@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -62,11 +62,11 @@ func (u *AWDRoundUpdater) previewServiceCheck(
 ) (*awdServiceCheckOutcome, error) {
 	checkerType := effectiveAWDCheckerType(definition.CheckerType)
 	switch checkerType {
-	case model.AWDCheckerTypeHTTPStandard:
+	case contestentity.AWDCheckerTypeHTTPStandard:
 		return u.buildAWDPreviewOutcomeFromHTTPStandard(ctx, definition, instances, previewContext)
-	case model.AWDCheckerTypeTCPStandard:
+	case contestentity.AWDCheckerTypeTCPStandard:
 		return u.buildAWDPreviewOutcomeFromTCPStandard(ctx, definition, instances, previewContext)
-	case model.AWDCheckerTypeScript:
+	case contestentity.AWDCheckerTypeScript:
 		return u.buildAWDPreviewOutcomeFromScriptChecker(ctx, definition, instances, previewContext)
 	default:
 		healthPath := resolveAWDCheckerHealthPath(definition.CheckerConfig, u.cfg.CheckerHealthPath)
@@ -96,7 +96,7 @@ func (u *AWDRoundUpdater) buildAWDPreviewOutcomeFromHTTPStandard(
 	result := awdServiceCheckResult{
 		CheckedAt:            time.Now().UTC().Format(time.RFC3339),
 		CheckSource:          awdCheckSourceCheckerPreview,
-		CheckerType:          model.AWDCheckerTypeHTTPStandard,
+		CheckerType:          contestentity.AWDCheckerTypeHTTPStandard,
 		HealthPath:           resolveAWDCheckerHealthPath(definition.CheckerConfig, u.cfg.CheckerHealthPath),
 		InstanceCount:        len(instances),
 		HealthyInstanceCount: 0,
@@ -136,7 +136,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerPreviewTarget(
 	startedAt := time.Now()
 	target := awdCheckTargetResult{
 		AccessURL: instance.AccessURL,
-		Probe:     string(model.AWDCheckerTypeHTTPStandard),
+		Probe:     string(contestentity.AWDCheckerTypeHTTPStandard),
 	}
 
 	if awdHTTPCheckerActionEnabled(config.PutFlag) {
@@ -147,7 +147,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerPreviewTarget(
 			target.Error = putResult.summary.Error
 			target.LatencyMS = time.Since(startedAt).Milliseconds()
 			return awdHTTPCheckerTargetRuntimeResult{
-				status:       model.AWDServiceStatusDown,
+				status:       contestentity.AWDServiceStatusDown,
 				statusReason: putResult.summary.ErrorCode,
 				target:       target,
 			}
@@ -166,9 +166,9 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerPreviewTarget(
 		target.ErrorCode = getResult.summary.ErrorCode
 		target.Error = getResult.summary.Error
 		target.LatencyMS = time.Since(startedAt).Milliseconds()
-		status := model.AWDServiceStatusDown
+		status := contestentity.AWDServiceStatusDown
 		if getResult.summary.ErrorCode == "flag_mismatch" {
-			status = model.AWDServiceStatusCompromised
+			status = contestentity.AWDServiceStatusCompromised
 		}
 		return awdHTTPCheckerTargetRuntimeResult{
 			status:       status,
@@ -185,7 +185,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerPreviewTarget(
 			target.Error = havocResult.summary.Error
 			target.LatencyMS = time.Since(startedAt).Milliseconds()
 			return awdHTTPCheckerTargetRuntimeResult{
-				status:       model.AWDServiceStatusDown,
+				status:       contestentity.AWDServiceStatusDown,
 				statusReason: havocResult.summary.ErrorCode,
 				target:       target,
 			}
@@ -195,7 +195,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerPreviewTarget(
 	target.Healthy = true
 	target.LatencyMS = time.Since(startedAt).Milliseconds()
 	return awdHTTPCheckerTargetRuntimeResult{
-		status:       model.AWDServiceStatusUp,
+		status:       contestentity.AWDServiceStatusUp,
 		statusReason: "healthy",
 		target:       target,
 	}
@@ -210,7 +210,7 @@ func normalizeAWDCheckerPreviewFlag(value string) string {
 
 func previewContextServiceStatus(outcome *awdServiceCheckOutcome) string {
 	if outcome == nil {
-		return model.AWDServiceStatusDown
+		return contestentity.AWDServiceStatusDown
 	}
 	return outcome.serviceStatus
 }

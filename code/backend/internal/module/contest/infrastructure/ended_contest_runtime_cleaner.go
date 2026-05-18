@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type contestEndedRuntimeServiceStore interface {
-	ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]model.ContestAWDService, error)
+	ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]contestentity.ContestAWDService, error)
 }
 
 type contestEndedRuntimeCleanupService interface {

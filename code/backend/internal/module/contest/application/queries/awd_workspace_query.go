@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -183,7 +184,7 @@ func (s *AWDService) populateAWDWorkspaceDefenseConnections(
 func (s *AWDService) populateAWDWorkspaceCurrentRound(
 	ctx context.Context,
 	roundID, myTeamID int64,
-	teams map[int64]*model.Team,
+	teams map[int64]*contestentity.Team,
 	serviceMap map[int64]*AWDWorkspaceServiceResult,
 	resp *AWDWorkspaceResult,
 ) error {

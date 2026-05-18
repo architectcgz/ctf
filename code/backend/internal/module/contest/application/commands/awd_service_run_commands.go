@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -24,7 +24,7 @@ func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64,
 	if contestdomain.ContestHasEndedAt(contest, now) {
 		return nil, errcode.ErrContestEnded
 	}
-	if contest.Status != model.ContestStatusRunning && contest.Status != model.ContestStatusFrozen {
+	if contest.Status != contestentity.ContestStatusRunning && contest.Status != contestentity.ContestStatusFrozen {
 		return nil, errcode.ErrContestNotRunning
 	}
 	if err := ensureAWDReadinessGate(ctx, s.repo, contestID, req.ForceOverride, req.OverrideReason); err != nil {
@@ -74,7 +74,7 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 
 	var previewServiceID int64
 	previewChallengeID := req.AWDChallengeID
-	var previewService *model.ContestAWDService
+	var previewService *contestentity.ContestAWDService
 	if req.ServiceID > 0 {
 		service, err := s.resolveContestRuntimeService(ctx, contestID, req.ServiceID)
 		if err != nil {
@@ -245,7 +245,7 @@ func aggregateAWDCheckerPreviewResults(results []*contestports.AWDServicePreview
 	totalCount := len(results)
 	passCount := 0
 	for _, item := range results {
-		if item != nil && item.ServiceStatus == model.AWDServiceStatusUp {
+		if item != nil && item.ServiceStatus == contestentity.AWDServiceStatusUp {
 			passCount++
 		}
 	}
@@ -286,9 +286,9 @@ func aggregateAWDCheckerPreviewResults(results []*contestports.AWDServicePreview
 		return nil, err
 	}
 
-	serviceStatus := model.AWDServiceStatusDown
+	serviceStatus := contestentity.AWDServiceStatusDown
 	if quorumPassed {
-		serviceStatus = model.AWDServiceStatusUp
+		serviceStatus = contestentity.AWDServiceStatusUp
 	}
 
 	return &contestports.AWDServicePreviewResult{
@@ -302,13 +302,13 @@ func aggregateAWDCheckerPreviewResults(results []*contestports.AWDServicePreview
 func selectAWDCheckerPreviewRepresentative(results []*contestports.AWDServicePreviewResult, quorumPassed bool) *contestports.AWDServicePreviewResult {
 	if quorumPassed {
 		for _, item := range results {
-			if item != nil && item.ServiceStatus == model.AWDServiceStatusUp {
+			if item != nil && item.ServiceStatus == contestentity.AWDServiceStatusUp {
 				return item
 			}
 		}
 	}
 	for _, item := range results {
-		if item != nil && item.ServiceStatus != model.AWDServiceStatusUp {
+		if item != nil && item.ServiceStatus != contestentity.AWDServiceStatusUp {
 			return item
 		}
 	}

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -26,7 +26,7 @@ func (s *ParticipationService) ReviewRegistration(ctx context.Context, contestID
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if registration.Status != model.ContestRegistrationStatusPending {
+	if registration.Status != contestentity.ContestRegistrationStatusPending {
 		return nil, errcode.ErrInvalidStatusTransition
 	}
 
@@ -35,7 +35,7 @@ func (s *ParticipationService) ReviewRegistration(ctx context.Context, contestID
 	registration.ReviewedBy = &reviewerID
 	registration.ReviewedAt = &now
 	registration.UpdatedAt = now
-	if req.Status == model.ContestRegistrationStatusRejected {
+	if req.Status == contestentity.ContestRegistrationStatusRejected {
 		registration.TeamID = nil
 	}
 	if err := s.repo.SaveRegistration(ctx, registration); err != nil {

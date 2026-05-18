@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) calculateActiveRoundNumber(contest *model.Contest, now time.Time) (int, bool) {
+func (s *AWDService) calculateActiveRoundNumber(contest *contestentity.Contest, now time.Time) (int, bool) {
 	if contest == nil || s.awdConfig.RoundInterval <= 0 {
 		return 0, false
 	}
@@ -57,5 +57,5 @@ func (s *AWDService) isLiveContestWindow(ctx context.Context, contestID int64) b
 	if contestdomain.ContestHasEndedAt(contest, now) {
 		return false
 	}
-	return contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusFrozen
+	return contest.Status == contestentity.ContestStatusRunning || contest.Status == contestentity.ContestStatusFrozen
 }

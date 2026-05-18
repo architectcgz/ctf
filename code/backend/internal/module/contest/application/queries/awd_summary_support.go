@@ -1,11 +1,11 @@
 package queries
 
-import "ctf-platform/internal/model"
+import contestentity "ctf-platform/internal/module/contest/entity"
 
 func buildAWDRoundSummary(
-	teams map[int64]*model.Team,
-	services []model.AWDTeamService,
-	attackLogs []model.AWDAttackLog,
+	teams map[int64]*contestentity.Team,
+	services []contestentity.AWDTeamService,
+	attackLogs []contestentity.AWDAttackLog,
 ) (*AWDRoundMetricsResult, []*AWDRoundSummaryItemResult) {
 	items := make(map[int64]*AWDRoundSummaryItemResult, len(teams))
 	metrics := &AWDRoundMetricsResult{}

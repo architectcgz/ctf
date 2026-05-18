@@ -8,24 +8,24 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (r *Repository) AddPausedDurationToActiveAWDContests(ctx context.Context, activeAt time.Time, recoveryKey string, targetPausedSeconds int64, updatedAt time.Time) ([]*model.Contest, error) {
+func (r *Repository) AddPausedDurationToActiveAWDContests(ctx context.Context, activeAt time.Time, recoveryKey string, targetPausedSeconds int64, updatedAt time.Time) ([]*contestentity.Contest, error) {
 	if targetPausedSeconds <= 0 || strings.TrimSpace(recoveryKey) == "" {
 		return nil, nil
 	}
 
-	var updatedContests []*model.Contest
+	var updatedContests []*contestentity.Contest
 	err := r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var contests []*model.Contest
+		var contests []*contestentity.Contest
 		if err := tx.
 			Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where(
 				"mode = ? AND status IN ? AND deleted_at IS NULL",
-				model.ContestModeAWD,
-				[]string{model.ContestStatusRunning, model.ContestStatusFrozen},
+				contestentity.ContestModeAWD,
+				[]string{contestentity.ContestStatusRunning, contestentity.ContestStatusFrozen},
 			).
 			Order("id ASC").
 			Find(&contests).Error; err != nil {
@@ -45,7 +45,7 @@ func (r *Repository) AddPausedDurationToActiveAWDContests(ctx context.Context, a
 				delta = targetPausedSeconds - contest.RuntimeRecoveryAppliedSeconds
 			}
 			if delta > 0 {
-				if err := tx.Model(&model.Contest{}).
+				if err := tx.Model(&contestentity.Contest{}).
 					Where("id = ?", contest.ID).
 					Updates(map[string]any{
 						"paused_seconds":                   gorm.Expr("paused_seconds + ?", delta),

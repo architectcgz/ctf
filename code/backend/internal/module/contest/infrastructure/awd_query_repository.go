@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -34,7 +34,7 @@ func NewAWDQueryRepository(source awdQueryRepositorySource) *AWDQueryRepository 
 	return &AWDQueryRepository{awdQueryRepositorySource: source}
 }
 
-func (r *AWDQueryRepository) FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*model.AWDRound, error) {
+func (r *AWDQueryRepository) FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*contestentity.AWDRound, error) {
 	round, err := r.awdQueryRepositorySource.FindRoundByContestAndID(ctx, contestID, roundID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestAWDRoundNotFound
@@ -42,7 +42,7 @@ func (r *AWDQueryRepository) FindRoundByContestAndID(ctx context.Context, contes
 	return round, err
 }
 
-func (r *AWDQueryRepository) FindRunningRound(ctx context.Context, contestID int64) (*model.AWDRound, error) {
+func (r *AWDQueryRepository) FindRunningRound(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	round, err := r.awdQueryRepositorySource.FindRunningRound(ctx, contestID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestAWDRoundNotFound
@@ -50,7 +50,7 @@ func (r *AWDQueryRepository) FindRunningRound(ctx context.Context, contestID int
 	return round, err
 }
 
-func (r *AWDQueryRepository) FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*model.Team, error) {
+func (r *AWDQueryRepository) FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*contestentity.Team, error) {
 	team, err := r.awdQueryRepositorySource.FindContestTeamByMember(ctx, contestID, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestUserTeamNotFound

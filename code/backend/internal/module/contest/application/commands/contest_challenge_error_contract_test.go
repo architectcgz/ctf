@@ -7,28 +7,29 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 type contestChallengeErrorContestLookupStub struct {
-	findByIDFn func(context.Context, int64) (*model.Contest, error)
+	findByIDFn func(context.Context, int64) (*contestentity.Contest, error)
 }
 
-func (s contestChallengeErrorContestLookupStub) FindByID(ctx context.Context, id int64) (*model.Contest, error) {
+func (s contestChallengeErrorContestLookupStub) FindByID(ctx context.Context, id int64) (*contestentity.Contest, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
-	return &model.Contest{ID: id, Mode: model.ContestModeAWD, Status: model.ContestStatusDraft}, nil
+	return &contestentity.Contest{ID: id, Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusDraft}, nil
 }
 
-func (s contestChallengeErrorContestLookupStub) List(context.Context, *string, int, int) ([]*model.Contest, int64, error) {
+func (s contestChallengeErrorContestLookupStub) List(context.Context, *string, int, int) ([]*contestentity.Contest, int64, error) {
 	return nil, 0, nil
 }
 
 type contestChallengeCommandRepoStub struct{}
 
-func (contestChallengeCommandRepoStub) AddChallenge(context.Context, *model.ContestChallenge) error {
+func (contestChallengeCommandRepoStub) AddChallenge(context.Context, *contestentity.ContestChallenge) error {
 	return errors.New("unexpected AddChallenge call")
 }
 
@@ -68,14 +69,14 @@ func (s contestChallengeLookupStub) BatchGetSolvedCount(context.Context, []int64
 }
 
 type contestAWDServiceStoreStub struct {
-	createContestAWDServiceFn               func(context.Context, *model.ContestAWDService) error
+	createContestAWDServiceFn               func(context.Context, *contestentity.ContestAWDService) error
 	updateContestAWDServiceByContestAndIDFn func(context.Context, int64, int64, map[string]any) error
-	findContestAWDServiceByContestAndIDFn   func(context.Context, int64, int64) (*model.ContestAWDService, error)
-	listContestAWDServicesByContestFn       func(context.Context, int64) ([]model.ContestAWDService, error)
+	findContestAWDServiceByContestAndIDFn   func(context.Context, int64, int64) (*contestentity.ContestAWDService, error)
+	listContestAWDServicesByContestFn       func(context.Context, int64) ([]contestentity.ContestAWDService, error)
 	deleteContestAWDServiceByContestAndIDFn func(context.Context, int64, int64) error
 }
 
-func (s contestAWDServiceStoreStub) CreateContestAWDService(ctx context.Context, service *model.ContestAWDService) error {
+func (s contestAWDServiceStoreStub) CreateContestAWDService(ctx context.Context, service *contestentity.ContestAWDService) error {
 	if s.createContestAWDServiceFn != nil {
 		return s.createContestAWDServiceFn(ctx, service)
 	}
@@ -89,14 +90,14 @@ func (s contestAWDServiceStoreStub) UpdateContestAWDServiceByContestAndID(ctx co
 	return nil
 }
 
-func (s contestAWDServiceStoreStub) FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+func (s contestAWDServiceStoreStub) FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
 	if s.findContestAWDServiceByContestAndIDFn != nil {
 		return s.findContestAWDServiceByContestAndIDFn(ctx, contestID, serviceID)
 	}
-	return &model.ContestAWDService{ID: serviceID, ContestID: contestID}, nil
+	return &contestentity.ContestAWDService{ID: serviceID, ContestID: contestID}, nil
 }
 
-func (s contestAWDServiceStoreStub) ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]model.ContestAWDService, error) {
+func (s contestAWDServiceStoreStub) ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]contestentity.ContestAWDService, error) {
 	if s.listContestAWDServicesByContestFn != nil {
 		return s.listContestAWDServicesByContestFn(ctx, contestID)
 	}
@@ -121,7 +122,7 @@ func (s contestAWDChallengeLookupStub) FindAWDChallengeByID(ctx context.Context,
 	return &model.AWDChallenge{
 		ID:          id,
 		Name:        "awd challenge",
-		CheckerType: model.AWDCheckerTypeHTTPStandard,
+		CheckerType: contestentity.AWDCheckerTypeHTTPStandard,
 	}, nil
 }
 
@@ -131,12 +132,12 @@ func (s contestAWDChallengeLookupStub) ListAWDChallenges(context.Context, *chall
 
 type contestChallengeRelationStub struct {
 	existsFn          func(context.Context, int64, int64) (bool, error)
-	addChallengeFn    func(context.Context, *model.ContestChallenge) error
+	addChallengeFn    func(context.Context, *contestentity.ContestChallenge) error
 	removeChallengeFn func(context.Context, int64, int64) error
 	updateChallengeFn func(context.Context, int64, int64, map[string]any) error
 }
 
-func (s contestChallengeRelationStub) AddChallenge(ctx context.Context, cc *model.ContestChallenge) error {
+func (s contestChallengeRelationStub) AddChallenge(ctx context.Context, cc *contestentity.ContestChallenge) error {
 	if s.addChallengeFn != nil {
 		return s.addChallengeFn(ctx, cc)
 	}
@@ -220,7 +221,7 @@ func TestContestAWDServiceServiceUpdateTreatsStoredServiceSentinelAsErrNotFound(
 
 	service := NewContestAWDServiceService(
 		contestAWDServiceStoreStub{
-			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) {
+			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) {
 				return nil, contestports.ErrContestAWDServiceNotFound
 			},
 		},
@@ -242,8 +243,8 @@ func TestContestAWDServiceServiceUpdateTreatsNewAWDChallengeSentinelAsErrNotFoun
 
 	service := NewContestAWDServiceService(
 		contestAWDServiceStoreStub{
-			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{
+			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{
 					ID:            20,
 					ContestID:     10,
 					DisplayName:   "stored",
@@ -279,7 +280,7 @@ func TestContestAWDServiceServiceDeleteTreatsStoredServiceSentinelAsErrNotFound(
 
 	service := NewContestAWDServiceService(
 		contestAWDServiceStoreStub{
-			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) {
+			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) {
 				return nil, contestports.ErrContestAWDServiceNotFound
 			},
 		},
@@ -312,7 +313,7 @@ func TestContestAWDServiceSyncContestChallengeRelationTreatsChallengeSentinelAsE
 		nil,
 	)
 
-	err := service.syncContestChallengeRelation(context.Background(), &model.Contest{ID: 10}, 20, 1, true)
+	err := service.syncContestChallengeRelation(context.Background(), &contestentity.Contest{ID: 10}, 20, 1, true)
 	if err != errcode.ErrChallengeNotFound {
 		t.Fatalf("expected ErrChallengeNotFound, got %v", err)
 	}

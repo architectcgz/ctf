@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -42,7 +43,7 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 		isVisible = *req.IsVisible
 	}
 
-	cc := &model.ContestChallenge{
+	cc := &contestentity.ContestChallenge{
 		ContestID:   contestID,
 		ChallengeID: req.ChallengeID,
 		Points:      points,

@@ -4,17 +4,17 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type ContestWriteRepository interface {
-	Create(ctx context.Context, contest *model.Contest) error
-	Update(ctx context.Context, contest *model.Contest) error
+	Create(ctx context.Context, contest *contestentity.Contest) error
+	Update(ctx context.Context, contest *contestentity.Contest) error
 }
 
 type ContestLookupRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Contest, error)
+	FindByID(ctx context.Context, id int64) (*contestentity.Contest, error)
 }
 
 type contestListSortKey uint8
@@ -139,20 +139,20 @@ type ContestListSummary struct {
 
 type ContestListRepository interface {
 	ContestLookupRepository
-	List(ctx context.Context, filter ContestListFilter, offset, limit int) ([]*model.Contest, int64, error)
+	List(ctx context.Context, filter ContestListFilter, offset, limit int) ([]*contestentity.Contest, int64, error)
 	Summarize(ctx context.Context, filter ContestListFilter) (ContestListSummary, error)
 }
 
 type ContestScoreboardRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Contest, error)
-	FindTeamsByIDs(ctx context.Context, ids []int64) ([]*model.Team, error)
+	FindByID(ctx context.Context, id int64) (*contestentity.Contest, error)
+	FindTeamsByIDs(ctx context.Context, ids []int64) ([]*contestentity.Team, error)
 	FindScoreboardTeamStats(ctx context.Context, contestID int64, contestMode string, teamIDs []int64) (map[int64]ScoreboardTeamStats, error)
 }
 
 type ContestScoreboardAdminRepository interface {
 	ContestLookupRepository
-	Update(ctx context.Context, contest *model.Contest) error
-	FindTeamsByContest(ctx context.Context, contestID int64) ([]*model.Team, error)
+	Update(ctx context.Context, contest *contestentity.Contest) error
+	FindTeamsByContest(ctx context.Context, contestID int64) ([]*contestentity.Team, error)
 }
 
 type ScoreboardMemberScore struct {
@@ -182,7 +182,7 @@ type ContestScoreboardStateStore interface {
 }
 
 type ContestStatusRepository interface {
-	ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error)
+	ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*contestentity.Contest, int64, error)
 	ApplyStatusTransition(ctx context.Context, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error)
 }
 
@@ -218,7 +218,7 @@ type AWDRoundStateStore interface {
 	IsAWDCurrentRound(ctx context.Context, contestID int64, roundNumber int) (bool, error)
 	LoadAWDCurrentRoundNumber(ctx context.Context, contestID int64) (int, bool, error)
 	LoadAWDRoundFlag(ctx context.Context, contestID, roundID, teamID, serviceID int64) (string, bool, error)
-	SyncAWDCurrentRoundState(ctx context.Context, contestID int64, round *model.AWDRound, assignments []AWDFlagAssignment, ttl time.Duration) error
+	SyncAWDCurrentRoundState(ctx context.Context, contestID int64, round *contestentity.AWDRound, assignments []AWDFlagAssignment, ttl time.Duration) error
 	ClearAWDCurrentRoundState(ctx context.Context, contestID int64) error
 	SetAWDServiceStatus(ctx context.Context, contestID, teamID, serviceID int64, status string) error
 	ReplaceAWDServiceStatus(ctx context.Context, contestID int64, entries []AWDServiceStatusEntry) error

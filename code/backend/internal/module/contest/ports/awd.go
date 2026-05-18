@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 var (
@@ -20,7 +21,7 @@ var (
 )
 
 type AWDServiceCheckTxRepository interface {
-	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, awdChallengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*model.AWDTeamService, error)
+	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, awdChallengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*contestentity.AWDTeamService, error)
 	RecalculateContestTeamScores(ctx context.Context, contestID int64) error
 }
 
@@ -29,7 +30,7 @@ type AWDServiceCheckTxRunner interface {
 }
 
 type AWDAttackLogTxRepository interface {
-	CreateAttackLog(ctx context.Context, logRecord *model.AWDAttackLog) error
+	CreateAttackLog(ctx context.Context, logRecord *contestentity.AWDAttackLog) error
 	ApplyAttackImpactToVictimService(ctx context.Context, roundID, victimTeamID, serviceID, awdChallengeID int64, scoreGained int, updatedAt time.Time) error
 	RecalculateContestTeamScores(ctx context.Context, contestID int64) error
 }
@@ -39,8 +40,8 @@ type AWDAttackLogTxRunner interface {
 }
 
 type AWDRoundReconcileTxRepository interface {
-	ListRoundsByContest(ctx context.Context, contestID int64) ([]model.AWDRound, error)
-	UpsertRound(ctx context.Context, round *model.AWDRound) error
+	ListRoundsByContest(ctx context.Context, contestID int64) ([]contestentity.AWDRound, error)
+	UpsertRound(ctx context.Context, round *contestentity.AWDRound) error
 }
 
 type AWDRoundReconcileTxRunner interface {
@@ -48,7 +49,7 @@ type AWDRoundReconcileTxRunner interface {
 }
 
 type AWDRoundServiceWritebackTxRepository interface {
-	UpsertTeamServices(ctx context.Context, records []model.AWDTeamService) error
+	UpsertTeamServices(ctx context.Context, records []contestentity.AWDTeamService) error
 	RecalculateContestTeamScores(ctx context.Context, contestID int64) error
 }
 
@@ -57,30 +58,30 @@ type AWDRoundServiceWritebackTxRunner interface {
 }
 
 type AWDServiceStore interface {
-	CreateContestAWDService(ctx context.Context, service *model.ContestAWDService) error
+	CreateContestAWDService(ctx context.Context, service *contestentity.ContestAWDService) error
 	UpdateContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64, updates map[string]any) error
-	FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error)
-	ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]model.ContestAWDService, error)
+	FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error)
+	ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]contestentity.ContestAWDService, error)
 	DeleteContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) error
 }
 
 type AWDRoundStore interface {
-	CreateRound(ctx context.Context, round *model.AWDRound) error
-	UpsertRound(ctx context.Context, round *model.AWDRound) error
-	ListRoundsByContest(ctx context.Context, contestID int64) ([]model.AWDRound, error)
-	FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*model.AWDRound, error)
-	FindRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*model.AWDRound, error)
-	FindRunningRound(ctx context.Context, contestID int64) (*model.AWDRound, error)
+	CreateRound(ctx context.Context, round *contestentity.AWDRound) error
+	UpsertRound(ctx context.Context, round *contestentity.AWDRound) error
+	ListRoundsByContest(ctx context.Context, contestID int64) ([]contestentity.AWDRound, error)
+	FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*contestentity.AWDRound, error)
+	FindRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*contestentity.AWDRound, error)
+	FindRunningRound(ctx context.Context, contestID int64) (*contestentity.AWDRound, error)
 }
 
 type AWDContestScheduleQuery interface {
-	ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]model.Contest, error)
+	ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]contestentity.Contest, error)
 }
 
 type AWDTeamLookup interface {
-	FindTeamsByContest(ctx context.Context, contestID int64) ([]*model.Team, error)
-	FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
-	FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*model.Team, error)
+	FindTeamsByContest(ctx context.Context, contestID int64) ([]*contestentity.Team, error)
+	FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error)
+	FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*contestentity.Team, error)
 }
 
 type AWDChallengeLookup interface {
@@ -110,16 +111,16 @@ type AWDServiceOperationQuery interface {
 }
 
 type AWDTeamServiceStore interface {
-	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, awdChallengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*model.AWDTeamService, error)
-	UpsertTeamServices(ctx context.Context, records []model.AWDTeamService) error
-	ListServicesByRound(ctx context.Context, roundID int64) ([]model.AWDTeamService, error)
+	UpsertServiceCheck(ctx context.Context, roundID, teamID, serviceID, awdChallengeID int64, serviceStatus, checkResult string, defenseScore int, updatedAt time.Time) (*contestentity.AWDTeamService, error)
+	UpsertTeamServices(ctx context.Context, records []contestentity.AWDTeamService) error
+	ListServicesByRound(ctx context.Context, roundID int64) ([]contestentity.AWDTeamService, error)
 }
 
 type AWDAttackLogStore interface {
 	CountSuccessfulAttacks(ctx context.Context, roundID, attackerTeamID, victimTeamID, serviceID int64) (int64, error)
-	CreateAttackLog(ctx context.Context, logRecord *model.AWDAttackLog) error
+	CreateAttackLog(ctx context.Context, logRecord *contestentity.AWDAttackLog) error
 	ApplyAttackImpactToVictimService(ctx context.Context, roundID, victimTeamID, serviceID, awdChallengeID int64, scoreGained int, updatedAt time.Time) error
-	ListAttackLogsByRound(ctx context.Context, roundID int64) ([]model.AWDAttackLog, error)
+	ListAttackLogsByRound(ctx context.Context, roundID int64) ([]contestentity.AWDAttackLog, error)
 }
 
 type AWDTrafficEventQuery interface {
@@ -146,7 +147,7 @@ type AWDServiceDefinition struct {
 	ServiceName      string
 	AWDChallengeID   int64
 	FlagPrefix       string
-	CheckerType      model.AWDCheckerType
+	CheckerType      contestentity.AWDCheckerType
 	CheckerConfig    string
 	CheckerTokenEnv  string
 	CheckerToken     string
@@ -170,11 +171,11 @@ type AWDReadinessChallengeRecord struct {
 	ServiceID          int64
 	AWDChallengeID     int64
 	Title              string
-	CheckerType        model.AWDCheckerType
+	CheckerType        contestentity.AWDCheckerType
 	CheckerConfig      string
 	RuntimeImageID     int64
 	RuntimeImageStatus string
-	ValidationState    model.AWDCheckerValidationState
+	ValidationState    contestentity.AWDCheckerValidationState
 	LastPreviewAt      *time.Time
 	LastPreviewResult  string
 }
@@ -184,7 +185,7 @@ type AWDContainerFileWriter interface {
 }
 
 type AWDFlagInjector interface {
-	InjectRoundFlags(ctx context.Context, contest *model.Contest, round *model.AWDRound, assignments []AWDFlagAssignment) error
+	InjectRoundFlags(ctx context.Context, contest *contestentity.Contest, round *contestentity.AWDRound, assignments []AWDFlagAssignment) error
 }
 
 type AWDServiceInstance struct {
@@ -231,7 +232,7 @@ type AWDCheckerPreviewTokenRecord struct {
 	ContestID       int64
 	ServiceID       int64
 	AWDChallengeID  int64
-	CheckerType     model.AWDCheckerType
+	CheckerType     contestentity.AWDCheckerType
 	CheckerConfig   string
 	CheckerTokenEnv string
 	Result          contestdomain.AWDCheckerPreviewResult
@@ -247,7 +248,7 @@ type AWDCheckerPreviewTokenStore interface {
 type AWDServicePreviewRequest struct {
 	ServiceID       int64
 	AWDChallengeID  int64
-	CheckerType     model.AWDCheckerType
+	CheckerType     contestentity.AWDCheckerType
 	CheckerConfig   string
 	CheckerTokenEnv string
 	CheckerToken    string
@@ -257,13 +258,13 @@ type AWDServicePreviewRequest struct {
 
 type AWDServicePreviewResult struct {
 	ServiceStatus  string
-	CheckerType    model.AWDCheckerType
+	CheckerType    contestentity.AWDCheckerType
 	CheckResult    string
 	PreviewContext AWDCheckerPreviewContext
 }
 
 type AWDRoundManager interface {
-	RunRoundServiceChecks(ctx context.Context, contest *model.Contest, round *model.AWDRound, source string) error
-	EnsureActiveRoundMaterialized(ctx context.Context, contest *model.Contest, now time.Time) error
+	RunRoundServiceChecks(ctx context.Context, contest *contestentity.Contest, round *contestentity.AWDRound, source string) error
+	EnsureActiveRoundMaterialized(ctx context.Context, contest *contestentity.Contest, now time.Time) error
 	PreviewServiceCheck(ctx context.Context, req AWDServicePreviewRequest) (*AWDServicePreviewResult, error)
 }

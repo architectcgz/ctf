@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -35,7 +36,7 @@ func (r *SubmissionRegistrationRepository) WithinScoringTransaction(ctx context.
 	return r.source.WithinScoringTransaction(ctx, fn)
 }
 
-func (r *SubmissionRegistrationRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (r *SubmissionRegistrationRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	registration, err := r.source.FindRegistration(ctx, contestID, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestParticipationRegistrationNotFound
@@ -43,7 +44,7 @@ func (r *SubmissionRegistrationRepository) FindRegistration(ctx context.Context,
 	return registration, err
 }
 
-func (r *SubmissionRegistrationRepository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+func (r *SubmissionRegistrationRepository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
 	item, err := r.source.FindContestChallenge(ctx, contestID, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestSubmissionChallengeNotFound
@@ -59,7 +60,7 @@ func (r *SubmissionRegistrationRepository) FindChallengeByID(ctx context.Context
 	return item, err
 }
 
-func (r *SubmissionRegistrationRepository) CreateSubmission(ctx context.Context, submission *model.Submission) error {
+func (r *SubmissionRegistrationRepository) CreateSubmission(ctx context.Context, submission *contestentity.Submission) error {
 	return r.source.CreateSubmission(ctx, submission)
 }
 

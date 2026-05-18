@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/module/contest/testsupport"
@@ -81,7 +82,7 @@ func TestDockerAWDFlagInjectorInjectsAllRunningTeamContainers(t *testing.T) {
 	writer := &stubAWDContainerFileWriter{}
 	injector := contestinfra.NewDockerAWDFlagInjector(db, writer, zap.NewNop())
 
-	err = injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 10}, &model.AWDRound{ID: 10001}, []contestports.AWDFlagAssignment{
+	err = injector.InjectRoundFlags(context.Background(), &contestentity.Contest{ID: 10}, &contestentity.AWDRound{ID: 10001}, []contestports.AWDFlagAssignment{
 		{TeamID: 1011, ServiceID: serviceID, AWDChallengeID: 1001, Flag: "awd{round-flag}"},
 	})
 	if err != nil {
@@ -130,7 +131,7 @@ func TestDockerAWDFlagInjectorInjectsContestScopedTeamInstanceWithoutTeamMemberF
 	writer := &stubAWDContainerFileWriter{}
 	injector := contestinfra.NewDockerAWDFlagInjector(db, writer, zap.NewNop())
 
-	err := injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 20}, &model.AWDRound{ID: 20001}, []contestports.AWDFlagAssignment{
+	err := injector.InjectRoundFlags(context.Background(), &contestentity.Contest{ID: 20}, &contestentity.AWDRound{ID: 20001}, []contestports.AWDFlagAssignment{
 		{TeamID: 2011, ServiceID: serviceID, AWDChallengeID: 2001, Flag: "awd{contest-scoped}"},
 	})
 	if err != nil {
@@ -173,7 +174,7 @@ func TestDockerAWDFlagInjectorMatchesInstancesByServiceID(t *testing.T) {
 	writer := &stubAWDContainerFileWriter{}
 	injector := contestinfra.NewDockerAWDFlagInjector(db, writer, zap.NewNop())
 
-	err := injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 30}, &model.AWDRound{ID: 30001}, []contestports.AWDFlagAssignment{
+	err := injector.InjectRoundFlags(context.Background(), &contestentity.Contest{ID: 30}, &contestentity.AWDRound{ID: 30001}, []contestports.AWDFlagAssignment{
 		{TeamID: 3011, ServiceID: serviceID, AWDChallengeID: 3001, Flag: "awd{service-id}"},
 	})
 	if err != nil {

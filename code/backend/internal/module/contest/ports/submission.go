@@ -6,19 +6,20 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 var ErrContestSubmissionChallengeNotFound = errors.New("contest submission challenge not found")
 var ErrContestSubmissionChallengeEntityNotFound = errors.New("contest submission challenge entity not found")
 
 type ContestSubmissionScoringTxRepository interface {
-	LockContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
+	LockContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error)
 	CountCorrectSubmissions(ctx context.Context, contestID, challengeID int64, teamID *int64, userID int64) (int64, error)
 	UpdateFirstBlood(ctx context.Context, contestID, challengeID, teamID int64) error
-	ListCorrectSubmissions(ctx context.Context, contestID, challengeID int64) ([]model.Submission, error)
+	ListCorrectSubmissions(ctx context.Context, contestID, challengeID int64) ([]contestentity.Submission, error)
 	UpdateSubmissionScore(ctx context.Context, submissionID int64, score int) error
 	AddTeamScore(ctx context.Context, teamID int64, delta int, lastSolveAt *time.Time) error
-	CreateSubmission(ctx context.Context, submission *model.Submission) error
+	CreateSubmission(ctx context.Context, submission *contestentity.Submission) error
 }
 
 type ContestSubmissionScoringTxRunner interface {
@@ -26,16 +27,16 @@ type ContestSubmissionScoringTxRunner interface {
 }
 
 type ContestSubmissionRegistrationLookupRepository interface {
-	FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
+	FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error)
 }
 
 type ContestSubmissionChallengeLookupRepository interface {
-	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
+	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error)
 	FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error)
 }
 
 type ContestSubmissionWriteRepository interface {
-	CreateSubmission(ctx context.Context, submission *model.Submission) error
+	CreateSubmission(ctx context.Context, submission *contestentity.Submission) error
 }
 
 type ContestSubmissionRateLimitStore interface {

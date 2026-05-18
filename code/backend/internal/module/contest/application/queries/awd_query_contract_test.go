@@ -4,17 +4,17 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 type awdQueryContestLookupStub struct {
-	contest *model.Contest
+	contest *contestentity.Contest
 	err     error
 }
 
-func (s awdQueryContestLookupStub) FindByID(context.Context, int64) (*model.Contest, error) {
+func (s awdQueryContestLookupStub) FindByID(context.Context, int64) (*contestentity.Contest, error) {
 	if s.err != nil {
 		return nil, s.err
 	}
@@ -33,20 +33,20 @@ type awdQueryRepositoryStub struct {
 	contestports.AWDAttackLogStore
 	contestports.AWDTrafficEventQuery
 
-	findRoundByContestAndIDFn func(context.Context, int64, int64) (*model.AWDRound, error)
-	findRunningRoundFn        func(context.Context, int64) (*model.AWDRound, error)
-	findContestTeamByMemberFn func(context.Context, int64, int64) (*model.Team, error)
+	findRoundByContestAndIDFn func(context.Context, int64, int64) (*contestentity.AWDRound, error)
+	findRunningRoundFn        func(context.Context, int64) (*contestentity.AWDRound, error)
+	findContestTeamByMemberFn func(context.Context, int64, int64) (*contestentity.Team, error)
 }
 
-func (s awdQueryRepositoryStub) FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*model.AWDRound, error) {
+func (s awdQueryRepositoryStub) FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*contestentity.AWDRound, error) {
 	return s.findRoundByContestAndIDFn(ctx, contestID, roundID)
 }
 
-func (s awdQueryRepositoryStub) FindRunningRound(ctx context.Context, contestID int64) (*model.AWDRound, error) {
+func (s awdQueryRepositoryStub) FindRunningRound(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	return s.findRunningRoundFn(ctx, contestID)
 }
 
-func (s awdQueryRepositoryStub) FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*model.Team, error) {
+func (s awdQueryRepositoryStub) FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*contestentity.Team, error) {
 	return s.findContestTeamByMemberFn(ctx, contestID, userID)
 }
 
@@ -55,12 +55,12 @@ func TestAWDServiceGetRoundSummaryMapsRoundNotFoundToErrNotFound(t *testing.T) {
 
 	service := NewAWDService(
 		awdQueryRepositoryStub{
-			findRoundByContestAndIDFn: func(context.Context, int64, int64) (*model.AWDRound, error) {
+			findRoundByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.AWDRound, error) {
 				return nil, contestports.ErrContestAWDRoundNotFound
 			},
 		},
 		awdQueryContestLookupStub{
-			contest: &model.Contest{ID: 1, Mode: model.ContestModeAWD},
+			contest: &contestentity.Contest{ID: 1, Mode: contestentity.ContestModeAWD},
 		},
 	)
 
@@ -75,15 +75,15 @@ func TestAWDServiceGetUserWorkspaceTreatsCurrentRoundAndTeamNotFoundAsEmptyState
 
 	service := NewAWDService(
 		awdQueryRepositoryStub{
-			findRunningRoundFn: func(context.Context, int64) (*model.AWDRound, error) {
+			findRunningRoundFn: func(context.Context, int64) (*contestentity.AWDRound, error) {
 				return nil, contestports.ErrContestAWDRoundNotFound
 			},
-			findContestTeamByMemberFn: func(context.Context, int64, int64) (*model.Team, error) {
+			findContestTeamByMemberFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 				return nil, contestports.ErrContestUserTeamNotFound
 			},
 		},
 		awdQueryContestLookupStub{
-			contest: &model.Contest{ID: 1, Mode: model.ContestModeAWD},
+			contest: &contestentity.Contest{ID: 1, Mode: contestentity.ContestModeAWD},
 		},
 	)
 

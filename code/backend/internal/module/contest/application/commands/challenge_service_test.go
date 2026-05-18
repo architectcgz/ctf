@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 )
@@ -35,11 +36,11 @@ func TestChallengeServiceAddChallengeToAWDContestDoesNotCreateAWDService(t *test
 	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeCommandService(t)
 
 	now := time.Now()
-	contest := &model.Contest{
+	contest := &contestentity.Contest{
 		ID:        501,
 		Title:     "awd-config",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -99,11 +100,11 @@ func TestChallengeServiceUpdateChallengeDoesNotCreateAWDService(t *testing.T) {
 	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeCommandService(t)
 
 	now := time.Now()
-	contest := &model.Contest{
+	contest := &contestentity.Contest{
 		ID:        503,
 		Title:     "awd-update",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -125,7 +126,7 @@ func TestChallengeServiceUpdateChallengeDoesNotCreateAWDService(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRelationRepo.AddChallenge(context.Background(), &model.ContestChallenge{
+	if err := challengeRelationRepo.AddChallenge(context.Background(), &contestentity.ContestChallenge{
 		ContestID:   contest.ID,
 		ChallengeID: 9003,
 		Points:      100,
@@ -169,11 +170,11 @@ func TestChallengeServiceRemoveChallengeFromContestDoesNotDeleteAWDService(t *te
 	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeCommandService(t)
 
 	now := time.Now()
-	contest := &model.Contest{
+	contest := &contestentity.Contest{
 		ID:        506,
 		Title:     "awd-remove",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -195,7 +196,7 @@ func TestChallengeServiceRemoveChallengeFromContestDoesNotDeleteAWDService(t *te
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRelationRepo.AddChallenge(context.Background(), &model.ContestChallenge{
+	if err := challengeRelationRepo.AddChallenge(context.Background(), &contestentity.ContestChallenge{
 		ContestID:   contest.ID,
 		ChallengeID: 9006,
 		Points:      100,
@@ -205,7 +206,7 @@ func TestChallengeServiceRemoveChallengeFromContestDoesNotDeleteAWDService(t *te
 	}); err != nil {
 		t.Fatalf("add challenge: %v", err)
 	}
-	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+	if err := awdRepo.CreateContestAWDService(context.Background(), &contestentity.ContestAWDService{
 		ID:              contesttestsupport.DefaultAWDContestServiceID(contest.ID, 9006),
 		ContestID:       contest.ID,
 		AWDChallengeID:  9006,
@@ -214,7 +215,7 @@ func TestChallengeServiceRemoveChallengeFromContestDoesNotDeleteAWDService(t *te
 		IsVisible:       true,
 		ScoreConfig:     `{"points":100}`,
 		RuntimeConfig:   `{"checker_type":"http_standard"}`,
-		ValidationState: model.AWDCheckerValidationStatePending,
+		ValidationState: contestentity.AWDCheckerValidationStatePending,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}); err != nil {

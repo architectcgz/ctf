@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -106,7 +106,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	if err := ensureCheckerPreviewTokenConsumed(previewToken, lastPreviewResult); err != nil {
 		return nil, err
 	}
-	record := &model.ContestAWDService{
+	record := &contestentity.ContestAWDService{
 		ContestID:         contestID,
 		AWDChallengeID:    req.AWDChallengeID,
 		DisplayName:       firstNonEmpty(req.DisplayName, awdChallenge.Name),
@@ -273,7 +273,7 @@ func (s *ContestAWDServiceService) DeleteContestAWDService(ctx context.Context, 
 	return nil
 }
 
-func (s *ContestAWDServiceService) ensureMutableAWDContest(ctx context.Context, contestID int64) (*model.Contest, error) {
+func (s *ContestAWDServiceService) ensureMutableAWDContest(ctx context.Context, contestID int64) (*contestentity.Contest, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
@@ -281,7 +281,7 @@ func (s *ContestAWDServiceService) ensureMutableAWDContest(ctx context.Context, 
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if contest.Mode != model.ContestModeAWD {
+	if contest.Mode != contestentity.ContestModeAWD {
 		return nil, errcode.ErrInvalidParams
 	}
 	if contestdomain.IsContestImmutable(contest) {
@@ -301,7 +301,7 @@ func (s *ContestAWDServiceService) ensureContestChallengeRelation(ctx context.Co
 	if exists {
 		return false, nil
 	}
-	relation := &model.ContestChallenge{
+	relation := &contestentity.ContestChallenge{
 		ContestID:   contestID,
 		ChallengeID: challengeID,
 		Points:      points,
@@ -316,7 +316,7 @@ func (s *ContestAWDServiceService) ensureContestChallengeRelation(ctx context.Co
 	return true, nil
 }
 
-func (s *ContestAWDServiceService) syncContestChallengeRelation(ctx context.Context, contest *model.Contest, challengeID int64, order int, isVisible bool) error {
+func (s *ContestAWDServiceService) syncContestChallengeRelation(ctx context.Context, contest *contestentity.Contest, challengeID int64, order int, isVisible bool) error {
 	if s.contestChallengeRepo == nil || contest == nil {
 		return nil
 	}

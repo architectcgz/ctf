@@ -3,15 +3,15 @@ package domain
 import (
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 var validStatusTransitions = map[string][]string{
-	model.ContestStatusDraft:        {model.ContestStatusRegistration},
-	model.ContestStatusRegistration: {model.ContestStatusDraft, model.ContestStatusRunning},
-	model.ContestStatusRunning:      {model.ContestStatusFrozen, model.ContestStatusEnded},
-	model.ContestStatusFrozen:       {model.ContestStatusRunning, model.ContestStatusEnded},
-	model.ContestStatusEnded:        {},
+	contestentity.ContestStatusDraft:        {contestentity.ContestStatusRegistration},
+	contestentity.ContestStatusRegistration: {contestentity.ContestStatusDraft, contestentity.ContestStatusRunning},
+	contestentity.ContestStatusRunning:      {contestentity.ContestStatusFrozen, contestentity.ContestStatusEnded},
+	contestentity.ContestStatusFrozen:       {contestentity.ContestStatusRunning, contestentity.ContestStatusEnded},
+	contestentity.ContestStatusEnded:        {},
 }
 
 func IsValidTransition(from, to string) bool {
@@ -27,20 +27,20 @@ func IsValidTransition(from, to string) bool {
 	return false
 }
 
-func IsContestImmutable(contest *model.Contest) bool {
+func IsContestImmutable(contest *contestentity.Contest) bool {
 	if contest == nil {
 		return false
 	}
-	return contest.Status == model.ContestStatusRunning ||
-		contest.Status == model.ContestStatusFrozen ||
-		contest.Status == model.ContestStatusEnded
+	return contest.Status == contestentity.ContestStatusRunning ||
+		contest.Status == contestentity.ContestStatusFrozen ||
+		contest.Status == contestentity.ContestStatusEnded
 }
 
-func IsFrozenContest(contest *model.Contest, now time.Time) bool {
+func IsFrozenContest(contest *contestentity.Contest, now time.Time) bool {
 	if contest == nil {
 		return false
 	}
-	if contest.Status == model.ContestStatusFrozen {
+	if contest.Status == contestentity.ContestStatusFrozen {
 		return true
 	}
 	if contest.FreezeTime == nil {
@@ -54,7 +54,7 @@ func ShouldGateAWDContestStart(mode, currentStatus string, targetStatus *string)
 	if targetStatus == nil {
 		return false
 	}
-	return mode == model.ContestModeAWD &&
-		currentStatus != model.ContestStatusRunning &&
-		*targetStatus == model.ContestStatusRunning
+	return mode == contestentity.ContestModeAWD &&
+		currentStatus != contestentity.ContestStatusRunning &&
+		*targetStatus == contestentity.ContestStatusRunning
 }

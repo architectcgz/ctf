@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -33,7 +33,7 @@ func NewTeamCommandAdapter(source interface {
 	return &TeamCommandAdapter{source: source}
 }
 
-func (r *TeamCommandAdapter) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*model.Team, error) {
+func (r *TeamCommandAdapter) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*contestentity.Team, error) {
 	team, err := r.source.FindUserTeamInContest(ctx, userID, contestID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestUserTeamNotFound
@@ -41,7 +41,7 @@ func (r *TeamCommandAdapter) FindUserTeamInContest(ctx context.Context, userID, 
 	return team, err
 }
 
-func (r *TeamCommandAdapter) CreateWithMember(ctx context.Context, team *model.Team, captainID int64) error {
+func (r *TeamCommandAdapter) CreateWithMember(ctx context.Context, team *contestentity.Team, captainID int64) error {
 	return mapCommandRegistrationNotFound(r.source.CreateWithMember(ctx, team, captainID))
 }
 
@@ -53,7 +53,7 @@ func (r *TeamCommandAdapter) IsUniqueViolation(err error, constraint string) boo
 	return r.source.IsUniqueViolation(err, constraint)
 }
 
-func (r *TeamCommandAdapter) FindByID(ctx context.Context, id int64) (*model.Team, error) {
+func (r *TeamCommandAdapter) FindByID(ctx context.Context, id int64) (*contestentity.Team, error) {
 	team, err := r.source.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestTeamNotFound
@@ -69,7 +69,7 @@ func (r *TeamCommandAdapter) RemoveMember(ctx context.Context, teamID, userID in
 	return r.source.RemoveMember(ctx, teamID, userID)
 }
 
-func (r *TeamCommandAdapter) GetMembers(ctx context.Context, teamID int64) ([]*model.TeamMember, error) {
+func (r *TeamCommandAdapter) GetMembers(ctx context.Context, teamID int64) ([]*contestentity.TeamMember, error) {
 	return r.source.GetMembers(ctx, teamID)
 }
 
@@ -81,7 +81,7 @@ func (r *TeamCommandAdapter) GetMemberCountBatch(ctx context.Context, teamIDs []
 	return r.source.GetMemberCountBatch(ctx, teamIDs)
 }
 
-func (r *TeamCommandAdapter) FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (r *TeamCommandAdapter) FindContestRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	registration, err := r.source.FindContestRegistration(ctx, contestID, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestParticipationRegistrationNotFound

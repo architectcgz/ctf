@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ContestService) loadContestForUpdate(ctx context.Context, id int64) (*model.Contest, error) {
+func (s *ContestService) loadContestForUpdate(ctx context.Context, id int64) (*contestentity.Contest, error) {
 	contest, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrContestNotFound) {
@@ -20,33 +20,33 @@ func (s *ContestService) loadContestForUpdate(ctx context.Context, id int64) (*m
 	return contest, nil
 }
 
-func validateContestUpdateRequest(contest *model.Contest, req UpdateContestInput) error {
+func validateContestUpdateRequest(contest *contestentity.Contest, req UpdateContestInput) error {
 	if req.Status != nil && *req.Status != contest.Status {
 		if err := domain.ValidateStatusTransition(contest.Status, *req.Status); err != nil {
 			return errcode.ErrInvalidStatusTransition
 		}
 	}
 
-	if contest.Status == model.ContestStatusRegistration || contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded {
+	if contest.Status == contestentity.ContestStatusRegistration || contest.Status == contestentity.ContestStatusRunning || contest.Status == contestentity.ContestStatusEnded {
 		if req.StartTime != nil {
 			return errcode.ErrContestAlreadyStarted
 		}
 	}
 
-	if contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded {
+	if contest.Status == contestentity.ContestStatusRunning || contest.Status == contestentity.ContestStatusEnded {
 		if req.EndTime != nil {
 			return errcode.ErrContestAlreadyStarted
 		}
 	}
 
-	if req.Mode != nil && *req.Mode != contest.Mode && contest.Status != model.ContestStatusDraft {
+	if req.Mode != nil && *req.Mode != contest.Mode && contest.Status != contestentity.ContestStatusDraft {
 		return errcode.ErrCannotModifyAfterDraft
 	}
 
 	return nil
 }
 
-func applyContestUpdateFields(contest *model.Contest, req UpdateContestInput) error {
+func applyContestUpdateFields(contest *contestentity.Contest, req UpdateContestInput) error {
 	if req.Mode != nil && *req.Mode != contest.Mode {
 		contest.Mode = *req.Mode
 	}

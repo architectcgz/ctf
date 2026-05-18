@@ -6,8 +6,8 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -39,7 +39,7 @@ func RebuildContestScoreboardCache(ctx context.Context, db *gorm.DB, redis redis
 		return nil
 	}
 
-	var teams []model.Team
+	var teams []contestentity.Team
 	if err := db.WithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Order("id ASC").

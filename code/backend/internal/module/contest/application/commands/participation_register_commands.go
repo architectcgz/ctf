@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -19,7 +19,7 @@ func (s *ParticipationService) RegisterContest(ctx context.Context, contestID, u
 		}
 		return errcode.ErrInternal.WithCause(err)
 	}
-	if contest.Status != model.ContestStatusRegistration {
+	if contest.Status != contestentity.ContestStatusRegistration {
 		return errcode.ErrContestRegistrationClosed
 	}
 
@@ -37,11 +37,11 @@ func (s *ParticipationService) RegisterContest(ctx context.Context, contestID, u
 		if !errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
 			return errcode.ErrInternal.WithCause(err)
 		}
-		registration = &model.ContestRegistration{
+		registration = &contestentity.ContestRegistration{
 			ContestID: contestID,
 			UserID:    userID,
 			TeamID:    teamID,
-			Status:    model.ContestRegistrationStatusPending,
+			Status:    contestentity.ContestRegistrationStatusPending,
 			CreatedAt: now,
 			UpdatedAt: now,
 		}
@@ -51,8 +51,8 @@ func (s *ParticipationService) RegisterContest(ctx context.Context, contestID, u
 		return nil
 	}
 
-	if registration.Status != model.ContestRegistrationStatusApproved {
-		registration.Status = model.ContestRegistrationStatusPending
+	if registration.Status != contestentity.ContestRegistrationStatusApproved {
+		registration.Status = contestentity.ContestRegistrationStatusPending
 		registration.ReviewedBy = nil
 		registration.ReviewedAt = nil
 	}

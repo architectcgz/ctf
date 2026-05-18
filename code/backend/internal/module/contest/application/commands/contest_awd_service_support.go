@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -16,20 +17,20 @@ func buildContestAWDServiceSnapshot(awdChallenge *model.AWDChallenge) string {
 	if awdChallenge == nil {
 		return "{}"
 	}
-	snapshot := model.ContestAWDServiceSnapshot{
+	snapshot := contestentity.ContestAWDServiceSnapshot{
 		Name:             strings.TrimSpace(awdChallenge.Name),
 		Category:         strings.TrimSpace(awdChallenge.Category),
 		Difficulty:       strings.TrimSpace(awdChallenge.Difficulty),
 		Description:      strings.TrimSpace(awdChallenge.Description),
-		ServiceType:      awdChallenge.ServiceType,
-		DeploymentMode:   awdChallenge.DeploymentMode,
+		ServiceType:      contestentity.AWDServiceType(awdChallenge.ServiceType),
+		DeploymentMode:   contestentity.AWDDeploymentMode(awdChallenge.DeploymentMode),
 		FlagMode:         strings.TrimSpace(awdChallenge.FlagMode),
 		FlagConfig:       parseContestAWDServiceJSONMap(awdChallenge.FlagConfig),
 		DefenseEntryMode: strings.TrimSpace(awdChallenge.DefenseEntryMode),
 		AccessConfig:     parseContestAWDServiceJSONMap(awdChallenge.AccessConfig),
 		RuntimeConfig:    parseContestAWDServiceJSONMap(awdChallenge.RuntimeConfig),
 	}
-	raw, err := model.EncodeContestAWDServiceSnapshot(snapshot)
+	raw, err := contestentity.EncodeContestAWDServiceSnapshot(snapshot)
 	if err != nil {
 		return "{}"
 	}
@@ -62,7 +63,7 @@ func buildContestAWDServiceScoreConfig(points, slaScore, defenseScore int) strin
 }
 
 func buildContestAWDServiceRuntimeConfig(
-	checkerType model.AWDCheckerType,
+	checkerType contestentity.AWDCheckerType,
 	checkerConfig string,
 	extraRuntimeConfig string,
 ) string {
@@ -84,14 +85,14 @@ func buildContestAWDServiceRuntimeConfig(
 }
 
 func normalizeContestAWDServiceRuntimeFields(
-	contest *model.Contest,
-	defaultCheckerType model.AWDCheckerType,
+	contest *contestentity.Contest,
+	defaultCheckerType contestentity.AWDCheckerType,
 	defaultCheckerConfig string,
 	checkerTypeOverride *string,
 	checkerConfigOverride map[string]any,
 	defaultSLAScore, defaultDefenseScore int,
 	slaScoreOverride, defenseScoreOverride *int,
-) (model.AWDCheckerType, string, int, int, error) {
+) (contestentity.AWDCheckerType, string, int, int, error) {
 	checkerTypeValue := string(defaultCheckerType)
 	if checkerTypeOverride != nil {
 		checkerTypeValue = strings.TrimSpace(*checkerTypeOverride)
@@ -128,10 +129,10 @@ func normalizeContestAWDServiceRuntimeFields(
 	return checkerType, checkerConfig, slaScore, defenseScore, nil
 }
 
-func parseContestAWDServiceRuntimeChecker(runtimeConfig string) (model.AWDCheckerType, string) {
+func parseContestAWDServiceRuntimeChecker(runtimeConfig string) (contestentity.AWDCheckerType, string) {
 	value := contestdomain.ParseAWDCheckerConfig(runtimeConfig)
 
-	checkerType := model.AWDCheckerType("")
+	checkerType := contestentity.AWDCheckerType("")
 	if raw, ok := value["checker_type"]; ok {
 		if typed, ok := raw.(string); ok {
 			checkerType = contestdomain.NormalizeAWDCheckerType(typed)
@@ -201,15 +202,15 @@ func parseContestAWDServiceScore(scoreConfig string, key string) (int, bool) {
 func buildContestAWDServiceValidationUpdate(
 	ctx context.Context,
 	previewTokenStore contestports.AWDCheckerPreviewTokenStore,
-	current *model.ContestAWDService,
+	current *contestentity.ContestAWDService,
 	contestID int64,
-	nextCheckerType model.AWDCheckerType,
+	nextCheckerType contestentity.AWDCheckerType,
 	nextCheckerConfig string,
 	nextCheckerTokenEnv string,
 	previewToken string,
-) (model.AWDCheckerValidationState, *time.Time, string, bool, error) {
+) (contestentity.AWDCheckerValidationState, *time.Time, string, bool, error) {
 	if current == nil {
-		return model.AWDCheckerValidationStatePending, nil, "", false, nil
+		return contestentity.AWDCheckerValidationStatePending, nil, "", false, nil
 	}
 
 	state, previewAt, previewResult, err := consumeCheckerPreviewValidationState(
@@ -224,10 +225,10 @@ func buildContestAWDServiceValidationUpdate(
 		previewToken,
 	)
 	if err != nil {
-		return model.AWDCheckerValidationStatePending, nil, "", false, err
+		return contestentity.AWDCheckerValidationStatePending, nil, "", false, err
 	}
 	if err := ensureCheckerPreviewTokenConsumed(previewToken, previewResult); err != nil {
-		return model.AWDCheckerValidationStatePending, nil, "", false, err
+		return contestentity.AWDCheckerValidationStatePending, nil, "", false, err
 	}
 	if strings.TrimSpace(previewToken) != "" && previewResult != "" {
 		return state, previewAt, previewResult, true, nil
@@ -241,11 +242,11 @@ func buildContestAWDServiceValidationUpdate(
 		return current.ValidationState, current.LastPreviewAt, current.LastPreviewResult, false, nil
 	}
 
-	nextState := model.AWDCheckerValidationStatePending
+	nextState := contestentity.AWDCheckerValidationStatePending
 	if current.LastPreviewAt != nil ||
 		strings.TrimSpace(current.LastPreviewResult) != "" ||
-		(current.ValidationState != "" && current.ValidationState != model.AWDCheckerValidationStatePending) {
-		nextState = model.AWDCheckerValidationStateStale
+		(current.ValidationState != "" && current.ValidationState != contestentity.AWDCheckerValidationStatePending) {
+		nextState = contestentity.AWDCheckerValidationStateStale
 	}
 	return nextState, current.LastPreviewAt, current.LastPreviewResult, true, nil
 }

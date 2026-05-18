@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 )
 
@@ -21,12 +21,12 @@ func TestAddPausedDurationToActiveAWDContests(t *testing.T) {
 	updatedAt := now.Add(10 * time.Minute)
 	recoveryKey := "boot-a|2026-05-16T10:00:00Z"
 
-	rows := []model.Contest{
-		{ID: 1, Title: "running-awd", Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, StartTime: now.Add(-time.Hour), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now},
-		{ID: 2, Title: "frozen-awd", Mode: model.ContestModeAWD, Status: model.ContestStatusFrozen, StartTime: now.Add(-time.Hour), EndTime: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now},
-		{ID: 3, Title: "expired-awd", Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, StartTime: now.Add(-2 * time.Hour), EndTime: now.Add(-time.Minute), CreatedAt: now, UpdatedAt: now},
-		{ID: 4, Title: "running-jeopardy", Mode: model.ContestModeJeopardy, Status: model.ContestStatusRunning, StartTime: now.Add(-time.Hour), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now},
-		{ID: 5, Title: "already-paused-awd", Mode: model.ContestModeAWD, Status: model.ContestStatusRunning, StartTime: now.Add(-2 * time.Hour), EndTime: now.Add(-time.Minute), PausedSeconds: 120, CreatedAt: now, UpdatedAt: now},
+	rows := []contestentity.Contest{
+		{ID: 1, Title: "running-awd", Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusRunning, StartTime: now.Add(-time.Hour), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now},
+		{ID: 2, Title: "frozen-awd", Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusFrozen, StartTime: now.Add(-time.Hour), EndTime: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now},
+		{ID: 3, Title: "expired-awd", Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusRunning, StartTime: now.Add(-2 * time.Hour), EndTime: now.Add(-time.Minute), CreatedAt: now, UpdatedAt: now},
+		{ID: 4, Title: "running-jeopardy", Mode: contestentity.ContestModeJeopardy, Status: contestentity.ContestStatusRunning, StartTime: now.Add(-time.Hour), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now},
+		{ID: 5, Title: "already-paused-awd", Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusRunning, StartTime: now.Add(-2 * time.Hour), EndTime: now.Add(-time.Minute), PausedSeconds: 120, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, row := range rows {
 		contest := row
@@ -75,7 +75,7 @@ func TestAddPausedDurationToActiveAWDContests(t *testing.T) {
 func assertPausedSeconds(t *testing.T, db *gorm.DB, contestID int64, want int64) {
 	t.Helper()
 
-	var contest model.Contest
+	var contest contestentity.Contest
 	if err := db.Where("id = ?", contestID).First(&contest).Error; err != nil {
 		t.Fatalf("load contest %d: %v", contestID, err)
 	}

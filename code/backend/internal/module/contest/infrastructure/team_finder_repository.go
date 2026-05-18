@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -21,7 +21,7 @@ func NewTeamFinderRepository(source contestports.ContestTeamFinder) *TeamFinderR
 	return &TeamFinderRepository{source: source}
 }
 
-func (r *TeamFinderRepository) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*model.Team, error) {
+func (r *TeamFinderRepository) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*contestentity.Team, error) {
 	team, err := r.source.FindUserTeamInContest(ctx, userID, contestID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestUserTeamNotFound

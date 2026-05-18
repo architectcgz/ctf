@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -30,7 +30,7 @@ func (ctxOnlyAWDRoundStateStore) LoadAWDRoundFlag(context.Context, int64, int64,
 	return "", false, nil
 }
 
-func (ctxOnlyAWDRoundStateStore) SyncAWDCurrentRoundState(context.Context, int64, *model.AWDRound, []contestports.AWDFlagAssignment, time.Duration) error {
+func (ctxOnlyAWDRoundStateStore) SyncAWDCurrentRoundState(context.Context, int64, *contestentity.AWDRound, []contestports.AWDFlagAssignment, time.Duration) error {
 	return nil
 }
 

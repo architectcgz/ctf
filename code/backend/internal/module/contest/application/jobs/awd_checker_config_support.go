@@ -3,14 +3,14 @@ package jobs
 import (
 	"strings"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func effectiveAWDCheckerType(value model.AWDCheckerType) model.AWDCheckerType {
+func effectiveAWDCheckerType(value contestentity.AWDCheckerType) contestentity.AWDCheckerType {
 	normalized := contestdomain.NormalizeAWDCheckerType(string(value))
 	if normalized == "" {
-		return model.AWDCheckerTypeLegacyProbe
+		return contestentity.AWDCheckerTypeLegacyProbe
 	}
 	return normalized
 }

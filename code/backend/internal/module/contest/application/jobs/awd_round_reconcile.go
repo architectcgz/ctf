@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (u *AWDRoundUpdater) reconcileRounds(ctx context.Context, contest *model.Contest, activeRound, totalRounds int) error {
+func (u *AWDRoundUpdater) reconcileRounds(ctx context.Context, contest *contestentity.Contest, activeRound, totalRounds int) error {
 	scheduledRounds := totalRounds
 	if activeRound > 0 {
 		scheduledRounds = activeRound
@@ -49,21 +49,21 @@ func (u *AWDRoundUpdater) reconcileRounds(ctx context.Context, contest *model.Co
 }
 
 func (u *AWDRoundUpdater) buildReconciledRoundRecord(
-	contest *model.Contest,
+	contest *contestentity.Contest,
 	roundNumber, activeRound int,
 	scoreByRound map[int][2]int,
 	lastAttackScore, lastDefenseScore int,
-) (*model.AWDRound, int, int) {
+) (*contestentity.AWDRound, int, int) {
 	roundStart := contest.StartTime.Add(time.Duration(roundNumber-1) * u.cfg.RoundInterval)
 	roundEnd := roundStart.Add(u.cfg.RoundInterval)
 	if roundEnd.After(contest.EndTime) {
 		roundEnd = contest.EndTime
 	}
 
-	status := model.AWDRoundStatusFinished
+	status := contestentity.AWDRoundStatusFinished
 	var endedAt *time.Time
 	if roundNumber == activeRound {
-		status = model.AWDRoundStatusRunning
+		status = contestentity.AWDRoundStatusRunning
 	} else {
 		endedAt = &roundEnd
 	}
@@ -77,7 +77,7 @@ func (u *AWDRoundUpdater) buildReconciledRoundRecord(
 		scoreByRound[roundNumber] = [2]int{attackScore, defenseScore}
 	}
 
-	return &model.AWDRound{
+	return &contestentity.AWDRound{
 		ContestID:    contest.ID,
 		RoundNumber:  roundNumber,
 		Status:       status,

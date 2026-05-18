@@ -3,8 +3,8 @@ package http
 import (
 	"time"
 
-	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type PageResult[T any] struct {
@@ -158,22 +158,22 @@ type AWDRoundResp struct {
 }
 
 type AWDTeamServiceResp struct {
-	ID                int64                `json:"id"`
-	RoundID           int64                `json:"round_id"`
-	TeamID            int64                `json:"team_id"`
-	TeamName          string               `json:"team_name"`
-	ServiceID         int64                `json:"service_id"`
-	ServiceName       string               `json:"service_name,omitempty"`
-	AWDChallengeID    int64                `json:"awd_challenge_id"`
-	AWDChallengeTitle string               `json:"awd_challenge_title,omitempty"`
-	ServiceStatus     string               `json:"service_status"`
-	CheckResult       map[string]any       `json:"check_result"`
-	CheckerType       model.AWDCheckerType `json:"checker_type,omitempty"`
-	AttackReceived    int                  `json:"attack_received"`
-	SLAScore          int                  `json:"sla_score"`
-	DefenseScore      int                  `json:"defense_score"`
-	AttackScore       int                  `json:"attack_score"`
-	UpdatedAt         time.Time            `json:"updated_at"`
+	ID                int64                        `json:"id"`
+	RoundID           int64                        `json:"round_id"`
+	TeamID            int64                        `json:"team_id"`
+	TeamName          string                       `json:"team_name"`
+	ServiceID         int64                        `json:"service_id"`
+	ServiceName       string                       `json:"service_name,omitempty"`
+	AWDChallengeID    int64                        `json:"awd_challenge_id"`
+	AWDChallengeTitle string                       `json:"awd_challenge_title,omitempty"`
+	ServiceStatus     string                       `json:"service_status"`
+	CheckResult       map[string]any               `json:"check_result"`
+	CheckerType       contestentity.AWDCheckerType `json:"checker_type,omitempty"`
+	AttackReceived    int                          `json:"attack_received"`
+	SLAScore          int                          `json:"sla_score"`
+	DefenseScore      int                          `json:"defense_score"`
+	AttackScore       int                          `json:"attack_score"`
+	UpdatedAt         time.Time                    `json:"updated_at"`
 }
 
 type AWDAttackLogResp struct {
@@ -234,14 +234,14 @@ type AWDRoundSummaryResp struct {
 }
 
 type AWDReadinessItemResp struct {
-	ServiceID       int64                `json:"service_id"`
-	AWDChallengeID  int64                `json:"awd_challenge_id"`
-	Title           string               `json:"title"`
-	CheckerType     model.AWDCheckerType `json:"checker_type"`
-	ValidationState string               `json:"validation_state"`
-	LastPreviewAt   *time.Time           `json:"last_preview_at"`
-	LastAccessURL   *string              `json:"last_access_url"`
-	BlockingReason  string               `json:"blocking_reason"`
+	ServiceID       int64                        `json:"service_id"`
+	AWDChallengeID  int64                        `json:"awd_challenge_id"`
+	Title           string                       `json:"title"`
+	CheckerType     contestentity.AWDCheckerType `json:"checker_type"`
+	ValidationState string                       `json:"validation_state"`
+	LastPreviewAt   *time.Time                   `json:"last_preview_at"`
+	LastAccessURL   *string                      `json:"last_access_url"`
+	BlockingReason  string                       `json:"blocking_reason"`
 }
 
 type AWDReadinessResp struct {
@@ -349,23 +349,23 @@ type ContestAWDWorkspaceTeamResp struct {
 }
 
 type ContestAWDWorkspaceServiceResp struct {
-	ServiceID            int64                     `json:"service_id"`
-	AWDChallengeID       int64                     `json:"awd_challenge_id"`
-	InstanceID           int64                     `json:"instance_id,omitempty"`
-	InstanceStatus       string                    `json:"instance_status,omitempty"`
-	AccessURL            string                    `json:"access_url,omitempty"`
-	ServiceStatus        string                    `json:"service_status,omitempty"`
-	OperationStatus      string                    `json:"operation_status,omitempty"`
-	OperationType        string                    `json:"operation_type,omitempty"`
-	OperationReason      string                    `json:"operation_reason,omitempty"`
-	OperationSLABillable *bool                     `json:"operation_sla_billable,omitempty"`
-	CheckerType          model.AWDCheckerType      `json:"checker_type,omitempty"`
-	AttackReceived       int                       `json:"attack_received"`
-	SLAScore             int                       `json:"sla_score"`
-	DefenseScore         int                       `json:"defense_score"`
-	AttackScore          int                       `json:"attack_score"`
-	DefenseConnection    *AWDDefenseConnectionResp `json:"defense_connection,omitempty"`
-	UpdatedAt            *time.Time                `json:"updated_at,omitempty"`
+	ServiceID            int64                        `json:"service_id"`
+	AWDChallengeID       int64                        `json:"awd_challenge_id"`
+	InstanceID           int64                        `json:"instance_id,omitempty"`
+	InstanceStatus       string                       `json:"instance_status,omitempty"`
+	AccessURL            string                       `json:"access_url,omitempty"`
+	ServiceStatus        string                       `json:"service_status,omitempty"`
+	OperationStatus      string                       `json:"operation_status,omitempty"`
+	OperationType        string                       `json:"operation_type,omitempty"`
+	OperationReason      string                       `json:"operation_reason,omitempty"`
+	OperationSLABillable *bool                        `json:"operation_sla_billable,omitempty"`
+	CheckerType          contestentity.AWDCheckerType `json:"checker_type,omitempty"`
+	AttackReceived       int                          `json:"attack_received"`
+	SLAScore             int                          `json:"sla_score"`
+	DefenseScore         int                          `json:"defense_score"`
+	AttackScore          int                          `json:"attack_score"`
+	DefenseConnection    *AWDDefenseConnectionResp    `json:"defense_connection,omitempty"`
+	UpdatedAt            *time.Time                   `json:"updated_at,omitempty"`
 }
 
 type AWDDefenseConnectionResp struct {

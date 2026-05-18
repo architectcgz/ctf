@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -15,9 +15,9 @@ var errAWDFlagUnavailable = errors.New("awd_flag_unavailable")
 
 func (u *AWDRoundUpdater) resolveAcceptedRoundFlags(
 	ctx context.Context,
-	contest *model.Contest,
+	contest *contestentity.Contest,
 	contestID int64,
-	round *model.AWDRound,
+	round *contestentity.AWDRound,
 	teamID int64,
 	definition contestports.AWDServiceDefinition,
 	now time.Time,
@@ -49,7 +49,7 @@ func (u *AWDRoundUpdater) resolveAcceptedRoundFlags(
 	return append(flags, previousFlag), nil
 }
 
-func (u *AWDRoundUpdater) allowPreviousRoundFlag(contest *model.Contest, round *model.AWDRound, now time.Time) bool {
+func (u *AWDRoundUpdater) allowPreviousRoundFlag(contest *contestentity.Contest, round *contestentity.AWDRound, now time.Time) bool {
 	if round == nil || round.RoundNumber <= 1 || u.cfg.PreviousRoundGrace <= 0 || round.StartedAt == nil {
 		return false
 	}
@@ -60,7 +60,7 @@ func (u *AWDRoundUpdater) allowPreviousRoundFlag(contest *model.Contest, round *
 func (u *AWDRoundUpdater) resolveRoundFlag(
 	ctx context.Context,
 	contestID int64,
-	round *model.AWDRound,
+	round *contestentity.AWDRound,
 	teamID int64,
 	definition contestports.AWDServiceDefinition,
 ) (string, error) {

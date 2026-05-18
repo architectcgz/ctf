@@ -8,9 +8,9 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 )
 
@@ -20,27 +20,27 @@ func TestAWDServiceCreateRoundBlocksItemLevelReadinessReasons(t *testing.T) {
 		contestID      int64
 		challengeID    int64
 		blockingReason string
-		checkerType    model.AWDCheckerType
+		checkerType    contestentity.AWDCheckerType
 		checkerConfig  string
-		state          model.AWDCheckerValidationState
+		state          contestentity.AWDCheckerValidationState
 	}{
 		{
 			name:           "pending validation",
 			contestID:      1210,
 			challengeID:    12101,
 			blockingReason: "pending_validation",
-			checkerType:    model.AWDCheckerTypeLegacyProbe,
+			checkerType:    contestentity.AWDCheckerTypeLegacyProbe,
 			checkerConfig:  `{}`,
-			state:          model.AWDCheckerValidationStatePending,
+			state:          contestentity.AWDCheckerValidationStatePending,
 		},
 		{
 			name:           "invalid checker config",
 			contestID:      1211,
 			challengeID:    12111,
 			blockingReason: "invalid_checker_config",
-			checkerType:    model.AWDCheckerTypeHTTPStandard,
+			checkerType:    contestentity.AWDCheckerTypeHTTPStandard,
 			checkerConfig:  `{"get_flag":`,
-			state:          model.AWDCheckerValidationStatePassed,
+			state:          contestentity.AWDCheckerValidationStatePassed,
 		},
 	}
 
@@ -73,9 +73,9 @@ func TestAWDServiceRunCurrentRoundChecksBlocksItemLevelReadinessReasons(t *testi
 		contestID         int64
 		challengeID       int64
 		blockingReason    string
-		checkerType       model.AWDCheckerType
+		checkerType       contestentity.AWDCheckerType
 		checkerConfig     string
-		state             model.AWDCheckerValidationState
+		state             contestentity.AWDCheckerValidationState
 		lastPreviewAt     *time.Time
 		lastPreviewResult string
 	}{
@@ -84,9 +84,9 @@ func TestAWDServiceRunCurrentRoundChecksBlocksItemLevelReadinessReasons(t *testi
 			contestID:         2410,
 			challengeID:       24101,
 			blockingReason:    "last_preview_failed",
-			checkerType:       model.AWDCheckerTypeHTTPStandard,
+			checkerType:       contestentity.AWDCheckerTypeHTTPStandard,
 			checkerConfig:     `{"get_flag":{"path":"/health"}}`,
-			state:             model.AWDCheckerValidationStateFailed,
+			state:             contestentity.AWDCheckerValidationStateFailed,
 			lastPreviewResult: `{"service_status":"down"}`,
 		},
 		{
@@ -94,9 +94,9 @@ func TestAWDServiceRunCurrentRoundChecksBlocksItemLevelReadinessReasons(t *testi
 			contestID:      2411,
 			challengeID:    24111,
 			blockingReason: "validation_stale",
-			checkerType:    model.AWDCheckerTypeLegacyProbe,
+			checkerType:    contestentity.AWDCheckerTypeLegacyProbe,
 			checkerConfig:  `{}`,
-			state:          model.AWDCheckerValidationStateStale,
+			state:          contestentity.AWDCheckerValidationStateStale,
 		},
 	}
 
@@ -130,27 +130,27 @@ func TestContestServiceUpdateContestBlocksAWDStartForItemLevelReadinessReasons(t
 		contestID      int64
 		challengeID    int64
 		blockingReason string
-		checkerType    model.AWDCheckerType
+		checkerType    contestentity.AWDCheckerType
 		checkerConfig  string
-		state          model.AWDCheckerValidationState
+		state          contestentity.AWDCheckerValidationState
 	}{
 		{
 			name:           "pending validation",
 			contestID:      8210,
 			challengeID:    82101,
 			blockingReason: "pending_validation",
-			checkerType:    model.AWDCheckerTypeLegacyProbe,
+			checkerType:    contestentity.AWDCheckerTypeLegacyProbe,
 			checkerConfig:  `{}`,
-			state:          model.AWDCheckerValidationStatePending,
+			state:          contestentity.AWDCheckerValidationStatePending,
 		},
 		{
 			name:           "validation stale",
 			contestID:      8211,
 			challengeID:    82111,
 			blockingReason: "validation_stale",
-			checkerType:    model.AWDCheckerTypeLegacyProbe,
+			checkerType:    contestentity.AWDCheckerTypeLegacyProbe,
 			checkerConfig:  `{}`,
-			state:          model.AWDCheckerValidationStateStale,
+			state:          contestentity.AWDCheckerValidationStateStale,
 		},
 	}
 
@@ -159,11 +159,11 @@ func TestContestServiceUpdateContestBlocksAWDStartForItemLevelReadinessReasons(t
 			service, db := newContestCommandServiceForTest(t)
 			now := time.Now()
 
-			createContestForUpdateTest(t, db, &model.Contest{
+			createContestForUpdateTest(t, db, &contestentity.Contest{
 				ID:        tc.contestID,
 				Title:     "awd-start-item-block",
-				Mode:      model.ContestModeAWD,
-				Status:    model.ContestStatusRegistration,
+				Mode:      contestentity.ContestModeAWD,
+				Status:    contestentity.ContestStatusRegistration,
 				StartTime: now.Add(time.Hour),
 				EndTime:   now.Add(2 * time.Hour),
 				CreatedAt: now,
@@ -178,7 +178,7 @@ func TestContestServiceUpdateContestBlocksAWDStartForItemLevelReadinessReasons(t
 			assertCommandReadinessBlockingReason(t, db, tc.contestID, tc.challengeID, tc.blockingReason)
 
 			_, err := service.UpdateContest(context.Background(), tc.contestID, contestcmd.UpdateContestInput{
-				Status: strPtr(model.ContestStatusRunning),
+				Status: strPtr(contestentity.ContestStatusRunning),
 			})
 			assertContestReadinessBlocked(t, err)
 		})
@@ -187,9 +187,9 @@ func TestContestServiceUpdateContestBlocksAWDStartForItemLevelReadinessReasons(t
 
 type commandReadinessSeed struct {
 	Now               time.Time
-	CheckerType       model.AWDCheckerType
+	CheckerType       contestentity.AWDCheckerType
 	CheckerConfig     string
-	ValidationState   model.AWDCheckerValidationState
+	ValidationState   contestentity.AWDCheckerValidationState
 	LastPreviewAt     *time.Time
 	LastPreviewResult string
 }

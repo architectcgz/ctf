@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -25,7 +26,7 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 	if contestdomain.ContestHasEndedAt(contest, submittedAt) {
 		return nil, errcode.ErrContestEnded
 	}
-	if contest.Status != model.ContestStatusRunning && contest.Status != model.ContestStatusFrozen {
+	if contest.Status != contestentity.ContestStatusRunning && contest.Status != contestentity.ContestStatusFrozen {
 		return nil, errcode.ErrContestNotRunning
 	}
 

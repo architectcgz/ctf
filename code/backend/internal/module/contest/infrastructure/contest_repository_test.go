@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 )
@@ -15,12 +15,12 @@ func TestRepositoryUpdateDoesNotOverwriteStatusFields(t *testing.T) {
 	repo := contestinfra.NewRepository(db)
 	now := time.Now().UTC()
 
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:            301,
 		Title:         "before",
 		Description:   "before-description",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRunning,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRunning,
 		StatusVersion: 5,
 		StartTime:     now.Add(-time.Hour),
 		EndTime:       now.Add(time.Hour),
@@ -30,12 +30,12 @@ func TestRepositoryUpdateDoesNotOverwriteStatusFields(t *testing.T) {
 		t.Fatalf("create contest: %v", err)
 	}
 
-	stale := &model.Contest{
+	stale := &contestentity.Contest{
 		ID:            301,
 		Title:         "after",
 		Description:   "after-description",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRegistration,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRegistration,
 		StatusVersion: 0,
 		StartTime:     now.Add(-30 * time.Minute),
 		EndTime:       now.Add(2 * time.Hour),
@@ -44,14 +44,14 @@ func TestRepositoryUpdateDoesNotOverwriteStatusFields(t *testing.T) {
 		t.Fatalf("Update() error = %v", err)
 	}
 
-	var persisted model.Contest
+	var persisted contestentity.Contest
 	if err := db.First(&persisted, 301).Error; err != nil {
 		t.Fatalf("load contest: %v", err)
 	}
 	if persisted.Title != "after" || persisted.Description != "after-description" {
 		t.Fatalf("expected metadata to update, got %+v", persisted)
 	}
-	if persisted.Status != model.ContestStatusRunning || persisted.StatusVersion != 5 {
+	if persisted.Status != contestentity.ContestStatusRunning || persisted.StatusVersion != 5 {
 		t.Fatalf("expected status fields to stay untouched, got %+v", persisted)
 	}
 }

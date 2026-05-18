@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) resolveCurrentRound(ctx context.Context, contestID int64) (*model.AWDRound, error) {
+func (s *AWDService) resolveCurrentRound(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	contest, err := s.ensureAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -16,7 +16,7 @@ func (s *AWDService) resolveCurrentRound(ctx context.Context, contestID int64) (
 	return s.resolveCurrentRoundForContest(ctx, contest)
 }
 
-func (s *AWDService) resolveCurrentRoundForContest(ctx context.Context, contest *model.Contest) (*model.AWDRound, error) {
+func (s *AWDService) resolveCurrentRoundForContest(ctx context.Context, contest *contestentity.Contest) (*contestentity.AWDRound, error) {
 	if contest == nil {
 		return nil, errcode.ErrContestNotFound
 	}

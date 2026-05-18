@@ -17,6 +17,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -40,7 +41,7 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRounds(t *testing.T) {
 	createAWDChallengeFixture(t, db, 1001, now)
 	createAWDContestChallengeFixture(t, db, 101, 1001, now)
 	createAWDTeamFixture(t, db, 10011, 101, "Alpha", now)
-	if err := db.Model(&model.Contest{}).Where("id = ?", 101).Updates(map[string]any{
+	if err := db.Model(&contestentity.Contest{}).Where("id = ?", 101).Updates(map[string]any{
 		"start_time": now.Add(-11 * time.Minute),
 		"end_time":   now.Add(14 * time.Minute),
 	}).Error; err != nil {
@@ -59,20 +60,20 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRounds(t *testing.T) {
 
 	updater.UpdateRoundsAt(context.Background(), now)
 
-	var rounds []model.AWDRound
+	var rounds []contestentity.AWDRound
 	if err := db.Order("round_number ASC").Find(&rounds, "contest_id = ?", 101).Error; err != nil {
 		t.Fatalf("list rounds: %v", err)
 	}
 	if len(rounds) != 3 {
 		t.Fatalf("expected 3 rounds, got %d", len(rounds))
 	}
-	if rounds[0].Status != model.AWDRoundStatusFinished || rounds[0].StartedAt == nil || rounds[0].EndedAt == nil {
+	if rounds[0].Status != contestentity.AWDRoundStatusFinished || rounds[0].StartedAt == nil || rounds[0].EndedAt == nil {
 		t.Fatalf("unexpected round 1: %+v", rounds[0])
 	}
-	if rounds[1].Status != model.AWDRoundStatusFinished || rounds[1].StartedAt == nil || rounds[1].EndedAt == nil {
+	if rounds[1].Status != contestentity.AWDRoundStatusFinished || rounds[1].StartedAt == nil || rounds[1].EndedAt == nil {
 		t.Fatalf("unexpected round 2: %+v", rounds[1])
 	}
-	if rounds[2].Status != model.AWDRoundStatusRunning || rounds[2].StartedAt == nil || rounds[2].EndedAt != nil {
+	if rounds[2].Status != contestentity.AWDRoundStatusRunning || rounds[2].StartedAt == nil || rounds[2].EndedAt != nil {
 		t.Fatalf("unexpected round 3: %+v", rounds[2])
 	}
 
@@ -105,8 +106,8 @@ func TestAWDRoundUpdaterSkipsRegistrationContest(t *testing.T) {
 	now := time.Date(2026, 3, 10, 12, 11, 0, 0, time.UTC)
 	contestID := int64(158)
 	createAWDContestFixture(t, db, contestID, now.Add(-11*time.Minute))
-	if err := db.Model(&model.Contest{}).Where("id = ?", contestID).Updates(map[string]any{
-		"status":     model.ContestStatusRegistration,
+	if err := db.Model(&contestentity.Contest{}).Where("id = ?", contestID).Updates(map[string]any{
+		"status":     contestentity.ContestStatusRegistration,
 		"start_time": now.Add(-11 * time.Minute),
 		"end_time":   now.Add(14 * time.Minute),
 	}).Error; err != nil {
@@ -123,7 +124,7 @@ func TestAWDRoundUpdaterSkipsRegistrationContest(t *testing.T) {
 	updater.UpdateRoundsAt(context.Background(), now)
 
 	var count int64
-	if err := db.Model(&model.AWDRound{}).Where("contest_id = ?", contestID).Count(&count).Error; err != nil {
+	if err := db.Model(&contestentity.AWDRound{}).Where("contest_id = ?", contestID).Count(&count).Error; err != nil {
 		t.Fatalf("count rounds: %v", err)
 	}
 	if count != 0 {
@@ -151,21 +152,21 @@ func TestAWDRoundUpdaterFinalizesStaleEndedContestAfterLongDowntime(t *testing.T
 	startedAt := now.Add(-30 * time.Minute)
 	firstRoundEnd := startedAt.Add(roundInterval)
 	createAWDContestFixture(t, db, contestID, startedAt)
-	if err := db.Model(&model.Contest{}).Where("id = ?", contestID).Updates(map[string]any{
-		"status":     model.ContestStatusEnded,
+	if err := db.Model(&contestentity.Contest{}).Where("id = ?", contestID).Updates(map[string]any{
+		"status":     contestentity.ContestStatusEnded,
 		"start_time": startedAt,
 		"end_time":   startedAt.Add(2 * roundInterval),
 	}).Error; err != nil {
 		t.Fatalf("update contest time window: %v", err)
 	}
 	createAWDRoundFixtureWithWindow(t, db, 15501, contestID, 1, 70, 35, startedAt, time.Time{})
-	if err := db.Model(&model.AWDRound{}).Where("id = ?", 15501).Update("ended_at", nil).Error; err != nil {
+	if err := db.Model(&contestentity.AWDRound{}).Where("id = ?", 15501).Update("ended_at", nil).Error; err != nil {
 		t.Fatalf("clear stale round end: %v", err)
 	}
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(contestID), "1", 0).Err(); err != nil {
 		t.Fatalf("seed current round: %v", err)
 	}
-	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(contestID), "1:s:1", model.AWDServiceStatusUp).Err(); err != nil {
+	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(contestID), "1:s:1", contestentity.AWDServiceStatusUp).Err(); err != nil {
 		t.Fatalf("seed service status: %v", err)
 	}
 
@@ -178,7 +179,7 @@ func TestAWDRoundUpdaterFinalizesStaleEndedContestAfterLongDowntime(t *testing.T
 
 	updater.UpdateRoundsAt(context.Background(), now)
 
-	var rounds []model.AWDRound
+	var rounds []contestentity.AWDRound
 	if err := db.Order("round_number ASC").Find(&rounds, "contest_id = ?", contestID).Error; err != nil {
 		t.Fatalf("list rounds: %v", err)
 	}
@@ -186,7 +187,7 @@ func TestAWDRoundUpdaterFinalizesStaleEndedContestAfterLongDowntime(t *testing.T
 		t.Fatalf("expected finalized contest to have 2 rounds, got %d: %+v", len(rounds), rounds)
 	}
 	for i, round := range rounds {
-		if round.Status != model.AWDRoundStatusFinished || round.EndedAt == nil {
+		if round.Status != contestentity.AWDRoundStatusFinished || round.EndedAt == nil {
 			t.Fatalf("expected round %d to be finished with ended_at, got %+v", i+1, round)
 		}
 	}
@@ -209,8 +210,8 @@ func TestAWDRoundUpdaterFinalizesEndedContestWithNoMaterializedRoundsAfterLongDo
 	contestID := int64(156)
 	startedAt := now.Add(-30 * time.Minute)
 	createAWDContestFixture(t, db, contestID, startedAt)
-	if err := db.Model(&model.Contest{}).Where("id = ?", contestID).Updates(map[string]any{
-		"status":     model.ContestStatusEnded,
+	if err := db.Model(&contestentity.Contest{}).Where("id = ?", contestID).Updates(map[string]any{
+		"status":     contestentity.ContestStatusEnded,
 		"start_time": startedAt,
 		"end_time":   startedAt.Add(2 * roundInterval),
 	}).Error; err != nil {
@@ -226,7 +227,7 @@ func TestAWDRoundUpdaterFinalizesEndedContestWithNoMaterializedRoundsAfterLongDo
 
 	updater.UpdateRoundsAt(context.Background(), now)
 
-	var rounds []model.AWDRound
+	var rounds []contestentity.AWDRound
 	if err := db.Order("round_number ASC").Find(&rounds, "contest_id = ?", contestID).Error; err != nil {
 		t.Fatalf("list rounds: %v", err)
 	}
@@ -234,7 +235,7 @@ func TestAWDRoundUpdaterFinalizesEndedContestWithNoMaterializedRoundsAfterLongDo
 		t.Fatalf("expected finalized contest to have 2 rounds, got %d: %+v", len(rounds), rounds)
 	}
 	for i, round := range rounds {
-		if round.Status != model.AWDRoundStatusFinished || round.EndedAt == nil {
+		if round.Status != contestentity.AWDRoundStatusFinished || round.EndedAt == nil {
 			t.Fatalf("expected round %d to be finished with ended_at, got %+v", i+1, round)
 		}
 	}
@@ -250,8 +251,8 @@ func TestAWDRoundUpdaterCompletesEndedContestWhenFinishedRoundsDoNotReachEnd(t *
 	firstRoundEnd := startedAt.Add(roundInterval)
 	contestEnd := startedAt.Add(2 * roundInterval)
 	createAWDContestFixture(t, db, contestID, startedAt)
-	if err := db.Model(&model.Contest{}).Where("id = ?", contestID).Updates(map[string]any{
-		"status":     model.ContestStatusEnded,
+	if err := db.Model(&contestentity.Contest{}).Where("id = ?", contestID).Updates(map[string]any{
+		"status":     contestentity.ContestStatusEnded,
 		"start_time": startedAt,
 		"end_time":   contestEnd,
 	}).Error; err != nil {
@@ -268,14 +269,14 @@ func TestAWDRoundUpdaterCompletesEndedContestWhenFinishedRoundsDoNotReachEnd(t *
 
 	updater.UpdateRoundsAt(context.Background(), now)
 
-	var rounds []model.AWDRound
+	var rounds []contestentity.AWDRound
 	if err := db.Order("round_number ASC").Find(&rounds, "contest_id = ?", contestID).Error; err != nil {
 		t.Fatalf("list rounds: %v", err)
 	}
 	if len(rounds) != 2 {
 		t.Fatalf("expected finalized contest to have 2 rounds, got %d: %+v", len(rounds), rounds)
 	}
-	if rounds[1].Status != model.AWDRoundStatusFinished || rounds[1].EndedAt == nil || !rounds[1].EndedAt.Equal(contestEnd) {
+	if rounds[1].Status != contestentity.AWDRoundStatusFinished || rounds[1].EndedAt == nil || !rounds[1].EndedAt.Equal(contestEnd) {
 		t.Fatalf("expected recovered final round to end at contest end, got %+v", rounds[1])
 	}
 }
@@ -300,7 +301,7 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesOnlyServiceFlagFields(t *t
 	createAWDChallengeFixture(t, db, 153001, now)
 	createAWDContestChallengeFixture(t, db, 153, 153001, now)
 	createAWDTeamFixture(t, db, 153011, 153, "Alpha", now)
-	if err := db.Model(&model.Contest{}).Where("id = ?", 153).Updates(map[string]any{
+	if err := db.Model(&contestentity.Contest{}).Where("id = ?", 153).Updates(map[string]any{
 		"start_time": now.Add(-11 * time.Minute),
 		"end_time":   now.Add(14 * time.Minute),
 	}).Error; err != nil {
@@ -310,7 +311,7 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesOnlyServiceFlagFields(t *t
 		t.Fatalf("update challenge flag prefix: %v", err)
 	}
 	serviceID := defaultAWDContestServiceID(153, 153001)
-	if err := db.Model(&model.ContestAWDService{}).
+	if err := db.Model(&contestentity.ContestAWDService{}).
 		Where("contest_id = ? AND awd_challenge_id = ?", 153, 153001).
 		Updates(map[string]any{
 			"display_name":   "Bridge Service",
@@ -332,7 +333,7 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesOnlyServiceFlagFields(t *t
 
 	updater.UpdateRoundsAt(context.Background(), now)
 
-	var rounds []model.AWDRound
+	var rounds []contestentity.AWDRound
 	if err := db.Order("round_number ASC").Find(&rounds, "contest_id = ?", 153).Error; err != nil {
 		t.Fatalf("list rounds: %v", err)
 	}
@@ -373,7 +374,7 @@ func TestAWDRoundUpdaterIgnoresLegacyContestChallengeBridgeWithoutServiceDefinit
 	createAWDChallengeFixture(t, db, 154001, now)
 	createAWDTeamFixture(t, db, 154011, 154, "LegacyOnly", now)
 	createAWDTeamMemberFixture(t, db, 154, 154011, 154101, now)
-	if err := db.Create(&model.ContestChallenge{
+	if err := db.Create(&contestentity.ContestChallenge{
 		ContestID:   154,
 		ChallengeID: 154001,
 		Points:      100,
@@ -417,12 +418,12 @@ func TestAWDRoundUpdaterIgnoresLegacyContestChallengeBridgeWithoutServiceDefinit
 	}, "test-flag-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 154}, &model.AWDRound{ID: 15401, ContestID: 154, RoundNumber: 1}, awdCheckSourceManualCurrent); err != nil {
+	if err := updater.RunRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 154}, &contestentity.AWDRound{ID: 15401, ContestID: 154, RoundNumber: 1}, awdCheckSourceManualCurrent); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
 	}
 
 	var count int64
-	if err := db.Model(&model.AWDTeamService{}).Where("round_id = ?", 15401).Count(&count).Error; err != nil {
+	if err := db.Model(&contestentity.AWDTeamService{}).Where("round_id = ?", 15401).Count(&count).Error; err != nil {
 		t.Fatalf("count service checks: %v", err)
 	}
 	if count != 0 {
@@ -447,7 +448,7 @@ func TestAWDRoundUpdaterSkipsWhenRoundLockHeld(t *testing.T) {
 	roundInterval := 5 * time.Minute
 	now := time.Date(2026, 3, 10, 12, 6, 0, 0, time.UTC)
 	createAWDContestFixture(t, db, 102, now.Add(-6*time.Minute))
-	if err := db.Model(&model.Contest{}).Where("id = ?", 102).Updates(map[string]any{
+	if err := db.Model(&contestentity.Contest{}).Where("id = ?", 102).Updates(map[string]any{
 		"start_time": now.Add(-6 * time.Minute),
 		"end_time":   now.Add(24 * time.Minute),
 	}).Error; err != nil {
@@ -470,7 +471,7 @@ func TestAWDRoundUpdaterSkipsWhenRoundLockHeld(t *testing.T) {
 	updater.UpdateRoundsAt(context.Background(), now)
 
 	var count int64
-	if err := db.Model(&model.AWDRound{}).Where("contest_id = ?", 102).Count(&count).Error; err != nil {
+	if err := db.Model(&contestentity.AWDRound{}).Where("contest_id = ?", 102).Count(&count).Error; err != nil {
 		t.Fatalf("count rounds: %v", err)
 	}
 	if count != 0 {
@@ -494,7 +495,7 @@ func TestAWDRoundUpdaterSkipsWhenSchedulerLockHeld(t *testing.T) {
 
 	now := time.Date(2026, 3, 10, 12, 6, 0, 0, time.UTC)
 	createAWDContestFixture(t, db, 152, now.Add(-6*time.Minute))
-	if err := db.Model(&model.Contest{}).Where("id = ?", 152).Updates(map[string]any{
+	if err := db.Model(&contestentity.Contest{}).Where("id = ?", 152).Updates(map[string]any{
 		"start_time": now.Add(-6 * time.Minute),
 		"end_time":   now.Add(24 * time.Minute),
 	}).Error; err != nil {
@@ -516,7 +517,7 @@ func TestAWDRoundUpdaterSkipsWhenSchedulerLockHeld(t *testing.T) {
 	updater.UpdateRoundsAt(context.Background(), now)
 
 	var count int64
-	if err := db.Model(&model.AWDRound{}).Where("contest_id = ?", 152).Count(&count).Error; err != nil {
+	if err := db.Model(&contestentity.AWDRound{}).Where("contest_id = ?", 152).Count(&count).Error; err != nil {
 		t.Fatalf("count rounds: %v", err)
 	}
 	if count != 0 {
@@ -541,7 +542,7 @@ func TestAWDRoundUpdaterReconcileRoundsInheritsPreviousRoundScores(t *testing.T)
 	now := time.Date(2026, 3, 10, 12, 6, 0, 0, time.UTC)
 	createAWDContestFixture(t, db, 111, now.Add(-6*time.Minute))
 	createAWDRoundFixtureWithWindow(t, db, 11101, 111, 1, 80, 25, now.Add(-6*time.Minute), now.Add(-time.Minute))
-	if err := db.Model(&model.Contest{}).Where("id = ?", 111).Updates(map[string]any{
+	if err := db.Model(&contestentity.Contest{}).Where("id = ?", 111).Updates(map[string]any{
 		"start_time": now.Add(-6 * time.Minute),
 		"end_time":   now.Add(14 * time.Minute),
 	}).Error; err != nil {
@@ -557,7 +558,7 @@ func TestAWDRoundUpdaterReconcileRoundsInheritsPreviousRoundScores(t *testing.T)
 
 	updater.UpdateRoundsAt(context.Background(), now)
 
-	var round model.AWDRound
+	var round contestentity.AWDRound
 	if err := db.Where("contest_id = ? AND round_number = ?", 111, 2).First(&round).Error; err != nil {
 		t.Fatalf("load inherited round: %v", err)
 	}
@@ -611,21 +612,21 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsUp(t *testing.T) {
 	}, "test-flag-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 103}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 103}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10301, 103011, 103001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp {
+	if record.ServiceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("unexpected service status: %s", record.ServiceStatus)
 	}
 	if record.DefenseScore != 40 {
 		t.Fatalf("unexpected defense score: %d", record.DefenseScore)
 	}
-	if record.SLAScore != 0 || record.CheckerType != model.AWDCheckerTypeLegacyProbe {
+	if record.SLAScore != 0 || record.CheckerType != contestentity.AWDCheckerTypeLegacyProbe {
 		t.Fatalf("unexpected sla/checker fields: %+v", record)
 	}
 	if record.CreatedAt.Location() != time.UTC || record.UpdatedAt.Location() != time.UTC {
@@ -672,7 +673,7 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 	createAWDTeamFixture(t, db, 104011, 104, "Config", now)
 	createAWDTeamMemberFixture(t, db, 104, 104011, 5401, now)
 
-	syncAWDContestServiceFixture(t, db, 104, 104001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/internal/flag"}}`, 100, 1, 2, now)
+	syncAWDContestServiceFixture(t, db, 104, 104001, "awd-service", contestentity.AWDCheckerTypeHTTPStandard, `{"get_flag":{"path":"/internal/flag"}}`, 100, 1, 2, now)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -709,15 +710,15 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 	}, "test-flag-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 104}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 104}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10401, 104011, 104001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp || record.DefenseScore != 2 || record.SLAScore != 1 || record.CheckerType != model.AWDCheckerTypeHTTPStandard {
+	if record.ServiceStatus != contestentity.AWDServiceStatusUp || record.DefenseScore != 2 || record.SLAScore != 1 || record.CheckerType != contestentity.AWDCheckerTypeHTTPStandard {
 		t.Fatalf("unexpected configured service record: %+v", record)
 	}
 
@@ -728,7 +729,7 @@ func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
 	if result["health_path"] != "/internal/flag" {
 		t.Fatalf("unexpected configured health path: %#v", result["health_path"])
 	}
-	if result["checker_type"] != string(model.AWDCheckerTypeHTTPStandard) {
+	if result["checker_type"] != string(contestentity.AWDCheckerTypeHTTPStandard) {
 		t.Fatalf("unexpected checker type: %#v", result["checker_type"])
 	}
 }
@@ -747,7 +748,7 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 141001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
-	syncAWDContestServiceFixture(t, db, 141, 141001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
+	syncAWDContestServiceFixture(t, db, 141, 141001, "awd-service", contestentity.AWDCheckerTypeHTTPStandard, `{
 				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
 				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
 			}`, 100, 1, 2, now)
@@ -796,15 +797,15 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 	}, "http-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 141}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 141}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 14101, 141011, 141001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp || record.SLAScore != 1 || record.DefenseScore != 2 {
+	if record.ServiceStatus != contestentity.AWDServiceStatusUp || record.SLAScore != 1 || record.DefenseScore != 2 {
 		t.Fatalf("unexpected http_standard record: %+v", record)
 	}
 
@@ -812,7 +813,7 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 	if err := json.Unmarshal([]byte(record.CheckResult), &result); err != nil {
 		t.Fatalf("unmarshal check result: %v", err)
 	}
-	if result["checker_type"] != string(model.AWDCheckerTypeHTTPStandard) {
+	if result["checker_type"] != string(contestentity.AWDCheckerTypeHTTPStandard) {
 		t.Fatalf("unexpected checker_type: %#v", result["checker_type"])
 	}
 	putFlag, ok := result["put_flag"].(map[string]any)
@@ -840,7 +841,7 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	serviceID := defaultAWDContestServiceID(144, 144001)
-	if err := db.Model(&model.ContestAWDService{}).
+	if err := db.Model(&contestentity.ContestAWDService{}).
 		Where("contest_id = ? AND awd_challenge_id = ?", 144, 144001).
 		Updates(map[string]any{
 			"display_name": "Service First",
@@ -904,18 +905,18 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 	}, "service-first-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 144}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 144}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 14401, 144011, 144001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
 	if record.ServiceID != serviceID {
 		t.Fatalf("expected persisted service_id=%d, got %+v", serviceID, record)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp || record.SLAScore != 1 || record.DefenseScore != 2 || record.CheckerType != model.AWDCheckerTypeHTTPStandard {
+	if record.ServiceStatus != contestentity.AWDServiceStatusUp || record.SLAScore != 1 || record.DefenseScore != 2 || record.CheckerType != contestentity.AWDCheckerTypeHTTPStandard {
 		t.Fatalf("expected runtime check to prefer contest_awd_services, got %+v", record)
 	}
 }
@@ -934,7 +935,7 @@ func TestAWDRoundUpdaterHTTPStandardKeepsAWDAliasHostWhenDialingRuntimeIP(t *tes
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 142001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
-	syncAWDContestServiceFixture(t, db, 142, 142001, "alias-service", model.AWDCheckerTypeHTTPStandard, `{
+	syncAWDContestServiceFixture(t, db, 142, 142001, "alias-service", contestentity.AWDCheckerTypeHTTPStandard, `{
 				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
 				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
 			}`, 100, 1, 2, now)
@@ -1010,15 +1011,15 @@ func TestAWDRoundUpdaterHTTPStandardKeepsAWDAliasHostWhenDialingRuntimeIP(t *tes
 		CheckerHealthPath:  "/health",
 	}, "http-alias-secret", nil, zap.NewNop())
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 142}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 142}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 14201, 142011, 142001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp {
+	if record.ServiceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("expected alias-backed service up, got status=%s result=%s", record.ServiceStatus, record.CheckResult)
 	}
 	if !strings.Contains(record.CheckResult, aliasAccessURL) {
@@ -1040,7 +1041,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksCompromisedOnFlagMismatch(t *test
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 142001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
-	syncAWDContestServiceFixture(t, db, 142, 142001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
+	syncAWDContestServiceFixture(t, db, 142, 142001, "awd-service", contestentity.AWDCheckerTypeHTTPStandard, `{
 				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
 				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"}
 			}`, 100, 1, 2, now)
@@ -1083,15 +1084,15 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksCompromisedOnFlagMismatch(t *test
 	}, "http-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 142}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 142}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 14201, 142011, 142001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusCompromised || record.SLAScore != 0 || record.DefenseScore != 0 {
+	if record.ServiceStatus != contestentity.AWDServiceStatusCompromised || record.SLAScore != 0 || record.DefenseScore != 0 {
 		t.Fatalf("unexpected compromised record: %+v", record)
 	}
 
@@ -1122,7 +1123,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksDownWhenHavocFails(t *testing.T) 
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 143001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
-	syncAWDContestServiceFixture(t, db, 143, 143001, "awd-service", model.AWDCheckerTypeHTTPStandard, `{
+	syncAWDContestServiceFixture(t, db, 143, 143001, "awd-service", contestentity.AWDCheckerTypeHTTPStandard, `{
 				"put_flag":{"method":"PUT","path":"/api/flag","body_template":"{{FLAG}}","expected_status":200},
 				"get_flag":{"method":"GET","path":"/api/flag","expected_status":200,"expected_substring":"{{FLAG}}"},
 				"havoc":{"method":"GET","path":"/api/ping","expected_status":200}
@@ -1174,15 +1175,15 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksDownWhenHavocFails(t *testing.T) 
 	}, "http-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 143}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 143}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 14301, 143011, 143001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusDown || record.SLAScore != 0 || record.DefenseScore != 0 {
+	if record.ServiceStatus != contestentity.AWDServiceStatusDown || record.SLAScore != 0 || record.DefenseScore != 0 {
 		t.Fatalf("unexpected havoc failure record: %+v", record)
 	}
 
@@ -1244,15 +1245,15 @@ func TestAWDRoundUpdaterSyncsServiceChecksForContestScopedTeamInstance(t *testin
 	}, "test-flag-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 105}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 105}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10501, 105011, 105001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp {
+	if record.ServiceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("unexpected service status: %s", record.ServiceStatus)
 	}
 }
@@ -1309,7 +1310,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksDoNotOverwriteLiveStatusCache(t *te
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(108), "2", 0).Err(); err != nil {
 		t.Fatalf("seed current round: %v", err)
 	}
-	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(108), field, model.AWDServiceStatusCompromised).Err(); err != nil {
+	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(108), field, contestentity.AWDServiceStatusCompromised).Err(); err != nil {
 		t.Fatalf("seed live status cache: %v", err)
 	}
 
@@ -1323,17 +1324,17 @@ func TestAWDRoundUpdaterHistoricalRoundChecksDoNotOverwriteLiveStatusCache(t *te
 	}, "test-flag-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 108}, &model.AWDRound{ID: 10801, ContestID: 108, RoundNumber: 1}, awdCheckSourceManualSelected); err != nil {
+	if err := updater.RunRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 108}, &contestentity.AWDRound{ID: 10801, ContestID: 108, RoundNumber: 1}, awdCheckSourceManualSelected); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
 	}
 
-	assertAWDServiceStatusCache(t, redisClient, 108, 108011, serviceID, model.AWDServiceStatusCompromised)
+	assertAWDServiceStatusCache(t, redisClient, 108, 108011, serviceID, contestentity.AWDServiceStatusCompromised)
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10801, 108011, 108001).First(&record).Error; err != nil {
 		t.Fatalf("load historical service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp {
+	if record.ServiceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("unexpected historical service status: %s", record.ServiceStatus)
 	}
 	var result map[string]any
@@ -1396,7 +1397,7 @@ func TestAWDRoundUpdaterCurrentRoundChecksRefreshLiveStatusCache(t *testing.T) {
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(109), "2", 0).Err(); err != nil {
 		t.Fatalf("seed current round: %v", err)
 	}
-	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(109), field, model.AWDServiceStatusDown).Err(); err != nil {
+	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(109), field, contestentity.AWDServiceStatusDown).Err(); err != nil {
 		t.Fatalf("seed live status cache: %v", err)
 	}
 
@@ -1410,11 +1411,11 @@ func TestAWDRoundUpdaterCurrentRoundChecksRefreshLiveStatusCache(t *testing.T) {
 	}, "test-flag-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 109}, &model.AWDRound{ID: 10902, ContestID: 109, RoundNumber: 2}, awdCheckSourceManualCurrent); err != nil {
+	if err := updater.RunRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 109}, &contestentity.AWDRound{ID: 10902, ContestID: 109, RoundNumber: 2}, awdCheckSourceManualCurrent); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
 	}
 
-	assertAWDServiceStatusCache(t, redisClient, 109, 109011, serviceID, model.AWDServiceStatusUp)
+	assertAWDServiceStatusCache(t, redisClient, 109, 109011, serviceID, contestentity.AWDServiceStatusUp)
 }
 
 func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *testing.T) {
@@ -1469,7 +1470,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *t
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(110), "1", 0).Err(); err != nil {
 		t.Fatalf("seed stale current round: %v", err)
 	}
-	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(110), field, model.AWDServiceStatusCompromised).Err(); err != nil {
+	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(110), field, contestentity.AWDServiceStatusCompromised).Err(); err != nil {
 		t.Fatalf("seed live status cache: %v", err)
 	}
 
@@ -1483,11 +1484,11 @@ func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *t
 	}, "test-flag-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 110}, &model.AWDRound{ID: 11001, ContestID: 110, RoundNumber: 1}, awdCheckSourceManualSelected); err != nil {
+	if err := updater.RunRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 110}, &contestentity.AWDRound{ID: 11001, ContestID: 110, RoundNumber: 1}, awdCheckSourceManualSelected); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
 	}
 
-	assertAWDServiceStatusCache(t, redisClient, 110, 110011, serviceID, model.AWDServiceStatusCompromised)
+	assertAWDServiceStatusCache(t, redisClient, 110, 110011, serviceID, contestentity.AWDServiceStatusCompromised)
 }
 
 func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) {
@@ -1559,15 +1560,15 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 	}, "test-flag-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, healthyServer.Client(), time.Second)
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 107}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 107}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10701, 107011, 107001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusUp {
+	if record.ServiceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("unexpected service status: %s", record.ServiceStatus)
 	}
 
@@ -1609,15 +1610,15 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsDownWithoutHealthyInstance(t *testin
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 104}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 104}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10401, 104011, 104001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusDown {
+	if record.ServiceStatus != contestentity.AWDServiceStatusDown {
 		t.Fatalf("unexpected service status: %s", record.ServiceStatus)
 	}
 	if record.DefenseScore != 0 {
@@ -1652,7 +1653,7 @@ func TestAWDRoundUpdaterExemptsSLAWhenSystemRecoveryIsActive(t *testing.T) {
 	createAWDTeamFixture(t, db, 174011, 174, "Alpha", now)
 
 	serviceID := defaultAWDContestServiceID(174, 174001)
-	if err := db.Model(&model.ContestAWDService{}).
+	if err := db.Model(&contestentity.ContestAWDService{}).
 		Where("id = ?", serviceID).
 		Update("score_config", `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`).Error; err != nil {
 		t.Fatalf("update service score config: %v", err)
@@ -1685,15 +1686,15 @@ func TestAWDRoundUpdaterExemptsSLAWhenSystemRecoveryIsActive(t *testing.T) {
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 174}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 174}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND service_id = ?", 17401, 174011, serviceID).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusDown || record.SLAScore != 1 || record.DefenseScore != 0 {
+	if record.ServiceStatus != contestentity.AWDServiceStatusDown || record.SLAScore != 1 || record.DefenseScore != 0 {
 		t.Fatalf("expected down service with SLA exemption only, got %+v", record)
 	}
 	var result map[string]any
@@ -1746,15 +1747,15 @@ func TestAWDRoundUpdaterMarksServiceDownAfterHTTPFailure(t *testing.T) {
 	}, "test-flag-secret", nil, zap.NewNop())
 	setAWDHTTPRuntimeForTest(updater, server.Client(), time.Second)
 
-	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 106}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &contestentity.Contest{ID: 106}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
-	var record model.AWDTeamService
+	var record contestentity.AWDTeamService
 	if err := db.Where("round_id = ? AND team_id = ? AND awd_challenge_id = ?", 10601, 106011, 106001).First(&record).Error; err != nil {
 		t.Fatalf("load service check: %v", err)
 	}
-	if record.ServiceStatus != model.AWDServiceStatusDown {
+	if record.ServiceStatus != contestentity.AWDServiceStatusDown {
 		t.Fatalf("unexpected service status: %s", record.ServiceStatus)
 	}
 

@@ -3,7 +3,7 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -11,8 +11,8 @@ func (s *AWDService) buildAttackLogResponse(
 	ctx context.Context,
 	contestID, roundID int64,
 	req CreateAttackLogInput,
-	logRecord *model.AWDAttackLog,
-	teams map[int64]*model.Team,
+	logRecord *contestentity.AWDAttackLog,
+	teams map[int64]*contestentity.Team,
 ) (*AWDAttackLogResp, error) {
 	if s.scoreboardCache != nil {
 		if err := s.scoreboardCache.RebuildContestScoreboard(ctx, contestID); err != nil {
@@ -31,7 +31,7 @@ func (s *AWDService) buildAttackLogResponse(
 		currentRoundID,
 		req.VictimTeamID,
 		logRecord.ServiceID,
-		model.AWDServiceStatusCompromised,
+		contestentity.AWDServiceStatusCompromised,
 	); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

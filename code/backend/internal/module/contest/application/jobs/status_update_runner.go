@@ -6,8 +6,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -48,9 +48,9 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 
 	now := time.Now().UTC()
 	statuses := []string{
-		model.ContestStatusRegistration,
-		model.ContestStatusRunning,
-		model.ContestStatusFrozen,
+		contestentity.ContestStatusRegistration,
+		contestentity.ContestStatusRunning,
+		contestentity.ContestStatusFrozen,
 	}
 
 	contests, err := u.listTransitionCandidates(runCtx, statuses, now)
@@ -122,12 +122,12 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 	}
 }
 
-func (u *StatusUpdater) listTransitionCandidates(ctx context.Context, statuses []string, now time.Time) ([]*model.Contest, error) {
+func (u *StatusUpdater) listTransitionCandidates(ctx context.Context, statuses []string, now time.Time) ([]*contestentity.Contest, error) {
 	if u.repo == nil || u.batchSize <= 0 {
 		return nil, nil
 	}
 
-	candidates := make([]*model.Contest, 0, u.batchSize)
+	candidates := make([]*contestentity.Contest, 0, u.batchSize)
 	offset := 0
 	for len(candidates) < u.batchSize {
 		page, total, err := u.repo.ListByStatusesAndTimeRange(ctx, statuses, now, offset, u.batchSize)

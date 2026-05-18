@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
 	platformevents "ctf-platform/internal/platform/events"
@@ -52,13 +52,13 @@ func TestParticipationServiceCreateAnnouncementBroadcastsRealtimeEvent(t *testin
 	}
 
 	now := time.Now()
-	contest := &model.Contest{
+	contest := &contestentity.Contest{
 		ID:        77,
 		Title:     "realtime-announcement",
-		Mode:      model.ContestModeJeopardy,
+		Mode:      contestentity.ContestModeJeopardy,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
-		Status:    model.ContestStatusRunning,
+		Status:    contestentity.ContestStatusRunning,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

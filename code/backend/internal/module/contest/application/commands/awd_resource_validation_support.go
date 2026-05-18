@@ -5,16 +5,17 @@ import (
 	"errors"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) loadContestTeams(ctx context.Context, contestID int64) (map[int64]*model.Team, error) {
+func (s *AWDService) loadContestTeams(ctx context.Context, contestID int64) (map[int64]*contestentity.Team, error) {
 	teams, err := s.repo.FindTeamsByContest(ctx, contestID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	result := make(map[int64]*model.Team, len(teams))
+	result := make(map[int64]*contestentity.Team, len(teams))
 	for _, team := range teams {
 		result[team.ID] = team
 	}
@@ -32,7 +33,7 @@ func (s *AWDService) loadChallenge(ctx context.Context, challengeID int64) (*mod
 	return challenge, nil
 }
 
-func (s *AWDService) resolveContestRuntimeService(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+func (s *AWDService) resolveContestRuntimeService(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
 	service, err := s.repo.FindContestAWDServiceByContestAndID(ctx, contestID, serviceID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestAWDServiceNotFound) {

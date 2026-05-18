@@ -5,11 +5,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func bindContestRegistrationTeam(tx *gorm.DB, contestID, userID int64, teamID *int64) error {
-	result := tx.Model(&model.ContestRegistration{}).
+	result := tx.Model(&contestentity.ContestRegistration{}).
 		Where("contest_id = ? AND user_id = ?", contestID, userID).
 		Updates(map[string]any{
 			"team_id":    teamID,

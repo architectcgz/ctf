@@ -5,8 +5,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func (r *Repository) ApplyStatusTransition(ctx context.Context, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error) {
@@ -17,7 +17,7 @@ func (r *Repository) ApplyStatusTransition(ctx context.Context, transition conte
 	})
 }
 
-func (r *Repository) UpdateContestWithStatusTransition(ctx context.Context, contest *model.Contest, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error) {
+func (r *Repository) UpdateContestWithStatusTransition(ctx context.Context, contest *contestentity.Contest, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error) {
 	if contest == nil {
 		return contestdomain.ContestStatusTransitionResult{Transition: transition}, contestdomain.ErrContestNotFound
 	}
@@ -38,7 +38,7 @@ func (r *Repository) UpdateContestWithStatusTransition(ctx context.Context, cont
 func (r *Repository) applyStatusTransitionWithUpdates(ctx context.Context, transition contestdomain.ContestStatusTransition, updates map[string]any) (contestdomain.ContestStatusTransitionResult, error) {
 	result := contestdomain.ContestStatusTransitionResult{Transition: transition}
 	err := r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		updateResult := tx.Model(&model.Contest{}).
+		updateResult := tx.Model(&contestentity.Contest{}).
 			Where("id = ? AND status = ? AND status_version = ? AND deleted_at IS NULL", transition.ContestID, transition.FromStatus, transition.FromStatusVersion).
 			Updates(updates)
 		if updateResult.Error != nil {
@@ -79,7 +79,7 @@ func (r *Repository) contestExists(ctx context.Context, id int64) (bool, error) 
 
 func contestExistsTx(db *gorm.DB, id int64) (bool, error) {
 	var exists bool
-	err := db.Model(&model.Contest{}).
+	err := db.Model(&contestentity.Contest{}).
 		Select("1").
 		Where("id = ?", id).
 		Limit(1).

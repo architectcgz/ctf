@@ -3,7 +3,7 @@ package jobs
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -21,6 +21,6 @@ func (u *AWDRoundUpdater) SetCheckerRunner(runner contestports.CheckerRunner) {
 	u.checkerRunner = runner
 }
 
-func (u *AWDRoundUpdater) SyncRoundServiceChecks(ctx context.Context, contest *model.Contest, activeRound int) error {
+func (u *AWDRoundUpdater) SyncRoundServiceChecks(ctx context.Context, contest *contestentity.Contest, activeRound int) error {
 	return u.syncRoundServiceChecks(ctx, contest, activeRound)
 }

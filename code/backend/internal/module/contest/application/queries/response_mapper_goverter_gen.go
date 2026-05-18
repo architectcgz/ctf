@@ -3,11 +3,11 @@
 
 package queries
 
-import model "ctf-platform/internal/model"
+import contestentity "ctf-platform/internal/module/contest/entity"
 
 type contestQueryResponseMapperImpl struct{}
 
-func (c *contestQueryResponseMapperImpl) ToContestResultBase(source model.Contest) ContestResult {
+func (c *contestQueryResponseMapperImpl) ToContestResultBase(source contestentity.Contest) ContestResult {
 	var queriesContestResult ContestResult
 	queriesContestResult.ID = source.ID
 	queriesContestResult.Title = source.Title
@@ -21,7 +21,7 @@ func (c *contestQueryResponseMapperImpl) ToContestResultBase(source model.Contes
 	queriesContestResult.UpdatedAt = CopyTime(source.UpdatedAt)
 	return queriesContestResult
 }
-func (c *contestQueryResponseMapperImpl) ToContestResultBasePtr(source *model.Contest) *ContestResult {
+func (c *contestQueryResponseMapperImpl) ToContestResultBasePtr(source *contestentity.Contest) *ContestResult {
 	var pQueriesContestResult *ContestResult
 	if source != nil {
 		queriesContestResult := c.ToContestResultBase((*source))
@@ -29,7 +29,7 @@ func (c *contestQueryResponseMapperImpl) ToContestResultBasePtr(source *model.Co
 	}
 	return pQueriesContestResult
 }
-func (c *contestQueryResponseMapperImpl) ToTeamResultBase(source model.Team) TeamResult {
+func (c *contestQueryResponseMapperImpl) ToTeamResultBase(source contestentity.Team) TeamResult {
 	var queriesTeamResult TeamResult
 	queriesTeamResult.ID = source.ID
 	queriesTeamResult.ContestID = source.ContestID
@@ -40,7 +40,7 @@ func (c *contestQueryResponseMapperImpl) ToTeamResultBase(source model.Team) Tea
 	queriesTeamResult.CreatedAt = CopyTime(source.CreatedAt)
 	return queriesTeamResult
 }
-func (c *contestQueryResponseMapperImpl) ToTeamResultBasePtr(source *model.Team) *TeamResult {
+func (c *contestQueryResponseMapperImpl) ToTeamResultBasePtr(source *contestentity.Team) *TeamResult {
 	var pQueriesTeamResult *TeamResult
 	if source != nil {
 		queriesTeamResult := c.ToTeamResultBase((*source))

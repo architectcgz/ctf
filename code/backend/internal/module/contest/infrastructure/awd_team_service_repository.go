@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm/clause"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func (r *AWDRepository) UpsertServiceCheck(
@@ -15,8 +15,8 @@ func (r *AWDRepository) UpsertServiceCheck(
 	serviceStatus, checkResult string,
 	defenseScore int,
 	updatedAt time.Time,
-) (*model.AWDTeamService, error) {
-	record := &model.AWDTeamService{
+) (*contestentity.AWDTeamService, error) {
+	record := &contestentity.AWDTeamService{
 		RoundID:        roundID,
 		TeamID:         teamID,
 		ServiceID:      serviceID,
@@ -43,7 +43,7 @@ func (r *AWDRepository) UpsertServiceCheck(
 	return record, nil
 }
 
-func (r *AWDRepository) UpsertTeamServices(ctx context.Context, records []model.AWDTeamService) error {
+func (r *AWDRepository) UpsertTeamServices(ctx context.Context, records []contestentity.AWDTeamService) error {
 	if len(records) == 0 {
 		return nil
 	}
@@ -65,8 +65,8 @@ func (r *AWDRepository) UpsertTeamServices(ctx context.Context, records []model.
 	}).Create(&records).Error
 }
 
-func (r *AWDRepository) ListServicesByRound(ctx context.Context, roundID int64) ([]model.AWDTeamService, error) {
-	var records []model.AWDTeamService
+func (r *AWDRepository) ListServicesByRound(ctx context.Context, roundID int64) ([]contestentity.AWDTeamService, error) {
+	var records []contestentity.AWDTeamService
 	err := r.dbWithContext(ctx).
 		Where("round_id = ?", roundID).
 		Order("team_id ASC, service_id ASC, awd_challenge_id ASC").

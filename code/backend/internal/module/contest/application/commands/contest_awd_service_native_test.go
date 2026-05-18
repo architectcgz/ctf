@@ -10,17 +10,18 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 	service, challengeRepo, contestRepo, contestChallengeRepo, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        1801,
 		Title:     "awd-native-service",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -38,7 +39,7 @@ func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 		ServiceType:      model.AWDServiceTypeWebHTTP,
 		DeploymentMode:   model.AWDDeploymentModeSingleContainer,
 		Status:           model.AWDChallengeStatusPublished,
-		CheckerType:      model.AWDCheckerTypeHTTPStandard,
+		CheckerType:      contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:    `{"get_flag":{"path":"/internal/flag"}}`,
 		FlagMode:         "dynamic",
 		FlagConfig:       `{"flag_type":"dynamic","flag_prefix":"awd"}`,
@@ -95,11 +96,11 @@ func TestContestAWDServiceServiceSnapshotRemainsFrozenAfterTemplateUpdate(t *tes
 	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        1802,
 		Title:     "awd-native-freeze",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -117,7 +118,7 @@ func TestContestAWDServiceServiceSnapshotRemainsFrozenAfterTemplateUpdate(t *tes
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"health":{"path":"/health"}}`,
 		RuntimeConfig:  `{"image_id":9902}`,
 		CreatedAt:      now,

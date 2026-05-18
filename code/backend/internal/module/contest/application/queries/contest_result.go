@@ -3,8 +3,8 @@ package queries
 import (
 	"time"
 
-	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type ListContestsInput struct {
@@ -37,7 +37,7 @@ type ContestResult struct {
 	UpdatedAt   time.Time
 }
 
-func contestResultFromModel(contest *model.Contest) *ContestResult {
+func contestResultFromModel(contest *contestentity.Contest) *ContestResult {
 	resp := contestQueryResponseMapperInst.ToContestResultBasePtr(domain.CloneContestWithEffectiveSchedule(contest))
 	if resp == nil {
 		return nil

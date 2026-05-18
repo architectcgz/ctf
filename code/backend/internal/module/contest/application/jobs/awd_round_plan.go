@@ -3,11 +3,11 @@ package jobs
 import (
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (u *AWDRoundUpdater) calculateRoundPlan(contest *model.Contest, now time.Time) (int, int, bool) {
+func (u *AWDRoundUpdater) calculateRoundPlan(contest *contestentity.Contest, now time.Time) (int, int, bool) {
 	if contest == nil {
 		return 0, 0, false
 	}

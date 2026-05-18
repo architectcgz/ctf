@@ -3,11 +3,11 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *SubmissionService) handleCorrectSubmission(ctx context.Context, submission *model.Submission, contestChallenge *model.ContestChallenge, teamID *int64) (int, error) {
+func (s *SubmissionService) handleCorrectSubmission(ctx context.Context, submission *contestentity.Submission, contestChallenge *contestentity.ContestChallenge, teamID *int64) (int, error) {
 	challengeRecord, err := s.repo.FindChallengeByID(ctx, submission.ChallengeID)
 	if err != nil {
 		return 0, errcode.ErrInternal.WithCause(err)

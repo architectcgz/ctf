@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type statusTransitionRepoStub struct {
@@ -36,8 +36,8 @@ func TestContestStatusTransitionServiceApplyValidTransition(t *testing.T) {
 
 	result, err := service.Apply(context.Background(), contestdomain.ContestStatusTransition{
 		ContestID:         12,
-		FromStatus:        model.ContestStatusRunning,
-		ToStatus:          model.ContestStatusFrozen,
+		FromStatus:        contestentity.ContestStatusRunning,
+		ToStatus:          contestentity.ContestStatusFrozen,
 		FromStatusVersion: 2,
 		OccurredAt:        time.Now().UTC(),
 	})
@@ -63,8 +63,8 @@ func TestContestStatusTransitionServiceApplyAllowsFrozenRollback(t *testing.T) {
 
 	result, err := service.Apply(context.Background(), contestdomain.ContestStatusTransition{
 		ContestID:         12,
-		FromStatus:        model.ContestStatusFrozen,
-		ToStatus:          model.ContestStatusRunning,
+		FromStatus:        contestentity.ContestStatusFrozen,
+		ToStatus:          contestentity.ContestStatusRunning,
 		FromStatusVersion: 4,
 		OccurredAt:        time.Now().UTC(),
 	})
@@ -74,7 +74,7 @@ func TestContestStatusTransitionServiceApplyAllowsFrozenRollback(t *testing.T) {
 	if !result.Applied || result.StatusVersion != 5 {
 		t.Fatalf("unexpected result: %+v", result)
 	}
-	if repo.lastTransition.FromStatus != model.ContestStatusFrozen || repo.lastTransition.ToStatus != model.ContestStatusRunning {
+	if repo.lastTransition.FromStatus != contestentity.ContestStatusFrozen || repo.lastTransition.ToStatus != contestentity.ContestStatusRunning {
 		t.Fatalf("unexpected transition forwarded to repo: %+v", repo.lastTransition)
 	}
 }
@@ -85,8 +85,8 @@ func TestContestStatusTransitionServiceRejectsInvalidTransition(t *testing.T) {
 
 	_, err := service.Apply(context.Background(), contestdomain.ContestStatusTransition{
 		ContestID:         12,
-		FromStatus:        model.ContestStatusRegistration,
-		ToStatus:          model.ContestStatusEnded,
+		FromStatus:        contestentity.ContestStatusRegistration,
+		ToStatus:          contestentity.ContestStatusEnded,
 		FromStatusVersion: 0,
 		OccurredAt:        time.Now().UTC(),
 	})

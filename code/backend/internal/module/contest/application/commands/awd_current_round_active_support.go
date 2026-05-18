@@ -5,12 +5,12 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) resolveMaterializedActiveRound(ctx context.Context, contest *model.Contest, activeRoundNumber int, now time.Time) (*model.AWDRound, error) {
+func (s *AWDService) resolveMaterializedActiveRound(ctx context.Context, contest *contestentity.Contest, activeRoundNumber int, now time.Time) (*contestentity.AWDRound, error) {
 	round, err := s.findRoundByNumber(ctx, contest.ID, activeRoundNumber)
 	if err == nil {
 		return round, nil
@@ -32,7 +32,7 @@ func (s *AWDService) resolveMaterializedActiveRound(ctx context.Context, contest
 	return nil, errcode.ErrInternal.WithCause(err)
 }
 
-func (s *AWDService) ensureActiveRoundMaterialized(ctx context.Context, contest *model.Contest, now time.Time) error {
+func (s *AWDService) ensureActiveRoundMaterialized(ctx context.Context, contest *contestentity.Contest, now time.Time) error {
 	if contest == nil {
 		return errcode.ErrContestNotFound
 	}
@@ -48,6 +48,6 @@ func (s *AWDService) ensureActiveRoundMaterialized(ctx context.Context, contest 
 	return nil
 }
 
-func (s *AWDService) findRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*model.AWDRound, error) {
+func (s *AWDService) findRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*contestentity.AWDRound, error) {
 	return s.repo.FindRoundByNumber(ctx, contestID, roundNumber)
 }

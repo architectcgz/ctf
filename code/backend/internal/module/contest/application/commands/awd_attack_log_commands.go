@@ -4,16 +4,16 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req CreateAttackLogInput) (*AWDAttackLogResp, error) {
-	return s.createAttackLog(ctx, contestID, roundID, req, model.AWDAttackSourceManual, nil)
+	return s.createAttackLog(ctx, contestID, roundID, req, contestentity.AWDAttackSourceManual, nil)
 }
 
 func (s *AWDService) createAttackLog(
@@ -53,7 +53,7 @@ func (s *AWDService) createAttackLog(
 		}
 	}
 
-	logRecord := &model.AWDAttackLog{
+	logRecord := &contestentity.AWDAttackLog{
 		RoundID:           roundID,
 		AttackerTeamID:    req.AttackerTeamID,
 		VictimTeamID:      req.VictimTeamID,
@@ -77,7 +77,7 @@ func (s *AWDService) createAttackLog(
 		return nil, err
 	}
 	if submittedByUserID != nil && logRecord.IsSuccess && logRecord.ScoreGained > 0 {
-		snapshot, _ := model.DecodeContestAWDServiceSnapshot(runtimeService.ServiceSnapshot)
+		snapshot, _ := contestentity.DecodeContestAWDServiceSnapshot(runtimeService.ServiceSnapshot)
 		s.publishWeakEvent(ctx, events.Event{
 			Name: contestcontracts.EventAWDAttackAccepted,
 			Payload: contestcontracts.AWDAttackAcceptedEvent{

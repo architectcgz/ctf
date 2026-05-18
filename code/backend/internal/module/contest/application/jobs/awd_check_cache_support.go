@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (u *AWDRoundUpdater) shouldSyncLiveServiceStatusCache(ctx context.Context, contestID int64, round *model.AWDRound) (bool, error) {
+func (u *AWDRoundUpdater) shouldSyncLiveServiceStatusCache(ctx context.Context, contestID int64, round *contestentity.AWDRound) (bool, error) {
 	if u.stateStore == nil || u.repo == nil || contestID <= 0 || round == nil {
 		return false, nil
 	}

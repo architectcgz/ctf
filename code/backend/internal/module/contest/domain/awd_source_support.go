@@ -3,7 +3,7 @@ package domain
 import (
 	"strings"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 const (
@@ -15,12 +15,12 @@ const (
 
 func NormalizeAWDAttackSource(value string) string {
 	switch strings.TrimSpace(value) {
-	case model.AWDAttackSourceManual:
-		return model.AWDAttackSourceManual
-	case model.AWDAttackSourceSubmission:
-		return model.AWDAttackSourceSubmission
+	case contestentity.AWDAttackSourceManual:
+		return contestentity.AWDAttackSourceManual
+	case contestentity.AWDAttackSourceSubmission:
+		return contestentity.AWDAttackSourceSubmission
 	default:
-		return model.AWDAttackSourceLegacy
+		return contestentity.AWDAttackSourceLegacy
 	}
 }
 

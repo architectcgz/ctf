@@ -3,11 +3,11 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) buildCheckerRunResp(ctx context.Context, contestID int64, round *model.AWDRound) (*AWDCheckerRunResp, error) {
+func (s *AWDService) buildCheckerRunResp(ctx context.Context, contestID int64, round *contestentity.AWDRound) (*AWDCheckerRunResp, error) {
 	services, err := s.listRoundServices(ctx, contestID, round.ID)
 	if err != nil {
 		return nil, err

@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -23,20 +23,20 @@ type awdQueryRepositorySourceStub struct {
 	contestports.AWDAttackLogStore
 	contestports.AWDTrafficEventQuery
 
-	findRoundByContestAndIDFn func(context.Context, int64, int64) (*model.AWDRound, error)
-	findRunningRoundFn        func(context.Context, int64) (*model.AWDRound, error)
-	findContestTeamByMemberFn func(context.Context, int64, int64) (*model.Team, error)
+	findRoundByContestAndIDFn func(context.Context, int64, int64) (*contestentity.AWDRound, error)
+	findRunningRoundFn        func(context.Context, int64) (*contestentity.AWDRound, error)
+	findContestTeamByMemberFn func(context.Context, int64, int64) (*contestentity.Team, error)
 }
 
-func (s awdQueryRepositorySourceStub) FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*model.AWDRound, error) {
+func (s awdQueryRepositorySourceStub) FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*contestentity.AWDRound, error) {
 	return s.findRoundByContestAndIDFn(ctx, contestID, roundID)
 }
 
-func (s awdQueryRepositorySourceStub) FindRunningRound(ctx context.Context, contestID int64) (*model.AWDRound, error) {
+func (s awdQueryRepositorySourceStub) FindRunningRound(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	return s.findRunningRoundFn(ctx, contestID)
 }
 
-func (s awdQueryRepositorySourceStub) FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*model.Team, error) {
+func (s awdQueryRepositorySourceStub) FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*contestentity.Team, error) {
 	return s.findContestTeamByMemberFn(ctx, contestID, userID)
 }
 
@@ -44,7 +44,7 @@ func TestAWDQueryRepositoryMapsFindRoundByContestAndIDNotFound(t *testing.T) {
 	t.Parallel()
 
 	repo := NewAWDQueryRepository(awdQueryRepositorySourceStub{
-		findRoundByContestAndIDFn: func(context.Context, int64, int64) (*model.AWDRound, error) {
+		findRoundByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.AWDRound, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -58,7 +58,7 @@ func TestAWDQueryRepositoryMapsFindRunningRoundNotFound(t *testing.T) {
 	t.Parallel()
 
 	repo := NewAWDQueryRepository(awdQueryRepositorySourceStub{
-		findRunningRoundFn: func(context.Context, int64) (*model.AWDRound, error) {
+		findRunningRoundFn: func(context.Context, int64) (*contestentity.AWDRound, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -72,7 +72,7 @@ func TestAWDQueryRepositoryMapsFindContestTeamByMemberNotFound(t *testing.T) {
 	t.Parallel()
 
 	repo := NewAWDQueryRepository(awdQueryRepositorySourceStub{
-		findContestTeamByMemberFn: func(context.Context, int64, int64) (*model.Team, error) {
+		findContestTeamByMemberFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -87,13 +87,13 @@ func TestAWDQueryRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 
 	expectedErr := errors.New("boom")
 	repo := NewAWDQueryRepository(awdQueryRepositorySourceStub{
-		findRoundByContestAndIDFn: func(context.Context, int64, int64) (*model.AWDRound, error) {
+		findRoundByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.AWDRound, error) {
 			return nil, expectedErr
 		},
-		findRunningRoundFn: func(context.Context, int64) (*model.AWDRound, error) {
+		findRunningRoundFn: func(context.Context, int64) (*contestentity.AWDRound, error) {
 			return nil, expectedErr
 		},
-		findContestTeamByMemberFn: func(context.Context, int64, int64) (*model.Team, error) {
+		findContestTeamByMemberFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 			return nil, expectedErr
 		},
 	})

@@ -9,7 +9,6 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -20,16 +19,16 @@ import (
 
 type scoreboardAdminRepoStub struct{}
 
-func (s *scoreboardAdminRepoStub) FindByID(context.Context, int64) (*model.Contest, error) {
+func (s *scoreboardAdminRepoStub) FindByID(context.Context, int64) (*contestentity.Contest, error) {
 	return nil, contestdomain.ErrContestNotFound
 }
 
-func (s *scoreboardAdminRepoStub) Update(context.Context, *model.Contest) error {
+func (s *scoreboardAdminRepoStub) Update(context.Context, *contestentity.Contest) error {
 	return nil
 }
 
-func (s *scoreboardAdminRepoStub) FindTeamsByContest(context.Context, int64) ([]*model.Team, error) {
-	return []*model.Team{}, nil
+func (s *scoreboardAdminRepoStub) FindTeamsByContest(context.Context, int64) ([]*contestentity.Team, error) {
+	return []*contestentity.Team{}, nil
 }
 
 func TestScoreboardAdminServiceFreezeScoreboardReturnsContestNotFound(t *testing.T) {
@@ -49,23 +48,23 @@ func TestScoreboardAdminServiceFreezeScoreboardReturnsContestNotFound(t *testing
 }
 
 type scoreboardAdminMutableRepoStub struct {
-	contest  *model.Contest
-	updateFn func(context.Context, *model.Contest) error
+	contest  *contestentity.Contest
+	updateFn func(context.Context, *contestentity.Contest) error
 }
 
-func (s *scoreboardAdminMutableRepoStub) FindByID(context.Context, int64) (*model.Contest, error) {
+func (s *scoreboardAdminMutableRepoStub) FindByID(context.Context, int64) (*contestentity.Contest, error) {
 	return s.contest, nil
 }
 
-func (s *scoreboardAdminMutableRepoStub) Update(ctx context.Context, contest *model.Contest) error {
+func (s *scoreboardAdminMutableRepoStub) Update(ctx context.Context, contest *contestentity.Contest) error {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, contest)
 	}
 	return nil
 }
 
-func (s *scoreboardAdminMutableRepoStub) FindTeamsByContest(context.Context, int64) ([]*model.Team, error) {
-	return []*model.Team{}, nil
+func (s *scoreboardAdminMutableRepoStub) FindTeamsByContest(context.Context, int64) ([]*contestentity.Team, error) {
+	return []*contestentity.Team{}, nil
 }
 
 func TestScoreboardAdminServiceFreezeScoreboardCreatesTransitionAndSnapshot(t *testing.T) {
@@ -74,11 +73,11 @@ func TestScoreboardAdminServiceFreezeScoreboardCreatesTransitionAndSnapshot(t *t
 	service, db, redisClient, mini := newScoreboardAdminServiceForTest(t)
 	contestID := int64(88)
 	now := time.Now().UTC()
-	createScoreboardContest(t, db, &model.Contest{
+	createScoreboardContest(t, db, &contestentity.Contest{
 		ID:            contestID,
 		Title:         "freeze-check",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRunning,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRunning,
 		StatusVersion: 2,
 		StartTime:     now.Add(-time.Hour),
 		EndTime:       now.Add(30 * time.Minute),
@@ -96,11 +95,11 @@ func TestScoreboardAdminServiceFreezeScoreboardCreatesTransitionAndSnapshot(t *t
 		t.Fatal("expected frozen snapshot to be created")
 	}
 
-	var contest model.Contest
+	var contest contestentity.Contest
 	if err := db.First(&contest, contestID).Error; err != nil {
 		t.Fatalf("load contest: %v", err)
 	}
-	if contest.Status != model.ContestStatusFrozen || contest.StatusVersion != 3 {
+	if contest.Status != contestentity.ContestStatusFrozen || contest.StatusVersion != 3 {
 		t.Fatalf("unexpected frozen contest: %+v", contest)
 	}
 
@@ -119,11 +118,11 @@ func TestScoreboardAdminServiceUnfreezeScoreboardClearsSnapshot(t *testing.T) {
 	service, db, redisClient, mini := newScoreboardAdminServiceForTest(t)
 	contestID := int64(89)
 	now := time.Now().UTC()
-	createScoreboardContest(t, db, &model.Contest{
+	createScoreboardContest(t, db, &contestentity.Contest{
 		ID:            contestID,
 		Title:         "unfreeze-check",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusFrozen,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusFrozen,
 		StatusVersion: 4,
 		StartTime:     now.Add(-time.Hour),
 		EndTime:       now.Add(30 * time.Minute),
@@ -142,11 +141,11 @@ func TestScoreboardAdminServiceUnfreezeScoreboardClearsSnapshot(t *testing.T) {
 		t.Fatal("expected frozen snapshot to be cleared")
 	}
 
-	var contest model.Contest
+	var contest contestentity.Contest
 	if err := db.First(&contest, contestID).Error; err != nil {
 		t.Fatalf("load contest: %v", err)
 	}
-	if contest.Status != model.ContestStatusRunning || contest.StatusVersion != 5 || contest.FreezeTime != nil {
+	if contest.Status != contestentity.ContestStatusRunning || contest.StatusVersion != 5 || contest.FreezeTime != nil {
 		t.Fatalf("unexpected unfrozen contest: %+v", contest)
 	}
 }
@@ -170,7 +169,7 @@ func newScoreboardAdminServiceForTest(t *testing.T) (*ScoreboardAdminService, *g
 	return service, db, redisClient, mini
 }
 
-func createScoreboardContest(t *testing.T, db *gorm.DB, contest *model.Contest) {
+func createScoreboardContest(t *testing.T, db *gorm.DB, contest *contestentity.Contest) {
 	t.Helper()
 
 	if err := db.Create(contest).Error; err != nil {

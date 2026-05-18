@@ -3,7 +3,7 @@ package jobs
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -70,7 +70,7 @@ func applyAWDProbeAggregateResult(result *awdServiceCheckResult, aggregate awdPr
 		} else {
 			result.StatusReason = "partial_available"
 		}
-		return model.AWDServiceStatusUp
+		return contestentity.AWDServiceStatusUp
 	}
 
 	if aggregate.firstErrCode != "" {
@@ -86,5 +86,5 @@ func applyAWDProbeAggregateResult(result *awdServiceCheckResult, aggregate awdPr
 	} else {
 		result.StatusReason = "all_probes_failed"
 	}
-	return model.AWDServiceStatusDown
+	return contestentity.AWDServiceStatusDown
 }

@@ -1,14 +1,14 @@
 package queries
 
 import (
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func accumulateAWDRoundServiceSummary(
 	items map[int64]*AWDRoundSummaryItemResult,
 	metrics *AWDRoundMetricsResult,
-	services []model.AWDTeamService,
+	services []contestentity.AWDTeamService,
 ) {
 	for _, service := range services {
 		metrics.TotalServiceCount++
@@ -31,16 +31,16 @@ func accumulateAWDRoundServiceSummary(
 			continue
 		}
 		switch service.ServiceStatus {
-		case model.AWDServiceStatusUp:
+		case contestentity.AWDServiceStatusUp:
 			metrics.ServiceUpCount++
 			if service.AttackReceived > 0 {
 				metrics.DefenseSuccessCount++
 			}
 			item.ServiceUpCount++
-		case model.AWDServiceStatusDown:
+		case contestentity.AWDServiceStatusDown:
 			metrics.ServiceDownCount++
 			item.ServiceDownCount++
-		case model.AWDServiceStatusCompromised:
+		case contestentity.AWDServiceStatusCompromised:
 			metrics.ServiceCompromisedCount++
 			item.ServiceCompromisedCount++
 		}

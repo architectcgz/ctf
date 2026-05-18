@@ -5,16 +5,16 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
 
 type submitAttackContext struct {
 	attackerTeamID int64
-	round          *model.AWDRound
-	runtimeService *model.ContestAWDService
+	round          *contestentity.AWDRound
+	runtimeService *contestentity.ContestAWDService
 	awdChallengeID int64
 	flagPrefix     string
 	acceptedFlags  []string
@@ -29,7 +29,7 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	if contestdomain.ContestHasEndedAt(contest, now) {
 		return nil, errcode.ErrContestEnded
 	}
-	if contest.Status != model.ContestStatusRunning && contest.Status != model.ContestStatusFrozen {
+	if contest.Status != contestentity.ContestStatusRunning && contest.Status != contestentity.ContestStatusFrozen {
 		return nil, errcode.ErrContestNotRunning
 	}
 
@@ -45,7 +45,7 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	if err != nil {
 		return nil, err
 	}
-	snapshot, _ := model.DecodeContestAWDServiceSnapshot(runtimeService.ServiceSnapshot)
+	snapshot, _ := contestentity.DecodeContestAWDServiceSnapshot(runtimeService.ServiceSnapshot)
 	flagPrefix := resolveSubmitAttackFlagPrefix(snapshot)
 
 	acceptedFlags, err := s.resolveAcceptedRoundFlags(ctx, contest, contestID, round, req.VictimTeamID, runtimeService.AWDChallengeID, flagPrefix, runtimeService.ID, now)
@@ -62,7 +62,7 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	}, nil
 }
 
-func resolveSubmitAttackFlagPrefix(snapshot model.ContestAWDServiceSnapshot) string {
+func resolveSubmitAttackFlagPrefix(snapshot contestentity.ContestAWDServiceSnapshot) string {
 	if snapshot.FlagConfig != nil {
 		if value, ok := snapshot.FlagConfig["flag_prefix"].(string); ok && strings.TrimSpace(value) != "" {
 			return strings.TrimSpace(value)

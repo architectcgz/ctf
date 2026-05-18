@@ -7,19 +7,20 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 type awdCommandRepoStub struct {
-	findRoundByContestAndIDFn             func(context.Context, int64, int64) (*model.AWDRound, error)
-	findRoundByNumberFn                   func(context.Context, int64, int) (*model.AWDRound, error)
-	findRunningRoundFn                    func(context.Context, int64) (*model.AWDRound, error)
-	findTeamsByContestFn                  func(context.Context, int64) ([]*model.Team, error)
-	findRegistrationFn                    func(context.Context, int64, int64) (*model.ContestRegistration, error)
-	findContestTeamByMemberFn             func(context.Context, int64, int64) (*model.Team, error)
+	findRoundByContestAndIDFn             func(context.Context, int64, int64) (*contestentity.AWDRound, error)
+	findRoundByNumberFn                   func(context.Context, int64, int) (*contestentity.AWDRound, error)
+	findRunningRoundFn                    func(context.Context, int64) (*contestentity.AWDRound, error)
+	findTeamsByContestFn                  func(context.Context, int64) ([]*contestentity.Team, error)
+	findRegistrationFn                    func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
+	findContestTeamByMemberFn             func(context.Context, int64, int64) (*contestentity.Team, error)
 	findChallengeByIDFn                   func(context.Context, int64) (*model.Challenge, error)
-	findContestAWDServiceByContestAndIDFn func(context.Context, int64, int64) (*model.ContestAWDService, error)
+	findContestAWDServiceByContestAndIDFn func(context.Context, int64, int64) (*contestentity.ContestAWDService, error)
 	countSuccessfulAttacksFn              func(context.Context, int64, int64, int64, int64) (int64, error)
 	withinAttackLogTransactionFn          func(context.Context, func(contestports.AWDAttackLogTxRepository) error) error
 }
@@ -35,7 +36,7 @@ func (s awdCommandRepoStub) WithinAttackLogTransaction(ctx context.Context, fn f
 	return fn(awdAttackLogTxRepoStub{})
 }
 
-func (s awdCommandRepoStub) CreateContestAWDService(context.Context, *model.ContestAWDService) error {
+func (s awdCommandRepoStub) CreateContestAWDService(context.Context, *contestentity.ContestAWDService) error {
 	return nil
 }
 
@@ -43,14 +44,14 @@ func (s awdCommandRepoStub) UpdateContestAWDServiceByContestAndID(context.Contex
 	return nil
 }
 
-func (s awdCommandRepoStub) FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+func (s awdCommandRepoStub) FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
 	if s.findContestAWDServiceByContestAndIDFn != nil {
 		return s.findContestAWDServiceByContestAndIDFn(ctx, contestID, serviceID)
 	}
-	return &model.ContestAWDService{ID: serviceID, ContestID: contestID}, nil
+	return &contestentity.ContestAWDService{ID: serviceID, ContestID: contestID}, nil
 }
 
-func (s awdCommandRepoStub) ListContestAWDServicesByContest(context.Context, int64) ([]model.ContestAWDService, error) {
+func (s awdCommandRepoStub) ListContestAWDServicesByContest(context.Context, int64) ([]contestentity.ContestAWDService, error) {
 	return nil, nil
 }
 
@@ -58,62 +59,62 @@ func (s awdCommandRepoStub) DeleteContestAWDServiceByContestAndID(context.Contex
 	return nil
 }
 
-func (s awdCommandRepoStub) CreateRound(context.Context, *model.AWDRound) error {
+func (s awdCommandRepoStub) CreateRound(context.Context, *contestentity.AWDRound) error {
 	return nil
 }
 
-func (s awdCommandRepoStub) UpsertRound(context.Context, *model.AWDRound) error {
+func (s awdCommandRepoStub) UpsertRound(context.Context, *contestentity.AWDRound) error {
 	return nil
 }
 
-func (s awdCommandRepoStub) ListRoundsByContest(context.Context, int64) ([]model.AWDRound, error) {
+func (s awdCommandRepoStub) ListRoundsByContest(context.Context, int64) ([]contestentity.AWDRound, error) {
 	return nil, nil
 }
 
-func (s awdCommandRepoStub) FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*model.AWDRound, error) {
+func (s awdCommandRepoStub) FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*contestentity.AWDRound, error) {
 	if s.findRoundByContestAndIDFn != nil {
 		return s.findRoundByContestAndIDFn(ctx, contestID, roundID)
 	}
-	return &model.AWDRound{ID: roundID, ContestID: contestID, RoundNumber: 1}, nil
+	return &contestentity.AWDRound{ID: roundID, ContestID: contestID, RoundNumber: 1}, nil
 }
 
-func (s awdCommandRepoStub) FindRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*model.AWDRound, error) {
+func (s awdCommandRepoStub) FindRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*contestentity.AWDRound, error) {
 	if s.findRoundByNumberFn != nil {
 		return s.findRoundByNumberFn(ctx, contestID, roundNumber)
 	}
-	return &model.AWDRound{ID: int64(roundNumber), ContestID: contestID, RoundNumber: roundNumber}, nil
+	return &contestentity.AWDRound{ID: int64(roundNumber), ContestID: contestID, RoundNumber: roundNumber}, nil
 }
 
-func (s awdCommandRepoStub) FindRunningRound(ctx context.Context, contestID int64) (*model.AWDRound, error) {
+func (s awdCommandRepoStub) FindRunningRound(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	if s.findRunningRoundFn != nil {
 		return s.findRunningRoundFn(ctx, contestID)
 	}
-	return &model.AWDRound{ID: 1, ContestID: contestID, RoundNumber: 1}, nil
+	return &contestentity.AWDRound{ID: 1, ContestID: contestID, RoundNumber: 1}, nil
 }
 
-func (s awdCommandRepoStub) FindTeamsByContest(ctx context.Context, contestID int64) ([]*model.Team, error) {
+func (s awdCommandRepoStub) FindTeamsByContest(ctx context.Context, contestID int64) ([]*contestentity.Team, error) {
 	if s.findTeamsByContestFn != nil {
 		return s.findTeamsByContestFn(ctx, contestID)
 	}
 	return nil, nil
 }
 
-func (s awdCommandRepoStub) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (s awdCommandRepoStub) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	if s.findRegistrationFn != nil {
 		return s.findRegistrationFn(ctx, contestID, userID)
 	}
-	return &model.ContestRegistration{
+	return &contestentity.ContestRegistration{
 		ContestID: contestID,
 		UserID:    userID,
-		Status:    model.ContestRegistrationStatusApproved,
+		Status:    contestentity.ContestRegistrationStatusApproved,
 	}, nil
 }
 
-func (s awdCommandRepoStub) FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*model.Team, error) {
+func (s awdCommandRepoStub) FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*contestentity.Team, error) {
 	if s.findContestTeamByMemberFn != nil {
 		return s.findContestTeamByMemberFn(ctx, contestID, userID)
 	}
-	return &model.Team{ID: 1, ContestID: contestID}, nil
+	return &contestentity.Team{ID: 1, ContestID: contestID}, nil
 }
 
 func (s awdCommandRepoStub) ListChallengesByContest(context.Context, int64) ([]model.Challenge, error) {
@@ -131,15 +132,15 @@ func (s awdCommandRepoStub) ListReadinessChallengesByContest(context.Context, in
 	return nil, nil
 }
 
-func (s awdCommandRepoStub) UpsertServiceCheck(context.Context, int64, int64, int64, int64, string, string, int, time.Time) (*model.AWDTeamService, error) {
-	return &model.AWDTeamService{}, nil
+func (s awdCommandRepoStub) UpsertServiceCheck(context.Context, int64, int64, int64, int64, string, string, int, time.Time) (*contestentity.AWDTeamService, error) {
+	return &contestentity.AWDTeamService{}, nil
 }
 
-func (s awdCommandRepoStub) UpsertTeamServices(context.Context, []model.AWDTeamService) error {
+func (s awdCommandRepoStub) UpsertTeamServices(context.Context, []contestentity.AWDTeamService) error {
 	return nil
 }
 
-func (s awdCommandRepoStub) ListServicesByRound(context.Context, int64) ([]model.AWDTeamService, error) {
+func (s awdCommandRepoStub) ListServicesByRound(context.Context, int64) ([]contestentity.AWDTeamService, error) {
 	return nil, nil
 }
 
@@ -150,7 +151,7 @@ func (s awdCommandRepoStub) CountSuccessfulAttacks(ctx context.Context, roundID,
 	return 0, nil
 }
 
-func (s awdCommandRepoStub) CreateAttackLog(context.Context, *model.AWDAttackLog) error {
+func (s awdCommandRepoStub) CreateAttackLog(context.Context, *contestentity.AWDAttackLog) error {
 	return nil
 }
 
@@ -158,17 +159,17 @@ func (s awdCommandRepoStub) ApplyAttackImpactToVictimService(context.Context, in
 	return nil
 }
 
-func (s awdCommandRepoStub) ListAttackLogsByRound(context.Context, int64) ([]model.AWDAttackLog, error) {
+func (s awdCommandRepoStub) ListAttackLogsByRound(context.Context, int64) ([]contestentity.AWDAttackLog, error) {
 	return nil, nil
 }
 
 type awdAttackLogTxRepoStub struct {
-	createAttackLogFn                  func(context.Context, *model.AWDAttackLog) error
+	createAttackLogFn                  func(context.Context, *contestentity.AWDAttackLog) error
 	applyAttackImpactToVictimServiceFn func(context.Context, int64, int64, int64, int64, int, time.Time) error
 	recalculateContestTeamScoresFn     func(context.Context, int64) error
 }
 
-func (s awdAttackLogTxRepoStub) CreateAttackLog(ctx context.Context, record *model.AWDAttackLog) error {
+func (s awdAttackLogTxRepoStub) CreateAttackLog(ctx context.Context, record *contestentity.AWDAttackLog) error {
 	if s.createAttackLogFn != nil {
 		return s.createAttackLogFn(ctx, record)
 	}
@@ -190,14 +191,14 @@ func (s awdAttackLogTxRepoStub) RecalculateContestTeamScores(ctx context.Context
 }
 
 type awdContestLookupStub struct {
-	findByIDFn func(context.Context, int64) (*model.Contest, error)
+	findByIDFn func(context.Context, int64) (*contestentity.Contest, error)
 }
 
-func (s awdContestLookupStub) FindByID(ctx context.Context, id int64) (*model.Contest, error) {
+func (s awdContestLookupStub) FindByID(ctx context.Context, id int64) (*contestentity.Contest, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
-	return &model.Contest{ID: id, Mode: model.ContestModeAWD}, nil
+	return &contestentity.Contest{ID: id, Mode: contestentity.ContestModeAWD}, nil
 }
 
 type awdRoundStateStoreStub struct {
@@ -227,7 +228,7 @@ func (s awdRoundStateStoreStub) LoadAWDRoundFlag(context.Context, int64, int64, 
 	return "", false, nil
 }
 
-func (s awdRoundStateStoreStub) SyncAWDCurrentRoundState(context.Context, int64, *model.AWDRound, []contestports.AWDFlagAssignment, time.Duration) error {
+func (s awdRoundStateStoreStub) SyncAWDCurrentRoundState(context.Context, int64, *contestentity.AWDRound, []contestports.AWDFlagAssignment, time.Duration) error {
 	return nil
 }
 
@@ -248,14 +249,14 @@ func (s awdRoundStateStoreStub) ClearAWDServiceStatus(context.Context, int64) er
 }
 
 type awdRoundManagerStub struct {
-	ensureActiveRoundMaterializedFn func(context.Context, *model.Contest, time.Time) error
+	ensureActiveRoundMaterializedFn func(context.Context, *contestentity.Contest, time.Time) error
 }
 
-func (s awdRoundManagerStub) RunRoundServiceChecks(context.Context, *model.Contest, *model.AWDRound, string) error {
+func (s awdRoundManagerStub) RunRoundServiceChecks(context.Context, *contestentity.Contest, *contestentity.AWDRound, string) error {
 	return nil
 }
 
-func (s awdRoundManagerStub) EnsureActiveRoundMaterialized(ctx context.Context, contest *model.Contest, now time.Time) error {
+func (s awdRoundManagerStub) EnsureActiveRoundMaterialized(ctx context.Context, contest *contestentity.Contest, now time.Time) error {
 	if s.ensureActiveRoundMaterializedFn != nil {
 		return s.ensureActiveRoundMaterializedFn(ctx, contest, now)
 	}
@@ -271,7 +272,7 @@ func TestAWDServiceEnsureAWDRoundTreatsModuleRoundSentinelAsErrNotFound(t *testi
 
 	service := &AWDService{
 		repo: awdCommandRepoStub{
-			findRoundByContestAndIDFn: func(context.Context, int64, int64) (*model.AWDRound, error) {
+			findRoundByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.AWDRound, error) {
 				return nil, contestports.ErrContestAWDRoundNotFound
 			},
 		},
@@ -289,11 +290,11 @@ func TestAWDServiceResolveUserTeamIDFallsBackFromRegistrationSentinelToMembershi
 
 	service := &AWDService{
 		repo: awdCommandRepoStub{
-			findRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+			findRegistrationFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 				return nil, contestports.ErrContestParticipationRegistrationNotFound
 			},
-			findContestTeamByMemberFn: func(context.Context, int64, int64) (*model.Team, error) {
-				return &model.Team{ID: 91}, nil
+			findContestTeamByMemberFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
+				return &contestentity.Team{ID: 91}, nil
 			},
 		},
 	}
@@ -312,10 +313,10 @@ func TestAWDServiceResolveUserTeamIDTreatsMembershipSentinelAsNotRegistered(t *t
 
 	service := &AWDService{
 		repo: awdCommandRepoStub{
-			findRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+			findRegistrationFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 				return nil, contestports.ErrContestParticipationRegistrationNotFound
 			},
-			findContestTeamByMemberFn: func(context.Context, int64, int64) (*model.Team, error) {
+			findContestTeamByMemberFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 				return nil, contestports.ErrContestUserTeamNotFound
 			},
 		},
@@ -332,10 +333,10 @@ func TestAWDServiceResolveCurrentRoundFromFallbacksTreatsMissingRoundSentinelAsN
 
 	service := &AWDService{
 		repo: awdCommandRepoStub{
-			findRunningRoundFn: func(context.Context, int64) (*model.AWDRound, error) {
+			findRunningRoundFn: func(context.Context, int64) (*contestentity.AWDRound, error) {
 				return nil, contestports.ErrContestAWDRoundNotFound
 			},
-			findRoundByNumberFn: func(context.Context, int64, int) (*model.AWDRound, error) {
+			findRoundByNumberFn: func(context.Context, int64, int) (*contestentity.AWDRound, error) {
 				return nil, contestports.ErrContestAWDRoundNotFound
 			},
 		},
@@ -357,18 +358,18 @@ func TestAWDServiceResolveMaterializedActiveRoundTreatsRoundManagerSentinelAsNot
 
 	service := &AWDService{
 		repo: awdCommandRepoStub{
-			findRoundByNumberFn: func(context.Context, int64, int) (*model.AWDRound, error) {
+			findRoundByNumberFn: func(context.Context, int64, int) (*contestentity.AWDRound, error) {
 				return nil, contestports.ErrContestAWDRoundNotFound
 			},
 		},
 		roundManager: awdRoundManagerStub{
-			ensureActiveRoundMaterializedFn: func(context.Context, *model.Contest, time.Time) error {
+			ensureActiveRoundMaterializedFn: func(context.Context, *contestentity.Contest, time.Time) error {
 				return contestports.ErrContestAWDRoundNotFound
 			},
 		},
 	}
 
-	contest := &model.Contest{ID: 11, Mode: model.ContestModeAWD}
+	contest := &contestentity.Contest{ID: 11, Mode: contestentity.ContestModeAWD}
 	_, err := service.resolveMaterializedActiveRound(context.Background(), contest, 3, time.Now().UTC())
 	if err != errcode.ErrAWDRoundNotActive {
 		t.Fatalf("expected ErrAWDRoundNotActive, got %v", err)
@@ -397,7 +398,7 @@ func TestAWDServiceResolveContestRuntimeServiceTreatsServiceSentinelAsErrNotFoun
 
 	service := &AWDService{
 		repo: awdCommandRepoStub{
-			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) {
+			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) {
 				return nil, contestports.ErrContestAWDServiceNotFound
 			},
 		},
@@ -414,14 +415,14 @@ func TestAWDServiceCreateAttackLogTreatsTransactionSentinelAsErrNotFound(t *test
 
 	service := &AWDService{
 		repo: awdCommandRepoStub{
-			findRoundByContestAndIDFn: func(context.Context, int64, int64) (*model.AWDRound, error) {
-				return &model.AWDRound{ID: 31, ContestID: 11, RoundNumber: 1}, nil
+			findRoundByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.AWDRound, error) {
+				return &contestentity.AWDRound{ID: 31, ContestID: 11, RoundNumber: 1}, nil
 			},
-			findTeamsByContestFn: func(context.Context, int64) ([]*model.Team, error) {
-				return []*model.Team{{ID: 101}, {ID: 102}}, nil
+			findTeamsByContestFn: func(context.Context, int64) ([]*contestentity.Team, error) {
+				return []*contestentity.Team{{ID: 101}, {ID: 102}}, nil
 			},
-			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{ID: 201, ContestID: 11, AWDChallengeID: 301}, nil
+			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{ID: 201, ContestID: 11, AWDChallengeID: 301}, nil
 			},
 			withinAttackLogTransactionFn: func(context.Context, func(contestports.AWDAttackLogTxRepository) error) error {
 				return contestports.ErrContestAWDAttackLogTransactionNotFound
@@ -447,14 +448,14 @@ func TestAWDServiceCreateAttackLogDoesNotSwallowUnexpectedTransactionError(t *te
 	expectedErr := errors.New("attack log write exploded")
 	service := &AWDService{
 		repo: awdCommandRepoStub{
-			findRoundByContestAndIDFn: func(context.Context, int64, int64) (*model.AWDRound, error) {
-				return &model.AWDRound{ID: 31, ContestID: 11, RoundNumber: 1}, nil
+			findRoundByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.AWDRound, error) {
+				return &contestentity.AWDRound{ID: 31, ContestID: 11, RoundNumber: 1}, nil
 			},
-			findTeamsByContestFn: func(context.Context, int64) ([]*model.Team, error) {
-				return []*model.Team{{ID: 101}, {ID: 102}}, nil
+			findTeamsByContestFn: func(context.Context, int64) ([]*contestentity.Team, error) {
+				return []*contestentity.Team{{ID: 101}, {ID: 102}}, nil
 			},
-			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*model.ContestAWDService, error) {
-				return &model.ContestAWDService{ID: 201, ContestID: 11, AWDChallengeID: 301}, nil
+			findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) {
+				return &contestentity.ContestAWDService{ID: 201, ContestID: 11, AWDChallengeID: 301}, nil
 			},
 			withinAttackLogTransactionFn: func(context.Context, func(contestports.AWDAttackLogTxRepository) error) error {
 				return expectedErr

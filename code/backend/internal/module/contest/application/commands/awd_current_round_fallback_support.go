@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) resolveCurrentRoundFromFallbacks(ctx context.Context, contestID int64) (*model.AWDRound, error) {
+func (s *AWDService) resolveCurrentRoundFromFallbacks(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	round, err := s.repo.FindRunningRound(ctx, contestID)
 	if err == nil {
 		return round, nil
@@ -29,7 +29,7 @@ func (s *AWDService) resolveCurrentRoundFromFallbacks(ctx context.Context, conte
 	return nil, errcode.ErrAWDRoundNotActive
 }
 
-func (s *AWDService) findCurrentRoundFromRedis(ctx context.Context, contestID int64) (*model.AWDRound, error) {
+func (s *AWDService) findCurrentRoundFromRedis(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	roundNumber, ok, err := s.stateStore.LoadAWDCurrentRoundNumber(ctx, contestID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)

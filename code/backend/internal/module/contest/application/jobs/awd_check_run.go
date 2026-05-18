@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *model.Contest, round *model.AWDRound, source string) error {
+func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *contestentity.Contest, round *contestentity.AWDRound, source string) error {
 	if contest == nil || round == nil {
 		return nil
 	}
@@ -33,7 +33,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 	}
 
 	now := time.Now().UTC()
-	records := make([]model.AWDTeamService, 0, len(teams)*len(definitions))
+	records := make([]contestentity.AWDTeamService, 0, len(teams)*len(definitions))
 	statusEntries := make([]contestports.AWDServiceStatusEntry, 0, len(teams)*len(definitions))
 	for _, team := range teams {
 		for _, definition := range definitions {
@@ -43,7 +43,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 				return checkErr
 			}
 
-			records = append(records, model.AWDTeamService{
+			records = append(records, contestentity.AWDTeamService{
 				RoundID:        round.ID,
 				TeamID:         team.ID,
 				ServiceID:      definition.ServiceID,

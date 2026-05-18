@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -26,7 +27,7 @@ func normalizeAWDPreviewFlag(value string) string {
 func (s *AWDService) prepareCheckerPreviewAccessURL(
 	ctx context.Context,
 	contestID int64,
-	previewService *model.ContestAWDService,
+	previewService *contestentity.ContestAWDService,
 	previewChallengeID int64,
 	explicitAccessURL string,
 	previewFlag string,
@@ -109,16 +110,16 @@ func (s *AWDService) resolvePreviewCheckerToken(runtimeConfig map[string]any, co
 
 func (s *AWDService) loadPreviewRuntimeDefinition(
 	ctx context.Context,
-	previewService *model.ContestAWDService,
+	previewService *contestentity.ContestAWDService,
 	previewChallengeID int64,
 ) (model.AWDDeploymentMode, map[string]any, error) {
 	if previewService != nil {
-		snapshot, err := model.DecodeContestAWDServiceSnapshot(previewService.ServiceSnapshot)
+		snapshot, err := contestentity.DecodeContestAWDServiceSnapshot(previewService.ServiceSnapshot)
 		if err != nil {
 			return "", nil, errcode.ErrInternal.WithCause(err)
 		}
 		if len(snapshot.RuntimeConfig) > 0 {
-			return snapshot.DeploymentMode, snapshot.RuntimeConfig, nil
+			return model.AWDDeploymentMode(snapshot.DeploymentMode), snapshot.RuntimeConfig, nil
 		}
 	}
 	if previewChallengeID <= 0 || s.awdChallengeRepo == nil {
@@ -137,7 +138,7 @@ func (s *AWDService) loadPreviewRuntimeDefinition(
 
 func (s *AWDService) ensureExplicitPreviewRuntimeImageAvailable(
 	ctx context.Context,
-	previewService *model.ContestAWDService,
+	previewService *contestentity.ContestAWDService,
 	previewChallengeID int64,
 ) error {
 	if previewService == nil && (previewChallengeID <= 0 || s.awdChallengeRepo == nil) {

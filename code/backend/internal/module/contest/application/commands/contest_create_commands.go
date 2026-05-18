@@ -5,8 +5,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -17,13 +17,13 @@ func (s *ContestService) CreateContest(ctx context.Context, req CreateContestInp
 		return nil, errcode.ErrInvalidTimeRange
 	}
 
-	contest := &model.Contest{
+	contest := &contestentity.Contest{
 		Title:       req.Title,
 		Description: req.Description,
 		Mode:        req.Mode,
 		StartTime:   startTime,
 		EndTime:     endTime,
-		Status:      model.ContestStatusDraft,
+		Status:      contestentity.ContestStatusDraft,
 	}
 
 	if err := s.repo.Create(ctx, contest); err != nil {

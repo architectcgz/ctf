@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type AWDCheckerPreviewContext struct {
@@ -17,23 +17,23 @@ type AWDCheckerPreviewContext struct {
 }
 
 type AWDCheckerPreviewResult struct {
-	CheckerType    model.AWDCheckerType     `json:"checker_type,omitempty"`
-	ServiceStatus  string                   `json:"service_status"`
-	CheckResult    map[string]any           `json:"check_result"`
-	PreviewContext AWDCheckerPreviewContext `json:"preview_context"`
-	PreviewToken   string                   `json:"preview_token,omitempty"`
+	CheckerType    contestentity.AWDCheckerType `json:"checker_type,omitempty"`
+	ServiceStatus  string                       `json:"service_status"`
+	CheckResult    map[string]any               `json:"check_result"`
+	PreviewContext AWDCheckerPreviewContext     `json:"preview_context"`
+	PreviewToken   string                       `json:"preview_token,omitempty"`
 }
 
-func NormalizeAWDCheckerValidationState(value string) model.AWDCheckerValidationState {
+func NormalizeAWDCheckerValidationState(value string) contestentity.AWDCheckerValidationState {
 	switch strings.TrimSpace(value) {
-	case string(model.AWDCheckerValidationStatePassed):
-		return model.AWDCheckerValidationStatePassed
-	case string(model.AWDCheckerValidationStateFailed):
-		return model.AWDCheckerValidationStateFailed
-	case string(model.AWDCheckerValidationStateStale):
-		return model.AWDCheckerValidationStateStale
+	case string(contestentity.AWDCheckerValidationStatePassed):
+		return contestentity.AWDCheckerValidationStatePassed
+	case string(contestentity.AWDCheckerValidationStateFailed):
+		return contestentity.AWDCheckerValidationStateFailed
+	case string(contestentity.AWDCheckerValidationStateStale):
+		return contestentity.AWDCheckerValidationStateStale
 	default:
-		return model.AWDCheckerValidationStatePending
+		return contestentity.AWDCheckerValidationStatePending
 	}
 }
 

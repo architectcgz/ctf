@@ -3,8 +3,8 @@ package statusmachine
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -20,13 +20,13 @@ func (r *SideEffectRunner) Run(ctx context.Context, result contestdomain.Contest
 	if !result.Applied {
 		return nil
 	}
-	if result.Transition.FromStatus == model.ContestStatusRunning && result.Transition.ToStatus == model.ContestStatusFrozen {
+	if result.Transition.FromStatus == contestentity.ContestStatusRunning && result.Transition.ToStatus == contestentity.ContestStatusFrozen {
 		return r.createFrozenSnapshot(ctx, result.Transition.ContestID)
 	}
-	if result.Transition.FromStatus == model.ContestStatusFrozen && result.Transition.ToStatus == model.ContestStatusRunning {
+	if result.Transition.FromStatus == contestentity.ContestStatusFrozen && result.Transition.ToStatus == contestentity.ContestStatusRunning {
 		return r.clearFrozenSnapshot(ctx, result.Transition.ContestID)
 	}
-	if result.Transition.ToStatus == model.ContestStatusEnded {
+	if result.Transition.ToStatus == contestentity.ContestStatusEnded {
 		return r.clearEndedContestRuntimeState(ctx, result.Transition.ContestID)
 	}
 	return nil

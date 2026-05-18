@@ -3,23 +3,23 @@ package commands
 import (
 	"strings"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
 func validateAndNormalizeContestAWDFields(
-	contest *model.Contest,
+	contest *contestentity.Contest,
 	checkerType string,
 	checkerConfig map[string]any,
 	slaScore int,
 	defenseScore int,
-) (model.AWDCheckerType, string, error) {
+) (contestentity.AWDCheckerType, string, error) {
 	hasConfig := strings.TrimSpace(checkerType) != "" || len(checkerConfig) > 0 || slaScore > 0 || defenseScore > 0
 	if contest == nil {
 		return "", "", errcode.ErrInvalidParams
 	}
-	if contest.Mode != model.ContestModeAWD {
+	if contest.Mode != contestentity.ContestModeAWD {
 		if hasConfig {
 			return "", "", errcode.ErrInvalidParams
 		}

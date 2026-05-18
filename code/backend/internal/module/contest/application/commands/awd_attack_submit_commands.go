@@ -3,7 +3,7 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, serviceID int64, req SubmitAttackInput) (*AWDAttackLogResp, error) {
@@ -16,8 +16,8 @@ func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, servic
 		AttackerTeamID: attackContext.attackerTeamID,
 		VictimTeamID:   req.VictimTeamID,
 		ServiceID:      serviceID,
-		AttackType:     model.AWDAttackTypeFlagCapture,
+		AttackType:     contestentity.AWDAttackTypeFlagCapture,
 		SubmittedFlag:  req.Flag,
 		IsSuccess:      validateSubmittedAttackFlag(req.Flag, attackContext.acceptedFlags),
-	}, model.AWDAttackSourceSubmission, &userID)
+	}, contestentity.AWDAttackSourceSubmission, &userID)
 }

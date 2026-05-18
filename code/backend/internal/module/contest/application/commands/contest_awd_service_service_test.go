@@ -15,6 +15,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	"ctf-platform/pkg/errcode"
@@ -53,11 +54,11 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	service, challengeRepo, contestRepo, contestChallengeRepo, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        801,
 		Title:     "awd-service-association",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -87,7 +88,7 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/internal/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://bank.internal"}`,
 		RuntimeConfig:  `{"workspace_mode":"per_team"}`,
@@ -131,11 +132,11 @@ func TestContestAWDServiceServiceCreateAppliesDefaultScoreContract(t *testing.T)
 	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        1808,
 		Title:     "awd-service-default-score",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -152,7 +153,7 @@ func TestContestAWDServiceServiceCreateAppliesDefaultScoreContract(t *testing.T)
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://default.internal"}`,
 		CreatedAt:      now,
@@ -186,11 +187,11 @@ func TestContestAWDServiceServiceCreateRejectsOversizedServiceScores(t *testing.
 	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        1809,
 		Title:     "awd-service-oversized-score",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -207,7 +208,7 @@ func TestContestAWDServiceServiceCreateRejectsOversizedServiceScores(t *testing.
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://oversized.internal"}`,
 		CreatedAt:      now,
@@ -231,11 +232,11 @@ func TestContestAWDServiceServiceCreateRejectsOversizedDisplayPoints(t *testing.
 	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        1810,
 		Title:     "awd-service-oversized-points",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -252,7 +253,7 @@ func TestContestAWDServiceServiceCreateRejectsOversizedDisplayPoints(t *testing.
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://points.internal"}`,
 		CreatedAt:      now,
@@ -274,11 +275,11 @@ func TestContestAWDServiceServiceCreateRejectsImmutableContest(t *testing.T) {
 	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTest(t)
 
 	now := time.Now().UTC()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        1811,
 		Title:     "awd-service-create-running",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusRunning,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -295,7 +296,7 @@ func TestContestAWDServiceServiceCreateRejectsImmutableContest(t *testing.T) {
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://immutable-create.internal"}`,
 		CreatedAt:      now,
@@ -319,11 +320,11 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	service, challengeRepo, contestRepo, contestChallengeRepo, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        802,
 		Title:     "awd-service-update-by-id",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -353,7 +354,7 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"health":{"path":"/healthz"}}`,
 		AccessConfig:   `{"primary_url":"http://billing.internal"}`,
 		CreatedAt:      now,
@@ -401,11 +402,11 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        804,
 		Title:     "awd-service-create-runtime-fields",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -435,7 +436,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeLegacyProbe,
+		CheckerType:    contestentity.AWDCheckerTypeLegacyProbe,
 		CheckerConfig:  `{"health":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://orders.internal"}`,
 		CreatedAt:      now,
@@ -449,7 +450,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 		Points:          100,
 		Order:           1,
 		IsVisible:       boolPtr(true),
-		CheckerType:     stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
+		CheckerType:     stringPtr(string(contestentity.AWDCheckerTypeHTTPStandard)),
 		CheckerConfig:   map[string]any{"get_flag": map[string]any{"path": "/flag"}},
 		AWDSLAScore:     intPtr(2),
 		AWDDefenseScore: intPtr(3),
@@ -467,7 +468,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	if err := json.Unmarshal([]byte(stored.RuntimeConfig), &runtimeConfig); err != nil {
 		t.Fatalf("unmarshal runtime config: %v", err)
 	}
-	if runtimeConfig["checker_type"] != string(model.AWDCheckerTypeHTTPStandard) {
+	if runtimeConfig["checker_type"] != string(contestentity.AWDCheckerTypeHTTPStandard) {
 		t.Fatalf("unexpected checker type: %+v", runtimeConfig)
 	}
 	if _, ok := runtimeConfig["challenge_id"]; ok {
@@ -488,7 +489,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	if scoreConfig["awd_sla_score"] != float64(2) || scoreConfig["awd_defense_score"] != float64(3) {
 		t.Fatalf("unexpected score config: %+v", scoreConfig)
 	}
-	if stored.ValidationState != model.AWDCheckerValidationStatePending {
+	if stored.ValidationState != contestentity.AWDCheckerValidationStatePending {
 		t.Fatalf("unexpected validation state: %s", stored.ValidationState)
 	}
 }
@@ -497,11 +498,11 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        805,
 		Title:     "awd-service-update-runtime-fields",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -531,7 +532,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeLegacyProbe,
+		CheckerType:    contestentity.AWDCheckerTypeLegacyProbe,
 		CheckerConfig:  `{"health":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://inventory.internal"}`,
 		CreatedAt:      now,
@@ -551,7 +552,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}
 
 	if err := service.UpdateContestAWDService(context.Background(), 805, resp.ID, UpdateContestAWDServiceInput{
-		CheckerType:     stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
+		CheckerType:     stringPtr(string(contestentity.AWDCheckerTypeHTTPStandard)),
 		CheckerConfig:   map[string]any{"get_flag": map[string]any{"path": "/healthz"}},
 		AWDSLAScore:     intPtr(2),
 		AWDDefenseScore: intPtr(4),
@@ -568,7 +569,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	if err := json.Unmarshal([]byte(stored.RuntimeConfig), &runtimeConfig); err != nil {
 		t.Fatalf("unmarshal runtime config: %v", err)
 	}
-	if runtimeConfig["checker_type"] != string(model.AWDCheckerTypeHTTPStandard) {
+	if runtimeConfig["checker_type"] != string(contestentity.AWDCheckerTypeHTTPStandard) {
 		t.Fatalf("unexpected checker type: %+v", runtimeConfig)
 	}
 	if _, ok := runtimeConfig["challenge_id"]; ok {
@@ -599,11 +600,11 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTestWithRedis(t, redisClient)
 
 	now := time.Now().UTC()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        806,
 		Title:     "awd-service-preview-token",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -633,7 +634,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview.internal"}`,
 		CreatedAt:      now,
@@ -657,12 +658,12 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 		806,
 		0,
 		1006,
-		model.AWDCheckerTypeHTTPStandard,
+		contestentity.AWDCheckerTypeHTTPStandard,
 		rawCheckerConfig,
 		"",
 		&AWDCheckerPreviewResp{
-			CheckerType:   model.AWDCheckerTypeHTTPStandard,
-			ServiceStatus: model.AWDServiceStatusUp,
+			CheckerType:   contestentity.AWDCheckerTypeHTTPStandard,
+			ServiceStatus: contestentity.AWDServiceStatusUp,
 			CheckResult: map[string]any{
 				"checked_at": now.Format(time.RFC3339),
 			},
@@ -682,7 +683,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 		Points:                 100,
 		Order:                  1,
 		IsVisible:              boolPtr(true),
-		CheckerType:            stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
+		CheckerType:            stringPtr(string(contestentity.AWDCheckerTypeHTTPStandard)),
 		CheckerConfig:          checkerConfig,
 		AWDCheckerPreviewToken: stringPtr(token),
 	})
@@ -694,7 +695,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	if err != nil {
 		t.Fatalf("FindContestAWDServiceByContestAndID() error = %v", err)
 	}
-	if stored.ValidationState != model.AWDCheckerValidationStatePassed {
+	if stored.ValidationState != contestentity.AWDCheckerValidationStatePassed {
 		t.Fatalf("unexpected validation state: %s", stored.ValidationState)
 	}
 	if stored.LastPreviewAt == nil {
@@ -720,11 +721,11 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTestWithRedis(t, redisClient)
 
 	now := time.Now().UTC()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        1806,
 		Title:     "awd-service-preview-token-missing",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -754,7 +755,7 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-missing.internal"}`,
 		CreatedAt:      now,
@@ -768,7 +769,7 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 		Points:                 100,
 		Order:                  1,
 		IsVisible:              boolPtr(true),
-		CheckerType:            stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
+		CheckerType:            stringPtr(string(contestentity.AWDCheckerTypeHTTPStandard)),
 		CheckerConfig:          map[string]any{"get_flag": map[string]any{"path": "/flag"}},
 		AWDCheckerPreviewToken: stringPtr("missing-preview-token"),
 	})
@@ -795,11 +796,11 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTestWithRedis(t, redisClient)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        807,
 		Title:     "awd-service-update-preview-token-by-service-id",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -829,7 +830,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-update.internal"}`,
 		CreatedAt:      now,
@@ -863,12 +864,12 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 		807,
 		resp.ID,
 		1007,
-		model.AWDCheckerTypeHTTPStandard,
+		contestentity.AWDCheckerTypeHTTPStandard,
 		rawCheckerConfig,
 		"",
 		&AWDCheckerPreviewResp{
-			CheckerType:   model.AWDCheckerTypeHTTPStandard,
-			ServiceStatus: model.AWDServiceStatusUp,
+			CheckerType:   contestentity.AWDCheckerTypeHTTPStandard,
+			ServiceStatus: contestentity.AWDServiceStatusUp,
 			CheckResult: map[string]any{
 				"checked_at": now.Format(time.RFC3339),
 			},
@@ -894,7 +895,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	if err != nil {
 		t.Fatalf("FindContestAWDServiceByContestAndID() error = %v", err)
 	}
-	if stored.ValidationState != model.AWDCheckerValidationStatePassed {
+	if stored.ValidationState != contestentity.AWDCheckerValidationStatePassed {
 		t.Fatalf("unexpected validation state: %s", stored.ValidationState)
 	}
 	if stored.LastPreviewAt == nil {
@@ -920,11 +921,11 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTestWithRedis(t, redisClient)
 
 	now := time.Now().UTC()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        1807,
 		Title:     "awd-service-update-missing-preview-token",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -954,7 +955,7 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-update-missing.internal"}`,
 		CreatedAt:      now,
@@ -988,11 +989,11 @@ func TestContestAWDServiceServiceUpdateRejectsImmutableContest(t *testing.T) {
 	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now().UTC()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        1812,
 		Title:     "awd-service-update-frozen",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusFrozen,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusFrozen,
 		StartTime: now.Add(-2 * time.Hour),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -1009,7 +1010,7 @@ func TestContestAWDServiceServiceUpdateRejectsImmutableContest(t *testing.T) {
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://immutable-update.internal"}`,
 		CreatedAt:      now,
@@ -1017,7 +1018,7 @@ func TestContestAWDServiceServiceUpdateRejectsImmutableContest(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create AWD challenge: %v", err)
 	}
-	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+	if err := awdRepo.CreateContestAWDService(context.Background(), &contestentity.ContestAWDService{
 		ID:              181202,
 		ContestID:       1812,
 		AWDChallengeID:  181201,
@@ -1026,7 +1027,7 @@ func TestContestAWDServiceServiceUpdateRejectsImmutableContest(t *testing.T) {
 		IsVisible:       true,
 		ScoreConfig:     `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
 		RuntimeConfig:   `{"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/flag"}}}`,
-		ValidationState: model.AWDCheckerValidationStatePending,
+		ValidationState: contestentity.AWDCheckerValidationStatePending,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}); err != nil {
@@ -1057,11 +1058,11 @@ func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerToke
 	service, challengeRepo, contestRepo, _, _ := newContestAWDServiceForTestWithRedis(t, redisClient)
 
 	now := time.Now().UTC()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        2806,
 		Title:     "awd-service-preview-token-env-mismatch",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -1091,7 +1092,7 @@ func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerToke
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://preview-token-env.internal"}`,
 		RuntimeConfig:  `{"checker_token_env":"CHECKER_TOKEN"}`,
@@ -1116,12 +1117,12 @@ func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerToke
 		2806,
 		0,
 		2106,
-		model.AWDCheckerTypeHTTPStandard,
+		contestentity.AWDCheckerTypeHTTPStandard,
 		rawCheckerConfig,
 		"",
 		&AWDCheckerPreviewResp{
-			CheckerType:   model.AWDCheckerTypeHTTPStandard,
-			ServiceStatus: model.AWDServiceStatusUp,
+			CheckerType:   contestentity.AWDCheckerTypeHTTPStandard,
+			ServiceStatus: contestentity.AWDServiceStatusUp,
 			CheckResult: map[string]any{
 				"checked_at": now.Format(time.RFC3339),
 			},
@@ -1141,7 +1142,7 @@ func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerToke
 		Points:                 100,
 		Order:                  1,
 		IsVisible:              boolPtr(true),
-		CheckerType:            stringPtr(string(model.AWDCheckerTypeHTTPStandard)),
+		CheckerType:            stringPtr(string(contestentity.AWDCheckerTypeHTTPStandard)),
 		CheckerConfig:          checkerConfig,
 		AWDCheckerPreviewToken: stringPtr(token),
 	})
@@ -1156,14 +1157,14 @@ func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerToke
 func TestBuildContestAWDServiceValidationUpdateMarksStaleWhenCheckerTokenEnvChanges(t *testing.T) {
 	now := time.Now().UTC()
 	checkerConfig := `{"get_flag":{"path":"/flag"}}`
-	current := &model.ContestAWDService{
+	current := &contestentity.ContestAWDService{
 		ID:                51,
 		AWDChallengeID:    61,
-		ValidationState:   model.AWDCheckerValidationStatePassed,
+		ValidationState:   contestentity.AWDCheckerValidationStatePassed,
 		LastPreviewAt:     &now,
 		LastPreviewResult: `{"checked_at":"2026-05-07T00:00:00Z"}`,
 		RuntimeConfig: buildContestAWDServiceRuntimeConfig(
-			model.AWDCheckerTypeHTTPStandard,
+			contestentity.AWDCheckerTypeHTTPStandard,
 			checkerConfig,
 			`{}`,
 		),
@@ -1174,7 +1175,7 @@ func TestBuildContestAWDServiceValidationUpdateMarksStaleWhenCheckerTokenEnvChan
 		nil,
 		current,
 		1001,
-		model.AWDCheckerTypeHTTPStandard,
+		contestentity.AWDCheckerTypeHTTPStandard,
 		checkerConfig,
 		"CHECKER_TOKEN",
 		"",
@@ -1185,7 +1186,7 @@ func TestBuildContestAWDServiceValidationUpdateMarksStaleWhenCheckerTokenEnvChan
 	if !changed {
 		t.Fatal("expected validation change when checker_token_env changes")
 	}
-	if state != model.AWDCheckerValidationStateStale {
+	if state != contestentity.AWDCheckerValidationStateStale {
 		t.Fatalf("ValidationState = %s, want stale", state)
 	}
 	if previewAt == nil || !previewAt.Equal(now) {
@@ -1200,11 +1201,11 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 	service, challengeRepo, contestRepo, contestChallengeRepo, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        803,
 		Title:     "awd-service-delete-by-id",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -1234,7 +1235,7 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"health":{"path":"/ready"}}`,
 		AccessConfig:   `{"primary_url":"http://user.internal"}`,
 		CreatedAt:      now,
@@ -1272,11 +1273,11 @@ func TestContestAWDServiceServiceDeleteRejectsImmutableContest(t *testing.T) {
 	service, challengeRepo, contestRepo, _, awdRepo := newContestAWDServiceForTest(t)
 
 	now := time.Now().UTC()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        1813,
 		Title:     "awd-service-delete-ended",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusEnded,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusEnded,
 		StartTime: now.Add(-3 * time.Hour),
 		EndTime:   now.Add(-time.Hour),
 		CreatedAt: now,
@@ -1293,7 +1294,7 @@ func TestContestAWDServiceServiceDeleteRejectsImmutableContest(t *testing.T) {
 		ServiceType:    model.AWDServiceTypeWebHTTP,
 		DeploymentMode: model.AWDDeploymentModeSingleContainer,
 		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig:  `{"get_flag":{"path":"/flag"}}`,
 		AccessConfig:   `{"primary_url":"http://immutable-delete.internal"}`,
 		CreatedAt:      now,
@@ -1301,7 +1302,7 @@ func TestContestAWDServiceServiceDeleteRejectsImmutableContest(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create AWD challenge: %v", err)
 	}
-	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+	if err := awdRepo.CreateContestAWDService(context.Background(), &contestentity.ContestAWDService{
 		ID:              181302,
 		ContestID:       1813,
 		AWDChallengeID:  181301,
@@ -1310,7 +1311,7 @@ func TestContestAWDServiceServiceDeleteRejectsImmutableContest(t *testing.T) {
 		IsVisible:       true,
 		ScoreConfig:     `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
 		RuntimeConfig:   `{"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/flag"}}}`,
-		ValidationState: model.AWDCheckerValidationStatePending,
+		ValidationState: contestentity.AWDCheckerValidationStatePending,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}); err != nil {

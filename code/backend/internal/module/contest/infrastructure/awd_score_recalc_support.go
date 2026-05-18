@@ -3,7 +3,7 @@ package infrastructure
 import (
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type awdDefenseScoreRow struct {
@@ -71,5 +71,5 @@ func shouldCountAWDDefenseScoreForOfficialTotals(checkResult string) bool {
 }
 
 func shouldCountAWDAttackForOfficialTotals(source string) bool {
-	return normalizeAWDAttackSourceValue(source) == model.AWDAttackSourceSubmission
+	return normalizeAWDAttackSourceValue(source) == contestentity.AWDAttackSourceSubmission
 }

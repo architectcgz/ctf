@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func TestContestRespFromModelReturnsTimesInUTC(t *testing.T) {
@@ -15,14 +15,14 @@ func TestContestRespFromModelReturnsTimesInUTC(t *testing.T) {
 	created := start.Add(-time.Hour)
 	updated := created.Add(time.Minute)
 
-	resp := contestRespFromModel(&model.Contest{
+	resp := contestRespFromModel(&contestentity.Contest{
 		ID:         6,
 		Title:      "time contract",
-		Mode:       model.ContestModeAWD,
+		Mode:       contestentity.ContestModeAWD,
 		StartTime:  start,
 		EndTime:    end,
 		FreezeTime: &freeze,
-		Status:     model.ContestStatusRunning,
+		Status:     contestentity.ContestStatusRunning,
 		CreatedAt:  created,
 		UpdatedAt:  updated,
 	})

@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 )
@@ -33,11 +34,11 @@ func TestChallengeServiceListAdminChallengesReturnsRelationFieldsOnly(t *testing
 	service, challengeRepo, contestRepo, challengeRelationRepo, awdRepo := newContestChallengeQueryService(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        601,
 		Title:     "awd-query",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -58,7 +59,7 @@ func TestChallengeServiceListAdminChallengesReturnsRelationFieldsOnly(t *testing
 	}); err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := challengeRelationRepo.AddChallenge(context.Background(), &model.ContestChallenge{
+	if err := challengeRelationRepo.AddChallenge(context.Background(), &contestentity.ContestChallenge{
 		ContestID:   601,
 		ChallengeID: 9101,
 		Points:      100,
@@ -69,7 +70,7 @@ func TestChallengeServiceListAdminChallengesReturnsRelationFieldsOnly(t *testing
 		t.Fatalf("add challenge: %v", err)
 	}
 	templateID := int64(3001)
-	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+	if err := awdRepo.CreateContestAWDService(context.Background(), &contestentity.ContestAWDService{
 		ContestID:      601,
 		AWDChallengeID: templateID,
 		DisplayName:    "Bank Portal",
@@ -123,11 +124,11 @@ func TestChallengeServiceGetContestChallengesReadsAWDServicesFromServiceSnapshot
 	service, _, contestRepo, _, awdRepo := newContestChallengeQueryService(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        611,
 		Title:     "awd-visible-query",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRunning,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusRunning,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -135,7 +136,7 @@ func TestChallengeServiceGetContestChallengesReadsAWDServicesFromServiceSnapshot
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+	if err := awdRepo.CreateContestAWDService(context.Background(), &contestentity.ContestAWDService{
 		ID:              7201,
 		ContestID:       611,
 		AWDChallengeID:  9111,

@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
@@ -48,16 +49,16 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	for _, contest := range []model.Contest{
-		{ID: contestID, Title: "ended-awd", Mode: model.ContestModeAWD, Status: model.ContestStatusEnded, StartTime: now.Add(-2 * time.Hour), EndTime: now.Add(-time.Minute), CreatedAt: now, UpdatedAt: now},
-		{ID: otherContestID, Title: "other-awd", Mode: model.ContestModeAWD, Status: model.ContestStatusEnded, StartTime: now.Add(-2 * time.Hour), EndTime: now.Add(-time.Minute), CreatedAt: now, UpdatedAt: now},
+	for _, contest := range []contestentity.Contest{
+		{ID: contestID, Title: "ended-awd", Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusEnded, StartTime: now.Add(-2 * time.Hour), EndTime: now.Add(-time.Minute), CreatedAt: now, UpdatedAt: now},
+		{ID: otherContestID, Title: "other-awd", Mode: contestentity.ContestModeAWD, Status: contestentity.ContestStatusEnded, StartTime: now.Add(-2 * time.Hour), EndTime: now.Add(-time.Minute), CreatedAt: now, UpdatedAt: now},
 	} {
 		if err := db.Create(&contest).Error; err != nil {
 			t.Fatalf("create contest: %v", err)
 		}
 	}
 
-	for _, service := range []model.ContestAWDService{
+	for _, service := range []contestentity.ContestAWDService{
 		{ID: serviceID, ContestID: contestID, AWDChallengeID: 201, DisplayName: "svc-a", Order: 1, IsVisible: true, CreatedAt: now, UpdatedAt: now},
 		{ID: secondServiceID, ContestID: contestID, AWDChallengeID: 202, DisplayName: "svc-b", Order: 2, IsVisible: true, CreatedAt: now, UpdatedAt: now},
 		{ID: otherServiceID, ContestID: otherContestID, AWDChallengeID: 203, DisplayName: "svc-c", Order: 1, IsVisible: true, CreatedAt: now, UpdatedAt: now},

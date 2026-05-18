@@ -8,12 +8,13 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type submissionRegistrationSourceStub struct {
-	findRegistrationFn     func(context.Context, int64, int64) (*model.ContestRegistration, error)
-	findContestChallengeFn func(context.Context, int64, int64) (*model.ContestChallenge, error)
+	findRegistrationFn     func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
+	findContestChallengeFn func(context.Context, int64, int64) (*contestentity.ContestChallenge, error)
 	findChallengeByIDFn    func(context.Context, int64) (*model.Challenge, error)
 }
 
@@ -21,18 +22,18 @@ func (s submissionRegistrationSourceStub) WithinScoringTransaction(context.Conte
 	return nil
 }
 
-func (s submissionRegistrationSourceStub) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (s submissionRegistrationSourceStub) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	if s.findRegistrationFn != nil {
 		return s.findRegistrationFn(ctx, contestID, userID)
 	}
-	return &model.ContestRegistration{}, nil
+	return &contestentity.ContestRegistration{}, nil
 }
 
-func (s submissionRegistrationSourceStub) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+func (s submissionRegistrationSourceStub) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
 	if s.findContestChallengeFn != nil {
 		return s.findContestChallengeFn(ctx, contestID, challengeID)
 	}
-	return &model.ContestChallenge{}, nil
+	return &contestentity.ContestChallenge{}, nil
 }
 
 func (s submissionRegistrationSourceStub) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
@@ -42,7 +43,7 @@ func (s submissionRegistrationSourceStub) FindChallengeByID(ctx context.Context,
 	return &model.Challenge{}, nil
 }
 
-func (s submissionRegistrationSourceStub) CreateSubmission(context.Context, *model.Submission) error {
+func (s submissionRegistrationSourceStub) CreateSubmission(context.Context, *contestentity.Submission) error {
 	return nil
 }
 
@@ -50,7 +51,7 @@ func TestSubmissionRegistrationRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewSubmissionRegistrationRepository(submissionRegistrationSourceStub{
-		findRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+		findRegistrationFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -64,7 +65,7 @@ func TestSubmissionRegistrationRepositoryMapsContestChallengeNotFoundErrors(t *t
 	t.Parallel()
 
 	repo := NewSubmissionRegistrationRepository(submissionRegistrationSourceStub{
-		findContestChallengeFn: func(context.Context, int64, int64) (*model.ContestChallenge, error) {
+		findContestChallengeFn: func(context.Context, int64, int64) (*contestentity.ContestChallenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})

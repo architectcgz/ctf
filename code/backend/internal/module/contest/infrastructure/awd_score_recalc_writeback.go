@@ -6,13 +6,13 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func applyAWDContestTeamScores(
 	ctx context.Context,
 	db *gorm.DB,
-	teams []model.Team,
+	teams []contestentity.Team,
 	serviceScoreMap map[int64]awdServiceScoreTotal,
 	attackMap map[int64]awdAttackScoreRow,
 ) error {
@@ -28,7 +28,7 @@ func applyAWDContestTeamScores(
 			"last_solve_at": lastSolveAt,
 		}
 		if err := db.WithContext(ctx).
-			Model(&model.Team{}).
+			Model(&contestentity.Team{}).
 			Where("id = ?", team.ID).
 			Updates(updates).Error; err != nil {
 			return err

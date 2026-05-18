@@ -5,9 +5,10 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func contestRespFromModel(contest *model.Contest) *ContestResp {
+func contestRespFromModel(contest *contestentity.Contest) *ContestResp {
 	resp := contestResponseMapperInst.ToContestRespBasePtr(contestdomain.CloneContestWithEffectiveSchedule(contest))
 	if resp == nil {
 		return nil
@@ -20,7 +21,7 @@ func contestRespFromModel(contest *model.Contest) *ContestResp {
 	return resp
 }
 
-func contestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.Challenge) *ContestChallengeResp {
+func contestChallengeRespFromModel(cc *contestentity.ContestChallenge, challenge *model.Challenge) *ContestChallengeResp {
 	resp := contestResponseMapperInst.ToContestChallengeRespBasePtr(cc)
 	if resp == nil {
 		return nil
@@ -33,7 +34,7 @@ func contestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.
 	return resp
 }
 
-func contestAWDServiceRespFromModel(item *model.ContestAWDService) *ContestAWDServiceResp {
+func contestAWDServiceRespFromModel(item *contestentity.ContestAWDService) *ContestAWDServiceResp {
 	baseResp := contestResponseMapperInst.ToContestAWDServiceRespBasePtr(item)
 	if baseResp == nil {
 		return nil
@@ -51,7 +52,7 @@ func contestAWDServiceRespFromModel(item *model.ContestAWDService) *ContestAWDSe
 		ValidationState: baseResp.ValidationState,
 	}
 	runtimeConfig := sanitizeContestAWDServiceRuntimeConfig(contestdomain.ParseAWDCheckerConfig(item.RuntimeConfig))
-	snapshot, _ := model.DecodeContestAWDServiceSnapshot(item.ServiceSnapshot)
+	snapshot, _ := contestentity.DecodeContestAWDServiceSnapshot(item.ServiceSnapshot)
 	resp.Title = snapshot.Name
 	resp.Category = snapshot.Category
 	resp.Difficulty = snapshot.Difficulty
@@ -78,7 +79,7 @@ func contestAWDServiceRespFromModel(item *model.ContestAWDService) *ContestAWDSe
 	return resp
 }
 
-func teamRespFromModel(team *model.Team, memberCount int) *TeamResp {
+func teamRespFromModel(team *contestentity.Team, memberCount int) *TeamResp {
 	resp := contestResponseMapperInst.ToTeamRespBasePtr(team)
 	if resp == nil {
 		return nil

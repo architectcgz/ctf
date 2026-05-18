@@ -10,6 +10,7 @@ import (
 	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
 	"ctf-platform/pkg/errcode"
@@ -29,13 +30,13 @@ func TestParticipationServiceRegisterContestCreatesPendingRegistration(t *testin
 	service, _ := newContestParticipationServicesForTest(db)
 
 	now := time.Now()
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        1,
 		Title:     "spring-ctf",
-		Mode:      model.ContestModeJeopardy,
+		Mode:      contestentity.ContestModeJeopardy,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
-		Status:    model.ContestStatusRegistration,
+		Status:    contestentity.ContestStatusRegistration,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -49,11 +50,11 @@ func TestParticipationServiceRegisterContestCreatesPendingRegistration(t *testin
 		t.Fatalf("RegisterContest() second call error = %v", err)
 	}
 
-	var registration model.ContestRegistration
+	var registration contestentity.ContestRegistration
 	if err := db.Where("contest_id = ? AND user_id = ?", 1, 1001).First(&registration).Error; err != nil {
 		t.Fatalf("load registration: %v", err)
 	}
-	if registration.Status != model.ContestRegistrationStatusPending {
+	if registration.Status != contestentity.ContestRegistrationStatusPending {
 		t.Fatalf("unexpected registration status: %s", registration.Status)
 	}
 	if registration.TeamID != nil {
@@ -70,22 +71,22 @@ func TestParticipationServiceRegisterContestRequeuesRejectedRegistration(t *test
 	now := time.Now()
 	reviewedBy := int64(9001)
 	reviewedAt := now.Add(-time.Hour)
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        10,
 		Title:     "retry-ctf",
-		Mode:      model.ContestModeJeopardy,
+		Mode:      contestentity.ContestModeJeopardy,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
-		Status:    model.ContestStatusRegistration,
+		Status:    contestentity.ContestStatusRegistration,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.ContestRegistration{
+	if err := db.Create(&contestentity.ContestRegistration{
 		ContestID:  10,
 		UserID:     1002,
-		Status:     model.ContestRegistrationStatusRejected,
+		Status:     contestentity.ContestRegistrationStatusRejected,
 		ReviewedBy: &reviewedBy,
 		ReviewedAt: &reviewedAt,
 		CreatedAt:  now.Add(-2 * time.Hour),
@@ -98,11 +99,11 @@ func TestParticipationServiceRegisterContestRequeuesRejectedRegistration(t *test
 		t.Fatalf("RegisterContest() error = %v", err)
 	}
 
-	var registration model.ContestRegistration
+	var registration contestentity.ContestRegistration
 	if err := db.Where("contest_id = ? AND user_id = ?", 10, 1002).First(&registration).Error; err != nil {
 		t.Fatalf("load registration: %v", err)
 	}
-	if registration.Status != model.ContestRegistrationStatusPending {
+	if registration.Status != contestentity.ContestRegistrationStatusPending {
 		t.Fatalf("unexpected registration status: %s", registration.Status)
 	}
 	if registration.ReviewedBy != nil || registration.ReviewedAt != nil {
@@ -119,22 +120,22 @@ func TestTeamServiceCreateTeamRequiresApprovedRegistration(t *testing.T) {
 	service := contestcmd.NewTeamService(teamRepo, contestRepo)
 
 	now := time.Now()
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        20,
 		Title:     "team-ctf",
-		Mode:      model.ContestModeJeopardy,
+		Mode:      contestentity.ContestModeJeopardy,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
-		Status:    model.ContestStatusRegistration,
+		Status:    contestentity.ContestStatusRegistration,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.ContestRegistration{
+	if err := db.Create(&contestentity.ContestRegistration{
 		ContestID: 20,
 		UserID:    2002,
-		Status:    model.ContestRegistrationStatusPending,
+		Status:    contestentity.ContestRegistrationStatusPending,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -147,7 +148,7 @@ func TestTeamServiceCreateTeamRequiresApprovedRegistration(t *testing.T) {
 	}
 
 	var count int64
-	if err := db.Model(&model.Team{}).Count(&count).Error; err != nil {
+	if err := db.Model(&contestentity.Team{}).Count(&count).Error; err != nil {
 		t.Fatalf("count teams: %v", err)
 	}
 	if count != 0 {
@@ -162,13 +163,13 @@ func TestParticipationServiceAnnouncementsAndMyProgress(t *testing.T) {
 	commandService, queryService := newContestParticipationServicesForTest(db)
 
 	now := time.Now()
-	contest := &model.Contest{
+	contest := &contestentity.Contest{
 		ID:        3,
 		Title:     "autumn-ctf",
-		Mode:      model.ContestModeJeopardy,
+		Mode:      contestentity.ContestModeJeopardy,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
-		Status:    model.ContestStatusRunning,
+		Status:    contestentity.ContestStatusRunning,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -176,17 +177,17 @@ func TestParticipationServiceAnnouncementsAndMyProgress(t *testing.T) {
 		t.Fatalf("create contest: %v", err)
 	}
 	teamID := int64(31)
-	if err := db.Create(&model.ContestRegistration{
+	if err := db.Create(&contestentity.ContestRegistration{
 		ContestID: contest.ID,
 		UserID:    3001,
 		TeamID:    &teamID,
-		Status:    model.ContestRegistrationStatusApproved,
+		Status:    contestentity.ContestRegistrationStatusApproved,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create registration: %v", err)
 	}
-	if err := db.Create(&model.ContestChallenge{
+	if err := db.Create(&contestentity.ContestChallenge{
 		ID:          11,
 		ContestID:   contest.ID,
 		ChallengeID: 501,
@@ -197,7 +198,7 @@ func TestParticipationServiceAnnouncementsAndMyProgress(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create contest challenge: %v", err)
 	}
-	if err := db.Create(&model.Submission{
+	if err := db.Create(&contestentity.Submission{
 		UserID:      3001,
 		ChallengeID: 501,
 		ContestID:   &contest.ID,
@@ -244,13 +245,13 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 	commandService, queryService := newContestParticipationServicesForTest(db)
 
 	now := time.Now()
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        30,
 		Title:     "review-ctf",
-		Mode:      model.ContestModeJeopardy,
+		Mode:      contestentity.ContestModeJeopardy,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
-		Status:    model.ContestStatusRegistration,
+		Status:    contestentity.ContestStatusRegistration,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -265,17 +266,17 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
-	if err := db.Create(&model.ContestRegistration{
+	if err := db.Create(&contestentity.ContestRegistration{
 		ContestID: 30,
 		UserID:    3001,
-		Status:    model.ContestRegistrationStatusPending,
+		Status:    contestentity.ContestRegistrationStatusPending,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create registration: %v", err)
 	}
 
-	status := model.ContestRegistrationStatusPending
+	status := contestentity.ContestRegistrationStatusPending
 	page, err := queryService.ListRegistrations(context.Background(), 30, contestqry.ContestRegistrationQueryInput{
 		Status: &status,
 		Page:   1,
@@ -285,17 +286,17 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 		t.Fatalf("ListRegistrations() error = %v", err)
 	}
 	items := page.List
-	if len(items) != 1 || items[0].Username != "alice" || items[0].Status != model.ContestRegistrationStatusPending {
+	if len(items) != 1 || items[0].Username != "alice" || items[0].Status != contestentity.ContestRegistrationStatusPending {
 		t.Fatalf("unexpected registrations: %+v", items)
 	}
 
 	reviewed, err := commandService.ReviewRegistration(context.Background(), 30, items[0].ID, 9001, contestcmd.ReviewRegistrationInput{
-		Status: model.ContestRegistrationStatusApproved,
+		Status: contestentity.ContestRegistrationStatusApproved,
 	})
 	if err != nil {
 		t.Fatalf("ReviewRegistration() error = %v", err)
 	}
-	if reviewed.Status != model.ContestRegistrationStatusApproved || reviewed.ReviewedBy == nil || *reviewed.ReviewedBy != 9001 || reviewed.ReviewedAt == nil {
+	if reviewed.Status != contestentity.ContestRegistrationStatusApproved || reviewed.ReviewedBy == nil || *reviewed.ReviewedBy != 9001 || reviewed.ReviewedAt == nil {
 		t.Fatalf("unexpected reviewed registration: %+v", reviewed)
 	}
 }

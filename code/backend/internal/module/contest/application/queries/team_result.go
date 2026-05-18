@@ -3,7 +3,7 @@ package queries
 import (
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type TeamResult struct {
@@ -31,7 +31,7 @@ type MyTeamResult struct {
 	Members    []*TeamMemberResult
 }
 
-func teamResultFromModel(team *model.Team, memberCount int) *TeamResult {
+func teamResultFromModel(team *contestentity.Team, memberCount int) *TeamResult {
 	resp := contestQueryResponseMapperInst.ToTeamResultBasePtr(team)
 	if resp == nil {
 		return nil

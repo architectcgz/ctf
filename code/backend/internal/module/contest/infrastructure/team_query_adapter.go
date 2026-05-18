@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -33,7 +34,7 @@ func NewTeamQueryAdapter(source interface {
 	return &TeamQueryAdapter{source: source}
 }
 
-func (r *TeamQueryAdapter) FindByID(ctx context.Context, id int64) (*model.Team, error) {
+func (r *TeamQueryAdapter) FindByID(ctx context.Context, id int64) (*contestentity.Team, error) {
 	team, err := r.source.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestTeamNotFound
@@ -41,7 +42,7 @@ func (r *TeamQueryAdapter) FindByID(ctx context.Context, id int64) (*model.Team,
 	return team, err
 }
 
-func (r *TeamQueryAdapter) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*model.Team, error) {
+func (r *TeamQueryAdapter) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*contestentity.Team, error) {
 	team, err := r.source.FindUserTeamInContest(ctx, userID, contestID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestUserTeamNotFound
@@ -49,7 +50,7 @@ func (r *TeamQueryAdapter) FindUserTeamInContest(ctx context.Context, userID, co
 	return team, err
 }
 
-func (r *TeamQueryAdapter) GetMembers(ctx context.Context, teamID int64) ([]*model.TeamMember, error) {
+func (r *TeamQueryAdapter) GetMembers(ctx context.Context, teamID int64) ([]*contestentity.TeamMember, error) {
 	return r.source.GetMembers(ctx, teamID)
 }
 
@@ -69,7 +70,7 @@ func (r *TeamQueryAdapter) GetMemberCountBatch(ctx context.Context, teamIDs []in
 	return r.source.GetMemberCountBatch(ctx, teamIDs)
 }
 
-func (r *TeamQueryAdapter) ListByContest(ctx context.Context, contestID int64) ([]*model.Team, error) {
+func (r *TeamQueryAdapter) ListByContest(ctx context.Context, contestID int64) ([]*contestentity.Team, error) {
 	return r.source.ListByContest(ctx, contestID)
 }
 

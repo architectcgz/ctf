@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -17,7 +17,7 @@ func storeAWDCheckerPreviewToken(
 	ctx context.Context,
 	store contestports.AWDCheckerPreviewTokenStore,
 	contestID, serviceID, awdChallengeID int64,
-	checkerType model.AWDCheckerType,
+	checkerType contestentity.AWDCheckerType,
 	checkerConfig string,
 	checkerTokenEnv string,
 	result *AWDCheckerPreviewResp,
@@ -46,20 +46,20 @@ func consumeCheckerPreviewValidationState(
 	ctx context.Context,
 	store contestports.AWDCheckerPreviewTokenStore,
 	contestID, serviceID, awdChallengeID int64,
-	checkerType model.AWDCheckerType,
+	checkerType contestentity.AWDCheckerType,
 	checkerConfig string,
 	checkerTokenEnv string,
 	previewToken string,
-) (model.AWDCheckerValidationState, *time.Time, string, error) {
+) (contestentity.AWDCheckerValidationState, *time.Time, string, error) {
 	if strings.TrimSpace(previewToken) != "" && store == nil {
-		return model.AWDCheckerValidationStatePending, nil, "", errcode.ErrAWDCheckerPreviewUnavailable
+		return contestentity.AWDCheckerValidationStatePending, nil, "", errcode.ErrAWDCheckerPreviewUnavailable
 	}
 	record, err := consumeAWDCheckerPreviewToken(ctx, store, contestID, serviceID, awdChallengeID, checkerType, checkerConfig, checkerTokenEnv, previewToken)
 	if err != nil {
-		return model.AWDCheckerValidationStatePending, nil, "", err
+		return contestentity.AWDCheckerValidationStatePending, nil, "", err
 	}
 	if record == nil {
-		return model.AWDCheckerValidationStatePending, nil, "", nil
+		return contestentity.AWDCheckerValidationStatePending, nil, "", nil
 	}
 
 	checkedAt := record.CreatedAt
@@ -70,12 +70,12 @@ func consumeCheckerPreviewValidationState(
 	}
 	rawResult, err := contestdomain.MarshalAWDCheckerPreviewResult(&record.Result)
 	if err != nil {
-		return model.AWDCheckerValidationStatePending, nil, "", err
+		return contestentity.AWDCheckerValidationStatePending, nil, "", err
 	}
 
-	state := model.AWDCheckerValidationStateFailed
-	if record.Result.ServiceStatus == model.AWDServiceStatusUp {
-		state = model.AWDCheckerValidationStatePassed
+	state := contestentity.AWDCheckerValidationStateFailed
+	if record.Result.ServiceStatus == contestentity.AWDServiceStatusUp {
+		state = contestentity.AWDCheckerValidationStatePassed
 	}
 	return state, &checkedAt, rawResult, nil
 }
@@ -84,7 +84,7 @@ func consumeAWDCheckerPreviewToken(
 	ctx context.Context,
 	store contestports.AWDCheckerPreviewTokenStore,
 	contestID, serviceID, awdChallengeID int64,
-	checkerType model.AWDCheckerType,
+	checkerType contestentity.AWDCheckerType,
 	checkerConfig string,
 	checkerTokenEnv string,
 	previewToken string,
@@ -117,7 +117,7 @@ func consumeAWDCheckerPreviewToken(
 func matchesAWDCheckerPreviewTokenRecord(
 	record *contestports.AWDCheckerPreviewTokenRecord,
 	contestID, serviceID, awdChallengeID int64,
-	checkerType model.AWDCheckerType,
+	checkerType contestentity.AWDCheckerType,
 	checkerConfig string,
 	checkerTokenEnv string,
 ) bool {

@@ -6,15 +6,15 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (r *TeamRepository) CreateWithMember(ctx context.Context, team *model.Team, captainID int64) error {
+func (r *TeamRepository) CreateWithMember(ctx context.Context, team *contestentity.Team, captainID int64) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(team).Error; err != nil {
 			return err
 		}
-		member := &model.TeamMember{
+		member := &contestentity.TeamMember{
 			ContestID: team.ContestID,
 			TeamID:    team.ID,
 			UserID:    captainID,
@@ -29,20 +29,20 @@ func (r *TeamRepository) CreateWithMember(ctx context.Context, team *model.Team,
 
 func (r *TeamRepository) DeleteWithMembers(ctx context.Context, id int64) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var team model.Team
+		var team contestentity.Team
 		if err := tx.Where("id = ?", id).First(&team).Error; err != nil {
 			return err
 		}
 
 		var userIDs []int64
-		if err := tx.Model(&model.TeamMember{}).Where("team_id = ?", id).Pluck("user_id", &userIDs).Error; err != nil {
+		if err := tx.Model(&contestentity.TeamMember{}).Where("team_id = ?", id).Pluck("user_id", &userIDs).Error; err != nil {
 			return err
 		}
-		if err := tx.Where("team_id = ?", id).Delete(&model.TeamMember{}).Error; err != nil {
+		if err := tx.Where("team_id = ?", id).Delete(&contestentity.TeamMember{}).Error; err != nil {
 			return err
 		}
 		if len(userIDs) > 0 {
-			if err := tx.Model(&model.ContestRegistration{}).
+			if err := tx.Model(&contestentity.ContestRegistration{}).
 				Where("contest_id = ? AND user_id IN ?", team.ContestID, userIDs).
 				Updates(map[string]any{
 					"team_id":    nil,
@@ -51,6 +51,6 @@ func (r *TeamRepository) DeleteWithMembers(ctx context.Context, id int64) error 
 				return err
 			}
 		}
-		return tx.Delete(&model.Team{}, id).Error
+		return tx.Delete(&contestentity.Team{}, id).Error
 	})
 }

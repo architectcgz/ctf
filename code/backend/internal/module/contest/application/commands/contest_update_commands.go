@@ -8,8 +8,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -46,7 +46,7 @@ func (s *ContestService) UpdateContest(ctx context.Context, id int64, req Update
 	return contestRespFromModel(contest), nil
 }
 
-func (s *ContestService) updateContestWithManualStatusTransition(ctx context.Context, contest *model.Contest, fromStatus string, fromVersion int64) error {
+func (s *ContestService) updateContestWithManualStatusTransition(ctx context.Context, contest *contestentity.Contest, fromStatus string, fromVersion int64) error {
 	if contest == nil {
 		return errcode.ErrContestNotFound
 	}

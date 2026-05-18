@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func awdTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, serviceName ...string) *AWDTeamServiceResp {
+func awdTeamServiceRespFromModel(record *contestentity.AWDTeamService, teamName string, serviceName ...string) *AWDTeamServiceResp {
 	resp := contestResponseMapperInst.ToAWDTeamServiceRespBasePtr(record)
 	if resp == nil {
 		return nil
@@ -19,7 +19,7 @@ func awdTeamServiceRespFromModel(record *model.AWDTeamService, teamName string, 
 	return resp
 }
 
-func awdAttackLogRespFromModel(record *model.AWDAttackLog, attackerTeam, victimTeam string) *AWDAttackLogResp {
+func awdAttackLogRespFromModel(record *contestentity.AWDAttackLog, attackerTeam, victimTeam string) *AWDAttackLogResp {
 	resp := contestResponseMapperInst.ToAWDAttackLogRespBasePtr(record)
 	if resp == nil {
 		return nil

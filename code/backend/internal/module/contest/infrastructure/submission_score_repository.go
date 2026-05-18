@@ -7,11 +7,11 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (r *SubmissionRepository) LockContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
-	var contestChallenge model.ContestChallenge
+func (r *SubmissionRepository) LockContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
+	var contestChallenge contestentity.ContestChallenge
 	if err := r.dbWithContext(ctx).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
@@ -23,7 +23,7 @@ func (r *SubmissionRepository) LockContestChallenge(ctx context.Context, contest
 
 func (r *SubmissionRepository) CountCorrectSubmissions(ctx context.Context, contestID, challengeID int64, teamID *int64, userID int64) (int64, error) {
 	query := r.dbWithContext(ctx).
-		Model(&model.Submission{}).
+		Model(&contestentity.Submission{}).
 		Where("contest_id = ? AND challenge_id = ? AND is_correct = ?", contestID, challengeID, true)
 	if teamID != nil {
 		query = query.Where("team_id = ?", *teamID)
@@ -40,13 +40,13 @@ func (r *SubmissionRepository) CountCorrectSubmissions(ctx context.Context, cont
 
 func (r *SubmissionRepository) UpdateFirstBlood(ctx context.Context, contestID, challengeID, teamID int64) error {
 	return r.dbWithContext(ctx).
-		Model(&model.ContestChallenge{}).
+		Model(&contestentity.ContestChallenge{}).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
 		Update("first_blood_by", teamID).Error
 }
 
-func (r *SubmissionRepository) ListCorrectSubmissions(ctx context.Context, contestID, challengeID int64) ([]model.Submission, error) {
-	var submissions []model.Submission
+func (r *SubmissionRepository) ListCorrectSubmissions(ctx context.Context, contestID, challengeID int64) ([]contestentity.Submission, error) {
+	var submissions []contestentity.Submission
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND challenge_id = ? AND is_correct = ?", contestID, challengeID, true).
 		Order("submitted_at ASC, id ASC").
@@ -64,7 +64,7 @@ func (r *SubmissionRepository) AddTeamScore(ctx context.Context, teamID int64, d
 		updates["last_solve_at"] = *lastSolveAt
 	}
 	return r.dbWithContext(ctx).
-		Model(&model.Team{}).
+		Model(&contestentity.Team{}).
 		Where("id = ?", teamID).
 		Updates(updates).Error
 }

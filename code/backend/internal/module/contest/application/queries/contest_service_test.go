@@ -6,20 +6,20 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 type contestListRepoStub struct{}
 
-func (s *contestListRepoStub) FindByID(context.Context, int64) (*model.Contest, error) {
+func (s *contestListRepoStub) FindByID(context.Context, int64) (*contestentity.Contest, error) {
 	return nil, contestdomain.ErrContestNotFound
 }
 
-func (s *contestListRepoStub) List(context.Context, contestports.ContestListFilter, int, int) ([]*model.Contest, int64, error) {
-	return []*model.Contest{}, 0, nil
+func (s *contestListRepoStub) List(context.Context, contestports.ContestListFilter, int, int) ([]*contestentity.Contest, int64, error) {
+	return []*contestentity.Contest{}, 0, nil
 }
 
 func (s *contestListRepoStub) Summarize(context.Context, contestports.ContestListFilter) (contestports.ContestListSummary, error) {
@@ -33,15 +33,15 @@ type contestListRepoSpy struct {
 	summaryFilter contestports.ContestListFilter
 }
 
-func (s *contestListRepoSpy) FindByID(context.Context, int64) (*model.Contest, error) {
+func (s *contestListRepoSpy) FindByID(context.Context, int64) (*contestentity.Contest, error) {
 	return nil, contestdomain.ErrContestNotFound
 }
 
-func (s *contestListRepoSpy) List(_ context.Context, filter contestports.ContestListFilter, offset, limit int) ([]*model.Contest, int64, error) {
+func (s *contestListRepoSpy) List(_ context.Context, filter contestports.ContestListFilter, offset, limit int) ([]*contestentity.Contest, int64, error) {
 	s.listFilter = filter
 	s.listOffset = offset
 	s.listLimit = limit
-	return []*model.Contest{}, 0, nil
+	return []*contestentity.Contest{}, 0, nil
 }
 
 func (s *contestListRepoSpy) Summarize(_ context.Context, filter contestports.ContestListFilter) (contestports.ContestListSummary, error) {

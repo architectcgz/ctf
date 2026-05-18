@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -17,16 +17,16 @@ func resolveCreateTeamMaxMembers(req CreateTeamInput) int {
 	return maxMembers
 }
 
-func (s *TeamService) createTeamWithInviteRetries(ctx context.Context, contestID, captainID int64, teamName string, maxMembers int) (*model.Team, error) {
+func (s *TeamService) createTeamWithInviteRetries(ctx context.Context, contestID, captainID int64, teamName string, maxMembers int) (*contestentity.Team, error) {
 	const maxRetries = 3
-	var team *model.Team
+	var team *contestentity.Team
 	for i := 0; i < maxRetries; i++ {
 		inviteCode, err := generateInviteCode()
 		if err != nil {
 			return nil, errcode.ErrInviteCodeGenerationFailed.WithCause(err)
 		}
 
-		team = &model.Team{
+		team = &contestentity.Team{
 			ContestID:  contestID,
 			Name:       teamName,
 			CaptainID:  captainID,

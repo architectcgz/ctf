@@ -3,7 +3,6 @@ package commands
 import (
 	"time"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
@@ -23,16 +22,16 @@ type submissionRespSource struct {
 // goverter:output:file ./response_mapper_goverter_gen.go
 // goverter:output:package :commands
 type contestResponseMapper interface {
-	ToContestRespBase(source model.Contest) ContestResp
-	ToContestRespBasePtr(source *model.Contest) *ContestResp
+	ToContestRespBase(source contestentity.Contest) ContestResp
+	ToContestRespBasePtr(source *contestentity.Contest) *ContestResp
 	ToContestAnnouncementRespBase(source contestentity.ContestAnnouncement) ContestAnnouncementResp
 	ToContestAnnouncementRespBasePtr(source *contestentity.ContestAnnouncement) *ContestAnnouncementResp
 
 	// goverter:ignore Title
 	// goverter:ignore Category
 	// goverter:ignore Difficulty
-	ToContestChallengeRespBase(source model.ContestChallenge) ContestChallengeResp
-	ToContestChallengeRespBasePtr(source *model.ContestChallenge) *ContestChallengeResp
+	ToContestChallengeRespBase(source contestentity.ContestChallenge) ContestChallengeResp
+	ToContestChallengeRespBasePtr(source *contestentity.ContestChallenge) *ContestChallengeResp
 
 	// goverter:ignore Title
 	// goverter:ignore Category
@@ -41,32 +40,32 @@ type contestResponseMapper interface {
 	// goverter:ignore RuntimeConfig
 	// goverter:ignore ValidationState
 	// goverter:ignore LastPreviewResult
-	ToContestAWDServiceRespBase(source model.ContestAWDService) ContestAWDServiceResp
-	ToContestAWDServiceRespBasePtr(source *model.ContestAWDService) *ContestAWDServiceResp
+	ToContestAWDServiceRespBase(source contestentity.ContestAWDService) ContestAWDServiceResp
+	ToContestAWDServiceRespBasePtr(source *contestentity.ContestAWDService) *ContestAWDServiceResp
 
 	// goverter:ignore MemberCount
-	ToTeamRespBase(source model.Team) TeamResp
-	ToTeamRespBasePtr(source *model.Team) *TeamResp
+	ToTeamRespBase(source contestentity.Team) TeamResp
+	ToTeamRespBasePtr(source *contestentity.Team) *TeamResp
 
-	ToAWDRoundRespBase(source model.AWDRound) AWDRoundResp
-	ToAWDRoundRespBasePtr(source *model.AWDRound) *AWDRoundResp
+	ToAWDRoundRespBase(source contestentity.AWDRound) AWDRoundResp
+	ToAWDRoundRespBasePtr(source *contestentity.AWDRound) *AWDRoundResp
 
 	// goverter:ignore TeamName
 	// goverter:ignore ServiceName
 	// goverter:ignore AWDChallengeTitle
 	// goverter:ignore CheckResult
-	ToAWDTeamServiceRespBase(source model.AWDTeamService) AWDTeamServiceResp
-	ToAWDTeamServiceRespBasePtr(source *model.AWDTeamService) *AWDTeamServiceResp
+	ToAWDTeamServiceRespBase(source contestentity.AWDTeamService) AWDTeamServiceResp
+	ToAWDTeamServiceRespBasePtr(source *contestentity.AWDTeamService) *AWDTeamServiceResp
 
 	// goverter:ignore AttackerTeam
 	// goverter:ignore VictimTeam
 	// goverter:ignore Source
-	ToAWDAttackLogRespBase(source model.AWDAttackLog) AWDAttackLogResp
-	ToAWDAttackLogRespBasePtr(source *model.AWDAttackLog) *AWDAttackLogResp
+	ToAWDAttackLogRespBase(source contestentity.AWDAttackLog) AWDAttackLogResp
+	ToAWDAttackLogRespBasePtr(source *contestentity.AWDAttackLog) *AWDAttackLogResp
 
 	// goverter:ignore Username
-	ToContestRegistrationRespBase(source model.ContestRegistration) ContestRegistrationResp
-	ToContestRegistrationRespBasePtr(source *model.ContestRegistration) *ContestRegistrationResp
+	ToContestRegistrationRespBase(source contestentity.ContestRegistration) ContestRegistrationResp
+	ToContestRegistrationRespBasePtr(source *contestentity.ContestRegistration) *ContestRegistrationResp
 
 	// goverter:ignore Message
 	// goverter:ignore InstanceShutdownAt

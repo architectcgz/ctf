@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (r *SubmissionRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
-	var registration model.ContestRegistration
+func (r *SubmissionRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
+	var registration contestentity.ContestRegistration
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND user_id = ?", contestID, userID).
 		First(&registration).Error; err != nil {
@@ -16,8 +17,8 @@ func (r *SubmissionRepository) FindRegistration(ctx context.Context, contestID, 
 	return &registration, nil
 }
 
-func (r *SubmissionRepository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
-	var contestChallenge model.ContestChallenge
+func (r *SubmissionRepository) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
+	var contestChallenge contestentity.ContestChallenge
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
 		First(&contestChallenge).Error; err != nil {

@@ -4,16 +4,16 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (u *AWDRoundUpdater) findRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*model.AWDRound, error) {
+func (u *AWDRoundUpdater) findRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*contestentity.AWDRound, error) {
 	return u.repo.FindRoundByNumber(ctx, contestID, roundNumber)
 }
 
-func (u *AWDRoundUpdater) buildRoundFlagAssignments(ctx context.Context, contestID int64, round *model.AWDRound) ([]contestports.AWDFlagAssignment, error) {
+func (u *AWDRoundUpdater) buildRoundFlagAssignments(ctx context.Context, contestID int64, round *contestentity.AWDRound) ([]contestports.AWDFlagAssignment, error) {
 	teams, err := u.loadContestTeams(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -37,12 +37,12 @@ func (u *AWDRoundUpdater) buildRoundFlagAssignments(ctx context.Context, contest
 	return assignments, nil
 }
 
-func (u *AWDRoundUpdater) loadContestTeams(ctx context.Context, contestID int64) ([]model.Team, error) {
+func (u *AWDRoundUpdater) loadContestTeams(ctx context.Context, contestID int64) ([]contestentity.Team, error) {
 	teamPtrs, err := u.repo.FindTeamsByContest(ctx, contestID)
 	if err != nil {
 		return nil, err
 	}
-	teams := make([]model.Team, 0, len(teamPtrs))
+	teams := make([]contestentity.Team, 0, len(teamPtrs))
 	for _, team := range teamPtrs {
 		if team != nil {
 			teams = append(teams, *team)
@@ -51,7 +51,7 @@ func (u *AWDRoundUpdater) loadContestTeams(ctx context.Context, contestID int64)
 	return teams, nil
 }
 
-func (u *AWDRoundUpdater) currentRoundTTL(contest *model.Contest, round *model.AWDRound, now time.Time) time.Duration {
+func (u *AWDRoundUpdater) currentRoundTTL(contest *contestentity.Contest, round *contestentity.AWDRound, now time.Time) time.Duration {
 	if contest == nil || round == nil {
 		return 0
 	}

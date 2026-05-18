@@ -3,11 +3,11 @@ package jobs
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (u *AWDRoundUpdater) persistRoundServiceChecks(ctx context.Context, contest *model.Contest, round *model.AWDRound, records []model.AWDTeamService, statusEntries []contestports.AWDServiceStatusEntry) error {
+func (u *AWDRoundUpdater) persistRoundServiceChecks(ctx context.Context, contest *contestentity.Contest, round *contestentity.AWDRound, records []contestentity.AWDTeamService, statusEntries []contestports.AWDServiceStatusEntry) error {
 	if len(records) > 0 {
 		if err := u.repo.WithinRoundServiceWritebackTransaction(ctx, func(txRepo contestports.AWDRoundServiceWritebackTxRepository) error {
 			if err := txRepo.UpsertTeamServices(ctx, records); err != nil {

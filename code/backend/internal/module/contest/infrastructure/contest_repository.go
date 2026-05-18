@@ -8,17 +8,17 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (r *Repository) Create(ctx context.Context, contest *model.Contest) error {
+func (r *Repository) Create(ctx context.Context, contest *contestentity.Contest) error {
 	return r.dbWithContext(ctx).Create(contest).Error
 }
 
-func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Contest, error) {
-	var contest model.Contest
+func (r *Repository) FindByID(ctx context.Context, id int64) (*contestentity.Contest, error) {
+	var contest contestentity.Contest
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&contest).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -29,7 +29,7 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Contest, er
 	return &contest, nil
 }
 
-func (r *Repository) Update(ctx context.Context, contest *model.Contest) error {
+func (r *Repository) Update(ctx context.Context, contest *contestentity.Contest) error {
 	if contest == nil {
 		return contestdomain.ErrContestNotFound
 	}
@@ -37,7 +37,7 @@ func (r *Repository) Update(ctx context.Context, contest *model.Contest) error {
 	contest.UpdatedAt = updatedAt
 
 	updateResult := r.dbWithContext(ctx).
-		Model(&model.Contest{}).
+		Model(&contestentity.Contest{}).
 		Where("id = ? AND deleted_at IS NULL", contest.ID).
 		Updates(map[string]any{
 			"title":       contest.Title,
@@ -57,11 +57,11 @@ func (r *Repository) Update(ctx context.Context, contest *model.Contest) error {
 	return nil
 }
 
-func (r *Repository) List(ctx context.Context, filter contestports.ContestListFilter, offset, limit int) ([]*model.Contest, int64, error) {
-	var contests []*model.Contest
+func (r *Repository) List(ctx context.Context, filter contestports.ContestListFilter, offset, limit int) ([]*contestentity.Contest, int64, error) {
+	var contests []*contestentity.Contest
 	var total int64
 
-	query := applyContestListFilter(r.dbWithContext(ctx).Model(&model.Contest{}), filter)
+	query := applyContestListFilter(r.dbWithContext(ctx).Model(&contestentity.Contest{}), filter)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -85,7 +85,7 @@ func (r *Repository) Summarize(ctx context.Context, filter contestports.ContestL
 	}
 
 	var rows []contestStatusCountRow
-	query := applyContestListFilter(r.dbWithContext(ctx).Model(&model.Contest{}), filter)
+	query := applyContestListFilter(r.dbWithContext(ctx).Model(&contestentity.Contest{}), filter)
 	if err := query.Select("status, COUNT(*) AS count").Group("status").Scan(&rows).Error; err != nil {
 		return contestports.ContestListSummary{}, err
 	}
@@ -93,15 +93,15 @@ func (r *Repository) Summarize(ctx context.Context, filter contestports.ContestL
 	summary := contestports.ContestListSummary{}
 	for _, row := range rows {
 		switch row.Status {
-		case model.ContestStatusDraft:
+		case contestentity.ContestStatusDraft:
 			summary.DraftCount = row.Count
-		case model.ContestStatusRegistration:
+		case contestentity.ContestStatusRegistration:
 			summary.RegistrationCount = row.Count
-		case model.ContestStatusRunning:
+		case contestentity.ContestStatusRunning:
 			summary.RunningCount = row.Count
-		case model.ContestStatusFrozen:
+		case contestentity.ContestStatusFrozen:
 			summary.FrozenCount = row.Count
-		case model.ContestStatusEnded:
+		case contestentity.ContestStatusEnded:
 			summary.EndedCount = row.Count
 		}
 	}

@@ -7,26 +7,26 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type teamFinderSourceStub struct {
-	findUserTeamInContestFn func(context.Context, int64, int64) (*model.Team, error)
+	findUserTeamInContestFn func(context.Context, int64, int64) (*contestentity.Team, error)
 }
 
-func (s teamFinderSourceStub) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*model.Team, error) {
+func (s teamFinderSourceStub) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*contestentity.Team, error) {
 	if s.findUserTeamInContestFn != nil {
 		return s.findUserTeamInContestFn(ctx, userID, contestID)
 	}
-	return &model.Team{}, nil
+	return &contestentity.Team{}, nil
 }
 
 func TestTeamFinderRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewTeamFinderRepository(teamFinderSourceStub{
-		findUserTeamInContestFn: func(context.Context, int64, int64) (*model.Team, error) {
+		findUserTeamInContestFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})

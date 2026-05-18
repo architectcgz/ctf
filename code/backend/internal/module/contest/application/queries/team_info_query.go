@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -42,7 +43,7 @@ func (s *TeamService) GetTeamInfo(ctx context.Context, teamID int64) (*TeamResul
 	return teamResultFromModel(team, len(members)), memberResps, nil
 }
 
-func (s *TeamService) loadTeamUsersByMembers(ctx context.Context, members []*model.TeamMember) (map[int64]*model.User, error) {
+func (s *TeamService) loadTeamUsersByMembers(ctx context.Context, members []*contestentity.TeamMember) (map[int64]*model.User, error) {
 	userIDs := make([]int64, len(members))
 	for i, member := range members {
 		userIDs[i] = member.UserID

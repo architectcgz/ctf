@@ -3,11 +3,11 @@ package jobs
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (u *AWDRoundUpdater) syncRoundServiceChecks(ctx context.Context, contest *model.Contest, activeRound int) error {
+func (u *AWDRoundUpdater) syncRoundServiceChecks(ctx context.Context, contest *contestentity.Contest, activeRound int) error {
 	if contest == nil {
 		return nil
 	}
@@ -26,7 +26,7 @@ func (u *AWDRoundUpdater) syncRoundServiceChecks(ctx context.Context, contest *m
 }
 
 // RunRoundServiceChecks 允许后台运维链路手动触发轮次服务检查，并记录巡检来源。
-func (u *AWDRoundUpdater) RunRoundServiceChecks(ctx context.Context, contest *model.Contest, round *model.AWDRound, source string) error {
+func (u *AWDRoundUpdater) RunRoundServiceChecks(ctx context.Context, contest *contestentity.Contest, round *contestentity.AWDRound, source string) error {
 	if contest == nil || round == nil {
 		return nil
 	}

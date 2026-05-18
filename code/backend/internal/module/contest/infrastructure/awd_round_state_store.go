@@ -10,7 +10,7 @@ import (
 
 	redislib "github.com/redis/go-redis/v9"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/internal/pkg/redislock"
@@ -93,7 +93,7 @@ func (s *AWDRoundStateStore) LoadAWDRoundFlag(ctx context.Context, contestID, ro
 	return "", false, err
 }
 
-func (s *AWDRoundStateStore) SyncAWDCurrentRoundState(ctx context.Context, contestID int64, round *model.AWDRound, assignments []contestports.AWDFlagAssignment, ttl time.Duration) error {
+func (s *AWDRoundStateStore) SyncAWDCurrentRoundState(ctx context.Context, contestID int64, round *contestentity.AWDRound, assignments []contestports.AWDFlagAssignment, ttl time.Duration) error {
 	if s == nil || s.cache == nil || round == nil {
 		return nil
 	}

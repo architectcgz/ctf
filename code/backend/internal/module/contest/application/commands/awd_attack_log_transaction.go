@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (s *AWDService) persistAttackLogAndScores(ctx context.Context, contestID, roundID int64, req CreateAttackLogInput, logRecord *model.AWDAttackLog) error {
+func (s *AWDService) persistAttackLogAndScores(ctx context.Context, contestID, roundID int64, req CreateAttackLogInput, logRecord *contestentity.AWDAttackLog) error {
 	now := time.Now().UTC()
 	return s.repo.WithinAttackLogTransaction(ctx, func(txRepo contestports.AWDAttackLogTxRepository) error {
 		if err := txRepo.CreateAttackLog(ctx, logRecord); err != nil {

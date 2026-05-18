@@ -3,11 +3,11 @@ package domain
 import (
 	"testing"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func TestShouldGateAWDContestStart(t *testing.T) {
-	running := model.ContestStatusRunning
+	running := contestentity.ContestStatusRunning
 
 	tests := []struct {
 		name          string
@@ -18,36 +18,36 @@ func TestShouldGateAWDContestStart(t *testing.T) {
 	}{
 		{
 			name:          "gate awd start transition",
-			mode:          model.ContestModeAWD,
-			currentStatus: model.ContestStatusRegistration,
+			mode:          contestentity.ContestModeAWD,
+			currentStatus: contestentity.ContestStatusRegistration,
 			targetStatus:  &running,
 			want:          true,
 		},
 		{
 			name:          "skip non awd contest",
-			mode:          model.ContestModeJeopardy,
-			currentStatus: model.ContestStatusRegistration,
+			mode:          contestentity.ContestModeJeopardy,
+			currentStatus: contestentity.ContestStatusRegistration,
 			targetStatus:  &running,
 			want:          false,
 		},
 		{
 			name:          "skip when already running",
-			mode:          model.ContestModeAWD,
-			currentStatus: model.ContestStatusRunning,
+			mode:          contestentity.ContestModeAWD,
+			currentStatus: contestentity.ContestStatusRunning,
 			targetStatus:  &running,
 			want:          false,
 		},
 		{
 			name:          "skip other target status",
-			mode:          model.ContestModeAWD,
-			currentStatus: model.ContestStatusRegistration,
-			targetStatus:  strPtr(model.ContestStatusFrozen),
+			mode:          contestentity.ContestModeAWD,
+			currentStatus: contestentity.ContestStatusRegistration,
+			targetStatus:  strPtr(contestentity.ContestStatusFrozen),
 			want:          false,
 		},
 		{
 			name:          "skip nil target status",
-			mode:          model.ContestModeAWD,
-			currentStatus: model.ContestStatusRegistration,
+			mode:          contestentity.ContestModeAWD,
+			currentStatus: contestentity.ContestStatusRegistration,
 			targetStatus:  nil,
 			want:          false,
 		},

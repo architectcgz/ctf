@@ -4,8 +4,8 @@
 package commands
 
 import (
-	model "ctf-platform/internal/model"
 	domain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type awdCheckerPreviewResultMapperImpl struct{}
@@ -74,17 +74,17 @@ func (c *awdCheckerPreviewResultMapperImpl) domainAWDCheckerPreviewContextToComm
 	commandsAWDCheckerPreviewContextResp.AWDChallengeID = source.AWDChallengeID
 	return commandsAWDCheckerPreviewContextResp
 }
-func (c *awdCheckerPreviewResultMapperImpl) modelAWDCheckerTypeToModelAWDCheckerType(source model.AWDCheckerType) model.AWDCheckerType {
-	var modelAWDCheckerType model.AWDCheckerType
+func (c *awdCheckerPreviewResultMapperImpl) modelAWDCheckerTypeToModelAWDCheckerType(source contestentity.AWDCheckerType) contestentity.AWDCheckerType {
+	var modelAWDCheckerType contestentity.AWDCheckerType
 	switch source {
-	case model.AWDCheckerTypeHTTPStandard:
-		modelAWDCheckerType = model.AWDCheckerTypeHTTPStandard
-	case model.AWDCheckerTypeLegacyProbe:
-		modelAWDCheckerType = model.AWDCheckerTypeLegacyProbe
-	case model.AWDCheckerTypeScript:
-		modelAWDCheckerType = model.AWDCheckerTypeScript
-	case model.AWDCheckerTypeTCPStandard:
-		modelAWDCheckerType = model.AWDCheckerTypeTCPStandard
+	case contestentity.AWDCheckerTypeHTTPStandard:
+		modelAWDCheckerType = contestentity.AWDCheckerTypeHTTPStandard
+	case contestentity.AWDCheckerTypeLegacyProbe:
+		modelAWDCheckerType = contestentity.AWDCheckerTypeLegacyProbe
+	case contestentity.AWDCheckerTypeScript:
+		modelAWDCheckerType = contestentity.AWDCheckerTypeScript
+	case contestentity.AWDCheckerTypeTCPStandard:
+		modelAWDCheckerType = contestentity.AWDCheckerTypeTCPStandard
 	default: // ignored
 	}
 	return modelAWDCheckerType

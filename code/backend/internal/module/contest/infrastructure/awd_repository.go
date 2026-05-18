@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -49,7 +49,7 @@ func (r *AWDRepository) WithinRoundServiceWritebackTransaction(ctx context.Conte
 	})
 }
 
-func (r *AWDRepository) CreateContestAWDService(ctx context.Context, service *model.ContestAWDService) error {
+func (r *AWDRepository) CreateContestAWDService(ctx context.Context, service *contestentity.ContestAWDService) error {
 	return r.dbWithContext(ctx).Create(service).Error
 }
 
@@ -57,13 +57,13 @@ func (r *AWDRepository) UpdateContestAWDServiceByContestAndID(ctx context.Contex
 	if len(updates) == 0 {
 		return nil
 	}
-	return r.dbWithContext(ctx).Model(&model.ContestAWDService{}).
+	return r.dbWithContext(ctx).Model(&contestentity.ContestAWDService{}).
 		Where("contest_id = ? AND id = ?", contestID, serviceID).
 		Updates(updates).Error
 }
 
-func (r *AWDRepository) FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
-	var item model.ContestAWDService
+func (r *AWDRepository) FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
+	var item contestentity.ContestAWDService
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND id = ?", contestID, serviceID).
 		First(&item).Error; err != nil {
@@ -72,8 +72,8 @@ func (r *AWDRepository) FindContestAWDServiceByContestAndID(ctx context.Context,
 	return &item, nil
 }
 
-func (r *AWDRepository) ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]model.ContestAWDService, error) {
-	var items []model.ContestAWDService
+func (r *AWDRepository) ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]contestentity.ContestAWDService, error) {
+	var items []contestentity.ContestAWDService
 	err := r.dbWithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Order("\"order\" ASC, id ASC").
@@ -84,7 +84,7 @@ func (r *AWDRepository) ListContestAWDServicesByContest(ctx context.Context, con
 func (r *AWDRepository) DeleteContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) error {
 	return r.dbWithContext(ctx).
 		Where("contest_id = ? AND id = ?", contestID, serviceID).
-		Delete(&model.ContestAWDService{}).Error
+		Delete(&contestentity.ContestAWDService{}).Error
 }
 
 func (r *AWDRepository) RecalculateContestTeamScores(ctx context.Context, contestID int64) error {

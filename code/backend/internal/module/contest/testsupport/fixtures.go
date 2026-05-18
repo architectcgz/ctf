@@ -14,6 +14,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/crypto"
 )
@@ -28,7 +29,7 @@ const (
 func CreateContestTeamRegistration(t *testing.T, db *gorm.DB, contestID, teamID, userID int64, teamName string, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.Team{
+	if err := db.Create(&contestentity.Team{
 		ID:         teamID,
 		ContestID:  contestID,
 		Name:       teamName,
@@ -40,11 +41,11 @@ func CreateContestTeamRegistration(t *testing.T, db *gorm.DB, contestID, teamID,
 	}).Error; err != nil {
 		t.Fatalf("create team: %v", err)
 	}
-	if err := db.Create(&model.ContestRegistration{
+	if err := db.Create(&contestentity.ContestRegistration{
 		ContestID: contestID,
 		UserID:    userID,
 		TeamID:    &teamID,
-		Status:    model.ContestRegistrationStatusApproved,
+		Status:    contestentity.ContestRegistrationStatusApproved,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -55,11 +56,11 @@ func CreateContestTeamRegistration(t *testing.T, db *gorm.DB, contestID, teamID,
 func CreateContestRegistrationForExistingTeam(t *testing.T, db *gorm.DB, contestID, teamID, userID int64, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.ContestRegistration{
+	if err := db.Create(&contestentity.ContestRegistration{
 		ContestID: contestID,
 		UserID:    userID,
 		TeamID:    &teamID,
-		Status:    model.ContestRegistrationStatusApproved,
+		Status:    contestentity.ContestRegistrationStatusApproved,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -70,7 +71,7 @@ func CreateContestRegistrationForExistingTeam(t *testing.T, db *gorm.DB, contest
 func AssertContestTeamScore(t *testing.T, db *gorm.DB, teamID int64, expected int) {
 	t.Helper()
 
-	var team model.Team
+	var team contestentity.Team
 	if err := db.First(&team, teamID).Error; err != nil {
 		t.Fatalf("load team %d: %v", teamID, err)
 	}
@@ -85,13 +86,13 @@ func AssertContestTeamScore(t *testing.T, db *gorm.DB, teamID int64, expected in
 func CreateAWDContestFixture(t *testing.T, db *gorm.DB, contestID int64, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        contestID,
 		Title:     "awd-contest",
-		Mode:      model.ContestModeAWD,
+		Mode:      contestentity.ContestModeAWD,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
-		Status:    model.ContestStatusRunning,
+		Status:    contestentity.ContestStatusRunning,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -102,11 +103,11 @@ func CreateAWDContestFixture(t *testing.T, db *gorm.DB, contestID int64, now tim
 func CreateAWDRoundFixture(t *testing.T, db *gorm.DB, roundID, contestID int64, roundNumber, attackScore, defenseScore int, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.AWDRound{
+	if err := db.Create(&contestentity.AWDRound{
 		ID:           roundID,
 		ContestID:    contestID,
 		RoundNumber:  roundNumber,
-		Status:       model.AWDRoundStatusRunning,
+		Status:       contestentity.AWDRoundStatusRunning,
 		AttackScore:  attackScore,
 		DefenseScore: defenseScore,
 		CreatedAt:    now,
@@ -119,11 +120,11 @@ func CreateAWDRoundFixture(t *testing.T, db *gorm.DB, roundID, contestID int64, 
 func CreateAWDRoundFixtureWithWindow(t *testing.T, db *gorm.DB, roundID, contestID int64, roundNumber, attackScore, defenseScore int, startedAt time.Time, endedAt time.Time) {
 	t.Helper()
 
-	round := &model.AWDRound{
+	round := &contestentity.AWDRound{
 		ID:           roundID,
 		ContestID:    contestID,
 		RoundNumber:  roundNumber,
-		Status:       model.AWDRoundStatusRunning,
+		Status:       contestentity.AWDRoundStatusRunning,
 		StartedAt:    &startedAt,
 		AttackScore:  attackScore,
 		DefenseScore: defenseScore,
@@ -132,7 +133,7 @@ func CreateAWDRoundFixtureWithWindow(t *testing.T, db *gorm.DB, roundID, contest
 	}
 	if !endedAt.IsZero() {
 		round.EndedAt = &endedAt
-		round.Status = model.AWDRoundStatusFinished
+		round.Status = contestentity.AWDRoundStatusFinished
 	}
 	if err := db.Create(round).Error; err != nil {
 		t.Fatalf("create awd round with window: %v", err)
@@ -161,7 +162,7 @@ func CreateAWDChallengeFixture(t *testing.T, db *gorm.DB, challengeID int64, now
 func CreateAWDContestChallengeFixture(t *testing.T, db *gorm.DB, contestID, challengeID int64, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.ContestChallenge{
+	if err := db.Create(&contestentity.ContestChallenge{
 		ContestID:   contestID,
 		ChallengeID: challengeID,
 		Points:      100,
@@ -172,17 +173,17 @@ func CreateAWDContestChallengeFixture(t *testing.T, db *gorm.DB, contestID, chal
 		t.Fatalf("create awd contest challenge: %v", err)
 	}
 
-	var contest model.Contest
+	var contest contestentity.Contest
 	if err := db.WithContext(context.Background()).Where("id = ?", contestID).First(&contest).Error; err != nil {
 		return
 	}
-	if contest.Mode != model.ContestModeAWD {
+	if contest.Mode != contestentity.ContestModeAWD {
 		return
 	}
 
 	var count int64
 	if err := db.WithContext(context.Background()).
-		Model(&model.ContestAWDService{}).
+		Model(&contestentity.ContestAWDService{}).
 		Where("contest_id = ? AND awd_challenge_id = ?", contestID, challengeID).
 		Count(&count).Error; err != nil {
 		t.Fatalf("count awd contest services: %v", err)
@@ -193,7 +194,7 @@ func CreateAWDContestChallengeFixture(t *testing.T, db *gorm.DB, contestID, chal
 
 	serviceSnapshot := buildAWDContestServiceFixtureSnapshot(t, db, challengeID)
 
-	if err := db.Create(&model.ContestAWDService{
+	if err := db.Create(&contestentity.ContestAWDService{
 		ID:                DefaultAWDContestServiceID(contestID, challengeID),
 		ContestID:         contestID,
 		AWDChallengeID:    challengeID,
@@ -203,7 +204,7 @@ func CreateAWDContestChallengeFixture(t *testing.T, db *gorm.DB, contestID, chal
 		IsVisible:         true,
 		ScoreConfig:       `{"points":100}`,
 		RuntimeConfig:     `{}`,
-		ValidationState:   model.AWDCheckerValidationStatePending,
+		ValidationState:   contestentity.AWDCheckerValidationStatePending,
 		LastPreviewResult: "",
 		CreatedAt:         now,
 		UpdatedAt:         now,
@@ -217,7 +218,7 @@ func SyncAWDContestServiceFixture(
 	db *gorm.DB,
 	contestID, challengeID int64,
 	displayName string,
-	checkerType model.AWDCheckerType,
+	checkerType contestentity.AWDCheckerType,
 	checkerConfig string,
 	points, slaScore, defenseScore int,
 	now time.Time,
@@ -266,7 +267,7 @@ func SyncAWDContestServiceFixture(
 		"service_snapshot": serviceSnapshot,
 		"updated_at":       now,
 	}
-	result := db.Model(&model.ContestAWDService{}).
+	result := db.Model(&contestentity.ContestAWDService{}).
 		Where("contest_id = ? AND awd_challenge_id = ?", contestID, challengeID).
 		Updates(updates)
 	if result.Error != nil {
@@ -276,7 +277,7 @@ func SyncAWDContestServiceFixture(
 		return
 	}
 
-	if err := db.Create(&model.ContestAWDService{
+	if err := db.Create(&contestentity.ContestAWDService{
 		ID:                DefaultAWDContestServiceID(contestID, challengeID),
 		ContestID:         contestID,
 		AWDChallengeID:    challengeID,
@@ -286,7 +287,7 @@ func SyncAWDContestServiceFixture(
 		IsVisible:         true,
 		ScoreConfig:       string(scoreConfigRaw),
 		RuntimeConfig:     string(runtimeConfigRaw),
-		ValidationState:   model.AWDCheckerValidationStatePending,
+		ValidationState:   contestentity.AWDCheckerValidationStatePending,
 		LastPreviewResult: "",
 		CreatedAt:         now,
 		UpdatedAt:         now,
@@ -299,7 +300,7 @@ func SyncAWDContestServiceReadinessFixture(
 	t *testing.T,
 	db *gorm.DB,
 	contestID, challengeID int64,
-	state model.AWDCheckerValidationState,
+	state contestentity.AWDCheckerValidationState,
 	lastPreviewAt *time.Time,
 	lastPreviewResult string,
 ) {
@@ -310,7 +311,7 @@ func SyncAWDContestServiceReadinessFixture(
 		"awd_checker_last_preview_at":     lastPreviewAt,
 		"awd_checker_last_preview_result": lastPreviewResult,
 	}
-	result := db.Model(&model.ContestAWDService{}).
+	result := db.Model(&contestentity.ContestAWDService{}).
 		Where("contest_id = ? AND awd_challenge_id = ?", contestID, challengeID).
 		Updates(updates)
 	if result.Error != nil {
@@ -332,7 +333,7 @@ func buildAWDContestServiceFixtureSnapshot(t *testing.T, db *gorm.DB, challengeI
 	if err := db.WithContext(context.Background()).Where("id = ?", challengeID).First(&challenge).Error; err != nil {
 		t.Fatalf("load awd challenge fixture: %v", err)
 	}
-	snapshot := model.ContestAWDServiceSnapshot{
+	snapshot := contestentity.ContestAWDServiceSnapshot{
 		Name:       challenge.Title,
 		Category:   challenge.Category,
 		Difficulty: challenge.Difficulty,
@@ -345,7 +346,7 @@ func buildAWDContestServiceFixtureSnapshot(t *testing.T, db *gorm.DB, challengeI
 	if challenge.ImageID > 0 {
 		snapshot.RuntimeConfig["image_id"] = challenge.ImageID
 	}
-	raw, err := model.EncodeContestAWDServiceSnapshot(snapshot)
+	raw, err := contestentity.EncodeContestAWDServiceSnapshot(snapshot)
 	if err != nil {
 		t.Fatalf("encode awd service snapshot fixture: %v", err)
 	}
@@ -364,7 +365,7 @@ func firstFixtureValue(values ...string) string {
 func CreateAWDTeamFixture(t *testing.T, db *gorm.DB, teamID, contestID int64, name string, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.Team{
+	if err := db.Create(&contestentity.Team{
 		ID:         teamID,
 		ContestID:  contestID,
 		Name:       name,
@@ -381,7 +382,7 @@ func CreateAWDTeamFixture(t *testing.T, db *gorm.DB, teamID, contestID int64, na
 func CreateAWDTeamMemberFixture(t *testing.T, db *gorm.DB, contestID, teamID, userID int64, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.TeamMember{
+	if err := db.Create(&contestentity.TeamMember{
 		ContestID: contestID,
 		TeamID:    teamID,
 		UserID:    userID,
@@ -400,7 +401,7 @@ func BuildAWDRoundFlag(contestID int64, roundNumber int, teamID, challengeID int
 func AssertTeamTotalScore(t *testing.T, db *gorm.DB, teamID int64, expected int) {
 	t.Helper()
 
-	var team model.Team
+	var team contestentity.Team
 	if err := db.Where("id = ?", teamID).First(&team).Error; err != nil {
 		t.Fatalf("load team %d: %v", teamID, err)
 	}

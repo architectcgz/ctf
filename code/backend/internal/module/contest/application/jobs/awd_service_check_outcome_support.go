@@ -3,7 +3,7 @@ package jobs
 import (
 	"encoding/json"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func buildAWDCheckOutcome(result awdServiceCheckResult, serviceStatus string) (*awdServiceCheckOutcome, error) {
@@ -25,7 +25,7 @@ func buildAWDCheckOutcomeWithError(result awdServiceCheckResult, serviceStatus, 
 }
 
 func buildAWDDownCheckOutcome(result awdServiceCheckResult, errorCode, errorMessage string) (*awdServiceCheckOutcome, error) {
-	return buildAWDCheckOutcomeWithError(result, model.AWDServiceStatusDown, errorCode, errorMessage)
+	return buildAWDCheckOutcomeWithError(result, contestentity.AWDServiceStatusDown, errorCode, errorMessage)
 }
 
 func annotateAWDRecoverySLAExemption(raw string) string {

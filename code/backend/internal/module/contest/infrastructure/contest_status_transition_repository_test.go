@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -18,11 +17,11 @@ func TestRepositoryRecordAppliedTransition(t *testing.T) {
 	repo := contestinfra.NewRepository(db)
 	now := time.Now().UTC()
 
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:            201,
 		Title:         "record-transition",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRunning,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRunning,
 		StatusVersion: 1,
 		StartTime:     now.Add(-time.Hour),
 		EndTime:       now.Add(time.Hour),
@@ -35,8 +34,8 @@ func TestRepositoryRecordAppliedTransition(t *testing.T) {
 	recordID, err := repo.RecordAppliedTransition(context.Background(), contestdomain.ContestStatusTransitionResult{
 		Transition: contestdomain.ContestStatusTransition{
 			ContestID:         201,
-			FromStatus:        model.ContestStatusRegistration,
-			ToStatus:          model.ContestStatusRunning,
+			FromStatus:        contestentity.ContestStatusRegistration,
+			ToStatus:          contestentity.ContestStatusRunning,
 			FromStatusVersion: 0,
 			Reason:            contestdomain.ContestStatusTransitionReasonTimeWindow,
 			OccurredAt:        now,
@@ -65,11 +64,11 @@ func TestRepositoryMarkTransitionSideEffects(t *testing.T) {
 	db := contesttestsupport.SetupContestTestDB(t)
 	repo := contestinfra.NewRepository(db)
 	now := time.Now().UTC()
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:            201,
 		Title:         "mark-transition",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRunning,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRunning,
 		StatusVersion: 1,
 		StartTime:     now.Add(-time.Hour),
 		EndTime:       now.Add(time.Hour),
@@ -82,8 +81,8 @@ func TestRepositoryMarkTransitionSideEffects(t *testing.T) {
 		ID:               301,
 		ContestID:        201,
 		StatusVersion:    1,
-		FromStatus:       model.ContestStatusRegistration,
-		ToStatus:         model.ContestStatusRunning,
+		FromStatus:       contestentity.ContestStatusRegistration,
+		ToStatus:         contestentity.ContestStatusRunning,
 		Reason:           contestdomain.ContestStatusTransitionReasonTimeWindow,
 		AppliedBy:        "contest_status_updater",
 		SideEffectStatus: contestdomain.ContestStatusTransitionSideEffectPending,
@@ -124,11 +123,11 @@ func TestRepositoryRecordAppliedTransitionReturnsExistingRecordOnDuplicate(t *te
 	db := contesttestsupport.SetupContestTestDB(t)
 	repo := contestinfra.NewRepository(db)
 	now := time.Now().UTC()
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:            202,
 		Title:         "duplicate-transition",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRunning,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRunning,
 		StatusVersion: 1,
 		StartTime:     now.Add(-time.Hour),
 		EndTime:       now.Add(time.Hour),
@@ -141,8 +140,8 @@ func TestRepositoryRecordAppliedTransitionReturnsExistingRecordOnDuplicate(t *te
 	firstID, err := repo.RecordAppliedTransition(context.Background(), contestdomain.ContestStatusTransitionResult{
 		Transition: contestdomain.ContestStatusTransition{
 			ContestID:         202,
-			FromStatus:        model.ContestStatusRegistration,
-			ToStatus:          model.ContestStatusRunning,
+			FromStatus:        contestentity.ContestStatusRegistration,
+			ToStatus:          contestentity.ContestStatusRunning,
 			FromStatusVersion: 0,
 			Reason:            contestdomain.ContestStatusTransitionReasonManualUpdate,
 			OccurredAt:        now,
@@ -158,8 +157,8 @@ func TestRepositoryRecordAppliedTransitionReturnsExistingRecordOnDuplicate(t *te
 	secondID, err := repo.RecordAppliedTransition(context.Background(), contestdomain.ContestStatusTransitionResult{
 		Transition: contestdomain.ContestStatusTransition{
 			ContestID:         202,
-			FromStatus:        model.ContestStatusRegistration,
-			ToStatus:          model.ContestStatusRunning,
+			FromStatus:        contestentity.ContestStatusRegistration,
+			ToStatus:          contestentity.ContestStatusRunning,
 			FromStatusVersion: 0,
 			Reason:            contestdomain.ContestStatusTransitionReasonManualUpdate,
 			OccurredAt:        now,
@@ -180,11 +179,11 @@ func TestRepositoryListTransitionsForSideEffectReplay(t *testing.T) {
 	db := contesttestsupport.SetupContestTestDB(t)
 	repo := contestinfra.NewRepository(db)
 	now := time.Now().UTC()
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:            203,
 		Title:         "replayable-transition",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusFrozen,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusFrozen,
 		StatusVersion: 2,
 		StartTime:     now.Add(-time.Hour),
 		EndTime:       now.Add(time.Hour),
@@ -198,8 +197,8 @@ func TestRepositoryListTransitionsForSideEffectReplay(t *testing.T) {
 			ID:               401,
 			ContestID:        203,
 			StatusVersion:    1,
-			FromStatus:       model.ContestStatusRegistration,
-			ToStatus:         model.ContestStatusRunning,
+			FromStatus:       contestentity.ContestStatusRegistration,
+			ToStatus:         contestentity.ContestStatusRunning,
 			Reason:           contestdomain.ContestStatusTransitionReasonTimeWindow,
 			AppliedBy:        "contest_status_updater",
 			SideEffectStatus: contestdomain.ContestStatusTransitionSideEffectPending,
@@ -211,8 +210,8 @@ func TestRepositoryListTransitionsForSideEffectReplay(t *testing.T) {
 			ID:               402,
 			ContestID:        203,
 			StatusVersion:    2,
-			FromStatus:       model.ContestStatusRunning,
-			ToStatus:         model.ContestStatusFrozen,
+			FromStatus:       contestentity.ContestStatusRunning,
+			ToStatus:         contestentity.ContestStatusFrozen,
 			Reason:           contestdomain.ContestStatusTransitionReasonTimeWindow,
 			AppliedBy:        "contest_status_updater",
 			SideEffectStatus: contestdomain.ContestStatusTransitionSideEffectFailed,

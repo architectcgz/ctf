@@ -11,8 +11,8 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (r *ParticipationRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
-	var registration model.ContestRegistration
+func (r *ParticipationRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
+	var registration contestentity.ContestRegistration
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND user_id = ?", contestID, userID).
 		First(&registration).Error; err != nil {
@@ -21,8 +21,8 @@ func (r *ParticipationRepository) FindRegistration(ctx context.Context, contestI
 	return &registration, nil
 }
 
-func (r *ParticipationRepository) FindRegistrationByID(ctx context.Context, contestID, registrationID int64) (*model.ContestRegistration, error) {
-	var registration model.ContestRegistration
+func (r *ParticipationRepository) FindRegistrationByID(ctx context.Context, contestID, registrationID int64) (*contestentity.ContestRegistration, error) {
+	var registration contestentity.ContestRegistration
 	if err := r.dbWithContext(ctx).
 		Where("id = ? AND contest_id = ?", registrationID, contestID).
 		First(&registration).Error; err != nil {
@@ -31,11 +31,11 @@ func (r *ParticipationRepository) FindRegistrationByID(ctx context.Context, cont
 	return &registration, nil
 }
 
-func (r *ParticipationRepository) CreateRegistration(ctx context.Context, registration *model.ContestRegistration) error {
+func (r *ParticipationRepository) CreateRegistration(ctx context.Context, registration *contestentity.ContestRegistration) error {
 	return r.dbWithContext(ctx).Create(registration).Error
 }
 
-func (r *ParticipationRepository) SaveRegistration(ctx context.Context, registration *model.ContestRegistration) error {
+func (r *ParticipationRepository) SaveRegistration(ctx context.Context, registration *contestentity.ContestRegistration) error {
 	return r.dbWithContext(ctx).Save(registration).Error
 }
 
@@ -100,7 +100,7 @@ func NewParticipationRegistrationRepository(source interface {
 	return &ParticipationRegistrationRepository{source: source}
 }
 
-func (r *ParticipationRegistrationRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (r *ParticipationRegistrationRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	registration, err := r.source.FindRegistration(ctx, contestID, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestParticipationRegistrationNotFound
@@ -108,7 +108,7 @@ func (r *ParticipationRegistrationRepository) FindRegistration(ctx context.Conte
 	return registration, err
 }
 
-func (r *ParticipationRegistrationRepository) FindRegistrationByID(ctx context.Context, contestID, registrationID int64) (*model.ContestRegistration, error) {
+func (r *ParticipationRegistrationRepository) FindRegistrationByID(ctx context.Context, contestID, registrationID int64) (*contestentity.ContestRegistration, error) {
 	registration, err := r.source.FindRegistrationByID(ctx, contestID, registrationID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestParticipationRegistrationNotFound
@@ -116,11 +116,11 @@ func (r *ParticipationRegistrationRepository) FindRegistrationByID(ctx context.C
 	return registration, err
 }
 
-func (r *ParticipationRegistrationRepository) CreateRegistration(ctx context.Context, registration *model.ContestRegistration) error {
+func (r *ParticipationRegistrationRepository) CreateRegistration(ctx context.Context, registration *contestentity.ContestRegistration) error {
 	return r.source.CreateRegistration(ctx, registration)
 }
 
-func (r *ParticipationRegistrationRepository) SaveRegistration(ctx context.Context, registration *model.ContestRegistration) error {
+func (r *ParticipationRegistrationRepository) SaveRegistration(ctx context.Context, registration *contestentity.ContestRegistration) error {
 	return r.source.SaveRegistration(ctx, registration)
 }
 

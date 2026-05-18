@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 )
@@ -29,11 +30,11 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 	service, challengeRepo, contestRepo, awdRepo := newContestAWDServiceQueryServiceForTest(t)
 
 	now := time.Now()
-	if err := contestRepo.Create(context.Background(), &model.Contest{
+	if err := contestRepo.Create(context.Background(), &contestentity.Contest{
 		ID:        801,
 		Title:     "awd-service-query",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -55,7 +56,7 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	if err := awdRepo.CreateContestAWDService(context.Background(), &model.ContestAWDService{
+	if err := awdRepo.CreateContestAWDService(context.Background(), &contestentity.ContestAWDService{
 		ID:                7101,
 		ContestID:         801,
 		AWDChallengeID:    9801,
@@ -64,7 +65,7 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 		IsVisible:         true,
 		ScoreConfig:       `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
 		RuntimeConfig:     `{"challenge_id":9801,"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/health"}}}`,
-		ValidationState:   model.AWDCheckerValidationStateFailed,
+		ValidationState:   contestentity.AWDCheckerValidationStateFailed,
 		LastPreviewAt:     &now,
 		LastPreviewResult: `{"service_status":"down","check_result":{"status_code":500},"preview_context":{"access_url":"http://preview.internal"}}`,
 		CreatedAt:         now,
@@ -80,7 +81,7 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 	if len(resp) != 1 {
 		t.Fatalf("unexpected service count: %d", len(resp))
 	}
-	if resp[0].ValidationState != string(model.AWDCheckerValidationStateFailed) {
+	if resp[0].ValidationState != string(contestentity.AWDCheckerValidationStateFailed) {
 		t.Fatalf("expected validation state failed, got %+v", resp[0])
 	}
 	if resp[0].LastPreviewAt == nil || !resp[0].LastPreviewAt.Equal(now) {

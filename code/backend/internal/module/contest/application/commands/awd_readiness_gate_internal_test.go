@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 )
@@ -25,7 +25,7 @@ func TestEvaluateAWDReadinessGateReturnsDecisionSnapshotAndNormalizedOverride(t 
 		db,
 		5101,
 		51011,
-		model.AWDCheckerValidationStatePending,
+		contestentity.AWDCheckerValidationStatePending,
 		nil,
 		"",
 	)

@@ -4,18 +4,18 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (r *Repository) ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error) {
-	var contests []*model.Contest
+func (r *Repository) ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*contestentity.Contest, int64, error) {
+	var contests []*contestentity.Contest
 	var total int64
 
 	if len(statuses) == 0 {
 		return contests, 0, nil
 	}
 
-	query := r.db.WithContext(ctx).Model(&model.Contest{}).
+	query := r.db.WithContext(ctx).Model(&contestentity.Contest{}).
 		Where("status IN ?", statuses)
 
 	if err := query.Count(&total).Error; err != nil {

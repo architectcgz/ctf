@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -17,11 +16,11 @@ func TestRepositoryApplyStatusTransitionApplied(t *testing.T) {
 	repo := contestinfra.NewRepository(db)
 	now := time.Now().UTC()
 
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:            101,
 		Title:         "status-transition",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRegistration,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRegistration,
 		StatusVersion: 0,
 		StartTime:     now.Add(-time.Minute),
 		EndTime:       now.Add(time.Hour),
@@ -33,8 +32,8 @@ func TestRepositoryApplyStatusTransitionApplied(t *testing.T) {
 
 	result, err := repo.ApplyStatusTransition(context.Background(), contestdomain.ContestStatusTransition{
 		ContestID:         101,
-		FromStatus:        model.ContestStatusRegistration,
-		ToStatus:          model.ContestStatusRunning,
+		FromStatus:        contestentity.ContestStatusRegistration,
+		ToStatus:          contestentity.ContestStatusRunning,
 		FromStatusVersion: 0,
 		OccurredAt:        now,
 	})
@@ -48,11 +47,11 @@ func TestRepositoryApplyStatusTransitionApplied(t *testing.T) {
 		t.Fatalf("expected status version 1, got %d", result.StatusVersion)
 	}
 
-	var contest model.Contest
+	var contest contestentity.Contest
 	if err := db.First(&contest, 101).Error; err != nil {
 		t.Fatalf("load contest: %v", err)
 	}
-	if contest.Status != model.ContestStatusRunning {
+	if contest.Status != contestentity.ContestStatusRunning {
 		t.Fatalf("expected status running, got %q", contest.Status)
 	}
 	if contest.StatusVersion != 1 {
@@ -73,11 +72,11 @@ func TestRepositoryApplyStatusTransitionReturnsStaleWhenVersionChanged(t *testin
 	repo := contestinfra.NewRepository(db)
 	now := time.Now().UTC()
 
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:            102,
 		Title:         "stale-transition",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRunning,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRunning,
 		StatusVersion: 2,
 		StartTime:     now.Add(-time.Hour),
 		EndTime:       now.Add(time.Hour),
@@ -89,8 +88,8 @@ func TestRepositoryApplyStatusTransitionReturnsStaleWhenVersionChanged(t *testin
 
 	result, err := repo.ApplyStatusTransition(context.Background(), contestdomain.ContestStatusTransition{
 		ContestID:         102,
-		FromStatus:        model.ContestStatusRunning,
-		ToStatus:          model.ContestStatusFrozen,
+		FromStatus:        contestentity.ContestStatusRunning,
+		ToStatus:          contestentity.ContestStatusFrozen,
 		FromStatusVersion: 1,
 		OccurredAt:        now,
 	})
@@ -108,8 +107,8 @@ func TestRepositoryApplyStatusTransitionMissingContest(t *testing.T) {
 
 	_, err := repo.ApplyStatusTransition(context.Background(), contestdomain.ContestStatusTransition{
 		ContestID:         404,
-		FromStatus:        model.ContestStatusRegistration,
-		ToStatus:          model.ContestStatusRunning,
+		FromStatus:        contestentity.ContestStatusRegistration,
+		ToStatus:          contestentity.ContestStatusRunning,
 		FromStatusVersion: 0,
 		OccurredAt:        time.Now().UTC(),
 	})
@@ -123,12 +122,12 @@ func TestRepositoryUpdateContestWithStatusTransitionUsesCompareAndSet(t *testing
 	repo := contestinfra.NewRepository(db)
 	now := time.Now().UTC()
 
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:            103,
 		Title:         "manual-cas",
 		Description:   "before",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRegistration,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRegistration,
 		StatusVersion: 1,
 		StartTime:     now.Add(-time.Minute),
 		EndTime:       now.Add(time.Hour),
@@ -138,12 +137,12 @@ func TestRepositoryUpdateContestWithStatusTransitionUsesCompareAndSet(t *testing
 		t.Fatalf("create contest: %v", err)
 	}
 
-	contest := &model.Contest{
+	contest := &contestentity.Contest{
 		ID:            103,
 		Title:         "manual-cas-updated",
 		Description:   "after",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRunning,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRunning,
 		StatusVersion: 2,
 		StartTime:     now.Add(-time.Minute),
 		EndTime:       now.Add(time.Hour),
@@ -153,8 +152,8 @@ func TestRepositoryUpdateContestWithStatusTransitionUsesCompareAndSet(t *testing
 
 	result, err := repo.UpdateContestWithStatusTransition(context.Background(), contest, contestdomain.ContestStatusTransition{
 		ContestID:         103,
-		FromStatus:        model.ContestStatusRegistration,
-		ToStatus:          model.ContestStatusRunning,
+		FromStatus:        contestentity.ContestStatusRegistration,
+		ToStatus:          contestentity.ContestStatusRunning,
 		FromStatusVersion: 1,
 		OccurredAt:        contest.UpdatedAt,
 		Reason:            contestdomain.ContestStatusTransitionReasonManualUpdate,
@@ -167,12 +166,12 @@ func TestRepositoryUpdateContestWithStatusTransitionUsesCompareAndSet(t *testing
 		t.Fatalf("unexpected transition result: %+v", result)
 	}
 
-	staleContest := &model.Contest{
+	staleContest := &contestentity.Contest{
 		ID:            103,
 		Title:         "should-not-win",
 		Description:   "stale",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusFrozen,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusFrozen,
 		StatusVersion: 2,
 		StartTime:     now.Add(-time.Minute),
 		EndTime:       now.Add(time.Hour),
@@ -181,8 +180,8 @@ func TestRepositoryUpdateContestWithStatusTransitionUsesCompareAndSet(t *testing
 	}
 	staleResult, err := repo.UpdateContestWithStatusTransition(context.Background(), staleContest, contestdomain.ContestStatusTransition{
 		ContestID:         103,
-		FromStatus:        model.ContestStatusRegistration,
-		ToStatus:          model.ContestStatusFrozen,
+		FromStatus:        contestentity.ContestStatusRegistration,
+		ToStatus:          contestentity.ContestStatusFrozen,
 		FromStatusVersion: 1,
 		OccurredAt:        staleContest.UpdatedAt,
 		Reason:            contestdomain.ContestStatusTransitionReasonManualUpdate,
@@ -195,11 +194,11 @@ func TestRepositoryUpdateContestWithStatusTransitionUsesCompareAndSet(t *testing
 		t.Fatalf("expected stale manual transition to be skipped, got %+v", staleResult)
 	}
 
-	var persisted model.Contest
+	var persisted contestentity.Contest
 	if err := db.First(&persisted, 103).Error; err != nil {
 		t.Fatalf("load contest: %v", err)
 	}
-	if persisted.Status != model.ContestStatusRunning || persisted.Title != "manual-cas-updated" {
+	if persisted.Status != contestentity.ContestStatusRunning || persisted.Title != "manual-cas-updated" {
 		t.Fatalf("unexpected persisted contest: %+v", persisted)
 	}
 }

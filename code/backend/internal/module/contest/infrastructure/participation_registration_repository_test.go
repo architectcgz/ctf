@@ -13,29 +13,29 @@ import (
 )
 
 type participationRegistrationSourceStub struct {
-	findRegistrationFn     func(context.Context, int64, int64) (*model.ContestRegistration, error)
-	findRegistrationByIDFn func(context.Context, int64, int64) (*model.ContestRegistration, error)
+	findRegistrationFn     func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
+	findRegistrationByIDFn func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
 }
 
-func (s participationRegistrationSourceStub) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (s participationRegistrationSourceStub) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	if s.findRegistrationFn != nil {
 		return s.findRegistrationFn(ctx, contestID, userID)
 	}
-	return &model.ContestRegistration{}, nil
+	return &contestentity.ContestRegistration{}, nil
 }
 
-func (s participationRegistrationSourceStub) FindRegistrationByID(ctx context.Context, contestID, registrationID int64) (*model.ContestRegistration, error) {
+func (s participationRegistrationSourceStub) FindRegistrationByID(ctx context.Context, contestID, registrationID int64) (*contestentity.ContestRegistration, error) {
 	if s.findRegistrationByIDFn != nil {
 		return s.findRegistrationByIDFn(ctx, contestID, registrationID)
 	}
-	return &model.ContestRegistration{}, nil
+	return &contestentity.ContestRegistration{}, nil
 }
 
-func (s participationRegistrationSourceStub) CreateRegistration(context.Context, *model.ContestRegistration) error {
+func (s participationRegistrationSourceStub) CreateRegistration(context.Context, *contestentity.ContestRegistration) error {
 	return nil
 }
 
-func (s participationRegistrationSourceStub) SaveRegistration(context.Context, *model.ContestRegistration) error {
+func (s participationRegistrationSourceStub) SaveRegistration(context.Context, *contestentity.ContestRegistration) error {
 	return nil
 }
 
@@ -67,7 +67,7 @@ func TestParticipationRegistrationRepositoryMapsFindRegistrationNotFoundErrors(t
 	t.Parallel()
 
 	repo := NewParticipationRegistrationRepository(participationRegistrationSourceStub{
-		findRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+		findRegistrationFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -81,7 +81,7 @@ func TestParticipationRegistrationRepositoryMapsFindRegistrationByIDNotFoundErro
 	t.Parallel()
 
 	repo := NewParticipationRegistrationRepository(participationRegistrationSourceStub{
-		findRegistrationByIDFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+		findRegistrationByIDFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})

@@ -14,52 +14,52 @@ import (
 )
 
 type participationContestLookupStub struct {
-	findByIDFn func(context.Context, int64) (*model.Contest, error)
+	findByIDFn func(context.Context, int64) (*contestentity.Contest, error)
 }
 
-func (s participationContestLookupStub) FindByID(ctx context.Context, id int64) (*model.Contest, error) {
+func (s participationContestLookupStub) FindByID(ctx context.Context, id int64) (*contestentity.Contest, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
-	return &model.Contest{ID: id, Status: model.ContestStatusRegistration}, nil
+	return &contestentity.Contest{ID: id, Status: contestentity.ContestStatusRegistration}, nil
 }
 
-func (s participationContestLookupStub) List(context.Context, *string, int, int) ([]*model.Contest, int64, error) {
+func (s participationContestLookupStub) List(context.Context, *string, int, int) ([]*contestentity.Contest, int64, error) {
 	return nil, 0, nil
 }
 
 type participationCommandRepoStub struct {
-	findRegistrationFn     func(context.Context, int64, int64) (*model.ContestRegistration, error)
-	findRegistrationByIDFn func(context.Context, int64, int64) (*model.ContestRegistration, error)
-	createRegistrationFn   func(context.Context, *model.ContestRegistration) error
-	saveRegistrationFn     func(context.Context, *model.ContestRegistration) error
+	findRegistrationFn     func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
+	findRegistrationByIDFn func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
+	createRegistrationFn   func(context.Context, *contestentity.ContestRegistration) error
+	saveRegistrationFn     func(context.Context, *contestentity.ContestRegistration) error
 	findUserByIDFn         func(context.Context, int64) (*model.User, error)
 	createAnnouncementFn   func(context.Context, *contestentity.ContestAnnouncement) error
 	deleteAnnouncementFn   func(context.Context, int64, int64) (bool, error)
 }
 
-func (s participationCommandRepoStub) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (s participationCommandRepoStub) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	if s.findRegistrationFn != nil {
 		return s.findRegistrationFn(ctx, contestID, userID)
 	}
 	return nil, contestports.ErrContestParticipationRegistrationNotFound
 }
 
-func (s participationCommandRepoStub) FindRegistrationByID(ctx context.Context, contestID, registrationID int64) (*model.ContestRegistration, error) {
+func (s participationCommandRepoStub) FindRegistrationByID(ctx context.Context, contestID, registrationID int64) (*contestentity.ContestRegistration, error) {
 	if s.findRegistrationByIDFn != nil {
 		return s.findRegistrationByIDFn(ctx, contestID, registrationID)
 	}
 	return nil, contestports.ErrContestParticipationRegistrationNotFound
 }
 
-func (s participationCommandRepoStub) CreateRegistration(ctx context.Context, registration *model.ContestRegistration) error {
+func (s participationCommandRepoStub) CreateRegistration(ctx context.Context, registration *contestentity.ContestRegistration) error {
 	if s.createRegistrationFn != nil {
 		return s.createRegistrationFn(ctx, registration)
 	}
 	return nil
 }
 
-func (s participationCommandRepoStub) SaveRegistration(ctx context.Context, registration *model.ContestRegistration) error {
+func (s participationCommandRepoStub) SaveRegistration(ctx context.Context, registration *contestentity.ContestRegistration) error {
 	if s.saveRegistrationFn != nil {
 		return s.saveRegistrationFn(ctx, registration)
 	}
@@ -88,10 +88,10 @@ func (s participationCommandRepoStub) DeleteAnnouncement(ctx context.Context, co
 }
 
 type participationTeamFinderStub struct {
-	findUserTeamInContestFn func(context.Context, int64, int64) (*model.Team, error)
+	findUserTeamInContestFn func(context.Context, int64, int64) (*contestentity.Team, error)
 }
 
-func (s participationTeamFinderStub) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*model.Team, error) {
+func (s participationTeamFinderStub) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*contestentity.Team, error) {
 	if s.findUserTeamInContestFn != nil {
 		return s.findUserTeamInContestFn(ctx, userID, contestID)
 	}
@@ -99,8 +99,8 @@ func (s participationTeamFinderStub) FindUserTeamInContest(ctx context.Context, 
 }
 
 type submissionRepositoryStub struct {
-	findRegistrationFn     func(context.Context, int64, int64) (*model.ContestRegistration, error)
-	findContestChallengeFn func(context.Context, int64, int64) (*model.ContestChallenge, error)
+	findRegistrationFn     func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
+	findContestChallengeFn func(context.Context, int64, int64) (*contestentity.ContestChallenge, error)
 	findChallengeByIDFn    func(context.Context, int64) (*model.Challenge, error)
 }
 
@@ -108,14 +108,14 @@ func (s submissionRepositoryStub) WithinScoringTransaction(ctx context.Context, 
 	return errors.New("unexpected WithinScoringTransaction call")
 }
 
-func (s submissionRepositoryStub) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (s submissionRepositoryStub) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	if s.findRegistrationFn != nil {
 		return s.findRegistrationFn(ctx, contestID, userID)
 	}
 	return nil, contestports.ErrContestParticipationRegistrationNotFound
 }
 
-func (s submissionRepositoryStub) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+func (s submissionRepositoryStub) FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
 	if s.findContestChallengeFn != nil {
 		return s.findContestChallengeFn(ctx, contestID, challengeID)
 	}
@@ -129,7 +129,7 @@ func (s submissionRepositoryStub) FindChallengeByID(ctx context.Context, challen
 	return nil, errors.New("unexpected FindChallengeByID call")
 }
 
-func (s submissionRepositoryStub) CreateSubmission(context.Context, *model.Submission) error {
+func (s submissionRepositoryStub) CreateSubmission(context.Context, *contestentity.Submission) error {
 	return errors.New("unexpected CreateSubmission call")
 }
 
@@ -140,9 +140,9 @@ func TestParticipationServiceRegisterContestTreatsSentinelNotFoundAsPendingCreat
 	service := NewParticipationService(
 		participationContestLookupStub{},
 		participationCommandRepoStub{
-			createRegistrationFn: func(_ context.Context, registration *model.ContestRegistration) error {
+			createRegistrationFn: func(_ context.Context, registration *contestentity.ContestRegistration) error {
 				createCalled = true
-				if registration.Status != model.ContestRegistrationStatusPending {
+				if registration.Status != contestentity.ContestRegistrationStatusPending {
 					t.Fatalf("unexpected status: %s", registration.Status)
 				}
 				if registration.TeamID != nil {
@@ -168,7 +168,7 @@ func TestParticipationServiceReviewRegistrationTreatsRegistrationNotFoundAsConte
 	service := NewParticipationService(
 		participationContestLookupStub{},
 		participationCommandRepoStub{
-			findRegistrationByIDFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+			findRegistrationByIDFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 				return nil, contestports.ErrContestParticipationRegistrationNotFound
 			},
 		},
@@ -176,7 +176,7 @@ func TestParticipationServiceReviewRegistrationTreatsRegistrationNotFoundAsConte
 	)
 
 	_, err := service.ReviewRegistration(context.Background(), 10, 404, 9001, ReviewRegistrationInput{
-		Status: model.ContestRegistrationStatusApproved,
+		Status: contestentity.ContestRegistrationStatusApproved,
 	})
 	if err == nil {
 		t.Fatal("expected registration not found")
@@ -192,19 +192,19 @@ func TestSubmissionServiceResolveTeamIDTreatsMissingRegistrationAndTeamAsNotRegi
 
 	service := NewSubmissionService(
 		participationContestLookupStub{
-			findByIDFn: func(context.Context, int64) (*model.Contest, error) {
+			findByIDFn: func(context.Context, int64) (*contestentity.Contest, error) {
 				return nil, contestdomain.ErrContestNotFound
 			},
 		},
 		submissionRepositoryStub{
-			findRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+			findRegistrationFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 				return nil, contestports.ErrContestParticipationRegistrationNotFound
 			},
 		},
 		nil,
 		nil,
 		participationTeamFinderStub{
-			findUserTeamInContestFn: func(context.Context, int64, int64) (*model.Team, error) {
+			findUserTeamInContestFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 				return nil, contestports.ErrContestUserTeamNotFound
 			},
 		},
@@ -227,24 +227,24 @@ func TestSubmissionServiceValidateContestSubmissionTreatsContestChallengeNotFoun
 	now := time.Now().UTC()
 	service := NewSubmissionService(
 		participationContestLookupStub{
-			findByIDFn: func(context.Context, int64) (*model.Contest, error) {
-				return &model.Contest{
+			findByIDFn: func(context.Context, int64) (*contestentity.Contest, error) {
+				return &contestentity.Contest{
 					ID:        10,
-					Status:    model.ContestStatusRunning,
+					Status:    contestentity.ContestStatusRunning,
 					StartTime: now.Add(-time.Hour),
 					EndTime:   now.Add(time.Hour),
 				}, nil
 			},
 		},
 		submissionRepositoryStub{
-			findRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
-				return &model.ContestRegistration{
+			findRegistrationFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
+				return &contestentity.ContestRegistration{
 					ContestID: 10,
 					UserID:    1001,
-					Status:    model.ContestRegistrationStatusApproved,
+					Status:    contestentity.ContestRegistrationStatusApproved,
 				}, nil
 			},
-			findContestChallengeFn: func(context.Context, int64, int64) (*model.ContestChallenge, error) {
+			findContestChallengeFn: func(context.Context, int64, int64) (*contestentity.ContestChallenge, error) {
 				return nil, contestports.ErrContestSubmissionChallengeNotFound
 			},
 		},
@@ -267,25 +267,25 @@ func TestSubmissionServiceValidateContestSubmissionTreatsChallengeEntityNotFound
 	now := time.Now().UTC()
 	service := NewSubmissionService(
 		participationContestLookupStub{
-			findByIDFn: func(context.Context, int64) (*model.Contest, error) {
-				return &model.Contest{
+			findByIDFn: func(context.Context, int64) (*contestentity.Contest, error) {
+				return &contestentity.Contest{
 					ID:        10,
-					Status:    model.ContestStatusRunning,
+					Status:    contestentity.ContestStatusRunning,
 					StartTime: now.Add(-time.Hour),
 					EndTime:   now.Add(time.Hour),
 				}, nil
 			},
 		},
 		submissionRepositoryStub{
-			findRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
-				return &model.ContestRegistration{
+			findRegistrationFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
+				return &contestentity.ContestRegistration{
 					ContestID: 10,
 					UserID:    1001,
-					Status:    model.ContestRegistrationStatusApproved,
+					Status:    contestentity.ContestRegistrationStatusApproved,
 				}, nil
 			},
-			findContestChallengeFn: func(context.Context, int64, int64) (*model.ContestChallenge, error) {
-				return &model.ContestChallenge{ContestID: 10, ChallengeID: 20}, nil
+			findContestChallengeFn: func(context.Context, int64, int64) (*contestentity.ContestChallenge, error) {
+				return &contestentity.ContestChallenge{ContestID: 10, ChallengeID: 20}, nil
 			},
 			findChallengeByIDFn: func(context.Context, int64) (*model.Challenge, error) {
 				return nil, contestports.ErrContestSubmissionChallengeEntityNotFound

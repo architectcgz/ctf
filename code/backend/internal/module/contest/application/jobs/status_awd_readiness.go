@@ -5,16 +5,16 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (u *StatusUpdater) shouldBlockAutomaticAWDStart(ctx context.Context, contest *model.Contest, nextStatus string) bool {
+func (u *StatusUpdater) shouldBlockAutomaticAWDStart(ctx context.Context, contest *contestentity.Contest, nextStatus string) bool {
 	if contest == nil ||
-		contest.Mode != model.ContestModeAWD ||
-		contest.Status != model.ContestStatusRegistration ||
-		nextStatus != model.ContestStatusRunning ||
+		contest.Mode != contestentity.ContestModeAWD ||
+		contest.Status != contestentity.ContestStatusRegistration ||
+		nextStatus != contestentity.ContestStatusRunning ||
 		u.awdRepo == nil {
 		return false
 	}

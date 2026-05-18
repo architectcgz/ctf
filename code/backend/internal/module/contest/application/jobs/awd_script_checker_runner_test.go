@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -67,7 +67,7 @@ func TestAWDRoundUpdaterPreviewScriptCheckerUsesSandboxRunner(t *testing.T) {
 	resp, err := updater.PreviewServiceCheck(context.Background(), contestports.AWDServicePreviewRequest{
 		ServiceID:      2001,
 		AWDChallengeID: 3001,
-		CheckerType:    model.AWDCheckerTypeScript,
+		CheckerType:    contestentity.AWDCheckerTypeScript,
 		CheckerConfig: `{
 			"runtime": "python3",
 			"entry": "docker/check/check.py",
@@ -90,7 +90,7 @@ func TestAWDRoundUpdaterPreviewScriptCheckerUsesSandboxRunner(t *testing.T) {
 	if err != nil {
 		t.Fatalf("PreviewServiceCheck() error = %v", err)
 	}
-	if resp.ServiceStatus != model.AWDServiceStatusUp {
+	if resp.ServiceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("ServiceStatus = %s, want up", resp.ServiceStatus)
 	}
 	if len(runner.jobs) != 1 {
@@ -230,7 +230,7 @@ func TestAWDRoundUpdaterScriptCheckerRedactsFlagInFailedAudit(t *testing.T) {
 	resp, err := updater.PreviewServiceCheck(context.Background(), contestports.AWDServicePreviewRequest{
 		ServiceID:      2001,
 		AWDChallengeID: 3001,
-		CheckerType:    model.AWDCheckerTypeScript,
+		CheckerType:    contestentity.AWDCheckerTypeScript,
 		CheckerConfig: `{
 			"runtime": "python3",
 			"entry": "docker/check/check.py",
@@ -268,7 +268,7 @@ func TestAWDRoundUpdaterScriptCheckerRedactsFlagInFailedAudit(t *testing.T) {
 	if !ok {
 		t.Fatalf("missing audit: %#v", target)
 	}
-	if audit["checker_type"] != string(model.AWDCheckerTypeScript) || audit["service_id"] != float64(2001) || audit["artifact_digest"] != "artifact-digest-1" {
+	if audit["checker_type"] != string(contestentity.AWDCheckerTypeScript) || audit["service_id"] != float64(2001) || audit["artifact_digest"] != "artifact-digest-1" {
 		t.Fatalf("unexpected audit: %#v", audit)
 	}
 	if !strings.Contains(fmt.Sprint(audit["stderr"]), "[redacted]") {
@@ -282,7 +282,7 @@ func TestAWDRoundUpdaterPreviewScriptCheckerRejectsMissingRunner(t *testing.T) {
 	updater := NewAWDRoundUpdater(nil, nil, config.ContestAWDConfig{CheckerTimeout: time.Second}, "", nil, nil)
 	resp, err := updater.PreviewServiceCheck(context.Background(), contestports.AWDServicePreviewRequest{
 		AWDChallengeID: 3001,
-		CheckerType:    model.AWDCheckerTypeScript,
+		CheckerType:    contestentity.AWDCheckerTypeScript,
 		CheckerConfig:  `{"runtime":"python3","entry":"docker/check/check.py"}`,
 		AccessURL:      "http://10.10.0.23:8080",
 		PreviewFlag:    "flag{preview}",
@@ -290,7 +290,7 @@ func TestAWDRoundUpdaterPreviewScriptCheckerRejectsMissingRunner(t *testing.T) {
 	if err != nil {
 		t.Fatalf("PreviewServiceCheck() error = %v", err)
 	}
-	if resp.ServiceStatus != model.AWDServiceStatusDown {
+	if resp.ServiceStatus != contestentity.AWDServiceStatusDown {
 		t.Fatalf("ServiceStatus = %s, want down", resp.ServiceStatus)
 	}
 }

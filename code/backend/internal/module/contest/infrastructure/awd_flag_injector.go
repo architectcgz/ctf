@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -21,7 +21,7 @@ func NewNoopAWDFlagInjector(log *zap.Logger) contestports.AWDFlagInjector {
 	return &noopAWDFlagInjector{log: log}
 }
 
-func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *model.Contest, round *model.AWDRound, assignments []contestports.AWDFlagAssignment) error {
+func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *contestentity.Contest, round *contestentity.AWDRound, assignments []contestports.AWDFlagAssignment) error {
 	i.log.Debug("skip_awd_flag_injection",
 		zap.Int64("contest_id", contest.ID),
 		zap.Int64("round_id", round.ID),

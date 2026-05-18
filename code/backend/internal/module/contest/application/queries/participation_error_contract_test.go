@@ -4,23 +4,22 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type participationQueryRepoStub struct {
-	findRegistrationFn func(context.Context, int64, int64) (*model.ContestRegistration, error)
+	findRegistrationFn func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
 }
 
-func (s participationQueryRepoStub) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (s participationQueryRepoStub) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	if s.findRegistrationFn != nil {
 		return s.findRegistrationFn(ctx, contestID, userID)
 	}
 	return nil, contestports.ErrContestParticipationRegistrationNotFound
 }
 
-func (s participationQueryRepoStub) FindRegistrationByID(context.Context, int64, int64) (*model.ContestRegistration, error) {
+func (s participationQueryRepoStub) FindRegistrationByID(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 	return nil, contestports.ErrContestParticipationRegistrationNotFound
 }
 
@@ -38,19 +37,19 @@ func (s participationQueryRepoStub) ListSolvedProgress(context.Context, int64, i
 
 type participationQueryContestLookupStub struct{}
 
-func (participationQueryContestLookupStub) FindByID(context.Context, int64) (*model.Contest, error) {
-	return &model.Contest{ID: 10, Status: model.ContestStatusRunning}, nil
+func (participationQueryContestLookupStub) FindByID(context.Context, int64) (*contestentity.Contest, error) {
+	return &contestentity.Contest{ID: 10, Status: contestentity.ContestStatusRunning}, nil
 }
 
-func (participationQueryContestLookupStub) List(context.Context, *string, int, int) ([]*model.Contest, int64, error) {
+func (participationQueryContestLookupStub) List(context.Context, *string, int, int) ([]*contestentity.Contest, int64, error) {
 	return nil, 0, nil
 }
 
 type participationQueryTeamFinderStub struct {
-	findUserTeamInContestFn func(context.Context, int64, int64) (*model.Team, error)
+	findUserTeamInContestFn func(context.Context, int64, int64) (*contestentity.Team, error)
 }
 
-func (s participationQueryTeamFinderStub) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*model.Team, error) {
+func (s participationQueryTeamFinderStub) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*contestentity.Team, error) {
 	if s.findUserTeamInContestFn != nil {
 		return s.findUserTeamInContestFn(ctx, userID, contestID)
 	}
@@ -63,12 +62,12 @@ func TestParticipationServiceResolveUserTeamIDTreatsMissingRegistrationAndTeamAs
 	service := NewParticipationService(
 		participationQueryContestLookupStub{},
 		participationQueryRepoStub{
-			findRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+			findRegistrationFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 				return nil, contestports.ErrContestParticipationRegistrationNotFound
 			},
 		},
 		participationQueryTeamFinderStub{
-			findUserTeamInContestFn: func(context.Context, int64, int64) (*model.Team, error) {
+			findUserTeamInContestFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 				return nil, contestports.ErrContestUserTeamNotFound
 			},
 		},

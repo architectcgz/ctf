@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -12,13 +12,13 @@ import (
 func (s *AWDService) upsertServiceCheckAndRecalculate(
 	ctx context.Context,
 	contestID, roundID int64,
-	runtimeService *model.ContestAWDService,
+	runtimeService *contestentity.ContestAWDService,
 	req UpsertServiceCheckInput,
 	checkResult string,
 	defenseScore int,
 	now time.Time,
-) (*model.AWDTeamService, error) {
-	var record *model.AWDTeamService
+) (*contestentity.AWDTeamService, error) {
+	var record *contestentity.AWDTeamService
 	if err := s.repo.WithinServiceCheckTransaction(ctx, func(txRepo contestports.AWDServiceCheckTxRepository) error {
 		var txErr error
 		record, txErr = txRepo.UpsertServiceCheck(

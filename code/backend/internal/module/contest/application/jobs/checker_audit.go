@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -14,23 +14,23 @@ const (
 )
 
 type awdCheckerAuditRecord struct {
-	ContestID       int64                `json:"contest_id,omitempty"`
-	ServiceID       int64                `json:"service_id,omitempty"`
-	TeamID          int64                `json:"team_id,omitempty"`
-	RoundNumber     int                  `json:"round_number,omitempty"`
-	CheckerType     model.AWDCheckerType `json:"checker_type,omitempty"`
-	ArtifactDigest  string               `json:"artifact_digest,omitempty"`
-	DurationMS      int64                `json:"duration_ms,omitempty"`
-	ErrorCode       string               `json:"error_code,omitempty"`
-	ExitCode        int64                `json:"exit_code,omitempty"`
-	Stdout          string               `json:"stdout,omitempty"`
-	Stderr          string               `json:"stderr,omitempty"`
-	OutputTruncated bool                 `json:"output_truncated,omitempty"`
+	ContestID       int64                        `json:"contest_id,omitempty"`
+	ServiceID       int64                        `json:"service_id,omitempty"`
+	TeamID          int64                        `json:"team_id,omitempty"`
+	RoundNumber     int                          `json:"round_number,omitempty"`
+	CheckerType     contestentity.AWDCheckerType `json:"checker_type,omitempty"`
+	ArtifactDigest  string                       `json:"artifact_digest,omitempty"`
+	DurationMS      int64                        `json:"duration_ms,omitempty"`
+	ErrorCode       string                       `json:"error_code,omitempty"`
+	ExitCode        int64                        `json:"exit_code,omitempty"`
+	Stdout          string                       `json:"stdout,omitempty"`
+	Stderr          string                       `json:"stderr,omitempty"`
+	OutputTruncated bool                         `json:"output_truncated,omitempty"`
 }
 
 func buildAWDCheckerAuditRecord(
 	job contestports.CheckerRunJob,
-	checkerType model.AWDCheckerType,
+	checkerType contestentity.AWDCheckerType,
 	artifactDigest string,
 	result contestports.CheckerRunResult,
 	errorCode string,

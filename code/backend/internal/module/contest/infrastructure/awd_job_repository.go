@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -32,7 +32,7 @@ func NewAWDJobRepository(source awdJobRepositorySource) *AWDJobRepository {
 	return &AWDJobRepository{awdJobRepositorySource: source}
 }
 
-func (r *AWDJobRepository) FindRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*model.AWDRound, error) {
+func (r *AWDJobRepository) FindRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*contestentity.AWDRound, error) {
 	round, err := r.awdJobRepositorySource.FindRoundByNumber(ctx, contestID, roundNumber)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestAWDRoundNotFound
@@ -40,7 +40,7 @@ func (r *AWDJobRepository) FindRoundByNumber(ctx context.Context, contestID int6
 	return round, err
 }
 
-func (r *AWDJobRepository) FindRunningRound(ctx context.Context, contestID int64) (*model.AWDRound, error) {
+func (r *AWDJobRepository) FindRunningRound(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	round, err := r.awdJobRepositorySource.FindRunningRound(ctx, contestID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestAWDRoundNotFound

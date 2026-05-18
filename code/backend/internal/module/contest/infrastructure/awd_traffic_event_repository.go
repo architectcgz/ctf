@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"gorm.io/gorm"
 )
@@ -41,7 +41,7 @@ func (r *AWDRepository) RecordRuntimeProxyTrafficEvent(ctx context.Context, inst
 		return nil
 	}
 
-	return r.dbWithContext(ctx).Create(&model.AWDTrafficEvent{
+	return r.dbWithContext(ctx).Create(&contestentity.AWDTrafficEvent{
 		ContestID:      *instanceScope.ContestID,
 		RoundID:        round.ID,
 		AttackerTeamID: attackerTeam.ID,
@@ -51,7 +51,7 @@ func (r *AWDRepository) RecordRuntimeProxyTrafficEvent(ctx context.Context, inst
 		Method:         trimToLength(method, 16),
 		Path:           trimToLength(requestPath, 1024),
 		StatusCode:     statusCode,
-		Source:         model.AWDTrafficSourceRuntimeProxy,
+		Source:         contestentity.AWDTrafficSourceRuntimeProxy,
 	}).Error
 }
 
@@ -102,7 +102,7 @@ func (r *AWDRepository) loadRuntimeProxyTrafficInstanceScope(ctx context.Context
 	return &row, nil
 }
 
-func (r *AWDRepository) findRuntimeProxyAttackerTeam(ctx context.Context, contestID, userID int64) (*model.Team, error) {
+func (r *AWDRepository) findRuntimeProxyAttackerTeam(ctx context.Context, contestID, userID int64) (*contestentity.Team, error) {
 	team, err := r.FindContestTeamByMember(ctx, contestID, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

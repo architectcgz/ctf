@@ -1,17 +1,17 @@
 package domain
 
 import (
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
 func RegistrationStatusError(status string) error {
 	switch status {
-	case "", model.ContestRegistrationStatusApproved:
+	case "", contestentity.ContestRegistrationStatusApproved:
 		return nil
-	case model.ContestRegistrationStatusPending:
+	case contestentity.ContestRegistrationStatusPending:
 		return errcode.ErrContestRegistrationPending
-	case model.ContestRegistrationStatusRejected:
+	case contestentity.ContestRegistrationStatusRejected:
 		return errcode.ErrRegistrationNotApproved
 	default:
 		return errcode.ErrRegistrationNotApproved

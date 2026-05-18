@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *SubmissionService) handleIncorrectSubmission(ctx context.Context, submission *model.Submission) (*SubmissionResp, error) {
+func (s *SubmissionService) handleIncorrectSubmission(ctx context.Context, submission *contestentity.Submission) (*SubmissionResp, error) {
 	if submission == nil || submission.ContestID == nil {
 		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("contest submission is incomplete"))
 	}

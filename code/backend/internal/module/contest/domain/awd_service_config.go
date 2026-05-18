@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"strings"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func NormalizeAWDCheckerType(value string) model.AWDCheckerType {
+func NormalizeAWDCheckerType(value string) contestentity.AWDCheckerType {
 	switch strings.TrimSpace(value) {
-	case string(model.AWDCheckerTypeLegacyProbe):
-		return model.AWDCheckerTypeLegacyProbe
-	case string(model.AWDCheckerTypeHTTPStandard):
-		return model.AWDCheckerTypeHTTPStandard
-	case string(model.AWDCheckerTypeTCPStandard):
-		return model.AWDCheckerTypeTCPStandard
-	case string(model.AWDCheckerTypeScript):
-		return model.AWDCheckerTypeScript
+	case string(contestentity.AWDCheckerTypeLegacyProbe):
+		return contestentity.AWDCheckerTypeLegacyProbe
+	case string(contestentity.AWDCheckerTypeHTTPStandard):
+		return contestentity.AWDCheckerTypeHTTPStandard
+	case string(contestentity.AWDCheckerTypeTCPStandard):
+		return contestentity.AWDCheckerTypeTCPStandard
+	case string(contestentity.AWDCheckerTypeScript):
+		return contestentity.AWDCheckerTypeScript
 	default:
 		return ""
 	}

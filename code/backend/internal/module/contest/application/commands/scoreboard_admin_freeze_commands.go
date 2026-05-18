@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
 )
@@ -33,7 +33,7 @@ func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID
 	previousVersion := contest.StatusVersion
 	effectiveNow := contestdomain.ContestEffectiveNow(contest, now)
 	if !effectiveNow.Before(storedFreezeTime) {
-		contest.Status = model.ContestStatusFrozen
+		contest.Status = contestentity.ContestStatusFrozen
 		contest.StatusVersion++
 		contest.UpdatedAt = now
 		if err := s.applyScoreboardStatusTransition(ctx, contest, previousStatus, previousVersion); err != nil {
@@ -62,7 +62,7 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	if contest.FreezeTime == nil && contest.Status != model.ContestStatusFrozen {
+	if contest.FreezeTime == nil && contest.Status != contestentity.ContestStatusFrozen {
 		return errcode.ErrScoreboardNotFrozen
 	}
 
@@ -70,8 +70,8 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 	previousStatus := contest.Status
 	previousVersion := contest.StatusVersion
 	now := time.Now().UTC()
-	if contest.Status == model.ContestStatusFrozen && !contestdomain.ContestHasEndedAt(contest, now) {
-		contest.Status = model.ContestStatusRunning
+	if contest.Status == contestentity.ContestStatusFrozen && !contestdomain.ContestHasEndedAt(contest, now) {
+		contest.Status = contestentity.ContestStatusRunning
 		contest.StatusVersion++
 		contest.UpdatedAt = now
 		if err := s.applyScoreboardStatusTransition(ctx, contest, previousStatus, previousVersion); err != nil {
@@ -91,7 +91,7 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 	return nil
 }
 
-func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Context, contest *model.Contest, fromStatus string, fromVersion int64) error {
+func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Context, contest *contestentity.Contest, fromStatus string, fromVersion int64) error {
 	if contest == nil {
 		return errcode.ErrContestNotFound
 	}

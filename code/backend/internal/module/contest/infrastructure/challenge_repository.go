@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type ChallengeRepository struct {
@@ -16,12 +16,12 @@ func NewChallengeRepository(db *gorm.DB) *ChallengeRepository {
 	return &ChallengeRepository{db: db}
 }
 
-func (r *ChallengeRepository) AddChallenge(ctx context.Context, cc *model.ContestChallenge) error {
+func (r *ChallengeRepository) AddChallenge(ctx context.Context, cc *contestentity.ContestChallenge) error {
 	return r.db.WithContext(ctx).Create(cc).Error
 }
 
-func (r *ChallengeRepository) FindChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
-	var challenge model.ContestChallenge
+func (r *ChallengeRepository) FindChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error) {
+	var challenge contestentity.ContestChallenge
 	if err := r.db.WithContext(ctx).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
 		First(&challenge).Error; err != nil {
@@ -32,20 +32,20 @@ func (r *ChallengeRepository) FindChallenge(ctx context.Context, contestID, chal
 
 func (r *ChallengeRepository) RemoveChallenge(ctx context.Context, contestID, challengeID int64) error {
 	return r.db.WithContext(ctx).Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
-		Delete(&model.ContestChallenge{}).Error
+		Delete(&contestentity.ContestChallenge{}).Error
 }
 
 func (r *ChallengeRepository) UpdateChallenge(ctx context.Context, contestID, challengeID int64, updates map[string]any) error {
 	if len(updates) == 0 {
 		return nil
 	}
-	return r.db.WithContext(ctx).Model(&model.ContestChallenge{}).
+	return r.db.WithContext(ctx).Model(&contestentity.ContestChallenge{}).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
 		Updates(updates).Error
 }
 
-func (r *ChallengeRepository) ListChallenges(ctx context.Context, contestID int64, visibleOnly bool) ([]*model.ContestChallenge, error) {
-	var challenges []*model.ContestChallenge
+func (r *ChallengeRepository) ListChallenges(ctx context.Context, contestID int64, visibleOnly bool) ([]*contestentity.ContestChallenge, error) {
+	var challenges []*contestentity.ContestChallenge
 	query := r.db.WithContext(ctx).Where("contest_id = ?", contestID)
 	if visibleOnly {
 		query = query.Where("is_visible = ?", true)
@@ -58,19 +58,19 @@ func (r *ChallengeRepository) ListChallenges(ctx context.Context, contestID int6
 
 func (r *ChallengeRepository) Exists(ctx context.Context, contestID, challengeID int64) (bool, error) {
 	var count int64
-	err := r.db.WithContext(ctx).Model(&model.ContestChallenge{}).
+	err := r.db.WithContext(ctx).Model(&contestentity.ContestChallenge{}).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
 		Count(&count).Error
 	return count > 0, err
 }
 
 func (r *ChallengeRepository) HasSubmissions(ctx context.Context, contestID, challengeID int64) (bool, error) {
-	if !r.db.WithContext(ctx).Migrator().HasColumn(&model.Submission{}, "contest_id") {
+	if !r.db.WithContext(ctx).Migrator().HasColumn(&contestentity.Submission{}, "contest_id") {
 		return false, nil
 	}
 
 	var count int64
-	err := r.db.WithContext(ctx).Model(&model.Submission{}).
+	err := r.db.WithContext(ctx).Model(&contestentity.Submission{}).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
 		Count(&count).Error
 	return count > 0, err

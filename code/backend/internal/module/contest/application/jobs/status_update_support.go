@@ -3,31 +3,31 @@ package jobs
 import (
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (u *StatusUpdater) calculateStatus(contest *model.Contest, now time.Time) string {
-	if contest.Status == model.ContestStatusDraft {
-		return model.ContestStatusDraft
+func (u *StatusUpdater) calculateStatus(contest *contestentity.Contest, now time.Time) string {
+	if contest.Status == contestentity.ContestStatusDraft {
+		return contestentity.ContestStatusDraft
 	}
 
 	effectiveNow := contestdomain.ContestEffectiveNow(contest, now)
 	if effectiveNow.Before(contest.StartTime) {
-		return model.ContestStatusRegistration
+		return contestentity.ContestStatusRegistration
 	}
 
 	if !effectiveNow.Before(contest.EndTime) {
-		return model.ContestStatusEnded
+		return contestentity.ContestStatusEnded
 	}
 
-	if contest.Status == model.ContestStatusFrozen && contest.FreezeTime == nil {
-		return model.ContestStatusFrozen
+	if contest.Status == contestentity.ContestStatusFrozen && contest.FreezeTime == nil {
+		return contestentity.ContestStatusFrozen
 	}
 
 	if contest.FreezeTime != nil && !effectiveNow.Before(contest.FreezeTime.UTC()) {
-		return model.ContestStatusFrozen
+		return contestentity.ContestStatusFrozen
 	}
 
-	return model.ContestStatusRunning
+	return contestentity.ContestStatusRunning
 }

@@ -3,18 +3,18 @@ package commands
 import (
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type validatedContestSubmission struct {
-	contestChallenge *model.ContestChallenge
+	contestChallenge *contestentity.ContestChallenge
 	teamID           *int64
 	submittedAt      time.Time
 	isCorrect        bool
 }
 
-func buildContestSubmission(userID, contestID, challengeID int64, flag string, teamID *int64, submittedAt time.Time) *model.Submission {
-	return &model.Submission{
+func buildContestSubmission(userID, contestID, challengeID int64, flag string, teamID *int64, submittedAt time.Time) *contestentity.Submission {
+	return &contestentity.Submission{
 		UserID:      userID,
 		ChallengeID: challengeID,
 		ContestID:   &contestID,

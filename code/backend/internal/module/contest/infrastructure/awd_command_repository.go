@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -33,7 +34,7 @@ func NewAWDCommandRepository(source awdCommandRepositorySource) *AWDCommandRepos
 	return &AWDCommandRepository{awdCommandRepositorySource: source}
 }
 
-func (r *AWDCommandRepository) FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*model.AWDRound, error) {
+func (r *AWDCommandRepository) FindRoundByContestAndID(ctx context.Context, contestID, roundID int64) (*contestentity.AWDRound, error) {
 	round, err := r.awdCommandRepositorySource.FindRoundByContestAndID(ctx, contestID, roundID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestAWDRoundNotFound
@@ -41,7 +42,7 @@ func (r *AWDCommandRepository) FindRoundByContestAndID(ctx context.Context, cont
 	return round, err
 }
 
-func (r *AWDCommandRepository) FindRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*model.AWDRound, error) {
+func (r *AWDCommandRepository) FindRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*contestentity.AWDRound, error) {
 	round, err := r.awdCommandRepositorySource.FindRoundByNumber(ctx, contestID, roundNumber)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestAWDRoundNotFound
@@ -49,7 +50,7 @@ func (r *AWDCommandRepository) FindRoundByNumber(ctx context.Context, contestID 
 	return round, err
 }
 
-func (r *AWDCommandRepository) FindRunningRound(ctx context.Context, contestID int64) (*model.AWDRound, error) {
+func (r *AWDCommandRepository) FindRunningRound(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	round, err := r.awdCommandRepositorySource.FindRunningRound(ctx, contestID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestAWDRoundNotFound
@@ -57,7 +58,7 @@ func (r *AWDCommandRepository) FindRunningRound(ctx context.Context, contestID i
 	return round, err
 }
 
-func (r *AWDCommandRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (r *AWDCommandRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	registration, err := r.awdCommandRepositorySource.FindRegistration(ctx, contestID, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestParticipationRegistrationNotFound
@@ -65,7 +66,7 @@ func (r *AWDCommandRepository) FindRegistration(ctx context.Context, contestID, 
 	return registration, err
 }
 
-func (r *AWDCommandRepository) FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*model.Team, error) {
+func (r *AWDCommandRepository) FindContestTeamByMember(ctx context.Context, contestID, userID int64) (*contestentity.Team, error) {
 	team, err := r.awdCommandRepositorySource.FindContestTeamByMember(ctx, contestID, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestUserTeamNotFound
@@ -81,7 +82,7 @@ func (r *AWDCommandRepository) FindChallengeByID(ctx context.Context, challengeI
 	return challenge, err
 }
 
-func (r *AWDCommandRepository) FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*model.ContestAWDService, error) {
+func (r *AWDCommandRepository) FindContestAWDServiceByContestAndID(ctx context.Context, contestID, serviceID int64) (*contestentity.ContestAWDService, error) {
 	service, err := r.awdCommandRepositorySource.FindContestAWDServiceByContestAndID(ctx, contestID, serviceID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestAWDServiceNotFound

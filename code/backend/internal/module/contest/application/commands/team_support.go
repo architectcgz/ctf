@@ -7,8 +7,8 @@ import (
 	"errors"
 	"strings"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -35,7 +35,7 @@ func (s *TeamService) ensureTeamJoinableContest(ctx context.Context, contestID i
 		}
 		return errcode.ErrInternal.WithCause(err)
 	}
-	if contest.Status != model.ContestStatusRegistration && contest.Status != model.ContestStatusRunning {
+	if contest.Status != contestentity.ContestStatusRegistration && contest.Status != contestentity.ContestStatusRunning {
 		return errcode.ErrContestTeamUnavailable
 	}
 	return nil
@@ -62,7 +62,7 @@ func isUniqueConflict(err error) bool {
 	return strings.Contains(lowered, "duplicate") || strings.Contains(lowered, "unique")
 }
 
-func teamHasMember(members []*model.TeamMember, userID int64) bool {
+func teamHasMember(members []*contestentity.TeamMember, userID int64) bool {
 	for _, member := range members {
 		if member.UserID == userID {
 			return true

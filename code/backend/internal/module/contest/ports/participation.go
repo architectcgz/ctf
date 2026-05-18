@@ -12,13 +12,13 @@ import (
 var ErrContestParticipationRegistrationNotFound = errors.New("contest participation registration not found")
 
 type ContestParticipationRegistrationLookupRepository interface {
-	FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
-	FindRegistrationByID(ctx context.Context, contestID, registrationID int64) (*model.ContestRegistration, error)
+	FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error)
+	FindRegistrationByID(ctx context.Context, contestID, registrationID int64) (*contestentity.ContestRegistration, error)
 }
 
 type ContestParticipationRegistrationWriteRepository interface {
-	CreateRegistration(ctx context.Context, registration *model.ContestRegistration) error
-	SaveRegistration(ctx context.Context, registration *model.ContestRegistration) error
+	CreateRegistration(ctx context.Context, registration *contestentity.ContestRegistration) error
+	SaveRegistration(ctx context.Context, registration *contestentity.ContestRegistration) error
 }
 
 type ContestParticipationRegistrationListRepository interface {

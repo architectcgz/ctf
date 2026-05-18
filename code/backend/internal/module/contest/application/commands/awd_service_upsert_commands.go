@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -33,7 +33,7 @@ func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 		return nil, errcode.ErrInvalidParams
 	}
 	defenseScore := 0
-	if req.ServiceStatus == model.AWDServiceStatusUp {
+	if req.ServiceStatus == contestentity.AWDServiceStatusUp {
 		defenseScore = round.DefenseScore
 	}
 

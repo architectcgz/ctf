@@ -5,45 +5,45 @@ import (
 	"errors"
 	"testing"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 type teamCommandRepoStub struct {
-	findContestRegistrationFn func(context.Context, int64, int64) (*model.ContestRegistration, error)
-	findByIDFn                func(context.Context, int64) (*model.Team, error)
-	findUserTeamInContestFn   func(context.Context, int64, int64) (*model.Team, error)
-	createWithMemberFn        func(context.Context, *model.Team, int64) error
+	findContestRegistrationFn func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
+	findByIDFn                func(context.Context, int64) (*contestentity.Team, error)
+	findUserTeamInContestFn   func(context.Context, int64, int64) (*contestentity.Team, error)
+	createWithMemberFn        func(context.Context, *contestentity.Team, int64) error
 	addMemberWithLockFn       func(context.Context, int64, int64, int64) error
 	getMemberCountFn          func(context.Context, int64) (int64, error)
-	getMembersFn              func(context.Context, int64) ([]*model.TeamMember, error)
+	getMembersFn              func(context.Context, int64) ([]*contestentity.TeamMember, error)
 	removeMemberFn            func(context.Context, int64, int64) error
 	deleteWithMembersFn       func(context.Context, int64) error
 }
 
-func (s teamCommandRepoStub) FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
+func (s teamCommandRepoStub) FindContestRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	if s.findContestRegistrationFn != nil {
 		return s.findContestRegistrationFn(ctx, contestID, userID)
 	}
-	return &model.ContestRegistration{ContestID: contestID, UserID: userID, Status: model.ContestRegistrationStatusApproved}, nil
+	return &contestentity.ContestRegistration{ContestID: contestID, UserID: userID, Status: contestentity.ContestRegistrationStatusApproved}, nil
 }
 
-func (s teamCommandRepoStub) FindByID(ctx context.Context, teamID int64) (*model.Team, error) {
+func (s teamCommandRepoStub) FindByID(ctx context.Context, teamID int64) (*contestentity.Team, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, teamID)
 	}
-	return &model.Team{ID: teamID, ContestID: 10, CaptainID: 2001, MaxMembers: 4}, nil
+	return &contestentity.Team{ID: teamID, ContestID: 10, CaptainID: 2001, MaxMembers: 4}, nil
 }
 
-func (s teamCommandRepoStub) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*model.Team, error) {
+func (s teamCommandRepoStub) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*contestentity.Team, error) {
 	if s.findUserTeamInContestFn != nil {
 		return s.findUserTeamInContestFn(ctx, userID, contestID)
 	}
 	return nil, contestports.ErrContestUserTeamNotFound
 }
 
-func (s teamCommandRepoStub) CreateWithMember(ctx context.Context, team *model.Team, captainID int64) error {
+func (s teamCommandRepoStub) CreateWithMember(ctx context.Context, team *contestentity.Team, captainID int64) error {
 	if s.createWithMemberFn != nil {
 		return s.createWithMemberFn(ctx, team, captainID)
 	}
@@ -74,11 +74,11 @@ func (s teamCommandRepoStub) RemoveMember(ctx context.Context, teamID, userID in
 	return nil
 }
 
-func (s teamCommandRepoStub) GetMembers(ctx context.Context, teamID int64) ([]*model.TeamMember, error) {
+func (s teamCommandRepoStub) GetMembers(ctx context.Context, teamID int64) ([]*contestentity.TeamMember, error) {
 	if s.getMembersFn != nil {
 		return s.getMembersFn(ctx, teamID)
 	}
-	return []*model.TeamMember{{TeamID: teamID, UserID: 2002}}, nil
+	return []*contestentity.TeamMember{{TeamID: teamID, UserID: 2002}}, nil
 }
 
 func (s teamCommandRepoStub) GetMemberCount(ctx context.Context, teamID int64) (int64, error) {
@@ -96,7 +96,7 @@ func TestTeamServiceCreateTeamTreatsRegistrationNotFoundAsNotRegistered(t *testi
 	t.Parallel()
 
 	service := NewTeamService(teamCommandRepoStub{
-		findContestRegistrationFn: func(context.Context, int64, int64) (*model.ContestRegistration, error) {
+		findContestRegistrationFn: func(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 			return nil, contestports.ErrContestParticipationRegistrationNotFound
 		},
 	}, participationContestLookupStub{})
@@ -113,10 +113,10 @@ func TestTeamServiceCreateTeamTreatsUnexpectedCurrentTeamLookupErrorAsInternal(t
 	lookupErr := errors.New("team lookup exploded")
 	createCalled := false
 	service := NewTeamService(teamCommandRepoStub{
-		findUserTeamInContestFn: func(context.Context, int64, int64) (*model.Team, error) {
+		findUserTeamInContestFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 			return nil, lookupErr
 		},
-		createWithMemberFn: func(context.Context, *model.Team, int64) error {
+		createWithMemberFn: func(context.Context, *contestentity.Team, int64) error {
 			createCalled = true
 			return nil
 		},
@@ -136,7 +136,7 @@ func TestTeamServiceCreateTeamTreatsCreateWithMemberRegistrationMissingAsNotRegi
 	t.Parallel()
 
 	service := NewTeamService(teamCommandRepoStub{
-		createWithMemberFn: func(context.Context, *model.Team, int64) error {
+		createWithMemberFn: func(context.Context, *contestentity.Team, int64) error {
 			return contestports.ErrContestParticipationRegistrationNotFound
 		},
 	}, participationContestLookupStub{})
@@ -151,7 +151,7 @@ func TestTeamServiceJoinTeamTreatsTeamNotFoundAsErrTeamNotFound(t *testing.T) {
 	t.Parallel()
 
 	service := NewTeamService(teamCommandRepoStub{
-		findByIDFn: func(context.Context, int64) (*model.Team, error) {
+		findByIDFn: func(context.Context, int64) (*contestentity.Team, error) {
 			return nil, contestports.ErrContestTeamNotFound
 		},
 	}, participationContestLookupStub{})
@@ -168,10 +168,10 @@ func TestTeamServiceJoinTeamTreatsUnexpectedCurrentTeamLookupErrorAsInternal(t *
 	lookupErr := errors.New("team lookup exploded")
 	addCalled := false
 	service := NewTeamService(teamCommandRepoStub{
-		findByIDFn: func(context.Context, int64) (*model.Team, error) {
-			return &model.Team{ID: 33, ContestID: 10, CaptainID: 2001, MaxMembers: 4}, nil
+		findByIDFn: func(context.Context, int64) (*contestentity.Team, error) {
+			return &contestentity.Team{ID: 33, ContestID: 10, CaptainID: 2001, MaxMembers: 4}, nil
 		},
-		findUserTeamInContestFn: func(context.Context, int64, int64) (*model.Team, error) {
+		findUserTeamInContestFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 			return nil, lookupErr
 		},
 		addMemberWithLockFn: func(context.Context, int64, int64, int64) error {
@@ -194,8 +194,8 @@ func TestTeamServiceJoinTeamTreatsMembershipRegistrationMissingAsNotRegistered(t
 	t.Parallel()
 
 	service := NewTeamService(teamCommandRepoStub{
-		findByIDFn: func(context.Context, int64) (*model.Team, error) {
-			return &model.Team{ID: 33, ContestID: 10, CaptainID: 2001, MaxMembers: 4}, nil
+		findByIDFn: func(context.Context, int64) (*contestentity.Team, error) {
+			return &contestentity.Team{ID: 33, ContestID: 10, CaptainID: 2001, MaxMembers: 4}, nil
 		},
 		addMemberWithLockFn: func(context.Context, int64, int64, int64) error {
 			return contestports.ErrContestParticipationRegistrationNotFound
@@ -212,7 +212,7 @@ func TestTeamServiceLeaveTeamTreatsTeamNotFoundAsErrTeamNotFound(t *testing.T) {
 	t.Parallel()
 
 	service := NewTeamService(teamCommandRepoStub{
-		findByIDFn: func(context.Context, int64) (*model.Team, error) {
+		findByIDFn: func(context.Context, int64) (*contestentity.Team, error) {
 			return nil, contestports.ErrContestTeamNotFound
 		},
 	}, participationContestLookupStub{})
@@ -227,7 +227,7 @@ func TestTeamServiceDismissTeamTreatsTeamNotFoundAsErrTeamNotFound(t *testing.T)
 	t.Parallel()
 
 	service := NewTeamService(teamCommandRepoStub{
-		findByIDFn: func(context.Context, int64) (*model.Team, error) {
+		findByIDFn: func(context.Context, int64) (*contestentity.Team, error) {
 			return nil, contestports.ErrContestTeamNotFound
 		},
 	}, participationContestLookupStub{})
@@ -242,7 +242,7 @@ func TestTeamServiceKickMemberTreatsTeamNotFoundAsErrTeamNotFound(t *testing.T) 
 	t.Parallel()
 
 	service := NewTeamService(teamCommandRepoStub{
-		findByIDFn: func(context.Context, int64) (*model.Team, error) {
+		findByIDFn: func(context.Context, int64) (*contestentity.Team, error) {
 			return nil, contestports.ErrContestTeamNotFound
 		},
 	}, participationContestLookupStub{})

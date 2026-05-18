@@ -6,17 +6,17 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) resolveAcceptedRoundFlags(
 	ctx context.Context,
-	contest *model.Contest,
+	contest *contestentity.Contest,
 	contestID int64,
-	round *model.AWDRound,
+	round *contestentity.AWDRound,
 	victimTeamID int64,
 	awdChallengeID int64,
 	flagPrefix string,
@@ -50,7 +50,7 @@ func (s *AWDService) resolveAcceptedRoundFlags(
 	return append(flags, previousFlag), nil
 }
 
-func (s *AWDService) allowPreviousRoundFlag(contest *model.Contest, round *model.AWDRound, now time.Time) bool {
+func (s *AWDService) allowPreviousRoundFlag(contest *contestentity.Contest, round *contestentity.AWDRound, now time.Time) bool {
 	if round == nil || round.RoundNumber <= 1 || s.awdConfig.PreviousRoundGrace <= 0 || round.StartedAt == nil {
 		return false
 	}
@@ -58,7 +58,7 @@ func (s *AWDService) allowPreviousRoundFlag(contest *model.Contest, round *model
 	return effectiveNow.Before(round.StartedAt.Add(s.awdConfig.PreviousRoundGrace))
 }
 
-func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, round *model.AWDRound, victimTeamID int64, awdChallengeID int64, flagPrefix string, serviceID int64) (string, error) {
+func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, round *contestentity.AWDRound, victimTeamID int64, awdChallengeID int64, flagPrefix string, serviceID int64) (string, error) {
 	if round == nil || awdChallengeID <= 0 {
 		return "", errcode.ErrAWDFlagUnavailable
 	}

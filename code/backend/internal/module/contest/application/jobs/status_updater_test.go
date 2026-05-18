@@ -8,7 +8,6 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -17,7 +16,7 @@ import (
 )
 
 type statusUpdaterRepoStub struct {
-	contests             []*model.Contest
+	contests             []*contestentity.Contest
 	updatedStatus        map[int64]string
 	updatedStatusVersion map[int64]int64
 	receivedStatus       []string
@@ -38,11 +37,11 @@ func (s *endedContestRuntimeCleanerStub) CleanupEndedContestAWDInstances(_ conte
 	return s.err
 }
 
-func (s *statusUpdaterRepoStub) ListByStatusesAndTimeRange(_ context.Context, statuses []string, _ time.Time, offset, limit int) ([]*model.Contest, int64, error) {
+func (s *statusUpdaterRepoStub) ListByStatusesAndTimeRange(_ context.Context, statuses []string, _ time.Time, offset, limit int) ([]*contestentity.Contest, int64, error) {
 	return s.listByStatusesAndTimeRange(statuses, offset, limit)
 }
 
-func (s *statusUpdaterRepoStub) listByStatusesAndTimeRange(statuses []string, offset, limit int) ([]*model.Contest, int64, error) {
+func (s *statusUpdaterRepoStub) listByStatusesAndTimeRange(statuses []string, offset, limit int) ([]*contestentity.Contest, int64, error) {
 	s.listCalls++
 	s.receivedStatus = append([]string(nil), statuses...)
 	if s.listCalled != nil && s.listCalls == 1 {
@@ -62,7 +61,7 @@ func (s *statusUpdaterRepoStub) listByStatusesAndTimeRange(statuses []string, of
 	if end > total {
 		end = total
 	}
-	page := append([]*model.Contest(nil), s.contests[offset:end]...)
+	page := append([]*contestentity.Contest(nil), s.contests[offset:end]...)
 	return page, int64(total), nil
 }
 
@@ -89,10 +88,10 @@ func (s *statusUpdaterRepoStub) ApplyStatusTransition(_ context.Context, transit
 func TestStatusUpdaterUpdateStatuses_EndsFrozenContest(t *testing.T) {
 	now := time.Now()
 	repo := &statusUpdaterRepoStub{
-		contests: []*model.Contest{
+		contests: []*contestentity.Contest{
 			{
 				ID:        7,
-				Status:    model.ContestStatusFrozen,
+				Status:    contestentity.ContestStatusFrozen,
 				StartTime: now.Add(-2 * time.Hour),
 				EndTime:   now.Add(-time.Minute),
 			},
@@ -103,7 +102,7 @@ func TestStatusUpdaterUpdateStatuses_EndsFrozenContest(t *testing.T) {
 
 	updater.updateStatuses(context.Background())
 
-	if got := repo.updatedStatus[7]; got != model.ContestStatusEnded {
+	if got := repo.updatedStatus[7]; got != contestentity.ContestStatusEnded {
 		t.Fatalf("expected frozen contest to end, got %q", got)
 	}
 }
@@ -115,9 +114,9 @@ func TestStatusUpdaterUpdateStatuses_RequestsFrozenStatus(t *testing.T) {
 	updater.updateStatuses(context.Background())
 
 	expected := []string{
-		model.ContestStatusRegistration,
-		model.ContestStatusRunning,
-		model.ContestStatusFrozen,
+		contestentity.ContestStatusRegistration,
+		contestentity.ContestStatusRunning,
+		contestentity.ContestStatusFrozen,
 	}
 	if len(repo.receivedStatus) != len(expected) {
 		t.Fatalf("expected %d statuses, got %d", len(expected), len(repo.receivedStatus))
@@ -132,16 +131,16 @@ func TestStatusUpdaterUpdateStatuses_RequestsFrozenStatus(t *testing.T) {
 func TestStatusUpdaterUpdateStatusesPagesPastNonTransitioningContests(t *testing.T) {
 	now := time.Now().UTC()
 	repo := &statusUpdaterRepoStub{
-		contests: []*model.Contest{
+		contests: []*contestentity.Contest{
 			{
 				ID:        21,
-				Status:    model.ContestStatusRegistration,
+				Status:    contestentity.ContestStatusRegistration,
 				StartTime: now.Add(time.Hour),
 				EndTime:   now.Add(2 * time.Hour),
 			},
 			{
 				ID:        22,
-				Status:    model.ContestStatusRunning,
+				Status:    contestentity.ContestStatusRunning,
 				StartTime: now.Add(-2 * time.Hour),
 				EndTime:   now.Add(-time.Minute),
 			},
@@ -152,7 +151,7 @@ func TestStatusUpdaterUpdateStatusesPagesPastNonTransitioningContests(t *testing
 	updater := NewStatusUpdater(repo, time.Minute, 1, 30*time.Second, nil)
 	updater.updateStatuses(context.Background())
 
-	if got := repo.updatedStatus[22]; got != model.ContestStatusEnded {
+	if got := repo.updatedStatus[22]; got != contestentity.ContestStatusEnded {
 		t.Fatalf("expected paged candidate contest to end, got %q", got)
 	}
 	if repo.listCalls < 2 {
@@ -163,10 +162,10 @@ func TestStatusUpdaterUpdateStatusesPagesPastNonTransitioningContests(t *testing
 func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *testing.T) {
 	now := time.Now()
 	repo := &statusUpdaterRepoStub{
-		contests: []*model.Contest{
+		contests: []*contestentity.Contest{
 			{
 				ID:        11,
-				Status:    model.ContestStatusRunning,
+				Status:    contestentity.ContestStatusRunning,
 				StartTime: now.Add(-2 * time.Hour),
 				EndTime:   now.Add(-time.Minute),
 			},
@@ -187,7 +186,7 @@ func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *tes
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(11), "4", 0).Err(); err != nil {
 		t.Fatalf("seed current round: %v", err)
 	}
-	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(11), "11:22", model.AWDServiceStatusUp).Err(); err != nil {
+	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(11), "11:22", contestentity.AWDServiceStatusUp).Err(); err != nil {
 		t.Fatalf("seed service status cache: %v", err)
 	}
 
@@ -198,7 +197,7 @@ func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *tes
 
 	updater.updateStatuses(context.Background())
 
-	if got := repo.updatedStatus[11]; got != model.ContestStatusEnded {
+	if got := repo.updatedStatus[11]; got != contestentity.ContestStatusEnded {
 		t.Fatalf("expected running contest to end, got %q", got)
 	}
 	if mini.Exists(rediskeys.AWDCurrentRoundKey(11)) {
@@ -216,11 +215,11 @@ func TestStatusUpdaterUpdateStatuses_BlocksAWDRegistrationStartWhenReadinessNotR
 	db := testsupport.SetupAWDTestDB(t)
 	now := time.Now().UTC()
 	contestID := int64(12)
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        contestID,
 		Title:     "blocked-awd-start",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusRegistration,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusRegistration,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		CreatedAt: now,
@@ -239,11 +238,11 @@ func TestStatusUpdaterUpdateStatuses_BlocksAWDRegistrationStartWhenReadinessNotR
 	)
 	updater.updateStatuses(context.Background())
 
-	var contest model.Contest
+	var contest contestentity.Contest
 	if err := db.First(&contest, contestID).Error; err != nil {
 		t.Fatalf("load contest: %v", err)
 	}
-	if contest.Status != model.ContestStatusRegistration {
+	if contest.Status != contestentity.ContestStatusRegistration {
 		t.Fatalf("expected readiness to keep contest in registration, got %q", contest.Status)
 	}
 }
@@ -252,11 +251,11 @@ func TestStatusUpdaterRecordsAppliedTransitionAndSideEffectStatus(t *testing.T) 
 	db := testsupport.SetupContestTestDB(t)
 	now := time.Now().UTC()
 	freezeTime := now.Add(-time.Minute)
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:            41,
 		Title:         "recorded-freeze",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusRunning,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRunning,
 		StatusVersion: 0,
 		StartTime:     now.Add(-time.Hour),
 		EndTime:       now.Add(time.Hour),
@@ -285,11 +284,11 @@ func TestStatusUpdaterRecordsAppliedTransitionAndSideEffectStatus(t *testing.T) 
 	updater.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
 	updater.updateStatuses(context.Background())
 
-	var contest model.Contest
+	var contest contestentity.Contest
 	if err := db.First(&contest, 41).Error; err != nil {
 		t.Fatalf("load contest: %v", err)
 	}
-	if contest.Status != model.ContestStatusFrozen || contest.StatusVersion != 1 {
+	if contest.Status != contestentity.ContestStatusFrozen || contest.StatusVersion != 1 {
 		t.Fatalf("unexpected contest state: %+v", contest)
 	}
 
@@ -297,7 +296,7 @@ func TestStatusUpdaterRecordsAppliedTransitionAndSideEffectStatus(t *testing.T) 
 	if err := db.Where("contest_id = ? AND status_version = ?", 41, 1).First(&transition).Error; err != nil {
 		t.Fatalf("load transition record: %v", err)
 	}
-	if transition.FromStatus != model.ContestStatusRunning || transition.ToStatus != model.ContestStatusFrozen {
+	if transition.FromStatus != contestentity.ContestStatusRunning || transition.ToStatus != contestentity.ContestStatusFrozen {
 		t.Fatalf("unexpected transition record: %+v", transition)
 	}
 	if transition.SideEffectStatus != contestdomain.ContestStatusTransitionSideEffectSucceeded {
@@ -311,11 +310,11 @@ func TestStatusUpdaterRecordsAppliedTransitionAndSideEffectStatus(t *testing.T) 
 func TestStatusUpdaterReplaysFailedTransitionSideEffects(t *testing.T) {
 	db := testsupport.SetupContestTestDB(t)
 	now := time.Now().UTC()
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:            42,
 		Title:         "replay-freeze",
-		Mode:          model.ContestModeJeopardy,
-		Status:        model.ContestStatusFrozen,
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusFrozen,
 		StatusVersion: 1,
 		StartTime:     now.Add(-time.Hour),
 		EndTime:       now.Add(time.Hour),
@@ -328,8 +327,8 @@ func TestStatusUpdaterReplaysFailedTransitionSideEffects(t *testing.T) {
 		ID:               4201,
 		ContestID:        42,
 		StatusVersion:    1,
-		FromStatus:       model.ContestStatusRunning,
-		ToStatus:         model.ContestStatusFrozen,
+		FromStatus:       contestentity.ContestStatusRunning,
+		ToStatus:         contestentity.ContestStatusFrozen,
 		Reason:           contestdomain.ContestStatusTransitionReasonTimeWindow,
 		AppliedBy:        contestStatusUpdaterAppliedBy,
 		SideEffectStatus: contestdomain.ContestStatusTransitionSideEffectFailed,
@@ -389,10 +388,10 @@ func TestStatusUpdaterRefreshesSchedulerLockWhileRunning(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	repo.contests = []*model.Contest{
+	repo.contests = []*contestentity.Contest{
 		{
 			ID:            31,
-			Status:        model.ContestStatusRegistration,
+			Status:        contestentity.ContestStatusRegistration,
 			StatusVersion: 0,
 			StartTime:     time.Now().Add(-time.Minute),
 			EndTime:       time.Now().Add(time.Hour),
@@ -438,8 +437,8 @@ func TestStatusUpdaterRefreshesSchedulerLockWhileRunning(t *testing.T) {
 
 func TestStatusUpdaterUpdateStatuses_SkipsWhenSchedulerLockHeld(t *testing.T) {
 	repo := &statusUpdaterRepoStub{
-		contests: []*model.Contest{
-			{ID: 1, Status: model.ContestStatusRunning, StartTime: time.Now().Add(-time.Hour), EndTime: time.Now().Add(time.Hour)},
+		contests: []*contestentity.Contest{
+			{ID: 1, Status: contestentity.ContestStatusRunning, StartTime: time.Now().Add(-time.Hour), EndTime: time.Now().Add(time.Hour)},
 		},
 	}
 
@@ -470,10 +469,10 @@ func TestStatusUpdaterUpdateStatuses_SkipsWhenSchedulerLockHeld(t *testing.T) {
 
 func TestStatusUpdaterSkipsSideEffectsWhenTransitionIsStale(t *testing.T) {
 	repo := &statusUpdaterRepoStub{
-		contests: []*model.Contest{
+		contests: []*contestentity.Contest{
 			{
 				ID:            51,
-				Status:        model.ContestStatusRunning,
+				Status:        contestentity.ContestStatusRunning,
 				StatusVersion: 4,
 				StartTime:     time.Now().Add(-time.Hour),
 				EndTime:       time.Now().Add(time.Hour),

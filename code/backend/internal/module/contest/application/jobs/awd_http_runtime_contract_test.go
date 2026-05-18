@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -78,7 +78,7 @@ func TestAWDRoundUpdaterPreviewHTTPStandardUsesCheckerToken(t *testing.T) {
 	resp, err := updater.PreviewServiceCheck(context.Background(), contestports.AWDServicePreviewRequest{
 		ServiceID:      2001,
 		AWDChallengeID: 3001,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		CheckerConfig: `{
 			"get_flag": {
 				"path": "/api/flag",
@@ -97,7 +97,7 @@ func TestAWDRoundUpdaterPreviewHTTPStandardUsesCheckerToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("PreviewServiceCheck() error = %v", err)
 	}
-	if resp.ServiceStatus != model.AWDServiceStatusUp {
+	if resp.ServiceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("unexpected preview status: %s; result=%s", resp.ServiceStatus, resp.CheckResult)
 	}
 	if len(runtime.requests) != 1 {
@@ -135,7 +135,7 @@ func TestAWDRoundUpdaterHTTPStandardDerivesCheckerTokenForRuntimeChecks(t *testi
 		contestports.AWDServiceDefinition{
 			ServiceID:       serviceID,
 			AWDChallengeID:  challengeID,
-			CheckerType:     model.AWDCheckerTypeHTTPStandard,
+			CheckerType:     contestentity.AWDCheckerTypeHTTPStandard,
 			CheckerTokenEnv: "CHECKER_TOKEN",
 			CheckerConfig: `{
 				"get_flag": {
@@ -159,7 +159,7 @@ func TestAWDRoundUpdaterHTTPStandardDerivesCheckerTokenForRuntimeChecks(t *testi
 	if err != nil {
 		t.Fatalf("buildAWDCheckOutcomeFromHTTPStandard() error = %v", err)
 	}
-	if outcome.serviceStatus != model.AWDServiceStatusUp {
+	if outcome.serviceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("unexpected outcome: %+v", outcome)
 	}
 	if len(runtime.requests) != 1 {

@@ -1,10 +1,10 @@
 package queries
 
 import (
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func teamName(team *model.Team) string {
+func teamName(team *contestentity.Team) string {
 	if team == nil {
 		return ""
 	}

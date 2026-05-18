@@ -21,19 +21,19 @@ func SetupContestTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
-		&model.Contest{},
+		&contestentity.Contest{},
 		&contestentity.ContestStatusTransition{},
 		&model.Challenge{},
 		&model.Image{},
 		&model.AWDChallenge{},
-		&model.ContestAWDService{},
+		&contestentity.ContestAWDService{},
 		&model.User{},
-		&model.Team{},
-		&model.TeamMember{},
-		&model.ContestRegistration{},
+		&contestentity.Team{},
+		&contestentity.TeamMember{},
+		&contestentity.ContestRegistration{},
 		&contestentity.ContestAnnouncement{},
-		&model.ContestChallenge{},
-		&model.Submission{},
+		&contestentity.ContestChallenge{},
+		&contestentity.Submission{},
 	); err != nil {
 		t.Fatalf("auto migrate: %v", err)
 	}
@@ -60,10 +60,10 @@ func SetupAWDTestDB(t *testing.T) *gorm.DB {
 	db := SetupContestTestDB(t)
 	if err := db.AutoMigrate(
 		&model.Instance{},
-		&model.AWDRound{},
-		&model.AWDTeamService{},
-		&model.AWDAttackLog{},
-		&model.AWDTrafficEvent{},
+		&contestentity.AWDRound{},
+		&contestentity.AWDTeamService{},
+		&contestentity.AWDAttackLog{},
+		&contestentity.AWDTrafficEvent{},
 		&model.AWDServiceOperation{},
 		&model.AWDScopeControl{},
 		&model.AWDDefenseWorkspace{},

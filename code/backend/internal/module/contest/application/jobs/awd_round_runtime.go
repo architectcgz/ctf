@@ -7,11 +7,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (u *AWDRoundUpdater) syncContestRounds(ctx context.Context, contest *model.Contest, now time.Time) {
+func (u *AWDRoundUpdater) syncContestRounds(ctx context.Context, contest *contestentity.Contest, now time.Time) {
 	activeRound, totalRounds, ok := u.calculateRoundPlan(contest, now)
 	if !ok {
 		return
@@ -59,7 +59,7 @@ func (u *AWDRoundUpdater) syncContestRounds(ctx context.Context, contest *model.
 	}
 }
 
-func (u *AWDRoundUpdater) EnsureActiveRoundMaterialized(ctx context.Context, contest *model.Contest, now time.Time) error {
+func (u *AWDRoundUpdater) EnsureActiveRoundMaterialized(ctx context.Context, contest *contestentity.Contest, now time.Time) error {
 	activeRound, totalRounds, ok := u.calculateRoundPlan(contest, now)
 	if !ok || activeRound <= 0 {
 		return contestports.ErrContestAWDRoundNotFound

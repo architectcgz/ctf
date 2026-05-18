@@ -5,16 +5,16 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromHTTPStandard(
 	ctx context.Context,
-	contest *model.Contest,
+	contest *contestentity.Contest,
 	contestID int64,
-	round *model.AWDRound,
+	round *contestentity.AWDRound,
 	teamID int64,
 	definition contestports.AWDServiceDefinition,
 	instances []contestports.AWDServiceInstance,
@@ -24,7 +24,7 @@ func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromHTTPStandard(
 	result := awdServiceCheckResult{
 		CheckedAt:            time.Now().UTC().Format(time.RFC3339),
 		CheckSource:          contestdomain.NormalizeAWDCheckSource(source),
-		CheckerType:          model.AWDCheckerTypeHTTPStandard,
+		CheckerType:          contestentity.AWDCheckerTypeHTTPStandard,
 		HealthPath:           resolveAWDCheckerHealthPath(definition.CheckerConfig, u.cfg.CheckerHealthPath),
 		InstanceCount:        len(instances),
 		HealthyInstanceCount: 0,
@@ -68,7 +68,7 @@ func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromHTTPStandard(
 func (u *AWDRoundUpdater) runAWDHTTPCheckerTarget(
 	ctx context.Context,
 	instance contestports.AWDServiceInstance,
-	round *model.AWDRound,
+	round *contestentity.AWDRound,
 	teamID int64,
 	definition contestports.AWDServiceDefinition,
 	config awdHTTPCheckerConfig,
@@ -79,7 +79,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerTarget(
 	startedAt := time.Now()
 	target := awdCheckTargetResult{
 		AccessURL: instance.AccessURL,
-		Probe:     string(model.AWDCheckerTypeHTTPStandard),
+		Probe:     string(contestentity.AWDCheckerTypeHTTPStandard),
 	}
 
 	templateData := awdHTTPCheckerTemplateData{
@@ -101,7 +101,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerTarget(
 			target.Error = putResult.summary.Error
 			target.LatencyMS = time.Since(startedAt).Milliseconds()
 			return awdHTTPCheckerTargetRuntimeResult{
-				status:       model.AWDServiceStatusDown,
+				status:       contestentity.AWDServiceStatusDown,
 				statusReason: putResult.summary.ErrorCode,
 				target:       target,
 			}
@@ -120,9 +120,9 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerTarget(
 		target.ErrorCode = getResult.summary.ErrorCode
 		target.Error = getResult.summary.Error
 		target.LatencyMS = time.Since(startedAt).Milliseconds()
-		status := model.AWDServiceStatusDown
+		status := contestentity.AWDServiceStatusDown
 		if getResult.summary.ErrorCode == "flag_mismatch" {
-			status = model.AWDServiceStatusCompromised
+			status = contestentity.AWDServiceStatusCompromised
 		}
 		return awdHTTPCheckerTargetRuntimeResult{
 			status:       status,
@@ -139,7 +139,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerTarget(
 			target.Error = havocResult.summary.Error
 			target.LatencyMS = time.Since(startedAt).Milliseconds()
 			return awdHTTPCheckerTargetRuntimeResult{
-				status:       model.AWDServiceStatusDown,
+				status:       contestentity.AWDServiceStatusDown,
 				statusReason: havocResult.summary.ErrorCode,
 				target:       target,
 			}
@@ -149,7 +149,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerTarget(
 	target.Healthy = true
 	target.LatencyMS = time.Since(startedAt).Milliseconds()
 	return awdHTTPCheckerTargetRuntimeResult{
-		status:       model.AWDServiceStatusUp,
+		status:       contestentity.AWDServiceStatusUp,
 		statusReason: "healthy",
 		target:       target,
 	}
@@ -166,12 +166,12 @@ func applyAWDHTTPCheckerAggregateResult(result *awdServiceCheckResult, targets [
 		item := targets[i]
 		result.Targets = append(result.Targets, item.target)
 		switch item.status {
-		case model.AWDServiceStatusUp:
+		case contestentity.AWDServiceStatusUp:
 			healthyCount++
 			if firstHealthy == nil {
 				firstHealthy = &targets[i]
 			}
-		case model.AWDServiceStatusCompromised:
+		case contestentity.AWDServiceStatusCompromised:
 			if firstCompromised == nil {
 				firstCompromised = &targets[i]
 			}
@@ -206,14 +206,14 @@ func applyAWDHTTPCheckerAggregateResult(result *awdServiceCheckResult, targets [
 		} else {
 			result.StatusReason = "partial_available"
 		}
-		return model.AWDServiceStatusUp
+		return contestentity.AWDServiceStatusUp
 	}
 
 	if firstCompromised != nil {
 		result.StatusReason = firstCompromised.statusReason
 		result.ErrorCode = firstCompromised.target.ErrorCode
 		result.Error = firstCompromised.target.Error
-		return model.AWDServiceStatusCompromised
+		return contestentity.AWDServiceStatusCompromised
 	}
 
 	if firstDown != nil {
@@ -223,7 +223,7 @@ func applyAWDHTTPCheckerAggregateResult(result *awdServiceCheckResult, targets [
 	} else {
 		result.StatusReason = "all_probes_failed"
 	}
-	return model.AWDServiceStatusDown
+	return contestentity.AWDServiceStatusDown
 }
 
 func renderAWDHTTPCheckerExpectedSubstrings(templateValue string, templateData awdHTTPCheckerTemplateData, acceptedFlags []string) []string {

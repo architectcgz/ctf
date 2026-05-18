@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -56,7 +56,7 @@ func TestAWDRoundUpdaterPreviewTCPStandardRunsTCPSteps(t *testing.T) {
 	resp, err := updater.PreviewServiceCheck(context.Background(), contestports.AWDServicePreviewRequest{
 		ServiceID:      2001,
 		AWDChallengeID: 3001,
-		CheckerType:    model.AWDCheckerTypeTCPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeTCPStandard,
 		CheckerConfig: `{
 			"steps": [
 				{"send": "PING\n", "expect_contains": "PONG"},
@@ -72,7 +72,7 @@ func TestAWDRoundUpdaterPreviewTCPStandardRunsTCPSteps(t *testing.T) {
 	if err != nil {
 		t.Fatalf("PreviewServiceCheck() error = %v", err)
 	}
-	if resp.ServiceStatus != model.AWDServiceStatusUp {
+	if resp.ServiceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("ServiceStatus = %s, want up; result=%s", resp.ServiceStatus, resp.CheckResult)
 	}
 
@@ -135,7 +135,7 @@ func TestAWDRoundUpdaterTCPStandardDerivesCheckerTokenForRuntimeChecks(t *testin
 		contestports.AWDServiceDefinition{
 			ServiceID:       serviceID,
 			AWDChallengeID:  challengeID,
-			CheckerType:     model.AWDCheckerTypeTCPStandard,
+			CheckerType:     contestentity.AWDCheckerTypeTCPStandard,
 			CheckerTokenEnv: "CHECKER_TOKEN",
 			CheckerConfig: `{
 				"steps": [
@@ -158,7 +158,7 @@ func TestAWDRoundUpdaterTCPStandardDerivesCheckerTokenForRuntimeChecks(t *testin
 	if err != nil {
 		t.Fatalf("buildAWDCheckOutcomeFromTCPStandard() error = %v", err)
 	}
-	if outcome.serviceStatus != model.AWDServiceStatusUp {
+	if outcome.serviceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("unexpected outcome: %+v", outcome)
 	}
 
@@ -174,7 +174,7 @@ func TestAWDRoundUpdaterTCPStandardRedactsFlagInErrors(t *testing.T) {
 	resp, err := updater.PreviewServiceCheck(context.Background(), contestports.AWDServicePreviewRequest{
 		ServiceID:      2001,
 		AWDChallengeID: 3001,
-		CheckerType:    model.AWDCheckerTypeTCPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeTCPStandard,
 		CheckerConfig: `{
 			"connect": {"host": "{{FLAG}}", "port": 1},
 			"steps": [{"send": "PING\n", "expect_contains": "PONG"}]
@@ -207,7 +207,7 @@ func TestAWDRoundUpdaterTCPStandardRedactsFlagInErrors(t *testing.T) {
 	if !ok {
 		t.Fatalf("missing audit: %#v", target)
 	}
-	if audit["checker_type"] != string(model.AWDCheckerTypeTCPStandard) || audit["service_id"] != float64(2001) || audit["error_code"] != "tcp_connect_failed" {
+	if audit["checker_type"] != string(contestentity.AWDCheckerTypeTCPStandard) || audit["service_id"] != float64(2001) || audit["error_code"] != "tcp_connect_failed" {
 		t.Fatalf("unexpected audit: %#v", audit)
 	}
 }

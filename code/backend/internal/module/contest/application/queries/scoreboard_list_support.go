@@ -6,13 +6,13 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *ScoreboardService) resolveScoreboardMembers(ctx context.Context, contest *model.Contest, contestID int64, live bool, now time.Time) (bool, []contestports.ScoreboardMemberScore, error) {
+func (s *ScoreboardService) resolveScoreboardMembers(ctx context.Context, contest *contestentity.Contest, contestID int64, live bool, now time.Time) (bool, []contestports.ScoreboardMemberScore, error) {
 	frozen := !live && contestdomain.IsFrozenContest(contest, now)
 	if !frozen {
 		results, err := s.stateStore.ListLiveScoreboard(ctx, contestID)
@@ -70,10 +70,10 @@ func buildScoreboardItems(
 	start int64,
 	results []contestports.ScoreboardMemberScore,
 	teamIDs []int64,
-	teams []*model.Team,
+	teams []*contestentity.Team,
 	statsMap map[int64]contestports.ScoreboardTeamStats,
 ) []*ScoreboardItemResult {
-	teamMap := make(map[int64]*model.Team, len(teams))
+	teamMap := make(map[int64]*contestentity.Team, len(teams))
 	for _, team := range teams {
 		teamMap[team.ID] = team
 	}

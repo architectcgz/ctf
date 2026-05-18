@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
 )
@@ -49,7 +50,7 @@ func TestAWDRepositoryRecordRuntimeProxyTrafficEventPrefersServiceChallengeMetad
 		t.Fatalf("RecordRuntimeProxyTrafficEvent() error = %v", err)
 	}
 
-	var event model.AWDTrafficEvent
+	var event contestentity.AWDTrafficEvent
 	if err := db.First(&event).Error; err != nil {
 		t.Fatalf("load awd traffic event: %v", err)
 	}

@@ -10,8 +10,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	rediskeys "ctf-platform/internal/pkg/redis"
@@ -20,11 +20,11 @@ import (
 
 type scoreboardRepoStub struct{}
 
-func (s *scoreboardRepoStub) FindByID(context.Context, int64) (*model.Contest, error) {
+func (s *scoreboardRepoStub) FindByID(context.Context, int64) (*contestentity.Contest, error) {
 	return nil, contestdomain.ErrContestNotFound
 }
 
-func (s *scoreboardRepoStub) FindTeamsByIDs(context.Context, []int64) ([]*model.Team, error) {
+func (s *scoreboardRepoStub) FindTeamsByIDs(context.Context, []int64) ([]*contestentity.Team, error) {
 	return nil, nil
 }
 
@@ -49,17 +49,17 @@ func TestScoreboardServiceGetScoreboardReturnsContestNotFound(t *testing.T) {
 }
 
 type scoreboardQueryRepoStub struct {
-	contest  *model.Contest
-	teams    map[int64]*model.Team
+	contest  *contestentity.Contest
+	teams    map[int64]*contestentity.Team
 	statsMap map[int64]contestports.ScoreboardTeamStats
 }
 
-func (s *scoreboardQueryRepoStub) FindByID(context.Context, int64) (*model.Contest, error) {
+func (s *scoreboardQueryRepoStub) FindByID(context.Context, int64) (*contestentity.Contest, error) {
 	return s.contest, nil
 }
 
-func (s *scoreboardQueryRepoStub) FindTeamsByIDs(_ context.Context, ids []int64) ([]*model.Team, error) {
-	teams := make([]*model.Team, 0, len(ids))
+func (s *scoreboardQueryRepoStub) FindTeamsByIDs(_ context.Context, ids []int64) ([]*contestentity.Team, error) {
+	teams := make([]*contestentity.Team, 0, len(ids))
 	for _, id := range ids {
 		if team := s.teams[id]; team != nil {
 			teams = append(teams, team)
@@ -104,15 +104,15 @@ func TestScoreboardServiceGetScoreboardSkipsInvalidRedisMembers(t *testing.T) {
 	}
 
 	service := NewScoreboardService(&scoreboardQueryRepoStub{
-		contest: &model.Contest{
+		contest: &contestentity.Contest{
 			ID:        contestID,
 			Title:     "scoreboard",
-			Mode:      model.ContestModeJeopardy,
+			Mode:      contestentity.ContestModeJeopardy,
 			StartTime: now.Add(-time.Hour),
 			EndTime:   now.Add(time.Hour),
-			Status:    model.ContestStatusRunning,
+			Status:    contestentity.ContestStatusRunning,
 		},
-		teams: map[int64]*model.Team{
+		teams: map[int64]*contestentity.Team{
 			11: {ID: 11, Name: "Alpha"},
 			12: {ID: 12, Name: "Beta"},
 		},
@@ -165,15 +165,15 @@ func TestScoreboardServiceGetScoreboardSkipsMissingTeams(t *testing.T) {
 	}
 
 	service := NewScoreboardService(&scoreboardQueryRepoStub{
-		contest: &model.Contest{
+		contest: &contestentity.Contest{
 			ID:        contestID,
 			Title:     "scoreboard",
-			Mode:      model.ContestModeJeopardy,
+			Mode:      contestentity.ContestModeJeopardy,
 			StartTime: now.Add(-time.Hour),
 			EndTime:   now.Add(time.Hour),
-			Status:    model.ContestStatusRunning,
+			Status:    contestentity.ContestStatusRunning,
 		},
-		teams: map[int64]*model.Team{
+		teams: map[int64]*contestentity.Team{
 			11: {ID: 11, Name: "Alpha"},
 		},
 		statsMap: map[int64]contestports.ScoreboardTeamStats{
@@ -223,15 +223,15 @@ func TestScoreboardServiceGetScoreboardPaginatesAfterFilteringInvisibleTeams(t *
 	}
 
 	service := NewScoreboardService(&scoreboardQueryRepoStub{
-		contest: &model.Contest{
+		contest: &contestentity.Contest{
 			ID:        contestID,
 			Title:     "scoreboard",
-			Mode:      model.ContestModeJeopardy,
+			Mode:      contestentity.ContestModeJeopardy,
 			StartTime: now.Add(-time.Hour),
 			EndTime:   now.Add(time.Hour),
-			Status:    model.ContestStatusRunning,
+			Status:    contestentity.ContestStatusRunning,
 		},
-		teams: map[int64]*model.Team{
+		teams: map[int64]*contestentity.Team{
 			11: {ID: 11, Name: "Alpha"},
 			13: {ID: 13, Name: "Gamma"},
 		},

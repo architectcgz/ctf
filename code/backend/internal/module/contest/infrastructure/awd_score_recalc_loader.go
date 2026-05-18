@@ -5,11 +5,11 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func loadAWDContestTeams(ctx context.Context, db *gorm.DB, contestID int64) ([]model.Team, error) {
-	var teams []model.Team
+func loadAWDContestTeams(ctx context.Context, db *gorm.DB, contestID int64) ([]contestentity.Team, error) {
+	var teams []contestentity.Team
 	if err := db.WithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Order("id ASC").

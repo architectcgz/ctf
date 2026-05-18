@@ -5,9 +5,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/contest/application/statusmachine"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -25,7 +25,7 @@ type contestCommandRepository interface {
 }
 
 type contestCommandStatusTransitionRepository interface {
-	UpdateContestWithStatusTransition(ctx context.Context, contest *model.Contest, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error)
+	UpdateContestWithStatusTransition(ctx context.Context, contest *contestentity.Contest, transition contestdomain.ContestStatusTransition) (contestdomain.ContestStatusTransitionResult, error)
 	MarkTransitionSideEffectsSucceeded(ctx context.Context, id int64) error
 	MarkTransitionSideEffectsFailed(ctx context.Context, id int64, cause error) error
 }

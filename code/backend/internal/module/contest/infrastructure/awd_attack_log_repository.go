@@ -6,13 +6,13 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func (r *AWDRepository) CountSuccessfulAttacks(ctx context.Context, roundID, attackerTeamID, victimTeamID, serviceID int64) (int64, error) {
 	var count int64
 	err := r.dbWithContext(ctx).
-		Model(&model.AWDAttackLog{}).
+		Model(&contestentity.AWDAttackLog{}).
 		Where(
 			"round_id = ? AND attacker_team_id = ? AND victim_team_id = ? AND service_id = ? AND is_success = ?",
 			roundID, attackerTeamID, victimTeamID, serviceID, true,
@@ -21,7 +21,7 @@ func (r *AWDRepository) CountSuccessfulAttacks(ctx context.Context, roundID, att
 	return count, err
 }
 
-func (r *AWDRepository) CreateAttackLog(ctx context.Context, logRecord *model.AWDAttackLog) error {
+func (r *AWDRepository) CreateAttackLog(ctx context.Context, logRecord *contestentity.AWDAttackLog) error {
 	return r.dbWithContext(ctx).Create(logRecord).Error
 }
 
@@ -31,12 +31,12 @@ func (r *AWDRepository) ApplyAttackImpactToVictimService(
 	scoreGained int,
 	updatedAt time.Time,
 ) error {
-	record := &model.AWDTeamService{
+	record := &contestentity.AWDTeamService{
 		RoundID:        roundID,
 		TeamID:         victimTeamID,
 		ServiceID:      serviceID,
 		AWDChallengeID: awdChallengeID,
-		ServiceStatus:  model.AWDServiceStatusCompromised,
+		ServiceStatus:  contestentity.AWDServiceStatusCompromised,
 		CheckResult:    "{}",
 		AttackReceived: 1,
 		DefenseScore:   0,
@@ -49,7 +49,7 @@ func (r *AWDRepository) ApplyAttackImpactToVictimService(
 		Assign(map[string]any{
 			"service_id":       serviceID,
 			"awd_challenge_id": awdChallengeID,
-			"service_status":   model.AWDServiceStatusCompromised,
+			"service_status":   contestentity.AWDServiceStatusCompromised,
 			"attack_received":  gorm.Expr("attack_received + ?", 1),
 			"attack_score":     gorm.Expr("attack_score + ?", scoreGained),
 			"defense_score":    0,
@@ -58,8 +58,8 @@ func (r *AWDRepository) ApplyAttackImpactToVictimService(
 		FirstOrCreate(record).Error
 }
 
-func (r *AWDRepository) ListAttackLogsByRound(ctx context.Context, roundID int64) ([]model.AWDAttackLog, error) {
-	var logs []model.AWDAttackLog
+func (r *AWDRepository) ListAttackLogsByRound(ctx context.Context, roundID int64) ([]contestentity.AWDAttackLog, error) {
+	var logs []contestentity.AWDAttackLog
 	err := r.dbWithContext(ctx).
 		Where("round_id = ?", roundID).
 		Order("created_at ASC, id ASC").

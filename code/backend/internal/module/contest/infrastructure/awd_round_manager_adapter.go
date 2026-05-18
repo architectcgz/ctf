@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -22,11 +22,11 @@ func NewAWDRoundManagerAdapter(source contestports.AWDRoundManager) *AWDRoundMan
 	return &AWDRoundManagerAdapter{source: source}
 }
 
-func (r *AWDRoundManagerAdapter) RunRoundServiceChecks(ctx context.Context, contest *model.Contest, round *model.AWDRound, source string) error {
+func (r *AWDRoundManagerAdapter) RunRoundServiceChecks(ctx context.Context, contest *contestentity.Contest, round *contestentity.AWDRound, source string) error {
 	return r.source.RunRoundServiceChecks(ctx, contest, round, source)
 }
 
-func (r *AWDRoundManagerAdapter) EnsureActiveRoundMaterialized(ctx context.Context, contest *model.Contest, now time.Time) error {
+func (r *AWDRoundManagerAdapter) EnsureActiveRoundMaterialized(ctx context.Context, contest *contestentity.Contest, now time.Time) error {
 	err := r.source.EnsureActiveRoundMaterialized(ctx, contest, now)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return contestports.ErrContestAWDRoundNotFound

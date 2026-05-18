@@ -1,14 +1,14 @@
 package queries
 
 import (
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func accumulateAWDRoundAttackSummary(
 	items map[int64]*AWDRoundSummaryItemResult,
 	metrics *AWDRoundMetricsResult,
-	attackLogs []model.AWDAttackLog,
+	attackLogs []contestentity.AWDAttackLog,
 ) map[int64]map[int64]struct{} {
 	uniqueAttackersAgainst := make(map[int64]map[int64]struct{}, len(items))
 	for _, logEntry := range attackLogs {
@@ -19,9 +19,9 @@ func accumulateAWDRoundAttackSummary(
 			metrics.FailedAttackCount++
 		}
 		switch contestdomain.NormalizeAWDAttackSource(logEntry.Source) {
-		case model.AWDAttackSourceSubmission:
+		case contestentity.AWDAttackSourceSubmission:
 			metrics.SubmissionAttackCount++
-		case model.AWDAttackSourceManual:
+		case contestentity.AWDAttackSourceManual:
 			metrics.ManualAttackLogCount++
 		default:
 			metrics.LegacyAttackLogCount++

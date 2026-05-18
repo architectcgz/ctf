@@ -21,6 +21,7 @@ import (
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
 	rediskeys "ctf-platform/internal/pkg/redis"
@@ -73,7 +74,7 @@ func TestSubmissionServiceSubmitFlagInContestAppliesDynamicScoreAndFirstBlood(t 
 		t.Fatalf("expected contest correct response message to be omitted, got %+v", secondResp)
 	}
 
-	var submissions []model.Submission
+	var submissions []contestentity.Submission
 	if err := db.Order("submitted_at ASC, id ASC").Find(&submissions).Error; err != nil {
 		t.Fatalf("list submissions: %v", err)
 	}
@@ -81,7 +82,7 @@ func TestSubmissionServiceSubmitFlagInContestAppliesDynamicScoreAndFirstBlood(t 
 		t.Fatalf("unexpected submissions: %+v", submissions)
 	}
 
-	var contestChallenge model.ContestChallenge
+	var contestChallenge contestentity.ContestChallenge
 	if err := db.Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).First(&contestChallenge).Error; err != nil {
 		t.Fatalf("load contest challenge: %v", err)
 	}
@@ -119,7 +120,7 @@ func TestSubmissionServiceSubmitFlagInContestUsesContestScoreAsDynamicBase(t *te
 	overrideScore := 300
 
 	createContestSubmissionFixture(t, db, contestID, challengeID, now)
-	if err := db.Model(&model.ContestChallenge{}).
+	if err := db.Model(&contestentity.ContestChallenge{}).
 		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
 		Update("contest_score", overrideScore).Error; err != nil {
 		t.Fatalf("set contest score override: %v", err)
@@ -134,7 +135,7 @@ func TestSubmissionServiceSubmitFlagInContestUsesContestScoreAsDynamicBase(t *te
 		t.Fatalf("unexpected response: %+v", resp)
 	}
 
-	var submission model.Submission
+	var submission contestentity.Submission
 	if err := db.First(&submission).Error; err != nil {
 		t.Fatalf("load submission: %v", err)
 	}
@@ -224,7 +225,7 @@ func TestSubmissionServiceSubmitFlagInContestRejectsSecondSolveFromSameTeam(t *t
 		t.Fatalf("expected ErrContestChallengeSolved, got %v", err)
 	}
 
-	var submissions []model.Submission
+	var submissions []contestentity.Submission
 	if err := db.Order("submitted_at ASC, id ASC").Find(&submissions).Error; err != nil {
 		t.Fatalf("list submissions: %v", err)
 	}
@@ -299,7 +300,7 @@ func TestSubmissionServiceSubmitFlagInContestDoesNotPersistSubmittedFlag(t *test
 		t.Fatalf("expected correct response, got %+v", resp)
 	}
 
-	var submission model.Submission
+	var submission contestentity.Submission
 	if err := db.Where("contest_id = ? AND user_id = ? AND challenge_id = ?", contestID, userID, challengeID).First(&submission).Error; err != nil {
 		t.Fatalf("load submission: %v", err)
 	}
@@ -422,7 +423,7 @@ func TestSubmissionServiceSubmitFlagInContestFailsWhenRateLimitLookupUnavailable
 	}
 
 	var count int64
-	if err := db.Model(&model.Submission{}).Where("contest_id = ? AND user_id = ? AND challenge_id = ?", contestID, userID, challengeID).Count(&count).Error; err != nil {
+	if err := db.Model(&contestentity.Submission{}).Where("contest_id = ? AND user_id = ? AND challenge_id = ?", contestID, userID, challengeID).Count(&count).Error; err != nil {
 		t.Fatalf("count submissions: %v", err)
 	}
 	if count != 0 {
@@ -472,7 +473,7 @@ func TestSubmissionServiceSubmitFlagInContestFailsWhenIncorrectRateLimitWriteUna
 	}
 
 	var count int64
-	if err := db.Model(&model.Submission{}).Where("contest_id = ? AND user_id = ? AND challenge_id = ?", contestID, userID, challengeID).Count(&count).Error; err != nil {
+	if err := db.Model(&contestentity.Submission{}).Where("contest_id = ? AND user_id = ? AND challenge_id = ?", contestID, userID, challengeID).Count(&count).Error; err != nil {
 		t.Fatalf("count submissions: %v", err)
 	}
 	if count != 0 {
@@ -485,19 +486,19 @@ func TestScoreboardServiceRebuildScoreboardUsesTeamTotals(t *testing.T) {
 
 	now := time.Now()
 	contestID := int64(3)
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        contestID,
 		Title:     "rebuild-ctf",
-		Mode:      model.ContestModeJeopardy,
+		Mode:      contestentity.ContestModeJeopardy,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
-		Status:    model.ContestStatusRunning,
+		Status:    contestentity.ContestStatusRunning,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create([]*model.Team{
+	if err := db.Create([]*contestentity.Team{
 		{ID: 31, ContestID: contestID, Name: "Alpha", CaptainID: 3001, InviteCode: "A", TotalScore: 600, CreatedAt: now, UpdatedAt: now},
 		{ID: 32, ContestID: contestID, Name: "Beta", CaptainID: 3002, InviteCode: "B", TotalScore: 0, CreatedAt: now, UpdatedAt: now},
 		{ID: 33, ContestID: contestID, Name: "Gamma", CaptainID: 3003, InviteCode: "C", TotalScore: 450, CreatedAt: now, UpdatedAt: now},
@@ -550,35 +551,35 @@ func TestScoreboardServiceRebuildScoreboardUsesTeamTotals(t *testing.T) {
 
 func TestScoreboardServiceGetScoreboardUsesAWDAttackStats(t *testing.T) {
 	db := testsupport.SetupContestTestDB(t)
-	if err := db.AutoMigrate(&model.AWDRound{}, &model.AWDAttackLog{}); err != nil {
+	if err := db.AutoMigrate(&contestentity.AWDRound{}, &contestentity.AWDAttackLog{}); err != nil {
 		t.Fatalf("auto migrate awd models: %v", err)
 	}
 
 	now := time.Now()
 	contestID := int64(13)
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        contestID,
 		Title:     "awd-scoreboard",
-		Mode:      model.ContestModeAWD,
+		Mode:      contestentity.ContestModeAWD,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
-		Status:    model.ContestStatusRunning,
+		Status:    contestentity.ContestStatusRunning,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create([]*model.Team{
+	if err := db.Create([]*contestentity.Team{
 		{ID: 131, ContestID: contestID, Name: "Alpha", CaptainID: 3001, InviteCode: "A13", TotalScore: 260, CreatedAt: now, UpdatedAt: now},
 		{ID: 132, ContestID: contestID, Name: "Beta", CaptainID: 3002, InviteCode: "B13", TotalScore: 120, CreatedAt: now, UpdatedAt: now},
 	}).Error; err != nil {
 		t.Fatalf("create teams: %v", err)
 	}
-	if err := db.Create(&model.AWDRound{
+	if err := db.Create(&contestentity.AWDRound{
 		ID:           1301,
 		ContestID:    contestID,
 		RoundNumber:  1,
-		Status:       model.AWDRoundStatusRunning,
+		Status:       contestentity.AWDRoundStatusRunning,
 		AttackScore:  80,
 		DefenseScore: 40,
 		CreatedAt:    now,
@@ -586,15 +587,15 @@ func TestScoreboardServiceGetScoreboardUsesAWDAttackStats(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create awd round: %v", err)
 	}
-	if err := db.Create([]*model.AWDAttackLog{
+	if err := db.Create([]*contestentity.AWDAttackLog{
 		{
 			ID:             13001,
 			RoundID:        1301,
 			AttackerTeamID: 131,
 			VictimTeamID:   132,
 			AWDChallengeID: 501,
-			AttackType:     model.AWDAttackTypeFlagCapture,
-			Source:         model.AWDAttackSourceSubmission,
+			AttackType:     contestentity.AWDAttackTypeFlagCapture,
+			Source:         contestentity.AWDAttackSourceSubmission,
 			IsSuccess:      true,
 			ScoreGained:    80,
 			CreatedAt:      now.Add(-2 * time.Minute),
@@ -605,8 +606,8 @@ func TestScoreboardServiceGetScoreboardUsesAWDAttackStats(t *testing.T) {
 			AttackerTeamID: 131,
 			VictimTeamID:   132,
 			AWDChallengeID: 502,
-			AttackType:     model.AWDAttackTypeServiceExploit,
-			Source:         model.AWDAttackSourceSubmission,
+			AttackType:     contestentity.AWDAttackTypeServiceExploit,
+			Source:         contestentity.AWDAttackSourceSubmission,
 			IsSuccess:      true,
 			ScoreGained:    80,
 			CreatedAt:      now.Add(-time.Minute),
@@ -659,27 +660,27 @@ func TestScoreboardServiceGetScoreboardUsesAWDAttackStats(t *testing.T) {
 
 func TestScoreboardServiceGetLiveScoreboardBypassesFrozenSnapshot(t *testing.T) {
 	db := testsupport.SetupContestTestDB(t)
-	if err := db.AutoMigrate(&model.AWDRound{}, &model.AWDAttackLog{}); err != nil {
+	if err := db.AutoMigrate(&contestentity.AWDRound{}, &contestentity.AWDAttackLog{}); err != nil {
 		t.Fatalf("auto migrate awd models: %v", err)
 	}
 	now := time.Now()
 	contestID := int64(14)
 	freezeTime := now.Add(-5 * time.Minute)
 
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:         contestID,
 		Title:      "awd-live-scoreboard",
-		Mode:       model.ContestModeAWD,
+		Mode:       contestentity.ContestModeAWD,
 		StartTime:  now.Add(-time.Hour),
 		EndTime:    now.Add(time.Hour),
 		FreezeTime: &freezeTime,
-		Status:     model.ContestStatusFrozen,
+		Status:     contestentity.ContestStatusFrozen,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create([]*model.Team{
+	if err := db.Create([]*contestentity.Team{
 		{ID: 141, ContestID: contestID, Name: "Alpha", CaptainID: 4001, InviteCode: "A14", TotalScore: 300, CreatedAt: now, UpdatedAt: now},
 		{ID: 142, ContestID: contestID, Name: "Beta", CaptainID: 4002, InviteCode: "B14", TotalScore: 180, CreatedAt: now, UpdatedAt: now},
 	}).Error; err != nil {
@@ -856,13 +857,13 @@ func newContestSubmissionTestServiceWithConfig(t *testing.T, cfg *config.Config)
 func createContestSubmissionFixture(t *testing.T, db *gorm.DB, contestID, challengeID int64, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        contestID,
 		Title:     "dynamic-ctf",
-		Mode:      model.ContestModeJeopardy,
+		Mode:      contestentity.ContestModeJeopardy,
 		StartTime: now.Add(-time.Hour),
 		EndTime:   now.Add(time.Hour),
-		Status:    model.ContestStatusRunning,
+		Status:    contestentity.ContestStatusRunning,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -881,7 +882,7 @@ func createContestSubmissionFixture(t *testing.T, db *gorm.DB, contestID, challe
 	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	if err := db.Create(&model.ContestChallenge{
+	if err := db.Create(&contestentity.ContestChallenge{
 		ContestID:   contestID,
 		ChallengeID: challengeID,
 		Points:      500,

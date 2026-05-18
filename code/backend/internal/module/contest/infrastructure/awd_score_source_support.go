@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func normalizeAWDCheckSourceValue(value any) string {
@@ -39,11 +39,11 @@ func parseAWDCheckResultValue(value string) map[string]any {
 
 func normalizeAWDAttackSourceValue(value string) string {
 	switch strings.TrimSpace(value) {
-	case model.AWDAttackSourceManual:
-		return model.AWDAttackSourceManual
-	case model.AWDAttackSourceSubmission:
-		return model.AWDAttackSourceSubmission
+	case contestentity.AWDAttackSourceManual:
+		return contestentity.AWDAttackSourceManual
+	case contestentity.AWDAttackSourceSubmission:
+		return contestentity.AWDAttackSourceSubmission
 	default:
-		return model.AWDAttackSourceLegacy
+		return contestentity.AWDAttackSourceLegacy
 	}
 }

@@ -7,13 +7,13 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 func (r *TeamRepository) AddMemberWithLock(ctx context.Context, contestID, teamID, userID int64) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var team model.Team
+		var team contestentity.Team
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ? AND contest_id = ?", teamID, contestID).
 			First(&team).Error; err != nil {
@@ -21,7 +21,7 @@ func (r *TeamRepository) AddMemberWithLock(ctx context.Context, contestID, teamI
 		}
 
 		var existingCount int64
-		if err := tx.Model(&model.TeamMember{}).
+		if err := tx.Model(&contestentity.TeamMember{}).
 			Where("contest_id = ? AND user_id = ?", contestID, userID).
 			Count(&existingCount).Error; err != nil {
 			return err
@@ -31,14 +31,14 @@ func (r *TeamRepository) AddMemberWithLock(ctx context.Context, contestID, teamI
 		}
 
 		var memberCount int64
-		if err := tx.Model(&model.TeamMember{}).Where("team_id = ?", teamID).Count(&memberCount).Error; err != nil {
+		if err := tx.Model(&contestentity.TeamMember{}).Where("team_id = ?", teamID).Count(&memberCount).Error; err != nil {
 			return err
 		}
 		if memberCount >= int64(team.MaxMembers) {
 			return contestdomain.ErrTeamFull
 		}
 
-		member := &model.TeamMember{
+		member := &contestentity.TeamMember{
 			ContestID: contestID,
 			TeamID:    teamID,
 			UserID:    userID,
@@ -53,11 +53,11 @@ func (r *TeamRepository) AddMemberWithLock(ctx context.Context, contestID, teamI
 
 func (r *TeamRepository) RemoveMember(ctx context.Context, teamID, userID int64) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var team model.Team
+		var team contestentity.Team
 		if err := tx.Where("id = ?", teamID).First(&team).Error; err != nil {
 			return err
 		}
-		if err := tx.Where("team_id = ? AND user_id = ?", teamID, userID).Delete(&model.TeamMember{}).Error; err != nil {
+		if err := tx.Where("team_id = ? AND user_id = ?", teamID, userID).Delete(&contestentity.TeamMember{}).Error; err != nil {
 			return err
 		}
 		return bindContestRegistrationTeam(tx, team.ContestID, userID, nil)

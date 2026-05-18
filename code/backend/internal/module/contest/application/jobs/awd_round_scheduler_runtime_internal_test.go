@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
 	rediskeys "ctf-platform/internal/pkg/redis"
@@ -64,14 +64,14 @@ func TestAWDRoundUpdaterSyncContestRoundsSkipsCanceledContextErrorLog(t *testing
 	now := time.Date(2026, 5, 9, 21, 30, 0, 0, time.UTC)
 	contestID := int64(901)
 	testsupport.CreateAWDContestFixture(t, db, contestID, now.Add(-11*time.Minute))
-	if err := db.Model(&model.Contest{}).Where("id = ?", contestID).Updates(map[string]any{
+	if err := db.Model(&contestentity.Contest{}).Where("id = ?", contestID).Updates(map[string]any{
 		"start_time": now.Add(-11 * time.Minute),
 		"end_time":   now.Add(14 * time.Minute),
 	}).Error; err != nil {
 		t.Fatalf("update contest time window: %v", err)
 	}
 
-	var contest model.Contest
+	var contest contestentity.Contest
 	if err := db.First(&contest, contestID).Error; err != nil {
 		t.Fatalf("load contest: %v", err)
 	}

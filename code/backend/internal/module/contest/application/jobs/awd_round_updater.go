@@ -7,8 +7,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -49,7 +49,7 @@ type noopAWDFlagInjector struct {
 	log *zap.Logger
 }
 
-func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *model.Contest, round *model.AWDRound, assignments []contestports.AWDFlagAssignment) error {
+func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *contestentity.Contest, round *contestentity.AWDRound, assignments []contestports.AWDFlagAssignment) error {
 	if i == nil || i.log == nil || contest == nil || round == nil {
 		return nil
 	}

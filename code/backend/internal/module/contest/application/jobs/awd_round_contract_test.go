@@ -9,12 +9,13 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type awdRoundUpdaterRepoStub struct {
-	findRunningRoundFn  func(context.Context, int64) (*model.AWDRound, error)
-	findRoundByNumberFn func(context.Context, int64, int) (*model.AWDRound, error)
+	findRunningRoundFn  func(context.Context, int64) (*contestentity.AWDRound, error)
+	findRoundByNumberFn func(context.Context, int64, int) (*contestentity.AWDRound, error)
 }
 
 func (s awdRoundUpdaterRepoStub) WithinRoundReconcileTransaction(context.Context, func(contestports.AWDRoundReconcileTxRepository) error) error {
@@ -25,49 +26,49 @@ func (s awdRoundUpdaterRepoStub) WithinRoundServiceWritebackTransaction(context.
 	return nil
 }
 
-func (s awdRoundUpdaterRepoStub) CreateRound(context.Context, *model.AWDRound) error {
+func (s awdRoundUpdaterRepoStub) CreateRound(context.Context, *contestentity.AWDRound) error {
 	return nil
 }
 
-func (s awdRoundUpdaterRepoStub) UpsertRound(context.Context, *model.AWDRound) error {
+func (s awdRoundUpdaterRepoStub) UpsertRound(context.Context, *contestentity.AWDRound) error {
 	return nil
 }
 
-func (s awdRoundUpdaterRepoStub) ListRoundsByContest(context.Context, int64) ([]model.AWDRound, error) {
+func (s awdRoundUpdaterRepoStub) ListRoundsByContest(context.Context, int64) ([]contestentity.AWDRound, error) {
 	return nil, nil
 }
 
-func (s awdRoundUpdaterRepoStub) FindRoundByContestAndID(context.Context, int64, int64) (*model.AWDRound, error) {
+func (s awdRoundUpdaterRepoStub) FindRoundByContestAndID(context.Context, int64, int64) (*contestentity.AWDRound, error) {
 	return nil, errors.New("unexpected FindRoundByContestAndID call")
 }
 
-func (s awdRoundUpdaterRepoStub) FindRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*model.AWDRound, error) {
+func (s awdRoundUpdaterRepoStub) FindRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*contestentity.AWDRound, error) {
 	if s.findRoundByNumberFn != nil {
 		return s.findRoundByNumberFn(ctx, contestID, roundNumber)
 	}
-	return &model.AWDRound{ID: int64(roundNumber), ContestID: contestID, RoundNumber: roundNumber}, nil
+	return &contestentity.AWDRound{ID: int64(roundNumber), ContestID: contestID, RoundNumber: roundNumber}, nil
 }
 
-func (s awdRoundUpdaterRepoStub) FindRunningRound(ctx context.Context, contestID int64) (*model.AWDRound, error) {
+func (s awdRoundUpdaterRepoStub) FindRunningRound(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	if s.findRunningRoundFn != nil {
 		return s.findRunningRoundFn(ctx, contestID)
 	}
-	return &model.AWDRound{ID: 1, ContestID: contestID, RoundNumber: 1}, nil
+	return &contestentity.AWDRound{ID: 1, ContestID: contestID, RoundNumber: 1}, nil
 }
 
-func (s awdRoundUpdaterRepoStub) ListSchedulableAWDContests(context.Context, time.Time, time.Time, int) ([]model.Contest, error) {
+func (s awdRoundUpdaterRepoStub) ListSchedulableAWDContests(context.Context, time.Time, time.Time, int) ([]contestentity.Contest, error) {
 	return nil, nil
 }
 
-func (s awdRoundUpdaterRepoStub) FindTeamsByContest(context.Context, int64) ([]*model.Team, error) {
+func (s awdRoundUpdaterRepoStub) FindTeamsByContest(context.Context, int64) ([]*contestentity.Team, error) {
 	return nil, nil
 }
 
-func (s awdRoundUpdaterRepoStub) FindRegistration(context.Context, int64, int64) (*model.ContestRegistration, error) {
+func (s awdRoundUpdaterRepoStub) FindRegistration(context.Context, int64, int64) (*contestentity.ContestRegistration, error) {
 	return nil, errors.New("unexpected FindRegistration call")
 }
 
-func (s awdRoundUpdaterRepoStub) FindContestTeamByMember(context.Context, int64, int64) (*model.Team, error) {
+func (s awdRoundUpdaterRepoStub) FindContestTeamByMember(context.Context, int64, int64) (*contestentity.Team, error) {
 	return nil, errors.New("unexpected FindContestTeamByMember call")
 }
 
@@ -118,7 +119,7 @@ func (s awdRoundStateStoreStub) LoadAWDRoundFlag(ctx context.Context, contestID,
 	return "", false, nil
 }
 
-func (s awdRoundStateStoreStub) SyncAWDCurrentRoundState(context.Context, int64, *model.AWDRound, []contestports.AWDFlagAssignment, time.Duration) error {
+func (s awdRoundStateStoreStub) SyncAWDCurrentRoundState(context.Context, int64, *contestentity.AWDRound, []contestports.AWDFlagAssignment, time.Duration) error {
 	return nil
 }
 
@@ -143,7 +144,7 @@ func TestAWDRoundUpdaterShouldSyncLiveServiceStatusCacheTreatsMissingRunningRoun
 
 	updater := &AWDRoundUpdater{
 		repo: awdRoundUpdaterRepoStub{
-			findRunningRoundFn: func(context.Context, int64) (*model.AWDRound, error) {
+			findRunningRoundFn: func(context.Context, int64) (*contestentity.AWDRound, error) {
 				return nil, contestports.ErrContestAWDRoundNotFound
 			},
 		},
@@ -154,7 +155,7 @@ func TestAWDRoundUpdaterShouldSyncLiveServiceStatusCacheTreatsMissingRunningRoun
 		},
 	}
 
-	ok, err := updater.shouldSyncLiveServiceStatusCache(context.Background(), 10, &model.AWDRound{ID: 20, RoundNumber: 3})
+	ok, err := updater.shouldSyncLiveServiceStatusCache(context.Background(), 10, &contestentity.AWDRound{ID: 20, RoundNumber: 3})
 	if err != nil {
 		t.Fatalf("shouldSyncLiveServiceStatusCache() error = %v", err)
 	}
@@ -169,7 +170,7 @@ func TestAWDRoundUpdaterResolveAcceptedRoundFlagsTreatsPreviousRoundSentinelAsCu
 	startedAt := time.Now().UTC().Add(-30 * time.Second)
 	updater := &AWDRoundUpdater{
 		repo: awdRoundUpdaterRepoStub{
-			findRoundByNumberFn: func(context.Context, int64, int) (*model.AWDRound, error) {
+			findRoundByNumberFn: func(context.Context, int64, int) (*contestentity.AWDRound, error) {
 				return nil, contestports.ErrContestAWDRoundNotFound
 			},
 		},
@@ -177,7 +178,7 @@ func TestAWDRoundUpdaterResolveAcceptedRoundFlagsTreatsPreviousRoundSentinelAsCu
 		flagSecret: "slice39-secret",
 	}
 
-	round := &model.AWDRound{ID: 11, ContestID: 10, RoundNumber: 2, StartedAt: &startedAt}
+	round := &contestentity.AWDRound{ID: 11, ContestID: 10, RoundNumber: 2, StartedAt: &startedAt}
 	definition := contestports.AWDServiceDefinition{
 		ServiceID:      21,
 		AWDChallengeID: 31,
@@ -202,14 +203,14 @@ func TestAWDRoundUpdaterResolveAcceptedRoundFlagsUsesEffectiveNowForPauseWindow(
 
 	now := time.Now().UTC()
 	startedAt := now.Add(-2 * time.Minute)
-	contest := &model.Contest{PausedSeconds: 90}
+	contest := &contestentity.Contest{PausedSeconds: 90}
 	updater := &AWDRoundUpdater{
 		repo:       awdRoundUpdaterRepoStub{},
 		cfg:        config.ContestAWDConfig{PreviousRoundGrace: time.Minute},
 		flagSecret: "slice39-secret",
 	}
 
-	round := &model.AWDRound{ID: 11, ContestID: 10, RoundNumber: 2, StartedAt: &startedAt}
+	round := &contestentity.AWDRound{ID: 11, ContestID: 10, RoundNumber: 2, StartedAt: &startedAt}
 	definition := contestports.AWDServiceDefinition{
 		ServiceID:      21,
 		AWDChallengeID: 31,
@@ -237,7 +238,7 @@ func TestAWDRoundUpdaterEnsureActiveRoundMaterializedTreatsNoActiveRoundAsSentin
 		cfg: config.ContestAWDConfig{RoundInterval: time.Minute},
 	}
 
-	contest := &model.Contest{
+	contest := &contestentity.Contest{
 		ID:        10,
 		StartTime: time.Now().UTC().Add(time.Hour),
 		EndTime:   time.Now().UTC().Add(2 * time.Hour),

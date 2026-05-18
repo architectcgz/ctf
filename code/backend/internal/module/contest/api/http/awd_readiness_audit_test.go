@@ -11,10 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/middleware"
-	"ctf-platform/internal/model"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -32,8 +32,8 @@ func TestUpdateContestSkipsReadinessAuditPayloadWhenCommandFailsBeforeGate(t *te
 			getContestFunc: func(ctx context.Context, id int64) (*contestqry.ContestResult, error) {
 				return &contestqry.ContestResult{
 					ID:     id,
-					Mode:   model.ContestModeAWD,
-					Status: model.ContestStatusRegistration,
+					Mode:   contestentity.ContestModeAWD,
+					Status: contestentity.ContestStatusRegistration,
 				}, nil
 			},
 		},
@@ -294,8 +294,8 @@ func testAWDReadinessSnapshot(contestID int64) *contestqry.AWDReadinessResult {
 			{
 				AWDChallengeID:  101,
 				Title:           "calc",
-				CheckerType:     string(model.AWDCheckerTypeHTTPStandard),
-				ValidationState: string(model.AWDCheckerValidationStateFailed),
+				CheckerType:     string(contestentity.AWDCheckerTypeHTTPStandard),
+				ValidationState: string(contestentity.AWDCheckerValidationStateFailed),
 				LastPreviewAt:   &lastPreviewAt,
 				LastAccessURL:   &accessURL,
 				BlockingReason:  contestdomain.AWDReadinessBlockingReasonLastPreviewFailed,

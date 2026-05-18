@@ -6,8 +6,8 @@ import (
 	"errors"
 	"strings"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -19,10 +19,10 @@ func (s *ChallengeService) GetContestChallenges(ctx context.Context, userID, con
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if contest.Status != model.ContestStatusRunning && contest.Status != model.ContestStatusFrozen {
+	if contest.Status != contestentity.ContestStatusRunning && contest.Status != contestentity.ContestStatusFrozen {
 		return nil, errcode.ErrContestChallengeVisible
 	}
-	if contest.Mode == model.ContestModeAWD {
+	if contest.Mode == contestentity.ContestModeAWD {
 		return s.getAWDContestChallenges(ctx, userID, contestID)
 	}
 
@@ -78,7 +78,7 @@ func (s *ChallengeService) getAWDContestChallenges(ctx context.Context, userID, 
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	visibleServices := make([]model.ContestAWDService, 0, len(services))
+	visibleServices := make([]contestentity.ContestAWDService, 0, len(services))
 	for _, service := range services {
 		if !service.IsVisible {
 			continue
@@ -91,7 +91,7 @@ func (s *ChallengeService) getAWDContestChallenges(ctx context.Context, userID, 
 
 	result := make([]*ContestChallengeInfoResult, 0, len(visibleServices))
 	for _, service := range visibleServices {
-		snapshot, decodeErr := model.DecodeContestAWDServiceSnapshot(service.ServiceSnapshot)
+		snapshot, decodeErr := contestentity.DecodeContestAWDServiceSnapshot(service.ServiceSnapshot)
 		if decodeErr != nil {
 			return nil, errcode.ErrInternal.WithCause(decodeErr)
 		}

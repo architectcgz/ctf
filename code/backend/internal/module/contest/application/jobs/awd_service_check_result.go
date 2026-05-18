@@ -4,19 +4,19 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func (u *AWDRoundUpdater) checkTeamChallengeServices(
 	ctx context.Context,
-	contest *model.Contest,
+	contest *contestentity.Contest,
 	contestID int64,
 	teamID int64,
 	definition contestports.AWDServiceDefinition,
 	instances []contestports.AWDServiceInstance,
-	round *model.AWDRound,
+	round *contestentity.AWDRound,
 	source string,
 ) (*awdServiceCheckOutcome, error) {
 	checkerType := effectiveAWDCheckerType(definition.CheckerType)
@@ -25,11 +25,11 @@ func (u *AWDRoundUpdater) checkTeamChallengeServices(
 		err     error
 	)
 	switch checkerType {
-	case model.AWDCheckerTypeHTTPStandard:
+	case contestentity.AWDCheckerTypeHTTPStandard:
 		outcome, err = u.buildAWDCheckOutcomeFromHTTPStandard(ctx, contest, contestID, round, teamID, definition, instances, source)
-	case model.AWDCheckerTypeTCPStandard:
+	case contestentity.AWDCheckerTypeTCPStandard:
 		outcome, err = u.buildAWDCheckOutcomeFromTCPStandard(ctx, contestID, round, teamID, definition, instances, source, "")
-	case model.AWDCheckerTypeScript:
+	case contestentity.AWDCheckerTypeScript:
 		roundFlag, flagErr := u.resolveRoundFlag(ctx, contestID, round, teamID, definition)
 		if flagErr != nil {
 			result := awdServiceCheckResult{
@@ -65,7 +65,7 @@ func (u *AWDRoundUpdater) checkTeamChallengeServices(
 		return nil, err
 	}
 	outcome.checkerType = checkerType
-	if outcome.serviceStatus == model.AWDServiceStatusUp {
+	if outcome.serviceStatus == contestentity.AWDServiceStatusUp {
 		outcome.slaScore = definition.SLAScore
 		outcome.defenseScore = effectiveAWDDefenseScore(definition, round)
 	} else if exempt, err := u.repo.HasSystemRecoveryOperationAt(ctx, contestID, teamID, definition.ServiceID, time.Now().UTC()); err != nil {

@@ -3,7 +3,7 @@ package commands
 import (
 	"time"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 type ContestResp struct {
@@ -94,22 +94,22 @@ type AWDRoundResp struct {
 }
 
 type AWDTeamServiceResp struct {
-	ID                int64                `json:"id"`
-	RoundID           int64                `json:"round_id"`
-	TeamID            int64                `json:"team_id"`
-	TeamName          string               `json:"team_name"`
-	ServiceID         int64                `json:"service_id"`
-	ServiceName       string               `json:"service_name,omitempty"`
-	AWDChallengeID    int64                `json:"awd_challenge_id"`
-	AWDChallengeTitle string               `json:"awd_challenge_title,omitempty"`
-	ServiceStatus     string               `json:"service_status"`
-	CheckResult       map[string]any       `json:"check_result"`
-	CheckerType       model.AWDCheckerType `json:"checker_type,omitempty"`
-	AttackReceived    int                  `json:"attack_received"`
-	SLAScore          int                  `json:"sla_score"`
-	DefenseScore      int                  `json:"defense_score"`
-	AttackScore       int                  `json:"attack_score"`
-	UpdatedAt         time.Time            `json:"updated_at"`
+	ID                int64                        `json:"id"`
+	RoundID           int64                        `json:"round_id"`
+	TeamID            int64                        `json:"team_id"`
+	TeamName          string                       `json:"team_name"`
+	ServiceID         int64                        `json:"service_id"`
+	ServiceName       string                       `json:"service_name,omitempty"`
+	AWDChallengeID    int64                        `json:"awd_challenge_id"`
+	AWDChallengeTitle string                       `json:"awd_challenge_title,omitempty"`
+	ServiceStatus     string                       `json:"service_status"`
+	CheckResult       map[string]any               `json:"check_result"`
+	CheckerType       contestentity.AWDCheckerType `json:"checker_type,omitempty"`
+	AttackReceived    int                          `json:"attack_received"`
+	SLAScore          int                          `json:"sla_score"`
+	DefenseScore      int                          `json:"defense_score"`
+	AttackScore       int                          `json:"attack_score"`
+	UpdatedAt         time.Time                    `json:"updated_at"`
 }
 
 type AWDCheckerPreviewContextResp struct {
@@ -122,7 +122,7 @@ type AWDCheckerPreviewContextResp struct {
 }
 
 type AWDCheckerPreviewResp struct {
-	CheckerType    model.AWDCheckerType         `json:"checker_type,omitempty"`
+	CheckerType    contestentity.AWDCheckerType `json:"checker_type,omitempty"`
 	ServiceStatus  string                       `json:"service_status"`
 	CheckResult    map[string]any               `json:"check_result"`
 	PreviewContext AWDCheckerPreviewContextResp `json:"preview_context"`
@@ -130,25 +130,25 @@ type AWDCheckerPreviewResp struct {
 }
 
 type ContestAWDServiceResp struct {
-	ID                int64                           `json:"id"`
-	ContestID         int64                           `json:"contest_id"`
-	AWDChallengeID    int64                           `json:"awd_challenge_id"`
-	Title             string                          `json:"title,omitempty"`
-	Category          string                          `json:"category,omitempty"`
-	Difficulty        string                          `json:"difficulty,omitempty"`
-	DisplayName       string                          `json:"display_name"`
-	Order             int                             `json:"order"`
-	IsVisible         bool                            `json:"is_visible"`
-	ScoreConfig       map[string]any                  `json:"score_config,omitempty"`
-	RuntimeConfig     map[string]any                  `json:"runtime_config,omitempty"`
-	ValidationState   model.AWDCheckerValidationState `json:"validation_state"`
-	LastPreviewAt     *time.Time                      `json:"last_preview_at,omitempty"`
-	LastPreviewResult *AWDCheckerPreviewResp          `json:"last_preview_result,omitempty"`
-	CreatedAt         time.Time                       `json:"created_at"`
-	UpdatedAt         time.Time                       `json:"updated_at"`
+	ID                int64                                   `json:"id"`
+	ContestID         int64                                   `json:"contest_id"`
+	AWDChallengeID    int64                                   `json:"awd_challenge_id"`
+	Title             string                                  `json:"title,omitempty"`
+	Category          string                                  `json:"category,omitempty"`
+	Difficulty        string                                  `json:"difficulty,omitempty"`
+	DisplayName       string                                  `json:"display_name"`
+	Order             int                                     `json:"order"`
+	IsVisible         bool                                    `json:"is_visible"`
+	ScoreConfig       map[string]any                          `json:"score_config,omitempty"`
+	RuntimeConfig     map[string]any                          `json:"runtime_config,omitempty"`
+	ValidationState   contestentity.AWDCheckerValidationState `json:"validation_state"`
+	LastPreviewAt     *time.Time                              `json:"last_preview_at,omitempty"`
+	LastPreviewResult *AWDCheckerPreviewResp                  `json:"last_preview_result,omitempty"`
+	CreatedAt         time.Time                               `json:"created_at"`
+	UpdatedAt         time.Time                               `json:"updated_at"`
 }
 
 type AWDCheckerRunResp struct {
-	Round    *AWDRoundResp       `json:"round"`
+	Round    *AWDRoundResp         `json:"round"`
 	Services []*AWDTeamServiceResp `json:"services"`
 }

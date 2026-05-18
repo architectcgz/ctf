@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *AWDService) ensureAWDContest(ctx context.Context, contestID int64) (*model.Contest, error) {
+func (s *AWDService) ensureAWDContest(ctx context.Context, contestID int64) (*contestentity.Contest, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
@@ -18,13 +18,13 @@ func (s *AWDService) ensureAWDContest(ctx context.Context, contestID int64) (*mo
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if contest.Mode != model.ContestModeAWD {
+	if contest.Mode != contestentity.ContestModeAWD {
 		return nil, errcode.ErrForbidden
 	}
 	return contest, nil
 }
 
-func (s *AWDService) ensureAWDRound(ctx context.Context, contestID, roundID int64) (*model.AWDRound, error) {
+func (s *AWDService) ensureAWDRound(ctx context.Context, contestID, roundID int64) (*contestentity.AWDRound, error) {
 	if _, err := s.ensureAWDContest(ctx, contestID); err != nil {
 		return nil, err
 	}

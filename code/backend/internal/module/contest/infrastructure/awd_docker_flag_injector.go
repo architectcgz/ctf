@@ -3,11 +3,11 @@ package infrastructure
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-func (i *dockerAWDFlagInjector) InjectRoundFlags(ctx context.Context, contest *model.Contest, round *model.AWDRound, assignments []contestports.AWDFlagAssignment) error {
+func (i *dockerAWDFlagInjector) InjectRoundFlags(ctx context.Context, contest *contestentity.Contest, round *contestentity.AWDRound, assignments []contestports.AWDFlagAssignment) error {
 	if i.db == nil || contest == nil || round == nil || len(assignments) == 0 {
 		return nil
 	}

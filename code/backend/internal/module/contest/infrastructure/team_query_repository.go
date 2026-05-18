@@ -4,42 +4,43 @@ import (
 	"context"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (r *TeamRepository) FindByID(ctx context.Context, id int64) (*model.Team, error) {
-	var team model.Team
+func (r *TeamRepository) FindByID(ctx context.Context, id int64) (*contestentity.Team, error) {
+	var team contestentity.Team
 	err := r.db.WithContext(ctx).Where("id = ?", id).First(&team).Error
 	return &team, err
 }
 
-func (r *TeamRepository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error) {
-	var registration model.ContestRegistration
+func (r *TeamRepository) FindContestRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
+	var registration contestentity.ContestRegistration
 	err := r.db.WithContext(ctx).Where("contest_id = ? AND user_id = ?", contestID, userID).First(&registration).Error
 	return &registration, err
 }
 
-func (r *TeamRepository) GetMembers(ctx context.Context, teamID int64) ([]*model.TeamMember, error) {
-	var members []*model.TeamMember
+func (r *TeamRepository) GetMembers(ctx context.Context, teamID int64) ([]*contestentity.TeamMember, error) {
+	var members []*contestentity.TeamMember
 	err := r.db.WithContext(ctx).Where("team_id = ?", teamID).Order("joined_at ASC").Find(&members).Error
 	return members, err
 }
 
 func (r *TeamRepository) GetMemberCount(ctx context.Context, teamID int64) (int64, error) {
 	var count int64
-	err := r.db.WithContext(ctx).Model(&model.TeamMember{}).Where("team_id = ?", teamID).Count(&count).Error
+	err := r.db.WithContext(ctx).Model(&contestentity.TeamMember{}).Where("team_id = ?", teamID).Count(&count).Error
 	return count, err
 }
 
-func (r *TeamRepository) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*model.Team, error) {
-	var team model.Team
+func (r *TeamRepository) FindUserTeamInContest(ctx context.Context, userID, contestID int64) (*contestentity.Team, error) {
+	var team contestentity.Team
 	err := r.db.WithContext(ctx).Joins("JOIN team_members ON teams.id = team_members.team_id").
 		Where("team_members.user_id = ? AND teams.contest_id = ? AND teams.deleted_at IS NULL", userID, contestID).
 		First(&team).Error
 	return &team, err
 }
 
-func (r *TeamRepository) ListByContest(ctx context.Context, contestID int64) ([]*model.Team, error) {
-	var teams []*model.Team
+func (r *TeamRepository) ListByContest(ctx context.Context, contestID int64) ([]*contestentity.Team, error) {
+	var teams []*contestentity.Team
 	err := r.db.WithContext(ctx).Where("contest_id = ?", contestID).Order("created_at DESC").Find(&teams).Error
 	return teams, err
 }
@@ -50,7 +51,7 @@ func (r *TeamRepository) GetMemberCountBatch(ctx context.Context, teamIDs []int6
 		Count  int
 	}
 	var results []result
-	err := r.db.WithContext(ctx).Model(&model.TeamMember{}).
+	err := r.db.WithContext(ctx).Model(&contestentity.TeamMember{}).
 		Select("team_id, COUNT(*) as count").
 		Where("team_id IN ?", teamIDs).
 		Group("team_id").

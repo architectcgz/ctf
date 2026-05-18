@@ -3,17 +3,17 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) buildUpsertServiceCheckResp(
 	ctx context.Context,
 	contestID, roundID int64,
-	runtimeService *model.ContestAWDService,
+	runtimeService *contestentity.ContestAWDService,
 	req UpsertServiceCheckInput,
-	team *model.Team,
-	record *model.AWDTeamService,
+	team *contestentity.Team,
+	record *contestentity.AWDTeamService,
 ) (*AWDTeamServiceResp, error) {
 	if s.scoreboardCache != nil {
 		if err := s.scoreboardCache.RebuildContestScoreboard(ctx, contestID); err != nil {

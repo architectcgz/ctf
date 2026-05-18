@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -16,10 +16,10 @@ func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req Creat
 		return nil, err
 	}
 
-	round := &model.AWDRound{
+	round := &contestentity.AWDRound{
 		ContestID:    contestID,
 		RoundNumber:  req.RoundNumber,
-		Status:       model.AWDRoundStatusPending,
+		Status:       contestentity.AWDRoundStatusPending,
 		AttackScore:  contestdomain.AWDDefaultRoundAttackScore,
 		DefenseScore: contestdomain.AWDDefaultRoundDefenseScore,
 	}

@@ -6,10 +6,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (u *AWDRoundUpdater) syncRoundFlags(ctx context.Context, contest *model.Contest, activeRound int, now time.Time) error {
+func (u *AWDRoundUpdater) syncRoundFlags(ctx context.Context, contest *contestentity.Contest, activeRound int, now time.Time) error {
 	if contest == nil || u.stateStore == nil {
 		return nil
 	}

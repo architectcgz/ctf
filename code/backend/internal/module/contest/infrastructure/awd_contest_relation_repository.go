@@ -8,19 +8,20 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type awdContestServiceRuntimeRow struct {
-	ServiceID         int64                           `gorm:"column:service_id"`
-	AWDChallengeID    int64                           `gorm:"column:awd_challenge_id"`
-	DisplayName       string                          `gorm:"column:display_name"`
-	ServiceSnapshot   string                          `gorm:"column:service_snapshot"`
-	RuntimeConfig     string                          `gorm:"column:runtime_config"`
-	ScoreConfig       string                          `gorm:"column:score_config"`
-	ValidationState   model.AWDCheckerValidationState `gorm:"column:validation_state"`
-	LastPreviewAt     *time.Time                      `gorm:"column:last_preview_at"`
-	LastPreviewResult string                          `gorm:"column:last_preview_result"`
+	ServiceID         int64                                   `gorm:"column:service_id"`
+	AWDChallengeID    int64                                   `gorm:"column:awd_challenge_id"`
+	DisplayName       string                                  `gorm:"column:display_name"`
+	ServiceSnapshot   string                                  `gorm:"column:service_snapshot"`
+	RuntimeConfig     string                                  `gorm:"column:runtime_config"`
+	ScoreConfig       string                                  `gorm:"column:score_config"`
+	ValidationState   contestentity.AWDCheckerValidationState `gorm:"column:validation_state"`
+	LastPreviewAt     *time.Time                              `gorm:"column:last_preview_at"`
+	LastPreviewResult string                                  `gorm:"column:last_preview_result"`
 }
 
 type awdDefenseWorkspaceSummaryRow struct {
@@ -29,10 +30,10 @@ type awdDefenseWorkspaceSummaryRow struct {
 	WorkspaceRevision int64  `gorm:"column:workspace_revision"`
 }
 
-func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]model.Contest, error) {
-	var contests []model.Contest
+func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]contestentity.Contest, error) {
+	var contests []contestentity.Contest
 	query := r.dbWithContext(ctx).
-		Where("mode = ?", model.ContestModeAWD).
+		Where("mode = ?", contestentity.ContestModeAWD).
 		Where("start_time <= ?", now).
 		Where(`(
 			status IN ?
@@ -59,11 +60,11 @@ func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, rec
 				)
 			)
 		)`,
-			[]string{model.ContestStatusRunning, model.ContestStatusFrozen},
-			model.ContestStatusEnded,
+			[]string{contestentity.ContestStatusRunning, contestentity.ContestStatusFrozen},
+			contestentity.ContestStatusEnded,
 			recentCutoff,
-			model.AWDRoundStatusFinished,
-			model.AWDRoundStatusFinished,
+			contestentity.AWDRoundStatusFinished,
+			contestentity.AWDRoundStatusFinished,
 		).
 		Order("start_time ASC, id ASC")
 	if limit > 0 {
@@ -83,7 +84,7 @@ func (r *AWDRepository) ListChallengesByContest(ctx context.Context, contestID i
 
 	challenges := make([]model.Challenge, 0, len(rows))
 	for _, row := range rows {
-		snapshot, decodeErr := model.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
+		snapshot, decodeErr := contestentity.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
 		if decodeErr != nil {
 			return nil, decodeErr
 		}
@@ -109,7 +110,7 @@ func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, con
 
 	definitions := make([]contestports.AWDServiceDefinition, 0, len(rows))
 	for _, row := range rows {
-		snapshot, decodeErr := model.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
+		snapshot, decodeErr := contestentity.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
 		if decodeErr != nil {
 			return nil, decodeErr
 		}
@@ -171,11 +172,11 @@ func (r *AWDRepository) ListReadinessChallengesByContest(ctx context.Context, co
 	}
 
 	runtimeConfigs := make([]map[string]any, len(rows))
-	snapshots := make([]model.ContestAWDServiceSnapshot, len(rows))
+	snapshots := make([]contestentity.ContestAWDServiceSnapshot, len(rows))
 	imageIDs := make([]int64, 0, len(rows))
 	seenImageIDs := make(map[int64]struct{}, len(rows))
 	for index, row := range rows {
-		snapshot, decodeErr := model.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
+		snapshot, decodeErr := contestentity.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
 		if decodeErr != nil {
 			return nil, decodeErr
 		}
@@ -266,7 +267,7 @@ func (r *AWDRepository) listContestAWDServiceRuntimeRows(ctx context.Context, co
 	return rows, nil
 }
 
-func resolveContestAWDServiceCheckerType(runtimeConfig map[string]any) model.AWDCheckerType {
+func resolveContestAWDServiceCheckerType(runtimeConfig map[string]any) contestentity.AWDCheckerType {
 	if runtimeConfig != nil {
 		if raw, ok := runtimeConfig["checker_type"]; ok {
 			if value, ok := raw.(string); ok {
@@ -279,14 +280,14 @@ func resolveContestAWDServiceCheckerType(runtimeConfig map[string]any) model.AWD
 	return ""
 }
 
-func resolveContestAWDServiceTitle(snapshot model.ContestAWDServiceSnapshot, displayName string) string {
+func resolveContestAWDServiceTitle(snapshot contestentity.ContestAWDServiceSnapshot, displayName string) string {
 	if title := strings.TrimSpace(displayName); title != "" {
 		return title
 	}
 	return strings.TrimSpace(snapshot.Name)
 }
 
-func resolveContestAWDServiceFlagPrefix(snapshot model.ContestAWDServiceSnapshot) string {
+func resolveContestAWDServiceFlagPrefix(snapshot contestentity.ContestAWDServiceSnapshot) string {
 	if snapshot.FlagConfig != nil {
 		if value, ok := snapshot.FlagConfig["flag_prefix"].(string); ok {
 			if trimmed := strings.TrimSpace(value); trimmed != "" {
@@ -297,7 +298,7 @@ func resolveContestAWDServiceFlagPrefix(snapshot model.ContestAWDServiceSnapshot
 	return "flag"
 }
 
-func resolveContestAWDServiceFlagType(snapshot model.ContestAWDServiceSnapshot) string {
+func resolveContestAWDServiceFlagType(snapshot contestentity.ContestAWDServiceSnapshot) string {
 	if snapshot.FlagConfig != nil {
 		if value, ok := snapshot.FlagConfig["flag_type"].(string); ok {
 			if trimmed := strings.TrimSpace(value); trimmed != "" {
@@ -339,7 +340,7 @@ func resolveContestAWDServiceCheckerTokenEnv(runtimeConfig map[string]any) strin
 }
 
 func resolveContestAWDServiceDefenseWorkspaceSummary(
-	snapshot model.ContestAWDServiceSnapshot,
+	snapshot contestentity.ContestAWDServiceSnapshot,
 	runtimeConfig map[string]any,
 ) contestports.AWDDefenseWorkspaceSummary {
 	entryMode := resolveContestAWDServiceDefenseWorkspaceEntryMode(runtimeConfig, snapshot.RuntimeConfig)

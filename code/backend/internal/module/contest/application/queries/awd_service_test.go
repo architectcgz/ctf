@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 )
@@ -25,12 +26,12 @@ func newAWDQueryServiceForTest(t *testing.T) (*AWDService, *gorm.DB) {
 }
 
 type awdReadinessRelationSeed struct {
-	relation          *model.ContestChallenge
-	checkerType       model.AWDCheckerType
+	relation          *contestentity.ContestChallenge
+	checkerType       contestentity.AWDCheckerType
 	checkerConfig     string
 	slaScore          int
 	defenseScore      int
-	validationState   model.AWDCheckerValidationState
+	validationState   contestentity.AWDCheckerValidationState
 	lastPreviewAt     *time.Time
 	lastPreviewResult string
 }
@@ -45,7 +46,7 @@ func TestAWDQueryServiceGetReadinessCountsBlockingStates(t *testing.T) {
 	createAWDReadinessChallengeFixture(t, db, 7013, "stale-service", now)
 	createAWDReadinessChallengeFixture(t, db, 7014, "passed-service", now)
 	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
-		relation: &model.ContestChallenge{
+		relation: &contestentity.ContestChallenge{
 			ContestID:   701,
 			ChallengeID: 7011,
 			Points:      100,
@@ -53,14 +54,14 @@ func TestAWDQueryServiceGetReadinessCountsBlockingStates(t *testing.T) {
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
-		checkerType:       model.AWDCheckerTypeHTTPStandard,
+		checkerType:       contestentity.AWDCheckerTypeHTTPStandard,
 		checkerConfig:     `{"get_flag":{"path":"/health"}}`,
-		validationState:   model.AWDCheckerValidationStateFailed,
+		validationState:   contestentity.AWDCheckerValidationStateFailed,
 		lastPreviewAt:     &now,
 		lastPreviewResult: `{"service_status":"down","preview_context":{"access_url":"http://preview.internal"}}`,
 	})
 	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
-		relation: &model.ContestChallenge{
+		relation: &contestentity.ContestChallenge{
 			ContestID:   701,
 			ChallengeID: 7012,
 			Points:      100,
@@ -68,12 +69,12 @@ func TestAWDQueryServiceGetReadinessCountsBlockingStates(t *testing.T) {
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
-		checkerType:     model.AWDCheckerTypeLegacyProbe,
+		checkerType:     contestentity.AWDCheckerTypeLegacyProbe,
 		checkerConfig:   `{}`,
-		validationState: model.AWDCheckerValidationStatePending,
+		validationState: contestentity.AWDCheckerValidationStatePending,
 	})
 	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
-		relation: &model.ContestChallenge{
+		relation: &contestentity.ContestChallenge{
 			ContestID:   701,
 			ChallengeID: 7013,
 			Points:      100,
@@ -81,12 +82,12 @@ func TestAWDQueryServiceGetReadinessCountsBlockingStates(t *testing.T) {
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
-		checkerType:     model.AWDCheckerTypeLegacyProbe,
+		checkerType:     contestentity.AWDCheckerTypeLegacyProbe,
 		checkerConfig:   `{}`,
-		validationState: model.AWDCheckerValidationStateStale,
+		validationState: contestentity.AWDCheckerValidationStateStale,
 	})
 	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
-		relation: &model.ContestChallenge{
+		relation: &contestentity.ContestChallenge{
 			ContestID:   701,
 			ChallengeID: 7014,
 			Points:      100,
@@ -94,9 +95,9 @@ func TestAWDQueryServiceGetReadinessCountsBlockingStates(t *testing.T) {
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
-		checkerType:     model.AWDCheckerTypeHTTPStandard,
+		checkerType:     contestentity.AWDCheckerTypeHTTPStandard,
 		checkerConfig:   `{"get_flag":{"path":"/health"}}`,
-		validationState: model.AWDCheckerValidationStatePassed,
+		validationState: contestentity.AWDCheckerValidationStatePassed,
 	})
 
 	resp, err := service.GetReadiness(context.Background(), 701)
@@ -153,7 +154,7 @@ func TestAWDQueryServiceGetReadinessIgnoresChallengeOnlyContestRelation(t *testi
 
 	createAWDReadinessContestFixture(t, db, 706, now)
 	createAWDReadinessChallengeFixture(t, db, 7061, "challenge-only", now)
-	if err := db.Create(&model.ContestChallenge{
+	if err := db.Create(&contestentity.ContestChallenge{
 		ContestID:   706,
 		ChallengeID: 7061,
 		Points:      100,
@@ -186,7 +187,7 @@ func TestAWDQueryServiceGetReadinessTreatsBrokenCheckerConfigAsMissingChecker(t 
 	createAWDReadinessContestFixture(t, db, 703, now)
 	createAWDReadinessChallengeFixture(t, db, 7031, "broken-config", now)
 	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
-		relation: &model.ContestChallenge{
+		relation: &contestentity.ContestChallenge{
 			ContestID:   703,
 			ChallengeID: 7031,
 			Points:      100,
@@ -194,9 +195,9 @@ func TestAWDQueryServiceGetReadinessTreatsBrokenCheckerConfigAsMissingChecker(t 
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
-		checkerType:     model.AWDCheckerTypeHTTPStandard,
+		checkerType:     contestentity.AWDCheckerTypeHTTPStandard,
 		checkerConfig:   `{"get_flag":`,
-		validationState: model.AWDCheckerValidationStatePassed,
+		validationState: contestentity.AWDCheckerValidationStatePassed,
 	})
 
 	resp, err := service.GetReadiness(context.Background(), 703)
@@ -234,7 +235,7 @@ func TestAWDQueryServiceGetReadinessBlocksUnavailableRuntimeImage(t *testing.T) 
 		t.Fatalf("attach image: %v", err)
 	}
 	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
-		relation: &model.ContestChallenge{
+		relation: &contestentity.ContestChallenge{
 			ContestID:   708,
 			ChallengeID: 7081,
 			Points:      100,
@@ -242,9 +243,9 @@ func TestAWDQueryServiceGetReadinessBlocksUnavailableRuntimeImage(t *testing.T) 
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
-		checkerType:     model.AWDCheckerTypeHTTPStandard,
+		checkerType:     contestentity.AWDCheckerTypeHTTPStandard,
 		checkerConfig:   `{"get_flag":{"path":"/health"}}`,
-		validationState: model.AWDCheckerValidationStatePassed,
+		validationState: contestentity.AWDCheckerValidationStatePassed,
 		lastPreviewAt:   &now,
 	})
 
@@ -267,7 +268,7 @@ func TestAWDQueryServiceGetReadinessItemJSONIncludesRequiredNullableKeys(t *test
 	createAWDReadinessContestFixture(t, db, 704, now)
 	createAWDReadinessChallengeFixture(t, db, 7041, "missing-checker", now)
 	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
-		relation: &model.ContestChallenge{
+		relation: &contestentity.ContestChallenge{
 			ContestID:   704,
 			ChallengeID: 7041,
 			Points:      100,
@@ -277,7 +278,7 @@ func TestAWDQueryServiceGetReadinessItemJSONIncludesRequiredNullableKeys(t *test
 		},
 		checkerType:     "",
 		checkerConfig:   `{}`,
-		validationState: model.AWDCheckerValidationStatePending,
+		validationState: contestentity.AWDCheckerValidationStatePending,
 	})
 
 	resp, err := service.GetReadiness(context.Background(), 704)
@@ -309,7 +310,7 @@ func TestAWDQueryServiceGetReadinessPrefersContestAWDServiceRuntimeConfig(t *tes
 	createAWDReadinessContestFixture(t, db, 705, now)
 	createAWDReadinessChallengeFixture(t, db, 7051, "service-defined-missing-checker", now)
 	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
-		relation: &model.ContestChallenge{
+		relation: &contestentity.ContestChallenge{
 			ContestID:   705,
 			ChallengeID: 7051,
 			Points:      100,
@@ -319,7 +320,7 @@ func TestAWDQueryServiceGetReadinessPrefersContestAWDServiceRuntimeConfig(t *tes
 		},
 		checkerType:     "",
 		checkerConfig:   `{}`,
-		validationState: model.AWDCheckerValidationStatePassed,
+		validationState: contestentity.AWDCheckerValidationStatePassed,
 	})
 	contesttestsupport.SyncAWDContestServiceFixture(
 		t,
@@ -327,7 +328,7 @@ func TestAWDQueryServiceGetReadinessPrefersContestAWDServiceRuntimeConfig(t *tes
 		705,
 		7051,
 		"Bank Portal",
-		model.AWDCheckerTypeHTTPStandard,
+		contestentity.AWDCheckerTypeHTTPStandard,
 		`{"get_flag":{"path":"/service-health","expected_status":200}}`,
 		100,
 		18,
@@ -345,7 +346,7 @@ func TestAWDQueryServiceGetReadinessPrefersContestAWDServiceRuntimeConfig(t *tes
 	if len(resp.Items) != 1 {
 		t.Fatalf("unexpected readiness items: %+v", resp.Items)
 	}
-	if resp.Items[0].CheckerType != string(model.AWDCheckerTypeHTTPStandard) {
+	if resp.Items[0].CheckerType != string(contestentity.AWDCheckerTypeHTTPStandard) {
 		t.Fatalf("unexpected checker_type: %+v", resp.Items[0])
 	}
 	if resp.Items[0].Title != "Bank Portal" {
@@ -365,7 +366,7 @@ func TestAWDQueryServiceGetReadinessExposesServiceID(t *testing.T) {
 		707,
 		7071,
 		"Readiness Service",
-		model.AWDCheckerTypeHTTPStandard,
+		contestentity.AWDCheckerTypeHTTPStandard,
 		`{"get_flag":{"path":"/ready"}}`,
 		100,
 		12,
@@ -396,7 +397,7 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 	contesttestsupport.CreateAWDChallengeFixture(t, db, 8012, now)
 	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 801, 8011, now)
 	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 801, 8012, now)
-	if err := db.Model(&model.ContestAWDService{}).
+	if err := db.Model(&contestentity.ContestAWDService{}).
 		Where("contest_id = ? AND awd_challenge_id = ?", 801, 8011).
 		Update("runtime_config", `{"challenge_runtime":{"defense_workspace":{"entry_mode":"ssh"}}}`).Error; err != nil {
 		t.Fatalf("seed awd defense workspace config: %v", err)
@@ -425,14 +426,14 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 		UpdatedAt:         now.Add(time.Minute),
 	})
 
-	seedAWDWorkspaceServiceRecord(t, db, &model.AWDTeamService{
+	seedAWDWorkspaceServiceRecord(t, db, &contestentity.AWDTeamService{
 		RoundID:        80101,
 		TeamID:         8101,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(801, 8011),
 		AWDChallengeID: 8011,
-		ServiceStatus:  model.AWDServiceStatusUp,
+		ServiceStatus:  contestentity.AWDServiceStatusUp,
 		CheckResult:    `{"status_reason":"healthy"}`,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		AttackReceived: 0,
 		SLAScore:       18,
 		DefenseScore:   40,
@@ -440,14 +441,14 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 		CreatedAt:      now,
 		UpdatedAt:      now.Add(2 * time.Minute),
 	})
-	seedAWDWorkspaceServiceRecord(t, db, &model.AWDTeamService{
+	seedAWDWorkspaceServiceRecord(t, db, &contestentity.AWDTeamService{
 		RoundID:        80101,
 		TeamID:         8101,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(801, 8012),
 		AWDChallengeID: 8012,
-		ServiceStatus:  model.AWDServiceStatusCompromised,
+		ServiceStatus:  contestentity.AWDServiceStatusCompromised,
 		CheckResult:    `{"status_reason":"flag_mismatch"}`,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
 		AttackReceived: 1,
 		SLAScore:       0,
 		DefenseScore:   0,
@@ -455,41 +456,41 @@ func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *te
 		CreatedAt:      now,
 		UpdatedAt:      now.Add(3 * time.Minute),
 	})
-	seedAWDWorkspaceAttackLog(t, db, &model.AWDAttackLog{
+	seedAWDWorkspaceAttackLog(t, db, &contestentity.AWDAttackLog{
 		ID:             1,
 		RoundID:        80101,
 		AttackerTeamID: 8101,
 		VictimTeamID:   8102,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(801, 8011),
 		AWDChallengeID: 8011,
-		AttackType:     model.AWDAttackTypeFlagCapture,
-		Source:         model.AWDAttackSourceSubmission,
+		AttackType:     contestentity.AWDAttackTypeFlagCapture,
+		Source:         contestentity.AWDAttackSourceSubmission,
 		IsSuccess:      true,
 		ScoreGained:    60,
 		CreatedAt:      now.Add(4 * time.Minute),
 	})
-	seedAWDWorkspaceAttackLog(t, db, &model.AWDAttackLog{
+	seedAWDWorkspaceAttackLog(t, db, &contestentity.AWDAttackLog{
 		ID:             2,
 		RoundID:        80101,
 		AttackerTeamID: 8102,
 		VictimTeamID:   8101,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(801, 8012),
 		AWDChallengeID: 8012,
-		AttackType:     model.AWDAttackTypeFlagCapture,
-		Source:         model.AWDAttackSourceSubmission,
+		AttackType:     contestentity.AWDAttackTypeFlagCapture,
+		Source:         contestentity.AWDAttackSourceSubmission,
 		IsSuccess:      false,
 		ScoreGained:    0,
 		CreatedAt:      now.Add(5 * time.Minute),
 	})
-	seedAWDWorkspaceAttackLog(t, db, &model.AWDAttackLog{
+	seedAWDWorkspaceAttackLog(t, db, &contestentity.AWDAttackLog{
 		ID:             3,
 		RoundID:        80101,
 		AttackerTeamID: 8102,
 		VictimTeamID:   8103,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(801, 8011),
 		AWDChallengeID: 8011,
-		AttackType:     model.AWDAttackTypeFlagCapture,
-		Source:         model.AWDAttackSourceSubmission,
+		AttackType:     contestentity.AWDAttackTypeFlagCapture,
+		Source:         contestentity.AWDAttackSourceSubmission,
 		IsSuccess:      true,
 		ScoreGained:    60,
 		CreatedAt:      now.Add(6 * time.Minute),
@@ -623,11 +624,11 @@ func TestAWDServiceGetUserWorkspacePrefersDefenseWorkspaceEntryModeOverLegacySna
 	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 802, 8201, 9201, now)
 
 	serviceID := contesttestsupport.DefaultAWDContestServiceID(802, 8021)
-	var contestService model.ContestAWDService
+	var contestService contestentity.ContestAWDService
 	if err := db.Where("contest_id = ? AND awd_challenge_id = ?", 802, 8021).First(&contestService).Error; err != nil {
 		t.Fatalf("load awd contest service: %v", err)
 	}
-	snapshot, err := model.DecodeContestAWDServiceSnapshot(contestService.ServiceSnapshot)
+	snapshot, err := contestentity.DecodeContestAWDServiceSnapshot(contestService.ServiceSnapshot)
 	if err != nil {
 		t.Fatalf("decode awd contest service snapshot: %v", err)
 	}
@@ -635,11 +636,11 @@ func TestAWDServiceGetUserWorkspacePrefersDefenseWorkspaceEntryModeOverLegacySna
 	snapshot.RuntimeConfig["defense_workspace"] = map[string]any{
 		"entry_mode": "ssh",
 	}
-	serviceSnapshot, err := model.EncodeContestAWDServiceSnapshot(snapshot)
+	serviceSnapshot, err := contestentity.EncodeContestAWDServiceSnapshot(snapshot)
 	if err != nil {
 		t.Fatalf("encode awd contest service snapshot: %v", err)
 	}
-	if err := db.Model(&model.ContestAWDService{}).
+	if err := db.Model(&contestentity.ContestAWDService{}).
 		Where("id = ?", serviceID).
 		Updates(map[string]any{
 			"service_snapshot": serviceSnapshot,
@@ -750,15 +751,15 @@ func TestAWDServiceGetUserWorkspaceWithoutTeamHidesTargets(t *testing.T) {
 	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 802, 8202, 9202, now)
 	seedAWDWorkspaceInstance(t, db, 4, 9201, 802, 8201, 8021, "http://alpha.internal", now)
 	seedAWDWorkspaceInstance(t, db, 5, 9202, 802, 8202, 8021, "http://beta.internal", now)
-	seedAWDWorkspaceAttackLog(t, db, &model.AWDAttackLog{
+	seedAWDWorkspaceAttackLog(t, db, &contestentity.AWDAttackLog{
 		ID:             4,
 		RoundID:        80201,
 		AttackerTeamID: 8201,
 		VictimTeamID:   8202,
 		ServiceID:      contesttestsupport.DefaultAWDContestServiceID(802, 8021),
 		AWDChallengeID: 8021,
-		AttackType:     model.AWDAttackTypeFlagCapture,
-		Source:         model.AWDAttackSourceSubmission,
+		AttackType:     contestentity.AWDAttackTypeFlagCapture,
+		Source:         contestentity.AWDAttackSourceSubmission,
 		IsSuccess:      true,
 		ScoreGained:    50,
 		CreatedAt:      now.Add(time.Minute),
@@ -802,7 +803,7 @@ func TestAWDServiceGetUserWorkspacePrefersContestServicesAndSeedsMissingDefiniti
 		803,
 		8031,
 		"Bank Portal",
-		model.AWDCheckerTypeHTTPStandard,
+		contestentity.AWDCheckerTypeHTTPStandard,
 		`{"get_flag":{"path":"/health"}}`,
 		100,
 		18,
@@ -815,7 +816,7 @@ func TestAWDServiceGetUserWorkspacePrefersContestServicesAndSeedsMissingDefiniti
 		803,
 		8032,
 		"Admin Gateway",
-		model.AWDCheckerTypeHTTPStandard,
+		contestentity.AWDCheckerTypeHTTPStandard,
 		`{"get_flag":{"path":"/ready"}}`,
 		100,
 		18,
@@ -823,7 +824,7 @@ func TestAWDServiceGetUserWorkspacePrefersContestServicesAndSeedsMissingDefiniti
 		now,
 	)
 	if err := db.Where("contest_id = ? AND awd_challenge_id = ?", 803, 8033).
-		Delete(&model.ContestAWDService{}).Error; err != nil {
+		Delete(&contestentity.ContestAWDService{}).Error; err != nil {
 		t.Fatalf("delete generated contest awd service definition: %v", err)
 	}
 
@@ -882,7 +883,7 @@ func TestAWDServiceGetUserWorkspaceMatchesInstancesByPersistedServiceID(t *testi
 		804,
 		8041,
 		"Bank Portal",
-		model.AWDCheckerTypeHTTPStandard,
+		contestentity.AWDCheckerTypeHTTPStandard,
 		`{"get_flag":{"path":"/health"}}`,
 		100,
 		18,
@@ -951,7 +952,7 @@ func TestAWDServiceGetUserWorkspaceIgnoresLegacyServiceRowsWithoutServiceID(t *t
 		805,
 		8051,
 		"Bank Portal",
-		model.AWDCheckerTypeHTTPStandard,
+		contestentity.AWDCheckerTypeHTTPStandard,
 		`{"get_flag":{"path":"/health"}}`,
 		100,
 		18,
@@ -962,12 +963,12 @@ func TestAWDServiceGetUserWorkspaceIgnoresLegacyServiceRowsWithoutServiceID(t *t
 	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 805, 8501, 9501, now)
 
 	serviceID := contesttestsupport.DefaultAWDContestServiceID(805, 8051)
-	seedAWDWorkspaceServiceRecord(t, db, &model.AWDTeamService{
+	seedAWDWorkspaceServiceRecord(t, db, &contestentity.AWDTeamService{
 		RoundID:        80501,
 		TeamID:         8501,
 		ServiceID:      serviceID,
 		AWDChallengeID: 8051,
-		ServiceStatus:  model.AWDServiceStatusUp,
+		ServiceStatus:  contestentity.AWDServiceStatusUp,
 		AttackReceived: 1,
 		SLAScore:       30,
 		DefenseScore:   20,
@@ -975,13 +976,13 @@ func TestAWDServiceGetUserWorkspaceIgnoresLegacyServiceRowsWithoutServiceID(t *t
 		UpdatedAt:      now.Add(-time.Minute),
 		CreatedAt:      now.Add(-2 * time.Minute),
 	})
-	seedAWDWorkspaceServiceRecord(t, db, &model.AWDTeamService{
+	seedAWDWorkspaceServiceRecord(t, db, &contestentity.AWDTeamService{
 		ID:             8050199,
 		RoundID:        80501,
 		TeamID:         8501,
 		ServiceID:      0,
 		AWDChallengeID: 8051,
-		ServiceStatus:  model.AWDServiceStatusDown,
+		ServiceStatus:  contestentity.AWDServiceStatusDown,
 		AttackReceived: 9,
 		SLAScore:       0,
 		DefenseScore:   0,
@@ -1000,7 +1001,7 @@ func TestAWDServiceGetUserWorkspaceIgnoresLegacyServiceRowsWithoutServiceID(t *t
 	if resp.Services[0].ServiceID != serviceID {
 		t.Fatalf("expected workspace service_id=%d, got %+v", serviceID, resp.Services[0])
 	}
-	if resp.Services[0].ServiceStatus != model.AWDServiceStatusUp {
+	if resp.Services[0].ServiceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("expected explicit service row to stay authoritative, got %+v", resp.Services[0])
 	}
 	for _, item := range resp.Services {
@@ -1013,11 +1014,11 @@ func TestAWDServiceGetUserWorkspaceIgnoresLegacyServiceRowsWithoutServiceID(t *t
 func createAWDReadinessContestFixture(t *testing.T, db *gorm.DB, contestID int64, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.Contest{
+	if err := db.Create(&contestentity.Contest{
 		ID:        contestID,
 		Title:     "awd-readiness",
-		Mode:      model.ContestModeAWD,
-		Status:    model.ContestStatusDraft,
+		Mode:      contestentity.ContestModeAWD,
+		Status:    contestentity.ContestStatusDraft,
 		StartTime: now.Add(time.Hour),
 		EndTime:   now.Add(2 * time.Hour),
 		CreatedAt: now,
@@ -1119,7 +1120,7 @@ func ensureAWDWorkspaceInstanceServiceIDColumn(db *gorm.DB) error {
 	return db.Exec("ALTER TABLE instances ADD COLUMN service_id integer").Error
 }
 
-func seedAWDWorkspaceServiceRecord(t *testing.T, db *gorm.DB, record *model.AWDTeamService) {
+func seedAWDWorkspaceServiceRecord(t *testing.T, db *gorm.DB, record *contestentity.AWDTeamService) {
 	t.Helper()
 
 	if err := db.Create(record).Error; err != nil {
@@ -1127,7 +1128,7 @@ func seedAWDWorkspaceServiceRecord(t *testing.T, db *gorm.DB, record *model.AWDT
 	}
 }
 
-func seedAWDWorkspaceAttackLog(t *testing.T, db *gorm.DB, record *model.AWDAttackLog) {
+func seedAWDWorkspaceAttackLog(t *testing.T, db *gorm.DB, record *contestentity.AWDAttackLog) {
 	t.Helper()
 
 	if err := db.Create(record).Error; err != nil {
