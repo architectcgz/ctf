@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -45,12 +46,12 @@ func reportAWDAttackDetailSQL(successExpr, victimTeamNameExpr, scoreExpr string)
 	)
 }
 
-func (r *ReportRepository) Create(ctx context.Context, report *model.Report) error {
+func (r *ReportRepository) Create(ctx context.Context, report *assessmententity.Report) error {
 	return r.db.WithContext(ctx).Create(report).Error
 }
 
-func (r *ReportRepository) FindByID(ctx context.Context, reportID int64) (*model.Report, error) {
-	var report model.Report
+func (r *ReportRepository) FindByID(ctx context.Context, reportID int64) (*assessmententity.Report, error) {
+	var report assessmententity.Report
 	if err := r.db.WithContext(ctx).First(&report, reportID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, assessmentports.ErrAssessmentReportNotFound
@@ -62,10 +63,10 @@ func (r *ReportRepository) FindByID(ctx context.Context, reportID int64) (*model
 
 func (r *ReportRepository) MarkReady(ctx context.Context, reportID int64, filePath string, expiresAt time.Time) error {
 	now := time.Now()
-	return r.db.WithContext(ctx).Model(&model.Report{}).
+	return r.db.WithContext(ctx).Model(&assessmententity.Report{}).
 		Where("id = ?", reportID).
 		Updates(map[string]any{
-			"status":       model.ReportStatusReady,
+			"status":       assessmententity.ReportStatusReady,
 			"file_path":    filePath,
 			"expires_at":   expiresAt,
 			"error_msg":    nil,
@@ -74,10 +75,10 @@ func (r *ReportRepository) MarkReady(ctx context.Context, reportID int64, filePa
 }
 
 func (r *ReportRepository) MarkFailed(ctx context.Context, reportID int64, message string) error {
-	return r.db.WithContext(ctx).Model(&model.Report{}).
+	return r.db.WithContext(ctx).Model(&assessmententity.Report{}).
 		Where("id = ?", reportID).
 		Updates(map[string]any{
-			"status":    model.ReportStatusFailed,
+			"status":    assessmententity.ReportStatusFailed,
 			"error_msg": &message,
 		}).Error
 }

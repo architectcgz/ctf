@@ -27,6 +27,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authruntime "ctf-platform/internal/module/auth/runtime"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
@@ -63,7 +64,7 @@ type fullRouterTestEnv struct {
 	awdRound     *model.AWDRound
 	instance     *model.Instance
 	notification *opsentity.Notification
-	report       *model.Report
+	report       *assessmententity.Report
 }
 
 var (
@@ -110,7 +111,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.AWDTrafficEvent{},
 	&model.AWDServiceOperation{},
 	&model.AWDScopeControl{},
-	&model.Report{},
+	&assessmententity.Report{},
 }
 
 func TestFullRouter_AccessControlMatrix(t *testing.T) {
@@ -167,7 +168,7 @@ func TestFullRouter_AuthorizedSmokeMatrix(t *testing.T) {
 			if route.Method == http.MethodPost && route.Path == "/api/v1/reports/class" && resp.Code == http.StatusOK {
 				var report assessmentcmd.ReportExportData
 				decodeFullRouterData(t, resp, &report)
-				waitForReportStatus(t, env, report.ReportID, headers, model.ReportStatusReady, 5*time.Second)
+				waitForReportStatus(t, env, report.ReportID, headers, assessmententity.ReportStatusReady, 5*time.Second)
 			}
 
 			access := classifyRouteAccess(route.Method, route.Path)
@@ -1171,7 +1172,7 @@ func newFullRouterTestConfig(t *testing.T) *config.Config {
 	}
 	cfg.Report = config.ReportConfig{
 		StorageDir:      filepath.Join(t.TempDir(), "reports"),
-		DefaultFormat:   model.ReportFormatPDF,
+		DefaultFormat:   assessmententity.ReportFormatPDF,
 		PersonalTimeout: 10 * time.Second,
 		ClassTimeout:    10 * time.Second,
 		FileTTL:         24 * time.Hour,
@@ -1486,11 +1487,11 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	}
 	expiresAt := now.Add(24 * time.Hour)
 	completedAt := now
-	env.report = &model.Report{
-		Type:        model.ReportTypePersonal,
-		Format:      model.ReportFormatPDF,
+	env.report = &assessmententity.Report{
+		Type:        assessmententity.ReportTypePersonal,
+		Format:      assessmententity.ReportFormatPDF,
 		UserID:      &env.student.ID,
-		Status:      model.ReportStatusReady,
+		Status:      assessmententity.ReportStatusReady,
 		FilePath:    reportPath,
 		ExpiresAt:   &expiresAt,
 		CompletedAt: &completedAt,

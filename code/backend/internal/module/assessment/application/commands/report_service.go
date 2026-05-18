@@ -22,6 +22,7 @@ import (
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
@@ -179,11 +180,11 @@ func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, 
 	}
 
 	format := s.normalizeFormat(req.Format)
-	report := &model.Report{
-		Type:   model.ReportTypePersonal,
+	report := &assessmententity.Report{
+		Type:   assessmententity.ReportTypePersonal,
 		Format: format,
 		UserID: &userID,
-		Status: model.ReportStatusProcessing,
+		Status: assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -201,7 +202,7 @@ func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return buildReportExportData(report.ID, model.ReportStatusReady, expiresAt), nil
+	return buildReportExportData(report.ID, assessmententity.ReportStatusReady, expiresAt), nil
 }
 
 func (s *ReportService) withPersonalTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
@@ -233,12 +234,12 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 	}
 
 	format := s.normalizeFormat(req.Format)
-	report := &model.Report{
-		Type:      model.ReportTypeClass,
+	report := &assessmententity.Report{
+		Type:      assessmententity.ReportTypeClass,
 		Format:    format,
 		UserID:    &requesterID,
 		ClassName: &className,
-		Status:    model.ReportStatusProcessing,
+		Status:    assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -252,7 +253,7 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 		return s.lifecycleRepo.MarkReady(runCtx, report.ID, filePath, expiresAt)
 	})
 
-	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+	return buildReportExportData(report.ID, assessmententity.ReportStatusProcessing, time.Time{}), nil
 }
 
 func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, contestID int64, req CreateContestExportInput) (*ReportExportData, error) {
@@ -264,11 +265,11 @@ func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, co
 	}
 
 	format := s.normalizeArchiveFormat(req.Format)
-	report := &model.Report{
-		Type:   model.ReportTypeContest,
+	report := &assessmententity.Report{
+		Type:   assessmententity.ReportTypeContest,
 		Format: format,
 		UserID: &requesterID,
-		Status: model.ReportStatusProcessing,
+		Status: assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -282,7 +283,7 @@ func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, co
 		return s.lifecycleRepo.MarkReady(runCtx, report.ID, filePath, expiresAt)
 	})
 
-	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+	return buildReportExportData(report.ID, assessmententity.ReportStatusProcessing, time.Time{}), nil
 }
 
 func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req CreateStudentReviewArchiveInput) (*ReportExportData, error) {
@@ -299,12 +300,12 @@ func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requeste
 	}
 
 	format := s.normalizeArchiveFormat(req.Format)
-	report := &model.Report{
-		Type:      model.ReportTypeReview,
+	report := &assessmententity.Report{
+		Type:      assessmententity.ReportTypeReview,
 		Format:    format,
 		UserID:    &requesterID,
 		ClassName: &student.ClassName,
-		Status:    model.ReportStatusProcessing,
+		Status:    assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -318,7 +319,7 @@ func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requeste
 		return s.lifecycleRepo.MarkReady(runCtx, report.ID, filePath, expiresAt)
 	})
 
-	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+	return buildReportExportData(report.ID, assessmententity.ReportStatusProcessing, time.Time{}), nil
 }
 
 func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req CreateTeacherAWDReviewExportInput) (*ReportExportData, error) {
@@ -329,11 +330,11 @@ func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, reque
 		return nil, errcode.New(errcode.ErrServiceUnavailable.Code, "教师 AWD 复盘归档导出暂不可用", errcode.ErrServiceUnavailable.HTTPStatus)
 	}
 
-	report := &model.Report{
-		Type:   model.ReportTypeAWDReviewArchive,
-		Format: model.ReportFormatZIP,
+	report := &assessmententity.Report{
+		Type:   assessmententity.ReportTypeAWDReviewArchive,
+		Format: assessmententity.ReportFormatZIP,
 		UserID: &requesterID,
-		Status: model.ReportStatusProcessing,
+		Status: assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -352,7 +353,7 @@ func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, reque
 		return s.lifecycleRepo.MarkReady(runCtx, report.ID, filePath, expiresAt)
 	})
 
-	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+	return buildReportExportData(report.ID, assessmententity.ReportStatusProcessing, time.Time{}), nil
 }
 
 func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req CreateTeacherAWDReviewExportInput) (*ReportExportData, error) {
@@ -367,11 +368,11 @@ func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, reques
 		return nil, errcode.New(errcode.ErrServiceUnavailable.Code, "教师 AWD 复盘报告导出暂不可用", errcode.ErrServiceUnavailable.HTTPStatus)
 	}
 
-	report := &model.Report{
-		Type:   model.ReportTypeAWDReviewReport,
-		Format: model.ReportFormatPDF,
+	report := &assessmententity.Report{
+		Type:   assessmententity.ReportTypeAWDReviewReport,
+		Format: assessmententity.ReportFormatPDF,
 		UserID: &requesterID,
-		Status: model.ReportStatusProcessing,
+		Status: assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -390,7 +391,7 @@ func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, reques
 		return s.lifecycleRepo.MarkReady(runCtx, report.ID, filePath, expiresAt)
 	})
 
-	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+	return buildReportExportData(report.ID, assessmententity.ReportStatusProcessing, time.Time{}), nil
 }
 
 func (s *ReportService) GetStudentReviewArchive(ctx context.Context, requesterID, studentID int64) (*ReviewArchiveData, error) {
@@ -465,10 +466,10 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 	if err := assessmentdomain.ValidateReportAccess(report, requesterID, role); err != nil {
 		return nil, err
 	}
-	if report.Status == model.ReportStatusProcessing {
+	if report.Status == assessmententity.ReportStatusProcessing {
 		return nil, errcode.New(errcode.ErrConflict.Code, "报告仍在生成中", errcode.ErrConflict.HTTPStatus)
 	}
-	if report.Status == model.ReportStatusFailed {
+	if report.Status == assessmententity.ReportStatusFailed {
 		message := "报告生成失败"
 		if report.ErrorMsg != nil && strings.TrimSpace(*report.ErrorMsg) != "" {
 			message = *report.ErrorMsg
@@ -492,13 +493,13 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 	contentType := reportContentType(format)
 	if contentType == "" {
 		switch format {
-		case model.ReportFormatJSON:
+		case assessmententity.ReportFormatJSON:
 			contentType = "application/json"
-		case model.ReportFormatPDF:
+		case assessmententity.ReportFormatPDF:
 			contentType = "application/pdf"
-		case model.ReportFormatExcel:
+		case assessmententity.ReportFormatExcel:
 			contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-		case model.ReportFormatZIP:
+		case assessmententity.ReportFormatZIP:
 			contentType = "application/zip"
 		default:
 			contentType = "application/octet-stream"
@@ -587,7 +588,7 @@ func (s *ReportService) generatePersonalReport(ctx context.Context, reportID, us
 		return "", time.Time{}, err
 	}
 
-	filePath, err := s.reportFilePath(reportID, model.ReportTypePersonal, format)
+	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypePersonal, format)
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
@@ -604,7 +605,7 @@ func (s *ReportService) generateClassReport(ctx context.Context, reportID int64,
 		return "", time.Time{}, err
 	}
 
-	filePath, err := s.reportFilePath(reportID, model.ReportTypeClass, format)
+	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypeClass, format)
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
@@ -621,7 +622,7 @@ func (s *ReportService) generateContestExport(ctx context.Context, reportID, con
 		return "", time.Time{}, err
 	}
 
-	filePath, err := s.reportFilePath(reportID, model.ReportTypeContest, format)
+	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypeContest, format)
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
@@ -638,7 +639,7 @@ func (s *ReportService) generateStudentReviewArchive(ctx context.Context, report
 		return "", time.Time{}, err
 	}
 
-	filePath, err := s.reportFilePath(reportID, model.ReportTypeReview, format)
+	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypeReview, format)
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
@@ -650,7 +651,7 @@ func (s *ReportService) generateStudentReviewArchive(ctx context.Context, report
 }
 
 func (s *ReportService) generateTeacherAWDReviewArchive(reportID int64, archive *assessmentqry.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
-	filePath, err := s.reportFilePath(reportID, model.ReportTypeAWDReviewArchive, model.ReportFormatZIP)
+	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypeAWDReviewArchive, assessmententity.ReportFormatZIP)
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
@@ -661,7 +662,7 @@ func (s *ReportService) generateTeacherAWDReviewArchive(reportID int64, archive 
 }
 
 func (s *ReportService) generateTeacherAWDReviewReport(reportID int64, archive *assessmentqry.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
-	filePath, err := s.reportFilePath(reportID, model.ReportTypeAWDReviewReport, model.ReportFormatPDF)
+	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypeAWDReviewReport, assessmententity.ReportFormatPDF)
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
@@ -1364,9 +1365,9 @@ func countCorrectTimelineAWDSubmissions(timeline []assessmentdomain.ReviewArchiv
 
 func (s *ReportService) renderReport(filePath, format string, data any) error {
 	switch format {
-	case model.ReportFormatJSON:
+	case assessmententity.ReportFormatJSON:
 		return writeJSONReport(filePath, data)
-	case model.ReportFormatExcel:
+	case assessmententity.ReportFormatExcel:
 		switch payload := data.(type) {
 		case *personalReportData:
 			return writePersonalExcel(filePath, payload)
@@ -1412,22 +1413,22 @@ func (s *ReportService) safeReportPath(path string) (string, error) {
 
 func (s *ReportService) normalizeFormat(format string) string {
 	switch strings.ToLower(strings.TrimSpace(format)) {
-	case model.ReportFormatJSON:
-		return model.ReportFormatJSON
-	case model.ReportFormatExcel:
-		return model.ReportFormatExcel
-	case model.ReportFormatPDF:
-		return model.ReportFormatPDF
+	case assessmententity.ReportFormatJSON:
+		return assessmententity.ReportFormatJSON
+	case assessmententity.ReportFormatExcel:
+		return assessmententity.ReportFormatExcel
+	case assessmententity.ReportFormatPDF:
+		return assessmententity.ReportFormatPDF
 	default:
 		return s.config.DefaultFormat
 	}
 }
 
 func (s *ReportService) normalizeArchiveFormat(format string) string {
-	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatJSON) {
-		return model.ReportFormatJSON
+	if strings.EqualFold(strings.TrimSpace(format), assessmententity.ReportFormatJSON) {
+		return assessmententity.ReportFormatJSON
 	}
-	return model.ReportFormatJSON
+	return assessmententity.ReportFormatJSON
 }
 
 func (s *ReportService) parseClassWindow(req CreateClassReportInput) (classwindow.Range, error) {
@@ -1533,33 +1534,33 @@ func derefClassContestMigration(summary *assessmentdomain.ClassContestMigrationS
 }
 
 func reportFileExtension(format string) string {
-	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatJSON) {
+	if strings.EqualFold(strings.TrimSpace(format), assessmententity.ReportFormatJSON) {
 		return "json"
 	}
-	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatZIP) {
+	if strings.EqualFold(strings.TrimSpace(format), assessmententity.ReportFormatZIP) {
 		return "zip"
 	}
-	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatExcel) {
+	if strings.EqualFold(strings.TrimSpace(format), assessmententity.ReportFormatExcel) {
 		return "xlsx"
 	}
 	return "pdf"
 }
 
-func reportOutputFormat(report *model.Report) string {
+func reportOutputFormat(report *assessmententity.Report) string {
 	if report == nil {
-		return model.ReportFormatPDF
+		return assessmententity.ReportFormatPDF
 	}
 	switch report.Type {
-	case model.ReportTypeAWDReviewArchive:
-		return model.ReportFormatZIP
-	case model.ReportTypeAWDReviewReport:
-		return model.ReportFormatPDF
+	case assessmententity.ReportTypeAWDReviewArchive:
+		return assessmententity.ReportFormatZIP
+	case assessmententity.ReportTypeAWDReviewReport:
+		return assessmententity.ReportFormatPDF
 	default:
 		return report.Format
 	}
 }
 
-func reportDownloadFileName(report *model.Report) string {
+func reportDownloadFileName(report *assessmententity.Report) string {
 	return fmt.Sprintf("%s-report-%d.%s", report.Type, report.ID, reportFileExtension(reportOutputFormat(report)))
 }
 
@@ -1588,7 +1589,7 @@ func (s *ReportService) markFailed(ctx context.Context, reportID int64, err erro
 }
 
 func buildReportExportData(reportID int64, status string, expiresAt time.Time) *ReportExportData {
-	report := &model.Report{
+	report := &assessmententity.Report{
 		ID:        reportID,
 		Status:    status,
 		ExpiresAt: nil,
@@ -1599,9 +1600,9 @@ func buildReportExportData(reportID int64, status string, expiresAt time.Time) *
 	return buildReportExportDataFromModel(report)
 }
 
-func buildReportExportDataFromModel(report *model.Report) *ReportExportData {
+func buildReportExportDataFromModel(report *assessmententity.Report) *ReportExportData {
 	resp := assessmentCommandResponseMapperInst.ToReportExportDataBasePtr(report)
-	if report.Status == model.ReportStatusReady {
+	if report.Status == assessmententity.ReportStatusReady {
 		downloadURL := fmt.Sprintf("/api/v1/reports/%d/download", report.ID)
 		resp.DownloadURL = &downloadURL
 		if report.ExpiresAt != nil && !report.ExpiresAt.IsZero() {
@@ -1609,7 +1610,7 @@ func buildReportExportDataFromModel(report *model.Report) *ReportExportData {
 			resp.ExpiresAt = &expires
 		}
 	}
-	if report.Status == model.ReportStatusFailed {
+	if report.Status == assessmententity.ReportStatusFailed {
 		resp.ErrorMessage = mapperutil.NormalizeOptionalString(report.ErrorMsg)
 	}
 	return resp

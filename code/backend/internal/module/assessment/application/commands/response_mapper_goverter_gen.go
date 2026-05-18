@@ -3,17 +3,17 @@
 
 package commands
 
-import model "ctf-platform/internal/model"
+import entity "ctf-platform/internal/module/assessment/entity"
 
 type assessmentCommandResponseMapperImpl struct{}
 
-func (c *assessmentCommandResponseMapperImpl) ToReportExportDataBase(source model.Report) ReportExportData {
+func (c *assessmentCommandResponseMapperImpl) ToReportExportDataBase(source entity.Report) ReportExportData {
 	var commandsReportExportData ReportExportData
 	commandsReportExportData.ReportID = source.ID
 	commandsReportExportData.Status = source.Status
 	return commandsReportExportData
 }
-func (c *assessmentCommandResponseMapperImpl) ToReportExportDataBasePtr(source *model.Report) *ReportExportData {
+func (c *assessmentCommandResponseMapperImpl) ToReportExportDataBasePtr(source *entity.Report) *ReportExportData {
 	var pCommandsReportExportData *ReportExportData
 	if source != nil {
 		commandsReportExportData := c.ToReportExportDataBase((*source))

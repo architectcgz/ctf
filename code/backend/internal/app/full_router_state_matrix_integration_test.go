@@ -22,6 +22,7 @@ import (
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
@@ -263,13 +264,13 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
 
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/reports/personal", map[string]any{
-		"format": model.ReportFormatExcel,
+		"format": assessmententity.ReportFormatExcel,
 	}, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var personalReport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &personalReport)
-	if personalReport.Status != model.ReportStatusReady || personalReport.DownloadURL == nil {
+	if personalReport.Status != assessmententity.ReportStatusReady || personalReport.DownloadURL == nil {
 		t.Fatalf("expected ready personal report with download url, got %+v", personalReport)
 	}
 
@@ -278,7 +279,7 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 
 	var personalStatus assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &personalStatus)
-	if personalStatus.Status != model.ReportStatusReady || personalStatus.DownloadURL == nil {
+	if personalStatus.Status != assessmententity.ReportStatusReady || personalStatus.DownloadURL == nil {
 		t.Fatalf("expected ready personal report status, got %+v", personalStatus)
 	}
 
@@ -288,11 +289,11 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 		t.Fatalf("expected xlsx content-type, got %q", contentType)
 	}
 
-	processingReport := createReportRecord(t, env, model.Report{
-		Type:   model.ReportTypePersonal,
-		Format: model.ReportFormatPDF,
+	processingReport := createReportRecord(t, env, assessmententity.Report{
+		Type:   assessmententity.ReportTypePersonal,
+		Format: assessmententity.ReportFormatPDF,
 		UserID: &env.student.ID,
-		Status: model.ReportStatusProcessing,
+		Status: assessmententity.ReportStatusProcessing,
 	})
 
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", processingReport.ID), nil, studentHeaders)
@@ -300,7 +301,7 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 
 	var processingStatus assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &processingStatus)
-	if processingStatus.Status != model.ReportStatusProcessing {
+	if processingStatus.Status != assessmententity.ReportStatusProcessing {
 		t.Fatalf("expected processing status, got %+v", processingStatus)
 	}
 
@@ -308,11 +309,11 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusConflict)
 
 	failedMessage := "generation failed in matrix"
-	failedReport := createReportRecord(t, env, model.Report{
-		Type:     model.ReportTypePersonal,
-		Format:   model.ReportFormatPDF,
+	failedReport := createReportRecord(t, env, assessmententity.Report{
+		Type:     assessmententity.ReportTypePersonal,
+		Format:   assessmententity.ReportFormatPDF,
 		UserID:   &env.student.ID,
-		Status:   model.ReportStatusFailed,
+		Status:   assessmententity.ReportStatusFailed,
 		ErrorMsg: &failedMessage,
 	})
 
@@ -321,7 +322,7 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 
 	var failedStatus assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &failedStatus)
-	if failedStatus.Status != model.ReportStatusFailed || failedStatus.ErrorMessage == nil || *failedStatus.ErrorMessage != failedMessage {
+	if failedStatus.Status != assessmententity.ReportStatusFailed || failedStatus.ErrorMessage == nil || *failedStatus.ErrorMessage != failedMessage {
 		t.Fatalf("expected failed status with message, got %+v", failedStatus)
 	}
 
@@ -330,23 +331,23 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/reports/class", map[string]any{
 		"class_name": env.otherStudent.ClassName,
-		"format":     model.ReportFormatPDF,
+		"format":     assessmententity.ReportFormatPDF,
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusForbidden)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/reports/class", map[string]any{
 		"class_name": env.className,
-		"format":     model.ReportFormatPDF,
+		"format":     assessmententity.ReportFormatPDF,
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var classReport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &classReport)
-	if classReport.Status != model.ReportStatusProcessing {
+	if classReport.Status != assessmententity.ReportStatusProcessing {
 		t.Fatalf("expected class report to start in processing state, got %+v", classReport)
 	}
 
-	classReady := waitForReportStatus(t, env, classReport.ReportID, teacherHeaders, model.ReportStatusReady, 5*time.Second)
+	classReady := waitForReportStatus(t, env, classReport.ReportID, teacherHeaders, assessmententity.ReportStatusReady, 5*time.Second)
 	if classReady.DownloadURL == nil {
 		t.Fatalf("expected class report download url after ready, got %+v", classReady)
 	}
@@ -364,17 +365,17 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/admin/contests/%d/export", env.contest.ID), map[string]any{
-		"format": model.ReportFormatJSON,
+		"format": assessmententity.ReportFormatJSON,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var contestExport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &contestExport)
-	if contestExport.Status != model.ReportStatusProcessing {
+	if contestExport.Status != assessmententity.ReportStatusProcessing {
 		t.Fatalf("expected contest export processing status, got %+v", contestExport)
 	}
 
-	contestExportReady := waitForReportStatus(t, env, contestExport.ReportID, adminHeaders, model.ReportStatusReady, 5*time.Second)
+	contestExportReady := waitForReportStatus(t, env, contestExport.ReportID, adminHeaders, assessmententity.ReportStatusReady, 5*time.Second)
 	if contestExportReady.DownloadURL == nil {
 		t.Fatalf("expected contest export download url, got %+v", contestExportReady)
 	}
@@ -389,22 +390,22 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive/export", env.otherStudent.ID), map[string]any{
-		"format": model.ReportFormatJSON,
+		"format": assessmententity.ReportFormatJSON,
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusForbidden)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive/export", env.student.ID), map[string]any{
-		"format": model.ReportFormatJSON,
+		"format": assessmententity.ReportFormatJSON,
 	}, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var reviewArchive assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &reviewArchive)
-	if reviewArchive.Status != model.ReportStatusProcessing {
+	if reviewArchive.Status != assessmententity.ReportStatusProcessing {
 		t.Fatalf("expected review archive processing status, got %+v", reviewArchive)
 	}
 
-	reviewArchiveReady := waitForReportStatus(t, env, reviewArchive.ReportID, teacherHeaders, model.ReportStatusReady, 5*time.Second)
+	reviewArchiveReady := waitForReportStatus(t, env, reviewArchive.ReportID, teacherHeaders, assessmententity.ReportStatusReady, 5*time.Second)
 	if reviewArchiveReady.DownloadURL == nil {
 		t.Fatalf("expected review archive download url, got %+v", reviewArchiveReady)
 	}
@@ -466,11 +467,11 @@ func TestFullRouter_ContestAndReviewArchiveExportStateMatrix(t *testing.T) {
 
 	var contestExport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &contestExport)
-	if contestExport.Status != model.ReportStatusProcessing {
+	if contestExport.Status != assessmententity.ReportStatusProcessing {
 		t.Fatalf("expected contest export to start in processing state, got %+v", contestExport)
 	}
 
-	contestReady := waitForReportStatus(t, env, contestExport.ReportID, adminHeaders, model.ReportStatusReady, 5*time.Second)
+	contestReady := waitForReportStatus(t, env, contestExport.ReportID, adminHeaders, assessmententity.ReportStatusReady, 5*time.Second)
 	if contestReady.DownloadURL == nil {
 		t.Fatalf("expected contest export download url after ready, got %+v", contestReady)
 	}
@@ -503,11 +504,11 @@ func TestFullRouter_ContestAndReviewArchiveExportStateMatrix(t *testing.T) {
 
 	var reviewArchive assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &reviewArchive)
-	if reviewArchive.Status != model.ReportStatusProcessing {
+	if reviewArchive.Status != assessmententity.ReportStatusProcessing {
 		t.Fatalf("expected review archive export to start in processing state, got %+v", reviewArchive)
 	}
 
-	reviewReady := waitForReportStatus(t, env, reviewArchive.ReportID, teacherHeaders, model.ReportStatusReady, 5*time.Second)
+	reviewReady := waitForReportStatus(t, env, reviewArchive.ReportID, teacherHeaders, assessmententity.ReportStatusReady, 5*time.Second)
 	if reviewReady.DownloadURL == nil {
 		t.Fatalf("expected review archive download url after ready, got %+v", reviewReady)
 	}
@@ -719,11 +720,11 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 
 	var archiveExport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &archiveExport)
-	if archiveExport.Status != model.ReportStatusProcessing {
+	if archiveExport.Status != assessmententity.ReportStatusProcessing {
 		t.Fatalf("expected archive export processing status, got %+v", archiveExport)
 	}
 
-	archiveReady := waitForReportStatus(t, env, archiveExport.ReportID, teacherHeaders, model.ReportStatusReady, 5*time.Second)
+	archiveReady := waitForReportStatus(t, env, archiveExport.ReportID, teacherHeaders, assessmententity.ReportStatusReady, 5*time.Second)
 	if archiveReady.DownloadURL == nil {
 		t.Fatalf("expected archive export download url, got %+v", archiveReady)
 	}
@@ -791,11 +792,11 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 
 	var reportExport assessmentcmd.ReportExportData
 	decodeFullRouterData(t, resp, &reportExport)
-	if reportExport.Status != model.ReportStatusProcessing {
+	if reportExport.Status != assessmententity.ReportStatusProcessing {
 		t.Fatalf("expected report export processing status, got %+v", reportExport)
 	}
 
-	reportReady := waitForReportStatus(t, env, reportExport.ReportID, teacherHeaders, model.ReportStatusReady, 5*time.Second)
+	reportReady := waitForReportStatus(t, env, reportExport.ReportID, teacherHeaders, assessmententity.ReportStatusReady, 5*time.Second)
 	if reportReady.DownloadURL == nil {
 		t.Fatalf("expected report export download url, got %+v", reportReady)
 	}
@@ -2848,7 +2849,7 @@ func resetInstanceForAccessMatrix(t *testing.T, env *fullRouterTestEnv, instance
 	}
 }
 
-func createReportRecord(t *testing.T, env *fullRouterTestEnv, report model.Report) *model.Report {
+func createReportRecord(t *testing.T, env *fullRouterTestEnv, report assessmententity.Report) *assessmententity.Report {
 	t.Helper()
 
 	if report.CreatedAt.IsZero() {

@@ -8,6 +8,7 @@ import (
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
@@ -88,8 +89,8 @@ type ChallengeRepository interface {
 }
 
 type AssessmentReportLifecycleRepository interface {
-	Create(ctx context.Context, report *model.Report) error
-	FindByID(ctx context.Context, reportID int64) (*model.Report, error)
+	Create(ctx context.Context, report *assessmententity.Report) error
+	FindByID(ctx context.Context, reportID int64) (*assessmententity.Report, error)
 	MarkReady(ctx context.Context, reportID int64, filePath string, expiresAt time.Time) error
 	MarkFailed(ctx context.Context, reportID int64, message string) error
 }

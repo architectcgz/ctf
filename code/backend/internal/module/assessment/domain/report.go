@@ -6,6 +6,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -185,7 +186,7 @@ type ReviewArchiveManualReviewItem struct {
 	ReviewerName   string     `json:"reviewer_name,omitempty"`
 }
 
-func ValidateReportAccess(report *model.Report, requesterID int64, role string) error {
+func ValidateReportAccess(report *assessmententity.Report, requesterID int64, role string) error {
 	if role == model.RoleAdmin {
 		return nil
 	}
@@ -242,8 +243,8 @@ func NormalizeReportConfig(cfg config.ReportConfig) config.ReportConfig {
 	if strings.TrimSpace(cfg.StorageDir) == "" {
 		cfg.StorageDir = "storage/exports"
 	}
-	if cfg.DefaultFormat != model.ReportFormatPDF && cfg.DefaultFormat != model.ReportFormatExcel {
-		cfg.DefaultFormat = model.ReportFormatPDF
+	if cfg.DefaultFormat != assessmententity.ReportFormatPDF && cfg.DefaultFormat != assessmententity.ReportFormatExcel {
+		cfg.DefaultFormat = assessmententity.ReportFormatPDF
 	}
 	if cfg.PersonalTimeout <= 0 {
 		cfg.PersonalTimeout = 30 * time.Second

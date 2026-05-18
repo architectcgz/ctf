@@ -23,6 +23,7 @@ import (
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
@@ -53,14 +54,14 @@ type testReportRepository struct {
 	manualReviews     []assessmentdomain.ReviewArchiveManualReviewItem
 }
 
-func (r *testReportRepository) Create(ctx context.Context, report *model.Report) error {
+func (r *testReportRepository) Create(ctx context.Context, report *assessmententity.Report) error {
 	if r == nil || r.db == nil {
 		return nil
 	}
 	return r.db.WithContext(ctx).Create(report).Error
 }
 
-func (r *testReportRepository) FindByID(context.Context, int64) (*model.Report, error) {
+func (r *testReportRepository) FindByID(context.Context, int64) (*assessmententity.Report, error) {
 	return nil, assessmentports.ErrAssessmentReportNotFound
 }
 
@@ -563,10 +564,10 @@ func TestReportFileExtension(t *testing.T) {
 func TestReportDownloadFileNameUsesRealExtension(t *testing.T) {
 	t.Parallel()
 
-	report := &model.Report{
+	report := &assessmententity.Report{
 		ID:     7,
-		Type:   model.ReportTypeClass,
-		Format: model.ReportFormatExcel,
+		Type:   assessmententity.ReportTypeClass,
+		Format: assessmententity.ReportFormatExcel,
 	}
 
 	if got := reportDownloadFileName(report); got != "class-report-7.xlsx" {
@@ -804,7 +805,7 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 		},
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
-			DefaultFormat: model.ReportFormatPDF,
+			DefaultFormat: assessmententity.ReportFormatPDF,
 			MaxWorkers:    1,
 		},
 		nil,
@@ -1174,10 +1175,10 @@ func TestBuildReviewArchiveTeachingFactSnapshotCountsRecentManualReviewsAsActivi
 func TestReportDownloadFileNameUsesJSONExtension(t *testing.T) {
 	t.Parallel()
 
-	report := &model.Report{
+	report := &assessmententity.Report{
 		ID:     9,
-		Type:   model.ReportTypeContestExport,
-		Format: model.ReportFormatJSON,
+		Type:   assessmententity.ReportTypeContestExport,
+		Format: assessmententity.ReportFormatJSON,
 	}
 
 	if got := reportDownloadFileName(report); got != "contest_export-report-9.json" {
@@ -1189,7 +1190,7 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 	t.Parallel()
 
 	db := newTestSQLiteDB(t)
-	if err := db.AutoMigrate(&model.User{}, &model.Report{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &assessmententity.Report{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 
@@ -1230,7 +1231,7 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
-			DefaultFormat: model.ReportFormatPDF,
+			DefaultFormat: assessmententity.ReportFormatPDF,
 			MaxWorkers:    1,
 		},
 		nil,
@@ -1251,19 +1252,19 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 	if err != nil {
 		t.Fatalf("CreateTeacherAWDReviewArchive() error = %v", err)
 	}
-	if resp.Status != model.ReportStatusProcessing {
+	if resp.Status != assessmententity.ReportStatusProcessing {
 		t.Fatalf("expected processing status, got %+v", resp)
 	}
 
-	var report model.Report
+	var report assessmententity.Report
 	if err := db.First(&report, "id = ?", resp.ReportID).Error; err != nil {
 		t.Fatalf("load report: %v", err)
 	}
-	if report.Type != model.ReportTypeAWDReviewArchive {
-		t.Fatalf("expected report type %s, got %+v", model.ReportTypeAWDReviewArchive, report)
+	if report.Type != assessmententity.ReportTypeAWDReviewArchive {
+		t.Fatalf("expected report type %s, got %+v", assessmententity.ReportTypeAWDReviewArchive, report)
 	}
-	if report.Format != model.ReportFormatZIP {
-		t.Fatalf("expected report format %s, got %+v", model.ReportFormatZIP, report)
+	if report.Format != assessmententity.ReportFormatZIP {
+		t.Fatalf("expected report format %s, got %+v", assessmententity.ReportFormatZIP, report)
 	}
 	if report.UserID == nil || *report.UserID != teacher.ID {
 		t.Fatalf("expected report user_id %d, got %+v", teacher.ID, report)
@@ -1360,7 +1361,7 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 	t.Parallel()
 
 	db := newTestSQLiteDB(t)
-	if err := db.AutoMigrate(&model.User{}, &model.Report{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &assessmententity.Report{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 
@@ -1401,7 +1402,7 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
-			DefaultFormat: model.ReportFormatPDF,
+			DefaultFormat: assessmententity.ReportFormatPDF,
 			MaxWorkers:    1,
 		},
 		nil,
@@ -1414,7 +1415,7 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 	}
 
 	var count int64
-	if err := db.Model(&model.Report{}).Count(&count).Error; err != nil {
+	if err := db.Model(&assessmententity.Report{}).Count(&count).Error; err != nil {
 		t.Fatalf("count reports: %v", err)
 	}
 	if count != 0 {
@@ -1425,10 +1426,10 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 func TestReportDownloadFileNameUsesZIPForAWDReviewArchive(t *testing.T) {
 	t.Parallel()
 
-	report := &model.Report{
+	report := &assessmententity.Report{
 		ID:     10,
-		Type:   model.ReportTypeAWDReviewArchive,
-		Format: model.ReportFormatJSON,
+		Type:   assessmententity.ReportTypeAWDReviewArchive,
+		Format: assessmententity.ReportFormatJSON,
 	}
 
 	if got := reportDownloadFileName(report); got != "awd_review_archive-report-10.zip" {
@@ -1439,10 +1440,10 @@ func TestReportDownloadFileNameUsesZIPForAWDReviewArchive(t *testing.T) {
 func TestReportDownloadFileNameUsesPDFForAWDReviewReport(t *testing.T) {
 	t.Parallel()
 
-	report := &model.Report{
+	report := &assessmententity.Report{
 		ID:     11,
-		Type:   model.ReportTypeAWDReviewReport,
-		Format: model.ReportFormatJSON,
+		Type:   assessmententity.ReportTypeAWDReviewReport,
+		Format: assessmententity.ReportFormatJSON,
 	}
 
 	if got := reportDownloadFileName(report); got != "awd_review_report-report-11.pdf" {
@@ -1474,7 +1475,7 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 	t.Parallel()
 
 	db := newTestSQLiteDB(t)
-	if err := db.AutoMigrate(&model.User{}, &model.Report{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &assessmententity.Report{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 
@@ -1501,7 +1502,7 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
-			DefaultFormat: model.ReportFormatPDF,
+			DefaultFormat: assessmententity.ReportFormatPDF,
 			MaxWorkers:    1,
 		},
 		nil,
@@ -1509,7 +1510,7 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 
 	_, err := service.CreateClassReport(context.Background(), teacher.ID, CreateClassReportInput{
 		ClassName: "class-b",
-		Format:    model.ReportFormatPDF,
+		Format:    assessmententity.ReportFormatPDF,
 	})
 	appErr, ok := err.(*errcode.AppError)
 	if !ok || appErr.Code != errcode.ErrForbidden.Code {
@@ -1517,7 +1518,7 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 	}
 
 	var count int64
-	if err := db.Model(&model.Report{}).Count(&count).Error; err != nil {
+	if err := db.Model(&assessmententity.Report{}).Count(&count).Error; err != nil {
 		t.Fatalf("count reports: %v", err)
 	}
 	if count != 0 {
@@ -1596,7 +1597,7 @@ func TestBuildClassReportDataUsesSharedWindowedClassInsight(t *testing.T) {
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
-			DefaultFormat: model.ReportFormatPDF,
+			DefaultFormat: assessmententity.ReportFormatPDF,
 			MaxWorkers:    1,
 		},
 		nil,
@@ -1651,7 +1652,7 @@ func TestReportServiceCloseCancelsAsyncTasks(t *testing.T) {
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
-			DefaultFormat: model.ReportFormatPDF,
+			DefaultFormat: assessmententity.ReportFormatPDF,
 			MaxWorkers:    1,
 			ClassTimeout:  time.Minute,
 		},
@@ -1699,7 +1700,7 @@ func TestReportServiceCloseRejectsNilContext(t *testing.T) {
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
-			DefaultFormat: model.ReportFormatPDF,
+			DefaultFormat: assessmententity.ReportFormatPDF,
 			MaxWorkers:    1,
 		},
 		nil,
@@ -1725,13 +1726,13 @@ func TestCreatePersonalReportRejectsNilContext(t *testing.T) {
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
-			DefaultFormat: model.ReportFormatPDF,
+			DefaultFormat: assessmententity.ReportFormatPDF,
 			MaxWorkers:    1,
 		},
 		nil,
 	)
 
-	_, err := service.CreatePersonalReport(nil, 1, CreatePersonalReportInput{Format: model.ReportFormatPDF})
+	_, err := service.CreatePersonalReport(nil, 1, CreatePersonalReportInput{Format: assessmententity.ReportFormatPDF})
 	if err == nil {
 		t.Fatal("expected CreatePersonalReport(nil) to reject missing context")
 	}
