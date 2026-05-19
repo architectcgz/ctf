@@ -2,7 +2,6 @@ package commands
 
 import (
 	"context"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -75,19 +74,19 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 		Difficulty:      "easy",
 		Points:          100,
 		ImageID:         1,
-		InstanceSharing: string(model.InstanceSharingPerUser),
+		InstanceSharing: string(challengeentity.InstanceSharingPerUser),
 	})
 
 	if err != nil {
 		t.Fatalf("CreateChallenge() error = %v", err)
 	}
-	if resp.Status != string(model.ChallengeStatusDraft) {
+	if resp.Status != string(challengeentity.ChallengeStatusDraft) {
 		t.Fatalf("unexpected status: %s", resp.Status)
 	}
 	if resp.CreatedBy == nil || *resp.CreatedBy != 1001 {
 		t.Fatalf("unexpected created_by: %+v", resp.CreatedBy)
 	}
-	if resp.InstanceSharing != string(model.InstanceSharingPerUser) {
+	if resp.InstanceSharing != string(challengeentity.InstanceSharingPerUser) {
 		t.Fatalf("unexpected instance sharing: %s", resp.InstanceSharing)
 	}
 }
@@ -138,17 +137,17 @@ func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T)
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:           "dynamic-flag",
 		Description:     "desc",
 		Category:        challengecontracts.DimensionCrypto,
-		Difficulty:      model.ChallengeDifficultyEasy,
+		Difficulty:      challengeentity.ChallengeDifficultyEasy,
 		Points:          100,
-		Status:          model.ChallengeStatusDraft,
-		FlagType:        model.FlagTypeDynamic,
+		Status:          challengeentity.ChallengeStatusDraft,
+		FlagType:        challengeentity.FlagTypeDynamic,
 		FlagSalt:        salt,
 		FlagPrefix:      "flag",
-		InstanceSharing: model.InstanceSharingPerUser,
+		InstanceSharing: challengeentity.InstanceSharingPerUser,
 	}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
@@ -159,7 +158,7 @@ func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T)
 	service := newTestService(repo, imageRepo)
 
 	err = service.UpdateChallenge(context.Background(), challenge.ID, UpdateChallengeInput{
-		InstanceSharing: string(model.InstanceSharingShared),
+		InstanceSharing: string(challengeentity.InstanceSharingShared),
 	})
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params when enabling shared for dynamic flag challenge, got %v", err)
@@ -169,15 +168,15 @@ func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T)
 func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:           "inject-flag-topology",
 		Description:     "desc",
 		Category:        challengecontracts.DimensionWeb,
-		Difficulty:      model.ChallengeDifficultyEasy,
+		Difficulty:      challengeentity.ChallengeDifficultyEasy,
 		Points:          100,
-		Status:          model.ChallengeStatusDraft,
-		FlagType:        model.FlagTypeStatic,
-		InstanceSharing: model.InstanceSharingPerUser,
+		Status:          challengeentity.ChallengeStatusDraft,
+		FlagType:        challengeentity.FlagTypeStatic,
+		InstanceSharing: challengeentity.InstanceSharingPerUser,
 	}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
@@ -204,7 +203,7 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 	service := newDBBackedChallengeService(nil, repo, imageRepo, nil, SelfCheckConfig{})
 
 	err = service.UpdateChallenge(context.Background(), challenge.ID, UpdateChallengeInput{
-		InstanceSharing: string(model.InstanceSharingShared),
+		InstanceSharing: string(challengeentity.InstanceSharingShared),
 	})
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params when enabling shared for inject_flag topology challenge, got %v", err)
@@ -215,7 +214,7 @@ func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
 	// 创建靶场和运行中的实例
-	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusDraft}
+	challenge := &challengeentity.Challenge{Title: "Test", Status: challengeentity.ChallengeStatusDraft}
 	db.Create(challenge)
 	db.Create(&instancecontracts.Instance{ChallengeID: challenge.ID, Status: "running"})
 
@@ -238,7 +237,7 @@ func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 func TestServicePublishChallengeNoImage(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{Title: "Test", ImageID: 0}
+	challenge := &challengeentity.Challenge{Title: "Test", ImageID: 0}
 	db.Create(challenge)
 
 	repo := challengeinfra.NewRepository(db)
@@ -273,15 +272,15 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:      "publish-me",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
-		Status:     model.ChallengeStatusDraft,
+		Status:     challengeentity.ChallengeStatusDraft,
 		CreatedBy:  &teacher.ID,
-		FlagType:   model.FlagTypeStatic,
+		FlagType:   challengeentity.FlagTypeStatic,
 		FlagSalt:   salt,
 		FlagHash:   flagcrypto.HashStaticFlag("flag{ok}", salt),
 	}
@@ -367,14 +366,14 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:      "no-image",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
-		Status:     model.ChallengeStatusDraft,
+		Status:     challengeentity.ChallengeStatusDraft,
 		CreatedBy:  &teacher.ID,
-		FlagType:   model.FlagTypeStatic,
+		FlagType:   challengeentity.FlagTypeStatic,
 		FlagSalt:   salt,
 		FlagHash:   flagcrypto.HashStaticFlag("flag{ok}", salt),
 	}
@@ -446,15 +445,15 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:         "attachment-only",
 		Category:      challengecontracts.DimensionWeb,
-		Difficulty:    model.ChallengeDifficultyEasy,
+		Difficulty:    challengeentity.ChallengeDifficultyEasy,
 		Points:        100,
-		Status:        model.ChallengeStatusDraft,
+		Status:        challengeentity.ChallengeStatusDraft,
 		CreatedBy:     &teacher.ID,
 		AttachmentURL: "/api/v1/challenges/attachments/imports/web-source-audit-double-wrap-01/source.html",
-		FlagType:      model.FlagTypeStatic,
+		FlagType:      challengeentity.FlagTypeStatic,
 		FlagSalt:      salt,
 		FlagHash:      flagcrypto.HashStaticFlag("flag{ok}", salt),
 	}
@@ -518,13 +517,13 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 
 	createdAt := time.Date(2026, 4, 9, 10, 55, 5, 0, time.UTC)
 	updatedAt := createdAt.Add(2 * time.Hour)
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:      "Web-01 源码审计：双层伪装",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    0,
-		Status:     model.ChallengeStatusDraft,
+		Status:     challengeentity.ChallengeStatusDraft,
 		CreatedBy:  &teacher.ID,
 		UpdatedAt:  updatedAt,
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
@@ -70,7 +69,7 @@ func TestAWDChallengeServiceCreateChallengePropagatesContextToRepository(t *test
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyHard,
+		Difficulty:     challengeentity.ChallengeDifficultyHard,
 		Description:    "desc",
 		ServiceType:    string(challengeentity.AWDServiceTypeWebHTTP),
 		DeploymentMode: string(challengeentity.AWDDeploymentModeSingleContainer),
@@ -104,7 +103,7 @@ func TestAWDChallengeServiceUpdateChallengePropagatesContextToRepository(t *test
 				Name:           "Legacy",
 				Slug:           "legacy",
 				Category:       "web",
-				Difficulty:     model.ChallengeDifficultyEasy,
+				Difficulty:     challengeentity.ChallengeDifficultyEasy,
 				ServiceType:    challengeentity.AWDServiceTypeWebHTTP,
 				DeploymentMode: challengeentity.AWDDeploymentModeSingleContainer,
 				Status:         challengeentity.AWDChallengeStatusDraft,

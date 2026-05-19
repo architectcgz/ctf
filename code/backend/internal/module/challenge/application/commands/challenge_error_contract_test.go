@@ -7,7 +7,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -41,7 +40,7 @@ func TestChallengeServiceUpdateChallengeTreatsModuleChallengeNotFoundAsErrChalle
 
 	service := NewChallengeService(
 		&challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
 				return nil, challengeports.ErrChallengeCommandChallengeNotFound
 			},
 		},
@@ -65,15 +64,15 @@ func TestChallengeServiceUpdateChallengeTreatsTopologySentinelAsMissingTopology(
 	updated := false
 	service := NewChallengeService(
 		&challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
-				return &model.Challenge{
+			findByIDWithContextFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
+				return &challengeentity.Challenge{
 					ID:              9,
 					Title:           "shared",
-					FlagType:        model.FlagTypeStatic,
-					InstanceSharing: model.InstanceSharingPerUser,
+					FlagType:        challengeentity.FlagTypeStatic,
+					InstanceSharing: challengeentity.InstanceSharingPerUser,
 				}, nil
 			},
-			updateWithHintsFn: func(context.Context, *model.Challenge, []*challengeentity.ChallengeHint, bool) error {
+			updateWithHintsFn: func(context.Context, *challengeentity.Challenge, []*challengeentity.ChallengeHint, bool) error {
 				updated = true
 				return nil
 			},
@@ -90,7 +89,7 @@ func TestChallengeServiceUpdateChallengeTreatsTopologySentinelAsMissingTopology(
 		zap.NewNop(),
 	)
 
-	err := service.UpdateChallenge(context.Background(), 9, UpdateChallengeInput{InstanceSharing: string(model.InstanceSharingShared)})
+	err := service.UpdateChallenge(context.Background(), 9, UpdateChallengeInput{InstanceSharing: string(challengeentity.InstanceSharingShared)})
 	if err != nil {
 		t.Fatalf("expected missing topology sentinel to be tolerated, got %v", err)
 	}
@@ -104,8 +103,8 @@ func TestChallengeServiceRequestPublishCheckTreatsMissingActiveJobSentinelAsNoAc
 
 	service := NewChallengeService(
 		&challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
-				return &model.Challenge{ID: 9, Status: model.ChallengeStatusDraft}, nil
+			findByIDWithContextFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
+				return &challengeentity.Challenge{ID: 9, Status: challengeentity.ChallengeStatusDraft}, nil
 			},
 			findActivePublishCheckJobByIDFn: func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
 				return nil, challengeports.ErrChallengePublishCheckJobNotFound
@@ -139,8 +138,8 @@ func TestChallengeServiceGetLatestPublishCheckTreatsMissingJobSentinelAsErrNotFo
 
 	service := NewChallengeService(
 		&challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
-				return &model.Challenge{ID: 9, UpdatedAt: time.Now()}, nil
+			findByIDWithContextFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
+				return &challengeentity.Challenge{ID: 9, UpdatedAt: time.Now()}, nil
 			},
 			findLatestPublishCheckJobByIDFn: func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
 				return nil, challengeports.ErrChallengePublishCheckJobNotFound
@@ -165,7 +164,7 @@ func TestChallengeServiceSelfCheckChallengeTreatsModuleChallengeNotFoundAsErrCha
 
 	service := NewChallengeService(
 		&challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
 				return nil, challengeports.ErrChallengeCommandChallengeNotFound
 			},
 		},

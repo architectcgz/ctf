@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -217,11 +216,11 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CommitChallengeImport() error = %v", err)
 	}
-	if resp.Status != string(model.ChallengeStatusDraft) {
+	if resp.Status != string(challengeentity.ChallengeStatusDraft) {
 		t.Fatalf("expected draft challenge, got %q", resp.Status)
 	}
 
-	var challenge model.Challenge
+	var challenge challengeentity.Challenge
 	if err := db.First(&challenge, resp.ID).Error; err != nil {
 		t.Fatalf("load challenge: %v", err)
 	}
@@ -336,7 +335,7 @@ func TestCommitChallengeImportFromPreviewKeepsPlatformBuildSourceAccessible(t *t
 		t.Fatalf("CommitChallengeImport() error = %v", err)
 	}
 
-	var challenge model.Challenge
+	var challenge challengeentity.Challenge
 	if err := db.First(&challenge, resp.ID).Error; err != nil {
 		t.Fatalf("load challenge: %v", err)
 	}
@@ -403,13 +402,13 @@ flag:
 	}
 
 	deletedAt := time.Date(2026, 4, 9, 20, 37, 35, 0, time.FixedZone("CST", 8*3600))
-	legacyChallenge := model.Challenge{
+	legacyChallenge := challengeentity.Challenge{
 		Title:       "legacy title",
 		Description: "legacy description",
 		Category:    "web",
 		Difficulty:  "easy",
 		Points:      50,
-		Status:      model.ChallengeStatusPublished,
+		Status:      challengeentity.ChallengeStatusPublished,
 		PackageSlug: stringPointer("web-source-audit-double-wrap-01"),
 		CreatedBy:   int64Pointer(4),
 		DeletedAt:   modelDeletedAt(deletedAt),
@@ -450,7 +449,7 @@ flag:
 		t.Fatalf("unexpected conflict message: %q", appErr.Message)
 	}
 
-	var unchanged model.Challenge
+	var unchanged challengeentity.Challenge
 	if err := db.Unscoped().First(&unchanged, legacyChallenge.ID).Error; err != nil {
 		t.Fatalf("load unchanged challenge: %v", err)
 	}
@@ -537,11 +536,11 @@ runtime:
 		t.Fatalf("CommitChallengeImport() error = %v", err)
 	}
 
-	var stored model.Challenge
+	var stored challengeentity.Challenge
 	if err := db.First(&stored, resp.ID).Error; err != nil {
 		t.Fatalf("load imported challenge: %v", err)
 	}
-	if stored.TargetProtocol != model.ChallengeTargetProtocolTCP {
+	if stored.TargetProtocol != challengeentity.ChallengeTargetProtocolTCP {
 		t.Fatalf("expected target protocol tcp, got %q", stored.TargetProtocol)
 	}
 	if stored.TargetPort != 31337 {
@@ -588,13 +587,13 @@ flag:
 		t.Fatalf("WriteFile(challenge.yml) error = %v", err)
 	}
 
-	challenge := model.Challenge{
+	challenge := challengeentity.Challenge{
 		Title:       "legacy title",
 		Description: "legacy description",
 		Category:    "web",
 		Difficulty:  "easy",
 		Points:      50,
-		Status:      model.ChallengeStatusDraft,
+		Status:      challengeentity.ChallengeStatusDraft,
 		PackageSlug: stringPointer("web-source-audit-double-wrap-01"),
 		CreatedBy:   int64Pointer(4),
 	}
@@ -786,7 +785,7 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 	}
 
 	challengeID := resp.ID
-	if err := db.Model(&model.Challenge{}).Where("id = ?", challengeID).Updates(map[string]any{
+	if err := db.Model(&challengeentity.Challenge{}).Where("id = ?", challengeID).Updates(map[string]any{
 		"title":  "Exportable Bank v2",
 		"points": 450,
 	}).Error; err != nil {
@@ -881,12 +880,12 @@ func TestGetChallengePackageExportMapsMissingTopologyToNotFound(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:      "no-topology",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
-		Status:     model.ChallengeStatusDraft,
+		Status:     challengeentity.ChallengeStatusDraft,
 	}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)

@@ -7,7 +7,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -16,10 +15,10 @@ import (
 )
 
 type challengeCommandContextRepoStub struct {
-	createWithHintsFn               func(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error
-	findByIDWithContextFn           func(ctx context.Context, id int64) (*model.Challenge, error)
-	updateFn                        func(ctx context.Context, challenge *model.Challenge) error
-	updateWithHintsFn               func(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
+	createWithHintsFn               func(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint) error
+	findByIDWithContextFn           func(ctx context.Context, id int64) (*challengeentity.Challenge, error)
+	updateFn                        func(ctx context.Context, challenge *challengeentity.Challenge) error
+	updateWithHintsFn               func(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
 	deleteFn                        func(ctx context.Context, id int64) error
 	hasRunningInstancesFn           func(ctx context.Context, challengeID int64) (bool, error)
 	createPublishCheckJobFn         func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
@@ -29,7 +28,7 @@ type challengeCommandContextRepoStub struct {
 	updatePublishCheckJobFn         func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
 }
 
-func challengeWriteModelFromModel(source *model.Challenge) *challengeports.ChallengeWriteModel {
+func challengeWriteModelFromModel(source *challengeentity.Challenge) *challengeports.ChallengeWriteModel {
 	if source == nil {
 		return nil
 	}
@@ -58,11 +57,11 @@ func challengeWriteModelFromModel(source *model.Challenge) *challengeports.Chall
 	}
 }
 
-func challengeWriteModelToModel(source *challengeports.ChallengeWriteModel) *model.Challenge {
+func challengeWriteModelToModel(source *challengeports.ChallengeWriteModel) *challengeentity.Challenge {
 	if source == nil {
 		return nil
 	}
-	return &model.Challenge{
+	return &challengeentity.Challenge{
 		ID:              source.ID,
 		PackageSlug:     source.PackageSlug,
 		Title:           source.Title,
@@ -72,13 +71,13 @@ func challengeWriteModelToModel(source *challengeports.ChallengeWriteModel) *mod
 		Points:          source.Points,
 		ImageID:         source.ImageID,
 		AttachmentURL:   source.AttachmentURL,
-		Status:          model.ChallengeStatus(source.Status),
+		Status:          challengeentity.ChallengeStatus(source.Status),
 		FlagType:        source.FlagType,
 		FlagHash:        source.FlagHash,
 		FlagSalt:        source.FlagSalt,
 		FlagRegex:       source.FlagRegex,
 		FlagPrefix:      source.FlagPrefix,
-		InstanceSharing: model.InstanceSharing(source.InstanceSharing),
+		InstanceSharing: challengeentity.InstanceSharing(source.InstanceSharing),
 		TargetProtocol:  source.TargetProtocol,
 		TargetPort:      source.TargetPort,
 		CreatedBy:       source.CreatedBy,
@@ -203,11 +202,11 @@ func (s *challengeCommandImageRepoStub) Delete(ctx context.Context, id int64) er
 }
 
 type challengeCommandTopologyRepoStub struct {
-	findByIDWithContextFn                func(ctx context.Context, id int64) (*model.Challenge, error)
+	findByIDWithContextFn                func(ctx context.Context, id int64) (*challengeentity.Challenge, error)
 	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
 }
 
-func (s *challengeCommandTopologyRepoStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *challengeCommandTopologyRepoStub) FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
@@ -250,7 +249,7 @@ func TestChallengeServiceCreateChallengePropagatesContextToRepositories(t *testi
 	createCalled := false
 
 	repo := &challengeCommandContextRepoStub{
-		createWithHintsFn: func(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error {
+		createWithHintsFn: func(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint) error {
 			createCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create challenge ctx value %v, got %v", expectedCtxValue, got)
@@ -307,19 +306,19 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 	}
 
 	repo := &challengeCommandContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id, Title: "Old", Category: "misc", Difficulty: "easy", Points: 50, FlagType: model.FlagTypeStatic, InstanceSharing: model.InstanceSharingPerUser}, nil
+			return &challengeentity.Challenge{ID: id, Title: "Old", Category: "misc", Difficulty: "easy", Points: 50, FlagType: challengeentity.FlagTypeStatic, InstanceSharing: challengeentity.InstanceSharingPerUser}, nil
 		},
-		updateWithHintsFn: func(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
+		updateWithHintsFn: func(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
 			updateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if challenge.ImageID != 7 || challenge.InstanceSharing != model.InstanceSharingShared {
+			if challenge.ImageID != 7 || challenge.InstanceSharing != challengeentity.InstanceSharingShared {
 				t.Fatalf("unexpected updated challenge payload: %+v", challenge)
 			}
 			return nil
@@ -347,7 +346,7 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 
 	imageID := int64(7)
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.UpdateChallenge(ctx, 9, UpdateChallengeInput{ImageID: &imageID, InstanceSharing: string(model.InstanceSharingShared)}); err != nil {
+	if err := service.UpdateChallenge(ctx, 9, UpdateChallengeInput{ImageID: &imageID, InstanceSharing: string(challengeentity.InstanceSharingShared)}); err != nil {
 		t.Fatalf("UpdateChallenge() error = %v", err)
 	}
 	if !findCalled || !imageCalled || !topologyCalled || !updateCalled {
@@ -365,12 +364,12 @@ func TestChallengeServiceDeleteChallengePropagatesContextToRepository(t *testing
 	deleteCalled := false
 
 	repo := &challengeCommandContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id, Title: "Delete Me"}, nil
+			return &challengeentity.Challenge{ID: id, Title: "Delete Me"}, nil
 		},
 		hasRunningInstancesFn: func(ctx context.Context, challengeID int64) (bool, error) {
 			hasRunningCalled = true
@@ -435,12 +434,12 @@ func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *t
 	createCalled := false
 
 	repo := &challengeCommandContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id, Title: "Publish Me", Status: model.ChallengeStatusDraft}, nil
+			return &challengeentity.Challenge{ID: id, Title: "Publish Me", Status: challengeentity.ChallengeStatusDraft}, nil
 		},
 		findActivePublishCheckJobByIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error) {
 			activeCalled = true
@@ -483,12 +482,12 @@ func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t 
 	now := time.Now()
 
 	repo := &challengeCommandContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id, Title: "Publish Me", UpdatedAt: now}, nil
+			return &challengeentity.Challenge{ID: id, Title: "Publish Me", UpdatedAt: now}, nil
 		},
 		findLatestPublishCheckJobByIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error) {
 			latestCalled = true
@@ -525,12 +524,12 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 	cleanupCalled := false
 
 	repo := &challengeCommandContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id, Title: "Self Check", ImageID: 7, FlagType: model.FlagTypeStatic, FlagHash: "flag{ok}", FlagSalt: "salt"}, nil
+			return &challengeentity.Challenge{ID: id, Title: "Self Check", ImageID: 7, FlagType: challengeentity.FlagTypeStatic, FlagHash: "flag{ok}", FlagSalt: "salt"}, nil
 		},
 	}
 	imageRepo := &challengeCommandImageRepoStub{
@@ -591,19 +590,19 @@ func TestChallengeServicePublishChallengePropagatesContextToRepository(t *testin
 	updateCalled := false
 
 	repo := &challengeCommandContextRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id, Title: "Publish Me", Status: model.ChallengeStatusDraft}, nil
+			return &challengeentity.Challenge{ID: id, Title: "Publish Me", Status: challengeentity.ChallengeStatusDraft}, nil
 		},
-		updateFn: func(ctx context.Context, challenge *model.Challenge) error {
+		updateFn: func(ctx context.Context, challenge *challengeentity.Challenge) error {
 			updateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if challenge.Status != model.ChallengeStatusPublished {
+			if challenge.Status != challengeentity.ChallengeStatusPublished {
 				t.Fatalf("unexpected challenge payload: %+v", challenge)
 			}
 			return nil
@@ -638,19 +637,19 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 			}
 			return &challengeentity.ChallengePublishCheckJob{ID: id, ChallengeID: 21, RequestedBy: 1001, Status: challengeentity.ChallengePublishCheckStatusRunning}, nil
 		},
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 			findChallengeCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id, Title: "Attachment Only", AttachmentURL: "/tmp/source.zip", Status: model.ChallengeStatusDraft, FlagType: model.FlagTypeStatic, FlagHash: "flag{ok}", FlagSalt: "salt"}, nil
+			return &challengeentity.Challenge{ID: id, Title: "Attachment Only", AttachmentURL: "/tmp/source.zip", Status: challengeentity.ChallengeStatusDraft, FlagType: challengeentity.FlagTypeStatic, FlagHash: "flag{ok}", FlagSalt: "salt"}, nil
 		},
-		updateFn: func(ctx context.Context, challenge *model.Challenge) error {
+		updateFn: func(ctx context.Context, challenge *challengeentity.Challenge) error {
 			publishUpdateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected publish update ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if challenge.Status != model.ChallengeStatusPublished {
+			if challenge.Status != challengeentity.ChallengeStatusPublished {
 				t.Fatalf("unexpected published challenge payload: %+v", challenge)
 			}
 			return nil

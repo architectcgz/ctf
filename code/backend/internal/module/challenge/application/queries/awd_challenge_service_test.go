@@ -5,9 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"ctf-platform/internal/model"
-	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -23,7 +22,7 @@ func TestAWDChallengeQueryServiceListChallenges(t *testing.T) {
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyHard,
+		Difficulty:     challengeentity.ChallengeDifficultyHard,
 		ServiceType:    challengeentity.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengeentity.AWDDeploymentModeSingleContainer,
 		Status:         challengeentity.AWDChallengeStatusDraft,
@@ -53,7 +52,7 @@ func TestAWDChallengeQueryServiceGetChallengeIncludesInheritedRuntimeFields(t *t
 		Name:             "Bank Portal AWD",
 		Slug:             "bank-portal-awd",
 		Category:         "web",
-		Difficulty:       model.ChallengeDifficultyHard,
+		Difficulty:       challengeentity.ChallengeDifficultyHard,
 		Description:      "multi-step banking target",
 		ServiceType:      challengeentity.AWDServiceTypeWebHTTP,
 		DeploymentMode:   challengeentity.AWDDeploymentModeSingleContainer,

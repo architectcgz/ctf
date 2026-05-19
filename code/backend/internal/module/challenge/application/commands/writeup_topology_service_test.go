@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -20,14 +19,14 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	challengeItem := &model.Challenge{
+	challengeItem := &challengeentity.Challenge{
 		Title:       "web-101",
 		Description: "desc",
 		Category:    challengecontracts.DimensionWeb,
-		Difficulty:  model.ChallengeDifficultyEasy,
+		Difficulty:  challengeentity.ChallengeDifficultyEasy,
 		Points:      100,
 		ImageID:     1,
-		Status:      model.ChallengeStatusPublished,
+		Status:      challengeentity.ChallengeStatusPublished,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -70,14 +69,14 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 	if err := db.Create(&challengeentity.Image{ID: 2, Name: "ctf/db", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image 2: %v", err)
 	}
-	challengeItem := &model.Challenge{
+	challengeItem := &challengeentity.Challenge{
 		Title:       "web-201",
 		Description: "desc",
 		Category:    challengecontracts.DimensionWeb,
-		Difficulty:  model.ChallengeDifficultyMedium,
+		Difficulty:  challengeentity.ChallengeDifficultyMedium,
 		Points:      200,
 		ImageID:     1,
-		Status:      model.ChallengeStatusDraft,
+		Status:      challengeentity.ChallengeStatusDraft,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -159,14 +158,14 @@ func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	challengeItem := &model.Challenge{
+	challengeItem := &challengeentity.Challenge{
 		Title:       "web-202",
 		Description: "desc",
 		Category:    challengecontracts.DimensionWeb,
-		Difficulty:  model.ChallengeDifficultyMedium,
+		Difficulty:  challengeentity.ChallengeDifficultyMedium,
 		Points:      200,
 		ImageID:     1,
-		Status:      model.ChallengeStatusDraft,
+		Status:      challengeentity.ChallengeStatusDraft,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -199,15 +198,15 @@ func TestTopologyServiceRejectsInjectFlagForSharedChallenge(t *testing.T) {
 	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	challengeItem := &model.Challenge{
+	challengeItem := &challengeentity.Challenge{
 		Title:           "shared-web-flag",
 		Description:     "desc",
 		Category:        challengecontracts.DimensionWeb,
-		Difficulty:      model.ChallengeDifficultyMedium,
+		Difficulty:      challengeentity.ChallengeDifficultyMedium,
 		Points:          200,
 		ImageID:         1,
-		Status:          model.ChallengeStatusDraft,
-		InstanceSharing: model.InstanceSharingShared,
+		Status:          challengeentity.ChallengeStatusDraft,
+		InstanceSharing: challengeentity.InstanceSharingShared,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}
@@ -270,14 +269,14 @@ func TestTopologyServiceAllowsFineGrainedPolicyWhenBindingTemplate(t *testing.T)
 	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	challengeItem := &model.Challenge{
+	challengeItem := &challengeentity.Challenge{
 		Title:       "web-203",
 		Description: "desc",
 		Category:    challengecontracts.DimensionWeb,
-		Difficulty:  model.ChallengeDifficultyMedium,
+		Difficulty:  challengeentity.ChallengeDifficultyMedium,
 		Points:      200,
 		ImageID:     1,
-		Status:      model.ChallengeStatusDraft,
+		Status:      challengeentity.ChallengeStatusDraft,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}

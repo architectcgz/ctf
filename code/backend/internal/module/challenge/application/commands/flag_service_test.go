@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -24,10 +24,10 @@ func newChallengeFlagRepository(db *gorm.DB) challengeports.ChallengeFlagReposit
 func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&challengeentity.Challenge{
 		ID:        1,
 		Title:     "static-flag",
-		Status:    model.ChallengeStatusDraft,
+		Status:    challengeentity.ChallengeStatusDraft,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -60,7 +60,7 @@ func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetFlagConfig() error = %v", err)
 	}
-	if cfg.FlagType != model.FlagTypeStatic || cfg.FlagPrefix != "flag" || !cfg.Configured {
+	if cfg.FlagType != challengeentity.FlagTypeStatic || cfg.FlagPrefix != "flag" || !cfg.Configured {
 		t.Fatalf("unexpected flag config: %+v", cfg)
 	}
 }
@@ -68,10 +68,10 @@ func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&challengeentity.Challenge{
 		ID:        2,
 		Title:     "dynamic-flag",
-		Status:    model.ChallengeStatusDraft,
+		Status:    challengeentity.ChallengeStatusDraft,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -112,11 +112,11 @@ func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
 func TestFlagServiceConfigureDynamicFlagRejectsSharedChallenge(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&challengeentity.Challenge{
 		ID:              22,
 		Title:           "shared-dynamic-flag",
-		Status:          model.ChallengeStatusDraft,
-		InstanceSharing: model.InstanceSharingShared,
+		Status:          challengeentity.ChallengeStatusDraft,
+		InstanceSharing: challengeentity.InstanceSharingShared,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}).Error; err != nil {
@@ -137,10 +137,10 @@ func TestFlagServiceConfigureDynamicFlagRejectsSharedChallenge(t *testing.T) {
 func TestFlagServiceConfigureRegexFlagAndValidate(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&challengeentity.Challenge{
 		ID:        3,
 		Title:     "regex-flag",
-		Status:    model.ChallengeStatusDraft,
+		Status:    challengeentity.ChallengeStatusDraft,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -173,7 +173,7 @@ func TestFlagServiceConfigureRegexFlagAndValidate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetFlagConfig() error = %v", err)
 	}
-	if cfg.FlagType != model.FlagTypeRegex || cfg.FlagRegex != `^flag\{user-[0-9]{3}\}$` || !cfg.Configured {
+	if cfg.FlagType != challengeentity.FlagTypeRegex || cfg.FlagRegex != `^flag\{user-[0-9]{3}\}$` || !cfg.Configured {
 		t.Fatalf("unexpected regex flag config: %+v", cfg)
 	}
 }
@@ -181,10 +181,10 @@ func TestFlagServiceConfigureRegexFlagAndValidate(t *testing.T) {
 func TestFlagServiceConfigureManualReviewFlag(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&challengeentity.Challenge{
 		ID:        4,
 		Title:     "manual-review",
-		Status:    model.ChallengeStatusDraft,
+		Status:    challengeentity.ChallengeStatusDraft,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -209,7 +209,7 @@ func TestFlagServiceConfigureManualReviewFlag(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetFlagConfig() error = %v", err)
 	}
-	if flagCfg.FlagType != model.FlagTypeManualReview || !flagCfg.Configured {
+	if flagCfg.FlagType != challengeentity.FlagTypeManualReview || !flagCfg.Configured {
 		t.Fatalf("unexpected manual review flag config: %+v", flagCfg)
 	}
 }
@@ -217,10 +217,10 @@ func TestFlagServiceConfigureManualReviewFlag(t *testing.T) {
 func TestFlagServiceValidateFlagRejectsUnknownFlagType(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&challengeentity.Challenge{
 		ID:        5,
 		Title:     "legacy-flag-type",
-		Status:    model.ChallengeStatusDraft,
+		Status:    challengeentity.ChallengeStatusDraft,
 		FlagType:  "shared_proof",
 		CreatedAt: now,
 		UpdatedAt: now,

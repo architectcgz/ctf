@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -49,14 +48,14 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	if err := db.Create(student).Error; err != nil {
 		t.Fatalf("create student: %v", err)
 	}
-	challengeItem := &model.Challenge{
+	challengeItem := &challengeentity.Challenge{
 		Title:       "web-301",
 		Description: "desc",
 		Category:    challengecontracts.DimensionWeb,
-		Difficulty:  model.ChallengeDifficultyEasy,
+		Difficulty:  challengeentity.ChallengeDifficultyEasy,
 		Points:      100,
 		ImageID:     1,
-		Status:      model.ChallengeStatusPublished,
+		Status:      challengeentity.ChallengeStatusPublished,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -187,14 +186,14 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 		t.Fatalf("create student: %v", err)
 	}
 
-	challengeItem := &model.Challenge{
+	challengeItem := &challengeentity.Challenge{
 		Title:       "web-302",
 		Description: "desc",
 		Category:    challengecontracts.DimensionWeb,
-		Difficulty:  model.ChallengeDifficultyEasy,
+		Difficulty:  challengeentity.ChallengeDifficultyEasy,
 		Points:      100,
 		ImageID:     1,
-		Status:      model.ChallengeStatusPublished,
+		Status:      challengeentity.ChallengeStatusPublished,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}

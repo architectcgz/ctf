@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -24,10 +23,10 @@ func TestImageServiceDeleteImageReturnsInUseWhenChallengeReferencesImage(t *test
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&challengeentity.Challenge{
 		Title:   "challenge-1",
 		ImageID: image.ID,
-		Status:  model.ChallengeStatusDraft,
+		Status:  challengeentity.ChallengeStatusDraft,
 	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
@@ -95,7 +94,7 @@ func TestImageServiceUpdateImageAllowsClearingDescription(t *testing.T) {
 		t.Fatalf("UpdateImage() error = %v", err)
 	}
 
-	var updated model.Image
+	var updated challengeentity.Image
 	if err := db.First(&updated, image.ID).Error; err != nil {
 		t.Fatalf("load image: %v", err)
 	}

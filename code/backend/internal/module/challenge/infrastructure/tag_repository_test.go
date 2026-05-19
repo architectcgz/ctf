@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"context"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -43,7 +42,7 @@ func TestTagRepositoryAttachToChallenge(t *testing.T) {
 	db := testsupport.SetupTagTestDB(t)
 	repo := NewTagRepository(db)
 
-	db.Create(&model.Challenge{ID: 1, Title: "test", Status: model.ChallengeStatusDraft})
+	db.Create(&challengeentity.Challenge{ID: 1, Title: "test", Status: challengeentity.ChallengeStatusDraft})
 	db.Create(&challengeentity.Tag{ID: 1, Name: "SQL注入", Type: challengecontracts.TagTypeVulnerability})
 
 	err := repo.AttachTagsInTx(context.Background(), 1, []int64{1})

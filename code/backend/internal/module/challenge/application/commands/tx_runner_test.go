@@ -9,7 +9,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -102,7 +101,7 @@ func (s *testChallengeImportTxStore) RejectImportedChallengeSlugConflict(ctx con
 	if slug == "" {
 		return nil
 	}
-	var existing model.Challenge
+	var existing challengeentity.Challenge
 	err := s.tx(ctx).Unscoped().
 		Select("id", "title", "package_slug").
 		Where("package_slug = ?", slug).
@@ -123,7 +122,7 @@ func (s *testChallengeImportTxStore) FindLegacyChallengeForImportedPackageCreate
 	title string,
 	category string,
 ) (*challengeports.ImportedChallenge, bool, error) {
-	var challenge model.Challenge
+	var challenge challengeentity.Challenge
 	err := s.tx(ctx).Unscoped().
 		Where("(package_slug IS NULL OR package_slug = '') AND title = ? AND category = ?", title, category).
 		First(&challenge).Error
@@ -155,7 +154,7 @@ func (s *testChallengeImportTxStore) FindLegacyChallengeForImportedPackageCreate
 }
 
 func (s *testChallengeImportTxStore) CreateImportedChallenge(ctx context.Context, challenge *challengeports.ImportedChallenge) error {
-	row := &model.Challenge{
+	row := &challengeentity.Challenge{
 		ID:             challenge.ID,
 		PackageSlug:    challenge.PackageSlug,
 		Title:          challenge.Title,
@@ -165,7 +164,7 @@ func (s *testChallengeImportTxStore) CreateImportedChallenge(ctx context.Context
 		Points:         challenge.Points,
 		ImageID:        challenge.ImageID,
 		AttachmentURL:  challenge.AttachmentURL,
-		Status:         model.ChallengeStatus(challenge.Status),
+		Status:         challengeentity.ChallengeStatus(challenge.Status),
 		FlagPrefix:     challenge.FlagPrefix,
 		TargetProtocol: challenge.TargetProtocol,
 		TargetPort:     challenge.TargetPort,
@@ -183,7 +182,7 @@ func (s *testChallengeImportTxStore) CreateImportedChallenge(ctx context.Context
 }
 
 func (s *testChallengeImportTxStore) UpdateImportedChallenge(ctx context.Context, challenge *challengeports.ImportedChallenge, updates map[string]any) error {
-	return s.tx(ctx).Unscoped().Model(&model.Challenge{}).Where("id = ?", challenge.ID).Updates(updates).Error
+	return s.tx(ctx).Unscoped().Model(&challengeentity.Challenge{}).Where("id = ?", challenge.ID).Updates(updates).Error
 }
 
 func (s *testChallengeImportTxStore) ClearPublishCheckJobs(ctx context.Context, challengeID int64) error {
@@ -201,7 +200,7 @@ func (s *testChallengeImportTxStore) ReplaceImportedHints(ctx context.Context, c
 }
 
 func (s *testChallengeImportTxStore) ApplyImportedFlagUpdates(ctx context.Context, challengeID int64, updates map[string]any) error {
-	return s.tx(ctx).Model(&model.Challenge{}).Where("id = ?", challengeID).Updates(updates).Error
+	return s.tx(ctx).Model(&challengeentity.Challenge{}).Where("id = ?", challengeID).Updates(updates).Error
 }
 
 func (s *testChallengeImportTxStore) NextChallengePackageRevisionNo(ctx context.Context, challengeID int64) (int, error) {

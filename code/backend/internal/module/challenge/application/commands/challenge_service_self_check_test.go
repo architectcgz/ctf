@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -60,12 +59,12 @@ func TestChallengeSelfCheckSkipsRuntimeWhenPrecheckFails(t *testing.T) {
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:      "no-image",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
-		FlagType:   model.FlagTypeStatic,
+		FlagType:   challengeentity.FlagTypeStatic,
 		FlagSalt:   salt,
 		FlagHash:   flagcrypto.HashStaticFlag("flag{test}", salt),
 	}
@@ -100,13 +99,13 @@ func TestChallengeSelfCheckAttachmentOnlyChallengeSkipsRuntimeStartup(t *testing
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:         "attachment-only",
 		Category:      challengecontracts.DimensionWeb,
-		Difficulty:    model.ChallengeDifficultyEasy,
+		Difficulty:    challengeentity.ChallengeDifficultyEasy,
 		Points:        100,
 		AttachmentURL: "/api/v1/challenges/attachments/imports/web-source-audit-double-wrap-01/source.html",
-		FlagType:      model.FlagTypeStatic,
+		FlagType:      challengeentity.FlagTypeStatic,
 		FlagSalt:      salt,
 		FlagHash:      flagcrypto.HashStaticFlag("flag{test}", salt),
 	}
@@ -154,13 +153,13 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:      "single-container",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
-		FlagType:   model.FlagTypeStatic,
+		FlagType:   challengeentity.FlagTypeStatic,
 		FlagSalt:   salt,
 		FlagHash:   flagcrypto.HashStaticFlag("flag{ok}", salt),
 	}
@@ -216,13 +215,13 @@ func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:      "runtime-fail",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
-		FlagType:   model.FlagTypeStatic,
+		FlagType:   challengeentity.FlagTypeStatic,
 		FlagSalt:   salt,
 		FlagHash:   flagcrypto.HashStaticFlag("flag{ok}", salt),
 	}
@@ -255,12 +254,12 @@ func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 func TestChallengeSelfCheckFailsOnInvalidRegexFlag(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:      "regex-invalid",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
-		FlagType:   model.FlagTypeRegex,
+		FlagType:   challengeentity.FlagTypeRegex,
 		FlagRegex:  "[",
 	}
 	if err := db.Create(challenge).Error; err != nil {
@@ -295,13 +294,13 @@ func TestChallengeSelfCheckManualReviewSkipsFlagValidationFailure(t *testing.T) 
 		t.Fatalf("create image: %v", err)
 	}
 
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:      "manual-review",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
-		FlagType:   model.FlagTypeManualReview,
+		FlagType:   challengeentity.FlagTypeManualReview,
 	}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)

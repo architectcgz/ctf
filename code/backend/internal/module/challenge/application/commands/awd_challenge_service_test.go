@@ -5,9 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"ctf-platform/internal/model"
-	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
@@ -22,7 +21,7 @@ func TestAWDChallengeServiceCreateChallenge(t *testing.T) {
 		Name:           "Bank Portal AWD",
 		Slug:           "bank-portal-awd",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyHard,
+		Difficulty:     challengeentity.ChallengeDifficultyHard,
 		Description:    "desc",
 		ServiceType:    string(challengeentity.AWDServiceTypeWebHTTP),
 		DeploymentMode: string(challengeentity.AWDDeploymentModeSingleContainer),
@@ -50,7 +49,7 @@ func TestAWDChallengeServiceUpdateChallenge(t *testing.T) {
 		Name:           "Legacy",
 		Slug:           "legacy",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyEasy,
+		Difficulty:     challengeentity.ChallengeDifficultyEasy,
 		ServiceType:    challengeentity.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengeentity.AWDDeploymentModeSingleContainer,
 		Status:         challengeentity.AWDChallengeStatusDraft,

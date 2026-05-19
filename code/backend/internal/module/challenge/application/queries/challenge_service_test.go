@@ -9,7 +9,6 @@ import (
 	miniredis "github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -102,7 +101,7 @@ func (s *challengeQueryRepositoryStub) BatchGetTotalAttempts(ctx context.Context
 	return map[int64]int64{}, nil
 }
 
-func challengeReadModelFromModel(source *model.Challenge) *challengeports.ChallengeReadModel {
+func challengeReadModelFromModel(source *challengeentity.Challenge) *challengeports.ChallengeReadModel {
 	if source == nil {
 		return nil
 	}
@@ -129,7 +128,7 @@ func challengeReadModelFromModel(source *model.Challenge) *challengeports.Challe
 func TestServiceGetPublishedChallengeDraftChallengeReturnsDraftAccessError(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusDraft}
+	challenge := &challengeentity.Challenge{Title: "Test", Status: challengeentity.ChallengeStatusDraft}
 	db.Create(challenge)
 
 	repo := challengeinfra.NewChallengeQueryRepository(challengeinfra.NewRepository(db))
@@ -154,7 +153,7 @@ func TestServiceGetPublishedChallengeDraftChallengeReturnsDraftAccessError(t *te
 func TestServiceGetPublishedChallengeArchivedChallengeReturnsArchivedAccessError(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusArchived}
+	challenge := &challengeentity.Challenge{Title: "Test", Status: challengeentity.ChallengeStatusArchived}
 	db.Create(challenge)
 
 	repo := challengeinfra.NewChallengeQueryRepository(challengeinfra.NewRepository(db))
@@ -217,15 +216,15 @@ func TestChallengeServiceGetPublishedChallengeTreatsChallengeQueryNotFoundAsNotF
 func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:         "Hint Challenge",
 		Description:   "desc",
 		Category:      "web",
-		Difficulty:    model.ChallengeDifficultyEasy,
+		Difficulty:    challengeentity.ChallengeDifficultyEasy,
 		Points:        100,
 		ImageID:       1,
 		AttachmentURL: "https://example.com/files/hint.zip",
-		Status:        model.ChallengeStatusDraft,
+		Status:        challengeentity.ChallengeStatusDraft,
 	}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
@@ -257,9 +256,9 @@ func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 func TestServiceGetSolvedCountCachedHonorsContextCancellation(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:  "Published",
-		Status: model.ChallengeStatusPublished,
+		Status: challengeentity.ChallengeStatusPublished,
 	}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
@@ -292,9 +291,9 @@ func TestServiceGetSolvedCountCachedHonorsContextCancellation(t *testing.T) {
 func TestServiceGetPublishedChallengeUsesSolvedCountCache(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:  "Published Cached",
-		Status: model.ChallengeStatusPublished,
+		Status: challengeentity.ChallengeStatusPublished,
 	}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
@@ -325,9 +324,9 @@ func TestServiceGetPublishedChallengeUsesSolvedCountCache(t *testing.T) {
 func TestServiceGetSolvedCountCachedWarmsCacheOnMiss(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{
+	challenge := &challengeentity.Challenge{
 		Title:  "Published Warm Cache",
-		Status: model.ChallengeStatusPublished,
+		Status: challengeentity.ChallengeStatusPublished,
 	}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
@@ -369,7 +368,7 @@ func TestServiceGetSolvedCountCachedWarmsCacheOnMiss(t *testing.T) {
 func TestServiceGetChallengeHonorsCancellation(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{Title: "ctx get", Status: model.ChallengeStatusDraft}
+	challenge := &challengeentity.Challenge{Title: "ctx get", Status: challengeentity.ChallengeStatusDraft}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
@@ -387,7 +386,7 @@ func TestServiceGetChallengeHonorsCancellation(t *testing.T) {
 func TestServiceListChallengesHonorsCancellation(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &model.Challenge{Title: "ctx list", Status: model.ChallengeStatusDraft}
+	challenge := &challengeentity.Challenge{Title: "ctx list", Status: challengeentity.ChallengeStatusDraft}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}

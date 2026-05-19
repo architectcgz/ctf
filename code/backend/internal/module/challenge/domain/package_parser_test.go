@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 func TestParseChallengePackageDirNormalizesUnknownDifficultyToEasy(t *testing.T) {
@@ -37,8 +37,8 @@ flag:
 	if err != nil {
 		t.Fatalf("ParseChallengePackageDir() error = %v", err)
 	}
-	if parsed.Difficulty != model.ChallengeDifficultyEasy {
-		t.Fatalf("unexpected difficulty: got %q want %q", parsed.Difficulty, model.ChallengeDifficultyEasy)
+	if parsed.Difficulty != challengeentity.ChallengeDifficultyEasy {
+		t.Fatalf("unexpected difficulty: got %q want %q", parsed.Difficulty, challengeentity.ChallengeDifficultyEasy)
 	}
 }
 
@@ -303,7 +303,7 @@ runtime:
 	if err != nil {
 		t.Fatalf("ParseChallengePackageDir() error = %v", err)
 	}
-	if parsed.RuntimeProtocol != model.ChallengeTargetProtocolTCP {
+	if parsed.RuntimeProtocol != challengeentity.ChallengeTargetProtocolTCP {
 		t.Fatalf("unexpected runtime protocol: got %q", parsed.RuntimeProtocol)
 	}
 	if parsed.RuntimePort != 31337 {
