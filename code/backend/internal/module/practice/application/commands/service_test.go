@@ -767,10 +767,10 @@ func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(ctx c
 }
 
 type stubPracticeImageStore struct {
-	findByIDFn func(ctx context.Context, id int64) (*model.Image, error)
+	findByIDFn func(ctx context.Context, id int64) (*challengeentity.Image, error)
 }
 
-func (s *stubPracticeImageStore) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+func (s *stubPracticeImageStore) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}

@@ -1353,12 +1353,12 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	lookups := make([]int64, 0, 2)
 	service := &Service{
 		imageRepo: &stubPracticeImageStore{
-			findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
+			findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
 				}
 				lookups = append(lookups, id)
-				return &model.Image{ID: id, Name: fmt.Sprintf("repo/%d", id), Tag: "latest", Status: model.ImageStatusAvailable}, nil
+				return &challengeentity.Image{ID: id, Name: fmt.Sprintf("repo/%d", id), Tag: "latest", Status: challengeentity.ImageStatusAvailable}, nil
 			},
 		},
 		config: &config.Config{},

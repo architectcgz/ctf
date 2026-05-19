@@ -13,10 +13,15 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/crypto"
+)
+
+const (
+	contestFixtureChallengeDifficultyMedium = "medium"
+	contestFixtureChallengeStatusPublished  = "published"
+	contestFixtureChallengeFlagTypeStatic   = "static"
 )
 
 const (
@@ -143,14 +148,14 @@ func CreateAWDRoundFixtureWithWindow(t *testing.T, db *gorm.DB, roundID, contest
 func CreateAWDChallengeFixture(t *testing.T, db *gorm.DB, challengeID int64, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&contestChallengeRecord{
 		ID:         challengeID,
 		Title:      "awd-service",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: contestFixtureChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     contestFixtureChallengeStatusPublished,
+		FlagType:   contestFixtureChallengeFlagTypeStatic,
 		FlagPrefix: "awd",
 		CreatedAt:  now,
 		UpdatedAt:  now,
@@ -329,7 +334,7 @@ func DefaultAWDContestServiceID(contestID, challengeID int64) int64 {
 func buildAWDContestServiceFixtureSnapshot(t *testing.T, db *gorm.DB, challengeID int64) string {
 	t.Helper()
 
-	var challenge model.Challenge
+	var challenge contestChallengeRecord
 	if err := db.WithContext(context.Background()).Where("id = ?", challengeID).First(&challenge).Error; err != nil {
 		t.Fatalf("load awd challenge fixture: %v", err)
 	}

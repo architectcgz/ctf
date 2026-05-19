@@ -1,8 +1,8 @@
 package domain
 
-import "ctf-platform/internal/model"
+import practiceentity "ctf-platform/internal/module/practice/entity"
 
-func CalculateChallengeScore(challenge *model.Challenge) int {
+func CalculateChallengeScore(challenge *practiceentity.Challenge) int {
 	if challenge == nil {
 		return 0
 	}

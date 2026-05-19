@@ -5,13 +5,12 @@ import (
 
 	"gorm.io/gorm/clause"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 )
 
-func (r *Repository) FindChallengeScore(ctx context.Context, challengeID int64) (*model.Challenge, error) {
-	var challenge model.Challenge
+func (r *Repository) FindChallengeScore(ctx context.Context, challengeID int64) (*practiceentity.Challenge, error) {
+	var challenge practiceentity.Challenge
 	if err := r.dbWithContext(ctx).
 		Select("id, points, difficulty").
 		Where("id = ?", challengeID).
@@ -21,12 +20,12 @@ func (r *Repository) FindChallengeScore(ctx context.Context, challengeID int64) 
 	return &challenge, nil
 }
 
-func (r *Repository) FindChallengesScores(ctx context.Context, challengeIDs []int64) ([]model.Challenge, error) {
+func (r *Repository) FindChallengesScores(ctx context.Context, challengeIDs []int64) ([]practiceentity.Challenge, error) {
 	if len(challengeIDs) == 0 {
-		return []model.Challenge{}, nil
+		return []practiceentity.Challenge{}, nil
 	}
 
-	var challenges []model.Challenge
+	var challenges []practiceentity.Challenge
 	err := r.dbWithContext(ctx).
 		Select("id, points, difficulty").
 		Where("id IN ?", challengeIDs).

@@ -7,7 +7,6 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -27,8 +26,8 @@ func SetupContestTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&contestentity.Contest{},
 		&contestentity.ContestStatusTransition{},
-		&model.Challenge{},
-		&model.Image{},
+		&contestChallengeRecord{},
+		&contestImageRecord{},
 		&challengecontracts.AWDChallenge{},
 		&contestentity.ContestAWDService{},
 		&identitycontracts.User{},

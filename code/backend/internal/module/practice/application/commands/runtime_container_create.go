@@ -92,7 +92,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
-	if imageItem.Status != model.ImageStatusAvailable {
+	if imageItem.Status != challengecontracts.ImageStatusAvailable {
 		return errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("image %d is not available", imageItem.ID))
 	}
 
@@ -100,7 +100,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 		"FLAG": flag,
 	}
 
-	imageRef := model.BuildRuntimeImageRef(imageItem)
+	imageRef := challengecontracts.BuildRuntimeImageRef(imageItem)
 	targetProtocol := normalizeChallengeTargetProtocol(chal.TargetProtocol)
 	if isAWDInstance(instance) || targetProtocol == model.ChallengeTargetProtocolTCP || chal.TargetPort > 0 {
 		awdWorkspacePlan, err := s.prepareAWDDefenseWorkspacePlan(ctx, instance, chal)
@@ -375,10 +375,10 @@ func (s *Service) resolveAvailableImageRef(ctx context.Context, imageID int64) (
 	if err != nil {
 		return "", errcode.ErrContainerCreateFailed.WithCause(err)
 	}
-	if imageItem.Status != model.ImageStatusAvailable {
+	if imageItem.Status != challengecontracts.ImageStatusAvailable {
 		return "", errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("image %d is not available", imageItem.ID))
 	}
-	return model.BuildRuntimeImageRef(imageItem), nil
+	return challengecontracts.BuildRuntimeImageRef(imageItem), nil
 }
 
 func applyAWDCheckerTokenToTopologyRequest(req *practiceports.TopologyCreateRequest, checkerTokenEnv, checkerToken string) {

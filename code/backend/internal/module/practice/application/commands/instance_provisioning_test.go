@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -238,11 +239,11 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 		nil,
 		nil,
 		&stubPracticeImageStore{
-			findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
+			findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
 				}
-				return &model.Image{ID: id, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable}, nil
+				return &challengeentity.Image{ID: id, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable}, nil
 			},
 		},
 		instanceStore,
@@ -309,8 +310,8 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 		nil,
 		nil,
 		&stubPracticeImageStore{
-			findByIDFn: func(context.Context, int64) (*model.Image, error) {
-				return &model.Image{ID: 301, Name: "ctf/pwn", Tag: "v1", Status: model.ImageStatusAvailable}, nil
+			findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
+				return &challengeentity.Image{ID: 301, Name: "ctf/pwn", Tag: "v1", Status: challengeentity.ImageStatusAvailable}, nil
 			},
 		},
 		instanceStore,

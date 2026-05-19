@@ -450,8 +450,8 @@ type PracticeUserProgressCache interface {
 }
 
 type PracticeChallengeScoreRepository interface {
-	FindChallengeScore(ctx context.Context, challengeID int64) (*model.Challenge, error)
-	FindChallengesScores(ctx context.Context, challengeIDs []int64) ([]model.Challenge, error)
+	FindChallengeScore(ctx context.Context, challengeID int64) (*practiceentity.Challenge, error)
+	FindChallengesScores(ctx context.Context, challengeIDs []int64) ([]practiceentity.Challenge, error)
 }
 
 type PracticeSolvedChallengeRepository interface {
