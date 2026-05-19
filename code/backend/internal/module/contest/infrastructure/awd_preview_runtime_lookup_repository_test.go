@@ -7,7 +7,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
@@ -27,17 +26,6 @@ func (s awdPreviewRuntimeChallengeSourceStub) ListAWDChallenges(context.Context,
 	return nil, 0, nil
 }
 
-type awdPreviewRuntimeImageSourceStub struct {
-	findByIDFn func(context.Context, int64) (*model.Image, error)
-}
-
-func (s awdPreviewRuntimeImageSourceStub) FindByID(ctx context.Context, id int64) (*model.Image, error) {
-	if s.findByIDFn != nil {
-		return s.findByIDFn(ctx, id)
-	}
-	return &model.Image{ID: id}, nil
-}
-
 func TestAWDPreviewRuntimeChallengeRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
@@ -52,20 +40,6 @@ func TestAWDPreviewRuntimeChallengeRepositoryMapsNotFoundErrors(t *testing.T) {
 	}
 }
 
-func TestAWDPreviewRuntimeImageRepositoryMapsNotFoundErrors(t *testing.T) {
-	t.Parallel()
-
-	repo := NewAWDPreviewRuntimeImageRepository(awdPreviewRuntimeImageSourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Image, error) {
-			return nil, gorm.ErrRecordNotFound
-		},
-	})
-
-	if _, err := repo.FindByID(context.Background(), 1); !errors.Is(err, contestports.ErrContestAWDPreviewImageNotFound) {
-		t.Fatalf("error = %v, want %v", err, contestports.ErrContestAWDPreviewImageNotFound)
-	}
-}
-
 func TestAWDPreviewRuntimeLookupRepositoriesPassThroughNonNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
@@ -75,16 +49,7 @@ func TestAWDPreviewRuntimeLookupRepositoriesPassThroughNonNotFoundErrors(t *test
 			return nil, expectedErr
 		},
 	})
-	imageRepo := NewAWDPreviewRuntimeImageRepository(awdPreviewRuntimeImageSourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Image, error) {
-			return nil, expectedErr
-		},
-	})
-
 	if _, err := challengeRepo.FindAWDChallengeByID(context.Background(), 1); !errors.Is(err, expectedErr) {
 		t.Fatalf("challenge error = %v, want %v", err, expectedErr)
-	}
-	if _, err := imageRepo.FindByID(context.Background(), 2); !errors.Is(err, expectedErr) {
-		t.Fatalf("image error = %v, want %v", err, expectedErr)
 	}
 }

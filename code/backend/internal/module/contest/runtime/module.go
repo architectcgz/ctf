@@ -118,7 +118,6 @@ func newModuleDeps(deps Deps) *moduleDeps {
 	participationLookup := contestinfra.NewParticipationRegistrationRepository(participationRepo)
 	submissionLookup := contestinfra.NewSubmissionRegistrationRepository(submissionRepo)
 	previewRuntimeChallengeLookup := contestinfra.NewAWDPreviewRuntimeChallengeRepository(deps.AWDChallengeQueryRepo)
-	previewRuntimeImageLookup := contestinfra.NewAWDPreviewRuntimeImageRepository(deps.ImageRepo)
 	challengeCatalogCmd := contestinfra.NewContestChallengeLookupAdapter(deps.ChallengeCatalog)
 	awdChallengeQueryCmd := contestinfra.NewContestAWDChallengeLookupAdapter(deps.AWDChallengeQueryRepo)
 
@@ -145,7 +144,7 @@ func newModuleDeps(deps Deps) *moduleDeps {
 		awdChallengeQueryCmd:  awdChallengeQueryCmd,
 		previewChallengeRepo:  previewRuntimeChallengeLookup,
 		imageRepo:             deps.ImageRepo,
-		previewImageRepo:      previewRuntimeImageLookup,
+		previewImageRepo:      deps.ImageRepo,
 		flagValidator:         deps.FlagValidator,
 		containerFiles:        deps.ContainerFiles,
 		runtimeProbe:          deps.RuntimeProbe,

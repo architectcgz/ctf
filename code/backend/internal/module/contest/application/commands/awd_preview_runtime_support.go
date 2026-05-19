@@ -8,7 +8,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
@@ -17,6 +16,7 @@ import (
 )
 
 const defaultAWDPreviewFlag = "flag{preview}"
+const contestPreviewImageStatusAvailable = "available"
 
 func normalizeAWDPreviewFlag(value string) string {
 	if strings.TrimSpace(value) == "" {
@@ -201,10 +201,26 @@ func (s *AWDService) resolvePreviewImageRefByID(ctx context.Context, imageID int
 		}
 		return "", errcode.ErrInternal.WithCause(err)
 	}
-	if imageItem.Status != model.ImageStatusAvailable {
+	if imageItem.Status != contestPreviewImageStatusAvailable {
 		return "", errcode.ErrInvalidParams.WithCause(fmt.Errorf("preview image %d status=%s", imageItem.ID, imageItem.Status))
 	}
-	return model.BuildRuntimeImageRef(imageItem), nil
+	return buildContestPreviewImageRef(imageItem.Name, imageItem.Tag, imageItem.Digest), nil
+}
+
+func buildContestPreviewImageRef(name, tag, digest string) string {
+	trimmedName := strings.TrimSpace(name)
+	trimmedTag := strings.TrimSpace(tag)
+	trimmedDigest := strings.TrimSpace(digest)
+	if trimmedName == "" {
+		return ""
+	}
+	if trimmedDigest != "" {
+		return fmt.Sprintf("%s@%s", trimmedName, trimmedDigest)
+	}
+	if trimmedTag == "" {
+		return trimmedName
+	}
+	return fmt.Sprintf("%s:%s", trimmedName, trimmedTag)
 }
 
 func readStringFromAny(value any) string {

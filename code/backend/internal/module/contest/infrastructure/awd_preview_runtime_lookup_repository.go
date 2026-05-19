@@ -6,7 +6,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -35,24 +34,4 @@ func (r *AWDPreviewRuntimeChallengeRepository) ListAWDChallenges(ctx context.Con
 	return r.source.ListAWDChallenges(ctx, query)
 }
 
-type AWDPreviewRuntimeImageRepository struct {
-	source challengecontracts.ImageStore
-}
-
-func NewAWDPreviewRuntimeImageRepository(source challengecontracts.ImageStore) *AWDPreviewRuntimeImageRepository {
-	if source == nil {
-		return nil
-	}
-	return &AWDPreviewRuntimeImageRepository{source: source}
-}
-
-func (r *AWDPreviewRuntimeImageRepository) FindByID(ctx context.Context, id int64) (*model.Image, error) {
-	image, err := r.source.FindByID(ctx, id)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, contestports.ErrContestAWDPreviewImageNotFound
-	}
-	return image, err
-}
-
 var _ challengeports.AWDChallengeQueryRepository = (*AWDPreviewRuntimeChallengeRepository)(nil)
-var _ challengecontracts.ImageStore = (*AWDPreviewRuntimeImageRepository)(nil)

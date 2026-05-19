@@ -152,7 +152,7 @@ func newAWDRoundUpdaterForTest(db *gorm.DB, redisClient *redis.Client, cfg confi
 }
 
 func newAWDPreviewRuntimeLookupsForTest(db *gorm.DB) (challengecontracts.ImageStore, challengeports.AWDChallengeQueryRepository) {
-	return contestinfra.NewAWDPreviewRuntimeImageRepository(challengeinfra.NewImageRepository(db)),
+	return challengeinfra.NewImageRepository(db),
 		contestinfra.NewAWDPreviewRuntimeChallengeRepository(challengeinfra.NewRepository(db))
 }
 
