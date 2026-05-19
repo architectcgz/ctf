@@ -10,9 +10,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	response "ctf-platform/internal/httpresponse"
 	ratelimitpkg "ctf-platform/internal/infrastructure/ratelimit"
 	"ctf-platform/pkg/errcode"
-	"ctf-platform/pkg/response"
 )
 
 func RateLimitByIP(checker *ratelimitpkg.Checker, scope string, limit int, window time.Duration) gin.HandlerFunc {

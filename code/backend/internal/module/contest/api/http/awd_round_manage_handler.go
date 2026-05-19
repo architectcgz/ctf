@@ -3,8 +3,8 @@ package http
 import (
 	"github.com/gin-gonic/gin"
 
+	response "ctf-platform/internal/httpresponse"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	"ctf-platform/pkg/response"
 )
 
 func (h *AWDHandler) CreateRound(c *gin.Context) {

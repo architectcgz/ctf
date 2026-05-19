@@ -1,9 +1,9 @@
 package http
 
 import (
+	response "ctf-platform/internal/httpresponse"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )

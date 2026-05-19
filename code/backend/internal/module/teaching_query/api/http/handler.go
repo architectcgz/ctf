@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
-	"ctf-platform/pkg/response"
 )
 
 type Handler struct {

@@ -2,7 +2,7 @@ package http
 
 import (
 	"ctf-platform/internal/authctx"
-	"ctf-platform/pkg/response"
+	response "ctf-platform/internal/httpresponse"
 
 	"github.com/gin-gonic/gin"
 )

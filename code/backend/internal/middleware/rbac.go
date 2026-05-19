@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	response "ctf-platform/internal/httpresponse"
 	"ctf-platform/pkg/errcode"
-	"ctf-platform/pkg/response"
 )
 
 var roleLevels = map[string]int{

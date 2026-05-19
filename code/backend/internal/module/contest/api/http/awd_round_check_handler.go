@@ -2,9 +2,9 @@ package http
 
 import (
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )

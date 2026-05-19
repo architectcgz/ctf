@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	contestcommands "ctf-platform/internal/module/contest/application/commands"
-	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )

@@ -10,10 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	"ctf-platform/pkg/response"
 )
 
 type AWDChallengeHandler struct {

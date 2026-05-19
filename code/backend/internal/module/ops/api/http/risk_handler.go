@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	response "ctf-platform/internal/httpresponse"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
-	"ctf-platform/pkg/response"
 )
 
 type riskQueryService interface {

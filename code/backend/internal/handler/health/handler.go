@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	response "ctf-platform/internal/httpresponse"
 	"ctf-platform/internal/service/health"
-	"ctf-platform/pkg/response"
 )
 
 type Handler struct {

@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	response "ctf-platform/internal/httpresponse"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
-	"ctf-platform/pkg/response"
 )
 
 type adminCommandService interface {

@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
-	"ctf-platform/pkg/response"
 )
 
 type skillProfileService interface {

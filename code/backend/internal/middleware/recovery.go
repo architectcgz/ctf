@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"ctf-platform/pkg/response"
+	response "ctf-platform/internal/httpresponse"
 )
 
 func Recovery(log *zap.Logger) gin.HandlerFunc {

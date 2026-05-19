@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	response "ctf-platform/internal/httpresponse"
 	opsports "ctf-platform/internal/module/ops/ports"
-	"ctf-platform/pkg/response"
 )
 
 type dashboardQueryService interface {

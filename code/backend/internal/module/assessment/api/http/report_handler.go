@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	assessmentcommands "ctf-platform/internal/module/assessment/application/commands"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
-	"ctf-platform/pkg/response"
 )
 
 type reportService interface {

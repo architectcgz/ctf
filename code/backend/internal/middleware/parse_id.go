@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	response "ctf-platform/internal/httpresponse"
 	"ctf-platform/pkg/errcode"
-	"ctf-platform/pkg/response"
 )
 
 // ParseChallengeID 解析路径参数中的 challenge ID

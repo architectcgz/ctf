@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	assessmentcommands "ctf-platform/internal/module/assessment/application/commands"
 	assessmentqueries "ctf-platform/internal/module/assessment/application/queries"
-	"ctf-platform/pkg/response"
 )
 
 type teacherAWDReviewService interface {

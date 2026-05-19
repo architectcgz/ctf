@@ -12,12 +12,12 @@ import (
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	"ctf-platform/internal/middleware"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
-	"ctf-platform/pkg/response"
 )
 
 type adminRouteDeps struct {

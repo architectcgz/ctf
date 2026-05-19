@@ -24,6 +24,7 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
+	response "ctf-platform/internal/httpresponse"
 	authhttp "ctf-platform/internal/module/auth/api/http"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
@@ -40,7 +41,6 @@ import (
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
-	"ctf-platform/pkg/response"
 )
 
 type testEnvelope struct {

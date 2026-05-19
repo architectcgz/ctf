@@ -4,9 +4,9 @@ import (
 	"context"
 	"strconv"
 
+	response "ctf-platform/internal/httpresponse"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/errcode"
-	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )

@@ -3,7 +3,7 @@ package http
 import (
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/pkg/response"
+	response "ctf-platform/internal/httpresponse"
 )
 
 func (h *AWDHandler) UpsertServiceCheck(c *gin.Context) {

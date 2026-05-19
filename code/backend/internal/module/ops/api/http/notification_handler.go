@@ -10,10 +10,10 @@ import (
 	xws "golang.org/x/net/websocket"
 
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
-	"ctf-platform/pkg/response"
 	ctfws "ctf-platform/pkg/websocket"
 )
 

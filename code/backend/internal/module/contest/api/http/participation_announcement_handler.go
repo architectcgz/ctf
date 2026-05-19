@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/pkg/response"
+	response "ctf-platform/internal/httpresponse"
 )
 
 func (h *ParticipationHandler) CreateAnnouncement(c *gin.Context) {

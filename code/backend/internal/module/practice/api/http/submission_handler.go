@@ -7,9 +7,9 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/pkg/errcode"
-	"ctf-platform/pkg/response"
 )
 
 // SubmitFlag 提交 Flag

@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	response "ctf-platform/internal/httpresponse"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	"ctf-platform/pkg/response"
 )
 
 type TopologyHandler struct {

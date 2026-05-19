@@ -1,7 +1,7 @@
 package http
 
 import (
-	"ctf-platform/pkg/response"
+	response "ctf-platform/internal/httpresponse"
 
 	"github.com/gin-gonic/gin"
 )

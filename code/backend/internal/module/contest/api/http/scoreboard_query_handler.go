@@ -3,8 +3,8 @@ package http
 import (
 	"strconv"
 
+	response "ctf-platform/internal/httpresponse"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
-	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )

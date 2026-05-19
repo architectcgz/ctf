@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
+	response "ctf-platform/internal/httpresponse"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
-	"ctf-platform/pkg/response"
 )
 
 func Auth(tokenService authcontracts.TokenService, cookieName string, users ...identitycontracts.UserLookupRepository) gin.HandlerFunc {
