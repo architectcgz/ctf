@@ -7,7 +7,7 @@ import (
 
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	platformevents "ctf-platform/internal/platform/events"
-	ctfws "ctf-platform/pkg/websocket"
+	ctfws "ctf-platform/internal/websocket"
 )
 
 type stubContestRealtimeBroadcaster struct {

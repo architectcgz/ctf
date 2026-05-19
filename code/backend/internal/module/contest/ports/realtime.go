@@ -3,7 +3,7 @@ package ports
 import (
 	"fmt"
 
-	ctfws "ctf-platform/pkg/websocket"
+	ctfws "ctf-platform/internal/websocket"
 )
 
 type RealtimeBroadcaster interface {

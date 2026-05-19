@@ -14,7 +14,6 @@ import (
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
-	ctfws "ctf-platform/pkg/websocket"
 )
 
 type notificationAuthContextKey struct{}
@@ -28,15 +27,19 @@ type notificationQueryService interface {
 	GetNotifications(ctx context.Context, userID int64, query *opsqry.NotificationQuery) ([]opsqry.NotificationInfo, int64, int, int, error)
 }
 
+type notificationSocketManager interface {
+	Serve(user authctx.CurrentUser, conn *xws.Conn)
+}
+
 type NotificationHandler struct {
 	commands     notificationCommandService
 	queries      notificationQueryService
 	tokenService authcontracts.TokenService
-	manager      *ctfws.Manager
+	manager      notificationSocketManager
 	logger       *zap.Logger
 }
 
-func NewNotificationHandler(commands notificationCommandService, queries notificationQueryService, tokenService authcontracts.TokenService, manager *ctfws.Manager, logger *zap.Logger) *NotificationHandler {
+func NewNotificationHandler(commands notificationCommandService, queries notificationQueryService, tokenService authcontracts.TokenService, manager notificationSocketManager, logger *zap.Logger) *NotificationHandler {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

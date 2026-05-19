@@ -20,8 +20,8 @@ import (
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
+	ctfws "ctf-platform/internal/websocket"
 	"ctf-platform/pkg/errcode"
-	ctfws "ctf-platform/pkg/websocket"
 )
 
 type NotificationService struct {

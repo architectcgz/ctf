@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/authctx"
+	ctfws "ctf-platform/internal/websocket"
 )
 
 func TestManagerSendToChannelOnlyDeliversSubscribedClients(t *testing.T) {
@@ -20,7 +21,7 @@ func TestManagerSendToChannelOnlyDeliversSubscribedClients(t *testing.T) {
 	subscribed := &client{
 		id:       "subscribed",
 		user:     authctx.CurrentUser{UserID: 1001},
-		send:     make(chan Envelope, 1),
+		send:     make(chan ctfws.Envelope, 1),
 		stop:     make(chan struct{}),
 		channels: map[string]struct{}{"contest:42:announcements": {}},
 		logger:   zap.NewNop(),
@@ -28,7 +29,7 @@ func TestManagerSendToChannelOnlyDeliversSubscribedClients(t *testing.T) {
 	otherChannel := &client{
 		id:       "other",
 		user:     authctx.CurrentUser{UserID: 1002},
-		send:     make(chan Envelope, 1),
+		send:     make(chan ctfws.Envelope, 1),
 		stop:     make(chan struct{}),
 		channels: map[string]struct{}{"contest:99:announcements": {}},
 		logger:   zap.NewNop(),
@@ -36,7 +37,7 @@ func TestManagerSendToChannelOnlyDeliversSubscribedClients(t *testing.T) {
 	plainClient := &client{
 		id:     "plain",
 		user:   authctx.CurrentUser{UserID: 1003},
-		send:   make(chan Envelope, 1),
+		send:   make(chan ctfws.Envelope, 1),
 		stop:   make(chan struct{}),
 		logger: zap.NewNop(),
 	}
@@ -45,7 +46,7 @@ func TestManagerSendToChannelOnlyDeliversSubscribedClients(t *testing.T) {
 	manager.register(otherChannel)
 	manager.register(plainClient)
 
-	sent := manager.SendToChannel("contest:42:announcements", Envelope{Type: "contest.announcement.created"})
+	sent := manager.SendToChannel("contest:42:announcements", ctfws.Envelope{Type: "contest.announcement.created"})
 	if sent != 1 {
 		t.Fatalf("expected 1 channel delivery, got %d", sent)
 	}
@@ -84,7 +85,7 @@ func TestManagerSendToUserStillDeliversAcrossClientTypes(t *testing.T) {
 	channelClient := &client{
 		id:       "channel-client",
 		user:     authctx.CurrentUser{UserID: 2001},
-		send:     make(chan Envelope, 1),
+		send:     make(chan ctfws.Envelope, 1),
 		stop:     make(chan struct{}),
 		channels: map[string]struct{}{"contest:7:scoreboard": {}},
 		logger:   zap.NewNop(),
@@ -92,7 +93,7 @@ func TestManagerSendToUserStillDeliversAcrossClientTypes(t *testing.T) {
 	plainClient := &client{
 		id:     "plain-client",
 		user:   authctx.CurrentUser{UserID: 2001},
-		send:   make(chan Envelope, 1),
+		send:   make(chan ctfws.Envelope, 1),
 		stop:   make(chan struct{}),
 		logger: zap.NewNop(),
 	}
@@ -100,7 +101,7 @@ func TestManagerSendToUserStillDeliversAcrossClientTypes(t *testing.T) {
 	manager.register(channelClient)
 	manager.register(plainClient)
 
-	sent := manager.SendToUser(2001, Envelope{Type: "notification.created"})
+	sent := manager.SendToUser(2001, ctfws.Envelope{Type: "notification.created"})
 	if sent != 2 {
 		t.Fatalf("expected 2 user deliveries, got %d", sent)
 	}

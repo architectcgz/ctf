@@ -15,8 +15,8 @@ import (
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
+	ctfws "ctf-platform/internal/websocket"
 	"ctf-platform/pkg/errcode"
-	ctfws "ctf-platform/pkg/websocket"
 )
 
 type stubNotificationRepository struct {

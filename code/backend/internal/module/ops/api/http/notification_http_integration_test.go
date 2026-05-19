@@ -21,6 +21,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
+	ctfws "ctf-platform/internal/infrastructure/websocket"
 	"ctf-platform/internal/middleware"
 	authhttp "ctf-platform/internal/module/auth/api/http"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
@@ -36,7 +37,6 @@ import (
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/internal/validation"
-	ctfws "ctf-platform/pkg/websocket"
 )
 
 type notificationIntegrationEnv struct {

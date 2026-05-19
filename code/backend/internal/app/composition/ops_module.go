@@ -4,10 +4,10 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/auditlog"
+	websocketpkg "ctf-platform/internal/infrastructure/websocket"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opsruntime "ctf-platform/internal/module/ops/runtime"
-	websocketpkg "ctf-platform/pkg/websocket"
 )
 
 type OpsModule struct {

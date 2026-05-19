@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	opsentity "ctf-platform/internal/module/ops/entity"
-	ctfws "ctf-platform/pkg/websocket"
+	ctfws "ctf-platform/internal/websocket"
 )
 
 var ErrNotificationNotFound = errors.New("ops notification not found")

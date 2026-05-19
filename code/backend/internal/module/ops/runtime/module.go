@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
+	websocketpkg "ctf-platform/internal/infrastructure/websocket"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
@@ -14,7 +15,6 @@ import (
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
 	platformevents "ctf-platform/internal/platform/events"
-	websocketpkg "ctf-platform/pkg/websocket"
 )
 
 type Module struct {

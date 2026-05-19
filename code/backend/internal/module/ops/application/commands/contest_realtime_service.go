@@ -8,7 +8,7 @@ import (
 
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	platformevents "ctf-platform/internal/platform/events"
-	ctfws "ctf-platform/pkg/websocket"
+	ctfws "ctf-platform/internal/websocket"
 )
 
 const awdPreviewProgressMessageType = "awd.preview.progress"

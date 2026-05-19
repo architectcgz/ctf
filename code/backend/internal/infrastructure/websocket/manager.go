@@ -11,13 +11,8 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
+	wscontract "ctf-platform/internal/websocket"
 )
-
-type Envelope struct {
-	Type      string    `json:"type"`
-	Payload   any       `json:"payload,omitempty"`
-	Timestamp time.Time `json:"timestamp"`
-}
 
 type RetryAdvice struct {
 	Strategy       string `json:"strategy"`
@@ -46,7 +41,7 @@ type client struct {
 	id       string
 	user     authctx.CurrentUser
 	conn     *xws.Conn
-	send     chan Envelope
+	send     chan wscontract.Envelope
 	stop     chan struct{}
 	channels map[string]struct{}
 	closeMu  sync.Once
@@ -87,7 +82,7 @@ func (m *Manager) ServeChannels(user authctx.CurrentUser, conn *xws.Conn, channe
 		id:       clientID,
 		user:     user,
 		conn:     conn,
-		send:     make(chan Envelope, 16),
+		send:     make(chan wscontract.Envelope, 16),
 		stop:     make(chan struct{}),
 		channels: channelSet,
 		logger:   m.logger.With(zap.Int64("user_id", user.UserID), zap.String("client_id", clientID)),
@@ -96,7 +91,7 @@ func (m *Manager) ServeChannels(user authctx.CurrentUser, conn *xws.Conn, channe
 	m.register(connClient)
 	defer m.unregister(connClient)
 
-	connClient.enqueue(Envelope{
+	connClient.enqueue(wscontract.Envelope{
 		Type: "system.connected",
 		Payload: connectedPayload{
 			UserID:                   user.UserID,
@@ -121,7 +116,7 @@ func (m *Manager) ServeChannels(user authctx.CurrentUser, conn *xws.Conn, channe
 	<-errCh
 }
 
-func (m *Manager) Broadcast(message Envelope) int {
+func (m *Manager) Broadcast(message wscontract.Envelope) int {
 	m.mu.RLock()
 	clients := make([]*client, 0)
 	for _, group := range m.clients {
@@ -140,7 +135,7 @@ func (m *Manager) Broadcast(message Envelope) int {
 	return sent
 }
 
-func (m *Manager) SendToUser(userID int64, message Envelope) int {
+func (m *Manager) SendToUser(userID int64, message wscontract.Envelope) int {
 	m.mu.RLock()
 	group := m.clients[userID]
 	clients := make([]*client, 0, len(group))
@@ -158,7 +153,7 @@ func (m *Manager) SendToUser(userID int64, message Envelope) int {
 	return sent
 }
 
-func (m *Manager) SendToChannel(channel string, message Envelope) int {
+func (m *Manager) SendToChannel(channel string, message wscontract.Envelope) int {
 	m.mu.RLock()
 	group := m.channels[channel]
 	clients := make([]*client, 0, len(group))
@@ -263,7 +258,7 @@ func (m *Manager) writeLoop(connClient *client) error {
 	}
 }
 
-func (c *client) enqueue(message Envelope) bool {
+func (c *client) enqueue(message wscontract.Envelope) bool {
 	select {
 	case <-c.stop:
 		return false
