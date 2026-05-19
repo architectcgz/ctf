@@ -178,7 +178,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeRespBase(source model.Challenge
 	contractsChallengeResp.Points = source.Points
 	contractsChallengeResp.ImageID = source.ImageID
 	contractsChallengeResp.AttachmentURL = source.AttachmentURL
-	contractsChallengeResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
+	contractsChallengeResp.InstanceSharing = string(source.InstanceSharing)
 	contractsChallengeResp.Status = string(source.Status)
 	if source.CreatedBy != nil {
 		xint64 := *source.CreatedBy
@@ -557,22 +557,6 @@ func (c *ChallengeResponseMapperImpl) ToTopologyTrafficPolicyResps(source []cont
 		}
 	}
 	return contractsTopologyTrafficPolicyRespList
-}
-func (c *ChallengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
-	var modelInstanceSharing model.InstanceSharing
-	switch source {
-	case model.InstanceSharingPerTeam:
-		modelInstanceSharing = model.InstanceSharingPerTeam
-	case model.InstanceSharingPerUser:
-		modelInstanceSharing = model.InstanceSharingPerUser
-	case model.InstanceSharingShared:
-		modelInstanceSharing = model.InstanceSharingShared
-	// Skipped ShareScopePerTeam(per_team) -> ShareScopePerTeam(per_team) because it duplicates InstanceSharingPerTeam(per_team) -> InstanceSharingPerTeam(per_team)
-	// Skipped ShareScopePerUser(per_user) -> ShareScopePerUser(per_user) because it duplicates InstanceSharingPerUser(per_user) -> InstanceSharingPerUser(per_user)
-	// Skipped ShareScopeShared(shared) -> ShareScopeShared(shared) because it duplicates InstanceSharingShared(shared) -> InstanceSharingShared(shared)
-	default: // ignored
-	}
-	return modelInstanceSharing
 }
 func (c *ChallengeResponseMapperImpl) pContractsTopologyResourcesToPContractsTopologyResourcesResp(source *contracts.TopologyResources) *contracts.TopologyResourcesResp {
 	var pContractsTopologyResourcesResp *contracts.TopologyResourcesResp

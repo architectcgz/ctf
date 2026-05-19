@@ -20,7 +20,7 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBase(source mode
 	contractsChallengeDetailResp.Difficulty = source.Difficulty
 	contractsChallengeDetailResp.Points = source.Points
 	contractsChallengeDetailResp.FlagType = source.FlagType
-	contractsChallengeDetailResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
+	contractsChallengeDetailResp.InstanceSharing = string(source.InstanceSharing)
 	contractsChallengeDetailResp.AttachmentURL = source.AttachmentURL
 	contractsChallengeDetailResp.CreatedAt = CopyTime(source.CreatedAt)
 	return contractsChallengeDetailResp
@@ -116,20 +116,4 @@ func (c *challengeQueryResponseMapperImpl) ToFlagRespBasePtr(source *model.Chall
 		pContractsFlagResp = &contractsFlagResp
 	}
 	return pContractsFlagResp
-}
-func (c *challengeQueryResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
-	var modelInstanceSharing model.InstanceSharing
-	switch source {
-	case model.InstanceSharingPerTeam:
-		modelInstanceSharing = model.InstanceSharingPerTeam
-	case model.InstanceSharingPerUser:
-		modelInstanceSharing = model.InstanceSharingPerUser
-	case model.InstanceSharingShared:
-		modelInstanceSharing = model.InstanceSharingShared
-	// Skipped ShareScopePerTeam(per_team) -> ShareScopePerTeam(per_team) because it duplicates InstanceSharingPerTeam(per_team) -> InstanceSharingPerTeam(per_team)
-	// Skipped ShareScopePerUser(per_user) -> ShareScopePerUser(per_user) because it duplicates InstanceSharingPerUser(per_user) -> InstanceSharingPerUser(per_user)
-	// Skipped ShareScopeShared(shared) -> ShareScopeShared(shared) because it duplicates InstanceSharingShared(shared) -> InstanceSharingShared(shared)
-	default: // ignored
-	}
-	return modelInstanceSharing
 }

@@ -126,7 +126,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeDetailResp(source *contracts.Ch
 		httpChallengeDetailResp.Points = (*source).Points
 		httpChallengeDetailResp.NeedTarget = (*source).NeedTarget
 		httpChallengeDetailResp.FlagType = (*source).FlagType
-		httpChallengeDetailResp.InstanceSharing = string((*source).InstanceSharing)
+		httpChallengeDetailResp.InstanceSharing = (*source).InstanceSharing
 		httpChallengeDetailResp.AttachmentURL = (*source).AttachmentURL
 		if (*source).Hints != nil {
 			httpChallengeDetailResp.Hints = make([]*ChallengeHintResp, len((*source).Hints))
@@ -306,7 +306,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeResp(source *contracts.Challeng
 		httpChallengeResp.Points = (*source).Points
 		httpChallengeResp.ImageID = (*source).ImageID
 		httpChallengeResp.AttachmentURL = (*source).AttachmentURL
-		httpChallengeResp.InstanceSharing = string((*source).InstanceSharing)
+		httpChallengeResp.InstanceSharing = (*source).InstanceSharing
 		if (*source).Hints != nil {
 			httpChallengeResp.Hints = make([]*ChallengeHintAdminResp, len((*source).Hints))
 			for i := 0; i < len((*source).Hints); i++ {
@@ -747,7 +747,7 @@ func (c *ChallengeResponseMapperImpl) contractsChallengeRespToPHttpChallengeResp
 	httpChallengeResp.Points = source.Points
 	httpChallengeResp.ImageID = source.ImageID
 	httpChallengeResp.AttachmentURL = source.AttachmentURL
-	httpChallengeResp.InstanceSharing = string(source.InstanceSharing)
+	httpChallengeResp.InstanceSharing = source.InstanceSharing
 	if source.Hints != nil {
 		httpChallengeResp.Hints = make([]*ChallengeHintAdminResp, len(source.Hints))
 		for i := 0; i < len(source.Hints); i++ {

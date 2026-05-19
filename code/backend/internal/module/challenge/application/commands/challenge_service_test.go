@@ -87,7 +87,7 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	if resp.CreatedBy == nil || *resp.CreatedBy != 1001 {
 		t.Fatalf("unexpected created_by: %+v", resp.CreatedBy)
 	}
-	if resp.InstanceSharing != model.InstanceSharingPerUser {
+	if resp.InstanceSharing != string(model.InstanceSharingPerUser) {
 		t.Fatalf("unexpected instance sharing: %s", resp.InstanceSharing)
 	}
 }
