@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -101,8 +101,8 @@ func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*identityc
 	return &user, nil
 }
 
-func (r *Repository) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
-	var challenge model.Challenge
+func (r *Repository) FindChallengeByID(ctx context.Context, challengeID int64) (*challengecontracts.RecommendationChallenge, error) {
+	var challenge challengecontracts.RecommendationChallenge
 	if err := r.dbWithContext(ctx).Where("id = ?", challengeID).First(&challenge).Error; err != nil {
 		return nil, err
 	}
