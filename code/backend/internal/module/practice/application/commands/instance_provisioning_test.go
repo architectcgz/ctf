@@ -69,7 +69,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 
 	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
-		challengeinfra.NewRepository(db),
+
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
@@ -97,7 +97,9 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 				},
 			},
 		},
-		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db)).
+		nil),
+
+		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db)).
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	service.StartBackgroundTasks(context.Background())
@@ -173,7 +175,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 	var cleanupCalls atomic.Int32
 	service := NewService(
 		practiceinfra.NewRepository(db),
-		challengeinfra.NewRepository(db),
+
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
@@ -237,7 +239,7 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 	}
 	service := NewService(
 		nil,
-		nil,
+
 		&stubPracticeImageStore{
 			findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -308,7 +310,7 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 	}
 	service := NewService(
 		nil,
-		nil,
+
 		&stubPracticeImageStore{
 			findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
 				return &challengeentity.Image{ID: 301, Name: "ctf/pwn", Tag: "v1", Status: challengeentity.ImageStatusAvailable}, nil
@@ -567,7 +569,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 				}, nil
 			},
 		},
-		nil,
+
 		challengeinfra.NewImageRepository(db),
 		instanceRepo,
 		&stubPracticeRuntimeService{
@@ -616,8 +618,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 				StartProbeAttempts: 1,
 			},
 		},
-		nil,
-	)
+		nil)
 
 	err = service.provisionInstance(context.Background(), instance, toPracticeChallenge(&model.Challenge{
 		ID:             503,
@@ -667,7 +668,7 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 	var markedFailed atomic.Int32
 	service := NewService(
 		nil,
-		nil,
+
 		challengeinfra.NewImageRepository(db),
 		&stubPracticeInstanceStore{
 			updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
@@ -761,7 +762,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 	release := make(chan struct{})
 	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
-		challengeinfra.NewRepository(db),
+
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
@@ -791,7 +792,9 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 				},
 			},
 		},
-		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		nil),
+
+		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
 
 	service.StartBackgroundTasks(context.Background())
 

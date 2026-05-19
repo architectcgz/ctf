@@ -166,7 +166,6 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 	)
 	service := practicecmd.NewService(
 		deps.commandRepo,
-		deps.challengeRepo,
 		deps.imageStore,
 		deps.instanceRepo,
 		deps.runtimeService,

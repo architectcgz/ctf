@@ -121,7 +121,7 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		nil,
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
@@ -138,7 +138,9 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 				},
 			},
 		},
-		nil), repo, nil)
+		nil),
+
+		repo, nil)
 
 	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
 		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
@@ -283,7 +285,7 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		nil,
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{
@@ -308,7 +310,9 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 				},
 			},
 		},
-		nil), repo, nil)
+		nil),
+
+		repo, nil)
 
 	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
 		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
@@ -381,7 +385,7 @@ func TestReconcileDesiredAWDInstancesBacksOffAfterImmediateFailure(t *testing.T)
 	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		nil,
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
@@ -402,7 +406,9 @@ func TestReconcileDesiredAWDInstancesBacksOffAfterImmediateFailure(t *testing.T)
 				},
 			},
 		},
-		nil), repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
+		nil),
+
+		repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
 
 	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
 		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
@@ -498,7 +504,7 @@ func TestReconcileDesiredAWDInstancesSuppressesScopeAfterProvisionFailure(t *tes
 	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		nil,
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
@@ -519,7 +525,9 @@ func TestReconcileDesiredAWDInstancesSuppressesScopeAfterProvisionFailure(t *tes
 				},
 			},
 		},
-		nil), repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
+		nil),
+
+		repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
 
 	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
 		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
@@ -616,7 +624,7 @@ func TestReconcileDesiredAWDInstancesIgnoresCorruptedDesiredState(t *testing.T) 
 	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		nil,
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
@@ -633,7 +641,9 @@ func TestReconcileDesiredAWDInstancesIgnoresCorruptedDesiredState(t *testing.T) 
 				},
 			},
 		},
-		nil), repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
+		nil),
+
+		repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
 
 	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
 		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
@@ -696,14 +706,16 @@ func TestReconcileDesiredAWDInstancesClearsSuppressedStateWhenScopeAlreadyActive
 
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		nil,
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
 		nil,
 		nil,
 		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour}},
-		nil), repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
+		nil),
+
+		repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
 
 	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
 		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
@@ -773,14 +785,16 @@ func TestReconcileDesiredAWDInstancesSkipsManuallySuppressedScope(t *testing.T) 
 
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		nil,
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
 		nil,
 		nil,
 		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour}},
-		nil), repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
+		nil),
+
+		repo, nil).SetDesiredAWDReconcileStateStore(stateStore)
 
 	if err := service.ReconcileDesiredAWDInstances(context.Background()); err != nil {
 		t.Fatalf("ReconcileDesiredAWDInstances() error = %v", err)
@@ -876,7 +890,7 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 	var createTopologyCalls atomic.Int32
 	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
-		nil,
+
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
@@ -943,7 +957,9 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 				},
 			},
 		},
-		nil), practiceinfra.NewRepository(db), nil)
+		nil),
+
+		practiceinfra.NewRepository(db), nil)
 	service.StartBackgroundTasks(context.Background())
 
 	runCtx, cancel := context.WithCancel(context.Background())

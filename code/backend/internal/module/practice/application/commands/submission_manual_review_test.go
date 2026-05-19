@@ -54,7 +54,7 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -70,6 +70,7 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -111,7 +112,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 	service := wirePracticeManualReviewAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -127,6 +128,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -204,7 +206,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 	service := wirePracticeManualReviewAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -231,6 +233,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -312,7 +315,7 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -331,6 +334,7 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -393,7 +397,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -409,6 +413,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -461,7 +466,7 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -477,6 +482,7 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -566,7 +572,7 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			runtimeinfrarepo.NewRepository(db),
 			nil,
@@ -585,6 +591,7 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -673,7 +680,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 					}, nil
 				},
 			},
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -681,6 +688,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 			nil,
 			&config.Config{},
 			nil),
+
 		nil,
 		challengeRepo,
 	)
@@ -730,7 +738,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			&stubPracticeInstanceStore{},
 			nil,
@@ -746,6 +754,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -805,7 +814,7 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -821,6 +830,7 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -843,11 +853,6 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 func TestSubmitFlagTreatsPracticeChallengeNotFoundAsChallengeNotFound(t *testing.T) {
 	t.Parallel()
 
-	rawChallengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
-			return nil, errors.New("raw challenge repo should not be called")
-		},
-	}
 	runtimeSubjectSource := &stubPracticeChallengeContract{
 		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
 			return nil, gorm.ErrRecordNotFound
@@ -855,7 +860,7 @@ func TestSubmitFlagTreatsPracticeChallengeNotFoundAsChallengeNotFound(t *testing
 	}
 
 	service := wirePracticeSubmissionAdapters(
-		NewService(&stubPracticeRepository{}, rawChallengeRepo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		NewService(&stubPracticeRepository{}, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		nil,
 		runtimeSubjectSource,
 	)
@@ -874,11 +879,6 @@ func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T
 	t.Parallel()
 
 	flagSalt := "submission-sentinel-salt"
-	rawChallengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
-			return nil, errors.New("raw challenge repo should not be called")
-		},
-	}
 	runtimeSubjectSource := &stubPracticeChallengeContract{
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
@@ -905,15 +905,15 @@ func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T
 					return nil
 				},
 			},
-			rawChallengeRepo,
+
 			nil,
 			nil,
 			nil,
 			nil,
 			nil,
 			&config.Config{},
-			nil,
-		),
+			nil),
+
 		&stubPracticeRepository{
 			findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
 				return nil, gorm.ErrRecordNotFound
@@ -999,7 +999,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 	service := wirePracticeManualReviewAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -1007,6 +1007,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 			nil,
 			&config.Config{},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -1060,7 +1061,7 @@ func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *test
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -1088,7 +1089,7 @@ func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -1117,7 +1118,7 @@ func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -1151,7 +1152,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -1185,7 +1186,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testin
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -1219,7 +1220,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *test
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 	challengeID := int64(0)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
@@ -1250,7 +1251,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),
@@ -1298,7 +1299,7 @@ func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testin
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -1328,7 +1329,7 @@ func TestGetTeacherManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			return nil, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.GetTeacherManualReviewSubmission(context.Background(), 91, 1001, identitycontracts.RoleStudent)
 	if err == nil {
@@ -1357,7 +1358,7 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			return nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -1392,7 +1393,7 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 			return nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -1427,7 +1428,7 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 			return nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -1503,7 +1504,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 	service := wirePracticeManualReviewAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -1511,6 +1512,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 			nil,
 			&config.Config{},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -1540,7 +1542,7 @@ func TestGetTeacherManualReviewSubmissionTreatsPracticeManualReviewSubmissionNot
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -1564,7 +1566,7 @@ func TestListMyChallengeSubmissionsTreatsPracticeChallengeNotFoundAsChallengeNot
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(&stubPracticeRepository{}, challengeRepo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		NewService(&stubPracticeRepository{}, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		nil,
 		challengeRepo,
 	)
@@ -1606,7 +1608,7 @@ func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 					return []practiceports.SubmissionRecord{{ID: 1, UserID: userID, ChallengeID: challengeID, SubmittedAt: time.Now()}}, nil
 				},
 			},
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -1614,6 +1616,7 @@ func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 			nil,
 			&config.Config{},
 			nil),
+
 		nil,
 		challengeRepo,
 	)
@@ -1675,7 +1678,7 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			instanceStore,
 			nil,
@@ -1689,6 +1692,7 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 				Container: config.ContainerConfig{FlagGlobalSecret: "12345678901234567890123456789012"},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -1758,7 +1762,7 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			instanceStore,
 			nil,
@@ -1772,6 +1776,7 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 				Container: config.ContainerConfig{SolveGracePeriod: 10 * time.Minute},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)

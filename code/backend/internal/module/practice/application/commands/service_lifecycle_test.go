@@ -26,7 +26,7 @@ func TestPracticeServiceCloseCancelsAsyncScoreUpdate(t *testing.T) {
 				return nil
 			},
 		},
-		nil,
+
 		nil,
 		nil,
 		nil,
@@ -71,7 +71,7 @@ func TestMarkInstanceFailedDoesNotCreateBackgroundContext(t *testing.T) {
 
 	service := NewService(
 		nil,
-		nil,
+
 		nil,
 		&stubPracticeInstanceStore{
 			updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
@@ -120,7 +120,7 @@ func TestMarkInstanceFailedDetachesCanceledContext(t *testing.T) {
 
 	service := NewService(
 		nil,
-		nil,
+
 		nil,
 		&stubPracticeInstanceStore{
 			updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
@@ -150,7 +150,7 @@ func TestPublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) {
 	t.Parallel()
 
 	publishCalled := false
-	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil, nil).
+	service := NewService(nil, nil, nil, nil, nil, nil, nil, nil).
 		SetEventBus(&stubPracticeEventBus{
 			publishFn: func(ctx context.Context, evt events.Event) error {
 				publishCalled = true
@@ -170,7 +170,7 @@ func TestPublishWeakEventDoesNotCreateBackgroundContext(t *testing.T) {
 func TestPracticeServiceRunAsyncTaskReturnsWhenClosed(t *testing.T) {
 	t.Parallel()
 
-	service := NewService(nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 	closeCtx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	if err := service.Close(closeCtx); err != nil {
@@ -192,7 +192,7 @@ func TestPracticeServiceRunAsyncTaskReturnsWhenClosed(t *testing.T) {
 func TestRunProvisioningLoopReturnsWhenContextMissing(t *testing.T) {
 	t.Parallel()
 
-	service := NewService(nil, nil, nil, nil, nil, nil, nil, &config.Config{
+	service := NewService(nil, nil, nil, nil, nil, nil, &config.Config{
 		Container: config.ContainerConfig{
 			Scheduler: config.ContainerSchedulerConfig{
 				Enabled: true,
@@ -211,7 +211,7 @@ func TestRunProvisioningLoopReturnsWhenContextMissing(t *testing.T) {
 func TestPracticeServiceCloseRejectsNilContext(t *testing.T) {
 	t.Parallel()
 
-	service := NewService(nil, nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := NewService(nil, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	if err := service.Close(nil); err == nil {
 		t.Fatal("expected Close(nil) to reject missing context")

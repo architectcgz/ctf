@@ -1317,14 +1317,16 @@ func TestLoadRuntimeSubjectWithScopePropagatesContextToChallengeContract(t *test
 	}
 	service := wirePracticeScopeAdapters(NewService(
 		nil,
-		challengeRepo,
+
 		nil,
 		nil,
 		nil,
 		nil,
 		nil,
 		&config.Config{},
-		nil), nil, challengeRepo)
+		nil),
+
+		nil, challengeRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	challenge, topology, err := service.loadRuntimeSubjectWithScope(ctx, practiceports.InstanceScope{}, 42)

@@ -61,7 +61,7 @@ func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -77,6 +77,7 @@ func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)
@@ -138,7 +139,7 @@ func TestSubmitFlagRejectsTooFrequentAttempts(t *testing.T) {
 	service := wirePracticeSubmissionAdapters(
 		NewService(
 			repo,
-			challengeRepo,
+
 			nil,
 			nil,
 			nil,
@@ -154,6 +155,7 @@ func TestSubmitFlagRejectsTooFrequentAttempts(t *testing.T) {
 				},
 			},
 			nil),
+
 		repo,
 		challengeRepo,
 	)

@@ -628,7 +628,6 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
 	return practicecmd.NewService(
 		practiceinfra.NewRepository(db),
-		challengeRepo,
 		imageRepo,
 		instanceRepo,
 		contestInstanceTestRuntimeService{},

@@ -57,7 +57,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 	var createCalls atomic.Int32
 	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
-		challengeinfra.NewRepository(db),
+
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
@@ -86,7 +86,9 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 				},
 			},
 		},
-		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		nil),
+
+		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.StartChallenge(context.Background(), 42, 201)
 	if err != nil {
@@ -172,7 +174,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	}
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		challengeRepo,
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
@@ -189,7 +191,9 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 				},
 			},
 		},
-		nil), repo, challengeRepo)
+		nil),
+
+		repo, challengeRepo)
 
 	resp, err := service.StartContestAWDService(context.Background(), 5104, 3104, 7104)
 	if err != nil {
@@ -265,7 +269,7 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 	}
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		challengeRepo,
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
@@ -280,7 +284,9 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 				},
 			},
 		},
-		nil), repo, challengeRepo)
+		nil),
+
+		repo, challengeRepo)
 
 	resp, err := service.StartContestAWDService(context.Background(), 5105, 3105, 7105)
 	if err != nil {
@@ -361,7 +367,7 @@ func TestStartContestAWDServiceReservesHostPortWhenAccessHostConfigured(t *testi
 	}
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		challengeRepo,
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
@@ -379,7 +385,9 @@ func TestStartContestAWDServiceReservesHostPortWhenAccessHostConfigured(t *testi
 				},
 			},
 		},
-		nil), repo, challengeRepo)
+		nil),
+
+		repo, challengeRepo)
 
 	resp, err := service.StartContestAWDService(context.Background(), 5115, 3115, 7115)
 	if err != nil {
@@ -463,7 +471,7 @@ func TestStartContestAWDServiceRefreshesExistingInstanceExpiryToContestEnd(t *te
 
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		&stubPracticeChallengeContract{},
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{},
@@ -478,7 +486,9 @@ func TestStartContestAWDServiceRefreshesExistingInstanceExpiryToContestEnd(t *te
 				},
 			},
 		},
-		nil), repo, &stubPracticeChallengeContract{})
+		nil),
+
+		repo, &stubPracticeChallengeContract{})
 
 	resp, err := service.StartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -574,7 +584,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		&stubPracticeChallengeContract{},
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{
@@ -597,7 +607,9 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 				},
 			},
 		},
-		nil), repo, &stubPracticeChallengeContract{})
+		nil),
+
+		repo, &stubPracticeChallengeContract{})
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -690,7 +702,7 @@ func TestRestartContestAWDServicePreservesHostPortWhenAccessHostConfigured(t *te
 
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		&stubPracticeChallengeContract{},
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{
@@ -714,7 +726,9 @@ func TestRestartContestAWDServicePreservesHostPortWhenAccessHostConfigured(t *te
 				},
 			},
 		},
-		nil), repo, &stubPracticeChallengeContract{})
+		nil),
+
+		repo, &stubPracticeChallengeContract{})
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -817,7 +831,7 @@ func TestRestartContestAWDServiceAllocatesHostPortWhenAccessHostConfiguredAndIns
 
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		&stubPracticeChallengeContract{},
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{
@@ -842,7 +856,9 @@ func TestRestartContestAWDServiceAllocatesHostPortWhenAccessHostConfiguredAndIns
 				},
 			},
 		},
-		nil), repo, &stubPracticeChallengeContract{})
+		nil),
+
+		repo, &stubPracticeChallengeContract{})
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -950,7 +966,7 @@ func TestRestartContestAWDServiceReallocatesStaleHostPortWhenOwnedByAnotherInsta
 
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		&stubPracticeChallengeContract{},
+
 		nil,
 		&stubPracticeInstanceStore{},
 		&stubPracticeRuntimeService{
@@ -975,7 +991,9 @@ func TestRestartContestAWDServiceReallocatesStaleHostPortWhenOwnedByAnotherInsta
 				},
 			},
 		},
-		nil), repo, &stubPracticeChallengeContract{})
+		nil),
+
+		repo, &stubPracticeChallengeContract{})
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -1114,7 +1132,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 	var createTopologyCalls atomic.Int32
 	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
-		challengeinfra.NewRepository(db),
+
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
@@ -1158,7 +1176,9 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 				Scheduler:            config.ContainerSchedulerConfig{Enabled: false},
 			},
 		},
-		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		nil),
+
+		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -1317,7 +1337,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	var createTopologyCalls atomic.Int32
 	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
-		challengeinfra.NewRepository(db),
+
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
@@ -1390,7 +1410,9 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 				Scheduler:            config.ContainerSchedulerConfig{Enabled: false},
 			},
 		},
-		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		nil),
+
+		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
@@ -1469,7 +1491,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 
 	service := wirePracticeScopeAdapters(NewService(
 		practiceinfra.NewRepository(db),
-		challengeinfra.NewRepository(db),
+
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{},
@@ -1493,7 +1515,9 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 				},
 			},
 		},
-		nil), practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		nil),
+
+		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.StartChallenge(context.Background(), 46, 206)
 	if err != nil {
@@ -1560,14 +1584,16 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingShar
 	}
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		challengeRepo,
+
 		nil,
 		nil,
 		nil,
 		nil,
 		nil,
 		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour, MaxConcurrentPerUser: 3}},
-		nil), repo, challengeRepo)
+		nil),
+
+		repo, challengeRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.StartChallenge(ctx, 7, 11)
@@ -1647,14 +1673,16 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingIns
 	}
 	service := wirePracticeScopeAdapters(NewService(
 		repo,
-		challengeRepo,
+
 		nil,
 		nil,
 		nil,
 		nil,
 		nil,
 		&config.Config{Container: config.ContainerConfig{DefaultTTL: time.Hour, MaxConcurrentPerUser: 3, MaxExtends: 2, Scheduler: config.ContainerSchedulerConfig{Enabled: true}}},
-		nil), repo, challengeRepo)
+		nil),
+
+		repo, challengeRepo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.StartChallenge(ctx, 7, 11)

@@ -56,7 +56,6 @@ type instanceRepository interface {
 
 type Service struct {
 	repo             practiceCommandRepository
-	challengeRepo    challengecontracts.PracticeChallengeContract
 	contestScope     practiceports.PracticeContestScopeRepository
 	imageRepo        challengecontracts.ImageStore
 	instanceRepo     instanceRepository
@@ -134,7 +133,6 @@ func (s *Service) SetSolvedSubmissionRepository(repo practiceports.PracticeSolve
 
 func NewService(
 	repo practiceCommandRepository,
-	challengeRepo challengecontracts.PracticeChallengeContract,
 	imageRepo challengecontracts.ImageStore,
 	instanceRepo instanceRepository,
 	runtimeService practiceports.RuntimeInstanceService,
@@ -151,7 +149,6 @@ func NewService(
 	}
 	return &Service{
 		repo:           repo,
-		challengeRepo:  challengeRepo,
 		imageRepo:      imageRepo,
 		instanceRepo:   instanceRepo,
 		runtimeService: runtimeService,
