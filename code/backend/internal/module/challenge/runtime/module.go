@@ -200,7 +200,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 		awdChallengeQueryRepo:   awdChallengeRepo,
 		flagRepo:                flagRepo,
 		imageUsageRepo:          challengeRepo,
-		topologyRepo:            challengeRepo,
+		topologyRepo:            challengeinfra.NewTopologyServiceRepository(challengeRepo),
 		writeupRepo:             writeupRepo,
 		templateRepo:            challengeinfra.NewTemplateRepository(deps.DB),
 		imageRuntime:            deps.ImageRuntime,
@@ -265,11 +265,10 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 	cfg := deps.input.Config
 	challengeCommandRepo := challengeinfra.NewChallengeCommandRepository(deps.challengeCommandRepo)
 	challengeCommandImageRepo := challengeinfra.NewImageQueryRepository(deps.imageRepo)
-	challengeCommandTopologyRepo := challengeinfra.NewTopologyServiceRepository(deps.topologyRepo)
 	challengeCommandService := challengecmd.NewChallengeService(
 		challengeCommandRepo,
 		challengeCommandImageRepo,
-		challengeCommandTopologyRepo,
+		deps.topologyRepo,
 		challengeinfra.NewTopologyPackageRevisionRepository(deps.challengeCommandRepo),
 		deps.runtimeProbe,
 		challengecmd.SelfCheckConfig{
@@ -304,7 +303,7 @@ func buildFlagHandler(deps moduleDeps) (*challengehttp.FlagHandler, challengecon
 }
 
 func buildTopologyHandler(deps moduleDeps) *challengehttp.TopologyHandler {
-	topologyRepo := challengeinfra.NewTopologyServiceRepository(deps.topologyRepo)
+	topologyRepo := deps.topologyRepo
 	templateRepo := challengeinfra.NewTopologyTemplateRepository(deps.templateRepo)
 	imageRepo := challengeinfra.NewImageQueryRepository(deps.imageRepo)
 	topologyCommandService := challengecmd.NewTopologyService(topologyRepo, templateRepo, imageRepo)

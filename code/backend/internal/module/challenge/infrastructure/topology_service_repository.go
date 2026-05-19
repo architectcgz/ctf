@@ -12,7 +12,7 @@ import (
 )
 
 type topologyServiceRawRepository interface {
-	challengeports.ChallengeTopologyChallengeLookupRepository
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	challengeports.ChallengeTopologyReadRepository
 	challengeports.ChallengeTopologyWriteRepository
 }
@@ -28,12 +28,18 @@ func NewTopologyServiceRepository(source topologyServiceRawRepository) *Topology
 	return &TopologyServiceRepository{source: source}
 }
 
-func (r *TopologyServiceRepository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (r *TopologyServiceRepository) FindByID(ctx context.Context, id int64) (*challengeports.ChallengeTopologyChallenge, error) {
 	item, err := r.source.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengeTopologyChallengeNotFound
 	}
-	return item, err
+	if err != nil || item == nil {
+		return nil, err
+	}
+	return &challengeports.ChallengeTopologyChallenge{
+		ID:              item.ID,
+		InstanceSharing: string(item.InstanceSharing),
+	}, nil
 }
 
 func (r *TopologyServiceRepository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {

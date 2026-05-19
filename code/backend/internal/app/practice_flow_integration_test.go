@@ -889,6 +889,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	auditHandler := opshttp.NewAuditHandler(auditQueryService)
 
 	challengeRepo := challengeinfra.NewRepository(db)
+	flagRepo := challengeinfra.NewFlagRepository(challengeRepo)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	challengeCommandService := challengecmd.NewChallengeService(
 		challengeinfra.NewChallengeCommandRepository(challengeRepo),
@@ -909,11 +910,11 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	}, logger)
 	challengeHandler := challengehttp.NewHandler(challengeCommandService, challengeQueryService)
 
-	flagQueryService, err := challengeqry.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
+	flagQueryService, err := challengeqry.NewFlagService(flagRepo, cfg.Container.FlagGlobalSecret)
 	if err != nil {
 		t.Fatalf("create flag query service: %v", err)
 	}
-	flagCommandService, err := challengecmd.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
+	flagCommandService, err := challengecmd.NewFlagService(flagRepo, cfg.Container.FlagGlobalSecret)
 	if err != nil {
 		t.Fatalf("create flag command service: %v", err)
 	}

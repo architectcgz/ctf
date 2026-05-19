@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/crypto"
@@ -52,14 +51,14 @@ func (s *FlagService) ValidateFlag(ctx context.Context, userID, challengeID int6
 	}
 
 	switch challenge.FlagType {
-	case model.FlagTypeStatic:
+	case challengecontracts.FlagTypeStatic:
 		hash := crypto.HashStaticFlag(input, challenge.FlagSalt)
 		return crypto.ValidateFlag(hash, challenge.FlagHash), nil
-	case model.FlagTypeRegex:
+	case challengecontracts.FlagTypeRegex:
 		return regexp.MatchString(challenge.FlagRegex, input)
-	case model.FlagTypeManualReview:
+	case challengecontracts.FlagTypeManualReview:
 		return false, nil
-	case model.FlagTypeDynamic:
+	case challengecontracts.FlagTypeDynamic:
 		expectedFlag, err := s.GenerateDynamicFlag(ctx, userID, challengeID, nonce)
 		if err != nil {
 			return false, err
@@ -77,22 +76,25 @@ func (s *FlagService) GetFlagConfig(ctx context.Context, challengeID int64) (*ch
 	}
 
 	configured := false
-	if challenge.FlagType == model.FlagTypeStatic && challenge.FlagHash != "" {
+	if challenge.FlagType == challengecontracts.FlagTypeStatic && challenge.FlagHash != "" {
 		configured = true
-	} else if challenge.FlagType == model.FlagTypeDynamic {
+	} else if challenge.FlagType == challengecontracts.FlagTypeDynamic {
 		configured = true
-	} else if challenge.FlagType == model.FlagTypeRegex && strings.TrimSpace(challenge.FlagRegex) != "" {
+	} else if challenge.FlagType == challengecontracts.FlagTypeRegex && strings.TrimSpace(challenge.FlagRegex) != "" {
 		configured = true
-	} else if challenge.FlagType == model.FlagTypeManualReview {
+	} else if challenge.FlagType == challengecontracts.FlagTypeManualReview {
 		configured = true
 	}
 
-	resp := challengeQueryResponseMapperInst.ToFlagRespBasePtr(challenge)
-	resp.Configured = configured
-	return resp, nil
+	return &challengecontracts.FlagResp{
+		FlagType:   challenge.FlagType,
+		FlagRegex:  challenge.FlagRegex,
+		FlagPrefix: challenge.FlagPrefix,
+		Configured: configured,
+	}, nil
 }
 
-func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*ports.ChallengeFlag, error) {
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, ports.ErrChallengeFlagChallengeNotFound) {

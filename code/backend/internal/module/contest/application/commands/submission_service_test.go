@@ -179,7 +179,7 @@ func TestSubmissionServiceSubmitFlagInContestRejectsManualReviewChallenges(t *te
 	createContestSubmissionFixture(t, db, contestID, challengeID, now)
 	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, 3001, "Manual", now)
 
-	flagService, err := challengecmd.NewFlagService(challengeinfra.NewRepository(db), "0123456789abcdef0123456789abcdef")
+	flagService, err := challengecmd.NewFlagService(challengeinfra.NewFlagRepository(challengeinfra.NewRepository(db)), "0123456789abcdef0123456789abcdef")
 	if err != nil {
 		t.Fatalf("new flag service: %v", err)
 	}
@@ -257,7 +257,7 @@ func TestSubmissionServiceSubmitFlagInContestAcceptsSharedStaticFlagChallenge(t 
 	createContestSubmissionFixture(t, db, contestID, challengeID, now)
 	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Shared", now)
 
-	flagService, err := challengecmd.NewFlagService(challengeinfra.NewRepository(db), "0123456789abcdef0123456789abcdef")
+	flagService, err := challengecmd.NewFlagService(challengeinfra.NewFlagRepository(challengeinfra.NewRepository(db)), "0123456789abcdef0123456789abcdef")
 	if err != nil {
 		t.Fatalf("new flag service: %v", err)
 	}
@@ -810,7 +810,7 @@ func newContestSubmissionServiceForTest(t *testing.T, db *gorm.DB, redisClient *
 	}
 	if flagValidator == nil {
 		var err error
-		flagValidator, err = challengeqry.NewFlagService(challengeinfra.NewRepository(db), "0123456789abcdef0123456789abcdef")
+		flagValidator, err = challengeqry.NewFlagService(challengeinfra.NewFlagRepository(challengeinfra.NewRepository(db)), "0123456789abcdef0123456789abcdef")
 		if err != nil {
 			t.Fatalf("new flag service: %v", err)
 		}
@@ -893,7 +893,7 @@ func createContestSubmissionFixture(t *testing.T, db *gorm.DB, contestID, challe
 		t.Fatalf("create contest challenge: %v", err)
 	}
 
-	flagService, err := challengecmd.NewFlagService(challengeinfra.NewRepository(db), "0123456789abcdef0123456789abcdef")
+	flagService, err := challengecmd.NewFlagService(challengeinfra.NewFlagRepository(challengeinfra.NewRepository(db)), "0123456789abcdef0123456789abcdef")
 	if err != nil {
 		t.Fatalf("new flag service: %v", err)
 	}

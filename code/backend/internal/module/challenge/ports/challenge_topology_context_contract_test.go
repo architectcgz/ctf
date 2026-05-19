@@ -3,14 +3,13 @@ package ports_test
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type ctxOnlyChallengeTopologyRepository struct{}
 
-func (ctxOnlyChallengeTopologyRepository) FindByID(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeTopologyRepository) FindByID(context.Context, int64) (*challengeports.ChallengeTopologyChallenge, error) {
 	return nil, nil
 }
 

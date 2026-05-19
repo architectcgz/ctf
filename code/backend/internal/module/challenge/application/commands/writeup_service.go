@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -88,7 +87,7 @@ func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, acto
 		}
 		return nil, err
 	}
-	if challengeItem.Status != model.ChallengeStatusPublished {
+	if challengeItem.Status != challengecontracts.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
 

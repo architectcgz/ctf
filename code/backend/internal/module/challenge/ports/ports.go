@@ -55,9 +55,19 @@ type ChallengePublishCheckRepository interface {
 	UpdatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
 }
 
+type ChallengeFlag struct {
+	ID              int64
+	FlagType        string
+	FlagPrefix      string
+	FlagHash        string
+	FlagSalt        string
+	FlagRegex       string
+	InstanceSharing string
+}
+
 type ChallengeFlagRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	Update(ctx context.Context, challenge *model.Challenge) error
+	FindByID(ctx context.Context, id int64) (*ChallengeFlag, error)
+	Update(ctx context.Context, challenge *ChallengeFlag) error
 }
 
 type ChallengeReadRepository interface {
@@ -103,8 +113,13 @@ type ChallengeImageUsageRepository interface {
 	CountByImageID(ctx context.Context, imageID int64) (int64, error)
 }
 
+type ChallengeWriteupChallenge struct {
+	ID     int64
+	Status string
+}
+
 type ChallengeWriteupChallengeLookupRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*ChallengeWriteupChallenge, error)
 }
 
 type ChallengeWriteupUserLookupRepository interface {
@@ -169,8 +184,13 @@ type CommunitySolutionRecord struct {
 	ChallengeTitle string
 }
 
+type ChallengeTopologyChallenge struct {
+	ID              int64
+	InstanceSharing string
+}
+
 type ChallengeTopologyChallengeLookupRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*ChallengeTopologyChallenge, error)
 }
 
 type ChallengeTopologyReadRepository interface {

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -14,8 +13,8 @@ import (
 )
 
 type writeupCommandContextStub struct {
-	findByIDFn                                         func(id int64) (*model.Challenge, error)
-	findByIDWithContextFn                              func(ctx context.Context, id int64) (*model.Challenge, error)
+	findByIDFn                                         func(id int64) (*challengeports.ChallengeWriteupChallenge, error)
+	findByIDWithContextFn                              func(ctx context.Context, id int64) (*challengeports.ChallengeWriteupChallenge, error)
 	findUserByIDFn                                     func(userID int64) (*identitycontracts.User, error)
 	findUserByIDWithContextFn                          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	findWriteupByChallengeIDFn                         func(challengeID int64) (*challengeentity.ChallengeWriteup, error)
@@ -44,7 +43,7 @@ type writeupCommandContextStub struct {
 	listCommunitySolutionsByChallengeIDWithContextFn   func(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
 }
 
-func (s *writeupCommandContextStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *writeupCommandContextStub) FindByID(ctx context.Context, id int64) (*challengeports.ChallengeWriteupChallenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
@@ -154,12 +153,12 @@ func TestWriteupServiceUpsertPropagatesContextToRepository(t *testing.T) {
 	upsertCalled := false
 	findUpdatedCalled := false
 	repo := &writeupCommandContextStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.ChallengeWriteupChallenge, error) {
 			findChallengeCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id}, nil
+			return &challengeports.ChallengeWriteupChallenge{ID: id}, nil
 		},
 		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -203,12 +202,12 @@ func TestWriteupServiceDeletePropagatesContextToRepository(t *testing.T) {
 	findChallengeCalled := false
 	deleteCalled := false
 	repo := &writeupCommandContextStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.ChallengeWriteupChallenge, error) {
 			findChallengeCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id}, nil
+			return &challengeports.ChallengeWriteupChallenge{ID: id}, nil
 		},
 		deleteWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) error {
 			deleteCalled = true
@@ -240,12 +239,12 @@ func TestWriteupServiceUpsertSubmissionPropagatesContextToRepository(t *testing.
 	upsertCalled := false
 	findUpdatedCalled := false
 	repo := &writeupCommandContextStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.ChallengeWriteupChallenge, error) {
 			findChallengeCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+			return &challengeports.ChallengeWriteupChallenge{ID: id, Status: challengecontracts.ChallengeStatusPublished}, nil
 		},
 		findSubmissionWriteupByUserChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -298,12 +297,12 @@ func TestWriteupServiceRecommendOfficialPropagatesContextToRepository(t *testing
 	upsertCalled := false
 	findUpdatedCalled := false
 	repo := &writeupCommandContextStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.ChallengeWriteupChallenge, error) {
 			findChallengeCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id}, nil
+			return &challengeports.ChallengeWriteupChallenge{ID: id}, nil
 		},
 		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
@@ -343,7 +342,7 @@ func TestWriteupServiceUpsertTreatsChallengeNotFoundSentinelAsChallengeNotFound(
 	t.Parallel()
 
 	service := NewWriteupService(&writeupCommandContextStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.ChallengeWriteupChallenge, error) {
 			return nil, challengeports.ErrChallengeWriteupChallengeNotFound
 		},
 	})
@@ -363,8 +362,8 @@ func TestWriteupServiceUpsertTreatsOfficialWriteupNotFoundSentinelAsCreateFlow(t
 
 	upsertCalled := false
 	service := NewWriteupService(&writeupCommandContextStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{ID: id}, nil
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.ChallengeWriteupChallenge, error) {
+			return &challengeports.ChallengeWriteupChallenge{ID: id}, nil
 		},
 		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 			if upsertCalled {
@@ -434,12 +433,12 @@ func TestWriteupServiceUnrecommendOfficialPropagatesContextToRepository(t *testi
 	upsertCalled := false
 	findUpdatedCalled := false
 	repo := &writeupCommandContextStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.ChallengeWriteupChallenge, error) {
 			findChallengeCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id}, nil
+			return &challengeports.ChallengeWriteupChallenge{ID: id}, nil
 		},
 		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {

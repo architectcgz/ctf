@@ -6,7 +6,6 @@ import (
 	"errors"
 	"testing"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -14,13 +13,13 @@ import (
 )
 
 type topologyCommandRepoStub struct {
-	findByIDWithContextFn                  func(ctx context.Context, id int64) (*model.Challenge, error)
+	findByIDWithContextFn                  func(ctx context.Context, id int64) (*challengeports.ChallengeTopologyChallenge, error)
 	findChallengeTopologyByChallengeIDFn   func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
 	upsertChallengeTopologyFn              func(ctx context.Context, topology *challengeentity.ChallengeTopology) error
 	deleteChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) error
 }
 
-func (s *topologyCommandRepoStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *topologyCommandRepoStub) FindByID(ctx context.Context, id int64) (*challengeports.ChallengeTopologyChallenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
@@ -170,12 +169,12 @@ func TestTopologyServiceSaveChallengeTopologyPropagatesContextToRepositories(t *
 	findSavedCalled := false
 
 	repo := &topologyCommandRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.ChallengeTopologyChallenge, error) {
 			findChallengeCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id}, nil
+			return &challengeports.ChallengeTopologyChallenge{ID: id}, nil
 		},
 		upsertChallengeTopologyFn: func(ctx context.Context, topology *challengeentity.ChallengeTopology) error {
 			upsertCalled = true
@@ -237,12 +236,12 @@ func TestTopologyServiceDeleteChallengeTopologyPropagatesContextToRepository(t *
 	findCalled := false
 	deleteCalled := false
 	repo := &topologyCommandRepoStub{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengeports.ChallengeTopologyChallenge, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id}, nil
+			return &challengeports.ChallengeTopologyChallenge{ID: id}, nil
 		},
 		deleteChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) error {
 			deleteCalled = true
@@ -267,7 +266,7 @@ func TestTopologyServiceSaveChallengeTopologyTreatsChallengeNotFoundAsChallengeN
 	t.Parallel()
 
 	service := NewTopologyService(&topologyCommandRepoStub{
-		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(context.Context, int64) (*challengeports.ChallengeTopologyChallenge, error) {
 			return nil, challengeports.ErrChallengeTopologyChallengeNotFound
 		},
 	}, &topologyTemplateRepoStub{}, &topologyImageRepoStub{})
@@ -291,8 +290,8 @@ func TestTopologyServiceSaveChallengeTopologyTreatsMissingTopologyAsCreate(t *te
 	}
 	var saved *challengeentity.ChallengeTopology
 	repo := &topologyCommandRepoStub{
-		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
-			return &model.Challenge{ID: 9}, nil
+		findByIDWithContextFn: func(context.Context, int64) (*challengeports.ChallengeTopologyChallenge, error) {
+			return &challengeports.ChallengeTopologyChallenge{ID: 9}, nil
 		},
 		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
 			if saved == nil {
@@ -329,8 +328,8 @@ func TestTopologyServiceSaveChallengeTopologyTreatsTemplateNotFoundAsNotFound(t 
 
 	templateID := int64(7)
 	service := NewTopologyService(&topologyCommandRepoStub{
-		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
-			return &model.Challenge{ID: 5}, nil
+		findByIDWithContextFn: func(context.Context, int64) (*challengeports.ChallengeTopologyChallenge, error) {
+			return &challengeports.ChallengeTopologyChallenge{ID: 5}, nil
 		},
 	}, &topologyTemplateRepoStub{
 		findByIDFn: func(context.Context, int64) (*challengeentity.EnvironmentTemplate, error) {

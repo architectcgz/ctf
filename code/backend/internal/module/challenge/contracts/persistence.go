@@ -55,3 +55,9 @@ const (
 	FlagTypeRegex        = "regex"
 	FlagTypeManualReview = "manual_review"
 )
+
+const (
+	InstanceSharingPerUser = "per_user"
+	InstanceSharingPerTeam = "per_team"
+	InstanceSharingShared  = "shared"
+)

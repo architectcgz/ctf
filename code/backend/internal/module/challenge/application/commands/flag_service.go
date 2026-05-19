@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -54,7 +54,7 @@ func (s *FlagService) ConfigureStaticFlag(ctx context.Context, challengeID int64
 	}
 
 	s.resetNonDynamicFlagFields(challenge)
-	challenge.FlagType = model.FlagTypeStatic
+	challenge.FlagType = challengecontracts.FlagTypeStatic
 	challenge.FlagHash = crypto.HashStaticFlag(flag, salt)
 	challenge.FlagSalt = salt
 	if flagPrefix != "" {
@@ -68,12 +68,12 @@ func (s *FlagService) ConfigureDynamicFlag(ctx context.Context, challengeID int6
 	if err != nil {
 		return err
 	}
-	if challenge.InstanceSharing == model.InstanceSharingShared {
+	if challenge.InstanceSharing == challengecontracts.InstanceSharingShared {
 		return errcode.ErrInvalidParams.WithCause(errors.New("共享实例策略不支持动态 Flag"))
 	}
 
 	s.resetNonDynamicFlagFields(challenge)
-	challenge.FlagType = model.FlagTypeDynamic
+	challenge.FlagType = challengecontracts.FlagTypeDynamic
 	if flagPrefix != "" {
 		challenge.FlagPrefix = flagPrefix
 	}
@@ -92,7 +92,7 @@ func (s *FlagService) ConfigureRegexFlag(ctx context.Context, challengeID int64,
 	}
 
 	s.resetNonDynamicFlagFields(challenge)
-	challenge.FlagType = model.FlagTypeRegex
+	challenge.FlagType = challengecontracts.FlagTypeRegex
 	challenge.FlagRegex = compiled.String()
 	if flagPrefix != "" {
 		challenge.FlagPrefix = flagPrefix
@@ -107,11 +107,11 @@ func (s *FlagService) ConfigureManualReviewFlag(ctx context.Context, challengeID
 	}
 
 	s.resetNonDynamicFlagFields(challenge)
-	challenge.FlagType = model.FlagTypeManualReview
+	challenge.FlagType = challengecontracts.FlagTypeManualReview
 	return s.repo.Update(ctx, challenge)
 }
 
-func (s *FlagService) resetNonDynamicFlagFields(challenge *model.Challenge) {
+func (s *FlagService) resetNonDynamicFlagFields(challenge *ports.ChallengeFlag) {
 	if challenge == nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (s *FlagService) resetNonDynamicFlagFields(challenge *model.Challenge) {
 	challenge.FlagRegex = ""
 }
 
-func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*ports.ChallengeFlag, error) {
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, ports.ErrChallengeFlagChallengeNotFound) {

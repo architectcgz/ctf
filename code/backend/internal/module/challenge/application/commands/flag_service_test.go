@@ -243,7 +243,7 @@ func TestFlagServiceTreatsChallengeFlagChallengeNotFoundAsNotFound(t *testing.T)
 	t.Parallel()
 
 	service, err := NewFlagService(&flagCommandContextRepoStub{
-		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(context.Context, int64) (*challengeports.ChallengeFlag, error) {
 			return nil, challengeports.ErrChallengeFlagChallengeNotFound
 		},
 	}, strings.Repeat("n", 32))

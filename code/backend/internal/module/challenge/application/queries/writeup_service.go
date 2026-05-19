@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -57,7 +56,7 @@ func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID i
 		}
 		return nil, err
 	}
-	if challengeItem.Status != model.ChallengeStatusPublished {
+	if challengeItem.Status != challengecontracts.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
 
@@ -87,7 +86,7 @@ func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeI
 		}
 		return nil, err
 	}
-	if challengeItem.Status != model.ChallengeStatusPublished {
+	if challengeItem.Status != challengecontracts.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
 	item, err := s.repo.FindSubmissionWriteupByUserChallenge(ctx, userID, challengeID)
@@ -265,7 +264,7 @@ func (s *WriteupService) ensureSolvedChallengeVisible(ctx context.Context, userI
 		}
 		return err
 	}
-	if challengeItem.Status != model.ChallengeStatusPublished {
+	if challengeItem.Status != challengecontracts.ChallengeStatusPublished {
 		return errcode.ErrChallengeNotPublish
 	}
 	isSolved, err := s.repo.GetSolvedStatus(ctx, userID, challengeID)

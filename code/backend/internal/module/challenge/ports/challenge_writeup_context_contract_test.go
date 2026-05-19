@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -13,7 +12,7 @@ import (
 
 type ctxOnlyChallengeWriteupRepository struct{}
 
-func (ctxOnlyChallengeWriteupRepository) FindByID(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeWriteupRepository) FindByID(context.Context, int64) (*challengeports.ChallengeWriteupChallenge, error) {
 	return nil, nil
 }
 

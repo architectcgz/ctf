@@ -15,7 +15,7 @@ import (
 )
 
 type writeupServiceRawRepository interface {
-	challengeports.ChallengeWriteupChallengeLookupRepository
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
 	challengeports.ChallengeWriteupUserLookupRepository
 	challengeports.ChallengeAdminWriteupRepository
 	challengeports.ChallengeReleasedWriteupRepository
@@ -33,9 +33,18 @@ func NewWriteupServiceRepository(raw writeupServiceRawRepository) *WriteupServic
 	return &WriteupServiceRepository{raw: raw}
 }
 
-func (r *WriteupServiceRepository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (r *WriteupServiceRepository) FindByID(ctx context.Context, id int64) (*challengeports.ChallengeWriteupChallenge, error) {
 	item, err := r.raw.FindByID(ctx, id)
-	return item, mapWriteupNotFound(err, challengeports.ErrChallengeWriteupChallengeNotFound)
+	if err != nil {
+		return nil, mapWriteupNotFound(err, challengeports.ErrChallengeWriteupChallengeNotFound)
+	}
+	if item == nil {
+		return nil, nil
+	}
+	return &challengeports.ChallengeWriteupChallenge{
+		ID:     item.ID,
+		Status: string(item.Status),
+	}, nil
 }
 
 func (r *WriteupServiceRepository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {

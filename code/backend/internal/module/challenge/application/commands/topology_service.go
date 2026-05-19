@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -113,8 +112,8 @@ func resolveTopologySyncStatus(rawSpec string, baselineSpec string) string {
 	return challengeentity.ChallengeTopologySyncStatusDrifted
 }
 
-func validateSharedTopologyConstraint(challenge *model.Challenge, rawSpec string) error {
-	if challenge == nil || challenge.InstanceSharing != model.InstanceSharingShared {
+func validateSharedTopologyConstraint(challenge *challengeports.ChallengeTopologyChallenge, rawSpec string) error {
+	if challenge == nil || challenge.InstanceSharing != challengecontracts.InstanceSharingShared {
 		return nil
 	}
 	spec, err := challengecontracts.DecodeTopologySpec(rawSpec)
