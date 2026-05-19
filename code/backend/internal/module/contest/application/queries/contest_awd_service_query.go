@@ -2,13 +2,14 @@ package queries
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"encoding/json"
 	"errors"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type ContestAWDServiceQueryService struct {
@@ -23,14 +24,14 @@ func NewContestAWDServiceQueryService(repo contestports.AWDServiceStore, contest
 func (s *ContestAWDServiceQueryService) ListContestAWDServices(ctx context.Context, contestID int64) ([]ContestAWDServiceResult, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	items, err := s.repo.ListContestAWDServicesByContest(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	resp := make([]ContestAWDServiceResult, 0, len(items))

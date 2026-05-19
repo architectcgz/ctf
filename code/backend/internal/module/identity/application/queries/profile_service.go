@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
-	"ctf-platform/pkg/errcode"
 )
 
 type ProfileService struct {
@@ -23,9 +23,9 @@ func (s *ProfileService) GetProfile(ctx context.Context, userID int64) (*identit
 	user, err := s.users.FindByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, identitycontracts.ErrUserNotFound) {
-			return nil, errcode.ErrUnauthorized
+			return nil, apperror.ErrUnauthorized
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	profile := buildProfileUser(user)

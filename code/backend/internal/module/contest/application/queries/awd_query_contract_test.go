@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type awdQueryContestLookupStub struct {
@@ -65,7 +65,7 @@ func TestAWDServiceGetRoundSummaryMapsRoundNotFoundToErrNotFound(t *testing.T) {
 	)
 
 	_, err := service.GetRoundSummary(context.Background(), 1, 2)
-	if err != errcode.ErrNotFound {
+	if err != apperror.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }

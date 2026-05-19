@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
-	"ctf-platform/pkg/errcode"
 )
 
 type QueryService struct {
@@ -47,16 +47,16 @@ func (s *QueryService) ListClasses(
 
 	requester, err := s.users.FindUserByID(ctx, requesterID)
 	if err != nil {
-		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+		return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 	}
 	if requester == nil {
-		return nil, 0, 0, 0, errcode.ErrUnauthorized
+		return nil, 0, 0, 0, apperror.ErrUnauthorized
 	}
 
 	if requesterRole == identitycontracts.RoleAdmin {
 		total, err := s.repo.CountClasses(ctx)
 		if err != nil {
-			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+			return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 		}
 		if total == 0 {
 			return []TeacherClassItem{}, 0, page, size, nil
@@ -64,7 +64,7 @@ func (s *QueryService) ListClasses(
 
 		items, err := s.repo.ListClasses(ctx, (page-1)*size, size)
 		if err != nil {
-			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+			return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 		}
 		return commonmapper.NonNilSlice(teachingQueryMapper.ToClassItems(items)), total, page, size, nil
 	}
@@ -76,7 +76,7 @@ func (s *QueryService) ListClasses(
 
 	count, err := s.repo.CountStudentsByClass(ctx, className)
 	if err != nil {
-		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+		return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 	}
 
 	if (page-1)*size >= 1 {
@@ -125,10 +125,10 @@ func (s *QueryService) ListStudents(
 		var err error
 		requester, err = s.users.FindUserByID(ctx, requesterID)
 		if err != nil {
-			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+			return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 		}
 		if requester == nil {
-			return nil, 0, 0, 0, errcode.ErrUnauthorized
+			return nil, 0, 0, 0, apperror.ErrUnauthorized
 		}
 	}
 
@@ -157,7 +157,7 @@ func (s *QueryService) ListStudents(
 		if className == "" {
 			className = requesterClassName
 		} else if className != requesterClassName {
-			return nil, 0, 0, 0, errcode.ErrForbidden
+			return nil, 0, 0, 0, apperror.ErrForbidden
 		}
 	}
 
@@ -165,7 +165,7 @@ func (s *QueryService) ListStudents(
 	startOfDay := time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, since.Location())
 	items, total, err := s.repo.ListStudents(ctx, className, keyword, studentNo, sortKey, sortOrder, startOfDay, (page-1)*size, size)
 	if err != nil {
-		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+		return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 	}
 	return commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(items)), total, page, size, nil
 }
@@ -196,7 +196,7 @@ func (s *QueryService) normalizeStudentPagination(query *TeacherStudentDirectory
 func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherStudentListInput) ([]TeacherStudentItem, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
-		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
+		return nil, apperror.ErrInvalidParams.WithMessage("class_name 不能为空")
 	}
 
 	if err := ensureClassAccess(ctx, s.users, requesterID, requesterRole, normalized); err != nil {
@@ -214,7 +214,7 @@ func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64,
 	startOfDay := time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, since.Location())
 	items, err := s.repo.ListStudentsByClass(ctx, normalized, keyword, studentNo, startOfDay)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(items)), nil
 }
@@ -230,14 +230,14 @@ func ensureClassAccess(ctx context.Context, repo classAccessRepository, requeste
 
 	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if requester == nil {
-		return errcode.ErrUnauthorized
+		return apperror.ErrUnauthorized
 	}
 
 	if strings.TrimSpace(requester.ClassName) == "" || requester.ClassName != className {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	return nil
 }

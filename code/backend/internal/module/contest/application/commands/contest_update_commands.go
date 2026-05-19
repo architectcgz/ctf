@@ -2,15 +2,16 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"fmt"
 	"time"
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ContestService) UpdateContest(ctx context.Context, id int64, req UpdateContestInput) (*ContestResp, error) {
@@ -39,7 +40,7 @@ func (s *ContestService) UpdateContest(ctx context.Context, id int64, req Update
 		}
 	} else if err := s.repo.Update(ctx, contest); err != nil {
 		s.log.Error("update_contest_failed", zap.Int64("contest_id", id), zap.Error(err))
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	s.log.Info("contest_updated", zap.Int64("contest_id", id))
@@ -48,11 +49,11 @@ func (s *ContestService) UpdateContest(ctx context.Context, id int64, req Update
 
 func (s *ContestService) updateContestWithManualStatusTransition(ctx context.Context, contest *contestentity.Contest, fromStatus string, fromVersion int64) error {
 	if contest == nil {
-		return errcode.ErrContestNotFound
+		return contestcontracts.ErrContestNotFound
 	}
 	if s.transitionRepo == nil {
 		s.log.Error("contest_status_transition_repo_missing", zap.Int64("contest_id", contest.ID))
-		return errcode.ErrInternal
+		return apperror.ErrInternal
 	}
 
 	result, err := s.transitionRepo.UpdateContestWithStatusTransition(ctx, contest, contestdomain.ContestStatusTransition{
@@ -66,13 +67,13 @@ func (s *ContestService) updateContestWithManualStatusTransition(ctx context.Con
 	})
 	if err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return errcode.ErrContestNotFound
+			return contestcontracts.ErrContestNotFound
 		}
 		s.log.Error("update_contest_status_transition_failed", zap.Int64("contest_id", contest.ID), zap.Error(err))
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if !result.Applied {
-		return errcode.New(errcode.ErrConflict.Code, "竞赛状态已变化，请刷新后重试", errcode.ErrConflict.HTTPStatus).
+		return apperror.ErrConflict.WithMessage("竞赛状态已变化，请刷新后重试").
 			WithCause(fmt.Errorf("contest %d status changed before manual transition commit", contest.ID))
 	}
 	contest.StatusVersion = result.StatusVersion
@@ -94,7 +95,7 @@ func (s *ContestService) updateContestWithManualStatusTransition(ctx context.Con
 			zap.String("to_status", contest.Status),
 			zap.Error(err),
 		)
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if result.RecordID > 0 {
 		if err := s.transitionRepo.MarkTransitionSideEffectsSucceeded(ctx, result.RecordID); err != nil {

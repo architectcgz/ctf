@@ -11,10 +11,10 @@ import (
 
 	redislib "github.com/redis/go-redis/v9"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type wsTicketPayload struct {
@@ -53,7 +53,7 @@ func (s *tokenService) CreateSession(ctx context.Context, userID int64, username
 
 	sessionID, err := generateOpaqueToken(32)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	expiresAt := time.Now().Add(s.config.SessionTTL).UTC()
@@ -66,10 +66,10 @@ func (s *tokenService) CreateSession(ctx context.Context, userID int64, username
 	}
 	payload, err := json.Marshal(record)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if err := s.cache.Set(ctx, s.sessionKey(sessionID), payload, s.config.SessionTTL).Err(); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return &authcontracts.Session{
@@ -86,23 +86,23 @@ func (s *tokenService) GetSession(ctx context.Context, sessionID string) (*authc
 		return nil, err
 	}
 	if sessionID == "" {
-		return nil, errcode.ErrUnauthorized
+		return nil, apperror.ErrUnauthorized
 	}
 
 	payload, err := s.cache.Get(ctx, s.sessionKey(sessionID)).Result()
 	if errors.Is(err, redislib.Nil) {
-		return nil, errcode.ErrUnauthorized
+		return nil, apperror.ErrUnauthorized
 	}
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	var record sessionRecord
 	if err := json.Unmarshal([]byte(payload), &record); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if record.ID == "" || record.UserID <= 0 || record.Username == "" || record.Role == "" {
-		return nil, errcode.ErrUnauthorized
+		return nil, apperror.ErrUnauthorized
 	}
 
 	return &authcontracts.Session{
@@ -133,7 +133,7 @@ func (s *tokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUs
 	}
 	ticket, err := generateOpaqueToken(32)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	payload, err := json.Marshal(wsTicketPayload{
@@ -143,12 +143,12 @@ func (s *tokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUs
 		IssuedAt: time.Now().UTC(),
 	})
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	expiresAt := time.Now().Add(s.wsConfig.TicketTTL).UTC()
 	if err := s.cache.Set(ctx, s.wsTicketKey(ticket), payload, s.wsConfig.TicketTTL).Err(); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return &authcontracts.WSTicket{
@@ -162,23 +162,23 @@ func (s *tokenService) ConsumeWSTicket(ctx context.Context, ticket string) (*aut
 		return nil, err
 	}
 	if ticket == "" {
-		return nil, errcode.ErrWSTicketInvalid
+		return nil, authcontracts.ErrWSTicketInvalid
 	}
 
 	payload, err := s.cache.GetDel(ctx, s.wsTicketKey(ticket)).Result()
 	if errors.Is(err, redislib.Nil) {
-		return nil, errcode.ErrWSTicketInvalid
+		return nil, authcontracts.ErrWSTicketInvalid
 	}
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	var claims wsTicketPayload
 	if err := json.Unmarshal([]byte(payload), &claims); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if claims.UserID <= 0 || claims.Username == "" || claims.Role == "" {
-		return nil, errcode.ErrWSTicketInvalid
+		return nil, authcontracts.ErrWSTicketInvalid
 	}
 
 	return &authctx.CurrentUser{
@@ -194,7 +194,7 @@ func (s *tokenService) sessionKey(sessionID string) string {
 
 func requireContext(ctx context.Context) error {
 	if ctx == nil {
-		return errcode.ErrInternal.WithCause(fmt.Errorf("context is required"))
+		return apperror.ErrInternal.WithCause(fmt.Errorf("context is required"))
 	}
 	return nil
 }

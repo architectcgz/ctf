@@ -9,13 +9,13 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
-	"ctf-platform/pkg/errcode"
 )
 
 func setupAuditQueryTestDB(t *testing.T) *gorm.DB {
@@ -119,11 +119,11 @@ func TestAuditServiceListAuditLogsRejectsInvalidTimeRange(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected invalid start_time error")
 	}
-	appErr, ok := err.(*errcode.AppError)
+	appErr, ok := err.(*apperror.AppError)
 	if !ok {
 		t.Fatalf("expected AppError, got %T", err)
 	}
-	if appErr.Code != errcode.ErrInvalidParams.Code {
+	if appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params code, got %+v", appErr)
 	}
 }

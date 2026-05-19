@@ -2,11 +2,12 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func resolveCreateTeamMaxMembers(req CreateTeamInput) int {
@@ -23,7 +24,7 @@ func (s *TeamService) createTeamWithInviteRetries(ctx context.Context, contestID
 	for i := 0; i < maxRetries; i++ {
 		inviteCode, err := generateInviteCode()
 		if err != nil {
-			return nil, errcode.ErrInviteCodeGenerationFailed.WithCause(err)
+			return nil, contestcontracts.ErrInviteCodeGenerationFailed.WithCause(err)
 		}
 
 		team = &contestentity.Team{
@@ -44,10 +45,10 @@ func (s *TeamService) createTeamWithInviteRetries(ctx context.Context, contestID
 		if next {
 			continue
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
-	return nil, errcode.ErrInviteCodeGenerationFailed
+	return nil, contestcontracts.ErrInviteCodeGenerationFailed
 }
 
 func mapCreateTeamError(err error, s *TeamService) (retry bool, mapped error) {
@@ -55,13 +56,13 @@ func mapCreateTeamError(err error, s *TeamService) (retry bool, mapped error) {
 		return true, nil
 	}
 	if s.teamRepo.IsUniqueViolation(err, "uk_teams_contest_name") {
-		return false, errcode.ErrTeamNameExists
+		return false, contestcontracts.ErrTeamNameExists
 	}
 	if s.teamRepo.IsUniqueViolation(err, "uk_team_members_contest_user") {
-		return false, errcode.ErrAlreadyInTeam
+		return false, contestcontracts.ErrAlreadyInTeam
 	}
 	if errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
-		return false, errcode.ErrNotRegistered
+		return false, contestcontracts.ErrNotRegistered
 	}
 	if isUniqueConflict(err) {
 		return true, nil

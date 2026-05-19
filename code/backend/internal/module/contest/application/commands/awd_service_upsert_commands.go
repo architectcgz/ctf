@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req UpsertServiceCheckInput) (*AWDTeamServiceResp, error) {
@@ -20,7 +20,7 @@ func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 	}
 	team, ok := teamMap[req.TeamID]
 	if !ok {
-		return nil, errcode.ErrNotFound
+		return nil, apperror.ErrNotFound
 	}
 	runtimeService, err := s.resolveContestRuntimeService(ctx, contestID, req.ServiceID)
 	if err != nil {
@@ -30,7 +30,7 @@ func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 	normalizedCheckResult := contestdomain.NormalizeManualAWDCheckResult(req.CheckResult)
 	checkResult, err := contestdomain.MarshalAWDCheckResult(normalizedCheckResult)
 	if err != nil {
-		return nil, errcode.ErrInvalidParams
+		return nil, apperror.ErrInvalidParams
 	}
 	defenseScore := 0
 	if req.ServiceStatus == contestentity.AWDServiceStatusUp {

@@ -5,11 +5,11 @@ import (
 	"errors"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type AWDChallengeService struct {
@@ -35,7 +35,7 @@ func (s *AWDChallengeService) CreateChallenge(ctx context.Context, actorUserID i
 		CreatedBy:       &actorUserID,
 	}
 	if err := s.repo.CreateAWDChallenge(ctx, challenge); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return domain.AWDChallengeRespFromModel(challenge), nil
 }
@@ -44,9 +44,9 @@ func (s *AWDChallengeService) UpdateChallenge(ctx context.Context, id int64, req
 	challenge, err := s.repo.FindAWDChallengeByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrAWDChallengeNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	if req.Name != "" {
@@ -75,7 +75,7 @@ func (s *AWDChallengeService) UpdateChallenge(ctx context.Context, id int64, req
 	}
 
 	if err := s.repo.UpdateAWDChallenge(ctx, challenge); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return domain.AWDChallengeRespFromModel(challenge), nil
 }
@@ -83,12 +83,12 @@ func (s *AWDChallengeService) UpdateChallenge(ctx context.Context, id int64, req
 func (s *AWDChallengeService) DeleteChallenge(ctx context.Context, id int64) error {
 	if _, err := s.repo.FindAWDChallengeByID(ctx, id); err != nil {
 		if errors.Is(err, challengeports.ErrAWDChallengeNotFound) {
-			return errcode.ErrNotFound
+			return apperror.ErrNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if err := s.repo.DeleteAWDChallenge(ctx, id); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }

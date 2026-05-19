@@ -2,13 +2,14 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"testing"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type awdCommandRepoStub struct {
@@ -279,7 +280,7 @@ func TestAWDServiceEnsureAWDRoundTreatsModuleRoundSentinelAsErrNotFound(t *testi
 	}
 
 	_, err := service.ensureAWDRound(context.Background(), 11, 22)
-	if err != errcode.ErrNotFound {
+	if err != apperror.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
@@ -322,7 +323,7 @@ func TestAWDServiceResolveUserTeamIDTreatsMembershipSentinelAsNotRegistered(t *t
 	}
 
 	_, err := service.resolveUserTeamID(context.Background(), 2001, 11)
-	if err != errcode.ErrNotRegistered {
+	if err != contestcontracts.ErrNotRegistered {
 		t.Fatalf("expected ErrNotRegistered, got %v", err)
 	}
 }
@@ -347,7 +348,7 @@ func TestAWDServiceResolveCurrentRoundFromFallbacksTreatsMissingRoundSentinelAsN
 	}
 
 	_, err := service.resolveCurrentRoundFromFallbacks(context.Background(), 11)
-	if err != errcode.ErrAWDRoundNotActive {
+	if err != contestcontracts.ErrAWDRoundNotActive {
 		t.Fatalf("expected ErrAWDRoundNotActive, got %v", err)
 	}
 }
@@ -370,7 +371,7 @@ func TestAWDServiceResolveMaterializedActiveRoundTreatsRoundManagerSentinelAsNot
 
 	contest := &contestentity.Contest{ID: 11, Mode: contestentity.ContestModeAWD}
 	_, err := service.resolveMaterializedActiveRound(context.Background(), contest, 3, time.Now().UTC())
-	if err != errcode.ErrAWDRoundNotActive {
+	if err != contestcontracts.ErrAWDRoundNotActive {
 		t.Fatalf("expected ErrAWDRoundNotActive, got %v", err)
 	}
 }
@@ -387,7 +388,7 @@ func TestAWDServiceLoadChallengeTreatsChallengeSentinelAsErrNotFound(t *testing.
 	}
 
 	_, err := service.loadChallenge(context.Background(), 501)
-	if err != errcode.ErrNotFound {
+	if err != apperror.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
@@ -404,7 +405,7 @@ func TestAWDServiceResolveContestRuntimeServiceTreatsServiceSentinelAsErrNotFoun
 	}
 
 	_, err := service.resolveContestRuntimeService(context.Background(), 11, 33)
-	if err != errcode.ErrNotFound {
+	if err != apperror.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
@@ -436,7 +437,7 @@ func TestAWDServiceCreateAttackLogTreatsTransactionSentinelAsErrNotFound(t *test
 		ServiceID:      201,
 		AttackType:     "exploit",
 	})
-	if err != errcode.ErrNotFound {
+	if err != apperror.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
@@ -472,7 +473,7 @@ func TestAWDServiceCreateAttackLogDoesNotSwallowUnexpectedTransactionError(t *te
 	if !errors.Is(err, expectedErr) {
 		t.Fatalf("expected original transaction error, got %v", err)
 	}
-	if errors.Is(err, errcode.ErrNotFound) {
+	if errors.Is(err, apperror.ErrNotFound) {
 		t.Fatalf("expected non-not-found transaction error to avoid ErrNotFound mapping, got %v", err)
 	}
 }

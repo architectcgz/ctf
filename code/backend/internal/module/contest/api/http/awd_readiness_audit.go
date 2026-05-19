@@ -2,16 +2,17 @@ package http
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/middleware"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	"ctf-platform/pkg/errcode"
 )
 
 type awdReadinessQueryService interface {
@@ -50,8 +51,8 @@ func isAWDReadinessBlocked(err error) bool {
 	if err == nil {
 		return false
 	}
-	var appErr *errcode.AppError
-	return errors.As(err, &appErr) && appErr.Code == errcode.ErrAWDReadinessBlocked.Code
+	var appErr *apperror.AppError
+	return errors.As(err, &appErr) && appErr.Code == contestcontracts.ErrAWDReadinessBlocked.Code
 }
 
 func hasNonBlankOverrideReason(reason *string) bool {

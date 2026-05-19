@@ -2,12 +2,13 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"testing"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type teamCommandRepoStub struct {
@@ -102,7 +103,7 @@ func TestTeamServiceCreateTeamTreatsRegistrationNotFoundAsNotRegistered(t *testi
 	}, participationContestLookupStub{})
 
 	_, err := service.CreateTeam(context.Background(), 10, 2001, CreateTeamInput{Name: "alpha"})
-	if !errors.Is(err, errcode.ErrNotRegistered) {
+	if !errors.Is(err, contestcontracts.ErrNotRegistered) {
 		t.Fatalf("expected ErrNotRegistered, got %v", err)
 	}
 }
@@ -123,8 +124,8 @@ func TestTeamServiceCreateTeamTreatsUnexpectedCurrentTeamLookupErrorAsInternal(t
 	}, participationContestLookupStub{})
 
 	_, err := service.CreateTeam(context.Background(), 10, 2001, CreateTeamInput{Name: "alpha"})
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInternal.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInternal.Code {
 		t.Fatalf("expected ErrInternal, got %v", err)
 	}
 	if createCalled {
@@ -142,7 +143,7 @@ func TestTeamServiceCreateTeamTreatsCreateWithMemberRegistrationMissingAsNotRegi
 	}, participationContestLookupStub{})
 
 	_, err := service.CreateTeam(context.Background(), 10, 2001, CreateTeamInput{Name: "alpha"})
-	if !errors.Is(err, errcode.ErrNotRegistered) {
+	if !errors.Is(err, contestcontracts.ErrNotRegistered) {
 		t.Fatalf("expected ErrNotRegistered, got %v", err)
 	}
 }
@@ -157,7 +158,7 @@ func TestTeamServiceJoinTeamTreatsTeamNotFoundAsErrTeamNotFound(t *testing.T) {
 	}, participationContestLookupStub{})
 
 	_, err := service.JoinTeam(context.Background(), 10, 2002, 404)
-	if !errors.Is(err, errcode.ErrTeamNotFound) {
+	if !errors.Is(err, contestcontracts.ErrTeamNotFound) {
 		t.Fatalf("expected ErrTeamNotFound, got %v", err)
 	}
 }
@@ -181,8 +182,8 @@ func TestTeamServiceJoinTeamTreatsUnexpectedCurrentTeamLookupErrorAsInternal(t *
 	}, participationContestLookupStub{})
 
 	_, err := service.JoinTeam(context.Background(), 10, 2002, 33)
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInternal.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInternal.Code {
 		t.Fatalf("expected ErrInternal, got %v", err)
 	}
 	if addCalled {
@@ -203,7 +204,7 @@ func TestTeamServiceJoinTeamTreatsMembershipRegistrationMissingAsNotRegistered(t
 	}, participationContestLookupStub{})
 
 	_, err := service.JoinTeam(context.Background(), 10, 2002, 33)
-	if !errors.Is(err, errcode.ErrNotRegistered) {
+	if !errors.Is(err, contestcontracts.ErrNotRegistered) {
 		t.Fatalf("expected ErrNotRegistered, got %v", err)
 	}
 }
@@ -218,7 +219,7 @@ func TestTeamServiceLeaveTeamTreatsTeamNotFoundAsErrTeamNotFound(t *testing.T) {
 	}, participationContestLookupStub{})
 
 	err := service.LeaveTeam(context.Background(), 10, 2002, 404)
-	if !errors.Is(err, errcode.ErrTeamNotFound) {
+	if !errors.Is(err, contestcontracts.ErrTeamNotFound) {
 		t.Fatalf("expected ErrTeamNotFound, got %v", err)
 	}
 }
@@ -233,7 +234,7 @@ func TestTeamServiceDismissTeamTreatsTeamNotFoundAsErrTeamNotFound(t *testing.T)
 	}, participationContestLookupStub{})
 
 	err := service.DismissTeam(context.Background(), 10, 2001, 404)
-	if !errors.Is(err, errcode.ErrTeamNotFound) {
+	if !errors.Is(err, contestcontracts.ErrTeamNotFound) {
 		t.Fatalf("expected ErrTeamNotFound, got %v", err)
 	}
 }
@@ -248,7 +249,7 @@ func TestTeamServiceKickMemberTreatsTeamNotFoundAsErrTeamNotFound(t *testing.T) 
 	}, participationContestLookupStub{})
 
 	err := service.KickMember(context.Background(), 10, 2001, 404, 2002)
-	if !errors.Is(err, errcode.ErrTeamNotFound) {
+	if !errors.Is(err, contestcontracts.ErrTeamNotFound) {
 		t.Fatalf("expected ErrTeamNotFound, got %v", err)
 	}
 }

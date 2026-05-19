@@ -2,13 +2,13 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"strings"
 	"time"
 
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	crypto "ctf-platform/internal/shared/flagcrypto"
-	"ctf-platform/pkg/errcode"
 )
 
 type submitAttackContext struct {
@@ -27,10 +27,10 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	}
 	now := time.Now().UTC()
 	if contestdomain.ContestHasEndedAt(contest, now) {
-		return nil, errcode.ErrContestEnded
+		return nil, contestcontracts.ErrContestEnded
 	}
 	if contest.Status != contestentity.ContestStatusRunning && contest.Status != contestentity.ContestStatusFrozen {
-		return nil, errcode.ErrContestNotRunning
+		return nil, contestcontracts.ErrContestNotRunning
 	}
 
 	attackerTeamID, err := s.resolveUserTeamID(ctx, userID, contestID)

@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 
+	"ctf-platform/internal/apperror"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
-	"ctf-platform/pkg/errcode"
 )
 
 type AWDReviewExportBuilder interface {
@@ -25,7 +25,7 @@ func NewAWDReviewExportBuilder(reader awdReviewArchiveReader) AWDReviewExportBui
 
 func (b *teacherAWDReviewExportBuilder) BuildArchive(ctx context.Context, requesterID, contestID int64, roundNumber *int) (*assessmentqry.TeacherAWDReviewArchiveResp, error) {
 	if b == nil || b.reader == nil {
-		return nil, errcode.New(errcode.ErrServiceUnavailable.Code, "教师 AWD 复盘导出暂不可用", errcode.ErrServiceUnavailable.HTTPStatus)
+		return nil, apperror.ErrServiceUnavailable.WithMessage("教师 AWD 复盘导出暂不可用")
 	}
 
 	return b.reader.GetContestArchive(ctx, requesterID, contestID, assessmentqry.GetTeacherAWDReviewArchiveInput{

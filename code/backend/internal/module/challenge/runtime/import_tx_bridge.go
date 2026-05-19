@@ -9,12 +9,12 @@ import (
 
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type runtimeImageBuildTxStore struct {
@@ -123,7 +123,7 @@ func (s *challengeImportTxStore) RejectImportedChallengeSlugConflict(ctx context
 		return fmt.Errorf("check imported challenge slug %s: %w", slug, err)
 	default:
 		message := fmt.Sprintf("题目 slug %s 已被已有题目占用，请改用题目编辑入口更新", slug)
-		return errcode.New(errcode.ErrConflict.Code, message, errcode.ErrConflict.HTTPStatus)
+		return apperror.ErrConflict.WithMessage(message)
 	}
 }
 

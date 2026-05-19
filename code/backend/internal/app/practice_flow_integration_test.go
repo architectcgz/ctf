@@ -67,7 +67,6 @@ import (
 	"ctf-platform/internal/shared/taxonomy"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/internal/validation"
-	"ctf-platform/pkg/errcode"
 )
 
 type flowTestEnv struct {
@@ -809,8 +808,8 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 		t.Fatalf("expected unpublished challenge submit to return 403, got %d body=%s", submitResp.Code, submitResp.Body.String())
 	}
 	submitBody := decodeFlowEnvelope(t, submitResp)
-	if submitBody.Code != errcode.ErrChallengeNotPublish.Code {
-		t.Fatalf("expected challenge not published code %d, got %d", errcode.ErrChallengeNotPublish.Code, submitBody.Code)
+	if submitBody.Code != challengecontracts.ErrChallengeNotPublish.Code {
+		t.Fatalf("expected challenge not published code %d, got %d", challengecontracts.ErrChallengeNotPublish.Code, submitBody.Code)
 	}
 }
 

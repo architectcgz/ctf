@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -14,7 +15,6 @@ import (
 	platformevents "ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 	"errors"
 	"testing"
 	"time"
@@ -102,7 +102,7 @@ func TestServiceCreateChallengeImageNotFound(t *testing.T) {
 	_, err := service.CreateChallenge(context.Background(), 1001, CreateChallengeInput{
 		ImageID: 999,
 	})
-	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
+	if err == nil || err.Error() != apperror.ErrNotFound.Error() {
 		t.Fatalf("expected image not found error, got %v", err)
 	}
 }
@@ -161,7 +161,7 @@ func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T)
 	err = service.UpdateChallenge(context.Background(), challenge.ID, UpdateChallengeInput{
 		InstanceSharing: string(challengeentity.InstanceSharingShared),
 	})
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params when enabling shared for dynamic flag challenge, got %v", err)
 	}
 }
@@ -206,7 +206,7 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 	err = service.UpdateChallenge(context.Background(), challenge.ID, UpdateChallengeInput{
 		InstanceSharing: string(challengeentity.InstanceSharingShared),
 	})
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params when enabling shared for inject_flag topology challenge, got %v", err)
 	}
 }
@@ -229,8 +229,8 @@ func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 	if err.Error() != domain.ErrMsgHasRunningStudents {
 		t.Fatalf("expected running instances error, got %v", err)
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrConflict.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrConflict.Code {
 		t.Fatalf("expected conflict app error, got %v", err)
 	}
 }
@@ -553,7 +553,7 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
 
 	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
-	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
+	if err == nil || err.Error() != apperror.ErrNotFound.Error() {
 		t.Fatalf("expected not found for stale publish check job, got latest=%+v err=%v", latest, err)
 	}
 }

@@ -6,10 +6,10 @@ import (
 	"errors"
 	"testing"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type topologyCommandRepoStub struct {
@@ -275,8 +275,8 @@ func TestTopologyServiceSaveChallengeTopologyTreatsChallengeNotFoundAsChallengeN
 	if err == nil {
 		t.Fatal("expected challenge not found")
 	}
-	if err.Error() != errcode.ErrChallengeNotFound.Error() {
-		t.Fatalf("expected errcode.ErrChallengeNotFound, got %v", err)
+	if err.Error() != challengecontracts.ErrChallengeNotFound.Error() {
+		t.Fatalf("expected challengecontracts.ErrChallengeNotFound, got %v", err)
 	}
 }
 
@@ -341,8 +341,8 @@ func TestTopologyServiceSaveChallengeTopologyTreatsTemplateNotFoundAsNotFound(t 
 	if err == nil {
 		t.Fatal("expected template not found")
 	}
-	if err.Error() != errcode.ErrNotFound.Error() {
-		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	if err.Error() != apperror.ErrNotFound.Error() {
+		t.Fatalf("expected apperror.ErrNotFound, got %v", err)
 	}
 }
 
@@ -363,9 +363,9 @@ func TestTopologyServiceCreateTemplateTreatsChallengeImageNotFoundAsInvalidParam
 	if err == nil {
 		t.Fatal("expected invalid params")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
-		t.Fatalf("expected errcode.ErrInvalidParams, got %v", err)
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInvalidParams.Code {
+		t.Fatalf("expected apperror.ErrInvalidParams, got %v", err)
 	}
 }
 
@@ -382,8 +382,8 @@ func TestTopologyServiceDeleteTemplateTreatsTemplateNotFoundAsNotFound(t *testin
 	if err == nil {
 		t.Fatal("expected template not found")
 	}
-	if err.Error() != errcode.ErrNotFound.Error() {
-		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	if err.Error() != apperror.ErrNotFound.Error() {
+		t.Fatalf("expected apperror.ErrNotFound, got %v", err)
 	}
 }
 

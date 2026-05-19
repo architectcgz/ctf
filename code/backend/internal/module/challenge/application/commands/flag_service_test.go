@@ -10,11 +10,11 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
-	"ctf-platform/pkg/errcode"
 )
 
 func newChallengeFlagRepository(db *gorm.DB) challengeports.ChallengeFlagRepository {
@@ -129,7 +129,7 @@ func TestFlagServiceConfigureDynamicFlagRejectsSharedChallenge(t *testing.T) {
 	}
 
 	err = service.ConfigureDynamicFlag(context.Background(), 22, "flag")
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for shared dynamic flag, got %v", err)
 	}
 }
@@ -234,7 +234,7 @@ func TestFlagServiceValidateFlagRejectsUnknownFlagType(t *testing.T) {
 	}
 
 	_, err = queryService.ValidateFlag(context.Background(), 10, 5, "flag{legacy}", "")
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for unknown flag type, got %v", err)
 	}
 }
@@ -255,8 +255,8 @@ func TestFlagServiceTreatsChallengeFlagChallengeNotFoundAsNotFound(t *testing.T)
 	if err == nil {
 		t.Fatal("expected challenge not found")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
-		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrNotFound.Code {
+		t.Fatalf("expected apperror.ErrNotFound, got %v", err)
 	}
 }

@@ -5,8 +5,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ProgressTimelineService) GetProgress(ctx context.Context, userID int64) (*practiceports.UserProgressSnapshot, error) {
@@ -21,22 +21,22 @@ func (s *ProgressTimelineService) GetProgress(ctx context.Context, userID int64)
 
 	totalScore, totalSolved, err := s.repo.GetUserProgress(ctx, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	rank, err := s.repo.GetUserRank(ctx, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	categoryStats, err := s.repo.GetCategoryStats(ctx, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	difficultyStats, err := s.repo.GetDifficultyStats(ctx, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	resp := &practiceports.UserProgressSnapshot{

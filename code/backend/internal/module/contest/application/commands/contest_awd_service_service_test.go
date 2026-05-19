@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"encoding/json"
 	"errors"
 	"strings"
@@ -19,7 +20,6 @@ import (
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 func newContestAWDServiceForTest(t *testing.T) (*ContestAWDServiceService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
@@ -312,7 +312,7 @@ func TestContestAWDServiceServiceCreateRejectsImmutableContest(t *testing.T) {
 		Order:          1,
 		IsVisible:      boolPtr(true),
 	})
-	if err != errcode.ErrContestImmutable {
+	if err != contestcontracts.ErrContestImmutable {
 		t.Fatalf("expected ErrContestImmutable, got %v", err)
 	}
 }
@@ -1039,7 +1039,7 @@ func TestContestAWDServiceServiceUpdateRejectsImmutableContest(t *testing.T) {
 	err := service.UpdateContestAWDService(context.Background(), 1812, 181202, UpdateContestAWDServiceInput{
 		DisplayName: &displayName,
 	})
-	if err != errcode.ErrContestImmutable {
+	if err != contestcontracts.ErrContestImmutable {
 		t.Fatalf("expected ErrContestImmutable, got %v", err)
 	}
 }
@@ -1320,7 +1320,7 @@ func TestContestAWDServiceServiceDeleteRejectsImmutableContest(t *testing.T) {
 	}
 
 	err := service.DeleteContestAWDService(context.Background(), 1813, 181302)
-	if err != errcode.ErrContestImmutable {
+	if err != contestcontracts.ErrContestImmutable {
 		t.Fatalf("expected ErrContestImmutable, got %v", err)
 	}
 }

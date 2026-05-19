@@ -2,6 +2,7 @@ package commands_test
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"fmt"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
@@ -25,7 +27,6 @@ import (
 	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	"ctf-platform/internal/module/contest/testsupport"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 type stubContestFlagValidator struct {
@@ -191,8 +192,8 @@ func TestSubmissionServiceSubmitFlagInContestRejectsManualReviewChallenges(t *te
 	if err == nil {
 		t.Fatal("expected manual review challenge submit in contest to fail")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %v", err)
 	}
 }
@@ -221,7 +222,7 @@ func TestSubmissionServiceSubmitFlagInContestRejectsSecondSolveFromSameTeam(t *t
 	if err == nil {
 		t.Fatalf("expected same-team second solve conflict, got response: %+v", secondResp)
 	}
-	if !errors.Is(err, errcode.ErrContestChallengeSolved) {
+	if !errors.Is(err, contestcontracts.ErrContestChallengeSolved) {
 		t.Fatalf("expected ErrContestChallengeSolved, got %v", err)
 	}
 
@@ -417,8 +418,8 @@ func TestSubmissionServiceSubmitFlagInContestFailsWhenRateLimitLookupUnavailable
 	if err == nil {
 		t.Fatal("expected rate limit lookup failure to abort submission")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInternal.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInternal.Code {
 		t.Fatalf("expected internal error, got %v", err)
 	}
 
@@ -467,8 +468,8 @@ func TestSubmissionServiceSubmitFlagInContestFailsWhenIncorrectRateLimitWriteUna
 	if err == nil {
 		t.Fatal("expected incorrect submission rate limit write failure to abort submission")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInternal.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInternal.Code {
 		t.Fatalf("expected internal error, got %v", err)
 	}
 

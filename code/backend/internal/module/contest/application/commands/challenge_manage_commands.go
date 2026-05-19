@@ -2,8 +2,9 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 func (s *ChallengeService) RemoveChallengeFromContest(ctx context.Context, contestID, challengeID int64) error {
@@ -14,18 +15,18 @@ func (s *ChallengeService) RemoveChallengeFromContest(ctx context.Context, conte
 
 	exists, err := s.repo.Exists(ctx, contestID, challengeID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if !exists {
-		return errcode.ErrChallengeNotInContest
+		return contestcontracts.ErrChallengeNotInContest
 	}
 
 	hasSubmissions, err := s.repo.HasSubmissions(ctx, contestID, challengeID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if hasSubmissions {
-		return errcode.ErrContestChallengeHasSubs
+		return contestcontracts.ErrContestChallengeHasSubs
 	}
 
 	if err := s.repo.RemoveChallenge(ctx, contestID, challengeID); err != nil {
@@ -41,10 +42,10 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, chall
 
 	exists, err := s.repo.Exists(ctx, contestID, challengeID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if !exists {
-		return errcode.ErrChallengeNotInContest
+		return contestcontracts.ErrChallengeNotInContest
 	}
 	updates := make(map[string]any)
 	if req.Points != nil {

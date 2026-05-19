@@ -5,11 +5,11 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
-	"ctf-platform/pkg/errcode"
 )
 
 type NotificationService struct {
@@ -49,7 +49,7 @@ func (s *NotificationService) GetNotifications(ctx context.Context, userID int64
 		Limit:  pageSize,
 	})
 	if err != nil {
-		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+		return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 	}
 
 	result := make([]NotificationInfo, 0, len(items))

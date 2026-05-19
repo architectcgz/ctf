@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
-	"ctf-platform/pkg/errcode"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,25 +30,25 @@ func ParseChallengePackageDir(rootDir string) (*ParsedChallengePackage, error) {
 
 func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManifest, manifestRaw string) (*ParsedChallengePackage, error) {
 	if manifest == nil {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("challenge.yml 不能为空"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("challenge.yml 不能为空"))
 	}
 	if strings.TrimSpace(manifest.APIVersion) != "v1" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("challenge.yml api_version 仅支持 v1"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("challenge.yml api_version 仅支持 v1"))
 	}
 	if strings.TrimSpace(manifest.Kind) != "challenge" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("challenge.yml kind 必须为 challenge"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("challenge.yml kind 必须为 challenge"))
 	}
 	if strings.EqualFold(strings.TrimSpace(manifest.Meta.Mode), "awd") {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("AWD 题目包请使用 AWD 题目导入入口"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("AWD 题目包请使用 AWD 题目导入入口"))
 	}
 
 	slug := strings.TrimSpace(manifest.Meta.Slug)
 	if slug == "" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("challenge.yml meta.slug 不能为空"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("challenge.yml meta.slug 不能为空"))
 	}
 	title := strings.TrimSpace(manifest.Meta.Title)
 	if title == "" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("challenge.yml meta.title 不能为空"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("challenge.yml meta.title 不能为空"))
 	}
 	if err := validatePackageDockerfileLayout(rootDir); err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 	}
 	statementPath, err := safePackageJoin(rootDir, statementFile)
 	if err != nil {
-		return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("题面路径非法: %w", err))
+		return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("题面路径非法: %w", err))
 	}
 	statementBytes, err := os.ReadFile(statementPath)
 	if err != nil {
@@ -68,7 +68,7 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 	}
 	description := strings.TrimSpace(string(statementBytes))
 	if description == "" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("题面内容不能为空"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("题面内容不能为空"))
 	}
 
 	attachments, err := resolvePackageAttachments(rootDir, manifest.Content.Attachments)
@@ -84,7 +84,7 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 	switch flagType {
 	case challengeentity.FlagTypeStatic, challengeentity.FlagTypeDynamic, challengeentity.FlagTypeRegex, challengeentity.FlagTypeManualReview:
 	default:
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("flag.type 仅支持 static、dynamic、regex 或 manual_review"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("flag.type 仅支持 static、dynamic、regex 或 manual_review"))
 	}
 
 	flagPrefix := strings.TrimSpace(manifest.Flag.Prefix)
@@ -94,12 +94,12 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 
 	flagValue := strings.TrimSpace(manifest.Flag.Value)
 	if (flagType == challengeentity.FlagTypeStatic || flagType == challengeentity.FlagTypeRegex) && flagValue == "" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("static/regex 题目必须提供 flag.value"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("static/regex 题目必须提供 flag.value"))
 	}
 
 	points := manifest.Meta.Points
 	if points <= 0 {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("meta.points 必须大于 0"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("meta.points 必须大于 0"))
 	}
 
 	topology, err := parseChallengePackageTopology(rootDir, manifest.Extensions.Topology)
@@ -150,18 +150,18 @@ func resolvePackageAttachments(rootDir string, attachments []ChallengePackageAtt
 	for _, attachment := range attachments {
 		relPath := strings.TrimSpace(attachment.Path)
 		if relPath == "" {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("content.attachments.path 不能为空"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("content.attachments.path 不能为空"))
 		}
 		absolutePath, err := safePackageJoin(rootDir, relPath)
 		if err != nil {
-			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("附件路径非法: %w", err))
+			return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("附件路径非法: %w", err))
 		}
 		info, err := os.Stat(absolutePath)
 		if err != nil {
 			return nil, fmt.Errorf("attachment not found %s: %w", relPath, err)
 		}
 		if info.IsDir() {
-			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("附件必须是文件: %s", relPath))
+			return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("附件必须是文件: %s", relPath))
 		}
 
 		name := strings.TrimSpace(attachment.Name)
@@ -188,14 +188,14 @@ func resolvePackageHints(hints []ChallengePackageHint) ([]ParsedChallengePackage
 	for index, hint := range hints {
 		content := strings.TrimSpace(hint.Content)
 		if content == "" {
-			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("第 %d 个提示内容不能为空", index+1))
+			return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("第 %d 个提示内容不能为空", index+1))
 		}
 		level := hint.Level
 		if level <= 0 {
 			level = len(parsed) + 1
 		}
 		if _, exists := levels[level]; exists {
-			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("提示级别重复: %d", level))
+			return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("提示级别重复: %d", level))
 		}
 		levels[level] = struct{}{}
 
@@ -306,7 +306,7 @@ func validatePackageDockerfileLayout(rootDir string) error {
 			continue
 		}
 		if item.Path != "docker/Dockerfile" {
-			return errcode.ErrInvalidParams.WithCause(
+			return apperror.ErrInvalidParams.WithCause(
 				fmt.Errorf("容器题 Dockerfile 必须位于 docker/Dockerfile，当前为 %s", item.Path),
 			)
 		}

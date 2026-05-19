@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -27,7 +28,6 @@ import (
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestRepositoryListActiveContainerIDs(t *testing.T) {
@@ -713,7 +713,7 @@ func TestServiceDestroyInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
 	})
 
 	err := service.DestroyInstance(context.Background(), 905, 2)
-	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+	if err == nil || err.Error() != apperror.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden for awd team service destroy, got %v", err)
 	}
 }
@@ -746,7 +746,7 @@ func TestServiceExtendInstanceRejectsAWDTeamServiceInstance(t *testing.T) {
 	})
 
 	_, err := service.ExtendInstance(context.Background(), 906, 2)
-	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+	if err == nil || err.Error() != apperror.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden for awd team service extend, got %v", err)
 	}
 }
@@ -783,7 +783,7 @@ func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
 	})
 
 	err := service.DestroyInstance(context.Background(), 903, 2)
-	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+	if err == nil || err.Error() != apperror.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden for shared destroy, got %v", err)
 	}
 }
@@ -820,7 +820,7 @@ func TestServiceExtendInstanceRejectsSharedInstance(t *testing.T) {
 	})
 
 	_, err := service.ExtendInstance(context.Background(), 904, 2)
-	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+	if err == nil || err.Error() != apperror.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden for shared extend, got %v", err)
 	}
 }
@@ -1826,7 +1826,7 @@ func TestServiceListTeacherInstancesRejectsTeacherCrossClassFilter(t *testing.T)
 	seedUser(t, repo.db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 
 	_, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{ClassName: "Class B"})
-	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+	if err == nil || err.Error() != apperror.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden, got %v", err)
 	}
 }
@@ -1845,7 +1845,7 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	seedInstance(t, repo.db, &instanceentity.Instance{ID: 201, UserID: 2, ChallengeID: 11, Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 	seedInstance(t, repo.db, &instanceentity.Instance{ID: 202, UserID: 3, ChallengeID: 11, Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 
-	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, identitycontracts.RoleTeacher); err == nil || err.Error() != errcode.ErrForbidden.Error() {
+	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, identitycontracts.RoleTeacher); err == nil || err.Error() != apperror.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden destroy, got %v", err)
 	}
 

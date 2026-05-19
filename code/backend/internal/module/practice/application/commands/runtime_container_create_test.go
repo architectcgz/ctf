@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -13,7 +14,6 @@ import (
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
-	"ctf-platform/pkg/errcode"
 	"errors"
 	"fmt"
 	"testing"
@@ -71,7 +71,7 @@ func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testin
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
 	}, "flag{demo}")
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for shared topology flag injection, got %v", err)
 	}
 }

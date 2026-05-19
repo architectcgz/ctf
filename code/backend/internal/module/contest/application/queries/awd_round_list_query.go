@@ -3,7 +3,7 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 func (s *AWDService) ListRounds(ctx context.Context, contestID int64) ([]AWDRoundResult, error) {
@@ -13,7 +13,7 @@ func (s *AWDService) ListRounds(ctx context.Context, contestID int64) ([]AWDRoun
 
 	rounds, err := s.repo.ListRoundsByContest(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	resp := make([]AWDRoundResult, 0, len(rounds))

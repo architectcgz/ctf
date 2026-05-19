@@ -2,6 +2,7 @@ package commands_test
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"testing"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 func newContestParticipationServicesForTest(db *gorm.DB) (*contestcmd.ParticipationService, *contestqry.ParticipationService) {
@@ -143,7 +143,7 @@ func TestTeamServiceCreateTeamRequiresApprovedRegistration(t *testing.T) {
 	}
 
 	_, err := service.CreateTeam(context.Background(), 20, 2002, contestcmd.CreateTeamInput{Name: "Pending Team"})
-	if err != errcode.ErrContestRegistrationPending {
+	if err != contestcontracts.ErrContestRegistrationPending {
 		t.Fatalf("expected ErrContestRegistrationPending, got %v", err)
 	}
 

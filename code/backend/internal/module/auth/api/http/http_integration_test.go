@@ -21,6 +21,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
@@ -40,7 +41,6 @@ import (
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/internal/validation"
-	"ctf-platform/pkg/errcode"
 )
 
 type testEnvelope struct {
@@ -280,8 +280,8 @@ func TestHTTP_ChangePasswordFlow(t *testing.T) {
 		t.Fatalf("expected old password login to fail, got %d body=%s", oldLoginResp.Code, oldLoginResp.Body.String())
 	}
 	oldLoginBody := decodeEnvelope(t, oldLoginResp)
-	if oldLoginBody.Code != errcode.ErrInvalidCredentials.Code {
-		t.Fatalf("expected invalid credentials code %d, got %d", errcode.ErrInvalidCredentials.Code, oldLoginBody.Code)
+	if oldLoginBody.Code != apperror.ErrInvalidCredentials.Code {
+		t.Fatalf("expected invalid credentials code %d, got %d", apperror.ErrInvalidCredentials.Code, oldLoginBody.Code)
 	}
 
 	newLoginResp := performJSONRequest(
@@ -354,8 +354,8 @@ func TestHTTP_LogoutRevokesSessionAndAdminCanQueryAuditLogs(t *testing.T) {
 		t.Fatalf("expected revoked session to return 401, got %d body=%s", revokedResp.Code, revokedResp.Body.String())
 	}
 	revokedBody := decodeEnvelope(t, revokedResp)
-	if revokedBody.Code != errcode.ErrUnauthorized.Code {
-		t.Fatalf("expected unauthorized code %d, got %d", errcode.ErrUnauthorized.Code, revokedBody.Code)
+	if revokedBody.Code != apperror.ErrUnauthorized.Code {
+		t.Fatalf("expected unauthorized code %d, got %d", apperror.ErrUnauthorized.Code, revokedBody.Code)
 	}
 
 	adminLoginResp := performJSONRequest(
@@ -495,10 +495,10 @@ func TestHTTP_LoginIsTemporarilyLockedAfterRepeatedFailures(t *testing.T) {
 			nil,
 		)
 		expectedStatus := http.StatusUnauthorized
-		expectedCode := errcode.ErrInvalidCredentials.Code
+		expectedCode := apperror.ErrInvalidCredentials.Code
 		if attempt == 3 {
 			expectedStatus = http.StatusTooManyRequests
-			expectedCode = errcode.ErrLoginTooFrequent.Code
+			expectedCode = apperror.ErrLoginTooFrequent.Code
 		}
 		if failedResp.Code != expectedStatus {
 			t.Fatalf("attempt %d expected status %d, got %d body=%s", attempt, expectedStatus, failedResp.Code, failedResp.Body.String())
@@ -525,8 +525,8 @@ func TestHTTP_LoginIsTemporarilyLockedAfterRepeatedFailures(t *testing.T) {
 		t.Fatalf("expected locked login status 403, got %d body=%s", lockedResp.Code, lockedResp.Body.String())
 	}
 	lockedBody := decodeEnvelope(t, lockedResp)
-	if lockedBody.Code != errcode.ErrAccountLocked.Code {
-		t.Fatalf("expected account locked code %d, got %d", errcode.ErrAccountLocked.Code, lockedBody.Code)
+	if lockedBody.Code != apperror.ErrAccountLocked.Code {
+		t.Fatalf("expected account locked code %d, got %d", apperror.ErrAccountLocked.Code, lockedBody.Code)
 	}
 }
 
@@ -644,8 +644,8 @@ func TestHTTP_CASCallbackRejectsUserWhenAutoProvisionDisabled(t *testing.T) {
 		t.Fatalf("unexpected cas callback status: %d body=%s", resp.Code, resp.Body.String())
 	}
 	body := decodeEnvelope(t, resp)
-	if body.Code != errcode.ErrCASUserNotProvisioned.Code {
-		t.Fatalf("expected cas user not provisioned code %d, got %d", errcode.ErrCASUserNotProvisioned.Code, body.Code)
+	if body.Code != apperror.ErrCASUserNotProvisioned.Code {
+		t.Fatalf("expected cas user not provisioned code %d, got %d", apperror.ErrCASUserNotProvisioned.Code, body.Code)
 	}
 }
 
@@ -787,7 +787,7 @@ func (s *memoryTokenService) GetSession(_ context.Context, sessionID string) (*a
 
 	session, ok := s.sessions[sessionID]
 	if !ok {
-		return nil, errcode.ErrUnauthorized
+		return nil, apperror.ErrUnauthorized
 	}
 	return &session, nil
 }
@@ -819,7 +819,7 @@ func (s *memoryTokenService) IssueWSTicket(ctx context.Context, user authctx.Cur
 
 func (s *memoryTokenService) ConsumeWSTicket(ctx context.Context, ticket string) (*authctx.CurrentUser, error) {
 	if ticket == "" {
-		return nil, errcode.ErrWSTicketInvalid
+		return nil, authcontracts.ErrWSTicketInvalid
 	}
 
 	s.mu.Lock()
@@ -827,7 +827,7 @@ func (s *memoryTokenService) ConsumeWSTicket(ctx context.Context, ticket string)
 
 	user, ok := s.tickets[ticket]
 	if !ok {
-		return nil, errcode.ErrWSTicketInvalid
+		return nil, authcontracts.ErrWSTicketInvalid
 	}
 	delete(s.tickets, ticket)
 	return &user, nil
@@ -966,14 +966,14 @@ func testAuthMiddleware(tokenService authcontracts.TokenService, cookieName stri
 	return func(c *gin.Context) {
 		sessionID, err := c.Cookie(cookieName)
 		if err != nil || sessionID == "" {
-			response.Error(c, errcode.ErrUnauthorized)
+			response.Error(c, apperror.ErrUnauthorized)
 			c.Abort()
 			return
 		}
 
 		session, err := tokenService.GetSession(c.Request.Context(), sessionID)
 		if err != nil {
-			response.Error(c, errcode.ErrUnauthorized)
+			response.Error(c, apperror.ErrUnauthorized)
 			c.Abort()
 			return
 		}
@@ -999,7 +999,7 @@ func testRequireRole(minRole string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentUser := authctx.MustCurrentUser(c)
 		if roleLevels[currentUser.Role] < roleLevels[minRole] {
-			response.Error(c, errcode.ErrForbidden)
+			response.Error(c, apperror.ErrForbidden)
 			c.Abort()
 			return
 		}

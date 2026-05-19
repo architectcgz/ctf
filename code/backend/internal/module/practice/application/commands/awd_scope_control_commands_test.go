@@ -2,6 +2,7 @@ package commands_test
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"testing"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestServiceAWDControlLifecycleGuards(t *testing.T) {
@@ -33,7 +33,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 				_, err := service.StartContestAWDService(context.Background(), userID, contestID, serviceID)
 				return err
 			},
-			wantErr: errcode.ErrAWDTeamRetired,
+			wantErr: contestcontracts.ErrAWDTeamRetired,
 		},
 		{
 			name:        "user_start_rejects_disabled_service",
@@ -42,7 +42,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 				_, err := service.StartContestAWDService(context.Background(), userID, contestID, serviceID)
 				return err
 			},
-			wantErr: errcode.ErrAWDServiceDisabled,
+			wantErr: contestcontracts.ErrAWDServiceDisabled,
 		},
 		{
 			name:        "admin_start_rejects_retired_team",
@@ -51,7 +51,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 				_, err := service.StartAdminContestAWDTeamService(context.Background(), contestID, teamID, serviceID)
 				return err
 			},
-			wantErr: errcode.ErrAWDTeamRetired,
+			wantErr: contestcontracts.ErrAWDTeamRetired,
 		},
 		{
 			name:        "admin_start_rejects_disabled_service",
@@ -60,7 +60,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 				_, err := service.StartAdminContestAWDTeamService(context.Background(), contestID, teamID, serviceID)
 				return err
 			},
-			wantErr: errcode.ErrAWDServiceDisabled,
+			wantErr: contestcontracts.ErrAWDServiceDisabled,
 		},
 	} {
 		tc := tc

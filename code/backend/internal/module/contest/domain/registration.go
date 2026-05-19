@@ -1,8 +1,8 @@
 package domain
 
 import (
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func RegistrationStatusError(status string) error {
@@ -10,10 +10,10 @@ func RegistrationStatusError(status string) error {
 	case "", contestentity.ContestRegistrationStatusApproved:
 		return nil
 	case contestentity.ContestRegistrationStatusPending:
-		return errcode.ErrContestRegistrationPending
+		return contestcontracts.ErrContestRegistrationPending
 	case contestentity.ContestRegistrationStatusRejected:
-		return errcode.ErrRegistrationNotApproved
+		return contestcontracts.ErrRegistrationNotApproved
 	default:
-		return errcode.ErrRegistrationNotApproved
+		return contestcontracts.ErrRegistrationNotApproved
 	}
 }

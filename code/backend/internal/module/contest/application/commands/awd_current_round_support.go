@@ -2,10 +2,10 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"time"
 
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) resolveCurrentRound(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
@@ -18,7 +18,7 @@ func (s *AWDService) resolveCurrentRound(ctx context.Context, contestID int64) (
 
 func (s *AWDService) resolveCurrentRoundForContest(ctx context.Context, contest *contestentity.Contest) (*contestentity.AWDRound, error) {
 	if contest == nil {
-		return nil, errcode.ErrContestNotFound
+		return nil, contestcontracts.ErrContestNotFound
 	}
 
 	now := time.Now().UTC()

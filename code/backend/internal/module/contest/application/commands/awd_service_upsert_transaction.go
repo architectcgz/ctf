@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) upsertServiceCheckAndRecalculate(
@@ -37,7 +37,7 @@ func (s *AWDService) upsertServiceCheckAndRecalculate(
 		}
 		return txRepo.RecalculateContestTeamScores(ctx, contestID)
 	}); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return record, nil
 }

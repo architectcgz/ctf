@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
-	"ctf-platform/pkg/errcode"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -158,7 +158,7 @@ func TestAWDDefenseSSHGatewayAuthenticateRejectsStaleWorkspaceRevision(t *testin
 	)
 
 	_, err := gateway.authenticate(context.Background(), "student+52+72", "ticket-secret")
-	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+	if err == nil || err.Error() != apperror.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden error for stale workspace revision, got %v", err)
 	}
 }

@@ -2,11 +2,12 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type awdReadinessGateDecision struct {
@@ -54,7 +55,7 @@ func ensureAWDReadinessGate(ctx context.Context, repo contestports.AWDReadinessQ
 	if decision.Allowed() {
 		return nil
 	}
-	return errcode.ErrAWDReadinessBlocked
+	return contestcontracts.ErrAWDReadinessBlocked
 }
 
 func evaluateAWDReadinessGate(ctx context.Context, repo contestports.AWDReadinessQuery, contestID int64, forceOverride *bool, overrideReason *string) (*awdReadinessGateDecision, error) {
@@ -63,12 +64,12 @@ func evaluateAWDReadinessGate(ctx context.Context, repo contestports.AWDReadines
 		return nil, err
 	}
 	if repo == nil {
-		return nil, errcode.ErrInternal
+		return nil, apperror.ErrInternal
 	}
 
 	summary, err := loadAWDReadinessSummary(ctx, repo, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return &awdReadinessGateDecision{
 		allowed:          summary.Ready || forced,
@@ -113,7 +114,7 @@ func normalizeAWDReadinessOverride(forceOverride *bool, overrideReason *string) 
 		reason = strings.TrimSpace(*overrideReason)
 	}
 	if reason == "" {
-		return false, "", errcode.ErrInvalidParams
+		return false, "", apperror.ErrInvalidParams
 	}
 	return true, reason, nil
 }

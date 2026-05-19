@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type TopologyService struct {
@@ -43,7 +43,7 @@ func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
@@ -118,11 +118,11 @@ func validateSharedTopologyConstraint(challenge *challengeports.ChallengeTopolog
 	}
 	spec, err := challengecontracts.DecodeTopologySpec(rawSpec)
 	if err != nil {
-		return errcode.ErrInvalidParams.WithCause(err)
+		return apperror.ErrInvalidParams.WithCause(err)
 	}
 	for _, node := range spec.Nodes {
 		if node.InjectFlag {
-			return errcode.ErrInvalidParams.WithCause(errors.New("共享实例只适用于无状态题，不支持带 Flag 注入的拓扑"))
+			return apperror.ErrInvalidParams.WithCause(errors.New("共享实例只适用于无状态题，不支持带 Flag 注入的拓扑"))
 		}
 	}
 	return nil
@@ -131,7 +131,7 @@ func validateSharedTopologyConstraint(challenge *challengeports.ChallengeTopolog
 func (s *TopologyService) DeleteChallengeTopology(ctx context.Context, challengeID int64) error {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyChallengeNotFound) {
-			return errcode.ErrChallengeNotFound
+			return challengecontracts.ErrChallengeNotFound
 		}
 		return err
 	}
@@ -162,7 +162,7 @@ func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req Upse
 	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyTemplateNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -187,7 +187,7 @@ func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req Upse
 func (s *TopologyService) DeleteTemplate(ctx context.Context, id int64) error {
 	if _, err := s.templateRepo.FindByID(ctx, id); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyTemplateNotFound) {
-			return errcode.ErrNotFound
+			return apperror.ErrNotFound
 		}
 		return err
 	}
@@ -199,7 +199,7 @@ func (s *TopologyService) resolveTopologyPayload(ctx context.Context, req SaveCh
 		item, findErr := s.templateRepo.FindByID(ctx, *req.TemplateID)
 		if findErr != nil {
 			if errors.Is(findErr, challengeports.ErrChallengeTopologyTemplateNotFound) {
-				return "", "", nil, errcode.ErrNotFound.WithCause(errors.New("环境模板不存在"))
+				return "", "", nil, apperror.ErrNotFound.WithCause(errors.New("环境模板不存在"))
 			}
 			return "", "", nil, findErr
 		}
@@ -229,7 +229,7 @@ func (s *TopologyService) ensureTopologyImagesExist(ctx context.Context, rawSpec
 		seen[node.ImageID] = struct{}{}
 		if _, findErr := s.imageRepo.FindByID(ctx, node.ImageID); findErr != nil {
 			if errors.Is(findErr, challengeports.ErrChallengeImageNotFound) {
-				return errcode.ErrInvalidParams.WithCause(errors.New("拓扑节点引用的镜像不存在"))
+				return apperror.ErrInvalidParams.WithCause(errors.New("拓扑节点引用的镜像不存在"))
 			}
 			return findErr
 		}

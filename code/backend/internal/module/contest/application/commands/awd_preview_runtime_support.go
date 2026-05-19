@@ -8,11 +8,11 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 const defaultAWDPreviewFlag = "flag{preview}"
@@ -43,8 +43,8 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 		}
 		_, runtimeConfig, err := s.loadPreviewRuntimeDefinition(ctx, previewService, previewChallengeID)
 		if err != nil {
-			if appErr, ok := err.(*errcode.AppError); ok &&
-				(appErr.Code == errcode.ErrNotFound.Code || appErr.Code == errcode.ErrInvalidParams.Code) {
+			if appErr, ok := err.(*apperror.AppError); ok &&
+				(appErr.Code == apperror.ErrNotFound.Code || appErr.Code == apperror.ErrInvalidParams.Code) {
 				return strings.TrimSpace(explicitAccessURL), "", "", nil, nil
 			}
 			return "", "", "", nil, err
@@ -56,7 +56,7 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 		return strings.TrimSpace(explicitAccessURL), checkerTokenEnv, checkerToken, nil, nil
 	}
 	if s.runtimeProbe == nil {
-		return "", "", "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法自动拉起试跑实例，请手动填写目标访问地址"))
+		return "", "", "", nil, apperror.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法自动拉起试跑实例，请手动填写目标访问地址"))
 	}
 
 	deploymentMode, runtimeConfig, err := s.loadPreviewRuntimeDefinition(ctx, previewService, previewChallengeID)
@@ -64,7 +64,7 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 		return "", "", "", nil, err
 	}
 	if deploymentMode != "" && deploymentMode != challengecontracts.AWDDeploymentModeSingleContainer {
-		return "", "", "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目尚不支持自动拉起该部署模式的试跑实例，请手动填写目标访问地址"))
+		return "", "", "", nil, apperror.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目尚不支持自动拉起该部署模式的试跑实例，请手动填写目标访问地址"))
 	}
 
 	imageRef, err := s.resolvePreviewImageRef(ctx, runtimeConfig)
@@ -84,7 +84,7 @@ func (s *AWDService) prepareCheckerPreviewAccessURL(
 	}
 	accessURL, details, err := s.runtimeProbe.CreateContainer(ctx, imageRef, env)
 	if err != nil {
-		return "", "", "", nil, errcode.ErrInternal.WithCause(err)
+		return "", "", "", nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return accessURL, checkerTokenEnv, checkerToken, func(cleanupCtx context.Context) error {
@@ -104,7 +104,7 @@ func (s *AWDService) resolvePreviewCheckerToken(runtimeConfig map[string]any, co
 	}
 	checkerToken := contestdomain.BuildAWDCheckerPreviewToken(contestID, serviceID, awdChallengeID, s.flagSecret)
 	if strings.TrimSpace(checkerToken) == "" {
-		return "", "", errcode.ErrInternal.WithCause(errors.New("checker token secret is not configured"))
+		return "", "", apperror.ErrInternal.WithCause(errors.New("checker token secret is not configured"))
 	}
 	return checkerTokenEnv, checkerToken, nil
 }
@@ -117,22 +117,22 @@ func (s *AWDService) loadPreviewRuntimeDefinition(
 	if previewService != nil {
 		snapshot, err := contestentity.DecodeContestAWDServiceSnapshot(previewService.ServiceSnapshot)
 		if err != nil {
-			return "", nil, errcode.ErrInternal.WithCause(err)
+			return "", nil, apperror.ErrInternal.WithCause(err)
 		}
 		if len(snapshot.RuntimeConfig) > 0 {
 			return challengecontracts.AWDDeploymentMode(snapshot.DeploymentMode), snapshot.RuntimeConfig, nil
 		}
 	}
 	if previewChallengeID <= 0 || s.awdChallengeRepo == nil {
-		return "", nil, errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目缺少可用的运行配置，请手动填写目标访问地址"))
+		return "", nil, apperror.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目缺少可用的运行配置，请手动填写目标访问地址"))
 	}
 
 	challenge, err := s.awdChallengeRepo.FindAWDChallengeByID(ctx, previewChallengeID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestAWDPreviewChallengeNotFound) {
-			return "", nil, errcode.ErrNotFound
+			return "", nil, apperror.ErrNotFound
 		}
-		return "", nil, errcode.ErrInternal.WithCause(err)
+		return "", nil, apperror.ErrInternal.WithCause(err)
 	}
 	return challenge.DeploymentMode, parseContestAWDServiceJSONMap(challenge.RuntimeConfig), nil
 }
@@ -147,8 +147,8 @@ func (s *AWDService) ensureExplicitPreviewRuntimeImageAvailable(
 	}
 	_, runtimeConfig, err := s.loadPreviewRuntimeDefinition(ctx, previewService, previewChallengeID)
 	if err != nil {
-		if appErr, ok := err.(*errcode.AppError); ok &&
-			(appErr.Code == errcode.ErrNotFound.Code || appErr.Code == errcode.ErrInvalidParams.Code) {
+		if appErr, ok := err.(*apperror.AppError); ok &&
+			(appErr.Code == apperror.ErrNotFound.Code || appErr.Code == apperror.ErrInvalidParams.Code) {
 			return nil
 		}
 		return err
@@ -163,7 +163,7 @@ func (s *AWDService) ensureExplicitPreviewRuntimeImageAvailable(
 		return nil
 	}
 	if s.imageRepo == nil {
-		return errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法解析镜像配置"))
+		return apperror.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法解析镜像配置"))
 	}
 	_, err = s.resolvePreviewImageRefByID(ctx, imageID)
 	return err
@@ -182,27 +182,27 @@ func (s *AWDService) resolvePreviewImageRef(ctx context.Context, runtimeConfig m
 
 	imageID := readInt64FromAny(runtimeConfig["image_id"])
 	if imageID <= 0 {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目未配置可拉起的镜像，请手动填写目标访问地址"))
+		return "", apperror.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目未配置可拉起的镜像，请手动填写目标访问地址"))
 	}
 	if s.imageRepo == nil {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法解析镜像配置，请手动填写目标访问地址"))
+		return "", apperror.ErrInvalidParams.WithCause(errors.New("当前 AWD 题目无法解析镜像配置，请手动填写目标访问地址"))
 	}
 	return s.resolvePreviewImageRefByID(ctx, imageID)
 }
 
 func (s *AWDService) resolvePreviewImageRefByID(ctx context.Context, imageID int64) (string, error) {
 	if imageID <= 0 {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("invalid preview image id"))
+		return "", apperror.ErrInvalidParams.WithCause(errors.New("invalid preview image id"))
 	}
 	imageItem, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestAWDPreviewImageNotFound) {
-			return "", errcode.ErrNotFound
+			return "", apperror.ErrNotFound
 		}
-		return "", errcode.ErrInternal.WithCause(err)
+		return "", apperror.ErrInternal.WithCause(err)
 	}
 	if imageItem.Status != contestPreviewImageStatusAvailable {
-		return "", errcode.ErrInvalidParams.WithCause(fmt.Errorf("preview image %d status=%s", imageItem.ID, imageItem.Status))
+		return "", apperror.ErrInvalidParams.WithCause(fmt.Errorf("preview image %d status=%s", imageItem.ID, imageItem.Status))
 	}
 	return buildContestPreviewImageRef(imageItem.Name, imageItem.Tag, imageItem.Digest), nil
 }
@@ -256,7 +256,7 @@ func (s *AWDService) cleanupCheckerPreviewRuntime(ctx context.Context, cleanup f
 			s.log.Warn("cleanup_checker_preview_runtime_failed", zap.Error(err))
 			return nil
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }

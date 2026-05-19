@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/app/composition"
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/auditlog"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
@@ -44,7 +45,6 @@ import (
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	xws "golang.org/x/net/websocket"
@@ -2091,7 +2091,7 @@ func TestFullRouter_AWDContestLegacyChallengeInstanceRouteRejected(t *testing.T)
 	if err := json.Unmarshal(resp.Body.Bytes(), &envelope); err != nil {
 		t.Fatalf("decode challenge-based awd instance route response: %v body=%s", err, resp.Body.String())
 	}
-	if envelope.Code != errcode.ErrInvalidParams.Code || envelope.Message != errcode.ErrInvalidParams.Message {
+	if envelope.Code != apperror.ErrInvalidParams.Code || envelope.Message != apperror.ErrInvalidParams.Message {
 		t.Fatalf("expected invalid params envelope, got %+v", envelope)
 	}
 

@@ -8,12 +8,12 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	crypto "ctf-platform/internal/shared/flagcrypto"
-	"ctf-platform/pkg/errcode"
 )
 
 func bestEffortFailureContext(ctx context.Context) context.Context {
@@ -56,7 +56,7 @@ func (s *Service) provisionInstance(ctx context.Context, instance *instancecontr
 		if err := s.waitForInstanceReadiness(createCtx, instance.AccessURL); err != nil {
 			s.logger.Error("实例访问地址未就绪", zap.Error(err), zap.Int64("instance_id", instance.ID), zap.String("access_url", instance.AccessURL))
 			s.markInstanceFailed(ctx, instance)
-			return errcode.ErrContainerStartFailed.WithCause(err)
+			return instancecontracts.ErrContainerStartFailed.WithCause(err)
 		}
 	} else {
 		s.logger.Info("跳过宿主机探活，AWD 实例使用赛内稳定网络访问",
@@ -68,7 +68,7 @@ func (s *Service) provisionInstance(ctx context.Context, instance *instancecontr
 	if err := s.instanceRepo.UpdateRuntime(ctx, instance); err != nil {
 		s.logger.Error("更新实例状态失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
 		s.markInstanceFailed(ctx, instance)
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil {
 		s.clearDesiredAWDReconcileFailure(ctx, *instance.ContestID, *instance.TeamID, *instance.ServiceID)
@@ -125,16 +125,16 @@ func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string
 
 func (s *Service) buildProvisioningFlag(instance *instancecontracts.Instance, chal *practiceentity.Challenge) (string, error) {
 	if instance == nil || chal == nil {
-		return "", errcode.ErrInternal.WithCause(fmt.Errorf("instance or challenge is nil"))
+		return "", apperror.ErrInternal.WithCause(fmt.Errorf("instance or challenge is nil"))
 	}
 
 	switch chal.FlagType {
 	case practiceentity.FlagTypeDynamic:
 		if strings.TrimSpace(instance.Nonce) == "" {
-			return "", errcode.ErrInternal.WithCause(fmt.Errorf("instance nonce is empty"))
+			return "", apperror.ErrInternal.WithCause(fmt.Errorf("instance nonce is empty"))
 		}
 		if strings.TrimSpace(s.config.Container.FlagGlobalSecret) == "" {
-			return "", errcode.ErrInternal.WithCause(fmt.Errorf("flag global secret is empty"))
+			return "", apperror.ErrInternal.WithCause(fmt.Errorf("flag global secret is empty"))
 		}
 		subjectID := instance.UserID
 		if instance.TeamID != nil && *instance.TeamID > 0 {

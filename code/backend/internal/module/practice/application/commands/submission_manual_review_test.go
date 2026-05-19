@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -14,7 +15,6 @@ import (
 	"ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 	"errors"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
@@ -760,7 +760,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 	)
 
 	_, err := service.SubmitFlag(context.Background(), 7, 11, "flag{legacy}")
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for unknown flag type, got %v", err)
 	}
 }
@@ -869,8 +869,8 @@ func TestSubmitFlagTreatsPracticeChallengeNotFoundAsChallengeNotFound(t *testing
 	if err == nil {
 		t.Fatal("expected challenge not found")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrChallengeNotFound.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != challengecontracts.ErrChallengeNotFound.Code {
 		t.Fatalf("expected challenge not found error, got %v", err)
 	}
 }
@@ -1098,8 +1098,8 @@ func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected student role to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrForbidden.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrForbidden.Code {
 		t.Fatalf("expected forbidden error, got %v", err)
 	}
 }
@@ -1132,8 +1132,8 @@ func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing
 	if err == nil {
 		t.Fatal("expected invalid review status to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %v", err)
 	}
 }
@@ -1166,8 +1166,8 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T
 	if err == nil {
 		t.Fatal("expected oversized page size to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %v", err)
 	}
 }
@@ -1201,8 +1201,8 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testin
 	if err == nil {
 		t.Fatal("expected non-positive student id to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %v", err)
 	}
 }
@@ -1232,8 +1232,8 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *test
 	if err == nil {
 		t.Fatal("expected non-positive challenge id to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %v", err)
 	}
 }
@@ -1262,8 +1262,8 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.
 	if err == nil {
 		t.Fatal("expected oversized class name to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %v", err)
 	}
 }
@@ -1335,8 +1335,8 @@ func TestGetTeacherManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected student role to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrForbidden.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrForbidden.Code {
 		t.Fatalf("expected forbidden error, got %v", err)
 	}
 }
@@ -1370,8 +1370,8 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected student role to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrForbidden.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrForbidden.Code {
 		t.Fatalf("expected forbidden error, got %v", err)
 	}
 }
@@ -1405,8 +1405,8 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected invalid review status to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %v", err)
 	}
 }
@@ -1443,8 +1443,8 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 	if err == nil {
 		t.Fatal("expected oversized review comment to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %v", err)
 	}
 }
@@ -1527,8 +1527,8 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 	if err == nil {
 		t.Fatal("expected already solved approval to be rejected")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrAlreadySolved.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != challengecontracts.ErrAlreadySolved.Code {
 		t.Fatalf("expected already solved error, got %v", err)
 	}
 }
@@ -1551,8 +1551,8 @@ func TestGetTeacherManualReviewSubmissionTreatsPracticeManualReviewSubmissionNot
 	if err == nil {
 		t.Fatal("expected manual review detail lookup to fail")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrNotFound.Code {
 		t.Fatalf("expected not found error, got %v", err)
 	}
 }
@@ -1575,8 +1575,8 @@ func TestListMyChallengeSubmissionsTreatsPracticeChallengeNotFoundAsChallengeNot
 	if err == nil {
 		t.Fatal("expected challenge not found")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrChallengeNotFound.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != challengecontracts.ErrChallengeNotFound.Code {
 		t.Fatalf("expected challenge not found error, got %v", err)
 	}
 }

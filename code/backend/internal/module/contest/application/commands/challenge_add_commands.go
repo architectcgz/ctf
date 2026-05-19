@@ -2,11 +2,13 @@ package commands
 
 import (
 	"context"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID int64, req AddContestChallengeInput) (*ContestChallengeResp, error) {
@@ -17,20 +19,20 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 	challenge, err := s.challengeRepo.FindByID(ctx, req.ChallengeID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestChallengeEntityNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if challenge.Status != contestentity.ChallengeStatusPublished {
-		return nil, errcode.ErrChallengeNotPublished
+		return nil, contestcontracts.ErrChallengeNotPublished
 	}
 
 	exists, err := s.repo.Exists(ctx, contestID, req.ChallengeID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if exists {
-		return nil, errcode.ErrChallengeAlreadyAdded
+		return nil, contestcontracts.ErrChallengeAlreadyAdded
 	}
 
 	points := req.Points
@@ -50,7 +52,7 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 		IsVisible:   isVisible,
 	}
 	if err := s.repo.AddChallenge(ctx, cc); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return contestChallengeRespFromModel(cc, challenge), nil
 }

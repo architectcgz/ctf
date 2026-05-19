@@ -2,11 +2,11 @@ package http
 
 import (
 	"context"
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	response "ctf-platform/internal/httpresponse"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	"ctf-platform/pkg/errcode"
 	"fmt"
 	"io"
 	nethttp "net/http"
@@ -346,14 +346,14 @@ func (h *Handler) DownloadAttachment(c *gin.Context) {
 	info, err := os.Stat(target)
 	if err != nil {
 		if os.IsNotExist(err) {
-			response.Error(c, errcode.ErrNotFound)
+			response.Error(c, apperror.ErrNotFound)
 			return
 		}
 		response.FromError(c, err)
 		return
 	}
 	if info.IsDir() {
-		response.Error(c, errcode.ErrNotFound)
+		response.Error(c, apperror.ErrNotFound)
 		return
 	}
 

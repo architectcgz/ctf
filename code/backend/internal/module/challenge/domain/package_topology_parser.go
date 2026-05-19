@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	"ctf-platform/pkg/errcode"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,12 +23,12 @@ func parseChallengePackageTopology(
 
 	source := strings.TrimSpace(extension.Source)
 	if source == "" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("extensions.topology.source 不能为空"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("extensions.topology.source 不能为空"))
 	}
 
 	topologyPath, err := safePackageJoin(rootDir, source)
 	if err != nil {
-		return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("拓扑文件路径非法: %w", err))
+		return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("拓扑文件路径非法: %w", err))
 	}
 	content, err := os.ReadFile(topologyPath)
 	if err != nil {
@@ -40,13 +40,13 @@ func parseChallengePackageTopology(
 		return nil, fmt.Errorf("parse topology %s: %w", topologyPath, err)
 	}
 	if strings.TrimSpace(manifest.APIVersion) != "v1" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("topology.yml api_version 仅支持 v1"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("topology.yml api_version 仅支持 v1"))
 	}
 	if strings.TrimSpace(manifest.Kind) != "topology" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("topology.yml kind 必须为 topology"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("topology.yml kind 必须为 topology"))
 	}
 	if len(manifest.Nodes) == 0 {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("题目包拓扑至少需要一个节点"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("题目包拓扑至少需要一个节点"))
 	}
 
 	parsed := &ParsedChallengePackageTopology{
@@ -63,10 +63,10 @@ func parseChallengePackageTopology(
 	for _, network := range manifest.Networks {
 		key := strings.TrimSpace(network.Key)
 		if key == "" {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("拓扑网络 key 不能为空"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("拓扑网络 key 不能为空"))
 		}
 		if _, exists := networkKeys[key]; exists {
-			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("拓扑网络 key 重复: %s", key))
+			return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("拓扑网络 key 重复: %s", key))
 		}
 		networkKeys[key] = struct{}{}
 		parsed.Networks = append(parsed.Networks, ChallengePackageTopologyNetwork{
@@ -89,17 +89,17 @@ func parseChallengePackageTopology(
 	for _, node := range manifest.Nodes {
 		key := strings.TrimSpace(node.Key)
 		if key == "" {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("拓扑节点 key 不能为空"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("拓扑节点 key 不能为空"))
 		}
 		if _, exists := nodeKeys[key]; exists {
-			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("拓扑节点 key 重复: %s", key))
+			return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("拓扑节点 key 重复: %s", key))
 		}
 		nodeKeys[key] = struct{}{}
 		if strings.TrimSpace(node.Image.Ref) == "" {
-			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("拓扑节点 %s 缺少 image.ref", key))
+			return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("拓扑节点 %s 缺少 image.ref", key))
 		}
 		if dockerfile := strings.TrimSpace(node.Image.Dockerfile); dockerfile != "" && filepath.ToSlash(filepath.Clean(dockerfile)) != "docker/Dockerfile" {
-			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("拓扑节点 %s 的 image.dockerfile 必须为 docker/Dockerfile", key))
+			return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("拓扑节点 %s 的 image.dockerfile 必须为 docker/Dockerfile", key))
 		}
 		if node.InjectFlag {
 			injectFlagCount++
@@ -125,7 +125,7 @@ func parseChallengePackageTopology(
 		parsed.EntryNodeKey = parsed.Nodes[0].Key
 	}
 	if _, exists := nodeKeys[parsed.EntryNodeKey]; !exists {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("题目包拓扑入口节点不存在"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("题目包拓扑入口节点不存在"))
 	}
 
 	entryHasPort := false
@@ -141,17 +141,17 @@ func parseChallengePackageTopology(
 		}
 	}
 	if !entryHasPort {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("题目包拓扑入口节点必须配置 service_port"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("题目包拓扑入口节点必须配置 service_port"))
 	}
 
 	for _, link := range manifest.Links {
 		from := strings.TrimSpace(link.FromNodeKey)
 		to := strings.TrimSpace(link.ToNodeKey)
 		if _, exists := nodeKeys[from]; !exists {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("题目包拓扑连线源节点不存在"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("题目包拓扑连线源节点不存在"))
 		}
 		if _, exists := nodeKeys[to]; !exists {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("题目包拓扑连线目标节点不存在"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("题目包拓扑连线目标节点不存在"))
 		}
 		parsed.Links = append(parsed.Links, ChallengePackageTopologyLink{
 			FromNodeKey: from,
@@ -163,16 +163,16 @@ func parseChallengePackageTopology(
 		sourceKey := strings.TrimSpace(policy.SourceNodeKey)
 		targetKey := strings.TrimSpace(policy.TargetNodeKey)
 		if _, exists := nodeKeys[sourceKey]; !exists {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("题目包拓扑策略源节点不存在"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("题目包拓扑策略源节点不存在"))
 		}
 		if _, exists := nodeKeys[targetKey]; !exists {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("题目包拓扑策略目标节点不存在"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("题目包拓扑策略目标节点不存在"))
 		}
 		action := strings.TrimSpace(policy.Action)
 		switch action {
 		case challengecontracts.TopologyPolicyActionAllow, challengecontracts.TopologyPolicyActionDeny:
 		default:
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("题目包拓扑策略 action 仅支持 allow/deny"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("题目包拓扑策略 action 仅支持 allow/deny"))
 		}
 		parsed.Policies = append(parsed.Policies, ChallengePackageTopologyPolicy{
 			SourceNodeKey: sourceKey,
@@ -201,7 +201,7 @@ func normalizeImportedTopologyNodeNetworks(
 			continue
 		}
 		if _, exists := knownNetworks[key]; !exists {
-			return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("节点引用未知网络: %s", key))
+			return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("节点引用未知网络: %s", key))
 		}
 		if _, exists := seen[key]; exists {
 			continue
@@ -253,10 +253,10 @@ func BuildTopologySpecFromImportedPackage(
 	resolveImageID func(imageRef string) (int64, error),
 ) (string, string, error) {
 	if topology == nil {
-		return "", "", errcode.ErrInvalidParams.WithCause(errors.New("题目包拓扑不能为空"))
+		return "", "", apperror.ErrInvalidParams.WithCause(errors.New("题目包拓扑不能为空"))
 	}
 	if resolveImageID == nil {
-		return "", "", errcode.ErrInvalidParams.WithCause(errors.New("缺少拓扑镜像解析器"))
+		return "", "", apperror.ErrInvalidParams.WithCause(errors.New("缺少拓扑镜像解析器"))
 	}
 
 	specNetworks, networkKeys, fallbackNetworkKey, err := normalizeTopologyNetworks(toTopologyNetworkReqs(topology.Networks))
@@ -269,7 +269,7 @@ func BuildTopologySpecFromImportedPackage(
 	for _, node := range topology.Nodes {
 		key := strings.TrimSpace(node.Key)
 		if _, exists := seenNodes[key]; exists {
-			return "", "", errcode.ErrInvalidParams.WithCause(errors.New("节点 key 不能重复"))
+			return "", "", apperror.ErrInvalidParams.WithCause(errors.New("节点 key 不能重复"))
 		}
 		seenNodes[key] = struct{}{}
 

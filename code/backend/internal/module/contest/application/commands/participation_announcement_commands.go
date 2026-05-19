@@ -5,19 +5,19 @@ import (
 	"errors"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	platformevents "ctf-platform/internal/platform/events"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID, actorUserID int64, req CreateAnnouncementInput) (*ContestAnnouncementResp, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	now := time.Now().UTC()
@@ -30,7 +30,7 @@ func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID
 		UpdatedAt: now,
 	}
 	if err := s.repo.CreateAnnouncement(ctx, item); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	result := contestResponseMapperInst.ToContestAnnouncementRespBasePtr(item)
 	publishContestWeakEvent(ctx, s.eventBus, platformevents.Event{
@@ -50,10 +50,10 @@ func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID
 func (s *ParticipationService) DeleteAnnouncement(ctx context.Context, contestID, announcementID int64) error {
 	deleted, err := s.repo.DeleteAnnouncement(ctx, contestID, announcementID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if !deleted {
-		return errcode.ErrContestAnnouncementNotFound
+		return contestcontracts.ErrContestAnnouncementNotFound
 	}
 	publishContestWeakEvent(ctx, s.eventBus, platformevents.Event{
 		Name: contestcontracts.EventAnnouncementDeleted,

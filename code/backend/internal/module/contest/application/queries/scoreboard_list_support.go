@@ -6,10 +6,10 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ScoreboardService) resolveScoreboardMembers(ctx context.Context, contest *contestentity.Contest, contestID int64, live bool, now time.Time) (bool, []contestports.ScoreboardMemberScore, error) {
@@ -17,24 +17,24 @@ func (s *ScoreboardService) resolveScoreboardMembers(ctx context.Context, contes
 	if !frozen {
 		results, err := s.stateStore.ListLiveScoreboard(ctx, contestID)
 		if err != nil {
-			return false, nil, errcode.ErrInternal.WithCause(err)
+			return false, nil, apperror.ErrInternal.WithCause(err)
 		}
 		return false, results, nil
 	}
 
 	exists, err := s.stateStore.HasFrozenScoreboardSnapshot(ctx, contestID)
 	if err != nil {
-		return false, nil, errcode.ErrInternal.WithCause(err)
+		return false, nil, apperror.ErrInternal.WithCause(err)
 	}
 	if !exists {
 		if snapshotErr := s.stateStore.CreateFrozenScoreboardSnapshot(ctx, contestID); snapshotErr != nil {
-			return false, nil, errcode.ErrInternal.WithCause(snapshotErr)
+			return false, nil, apperror.ErrInternal.WithCause(snapshotErr)
 		}
 	}
 
 	results, err := s.stateStore.ListFrozenScoreboard(ctx, contestID)
 	if err != nil {
-		return false, nil, errcode.ErrInternal.WithCause(err)
+		return false, nil, apperror.ErrInternal.WithCause(err)
 	}
 	return true, results, nil
 }

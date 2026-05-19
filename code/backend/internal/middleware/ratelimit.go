@@ -10,9 +10,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/apperror"
 	response "ctf-platform/internal/httpresponse"
 	ratelimitpkg "ctf-platform/internal/infrastructure/ratelimit"
-	"ctf-platform/pkg/errcode"
 )
 
 func RateLimitByIP(checker *ratelimitpkg.Checker, scope string, limit int, window time.Duration) gin.HandlerFunc {
@@ -41,7 +41,7 @@ func rateLimitMiddleware(checker *ratelimitpkg.Checker, scope string, limit int,
 	return func(c *gin.Context) {
 		result, err := checker.CheckRate(c.Request.Context(), scope+":"+keyFunc(c), limit, window)
 		if err != nil {
-			response.FromError(c, errcode.ErrInternal.WithCause(err))
+			response.FromError(c, apperror.ErrInternal.WithCause(err))
 			c.Abort()
 			return
 		}
@@ -54,7 +54,7 @@ func rateLimitMiddleware(checker *ratelimitpkg.Checker, scope string, limit int,
 		}
 
 		if !result.Allowed {
-			response.Error(c, errcode.ErrRateLimitExceeded)
+			response.Error(c, apperror.ErrRateLimitExceeded)
 			c.Abort()
 			return
 		}

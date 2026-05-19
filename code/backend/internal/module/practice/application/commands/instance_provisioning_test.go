@@ -6,6 +6,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -14,7 +15,6 @@ import (
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 	"fmt"
 	"go.uber.org/zap"
 	"net"
@@ -211,7 +211,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	err := service.provisionInstance(context.Background(), instance, toPracticeChallenge(challenge), nil, "flag{static}")
-	if err == nil || err.Error() != errcode.ErrContainerStartFailed.Error() {
+	if err == nil || err.Error() != instancecontracts.ErrContainerStartFailed.Error() {
 		t.Fatalf("expected container start failed error, got %v", err)
 	}
 
@@ -637,7 +637,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 		TargetPort:     8080,
 		TargetProtocol: challengecontracts.ChallengeTargetProtocolHTTP,
 	}), nil, "flag{demo}")
-	if err == nil || err.Error() != errcode.ErrContainerCreateFailed.Error() {
+	if err == nil || err.Error() != instancecontracts.ErrContainerCreateFailed.Error() {
 		t.Fatalf("expected container create failed error, got %v", err)
 	}
 	if cleanupPayload == nil {
@@ -721,7 +721,7 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 
 	err := service.provisionInstance(ctx, instance, toPracticeChallenge(challenge), nil, "flag{ctx}")
-	if err == nil || err.Error() != errcode.ErrContainerStartFailed.Error() {
+	if err == nil || err.Error() != instancecontracts.ErrContainerStartFailed.Error() {
 		t.Fatalf("expected container start failed error, got %v", err)
 	}
 	if markedFailed.Load() != 1 {

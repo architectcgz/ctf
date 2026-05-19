@@ -8,11 +8,11 @@ import (
 
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type awdChallengeImportTxRunner struct {
@@ -79,7 +79,7 @@ func (s *awdChallengeImportTxStore) RejectImportedAWDChallengeSlugConflict(ctx c
 		return fmt.Errorf("check imported awd challenge slug %s: %w", normalizedSlug, err)
 	default:
 		message := fmt.Sprintf("AWD 题目 slug %s 已被已有题目占用，请改用题目编辑入口更新", normalizedSlug)
-		return errcode.New(errcode.ErrConflict.Code, message, errcode.ErrConflict.HTTPStatus)
+		return apperror.ErrConflict.WithMessage(message)
 	}
 }
 

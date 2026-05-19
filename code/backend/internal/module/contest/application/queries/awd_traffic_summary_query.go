@@ -3,7 +3,7 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 func (s *AWDService) GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*AWDTrafficSummaryResult, error) {
@@ -13,7 +13,7 @@ func (s *AWDService) GetTrafficSummary(ctx context.Context, contestID, roundID i
 	}
 	records, err := s.repo.ListTrafficEvents(ctx, contestID, roundID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return buildAWDTrafficSummary(&AWDRoundResult{
 		ID:           round.ID,

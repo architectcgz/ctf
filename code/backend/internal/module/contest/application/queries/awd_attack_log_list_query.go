@@ -3,7 +3,7 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 func (s *AWDService) ListAttackLogs(ctx context.Context, contestID, roundID int64) ([]AWDAttackLogResult, error) {
@@ -13,7 +13,7 @@ func (s *AWDService) ListAttackLogs(ctx context.Context, contestID, roundID int6
 
 	logs, err := s.repo.ListAttackLogsByRound(ctx, roundID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	teams, err := s.loadContestTeams(ctx, contestID)

@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"context"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"testing"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type stubProxyTicketStore struct {
@@ -251,7 +251,7 @@ func TestProxyTicketServiceResolveTicketRejectsInvalidClaims(t *testing.T) {
 	service := instanceqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{}, 15*time.Minute)
 
 	_, err := service.ResolveTicket(context.Background(), "ticket-1")
-	if err == nil || err.Error() != errcode.ErrProxyTicketInvalid.Error() {
+	if err == nil || err.Error() != instancecontracts.ErrProxyTicketInvalid.Error() {
 		t.Fatalf("expected invalid ticket error, got %v", err)
 	}
 }
@@ -280,7 +280,7 @@ func TestProxyTicketServiceResolveTicketRejectsDefenseClaimsWithoutWorkspaceRevi
 	service := instanceqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{}, 15*time.Minute)
 
 	_, err := service.ResolveTicket(context.Background(), "ticket-1")
-	if err == nil || err.Error() != errcode.ErrProxyTicketInvalid.Error() {
+	if err == nil || err.Error() != instancecontracts.ErrProxyTicketInvalid.Error() {
 		t.Fatalf("expected invalid defense ssh ticket without workspace revision, got %v", err)
 	}
 }

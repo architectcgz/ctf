@@ -2,31 +2,32 @@ package commands
 
 import (
 	"context"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *Service) ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*ChallengeSubmissionRecordResp, error) {
 	if s.runtimeSubject == nil {
-		return nil, errcode.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
+		return nil, apperror.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
 	}
 	challengeItem, err := s.runtimeSubject.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if challengeItem.Status != practiceentity.ChallengeStatusPublished {
-		return nil, errcode.ErrChallengeNotPublish
+		return nil, challengecontracts.ErrChallengeNotPublish
 	}
 
 	items, err := s.repo.ListChallengeSubmissions(ctx, userID, challengeID, 20)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	resp := make([]*ChallengeSubmissionRecordResp, 0, len(items))

@@ -7,10 +7,10 @@ import (
 	"regexp"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/ports"
 	crypto "ctf-platform/internal/shared/flagcrypto"
-	"ctf-platform/pkg/errcode"
 )
 
 type FlagService struct {
@@ -34,7 +34,7 @@ func NewFlagService(repo ports.ChallengeFlagRepository, globalSecret string) (*F
 
 func (s *FlagService) GenerateDynamicFlag(ctx context.Context, userID, challengeID int64, nonce string) (string, error) {
 	if nonce == "" {
-		return "", errcode.ErrInvalidParams
+		return "", apperror.ErrInvalidParams
 	}
 
 	challenge, err := s.loadChallenge(ctx, challengeID)
@@ -65,7 +65,7 @@ func (s *FlagService) ValidateFlag(ctx context.Context, userID, challengeID int6
 		}
 		return crypto.ValidateFlag(input, expectedFlag), nil
 	default:
-		return false, errcode.ErrInvalidParams.WithCause(fmt.Errorf("unsupported flag type %s", challenge.FlagType))
+		return false, apperror.ErrInvalidParams.WithCause(fmt.Errorf("unsupported flag type %s", challenge.FlagType))
 	}
 }
 
@@ -98,7 +98,7 @@ func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*po
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, ports.ErrChallengeFlagChallengeNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}

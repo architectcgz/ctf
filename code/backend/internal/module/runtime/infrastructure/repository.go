@@ -20,7 +20,6 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type Repository struct {
@@ -734,7 +733,7 @@ func (r *Repository) AtomicExtend(ctx context.Context, id int64, userID int64, m
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return errcode.ErrExtendLimitExceeded
+		return instancecontracts.ErrExtendLimitExceeded
 	}
 	return nil
 }
@@ -751,7 +750,7 @@ func (r *Repository) AtomicExtendByID(ctx context.Context, id int64, maxExtends 
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return errcode.ErrExtendLimitExceeded
+		return instancecontracts.ErrExtendLimitExceeded
 	}
 	return nil
 }

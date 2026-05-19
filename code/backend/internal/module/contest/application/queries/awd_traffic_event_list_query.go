@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) ListTrafficEvents(ctx context.Context, contestID, roundID int64, req ListAWDTrafficEventsInput) (*AWDTrafficEventPageResult, error) {
@@ -15,7 +15,7 @@ func (s *AWDService) ListTrafficEvents(ctx context.Context, contestID, roundID i
 	}
 	records, err := s.repo.ListTrafficEvents(ctx, contestID, roundID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	filtered := filterAWDTrafficEventResults(buildAWDTrafficEventResults(records), req)
 	pageItems, total, page, size := paginateAWDTrafficEventResults(filtered, req.Page, req.Size)

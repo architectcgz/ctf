@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
@@ -229,7 +229,7 @@ func TestTopologyServiceRejectsInjectFlagForSharedChallenge(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected shared challenge topology validation error")
 	}
-	if err.Error() != errcode.ErrInvalidParams.Error() {
+	if err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for shared inject_flag topology, got %v", err)
 	}
 }

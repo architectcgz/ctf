@@ -2,6 +2,7 @@ package queries
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"testing"
 
 	"go.uber.org/zap"
@@ -9,7 +10,6 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type contestListRepoStub struct{}
@@ -60,7 +60,7 @@ func TestContestServiceGetContestReturnsContestNotFound(t *testing.T) {
 	service := NewContestService(&contestListRepoStub{}, zap.NewNop())
 
 	_, err := service.GetContest(context.Background(), 42)
-	if err != errcode.ErrContestNotFound {
+	if err != contestcontracts.ErrContestNotFound {
 		t.Fatalf("expected ErrContestNotFound, got %v", err)
 	}
 }

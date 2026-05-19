@@ -3,9 +3,9 @@ package queries
 import (
 	"context"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) GetReadiness(ctx context.Context, contestID int64) (*AWDReadinessResult, error) {
@@ -15,7 +15,7 @@ func (s *AWDService) GetReadiness(ctx context.Context, contestID int64) (*AWDRea
 
 	records, err := s.repo.ListReadinessChallengesByContest(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	summary := contestdomain.BuildAWDReadiness(contestID, mapAWDReadinessChallenges(records))

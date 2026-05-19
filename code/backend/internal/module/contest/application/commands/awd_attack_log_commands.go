@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/platform/events"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req CreateAttackLogInput) (*AWDAttackLogResp, error) {
@@ -28,14 +28,14 @@ func (s *AWDService) createAttackLog(
 		return nil, err
 	}
 	if req.AttackerTeamID == req.VictimTeamID {
-		return nil, errcode.ErrInvalidParams
+		return nil, apperror.ErrInvalidParams
 	}
 	teams, err := s.loadContestTeams(ctx, contestID)
 	if err != nil {
 		return nil, err
 	}
 	if teams[req.AttackerTeamID] == nil || teams[req.VictimTeamID] == nil {
-		return nil, errcode.ErrNotFound
+		return nil, apperror.ErrNotFound
 	}
 	runtimeService, err := s.resolveContestRuntimeService(ctx, contestID, req.ServiceID)
 	if err != nil {
@@ -46,7 +46,7 @@ func (s *AWDService) createAttackLog(
 	if req.IsSuccess {
 		count, err := s.repo.CountSuccessfulAttacks(ctx, roundID, req.AttackerTeamID, req.VictimTeamID, runtimeService.ID)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		if count == 0 {
 			scoreGained = round.AttackScore
@@ -68,7 +68,7 @@ func (s *AWDService) createAttackLog(
 	}
 	if err := s.persistAttackLogAndScores(ctx, contestID, round.ID, req, logRecord); err != nil {
 		if errors.Is(err, contestports.ErrContestAWDAttackLogTransactionNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}

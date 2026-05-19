@@ -5,8 +5,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/module/challenge/domain"
-	"ctf-platform/pkg/errcode"
 )
 
 const challengeImportImageBuildServiceUnavailableBase = "当前后端未启用题包镜像构建/校验服务，请检查 registry 配置"
@@ -32,11 +32,9 @@ func challengeImportImageBuildServiceUnavailableMessage(sourceType string) strin
 }
 
 func challengeImportImageBuildServiceUnavailableError(sourceType string) error {
-	return errcode.New(
-		errcode.ErrServiceUnavailable.Code,
-		challengeImportImageBuildServiceUnavailableMessage(sourceType),
-		errcode.ErrServiceUnavailable.HTTPStatus,
-	).WithCause(errors.New("image build service is not configured"))
+	return apperror.ErrServiceUnavailable.
+		WithMessage(challengeImportImageBuildServiceUnavailableMessage(sourceType)).
+		WithCause(errors.New("image build service is not configured"))
 }
 
 func challengeImportMissingImageBuildService(imageBuild *ImageBuildService, sourceType string) bool {

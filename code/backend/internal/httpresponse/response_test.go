@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 func TestFromErrorRecordsAppErrorCause(t *testing.T) {
@@ -20,7 +20,7 @@ func TestFromErrorRecordsAppErrorCause(t *testing.T) {
 	c.Set("request_id", "req-test")
 
 	expected := errors.New("list students by class: column student_no does not exist")
-	FromError(c, errcode.ErrInternal.WithCause(expected))
+	FromError(c, apperror.ErrInternal.WithCause(expected))
 
 	if recorder.Code != http.StatusInternalServerError {
 		t.Fatalf("expected status %d, got %d", http.StatusInternalServerError, recorder.Code)

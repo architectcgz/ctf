@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 const (
@@ -399,16 +399,16 @@ func TestParseAWDChallengePackageDirRejectsInvalidDefenseWorkspace(t *testing.T)
 			rootDir := t.TempDir()
 			writeDefaultAWDPackageLayout(t, rootDir, false, tc.extraFiles)
 			writeAWDChallengeManifest(t, rootDir, buildAWDManifest(awdManifestOptions{
-				Slug:              "awd-defense-workspace",
-				Title:             "AWD Defense Workspace",
-				Category:          "web",
-				Difficulty:        "hard",
-				ServiceType:       "web_http",
-				Version:           "v2026.04",
-				DefenseEntryMode:  "http",
-				RuntimeImageBlock: "  image:\n    ref: registry.example.edu/ctf/awd-defense-workspace:v1\n",
-				CheckerBlock:      defaultHTTPCheckerYAML,
-				AccessConfigBlock: defaultHTTPAccessConfigYAML,
+				Slug:               "awd-defense-workspace",
+				Title:              "AWD Defense Workspace",
+				Category:           "web",
+				Difficulty:         "hard",
+				ServiceType:        "web_http",
+				Version:            "v2026.04",
+				DefenseEntryMode:   "http",
+				RuntimeImageBlock:  "  image:\n    ref: registry.example.edu/ctf/awd-defense-workspace:v1\n",
+				CheckerBlock:       defaultHTTPCheckerYAML,
+				AccessConfigBlock:  defaultHTTPAccessConfigYAML,
 				RuntimeConfigBlock: tc.runtimeConfigBlock,
 			}))
 
@@ -629,11 +629,11 @@ func writeAWDChallengeManifest(t *testing.T, rootDir, manifest string) {
 func writeDefaultAWDPackageLayout(t *testing.T, rootDir string, withRuntimeDockerfile bool, extraFiles map[string]string) {
 	t.Helper()
 	files := map[string]string{
-		"statement.md":                     "AWD package statement.",
-		"docker/runtime/app.py":           "print('entry')\n",
-		"docker/runtime/ctf_runtime.py":   "print('runtime')\n",
-		"docker/workspace/src/app.py":     "print('workspace entry')\n",
-		"docker/workspace/src/service.py": "print('service logic')\n",
+		"statement.md":                          "AWD package statement.",
+		"docker/runtime/app.py":                 "print('entry')\n",
+		"docker/runtime/ctf_runtime.py":         "print('runtime')\n",
+		"docker/workspace/src/app.py":           "print('workspace entry')\n",
+		"docker/workspace/src/service.py":       "print('service logic')\n",
 		"docker/workspace/templates/index.html": "<h1>workspace</h1>\n",
 		"docker/workspace/static/site.css":      "body { color: black; }\n",
 		"docker/workspace/data/seed.txt":        "seed\n",
@@ -663,7 +663,7 @@ func writeTestFiles(t *testing.T, rootDir string, files map[string]string) {
 
 func assertAppErrorCauseContains(t *testing.T, err error, want string) {
 	t.Helper()
-	var appErr *errcode.AppError
+	var appErr *apperror.AppError
 	if !errors.As(err, &appErr) {
 		t.Fatalf("expected AppError, got %T (%v)", err, err)
 	}

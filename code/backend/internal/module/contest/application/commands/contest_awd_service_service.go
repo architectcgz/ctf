@@ -2,15 +2,17 @@ package commands
 
 import (
 	"context"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type ContestAWDServiceService struct {
@@ -50,15 +52,15 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		return nil, err
 	}
 	if req.Points < 1 || req.Points > contestdomain.AWDMaxServiceDisplayPoint {
-		return nil, errcode.ErrInvalidParams
+		return nil, apperror.ErrInvalidParams
 	}
 
 	awdChallenge, err := s.awdChallengeRepo.FindAWDChallengeByID(ctx, req.AWDChallengeID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestAWDChallengeNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	isVisible := true
@@ -96,11 +98,11 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		previewToken,
 	)
 	if err != nil {
-		var appErr *errcode.AppError
+		var appErr *apperror.AppError
 		if errors.As(err, &appErr) {
 			return nil, err
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if err := ensureCheckerPreviewTokenConsumed(previewToken, lastPreviewResult); err != nil {
 		return nil, err
@@ -123,7 +125,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 		),
 	}
 	if err := s.repo.CreateContestAWDService(ctx, record); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return contestAWDServiceRespFromModel(record), nil
@@ -138,9 +140,9 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	stored, err := s.repo.FindContestAWDServiceByContestAndID(ctx, contestID, serviceID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestAWDServiceNotFound) {
-			return errcode.ErrNotFound
+			return apperror.ErrNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	displayName := stored.DisplayName
@@ -175,9 +177,9 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 		awdChallenge, err := s.awdChallengeRepo.FindAWDChallengeByID(ctx, *req.AWDChallengeID)
 		if err != nil {
 			if errors.Is(err, contestports.ErrContestAWDChallengeNotFound) {
-				return errcode.ErrNotFound
+				return apperror.ErrNotFound
 			}
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		updates["awd_challenge_id"] = *req.AWDChallengeID
 		updates["service_snapshot"] = buildContestAWDServiceSnapshot(awdChallenge)
@@ -213,7 +215,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	if req.Points != nil || req.AWDSLAScore != nil || req.AWDDefenseScore != nil {
 		if req.Points != nil {
 			if *req.Points < 1 || *req.Points > contestdomain.AWDMaxServiceDisplayPoint {
-				return errcode.ErrInvalidParams
+				return apperror.ErrInvalidParams
 			}
 			currentPoints = *req.Points
 		}
@@ -234,11 +236,11 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 		previewToken,
 	)
 	if err != nil {
-		var appErr *errcode.AppError
+		var appErr *apperror.AppError
 		if errors.As(err, &appErr) {
 			return err
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if validationChanged {
 		updates["awd_checker_validation_state"] = validationState
@@ -247,7 +249,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 	}
 
 	if err := s.repo.UpdateContestAWDServiceByContestAndID(ctx, contestID, serviceID, updates); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }
@@ -261,13 +263,13 @@ func (s *ContestAWDServiceService) DeleteContestAWDService(ctx context.Context, 
 	_, err = s.repo.FindContestAWDServiceByContestAndID(ctx, contestID, serviceID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestAWDServiceNotFound) {
-			return errcode.ErrNotFound
+			return apperror.ErrNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	if err := s.repo.DeleteContestAWDServiceByContestAndID(ctx, contestID, serviceID); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }
@@ -276,15 +278,15 @@ func (s *ContestAWDServiceService) ensureMutableAWDContest(ctx context.Context, 
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if contest.Mode != contestentity.ContestModeAWD {
-		return nil, errcode.ErrInvalidParams
+		return nil, apperror.ErrInvalidParams
 	}
 	if contestdomain.IsContestImmutable(contest) {
-		return nil, errcode.ErrContestImmutable
+		return nil, contestcontracts.ErrContestImmutable
 	}
 	return contest, nil
 }
@@ -295,7 +297,7 @@ func (s *ContestAWDServiceService) ensureContestChallengeRelation(ctx context.Co
 	}
 	exists, err := s.contestChallengeRepo.Exists(ctx, contestID, challengeID)
 	if err != nil {
-		return false, errcode.ErrInternal.WithCause(err)
+		return false, apperror.ErrInternal.WithCause(err)
 	}
 	if exists {
 		return false, nil
@@ -310,7 +312,7 @@ func (s *ContestAWDServiceService) ensureContestChallengeRelation(ctx context.Co
 		UpdatedAt:   time.Now().UTC(),
 	}
 	if err := s.contestChallengeRepo.AddChallenge(ctx, relation); err != nil {
-		return false, errcode.ErrInternal.WithCause(err)
+		return false, apperror.ErrInternal.WithCause(err)
 	}
 	return true, nil
 }
@@ -321,15 +323,15 @@ func (s *ContestAWDServiceService) syncContestChallengeRelation(ctx context.Cont
 	}
 	exists, err := s.contestChallengeRepo.Exists(ctx, contest.ID, challengeID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if !exists {
 		challenge, err := s.challengeRepo.FindByID(ctx, challengeID)
 		if err != nil {
 			if errors.Is(err, contestports.ErrContestChallengeEntityNotFound) {
-				return errcode.ErrChallengeNotFound
+				return challengecontracts.ErrChallengeNotFound
 			}
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		_, err = s.ensureContestChallengeRelation(ctx, contest.ID, challengeID, challenge.Points, order, isVisible)
 		return err
@@ -338,7 +340,7 @@ func (s *ContestAWDServiceService) syncContestChallengeRelation(ctx context.Cont
 		"order":      order,
 		"is_visible": isVisible,
 	}); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }

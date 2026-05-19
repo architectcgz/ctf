@@ -2,15 +2,15 @@ package commands
 
 import (
 	"context"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"encoding/json"
 	"strings"
 	"time"
 
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func buildContestAWDServiceSnapshot(awdChallenge *challengecontracts.AWDChallenge) string {
@@ -258,5 +258,5 @@ func ensureCheckerPreviewTokenConsumed(previewToken, previewResult string) error
 	if strings.TrimSpace(previewResult) != "" {
 		return nil
 	}
-	return errcode.ErrAWDCheckerPreviewExpired
+	return contestcontracts.ErrAWDCheckerPreviewExpired
 }

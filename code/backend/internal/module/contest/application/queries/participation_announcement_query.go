@@ -3,7 +3,7 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 func (s *ParticipationService) ListAnnouncements(ctx context.Context, contestID int64) ([]*ContestAnnouncementResult, error) {
@@ -13,7 +13,7 @@ func (s *ParticipationService) ListAnnouncements(ctx context.Context, contestID 
 
 	announcements, err := s.repo.ListAnnouncements(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	result := make([]*ContestAnnouncementResult, 0, len(announcements))

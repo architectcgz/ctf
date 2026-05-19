@@ -7,13 +7,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	response "ctf-platform/internal/httpresponse"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type Handler struct {
@@ -59,7 +59,7 @@ func (h *Handler) StartChallenge(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -78,12 +78,12 @@ func (h *Handler) StartContestChallenge(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 	challengeID, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -102,12 +102,12 @@ func (h *Handler) StartContestAWDService(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 	serviceID, err := strconv.ParseInt(c.Param("sid"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -126,12 +126,12 @@ func (h *Handler) RestartContestAWDService(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 	serviceID, err := strconv.ParseInt(c.Param("sid"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -149,7 +149,7 @@ func (h *Handler) RestartContestAWDService(c *gin.Context) {
 func (h *Handler) GetAdminContestAWDInstanceOrchestration(c *gin.Context) {
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -167,7 +167,7 @@ func (h *Handler) GetAdminContestAWDInstanceOrchestration(c *gin.Context) {
 func (h *Handler) StartAdminContestAWDInstance(c *gin.Context) {
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -177,7 +177,7 @@ func (h *Handler) StartAdminContestAWDInstance(c *gin.Context) {
 		return
 	}
 	if req.TeamID <= 0 || req.ServiceID <= 0 {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -200,7 +200,7 @@ func (h *Handler) StartAdminContestAWDInstance(c *gin.Context) {
 func (h *Handler) PrewarmAdminContestAWDInstances(c *gin.Context) {
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -210,7 +210,7 @@ func (h *Handler) PrewarmAdminContestAWDInstances(c *gin.Context) {
 		return
 	}
 	if req.TeamID != nil && *req.TeamID <= 0 {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -228,12 +228,12 @@ func (h *Handler) PrewarmAdminContestAWDInstances(c *gin.Context) {
 func (h *Handler) SetAdminContestAWDTeamRetired(c *gin.Context) {
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 	teamID, err := strconv.ParseInt(c.Param("team_id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -263,17 +263,17 @@ func (h *Handler) SetAdminContestAWDTeamRetired(c *gin.Context) {
 func (h *Handler) SetAdminContestAWDTeamServiceDisabled(c *gin.Context) {
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 	teamID, err := strconv.ParseInt(c.Param("team_id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 	serviceID, err := strconv.ParseInt(c.Param("sid"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -304,17 +304,17 @@ func (h *Handler) SetAdminContestAWDTeamServiceDisabled(c *gin.Context) {
 func (h *Handler) SetAdminContestAWDDesiredReconcileSuppressed(c *gin.Context) {
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 	teamID, err := strconv.ParseInt(c.Param("team_id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 	serviceID, err := strconv.ParseInt(c.Param("sid"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -345,7 +345,7 @@ func (h *Handler) GetRanking(c *gin.Context) {
 	if rawLimit := strings.TrimSpace(c.Query("limit")); rawLimit != "" {
 		parsed, err := strconv.Atoi(rawLimit)
 		if err != nil {
-			response.Error(c, errcode.ErrInvalidParams)
+			response.Error(c, apperror.ErrInvalidParams)
 			return
 		}
 		limit = parsed

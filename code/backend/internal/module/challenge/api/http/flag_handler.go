@@ -4,9 +4,9 @@ import (
 	"context"
 	"strconv"
 
+	"ctf-platform/internal/apperror"
 	response "ctf-platform/internal/httpresponse"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	"ctf-platform/pkg/errcode"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,7 +43,7 @@ func NewFlagHandler(commands flagCommandService, queries flagQueryService) *Flag
 func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 func (h *FlagHandler) GetFlagConfig(c *gin.Context) {
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 

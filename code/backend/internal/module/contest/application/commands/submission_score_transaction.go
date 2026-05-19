@@ -2,12 +2,12 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"math"
 	"time"
 
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type correctSubmissionScoringResult struct {
@@ -31,7 +31,7 @@ func (s *SubmissionService) applyCorrectSubmissionScoring(ctx context.Context, s
 			return err
 		}
 		if count > 0 {
-			return errcode.ErrContestChallengeSolved
+			return contestcontracts.ErrContestChallengeSolved
 		}
 
 		if teamID != nil && lockedChallenge.FirstBloodBy == nil {
@@ -45,7 +45,7 @@ func (s *SubmissionService) applyCorrectSubmissionScoring(ctx context.Context, s
 		submission.Score = 0
 		if err := txRepo.CreateSubmission(ctx, submission); err != nil {
 			if isContestSubmissionUniqueViolation(err) {
-				return errcode.ErrContestChallengeSolved
+				return contestcontracts.ErrContestChallengeSolved
 			}
 			return err
 		}

@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func NormalizeHintModels(reqHints []challengecontracts.ChallengeHintReq) ([]*challengeentity.ChallengeHint, error) {
@@ -24,10 +24,10 @@ func NormalizeHintModels(reqHints []challengecontracts.ChallengeHintReq) ([]*cha
 	for _, reqHint := range reqHints {
 		content := strings.TrimSpace(reqHint.Content)
 		if content == "" {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("提示内容不能为空"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("提示内容不能为空"))
 		}
 		if _, exists := seenLevels[reqHint.Level]; exists {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("提示级别不能重复"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("提示级别不能重复"))
 		}
 		seenLevels[reqHint.Level] = struct{}{}
 		hints = append(hints, &challengeentity.ChallengeHint{

@@ -18,6 +18,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
@@ -31,7 +32,6 @@ import (
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/classwindow"
 	"ctf-platform/internal/teaching/evidence"
-	"ctf-platform/pkg/errcode"
 )
 
 type testReportRepository struct {
@@ -660,8 +660,8 @@ func TestValidateStudentReviewArchiveAccess(t *testing.T) {
 	}
 
 	err := validateStudentReviewArchiveAccess(teacher, otherStudent)
-	appErr, ok := err.(*errcode.AppError)
-	if !ok || appErr.Code != errcode.ErrForbidden.Code {
+	appErr, ok := err.(*apperror.AppError)
+	if !ok || appErr.Code != apperror.ErrForbidden.Code {
 		t.Fatalf("expected forbidden error, got %#v", err)
 	}
 }
@@ -1411,8 +1411,8 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 	)
 
 	_, err := service.CreateTeacherAWDReviewReport(context.Background(), teacher.ID, contest.ID, CreateTeacherAWDReviewExportInput{})
-	appErr, ok := err.(*errcode.AppError)
-	if !ok || appErr.Code != errcode.ErrInvalidParams.Code {
+	appErr, ok := err.(*apperror.AppError)
+	if !ok || appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %#v", err)
 	}
 
@@ -1467,8 +1467,8 @@ func TestValidateClassReportAccess(t *testing.T) {
 	}
 
 	err := validateClassReportAccess(teacher, "class-b")
-	appErr, ok := err.(*errcode.AppError)
-	if !ok || appErr.Code != errcode.ErrForbidden.Code {
+	appErr, ok := err.(*apperror.AppError)
+	if !ok || appErr.Code != apperror.ErrForbidden.Code {
 		t.Fatalf("expected forbidden error, got %#v", err)
 	}
 }
@@ -1514,8 +1514,8 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 		ClassName: "class-b",
 		Format:    assessmententity.ReportFormatPDF,
 	})
-	appErr, ok := err.(*errcode.AppError)
-	if !ok || appErr.Code != errcode.ErrForbidden.Code {
+	appErr, ok := err.(*apperror.AppError)
+	if !ok || appErr.Code != apperror.ErrForbidden.Code {
 		t.Fatalf("expected forbidden error, got %#v", err)
 	}
 

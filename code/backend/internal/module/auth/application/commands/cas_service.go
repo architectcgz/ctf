@@ -12,11 +12,11 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authports "ctf-platform/internal/module/auth/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 const (
@@ -57,13 +57,13 @@ func NewCASService(cfg config.CASConfig, users casUserRepository, tokenService a
 
 func (s *casService) Authenticate(ctx context.Context, ticket string) (*LoginResp, *authcontracts.Session, error) {
 	if !s.config.Enabled {
-		return nil, nil, errcode.ErrCASDisabled
+		return nil, nil, apperror.ErrCASDisabled
 	}
 	if !s.isConfigured() {
-		return nil, nil, errcode.ErrCASNotConfigured
+		return nil, nil, apperror.ErrCASNotConfigured
 	}
 	if s.users == nil || s.tokenService == nil || s.validator == nil {
-		return nil, nil, errcode.ErrCASNotImplemented
+		return nil, nil, apperror.ErrCASNotImplemented
 	}
 
 	principal, err := s.validateTicket(ctx, ticket)
@@ -82,15 +82,15 @@ func (s *casService) Authenticate(ctx context.Context, ticket string) (*LoginRes
 func (s *casService) validateTicket(ctx context.Context, ticket string) (*authports.CASPrincipal, error) {
 	validateURL, err := s.buildValidateURL(ticket)
 	if err != nil {
-		return nil, errcode.ErrCASNotConfigured.WithCause(err)
+		return nil, apperror.ErrCASNotConfigured.WithCause(err)
 	}
 
 	principal, err := s.validator.ValidateTicket(ctx, validateURL)
 	if err != nil {
 		if errors.Is(err, authports.ErrCASTicketInvalid) {
-			return nil, errcode.ErrCASTicketInvalid
+			return nil, apperror.ErrCASTicketInvalid
 		}
-		return nil, errcode.ErrServiceUnavailable.WithCause(err)
+		return nil, apperror.ErrServiceUnavailable.WithCause(err)
 	}
 	return principal, nil
 }
@@ -100,10 +100,10 @@ func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrinc
 	if err != nil {
 		if !errors.Is(err, identitycontracts.ErrUserNotFound) {
 			s.log.Error("auth_cas_find_user_failed", zap.String("username", principal.Username), zap.Error(err))
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		if !s.config.AutoProvision {
-			return nil, errcode.ErrCASUserNotProvisioned
+			return nil, apperror.ErrCASUserNotProvisioned
 		}
 
 		user = &identitycontracts.User{
@@ -117,7 +117,7 @@ func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrinc
 			Status:    identitycontracts.UserStatusActive,
 		}
 		if err := user.SetPassword(randomPassword()); err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		if err := s.users.Create(ctx, user); err != nil {
 			return nil, s.mapUserSyncError(err)
@@ -126,10 +126,10 @@ func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrinc
 	}
 
 	if user.Status == identitycontracts.UserStatusBanned {
-		return nil, errcode.ErrAccountDisabled
+		return nil, apperror.ErrAccountDisabled
 	}
 	if user.Status == identitycontracts.UserStatusLocked && (user.LockedUntil == nil || time.Now().Before(*user.LockedUntil)) {
-		return nil, errcode.ErrAccountLocked
+		return nil, apperror.ErrAccountLocked
 	}
 
 	changed := s.mergePrincipal(user, principal)
@@ -178,7 +178,7 @@ func (s *casService) issueLoginResp(ctx context.Context, user *identitycontracts
 	session, err := s.tokenService.CreateSession(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		s.log.Error("auth_cas_create_session_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))
-		return nil, nil, errcode.ErrInternal.WithCause(err)
+		return nil, nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return authCommandResponseMapperInst.ToLoginRespPtr(loginRespSource{User: buildAuthUser(user)}), session, nil
@@ -187,17 +187,17 @@ func (s *casService) issueLoginResp(ctx context.Context, user *identitycontracts
 func (s *casService) mapUserSyncError(err error) error {
 	switch {
 	case errors.Is(err, identitycontracts.ErrUsernameExists):
-		return errcode.ErrUsernameExists
+		return apperror.ErrUsernameExists
 	case errors.Is(err, identitycontracts.ErrEmailExists):
-		return errcode.ErrEmailExists
+		return apperror.ErrEmailExists
 	case errors.Is(err, identitycontracts.ErrStudentNoExists):
-		return errcode.ErrStudentNoExists
+		return apperror.ErrStudentNoExists
 	case errors.Is(err, identitycontracts.ErrTeacherNoExists):
-		return errcode.ErrTeacherNoExists
+		return apperror.ErrTeacherNoExists
 	case errors.Is(err, identitycontracts.ErrRoleNotFound):
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	default:
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 }
 

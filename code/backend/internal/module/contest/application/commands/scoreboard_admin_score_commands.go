@@ -3,14 +3,14 @@ package commands
 import (
 	"context"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ScoreboardAdminService) UpdateScore(ctx context.Context, contestID, teamID int64, points float64) error {
 	if err := s.stateStore.IncrementLiveTeamScore(ctx, contestID, teamID, points); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }
@@ -18,7 +18,7 @@ func (s *ScoreboardAdminService) UpdateScore(ctx context.Context, contestID, tea
 func (s *ScoreboardAdminService) RebuildScoreboard(ctx context.Context, contestID int64) error {
 	teams, err := s.repo.FindTeamsByContest(ctx, contestID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	entries := make([]contestports.ScoreboardTeamScoreEntry, 0, len(teams))
@@ -32,7 +32,7 @@ func (s *ScoreboardAdminService) RebuildScoreboard(ctx context.Context, contestI
 		})
 	}
 	if err := s.stateStore.ReplaceLiveScoreboard(ctx, contestID, entries); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }

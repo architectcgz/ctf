@@ -8,6 +8,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
@@ -15,7 +16,6 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *Service) createContainer(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
@@ -25,17 +25,17 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 
 	awdWorkspacePlan, err := s.prepareAWDDefenseWorkspacePlan(ctx, instance, chal)
 	if err != nil {
-		return errcode.ErrContainerCreateFailed.WithCause(err)
+		return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 	}
 	if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
 		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimecontracts.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
-			return errcode.ErrContainerCreateFailed.WithCause(err)
+			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 		}
 	}
 
 	spec, err := challengecontracts.DecodeTopologySpec(topology.Spec)
 	if err != nil {
-		return errcode.ErrContainerCreateFailed.WithCause(err)
+		return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 	}
 
 	request, err := s.buildTopologyCreateRequest(ctx, instance.HostPort, shouldDisableEntryPortPublishing(instance, s.config.Container.AccessHost), chal, topology.EntryNodeKey, spec, flag)
@@ -51,7 +51,7 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 		request.ReservedHostPort = instance.HostPort
 		result, err := s.runtimeService.CreateTopology(ctx, request)
 		if err != nil {
-			return errcode.ErrContainerCreateFailed.WithCause(err)
+			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 		}
 		return applyTopologyCreateResultToInstance(instance, result)
 	}); err != nil {
@@ -65,12 +65,12 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 		if awdWorkspacePlan.createWorkspace {
 			if err := s.cleanupAWDDefenseWorkspaceCompanion(ctx, awdWorkspacePlan.staleWorkspaceContainerID); err != nil {
 				s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
-				return errcode.ErrContainerCreateFailed.WithCause(err)
+				return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 			}
 			workspaceContainerID, err = s.createAWDDefenseWorkspaceCompanion(ctx, instance, awdWorkspacePlan)
 			if err != nil {
 				s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
-				return errcode.ErrContainerCreateFailed.WithCause(err)
+				return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 			}
 		}
 		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimecontracts.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
@@ -81,7 +81,7 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 					s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
 				}
 			}
-			return errcode.ErrContainerCreateFailed.WithCause(err)
+			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 		}
 	}
 	return nil
@@ -90,10 +90,10 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 func (s *Service) createSingleContainer(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, flag string) error {
 	imageItem, err := s.imageRepo.FindByID(ctx, chal.ImageID)
 	if err != nil {
-		return errcode.ErrContainerCreateFailed.WithCause(err)
+		return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 	}
 	if imageItem.Status != challengecontracts.ImageStatusAvailable {
-		return errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("image %d is not available", imageItem.ID))
+		return instancecontracts.ErrContainerCreateFailed.WithCause(fmt.Errorf("image %d is not available", imageItem.ID))
 	}
 
 	env := map[string]string{
@@ -105,11 +105,11 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 	if isAWDInstance(instance) || targetProtocol == practiceentity.ChallengeTargetProtocolTCP || chal.TargetPort > 0 {
 		awdWorkspacePlan, err := s.prepareAWDDefenseWorkspacePlan(ctx, instance, chal)
 		if err != nil {
-			return errcode.ErrContainerCreateFailed.WithCause(err)
+			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 		}
 		if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
 			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimecontracts.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
-				return errcode.ErrContainerCreateFailed.WithCause(err)
+				return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 			}
 		}
 		runtimeMounts := []runtimecontracts.ContainerMount(nil)
@@ -152,7 +152,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 			request.ReservedHostPort = instance.HostPort
 			result, err := s.runtimeService.CreateTopology(ctx, request)
 			if err != nil {
-				return errcode.ErrContainerCreateFailed.WithCause(err)
+				return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 			}
 			return applyTopologyCreateResultToInstance(instance, result)
 		}); err != nil {
@@ -166,12 +166,12 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 			if awdWorkspacePlan.createWorkspace {
 				if err := s.cleanupAWDDefenseWorkspaceCompanion(ctx, awdWorkspacePlan.staleWorkspaceContainerID); err != nil {
 					s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
-					return errcode.ErrContainerCreateFailed.WithCause(err)
+					return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 				}
 				workspaceContainerID, err = s.createAWDDefenseWorkspaceCompanion(ctx, instance, awdWorkspacePlan)
 				if err != nil {
 					s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
-					return errcode.ErrContainerCreateFailed.WithCause(err)
+					return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 				}
 			}
 			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimecontracts.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
@@ -182,7 +182,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 						s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, "")
 					}
 				}
-				return errcode.ErrContainerCreateFailed.WithCause(err)
+				return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 			}
 		}
 		return nil
@@ -191,7 +191,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 	return s.createRuntimeWithHostPortRebind(ctx, instance, func() error {
 		containerID, networkID, hostPort, servicePort, err := s.runtimeService.CreateContainer(ctx, imageRef, env, instance.HostPort)
 		if err != nil {
-			return errcode.ErrContainerCreateFailed.WithCause(err)
+			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 		}
 
 		runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
@@ -207,7 +207,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 			},
 		})
 		if err != nil {
-			return errcode.ErrContainerCreateFailed.WithCause(err)
+			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 		}
 
 		instance.ContainerID = containerID
@@ -249,7 +249,7 @@ func (s *Service) createRuntimeWithHostPortRebind(ctx context.Context, instance 
 
 	conflictedPort := instance.HostPort
 	if err := s.reserveReboundProvisioningHostPort(ctx, instance, conflictedPort); err != nil {
-		return errcode.ErrContainerCreateFailed.WithCause(err)
+		return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 	}
 	if err := create(); err != nil {
 		return err
@@ -305,12 +305,12 @@ func (s *Service) buildTopologyCreateRequest(
 	flag string,
 ) (*practiceports.TopologyCreateRequest, error) {
 	if len(spec.Nodes) == 0 {
-		return nil, errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("challenge topology has no nodes"))
+		return nil, instancecontracts.ErrContainerCreateFailed.WithCause(fmt.Errorf("challenge topology has no nodes"))
 	}
 	if chal != nil && chal.InstanceSharing == practiceentity.InstanceSharingShared {
 		for _, node := range spec.Nodes {
 			if node.InjectFlag {
-				return nil, errcode.ErrInvalidParams.WithCause(errors.New("共享实例策略不支持带 Flag 注入的拓扑"))
+				return nil, apperror.ErrInvalidParams.WithCause(errors.New("共享实例策略不支持带 Flag 注入的拓扑"))
 			}
 		}
 	}
@@ -373,10 +373,10 @@ func (s *Service) buildTopologyCreateRequest(
 func (s *Service) resolveAvailableImageRef(ctx context.Context, imageID int64) (string, error) {
 	imageItem, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
-		return "", errcode.ErrContainerCreateFailed.WithCause(err)
+		return "", instancecontracts.ErrContainerCreateFailed.WithCause(err)
 	}
 	if imageItem.Status != challengecontracts.ImageStatusAvailable {
-		return "", errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("image %d is not available", imageItem.ID))
+		return "", instancecontracts.ErrContainerCreateFailed.WithCause(fmt.Errorf("image %d is not available", imageItem.ID))
 	}
 	return challengecontracts.BuildRuntimeImageRef(imageItem), nil
 }

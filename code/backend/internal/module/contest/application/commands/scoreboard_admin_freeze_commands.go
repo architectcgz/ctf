@@ -5,25 +5,25 @@ import (
 	"fmt"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	platformevents "ctf-platform/internal/platform/events"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID int64, minutesBeforeEnd int) error {
 	contest, err := s.repo.FindByID(ctx, contestID)
 	if err != nil {
 		if err == contestdomain.ErrContestNotFound {
-			return errcode.ErrContestNotFound
+			return contestcontracts.ErrContestNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	now := time.Now().UTC()
 	if contestdomain.ContestHasEndedAt(contest, now) {
-		return errcode.ErrContestEnded
+		return contestcontracts.ErrContestEnded
 	}
 
 	effectiveEnd := contestdomain.ContestEffectiveEndTime(contest)
@@ -40,7 +40,7 @@ func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID
 			return err
 		}
 	} else if err := s.repo.Update(ctx, contest); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	publishContestWeakEvent(ctx, s.eventBus, platformevents.Event{
@@ -57,13 +57,13 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 	contest, err := s.repo.FindByID(ctx, contestID)
 	if err != nil {
 		if err == contestdomain.ErrContestNotFound {
-			return errcode.ErrContestNotFound
+			return contestcontracts.ErrContestNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	if contest.FreezeTime == nil && contest.Status != contestentity.ContestStatusFrozen {
-		return errcode.ErrScoreboardNotFrozen
+		return contestcontracts.ErrScoreboardNotFrozen
 	}
 
 	contest.FreezeTime = nil
@@ -78,7 +78,7 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 			return err
 		}
 	} else if err := s.repo.Update(ctx, contest); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	publishContestWeakEvent(ctx, s.eventBus, platformevents.Event{
@@ -93,10 +93,10 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 
 func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Context, contest *contestentity.Contest, fromStatus string, fromVersion int64) error {
 	if contest == nil {
-		return errcode.ErrContestNotFound
+		return contestcontracts.ErrContestNotFound
 	}
 	if s.transition == nil {
-		return errcode.ErrInternal.WithCause(fmt.Errorf("scoreboard transition repository unavailable"))
+		return apperror.ErrInternal.WithCause(fmt.Errorf("scoreboard transition repository unavailable"))
 	}
 
 	result, err := s.transition.UpdateContestWithStatusTransition(ctx, contest, contestdomain.ContestStatusTransition{
@@ -110,12 +110,12 @@ func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Con
 	})
 	if err != nil {
 		if err == contestdomain.ErrContestNotFound {
-			return errcode.ErrContestNotFound
+			return contestcontracts.ErrContestNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if !result.Applied {
-		return errcode.New(errcode.ErrConflict.Code, "竞赛状态已变化，请刷新后重试", errcode.ErrConflict.HTTPStatus)
+		return apperror.ErrConflict.WithMessage("竞赛状态已变化，请刷新后重试")
 	}
 	contest.StatusVersion = result.StatusVersion
 
@@ -123,14 +123,14 @@ func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Con
 	if err := s.sideEffects.Run(ctx, result); err != nil {
 		if result.RecordID > 0 {
 			if markErr := s.transition.MarkTransitionSideEffectsFailed(ctx, result.RecordID, err); markErr != nil {
-				return errcode.ErrInternal.WithCause(fmt.Errorf("run scoreboard transition side effects: %w; mark failed: %v", err, markErr))
+				return apperror.ErrInternal.WithCause(fmt.Errorf("run scoreboard transition side effects: %w; mark failed: %v", err, markErr))
 			}
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if result.RecordID > 0 {
 		if err := s.transition.MarkTransitionSideEffectsSucceeded(ctx, result.RecordID); err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 	}
 	return nil

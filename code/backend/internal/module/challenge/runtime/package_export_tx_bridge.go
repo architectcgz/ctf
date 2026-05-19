@@ -9,10 +9,10 @@ import (
 
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type challengePackageExportTxRunner struct {
@@ -124,12 +124,12 @@ func (s *challengePackageExportTxStore) FindImageRefByID(ctx context.Context, im
 	image, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-			return "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑节点引用的镜像不存在"))
+			return "", apperror.ErrInvalidParams.WithCause(errors.New("拓扑节点引用的镜像不存在"))
 		}
 		return "", err
 	}
 	if strings.TrimSpace(image.Name) == "" {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("镜像记录缺少名称"))
+		return "", apperror.ErrInvalidParams.WithCause(errors.New("镜像记录缺少名称"))
 	}
 	if strings.TrimSpace(image.Tag) == "" || strings.TrimSpace(image.Tag) == "latest" {
 		return strings.TrimSpace(image.Name), nil

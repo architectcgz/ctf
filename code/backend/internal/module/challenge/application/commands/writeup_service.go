@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type WriteupService struct {
@@ -34,7 +34,7 @@ func NewWriteupService(repo writeupCommandRepository) *WriteupService {
 func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID int64, req UpsertOfficialWriteupInput) (*challengecontracts.AdminChallengeWriteupResp, error) {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID in
 func (s *WriteupService) Delete(ctx context.Context, challengeID int64) error {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
-			return errcode.ErrChallengeNotFound
+			return challengecontracts.ErrChallengeNotFound
 		}
 		return err
 	}
@@ -83,12 +83,12 @@ func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, acto
 	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
 	if challengeItem.Status != challengecontracts.ChallengeStatusPublished {
-		return nil, errcode.ErrChallengeNotPublish
+		return nil, challengecontracts.ErrChallengeNotPublish
 	}
 
 	now := time.Now()
@@ -105,7 +105,7 @@ func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, acto
 			return nil, solveErr
 		}
 		if !isSolved {
-			return nil, errcode.ErrForbidden
+			return nil, apperror.ErrForbidden
 		}
 		publishedAt = &now
 	}
@@ -198,7 +198,7 @@ func (s *WriteupService) RecommendCommunity(ctx context.Context, submissionID, r
 		return nil, err
 	}
 	if record.VisibilityStatus == challengeentity.SubmissionWriteupVisibilityHidden {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("隐藏题解不能设为推荐"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("隐藏题解不能设为推荐"))
 	}
 
 	now := time.Now()
@@ -286,14 +286,14 @@ func (s *WriteupService) RestoreCommunity(ctx context.Context, submissionID, req
 func (s *WriteupService) loadOfficialWriteupForModeration(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
 	item, err := s.repo.FindWriteupByChallengeID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeOfficialWriteupNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -304,7 +304,7 @@ func (s *WriteupService) loadCommunityWriteupForModeration(ctx context.Context, 
 	record, err := s.repo.GetTeacherSubmissionWriteupByID(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTeacherSubmissionWriteupNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -315,7 +315,7 @@ func (s *WriteupService) loadCommunityWriteupForModeration(ctx context.Context, 
 	item, err := s.repo.FindSubmissionWriteupByID(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeSubmissionWriteupDetailNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -335,12 +335,12 @@ func ensureTeacherCanModerateCommunityWriteup(
 	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupRequesterNotFound) {
-			return errcode.ErrUnauthorized
+			return apperror.ErrUnauthorized
 		}
 		return err
 	}
 	if requester.ClassName == "" || requester.ClassName != record.ClassName {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	return nil
 }

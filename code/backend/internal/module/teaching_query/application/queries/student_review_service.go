@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	teachingevidence "ctf-platform/internal/teaching/evidence"
-	"ctf-platform/pkg/errcode"
 )
 
 type studentReviewQueryRepository interface {
@@ -48,22 +48,22 @@ func (s *StudentReviewQueryService) GetStudentProgress(ctx context.Context, requ
 
 	totalChallenges, err := s.repo.CountPublishedChallenges(ctx)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	solvedChallenges, err := s.repo.CountSolvedChallenges(ctx, student.ID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	categoryRows, err := s.repo.GetCategoryProgress(ctx, student.ID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	difficultyRows, err := s.repo.GetDifficultyProgress(ctx, student.ID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return &TeacherProgressResp{
@@ -86,7 +86,7 @@ func (s *StudentReviewQueryService) GetStudentRecommendations(ctx context.Contex
 
 	result, err := s.recommendationService.Recommend(ctx, student.ID, limit)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if result == nil {
 		return &TeacherRecommendationResp{}, nil
@@ -108,7 +108,7 @@ func (s *StudentReviewQueryService) GetStudentTimeline(ctx context.Context, requ
 
 	events, err := s.repo.GetStudentTimeline(ctx, student.ID, limit, offset)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return &TimelineResp{Events: commonmapper.NonNilSlice(teachingQueryMapper.ToTimelineEvents(events))}, nil
@@ -123,7 +123,7 @@ func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requ
 	repoQuery := buildEvidenceQuery(query)
 	events, err := s.repo.GetStudentEvidence(ctx, student.ID, repoQuery)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	events = filterEvidenceEvents(events, repoQuery)
 	events = paginateEvidenceEvents(events, repoQuery)
@@ -178,7 +178,7 @@ func (s *StudentReviewQueryService) GetStudentAttackSessions(ctx context.Context
 	evidenceQuery := buildEvidenceQuery(evidenceInput)
 	events, err := s.repo.GetStudentEvidence(ctx, student.ID, evidenceQuery)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	events = filterEvidenceEvents(events, evidenceQuery)
 	events = filterAttackSessionEvents(events, query)
@@ -547,10 +547,10 @@ func getAccessibleStudent(
 ) (*identitycontracts.User, error) {
 	student, err := repo.FindUserByID(ctx, studentID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if student == nil || student.Role != identitycontracts.RoleStudent {
-		return nil, errcode.ErrNotFound
+		return nil, apperror.ErrNotFound
 	}
 
 	if err := ensureClassAccess(ctx, repo, requesterID, requesterRole, student.ClassName); err != nil {

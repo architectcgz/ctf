@@ -11,6 +11,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -18,7 +19,6 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	crypto "ctf-platform/internal/shared/flagcrypto"
-	"ctf-platform/pkg/errcode"
 )
 
 type challengeCommandRepository interface {
@@ -54,7 +54,7 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int6
 	if req.ImageID > 0 {
 		if _, err := s.imageRepo.FindByID(ctx, req.ImageID); err != nil {
 			if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-				return nil, errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
+				return nil, apperror.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
 			}
 			return nil, err
 		}
@@ -90,7 +90,7 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req Up
 	challengeWriteModel, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
-			return errcode.ErrChallengeNotFound
+			return challengecontracts.ErrChallengeNotFound
 		}
 		return err
 	}
@@ -115,7 +115,7 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req Up
 		if *req.ImageID > 0 {
 			if _, err := s.imageRepo.FindByID(ctx, *req.ImageID); err != nil {
 				if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-					return errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
+					return apperror.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
 				}
 				return err
 			}
@@ -172,7 +172,7 @@ func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, ch
 		return nil
 	}
 	if challenge.FlagType == challengecontracts.FlagTypeDynamic {
-		return errcode.ErrInvalidParams.WithCause(errors.New("共享实例只适用于无状态题，不支持动态 Flag"))
+		return apperror.ErrInvalidParams.WithCause(errors.New("共享实例只适用于无状态题，不支持动态 Flag"))
 	}
 	if s.topologyRepo == nil || challenge.ID <= 0 {
 		return nil
@@ -188,11 +188,11 @@ func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, ch
 
 	spec, err := challengecontracts.DecodeTopologySpec(topology.Spec)
 	if err != nil {
-		return errcode.ErrInvalidParams.WithCause(err)
+		return apperror.ErrInvalidParams.WithCause(err)
 	}
 	for _, node := range spec.Nodes {
 		if node.InjectFlag {
-			return errcode.ErrInvalidParams.WithCause(errors.New("共享实例只适用于无状态题，不支持带 Flag 注入的拓扑"))
+			return apperror.ErrInvalidParams.WithCause(errors.New("共享实例只适用于无状态题，不支持带 Flag 注入的拓扑"))
 		}
 	}
 	return nil
@@ -201,7 +201,7 @@ func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, ch
 func (s *ChallengeService) DeleteChallenge(ctx context.Context, id int64) error {
 	if _, err := s.repo.FindByID(ctx, id); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
-			return errcode.ErrChallengeNotFound
+			return challengecontracts.ErrChallengeNotFound
 		}
 		return err
 	}
@@ -211,7 +211,7 @@ func (s *ChallengeService) DeleteChallenge(ctx context.Context, id int64) error 
 		return err
 	}
 	if hasInstances {
-		return errcode.New(errcode.ErrConflict.Code, domain.ErrMsgHasRunningStudents, errcode.ErrConflict.HTTPStatus).
+		return apperror.ErrConflict.WithMessage(domain.ErrMsgHasRunningStudents).
 			WithCause(errors.New(domain.ErrMsgHasRunningInstances))
 	}
 	return s.repo.Delete(ctx, id)
@@ -221,7 +221,7 @@ func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error
 	challengeWriteModel, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
-			return errcode.ErrChallengeNotFound
+			return challengecontracts.ErrChallengeNotFound
 		}
 		return err
 	}
@@ -233,13 +233,13 @@ func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID,
 	challengeWriteModel, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
 	challenge := challengeWriteModel
 	if challenge.Status == challengecontracts.ChallengeStatusPublished {
-		return nil, errcode.ErrConflict.WithCause(errors.New("题目已发布，无需重复提交发布检查"))
+		return nil, apperror.ErrConflict.WithCause(errors.New("题目已发布，无需重复提交发布检查"))
 	}
 
 	active, err := s.repo.FindActivePublishCheckJobByChallengeID(ctx, id)
@@ -269,7 +269,7 @@ func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID,
 func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error) {
 	challengeWriteModel, err := s.repo.FindByID(ctx, id)
 	if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
-		return nil, errcode.ErrChallengeNotFound
+		return nil, challengecontracts.ErrChallengeNotFound
 	}
 	if err != nil {
 		return nil, err
@@ -277,13 +277,13 @@ func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) 
 	challenge := challengeWriteModel
 	job, err := s.repo.FindLatestPublishCheckJobByChallengeID(ctx, id)
 	if errors.Is(err, challengeports.ErrChallengePublishCheckJobNotFound) {
-		return nil, errcode.ErrNotFound
+		return nil, apperror.ErrNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
 	if challenge.UpdatedAt.After(job.UpdatedAt) {
-		return nil, errcode.ErrNotFound
+		return nil, apperror.ErrNotFound
 	}
 	return s.buildPublishCheckJobResp(job), nil
 }
@@ -477,7 +477,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*c
 	challengeWriteModel, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
@@ -668,7 +668,7 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *challenge
 	}
 
 	if s.topologyRepo == nil {
-		return input, false, errcode.ErrInternal.WithCause(errors.New("challenge topology repository is not configured"))
+		return input, false, apperror.ErrInternal.WithCause(errors.New("challenge topology repository is not configured"))
 	}
 	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challenge.ID)
 	if err != nil {
@@ -914,7 +914,7 @@ func (s *ChallengeService) resolveAvailableImageRef(ctx context.Context, imageID
 	imageItem, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-			return "", errcode.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
+			return "", apperror.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
 		}
 		return "", err
 	}

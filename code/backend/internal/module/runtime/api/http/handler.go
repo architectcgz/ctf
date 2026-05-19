@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	response "ctf-platform/internal/httpresponse"
@@ -22,7 +23,6 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
-	"ctf-platform/pkg/errcode"
 )
 
 const proxyAccessCookieName = "ctf_instance_proxy_ticket"
@@ -260,9 +260,9 @@ func (h *Handler) proxyToTarget(c *gin.Context, claims *runtimeports.ProxyTicket
 	parsedTarget, err := url.Parse(targetURL)
 	if err != nil || parsedTarget.Scheme == "" || parsedTarget.Host == "" {
 		if err == nil {
-			err = errcode.ErrInternal.WithCause(io.ErrUnexpectedEOF)
+			err = apperror.ErrInternal.WithCause(io.ErrUnexpectedEOF)
 		}
-		response.FromError(c, errcode.ErrInternal.WithCause(err))
+		response.FromError(c, apperror.ErrInternal.WithCause(err))
 		return
 	}
 
@@ -302,7 +302,7 @@ func (h *Handler) proxyToTarget(c *gin.Context, claims *runtimeports.ProxyTicket
 		if shouldAudit {
 			h.recordProxyAudit(c, claims, instanceID, username, requestID, joinedPath, stdhttp.StatusBadGateway, bodyPreview, bodyCaptured, bodyTruncated)
 		}
-		response.FromError(c, errcode.ErrServiceUnavailable.WithCause(proxyErr))
+		response.FromError(c, apperror.ErrServiceUnavailable.WithCause(proxyErr))
 	}
 
 	proxy.ServeHTTP(newProxyResponseWriter(c.Writer), c.Request)
@@ -366,7 +366,7 @@ func buildAWDTargetProxyAccessURL(contestID, serviceID, victimTeamID int64, tick
 
 func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtimeports.ProxyTicketClaims, string, error) {
 	if h.service == nil {
-		return nil, "", errcode.ErrInternal.WithCause(errcode.ErrServiceUnavailable)
+		return nil, "", apperror.ErrInternal.WithCause(apperror.ErrServiceUnavailable)
 	}
 
 	if ticket := strings.TrimSpace(c.Query("ticket")); ticket != "" {
@@ -375,7 +375,7 @@ func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtime
 			return nil, "", err
 		}
 		if claims.InstanceID != instanceID {
-			return nil, "", errcode.ErrForbidden
+			return nil, "", apperror.ErrForbidden
 		}
 
 		setProxyAccessCookie(c, ticket, instanceID, h.service.ProxyTicketMaxAge(), h.cookieConfig)
@@ -384,21 +384,21 @@ func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtime
 
 	ticketCookie, err := c.Cookie(proxyAccessCookieName)
 	if err != nil {
-		return nil, "", errcode.ErrProxyTicketInvalid
+		return nil, "", instancecontracts.ErrProxyTicketInvalid
 	}
 	claims, err := h.service.ResolveProxyTicket(c.Request.Context(), ticketCookie)
 	if err != nil {
 		return nil, "", err
 	}
 	if claims.InstanceID != instanceID {
-		return nil, "", errcode.ErrForbidden
+		return nil, "", apperror.ErrForbidden
 	}
 	return claims, "", nil
 }
 
 func (h *Handler) resolveAWDTargetProxyClaims(c *gin.Context, contestID, serviceID, victimTeamID int64) (*runtimeports.ProxyTicketClaims, string, error) {
 	if h.service == nil {
-		return nil, "", errcode.ErrInternal.WithCause(errcode.ErrServiceUnavailable)
+		return nil, "", apperror.ErrInternal.WithCause(apperror.ErrServiceUnavailable)
 	}
 
 	if ticket := strings.TrimSpace(c.Query("ticket")); ticket != "" {
@@ -416,7 +416,7 @@ func (h *Handler) resolveAWDTargetProxyClaims(c *gin.Context, contestID, service
 
 	ticketCookie, err := c.Cookie(proxyAccessCookieName)
 	if err != nil {
-		return nil, "", errcode.ErrProxyTicketInvalid
+		return nil, "", instancecontracts.ErrProxyTicketInvalid
 	}
 	claims, err := h.service.ResolveProxyTicket(c.Request.Context(), ticketCookie)
 	if err != nil {
@@ -430,13 +430,13 @@ func (h *Handler) resolveAWDTargetProxyClaims(c *gin.Context, contestID, service
 
 func validateAWDTargetProxyClaims(claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) error {
 	if claims == nil || claims.Purpose != runtimeports.ProxyTicketPurposeAWDAttack {
-		return errcode.ErrProxyTicketInvalid
+		return instancecontracts.ErrProxyTicketInvalid
 	}
 	if claims.ContestID == nil || *claims.ContestID != contestID ||
 		claims.AWDServiceID == nil || *claims.AWDServiceID != serviceID ||
 		claims.AWDVictimTeamID == nil || *claims.AWDVictimTeamID != victimTeamID ||
 		claims.AWDAttackerTeamID == nil || claims.AWDChallengeID == nil {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	return nil
 }

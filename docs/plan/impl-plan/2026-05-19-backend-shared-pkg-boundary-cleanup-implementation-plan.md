@@ -49,6 +49,10 @@
 4. 处理 `pkg/crypto`、`pkg/errcode`：
    - 先做 owner 分析
    - 再按最小可审阅切片迁移，避免一次混做多类 contract
+5. 收口 `pkg/errcode`：
+   - 共享 `AppError` 类型与平台级公共错误收回 `internal/apperror`
+   - challenge / contest / instance / ops / auth 的公开错误按 owner 收回模块 `contracts`
+   - `httpresponse` 统一消费 HTTP status，application / domain 不再读取 `HTTPStatus`
 
 ## Validation
 

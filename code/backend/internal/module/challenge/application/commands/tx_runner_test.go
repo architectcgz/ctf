@@ -9,11 +9,11 @@ import (
 
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type imageBuildServiceGetter func() *ImageBuildService
@@ -113,7 +113,7 @@ func (s *testChallengeImportTxStore) RejectImportedChallengeSlugConflict(ctx con
 		return fmt.Errorf("check imported challenge slug %s: %w", slug, err)
 	default:
 		message := fmt.Sprintf("题目 slug %s 已被已有题目占用，请改用题目编辑入口更新", slug)
-		return errcode.New(errcode.ErrConflict.Code, message, errcode.ErrConflict.HTTPStatus)
+		return apperror.ErrConflict.WithMessage(message)
 	}
 }
 
@@ -362,7 +362,7 @@ func (s *testAWDChallengeImportTxStore) RejectImportedAWDChallengeSlugConflict(c
 		return err
 	default:
 		message := fmt.Sprintf("AWD 题目 slug %s 已被已有题目占用，请改用题目编辑入口更新", normalizedSlug)
-		return errcode.New(errcode.ErrConflict.Code, message, errcode.ErrConflict.HTTPStatus)
+		return apperror.ErrConflict.WithMessage(message)
 	}
 }
 
@@ -491,12 +491,12 @@ func (s *testChallengePackageExportTxStore) FindImageRefByID(ctx context.Context
 	image, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-			return "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑节点引用的镜像不存在"))
+			return "", apperror.ErrInvalidParams.WithCause(errors.New("拓扑节点引用的镜像不存在"))
 		}
 		return "", err
 	}
 	if strings.TrimSpace(image.Name) == "" {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("镜像记录缺少名称"))
+		return "", apperror.ErrInvalidParams.WithCause(errors.New("镜像记录缺少名称"))
 	}
 	if strings.TrimSpace(image.Tag) == "" || strings.TrimSpace(image.Tag) == "latest" {
 		return strings.TrimSpace(image.Name), nil

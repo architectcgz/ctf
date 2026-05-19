@@ -9,13 +9,13 @@ import (
 	miniredis "github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type challengeQueryRepositoryStub struct {
@@ -138,11 +138,11 @@ func TestServiceGetPublishedChallengeDraftChallengeReturnsDraftAccessError(t *te
 	if err == nil {
 		t.Fatal("expected draft access error")
 	}
-	var appErr *errcode.AppError
+	var appErr *apperror.AppError
 	if !errors.As(err, &appErr) {
 		t.Fatalf("expected app error, got %v", err)
 	}
-	if appErr.Code != errcode.ErrChallengeNotPublish.Code {
+	if appErr.Code != challengecontracts.ErrChallengeNotPublish.Code {
 		t.Fatalf("expected challenge not publish code, got %+v", appErr)
 	}
 	if appErr.Message != "题目为草稿，无法访问" {
@@ -163,11 +163,11 @@ func TestServiceGetPublishedChallengeArchivedChallengeReturnsArchivedAccessError
 	if err == nil {
 		t.Fatal("expected archived access error")
 	}
-	var appErr *errcode.AppError
+	var appErr *apperror.AppError
 	if !errors.As(err, &appErr) {
 		t.Fatalf("expected app error, got %v", err)
 	}
-	if appErr.Code != errcode.ErrChallengeNotPublish.Code {
+	if appErr.Code != challengecontracts.ErrChallengeNotPublish.Code {
 		t.Fatalf("expected challenge not publish code, got %+v", appErr)
 	}
 	if appErr.Message != "题目已归档，无法访问" {
@@ -188,9 +188,9 @@ func TestChallengeServiceGetChallengeTreatsChallengeQueryNotFoundAsChallengeNotF
 	if err == nil {
 		t.Fatal("expected challenge not found")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrChallengeNotFound.Code {
-		t.Fatalf("expected errcode.ErrChallengeNotFound, got %v", err)
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != challengecontracts.ErrChallengeNotFound.Code {
+		t.Fatalf("expected challengecontracts.ErrChallengeNotFound, got %v", err)
 	}
 }
 
@@ -207,9 +207,9 @@ func TestChallengeServiceGetPublishedChallengeTreatsChallengeQueryNotFoundAsNotF
 	if err == nil {
 		t.Fatal("expected published challenge not found")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
-		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrNotFound.Code {
+		t.Fatalf("expected apperror.ErrNotFound, got %v", err)
 	}
 }
 

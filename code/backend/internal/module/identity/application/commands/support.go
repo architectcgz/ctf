@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
-	"ctf-platform/pkg/errcode"
 )
 
 func toAdminUserResp(user *identitycontracts.User) identitycontracts.AdminUser {
@@ -31,19 +31,19 @@ func defaultUserStatus(status string) string {
 func mapServiceError(err error) error {
 	switch {
 	case errors.Is(err, identitycontracts.ErrUserNotFound):
-		return errcode.ErrNotFound
+		return apperror.ErrNotFound
 	case errors.Is(err, identitycontracts.ErrUsernameExists):
-		return errcode.ErrUsernameExists
+		return apperror.ErrUsernameExists
 	case errors.Is(err, identitycontracts.ErrEmailExists):
-		return errcode.ErrEmailExists
+		return apperror.ErrEmailExists
 	case errors.Is(err, identitycontracts.ErrStudentNoExists):
-		return errcode.ErrStudentNoExists
+		return apperror.ErrStudentNoExists
 	case errors.Is(err, identitycontracts.ErrTeacherNoExists):
-		return errcode.ErrTeacherNoExists
+		return apperror.ErrTeacherNoExists
 	case errors.Is(err, identitycontracts.ErrRoleNotFound):
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	default:
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 }
 

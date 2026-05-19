@@ -2,13 +2,13 @@ package queries
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"testing"
 
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type teamContestLookupStub struct{}
@@ -74,7 +74,7 @@ func TestTeamServiceListTeamsReturnsContestNotFound(t *testing.T) {
 	service := NewTeamService(&teamRepoStub{}, &teamContestLookupStub{})
 
 	_, err := service.ListTeams(context.Background(), 42)
-	if err != errcode.ErrContestNotFound {
+	if err != contestcontracts.ErrContestNotFound {
 		t.Fatalf("expected ErrContestNotFound, got %v", err)
 	}
 }
@@ -89,7 +89,7 @@ func TestTeamServiceGetTeamInfoTreatsContestTeamNotFoundAsTeamNotFound(t *testin
 	}, &teamContestLookupStub{})
 
 	_, _, err := service.GetTeamInfo(context.Background(), 404)
-	if err != errcode.ErrTeamNotFound {
+	if err != contestcontracts.ErrTeamNotFound {
 		t.Fatalf("expected ErrTeamNotFound, got %v", err)
 	}
 }

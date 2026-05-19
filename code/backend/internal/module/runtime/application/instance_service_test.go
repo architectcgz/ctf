@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -24,7 +25,6 @@ import (
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 type noopRuntimeCleaner struct{}
@@ -592,7 +592,7 @@ func TestInstanceServiceGetAccessURLRejectsExpiredRunningInstance(t *testing.T) 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
 	_, err := service.GetAccessURL(context.Background(), 1006, 2)
-	if err == nil || err.Error() != errcode.ErrInstanceExpired.Error() {
+	if err == nil || err.Error() != instancecontracts.ErrInstanceExpired.Error() {
 		t.Fatalf("expected instance expired error, got %v", err)
 	}
 }
@@ -686,7 +686,7 @@ func TestInstanceServiceGetAccessURLRejectsControlledAWDInstance(t *testing.T) {
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 	_, err := service.GetAccessURL(context.Background(), 1205, 2)
-	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+	if err == nil || err.Error() != apperror.ErrForbidden.Error() {
 		t.Fatalf("expected controlled awd instance access to be forbidden, got %v", err)
 	}
 }
@@ -873,7 +873,7 @@ func TestInstanceServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 		nil,
 	)
 
-	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, identitycontracts.RoleTeacher); err == nil || err.Error() != errcode.ErrForbidden.Error() {
+	if err := service.DestroyTeacherInstance(context.Background(), 202, 1, identitycontracts.RoleTeacher); err == nil || err.Error() != apperror.ErrForbidden.Error() {
 		t.Fatalf("expected forbidden destroy, got %v", err)
 	}
 

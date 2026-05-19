@@ -8,9 +8,9 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	opsports "ctf-platform/internal/module/ops/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type AuditService struct {
@@ -65,7 +65,7 @@ func (s *AuditService) ListAuditLogs(ctx context.Context, query *AuditLogQuery) 
 		Limit:        pageSize,
 	})
 	if err != nil {
-		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+		return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 	}
 
 	items := make([]AuditLogItem, 0, len(records))
@@ -111,19 +111,19 @@ func parseAuditTimeRange(start, end string) (*time.Time, *time.Time, error) {
 	if strings.TrimSpace(start) != "" {
 		parsed, err := time.Parse(time.RFC3339, start)
 		if err != nil {
-			return nil, nil, errcode.New(errcode.ErrInvalidParams.Code, "start_time 必须为 RFC3339 格式", errcode.ErrInvalidParams.HTTPStatus)
+			return nil, nil, apperror.ErrInvalidParams.WithMessage("start_time 必须为 RFC3339 格式")
 		}
 		startTime = &parsed
 	}
 	if strings.TrimSpace(end) != "" {
 		parsed, err := time.Parse(time.RFC3339, end)
 		if err != nil {
-			return nil, nil, errcode.New(errcode.ErrInvalidParams.Code, "end_time 必须为 RFC3339 格式", errcode.ErrInvalidParams.HTTPStatus)
+			return nil, nil, apperror.ErrInvalidParams.WithMessage("end_time 必须为 RFC3339 格式")
 		}
 		endTime = &parsed
 	}
 	if startTime != nil && endTime != nil && endTime.Before(*startTime) {
-		return nil, nil, errcode.New(errcode.ErrInvalidParams.Code, "end_time 不能早于 start_time", errcode.ErrInvalidParams.HTTPStatus)
+		return nil, nil, apperror.ErrInvalidParams.WithMessage("end_time 不能早于 start_time")
 	}
 
 	return startTime, endTime, nil

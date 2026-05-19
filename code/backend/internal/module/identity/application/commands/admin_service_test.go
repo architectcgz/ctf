@@ -9,9 +9,9 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
-	"ctf-platform/pkg/errcode"
 )
 
 func setupIdentityTestDB(t *testing.T) *gorm.DB {
@@ -97,7 +97,7 @@ func TestAdminServiceCreateUserRejectsDuplicateUsername(t *testing.T) {
 		Role:     identitycontracts.RoleStudent,
 		Status:   identitycontracts.UserStatusActive,
 	})
-	if !errors.Is(err, errcode.ErrUsernameExists) {
+	if !errors.Is(err, apperror.ErrUsernameExists) {
 		t.Fatalf("expected ErrUsernameExists, got %v", err)
 	}
 }

@@ -2,24 +2,25 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) ensureAWDContest(ctx context.Context, contestID int64) (*contestentity.Contest, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if contest.Mode != contestentity.ContestModeAWD {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	return contest, nil
 }
@@ -32,9 +33,9 @@ func (s *AWDService) ensureAWDRound(ctx context.Context, contestID, roundID int6
 	round, err := s.repo.FindRoundByContestAndID(ctx, contestID, roundID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestAWDRoundNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return round, nil
 }

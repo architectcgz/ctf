@@ -12,11 +12,11 @@ import (
 	"strings"
 	"testing"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
-	"ctf-platform/pkg/errcode"
 	"gorm.io/gorm"
 )
 
@@ -329,8 +329,8 @@ func TestAWDChallengeImportRejectsDuplicateSlug(t *testing.T) {
 		t.Fatal("expected duplicate awd slug commit to fail")
 	}
 
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrConflict.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrConflict.Code {
 		t.Fatalf("expected conflict app error, got %v", err)
 	}
 	if !strings.Contains(appErr.Message, "AWD 题目 slug awd-bank-portal-01 已被已有题目占用") {
@@ -523,14 +523,14 @@ func readAWDCheckerArtifactDigestForTest(t *testing.T, checkerConfigRaw string) 
 func assertAWDChallengeImportServiceUnavailableError(t *testing.T, err error) {
 	t.Helper()
 
-	var appErr *errcode.AppError
+	var appErr *apperror.AppError
 	if !errors.As(err, &appErr) {
 		t.Fatalf("expected app error, got %v", err)
 	}
-	if appErr.Code != errcode.ErrServiceUnavailable.Code {
+	if appErr.Code != apperror.ErrServiceUnavailable.Code {
 		t.Fatalf("expected service unavailable code, got %+v", appErr)
 	}
-	if appErr.HTTPStatus != errcode.ErrServiceUnavailable.HTTPStatus {
+	if apperror.HTTPStatus(appErr) != apperror.HTTPStatus(apperror.ErrServiceUnavailable) {
 		t.Fatalf("expected service unavailable status, got %+v", appErr)
 	}
 	if !strings.Contains(appErr.Message, "当前后端未启用题包镜像构建/校验服务") {

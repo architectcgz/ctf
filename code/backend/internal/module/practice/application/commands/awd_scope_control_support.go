@@ -2,11 +2,12 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 const awdScopeControlReasonLimit = 256
@@ -79,10 +80,10 @@ func (idx awdContestControlIndex) state(teamID, serviceID int64) awdScopeControl
 
 func (s awdScopeControlState) blocksLifecycle() error {
 	if s.TeamRetired != nil {
-		return errcode.ErrAWDTeamRetired
+		return contestcontracts.ErrAWDTeamRetired
 	}
 	if s.ServiceDisabled != nil {
-		return errcode.ErrAWDServiceDisabled
+		return contestcontracts.ErrAWDServiceDisabled
 	}
 	return nil
 }
@@ -123,7 +124,7 @@ func (s *Service) ensureAWDScopeAllowsLifecycle(ctx context.Context, scope pract
 	}
 	state, err := s.loadAWDScopeControlState(ctx, *scope.ContestID, *scope.TeamID, *scope.ServiceID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if blocked := state.blocksLifecycle(); blocked != nil {
 		return blocked

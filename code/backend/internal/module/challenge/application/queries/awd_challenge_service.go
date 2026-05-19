@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type AWDChallengeQueryService struct {
@@ -22,9 +22,9 @@ func (s *AWDChallengeQueryService) GetChallenge(ctx context.Context, id int64) (
 	item, err := s.repo.FindAWDChallengeByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrAWDChallengeNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return domain.AWDChallengeRespFromModel(item), nil
 }
@@ -40,7 +40,7 @@ func (s *AWDChallengeQueryService) ListChallenges(ctx context.Context, req ListA
 
 	items, total, err := s.repo.ListAWDChallenges(ctx, query)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	page := 1
 	size := 20

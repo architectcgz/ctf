@@ -2,19 +2,20 @@ package queries
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *TeamService) GetTeamInfo(ctx context.Context, teamID int64) (*TeamResult, []*TeamMemberResult, error) {
 	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestTeamNotFound) {
-			return nil, nil, errcode.ErrTeamNotFound
+			return nil, nil, contestcontracts.ErrTeamNotFound
 		}
 		return nil, nil, err
 	}
@@ -51,7 +52,7 @@ func (s *TeamService) loadTeamUsersByMembers(ctx context.Context, members []*con
 
 	users, err := s.teamRepo.FindUsersByIDs(ctx, userIDs)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	userMap := make(map[int64]*identitycontracts.User, len(users))

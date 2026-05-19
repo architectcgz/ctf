@@ -20,6 +20,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/app/composition"
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
@@ -43,7 +44,6 @@ import (
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
-	"ctf-platform/pkg/errcode"
 )
 
 type routerChallengeLookupContextStub struct {
@@ -304,7 +304,7 @@ func TestTeacherAWDReviewServiceInvalidRoundUsesRoundMessage(t *testing.T) {
 		t.Fatalf("expected invalid round error")
 	}
 
-	var appErr *errcode.AppError
+	var appErr *apperror.AppError
 	if !errors.As(err, &appErr) {
 		t.Fatalf("expected app error, got %T", err)
 	}

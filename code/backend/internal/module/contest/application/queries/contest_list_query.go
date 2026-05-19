@@ -6,7 +6,7 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	"go.uber.org/zap"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 func (s *ContestService) ListContests(ctx context.Context, req ListContestsInput) ([]*ContestResult, int64, error) {
@@ -24,7 +24,7 @@ func (s *ContestService) ListContests(ctx context.Context, req ListContestsInput
 	contests, total, err := s.repo.List(ctx, filter, offset, size)
 	if err != nil {
 		s.log.Error("list_contests_failed", zap.Error(err))
-		return nil, 0, errcode.ErrInternal.WithCause(err)
+		return nil, 0, apperror.ErrInternal.WithCause(err)
 	}
 
 	resp := make([]*ContestResult, len(contests))
@@ -38,7 +38,7 @@ func (s *ContestService) GetContestListSummary(ctx context.Context, req ListCont
 	summary, err := s.repo.Summarize(ctx, buildContestListFilter(req))
 	if err != nil {
 		s.log.Error("summarize_contests_failed", zap.Error(err))
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return &ContestListSummaryResult{
 		DraftCount:        summary.DraftCount,

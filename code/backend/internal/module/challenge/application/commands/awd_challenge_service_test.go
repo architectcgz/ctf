@@ -5,11 +5,11 @@ import (
 	"errors"
 	"testing"
 
+	"ctf-platform/internal/apperror"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestAWDChallengeServiceCreateChallenge(t *testing.T) {
@@ -86,8 +86,8 @@ func TestAWDChallengeServiceTreatsAWDChallengeNotFoundAsNotFound(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected challenge not found")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
-		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrNotFound.Code {
+		t.Fatalf("expected apperror.ErrNotFound, got %v", err)
 	}
 }

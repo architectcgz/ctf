@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type ImageService struct {
@@ -27,9 +27,9 @@ func (s *ImageService) GetImage(ctx context.Context, id int64) (*challengecontra
 	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-			return nil, errcode.ErrImageNotFound
+			return nil, challengecontracts.ErrImageNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return domain.ImageRespFromModel(image), nil
 }
@@ -50,7 +50,7 @@ func (s *ImageService) ListImages(ctx context.Context, query ListImagesInput) (*
 	offset := (page - 1) * size
 	images, total, err := s.repo.List(ctx, query.Name, query.Status, offset, size)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	items := make([]*challengecontracts.ImageResp, len(images))

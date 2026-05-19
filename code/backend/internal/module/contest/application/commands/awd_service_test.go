@@ -17,6 +17,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -35,7 +36,6 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 const (
@@ -529,7 +529,7 @@ func TestAWDServiceRunCurrentRoundChecksRejectsEndedContest(t *testing.T) {
 	service := newAWDServiceForTest(db, redisClient, "", config.ContestAWDConfig{})
 
 	_, err = service.RunCurrentRoundChecks(context.Background(), 222, contestcmd.RunCurrentRoundChecksInput{})
-	if err != errcode.ErrContestEnded {
+	if err != contestcontracts.ErrContestEnded {
 		t.Fatalf("expected ErrContestEnded, got %v", err)
 	}
 }
@@ -581,7 +581,7 @@ func TestAWDServiceCreateRoundRejectsBlankOverrideReason(t *testing.T) {
 		ForceOverride:  boolPtr(true),
 		OverrideReason: strPtr("   "),
 	})
-	if err != errcode.ErrInvalidParams {
+	if err != apperror.ErrInvalidParams {
 		t.Fatalf("expected ErrInvalidParams, got %v", err)
 	}
 }
@@ -612,7 +612,7 @@ func TestAWDServiceRunCurrentRoundChecksRejectsBlankOverrideReason(t *testing.T)
 		ForceOverride:  boolPtr(true),
 		OverrideReason: strPtr("  "),
 	})
-	if err != errcode.ErrInvalidParams {
+	if err != apperror.ErrInvalidParams {
 		t.Fatalf("expected ErrInvalidParams, got %v", err)
 	}
 }
@@ -1044,7 +1044,7 @@ func TestAWDServicePreviewCheckerRejectsWhenRedisUnavailable(t *testing.T) {
 		AccessURL:   server.URL,
 		PreviewFlag: "flag{preview}",
 	})
-	if err != errcode.ErrAWDCheckerPreviewUnavailable {
+	if err != contestcontracts.ErrAWDCheckerPreviewUnavailable {
 		t.Fatalf("expected ErrAWDCheckerPreviewUnavailable, got %v", err)
 	}
 }
@@ -2829,8 +2829,8 @@ func strPtr(v string) *string { return &v }
 func assertAWDReadinessBlocked(t *testing.T, err error) {
 	t.Helper()
 
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrAWDReadinessBlocked.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != contestcontracts.ErrAWDReadinessBlocked.Code {
 		t.Fatalf("expected ErrAWDReadinessBlocked, got %v", err)
 	}
 }

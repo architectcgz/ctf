@@ -10,12 +10,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/middleware"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestUpdateContestSkipsReadinessAuditPayloadWhenCommandFailsBeforeGate(t *testing.T) {
@@ -25,7 +26,7 @@ func TestUpdateContestSkipsReadinessAuditPayloadWhenCommandFailsBeforeGate(t *te
 	handler := NewHandler(
 		stubContestService{
 			updateContestFunc: func(ctx context.Context, id int64, req contestcmd.UpdateContestInput) (*contestcmd.ContestResp, error) {
-				return nil, errcode.ErrInvalidStatusTransition
+				return nil, contestcontracts.ErrInvalidStatusTransition
 			},
 		},
 		stubContestQueryService{
@@ -52,8 +53,8 @@ func TestUpdateContestSkipsReadinessAuditPayloadWhenCommandFailsBeforeGate(t *te
 
 	handler.UpdateContest(ctx)
 
-	if recorder.Code != errcode.ErrInvalidStatusTransition.HTTPStatus {
-		t.Fatalf("expected status %d, got %d", errcode.ErrInvalidStatusTransition.HTTPStatus, recorder.Code)
+	if recorder.Code != apperror.HTTPStatus(contestcontracts.ErrInvalidStatusTransition) {
+		t.Fatalf("expected status %d, got %d", apperror.HTTPStatus(contestcontracts.ErrInvalidStatusTransition), recorder.Code)
 	}
 	if readinessCalls != 1 {
 		t.Fatalf("expected readiness snapshot prefetched once, got %d", readinessCalls)
@@ -74,7 +75,7 @@ func TestRunCurrentRoundChecksWritesReadinessAuditPayloadAfterGateAllowsFailure(
 					t.Fatal("expected readiness gate trace in command context")
 				}
 				trace.RecordDecision(true)
-				return nil, errcode.ErrInternal
+				return nil, apperror.ErrInternal
 			},
 		},
 		stubAWDQueryService{
@@ -91,8 +92,8 @@ func TestRunCurrentRoundChecksWritesReadinessAuditPayloadAfterGateAllowsFailure(
 
 	handler.RunCurrentRoundChecks(ctx)
 
-	if recorder.Code != errcode.ErrInternal.HTTPStatus {
-		t.Fatalf("expected status %d, got %d", errcode.ErrInternal.HTTPStatus, recorder.Code)
+	if recorder.Code != apperror.HTTPStatus(apperror.ErrInternal) {
+		t.Fatalf("expected status %d, got %d", apperror.HTTPStatus(apperror.ErrInternal), recorder.Code)
 	}
 	payload := getAWDReadinessAuditPayloadFromContext(ctx)
 	if payload == nil {
@@ -104,7 +105,7 @@ func TestRunCurrentRoundChecksWritesReadinessAuditPayloadAfterGateAllowsFailure(
 	if payload.ExecutionOutcome != "failed" {
 		t.Fatalf("unexpected execution outcome: %+v", payload)
 	}
-	if payload.ExecutionError != errcode.ErrInternal.Message {
+	if payload.ExecutionError != apperror.ErrInternal.Message {
 		t.Fatalf("unexpected execution error: %+v", payload)
 	}
 }

@@ -2,14 +2,15 @@ package composition
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"fmt"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type runtimeHTTPServiceAdapter struct {
@@ -110,7 +111,7 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
 	if !a.defenseSSHEnabled || a.defenseSSHHost == "" || a.defenseSSHPort <= 0 {
-		return nil, errcode.ErrAWDDefenseSSHUnavailable.WithCause(fmt.Errorf("awd defense ssh gateway is not enabled"))
+		return nil, contestcontracts.ErrAWDDefenseSSHUnavailable.WithCause(fmt.Errorf("awd defense ssh gateway is not enabled"))
 	}
 
 	ticket, expiresAt, err := a.proxyTickets.IssueAWDDefenseSSHTicket(ctx, user, contestID, serviceID)
@@ -129,7 +130,7 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 }
 
 func errRuntimeHTTPProxyTicketServiceUnavailable() error {
-	return errcode.ErrInternal.WithCause(fmt.Errorf("proxy ticket service is not configured"))
+	return apperror.ErrInternal.WithCause(fmt.Errorf("proxy ticket service is not configured"))
 }
 
 func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
@@ -161,5 +162,5 @@ func (a *runtimeHTTPServiceAdapter) ProxyBodyPreviewSize() int {
 }
 
 func errRuntimeHTTPInstanceServiceUnavailable() error {
-	return errcode.ErrInternal.WithCause(fmt.Errorf("instance application service is not configured"))
+	return apperror.ErrInternal.WithCause(fmt.Errorf("instance application service is not configured"))
 }

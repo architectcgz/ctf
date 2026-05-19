@@ -9,6 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
@@ -19,7 +20,6 @@ import (
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 type Service struct {
@@ -266,22 +266,22 @@ func (s *Service) GetSkillProfile(ctx context.Context, userID int64) (*assessmen
 func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*assessmentcontracts.SkillProfile, error) {
 	student, err := s.repo.FindUserByID(ctx, studentID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if student == nil || student.Role != identitycontracts.RoleStudent {
-		return nil, errcode.ErrNotFound
+		return nil, apperror.ErrNotFound
 	}
 
 	if requesterRole != identitycontracts.RoleAdmin {
 		requester, findErr := s.repo.FindUserByID(ctx, requesterID)
 		if findErr != nil {
-			return nil, errcode.ErrInternal.WithCause(findErr)
+			return nil, apperror.ErrInternal.WithCause(findErr)
 		}
 		if requester == nil {
-			return nil, errcode.ErrUnauthorized
+			return nil, apperror.ErrUnauthorized
 		}
 		if strings.TrimSpace(requester.ClassName) == "" || requester.ClassName != student.ClassName {
-			return nil, errcode.ErrForbidden
+			return nil, apperror.ErrForbidden
 		}
 	}
 

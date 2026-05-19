@@ -2,11 +2,12 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *SubmissionService) resolveTeamID(ctx context.Context, userID, contestID int64) (*int64, error) {
@@ -17,7 +18,7 @@ func (s *SubmissionService) resolveTeamID(ctx context.Context, userID, contestID
 		}
 		return registration.TeamID, nil
 	} else if !errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	team, err := s.teamRepo.FindUserTeamInContest(ctx, userID, contestID)
@@ -25,8 +26,8 @@ func (s *SubmissionService) resolveTeamID(ctx context.Context, userID, contestID
 		return &team.ID, nil
 	}
 	if err != nil && !errors.Is(err, contestports.ErrContestUserTeamNotFound) {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
-	return nil, errcode.ErrNotRegistered
+	return nil, contestcontracts.ErrNotRegistered
 }

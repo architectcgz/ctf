@@ -2,13 +2,14 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"fmt"
 
+	"ctf-platform/internal/apperror"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type awdScopeControlSpec struct {
@@ -104,10 +105,10 @@ func (s *Service) SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Conte
 
 func (s *Service) setAWDScopeControl(ctx context.Context, spec awdScopeControlSpec, actorUserID int64, enabled bool, reason string) (*AdminAWDScopeControlResp, error) {
 	if s == nil || s.repo == nil {
-		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice awd scope control repository is nil"))
+		return nil, apperror.ErrInternal.WithCause(fmt.Errorf("practice awd scope control repository is nil"))
 	}
 	if spec.ContestID <= 0 || spec.TeamID <= 0 || spec.ScopeType == "" || spec.ControlType == "" {
-		return nil, errcode.ErrInvalidParams
+		return nil, apperror.ErrInvalidParams
 	}
 
 	if enabled {
@@ -121,17 +122,17 @@ func (s *Service) setAWDScopeControl(ctx context.Context, spec awdScopeControlSp
 			UpdatedBy:   &actorUserID,
 		}
 		if err := s.repo.UpsertAWDScopeControl(ctx, control); err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 	} else {
 		if err := s.repo.DeleteAWDScopeControl(ctx, spec.ContestID, spec.TeamID, spec.ScopeType, spec.ControlType, spec.ServiceID); err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 	}
 
 	rows, err := s.repo.ListScopeAWDScopeControls(ctx, spec.ContestID, spec.TeamID, spec.ServiceID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	row := findAWDScopeControlRow(rows, spec.ScopeType, spec.ControlType, spec.ServiceID)
 	return adminAWDScopeControlRespFromModel(spec, row), nil
@@ -181,14 +182,14 @@ func (s *Service) validateAdminContestAWDServiceControlScope(ctx context.Context
 
 func (s *Service) loadAdminContestAWDTeam(ctx context.Context, contestID, teamID int64) (*practiceports.ContestTeamRecord, error) {
 	if s.contestScope == nil {
-		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+		return nil, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
 	team, err := s.contestScope.FindContestTeam(ctx, contestID, teamID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeContestTeamNotFound) {
-			return nil, errcode.ErrTeamNotFound
+			return nil, contestcontracts.ErrTeamNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return team, nil
 }
@@ -199,7 +200,7 @@ func (s *Service) stopContestAWDActiveInstances(ctx context.Context, contestID i
 	}
 	instances, err := s.repo.ListContestAWDInstances(ctx, contestID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	for _, instance := range instances {
 		if !match(instance) {
@@ -207,11 +208,11 @@ func (s *Service) stopContestAWDActiveInstances(ctx context.Context, contestID i
 		}
 		if s.runtimeService != nil {
 			if err := s.runtimeService.CleanupRuntime(ctx, instance); err != nil {
-				return errcode.ErrServiceUnavailable.WithCause(err)
+				return apperror.ErrServiceUnavailable.WithCause(err)
 			}
 		}
 		if err := s.instanceRepo.UpdateStatusAndReleasePort(ctx, instance.ID, instancecontracts.InstanceStatusStopped); err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 	}
 	return nil

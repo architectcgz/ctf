@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type contestChallengeErrorContestLookupStub struct {
@@ -185,7 +185,7 @@ func TestChallengeServiceAddChallengeToContestTreatsChallengeSentinelAsErrChalle
 	)
 
 	_, err := service.AddChallengeToContest(context.Background(), 10, AddContestChallengeInput{ChallengeID: 501})
-	if err != errcode.ErrChallengeNotFound {
+	if err != challengecontracts.ErrChallengeNotFound {
 		t.Fatalf("expected ErrChallengeNotFound, got %v", err)
 	}
 }
@@ -210,7 +210,7 @@ func TestContestAWDServiceServiceCreateTreatsAWDChallengeSentinelAsErrNotFound(t
 		AWDChallengeID: 501,
 		Points:         100,
 	})
-	if err != errcode.ErrNotFound {
+	if err != apperror.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
@@ -232,7 +232,7 @@ func TestContestAWDServiceServiceUpdateTreatsStoredServiceSentinelAsErrNotFound(
 	)
 
 	err := service.UpdateContestAWDService(context.Background(), 10, 20, UpdateContestAWDServiceInput{})
-	if err != errcode.ErrNotFound {
+	if err != apperror.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
@@ -269,7 +269,7 @@ func TestContestAWDServiceServiceUpdateTreatsNewAWDChallengeSentinelAsErrNotFoun
 	err := service.UpdateContestAWDService(context.Background(), 10, 20, UpdateContestAWDServiceInput{
 		AWDChallengeID: &newChallengeID,
 	})
-	if err != errcode.ErrNotFound {
+	if err != apperror.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
@@ -291,7 +291,7 @@ func TestContestAWDServiceServiceDeleteTreatsStoredServiceSentinelAsErrNotFound(
 	)
 
 	err := service.DeleteContestAWDService(context.Background(), 10, 20)
-	if err != errcode.ErrNotFound {
+	if err != apperror.ErrNotFound {
 		t.Fatalf("expected ErrNotFound, got %v", err)
 	}
 }
@@ -313,7 +313,7 @@ func TestContestAWDServiceSyncContestChallengeRelationTreatsChallengeSentinelAsE
 	)
 
 	err := service.syncContestChallengeRelation(context.Background(), &contestentity.Contest{ID: 10}, 20, 1, true)
-	if err != errcode.ErrChallengeNotFound {
+	if err != challengecontracts.ErrChallengeNotFound {
 		t.Fatalf("expected ErrChallengeNotFound, got %v", err)
 	}
 }

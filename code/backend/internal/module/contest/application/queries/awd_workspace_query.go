@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 const (
@@ -31,7 +31,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 
 	currentRound, err := s.repo.FindRunningRound(ctx, contestID)
 	if err != nil && !errors.Is(err, contestports.ErrContestAWDRoundNotFound) {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if currentRound != nil {
 		resp.CurrentRound = &AWDRoundResult{
@@ -50,7 +50,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 
 	myTeam, err := s.repo.FindContestTeamByMember(ctx, contestID, userID)
 	if err != nil && !errors.Is(err, contestports.ErrContestUserTeamNotFound) {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if myTeam == nil {
 		return resp, nil
@@ -67,7 +67,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 
 	definitions, err := s.repo.ListServiceDefinitionsByContest(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	serviceMap := make(map[int64]*AWDWorkspaceServiceResult)
@@ -94,7 +94,7 @@ func (s *AWDService) GetUserWorkspace(ctx context.Context, userID, contestID int
 
 	instances, err := s.repo.ListServiceInstancesByContest(ctx, contestID, serviceIDs)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	targetServiceSeen := make(map[int64]map[int64]struct{})
 	for _, instance := range instances {
@@ -148,7 +148,7 @@ func (s *AWDService) populateAWDWorkspaceLatestOperations(
 ) error {
 	operations, err := s.repo.ListLatestServiceOperationsByContest(ctx, contestID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	for _, operation := range operations {
 		if operation.TeamID != myTeamID || operation.ServiceID <= 0 {
@@ -172,7 +172,7 @@ func (s *AWDService) populateAWDWorkspaceDefenseConnections(
 ) error {
 	summaries, err := s.repo.ListDefenseWorkspaceSummariesByContestTeam(ctx, contestID, myTeamID, serviceIDs)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	for _, summary := range summaries {
 		item := ensureAWDWorkspaceService(serviceMap, summary.ServiceID, 0)
@@ -190,7 +190,7 @@ func (s *AWDService) populateAWDWorkspaceCurrentRound(
 ) error {
 	records, err := s.repo.ListServicesByRound(ctx, roundID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	for _, record := range records {
 		if record.TeamID != myTeamID {
@@ -212,7 +212,7 @@ func (s *AWDService) populateAWDWorkspaceCurrentRound(
 
 	logs, err := s.repo.ListAttackLogsByRound(ctx, roundID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	for _, log := range logs {
 		if log.AttackerTeamID != myTeamID && log.VictimTeamID != myTeamID {

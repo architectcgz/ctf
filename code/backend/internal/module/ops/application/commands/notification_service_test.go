@@ -2,12 +2,14 @@ package commands
 
 import (
 	"context"
+	opscontracts "ctf-platform/internal/module/ops/contracts"
 	"errors"
 	"testing"
 	"time"
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -16,7 +18,6 @@ import (
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	ctfws "ctf-platform/internal/websocket"
-	"ctf-platform/pkg/errcode"
 )
 
 type stubNotificationRepository struct {
@@ -229,7 +230,7 @@ func TestNotificationServiceMarkAsReadReturnsNotificationNotFound(t *testing.T) 
 	}, nil, zap.NewNop())
 
 	err := service.MarkAsRead(context.Background(), 7, 11)
-	if !errors.Is(err, errcode.ErrNotificationNotFound) {
+	if !errors.Is(err, opscontracts.ErrNotificationNotFound) {
 		t.Fatalf("MarkAsRead() error = %v, want ErrNotificationNotFound", err)
 	}
 }
@@ -401,7 +402,7 @@ func TestNotificationServicePublishAdminNotificationRejectsInvalidAudienceRule(t
 			},
 		},
 	})
-	if !errors.Is(err, errcode.ErrInvalidParams) {
+	if !errors.Is(err, apperror.ErrInvalidParams) {
 		t.Fatalf("PublishAdminNotification() error = %v, want ErrInvalidParams", err)
 	}
 }
@@ -423,7 +424,7 @@ func TestNotificationServicePublishAdminNotificationRejectsUnknownRoleValue(t *t
 			},
 		},
 	})
-	if !errors.Is(err, errcode.ErrInvalidParams) {
+	if !errors.Is(err, apperror.ErrInvalidParams) {
 		t.Fatalf("PublishAdminNotification() error = %v, want ErrInvalidParams", err)
 	}
 }

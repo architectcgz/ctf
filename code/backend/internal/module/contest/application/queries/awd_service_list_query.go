@@ -3,8 +3,8 @@ package queries
 import (
 	"context"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) ListServices(ctx context.Context, contestID, roundID int64) ([]AWDTeamServiceResult, error) {
@@ -14,7 +14,7 @@ func (s *AWDService) ListServices(ctx context.Context, contestID, roundID int64)
 
 	records, err := s.repo.ListServicesByRound(ctx, roundID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	teams, err := s.loadContestTeams(ctx, contestID)
@@ -59,7 +59,7 @@ func (s *AWDService) ListServices(ctx context.Context, contestID, roundID int64)
 func (s *AWDService) loadServiceNames(ctx context.Context, contestID int64) (map[int64]string, error) {
 	definitions, err := s.repo.ListServiceDefinitionsByContest(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	names := make(map[int64]string, len(definitions))

@@ -2,17 +2,18 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"fmt"
 	"time"
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *Service) recordAWDServiceOperation(ctx context.Context, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status, requestedBy string, requestedByID *int64, reason string, slaBillable bool) {
@@ -88,34 +89,34 @@ func restartCleanupRuntimeView(instance *instancecontracts.Instance) *instanceco
 
 func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*AdminAWDInstanceOrchestrationResp, error) {
 	if s.contestScope == nil {
-		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+		return nil, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
 	contest, err := s.contestScope.FindContestByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeContestNotFound) {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if contest.Mode != practiceports.ContestModeAWD {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅 AWD 赛事支持队伍实例编排"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("仅 AWD 赛事支持队伍实例编排"))
 	}
 
 	teams, err := s.repo.ListContestTeams(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	services, err := s.repo.ListContestAWDServices(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	instances, err := s.repo.ListContestAWDInstances(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	controls, err := s.listContestAWDScopeControls(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	resp := &AdminAWDInstanceOrchestrationResp{

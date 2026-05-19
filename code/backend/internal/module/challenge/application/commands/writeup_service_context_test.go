@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type writeupCommandContextStub struct {
@@ -352,7 +352,7 @@ func TestWriteupServiceUpsertTreatsChallengeNotFoundSentinelAsChallengeNotFound(
 		Content:    "Walkthrough",
 		Visibility: challengeentity.WriteupVisibilityPublic,
 	})
-	if err == nil || err.Error() != errcode.ErrChallengeNotFound.Error() {
+	if err == nil || err.Error() != challengecontracts.ErrChallengeNotFound.Error() {
 		t.Fatalf("expected challenge not found, got %v", err)
 	}
 }
@@ -418,7 +418,7 @@ func TestWriteupServiceRecommendCommunityTreatsRequesterNotFoundSentinelAsUnauth
 	})
 
 	_, err := service.RecommendCommunity(context.Background(), 91, 1001, identitycontracts.RoleTeacher)
-	if err == nil || err.Error() != errcode.ErrUnauthorized.Error() {
+	if err == nil || err.Error() != apperror.ErrUnauthorized.Error() {
 		t.Fatalf("expected unauthorized, got %v", err)
 	}
 }

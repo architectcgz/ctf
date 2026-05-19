@@ -2,10 +2,11 @@ package queries
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ScoreboardService) GetScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*ScoreboardResult, error) {
@@ -20,9 +21,9 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 	contest, err := s.repo.FindByID(ctx, contestID)
 	if err != nil {
 		if err == contestdomain.ErrContestNotFound {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	if page < 1 {
@@ -44,11 +45,11 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 
 	teams, err := s.repo.FindTeamsByIDs(ctx, teamIDs)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	statsMap, err := s.repo.FindScoreboardTeamStats(ctx, contestID, contest.Mode, teamIDs)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	allItems := buildScoreboardItems(s.logger, contestID, 0, results, teamIDs, teams, statsMap)
 	total := int64(len(allItems))

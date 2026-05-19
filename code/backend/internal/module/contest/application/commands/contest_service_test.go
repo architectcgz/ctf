@@ -2,6 +2,7 @@ package commands_test
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"testing"
 	"time"
@@ -11,13 +12,13 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
-	"ctf-platform/pkg/errcode"
 )
 
 type stubContestRepository struct{}
@@ -36,7 +37,7 @@ func TestContestServiceCreateContestRejectsInvalidTimeRange(t *testing.T) {
 		StartTime: time.Now().Add(time.Hour),
 		EndTime:   time.Now(),
 	})
-	if err != errcode.ErrInvalidTimeRange {
+	if err != contestcontracts.ErrInvalidTimeRange {
 		t.Fatalf("expected ErrInvalidTimeRange, got %v", err)
 	}
 }
@@ -189,7 +190,7 @@ func TestContestServiceUpdateContestRejectsBlankOverrideReason(t *testing.T) {
 		ForceOverride:  boolPtr(true),
 		OverrideReason: strPtr("  "),
 	})
-	if err != errcode.ErrInvalidParams {
+	if err != apperror.ErrInvalidParams {
 		t.Fatalf("expected ErrInvalidParams, got %v", err)
 	}
 }
@@ -342,8 +343,8 @@ func createContestForUpdateTest(t *testing.T, db *gorm.DB, contest *contestentit
 func assertContestReadinessBlocked(t *testing.T, err error) {
 	t.Helper()
 
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrAWDReadinessBlocked.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != contestcontracts.ErrAWDReadinessBlocked.Code {
 		t.Fatalf("expected ErrAWDReadinessBlocked, got %v", err)
 	}
 }

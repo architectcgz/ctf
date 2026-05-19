@@ -19,13 +19,13 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	platformevents "ctf-platform/internal/platform/events"
 	crypto "ctf-platform/internal/shared/flagcrypto"
-	"ctf-platform/pkg/errcode"
 )
 
 const (
@@ -160,7 +160,7 @@ func (s *ChallengeService) GetChallengeImport(ctx context.Context, actorUserID i
 		return nil, err
 	}
 	if record.CreatedBy != 0 && record.CreatedBy != actorUserID {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	preview := record.Preview
 	return &preview, nil
@@ -212,7 +212,7 @@ func (s *ChallengeService) CommitChallengeImport(
 		return nil, err
 	}
 	if record.CreatedBy != 0 && record.CreatedBy != actorUserID {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 
 	parsed, err := domain.ParseChallengePackageDir(record.SourceDir)
@@ -564,7 +564,7 @@ func writeImportUploadArchive(targetPath string, reader io.Reader) error {
 func extractChallengeImportArchive(archivePath, extractDir string) (string, error) {
 	archive, err := zip.OpenReader(archivePath)
 	if err != nil {
-		return "", errcode.ErrInvalidParams.WithCause(fmt.Errorf("读取 zip 失败: %w", err))
+		return "", apperror.ErrInvalidParams.WithCause(fmt.Errorf("读取 zip 失败: %w", err))
 	}
 	defer archive.Close()
 
@@ -599,7 +599,7 @@ func (s *challengeImportArchiveStats) accept(file *zip.File) error {
 		return nil
 	}
 	if file.Mode()&os.ModeSymlink != 0 {
-		return errcode.ErrInvalidParams.WithCause(fmt.Errorf("zip 条目不允许符号链接: %s", file.Name))
+		return apperror.ErrInvalidParams.WithCause(fmt.Errorf("zip 条目不允许符号链接: %s", file.Name))
 	}
 	if file.FileInfo().IsDir() {
 		return nil
@@ -607,19 +607,19 @@ func (s *challengeImportArchiveStats) accept(file *zip.File) error {
 
 	s.fileCount++
 	if s.fileCount > maxChallengeImportArchiveFiles {
-		return errcode.ErrInvalidParams.WithCause(
+		return apperror.ErrInvalidParams.WithCause(
 			fmt.Errorf("zip 文件数量超过限制，最多允许 %d 个文件", maxChallengeImportArchiveFiles),
 		)
 	}
 	if file.UncompressedSize64 > maxChallengeImportArchiveFileSize {
-		return errcode.ErrInvalidParams.WithCause(
+		return apperror.ErrInvalidParams.WithCause(
 			fmt.Errorf("zip 单文件超过限制，最多允许 %d 字节", maxChallengeImportArchiveFileSize),
 		)
 	}
 
 	s.totalSize += file.UncompressedSize64
 	if s.totalSize > maxChallengeImportArchiveTotalSize {
-		return errcode.ErrInvalidParams.WithCause(
+		return apperror.ErrInvalidParams.WithCause(
 			fmt.Errorf("zip 解包总大小超过限制，最多允许 %d 字节", maxChallengeImportArchiveTotalSize),
 		)
 	}
@@ -643,7 +643,7 @@ func extractChallengeImportFile(baseDir string, file *zip.File) error {
 		return err
 	}
 	if targetAbs != baseAbs && !strings.HasPrefix(targetAbs, prefix) {
-		return errcode.ErrInvalidParams.WithCause(fmt.Errorf("zip 条目路径非法: %s", relativePath))
+		return apperror.ErrInvalidParams.WithCause(fmt.Errorf("zip 条目路径非法: %s", relativePath))
 	}
 
 	if file.FileInfo().IsDir() {
@@ -682,12 +682,12 @@ func resolveExtractedChallengeImportRoot(extractDir string) (string, error) {
 		return "", err
 	}
 	if len(entries) != 1 || !entries[0].IsDir() {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("zip 根目录必须直接包含 challenge.yml 或单一题目目录"))
+		return "", apperror.ErrInvalidParams.WithCause(errors.New("zip 根目录必须直接包含 challenge.yml 或单一题目目录"))
 	}
 
 	rootDir := filepath.Join(extractDir, entries[0].Name())
 	if _, err := os.Stat(filepath.Join(rootDir, "challenge.yml")); err != nil {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("未找到 challenge.yml"))
+		return "", apperror.ErrInvalidParams.WithCause(errors.New("未找到 challenge.yml"))
 	}
 	return rootDir, nil
 }
@@ -704,7 +704,7 @@ func loadChallengeImportPreviewRecord(id string) (*storedChallengeImportPreview,
 	content, err := os.ReadFile(filepath.Join(challengeImportPreviewRoot(), id, "preview.json"))
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -733,7 +733,7 @@ func loadChallengeImportPreviewRecords() ([]*storedChallengeImportPreview, error
 		}
 		record, err := loadChallengeImportPreviewRecord(entry.Name())
 		if err != nil {
-			if errors.Is(err, errcode.ErrNotFound) {
+			if errors.Is(err, apperror.ErrNotFound) {
 				continue
 			}
 			return nil, err
@@ -876,7 +876,7 @@ func buildImportedFlagUpdates(
 	case challengecontracts.FlagTypeManualReview:
 		return buildImportedManualReviewFlagUpdates(prefix, updatedAt), nil
 	default:
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("不支持的 flag 类型"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("不支持的 flag 类型"))
 	}
 }
 
@@ -909,7 +909,7 @@ func buildImportedDynamicFlagUpdates(prefix string, updatedAt time.Time) map[str
 func buildImportedRegexFlagUpdates(prefix string, value string, updatedAt time.Time) (map[string]any, error) {
 	compiled, err := regexp.Compile(strings.TrimSpace(value))
 	if err != nil {
-		return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("regex flag 无效: %w", err))
+		return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("regex flag 无效: %w", err))
 	}
 	return map[string]any{
 		"flag_type":   challengecontracts.FlagTypeRegex,

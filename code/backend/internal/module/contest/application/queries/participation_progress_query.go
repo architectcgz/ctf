@@ -2,19 +2,20 @@ package queries
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ParticipationService) GetMyProgress(ctx context.Context, contestID, userID int64) (*ParticipationProgressResult, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	teamID, err := s.resolveUserTeamID(ctx, contestID, userID)
@@ -24,7 +25,7 @@ func (s *ParticipationService) GetMyProgress(ctx context.Context, contestID, use
 
 	rows, err := s.repo.ListSolvedProgress(ctx, contestID, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	result := &ParticipationProgressResult{
@@ -46,7 +47,7 @@ func (s *ParticipationService) resolveUserTeamID(ctx context.Context, contestID,
 	if registration, err := s.repo.FindRegistration(ctx, contestID, userID); err == nil {
 		return registration.TeamID, nil
 	} else if err != nil && !errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	team, err := s.teamRepo.FindUserTeamInContest(ctx, userID, contestID)
@@ -54,7 +55,7 @@ func (s *ParticipationService) resolveUserTeamID(ctx context.Context, contestID,
 		return &team.ID, nil
 	}
 	if err != nil && !errors.Is(err, contestports.ErrContestUserTeamNotFound) {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return nil, nil

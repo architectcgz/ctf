@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
@@ -17,7 +18,6 @@ import (
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
-	"ctf-platform/pkg/errcode"
 )
 
 type authCommandService interface {
@@ -153,7 +153,7 @@ func (h *Handler) Logout(c *gin.Context) {
 	h.log.Info("auth_logout_attempt", zap.Int64("user_id", authUser.UserID), zap.String("username", authUser.Username))
 	if err := h.tokenService.DeleteSession(c.Request.Context(), authUser.SessionID); err != nil {
 		h.log.Error("auth_logout_failed_delete_session", zap.Int64("user_id", authUser.UserID), zap.Error(err))
-		response.FromError(c, errcode.ErrInternal.WithCause(err))
+		response.FromError(c, apperror.ErrInternal.WithCause(err))
 		return
 	}
 
@@ -175,7 +175,7 @@ func (h *Handler) Logout(c *gin.Context) {
 
 func (h *Handler) Profile(c *gin.Context) {
 	if h.profileQuery == nil {
-		response.Error(c, errcode.ErrServiceUnavailable)
+		response.Error(c, apperror.ErrServiceUnavailable)
 		return
 	}
 
@@ -190,7 +190,7 @@ func (h *Handler) Profile(c *gin.Context) {
 
 func (h *Handler) ChangePassword(c *gin.Context) {
 	if h.profileCmd == nil {
-		response.Error(c, errcode.ErrServiceUnavailable)
+		response.Error(c, apperror.ErrServiceUnavailable)
 		return
 	}
 
@@ -264,7 +264,7 @@ func (h *Handler) CASLogin(c *gin.Context) {
 func (h *Handler) CASCallback(c *gin.Context) {
 	ticket := c.Query("ticket")
 	if ticket == "" {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 

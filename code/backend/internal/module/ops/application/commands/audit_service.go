@@ -6,10 +6,10 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/auditlog"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type AuditService struct {
@@ -35,7 +35,7 @@ func (s *AuditService) Record(ctx context.Context, entry auditlog.Entry) error {
 
 	detailJSON, err := json.Marshal(detail)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	logEntry := &opsentity.AuditLog{
@@ -49,7 +49,7 @@ func (s *AuditService) Record(ctx context.Context, entry auditlog.Entry) error {
 	}
 
 	if err := s.repo.Create(ctx, logEntry); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	return nil

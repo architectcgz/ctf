@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) buildCheckerRunResp(ctx context.Context, contestID int64, round *contestentity.AWDRound) (*AWDCheckerRunResp, error) {
@@ -40,7 +40,7 @@ func (s *AWDService) listRoundServices(ctx context.Context, contestID, roundID i
 
 	records, err := s.repo.ListServicesByRound(ctx, roundID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	teams, err := s.loadContestTeams(ctx, contestID)

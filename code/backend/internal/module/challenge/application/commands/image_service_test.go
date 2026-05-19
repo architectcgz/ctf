@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestImageServiceDeleteImageReturnsInUseWhenChallengeReferencesImage(t *testing.T) {
@@ -39,7 +39,7 @@ func TestImageServiceDeleteImageReturnsInUseWhenChallengeReferencesImage(t *test
 	)
 
 	err := service.DeleteImage(context.Background(), image.ID)
-	if err == nil || err.Error() != errcode.ErrImageInUse.Error() {
+	if err == nil || err.Error() != challengecontracts.ErrImageInUse.Error() {
 		t.Fatalf("expected image in use error, got %v", err)
 	}
 }
@@ -221,7 +221,7 @@ func TestImageServiceUpdateImageReturnsNotFoundForModuleSentinel(t *testing.T) {
 	)
 
 	err := service.UpdateImage(context.Background(), 9, UpdateImageInput{})
-	if err == nil || err.Error() != errcode.ErrImageNotFound.Error() {
+	if err == nil || err.Error() != challengecontracts.ErrImageNotFound.Error() {
 		t.Fatalf("expected image not found error, got %v", err)
 	}
 }
@@ -241,7 +241,7 @@ func TestImageServiceDeleteImageReturnsNotFoundForModuleSentinel(t *testing.T) {
 	)
 
 	err := service.DeleteImage(context.Background(), 9)
-	if err == nil || err.Error() != errcode.ErrImageNotFound.Error() {
+	if err == nil || err.Error() != challengecontracts.ErrImageNotFound.Error() {
 		t.Fatalf("expected image not found error, got %v", err)
 	}
 }

@@ -4,10 +4,10 @@ import (
 	"errors"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 func BuildTopologySpec(entryNodeKey string, networks []challengecontracts.TopologyNetworkReq, nodes []challengecontracts.TopologyNodeReq, links []challengecontracts.TopologyLinkReq, policies []challengecontracts.TopologyTrafficPolicyReq) (string, string, error) {
@@ -24,7 +24,7 @@ func BuildTopologySpec(entryNodeKey string, networks []challengecontracts.Topolo
 
 func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.TopologyNetworkReq, nodes []challengecontracts.TopologyNodeReq, links []challengecontracts.TopologyLinkReq, policies []challengecontracts.TopologyTrafficPolicyReq) (challengecontracts.TopologySpec, string, error) {
 	if len(nodes) == 0 {
-		return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑至少需要一个节点"))
+		return challengecontracts.TopologySpec{}, "", apperror.ErrInvalidParams.WithCause(errors.New("拓扑至少需要一个节点"))
 	}
 
 	specNetworks, networkKeys, fallbackNetworkKey, err := normalizeTopologyNetworks(networks)
@@ -38,10 +38,10 @@ func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.To
 	for _, node := range nodes {
 		key := strings.TrimSpace(node.Key)
 		if key == "" {
-			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("节点 key 不能为空"))
+			return challengecontracts.TopologySpec{}, "", apperror.ErrInvalidParams.WithCause(errors.New("节点 key 不能为空"))
 		}
 		if _, exists := seenNodes[key]; exists {
-			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("节点 key 不能重复"))
+			return challengecontracts.TopologySpec{}, "", apperror.ErrInvalidParams.WithCause(errors.New("节点 key 不能重复"))
 		}
 		seenNodes[key] = struct{}{}
 
@@ -85,7 +85,7 @@ func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.To
 		entry = specNodes[0].Key
 	}
 	if _, exists := seenNodes[entry]; !exists {
-		return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("入口节点不存在"))
+		return challengecontracts.TopologySpec{}, "", apperror.ErrInvalidParams.WithCause(errors.New("入口节点不存在"))
 	}
 
 	if injectFlagCount == 0 {
@@ -102,10 +102,10 @@ func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.To
 		from := strings.TrimSpace(link.FromNodeKey)
 		to := strings.TrimSpace(link.ToNodeKey)
 		if _, exists := seenNodes[from]; !exists {
-			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑连线源节点不存在"))
+			return challengecontracts.TopologySpec{}, "", apperror.ErrInvalidParams.WithCause(errors.New("拓扑连线源节点不存在"))
 		}
 		if _, exists := seenNodes[to]; !exists {
-			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑连线目标节点不存在"))
+			return challengecontracts.TopologySpec{}, "", apperror.ErrInvalidParams.WithCause(errors.New("拓扑连线目标节点不存在"))
 		}
 		specLinks = append(specLinks, challengecontracts.TopologyLink{
 			FromNodeKey: from,
@@ -118,10 +118,10 @@ func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.To
 		source := strings.TrimSpace(policy.SourceNodeKey)
 		target := strings.TrimSpace(policy.TargetNodeKey)
 		if _, exists := seenNodes[source]; !exists {
-			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("链路策略源节点不存在"))
+			return challengecontracts.TopologySpec{}, "", apperror.ErrInvalidParams.WithCause(errors.New("链路策略源节点不存在"))
 		}
 		if _, exists := seenNodes[target]; !exists {
-			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("链路策略目标节点不存在"))
+			return challengecontracts.TopologySpec{}, "", apperror.ErrInvalidParams.WithCause(errors.New("链路策略目标节点不存在"))
 		}
 		specPolicies = append(specPolicies, challengecontracts.TopologyTrafficPolicy{
 			SourceNodeKey: source,
@@ -139,7 +139,7 @@ func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.To
 		}
 	}
 	if !hasEntryPort {
-		return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("入口节点必须配置 service_port"))
+		return challengecontracts.TopologySpec{}, "", apperror.ErrInvalidParams.WithCause(errors.New("入口节点必须配置 service_port"))
 	}
 
 	return challengecontracts.TopologySpec{
@@ -281,10 +281,10 @@ func normalizeTopologyNetworks(networks []challengecontracts.TopologyNetworkReq)
 	for _, network := range networks {
 		key := strings.TrimSpace(network.Key)
 		if key == "" {
-			return nil, nil, "", errcode.ErrInvalidParams.WithCause(errors.New("网络 key 不能为空"))
+			return nil, nil, "", apperror.ErrInvalidParams.WithCause(errors.New("网络 key 不能为空"))
 		}
 		if _, exists := seen[key]; exists {
-			return nil, nil, "", errcode.ErrInvalidParams.WithCause(errors.New("网络 key 不能重复"))
+			return nil, nil, "", apperror.ErrInvalidParams.WithCause(errors.New("网络 key 不能重复"))
 		}
 		if fallbackNetworkKey == "" {
 			fallbackNetworkKey = key
@@ -305,7 +305,7 @@ func normalizeNodeNetworks(networkKeys []string, validNetworkKeys map[string]str
 		return []string{fallbackNetworkKey}, nil
 	}
 	if len(networkKeys) == 0 {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("多网络拓扑中的节点必须声明 network_keys"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("多网络拓扑中的节点必须声明 network_keys"))
 	}
 
 	seen := make(map[string]struct{}, len(networkKeys))
@@ -313,10 +313,10 @@ func normalizeNodeNetworks(networkKeys []string, validNetworkKeys map[string]str
 	for _, networkKey := range networkKeys {
 		key := strings.TrimSpace(networkKey)
 		if key == "" {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("节点 network_keys 不能为空"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("节点 network_keys 不能为空"))
 		}
 		if _, exists := validNetworkKeys[key]; !exists {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New("节点引用了不存在的网络"))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New("节点引用了不存在的网络"))
 		}
 		if _, exists := seen[key]; exists {
 			continue

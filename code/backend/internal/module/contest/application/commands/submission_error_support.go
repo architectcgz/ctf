@@ -5,14 +5,14 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 func mapSubmissionError(err error) error {
-	if appErr, ok := err.(*errcode.AppError); ok {
+	if appErr, ok := err.(*apperror.AppError); ok {
 		return appErr
 	}
-	return errcode.ErrInternal.WithCause(err)
+	return apperror.ErrInternal.WithCause(err)
 }
 
 func isContestSubmissionUniqueViolation(err error) bool {

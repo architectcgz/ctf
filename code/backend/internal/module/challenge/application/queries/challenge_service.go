@@ -6,9 +6,9 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type ChallengeService struct {
@@ -41,7 +41,7 @@ func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*challen
 	challenge, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeQueryChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeQueryChallengeNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -207,19 +207,11 @@ func normalizeChallengeQuery(query *challengecontracts.ChallengeQuery) *challeng
 func buildChallengeAccessUnavailableError(status string) error {
 	switch status {
 	case challengecontracts.ChallengeStatusDraft:
-		return errcode.New(
-			errcode.ErrChallengeNotPublish.Code,
-			"题目为草稿，无法访问",
-			errcode.ErrChallengeNotPublish.HTTPStatus,
-		)
+		return challengecontracts.ErrChallengeNotPublish.WithMessage("题目为草稿，无法访问")
 	case challengecontracts.ChallengeStatusArchived:
-		return errcode.New(
-			errcode.ErrChallengeNotPublish.Code,
-			"题目已归档，无法访问",
-			errcode.ErrChallengeNotPublish.HTTPStatus,
-		)
+		return challengecontracts.ErrChallengeNotPublish.WithMessage("题目已归档，无法访问")
 	default:
-		return errcode.ErrChallengeNotPublish
+		return challengecontracts.ErrChallengeNotPublish
 	}
 }
 

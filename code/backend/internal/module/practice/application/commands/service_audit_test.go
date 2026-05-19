@@ -16,7 +16,6 @@ import (
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
@@ -165,7 +164,7 @@ func TestSubmitFlagRejectsTooFrequentAttempts(t *testing.T) {
 	}
 
 	_, err := service.SubmitFlag(context.Background(), 81, 12, "flag{wrong-again}")
-	if err == nil || err.Error() != errcode.ErrSubmitTooFrequent.Error() {
+	if err == nil || err.Error() != challengecontracts.ErrSubmitTooFrequent.Error() {
 		t.Fatalf("expected submit too frequent, got %v", err)
 	}
 }

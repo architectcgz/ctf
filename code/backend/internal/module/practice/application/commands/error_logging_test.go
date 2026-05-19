@@ -1,20 +1,19 @@
 package commands
 
 import (
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"errors"
 	"testing"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
-
-	"ctf-platform/pkg/errcode"
 )
 
 func TestWrappedErrorCauseFieldLogsAppErrorCause(t *testing.T) {
 	t.Parallel()
 
 	cause := errors.New("docker create failed")
-	err := errcode.ErrContainerCreateFailed.WithCause(cause)
+	err := instancecontracts.ErrContainerCreateFailed.WithCause(cause)
 	core, observed := observer.New(zap.WarnLevel)
 	logger := zap.New(core)
 

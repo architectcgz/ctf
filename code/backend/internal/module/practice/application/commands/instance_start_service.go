@@ -2,6 +2,8 @@ package commands
 
 import (
 	"context"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"fmt"
 	"strings"
@@ -9,12 +11,12 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 const (
@@ -103,7 +105,7 @@ func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdSco
 		}
 		existing, err := txRepo.FindScopedRestartableInstance(ctx, req.OwnerUserID, req.ChallengeID, scope)
 		if err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		instance = existing
 		return nil
@@ -127,7 +129,7 @@ func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdSco
 
 	if instance.Status != instancecontracts.InstanceStatusPending && instance.Status != instancecontracts.InstanceStatusCreating {
 		if err := s.runtimeService.CleanupRuntime(ctx, restartCleanupRuntimeView(instance)); err != nil {
-			return nil, errcode.ErrServiceUnavailable.WithCause(err)
+			return nil, apperror.ErrServiceUnavailable.WithCause(err)
 		}
 	}
 
@@ -148,7 +150,7 @@ func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdSco
 		if preserveHostPort && instance.HostPort > 0 {
 			reusable, err := txRepo.IsHostPortReusableForRestart(ctx, instance.ID, instance.HostPort)
 			if err != nil {
-				return errcode.ErrInternal.WithCause(err)
+				return apperror.ErrInternal.WithCause(err)
 			}
 			if !reusable {
 				staleHostPort = instance.HostPort
@@ -158,22 +160,22 @@ func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdSco
 		if preserveHostPort && instance.HostPort <= 0 {
 			hostPort, err := txRepo.ReserveAvailablePortExcluding(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd, staleHostPort)
 			if err != nil {
-				return errcode.ErrInternal.WithCause(err)
+				return apperror.ErrInternal.WithCause(err)
 			}
 			if err := txRepo.BindReservedPort(ctx, hostPort, instance.ID); err != nil {
-				return errcode.ErrInternal.WithCause(err)
+				return apperror.ErrInternal.WithCause(err)
 			}
 			instance.HostPort = hostPort
 		}
 		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus, nextExpiresAt, preserveHostPort); err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		operationStatus := runtimecontracts.AWDServiceOperationStatusRequested
 		if nextStatus == instancecontracts.InstanceStatusPending {
 			operationStatus = runtimecontracts.AWDServiceOperationStatusProvisioning
 		}
 		if err := createAWDServiceOperation(ctx, txRepo, instance.ID, req.ContestID, scope, req.Audit.RestartOperationType, operationStatus, req.Audit.RequestedBy, req.Audit.RequestedByID, req.Audit.Reason, req.Audit.SLABillable); err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		return nil
 	}); err != nil {
@@ -238,10 +240,10 @@ func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID
 		return nil, err
 	}
 	if contest.Status == practiceports.ContestStatusEnded {
-		return nil, errcode.ErrContestEnded
+		return nil, contestcontracts.ErrContestEnded
 	}
 	if contest.Status != practiceports.ContestStatusRegistration {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("awd 赛前预热仅支持报名阶段"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("awd 赛前预热仅支持报名阶段"))
 	}
 
 	teams, err := s.resolveAdminContestAWDPrewarmTeams(ctx, contestID, teamID)
@@ -250,11 +252,11 @@ func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID
 	}
 	services, err := s.repo.ListContestAWDServices(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	existingInstances, err := s.repo.ListContestAWDInstances(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	resp := &AdminAWDInstancePrewarmResp{
 		ContestID: contestID,
@@ -292,16 +294,16 @@ func (s *Service) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contes
 		team, err := s.repo.FindContestTeam(ctx, contestID, *teamID)
 		if err != nil {
 			if errors.Is(err, practiceports.ErrPracticeContestTeamNotFound) {
-				return nil, errcode.ErrTeamNotFound
+				return nil, contestcontracts.ErrTeamNotFound
 			}
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		return []*practiceports.ContestTeamRecord{team}, nil
 	}
 
 	teams, err := s.repo.ListContestTeams(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return teams, nil
 }
@@ -384,11 +386,11 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		return nil, err
 	}
 	if chal.Status != practiceentity.ChallengeStatusPublished {
-		return nil, errcode.ErrChallengeNotPublish
+		return nil, challengecontracts.ErrChallengeNotPublish
 	}
 	if chal.ImageID == 0 {
 		if topology == nil {
-			return nil, errcode.ErrInvalidParams.WithCause(errors.New(errMsgChallengeNoTarget))
+			return nil, apperror.ErrInvalidParams.WithCause(errors.New(errMsgChallengeNoTarget))
 		}
 	}
 	scope = resolveEffectiveInstanceScope(chal, scope)
@@ -417,13 +419,13 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 
 		existingInstance, err := txRepo.FindScopedExistingInstance(ctx, userID, challengeID, scope)
 		if err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		if existingInstance != nil {
 			if scope.ContestMode == practiceports.ContestModeAWD {
 				if !existingInstance.ExpiresAt.Equal(expiresAt) {
 					if err := txRepo.RefreshInstanceExpiry(ctx, existingInstance.ID, expiresAt); err != nil {
-						return errcode.ErrInternal.WithCause(err)
+						return apperror.ErrInternal.WithCause(err)
 					}
 					existingInstance.ExpiresAt = expiresAt
 				}
@@ -433,7 +435,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 					refreshedExpiry = expiresAt
 				}
 				if err := txRepo.RefreshInstanceExpiry(ctx, existingInstance.ID, refreshedExpiry); err != nil {
-					return errcode.ErrInternal.WithCause(err)
+					return apperror.ErrInternal.WithCause(err)
 				}
 				existingInstance.ExpiresAt = refreshedExpiry
 			}
@@ -444,7 +446,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 
 		runningCount, err := txRepo.CountScopedRunningInstances(ctx, userID, scope)
 		if err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		if runningCount >= s.config.Container.MaxConcurrentPerUser {
 			s.logger.Warn("实例数量超限",
@@ -452,7 +454,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 				zap.Int64("challenge_id", challengeID),
 				zap.Int("current", runningCount),
 				zap.Int("limit", s.config.Container.MaxConcurrentPerUser))
-			return errcode.ErrInstanceLimitExceeded
+			return instancecontracts.ErrInstanceLimitExceeded
 		}
 
 		hostPort := 0
@@ -460,7 +462,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			var err error
 			hostPort, err = txRepo.ReserveAvailablePort(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
 			if err != nil {
-				return errcode.ErrInternal.WithCause(err)
+				return apperror.ErrInternal.WithCause(err)
 			}
 		}
 
@@ -478,11 +480,11 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			MaxExtends:  s.config.Container.MaxExtends,
 		}
 		if err := txRepo.CreateInstance(ctx, instance); err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		if hostPort > 0 {
 			if err := txRepo.BindReservedPort(ctx, hostPort, instance.ID); err != nil {
-				return errcode.ErrInternal.WithCause(err)
+				return apperror.ErrInternal.WithCause(err)
 			}
 		}
 		return nil
@@ -519,18 +521,18 @@ func (s *Service) resolveInstanceExpiresAt(ctx context.Context, scope practicepo
 		return time.Now().UTC().Add(s.config.Container.DefaultTTL), nil
 	}
 	if s.contestScope == nil {
-		return time.Time{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+		return time.Time{}, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
 
 	contest, err := s.contestScope.FindContestByID(ctx, *scope.ContestID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeContestNotFound) {
-			return time.Time{}, errcode.ErrContestNotFound
+			return time.Time{}, contestcontracts.ErrContestNotFound
 		}
-		return time.Time{}, errcode.ErrInternal.WithCause(err)
+		return time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 	if contest == nil {
-		return time.Time{}, errcode.ErrContestNotFound
+		return time.Time{}, contestcontracts.ErrContestNotFound
 	}
 	return practiceContestEffectiveEndTime(contest), nil
 }

@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type awdDefenseWorkbenchScopeReader interface {
@@ -61,7 +61,7 @@ func (s *AWDDefenseWorkbenchService) ReadAWDDefenseFile(ctx context.Context, use
 	}
 	content, err := s.runtime.ReadFileFromContainer(ctx, scope.ContainerID, containerPath, 256*1024)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return &instancecontracts.AWDDefenseFileResp{Path: cleanPath, Content: string(content), Size: len(content)}, nil
 }
@@ -77,7 +77,7 @@ func (s *AWDDefenseWorkbenchService) ListAWDDefenseDirectory(ctx context.Context
 	}
 	entries, err := s.runtime.ListDirectoryFromContainer(ctx, scope.ContainerID, containerPath, 300)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return &instancecontracts.AWDDefenseDirectoryResp{
 		Path:    cleanPath,
@@ -96,7 +96,7 @@ func (s *AWDDefenseWorkbenchService) SaveAWDDefenseFile(ctx context.Context, use
 	}
 	content := []byte(req.Content)
 	if len(content) > 256*1024 {
-		return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("awd defense file is too large"))
+		return nil, apperror.ErrInvalidParams.WithCause(fmt.Errorf("awd defense file is too large"))
 	}
 
 	backupPath := ""
@@ -106,12 +106,12 @@ func (s *AWDDefenseWorkbenchService) SaveAWDDefenseFile(ctx context.Context, use
 			backupPath = fmt.Sprintf("%s.bak.%d", cleanPath, time.Now().Unix())
 			backupContainerPath := defenseWorkbenchContainerPath(root, backupPath)
 			if err := s.runtime.WriteFileToContainer(ctx, scope.ContainerID, backupContainerPath, existing); err != nil {
-				return nil, errcode.ErrInternal.WithCause(err)
+				return nil, apperror.ErrInternal.WithCause(err)
 			}
 		}
 	}
 	if err := s.runtime.WriteFileToContainer(ctx, scope.ContainerID, containerPath, content); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return &instancecontracts.AWDDefenseFileSaveResp{
@@ -127,21 +127,21 @@ func (s *AWDDefenseWorkbenchService) RunAWDDefenseCommand(ctx context.Context, u
 	}
 	command := strings.TrimSpace(req.Command)
 	if command == "" || len(command) > 2000 {
-		return nil, errcode.ErrInvalidParams
+		return nil, apperror.ErrInvalidParams
 	}
 	scope, err := s.scopeReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if scope == nil || scope.ContainerID == "" {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 
 	runCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	output, err := s.runtime.ExecContainerCommand(runCtx, scope.ContainerID, []string{"/bin/sh", "-lc", command}, nil, 64*1024)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return &instancecontracts.AWDDefenseCommandResp{
 		Command: command,
@@ -154,21 +154,21 @@ func (s *AWDDefenseWorkbenchService) resolveReadOnlyScope(ctx context.Context, u
 		return nil, "", errAWDDefenseWorkbenchUnavailable()
 	}
 	if !s.readOnlyEnabled {
-		return nil, "", errcode.ErrForbidden
+		return nil, "", apperror.ErrForbidden
 	}
 	root := strings.TrimSpace(s.root)
 	if !strings.HasPrefix(root, "/") || root == "/" {
-		return nil, "", errcode.ErrInvalidParams
+		return nil, "", apperror.ErrInvalidParams
 	}
 	scope, err := s.scopeReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
 	if err != nil {
-		return nil, "", errcode.ErrInternal.WithCause(err)
+		return nil, "", apperror.ErrInternal.WithCause(err)
 	}
 	if scope == nil || scope.ContainerID == "" {
-		return nil, "", errcode.ErrForbidden
+		return nil, "", apperror.ErrForbidden
 	}
 	if len(normalizeDefenseEditablePaths(scope.EditablePaths)) == 0 {
-		return nil, "", errcode.ErrForbidden
+		return nil, "", apperror.ErrForbidden
 	}
 	return scope, root, nil
 }
@@ -184,11 +184,11 @@ func normalizeAWDDefenseDirectoryPath(input string) (string, error) {
 func normalizeAWDDefensePath(input string) (string, error) {
 	trimmed := strings.TrimSpace(input)
 	if trimmed == "" || strings.HasPrefix(trimmed, "/") {
-		return "", errcode.ErrInvalidParams
+		return "", apperror.ErrInvalidParams
 	}
 	cleaned := path.Clean(trimmed)
 	if cleaned == "." || cleaned == ".." || strings.HasPrefix(cleaned, "../") || strings.Contains(cleaned, "/../") {
-		return "", errcode.ErrInvalidParams
+		return "", apperror.ErrInvalidParams
 	}
 	return cleaned, nil
 }
@@ -273,11 +273,11 @@ func resolveEditableDefenseFilePath(scope *instanceports.AWDDefenseSSHScope, roo
 		return "", "", err
 	}
 	if !isEditableDefenseFileAllowed(scope.EditablePaths, cleanPath) {
-		return "", "", errcode.ErrForbidden
+		return "", "", apperror.ErrForbidden
 	}
 	containerPath := defenseWorkbenchContainerPath(root, cleanPath)
 	if isSensitiveDefensePath(containerPath) {
-		return "", "", errcode.ErrForbidden
+		return "", "", apperror.ErrForbidden
 	}
 	return cleanPath, containerPath, nil
 }
@@ -288,11 +288,11 @@ func resolveEditableDefenseDirectoryPath(scope *instanceports.AWDDefenseSSHScope
 		return "", "", err
 	}
 	if !hasEditableDefenseDirectoryAccess(scope.EditablePaths, cleanPath) {
-		return "", "", errcode.ErrForbidden
+		return "", "", apperror.ErrForbidden
 	}
 	containerPath := defenseWorkbenchContainerPath(root, cleanPath)
 	if isSensitiveDefensePath(containerPath) {
-		return "", "", errcode.ErrForbidden
+		return "", "", apperror.ErrForbidden
 	}
 	return cleanPath, containerPath, nil
 }
@@ -405,5 +405,5 @@ func isSensitiveDefensePath(value string) bool {
 }
 
 func errAWDDefenseWorkbenchUnavailable() error {
-	return errcode.ErrInternal.WithCause(fmt.Errorf("awd defense workbench service is not configured"))
+	return apperror.ErrInternal.WithCause(fmt.Errorf("awd defense workbench service is not configured"))
 }

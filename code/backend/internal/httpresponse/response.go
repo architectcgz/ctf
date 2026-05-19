@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 type Envelope struct {
@@ -36,19 +36,19 @@ func SuccessWithStatus(c *gin.Context, status int, data any) {
 	})
 }
 
-func Error(c *gin.Context, err *errcode.AppError) {
-	c.JSON(err.HTTPStatus, NewEnvelope(c, err, nil))
+func Error(c *gin.Context, err *apperror.AppError) {
+	c.JSON(apperror.HTTPStatus(err), NewEnvelope(c, err, nil))
 }
 
 func FromError(c *gin.Context, err error) {
 	recordError(c, err)
 
-	var appErr *errcode.AppError
+	var appErr *apperror.AppError
 	if errors.As(err, &appErr) {
 		Error(c, appErr)
 		return
 	}
-	Error(c, errcode.ErrInternal)
+	Error(c, apperror.ErrInternal)
 }
 
 func ValidationError(c *gin.Context, err error) {
@@ -63,18 +63,18 @@ func ValidationError(c *gin.Context, err error) {
 				Message: item.Error(),
 			})
 		}
-		c.JSON(errcode.ErrValidationFailed.HTTPStatus, NewEnvelope(c, errcode.ErrValidationFailed, fields))
+		c.JSON(apperror.HTTPStatus(apperror.ErrValidationFailed), NewEnvelope(c, apperror.ErrValidationFailed, fields))
 		return
 	}
-	Error(c, errcode.ErrInvalidParams)
+	Error(c, apperror.ErrInvalidParams)
 }
 
 func InternalError(c *gin.Context) {
-	Error(c, errcode.ErrInternal)
+	Error(c, apperror.ErrInternal)
 }
 
 func InvalidParams(c *gin.Context, message string) {
-	err := errcode.New(errcode.ErrInvalidParams.Code, message, errcode.ErrInvalidParams.HTTPStatus)
+	err := apperror.ErrInvalidParams.WithMessage(message)
 	Error(c, err)
 }
 
@@ -87,7 +87,7 @@ func Page(c *gin.Context, list any, total int64, page, pageSize int) {
 	})
 }
 
-func NewEnvelope(c *gin.Context, err *errcode.AppError, fieldErrors []FieldError) Envelope {
+func NewEnvelope(c *gin.Context, err *apperror.AppError, fieldErrors []FieldError) Envelope {
 	return Envelope{
 		Code:      err.Code,
 		Message:   err.Message,
@@ -106,7 +106,7 @@ func recordError(c *gin.Context, err error) {
 		return
 	}
 
-	var appErr *errcode.AppError
+	var appErr *apperror.AppError
 	if errors.As(err, &appErr) && appErr.Cause != nil {
 		_ = c.Error(appErr.Cause)
 		return

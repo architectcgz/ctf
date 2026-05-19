@@ -2,25 +2,26 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *TeamService) DismissTeam(ctx context.Context, contestID, captainID, teamID int64) error {
 	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestTeamNotFound) {
-			return errcode.ErrTeamNotFound
+			return contestcontracts.ErrTeamNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if team.ContestID != contestID {
-		return errcode.ErrTeamNotFound
+		return contestcontracts.ErrTeamNotFound
 	}
 	if team.CaptainID != captainID {
-		return errcode.ErrNotCaptain
+		return contestcontracts.ErrNotCaptain
 	}
 	return s.teamRepo.DeleteWithMembers(ctx, teamID)
 }
@@ -29,29 +30,29 @@ func (s *TeamService) KickMember(ctx context.Context, contestID, captainID, team
 	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestTeamNotFound) {
-			return errcode.ErrTeamNotFound
+			return contestcontracts.ErrTeamNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if team.ContestID != contestID {
-		return errcode.ErrTeamNotFound
+		return contestcontracts.ErrTeamNotFound
 	}
 	if team.CaptainID != captainID {
-		return errcode.ErrNotCaptain
+		return contestcontracts.ErrNotCaptain
 	}
 	if memberUserID == captainID {
-		return errcode.ErrCaptainCannotLeave
+		return contestcontracts.ErrCaptainCannotLeave
 	}
 
 	members, err := s.teamRepo.GetMembers(ctx, teamID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if !teamHasMember(members, memberUserID) {
-		return errcode.ErrNotInTeam
+		return contestcontracts.ErrNotInTeam
 	}
 	if err := s.teamRepo.RemoveMember(ctx, teamID, memberUserID); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }

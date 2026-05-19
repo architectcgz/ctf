@@ -12,6 +12,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
@@ -22,7 +23,6 @@ import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 type assessmentChallengeTestRow struct {
@@ -319,11 +319,11 @@ func TestGetStudentSkillProfileRejectsTeacherFromOtherClass(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected forbidden error for cross-class teacher access")
 	}
-	appErr, ok := err.(*errcode.AppError)
+	appErr, ok := err.(*apperror.AppError)
 	if !ok {
 		t.Fatalf("expected AppError, got %T", err)
 	}
-	if appErr.Code != errcode.ErrForbidden.Code {
+	if appErr.Code != apperror.ErrForbidden.Code {
 		t.Fatalf("expected forbidden code, got %+v", appErr)
 	}
 }

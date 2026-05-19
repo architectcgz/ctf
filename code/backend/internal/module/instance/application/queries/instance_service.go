@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -12,7 +13,6 @@ import (
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type InstanceService struct {
@@ -39,13 +39,13 @@ func (s *InstanceService) GetAccessURL(ctx context.Context, instanceID, userID i
 
 	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
 	if err != nil {
-		return "", errcode.ErrInternal.WithCause(err)
+		return "", apperror.ErrInternal.WithCause(err)
 	}
 	if instance == nil {
-		return "", errcode.ErrForbidden
+		return "", apperror.ErrForbidden
 	}
 	if visibleInstanceStatus(instance.Status, instance.ExpiresAt, time.Now()) != instancecontracts.InstanceStatusRunning || strings.TrimSpace(instance.AccessURL) == "" {
-		return "", errcode.ErrInstanceExpired
+		return "", instancecontracts.ErrInstanceExpired
 	}
 
 	return instance.AccessURL, nil
@@ -56,7 +56,7 @@ func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([
 
 	instances, err := s.repo.ListVisibleByUser(ctx, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	now := time.Now()
@@ -78,10 +78,10 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 	if requesterRole != identitycontracts.RoleAdmin {
 		requester, err := s.repo.FindUserByID(ctx, requesterID)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		if requester == nil {
-			return nil, errcode.ErrUnauthorized
+			return nil, apperror.ErrUnauthorized
 		}
 
 		className := strings.TrimSpace(requester.ClassName)
@@ -89,14 +89,14 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 			return []instancecontracts.TeacherInstanceItem{}, nil
 		}
 		if filter.ClassName != "" && filter.ClassName != className {
-			return nil, errcode.ErrForbidden
+			return nil, apperror.ErrForbidden
 		}
 		filter.ClassName = className
 	}
 
 	items, err := s.repo.ListTeacherInstances(ctx, filter)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	now := time.Now()

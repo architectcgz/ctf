@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 	"go.uber.org/zap"
 )
 
@@ -217,8 +217,8 @@ func TestServiceRegisterRoleNotFound(t *testing.T) {
 		Username: "alice_1",
 		Password: "Password123",
 	})
-	appErr, ok := err.(*errcode.AppError)
-	if !ok || appErr.Code != errcode.ErrInternal.Code {
+	appErr, ok := err.(*apperror.AppError)
+	if !ok || appErr.Code != apperror.ErrInternal.Code {
 		t.Fatalf("expected internal error, got %v", err)
 	}
 }
@@ -253,7 +253,7 @@ func TestServiceLoginInvalidPassword(t *testing.T) {
 		Username: "alice_1",
 		Password: "wrong-password",
 	})
-	if !errors.Is(err, errcode.ErrInvalidCredentials) {
+	if !errors.Is(err, apperror.ErrInvalidCredentials) {
 		t.Fatalf("expected invalid credentials, got %v", err)
 	}
 }
@@ -296,7 +296,7 @@ func TestServiceLoginLocksAccountAfterExceededAttempts(t *testing.T) {
 		Username: "alice_2",
 		Password: "wrong-password",
 	})
-	if !errors.Is(err, errcode.ErrLoginTooFrequent) {
+	if !errors.Is(err, apperror.ErrLoginTooFrequent) {
 		t.Fatalf("expected ErrLoginTooFrequent, got %v", err)
 	}
 	if user.Status != identitycontracts.UserStatusLocked || user.LockedUntil == nil {

@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/apperror"
 	response "ctf-platform/internal/httpresponse"
-	"ctf-platform/pkg/errcode"
 )
 
 var roleLevels = map[string]int{
@@ -27,7 +27,7 @@ func RequireRole(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentUser := MustCurrentUser(c)
 		if roleLevels[currentUser.Role] < minLevel {
-			response.Error(c, errcode.ErrForbidden)
+			response.Error(c, apperror.ErrForbidden)
 			c.Abort()
 			return
 		}

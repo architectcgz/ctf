@@ -8,10 +8,10 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type Service interface {
@@ -58,23 +58,23 @@ func (s *service) Register(ctx context.Context, req RegisterInput) (*LoginResp, 
 	}
 	if err := user.SetPassword(req.Password); err != nil {
 		s.log.Error("auth_register_password_hash_failed", zap.String("username", req.Username), zap.Error(err))
-		return nil, nil, errcode.ErrInternal.WithCause(err)
+		return nil, nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	if err := s.users.Create(ctx, user); err != nil {
 		switch {
 		case errors.Is(err, identitycontracts.ErrUsernameExists):
 			s.log.Warn("auth_register_failed_username_exists", zap.String("username", req.Username))
-			return nil, nil, errcode.ErrUsernameExists
+			return nil, nil, apperror.ErrUsernameExists
 		case errors.Is(err, identitycontracts.ErrEmailExists):
 			s.log.Warn("auth_register_failed_email_exists", zap.String("username", req.Username), zap.String("email", req.Email))
-			return nil, nil, errcode.ErrEmailExists
+			return nil, nil, apperror.ErrEmailExists
 		case errors.Is(err, identitycontracts.ErrRoleNotFound):
 			s.log.Error("auth_register_failed_role_missing", zap.String("username", req.Username), zap.String("role", user.Role))
-			return nil, nil, errcode.ErrInternal.WithCause(err)
+			return nil, nil, apperror.ErrInternal.WithCause(err)
 		default:
 			s.log.Error("auth_register_failed", zap.String("username", req.Username), zap.Error(err))
-			return nil, nil, errcode.ErrInternal.WithCause(err)
+			return nil, nil, apperror.ErrInternal.WithCause(err)
 		}
 	}
 
@@ -89,24 +89,24 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 	if err != nil {
 		if errors.Is(err, identitycontracts.ErrUserNotFound) {
 			s.log.Warn("auth_login_failed_user_not_found", zap.String("username", req.Username))
-			return nil, nil, errcode.ErrInvalidCredentials
+			return nil, nil, apperror.ErrInvalidCredentials
 		}
 		s.log.Error("auth_login_failed_lookup", zap.String("username", req.Username), zap.Error(err))
-		return nil, nil, errcode.ErrInternal.WithCause(err)
+		return nil, nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	if user.Status == identitycontracts.UserStatusBanned {
 		s.log.Warn("auth_login_failed_account_disabled", zap.String("username", req.Username), zap.Int64("user_id", user.ID))
-		return nil, nil, errcode.ErrAccountDisabled
+		return nil, nil, apperror.ErrAccountDisabled
 	}
 	if user.Status == identitycontracts.UserStatusLocked {
 		if user.LockedUntil == nil || time.Now().Before(*user.LockedUntil) {
 			s.log.Warn("auth_login_failed_account_locked", zap.String("username", req.Username), zap.Int64("user_id", user.ID))
-			return nil, nil, errcode.ErrAccountLocked
+			return nil, nil, apperror.ErrAccountLocked
 		}
 		if err := s.resetLoginTracking(ctx, user, identitycontracts.UserStatusActive); err != nil {
 			s.log.Error("auth_login_failed_unlock_expired_lock", zap.String("username", req.Username), zap.Int64("user_id", user.ID), zap.Error(err))
-			return nil, nil, errcode.ErrInternal.WithCause(err)
+			return nil, nil, apperror.ErrInternal.WithCause(err)
 		}
 	}
 
@@ -114,13 +114,13 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 		locked, updateErr := s.recordFailedLogin(ctx, user, time.Now())
 		if updateErr != nil {
 			s.log.Error("auth_login_failed_record_attempt", zap.String("username", req.Username), zap.Int64("user_id", user.ID), zap.Error(updateErr))
-			return nil, nil, errcode.ErrInternal.WithCause(updateErr)
+			return nil, nil, apperror.ErrInternal.WithCause(updateErr)
 		}
 		s.log.Warn("auth_login_failed_invalid_password", zap.String("username", req.Username), zap.Int64("user_id", user.ID), zap.Bool("locked", locked))
 		if locked {
-			return nil, nil, errcode.ErrLoginTooFrequent
+			return nil, nil, apperror.ErrLoginTooFrequent
 		}
-		return nil, nil, errcode.ErrInvalidCredentials
+		return nil, nil, apperror.ErrInvalidCredentials
 	}
 
 	if user.FailedLoginAttempts > 0 || user.LockedUntil != nil || user.Status == identitycontracts.UserStatusLocked {
@@ -130,7 +130,7 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 		}
 		if err := s.resetLoginTracking(ctx, user, nextStatus); err != nil {
 			s.log.Error("auth_login_failed_reset_attempts", zap.String("username", req.Username), zap.Int64("user_id", user.ID), zap.Error(err))
-			return nil, nil, errcode.ErrInternal.WithCause(err)
+			return nil, nil, apperror.ErrInternal.WithCause(err)
 		}
 	}
 
@@ -146,7 +146,7 @@ func (s *service) issueLoginResp(ctx context.Context, user *identitycontracts.Us
 	session, err := s.tokenService.CreateSession(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		s.log.Error("auth_create_session_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))
-		return nil, nil, errcode.ErrInternal.WithCause(err)
+		return nil, nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return authCommandResponseMapperInst.ToLoginRespPtr(loginRespSource{User: buildAuthUser(user)}), session, nil

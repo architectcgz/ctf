@@ -3,15 +3,16 @@ package queries
 import (
 	"context"
 	"crypto/rand"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"encoding/base64"
 	"fmt"
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type ProxyTicketService struct {
@@ -35,15 +36,15 @@ func (s *ProxyTicketService) IssueTicket(ctx context.Context, user authctx.Curre
 
 	ticket, err := generateProxyToken(32)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 
 	instance, err := s.instanceReader.FindByID(ctx, instanceID)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 	if instance == nil {
-		return "", time.Time{}, errcode.ErrNotFound
+		return "", time.Time{}, apperror.ErrNotFound
 	}
 
 	claims := instanceports.ProxyTicketClaims{
@@ -59,7 +60,7 @@ func (s *ProxyTicketService) IssueTicket(ctx context.Context, user authctx.Curre
 	expiresAt := time.Now().Add(s.ticketTTL).UTC()
 
 	if err := s.store.SaveProxyTicket(ctx, ticket, claims, s.ticketTTL); err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 
 	return ticket, expiresAt, nil
@@ -72,18 +73,18 @@ func (s *ProxyTicketService) IssueAWDTargetTicket(ctx context.Context, user auth
 
 	scope, err := s.instanceReader.FindAWDTargetProxyScope(ctx, user.UserID, contestID, serviceID, victimTeamID)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 	if scope == nil {
-		return "", time.Time{}, errcode.ErrForbidden
+		return "", time.Time{}, apperror.ErrForbidden
 	}
 	if scope.AttackerTeamID == scope.VictimTeamID {
-		return "", time.Time{}, errcode.ErrForbidden
+		return "", time.Time{}, apperror.ErrForbidden
 	}
 
 	ticket, err := generateProxyToken(32)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 
 	claims := instanceports.ProxyTicketClaims{
@@ -103,7 +104,7 @@ func (s *ProxyTicketService) IssueAWDTargetTicket(ctx context.Context, user auth
 	expiresAt := time.Now().Add(s.ticketTTL).UTC()
 
 	if err := s.store.SaveProxyTicket(ctx, ticket, claims, s.ticketTTL); err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 
 	return ticket, expiresAt, nil
@@ -116,15 +117,15 @@ func (s *ProxyTicketService) IssueAWDDefenseSSHTicket(ctx context.Context, user 
 
 	scope, err := s.instanceReader.FindAWDDefenseSSHScope(ctx, user.UserID, contestID, serviceID)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 	if scope == nil || scope.ContainerID == "" || scope.WorkspaceRevision <= 0 {
-		return "", time.Time{}, errcode.ErrForbidden
+		return "", time.Time{}, apperror.ErrForbidden
 	}
 
 	ticket, err := generateProxyToken(32)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 
 	claims := instanceports.ProxyTicketClaims{
@@ -144,7 +145,7 @@ func (s *ProxyTicketService) IssueAWDDefenseSSHTicket(ctx context.Context, user 
 	expiresAt := time.Now().Add(s.ticketTTL).UTC()
 
 	if err := s.store.SaveProxyTicket(ctx, ticket, claims, s.ticketTTL); err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 
 	return ticket, expiresAt, nil
@@ -155,23 +156,23 @@ func (s *ProxyTicketService) ResolveAWDTargetAccessURL(ctx context.Context, clai
 		return "", errProxyTicketServiceUnavailable()
 	}
 	if claims == nil || claims.Purpose != instanceports.ProxyTicketPurposeAWDAttack {
-		return "", errcode.ErrProxyTicketInvalid
+		return "", instancecontracts.ErrProxyTicketInvalid
 	}
 	if claims.ContestID == nil || *claims.ContestID != contestID ||
 		claims.AWDServiceID == nil || *claims.AWDServiceID != serviceID ||
 		claims.AWDVictimTeamID == nil || *claims.AWDVictimTeamID != victimTeamID {
-		return "", errcode.ErrForbidden
+		return "", apperror.ErrForbidden
 	}
 
 	scope, err := s.instanceReader.FindAWDTargetProxyScope(ctx, claims.UserID, contestID, serviceID, victimTeamID)
 	if err != nil {
-		return "", errcode.ErrInternal.WithCause(err)
+		return "", apperror.ErrInternal.WithCause(err)
 	}
 	if scope == nil || scope.InstanceID != claims.InstanceID || scope.AttackerTeamID == scope.VictimTeamID {
-		return "", errcode.ErrForbidden
+		return "", apperror.ErrForbidden
 	}
 	if scope.Status != instanceentity.InstanceStatusRunning || strings.TrimSpace(scope.AccessURL) == "" {
-		return "", errcode.ErrServiceUnavailable.WithCause(fmt.Errorf("awd target instance %d status=%s", scope.InstanceID, scope.Status))
+		return "", apperror.ErrServiceUnavailable.WithCause(fmt.Errorf("awd target instance %d status=%s", scope.InstanceID, scope.Status))
 	}
 	return scope.AccessURL, nil
 }
@@ -181,24 +182,24 @@ func (s *ProxyTicketService) ResolveTicket(ctx context.Context, ticket string) (
 		return nil, errProxyTicketServiceUnavailable()
 	}
 	if ticket == "" {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 
 	claims, err := s.store.FindProxyTicket(ctx, ticket)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if claims == nil {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 	if claims.UserID <= 0 || claims.InstanceID <= 0 || claims.Username == "" || claims.Role == "" || claims.ShareScope == "" {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 	if claims.Purpose == instanceports.ProxyTicketPurposeAWDAttack && (claims.ContestID == nil || claims.AWDAttackerTeamID == nil || claims.AWDVictimTeamID == nil || claims.AWDServiceID == nil || claims.AWDChallengeID == nil) {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 	if claims.Purpose == instanceports.ProxyTicketPurposeAWDDefenseSSH && (claims.ContestID == nil || claims.AWDAttackerTeamID == nil || claims.AWDServiceID == nil || claims.AWDChallengeID == nil || claims.AWDWorkspaceRevision == nil || *claims.AWDWorkspaceRevision <= 0) {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 
 	return claims, nil
@@ -212,7 +213,7 @@ func (s *ProxyTicketService) MaxAge() int {
 }
 
 func errProxyTicketServiceUnavailable() error {
-	return errcode.ErrInternal.WithCause(fmt.Errorf("proxy ticket service is not configured"))
+	return apperror.ErrInternal.WithCause(fmt.Errorf("proxy ticket service is not configured"))
 }
 
 func generateProxyToken(size int) (string, error) {

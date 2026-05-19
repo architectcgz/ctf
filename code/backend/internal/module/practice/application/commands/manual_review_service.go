@@ -2,16 +2,17 @@ package commands
 
 import (
 	"context"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"errors"
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	platformevents "ctf-platform/internal/platform/events"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *Service) ReviewManualReviewSubmission(
@@ -27,16 +28,16 @@ func (s *Service) ReviewManualReviewSubmission(
 		return nil, err
 	}
 	if s.manualReviewRepo == nil {
-		return nil, errcode.ErrInternal.WithCause(errors.New("practice manual review repository is nil"))
+		return nil, apperror.ErrInternal.WithCause(errors.New("practice manual review repository is nil"))
 	}
 	if s.runtimeSubject == nil {
-		return nil, errcode.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
+		return nil, apperror.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
 	}
 
 	record, err := s.manualReviewRepo.GetTeacherManualReviewSubmissionByID(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeManualReviewSubmissionNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -44,18 +45,18 @@ func (s *Service) ReviewManualReviewSubmission(
 		return nil, err
 	}
 	if record.Submission.ReviewStatus != practiceports.SubmissionReviewStatusPending {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅待审核提交可执行评阅"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("仅待审核提交可执行评阅"))
 	}
 
 	challengeItem, err := s.runtimeSubject.FindByID(ctx, record.Submission.ChallengeID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if challengeItem.FlagType != practiceentity.FlagTypeManualReview {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("当前提交不属于人工审核题"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("当前提交不属于人工审核题"))
 	}
 
 	now := time.Now()
@@ -67,9 +68,9 @@ func (s *Service) ReviewManualReviewSubmission(
 	item.UpdatedAt = now
 	if req.ReviewStatus == practiceports.SubmissionReviewStatusApproved {
 		if _, err := s.manualReviewRepo.FindCorrectSubmission(ctx, item.UserID, item.ChallengeID); err == nil {
-			return nil, errcode.ErrAlreadySolved
+			return nil, challengecontracts.ErrAlreadySolved
 		} else if err != nil && !errors.Is(err, practiceports.ErrPracticeSolvedSubmissionNotFound) {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		item.IsCorrect = true
 		item.Score = challengeItem.Points
@@ -79,7 +80,7 @@ func (s *Service) ReviewManualReviewSubmission(
 	}
 
 	if err := s.manualReviewRepo.UpdateSubmission(ctx, &item); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if item.IsCorrect {
 		s.publishWeakEvent(ctx, platformevents.Event{
@@ -116,7 +117,7 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 		return nil, err
 	}
 	if s.manualReviewRepo == nil {
-		return nil, errcode.ErrInternal.WithCause(errors.New("practice manual review repository is nil"))
+		return nil, apperror.ErrInternal.WithCause(errors.New("practice manual review repository is nil"))
 	}
 	normalized, err := normalizeTeacherManualReviewQuery(ctx, s.manualReviewRepo, requesterID, requesterRole, query)
 	if err != nil {
@@ -150,12 +151,12 @@ func (s *Service) GetTeacherManualReviewSubmission(
 		return nil, err
 	}
 	if s.manualReviewRepo == nil {
-		return nil, errcode.ErrInternal.WithCause(errors.New("practice manual review repository is nil"))
+		return nil, apperror.ErrInternal.WithCause(errors.New("practice manual review repository is nil"))
 	}
 	record, err := s.manualReviewRepo.GetTeacherManualReviewSubmissionByID(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeManualReviewSubmissionNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -181,12 +182,12 @@ func ensureTeacherCanAccessManualReviewSubmission(
 	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeUserNotFound) {
-			return errcode.ErrUnauthorized
+			return apperror.ErrUnauthorized
 		}
 		return err
 	}
 	if requester.ClassName == "" || requester.ClassName != record.ClassName {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	return nil
 }
@@ -218,15 +219,15 @@ func normalizeTeacherManualReviewQuery(
 	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeUserNotFound) {
-			return nil, errcode.ErrUnauthorized
+			return nil, apperror.ErrUnauthorized
 		}
 		return nil, err
 	}
 	if requester.ClassName == "" {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	if normalized.ClassName != "" && normalized.ClassName != requester.ClassName {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	normalized.ClassName = requester.ClassName
 	return &normalized, nil
@@ -236,20 +237,20 @@ func ensureManualReviewRequesterRole(role string) error {
 	if role == identitycontracts.RoleAdmin || role == identitycontracts.RoleTeacher {
 		return nil
 	}
-	return errcode.ErrForbidden
+	return apperror.ErrForbidden
 }
 
 func ensureManualReviewDecisionStatus(req *practicecontracts.ReviewManualReviewSubmissionReq) error {
 	if req == nil {
-		return errcode.ErrInvalidParams.WithCause(errors.New("评阅请求不能为空"))
+		return apperror.ErrInvalidParams.WithCause(errors.New("评阅请求不能为空"))
 	}
 	if len([]rune(strings.TrimSpace(req.ReviewComment))) > 4000 {
-		return errcode.ErrInvalidParams.WithCause(errors.New("review_comment 不能超过 4000 个字符"))
+		return apperror.ErrInvalidParams.WithCause(errors.New("review_comment 不能超过 4000 个字符"))
 	}
 	if req.ReviewStatus == practiceports.SubmissionReviewStatusApproved || req.ReviewStatus == practiceports.SubmissionReviewStatusRejected {
 		return nil
 	}
-	return errcode.ErrInvalidParams.WithCause(errors.New("review_status 仅支持 approved 或 rejected"))
+	return apperror.ErrInvalidParams.WithCause(errors.New("review_status 仅支持 approved 或 rejected"))
 }
 
 func ensureManualReviewQuery(query *practicecontracts.TeacherManualReviewSubmissionQuery) error {
@@ -257,16 +258,16 @@ func ensureManualReviewQuery(query *practicecontracts.TeacherManualReviewSubmiss
 		return nil
 	}
 	if query.StudentID != nil && *query.StudentID <= 0 {
-		return errcode.ErrInvalidParams.WithCause(errors.New("student_id 必须大于 0"))
+		return apperror.ErrInvalidParams.WithCause(errors.New("student_id 必须大于 0"))
 	}
 	if query.ChallengeID != nil && *query.ChallengeID <= 0 {
-		return errcode.ErrInvalidParams.WithCause(errors.New("challenge_id 必须大于 0"))
+		return apperror.ErrInvalidParams.WithCause(errors.New("challenge_id 必须大于 0"))
 	}
 	if len([]rune(strings.TrimSpace(query.ClassName))) > 128 {
-		return errcode.ErrInvalidParams.WithCause(errors.New("class_name 不能超过 128 个字符"))
+		return apperror.ErrInvalidParams.WithCause(errors.New("class_name 不能超过 128 个字符"))
 	}
 	if query.Size > 100 {
-		return errcode.ErrInvalidParams.WithCause(errors.New("page_size 不能超过 100"))
+		return apperror.ErrInvalidParams.WithCause(errors.New("page_size 不能超过 100"))
 	}
 	if query.ReviewStatus == "" ||
 		query.ReviewStatus == practiceports.SubmissionReviewStatusPending ||
@@ -274,7 +275,7 @@ func ensureManualReviewQuery(query *practicecontracts.TeacherManualReviewSubmiss
 		query.ReviewStatus == practiceports.SubmissionReviewStatusRejected {
 		return nil
 	}
-	return errcode.ErrInvalidParams.WithCause(errors.New("review_status 仅支持 pending、approved 或 rejected"))
+	return apperror.ErrInvalidParams.WithCause(errors.New("review_status 仅支持 pending、approved 或 rejected"))
 }
 
 func manualReviewDetailRespFromRecord(

@@ -7,13 +7,13 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type InstanceService struct {
@@ -51,16 +51,16 @@ func (s *InstanceService) DestroyInstance(ctx context.Context, instanceID, userI
 
 	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if instance == nil {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	if instance.ShareScope == instancecontracts.ShareScopeShared {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	if isAWDTeamServiceInstance(instance) {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 
 	s.logger.Info("销毁实例", zap.Int64("instance_id", instanceID), zap.Int64("user_id", userID))
@@ -73,19 +73,19 @@ func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID
 
 	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if instance == nil {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	if instance.ShareScope == instancecontracts.ShareScopeShared {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	if isAWDTeamServiceInstance(instance) {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	if instance.Status != instancecontracts.InstanceStatusRunning || !instance.ExpiresAt.After(time.Now()) {
-		return nil, errcode.ErrInstanceExpired
+		return nil, instancecontracts.ErrInstanceExpired
 	}
 
 	if err := s.repo.AtomicExtendByID(ctx, instanceID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
@@ -94,10 +94,10 @@ func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID
 
 	updatedInstance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if updatedInstance == nil {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 
 	s.logger.Info("延时实例",
@@ -113,24 +113,24 @@ func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID
 
 	instance, err := s.repo.FindByID(ctx, instanceID)
 	if err != nil {
-		return errcode.ErrInstanceNotFound
+		return instancecontracts.ErrInstanceNotFound
 	}
 
 	if requesterRole != identitycontracts.RoleAdmin {
 		requester, err := s.repo.FindUserByID(ctx, requesterID)
 		if err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		if requester == nil {
-			return errcode.ErrUnauthorized
+			return apperror.ErrUnauthorized
 		}
 
 		owner, err := s.repo.FindUserByID(ctx, instance.UserID)
 		if err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		if owner == nil || strings.TrimSpace(owner.ClassName) == "" || owner.ClassName != requester.ClassName {
-			return errcode.ErrForbidden
+			return apperror.ErrForbidden
 		}
 	}
 
@@ -145,11 +145,11 @@ func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID
 func (s *InstanceService) destroyManagedInstance(ctx context.Context, instance *instancecontracts.Instance) error {
 	if s.cleaner != nil {
 		if err := s.cleaner.CleanupRuntime(ctx, instance); err != nil {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 	}
 	if err := s.repo.UpdateStatusAndReleasePort(ctx, instance.ID, instancecontracts.InstanceStatusStopped); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }

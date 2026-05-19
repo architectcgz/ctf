@@ -3,7 +3,7 @@ package queries
 import (
 	"context"
 
-	"ctf-platform/pkg/errcode"
+	"ctf-platform/internal/apperror"
 )
 
 func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID int64, query ContestRegistrationQueryInput) (*RegistrationPageResult[*ContestRegistrationResult], error) {
@@ -25,7 +25,7 @@ func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID 
 
 	rows, total, err := s.repo.ListRegistrations(ctx, contestID, query.Status, (page-1)*size, size)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	items := make([]*ContestRegistrationResult, 0, len(rows))

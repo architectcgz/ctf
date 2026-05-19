@@ -2,25 +2,26 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ParticipationService) RegisterContest(ctx context.Context, contestID, userID int64) error {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return errcode.ErrContestNotFound
+			return contestcontracts.ErrContestNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if contest.Status != contestentity.ContestStatusRegistration {
-		return errcode.ErrContestRegistrationClosed
+		return contestcontracts.ErrContestRegistrationClosed
 	}
 
 	var teamID *int64
@@ -28,14 +29,14 @@ func (s *ParticipationService) RegisterContest(ctx context.Context, contestID, u
 	if err == nil && team != nil && team.ID > 0 {
 		teamID = &team.ID
 	} else if err != nil && !errors.Is(err, contestports.ErrContestUserTeamNotFound) {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	now := time.Now()
 	registration, err := s.repo.FindRegistration(ctx, contestID, userID)
 	if err != nil {
 		if !errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
-			return errcode.ErrInternal.WithCause(err)
+			return apperror.ErrInternal.WithCause(err)
 		}
 		registration = &contestentity.ContestRegistration{
 			ContestID: contestID,
@@ -46,7 +47,7 @@ func (s *ParticipationService) RegisterContest(ctx context.Context, contestID, u
 			UpdatedAt: now,
 		}
 		if createErr := s.repo.CreateRegistration(ctx, registration); createErr != nil {
-			return errcode.ErrInternal.WithCause(createErr)
+			return apperror.ErrInternal.WithCause(createErr)
 		}
 		return nil
 	}
@@ -59,7 +60,7 @@ func (s *ParticipationService) RegisterContest(ctx context.Context, contestID, u
 	registration.TeamID = teamID
 	registration.UpdatedAt = now
 	if err := s.repo.SaveRegistration(ctx, registration); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }

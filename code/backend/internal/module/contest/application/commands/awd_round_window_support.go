@@ -2,11 +2,11 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"time"
 
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) calculateActiveRoundNumber(contest *contestentity.Contest, now time.Time) (int, bool) {
@@ -40,7 +40,7 @@ func (s *AWDService) resolveCurrentRoundID(ctx context.Context, contestID int64)
 	}
 	round, err := s.resolveCurrentRound(ctx, contestID)
 	if err != nil {
-		if err == errcode.ErrAWDRoundNotActive {
+		if err == contestcontracts.ErrAWDRoundNotActive {
 			return 0, nil
 		}
 		return 0, err

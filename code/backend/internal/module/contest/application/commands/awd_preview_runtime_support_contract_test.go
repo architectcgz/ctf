@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type awdPreviewRuntimeChallengeLookupStub struct {
@@ -52,9 +52,9 @@ func TestAWDServiceLoadPreviewRuntimeDefinitionTreatsPreviewChallengeSentinelAsN
 	}
 
 	_, _, err := service.loadPreviewRuntimeDefinition(context.Background(), nil, 3201)
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
-		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrNotFound.Code {
+		t.Fatalf("expected apperror.ErrNotFound, got %v", err)
 	}
 }
 
@@ -120,8 +120,8 @@ func TestAWDServicePrepareCheckerPreviewAccessURLRejectsExplicitURLWhenPreviewIm
 		"http://preview.internal",
 		"flag{preview}",
 	)
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
-		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrNotFound.Code {
+		t.Fatalf("expected apperror.ErrNotFound, got %v", err)
 	}
 }

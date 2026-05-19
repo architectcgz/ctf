@@ -9,9 +9,9 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	redislib "github.com/redis/go-redis/v9"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestTokenServiceCreateGetAndDeleteSession(t *testing.T) {
@@ -40,7 +40,7 @@ func TestTokenServiceCreateGetAndDeleteSession(t *testing.T) {
 	if err := service.DeleteSession(context.Background(), session.ID); err != nil {
 		t.Fatalf("DeleteSession() error = %v", err)
 	}
-	if _, err := service.GetSession(context.Background(), session.ID); !errors.Is(err, errcode.ErrUnauthorized) {
+	if _, err := service.GetSession(context.Background(), session.ID); !errors.Is(err, apperror.ErrUnauthorized) {
 		t.Fatalf("expected unauthorized after delete, got %v", err)
 	}
 }
@@ -52,7 +52,7 @@ func TestTokenServiceGetSessionRejectsMissingSession(t *testing.T) {
 
 	service := authinfra.NewTokenService(newTestAuthConfig(), testWebSocketConfig(), redisClient)
 
-	if _, err := service.GetSession(context.Background(), "missing-session"); !errors.Is(err, errcode.ErrUnauthorized) {
+	if _, err := service.GetSession(context.Background(), "missing-session"); !errors.Is(err, apperror.ErrUnauthorized) {
 		t.Fatalf("expected unauthorized for missing session, got %v", err)
 	}
 }

@@ -5,11 +5,11 @@ import (
 	"errors"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type WriteupService struct {
@@ -34,14 +34,14 @@ func NewWriteupService(repo writeupQueryRepository) *WriteupService {
 func (s *WriteupService) GetAdmin(ctx context.Context, challengeID int64) (*challengecontracts.AdminChallengeWriteupResp, error) {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
 	item, err := s.repo.FindWriteupByChallengeID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeOfficialWriteupNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -52,18 +52,18 @@ func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID i
 	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
 	if challengeItem.Status != challengecontracts.ChallengeStatusPublished {
-		return nil, errcode.ErrChallengeNotPublish
+		return nil, challengecontracts.ErrChallengeNotPublish
 	}
 
 	item, err := s.repo.FindReleasedWriteupByChallengeID(ctx, challengeID, time.Now())
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeReleasedWriteupNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -82,12 +82,12 @@ func (s *WriteupService) GetMySubmission(ctx context.Context, userID, challengeI
 	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
 	if challengeItem.Status != challengecontracts.ChallengeStatusPublished {
-		return nil, errcode.ErrChallengeNotPublish
+		return nil, challengecontracts.ErrChallengeNotPublish
 	}
 	item, err := s.repo.FindSubmissionWriteupByUserChallenge(ctx, userID, challengeID)
 	if err != nil {
@@ -188,7 +188,7 @@ func (s *WriteupService) GetTeacherSubmission(ctx context.Context, submissionID,
 	record, err := s.repo.GetTeacherSubmissionWriteupByID(ctx, submissionID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTeacherSubmissionWriteupNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -219,15 +219,15 @@ func normalizeTeacherSubmissionQuery(
 	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupRequesterNotFound) {
-			return nil, errcode.ErrUnauthorized
+			return nil, apperror.ErrUnauthorized
 		}
 		return nil, err
 	}
 	if requester.ClassName == "" {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	if normalized.ClassName != "" && normalized.ClassName != requester.ClassName {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	normalized.ClassName = requester.ClassName
 	return &normalized, nil
@@ -246,12 +246,12 @@ func ensureTeacherCanAccessQueryRecord(
 	requester, err := repo.FindUserByID(ctx, requesterID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupRequesterNotFound) {
-			return errcode.ErrUnauthorized
+			return apperror.ErrUnauthorized
 		}
 		return err
 	}
 	if requester.ClassName == "" || requester.ClassName != record.ClassName {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	return nil
 }
@@ -260,19 +260,19 @@ func (s *WriteupService) ensureSolvedChallengeVisible(ctx context.Context, userI
 	challengeItem, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
-			return errcode.ErrChallengeNotFound
+			return challengecontracts.ErrChallengeNotFound
 		}
 		return err
 	}
 	if challengeItem.Status != challengecontracts.ChallengeStatusPublished {
-		return errcode.ErrChallengeNotPublish
+		return challengecontracts.ErrChallengeNotPublish
 	}
 	isSolved, err := s.repo.GetSolvedStatus(ctx, userID, challengeID)
 	if err != nil {
 		return err
 	}
 	if !isSolved {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -21,9 +22,9 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 const awdDefenseSSHWorkspaceDir = "/workspace"
@@ -254,7 +255,7 @@ func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, pa
 		claims.AWDServiceID == nil || *claims.AWDServiceID != login.serviceID ||
 		claims.AWDAttackerTeamID == nil ||
 		claims.AWDChallengeID == nil {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 
 	scope, err := g.scopeReader.FindAWDDefenseSSHScope(ctx, claims.UserID, login.contestID, login.serviceID)
@@ -267,7 +268,7 @@ func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, pa
 		scope.AWDChallengeID != *claims.AWDChallengeID ||
 		scope.WorkspaceRevision != *claims.AWDWorkspaceRevision ||
 		scope.ContainerID == "" {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 
 	return &runtimeports.AWDDefenseSSHSession{
@@ -393,37 +394,37 @@ type awdDefenseSSHLogin struct {
 func parseAWDDefenseSSHUsername(input string) (*awdDefenseSSHLogin, error) {
 	parts := strings.Split(input, "+")
 	if len(parts) < 3 {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 	contestID, err := strconv.ParseInt(parts[len(parts)-2], 10, 64)
 	if err != nil || contestID <= 0 {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 	serviceID, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
 	if err != nil || serviceID <= 0 {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 	username := strings.Join(parts[:len(parts)-2], "+")
 	if strings.TrimSpace(username) == "" {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 	return &awdDefenseSSHLogin{username: username, contestID: contestID, serviceID: serviceID}, nil
 }
 
 func sshSessionFromPermissions(permissions *ssh.Permissions) (*runtimeports.AWDDefenseSSHSession, error) {
 	if permissions == nil || permissions.Extensions == nil {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 	payload := permissions.Extensions["awd_defense_ssh_session"]
 	if payload == "" {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 	var session runtimeports.AWDDefenseSSHSession
 	if err := json.Unmarshal([]byte(payload), &session); err != nil {
 		return nil, err
 	}
 	if session.ContainerID == "" || session.InstanceID <= 0 || session.WorkspaceRevision <= 0 {
-		return nil, errcode.ErrProxyTicketInvalid
+		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
 	return &session, nil
 }

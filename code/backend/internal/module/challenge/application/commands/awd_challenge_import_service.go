@@ -16,12 +16,12 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 const defaultAWDChallengeImportPreviewRoot = "./data/awd-challenge-import-previews"
@@ -150,7 +150,7 @@ func (s *AWDChallengeImportService) GetImport(
 		return nil, err
 	}
 	if record.CreatedBy != 0 && record.CreatedBy != actorUserID {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	preview := record.Preview
 	return &preview, nil
@@ -166,7 +166,7 @@ func (s *AWDChallengeImportService) CommitImport(
 		return nil, err
 	}
 	if record.CreatedBy != 0 && record.CreatedBy != actorUserID {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 
 	parsed, err := domain.ParseAWDChallengePackageDir(record.SourceDir)
@@ -399,7 +399,7 @@ func persistAWDCheckerArtifact(parsed *domain.ParsedAWDChallengePackage) (string
 		return marshalAWDChallengeConfig(config)
 	}
 	if strings.TrimSpace(parsed.CheckerEntryAbs) == "" || strings.TrimSpace(parsed.CheckerEntryPath) == "" {
-		return "", errcode.ErrInvalidParams.WithCause(errors.New("script_checker artifact entry is missing"))
+		return "", apperror.ErrInvalidParams.WithCause(errors.New("script_checker artifact entry is missing"))
 	}
 	files := parsed.CheckerFiles
 	if len(files) == 0 {
@@ -582,7 +582,7 @@ func loadAWDChallengeImportPreviewRecord(id string) (*storedAWDChallengeImportPr
 	content, err := os.ReadFile(filepath.Join(awdChallengeImportPreviewRoot(), id, "preview.json"))
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -611,7 +611,7 @@ func loadAWDChallengeImportPreviewRecords() ([]*storedAWDChallengeImportPreview,
 		}
 		record, err := loadAWDChallengeImportPreviewRecord(entry.Name())
 		if err != nil {
-			if errors.Is(err, errcode.ErrNotFound) {
+			if errors.Is(err, apperror.ErrNotFound) {
 				continue
 			}
 			return nil, err

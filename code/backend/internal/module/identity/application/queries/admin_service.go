@@ -6,9 +6,9 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type AdminService struct {
@@ -54,7 +54,7 @@ func (s *AdminService) ListUsers(ctx context.Context, query identitycontracts.Ad
 		Limit:     size,
 	})
 	if err != nil {
-		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+		return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 	}
 
 	items := make([]identitycontracts.AdminUser, 0, len(users))

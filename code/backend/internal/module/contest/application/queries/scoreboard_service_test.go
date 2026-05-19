@@ -2,6 +2,7 @@ package queries
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"testing"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type scoreboardRepoStub struct{}
@@ -43,7 +43,7 @@ func TestScoreboardServiceGetScoreboardReturnsContestNotFound(t *testing.T) {
 	service := NewScoreboardService(&scoreboardRepoStub{}, contestinfra.NewContestScoreboardStateStore(redisClient), &config.ContestConfig{}, nil)
 
 	_, err := service.GetScoreboard(context.Background(), 42, 1, 20)
-	if err != errcode.ErrContestNotFound {
+	if err != contestcontracts.ErrContestNotFound {
 		t.Fatalf("expected ErrContestNotFound, got %v", err)
 	}
 }

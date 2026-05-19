@@ -2,30 +2,31 @@ package queries
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ChallengeService) ListAdminChallenges(ctx context.Context, contestID int64) ([]*ContestChallengeResult, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	challenges, err := s.repo.ListChallenges(ctx, contestID, false)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	result := make([]*ContestChallengeResult, len(challenges))
 	for i, item := range challenges {
 		challenge, findErr := s.challengeRepo.FindByID(ctx, item.ChallengeID)
 		if findErr != nil {
-			return nil, errcode.ErrInternal.WithCause(findErr)
+			return nil, apperror.ErrInternal.WithCause(findErr)
 		}
 		result[i] = &ContestChallengeResult{
 			ID:          item.ID,

@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/app/composition"
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	response "ctf-platform/internal/httpresponse"
@@ -17,7 +18,6 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type adminRouteDeps struct {
@@ -68,7 +68,7 @@ func challengeOwnerGuard(catalog challengeLookup) gin.HandlerFunc {
 		challenge, err := catalog.FindByID(c.Request.Context(), challengeID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				response.Error(c, errcode.ErrChallengeNotFound)
+				response.Error(c, challengecontracts.ErrChallengeNotFound)
 			} else {
 				response.FromError(c, err)
 			}
@@ -76,7 +76,7 @@ func challengeOwnerGuard(catalog challengeLookup) gin.HandlerFunc {
 			return
 		}
 		if challenge.CreatedBy == nil || *challenge.CreatedBy != currentUser.UserID {
-			response.Error(c, errcode.ErrForbidden)
+			response.Error(c, apperror.ErrForbidden)
 			c.Abort()
 			return
 		}

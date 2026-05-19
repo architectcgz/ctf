@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type stubChallengeWriteupRepository struct {
@@ -455,7 +455,7 @@ func TestWriteupServiceGetPublishedTreatsReleasedWriteupNotFoundSentinelAsNotFou
 	})
 
 	_, err := service.GetPublished(context.Background(), 7, 11)
-	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
+	if err == nil || err.Error() != apperror.ErrNotFound.Error() {
 		t.Fatalf("expected not found, got %v", err)
 	}
 }
@@ -491,7 +491,7 @@ func TestWriteupServiceGetTeacherSubmissionTreatsTeacherSubmissionNotFoundSentin
 	})
 
 	_, err := service.GetTeacherSubmission(context.Background(), 91, 1001, identitycontracts.RoleTeacher)
-	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
+	if err == nil || err.Error() != apperror.ErrNotFound.Error() {
 		t.Fatalf("expected not found, got %v", err)
 	}
 }
@@ -506,7 +506,7 @@ func TestWriteupServiceListTeacherSubmissionsTreatsRequesterNotFoundSentinelAsUn
 	})
 
 	_, err := service.ListTeacherSubmissions(context.Background(), 1001, identitycontracts.RoleTeacher, &challengecontracts.TeacherSubmissionWriteupQuery{})
-	if err == nil || err.Error() != errcode.ErrUnauthorized.Error() {
+	if err == nil || err.Error() != apperror.ErrUnauthorized.Error() {
 		t.Fatalf("expected unauthorized, got %v", err)
 	}
 }

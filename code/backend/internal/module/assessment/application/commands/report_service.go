@@ -17,6 +17,7 @@ import (
 	"github.com/xuri/excelize/v2"
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
@@ -33,7 +34,6 @@ import (
 	"ctf-platform/internal/teaching/classreview"
 	"ctf-platform/internal/teaching/classwindow"
 	"ctf-platform/internal/teaching/evidence"
-	"ctf-platform/pkg/errcode"
 )
 
 type ReportService struct {
@@ -189,7 +189,7 @@ func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, 
 		Status: assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	reportCtx, cancel := s.withPersonalTimeout(ctx)
@@ -201,7 +201,7 @@ func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, 
 		return nil, err
 	}
 	if err := s.lifecycleRepo.MarkReady(reportCtx, report.ID, filePath, expiresAt); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return buildReportExportData(report.ID, assessmententity.ReportStatusReady, expiresAt), nil
@@ -217,7 +217,7 @@ func (s *ReportService) withPersonalTimeout(ctx context.Context) (context.Contex
 func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64, req CreateClassReportInput) (*ReportExportData, error) {
 	requester, err := s.userRepo.FindUserByID(ctx, requesterID)
 	if err != nil {
-		return nil, errcode.ErrUnauthorized
+		return nil, apperror.ErrUnauthorized
 	}
 
 	className := strings.TrimSpace(req.ClassName)
@@ -225,7 +225,7 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 		className = strings.TrimSpace(requester.ClassName)
 	}
 	if className == "" {
-		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
+		return nil, apperror.ErrInvalidParams.WithMessage("class_name 不能为空")
 	}
 	if err := validateClassReportAccess(requester, className); err != nil {
 		return nil, err
@@ -244,7 +244,7 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 		Status:    assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	s.runAsyncReport(report.ID, func(runCtx context.Context) error {
@@ -261,9 +261,9 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, contestID int64, req CreateContestExportInput) (*ReportExportData, error) {
 	if _, err := s.contestRepo.FindContestByID(ctx, contestID); err != nil {
 		if errors.Is(err, assessmentports.ErrAssessmentContestNotFound) {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	format := s.normalizeArchiveFormat(req.Format)
@@ -274,7 +274,7 @@ func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, co
 		Status: assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	s.runAsyncReport(report.ID, func(runCtx context.Context) error {
@@ -291,11 +291,11 @@ func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, co
 func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req CreateStudentReviewArchiveInput) (*ReportExportData, error) {
 	requester, err := s.userRepo.FindUserByID(ctx, requesterID)
 	if err != nil {
-		return nil, errcode.ErrUnauthorized
+		return nil, apperror.ErrUnauthorized
 	}
 	student, err := s.userRepo.FindUserByID(ctx, studentID)
 	if err != nil {
-		return nil, errcode.ErrNotFound
+		return nil, apperror.ErrNotFound
 	}
 	if err := validateStudentReviewArchiveAccess(requester, student); err != nil {
 		return nil, err
@@ -310,7 +310,7 @@ func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requeste
 		Status:    assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	s.runAsyncReport(report.ID, func(runCtx context.Context) error {
@@ -329,7 +329,7 @@ func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, reque
 		return nil, err
 	}
 	if s.awdReviewBuilder == nil {
-		return nil, errcode.New(errcode.ErrServiceUnavailable.Code, "教师 AWD 复盘归档导出暂不可用", errcode.ErrServiceUnavailable.HTTPStatus)
+		return nil, apperror.ErrServiceUnavailable.WithMessage("教师 AWD 复盘归档导出暂不可用")
 	}
 
 	report := &assessmententity.Report{
@@ -339,7 +339,7 @@ func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, reque
 		Status: assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	roundNumber := req.RoundNumber
@@ -364,10 +364,10 @@ func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, reques
 		return nil, err
 	}
 	if contest.Status != contestcontracts.ContestStatusEnded {
-		return nil, errcode.New(errcode.ErrInvalidParams.Code, "教师复盘报告仅支持赛后导出", errcode.ErrInvalidParams.HTTPStatus)
+		return nil, apperror.ErrInvalidParams.WithMessage("教师复盘报告仅支持赛后导出")
 	}
 	if s.awdReviewBuilder == nil {
-		return nil, errcode.New(errcode.ErrServiceUnavailable.Code, "教师 AWD 复盘报告导出暂不可用", errcode.ErrServiceUnavailable.HTTPStatus)
+		return nil, apperror.ErrServiceUnavailable.WithMessage("教师 AWD 复盘报告导出暂不可用")
 	}
 
 	report := &assessmententity.Report{
@@ -377,7 +377,7 @@ func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, reques
 		Status: assessmententity.ReportStatusProcessing,
 	}
 	if err := s.lifecycleRepo.Create(ctx, report); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	roundNumber := req.RoundNumber
@@ -399,11 +399,11 @@ func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, reques
 func (s *ReportService) GetStudentReviewArchive(ctx context.Context, requesterID, studentID int64) (*ReviewArchiveData, error) {
 	requester, err := s.userRepo.FindUserByID(ctx, requesterID)
 	if err != nil {
-		return nil, errcode.ErrUnauthorized
+		return nil, apperror.ErrUnauthorized
 	}
 	student, err := s.userRepo.FindUserByID(ctx, studentID)
 	if err != nil {
-		return nil, errcode.ErrNotFound
+		return nil, apperror.ErrNotFound
 	}
 	if err := validateStudentReviewArchiveAccess(requester, student); err != nil {
 		return nil, err
@@ -413,32 +413,32 @@ func (s *ReportService) GetStudentReviewArchive(ctx context.Context, requesterID
 
 func validateClassReportAccess(requester *assessmentdomain.ReportUser, className string) error {
 	if requester == nil || requester.ID <= 0 {
-		return errcode.ErrUnauthorized
+		return apperror.ErrUnauthorized
 	}
 	if requester.Role == identitycontracts.RoleAdmin {
 		return nil
 	}
 	if strings.TrimSpace(requester.ClassName) == "" || strings.TrimSpace(requester.ClassName) != className {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	return nil
 }
 
 func validateStudentReviewArchiveAccess(requester, student *assessmentdomain.ReportUser) error {
 	if requester == nil || requester.ID <= 0 {
-		return errcode.ErrUnauthorized
+		return apperror.ErrUnauthorized
 	}
 	if student == nil || student.ID <= 0 {
-		return errcode.ErrNotFound
+		return apperror.ErrNotFound
 	}
 	if student.Role != identitycontracts.RoleStudent {
-		return errcode.New(errcode.ErrInvalidParams.Code, "目标用户不是学生", errcode.ErrInvalidParams.HTTPStatus)
+		return apperror.ErrInvalidParams.WithMessage("目标用户不是学生")
 	}
 	if requester.Role == identitycontracts.RoleAdmin {
 		return nil
 	}
 	if strings.TrimSpace(requester.ClassName) == "" || requester.ClassName != student.ClassName {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	return nil
 }
@@ -447,12 +447,12 @@ func (s *ReportService) findAWDContestForExport(ctx context.Context, contestID i
 	contest, err := s.contestRepo.FindContestByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, assessmentports.ErrAssessmentContestNotFound) {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if contest.Mode != contestcontracts.ContestModeAWD {
-		return nil, errcode.ErrContestNotFound
+		return nil, contestcontracts.ErrContestNotFound
 	}
 	return contest, nil
 }
@@ -461,33 +461,33 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 	report, err := s.lifecycleRepo.FindByID(ctx, reportID)
 	if err != nil {
 		if errors.Is(err, assessmentports.ErrAssessmentReportNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if err := assessmentdomain.ValidateReportAccess(report, requesterID, role); err != nil {
 		return nil, err
 	}
 	if report.Status == assessmententity.ReportStatusProcessing {
-		return nil, errcode.New(errcode.ErrConflict.Code, "报告仍在生成中", errcode.ErrConflict.HTTPStatus)
+		return nil, apperror.ErrConflict.WithMessage("报告仍在生成中")
 	}
 	if report.Status == assessmententity.ReportStatusFailed {
 		message := "报告生成失败"
 		if report.ErrorMsg != nil && strings.TrimSpace(*report.ErrorMsg) != "" {
 			message = *report.ErrorMsg
 		}
-		return nil, errcode.New(errcode.ErrConflict.Code, message, errcode.ErrConflict.HTTPStatus)
+		return nil, apperror.ErrConflict.WithMessage(message)
 	}
 
 	filePath, err := s.safeReportPath(report.FilePath)
 	if err != nil {
-		return nil, errcode.ErrForbidden
+		return nil, apperror.ErrForbidden
 	}
 	if _, statErr := os.Stat(filePath); statErr != nil {
 		if os.IsNotExist(statErr) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(statErr)
+		return nil, apperror.ErrInternal.WithCause(statErr)
 	}
 
 	fileName := reportDownloadFileName(report)
@@ -519,9 +519,9 @@ func (s *ReportService) GetStatus(ctx context.Context, reportID, requesterID int
 	report, err := s.lifecycleRepo.FindByID(ctx, reportID)
 	if err != nil {
 		if errors.Is(err, assessmentports.ErrAssessmentReportNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if err := assessmentdomain.ValidateReportAccess(report, requesterID, role); err != nil {
 		return nil, err
@@ -592,7 +592,7 @@ func (s *ReportService) generatePersonalReport(ctx context.Context, reportID, us
 
 	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypePersonal, format)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 	if err := s.renderReport(filePath, format, data); err != nil {
 		return "", time.Time{}, err
@@ -609,7 +609,7 @@ func (s *ReportService) generateClassReport(ctx context.Context, reportID int64,
 
 	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypeClass, format)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 	if err := s.renderReport(filePath, format, data); err != nil {
 		return "", time.Time{}, err
@@ -626,7 +626,7 @@ func (s *ReportService) generateContestExport(ctx context.Context, reportID, con
 
 	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypeContest, format)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 	if err := s.renderReport(filePath, format, data); err != nil {
 		return "", time.Time{}, err
@@ -643,7 +643,7 @@ func (s *ReportService) generateStudentReviewArchive(ctx context.Context, report
 
 	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypeReview, format)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 	if err := s.renderReport(filePath, format, data); err != nil {
 		return "", time.Time{}, err
@@ -655,7 +655,7 @@ func (s *ReportService) generateStudentReviewArchive(ctx context.Context, report
 func (s *ReportService) generateTeacherAWDReviewArchive(reportID int64, archive *assessmentqry.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
 	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypeAWDReviewArchive, assessmententity.ReportFormatZIP)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 	if err := RenderAWDReviewArchiveZip(filePath, archive); err != nil {
 		return "", time.Time{}, err
@@ -666,7 +666,7 @@ func (s *ReportService) generateTeacherAWDReviewArchive(reportID int64, archive 
 func (s *ReportService) generateTeacherAWDReviewReport(reportID int64, archive *assessmentqry.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
 	filePath, err := s.reportFilePath(reportID, assessmententity.ReportTypeAWDReviewReport, assessmententity.ReportFormatPDF)
 	if err != nil {
-		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
 	if err := RenderAWDReviewReportPDF(filePath, archive); err != nil {
 		return "", time.Time{}, err
@@ -677,21 +677,21 @@ func (s *ReportService) generateTeacherAWDReviewReport(reportID int64, archive *
 func (s *ReportService) buildPersonalReportData(ctx context.Context, userID int64) (*personalReportData, error) {
 	user, err := s.userRepo.FindUserByID(ctx, userID)
 	if err != nil {
-		return nil, errcode.ErrUnauthorized
+		return nil, apperror.ErrUnauthorized
 	}
 
 	skillProfileResp, err := s.assessmentService.GetSkillProfile(ctx, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	stats, err := s.personalRepo.GetPersonalStats(ctx, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	dimensionStats, err := s.personalRepo.ListPersonalDimensionStats(ctx, userID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return &personalReportData{
@@ -705,31 +705,31 @@ func (s *ReportService) buildPersonalReportData(ctx context.Context, userID int6
 func (s *ReportService) buildClassReportData(ctx context.Context, className string, window classwindow.Range) (*classReportData, error) {
 	totalStudents, err := s.classRepo.CountClassStudents(ctx, className)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	avgScore, err := s.classRepo.GetClassAverageScore(ctx, className)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	dimensionAverages, err := s.classRepo.ListClassDimensionAverages(ctx, className)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	topStudents, err := s.classRepo.ListClassTopStudents(ctx, className, 10)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	categoryDistribution, err := s.classRepo.ListClassCategoryDistribution(ctx, className)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	difficultyDistribution, err := s.classRepo.ListClassDifficultyDistribution(ctx, className)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	contestMigration, err := s.classRepo.GetClassContestMigrationSummary(ctx, className)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	var summaryResp *teachingquerycontracts.TeacherClassSummary
@@ -738,19 +738,19 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 	if s.classInsightRepo != nil {
 		summary, err := s.classInsightRepo.GetClassSummary(ctx, className, window.Since)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		summaryResp = mapClassSummary(summary)
 
 		trend, err := s.classInsightRepo.GetClassTrend(ctx, className, window.StartOfDay, window.Days)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		trendResp = mapClassTrend(trend)
 
 		snapshots, err := s.classInsightRepo.ListClassTeachingFactSnapshots(ctx, className, window.Since)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 
 		var trendEventDelta int64
@@ -799,22 +799,22 @@ func (s *ReportService) buildContestExportData(ctx context.Context, contestID in
 	contest, err := s.contestRepo.FindContestByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, assessmentports.ErrAssessmentContestNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	scoreboard, err := s.contestExportRepo.ListContestScoreboard(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	challenges, err := s.contestExportRepo.ListContestChallenges(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	teams, err := s.contestExportRepo.ListContestTeams(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return &contestExportData{
@@ -838,39 +838,39 @@ func (s *ReportService) buildContestExportData(ctx context.Context, contestID in
 func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, studentID int64) (*ReviewArchiveData, error) {
 	student, err := s.userRepo.FindUserByID(ctx, studentID)
 	if err != nil {
-		return nil, errcode.ErrNotFound
+		return nil, apperror.ErrNotFound
 	}
 
 	stats, err := s.personalRepo.GetPersonalStats(ctx, studentID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	totalChallenges, err := s.reviewArchiveRepo.CountPublishedChallenges(ctx)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	timeline, err := s.reviewArchiveRepo.GetStudentTimeline(ctx, studentID, 200, 0)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	evidence, err := s.reviewArchiveRepo.GetStudentEvidence(ctx, studentID, evidence.Query{})
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	writeups, err := s.reviewArchiveRepo.ListStudentWriteups(ctx, studentID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	manualReviews, err := s.reviewArchiveRepo.ListStudentManualReviews(ctx, studentID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	var skillProfile []*assessmentcontracts.SkillDimension
 	if s.assessmentService != nil {
 		skillProfileResp, skillErr := s.assessmentService.GetSkillProfile(ctx, studentID)
 		if skillErr != nil {
-			return nil, errcode.ErrInternal.WithCause(skillErr)
+			return nil, apperror.ErrInternal.WithCause(skillErr)
 		}
 		skillProfile = skillProfileResp.Dimensions
 	}
@@ -1384,7 +1384,7 @@ func (s *ReportService) renderReport(filePath, format string, data any) error {
 			return writeClassPDF(filePath, payload)
 		}
 	}
-	return errcode.ErrInternal.WithCause(fmt.Errorf("unsupported report payload"))
+	return apperror.ErrInternal.WithCause(fmt.Errorf("unsupported report payload"))
 }
 
 func (s *ReportService) reportFilePath(reportID int64, reportType, format string) (string, error) {
@@ -1436,7 +1436,7 @@ func (s *ReportService) normalizeArchiveFormat(format string) string {
 func (s *ReportService) parseClassWindow(req CreateClassReportInput) (classwindow.Range, error) {
 	window, err := classwindow.Parse(reportNow(), req.FromDate, req.ToDate)
 	if err != nil {
-		return classwindow.Range{}, errcode.New(errcode.ErrInvalidParams.Code, err.Error(), errcode.ErrInvalidParams.HTTPStatus)
+		return classwindow.Range{}, apperror.ErrInvalidParams.WithMessage(err.Error())
 	}
 	return window, nil
 }
@@ -1813,11 +1813,11 @@ func writeClassExcel(filePath string, data *classReportData) error {
 func writeJSONReport(filePath string, data any) error {
 	content, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	content = append(content, '\n')
 	if err := os.WriteFile(filePath, content, 0o644); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }

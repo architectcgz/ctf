@@ -14,11 +14,11 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ChallengeService) createImportedPackageRevision(
@@ -30,7 +30,7 @@ func (s *ChallengeService) createImportedPackageRevision(
 	parsed *domain.ParsedChallengePackage,
 ) (*challengeentity.ChallengePackageRevision, error) {
 	if challenge == nil || parsed == nil {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("缺少题目或题包信息"))
+		return nil, apperror.ErrInvalidParams.WithCause(errors.New("缺少题目或题包信息"))
 	}
 
 	revisionNo, err := store.NextChallengePackageRevisionNo(ctx, challenge.ID)
@@ -87,7 +87,7 @@ func (s *ChallengeService) ExportChallengePackage(
 		challenge, err := store.FindChallenge(ctx, challengeID)
 		if err != nil {
 			if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
-				return errcode.ErrChallengeNotFound
+				return challengecontracts.ErrChallengeNotFound
 			}
 			return err
 		}
@@ -95,23 +95,23 @@ func (s *ChallengeService) ExportChallengePackage(
 		topology, err := store.FindTopology(ctx, challengeID)
 		if err != nil {
 			if errors.Is(err, challengeports.ErrChallengeTopologyNotFound) {
-				return errcode.ErrNotFound.WithCause(errors.New("题目拓扑不存在"))
+				return apperror.ErrNotFound.WithCause(errors.New("题目拓扑不存在"))
 			}
 			return err
 		}
 		if topology.PackageRevisionID == nil || *topology.PackageRevisionID <= 0 {
-			return errcode.ErrConflict.WithCause(errors.New("当前题目没有可导出的题包基线"))
+			return apperror.ErrConflict.WithCause(errors.New("当前题目没有可导出的题包基线"))
 		}
 
 		baseRevision, err := store.FindPackageRevisionByID(ctx, *topology.PackageRevisionID)
 		if err != nil {
 			if errors.Is(err, challengeports.ErrChallengeTopologyPackageRevisionNotFound) {
-				return errcode.ErrConflict.WithCause(errors.New("题包基线修订不存在"))
+				return apperror.ErrConflict.WithCause(errors.New("题包基线修订不存在"))
 			}
 			return err
 		}
 		if strings.TrimSpace(baseRevision.SourceDir) == "" {
-			return errcode.ErrConflict.WithCause(errors.New("题包基线源码目录缺失"))
+			return apperror.ErrConflict.WithCause(errors.New("题包基线源码目录缺失"))
 		}
 
 		revisionNo, err := store.NextPackageRevisionNo(ctx, challengeID)
@@ -195,11 +195,11 @@ func (s *ChallengeService) ExportChallengePackage(
 
 func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*challengecontracts.ChallengePackageExportResp, error) {
 	if s.packageRepo == nil {
-		return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订仓储未配置"))
+		return nil, apperror.ErrNotFound.WithCause(errors.New("题包修订仓储未配置"))
 	}
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
@@ -210,18 +210,18 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 		revision, err = s.packageRepo.FindChallengePackageRevisionByID(ctx, *revisionID)
 		if err != nil {
 			if errors.Is(err, challengeports.ErrChallengeTopologyPackageRevisionNotFound) {
-				return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订不存在"))
+				return nil, apperror.ErrNotFound.WithCause(errors.New("题包修订不存在"))
 			}
 			return nil, err
 		}
 		if revision.ChallengeID != challengeID {
-			return nil, errcode.ErrForbidden
+			return nil, apperror.ErrForbidden
 		}
 	} else {
 		topology, findErr := s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 		if findErr != nil {
 			if errors.Is(findErr, challengeports.ErrChallengeTopologyNotFound) {
-				return nil, errcode.ErrNotFound.WithCause(errors.New("题目拓扑不存在"))
+				return nil, apperror.ErrNotFound.WithCause(errors.New("题目拓扑不存在"))
 			}
 			return nil, findErr
 		}
@@ -230,23 +230,23 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 			selectedRevisionID = topology.PackageRevisionID
 		}
 		if selectedRevisionID == nil || *selectedRevisionID <= 0 {
-			return nil, errcode.ErrNotFound.WithCause(errors.New("尚未生成可下载的题包"))
+			return nil, apperror.ErrNotFound.WithCause(errors.New("尚未生成可下载的题包"))
 		}
 		revision, err = s.packageRepo.FindChallengePackageRevisionByID(ctx, *selectedRevisionID)
 		if err != nil {
 			if errors.Is(err, challengeports.ErrChallengeTopologyPackageRevisionNotFound) {
-				return nil, errcode.ErrNotFound.WithCause(errors.New("题包修订不存在"))
+				return nil, apperror.ErrNotFound.WithCause(errors.New("题包修订不存在"))
 			}
 			return nil, err
 		}
 	}
 
 	if strings.TrimSpace(revision.ArchivePath) == "" {
-		return nil, errcode.ErrNotFound.WithCause(errors.New("当前修订没有可下载的题包归档"))
+		return nil, apperror.ErrNotFound.WithCause(errors.New("当前修订没有可下载的题包归档"))
 	}
 	if _, err := os.Stat(revision.ArchivePath); err != nil {
 		if os.IsNotExist(err) {
-			return nil, errcode.ErrNotFound.WithCause(errors.New("题包归档文件不存在"))
+			return nil, apperror.ErrNotFound.WithCause(errors.New("题包归档文件不存在"))
 		}
 		return nil, err
 	}
@@ -398,7 +398,7 @@ func rewriteChallengeTopologySnapshot(
 			image.Ref = ref
 		}
 		if strings.TrimSpace(image.Ref) == "" {
-			return "", errcode.ErrInvalidParams.WithCause(fmt.Errorf("节点 %s 缺少镜像引用，无法导出题包", node.Key))
+			return "", apperror.ErrInvalidParams.WithCause(fmt.Errorf("节点 %s 缺少镜像引用，无法导出题包", node.Key))
 		}
 		var resources *domain.ChallengePackageTopologyResources
 		if node.Resources != nil {

@@ -8,12 +8,12 @@ import (
 
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
-	"ctf-platform/pkg/errcode"
 )
 
 func newTeacherAWDReviewService(db *gorm.DB) *assessmentqry.TeacherAWDReviewService {
@@ -362,11 +362,11 @@ func assertInvalidParamsError(t *testing.T, err error) {
 		t.Fatalf("expected invalid params error")
 	}
 
-	var appErr *errcode.AppError
+	var appErr *apperror.AppError
 	if !errors.As(err, &appErr) {
 		t.Fatalf("expected app error, got %T", err)
 	}
-	if appErr.Code != errcode.ErrInvalidParams.Code {
+	if appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params code, got %+v", appErr)
 	}
 }

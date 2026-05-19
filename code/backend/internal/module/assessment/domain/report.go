@@ -4,11 +4,11 @@ import (
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 type ReportDownload struct {
@@ -192,7 +192,7 @@ func ValidateReportAccess(report *assessmententity.Report, requesterID int64, ro
 		return nil
 	}
 	if report.UserID == nil || *report.UserID != requesterID {
-		return errcode.ErrForbidden
+		return apperror.ErrForbidden
 	}
 	return nil
 }

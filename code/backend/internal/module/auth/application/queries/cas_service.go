@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
-	"ctf-platform/pkg/errcode"
 )
 
 const (
@@ -42,15 +42,15 @@ func (s *casService) Status() *CASStatusResp {
 
 func (s *casService) BuildLogin(context.Context) (*CASLoginResp, error) {
 	if !s.config.Enabled {
-		return nil, errcode.ErrCASDisabled
+		return nil, apperror.ErrCASDisabled
 	}
 	if !s.isConfigured() {
-		return nil, errcode.ErrCASNotConfigured
+		return nil, apperror.ErrCASNotConfigured
 	}
 
 	loginURL, err := s.buildLoginURL()
 	if err != nil {
-		return nil, errcode.ErrCASNotConfigured.WithCause(err)
+		return nil, apperror.ErrCASNotConfigured.WithCause(err)
 	}
 	return authQueryResponseMapperInst.ToCASLoginRespPtr(casLoginSource{
 		Provider:    casProviderName,

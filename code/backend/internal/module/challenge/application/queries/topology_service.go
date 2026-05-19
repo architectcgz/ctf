@@ -8,10 +8,10 @@ import (
 	"sort"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type TopologyService struct {
@@ -43,14 +43,14 @@ func NewTopologyService(
 func (s *TopologyService) GetChallengeTopology(ctx context.Context, challengeID int64) (*challengecontracts.ChallengeTopologyResp, error) {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyChallengeNotFound) {
-			return nil, errcode.ErrChallengeNotFound
+			return nil, challengecontracts.ErrChallengeNotFound
 		}
 		return nil, err
 	}
 	item, err := s.repo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (s *TopologyService) GetTemplate(ctx context.Context, id int64) (*challenge
 	item, err := s.templateRepo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeTopologyTemplateNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}

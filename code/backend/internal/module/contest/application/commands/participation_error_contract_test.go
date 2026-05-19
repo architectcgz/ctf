@@ -2,15 +2,17 @@ package commands
 
 import (
 	"context"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"testing"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type participationContestLookupStub struct {
@@ -181,9 +183,9 @@ func TestParticipationServiceReviewRegistrationTreatsRegistrationNotFoundAsConte
 	if err == nil {
 		t.Fatal("expected registration not found")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrContestRegistrationNotFound.Code {
-		t.Fatalf("expected errcode.ErrContestRegistrationNotFound, got %v", err)
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != contestcontracts.ErrContestRegistrationNotFound.Code {
+		t.Fatalf("expected contestcontracts.ErrContestRegistrationNotFound, got %v", err)
 	}
 }
 
@@ -213,7 +215,7 @@ func TestSubmissionServiceResolveTeamIDTreatsMissingRegistrationAndTeamAsNotRegi
 	)
 
 	teamID, err := service.resolveTeamID(context.Background(), 1001, 10)
-	if !errors.Is(err, errcode.ErrNotRegistered) {
+	if !errors.Is(err, contestcontracts.ErrNotRegistered) {
 		t.Fatalf("expected ErrNotRegistered, got %v", err)
 	}
 	if teamID != nil {
@@ -256,7 +258,7 @@ func TestSubmissionServiceValidateContestSubmissionTreatsContestChallengeNotFoun
 	)
 
 	_, err := service.validateContestSubmission(context.Background(), 1001, 10, 20, "flag{irrelevant}")
-	if !errors.Is(err, errcode.ErrChallengeNotInContest) {
+	if !errors.Is(err, contestcontracts.ErrChallengeNotInContest) {
 		t.Fatalf("expected ErrChallengeNotInContest, got %v", err)
 	}
 }
@@ -299,7 +301,7 @@ func TestSubmissionServiceValidateContestSubmissionTreatsChallengeEntityNotFound
 	)
 
 	_, err := service.validateContestSubmission(context.Background(), 1001, 10, 20, "flag{irrelevant}")
-	if !errors.Is(err, errcode.ErrChallengeNotFound) {
+	if !errors.Is(err, challengecontracts.ErrChallengeNotFound) {
 		t.Fatalf("expected ErrChallengeNotFound, got %v", err)
 	}
 }

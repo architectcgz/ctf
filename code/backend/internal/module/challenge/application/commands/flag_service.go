@@ -7,10 +7,10 @@ import (
 	"regexp"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/ports"
 	crypto "ctf-platform/internal/shared/flagcrypto"
-	"ctf-platform/pkg/errcode"
 )
 
 var flagPattern = regexp.MustCompile(`^[a-zA-Z0-9_]+\{[^\{\}
@@ -37,10 +37,10 @@ func NewFlagService(repo ports.ChallengeFlagRepository, globalSecret string) (*F
 
 func (s *FlagService) ConfigureStaticFlag(ctx context.Context, challengeID int64, flag, flagPrefix string) error {
 	if !flagPattern.MatchString(flag) {
-		return errcode.New(10001, "Flag 格式错误，必须以 prefix{ 开头并以 } 结尾，如 flag{abc123}", 400)
+		return apperror.ErrInvalidParams.WithMessage("Flag 格式错误，必须以 prefix{ 开头并以 } 结尾，如 flag{abc123}")
 	}
 	if len(flag) > 256 {
-		return errcode.New(10001, fmt.Sprintf("Flag 长度不能超过 256 字符，当前长度: %d", len(flag)), 400)
+		return apperror.ErrInvalidParams.WithMessage(fmt.Sprintf("Flag 长度不能超过 256 字符，当前长度: %d", len(flag)))
 	}
 
 	challenge, err := s.loadChallenge(ctx, challengeID)
@@ -69,7 +69,7 @@ func (s *FlagService) ConfigureDynamicFlag(ctx context.Context, challengeID int6
 		return err
 	}
 	if challenge.InstanceSharing == challengecontracts.InstanceSharingShared {
-		return errcode.ErrInvalidParams.WithCause(errors.New("共享实例策略不支持动态 Flag"))
+		return apperror.ErrInvalidParams.WithCause(errors.New("共享实例策略不支持动态 Flag"))
 	}
 
 	s.resetNonDynamicFlagFields(challenge)
@@ -83,7 +83,7 @@ func (s *FlagService) ConfigureDynamicFlag(ctx context.Context, challengeID int6
 func (s *FlagService) ConfigureRegexFlag(ctx context.Context, challengeID int64, flagRegex, flagPrefix string) error {
 	compiled, err := regexp.Compile(strings.TrimSpace(flagRegex))
 	if err != nil {
-		return errcode.New(10001, "Regex Flag 配置无效: "+err.Error(), 400)
+		return apperror.ErrInvalidParams.WithMessage("Regex Flag 配置无效: " + err.Error())
 	}
 
 	challenge, err := s.loadChallenge(ctx, challengeID)
@@ -124,7 +124,7 @@ func (s *FlagService) loadChallenge(ctx context.Context, challengeID int64) (*po
 	challenge, err := s.repo.FindByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, ports.ErrChallengeFlagChallengeNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, apperror.ErrNotFound
 		}
 		return nil, err
 	}

@@ -2,14 +2,15 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) resolveAcceptedRoundFlags(
@@ -38,11 +39,11 @@ func (s *AWDService) resolveAcceptedRoundFlags(
 		if errors.Is(err, contestports.ErrContestAWDRoundNotFound) {
 			return flags, nil
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	previousFlag, err := s.resolveRoundFlag(ctx, contestID, previousRound, victimTeamID, awdChallengeID, flagPrefix, serviceID)
 	if err != nil {
-		if err == errcode.ErrAWDFlagUnavailable {
+		if err == contestcontracts.ErrAWDFlagUnavailable {
 			return flags, nil
 		}
 		return nil, err
@@ -60,17 +61,17 @@ func (s *AWDService) allowPreviousRoundFlag(contest *contestentity.Contest, roun
 
 func (s *AWDService) resolveRoundFlag(ctx context.Context, contestID int64, round *contestentity.AWDRound, victimTeamID int64, awdChallengeID int64, flagPrefix string, serviceID int64) (string, error) {
 	if round == nil || awdChallengeID <= 0 {
-		return "", errcode.ErrAWDFlagUnavailable
+		return "", contestcontracts.ErrAWDFlagUnavailable
 	}
 	flag, ok, err := s.stateStore.LoadAWDRoundFlag(ctx, contestID, round.ID, victimTeamID, serviceID)
 	if err != nil {
-		return "", errcode.ErrInternal.WithCause(err)
+		return "", apperror.ErrInternal.WithCause(err)
 	}
 	if ok {
 		return flag, nil
 	}
 	if strings.TrimSpace(s.flagSecret) == "" {
-		return "", errcode.ErrAWDFlagUnavailable
+		return "", contestcontracts.ErrAWDFlagUnavailable
 	}
 	return contestdomain.BuildAWDRoundFlag(contestID, round.RoundNumber, victimTeamID, awdChallengeID, s.flagSecret, flagPrefix), nil
 }

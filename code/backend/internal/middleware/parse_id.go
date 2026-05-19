@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/apperror"
 	response "ctf-platform/internal/httpresponse"
-	"ctf-platform/pkg/errcode"
 )
 
 // ParseChallengeID 解析路径参数中的 challenge ID
@@ -15,7 +15,7 @@ func ParseChallengeID() gin.HandlerFunc {
 		idStr := c.Param("id")
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil || id <= 0 {
-			response.FromError(c, errcode.ErrInvalidParams)
+			response.FromError(c, apperror.ErrInvalidParams)
 			c.Abort()
 			return
 		}
@@ -30,7 +30,7 @@ func ParseInt64Param(paramName string) gin.HandlerFunc {
 		idStr := c.Param(paramName)
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil || id <= 0 {
-			response.FromError(c, errcode.ErrInvalidParams)
+			response.FromError(c, apperror.ErrInvalidParams)
 			c.Abort()
 			return
 		}

@@ -10,8 +10,8 @@ import (
 
 	"github.com/jung-kurt/gofpdf"
 
+	"ctf-platform/internal/apperror"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
-	"ctf-platform/pkg/errcode"
 )
 
 type awdReviewArchiveManifest struct {
@@ -28,16 +28,16 @@ type awdReviewArchiveManifest struct {
 
 func RenderAWDReviewArchiveZip(targetPath string, archive *assessmentqry.TeacherAWDReviewArchiveResp) error {
 	if archive == nil {
-		return errcode.ErrInternal.WithCause(fmt.Errorf("nil awd review archive"))
+		return apperror.ErrInternal.WithCause(fmt.Errorf("nil awd review archive"))
 	}
 
 	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	file, err := os.Create(targetPath)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	defer file.Close()
 
@@ -80,7 +80,7 @@ func RenderAWDReviewArchiveZip(targetPath string, archive *assessmentqry.Teacher
 
 func RenderAWDReviewReportPDF(targetPath string, archive *assessmentqry.TeacherAWDReviewArchiveResp) error {
 	if archive == nil {
-		return errcode.ErrInternal.WithCause(fmt.Errorf("nil awd review archive"))
+		return apperror.ErrInternal.WithCause(fmt.Errorf("nil awd review archive"))
 	}
 
 	pdf := newReportPDF()
@@ -113,16 +113,16 @@ func RenderAWDReviewReportPDF(targetPath string, archive *assessmentqry.TeacherA
 func writeZIPJSONFile(writer *zip.Writer, name string, payload any) error {
 	entry, err := writer.Create(name)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	content, err := json.MarshalIndent(payload, "", "  ")
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	content = append(content, '\n')
 	if _, err := entry.Write(content); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }

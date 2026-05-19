@@ -7,11 +7,11 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/teaching/classreview"
 	"ctf-platform/internal/teaching/classwindow"
-	"ctf-platform/pkg/errcode"
 )
 
 type classInsightQueryRepository interface {
@@ -47,7 +47,7 @@ func NewClassInsightService(
 func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*TeacherClassSummary, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
-		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
+		return nil, apperror.ErrInvalidParams.WithMessage("class_name 不能为空")
 	}
 	if err := ensureClassAccess(ctx, s.users, requesterID, requesterRole, normalized); err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requeste
 
 	summary, err := s.repo.GetClassSummary(ctx, normalized, window.Since)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return toTeacherClassSummary(summary), nil
 }
@@ -68,7 +68,7 @@ func (s *ClassInsightQueryService) GetClassSummary(ctx context.Context, requeste
 func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*TeacherClassTrend, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
-		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
+		return nil, apperror.ErrInvalidParams.WithMessage("class_name 不能为空")
 	}
 	if err := ensureClassAccess(ctx, s.users, requesterID, requesterRole, normalized); err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterI
 
 	trend, err := s.repo.GetClassTrend(ctx, normalized, window.StartOfDay, window.Days)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return toTeacherClassTrend(trend), nil
 }
@@ -89,7 +89,7 @@ func (s *ClassInsightQueryService) GetClassTrend(ctx context.Context, requesterI
 func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string, query *TeacherClassInsightInput) (*TeacherClassReview, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
-		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
+		return nil, apperror.ErrInvalidParams.WithMessage("class_name 不能为空")
 	}
 	if err := ensureClassAccess(ctx, s.users, requesterID, requesterRole, normalized); err != nil {
 		return nil, err
@@ -102,15 +102,15 @@ func (s *ClassInsightQueryService) GetClassReview(ctx context.Context, requester
 
 	summary, err := s.repo.GetClassSummary(ctx, normalized, window.Since)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	trend, err := s.repo.GetClassTrend(ctx, normalized, window.StartOfDay, window.Days)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	snapshots, err := s.repo.ListClassTeachingFactSnapshots(ctx, normalized, window.Since)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	var trendEventDelta int64
@@ -140,7 +140,7 @@ func (s *ClassInsightQueryService) parseWindow(query *TeacherClassInsightInput) 
 	}
 	window, err := classwindow.Parse(queryNow(), query.FromDate, query.ToDate)
 	if err != nil {
-		return classwindow.Range{}, errcode.New(errcode.ErrInvalidParams.Code, err.Error(), errcode.ErrInvalidParams.HTTPStatus)
+		return classwindow.Range{}, apperror.ErrInvalidParams.WithMessage(err.Error())
 	}
 	return window, nil
 }

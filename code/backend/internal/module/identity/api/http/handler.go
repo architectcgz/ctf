@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/apperror"
 	response "ctf-platform/internal/httpresponse"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type adminCommandService interface {
@@ -99,7 +99,7 @@ func (h *Handler) ImportUsers(c *gin.Context) {
 
 	file, err := fileHeader.Open()
 	if err != nil {
-		response.Error(c, errcode.New(errcode.ErrInvalidParams.Code, "无法读取导入文件", errcode.ErrInvalidParams.HTTPStatus))
+		response.Error(c, apperror.ErrInvalidParams.WithMessage("无法读取导入文件"))
 		return
 	}
 	defer file.Close()

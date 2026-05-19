@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type TeacherAWDReviewService struct {
@@ -54,7 +54,7 @@ func (s *TeacherAWDReviewService) ListContests(ctx context.Context, requesterID 
 		Limit:   size,
 	})
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	resp := &TeacherAWDReviewContestPageResp{
@@ -72,28 +72,28 @@ func (s *TeacherAWDReviewService) ListContests(ctx context.Context, requesterID 
 
 func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req GetTeacherAWDReviewArchiveInput) (*TeacherAWDReviewArchiveResp, error) {
 	if req.TeamID != nil && req.RoundNumber == nil {
-		return nil, errcode.New(errcode.ErrInvalidParams.Code, "team_id 需要配合 round 使用", errcode.ErrInvalidParams.HTTPStatus)
+		return nil, apperror.ErrInvalidParams.WithMessage("team_id 需要配合 round 使用")
 	}
 
 	contest, err := s.repo.FindTeacherAWDReviewContest(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if contest == nil {
-		return nil, errcode.ErrContestNotFound
+		return nil, contestcontracts.ErrContestNotFound
 	}
 
 	rounds, err := s.repo.ListTeacherAWDReviewRounds(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	teams, err := s.repo.ListTeacherAWDReviewTeams(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	selectedTeam, hasSelectedTeam := findTeacherAWDReviewTeam(teams, req.TeamID)
 	if req.TeamID != nil && !hasSelectedTeam {
-		return nil, errcode.New(errcode.ErrInvalidParams.Code, "team_id 无效", errcode.ErrInvalidParams.HTTPStatus)
+		return nil, apperror.ErrInvalidParams.WithMessage("team_id 无效")
 	}
 
 	resp := &TeacherAWDReviewArchiveResp{
@@ -123,15 +123,15 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 	for _, round := range rounds {
 		services, err := s.repo.ListTeacherAWDReviewRoundServices(ctx, round.ID)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		attacks, err := s.repo.ListTeacherAWDReviewRoundAttacks(ctx, round.ID)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		traffic, err := s.repo.ListTeacherAWDReviewRoundTraffic(ctx, contestID, round.ID)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 
 		roundResp := teacherAWDReviewMapper.ToTeacherAWDReviewRoundResp(round)
@@ -163,7 +163,7 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 
 	if req.RoundNumber != nil {
 		if selectedRound == nil {
-			return nil, errcode.New(errcode.ErrInvalidParams.Code, "round 无效", errcode.ErrInvalidParams.HTTPStatus)
+			return nil, apperror.ErrInvalidParams.WithMessage("round 无效")
 		}
 		selectedTeams := teams
 		if req.TeamID != nil {

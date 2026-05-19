@@ -6,10 +6,10 @@ import (
 	"errors"
 	"testing"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type stubChallengeTopologyRepository struct {
@@ -192,8 +192,8 @@ func TestTopologyServiceGetChallengeTopologyTreatsChallengeNotFoundAsChallengeNo
 	if err == nil {
 		t.Fatal("expected challenge not found")
 	}
-	if err.Error() != errcode.ErrChallengeNotFound.Error() {
-		t.Fatalf("expected errcode.ErrChallengeNotFound, got %v", err)
+	if err.Error() != challengecontracts.ErrChallengeNotFound.Error() {
+		t.Fatalf("expected challengecontracts.ErrChallengeNotFound, got %v", err)
 	}
 }
 
@@ -213,8 +213,8 @@ func TestTopologyServiceGetChallengeTopologyTreatsTopologyNotFoundAsNotFound(t *
 	if err == nil {
 		t.Fatal("expected topology not found")
 	}
-	if err.Error() != errcode.ErrNotFound.Error() {
-		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	if err.Error() != apperror.ErrNotFound.Error() {
+		t.Fatalf("expected apperror.ErrNotFound, got %v", err)
 	}
 }
 
@@ -307,9 +307,9 @@ func TestTopologyServiceGetTemplateTreatsTemplateNotFoundAsNotFound(t *testing.T
 	if err == nil {
 		t.Fatal("expected template not found")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrNotFound.Code {
-		t.Fatalf("expected errcode.ErrNotFound, got %v", err)
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != apperror.ErrNotFound.Code {
+		t.Fatalf("expected apperror.ErrNotFound, got %v", err)
 	}
 }
 

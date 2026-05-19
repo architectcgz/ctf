@@ -9,11 +9,11 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type ImageService struct {
@@ -56,10 +56,10 @@ func (s *ImageService) StartBackgroundTasks(ctx context.Context) {
 func (s *ImageService) CreateImage(ctx context.Context, req CreateImageInput) (*challengecontracts.ImageResp, error) {
 	existing, err := s.repo.FindByNameTag(ctx, req.Name, req.Tag)
 	if err == nil && existing != nil {
-		return nil, errcode.ErrImageAlreadyExists
+		return nil, challengecontracts.ErrImageAlreadyExists
 	}
 	if err != nil && !errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	var size int64
@@ -67,7 +67,7 @@ func (s *ImageService) CreateImage(ctx context.Context, req CreateImageInput) (*
 		imageRef := fmt.Sprintf("%s:%s", req.Name, req.Tag)
 		size, err = s.verifyDockerImage(ctx, imageRef)
 		if err != nil {
-			return nil, errcode.ErrImageNotAccessible.WithCause(err)
+			return nil, challengecontracts.ErrImageNotAccessible.WithCause(err)
 		}
 	}
 
@@ -79,7 +79,7 @@ func (s *ImageService) CreateImage(ctx context.Context, req CreateImageInput) (*
 		Status:      challengeentity.ImageStatusAvailable,
 	}
 	if err := s.repo.Create(ctx, image); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	s.logger.Info("创建镜像", zap.Int64("id", image.ID), zap.String("name", image.Name), zap.String("tag", image.Tag))
@@ -90,9 +90,9 @@ func (s *ImageService) UpdateImage(ctx context.Context, id int64, req UpdateImag
 	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-			return errcode.ErrImageNotFound
+			return challengecontracts.ErrImageNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	oldDescription := image.Description
@@ -105,7 +105,7 @@ func (s *ImageService) UpdateImage(ctx context.Context, id int64, req UpdateImag
 		image.Status = req.Status
 	}
 	if err := s.repo.Update(ctx, image); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	s.logger.Info("更新镜像",
@@ -122,20 +122,20 @@ func (s *ImageService) DeleteImage(ctx context.Context, id int64) error {
 	image, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-			return errcode.ErrImageNotFound
+			return challengecontracts.ErrImageNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	count, err := s.challengeRepo.CountByImageID(ctx, id)
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if count > 0 {
-		return errcode.ErrImageInUse
+		return challengecontracts.ErrImageInUse
 	}
 	if err := s.repo.Delete(ctx, id); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	if s.runtime != nil {

@@ -3,23 +3,24 @@ package commands
 import (
 	"context"
 	"crypto/rand"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"encoding/base32"
 	"errors"
 	"strings"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *TeamService) ensureApprovedRegistration(ctx context.Context, contestID, userID int64) error {
 	registration, err := s.teamRepo.FindContestRegistration(ctx, contestID, userID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {
-			return errcode.ErrNotRegistered
+			return contestcontracts.ErrNotRegistered
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if err := contestdomain.RegistrationStatusError(registration.Status); err != nil {
 		return err
@@ -31,12 +32,12 @@ func (s *TeamService) ensureTeamJoinableContest(ctx context.Context, contestID i
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return errcode.ErrContestNotFound
+			return contestcontracts.ErrContestNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if contest.Status != contestentity.ContestStatusRegistration && contest.Status != contestentity.ContestStatusRunning {
-		return errcode.ErrContestTeamUnavailable
+		return contestcontracts.ErrContestTeamUnavailable
 	}
 	return nil
 }

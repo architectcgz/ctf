@@ -10,8 +10,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	"ctf-platform/pkg/errcode"
 )
 
 type AdminService struct {
@@ -39,9 +39,9 @@ func NewAdminService(repo adminCommandRepository, log *zap.Logger) *AdminService
 func (s *AdminService) CreateUser(ctx context.Context, req identitycontracts.CreateUserInput) (*identitycontracts.AdminUser, error) {
 	username := strings.TrimSpace(req.Username)
 	if existing, err := s.repo.FindByUsername(ctx, username); err == nil && existing != nil {
-		return nil, errcode.ErrUsernameExists
+		return nil, apperror.ErrUsernameExists
 	} else if err != nil && !errors.Is(err, identitycontracts.ErrUserNotFound) {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	identity := normalizeIdentityNumbers(req.Role, req.StudentNo, req.TeacherNo)
@@ -56,7 +56,7 @@ func (s *AdminService) CreateUser(ctx context.Context, req identitycontracts.Cre
 		Status:    defaultUserStatus(req.Status),
 	}
 	if err := user.SetPassword(req.Password); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if err := s.repo.Create(ctx, user); err != nil {
 		return nil, mapServiceError(err)
@@ -74,7 +74,7 @@ func (s *AdminService) UpdateUser(ctx context.Context, userID int64, req identit
 
 	if req.Password != nil && strings.TrimSpace(*req.Password) != "" {
 		if err := user.SetPassword(strings.TrimSpace(*req.Password)); err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 	}
 	if req.Name != nil {
@@ -134,7 +134,7 @@ func (s *AdminService) ImportUsers(ctx context.Context, reader io.Reader) (*iden
 			if errors.Is(err, io.EOF) {
 				break
 			}
-			return nil, errcode.New(errcode.ErrInvalidParams.Code, "导入文件格式错误", errcode.ErrInvalidParams.HTTPStatus)
+			return nil, apperror.ErrInvalidParams.WithMessage("导入文件格式错误")
 		}
 		rowIndex++
 		if rowIndex == 1 && looksLikeHeader(record) {

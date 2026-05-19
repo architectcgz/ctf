@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	response "ctf-platform/internal/httpresponse"
 	"ctf-platform/internal/middleware"
-	"ctf-platform/pkg/errcode"
 )
 
 // SubmitFlag 提交 Flag
@@ -18,7 +18,7 @@ func (h *Handler) SubmitFlag(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 
@@ -47,7 +47,7 @@ func (h *Handler) ListMyChallengeSubmissions(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
+		response.Error(c, apperror.ErrInvalidParams)
 		return
 	}
 

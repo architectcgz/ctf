@@ -2,11 +2,12 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) resolveCurrentRoundFromFallbacks(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
@@ -15,7 +16,7 @@ func (s *AWDService) resolveCurrentRoundFromFallbacks(ctx context.Context, conte
 		return round, nil
 	}
 	if !errors.Is(err, contestports.ErrContestAWDRoundNotFound) {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	round, err = s.findCurrentRoundFromRedis(ctx, contestID)
@@ -26,13 +27,13 @@ func (s *AWDService) resolveCurrentRoundFromFallbacks(ctx context.Context, conte
 		return nil, err
 	}
 
-	return nil, errcode.ErrAWDRoundNotActive
+	return nil, contestcontracts.ErrAWDRoundNotActive
 }
 
 func (s *AWDService) findCurrentRoundFromRedis(ctx context.Context, contestID int64) (*contestentity.AWDRound, error) {
 	roundNumber, ok, err := s.stateStore.LoadAWDCurrentRoundNumber(ctx, contestID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if !ok {
 		return nil, nil
@@ -45,5 +46,5 @@ func (s *AWDService) findCurrentRoundFromRedis(ctx context.Context, contestID in
 	if errors.Is(findErr, contestports.ErrContestAWDRoundNotFound) {
 		return nil, nil
 	}
-	return nil, errcode.ErrInternal.WithCause(findErr)
+	return nil, apperror.ErrInternal.WithCause(findErr)
 }

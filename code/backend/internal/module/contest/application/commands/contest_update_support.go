@@ -2,20 +2,21 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *ContestService) loadContestForUpdate(ctx context.Context, id int64) (*contestentity.Contest, error) {
 	contest, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrContestNotFound) {
-			return nil, errcode.ErrContestNotFound
+			return nil, contestcontracts.ErrContestNotFound
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return contest, nil
 }
@@ -23,24 +24,24 @@ func (s *ContestService) loadContestForUpdate(ctx context.Context, id int64) (*c
 func validateContestUpdateRequest(contest *contestentity.Contest, req UpdateContestInput) error {
 	if req.Status != nil && *req.Status != contest.Status {
 		if err := domain.ValidateStatusTransition(contest.Status, *req.Status); err != nil {
-			return errcode.ErrInvalidStatusTransition
+			return contestcontracts.ErrInvalidStatusTransition
 		}
 	}
 
 	if contest.Status == contestentity.ContestStatusRegistration || contest.Status == contestentity.ContestStatusRunning || contest.Status == contestentity.ContestStatusEnded {
 		if req.StartTime != nil {
-			return errcode.ErrContestAlreadyStarted
+			return contestcontracts.ErrContestAlreadyStarted
 		}
 	}
 
 	if contest.Status == contestentity.ContestStatusRunning || contest.Status == contestentity.ContestStatusEnded {
 		if req.EndTime != nil {
-			return errcode.ErrContestAlreadyStarted
+			return contestcontracts.ErrContestAlreadyStarted
 		}
 	}
 
 	if req.Mode != nil && *req.Mode != contest.Mode && contest.Status != contestentity.ContestStatusDraft {
-		return errcode.ErrCannotModifyAfterDraft
+		return contestcontracts.ErrCannotModifyAfterDraft
 	}
 
 	return nil
@@ -64,7 +65,7 @@ func applyContestUpdateFields(contest *contestentity.Contest, req UpdateContestI
 	}
 
 	if !contest.EndTime.After(contest.StartTime) {
-		return errcode.ErrInvalidTimeRange
+		return contestcontracts.ErrInvalidTimeRange
 	}
 	if req.Status != nil {
 		if *req.Status != contest.Status {

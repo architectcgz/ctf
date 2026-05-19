@@ -2,15 +2,16 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 const awdCheckerPreviewAttemptCount = 3
@@ -22,10 +23,10 @@ func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64,
 	}
 	now := time.Now().UTC()
 	if contestdomain.ContestHasEndedAt(contest, now) {
-		return nil, errcode.ErrContestEnded
+		return nil, contestcontracts.ErrContestEnded
 	}
 	if contest.Status != contestentity.ContestStatusRunning && contest.Status != contestentity.ContestStatusFrozen {
-		return nil, errcode.ErrContestNotRunning
+		return nil, contestcontracts.ErrContestNotRunning
 	}
 	if err := ensureAWDReadinessGate(ctx, s.repo, contestID, req.ForceOverride, req.OverrideReason); err != nil {
 		return nil, err
@@ -36,10 +37,10 @@ func (s *AWDService) RunCurrentRoundChecks(ctx context.Context, contestID int64,
 	}
 
 	if s.roundManager == nil {
-		return nil, errcode.ErrInternal.WithCause(errors.New("awd round manager is nil"))
+		return nil, apperror.ErrInternal.WithCause(errors.New("awd round manager is nil"))
 	}
 	if err := s.roundManager.RunRoundServiceChecks(ctx, contest, round, contestdomain.AWDCheckSourceManualCurrent); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return s.buildCheckerRunResp(ctx, contestID, round)
 }
@@ -55,10 +56,10 @@ func (s *AWDService) RunRoundChecks(ctx context.Context, contestID, roundID int6
 	}
 
 	if s.roundManager == nil {
-		return nil, errcode.ErrInternal.WithCause(errors.New("awd round manager is nil"))
+		return nil, apperror.ErrInternal.WithCause(errors.New("awd round manager is nil"))
 	}
 	if err := s.roundManager.RunRoundServiceChecks(ctx, contest, round, contestdomain.AWDCheckSourceManualSelected); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return s.buildCheckerRunResp(ctx, contestID, round)
 }
@@ -84,12 +85,12 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 		previewServiceID = service.ID
 		previewChallengeID = service.AWDChallengeID
 		if req.AWDChallengeID > 0 && req.AWDChallengeID != service.AWDChallengeID {
-			return nil, errcode.ErrInvalidParams
+			return nil, apperror.ErrInvalidParams
 		}
 	}
 	if previewChallengeID <= 0 {
-		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "prepare", "缺少试跑目标题目。", errcode.ErrInvalidParams)
-		return nil, errcode.ErrInvalidParams
+		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "prepare", "缺少试跑目标题目。", apperror.ErrInvalidParams)
+		return nil, apperror.ErrInvalidParams
 	}
 
 	checkerType, checkerConfig, err := validateAndNormalizeContestAWDFields(
@@ -104,8 +105,8 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 		return nil, err
 	}
 	if checkerType == "" {
-		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "prepare", "Checker 类型无效。", errcode.ErrInvalidParams)
-		return nil, errcode.ErrInvalidParams
+		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "prepare", "Checker 类型无效。", apperror.ErrInvalidParams)
+		return nil, apperror.ErrInvalidParams
 	}
 
 	previewAccessURL, checkerTokenEnv, checkerToken, cleanupRuntime, err := s.prepareCheckerPreviewAccessURL(
@@ -123,7 +124,7 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 
 	if s.roundManager == nil {
 		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "prepare", "试跑执行器不可用。", errors.New("awd round manager is nil"))
-		return nil, errcode.ErrInternal.WithCause(errors.New("awd round manager is nil"))
+		return nil, apperror.ErrInternal.WithCause(errors.New("awd round manager is nil"))
 	}
 
 	preview, err := s.runPreviewCheckerAttempts(ctx, contestID, req.PreviewRequestID, contestports.AWDServicePreviewRequest{
@@ -142,7 +143,7 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 	}
 	if err != nil {
 		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑执行失败。", err)
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	resp := &AWDCheckerPreviewResp{
@@ -159,21 +160,21 @@ func (s *AWDService) PreviewChecker(ctx context.Context, contestID int64, req Pr
 		},
 	}
 	if s.previewTokenStore == nil {
-		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果暂不可保存。", errcode.ErrAWDCheckerPreviewUnavailable)
-		return nil, errcode.ErrAWDCheckerPreviewUnavailable
+		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果暂不可保存。", contestcontracts.ErrAWDCheckerPreviewUnavailable)
+		return nil, contestcontracts.ErrAWDCheckerPreviewUnavailable
 	}
 	previewToken, err := storeAWDCheckerPreviewToken(ctx, s.previewTokenStore, contestID, previewServiceID, previewChallengeID, checkerType, checkerConfig, checkerTokenEnv, resp)
 	if err != nil {
 		if err == contestports.ErrAWDCheckerPreviewTokenStoreUnavailable {
-			s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果暂不可保存。", errcode.ErrAWDCheckerPreviewUnavailable)
-			return nil, errcode.ErrAWDCheckerPreviewUnavailable
+			s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果暂不可保存。", contestcontracts.ErrAWDCheckerPreviewUnavailable)
+			return nil, contestcontracts.ErrAWDCheckerPreviewUnavailable
 		}
 		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果保存失败。", err)
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if strings.TrimSpace(previewToken) == "" {
-		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果未生成可保存 token。", errcode.ErrAWDCheckerPreviewUnavailable)
-		return nil, errcode.ErrAWDCheckerPreviewUnavailable
+		s.reportAWDPreviewFailure(ctx, contestID, req.PreviewRequestID, "summary", "试跑结果未生成可保存 token。", contestcontracts.ErrAWDCheckerPreviewUnavailable)
+		return nil, contestcontracts.ErrAWDCheckerPreviewUnavailable
 	}
 	resp.PreviewToken = previewToken
 	return resp, nil

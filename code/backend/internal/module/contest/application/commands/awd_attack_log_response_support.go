@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) buildAttackLogResponse(
@@ -16,7 +16,7 @@ func (s *AWDService) buildAttackLogResponse(
 ) (*AWDAttackLogResp, error) {
 	if s.scoreboardCache != nil {
 		if err := s.scoreboardCache.RebuildContestScoreboard(ctx, contestID); err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 	}
 	currentRoundID, err := s.resolveCurrentRoundID(ctx, contestID)
@@ -33,7 +33,7 @@ func (s *AWDService) buildAttackLogResponse(
 		logRecord.ServiceID,
 		contestentity.AWDServiceStatusCompromised,
 	); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return awdAttackLogRespFromModel(logRecord, teams[req.AttackerTeamID].Name, teams[req.VictimTeamID].Name), nil

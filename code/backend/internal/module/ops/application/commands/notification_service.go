@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	opscontracts "ctf-platform/internal/module/ops/contracts"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -21,7 +23,6 @@ import (
 	platformevents "ctf-platform/internal/platform/events"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	ctfws "ctf-platform/internal/websocket"
-	"ctf-platform/pkg/errcode"
 )
 
 type NotificationService struct {
@@ -105,7 +106,7 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID int64
 		Link:    req.Link,
 	}
 	if err := s.repo.Create(ctx, notification); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 
 	if s.manager != nil {
@@ -120,7 +121,7 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID int64
 
 func (s *NotificationService) PublishAdminNotification(ctx context.Context, actorUserID int64, req PublishAdminNotificationInput) (*AdminNotificationPublishResp, error) {
 	if req.AudienceRules.Mode != "union" || len(req.AudienceRules.Rules) == 0 {
-		return nil, errcode.ErrInvalidParams
+		return nil, apperror.ErrInvalidParams
 	}
 
 	recipientSet := make(map[int64]struct{})
@@ -142,7 +143,7 @@ func (s *NotificationService) PublishAdminNotification(ctx context.Context, acto
 
 	audienceRules, err := json.Marshal(req.AudienceRules)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	batch := &opsentity.NotificationBatch{
 		Type:           req.Type,
@@ -166,7 +167,7 @@ func (s *NotificationService) PublishAdminNotification(ctx context.Context, acto
 		})
 	}
 	if err := s.repo.CreateBatch(ctx, batch, notifications); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	if s.manager != nil {
@@ -188,10 +189,10 @@ func (s *NotificationService) PublishAdminNotification(ctx context.Context, acto
 func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificationID int64) error {
 	notification, err := s.repo.FindByID(ctx, notificationID, userID)
 	if errors.Is(err, opsports.ErrNotificationNotFound) {
-		return errcode.ErrNotificationNotFound
+		return opscontracts.ErrNotificationNotFound
 	}
 	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if notification.IsRead {
 		return nil
@@ -199,7 +200,7 @@ func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificati
 
 	readAt := time.Now().UTC()
 	if err := s.repo.MarkAsRead(ctx, notificationID, userID, readAt); err != nil {
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	notification.IsRead = true
 	notification.ReadAt = &readAt
@@ -226,47 +227,47 @@ func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule Noti
 	case NotificationAudienceTypeAll:
 		userIDs, err := s.repo.ListAllUserIDs(ctx)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		return userIDs, nil
 	case NotificationAudienceTypeRole:
 		roles, err := normalizeRoleSlice(rule.Values)
 		if err != nil {
-			return nil, errcode.ErrInvalidParams
+			return nil, apperror.ErrInvalidParams
 		}
 		if len(roles) == 0 {
-			return nil, errcode.ErrInvalidParams
+			return nil, apperror.ErrInvalidParams
 		}
 		userIDs, err := s.repo.ListUserIDsByRoles(ctx, roles)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		return userIDs, nil
 	case NotificationAudienceTypeClass:
 		classNames := normalizeStringSlice(rule.Values)
 		if len(classNames) == 0 {
-			return nil, errcode.ErrInvalidParams
+			return nil, apperror.ErrInvalidParams
 		}
 		userIDs, err := s.repo.ListUserIDsByClasses(ctx, classNames)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		return userIDs, nil
 	case NotificationAudienceTypeUser:
 		userIDs, err := normalizeUserIDSlice(rule.Values)
 		if err != nil {
-			return nil, errcode.ErrInvalidParams
+			return nil, apperror.ErrInvalidParams
 		}
 		if len(userIDs) == 0 {
-			return nil, errcode.ErrInvalidParams
+			return nil, apperror.ErrInvalidParams
 		}
 		resolvedIDs, err := s.repo.ListExistingUserIDs(ctx, userIDs)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		return resolvedIDs, nil
 	default:
-		return nil, errcode.ErrInvalidParams
+		return nil, apperror.ErrInvalidParams
 	}
 }
 
@@ -312,7 +313,7 @@ func normalizeUserIDSlice(values []string) ([]int64, error) {
 		}
 		userID, err := strconv.ParseInt(value, 10, 64)
 		if err != nil || userID <= 0 {
-			return nil, errcode.ErrInvalidParams
+			return nil, apperror.ErrInvalidParams
 		}
 		parsed = append(parsed, userID)
 	}
@@ -328,7 +329,7 @@ func normalizeRoleSlice(values []string) ([]string, error) {
 	}
 	for _, role := range roles {
 		if _, ok := allowed[role]; !ok {
-			return nil, errcode.ErrInvalidParams
+			return nil, apperror.ErrInvalidParams
 		}
 	}
 	return roles, nil

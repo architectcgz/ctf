@@ -3,9 +3,9 @@ package commands
 import (
 	"context"
 
+	"ctf-platform/internal/apperror"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req CreateAWDRoundInput) (*AWDRoundResp, error) {
@@ -33,16 +33,16 @@ func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req Creat
 		round.DefenseScore = *req.DefenseScore
 	}
 	if round.AttackScore < 0 || round.AttackScore > contestdomain.AWDMaxRoundAttackScore {
-		return nil, errcode.ErrInvalidParams
+		return nil, apperror.ErrInvalidParams
 	}
 	if round.DefenseScore < 0 || round.DefenseScore > contestdomain.AWDMaxRoundDefenseScore {
-		return nil, errcode.ErrInvalidParams
+		return nil, apperror.ErrInvalidParams
 	}
 	if err := s.repo.CreateRound(ctx, round); err != nil {
 		if contestdomain.IsUniqueConstraintError(err) {
-			return nil, errcode.ErrConflict
+			return nil, apperror.ErrConflict
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	roundResp := contestResponseMapperInst.ToAWDRoundRespBasePtr(round)
 	if roundResp == nil {

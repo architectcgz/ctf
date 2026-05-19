@@ -2,25 +2,26 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 
+	"ctf-platform/internal/apperror"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *TeamService) LeaveTeam(ctx context.Context, contestID, userID, teamID int64) error {
 	team, err := s.teamRepo.FindByID(ctx, teamID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestTeamNotFound) {
-			return errcode.ErrTeamNotFound
+			return contestcontracts.ErrTeamNotFound
 		}
-		return errcode.ErrInternal.WithCause(err)
+		return apperror.ErrInternal.WithCause(err)
 	}
 	if team.ContestID != contestID {
-		return errcode.ErrTeamNotFound
+		return contestcontracts.ErrTeamNotFound
 	}
 	if team.CaptainID == userID {
-		return errcode.ErrCaptainCannotLeave
+		return contestcontracts.ErrCaptainCannotLeave
 	}
 
 	members, err := s.teamRepo.GetMembers(ctx, teamID)
@@ -28,7 +29,7 @@ func (s *TeamService) LeaveTeam(ctx context.Context, contestID, userID, teamID i
 		return err
 	}
 	if !teamHasMember(members, userID) {
-		return errcode.ErrNotInTeam
+		return contestcontracts.ErrNotInTeam
 	}
 
 	return s.teamRepo.RemoveMember(ctx, teamID, userID)

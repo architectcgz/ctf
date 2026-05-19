@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestAWDDefenseWorkbenchServiceReadsAndListsEditablePaths(t *testing.T) {
@@ -203,8 +203,8 @@ func TestAWDDefenseWorkbenchServiceRejectsInvalidCommand(t *testing.T) {
 		AWDDefenseWorkbenchConfig{},
 	)
 	_, err := service.RunAWDDefenseCommand(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, instancecontracts.AWDDefenseCommandReq{Command: "  "})
-	appErr, ok := err.(*errcode.AppError)
-	if err == nil || !ok || appErr.Code != errcode.ErrInvalidParams.Code {
+	appErr, ok := err.(*apperror.AppError)
+	if err == nil || !ok || appErr.Code != apperror.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params, got %v", err)
 	}
 }

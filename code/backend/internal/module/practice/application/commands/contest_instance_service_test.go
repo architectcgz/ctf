@@ -15,6 +15,7 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -29,7 +30,6 @@ import (
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/shared/taxonomy"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestServiceStartContestChallengeRejectsAWDContest(t *testing.T) {
@@ -47,7 +47,7 @@ func TestServiceStartContestChallengeRejectsAWDContest(t *testing.T) {
 	service := newContestInstanceTestService(t, db)
 
 	resp, err := service.StartContestChallenge(context.Background(), 5001, 3001, 2001)
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected awd contest challenge entry rejected, resp=%+v err=%v", resp, err)
 	}
 }
@@ -85,7 +85,7 @@ func TestServiceStartContestChallengeAWDDoesNotReuseExistingTeamInstance(t *test
 
 	service := newContestInstanceTestService(t, db)
 	resp, err := service.StartContestChallenge(context.Background(), 5004, 3002, 2002)
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected awd contest challenge entry rejected even with existing instance, resp=%+v err=%v", resp, err)
 	}
 }
@@ -342,7 +342,7 @@ func TestServicePrewarmAdminContestAWDInstancesRejectsNonRegistrationContest(t *
 
 	service := newContestInstanceTestService(t, db)
 	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30120, nil)
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected non-registration contest prewarm rejected, resp=%+v err=%v", resp, err)
 	}
 }
@@ -508,7 +508,7 @@ func TestServiceStartChallengeRejectsNoTargetChallenge(t *testing.T) {
 
 	service := newContestInstanceTestService(t, db)
 	_, err := service.StartChallenge(context.Background(), 5001, 2201)
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for no-target challenge, got %v", err)
 	}
 }

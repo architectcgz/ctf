@@ -3,14 +3,14 @@ package commands
 import (
 	"context"
 
+	"ctf-platform/internal/apperror"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/errcode"
 )
 
 func (s *SubmissionService) handleCorrectSubmission(ctx context.Context, submission *contestentity.Submission, contestChallenge *contestentity.ContestChallenge, teamID *int64) (int, error) {
 	challengeRecord, err := s.repo.FindChallengeByID(ctx, submission.ChallengeID)
 	if err != nil {
-		return 0, errcode.ErrInternal.WithCause(err)
+		return 0, apperror.ErrInternal.WithCause(err)
 	}
 
 	scoringResult, err := s.applyCorrectSubmissionScoring(ctx, submission, challengeRecord, teamID)

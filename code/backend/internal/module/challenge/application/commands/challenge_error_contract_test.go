@@ -2,14 +2,15 @@ package commands
 
 import (
 	"context"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"testing"
 	"time"
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 func TestChallengeServiceCreateChallengeTreatsModuleImageNotFoundAsErrNotFound(t *testing.T) {
@@ -30,7 +31,7 @@ func TestChallengeServiceCreateChallengeTreatsModuleImageNotFoundAsErrNotFound(t
 	)
 
 	_, err := service.CreateChallenge(context.Background(), 1001, CreateChallengeInput{ImageID: 9})
-	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
+	if err == nil || err.Error() != apperror.ErrNotFound.Error() {
 		t.Fatalf("expected image not found error, got %v", err)
 	}
 }
@@ -53,7 +54,7 @@ func TestChallengeServiceUpdateChallengeTreatsModuleChallengeNotFoundAsErrChalle
 	)
 
 	err := service.UpdateChallenge(context.Background(), 9, UpdateChallengeInput{Title: "updated"})
-	if err == nil || err.Error() != errcode.ErrChallengeNotFound.Error() {
+	if err == nil || err.Error() != challengecontracts.ErrChallengeNotFound.Error() {
 		t.Fatalf("expected challenge not found error, got %v", err)
 	}
 }
@@ -154,7 +155,7 @@ func TestChallengeServiceGetLatestPublishCheckTreatsMissingJobSentinelAsErrNotFo
 	)
 
 	_, err := service.GetLatestPublishCheck(context.Background(), 9)
-	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
+	if err == nil || err.Error() != apperror.ErrNotFound.Error() {
 		t.Fatalf("expected publish check not found error, got %v", err)
 	}
 }
@@ -177,7 +178,7 @@ func TestChallengeServiceSelfCheckChallengeTreatsModuleChallengeNotFoundAsErrCha
 	)
 
 	_, err := service.SelfCheckChallenge(context.Background(), 9)
-	if err == nil || err.Error() != errcode.ErrChallengeNotFound.Error() {
+	if err == nil || err.Error() != challengecontracts.ErrChallengeNotFound.Error() {
 		t.Fatalf("expected challenge not found error, got %v", err)
 	}
 }

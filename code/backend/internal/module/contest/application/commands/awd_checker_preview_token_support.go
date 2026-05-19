@@ -2,13 +2,13 @@ package commands
 
 import (
 	"context"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"strings"
 	"time"
 
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 const awdCheckerPreviewTokenTTL = 30 * time.Minute
@@ -52,7 +52,7 @@ func consumeCheckerPreviewValidationState(
 	previewToken string,
 ) (contestentity.AWDCheckerValidationState, *time.Time, string, error) {
 	if strings.TrimSpace(previewToken) != "" && store == nil {
-		return contestentity.AWDCheckerValidationStatePending, nil, "", errcode.ErrAWDCheckerPreviewUnavailable
+		return contestentity.AWDCheckerValidationStatePending, nil, "", contestcontracts.ErrAWDCheckerPreviewUnavailable
 	}
 	record, err := consumeAWDCheckerPreviewToken(ctx, store, contestID, serviceID, awdChallengeID, checkerType, checkerConfig, checkerTokenEnv, previewToken)
 	if err != nil {
@@ -95,7 +95,7 @@ func consumeAWDCheckerPreviewToken(
 	record, found, err := store.LoadAWDCheckerPreviewToken(ctx, contestID, previewToken)
 	if err != nil {
 		if err == contestports.ErrAWDCheckerPreviewTokenStoreUnavailable {
-			return nil, errcode.ErrAWDCheckerPreviewUnavailable
+			return nil, contestcontracts.ErrAWDCheckerPreviewUnavailable
 		}
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func consumeAWDCheckerPreviewToken(
 	}
 	if err := store.DeleteAWDCheckerPreviewToken(ctx, contestID, previewToken); err != nil {
 		if err == contestports.ErrAWDCheckerPreviewTokenStoreUnavailable {
-			return nil, errcode.ErrAWDCheckerPreviewUnavailable
+			return nil, contestcontracts.ErrAWDCheckerPreviewUnavailable
 		}
 		return nil, err
 	}

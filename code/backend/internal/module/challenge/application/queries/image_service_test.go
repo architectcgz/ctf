@@ -2,13 +2,14 @@ package queries
 
 import (
 	"context"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"errors"
 	"testing"
 
+	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 type stubChallengeImageRepository struct {
@@ -107,8 +108,8 @@ func TestImageServiceTreatsChallengeImageNotFoundAsImageNotFound(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected image not found")
 	}
-	var appErr *errcode.AppError
-	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrImageNotFound.Code {
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != challengecontracts.ErrImageNotFound.Code {
 		t.Fatalf("expected image not found error, got %v", err)
 	}
 }

@@ -8,8 +8,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/apperror"
 	opsports "ctf-platform/internal/module/ops/ports"
-	"ctf-platform/pkg/errcode"
 )
 
 const (
@@ -42,11 +42,11 @@ func NewRiskService(repo riskRepository, log *zap.Logger) *RiskService {
 func (s *RiskService) GetCheatDetection(ctx context.Context) (*CheatDetectionResp, error) {
 	submitEvents, err := s.repo.ListRecentSubmitEvents(ctx, time.Now().Add(-submitBurstWindow), submitBurstLimit)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	loginEvents, err := s.repo.ListRecentLoginEvents(ctx, time.Now().Add(-loginSharedIPWindow), loginBurstLimit)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	suspects, suspectUserIDs := aggregateSubmitBursts(submitEvents)

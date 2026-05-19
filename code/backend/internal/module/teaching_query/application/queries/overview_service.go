@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"ctf-platform/internal/apperror"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
-	"ctf-platform/pkg/errcode"
 )
 
 type overviewQueryRepository interface {
@@ -60,13 +60,13 @@ func (s *OverviewQueryService) GetOverview(ctx context.Context, requesterID int6
 
 	studentItems, err := s.repo.ListStudentsByClasses(ctx, classNames, "", "", startOfDay)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	students := commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(studentItems))
 
 	trend, err := s.repo.GetOverviewTrend(ctx, classNames, startOfDay, 7)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	focusClasses, err := s.buildOverviewClassFocuses(ctx, classItems, startOfDay)
@@ -102,17 +102,17 @@ func (s *OverviewQueryService) listAccessibleClassItems(ctx context.Context, req
 	if requesterRole == identitycontracts.RoleAdmin {
 		items, err := s.repo.ListClasses(ctx, 0, 0)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		return items, nil
 	}
 
 	requester, err := s.users.FindUserByID(ctx, requesterID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if requester == nil {
-		return nil, errcode.ErrUnauthorized
+		return nil, apperror.ErrUnauthorized
 	}
 
 	className := strings.TrimSpace(requester.ClassName)
@@ -122,7 +122,7 @@ func (s *OverviewQueryService) listAccessibleClassItems(ctx context.Context, req
 
 	count, err := s.repo.CountStudentsByClass(ctx, className)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	return []queryports.ClassItem{{
 		Name:         className,
@@ -231,11 +231,11 @@ func (s *OverviewQueryService) buildOverviewClassFocuses(
 
 		summary, err := s.repo.GetClassSummary(ctx, item.Name, since)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		studentItems, err := s.repo.ListStudentsByClass(ctx, item.Name, "", "", since)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		students := commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(studentItems))
 		dominantWeakDimension, _ := selectOverviewWeakDimensionStudents(students)
