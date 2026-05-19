@@ -2,53 +2,53 @@ package queries
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
-	"errors"
 )
 
 type stubChallengeImageRepository struct {
-	createFn        func(ctx context.Context, image *model.Image) error
-	findByIDFn      func(ctx context.Context, id int64) (*model.Image, error)
-	findByNameTagFn func(ctx context.Context, name, tag string) (*model.Image, error)
-	listFn          func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
-	updateFn        func(ctx context.Context, image *model.Image) error
+	createFn        func(ctx context.Context, image *challengeentity.Image) error
+	findByIDFn      func(ctx context.Context, id int64) (*challengeentity.Image, error)
+	findByNameTagFn func(ctx context.Context, name, tag string) (*challengeentity.Image, error)
+	listFn          func(ctx context.Context, name, status string, offset, limit int) ([]*challengeentity.Image, int64, error)
+	updateFn        func(ctx context.Context, image *challengeentity.Image) error
 	deleteFn        func(ctx context.Context, id int64) error
 }
 
-func (s *stubChallengeImageRepository) Create(ctx context.Context, image *model.Image) error {
+func (s *stubChallengeImageRepository) Create(ctx context.Context, image *challengeentity.Image) error {
 	if s.createFn != nil {
 		return s.createFn(ctx, image)
 	}
 	return nil
 }
 
-func (s *stubChallengeImageRepository) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+func (s *stubChallengeImageRepository) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengeImageRepository) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
+func (s *stubChallengeImageRepository) FindByNameTag(ctx context.Context, name, tag string) (*challengeentity.Image, error) {
 	if s.findByNameTagFn != nil {
 		return s.findByNameTagFn(ctx, name, tag)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengeImageRepository) List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
+func (s *stubChallengeImageRepository) List(ctx context.Context, name, status string, offset, limit int) ([]*challengeentity.Image, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, name, status, offset, limit)
 	}
 	return nil, 0, nil
 }
 
-func (s *stubChallengeImageRepository) Update(ctx context.Context, image *model.Image) error {
+func (s *stubChallengeImageRepository) Update(ctx context.Context, image *challengeentity.Image) error {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, image)
 	}
@@ -71,12 +71,12 @@ func TestImageServiceGetImagePropagatesContextToRepository(t *testing.T) {
 	expectedCtxValue := "ctx-image-query"
 	findCalled := false
 	repo := &stubChallengeImageRepository{
-		findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
 			findCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-by-id ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Image{ID: id, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable}, nil
+			return &challengeentity.Image{ID: id, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable}, nil
 		},
 	}
 	service := NewImageService(repo, &config.Config{Pagination: config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100}})
@@ -98,7 +98,7 @@ func TestImageServiceTreatsChallengeImageNotFoundAsImageNotFound(t *testing.T) {
 	t.Parallel()
 
 	service := NewImageService(&stubChallengeImageRepository{
-		findByIDFn: func(context.Context, int64) (*model.Image, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
 			return nil, challengeports.ErrChallengeImageNotFound
 		},
 	}, &config.Config{Pagination: config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100}})
@@ -120,21 +120,21 @@ func TestImageServiceListImagesPropagatesContextToRepository(t *testing.T) {
 	expectedCtxValue := "ctx-image-list"
 	listCalled := false
 	repo := &stubChallengeImageRepository{
-		listFn: func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
+		listFn: func(ctx context.Context, name, status string, offset, limit int) ([]*challengeentity.Image, int64, error) {
 			listCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list-images ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if name != "web" || status != model.ImageStatusAvailable || offset != 0 || limit != 20 {
+			if name != "web" || status != challengeentity.ImageStatusAvailable || offset != 0 || limit != 20 {
 				t.Fatalf("unexpected list args: name=%s status=%s offset=%d limit=%d", name, status, offset, limit)
 			}
-			return []*model.Image{{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable}}, 1, nil
+			return []*challengeentity.Image{{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable}}, 1, nil
 		},
 	}
 	service := NewImageService(repo, &config.Config{Pagination: config.PaginationConfig{DefaultPageSize: 20, MaxPageSize: 100}})
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.ListImages(ctx, ListImagesInput{Name: "web", Status: model.ImageStatusAvailable})
+	resp, err := service.ListImages(ctx, ListImagesInput{Name: "web", Status: challengeentity.ImageStatusAvailable})
 	if err != nil {
 		t.Fatalf("ListImages() error = %v", err)
 	}

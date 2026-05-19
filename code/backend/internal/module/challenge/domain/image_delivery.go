@@ -6,16 +6,16 @@ import (
 	"regexp"
 	"strings"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 const (
 	ChallengePackageModeJeopardy = "jeopardy"
 	ChallengePackageModeAWD      = "awd"
 
-	ImageSourceTypeManual        = model.ImageSourceTypeManual
-	ImageSourceTypePlatformBuild = model.ImageSourceTypePlatformBuild
-	ImageSourceTypeExternalRef   = model.ImageSourceTypeExternalRef
+	ImageSourceTypeManual        = challengeentity.ImageSourceTypeManual
+	ImageSourceTypePlatformBuild = challengeentity.ImageSourceTypePlatformBuild
+	ImageSourceTypeExternalRef   = challengeentity.ImageSourceTypeExternalRef
 )
 
 var packageImageSlugPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)

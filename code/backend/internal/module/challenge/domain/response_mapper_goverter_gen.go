@@ -270,7 +270,7 @@ func (c *ChallengeResponseMapperImpl) ToEnvironmentTemplateRespBasePtr(source *e
 	}
 	return pContractsEnvironmentTemplateResp
 }
-func (c *ChallengeResponseMapperImpl) ToImageRespBase(source model.Image) contracts.ImageResp {
+func (c *ChallengeResponseMapperImpl) ToImageRespBase(source entity.Image) contracts.ImageResp {
 	var contractsImageResp contracts.ImageResp
 	contractsImageResp.ID = source.ID
 	contractsImageResp.Name = source.Name
@@ -290,7 +290,7 @@ func (c *ChallengeResponseMapperImpl) ToImageRespBase(source model.Image) contra
 	contractsImageResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return contractsImageResp
 }
-func (c *ChallengeResponseMapperImpl) ToImageRespBasePtr(source *model.Image) *contracts.ImageResp {
+func (c *ChallengeResponseMapperImpl) ToImageRespBasePtr(source *entity.Image) *contracts.ImageResp {
 	var pContractsImageResp *contracts.ImageResp
 	if source != nil {
 		contractsImageResp := c.ToImageRespBase((*source))

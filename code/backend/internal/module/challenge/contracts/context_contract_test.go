@@ -10,7 +10,7 @@ import (
 
 type ctxOnlyImageStore struct{}
 
-func (ctxOnlyImageStore) FindByID(context.Context, int64) (*model.Image, error) {
+func (ctxOnlyImageStore) FindByID(context.Context, int64) (*challengeentity.Image, error) {
 	return nil, nil
 }
 

@@ -30,8 +30,8 @@ func newImageBuildTxStore(tx *gorm.DB) *testImageBuildTxStore {
 	return &testImageBuildTxStore{tx: tx}
 }
 
-func (s *testImageBuildTxStore) FindByNameTag(ctx context.Context, name string, tag string) (*model.Image, error) {
-	var image model.Image
+func (s *testImageBuildTxStore) FindByNameTag(ctx context.Context, name string, tag string) (*challengeentity.Image, error) {
+	var image challengeentity.Image
 	err := s.tx.WithContext(ctx).Unscoped().
 		Where("name = ? AND tag = ?", name, tag).
 		First(&image).Error
@@ -44,7 +44,7 @@ func (s *testImageBuildTxStore) FindByNameTag(ctx context.Context, name string, 
 	return &image, nil
 }
 
-func (s *testImageBuildTxStore) CreateImage(ctx context.Context, image *model.Image) error {
+func (s *testImageBuildTxStore) CreateImage(ctx context.Context, image *challengeentity.Image) error {
 	return s.tx.WithContext(ctx).Create(image).Error
 }
 
@@ -52,7 +52,7 @@ func (s *testImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *ch
 	return s.tx.WithContext(ctx).Create(job).Error
 }
 
-func (s *testImageBuildTxStore) UpdateImage(ctx context.Context, image *model.Image, updates map[string]any) error {
+func (s *testImageBuildTxStore) UpdateImage(ctx context.Context, image *challengeentity.Image, updates map[string]any) error {
 	return s.tx.WithContext(ctx).Unscoped().Model(image).Updates(updates).Error
 }
 
@@ -237,15 +237,15 @@ func (s *testChallengeImportTxStore) ResolveExistingImageRef(
 		return nil, fmt.Errorf("invalid image ref for %s: %w", packageSlug, err)
 	}
 	tx := s.tx(ctx)
-	var image model.Image
+	var image challengeentity.Image
 	findErr := tx.Unscoped().Where("name = ? AND tag = ?", name, tag).First(&image).Error
 	switch {
 	case errors.Is(findErr, gorm.ErrRecordNotFound):
-		image = model.Image{
+		image = challengeentity.Image{
 			Name:        name,
 			Tag:         tag,
 			Description: fmt.Sprintf("Imported from challenge pack %s", packageSlug),
-			Status:      model.ImageStatusAvailable,
+			Status:      challengeentity.ImageStatusAvailable,
 		}
 		if err := tx.Create(&image).Error; err != nil {
 			return nil, err
@@ -254,7 +254,7 @@ func (s *testChallengeImportTxStore) ResolveExistingImageRef(
 		return nil, findErr
 	default:
 		if err := tx.Model(&image).Updates(map[string]any{
-			"status":     model.ImageStatusAvailable,
+			"status":     challengeentity.ImageStatusAvailable,
 			"deleted_at": nil,
 			"updated_at": time.Now().UTC(),
 		}).Error; err != nil {

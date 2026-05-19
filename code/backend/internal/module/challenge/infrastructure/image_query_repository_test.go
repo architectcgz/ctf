@@ -7,31 +7,31 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type imageQuerySourceStub struct {
-	findByIDFn func(context.Context, int64) (*model.Image, error)
-	listFn     func(context.Context, string, string, int, int) ([]*model.Image, int64, error)
+	findByIDFn func(context.Context, int64) (*challengeentity.Image, error)
+	listFn     func(context.Context, string, string, int, int) ([]*challengeentity.Image, int64, error)
 }
 
-func (s imageQuerySourceStub) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+func (s imageQuerySourceStub) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
 	return s.findByIDFn(ctx, id)
 }
 
-func (s imageQuerySourceStub) List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
+func (s imageQuerySourceStub) List(ctx context.Context, name, status string, offset, limit int) ([]*challengeentity.Image, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, name, status, offset, limit)
 	}
-	return []*model.Image{}, 0, nil
+	return []*challengeentity.Image{}, 0, nil
 }
 
 func TestImageQueryRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewImageQueryRepository(imageQuerySourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Image, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -46,7 +46,7 @@ func TestImageQueryRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 
 	expectedErr := errors.New("boom")
 	repo := NewImageQueryRepository(imageQuerySourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Image, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
 			return nil, expectedErr
 		},
 	})

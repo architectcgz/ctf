@@ -17,7 +17,7 @@ import (
 func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 	challengeItem := &model.Challenge{
@@ -64,10 +64,10 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image 1: %v", err)
 	}
-	if err := db.Create(&model.Image{ID: 2, Name: "ctf/db", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&challengeentity.Image{ID: 2, Name: "ctf/db", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image 2: %v", err)
 	}
 	challengeItem := &model.Challenge{
@@ -156,7 +156,7 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 	challengeItem := &model.Challenge{
@@ -196,7 +196,7 @@ func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 func TestTopologyServiceRejectsInjectFlagForSharedChallenge(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 	challengeItem := &model.Challenge{
@@ -237,7 +237,7 @@ func TestTopologyServiceRejectsInjectFlagForSharedChallenge(t *testing.T) {
 func TestTopologyServiceAllowsFineGrainedPolicyOnTemplateCreate(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 
@@ -267,7 +267,7 @@ func TestTopologyServiceAllowsFineGrainedPolicyOnTemplateCreate(t *testing.T) {
 func TestTopologyServiceAllowsFineGrainedPolicyWhenBindingTemplate(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 	challengeItem := &model.Challenge{

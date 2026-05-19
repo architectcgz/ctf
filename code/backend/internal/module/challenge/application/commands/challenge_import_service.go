@@ -419,7 +419,7 @@ func (s *ChallengeService) buildChallengeImportPreview(
 	if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && imageBuild != nil {
 		if targetRef, err := imageBuild.BuildPlatformTargetRef(domain.ChallengePackageModeJeopardy, parsed.Slug, parsed.SuggestedImageTag); err == nil {
 			imageDelivery.TargetImageRef = targetRef
-			imageDelivery.BuildStatus = model.ImageStatusPending
+			imageDelivery.BuildStatus = challengeentity.ImageStatusPending
 		}
 	}
 	warnings := append([]string(nil), parsed.Warnings...)

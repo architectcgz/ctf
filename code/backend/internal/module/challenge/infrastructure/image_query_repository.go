@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -21,7 +21,7 @@ func NewImageQueryRepository(source challengeports.ImageQueryRepository) *ImageQ
 	return &ImageQueryRepository{source: source}
 }
 
-func (r *ImageQueryRepository) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+func (r *ImageQueryRepository) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
 	image, err := r.source.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengeImageNotFound
@@ -29,7 +29,7 @@ func (r *ImageQueryRepository) FindByID(ctx context.Context, id int64) (*model.I
 	return image, err
 }
 
-func (r *ImageQueryRepository) List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
+func (r *ImageQueryRepository) List(ctx context.Context, name, status string, offset, limit int) ([]*challengeentity.Image, int64, error) {
 	return r.source.List(ctx, name, status, offset, limit)
 }
 

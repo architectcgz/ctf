@@ -10,7 +10,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -53,10 +52,10 @@ type imageBuildRepository interface {
 }
 
 type imageBuildTxStore interface {
-	FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error)
-	CreateImage(ctx context.Context, image *model.Image) error
+	FindByNameTag(ctx context.Context, name, tag string) (*challengeentity.Image, error)
+	CreateImage(ctx context.Context, image *challengeentity.Image) error
 	CreateImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob) error
-	UpdateImage(ctx context.Context, image *model.Image, updates map[string]any) error
+	UpdateImage(ctx context.Context, image *challengeentity.Image, updates map[string]any) error
 }
 
 type ImageBuildService struct {
@@ -145,7 +144,7 @@ func (s *ImageBuildService) CreatePlatformBuildJob(
 
 	createdBy := req.CreatedBy
 	job := &challengeentity.ImageBuildJob{
-		SourceType:     model.ImageSourceTypePlatformBuild,
+		SourceType:     challengeentity.ImageSourceTypePlatformBuild,
 		ChallengeMode:  strings.TrimSpace(req.ChallengeMode),
 		PackageSlug:    strings.TrimSpace(req.PackageSlug),
 		SourceDir:      strings.TrimSpace(req.SourceDir),
@@ -161,8 +160,8 @@ func (s *ImageBuildService) CreatePlatformBuildJob(
 		return nil, err
 	}
 
-	image.Status = model.ImageStatusPending
-	image.SourceType = model.ImageSourceTypePlatformBuild
+	image.Status = challengeentity.ImageStatusPending
+	image.SourceType = challengeentity.ImageSourceTypePlatformBuild
 	image.BuildJobID = &job.ID
 	image.LastError = ""
 	image.Digest = ""
@@ -210,7 +209,7 @@ func (s *ImageBuildService) CreatePlatformBuildJobInTx(
 
 	createdBy := req.CreatedBy
 	job := &challengeentity.ImageBuildJob{
-		SourceType:     model.ImageSourceTypePlatformBuild,
+		SourceType:     challengeentity.ImageSourceTypePlatformBuild,
 		ChallengeMode:  strings.TrimSpace(req.ChallengeMode),
 		PackageSlug:    strings.TrimSpace(req.PackageSlug),
 		SourceDir:      strings.TrimSpace(req.SourceDir),
@@ -227,8 +226,8 @@ func (s *ImageBuildService) CreatePlatformBuildJobInTx(
 	}
 
 	updates := map[string]any{
-		"status":       model.ImageStatusPending,
-		"source_type":  model.ImageSourceTypePlatformBuild,
+		"status":       challengeentity.ImageStatusPending,
+		"source_type":  challengeentity.ImageSourceTypePlatformBuild,
 		"build_job_id": job.ID,
 		"last_error":   "",
 		"digest":       "",
@@ -239,8 +238,8 @@ func (s *ImageBuildService) CreatePlatformBuildJobInTx(
 	if err := txStore.UpdateImage(ctx, image, updates); err != nil {
 		return nil, err
 	}
-	image.Status = model.ImageStatusPending
-	image.SourceType = model.ImageSourceTypePlatformBuild
+	image.Status = challengeentity.ImageStatusPending
+	image.SourceType = challengeentity.ImageSourceTypePlatformBuild
 	image.BuildJobID = &job.ID
 	image.LastError = ""
 	image.Digest = ""
@@ -291,7 +290,7 @@ func (s *ImageBuildService) VerifyExternalImageRefInTx(
 	if err != nil {
 		return nil, err
 	}
-	if err := updateExternalImageTx(ctx, txStore, image, model.ImageStatusVerifying, "", 0, ""); err != nil {
+	if err := updateExternalImageTx(ctx, txStore, image, challengeentity.ImageStatusVerifying, "", 0, ""); err != nil {
 		return nil, err
 	}
 
@@ -300,19 +299,19 @@ func (s *ImageBuildService) VerifyExternalImageRefInTx(
 
 	digest, err := s.verifier.CheckManifest(verifyCtx, imageRef)
 	if err != nil {
-		_ = updateExternalImageTx(ctx, txStore, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
+		_ = updateExternalImageTx(ctx, txStore, image, challengeentity.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
 		return nil, err
 	}
 	if err := s.builder.Pull(verifyCtx, imageRef); err != nil {
-		_ = updateExternalImageTx(ctx, txStore, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
+		_ = updateExternalImageTx(ctx, txStore, image, challengeentity.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
 		return nil, err
 	}
 	inspect, err := s.builder.Inspect(verifyCtx, imageRef)
 	if err != nil {
-		_ = updateExternalImageTx(ctx, txStore, image, model.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
+		_ = updateExternalImageTx(ctx, txStore, image, challengeentity.ImageStatusFailed, "", 0, strings.TrimSpace(err.Error()))
 		return nil, err
 	}
-	if err := updateExternalImageTx(ctx, txStore, image, model.ImageStatusAvailable, digest, inspect.Size, ""); err != nil {
+	if err := updateExternalImageTx(ctx, txStore, image, challengeentity.ImageStatusAvailable, digest, inspect.Size, ""); err != nil {
 		return nil, err
 	}
 	return &VerifyExternalImageRefResult{
@@ -441,7 +440,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 	if err != nil {
 		return err
 	}
-	if err := s.updateImageBuildStatus(ctx, image, model.ImageStatusBuilding, "", ""); err != nil {
+	if err := s.updateImageBuildStatus(ctx, image, challengeentity.ImageStatusBuilding, "", ""); err != nil {
 		return err
 	}
 
@@ -460,7 +459,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 	if err := s.repo.UpdateImageBuildJob(ctx, job); err != nil {
 		return err
 	}
-	if err := s.updateImageBuildStatus(ctx, image, model.ImageStatusPushed, "", ""); err != nil {
+	if err := s.updateImageBuildStatus(ctx, image, challengeentity.ImageStatusPushed, "", ""); err != nil {
 		return err
 	}
 
@@ -469,7 +468,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 	if err := s.repo.UpdateImageBuildJob(ctx, job); err != nil {
 		return err
 	}
-	if err := s.updateImageBuildStatus(ctx, image, model.ImageStatusVerifying, "", ""); err != nil {
+	if err := s.updateImageBuildStatus(ctx, image, challengeentity.ImageStatusVerifying, "", ""); err != nil {
 		return err
 	}
 
@@ -495,10 +494,10 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 		return err
 	}
 	image.Size = inspect.Size
-	return s.updateImageBuildStatus(ctx, image, model.ImageStatusAvailable, digest, "")
+	return s.updateImageBuildStatus(ctx, image, challengeentity.ImageStatusAvailable, digest, "")
 }
 
-func (s *ImageBuildService) failImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob, image *model.Image, cause error) error {
+func (s *ImageBuildService) failImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob, image *challengeentity.Image, cause error) error {
 	summary := strings.TrimSpace(cause.Error())
 	finishedAt := time.Now()
 	job.Status = challengeentity.ImageBuildJobStatusFailed
@@ -508,13 +507,13 @@ func (s *ImageBuildService) failImageBuildJob(ctx context.Context, job *challeng
 	if err := s.repo.UpdateImageBuildJob(ctx, job); err != nil {
 		return err
 	}
-	if err := s.updateImageBuildStatus(ctx, image, model.ImageStatusFailed, "", summary); err != nil {
+	if err := s.updateImageBuildStatus(ctx, image, challengeentity.ImageStatusFailed, "", summary); err != nil {
 		return err
 	}
 	return cause
 }
 
-func (s *ImageBuildService) findImageByJobTargetRef(ctx context.Context, targetRef string) (*model.Image, error) {
+func (s *ImageBuildService) findImageByJobTargetRef(ctx context.Context, targetRef string) (*challengeentity.Image, error) {
 	name, tag, err := domain.SplitImageRef(targetRef)
 	if err != nil {
 		return nil, err
@@ -522,12 +521,12 @@ func (s *ImageBuildService) findImageByJobTargetRef(ctx context.Context, targetR
 	return s.repo.FindByNameTag(ctx, name, tag)
 }
 
-func (s *ImageBuildService) updateImageBuildStatus(ctx context.Context, image *model.Image, status, digest, lastError string) error {
+func (s *ImageBuildService) updateImageBuildStatus(ctx context.Context, image *challengeentity.Image, status, digest, lastError string) error {
 	image.Status = status
-	image.SourceType = model.ImageSourceTypePlatformBuild
+	image.SourceType = challengeentity.ImageSourceTypePlatformBuild
 	image.Digest = digest
 	image.LastError = lastError
-	if status == model.ImageStatusAvailable {
+	if status == challengeentity.ImageStatusAvailable {
 		now := time.Now()
 		image.VerifiedAt = &now
 	} else {
@@ -541,18 +540,18 @@ func (s *ImageBuildService) findOrCreatePendingPlatformBuildImage(
 	name string,
 	tag string,
 	packageSlug string,
-) (*model.Image, error) {
+) (*challengeentity.Image, error) {
 	image, err := s.repo.FindByNameTag(ctx, name, tag)
 	switch {
 	case err == nil:
 		return image, nil
 	case errors.Is(err, challengeports.ErrChallengeImageNotFound):
-		image = &model.Image{
+		image = &challengeentity.Image{
 			Name:        name,
 			Tag:         tag,
 			Description: fmt.Sprintf("Built from challenge pack %s", packageSlug),
-			Status:      model.ImageStatusPending,
-			SourceType:  model.ImageSourceTypePlatformBuild,
+			Status:      challengeentity.ImageStatusPending,
+			SourceType:  challengeentity.ImageSourceTypePlatformBuild,
 		}
 		if err := s.repo.Create(ctx, image); err != nil {
 			return nil, err
@@ -569,18 +568,18 @@ func findOrCreatePendingPlatformBuildImageTx(
 	name string,
 	tag string,
 	packageSlug string,
-) (*model.Image, error) {
+) (*challengeentity.Image, error) {
 	image, findErr := txStore.FindByNameTag(ctx, name, tag)
 	switch {
 	case findErr == nil:
 		return image, nil
 	case errors.Is(findErr, challengeports.ErrChallengeImageNotFound):
-		image = &model.Image{
+		image = &challengeentity.Image{
 			Name:        name,
 			Tag:         tag,
 			Description: fmt.Sprintf("Built from challenge pack %s", packageSlug),
-			Status:      model.ImageStatusPending,
-			SourceType:  model.ImageSourceTypePlatformBuild,
+			Status:      challengeentity.ImageStatusPending,
+			SourceType:  challengeentity.ImageSourceTypePlatformBuild,
 		}
 		if err := txStore.CreateImage(ctx, image); err != nil {
 			return nil, err
@@ -597,18 +596,18 @@ func findOrCreateExternalImageTx(
 	name string,
 	tag string,
 	packageSlug string,
-) (*model.Image, error) {
+) (*challengeentity.Image, error) {
 	image, findErr := txStore.FindByNameTag(ctx, name, tag)
 	switch {
 	case findErr == nil:
 		return image, nil
 	case errors.Is(findErr, challengeports.ErrChallengeImageNotFound):
-		image = &model.Image{
+		image = &challengeentity.Image{
 			Name:        name,
 			Tag:         tag,
 			Description: fmt.Sprintf("Verified external image from challenge pack %s", packageSlug),
-			Status:      model.ImageStatusVerifying,
-			SourceType:  model.ImageSourceTypeExternalRef,
+			Status:      challengeentity.ImageStatusVerifying,
+			SourceType:  challengeentity.ImageSourceTypeExternalRef,
 		}
 		if err := txStore.CreateImage(ctx, image); err != nil {
 			return nil, err
@@ -622,7 +621,7 @@ func findOrCreateExternalImageTx(
 func updateExternalImageTx(
 	ctx context.Context,
 	txStore imageBuildTxStore,
-	image *model.Image,
+	image *challengeentity.Image,
 	status string,
 	digest string,
 	size int64,
@@ -630,7 +629,7 @@ func updateExternalImageTx(
 ) error {
 	updates := map[string]any{
 		"status":       status,
-		"source_type":  model.ImageSourceTypeExternalRef,
+		"source_type":  challengeentity.ImageSourceTypeExternalRef,
 		"build_job_id": nil,
 		"digest":       digest,
 		"size":         size,
@@ -638,7 +637,7 @@ func updateExternalImageTx(
 		"deleted_at":   nil,
 		"updated_at":   time.Now(),
 	}
-	if status == model.ImageStatusAvailable {
+	if status == challengeentity.ImageStatusAvailable {
 		now := time.Now()
 		updates["verified_at"] = &now
 	} else {
@@ -648,7 +647,7 @@ func updateExternalImageTx(
 		return err
 	}
 	image.Status = status
-	image.SourceType = model.ImageSourceTypeExternalRef
+	image.SourceType = challengeentity.ImageSourceTypeExternalRef
 	image.BuildJobID = nil
 	image.Digest = digest
 	image.Size = size

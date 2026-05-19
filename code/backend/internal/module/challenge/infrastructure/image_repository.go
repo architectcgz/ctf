@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 
 	"gorm.io/gorm"
@@ -22,12 +21,12 @@ func (r *ImageRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *ImageRepository) Create(ctx context.Context, image *model.Image) error {
+func (r *ImageRepository) Create(ctx context.Context, image *challengeentity.Image) error {
 	return r.dbWithContext(ctx).Create(image).Error
 }
 
-func (r *ImageRepository) FindByID(ctx context.Context, id int64) (*model.Image, error) {
-	var image model.Image
+func (r *ImageRepository) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
+	var image challengeentity.Image
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&image).Error
 	if err != nil {
 		return nil, err
@@ -35,8 +34,8 @@ func (r *ImageRepository) FindByID(ctx context.Context, id int64) (*model.Image,
 	return &image, nil
 }
 
-func (r *ImageRepository) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
-	var image model.Image
+func (r *ImageRepository) FindByNameTag(ctx context.Context, name, tag string) (*challengeentity.Image, error) {
+	var image challengeentity.Image
 	err := r.dbWithContext(ctx).Where("name = ? AND tag = ?", name, tag).First(&image).Error
 	if err != nil {
 		return nil, err
@@ -44,11 +43,11 @@ func (r *ImageRepository) FindByNameTag(ctx context.Context, name, tag string) (
 	return &image, nil
 }
 
-func (r *ImageRepository) List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
-	var images []*model.Image
+func (r *ImageRepository) List(ctx context.Context, name, status string, offset, limit int) ([]*challengeentity.Image, int64, error) {
+	var images []*challengeentity.Image
 	var total int64
 
-	query := r.dbWithContext(ctx).Model(&model.Image{}).Where("deleted_at IS NULL")
+	query := r.dbWithContext(ctx).Model(&challengeentity.Image{}).Where("deleted_at IS NULL")
 	if name != "" {
 		query = query.Where("name LIKE ?", "%"+name+"%")
 	}
@@ -64,12 +63,12 @@ func (r *ImageRepository) List(ctx context.Context, name, status string, offset,
 	return images, total, err
 }
 
-func (r *ImageRepository) Update(ctx context.Context, image *model.Image) error {
+func (r *ImageRepository) Update(ctx context.Context, image *challengeentity.Image) error {
 	return r.dbWithContext(ctx).Save(image).Error
 }
 
 func (r *ImageRepository) Delete(ctx context.Context, id int64) error {
-	return r.dbWithContext(ctx).Delete(&model.Image{}, id).Error
+	return r.dbWithContext(ctx).Delete(&challengeentity.Image{}, id).Error
 }
 
 func (r *ImageRepository) CreateImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob) error {

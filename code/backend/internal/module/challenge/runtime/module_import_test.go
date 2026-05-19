@@ -22,8 +22,8 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -61,13 +61,13 @@ func TestBuildWiresChallengeImportImageBuildService(t *testing.T) {
 	if err := json.Unmarshal(previewRecorder.Body.Bytes(), &preview); err != nil {
 		t.Fatalf("decode preview response: %v", err)
 	}
-	if preview.Data.ImageDelivery.SourceType != model.ImageSourceTypePlatformBuild {
-		t.Fatalf("preview source_type = %q, want %q", preview.Data.ImageDelivery.SourceType, model.ImageSourceTypePlatformBuild)
+	if preview.Data.ImageDelivery.SourceType != challengeentity.ImageSourceTypePlatformBuild {
+		t.Fatalf("preview source_type = %q, want %q", preview.Data.ImageDelivery.SourceType, challengeentity.ImageSourceTypePlatformBuild)
 	}
 	if preview.Data.ImageDelivery.TargetImageRef != "127.0.0.1:5000/jeopardy/web-platform-build:v1" {
 		t.Fatalf("preview target_image_ref = %q", preview.Data.ImageDelivery.TargetImageRef)
 	}
-	if preview.Data.ImageDelivery.BuildStatus != model.ImageStatusPending {
+	if preview.Data.ImageDelivery.BuildStatus != challengeentity.ImageStatusPending {
 		t.Fatalf("preview build_status = %q, want pending", preview.Data.ImageDelivery.BuildStatus)
 	}
 
@@ -94,7 +94,7 @@ func TestBuildWiresChallengeImportImageBuildService(t *testing.T) {
 	if image.Name != "127.0.0.1:5000/jeopardy/web-platform-build" || image.Tag != "v1" {
 		t.Fatalf("unexpected stored image: %+v", image)
 	}
-	if image.BuildJobID == nil || image.Status != model.ImageStatusPending {
+	if image.BuildJobID == nil || image.Status != challengeentity.ImageStatusPending {
 		t.Fatalf("expected pending platform build image, got %+v", image)
 	}
 }
@@ -125,13 +125,13 @@ func TestBuildWiresAWDImportImageBuildService(t *testing.T) {
 	if err := json.Unmarshal(previewRecorder.Body.Bytes(), &preview); err != nil {
 		t.Fatalf("decode preview response: %v", err)
 	}
-	if preview.Data.ImageDelivery.SourceType != model.ImageSourceTypePlatformBuild {
-		t.Fatalf("preview source_type = %q, want %q", preview.Data.ImageDelivery.SourceType, model.ImageSourceTypePlatformBuild)
+	if preview.Data.ImageDelivery.SourceType != challengeentity.ImageSourceTypePlatformBuild {
+		t.Fatalf("preview source_type = %q, want %q", preview.Data.ImageDelivery.SourceType, challengeentity.ImageSourceTypePlatformBuild)
 	}
 	if preview.Data.ImageDelivery.TargetImageRef != "127.0.0.1:5000/awd/awd-platform-build:c1" {
 		t.Fatalf("preview target_image_ref = %q", preview.Data.ImageDelivery.TargetImageRef)
 	}
-	if preview.Data.ImageDelivery.BuildStatus != model.ImageStatusPending {
+	if preview.Data.ImageDelivery.BuildStatus != challengeentity.ImageStatusPending {
 		t.Fatalf("preview build_status = %q, want pending", preview.Data.ImageDelivery.BuildStatus)
 	}
 
@@ -162,7 +162,7 @@ func TestBuildWiresAWDImportImageBuildService(t *testing.T) {
 	if image.Name != "127.0.0.1:5000/awd/awd-platform-build" || image.Tag != "c1" {
 		t.Fatalf("unexpected stored image: %+v", image)
 	}
-	if image.BuildJobID == nil || image.Status != model.ImageStatusPending {
+	if image.BuildJobID == nil || image.Status != challengeentity.ImageStatusPending {
 		t.Fatalf("expected pending awd platform build image, got %+v", image)
 	}
 }

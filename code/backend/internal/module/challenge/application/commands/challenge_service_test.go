@@ -62,7 +62,7 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
 	// 创建测试镜像
-	db.Create(&model.Image{ID: 1, Name: "test-image"})
+	db.Create(&challengeentity.Image{ID: 1, Name: "test-image"})
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
@@ -265,7 +265,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("create teacher: %v", err)
 	}
-	image := &model.Image{Name: "ctf/web-demo", Tag: "latest", Status: model.ImageStatusAvailable}
+	image := &challengeentity.Image{Name: "ctf/web-demo", Tag: "latest", Status: challengeentity.ImageStatusAvailable}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}

@@ -254,16 +254,16 @@ type ChallengePackageExportTxRunner interface {
 }
 
 type ImageCommandRepository interface {
-	Create(ctx context.Context, image *model.Image) error
-	FindByID(ctx context.Context, id int64) (*model.Image, error)
-	FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error)
-	Update(ctx context.Context, image *model.Image) error
+	Create(ctx context.Context, image *challengeentity.Image) error
+	FindByID(ctx context.Context, id int64) (*challengeentity.Image, error)
+	FindByNameTag(ctx context.Context, name, tag string) (*challengeentity.Image, error)
+	Update(ctx context.Context, image *challengeentity.Image) error
 	Delete(ctx context.Context, id int64) error
 }
 
 type ImageQueryRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Image, error)
-	List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
+	FindByID(ctx context.Context, id int64) (*challengeentity.Image, error)
+	List(ctx context.Context, name, status string, offset, limit int) ([]*challengeentity.Image, int64, error)
 }
 
 type ImageBuildJobRepository interface {

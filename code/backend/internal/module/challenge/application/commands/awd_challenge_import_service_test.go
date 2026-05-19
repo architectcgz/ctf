@@ -12,7 +12,6 @@ import (
 	"strings"
 	"testing"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -125,13 +124,13 @@ func TestAWDChallengeImportPreviewReturnsPlatformBuildImageDelivery(t *testing.T
 		t.Fatalf("PreviewImport() error = %v", err)
 	}
 
-	if preview.ImageDelivery.SourceType != model.ImageSourceTypePlatformBuild {
-		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, model.ImageSourceTypePlatformBuild)
+	if preview.ImageDelivery.SourceType != challengeentity.ImageSourceTypePlatformBuild {
+		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, challengeentity.ImageSourceTypePlatformBuild)
 	}
 	if preview.ImageDelivery.TargetImageRef != "127.0.0.1:5000/awd/awd-platform-build:c1" {
 		t.Fatalf("TargetImageRef = %q", preview.ImageDelivery.TargetImageRef)
 	}
-	if preview.ImageDelivery.BuildStatus != model.ImageStatusPending {
+	if preview.ImageDelivery.BuildStatus != challengeentity.ImageStatusPending {
 		t.Fatalf("BuildStatus = %q, want pending", preview.ImageDelivery.BuildStatus)
 	}
 	if imageRef, _ := preview.RuntimeConfig["image_ref"].(string); imageRef != "" {
@@ -158,8 +157,8 @@ func TestAWDChallengeImportPreviewWarnsWhenPlatformBuildServiceUnavailable(t *te
 		t.Fatalf("PreviewImport() error = %v", err)
 	}
 
-	if preview.ImageDelivery.SourceType != model.ImageSourceTypePlatformBuild {
-		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, model.ImageSourceTypePlatformBuild)
+	if preview.ImageDelivery.SourceType != challengeentity.ImageSourceTypePlatformBuild {
+		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, challengeentity.ImageSourceTypePlatformBuild)
 	}
 	if preview.ImageDelivery.TargetImageRef != "" {
 		t.Fatalf("expected no target image ref without build service, got %q", preview.ImageDelivery.TargetImageRef)
@@ -216,8 +215,8 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID(image) error = %v", err)
 	}
-	if image.Status != model.ImageStatusPending ||
-		image.SourceType != model.ImageSourceTypePlatformBuild ||
+	if image.Status != challengeentity.ImageStatusPending ||
+		image.SourceType != challengeentity.ImageSourceTypePlatformBuild ||
 		image.BuildJobID == nil {
 		t.Fatalf("unexpected platform image: %+v", image)
 	}

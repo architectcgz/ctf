@@ -100,43 +100,43 @@ func (s *topologyTemplateRepoStub) IncrementUsage(ctx context.Context, id int64)
 }
 
 type topologyImageRepoStub struct {
-	createFn            func(ctx context.Context, image *model.Image) error
-	findByIDFn          func(ctx context.Context, id int64) (*model.Image, error)
-	findByNameTagFn     func(ctx context.Context, name, tag string) (*model.Image, error)
-	listFn              func(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error)
-	updateFn            func(ctx context.Context, image *model.Image) error
+	createFn            func(ctx context.Context, image *challengeentity.Image) error
+	findByIDFn          func(ctx context.Context, id int64) (*challengeentity.Image, error)
+	findByNameTagFn     func(ctx context.Context, name, tag string) (*challengeentity.Image, error)
+	listFn              func(ctx context.Context, name, status string, offset, limit int) ([]*challengeentity.Image, int64, error)
+	updateFn            func(ctx context.Context, image *challengeentity.Image) error
 	deleteWithContextFn func(ctx context.Context, id int64) error
 }
 
-func (s *topologyImageRepoStub) Create(ctx context.Context, image *model.Image) error {
+func (s *topologyImageRepoStub) Create(ctx context.Context, image *challengeentity.Image) error {
 	if s.createFn != nil {
 		return s.createFn(ctx, image)
 	}
 	return nil
 }
 
-func (s *topologyImageRepoStub) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+func (s *topologyImageRepoStub) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *topologyImageRepoStub) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
+func (s *topologyImageRepoStub) FindByNameTag(ctx context.Context, name, tag string) (*challengeentity.Image, error) {
 	if s.findByNameTagFn != nil {
 		return s.findByNameTagFn(ctx, name, tag)
 	}
 	return nil, nil
 }
 
-func (s *topologyImageRepoStub) List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
+func (s *topologyImageRepoStub) List(ctx context.Context, name, status string, offset, limit int) ([]*challengeentity.Image, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, name, status, offset, limit)
 	}
 	return nil, 0, nil
 }
 
-func (s *topologyImageRepoStub) Update(ctx context.Context, image *model.Image) error {
+func (s *topologyImageRepoStub) Update(ctx context.Context, image *challengeentity.Image) error {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, image)
 	}
@@ -351,7 +351,7 @@ func TestTopologyServiceCreateTemplateTreatsChallengeImageNotFoundAsInvalidParam
 	t.Parallel()
 
 	service := NewTopologyService(&topologyCommandRepoStub{}, &topologyTemplateRepoStub{}, &topologyImageRepoStub{
-		findByIDFn: func(context.Context, int64) (*model.Image, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
 			return nil, challengeports.ErrChallengeImageNotFound
 		},
 	})
@@ -396,12 +396,12 @@ func TestTopologyServiceCreateTemplatePropagatesContextToRepositories(t *testing
 	findImageCalled := false
 	createCalled := false
 	imageRepo := &topologyImageRepoStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
 			findImageCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-image ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Image{ID: id, Name: "ctf/web", Tag: "v1"}, nil
+			return &challengeentity.Image{ID: id, Name: "ctf/web", Tag: "v1"}, nil
 		},
 	}
 	templateRepo := &topologyTemplateRepoStub{
@@ -463,12 +463,12 @@ func TestTopologyServiceUpdateTemplatePropagatesContextToRepositories(t *testing
 		},
 	}
 	imageRepo := &topologyImageRepoStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
 			findImageCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-image ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Image{ID: id, Name: "ctf/web", Tag: "v2"}, nil
+			return &challengeentity.Image{ID: id, Name: "ctf/web", Tag: "v2"}, nil
 		},
 	}
 	service := NewTopologyService(&topologyCommandRepoStub{}, templateRepo, imageRepo)

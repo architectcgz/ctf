@@ -9,9 +9,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -71,12 +71,12 @@ func (s *ImageService) CreateImage(ctx context.Context, req CreateImageInput) (*
 		}
 	}
 
-	image := &model.Image{
+	image := &challengeentity.Image{
 		Name:        req.Name,
 		Tag:         req.Tag,
 		Description: req.Description,
 		Size:        size,
-		Status:      model.ImageStatusAvailable,
+		Status:      challengeentity.ImageStatusAvailable,
 	}
 	if err := s.repo.Create(ctx, image); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)

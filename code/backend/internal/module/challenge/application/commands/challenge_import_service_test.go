@@ -133,13 +133,13 @@ func TestPreviewChallengeImportReturnsPlatformBuildImageDelivery(t *testing.T) {
 	if preview.Runtime.ImageRef != "" {
 		t.Fatalf("expected no author image ref, got %q", preview.Runtime.ImageRef)
 	}
-	if preview.ImageDelivery.SourceType != model.ImageSourceTypePlatformBuild {
-		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, model.ImageSourceTypePlatformBuild)
+	if preview.ImageDelivery.SourceType != challengeentity.ImageSourceTypePlatformBuild {
+		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, challengeentity.ImageSourceTypePlatformBuild)
 	}
 	if preview.ImageDelivery.TargetImageRef != "127.0.0.1:5000/jeopardy/web-platform-build:v1" {
 		t.Fatalf("TargetImageRef = %q", preview.ImageDelivery.TargetImageRef)
 	}
-	if preview.ImageDelivery.BuildStatus != model.ImageStatusPending {
+	if preview.ImageDelivery.BuildStatus != challengeentity.ImageStatusPending {
 		t.Fatalf("BuildStatus = %q, want pending", preview.ImageDelivery.BuildStatus)
 	}
 }
@@ -164,8 +164,8 @@ func TestPreviewChallengeImportWarnsWhenPlatformBuildServiceUnavailable(t *testi
 		t.Fatalf("PreviewChallengeImport() error = %v", err)
 	}
 
-	if preview.ImageDelivery.SourceType != model.ImageSourceTypePlatformBuild {
-		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, model.ImageSourceTypePlatformBuild)
+	if preview.ImageDelivery.SourceType != challengeentity.ImageSourceTypePlatformBuild {
+		t.Fatalf("SourceType = %q, want %q", preview.ImageDelivery.SourceType, challengeentity.ImageSourceTypePlatformBuild)
 	}
 	if preview.ImageDelivery.TargetImageRef != "" {
 		t.Fatalf("expected no target image ref without build service, got %q", preview.ImageDelivery.TargetImageRef)
@@ -235,8 +235,8 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	}
 	if image.Name != "127.0.0.1:5000/jeopardy/web-platform-build" ||
 		image.Tag != "v1" ||
-		image.Status != model.ImageStatusPending ||
-		image.SourceType != model.ImageSourceTypePlatformBuild ||
+		image.Status != challengeentity.ImageStatusPending ||
+		image.SourceType != challengeentity.ImageSourceTypePlatformBuild ||
 		image.BuildJobID == nil {
 		t.Fatalf("unexpected image: %+v", image)
 	}

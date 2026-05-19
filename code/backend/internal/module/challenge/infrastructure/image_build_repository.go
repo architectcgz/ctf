@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
@@ -29,19 +28,19 @@ func NewImageBuildRepository(source imageBuildRepositorySource) *ImageBuildRepos
 	}
 }
 
-func (r *ImageBuildRepository) Create(ctx context.Context, image *model.Image) error {
+func (r *ImageBuildRepository) Create(ctx context.Context, image *challengeentity.Image) error {
 	return r.commands.Create(ctx, image)
 }
 
-func (r *ImageBuildRepository) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+func (r *ImageBuildRepository) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
 	return r.commands.FindByID(ctx, id)
 }
 
-func (r *ImageBuildRepository) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
+func (r *ImageBuildRepository) FindByNameTag(ctx context.Context, name, tag string) (*challengeentity.Image, error) {
 	return r.commands.FindByNameTag(ctx, name, tag)
 }
 
-func (r *ImageBuildRepository) Update(ctx context.Context, image *model.Image) error {
+func (r *ImageBuildRepository) Update(ctx context.Context, image *challengeentity.Image) error {
 	return r.commands.Update(ctx, image)
 }
 

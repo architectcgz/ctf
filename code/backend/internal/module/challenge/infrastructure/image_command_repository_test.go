@@ -7,26 +7,26 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type imageCommandSourceStub struct {
-	findByIDFn      func(context.Context, int64) (*model.Image, error)
-	findByNameTagFn func(context.Context, string, string) (*model.Image, error)
+	findByIDFn      func(context.Context, int64) (*challengeentity.Image, error)
+	findByNameTagFn func(context.Context, string, string) (*challengeentity.Image, error)
 }
 
-func (s imageCommandSourceStub) Create(context.Context, *model.Image) error { return nil }
+func (s imageCommandSourceStub) Create(context.Context, *challengeentity.Image) error { return nil }
 
-func (s imageCommandSourceStub) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+func (s imageCommandSourceStub) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
 	return s.findByIDFn(ctx, id)
 }
 
-func (s imageCommandSourceStub) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
+func (s imageCommandSourceStub) FindByNameTag(ctx context.Context, name, tag string) (*challengeentity.Image, error) {
 	return s.findByNameTagFn(ctx, name, tag)
 }
 
-func (s imageCommandSourceStub) Update(context.Context, *model.Image) error { return nil }
+func (s imageCommandSourceStub) Update(context.Context, *challengeentity.Image) error { return nil }
 
 func (s imageCommandSourceStub) Delete(context.Context, int64) error { return nil }
 
@@ -34,10 +34,10 @@ func TestImageCommandRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewImageCommandRepository(imageCommandSourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Image, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findByNameTagFn: func(context.Context, string, string) (*model.Image, error) {
+		findByNameTagFn: func(context.Context, string, string) (*challengeentity.Image, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -78,10 +78,10 @@ func TestImageCommandRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 
 	expectedErr := errors.New("boom")
 	repo := NewImageCommandRepository(imageCommandSourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Image, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
 			return nil, expectedErr
 		},
-		findByNameTagFn: func(context.Context, string, string) (*model.Image, error) {
+		findByNameTagFn: func(context.Context, string, string) (*challengeentity.Image, error) {
 			return nil, expectedErr
 		},
 	})

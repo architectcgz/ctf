@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -139,11 +140,11 @@ func TestChallengeSelfCheckAttachmentOnlyChallengeSkipsRuntimeStartup(t *testing
 func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	image := &model.Image{
+	image := &challengeentity.Image{
 		Name:   "ctf/web-demo",
 		Tag:    "latest",
 		Digest: "sha256:selfcheck-demo",
-		Status: model.ImageStatusAvailable,
+		Status: challengeentity.ImageStatusAvailable,
 	}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
@@ -202,10 +203,10 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	image := &model.Image{
+	image := &challengeentity.Image{
 		Name:   "ctf/web-broken",
 		Tag:    "latest",
-		Status: model.ImageStatusAvailable,
+		Status: challengeentity.ImageStatusAvailable,
 	}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
@@ -285,10 +286,10 @@ func TestChallengeSelfCheckFailsOnInvalidRegexFlag(t *testing.T) {
 func TestChallengeSelfCheckManualReviewSkipsFlagValidationFailure(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	image := &model.Image{
+	image := &challengeentity.Image{
 		Name:   "ctf/web-manual",
 		Tag:    "latest",
-		Status: model.ImageStatusAvailable,
+		Status: challengeentity.ImageStatusAvailable,
 	}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)

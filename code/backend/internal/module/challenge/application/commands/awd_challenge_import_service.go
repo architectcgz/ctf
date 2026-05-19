@@ -16,7 +16,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -293,7 +292,7 @@ func (s *AWDChallengeImportService) buildAWDChallengeImportPreview(
 	if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && imageBuild != nil {
 		if targetRef, err := imageBuild.BuildPlatformTargetRef(domain.ChallengePackageModeAWD, parsed.Slug, parsed.SuggestedImageTag); err == nil {
 			imageDelivery.TargetImageRef = targetRef
-			imageDelivery.BuildStatus = model.ImageStatusPending
+			imageDelivery.BuildStatus = challengeentity.ImageStatusPending
 		}
 	}
 	warnings := append([]string(nil), parsed.Warnings...)

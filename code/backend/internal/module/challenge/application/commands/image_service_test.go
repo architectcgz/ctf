@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -19,7 +20,7 @@ func TestImageServiceDeleteImageReturnsInUseWhenChallengeReferencesImage(t *test
 	t.Parallel()
 
 	db := testsupport.SetupTestDB(t)
-	image := &model.Image{Name: "web", Tag: "latest", Status: model.ImageStatusAvailable}
+	image := &challengeentity.Image{Name: "web", Tag: "latest", Status: challengeentity.ImageStatusAvailable}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
@@ -48,7 +49,7 @@ func TestImageServiceDeleteImageRemovesUnreferencedImage(t *testing.T) {
 	t.Parallel()
 
 	db := testsupport.SetupTestDB(t)
-	image := &model.Image{Name: "web", Tag: "latest", Status: model.ImageStatusAvailable}
+	image := &challengeentity.Image{Name: "web", Tag: "latest", Status: challengeentity.ImageStatusAvailable}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
@@ -65,7 +66,7 @@ func TestImageServiceDeleteImageRemovesUnreferencedImage(t *testing.T) {
 	}
 
 	var count int64
-	if err := db.Model(&model.Image{}).Where("id = ?", image.ID).Count(&count).Error; err != nil {
+	if err := db.Model(&challengeentity.Image{}).Where("id = ?", image.ID).Count(&count).Error; err != nil {
 		t.Fatalf("count image: %v", err)
 	}
 	if count != 0 {
@@ -77,7 +78,7 @@ func TestImageServiceUpdateImageAllowsClearingDescription(t *testing.T) {
 	t.Parallel()
 
 	db := testsupport.SetupTestDB(t)
-	image := &model.Image{Name: "web", Tag: "latest", Description: "old description", Status: model.ImageStatusAvailable}
+	image := &challengeentity.Image{Name: "web", Tag: "latest", Description: "old description", Status: challengeentity.ImageStatusAvailable}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
@@ -136,7 +137,7 @@ func TestImageServiceCloseCancelsAsyncDelete(t *testing.T) {
 	t.Parallel()
 
 	db := testsupport.SetupTestDB(t)
-	image := &model.Image{Name: "web", Tag: "latest", Status: model.ImageStatusAvailable}
+	image := &challengeentity.Image{Name: "web", Tag: "latest", Status: challengeentity.ImageStatusAvailable}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
@@ -185,10 +186,10 @@ func TestImageServiceCreateImageAllowsModuleNotFoundLookup(t *testing.T) {
 	created := false
 	service := NewImageService(
 		&imageCommandContextRepoStub{
-			findByNameTagFn: func(context.Context, string, string) (*model.Image, error) {
+			findByNameTagFn: func(context.Context, string, string) (*challengeentity.Image, error) {
 				return nil, challengeports.ErrChallengeImageNotFound
 			},
-			createFn: func(ctx context.Context, image *model.Image) error {
+			createFn: func(ctx context.Context, image *challengeentity.Image) error {
 				created = true
 				return nil
 			},
@@ -211,7 +212,7 @@ func TestImageServiceUpdateImageReturnsNotFoundForModuleSentinel(t *testing.T) {
 
 	service := NewImageService(
 		&imageCommandContextRepoStub{
-			findByIDFn: func(context.Context, int64) (*model.Image, error) {
+			findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
 				return nil, challengeports.ErrChallengeImageNotFound
 			},
 		},
@@ -231,7 +232,7 @@ func TestImageServiceDeleteImageReturnsNotFoundForModuleSentinel(t *testing.T) {
 
 	service := NewImageService(
 		&imageCommandContextRepoStub{
-			findByIDFn: func(context.Context, int64) (*model.Image, error) {
+			findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
 				return nil, challengeports.ErrChallengeImageNotFound
 			},
 		},

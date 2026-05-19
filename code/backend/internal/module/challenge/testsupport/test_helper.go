@@ -25,7 +25,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&challengeentity.ChallengePackageRevision{},
 		&challengeentity.AWDChallenge{},
 		&challengeentity.ChallengePublishCheckJob{},
-		&model.Image{},
+		&challengeentity.Image{},
 		&challengeentity.ImageBuildJob{},
 		&instancecontracts.Instance{},
 		&contestcontracts.Submission{},

@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -61,19 +60,19 @@ func (v fakeRegistryVerifier) CheckManifest(ctx context.Context, imageRef string
 
 type imageBuildRepoStub struct{}
 
-func (imageBuildRepoStub) Create(context.Context, *model.Image) error {
+func (imageBuildRepoStub) Create(context.Context, *challengeentity.Image) error {
 	return nil
 }
 
-func (imageBuildRepoStub) FindByID(context.Context, int64) (*model.Image, error) {
+func (imageBuildRepoStub) FindByID(context.Context, int64) (*challengeentity.Image, error) {
 	return nil, nil
 }
 
-func (imageBuildRepoStub) FindByNameTag(context.Context, string, string) (*model.Image, error) {
+func (imageBuildRepoStub) FindByNameTag(context.Context, string, string) (*challengeentity.Image, error) {
 	return nil, nil
 }
 
-func (imageBuildRepoStub) Update(context.Context, *model.Image) error {
+func (imageBuildRepoStub) Update(context.Context, *challengeentity.Image) error {
 	return nil
 }
 
@@ -102,18 +101,18 @@ func (imageBuildRepoStub) UpdateImageBuildJob(context.Context, *challengeentity.
 }
 
 type fakeImageBuildTxStore struct {
-	findByNameTagResult *model.Image
+	findByNameTagResult *challengeentity.Image
 	findByNameTagErr    error
-	createdImage        *model.Image
+	createdImage        *challengeentity.Image
 	createdJob          *challengeentity.ImageBuildJob
-	updatedImage        *model.Image
+	updatedImage        *challengeentity.Image
 }
 
-func (s *fakeImageBuildTxStore) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
+func (s *fakeImageBuildTxStore) FindByNameTag(ctx context.Context, name, tag string) (*challengeentity.Image, error) {
 	return s.findByNameTagResult, s.findByNameTagErr
 }
 
-func (s *fakeImageBuildTxStore) CreateImage(ctx context.Context, image *model.Image) error {
+func (s *fakeImageBuildTxStore) CreateImage(ctx context.Context, image *challengeentity.Image) error {
 	s.createdImage = image
 	image.ID = 41
 	return nil
@@ -125,7 +124,7 @@ func (s *fakeImageBuildTxStore) CreateImageBuildJob(ctx context.Context, job *ch
 	return nil
 }
 
-func (s *fakeImageBuildTxStore) UpdateImage(ctx context.Context, image *model.Image, updates map[string]any) error {
+func (s *fakeImageBuildTxStore) UpdateImage(ctx context.Context, image *challengeentity.Image, updates map[string]any) error {
 	s.updatedImage = image
 	return nil
 }
@@ -184,8 +183,8 @@ func TestImageBuildServiceCreatePlatformBuildJobCreatesPendingImageAndJob(t *tes
 	}
 	if image.Name != "127.0.0.1:5000/jeopardy/web-demo" ||
 		image.Tag != "v1" ||
-		image.Status != model.ImageStatusPending ||
-		image.SourceType != model.ImageSourceTypePlatformBuild ||
+		image.Status != challengeentity.ImageStatusPending ||
+		image.SourceType != challengeentity.ImageSourceTypePlatformBuild ||
 		image.BuildJobID == nil ||
 		*image.BuildJobID != result.JobID {
 		t.Fatalf("unexpected image: %+v", image)
@@ -196,7 +195,7 @@ func TestImageBuildServiceCreatePlatformBuildJobCreatesPendingImageAndJob(t *tes
 		t.Fatalf("FindImageBuildJobByID() error = %v", err)
 	}
 	if job.Status != challengeentity.ImageBuildJobStatusPending ||
-		job.SourceType != model.ImageSourceTypePlatformBuild ||
+		job.SourceType != challengeentity.ImageSourceTypePlatformBuild ||
 		job.TargetRef != result.TargetRef ||
 		job.CreatedBy == nil ||
 		*job.CreatedBy != 1001 {
@@ -207,11 +206,11 @@ func TestImageBuildServiceCreatePlatformBuildJobCreatesPendingImageAndJob(t *tes
 func TestImageBuildServiceCreatePlatformBuildJobReusesExistingImage(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewImageRepository(db)
-	existing := &model.Image{
+	existing := &challengeentity.Image{
 		Name:       "127.0.0.1:5000/jeopardy/web-demo",
 		Tag:        "v1",
-		Status:     model.ImageStatusFailed,
-		SourceType: model.ImageSourceTypePlatformBuild,
+		Status:     challengeentity.ImageStatusFailed,
+		SourceType: challengeentity.ImageSourceTypePlatformBuild,
 		LastError:  "old failure",
 	}
 	if err := repo.Create(context.Background(), existing); err != nil {
@@ -238,7 +237,7 @@ func TestImageBuildServiceCreatePlatformBuildJobReusesExistingImage(t *testing.T
 	if err != nil {
 		t.Fatalf("FindByID(image) error = %v", err)
 	}
-	if image.Status != model.ImageStatusPending || image.LastError != "" || image.BuildJobID == nil {
+	if image.Status != challengeentity.ImageStatusPending || image.LastError != "" || image.BuildJobID == nil {
 		t.Fatalf("expected existing image to be reset for new build, got %+v", image)
 	}
 }
@@ -284,7 +283,7 @@ func TestImageBuildServiceProcessImageBuildJobMarksImageAvailable(t *testing.T) 
 	if err != nil {
 		t.Fatalf("FindByID(image) error = %v", err)
 	}
-	if image.Status != model.ImageStatusAvailable ||
+	if image.Status != challengeentity.ImageStatusAvailable ||
 		image.Digest != "sha256:demo" ||
 		image.Size != 12345 ||
 		image.VerifiedAt == nil {
@@ -374,7 +373,7 @@ func TestImageBuildServiceProcessImageBuildJobMarksFailures(t *testing.T) {
 			if err != nil {
 				t.Fatalf("FindByID(image) error = %v", err)
 			}
-			if image.Status != model.ImageStatusFailed || image.LastError != tc.errorText {
+			if image.Status != challengeentity.ImageStatusFailed || image.LastError != tc.errorText {
 				t.Fatalf("unexpected failed image: %+v", image)
 			}
 		})
@@ -415,8 +414,8 @@ func TestImageBuildServiceVerifyExternalImageRefInTxMarksImageAvailable(t *testi
 	}
 	if image.Name != "registry.example.edu/team/web-demo" ||
 		image.Tag != "v1" ||
-		image.Status != model.ImageStatusAvailable ||
-		image.SourceType != model.ImageSourceTypeExternalRef ||
+		image.Status != challengeentity.ImageStatusAvailable ||
+		image.SourceType != challengeentity.ImageSourceTypeExternalRef ||
 		image.Digest != "sha256:external" ||
 		image.VerifiedAt == nil ||
 		image.BuildJobID != nil {
@@ -458,7 +457,7 @@ func TestImageBuildServiceVerifyExternalImageRefInTxReturnsErrorOnManifestFailur
 	}
 
 	var count int64
-	if err := db.Model(&model.Image{}).Where("name = ?", "registry.example.edu/team/web-demo").Count(&count).Error; err != nil {
+	if err := db.Model(&challengeentity.Image{}).Where("name = ?", "registry.example.edu/team/web-demo").Count(&count).Error; err != nil {
 		t.Fatalf("count images: %v", err)
 	}
 	if count != 0 {

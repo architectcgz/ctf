@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
@@ -21,11 +21,11 @@ func NewImageCommandRepository(source challengeports.ImageCommandRepository) *Im
 	return &ImageCommandRepository{source: source}
 }
 
-func (r *ImageCommandRepository) Create(ctx context.Context, image *model.Image) error {
+func (r *ImageCommandRepository) Create(ctx context.Context, image *challengeentity.Image) error {
 	return r.source.Create(ctx, image)
 }
 
-func (r *ImageCommandRepository) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+func (r *ImageCommandRepository) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
 	image, err := r.source.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengeImageNotFound
@@ -33,7 +33,7 @@ func (r *ImageCommandRepository) FindByID(ctx context.Context, id int64) (*model
 	return image, err
 }
 
-func (r *ImageCommandRepository) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
+func (r *ImageCommandRepository) FindByNameTag(ctx context.Context, name, tag string) (*challengeentity.Image, error) {
 	image, err := r.source.FindByNameTag(ctx, name, tag)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengeImageNotFound
@@ -41,7 +41,7 @@ func (r *ImageCommandRepository) FindByNameTag(ctx context.Context, name, tag st
 	return image, err
 }
 
-func (r *ImageCommandRepository) Update(ctx context.Context, image *model.Image) error {
+func (r *ImageCommandRepository) Update(ctx context.Context, image *challengeentity.Image) error {
 	return r.source.Update(ctx, image)
 }
 

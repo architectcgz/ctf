@@ -115,25 +115,25 @@ func (s *challengeCommandContextRepoStub) UpdatePublishCheckJob(ctx context.Cont
 }
 
 type challengeCommandImageRepoStub struct {
-	findByIDFn func(ctx context.Context, id int64) (*model.Image, error)
+	findByIDFn func(ctx context.Context, id int64) (*challengeentity.Image, error)
 }
 
-func (s *challengeCommandImageRepoStub) Create(ctx context.Context, image *model.Image) error {
+func (s *challengeCommandImageRepoStub) Create(ctx context.Context, image *challengeentity.Image) error {
 	return nil
 }
-func (s *challengeCommandImageRepoStub) FindByID(ctx context.Context, id int64) (*model.Image, error) {
+func (s *challengeCommandImageRepoStub) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
-func (s *challengeCommandImageRepoStub) FindByNameTag(ctx context.Context, name, tag string) (*model.Image, error) {
+func (s *challengeCommandImageRepoStub) FindByNameTag(ctx context.Context, name, tag string) (*challengeentity.Image, error) {
 	return nil, nil
 }
-func (s *challengeCommandImageRepoStub) List(ctx context.Context, name, status string, offset, limit int) ([]*model.Image, int64, error) {
+func (s *challengeCommandImageRepoStub) List(ctx context.Context, name, status string, offset, limit int) ([]*challengeentity.Image, int64, error) {
 	return nil, 0, nil
 }
-func (s *challengeCommandImageRepoStub) Update(ctx context.Context, image *model.Image) error {
+func (s *challengeCommandImageRepoStub) Update(ctx context.Context, image *challengeentity.Image) error {
 	return nil
 }
 func (s *challengeCommandImageRepoStub) Delete(ctx context.Context, id int64) error {
@@ -200,12 +200,12 @@ func TestChallengeServiceCreateChallengePropagatesContextToRepositories(t *testi
 		},
 	}
 	imageRepo := &challengeCommandImageRepoStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
 			imageCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected image find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Image{ID: id, Name: "ctf/web", Tag: "v1"}, nil
+			return &challengeentity.Image{ID: id, Name: "ctf/web", Tag: "v1"}, nil
 		},
 	}
 	service := NewChallengeService(repo, imageRepo, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
@@ -264,12 +264,12 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 		},
 	}
 	imageRepo := &challengeCommandImageRepoStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
 			imageCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected image find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Image{ID: id, Name: "ctf/web", Tag: "v2"}, nil
+			return &challengeentity.Image{ID: id, Name: "ctf/web", Tag: "v2"}, nil
 		},
 	}
 	topologyRepo := &challengeCommandTopologyRepoStub{
@@ -472,12 +472,12 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 		},
 	}
 	imageRepo := &challengeCommandImageRepoStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.Image, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
 			imageCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected image find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Image{ID: id, Name: "ctf/web", Tag: "latest", Status: model.ImageStatusAvailable}, nil
+			return &challengeentity.Image{ID: id, Name: "ctf/web", Tag: "latest", Status: challengeentity.ImageStatusAvailable}, nil
 		},
 	}
 	topologyRepo := &challengeCommandTopologyRepoStub{

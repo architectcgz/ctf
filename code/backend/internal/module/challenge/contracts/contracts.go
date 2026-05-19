@@ -12,7 +12,7 @@ type FlagValidator interface {
 }
 
 type ImageStore interface {
-	FindByID(ctx context.Context, id int64) (*model.Image, error)
+	FindByID(ctx context.Context, id int64) (*challengeentity.Image, error)
 }
 
 type ContestChallengeContract interface {

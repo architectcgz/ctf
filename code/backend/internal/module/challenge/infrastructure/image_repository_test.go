@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"gorm.io/gorm"
@@ -41,7 +40,7 @@ func TestImageRepositoryManagesImageBuildJobs(t *testing.T) {
 	ctx := context.Background()
 
 	job := &challengeentity.ImageBuildJob{
-		SourceType:     model.ImageSourceTypePlatformBuild,
+		SourceType:     challengeentity.ImageSourceTypePlatformBuild,
 		ChallengeMode:  "jeopardy",
 		PackageSlug:    "web-demo",
 		SourceDir:      "/tmp/web-demo",

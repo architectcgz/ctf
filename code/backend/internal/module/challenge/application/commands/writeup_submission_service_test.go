@@ -18,7 +18,7 @@ import (
 func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 	teacher := &identitycontracts.User{
@@ -151,7 +151,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&challengeentity.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 

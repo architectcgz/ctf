@@ -19,7 +19,7 @@ func TestChallengeServiceCreateChallengeTreatsModuleImageNotFoundAsErrNotFound(t
 	service := NewChallengeService(
 		&challengeCommandContextRepoStub{},
 		&challengeCommandImageRepoStub{
-			findByIDFn: func(context.Context, int64) (*model.Image, error) {
+			findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
 				return nil, challengeports.ErrChallengeImageNotFound
 			},
 		},

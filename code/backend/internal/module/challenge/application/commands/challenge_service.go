@@ -915,8 +915,8 @@ func (s *ChallengeService) resolveAvailableImageRef(ctx context.Context, imageID
 		}
 		return "", err
 	}
-	if imageItem.Status != model.ImageStatusAvailable {
+	if imageItem.Status != challengeentity.ImageStatusAvailable {
 		return "", fmt.Errorf("image %d status=%s", imageItem.ID, imageItem.Status)
 	}
-	return model.BuildRuntimeImageRef(imageItem), nil
+	return challengeentity.BuildRuntimeImageRef(imageItem), nil
 }
