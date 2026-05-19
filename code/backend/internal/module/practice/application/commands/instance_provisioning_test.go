@@ -4,12 +4,14 @@ import (
 	"context"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
@@ -48,7 +50,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	if err := db.Create(&model.Challenge{
 		ID:         202,
 		Title:      "Queued Runner",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    102,
@@ -138,7 +140,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 	challenge := &model.Challenge{
 		ID:         205,
 		Title:      "Readiness Failure",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    104,
@@ -324,15 +326,15 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 					PrimaryContainerID: "pwn-ctr",
 					NetworkID:          "pwn-net",
 					AccessURL:          fmt.Sprintf("tcp://%s", listener.Addr().String()),
-					RuntimeDetails: model.InstanceRuntimeDetails{
-						Containers: []model.InstanceRuntimeContainer{
+					RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+						Containers: []runtimecontracts.InstanceRuntimeContainer{
 							{
 								NodeKey:         "default",
 								ContainerID:     "pwn-ctr",
 								ServicePort:     8080,
 								ServiceProtocol: model.ChallengeTargetProtocolTCP,
 								IsEntryPoint:    true,
-								NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+								NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 							},
 						},
 					},
@@ -431,11 +433,11 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 					PrimaryContainerID: "awd-alias-ctr",
 					NetworkID:          "net-awd-contest-7002",
 					AccessURL:          "http://awd-c7002-t7102-s8002:8080",
-					RuntimeDetails: model.InstanceRuntimeDetails{
-						Networks: []model.InstanceRuntimeNetwork{
-							{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7002", NetworkID: "net-awd-contest-7002", Shared: true},
+					RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+						Networks: []runtimecontracts.InstanceRuntimeNetwork{
+							{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7002", NetworkID: "net-awd-contest-7002", Shared: true},
 						},
-						Containers: []model.InstanceRuntimeContainer{
+						Containers: []runtimecontracts.InstanceRuntimeContainer{
 							{NodeKey: "default", ContainerID: "awd-alias-ctr", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c7002-t7102-s8002"}},
 						},
 					},
@@ -579,8 +581,8 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 						PrimaryContainerID: "workspace-ctr",
 						NetworkID:          "net-awd-contest-7003",
 						AccessURL:          "tcp://172.30.0.41:22",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Containers: []model.InstanceRuntimeContainer{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
@@ -590,11 +592,11 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 					PrimaryContainerID: "runtime-ctr",
 					NetworkID:          "net-awd-contest-7003",
 					AccessURL:          "http://host-gateway.internal:30031",
-					RuntimeDetails: model.InstanceRuntimeDetails{
-						Networks: []model.InstanceRuntimeNetwork{
-							{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7003", NetworkID: "net-awd-contest-7003", Shared: true},
+					RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+						Networks: []runtimecontracts.InstanceRuntimeNetwork{
+							{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7003", NetworkID: "net-awd-contest-7003", Shared: true},
 						},
-						Containers: []model.InstanceRuntimeContainer{
+						Containers: []runtimecontracts.InstanceRuntimeContainer{
 							{NodeKey: "default", ContainerID: "runtime-ctr", ServicePort: 8080, HostPort: 30031, IsEntryPoint: true, NetworkAliases: []string{"awd-c7003-t7103-s8003"}},
 						},
 					},
@@ -630,7 +632,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 	if cleanupPayload == nil {
 		t.Fatal("expected cleanup to be triggered")
 	}
-	details, err := model.DecodeInstanceRuntimeDetails(cleanupPayload.RuntimeDetails)
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(cleanupPayload.RuntimeDetails)
 	if err != nil {
 		t.Fatalf("expected cleanup payload to carry runtime details, got %+v err=%v", cleanupPayload, err)
 	}
@@ -735,7 +737,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		if err := db.Create(&model.Challenge{
 			ID:         challengeID,
 			Title:      "Queued Capacity",
-			Category:   model.DimensionWeb,
+			Category:   challengecontracts.DimensionWeb,
 			Difficulty: model.ChallengeDifficultyEasy,
 			Points:     100,
 			ImageID:    103,

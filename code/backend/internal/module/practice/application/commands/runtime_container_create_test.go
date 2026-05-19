@@ -4,11 +4,14 @@ import (
 	"context"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -31,12 +34,12 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 		config:    &config.Config{},
 	}
 
-	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, false, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
-		Nodes: []model.TopologyNode{
+	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, false, &model.Challenge{ImageID: 1}, "web", challengecontracts.TopologySpec{
+		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
-		Policies: []model.TopologyTrafficPolicy{
-			{SourceNodeKey: "web", TargetNodeKey: "web", Action: model.TopologyPolicyActionAllow, Protocol: model.TopologyPolicyProtocolTCP, Ports: []int{8080}},
+		Policies: []challengecontracts.TopologyTrafficPolicy{
+			{SourceNodeKey: "web", TargetNodeKey: "web", Action: challengecontracts.TopologyPolicyActionAllow, Protocol: challengecontracts.TopologyPolicyProtocolTCP, Ports: []int{8080}},
 		},
 	}, "flag{demo}")
 	if err != nil {
@@ -45,7 +48,7 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 	if len(request.Policies) != 1 {
 		t.Fatalf("expected fine-grained policy to be kept, got %+v", request.Policies)
 	}
-	if request.Policies[0].Protocol != model.TopologyPolicyProtocolTCP {
+	if request.Policies[0].Protocol != challengecontracts.TopologyPolicyProtocolTCP {
 		t.Fatalf("unexpected policy protocol: %+v", request.Policies[0])
 	}
 }
@@ -65,8 +68,8 @@ func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testin
 	_, err := service.buildTopologyCreateRequest(context.Background(), 30002, false, &model.Challenge{
 		ImageID:         2,
 		InstanceSharing: model.InstanceSharingShared,
-	}, "web", model.TopologySpec{
-		Nodes: []model.TopologyNode{
+	}, "web", challengecontracts.TopologySpec{
+		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
 	}, "flag{demo}")
@@ -121,17 +124,17 @@ func TestApplyAWDStableNetworkToTopologyRequestSkipsContainerNameForMultiNodeTop
 	packageSlug := "Campus Drive"
 	request := &practiceports.TopologyCreateRequest{
 		Networks: []practiceports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: challengecontracts.TopologyDefaultNetworkKey},
 		},
 		Nodes: []practiceports.TopologyCreateNode{
 			{
 				Key:          "web",
 				IsEntryPoint: true,
-				NetworkKeys:  []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:  []string{challengecontracts.TopologyDefaultNetworkKey},
 			},
 			{
 				Key:         "worker",
-				NetworkKeys: []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys: []string{challengecontracts.TopologyDefaultNetworkKey},
 			},
 		},
 	}
@@ -364,16 +367,16 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 						PrimaryContainerID: "awd-private-ctr",
 						NetworkID:          "net-awd-contest-7001",
 						AccessURL:          "http://awd-c7001-t7101-s8001:8080",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Networks: []model.InstanceRuntimeNetwork{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Networks: []runtimecontracts.InstanceRuntimeNetwork{
 								{
-									Key:       model.TopologyDefaultNetworkKey,
+									Key:       challengecontracts.TopologyDefaultNetworkKey,
 									Name:      "ctf-awd-contest-7001",
 									NetworkID: "net-awd-contest-7001",
 									Shared:    true,
 								},
 							},
-							Containers: []model.InstanceRuntimeContainer{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{
 									NodeKey:        "default",
 									ContainerID:    "awd-private-ctr",
@@ -393,8 +396,8 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 						PrimaryContainerID: "workspace-ctr",
 						NetworkID:          "net-awd-contest-7001",
 						AccessURL:          "tcp://172.30.0.20:22",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Containers: []model.InstanceRuntimeContainer{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
@@ -511,16 +514,16 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 						PrimaryContainerID: "awd-private-ctr",
 						NetworkID:          "net-awd-contest-7011",
 						AccessURL:          "http://host-gateway.internal:30011",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Networks: []model.InstanceRuntimeNetwork{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Networks: []runtimecontracts.InstanceRuntimeNetwork{
 								{
-									Key:       model.TopologyDefaultNetworkKey,
+									Key:       challengecontracts.TopologyDefaultNetworkKey,
 									Name:      "ctf-awd-contest-7011",
 									NetworkID: "net-awd-contest-7011",
 									Shared:    true,
 								},
 							},
-							Containers: []model.InstanceRuntimeContainer{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{
 									NodeKey:        "default",
 									ContainerID:    "awd-private-ctr",
@@ -537,8 +540,8 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 						PrimaryContainerID: "workspace-ctr",
 						NetworkID:          "net-awd-contest-7011",
 						AccessURL:          "tcp://172.30.0.20:22",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Containers: []model.InstanceRuntimeContainer{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
@@ -714,11 +717,11 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 						PrimaryContainerID: "awd-rebound-ctr",
 						NetworkID:          "net-awd-contest-7012",
 						AccessURL:          "http://host-gateway.internal:30012",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Networks: []model.InstanceRuntimeNetwork{
-								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7012", NetworkID: "net-awd-contest-7012", Shared: true},
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Networks: []runtimecontracts.InstanceRuntimeNetwork{
+								{Key: challengecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7012", NetworkID: "net-awd-contest-7012", Shared: true},
 							},
-							Containers: []model.InstanceRuntimeContainer{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "default", ContainerID: "awd-rebound-ctr", ServicePort: 8080, HostPort: 30012, IsEntryPoint: true, NetworkAliases: []string{"awd-c7012-t7112-s8012"}},
 							},
 						},
@@ -863,11 +866,11 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 						PrimaryContainerID: "awd-topology-ctr",
 						NetworkID:          "net-awd-contest-7003",
 						AccessURL:          "http://awd-c7003-t7103-s8003:8080",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Networks: []model.InstanceRuntimeNetwork{
-								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7003", NetworkID: "net-awd-contest-7003", Shared: true},
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Networks: []runtimecontracts.InstanceRuntimeNetwork{
+								{Key: challengecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7003", NetworkID: "net-awd-contest-7003", Shared: true},
 							},
-							Containers: []model.InstanceRuntimeContainer{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "web", ContainerID: "awd-topology-ctr", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c7003-t7103-s8003"}},
 							},
 						},
@@ -877,8 +880,8 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 						PrimaryContainerID: "workspace-ctr",
 						NetworkID:          "net-awd-contest-7003",
 						AccessURL:          "tcp://172.30.0.21:22",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Containers: []model.InstanceRuntimeContainer{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
@@ -905,8 +908,8 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 		ImageID:  503,
 		FlagType: model.FlagTypeStatic,
 	}
-	topology, err := model.EncodeTopologySpec(model.TopologySpec{
-		Nodes: []model.TopologyNode{
+	topology, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{
+		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
 	})
@@ -914,7 +917,7 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 		t.Fatalf("encode topology: %v", err)
 	}
 
-	if err := service.createContainer(context.Background(), instance, challenge, &model.ChallengeTopology{
+	if err := service.createContainer(context.Background(), instance, challenge, &practiceports.RuntimeChallengeTopology{
 		ChallengeID:  503,
 		EntryNodeKey: "web",
 		Spec:         topology,
@@ -1000,11 +1003,11 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 						PrimaryContainerID: "awd-topology-ctr",
 						NetworkID:          "net-awd-contest-7013",
 						AccessURL:          "http://host-gateway.internal:30013",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Networks: []model.InstanceRuntimeNetwork{
-								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7013", NetworkID: "net-awd-contest-7013", Shared: true},
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Networks: []runtimecontracts.InstanceRuntimeNetwork{
+								{Key: challengecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7013", NetworkID: "net-awd-contest-7013", Shared: true},
 							},
-							Containers: []model.InstanceRuntimeContainer{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "web", ContainerID: "awd-topology-ctr", ServicePort: 8080, HostPort: 30013, IsEntryPoint: true, NetworkAliases: []string{"awd-c7013-t7113-s8013"}},
 							},
 						},
@@ -1014,8 +1017,8 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 						PrimaryContainerID: "workspace-ctr",
 						NetworkID:          "net-awd-contest-7013",
 						AccessURL:          "tcp://172.30.0.21:22",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Containers: []model.InstanceRuntimeContainer{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
@@ -1047,8 +1050,8 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 		ImageID:  513,
 		FlagType: model.FlagTypeStatic,
 	}
-	topology, err := model.EncodeTopologySpec(model.TopologySpec{
-		Nodes: []model.TopologyNode{
+	topology, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{
+		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
 	})
@@ -1056,7 +1059,7 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 		t.Fatalf("encode topology: %v", err)
 	}
 
-	if err := service.createContainer(context.Background(), instance, challenge, &model.ChallengeTopology{
+	if err := service.createContainer(context.Background(), instance, challenge, &practiceports.RuntimeChallengeTopology{
 		ChallengeID:  513,
 		EntryNodeKey: "web",
 		Spec:         topology,
@@ -1205,11 +1208,11 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 						PrimaryContainerID: "runtime-ctr",
 						NetworkID:          "net-awd-contest-7601",
 						AccessURL:          "http://awd-c7601-t7701-s7801:8080",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Networks: []model.InstanceRuntimeNetwork{
-								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7601", NetworkID: "net-awd-contest-7601", Shared: true},
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Networks: []runtimecontracts.InstanceRuntimeNetwork{
+								{Key: challengecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-7601", NetworkID: "net-awd-contest-7601", Shared: true},
 							},
-							Containers: []model.InstanceRuntimeContainer{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "default", ContainerID: "runtime-ctr", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c7601-t7701-s7801"}},
 							},
 						},
@@ -1238,8 +1241,8 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 						PrimaryContainerID: "workspace-ctr",
 						NetworkID:          "net-awd-contest-7601",
 						AccessURL:          "tcp://172.30.0.40:22",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Containers: []model.InstanceRuntimeContainer{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
@@ -1304,7 +1307,7 @@ func TestLoadRuntimeSubjectWithScopePropagatesContextToChallengeContract(t *test
 			}
 			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
 		},
-		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 			topologyLookupCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected topology lookup ctx value %v, got %v", expectedCtxValue, got)
@@ -1362,8 +1365,8 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	}
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	request, err := service.buildTopologyCreateRequest(ctx, 30001, false, &model.Challenge{ImageID: 1}, "web", model.TopologySpec{
-		Nodes: []model.TopologyNode{
+	request, err := service.buildTopologyCreateRequest(ctx, 30001, false, &model.Challenge{ImageID: 1}, "web", challengecontracts.TopologySpec{
+		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", Name: "Web", ServicePort: 8080},
 			{Key: "worker", Name: "Worker", ImageID: 2, ServicePort: 9000},
 		},

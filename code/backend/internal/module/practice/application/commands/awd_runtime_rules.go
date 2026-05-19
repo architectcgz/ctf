@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
@@ -63,7 +64,7 @@ func applyAWDStableNetworkToTopologyRequest(instance *instancecontracts.Instance
 		return
 	}
 
-	networkKey := model.TopologyDefaultNetworkKey
+	networkKey := challengecontracts.TopologyDefaultNetworkKey
 	if len(request.Nodes[entryIndex].NetworkKeys) > 0 && strings.TrimSpace(request.Nodes[entryIndex].NetworkKeys[0]) != "" {
 		networkKey = request.Nodes[entryIndex].NetworkKeys[0]
 	} else {

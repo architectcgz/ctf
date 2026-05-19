@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -42,7 +43,7 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *instancecont
 	}
 }
 
-func (s *Service) provisionInstance(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge, topology *model.ChallengeTopology, flag string) error {
+func (s *Service) provisionInstance(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
 	createCtx, cancel := context.WithTimeout(ctx, s.config.Container.CreateTimeout)
 	defer cancel()
 

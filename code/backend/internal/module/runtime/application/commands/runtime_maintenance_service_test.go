@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -301,8 +301,8 @@ func TestRuntimeMaintenanceServiceRestartsExitedTopologyContainerBeforeRequeue(t
 	contestID := int64(9001)
 	teamID := int64(9101)
 	serviceID := int64(9201)
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Containers: []model.InstanceRuntimeContainer{
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{ContainerID: "entry", IsEntryPoint: true},
 			{ContainerID: "sidecar"},
 		},

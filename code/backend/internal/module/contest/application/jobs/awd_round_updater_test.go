@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
@@ -970,15 +971,15 @@ func TestAWDRoundUpdaterHTTPStandardKeepsAWDAliasHostWhenDialingRuntimeIP(t *tes
 		t.Fatalf("parse server url: %v", err)
 	}
 	aliasAccessURL := "http://awd-c142-t142011-s142001:" + parsedURL.Port()
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Networks: []model.InstanceRuntimeNetwork{
-			{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-142", Shared: true},
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Networks: []runtimecontracts.InstanceRuntimeNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-142", Shared: true},
 		},
-		Containers: []model.InstanceRuntimeContainer{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{
 				ContainerID:    "ctr-http-alias",
 				IsEntryPoint:   true,
-				NetworkKeys:    []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:    []string{runtimecontracts.TopologyDefaultNetworkKey},
 				NetworkAliases: []string{"awd-c142-t142011-s142001"},
 				NetworkIPs:     map[string]string{"ctf-awd-contest-142": "127.0.0.1"},
 			},

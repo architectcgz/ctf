@@ -32,6 +32,7 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
@@ -77,7 +78,7 @@ type fakeContestPreviewRuntimeProbe struct {
 	lastEnv       map[string]string
 
 	containerAccessURL string
-	containerDetails   model.InstanceRuntimeDetails
+	containerDetails   runtimecontracts.InstanceRuntimeDetails
 	containerErr       error
 	cleanupErr         error
 }
@@ -86,17 +87,17 @@ func (f *fakeContestPreviewRuntimeProbe) CreateTopology(_ context.Context, _ *ch
 	return nil, errors.New("unexpected CreateTopology call")
 }
 
-func (f *fakeContestPreviewRuntimeProbe) CreateContainer(_ context.Context, imageName string, env map[string]string) (string, model.InstanceRuntimeDetails, error) {
+func (f *fakeContestPreviewRuntimeProbe) CreateContainer(_ context.Context, imageName string, env map[string]string) (string, runtimecontracts.InstanceRuntimeDetails, error) {
 	f.createContainerCalled = true
 	f.lastImageName = imageName
 	f.lastEnv = env
 	if f.containerErr != nil {
-		return "", model.InstanceRuntimeDetails{}, f.containerErr
+		return "", runtimecontracts.InstanceRuntimeDetails{}, f.containerErr
 	}
 	return f.containerAccessURL, f.containerDetails, nil
 }
 
-func (f *fakeContestPreviewRuntimeProbe) CleanupRuntimeDetails(_ context.Context, details model.InstanceRuntimeDetails) error {
+func (f *fakeContestPreviewRuntimeProbe) CleanupRuntimeDetails(_ context.Context, details runtimecontracts.InstanceRuntimeDetails) error {
 	f.cleanupCalled = true
 	if f.cleanupErr != nil {
 		return f.cleanupErr
@@ -1544,8 +1545,8 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 
 	runtimeProbe := &fakeContestPreviewRuntimeProbe{
 		containerAccessURL: server.URL,
-		containerDetails: model.InstanceRuntimeDetails{
-			Containers: []model.InstanceRuntimeContainer{{ContainerID: "preview-container"}},
+		containerDetails: runtimecontracts.InstanceRuntimeDetails{
+			Containers: []runtimecontracts.InstanceRuntimeContainer{{ContainerID: "preview-container"}},
 		},
 	}
 	awdRepo := newAWDCommandRepositoryForTest(db)
@@ -2201,7 +2202,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 
 	if err := db.Model(&model.Challenge{}).Where("id = ?", 1401).Updates(map[string]any{
 		"flag_prefix": "awd",
-		"category":    model.DimensionWeb,
+		"category":    challengecontracts.DimensionWeb,
 	}).Error; err != nil {
 		t.Fatalf("update challenge fields: %v", err)
 	}
@@ -2250,7 +2251,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 
 	select {
 	case evt := <-received:
-		if evt.UserID != 14001 || evt.AWDChallengeID != 1401 || evt.Dimension != model.DimensionWeb {
+		if evt.UserID != 14001 || evt.AWDChallengeID != 1401 || evt.Dimension != challengecontracts.DimensionWeb {
 			t.Fatalf("unexpected event payload: %+v", evt)
 		}
 	case <-time.After(time.Second):

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestExtractManagedResourcesPrefersRuntimeDetails(t *testing.T) {
@@ -127,13 +127,13 @@ func TestRemainingHelpersClampAtZero(t *testing.T) {
 func TestResolveTopologyACLRulesGeneratesAllowAndFallbackDeny(t *testing.T) {
 	t.Parallel()
 
-	details := model.InstanceRuntimeDetails{
-		Networks: []model.InstanceRuntimeNetwork{
-			{Key: model.TopologyDefaultNetworkKey, Name: "runtime-net"},
+	details := runtimecontracts.InstanceRuntimeDetails{
+		Networks: []runtimecontracts.InstanceRuntimeNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "runtime-net"},
 		},
-		Containers: []model.InstanceRuntimeContainer{
-			{NodeKey: "web", ContainerID: "web-ctr", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
-			{NodeKey: "db", ContainerID: "db-ctr", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
+			{NodeKey: "web", ContainerID: "web-ctr", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+			{NodeKey: "db", ContainerID: "db-ctr", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	}
 	ipsByContainerID := map[string]map[string]string{
@@ -141,12 +141,12 @@ func TestResolveTopologyACLRulesGeneratesAllowAndFallbackDeny(t *testing.T) {
 		"db-ctr":  {"runtime-net": "172.30.0.3"},
 	}
 
-	rules, err := ResolveTopologyACLRules([]model.TopologyTrafficPolicy{
+	rules, err := ResolveTopologyACLRules([]runtimecontracts.TopologyTrafficPolicy{
 		{
 			SourceNodeKey: "web",
 			TargetNodeKey: "db",
-			Action:        model.TopologyPolicyActionAllow,
-			Protocol:      model.TopologyPolicyProtocolTCP,
+			Action:        runtimecontracts.TopologyPolicyActionAllow,
+			Protocol:      runtimecontracts.TopologyPolicyProtocolTCP,
 			Ports:         []int{3306},
 		},
 	}, details, ipsByContainerID)
@@ -156,10 +156,10 @@ func TestResolveTopologyACLRulesGeneratesAllowAndFallbackDeny(t *testing.T) {
 	if len(rules) != 2 {
 		t.Fatalf("expected 2 acl rules, got %+v", rules)
 	}
-	if rules[0].Action != model.TopologyPolicyActionAllow || rules[0].Protocol != model.TopologyPolicyProtocolTCP {
+	if rules[0].Action != runtimecontracts.TopologyPolicyActionAllow || rules[0].Protocol != runtimecontracts.TopologyPolicyProtocolTCP {
 		t.Fatalf("unexpected allow rule: %+v", rules[0])
 	}
-	if rules[1].Action != model.TopologyPolicyActionDeny || rules[1].Protocol != model.TopologyPolicyProtocolAny {
+	if rules[1].Action != runtimecontracts.TopologyPolicyActionDeny || rules[1].Protocol != runtimecontracts.TopologyPolicyProtocolAny {
 		t.Fatalf("unexpected fallback deny rule: %+v", rules[1])
 	}
 }
@@ -167,12 +167,12 @@ func TestResolveTopologyACLRulesGeneratesAllowAndFallbackDeny(t *testing.T) {
 func TestResolveTopologyACLRulesRejectsAllowWithoutSharedRuntimeNetwork(t *testing.T) {
 	t.Parallel()
 
-	details := model.InstanceRuntimeDetails{
-		Networks: []model.InstanceRuntimeNetwork{
+	details := runtimecontracts.InstanceRuntimeDetails{
+		Networks: []runtimecontracts.InstanceRuntimeNetwork{
 			{Key: "web-net", Name: "web-net"},
 			{Key: "db-net", Name: "db-net"},
 		},
-		Containers: []model.InstanceRuntimeContainer{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{NodeKey: "web", ContainerID: "web-ctr", NetworkKeys: []string{"web-net"}},
 			{NodeKey: "db", ContainerID: "db-ctr", NetworkKeys: []string{"db-net"}},
 		},
@@ -182,12 +182,12 @@ func TestResolveTopologyACLRulesRejectsAllowWithoutSharedRuntimeNetwork(t *testi
 		"db-ctr":  {"db-net": "172.30.0.3"},
 	}
 
-	_, err := ResolveTopologyACLRules([]model.TopologyTrafficPolicy{
+	_, err := ResolveTopologyACLRules([]runtimecontracts.TopologyTrafficPolicy{
 		{
 			SourceNodeKey: "web",
 			TargetNodeKey: "db",
-			Action:        model.TopologyPolicyActionAllow,
-			Protocol:      model.TopologyPolicyProtocolTCP,
+			Action:        runtimecontracts.TopologyPolicyActionAllow,
+			Protocol:      runtimecontracts.TopologyPolicyProtocolTCP,
 			Ports:         []int{3306},
 		},
 	}, details, ipsByContainerID)

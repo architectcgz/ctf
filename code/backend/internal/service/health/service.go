@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 )
 
 type Service interface {
@@ -17,8 +16,16 @@ type Service interface {
 	CheckRedis(ctx context.Context) error
 }
 
+type HealthStatus struct {
+	Status       string            `json:"status"`
+	Service      string            `json:"service"`
+	Environment  string            `json:"environment"`
+	Dependencies map[string]string `json:"dependencies"`
+	Version      string            `json:"version"`
+}
+
 type Status struct {
-	HealthStatus model.HealthStatus
+	HealthStatus HealthStatus
 	healthy      bool
 }
 
@@ -58,7 +65,7 @@ func (s *service) Check(ctx context.Context) *Status {
 	}
 
 	return &Status{
-		HealthStatus: model.HealthStatus{
+		HealthStatus: HealthStatus{
 			Status:       status,
 			Service:      s.cfg.App.Name,
 			Environment:  s.cfg.App.Env,

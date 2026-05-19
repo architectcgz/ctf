@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -20,7 +20,7 @@ type runtimePairPolicy struct {
 }
 
 // BuildRuntimeTopologyPlan 将逻辑拓扑转换成容器运行时可执行的网络计划。
-func BuildRuntimeTopologyPlan(spec model.TopologySpec) *RuntimeTopologyPlan {
+func BuildRuntimeTopologyPlan(spec challengecontracts.TopologySpec) *RuntimeTopologyPlan {
 	logicalNetworks := normalizeLogicalTopologyNetworks(spec.Networks)
 	nodeOrder := make(map[string]int, len(spec.Nodes))
 	nodeNetworkMembership := make(map[string][]string, len(spec.Nodes))
@@ -114,31 +114,31 @@ func BuildRuntimeTopologyPlan(spec model.TopologySpec) *RuntimeTopologyPlan {
 	return plan
 }
 
-func normalizeLogicalTopologyNetworks(networks []model.TopologyNetwork) []model.TopologyNetwork {
+func normalizeLogicalTopologyNetworks(networks []challengecontracts.TopologyNetwork) []challengecontracts.TopologyNetwork {
 	if len(networks) > 0 {
 		return networks
 	}
-	return []model.TopologyNetwork{
+	return []challengecontracts.TopologyNetwork{
 		{
-			Key: model.TopologyDefaultNetworkKey,
+			Key: challengecontracts.TopologyDefaultNetworkKey,
 		},
 	}
 }
 
-func indexRuntimeConnectivityPolicies(policies []model.TopologyTrafficPolicy) map[string]runtimePairPolicy {
+func indexRuntimeConnectivityPolicies(policies []challengecontracts.TopologyTrafficPolicy) map[string]runtimePairPolicy {
 	index := make(map[string]runtimePairPolicy, len(policies))
 	for _, policy := range policies {
 		pairKey := unorderedNodePairKey(policy.SourceNodeKey, policy.TargetNodeKey)
 		rule := index[pairKey]
-		isBroad := model.IsBroadTopologyPolicy(policy)
+		isBroad := challengecontracts.IsBroadTopologyPolicy(policy)
 		switch policy.Action {
-		case model.TopologyPolicyActionAllow:
+		case challengecontracts.TopologyPolicyActionAllow:
 			if isBroad {
 				rule.hasBroadAllow = true
 			} else {
 				rule.hasFineAllow = true
 			}
-		case model.TopologyPolicyActionDeny:
+		case challengecontracts.TopologyPolicyActionDeny:
 			if isBroad {
 				rule.hasBroadDeny = true
 			}

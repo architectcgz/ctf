@@ -11,6 +11,7 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
@@ -37,7 +38,7 @@ func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 	}
 	if err := db.Create(&model.Challenge{
 		ID:        11,
-		Category:  model.DimensionWeb,
+		Category:  challengecontracts.DimensionWeb,
 		Points:    100,
 		Status:    model.ChallengeStatusPublished,
 		FlagType:  model.FlagTypeStatic,
@@ -114,7 +115,7 @@ func TestSubmitFlagRejectsTooFrequentAttempts(t *testing.T) {
 	}
 	if err := db.Create(&model.Challenge{
 		ID:        12,
-		Category:  model.DimensionWeb,
+		Category:  challengecontracts.DimensionWeb,
 		Points:    50,
 		Status:    model.ChallengeStatusPublished,
 		FlagType:  model.FlagTypeStatic,

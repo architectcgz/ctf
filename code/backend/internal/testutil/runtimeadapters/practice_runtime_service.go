@@ -4,9 +4,9 @@ import (
 	"context"
 	"reflect"
 
-	"ctf-platform/internal/model"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -51,7 +51,7 @@ func (a *PracticeRuntimeService) CreateTopology(ctx context.Context, req *practi
 	result, err := a.provisioner.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
 		Networks:                   toRuntimeTopologyNetworks(req.Networks),
 		Nodes:                      toRuntimeTopologyNodes(req.Nodes),
-		Policies:                   append([]model.TopologyTrafficPolicy(nil), req.Policies...),
+		Policies:                   append([]runtimecontracts.TopologyTrafficPolicy(nil), req.Policies...),
 		ReservedHostPort:           req.ReservedHostPort,
 		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
 	})
@@ -128,11 +128,11 @@ func cloneStringMap(input map[string]string) map[string]string {
 	return output
 }
 
-func cloneResourceLimits(input *model.ResourceLimits) *model.ResourceLimits {
+func cloneResourceLimits(input *runtimecontracts.ResourceLimits) *runtimecontracts.ResourceLimits {
 	if input == nil {
 		return nil
 	}
-	return &model.ResourceLimits{
+	return &runtimecontracts.ResourceLimits{
 		CPUQuota:  input.CPUQuota,
 		Memory:    input.Memory,
 		PidsLimit: input.PidsLimit,

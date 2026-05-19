@@ -180,7 +180,7 @@ func (s *testChallengeImportTxStore) CreateImportedPackageRevision(ctx context.C
 	return s.rawRepo.CreateChallengePackageRevision(ctx, revision)
 }
 
-func (s *testChallengeImportTxStore) UpsertImportedTopology(ctx context.Context, topology *model.ChallengeTopology) error {
+func (s *testChallengeImportTxStore) UpsertImportedTopology(ctx context.Context, topology *challengeentity.ChallengeTopology) error {
 	return s.rawRepo.UpsertChallengeTopology(ctx, topology)
 }
 
@@ -395,7 +395,7 @@ func (s *testChallengePackageExportTxStore) FindChallenge(ctx context.Context, c
 	return s.challengeRepo.FindByID(ctx, challengeID)
 }
 
-func (s *testChallengePackageExportTxStore) FindTopology(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+func (s *testChallengePackageExportTxStore) FindTopology(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 	return s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 }
 
@@ -460,12 +460,12 @@ func (s *testChallengePackageExportTxStore) MarkTopologyExported(
 	updatedAt time.Time,
 ) error {
 	return s.rawRepo.DB(ctx).
-		Model(&model.ChallengeTopology{}).
+		Model(&challengeentity.ChallengeTopology{}).
 		Where("id = ?", topologyID).
 		Updates(map[string]any{
 			"package_revision_id":     revisionID,
 			"package_baseline_spec":   baselineSpec,
-			"sync_status":             model.ChallengeTopologySyncStatusClean,
+			"sync_status":             challengeentity.ChallengeTopologySyncStatusClean,
 			"last_export_revision_id": revisionID,
 			"updated_at":              updatedAt,
 		}).Error

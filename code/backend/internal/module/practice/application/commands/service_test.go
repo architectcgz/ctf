@@ -5,12 +5,14 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/platform/events"
@@ -191,7 +193,7 @@ func TestCreateAWDDefenseWorkspaceCompanionInitializesGitReposForWritableMounts(
 	}, &awdDefenseWorkspacePlan{
 		workspaceRevision:      2,
 		workspaceContainerName: "ctf-workspace-custom",
-		workspaceMounts: []model.ContainerMount{
+		workspaceMounts: []runtimecontracts.ContainerMount{
 			{Source: "ws-app", Target: "/workspace/app"},
 			{Source: "ws-templates", Target: "/workspace/templates"},
 			{Source: "ws-data", Target: "/workspace/data", ReadOnly: true},
@@ -239,7 +241,7 @@ func TestContestAWDServiceRuntimeSubjectMapsWorkspaceRootsOutsideWritableSetAsRe
 }
 
 func TestBuildAWDDefenseWorkspaceBootstrapCommandDegradesGracefullyWithoutPackageInstall(t *testing.T) {
-	command := buildAWDDefenseWorkspaceBootstrapCommand([]model.ContainerMount{
+	command := buildAWDDefenseWorkspaceBootstrapCommand([]runtimecontracts.ContainerMount{
 		{Target: "/workspace/src"},
 		{Target: "/workspace/data", ReadOnly: true},
 	})
@@ -333,7 +335,7 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 		runtimeService: &stubPracticeRuntimeService{
 			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 				cleanupCalls++
-				details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+				details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
 				if err != nil {
 					t.Fatalf("decode cleanup runtime details: %v", err)
 				}
@@ -353,16 +355,16 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 						PrimaryContainerID: "awd-private-ctr",
 						NetworkID:          "net-awd-contest-801",
 						AccessURL:          "http://awd-c801-t802-s803:8080",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Networks: []model.InstanceRuntimeNetwork{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Networks: []runtimecontracts.InstanceRuntimeNetwork{
 								{
-									Key:       model.TopologyDefaultNetworkKey,
+									Key:       runtimecontracts.TopologyDefaultNetworkKey,
 									Name:      "ctf-awd-contest-801",
 									NetworkID: "net-awd-contest-801",
 									Shared:    true,
 								},
 							},
-							Containers: []model.InstanceRuntimeContainer{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{
 									NodeKey:        "default",
 									ContainerID:    "awd-private-ctr",
@@ -499,16 +501,16 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 					PrimaryContainerID: "awd-private-ctr",
 					NetworkID:          "net-awd-contest-811",
 					AccessURL:          "http://awd-c811-t812-s813:8080",
-					RuntimeDetails: model.InstanceRuntimeDetails{
-						Networks: []model.InstanceRuntimeNetwork{
+					RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+						Networks: []runtimecontracts.InstanceRuntimeNetwork{
 							{
-								Key:       model.TopologyDefaultNetworkKey,
+								Key:       runtimecontracts.TopologyDefaultNetworkKey,
 								Name:      "ctf-awd-contest-811",
 								NetworkID: "net-awd-contest-811",
 								Shared:    true,
 							},
 						},
-						Containers: []model.InstanceRuntimeContainer{
+						Containers: []runtimecontracts.InstanceRuntimeContainer{
 							{
 								NodeKey:        "default",
 								ContainerID:    "awd-private-ctr",
@@ -667,7 +669,7 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&model.Image{},
 		&model.Challenge{},
-		&model.ChallengeTopology{},
+		&challengeentity.ChallengeTopology{},
 		&contestentity.Contest{},
 		&contestentity.ContestAWDService{},
 		&contestentity.ContestRegistration{},
@@ -747,7 +749,7 @@ func (s *stubScoreUpdater) lockTimeout() time.Duration {
 
 type stubPracticeChallengeContract struct {
 	findByIDWithContextFn                func(ctx context.Context, id int64) (*model.Challenge, error)
-	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
 }
 
 func (s *stubPracticeChallengeContract) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
@@ -757,7 +759,7 @@ func (s *stubPracticeChallengeContract) FindByID(ctx context.Context, id int64) 
 	return nil, nil
 }
 
-func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 	if s.findChallengeTopologyByChallengeIDFn != nil {
 		return s.findChallengeTopologyByChallengeIDFn(ctx, challengeID)
 	}

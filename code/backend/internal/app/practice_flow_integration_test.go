@@ -34,6 +34,7 @@ import (
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeruntime "ctf-platform/internal/module/challenge/runtime"
@@ -251,7 +252,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		map[string]any{
 			"title":          "Web SQLi 101",
 			"description":    "basic sql injection challenge",
-			"category":       model.DimensionWeb,
+			"category":       challengecontracts.DimensionWeb,
 			"difficulty":     model.ChallengeDifficultyEasy,
 			"points":         100,
 			"image_id":       env.image.ID,
@@ -733,7 +734,7 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 		map[string]any{
 			"title":       "Draft Crypto",
 			"description": "not published yet",
-			"category":    model.DimensionCrypto,
+			"category":    challengecontracts.DimensionCrypto,
 			"difficulty":  model.ChallengeDifficultyMedium,
 			"points":      150,
 			"image_id":    env.image.ID,
@@ -848,10 +849,10 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.Challenge{},
 		&challengeentity.ChallengePublishCheckJob{},
 		&challengeentity.ChallengeHint{},
-		&model.ChallengeWriteup{},
-		&model.ChallengeTopology{},
+		&challengeentity.ChallengeWriteup{},
+		&challengeentity.ChallengeTopology{},
 		&challengeentity.ChallengePackageRevision{},
-		&model.EnvironmentTemplate{},
+		&challengeentity.EnvironmentTemplate{},
 		&contestcontracts.ContestAWDService{},
 		&contestcontracts.Submission{},
 		&instancecontracts.Instance{},

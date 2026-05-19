@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
@@ -14,8 +15,8 @@ import (
 
 type stubChallengeTopologyRepository struct {
 	findByIDWithContextFn                  func(ctx context.Context, id int64) (*model.Challenge, error)
-	findChallengeTopologyByChallengeIDFn   func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
-	upsertChallengeTopologyFn              func(ctx context.Context, topology *model.ChallengeTopology) error
+	findChallengeTopologyByChallengeIDFn   func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
+	upsertChallengeTopologyFn              func(ctx context.Context, topology *challengeentity.ChallengeTopology) error
 	deleteChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) error
 }
 
@@ -26,14 +27,14 @@ func (s *stubChallengeTopologyRepository) FindByID(ctx context.Context, id int64
 	return nil, nil
 }
 
-func (s *stubChallengeTopologyRepository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+func (s *stubChallengeTopologyRepository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 	if s.findChallengeTopologyByChallengeIDFn != nil {
 		return s.findChallengeTopologyByChallengeIDFn(ctx, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengeTopologyRepository) UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error {
+func (s *stubChallengeTopologyRepository) UpsertChallengeTopology(ctx context.Context, topology *challengeentity.ChallengeTopology) error {
 	if s.upsertChallengeTopologyFn != nil {
 		return s.upsertChallengeTopologyFn(ctx, topology)
 	}
@@ -48,22 +49,22 @@ func (s *stubChallengeTopologyRepository) DeleteChallengeTopologyByChallengeID(c
 }
 
 type stubEnvironmentTemplateRepository struct {
-	createFn         func(ctx context.Context, template *model.EnvironmentTemplate) error
-	updateFn         func(ctx context.Context, template *model.EnvironmentTemplate) error
+	createFn         func(ctx context.Context, template *challengeentity.EnvironmentTemplate) error
+	updateFn         func(ctx context.Context, template *challengeentity.EnvironmentTemplate) error
 	deleteFn         func(ctx context.Context, id int64) error
-	findByIDFn       func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
-	listFn           func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
+	findByIDFn       func(ctx context.Context, id int64) (*challengeentity.EnvironmentTemplate, error)
+	listFn           func(ctx context.Context, keyword string) ([]*challengeentity.EnvironmentTemplate, error)
 	incrementUsageFn func(ctx context.Context, id int64) error
 }
 
-func (s *stubEnvironmentTemplateRepository) Create(ctx context.Context, template *model.EnvironmentTemplate) error {
+func (s *stubEnvironmentTemplateRepository) Create(ctx context.Context, template *challengeentity.EnvironmentTemplate) error {
 	if s.createFn != nil {
 		return s.createFn(ctx, template)
 	}
 	return nil
 }
 
-func (s *stubEnvironmentTemplateRepository) Update(ctx context.Context, template *model.EnvironmentTemplate) error {
+func (s *stubEnvironmentTemplateRepository) Update(ctx context.Context, template *challengeentity.EnvironmentTemplate) error {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, template)
 	}
@@ -77,14 +78,14 @@ func (s *stubEnvironmentTemplateRepository) Delete(ctx context.Context, id int64
 	return nil
 }
 
-func (s *stubEnvironmentTemplateRepository) FindByID(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
+func (s *stubEnvironmentTemplateRepository) FindByID(ctx context.Context, id int64) (*challengeentity.EnvironmentTemplate, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *stubEnvironmentTemplateRepository) List(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
+func (s *stubEnvironmentTemplateRepository) List(ctx context.Context, keyword string) ([]*challengeentity.EnvironmentTemplate, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, keyword)
 	}
@@ -142,8 +143,8 @@ func TestTopologyServiceGetChallengeTopologyWithContextPropagatesContextToReposi
 	expectedCtxValue := "ctx-topology"
 	findChallengeCalled := false
 	findTopologyCalled := false
-	spec, err := json.Marshal(model.TopologySpec{
-		Nodes: []model.TopologyNode{{Key: "web", Name: "Web", ServicePort: 8080}},
+	spec, err := json.Marshal(challengecontracts.TopologySpec{
+		Nodes: []challengecontracts.TopologyNode{{Key: "web", Name: "Web", ServicePort: 8080}},
 	})
 	if err != nil {
 		t.Fatalf("marshal topology spec: %v", err)
@@ -156,12 +157,12 @@ func TestTopologyServiceGetChallengeTopologyWithContextPropagatesContextToReposi
 			}
 			return &model.Challenge{ID: id}, nil
 		},
-		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 			findTopologyCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-topology ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.ChallengeTopology{ChallengeID: challengeID, EntryNodeKey: "web", Spec: string(spec)}, nil
+			return &challengeentity.ChallengeTopology{ChallengeID: challengeID, EntryNodeKey: "web", Spec: string(spec)}, nil
 		},
 	}
 	service := NewTopologyService(repo, nil)
@@ -204,7 +205,7 @@ func TestTopologyServiceGetChallengeTopologyTreatsTopologyNotFoundAsNotFound(t *
 		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
 			return &model.Challenge{ID: 9}, nil
 		},
-		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
 			return nil, challengeports.ErrChallengeTopologyNotFound
 		},
 	}, nil)
@@ -221,8 +222,8 @@ func TestTopologyServiceGetChallengeTopologyTreatsTopologyNotFoundAsNotFound(t *
 func TestTopologyServiceGetChallengeTopologyIgnoresMissingPackageRevision(t *testing.T) {
 	t.Parallel()
 
-	spec, err := json.Marshal(model.TopologySpec{
-		Nodes: []model.TopologyNode{{Key: "web", Name: "Web"}},
+	spec, err := json.Marshal(challengecontracts.TopologySpec{
+		Nodes: []challengecontracts.TopologyNode{{Key: "web", Name: "Web"}},
 	})
 	if err != nil {
 		t.Fatalf("marshal topology spec: %v", err)
@@ -232,8 +233,8 @@ func TestTopologyServiceGetChallengeTopologyIgnoresMissingPackageRevision(t *tes
 		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
 			return &model.Challenge{ID: 9}, nil
 		},
-		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
-			return &model.ChallengeTopology{
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
+			return &challengeentity.ChallengeTopology{
 				ChallengeID:       9,
 				EntryNodeKey:      "web",
 				Spec:              string(spec),
@@ -271,12 +272,12 @@ func TestTopologyServiceGetTemplateWithContextPropagatesContextToRepository(t *t
 	expectedCtxValue := "ctx-template"
 	findTemplateCalled := false
 	templateRepo := &stubEnvironmentTemplateRepository{
-		findByIDFn: func(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.EnvironmentTemplate, error) {
 			findTemplateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-template ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.EnvironmentTemplate{ID: id, Name: "Base Web", EntryNodeKey: "web"}, nil
+			return &challengeentity.EnvironmentTemplate{ID: id, Name: "Base Web", EntryNodeKey: "web"}, nil
 		},
 	}
 	service := NewTopologyService(nil, templateRepo)
@@ -298,7 +299,7 @@ func TestTopologyServiceGetTemplateTreatsTemplateNotFoundAsNotFound(t *testing.T
 	t.Parallel()
 
 	service := NewTopologyService(nil, &stubEnvironmentTemplateRepository{
-		findByIDFn: func(context.Context, int64) (*model.EnvironmentTemplate, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.EnvironmentTemplate, error) {
 			return nil, challengeports.ErrChallengeTopologyTemplateNotFound
 		},
 	})
@@ -320,7 +321,7 @@ func TestTopologyServiceListTemplatesWithContextPropagatesContextToRepository(t 
 	expectedCtxValue := "ctx-template-list"
 	listCalled := false
 	templateRepo := &stubEnvironmentTemplateRepository{
-		listFn: func(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
+		listFn: func(ctx context.Context, keyword string) ([]*challengeentity.EnvironmentTemplate, error) {
 			listCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected list-templates ctx value %v, got %v", expectedCtxValue, got)
@@ -328,7 +329,7 @@ func TestTopologyServiceListTemplatesWithContextPropagatesContextToRepository(t 
 			if keyword != "web" {
 				t.Fatalf("unexpected keyword: %q", keyword)
 			}
-			return []*model.EnvironmentTemplate{{ID: 1, Name: "Base Web", EntryNodeKey: "web"}}, nil
+			return []*challengeentity.EnvironmentTemplate{{ID: 1, Name: "Base Web", EntryNodeKey: "web"}}, nil
 		},
 	}
 	service := NewTopologyService(nil, templateRepo)

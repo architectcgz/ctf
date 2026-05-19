@@ -5,12 +5,13 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
 	req := &challengeTopologyCreateRequestStub{
 		Networks: []challengeTopologyCreateNetworkStub{
-			{Key: model.TopologyDefaultNetworkKey, Internal: true},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Internal: true},
 		},
 		Nodes: []challengeTopologyCreateNodeStub{
 			{
@@ -20,12 +21,12 @@ func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
 				ServicePort:     8080,
 				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
 				IsEntryPoint:    true,
-				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
-				Resources:       &model.ResourceLimits{CPUQuota: 50000, Memory: 256 * 1024 * 1024, PidsLimit: 128},
+				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
+				Resources:       &runtimecontracts.ResourceLimits{CPUQuota: 50000, Memory: 256 * 1024 * 1024, PidsLimit: 128},
 			},
 		},
-		Policies: []model.TopologyTrafficPolicy{
-			{Action: model.TopologyPolicyActionAllow, Protocol: model.TopologyPolicyProtocolTCP, Ports: []int{8080}},
+		Policies: []runtimecontracts.TopologyTrafficPolicy{
+			{Action: runtimecontracts.TopologyPolicyActionAllow, Protocol: runtimecontracts.TopologyPolicyProtocolTCP, Ports: []int{8080}},
 		},
 	}
 
@@ -53,7 +54,7 @@ func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
 func TestRuntimeChallengeTopologyAdapterDisablesPublishedEntryPortWithoutAccessHost(t *testing.T) {
 	req := &challengeTopologyCreateRequestStub{
 		Networks: []challengeTopologyCreateNetworkStub{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
 		Nodes: []challengeTopologyCreateNodeStub{
 			{
@@ -62,7 +63,7 @@ func TestRuntimeChallengeTopologyAdapterDisablesPublishedEntryPortWithoutAccessH
 				ServicePort:     8080,
 				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
 				IsEntryPoint:    true,
-				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 			},
 		},
 	}
@@ -76,7 +77,7 @@ func TestRuntimeChallengeTopologyAdapterDisablesPublishedEntryPortWithoutAccessH
 type challengeTopologyCreateRequestStub struct {
 	Networks []challengeTopologyCreateNetworkStub
 	Nodes    []challengeTopologyCreateNodeStub
-	Policies []model.TopologyTrafficPolicy
+	Policies []runtimecontracts.TopologyTrafficPolicy
 }
 
 type challengeTopologyCreateNetworkStub struct {
@@ -92,7 +93,7 @@ type challengeTopologyCreateNodeStub struct {
 	ServiceProtocol string
 	IsEntryPoint    bool
 	NetworkKeys     []string
-	Resources       *model.ResourceLimits
+	Resources       *runtimecontracts.ResourceLimits
 }
 
 func (r *challengeTopologyCreateRequestStub) toPorts() *challengeports.RuntimeTopologyCreateRequest {
@@ -121,6 +122,6 @@ func (r *challengeTopologyCreateRequestStub) toPorts() *challengeports.RuntimeTo
 	return &challengeports.RuntimeTopologyCreateRequest{
 		Networks: networks,
 		Nodes:    nodes,
-		Policies: append([]model.TopologyTrafficPolicy(nil), r.Policies...),
+		Policies: append([]runtimecontracts.TopologyTrafficPolicy(nil), r.Policies...),
 	}
 }

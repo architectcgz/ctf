@@ -8,13 +8,13 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -130,7 +130,7 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 		containerStatsService: containerStatsService,
 		imageRuntime:          runtimeapp.NewImageRuntimeService(deps.ImageRuntime),
 		containerFiles:        runtimeapp.NewContainerFileService(deps.FileRuntime, log.Named("runtime_container_file_service")),
-		containerPublicHost:   model.ResolveRuntimePublishedAccessHost(cfg.Container.PublicHost, cfg.Container.AccessHost),
+		containerPublicHost:   runtimecontracts.ResolveRuntimePublishedAccessHost(cfg.Container.PublicHost, cfg.Container.AccessHost),
 	}
 }
 

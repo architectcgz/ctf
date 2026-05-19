@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -75,7 +75,7 @@ func (s *ProvisioningService) CreateContainer(ctx context.Context, imageName str
 	result, err := s.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
 		ReservedHostPort: reservedHostPort,
 		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
 			{
@@ -83,9 +83,9 @@ func (s *ProvisioningService) CreateContainer(ctx context.Context, imageName str
 				Image:           imageName,
 				Env:             env,
 				ServicePort:     servicePort,
-				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+				ServiceProtocol: runtimecontracts.ChallengeTargetProtocolHTTP,
 				IsEntryPoint:    true,
-				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 			},
 		},
 	})
@@ -163,12 +163,12 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		networkByKey[network.Key] = item
 	}
 
-	details := model.InstanceRuntimeDetails{
-		Networks:   make([]model.InstanceRuntimeNetwork, 0, len(createdNetworks)),
-		Containers: make([]model.InstanceRuntimeContainer, 0, len(req.Nodes)),
+	details := runtimecontracts.InstanceRuntimeDetails{
+		Networks:   make([]runtimecontracts.InstanceRuntimeNetwork, 0, len(createdNetworks)),
+		Containers: make([]runtimecontracts.InstanceRuntimeContainer, 0, len(req.Nodes)),
 	}
 	for _, network := range createdNetworks {
-		details.Networks = append(details.Networks, model.InstanceRuntimeNetwork{
+		details.Networks = append(details.Networks, runtimecontracts.InstanceRuntimeNetwork{
 			Key:       network.key,
 			Name:      network.name,
 			NetworkID: network.id,
@@ -197,14 +197,14 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			}
 		}
 
-		containerID, err := s.engine.CreateContainer(ctx, &model.ContainerConfig{
+		containerID, err := s.engine.CreateContainer(ctx, &runtimecontracts.ContainerConfig{
 			Image:          node.Image,
 			Name:           buildManagedContainerName(req.ContainerName),
 			Env:            envMapToList(node.Env),
 			Command:        append([]string(nil), node.Command...),
 			WorkingDir:     strings.TrimSpace(node.WorkingDir),
 			Ports:          ports,
-			Mounts:         append([]model.ContainerMount(nil), node.Mounts...),
+			Mounts:         append([]runtimecontracts.ContainerMount(nil), node.Mounts...),
 			Labels:         managedLabels,
 			Resources:      node.Resources,
 			Network:        primaryNetwork.name,
@@ -235,7 +235,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 
 		createdContainerIDs = append(createdContainerIDs, containerID)
 		serviceProtocol := normalizeServiceProtocol(node.ServiceProtocol)
-		runtimeItem := model.InstanceRuntimeContainer{
+		runtimeItem := runtimecontracts.InstanceRuntimeContainer{
 			NodeKey:         node.Key,
 			ContainerID:     containerID,
 			ServicePort:     servicePort,
@@ -279,14 +279,14 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	}, nil
 }
 
-func (s *ProvisioningService) resolveEntryAccessURL(ctx context.Context, details model.InstanceRuntimeDetails, entryNodeIndex int, publishEntryPort bool, hostPort int) (string, error) {
+func (s *ProvisioningService) resolveEntryAccessURL(ctx context.Context, details runtimecontracts.InstanceRuntimeDetails, entryNodeIndex int, publishEntryPort bool, hostPort int) (string, error) {
 	if entryNodeIndex < 0 || entryNodeIndex >= len(details.Containers) {
 		return "", fmt.Errorf("entry container is missing")
 	}
 	entry := details.Containers[entryNodeIndex]
 	scheme := normalizeServiceProtocol(entry.ServiceProtocol)
 	if publishEntryPort {
-		host := model.ResolveRuntimePublishedAccessHost(s.config.PublicHost, s.config.AccessHost)
+		host := runtimecontracts.ResolveRuntimePublishedAccessHost(s.config.PublicHost, s.config.AccessHost)
 		return fmt.Sprintf("%s://%s:%d", scheme, host, hostPort), nil
 	}
 	if entry.ServicePort <= 0 {
@@ -326,10 +326,10 @@ func (s *ProvisioningService) resolveEntryAccessURL(ctx context.Context, details
 
 func normalizeServiceProtocol(protocol string) string {
 	switch strings.ToLower(strings.TrimSpace(protocol)) {
-	case model.ChallengeTargetProtocolTCP:
-		return model.ChallengeTargetProtocolTCP
+	case runtimecontracts.ChallengeTargetProtocolTCP:
+		return runtimecontracts.ChallengeTargetProtocolTCP
 	default:
-		return model.ChallengeTargetProtocolHTTP
+		return runtimecontracts.ChallengeTargetProtocolHTTP
 	}
 }
 
@@ -352,7 +352,7 @@ func (s *ProvisioningService) resolveServicePort(ctx context.Context, imageRef s
 	return resolvedPort, nil
 }
 
-func (s *ProvisioningService) resolveTopologyACLRules(ctx context.Context, req *runtimeports.TopologyCreateRequest, details model.InstanceRuntimeDetails) ([]model.InstanceRuntimeACLRule, error) {
+func (s *ProvisioningService) resolveTopologyACLRules(ctx context.Context, req *runtimeports.TopologyCreateRequest, details runtimecontracts.InstanceRuntimeDetails) ([]runtimecontracts.InstanceRuntimeACLRule, error) {
 	if s.engine == nil || req == nil || len(req.Policies) == 0 {
 		return nil, nil
 	}
@@ -448,7 +448,7 @@ func buildManagedContainerName(preferred string) string {
 func buildManagedNetworkName(key string) string {
 	trimmed := strings.TrimSpace(key)
 	if trimmed == "" {
-		trimmed = model.TopologyDefaultNetworkKey
+		trimmed = runtimecontracts.TopologyDefaultNetworkKey
 	}
 	return fmt.Sprintf("%s%s-%d", managedNetworkNamePrefix, trimmed, time.Now().UnixNano())
 }
@@ -523,7 +523,7 @@ func looksLikeAWDImage(image string) bool {
 
 func normalizedCreateNetworks(networks []runtimeports.TopologyCreateNetwork) []runtimeports.TopologyCreateNetwork {
 	if len(networks) == 0 {
-		return []runtimeports.TopologyCreateNetwork{{Key: model.TopologyDefaultNetworkKey}}
+		return []runtimeports.TopologyCreateNetwork{{Key: runtimecontracts.TopologyDefaultNetworkKey}}
 	}
 	return networks
 }

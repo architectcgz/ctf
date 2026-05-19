@@ -8,6 +8,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
@@ -22,7 +23,7 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 	challengeItem := &model.Challenge{
 		Title:       "web-101",
 		Description: "desc",
-		Category:    model.DimensionWeb,
+		Category:    challengecontracts.DimensionWeb,
 		Difficulty:  model.ChallengeDifficultyEasy,
 		Points:      100,
 		ImageID:     1,
@@ -41,7 +42,7 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 	saved, err := service.Upsert(context.Background(), challengeItem.ID, 99, UpsertOfficialWriteupInput{
 		Title:      "官方题解",
 		Content:    "## Step 1",
-		Visibility: model.WriteupVisibilityPublic,
+		Visibility: challengeentity.WriteupVisibilityPublic,
 	})
 	if err != nil {
 		t.Fatalf("Upsert() error = %v", err)
@@ -72,7 +73,7 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 	challengeItem := &model.Challenge{
 		Title:       "web-201",
 		Description: "desc",
-		Category:    model.DimensionWeb,
+		Category:    challengecontracts.DimensionWeb,
 		Difficulty:  model.ChallengeDifficultyMedium,
 		Points:      200,
 		ImageID:     1,
@@ -102,15 +103,15 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 			{Key: "backend", Name: "Backend", Internal: true},
 		},
 		Nodes: []challengecontracts.TopologyNodeReq{
-			{Key: "web", Name: "Web", ImageID: 1, ServicePort: 8080, Tier: model.TopologyTierPublic, NetworkKeys: []string{"public", "backend"}},
-			{Key: "db", Name: "DB", ImageID: 2, Tier: model.TopologyTierInternal, NetworkKeys: []string{"backend"}},
+			{Key: "web", Name: "Web", ImageID: 1, ServicePort: 8080, Tier: challengecontracts.TopologyTierPublic, NetworkKeys: []string{"public", "backend"}},
+			{Key: "db", Name: "DB", ImageID: 2, Tier: challengecontracts.TopologyTierInternal, NetworkKeys: []string{"backend"}},
 		},
 		Links: []challengecontracts.TopologyLinkReq{
 			{FromNodeKey: "web", ToNodeKey: "db"},
 		},
 		Policies: []challengecontracts.TopologyTrafficPolicyReq{
-			{SourceNodeKey: "web", TargetNodeKey: "db", Action: model.TopologyPolicyActionAllow},
-			{SourceNodeKey: "db", TargetNodeKey: "web", Action: model.TopologyPolicyActionDeny},
+			{SourceNodeKey: "web", TargetNodeKey: "db", Action: challengecontracts.TopologyPolicyActionAllow},
+			{SourceNodeKey: "db", TargetNodeKey: "web", Action: challengecontracts.TopologyPolicyActionDeny},
 		},
 	})
 	if err != nil {
@@ -161,7 +162,7 @@ func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 	challengeItem := &model.Challenge{
 		Title:       "web-202",
 		Description: "desc",
-		Category:    model.DimensionWeb,
+		Category:    challengecontracts.DimensionWeb,
 		Difficulty:  model.ChallengeDifficultyMedium,
 		Points:      200,
 		ImageID:     1,
@@ -201,7 +202,7 @@ func TestTopologyServiceRejectsInjectFlagForSharedChallenge(t *testing.T) {
 	challengeItem := &model.Challenge{
 		Title:           "shared-web-flag",
 		Description:     "desc",
-		Category:        model.DimensionWeb,
+		Category:        challengecontracts.DimensionWeb,
 		Difficulty:      model.ChallengeDifficultyMedium,
 		Points:          200,
 		ImageID:         1,
@@ -252,13 +253,13 @@ func TestTopologyServiceAllowsFineGrainedPolicyOnTemplateCreate(t *testing.T) {
 			{Key: "web", Name: "Web", ImageID: 1, ServicePort: 8080},
 		},
 		Policies: []challengecontracts.TopologyTrafficPolicyReq{
-			{SourceNodeKey: "web", TargetNodeKey: "web", Action: model.TopologyPolicyActionAllow, Protocol: model.TopologyPolicyProtocolTCP, Ports: []int{8080}},
+			{SourceNodeKey: "web", TargetNodeKey: "web", Action: challengecontracts.TopologyPolicyActionAllow, Protocol: challengecontracts.TopologyPolicyProtocolTCP, Ports: []int{8080}},
 		},
 	})
 	if err != nil {
 		t.Fatalf("CreateTemplate() error = %v", err)
 	}
-	if len(saved.Policies) != 1 || saved.Policies[0].Protocol != model.TopologyPolicyProtocolTCP {
+	if len(saved.Policies) != 1 || saved.Policies[0].Protocol != challengecontracts.TopologyPolicyProtocolTCP {
 		t.Fatalf("unexpected fine-grained policy payload: %+v", saved.Policies)
 	}
 }
@@ -272,7 +273,7 @@ func TestTopologyServiceAllowsFineGrainedPolicyWhenBindingTemplate(t *testing.T)
 	challengeItem := &model.Challenge{
 		Title:       "web-203",
 		Description: "desc",
-		Category:    model.DimensionWeb,
+		Category:    challengecontracts.DimensionWeb,
 		Difficulty:  model.ChallengeDifficultyMedium,
 		Points:      200,
 		ImageID:     1,
@@ -283,18 +284,18 @@ func TestTopologyServiceAllowsFineGrainedPolicyWhenBindingTemplate(t *testing.T)
 	if err := db.Create(challengeItem).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
-	rawSpec, err := model.EncodeTopologySpec(model.TopologySpec{
-		Nodes: []model.TopologyNode{
+	rawSpec, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{
+		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", Name: "Web", ImageID: 1, ServicePort: 8080},
 		},
-		Policies: []model.TopologyTrafficPolicy{
-			{SourceNodeKey: "web", TargetNodeKey: "web", Action: model.TopologyPolicyActionAllow, Protocol: model.TopologyPolicyProtocolTCP, Ports: []int{8080}},
+		Policies: []challengecontracts.TopologyTrafficPolicy{
+			{SourceNodeKey: "web", TargetNodeKey: "web", Action: challengecontracts.TopologyPolicyActionAllow, Protocol: challengecontracts.TopologyPolicyProtocolTCP, Ports: []int{8080}},
 		},
 	})
 	if err != nil {
 		t.Fatalf("encode spec: %v", err)
 	}
-	template := &model.EnvironmentTemplate{
+	template := &challengeentity.EnvironmentTemplate{
 		Name:         "legacy-template",
 		Description:  "legacy",
 		EntryNodeKey: "web",

@@ -887,11 +887,11 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 						PrimaryContainerID: "container-loop",
 						NetworkID:          "network-loop",
 						AccessURL:          "http://awd-c3401-t4401-s5401:8080",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Networks: []model.InstanceRuntimeNetwork{
-								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-3401", NetworkID: "network-loop", Shared: true},
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Networks: []runtimecontracts.InstanceRuntimeNetwork{
+								{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-3401", NetworkID: "network-loop", Shared: true},
 							},
-							Containers: []model.InstanceRuntimeContainer{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{
 									NodeKey:         "default",
 									ContainerID:     "container-loop",
@@ -908,8 +908,8 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 						PrimaryContainerID: "workspace-loop",
 						NetworkID:          "network-loop",
 						AccessURL:          "tcp://172.30.0.21:22",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Containers: []model.InstanceRuntimeContainer{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{
 									NodeKey:         "workspace",
 									ContainerID:     "workspace-loop",

@@ -7,8 +7,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -77,7 +77,7 @@ func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *in
 	return nil
 }
 
-func (s *RuntimeCleanupService) removeACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
+func (s *RuntimeCleanupService) removeACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
 	if len(rules) == 0 {
 		return nil
 	}

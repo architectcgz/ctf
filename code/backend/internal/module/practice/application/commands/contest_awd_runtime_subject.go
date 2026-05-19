@@ -13,7 +13,7 @@ func buildContestAWDServiceVirtualChallenge(subject *practiceports.ContestAWDSer
 	return &chal
 }
 
-func buildContestAWDServiceVirtualTopology(subject *practiceports.ContestAWDServiceRuntimeSubject) *model.ChallengeTopology {
+func buildContestAWDServiceVirtualTopology(subject *practiceports.ContestAWDServiceRuntimeSubject) *practiceports.RuntimeChallengeTopology {
 	if subject == nil || subject.RuntimeTopology == nil {
 		return nil
 	}

@@ -9,6 +9,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 var (
@@ -111,13 +112,13 @@ type ChallengeWriteupUserLookupRepository interface {
 }
 
 type ChallengeAdminWriteupRepository interface {
-	FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
-	UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error
+	FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error)
+	UpsertWriteup(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error
 	DeleteWriteupByChallengeID(ctx context.Context, challengeID int64) error
 }
 
 type ChallengeReleasedWriteupRepository interface {
-	FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
+	FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error)
 }
 
 type ChallengeWriteupSolveStatusRepository interface {
@@ -173,11 +174,11 @@ type ChallengeTopologyChallengeLookupRepository interface {
 }
 
 type ChallengeTopologyReadRepository interface {
-	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
 }
 
 type ChallengeTopologyWriteRepository interface {
-	UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error
+	UpsertChallengeTopology(ctx context.Context, topology *challengeentity.ChallengeTopology) error
 	DeleteChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) error
 }
 
@@ -220,7 +221,7 @@ type ChallengeImportTxStore interface {
 	ApplyImportedFlagUpdates(ctx context.Context, challengeID int64, updates map[string]any) error
 	NextChallengePackageRevisionNo(ctx context.Context, challengeID int64) (int, error)
 	CreateImportedPackageRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error
-	UpsertImportedTopology(ctx context.Context, topology *model.ChallengeTopology) error
+	UpsertImportedTopology(ctx context.Context, topology *challengeentity.ChallengeTopology) error
 }
 
 type ChallengeImportTxRunner interface {
@@ -239,7 +240,7 @@ type AWDChallengeImportTxRunner interface {
 
 type ChallengePackageExportTxStore interface {
 	FindChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error)
-	FindTopology(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	FindTopology(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
 	FindPackageRevisionByID(ctx context.Context, revisionID int64) (*challengeentity.ChallengePackageRevision, error)
 	NextPackageRevisionNo(ctx context.Context, challengeID int64) (int, error)
 	ListChallengeHints(ctx context.Context, challengeID int64) ([]challengeentity.ChallengeHint, error)
@@ -290,14 +291,14 @@ type RegistryVerifier interface {
 }
 
 type EnvironmentTemplateCommandRepository interface {
-	Create(ctx context.Context, template *model.EnvironmentTemplate) error
-	Update(ctx context.Context, template *model.EnvironmentTemplate) error
+	Create(ctx context.Context, template *challengeentity.EnvironmentTemplate) error
+	Update(ctx context.Context, template *challengeentity.EnvironmentTemplate) error
 	Delete(ctx context.Context, id int64) error
 }
 
 type EnvironmentTemplateQueryRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.EnvironmentTemplate, error)
-	List(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error)
+	FindByID(ctx context.Context, id int64) (*challengeentity.EnvironmentTemplate, error)
+	List(ctx context.Context, keyword string) ([]*challengeentity.EnvironmentTemplate, error)
 }
 
 type EnvironmentTemplateUsageRepository interface {
@@ -305,8 +306,8 @@ type EnvironmentTemplateUsageRepository interface {
 }
 
 type TagCommandRepository interface {
-	Create(ctx context.Context, tag *model.Tag) error
-	FindByIDs(ctx context.Context, ids []int64) ([]*model.Tag, error)
+	Create(ctx context.Context, tag *challengeentity.Tag) error
+	FindByIDs(ctx context.Context, ids []int64) ([]*challengeentity.Tag, error)
 	AttachTagsInTx(ctx context.Context, challengeID int64, tagIDs []int64) error
 	DetachFromChallenge(ctx context.Context, challengeID, tagID int64) error
 	Delete(ctx context.Context, id int64) error
@@ -314,8 +315,8 @@ type TagCommandRepository interface {
 }
 
 type TagQueryRepository interface {
-	List(ctx context.Context, tagType string) ([]*model.Tag, error)
-	FindByChallengeID(ctx context.Context, challengeID int64) ([]*model.Tag, error)
+	List(ctx context.Context, tagType string) ([]*challengeentity.Tag, error)
+	FindByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.Tag, error)
 }
 
 type ImageRuntime interface {
@@ -331,7 +332,7 @@ type RuntimeTopologyCreateNode struct {
 	ServiceProtocol string
 	IsEntryPoint    bool
 	NetworkKeys     []string
-	Resources       *model.ResourceLimits
+	Resources       *runtimecontracts.ResourceLimits
 }
 
 type RuntimeTopologyCreateNetwork struct {
@@ -342,16 +343,16 @@ type RuntimeTopologyCreateNetwork struct {
 type RuntimeTopologyCreateRequest struct {
 	Networks []RuntimeTopologyCreateNetwork
 	Nodes    []RuntimeTopologyCreateNode
-	Policies []model.TopologyTrafficPolicy
+	Policies []runtimecontracts.TopologyTrafficPolicy
 }
 
 type RuntimeTopologyCreateResult struct {
 	AccessURL      string
-	RuntimeDetails model.InstanceRuntimeDetails
+	RuntimeDetails runtimecontracts.InstanceRuntimeDetails
 }
 
 type ChallengeRuntimeProbe interface {
 	CreateTopology(ctx context.Context, req *RuntimeTopologyCreateRequest) (*RuntimeTopologyCreateResult, error)
-	CreateContainer(ctx context.Context, imageName string, env map[string]string) (accessURL string, runtimeDetails model.InstanceRuntimeDetails, err error)
-	CleanupRuntimeDetails(ctx context.Context, details model.InstanceRuntimeDetails) error
+	CreateContainer(ctx context.Context, imageName string, env map[string]string) (accessURL string, runtimeDetails runtimecontracts.InstanceRuntimeDetails, err error)
+	CleanupRuntimeDetails(ctx context.Context, details runtimecontracts.InstanceRuntimeDetails) error
 }

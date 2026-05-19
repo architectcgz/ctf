@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestAWDHTTPRuntimeAdapterExecuteKeepsAliasHostWhenDialingRuntimeIP(t *testing.T) {
@@ -29,15 +29,15 @@ func TestAWDHTTPRuntimeAdapterExecuteKeepsAliasHostWhenDialingRuntimeIP(t *testi
 		t.Fatalf("parse server url: %v", err)
 	}
 	accessURL := "http://awd-c1-t1-s1:" + parsedURL.Port()
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Networks: []model.InstanceRuntimeNetwork{
-			{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-test", Shared: true},
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Networks: []runtimecontracts.InstanceRuntimeNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-test", Shared: true},
 		},
-		Containers: []model.InstanceRuntimeContainer{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{
 				ContainerID:    "ctr-alias",
 				IsEntryPoint:   true,
-				NetworkKeys:    []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:    []string{runtimecontracts.TopologyDefaultNetworkKey},
 				NetworkAliases: []string{"awd-c1-t1-s1"},
 				NetworkIPs:     map[string]string{"ctf-awd-test": "127.0.0.1"},
 			},

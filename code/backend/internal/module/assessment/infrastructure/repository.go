@@ -365,8 +365,8 @@ func (r *Repository) fillStudentDimensionFacts(
 		return nil
 	}
 
-	factMap := make(map[string]*teachingadvice.DimensionFact, len(model.AllDimensions))
-	for _, dimension := range model.AllDimensions {
+	factMap := make(map[string]*teachingadvice.DimensionFact, len(challengecontracts.AllDimensions))
+	for _, dimension := range challengecontracts.AllDimensions {
 		dimensionCopy := dimension
 		factMap[dimension] = &teachingadvice.DimensionFact{Dimension: dimensionCopy}
 	}
@@ -597,7 +597,7 @@ func (r *Repository) fillStudentDimensionFacts(
 	}
 
 	dimensions := make([]teachingadvice.DimensionFact, 0, len(factMap))
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		fact := ensureDimensionFact(factMap, dimension)
 		dimensions = append(dimensions, *fact)
 	}

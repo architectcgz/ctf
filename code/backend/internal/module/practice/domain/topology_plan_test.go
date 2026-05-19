@@ -4,21 +4,21 @@ import (
 	"reflect"
 	"testing"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 func TestBuildRuntimeTopologyPlanSplitsNetworkByBroadDeny(t *testing.T) {
-	plan := BuildRuntimeTopologyPlan(model.TopologySpec{
-		Networks: []model.TopologyNetwork{
+	plan := BuildRuntimeTopologyPlan(challengecontracts.TopologySpec{
+		Networks: []challengecontracts.TopologyNetwork{
 			{Key: "backend", Internal: true},
 		},
-		Nodes: []model.TopologyNode{
+		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", NetworkKeys: []string{"backend"}},
 			{Key: "db", NetworkKeys: []string{"backend"}},
 			{Key: "cache", NetworkKeys: []string{"backend"}},
 		},
-		Policies: []model.TopologyTrafficPolicy{
-			{SourceNodeKey: "web", TargetNodeKey: "cache", Action: model.TopologyPolicyActionDeny},
+		Policies: []challengecontracts.TopologyTrafficPolicy{
+			{SourceNodeKey: "web", TargetNodeKey: "cache", Action: challengecontracts.TopologyPolicyActionDeny},
 		},
 	})
 
@@ -36,17 +36,17 @@ func TestBuildRuntimeTopologyPlanSplitsNetworkByBroadDeny(t *testing.T) {
 }
 
 func TestBuildRuntimeTopologyPlanUsesAllowListModeForFineGrainedAllow(t *testing.T) {
-	plan := BuildRuntimeTopologyPlan(model.TopologySpec{
-		Networks: []model.TopologyNetwork{
+	plan := BuildRuntimeTopologyPlan(challengecontracts.TopologySpec{
+		Networks: []challengecontracts.TopologyNetwork{
 			{Key: "backend", Internal: true},
 		},
-		Nodes: []model.TopologyNode{
+		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", NetworkKeys: []string{"backend"}},
 			{Key: "db", NetworkKeys: []string{"backend"}},
 			{Key: "cache", NetworkKeys: []string{"backend"}},
 		},
-		Policies: []model.TopologyTrafficPolicy{
-			{SourceNodeKey: "web", TargetNodeKey: "db", Action: model.TopologyPolicyActionAllow, Protocol: model.TopologyPolicyProtocolTCP, Ports: []int{3306}},
+		Policies: []challengecontracts.TopologyTrafficPolicy{
+			{SourceNodeKey: "web", TargetNodeKey: "db", Action: challengecontracts.TopologyPolicyActionAllow, Protocol: challengecontracts.TopologyPolicyProtocolTCP, Ports: []int{3306}},
 		},
 	})
 

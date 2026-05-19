@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 type DimensionScore struct {
@@ -21,8 +21,8 @@ func BuildEmptyProfileContract(userID int64) *assessmentcontracts.SkillProfile {
 
 func BuildSkillProfileContract(userID int64, profiles []*assessmententity.SkillProfile) *assessmentcontracts.SkillProfile {
 	dimensionMap, latestUpdate := buildProfileSnapshot(profiles)
-	dimensions := make([]*assessmentcontracts.SkillDimension, 0, len(model.AllDimensions))
-	for _, dim := range model.AllDimensions {
+	dimensions := make([]*assessmentcontracts.SkillDimension, 0, len(challengecontracts.AllDimensions))
+	for _, dim := range challengecontracts.AllDimensions {
 		dimensions = append(dimensions, &assessmentcontracts.SkillDimension{
 			Dimension: dim,
 			Score:     dimensionMap[dim],

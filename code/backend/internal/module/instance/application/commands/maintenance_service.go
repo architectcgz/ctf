@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceports "ctf-platform/internal/module/instance/ports"
@@ -323,7 +322,7 @@ func collectInstanceContainerIDs(instance *instanceentity.Instance) []string {
 	}
 	ids := make([]string, 0, 1)
 	ids = appendUniqueContainerID(ids, instance.ContainerID)
-	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
 	if err != nil {
 		return ids
 	}

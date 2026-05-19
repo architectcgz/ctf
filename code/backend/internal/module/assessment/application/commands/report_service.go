@@ -18,12 +18,12 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
@@ -785,7 +785,7 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 		Review:            reviewResp,
 		CategoryDistribution: assessmentdomain.FillMissingDistributionStats(
 			categoryDistribution,
-			model.AllDimensions,
+			challengecontracts.AllDimensions,
 		),
 		DifficultyDistribution: assessmentdomain.FillMissingDistributionStats(
 			difficultyDistribution,
@@ -1025,11 +1025,11 @@ func buildReviewArchiveTeachingFactSnapshot(
 		SubmissionFailureCount: submissionStats.FailureCount,
 		WriteupCount:           summary.WriteupCount,
 		ApprovedReviewCount:    countApprovedManualReviews(manualReviews),
-		Dimensions:             make([]teachingadvice.DimensionFact, 0, len(model.AllDimensions)),
+		Dimensions:             make([]teachingadvice.DimensionFact, 0, len(challengecontracts.AllDimensions)),
 	}
 
-	factMap := make(map[string]*teachingadvice.DimensionFact, len(model.AllDimensions))
-	for _, dimension := range model.AllDimensions {
+	factMap := make(map[string]*teachingadvice.DimensionFact, len(challengecontracts.AllDimensions))
+	for _, dimension := range challengecontracts.AllDimensions {
 		dimensionCopy := dimension
 		factMap[dimension] = &teachingadvice.DimensionFact{Dimension: dimensionCopy}
 	}
@@ -1092,7 +1092,7 @@ func buildReviewArchiveTeachingFactSnapshot(
 		fact.EvidenceCount++
 	}
 
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		fact := ensureReviewArchiveDimensionFact(factMap, dimension)
 		if fact == nil {
 			continue

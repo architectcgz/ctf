@@ -7,7 +7,7 @@ import (
 	"github.com/docker/docker/client"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -62,11 +62,11 @@ func (e *Engine) containerDefaults() *config.ContainerConfig {
 	return e.containerCfg
 }
 
-func DefaultSecurityConfig(cfg *config.ContainerConfig) *model.SecurityConfig {
+func DefaultSecurityConfig(cfg *config.ContainerConfig) *runtimecontracts.SecurityConfig {
 	if cfg == nil {
 		cfg = &config.ContainerConfig{}
 	}
-	return &model.SecurityConfig{
+	return &runtimecontracts.SecurityConfig{
 		ReadonlyRootfs: cfg.ReadonlyRootfs,
 		CapDrop:        []string{"ALL"},
 		CapAdd:         append([]string(nil), cfg.AllowedCapabilities...),
@@ -75,12 +75,12 @@ func DefaultSecurityConfig(cfg *config.ContainerConfig) *model.SecurityConfig {
 	}
 }
 
-func resolveContainerResourceLimits(input *model.ResourceLimits, cfg *config.ContainerConfig) (*model.ResourceLimits, error) {
+func resolveContainerResourceLimits(input *runtimecontracts.ResourceLimits, cfg *config.ContainerConfig) (*runtimecontracts.ResourceLimits, error) {
 	if cfg == nil {
 		cfg = &config.ContainerConfig{}
 	}
 
-	resolved := &model.ResourceLimits{}
+	resolved := &runtimecontracts.ResourceLimits{}
 	if input == nil {
 		resolved.CPUQuota = cfg.DefaultCPUQuota
 		resolved.Memory = cfg.DefaultMemory
@@ -97,7 +97,7 @@ func resolveContainerResourceLimits(input *model.ResourceLimits, cfg *config.Con
 	return resolved, nil
 }
 
-func validateContainerResourceLimits(limits *model.ResourceLimits) error {
+func validateContainerResourceLimits(limits *runtimecontracts.ResourceLimits) error {
 	if limits == nil {
 		return nil
 	}
@@ -113,11 +113,11 @@ func validateContainerResourceLimits(limits *model.ResourceLimits) error {
 	return nil
 }
 
-func resolveContainerSecurityConfig(input *model.SecurityConfig, cfg *config.ContainerConfig) *model.SecurityConfig {
+func resolveContainerSecurityConfig(input *runtimecontracts.SecurityConfig, cfg *config.ContainerConfig) *runtimecontracts.SecurityConfig {
 	if input == nil {
 		return DefaultSecurityConfig(cfg)
 	}
-	return &model.SecurityConfig{
+	return &runtimecontracts.SecurityConfig{
 		ReadonlyRootfs: input.ReadonlyRootfs,
 		CapDrop:        append([]string(nil), input.CapDrop...),
 		CapAdd:         append([]string(nil), input.CapAdd...),

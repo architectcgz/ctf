@@ -344,15 +344,15 @@ func (s *ChallengeService) CommitChallengeImport(
 			}
 			now = time.Now().UTC()
 			revisionID := revision.ID
-			item := &model.ChallengeTopology{
+			item := &challengeentity.ChallengeTopology{
 				ChallengeID:          current.ID,
 				EntryNodeKey:         entryNodeKey,
 				Spec:                 topologySpec,
-				SourceType:           model.ChallengeTopologySourceTypePackageImport,
+				SourceType:           challengeentity.ChallengeTopologySourceTypePackageImport,
 				SourcePath:           parsed.Topology.Source,
 				PackageRevisionID:    &revisionID,
 				PackageBaselineSpec:  topologySpec,
-				SyncStatus:           model.ChallengeTopologySyncStatusClean,
+				SyncStatus:           challengeentity.ChallengeTopologySyncStatusClean,
 				LastExportRevisionID: nil,
 				UpdatedAt:            now,
 			}

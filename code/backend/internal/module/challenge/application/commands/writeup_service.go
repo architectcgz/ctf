@@ -45,7 +45,7 @@ func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID in
 		return nil, err
 	}
 
-	writeup := &model.ChallengeWriteup{
+	writeup := &challengeentity.ChallengeWriteup{
 		ChallengeID: challengeID,
 		Title:       strings.TrimSpace(req.Title),
 		Content:     strings.TrimSpace(req.Content),
@@ -284,7 +284,7 @@ func (s *WriteupService) RestoreCommunity(ctx context.Context, submissionID, req
 	return domain.ResponseMapper().ToSubmissionWriteupRespPtr(updated), nil
 }
 
-func (s *WriteupService) loadOfficialWriteupForModeration(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+func (s *WriteupService) loadOfficialWriteupForModeration(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeWriteupChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound

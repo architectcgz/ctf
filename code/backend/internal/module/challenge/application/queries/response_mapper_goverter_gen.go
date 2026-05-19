@@ -77,7 +77,7 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBasePtr(source *mo
 	}
 	return pContractsChallengeListItem
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBase(source model.ChallengeWriteup) contracts.ChallengeWriteupResp {
+func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBase(source entity.ChallengeWriteup) contracts.ChallengeWriteupResp {
 	var contractsChallengeWriteupResp contracts.ChallengeWriteupResp
 	contractsChallengeWriteupResp.ID = source.ID
 	contractsChallengeWriteupResp.ChallengeID = source.ChallengeID
@@ -94,7 +94,7 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBase(source mod
 	contractsChallengeWriteupResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return contractsChallengeWriteupResp
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBasePtr(source *model.ChallengeWriteup) *contracts.ChallengeWriteupResp {
+func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBasePtr(source *entity.ChallengeWriteup) *contracts.ChallengeWriteupResp {
 	var pContractsChallengeWriteupResp *contracts.ChallengeWriteupResp
 	if source != nil {
 		contractsChallengeWriteupResp := c.ToChallengeWriteupRespBase((*source))

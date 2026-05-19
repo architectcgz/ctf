@@ -36,7 +36,7 @@ func (r *TopologyServiceRepository) FindByID(ctx context.Context, id int64) (*mo
 	return item, err
 }
 
-func (r *TopologyServiceRepository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+func (r *TopologyServiceRepository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 	item, err := r.source.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengeTopologyNotFound
@@ -44,7 +44,7 @@ func (r *TopologyServiceRepository) FindChallengeTopologyByChallengeID(ctx conte
 	return item, err
 }
 
-func (r *TopologyServiceRepository) UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error {
+func (r *TopologyServiceRepository) UpsertChallengeTopology(ctx context.Context, topology *challengeentity.ChallengeTopology) error {
 	return r.source.UpsertChallengeTopology(ctx, topology)
 }
 
@@ -73,11 +73,11 @@ func NewTopologyTemplateRepository(source topologyTemplateRawRepository) *Topolo
 	return &TopologyTemplateRepository{source: source}
 }
 
-func (r *TopologyTemplateRepository) Create(ctx context.Context, template *model.EnvironmentTemplate) error {
+func (r *TopologyTemplateRepository) Create(ctx context.Context, template *challengeentity.EnvironmentTemplate) error {
 	return r.source.Create(ctx, template)
 }
 
-func (r *TopologyTemplateRepository) Update(ctx context.Context, template *model.EnvironmentTemplate) error {
+func (r *TopologyTemplateRepository) Update(ctx context.Context, template *challengeentity.EnvironmentTemplate) error {
 	return r.source.Update(ctx, template)
 }
 
@@ -85,7 +85,7 @@ func (r *TopologyTemplateRepository) Delete(ctx context.Context, id int64) error
 	return r.source.Delete(ctx, id)
 }
 
-func (r *TopologyTemplateRepository) FindByID(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
+func (r *TopologyTemplateRepository) FindByID(ctx context.Context, id int64) (*challengeentity.EnvironmentTemplate, error) {
 	item, err := r.source.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengeTopologyTemplateNotFound
@@ -93,7 +93,7 @@ func (r *TopologyTemplateRepository) FindByID(ctx context.Context, id int64) (*m
 	return item, err
 }
 
-func (r *TopologyTemplateRepository) List(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
+func (r *TopologyTemplateRepository) List(ctx context.Context, keyword string) ([]*challengeentity.EnvironmentTemplate, error) {
 	return r.source.List(ctx, keyword)
 }
 

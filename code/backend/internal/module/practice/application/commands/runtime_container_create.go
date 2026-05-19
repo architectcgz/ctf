@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -17,7 +18,7 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *Service) createContainer(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge, topology *model.ChallengeTopology, flag string) error {
+func (s *Service) createContainer(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
 	if topology == nil {
 		return s.createSingleContainer(ctx, instance, chal, flag)
 	}
@@ -32,7 +33,7 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 		}
 	}
 
-	spec, err := model.DecodeTopologySpec(topology.Spec)
+	spec, err := challengecontracts.DecodeTopologySpec(topology.Spec)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
@@ -111,7 +112,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 				return errcode.ErrContainerCreateFailed.WithCause(err)
 			}
 		}
-		runtimeMounts := []model.ContainerMount(nil)
+		runtimeMounts := []runtimecontracts.ContainerMount(nil)
 		if awdWorkspacePlan != nil {
 			runtimeMounts = append(runtimeMounts, awdWorkspacePlan.runtimeMounts...)
 			if awdWorkspacePlan.checkerTokenEnv != "" {
@@ -120,7 +121,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 		}
 
 		networks := []practiceports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: challengecontracts.TopologyDefaultNetworkKey},
 		}
 		nodeAliases := []string(nil)
 		if isAWDInstance(instance) {
@@ -141,7 +142,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 					ServicePort:     chal.TargetPort,
 					ServiceProtocol: targetProtocol,
 					IsEntryPoint:    true,
-					NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+					NetworkKeys:     []string{challengecontracts.TopologyDefaultNetworkKey},
 					NetworkAliases:  nodeAliases,
 					Mounts:          runtimeMounts,
 				},
@@ -193,8 +194,8 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 			return errcode.ErrContainerCreateFailed.WithCause(err)
 		}
 
-		runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-			Containers: []model.InstanceRuntimeContainer{
+		runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+			Containers: []runtimecontracts.InstanceRuntimeContainer{
 				{
 					NodeKey:         "default",
 					ContainerID:     containerID,
@@ -213,7 +214,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 		instance.NetworkID = networkID
 		instance.RuntimeDetails = runtimeDetails
 		instance.HostPort = hostPort
-		host := model.ResolveRuntimePublishedAccessHost(s.config.Container.PublicHost, s.config.Container.AccessHost)
+		host := runtimecontracts.ResolveRuntimePublishedAccessHost(s.config.Container.PublicHost, s.config.Container.AccessHost)
 		instance.AccessURL = fmt.Sprintf("http://%s:%d", host, hostPort)
 		return nil
 	})
@@ -223,7 +224,7 @@ func applyTopologyCreateResultToInstance(instance *instancecontracts.Instance, r
 	if instance == nil || result == nil {
 		return fmt.Errorf("topology create result is nil")
 	}
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(result.RuntimeDetails)
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(result.RuntimeDetails)
 	if err != nil {
 		return err
 	}
@@ -300,7 +301,7 @@ func (s *Service) buildTopologyCreateRequest(
 	disableEntryPortPublishing bool,
 	chal *model.Challenge,
 	entryNodeKey string,
-	spec model.TopologySpec,
+	spec challengecontracts.TopologySpec,
 	flag string,
 ) (*practiceports.TopologyCreateRequest, error) {
 	if len(spec.Nodes) == 0 {
@@ -324,7 +325,7 @@ func (s *Service) buildTopologyCreateRequest(
 		DisableEntryPortPublishing: disableEntryPortPublishing,
 		Networks:                   make([]practiceports.TopologyCreateNetwork, 0),
 		Nodes:                      make([]practiceports.TopologyCreateNode, 0, len(spec.Nodes)),
-		Policies:                   append([]model.TopologyTrafficPolicy(nil), spec.Policies...),
+		Policies:                   append([]runtimecontracts.TopologyTrafficPolicy(nil), spec.Policies...),
 	}
 	runtimePlan := domain.BuildRuntimeTopologyPlan(spec)
 	request.Networks = append(request.Networks, runtimePlan.Networks...)
@@ -345,9 +346,9 @@ func (s *Service) buildTopologyCreateRequest(
 			env["FLAG"] = flag
 		}
 
-		var resources *model.ResourceLimits
+		var resources *runtimecontracts.ResourceLimits
 		if node.Resources != nil {
-			resources = &model.ResourceLimits{
+			resources = &runtimecontracts.ResourceLimits{
 				CPUQuota:  node.Resources.CPUQuota,
 				Memory:    node.Resources.MemoryMB * 1024 * 1024,
 				PidsLimit: node.Resources.PidsLimit,

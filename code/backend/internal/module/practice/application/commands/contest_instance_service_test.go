@@ -17,6 +17,8 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -25,6 +27,7 @@ import (
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
@@ -492,7 +495,7 @@ func TestServiceStartChallengeRejectsNoTargetChallenge(t *testing.T) {
 	if err := db.Create(&model.Challenge{
 		ID:         2201,
 		Title:      "No Target",
-		Category:   model.DimensionMisc,
+		Category:   challengecontracts.DimensionMisc,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     20,
 		ImageID:    0,
@@ -525,7 +528,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&identitycontracts.User{},
 		&model.Image{},
 		&model.Challenge{},
-		&model.ChallengeTopology{},
+		&challengeentity.ChallengeTopology{},
 		&contestentity.Contest{},
 		&contestentity.ContestAWDService{},
 		&contestentity.ContestChallenge{},
@@ -581,8 +584,8 @@ func (contestInstanceTestRuntimeService) CreateTopology(_ context.Context, req *
 		PrimaryContainerID: fmt.Sprintf("contest-topology-%d", req.ReservedHostPort),
 		NetworkID:          fmt.Sprintf("contest-network-%d", req.ReservedHostPort),
 		AccessURL:          accessURL,
-		RuntimeDetails: model.InstanceRuntimeDetails{
-			Containers: []model.InstanceRuntimeContainer{{
+		RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+			Containers: []runtimecontracts.InstanceRuntimeContainer{{
 				NodeKey:      "entry",
 				ContainerID:  fmt.Sprintf("contest-topology-%d", req.ReservedHostPort),
 				HostPort:     hostPort,
@@ -665,7 +668,7 @@ func seedContestInstanceChallenge(t *testing.T, db *gorm.DB, imageID, challengeI
 	if err := db.Create(&model.Challenge{
 		ID:         challengeID,
 		Title:      "AWD Service",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    imageID,

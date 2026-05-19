@@ -55,7 +55,7 @@ func buildContestAWDServiceRuntimeChallenge(service *practiceports.ContestAWDSer
 	return chal
 }
 
-func buildContestAWDServiceRuntimeTopology(service *practiceports.ContestAWDServiceRecord, snapshot contestAWDServiceSnapshot) (*model.ChallengeTopology, error) {
+func buildContestAWDServiceRuntimeTopology(service *practiceports.ContestAWDServiceRecord, snapshot contestAWDServiceSnapshot) (*practiceports.RuntimeChallengeTopology, error) {
 	topologyPayload, ok := snapshot.RuntimeConfig["topology"]
 	if !ok {
 		return nil, nil
@@ -73,7 +73,7 @@ func buildContestAWDServiceRuntimeTopology(service *practiceports.ContestAWDServ
 	if err != nil {
 		return nil, err
 	}
-	return &model.ChallengeTopology{
+	return &practiceports.RuntimeChallengeTopology{
 		ChallengeID:  service.AWDChallengeID,
 		EntryNodeKey: strings.TrimSpace(entryNodeKey),
 		Spec:         string(specRaw),

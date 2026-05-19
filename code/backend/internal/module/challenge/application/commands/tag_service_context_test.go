@@ -4,30 +4,31 @@ import (
 	"context"
 	"testing"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 type tagCommandContextStub struct {
-	createFn                 func(ctx context.Context, tag *model.Tag) error
-	findByIDsFn              func(ctx context.Context, ids []int64) ([]*model.Tag, error)
+	createFn                 func(ctx context.Context, tag *challengeentity.Tag) error
+	findByIDsFn              func(ctx context.Context, ids []int64) ([]*challengeentity.Tag, error)
 	attachTagsInTxFn         func(ctx context.Context, challengeID int64, tagIDs []int64) error
 	detachFromChallengeFn    func(ctx context.Context, challengeID, tagID int64) error
 	countChallengesByTagIDFn func(ctx context.Context, tagID int64) (int64, error)
 	deleteFn                 func(ctx context.Context, id int64) error
 }
 
-func (s *tagCommandContextStub) Create(ctx context.Context, tag *model.Tag) error {
+func (s *tagCommandContextStub) Create(ctx context.Context, tag *challengeentity.Tag) error {
 	if s.createFn != nil {
 		return s.createFn(ctx, tag)
 	}
 	return nil
 }
 
-func (s *tagCommandContextStub) List(ctx context.Context, tagType string) ([]*model.Tag, error) {
+func (s *tagCommandContextStub) List(ctx context.Context, tagType string) ([]*challengeentity.Tag, error) {
 	return nil, nil
 }
 
-func (s *tagCommandContextStub) FindByIDs(ctx context.Context, ids []int64) ([]*model.Tag, error) {
+func (s *tagCommandContextStub) FindByIDs(ctx context.Context, ids []int64) ([]*challengeentity.Tag, error) {
 	if s.findByIDsFn != nil {
 		return s.findByIDsFn(ctx, ids)
 	}
@@ -48,7 +49,7 @@ func (s *tagCommandContextStub) DetachFromChallenge(ctx context.Context, challen
 	return nil
 }
 
-func (s *tagCommandContextStub) FindByChallengeID(ctx context.Context, challengeID int64) ([]*model.Tag, error) {
+func (s *tagCommandContextStub) FindByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.Tag, error) {
 	return nil, nil
 }
 
@@ -75,7 +76,7 @@ func TestTagServiceCreateTagPropagatesContextToRepository(t *testing.T) {
 	expectedCtxValue := "ctx-tag-create"
 	createCalled := false
 	repo := &tagCommandContextStub{
-		createFn: func(ctx context.Context, tag *model.Tag) error {
+		createFn: func(ctx context.Context, tag *challengeentity.Tag) error {
 			createCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create ctx value %v, got %v", expectedCtxValue, got)
@@ -87,7 +88,7 @@ func TestTagServiceCreateTagPropagatesContextToRepository(t *testing.T) {
 	service := NewTagService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.CreateTag(ctx, CreateTagInput{Name: "SQL注入", Type: model.TagTypeVulnerability, Description: "desc"})
+	resp, err := service.CreateTag(ctx, CreateTagInput{Name: "SQL注入", Type: challengecontracts.TagTypeVulnerability, Description: "desc"})
 	if err != nil {
 		t.Fatalf("CreateTag() error = %v", err)
 	}
@@ -107,12 +108,12 @@ func TestTagServiceAttachTagsPropagatesContextToRepository(t *testing.T) {
 	findByIDsCalled := false
 	attachCalled := false
 	repo := &tagCommandContextStub{
-		findByIDsFn: func(ctx context.Context, ids []int64) ([]*model.Tag, error) {
+		findByIDsFn: func(ctx context.Context, ids []int64) ([]*challengeentity.Tag, error) {
 			findByIDsCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-by-ids ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return []*model.Tag{{ID: ids[0]}, {ID: ids[1]}}, nil
+			return []*challengeentity.Tag{{ID: ids[0]}, {ID: ids[1]}}, nil
 		},
 		attachTagsInTxFn: func(ctx context.Context, challengeID int64, tagIDs []int64) error {
 			attachCalled = true
@@ -144,12 +145,12 @@ func TestTagServiceDetachTagsPropagatesContextToRepository(t *testing.T) {
 	findByIDsCalled := false
 	detachCalls := 0
 	repo := &tagCommandContextStub{
-		findByIDsFn: func(ctx context.Context, ids []int64) ([]*model.Tag, error) {
+		findByIDsFn: func(ctx context.Context, ids []int64) ([]*challengeentity.Tag, error) {
 			findByIDsCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-by-ids ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return []*model.Tag{{ID: ids[0]}, {ID: ids[1]}}, nil
+			return []*challengeentity.Tag{{ID: ids[0]}, {ID: ids[1]}}, nil
 		},
 		detachFromChallengeFn: func(ctx context.Context, challengeID, tagID int64) error {
 			detachCalls++

@@ -14,8 +14,8 @@ import (
 
 type topologyServiceRepositoryStub struct {
 	findByIDFn     func(context.Context, int64) (*model.Challenge, error)
-	findTopologyFn func(context.Context, int64) (*model.ChallengeTopology, error)
-	upsertFn       func(context.Context, *model.ChallengeTopology) error
+	findTopologyFn func(context.Context, int64) (*challengeentity.ChallengeTopology, error)
+	upsertFn       func(context.Context, *challengeentity.ChallengeTopology) error
 	deleteFn       func(context.Context, int64) error
 }
 
@@ -23,11 +23,11 @@ func (s topologyServiceRepositoryStub) FindByID(ctx context.Context, id int64) (
 	return s.findByIDFn(ctx, id)
 }
 
-func (s topologyServiceRepositoryStub) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+func (s topologyServiceRepositoryStub) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 	return s.findTopologyFn(ctx, challengeID)
 }
 
-func (s topologyServiceRepositoryStub) UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error {
+func (s topologyServiceRepositoryStub) UpsertChallengeTopology(ctx context.Context, topology *challengeentity.ChallengeTopology) error {
 	if s.upsertFn != nil {
 		return s.upsertFn(ctx, topology)
 	}
@@ -42,22 +42,22 @@ func (s topologyServiceRepositoryStub) DeleteChallengeTopologyByChallengeID(ctx 
 }
 
 type topologyTemplateRepositoryStub struct {
-	createFn         func(context.Context, *model.EnvironmentTemplate) error
-	updateFn         func(context.Context, *model.EnvironmentTemplate) error
+	createFn         func(context.Context, *challengeentity.EnvironmentTemplate) error
+	updateFn         func(context.Context, *challengeentity.EnvironmentTemplate) error
 	deleteFn         func(context.Context, int64) error
-	findByIDFn       func(context.Context, int64) (*model.EnvironmentTemplate, error)
-	listFn           func(context.Context, string) ([]*model.EnvironmentTemplate, error)
+	findByIDFn       func(context.Context, int64) (*challengeentity.EnvironmentTemplate, error)
+	listFn           func(context.Context, string) ([]*challengeentity.EnvironmentTemplate, error)
 	incrementUsageFn func(context.Context, int64) error
 }
 
-func (s topologyTemplateRepositoryStub) Create(ctx context.Context, template *model.EnvironmentTemplate) error {
+func (s topologyTemplateRepositoryStub) Create(ctx context.Context, template *challengeentity.EnvironmentTemplate) error {
 	if s.createFn != nil {
 		return s.createFn(ctx, template)
 	}
 	return nil
 }
 
-func (s topologyTemplateRepositoryStub) Update(ctx context.Context, template *model.EnvironmentTemplate) error {
+func (s topologyTemplateRepositoryStub) Update(ctx context.Context, template *challengeentity.EnvironmentTemplate) error {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, template)
 	}
@@ -71,11 +71,11 @@ func (s topologyTemplateRepositoryStub) Delete(ctx context.Context, id int64) er
 	return nil
 }
 
-func (s topologyTemplateRepositoryStub) FindByID(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
+func (s topologyTemplateRepositoryStub) FindByID(ctx context.Context, id int64) (*challengeentity.EnvironmentTemplate, error) {
 	return s.findByIDFn(ctx, id)
 }
 
-func (s topologyTemplateRepositoryStub) List(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
+func (s topologyTemplateRepositoryStub) List(ctx context.Context, keyword string) ([]*challengeentity.EnvironmentTemplate, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, keyword)
 	}
@@ -125,7 +125,7 @@ func TestTopologyServiceRepositoryMapsRawNotFoundToPortsSentinels(t *testing.T) 
 		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findTopologyFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+		findTopologyFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -168,7 +168,7 @@ func TestTopologyTemplateRepositoryMapsRawNotFoundToPortsSentinel(t *testing.T) 
 	t.Parallel()
 
 	repo := NewTopologyTemplateRepository(topologyTemplateRepositoryStub{
-		findByIDFn: func(context.Context, int64) (*model.EnvironmentTemplate, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.EnvironmentTemplate, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})

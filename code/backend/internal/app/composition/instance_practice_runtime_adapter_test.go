@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/model"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -15,7 +16,7 @@ func TestPracticeRuntimeTopologyAdapterPreservesAWDNetworkFields(t *testing.T) {
 	req := &practiceports.TopologyCreateRequest{
 		ContainerName: "ctf-workspace-workspace-c8-t15-s21-r1",
 		Networks: []practiceports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
 		},
 		Nodes: []practiceports.TopologyCreateNode{
 			{
@@ -23,9 +24,9 @@ func TestPracticeRuntimeTopologyAdapterPreservesAWDNetworkFields(t *testing.T) {
 				Command:        []string{"tail", "-f", "/dev/null"},
 				WorkingDir:     "/workspace",
 				IsEntryPoint:   true,
-				NetworkKeys:    []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:    []string{runtimecontracts.TopologyDefaultNetworkKey},
 				NetworkAliases: []string{"awd-c8-t15-s21"},
-				Mounts: []model.ContainerMount{
+				Mounts: []runtimecontracts.ContainerMount{
 					{Source: "ctf-workspace-root-c8-t15-s21-r1-src", Target: "/workspace/src", ReadOnly: false},
 				},
 			},
@@ -64,9 +65,9 @@ func TestPracticeRuntimeTopologyAdapterPreservesWorkspaceShellFields(t *testing.
 				ServicePort:     22,
 				ServiceProtocol: model.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
-				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 				NetworkAliases:  []string{"awd-c8-t15-s21-workspace"},
-				Mounts: []model.ContainerMount{
+				Mounts: []runtimecontracts.ContainerMount{
 					{Source: "workspace-src", Target: "/workspace/src"},
 					{Source: "workspace-data", Target: "/workspace/data", ReadOnly: true},
 				},

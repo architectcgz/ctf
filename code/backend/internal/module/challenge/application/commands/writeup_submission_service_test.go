@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -51,7 +52,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	challengeItem := &model.Challenge{
 		Title:       "web-301",
 		Description: "desc",
-		Category:    model.DimensionWeb,
+		Category:    challengecontracts.DimensionWeb,
 		Difficulty:  model.ChallengeDifficultyEasy,
 		Points:      100,
 		ImageID:     1,
@@ -189,7 +190,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 	challengeItem := &model.Challenge{
 		Title:       "web-302",
 		Description: "desc",
-		Category:    model.DimensionWeb,
+		Category:    challengecontracts.DimensionWeb,
 		Difficulty:  model.ChallengeDifficultyEasy,
 		Points:      100,
 		ImageID:     1,
@@ -208,7 +209,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 	if _, err := service.Upsert(context.Background(), challengeItem.ID, admin.ID, UpsertOfficialWriteupInput{
 		Title:      "Official",
 		Content:    "official content",
-		Visibility: model.WriteupVisibilityPublic,
+		Visibility: challengeentity.WriteupVisibilityPublic,
 	}); err != nil {
 		t.Fatalf("Upsert official writeup() error = %v", err)
 	}

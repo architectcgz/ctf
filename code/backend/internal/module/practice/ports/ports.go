@@ -67,6 +67,12 @@ type ContestAWDServiceRecord struct {
 	IsVisible       bool
 }
 
+type RuntimeChallengeTopology struct {
+	ChallengeID  int64
+	EntryNodeKey string
+	Spec         string
+}
+
 type ContestTeamRecord struct {
 	ID        int64
 	ContestID int64
@@ -111,8 +117,8 @@ type TopologyCreateNode struct {
 	IsEntryPoint    bool
 	NetworkKeys     []string
 	NetworkAliases  []string
-	Mounts          []model.ContainerMount
-	Resources       *model.ResourceLimits
+	Mounts          []runtimecontracts.ContainerMount
+	Resources       *runtimecontracts.ResourceLimits
 }
 
 type TopologyCreateNetwork struct {
@@ -125,7 +131,7 @@ type TopologyCreateNetwork struct {
 type TopologyCreateRequest struct {
 	Networks                   []TopologyCreateNetwork
 	Nodes                      []TopologyCreateNode
-	Policies                   []model.TopologyTrafficPolicy
+	Policies                   []runtimecontracts.TopologyTrafficPolicy
 	ReservedHostPort           int
 	DisableEntryPortPublishing bool
 	ContainerName              string
@@ -135,7 +141,7 @@ type TopologyCreateResult struct {
 	PrimaryContainerID string
 	NetworkID          string
 	AccessURL          string
-	RuntimeDetails     model.InstanceRuntimeDetails
+	RuntimeDetails     runtimecontracts.InstanceRuntimeDetails
 }
 
 type ManagedContainerState = runtimeports.ManagedContainerState
@@ -246,7 +252,7 @@ type ContestAWDServiceRuntimeSubject struct {
 	Visible          bool
 	SeedSignature    string
 	RuntimeChallenge *model.Challenge
-	RuntimeTopology  *model.ChallengeTopology
+	RuntimeTopology  *RuntimeChallengeTopology
 	WorkspaceConfig  *ContestAWDDefenseWorkspaceConfig
 }
 
@@ -317,7 +323,7 @@ type PracticeContestScopeRepository interface {
 
 type PracticeRuntimeSubjectRepository interface {
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*RuntimeChallengeTopology, error)
 }
 
 type PracticeSubmissionWriteRepository interface {

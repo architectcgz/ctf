@@ -3,8 +3,8 @@ package domain
 import (
 	"time"
 
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 // ManagedResources 表示实例占用的运行时资源集合。
@@ -12,7 +12,7 @@ type ManagedResources struct {
 	ContainerIDs []string
 	NetworkIDs   []string
 	HostPorts    []int
-	ACLRules     []model.InstanceRuntimeACLRule
+	ACLRules     []runtimecontracts.InstanceRuntimeACLRule
 }
 
 // ExtractManagedResources 提取实例持有的容器、网络和 ACL 资源标识。
@@ -21,7 +21,7 @@ func ExtractManagedResources(instance *instancecontracts.Instance) ManagedResour
 		return ManagedResources{}
 	}
 
-	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
 	if err != nil {
 		return ManagedResources{
 			ContainerIDs: fallbackIDs(instance.ContainerID),
@@ -34,7 +34,7 @@ func ExtractManagedResources(instance *instancecontracts.Instance) ManagedResour
 		ContainerIDs: uniqueContainerIDs(details, instance.ContainerID),
 		NetworkIDs:   uniqueNetworkIDs(details, instance.NetworkID),
 		HostPorts:    uniqueHostPorts(details, instance.HostPort),
-		ACLRules:     append([]model.InstanceRuntimeACLRule(nil), details.ACLRules...),
+		ACLRules:     append([]runtimecontracts.InstanceRuntimeACLRule(nil), details.ACLRules...),
 	}
 }
 
@@ -56,7 +56,7 @@ func RemainingTime(expiresAt, now time.Time) int64 {
 	return remaining
 }
 
-func uniqueContainerIDs(details model.InstanceRuntimeDetails, fallback string) []string {
+func uniqueContainerIDs(details runtimecontracts.InstanceRuntimeDetails, fallback string) []string {
 	result := make([]string, 0, len(details.Containers))
 	seen := make(map[string]struct{}, len(details.Containers))
 	for _, item := range details.Containers {
@@ -75,7 +75,7 @@ func uniqueContainerIDs(details model.InstanceRuntimeDetails, fallback string) [
 	return result
 }
 
-func uniqueNetworkIDs(details model.InstanceRuntimeDetails, fallback string) []string {
+func uniqueNetworkIDs(details runtimecontracts.InstanceRuntimeDetails, fallback string) []string {
 	result := make([]string, 0, len(details.Networks))
 	seen := make(map[string]struct{}, len(details.Networks))
 	for _, item := range details.Networks {
@@ -101,7 +101,7 @@ func fallbackIDs(id string) []string {
 	return []string{id}
 }
 
-func uniqueHostPorts(details model.InstanceRuntimeDetails, fallback int) []int {
+func uniqueHostPorts(details runtimecontracts.InstanceRuntimeDetails, fallback int) []int {
 	result := make([]int, 0, len(details.Containers)+1)
 	seen := make(map[int]struct{}, len(details.Containers)+1)
 	for _, item := range details.Containers {

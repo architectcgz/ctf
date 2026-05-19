@@ -9,6 +9,7 @@ import (
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -59,7 +60,7 @@ func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID
 		return nil, err
 	}
 
-	var existing *model.ChallengeTopology
+	var existing *challengeentity.ChallengeTopology
 	existing, err = s.repo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	switch {
 	case err == nil:
@@ -69,7 +70,7 @@ func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID
 		return nil, err
 	}
 
-	item := &model.ChallengeTopology{
+	item := &challengeentity.ChallengeTopology{
 		ChallengeID:  challengeID,
 		TemplateID:   templateID,
 		EntryNodeKey: entryNodeKey,
@@ -84,8 +85,8 @@ func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID
 		item.LastExportRevisionID = existing.LastExportRevisionID
 		item.SyncStatus = resolveTopologySyncStatus(rawSpec, existing.PackageBaselineSpec)
 	} else {
-		item.SourceType = model.ChallengeTopologySourceTypeManual
-		item.SyncStatus = model.ChallengeTopologySyncStatusClean
+		item.SourceType = challengeentity.ChallengeTopologySourceTypeManual
+		item.SyncStatus = challengeentity.ChallengeTopologySyncStatusClean
 	}
 	if err := s.repo.UpsertChallengeTopology(ctx, item); err != nil {
 		return nil, err
@@ -104,19 +105,19 @@ func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID
 
 func resolveTopologySyncStatus(rawSpec string, baselineSpec string) string {
 	if strings.TrimSpace(baselineSpec) == "" {
-		return model.ChallengeTopologySyncStatusClean
+		return challengeentity.ChallengeTopologySyncStatusClean
 	}
 	if strings.TrimSpace(rawSpec) == strings.TrimSpace(baselineSpec) {
-		return model.ChallengeTopologySyncStatusClean
+		return challengeentity.ChallengeTopologySyncStatusClean
 	}
-	return model.ChallengeTopologySyncStatusDrifted
+	return challengeentity.ChallengeTopologySyncStatusDrifted
 }
 
 func validateSharedTopologyConstraint(challenge *model.Challenge, rawSpec string) error {
 	if challenge == nil || challenge.InstanceSharing != model.InstanceSharingShared {
 		return nil
 	}
-	spec, err := model.DecodeTopologySpec(rawSpec)
+	spec, err := challengecontracts.DecodeTopologySpec(rawSpec)
 	if err != nil {
 		return errcode.ErrInvalidParams.WithCause(err)
 	}
@@ -146,7 +147,7 @@ func (s *TopologyService) CreateTemplate(ctx context.Context, req UpsertEnvironm
 	if err := s.ensureTopologyImagesExist(ctx, rawSpec); err != nil {
 		return nil, err
 	}
-	item := &model.EnvironmentTemplate{
+	item := &challengeentity.EnvironmentTemplate{
 		Name:         strings.TrimSpace(req.Name),
 		Description:  strings.TrimSpace(req.Description),
 		EntryNodeKey: entryNodeKey,
@@ -214,7 +215,7 @@ func (s *TopologyService) resolveTopologyPayload(ctx context.Context, req SaveCh
 }
 
 func (s *TopologyService) ensureTopologyImagesExist(ctx context.Context, rawSpec string) error {
-	spec, err := model.DecodeTopologySpec(rawSpec)
+	spec, err := challengecontracts.DecodeTopologySpec(rawSpec)
 	if err != nil {
 		return err
 	}

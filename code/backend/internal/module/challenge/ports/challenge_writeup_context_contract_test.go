@@ -21,11 +21,11 @@ func (ctxOnlyChallengeWriteupRepository) FindUserByID(context.Context, int64) (*
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) FindWriteupByChallengeID(context.Context, int64) (*model.ChallengeWriteup, error) {
+func (ctxOnlyChallengeWriteupRepository) FindWriteupByChallengeID(context.Context, int64) (*challengeentity.ChallengeWriteup, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) UpsertWriteup(context.Context, *model.ChallengeWriteup) error {
+func (ctxOnlyChallengeWriteupRepository) UpsertWriteup(context.Context, *challengeentity.ChallengeWriteup) error {
 	return nil
 }
 
@@ -33,7 +33,7 @@ func (ctxOnlyChallengeWriteupRepository) DeleteWriteupByChallengeID(context.Cont
 	return nil
 }
 
-func (ctxOnlyChallengeWriteupRepository) FindReleasedWriteupByChallengeID(context.Context, int64, time.Time) (*model.ChallengeWriteup, error) {
+func (ctxOnlyChallengeWriteupRepository) FindReleasedWriteupByChallengeID(context.Context, int64, time.Time) (*challengeentity.ChallengeWriteup, error) {
 	return nil, nil
 }
 

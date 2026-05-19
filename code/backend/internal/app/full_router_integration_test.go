@@ -63,7 +63,7 @@ type fullRouterTestEnv struct {
 	reportDir    string
 	image        *model.Image
 	challenge    *model.Challenge
-	template     *model.EnvironmentTemplate
+	template     *challengeentity.EnvironmentTemplate
 	contest      *contestcontracts.Contest
 	awdContest   *contestcontracts.Contest
 	registration *contestcontracts.ContestRegistration
@@ -89,13 +89,13 @@ var fullRouterTestSchemaModels = []any{
 	&model.Challenge{},
 	&challengecontracts.AWDChallenge{},
 	&challengeentity.ChallengePublishCheckJob{},
-	&model.Tag{},
-	&model.ChallengeTag{},
+	&challengeentity.Tag{},
+	&challengeentity.ChallengeTag{},
 	&challengeentity.ChallengeHint{},
-	&model.ChallengeWriteup{},
+	&challengeentity.ChallengeWriteup{},
 	&challengeentity.SubmissionWriteup{},
-	&model.EnvironmentTemplate{},
-	&model.ChallengeTopology{},
+	&challengeentity.EnvironmentTemplate{},
+	&challengeentity.ChallengeTopology{},
 	&challengeentity.ChallengePackageRevision{},
 	&contestcontracts.Submission{},
 	&instancecontracts.Instance{},
@@ -264,7 +264,7 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 
 	serviceSnapshot, err := contestcontracts.EncodeContestAWDServiceSnapshot(contestcontracts.ContestAWDServiceSnapshot{
 		Name:       "AWD Web",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		RuntimeConfig: map[string]any{
 			"image_id":         env.image.ID,
@@ -387,7 +387,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 		return map[string]any{
 			"title":       title,
 			"description": "ownership test challenge",
-			"category":    model.DimensionWeb,
+			"category":    challengecontracts.DimensionWeb,
 			"difficulty":  model.ChallengeDifficultyEasy,
 			"points":      100,
 			"image_id":    env.image.ID,
@@ -436,7 +436,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", adminChallenge.ID), map[string]any{
 		"title":      "admin writeup",
 		"content":    "admin writeup content",
-		"visibility": model.WriteupVisibilityPublic,
+		"visibility": challengeentity.WriteupVisibilityPublic,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
@@ -518,7 +518,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 				assertFullRouterStatus(t, resp, http.StatusOK)
 				var writeup challengecontracts.AdminChallengeWriteupResp
 				decodeFullRouterData(t, resp, &writeup)
-				if writeup.Title != "admin writeup" || writeup.Visibility != model.WriteupVisibilityPublic {
+				if writeup.Title != "admin writeup" || writeup.Visibility != challengeentity.WriteupVisibilityPublic {
 					t.Fatalf("unexpected admin writeup: %+v", writeup)
 				}
 			},
@@ -591,7 +591,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 		{name: "upsert writeup", method: http.MethodPut, path: fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", adminChallenge.ID), payload: map[string]any{
 			"title":      "forbidden writeup",
 			"content":    "forbidden content",
-			"visibility": model.WriteupVisibilityPublic,
+			"visibility": challengeentity.WriteupVisibilityPublic,
 		}},
 		{name: "save topology", method: http.MethodPut, path: fmt.Sprintf("/api/v1/authoring/challenges/%d/topology", adminChallenge.ID), payload: map[string]any{
 			"entry_node_key": "web",
@@ -602,7 +602,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 					"image_id":     env.image.ID,
 					"service_port": 80,
 					"inject_flag":  true,
-					"tier":         model.TopologyTierPublic,
+					"tier":         challengecontracts.TopologyTierPublic,
 				},
 			},
 		}},
@@ -631,7 +631,7 @@ func TestFullRouter_CreateChallengeStoresCreator(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "creator-marker",
 		"description": "creator marker challenge",
-		"category":    model.DimensionWeb,
+		"category":    challengecontracts.DimensionWeb,
 		"difficulty":  model.ChallengeDifficultyEasy,
 		"points":      100,
 		"image_id":    env.image.ID,
@@ -1232,7 +1232,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	env.challenge = &model.Challenge{
 		Title:         "Matrix Web Challenge",
 		Description:   "challenge for full router integration tests",
-		Category:      model.DimensionWeb,
+		Category:      challengecontracts.DimensionWeb,
 		Difficulty:    model.ChallengeDifficultyEasy,
 		Points:        100,
 		ImageID:       env.image.ID,
@@ -1258,34 +1258,34 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("create hint: %v", err)
 	}
 
-	writeup := &model.ChallengeWriteup{
+	writeup := &challengeentity.ChallengeWriteup{
 		ChallengeID: env.challenge.ID,
 		Title:       "题解",
 		Content:     "writeup content",
-		Visibility:  model.WriteupVisibilityPublic,
+		Visibility:  challengeentity.WriteupVisibilityPublic,
 		CreatedBy:   &env.admin.ID,
 	}
 	if err := env.db.Create(writeup).Error; err != nil {
 		t.Fatalf("create writeup: %v", err)
 	}
 
-	spec, err := model.EncodeTopologySpec(model.TopologySpec{
-		Networks: []model.TopologyNetwork{{Key: model.TopologyDefaultNetworkKey, Name: "default"}},
-		Nodes: []model.TopologyNode{{
+	spec, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{
+		Networks: []challengecontracts.TopologyNetwork{{Key: challengecontracts.TopologyDefaultNetworkKey, Name: "default"}},
+		Nodes: []challengecontracts.TopologyNode{{
 			Key:         "web",
 			Name:        "Web Node",
 			ImageID:     env.image.ID,
 			ServicePort: 80,
 			InjectFlag:  true,
-			Tier:        model.TopologyTierPublic,
-			NetworkKeys: []string{model.TopologyDefaultNetworkKey},
+			Tier:        challengecontracts.TopologyTierPublic,
+			NetworkKeys: []string{challengecontracts.TopologyDefaultNetworkKey},
 		}},
 	})
 	if err != nil {
 		t.Fatalf("encode topology: %v", err)
 	}
 
-	env.template = &model.EnvironmentTemplate{
+	env.template = &challengeentity.EnvironmentTemplate{
 		Name:         "Matrix Template",
 		Description:  "template for integration tests",
 		EntryNodeKey: "web",
@@ -1423,8 +1423,8 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		t.Fatalf("create awd attack log: %v", err)
 	}
 
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Containers: []model.InstanceRuntimeContainer{{
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{{
 			NodeKey:      "web",
 			ContainerID:  "ctf-instance",
 			ServicePort:  80,
@@ -1467,7 +1467,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	}
 	if err := env.db.Create(&assessmententity.SkillProfile{
 		UserID:    env.student.ID,
-		Dimension: model.DimensionWeb,
+		Dimension: challengecontracts.DimensionWeb,
 		Score:     0.3,
 		UpdatedAt: now,
 	}).Error; err != nil {

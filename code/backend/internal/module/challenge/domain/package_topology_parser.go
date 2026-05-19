@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/errcode"
 	"gopkg.in/yaml.v3"
@@ -79,10 +78,10 @@ func parseChallengePackageTopology(
 	}
 	if len(parsed.Networks) == 0 {
 		parsed.Networks = append(parsed.Networks, ChallengePackageTopologyNetwork{
-			Key:  model.TopologyDefaultNetworkKey,
-			Name: model.TopologyDefaultNetworkKey,
+			Key:  challengecontracts.TopologyDefaultNetworkKey,
+			Name: challengecontracts.TopologyDefaultNetworkKey,
 		})
-		networkKeys[model.TopologyDefaultNetworkKey] = struct{}{}
+		networkKeys[challengecontracts.TopologyDefaultNetworkKey] = struct{}{}
 	}
 
 	nodeKeys := map[string]struct{}{}
@@ -171,7 +170,7 @@ func parseChallengePackageTopology(
 		}
 		action := strings.TrimSpace(policy.Action)
 		switch action {
-		case model.TopologyPolicyActionAllow, model.TopologyPolicyActionDeny:
+		case challengecontracts.TopologyPolicyActionAllow, challengecontracts.TopologyPolicyActionDeny:
 		default:
 			return nil, errcode.ErrInvalidParams.WithCause(errors.New("题目包拓扑策略 action 仅支持 allow/deny"))
 		}
@@ -192,7 +191,7 @@ func normalizeImportedTopologyNodeNetworks(
 	knownNetworks map[string]struct{},
 ) ([]string, error) {
 	if len(networkKeys) == 0 {
-		return []string{model.TopologyDefaultNetworkKey}, nil
+		return []string{challengecontracts.TopologyDefaultNetworkKey}, nil
 	}
 	result := make([]string, 0, len(networkKeys))
 	seen := map[string]struct{}{}
@@ -211,7 +210,7 @@ func normalizeImportedTopologyNodeNetworks(
 		result = append(result, key)
 	}
 	if len(result) == 0 {
-		return []string{model.TopologyDefaultNetworkKey}, nil
+		return []string{challengecontracts.TopologyDefaultNetworkKey}, nil
 	}
 	sort.Strings(result)
 	return result, nil
@@ -266,7 +265,7 @@ func BuildTopologySpecFromImportedPackage(
 	}
 
 	seenNodes := make(map[string]struct{}, len(topology.Nodes))
-	specNodes := make([]model.TopologyNode, 0, len(topology.Nodes))
+	specNodes := make([]challengecontracts.TopologyNode, 0, len(topology.Nodes))
 	for _, node := range topology.Nodes {
 		key := strings.TrimSpace(node.Key)
 		if _, exists := seenNodes[key]; exists {
@@ -284,9 +283,9 @@ func BuildTopologySpecFromImportedPackage(
 		}
 		tier := strings.TrimSpace(node.Tier)
 		if tier == "" {
-			tier = model.TopologyTierService
+			tier = challengecontracts.TopologyTierService
 		}
-		specNode := model.TopologyNode{
+		specNode := challengecontracts.TopologyNode{
 			Key:         key,
 			Name:        strings.TrimSpace(node.Name),
 			ImageID:     imageID,
@@ -297,7 +296,7 @@ func BuildTopologySpecFromImportedPackage(
 			Env:         trimEnvMap(node.Env),
 		}
 		if node.Resources != nil {
-			specNode.Resources = &model.TopologyResources{
+			specNode.Resources = &challengecontracts.TopologyResources{
 				CPUQuota:  node.Resources.CPUQuota,
 				MemoryMB:  node.Resources.MemoryMB,
 				PidsLimit: node.Resources.PidsLimit,
@@ -306,17 +305,17 @@ func BuildTopologySpecFromImportedPackage(
 		specNodes = append(specNodes, specNode)
 	}
 
-	specLinks := make([]model.TopologyLink, 0, len(topology.Links))
+	specLinks := make([]challengecontracts.TopologyLink, 0, len(topology.Links))
 	for _, link := range topology.Links {
-		specLinks = append(specLinks, model.TopologyLink{
+		specLinks = append(specLinks, challengecontracts.TopologyLink{
 			FromNodeKey: strings.TrimSpace(link.FromNodeKey),
 			ToNodeKey:   strings.TrimSpace(link.ToNodeKey),
 		})
 	}
 
-	specPolicies := make([]model.TopologyTrafficPolicy, 0, len(topology.Policies))
+	specPolicies := make([]challengecontracts.TopologyTrafficPolicy, 0, len(topology.Policies))
 	for _, policy := range topology.Policies {
-		specPolicies = append(specPolicies, model.TopologyTrafficPolicy{
+		specPolicies = append(specPolicies, challengecontracts.TopologyTrafficPolicy{
 			SourceNodeKey: strings.TrimSpace(policy.SourceNodeKey),
 			TargetNodeKey: strings.TrimSpace(policy.TargetNodeKey),
 			Action:        strings.TrimSpace(policy.Action),
@@ -325,7 +324,7 @@ func BuildTopologySpecFromImportedPackage(
 		})
 	}
 
-	raw, err := model.EncodeTopologySpec(model.TopologySpec{
+	raw, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{
 		Networks: specNetworks,
 		Nodes:    specNodes,
 		Links:    specLinks,

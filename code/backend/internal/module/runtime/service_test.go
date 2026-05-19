@@ -14,6 +14,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
@@ -310,8 +311,8 @@ func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create port allocation: %v", err)
 	}
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Containers: []model.InstanceRuntimeContainer{
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{
 				ContainerID:  "ctr-cleanup",
 				HostPort:     30001,
@@ -352,8 +353,8 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailHostPort(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create owned port allocation: %v", err)
 	}
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Containers: []model.InstanceRuntimeContainer{
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{
 				ContainerID:  "ctr-cleanup-owned",
 				HostPort:     30011,
@@ -395,8 +396,8 @@ func TestRuntimeCleanupServiceKeepsForeignOwnedRuntimeDetailHostPort(t *testing.
 	}).Error; err != nil {
 		t.Fatalf("create foreign-owned port allocation: %v", err)
 	}
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Containers: []model.InstanceRuntimeContainer{
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{
 				ContainerID:  "ctr-cleanup-foreign",
 				HostPort:     30012,
@@ -760,7 +761,7 @@ func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
 	if err := repo.db.Create(&model.Challenge{
 		ID:              903,
 		Title:           "Shared Practice",
-		Category:        model.DimensionWeb,
+		Category:        challengecontracts.DimensionWeb,
 		Difficulty:      model.ChallengeDifficultyEasy,
 		FlagType:        model.FlagTypeStatic,
 		Status:          model.ChallengeStatusPublished,
@@ -797,7 +798,7 @@ func TestServiceExtendInstanceRejectsSharedInstance(t *testing.T) {
 	if err := repo.db.Create(&model.Challenge{
 		ID:              904,
 		Title:           "Shared Practice",
-		Category:        model.DimensionWeb,
+		Category:        challengecontracts.DimensionWeb,
 		Difficulty:      model.ChallengeDifficultyEasy,
 		FlagType:        model.FlagTypeStatic,
 		Status:          model.ChallengeStatusPublished,
@@ -834,7 +835,7 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 	if err := repo.db.Create(&model.Challenge{
 		ID:         101,
 		Title:      "Matrix Web Challenge",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		FlagType:   model.FlagTypeStatic,
 		Status:     model.ChallengeStatusPublished,
@@ -869,8 +870,8 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 	if item.ChallengeTitle != "Matrix Web Challenge" {
 		t.Fatalf("expected challenge title, got %+v", item)
 	}
-	if item.Category != model.DimensionWeb {
-		t.Fatalf("expected category %q, got %+v", model.DimensionWeb, item)
+	if item.Category != challengecontracts.DimensionWeb {
+		t.Fatalf("expected category %q, got %+v", challengecontracts.DimensionWeb, item)
 	}
 	if item.Difficulty != model.ChallengeDifficultyEasy {
 		t.Fatalf("expected difficulty %q, got %+v", model.ChallengeDifficultyEasy, item)
@@ -895,7 +896,7 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 	if err := repo.db.Create(&model.Challenge{
 		ID:         102,
 		Title:      "Shared AWD Challenge",
-		Category:   model.DimensionPwn,
+		Category:   challengecontracts.DimensionPwn,
 		Difficulty: model.ChallengeDifficultyMedium,
 		FlagType:   model.FlagTypeDynamic,
 		Status:     model.ChallengeStatusPublished,
@@ -960,7 +961,7 @@ func TestServiceGetUserInstancesShowsPracticeSharedInstanceToAnyUser(t *testing.
 	if err := repo.db.Create(&model.Challenge{
 		ID:              103,
 		Title:           "Shared Practice",
-		Category:        model.DimensionWeb,
+		Category:        challengecontracts.DimensionWeb,
 		Difficulty:      model.ChallengeDifficultyEasy,
 		FlagType:        model.FlagTypeStatic,
 		Status:          model.ChallengeStatusPublished,
@@ -1013,11 +1014,11 @@ func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testin
 
 	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
 		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
-			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
-			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	})
 	if err != nil {
@@ -1066,10 +1067,10 @@ func TestServiceCreateTopologyCanKeepEntryPointPrivate(t *testing.T) {
 	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
 		DisableEntryPortPublishing: true,
 		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
-			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	})
 	if err != nil {
@@ -1115,10 +1116,10 @@ func TestServiceCreateTopologyUsesPreferredContainerName(t *testing.T) {
 	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
 		ContainerName: preferredName,
 		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
-			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	})
 	if err != nil {
@@ -1179,7 +1180,7 @@ func TestServiceCreateTopologyMarksAWDWorkspaceAsAWDComposeService(t *testing.T)
 		DisableEntryPortPublishing: true,
 		ContainerName:              "ctf-workspace-workspace-c8-t15-s21-r2",
 		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
 			{
@@ -1188,7 +1189,7 @@ func TestServiceCreateTopologyMarksAWDWorkspaceAsAWDComposeService(t *testing.T)
 				ServicePort:     22,
 				ServiceProtocol: model.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
-				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 				NetworkAliases:  []string{"awd-ws-c8-t15-s21-r2"},
 			},
 		},
@@ -1224,7 +1225,7 @@ func TestServiceCreateTopologyPassesMountsAndCommandToEngine(t *testing.T) {
 	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
 		DisableEntryPortPublishing: true,
 		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
 			{
@@ -1234,10 +1235,10 @@ func TestServiceCreateTopologyPassesMountsAndCommandToEngine(t *testing.T) {
 				ServicePort:     22,
 				ServiceProtocol: model.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
-				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 				WorkingDir:      "/workspace",
 				Command:         []string{"tail", "-f", "/dev/null"},
-				Mounts: []model.ContainerMount{
+				Mounts: []runtimecontracts.ContainerMount{
 					{Source: "ctf-ws-src", Target: "/workspace/src"},
 					{Source: "ctf-ws-data", Target: "/workspace/data", ReadOnly: true},
 				},
@@ -1295,7 +1296,7 @@ func TestServiceCreateTopologyBuildsTCPEntryAccessURL(t *testing.T) {
 
 	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
 		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
 			{
@@ -1304,7 +1305,7 @@ func TestServiceCreateTopologyBuildsTCPEntryAccessURL(t *testing.T) {
 				ServicePort:     31337,
 				ServiceProtocol: model.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
-				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 			},
 		},
 	})
@@ -1580,7 +1581,7 @@ func TestServiceCreateTopologyUsesStableAliasForPrivateEntryPoint(t *testing.T) 
 	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
 		DisableEntryPortPublishing: true,
 		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
 			{
@@ -1588,7 +1589,7 @@ func TestServiceCreateTopologyUsesStableAliasForPrivateEntryPoint(t *testing.T) 
 				Image:          "ctf/web:v1",
 				ServicePort:    8080,
 				IsEntryPoint:   true,
-				NetworkKeys:    []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:    []string{runtimecontracts.TopologyDefaultNetworkKey},
 				NetworkAliases: []string{"awd-c8-t15-s21"},
 			},
 		},
@@ -1689,14 +1690,14 @@ func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
 
 	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
 		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
-			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
-			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
-		Policies: []model.TopologyTrafficPolicy{
-			{SourceNodeKey: "web", TargetNodeKey: "db", Action: model.TopologyPolicyActionAllow, Protocol: model.TopologyPolicyProtocolTCP, Ports: []int{3306}},
+		Policies: []runtimecontracts.TopologyTrafficPolicy{
+			{SourceNodeKey: "web", TargetNodeKey: "db", Action: runtimecontracts.TopologyPolicyActionAllow, Protocol: runtimecontracts.TopologyPolicyProtocolTCP, Ports: []int{3306}},
 		},
 	})
 	if err != nil {
@@ -1708,10 +1709,10 @@ func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
 	if len(result.RuntimeDetails.ACLRules) != 2 {
 		t.Fatalf("expected runtime acl rules, got %+v", result.RuntimeDetails.ACLRules)
 	}
-	if engine.appliedACLRules[0].Action != model.TopologyPolicyActionAllow || engine.appliedACLRules[0].Protocol != model.TopologyPolicyProtocolTCP {
+	if engine.appliedACLRules[0].Action != runtimecontracts.TopologyPolicyActionAllow || engine.appliedACLRules[0].Protocol != runtimecontracts.TopologyPolicyProtocolTCP {
 		t.Fatalf("unexpected allow acl rule: %+v", engine.appliedACLRules[0])
 	}
-	if engine.appliedACLRules[1].Action != model.TopologyPolicyActionDeny || len(engine.appliedACLRules[1].Ports) != 0 {
+	if engine.appliedACLRules[1].Action != runtimecontracts.TopologyPolicyActionDeny || len(engine.appliedACLRules[1].Ports) != 0 {
 		t.Fatalf("unexpected fallback deny rule: %+v", engine.appliedACLRules[1])
 	}
 }
@@ -1746,14 +1747,14 @@ func TestServiceCreateTopologyRollsBackWhenACLApplyFails(t *testing.T) {
 
 	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
 		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
 		Nodes: []runtimeports.TopologyCreateNode{
-			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
-			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
-		Policies: []model.TopologyTrafficPolicy{
-			{SourceNodeKey: "web", TargetNodeKey: "db", Action: model.TopologyPolicyActionAllow, Protocol: model.TopologyPolicyProtocolTCP, Ports: []int{3306}},
+		Policies: []runtimecontracts.TopologyTrafficPolicy{
+			{SourceNodeKey: "web", TargetNodeKey: "db", Action: runtimecontracts.TopologyPolicyActionAllow, Protocol: runtimecontracts.TopologyPolicyProtocolTCP, Ports: []int{3306}},
 		},
 	})
 	if err == nil {
@@ -1955,14 +1956,14 @@ type fakeRuntimeEngine struct {
 	createdNetworkAllowExisting    bool
 	createdNetworkAllowExistingSeq []bool
 	createdNetworkLabel            map[string]string
-	createdContainerCfg            *model.ContainerConfig
-	createdContainerCfgs           []*model.ContainerConfig
+	createdContainerCfg            *runtimecontracts.ContainerConfig
+	createdContainerCfgs           []*runtimecontracts.ContainerConfig
 	removedContainerID             string
 	removedContainerIDs            []string
 	removedNetworkID               string
 	removedNetworkIDs              []string
-	appliedACLRules                []model.InstanceRuntimeACLRule
-	removedACLRules                []model.InstanceRuntimeACLRule
+	appliedACLRules                []runtimecontracts.InstanceRuntimeACLRule
+	removedACLRules                []runtimecontracts.InstanceRuntimeACLRule
 	connectedNetworks              map[string][]string
 	writtenFiles                   map[string]map[string]string
 	imageSize                      int64
@@ -1974,7 +1975,7 @@ type fakeRuntimeEngine struct {
 	stopContainerFn                func(ctx context.Context, containerID string, timeout time.Duration) error
 	removeContainerFn              func(ctx context.Context, containerID string, force bool) error
 	removeNetworkFn                func(ctx context.Context, networkID string) error
-	removeACLRulesFn               func(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
+	removeACLRulesFn               func(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
 }
 
 func (f *fakeRuntimeEngine) CreateNetwork(_ context.Context, name string, labels map[string]string, _ bool, allowExisting bool) (string, error) {
@@ -1991,7 +1992,7 @@ func (f *fakeRuntimeEngine) CreateNetwork(_ context.Context, name string, labels
 	return f.networkID, nil
 }
 
-func (f *fakeRuntimeEngine) CreateContainer(_ context.Context, cfg *model.ContainerConfig) (string, error) {
+func (f *fakeRuntimeEngine) CreateContainer(_ context.Context, cfg *runtimecontracts.ContainerConfig) (string, error) {
 	f.createdContainerCfg = cfg
 	f.createdContainerCfgs = append(f.createdContainerCfgs, cfg)
 	if len(f.containerIDs) > 0 {
@@ -2072,7 +2073,7 @@ func (f *fakeRuntimeEngine) RemoveNetwork(ctx context.Context, networkID string)
 	return f.removeNetworkErr
 }
 
-func (f *fakeRuntimeEngine) ApplyACLRules(_ context.Context, rules []model.InstanceRuntimeACLRule) error {
+func (f *fakeRuntimeEngine) ApplyACLRules(_ context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
 	if f.applyACLErr != nil {
 		return f.applyACLErr
 	}
@@ -2080,7 +2081,7 @@ func (f *fakeRuntimeEngine) ApplyACLRules(_ context.Context, rules []model.Insta
 	return nil
 }
 
-func (f *fakeRuntimeEngine) RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
+func (f *fakeRuntimeEngine) RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
 	if f.removeACLRulesFn != nil {
 		return f.removeACLRulesFn(ctx, rules)
 	}

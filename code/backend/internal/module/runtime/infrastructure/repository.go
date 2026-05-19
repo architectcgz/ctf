@@ -17,6 +17,7 @@ import (
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
@@ -971,7 +972,7 @@ func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, erro
 	seen := make(map[string]struct{}, len(items))
 	for _, item := range items {
 		ids := []string{item.ContainerID}
-		details, err := model.DecodeInstanceRuntimeDetails(item.RuntimeDetails)
+		details, err := runtimecontracts.DecodeInstanceRuntimeDetails(item.RuntimeDetails)
 		if err == nil {
 			for _, container := range details.Containers {
 				ids = append(ids, container.ContainerID)

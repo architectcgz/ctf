@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type typedNilCleanupEngine struct{}
@@ -22,7 +22,7 @@ func (*typedNilCleanupEngine) RemoveNetwork(context.Context, string) error {
 	return nil
 }
 
-func (*typedNilCleanupEngine) RemoveACLRules(context.Context, []model.InstanceRuntimeACLRule) error {
+func (*typedNilCleanupEngine) RemoveACLRules(context.Context, []runtimecontracts.InstanceRuntimeACLRule) error {
 	return nil
 }
 
@@ -32,7 +32,7 @@ func (*typedNilProvisioningEngine) CreateNetwork(context.Context, string, map[st
 	return "", nil
 }
 
-func (*typedNilProvisioningEngine) CreateContainer(context.Context, *model.ContainerConfig) (string, error) {
+func (*typedNilProvisioningEngine) CreateContainer(context.Context, *runtimecontracts.ContainerConfig) (string, error) {
 	return "", nil
 }
 
@@ -64,7 +64,7 @@ func (*typedNilProvisioningEngine) RemoveNetwork(context.Context, string) error 
 	return nil
 }
 
-func (*typedNilProvisioningEngine) ApplyACLRules(context.Context, []model.InstanceRuntimeACLRule) error {
+func (*typedNilProvisioningEngine) ApplyACLRules(context.Context, []runtimecontracts.InstanceRuntimeACLRule) error {
 	return nil
 }
 

@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func InstanceRespFromModel(inst *instancecontracts.Instance, publicHost, accessHost string) *instancecontracts.InstanceResp {
@@ -10,7 +10,7 @@ func InstanceRespFromModel(inst *instancecontracts.Instance, publicHost, accessH
 	if resp == nil {
 		return nil
 	}
-	resp.AccessURL = model.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
+	resp.AccessURL = runtimecontracts.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
 	resp.Access = instancecontracts.BuildInstanceAccessInfo(resp.AccessURL)
 	resp.RemainingExtends = RemainingExtends(inst)
 	return resp

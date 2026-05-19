@@ -25,6 +25,7 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
@@ -1628,7 +1629,7 @@ func TestBuildClassReportDataUsesSharedWindowedClassInsight(t *testing.T) {
 	if len(data.Review.Items) == 0 {
 		t.Fatalf("expected review items, got %+v", data.Review)
 	}
-	if len(data.CategoryDistribution) != len(model.AllDimensions) {
+	if len(data.CategoryDistribution) != len(challengecontracts.AllDimensions) {
 		t.Fatalf("expected filled category distribution, got %+v", data.CategoryDistribution)
 	}
 	if len(data.DifficultyDistribution) != len(assessmentdomain.ClassReportDifficultyOrder()) {

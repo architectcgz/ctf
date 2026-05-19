@@ -7,12 +7,12 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type stubAWDContainerFileWriter struct {
@@ -43,8 +43,8 @@ func TestDockerAWDFlagInjectorInjectsAllRunningTeamContainers(t *testing.T) {
 	testsupport.CreateAWDRoundFixture(t, db, 10001, 10, 1, 50, 50, now)
 	serviceID := testsupport.DefaultAWDContestServiceID(10, 1001)
 
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Containers: []model.InstanceRuntimeContainer{
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{ContainerID: "ctr-main"},
 			{ContainerID: "ctr-sidecar"},
 		},

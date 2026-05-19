@@ -8,8 +8,10 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 )
 
@@ -140,7 +142,7 @@ func (s *challengeCommandImageRepoStub) Delete(ctx context.Context, id int64) er
 
 type challengeCommandTopologyRepoStub struct {
 	findByIDWithContextFn                func(ctx context.Context, id int64) (*model.Challenge, error)
-	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
 }
 
 func (s *challengeCommandTopologyRepoStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
@@ -149,13 +151,13 @@ func (s *challengeCommandTopologyRepoStub) FindByID(ctx context.Context, id int6
 	}
 	return nil, nil
 }
-func (s *challengeCommandTopologyRepoStub) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+func (s *challengeCommandTopologyRepoStub) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 	if s.findChallengeTopologyByChallengeIDFn != nil {
 		return s.findChallengeTopologyByChallengeIDFn(ctx, challengeID)
 	}
 	return nil, nil
 }
-func (s *challengeCommandTopologyRepoStub) UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error {
+func (s *challengeCommandTopologyRepoStub) UpsertChallengeTopology(ctx context.Context, topology *challengeentity.ChallengeTopology) error {
 	return nil
 }
 func (s *challengeCommandTopologyRepoStub) DeleteChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) error {
@@ -237,7 +239,7 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 	imageCalled := false
 	topologyCalled := false
 	updateCalled := false
-	rawSpec, err := model.EncodeTopologySpec(model.TopologySpec{Nodes: []model.TopologyNode{{Key: "web", Name: "Web", ServicePort: 8080}}})
+	rawSpec, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{Nodes: []challengecontracts.TopologyNode{{Key: "web", Name: "Web", ServicePort: 8080}}})
 	if err != nil {
 		t.Fatalf("encode topology spec: %v", err)
 	}
@@ -271,12 +273,12 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 		},
 	}
 	topologyRepo := &challengeCommandTopologyRepoStub{
-		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 			topologyCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected topology find ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.ChallengeTopology{ChallengeID: challengeID, EntryNodeKey: "web", Spec: rawSpec}, nil
+			return &challengeentity.ChallengeTopology{ChallengeID: challengeID, EntryNodeKey: "web", Spec: rawSpec}, nil
 		},
 	}
 	service := NewChallengeService(repo, imageRepo, topologyRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
@@ -335,9 +337,9 @@ func TestChallengeServiceDeleteChallengePropagatesContextToRepository(t *testing
 }
 
 type challengeCommandRuntimeProbeStub struct {
-	createContainerFn func(ctx context.Context, imageName string, env map[string]string) (string, model.InstanceRuntimeDetails, error)
+	createContainerFn func(ctx context.Context, imageName string, env map[string]string) (string, runtimecontracts.InstanceRuntimeDetails, error)
 	createTopologyFn  func(ctx context.Context, req *challengeports.RuntimeTopologyCreateRequest) (*challengeports.RuntimeTopologyCreateResult, error)
-	cleanupFn         func(ctx context.Context, details model.InstanceRuntimeDetails) error
+	cleanupFn         func(ctx context.Context, details runtimecontracts.InstanceRuntimeDetails) error
 }
 
 func (s *challengeCommandRuntimeProbeStub) CreateTopology(ctx context.Context, req *challengeports.RuntimeTopologyCreateRequest) (*challengeports.RuntimeTopologyCreateResult, error) {
@@ -347,14 +349,14 @@ func (s *challengeCommandRuntimeProbeStub) CreateTopology(ctx context.Context, r
 	return nil, nil
 }
 
-func (s *challengeCommandRuntimeProbeStub) CreateContainer(ctx context.Context, imageName string, env map[string]string) (string, model.InstanceRuntimeDetails, error) {
+func (s *challengeCommandRuntimeProbeStub) CreateContainer(ctx context.Context, imageName string, env map[string]string) (string, runtimecontracts.InstanceRuntimeDetails, error) {
 	if s.createContainerFn != nil {
 		return s.createContainerFn(ctx, imageName, env)
 	}
-	return "", model.InstanceRuntimeDetails{}, nil
+	return "", runtimecontracts.InstanceRuntimeDetails{}, nil
 }
 
-func (s *challengeCommandRuntimeProbeStub) CleanupRuntimeDetails(ctx context.Context, details model.InstanceRuntimeDetails) error {
+func (s *challengeCommandRuntimeProbeStub) CleanupRuntimeDetails(ctx context.Context, details runtimecontracts.InstanceRuntimeDetails) error {
 	if s.cleanupFn != nil {
 		return s.cleanupFn(ctx, details)
 	}
@@ -479,7 +481,7 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 		},
 	}
 	topologyRepo := &challengeCommandTopologyRepoStub{
-		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 			topologyCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected topology find ctx value %v, got %v", expectedCtxValue, got)
@@ -488,14 +490,14 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 		},
 	}
 	probe := &challengeCommandRuntimeProbeStub{
-		createContainerFn: func(ctx context.Context, imageName string, env map[string]string) (string, model.InstanceRuntimeDetails, error) {
+		createContainerFn: func(ctx context.Context, imageName string, env map[string]string) (string, runtimecontracts.InstanceRuntimeDetails, error) {
 			createCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected runtime create ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return "http://127.0.0.1:30001", model.InstanceRuntimeDetails{Containers: []model.InstanceRuntimeContainer{{ContainerID: "ctr-1"}}, Networks: []model.InstanceRuntimeNetwork{{NetworkID: "net-1"}}}, nil
+			return "http://127.0.0.1:30001", runtimecontracts.InstanceRuntimeDetails{Containers: []runtimecontracts.InstanceRuntimeContainer{{ContainerID: "ctr-1"}}, Networks: []runtimecontracts.InstanceRuntimeNetwork{{NetworkID: "net-1"}}}, nil
 		},
-		cleanupFn: func(ctx context.Context, details model.InstanceRuntimeDetails) error {
+		cleanupFn: func(ctx context.Context, details runtimecontracts.InstanceRuntimeDetails) error {
 			cleanupCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected runtime cleanup ctx value %v, got %v", expectedCtxValue, got)
@@ -600,7 +602,7 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 		},
 	}
 	topologyRepo := &challengeCommandTopologyRepoStub{
-		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected topology find ctx value %v, got %v", expectedCtxValue, got)
 			}

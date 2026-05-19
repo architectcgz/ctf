@@ -438,7 +438,7 @@ func TestFullRouter_ContestAndReviewArchiveExportStateMatrix(t *testing.T) {
 	secondChallenge := &model.Challenge{
 		Title:       "Export Matrix 2",
 		Description: "contest export second solve",
-		Category:    model.DimensionCrypto,
+		Category:    challengecontracts.DimensionCrypto,
 		Difficulty:  model.ChallengeDifficultyEasy,
 		Points:      150,
 		Status:      model.ChallengeStatusPublished,
@@ -828,7 +828,7 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 
 func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	env := newFullRouterTestEnv(t)
-	createRecommendationChallenge(t, env, "Matrix Weak Web 2", model.DimensionWeb)
+	createRecommendationChallenge(t, env, "Matrix Weak Web 2", challengecontracts.DimensionWeb)
 
 	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
 	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
@@ -963,7 +963,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Lifecycle Challenge",
 		"description": "challenge lifecycle matrix",
-		"category":    model.DimensionWeb,
+		"category":    challengecontracts.DimensionWeb,
 		"difficulty":  model.ChallengeDifficultyEasy,
 		"points":      120,
 		"image_id":    env.image.ID,
@@ -991,7 +991,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Invalid Hint Challenge",
 		"description": "invalid hints",
-		"category":    model.DimensionWeb,
+		"category":    challengecontracts.DimensionWeb,
 		"difficulty":  model.ChallengeDifficultyEasy,
 		"points":      80,
 		"image_id":    env.image.ID,
@@ -1102,7 +1102,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), map[string]any{
 		"title":      "Public Writeup",
 		"content":    "public content",
-		"visibility": model.WriteupVisibilityPublic,
+		"visibility": challengeentity.WriteupVisibilityPublic,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
@@ -1111,7 +1111,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 
 	var publicWriteup challengecontracts.ChallengeWriteupResp
 	decodeFullRouterData(t, resp, &publicWriteup)
-	if publicWriteup.Visibility != model.WriteupVisibilityPublic {
+	if publicWriteup.Visibility != challengeentity.WriteupVisibilityPublic {
 		t.Fatalf("unexpected public writeup visibility: %+v", publicWriteup)
 	}
 	if !publicWriteup.RequiresSpoilerWarning {
@@ -1238,7 +1238,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Manual Review Challenge",
 		"description": "submit an answer for teacher review",
-		"category":    model.DimensionMisc,
+		"category":    challengecontracts.DimensionMisc,
 		"difficulty":  model.ChallengeDifficultyMedium,
 		"points":      120,
 	}, adminHeaders)
@@ -1348,7 +1348,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 				"name":         "Web",
 				"image_id":     env.image.ID,
 				"service_port": 8080,
-				"tier":         model.TopologyTierPublic,
+				"tier":         challengecontracts.TopologyTierPublic,
 				"network_keys": []string{"default"},
 			},
 		},
@@ -1683,7 +1683,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Community Writeup Challenge",
 		"description": "community writeup semantics",
-		"category":    model.DimensionWeb,
+		"category":    challengecontracts.DimensionWeb,
 		"difficulty":  model.ChallengeDifficultyEasy,
 		"points":      80,
 	}, adminHeaders)
@@ -1695,7 +1695,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), map[string]any{
 		"title":      "Official Solution",
 		"content":    "official content",
-		"visibility": model.WriteupVisibilityPublic,
+		"visibility": challengeentity.WriteupVisibilityPublic,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
@@ -1845,8 +1845,8 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	peerHeaders := bearerHeaders(loginForToken(t, env.router, env.peerStudent.Username, "Password123"))
 	otherHeaders := bearerHeaders(loginForToken(t, env.router, env.otherStudent.Username, "Password123"))
 
-	challengeA := createRecommendationChallenge(t, env, "Contest Matrix A", model.DimensionWeb)
-	challengeB := createRecommendationChallenge(t, env, "Contest Matrix B", model.DimensionWeb)
+	challengeA := createRecommendationChallenge(t, env, "Contest Matrix A", challengecontracts.DimensionWeb)
+	challengeB := createRecommendationChallenge(t, env, "Contest Matrix B", challengecontracts.DimensionWeb)
 	editableContest := createFullRouterContest(t, env, "Editable Contest", contestcontracts.ContestStatusRegistration)
 
 	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/challenges", editableContest.ID), nil, studentHeaders)
@@ -2009,7 +2009,7 @@ func TestFullRouter_VisibleAWDContestChallengesIncludeAWDServiceID(t *testing.T)
 
 	awdChallenge := &challengecontracts.AWDChallenge{
 		Name:           "Visible AWD Challenge",
-		Category:       model.DimensionWeb,
+		Category:       challengecontracts.DimensionWeb,
 		Difficulty:     model.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
@@ -2876,7 +2876,7 @@ func createDraftChallengeRecord(t *testing.T, env *fullRouterTestEnv, title stri
 	challenge := &model.Challenge{
 		Title:       title,
 		Description: "draft challenge for delete matrix",
-		Category:    model.DimensionWeb,
+		Category:    challengecontracts.DimensionWeb,
 		Difficulty:  model.ChallengeDifficultyEasy,
 		Points:      90,
 		ImageID:     env.image.ID,

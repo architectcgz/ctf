@@ -1,6 +1,6 @@
 package ports
 
-import "ctf-platform/internal/model"
+import runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 
 type TopologyCreateNode struct {
 	Key             string
@@ -13,8 +13,8 @@ type TopologyCreateNode struct {
 	IsEntryPoint    bool
 	NetworkKeys     []string
 	NetworkAliases  []string
-	Mounts          []model.ContainerMount
-	Resources       *model.ResourceLimits
+	Mounts          []runtimecontracts.ContainerMount
+	Resources       *runtimecontracts.ResourceLimits
 }
 
 type TopologyCreateNetwork struct {
@@ -27,7 +27,7 @@ type TopologyCreateNetwork struct {
 type TopologyCreateRequest struct {
 	Networks                   []TopologyCreateNetwork
 	Nodes                      []TopologyCreateNode
-	Policies                   []model.TopologyTrafficPolicy
+	Policies                   []runtimecontracts.TopologyTrafficPolicy
 	ReservedHostPort           int
 	DisableEntryPortPublishing bool
 	ContainerName              string
@@ -37,5 +37,5 @@ type TopologyCreateResult struct {
 	PrimaryContainerID string
 	NetworkID          string
 	AccessURL          string
-	RuntimeDetails     model.InstanceRuntimeDetails
+	RuntimeDetails     runtimecontracts.InstanceRuntimeDetails
 }

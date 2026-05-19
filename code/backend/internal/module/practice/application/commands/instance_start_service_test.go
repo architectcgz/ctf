@@ -4,12 +4,15 @@ import (
 	"context"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"sync/atomic"
@@ -35,7 +38,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 	if err := db.Create(&model.Challenge{
 		ID:         201,
 		Title:      "Queued Web",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    101,
@@ -1133,11 +1136,11 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 					PrimaryContainerID: "runtime-new",
 					NetworkID:          "net-awd-contest-9101",
 					AccessURL:          "http://awd-c9101-t9102-s9103:8080",
-					RuntimeDetails: model.InstanceRuntimeDetails{
-						Networks: []model.InstanceRuntimeNetwork{
-							{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-9101", NetworkID: "net-awd-contest-9101", Shared: true},
+					RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+						Networks: []runtimecontracts.InstanceRuntimeNetwork{
+							{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-9101", NetworkID: "net-awd-contest-9101", Shared: true},
 						},
-						Containers: []model.InstanceRuntimeContainer{
+						Containers: []runtimecontracts.InstanceRuntimeContainer{
 							{NodeKey: "default", ContainerID: "runtime-new", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c9101-t9102-s9103"}},
 						},
 					},
@@ -1337,11 +1340,11 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 						PrimaryContainerID: "runtime-new",
 						NetworkID:          "net-awd-contest-9111",
 						AccessURL:          "http://awd-c9111-t9112-s9113:8080",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Networks: []model.InstanceRuntimeNetwork{
-								{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-9111", NetworkID: "net-awd-contest-9111", Shared: true},
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Networks: []runtimecontracts.InstanceRuntimeNetwork{
+								{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-9111", NetworkID: "net-awd-contest-9111", Shared: true},
 							},
-							Containers: []model.InstanceRuntimeContainer{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "default", ContainerID: "runtime-new", ServicePort: 8080, IsEntryPoint: true, NetworkAliases: []string{"awd-c9111-t9112-s9113"}},
 							},
 						},
@@ -1364,8 +1367,8 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 						PrimaryContainerID: "workspace-recreated",
 						NetworkID:          "net-awd-contest-9111",
 						AccessURL:          "tcp://172.30.0.55:22",
-						RuntimeDetails: model.InstanceRuntimeDetails{
-							Containers: []model.InstanceRuntimeContainer{
+						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+							Containers: []runtimecontracts.InstanceRuntimeContainer{
 								{NodeKey: "workspace", ContainerID: "workspace-recreated", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
@@ -1433,7 +1436,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 	if err := db.Create(&model.Challenge{
 		ID:         206,
 		Title:      "Expired Runtime",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    106,
@@ -1551,7 +1554,7 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingShar
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{shared}", InstanceSharing: model.InstanceSharingShared}, nil
 		},
-		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
 			return nil, nil
 		},
 	}
@@ -1638,7 +1641,7 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingIns
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{new}"}, nil
 		},
-		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
 			return nil, nil
 		},
 	}

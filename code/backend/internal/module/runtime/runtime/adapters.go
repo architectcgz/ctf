@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"ctf-platform/internal/model"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsports "ctf-platform/internal/module/ops/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -57,11 +57,11 @@ func cloneRuntimeStringMap(input map[string]string) map[string]string {
 	return output
 }
 
-func cloneRuntimeResourceLimits(input *model.ResourceLimits) *model.ResourceLimits {
+func cloneRuntimeResourceLimits(input *runtimecontracts.ResourceLimits) *runtimecontracts.ResourceLimits {
 	if input == nil {
 		return nil
 	}
-	return &model.ResourceLimits{
+	return &runtimecontracts.ResourceLimits{
 		CPUQuota:  input.CPUQuota,
 		Memory:    input.Memory,
 		PidsLimit: input.PidsLimit,
@@ -102,45 +102,45 @@ func (a *runtimeChallengeServiceAdapter) CreateTopology(ctx context.Context, req
 	}, nil
 }
 
-func (a *runtimeChallengeServiceAdapter) CreateContainer(ctx context.Context, imageName string, env map[string]string) (string, model.InstanceRuntimeDetails, error) {
+func (a *runtimeChallengeServiceAdapter) CreateContainer(ctx context.Context, imageName string, env map[string]string) (string, runtimecontracts.InstanceRuntimeDetails, error) {
 	if a == nil || a.provisioner == nil {
-		return "", model.InstanceRuntimeDetails{}, fmt.Errorf("runtime provisioning service is not configured")
+		return "", runtimecontracts.InstanceRuntimeDetails{}, fmt.Errorf("runtime provisioning service is not configured")
 	}
 
 	containerID, networkID, hostPort, servicePort, err := a.provisioner.CreateContainer(ctx, imageName, env, 0)
 	if err != nil {
-		return "", model.InstanceRuntimeDetails{}, err
+		return "", runtimecontracts.InstanceRuntimeDetails{}, err
 	}
 
 	accessURL := fmt.Sprintf("http://%s:%d", a.accessHost, hostPort)
-	return accessURL, model.InstanceRuntimeDetails{
-		Networks: []model.InstanceRuntimeNetwork{
+	return accessURL, runtimecontracts.InstanceRuntimeDetails{
+		Networks: []runtimecontracts.InstanceRuntimeNetwork{
 			{
-				Key:       model.TopologyDefaultNetworkKey,
-				Name:      model.TopologyDefaultNetworkKey,
+				Key:       runtimecontracts.TopologyDefaultNetworkKey,
+				Name:      runtimecontracts.TopologyDefaultNetworkKey,
 				NetworkID: networkID,
 			},
 		},
-		Containers: []model.InstanceRuntimeContainer{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{
 				NodeKey:         "default",
 				ContainerID:     containerID,
 				ServicePort:     servicePort,
-				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+				ServiceProtocol: runtimecontracts.ChallengeTargetProtocolHTTP,
 				HostPort:        hostPort,
 				IsEntryPoint:    true,
-				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 			},
 		},
 	}, nil
 }
 
-func (a *runtimeChallengeServiceAdapter) CleanupRuntimeDetails(ctx context.Context, details model.InstanceRuntimeDetails) error {
+func (a *runtimeChallengeServiceAdapter) CleanupRuntimeDetails(ctx context.Context, details runtimecontracts.InstanceRuntimeDetails) error {
 	if a == nil || a.cleaner == nil {
 		return nil
 	}
 
-	rawDetails, err := model.EncodeInstanceRuntimeDetails(details)
+	rawDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(details)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func toRuntimeChallengeTopologyCreateRequest(req *challengeports.RuntimeTopology
 	return &runtimeports.TopologyCreateRequest{
 		Networks:                   networks,
 		Nodes:                      nodes,
-		Policies:                   append([]model.TopologyTrafficPolicy(nil), req.Policies...),
+		Policies:                   append([]runtimecontracts.TopologyTrafficPolicy(nil), req.Policies...),
 		DisableEntryPortPublishing: strings.TrimSpace(publishedAccessHost) == "",
 	}
 }

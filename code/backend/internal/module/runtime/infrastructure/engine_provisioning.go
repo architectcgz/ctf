@@ -20,10 +20,10 @@ import (
 	"github.com/docker/go-connections/nat"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
-func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error) {
+func (e *Engine) CreateContainer(ctx context.Context, cfg *runtimecontracts.ContainerConfig) (string, error) {
 	if cfg == nil {
 		return "", fmt.Errorf("container config is nil")
 	}
@@ -181,7 +181,7 @@ func buildContainerNetworkingConfig(networkName string, aliases []string) *netwo
 	}
 }
 
-func buildContainerMounts(mounts []model.ContainerMount) []mount.Mount {
+func buildContainerMounts(mounts []runtimecontracts.ContainerMount) []mount.Mount {
 	if len(mounts) == 0 {
 		return nil
 	}
@@ -269,11 +269,11 @@ func (e *Engine) RemoveNetwork(ctx context.Context, networkID string) error {
 	return normalizeNetworkNotFoundError(cli.NetworkRemove(ctx, networkID))
 }
 
-func (e *Engine) ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
+func (e *Engine) ApplyACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
 	return applyACLRules(ctx, rules)
 }
 
-func (e *Engine) RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
+func (e *Engine) RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
 	return removeACLRules(ctx, rules)
 }
 

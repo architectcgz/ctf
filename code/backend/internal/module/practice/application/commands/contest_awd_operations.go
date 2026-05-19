@@ -8,7 +8,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -74,14 +73,14 @@ func restartCleanupRuntimeView(instance *instancecontracts.Instance) *instanceco
 	}
 	copied := *instance
 	copied.HostPort = 0
-	details, err := model.DecodeInstanceRuntimeDetails(copied.RuntimeDetails)
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(copied.RuntimeDetails)
 	if err != nil {
 		return &copied
 	}
 	for i := range details.Containers {
 		details.Containers[i].HostPort = 0
 	}
-	if raw, err := model.EncodeInstanceRuntimeDetails(details); err == nil {
+	if raw, err := runtimecontracts.EncodeInstanceRuntimeDetails(details); err == nil {
 		copied.RuntimeDetails = raw
 	}
 	return &copied

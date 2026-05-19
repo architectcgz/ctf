@@ -263,7 +263,7 @@ func rewriteChallengeManifestSnapshot(
 	store challengeports.ChallengePackageExportTxStore,
 	sourceDir string,
 	challenge *model.Challenge,
-	topology *model.ChallengeTopology,
+	topology *challengeentity.ChallengeTopology,
 	hints []challengeentity.ChallengeHint,
 	revision *challengeentity.ChallengePackageRevision,
 ) (string, error) {
@@ -350,13 +350,13 @@ func rewriteChallengeTopologySnapshot(
 	ctx context.Context,
 	store challengeports.ChallengePackageExportTxStore,
 	sourceDir string,
-	topology *model.ChallengeTopology,
+	topology *challengeentity.ChallengeTopology,
 	revision *challengeentity.ChallengePackageRevision,
 ) (string, error) {
 	if topology == nil {
 		return "", nil
 	}
-	spec, err := model.DecodeTopologySpec(topology.Spec)
+	spec, err := challengecontracts.DecodeTopologySpec(topology.Spec)
 	if err != nil {
 		return "", err
 	}
@@ -479,7 +479,7 @@ func resolveTopologySnapshot(topology *domain.ParsedChallengePackageTopology) st
 	return topology.Raw
 }
 
-func resolveRevisionTopologySourcePath(topology *model.ChallengeTopology, revision *challengeentity.ChallengePackageRevision) string {
+func resolveRevisionTopologySourcePath(topology *challengeentity.ChallengeTopology, revision *challengeentity.ChallengePackageRevision) string {
 	if topology != nil && strings.TrimSpace(topology.SourcePath) != "" {
 		return strings.TrimSpace(topology.SourcePath)
 	}

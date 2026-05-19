@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type InstanceAccessInfo struct {
@@ -114,7 +114,7 @@ func BuildInstanceAccessInfo(accessURL string) *InstanceAccessInfo {
 			info.Port = port
 		}
 	}
-	if protocol == model.ChallengeTargetProtocolTCP && info.Host != "" && info.Port > 0 {
+	if protocol == runtimecontracts.ChallengeTargetProtocolTCP && info.Host != "" && info.Port > 0 {
 		info.Command = fmt.Sprintf("nc %s %d", formatCommandHost(info.Host), info.Port)
 	}
 	return info

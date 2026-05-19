@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 func TestProfileServiceGetSkillProfileHonorsCancellation(t *testing.T) {
@@ -38,7 +38,7 @@ func TestProfileServiceGetSkillProfileReturnsEmptyDimensionsWhenProfileMissing(t
 	if profile.UpdatedAt != "" {
 		t.Fatalf("expected empty updated_at, got %+v", profile)
 	}
-	if len(profile.Dimensions) != len(model.AllDimensions) {
+	if len(profile.Dimensions) != len(challengecontracts.AllDimensions) {
 		t.Fatalf("expected all dimensions, got %+v", profile.Dimensions)
 	}
 	for _, item := range profile.Dimensions {
@@ -58,7 +58,7 @@ func TestProfileServiceGetSkillProfileBuildsRFC3339Contract(t *testing.T) {
 
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    7,
-		Dimension: model.DimensionWeb,
+		Dimension: challengecontracts.DimensionWeb,
 		Score:     0.75,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -72,7 +72,7 @@ func TestProfileServiceGetSkillProfileBuildsRFC3339Contract(t *testing.T) {
 	if profile.UpdatedAt != now.Format(time.RFC3339) {
 		t.Fatalf("expected RFC3339 updated_at, got %+v", profile)
 	}
-	if len(profile.Dimensions) != len(model.AllDimensions) {
+	if len(profile.Dimensions) != len(challengecontracts.AllDimensions) {
 		t.Fatalf("expected all dimensions, got %+v", profile.Dimensions)
 	}
 }

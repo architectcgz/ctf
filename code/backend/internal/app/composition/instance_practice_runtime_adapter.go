@@ -3,10 +3,10 @@ package composition
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -96,7 +96,7 @@ func toRuntimeTopologyCreateRequestFromPractice(req *practiceports.TopologyCreat
 			IsEntryPoint:    node.IsEntryPoint,
 			NetworkKeys:     append([]string(nil), node.NetworkKeys...),
 			NetworkAliases:  append([]string(nil), node.NetworkAliases...),
-			Mounts:          append([]model.ContainerMount(nil), node.Mounts...),
+			Mounts:          append([]runtimecontracts.ContainerMount(nil), node.Mounts...),
 			Resources:       clonePracticeRuntimeResourceLimits(node.Resources),
 		})
 	}
@@ -104,7 +104,7 @@ func toRuntimeTopologyCreateRequestFromPractice(req *practiceports.TopologyCreat
 	return &runtimeports.TopologyCreateRequest{
 		Networks:                   networks,
 		Nodes:                      nodes,
-		Policies:                   append([]model.TopologyTrafficPolicy(nil), req.Policies...),
+		Policies:                   append([]runtimecontracts.TopologyTrafficPolicy(nil), req.Policies...),
 		ReservedHostPort:           req.ReservedHostPort,
 		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
 		ContainerName:              req.ContainerName,
@@ -134,11 +134,11 @@ func clonePracticeRuntimeStringMap(input map[string]string) map[string]string {
 	return output
 }
 
-func clonePracticeRuntimeResourceLimits(input *model.ResourceLimits) *model.ResourceLimits {
+func clonePracticeRuntimeResourceLimits(input *runtimecontracts.ResourceLimits) *runtimecontracts.ResourceLimits {
 	if input == nil {
 		return nil
 	}
-	return &model.ResourceLimits{
+	return &runtimecontracts.ResourceLimits{
 		CPUQuota:  input.CPUQuota,
 		Memory:    input.Memory,
 		PidsLimit: input.PidsLimit,

@@ -29,15 +29,15 @@ type ChallengeResponseMapper interface {
 	// goverter:ignore PackageBaseline
 	// goverter:ignore PackageFiles
 	// goverter:ignore PackageRevisions
-	ToChallengeTopologyRespBase(source model.ChallengeTopology) challengecontracts.ChallengeTopologyResp
-	ToChallengeTopologyRespBasePtr(source *model.ChallengeTopology) *challengecontracts.ChallengeTopologyResp
+	ToChallengeTopologyRespBase(source challengeentity.ChallengeTopology) challengecontracts.ChallengeTopologyResp
+	ToChallengeTopologyRespBasePtr(source *challengeentity.ChallengeTopology) *challengecontracts.ChallengeTopologyResp
 
 	// goverter:ignore Networks
 	// goverter:ignore Nodes
 	// goverter:ignore Links
 	// goverter:ignore Policies
-	ToEnvironmentTemplateRespBase(source model.EnvironmentTemplate) challengecontracts.EnvironmentTemplateResp
-	ToEnvironmentTemplateRespBasePtr(source *model.EnvironmentTemplate) *challengecontracts.EnvironmentTemplateResp
+	ToEnvironmentTemplateRespBase(source challengeentity.EnvironmentTemplate) challengecontracts.EnvironmentTemplateResp
+	ToEnvironmentTemplateRespBasePtr(source *challengeentity.EnvironmentTemplate) *challengecontracts.EnvironmentTemplateResp
 
 	// goverter:ignore CheckerConfig FlagConfig AccessConfig RuntimeConfig
 	ToAWDChallengeRespBase(source challengeentity.AWDChallenge) challengecontracts.AWDChallengeResp
@@ -50,10 +50,10 @@ type ChallengeResponseMapper interface {
 	ToImageRespBase(source model.Image) challengecontracts.ImageResp
 	ToImageRespBasePtr(source *model.Image) *challengecontracts.ImageResp
 
-	ToTagResp(source model.Tag) challengecontracts.TagResp
-	ToTagRespPtr(source *model.Tag) *challengecontracts.TagResp
-	ToAdminChallengeWriteupResp(source model.ChallengeWriteup) challengecontracts.AdminChallengeWriteupResp
-	ToAdminChallengeWriteupRespPtr(source *model.ChallengeWriteup) *challengecontracts.AdminChallengeWriteupResp
+	ToTagResp(source challengeentity.Tag) challengecontracts.TagResp
+	ToTagRespPtr(source *challengeentity.Tag) *challengecontracts.TagResp
+	ToAdminChallengeWriteupResp(source challengeentity.ChallengeWriteup) challengecontracts.AdminChallengeWriteupResp
+	ToAdminChallengeWriteupRespPtr(source *challengeentity.ChallengeWriteup) *challengecontracts.AdminChallengeWriteupResp
 	ToSubmissionWriteupResp(source challengeentity.SubmissionWriteup) challengecontracts.SubmissionWriteupResp
 	ToSubmissionWriteupRespPtr(source *challengeentity.SubmissionWriteup) *challengecontracts.SubmissionWriteupResp
 
@@ -84,21 +84,21 @@ type ChallengeResponseMapper interface {
 	ToChallengePackageFileResp(source ParsedChallengePackageFile) challengecontracts.ChallengePackageFileResp
 	ToChallengePackageFileResps(source []ParsedChallengePackageFile) []challengecontracts.ChallengePackageFileResp
 
-	ToTopologyNetworkResp(source model.TopologyNetwork) challengecontracts.TopologyNetworkResp
-	ToTopologyNetworkResps(source []model.TopologyNetwork) []challengecontracts.TopologyNetworkResp
-	ToTopologyNodeResp(source model.TopologyNode) challengecontracts.TopologyNodeResp
-	ToTopologyNodeResps(source []model.TopologyNode) []challengecontracts.TopologyNodeResp
-	ToTopologyLinkResp(source model.TopologyLink) challengecontracts.TopologyLinkResp
-	ToTopologyLinkResps(source []model.TopologyLink) []challengecontracts.TopologyLinkResp
-	ToTopologyTrafficPolicyResp(source model.TopologyTrafficPolicy) challengecontracts.TopologyTrafficPolicyResp
-	ToTopologyTrafficPolicyResps(source []model.TopologyTrafficPolicy) []challengecontracts.TopologyTrafficPolicyResp
+	ToTopologyNetworkResp(source challengecontracts.TopologyNetwork) challengecontracts.TopologyNetworkResp
+	ToTopologyNetworkResps(source []challengecontracts.TopologyNetwork) []challengecontracts.TopologyNetworkResp
+	ToTopologyNodeResp(source challengecontracts.TopologyNode) challengecontracts.TopologyNodeResp
+	ToTopologyNodeResps(source []challengecontracts.TopologyNode) []challengecontracts.TopologyNodeResp
+	ToTopologyLinkResp(source challengecontracts.TopologyLink) challengecontracts.TopologyLinkResp
+	ToTopologyLinkResps(source []challengecontracts.TopologyLink) []challengecontracts.TopologyLinkResp
+	ToTopologyTrafficPolicyResp(source challengecontracts.TopologyTrafficPolicy) challengecontracts.TopologyTrafficPolicyResp
+	ToTopologyTrafficPolicyResps(source []challengecontracts.TopologyTrafficPolicy) []challengecontracts.TopologyTrafficPolicyResp
 
-	ToImportedTopologyNetwork(source ChallengePackageTopologyNetwork) model.TopologyNetwork
-	ToImportedTopologyNetworks(source []ChallengePackageTopologyNetwork) []model.TopologyNetwork
-	ToImportedTopologyLink(source ChallengePackageTopologyLink) model.TopologyLink
-	ToImportedTopologyLinks(source []ChallengePackageTopologyLink) []model.TopologyLink
-	ToImportedTopologyPolicy(source ChallengePackageTopologyPolicy) model.TopologyTrafficPolicy
-	ToImportedTopologyPolicies(source []ChallengePackageTopologyPolicy) []model.TopologyTrafficPolicy
+	ToImportedTopologyNetwork(source ChallengePackageTopologyNetwork) challengecontracts.TopologyNetwork
+	ToImportedTopologyNetworks(source []ChallengePackageTopologyNetwork) []challengecontracts.TopologyNetwork
+	ToImportedTopologyLink(source ChallengePackageTopologyLink) challengecontracts.TopologyLink
+	ToImportedTopologyLinks(source []ChallengePackageTopologyLink) []challengecontracts.TopologyLink
+	ToImportedTopologyPolicy(source ChallengePackageTopologyPolicy) challengecontracts.TopologyTrafficPolicy
+	ToImportedTopologyPolicies(source []ChallengePackageTopologyPolicy) []challengecontracts.TopologyTrafficPolicy
 
 	// goverter:map Image.Ref ImageRef
 	ToChallengeImportTopologyNodeRespBase(source ChallengePackageTopologyNode) challengecontracts.ChallengeImportTopologyNodeResp

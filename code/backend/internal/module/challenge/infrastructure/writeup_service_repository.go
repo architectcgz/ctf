@@ -43,12 +43,12 @@ func (r *WriteupServiceRepository) FindUserByID(ctx context.Context, userID int6
 	return item, mapWriteupNotFound(err, challengeports.ErrChallengeWriteupRequesterNotFound)
 }
 
-func (r *WriteupServiceRepository) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+func (r *WriteupServiceRepository) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 	item, err := r.raw.FindWriteupByChallengeID(ctx, challengeID)
 	return item, mapWriteupNotFound(err, challengeports.ErrChallengeOfficialWriteupNotFound)
 }
 
-func (r *WriteupServiceRepository) UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error {
+func (r *WriteupServiceRepository) UpsertWriteup(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error {
 	return r.raw.UpsertWriteup(ctx, writeup)
 }
 
@@ -56,7 +56,7 @@ func (r *WriteupServiceRepository) DeleteWriteupByChallengeID(ctx context.Contex
 	return r.raw.DeleteWriteupByChallengeID(ctx, challengeID)
 }
 
-func (r *WriteupServiceRepository) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+func (r *WriteupServiceRepository) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error) {
 	item, err := r.raw.FindReleasedWriteupByChallengeID(ctx, challengeID, now)
 	return item, mapWriteupNotFound(err, challengeports.ErrChallengeReleasedWriteupNotFound)
 }

@@ -3,21 +3,21 @@ package ports_test
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type ctxOnlyTagRepository struct{}
 
-func (ctxOnlyTagRepository) Create(context.Context, *model.Tag) error {
+func (ctxOnlyTagRepository) Create(context.Context, *challengeentity.Tag) error {
 	return nil
 }
 
-func (ctxOnlyTagRepository) List(context.Context, string) ([]*model.Tag, error) {
+func (ctxOnlyTagRepository) List(context.Context, string) ([]*challengeentity.Tag, error) {
 	return nil, nil
 }
 
-func (ctxOnlyTagRepository) FindByIDs(context.Context, []int64) ([]*model.Tag, error) {
+func (ctxOnlyTagRepository) FindByIDs(context.Context, []int64) ([]*challengeentity.Tag, error) {
 	return nil, nil
 }
 
@@ -29,7 +29,7 @@ func (ctxOnlyTagRepository) DetachFromChallenge(context.Context, int64, int64) e
 	return nil
 }
 
-func (ctxOnlyTagRepository) FindByChallengeID(context.Context, int64) ([]*model.Tag, error) {
+func (ctxOnlyTagRepository) FindByChallengeID(context.Context, int64) ([]*challengeentity.Tag, error) {
 	return nil, nil
 }
 

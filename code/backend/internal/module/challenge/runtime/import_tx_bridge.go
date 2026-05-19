@@ -223,7 +223,7 @@ func (s *challengeImportTxStore) CreateImportedPackageRevision(
 
 func (s *challengeImportTxStore) UpsertImportedTopology(
 	ctx context.Context,
-	topology *model.ChallengeTopology,
+	topology *challengeentity.ChallengeTopology,
 ) error {
 	return s.rawRepo.UpsertChallengeTopology(ctx, topology)
 }

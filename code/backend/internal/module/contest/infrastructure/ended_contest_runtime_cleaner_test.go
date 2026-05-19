@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
@@ -41,8 +41,8 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	teamID := int64(101)
 	secondTeamID := int64(102)
 
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Containers: []model.InstanceRuntimeContainer{
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{ContainerID: "ctr-runtime-details", HostPort: 32012, IsEntryPoint: true},
 		},
 	})
@@ -370,7 +370,7 @@ func collectCleanedContainerIDs(t *testing.T, instances []*instanceentity.Instan
 		if strings.TrimSpace(instance.RuntimeDetails) == "" {
 			continue
 		}
-		details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+		details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
 		if err != nil {
 			t.Fatalf("decode runtime details for cleaned instance %d: %v", instance.ID, err)
 		}

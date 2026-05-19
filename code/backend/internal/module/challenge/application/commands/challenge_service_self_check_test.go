@@ -6,9 +6,11 @@ import (
 	"testing"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
 
@@ -19,7 +21,7 @@ type fakeChallengeRuntimeProbe struct {
 	lastImageName         string
 
 	containerResultAccessURL string
-	containerResultDetails   model.InstanceRuntimeDetails
+	containerResultDetails   runtimecontracts.InstanceRuntimeDetails
 	containerResultErr       error
 
 	topologyResult *challengeports.RuntimeTopologyCreateResult
@@ -36,16 +38,16 @@ func (f *fakeChallengeRuntimeProbe) CreateTopology(_ context.Context, _ *challen
 	return f.topologyResult, nil
 }
 
-func (f *fakeChallengeRuntimeProbe) CreateContainer(_ context.Context, imageName string, _ map[string]string) (string, model.InstanceRuntimeDetails, error) {
+func (f *fakeChallengeRuntimeProbe) CreateContainer(_ context.Context, imageName string, _ map[string]string) (string, runtimecontracts.InstanceRuntimeDetails, error) {
 	f.createContainerCalled = true
 	f.lastImageName = imageName
 	if f.containerResultErr != nil {
-		return "", model.InstanceRuntimeDetails{}, f.containerResultErr
+		return "", runtimecontracts.InstanceRuntimeDetails{}, f.containerResultErr
 	}
 	return f.containerResultAccessURL, f.containerResultDetails, nil
 }
 
-func (f *fakeChallengeRuntimeProbe) CleanupRuntimeDetails(_ context.Context, _ model.InstanceRuntimeDetails) error {
+func (f *fakeChallengeRuntimeProbe) CleanupRuntimeDetails(_ context.Context, _ runtimecontracts.InstanceRuntimeDetails) error {
 	f.cleanupCalled = true
 	return f.cleanupErr
 }
@@ -59,7 +61,7 @@ func TestChallengeSelfCheckSkipsRuntimeWhenPrecheckFails(t *testing.T) {
 	}
 	challenge := &model.Challenge{
 		Title:      "no-image",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		FlagType:   model.FlagTypeStatic,
@@ -99,7 +101,7 @@ func TestChallengeSelfCheckAttachmentOnlyChallengeSkipsRuntimeStartup(t *testing
 	}
 	challenge := &model.Challenge{
 		Title:         "attachment-only",
-		Category:      model.DimensionWeb,
+		Category:      challengecontracts.DimensionWeb,
 		Difficulty:    model.ChallengeDifficultyEasy,
 		Points:        100,
 		AttachmentURL: "/api/v1/challenges/attachments/imports/web-source-audit-double-wrap-01/source.html",
@@ -153,7 +155,7 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 	}
 	challenge := &model.Challenge{
 		Title:      "single-container",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
@@ -169,9 +171,9 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	probe := &fakeChallengeRuntimeProbe{
 		containerResultAccessURL: "http://127.0.0.1:30001",
-		containerResultDetails: model.InstanceRuntimeDetails{
-			Containers: []model.InstanceRuntimeContainer{{ContainerID: "ctr-1"}},
-			Networks:   []model.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
+		containerResultDetails: runtimecontracts.InstanceRuntimeDetails{
+			Containers: []runtimecontracts.InstanceRuntimeContainer{{ContainerID: "ctr-1"}},
+			Networks:   []runtimecontracts.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
 		},
 	}
 	service := newDBBackedChallengeService(nil, repo, imageRepo, probe, SelfCheckConfig{})
@@ -215,7 +217,7 @@ func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 	}
 	challenge := &model.Challenge{
 		Title:      "runtime-fail",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
@@ -254,7 +256,7 @@ func TestChallengeSelfCheckFailsOnInvalidRegexFlag(t *testing.T) {
 
 	challenge := &model.Challenge{
 		Title:      "regex-invalid",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		FlagType:   model.FlagTypeRegex,
@@ -294,7 +296,7 @@ func TestChallengeSelfCheckManualReviewSkipsFlagValidationFailure(t *testing.T) 
 
 	challenge := &model.Challenge{
 		Title:      "manual-review",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
@@ -308,9 +310,9 @@ func TestChallengeSelfCheckManualReviewSkipsFlagValidationFailure(t *testing.T) 
 	imageRepo := challengeinfra.NewImageRepository(db)
 	probe := &fakeChallengeRuntimeProbe{
 		containerResultAccessURL: "http://127.0.0.1:30002",
-		containerResultDetails: model.InstanceRuntimeDetails{
-			Containers: []model.InstanceRuntimeContainer{{ContainerID: "ctr-manual"}},
-			Networks:   []model.InstanceRuntimeNetwork{{NetworkID: "net-manual"}},
+		containerResultDetails: runtimecontracts.InstanceRuntimeDetails{
+			Containers: []runtimecontracts.InstanceRuntimeContainer{{ContainerID: "ctr-manual"}},
+			Networks:   []runtimecontracts.InstanceRuntimeNetwork{{NetworkID: "net-manual"}},
 		},
 	}
 	service := newDBBackedChallengeService(nil, repo, imageRepo, probe, SelfCheckConfig{})

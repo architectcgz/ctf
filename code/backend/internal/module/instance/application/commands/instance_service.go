@@ -8,11 +8,11 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -162,7 +162,7 @@ func (s *InstanceService) toInstanceResp(inst *instancecontracts.Instance) *inst
 	if inst == nil {
 		return nil
 	}
-	accessURL := model.ResolveRuntimePublicAccessURL(inst.AccessURL, s.config.PublicHost, s.config.AccessHost)
+	accessURL := runtimecontracts.ResolveRuntimePublicAccessURL(inst.AccessURL, s.config.PublicHost, s.config.AccessHost)
 	return &instancecontracts.InstanceResp{
 		ID:               inst.ID,
 		ChallengeID:      inst.ChallengeID,

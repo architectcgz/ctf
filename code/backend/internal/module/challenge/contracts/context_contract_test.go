@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 type ctxOnlyImageStore struct{}
@@ -19,7 +20,7 @@ func (ctxOnlyPracticeChallengeContract) FindByID(context.Context, int64) (*model
 	return nil, nil
 }
 
-func (ctxOnlyPracticeChallengeContract) FindChallengeTopologyByChallengeID(context.Context, int64) (*model.ChallengeTopology, error) {
+func (ctxOnlyPracticeChallengeContract) FindChallengeTopologyByChallengeID(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
 	return nil, nil
 }
 
@@ -51,7 +52,7 @@ func (ctxOnlyChallengeContract) BatchGetSolvedCount(context.Context, []int64) (m
 	return nil, nil
 }
 
-func (ctxOnlyChallengeContract) FindChallengeTopologyByChallengeID(context.Context, int64) (*model.ChallengeTopology, error) {
+func (ctxOnlyChallengeContract) FindChallengeTopologyByChallengeID(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
 	return nil, nil
 }
 

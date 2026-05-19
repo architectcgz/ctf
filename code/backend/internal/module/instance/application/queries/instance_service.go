@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -109,7 +109,7 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 }
 
 func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, publicHost, accessHost string) *instancecontracts.InstanceInfo {
-	accessURL := model.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
+	accessURL := runtimecontracts.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
 	if inst.ContestMode == contestcontracts.ContestModeAWD {
 		accessURL = ""
 	}
@@ -135,7 +135,7 @@ func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, pu
 }
 
 func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time, publicHost, accessHost string) instancecontracts.TeacherInstanceItem {
-	accessURL := model.ResolveRuntimePublicAccessURL(item.AccessURL, publicHost, accessHost)
+	accessURL := runtimecontracts.ResolveRuntimePublicAccessURL(item.AccessURL, publicHost, accessHost)
 	return instancecontracts.TeacherInstanceItem{
 		ID:              item.ID,
 		StudentID:       item.StudentID,

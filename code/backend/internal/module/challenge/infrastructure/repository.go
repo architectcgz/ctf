@@ -486,7 +486,7 @@ func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit i
 				LOWER(challenges.category)
 			) AS recommendation_dimension`,
 			normalized,
-			model.TagTypeKnowledge,
+			challengecontracts.TagTypeKnowledge,
 			normalized,
 		).
 		Where("challenges.status = ?", model.ChallengeStatusPublished).
@@ -503,7 +503,7 @@ func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit i
 				)
 			)`,
 			normalized,
-			model.TagTypeKnowledge,
+			challengecontracts.TagTypeKnowledge,
 			normalized,
 		)
 

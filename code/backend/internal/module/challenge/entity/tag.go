@@ -1,18 +1,12 @@
-package model
+package entity
 
 import "time"
 
-const (
-	TagTypeVulnerability = "vulnerability" // 漏洞类型
-	TagTypeTechStack     = "tech_stack"    // 技术栈
-	TagTypeKnowledge     = "knowledge"     // 知识点
-)
-
 type Tag struct {
 	ID          int64     `gorm:"column:id;primaryKey"`
-	Name        string    `gorm:"column:name"`        // 标签名称
-	Type        string    `gorm:"column:type"`        // 标签类型：vulnerability/tech_stack/knowledge
-	Description string    `gorm:"column:description"` // 标签描述
+	Name        string    `gorm:"column:name"`
+	Type        string    `gorm:"column:type"`
+	Description string    `gorm:"column:description"`
 	CreatedAt   time.Time `gorm:"column:created_at"`
 	UpdatedAt   time.Time `gorm:"column:updated_at"`
 }

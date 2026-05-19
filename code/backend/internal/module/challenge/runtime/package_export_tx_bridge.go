@@ -60,7 +60,7 @@ func (s *challengePackageExportTxStore) FindChallenge(ctx context.Context, chall
 	return s.challengeRepo.FindByID(ctx, challengeID)
 }
 
-func (s *challengePackageExportTxStore) FindTopology(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+func (s *challengePackageExportTxStore) FindTopology(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
 	return s.topologyRepo.FindChallengeTopologyByChallengeID(ctx, challengeID)
 }
 
@@ -137,12 +137,12 @@ func (s *challengePackageExportTxStore) MarkTopologyExported(
 	updatedAt time.Time,
 ) error {
 	return s.rawRepo.DB(ctx).
-		Model(&model.ChallengeTopology{}).
+		Model(&challengeentity.ChallengeTopology{}).
 		Where("id = ?", topologyID).
 		Updates(map[string]any{
 			"package_revision_id":     revisionID,
 			"package_baseline_spec":   baselineSpec,
-			"sync_status":             model.ChallengeTopologySyncStatusClean,
+			"sync_status":             challengeentity.ChallengeTopologySyncStatusClean,
 			"last_export_revision_id": revisionID,
 			"updated_at":              updatedAt,
 		}).Error

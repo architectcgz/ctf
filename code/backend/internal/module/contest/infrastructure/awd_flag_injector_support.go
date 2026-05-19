@@ -3,8 +3,8 @@ package infrastructure
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func (i *dockerAWDFlagInjector) findTargetContainers(ctx context.Context, contestID, teamID, serviceID, _ int64) ([]string, error) {
@@ -47,7 +47,7 @@ func collectInstanceContainerIDs(instance *instancecontracts.Instance) []string 
 	if instance == nil {
 		return nil
 	}
-	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
 	if err != nil || len(details.Containers) == 0 {
 		if instance.ContainerID == "" {
 			return nil

@@ -691,7 +691,7 @@ func TestCommitChallengeImportCreatesTopologyAndPackageRevision(t *testing.T) {
 		t.Fatalf("CommitChallengeImport() error = %v", err)
 	}
 
-	var topology model.ChallengeTopology
+	var topology challengeentity.ChallengeTopology
 	if err := db.Where("challenge_id = ?", resp.ID).First(&topology).Error; err != nil {
 		t.Fatalf("load challenge topology: %v", err)
 	}
@@ -714,7 +714,7 @@ func TestCommitChallengeImportCreatesTopologyAndPackageRevision(t *testing.T) {
 		t.Fatal("expected package baseline spec")
 	}
 
-	spec, err := model.DecodeTopologySpec(topology.Spec)
+	spec, err := challengecontracts.DecodeTopologySpec(topology.Spec)
 	if err != nil {
 		t.Fatalf("DecodeTopologySpec() error = %v", err)
 	}
@@ -792,16 +792,16 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("update challenge: %v", err)
 	}
-	var topology model.ChallengeTopology
+	var topology challengeentity.ChallengeTopology
 	if err := db.Where("challenge_id = ?", challengeID).First(&topology).Error; err != nil {
 		t.Fatalf("load topology: %v", err)
 	}
-	spec, err := model.DecodeTopologySpec(topology.Spec)
+	spec, err := challengecontracts.DecodeTopologySpec(topology.Spec)
 	if err != nil {
 		t.Fatalf("DecodeTopologySpec() error = %v", err)
 	}
 	spec.Nodes[0].ServicePort = 9090
-	topology.Spec, err = model.EncodeTopologySpec(spec)
+	topology.Spec, err = challengecontracts.EncodeTopologySpec(spec)
 	if err != nil {
 		t.Fatalf("EncodeTopologySpec() error = %v", err)
 	}
@@ -843,7 +843,7 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 		t.Fatalf("expected rewritten service_port in topology.yml, got:\n%s", string(topologyBytes))
 	}
 
-	var refreshed model.ChallengeTopology
+	var refreshed challengeentity.ChallengeTopology
 	if err := db.Where("challenge_id = ?", challengeID).First(&refreshed).Error; err != nil {
 		t.Fatalf("reload topology: %v", err)
 	}
@@ -883,7 +883,7 @@ func TestGetChallengePackageExportMapsMissingTopologyToNotFound(t *testing.T) {
 
 	challenge := &model.Challenge{
 		Title:      "no-topology",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		Status:     model.ChallengeStatusDraft,

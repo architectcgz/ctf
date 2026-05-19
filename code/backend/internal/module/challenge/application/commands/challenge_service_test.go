@@ -11,6 +11,7 @@ import (
 	"ctf-platform/internal/module/challenge/testsupport"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -140,7 +141,7 @@ func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T)
 	challenge := &model.Challenge{
 		Title:           "dynamic-flag",
 		Description:     "desc",
-		Category:        model.DimensionCrypto,
+		Category:        challengecontracts.DimensionCrypto,
 		Difficulty:      model.ChallengeDifficultyEasy,
 		Points:          100,
 		Status:          model.ChallengeStatusDraft,
@@ -171,7 +172,7 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 	challenge := &model.Challenge{
 		Title:           "inject-flag-topology",
 		Description:     "desc",
-		Category:        model.DimensionWeb,
+		Category:        challengecontracts.DimensionWeb,
 		Difficulty:      model.ChallengeDifficultyEasy,
 		Points:          100,
 		Status:          model.ChallengeStatusDraft,
@@ -182,15 +183,15 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	rawSpec, err := model.EncodeTopologySpec(model.TopologySpec{
-		Nodes: []model.TopologyNode{
+	rawSpec, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{
+		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", Name: "Web", ServicePort: 8080, InjectFlag: true},
 		},
 	})
 	if err != nil {
 		t.Fatalf("encode topology spec: %v", err)
 	}
-	if err := db.Create(&model.ChallengeTopology{
+	if err := db.Create(&challengeentity.ChallengeTopology{
 		ChallengeID:  challenge.ID,
 		EntryNodeKey: "web",
 		Spec:         rawSpec,
@@ -274,7 +275,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 	}
 	challenge := &model.Challenge{
 		Title:      "publish-me",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
@@ -292,9 +293,9 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 	imageRepo := challengeinfra.NewImageRepository(db)
 	probe := &fakeChallengeRuntimeProbe{
 		containerResultAccessURL: "http://127.0.0.1:30001",
-		containerResultDetails: model.InstanceRuntimeDetails{
-			Containers: []model.InstanceRuntimeContainer{{ContainerID: "ctr-1"}},
-			Networks:   []model.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
+		containerResultDetails: runtimecontracts.InstanceRuntimeDetails{
+			Containers: []runtimecontracts.InstanceRuntimeContainer{{ContainerID: "ctr-1"}},
+			Networks:   []runtimecontracts.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
 		},
 	}
 	service := newDBBackedChallengeService(db, repo, imageRepo, probe, SelfCheckConfig{
@@ -368,7 +369,7 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 	}
 	challenge := &model.Challenge{
 		Title:      "no-image",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		Status:     model.ChallengeStatusDraft,
@@ -447,7 +448,7 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	}
 	challenge := &model.Challenge{
 		Title:         "attachment-only",
-		Category:      model.DimensionWeb,
+		Category:      challengecontracts.DimensionWeb,
 		Difficulty:    model.ChallengeDifficultyEasy,
 		Points:        100,
 		Status:        model.ChallengeStatusDraft,
@@ -519,7 +520,7 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 	updatedAt := createdAt.Add(2 * time.Hour)
 	challenge := &model.Challenge{
 		Title:      "Web-01 源码审计：双层伪装",
-		Category:   model.DimensionWeb,
+		Category:   challengecontracts.DimensionWeb,
 		Difficulty: model.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    0,

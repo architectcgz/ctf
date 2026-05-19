@@ -171,14 +171,14 @@ func TestRepositoryFindPublishedForRecommendation(t *testing.T) {
 		}
 	}
 
-	knowledgeTag := &model.Tag{
+	knowledgeTag := &challengeentity.Tag{
 		Name: "pwn",
-		Type: model.TagTypeKnowledge,
+		Type: challengecontracts.TagTypeKnowledge,
 	}
 	if err := db.Create(knowledgeTag).Error; err != nil {
 		t.Fatalf("create knowledge tag: %v", err)
 	}
-	if err := db.Create(&model.ChallengeTag{
+	if err := db.Create(&challengeentity.ChallengeTag{
 		ChallengeID: tagged.ID,
 		TagID:       knowledgeTag.ID,
 	}).Error; err != nil {

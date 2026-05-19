@@ -4,6 +4,7 @@ import (
 	"context"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -42,7 +43,7 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:        id,
-				Category:  model.DimensionWeb,
+				Category:  challengecontracts.DimensionWeb,
 				Points:    80,
 				Status:    model.ChallengeStatusPublished,
 				FlagType:  model.FlagTypeRegex,
@@ -100,7 +101,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:       id,
-				Category: model.DimensionWeb,
+				Category: challengecontracts.DimensionWeb,
 				Points:   120,
 				Status:   model.ChallengeStatusPublished,
 				FlagType: model.FlagTypeManualReview,
@@ -193,7 +194,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:       id,
-				Category: model.DimensionWeb,
+				Category: challengecontracts.DimensionWeb,
 				Points:   120,
 				Status:   model.ChallengeStatusPublished,
 				FlagType: model.FlagTypeManualReview,
@@ -299,7 +300,7 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:       id,
-				Category: model.DimensionWeb,
+				Category: challengecontracts.DimensionWeb,
 				Points:   100,
 				Status:   model.ChallengeStatusPublished,
 				FlagType: model.FlagTypeStatic,
@@ -356,7 +357,7 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 
 	select {
 	case evt := <-received:
-		if evt.UserID != 7 || evt.ChallengeID != 11 || evt.Dimension != model.DimensionWeb {
+		if evt.UserID != 7 || evt.ChallengeID != 11 || evt.Dimension != challengecontracts.DimensionWeb {
 			t.Fatalf("unexpected event payload: %+v", evt)
 		}
 	case <-time.After(time.Second):
@@ -379,7 +380,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:              id,
-				Category:        model.DimensionWeb,
+				Category:        challengecontracts.DimensionWeb,
 				Points:          100,
 				Status:          model.ChallengeStatusPublished,
 				FlagType:        model.FlagTypeStatic,
@@ -448,7 +449,7 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:       id,
-				Category: model.DimensionWeb,
+				Category: challengecontracts.DimensionWeb,
 				Points:   100,
 				Status:   model.ChallengeStatusPublished,
 				FlagType: model.FlagTypeStatic,
@@ -552,7 +553,7 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:              id,
-				Category:        model.DimensionWeb,
+				Category:        challengecontracts.DimensionWeb,
 				Points:          100,
 				Status:          model.ChallengeStatusPublished,
 				FlagType:        model.FlagTypeStatic,
@@ -719,7 +720,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:       id,
-				Category: model.DimensionWeb,
+				Category: challengecontracts.DimensionWeb,
 				Points:   100,
 				Status:   model.ChallengeStatusPublished,
 				FlagType: "shared_proof",
@@ -792,7 +793,7 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 			}
 			return &model.Challenge{
 				ID:       id,
-				Category: model.DimensionWeb,
+				Category: challengecontracts.DimensionWeb,
 				Points:   100,
 				Status:   model.ChallengeStatusPublished,
 				FlagType: model.FlagTypeStatic,
@@ -882,7 +883,7 @@ func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:       id,
-				Category: model.DimensionWeb,
+				Category: challengecontracts.DimensionWeb,
 				Points:   100,
 				Status:   model.ChallengeStatusPublished,
 				FlagType: model.FlagTypeStatic,
@@ -988,7 +989,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 			}
 			return &model.Challenge{
 				ID:       id,
-				Category: model.DimensionWeb,
+				Category: challengecontracts.DimensionWeb,
 				Points:   120,
 				Status:   model.ChallengeStatusPublished,
 				FlagType: model.FlagTypeManualReview,
@@ -1492,7 +1493,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:       id,
-				Category: model.DimensionWeb,
+				Category: challengecontracts.DimensionWeb,
 				Points:   120,
 				Status:   model.ChallengeStatusPublished,
 				FlagType: model.FlagTypeManualReview,
@@ -1663,7 +1664,7 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:         id,
-				Category:   model.DimensionWeb,
+				Category:   challengecontracts.DimensionWeb,
 				Points:     100,
 				Status:     model.ChallengeStatusPublished,
 				FlagType:   model.FlagTypeDynamic,
@@ -1744,7 +1745,7 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{
 				ID:              id,
-				Category:        model.DimensionWeb,
+				Category:        challengecontracts.DimensionWeb,
 				Points:          100,
 				Status:          model.ChallengeStatusPublished,
 				FlagType:        model.FlagTypeStatic,

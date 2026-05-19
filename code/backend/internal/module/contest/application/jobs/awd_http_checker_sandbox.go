@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 const awdHTTPCheckerSandboxEntry = "http_action.py"
@@ -95,7 +95,7 @@ func resolveAWDCheckerNetworkMode(accessURL, runtimeDetails string) string {
 	if !strings.HasPrefix(targetHost, "awd-c") {
 		return ""
 	}
-	details, err := model.DecodeInstanceRuntimeDetails(runtimeDetails)
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(runtimeDetails)
 	if err != nil {
 		return ""
 	}

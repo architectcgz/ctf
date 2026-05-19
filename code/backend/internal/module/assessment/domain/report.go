@@ -7,6 +7,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 )
@@ -203,8 +204,8 @@ func FillMissingDimensionAverages(rows []ClassDimensionAverage) []ClassDimension
 		index[row.Dimension] = row.AvgScore
 	}
 
-	filled := make([]ClassDimensionAverage, 0, len(model.AllDimensions))
-	for _, dimension := range model.AllDimensions {
+	filled := make([]ClassDimensionAverage, 0, len(challengecontracts.AllDimensions))
+	for _, dimension := range challengecontracts.AllDimensions {
 		filled = append(filled, ClassDimensionAverage{
 			Dimension: dimension,
 			AvgScore:  index[dimension],

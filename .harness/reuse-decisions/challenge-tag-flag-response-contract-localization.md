@@ -31,7 +31,9 @@ refactor_existing
 - `code/backend/internal/module/challenge/contracts/tag_flag.go`
 - `code/backend/internal/module/challenge/domain/response_mapper_goverter.go`
 - `code/backend/internal/module/challenge/application/commands/tag_service.go`
+- `code/backend/internal/module/challenge/application/commands/tag_service_context_test.go`
 - `code/backend/internal/module/challenge/application/queries/tag_service.go`
+- `code/backend/internal/module/challenge/application/queries/tag_service_context_test.go`
 - `code/backend/internal/module/challenge/application/queries/flag_service.go`
 - `code/backend/internal/module/challenge/application/queries/response_mapper_goverter.go`
 - `code/backend/internal/module/challenge/api/http/tag_handler.go`

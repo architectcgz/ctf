@@ -584,8 +584,8 @@ func (r *Repository) fillClassDimensionFacts(
 ) error {
 	dimensionFactsByUser := make(map[int64]map[string]*teachingadvice.DimensionFact, len(userIDs))
 	for _, userID := range userIDs {
-		dimensionFactsByUser[userID] = make(map[string]*teachingadvice.DimensionFact, len(model.AllDimensions))
-		for _, dimension := range model.AllDimensions {
+		dimensionFactsByUser[userID] = make(map[string]*teachingadvice.DimensionFact, len(challengecontracts.AllDimensions))
+		for _, dimension := range challengecontracts.AllDimensions {
 			dimensionCopy := dimension
 			dimensionFactsByUser[userID][dimension] = &teachingadvice.DimensionFact{Dimension: dimensionCopy}
 		}
@@ -801,8 +801,8 @@ func (r *Repository) fillClassDimensionFacts(
 		if snapshot == nil {
 			continue
 		}
-		items := make([]teachingadvice.DimensionFact, 0, len(model.AllDimensions))
-		for _, dimension := range model.AllDimensions {
+		items := make([]teachingadvice.DimensionFact, 0, len(challengecontracts.AllDimensions))
+		for _, dimension := range challengecontracts.AllDimensions {
 			fact := dimensions[dimension]
 			if fact == nil {
 				continue

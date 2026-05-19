@@ -18,14 +18,14 @@ type stubChallengeWriteupRepository struct {
 	findByIDWithContextFn                              func(ctx context.Context, id int64) (*model.Challenge, error)
 	findUserByIDFn                                     func(userID int64) (*identitycontracts.User, error)
 	findUserByIDWithContextFn                          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
-	findWriteupByChallengeIDFn                         func(challengeID int64) (*model.ChallengeWriteup, error)
-	findWriteupByChallengeIDWithContextFn              func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
-	upsertWriteupFn                                    func(writeup *model.ChallengeWriteup) error
-	upsertWriteupWithContextFn                         func(ctx context.Context, writeup *model.ChallengeWriteup) error
+	findWriteupByChallengeIDFn                         func(challengeID int64) (*challengeentity.ChallengeWriteup, error)
+	findWriteupByChallengeIDWithContextFn              func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error)
+	upsertWriteupFn                                    func(writeup *challengeentity.ChallengeWriteup) error
+	upsertWriteupWithContextFn                         func(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error
 	deleteWriteupByChallengeIDFn                       func(challengeID int64) error
 	deleteWriteupByChallengeIDWithContextFn            func(ctx context.Context, challengeID int64) error
-	findReleasedWriteupByChallengeIDFn                 func(challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
-	findReleasedWriteupByChallengeIDWithContextFn      func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
+	findReleasedWriteupByChallengeIDFn                 func(challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error)
+	findReleasedWriteupByChallengeIDWithContextFn      func(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error)
 	getSolvedStatusFn                                  func(userID, challengeID int64) (bool, error)
 	getSolvedStatusWithContextFn                       func(ctx context.Context, userID, challengeID int64) (bool, error)
 	findSubmissionWriteupByUserChallengeFn             func(userID, challengeID int64) (*challengeentity.SubmissionWriteup, error)
@@ -58,14 +58,14 @@ func (s *stubChallengeWriteupRepository) FindUserByID(ctx context.Context, userI
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+func (s *stubChallengeWriteupRepository) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 	if s.findWriteupByChallengeIDWithContextFn != nil {
 		return s.findWriteupByChallengeIDWithContextFn(ctx, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *stubChallengeWriteupRepository) UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error {
+func (s *stubChallengeWriteupRepository) UpsertWriteup(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error {
 	if s.upsertWriteupWithContextFn != nil {
 		return s.upsertWriteupWithContextFn(ctx, writeup)
 	}
@@ -79,7 +79,7 @@ func (s *stubChallengeWriteupRepository) DeleteWriteupByChallengeID(ctx context.
 	return nil
 }
 
-func (s *stubChallengeWriteupRepository) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+func (s *stubChallengeWriteupRepository) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error) {
 	if s.findReleasedWriteupByChallengeIDWithContextFn != nil {
 		return s.findReleasedWriteupByChallengeIDWithContextFn(ctx, challengeID, now)
 	}
@@ -159,12 +159,12 @@ func TestWriteupServiceGetAdminPropagatesContextToRepository(t *testing.T) {
 			}
 			return &model.Challenge{ID: id}, nil
 		},
-		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 			findWriteupCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-writeup ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.ChallengeWriteup{ID: 101, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPrivate}, nil
+			return &challengeentity.ChallengeWriteup{ID: 101, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: challengeentity.WriteupVisibilityPrivate}, nil
 		},
 	}
 	service := NewWriteupService(repo)
@@ -236,12 +236,12 @@ func TestWriteupServiceGetPublishedPropagatesContextToRepository(t *testing.T) {
 			}
 			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
 		},
-		findReleasedWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+		findReleasedWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error) {
 			findReleasedCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-released ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.ChallengeWriteup{ID: 301, ChallengeID: challengeID, Title: "Published", Content: "walkthrough", Visibility: model.WriteupVisibilityPublic}, nil
+			return &challengeentity.ChallengeWriteup{ID: 301, ChallengeID: challengeID, Title: "Published", Content: "walkthrough", Visibility: challengeentity.WriteupVisibilityPublic}, nil
 		},
 		getSolvedStatusWithContextFn: func(ctx context.Context, userID, challengeID int64) (bool, error) {
 			getSolvedCalled = true
@@ -450,7 +450,7 @@ func TestWriteupServiceGetPublishedTreatsReleasedWriteupNotFoundSentinelAsNotFou
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
 		},
-		findReleasedWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+		findReleasedWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error) {
 			return nil, challengeports.ErrChallengeReleasedWriteupNotFound
 		},
 	})

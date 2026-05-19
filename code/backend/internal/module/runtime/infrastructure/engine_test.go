@@ -10,7 +10,7 @@ import (
 	"github.com/docker/go-connections/nat"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestBuildSecurityOpts(t *testing.T) {
@@ -224,7 +224,7 @@ func TestSelectServicePort(t *testing.T) {
 func TestResolveContainerResourceLimitsClonesInput(t *testing.T) {
 	t.Parallel()
 
-	input := &model.ResourceLimits{
+	input := &runtimecontracts.ResourceLimits{
 		CPUQuota:  1.5,
 		Memory:    256 * 1024 * 1024,
 		PidsLimit: 128,
@@ -263,7 +263,7 @@ func TestResolveContainerResourceLimitsUsesDefaults(t *testing.T) {
 func TestResolveContainerSecurityConfigClonesInput(t *testing.T) {
 	t.Parallel()
 
-	input := &model.SecurityConfig{
+	input := &runtimecontracts.SecurityConfig{
 		ReadonlyRootfs: true,
 		CapDrop:        []string{"ALL"},
 		CapAdd:         []string{"NET_BIND_SERVICE"},

@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 const dockerUserChain = "DOCKER-USER"
 
-func applyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
+func applyACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
 	if len(rules) == 0 {
 		return nil
 	}
@@ -20,7 +20,7 @@ func applyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) er
 		return fmt.Errorf("iptables not found: %w", err)
 	}
 
-	applied := make([]model.InstanceRuntimeACLRule, 0, len(rules))
+	applied := make([]runtimecontracts.InstanceRuntimeACLRule, 0, len(rules))
 	for idx := len(rules) - 1; idx >= 0; idx-- {
 		rule := rules[idx]
 		if err := runACLRuleCommand(ctx, insertACLCommand(rule)); err != nil {
@@ -32,7 +32,7 @@ func applyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) er
 	return nil
 }
 
-func removeACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
+func removeACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
 	var firstErr error
 	for _, rule := range rules {
 		if err := runACLRuleCommand(ctx, deleteACLCommand(rule)); err != nil && firstErr == nil {
@@ -42,18 +42,18 @@ func removeACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) e
 	return firstErr
 }
 
-func insertACLCommand(rule model.InstanceRuntimeACLRule) []string {
+func insertACLCommand(rule runtimecontracts.InstanceRuntimeACLRule) []string {
 	return buildACLCommand("-I", rule)
 }
 
-func deleteACLCommand(rule model.InstanceRuntimeACLRule) []string {
+func deleteACLCommand(rule runtimecontracts.InstanceRuntimeACLRule) []string {
 	return buildACLCommand("-D", rule)
 }
 
-func buildACLCommand(operation string, rule model.InstanceRuntimeACLRule) []string {
+func buildACLCommand(operation string, rule runtimecontracts.InstanceRuntimeACLRule) []string {
 	args := []string{operation, dockerUserChain, "-s", rule.SourceIP, "-d", rule.TargetIP}
 	protocol := strings.TrimSpace(rule.Protocol)
-	if protocol != "" && protocol != model.TopologyPolicyProtocolAny {
+	if protocol != "" && protocol != runtimecontracts.TopologyPolicyProtocolAny {
 		args = append(args, "-p", protocol)
 	}
 	if len(rule.Ports) == 1 {

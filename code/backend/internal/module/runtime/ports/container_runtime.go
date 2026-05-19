@@ -5,13 +5,13 @@ import (
 	"io"
 	"time"
 
-	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 // ContainerProvisioningRuntime 定义拓扑创建与资源回滚所需的容器运行时能力。
 type ContainerProvisioningRuntime interface {
 	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool, allowExisting bool) (string, error)
-	CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error)
+	CreateContainer(ctx context.Context, cfg *runtimecontracts.ContainerConfig) (string, error)
 	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
 	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
 	InspectContainerNetworkIPs(ctx context.Context, containerID string) (map[string]string, error)
@@ -19,7 +19,7 @@ type ContainerProvisioningRuntime interface {
 	StopContainer(ctx context.Context, containerID string, timeout time.Duration) error
 	RemoveContainer(ctx context.Context, containerID string, force bool) error
 	RemoveNetwork(ctx context.Context, networkID string) error
-	ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
+	ApplyACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
 }
 
 // ContainerCleanupRuntime 定义实例运行时清理所需的容器运行时能力。
@@ -27,7 +27,7 @@ type ContainerCleanupRuntime interface {
 	StopContainer(ctx context.Context, containerID string, timeout time.Duration) error
 	RemoveContainer(ctx context.Context, containerID string, force bool) error
 	RemoveNetwork(ctx context.Context, networkID string) error
-	RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
+	RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
 }
 
 // ContainerFileWriter 定义向容器写入文件的最小能力。

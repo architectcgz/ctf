@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type aclRuleGroup struct {
@@ -33,15 +33,15 @@ type aclBinding struct {
 
 // ResolveTopologyACLRules 根据实例运行时拓扑和容器 IP 信息解析细粒度 ACL 规则。
 func ResolveTopologyACLRules(
-	policies []model.TopologyTrafficPolicy,
-	details model.InstanceRuntimeDetails,
+	policies []runtimecontracts.TopologyTrafficPolicy,
+	details runtimecontracts.InstanceRuntimeDetails,
 	ipsByContainerID map[string]map[string]string,
-) ([]model.InstanceRuntimeACLRule, error) {
+) ([]runtimecontracts.InstanceRuntimeACLRule, error) {
 	if len(policies) == 0 {
 		return nil, nil
 	}
 
-	containerByNodeKey := make(map[string]model.InstanceRuntimeContainer, len(details.Containers))
+	containerByNodeKey := make(map[string]runtimecontracts.InstanceRuntimeContainer, len(details.Containers))
 	for _, container := range details.Containers {
 		containerByNodeKey[container.NodeKey] = container
 	}
@@ -56,7 +56,7 @@ func ResolveTopologyACLRules(
 
 	groups := make(map[string]*aclRuleGroup)
 	for _, policy := range policies {
-		if model.IsBroadTopologyPolicy(policy) {
+		if runtimecontracts.IsBroadTopologyPolicy(policy) {
 			continue
 		}
 
@@ -68,7 +68,7 @@ func ResolveTopologyACLRules(
 
 		sharedBindings := sharedRuntimeACLBindings(source, target, networkNameByKey, ipsByContainerID)
 		if len(sharedBindings) == 0 {
-			if policy.Action == model.TopologyPolicyActionAllow {
+			if policy.Action == runtimecontracts.TopologyPolicyActionAllow {
 				return nil, fmt.Errorf("topology acl has no shared runtime network: %s -> %s", policy.SourceNodeKey, policy.TargetNodeKey)
 			}
 			continue
@@ -95,9 +95,9 @@ func ResolveTopologyACLRules(
 					ports:    append([]int(nil), policy.Ports...),
 				}
 				switch policy.Action {
-				case model.TopologyPolicyActionAllow:
+				case runtimecontracts.TopologyPolicyActionAllow:
 					group.allowRules = appendUniqueACLRule(group.allowRules, spec)
-				case model.TopologyPolicyActionDeny:
+				case runtimecontracts.TopologyPolicyActionDeny:
 					group.denyRules = appendUniqueACLRule(group.denyRules, spec)
 				default:
 					return nil, fmt.Errorf("unsupported topology acl action: %s", policy.Action)
@@ -116,17 +116,17 @@ func ResolveTopologyACLRules(
 	}
 	sort.Strings(groupKeys)
 
-	rules := make([]model.InstanceRuntimeACLRule, 0)
+	rules := make([]runtimecontracts.InstanceRuntimeACLRule, 0)
 	for _, key := range groupKeys {
 		group := groups[key]
 		for _, spec := range group.denyRules {
-			rules = append(rules, newRuntimeACLRule(group, model.TopologyPolicyActionDeny, spec.protocol, spec.ports))
+			rules = append(rules, newRuntimeACLRule(group, runtimecontracts.TopologyPolicyActionDeny, spec.protocol, spec.ports))
 		}
 		for _, spec := range group.allowRules {
-			rules = append(rules, newRuntimeACLRule(group, model.TopologyPolicyActionAllow, spec.protocol, spec.ports))
+			rules = append(rules, newRuntimeACLRule(group, runtimecontracts.TopologyPolicyActionAllow, spec.protocol, spec.ports))
 		}
 		if len(group.allowRules) > 0 {
-			rules = append(rules, newRuntimeACLRule(group, model.TopologyPolicyActionDeny, model.TopologyPolicyProtocolAny, nil))
+			rules = append(rules, newRuntimeACLRule(group, runtimecontracts.TopologyPolicyActionDeny, runtimecontracts.TopologyPolicyProtocolAny, nil))
 		}
 	}
 
@@ -138,8 +138,8 @@ func (b aclBinding) groupKey() string {
 }
 
 func sharedRuntimeACLBindings(
-	source model.InstanceRuntimeContainer,
-	target model.InstanceRuntimeContainer,
+	source runtimecontracts.InstanceRuntimeContainer,
+	target runtimecontracts.InstanceRuntimeContainer,
 	networkNameByKey map[string]string,
 	ipsByContainerID map[string]map[string]string,
 ) []aclBinding {
@@ -186,10 +186,10 @@ func sharedRuntimeACLBindings(
 func expandACLProtocols(protocol string, ports []int) []string {
 	normalized := strings.TrimSpace(protocol)
 	if normalized == "" {
-		normalized = model.TopologyPolicyProtocolAny
+		normalized = runtimecontracts.TopologyPolicyProtocolAny
 	}
-	if normalized == model.TopologyPolicyProtocolAny && len(ports) > 0 {
-		return []string{model.TopologyPolicyProtocolTCP, model.TopologyPolicyProtocolUDP}
+	if normalized == runtimecontracts.TopologyPolicyProtocolAny && len(ports) > 0 {
+		return []string{runtimecontracts.TopologyPolicyProtocolTCP, runtimecontracts.TopologyPolicyProtocolUDP}
 	}
 	return []string{normalized}
 }
@@ -218,8 +218,8 @@ func sameACLPorts(left, right []int) bool {
 	return true
 }
 
-func newRuntimeACLRule(group *aclRuleGroup, action, protocol string, ports []int) model.InstanceRuntimeACLRule {
-	rule := model.InstanceRuntimeACLRule{
+func newRuntimeACLRule(group *aclRuleGroup, action, protocol string, ports []int) runtimecontracts.InstanceRuntimeACLRule {
+	rule := runtimecontracts.InstanceRuntimeACLRule{
 		SourceNodeKey:     group.sourceNodeKey,
 		TargetNodeKey:     group.targetNodeKey,
 		SourceContainerID: group.sourceContainerID,
@@ -234,7 +234,7 @@ func newRuntimeACLRule(group *aclRuleGroup, action, protocol string, ports []int
 	return rule
 }
 
-func buildRuntimeACLComment(rule model.InstanceRuntimeACLRule) string {
+func buildRuntimeACLComment(rule runtimecontracts.InstanceRuntimeACLRule) string {
 	payload := strings.Join([]string{
 		rule.SourceContainerID,
 		rule.TargetContainerID,

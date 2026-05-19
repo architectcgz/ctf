@@ -18,14 +18,14 @@ type writeupCommandContextStub struct {
 	findByIDWithContextFn                              func(ctx context.Context, id int64) (*model.Challenge, error)
 	findUserByIDFn                                     func(userID int64) (*identitycontracts.User, error)
 	findUserByIDWithContextFn                          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
-	findWriteupByChallengeIDFn                         func(challengeID int64) (*model.ChallengeWriteup, error)
-	findWriteupByChallengeIDWithContextFn              func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
-	upsertWriteupFn                                    func(writeup *model.ChallengeWriteup) error
-	upsertWriteupWithContextFn                         func(ctx context.Context, writeup *model.ChallengeWriteup) error
+	findWriteupByChallengeIDFn                         func(challengeID int64) (*challengeentity.ChallengeWriteup, error)
+	findWriteupByChallengeIDWithContextFn              func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error)
+	upsertWriteupFn                                    func(writeup *challengeentity.ChallengeWriteup) error
+	upsertWriteupWithContextFn                         func(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error
 	deleteWriteupByChallengeIDFn                       func(challengeID int64) error
 	deleteWriteupByChallengeIDWithContextFn            func(ctx context.Context, challengeID int64) error
-	findReleasedWriteupByChallengeIDFn                 func(challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
-	findReleasedWriteupByChallengeIDWithContextFn      func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
+	findReleasedWriteupByChallengeIDFn                 func(challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error)
+	findReleasedWriteupByChallengeIDWithContextFn      func(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error)
 	getSolvedStatusFn                                  func(userID, challengeID int64) (bool, error)
 	getSolvedStatusWithContextFn                       func(ctx context.Context, userID, challengeID int64) (bool, error)
 	findSubmissionWriteupByUserChallengeFn             func(userID, challengeID int64) (*challengeentity.SubmissionWriteup, error)
@@ -58,14 +58,14 @@ func (s *writeupCommandContextStub) FindUserByID(ctx context.Context, userID int
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+func (s *writeupCommandContextStub) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 	if s.findWriteupByChallengeIDWithContextFn != nil {
 		return s.findWriteupByChallengeIDWithContextFn(ctx, challengeID)
 	}
 	return nil, nil
 }
 
-func (s *writeupCommandContextStub) UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error {
+func (s *writeupCommandContextStub) UpsertWriteup(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error {
 	if s.upsertWriteupWithContextFn != nil {
 		return s.upsertWriteupWithContextFn(ctx, writeup)
 	}
@@ -79,7 +79,7 @@ func (s *writeupCommandContextStub) DeleteWriteupByChallengeID(ctx context.Conte
 	return nil
 }
 
-func (s *writeupCommandContextStub) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+func (s *writeupCommandContextStub) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error) {
 	if s.findReleasedWriteupByChallengeIDWithContextFn != nil {
 		return s.findReleasedWriteupByChallengeIDWithContextFn(ctx, challengeID, now)
 	}
@@ -161,7 +161,7 @@ func TestWriteupServiceUpsertPropagatesContextToRepository(t *testing.T) {
 			}
 			return &model.Challenge{ID: id}, nil
 		},
-		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-writeup ctx value %v, got %v", expectedCtxValue, got)
 			}
@@ -170,9 +170,9 @@ func TestWriteupServiceUpsertPropagatesContextToRepository(t *testing.T) {
 				return nil, nil
 			}
 			findUpdatedCalled = true
-			return &model.ChallengeWriteup{ID: 21, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic}, nil
+			return &challengeentity.ChallengeWriteup{ID: 21, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: challengeentity.WriteupVisibilityPublic}, nil
 		},
-		upsertWriteupWithContextFn: func(ctx context.Context, writeup *model.ChallengeWriteup) error {
+		upsertWriteupWithContextFn: func(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error {
 			upsertCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected upsert-writeup ctx value %v, got %v", expectedCtxValue, got)
@@ -183,7 +183,7 @@ func TestWriteupServiceUpsertPropagatesContextToRepository(t *testing.T) {
 	service := NewWriteupService(repo)
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	resp, err := service.Upsert(ctx, 11, 7, UpsertOfficialWriteupInput{Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic})
+	resp, err := service.Upsert(ctx, 11, 7, UpsertOfficialWriteupInput{Title: "Official", Content: "Walkthrough", Visibility: challengeentity.WriteupVisibilityPublic})
 	if err != nil {
 		t.Fatalf("Upsert() error = %v", err)
 	}
@@ -305,18 +305,18 @@ func TestWriteupServiceRecommendOfficialPropagatesContextToRepository(t *testing
 			}
 			return &model.Challenge{ID: id}, nil
 		},
-		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-writeup ctx value %v, got %v", expectedCtxValue, got)
 			}
 			if !upsertCalled {
 				findWriteupCalled = true
-				return &model.ChallengeWriteup{ID: 41, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic}, nil
+				return &challengeentity.ChallengeWriteup{ID: 41, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: challengeentity.WriteupVisibilityPublic}, nil
 			}
 			findUpdatedCalled = true
-			return &model.ChallengeWriteup{ID: 41, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic, IsRecommended: true}, nil
+			return &challengeentity.ChallengeWriteup{ID: 41, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: challengeentity.WriteupVisibilityPublic, IsRecommended: true}, nil
 		},
-		upsertWriteupWithContextFn: func(ctx context.Context, writeup *model.ChallengeWriteup) error {
+		upsertWriteupWithContextFn: func(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error {
 			upsertCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected upsert-writeup ctx value %v, got %v", expectedCtxValue, got)
@@ -351,7 +351,7 @@ func TestWriteupServiceUpsertTreatsChallengeNotFoundSentinelAsChallengeNotFound(
 	_, err := service.Upsert(context.Background(), 11, 7, UpsertOfficialWriteupInput{
 		Title:      "Official",
 		Content:    "Walkthrough",
-		Visibility: model.WriteupVisibilityPublic,
+		Visibility: challengeentity.WriteupVisibilityPublic,
 	})
 	if err == nil || err.Error() != errcode.ErrChallengeNotFound.Error() {
 		t.Fatalf("expected challenge not found, got %v", err)
@@ -366,19 +366,19 @@ func TestWriteupServiceUpsertTreatsOfficialWriteupNotFoundSentinelAsCreateFlow(t
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
 			return &model.Challenge{ID: id}, nil
 		},
-		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 			if upsertCalled {
-				return &model.ChallengeWriteup{
+				return &challengeentity.ChallengeWriteup{
 					ID:          21,
 					ChallengeID: challengeID,
 					Title:       "Official",
 					Content:     "Walkthrough",
-					Visibility:  model.WriteupVisibilityPublic,
+					Visibility:  challengeentity.WriteupVisibilityPublic,
 				}, nil
 			}
 			return nil, challengeports.ErrChallengeOfficialWriteupNotFound
 		},
-		upsertWriteupWithContextFn: func(ctx context.Context, writeup *model.ChallengeWriteup) error {
+		upsertWriteupWithContextFn: func(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error {
 			upsertCalled = true
 			return nil
 		},
@@ -387,7 +387,7 @@ func TestWriteupServiceUpsertTreatsOfficialWriteupNotFoundSentinelAsCreateFlow(t
 	resp, err := service.Upsert(context.Background(), 11, 7, UpsertOfficialWriteupInput{
 		Title:      "Official",
 		Content:    "Walkthrough",
-		Visibility: model.WriteupVisibilityPublic,
+		Visibility: challengeentity.WriteupVisibilityPublic,
 	})
 	if err != nil {
 		t.Fatalf("Upsert() error = %v", err)
@@ -441,18 +441,18 @@ func TestWriteupServiceUnrecommendOfficialPropagatesContextToRepository(t *testi
 			}
 			return &model.Challenge{ID: id}, nil
 		},
-		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+		findWriteupByChallengeIDWithContextFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-writeup ctx value %v, got %v", expectedCtxValue, got)
 			}
 			if !upsertCalled {
 				findWriteupCalled = true
-				return &model.ChallengeWriteup{ID: 42, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic, IsRecommended: true}, nil
+				return &challengeentity.ChallengeWriteup{ID: 42, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: challengeentity.WriteupVisibilityPublic, IsRecommended: true}, nil
 			}
 			findUpdatedCalled = true
-			return &model.ChallengeWriteup{ID: 42, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: model.WriteupVisibilityPublic, IsRecommended: false}, nil
+			return &challengeentity.ChallengeWriteup{ID: 42, ChallengeID: challengeID, Title: "Official", Content: "Walkthrough", Visibility: challengeentity.WriteupVisibilityPublic, IsRecommended: false}, nil
 		},
-		upsertWriteupWithContextFn: func(ctx context.Context, writeup *model.ChallengeWriteup) error {
+		upsertWriteupWithContextFn: func(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error {
 			upsertCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected upsert-writeup ctx value %v, got %v", expectedCtxValue, got)

@@ -4,8 +4,9 @@ import (
 	"errors"
 	"strings"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -14,48 +15,48 @@ func BuildTopologySpec(entryNodeKey string, networks []challengecontracts.Topolo
 	if err != nil {
 		return "", "", err
 	}
-	raw, err := model.EncodeTopologySpec(spec)
+	raw, err := challengecontracts.EncodeTopologySpec(spec)
 	if err != nil {
 		return "", "", err
 	}
 	return raw, normalizedEntryNodeKey, nil
 }
 
-func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.TopologyNetworkReq, nodes []challengecontracts.TopologyNodeReq, links []challengecontracts.TopologyLinkReq, policies []challengecontracts.TopologyTrafficPolicyReq) (model.TopologySpec, string, error) {
+func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.TopologyNetworkReq, nodes []challengecontracts.TopologyNodeReq, links []challengecontracts.TopologyLinkReq, policies []challengecontracts.TopologyTrafficPolicyReq) (challengecontracts.TopologySpec, string, error) {
 	if len(nodes) == 0 {
-		return model.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑至少需要一个节点"))
+		return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑至少需要一个节点"))
 	}
 
 	specNetworks, networkKeys, fallbackNetworkKey, err := normalizeTopologyNetworks(networks)
 	if err != nil {
-		return model.TopologySpec{}, "", err
+		return challengecontracts.TopologySpec{}, "", err
 	}
 
 	seenNodes := make(map[string]struct{}, len(nodes))
-	specNodes := make([]model.TopologyNode, 0, len(nodes))
+	specNodes := make([]challengecontracts.TopologyNode, 0, len(nodes))
 	injectFlagCount := 0
 	for _, node := range nodes {
 		key := strings.TrimSpace(node.Key)
 		if key == "" {
-			return model.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("节点 key 不能为空"))
+			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("节点 key 不能为空"))
 		}
 		if _, exists := seenNodes[key]; exists {
-			return model.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("节点 key 不能重复"))
+			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("节点 key 不能重复"))
 		}
 		seenNodes[key] = struct{}{}
 
 		tier := strings.TrimSpace(node.Tier)
 		if tier == "" {
-			tier = model.TopologyTierService
+			tier = challengecontracts.TopologyTierService
 		}
 		networkRefs, networkErr := normalizeNodeNetworks(node.NetworkKeys, networkKeys, fallbackNetworkKey)
 		if networkErr != nil {
-			return model.TopologySpec{}, "", networkErr
+			return challengecontracts.TopologySpec{}, "", networkErr
 		}
 
-		var resources *model.TopologyResources
+		var resources *challengecontracts.TopologyResources
 		if node.Resources != nil {
-			resources = &model.TopologyResources{
+			resources = &challengecontracts.TopologyResources{
 				CPUQuota:  node.Resources.CPUQuota,
 				MemoryMB:  node.Resources.MemoryMB,
 				PidsLimit: node.Resources.PidsLimit,
@@ -65,7 +66,7 @@ func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.To
 			injectFlagCount++
 		}
 
-		specNodes = append(specNodes, model.TopologyNode{
+		specNodes = append(specNodes, challengecontracts.TopologyNode{
 			Key:             key,
 			Name:            strings.TrimSpace(node.Name),
 			ImageID:         node.ImageID,
@@ -84,7 +85,7 @@ func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.To
 		entry = specNodes[0].Key
 	}
 	if _, exists := seenNodes[entry]; !exists {
-		return model.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("入口节点不存在"))
+		return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("入口节点不存在"))
 	}
 
 	if injectFlagCount == 0 {
@@ -96,33 +97,33 @@ func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.To
 		}
 	}
 
-	specLinks := make([]model.TopologyLink, 0, len(links))
+	specLinks := make([]challengecontracts.TopologyLink, 0, len(links))
 	for _, link := range links {
 		from := strings.TrimSpace(link.FromNodeKey)
 		to := strings.TrimSpace(link.ToNodeKey)
 		if _, exists := seenNodes[from]; !exists {
-			return model.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑连线源节点不存在"))
+			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑连线源节点不存在"))
 		}
 		if _, exists := seenNodes[to]; !exists {
-			return model.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑连线目标节点不存在"))
+			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("拓扑连线目标节点不存在"))
 		}
-		specLinks = append(specLinks, model.TopologyLink{
+		specLinks = append(specLinks, challengecontracts.TopologyLink{
 			FromNodeKey: from,
 			ToNodeKey:   to,
 		})
 	}
 
-	specPolicies := make([]model.TopologyTrafficPolicy, 0, len(policies))
+	specPolicies := make([]challengecontracts.TopologyTrafficPolicy, 0, len(policies))
 	for _, policy := range policies {
 		source := strings.TrimSpace(policy.SourceNodeKey)
 		target := strings.TrimSpace(policy.TargetNodeKey)
 		if _, exists := seenNodes[source]; !exists {
-			return model.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("链路策略源节点不存在"))
+			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("链路策略源节点不存在"))
 		}
 		if _, exists := seenNodes[target]; !exists {
-			return model.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("链路策略目标节点不存在"))
+			return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("链路策略目标节点不存在"))
 		}
-		specPolicies = append(specPolicies, model.TopologyTrafficPolicy{
+		specPolicies = append(specPolicies, challengecontracts.TopologyTrafficPolicy{
 			SourceNodeKey: source,
 			TargetNodeKey: target,
 			Action:        strings.TrimSpace(policy.Action),
@@ -138,10 +139,10 @@ func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.To
 		}
 	}
 	if !hasEntryPort {
-		return model.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("入口节点必须配置 service_port"))
+		return challengecontracts.TopologySpec{}, "", errcode.ErrInvalidParams.WithCause(errors.New("入口节点必须配置 service_port"))
 	}
 
-	return model.TopologySpec{
+	return challengecontracts.TopologySpec{
 		Networks: specNetworks,
 		Nodes:    specNodes,
 		Links:    specLinks,
@@ -149,8 +150,8 @@ func normalizeTopologySpec(entryNodeKey string, networks []challengecontracts.To
 	}, entry, nil
 }
 
-func TopologyRespFromModel(item *model.ChallengeTopology) (*challengecontracts.ChallengeTopologyResp, error) {
-	spec, err := model.DecodeTopologySpec(item.Spec)
+func TopologyRespFromModel(item *challengeentity.ChallengeTopology) (*challengecontracts.ChallengeTopologyResp, error) {
+	spec, err := challengecontracts.DecodeTopologySpec(item.Spec)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +159,7 @@ func TopologyRespFromModel(item *model.ChallengeTopology) (*challengecontracts.C
 	resp := challengeResponseMapperInst.ToChallengeTopologyRespBasePtr(item)
 	var baseline *challengecontracts.TopologySpecResp
 	if strings.TrimSpace(item.PackageBaselineSpec) != "" {
-		baselineSpec, decodeErr := model.DecodeTopologySpec(item.PackageBaselineSpec)
+		baselineSpec, decodeErr := challengecontracts.DecodeTopologySpec(item.PackageBaselineSpec)
 		if decodeErr != nil {
 			return nil, decodeErr
 		}
@@ -173,19 +174,19 @@ func TopologyRespFromModel(item *model.ChallengeTopology) (*challengecontracts.C
 }
 
 func TopologySpecRespFromEncoded(entryNodeKey string, raw string) (*challengecontracts.TopologySpecResp, error) {
-	spec, err := model.DecodeTopologySpec(raw)
+	spec, err := challengecontracts.DecodeTopologySpec(raw)
 	if err != nil {
 		return nil, err
 	}
 	return topologySpecRespFromSpec(entryNodeKey, spec), nil
 }
 
-func TopologySpecRespFromSpec(entryNodeKey string, spec model.TopologySpec) *challengecontracts.TopologySpecResp {
+func TopologySpecRespFromSpec(entryNodeKey string, spec challengecontracts.TopologySpec) *challengecontracts.TopologySpecResp {
 	return topologySpecRespFromSpec(entryNodeKey, spec)
 }
 
-func TemplateRespFromModel(item *model.EnvironmentTemplate) (*challengecontracts.EnvironmentTemplateResp, error) {
-	spec, err := model.DecodeTopologySpec(item.Spec)
+func TemplateRespFromModel(item *challengeentity.EnvironmentTemplate) (*challengecontracts.EnvironmentTemplateResp, error) {
+	spec, err := challengecontracts.DecodeTopologySpec(item.Spec)
 	if err != nil {
 		return nil, err
 	}
@@ -197,19 +198,19 @@ func TemplateRespFromModel(item *model.EnvironmentTemplate) (*challengecontracts
 	return resp, nil
 }
 
-func topologyNodeRespList(nodes []model.TopologyNode) []challengecontracts.TopologyNodeResp {
+func topologyNodeRespList(nodes []challengecontracts.TopologyNode) []challengecontracts.TopologyNodeResp {
 	return challengeResponseMapperInst.ToTopologyNodeResps(nodes)
 }
 
-func topologyNetworkRespList(networks []model.TopologyNetwork) []challengecontracts.TopologyNetworkResp {
+func topologyNetworkRespList(networks []challengecontracts.TopologyNetwork) []challengecontracts.TopologyNetworkResp {
 	return challengeResponseMapperInst.ToTopologyNetworkResps(networks)
 }
 
-func topologyLinkRespList(links []model.TopologyLink) []challengecontracts.TopologyLinkResp {
+func topologyLinkRespList(links []challengecontracts.TopologyLink) []challengecontracts.TopologyLinkResp {
 	return challengeResponseMapperInst.ToTopologyLinkResps(links)
 }
 
-func topologyTrafficPolicyRespList(policies []model.TopologyTrafficPolicy) []challengecontracts.TopologyTrafficPolicyResp {
+func topologyTrafficPolicyRespList(policies []challengecontracts.TopologyTrafficPolicy) []challengecontracts.TopologyTrafficPolicyResp {
 	return challengeResponseMapperInst.ToTopologyTrafficPolicyResps(policies)
 }
 
@@ -239,7 +240,7 @@ func ChallengePackageFileRespListFromRevisionFiles(items []challengecontracts.Ch
 	return append([]challengecontracts.ChallengePackageFileResp(nil), items...)
 }
 
-func topologySpecRespFromSpec(entryNodeKey string, spec model.TopologySpec) *challengecontracts.TopologySpecResp {
+func topologySpecRespFromSpec(entryNodeKey string, spec challengecontracts.TopologySpec) *challengecontracts.TopologySpecResp {
 	return &challengecontracts.TopologySpecResp{
 		EntryNodeKey: entryNodeKey,
 		Networks:     topologyNetworkRespList(spec.Networks),
@@ -249,33 +250,33 @@ func topologySpecRespFromSpec(entryNodeKey string, spec model.TopologySpec) *cha
 	}
 }
 
-func importedTopologyNetworkList(items []ChallengePackageTopologyNetwork) []model.TopologyNetwork {
+func importedTopologyNetworkList(items []ChallengePackageTopologyNetwork) []challengecontracts.TopologyNetwork {
 	return challengeResponseMapperInst.ToImportedTopologyNetworks(items)
 }
 
-func importedTopologyLinkList(items []ChallengePackageTopologyLink) []model.TopologyLink {
+func importedTopologyLinkList(items []ChallengePackageTopologyLink) []challengecontracts.TopologyLink {
 	return challengeResponseMapperInst.ToImportedTopologyLinks(items)
 }
 
-func importedTopologyPolicyList(items []ChallengePackageTopologyPolicy) []model.TopologyTrafficPolicy {
+func importedTopologyPolicyList(items []ChallengePackageTopologyPolicy) []challengecontracts.TopologyTrafficPolicy {
 	return challengeResponseMapperInst.ToImportedTopologyPolicies(items)
 }
 
-func normalizeTopologyNetworks(networks []challengecontracts.TopologyNetworkReq) ([]model.TopologyNetwork, map[string]struct{}, string, error) {
+func normalizeTopologyNetworks(networks []challengecontracts.TopologyNetworkReq) ([]challengecontracts.TopologyNetwork, map[string]struct{}, string, error) {
 	if len(networks) == 0 {
-		return []model.TopologyNetwork{
+		return []challengecontracts.TopologyNetwork{
 				{
-					Key:  model.TopologyDefaultNetworkKey,
-					Name: model.TopologyDefaultNetworkKey,
+					Key:  challengecontracts.TopologyDefaultNetworkKey,
+					Name: challengecontracts.TopologyDefaultNetworkKey,
 				},
 			},
-			map[string]struct{}{model.TopologyDefaultNetworkKey: {}},
-			model.TopologyDefaultNetworkKey,
+			map[string]struct{}{challengecontracts.TopologyDefaultNetworkKey: {}},
+			challengecontracts.TopologyDefaultNetworkKey,
 			nil
 	}
 
 	seen := make(map[string]struct{}, len(networks))
-	items := make([]model.TopologyNetwork, 0, len(networks))
+	items := make([]challengecontracts.TopologyNetwork, 0, len(networks))
 	fallbackNetworkKey := ""
 	for _, network := range networks {
 		key := strings.TrimSpace(network.Key)
@@ -289,7 +290,7 @@ func normalizeTopologyNetworks(networks []challengecontracts.TopologyNetworkReq)
 			fallbackNetworkKey = key
 		}
 		seen[key] = struct{}{}
-		items = append(items, model.TopologyNetwork{
+		items = append(items, challengecontracts.TopologyNetwork{
 			Key:      key,
 			Name:     strings.TrimSpace(network.Name),
 			CIDR:     strings.TrimSpace(network.CIDR),
@@ -329,17 +330,17 @@ func normalizeNodeNetworks(networkKeys []string, validNetworkKeys map[string]str
 func normalizePolicyProtocol(protocol string) string {
 	trimmed := strings.TrimSpace(protocol)
 	if trimmed == "" {
-		return model.TopologyPolicyProtocolAny
+		return challengecontracts.TopologyPolicyProtocolAny
 	}
 	return trimmed
 }
 
 func normalizeServiceProtocol(protocol string) string {
 	switch strings.ToLower(strings.TrimSpace(protocol)) {
-	case model.ChallengeTargetProtocolTCP:
-		return model.ChallengeTargetProtocolTCP
+	case runtimecontracts.ChallengeTargetProtocolTCP:
+		return runtimecontracts.ChallengeTargetProtocolTCP
 	default:
-		return model.ChallengeTargetProtocolHTTP
+		return runtimecontracts.ChallengeTargetProtocolHTTP
 	}
 }
 

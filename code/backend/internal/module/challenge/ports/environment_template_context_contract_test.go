@@ -3,17 +3,17 @@ package ports_test
 import (
 	"context"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type ctxOnlyEnvironmentTemplateRepository struct{}
 
-func (ctxOnlyEnvironmentTemplateRepository) Create(context.Context, *model.EnvironmentTemplate) error {
+func (ctxOnlyEnvironmentTemplateRepository) Create(context.Context, *challengeentity.EnvironmentTemplate) error {
 	return nil
 }
 
-func (ctxOnlyEnvironmentTemplateRepository) Update(context.Context, *model.EnvironmentTemplate) error {
+func (ctxOnlyEnvironmentTemplateRepository) Update(context.Context, *challengeentity.EnvironmentTemplate) error {
 	return nil
 }
 
@@ -21,11 +21,11 @@ func (ctxOnlyEnvironmentTemplateRepository) Delete(context.Context, int64) error
 	return nil
 }
 
-func (ctxOnlyEnvironmentTemplateRepository) FindByID(context.Context, int64) (*model.EnvironmentTemplate, error) {
+func (ctxOnlyEnvironmentTemplateRepository) FindByID(context.Context, int64) (*challengeentity.EnvironmentTemplate, error) {
 	return nil, nil
 }
 
-func (ctxOnlyEnvironmentTemplateRepository) List(context.Context, string) ([]*model.EnvironmentTemplate, error) {
+func (ctxOnlyEnvironmentTemplateRepository) List(context.Context, string) ([]*challengeentity.EnvironmentTemplate, error) {
 	return nil, nil
 }
 

@@ -30,12 +30,19 @@ func (r *RuntimeSubjectRepository) FindByID(ctx context.Context, id int64) (*mod
 	return challenge, err
 }
 
-func (r *RuntimeSubjectRepository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
+func (r *RuntimeSubjectRepository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*practiceports.RuntimeChallengeTopology, error) {
 	topology, err := r.source.FindChallengeTopologyByChallengeID(ctx, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeChallengeTopologyNotFound
 	}
-	return topology, err
+	if err != nil || topology == nil {
+		return nil, err
+	}
+	return &practiceports.RuntimeChallengeTopology{
+		ChallengeID:  topology.ChallengeID,
+		EntryNodeKey: topology.EntryNodeKey,
+		Spec:         topology.Spec,
+	}, nil
 }
 
 var _ practiceports.PracticeRuntimeSubjectRepository = (*RuntimeSubjectRepository)(nil)

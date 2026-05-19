@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -77,7 +76,7 @@ func TestAWDDefenseSSHGatewayAuthenticateUsesWorkspaceScope(t *testing.T) {
 				Role:                 identitycontracts.RoleStudent,
 				InstanceID:           9001,
 				ContestID:            &contestID,
-				ShareScope:           model.InstanceSharingPerTeam,
+				ShareScope:           instancecontracts.ShareScopePerTeam,
 				Purpose:              runtimeports.ProxyTicketPurposeAWDDefenseSSH,
 				AWDAttackerTeamID:    &teamID,
 				AWDServiceID:         &serviceID,
@@ -94,7 +93,7 @@ func TestAWDDefenseSSHGatewayAuthenticateUsesWorkspaceScope(t *testing.T) {
 				AWDChallengeID:    challengeID,
 				WorkspaceRevision: workspaceRevision,
 				ContainerID:       "workspace-ctr",
-				ShareScope:        model.InstanceSharingPerTeam,
+				ShareScope:        instancecontracts.ShareScopePerTeam,
 			},
 		},
 		nil,
@@ -132,7 +131,7 @@ func TestAWDDefenseSSHGatewayAuthenticateRejectsStaleWorkspaceRevision(t *testin
 				Role:                 identitycontracts.RoleStudent,
 				InstanceID:           9002,
 				ContestID:            &contestID,
-				ShareScope:           model.InstanceSharingPerTeam,
+				ShareScope:           instancecontracts.ShareScopePerTeam,
 				Purpose:              runtimeports.ProxyTicketPurposeAWDDefenseSSH,
 				AWDAttackerTeamID:    &teamID,
 				AWDServiceID:         &serviceID,
@@ -149,7 +148,7 @@ func TestAWDDefenseSSHGatewayAuthenticateRejectsStaleWorkspaceRevision(t *testin
 				AWDChallengeID:    challengeID,
 				WorkspaceRevision: currentRevision,
 				ContainerID:       "workspace-ctr",
-				ShareScope:        model.InstanceSharingPerTeam,
+				ShareScope:        instancecontracts.ShareScopePerTeam,
 			},
 		},
 		nil,

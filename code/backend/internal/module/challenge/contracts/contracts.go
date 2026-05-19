@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 type FlagValidator interface {
@@ -22,7 +23,7 @@ type ContestChallengeContract interface {
 
 type PracticeChallengeContract interface {
 	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error)
+	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
 }
 
 type ChallengeContract interface {

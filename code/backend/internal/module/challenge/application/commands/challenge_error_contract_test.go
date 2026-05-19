@@ -80,7 +80,7 @@ func TestChallengeServiceUpdateChallengeTreatsTopologySentinelAsMissingTopology(
 		},
 		&challengeCommandImageRepoStub{},
 		&challengeCommandTopologyRepoStub{
-			findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*model.ChallengeTopology, error) {
+			findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
 				return nil, challengeports.ErrChallengeTopologyNotFound
 			},
 		},

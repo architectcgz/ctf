@@ -1,4 +1,4 @@
-package model
+package contracts
 
 // 能力维度枚举
 const (

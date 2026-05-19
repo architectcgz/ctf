@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -16,8 +15,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (r *Repository) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
-	var writeup model.ChallengeWriteup
+func (r *Repository) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
+	var writeup challengeentity.ChallengeWriteup
 	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).First(&writeup).Error
 	if err != nil {
 		return nil, err
@@ -25,7 +24,7 @@ func (r *Repository) FindWriteupByChallengeID(ctx context.Context, challengeID i
 	return &writeup, nil
 }
 
-func (r *Repository) UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error {
+func (r *Repository) UpsertWriteup(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "challenge_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"title", "content", "visibility", "created_by", "is_recommended", "recommended_at", "recommended_by", "updated_at"}),
@@ -33,14 +32,14 @@ func (r *Repository) UpsertWriteup(ctx context.Context, writeup *model.Challenge
 }
 
 func (r *Repository) DeleteWriteupByChallengeID(ctx context.Context, challengeID int64) error {
-	return r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeWriteup{}).Error
+	return r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&challengeentity.ChallengeWriteup{}).Error
 }
 
-func (r *Repository) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
-	var writeup model.ChallengeWriteup
+func (r *Repository) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error) {
+	var writeup challengeentity.ChallengeWriteup
 	err := r.dbWithContext(ctx).
 		Where("challenge_id = ?", challengeID).
-		Where("visibility = ?", model.WriteupVisibilityPublic).
+		Where("visibility = ?", challengeentity.WriteupVisibilityPublic).
 		First(&writeup).Error
 	if err != nil {
 		return nil, err
@@ -206,7 +205,7 @@ func (r *Repository) ListRecommendedSolutionsByChallengeID(ctx context.Context, 
 		`)).
 		Joins("LEFT JOIN users author ON author.id = cw.created_by").
 		Where("cw.challenge_id = ? AND cw.is_recommended = ?", challengeID, true).
-		Where("cw.visibility = ?", model.WriteupVisibilityPublic).
+		Where("cw.visibility = ?", challengeentity.WriteupVisibilityPublic).
 		Order("cw.recommended_at DESC, cw.updated_at DESC").
 		Scan(&officialRows).Error; err != nil {
 		return nil, err
@@ -450,8 +449,8 @@ func (r *Repository) listTeacherSubmissionWriteups(
 	return items, total, nil
 }
 
-func (r *Repository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeTopology, error) {
-	var topology model.ChallengeTopology
+func (r *Repository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
+	var topology challengeentity.ChallengeTopology
 	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).First(&topology).Error
 	if err != nil {
 		return nil, err
@@ -459,7 +458,7 @@ func (r *Repository) FindChallengeTopologyByChallengeID(ctx context.Context, cha
 	return &topology, nil
 }
 
-func (r *Repository) UpsertChallengeTopology(ctx context.Context, topology *model.ChallengeTopology) error {
+func (r *Repository) UpsertChallengeTopology(ctx context.Context, topology *challengeentity.ChallengeTopology) error {
 	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "challenge_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{
@@ -479,7 +478,7 @@ func (r *Repository) UpsertChallengeTopology(ctx context.Context, topology *mode
 }
 
 func (r *Repository) DeleteChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) error {
-	return r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&model.ChallengeTopology{}).Error
+	return r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Delete(&challengeentity.ChallengeTopology{}).Error
 }
 
 func (r *Repository) CreateChallengePackageRevision(ctx context.Context, revision *challengeentity.ChallengePackageRevision) error {
@@ -522,20 +521,20 @@ func (r *TemplateRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *TemplateRepository) Create(ctx context.Context, template *model.EnvironmentTemplate) error {
+func (r *TemplateRepository) Create(ctx context.Context, template *challengeentity.EnvironmentTemplate) error {
 	return r.dbWithContext(ctx).Create(template).Error
 }
 
-func (r *TemplateRepository) Update(ctx context.Context, template *model.EnvironmentTemplate) error {
+func (r *TemplateRepository) Update(ctx context.Context, template *challengeentity.EnvironmentTemplate) error {
 	return r.dbWithContext(ctx).Save(template).Error
 }
 
 func (r *TemplateRepository) Delete(ctx context.Context, id int64) error {
-	return r.dbWithContext(ctx).Delete(&model.EnvironmentTemplate{}, id).Error
+	return r.dbWithContext(ctx).Delete(&challengeentity.EnvironmentTemplate{}, id).Error
 }
 
-func (r *TemplateRepository) FindByID(ctx context.Context, id int64) (*model.EnvironmentTemplate, error) {
-	var template model.EnvironmentTemplate
+func (r *TemplateRepository) FindByID(ctx context.Context, id int64) (*challengeentity.EnvironmentTemplate, error) {
+	var template challengeentity.EnvironmentTemplate
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&template).Error
 	if err != nil {
 		return nil, err
@@ -543,9 +542,9 @@ func (r *TemplateRepository) FindByID(ctx context.Context, id int64) (*model.Env
 	return &template, nil
 }
 
-func (r *TemplateRepository) List(ctx context.Context, keyword string) ([]*model.EnvironmentTemplate, error) {
-	var templates []*model.EnvironmentTemplate
-	db := r.dbWithContext(ctx).Model(&model.EnvironmentTemplate{})
+func (r *TemplateRepository) List(ctx context.Context, keyword string) ([]*challengeentity.EnvironmentTemplate, error) {
+	var templates []*challengeentity.EnvironmentTemplate
+	db := r.dbWithContext(ctx).Model(&challengeentity.EnvironmentTemplate{})
 	if keyword != "" {
 		pattern := "%" + keyword + "%"
 		db = db.Where("name LIKE ? OR description LIKE ?", pattern, pattern)
@@ -555,7 +554,7 @@ func (r *TemplateRepository) List(ctx context.Context, keyword string) ([]*model
 }
 
 func (r *TemplateRepository) IncrementUsage(ctx context.Context, id int64) error {
-	return r.dbWithContext(ctx).Model(&model.EnvironmentTemplate{}).
+	return r.dbWithContext(ctx).Model(&challengeentity.EnvironmentTemplate{}).
 		Where("id = ?", id).
 		UpdateColumn("usage_count", gorm.Expr("usage_count + 1")).Error
 }

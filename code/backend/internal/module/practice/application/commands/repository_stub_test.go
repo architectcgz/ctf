@@ -422,7 +422,7 @@ func stubContestAWDServiceRuntimeSubject(service *practiceports.ContestAWDServic
 		return nil, err
 	}
 	entryNodeKey, _ := topologyMap["entry_node_key"].(string)
-	subject.RuntimeTopology = &model.ChallengeTopology{
+	subject.RuntimeTopology = &practiceports.RuntimeChallengeTopology{
 		ChallengeID:  service.AWDChallengeID,
 		EntryNodeKey: entryNodeKey,
 		Spec:         string(specRaw),

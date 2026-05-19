@@ -16,9 +16,9 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/model"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	"ctf-platform/pkg/errcode"
@@ -132,7 +132,7 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 		return
 	}
 	if isTCPAccessURL(accessURL) {
-		publicAccessURL := model.ResolveRuntimePublicAccessURL(accessURL, h.publicHost, h.accessHost)
+		publicAccessURL := runtimecontracts.ResolveRuntimePublicAccessURL(accessURL, h.publicHost, h.accessHost)
 		response.Success(c, &InstanceAccessResp{
 			AccessURL: publicAccessURL,
 			Access:    instancecontracts.BuildInstanceAccessInfo(publicAccessURL),
@@ -172,7 +172,7 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 
 func isTCPAccessURL(accessURL string) bool {
 	parsed, err := url.Parse(strings.TrimSpace(accessURL))
-	return err == nil && strings.EqualFold(parsed.Scheme, model.ChallengeTargetProtocolTCP)
+	return err == nil && strings.EqualFold(parsed.Scheme, runtimecontracts.ChallengeTargetProtocolTCP)
 }
 
 func (h *Handler) ProxyInstance(c *gin.Context) {

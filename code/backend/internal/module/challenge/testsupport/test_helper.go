@@ -30,10 +30,10 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&instancecontracts.Instance{},
 		&contestcontracts.Submission{},
 		&challengeentity.ChallengeHint{},
-		&model.ChallengeWriteup{},
+		&challengeentity.ChallengeWriteup{},
 		&challengeentity.SubmissionWriteup{},
-		&model.ChallengeTopology{},
-		&model.EnvironmentTemplate{},
+		&challengeentity.ChallengeTopology{},
+		&challengeentity.EnvironmentTemplate{},
 		&contestcontracts.Contest{},
 		&contestcontracts.ContestAWDService{},
 	); err != nil {
@@ -49,7 +49,7 @@ func SetupTagTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("failed to open db: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Challenge{}, &model.Tag{}, &model.ChallengeTag{}); err != nil {
+	if err := db.AutoMigrate(&model.Challenge{}, &challengeentity.Tag{}, &challengeentity.ChallengeTag{}); err != nil {
 		t.Fatalf("failed to migrate tag tables: %v", err)
 	}
 	return db

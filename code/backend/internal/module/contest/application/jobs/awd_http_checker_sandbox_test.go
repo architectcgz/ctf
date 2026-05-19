@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestAWDHTTPStandardUsesSandboxNetworkForAliasTarget(t *testing.T) {
@@ -32,15 +32,15 @@ func TestAWDHTTPStandardUsesSandboxNetworkForAliasTarget(t *testing.T) {
 	}, "", nil, nil)
 	updater.SetCheckerRunner(runner)
 
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Networks: []model.InstanceRuntimeNetwork{
-			{Key: model.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Networks: []runtimecontracts.InstanceRuntimeNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
 		},
-		Containers: []model.InstanceRuntimeContainer{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{
 				ContainerID:    "ctr-awd",
 				IsEntryPoint:   true,
-				NetworkKeys:    []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:    []string{runtimecontracts.TopologyDefaultNetworkKey},
 				NetworkAliases: []string{"awd-c8-t15-s21"},
 				NetworkIPs:     map[string]string{"ctf-awd-contest-8": "192.168.176.2"},
 			},

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -54,8 +55,8 @@ type awdDefenseWorkspacePlan struct {
 	serviceID                 int64
 	workspaceRevision         int64
 	seedSignature             string
-	runtimeMounts             []model.ContainerMount
-	workspaceMounts           []model.ContainerMount
+	runtimeMounts             []runtimecontracts.ContainerMount
+	workspaceMounts           []runtimecontracts.ContainerMount
 	workspaceContainerID      string
 	staleWorkspaceContainerID string
 	workspaceContainerName    string
@@ -72,7 +73,7 @@ func resolveAWDDefenseWorkspaceRepository(repo any) awdDefenseWorkspaceRepositor
 	return value
 }
 
-func buildAWDDefenseWorkspaceBootstrapCommand(mounts []model.ContainerMount) string {
+func buildAWDDefenseWorkspaceBootstrapCommand(mounts []runtimecontracts.ContainerMount) string {
 	var builder strings.Builder
 	builder.WriteString(awdDefenseWorkspaceBootstrapPrelude)
 
@@ -111,7 +112,7 @@ func buildAWDDefenseWorkspaceBootstrapCommand(mounts []model.ContainerMount) str
 	return builder.String()
 }
 
-func listAWDDefenseWorkspaceWritableTargets(mounts []model.ContainerMount) []string {
+func listAWDDefenseWorkspaceWritableTargets(mounts []runtimecontracts.ContainerMount) []string {
 	if len(mounts) == 0 {
 		return nil
 	}
@@ -182,25 +183,25 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 	}
 
 	volumeBySource := make(map[string]string, len(config.WorkspaceRoots))
-	workspaceMounts := make([]model.ContainerMount, 0, len(config.WorkspaceRoots))
+	workspaceMounts := make([]runtimecontracts.ContainerMount, 0, len(config.WorkspaceRoots))
 	for _, root := range config.WorkspaceRoots {
 		relative := relativeAWDDefenseWorkspaceRoot(config.SeedRoot, root.Source)
 		volumeName := buildAWDDefenseWorkspaceVolumeName(instance, workspaceRevision, relative)
 		volumeBySource[root.Source] = volumeName
-		workspaceMounts = append(workspaceMounts, model.ContainerMount{
+		workspaceMounts = append(workspaceMounts, runtimecontracts.ContainerMount{
 			Source:   volumeName,
 			Target:   buildAWDDefenseWorkspaceTarget(relative),
 			ReadOnly: root.ReadOnly,
 		})
 	}
 
-	runtimeMounts := make([]model.ContainerMount, 0, len(config.RuntimeMounts))
+	runtimeMounts := make([]runtimecontracts.ContainerMount, 0, len(config.RuntimeMounts))
 	for _, item := range config.RuntimeMounts {
 		volumeName := volumeBySource[item.Source]
 		if volumeName == "" {
 			return nil, fmt.Errorf("workspace root volume is missing for %s", item.Source)
 		}
-		runtimeMounts = append(runtimeMounts, model.ContainerMount{
+		runtimeMounts = append(runtimeMounts, runtimecontracts.ContainerMount{
 			Source:   volumeName,
 			Target:   item.Target,
 			ReadOnly: item.ReadOnly,
@@ -297,7 +298,7 @@ func buildAWDDefenseWorkspaceTarget(relative string) string {
 	return awdDefenseWorkspaceWorkingDir + "/" + relative
 }
 
-func applyAWDDefenseWorkspaceRuntimeMounts(request *practiceports.TopologyCreateRequest, mounts []model.ContainerMount) {
+func applyAWDDefenseWorkspaceRuntimeMounts(request *practiceports.TopologyCreateRequest, mounts []runtimecontracts.ContainerMount) {
 	if request == nil || len(mounts) == 0 {
 		return
 	}
@@ -339,7 +340,7 @@ func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instan
 		ContainerName:              plan.workspaceContainerName,
 		Networks: []practiceports.TopologyCreateNetwork{
 			{
-				Key:    model.TopologyDefaultNetworkKey,
+				Key:    challengecontracts.TopologyDefaultNetworkKey,
 				Name:   buildAWDContestNetworkName(instance),
 				Shared: true,
 			},
@@ -352,11 +353,11 @@ func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instan
 				Command:         []string{"/bin/sh", "-lc", buildAWDDefenseWorkspaceBootstrapCommand(plan.workspaceMounts)},
 				WorkingDir:      awdDefenseWorkspaceWorkingDir,
 				ServicePort:     22,
-				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				ServiceProtocol: runtimecontracts.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
-				NetworkKeys:     []string{model.TopologyDefaultNetworkKey},
+				NetworkKeys:     []string{challengecontracts.TopologyDefaultNetworkKey},
 				NetworkAliases:  []string{buildAWDDefenseWorkspaceAlias(instance, plan.workspaceRevision)},
-				Mounts:          append([]model.ContainerMount(nil), plan.workspaceMounts...),
+				Mounts:          append([]runtimecontracts.ContainerMount(nil), plan.workspaceMounts...),
 			},
 		},
 	})
@@ -370,8 +371,8 @@ func (s *Service) cleanupAWDDefenseWorkspaceCompanion(ctx context.Context, conta
 	if s == nil || s.runtimeService == nil || strings.TrimSpace(containerID) == "" {
 		return nil
 	}
-	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
-		Containers: []model.InstanceRuntimeContainer{
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
 			{ContainerID: strings.TrimSpace(containerID)},
 		},
 	})

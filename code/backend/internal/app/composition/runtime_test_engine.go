@@ -13,7 +13,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -89,7 +89,7 @@ func (e *testRuntimeEngine) CreateNetwork(_ context.Context, name string, _ map[
 	return id, nil
 }
 
-func (e *testRuntimeEngine) CreateContainer(_ context.Context, cfg *model.ContainerConfig) (string, error) {
+func (e *testRuntimeEngine) CreateContainer(_ context.Context, cfg *runtimecontracts.ContainerConfig) (string, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -238,11 +238,11 @@ func (e *testRuntimeEngine) RemoveNetwork(_ context.Context, networkID string) e
 	return nil
 }
 
-func (e *testRuntimeEngine) ApplyACLRules(_ context.Context, _ []model.InstanceRuntimeACLRule) error {
+func (e *testRuntimeEngine) ApplyACLRules(_ context.Context, _ []runtimecontracts.InstanceRuntimeACLRule) error {
 	return nil
 }
 
-func (e *testRuntimeEngine) RemoveACLRules(_ context.Context, _ []model.InstanceRuntimeACLRule) error {
+func (e *testRuntimeEngine) RemoveACLRules(_ context.Context, _ []runtimecontracts.InstanceRuntimeACLRule) error {
 	return nil
 }
 

@@ -16,6 +16,7 @@ import (
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -185,7 +186,7 @@ func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, ch
 		return err
 	}
 
-	spec, err := model.DecodeTopologySpec(topology.Spec)
+	spec, err := challengecontracts.DecodeTopologySpec(topology.Spec)
 	if err != nil {
 		return errcode.ErrInvalidParams.WithCause(err)
 	}
@@ -465,7 +466,7 @@ type challengeSelfCheckRuntimeInput struct {
 	defaultImageRef string
 	nodeImageRefs   map[int64]string
 	entryNodeKey    string
-	topologySpec    model.TopologySpec
+	topologySpec    challengecontracts.TopologySpec
 	useTopology     bool
 	skipRuntime     bool
 }
@@ -542,7 +543,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*c
 	}
 
 	var (
-		runtimeDetails model.InstanceRuntimeDetails
+		runtimeDetails runtimecontracts.InstanceRuntimeDetails
 		accessURL      string
 	)
 	if runtimePassed {
@@ -697,7 +698,7 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 		return input, passed, nil
 	}
 
-	spec, err := model.DecodeTopologySpec(topology.Spec)
+	spec, err := challengecontracts.DecodeTopologySpec(topology.Spec)
 	if err != nil {
 		*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "topology_spec",
@@ -839,7 +840,7 @@ func (s *ChallengeService) buildTopologyRuntimeRequest(
 	req := &challengeports.RuntimeTopologyCreateRequest{
 		Networks: make([]challengeports.RuntimeTopologyCreateNetwork, 0, len(input.topologySpec.Networks)),
 		Nodes:    make([]challengeports.RuntimeTopologyCreateNode, 0, len(input.topologySpec.Nodes)),
-		Policies: append([]model.TopologyTrafficPolicy(nil), input.topologySpec.Policies...),
+		Policies: append([]challengecontracts.TopologyTrafficPolicy(nil), input.topologySpec.Policies...),
 	}
 	for _, network := range input.topologySpec.Networks {
 		req.Networks = append(req.Networks, challengeports.RuntimeTopologyCreateNetwork{
@@ -848,7 +849,7 @@ func (s *ChallengeService) buildTopologyRuntimeRequest(
 		})
 	}
 
-	defaultNetworkKey := model.TopologyDefaultNetworkKey
+	defaultNetworkKey := challengecontracts.TopologyDefaultNetworkKey
 	if len(req.Networks) > 0 {
 		defaultNetworkKey = req.Networks[0].Key
 	}
@@ -875,9 +876,9 @@ func (s *ChallengeService) buildTopologyRuntimeRequest(
 			networkKeys = []string{defaultNetworkKey}
 		}
 
-		var resources *model.ResourceLimits
+		var resources *runtimecontracts.ResourceLimits
 		if node.Resources != nil {
-			resources = &model.ResourceLimits{
+			resources = &runtimecontracts.ResourceLimits{
 				CPUQuota:  node.Resources.CPUQuota,
 				Memory:    node.Resources.MemoryMB * 1024 * 1024,
 				PidsLimit: node.Resources.PidsLimit,
@@ -897,7 +898,7 @@ func (s *ChallengeService) buildTopologyRuntimeRequest(
 	}
 	if len(req.Networks) == 0 {
 		req.Networks = []challengeports.RuntimeTopologyCreateNetwork{
-			{Key: model.TopologyDefaultNetworkKey},
+			{Key: challengecontracts.TopologyDefaultNetworkKey},
 		}
 	}
 	return req, nil

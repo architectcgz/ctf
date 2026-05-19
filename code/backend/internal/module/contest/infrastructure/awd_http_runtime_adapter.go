@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type AWDHTTPRuntimeAdapter struct {
@@ -135,7 +135,7 @@ func resolveAWDHTTPDialOverride(accessURL, runtimeDetails string) (string, strin
 		return "", ""
 	}
 
-	resolved := model.ResolveRuntimeAliasAccessURL(accessURL, runtimeDetails)
+	resolved := runtimecontracts.ResolveRuntimeAliasAccessURL(accessURL, runtimeDetails)
 	resolvedParsed, err := url.Parse(strings.TrimSpace(resolved))
 	if err != nil {
 		return "", ""

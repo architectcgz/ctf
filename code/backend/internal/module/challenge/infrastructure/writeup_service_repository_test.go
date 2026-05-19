@@ -18,10 +18,10 @@ import (
 type writeupServiceRepositoryStub struct {
 	findByIDFn                              func(ctx context.Context, id int64) (*model.Challenge, error)
 	findUserByIDFn                          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
-	findWriteupByChallengeIDFn              func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error)
-	upsertWriteupFn                         func(ctx context.Context, writeup *model.ChallengeWriteup) error
+	findWriteupByChallengeIDFn              func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error)
+	upsertWriteupFn                         func(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error
 	deleteWriteupByChallengeIDFn            func(ctx context.Context, challengeID int64) error
-	findReleasedWriteupByChallengeIDFn      func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
+	findReleasedWriteupByChallengeIDFn      func(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error)
 	getSolvedStatusFn                       func(ctx context.Context, userID, challengeID int64) (bool, error)
 	findSubmissionWriteupByUserChallengeFn  func(ctx context.Context, userID, challengeID int64) (*challengeentity.SubmissionWriteup, error)
 	findSubmissionWriteupByIDFn             func(ctx context.Context, id int64) (*challengeentity.SubmissionWriteup, error)
@@ -40,11 +40,11 @@ func (s *writeupServiceRepositoryStub) FindUserByID(ctx context.Context, userID 
 	return s.findUserByIDFn(ctx, userID)
 }
 
-func (s *writeupServiceRepositoryStub) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+func (s *writeupServiceRepositoryStub) FindWriteupByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 	return s.findWriteupByChallengeIDFn(ctx, challengeID)
 }
 
-func (s *writeupServiceRepositoryStub) UpsertWriteup(ctx context.Context, writeup *model.ChallengeWriteup) error {
+func (s *writeupServiceRepositoryStub) UpsertWriteup(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error {
 	return s.upsertWriteupFn(ctx, writeup)
 }
 
@@ -52,7 +52,7 @@ func (s *writeupServiceRepositoryStub) DeleteWriteupByChallengeID(ctx context.Co
 	return s.deleteWriteupByChallengeIDFn(ctx, challengeID)
 }
 
-func (s *writeupServiceRepositoryStub) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+func (s *writeupServiceRepositoryStub) FindReleasedWriteupByChallengeID(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error) {
 	return s.findReleasedWriteupByChallengeIDFn(ctx, challengeID, now)
 }
 
@@ -99,16 +99,16 @@ func TestWriteupRepositoryMapsRawNotFoundToPortsSentinels(t *testing.T) {
 		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findWriteupByChallengeIDFn: func(ctx context.Context, challengeID int64) (*model.ChallengeWriteup, error) {
+		findWriteupByChallengeIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		upsertWriteupFn: func(ctx context.Context, writeup *model.ChallengeWriteup) error {
+		upsertWriteupFn: func(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error {
 			return nil
 		},
 		deleteWriteupByChallengeIDFn: func(ctx context.Context, challengeID int64) error {
 			return nil
 		},
-		findReleasedWriteupByChallengeIDFn: func(ctx context.Context, challengeID int64, now time.Time) (*model.ChallengeWriteup, error) {
+		findReleasedWriteupByChallengeIDFn: func(ctx context.Context, challengeID int64, now time.Time) (*challengeentity.ChallengeWriteup, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 		getSolvedStatusFn: func(ctx context.Context, userID, challengeID int64) (bool, error) {

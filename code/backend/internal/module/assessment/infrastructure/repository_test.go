@@ -68,7 +68,7 @@ func TestRepositoryGetStudentTeachingFactSnapshotBackfillsAWDSuccessDimensionFac
 	}
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    7,
-		Dimension: model.DimensionWeb,
+		Dimension: challengecontracts.DimensionWeb,
 		Score:     0.2,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -76,10 +76,10 @@ func TestRepositoryGetStudentTeachingFactSnapshotBackfillsAWDSuccessDimensionFac
 	}
 
 	awdChallenges := []challengecontracts.AWDChallenge{
-		{ID: 701, Name: "web-awd-easy-a", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 702, Name: "web-awd-easy-b", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 703, Name: "web-awd-medium-a", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 704, Name: "web-awd-medium-b", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 701, Name: "web-awd-easy-a", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 702, Name: "web-awd-easy-b", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 703, Name: "web-awd-medium-a", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 704, Name: "web-awd-medium-b", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, challenge := range awdChallenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -109,7 +109,7 @@ func TestRepositoryGetStudentTeachingFactSnapshotBackfillsAWDSuccessDimensionFac
 		t.Fatalf("expected awd success count to ignore zero-score/manual logs, got %+v", snapshot)
 	}
 
-	web := findAssessmentSnapshotDimension(t, snapshot, model.DimensionWeb)
+	web := findAssessmentSnapshotDimension(t, snapshot, challengecontracts.DimensionWeb)
 	if web.ProfileScore != 1 {
 		t.Fatalf("expected web profile score lifted by awd coverage, got %+v", web)
 	}
