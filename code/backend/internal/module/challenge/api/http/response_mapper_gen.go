@@ -3,10 +3,7 @@
 
 package http
 
-import (
-	model "ctf-platform/internal/model"
-	contracts "ctf-platform/internal/module/challenge/contracts"
-)
+import contracts "ctf-platform/internal/module/challenge/contracts"
 
 type ChallengeResponseMapperImpl struct{}
 
@@ -129,7 +126,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeDetailResp(source *contracts.Ch
 		httpChallengeDetailResp.Points = (*source).Points
 		httpChallengeDetailResp.NeedTarget = (*source).NeedTarget
 		httpChallengeDetailResp.FlagType = (*source).FlagType
-		httpChallengeDetailResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing((*source).InstanceSharing)
+		httpChallengeDetailResp.InstanceSharing = string((*source).InstanceSharing)
 		httpChallengeDetailResp.AttachmentURL = (*source).AttachmentURL
 		if (*source).Hints != nil {
 			httpChallengeDetailResp.Hints = make([]*ChallengeHintResp, len((*source).Hints))
@@ -309,7 +306,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeResp(source *contracts.Challeng
 		httpChallengeResp.Points = (*source).Points
 		httpChallengeResp.ImageID = (*source).ImageID
 		httpChallengeResp.AttachmentURL = (*source).AttachmentURL
-		httpChallengeResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing((*source).InstanceSharing)
+		httpChallengeResp.InstanceSharing = string((*source).InstanceSharing)
 		if (*source).Hints != nil {
 			httpChallengeResp.Hints = make([]*ChallengeHintAdminResp, len((*source).Hints))
 			for i := 0; i < len((*source).Hints); i++ {
@@ -750,7 +747,7 @@ func (c *ChallengeResponseMapperImpl) contractsChallengeRespToPHttpChallengeResp
 	httpChallengeResp.Points = source.Points
 	httpChallengeResp.ImageID = source.ImageID
 	httpChallengeResp.AttachmentURL = source.AttachmentURL
-	httpChallengeResp.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
+	httpChallengeResp.InstanceSharing = string(source.InstanceSharing)
 	if source.Hints != nil {
 		httpChallengeResp.Hints = make([]*ChallengeHintAdminResp, len(source.Hints))
 		for i := 0; i < len(source.Hints); i++ {
@@ -853,22 +850,6 @@ func (c *ChallengeResponseMapperImpl) contractsTopologyTrafficPolicyRespToHttpTo
 		}
 	}
 	return httpTopologyTrafficPolicyResp
-}
-func (c *ChallengeResponseMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
-	var modelInstanceSharing model.InstanceSharing
-	switch source {
-	case model.InstanceSharingPerTeam:
-		modelInstanceSharing = model.InstanceSharingPerTeam
-	case model.InstanceSharingPerUser:
-		modelInstanceSharing = model.InstanceSharingPerUser
-	case model.InstanceSharingShared:
-		modelInstanceSharing = model.InstanceSharingShared
-	// Skipped ShareScopePerTeam(per_team) -> ShareScopePerTeam(per_team) because it duplicates InstanceSharingPerTeam(per_team) -> InstanceSharingPerTeam(per_team)
-	// Skipped ShareScopePerUser(per_user) -> ShareScopePerUser(per_user) because it duplicates InstanceSharingPerUser(per_user) -> InstanceSharingPerUser(per_user)
-	// Skipped ShareScopeShared(shared) -> ShareScopeShared(shared) because it duplicates InstanceSharingShared(shared) -> InstanceSharingShared(shared)
-	default: // ignored
-	}
-	return modelInstanceSharing
 }
 func (c *ChallengeResponseMapperImpl) pContractsChallengeHintAdminRespToPHttpChallengeHintAdminResp(source *contracts.ChallengeHintAdminResp) *ChallengeHintAdminResp {
 	var pHttpChallengeHintAdminResp *ChallengeHintAdminResp

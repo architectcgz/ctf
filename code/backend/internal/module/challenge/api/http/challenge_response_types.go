@@ -1,7 +1,6 @@
 package http
 
 import (
-	"ctf-platform/internal/model"
 	"time"
 )
 
@@ -60,7 +59,7 @@ type ChallengeResp struct {
 	Points          int                       `json:"points"`
 	ImageID         int64                     `json:"image_id"`
 	AttachmentURL   string                    `json:"attachment_url,omitempty"`
-	InstanceSharing model.InstanceSharing     `json:"instance_sharing"`
+	InstanceSharing string                    `json:"instance_sharing"`
 	Hints           []*ChallengeHintAdminResp `json:"hints,omitempty"`
 	Status          string                    `json:"status"`
 	CreatedBy       *int64                    `json:"created_by,omitempty"`
@@ -96,7 +95,7 @@ type ChallengeDetailResp struct {
 	Points          int                   `json:"points"`
 	NeedTarget      bool                  `json:"need_target"`
 	FlagType        string                `json:"flag_type"`
-	InstanceSharing model.InstanceSharing `json:"instance_sharing"`
+	InstanceSharing string                `json:"instance_sharing"`
 	AttachmentURL   string                `json:"attachment_url,omitempty"`
 	Hints           []*ChallengeHintResp  `json:"hints"`
 	SolvedCount     int64                 `json:"solved_count"`

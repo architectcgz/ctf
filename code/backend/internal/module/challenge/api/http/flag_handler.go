@@ -4,7 +4,6 @@ import (
 	"context"
 	"strconv"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
@@ -28,6 +27,13 @@ type flagQueryService interface {
 	GetFlagConfig(ctx context.Context, challengeID int64) (*challengecontracts.FlagResp, error)
 }
 
+const (
+	flagTypeStatic       = "static"
+	flagTypeDynamic      = "dynamic"
+	flagTypeRegex        = "regex"
+	flagTypeManualReview = "manual_review"
+)
+
 func NewFlagHandler(commands flagCommandService, queries flagQueryService) *FlagHandler {
 	return &FlagHandler{commands: commands, queries: queries}
 }
@@ -47,11 +53,11 @@ func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 		return
 	}
 
-	if req.FlagType == model.FlagTypeStatic {
+	if req.FlagType == flagTypeStatic {
 		err = h.commands.ConfigureStaticFlag(c.Request.Context(), challengeID, req.Flag, req.FlagPrefix)
-	} else if req.FlagType == model.FlagTypeDynamic {
+	} else if req.FlagType == flagTypeDynamic {
 		err = h.commands.ConfigureDynamicFlag(c.Request.Context(), challengeID, req.FlagPrefix)
-	} else if req.FlagType == model.FlagTypeRegex {
+	} else if req.FlagType == flagTypeRegex {
 		err = h.commands.ConfigureRegexFlag(c.Request.Context(), challengeID, req.FlagRegex, req.FlagPrefix)
 	} else {
 		err = h.commands.ConfigureManualReviewFlag(c.Request.Context(), challengeID)
