@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"ctf-platform/pkg/errcode"
 	"gopkg.in/yaml.v3"
 )
@@ -82,7 +82,7 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 
 	flagType := strings.ToLower(strings.TrimSpace(manifest.Flag.Type))
 	switch flagType {
-	case model.FlagTypeStatic, model.FlagTypeDynamic, model.FlagTypeRegex, model.FlagTypeManualReview:
+	case challengeentity.FlagTypeStatic, challengeentity.FlagTypeDynamic, challengeentity.FlagTypeRegex, challengeentity.FlagTypeManualReview:
 	default:
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("flag.type 仅支持 static、dynamic、regex 或 manual_review"))
 	}
@@ -93,7 +93,7 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 	}
 
 	flagValue := strings.TrimSpace(manifest.Flag.Value)
-	if (flagType == model.FlagTypeStatic || flagType == model.FlagTypeRegex) && flagValue == "" {
+	if (flagType == challengeentity.FlagTypeStatic || flagType == challengeentity.FlagTypeRegex) && flagValue == "" {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("static/regex 题目必须提供 flag.value"))
 	}
 
@@ -247,27 +247,27 @@ func normalizePackageCategory(raw string) string {
 
 func normalizePackageDifficulty(raw string) string {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
-	case model.ChallengeDifficultyBeginner:
-		return model.ChallengeDifficultyBeginner
-	case model.ChallengeDifficultyEasy:
-		return model.ChallengeDifficultyEasy
-	case model.ChallengeDifficultyMedium:
-		return model.ChallengeDifficultyMedium
-	case model.ChallengeDifficultyHard:
-		return model.ChallengeDifficultyHard
-	case model.ChallengeDifficultyInsane:
-		return model.ChallengeDifficultyInsane
+	case challengeentity.ChallengeDifficultyBeginner:
+		return challengeentity.ChallengeDifficultyBeginner
+	case challengeentity.ChallengeDifficultyEasy:
+		return challengeentity.ChallengeDifficultyEasy
+	case challengeentity.ChallengeDifficultyMedium:
+		return challengeentity.ChallengeDifficultyMedium
+	case challengeentity.ChallengeDifficultyHard:
+		return challengeentity.ChallengeDifficultyHard
+	case challengeentity.ChallengeDifficultyInsane:
+		return challengeentity.ChallengeDifficultyInsane
 	default:
-		return model.ChallengeDifficultyEasy
+		return challengeentity.ChallengeDifficultyEasy
 	}
 }
 
 func normalizePackageRuntimeProtocol(raw string) string {
 	switch strings.ToLower(strings.TrimSpace(raw)) {
-	case model.ChallengeTargetProtocolTCP:
-		return model.ChallengeTargetProtocolTCP
+	case challengeentity.ChallengeTargetProtocolTCP:
+		return challengeentity.ChallengeTargetProtocolTCP
 	default:
-		return model.ChallengeTargetProtocolHTTP
+		return challengeentity.ChallengeTargetProtocolHTTP
 	}
 }
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
 type Severity string
@@ -753,13 +753,13 @@ func progressionBandForFact(advice DimensionAdvice, fact DimensionFact) (Difficu
 	}
 
 	switch {
-	case solved[model.ChallengeDifficultyHard] > 0 && solved[model.ChallengeDifficultyMedium] > 0:
+	case solved[challengecontracts.ChallengeDifficultyHard] > 0 && solved[challengecontracts.ChallengeDifficultyMedium] > 0:
 		return DifficultyBandInsane, true
-	case solved[model.ChallengeDifficultyMedium] > 0 && solved[model.ChallengeDifficultyEasy] > 0:
+	case solved[challengecontracts.ChallengeDifficultyMedium] > 0 && solved[challengecontracts.ChallengeDifficultyEasy] > 0:
 		return DifficultyBandHard, true
-	case solved[model.ChallengeDifficultyEasy] > 0:
+	case solved[challengecontracts.ChallengeDifficultyEasy] > 0:
 		return DifficultyBandMedium, true
-	case solved[model.ChallengeDifficultyBeginner] > 0:
+	case solved[challengecontracts.ChallengeDifficultyBeginner] > 0:
 		return DifficultyBandEasy, true
 	default:
 		return "", false

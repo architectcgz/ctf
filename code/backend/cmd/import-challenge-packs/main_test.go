@@ -10,7 +10,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 func TestImportOnePackSupportsChallengeYAML(t *testing.T) {
@@ -62,7 +62,7 @@ extensions:
 		t.Fatalf("expected challenge to remain draft when publish=false")
 	}
 
-	var challenge model.Challenge
+	var challenge challengeentity.Challenge
 	if err := db.Where("title = ?", "SQL Injection 101").First(&challenge).Error; err != nil {
 		t.Fatalf("find imported challenge: %v", err)
 	}
@@ -78,11 +78,11 @@ extensions:
 	if challenge.ImageID == 0 {
 		t.Fatal("expected runtime image to be resolved")
 	}
-	if challenge.FlagType != model.FlagTypeStatic {
+	if challenge.FlagType != challengeentity.FlagTypeStatic {
 		t.Fatalf("unexpected flag type: %s", challenge.FlagType)
 	}
 
-	var hints []model.ChallengeHint
+	var hints []challengeentity.ChallengeHint
 	if err := db.Where("challenge_id = ?", challenge.ID).Order("level ASC").Find(&hints).Error; err != nil {
 		t.Fatalf("list hints: %v", err)
 	}
@@ -131,17 +131,17 @@ runtime:
 		t.Fatalf("expected challenge to be created")
 	}
 
-	var challenge model.Challenge
+	var challenge challengeentity.Challenge
 	if err := db.Where("package_slug = ?", "pwn-length-gate").First(&challenge).Error; err != nil {
 		t.Fatalf("find imported challenge: %v", err)
 	}
-	if challenge.FlagType != model.FlagTypeDynamic {
+	if challenge.FlagType != challengeentity.FlagTypeDynamic {
 		t.Fatalf("expected dynamic flag type, got %s", challenge.FlagType)
 	}
 	if challenge.FlagHash != "" || challenge.FlagSalt != "" || challenge.FlagRegex != "" {
 		t.Fatalf("expected dynamic flag to clear static/regex fields, got hash=%q salt=%q regex=%q", challenge.FlagHash, challenge.FlagSalt, challenge.FlagRegex)
 	}
-	if challenge.TargetProtocol != model.ChallengeTargetProtocolTCP || challenge.TargetPort != 8080 {
+	if challenge.TargetProtocol != challengeentity.ChallengeTargetProtocolTCP || challenge.TargetPort != 8080 {
 		t.Fatalf("unexpected target service: protocol=%q port=%d", challenge.TargetProtocol, challenge.TargetPort)
 	}
 }
@@ -150,14 +150,14 @@ func TestImportOnePackAdoptsLegacyChallengeAndUpdatesFlagType(t *testing.T) {
 	db := setupImportTestDB(t)
 
 	packDir := t.TempDir()
-	legacyChallenge := model.Challenge{
+	legacyChallenge := challengeentity.Challenge{
 		Title:       "Mode Switch",
 		Description: "legacy",
 		Category:    "web",
 		Difficulty:  "easy",
 		Points:      100,
-		Status:      model.ChallengeStatusDraft,
-		FlagType:    model.FlagTypeStatic,
+		Status:      challengeentity.ChallengeStatusDraft,
+		FlagType:    challengeentity.FlagTypeStatic,
 		FlagHash:    "legacy-hash",
 		FlagSalt:    "legacy-salt",
 	}
@@ -195,11 +195,11 @@ runtime:
 		t.Fatalf("expected import to adopt legacy challenge instead of creating new one")
 	}
 
-	var challenge model.Challenge
+	var challenge challengeentity.Challenge
 	if err := db.First(&challenge, legacyChallenge.ID).Error; err != nil {
 		t.Fatalf("find imported challenge: %v", err)
 	}
-	if challenge.FlagType != model.FlagTypeDynamic {
+	if challenge.FlagType != challengeentity.FlagTypeDynamic {
 		t.Fatalf("expected flag type to change to dynamic, got %s", challenge.FlagType)
 	}
 	if challenge.FlagHash != "" || challenge.FlagSalt != "" {
@@ -240,14 +240,14 @@ func TestImportOnePackRejectsDuplicatePackageSlug(t *testing.T) {
 	}
 
 	var count int64
-	if err := db.Model(&model.Challenge{}).Count(&count).Error; err != nil {
+	if err := db.Model(&challengeentity.Challenge{}).Count(&count).Error; err != nil {
 		t.Fatalf("count challenges: %v", err)
 	}
 	if count != 1 {
 		t.Fatalf("expected 1 challenge after slug conflict, got %d", count)
 	}
 
-	var challenge model.Challenge
+	var challenge challengeentity.Challenge
 	if err := db.First(&challenge).Error; err != nil {
 		t.Fatalf("find challenge: %v", err)
 	}
@@ -274,7 +274,7 @@ func setupImportTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Image{}, &model.Challenge{}, &model.ChallengeHint{}); err != nil {
+	if err := db.AutoMigrate(&challengeentity.Image{}, &challengeentity.Challenge{}, &challengeentity.ChallengeHint{}); err != nil {
 		t.Fatalf("auto migrate: %v", err)
 	}
 	return db

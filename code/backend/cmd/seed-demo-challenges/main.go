@@ -13,7 +13,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/infrastructure/postgres"
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"ctf-platform/pkg/crypto"
 )
 
@@ -116,10 +116,10 @@ func seedDemoChallenges(ctx context.Context, db *gorm.DB, dockerClient *client.C
 			Title:       "Hello Web",
 			Description: "启动实例后访问首页，阅读页面源码并提交页面中直接出现的欢迎 Flag。该题用于验证题目列表、实例启动和 Flag 提交流程。",
 			Category:    "web",
-			Difficulty:  model.ChallengeDifficultyBeginner,
+			Difficulty:  challengeentity.ChallengeDifficultyBeginner,
 			Points:      50,
 			ImageRef:    "localhost:5000/ctf/hello-web:v20260106125101",
-			FlagType:    model.FlagTypeStatic,
+			FlagType:    challengeentity.FlagTypeStatic,
 			StaticFlag:  "flag{hello_web_test_2024}",
 			FlagPrefix:  "flag",
 			Hints: []seedHintSpec{
@@ -131,10 +131,10 @@ func seedDemoChallenges(ctx context.Context, db *gorm.DB, dockerClient *client.C
 			Title:       "Find The Secret",
 			Description: "这是一个静态页面检索热身题。启动实例后访问首页，定位隐藏的 Secret Flag 并提交。",
 			Category:    "web",
-			Difficulty:  model.ChallengeDifficultyEasy,
+			Difficulty:  challengeentity.ChallengeDifficultyEasy,
 			Points:      100,
 			ImageRef:    "localhost:5000/ctf/find-the-secret:v20260106102757",
-			FlagType:    model.FlagTypeStatic,
+			FlagType:    challengeentity.FlagTypeStatic,
 			StaticFlag:  "flag{auto_build_test_success_2024}",
 			FlagPrefix:  "flag",
 			Hints: []seedHintSpec{
@@ -146,10 +146,10 @@ func seedDemoChallenges(ctx context.Context, db *gorm.DB, dockerClient *client.C
 			Title:       "SQL Injection Login Bypass",
 			Description: "这是一个经典 SQL 注入登录绕过练习。目标是以管理员身份登录，进入后台后读取系统展示的 Flag。该题实例会按平台规则注入动态 Flag。",
 			Category:    "web",
-			Difficulty:  model.ChallengeDifficultyEasy,
+			Difficulty:  challengeentity.ChallengeDifficultyEasy,
 			Points:      150,
 			ImageRef:    "ctf-web-sqli:latest",
-			FlagType:    model.FlagTypeDynamic,
+			FlagType:    challengeentity.FlagTypeDynamic,
 			FlagPrefix:  "flag",
 			Hints: []seedHintSpec{
 				{Level: 1, Title: "登录逻辑", Content: "观察登录表单提交目标，留意后端是否直接拼接 SQL。"},
@@ -206,19 +206,19 @@ func upsertImage(ctx context.Context, tx *gorm.DB, dockerClient *client.Client, 
 		return 0, false, err
 	}
 
-	var image model.Image
+	var image challengeentity.Image
 	err = tx.Unscoped().
 		Where("name = ? AND tag = ?", spec.Name, spec.Tag).
 		First(&image).Error
 
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		image = model.Image{
+		image = challengeentity.Image{
 			Name:        spec.Name,
 			Tag:         spec.Tag,
 			Description: spec.Description,
 			Size:        size,
-			Status:      model.ImageStatusAvailable,
+			Status:      challengeentity.ImageStatusAvailable,
 		}
 		if err := tx.Create(&image).Error; err != nil {
 			return 0, false, fmt.Errorf("create image %s:%s: %w", spec.Name, spec.Tag, err)
@@ -230,7 +230,7 @@ func upsertImage(ctx context.Context, tx *gorm.DB, dockerClient *client.Client, 
 		updates := map[string]any{
 			"description": spec.Description,
 			"size":        size,
-			"status":      model.ImageStatusAvailable,
+			"status":      challengeentity.ImageStatusAvailable,
 			"deleted_at":  nil,
 			"updated_at":  time.Now(),
 		}
@@ -242,7 +242,7 @@ func upsertImage(ctx context.Context, tx *gorm.DB, dockerClient *client.Client, 
 }
 
 func upsertChallenge(tx *gorm.DB, spec seedChallengeSpec, imageID int64) (bool, error) {
-	var challenge model.Challenge
+	var challenge challengeentity.Challenge
 	err := tx.Unscoped().
 		Where("title = ?", spec.Title).
 		First(&challenge).Error
@@ -251,7 +251,7 @@ func upsertChallenge(tx *gorm.DB, spec seedChallengeSpec, imageID int64) (bool, 
 	created := false
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		challenge = model.Challenge{
+		challenge = challengeentity.Challenge{
 			Title:         spec.Title,
 			Description:   spec.Description,
 			Category:      spec.Category,
@@ -259,7 +259,7 @@ func upsertChallenge(tx *gorm.DB, spec seedChallengeSpec, imageID int64) (bool, 
 			Points:        spec.Points,
 			ImageID:       imageID,
 			AttachmentURL: spec.AttachmentURL,
-			Status:        model.ChallengeStatusDraft,
+			Status:        challengeentity.ChallengeStatusDraft,
 			FlagPrefix:    spec.FlagPrefix,
 			CreatedAt:     now,
 			UpdatedAt:     now,
@@ -295,10 +295,10 @@ func upsertChallenge(tx *gorm.DB, spec seedChallengeSpec, imageID int64) (bool, 
 		return false, err
 	}
 
-	if err := tx.Model(&model.Challenge{}).
+	if err := tx.Model(&challengeentity.Challenge{}).
 		Where("id = ?", challenge.ID).
 		Updates(map[string]any{
-			"status":     model.ChallengeStatusPublished,
+			"status":     challengeentity.ChallengeStatusPublished,
 			"updated_at": time.Now(),
 		}).Error; err != nil {
 		return false, fmt.Errorf("publish challenge %s: %w", spec.Title, err)
@@ -308,7 +308,7 @@ func upsertChallenge(tx *gorm.DB, spec seedChallengeSpec, imageID int64) (bool, 
 }
 
 func syncChallengeHints(tx *gorm.DB, challengeID int64, hints []seedHintSpec) error {
-	if err := tx.Where("challenge_id = ?", challengeID).Delete(&model.ChallengeHint{}).Error; err != nil {
+	if err := tx.Where("challenge_id = ?", challengeID).Delete(&challengeentity.ChallengeHint{}).Error; err != nil {
 		return fmt.Errorf("delete hints for challenge %d: %w", challengeID, err)
 	}
 	if len(hints) == 0 {
@@ -316,9 +316,9 @@ func syncChallengeHints(tx *gorm.DB, challengeID int64, hints []seedHintSpec) er
 	}
 
 	now := time.Now()
-	records := make([]model.ChallengeHint, 0, len(hints))
+	records := make([]challengeentity.ChallengeHint, 0, len(hints))
 	for _, hint := range hints {
-		records = append(records, model.ChallengeHint{
+		records = append(records, challengeentity.ChallengeHint{
 			ChallengeID: challengeID,
 			Level:       hint.Level,
 			Title:       hint.Title,
@@ -340,23 +340,23 @@ func configureChallengeFlag(tx *gorm.DB, challengeID int64, spec seedChallengeSp
 	}
 
 	switch spec.FlagType {
-	case model.FlagTypeStatic:
+	case challengeentity.FlagTypeStatic:
 		salt, err := crypto.GenerateSalt()
 		if err != nil {
 			return fmt.Errorf("generate salt for challenge %d: %w", challengeID, err)
 		}
-		updates["flag_type"] = model.FlagTypeStatic
+		updates["flag_type"] = challengeentity.FlagTypeStatic
 		updates["flag_salt"] = salt
 		updates["flag_hash"] = crypto.HashStaticFlag(spec.StaticFlag, salt)
-	case model.FlagTypeDynamic:
-		updates["flag_type"] = model.FlagTypeDynamic
+	case challengeentity.FlagTypeDynamic:
+		updates["flag_type"] = challengeentity.FlagTypeDynamic
 		updates["flag_salt"] = ""
 		updates["flag_hash"] = ""
 	default:
 		return fmt.Errorf("unsupported flag type for challenge %d: %s", challengeID, spec.FlagType)
 	}
 
-	if err := tx.Model(&model.Challenge{}).Where("id = ?", challengeID).Updates(updates).Error; err != nil {
+	if err := tx.Model(&challengeentity.Challenge{}).Where("id = ?", challengeID).Updates(updates).Error; err != nil {
 		return fmt.Errorf("configure flag for challenge %d: %w", challengeID, err)
 	}
 	return nil
