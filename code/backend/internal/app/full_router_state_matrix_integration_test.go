@@ -19,7 +19,6 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/auditlog"
-	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
@@ -435,14 +434,14 @@ func TestFullRouter_ContestAndReviewArchiveExportStateMatrix(t *testing.T) {
 	otherTeacherHeaders := bearerHeaders(loginForToken(t, env.router, env.otherTeacher.Username, "Password123"))
 
 	createContestSubmission(t, env, env.contest.ID, env.team.ID, env.student.ID, env.challenge.ID, 100)
-	secondChallenge := &model.Challenge{
+	secondChallenge := &appChallengeRow{
 		Title:       "Export Matrix 2",
 		Description: "contest export second solve",
 		Category:    challengecontracts.DimensionCrypto,
-		Difficulty:  model.ChallengeDifficultyEasy,
+		Difficulty:  challengecontracts.ChallengeDifficultyEasy,
 		Points:      150,
-		Status:      model.ChallengeStatusPublished,
-		FlagType:    model.FlagTypeStatic,
+		Status:      challengecontracts.ChallengeStatusPublished,
+		FlagType:    challengecontracts.FlagTypeStatic,
 	}
 	if err := env.db.Create(secondChallenge).Error; err != nil {
 		t.Fatalf("create second challenge: %v", err)
@@ -964,7 +963,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		"title":       "Lifecycle Challenge",
 		"description": "challenge lifecycle matrix",
 		"category":    challengecontracts.DimensionWeb,
-		"difficulty":  model.ChallengeDifficultyEasy,
+		"difficulty":  challengecontracts.ChallengeDifficultyEasy,
 		"points":      120,
 		"image_id":    env.image.ID,
 		"hints": []map[string]any{
@@ -984,7 +983,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 
 	var createdChallenge challengehttp.ChallengeResp
 	decodeFullRouterData(t, resp, &createdChallenge)
-	if createdChallenge.Status != string(model.ChallengeStatusDraft) || len(createdChallenge.Hints) != 2 {
+	if createdChallenge.Status != challengecontracts.ChallengeStatusDraft || len(createdChallenge.Hints) != 2 {
 		t.Fatalf("unexpected created challenge: %+v", createdChallenge)
 	}
 
@@ -992,7 +991,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		"title":       "Invalid Hint Challenge",
 		"description": "invalid hints",
 		"category":    challengecontracts.DimensionWeb,
-		"difficulty":  model.ChallengeDifficultyEasy,
+		"difficulty":  challengecontracts.ChallengeDifficultyEasy,
 		"points":      80,
 		"image_id":    env.image.ID,
 		"hints": []map[string]any{
@@ -1027,14 +1026,14 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", createdChallenge.ID), map[string]any{
-		"flag_type":   model.FlagTypeStatic,
+		"flag_type":   challengecontracts.FlagTypeStatic,
 		"flag":        "invalid-flag",
 		"flag_prefix": "flag",
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", createdChallenge.ID), map[string]any{
-		"flag_type":   model.FlagTypeStatic,
+		"flag_type":   challengecontracts.FlagTypeStatic,
 		"flag":        "flag{lifecycle-static}",
 		"flag_prefix": "flag",
 	}, adminHeaders)
@@ -1045,12 +1044,12 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 
 	var staticFlag challengehttp.FlagResp
 	decodeFullRouterData(t, resp, &staticFlag)
-	if !staticFlag.Configured || staticFlag.FlagType != model.FlagTypeStatic {
+	if !staticFlag.Configured || staticFlag.FlagType != challengecontracts.FlagTypeStatic {
 		t.Fatalf("unexpected static flag config: %+v", staticFlag)
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", createdChallenge.ID), map[string]any{
-		"flag_type":   model.FlagTypeDynamic,
+		"flag_type":   challengecontracts.FlagTypeDynamic,
 		"flag_prefix": "ctf",
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
@@ -1060,7 +1059,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 
 	var dynamicFlag challengehttp.FlagResp
 	decodeFullRouterData(t, resp, &dynamicFlag)
-	if !dynamicFlag.Configured || dynamicFlag.FlagType != model.FlagTypeDynamic || dynamicFlag.FlagPrefix != "ctf" {
+	if !dynamicFlag.Configured || dynamicFlag.FlagType != challengecontracts.FlagTypeDynamic || dynamicFlag.FlagPrefix != "ctf" {
 		t.Fatalf("unexpected dynamic flag config: %+v", dynamicFlag)
 	}
 
@@ -1081,9 +1080,9 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusNotFound)
 
-	if err := env.db.Model(&model.Challenge{}).
+	if err := env.db.Model(&appChallengeRow{}).
 		Where("id = ?", createdChallenge.ID).
-		Update("status", model.ChallengeStatusPublished).Error; err != nil {
+		Update("status", challengecontracts.ChallengeStatusPublished).Error; err != nil {
 		t.Fatalf("set created challenge published: %v", err)
 	}
 
@@ -1239,7 +1238,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		"title":       "Manual Review Challenge",
 		"description": "submit an answer for teacher review",
 		"category":    challengecontracts.DimensionMisc,
-		"difficulty":  model.ChallengeDifficultyMedium,
+		"difficulty":  challengecontracts.ChallengeDifficultyMedium,
 		"points":      120,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
@@ -1248,13 +1247,13 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	decodeFullRouterData(t, resp, &manualChallenge)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", manualChallenge.ID), map[string]any{
-		"flag_type": model.FlagTypeManualReview,
+		"flag_type": challengecontracts.FlagTypeManualReview,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	if err := env.db.Model(&model.Challenge{}).
+	if err := env.db.Model(&appChallengeRow{}).
 		Where("id = ?", manualChallenge.ID).
-		Update("status", model.ChallengeStatusPublished).Error; err != nil {
+		Update("status", challengecontracts.ChallengeStatusPublished).Error; err != nil {
 		t.Fatalf("set manual challenge published: %v", err)
 	}
 
@@ -1684,7 +1683,7 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 		"title":       "Community Writeup Challenge",
 		"description": "community writeup semantics",
 		"category":    challengecontracts.DimensionWeb,
-		"difficulty":  model.ChallengeDifficultyEasy,
+		"difficulty":  challengecontracts.ChallengeDifficultyEasy,
 		"points":      80,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
@@ -1699,9 +1698,9 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	if err := env.db.Model(&model.Challenge{}).
+	if err := env.db.Model(&appChallengeRow{}).
 		Where("id = ?", createdChallenge.ID).
-		Update("status", model.ChallengeStatusPublished).Error; err != nil {
+		Update("status", challengecontracts.ChallengeStatusPublished).Error; err != nil {
 		t.Fatalf("set challenge published: %v", err)
 	}
 
@@ -2010,7 +2009,7 @@ func TestFullRouter_VisibleAWDContestChallengesIncludeAWDServiceID(t *testing.T)
 	awdChallenge := &challengecontracts.AWDChallenge{
 		Name:           "Visible AWD Challenge",
 		Category:       challengecontracts.DimensionWeb,
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -2117,7 +2116,7 @@ func TestFullRouter_AWDChallengeAuthoringStateMatrix(t *testing.T) {
 		"name":            "Bank Portal AWD",
 		"slug":            "bank-portal-awd",
 		"category":        "web",
-		"difficulty":      model.ChallengeDifficultyHard,
+		"difficulty":      challengecontracts.ChallengeDifficultyHard,
 		"description":     "multi-step banking target",
 		"service_type":    "web_http",
 		"deployment_mode": "single_container",
@@ -2128,7 +2127,7 @@ func TestFullRouter_AWDChallengeAuthoringStateMatrix(t *testing.T) {
 		"name":            "Invalid Category AWD",
 		"slug":            "invalid-category-awd",
 		"category":        "mobile",
-		"difficulty":      model.ChallengeDifficultyHard,
+		"difficulty":      challengecontracts.ChallengeDifficultyHard,
 		"description":     "invalid category",
 		"service_type":    "web_http",
 		"deployment_mode": "single_container",
@@ -2289,7 +2288,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/images/%d", freeImage.ID), map[string]any{
 		"description": "updated image",
-		"status":      model.ImageStatusFailed,
+		"status":      "failed",
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
@@ -2298,7 +2297,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 
 	var loadedImage challengehttp.ImageResp
 	decodeFullRouterData(t, resp, &loadedImage)
-	if loadedImage.Status != model.ImageStatusFailed || loadedImage.Description != "updated image" {
+	if loadedImage.Status != "failed" || loadedImage.Description != "updated image" {
 		t.Fatalf("unexpected loaded image: %+v", loadedImage)
 	}
 
@@ -2865,7 +2864,7 @@ func createReportRecord(t *testing.T, env *fullRouterTestEnv, report assessmente
 	return &report
 }
 
-func createDraftChallengeRecord(t *testing.T, env *fullRouterTestEnv, title string) *model.Challenge {
+func createDraftChallengeRecord(t *testing.T, env *fullRouterTestEnv, title string) *appChallengeRow {
 	t.Helper()
 
 	salt, err := flagcrypto.GenerateSalt()
@@ -2873,15 +2872,15 @@ func createDraftChallengeRecord(t *testing.T, env *fullRouterTestEnv, title stri
 		t.Fatalf("generate flag salt: %v", err)
 	}
 
-	challenge := &model.Challenge{
+	challenge := &appChallengeRow{
 		Title:       title,
 		Description: "draft challenge for delete matrix",
 		Category:    challengecontracts.DimensionWeb,
-		Difficulty:  model.ChallengeDifficultyEasy,
+		Difficulty:  challengecontracts.ChallengeDifficultyEasy,
 		Points:      90,
 		ImageID:     env.image.ID,
-		Status:      model.ChallengeStatusDraft,
-		FlagType:    model.FlagTypeStatic,
+		Status:      challengecontracts.ChallengeStatusDraft,
+		FlagType:    challengecontracts.FlagTypeStatic,
 		FlagSalt:    salt,
 		FlagHash:    flagcrypto.HashStaticFlag("flag{draft}", salt),
 		FlagPrefix:  "flag",
@@ -2950,7 +2949,7 @@ func seedContestScore(t *testing.T, env *fullRouterTestEnv, contestID, teamID in
 	}
 }
 
-func createRecommendationChallenge(t *testing.T, env *fullRouterTestEnv, title, category string) *model.Challenge {
+func createRecommendationChallenge(t *testing.T, env *fullRouterTestEnv, title, category string) *appChallengeRow {
 	t.Helper()
 
 	salt, err := flagcrypto.GenerateSalt()
@@ -2958,15 +2957,15 @@ func createRecommendationChallenge(t *testing.T, env *fullRouterTestEnv, title, 
 		t.Fatalf("generate flag salt: %v", err)
 	}
 
-	challenge := &model.Challenge{
+	challenge := &appChallengeRow{
 		Title:       title,
 		Description: "recommendation challenge",
 		Category:    category,
-		Difficulty:  model.ChallengeDifficultyEasy,
+		Difficulty:  challengecontracts.ChallengeDifficultyEasy,
 		Points:      150,
 		ImageID:     env.image.ID,
-		Status:      model.ChallengeStatusPublished,
-		FlagType:    model.FlagTypeStatic,
+		Status:      challengecontracts.ChallengeStatusPublished,
+		FlagType:    challengecontracts.FlagTypeStatic,
 		FlagSalt:    salt,
 		FlagHash:    flagcrypto.HashStaticFlag("flag{recommend}", salt),
 		FlagPrefix:  "flag",

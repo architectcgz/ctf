@@ -25,7 +25,6 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/middleware"
-	"ctf-platform/internal/model"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	authhttp "ctf-platform/internal/module/auth/api/http"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
@@ -76,7 +75,7 @@ type flowTestEnv struct {
 	cache   *redislib.Client
 	admin   *identitycontracts.User
 	student *identitycontracts.User
-	image   *model.Image
+	image   *appImageRow
 }
 
 type flowEnvelope struct {
@@ -253,7 +252,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 			"title":          "Web SQLi 101",
 			"description":    "basic sql injection challenge",
 			"category":       challengecontracts.DimensionWeb,
-			"difficulty":     model.ChallengeDifficultyEasy,
+			"difficulty":     challengecontracts.ChallengeDifficultyEasy,
 			"points":         100,
 			"image_id":       env.image.ID,
 			"attachment_url": "https://example.com/files/web-sqli-101.zip",
@@ -290,9 +289,9 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		t.Fatalf("unexpected configure flag status: %d body=%s", configureFlagResp.Code, configureFlagResp.Body.String())
 	}
 
-	if err := env.db.Model(&model.Challenge{}).
+	if err := env.db.Model(&appChallengeRow{}).
 		Where("id = ?", challenge.ID).
-		Update("status", model.ChallengeStatusPublished).Error; err != nil {
+		Update("status", challengecontracts.ChallengeStatusPublished).Error; err != nil {
 		t.Fatalf("set challenge published: %v", err)
 	}
 
@@ -735,7 +734,7 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 			"title":       "Draft Crypto",
 			"description": "not published yet",
 			"category":    challengecontracts.DimensionCrypto,
-			"difficulty":  model.ChallengeDifficultyMedium,
+			"difficulty":  challengecontracts.ChallengeDifficultyMedium,
 			"points":      150,
 			"image_id":    env.image.ID,
 		},
@@ -845,8 +844,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&contestcontracts.ContestRegistration{},
 		&contestcontracts.Team{},
 		&contestcontracts.TeamMember{},
-		&model.Image{},
-		&model.Challenge{},
+		&appImageRow{},
+		&appChallengeRow{},
 		&challengeentity.ChallengePublishCheckJob{},
 		&challengeentity.ChallengeHint{},
 		&challengeentity.ChallengeWriteup{},
@@ -1128,13 +1127,13 @@ func createFlowUser(t *testing.T, db *gorm.DB, username, password, role string) 
 	return user
 }
 
-func createFlowImage(t *testing.T, db *gorm.DB) *model.Image {
+func createFlowImage(t *testing.T, db *gorm.DB) *appImageRow {
 	t.Helper()
 
-	image := &model.Image{
+	image := &appImageRow{
 		Name:   "ctf/web-basic",
 		Tag:    "v1",
-		Status: model.ImageStatusAvailable,
+		Status: challengecontracts.ImageStatusAvailable,
 	}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)

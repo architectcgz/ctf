@@ -18,7 +18,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/authctx"
-	"ctf-platform/internal/model"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -177,13 +176,13 @@ func TestChallengeImportCommitRejectsDuplicatePackageSlug(t *testing.T) {
 	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	legacyChallenge := model.Challenge{
+	legacyChallenge := appChallengeRow{
 		Title:       "SQL Injection 101",
 		Description: "legacy",
 		Category:    "web",
 		Difficulty:  "easy",
 		Points:      50,
-		Status:      model.ChallengeStatusDraft,
+		Status:      challengecontracts.ChallengeStatusDraft,
 	}
 	if err := db.Create(&legacyChallenge).Error; err != nil {
 		t.Fatalf("seed legacy challenge: %v", err)
@@ -247,14 +246,14 @@ func TestChallengeImportCommitRejectsDuplicatePackageSlug(t *testing.T) {
 	}
 
 	var count int64
-	if err := db.Model(&model.Challenge{}).Count(&count).Error; err != nil {
+	if err := db.Model(&appChallengeRow{}).Count(&count).Error; err != nil {
 		t.Fatalf("count challenges: %v", err)
 	}
 	if count != 1 {
 		t.Fatalf("expected 1 challenge after slug conflict, got %d", count)
 	}
 
-	var unchanged model.Challenge
+	var unchanged appChallengeRow
 	if err := db.First(&unchanged, legacyChallenge.ID).Error; err != nil {
 		t.Fatalf("reload legacy challenge: %v", err)
 	}
@@ -312,11 +311,11 @@ func TestChallengeImportCommitSupportsRegexFlag(t *testing.T) {
 		t.Fatal("expected imported challenge response")
 	}
 
-	var stored model.Challenge
+	var stored appChallengeRow
 	if err := db.First(&stored, commit.Challenge.ID).Error; err != nil {
 		t.Fatalf("load imported challenge: %v", err)
 	}
-	if stored.FlagType != model.FlagTypeRegex || stored.FlagRegex != `^flag\{import-[0-9]{2}\}$` {
+	if stored.FlagType != challengecontracts.FlagTypeRegex || stored.FlagRegex != `^flag\{import-[0-9]{2}\}$` {
 		t.Fatalf("expected regex flag persisted, got %+v", stored)
 	}
 }
@@ -338,11 +337,11 @@ func TestChallengeImportCommitSupportsManualReviewFlag(t *testing.T) {
 		t.Fatal("expected imported challenge response")
 	}
 
-	var stored model.Challenge
+	var stored appChallengeRow
 	if err := db.First(&stored, commit.Challenge.ID).Error; err != nil {
 		t.Fatalf("load imported challenge: %v", err)
 	}
-	if stored.FlagType != model.FlagTypeManualReview {
+	if stored.FlagType != challengecontracts.FlagTypeManualReview {
 		t.Fatalf("expected manual review flag persisted, got %+v", stored)
 	}
 }

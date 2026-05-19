@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -63,7 +63,7 @@ func TestPracticeRuntimeTopologyAdapterPreservesWorkspaceShellFields(t *testing.
 				Command:         []string{"/bin/sh", "-lc", "apk add --no-cache git vim nano && exec tail -f /dev/null"},
 				WorkingDir:      "/workspace",
 				ServicePort:     22,
-				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
 				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 				NetworkAliases:  []string{"awd-c8-t15-s21-workspace"},

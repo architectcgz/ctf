@@ -25,7 +25,6 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
@@ -61,8 +60,8 @@ type fullRouterTestEnv struct {
 	adminPwd     string
 	className    string
 	reportDir    string
-	image        *model.Image
-	challenge    *model.Challenge
+	image        *appImageRow
+	challenge    *appChallengeRow
 	template     *challengeentity.EnvironmentTemplate
 	contest      *contestcontracts.Contest
 	awdContest   *contestcontracts.Contest
@@ -85,8 +84,8 @@ var fullRouterTestSchemaModels = []any{
 	&identitycontracts.Role{},
 	&identitycontracts.User{},
 	&identitycontracts.UserRole{},
-	&model.Image{},
-	&model.Challenge{},
+	&appImageRow{},
+	&appChallengeRow{},
 	&challengecontracts.AWDChallenge{},
 	&challengeentity.ChallengePublishCheckJob{},
 	&challengeentity.Tag{},
@@ -265,13 +264,13 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 	serviceSnapshot, err := contestcontracts.EncodeContestAWDServiceSnapshot(contestcontracts.ContestAWDServiceSnapshot{
 		Name:       "AWD Web",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
 		RuntimeConfig: map[string]any{
 			"image_id":         env.image.ID,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": challengecontracts.InstanceSharingPerTeam,
 		},
 		FlagConfig: map[string]any{
-			"flag_type":   model.FlagTypeStatic,
+			"flag_type":   challengecontracts.FlagTypeStatic,
 			"flag_prefix": "flag",
 		},
 	})
@@ -388,7 +387,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 			"title":       title,
 			"description": "ownership test challenge",
 			"category":    challengecontracts.DimensionWeb,
-			"difficulty":  model.ChallengeDifficultyEasy,
+			"difficulty":  challengecontracts.ChallengeDifficultyEasy,
 			"points":      100,
 			"image_id":    env.image.ID,
 		}
@@ -441,7 +440,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", adminChallenge.ID), map[string]any{
-		"flag_type":   model.FlagTypeStatic,
+		"flag_type":   challengecontracts.FlagTypeStatic,
 		"flag":        "flag{ownership-check}",
 		"flag_prefix": "flag",
 	}, adminHeaders)
@@ -475,9 +474,9 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 		t.Fatalf("create package revision: %v", err)
 	}
 
-	if err := env.db.Model(&model.Challenge{}).
+	if err := env.db.Model(&appChallengeRow{}).
 		Where("id = ?", adminChallenge.ID).
-		Update("status", model.ChallengeStatusArchived).Error; err != nil {
+		Update("status", challengecontracts.ChallengeStatusArchived).Error; err != nil {
 		t.Fatalf("archive admin challenge: %v", err)
 	}
 
@@ -505,7 +504,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 				assertFullRouterStatus(t, resp, http.StatusOK)
 				var detail challengehttp.ChallengeResp
 				decodeFullRouterData(t, resp, &detail)
-				if detail.ID != adminChallenge.ID || detail.Status != string(model.ChallengeStatusArchived) {
+				if detail.ID != adminChallenge.ID || detail.Status != challengecontracts.ChallengeStatusArchived {
 					t.Fatalf("unexpected archived challenge detail: %+v", detail)
 				}
 			},
@@ -531,7 +530,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 				assertFullRouterStatus(t, resp, http.StatusOK)
 				var flagResp challengehttp.FlagResp
 				decodeFullRouterData(t, resp, &flagResp)
-				if !flagResp.Configured || flagResp.FlagType != model.FlagTypeStatic {
+				if !flagResp.Configured || flagResp.FlagType != challengecontracts.FlagTypeStatic {
 					t.Fatalf("unexpected flag config: %+v", flagResp)
 				}
 			},
@@ -584,7 +583,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 	}{
 		{name: "update challenge", method: http.MethodPut, path: fmt.Sprintf("/api/v1/authoring/challenges/%d", adminChallenge.ID), payload: map[string]any{"title": "forbidden-update"}},
 		{name: "configure flag", method: http.MethodPut, path: fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", adminChallenge.ID), payload: map[string]any{
-			"flag_type":   model.FlagTypeStatic,
+			"flag_type":   challengecontracts.FlagTypeStatic,
 			"flag":        "flag{ownership-check}",
 			"flag_prefix": "flag",
 		}},
@@ -619,7 +618,7 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 
 	var ownDetail challengehttp.ChallengeResp
 	decodeFullRouterData(t, ownDetailResp, &ownDetail)
-	if ownDetail.Status != string(model.ChallengeStatusDraft) {
+	if ownDetail.Status != challengecontracts.ChallengeStatusDraft {
 		t.Fatalf("expected own draft challenge to stay readable, got %+v", ownDetail)
 	}
 }
@@ -632,7 +631,7 @@ func TestFullRouter_CreateChallengeStoresCreator(t *testing.T) {
 		"title":       "creator-marker",
 		"description": "creator marker challenge",
 		"category":    challengecontracts.DimensionWeb,
-		"difficulty":  model.ChallengeDifficultyEasy,
+		"difficulty":  challengecontracts.ChallengeDifficultyEasy,
 		"points":      100,
 		"image_id":    env.image.ID,
 	}, teacherHeaders)
@@ -693,12 +692,12 @@ func TestFullRouter_ChallengeSelfCheckRunsPrecheckAndRuntime(t *testing.T) {
 
 func TestFullRouter_AdminChallengePublishRequestLifecycle(t *testing.T) {
 	env := newFullRouterTestEnv(t)
-	if err := env.db.Model(&model.Challenge{}).
+	if err := env.db.Model(&appChallengeRow{}).
 		Where("id = ?", env.challenge.ID).
-		Update("status", model.ChallengeStatusDraft).Error; err != nil {
+		Update("status", challengecontracts.ChallengeStatusDraft).Error; err != nil {
 		t.Fatalf("set challenge draft: %v", err)
 	}
-	env.challenge.Status = model.ChallengeStatusDraft
+	env.challenge.Status = challengecontracts.ChallengeStatusDraft
 
 	teacherHeaders := sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
 	createResp := performFullRouterRequest(
@@ -1229,15 +1228,15 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	if err != nil {
 		t.Fatalf("generate flag salt: %v", err)
 	}
-	env.challenge = &model.Challenge{
+	env.challenge = &appChallengeRow{
 		Title:         "Matrix Web Challenge",
 		Description:   "challenge for full router integration tests",
 		Category:      challengecontracts.DimensionWeb,
-		Difficulty:    model.ChallengeDifficultyEasy,
+		Difficulty:    challengecontracts.ChallengeDifficultyEasy,
 		Points:        100,
 		ImageID:       env.image.ID,
-		Status:        model.ChallengeStatusPublished,
-		FlagType:      model.FlagTypeStatic,
+		Status:        challengecontracts.ChallengeStatusPublished,
+		FlagType:      challengecontracts.FlagTypeStatic,
 		FlagSalt:      salt,
 		FlagHash:      flagcrypto.HashStaticFlag("flag{matrix}", salt),
 		FlagPrefix:    "flag",
