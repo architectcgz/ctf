@@ -10,8 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	ratelimitpkg "ctf-platform/internal/infrastructure/ratelimit"
 	"ctf-platform/pkg/errcode"
-	ratelimitpkg "ctf-platform/pkg/ratelimit"
 	"ctf-platform/pkg/response"
 )
 

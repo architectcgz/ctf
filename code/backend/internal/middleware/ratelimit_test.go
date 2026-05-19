@@ -14,7 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	redislib "github.com/redis/go-redis/v9"
 
-	ratelimitpkg "ctf-platform/pkg/ratelimit"
+	ratelimitpkg "ctf-platform/internal/infrastructure/ratelimit"
 )
 
 func TestRateLimitByLoginPrincipalAndIP_AllowsDifferentPrincipalsFromSameIP(t *testing.T) {

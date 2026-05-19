@@ -9,13 +9,13 @@ import (
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
 	healthHandler "ctf-platform/internal/handler/health"
+	ratelimitpkg "ctf-platform/internal/infrastructure/ratelimit"
 	"ctf-platform/internal/middleware"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
-	ratelimitpkg "ctf-platform/pkg/ratelimit"
 )
 
 type routerRuntime struct {

@@ -15,9 +15,9 @@ import (
 
 	"ctf-platform/internal/app"
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/infrastructure/logger"
 	"ctf-platform/internal/infrastructure/postgres"
 	infraredis "ctf-platform/internal/infrastructure/redis"
-	"ctf-platform/pkg/logger"
 )
 
 func Run() {

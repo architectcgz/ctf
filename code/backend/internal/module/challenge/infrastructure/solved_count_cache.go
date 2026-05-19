@@ -8,8 +8,8 @@ import (
 
 	redislib "github.com/redis/go-redis/v9"
 
+	"ctf-platform/internal/module/challenge/infrastructure/cachekeys"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	cachekeys "ctf-platform/pkg/cache"
 )
 
 var _ challengeports.ChallengeSolvedCountCache = (*SolvedCountCache)(nil)
