@@ -17,13 +17,18 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/infrastructure/postgres"
 	infraredis "ctf-platform/internal/infrastructure/redis"
-	"ctf-platform/internal/model"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
@@ -44,6 +49,13 @@ const (
 	seedAWDCaptainStudent   = "student"
 	seedAWDCaptainTeacher   = "teacher"
 	seedAWDCaptainSynthetic = "synthetic"
+)
+
+const (
+	auditActionRead   = "read"
+	auditActionSubmit = "submit"
+	auditActionUpdate = "update"
+	auditActionDelete = "delete"
 )
 
 var coverageStudentSeeds = []userSeed{
@@ -87,7 +99,7 @@ type teachingQueryUserLookupAdapter struct {
 	users identitycontracts.UserLookupRepository
 }
 
-func (a teachingQueryUserLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (a teachingQueryUserLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	user, err := a.users.FindByID(ctx, userID)
 	if errors.Is(err, identitycontracts.ErrUserNotFound) {
 		return nil, nil
@@ -158,7 +170,7 @@ type awdServiceSeed struct {
 	SLAScore       int
 	DefenseScore   int
 	AttackScore    int
-	CheckerType    model.AWDCheckerType
+	CheckerType    contestcontracts.AWDCheckerType
 	CheckResult    string
 	UpdatedOffset  time.Duration
 }
@@ -224,7 +236,7 @@ type studentScenario struct {
 }
 
 type seededStudentResult struct {
-	User                 *model.User
+	User                 *identitycontracts.User
 	ScenarioLabel        string
 	PracticeSessionCount int
 	AWDAttackCount       int
@@ -247,7 +259,7 @@ type seedCoverageSummary struct {
 
 type seedResult struct {
 	ClassName            string
-	Teacher              *model.User
+	Teacher              *identitycontracts.User
 	PracticeSessionCount int
 	AWDAttackCount       int
 	Students             []seededStudentResult
@@ -324,13 +336,13 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		Username:  seedTeacherUsername,
 		Name:      "赵晓峰",
 		Email:     "zhaoxiaofeng@xinan.example.edu.cn",
-		Role:      model.RoleTeacher,
+		Role:      identitycontracts.RoleTeacher,
 		ClassName: seedClassName,
 		TeacherNo: "T20264001",
 	}
 
-	var teacher *model.User
-	studentsByUsername := make(map[string]*model.User, len(scenarios))
+	var teacher *identitycontracts.User
+	studentsByUsername := make(map[string]*identitycontracts.User, len(scenarios))
 	seededUserIDs := make([]int64, 0, len(scenarios)+1)
 
 	err = db.Transaction(func(tx *gorm.DB) error {
@@ -391,7 +403,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 	profileReader := assessmentqry.NewProfileService(assessmentRepo)
 	recommendationService := assessmentqry.NewRecommendationService(
 		assessmentRepo,
-		challengeinfra.NewRepository(db),
+		challengeinfra.NewContractRepository(challengeinfra.NewRepository(db)),
 		assessmentinfra.NewRecommendationCacheStore(cache),
 		cfg.Recommendation,
 		zap.NewNop(),
@@ -422,7 +434,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		recommendationService,
 	)
 
-	classReview, err := classInsightService.GetClassReview(ctx, teacher.ID, model.RoleTeacher, seedClassName, nil)
+	classReview, err := classInsightService.GetClassReview(ctx, teacher.ID, identitycontracts.RoleTeacher, seedClassName, nil)
 	if err != nil {
 		return nil, fmt.Errorf("load class review: %w", err)
 	}
@@ -438,7 +450,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		if student == nil {
 			continue
 		}
-		recommendations, recErr := studentReviewService.GetStudentRecommendations(ctx, teacher.ID, model.RoleTeacher, student.ID, 3)
+		recommendations, recErr := studentReviewService.GetStudentRecommendations(ctx, teacher.ID, identitycontracts.RoleTeacher, student.ID, 3)
 		if recErr != nil {
 			return nil, fmt.Errorf("load recommendations for %s: %w", student.Username, recErr)
 		}
@@ -474,9 +486,9 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 }
 
 func loadChallengeCatalog(ctx context.Context, db *gorm.DB) (*challengeCatalog, error) {
-	var rows []model.Challenge
+	var rows []challengeentity.Challenge
 	err := db.WithContext(ctx).
-		Where("status = ?", model.ChallengeStatusPublished).
+		Where("status = ?", challengeentity.ChallengeStatusPublished).
 		Order(`
 			CASE difficulty
 				WHEN 'beginner' THEN 1
@@ -523,9 +535,9 @@ func loadChallengeCatalog(ctx context.Context, db *gorm.DB) (*challengeCatalog, 
 }
 
 func loadAWDChallengeCatalog(ctx context.Context, db *gorm.DB) (*awdChallengeCatalog, error) {
-	var rows []model.AWDChallenge
+	var rows []challengeentity.AWDChallenge
 	err := db.WithContext(ctx).
-		Where("status = ?", model.AWDChallengeStatusPublished).
+		Where("status = ?", challengeentity.AWDChallengeStatusPublished).
 		Order("created_at DESC").
 		Find(&rows).Error
 	if err != nil {
@@ -558,9 +570,9 @@ func buildCoverageStudentScenarios(catalog *challengeCatalog) []studentScenario 
 		return nil
 	}
 
-	scenarios := make([]studentScenario, 0, len(model.AllDimensions)*2)
+	scenarios := make([]studentScenario, 0, len(challengecontracts.AllDimensions)*2)
 	seedIndex := 0
-	for dimIndex, dimension := range model.AllDimensions {
+	for dimIndex, dimension := range challengecontracts.AllDimensions {
 		items := catalog.byCategory[dimension]
 		studentsPerCategory := coverageStudentsPerCategory(len(items))
 		if studentsPerCategory == 0 {
@@ -605,12 +617,12 @@ func buildCoverageStudentScenario(
 	variant int,
 	catalog *challengeCatalog,
 ) studentScenario {
-	weakDimension := model.AllDimensions[dimensionIndex%len(model.AllDimensions)]
+	weakDimension := challengecontracts.AllDimensions[dimensionIndex%len(challengecontracts.AllDimensions)]
 	strongDimension := nextCoverageDimension(catalog, dimensionIndex+1, weakDimension)
 	steadyDimension := nextCoverageDimension(catalog, dimensionIndex+2, weakDimension, strongDimension)
 	studentSerial := dimensionIndex*coverageMaxStudentsPerCategory + variant + 1
 
-	spec.Role = model.RoleStudent
+	spec.Role = identitycontracts.RoleStudent
 	spec.ClassName = seedClassName
 	spec.StudentNo = fmt.Sprintf("20243102%02d", studentSerial)
 	spec.Email = fmt.Sprintf("%s@xinan.example.edu.cn", spec.StudentNo)
@@ -668,7 +680,7 @@ func buildCoverageStudentScenario(
 }
 
 func nextCoverageDimension(catalog *challengeCatalog, startIndex int, exclude ...string) string {
-	if catalog == nil || len(model.AllDimensions) == 0 {
+	if catalog == nil || len(challengecontracts.AllDimensions) == 0 {
 		return ""
 	}
 
@@ -680,8 +692,8 @@ func nextCoverageDimension(catalog *challengeCatalog, startIndex int, exclude ..
 		excluded[dimension] = struct{}{}
 	}
 
-	for offset := 0; offset < len(model.AllDimensions); offset++ {
-		dimension := model.AllDimensions[(startIndex+offset)%len(model.AllDimensions)]
+	for offset := 0; offset < len(challengecontracts.AllDimensions); offset++ {
+		dimension := challengecontracts.AllDimensions[(startIndex+offset)%len(challengecontracts.AllDimensions)]
 		if _, skip := excluded[dimension]; skip {
 			continue
 		}
@@ -724,8 +736,8 @@ func buildCoverageProfiles(
 	steadyDimension string,
 	variant int,
 ) map[string]float64 {
-	profiles := make(map[string]float64, len(model.AllDimensions))
-	for index, dimension := range model.AllDimensions {
+	profiles := make(map[string]float64, len(challengecontracts.AllDimensions))
+	for index, dimension := range challengecontracts.AllDimensions {
 		profiles[dimension] = 0.48 + float64((index+variant)%3)*0.04
 	}
 	profiles[weakDimension] = 0.18 + float64(variant%3)*0.06
@@ -811,7 +823,7 @@ func buildBaseStudentScenarios() []studentScenario {
 				Username:  "linchenxi",
 				Name:      "林宸熙",
 				Email:     "2024310101@xinan.example.edu.cn",
-				Role:      model.RoleStudent,
+				Role:      identitycontracts.RoleStudent,
 				ClassName: seedClassName,
 				StudentNo: "2024310101",
 			},
@@ -877,18 +889,18 @@ func buildBaseStudentScenarios() []studentScenario {
 						AttackScore:  80,
 						DefenseScore: 50,
 						Services: []awdServiceSeed{
-							{TeamIndex: 0, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 30, DefenseScore: 40, AttackScore: 15, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":78}`, UpdatedOffset: 25 * time.Minute},
-							{TeamIndex: 1, ServiceStatus: model.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 25, DefenseScore: 28, AttackScore: 20, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"partial","latency_ms":181}`, UpdatedOffset: 26 * time.Minute},
-							{TeamIndex: 2, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 28, DefenseScore: 35, AttackScore: 18, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":96}`, UpdatedOffset: 27 * time.Minute},
+							{TeamIndex: 0, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 30, DefenseScore: 40, AttackScore: 15, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":78}`, UpdatedOffset: 25 * time.Minute},
+							{TeamIndex: 1, ServiceStatus: contestcontracts.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 25, DefenseScore: 28, AttackScore: 20, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"partial","latency_ms":181}`, UpdatedOffset: 26 * time.Minute},
+							{TeamIndex: 2, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 28, DefenseScore: 35, AttackScore: 18, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":96}`, UpdatedOffset: 27 * time.Minute},
 						},
 						Attacks: []awdAttackSeed{
-							{Offset: 12 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, SubmittedFlag: "awd{web-replay-miss}", Source: model.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: false, ScoreGained: 0},
-							{Offset: 19 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, AttackType: model.AWDAttackTypeServiceExploit, Source: model.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 90},
+							{Offset: 12 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, SubmittedFlag: "awd{web-replay-miss}", Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: false, ScoreGained: 0},
+							{Offset: 19 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, AttackType: contestcontracts.AWDAttackTypeServiceExploit, Source: contestcontracts.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 90},
 						},
 						Traffic: []awdTrafficSeed{
-							{Offset: 8 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "GET", Path: "/health", StatusCode: 200, Source: model.AWDTrafficSourceRuntimeProxy},
-							{Offset: 14 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "POST", Path: "/api/replay", StatusCode: 403, Source: model.AWDTrafficSourceRuntimeProxy},
-							{Offset: 20 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, Method: "GET", Path: "/debug", StatusCode: 200, Source: model.AWDAttackSourceManual},
+							{Offset: 8 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "GET", Path: "/health", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 14 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "POST", Path: "/api/replay", StatusCode: 403, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 20 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, Method: "GET", Path: "/debug", StatusCode: 200, Source: contestcontracts.AWDAttackSourceManual},
 						},
 					},
 					{
@@ -898,19 +910,19 @@ func buildBaseStudentScenarios() []studentScenario {
 						AttackScore:  90,
 						DefenseScore: 45,
 						Services: []awdServiceSeed{
-							{TeamIndex: 0, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 35, DefenseScore: 45, AttackScore: 32, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":72}`, UpdatedOffset: 28 * time.Minute},
-							{TeamIndex: 1, ServiceStatus: model.AWDServiceStatusDown, AttackReceived: 3, SLAScore: 10, DefenseScore: 12, AttackScore: 5, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"down","error":"timeout"}`, UpdatedOffset: 30 * time.Minute},
-							{TeamIndex: 2, ServiceStatus: model.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 22, DefenseScore: 26, AttackScore: 18, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"partial","latency_ms":204}`, UpdatedOffset: 31 * time.Minute},
+							{TeamIndex: 0, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 35, DefenseScore: 45, AttackScore: 32, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":72}`, UpdatedOffset: 28 * time.Minute},
+							{TeamIndex: 1, ServiceStatus: contestcontracts.AWDServiceStatusDown, AttackReceived: 3, SLAScore: 10, DefenseScore: 12, AttackScore: 5, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"down","error":"timeout"}`, UpdatedOffset: 30 * time.Minute},
+							{TeamIndex: 2, ServiceStatus: contestcontracts.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 22, DefenseScore: 26, AttackScore: 18, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"partial","latency_ms":204}`, UpdatedOffset: 31 * time.Minute},
 						},
 						Attacks: []awdAttackSeed{
-							{Offset: 9 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, SubmittedFlag: "awd{web-replay-hit}", Source: model.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: true, ScoreGained: 120},
-							{Offset: 17 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 2, Source: model.AWDAttackSourceManual, IsSuccess: false, ScoreGained: 0},
-							{Offset: 24 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, AttackType: model.AWDAttackTypeServiceExploit, Source: model.AWDAttackSourceLegacy, IsSuccess: true, ScoreGained: 60},
+							{Offset: 9 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, SubmittedFlag: "awd{web-replay-hit}", Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: true, ScoreGained: 120},
+							{Offset: 17 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 2, Source: contestcontracts.AWDAttackSourceManual, IsSuccess: false, ScoreGained: 0},
+							{Offset: 24 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, AttackType: contestcontracts.AWDAttackTypeServiceExploit, Source: contestcontracts.AWDAttackSourceLegacy, IsSuccess: true, ScoreGained: 60},
 						},
 						Traffic: []awdTrafficSeed{
-							{Offset: 6 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "GET", Path: "/flag", StatusCode: 200, Source: model.AWDTrafficSourceRuntimeProxy},
-							{Offset: 10 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "POST", Path: "/exploit", StatusCode: 200, Source: model.AWDTrafficSourceRuntimeProxy},
-							{Offset: 25 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, Method: "GET", Path: "/backup", StatusCode: 302, Source: model.AWDTrafficSourceRuntimeProxy},
+							{Offset: 6 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "GET", Path: "/flag", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 10 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "POST", Path: "/exploit", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 25 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, Method: "GET", Path: "/backup", StatusCode: 302, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
 						},
 					},
 					{
@@ -920,18 +932,18 @@ func buildBaseStudentScenarios() []studentScenario {
 						AttackScore:  70,
 						DefenseScore: 60,
 						Services: []awdServiceSeed{
-							{TeamIndex: 0, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 0, SLAScore: 40, DefenseScore: 48, AttackScore: 28, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":69}`, UpdatedOffset: 23 * time.Minute},
-							{TeamIndex: 1, ServiceStatus: model.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 34, DefenseScore: 40, AttackScore: 16, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":87}`, UpdatedOffset: 24 * time.Minute},
-							{TeamIndex: 2, ServiceStatus: model.AWDServiceStatusDown, AttackReceived: 2, SLAScore: 8, DefenseScore: 10, AttackScore: 6, CheckerType: model.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"down","error":"container_exit"}`, UpdatedOffset: 25 * time.Minute},
+							{TeamIndex: 0, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 0, SLAScore: 40, DefenseScore: 48, AttackScore: 28, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":69}`, UpdatedOffset: 23 * time.Minute},
+							{TeamIndex: 1, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 34, DefenseScore: 40, AttackScore: 16, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":87}`, UpdatedOffset: 24 * time.Minute},
+							{TeamIndex: 2, ServiceStatus: contestcontracts.AWDServiceStatusDown, AttackReceived: 2, SLAScore: 8, DefenseScore: 10, AttackScore: 6, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"down","error":"container_exit"}`, UpdatedOffset: 25 * time.Minute},
 						},
 						Attacks: []awdAttackSeed{
-							{Offset: 11 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, SubmittedFlag: "awd{web-lateral-sync}", Source: model.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: true, ScoreGained: 100},
-							{Offset: 18 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 0, Source: model.AWDAttackSourceManual, IsSuccess: false, ScoreGained: 0},
+							{Offset: 11 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, SubmittedFlag: "awd{web-lateral-sync}", Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: true, ScoreGained: 100},
+							{Offset: 18 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 0, Source: contestcontracts.AWDAttackSourceManual, IsSuccess: false, ScoreGained: 0},
 						},
 						Traffic: []awdTrafficSeed{
-							{Offset: 7 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, Method: "GET", Path: "/metrics", StatusCode: 200, Source: model.AWDTrafficSourceRuntimeProxy},
-							{Offset: 12 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, Method: "POST", Path: "/sync", StatusCode: 201, Source: model.AWDTrafficSourceRuntimeProxy},
-							{Offset: 19 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 0, Method: "GET", Path: "/health", StatusCode: 200, Source: model.AWDTrafficSourceRuntimeProxy},
+							{Offset: 7 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, Method: "GET", Path: "/metrics", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 12 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, Method: "POST", Path: "/sync", StatusCode: 201, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 19 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 0, Method: "GET", Path: "/health", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
 						},
 					},
 				},
@@ -943,7 +955,7 @@ func buildBaseStudentScenarios() []studentScenario {
 				Username:  "zhangyuchen",
 				Name:      "张雨辰",
 				Email:     "2024310102@xinan.example.edu.cn",
-				Role:      model.RoleStudent,
+				Role:      identitycontracts.RoleStudent,
 				ClassName: seedClassName,
 				StudentNo: "2024310102",
 			},
@@ -982,7 +994,7 @@ func buildBaseStudentScenarios() []studentScenario {
 				Username:  "wangzihan",
 				Name:      "王梓涵",
 				Email:     "2024310103@xinan.example.edu.cn",
-				Role:      model.RoleStudent,
+				Role:      identitycontracts.RoleStudent,
 				ClassName: seedClassName,
 				StudentNo: "2024310103",
 			},
@@ -1030,7 +1042,7 @@ func buildBaseStudentScenarios() []studentScenario {
 				Username:  "chensiyuan",
 				Name:      "陈思远",
 				Email:     "2024310104@xinan.example.edu.cn",
-				Role:      model.RoleStudent,
+				Role:      identitycontracts.RoleStudent,
 				ClassName: seedClassName,
 				StudentNo: "2024310104",
 			},
@@ -1064,7 +1076,7 @@ func buildBaseStudentScenarios() []studentScenario {
 				Username:  "limuyang",
 				Name:      "李沐阳",
 				Email:     "2024310105@xinan.example.edu.cn",
-				Role:      model.RoleStudent,
+				Role:      identitycontracts.RoleStudent,
 				ClassName: seedClassName,
 				StudentNo: "2024310105",
 			},
@@ -1118,7 +1130,7 @@ func buildBaseStudentScenarios() []studentScenario {
 				Username:  "zhoujianning",
 				Name:      "周嘉宁",
 				Email:     "2024310106@xinan.example.edu.cn",
-				Role:      model.RoleStudent,
+				Role:      identitycontracts.RoleStudent,
 				ClassName: seedClassName,
 				StudentNo: "2024310106",
 			},
@@ -1184,7 +1196,7 @@ func buildBaseStudentScenarios() []studentScenario {
 				Username:  "songyuehan",
 				Name:      "宋月涵",
 				Email:     "2024310107@xinan.example.edu.cn",
-				Role:      model.RoleStudent,
+				Role:      identitycontracts.RoleStudent,
 				ClassName: seedClassName,
 				StudentNo: "2024310107",
 			},
@@ -1221,18 +1233,18 @@ func buildBaseStudentScenarios() []studentScenario {
 	}
 }
 
-func upsertUser(tx *gorm.DB, spec userSeed) (*model.User, error) {
-	var user model.User
+func upsertUser(tx *gorm.DB, spec userSeed) (*identitycontracts.User, error) {
+	var user identitycontracts.User
 	err := tx.Unscoped().Where("username = ?", spec.Username).First(&user).Error
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		user = model.User{
+		user = identitycontracts.User{
 			Username:  spec.Username,
 			Name:      spec.Name,
 			Email:     spec.Email,
 			Role:      spec.Role,
 			ClassName: spec.ClassName,
-			Status:    model.UserStatusActive,
+			Status:    identitycontracts.UserStatusActive,
 			StudentNo: spec.StudentNo,
 			TeacherNo: spec.TeacherNo,
 		}
@@ -1250,7 +1262,7 @@ func upsertUser(tx *gorm.DB, spec userSeed) (*model.User, error) {
 		updatedUser.Email = spec.Email
 		updatedUser.Role = spec.Role
 		updatedUser.ClassName = spec.ClassName
-		updatedUser.Status = model.UserStatusActive
+		updatedUser.Status = identitycontracts.UserStatusActive
 		updatedUser.StudentNo = spec.StudentNo
 		updatedUser.TeacherNo = spec.TeacherNo
 		updatedUser.DeletedAt = gorm.DeletedAt{}
@@ -1284,14 +1296,14 @@ func upsertUser(tx *gorm.DB, spec userSeed) (*model.User, error) {
 }
 
 func ensureUserRole(tx *gorm.DB, userID int64, roleCode string) error {
-	var role model.Role
+	var role identitycontracts.Role
 	if err := tx.Where("code = ?", roleCode).First(&role).Error; err != nil {
 		return fmt.Errorf("find role %s: %w", roleCode, err)
 	}
-	if err := tx.Where("user_id = ?", userID).Delete(&model.UserRole{}).Error; err != nil {
+	if err := tx.Where("user_id = ?", userID).Delete(&identitycontracts.UserRole{}).Error; err != nil {
 		return fmt.Errorf("clear user roles for %d: %w", userID, err)
 	}
-	if err := tx.Create(&model.UserRole{
+	if err := tx.Create(&identitycontracts.UserRole{
 		UserID:    userID,
 		RoleID:    role.ID,
 		CreatedAt: time.Now().UTC(),
@@ -1313,29 +1325,29 @@ func resetSeededData(tx *gorm.DB, userIDs []int64, teacherID int64) error {
 	if err := resetSeededAWDData(tx); err != nil {
 		return err
 	}
-	if err := tx.Where("user_id IN ?", seedUserIDs).Delete(&model.AuditLog{}).Error; err != nil {
+	if err := tx.Where("user_id IN ?", seedUserIDs).Delete(&opsentity.AuditLog{}).Error; err != nil {
 		return fmt.Errorf("delete audit logs: %w", err)
 	}
-	if err := tx.Where("user_id IN ?", seedUserIDs).Delete(&model.SubmissionWriteup{}).Error; err != nil {
+	if err := tx.Where("user_id IN ?", seedUserIDs).Delete(&challengeentity.SubmissionWriteup{}).Error; err != nil {
 		return fmt.Errorf("delete submission writeups: %w", err)
 	}
-	if err := tx.Where("user_id IN ? AND contest_id IS NULL", seedUserIDs).Delete(&model.Submission{}).Error; err != nil {
+	if err := tx.Where("user_id IN ? AND contest_id IS NULL", seedUserIDs).Delete(&contestcontracts.Submission{}).Error; err != nil {
 		return fmt.Errorf("delete submissions: %w", err)
 	}
-	if err := tx.Where("user_id IN ? AND contest_id IS NULL", seedUserIDs).Delete(&model.Instance{}).Error; err != nil {
+	if err := tx.Where("user_id IN ? AND contest_id IS NULL", seedUserIDs).Delete(&instancecontracts.Instance{}).Error; err != nil {
 		return fmt.Errorf("delete instances: %w", err)
 	}
-	if err := tx.Where("user_id IN ?", seedUserIDs).Delete(&model.SkillProfile{}).Error; err != nil {
+	if err := tx.Where("user_id IN ?", seedUserIDs).Delete(&assessmententity.SkillProfile{}).Error; err != nil {
 		return fmt.Errorf("delete skill profiles: %w", err)
 	}
-	if err := tx.Where("class_name = ? OR user_id IN ?", seedClassName, seedUserIDs).Delete(&model.Report{}).Error; err != nil {
+	if err := tx.Where("class_name = ? OR user_id IN ?", seedClassName, seedUserIDs).Delete(&assessmententity.Report{}).Error; err != nil {
 		return fmt.Errorf("delete reports: %w", err)
 	}
 	if len(extraUserIDs) > 0 {
-		if err := tx.Where("user_id IN ?", extraUserIDs).Delete(&model.UserRole{}).Error; err != nil {
+		if err := tx.Where("user_id IN ?", extraUserIDs).Delete(&identitycontracts.UserRole{}).Error; err != nil {
 			return fmt.Errorf("delete stale user roles: %w", err)
 		}
-		if err := tx.Unscoped().Where("id IN ?", extraUserIDs).Delete(&model.User{}).Error; err != nil {
+		if err := tx.Unscoped().Where("id IN ?", extraUserIDs).Delete(&identitycontracts.User{}).Error; err != nil {
 			return fmt.Errorf("delete stale seed users: %w", err)
 		}
 	}
@@ -1343,7 +1355,7 @@ func resetSeededData(tx *gorm.DB, userIDs []int64, teacherID int64) error {
 }
 
 func collectSeedUserIDs(tx *gorm.DB, currentUserIDs []int64) ([]int64, []int64, error) {
-	var seedUsers []model.User
+	var seedUsers []identitycontracts.User
 	if err := tx.Unscoped().
 		Where("class_name = ? OR username = ?", seedClassName, seedTeacherUsername).
 		Find(&seedUsers).Error; err != nil {
@@ -1373,8 +1385,8 @@ func collectSeedUserIDs(tx *gorm.DB, currentUserIDs []int64) ([]int64, []int64, 
 
 func resetSeededAWDData(tx *gorm.DB) error {
 	var contestIDs []int64
-	if err := tx.Unscoped().Model(&model.Contest{}).
-		Where("mode = ? AND title LIKE ?", model.ContestModeAWD, seedAWDContestTitle+"%").
+	if err := tx.Unscoped().Model(&contestcontracts.Contest{}).
+		Where("mode = ? AND title LIKE ?", contestcontracts.ContestModeAWD, seedAWDContestTitle+"%").
 		Pluck("id", &contestIDs).Error; err != nil {
 		return fmt.Errorf("find seeded awd contests: %w", err)
 	}
@@ -1383,31 +1395,31 @@ func resetSeededAWDData(tx *gorm.DB) error {
 	}
 
 	var roundIDs []int64
-	if err := tx.Model(&model.AWDRound{}).Where("contest_id IN ?", contestIDs).Pluck("id", &roundIDs).Error; err != nil {
+	if err := tx.Model(&contestcontracts.AWDRound{}).Where("contest_id IN ?", contestIDs).Pluck("id", &roundIDs).Error; err != nil {
 		return fmt.Errorf("find seeded awd rounds: %w", err)
 	}
 
-	if err := tx.Where("contest_id IN ?", contestIDs).Delete(&model.AWDTrafficEvent{}).Error; err != nil {
+	if err := tx.Where("contest_id IN ?", contestIDs).Delete(&contestcontracts.AWDTrafficEvent{}).Error; err != nil {
 		return fmt.Errorf("delete awd traffic events: %w", err)
 	}
 	if len(roundIDs) > 0 {
-		if err := tx.Where("round_id IN ?", roundIDs).Delete(&model.AWDTeamService{}).Error; err != nil {
+		if err := tx.Where("round_id IN ?", roundIDs).Delete(&contestcontracts.AWDTeamService{}).Error; err != nil {
 			return fmt.Errorf("delete awd team services: %w", err)
 		}
-		if err := tx.Where("round_id IN ?", roundIDs).Delete(&model.AWDAttackLog{}).Error; err != nil {
+		if err := tx.Where("round_id IN ?", roundIDs).Delete(&contestcontracts.AWDAttackLog{}).Error; err != nil {
 			return fmt.Errorf("delete awd attack logs: %w", err)
 		}
 	}
-	if err := tx.Where("contest_id IN ?", contestIDs).Delete(&model.TeamMember{}).Error; err != nil {
+	if err := tx.Where("contest_id IN ?", contestIDs).Delete(&contestcontracts.TeamMember{}).Error; err != nil {
 		return fmt.Errorf("delete awd team members: %w", err)
 	}
-	if err := tx.Unscoped().Where("contest_id IN ?", contestIDs).Delete(&model.Team{}).Error; err != nil {
+	if err := tx.Unscoped().Where("contest_id IN ?", contestIDs).Delete(&contestcontracts.Team{}).Error; err != nil {
 		return fmt.Errorf("delete awd teams: %w", err)
 	}
-	if err := tx.Where("contest_id IN ?", contestIDs).Delete(&model.AWDRound{}).Error; err != nil {
+	if err := tx.Where("contest_id IN ?", contestIDs).Delete(&contestcontracts.AWDRound{}).Error; err != nil {
 		return fmt.Errorf("delete awd rounds: %w", err)
 	}
-	if err := tx.Unscoped().Where("id IN ?", contestIDs).Delete(&model.Contest{}).Error; err != nil {
+	if err := tx.Unscoped().Where("id IN ?", contestIDs).Delete(&contestcontracts.Contest{}).Error; err != nil {
 		return fmt.Errorf("delete awd contests: %w", err)
 	}
 	return nil
@@ -1415,8 +1427,8 @@ func resetSeededAWDData(tx *gorm.DB) error {
 
 func seedStudentScenario(
 	tx *gorm.DB,
-	teacher *model.User,
-	student *model.User,
+	teacher *identitycontracts.User,
+	student *identitycontracts.User,
 	scenario studentScenario,
 	catalog *challengeCatalog,
 	awdCatalog *awdChallengeCatalog,
@@ -1441,19 +1453,19 @@ func seedStudentScenario(
 
 func createSession(
 	tx *gorm.DB,
-	teacher *model.User,
-	student *model.User,
+	teacher *identitycontracts.User,
+	student *identitycontracts.User,
 	challenge challengeRef,
 	session sessionSeed,
 	base time.Time,
 ) error {
 	startAt := base.Add(session.StartOffset)
 	endAt := startAt.Add(session.Duration)
-	instance := &model.Instance{
+	instance := &instancecontracts.Instance{
 		UserID:         student.ID,
 		ChallengeID:    challenge.ID,
 		ContainerID:    fmt.Sprintf("seed-%s-%d", student.Username, challenge.ID),
-		Status:         model.InstanceStatusStopped,
+		Status:         instancecontracts.InstanceStatusStopped,
 		AccessURL:      fmt.Sprintf("http://127.0.0.1:%d", 32000+(student.ID%1000)+(challenge.ID%100)),
 		Nonce:          fmt.Sprintf("seed-%d-%d", student.ID, challenge.ID),
 		ExpiresAt:      endAt.Add(90 * time.Minute),
@@ -1463,16 +1475,16 @@ func createSession(
 		CreatedAt:      startAt,
 		UpdatedAt:      endAt,
 		RuntimeDetails: `{"seed":"teaching-review-data"}`,
-		ShareScope:     model.ShareScopePerUser,
+		ShareScope:     instancecontracts.ShareScopePerUser,
 	}
 	if err := tx.Create(instance).Error; err != nil {
 		return fmt.Errorf("create instance for %s/%s: %w", student.Username, challenge.Title, err)
 	}
 
 	if session.Access {
-		if err := tx.Create(&model.AuditLog{
+		if err := tx.Create(&opsentity.AuditLog{
 			UserID:       int64Ptr(student.ID),
-			Action:       model.AuditActionRead,
+			Action:       auditActionRead,
 			ResourceType: "instance_access",
 			ResourceID:   int64Ptr(instance.ID),
 			Detail:       proxyDetailJSON("GET", fmt.Sprintf("/api/v1/instances/%d/access", instance.ID), "", 200, ""),
@@ -1485,7 +1497,7 @@ func createSession(
 	}
 
 	for _, proxy := range session.ProxyRequests {
-		if err := tx.Create(&model.AuditLog{
+		if err := tx.Create(&opsentity.AuditLog{
 			UserID:       int64Ptr(student.ID),
 			Action:       auditActionForMethod(proxy.Method),
 			ResourceType: "instance_proxy_request",
@@ -1505,12 +1517,12 @@ func createSession(
 		if submission.Correct {
 			score = challenge.Points
 		}
-		record := &model.Submission{
+		record := &contestcontracts.Submission{
 			UserID:       student.ID,
 			ChallengeID:  challenge.ID,
 			Flag:         submission.Flag,
 			IsCorrect:    submission.Correct,
-			ReviewStatus: model.SubmissionReviewStatusNotRequired,
+			ReviewStatus: contestcontracts.SubmissionReviewStatusNotRequired,
 			Score:        score,
 			SubmittedAt:  submittedAt,
 			UpdatedAt:    submittedAt,
@@ -1522,21 +1534,21 @@ func createSession(
 
 	if session.Writeup != nil {
 		writeupAt := startAt.Add(session.Writeup.Offset)
-		submissionStatus := model.SubmissionWriteupStatusDraft
-		visibilityStatus := model.SubmissionWriteupVisibilityHidden
+		submissionStatus := challengeentity.SubmissionWriteupStatusDraft
+		visibilityStatus := challengeentity.SubmissionWriteupVisibilityHidden
 		var publishedAt *time.Time
 		var recommendedAt *time.Time
 		var recommendedBy *int64
 		if session.Writeup.Published {
-			submissionStatus = model.SubmissionWriteupStatusPublished
-			visibilityStatus = model.SubmissionWriteupVisibilityVisible
+			submissionStatus = challengeentity.SubmissionWriteupStatusPublished
+			visibilityStatus = challengeentity.SubmissionWriteupVisibilityVisible
 			publishedAt = timePtr(writeupAt)
 		}
 		if session.Writeup.Recommended {
 			recommendedAt = timePtr(writeupAt.Add(15 * time.Minute))
 			recommendedBy = int64Ptr(teacher.ID)
 		}
-		if err := tx.Create(&model.SubmissionWriteup{
+		if err := tx.Create(&challengeentity.SubmissionWriteup{
 			UserID:           student.ID,
 			ChallengeID:      challenge.ID,
 			Title:            session.Writeup.Title,
@@ -1565,7 +1577,7 @@ func upsertSkillProfiles(tx *gorm.DB, userID int64, profiles map[string]float64,
 	sort.Strings(dimensions)
 	for idx, dimension := range dimensions {
 		score := profiles[dimension]
-		record := &model.SkillProfile{
+		record := &assessmententity.SkillProfile{
 			UserID:    userID,
 			Dimension: dimension,
 			Score:     score,
@@ -1582,8 +1594,8 @@ func upsertSkillProfiles(tx *gorm.DB, userID int64, profiles map[string]float64,
 
 func seedStudentAWDScenario(
 	tx *gorm.DB,
-	teacher *model.User,
-	student *model.User,
+	teacher *identitycontracts.User,
+	student *identitycontracts.User,
 	scenario *awdScenario,
 	catalog *awdChallengeCatalog,
 	base time.Time,
@@ -1604,13 +1616,13 @@ func seedStudentAWDScenario(
 
 	contestStart := base.Add(scenario.StartOffset)
 	contestEnd := seedAWDScenarioEndAt(contestStart, scenario.Rounds)
-	contest := &model.Contest{
+	contest := &contestcontracts.Contest{
 		Title:         fmt.Sprintf("%s - %s", seedAWDContestTitle, student.Username),
 		Description:   "用于教学复盘样本的 AWD 迁移演练数据。",
-		Mode:          model.ContestModeAWD,
+		Mode:          contestcontracts.ContestModeAWD,
 		StartTime:     contestStart.Add(-30 * time.Minute),
 		EndTime:       contestEnd,
-		Status:        model.ContestStatusEnded,
+		Status:        contestcontracts.ContestStatusEnded,
 		StatusVersion: 1,
 		CreatedAt:     contestStart.Add(-45 * time.Minute),
 		UpdatedAt:     contestEnd,
@@ -1620,7 +1632,7 @@ func seedStudentAWDScenario(
 	}
 
 	serviceID := 7000 + challenge.ID
-	teams := make([]*model.Team, 0, len(scenario.Teams))
+	teams := make([]*contestcontracts.Team, 0, len(scenario.Teams))
 	teamScores := make(map[int64]int, len(scenario.Teams))
 	teamLastSolveAt := make(map[int64]time.Time, len(scenario.Teams))
 
@@ -1629,7 +1641,7 @@ func seedStudentAWDScenario(
 		if memberCount < 1 {
 			memberCount = 1
 		}
-		team := &model.Team{
+		team := &contestcontracts.Team{
 			ContestID:  contest.ID,
 			Name:       teamSeed.Name,
 			CaptainID:  resolveSeedAWDCaptainID(teamSeed.CaptainRole, teacher, student, contest.ID, teamIndex),
@@ -1648,7 +1660,7 @@ func seedStudentAWDScenario(
 			if memberIndex == 0 {
 				memberID = team.CaptainID
 			}
-			if err := tx.Create(&model.TeamMember{
+			if err := tx.Create(&contestcontracts.TeamMember{
 				ContestID: contest.ID,
 				TeamID:    team.ID,
 				UserID:    memberID,
@@ -1663,10 +1675,10 @@ func seedStudentAWDScenario(
 	for _, roundSeed := range scenario.Rounds {
 		roundStart := contestStart.Add(roundSeed.StartOffset)
 		roundEnd := roundStart.Add(roundSeed.Duration)
-		round := &model.AWDRound{
+		round := &contestcontracts.AWDRound{
 			ContestID:    contest.ID,
 			RoundNumber:  roundSeed.RoundNumber,
-			Status:       model.AWDRoundStatusFinished,
+			Status:       contestcontracts.AWDRoundStatusFinished,
 			StartedAt:    timePtr(roundStart),
 			EndedAt:      timePtr(roundEnd),
 			AttackScore:  roundSeed.AttackScore,
@@ -1691,7 +1703,7 @@ func seedStudentAWDScenario(
 			if checkResult == "" {
 				checkResult = `{}`
 			}
-			if err := tx.Create(&model.AWDTeamService{
+			if err := tx.Create(&contestcontracts.AWDTeamService{
 				RoundID:        round.ID,
 				TeamID:         team.ID,
 				ServiceID:      serviceID,
@@ -1723,17 +1735,17 @@ func seedStudentAWDScenario(
 			attackAt := roundStart.Add(attackSeed.Offset)
 			attackType := strings.TrimSpace(attackSeed.AttackType)
 			if attackType == "" {
-				attackType = model.AWDAttackTypeFlagCapture
+				attackType = contestcontracts.AWDAttackTypeFlagCapture
 			}
 			source := strings.TrimSpace(attackSeed.Source)
 			if source == "" {
-				source = model.AWDAttackSourceManual
+				source = contestcontracts.AWDAttackSourceManual
 			}
 			var submittedBy *int64
 			if attackSeed.SubmittedByStudent {
 				submittedBy = int64Ptr(student.ID)
 			}
-			if err := tx.Create(&model.AWDAttackLog{
+			if err := tx.Create(&contestcontracts.AWDAttackLog{
 				RoundID:           round.ID,
 				AttackerTeamID:    attackerTeam.ID,
 				VictimTeamID:      victimTeam.ID,
@@ -1768,9 +1780,9 @@ func seedStudentAWDScenario(
 			}
 			source := strings.TrimSpace(trafficSeed.Source)
 			if source == "" {
-				source = model.AWDTrafficSourceRuntimeProxy
+				source = contestcontracts.AWDTrafficSourceRuntimeProxy
 			}
-			if err := tx.Create(&model.AWDTrafficEvent{
+			if err := tx.Create(&contestcontracts.AWDTrafficEvent{
 				ContestID:      contest.ID,
 				RoundID:        round.ID,
 				AttackerTeamID: attackerTeam.ID,
@@ -1812,7 +1824,7 @@ func seedAWDScenarioEndAt(contestStart time.Time, rounds []awdRoundSeed) time.Ti
 	return contestEnd
 }
 
-func resolveSeedAWDCaptainID(role string, teacher *model.User, student *model.User, contestID int64, teamIndex int) int64 {
+func resolveSeedAWDCaptainID(role string, teacher *identitycontracts.User, student *identitycontracts.User, contestID int64, teamIndex int) int64 {
 	switch strings.TrimSpace(role) {
 	case seedAWDCaptainTeacher:
 		return teacher.ID
@@ -1827,7 +1839,7 @@ func seedAWDTeamMemberID(contestID int64, teamIndex, memberIndex int) int64 {
 	return 9_000_000_000 + contestID*100 + int64(teamIndex*10+memberIndex)
 }
 
-func seedAWDTeamAt(teams []*model.Team, index int) (*model.Team, error) {
+func seedAWDTeamAt(teams []*contestcontracts.Team, index int) (*contestcontracts.Team, error) {
 	if index < 0 || index >= len(teams) {
 		return nil, fmt.Errorf("team index %d out of range", index)
 	}
@@ -1880,15 +1892,15 @@ func buildSeedCoverageSummary(
 	results []seededStudentResult,
 ) seedCoverageSummary {
 	summary := seedCoverageSummary{
-		ByCategory: make(map[string]categoryCoverage, len(model.AllDimensions)),
+		ByCategory: make(map[string]categoryCoverage, len(challengecontracts.AllDimensions)),
 	}
 	if catalog == nil {
 		return summary
 	}
 
-	usedByCategory := make(map[string]map[int64]struct{}, len(model.AllDimensions))
+	usedByCategory := make(map[string]map[int64]struct{}, len(challengecontracts.AllDimensions))
 	usedPracticeChallenges := make(map[int64]struct{})
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		items := catalog.byCategory[dimension]
 		summary.PublishedChallenges += len(items)
 		summary.ByCategory[dimension] = categoryCoverage{Published: len(items)}
@@ -1918,7 +1930,7 @@ func buildSeedCoverageSummary(
 	}
 	summary.UniqueTopRecommendationCount = len(uniqueTopRecommendations)
 
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		entry := summary.ByCategory[dimension]
 		entry.Used = len(usedByCategory[dimension])
 		summary.ByCategory[dimension] = entry
@@ -1947,13 +1959,13 @@ func proxyDetailJSON(method, path, query string, status int, payloadPreview stri
 func auditActionForMethod(method string) string {
 	switch strings.ToUpper(strings.TrimSpace(method)) {
 	case "POST":
-		return model.AuditActionSubmit
+		return auditActionSubmit
 	case "PUT", "PATCH":
-		return model.AuditActionUpdate
+		return auditActionUpdate
 	case "DELETE":
-		return model.AuditActionDelete
+		return auditActionDelete
 	default:
-		return model.AuditActionRead
+		return auditActionRead
 	}
 }
 
@@ -1969,7 +1981,7 @@ func printSeedSummary(result *seedResult) {
 		result.Coverage.UniqueTopRecommendationCount,
 	)
 	fmt.Println("分类覆盖:")
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		coverage, ok := result.Coverage.ByCategory[dimension]
 		if !ok {
 			continue

@@ -8,10 +8,13 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	"gorm.io/gorm"
 )
@@ -33,8 +36,8 @@ func TestBuildCoverageStudentScenariosExpandsLargeCatalogAcrossDimensions(t *tes
 		t.Fatal("expected coverage scenarios for large catalog")
 	}
 
-	weakCount := make(map[string]int, len(model.AllDimensions))
-	weakChallengeUsage := make(map[string]map[int]struct{}, len(model.AllDimensions))
+	weakCount := make(map[string]int, len(challengecontracts.AllDimensions))
+	weakChallengeUsage := make(map[string]map[int]struct{}, len(challengecontracts.AllDimensions))
 	for _, scenario := range scenarios {
 		weakDimension := weakestScenarioDimension(scenario)
 		if weakDimension == "" {
@@ -52,7 +55,7 @@ func TestBuildCoverageStudentScenariosExpandsLargeCatalogAcrossDimensions(t *tes
 		}
 	}
 
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		if weakCount[dimension] == 0 {
 			t.Fatalf("expected coverage scenarios for dimension %s, got none", dimension)
 		}
@@ -93,7 +96,7 @@ func TestBuildCoverageStudentScenariosDistributesTopRecommendationCandidates(t *
 	catalog := newSyntheticChallengeCatalog(t, 14)
 
 	scenarios := buildCoverageStudentScenarios(catalog)
-	topRecommendationIDs := make(map[string]map[int64]struct{}, len(model.AllDimensions))
+	topRecommendationIDs := make(map[string]map[int64]struct{}, len(challengecontracts.AllDimensions))
 	for _, scenario := range scenarios {
 		weakDimension := weakestScenarioDimension(scenario)
 		if weakDimension == "" {
@@ -107,7 +110,7 @@ func TestBuildCoverageStudentScenariosDistributesTopRecommendationCandidates(t *
 	}
 
 	expectedPerDimension := coverageStudentsPerCategory(14)
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		if got := len(topRecommendationIDs[dimension]); got != expectedPerDimension {
 			t.Fatalf("expected %d distinct top recommendation candidates for %s, got %d", expectedPerDimension, dimension, got)
 		}
@@ -118,8 +121,8 @@ func TestBuildCoverageStudentScenariosMixesRetryPressure(t *testing.T) {
 	catalog := newSyntheticChallengeCatalog(t, 14)
 
 	scenarios := buildCoverageStudentScenarios(catalog)
-	highRiskByDimension := make(map[string]bool, len(model.AllDimensions))
-	stableByDimension := make(map[string]bool, len(model.AllDimensions))
+	highRiskByDimension := make(map[string]bool, len(challengecontracts.AllDimensions))
+	stableByDimension := make(map[string]bool, len(challengecontracts.AllDimensions))
 	for _, scenario := range scenarios {
 		weakDimension := weakestScenarioDimension(scenario)
 		if weakDimension == "" {
@@ -132,7 +135,7 @@ func TestBuildCoverageStudentScenariosMixesRetryPressure(t *testing.T) {
 		stableByDimension[weakDimension] = true
 	}
 
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		if !highRiskByDimension[dimension] {
 			t.Fatalf("expected at least one high-risk retry scenario for %s", dimension)
 		}
@@ -146,8 +149,8 @@ func TestBuildCoverageStudentScenariosFallsBackToAvailableSupportDimensions(t *t
 	t.Parallel()
 
 	catalog := newSparseSyntheticChallengeCatalog(t, map[string]int{
-		model.DimensionWeb:     24,
-		model.DimensionReverse: 24,
+		challengecontracts.DimensionWeb:     24,
+		challengecontracts.DimensionReverse: 24,
 	})
 
 	scenarios := buildCoverageStudentScenarios(catalog)
@@ -192,7 +195,7 @@ func TestBuildSeedCoverageSummaryReportsPublishedUsedAndRecommendationReach(t *t
 	}
 
 	summary := buildSeedCoverageSummary(catalog, scenarios, results)
-	expectedPublished := len(model.AllDimensions) * 14
+	expectedPublished := len(challengecontracts.AllDimensions) * 14
 	if summary.PublishedChallenges != expectedPublished {
 		t.Fatalf("expected published challenge count %d, got %d", expectedPublished, summary.PublishedChallenges)
 	}
@@ -205,7 +208,7 @@ func TestBuildSeedCoverageSummaryReportsPublishedUsedAndRecommendationReach(t *t
 	if summary.UniqueTopRecommendationCount != 2 {
 		t.Fatalf("expected 2 unique top recommendations, got %d", summary.UniqueTopRecommendationCount)
 	}
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		category, ok := summary.ByCategory[dimension]
 		if !ok {
 			t.Fatalf("expected category summary for %s", dimension)
@@ -271,19 +274,19 @@ func TestSeedStudentAWDScenarioBuildsTeacherReviewArchiveEvidence(t *testing.T) 
 
 	db := contesttestsupport.SetupAWDTestDB(t)
 	now := time.Date(2026, 5, 14, 10, 0, 0, 0, time.UTC)
-	teacher := createSeedReviewUser(t, db, 5101, seedTeacherUsername, "赵晓峰", model.RoleTeacher, now)
-	student := createSeedReviewUser(t, db, 5102, "linchenxi", "林宸熙", model.RoleStudent, now)
+	teacher := createSeedReviewUser(t, db, 5101, seedTeacherUsername, "赵晓峰", identitycontracts.RoleTeacher, now)
+	student := createSeedReviewUser(t, db, 5102, "linchenxi", "林宸熙", identitycontracts.RoleStudent, now)
 
-	if err := db.Create(&model.AWDChallenge{
+	if err := db.Create(&challengeentity.AWDChallenge{
 		ID:             91001,
 		Name:           "awd-web-seed",
 		Slug:           "awd-web-seed",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
-		ServiceType:    model.AWDServiceTypeWebHTTP,
-		DeploymentMode: model.AWDDeploymentModeSingleContainer,
-		Status:         model.AWDChallengeStatusPublished,
-		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		Difficulty:     challengeentity.ChallengeDifficultyMedium,
+		ServiceType:    challengeentity.AWDServiceTypeWebHTTP,
+		DeploymentMode: challengeentity.AWDDeploymentModeSingleContainer,
+		Status:         challengeentity.AWDChallengeStatusPublished,
+		CheckerType:    contestcontracts.AWDCheckerTypeHTTPStandard,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}).Error; err != nil {
@@ -311,13 +314,13 @@ func TestSeedStudentAWDScenarioBuildsTeacherReviewArchiveEvidence(t *testing.T) 
 		t.Fatalf("seed awd scenario: %v", err)
 	}
 
-	var contest model.Contest
-	if err := db.Where("mode = ? AND title LIKE ?", model.ContestModeAWD, seedAWDContestTitle+"%").First(&contest).Error; err != nil {
+	var contest contestcontracts.Contest
+	if err := db.Where("mode = ? AND title LIKE ?", contestcontracts.ContestModeAWD, seedAWDContestTitle+"%").First(&contest).Error; err != nil {
 		t.Fatalf("load seeded awd contest: %v", err)
 	}
 
 	var memberCount int64
-	if err := db.Model(&model.TeamMember{}).Where("contest_id = ?", contest.ID).Count(&memberCount).Error; err != nil {
+	if err := db.Model(&contestcontracts.TeamMember{}).Where("contest_id = ?", contest.ID).Count(&memberCount).Error; err != nil {
 		t.Fatalf("count team members: %v", err)
 	}
 	if memberCount != 7 {
@@ -325,7 +328,7 @@ func TestSeedStudentAWDScenarioBuildsTeacherReviewArchiveEvidence(t *testing.T) 
 	}
 
 	var serviceCount int64
-	if err := db.Model(&model.AWDTeamService{}).Joins("JOIN awd_rounds ON awd_rounds.id = awd_team_services.round_id").Where("awd_rounds.contest_id = ?", contest.ID).Count(&serviceCount).Error; err != nil {
+	if err := db.Model(&contestcontracts.AWDTeamService{}).Joins("JOIN awd_rounds ON awd_rounds.id = awd_team_services.round_id").Where("awd_rounds.contest_id = ?", contest.ID).Count(&serviceCount).Error; err != nil {
 		t.Fatalf("count awd team services: %v", err)
 	}
 	if serviceCount != 9 {
@@ -333,7 +336,7 @@ func TestSeedStudentAWDScenarioBuildsTeacherReviewArchiveEvidence(t *testing.T) 
 	}
 
 	var trafficCount int64
-	if err := db.Model(&model.AWDTrafficEvent{}).Where("contest_id = ?", contest.ID).Count(&trafficCount).Error; err != nil {
+	if err := db.Model(&contestcontracts.AWDTrafficEvent{}).Where("contest_id = ?", contest.ID).Count(&trafficCount).Error; err != nil {
 		t.Fatalf("count awd traffic events: %v", err)
 	}
 	if trafficCount != 9 {
@@ -398,14 +401,14 @@ func newSyntheticChallengeCatalog(t *testing.T, perCategory int) *challengeCatal
 	}
 
 	difficulties := []string{
-		model.ChallengeDifficultyBeginner,
-		model.ChallengeDifficultyEasy,
-		model.ChallengeDifficultyMedium,
-		model.ChallengeDifficultyHard,
+		challengeentity.ChallengeDifficultyBeginner,
+		challengeentity.ChallengeDifficultyEasy,
+		challengeentity.ChallengeDifficultyMedium,
+		challengeentity.ChallengeDifficultyHard,
 	}
-	catalog := &challengeCatalog{byCategory: make(map[string][]challengeRef, len(model.AllDimensions))}
+	catalog := &challengeCatalog{byCategory: make(map[string][]challengeRef, len(challengecontracts.AllDimensions))}
 	var nextID int64 = 1
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		items := make([]challengeRef, 0, perCategory)
 		for index := 0; index < perCategory; index++ {
 			items = append(items, challengeRef{
@@ -414,7 +417,7 @@ func newSyntheticChallengeCatalog(t *testing.T, perCategory int) *challengeCatal
 				Category:   dimension,
 				Difficulty: difficulties[index%len(difficulties)],
 				Points:     100 + index*10,
-				FlagType:   model.FlagTypeStatic,
+				FlagType:   challengeentity.FlagTypeStatic,
 			})
 			nextID++
 		}
@@ -430,14 +433,14 @@ func newSparseSyntheticChallengeCatalog(t *testing.T, perCategory map[string]int
 	}
 
 	difficulties := []string{
-		model.ChallengeDifficultyBeginner,
-		model.ChallengeDifficultyEasy,
-		model.ChallengeDifficultyMedium,
-		model.ChallengeDifficultyHard,
+		challengeentity.ChallengeDifficultyBeginner,
+		challengeentity.ChallengeDifficultyEasy,
+		challengeentity.ChallengeDifficultyMedium,
+		challengeentity.ChallengeDifficultyHard,
 	}
-	catalog := &challengeCatalog{byCategory: make(map[string][]challengeRef, len(model.AllDimensions))}
+	catalog := &challengeCatalog{byCategory: make(map[string][]challengeRef, len(challengecontracts.AllDimensions))}
 	var nextID int64 = 1
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		count := perCategory[dimension]
 		if count <= 0 {
 			continue
@@ -450,7 +453,7 @@ func newSparseSyntheticChallengeCatalog(t *testing.T, perCategory map[string]int
 				Category:   dimension,
 				Difficulty: difficulties[index%len(difficulties)],
 				Points:     100 + index*10,
-				FlagType:   model.FlagTypeStatic,
+				FlagType:   challengeentity.FlagTypeStatic,
 			})
 			nextID++
 		}
@@ -462,7 +465,7 @@ func newSparseSyntheticChallengeCatalog(t *testing.T, perCategory map[string]int
 func weakestScenarioDimension(scenario studentScenario) string {
 	weakestDimension := ""
 	weakestScore := 2.0
-	for _, dimension := range model.AllDimensions {
+	for _, dimension := range challengecontracts.AllDimensions {
 		score, ok := scenario.Profiles[dimension]
 		if !ok {
 			continue
@@ -547,21 +550,21 @@ func syntheticMaxWrongStreak(scenario studentScenario) int {
 	return maxStreak
 }
 
-func createSeedReviewUser(t *testing.T, db *gorm.DB, id int64, username, name, role string, now time.Time) *model.User {
+func createSeedReviewUser(t *testing.T, db *gorm.DB, id int64, username, name, role string, now time.Time) *identitycontracts.User {
 	t.Helper()
 
-	user := &model.User{
+	user := &identitycontracts.User{
 		ID:        id,
 		Username:  username,
 		Name:      name,
 		Email:     fmt.Sprintf("%s@example.edu.cn", username),
 		Role:      role,
-		Status:    model.UserStatusActive,
+		Status:    identitycontracts.UserStatusActive,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 	switch role {
-	case model.RoleTeacher:
+	case identitycontracts.RoleTeacher:
 		user.TeacherNo = fmt.Sprintf("T%d", id)
 	default:
 		user.ClassName = seedClassName
