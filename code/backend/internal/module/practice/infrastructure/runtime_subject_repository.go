@@ -6,7 +6,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -31,7 +30,24 @@ func (r *RuntimeSubjectRepository) FindByID(ctx context.Context, id int64) (*pra
 	if err != nil || challenge == nil {
 		return nil, err
 	}
-	return mapPracticeRuntimeChallenge(challenge), nil
+	return &practiceentity.Challenge{
+		ID:              challenge.ID,
+		PackageSlug:     challenge.PackageSlug,
+		Title:           challenge.Title,
+		Category:        challenge.Category,
+		Difficulty:      challenge.Difficulty,
+		Points:          challenge.Points,
+		ImageID:         challenge.ImageID,
+		Status:          string(challenge.Status),
+		FlagType:        challenge.FlagType,
+		FlagHash:        challenge.FlagHash,
+		FlagSalt:        challenge.FlagSalt,
+		FlagRegex:       challenge.FlagRegex,
+		FlagPrefix:      challenge.FlagPrefix,
+		InstanceSharing: string(challenge.InstanceSharing),
+		TargetProtocol:  challenge.TargetProtocol,
+		TargetPort:      challenge.TargetPort,
+	}, nil
 }
 
 func (r *RuntimeSubjectRepository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*practiceports.RuntimeChallengeTopology, error) {
@@ -50,27 +66,3 @@ func (r *RuntimeSubjectRepository) FindChallengeTopologyByChallengeID(ctx contex
 }
 
 var _ practiceports.PracticeRuntimeSubjectRepository = (*RuntimeSubjectRepository)(nil)
-
-func mapPracticeRuntimeChallenge(source *model.Challenge) *practiceentity.Challenge {
-	if source == nil {
-		return nil
-	}
-	return &practiceentity.Challenge{
-		ID:              source.ID,
-		PackageSlug:     source.PackageSlug,
-		Title:           source.Title,
-		Category:        source.Category,
-		Difficulty:      source.Difficulty,
-		Points:          source.Points,
-		ImageID:         source.ImageID,
-		Status:          string(source.Status),
-		FlagType:        source.FlagType,
-		FlagHash:        source.FlagHash,
-		FlagSalt:        source.FlagSalt,
-		FlagRegex:       source.FlagRegex,
-		FlagPrefix:      source.FlagPrefix,
-		InstanceSharing: string(source.InstanceSharing),
-		TargetProtocol:  source.TargetProtocol,
-		TargetPort:      source.TargetPort,
-	}
-}
