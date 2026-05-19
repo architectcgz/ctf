@@ -19,7 +19,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
@@ -1577,7 +1576,7 @@ func TestBuildClassReportDataUsesSharedWindowedClassInsight(t *testing.T) {
 			{Key: "web", TotalChallenges: 12, CoveredChallenges: 3, SolvedStudents: 2},
 		},
 		difficultyStats: []assessmentdomain.ClassDistributionStat{
-			{Key: model.ChallengeDifficultyEasy, TotalChallenges: 8, CoveredChallenges: 2, SolvedStudents: 2},
+			{Key: challengecontracts.ChallengeDifficultyEasy, TotalChallenges: 8, CoveredChallenges: 2, SolvedStudents: 2},
 		},
 		contestSummary: &assessmentdomain.ClassContestMigrationSummary{
 			ParticipatingStudents: 2,

@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
@@ -25,6 +24,23 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
+type assessmentChallengeTestRow struct {
+	ID                      int64          `gorm:"column:id;primaryKey"`
+	Title                   string         `gorm:"column:title"`
+	Category                string         `gorm:"column:category"`
+	Difficulty              string         `gorm:"column:difficulty"`
+	Points                  int            `gorm:"column:points"`
+	Status                  string         `gorm:"column:status"`
+	RecommendationDimension string         `gorm:"column:recommendation_dimension"`
+	CreatedAt               time.Time      `gorm:"column:created_at"`
+	UpdatedAt               time.Time      `gorm:"column:updated_at"`
+	DeletedAt               gorm.DeletedAt `gorm:"column:deleted_at"`
+}
+
+func (assessmentChallengeTestRow) TableName() string {
+	return "challenges"
+}
+
 func setupAssessmentTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
@@ -34,7 +50,7 @@ func setupAssessmentTestDB(t *testing.T) *gorm.DB {
 	}
 	if err := db.AutoMigrate(
 		&identitycontracts.User{},
-		&model.Challenge{},
+		&assessmentChallengeTestRow{},
 		&contestcontracts.Submission{},
 		&contestcontracts.AWDAttackLog{},
 		&assessmententity.SkillProfile{},
@@ -81,11 +97,11 @@ func TestCalculateSkillProfilePersistsComputedScores(t *testing.T) {
 		t.Fatalf("seed student: %v", err)
 	}
 
-	challenges := []model.Challenge{
-		{ID: 11, Title: "web-1", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Points: 100, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 12, Title: "web-2", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Points: 50, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 13, Title: "crypto-1", Category: challengecontracts.DimensionCrypto, Difficulty: model.ChallengeDifficultyEasy, Points: 200, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 14, Title: "draft-ignored", Category: challengecontracts.DimensionPwn, Difficulty: model.ChallengeDifficultyEasy, Points: 300, Status: model.ChallengeStatusDraft, CreatedAt: now, UpdatedAt: now},
+	challenges := []assessmentChallengeTestRow{
+		{ID: 11, Title: "web-1", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 12, Title: "web-2", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 50, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 13, Title: "crypto-1", Category: challengecontracts.DimensionCrypto, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 14, Title: "draft-ignored", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 300, Status: challengecontracts.ChallengeStatusDraft, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, challenge := range challenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -150,10 +166,10 @@ func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 		t.Fatalf("seed student: %v", err)
 	}
 
-	challenges := []model.Challenge{
-		{ID: 31, Title: "web-practice", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Points: 100, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 32, Title: "web-awd", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Points: 50, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 33, Title: "crypto-awd", Category: challengecontracts.DimensionCrypto, Difficulty: model.ChallengeDifficultyEasy, Points: 200, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+	challenges := []assessmentChallengeTestRow{
+		{ID: 31, Title: "web-practice", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 32, Title: "web-awd", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 50, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 33, Title: "crypto-awd", Category: challengecontracts.DimensionCrypto, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, challenge := range challenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -344,13 +360,13 @@ func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
 	service.RegisterContestEventConsumers(bus)
 
 	now := time.Now()
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&assessmentChallengeTestRow{
 		ID:         51,
 		Title:      "web-awd",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
+		Status:     challengecontracts.ChallengeStatusPublished,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}).Error; err != nil {

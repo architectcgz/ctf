@@ -3,6 +3,7 @@ package assessment
 import (
 	"go/parser"
 	"go/token"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -215,6 +216,28 @@ func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
 		assertFileDoesNotImport(t, file, "github.com/redis/go-redis/v9")
+	}
+}
+
+func TestAssessmentTestsDoNotDependOnLegacyModelOrChallengeEntity(t *testing.T) {
+	t.Parallel()
+
+	err := filepath.WalkDir(".", func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		if !strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		assertFileDoesNotImport(t, path, "ctf-platform/internal/model")
+		assertFileDoesNotImport(t, path, "ctf-platform/internal/module/challenge/entity")
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk assessment test files: %v", err)
 	}
 }
 

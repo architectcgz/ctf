@@ -8,7 +8,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -76,10 +75,10 @@ func TestRepositoryGetStudentTeachingFactSnapshotBackfillsAWDSuccessDimensionFac
 	}
 
 	awdChallenges := []challengecontracts.AWDChallenge{
-		{ID: 701, Name: "web-awd-easy-a", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 702, Name: "web-awd-easy-b", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 703, Name: "web-awd-medium-a", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 704, Name: "web-awd-medium-b", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 701, Name: "web-awd-easy-a", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 702, Name: "web-awd-easy-b", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 703, Name: "web-awd-medium-a", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 704, Name: "web-awd-medium-b", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, challenge := range awdChallenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -119,7 +118,7 @@ func TestRepositoryGetStudentTeachingFactSnapshotBackfillsAWDSuccessDimensionFac
 	if web.EvidenceCount != 4 {
 		t.Fatalf("expected web evidence count to include awd success coverage, got %+v", web)
 	}
-	if web.SolvedDifficultyCounts[model.ChallengeDifficultyEasy] != 2 || web.SolvedDifficultyCounts[model.ChallengeDifficultyMedium] != 2 {
+	if web.SolvedDifficultyCounts[challengecontracts.ChallengeDifficultyEasy] != 2 || web.SolvedDifficultyCounts[challengecontracts.ChallengeDifficultyMedium] != 2 {
 		t.Fatalf("expected awd difficulty coverage merged into snapshot, got %+v", web.SolvedDifficultyCounts)
 	}
 }
