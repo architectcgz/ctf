@@ -10,8 +10,10 @@ type FlagValidator interface {
 	ValidateFlag(ctx context.Context, userID, challengeID int64, input string, nonce string) (bool, error)
 }
 
+type Image = challengeentity.Image
+
 type ImageStore interface {
-	FindByID(ctx context.Context, id int64) (*challengeentity.Image, error)
+	FindByID(ctx context.Context, id int64) (*Image, error)
 }
 
 type ContestChallenge struct {
@@ -37,7 +39,7 @@ type RecommendationChallenge struct {
 
 const ImageStatusAvailable = challengeentity.ImageStatusAvailable
 
-func BuildRuntimeImageRef(image *challengeentity.Image) string {
+func BuildRuntimeImageRef(image *Image) string {
 	return challengeentity.BuildRuntimeImageRef(image)
 }
 

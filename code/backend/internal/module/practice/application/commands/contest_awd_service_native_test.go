@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 )
 
@@ -18,11 +18,11 @@ func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(
 	seedContestInstanceRegistration(t, db, 3901, 5901, 4901, contestentity.ContestRegistrationStatusApproved, now)
 	seedContestInstanceTeamMember(t, db, 3901, 4901, 5901, now)
 
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:          9901,
 		Name:        "ctf/bank-portal",
 		Tag:         "v1",
-		Status:      model.ImageStatusAvailable,
+		Status:      challengecontracts.ImageStatusAvailable,
 		Description: "bank portal",
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -44,7 +44,7 @@ func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(
 			Difficulty: "medium",
 			RuntimeConfig: map[string]any{
 				"image_id":         int64(9901),
-				"instance_sharing": string(model.InstanceSharingPerTeam),
+				"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 				"defense_workspace": map[string]any{
 					"entry_mode":      "ssh",
 					"seed_root":       "runtime/workspace",
@@ -57,7 +57,7 @@ func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(
 				},
 			},
 			FlagConfig: map[string]any{
-				"flag_type":   model.FlagTypeStatic,
+				"flag_type":   challengecontracts.FlagTypeStatic,
 				"flag_prefix": "awd",
 			},
 		}),

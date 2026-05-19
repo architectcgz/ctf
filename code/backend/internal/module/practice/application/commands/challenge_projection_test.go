@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 )
 
-func toPracticeChallenge(challenge *model.Challenge) *practiceentity.Challenge {
+func toPracticeChallenge(challenge *challengecontracts.PracticeRuntimeChallenge) *practiceentity.Challenge {
 	if challenge == nil {
 		return nil
 	}

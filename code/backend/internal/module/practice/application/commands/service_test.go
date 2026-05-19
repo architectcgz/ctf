@@ -3,9 +3,7 @@ package commands
 import (
 	"context"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -264,12 +262,12 @@ func TestBuildAWDDefenseWorkspaceBootstrapCommandDegradesGracefullyWithoutPackag
 func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(t *testing.T) {
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        601,
 		Name:      "ctf/awd-web",
 		Tag:       "v1",
 		Digest:    "sha256:awd-web-v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -299,7 +297,7 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         601,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "docker/workspace",
@@ -406,11 +404,11 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
 	}
-	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(&model.Challenge{
+	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{
 		ID:             challengeID,
 		ImageID:        601,
 		TargetPort:     8080,
-		TargetProtocol: model.ChallengeTargetProtocolHTTP,
+		TargetProtocol: challengecontracts.ChallengeTargetProtocolHTTP,
 	}), "flag{demo}"); err != nil {
 		t.Fatalf("createSingleContainer() error = %v", err)
 	}
@@ -426,12 +424,12 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFails(t *testing.T) {
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        602,
 		Name:      "ctf/awd-web",
 		Tag:       "v1",
 		Digest:    "sha256:awd-web-v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -461,7 +459,7 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         602,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "docker/workspace",
@@ -541,11 +539,11 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
 	}
-	err = service.createSingleContainer(context.Background(), instance, toPracticeChallenge(&model.Challenge{
+	err = service.createSingleContainer(context.Background(), instance, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{
 		ID:             challengeID,
 		ImageID:        602,
 		TargetPort:     8080,
-		TargetProtocol: model.ChallengeTargetProtocolHTTP,
+		TargetProtocol: challengecontracts.ChallengeTargetProtocolHTTP,
 	}), "flag{demo}")
 	if err == nil {
 		t.Fatal("expected createSingleContainer() to fail when stale workspace cleanup fails")
@@ -593,7 +591,7 @@ func TestPrepareAWDDefenseWorkspacePlanTreatsFailedWorkspaceContainerAsStale(t *
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         challengeID,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "docker/workspace",
@@ -638,7 +636,7 @@ func TestPrepareAWDDefenseWorkspacePlanTreatsFailedWorkspaceContainerAsStale(t *
 		TeamID:      &teamID,
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
-	}, toPracticeChallenge(&model.Challenge{ID: challengeID}))
+	}, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{ID: challengeID}))
 	if err != nil {
 		t.Fatalf("prepareAWDDefenseWorkspacePlan() error = %v", err)
 	}
@@ -667,9 +665,9 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
-		&model.Image{},
-		&model.Challenge{},
-		&challengeentity.ChallengeTopology{},
+		&practiceCommandImageRow{},
+		&practiceCommandChallengeRow{},
+		&practiceCommandChallengeTopologyRow{},
 		&contestentity.Contest{},
 		&contestentity.ContestAWDService{},
 		&contestentity.ContestRegistration{},
@@ -748,8 +746,8 @@ func (s *stubScoreUpdater) lockTimeout() time.Duration {
 }
 
 type stubPracticeChallengeContract struct {
-	findByIDWithContextFn                func(ctx context.Context, id int64) (*model.Challenge, error)
-	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
+	findByIDWithContextFn                func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error)
+	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error)
 }
 
 func (s *stubPracticeChallengeContract) FindPracticeRuntimeChallengeByID(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
@@ -796,10 +794,10 @@ func (s *stubPracticeChallengeContract) FindPracticeRuntimeChallengeTopologyByCh
 }
 
 type stubPracticeImageStore struct {
-	findByIDFn func(ctx context.Context, id int64) (*challengeentity.Image, error)
+	findByIDFn func(ctx context.Context, id int64) (*challengecontracts.Image, error)
 }
 
-func (s *stubPracticeImageStore) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
+func (s *stubPracticeImageStore) FindByID(ctx context.Context, id int64) (*challengecontracts.Image, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}

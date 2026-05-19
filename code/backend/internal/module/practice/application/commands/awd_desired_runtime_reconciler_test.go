@@ -11,7 +11,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
@@ -825,7 +825,7 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 		Difficulty: "easy",
 		RuntimeConfig: map[string]any{
 			"image_id":         9401,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 			"defense_workspace": map[string]any{
 				"seed_root":       "runtime/workspace",
 				"workspace_roots": []string{"runtime/workspace/app"},
@@ -836,7 +836,7 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 			},
 		},
 		FlagConfig: map[string]any{
-			"flag_type":   model.FlagTypeStatic,
+			"flag_type":   challengecontracts.FlagTypeStatic,
 			"flag_prefix": "flag",
 		},
 	})
@@ -844,11 +844,11 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 		t.Fatalf("encode awd service snapshot: %v", err)
 	}
 
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        9401,
 		Name:      "ctf/awd-web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -912,7 +912,7 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 									ServicePort:     8080,
 									IsEntryPoint:    true,
 									NetworkAliases:  []string{"awd-c3401-t4401-s5401"},
-									ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+									ServiceProtocol: challengecontracts.ChallengeTargetProtocolHTTP,
 								},
 							},
 						},
@@ -929,7 +929,7 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 									ContainerID:     "workspace-loop",
 									ServicePort:     22,
 									IsEntryPoint:    true,
-									ServiceProtocol: model.ChallengeTargetProtocolTCP,
+									ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP,
 								},
 							},
 						},

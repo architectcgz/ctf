@@ -10,7 +10,6 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -36,12 +35,12 @@ func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&practiceCommandChallengeRow{
 		ID:        11,
 		Category:  challengecontracts.DimensionWeb,
 		Points:    100,
-		Status:    model.ChallengeStatusPublished,
-		FlagType:  model.FlagTypeStatic,
+		Status:    challengecontracts.ChallengeStatusPublished,
+		FlagType:  challengecontracts.FlagTypeStatic,
 		FlagSalt:  flagSalt,
 		FlagHash:  flagcrypto.HashStaticFlag("flag{repeatable}", flagSalt),
 		CreatedAt: now,
@@ -114,12 +113,12 @@ func TestSubmitFlagRejectsTooFrequentAttempts(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&practiceCommandChallengeRow{
 		ID:        12,
 		Category:  challengecontracts.DimensionWeb,
 		Points:    50,
-		Status:    model.ChallengeStatusPublished,
-		FlagType:  model.FlagTypeStatic,
+		Status:    challengecontracts.ChallengeStatusPublished,
+		FlagType:  challengecontracts.FlagTypeStatic,
 		FlagSalt:  flagSalt,
 		FlagHash:  flagcrypto.HashStaticFlag("flag{limited}", flagSalt),
 		CreatedAt: now,

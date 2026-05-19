@@ -16,9 +16,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -386,9 +384,9 @@ func TestServiceStartChallengeSharedReusesPracticeInstance(t *testing.T) {
 	seedContestInstanceUser(t, db, 5101, now)
 	seedContestInstanceUser(t, db, 5102, now)
 	seedContestInstanceChallenge(t, db, 1101, 2101, now)
-	if err := db.Model(&model.Challenge{}).
+	if err := db.Model(&practiceCommandChallengeRow{}).
 		Where("id = ?", 2101).
-		Update("instance_sharing", model.InstanceSharingShared).Error; err != nil {
+		Update("instance_sharing", challengecontracts.InstanceSharingShared).Error; err != nil {
 		t.Fatalf("update challenge sharing: %v", err)
 	}
 
@@ -414,9 +412,9 @@ func TestServiceStartChallengeSharedReusesPracticeInstanceAndRefreshesExpiry(t *
 	seedContestInstanceUser(t, db, 5201, now)
 	seedContestInstanceUser(t, db, 5202, now)
 	seedContestInstanceChallenge(t, db, 1201, 2201, now)
-	if err := db.Model(&model.Challenge{}).
+	if err := db.Model(&practiceCommandChallengeRow{}).
 		Where("id = ?", 2201).
-		Update("instance_sharing", model.InstanceSharingShared).Error; err != nil {
+		Update("instance_sharing", challengecontracts.InstanceSharingShared).Error; err != nil {
 		t.Fatalf("update challenge sharing: %v", err)
 	}
 
@@ -461,9 +459,9 @@ func TestServiceStartContestChallengePerTeamReusesTeamInstance(t *testing.T) {
 	seedContestInstanceUser(t, db, 5103, now)
 	seedContestInstanceUser(t, db, 5104, now)
 	seedContestInstanceChallenge(t, db, 1102, 2102, now)
-	if err := db.Model(&model.Challenge{}).
+	if err := db.Model(&practiceCommandChallengeRow{}).
 		Where("id = ?", 2102).
-		Update("instance_sharing", model.InstanceSharingPerTeam).Error; err != nil {
+		Update("instance_sharing", challengecontracts.InstanceSharingPerTeam).Error; err != nil {
 		t.Fatalf("update challenge sharing: %v", err)
 	}
 	seedContestInstanceJeopardyContest(t, db, 3102, 2102, now)
@@ -492,15 +490,15 @@ func TestServiceStartChallengeRejectsNoTargetChallenge(t *testing.T) {
 	db := newContestInstanceTestDB(t)
 	now := time.Now()
 
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         2201,
 		Title:      "No Target",
 		Category:   challengecontracts.DimensionMisc,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
 		Points:     20,
 		ImageID:    0,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}).Error; err != nil {
@@ -526,9 +524,9 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 	}
 	if err := db.AutoMigrate(
 		&identitycontracts.User{},
-		&model.Image{},
-		&model.Challenge{},
-		&challengeentity.ChallengeTopology{},
+		&practiceCommandImageRow{},
+		&practiceCommandChallengeRow{},
+		&practiceCommandChallengeTopologyRow{},
 		&contestentity.Contest{},
 		&contestentity.ContestAWDService{},
 		&contestentity.ContestChallenge{},
@@ -654,25 +652,25 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 
 func seedContestInstanceChallenge(t *testing.T, db *gorm.DB, imageID, challengeID int64, now time.Time) {
 	t.Helper()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        imageID,
 		Name:      fmt.Sprintf("ctf/web-%d", imageID),
 		Tag:       fmt.Sprintf("v%d", imageID),
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         challengeID,
 		Title:      "AWD Service",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    imageID,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}).Error; err != nil {
@@ -733,7 +731,7 @@ func seedContestInstanceAWDService(t *testing.T, db *gorm.DB, serviceID, contest
 
 func seedContestInstanceAWDServiceWithVisibility(t *testing.T, db *gorm.DB, serviceID, contestID, challengeID int64, visible bool, now time.Time) {
 	t.Helper()
-	var challenge model.Challenge
+	var challenge practiceCommandChallengeRow
 	if err := db.Where("id = ?", challengeID).First(&challenge).Error; err != nil {
 		t.Fatalf("load challenge for awd service snapshot: %v", err)
 	}
@@ -752,7 +750,7 @@ func seedContestInstanceAWDServiceWithVisibility(t *testing.T, db *gorm.DB, serv
 			Difficulty: challenge.Difficulty,
 			RuntimeConfig: map[string]any{
 				"image_id":         challenge.ImageID,
-				"instance_sharing": string(model.InstanceSharingPerTeam),
+				"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 				"defense_workspace": map[string]any{
 					"entry_mode":      "ssh",
 					"seed_root":       "runtime/workspace",

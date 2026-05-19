@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -40,13 +39,13 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 
 	repo := &stubPracticeRepository{}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:        id,
 				Category:  challengecontracts.DimensionWeb,
 				Points:    80,
-				Status:    model.ChallengeStatusPublished,
-				FlagType:  model.FlagTypeRegex,
+				Status:    challengecontracts.ChallengeStatusPublished,
+				FlagType:  challengecontracts.FlagTypeRegex,
 				FlagRegex: `^flag\{regex-[0-9]{2}\}$`,
 			}, nil
 		},
@@ -99,13 +98,13 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Category: challengecontracts.DimensionWeb,
 				Points:   120,
-				Status:   model.ChallengeStatusPublished,
-				FlagType: model.FlagTypeManualReview,
+				Status:   challengecontracts.ChallengeStatusPublished,
+				FlagType: challengecontracts.FlagTypeManualReview,
 			}, nil
 		},
 	}
@@ -193,13 +192,13 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Category: challengecontracts.DimensionWeb,
 				Points:   120,
-				Status:   model.ChallengeStatusPublished,
-				FlagType: model.FlagTypeManualReview,
+				Status:   challengecontracts.ChallengeStatusPublished,
+				FlagType: challengecontracts.FlagTypeManualReview,
 			}, nil
 		},
 	}
@@ -300,13 +299,13 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Category: challengecontracts.DimensionWeb,
 				Points:   100,
-				Status:   model.ChallengeStatusPublished,
-				FlagType: model.FlagTypeStatic,
+				Status:   challengecontracts.ChallengeStatusPublished,
+				FlagType: challengecontracts.FlagTypeStatic,
 				FlagSalt: flagSalt,
 				FlagHash: flagcrypto.HashStaticFlag("flag{correct}", flagSalt),
 			}, nil
@@ -381,16 +380,16 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 
 	repo := practiceinfra.NewRepository(db)
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:              id,
 				Category:        challengecontracts.DimensionWeb,
 				Points:          100,
-				Status:          model.ChallengeStatusPublished,
-				FlagType:        model.FlagTypeStatic,
+				Status:          challengecontracts.ChallengeStatusPublished,
+				FlagType:        challengecontracts.FlagTypeStatic,
 				FlagSalt:        flagSalt,
 				FlagHash:        flagcrypto.HashStaticFlag("flag{shared-static}", flagSalt),
-				InstanceSharing: model.InstanceSharingShared,
+				InstanceSharing: challengecontracts.InstanceSharingShared,
 			}, nil
 		},
 	}
@@ -451,13 +450,13 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 
 	repo := practiceinfra.NewRepository(db)
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Category: challengecontracts.DimensionWeb,
 				Points:   100,
-				Status:   model.ChallengeStatusPublished,
-				FlagType: model.FlagTypeStatic,
+				Status:   challengecontracts.ChallengeStatusPublished,
+				FlagType: challengecontracts.FlagTypeStatic,
 				FlagSalt: flagSalt,
 				FlagHash: flagcrypto.HashStaticFlag("flag{repeatable}", flagSalt),
 			}, nil
@@ -556,16 +555,16 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 
 	repo := practiceinfra.NewRepository(db)
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:              id,
 				Category:        challengecontracts.DimensionWeb,
 				Points:          100,
-				Status:          model.ChallengeStatusPublished,
-				FlagType:        model.FlagTypeStatic,
+				Status:          challengecontracts.ChallengeStatusPublished,
+				FlagType:        challengecontracts.FlagTypeStatic,
 				FlagSalt:        flagSalt,
 				FlagHash:        flagcrypto.HashStaticFlag("flag{correct}", flagSalt),
-				InstanceSharing: model.InstanceSharingPerUser,
+				InstanceSharing: challengecontracts.InstanceSharingPerUser,
 			}, nil
 		},
 	}
@@ -634,10 +633,10 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 
 	now := time.Now()
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:     id,
-				Status: model.ChallengeStatusPublished,
+				Status: challengecontracts.ChallengeStatusPublished,
 			}, nil
 		},
 	}
@@ -725,12 +724,12 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 
 	repo := practiceinfra.NewRepository(db)
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Category: challengecontracts.DimensionWeb,
 				Points:   100,
-				Status:   model.ChallengeStatusPublished,
+				Status:   challengecontracts.ChallengeStatusPublished,
 				FlagType: "shared_proof",
 			}, nil
 		},
@@ -795,17 +794,17 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			challengeLookupCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Category: challengecontracts.DimensionWeb,
 				Points:   100,
-				Status:   model.ChallengeStatusPublished,
-				FlagType: model.FlagTypeStatic,
+				Status:   challengecontracts.ChallengeStatusPublished,
+				FlagType: challengecontracts.FlagTypeStatic,
 				FlagSalt: flagSalt,
 				FlagHash: flagcrypto.HashStaticFlag("flag{ctx-submit}", flagSalt),
 			}, nil
@@ -854,7 +853,7 @@ func TestSubmitFlagTreatsPracticeChallengeNotFoundAsChallengeNotFound(t *testing
 	t.Parallel()
 
 	runtimeSubjectSource := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	}
@@ -880,13 +879,13 @@ func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T
 
 	flagSalt := "submission-sentinel-salt"
 	runtimeSubjectSource := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Category: challengecontracts.DimensionWeb,
 				Points:   100,
-				Status:   model.ChallengeStatusPublished,
-				FlagType: model.FlagTypeStatic,
+				Status:   challengecontracts.ChallengeStatusPublished,
+				FlagType: challengecontracts.FlagTypeStatic,
 				FlagSalt: flagSalt,
 				FlagHash: flagcrypto.HashStaticFlag("flag{sentinel-correct}", flagSalt),
 			}, nil
@@ -982,17 +981,17 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			challengeLookupCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Category: challengecontracts.DimensionWeb,
 				Points:   120,
-				Status:   model.ChallengeStatusPublished,
-				FlagType: model.FlagTypeManualReview,
+				Status:   challengecontracts.ChallengeStatusPublished,
+				FlagType: challengecontracts.FlagTypeManualReview,
 			}, nil
 		},
 	}
@@ -1491,13 +1490,13 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Category: challengecontracts.DimensionWeb,
 				Points:   120,
-				Status:   model.ChallengeStatusPublished,
-				FlagType: model.FlagTypeManualReview,
+				Status:   challengecontracts.ChallengeStatusPublished,
+				FlagType: challengecontracts.FlagTypeManualReview,
 			}, nil
 		},
 	}
@@ -1561,7 +1560,7 @@ func TestListMyChallengeSubmissionsTreatsPracticeChallengeNotFoundAsChallengeNot
 	t.Parallel()
 
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	}
@@ -1589,12 +1588,12 @@ func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 	challengeLookupCalled := false
 	listCalled := false
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			challengeLookupCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+			return &challengecontracts.PracticeRuntimeChallenge{ID: id, Status: challengecontracts.ChallengeStatusPublished}, nil
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
@@ -1664,13 +1663,13 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:         id,
 				Category:   challengecontracts.DimensionWeb,
 				Points:     100,
-				Status:     model.ChallengeStatusPublished,
-				FlagType:   model.FlagTypeDynamic,
+				Status:     challengecontracts.ChallengeStatusPublished,
+				FlagType:   challengecontracts.FlagTypeDynamic,
 				FlagPrefix: "flag",
 			}, nil
 		},
@@ -1746,16 +1745,16 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:              id,
 				Category:        challengecontracts.DimensionWeb,
 				Points:          100,
-				Status:          model.ChallengeStatusPublished,
-				FlagType:        model.FlagTypeStatic,
+				Status:          challengecontracts.ChallengeStatusPublished,
+				FlagType:        challengecontracts.FlagTypeStatic,
 				FlagSalt:        flagSalt,
 				FlagHash:        flagcrypto.HashStaticFlag("flag{solve-grace-ctx}", flagSalt),
-				InstanceSharing: model.InstanceSharingPerUser,
+				InstanceSharing: challengecontracts.InstanceSharingPerUser,
 			}, nil
 		},
 	}

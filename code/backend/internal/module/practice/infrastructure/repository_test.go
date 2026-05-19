@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
@@ -340,7 +340,7 @@ func TestRepositoryFindContestAWDServiceRuntimeSubjectMapsSnapshot(t *testing.T)
 	if subject.RuntimeChallenge.Points != 320 || subject.RuntimeChallenge.ImageID != 105 {
 		t.Fatalf("unexpected runtime challenge payload: %+v", subject.RuntimeChallenge)
 	}
-	if subject.RuntimeChallenge.InstanceSharing != string(model.InstanceSharingPerTeam) {
+	if subject.RuntimeChallenge.InstanceSharing != string(challengecontracts.InstanceSharingPerTeam) {
 		t.Fatalf("unexpected instance sharing: %+v", subject.RuntimeChallenge)
 	}
 	if subject.SeedSignature == "" {

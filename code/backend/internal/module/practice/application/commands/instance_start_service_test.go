@@ -3,9 +3,7 @@ package commands
 import (
 	"context"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -25,25 +23,25 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        101,
 		Name:      "ctf/web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         201,
 		Title:      "Queued Web",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    101,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
 		CreatedAt:  now,
 		UpdatedAt:  now,
@@ -159,15 +157,15 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 	}
 
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			if id != 2104 {
 				t.Fatalf("unexpected challenge lookup: %d", id)
 			}
-			return &model.Challenge{
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Status:   model.ChallengeStatusPublished,
+				Status:   challengecontracts.ChallengeStatusPublished,
 				ImageID:  104,
-				FlagType: model.FlagTypeStatic,
+				FlagType: challengecontracts.FlagTypeStatic,
 				FlagHash: "flag{awd-static}",
 			}, nil
 		},
@@ -257,12 +255,12 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 	}
 
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Status:   model.ChallengeStatusPublished,
+				Status:   challengecontracts.ChallengeStatusPublished,
 				ImageID:  105,
-				FlagType: model.FlagTypeStatic,
+				FlagType: challengecontracts.FlagTypeStatic,
 				FlagHash: "flag{awd-static}",
 			}, nil
 		},
@@ -355,12 +353,12 @@ func TestStartContestAWDServiceReservesHostPortWhenAccessHostConfigured(t *testi
 	}
 
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Status:   model.ChallengeStatusPublished,
+				Status:   challengecontracts.ChallengeStatusPublished,
 				ImageID:  115,
-				FlagType: model.FlagTypeStatic,
+				FlagType: challengecontracts.FlagTypeStatic,
 				FlagHash: "flag{awd-static}",
 			}, nil
 		},
@@ -1025,11 +1023,11 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 	imageID := int64(9105)
 	challengeID := int64(9106)
 
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        imageID,
 		Name:      "ctf/awd-runtime",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -1064,7 +1062,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 		Name: "Restart Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         imageID,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "docker/workspace",
@@ -1218,22 +1216,22 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	imageID := int64(9115)
 	challengeID := int64(9116)
 
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        imageID,
 		Name:      "ctf/awd-runtime",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&practiceCommandChallengeRow{
 		ID:        challengeID,
 		Title:     "Restart Service",
 		ImageID:   imageID,
-		Status:    model.ChallengeStatusPublished,
-		FlagType:  model.FlagTypeStatic,
+		Status:    challengecontracts.ChallengeStatusPublished,
+		FlagType:  challengecontracts.FlagTypeStatic,
 		FlagHash:  "flag{restart}",
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -1269,7 +1267,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 		Name: "Restart Service Missing Workspace",
 		RuntimeConfig: map[string]any{
 			"image_id":         imageID,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "docker/workspace",
@@ -1389,7 +1387,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 						AccessURL:          "tcp://172.30.0.55:22",
 						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
 							Containers: []runtimecontracts.InstanceRuntimeContainer{
-								{NodeKey: "workspace", ContainerID: "workspace-recreated", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+								{NodeKey: "workspace", ContainerID: "workspace-recreated", ServicePort: 22, ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
 					}, nil
@@ -1445,25 +1443,25 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now().UTC()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        106,
 		Name:      "ctf/web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         206,
 		Title:      "Expired Runtime",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    106,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
 		CreatedAt:  now,
 		UpdatedAt:  now,
@@ -1575,10 +1573,10 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingShar
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{shared}", InstanceSharing: model.InstanceSharingShared}, nil
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{ID: id, ImageID: 1, Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{shared}", InstanceSharing: challengecontracts.InstanceSharingShared}, nil
 		},
-		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
 			return nil, nil
 		},
 	}
@@ -1664,10 +1662,10 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingIns
 		},
 	}
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
-			return &model.Challenge{ID: id, ImageID: 1, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{new}"}, nil
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{ID: id, ImageID: 1, Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{new}"}, nil
 		},
-		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
 			return nil, nil
 		},
 	}

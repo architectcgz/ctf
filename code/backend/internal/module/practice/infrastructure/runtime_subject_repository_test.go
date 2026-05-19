@@ -7,13 +7,12 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
 type runtimeSubjectSourceStub struct {
-	findByIDFn                  func(context.Context, int64) (*model.Challenge, error)
+	findByIDFn                  func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallenge, error)
 	findChallengeTopologyByIDFn func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error)
 }
 
@@ -50,7 +49,7 @@ func TestRuntimeSubjectRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewRuntimeSubjectRepository(runtimeSubjectSourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 		findChallengeTopologyByIDFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
@@ -71,7 +70,7 @@ func TestRuntimeSubjectRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 
 	expectedErr := errors.New("boom")
 	repo := NewRuntimeSubjectRepository(runtimeSubjectSourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return nil, expectedErr
 		},
 		findChallengeTopologyByIDFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {

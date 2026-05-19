@@ -3,9 +3,7 @@ package commands
 import (
 	"context"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -25,7 +23,7 @@ import (
 func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&practiceCommandImageRow{ID: 1, Name: "ctf/web", Tag: "v1", Status: challengecontracts.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 
@@ -34,7 +32,7 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 		config:    &config.Config{},
 	}
 
-	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, false, toPracticeChallenge(&model.Challenge{ImageID: 1}), "web", challengecontracts.TopologySpec{
+	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, false, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{ImageID: 1}), "web", challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
@@ -56,7 +54,7 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testing.T) {
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{ID: 2, Name: "ctf/web", Tag: "v2", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+	if err := db.Create(&practiceCommandImageRow{ID: 2, Name: "ctf/web", Tag: "v2", Status: challengecontracts.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 
@@ -65,9 +63,9 @@ func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testin
 		config:    &config.Config{},
 	}
 
-	_, err := service.buildTopologyCreateRequest(context.Background(), 30002, false, toPracticeChallenge(&model.Challenge{
+	_, err := service.buildTopologyCreateRequest(context.Background(), 30002, false, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{
 		ImageID:         2,
-		InstanceSharing: model.InstanceSharingShared,
+		InstanceSharing: challengecontracts.InstanceSharingShared,
 	}), "web", challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
@@ -86,7 +84,7 @@ func TestBuildRuntimeContainerNameUsesChallengeSlugAndContestIdentity(t *testing
 	serviceID := int64(21)
 	packageSlug := "Bank Portal"
 
-	got := buildRuntimeContainerName(toPracticeChallenge(&model.Challenge{PackageSlug: &packageSlug}), &instanceentity.Instance{
+	got := buildRuntimeContainerName(toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{PackageSlug: &packageSlug}), &instanceentity.Instance{
 		ContestID: &contestID,
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
@@ -104,7 +102,7 @@ func TestBuildRuntimeContainerNameIncludesServiceIDWhenChallengeSlugMissing(t *t
 	teamID := int64(16)
 	serviceID := int64(22)
 
-	got := buildRuntimeContainerName(toPracticeChallenge(&model.Challenge{}), &instanceentity.Instance{
+	got := buildRuntimeContainerName(toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{}), &instanceentity.Instance{
 		ContestID: &contestID,
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
@@ -143,7 +141,7 @@ func TestApplyAWDStableNetworkToTopologyRequestSkipsContainerNameForMultiNodeTop
 		ContestID: &contestID,
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
-	}, toPracticeChallenge(&model.Challenge{
+	}, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{
 		PackageSlug: &packageSlug,
 	}), request)
 
@@ -166,11 +164,11 @@ func TestCreateSingleContainerRebindsHostPortAfterPublishConflict(t *testing.T) 
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        410,
 		Name:      "ctf/web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -251,10 +249,10 @@ func TestCreateSingleContainerRebindsHostPortAfterPublishConflict(t *testing.T) 
 		ChallengeID: 410,
 		HostPort:    30021,
 	}
-	challenge := &model.Challenge{
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       410,
 		ImageID:  410,
-		FlagType: model.FlagTypeStatic,
+		FlagType: challengecontracts.FlagTypeStatic,
 	}
 
 	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
@@ -286,12 +284,12 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
 	const checkerSecret = "practice-secret-12345678901234567890"
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        501,
 		Name:      "ctf/awd-web",
 		Tag:       "v1",
 		Digest:    "sha256:awd-web-v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -305,7 +303,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":          501,
-			"instance_sharing":  string(model.InstanceSharingPerTeam),
+			"instance_sharing":  string(challengecontracts.InstanceSharingPerTeam),
 			"checker_token_env": "CHECKER_TOKEN",
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
@@ -398,7 +396,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 						AccessURL:          "tcp://172.30.0.20:22",
 						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
 							Containers: []runtimecontracts.InstanceRuntimeContainer{
-								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
 					}, nil
@@ -423,10 +421,10 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 		ServiceID:   &serviceID,
 		ChallengeID: 501,
 	}
-	challenge := &model.Challenge{
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       501,
 		ImageID:  501,
-		FlagType: model.FlagTypeStatic,
+		FlagType: challengecontracts.FlagTypeStatic,
 	}
 
 	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
@@ -449,11 +447,11 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
 	const checkerSecret = "practice-secret-12345678901234567890"
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        511,
 		Name:      "ctf/awd-web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -467,7 +465,7 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":          511,
-			"instance_sharing":  string(model.InstanceSharingPerTeam),
+			"instance_sharing":  string(challengecontracts.InstanceSharingPerTeam),
 			"checker_token_env": "CHECKER_TOKEN",
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
@@ -542,7 +540,7 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 						AccessURL:          "tcp://172.30.0.20:22",
 						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
 							Containers: []runtimecontracts.InstanceRuntimeContainer{
-								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
 					}, nil
@@ -572,10 +570,10 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 		ChallengeID: 511,
 		HostPort:    30011,
 	}
-	challenge := &model.Challenge{
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       511,
 		ImageID:  511,
-		FlagType: model.FlagTypeStatic,
+		FlagType: challengecontracts.FlagTypeStatic,
 	}
 
 	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
@@ -604,11 +602,11 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        512,
 		Name:      "ctf/awd-web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -622,7 +620,7 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         512,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "docker/workspace",
@@ -747,10 +745,10 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 		ChallengeID: 512,
 		HostPort:    30011,
 	}
-	challenge := &model.Challenge{
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       512,
 		ImageID:  512,
-		FlagType: model.FlagTypeStatic,
+		FlagType: challengecontracts.FlagTypeStatic,
 	}
 
 	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
@@ -786,11 +784,11 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
 	const checkerSecret = "practice-topology-secret-1234567890123"
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        503,
 		Name:      "ctf/awd-topology",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -804,7 +802,7 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 		Name: "AWD Topology",
 		RuntimeConfig: map[string]any{
 			"image_id":          503,
-			"instance_sharing":  string(model.InstanceSharingPerTeam),
+			"instance_sharing":  string(challengecontracts.InstanceSharingPerTeam),
 			"checker_token_env": "CHECKER_TOKEN",
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
@@ -882,7 +880,7 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 						AccessURL:          "tcp://172.30.0.21:22",
 						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
 							Containers: []runtimecontracts.InstanceRuntimeContainer{
-								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
 					}, nil
@@ -903,10 +901,10 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 		ServiceID:   &serviceID,
 		ChallengeID: 503,
 	}
-	challenge := &model.Challenge{
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       503,
 		ImageID:  503,
-		FlagType: model.FlagTypeStatic,
+		FlagType: challengecontracts.FlagTypeStatic,
 	}
 	topology, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{
@@ -938,11 +936,11 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
 	const checkerSecret = "practice-topology-secret-1234567890123"
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        513,
 		Name:      "ctf/awd-topology",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -956,7 +954,7 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 		Name: "AWD Topology",
 		RuntimeConfig: map[string]any{
 			"image_id":          513,
-			"instance_sharing":  string(model.InstanceSharingPerTeam),
+			"instance_sharing":  string(challengecontracts.InstanceSharingPerTeam),
 			"checker_token_env": "CHECKER_TOKEN",
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
@@ -1019,7 +1017,7 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 						AccessURL:          "tcp://172.30.0.21:22",
 						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
 							Containers: []runtimecontracts.InstanceRuntimeContainer{
-								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
 					}, nil
@@ -1045,10 +1043,10 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 		ChallengeID: 513,
 		HostPort:    30013,
 	}
-	challenge := &model.Challenge{
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       513,
 		ImageID:  513,
-		FlagType: model.FlagTypeStatic,
+		FlagType: challengecontracts.FlagTypeStatic,
 	}
 	topology, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{
@@ -1133,11 +1131,11 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        601,
 		Name:      "ctf/awd-workspace",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -1151,7 +1149,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 		Name: "Campus Drive",
 		RuntimeConfig: map[string]any{
 			"image_id":         601,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "docker/workspace",
@@ -1243,7 +1241,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 						AccessURL:          "tcp://172.30.0.40:22",
 						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
 							Containers: []runtimecontracts.InstanceRuntimeContainer{
-								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
 					}, nil
@@ -1263,10 +1261,10 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 		ServiceID:   &serviceID,
 		ChallengeID: 601,
 	}
-	challenge := &model.Challenge{
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:          601,
 		ImageID:     601,
-		FlagType:    model.FlagTypeStatic,
+		FlagType:    challengecontracts.FlagTypeStatic,
 		PackageSlug: stringPtr("campus-drive"),
 	}
 
@@ -1300,14 +1298,14 @@ func TestLoadRuntimeSubjectWithScopePropagatesContextToChallengeContract(t *test
 	challengeLookupCalled := false
 	topologyLookupCalled := false
 	challengeRepo := &stubPracticeChallengeContract{
-		findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			challengeLookupCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected challenge lookup ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+			return &challengecontracts.PracticeRuntimeChallenge{ID: id, Status: challengecontracts.ChallengeStatusPublished}, nil
 		},
-		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
+		findChallengeTopologyByChallengeIDFn: func(ctx context.Context, challengeID int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
 			topologyLookupCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected topology lookup ctx value %v, got %v", expectedCtxValue, got)
@@ -1355,19 +1353,19 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	lookups := make([]int64, 0, 2)
 	service := &Service{
 		imageRepo: &stubPracticeImageStore{
-			findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
+			findByIDFn: func(ctx context.Context, id int64) (*challengecontracts.Image, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
 				}
 				lookups = append(lookups, id)
-				return &challengeentity.Image{ID: id, Name: fmt.Sprintf("repo/%d", id), Tag: "latest", Status: challengeentity.ImageStatusAvailable}, nil
+				return &challengecontracts.Image{ID: id, Name: fmt.Sprintf("repo/%d", id), Tag: "latest", Status: challengecontracts.ImageStatusAvailable}, nil
 			},
 		},
 		config: &config.Config{},
 	}
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	request, err := service.buildTopologyCreateRequest(ctx, 30001, false, toPracticeChallenge(&model.Challenge{ImageID: 1}), "web", challengecontracts.TopologySpec{
+	request, err := service.buildTopologyCreateRequest(ctx, 30001, false, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{ImageID: 1}), "web", challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", Name: "Web", ServicePort: 8080},
 			{Key: "worker", Name: "Worker", ImageID: 2, ServicePort: 9000},

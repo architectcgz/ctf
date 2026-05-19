@@ -61,3 +61,8 @@ const (
 	InstanceSharingPerTeam = "per_team"
 	InstanceSharingShared  = "shared"
 )
+
+const (
+	ChallengeTargetProtocolHTTP = challengeentity.ChallengeTargetProtocolHTTP
+	ChallengeTargetProtocolTCP  = challengeentity.ChallengeTargetProtocolTCP
+)

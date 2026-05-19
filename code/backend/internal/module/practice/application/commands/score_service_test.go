@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceentity "ctf-platform/internal/module/practice/entity"
@@ -37,12 +37,12 @@ func TestScoreServiceUpdateUserScoreHonorsCancellation(t *testing.T) {
 	t.Cleanup(func() { _ = redisClient.Close() })
 
 	now := time.Now()
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         1,
 		Title:      "web-1",
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
+		Status:     challengecontracts.ChallengeStatusPublished,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}).Error; err != nil {
@@ -75,12 +75,12 @@ func TestScoreServiceCalculateScoreUsesChallengePointsDirectly(t *testing.T) {
 	t.Cleanup(func() { _ = redisClient.Close() })
 
 	now := time.Now()
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         11,
 		Title:      "web-2",
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
+		Status:     challengecontracts.ChallengeStatusPublished,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}).Error; err != nil {
@@ -107,22 +107,22 @@ func TestScoreServiceUpdateUserScoreUsesSolvedChallengePointsSum(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("seed user: %v", err)
 	}
-	if err := db.Create([]*model.Challenge{
+	if err := db.Create([]*practiceCommandChallengeRow{
 		{
 			ID:         21,
 			Title:      "easy-web",
-			Difficulty: model.ChallengeDifficultyEasy,
+			Difficulty: challengecontracts.ChallengeDifficultyEasy,
 			Points:     100,
-			Status:     model.ChallengeStatusPublished,
+			Status:     challengecontracts.ChallengeStatusPublished,
 			CreatedAt:  now,
 			UpdatedAt:  now,
 		},
 		{
 			ID:         22,
 			Title:      "hard-pwn",
-			Difficulty: model.ChallengeDifficultyHard,
+			Difficulty: challengecontracts.ChallengeDifficultyHard,
 			Points:     300,
-			Status:     model.ChallengeStatusPublished,
+			Status:     challengecontracts.ChallengeStatusPublished,
 			CreatedAt:  now,
 			UpdatedAt:  now,
 		},

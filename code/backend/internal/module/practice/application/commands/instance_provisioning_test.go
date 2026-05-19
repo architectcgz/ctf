@@ -3,9 +3,7 @@ package commands
 import (
 	"context"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -38,25 +36,25 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	}))
 	t.Cleanup(healthyServer.Close)
 	publicHost, hostPort := parseHTTPServerEndpoint(t, healthyServer.URL)
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        102,
 		Name:      "ctf/web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         202,
 		Title:      "Queued Runner",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    102,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
 		CreatedAt:  now,
 		UpdatedAt:  now,
@@ -130,30 +128,40 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        104,
 		Name:      "ctf/web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	challenge := &model.Challenge{
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:         205,
 		Title:      "Readiness Failure",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    104,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
+	}
+	if err := db.Create(&practiceCommandChallengeRow{
+		ID:         challenge.ID,
+		Title:      challenge.Title,
+		Category:   challenge.Category,
+		Difficulty: challenge.Difficulty,
+		Points:     challenge.Points,
+		ImageID:    challenge.ImageID,
+		Status:     challenge.Status,
+		FlagType:   challenge.FlagType,
+		FlagHash:   challenge.FlagHash,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}
-	if err := db.Create(challenge).Error; err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 
@@ -241,11 +249,11 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 		nil,
 
 		&stubPracticeImageStore{
-			findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Image, error) {
+			findByIDFn: func(ctx context.Context, id int64) (*challengecontracts.Image, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected image lookup ctx value %v, got %v", expectedCtxValue, got)
 				}
-				return &challengeentity.Image{ID: id, Name: "ctf/web", Tag: "v1", Status: challengeentity.ImageStatusAvailable}, nil
+				return &challengecontracts.Image{ID: id, Name: "ctf/web", Tag: "v1", Status: challengecontracts.ImageStatusAvailable}, nil
 			},
 		},
 		instanceStore,
@@ -269,7 +277,7 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 	defer server.Close()
 	host, port := parseHTTPServerEndpoint(t, server.URL)
 	instance := &instanceentity.Instance{ID: 951, ChallengeID: 2051, HostPort: port, Status: instanceentity.InstanceStatusCreating}
-	challenge := &model.Challenge{ID: 2051, ImageID: 301, Status: model.ChallengeStatusPublished, FlagType: model.FlagTypeStatic, FlagHash: "flag{ok}"}
+	challenge := &challengecontracts.PracticeRuntimeChallenge{ID: 2051, ImageID: 301, Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{ok}"}
 	service.config.Container.PublicHost = host
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 
@@ -312,8 +320,8 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 		nil,
 
 		&stubPracticeImageStore{
-			findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
-				return &challengeentity.Image{ID: 301, Name: "ctf/pwn", Tag: "v1", Status: challengeentity.ImageStatusAvailable}, nil
+			findByIDFn: func(context.Context, int64) (*challengecontracts.Image, error) {
+				return &challengecontracts.Image{ID: 301, Name: "ctf/pwn", Tag: "v1", Status: challengecontracts.ImageStatusAvailable}, nil
 			},
 		},
 		instanceStore,
@@ -322,7 +330,7 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 				if len(req.Nodes) != 1 {
 					t.Fatalf("unexpected topology request: %+v", req)
 				}
-				if req.Nodes[0].ServiceProtocol != model.ChallengeTargetProtocolTCP {
+				if req.Nodes[0].ServiceProtocol != challengecontracts.ChallengeTargetProtocolTCP {
 					t.Fatalf("expected tcp topology node, got %+v", req.Nodes[0])
 				}
 				return &practiceports.TopologyCreateResult{
@@ -335,7 +343,7 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 								NodeKey:         "default",
 								ContainerID:     "pwn-ctr",
 								ServicePort:     8080,
-								ServiceProtocol: model.ChallengeTargetProtocolTCP,
+								ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP,
 								IsEntryPoint:    true,
 								NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 							},
@@ -351,13 +359,13 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	instance := &instanceentity.Instance{ID: 952, ChallengeID: 2052, HostPort: 0, Status: instanceentity.InstanceStatusCreating}
-	challenge := &model.Challenge{
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:             2052,
 		ImageID:        301,
-		Status:         model.ChallengeStatusPublished,
-		FlagType:       model.FlagTypeStatic,
+		Status:         challengecontracts.ChallengeStatusPublished,
+		FlagType:       challengecontracts.FlagTypeStatic,
 		FlagHash:       "flag{ok}",
-		TargetProtocol: model.ChallengeTargetProtocolTCP,
+		TargetProtocol: challengecontracts.ChallengeTargetProtocolTCP,
 	}
 
 	if err := service.provisionInstance(context.Background(), instance, toPracticeChallenge(challenge), nil, "flag{ok}"); err != nil {
@@ -375,11 +383,11 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        502,
 		Name:      "ctf/awd-web",
 		Tag:       "v2",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -393,7 +401,7 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         502,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "runtime/workspace",
@@ -406,7 +414,7 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 			},
 		},
 		FlagConfig: map[string]any{
-			"flag_type":   model.FlagTypeStatic,
+			"flag_type":   challengecontracts.FlagTypeStatic,
 			"flag_prefix": "flag",
 		},
 	})
@@ -468,10 +476,10 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 	if err := db.Create(instance).Error; err != nil {
 		t.Fatalf("create instance: %v", err)
 	}
-	challenge := &model.Challenge{
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       502,
 		ImageID:  502,
-		FlagType: model.FlagTypeStatic,
+		FlagType: challengecontracts.FlagTypeStatic,
 	}
 
 	if err := service.provisionInstance(context.Background(), instance, toPracticeChallenge(challenge), nil, "flag{demo}"); err != nil {
@@ -494,11 +502,11 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        503,
 		Name:      "ctf/awd-web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -512,7 +520,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 		Name: "AWD Service",
 		RuntimeConfig: map[string]any{
 			"image_id":         503,
-			"instance_sharing": string(model.InstanceSharingPerTeam),
+			"instance_sharing": string(challengecontracts.InstanceSharingPerTeam),
 			"defense_workspace": map[string]any{
 				"entry_mode":      "ssh",
 				"seed_root":       "docker/workspace",
@@ -586,7 +594,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 						AccessURL:          "tcp://172.30.0.41:22",
 						RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
 							Containers: []runtimecontracts.InstanceRuntimeContainer{
-								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: model.ChallengeTargetProtocolTCP, IsEntryPoint: true},
+								{NodeKey: "workspace", ContainerID: "workspace-ctr", ServicePort: 22, ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP, IsEntryPoint: true},
 							},
 						},
 					}, nil
@@ -620,13 +628,13 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 		},
 		nil)
 
-	err = service.provisionInstance(context.Background(), instance, toPracticeChallenge(&model.Challenge{
+	err = service.provisionInstance(context.Background(), instance, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{
 		ID:             503,
 		ImageID:        503,
-		FlagType:       model.FlagTypeStatic,
+		FlagType:       challengecontracts.FlagTypeStatic,
 		FlagHash:       "flag{demo}",
 		TargetPort:     8080,
-		TargetProtocol: model.ChallengeTargetProtocolHTTP,
+		TargetProtocol: challengecontracts.ChallengeTargetProtocolHTTP,
 	}), nil, "flag{demo}")
 	if err == nil || err.Error() != errcode.ErrContainerCreateFailed.Error() {
 		t.Fatalf("expected container create failed error, got %v", err)
@@ -651,11 +659,11 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        105,
 		Name:      "ctf/web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -708,7 +716,7 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	instance := &instanceentity.Instance{ID: 611, ChallengeID: 711, HostPort: reserveClosedLoopbackPort(t), Status: instanceentity.InstanceStatusCreating}
-	challenge := &model.Challenge{ID: 711, ImageID: 105, Status: model.ChallengeStatusPublished}
+	challenge := &challengecontracts.PracticeRuntimeChallenge{ID: 711, ImageID: 105, Status: challengecontracts.ChallengeStatusPublished}
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 
 	err := service.provisionInstance(ctx, instance, toPracticeChallenge(challenge), nil, "flag{ctx}")
@@ -725,26 +733,26 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
-	if err := db.Create(&model.Image{
+	if err := db.Create(&practiceCommandImageRow{
 		ID:        103,
 		Name:      "ctf/web",
 		Tag:       "v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 	for _, challengeID := range []int64{203, 204} {
-		if err := db.Create(&model.Challenge{
+		if err := db.Create(&practiceCommandChallengeRow{
 			ID:         challengeID,
 			Title:      "Queued Capacity",
 			Category:   challengecontracts.DimensionWeb,
-			Difficulty: model.ChallengeDifficultyEasy,
+			Difficulty: challengecontracts.ChallengeDifficultyEasy,
 			Points:     100,
 			ImageID:    103,
-			Status:     model.ChallengeStatusPublished,
-			FlagType:   model.FlagTypeStatic,
+			Status:     challengecontracts.ChallengeStatusPublished,
+			FlagType:   challengecontracts.FlagTypeStatic,
 			FlagHash:   "flag{static}",
 			CreatedAt:  now,
 			UpdatedAt:  now,
