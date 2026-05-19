@@ -1,4 +1,4 @@
-package crypto
+package flagcrypto
 
 import (
 	"crypto/hmac"

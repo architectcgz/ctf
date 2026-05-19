@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	pkgcrypto "ctf-platform/pkg/crypto"
+	pkgcrypto "ctf-platform/internal/shared/flagcrypto"
 )
 
 type Config struct {

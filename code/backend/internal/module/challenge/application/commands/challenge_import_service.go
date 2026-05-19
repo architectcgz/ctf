@@ -24,7 +24,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	platformevents "ctf-platform/internal/platform/events"
-	"ctf-platform/pkg/crypto"
+	crypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/pkg/errcode"
 )
 

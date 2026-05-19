@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"ctf-platform/pkg/crypto"
+	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
 func IsUniqueConstraintError(err error) bool {

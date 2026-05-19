@@ -17,7 +17,7 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
-	"ctf-platform/pkg/crypto"
+	crypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/pkg/errcode"
 )
 

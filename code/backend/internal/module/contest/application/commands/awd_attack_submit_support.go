@@ -7,7 +7,7 @@ import (
 
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	"ctf-platform/pkg/crypto"
+	crypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/pkg/errcode"
 )
 

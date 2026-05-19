@@ -14,8 +14,8 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
+	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
-	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
 

@@ -9,7 +9,7 @@ import (
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/ports"
-	"ctf-platform/pkg/crypto"
+	crypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/pkg/errcode"
 )
 

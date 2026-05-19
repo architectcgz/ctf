@@ -19,7 +19,7 @@ import (
 	"ctf-platform/internal/infrastructure/postgres"
 	challengedomain "ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
-	"ctf-platform/pkg/crypto"
+	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
 const (

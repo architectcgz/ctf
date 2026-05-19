@@ -15,7 +15,7 @@ import (
 
 	contestentity "ctf-platform/internal/module/contest/entity"
 	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
-	"ctf-platform/pkg/crypto"
+	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
 const (

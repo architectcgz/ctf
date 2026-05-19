@@ -7,8 +7,8 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
-	flagcrypto "ctf-platform/pkg/crypto"
 	"errors"
 	"testing"
 )

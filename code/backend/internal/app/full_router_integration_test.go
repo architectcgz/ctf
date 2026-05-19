@@ -41,8 +41,8 @@ import (
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
-	flagcrypto "ctf-platform/pkg/crypto"
 )
 
 type fullRouterTestEnv struct {

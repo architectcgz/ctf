@@ -14,7 +14,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/infrastructure/postgres"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
-	"ctf-platform/pkg/crypto"
+	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
 type seedImageSpec struct {
