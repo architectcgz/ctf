@@ -6,9 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -51,7 +49,13 @@ func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*challen
 	if err != nil {
 		return nil, err
 	}
-	return domain.ChallengeRespFromModel(toChallengeModel(challenge), hints), nil
+
+	resp := challengeQueryResponseMapperInst.ToChallengeRespBasePtr(challenge)
+	if resp == nil {
+		return nil, nil
+	}
+	resp.Hints = challengeQueryResponseMapperInst.ToChallengeHintAdminRespsPtr(hints)
+	return resp, nil
 }
 
 func (s *ChallengeService) ListChallenges(ctx context.Context, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeResp], error) {
@@ -63,7 +67,7 @@ func (s *ChallengeService) ListChallenges(ctx context.Context, query *challengec
 
 	list := make([]*challengecontracts.ChallengeResp, len(challenges))
 	for i, challenge := range challenges {
-		list[i] = domain.ChallengeRespFromModel(toChallengeModel(challenge), nil)
+		list[i] = challengeQueryResponseMapperInst.ToChallengeRespBasePtr(challenge)
 	}
 
 	page := query.Page
@@ -123,7 +127,7 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 
 	list := make([]*challengecontracts.ChallengeListItem, 0, len(challenges))
 	for _, challenge := range challenges {
-		item := challengeQueryResponseMapperInst.ToChallengeListItemBasePtr(toChallengeModel(challenge))
+		item := challengeQueryResponseMapperInst.ToChallengeListItemBasePtr(challenge)
 		item.IsSolved = solvedMap[challenge.ID]
 		item.SolvedCount = solvedCountMap[challenge.ID]
 		item.TotalAttempts = attemptsMap[challenge.ID]
@@ -146,9 +150,8 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 		}
 		return nil, err
 	}
-	challengeModel := toChallengeModel(challenge)
-	if challengeModel.Status != model.ChallengeStatusPublished {
-		return nil, buildChallengeAccessUnavailableError(challengeModel.Status)
+	if challenge.Status != challengecontracts.ChallengeStatusPublished {
+		return nil, buildChallengeAccessUnavailableError(challenge.Status)
 	}
 
 	var isSolved bool
@@ -176,8 +179,8 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 		return nil, err
 	}
 
-	resp := challengeQueryResponseMapperInst.ToChallengeDetailRespBasePtr(challengeModel)
-	resp.NeedTarget = challengeModel.ImageID > 0
+	resp := challengeQueryResponseMapperInst.ToChallengeDetailRespBasePtr(challenge)
+	resp.NeedTarget = challenge.ImageID > 0
 	resp.Hints = challengeQueryResponseMapperInst.ToChallengeHintRespsPtr(hints)
 	resp.SolvedCount = solvedCount
 	resp.TotalAttempts = attempts
@@ -201,15 +204,15 @@ func normalizeChallengeQuery(query *challengecontracts.ChallengeQuery) *challeng
 	}
 }
 
-func buildChallengeAccessUnavailableError(status model.ChallengeStatus) error {
+func buildChallengeAccessUnavailableError(status string) error {
 	switch status {
-	case model.ChallengeStatusDraft:
+	case challengecontracts.ChallengeStatusDraft:
 		return errcode.New(
 			errcode.ErrChallengeNotPublish.Code,
 			"题目为草稿，无法访问",
 			errcode.ErrChallengeNotPublish.HTTPStatus,
 		)
-	case model.ChallengeStatusArchived:
+	case challengecontracts.ChallengeStatusArchived:
 		return errcode.New(
 			errcode.ErrChallengeNotPublish.Code,
 			"题目已归档，无法访问",
@@ -242,28 +245,4 @@ func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID
 		_ = s.solvedCountCache.StoreSolvedCount(ctx, challengeID, count, s.config.SolvedCountCacheTTL)
 	}
 	return count, nil
-}
-
-func toChallengeModel(source *challengeports.ChallengeReadModel) *model.Challenge {
-	if source == nil {
-		return nil
-	}
-	return &model.Challenge{
-		ID:              source.ID,
-		PackageSlug:     source.PackageSlug,
-		Title:           source.Title,
-		Description:     source.Description,
-		Category:        source.Category,
-		Difficulty:      source.Difficulty,
-		Points:          source.Points,
-		ImageID:         source.ImageID,
-		AttachmentURL:   source.AttachmentURL,
-		Status:          model.ChallengeStatus(source.Status),
-		FlagType:        source.FlagType,
-		FlagPrefix:      source.FlagPrefix,
-		InstanceSharing: model.InstanceSharing(source.InstanceSharing),
-		CreatedBy:       source.CreatedBy,
-		CreatedAt:       source.CreatedAt,
-		UpdatedAt:       source.UpdatedAt,
-	}
 }

@@ -11,7 +11,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -61,7 +60,7 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int6
 		}
 	}
 
-	challenge := &model.Challenge{
+	challenge := &challengeports.ChallengeWriteModel{
 		Title:           req.Title,
 		Description:     req.Description,
 		Category:        req.Category,
@@ -70,7 +69,7 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int6
 		ImageID:         req.ImageID,
 		AttachmentURL:   strings.TrimSpace(req.AttachmentURL),
 		InstanceSharing: normalizeInstanceSharing(req.InstanceSharing),
-		Status:          model.ChallengeStatusDraft,
+		Status:          challengecontracts.ChallengeStatusDraft,
 		CreatedBy:       &actorUserID,
 	}
 
@@ -81,12 +80,10 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int6
 	if err := s.validateInstanceSharingConfig(ctx, challenge); err != nil {
 		return nil, err
 	}
-	writeModel := challengeWriteModelFromModel(challenge)
-	if err := s.repo.CreateWithHints(ctx, writeModel, hints); err != nil {
+	if err := s.repo.CreateWithHints(ctx, challenge, hints); err != nil {
 		return nil, err
 	}
-	challenge = challengeWriteModelToModel(writeModel)
-	return domain.ChallengeRespFromModel(challenge, hints), nil
+	return domain.ChallengeRespFromWriteModel(challenge, hints), nil
 }
 
 func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req UpdateChallengeInput) error {
@@ -97,7 +94,7 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req Up
 		}
 		return err
 	}
-	challenge := challengeWriteModelToModel(challengeWriteModel)
+	challenge := challengeWriteModel
 
 	if req.Title != "" {
 		challenge.Title = req.Title
@@ -141,75 +138,17 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req Up
 		return err
 	}
 
-	return s.repo.UpdateWithHints(ctx, challengeWriteModelFromModel(challenge), hints, replaceHints)
+	return s.repo.UpdateWithHints(ctx, challenge, hints, replaceHints)
 }
 
-func normalizeInstanceSharing(value string) model.InstanceSharing {
-	switch model.InstanceSharing(strings.TrimSpace(value)) {
-	case model.InstanceSharingPerTeam:
-		return model.InstanceSharingPerTeam
-	case model.InstanceSharingShared:
-		return model.InstanceSharingShared
+func normalizeInstanceSharing(value string) string {
+	switch strings.TrimSpace(value) {
+	case challengecontracts.InstanceSharingPerTeam:
+		return challengecontracts.InstanceSharingPerTeam
+	case challengecontracts.InstanceSharingShared:
+		return challengecontracts.InstanceSharingShared
 	default:
-		return model.InstanceSharingPerUser
-	}
-}
-
-func challengeWriteModelFromModel(source *model.Challenge) *challengeports.ChallengeWriteModel {
-	if source == nil {
-		return nil
-	}
-	return &challengeports.ChallengeWriteModel{
-		ID:              source.ID,
-		PackageSlug:     source.PackageSlug,
-		Title:           source.Title,
-		Description:     source.Description,
-		Category:        source.Category,
-		Difficulty:      source.Difficulty,
-		Points:          source.Points,
-		ImageID:         source.ImageID,
-		AttachmentURL:   source.AttachmentURL,
-		Status:          string(source.Status),
-		FlagType:        source.FlagType,
-		FlagHash:        source.FlagHash,
-		FlagSalt:        source.FlagSalt,
-		FlagRegex:       source.FlagRegex,
-		FlagPrefix:      source.FlagPrefix,
-		InstanceSharing: string(source.InstanceSharing),
-		TargetProtocol:  source.TargetProtocol,
-		TargetPort:      source.TargetPort,
-		CreatedBy:       source.CreatedBy,
-		CreatedAt:       source.CreatedAt,
-		UpdatedAt:       source.UpdatedAt,
-	}
-}
-
-func challengeWriteModelToModel(source *challengeports.ChallengeWriteModel) *model.Challenge {
-	if source == nil {
-		return nil
-	}
-	return &model.Challenge{
-		ID:              source.ID,
-		PackageSlug:     source.PackageSlug,
-		Title:           source.Title,
-		Description:     source.Description,
-		Category:        source.Category,
-		Difficulty:      source.Difficulty,
-		Points:          source.Points,
-		ImageID:         source.ImageID,
-		AttachmentURL:   source.AttachmentURL,
-		Status:          model.ChallengeStatus(source.Status),
-		FlagType:        source.FlagType,
-		FlagHash:        source.FlagHash,
-		FlagSalt:        source.FlagSalt,
-		FlagRegex:       source.FlagRegex,
-		FlagPrefix:      source.FlagPrefix,
-		InstanceSharing: model.InstanceSharing(source.InstanceSharing),
-		TargetProtocol:  source.TargetProtocol,
-		TargetPort:      source.TargetPort,
-		CreatedBy:       source.CreatedBy,
-		CreatedAt:       source.CreatedAt,
-		UpdatedAt:       source.UpdatedAt,
+		return challengecontracts.InstanceSharingPerUser
 	}
 }
 
@@ -228,11 +167,11 @@ func toChallengeHintReqs(hints []ChallengeHintInput) []challengecontracts.Challe
 	return resp
 }
 
-func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, challenge *model.Challenge) error {
-	if challenge == nil || challenge.InstanceSharing != model.InstanceSharingShared {
+func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, challenge *challengeports.ChallengeWriteModel) error {
+	if challenge == nil || challenge.InstanceSharing != challengecontracts.InstanceSharingShared {
 		return nil
 	}
-	if challenge.FlagType == model.FlagTypeDynamic {
+	if challenge.FlagType == challengecontracts.FlagTypeDynamic {
 		return errcode.ErrInvalidParams.WithCause(errors.New("共享实例只适用于无状态题，不支持动态 Flag"))
 	}
 	if s.topologyRepo == nil || challenge.ID <= 0 {
@@ -286,10 +225,8 @@ func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error
 		}
 		return err
 	}
-	challenge := challengeWriteModelToModel(challengeWriteModel)
-
-	challenge.Status = model.ChallengeStatusPublished
-	return s.repo.Update(ctx, challengeWriteModelFromModel(challenge))
+	challengeWriteModel.Status = challengecontracts.ChallengeStatusPublished
+	return s.repo.Update(ctx, challengeWriteModel)
 }
 
 func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error) {
@@ -300,8 +237,8 @@ func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID,
 		}
 		return nil, err
 	}
-	challenge := challengeWriteModelToModel(challengeWriteModel)
-	if challenge.Status == model.ChallengeStatusPublished {
+	challenge := challengeWriteModel
+	if challenge.Status == challengecontracts.ChallengeStatusPublished {
 		return nil, errcode.ErrConflict.WithCause(errors.New("题目已发布，无需重复提交发布检查"))
 	}
 
@@ -337,7 +274,7 @@ func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) 
 	if err != nil {
 		return nil, err
 	}
-	challenge := challengeWriteModelToModel(challengeWriteModel)
+	challenge := challengeWriteModel
 	job, err := s.repo.FindLatestPublishCheckJobByChallengeID(ctx, id)
 	if errors.Is(err, challengeports.ErrChallengePublishCheckJobNotFound) {
 		return nil, errcode.ErrNotFound
@@ -396,13 +333,13 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 	}
 	challengeWriteModel, err := s.repo.FindByID(ctx, job.ChallengeID)
 	if err != nil {
-		s.finishPublishCheckJob(ctx, job, nil, false, fmt.Sprintf("读取题目失败: %v", err), &model.Challenge{
+		s.finishPublishCheckJob(ctx, job, nil, false, fmt.Sprintf("读取题目失败: %v", err), &challengeports.ChallengeWriteModel{
 			ID:    job.ChallengeID,
 			Title: fmt.Sprintf("题目 #%d", job.ChallengeID),
 		})
 		return
 	}
-	challenge := challengeWriteModelToModel(challengeWriteModel)
+	challenge := challengeWriteModel
 
 	resp, err := s.SelfCheckChallenge(ctx, challenge.ID)
 	if err != nil {
@@ -437,7 +374,7 @@ func (s *ChallengeService) loadPublishCheckJob(ctx context.Context, id int64) (*
 	return s.repo.FindPublishCheckJobByID(ctx, id)
 }
 
-func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob, result *challengecontracts.ChallengeSelfCheckResp, passed bool, failureSummary string, challenge *model.Challenge) {
+func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob, result *challengecontracts.ChallengeSelfCheckResp, passed bool, failureSummary string, challenge *challengeports.ChallengeWriteModel) {
 	if job == nil {
 		return
 	}
@@ -544,7 +481,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*c
 		}
 		return nil, err
 	}
-	challenge := challengeWriteModelToModel(challengeWriteModel)
+	challenge := challengeWriteModel
 
 	resp := &challengecontracts.ChallengeSelfCheckResp{
 		ChallengeID: challenge.ID,
@@ -689,7 +626,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*c
 	return resp, nil
 }
 
-func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Challenge, steps *[]challengecontracts.ChallengeSelfCheckStepResp) (challengeSelfCheckRuntimeInput, bool, error) {
+func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *challengeports.ChallengeWriteModel, steps *[]challengecontracts.ChallengeSelfCheckStepResp) (challengeSelfCheckRuntimeInput, bool, error) {
 	input := challengeSelfCheckRuntimeInput{
 		nodeImageRefs: make(map[int64]string),
 	}
@@ -855,35 +792,35 @@ func (s *ChallengeService) runPrecheck(ctx context.Context, challenge *model.Cha
 	return input, passed, nil
 }
 
-func (s *ChallengeService) validateFlagConfig(challenge *model.Challenge) (bool, string) {
+func (s *ChallengeService) validateFlagConfig(challenge *challengeports.ChallengeWriteModel) (bool, string) {
 	switch challenge.FlagType {
-	case model.FlagTypeStatic:
+	case challengecontracts.FlagTypeStatic:
 		if challenge.FlagHash == "" || challenge.FlagSalt == "" {
 			return false, "静态 Flag 未正确配置（缺少 hash/salt）"
 		}
 		return true, "静态 Flag 配置有效"
-	case model.FlagTypeDynamic:
+	case challengecontracts.FlagTypeDynamic:
 		if strings.TrimSpace(s.selfCheckCfg.FlagGlobalSecret) == "" {
 			return false, "动态 Flag 依赖的全局密钥未配置"
 		}
 		return true, "动态 Flag 配置有效"
-	case model.FlagTypeRegex:
+	case challengecontracts.FlagTypeRegex:
 		if _, err := regexp.Compile(strings.TrimSpace(challenge.FlagRegex)); err != nil {
 			return false, fmt.Sprintf("Regex Flag 配置无效: %v", err)
 		}
 		return true, "Regex Flag 配置有效"
-	case model.FlagTypeManualReview:
+	case challengecontracts.FlagTypeManualReview:
 		return true, "人工审核题已跳过 Flag 自动校验"
 	default:
 		return false, "Flag 类型无效"
 	}
 }
 
-func (s *ChallengeService) buildRuntimeFlag(challenge *model.Challenge) (string, error) {
+func (s *ChallengeService) buildRuntimeFlag(challenge *challengeports.ChallengeWriteModel) (string, error) {
 	switch challenge.FlagType {
-	case model.FlagTypeStatic:
+	case challengecontracts.FlagTypeStatic:
 		return challenge.FlagHash, nil
-	case model.FlagTypeDynamic:
+	case challengecontracts.FlagTypeDynamic:
 		nonce, err := crypto.GenerateNonce()
 		if err != nil {
 			return "", err
@@ -892,7 +829,7 @@ func (s *ChallengeService) buildRuntimeFlag(challenge *model.Challenge) (string,
 			return "", fmt.Errorf("flag global secret is empty")
 		}
 		return crypto.GenerateDynamicFlag(0, challenge.ID, s.selfCheckCfg.FlagGlobalSecret, nonce, challenge.FlagPrefix), nil
-	case model.FlagTypeRegex, model.FlagTypeManualReview:
+	case challengecontracts.FlagTypeRegex, challengecontracts.FlagTypeManualReview:
 		return "", nil
 	default:
 		return "", fmt.Errorf("unsupported flag type %s", challenge.FlagType)

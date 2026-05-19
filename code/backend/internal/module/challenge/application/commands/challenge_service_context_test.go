@@ -29,6 +29,64 @@ type challengeCommandContextRepoStub struct {
 	updatePublishCheckJobFn         func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
 }
 
+func challengeWriteModelFromModel(source *model.Challenge) *challengeports.ChallengeWriteModel {
+	if source == nil {
+		return nil
+	}
+	return &challengeports.ChallengeWriteModel{
+		ID:              source.ID,
+		PackageSlug:     source.PackageSlug,
+		Title:           source.Title,
+		Description:     source.Description,
+		Category:        source.Category,
+		Difficulty:      source.Difficulty,
+		Points:          source.Points,
+		ImageID:         source.ImageID,
+		AttachmentURL:   source.AttachmentURL,
+		Status:          string(source.Status),
+		FlagType:        source.FlagType,
+		FlagHash:        source.FlagHash,
+		FlagSalt:        source.FlagSalt,
+		FlagRegex:       source.FlagRegex,
+		FlagPrefix:      source.FlagPrefix,
+		InstanceSharing: string(source.InstanceSharing),
+		TargetProtocol:  source.TargetProtocol,
+		TargetPort:      source.TargetPort,
+		CreatedBy:       source.CreatedBy,
+		CreatedAt:       source.CreatedAt,
+		UpdatedAt:       source.UpdatedAt,
+	}
+}
+
+func challengeWriteModelToModel(source *challengeports.ChallengeWriteModel) *model.Challenge {
+	if source == nil {
+		return nil
+	}
+	return &model.Challenge{
+		ID:              source.ID,
+		PackageSlug:     source.PackageSlug,
+		Title:           source.Title,
+		Description:     source.Description,
+		Category:        source.Category,
+		Difficulty:      source.Difficulty,
+		Points:          source.Points,
+		ImageID:         source.ImageID,
+		AttachmentURL:   source.AttachmentURL,
+		Status:          model.ChallengeStatus(source.Status),
+		FlagType:        source.FlagType,
+		FlagHash:        source.FlagHash,
+		FlagSalt:        source.FlagSalt,
+		FlagRegex:       source.FlagRegex,
+		FlagPrefix:      source.FlagPrefix,
+		InstanceSharing: model.InstanceSharing(source.InstanceSharing),
+		TargetProtocol:  source.TargetProtocol,
+		TargetPort:      source.TargetPort,
+		CreatedBy:       source.CreatedBy,
+		CreatedAt:       source.CreatedAt,
+		UpdatedAt:       source.UpdatedAt,
+	}
+}
+
 func (s *challengeCommandContextRepoStub) CreateWithHints(ctx context.Context, challenge *challengeports.ChallengeWriteModel, hints []*challengeentity.ChallengeHint) error {
 	if s.createWithHintsFn != nil {
 		return s.createWithHintsFn(ctx, challengeWriteModelToModel(challenge), hints)

@@ -4,14 +4,14 @@
 package queries
 
 import (
-	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/challenge/contracts"
 	entity "ctf-platform/internal/module/challenge/entity"
+	ports "ctf-platform/internal/module/challenge/ports"
 )
 
 type challengeQueryResponseMapperImpl struct{}
 
-func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBase(source model.Challenge) contracts.ChallengeDetailResp {
+func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBase(source ports.ChallengeReadModel) contracts.ChallengeDetailResp {
 	var contractsChallengeDetailResp contracts.ChallengeDetailResp
 	contractsChallengeDetailResp.ID = source.ID
 	contractsChallengeDetailResp.Title = source.Title
@@ -20,18 +20,44 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBase(source mode
 	contractsChallengeDetailResp.Difficulty = source.Difficulty
 	contractsChallengeDetailResp.Points = source.Points
 	contractsChallengeDetailResp.FlagType = source.FlagType
-	contractsChallengeDetailResp.InstanceSharing = string(source.InstanceSharing)
+	contractsChallengeDetailResp.InstanceSharing = source.InstanceSharing
 	contractsChallengeDetailResp.AttachmentURL = source.AttachmentURL
 	contractsChallengeDetailResp.CreatedAt = CopyTime(source.CreatedAt)
 	return contractsChallengeDetailResp
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBasePtr(source *model.Challenge) *contracts.ChallengeDetailResp {
+func (c *challengeQueryResponseMapperImpl) ToChallengeDetailRespBasePtr(source *ports.ChallengeReadModel) *contracts.ChallengeDetailResp {
 	var pContractsChallengeDetailResp *contracts.ChallengeDetailResp
 	if source != nil {
 		contractsChallengeDetailResp := c.ToChallengeDetailRespBase((*source))
 		pContractsChallengeDetailResp = &contractsChallengeDetailResp
 	}
 	return pContractsChallengeDetailResp
+}
+func (c *challengeQueryResponseMapperImpl) ToChallengeHintAdminResp(source entity.ChallengeHint) contracts.ChallengeHintAdminResp {
+	var contractsChallengeHintAdminResp contracts.ChallengeHintAdminResp
+	contractsChallengeHintAdminResp.ID = source.ID
+	contractsChallengeHintAdminResp.Level = source.Level
+	contractsChallengeHintAdminResp.Title = source.Title
+	contractsChallengeHintAdminResp.Content = source.Content
+	return contractsChallengeHintAdminResp
+}
+func (c *challengeQueryResponseMapperImpl) ToChallengeHintAdminRespPtr(source *entity.ChallengeHint) *contracts.ChallengeHintAdminResp {
+	var pContractsChallengeHintAdminResp *contracts.ChallengeHintAdminResp
+	if source != nil {
+		contractsChallengeHintAdminResp := c.ToChallengeHintAdminResp((*source))
+		pContractsChallengeHintAdminResp = &contractsChallengeHintAdminResp
+	}
+	return pContractsChallengeHintAdminResp
+}
+func (c *challengeQueryResponseMapperImpl) ToChallengeHintAdminRespsPtr(source []*entity.ChallengeHint) []*contracts.ChallengeHintAdminResp {
+	var pContractsChallengeHintAdminRespList []*contracts.ChallengeHintAdminResp
+	if source != nil {
+		pContractsChallengeHintAdminRespList = make([]*contracts.ChallengeHintAdminResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pContractsChallengeHintAdminRespList[i] = c.ToChallengeHintAdminRespPtr(source[i])
+		}
+	}
+	return pContractsChallengeHintAdminRespList
 }
 func (c *challengeQueryResponseMapperImpl) ToChallengeHintResp(source entity.ChallengeHint) contracts.ChallengeHintResp {
 	var contractsChallengeHintResp contracts.ChallengeHintResp
@@ -59,7 +85,7 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeHintRespsPtr(source []*ent
 	}
 	return pContractsChallengeHintRespList
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBase(source model.Challenge) contracts.ChallengeListItem {
+func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBase(source ports.ChallengeReadModel) contracts.ChallengeListItem {
 	var contractsChallengeListItem contracts.ChallengeListItem
 	contractsChallengeListItem.ID = source.ID
 	contractsChallengeListItem.Title = source.Title
@@ -69,13 +95,41 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBase(source model.
 	contractsChallengeListItem.CreatedAt = CopyTime(source.CreatedAt)
 	return contractsChallengeListItem
 }
-func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBasePtr(source *model.Challenge) *contracts.ChallengeListItem {
+func (c *challengeQueryResponseMapperImpl) ToChallengeListItemBasePtr(source *ports.ChallengeReadModel) *contracts.ChallengeListItem {
 	var pContractsChallengeListItem *contracts.ChallengeListItem
 	if source != nil {
 		contractsChallengeListItem := c.ToChallengeListItemBase((*source))
 		pContractsChallengeListItem = &contractsChallengeListItem
 	}
 	return pContractsChallengeListItem
+}
+func (c *challengeQueryResponseMapperImpl) ToChallengeRespBase(source ports.ChallengeReadModel) contracts.ChallengeResp {
+	var contractsChallengeResp contracts.ChallengeResp
+	contractsChallengeResp.ID = source.ID
+	contractsChallengeResp.Title = source.Title
+	contractsChallengeResp.Description = source.Description
+	contractsChallengeResp.Category = source.Category
+	contractsChallengeResp.Difficulty = source.Difficulty
+	contractsChallengeResp.Points = source.Points
+	contractsChallengeResp.ImageID = source.ImageID
+	contractsChallengeResp.AttachmentURL = source.AttachmentURL
+	contractsChallengeResp.InstanceSharing = source.InstanceSharing
+	contractsChallengeResp.Status = source.Status
+	if source.CreatedBy != nil {
+		xint64 := *source.CreatedBy
+		contractsChallengeResp.CreatedBy = &xint64
+	}
+	contractsChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
+	contractsChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
+	return contractsChallengeResp
+}
+func (c *challengeQueryResponseMapperImpl) ToChallengeRespBasePtr(source *ports.ChallengeReadModel) *contracts.ChallengeResp {
+	var pContractsChallengeResp *contracts.ChallengeResp
+	if source != nil {
+		contractsChallengeResp := c.ToChallengeRespBase((*source))
+		pContractsChallengeResp = &contractsChallengeResp
+	}
+	return pContractsChallengeResp
 }
 func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBase(source entity.ChallengeWriteup) contracts.ChallengeWriteupResp {
 	var contractsChallengeWriteupResp contracts.ChallengeWriteupResp
@@ -101,19 +155,4 @@ func (c *challengeQueryResponseMapperImpl) ToChallengeWriteupRespBasePtr(source 
 		pContractsChallengeWriteupResp = &contractsChallengeWriteupResp
 	}
 	return pContractsChallengeWriteupResp
-}
-func (c *challengeQueryResponseMapperImpl) ToFlagRespBase(source model.Challenge) contracts.FlagResp {
-	var contractsFlagResp contracts.FlagResp
-	contractsFlagResp.FlagType = source.FlagType
-	contractsFlagResp.FlagRegex = source.FlagRegex
-	contractsFlagResp.FlagPrefix = source.FlagPrefix
-	return contractsFlagResp
-}
-func (c *challengeQueryResponseMapperImpl) ToFlagRespBasePtr(source *model.Challenge) *contracts.FlagResp {
-	var pContractsFlagResp *contracts.FlagResp
-	if source != nil {
-		contractsFlagResp := c.ToFlagRespBase((*source))
-		pContractsFlagResp = &contractsFlagResp
-	}
-	return pContractsFlagResp
 }

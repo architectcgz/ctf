@@ -19,7 +19,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -389,7 +388,7 @@ func (s *ChallengeService) CommitChallengeImport(
 	}
 
 	_ = os.RemoveAll(filepath.Join(challengeImportPreviewRoot(), id))
-	return domain.ChallengeRespFromModel(toImportedChallengeResponseModel(challenge), nil), nil
+	return domain.ChallengeRespFromWriteModel(toImportedChallengeResponseWriteModel(challenge), nil), nil
 }
 
 func (s *ChallengeService) buildChallengeImportPreview(
@@ -868,13 +867,13 @@ func buildImportedFlagUpdates(
 	updatedAt time.Time,
 ) (map[string]any, error) {
 	switch flagType {
-	case model.FlagTypeStatic:
+	case challengecontracts.FlagTypeStatic:
 		return buildImportedStaticFlagUpdates(prefix, value, updatedAt)
-	case model.FlagTypeDynamic:
+	case challengecontracts.FlagTypeDynamic:
 		return buildImportedDynamicFlagUpdates(prefix, updatedAt), nil
-	case model.FlagTypeRegex:
+	case challengecontracts.FlagTypeRegex:
 		return buildImportedRegexFlagUpdates(prefix, value, updatedAt)
-	case model.FlagTypeManualReview:
+	case challengecontracts.FlagTypeManualReview:
 		return buildImportedManualReviewFlagUpdates(prefix, updatedAt), nil
 	default:
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("不支持的 flag 类型"))
@@ -887,7 +886,7 @@ func buildImportedStaticFlagUpdates(prefix string, value string, updatedAt time.
 		return nil, fmt.Errorf("generate salt for imported challenge: %w", err)
 	}
 	return map[string]any{
-		"flag_type":   model.FlagTypeStatic,
+		"flag_type":   challengecontracts.FlagTypeStatic,
 		"flag_salt":   salt,
 		"flag_hash":   crypto.HashStaticFlag(value, salt),
 		"flag_regex":  "",
@@ -898,7 +897,7 @@ func buildImportedStaticFlagUpdates(prefix string, value string, updatedAt time.
 
 func buildImportedDynamicFlagUpdates(prefix string, updatedAt time.Time) map[string]any {
 	return map[string]any{
-		"flag_type":   model.FlagTypeDynamic,
+		"flag_type":   challengecontracts.FlagTypeDynamic,
 		"flag_salt":   "",
 		"flag_hash":   "",
 		"flag_regex":  "",
@@ -913,7 +912,7 @@ func buildImportedRegexFlagUpdates(prefix string, value string, updatedAt time.T
 		return nil, errcode.ErrInvalidParams.WithCause(fmt.Errorf("regex flag 无效: %w", err))
 	}
 	return map[string]any{
-		"flag_type":   model.FlagTypeRegex,
+		"flag_type":   challengecontracts.FlagTypeRegex,
 		"flag_salt":   "",
 		"flag_hash":   "",
 		"flag_regex":  compiled.String(),
@@ -924,7 +923,7 @@ func buildImportedRegexFlagUpdates(prefix string, value string, updatedAt time.T
 
 func buildImportedManualReviewFlagUpdates(prefix string, updatedAt time.Time) map[string]any {
 	return map[string]any{
-		"flag_type":   model.FlagTypeManualReview,
+		"flag_type":   challengecontracts.FlagTypeManualReview,
 		"flag_salt":   "",
 		"flag_hash":   "",
 		"flag_regex":  "",
@@ -956,11 +955,11 @@ func buildImportedChallengeHints(
 	return records
 }
 
-func toImportedChallengeResponseModel(source *challengeports.ImportedChallenge) *model.Challenge {
+func toImportedChallengeResponseWriteModel(source *challengeports.ImportedChallenge) *challengeports.ChallengeWriteModel {
 	if source == nil {
 		return nil
 	}
-	return &model.Challenge{
+	return &challengeports.ChallengeWriteModel{
 		ID:             source.ID,
 		PackageSlug:    source.PackageSlug,
 		Title:          source.Title,
@@ -970,7 +969,7 @@ func toImportedChallengeResponseModel(source *challengeports.ImportedChallenge) 
 		Points:         source.Points,
 		ImageID:        source.ImageID,
 		AttachmentURL:  source.AttachmentURL,
-		Status:         model.ChallengeStatus(source.Status),
+		Status:         source.Status,
 		FlagPrefix:     source.FlagPrefix,
 		TargetProtocol: source.TargetProtocol,
 		TargetPort:     source.TargetPort,

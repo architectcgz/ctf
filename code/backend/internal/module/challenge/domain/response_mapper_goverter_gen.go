@@ -4,7 +4,6 @@
 package domain
 
 import (
-	model "ctf-platform/internal/model"
 	contracts "ctf-platform/internal/module/challenge/contracts"
 	entity "ctf-platform/internal/module/challenge/entity"
 	ports "ctf-platform/internal/module/challenge/ports"
@@ -168,7 +167,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengePackageRevisionRespPtr(source *
 	}
 	return pContractsChallengePackageRevisionResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeRespBase(source model.Challenge) contracts.ChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeRespBase(source ports.ChallengeWriteModel) contracts.ChallengeResp {
 	var contractsChallengeResp contracts.ChallengeResp
 	contractsChallengeResp.ID = source.ID
 	contractsChallengeResp.Title = source.Title
@@ -178,8 +177,8 @@ func (c *ChallengeResponseMapperImpl) ToChallengeRespBase(source model.Challenge
 	contractsChallengeResp.Points = source.Points
 	contractsChallengeResp.ImageID = source.ImageID
 	contractsChallengeResp.AttachmentURL = source.AttachmentURL
-	contractsChallengeResp.InstanceSharing = string(source.InstanceSharing)
-	contractsChallengeResp.Status = string(source.Status)
+	contractsChallengeResp.InstanceSharing = source.InstanceSharing
+	contractsChallengeResp.Status = source.Status
 	if source.CreatedBy != nil {
 		xint64 := *source.CreatedBy
 		contractsChallengeResp.CreatedBy = &xint64
@@ -188,7 +187,7 @@ func (c *ChallengeResponseMapperImpl) ToChallengeRespBase(source model.Challenge
 	contractsChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)
 	return contractsChallengeResp
 }
-func (c *ChallengeResponseMapperImpl) ToChallengeRespBasePtr(source *model.Challenge) *contracts.ChallengeResp {
+func (c *ChallengeResponseMapperImpl) ToChallengeRespBasePtr(source *ports.ChallengeWriteModel) *contracts.ChallengeResp {
 	var pContractsChallengeResp *contracts.ChallengeResp
 	if source != nil {
 		contractsChallengeResp := c.ToChallengeRespBase((*source))

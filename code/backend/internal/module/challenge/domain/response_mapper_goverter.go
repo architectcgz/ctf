@@ -3,7 +3,6 @@ package domain
 import (
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -19,8 +18,8 @@ import (
 // goverter:output:package :domain
 type ChallengeResponseMapper interface {
 	// goverter:ignore Hints
-	ToChallengeRespBase(source model.Challenge) challengecontracts.ChallengeResp
-	ToChallengeRespBasePtr(source *model.Challenge) *challengecontracts.ChallengeResp
+	ToChallengeRespBase(source challengeports.ChallengeWriteModel) challengecontracts.ChallengeResp
+	ToChallengeRespBasePtr(source *challengeports.ChallengeWriteModel) *challengecontracts.ChallengeResp
 
 	// goverter:ignore Networks
 	// goverter:ignore Nodes

@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -44,7 +43,7 @@ func NormalizeHintModels(reqHints []challengecontracts.ChallengeHintReq) ([]*cha
 	return hints, nil
 }
 
-func ChallengeRespFromModel(challenge *model.Challenge, hints []*challengeentity.ChallengeHint) *challengecontracts.ChallengeResp {
+func ChallengeRespFromWriteModel(challenge *challengeports.ChallengeWriteModel, hints []*challengeentity.ChallengeHint) *challengecontracts.ChallengeResp {
 	resp := challengeResponseMapperInst.ToChallengeRespBasePtr(challenge)
 	if resp == nil {
 		return nil
