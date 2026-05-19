@@ -21,7 +21,6 @@ import (
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -33,6 +32,7 @@ import (
 	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
+	"ctf-platform/internal/shared/taxonomy"
 )
 
 const (
@@ -570,9 +570,9 @@ func buildCoverageStudentScenarios(catalog *challengeCatalog) []studentScenario 
 		return nil
 	}
 
-	scenarios := make([]studentScenario, 0, len(challengecontracts.AllDimensions)*2)
+	scenarios := make([]studentScenario, 0, len(taxonomy.AllDimensions)*2)
 	seedIndex := 0
-	for dimIndex, dimension := range challengecontracts.AllDimensions {
+	for dimIndex, dimension := range taxonomy.AllDimensions {
 		items := catalog.byCategory[dimension]
 		studentsPerCategory := coverageStudentsPerCategory(len(items))
 		if studentsPerCategory == 0 {
@@ -617,7 +617,7 @@ func buildCoverageStudentScenario(
 	variant int,
 	catalog *challengeCatalog,
 ) studentScenario {
-	weakDimension := challengecontracts.AllDimensions[dimensionIndex%len(challengecontracts.AllDimensions)]
+	weakDimension := taxonomy.AllDimensions[dimensionIndex%len(taxonomy.AllDimensions)]
 	strongDimension := nextCoverageDimension(catalog, dimensionIndex+1, weakDimension)
 	steadyDimension := nextCoverageDimension(catalog, dimensionIndex+2, weakDimension, strongDimension)
 	studentSerial := dimensionIndex*coverageMaxStudentsPerCategory + variant + 1
@@ -680,7 +680,7 @@ func buildCoverageStudentScenario(
 }
 
 func nextCoverageDimension(catalog *challengeCatalog, startIndex int, exclude ...string) string {
-	if catalog == nil || len(challengecontracts.AllDimensions) == 0 {
+	if catalog == nil || len(taxonomy.AllDimensions) == 0 {
 		return ""
 	}
 
@@ -692,8 +692,8 @@ func nextCoverageDimension(catalog *challengeCatalog, startIndex int, exclude ..
 		excluded[dimension] = struct{}{}
 	}
 
-	for offset := 0; offset < len(challengecontracts.AllDimensions); offset++ {
-		dimension := challengecontracts.AllDimensions[(startIndex+offset)%len(challengecontracts.AllDimensions)]
+	for offset := 0; offset < len(taxonomy.AllDimensions); offset++ {
+		dimension := taxonomy.AllDimensions[(startIndex+offset)%len(taxonomy.AllDimensions)]
 		if _, skip := excluded[dimension]; skip {
 			continue
 		}
@@ -736,8 +736,8 @@ func buildCoverageProfiles(
 	steadyDimension string,
 	variant int,
 ) map[string]float64 {
-	profiles := make(map[string]float64, len(challengecontracts.AllDimensions))
-	for index, dimension := range challengecontracts.AllDimensions {
+	profiles := make(map[string]float64, len(taxonomy.AllDimensions))
+	for index, dimension := range taxonomy.AllDimensions {
 		profiles[dimension] = 0.48 + float64((index+variant)%3)*0.04
 	}
 	profiles[weakDimension] = 0.18 + float64(variant%3)*0.06
@@ -1892,15 +1892,15 @@ func buildSeedCoverageSummary(
 	results []seededStudentResult,
 ) seedCoverageSummary {
 	summary := seedCoverageSummary{
-		ByCategory: make(map[string]categoryCoverage, len(challengecontracts.AllDimensions)),
+		ByCategory: make(map[string]categoryCoverage, len(taxonomy.AllDimensions)),
 	}
 	if catalog == nil {
 		return summary
 	}
 
-	usedByCategory := make(map[string]map[int64]struct{}, len(challengecontracts.AllDimensions))
+	usedByCategory := make(map[string]map[int64]struct{}, len(taxonomy.AllDimensions))
 	usedPracticeChallenges := make(map[int64]struct{})
-	for _, dimension := range challengecontracts.AllDimensions {
+	for _, dimension := range taxonomy.AllDimensions {
 		items := catalog.byCategory[dimension]
 		summary.PublishedChallenges += len(items)
 		summary.ByCategory[dimension] = categoryCoverage{Published: len(items)}
@@ -1930,7 +1930,7 @@ func buildSeedCoverageSummary(
 	}
 	summary.UniqueTopRecommendationCount = len(uniqueTopRecommendations)
 
-	for _, dimension := range challengecontracts.AllDimensions {
+	for _, dimension := range taxonomy.AllDimensions {
 		entry := summary.ByCategory[dimension]
 		entry.Used = len(usedByCategory[dimension])
 		summary.ByCategory[dimension] = entry
@@ -1981,7 +1981,7 @@ func printSeedSummary(result *seedResult) {
 		result.Coverage.UniqueTopRecommendationCount,
 	)
 	fmt.Println("分类覆盖:")
-	for _, dimension := range challengecontracts.AllDimensions {
+	for _, dimension := range taxonomy.AllDimensions {
 		coverage, ok := result.Coverage.ByCategory[dimension]
 		if !ok {
 			continue

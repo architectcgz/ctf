@@ -2,16 +2,15 @@ package commands
 
 import (
 	"context"
-	"errors"
-	"testing"
-
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	"ctf-platform/internal/shared/taxonomy"
 	flagcrypto "ctf-platform/pkg/crypto"
+	"errors"
+	"testing"
 )
 
 type fakeChallengeRuntimeProbe struct {
@@ -61,7 +60,7 @@ func TestChallengeSelfCheckSkipsRuntimeWhenPrecheckFails(t *testing.T) {
 	}
 	challenge := &challengeentity.Challenge{
 		Title:      "no-image",
-		Category:   challengecontracts.DimensionWeb,
+		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		FlagType:   challengeentity.FlagTypeStatic,
@@ -101,7 +100,7 @@ func TestChallengeSelfCheckAttachmentOnlyChallengeSkipsRuntimeStartup(t *testing
 	}
 	challenge := &challengeentity.Challenge{
 		Title:         "attachment-only",
-		Category:      challengecontracts.DimensionWeb,
+		Category:      taxonomy.DimensionWeb,
 		Difficulty:    challengeentity.ChallengeDifficultyEasy,
 		Points:        100,
 		AttachmentURL: "/api/v1/challenges/attachments/imports/web-source-audit-double-wrap-01/source.html",
@@ -155,7 +154,7 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 	}
 	challenge := &challengeentity.Challenge{
 		Title:      "single-container",
-		Category:   challengecontracts.DimensionWeb,
+		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
@@ -217,7 +216,7 @@ func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 	}
 	challenge := &challengeentity.Challenge{
 		Title:      "runtime-fail",
-		Category:   challengecontracts.DimensionWeb,
+		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
@@ -256,7 +255,7 @@ func TestChallengeSelfCheckFailsOnInvalidRegexFlag(t *testing.T) {
 
 	challenge := &challengeentity.Challenge{
 		Title:      "regex-invalid",
-		Category:   challengecontracts.DimensionWeb,
+		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		FlagType:   challengeentity.FlagTypeRegex,
@@ -296,7 +295,7 @@ func TestChallengeSelfCheckManualReviewSkipsFlagValidationFailure(t *testing.T) 
 
 	challenge := &challengeentity.Challenge{
 		Title:      "manual-review",
-		Category:   challengecontracts.DimensionWeb,
+		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,

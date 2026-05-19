@@ -1,6 +1,5 @@
-package contracts
+package taxonomy
 
-// 能力维度枚举
 const (
 	DimensionWeb       = "web"
 	DimensionPwn       = "pwn"
@@ -10,7 +9,6 @@ const (
 	DimensionForensics = "forensics"
 )
 
-// ValidDimensions 合法维度集合
 var ValidDimensions = map[string]bool{
 	DimensionWeb:       true,
 	DimensionPwn:       true,
@@ -20,7 +18,6 @@ var ValidDimensions = map[string]bool{
 	DimensionForensics: true,
 }
 
-// AllDimensions 所有维度列表
 var AllDimensions = []string{
 	DimensionWeb,
 	DimensionPwn,
@@ -30,7 +27,14 @@ var AllDimensions = []string{
 	DimensionForensics,
 }
 
-// IsValidDimension 检查维度是否合法
+const (
+	DifficultyBeginner = "beginner"
+	DifficultyEasy     = "easy"
+	DifficultyMedium   = "medium"
+	DifficultyHard     = "hard"
+	DifficultyInsane   = "insane"
+)
+
 func IsValidDimension(dimension string) bool {
 	return ValidDimensions[dimension]
 }

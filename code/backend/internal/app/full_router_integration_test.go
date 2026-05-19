@@ -41,6 +41,7 @@ import (
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	"ctf-platform/internal/shared/taxonomy"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
 
@@ -263,8 +264,8 @@ func TestFullRouter_AdminCanToggleAWDControlsAndSeeOrchestrationState(t *testing
 
 	serviceSnapshot, err := contestcontracts.EncodeContestAWDServiceSnapshot(contestcontracts.ContestAWDServiceSnapshot{
 		Name:       "AWD Web",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		RuntimeConfig: map[string]any{
 			"image_id":         env.image.ID,
 			"instance_sharing": challengecontracts.InstanceSharingPerTeam,
@@ -386,8 +387,8 @@ func TestFullRouter_TeacherCanBrowseArchivedAndDraftChallengesButOnlyManageOwnCh
 		return map[string]any{
 			"title":       title,
 			"description": "ownership test challenge",
-			"category":    challengecontracts.DimensionWeb,
-			"difficulty":  challengecontracts.ChallengeDifficultyEasy,
+			"category":    taxonomy.DimensionWeb,
+			"difficulty":  taxonomy.DifficultyEasy,
 			"points":      100,
 			"image_id":    env.image.ID,
 		}
@@ -630,8 +631,8 @@ func TestFullRouter_CreateChallengeStoresCreator(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "creator-marker",
 		"description": "creator marker challenge",
-		"category":    challengecontracts.DimensionWeb,
-		"difficulty":  challengecontracts.ChallengeDifficultyEasy,
+		"category":    taxonomy.DimensionWeb,
+		"difficulty":  taxonomy.DifficultyEasy,
 		"points":      100,
 		"image_id":    env.image.ID,
 	}, teacherHeaders)
@@ -1231,8 +1232,8 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	env.challenge = &appChallengeRow{
 		Title:         "Matrix Web Challenge",
 		Description:   "challenge for full router integration tests",
-		Category:      challengecontracts.DimensionWeb,
-		Difficulty:    challengecontracts.ChallengeDifficultyEasy,
+		Category:      taxonomy.DimensionWeb,
+		Difficulty:    taxonomy.DifficultyEasy,
 		Points:        100,
 		ImageID:       env.image.ID,
 		Status:        challengecontracts.ChallengeStatusPublished,
@@ -1466,7 +1467,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	}
 	if err := env.db.Create(&assessmententity.SkillProfile{
 		UserID:    env.student.ID,
-		Dimension: challengecontracts.DimensionWeb,
+		Dimension: taxonomy.DimensionWeb,
 		Score:     0.3,
 		UpdatedAt: now,
 	}).Error; err != nil {

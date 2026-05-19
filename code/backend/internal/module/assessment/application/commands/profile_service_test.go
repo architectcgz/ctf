@@ -21,6 +21,7 @@ import (
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -98,10 +99,10 @@ func TestCalculateSkillProfilePersistsComputedScores(t *testing.T) {
 	}
 
 	challenges := []assessmentChallengeTestRow{
-		{ID: 11, Title: "web-1", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 12, Title: "web-2", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 50, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 13, Title: "crypto-1", Category: challengecontracts.DimensionCrypto, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 14, Title: "draft-ignored", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 300, Status: challengecontracts.ChallengeStatusDraft, CreatedAt: now, UpdatedAt: now},
+		{ID: 11, Title: "web-1", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 12, Title: "web-2", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyMedium, Points: 50, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 13, Title: "crypto-1", Category: taxonomy.DimensionCrypto, Difficulty: taxonomy.DifficultyEasy, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 14, Title: "draft-ignored", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyEasy, Points: 300, Status: challengecontracts.ChallengeStatusDraft, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, challenge := range challenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -132,10 +133,10 @@ func TestCalculateSkillProfilePersistsComputedScores(t *testing.T) {
 	for _, item := range dimensions {
 		scoreByDimension[item.Dimension] = item.Score
 	}
-	if scoreByDimension[challengecontracts.DimensionWeb] != float64(100)/float64(150) {
+	if scoreByDimension[taxonomy.DimensionWeb] != float64(100)/float64(150) {
 		t.Fatalf("unexpected web score map: %+v", scoreByDimension)
 	}
-	if scoreByDimension[challengecontracts.DimensionCrypto] != 1 {
+	if scoreByDimension[taxonomy.DimensionCrypto] != 1 {
 		t.Fatalf("unexpected crypto score map: %+v", scoreByDimension)
 	}
 
@@ -167,9 +168,9 @@ func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 	}
 
 	challenges := []assessmentChallengeTestRow{
-		{ID: 31, Title: "web-practice", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 32, Title: "web-awd", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 50, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 33, Title: "crypto-awd", Category: challengecontracts.DimensionCrypto, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 31, Title: "web-practice", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 32, Title: "web-awd", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyMedium, Points: 50, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 33, Title: "crypto-awd", Category: taxonomy.DimensionCrypto, Difficulty: taxonomy.DifficultyEasy, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, challenge := range challenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -229,10 +230,10 @@ func TestCalculateSkillProfileCountsSuccessfulAWDAttacks(t *testing.T) {
 	for _, item := range dimensions {
 		scoreByDimension[item.Dimension] = item.Score
 	}
-	if scoreByDimension[challengecontracts.DimensionWeb] != 2.0/3.0 {
+	if scoreByDimension[taxonomy.DimensionWeb] != 2.0/3.0 {
 		t.Fatalf("expected web score to ignore separated awd evidence, got %+v", scoreByDimension)
 	}
-	if scoreByDimension[challengecontracts.DimensionCrypto] != 0 {
+	if scoreByDimension[taxonomy.DimensionCrypto] != 0 {
 		t.Fatalf("expected crypto score 0, got %+v", scoreByDimension)
 	}
 }
@@ -242,8 +243,8 @@ func TestCalculateSkillProfileReturnsExistingProfileWhenLocked(t *testing.T) {
 	now := time.Now()
 
 	profiles := []assessmententity.SkillProfile{
-		{UserID: 2, Dimension: challengecontracts.DimensionWeb, Score: 0.75, UpdatedAt: now},
-		{UserID: 2, Dimension: challengecontracts.DimensionCrypto, Score: 0.25, UpdatedAt: now},
+		{UserID: 2, Dimension: taxonomy.DimensionWeb, Score: 0.75, UpdatedAt: now},
+		{UserID: 2, Dimension: taxonomy.DimensionCrypto, Score: 0.25, UpdatedAt: now},
 	}
 	for _, profile := range profiles {
 		if err := db.Create(&profile).Error; err != nil {
@@ -271,7 +272,7 @@ func TestCalculateSkillProfileReturnsExistingProfileWhenLocked(t *testing.T) {
 	for _, item := range dimensions {
 		scoreByDimension[item.Dimension] = item.Score
 	}
-	if scoreByDimension[challengecontracts.DimensionWeb] != 0.75 || scoreByDimension[challengecontracts.DimensionCrypto] != 0.25 {
+	if scoreByDimension[taxonomy.DimensionWeb] != 0.75 || scoreByDimension[taxonomy.DimensionCrypto] != 0.25 {
 		t.Fatalf("expected fallback scores from db, got %+v", scoreByDimension)
 	}
 }
@@ -289,7 +290,7 @@ func TestGetSkillProfileReturnsEmptyDimensionsWhenProfileMissing(t *testing.T) {
 	if profile.UpdatedAt != "" {
 		t.Fatalf("expected empty updated_at, got %+v", profile)
 	}
-	if len(profile.Dimensions) != len(challengecontracts.AllDimensions) {
+	if len(profile.Dimensions) != len(taxonomy.AllDimensions) {
 		t.Fatalf("expected all dimensions, got %+v", profile.Dimensions)
 	}
 	for _, item := range profile.Dimensions {
@@ -363,8 +364,8 @@ func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
 	if err := db.Create(&assessmentChallengeTestRow{
 		ID:         51,
 		Title:      "web-awd",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		CreatedAt:  now,
@@ -394,7 +395,7 @@ func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
 			UserID:         77,
 			ContestID:      99,
 			AWDChallengeID: 51,
-			Dimension:      challengecontracts.DimensionWeb,
+			Dimension:      taxonomy.DimensionWeb,
 			OccurredAt:     now,
 		},
 	}); err != nil {
@@ -402,7 +403,7 @@ func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
 	}
 
 	var profile assessmententity.SkillProfile
-	if err := db.Where("user_id = ? AND dimension = ?", 77, challengecontracts.DimensionWeb).First(&profile).Error; err != nil {
+	if err := db.Where("user_id = ? AND dimension = ?", 77, taxonomy.DimensionWeb).First(&profile).Error; err != nil {
 		t.Fatalf("query profile after event: %v", err)
 	}
 	if profile.Score != 0 {

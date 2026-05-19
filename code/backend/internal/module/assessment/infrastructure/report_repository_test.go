@@ -16,6 +16,7 @@ import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/internal/teaching/evidence"
 )
 
@@ -100,8 +101,8 @@ func TestReportRepositoryGetPersonalStatsIncludesAWDSolvedAndAttempts(t *testing
 	}
 
 	challenges := []assessmentReportChallengeRow{
-		{ID: 101, Title: "web-entry", Category: "web", Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 102, Title: "pwn-core", Category: "pwn", Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 101, Title: "web-entry", Category: "web", Difficulty: taxonomy.DifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 102, Title: "pwn-core", Category: "pwn", Difficulty: taxonomy.DifficultyMedium, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	if err := db.Create(&challenges).Error; err != nil {
 		t.Fatalf("seed challenges: %v", err)
@@ -206,9 +207,9 @@ func TestReportRepositoryListPersonalDimensionStatsDedupesPracticeAndAWD(t *test
 	}
 
 	challenges := []assessmentReportChallengeRow{
-		{ID: 201, Title: "web-a", Category: "web", Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 202, Title: "web-b", Category: "web", Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 150, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 203, Title: "crypto-a", Category: "crypto", Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 80, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 201, Title: "web-a", Category: "web", Difficulty: taxonomy.DifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 202, Title: "web-b", Category: "web", Difficulty: taxonomy.DifficultyMedium, Points: 150, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 203, Title: "crypto-a", Category: "crypto", Difficulty: taxonomy.DifficultyEasy, Points: 80, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	if err := db.Create(&challenges).Error; err != nil {
 		t.Fatalf("seed challenges: %v", err)
@@ -304,8 +305,8 @@ func TestReportRepositoryClassStatsIncludeAWDSolvedEvidence(t *testing.T) {
 	}
 
 	challenges := []assessmentReportChallengeRow{
-		{ID: 301, Title: "web", Category: "web", Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 302, Title: "pwn", Category: "pwn", Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 301, Title: "web", Category: "web", Difficulty: taxonomy.DifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 302, Title: "pwn", Category: "pwn", Difficulty: taxonomy.DifficultyMedium, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	if err := db.Create(&challenges).Error; err != nil {
 		t.Fatalf("seed challenges: %v", err)
@@ -375,7 +376,7 @@ func TestReportRepositoryGetStudentTimelineIncludesAWDAttackEvents(t *testing.T)
 	now := time.Date(2026, 4, 13, 13, 0, 0, 0, time.UTC)
 
 	user := identitycontracts.User{ID: 1, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive}
-	challenge := challengecontracts.AWDChallenge{ID: 401, Name: "web-attack", Slug: "web-attack", Category: "web", Difficulty: challengecontracts.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
+	challenge := challengecontracts.AWDChallenge{ID: 401, Name: "web-attack", Slug: "web-attack", Category: "web", Difficulty: taxonomy.DifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
 	round := contestcontracts.AWDRound{ID: 51, ContestID: 200, RoundNumber: 2, Status: contestcontracts.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	teams := []contestcontracts.Team{
 		{ID: 501, ContestID: 200, Name: "red-team", CaptainID: user.ID, InviteCode: "invite-red", MaxMembers: 4, CreatedAt: now, UpdatedAt: now},
@@ -463,7 +464,7 @@ func TestReportRepositoryGetStudentEvidenceIncludesAWDAttackLogs(t *testing.T) {
 	now := time.Date(2026, 4, 13, 14, 0, 0, 0, time.UTC)
 
 	user := identitycontracts.User{ID: 1, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "class-a", Status: identitycontracts.UserStatusActive}
-	challenge := challengecontracts.AWDChallenge{ID: 501, Name: "pwn-attack", Slug: "pwn-attack", Category: "pwn", Difficulty: challengecontracts.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
+	challenge := challengecontracts.AWDChallenge{ID: 501, Name: "pwn-attack", Slug: "pwn-attack", Category: "pwn", Difficulty: taxonomy.DifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now}
 	round := contestcontracts.AWDRound{ID: 61, ContestID: 300, RoundNumber: 3, Status: contestcontracts.AWDRoundStatusFinished, CreatedAt: now, UpdatedAt: now}
 	teams := []contestcontracts.Team{
 		{ID: 601, ContestID: 300, Name: "green-team", CaptainID: user.ID, InviteCode: "invite-green", MaxMembers: 4, CreatedAt: now, UpdatedAt: now},
@@ -569,9 +570,9 @@ func TestReportRepositoryListClassDistributions(t *testing.T) {
 	}
 
 	challenges := []assessmentReportChallengeRow{
-		{ID: 701, Title: "web-easy", Category: "web", Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 702, Title: "web-medium", Category: "web", Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 150, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 703, Title: "pwn-hard", Category: "pwn", Difficulty: challengecontracts.ChallengeDifficultyHard, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 701, Title: "web-easy", Category: "web", Difficulty: taxonomy.DifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 702, Title: "web-medium", Category: "web", Difficulty: taxonomy.DifficultyMedium, Points: 150, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 703, Title: "pwn-hard", Category: "pwn", Difficulty: taxonomy.DifficultyHard, Points: 200, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	if err := db.Create(&challenges).Error; err != nil {
 		t.Fatalf("seed challenges: %v", err)
@@ -599,7 +600,7 @@ func TestReportRepositoryListClassDistributions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ListClassDifficultyDistribution() error = %v", err)
 	}
-	hard := findDistributionStat(difficultyRows, challengecontracts.ChallengeDifficultyHard)
+	hard := findDistributionStat(difficultyRows, taxonomy.DifficultyHard)
 	if hard == nil || hard.TotalChallenges != 1 || hard.CoveredChallenges != 1 || hard.SolvedStudents != 1 {
 		t.Fatalf("expected hard difficulty distribution, got %+v", difficultyRows)
 	}
@@ -628,8 +629,8 @@ func TestReportRepositoryGetClassContestMigrationSummary(t *testing.T) {
 	}
 
 	challenges := []challengecontracts.AWDChallenge{
-		{ID: 801, Name: "awd-web", Slug: "awd-web", Category: "web", Difficulty: challengecontracts.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 802, Name: "awd-pwn", Slug: "awd-pwn", Category: "pwn", Difficulty: challengecontracts.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 801, Name: "awd-web", Slug: "awd-web", Category: "web", Difficulty: taxonomy.DifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 802, Name: "awd-pwn", Slug: "awd-pwn", Category: "pwn", Difficulty: taxonomy.DifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	if err := db.Create(&challenges).Error; err != nil {
 		t.Fatalf("seed awd challenges: %v", err)

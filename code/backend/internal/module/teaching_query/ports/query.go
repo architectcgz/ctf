@@ -10,20 +10,20 @@ import (
 )
 
 type ClassItem struct {
-	Name         string `gorm:"column:name"`
-	StudentCount int64  `gorm:"column:student_count"`
+	Name         string
+	StudentCount int64
 }
 
 type StudentItem struct {
-	ID               int64   `gorm:"column:id"`
-	Username         string  `gorm:"column:username"`
-	StudentNo        *string `gorm:"column:student_no"`
-	Name             *string `gorm:"column:name"`
-	ClassName        *string `gorm:"column:class_name"`
-	SolvedCount      int     `gorm:"column:solved_count"`
-	TotalScore       int     `gorm:"column:total_score"`
-	RecentEventCount int     `gorm:"column:recent_event_count"`
-	WeakDimension    *string `gorm:"column:weak_dimension"`
+	ID               int64
+	Username         string
+	StudentNo        *string
+	Name             *string
+	ClassName        *string
+	SolvedCount      int
+	TotalScore       int
+	RecentEventCount int
+	WeakDimension    *string
 }
 
 type ProgressRow struct {

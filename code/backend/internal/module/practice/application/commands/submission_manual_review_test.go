@@ -12,6 +12,7 @@ import (
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/platform/events"
+	"ctf-platform/internal/shared/taxonomy"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 	"errors"
@@ -42,7 +43,7 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:        id,
-				Category:  challengecontracts.DimensionWeb,
+				Category:  taxonomy.DimensionWeb,
 				Points:    80,
 				Status:    challengecontracts.ChallengeStatusPublished,
 				FlagType:  challengecontracts.FlagTypeRegex,
@@ -101,7 +102,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Category: challengecontracts.DimensionWeb,
+				Category: taxonomy.DimensionWeb,
 				Points:   120,
 				Status:   challengecontracts.ChallengeStatusPublished,
 				FlagType: challengecontracts.FlagTypeManualReview,
@@ -195,7 +196,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Category: challengecontracts.DimensionWeb,
+				Category: taxonomy.DimensionWeb,
 				Points:   120,
 				Status:   challengecontracts.ChallengeStatusPublished,
 				FlagType: challengecontracts.FlagTypeManualReview,
@@ -302,7 +303,7 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Category: challengecontracts.DimensionWeb,
+				Category: taxonomy.DimensionWeb,
 				Points:   100,
 				Status:   challengecontracts.ChallengeStatusPublished,
 				FlagType: challengecontracts.FlagTypeStatic,
@@ -360,7 +361,7 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 
 	select {
 	case evt := <-received:
-		if evt.UserID != 7 || evt.ChallengeID != 11 || evt.Dimension != challengecontracts.DimensionWeb {
+		if evt.UserID != 7 || evt.ChallengeID != 11 || evt.Dimension != taxonomy.DimensionWeb {
 			t.Fatalf("unexpected event payload: %+v", evt)
 		}
 	case <-time.After(time.Second):
@@ -383,7 +384,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:              id,
-				Category:        challengecontracts.DimensionWeb,
+				Category:        taxonomy.DimensionWeb,
 				Points:          100,
 				Status:          challengecontracts.ChallengeStatusPublished,
 				FlagType:        challengecontracts.FlagTypeStatic,
@@ -453,7 +454,7 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Category: challengecontracts.DimensionWeb,
+				Category: taxonomy.DimensionWeb,
 				Points:   100,
 				Status:   challengecontracts.ChallengeStatusPublished,
 				FlagType: challengecontracts.FlagTypeStatic,
@@ -558,7 +559,7 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:              id,
-				Category:        challengecontracts.DimensionWeb,
+				Category:        taxonomy.DimensionWeb,
 				Points:          100,
 				Status:          challengecontracts.ChallengeStatusPublished,
 				FlagType:        challengecontracts.FlagTypeStatic,
@@ -727,7 +728,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Category: challengecontracts.DimensionWeb,
+				Category: taxonomy.DimensionWeb,
 				Points:   100,
 				Status:   challengecontracts.ChallengeStatusPublished,
 				FlagType: "shared_proof",
@@ -801,7 +802,7 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 			}
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Category: challengecontracts.DimensionWeb,
+				Category: taxonomy.DimensionWeb,
 				Points:   100,
 				Status:   challengecontracts.ChallengeStatusPublished,
 				FlagType: challengecontracts.FlagTypeStatic,
@@ -882,7 +883,7 @@ func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Category: challengecontracts.DimensionWeb,
+				Category: taxonomy.DimensionWeb,
 				Points:   100,
 				Status:   challengecontracts.ChallengeStatusPublished,
 				FlagType: challengecontracts.FlagTypeStatic,
@@ -988,7 +989,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 			}
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Category: challengecontracts.DimensionWeb,
+				Category: taxonomy.DimensionWeb,
 				Points:   120,
 				Status:   challengecontracts.ChallengeStatusPublished,
 				FlagType: challengecontracts.FlagTypeManualReview,
@@ -1493,7 +1494,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
-				Category: challengecontracts.DimensionWeb,
+				Category: taxonomy.DimensionWeb,
 				Points:   120,
 				Status:   challengecontracts.ChallengeStatusPublished,
 				FlagType: challengecontracts.FlagTypeManualReview,
@@ -1666,7 +1667,7 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:         id,
-				Category:   challengecontracts.DimensionWeb,
+				Category:   taxonomy.DimensionWeb,
 				Points:     100,
 				Status:     challengecontracts.ChallengeStatusPublished,
 				FlagType:   challengecontracts.FlagTypeDynamic,
@@ -1748,7 +1749,7 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:              id,
-				Category:        challengecontracts.DimensionWeb,
+				Category:        taxonomy.DimensionWeb,
 				Points:          100,
 				Status:          challengecontracts.ChallengeStatusPublished,
 				FlagType:        challengecontracts.FlagTypeStatic,

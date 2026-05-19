@@ -6,12 +6,12 @@ import (
 	"time"
 
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	"ctf-platform/internal/shared/taxonomy"
 )
 
 func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
@@ -51,7 +51,7 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	challengeItem := &challengeentity.Challenge{
 		Title:       "web-301",
 		Description: "desc",
-		Category:    challengecontracts.DimensionWeb,
+		Category:    taxonomy.DimensionWeb,
 		Difficulty:  challengeentity.ChallengeDifficultyEasy,
 		Points:      100,
 		ImageID:     1,
@@ -189,7 +189,7 @@ func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T
 	challengeItem := &challengeentity.Challenge{
 		Title:       "web-302",
 		Description: "desc",
-		Category:    challengecontracts.DimensionWeb,
+		Category:    taxonomy.DimensionWeb,
 		Difficulty:  challengeentity.ChallengeDifficultyEasy,
 		Points:      100,
 		ImageID:     1,

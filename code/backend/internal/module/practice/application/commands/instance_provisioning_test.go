@@ -13,6 +13,7 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 	"fmt"
 	"go.uber.org/zap"
@@ -49,8 +50,8 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         202,
 		Title:      "Queued Runner",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
 		ImageID:    102,
 		Status:     challengecontracts.ChallengeStatusPublished,
@@ -141,8 +142,8 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:         205,
 		Title:      "Readiness Failure",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
 		ImageID:    104,
 		Status:     challengecontracts.ChallengeStatusPublished,
@@ -747,8 +748,8 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		if err := db.Create(&practiceCommandChallengeRow{
 			ID:         challengeID,
 			Title:      "Queued Capacity",
-			Category:   challengecontracts.DimensionWeb,
-			Difficulty: challengecontracts.ChallengeDifficultyEasy,
+			Category:   taxonomy.DimensionWeb,
+			Difficulty: taxonomy.DifficultyEasy,
 			Points:     100,
 			ImageID:    103,
 			Status:     challengecontracts.ChallengeStatusPublished,

@@ -12,6 +12,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	"ctf-platform/internal/shared/taxonomy"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
@@ -62,7 +63,7 @@ func TestRepositoryListClassTeachingFactSnapshotsBackfillsAWDSuccessDimensionFac
 	}
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    1,
-		Dimension: challengecontracts.DimensionPwn,
+		Dimension: taxonomy.DimensionPwn,
 		Score:     0.18,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -70,10 +71,10 @@ func TestRepositoryListClassTeachingFactSnapshotsBackfillsAWDSuccessDimensionFac
 	}
 
 	awdChallenges := []challengecontracts.AWDChallenge{
-		{ID: 1001, Name: "pwn-awd-easy-a", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 1002, Name: "pwn-awd-easy-b", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 1003, Name: "pwn-awd-medium-a", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 1004, Name: "pwn-awd-medium-b", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 1001, Name: "pwn-awd-easy-a", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 1002, Name: "pwn-awd-easy-b", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 1003, Name: "pwn-awd-medium-a", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 1004, Name: "pwn-awd-medium-b", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, challenge := range awdChallenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -111,7 +112,7 @@ func TestRepositoryListClassTeachingFactSnapshotsBackfillsAWDSuccessDimensionFac
 		t.Fatalf("expected awd success count to ignore zero-score/manual logs, got %+v", snapshot)
 	}
 
-	pwn := findSnapshotDimension(t, snapshot, challengecontracts.DimensionPwn)
+	pwn := findSnapshotDimension(t, snapshot, taxonomy.DimensionPwn)
 	if pwn.ProfileScore != 1 {
 		t.Fatalf("expected pwn profile score lifted by awd coverage, got %+v", pwn)
 	}
@@ -121,7 +122,7 @@ func TestRepositoryListClassTeachingFactSnapshotsBackfillsAWDSuccessDimensionFac
 	if pwn.EvidenceCount != 4 {
 		t.Fatalf("expected pwn evidence count to include awd success coverage, got %+v", pwn)
 	}
-	if pwn.SolvedDifficultyCounts[challengecontracts.ChallengeDifficultyEasy] != 2 || pwn.SolvedDifficultyCounts[challengecontracts.ChallengeDifficultyMedium] != 2 {
+	if pwn.SolvedDifficultyCounts[taxonomy.DifficultyEasy] != 2 || pwn.SolvedDifficultyCounts[taxonomy.DifficultyMedium] != 2 {
 		t.Fatalf("expected awd difficulty coverage merged into snapshot, got %+v", pwn.SolvedDifficultyCounts)
 	}
 }

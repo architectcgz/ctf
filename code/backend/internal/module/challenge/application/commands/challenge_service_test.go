@@ -12,6 +12,7 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/shared/taxonomy"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 	"errors"
@@ -140,7 +141,7 @@ func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T)
 	challenge := &challengeentity.Challenge{
 		Title:           "dynamic-flag",
 		Description:     "desc",
-		Category:        challengecontracts.DimensionCrypto,
+		Category:        taxonomy.DimensionCrypto,
 		Difficulty:      challengeentity.ChallengeDifficultyEasy,
 		Points:          100,
 		Status:          challengeentity.ChallengeStatusDraft,
@@ -171,7 +172,7 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 	challenge := &challengeentity.Challenge{
 		Title:           "inject-flag-topology",
 		Description:     "desc",
-		Category:        challengecontracts.DimensionWeb,
+		Category:        taxonomy.DimensionWeb,
 		Difficulty:      challengeentity.ChallengeDifficultyEasy,
 		Points:          100,
 		Status:          challengeentity.ChallengeStatusDraft,
@@ -274,7 +275,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 	}
 	challenge := &challengeentity.Challenge{
 		Title:      "publish-me",
-		Category:   challengecontracts.DimensionWeb,
+		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    image.ID,
@@ -368,7 +369,7 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 	}
 	challenge := &challengeentity.Challenge{
 		Title:      "no-image",
-		Category:   challengecontracts.DimensionWeb,
+		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		Status:     challengeentity.ChallengeStatusDraft,
@@ -447,7 +448,7 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	}
 	challenge := &challengeentity.Challenge{
 		Title:         "attachment-only",
-		Category:      challengecontracts.DimensionWeb,
+		Category:      taxonomy.DimensionWeb,
 		Difficulty:    challengeentity.ChallengeDifficultyEasy,
 		Points:        100,
 		Status:        challengeentity.ChallengeStatusDraft,
@@ -519,7 +520,7 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 	updatedAt := createdAt.Add(2 * time.Hour)
 	challenge := &challengeentity.Challenge{
 		Title:      "Web-01 源码审计：双层伪装",
-		Category:   challengecontracts.DimensionWeb,
+		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		ImageID:    0,

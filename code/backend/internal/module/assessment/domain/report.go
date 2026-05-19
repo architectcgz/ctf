@@ -6,8 +6,8 @@ import (
 
 	"ctf-platform/internal/config"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -203,8 +203,8 @@ func FillMissingDimensionAverages(rows []ClassDimensionAverage) []ClassDimension
 		index[row.Dimension] = row.AvgScore
 	}
 
-	filled := make([]ClassDimensionAverage, 0, len(challengecontracts.AllDimensions))
-	for _, dimension := range challengecontracts.AllDimensions {
+	filled := make([]ClassDimensionAverage, 0, len(taxonomy.AllDimensions))
+	for _, dimension := range taxonomy.AllDimensions {
 		filled = append(filled, ClassDimensionAverage{
 			Dimension: dimension,
 			AvgScore:  index[dimension],
@@ -232,11 +232,11 @@ func FillMissingDistributionStats(rows []ClassDistributionStat, keys []string) [
 
 func ClassReportDifficultyOrder() []string {
 	return []string{
-		challengecontracts.ChallengeDifficultyBeginner,
-		challengecontracts.ChallengeDifficultyEasy,
-		challengecontracts.ChallengeDifficultyMedium,
-		challengecontracts.ChallengeDifficultyHard,
-		challengecontracts.ChallengeDifficultyInsane,
+		taxonomy.DifficultyBeginner,
+		taxonomy.DifficultyEasy,
+		taxonomy.DifficultyMedium,
+		taxonomy.DifficultyHard,
+		taxonomy.DifficultyInsane,
 	}
 }
 

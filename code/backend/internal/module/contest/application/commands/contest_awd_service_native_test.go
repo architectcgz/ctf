@@ -11,6 +11,7 @@ import (
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	"ctf-platform/internal/shared/taxonomy"
 )
 
 func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
@@ -34,7 +35,7 @@ func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 		Name:             "Bank Portal",
 		Slug:             "bank-portal",
 		Category:         "web",
-		Difficulty:       challengecontracts.ChallengeDifficultyMedium,
+		Difficulty:       taxonomy.DifficultyMedium,
 		Description:      "Bank Portal runtime",
 		ServiceType:      challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode:   challengecontracts.AWDDeploymentModeSingleContainer,
@@ -113,7 +114,7 @@ func TestContestAWDServiceServiceSnapshotRemainsFrozenAfterTemplateUpdate(t *tes
 		Name:           "Billing API",
 		Slug:           "billing-api",
 		Category:       "web",
-		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
+		Difficulty:     taxonomy.DifficultyMedium,
 		Description:    "Billing runtime",
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,

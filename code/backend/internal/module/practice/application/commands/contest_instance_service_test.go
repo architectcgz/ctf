@@ -28,6 +28,7 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -493,8 +494,8 @@ func TestServiceStartChallengeRejectsNoTargetChallenge(t *testing.T) {
 	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         2201,
 		Title:      "No Target",
-		Category:   challengecontracts.DimensionMisc,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionMisc,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     20,
 		ImageID:    0,
 		Status:     challengecontracts.ChallengeStatusPublished,
@@ -665,8 +666,8 @@ func seedContestInstanceChallenge(t *testing.T, db *gorm.DB, imageID, challengeI
 	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         challengeID,
 		Title:      "AWD Service",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
 		ImageID:    imageID,
 		Status:     challengecontracts.ChallengeStatusPublished,

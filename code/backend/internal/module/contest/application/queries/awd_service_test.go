@@ -15,6 +15,7 @@ import (
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	"ctf-platform/internal/shared/taxonomy"
 )
 
 func newAWDQueryServiceForTest(t *testing.T) (*AWDService, *gorm.DB) {
@@ -1037,7 +1038,7 @@ func createAWDReadinessChallengeFixture(t *testing.T, db *gorm.DB, challengeID i
 		ID:         challengeID,
 		Title:      title,
 		Category:   "web",
-		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		Difficulty: taxonomy.DifficultyMedium,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,

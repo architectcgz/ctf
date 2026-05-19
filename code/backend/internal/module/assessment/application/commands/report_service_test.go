@@ -24,10 +24,10 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
+	"ctf-platform/internal/shared/taxonomy"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/classwindow"
 	"ctf-platform/internal/teaching/evidence"
@@ -1576,7 +1576,7 @@ func TestBuildClassReportDataUsesSharedWindowedClassInsight(t *testing.T) {
 			{Key: "web", TotalChallenges: 12, CoveredChallenges: 3, SolvedStudents: 2},
 		},
 		difficultyStats: []assessmentdomain.ClassDistributionStat{
-			{Key: challengecontracts.ChallengeDifficultyEasy, TotalChallenges: 8, CoveredChallenges: 2, SolvedStudents: 2},
+			{Key: taxonomy.DifficultyEasy, TotalChallenges: 8, CoveredChallenges: 2, SolvedStudents: 2},
 		},
 		contestSummary: &assessmentdomain.ClassContestMigrationSummary{
 			ParticipatingStudents: 2,
@@ -1628,7 +1628,7 @@ func TestBuildClassReportDataUsesSharedWindowedClassInsight(t *testing.T) {
 	if len(data.Review.Items) == 0 {
 		t.Fatalf("expected review items, got %+v", data.Review)
 	}
-	if len(data.CategoryDistribution) != len(challengecontracts.AllDimensions) {
+	if len(data.CategoryDistribution) != len(taxonomy.AllDimensions) {
 		t.Fatalf("expected filled category distribution, got %+v", data.CategoryDistribution)
 	}
 	if len(data.DifficultyDistribution) != len(assessmentdomain.ClassReportDifficultyOrder()) {

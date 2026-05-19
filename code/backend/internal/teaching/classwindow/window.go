@@ -14,6 +14,7 @@ const (
 )
 
 var (
+	errMissingNow  = errors.New("now 不能为空")
 	errMissingPair = errors.New("from_date 和 to_date 必须同时传入")
 	errRangeOrder  = errors.New("to_date 不能早于 from_date")
 	errRangeTooBig = fmt.Errorf("时间范围不能超过 %d 天", MaxDays)
@@ -31,7 +32,7 @@ type Range struct {
 func Parse(now time.Time, fromDate, toDate string) (Range, error) {
 	current := now.UTC()
 	if current.IsZero() {
-		current = time.Now().UTC()
+		return Range{}, errMissingNow
 	}
 
 	normalizedFrom := strings.TrimSpace(fromDate)

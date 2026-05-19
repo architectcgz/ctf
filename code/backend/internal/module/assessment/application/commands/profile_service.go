@@ -14,11 +14,11 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -70,7 +70,7 @@ func (s *Service) handleFlagAcceptedEvent(ctx context.Context, evt platformevent
 	if !ok {
 		return fmt.Errorf("unexpected practice flag event payload: %T", evt.Payload)
 	}
-	if !challengecontracts.IsValidDimension(payload.Dimension) {
+	if !taxonomy.IsValidDimension(payload.Dimension) {
 		return nil
 	}
 
@@ -89,7 +89,7 @@ func (s *Service) handleAWDAttackAcceptedEvent(ctx context.Context, evt platform
 	if !ok {
 		return fmt.Errorf("unexpected contest awd event payload: %T", evt.Payload)
 	}
-	if !challengecontracts.IsValidDimension(payload.Dimension) {
+	if !taxonomy.IsValidDimension(payload.Dimension) {
 		return nil
 	}
 
@@ -106,7 +106,7 @@ func (s *Service) handleAWDAttackAcceptedEvent(ctx context.Context, evt platform
 // UpdateSkillProfileForDimension 增量更新指定维度的能力画像
 func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error {
 	// 校验维度合法性
-	if !challengecontracts.IsValidDimension(dimension) {
+	if !taxonomy.IsValidDimension(dimension) {
 		s.logger.Warn("无效维度", zap.String("dimension", dimension))
 		return fmt.Errorf("invalid dimension: %s", dimension)
 	}
@@ -183,7 +183,7 @@ func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*a
 
 	for _, score := range scores {
 		// 校验维度合法性
-		if !challengecontracts.IsValidDimension(score.Dimension) {
+		if !taxonomy.IsValidDimension(score.Dimension) {
 			s.logger.Warn("跳过无效维度", zap.String("dimension", score.Dimension))
 			continue
 		}

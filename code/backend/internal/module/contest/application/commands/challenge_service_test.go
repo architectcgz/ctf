@@ -10,6 +10,7 @@ import (
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	"ctf-platform/internal/shared/taxonomy"
 )
 
 func newContestChallengeCommandService(t *testing.T) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
@@ -53,7 +54,7 @@ func TestChallengeServiceAddChallengeToAWDContestDoesNotCreateAWDService(t *test
 		ID:         9001,
 		Title:      "awd-web",
 		Category:   "web",
-		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		Difficulty: taxonomy.DifficultyMedium,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,
@@ -117,7 +118,7 @@ func TestChallengeServiceUpdateChallengeDoesNotCreateAWDService(t *testing.T) {
 		ID:         9003,
 		Title:      "awd-update-challenge",
 		Category:   "web",
-		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		Difficulty: taxonomy.DifficultyMedium,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,
@@ -187,7 +188,7 @@ func TestChallengeServiceRemoveChallengeFromContestDoesNotDeleteAWDService(t *te
 		ID:         9006,
 		Title:      "awd-remove-challenge",
 		Category:   "web",
-		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		Difficulty: taxonomy.DifficultyMedium,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,

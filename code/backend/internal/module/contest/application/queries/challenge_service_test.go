@@ -11,6 +11,7 @@ import (
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	"ctf-platform/internal/shared/taxonomy"
 )
 
 func newContestChallengeQueryService(t *testing.T) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository, *contestinfra.AWDRepository) {
@@ -52,7 +53,7 @@ func TestChallengeServiceListAdminChallengesReturnsRelationFieldsOnly(t *testing
 		ID:         9101,
 		Title:      "awd-query-challenge",
 		Category:   "web",
-		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		Difficulty: taxonomy.DifficultyMedium,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,
@@ -163,7 +164,7 @@ func TestChallengeServiceGetContestChallengesReadsAWDServicesFromServiceSnapshot
 	if resp[0].AWDServiceID == nil || *resp[0].AWDServiceID != 7201 {
 		t.Fatalf("expected awd service id 7201, got %+v", resp[0])
 	}
-	if resp[0].AWDChallengeID == nil || *resp[0].AWDChallengeID != 9111 || resp[0].Title != "Bank Portal" || resp[0].Category != "web" || resp[0].Difficulty != challengecontracts.ChallengeDifficultyMedium {
+	if resp[0].AWDChallengeID == nil || *resp[0].AWDChallengeID != 9111 || resp[0].Title != "Bank Portal" || resp[0].Category != "web" || resp[0].Difficulty != taxonomy.DifficultyMedium {
 		t.Fatalf("expected awd challenge info from service snapshot, got %+v", resp[0])
 	}
 }

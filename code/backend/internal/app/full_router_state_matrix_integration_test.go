@@ -42,6 +42,7 @@ import (
 	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	rediskeys "ctf-platform/internal/pkg/redis"
+	"ctf-platform/internal/shared/taxonomy"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 	redislib "github.com/redis/go-redis/v9"
@@ -437,8 +438,8 @@ func TestFullRouter_ContestAndReviewArchiveExportStateMatrix(t *testing.T) {
 	secondChallenge := &appChallengeRow{
 		Title:       "Export Matrix 2",
 		Description: "contest export second solve",
-		Category:    challengecontracts.DimensionCrypto,
-		Difficulty:  challengecontracts.ChallengeDifficultyEasy,
+		Category:    taxonomy.DimensionCrypto,
+		Difficulty:  taxonomy.DifficultyEasy,
 		Points:      150,
 		Status:      challengecontracts.ChallengeStatusPublished,
 		FlagType:    challengecontracts.FlagTypeStatic,
@@ -827,7 +828,7 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 
 func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	env := newFullRouterTestEnv(t)
-	createRecommendationChallenge(t, env, "Matrix Weak Web 2", challengecontracts.DimensionWeb)
+	createRecommendationChallenge(t, env, "Matrix Weak Web 2", taxonomy.DimensionWeb)
 
 	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
 	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
@@ -962,8 +963,8 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Lifecycle Challenge",
 		"description": "challenge lifecycle matrix",
-		"category":    challengecontracts.DimensionWeb,
-		"difficulty":  challengecontracts.ChallengeDifficultyEasy,
+		"category":    taxonomy.DimensionWeb,
+		"difficulty":  taxonomy.DifficultyEasy,
 		"points":      120,
 		"image_id":    env.image.ID,
 		"hints": []map[string]any{
@@ -990,8 +991,8 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Invalid Hint Challenge",
 		"description": "invalid hints",
-		"category":    challengecontracts.DimensionWeb,
-		"difficulty":  challengecontracts.ChallengeDifficultyEasy,
+		"category":    taxonomy.DimensionWeb,
+		"difficulty":  taxonomy.DifficultyEasy,
 		"points":      80,
 		"image_id":    env.image.ID,
 		"hints": []map[string]any{
@@ -1237,8 +1238,8 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Manual Review Challenge",
 		"description": "submit an answer for teacher review",
-		"category":    challengecontracts.DimensionMisc,
-		"difficulty":  challengecontracts.ChallengeDifficultyMedium,
+		"category":    taxonomy.DimensionMisc,
+		"difficulty":  taxonomy.DifficultyMedium,
 		"points":      120,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
@@ -1682,8 +1683,8 @@ func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Community Writeup Challenge",
 		"description": "community writeup semantics",
-		"category":    challengecontracts.DimensionWeb,
-		"difficulty":  challengecontracts.ChallengeDifficultyEasy,
+		"category":    taxonomy.DimensionWeb,
+		"difficulty":  taxonomy.DifficultyEasy,
 		"points":      80,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
@@ -1844,8 +1845,8 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	peerHeaders := bearerHeaders(loginForToken(t, env.router, env.peerStudent.Username, "Password123"))
 	otherHeaders := bearerHeaders(loginForToken(t, env.router, env.otherStudent.Username, "Password123"))
 
-	challengeA := createRecommendationChallenge(t, env, "Contest Matrix A", challengecontracts.DimensionWeb)
-	challengeB := createRecommendationChallenge(t, env, "Contest Matrix B", challengecontracts.DimensionWeb)
+	challengeA := createRecommendationChallenge(t, env, "Contest Matrix A", taxonomy.DimensionWeb)
+	challengeB := createRecommendationChallenge(t, env, "Contest Matrix B", taxonomy.DimensionWeb)
 	editableContest := createFullRouterContest(t, env, "Editable Contest", contestcontracts.ContestStatusRegistration)
 
 	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/contests/%d/challenges", editableContest.ID), nil, studentHeaders)
@@ -2008,8 +2009,8 @@ func TestFullRouter_VisibleAWDContestChallengesIncludeAWDServiceID(t *testing.T)
 
 	awdChallenge := &challengecontracts.AWDChallenge{
 		Name:           "Visible AWD Challenge",
-		Category:       challengecontracts.DimensionWeb,
-		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
+		Category:       taxonomy.DimensionWeb,
+		Difficulty:     taxonomy.DifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -2116,7 +2117,7 @@ func TestFullRouter_AWDChallengeAuthoringStateMatrix(t *testing.T) {
 		"name":            "Bank Portal AWD",
 		"slug":            "bank-portal-awd",
 		"category":        "web",
-		"difficulty":      challengecontracts.ChallengeDifficultyHard,
+		"difficulty":      taxonomy.DifficultyHard,
 		"description":     "multi-step banking target",
 		"service_type":    "web_http",
 		"deployment_mode": "single_container",
@@ -2127,7 +2128,7 @@ func TestFullRouter_AWDChallengeAuthoringStateMatrix(t *testing.T) {
 		"name":            "Invalid Category AWD",
 		"slug":            "invalid-category-awd",
 		"category":        "mobile",
-		"difficulty":      challengecontracts.ChallengeDifficultyHard,
+		"difficulty":      taxonomy.DifficultyHard,
 		"description":     "invalid category",
 		"service_type":    "web_http",
 		"deployment_mode": "single_container",
@@ -2875,8 +2876,8 @@ func createDraftChallengeRecord(t *testing.T, env *fullRouterTestEnv, title stri
 	challenge := &appChallengeRow{
 		Title:       title,
 		Description: "draft challenge for delete matrix",
-		Category:    challengecontracts.DimensionWeb,
-		Difficulty:  challengecontracts.ChallengeDifficultyEasy,
+		Category:    taxonomy.DimensionWeb,
+		Difficulty:  taxonomy.DifficultyEasy,
 		Points:      90,
 		ImageID:     env.image.ID,
 		Status:      challengecontracts.ChallengeStatusDraft,
@@ -2961,7 +2962,7 @@ func createRecommendationChallenge(t *testing.T, env *fullRouterTestEnv, title, 
 		Title:       title,
 		Description: "recommendation challenge",
 		Category:    category,
-		Difficulty:  challengecontracts.ChallengeDifficultyEasy,
+		Difficulty:  taxonomy.DifficultyEasy,
 		Points:      150,
 		ImageID:     env.image.ID,
 		Status:      challengecontracts.ChallengeStatusPublished,

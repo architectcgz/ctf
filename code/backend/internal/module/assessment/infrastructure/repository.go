@@ -12,6 +12,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	"ctf-platform/internal/shared/taxonomy"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -364,8 +365,8 @@ func (r *Repository) fillStudentDimensionFacts(
 		return nil
 	}
 
-	factMap := make(map[string]*teachingadvice.DimensionFact, len(challengecontracts.AllDimensions))
-	for _, dimension := range challengecontracts.AllDimensions {
+	factMap := make(map[string]*teachingadvice.DimensionFact, len(taxonomy.AllDimensions))
+	for _, dimension := range taxonomy.AllDimensions {
 		dimensionCopy := dimension
 		factMap[dimension] = &teachingadvice.DimensionFact{Dimension: dimensionCopy}
 	}
@@ -596,7 +597,7 @@ func (r *Repository) fillStudentDimensionFacts(
 	}
 
 	dimensions := make([]teachingadvice.DimensionFact, 0, len(factMap))
-	for _, dimension := range challengecontracts.AllDimensions {
+	for _, dimension := range taxonomy.AllDimensions {
 		fact := ensureDimensionFact(factMap, dimension)
 		dimensions = append(dimensions, *fact)
 	}

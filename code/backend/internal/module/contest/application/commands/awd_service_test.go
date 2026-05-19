@@ -34,6 +34,7 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -861,7 +862,7 @@ func TestAWDServicePreviewCheckerTCPStandardTokenMakesReadinessPassed(t *testing
 		Name:           "TCP Length Gate",
 		Slug:           "awd-tcp-length-gate",
 		Category:       "pwn",
-		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
+		Difficulty:     taxonomy.DifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeBinaryTCP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -1527,7 +1528,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 		Name:           "Preview Target",
 		Slug:           "preview-target",
 		Category:       "web",
-		Difficulty:     challengecontracts.ChallengeDifficultyEasy,
+		Difficulty:     taxonomy.DifficultyEasy,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -1641,7 +1642,7 @@ func TestAWDServicePreviewCheckerRejectsExplicitAccessURLWhenRuntimeImageUnavail
 		Name:           "Preview Pending Image",
 		Slug:           "preview-pending-image",
 		Category:       "web",
-		Difficulty:     challengecontracts.ChallengeDifficultyEasy,
+		Difficulty:     taxonomy.DifficultyEasy,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -2208,7 +2209,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 
 	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 1401).Updates(map[string]any{
 		"flag_prefix": "awd",
-		"category":    challengecontracts.DimensionWeb,
+		"category":    taxonomy.DimensionWeb,
 	}).Error; err != nil {
 		t.Fatalf("update challenge fields: %v", err)
 	}
@@ -2257,7 +2258,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 
 	select {
 	case evt := <-received:
-		if evt.UserID != 14001 || evt.AWDChallengeID != 1401 || evt.Dimension != challengecontracts.DimensionWeb {
+		if evt.UserID != 14001 || evt.AWDChallengeID != 1401 || evt.Dimension != taxonomy.DimensionWeb {
 			t.Fatalf("unexpected event payload: %+v", evt)
 		}
 	case <-time.After(time.Second):

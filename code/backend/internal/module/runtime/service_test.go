@@ -26,6 +26,7 @@ import (
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -760,8 +761,8 @@ func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
 	if err := repo.db.Create(&runtimeChallengeTestRow{
 		ID:              903,
 		Title:           "Shared Practice",
-		Category:        challengecontracts.DimensionWeb,
-		Difficulty:      challengecontracts.ChallengeDifficultyEasy,
+		Category:        taxonomy.DimensionWeb,
+		Difficulty:      taxonomy.DifficultyEasy,
 		FlagType:        challengecontracts.FlagTypeStatic,
 		Status:          challengecontracts.ChallengeStatusPublished,
 		InstanceSharing: challengecontracts.InstanceSharingShared,
@@ -797,8 +798,8 @@ func TestServiceExtendInstanceRejectsSharedInstance(t *testing.T) {
 	if err := repo.db.Create(&runtimeChallengeTestRow{
 		ID:              904,
 		Title:           "Shared Practice",
-		Category:        challengecontracts.DimensionWeb,
-		Difficulty:      challengecontracts.ChallengeDifficultyEasy,
+		Category:        taxonomy.DimensionWeb,
+		Difficulty:      taxonomy.DifficultyEasy,
 		FlagType:        challengecontracts.FlagTypeStatic,
 		Status:          challengecontracts.ChallengeStatusPublished,
 		InstanceSharing: challengecontracts.InstanceSharingShared,
@@ -834,8 +835,8 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 	if err := repo.db.Create(&runtimeChallengeTestRow{
 		ID:         101,
 		Title:      "Matrix Web Challenge",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		Points:     100,
@@ -869,11 +870,11 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 	if item.ChallengeTitle != "Matrix Web Challenge" {
 		t.Fatalf("expected challenge title, got %+v", item)
 	}
-	if item.Category != challengecontracts.DimensionWeb {
-		t.Fatalf("expected category %q, got %+v", challengecontracts.DimensionWeb, item)
+	if item.Category != taxonomy.DimensionWeb {
+		t.Fatalf("expected category %q, got %+v", taxonomy.DimensionWeb, item)
 	}
-	if item.Difficulty != challengecontracts.ChallengeDifficultyEasy {
-		t.Fatalf("expected difficulty %q, got %+v", challengecontracts.ChallengeDifficultyEasy, item)
+	if item.Difficulty != taxonomy.DifficultyEasy {
+		t.Fatalf("expected difficulty %q, got %+v", taxonomy.DifficultyEasy, item)
 	}
 	if item.FlagType != challengecontracts.FlagTypeStatic {
 		t.Fatalf("expected flag type %q, got %+v", challengecontracts.FlagTypeStatic, item)
@@ -895,8 +896,8 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 	if err := repo.db.Create(&runtimeChallengeTestRow{
 		ID:         102,
 		Title:      "Shared AWD Challenge",
-		Category:   challengecontracts.DimensionPwn,
-		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		Category:   taxonomy.DimensionPwn,
+		Difficulty: taxonomy.DifficultyMedium,
 		FlagType:   challengecontracts.FlagTypeDynamic,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		Points:     150,
@@ -960,8 +961,8 @@ func TestServiceGetUserInstancesShowsPracticeSharedInstanceToAnyUser(t *testing.
 	if err := repo.db.Create(&runtimeChallengeTestRow{
 		ID:              103,
 		Title:           "Shared Practice",
-		Category:        challengecontracts.DimensionWeb,
-		Difficulty:      challengecontracts.ChallengeDifficultyEasy,
+		Category:        taxonomy.DimensionWeb,
+		Difficulty:      taxonomy.DifficultyEasy,
 		FlagType:        challengecontracts.FlagTypeStatic,
 		Status:          challengecontracts.ChallengeStatusPublished,
 		InstanceSharing: challengecontracts.InstanceSharingShared,

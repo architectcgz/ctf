@@ -40,3 +40,11 @@ func TestParseRejectsTooLargeRange(t *testing.T) {
 		t.Fatal("expected oversized range to be rejected")
 	}
 }
+
+func TestParseRejectsZeroNow(t *testing.T) {
+	t.Parallel()
+
+	if _, err := Parse(time.Time{}, "", ""); err == nil {
+		t.Fatal("expected zero now to be rejected")
+	}
+}

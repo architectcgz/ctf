@@ -13,6 +13,7 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	"ctf-platform/internal/shared/taxonomy"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -36,8 +37,8 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         201,
 		Title:      "Queued Web",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
 		ImageID:    101,
 		Status:     challengecontracts.ChallengeStatusPublished,
@@ -1456,8 +1457,8 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         206,
 		Title:      "Expired Runtime",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
 		ImageID:    106,
 		Status:     challengecontracts.ChallengeStatusPublished,

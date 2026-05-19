@@ -116,6 +116,49 @@ func TestPortsDoNotDeclareWideChallengeRepository(t *testing.T) {
 	}
 }
 
+func TestContractsDoNotReExportSharedTaxonomy(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("contracts", "*.go"))
+	if err != nil {
+		t.Fatalf("glob challenge contracts files: %v", err)
+	}
+
+	blockedMarkers := []string{
+		"DimensionWeb",
+		"DimensionPwn",
+		"DimensionReverse",
+		"DimensionCrypto",
+		"DimensionMisc",
+		"DimensionForensics",
+		"AllDimensions",
+		"IsValidDimension(",
+		"ChallengeDifficultyBeginner",
+		"ChallengeDifficultyEasy",
+		"ChallengeDifficultyMedium",
+		"ChallengeDifficultyHard",
+		"ChallengeDifficultyInsane",
+		"internal/shared/taxonomy",
+	}
+
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("read challenge contracts file %s: %v", file, err)
+		}
+		source := string(content)
+		for _, marker := range blockedMarkers {
+			if strings.Contains(source, marker) {
+				t.Fatalf("challenge contracts must not re-export shared taxonomy marker %s in %s", marker, file)
+			}
+		}
+	}
+}
+
 func TestRuntimeOwnsChallengeWiring(t *testing.T) {
 	t.Parallel()
 

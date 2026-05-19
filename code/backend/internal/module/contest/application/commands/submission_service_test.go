@@ -24,6 +24,7 @@ import (
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
 	rediskeys "ctf-platform/internal/pkg/redis"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -872,7 +873,7 @@ func createContestSubmissionFixture(t *testing.T, db *gorm.DB, contestID, challe
 		ID:         challengeID,
 		Title:      "dynamic-web",
 		Category:   "web",
-		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		Difficulty: taxonomy.DifficultyMedium,
 		Points:     500,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,

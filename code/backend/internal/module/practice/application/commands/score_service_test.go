@@ -20,6 +20,7 @@ import (
 	"ctf-platform/internal/module/practice/testsupport"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	"ctf-platform/internal/pkg/cache"
+	"ctf-platform/internal/shared/taxonomy"
 )
 
 func newTestScoreCommandService(db *gorm.DB, redisClient *redis.Client) *practicecmd.ScoreService {
@@ -40,7 +41,7 @@ func TestScoreServiceUpdateUserScoreHonorsCancellation(t *testing.T) {
 	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         1,
 		Title:      "web-1",
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		CreatedAt:  now,
@@ -78,7 +79,7 @@ func TestScoreServiceCalculateScoreUsesChallengePointsDirectly(t *testing.T) {
 	if err := db.Create(&practiceCommandChallengeRow{
 		ID:         11,
 		Title:      "web-2",
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		CreatedAt:  now,
@@ -111,7 +112,7 @@ func TestScoreServiceUpdateUserScoreUsesSolvedChallengePointsSum(t *testing.T) {
 		{
 			ID:         21,
 			Title:      "easy-web",
-			Difficulty: challengecontracts.ChallengeDifficultyEasy,
+			Difficulty: taxonomy.DifficultyEasy,
 			Points:     100,
 			Status:     challengecontracts.ChallengeStatusPublished,
 			CreatedAt:  now,
@@ -120,7 +121,7 @@ func TestScoreServiceUpdateUserScoreUsesSolvedChallengePointsSum(t *testing.T) {
 		{
 			ID:         22,
 			Title:      "hard-pwn",
-			Difficulty: challengecontracts.ChallengeDifficultyHard,
+			Difficulty: taxonomy.DifficultyHard,
 			Points:     300,
 			Status:     challengecontracts.ChallengeStatusPublished,
 			CreatedAt:  now,

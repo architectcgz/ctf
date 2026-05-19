@@ -23,6 +23,7 @@ import (
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -90,8 +91,8 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
 		ID:         102,
 		Title:      "Shared AWD Challenge",
-		Category:   challengecontracts.DimensionPwn,
-		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		Category:   taxonomy.DimensionPwn,
+		Difficulty: taxonomy.DifficultyMedium,
 		FlagType:   challengecontracts.FlagTypeDynamic,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		Points:     150,
@@ -152,8 +153,8 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
 		ID:         201,
 		Title:      "Legacy Runtime Challenge",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		Points:     100,
@@ -235,7 +236,7 @@ func TestInstanceServiceGetUserInstancesPrefersContestAWDServiceMetadata(t *test
 	if items[0].ChallengeTitle != "Bank Portal" {
 		t.Fatalf("expected awd instance title from contest service display name, got %+v", items[0])
 	}
-	if items[0].Category != challengecontracts.DimensionPwn || items[0].Difficulty != challengecontracts.ChallengeDifficultyHard || items[0].FlagType != challengecontracts.FlagTypeDynamic {
+	if items[0].Category != taxonomy.DimensionPwn || items[0].Difficulty != taxonomy.DifficultyHard || items[0].FlagType != challengecontracts.FlagTypeDynamic {
 		t.Fatalf("expected awd instance metadata from contest service snapshot, got %+v", items[0])
 	}
 	if items[0].AccessURL != "" {
@@ -257,8 +258,8 @@ func TestInstanceServiceGetUserInstancesFiltersLegacyAWDInstanceWithoutServiceID
 	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
 		ID:         221,
 		Title:      "Legacy AWD Runtime Challenge",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyMedium,
 		FlagType:   challengecontracts.FlagTypeDynamic,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		CreatedAt:  now,
@@ -351,8 +352,8 @@ func TestInstanceServiceGetUserInstancesHidesControlledAWDInstance(t *testing.T)
 			seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
 				ID:         223,
 				Title:      "Controlled AWD Runtime Challenge",
-				Category:   challengecontracts.DimensionWeb,
-				Difficulty: challengecontracts.ChallengeDifficultyMedium,
+				Category:   taxonomy.DimensionWeb,
+				Difficulty: taxonomy.DifficultyMedium,
 				FlagType:   challengecontracts.FlagTypeDynamic,
 				Status:     challengecontracts.ChallengeStatusPublished,
 				CreatedAt:  now,
@@ -447,8 +448,8 @@ func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
 	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
 		ID:         103,
 		Title:      "Queued Challenge",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		Points:     120,
@@ -486,8 +487,8 @@ func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
 	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
 		ID:         104,
 		Title:      "Failed Challenge",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		Points:     120,
@@ -525,8 +526,8 @@ func TestInstanceServiceGetUserInstancesMarksExpiredRunningInstance(t *testing.T
 	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
 		ID:         105,
 		Title:      "Expired Challenge",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		Points:     120,
@@ -568,8 +569,8 @@ func TestInstanceServiceGetAccessURLRejectsExpiredRunningInstance(t *testing.T) 
 	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
 		ID:         106,
 		Title:      "Expired Access",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		Points:     120,
@@ -608,8 +609,8 @@ func TestInstanceServiceGetAccessURLRejectsControlledAWDInstance(t *testing.T) {
 	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
 		ID:         225,
 		Title:      "Controlled Access",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		CreatedAt:  now,
@@ -749,7 +750,7 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 
 	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{ID: 211, Title: "Legacy Runtime Challenge", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, FlagType: challengecontracts.FlagTypeStatic, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{ID: 211, Title: "Legacy Runtime Challenge", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, FlagType: challengecontracts.FlagTypeStatic, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
 	if err := db.Create(&contestcontracts.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
@@ -815,7 +816,7 @@ func TestInstanceServiceListTeacherInstancesFiltersLegacyAWDInstanceWithoutServi
 
 	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
-	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{ID: 222, Title: "Legacy AWD Runtime Challenge", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyMedium, FlagType: challengecontracts.FlagTypeDynamic, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{ID: 222, Title: "Legacy AWD Runtime Challenge", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyMedium, FlagType: challengecontracts.FlagTypeDynamic, Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
 	if err := db.Create(&contestcontracts.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",

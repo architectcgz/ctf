@@ -23,12 +23,12 @@ import (
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/shared/mapperutil"
+	"ctf-platform/internal/shared/taxonomy"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/classreview"
 	"ctf-platform/internal/teaching/classwindow"
@@ -785,7 +785,7 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 		Review:            reviewResp,
 		CategoryDistribution: assessmentdomain.FillMissingDistributionStats(
 			categoryDistribution,
-			challengecontracts.AllDimensions,
+			taxonomy.AllDimensions,
 		),
 		DifficultyDistribution: assessmentdomain.FillMissingDistributionStats(
 			difficultyDistribution,
@@ -1025,11 +1025,11 @@ func buildReviewArchiveTeachingFactSnapshot(
 		SubmissionFailureCount: submissionStats.FailureCount,
 		WriteupCount:           summary.WriteupCount,
 		ApprovedReviewCount:    countApprovedManualReviews(manualReviews),
-		Dimensions:             make([]teachingadvice.DimensionFact, 0, len(challengecontracts.AllDimensions)),
+		Dimensions:             make([]teachingadvice.DimensionFact, 0, len(taxonomy.AllDimensions)),
 	}
 
-	factMap := make(map[string]*teachingadvice.DimensionFact, len(challengecontracts.AllDimensions))
-	for _, dimension := range challengecontracts.AllDimensions {
+	factMap := make(map[string]*teachingadvice.DimensionFact, len(taxonomy.AllDimensions))
+	for _, dimension := range taxonomy.AllDimensions {
 		dimensionCopy := dimension
 		factMap[dimension] = &teachingadvice.DimensionFact{Dimension: dimensionCopy}
 	}
@@ -1092,7 +1092,7 @@ func buildReviewArchiveTeachingFactSnapshot(
 		fact.EvidenceCount++
 	}
 
-	for _, dimension := range challengecontracts.AllDimensions {
+	for _, dimension := range taxonomy.AllDimensions {
 		fact := ensureReviewArchiveDimensionFact(factMap, dimension)
 		if fact == nil {
 			continue

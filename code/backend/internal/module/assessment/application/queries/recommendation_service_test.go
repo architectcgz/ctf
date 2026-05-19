@@ -26,6 +26,7 @@ import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/shared/taxonomy"
 )
 
 type assessmentRecommendationChallengeRow struct {
@@ -137,7 +138,7 @@ func TestRecommendationServiceRecommendChallengesUsesCacheForDefaultLimit(t *tes
 	t.Cleanup(func() { _ = redisClient.Close() })
 
 	cached := []*assessmentcontracts.ChallengeRecommendation{
-		{ID: 1, Title: "cached-web", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Summary: "cached"},
+		{ID: 1, Title: "cached-web", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 100, Summary: "cached"},
 	}
 	payload, err := json.Marshal(cached)
 	if err != nil {
@@ -173,8 +174,8 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	}
 
 	challenges := []assessmentRecommendationChallengeRow{
-		{ID: 101, Title: "web-intro", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 202, Title: "pwn-intro", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 150, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 101, Title: "web-intro", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 202, Title: "pwn-intro", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyEasy, Points: 150, Status: challengecontracts.ChallengeStatusPublished},
 	}
 	for _, challenge := range challenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -183,9 +184,9 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	}
 
 	profiles := []assessmententity.SkillProfile{
-		{UserID: 7, Dimension: challengecontracts.DimensionWeb, Score: 0.2, UpdatedAt: now},
-		{UserID: 7, Dimension: challengecontracts.DimensionCrypto, Score: 0.8, UpdatedAt: now},
-		{UserID: 7, Dimension: challengecontracts.DimensionPwn, Score: 0.1, UpdatedAt: now},
+		{UserID: 7, Dimension: taxonomy.DimensionWeb, Score: 0.2, UpdatedAt: now},
+		{UserID: 7, Dimension: taxonomy.DimensionCrypto, Score: 0.8, UpdatedAt: now},
+		{UserID: 7, Dimension: taxonomy.DimensionPwn, Score: 0.1, UpdatedAt: now},
 	}
 	for _, profile := range profiles {
 		if err := db.Create(&profile).Error; err != nil {
@@ -207,8 +208,8 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 
 	stubRepo := &stubChallengeRecommendationRepo{
 		challenges: []*challengecontracts.RecommendationChallenge{
-			{ID: 301, Title: "web-fix", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 120},
-			{ID: 302, Title: "pwn-fix", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 180},
+			{ID: 301, Title: "web-fix", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 120},
+			{ID: 302, Title: "pwn-fix", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyMedium, Points: 180},
 		},
 	}
 	service := newRecommendationTestService(db, stubRepo, nil)
@@ -226,7 +227,7 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	if stubRepo.lastLimit != 5 {
 		t.Fatalf("expected limit capped to max limit 5, got %d", stubRepo.lastLimit)
 	}
-	if len(stubRepo.lastDims) != 1 || stubRepo.lastDims[0] != challengecontracts.DimensionPwn {
+	if len(stubRepo.lastDims) != 1 || stubRepo.lastDims[0] != taxonomy.DimensionPwn {
 		t.Fatalf("unexpected weak dimensions: %+v", stubRepo.lastDims)
 	}
 	if len(stubRepo.lastSolved) != 1 || stubRepo.lastSolved[0] != 101 {
@@ -256,7 +257,7 @@ func TestRecommendationServiceRecommendChallengesUsesMatchedRecommendationDimens
 	}
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    8,
-		Dimension: challengecontracts.DimensionPwn,
+		Dimension: taxonomy.DimensionPwn,
 		Score:     0.18,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -265,8 +266,8 @@ func TestRecommendationServiceRecommendChallengesUsesMatchedRecommendationDimens
 	if err := db.Create(&assessmentRecommendationChallengeRow{
 		ID:         801,
 		Title:      "pwn-primer",
-		Category:   challengecontracts.DimensionPwn,
-		Difficulty: challengecontracts.ChallengeDifficultyBeginner,
+		Category:   taxonomy.DimensionPwn,
+		Difficulty: taxonomy.DifficultyBeginner,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 	}).Error; err != nil {
@@ -288,9 +289,9 @@ func TestRecommendationServiceRecommendChallengesUsesMatchedRecommendationDimens
 			{
 				ID:                      401,
 				Title:                   "tagged-web-for-pwn",
-				Category:                challengecontracts.DimensionWeb,
-				RecommendationDimension: challengecontracts.DimensionPwn,
-				Difficulty:              challengecontracts.ChallengeDifficultyEasy,
+				Category:                taxonomy.DimensionWeb,
+				RecommendationDimension: taxonomy.DimensionPwn,
+				Difficulty:              taxonomy.DifficultyEasy,
 				Points:                  120,
 			},
 		},
@@ -304,10 +305,10 @@ func TestRecommendationServiceRecommendChallengesUsesMatchedRecommendationDimens
 	if len(items) != 1 {
 		t.Fatalf("expected 1 recommendation, got %+v", items)
 	}
-	if items[0].Dimension != challengecontracts.DimensionPwn {
+	if items[0].Dimension != taxonomy.DimensionPwn {
 		t.Fatalf("expected recommendation dimension pwn, got %+v", items[0])
 	}
-	if items[0].Category != challengecontracts.DimensionWeb {
+	if items[0].Category != taxonomy.DimensionWeb {
 		t.Fatalf("expected original challenge category preserved, got %+v", items[0])
 	}
 	if items[0].Summary == "" || !strings.Contains(items[0].Summary, "Pwn") {
@@ -328,7 +329,7 @@ func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandi
 	}
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    18,
-		Dimension: challengecontracts.DimensionPwn,
+		Dimension: taxonomy.DimensionPwn,
 		Score:     0.5,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -337,8 +338,8 @@ func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandi
 	if err := db.Create(&assessmentRecommendationChallengeRow{
 		ID:         1801,
 		Title:      "training-pwn-sample",
-		Category:   challengecontracts.DimensionPwn,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionPwn,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     80,
 		Status:     challengecontracts.ChallengeStatusPublished,
 	}).Error; err != nil {
@@ -359,16 +360,16 @@ func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandi
 		{
 			ID:         1802,
 			Title:      "pwn-beginner",
-			Category:   challengecontracts.DimensionPwn,
-			Difficulty: challengecontracts.ChallengeDifficultyBeginner,
+			Category:   taxonomy.DimensionPwn,
+			Difficulty: taxonomy.DifficultyBeginner,
 			Points:     90,
 			Status:     challengecontracts.ChallengeStatusPublished,
 		},
 		{
 			ID:         1803,
 			Title:      "pwn-easy",
-			Category:   challengecontracts.DimensionPwn,
-			Difficulty: challengecontracts.ChallengeDifficultyEasy,
+			Category:   taxonomy.DimensionPwn,
+			Difficulty: taxonomy.DifficultyEasy,
 			Points:     120,
 			Status:     challengecontracts.ChallengeStatusPublished,
 		},
@@ -388,10 +389,10 @@ func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandi
 	if len(items) != 2 {
 		t.Fatalf("expected 2 recommendations, got %+v", items)
 	}
-	if items[0].DifficultyBand != challengecontracts.ChallengeDifficultyEasy {
+	if items[0].DifficultyBand != taxonomy.DifficultyEasy {
 		t.Fatalf("expected preferred difficulty band easy, got %+v", items[0])
 	}
-	if items[0].Difficulty != challengecontracts.ChallengeDifficultyEasy {
+	if items[0].Difficulty != taxonomy.DifficultyEasy {
 		t.Fatalf("expected easy candidate to rank first when preferred difficulty is easy, got %+v", items)
 	}
 }
@@ -401,7 +402,7 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenNoWeakDimension(t *testin
 	now := time.Now()
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    9,
-		Dimension: challengecontracts.DimensionWeb,
+		Dimension: taxonomy.DimensionWeb,
 		Score:     0.95,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -436,7 +437,7 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenOnlyHealthyEvidenceExists
 	}
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    10,
-		Dimension: challengecontracts.DimensionWeb,
+		Dimension: taxonomy.DimensionWeb,
 		Score:     0.82,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -445,8 +446,8 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenOnlyHealthyEvidenceExists
 	if err := db.Create(&assessmentRecommendationChallengeRow{
 		ID:         901,
 		Title:      "healthy-web-sample",
-		Category:   challengecontracts.DimensionWeb,
-		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 	}).Error; err != nil {
@@ -491,7 +492,7 @@ func TestRecommendationServiceRecommendChallengesReturnsProgressionCandidateForS
 	}
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    30,
-		Dimension: challengecontracts.DimensionWeb,
+		Dimension: taxonomy.DimensionWeb,
 		Score:     0.92,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -499,14 +500,14 @@ func TestRecommendationServiceRecommendChallengesReturnsProgressionCandidateForS
 	}
 
 	solvedChallenges := []assessmentRecommendationChallengeRow{
-		{ID: 3001, Title: "web-easy-a", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 3002, Title: "web-easy-b", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyEasy, Points: 120, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 3003, Title: "web-medium-a", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 150, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 3004, Title: "web-medium-b", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 180, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3001, Title: "web-easy-a", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3002, Title: "web-easy-b", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 120, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3003, Title: "web-medium-a", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyMedium, Points: 150, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3004, Title: "web-medium-b", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyMedium, Points: 180, Status: challengecontracts.ChallengeStatusPublished},
 	}
 	candidateChallenges := []assessmentRecommendationChallengeRow{
-		{ID: 3005, Title: "web-medium-next", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 160, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 3006, Title: "web-hard-next", Category: challengecontracts.DimensionWeb, Difficulty: challengecontracts.ChallengeDifficultyHard, Points: 220, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3005, Title: "web-medium-next", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyMedium, Points: 160, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3006, Title: "web-hard-next", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyHard, Points: 220, Status: challengecontracts.ChallengeStatusPublished},
 	}
 	for _, challenge := range append(solvedChallenges, candidateChallenges...) {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -533,10 +534,10 @@ func TestRecommendationServiceRecommendChallengesReturnsProgressionCandidateForS
 	if len(resp.Challenges) == 0 {
 		t.Fatalf("expected progression recommendation for stable healthy dimension, got %+v", resp)
 	}
-	if resp.Challenges[0].DifficultyBand != challengecontracts.ChallengeDifficultyHard {
+	if resp.Challenges[0].DifficultyBand != taxonomy.DifficultyHard {
 		t.Fatalf("expected progression difficulty band hard, got %+v", resp.Challenges[0])
 	}
-	if resp.Challenges[0].Difficulty != challengecontracts.ChallengeDifficultyHard {
+	if resp.Challenges[0].Difficulty != taxonomy.DifficultyHard {
 		t.Fatalf("expected hard challenge to rank first for progression recommendation, got %+v", resp.Challenges)
 	}
 }
@@ -554,7 +555,7 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 	}
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    31,
-		Dimension: challengecontracts.DimensionPwn,
+		Dimension: taxonomy.DimensionPwn,
 		Score:     0.12,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -562,10 +563,10 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 	}
 
 	awdChallenges := []challengecontracts.AWDChallenge{
-		{ID: 3101, Name: "pwn-awd-easy-a", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 3102, Name: "pwn-awd-easy-b", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 3103, Name: "pwn-awd-medium-a", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
-		{ID: 3104, Name: "pwn-awd-medium-b", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 3101, Name: "pwn-awd-easy-a", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 3102, Name: "pwn-awd-easy-b", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyEasy, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 3103, Name: "pwn-awd-medium-a", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 3104, Name: "pwn-awd-medium-b", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyMedium, Status: challengecontracts.AWDChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, challenge := range awdChallenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -586,8 +587,8 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 	}
 
 	candidateChallenges := []assessmentRecommendationChallengeRow{
-		{ID: 3111, Title: "pwn-medium-next", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyMedium, Points: 180, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 3112, Title: "pwn-hard-next", Category: challengecontracts.DimensionPwn, Difficulty: challengecontracts.ChallengeDifficultyHard, Points: 240, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3111, Title: "pwn-medium-next", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyMedium, Points: 180, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3112, Title: "pwn-hard-next", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyHard, Points: 240, Status: challengecontracts.ChallengeStatusPublished},
 	}
 	for _, challenge := range candidateChallenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -607,10 +608,10 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 	if len(resp.Challenges) == 0 {
 		t.Fatalf("expected awd-backed progression recommendation, got %+v", resp)
 	}
-	if resp.Challenges[0].DifficultyBand != challengecontracts.ChallengeDifficultyHard {
+	if resp.Challenges[0].DifficultyBand != taxonomy.DifficultyHard {
 		t.Fatalf("expected hard progression band from awd-backed snapshot, got %+v", resp.Challenges[0])
 	}
-	if resp.Challenges[0].Difficulty != challengecontracts.ChallengeDifficultyHard {
+	if resp.Challenges[0].Difficulty != taxonomy.DifficultyHard {
 		t.Fatalf("expected hard challenge to rank first for awd-backed progression recommendation, got %+v", resp.Challenges)
 	}
 }
@@ -620,7 +621,7 @@ func TestRecommendationServiceRecommendChallengesHonorsCancellation(t *testing.T
 	now := time.Now()
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    11,
-		Dimension: challengecontracts.DimensionWeb,
+		Dimension: taxonomy.DimensionWeb,
 		Score:     0.2,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -660,7 +661,7 @@ func TestRecommendationServiceRegistersContestAttackAcceptedConsumer(t *testing.
 			UserID:         17,
 			ContestID:      99,
 			AWDChallengeID: 501,
-			Dimension:      challengecontracts.DimensionWeb,
+			Dimension:      taxonomy.DimensionWeb,
 			OccurredAt:     time.Now(),
 		},
 	}); err != nil {

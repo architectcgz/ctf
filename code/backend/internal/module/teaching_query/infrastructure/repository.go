@@ -14,6 +14,7 @@ import (
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
+	"ctf-platform/internal/shared/taxonomy"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -22,8 +23,72 @@ type Repository struct {
 	db *gorm.DB
 }
 
+type classItemRow struct {
+	Name         string `gorm:"column:name"`
+	StudentCount int64  `gorm:"column:student_count"`
+}
+
+type studentItemRow struct {
+	ID               int64   `gorm:"column:id"`
+	Username         string  `gorm:"column:username"`
+	StudentNo        *string `gorm:"column:student_no"`
+	Name             *string `gorm:"column:name"`
+	ClassName        *string `gorm:"column:class_name"`
+	SolvedCount      int     `gorm:"column:solved_count"`
+	TotalScore       int     `gorm:"column:total_score"`
+	RecentEventCount int     `gorm:"column:recent_event_count"`
+	WeakDimension    *string `gorm:"column:weak_dimension"`
+}
+
+type progressRow struct {
+	Key    string `gorm:"column:key"`
+	Total  int    `gorm:"column:total"`
+	Solved int    `gorm:"column:solved"`
+}
+
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
+}
+
+func toClassItems(rows []classItemRow) []queryports.ClassItem {
+	items := make([]queryports.ClassItem, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, queryports.ClassItem{
+			Name:         row.Name,
+			StudentCount: row.StudentCount,
+		})
+	}
+	return items
+}
+
+func toStudentItems(rows []studentItemRow) []queryports.StudentItem {
+	items := make([]queryports.StudentItem, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, queryports.StudentItem{
+			ID:               row.ID,
+			Username:         row.Username,
+			StudentNo:        row.StudentNo,
+			Name:             row.Name,
+			ClassName:        row.ClassName,
+			SolvedCount:      row.SolvedCount,
+			TotalScore:       row.TotalScore,
+			RecentEventCount: row.RecentEventCount,
+			WeakDimension:    row.WeakDimension,
+		})
+	}
+	return items
+}
+
+func toProgressRows(rows []progressRow) []queryports.ProgressRow {
+	items := make([]queryports.ProgressRow, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, queryports.ProgressRow{
+			Key:    row.Key,
+			Total:  row.Total,
+			Solved: row.Solved,
+		})
+	}
+	return items
 }
 
 func (r *Repository) CountStudentsByClass(ctx context.Context, className string) (int64, error) {
@@ -48,7 +113,7 @@ func (r *Repository) CountClasses(ctx context.Context) (int64, error) {
 }
 
 func (r *Repository) ListClasses(ctx context.Context, offset, limit int) ([]queryports.ClassItem, error) {
-	items := make([]queryports.ClassItem, 0)
+	rows := make([]classItemRow, 0)
 	query := r.db.WithContext(ctx).Model(&identitycontracts.User{}).
 		Select("class_name AS name, COUNT(*) AS student_count").
 		Where("role = ? AND class_name <> '' AND deleted_at IS NULL", identitycontracts.RoleStudent).
@@ -60,10 +125,10 @@ func (r *Repository) ListClasses(ctx context.Context, offset, limit int) ([]quer
 	if limit > 0 {
 		query = query.Limit(limit)
 	}
-	if err := query.Scan(&items).Error; err != nil {
+	if err := query.Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("list classes: %w", err)
 	}
-	return items, nil
+	return toClassItems(rows), nil
 }
 
 func (r *Repository) listStudentsBaseQuery(ctx context.Context, since time.Time) *gorm.DB {
@@ -179,7 +244,7 @@ func (r *Repository) ListStudents(
 	since time.Time,
 	offset, limit int,
 ) ([]queryports.StudentItem, int64, error) {
-	items := make([]queryports.StudentItem, 0)
+	rows := make([]studentItemRow, 0)
 	var total int64
 	countQuery := applyStudentFilters(
 		r.db.WithContext(ctx).Table("users AS u").Where("u.role = ? AND u.deleted_at IS NULL", identitycontracts.RoleStudent),
@@ -191,7 +256,7 @@ func (r *Repository) ListStudents(
 		return nil, 0, fmt.Errorf("count students: %w", err)
 	}
 	if total == 0 {
-		return items, 0, nil
+		return []queryports.StudentItem{}, 0, nil
 	}
 
 	query := applyStudentFilters(r.listStudentsBaseQuery(ctx, since), className, keyword, studentNo).
@@ -202,10 +267,10 @@ func (r *Repository) ListStudents(
 	if limit > 0 {
 		query = query.Limit(limit)
 	}
-	if err := query.Scan(&items).Error; err != nil {
+	if err := query.Scan(&rows).Error; err != nil {
 		return nil, 0, fmt.Errorf("list students: %w", err)
 	}
-	return items, total, nil
+	return toStudentItems(rows), total, nil
 }
 
 func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]queryports.StudentItem, error) {
@@ -227,17 +292,17 @@ func (r *Repository) ListStudentsByClasses(
 		return []queryports.StudentItem{}, nil
 	}
 
-	items := make([]queryports.StudentItem, 0)
+	rows := make([]studentItemRow, 0)
 	query := applyStudentFilters(
 		applyStudentScopeFilter(r.listStudentsBaseQuery(ctx, since), normalized),
 		"",
 		keyword,
 		studentNo,
 	).Order(resolveStudentOrder("solved_count", "desc"))
-	if err := query.Scan(&items).Error; err != nil {
+	if err := query.Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("list students by classes: %w", err)
 	}
-	return items, nil
+	return toStudentItems(rows), nil
 }
 
 func (r *Repository) ListClassTeachingFactSnapshots(
@@ -583,8 +648,8 @@ func (r *Repository) fillClassDimensionFacts(
 ) error {
 	dimensionFactsByUser := make(map[int64]map[string]*teachingadvice.DimensionFact, len(userIDs))
 	for _, userID := range userIDs {
-		dimensionFactsByUser[userID] = make(map[string]*teachingadvice.DimensionFact, len(challengecontracts.AllDimensions))
-		for _, dimension := range challengecontracts.AllDimensions {
+		dimensionFactsByUser[userID] = make(map[string]*teachingadvice.DimensionFact, len(taxonomy.AllDimensions))
+		for _, dimension := range taxonomy.AllDimensions {
 			dimensionCopy := dimension
 			dimensionFactsByUser[userID][dimension] = &teachingadvice.DimensionFact{Dimension: dimensionCopy}
 		}
@@ -800,8 +865,8 @@ func (r *Repository) fillClassDimensionFacts(
 		if snapshot == nil {
 			continue
 		}
-		items := make([]teachingadvice.DimensionFact, 0, len(challengecontracts.AllDimensions))
-		for _, dimension := range challengecontracts.AllDimensions {
+		items := make([]teachingadvice.DimensionFact, 0, len(taxonomy.AllDimensions))
+		for _, dimension := range taxonomy.AllDimensions {
 			fact := dimensions[dimension]
 			if fact == nil {
 				continue
@@ -844,7 +909,7 @@ func (r *Repository) CountSolvedChallenges(ctx context.Context, userID int64) (i
 }
 
 func (r *Repository) GetCategoryProgress(ctx context.Context, userID int64) ([]queryports.ProgressRow, error) {
-	rows := make([]queryports.ProgressRow, 0)
+	rows := make([]progressRow, 0)
 	if err := r.db.WithContext(ctx).Raw(`
 		SELECT
 			c.category AS key,
@@ -861,11 +926,11 @@ func (r *Repository) GetCategoryProgress(ctx context.Context, userID int64) ([]q
 	`, userID, challengecontracts.ChallengeStatusPublished).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("get category progress: %w", err)
 	}
-	return rows, nil
+	return toProgressRows(rows), nil
 }
 
 func (r *Repository) GetDifficultyProgress(ctx context.Context, userID int64) ([]queryports.ProgressRow, error) {
-	rows := make([]queryports.ProgressRow, 0)
+	rows := make([]progressRow, 0)
 	if err := r.db.WithContext(ctx).Raw(`
 		SELECT
 			c.difficulty AS key,
@@ -890,7 +955,7 @@ func (r *Repository) GetDifficultyProgress(ctx context.Context, userID int64) ([
 	`, userID, challengecontracts.ChallengeStatusPublished).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("get difficulty progress: %w", err)
 	}
-	return rows, nil
+	return toProgressRows(rows), nil
 }
 
 func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]queryports.TimelineEventRecord, error) {

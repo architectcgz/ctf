@@ -14,6 +14,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
+	"ctf-platform/internal/shared/taxonomy"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
@@ -37,7 +38,7 @@ func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 	}
 	if err := db.Create(&practiceCommandChallengeRow{
 		ID:        11,
-		Category:  challengecontracts.DimensionWeb,
+		Category:  taxonomy.DimensionWeb,
 		Points:    100,
 		Status:    challengecontracts.ChallengeStatusPublished,
 		FlagType:  challengecontracts.FlagTypeStatic,
@@ -115,7 +116,7 @@ func TestSubmitFlagRejectsTooFrequentAttempts(t *testing.T) {
 	}
 	if err := db.Create(&practiceCommandChallengeRow{
 		ID:        12,
-		Category:  challengecontracts.DimensionWeb,
+		Category:  taxonomy.DimensionWeb,
 		Points:    50,
 		Status:    challengecontracts.ChallengeStatusPublished,
 		FlagType:  challengecontracts.FlagTypeStatic,

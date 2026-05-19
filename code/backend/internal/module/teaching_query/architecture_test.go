@@ -109,6 +109,18 @@ func TestPortsDoNotDeclareWideRepository(t *testing.T) {
 	}
 }
 
+func TestPortsDoNotDeclareGORMTags(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "query.go"))
+	if err != nil {
+		t.Fatalf("read teaching_query ports file: %v", err)
+	}
+	if strings.Contains(string(content), "gorm:\"") {
+		t.Fatalf("teaching_query ports must not declare gorm tags")
+	}
+}
+
 func TestInfrastructureDoesNotDependOnDTO(t *testing.T) {
 	t.Parallel()
 

@@ -10,6 +10,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -22,7 +23,7 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 	challengeItem := &challengeentity.Challenge{
 		Title:       "web-101",
 		Description: "desc",
-		Category:    challengecontracts.DimensionWeb,
+		Category:    taxonomy.DimensionWeb,
 		Difficulty:  challengeentity.ChallengeDifficultyEasy,
 		Points:      100,
 		ImageID:     1,
@@ -72,7 +73,7 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 	challengeItem := &challengeentity.Challenge{
 		Title:       "web-201",
 		Description: "desc",
-		Category:    challengecontracts.DimensionWeb,
+		Category:    taxonomy.DimensionWeb,
 		Difficulty:  challengeentity.ChallengeDifficultyMedium,
 		Points:      200,
 		ImageID:     1,
@@ -161,7 +162,7 @@ func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 	challengeItem := &challengeentity.Challenge{
 		Title:       "web-202",
 		Description: "desc",
-		Category:    challengecontracts.DimensionWeb,
+		Category:    taxonomy.DimensionWeb,
 		Difficulty:  challengeentity.ChallengeDifficultyMedium,
 		Points:      200,
 		ImageID:     1,
@@ -201,7 +202,7 @@ func TestTopologyServiceRejectsInjectFlagForSharedChallenge(t *testing.T) {
 	challengeItem := &challengeentity.Challenge{
 		Title:           "shared-web-flag",
 		Description:     "desc",
-		Category:        challengecontracts.DimensionWeb,
+		Category:        taxonomy.DimensionWeb,
 		Difficulty:      challengeentity.ChallengeDifficultyMedium,
 		Points:          200,
 		ImageID:         1,
@@ -272,7 +273,7 @@ func TestTopologyServiceAllowsFineGrainedPolicyWhenBindingTemplate(t *testing.T)
 	challengeItem := &challengeentity.Challenge{
 		Title:       "web-203",
 		Description: "desc",
-		Category:    challengecontracts.DimensionWeb,
+		Category:    taxonomy.DimensionWeb,
 		Difficulty:  challengeentity.ChallengeDifficultyMedium,
 		Points:      200,
 		ImageID:     1,

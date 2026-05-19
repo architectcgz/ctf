@@ -17,6 +17,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	"ctf-platform/internal/shared/taxonomy"
 	"ctf-platform/pkg/errcode"
 	"gorm.io/gorm"
 )
@@ -882,7 +883,7 @@ func TestGetChallengePackageExportMapsMissingTopologyToNotFound(t *testing.T) {
 
 	challenge := &challengeentity.Challenge{
 		Title:      "no-topology",
-		Category:   challengecontracts.DimensionWeb,
+		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
 		Status:     challengeentity.ChallengeStatusDraft,

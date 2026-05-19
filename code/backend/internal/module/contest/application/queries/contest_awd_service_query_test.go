@@ -11,6 +11,7 @@ import (
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
+	"ctf-platform/internal/shared/taxonomy"
 )
 
 func newContestAWDServiceQueryServiceForTest(t *testing.T) (*ContestAWDServiceQueryService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.AWDRepository) {
@@ -46,7 +47,7 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 		ID:         9801,
 		Title:      "service-query-challenge",
 		Category:   "web",
-		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		Difficulty: taxonomy.DifficultyMedium,
 		Points:     100,
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,

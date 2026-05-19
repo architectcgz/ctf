@@ -64,6 +64,7 @@ import (
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	teachingqueryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
+	"ctf-platform/internal/shared/taxonomy"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
@@ -251,8 +252,8 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		map[string]any{
 			"title":          "Web SQLi 101",
 			"description":    "basic sql injection challenge",
-			"category":       challengecontracts.DimensionWeb,
-			"difficulty":     challengecontracts.ChallengeDifficultyEasy,
+			"category":       taxonomy.DimensionWeb,
+			"difficulty":     taxonomy.DifficultyEasy,
 			"points":         100,
 			"image_id":       env.image.ID,
 			"attachment_url": "https://example.com/files/web-sqli-101.zip",
@@ -733,8 +734,8 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 		map[string]any{
 			"title":       "Draft Crypto",
 			"description": "not published yet",
-			"category":    challengecontracts.DimensionCrypto,
-			"difficulty":  challengecontracts.ChallengeDifficultyMedium,
+			"category":    taxonomy.DimensionCrypto,
+			"difficulty":  taxonomy.DifficultyMedium,
 			"points":      150,
 			"image_id":    env.image.ID,
 		},
