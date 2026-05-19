@@ -23,7 +23,7 @@ func NewRuntimeSubjectRepository(source challengecontracts.PracticeChallengeCont
 }
 
 func (r *RuntimeSubjectRepository) FindByID(ctx context.Context, id int64) (*practiceentity.Challenge, error) {
-	challenge, err := r.source.FindByID(ctx, id)
+	challenge, err := r.source.FindPracticeRuntimeChallengeByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeChallengeNotFound
 	}
@@ -51,7 +51,7 @@ func (r *RuntimeSubjectRepository) FindByID(ctx context.Context, id int64) (*pra
 }
 
 func (r *RuntimeSubjectRepository) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*practiceports.RuntimeChallengeTopology, error) {
-	topology, err := r.source.FindChallengeTopologyByChallengeID(ctx, challengeID)
+	topology, err := r.source.FindPracticeRuntimeChallengeTopologyByChallengeID(ctx, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, practiceports.ErrPracticeChallengeTopologyNotFound
 	}

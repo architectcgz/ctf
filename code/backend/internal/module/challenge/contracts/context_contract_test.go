@@ -16,11 +16,11 @@ func (ctxOnlyImageStore) FindByID(context.Context, int64) (*challengeentity.Imag
 
 type ctxOnlyPracticeChallengeContract struct{}
 
-func (ctxOnlyPracticeChallengeContract) FindByID(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyPracticeChallengeContract) FindPracticeRuntimeChallengeByID(context.Context, int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 	return nil, nil
 }
 
-func (ctxOnlyPracticeChallengeContract) FindChallengeTopologyByChallengeID(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
+func (ctxOnlyPracticeChallengeContract) FindPracticeRuntimeChallengeTopologyByChallengeID(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
 	return nil, nil
 }
 
@@ -52,7 +52,11 @@ func (ctxOnlyChallengeContract) BatchGetSolvedCount(context.Context, []int64) (m
 	return nil, nil
 }
 
-func (ctxOnlyChallengeContract) FindChallengeTopologyByChallengeID(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
+func (ctxOnlyChallengeContract) FindPracticeRuntimeChallengeByID(context.Context, int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+	return nil, nil
+}
+
+func (ctxOnlyChallengeContract) FindPracticeRuntimeChallengeTopologyByChallengeID(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
 	return nil, nil
 }
 

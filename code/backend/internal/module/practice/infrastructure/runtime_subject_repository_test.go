@@ -8,20 +8,41 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	challengeentity "ctf-platform/internal/module/challenge/entity"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
 type runtimeSubjectSourceStub struct {
 	findByIDFn                  func(context.Context, int64) (*model.Challenge, error)
-	findChallengeTopologyByIDFn func(context.Context, int64) (*challengeentity.ChallengeTopology, error)
+	findChallengeTopologyByIDFn func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error)
 }
 
-func (s runtimeSubjectSourceStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
-	return s.findByIDFn(ctx, id)
+func (s runtimeSubjectSourceStub) FindPracticeRuntimeChallengeByID(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+	challenge, err := s.findByIDFn(ctx, id)
+	if err != nil || challenge == nil {
+		return nil, err
+	}
+	return &challengecontracts.PracticeRuntimeChallenge{
+		ID:              challenge.ID,
+		PackageSlug:     challenge.PackageSlug,
+		Title:           challenge.Title,
+		Category:        challenge.Category,
+		Difficulty:      challenge.Difficulty,
+		Points:          challenge.Points,
+		ImageID:         challenge.ImageID,
+		Status:          string(challenge.Status),
+		FlagType:        challenge.FlagType,
+		FlagHash:        challenge.FlagHash,
+		FlagSalt:        challenge.FlagSalt,
+		FlagRegex:       challenge.FlagRegex,
+		FlagPrefix:      challenge.FlagPrefix,
+		InstanceSharing: string(challenge.InstanceSharing),
+		TargetProtocol:  challenge.TargetProtocol,
+		TargetPort:      challenge.TargetPort,
+	}, nil
 }
 
-func (s runtimeSubjectSourceStub) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
+func (s runtimeSubjectSourceStub) FindPracticeRuntimeChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
 	return s.findChallengeTopologyByIDFn(ctx, challengeID)
 }
 
@@ -32,7 +53,7 @@ func TestRuntimeSubjectRepositoryMapsNotFoundErrors(t *testing.T) {
 		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findChallengeTopologyByIDFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
+		findChallengeTopologyByIDFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -53,8 +74,8 @@ func TestRuntimeSubjectRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
 			return nil, expectedErr
 		},
-		findChallengeTopologyByIDFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
-			return &challengeentity.ChallengeTopology{ChallengeID: 1}, nil
+		findChallengeTopologyByIDFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
+			return &challengecontracts.PracticeRuntimeChallengeTopology{ChallengeID: 1}, nil
 		},
 	})
 

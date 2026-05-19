@@ -752,16 +752,45 @@ type stubPracticeChallengeContract struct {
 	findChallengeTopologyByChallengeIDFn func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
 }
 
-func (s *stubPracticeChallengeContract) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *stubPracticeChallengeContract) FindPracticeRuntimeChallengeByID(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 	if s.findByIDWithContextFn != nil {
-		return s.findByIDWithContextFn(ctx, id)
+		challenge, err := s.findByIDWithContextFn(ctx, id)
+		if err != nil || challenge == nil {
+			return nil, err
+		}
+		return &challengecontracts.PracticeRuntimeChallenge{
+			ID:              challenge.ID,
+			PackageSlug:     challenge.PackageSlug,
+			Title:           challenge.Title,
+			Category:        challenge.Category,
+			Difficulty:      challenge.Difficulty,
+			Points:          challenge.Points,
+			ImageID:         challenge.ImageID,
+			Status:          string(challenge.Status),
+			FlagType:        challenge.FlagType,
+			FlagHash:        challenge.FlagHash,
+			FlagSalt:        challenge.FlagSalt,
+			FlagRegex:       challenge.FlagRegex,
+			FlagPrefix:      challenge.FlagPrefix,
+			InstanceSharing: string(challenge.InstanceSharing),
+			TargetProtocol:  challenge.TargetProtocol,
+			TargetPort:      challenge.TargetPort,
+		}, nil
 	}
 	return nil, nil
 }
 
-func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {
+func (s *stubPracticeChallengeContract) FindPracticeRuntimeChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
 	if s.findChallengeTopologyByChallengeIDFn != nil {
-		return s.findChallengeTopologyByChallengeIDFn(ctx, challengeID)
+		topology, err := s.findChallengeTopologyByChallengeIDFn(ctx, challengeID)
+		if err != nil || topology == nil {
+			return nil, err
+		}
+		return &challengecontracts.PracticeRuntimeChallengeTopology{
+			ChallengeID:  topology.ChallengeID,
+			EntryNodeKey: topology.EntryNodeKey,
+			Spec:         topology.Spec,
+		}, nil
 	}
 	return nil, nil
 }

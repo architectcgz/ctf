@@ -27,9 +27,34 @@ type ContestChallengeContract interface {
 	BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
 }
 
+type PracticeRuntimeChallenge struct {
+	ID              int64
+	PackageSlug     *string
+	Title           string
+	Category        string
+	Difficulty      string
+	Points          int
+	ImageID         int64
+	Status          string
+	FlagType        string
+	FlagHash        string
+	FlagSalt        string
+	FlagRegex       string
+	FlagPrefix      string
+	InstanceSharing string
+	TargetProtocol  string
+	TargetPort      int
+}
+
+type PracticeRuntimeChallengeTopology struct {
+	ChallengeID  int64
+	EntryNodeKey string
+	Spec         string
+}
+
 type PracticeChallengeContract interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
+	FindPracticeRuntimeChallengeByID(ctx context.Context, id int64) (*PracticeRuntimeChallenge, error)
+	FindPracticeRuntimeChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*PracticeRuntimeChallengeTopology, error)
 }
 
 type ChallengeContract interface {
