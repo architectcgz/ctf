@@ -391,8 +391,24 @@ type testChallengePackageExportTxStore struct {
 	imageRepo     *challengeinfra.ImageQueryRepository
 }
 
-func (s *testChallengePackageExportTxStore) FindChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
-	return s.challengeRepo.FindByID(ctx, challengeID)
+func (s *testChallengePackageExportTxStore) FindChallenge(ctx context.Context, challengeID int64) (*challengeports.ChallengePackageCore, error) {
+	challenge, err := s.challengeRepo.FindByID(ctx, challengeID)
+	if err != nil || challenge == nil {
+		return nil, err
+	}
+	return &challengeports.ChallengePackageCore{
+		ID:          challenge.ID,
+		Title:       challenge.Title,
+		Description: challenge.Description,
+		Category:    challenge.Category,
+		Difficulty:  challenge.Difficulty,
+		Points:      challenge.Points,
+		ImageID:     challenge.ImageID,
+		FlagType:    challenge.FlagType,
+		FlagPrefix:  challenge.FlagPrefix,
+		FlagRegex:   challenge.FlagRegex,
+		PackageSlug: challenge.PackageSlug,
+	}, nil
 }
 
 func (s *testChallengePackageExportTxStore) FindTopology(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {

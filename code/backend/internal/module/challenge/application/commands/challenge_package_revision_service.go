@@ -58,7 +58,7 @@ func (s *ChallengeService) createImportedPackageRevision(
 		ChallengeID:        challenge.ID,
 		RevisionNo:         revisionNo,
 		SourceType:         challengeentity.ChallengePackageRevisionSourceImported,
-		PackageSlug:        resolveChallengePackageSlug(challenge, parsed.Slug),
+		PackageSlug:        resolveChallengePackageSlug(challenge.PackageSlug, challenge.ID, parsed.Slug),
 		ArchivePath:        archivePath,
 		SourceDir:          sourceDir,
 		ManifestSnapshot:   parsed.ManifestRaw,
@@ -139,7 +139,7 @@ func (s *ChallengeService) ExportChallengePackage(
 			return err
 		}
 
-		fileName := sanitizeImportedAttachmentName(resolveChallengePackageSlug(challenge, baseRevision.PackageSlug)+".zip", "challenge-package.zip")
+		fileName := sanitizeImportedAttachmentName(resolveChallengePackageSlug(challenge.PackageSlug, challenge.ID, baseRevision.PackageSlug)+".zip", "challenge-package.zip")
 		archivePath := filepath.Join(exportRoot, fileName)
 		if err := zipDirectory(sourceDir, archivePath); err != nil {
 			return fmt.Errorf("zip exported package: %w", err)
@@ -153,7 +153,7 @@ func (s *ChallengeService) ExportChallengePackage(
 			RevisionNo:         revisionNo,
 			SourceType:         challengeentity.ChallengePackageRevisionSourceExported,
 			ParentRevisionID:   &parentRevisionID,
-			PackageSlug:        resolveChallengePackageSlug(challenge, baseRevision.PackageSlug),
+			PackageSlug:        resolveChallengePackageSlug(challenge.PackageSlug, challenge.ID, baseRevision.PackageSlug),
 			ArchivePath:        archivePath,
 			SourceDir:          sourceDir,
 			ManifestSnapshot:   manifestRaw,
@@ -262,7 +262,7 @@ func rewriteChallengeManifestSnapshot(
 	ctx context.Context,
 	store challengeports.ChallengePackageExportTxStore,
 	sourceDir string,
-	challenge *model.Challenge,
+	challenge *challengeports.ChallengePackageCore,
 	topology *challengeentity.ChallengeTopology,
 	hints []challengeentity.ChallengeHint,
 	revision *challengeentity.ChallengePackageRevision,
@@ -282,7 +282,7 @@ func rewriteChallengeManifestSnapshot(
 
 	manifest.APIVersion = "v1"
 	manifest.Kind = "challenge"
-	manifest.Meta.Slug = resolveChallengePackageSlug(challenge, revision.PackageSlug)
+	manifest.Meta.Slug = resolveChallengePackageSlug(challenge.PackageSlug, challenge.ID, revision.PackageSlug)
 	manifest.Meta.Title = challenge.Title
 	manifest.Meta.Category = challenge.Category
 	manifest.Meta.Difficulty = challenge.Difficulty
@@ -290,9 +290,9 @@ func rewriteChallengeManifestSnapshot(
 	manifest.Flag.Type = challenge.FlagType
 	manifest.Flag.Prefix = challenge.FlagPrefix
 	switch challenge.FlagType {
-	case model.FlagTypeRegex:
+	case challengecontracts.FlagTypeRegex:
 		manifest.Flag.Value = challenge.FlagRegex
-	case model.FlagTypeDynamic, model.FlagTypeManualReview:
+	case challengecontracts.FlagTypeDynamic, challengecontracts.FlagTypeManualReview:
 		manifest.Flag.Value = ""
 	}
 	if challenge.ImageID > 0 {
@@ -452,15 +452,15 @@ func rewriteChallengeTopologySnapshot(
 	return string(content), nil
 }
 
-func resolveChallengePackageSlug(challenge *model.Challenge, fallback string) string {
-	if challenge != nil && challenge.PackageSlug != nil && strings.TrimSpace(*challenge.PackageSlug) != "" {
-		return strings.TrimSpace(*challenge.PackageSlug)
+func resolveChallengePackageSlug(packageSlug *string, challengeID int64, fallback string) string {
+	if packageSlug != nil && strings.TrimSpace(*packageSlug) != "" {
+		return strings.TrimSpace(*packageSlug)
 	}
 	if strings.TrimSpace(fallback) != "" {
 		return strings.TrimSpace(fallback)
 	}
-	if challenge != nil && challenge.ID > 0 {
-		return fmt.Sprintf("challenge-%d", challenge.ID)
+	if challengeID > 0 {
+		return fmt.Sprintf("challenge-%d", challengeID)
 	}
 	return "challenge-package"
 }

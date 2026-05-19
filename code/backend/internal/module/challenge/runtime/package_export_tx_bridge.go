@@ -9,7 +9,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -56,8 +55,24 @@ type challengePackageExportTxStore struct {
 	imageRepo     *challengeinfra.ImageQueryRepository
 }
 
-func (s *challengePackageExportTxStore) FindChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
-	return s.challengeRepo.FindByID(ctx, challengeID)
+func (s *challengePackageExportTxStore) FindChallenge(ctx context.Context, challengeID int64) (*challengeports.ChallengePackageCore, error) {
+	challenge, err := s.challengeRepo.FindByID(ctx, challengeID)
+	if err != nil || challenge == nil {
+		return nil, err
+	}
+	return &challengeports.ChallengePackageCore{
+		ID:          challenge.ID,
+		Title:       challenge.Title,
+		Description: challenge.Description,
+		Category:    challenge.Category,
+		Difficulty:  challenge.Difficulty,
+		Points:      challenge.Points,
+		ImageID:     challenge.ImageID,
+		FlagType:    challenge.FlagType,
+		FlagPrefix:  challenge.FlagPrefix,
+		FlagRegex:   challenge.FlagRegex,
+		PackageSlug: challenge.PackageSlug,
+	}, nil
 }
 
 func (s *challengePackageExportTxStore) FindTopology(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error) {

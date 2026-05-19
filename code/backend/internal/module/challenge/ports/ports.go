@@ -238,8 +238,22 @@ type AWDChallengeImportTxRunner interface {
 	WithinAWDChallengeImportTransaction(ctx context.Context, fn func(store AWDChallengeImportTxStore) error) error
 }
 
+type ChallengePackageCore struct {
+	ID          int64
+	Title       string
+	Description string
+	Category    string
+	Difficulty  string
+	Points      int
+	ImageID     int64
+	FlagType    string
+	FlagPrefix  string
+	FlagRegex   string
+	PackageSlug *string
+}
+
 type ChallengePackageExportTxStore interface {
-	FindChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error)
+	FindChallenge(ctx context.Context, challengeID int64) (*ChallengePackageCore, error)
 	FindTopology(ctx context.Context, challengeID int64) (*challengeentity.ChallengeTopology, error)
 	FindPackageRevisionByID(ctx context.Context, revisionID int64) (*challengeentity.ChallengePackageRevision, error)
 	NextPackageRevisionNo(ctx context.Context, challengeID int64) (int, error)
