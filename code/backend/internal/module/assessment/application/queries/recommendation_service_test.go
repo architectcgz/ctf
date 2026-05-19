@@ -31,7 +31,7 @@ import (
 )
 
 type stubChallengeRecommendationRepo struct {
-	challenges     []*model.Challenge
+	challenges     []*challengecontracts.RecommendationChallenge
 	calls          int
 	lastLimit      int
 	lastDims       []string
@@ -39,7 +39,7 @@ type stubChallengeRecommendationRepo struct {
 	lastSolved     []int64
 }
 
-func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendation(_ context.Context, limit int, dimensions []string, preferredDifficulty string, excludeSolved []int64) ([]*model.Challenge, error) {
+func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendation(_ context.Context, limit int, dimensions []string, preferredDifficulty string, excludeSolved []int64) ([]*challengecontracts.RecommendationChallenge, error) {
 	s.calls++
 	s.lastLimit = limit
 	s.lastDims = append([]string(nil), dimensions...)
@@ -167,7 +167,7 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	}
 
 	stubRepo := &stubChallengeRecommendationRepo{
-		challenges: []*model.Challenge{
+		challenges: []*challengecontracts.RecommendationChallenge{
 			{ID: 301, Title: "web-fix", Category: challengecontracts.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Points: 120},
 			{ID: 302, Title: "pwn-fix", Category: challengecontracts.DimensionPwn, Difficulty: model.ChallengeDifficultyMedium, Points: 180},
 		},
@@ -245,7 +245,7 @@ func TestRecommendationServiceRecommendChallengesUsesMatchedRecommendationDimens
 	}
 
 	stubRepo := &stubChallengeRecommendationRepo{
-		challenges: []*model.Challenge{
+		challenges: []*challengecontracts.RecommendationChallenge{
 			{
 				ID:                      401,
 				Title:                   "tagged-web-for-pwn",
@@ -340,7 +340,7 @@ func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandi
 		}
 	}
 
-	service := newRecommendationTestService(db, challengeinfra.NewRepository(db), nil)
+	service := newRecommendationTestService(db, challengeinfra.NewContractRepository(challengeinfra.NewRepository(db)), nil)
 
 	items, err := service.RecommendChallenges(context.Background(), 18, 2)
 	if err != nil {
@@ -485,7 +485,7 @@ func TestRecommendationServiceRecommendChallengesReturnsProgressionCandidateForS
 		}
 	}
 
-	service := newRecommendationTestService(db, challengeinfra.NewRepository(db), nil)
+	service := newRecommendationTestService(db, challengeinfra.NewContractRepository(challengeinfra.NewRepository(db)), nil)
 
 	resp, err := service.Recommend(context.Background(), 30, 3)
 	if err != nil {
@@ -556,7 +556,7 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 		}
 	}
 
-	service := newRecommendationTestService(db, challengeinfra.NewRepository(db), nil)
+	service := newRecommendationTestService(db, challengeinfra.NewContractRepository(challengeinfra.NewRepository(db)), nil)
 
 	resp, err := service.Recommend(context.Background(), 31, 2)
 	if err != nil {

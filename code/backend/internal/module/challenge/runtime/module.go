@@ -190,7 +190,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 
 	return moduleDeps{
 		input:                   deps,
-		catalog:                 challengeRepo,
+		catalog:                 challengeinfra.NewContractRepository(challengeRepo),
 		imageStore:              imageRepo,
 		rawRepo:                 challengeRepo,
 		imageRepo:               imageRepo,

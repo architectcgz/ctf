@@ -942,7 +942,6 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	practiceScoreCommandService := practicecmd.NewScoreService(practiceRepo, scoreStateStore, logger, &cfg.Score)
 	practiceService := practicecmd.NewService(
 		practiceRepo,
-		challengeRepo,
 		imageRepo,
 		instanceModule.PracticeInstanceRepository,
 		instanceModule.PracticeRuntimeService,

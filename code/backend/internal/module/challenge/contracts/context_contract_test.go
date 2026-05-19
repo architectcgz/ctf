@@ -3,7 +3,6 @@ package contracts_test
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
@@ -26,7 +25,7 @@ func (ctxOnlyPracticeChallengeContract) FindPracticeRuntimeChallengeTopologyByCh
 
 type ctxOnlyContestChallengeContract struct{}
 
-func (ctxOnlyContestChallengeContract) FindByID(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyContestChallengeContract) FindByID(context.Context, int64) (*challengecontracts.ContestChallenge, error) {
 	return nil, nil
 }
 
@@ -40,7 +39,7 @@ func (ctxOnlyContestChallengeContract) BatchGetSolvedCount(context.Context, []in
 
 type ctxOnlyChallengeContract struct{}
 
-func (ctxOnlyChallengeContract) FindByID(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeContract) FindByID(context.Context, int64) (*challengecontracts.ContestChallenge, error) {
 	return nil, nil
 }
 
@@ -60,7 +59,7 @@ func (ctxOnlyChallengeContract) FindPracticeRuntimeChallengeTopologyByChallengeI
 	return nil, nil
 }
 
-func (ctxOnlyChallengeContract) FindPublishedForRecommendation(context.Context, int, []string, string, []int64) ([]*model.Challenge, error) {
+func (ctxOnlyChallengeContract) FindPublishedForRecommendation(context.Context, int, []string, string, []int64) ([]*challengecontracts.RecommendationChallenge, error) {
 	return nil, nil
 }
 

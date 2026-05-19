@@ -3,7 +3,6 @@ package contracts
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
@@ -15,7 +14,26 @@ type ImageStore interface {
 	FindByID(ctx context.Context, id int64) (*challengeentity.Image, error)
 }
 
-type RecommendationChallenge = model.Challenge
+type ContestChallenge struct {
+	ID         int64
+	Title      string
+	Category   string
+	Difficulty string
+	Points     int
+	Status     string
+	FlagType   string
+	FlagPrefix string
+	CreatedBy  *int64
+}
+
+type RecommendationChallenge struct {
+	ID                      int64  `gorm:"column:id"`
+	Title                   string `gorm:"column:title"`
+	Category                string `gorm:"column:category"`
+	RecommendationDimension string `gorm:"column:recommendation_dimension"`
+	Difficulty              string `gorm:"column:difficulty"`
+	Points                  int    `gorm:"column:points"`
+}
 
 const ImageStatusAvailable = challengeentity.ImageStatusAvailable
 
@@ -24,7 +42,7 @@ func BuildRuntimeImageRef(image *challengeentity.Image) string {
 }
 
 type ContestChallengeContract interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*ContestChallenge, error)
 	BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
 	BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
 }
@@ -62,5 +80,5 @@ type PracticeChallengeContract interface {
 type ChallengeContract interface {
 	ContestChallengeContract
 	PracticeChallengeContract
-	FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, preferredDifficulty string, excludeSolved []int64) ([]*model.Challenge, error)
+	FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, preferredDifficulty string, excludeSolved []int64) ([]*RecommendationChallenge, error)
 }

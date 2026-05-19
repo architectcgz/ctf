@@ -7,22 +7,22 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type contestChallengeLookupSourceStub struct {
-	findByIDFn             func(context.Context, int64) (*model.Challenge, error)
+	findByIDFn             func(context.Context, int64) (*challengecontracts.ContestChallenge, error)
 	batchGetSolvedStatusFn func(context.Context, int64, []int64) (map[int64]bool, error)
 	batchGetSolvedCountFn  func(context.Context, []int64) (map[int64]int64, error)
 }
 
-func (s contestChallengeLookupSourceStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s contestChallengeLookupSourceStub) FindByID(ctx context.Context, id int64) (*challengecontracts.ContestChallenge, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
-	return &model.Challenge{ID: id}, nil
+	return &challengecontracts.ContestChallenge{ID: id}, nil
 }
 
 func (s contestChallengeLookupSourceStub) BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error) {
@@ -57,7 +57,7 @@ func TestContestChallengeLookupAdapterMapsNotFoundErrors(t *testing.T) {
 			t.Parallel()
 
 			repo := NewContestChallengeLookupAdapter(contestChallengeLookupSourceStub{
-				findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+				findByIDFn: func(context.Context, int64) (*challengecontracts.ContestChallenge, error) {
 					return nil, tc.err
 				},
 			})
@@ -74,7 +74,7 @@ func TestContestChallengeLookupAdapterPassesThroughNonNotFoundErrors(t *testing.
 
 	expectedErr := errors.New("challenge lookup exploded")
 	repo := NewContestChallengeLookupAdapter(contestChallengeLookupSourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengecontracts.ContestChallenge, error) {
 			return nil, expectedErr
 		},
 	})

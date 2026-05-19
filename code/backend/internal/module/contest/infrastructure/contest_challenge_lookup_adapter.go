@@ -39,7 +39,7 @@ func (r *ContestChallengeLookupAdapter) FindByID(ctx context.Context, id int64) 
 		Category:   challenge.Category,
 		Difficulty: challenge.Difficulty,
 		Points:     challenge.Points,
-		Status:     string(challenge.Status),
+		Status:     challenge.Status,
 		FlagType:   challenge.FlagType,
 		FlagPrefix: challenge.FlagPrefix,
 	}, nil

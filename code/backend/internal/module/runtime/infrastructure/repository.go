@@ -103,7 +103,11 @@ func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*identityc
 
 func (r *Repository) FindChallengeByID(ctx context.Context, challengeID int64) (*challengecontracts.RecommendationChallenge, error) {
 	var challenge challengecontracts.RecommendationChallenge
-	if err := r.dbWithContext(ctx).Where("id = ?", challengeID).First(&challenge).Error; err != nil {
+	if err := r.dbWithContext(ctx).
+		Table("challenges").
+		Select("id, title, category, category AS recommendation_dimension, difficulty, points").
+		Where("id = ?", challengeID).
+		Take(&challenge).Error; err != nil {
 		return nil, err
 	}
 	return &challenge, nil

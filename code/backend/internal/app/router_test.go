@@ -23,7 +23,6 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
@@ -48,10 +47,10 @@ import (
 )
 
 type routerChallengeLookupContextStub struct {
-	findByIDWithContextFn func(ctx context.Context, id int64) (*model.Challenge, error)
+	findByIDWithContextFn func(ctx context.Context, id int64) (*challengecontracts.ContestChallenge, error)
 }
 
-func (s *routerChallengeLookupContextStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *routerChallengeLookupContextStub) FindByID(ctx context.Context, id int64) (*challengecontracts.ContestChallenge, error) {
 	if s.findByIDWithContextFn != nil {
 		return s.findByIDWithContextFn(ctx, id)
 	}
@@ -164,7 +163,7 @@ func TestChallengeOwnerGuardPropagatesRequestContextToLookup(t *testing.T) {
 			c.Next()
 		},
 		challengeOwnerGuard(&routerChallengeLookupContextStub{
-			findByIDWithContextFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+			findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.ContestChallenge, error) {
 				called = true
 				if got := ctx.Value(ctxKey("owner-guard")); got != expectedCtxValue {
 					t.Fatalf("expected ctx value %v, got %v", expectedCtxValue, got)
@@ -173,7 +172,7 @@ func TestChallengeOwnerGuardPropagatesRequestContextToLookup(t *testing.T) {
 					t.Fatalf("unexpected challenge id: %d", id)
 				}
 				createdBy := int64(42)
-				return &model.Challenge{ID: id, CreatedBy: &createdBy}, nil
+				return &challengecontracts.ContestChallenge{ID: id, CreatedBy: &createdBy}, nil
 			},
 		}),
 		func(c *gin.Context) {

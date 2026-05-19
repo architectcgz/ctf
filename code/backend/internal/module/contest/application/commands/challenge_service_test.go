@@ -22,7 +22,7 @@ func newContestChallengeCommandService(t *testing.T) (*ChallengeService, *challe
 	awdRepo := contestinfra.NewAWDRepository(db)
 	return NewChallengeService(
 			contestChallengeRepo,
-			contestinfra.NewContestChallengeLookupAdapter(rawChallengeRepo),
+			contestinfra.NewContestChallengeLookupAdapter(challengeinfra.NewContractRepository(rawChallengeRepo)),
 			contestRepo,
 			awdRepo,
 		),

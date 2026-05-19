@@ -915,7 +915,7 @@ func TestAWDServicePreviewCheckerTCPStandardTokenMakesReadinessPassed(t *testing
 		awdRepo,
 		contestRepo,
 		contestChallengeRepo,
-		contestinfra.NewContestChallengeLookupAdapter(challengeRepo),
+		contestinfra.NewContestChallengeLookupAdapter(challengeinfra.NewContractRepository(challengeRepo)),
 		challengeRepo,
 		contestinfra.NewAWDCheckerPreviewTokenStore(redisClient),
 	)

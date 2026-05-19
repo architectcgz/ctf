@@ -13,8 +13,8 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -41,7 +41,7 @@ func newContestAWDServiceForTestWithRedis(t *testing.T, redisClient *redis.Clien
 			contestinfra.NewAWDCommandRepository(awdRepo),
 			contestRepo,
 			contestChallengeRepo,
-			contestinfra.NewContestChallengeLookupAdapter(challengeRepo),
+			contestinfra.NewContestChallengeLookupAdapter(challengeinfra.NewContractRepository(challengeRepo)),
 			contestinfra.NewContestAWDChallengeLookupAdapter(awdChallengeRepo),
 			contestinfra.NewAWDCheckerPreviewTokenStore(redisClient),
 		),

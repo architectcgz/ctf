@@ -13,7 +13,7 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/middleware"
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
@@ -43,7 +43,7 @@ type userRouteDeps struct {
 }
 
 type challengeLookup interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*challengecontracts.ContestChallenge, error)
 }
 
 func routeAudit(recorder auditlog.Recorder, logger *zap.Logger, options middleware.AuditOptions) gin.HandlerFunc {
