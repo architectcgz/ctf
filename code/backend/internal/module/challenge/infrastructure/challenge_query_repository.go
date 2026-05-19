@@ -13,8 +13,10 @@ import (
 )
 
 type challengeQueryRawRepository interface {
-	challengeports.ChallengeReadRepository
-	challengeports.ChallengePublishedRepository
+	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
+	ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
+	ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengeHint, error)
 	challengeports.ChallengeStatsRepository
 	challengeports.ChallengeBatchStatsRepository
 }
@@ -30,24 +32,43 @@ func NewChallengeQueryRepository(source challengeQueryRawRepository) *ChallengeQ
 	return &ChallengeQueryRepository{source: source}
 }
 
-func (r *ChallengeQueryRepository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (r *ChallengeQueryRepository) FindByID(ctx context.Context, id int64) (*challengeports.ChallengeReadModel, error) {
 	challenge, err := r.source.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, challengeports.ErrChallengeQueryChallengeNotFound
 	}
-	return challenge, err
+	if err != nil || challenge == nil {
+		return nil, err
+	}
+	return challengeReadModelFromModel(challenge), nil
 }
 
-func (r *ChallengeQueryRepository) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
-	return r.source.List(ctx, query)
+func (r *ChallengeQueryRepository) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeports.ChallengeReadModel, int64, error) {
+	challenges, total, err := r.source.List(ctx, query)
+	if err != nil {
+		return nil, 0, err
+	}
+	result := make([]*challengeports.ChallengeReadModel, 0, len(challenges))
+	for _, challenge := range challenges {
+		result = append(result, challengeReadModelFromModel(challenge))
+	}
+	return result, total, nil
 }
 
 func (r *ChallengeQueryRepository) ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengeHint, error) {
 	return r.source.ListHintsByChallengeID(ctx, challengeID)
 }
 
-func (r *ChallengeQueryRepository) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
-	return r.source.ListPublished(ctx, query)
+func (r *ChallengeQueryRepository) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeports.ChallengeReadModel, int64, error) {
+	challenges, total, err := r.source.ListPublished(ctx, query)
+	if err != nil {
+		return nil, 0, err
+	}
+	result := make([]*challengeports.ChallengeReadModel, 0, len(challenges))
+	for _, challenge := range challenges {
+		result = append(result, challengeReadModelFromModel(challenge))
+	}
+	return result, total, nil
 }
 
 func (r *ChallengeQueryRepository) GetSolvedStatus(ctx context.Context, userID, challengeID int64) (bool, error) {
@@ -72,6 +93,30 @@ func (r *ChallengeQueryRepository) BatchGetSolvedCount(ctx context.Context, chal
 
 func (r *ChallengeQueryRepository) BatchGetTotalAttempts(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
 	return r.source.BatchGetTotalAttempts(ctx, challengeIDs)
+}
+
+func challengeReadModelFromModel(source *model.Challenge) *challengeports.ChallengeReadModel {
+	if source == nil {
+		return nil
+	}
+	return &challengeports.ChallengeReadModel{
+		ID:              source.ID,
+		PackageSlug:     source.PackageSlug,
+		Title:           source.Title,
+		Description:     source.Description,
+		Category:        source.Category,
+		Difficulty:      source.Difficulty,
+		Points:          source.Points,
+		ImageID:         source.ImageID,
+		AttachmentURL:   source.AttachmentURL,
+		Status:          string(source.Status),
+		FlagType:        source.FlagType,
+		FlagPrefix:      source.FlagPrefix,
+		InstanceSharing: string(source.InstanceSharing),
+		CreatedBy:       source.CreatedBy,
+		CreatedAt:       source.CreatedAt,
+		UpdatedAt:       source.UpdatedAt,
+	}
 }
 
 var _ challengeports.ChallengeReadRepository = (*ChallengeQueryRepository)(nil)

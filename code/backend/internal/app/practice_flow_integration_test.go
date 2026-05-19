@@ -905,7 +905,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	)
 	challengeCommandService.SetChallengeImportTxRunner(challengeruntime.NewChallengeImportTxRunner(challengeRepo, nil))
 	challengeCommandService.SetChallengePackageExportTxRunner(challengeruntime.NewChallengePackageExportTxRunner(challengeRepo))
-	challengeQueryService := challengeqry.NewChallengeService(challengeRepo, challengeinfra.NewSolvedCountCache(cache), &challengeqry.Config{
+	challengeQueryService := challengeqry.NewChallengeService(challengeinfra.NewChallengeQueryRepository(challengeRepo), challengeinfra.NewSolvedCountCache(cache), &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, logger)
 	challengeHandler := challengehttp.NewHandler(challengeCommandService, challengeQueryService)

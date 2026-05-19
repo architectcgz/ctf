@@ -51,7 +51,7 @@ func (s *ChallengeService) GetChallenge(ctx context.Context, id int64) (*challen
 	if err != nil {
 		return nil, err
 	}
-	return domain.ChallengeRespFromModel(challenge, hints), nil
+	return domain.ChallengeRespFromModel(toChallengeModel(challenge), hints), nil
 }
 
 func (s *ChallengeService) ListChallenges(ctx context.Context, query *challengecontracts.ChallengeQuery) (*challengecontracts.PageResult[*challengecontracts.ChallengeResp], error) {
@@ -63,7 +63,7 @@ func (s *ChallengeService) ListChallenges(ctx context.Context, query *challengec
 
 	list := make([]*challengecontracts.ChallengeResp, len(challenges))
 	for i, challenge := range challenges {
-		list[i] = domain.ChallengeRespFromModel(challenge, nil)
+		list[i] = domain.ChallengeRespFromModel(toChallengeModel(challenge), nil)
 	}
 
 	page := query.Page
@@ -123,7 +123,7 @@ func (s *ChallengeService) ListPublishedChallenges(ctx context.Context, userID i
 
 	list := make([]*challengecontracts.ChallengeListItem, 0, len(challenges))
 	for _, challenge := range challenges {
-		item := challengeQueryResponseMapperInst.ToChallengeListItemBasePtr(challenge)
+		item := challengeQueryResponseMapperInst.ToChallengeListItemBasePtr(toChallengeModel(challenge))
 		item.IsSolved = solvedMap[challenge.ID]
 		item.SolvedCount = solvedCountMap[challenge.ID]
 		item.TotalAttempts = attemptsMap[challenge.ID]
@@ -146,8 +146,9 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 		}
 		return nil, err
 	}
-	if challenge.Status != model.ChallengeStatusPublished {
-		return nil, buildChallengeAccessUnavailableError(challenge.Status)
+	challengeModel := toChallengeModel(challenge)
+	if challengeModel.Status != model.ChallengeStatusPublished {
+		return nil, buildChallengeAccessUnavailableError(challengeModel.Status)
 	}
 
 	var isSolved bool
@@ -175,8 +176,8 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 		return nil, err
 	}
 
-	resp := challengeQueryResponseMapperInst.ToChallengeDetailRespBasePtr(challenge)
-	resp.NeedTarget = challenge.ImageID > 0
+	resp := challengeQueryResponseMapperInst.ToChallengeDetailRespBasePtr(challengeModel)
+	resp.NeedTarget = challengeModel.ImageID > 0
 	resp.Hints = challengeQueryResponseMapperInst.ToChallengeHintRespsPtr(hints)
 	resp.SolvedCount = solvedCount
 	resp.TotalAttempts = attempts
@@ -241,4 +242,28 @@ func (s *ChallengeService) getSolvedCountCached(ctx context.Context, challengeID
 		_ = s.solvedCountCache.StoreSolvedCount(ctx, challengeID, count, s.config.SolvedCountCacheTTL)
 	}
 	return count, nil
+}
+
+func toChallengeModel(source *challengeports.ChallengeReadModel) *model.Challenge {
+	if source == nil {
+		return nil
+	}
+	return &model.Challenge{
+		ID:              source.ID,
+		PackageSlug:     source.PackageSlug,
+		Title:           source.Title,
+		Description:     source.Description,
+		Category:        source.Category,
+		Difficulty:      source.Difficulty,
+		Points:          source.Points,
+		ImageID:         source.ImageID,
+		AttachmentURL:   source.AttachmentURL,
+		Status:          model.ChallengeStatus(source.Status),
+		FlagType:        source.FlagType,
+		FlagPrefix:      source.FlagPrefix,
+		InstanceSharing: model.InstanceSharing(source.InstanceSharing),
+		CreatedBy:       source.CreatedBy,
+		CreatedAt:       source.CreatedAt,
+		UpdatedAt:       source.UpdatedAt,
+	}
 }

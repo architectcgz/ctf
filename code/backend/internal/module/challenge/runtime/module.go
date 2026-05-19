@@ -195,7 +195,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 		rawRepo:                 challengeRepo,
 		imageRepo:               imageRepo,
 		challengeCommandRepo:    challengeRepo,
-		challengeQueryRepo:      challengeRepo,
+		challengeQueryRepo:      challengeinfra.NewChallengeQueryRepository(challengeRepo),
 		awdChallengeCommandRepo: awdChallengeRepo,
 		awdChallengeQueryRepo:   awdChallengeRepo,
 		flagRepo:                flagRepo,
@@ -283,8 +283,7 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 	challengeCommandService.SetChallengePackageExportTxRunner(NewChallengePackageExportTxRunner(deps.rawRepo))
 	challengeCommandService.SetImageBuildService(imageBuildService)
 	challengeCommandService.SetEventBus(deps.input.Events)
-	challengeQueryRepo := challengeinfra.NewChallengeQueryRepository(deps.challengeQueryRepo)
-	challengeQueryService := challengeqry.NewChallengeService(challengeQueryRepo, challengeinfra.NewSolvedCountCache(deps.input.Cache), &challengeqry.Config{
+	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, challengeinfra.NewSolvedCountCache(deps.input.Cache), &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, deps.input.Logger.Named("challenge_service"))
 	return challengeCommandService, challengehttp.NewHandler(challengeCommandService, challengeQueryService)

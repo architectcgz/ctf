@@ -70,14 +70,33 @@ type ChallengeFlagRepository interface {
 	Update(ctx context.Context, challenge *ChallengeFlag) error
 }
 
+type ChallengeReadModel struct {
+	ID              int64
+	PackageSlug     *string
+	Title           string
+	Description     string
+	Category        string
+	Difficulty      string
+	Points          int
+	ImageID         int64
+	AttachmentURL   string
+	Status          string
+	FlagType        string
+	FlagPrefix      string
+	InstanceSharing string
+	CreatedBy       *int64
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+}
+
 type ChallengeReadRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
+	FindByID(ctx context.Context, id int64) (*ChallengeReadModel, error)
+	List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*ChallengeReadModel, int64, error)
 	ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengeHint, error)
 }
 
 type ChallengePublishedRepository interface {
-	ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
+	ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*ChallengeReadModel, int64, error)
 }
 
 type ChallengeStatsRepository interface {

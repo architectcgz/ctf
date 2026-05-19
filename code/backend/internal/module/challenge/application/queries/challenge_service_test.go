@@ -20,9 +20,9 @@ import (
 )
 
 type challengeQueryRepositoryStub struct {
-	findByIDFn             func(context.Context, int64) (*model.Challenge, error)
-	listFn                 func(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
-	listPublishedFn        func(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
+	findByIDFn             func(context.Context, int64) (*challengeports.ChallengeReadModel, error)
+	listFn                 func(context.Context, *challengecontracts.ChallengeQuery) ([]*challengeports.ChallengeReadModel, int64, error)
+	listPublishedFn        func(context.Context, *challengecontracts.ChallengeQuery) ([]*challengeports.ChallengeReadModel, int64, error)
 	listHintsByChallengeID func(context.Context, int64) ([]*challengeentity.ChallengeHint, error)
 	getSolvedStatusFn      func(context.Context, int64, int64) (bool, error)
 	getSolvedCountFn       func(context.Context, int64) (int64, error)
@@ -32,21 +32,21 @@ type challengeQueryRepositoryStub struct {
 	batchTotalAttemptsFn   func(context.Context, []int64) (map[int64]int64, error)
 }
 
-func (s *challengeQueryRepositoryStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *challengeQueryRepositoryStub) FindByID(ctx context.Context, id int64) (*challengeports.ChallengeReadModel, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
 	return nil, nil
 }
 
-func (s *challengeQueryRepositoryStub) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (s *challengeQueryRepositoryStub) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeports.ChallengeReadModel, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, query)
 	}
 	return nil, 0, nil
 }
 
-func (s *challengeQueryRepositoryStub) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (s *challengeQueryRepositoryStub) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeports.ChallengeReadModel, int64, error) {
 	if s.listPublishedFn != nil {
 		return s.listPublishedFn(ctx, query)
 	}
@@ -102,13 +102,37 @@ func (s *challengeQueryRepositoryStub) BatchGetTotalAttempts(ctx context.Context
 	return map[int64]int64{}, nil
 }
 
+func challengeReadModelFromModel(source *model.Challenge) *challengeports.ChallengeReadModel {
+	if source == nil {
+		return nil
+	}
+	return &challengeports.ChallengeReadModel{
+		ID:              source.ID,
+		PackageSlug:     source.PackageSlug,
+		Title:           source.Title,
+		Description:     source.Description,
+		Category:        source.Category,
+		Difficulty:      source.Difficulty,
+		Points:          source.Points,
+		ImageID:         source.ImageID,
+		AttachmentURL:   source.AttachmentURL,
+		Status:          string(source.Status),
+		FlagType:        source.FlagType,
+		FlagPrefix:      source.FlagPrefix,
+		InstanceSharing: string(source.InstanceSharing),
+		CreatedBy:       source.CreatedBy,
+		CreatedAt:       source.CreatedAt,
+		UpdatedAt:       source.UpdatedAt,
+	}
+}
+
 func TestServiceGetPublishedChallengeDraftChallengeReturnsDraftAccessError(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
 	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusDraft}
 	db.Create(challenge)
 
-	repo := challengeinfra.NewRepository(db)
+	repo := challengeinfra.NewChallengeQueryRepository(challengeinfra.NewRepository(db))
 	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
 	_, err := service.GetPublishedChallenge(context.Background(), 1, challenge.ID)
@@ -133,7 +157,7 @@ func TestServiceGetPublishedChallengeArchivedChallengeReturnsArchivedAccessError
 	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusArchived}
 	db.Create(challenge)
 
-	repo := challengeinfra.NewRepository(db)
+	repo := challengeinfra.NewChallengeQueryRepository(challengeinfra.NewRepository(db))
 	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
 	_, err := service.GetPublishedChallenge(context.Background(), 1, challenge.ID)
@@ -156,7 +180,7 @@ func TestChallengeServiceGetChallengeTreatsChallengeQueryNotFoundAsChallengeNotF
 	t.Parallel()
 
 	service := NewChallengeService(&challengeQueryRepositoryStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeports.ChallengeReadModel, error) {
 			return nil, challengeports.ErrChallengeQueryChallengeNotFound
 		},
 	}, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
@@ -175,7 +199,7 @@ func TestChallengeServiceGetPublishedChallengeTreatsChallengeQueryNotFoundAsNotF
 	t.Parallel()
 
 	service := NewChallengeService(&challengeQueryRepositoryStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeports.ChallengeReadModel, error) {
 			return nil, challengeports.ErrChallengeQueryChallengeNotFound
 		},
 	}, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
@@ -215,7 +239,7 @@ func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 		t.Fatalf("create hint: %v", err)
 	}
 
-	repo := challengeinfra.NewRepository(db)
+	repo := challengeinfra.NewChallengeQueryRepository(challengeinfra.NewRepository(db))
 	service := NewChallengeService(repo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
 	resp, err := service.GetChallenge(context.Background(), challenge.ID)
@@ -254,7 +278,7 @@ func TestServiceGetSolvedCountCachedHonorsContextCancellation(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service := NewChallengeService(challengeinfra.NewRepository(db), challengeinfra.NewSolvedCountCache(redisClient), &Config{SolvedCountCacheTTL: time.Minute}, nil)
+	service := NewChallengeService(challengeinfra.NewChallengeQueryRepository(challengeinfra.NewRepository(db)), challengeinfra.NewSolvedCountCache(redisClient), &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -287,7 +311,7 @@ func TestServiceGetPublishedChallengeUsesSolvedCountCache(t *testing.T) {
 		t.Fatalf("StoreSolvedCount() error = %v", err)
 	}
 
-	service := NewChallengeService(challengeinfra.NewRepository(db), solvedCountCache, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+	service := NewChallengeService(challengeinfra.NewChallengeQueryRepository(challengeinfra.NewRepository(db)), solvedCountCache, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
 	resp, err := service.GetPublishedChallenge(context.Background(), 0, challenge.ID)
 	if err != nil {
@@ -323,7 +347,7 @@ func TestServiceGetSolvedCountCachedWarmsCacheOnMiss(t *testing.T) {
 	})
 
 	solvedCountCache := challengeinfra.NewSolvedCountCache(redisClient)
-	service := NewChallengeService(challengeinfra.NewRepository(db), solvedCountCache, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+	service := NewChallengeService(challengeinfra.NewChallengeQueryRepository(challengeinfra.NewRepository(db)), solvedCountCache, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
 	count, err := service.getSolvedCountCached(context.Background(), challenge.ID)
 	if err != nil {
@@ -350,7 +374,7 @@ func TestServiceGetChallengeHonorsCancellation(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	service := NewChallengeService(challengeinfra.NewRepository(db), nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+	service := NewChallengeService(challengeinfra.NewChallengeQueryRepository(challengeinfra.NewRepository(db)), nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
@@ -368,7 +392,7 @@ func TestServiceListChallengesHonorsCancellation(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	service := NewChallengeService(challengeinfra.NewRepository(db), nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+	service := NewChallengeService(challengeinfra.NewChallengeQueryRepository(challengeinfra.NewRepository(db)), nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 

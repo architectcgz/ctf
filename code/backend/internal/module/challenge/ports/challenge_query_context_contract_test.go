@@ -3,7 +3,6 @@ package ports_test
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -11,11 +10,11 @@ import (
 
 type ctxOnlyChallengeQueryRepository struct{}
 
-func (ctxOnlyChallengeQueryRepository) FindByID(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeQueryRepository) FindByID(context.Context, int64) (*challengeports.ChallengeReadModel, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) List(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (ctxOnlyChallengeQueryRepository) List(context.Context, *challengecontracts.ChallengeQuery) ([]*challengeports.ChallengeReadModel, int64, error) {
 	return nil, 0, nil
 }
 
@@ -47,7 +46,7 @@ func (ctxOnlyChallengeQueryRepository) BatchGetTotalAttempts(context.Context, []
 	return nil, nil
 }
 
-func (ctxOnlyChallengeQueryRepository) ListPublished(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (ctxOnlyChallengeQueryRepository) ListPublished(context.Context, *challengecontracts.ChallengeQuery) ([]*challengeports.ChallengeReadModel, int64, error) {
 	return nil, 0, nil
 }
 
