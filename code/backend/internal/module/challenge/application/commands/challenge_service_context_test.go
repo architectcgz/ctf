@@ -285,7 +285,7 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 
 	imageID := int64(7)
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.UpdateChallenge(ctx, 9, UpdateChallengeInput{ImageID: &imageID, InstanceSharing: model.InstanceSharingShared}); err != nil {
+	if err := service.UpdateChallenge(ctx, 9, UpdateChallengeInput{ImageID: &imageID, InstanceSharing: string(model.InstanceSharingShared)}); err != nil {
 		t.Fatalf("UpdateChallenge() error = %v", err)
 	}
 	if !findCalled || !imageCalled || !topologyCalled || !updateCalled {

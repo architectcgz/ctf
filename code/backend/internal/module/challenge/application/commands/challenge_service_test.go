@@ -75,7 +75,7 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 		Difficulty:      "easy",
 		Points:          100,
 		ImageID:         1,
-		InstanceSharing: model.InstanceSharingPerUser,
+		InstanceSharing: string(model.InstanceSharingPerUser),
 	})
 
 	if err != nil {
@@ -159,7 +159,7 @@ func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T)
 	service := newTestService(repo, imageRepo)
 
 	err = service.UpdateChallenge(context.Background(), challenge.ID, UpdateChallengeInput{
-		InstanceSharing: model.InstanceSharingShared,
+		InstanceSharing: string(model.InstanceSharingShared),
 	})
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params when enabling shared for dynamic flag challenge, got %v", err)
@@ -204,7 +204,7 @@ func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *tes
 	service := newDBBackedChallengeService(nil, repo, imageRepo, nil, SelfCheckConfig{})
 
 	err = service.UpdateChallenge(context.Background(), challenge.ID, UpdateChallengeInput{
-		InstanceSharing: model.InstanceSharingShared,
+		InstanceSharing: string(model.InstanceSharingShared),
 	})
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params when enabling shared for inject_flag topology challenge, got %v", err)

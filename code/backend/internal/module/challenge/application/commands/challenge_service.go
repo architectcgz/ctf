@@ -141,8 +141,8 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req Up
 	return s.repo.UpdateWithHints(ctx, challenge, hints, replaceHints)
 }
 
-func normalizeInstanceSharing(value model.InstanceSharing) model.InstanceSharing {
-	switch model.InstanceSharing(strings.TrimSpace(string(value))) {
+func normalizeInstanceSharing(value string) model.InstanceSharing {
+	switch model.InstanceSharing(strings.TrimSpace(value)) {
 	case model.InstanceSharingPerTeam:
 		return model.InstanceSharingPerTeam
 	case model.InstanceSharingShared:

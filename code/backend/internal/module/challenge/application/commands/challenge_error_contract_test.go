@@ -90,7 +90,7 @@ func TestChallengeServiceUpdateChallengeTreatsTopologySentinelAsMissingTopology(
 		zap.NewNop(),
 	)
 
-	err := service.UpdateChallenge(context.Background(), 9, UpdateChallengeInput{InstanceSharing: model.InstanceSharingShared})
+	err := service.UpdateChallenge(context.Background(), 9, UpdateChallengeInput{InstanceSharing: string(model.InstanceSharingShared)})
 	if err != nil {
 		t.Fatalf("expected missing topology sentinel to be tolerated, got %v", err)
 	}

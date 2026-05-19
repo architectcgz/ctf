@@ -1,7 +1,5 @@
 package commands
 
-import "ctf-platform/internal/model"
-
 type ChallengeHintInput struct {
 	Level   int
 	Title   string
@@ -16,7 +14,7 @@ type CreateChallengeInput struct {
 	Points          int
 	ImageID         int64
 	AttachmentURL   string
-	InstanceSharing model.InstanceSharing
+	InstanceSharing string
 	Hints           []ChallengeHintInput
 }
 
@@ -28,6 +26,6 @@ type UpdateChallengeInput struct {
 	Points          int
 	ImageID         *int64
 	AttachmentURL   *string
-	InstanceSharing model.InstanceSharing
+	InstanceSharing string
 	Hints           []ChallengeHintInput
 }

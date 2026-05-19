@@ -4,7 +4,6 @@
 package http
 
 import (
-	model "ctf-platform/internal/model"
 	commands "ctf-platform/internal/module/challenge/application/commands"
 	queries "ctf-platform/internal/module/challenge/application/queries"
 	contracts "ctf-platform/internal/module/challenge/contracts"
@@ -47,7 +46,7 @@ func (c *ChallengeRequestMapperImpl) ToCreateChallengeInput(source CreateChallen
 	commandsCreateChallengeInput.Points = source.Points
 	commandsCreateChallengeInput.ImageID = source.ImageID
 	commandsCreateChallengeInput.AttachmentURL = source.AttachmentURL
-	commandsCreateChallengeInput.InstanceSharing = model.InstanceSharing(source.InstanceSharing)
+	commandsCreateChallengeInput.InstanceSharing = source.InstanceSharing
 	if source.Hints != nil {
 		commandsCreateChallengeInput.Hints = make([]commands.ChallengeHintInput, len(source.Hints))
 		for i := 0; i < len(source.Hints); i++ {
@@ -147,7 +146,7 @@ func (c *ChallengeRequestMapperImpl) ToUpdateChallengeInput(source UpdateChallen
 		xstring := *source.AttachmentURL
 		commandsUpdateChallengeInput.AttachmentURL = &xstring
 	}
-	commandsUpdateChallengeInput.InstanceSharing = model.InstanceSharing(source.InstanceSharing)
+	commandsUpdateChallengeInput.InstanceSharing = source.InstanceSharing
 	if source.Hints != nil {
 		commandsUpdateChallengeInput.Hints = make([]commands.ChallengeHintInput, len(source.Hints))
 		for i := 0; i < len(source.Hints); i++ {
