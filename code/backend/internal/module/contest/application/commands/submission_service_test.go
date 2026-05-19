@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -261,9 +260,9 @@ func TestSubmissionServiceSubmitFlagInContestAcceptsSharedStaticFlagChallenge(t 
 	if err != nil {
 		t.Fatalf("new flag service: %v", err)
 	}
-	if err := db.Model(&model.Challenge{}).
+	if err := db.Model(&contestCommandChallengeRow{}).
 		Where("id = ?", challengeID).
-		Update("instance_sharing", model.InstanceSharingShared).Error; err != nil {
+		Update("instance_sharing", challengecontracts.InstanceSharingShared).Error; err != nil {
 		t.Fatalf("set shared instance scope: %v", err)
 	}
 	if err := flagService.ConfigureStaticFlag(context.Background(), challengeID, "flag{contest-shared-static}", "flag"); err != nil {
@@ -869,14 +868,14 @@ func createContestSubmissionFixture(t *testing.T, db *gorm.DB, contestID, challe
 	}).Error; err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&contestCommandChallengeRow{
 		ID:         challengeID,
 		Title:      "dynamic-web",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     500,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}).Error; err != nil {

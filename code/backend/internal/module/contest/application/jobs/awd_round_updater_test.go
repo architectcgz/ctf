@@ -16,7 +16,6 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
@@ -50,7 +49,7 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRounds(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("update contest time window: %v", err)
 	}
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 1001).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestJobChallengeRow{}).Where("id = ?", 1001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("update challenge flag prefix: %v", err)
 	}
 
@@ -310,7 +309,7 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRoundsWritesOnlyServiceFlagFields(t *t
 	}).Error; err != nil {
 		t.Fatalf("update contest time window: %v", err)
 	}
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 153001).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestJobChallengeRow{}).Where("id = ?", 153001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("update challenge flag prefix: %v", err)
 	}
 	serviceID := defaultAWDContestServiceID(153, 153001)
@@ -748,7 +747,7 @@ func TestAWDRoundUpdaterSyncsHTTPStandardChecksAsUp(t *testing.T) {
 	createAWDTeamFixture(t, db, 141011, 141, "HTTP", now)
 	createAWDTeamMemberFixture(t, db, 141, 141011, 6411, now)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 141001).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestJobChallengeRow{}).Where("id = ?", 141001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	syncAWDContestServiceFixture(t, db, 141, 141001, "awd-service", contestentity.AWDCheckerTypeHTTPStandard, `{
@@ -840,7 +839,7 @@ func TestAWDRoundUpdaterPrefersContestAWDServiceDefinitionsForRuntimeChecks(t *t
 	createAWDTeamFixture(t, db, 144011, 144, "ServiceFirst", now)
 	createAWDTeamMemberFixture(t, db, 144, 144011, 6441, now)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 144001).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestJobChallengeRow{}).Where("id = ?", 144001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	serviceID := defaultAWDContestServiceID(144, 144001)
@@ -935,7 +934,7 @@ func TestAWDRoundUpdaterHTTPStandardKeepsAWDAliasHostWhenDialingRuntimeIP(t *tes
 	createAWDTeamFixture(t, db, 142011, 142, "Alias", now)
 	createAWDTeamMemberFixture(t, db, 142, 142011, 6421, now)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 142001).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestJobChallengeRow{}).Where("id = ?", 142001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	syncAWDContestServiceFixture(t, db, 142, 142001, "alias-service", contestentity.AWDCheckerTypeHTTPStandard, `{
@@ -1041,7 +1040,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksCompromisedOnFlagMismatch(t *test
 	createAWDTeamFixture(t, db, 142011, 142, "Mismatch", now)
 	createAWDTeamMemberFixture(t, db, 142, 142011, 6421, now)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 142001).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestJobChallengeRow{}).Where("id = ?", 142001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	syncAWDContestServiceFixture(t, db, 142, 142001, "awd-service", contestentity.AWDCheckerTypeHTTPStandard, `{
@@ -1123,7 +1122,7 @@ func TestAWDRoundUpdaterMarksHTTPStandardChecksDownWhenHavocFails(t *testing.T) 
 	createAWDTeamFixture(t, db, 143011, 143, "Havoc", now)
 	createAWDTeamMemberFixture(t, db, 143, 143011, 6431, now)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 143001).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestJobChallengeRow{}).Where("id = ?", 143001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	syncAWDContestServiceFixture(t, db, 143, 143001, "awd-service", contestentity.AWDCheckerTypeHTTPStandard, `{

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -42,17 +42,17 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestQueryChallengeRow{
 		ID:         9801,
 		Title:      "service-query-challenge",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 

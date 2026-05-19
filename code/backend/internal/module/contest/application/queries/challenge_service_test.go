@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -48,17 +48,17 @@ func TestChallengeServiceListAdminChallengesReturnsRelationFieldsOnly(t *testing
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestQueryChallengeRow{
 		ID:         9101,
 		Title:      "awd-query-challenge",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRelationRepo.AddChallenge(context.Background(), &contestentity.ContestChallenge{
@@ -163,7 +163,7 @@ func TestChallengeServiceGetContestChallengesReadsAWDServicesFromServiceSnapshot
 	if resp[0].AWDServiceID == nil || *resp[0].AWDServiceID != 7201 {
 		t.Fatalf("expected awd service id 7201, got %+v", resp[0])
 	}
-	if resp[0].AWDChallengeID == nil || *resp[0].AWDChallengeID != 9111 || resp[0].Title != "Bank Portal" || resp[0].Category != "web" || resp[0].Difficulty != model.ChallengeDifficultyMedium {
+	if resp[0].AWDChallengeID == nil || *resp[0].AWDChallengeID != 9111 || resp[0].Title != "Bank Portal" || resp[0].Category != "web" || resp[0].Difficulty != challengecontracts.ChallengeDifficultyMedium {
 		t.Fatalf("expected awd challenge info from service snapshot, got %+v", resp[0])
 	}
 }

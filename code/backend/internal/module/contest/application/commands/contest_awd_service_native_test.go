@@ -9,7 +9,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 )
@@ -35,7 +34,7 @@ func TestContestAWDServiceServiceCreateUsesTemplateSnapshotOnly(t *testing.T) {
 		Name:             "Bank Portal",
 		Slug:             "bank-portal",
 		Category:         "web",
-		Difficulty:       model.ChallengeDifficultyMedium,
+		Difficulty:       challengecontracts.ChallengeDifficultyMedium,
 		Description:      "Bank Portal runtime",
 		ServiceType:      challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode:   challengecontracts.AWDDeploymentModeSingleContainer,
@@ -114,7 +113,7 @@ func TestContestAWDServiceServiceSnapshotRemainsFrozenAfterTemplateUpdate(t *tes
 		Name:           "Billing API",
 		Slug:           "billing-api",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		Description:    "Billing runtime",
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,

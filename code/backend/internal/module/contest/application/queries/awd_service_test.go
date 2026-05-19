@@ -9,7 +9,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
@@ -222,18 +222,18 @@ func TestAWDQueryServiceGetReadinessBlocksUnavailableRuntimeImage(t *testing.T) 
 	now := time.Now()
 
 	createAWDReadinessContestFixture(t, db, 708, now)
-	if err := db.Create(&model.Image{
+	if err := db.Create(&contestQueryImageRow{
 		ID:        70801,
 		Name:      "registry.example.edu/awd/pending-service",
 		Tag:       "c1",
-		Status:    model.ImageStatusPending,
+		Status:    "pending",
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 	createAWDReadinessChallengeFixture(t, db, 7081, "pending-image-service", now)
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 7081).Update("image_id", 70801).Error; err != nil {
+	if err := db.Model(&contestQueryChallengeRow{}).Where("id = ?", 7081).Update("image_id", 70801).Error; err != nil {
 		t.Fatalf("attach image: %v", err)
 	}
 	createAWDReadinessRelationFixture(t, db, awdReadinessRelationSeed{
@@ -1033,14 +1033,14 @@ func createAWDReadinessContestFixture(t *testing.T, db *gorm.DB, contestID int64
 func createAWDReadinessChallengeFixture(t *testing.T, db *gorm.DB, challengeID int64, title string, now time.Time) {
 	t.Helper()
 
-	if err := db.Create(&model.Challenge{
+	if err := db.Create(&contestQueryChallengeRow{
 		ID:         challengeID,
 		Title:      title,
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}).Error; err != nil {
@@ -1055,7 +1055,7 @@ func createAWDReadinessRelationFixture(t *testing.T, db *gorm.DB, seed awdReadin
 		t.Fatalf("create contest challenge: %v", err)
 	}
 
-	var challenge model.Challenge
+	var challenge contestQueryChallengeRow
 	if err := db.Where("id = ?", seed.relation.ChallengeID).First(&challenge).Error; err != nil {
 		t.Fatalf("load challenge for awd service fixture: %v", err)
 	}

@@ -18,7 +18,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -862,7 +861,7 @@ func TestAWDServicePreviewCheckerTCPStandardTokenMakesReadinessPassed(t *testing
 		Name:           "TCP Length Gate",
 		Slug:           "awd-tcp-length-gate",
 		Category:       "pwn",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeBinaryTCP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -1495,7 +1494,7 @@ func TestAWDServicePreviewCheckerAcceptsServiceIDAndReturnsServiceContext(t *tes
 
 func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *testing.T) {
 	db := newAWDTestDB(t)
-	if err := db.AutoMigrate(&model.Image{}, &challengecontracts.AWDChallenge{}); err != nil {
+	if err := db.AutoMigrate(&contestCommandImageRow{}, &challengecontracts.AWDChallenge{}); err != nil {
 		t.Fatalf("auto migrate preview dependencies: %v", err)
 	}
 	mini, err := miniredis.Run()
@@ -1512,12 +1511,12 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 	now := time.Now()
 	const previewSecret = "preview-secret-12345678901234567890"
 	createAWDContestFixture(t, db, 26, now)
-	if err := db.Create(&model.Image{
+	if err := db.Create(&contestCommandImageRow{
 		ID:        26001,
 		Name:      "registry.example.edu/ctf/awd-preview",
 		Tag:       "v1",
 		Digest:    "sha256:preview-v1",
-		Status:    model.ImageStatusAvailable,
+		Status:    challengecontracts.ImageStatusAvailable,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -1528,7 +1527,7 @@ func TestAWDServicePreviewCheckerStartsPreviewRuntimeWhenAccessURLMissing(t *tes
 		Name:           "Preview Target",
 		Slug:           "preview-target",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyEasy,
+		Difficulty:     challengecontracts.ChallengeDifficultyEasy,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -1627,11 +1626,11 @@ func TestAWDServicePreviewCheckerRejectsExplicitAccessURLWhenRuntimeImageUnavail
 	}
 	now := time.Now()
 	createAWDContestFixture(t, db, 260, now)
-	if err := db.Create(&model.Image{
+	if err := db.Create(&contestCommandImageRow{
 		ID:        26002,
 		Name:      "registry.example.edu/ctf/awd-preview",
 		Tag:       "pending",
-		Status:    model.ImageStatusPending,
+		Status:    "pending",
 		CreatedAt: now,
 		UpdatedAt: now,
 	}).Error; err != nil {
@@ -1642,7 +1641,7 @@ func TestAWDServicePreviewCheckerRejectsExplicitAccessURLWhenRuntimeImageUnavail
 		Name:           "Preview Pending Image",
 		Slug:           "preview-pending-image",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyEasy,
+		Difficulty:     challengecontracts.ChallengeDifficultyEasy,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -2040,7 +2039,7 @@ func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *test
 	createContestRegistrationForExistingTeam(t, db, 4, 411, 4001, now)
 	createContestRegistrationForExistingTeam(t, db, 4, 411, 4002, now)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 401).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 401).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 
@@ -2123,7 +2122,7 @@ func TestAWDServiceSubmitAttackAcceptsServiceScopedRoundFlagField(t *testing.T) 
 	createAWDTeamFixture(t, db, 2412, 24, "Blue", now)
 	createContestRegistrationForExistingTeam(t, db, 24, 2411, 24001, now)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 2401).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 2401).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	serviceID := defaultAWDContestServiceID(24, 2401)
@@ -2207,7 +2206,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 	createContestRegistrationForExistingTeam(t, db, 14, 1411, 14002, now)
 	serviceID := defaultAWDContestServiceID(14, 1401)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 1401).Updates(map[string]any{
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 1401).Updates(map[string]any{
 		"flag_prefix": "awd",
 		"category":    challengecontracts.DimensionWeb,
 	}).Error; err != nil {
@@ -2301,7 +2300,7 @@ func TestAWDServiceSubmitAttackAcceptsPreviousRoundFlagWithinGrace(t *testing.T)
 	createContestRegistrationForExistingTeam(t, db, 5, 511, 5001, now)
 	serviceID := defaultAWDContestServiceID(5, 501)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 501).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 501).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(5), "2", 0).Err(); err != nil {
@@ -2356,7 +2355,7 @@ func TestAWDServiceSubmitAttackAllowsFrozenContest(t *testing.T) {
 	if err := db.Model(&contestentity.Contest{}).Where("id = ?", 6).Update("status", contestentity.ContestStatusFrozen).Error; err != nil {
 		t.Fatalf("set contest frozen: %v", err)
 	}
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 601).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 601).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(6), "1", 0).Err(); err != nil {
@@ -2411,7 +2410,7 @@ func TestAWDServiceSubmitAttackIgnoresStaleCurrentRoundPointer(t *testing.T) {
 	createContestRegistrationForExistingTeam(t, db, 7, 711, 7001, now)
 	serviceID := defaultAWDContestServiceID(7, 701)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 701).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 701).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(7), "1", 0).Err(); err != nil {
@@ -2484,7 +2483,7 @@ func TestAWDServiceSubmitAttackUsesTimeDerivedCurrentRoundWhenRoundStatusLags(t 
 	}).Error; err != nil {
 		t.Fatalf("mark actual round as pending: %v", err)
 	}
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 801).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 801).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(8), "1", 0).Err(); err != nil {
@@ -2551,7 +2550,7 @@ func TestAWDServiceSubmitAttackRejectsPreviousFlagAfterMaterializingMissingCurre
 	}).Error; err != nil {
 		t.Fatalf("mark stale round as running: %v", err)
 	}
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 901).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 901).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(9), "1", 0).Err(); err != nil {
@@ -2614,7 +2613,7 @@ func TestAWDServiceSubmitAttackMaterializesMissingCurrentRound(t *testing.T) {
 	createContestRegistrationForExistingTeam(t, db, 10, 1011, 10001, now)
 	serviceID := defaultAWDContestServiceID(10, 1001)
 
-	if err := db.Model(&model.Challenge{}).Where("id = ?", 1001).Update("flag_prefix", "awd").Error; err != nil {
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 1001).Update("flag_prefix", "awd").Error; err != nil {
 		t.Fatalf("set flag prefix: %v", err)
 	}
 

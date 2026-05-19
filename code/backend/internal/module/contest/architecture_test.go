@@ -526,6 +526,29 @@ func TestJobsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	}
 }
 
+func TestContestTestsDoNotDependOnGlobalModelOrChallengeEntity(t *testing.T) {
+	t.Parallel()
+
+	patterns := []string{
+		"*_test.go",
+		filepath.Join("api", "http", "*_test.go"),
+		filepath.Join("application", "commands", "*_test.go"),
+		filepath.Join("application", "queries", "*_test.go"),
+		filepath.Join("application", "jobs", "*_test.go"),
+		filepath.Join("infrastructure", "*_test.go"),
+	}
+	for _, pattern := range patterns {
+		files, err := filepath.Glob(pattern)
+		if err != nil {
+			t.Fatalf("glob test files for %s: %v", pattern, err)
+		}
+		for _, file := range files {
+			assertFileDoesNotImport(t, file, "ctf-platform/internal/model")
+			assertFileDoesNotImport(t, file, "ctf-platform/internal/module/challenge/entity")
+		}
+	}
+}
+
 func TestPortsDoNotDependOnFrameworksDTOOrCacheClients(t *testing.T) {
 	t.Parallel()
 

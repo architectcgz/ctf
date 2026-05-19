@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
@@ -28,14 +27,14 @@ func (s awdPreviewRuntimeChallengeLookupStub) ListAWDChallenges(context.Context,
 }
 
 type awdPreviewRuntimeImageStoreStub struct {
-	findByIDFn func(context.Context, int64) (*challengeentity.Image, error)
+	findByIDFn func(context.Context, int64) (*challengecontracts.Image, error)
 }
 
-func (s awdPreviewRuntimeImageStoreStub) FindByID(ctx context.Context, id int64) (*challengeentity.Image, error) {
+func (s awdPreviewRuntimeImageStoreStub) FindByID(ctx context.Context, id int64) (*challengecontracts.Image, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
-	return &challengeentity.Image{ID: id}, nil
+	return &challengecontracts.Image{ID: id}, nil
 }
 
 var _ challengeports.AWDChallengeQueryRepository = (*awdPreviewRuntimeChallengeLookupStub)(nil)
@@ -98,7 +97,7 @@ func TestAWDServicePrepareCheckerPreviewAccessURLRejectsExplicitURLWhenPreviewIm
 
 	service := &AWDService{
 		imageRepo: awdPreviewRuntimeImageStoreStub{
-			findByIDFn: func(context.Context, int64) (*challengeentity.Image, error) {
+			findByIDFn: func(context.Context, int64) (*challengecontracts.Image, error) {
 				return nil, contestports.ErrContestAWDPreviewImageNotFound
 			},
 		},

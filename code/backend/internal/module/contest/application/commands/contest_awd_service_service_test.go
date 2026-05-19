@@ -12,7 +12,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestdomain "ctf-platform/internal/module/contest/domain"
@@ -67,17 +66,17 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestCommandChallengeRow{
 		ID:         9801,
 		Title:      "bank-portal",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
@@ -85,7 +84,7 @@ func TestContestAWDServiceServiceCreateFromTemplate(t *testing.T) {
 		Name:           "Bank Portal",
 		Slug:           "bank-portal",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -150,7 +149,7 @@ func TestContestAWDServiceServiceCreateAppliesDefaultScoreContract(t *testing.T)
 		Name:           "Default Score Service",
 		Slug:           "default-score-service",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -205,7 +204,7 @@ func TestContestAWDServiceServiceCreateRejectsOversizedServiceScores(t *testing.
 		Name:           "Oversized Score Service",
 		Slug:           "oversized-score-service",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -250,7 +249,7 @@ func TestContestAWDServiceServiceCreateRejectsOversizedDisplayPoints(t *testing.
 		Name:           "Oversized Points Service",
 		Slug:           "oversized-points-service",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -293,7 +292,7 @@ func TestContestAWDServiceServiceCreateRejectsImmutableContest(t *testing.T) {
 		Name:           "Immutable Create Service",
 		Slug:           "immutable-create-service",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -333,17 +332,17 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestCommandChallengeRow{
 		ID:         9802,
 		Title:      "billing-api",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
@@ -351,7 +350,7 @@ func TestContestAWDServiceServiceUpdateMaintainsSnapshotOnly(t *testing.T) {
 		Name:           "Billing API",
 		Slug:           "billing-api",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -415,17 +414,17 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestCommandChallengeRow{
 		ID:         9804,
 		Title:      "orders-api",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
@@ -433,7 +432,7 @@ func TestContestAWDServiceServiceCreateDoesNotPersistLegacyChallengeIDInRuntimeC
 		Name:           "Orders API",
 		Slug:           "orders-api",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -511,17 +510,17 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestCommandChallengeRow{
 		ID:         9805,
 		Title:      "inventory-api",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
@@ -529,7 +528,7 @@ func TestContestAWDServiceServiceUpdateDoesNotPersistLegacyChallengeIDInRuntimeC
 		Name:           "Inventory API",
 		Slug:           "inventory-api",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -613,17 +612,17 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestCommandChallengeRow{
 		ID:         9806,
 		Title:      "preview-service",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
@@ -631,7 +630,7 @@ func TestContestAWDServiceServiceCreateConsumesCheckerPreviewToken(t *testing.T)
 		Name:           "Preview Service",
 		Slug:           "preview-service",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -734,17 +733,17 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestCommandChallengeRow{
 		ID:         19806,
 		Title:      "preview-service-missing-token",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
@@ -752,7 +751,7 @@ func TestContestAWDServiceServiceCreateRejectsMissingCheckerPreviewToken(t *test
 		Name:           "Preview Service Missing Token",
 		Slug:           "preview-service-missing-token",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -809,17 +808,17 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestCommandChallengeRow{
 		ID:         9807,
 		Title:      "preview-update-service",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
@@ -827,7 +826,7 @@ func TestContestAWDServiceServiceUpdateConsumesCheckerPreviewTokenByServiceID(t 
 		Name:           "Preview Update Service",
 		Slug:           "preview-update-service",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -934,17 +933,17 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestCommandChallengeRow{
 		ID:         19807,
 		Title:      "preview-update-missing-token",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
@@ -952,7 +951,7 @@ func TestContestAWDServiceServiceUpdateRejectsMissingCheckerPreviewToken(t *test
 		Name:           "Preview Update Missing Token",
 		Slug:           "preview-update-missing-token",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -1007,7 +1006,7 @@ func TestContestAWDServiceServiceUpdateRejectsImmutableContest(t *testing.T) {
 		Name:           "Immutable Update Service",
 		Slug:           "immutable-update-service",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -1071,17 +1070,17 @@ func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerToke
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestCommandChallengeRow{
 		ID:         29806,
 		Title:      "preview-service-token-env",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
@@ -1089,7 +1088,7 @@ func TestContestAWDServiceServiceCreateRejectsCheckerPreviewTokenWhenCheckerToke
 		Name:           "Preview Service Token Env",
 		Slug:           "preview-service-token-env",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -1214,17 +1213,17 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("create contest: %v", err)
 	}
-	if err := challengeRepo.Create(context.Background(), &model.Challenge{
+	if err := challengeRepo.DB(context.Background()).Create(&contestCommandChallengeRow{
 		ID:         9803,
 		Title:      "user-center",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
-		FlagType:   model.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-	}); err != nil {
+	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}
 	if err := challengeRepo.CreateAWDChallenge(context.Background(), &challengecontracts.AWDChallenge{
@@ -1232,7 +1231,7 @@ func TestContestAWDServiceServiceDeleteRemovesOnlyServiceRecord(t *testing.T) {
 		Name:           "User Center",
 		Slug:           "user-center",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
@@ -1291,7 +1290,7 @@ func TestContestAWDServiceServiceDeleteRejectsImmutableContest(t *testing.T) {
 		Name:           "Immutable Delete Service",
 		Slug:           "immutable-delete-service",
 		Category:       "web",
-		Difficulty:     model.ChallengeDifficultyMedium,
+		Difficulty:     challengecontracts.ChallengeDifficultyMedium,
 		ServiceType:    challengecontracts.AWDServiceTypeWebHTTP,
 		DeploymentMode: challengecontracts.AWDDeploymentModeSingleContainer,
 		Status:         challengecontracts.AWDChallengeStatusPublished,
