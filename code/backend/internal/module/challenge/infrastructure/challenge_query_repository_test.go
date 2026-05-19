@@ -7,16 +7,15 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type challengeQueryRepositorySourceStub struct {
-	findByIDFn          func(context.Context, int64) (*model.Challenge, error)
-	listFn              func(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
-	listPublishedFn     func(context.Context, *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
+	findByIDFn          func(context.Context, int64) (*challengeentity.Challenge, error)
+	listFn              func(context.Context, *challengecontracts.ChallengeQuery) ([]*challengeentity.Challenge, int64, error)
+	listPublishedFn     func(context.Context, *challengecontracts.ChallengeQuery) ([]*challengeentity.Challenge, int64, error)
 	listHintsFn         func(context.Context, int64) ([]*challengeentity.ChallengeHint, error)
 	getSolvedStatusFn   func(context.Context, int64, int64) (bool, error)
 	getSolvedCountFn    func(context.Context, int64) (int64, error)
@@ -26,18 +25,18 @@ type challengeQueryRepositorySourceStub struct {
 	batchAttemptsFn     func(context.Context, []int64) (map[int64]int64, error)
 }
 
-func (s challengeQueryRepositorySourceStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s challengeQueryRepositorySourceStub) FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 	return s.findByIDFn(ctx, id)
 }
 
-func (s challengeQueryRepositorySourceStub) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (s challengeQueryRepositorySourceStub) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeentity.Challenge, int64, error) {
 	if s.listFn != nil {
 		return s.listFn(ctx, query)
 	}
 	return nil, 0, nil
 }
 
-func (s challengeQueryRepositorySourceStub) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
+func (s challengeQueryRepositorySourceStub) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeentity.Challenge, int64, error) {
 	if s.listPublishedFn != nil {
 		return s.listPublishedFn(ctx, query)
 	}
@@ -97,7 +96,7 @@ func TestChallengeQueryRepositoryMapsChallengeLookupNotFound(t *testing.T) {
 	t.Parallel()
 
 	repo := NewChallengeQueryRepository(challengeQueryRepositorySourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -112,7 +111,7 @@ func TestChallengeQueryRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 
 	expectedErr := errors.New("boom")
 	repo := NewChallengeQueryRepository(challengeQueryRepositorySourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
 			return nil, expectedErr
 		},
 	})

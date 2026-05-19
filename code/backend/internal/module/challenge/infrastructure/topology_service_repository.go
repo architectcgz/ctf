@@ -6,13 +6,12 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type topologyServiceRawRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error)
 	challengeports.ChallengeTopologyReadRepository
 	challengeports.ChallengeTopologyWriteRepository
 }

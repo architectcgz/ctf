@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"context"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	"ctf-platform/internal/module/challenge/testsupport"
@@ -18,7 +17,7 @@ func TestRepositoryCreate(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := NewRepository(db)
 
-	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusDraft}
+	challenge := &challengeentity.Challenge{Title: "Test", Status: challengeentity.ChallengeStatusDraft}
 	err := repo.Create(context.Background(), challenge)
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
@@ -32,7 +31,7 @@ func TestRepositoryFindByID(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := NewRepository(db)
 
-	challenge := &model.Challenge{Title: "Test"}
+	challenge := &challengeentity.Challenge{Title: "Test"}
 	db.Create(challenge)
 
 	found, err := repo.FindByID(context.Background(), challenge.ID)
@@ -48,8 +47,8 @@ func TestRepositoryList(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := NewRepository(db)
 
-	db.Create(&model.Challenge{Title: "C1", Category: "web"})
-	db.Create(&model.Challenge{Title: "C2", Category: "pwn"})
+	db.Create(&challengeentity.Challenge{Title: "C1", Category: "web"})
+	db.Create(&challengeentity.Challenge{Title: "C2", Category: "pwn"})
 
 	challenges, total, err := repo.List(context.Background(), &challengecontracts.ChallengeQuery{Page: 1, Size: 10})
 	if err != nil {
@@ -67,9 +66,9 @@ func TestRepositoryListPublishedUsesOnlyJeopardyChallenges(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := NewRepository(db)
 
-	normalChallenge := &model.Challenge{
+	normalChallenge := &challengeentity.Challenge{
 		Title:  "Normal Web",
-		Status: model.ChallengeStatusPublished,
+		Status: challengeentity.ChallengeStatusPublished,
 	}
 	awdChallenge := &challengeentity.AWDChallenge{
 		Name:   "AWD Web",
@@ -120,7 +119,7 @@ func TestRepositoryHasRunningInstances(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := NewRepository(db)
 
-	challenge := &model.Challenge{Title: "Test"}
+	challenge := &challengeentity.Challenge{Title: "Test"}
 	db.Create(challenge)
 	db.Create(&instancecontracts.Instance{ChallengeID: challenge.ID, Status: "running"})
 
@@ -137,35 +136,35 @@ func TestRepositoryFindPublishedForRecommendation(t *testing.T) {
 	db := testsupport.SetupTagTestDB(t)
 	repo := NewRepository(db)
 
-	solved := &model.Challenge{
+	solved := &challengeentity.Challenge{
 		Title:      "Solved Pwn",
 		Category:   "pwn",
-		Difficulty: model.ChallengeDifficultyBeginner,
+		Difficulty: challengeentity.ChallengeDifficultyBeginner,
 		Points:     100,
-		Status:     model.ChallengeStatusPublished,
+		Status:     challengeentity.ChallengeStatusPublished,
 	}
-	fresh := &model.Challenge{
+	fresh := &challengeentity.Challenge{
 		Title:      "Fresh Pwn",
 		Category:   "pwn",
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     120,
-		Status:     model.ChallengeStatusPublished,
+		Status:     challengeentity.ChallengeStatusPublished,
 	}
-	tagged := &model.Challenge{
+	tagged := &challengeentity.Challenge{
 		Title:      "Tagged Web",
 		Category:   "web",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengeentity.ChallengeDifficultyMedium,
 		Points:     150,
-		Status:     model.ChallengeStatusPublished,
+		Status:     challengeentity.ChallengeStatusPublished,
 	}
-	ignoredDraft := &model.Challenge{
+	ignoredDraft := &challengeentity.Challenge{
 		Title:      "Draft Pwn",
 		Category:   "pwn",
-		Difficulty: model.ChallengeDifficultyBeginner,
+		Difficulty: challengeentity.ChallengeDifficultyBeginner,
 		Points:     90,
-		Status:     model.ChallengeStatusDraft,
+		Status:     challengeentity.ChallengeStatusDraft,
 	}
-	for _, challenge := range []*model.Challenge{solved, fresh, tagged, ignoredDraft} {
+	for _, challenge := range []*challengeentity.Challenge{solved, fresh, tagged, ignoredDraft} {
 		if err := db.Create(challenge).Error; err != nil {
 			t.Fatalf("create challenge %s: %v", challenge.Title, err)
 		}
@@ -214,28 +213,28 @@ func TestRepositoryFindPublishedForRecommendationPrefersClosestDifficultyMatch(t
 	db := testsupport.SetupTagTestDB(t)
 	repo := NewRepository(db)
 
-	beginner := &model.Challenge{
+	beginner := &challengeentity.Challenge{
 		Title:      "Pwn Beginner",
 		Category:   "pwn",
-		Difficulty: model.ChallengeDifficultyBeginner,
+		Difficulty: challengeentity.ChallengeDifficultyBeginner,
 		Points:     90,
-		Status:     model.ChallengeStatusPublished,
+		Status:     challengeentity.ChallengeStatusPublished,
 	}
-	easy := &model.Challenge{
+	easy := &challengeentity.Challenge{
 		Title:      "Pwn Easy",
 		Category:   "pwn",
-		Difficulty: model.ChallengeDifficultyEasy,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     120,
-		Status:     model.ChallengeStatusPublished,
+		Status:     challengeentity.ChallengeStatusPublished,
 	}
-	medium := &model.Challenge{
+	medium := &challengeentity.Challenge{
 		Title:      "Pwn Medium",
 		Category:   "pwn",
-		Difficulty: model.ChallengeDifficultyMedium,
+		Difficulty: challengeentity.ChallengeDifficultyMedium,
 		Points:     150,
-		Status:     model.ChallengeStatusPublished,
+		Status:     challengeentity.ChallengeStatusPublished,
 	}
-	for _, challenge := range []*model.Challenge{beginner, easy, medium} {
+	for _, challenge := range []*challengeentity.Challenge{beginner, easy, medium} {
 		if err := db.Create(challenge).Error; err != nil {
 			t.Fatalf("create challenge %s: %v", challenge.Title, err)
 		}
@@ -245,7 +244,7 @@ func TestRepositoryFindPublishedForRecommendationPrefersClosestDifficultyMatch(t
 		context.Background(),
 		5,
 		[]string{"pwn"},
-		model.ChallengeDifficultyEasy,
+		challengeentity.ChallengeDifficultyEasy,
 		nil,
 	)
 	if err != nil {
@@ -270,7 +269,7 @@ func TestRepositoryPublishCheckJobLifecycle(t *testing.T) {
 	if err := db.Create(user).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
-	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusDraft, CreatedBy: &user.ID}
+	challenge := &challengeentity.Challenge{Title: "Test", Status: challengeentity.ChallengeStatusDraft, CreatedBy: &user.ID}
 	if err := db.Create(challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)
 	}

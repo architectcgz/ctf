@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
@@ -68,10 +67,10 @@ type moduleDeps struct {
 	}
 	// challengeCommandRepo    challengeports.ChallengeCommandRepository
 	challengeCommandRepo interface {
-		CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error
-		FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-		Update(ctx context.Context, challenge *model.Challenge) error
-		UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
+		CreateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint) error
+		FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error)
+		Update(ctx context.Context, challenge *challengeentity.Challenge) error
+		UpdateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
 		Delete(ctx context.Context, id int64) error
 		challengeports.ChallengeInstanceUsageRepository
 		challengeports.ChallengePublishCheckRepository

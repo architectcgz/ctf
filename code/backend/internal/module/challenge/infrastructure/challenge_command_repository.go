@@ -7,16 +7,15 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type challengeCommandRepositorySource interface {
-	CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	Update(ctx context.Context, challenge *model.Challenge) error
-	UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
+	CreateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint) error
+	FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error)
+	Update(ctx context.Context, challenge *challengeentity.Challenge) error
+	UpdateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
 	Delete(ctx context.Context, id int64) error
 	challengeports.ChallengeInstanceUsageRepository
 	challengeports.ChallengePublishCheckRepository
@@ -34,12 +33,12 @@ func NewChallengeCommandRepository(source challengeCommandRepositorySource) *Cha
 }
 
 func (r *ChallengeCommandRepository) CreateWithHints(ctx context.Context, challenge *challengeports.ChallengeWriteModel, hints []*challengeentity.ChallengeHint) error {
-	rawChallenge := challengeWriteModelToModel(challenge)
+	rawChallenge := challengeWriteModelToEntity(challenge)
 	if err := r.source.CreateWithHints(ctx, rawChallenge, hints); err != nil {
 		return err
 	}
 	if challenge != nil && rawChallenge != nil {
-		*challenge = *challengeWriteModelFromModel(rawChallenge)
+		*challenge = *challengeWriteModelFromEntity(rawChallenge)
 	}
 	return nil
 }
@@ -52,15 +51,15 @@ func (r *ChallengeCommandRepository) FindByID(ctx context.Context, id int64) (*c
 	if err != nil || item == nil {
 		return nil, err
 	}
-	return challengeWriteModelFromModel(item), nil
+	return challengeWriteModelFromEntity(item), nil
 }
 
 func (r *ChallengeCommandRepository) Update(ctx context.Context, challenge *challengeports.ChallengeWriteModel) error {
-	return r.source.Update(ctx, challengeWriteModelToModel(challenge))
+	return r.source.Update(ctx, challengeWriteModelToEntity(challenge))
 }
 
 func (r *ChallengeCommandRepository) UpdateWithHints(ctx context.Context, challenge *challengeports.ChallengeWriteModel, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
-	return r.source.UpdateWithHints(ctx, challengeWriteModelToModel(challenge), hints, replaceHints)
+	return r.source.UpdateWithHints(ctx, challengeWriteModelToEntity(challenge), hints, replaceHints)
 }
 
 func (r *ChallengeCommandRepository) Delete(ctx context.Context, id int64) error {
@@ -111,7 +110,7 @@ func (r *ChallengeCommandRepository) UpdatePublishCheckJob(ctx context.Context, 
 	return r.source.UpdatePublishCheckJob(ctx, job)
 }
 
-func challengeWriteModelFromModel(source *model.Challenge) *challengeports.ChallengeWriteModel {
+func challengeWriteModelFromEntity(source *challengeentity.Challenge) *challengeports.ChallengeWriteModel {
 	if source == nil {
 		return nil
 	}
@@ -140,11 +139,11 @@ func challengeWriteModelFromModel(source *model.Challenge) *challengeports.Chall
 	}
 }
 
-func challengeWriteModelToModel(source *challengeports.ChallengeWriteModel) *model.Challenge {
+func challengeWriteModelToEntity(source *challengeports.ChallengeWriteModel) *challengeentity.Challenge {
 	if source == nil {
 		return nil
 	}
-	return &model.Challenge{
+	return &challengeentity.Challenge{
 		ID:              source.ID,
 		PackageSlug:     source.PackageSlug,
 		Title:           source.Title,
@@ -154,13 +153,13 @@ func challengeWriteModelToModel(source *challengeports.ChallengeWriteModel) *mod
 		Points:          source.Points,
 		ImageID:         source.ImageID,
 		AttachmentURL:   source.AttachmentURL,
-		Status:          model.ChallengeStatus(source.Status),
+		Status:          challengeentity.ChallengeStatus(source.Status),
 		FlagType:        source.FlagType,
 		FlagHash:        source.FlagHash,
 		FlagSalt:        source.FlagSalt,
 		FlagRegex:       source.FlagRegex,
 		FlagPrefix:      source.FlagPrefix,
-		InstanceSharing: model.InstanceSharing(source.InstanceSharing),
+		InstanceSharing: challengeentity.InstanceSharing(source.InstanceSharing),
 		TargetProtocol:  source.TargetProtocol,
 		TargetPort:      source.TargetPort,
 		CreatedBy:       source.CreatedBy,

@@ -3,8 +3,8 @@ package infrastructure
 import (
 	"context"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 )
 
 type ContractRepository struct {
@@ -58,7 +58,7 @@ func (r *ContractRepository) FindPublishedForRecommendation(ctx context.Context,
 	return items, nil
 }
 
-func toContestChallengeProjection(challenge *model.Challenge) *challengecontracts.ContestChallenge {
+func toContestChallengeProjection(challenge *challengeentity.Challenge) *challengecontracts.ContestChallenge {
 	return &challengecontracts.ContestChallenge{
 		ID:         challenge.ID,
 		Title:      challenge.Title,
@@ -72,7 +72,7 @@ func toContestChallengeProjection(challenge *model.Challenge) *challengecontract
 	}
 }
 
-func toRecommendationChallengeProjection(challenge *model.Challenge) *challengecontracts.RecommendationChallenge {
+func toRecommendationChallengeProjection(challenge *challengeentity.Challenge) *challengecontracts.RecommendationChallenge {
 	return &challengecontracts.RecommendationChallenge{
 		ID:                      challenge.ID,
 		Title:                   challenge.Title,

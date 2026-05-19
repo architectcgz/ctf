@@ -9,7 +9,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -112,7 +111,7 @@ func (s *challengeImportTxStore) RejectImportedChallengeSlugConflict(ctx context
 		return nil
 	}
 
-	var existing model.Challenge
+	var existing challengeentity.Challenge
 	err := s.tx(ctx).Unscoped().
 		Select("id", "title", "package_slug").
 		Where("package_slug = ?", slug).
@@ -133,7 +132,7 @@ func (s *challengeImportTxStore) FindLegacyChallengeForImportedPackageCreate(
 	title string,
 	category string,
 ) (*challengeports.ImportedChallenge, bool, error) {
-	var challenge model.Challenge
+	var challenge challengeentity.Challenge
 	err := s.tx(ctx).Unscoped().
 		Where("(package_slug IS NULL OR package_slug = '') AND title = ? AND category = ?", title, category).
 		First(&challenge).Error
@@ -143,7 +142,7 @@ func (s *challengeImportTxStore) FindLegacyChallengeForImportedPackageCreate(
 	case err != nil:
 		return nil, false, fmt.Errorf("find imported challenge %s: %w", strings.TrimSpace(title), err)
 	default:
-		return importedChallengeFromModel(&challenge), true, nil
+		return importedChallengeFromEntity(&challenge), true, nil
 	}
 }
 
@@ -151,7 +150,7 @@ func (s *challengeImportTxStore) CreateImportedChallenge(ctx context.Context, ch
 	if challenge == nil {
 		return fmt.Errorf("challenge is nil")
 	}
-	row := importedChallengeToModel(challenge)
+	row := importedChallengeToEntity(challenge)
 	if err := s.tx(ctx).Create(row).Error; err != nil {
 		return err
 	}
@@ -170,7 +169,7 @@ func (s *challengeImportTxStore) UpdateImportedChallenge(
 		return fmt.Errorf("challenge is nil")
 	}
 	return s.tx(ctx).Unscoped().
-		Model(&model.Challenge{}).
+		Model(&challengeentity.Challenge{}).
 		Where("id = ?", challenge.ID).
 		Updates(updates).Error
 }
@@ -203,7 +202,7 @@ func (s *challengeImportTxStore) ApplyImportedFlagUpdates(
 	updates map[string]any,
 ) error {
 	return s.tx(ctx).
-		Model(&model.Challenge{}).
+		Model(&challengeentity.Challenge{}).
 		Where("id = ?", challengeID).
 		Updates(updates).Error
 }
@@ -338,7 +337,7 @@ func (s *challengeImportTxStore) ResolveExistingImageRef(
 	}, nil
 }
 
-func importedChallengeFromModel(source *model.Challenge) *challengeports.ImportedChallenge {
+func importedChallengeFromEntity(source *challengeentity.Challenge) *challengeports.ImportedChallenge {
 	if source == nil {
 		return nil
 	}
@@ -362,11 +361,11 @@ func importedChallengeFromModel(source *model.Challenge) *challengeports.Importe
 	}
 }
 
-func importedChallengeToModel(source *challengeports.ImportedChallenge) *model.Challenge {
+func importedChallengeToEntity(source *challengeports.ImportedChallenge) *challengeentity.Challenge {
 	if source == nil {
 		return nil
 	}
-	return &model.Challenge{
+	return &challengeentity.Challenge{
 		ID:             source.ID,
 		PackageSlug:    source.PackageSlug,
 		Title:          source.Title,
@@ -376,7 +375,7 @@ func importedChallengeToModel(source *challengeports.ImportedChallenge) *model.C
 		Points:         source.Points,
 		ImageID:        source.ImageID,
 		AttachmentURL:  source.AttachmentURL,
-		Status:         model.ChallengeStatus(source.Status),
+		Status:         challengeentity.ChallengeStatus(source.Status),
 		FlagPrefix:     source.FlagPrefix,
 		TargetProtocol: source.TargetProtocol,
 		TargetPort:     source.TargetPort,

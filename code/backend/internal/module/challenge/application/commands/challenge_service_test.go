@@ -253,7 +253,7 @@ func TestServicePublishChallengeNoImage(t *testing.T) {
 	if findErr != nil {
 		t.Fatalf("FindByID() error = %v", findErr)
 	}
-	if published.Status != model.ChallengeStatusPublished {
+	if published.Status != challengeentity.ChallengeStatusPublished {
 		t.Fatalf("expected published status, got %s", published.Status)
 	}
 }
@@ -323,7 +323,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if publishedChallenge.Status != model.ChallengeStatusPublished {
+	if publishedChallenge.Status != challengeentity.ChallengeStatusPublished {
 		t.Fatalf("expected published challenge status, got %s", publishedChallenge.Status)
 	}
 
@@ -405,7 +405,7 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if stored.Status != model.ChallengeStatusDraft {
+	if stored.Status != challengeentity.ChallengeStatusDraft {
 		t.Fatalf("expected challenge to stay draft, got %s", stored.Status)
 	}
 
@@ -486,7 +486,7 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if publishedChallenge.Status != model.ChallengeStatusPublished {
+	if publishedChallenge.Status != challengeentity.ChallengeStatusPublished {
 		t.Fatalf("expected attachment-only challenge to publish, got %s", publishedChallenge.Status)
 	}
 	if probe.createContainerCalled || probe.createTopologyCalled {

@@ -3,7 +3,6 @@ package testsupport
 import (
 	"testing"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -21,7 +20,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 	}
 	if err := db.AutoMigrate(
 		&identitycontracts.User{},
-		&model.Challenge{},
+		&challengeentity.Challenge{},
 		&challengeentity.ChallengePackageRevision{},
 		&challengeentity.AWDChallenge{},
 		&challengeentity.ChallengePublishCheckJob{},
@@ -49,7 +48,7 @@ func SetupTagTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("failed to open db: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Challenge{}, &challengeentity.Tag{}, &challengeentity.ChallengeTag{}); err != nil {
+	if err := db.AutoMigrate(&challengeentity.Challenge{}, &challengeentity.Tag{}, &challengeentity.ChallengeTag{}); err != nil {
 		t.Fatalf("failed to migrate tag tables: %v", err)
 	}
 	return db

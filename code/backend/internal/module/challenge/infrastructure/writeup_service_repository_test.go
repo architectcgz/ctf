@@ -8,7 +8,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -16,7 +15,7 @@ import (
 )
 
 type writeupServiceRepositoryStub struct {
-	findByIDFn                              func(ctx context.Context, id int64) (*model.Challenge, error)
+	findByIDFn                              func(ctx context.Context, id int64) (*challengeentity.Challenge, error)
 	findUserByIDFn                          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	findWriteupByChallengeIDFn              func(ctx context.Context, challengeID int64) (*challengeentity.ChallengeWriteup, error)
 	upsertWriteupFn                         func(ctx context.Context, writeup *challengeentity.ChallengeWriteup) error
@@ -32,7 +31,7 @@ type writeupServiceRepositoryStub struct {
 	listCommunitySolutionsByChallengeIDFn   func(ctx context.Context, challengeID int64, query *challengecontracts.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error)
 }
 
-func (s *writeupServiceRepositoryStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *writeupServiceRepositoryStub) FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 	return s.findByIDFn(ctx, id)
 }
 
@@ -93,7 +92,7 @@ func TestWriteupRepositoryMapsRawNotFoundToPortsSentinels(t *testing.T) {
 
 	ctx := context.Background()
 	repo := NewWriteupServiceRepository(&writeupServiceRepositoryStub{
-		findByIDFn: func(ctx context.Context, id int64) (*model.Challenge, error) {
+		findByIDFn: func(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {

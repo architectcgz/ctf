@@ -8,31 +8,30 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type challengeCommandRepositorySourceStub struct {
-	findByIDFn                      func(context.Context, int64) (*model.Challenge, error)
+	findByIDFn                      func(context.Context, int64) (*challengeentity.Challenge, error)
 	findPublishCheckJobByIDFn       func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error)
 	findActivePublishCheckJobByIDFn func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error)
 	findLatestPublishCheckJobByIDFn func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error)
 }
 
-func (s challengeCommandRepositorySourceStub) CreateWithHints(context.Context, *model.Challenge, []*challengeentity.ChallengeHint) error {
+func (s challengeCommandRepositorySourceStub) CreateWithHints(context.Context, *challengeentity.Challenge, []*challengeentity.ChallengeHint) error {
 	return nil
 }
 
-func (s challengeCommandRepositorySourceStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s challengeCommandRepositorySourceStub) FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 	return s.findByIDFn(ctx, id)
 }
 
-func (s challengeCommandRepositorySourceStub) Update(context.Context, *model.Challenge) error {
+func (s challengeCommandRepositorySourceStub) Update(context.Context, *challengeentity.Challenge) error {
 	return nil
 }
 
-func (s challengeCommandRepositorySourceStub) UpdateWithHints(context.Context, *model.Challenge, []*challengeentity.ChallengeHint, bool) error {
+func (s challengeCommandRepositorySourceStub) UpdateWithHints(context.Context, *challengeentity.Challenge, []*challengeentity.ChallengeHint, bool) error {
 	return nil
 }
 
@@ -76,7 +75,7 @@ func TestChallengeCommandRepositoryMapsRawNotFoundToPortsSentinels(t *testing.T)
 	t.Parallel()
 
 	repo := NewChallengeCommandRepository(challengeCommandRepositorySourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 		findPublishCheckJobByIDFn: func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
@@ -145,7 +144,7 @@ func TestChallengeCommandRepositoryPassesThroughNonNotFoundErrors(t *testing.T) 
 
 	expectedErr := errors.New("boom")
 	repo := NewChallengeCommandRepository(challengeCommandRepositorySourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
 			return nil, expectedErr
 		},
 		findPublishCheckJobByIDFn: func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {

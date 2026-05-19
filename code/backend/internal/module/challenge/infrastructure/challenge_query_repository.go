@@ -6,16 +6,15 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type challengeQueryRawRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
-	ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error)
+	FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error)
+	List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeentity.Challenge, int64, error)
+	ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeentity.Challenge, int64, error)
 	ListHintsByChallengeID(ctx context.Context, challengeID int64) ([]*challengeentity.ChallengeHint, error)
 	challengeports.ChallengeStatsRepository
 	challengeports.ChallengeBatchStatsRepository
@@ -40,7 +39,7 @@ func (r *ChallengeQueryRepository) FindByID(ctx context.Context, id int64) (*cha
 	if err != nil || challenge == nil {
 		return nil, err
 	}
-	return challengeReadModelFromModel(challenge), nil
+	return challengeReadModelFromEntity(challenge), nil
 }
 
 func (r *ChallengeQueryRepository) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeports.ChallengeReadModel, int64, error) {
@@ -50,7 +49,7 @@ func (r *ChallengeQueryRepository) List(ctx context.Context, query *challengecon
 	}
 	result := make([]*challengeports.ChallengeReadModel, 0, len(challenges))
 	for _, challenge := range challenges {
-		result = append(result, challengeReadModelFromModel(challenge))
+		result = append(result, challengeReadModelFromEntity(challenge))
 	}
 	return result, total, nil
 }
@@ -66,7 +65,7 @@ func (r *ChallengeQueryRepository) ListPublished(ctx context.Context, query *cha
 	}
 	result := make([]*challengeports.ChallengeReadModel, 0, len(challenges))
 	for _, challenge := range challenges {
-		result = append(result, challengeReadModelFromModel(challenge))
+		result = append(result, challengeReadModelFromEntity(challenge))
 	}
 	return result, total, nil
 }
@@ -95,7 +94,7 @@ func (r *ChallengeQueryRepository) BatchGetTotalAttempts(ctx context.Context, ch
 	return r.source.BatchGetTotalAttempts(ctx, challengeIDs)
 }
 
-func challengeReadModelFromModel(source *model.Challenge) *challengeports.ChallengeReadModel {
+func challengeReadModelFromEntity(source *challengeentity.Challenge) *challengeports.ChallengeReadModel {
 	if source == nil {
 		return nil
 	}

@@ -7,20 +7,20 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
+	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type flagRepositorySourceStub struct {
-	findByIDFn func(context.Context, int64) (*model.Challenge, error)
-	updateFn   func(context.Context, *model.Challenge) error
+	findByIDFn func(context.Context, int64) (*challengeentity.Challenge, error)
+	updateFn   func(context.Context, *challengeentity.Challenge) error
 }
 
-func (s flagRepositorySourceStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s flagRepositorySourceStub) FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 	return s.findByIDFn(ctx, id)
 }
 
-func (s flagRepositorySourceStub) Update(ctx context.Context, challenge *model.Challenge) error {
+func (s flagRepositorySourceStub) Update(ctx context.Context, challenge *challengeentity.Challenge) error {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, challenge)
 	}
@@ -31,7 +31,7 @@ func TestFlagRepositoryMapsNotFoundErrors(t *testing.T) {
 	t.Parallel()
 
 	repo := NewFlagRepository(flagRepositorySourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})
@@ -46,7 +46,7 @@ func TestFlagRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 
 	expectedErr := errors.New("boom")
 	repo := NewFlagRepository(flagRepositorySourceStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
 			return nil, expectedErr
 		},
 	})

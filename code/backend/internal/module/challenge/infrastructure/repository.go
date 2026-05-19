@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"context"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -56,11 +55,11 @@ func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo *Repo
 	})
 }
 
-func (r *Repository) Create(ctx context.Context, challenge *model.Challenge) error {
+func (r *Repository) Create(ctx context.Context, challenge *challengeentity.Challenge) error {
 	return r.dbWithContext(ctx).Create(challenge).Error
 }
 
-func (r *Repository) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error {
+func (r *Repository) CreateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(challenge).Error; err != nil {
 			return err
@@ -75,17 +74,17 @@ func (r *Repository) CreateWithHints(ctx context.Context, challenge *model.Chall
 	})
 }
 
-func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
-	var challenge model.Challenge
+func (r *Repository) FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
+	var challenge challengeentity.Challenge
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&challenge).Error
 	return &challenge, err
 }
 
-func (r *Repository) Update(ctx context.Context, challenge *model.Challenge) error {
+func (r *Repository) Update(ctx context.Context, challenge *challengeentity.Challenge) error {
 	return r.dbWithContext(ctx).Save(challenge).Error
 }
 
-func (r *Repository) UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
+func (r *Repository) UpdateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(challenge).Error; err != nil {
 			return err
@@ -107,7 +106,7 @@ func (r *Repository) UpdateWithHints(ctx context.Context, challenge *model.Chall
 }
 
 func (r *Repository) Delete(ctx context.Context, id int64) error {
-	return r.dbWithContext(ctx).Delete(&model.Challenge{}, id).Error
+	return r.dbWithContext(ctx).Delete(&challengeentity.Challenge{}, id).Error
 }
 
 func (r *Repository) CreateAWDChallenge(ctx context.Context, challenge *challengeentity.AWDChallenge) error {
@@ -168,11 +167,11 @@ func (r *Repository) ListAWDChallenges(ctx context.Context, query *challengecont
 	return challenges, total, err
 }
 
-func (r *Repository) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
-	var challenges []*model.Challenge
+func (r *Repository) List(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeentity.Challenge, int64, error) {
+	var challenges []*challengeentity.Challenge
 	var total int64
 
-	db := r.dbWithContext(ctx).Model(&model.Challenge{})
+	db := r.dbWithContext(ctx).Model(&challengeentity.Challenge{})
 
 	if query.Category != "" {
 		db = db.Where("category = ?", query.Category)
@@ -281,7 +280,7 @@ func (r *Repository) UpdatePublishCheckJob(ctx context.Context, job *challengeen
 
 func (r *Repository) CountByImageID(ctx context.Context, imageID int64) (int64, error) {
 	var count int64
-	err := r.dbWithContext(ctx).Model(&model.Challenge{}).
+	err := r.dbWithContext(ctx).Model(&challengeentity.Challenge{}).
 		Where("image_id = ?", imageID).
 		Count(&count).Error
 	return count, err
@@ -294,13 +293,13 @@ func (r *Repository) ListHintsByChallengeID(ctx context.Context, challengeID int
 }
 
 // ListPublished 查询已发布的靶场列表（学员视图）
-func (r *Repository) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*model.Challenge, int64, error) {
-	var challenges []*model.Challenge
+func (r *Repository) ListPublished(ctx context.Context, query *challengecontracts.ChallengeQuery) ([]*challengeentity.Challenge, int64, error) {
+	var challenges []*challengeentity.Challenge
 	var total int64
 
 	db := r.dbWithContext(ctx).
-		Model(&model.Challenge{}).
-		Where("status = ?", model.ChallengeStatusPublished)
+		Model(&challengeentity.Challenge{}).
+		Where("status = ?", challengeentity.ChallengeStatusPublished)
 
 	if query.Category != "" {
 		db = db.Where("category = ?", query.Category)
@@ -442,9 +441,9 @@ const challengeDifficultyOrderSQL = `CASE challenges.difficulty
 	ELSE 99
 END`
 
-func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, preferredDifficulty string, excludeSolved []int64) ([]*model.Challenge, error) {
+func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit int, dimensions []string, preferredDifficulty string, excludeSolved []int64) ([]*challengeentity.Challenge, error) {
 	if len(dimensions) == 0 || limit <= 0 {
-		return []*model.Challenge{}, nil
+		return []*challengeentity.Challenge{}, nil
 	}
 
 	normalized := make([]string, 0, len(dimensions))
@@ -461,11 +460,11 @@ func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit i
 		normalized = append(normalized, key)
 	}
 	if len(normalized) == 0 {
-		return []*model.Challenge{}, nil
+		return []*challengeentity.Challenge{}, nil
 	}
 
-	var challenges []*model.Challenge
-	query := r.dbWithContext(ctx).Model(&model.Challenge{}).
+	var challenges []*challengeentity.Challenge
+	query := r.dbWithContext(ctx).Model(&challengeentity.Challenge{}).
 		Select(
 			`challenges.*,
 			COALESCE(
@@ -489,7 +488,7 @@ func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit i
 			challengecontracts.TagTypeKnowledge,
 			normalized,
 		).
-		Where("challenges.status = ?", model.ChallengeStatusPublished).
+		Where("challenges.status = ?", challengeentity.ChallengeStatusPublished).
 		Where(
 			`(
 				LOWER(challenges.category) IN ?
@@ -527,15 +526,15 @@ func (r *Repository) FindPublishedForRecommendation(ctx context.Context, limit i
 
 func normalizedChallengeDifficultyRank(value string) (int, bool) {
 	switch strings.ToLower(strings.TrimSpace(value)) {
-	case model.ChallengeDifficultyBeginner:
+	case challengeentity.ChallengeDifficultyBeginner:
 		return 1, true
-	case model.ChallengeDifficultyEasy:
+	case challengeentity.ChallengeDifficultyEasy:
 		return 2, true
-	case model.ChallengeDifficultyMedium:
+	case challengeentity.ChallengeDifficultyMedium:
 		return 3, true
-	case model.ChallengeDifficultyHard:
+	case challengeentity.ChallengeDifficultyHard:
 		return 4, true
-	case model.ChallengeDifficultyInsane:
+	case challengeentity.ChallengeDifficultyInsane:
 		return 5, true
 	default:
 		return 0, false

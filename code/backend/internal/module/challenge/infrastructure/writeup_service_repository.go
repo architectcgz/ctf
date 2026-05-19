@@ -7,7 +7,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -15,7 +14,7 @@ import (
 )
 
 type writeupServiceRawRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error)
 	challengeports.ChallengeWriteupUserLookupRepository
 	challengeports.ChallengeAdminWriteupRepository
 	challengeports.ChallengeReleasedWriteupRepository

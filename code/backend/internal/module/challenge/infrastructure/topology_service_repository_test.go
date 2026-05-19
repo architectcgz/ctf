@@ -7,19 +7,18 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type topologyServiceRepositoryStub struct {
-	findByIDFn     func(context.Context, int64) (*model.Challenge, error)
+	findByIDFn     func(context.Context, int64) (*challengeentity.Challenge, error)
 	findTopologyFn func(context.Context, int64) (*challengeentity.ChallengeTopology, error)
 	upsertFn       func(context.Context, *challengeentity.ChallengeTopology) error
 	deleteFn       func(context.Context, int64) error
 }
 
-func (s topologyServiceRepositoryStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s topologyServiceRepositoryStub) FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
 	return s.findByIDFn(ctx, id)
 }
 
@@ -122,7 +121,7 @@ func TestTopologyServiceRepositoryMapsRawNotFoundToPortsSentinels(t *testing.T) 
 	t.Parallel()
 
 	repo := NewTopologyServiceRepository(topologyServiceRepositoryStub{
-		findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findByIDFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 		findTopologyFn: func(context.Context, int64) (*challengeentity.ChallengeTopology, error) {
