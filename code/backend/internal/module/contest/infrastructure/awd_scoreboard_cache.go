@@ -8,7 +8,7 @@ import (
 
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	rediskeys "ctf-platform/internal/pkg/redis"
+	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 )
 
 type redisScoreboardCache interface {

@@ -10,10 +10,10 @@ import (
 
 	redislib "github.com/redis/go-redis/v9"
 
+	"ctf-platform/internal/infrastructure/redislock"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	contestports "ctf-platform/internal/module/contest/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
-	"ctf-platform/internal/pkg/redislock"
 )
 
 var _ contestports.AWDRoundStateStore = (*AWDRoundStateStore)(nil)

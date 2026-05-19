@@ -10,8 +10,8 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	"ctf-platform/internal/module/practice/infrastructure/cachekeys"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	"ctf-platform/internal/pkg/cache"
 )
 
 const practiceScoreLockReleaseScript = `
@@ -50,7 +50,7 @@ func (s *ScoreStateStore) AcquireUserScoreUpdateLock(ctx context.Context, userID
 
 	lock := &practiceScoreLockLease{
 		client: s.client,
-		key:    cache.ScoreLockKey(userID),
+		key:    cachekeys.ScoreLockKey(userID),
 		token:  uuid.NewString(),
 	}
 
@@ -69,7 +69,7 @@ func (s *ScoreStateStore) LoadUserScoreCache(ctx context.Context, userID int64) 
 		return nil, false, nil
 	}
 
-	cached, err := s.client.Get(ctx, cache.UserScoreKey(userID)).Result()
+	cached, err := s.client.Get(ctx, cachekeys.UserScoreKey(userID)).Result()
 	if err != nil {
 		if err == redislib.Nil {
 			return nil, false, nil
@@ -93,7 +93,7 @@ func (s *ScoreStateStore) StoreUserScoreCache(ctx context.Context, info *practic
 	if err != nil {
 		return fmt.Errorf("encode user score cache: %w", err)
 	}
-	if err := s.client.Set(ctx, cache.UserScoreKey(info.UserID), data, ttl).Err(); err != nil {
+	if err := s.client.Set(ctx, cachekeys.UserScoreKey(info.UserID), data, ttl).Err(); err != nil {
 		return fmt.Errorf("store user score cache: %w", err)
 	}
 	return nil
@@ -110,8 +110,8 @@ func (s *ScoreStateStore) SyncUserScoreState(ctx context.Context, info *practice
 	}
 
 	pipe := s.client.Pipeline()
-	pipe.Set(ctx, cache.UserScoreKey(info.UserID), data, ttl)
-	pipe.ZAdd(ctx, cache.RankingKey(), redislib.Z{
+	pipe.Set(ctx, cachekeys.UserScoreKey(info.UserID), data, ttl)
+	pipe.ZAdd(ctx, cachekeys.RankingKey(), redislib.Z{
 		Score:  float64(info.TotalScore),
 		Member: info.UserID,
 	})

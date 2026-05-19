@@ -6,9 +6,9 @@ import (
 
 	redislib "github.com/redis/go-redis/v9"
 
+	"ctf-platform/internal/infrastructure/redislock"
+	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	contestports "ctf-platform/internal/module/contest/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
-	"ctf-platform/internal/pkg/redislock"
 )
 
 var _ contestports.ContestStatusUpdateLockStore = (*ContestStatusUpdateLockStore)(nil)

@@ -9,7 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/pkg/redislock"
+	"ctf-platform/internal/infrastructure/redislock"
 )
 
 func TestRedisLockKeepaliveRefreshesOwnedLock(t *testing.T) {

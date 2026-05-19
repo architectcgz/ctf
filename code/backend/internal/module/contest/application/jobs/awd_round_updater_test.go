@@ -17,10 +17,10 @@ import (
 
 	"ctf-platform/internal/config"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 func TestAWDRoundUpdaterCreatesAndAdvancesRounds(t *testing.T) {

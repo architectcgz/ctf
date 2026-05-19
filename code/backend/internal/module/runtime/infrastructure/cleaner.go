@@ -11,8 +11,8 @@ import (
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 
-	rediskeys "ctf-platform/internal/pkg/redis"
-	"ctf-platform/internal/pkg/redislock"
+	"ctf-platform/internal/infrastructure/redislock"
+	"ctf-platform/internal/module/runtime/infrastructure/cachekeys"
 )
 
 type Cleaner struct {
@@ -83,7 +83,7 @@ func (c *Cleaner) runOnce() {
 		return
 	}
 
-	lock, acquired, err := redislock.Acquire(ctx, c.redis, rediskeys.ContainerCleanupLockKey(), c.lockTTL)
+	lock, acquired, err := redislock.Acquire(ctx, c.redis, cachekeys.ContainerCleanupLockKey(), c.lockTTL)
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
 			c.logger.Error("获取实例清理任务锁失败", zap.Error(err))

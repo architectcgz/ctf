@@ -21,6 +21,7 @@ import (
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
+	assessmentcachekeys "ctf-platform/internal/module/assessment/infrastructure/cachekeys"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -31,7 +32,6 @@ import (
 	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
-	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/internal/shared/taxonomy"
 )
 
@@ -388,7 +388,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 			if student == nil {
 				continue
 			}
-			cacheKeys = append(cacheKeys, rediskeys.RecommendationKey(student.ID))
+			cacheKeys = append(cacheKeys, assessmentcachekeys.RecommendationKey(student.ID))
 		}
 		if len(cacheKeys) > 0 {
 			if cacheErr := cache.Del(ctx, cacheKeys...).Err(); cacheErr != nil {

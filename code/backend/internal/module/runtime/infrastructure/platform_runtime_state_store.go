@@ -7,7 +7,7 @@ import (
 
 	redislib "github.com/redis/go-redis/v9"
 
-	rediskeys "ctf-platform/internal/pkg/redis"
+	"ctf-platform/internal/module/runtime/infrastructure/cachekeys"
 )
 
 type PlatformRuntimeStateStore struct {
@@ -25,7 +25,7 @@ func (s *PlatformRuntimeStateStore) LoadPlatformRuntimeState(ctx context.Context
 	if s == nil || s.cache == nil {
 		return "", time.Time{}, false, nil
 	}
-	values, err := s.cache.HGetAll(ctx, rediskeys.PlatformRuntimeStateKey()).Result()
+	values, err := s.cache.HGetAll(ctx, cachekeys.PlatformRuntimeStateKey()).Result()
 	if err != nil {
 		return "", time.Time{}, false, err
 	}
@@ -48,7 +48,7 @@ func (s *PlatformRuntimeStateStore) SavePlatformRuntimeState(ctx context.Context
 	if s == nil || s.cache == nil || strings.TrimSpace(bootID) == "" || heartbeatAt.IsZero() {
 		return nil
 	}
-	return s.cache.HSet(ctx, rediskeys.PlatformRuntimeStateKey(), map[string]any{
+	return s.cache.HSet(ctx, cachekeys.PlatformRuntimeStateKey(), map[string]any{
 		"boot_id":           strings.TrimSpace(bootID),
 		"last_heartbeat_at": heartbeatAt.UTC().Format(time.RFC3339Nano),
 	}).Err()

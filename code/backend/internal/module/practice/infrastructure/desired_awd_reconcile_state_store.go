@@ -8,8 +8,8 @@ import (
 
 	redislib "github.com/redis/go-redis/v9"
 
+	"ctf-platform/internal/module/practice/infrastructure/cachekeys"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 const desiredAWDReconcileStateRetention = 24 * time.Hour
@@ -29,7 +29,7 @@ func (s *DesiredAWDReconcileStateStore) LoadDesiredAWDReconcileState(ctx context
 	if s == nil || s.cache == nil || contestID <= 0 || teamID <= 0 || serviceID <= 0 {
 		return nil, false, nil
 	}
-	values, err := s.cache.HGetAll(ctx, rediskeys.DesiredAWDReconcileStateKey(contestID, teamID, serviceID)).Result()
+	values, err := s.cache.HGetAll(ctx, cachekeys.DesiredAWDReconcileStateKey(contestID, teamID, serviceID)).Result()
 	if err != nil {
 		return nil, false, err
 	}
@@ -73,7 +73,7 @@ func (s *DesiredAWDReconcileStateStore) StoreDesiredAWDReconcileState(ctx contex
 	if s == nil || s.cache == nil || contestID <= 0 || teamID <= 0 || serviceID <= 0 || state == nil {
 		return nil
 	}
-	key := rediskeys.DesiredAWDReconcileStateKey(contestID, teamID, serviceID)
+	key := cachekeys.DesiredAWDReconcileStateKey(contestID, teamID, serviceID)
 	pipe := s.cache.TxPipeline()
 	pipe.HSet(ctx, key, map[string]any{
 		"failure_count":    state.FailureCount,
@@ -91,7 +91,7 @@ func (s *DesiredAWDReconcileStateStore) DeleteDesiredAWDReconcileState(ctx conte
 	if s == nil || s.cache == nil || contestID <= 0 || teamID <= 0 || serviceID <= 0 {
 		return nil
 	}
-	return s.cache.Del(ctx, rediskeys.DesiredAWDReconcileStateKey(contestID, teamID, serviceID)).Err()
+	return s.cache.Del(ctx, cachekeys.DesiredAWDReconcileStateKey(contestID, teamID, serviceID)).Err()
 }
 
 func parseDesiredAWDReconcileStateTime(raw string) (time.Time, error) {

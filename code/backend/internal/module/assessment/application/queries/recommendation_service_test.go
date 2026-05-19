@@ -19,12 +19,12 @@ import (
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
+	assessmentcachekeys "ctf-platform/internal/module/assessment/infrastructure/cachekeys"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
 )
@@ -144,7 +144,7 @@ func TestRecommendationServiceRecommendChallengesUsesCacheForDefaultLimit(t *tes
 	if err != nil {
 		t.Fatalf("marshal cached recommendations: %v", err)
 	}
-	if err := redisClient.Set(context.Background(), rediskeys.RecommendationKey(1), payload, time.Hour).Err(); err != nil {
+	if err := redisClient.Set(context.Background(), assessmentcachekeys.RecommendationKey(1), payload, time.Hour).Err(); err != nil {
 		t.Fatalf("seed recommendation cache: %v", err)
 	}
 
@@ -646,7 +646,7 @@ func TestRecommendationServiceRegistersContestAttackAcceptedConsumer(t *testing.
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	t.Cleanup(func() { _ = redisClient.Close() })
 
-	cacheKey := rediskeys.RecommendationKey(17)
+	cacheKey := assessmentcachekeys.RecommendationKey(17)
 	if err := redisClient.Set(context.Background(), cacheKey, `[{"id":"cached"}]`, time.Hour).Err(); err != nil {
 		t.Fatalf("seed recommendation cache: %v", err)
 	}

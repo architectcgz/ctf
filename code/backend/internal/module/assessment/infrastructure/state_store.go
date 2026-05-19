@@ -13,8 +13,8 @@ import (
 	"ctf-platform/internal/config"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmentcachekeys "ctf-platform/internal/module/assessment/infrastructure/cachekeys"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 const assessmentProfileLockReleaseScript = `
@@ -111,7 +111,7 @@ func (s *RecommendationCacheStore) LoadRecommendations(ctx context.Context, user
 		return nil, false, nil
 	}
 
-	cached, err := s.cache.Get(ctx, rediskeys.RecommendationKey(userID)).Result()
+	cached, err := s.cache.Get(ctx, assessmentcachekeys.RecommendationKey(userID)).Result()
 	if err != nil {
 		if errors.Is(err, redislib.Nil) {
 			return nil, false, nil
@@ -135,7 +135,7 @@ func (s *RecommendationCacheStore) StoreRecommendations(ctx context.Context, use
 	if err != nil {
 		return fmt.Errorf("encode recommendation cache: %w", err)
 	}
-	if err := s.cache.Set(ctx, rediskeys.RecommendationKey(userID), data, ttl).Err(); err != nil {
+	if err := s.cache.Set(ctx, assessmentcachekeys.RecommendationKey(userID), data, ttl).Err(); err != nil {
 		return fmt.Errorf("store recommendation cache: %w", err)
 	}
 	return nil
@@ -145,7 +145,7 @@ func (s *RecommendationCacheStore) DeleteRecommendations(ctx context.Context, us
 	if s == nil || s.cache == nil || userID <= 0 {
 		return nil
 	}
-	if err := s.cache.Del(ctx, rediskeys.RecommendationKey(userID)).Err(); err != nil {
+	if err := s.cache.Del(ctx, assessmentcachekeys.RecommendationKey(userID)).Err(); err != nil {
 		return fmt.Errorf("delete recommendation cache: %w", err)
 	}
 	return nil

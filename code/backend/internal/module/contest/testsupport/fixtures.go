@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 
 	contestentity "ctf-platform/internal/module/contest/entity"
-	rediskeys "ctf-platform/internal/pkg/redis"
+	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	"ctf-platform/pkg/crypto"
 )
 

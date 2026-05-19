@@ -17,9 +17,9 @@ import (
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
+	practicecachekeys "ctf-platform/internal/module/practice/infrastructure/cachekeys"
 	"ctf-platform/internal/module/practice/testsupport"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	"ctf-platform/internal/pkg/cache"
 	"ctf-platform/internal/shared/taxonomy"
 )
 
@@ -154,7 +154,7 @@ func TestScoreServiceUpdateUserScoreUsesSolvedChallengePointsSum(t *testing.T) {
 		t.Fatalf("expected solved_count 2, got %+v", userScore)
 	}
 
-	rankingScore, err := redisClient.ZScore(context.Background(), cache.RankingKey(), "9").Result()
+	rankingScore, err := redisClient.ZScore(context.Background(), practicecachekeys.RankingKey(), "9").Result()
 	if err != nil {
 		t.Fatalf("load ranking score: %v", err)
 	}

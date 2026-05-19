@@ -8,8 +8,8 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 
+	"ctf-platform/internal/module/practice/infrastructure/cachekeys"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 func TestDesiredAWDReconcileStateStoreAppliesBoundedTTL(t *testing.T) {
@@ -31,7 +31,7 @@ func TestDesiredAWDReconcileStateStoreAppliesBoundedTTL(t *testing.T) {
 		t.Fatalf("StoreDesiredAWDReconcileState() error = %v", err)
 	}
 
-	ttl := redisServer.TTL(rediskeys.DesiredAWDReconcileStateKey(1, 2, 3))
+	ttl := redisServer.TTL(cachekeys.DesiredAWDReconcileStateKey(1, 2, 3))
 	if ttl <= 24*time.Hour {
 		t.Fatalf("expected ttl to extend beyond retention floor, got %s", ttl)
 	}

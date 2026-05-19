@@ -13,8 +13,8 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	contestports "ctf-platform/internal/module/contest/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
 

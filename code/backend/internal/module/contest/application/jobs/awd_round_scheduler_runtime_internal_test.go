@@ -13,8 +13,8 @@ import (
 	"ctf-platform/internal/config"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	"ctf-platform/internal/module/contest/testsupport"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 func TestAWDRoundUpdaterRefreshesSchedulerLockWhileRunning(t *testing.T) {

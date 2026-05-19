@@ -15,12 +15,12 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
+	practicecachekeys "ctf-platform/internal/module/practice/infrastructure/cachekeys"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
@@ -578,7 +578,7 @@ func TestReconcileDesiredAWDInstancesIgnoresCorruptedDesiredState(t *testing.T) 
 		ServiceSnapshot: `{"name":"awd-web","runtime_config":{"image_id":104,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
 	}
 
-	if err := redisClient.HSet(context.Background(), rediskeys.DesiredAWDReconcileStateKey(contestID, teamID, serviceID), map[string]any{
+	if err := redisClient.HSet(context.Background(), practicecachekeys.DesiredAWDReconcileStateKey(contestID, teamID, serviceID), map[string]any{
 		"failure_count": "invalid",
 	}).Err(); err != nil {
 		t.Fatalf("seed corrupted desired reconcile state: %v", err)

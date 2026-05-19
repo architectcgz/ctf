@@ -5,8 +5,8 @@ import (
 
 	redislib "github.com/redis/go-redis/v9"
 
+	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	contestports "ctf-platform/internal/module/contest/ports"
-	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 var _ contestports.ContestStatusSideEffectStore = (*ContestStatusSideEffectStore)(nil)
