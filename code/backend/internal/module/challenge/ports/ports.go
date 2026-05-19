@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -34,11 +33,35 @@ var (
 )
 
 type ChallengeWriteRepository interface {
-	CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
-	Update(ctx context.Context, challenge *model.Challenge) error
-	UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
+	CreateWithHints(ctx context.Context, challenge *ChallengeWriteModel, hints []*challengeentity.ChallengeHint) error
+	FindByID(ctx context.Context, id int64) (*ChallengeWriteModel, error)
+	Update(ctx context.Context, challenge *ChallengeWriteModel) error
+	UpdateWithHints(ctx context.Context, challenge *ChallengeWriteModel, hints []*challengeentity.ChallengeHint, replaceHints bool) error
 	Delete(ctx context.Context, id int64) error
+}
+
+type ChallengeWriteModel struct {
+	ID              int64
+	PackageSlug     *string
+	Title           string
+	Description     string
+	Category        string
+	Difficulty      string
+	Points          int
+	ImageID         int64
+	AttachmentURL   string
+	Status          string
+	FlagType        string
+	FlagHash        string
+	FlagSalt        string
+	FlagRegex       string
+	FlagPrefix      string
+	InstanceSharing string
+	TargetProtocol  string
+	TargetPort      int
+	CreatedBy       *int64
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 type ChallengeInstanceUsageRepository interface {

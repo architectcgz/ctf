@@ -81,20 +81,23 @@ func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int6
 	if err := s.validateInstanceSharingConfig(ctx, challenge); err != nil {
 		return nil, err
 	}
-	if err := s.repo.CreateWithHints(ctx, challenge, hints); err != nil {
+	writeModel := challengeWriteModelFromModel(challenge)
+	if err := s.repo.CreateWithHints(ctx, writeModel, hints); err != nil {
 		return nil, err
 	}
+	challenge = challengeWriteModelToModel(writeModel)
 	return domain.ChallengeRespFromModel(challenge, hints), nil
 }
 
 func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req UpdateChallengeInput) error {
-	challenge, err := s.repo.FindByID(ctx, id)
+	challengeWriteModel, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 			return errcode.ErrChallengeNotFound
 		}
 		return err
 	}
+	challenge := challengeWriteModelToModel(challengeWriteModel)
 
 	if req.Title != "" {
 		challenge.Title = req.Title
@@ -138,7 +141,7 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req Up
 		return err
 	}
 
-	return s.repo.UpdateWithHints(ctx, challenge, hints, replaceHints)
+	return s.repo.UpdateWithHints(ctx, challengeWriteModelFromModel(challenge), hints, replaceHints)
 }
 
 func normalizeInstanceSharing(value string) model.InstanceSharing {
@@ -149,6 +152,64 @@ func normalizeInstanceSharing(value string) model.InstanceSharing {
 		return model.InstanceSharingShared
 	default:
 		return model.InstanceSharingPerUser
+	}
+}
+
+func challengeWriteModelFromModel(source *model.Challenge) *challengeports.ChallengeWriteModel {
+	if source == nil {
+		return nil
+	}
+	return &challengeports.ChallengeWriteModel{
+		ID:              source.ID,
+		PackageSlug:     source.PackageSlug,
+		Title:           source.Title,
+		Description:     source.Description,
+		Category:        source.Category,
+		Difficulty:      source.Difficulty,
+		Points:          source.Points,
+		ImageID:         source.ImageID,
+		AttachmentURL:   source.AttachmentURL,
+		Status:          string(source.Status),
+		FlagType:        source.FlagType,
+		FlagHash:        source.FlagHash,
+		FlagSalt:        source.FlagSalt,
+		FlagRegex:       source.FlagRegex,
+		FlagPrefix:      source.FlagPrefix,
+		InstanceSharing: string(source.InstanceSharing),
+		TargetProtocol:  source.TargetProtocol,
+		TargetPort:      source.TargetPort,
+		CreatedBy:       source.CreatedBy,
+		CreatedAt:       source.CreatedAt,
+		UpdatedAt:       source.UpdatedAt,
+	}
+}
+
+func challengeWriteModelToModel(source *challengeports.ChallengeWriteModel) *model.Challenge {
+	if source == nil {
+		return nil
+	}
+	return &model.Challenge{
+		ID:              source.ID,
+		PackageSlug:     source.PackageSlug,
+		Title:           source.Title,
+		Description:     source.Description,
+		Category:        source.Category,
+		Difficulty:      source.Difficulty,
+		Points:          source.Points,
+		ImageID:         source.ImageID,
+		AttachmentURL:   source.AttachmentURL,
+		Status:          model.ChallengeStatus(source.Status),
+		FlagType:        source.FlagType,
+		FlagHash:        source.FlagHash,
+		FlagSalt:        source.FlagSalt,
+		FlagRegex:       source.FlagRegex,
+		FlagPrefix:      source.FlagPrefix,
+		InstanceSharing: model.InstanceSharing(source.InstanceSharing),
+		TargetProtocol:  source.TargetProtocol,
+		TargetPort:      source.TargetPort,
+		CreatedBy:       source.CreatedBy,
+		CreatedAt:       source.CreatedAt,
+		UpdatedAt:       source.UpdatedAt,
 	}
 }
 
@@ -218,26 +279,28 @@ func (s *ChallengeService) DeleteChallenge(ctx context.Context, id int64) error 
 }
 
 func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error {
-	challenge, err := s.repo.FindByID(ctx, id)
+	challengeWriteModel, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 			return errcode.ErrChallengeNotFound
 		}
 		return err
 	}
+	challenge := challengeWriteModelToModel(challengeWriteModel)
 
 	challenge.Status = model.ChallengeStatusPublished
-	return s.repo.Update(ctx, challenge)
+	return s.repo.Update(ctx, challengeWriteModelFromModel(challenge))
 }
 
 func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error) {
-	challenge, err := s.repo.FindByID(ctx, id)
+	challengeWriteModel, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
+	challenge := challengeWriteModelToModel(challengeWriteModel)
 	if challenge.Status == model.ChallengeStatusPublished {
 		return nil, errcode.ErrConflict.WithCause(errors.New("题目已发布，无需重复提交发布检查"))
 	}
@@ -267,13 +330,14 @@ func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID,
 }
 
 func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error) {
-	challenge, err := s.repo.FindByID(ctx, id)
+	challengeWriteModel, err := s.repo.FindByID(ctx, id)
 	if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 		return nil, errcode.ErrChallengeNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
+	challenge := challengeWriteModelToModel(challengeWriteModel)
 	job, err := s.repo.FindLatestPublishCheckJobByChallengeID(ctx, id)
 	if errors.Is(err, challengeports.ErrChallengePublishCheckJobNotFound) {
 		return nil, errcode.ErrNotFound
@@ -330,7 +394,7 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 		s.logger.Warn("load publish check job failed", zap.Int64("job_id", jobID), zap.Error(err))
 		return
 	}
-	challenge, err := s.repo.FindByID(ctx, job.ChallengeID)
+	challengeWriteModel, err := s.repo.FindByID(ctx, job.ChallengeID)
 	if err != nil {
 		s.finishPublishCheckJob(ctx, job, nil, false, fmt.Sprintf("读取题目失败: %v", err), &model.Challenge{
 			ID:    job.ChallengeID,
@@ -338,6 +402,7 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 		})
 		return
 	}
+	challenge := challengeWriteModelToModel(challengeWriteModel)
 
 	resp, err := s.SelfCheckChallenge(ctx, challenge.ID)
 	if err != nil {
@@ -472,13 +537,14 @@ type challengeSelfCheckRuntimeInput struct {
 }
 
 func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeSelfCheckResp, error) {
-	challenge, err := s.repo.FindByID(ctx, id)
+	challengeWriteModel, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
 	}
+	challenge := challengeWriteModelToModel(challengeWriteModel)
 
 	resp := &challengecontracts.ChallengeSelfCheckResp{
 		ChallengeID: challenge.ID,

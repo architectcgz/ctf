@@ -4,26 +4,25 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/model"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type ctxOnlyChallengeCommandRepository struct{}
 
-func (ctxOnlyChallengeCommandRepository) CreateWithHints(context.Context, *model.Challenge, []*challengeentity.ChallengeHint) error {
+func (ctxOnlyChallengeCommandRepository) CreateWithHints(context.Context, *challengeports.ChallengeWriteModel, []*challengeentity.ChallengeHint) error {
 	return nil
 }
 
-func (ctxOnlyChallengeCommandRepository) FindByID(context.Context, int64) (*model.Challenge, error) {
+func (ctxOnlyChallengeCommandRepository) FindByID(context.Context, int64) (*challengeports.ChallengeWriteModel, error) {
 	return nil, nil
 }
 
-func (ctxOnlyChallengeCommandRepository) Update(context.Context, *model.Challenge) error {
+func (ctxOnlyChallengeCommandRepository) Update(context.Context, *challengeports.ChallengeWriteModel) error {
 	return nil
 }
 
-func (ctxOnlyChallengeCommandRepository) UpdateWithHints(context.Context, *model.Challenge, []*challengeentity.ChallengeHint, bool) error {
+func (ctxOnlyChallengeCommandRepository) UpdateWithHints(context.Context, *challengeports.ChallengeWriteModel, []*challengeentity.ChallengeHint, bool) error {
 	return nil
 }
 

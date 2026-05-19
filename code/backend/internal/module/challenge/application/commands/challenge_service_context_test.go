@@ -29,30 +29,34 @@ type challengeCommandContextRepoStub struct {
 	updatePublishCheckJobFn         func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
 }
 
-func (s *challengeCommandContextRepoStub) CreateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint) error {
+func (s *challengeCommandContextRepoStub) CreateWithHints(ctx context.Context, challenge *challengeports.ChallengeWriteModel, hints []*challengeentity.ChallengeHint) error {
 	if s.createWithHintsFn != nil {
-		return s.createWithHintsFn(ctx, challenge, hints)
+		return s.createWithHintsFn(ctx, challengeWriteModelToModel(challenge), hints)
 	}
 	return nil
 }
 
-func (s *challengeCommandContextRepoStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s *challengeCommandContextRepoStub) FindByID(ctx context.Context, id int64) (*challengeports.ChallengeWriteModel, error) {
 	if s.findByIDWithContextFn != nil {
-		return s.findByIDWithContextFn(ctx, id)
+		item, err := s.findByIDWithContextFn(ctx, id)
+		if err != nil || item == nil {
+			return nil, err
+		}
+		return challengeWriteModelFromModel(item), nil
 	}
 	return nil, nil
 }
 
-func (s *challengeCommandContextRepoStub) Update(ctx context.Context, challenge *model.Challenge) error {
+func (s *challengeCommandContextRepoStub) Update(ctx context.Context, challenge *challengeports.ChallengeWriteModel) error {
 	if s.updateFn != nil {
-		return s.updateFn(ctx, challenge)
+		return s.updateFn(ctx, challengeWriteModelToModel(challenge))
 	}
 	return nil
 }
 
-func (s *challengeCommandContextRepoStub) UpdateWithHints(ctx context.Context, challenge *model.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
+func (s *challengeCommandContextRepoStub) UpdateWithHints(ctx context.Context, challenge *challengeports.ChallengeWriteModel, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
 	if s.updateWithHintsFn != nil {
-		return s.updateWithHintsFn(ctx, challenge, hints, replaceHints)
+		return s.updateWithHintsFn(ctx, challengeWriteModelToModel(challenge), hints, replaceHints)
 	}
 	return nil
 }

@@ -23,7 +23,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func newTestService(repo challengeCommandRepository, imageRepo challengeports.ImageQueryRepository) *ChallengeService {
+func newTestService(repo *challengeinfra.Repository, imageRepo challengeports.ImageQueryRepository) *ChallengeService {
 	return NewChallengeService(
 		challengeinfra.NewChallengeCommandRepository(repo),
 		challengeinfra.NewImageQueryRepository(imageRepo),
