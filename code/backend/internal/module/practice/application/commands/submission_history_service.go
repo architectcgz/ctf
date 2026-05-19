@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -20,7 +20,7 @@ func (s *Service) ListMyChallengeSubmissions(ctx context.Context, userID, challe
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if challengeItem.Status != model.ChallengeStatusPublished {
+	if challengeItem.Status != practiceentity.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
 

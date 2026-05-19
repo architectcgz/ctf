@@ -406,12 +406,12 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
 	}
-	if err := service.createSingleContainer(context.Background(), instance, &model.Challenge{
+	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(&model.Challenge{
 		ID:             challengeID,
 		ImageID:        601,
 		TargetPort:     8080,
 		TargetProtocol: model.ChallengeTargetProtocolHTTP,
-	}, "flag{demo}"); err != nil {
+	}), "flag{demo}"); err != nil {
 		t.Fatalf("createSingleContainer() error = %v", err)
 	}
 
@@ -541,12 +541,12 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
 	}
-	err = service.createSingleContainer(context.Background(), instance, &model.Challenge{
+	err = service.createSingleContainer(context.Background(), instance, toPracticeChallenge(&model.Challenge{
 		ID:             challengeID,
 		ImageID:        602,
 		TargetPort:     8080,
 		TargetProtocol: model.ChallengeTargetProtocolHTTP,
-	}, "flag{demo}")
+	}), "flag{demo}")
 	if err == nil {
 		t.Fatal("expected createSingleContainer() to fail when stale workspace cleanup fails")
 	}
@@ -638,7 +638,7 @@ func TestPrepareAWDDefenseWorkspacePlanTreatsFailedWorkspaceContainerAsStale(t *
 		TeamID:      &teamID,
 		ChallengeID: challengeID,
 		ServiceID:   &serviceID,
-	}, &model.Challenge{ID: challengeID})
+	}, toPracticeChallenge(&model.Challenge{ID: challengeID}))
 	if err != nil {
 		t.Fatalf("prepareAWDDefenseWorkspacePlan() error = %v", err)
 	}

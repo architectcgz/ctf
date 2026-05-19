@@ -9,9 +9,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/pkg/errcode"
@@ -94,7 +94,7 @@ type awdScopedRuntimeRequest struct {
 }
 
 func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdScopedRuntimeRequest) (*instancecontracts.InstanceResp, error) {
-	scope := resolveEffectiveInstanceScope(&model.Challenge{}, req.Scope)
+	scope := resolveEffectiveInstanceScope(&practiceentity.Challenge{}, req.Scope)
 
 	var instance *instancecontracts.Instance
 	if err := s.repo.WithinInstanceRestartTx(ctx, func(txRepo practiceports.PracticeInstanceRestartTxRepository) error {
@@ -383,7 +383,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	if err != nil {
 		return nil, err
 	}
-	if chal.Status != model.ChallengeStatusPublished {
+	if chal.Status != practiceentity.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
 	if chal.ImageID == 0 {

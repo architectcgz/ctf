@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"ctf-platform/internal/model"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -16,7 +16,7 @@ func (r *Repository) GetUserProgress(ctx context.Context, userID int64) (totalSc
 	err = r.dbWithContext(ctx).Table("submissions s").
 		Select("COALESCE(SUM(c.points), 0) AS total_score, COUNT(DISTINCT s.challenge_id) AS total_solved").
 		Joins("JOIN challenges c ON s.challenge_id = c.id").
-		Where("s.user_id = ? AND s.is_correct = ? AND c.status = ?", userID, true, model.ChallengeStatusPublished).
+		Where("s.user_id = ? AND s.is_correct = ? AND c.status = ?", userID, true, practiceentity.ChallengeStatusPublished).
 		Scan(&result).Error
 	if err != nil {
 		return 0, 0, fmt.Errorf("get user progress: %w", err)
@@ -36,7 +36,7 @@ func (r *Repository) GetCategoryStats(ctx context.Context, userID int64) ([]prac
 		WHERE c.status = ?
 		GROUP BY c.category
 		ORDER BY c.category
-	`, userID, model.ChallengeStatusPublished).Scan(&stats).Error; err != nil {
+	`, userID, practiceentity.ChallengeStatusPublished).Scan(&stats).Error; err != nil {
 		return nil, fmt.Errorf("get category stats: %w", err)
 	}
 	return stats, nil
@@ -61,7 +61,7 @@ func (r *Repository) GetDifficultyStats(ctx context.Context, userID int64) ([]pr
 				WHEN 'hard' THEN 4
 				WHEN 'insane' THEN 5
 			END
-	`, userID, model.ChallengeStatusPublished).Scan(&stats).Error; err != nil {
+	`, userID, practiceentity.ChallengeStatusPublished).Scan(&stats).Error; err != nil {
 		return nil, fmt.Errorf("get difficulty stats: %w", err)
 	}
 	return stats, nil
@@ -81,7 +81,7 @@ func (r *Repository) GetUserRank(ctx context.Context, userID int64) (int, error)
 		)
 		SELECT COALESCE(rank, (SELECT COUNT(DISTINCT user_id) + 1 FROM ranked_users))
 		FROM ranked_users WHERE user_id = ?
-	`, model.ChallengeStatusPublished, userID).Scan(&rank).Error; err != nil {
+	`, practiceentity.ChallengeStatusPublished, userID).Scan(&rank).Error; err != nil {
 		return 0, fmt.Errorf("get user rank: %w", err)
 	}
 	return rank, nil

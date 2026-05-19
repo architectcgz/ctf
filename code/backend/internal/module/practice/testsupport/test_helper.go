@@ -7,7 +7,6 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
@@ -22,7 +21,7 @@ func SetupPracticeTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Image{}); err != nil {
+	if err := db.AutoMigrate(&practiceImageRecord{}); err != nil {
 		t.Fatalf("migrate image: %v", err)
 	}
 	return db
@@ -37,7 +36,7 @@ func SetupScoreServiceTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Challenge{}, &contestentity.Submission{}, &identitycontracts.User{}, &practiceentity.UserScore{}); err != nil {
+	if err := db.AutoMigrate(&practiceentity.Challenge{}, &contestentity.Submission{}, &identitycontracts.User{}, &practiceentity.UserScore{}); err != nil {
 		t.Fatalf("migrate score tables: %v", err)
 	}
 	return db

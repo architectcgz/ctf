@@ -199,7 +199,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 		nil).
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
-	err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{static}")
+	err := service.provisionInstance(context.Background(), instance, toPracticeChallenge(challenge), nil, "flag{static}")
 	if err == nil || err.Error() != errcode.ErrContainerStartFailed.Error() {
 		t.Fatalf("expected container start failed error, got %v", err)
 	}
@@ -271,7 +271,7 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 	service.config.Container.PublicHost = host
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 
-	if err := service.provisionInstance(ctx, instance, challenge, nil, "flag{ok}"); err != nil {
+	if err := service.provisionInstance(ctx, instance, toPracticeChallenge(challenge), nil, "flag{ok}"); err != nil {
 		t.Fatalf("provisionInstance() error = %v", err)
 	}
 }
@@ -358,7 +358,7 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 		TargetProtocol: model.ChallengeTargetProtocolTCP,
 	}
 
-	if err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{ok}"); err != nil {
+	if err := service.provisionInstance(context.Background(), instance, toPracticeChallenge(challenge), nil, "flag{ok}"); err != nil {
 		t.Fatalf("provisionInstance() error = %v", err)
 	}
 	select {
@@ -472,7 +472,7 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 		FlagType: model.FlagTypeStatic,
 	}
 
-	if err := service.provisionInstance(context.Background(), instance, challenge, nil, "flag{demo}"); err != nil {
+	if err := service.provisionInstance(context.Background(), instance, toPracticeChallenge(challenge), nil, "flag{demo}"); err != nil {
 		t.Fatalf("provisionInstance() should not host-probe AWD alias URL: %v", err)
 	}
 	var stored instanceentity.Instance
@@ -619,14 +619,14 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 		nil,
 	)
 
-	err = service.provisionInstance(context.Background(), instance, &model.Challenge{
+	err = service.provisionInstance(context.Background(), instance, toPracticeChallenge(&model.Challenge{
 		ID:             503,
 		ImageID:        503,
 		FlagType:       model.FlagTypeStatic,
 		FlagHash:       "flag{demo}",
 		TargetPort:     8080,
 		TargetProtocol: model.ChallengeTargetProtocolHTTP,
-	}, nil, "flag{demo}")
+	}), nil, "flag{demo}")
 	if err == nil || err.Error() != errcode.ErrContainerCreateFailed.Error() {
 		t.Fatalf("expected container create failed error, got %v", err)
 	}
@@ -710,7 +710,7 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 	challenge := &model.Challenge{ID: 711, ImageID: 105, Status: model.ChallengeStatusPublished}
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 
-	err := service.provisionInstance(ctx, instance, challenge, nil, "flag{ctx}")
+	err := service.provisionInstance(ctx, instance, toPracticeChallenge(challenge), nil, "flag{ctx}")
 	if err == nil || err.Error() != errcode.ErrContainerStartFailed.Error() {
 		t.Fatalf("expected container start failed error, got %v", err)
 	}

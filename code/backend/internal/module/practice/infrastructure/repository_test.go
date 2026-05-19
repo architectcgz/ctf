@@ -340,7 +340,7 @@ func TestRepositoryFindContestAWDServiceRuntimeSubjectMapsSnapshot(t *testing.T)
 	if subject.RuntimeChallenge.Points != 320 || subject.RuntimeChallenge.ImageID != 105 {
 		t.Fatalf("unexpected runtime challenge payload: %+v", subject.RuntimeChallenge)
 	}
-	if subject.RuntimeChallenge.InstanceSharing != model.InstanceSharingPerTeam {
+	if subject.RuntimeChallenge.InstanceSharing != string(model.InstanceSharingPerTeam) {
 		t.Fatalf("unexpected instance sharing: %+v", subject.RuntimeChallenge)
 	}
 	if subject.SeedSignature == "" {

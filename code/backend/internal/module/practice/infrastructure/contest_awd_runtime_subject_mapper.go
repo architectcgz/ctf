@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"ctf-platform/internal/model"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -36,14 +36,14 @@ func buildContestAWDServiceRuntimeSubject(service *practiceports.ContestAWDServi
 	}, nil
 }
 
-func buildContestAWDServiceRuntimeChallenge(service *practiceports.ContestAWDServiceRecord, snapshot contestAWDServiceSnapshot) *model.Challenge {
-	chal := &model.Challenge{
+func buildContestAWDServiceRuntimeChallenge(service *practiceports.ContestAWDServiceRecord, snapshot contestAWDServiceSnapshot) *practiceentity.Challenge {
+	chal := &practiceentity.Challenge{
 		ID:              service.AWDChallengeID,
 		Title:           firstNonEmptyRuntimeValue(service.DisplayName, snapshot.Name),
 		Category:        snapshot.Category,
 		Difficulty:      snapshot.Difficulty,
 		Points:          parseContestAWDServiceSnapshotPoints(service.ScoreConfig),
-		Status:          model.ChallengeStatusPublished,
+		Status:          practiceentity.ChallengeStatusPublished,
 		ImageID:         parseContestAWDServiceSnapshotImageID(snapshot.RuntimeConfig),
 		FlagType:        parseContestAWDServiceSnapshotFlagType(snapshot.FlagConfig),
 		FlagPrefix:      parseContestAWDServiceSnapshotFlagPrefix(snapshot.FlagConfig),
@@ -102,30 +102,30 @@ func parseContestAWDServiceSnapshotImageID(runtimeConfig map[string]any) int64 {
 	return int64(value)
 }
 
-func parseContestAWDServiceSnapshotInstanceSharing(runtimeConfig map[string]any) model.InstanceSharing {
+func parseContestAWDServiceSnapshotInstanceSharing(runtimeConfig map[string]any) string {
 	if runtimeConfig == nil {
-		return model.InstanceSharingPerTeam
+		return practiceentity.InstanceSharingPerTeam
 	}
 	value, _ := runtimeConfig["instance_sharing"].(string)
-	switch model.InstanceSharing(value) {
-	case model.InstanceSharingShared:
-		return model.InstanceSharingShared
-	case model.InstanceSharingPerUser:
-		return model.InstanceSharingPerUser
-	case model.InstanceSharingPerTeam:
-		return model.InstanceSharingPerTeam
+	switch value {
+	case practiceentity.InstanceSharingShared:
+		return practiceentity.InstanceSharingShared
+	case practiceentity.InstanceSharingPerUser:
+		return practiceentity.InstanceSharingPerUser
+	case practiceentity.InstanceSharingPerTeam:
+		return practiceentity.InstanceSharingPerTeam
 	default:
-		return model.InstanceSharingPerTeam
+		return practiceentity.InstanceSharingPerTeam
 	}
 }
 
 func parseContestAWDServiceSnapshotFlagType(flagConfig map[string]any) string {
 	if flagConfig == nil {
-		return model.FlagTypeDynamic
+		return practiceentity.FlagTypeDynamic
 	}
 	value, _ := flagConfig["flag_type"].(string)
 	if strings.TrimSpace(value) == "" {
-		return model.FlagTypeDynamic
+		return practiceentity.FlagTypeDynamic
 	}
 	return value
 }

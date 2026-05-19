@@ -10,9 +10,9 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/auditlog"
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/crypto"
@@ -32,7 +32,7 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	if challengeItem.Status != model.ChallengeStatusPublished {
+	if challengeItem.Status != practiceentity.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
 
@@ -46,7 +46,7 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 	} else if err != nil && !errors.Is(err, practiceports.ErrPracticeSolvedSubmissionNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if alreadySolved && challengeItem.FlagType == model.FlagTypeManualReview {
+	if alreadySolved && challengeItem.FlagType == practiceentity.FlagTypeManualReview {
 		return nil, errcode.ErrAlreadySolved
 	}
 
@@ -73,7 +73,7 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 	status := SubmissionStatusIncorrect
 	submissionPersisted := false
 
-	if challengeItem.FlagType == model.FlagTypeManualReview {
+	if challengeItem.FlagType == practiceentity.FlagTypeManualReview {
 		submission.Flag = flag
 		submission.ReviewStatus = practiceports.SubmissionReviewStatusPending
 		status = SubmissionStatusPendingReview
@@ -139,7 +139,7 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 	return resp, nil
 }
 
-func (s *Service) applySolveGracePeriod(ctx context.Context, userID int64, challengeItem *model.Challenge, solvedAt time.Time) *time.Time {
+func (s *Service) applySolveGracePeriod(ctx context.Context, userID int64, challengeItem *practiceentity.Challenge, solvedAt time.Time) *time.Time {
 	if s == nil || s.instanceRepo == nil || challengeItem == nil {
 		return nil
 	}
@@ -186,9 +186,9 @@ func formatSolveGracePeriod(delay time.Duration) string {
 	return fmt.Sprintf("%d 分钟", minutes)
 }
 
-func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *model.Challenge) (string, string, error) {
+func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *practiceentity.Challenge) (string, string, error) {
 	switch chal.FlagType {
-	case model.FlagTypeDynamic:
+	case practiceentity.FlagTypeDynamic:
 		nonce, err := crypto.GenerateNonce()
 		if err != nil {
 			return "", "", errcode.ErrInternal.WithCause(err)
@@ -198,23 +198,23 @@ func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *model.Ch
 		}
 		flag := crypto.GenerateDynamicFlag(subjectID, challengeID, s.config.Container.FlagGlobalSecret, nonce, chal.FlagPrefix)
 		return flag, nonce, nil
-	case model.FlagTypeStatic:
+	case practiceentity.FlagTypeStatic:
 		return chal.FlagHash, "", nil
 	default:
 		return "", "", nil
 	}
 }
 
-func (s *Service) validateSubmittedFlag(ctx context.Context, userID int64, challengeItem *model.Challenge, flag string) (bool, error) {
+func (s *Service) validateSubmittedFlag(ctx context.Context, userID int64, challengeItem *practiceentity.Challenge, flag string) (bool, error) {
 	switch challengeItem.FlagType {
-	case model.FlagTypeStatic:
+	case practiceentity.FlagTypeStatic:
 		inputHash := crypto.HashStaticFlag(flag, challengeItem.FlagSalt)
 		return crypto.ValidateFlag(inputHash, challengeItem.FlagHash), nil
-	case model.FlagTypeRegex:
+	case practiceentity.FlagTypeRegex:
 		return regexp.MatchString(challengeItem.FlagRegex, flag)
-	case model.FlagTypeManualReview:
+	case practiceentity.FlagTypeManualReview:
 		return false, nil
-	case model.FlagTypeDynamic:
+	case practiceentity.FlagTypeDynamic:
 	default:
 		return false, errcode.ErrInvalidParams.WithCause(fmt.Errorf("unsupported flag type %s", challengeItem.FlagType))
 	}

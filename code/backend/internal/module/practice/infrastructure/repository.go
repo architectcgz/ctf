@@ -10,10 +10,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeportreservation "ctf-platform/internal/module/runtime/contracts/portreservation"
@@ -23,6 +23,14 @@ import (
 type Repository struct {
 	db           *gorm.DB
 	runtimePorts runtimeports.PortReservationOwner
+}
+
+type sharedChallengeLockRecord struct {
+	ID int64 `gorm:"column:id;primaryKey"`
+}
+
+func (sharedChallengeLockRecord) TableName() string {
+	return "challenges"
 }
 
 func NewRepository(db *gorm.DB) *Repository {
@@ -259,7 +267,7 @@ func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID 
 	case instancecontracts.ShareScopeShared:
 		return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ?", challengeID).
-			First(&model.Challenge{}).Error
+			First(&sharedChallengeLockRecord{}).Error
 	case instancecontracts.ShareScopePerTeam:
 		if scope.TeamID != nil {
 			return r.dbWithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -656,7 +664,7 @@ func (r *Repository) listTeacherManualReviewSubmissions(
 		Joins("JOIN users u ON u.id = s.user_id").
 		Joins("JOIN challenges c ON c.id = s.challenge_id").
 		Joins("LEFT JOIN users reviewer ON reviewer.id = s.reviewed_by").
-		Where("c.flag_type = ?", model.FlagTypeManualReview)
+		Where("c.flag_type = ?", practiceentity.FlagTypeManualReview)
 
 	if query != nil {
 		if query.StudentID != nil {

@@ -6,10 +6,10 @@ import (
 	"path"
 	"strings"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
@@ -139,7 +139,7 @@ func shellQuoteForPOSIXSh(value string) string {
 	return "'" + strings.ReplaceAll(value, "'", `'"'"'`) + "'"
 }
 
-func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge) (*awdDefenseWorkspacePlan, error) {
+func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge) (*awdDefenseWorkspacePlan, error) {
 	if !isAWDInstance(instance) || instance.TeamID == nil {
 		return nil, nil
 	}

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/pkg/errcode"
 )
@@ -136,7 +136,7 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScopeWithContest(ctx cont
 	return subject.ChallengeID, team.CaptainID, scope, nil
 }
 
-func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practiceports.InstanceScope, challengeID int64) (*model.Challenge, *practiceports.RuntimeChallengeTopology, error) {
+func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practiceports.InstanceScope, challengeID int64) (*practiceentity.Challenge, *practiceports.RuntimeChallengeTopology, error) {
 	if scope.ServiceID != nil && scope.ContestID != nil {
 		return s.loadContestAWDServiceRuntimeSubject(ctx, *scope.ContestID, *scope.ServiceID)
 	}
@@ -158,14 +158,14 @@ func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practic
 	return chal, topology, nil
 }
 
-func (s *Service) loadRuntimeSubjectForInstance(ctx context.Context, instance *instancecontracts.Instance) (*model.Challenge, *practiceports.RuntimeChallengeTopology, error) {
+func (s *Service) loadRuntimeSubjectForInstance(ctx context.Context, instance *instancecontracts.Instance) (*practiceentity.Challenge, *practiceports.RuntimeChallengeTopology, error) {
 	if instance != nil && instance.ServiceID != nil && instance.ContestID != nil {
 		return s.loadContestAWDServiceRuntimeSubject(ctx, *instance.ContestID, *instance.ServiceID)
 	}
 	return s.loadRuntimeSubjectWithScope(ctx, practiceports.InstanceScope{}, instance.ChallengeID)
 }
 
-func (s *Service) loadContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*model.Challenge, *practiceports.RuntimeChallengeTopology, error) {
+func (s *Service) loadContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*practiceentity.Challenge, *practiceports.RuntimeChallengeTopology, error) {
 	if s.contestScope == nil {
 		return nil, nil, errcode.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
@@ -235,7 +235,7 @@ func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, c
 	return scope, nil
 }
 
-func resolveEffectiveInstanceScope(chal *model.Challenge, scope practiceports.InstanceScope) practiceports.InstanceScope {
+func resolveEffectiveInstanceScope(chal *practiceentity.Challenge, scope practiceports.InstanceScope) practiceports.InstanceScope {
 	effective := scope
 	effective.FlagSubjectID = scope.FlagSubjectID
 	effective.ShareScope = instancecontracts.ShareScopePerUser
@@ -246,10 +246,10 @@ func resolveEffectiveInstanceScope(chal *model.Challenge, scope practiceports.In
 		if scope.TeamID != nil && *scope.TeamID > 0 {
 			effective.FlagSubjectID = *scope.TeamID
 		}
-	case chal.InstanceSharing == model.InstanceSharingShared:
+	case chal.InstanceSharing == practiceentity.InstanceSharingShared:
 		effective.ShareScope = instancecontracts.ShareScopeShared
 		effective.TeamID = nil
-	case chal.InstanceSharing == model.InstanceSharingPerTeam && scope.TeamID != nil && *scope.TeamID > 0:
+	case chal.InstanceSharing == practiceentity.InstanceSharingPerTeam && scope.TeamID != nil && *scope.TeamID > 0:
 		effective.ShareScope = instancecontracts.ShareScopePerTeam
 		effective.FlagSubjectID = *scope.TeamID
 	default:

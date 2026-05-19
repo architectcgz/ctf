@@ -9,10 +9,10 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
@@ -382,9 +382,9 @@ func stubContestAWDServiceRuntimeSubject(service *practiceports.ContestAWDServic
 		ChallengeID:   service.AWDChallengeID,
 		Visible:       service.IsVisible,
 		SeedSignature: buildStubContestAWDServiceSeedSignature(service.ServiceSnapshot),
-		RuntimeChallenge: &model.Challenge{
+		RuntimeChallenge: &practiceentity.Challenge{
 			ID:     service.AWDChallengeID,
-			Status: model.ChallengeStatusPublished,
+			Status: practiceentity.ChallengeStatusPublished,
 		},
 	}
 
@@ -463,11 +463,11 @@ func stubContestAWDServiceSnapshotImageID(runtimeConfig map[string]any) int64 {
 
 func stubContestAWDServiceSnapshotFlagType(flagConfig map[string]any) string {
 	if flagConfig == nil {
-		return model.FlagTypeDynamic
+		return practiceentity.FlagTypeDynamic
 	}
 	value, _ := flagConfig["flag_type"].(string)
 	if value == "" {
-		return model.FlagTypeDynamic
+		return practiceentity.FlagTypeDynamic
 	}
 	return value
 }
@@ -483,20 +483,20 @@ func stubContestAWDServiceSnapshotFlagPrefix(flagConfig map[string]any) string {
 	return value
 }
 
-func stubContestAWDServiceSnapshotInstanceSharing(runtimeConfig map[string]any) model.InstanceSharing {
+func stubContestAWDServiceSnapshotInstanceSharing(runtimeConfig map[string]any) string {
 	if runtimeConfig == nil {
-		return model.InstanceSharingPerTeam
+		return practiceentity.InstanceSharingPerTeam
 	}
 	value, _ := runtimeConfig["instance_sharing"].(string)
-	switch model.InstanceSharing(value) {
-	case model.InstanceSharingShared:
-		return model.InstanceSharingShared
-	case model.InstanceSharingPerUser:
-		return model.InstanceSharingPerUser
-	case model.InstanceSharingPerTeam:
-		return model.InstanceSharingPerTeam
+	switch value {
+	case practiceentity.InstanceSharingShared:
+		return practiceentity.InstanceSharingShared
+	case practiceentity.InstanceSharingPerUser:
+		return practiceentity.InstanceSharingPerUser
+	case practiceentity.InstanceSharingPerTeam:
+		return practiceentity.InstanceSharingPerTeam
 	default:
-		return model.InstanceSharingPerTeam
+		return practiceentity.InstanceSharingPerTeam
 	}
 }
 

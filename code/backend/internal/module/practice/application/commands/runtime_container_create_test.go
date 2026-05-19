@@ -34,7 +34,7 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 		config:    &config.Config{},
 	}
 
-	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, false, &model.Challenge{ImageID: 1}, "web", challengecontracts.TopologySpec{
+	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, false, toPracticeChallenge(&model.Challenge{ImageID: 1}), "web", challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
@@ -65,10 +65,10 @@ func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testin
 		config:    &config.Config{},
 	}
 
-	_, err := service.buildTopologyCreateRequest(context.Background(), 30002, false, &model.Challenge{
+	_, err := service.buildTopologyCreateRequest(context.Background(), 30002, false, toPracticeChallenge(&model.Challenge{
 		ImageID:         2,
 		InstanceSharing: model.InstanceSharingShared,
-	}, "web", challengecontracts.TopologySpec{
+	}), "web", challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
@@ -86,7 +86,7 @@ func TestBuildRuntimeContainerNameUsesChallengeSlugAndContestIdentity(t *testing
 	serviceID := int64(21)
 	packageSlug := "Bank Portal"
 
-	got := buildRuntimeContainerName(&model.Challenge{PackageSlug: &packageSlug}, &instanceentity.Instance{
+	got := buildRuntimeContainerName(toPracticeChallenge(&model.Challenge{PackageSlug: &packageSlug}), &instanceentity.Instance{
 		ContestID: &contestID,
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
@@ -104,7 +104,7 @@ func TestBuildRuntimeContainerNameIncludesServiceIDWhenChallengeSlugMissing(t *t
 	teamID := int64(16)
 	serviceID := int64(22)
 
-	got := buildRuntimeContainerName(&model.Challenge{}, &instanceentity.Instance{
+	got := buildRuntimeContainerName(toPracticeChallenge(&model.Challenge{}), &instanceentity.Instance{
 		ContestID: &contestID,
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
@@ -143,9 +143,9 @@ func TestApplyAWDStableNetworkToTopologyRequestSkipsContainerNameForMultiNodeTop
 		ContestID: &contestID,
 		TeamID:    &teamID,
 		ServiceID: &serviceID,
-	}, &model.Challenge{
+	}, toPracticeChallenge(&model.Challenge{
 		PackageSlug: &packageSlug,
-	}, request)
+	}), request)
 
 	if request.ContainerName != "" {
 		t.Fatalf("expected multi-node AWD topology to skip preferred container name, got %q", request.ContainerName)
@@ -257,7 +257,7 @@ func TestCreateSingleContainerRebindsHostPortAfterPublishConflict(t *testing.T) 
 		FlagType: model.FlagTypeStatic,
 	}
 
-	if err := service.createSingleContainer(context.Background(), instance, challenge, "flag{demo}"); err != nil {
+	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
 		t.Fatalf("createSingleContainer() error = %v cause=%v", err, errors.Unwrap(err))
 	}
 	if createContainerCalls != 2 {
@@ -429,7 +429,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 		FlagType: model.FlagTypeStatic,
 	}
 
-	if err := service.createSingleContainer(context.Background(), instance, challenge, "flag{demo}"); err != nil {
+	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
 		t.Fatalf("createSingleContainer() error = %v cause=%v", err, errors.Unwrap(err))
 	}
 	if createTopologyCalls != 2 {
@@ -578,7 +578,7 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 		FlagType: model.FlagTypeStatic,
 	}
 
-	if err := service.createSingleContainer(context.Background(), instance, challenge, "flag{demo}"); err != nil {
+	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
 		t.Fatalf(
 			"createSingleContainer() error = %v cause=%v conflict=%t calls=%d host_port=%d",
 			err,
@@ -753,7 +753,7 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 		FlagType: model.FlagTypeStatic,
 	}
 
-	if err := service.createSingleContainer(context.Background(), instance, challenge, "flag{demo}"); err != nil {
+	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
 		t.Fatalf(
 			"createSingleContainer() error = %v cause=%v conflict=%t calls=%d host_port=%d",
 			err,
@@ -917,7 +917,7 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 		t.Fatalf("encode topology: %v", err)
 	}
 
-	if err := service.createContainer(context.Background(), instance, challenge, &practiceports.RuntimeChallengeTopology{
+	if err := service.createContainer(context.Background(), instance, toPracticeChallenge(challenge), &practiceports.RuntimeChallengeTopology{
 		ChallengeID:  503,
 		EntryNodeKey: "web",
 		Spec:         topology,
@@ -1059,7 +1059,7 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 		t.Fatalf("encode topology: %v", err)
 	}
 
-	if err := service.createContainer(context.Background(), instance, challenge, &practiceports.RuntimeChallengeTopology{
+	if err := service.createContainer(context.Background(), instance, toPracticeChallenge(challenge), &practiceports.RuntimeChallengeTopology{
 		ChallengeID:  513,
 		EntryNodeKey: "web",
 		Spec:         topology,
@@ -1270,7 +1270,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 		PackageSlug: stringPtr("campus-drive"),
 	}
 
-	if err := service.createSingleContainer(context.Background(), instance, challenge, "flag{demo}"); err != nil {
+	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
 		t.Fatalf("createSingleContainer() error = %v", err)
 	}
 	if len(requests) != 2 {
@@ -1365,7 +1365,7 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	}
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	request, err := service.buildTopologyCreateRequest(ctx, 30001, false, &model.Challenge{ImageID: 1}, "web", challengecontracts.TopologySpec{
+	request, err := service.buildTopologyCreateRequest(ctx, 30001, false, toPracticeChallenge(&model.Challenge{ImageID: 1}), "web", challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", Name: "Web", ServicePort: 8080},
 			{Key: "worker", Name: "Worker", ImageID: 2, ServicePort: 9000},

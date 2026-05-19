@@ -8,8 +8,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/pkg/crypto"
@@ -43,7 +43,7 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *instancecont
 	}
 }
 
-func (s *Service) provisionInstance(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
+func (s *Service) provisionInstance(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
 	createCtx, cancel := context.WithTimeout(ctx, s.config.Container.CreateTimeout)
 	defer cancel()
 
@@ -123,13 +123,13 @@ func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string
 	return lastErr
 }
 
-func (s *Service) buildProvisioningFlag(instance *instancecontracts.Instance, chal *model.Challenge) (string, error) {
+func (s *Service) buildProvisioningFlag(instance *instancecontracts.Instance, chal *practiceentity.Challenge) (string, error) {
 	if instance == nil || chal == nil {
 		return "", errcode.ErrInternal.WithCause(fmt.Errorf("instance or challenge is nil"))
 	}
 
 	switch chal.FlagType {
-	case model.FlagTypeDynamic:
+	case practiceentity.FlagTypeDynamic:
 		if strings.TrimSpace(instance.Nonce) == "" {
 			return "", errcode.ErrInternal.WithCause(fmt.Errorf("instance nonce is empty"))
 		}
@@ -141,7 +141,7 @@ func (s *Service) buildProvisioningFlag(instance *instancecontracts.Instance, ch
 			subjectID = *instance.TeamID
 		}
 		return crypto.GenerateDynamicFlag(subjectID, chal.ID, s.config.Container.FlagGlobalSecret, instance.Nonce, chal.FlagPrefix), nil
-	case model.FlagTypeStatic:
+	case practiceentity.FlagTypeStatic:
 		return chal.FlagHash, nil
 	default:
 		return "", nil

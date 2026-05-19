@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
@@ -54,7 +54,7 @@ func (s *Service) ReviewManualReviewSubmission(
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if challengeItem.FlagType != model.FlagTypeManualReview {
+	if challengeItem.FlagType != practiceentity.FlagTypeManualReview {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("当前提交不属于人工审核题"))
 	}
 

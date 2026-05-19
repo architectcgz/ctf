@@ -8,17 +8,17 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
 
-func (s *Service) createContainer(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
+func (s *Service) createContainer(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
 	if topology == nil {
 		return s.createSingleContainer(ctx, instance, chal, flag)
 	}
@@ -87,7 +87,7 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 	return nil
 }
 
-func (s *Service) createSingleContainer(ctx context.Context, instance *instancecontracts.Instance, chal *model.Challenge, flag string) error {
+func (s *Service) createSingleContainer(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, flag string) error {
 	imageItem, err := s.imageRepo.FindByID(ctx, chal.ImageID)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
@@ -102,7 +102,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 
 	imageRef := challengecontracts.BuildRuntimeImageRef(imageItem)
 	targetProtocol := normalizeChallengeTargetProtocol(chal.TargetProtocol)
-	if isAWDInstance(instance) || targetProtocol == model.ChallengeTargetProtocolTCP || chal.TargetPort > 0 {
+	if isAWDInstance(instance) || targetProtocol == practiceentity.ChallengeTargetProtocolTCP || chal.TargetPort > 0 {
 		awdWorkspacePlan, err := s.prepareAWDDefenseWorkspacePlan(ctx, instance, chal)
 		if err != nil {
 			return errcode.ErrContainerCreateFailed.WithCause(err)
@@ -200,7 +200,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 					NodeKey:         "default",
 					ContainerID:     containerID,
 					ServicePort:     servicePort,
-					ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+					ServiceProtocol: practiceentity.ChallengeTargetProtocolHTTP,
 					HostPort:        hostPort,
 					IsEntryPoint:    true,
 				},
@@ -288,10 +288,10 @@ func shouldRebindProvisioningHostPort(instance *instancecontracts.Instance, err 
 
 func normalizeChallengeTargetProtocol(protocol string) string {
 	switch strings.ToLower(strings.TrimSpace(protocol)) {
-	case model.ChallengeTargetProtocolTCP:
-		return model.ChallengeTargetProtocolTCP
+	case practiceentity.ChallengeTargetProtocolTCP:
+		return practiceentity.ChallengeTargetProtocolTCP
 	default:
-		return model.ChallengeTargetProtocolHTTP
+		return practiceentity.ChallengeTargetProtocolHTTP
 	}
 }
 
@@ -299,7 +299,7 @@ func (s *Service) buildTopologyCreateRequest(
 	ctx context.Context,
 	reservedHostPort int,
 	disableEntryPortPublishing bool,
-	chal *model.Challenge,
+	chal *practiceentity.Challenge,
 	entryNodeKey string,
 	spec challengecontracts.TopologySpec,
 	flag string,
@@ -307,7 +307,7 @@ func (s *Service) buildTopologyCreateRequest(
 	if len(spec.Nodes) == 0 {
 		return nil, errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("challenge topology has no nodes"))
 	}
-	if chal != nil && chal.InstanceSharing == model.InstanceSharingShared {
+	if chal != nil && chal.InstanceSharing == practiceentity.InstanceSharingShared {
 		for _, node := range spec.Nodes {
 			if node.InjectFlag {
 				return nil, errcode.ErrInvalidParams.WithCause(errors.New("共享实例策略不支持带 Flag 注入的拓扑"))

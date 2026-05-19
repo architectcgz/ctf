@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"strings"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -46,7 +46,7 @@ func buildAWDDefenseWorkspaceAlias(instance *instancecontracts.Instance, revisio
 	return fmt.Sprintf("awd-ws-c%d-t%d-s%d-r%d", *instance.ContestID, *instance.TeamID, *instance.ServiceID, revision)
 }
 
-func applyAWDStableNetworkToTopologyRequest(instance *instancecontracts.Instance, chal *model.Challenge, request *practiceports.TopologyCreateRequest) {
+func applyAWDStableNetworkToTopologyRequest(instance *instancecontracts.Instance, chal *practiceentity.Challenge, request *practiceports.TopologyCreateRequest) {
 	if !isAWDInstance(instance) || request == nil {
 		return
 	}
@@ -136,7 +136,7 @@ func usesAWDStableNetworkAlias(instance *instancecontracts.Instance) bool {
 	return strings.HasPrefix(host, "awd-c")
 }
 
-func buildRuntimeContainerName(chal *model.Challenge, instance *instancecontracts.Instance) string {
+func buildRuntimeContainerName(chal *practiceentity.Challenge, instance *instancecontracts.Instance) string {
 	if !isAWDInstance(instance) || instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
 		return ""
 	}
@@ -147,7 +147,7 @@ func buildRuntimeContainerName(chal *model.Challenge, instance *instancecontract
 	return fmt.Sprintf("%s%s-c%d-t%d-s%d", runtimeContainerNamePrefix, challengeSegment, *instance.ContestID, *instance.TeamID, *instance.ServiceID)
 }
 
-func buildAWDDefenseWorkspaceContainerName(chal *model.Challenge, instance *instancecontracts.Instance, revision int64) string {
+func buildAWDDefenseWorkspaceContainerName(chal *practiceentity.Challenge, instance *instancecontracts.Instance, revision int64) string {
 	if !isAWDInstance(instance) || instance == nil || instance.ContestID == nil || instance.TeamID == nil || instance.ServiceID == nil {
 		return ""
 	}
@@ -169,7 +169,7 @@ func buildAWDDefenseWorkspaceVolumeName(instance *instancecontracts.Instance, re
 	return fmt.Sprintf("%sc%d-t%d-s%d-r%d-%s", workspaceVolumeNamePrefix, *instance.ContestID, *instance.TeamID, *instance.ServiceID, revision, rootSegment)
 }
 
-func resolveRuntimeChallengeName(chal *model.Challenge) string {
+func resolveRuntimeChallengeName(chal *practiceentity.Challenge) string {
 	if chal == nil {
 		return ""
 	}

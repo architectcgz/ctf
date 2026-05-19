@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
@@ -25,7 +25,7 @@ func (instanceReadinessProbe) ProbeAccessURL(ctx context.Context, accessURL stri
 	if err != nil {
 		return err
 	}
-	if strings.EqualFold(parsed.Scheme, model.ChallengeTargetProtocolTCP) {
+	if strings.EqualFold(parsed.Scheme, practiceentity.ChallengeTargetProtocolTCP) {
 		return probeTCPAccessURL(ctx, parsed, timeout)
 	}
 

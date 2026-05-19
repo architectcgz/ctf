@@ -1,11 +1,11 @@
 package commands
 
 import (
-	"ctf-platform/internal/model"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
-func buildContestAWDServiceVirtualChallenge(subject *practiceports.ContestAWDServiceRuntimeSubject) *model.Challenge {
+func buildContestAWDServiceVirtualChallenge(subject *practiceports.ContestAWDServiceRuntimeSubject) *practiceentity.Challenge {
 	if subject == nil || subject.RuntimeChallenge == nil {
 		return nil
 	}

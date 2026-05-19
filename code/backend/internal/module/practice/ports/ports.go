@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/model"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -251,7 +250,7 @@ type ContestAWDServiceRuntimeSubject struct {
 	ChallengeID      int64
 	Visible          bool
 	SeedSignature    string
-	RuntimeChallenge *model.Challenge
+	RuntimeChallenge *practiceentity.Challenge
 	RuntimeTopology  *RuntimeChallengeTopology
 	WorkspaceConfig  *ContestAWDDefenseWorkspaceConfig
 }
@@ -322,7 +321,7 @@ type PracticeContestScopeRepository interface {
 }
 
 type PracticeRuntimeSubjectRepository interface {
-	FindByID(ctx context.Context, id int64) (*model.Challenge, error)
+	FindByID(ctx context.Context, id int64) (*practiceentity.Challenge, error)
 	FindChallengeTopologyByChallengeID(ctx context.Context, challengeID int64) (*RuntimeChallengeTopology, error)
 }
 
