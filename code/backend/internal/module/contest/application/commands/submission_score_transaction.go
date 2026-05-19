@@ -5,7 +5,6 @@ import (
 	"math"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
@@ -16,7 +15,7 @@ type correctSubmissionScoringResult struct {
 	teamScoreDeltas map[int64]int
 }
 
-func (s *SubmissionService) applyCorrectSubmissionScoring(ctx context.Context, submission *contestentity.Submission, challengeRecord *model.Challenge, teamID *int64) (correctSubmissionScoringResult, error) {
+func (s *SubmissionService) applyCorrectSubmissionScoring(ctx context.Context, submission *contestentity.Submission, challengeRecord *contestentity.Challenge, teamID *int64) (correctSubmissionScoringResult, error) {
 	result := correctSubmissionScoringResult{
 		teamScoreDeltas: make(map[int64]int),
 	}

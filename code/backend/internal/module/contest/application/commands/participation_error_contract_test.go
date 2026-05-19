@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -102,7 +101,7 @@ func (s participationTeamFinderStub) FindUserTeamInContest(ctx context.Context, 
 type submissionRepositoryStub struct {
 	findRegistrationFn     func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
 	findContestChallengeFn func(context.Context, int64, int64) (*contestentity.ContestChallenge, error)
-	findChallengeByIDFn    func(context.Context, int64) (*model.Challenge, error)
+	findChallengeByIDFn    func(context.Context, int64) (*contestentity.Challenge, error)
 }
 
 func (s submissionRepositoryStub) WithinScoringTransaction(ctx context.Context, fn func(repo contestports.ContestSubmissionScoringTxRepository) error) error {
@@ -123,7 +122,7 @@ func (s submissionRepositoryStub) FindContestChallenge(ctx context.Context, cont
 	return nil, errors.New("unexpected FindContestChallenge call")
 }
 
-func (s submissionRepositoryStub) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (s submissionRepositoryStub) FindChallengeByID(ctx context.Context, challengeID int64) (*contestentity.Challenge, error) {
 	if s.findChallengeByIDFn != nil {
 		return s.findChallengeByIDFn(ctx, challengeID)
 	}
@@ -288,7 +287,7 @@ func TestSubmissionServiceValidateContestSubmissionTreatsChallengeEntityNotFound
 			findContestChallengeFn: func(context.Context, int64, int64) (*contestentity.ContestChallenge, error) {
 				return &contestentity.ContestChallenge{ContestID: 10, ChallengeID: 20}, nil
 			},
-			findChallengeByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+			findChallengeByIDFn: func(context.Context, int64) (*contestentity.Challenge, error) {
 				return nil, contestports.ErrContestSubmissionChallengeEntityNotFound
 			},
 		},

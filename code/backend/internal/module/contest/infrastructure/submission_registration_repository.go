@@ -6,7 +6,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
@@ -52,7 +51,7 @@ func (r *SubmissionRegistrationRepository) FindContestChallenge(ctx context.Cont
 	return item, err
 }
 
-func (r *SubmissionRegistrationRepository) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (r *SubmissionRegistrationRepository) FindChallengeByID(ctx context.Context, challengeID int64) (*contestentity.Challenge, error) {
 	item, err := r.source.FindChallengeByID(ctx, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestSubmissionChallengeEntityNotFound

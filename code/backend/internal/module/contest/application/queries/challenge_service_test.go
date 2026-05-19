@@ -18,9 +18,10 @@ func newContestChallengeQueryService(t *testing.T) (*ChallengeService, *challeng
 
 	db := contesttestsupport.SetupContestTestDB(t)
 	awdRepo := contestinfra.NewAWDRepository(db)
+	challengeCatalog := contestinfra.NewContestChallengeLookupAdapter(challengeinfra.NewRepository(db))
 	return NewChallengeService(
 			contestinfra.NewChallengeRepository(db),
-			challengeinfra.NewRepository(db),
+			challengeCatalog,
 			contestinfra.NewRepository(db),
 			awdRepo,
 		),

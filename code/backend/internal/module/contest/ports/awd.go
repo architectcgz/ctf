@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
@@ -86,8 +85,8 @@ type AWDTeamLookup interface {
 }
 
 type AWDChallengeLookup interface {
-	ListChallengesByContest(ctx context.Context, contestID int64) ([]model.Challenge, error)
-	FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error)
+	ListChallengesByContest(ctx context.Context, contestID int64) ([]contestentity.Challenge, error)
+	FindChallengeByID(ctx context.Context, challengeID int64) (*contestentity.Challenge, error)
 }
 
 type AWDServiceDefinitionQuery interface {

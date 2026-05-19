@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
@@ -18,7 +17,7 @@ type ContestAWDServiceService struct {
 	repo                 contestports.AWDServiceStore
 	contestRepo          contestports.ContestLookupRepository
 	contestChallengeRepo contestChallengeRelationRepository
-	challengeRepo        challengecontracts.ContestChallengeContract
+	challengeRepo        contestports.ContestChallengeCatalog
 	awdChallengeRepo     challengeports.AWDChallengeQueryRepository
 	previewTokenStore    contestports.AWDCheckerPreviewTokenStore
 }
@@ -31,7 +30,7 @@ func NewContestAWDServiceService(
 	repo contestports.AWDServiceStore,
 	contestRepo contestports.ContestLookupRepository,
 	contestChallengeRepo contestChallengeRelationRepository,
-	challengeRepo challengecontracts.ContestChallengeContract,
+	challengeRepo contestports.ContestChallengeCatalog,
 	awdChallengeRepo challengeports.AWDChallengeQueryRepository,
 	previewTokenStore contestports.AWDCheckerPreviewTokenStore,
 ) *ContestAWDServiceService {

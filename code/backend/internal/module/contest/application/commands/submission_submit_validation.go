@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -50,7 +49,7 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if challengeItem.FlagType == model.FlagTypeManualReview {
+	if challengeItem.FlagType == contestentity.ChallengeFlagTypeManualReview {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New("人工审核题暂不支持竞赛提交"))
 	}
 

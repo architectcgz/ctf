@@ -8,7 +8,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
@@ -19,7 +18,7 @@ type awdCommandRepositorySourceStub struct {
 	findRunningRoundFn                    func(context.Context, int64) (*contestentity.AWDRound, error)
 	findRegistrationFn                    func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
 	findContestTeamByMemberFn             func(context.Context, int64, int64) (*contestentity.Team, error)
-	findChallengeByIDFn                   func(context.Context, int64) (*model.Challenge, error)
+	findChallengeByIDFn                   func(context.Context, int64) (*contestentity.Challenge, error)
 	findContestAWDServiceByContestAndIDFn func(context.Context, int64, int64) (*contestentity.ContestAWDService, error)
 	withinAttackLogTransactionFn          func(context.Context, func(contestports.AWDAttackLogTxRepository) error) error
 }
@@ -109,15 +108,15 @@ func (s awdCommandRepositorySourceStub) FindContestTeamByMember(ctx context.Cont
 	return &contestentity.Team{}, nil
 }
 
-func (s awdCommandRepositorySourceStub) ListChallengesByContest(context.Context, int64) ([]model.Challenge, error) {
+func (s awdCommandRepositorySourceStub) ListChallengesByContest(context.Context, int64) ([]contestentity.Challenge, error) {
 	return nil, nil
 }
 
-func (s awdCommandRepositorySourceStub) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (s awdCommandRepositorySourceStub) FindChallengeByID(ctx context.Context, challengeID int64) (*contestentity.Challenge, error) {
 	if s.findChallengeByIDFn != nil {
 		return s.findChallengeByIDFn(ctx, challengeID)
 	}
-	return &model.Challenge{ID: challengeID}, nil
+	return &contestentity.Challenge{ID: challengeID}, nil
 }
 
 func (s awdCommandRepositorySourceStub) ListReadinessChallengesByContest(context.Context, int64) ([]contestports.AWDReadinessChallengeRecord, error) {
@@ -209,7 +208,7 @@ func TestAWDCommandRepositoryMapsLookupNotFoundErrors(t *testing.T) {
 		findContestTeamByMemberFn: func(context.Context, int64, int64) (*contestentity.Team, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
-		findChallengeByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findChallengeByIDFn: func(context.Context, int64) (*contestentity.Challenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 		findContestAWDServiceByContestAndIDFn: func(context.Context, int64, int64) (*contestentity.ContestAWDService, error) {
@@ -266,7 +265,7 @@ func TestAWDCommandRepositoryPassesThroughNonNotFoundErrors(t *testing.T) {
 
 	expectedErr := errors.New("boom")
 	repo := NewAWDCommandRepository(awdCommandRepositorySourceStub{
-		findChallengeByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findChallengeByIDFn: func(context.Context, int64) (*contestentity.Challenge, error) {
 			return nil, expectedErr
 		},
 		withinAttackLogTransactionFn: func(context.Context, func(contestports.AWDAttackLogTxRepository) error) error {

@@ -1,12 +1,11 @@
 package commands
 
 import (
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-func (s *SubmissionService) calculateContestScore(contestChallenge contestentity.ContestChallenge, challengeRecord model.Challenge, solveCount int64) int {
+func (s *SubmissionService) calculateContestScore(contestChallenge contestentity.ContestChallenge, challengeRecord contestentity.Challenge, solveCount int64) int {
 	baseScore := s.resolveContestBaseScore(contestChallenge, challengeRecord)
 	if baseScore <= 0 {
 		baseScore = s.cfg.Contest.BaseScore
@@ -14,7 +13,7 @@ func (s *SubmissionService) calculateContestScore(contestChallenge contestentity
 	return contestdomain.CalculateDynamicScore(baseScore, s.cfg.Contest.MinScore, s.cfg.Contest.Decay, solveCount)
 }
 
-func (s *SubmissionService) resolveContestBaseScore(contestChallenge contestentity.ContestChallenge, challengeRecord model.Challenge) float64 {
+func (s *SubmissionService) resolveContestBaseScore(contestChallenge contestentity.ContestChallenge, challengeRecord contestentity.Challenge) float64 {
 	switch {
 	case contestChallenge.ContestScore != nil && *contestChallenge.ContestScore > 0:
 		return float64(*contestChallenge.ContestScore)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
@@ -22,7 +21,7 @@ func (s *AWDService) loadContestTeams(ctx context.Context, contestID int64) (map
 	return result, nil
 }
 
-func (s *AWDService) loadChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (s *AWDService) loadChallenge(ctx context.Context, challengeID int64) (*contestentity.Challenge, error) {
 	challenge, err := s.repo.FindChallengeByID(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, contestports.ErrContestAWDChallengeNotFound) {

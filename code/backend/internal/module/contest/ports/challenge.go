@@ -27,3 +27,9 @@ type ContestChallengeReadRepository interface {
 type ContestChallengeAWDServiceListRepository interface {
 	ListContestAWDServicesByContest(ctx context.Context, contestID int64) ([]contestentity.ContestAWDService, error)
 }
+
+type ContestChallengeCatalog interface {
+	FindByID(ctx context.Context, id int64) (*contestentity.Challenge, error)
+	BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error)
+	BatchGetSolvedCount(ctx context.Context, challengeIDs []int64) (map[int64]int64, error)
+}

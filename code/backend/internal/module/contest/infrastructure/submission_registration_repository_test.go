@@ -7,7 +7,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
@@ -15,7 +14,7 @@ import (
 type submissionRegistrationSourceStub struct {
 	findRegistrationFn     func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
 	findContestChallengeFn func(context.Context, int64, int64) (*contestentity.ContestChallenge, error)
-	findChallengeByIDFn    func(context.Context, int64) (*model.Challenge, error)
+	findChallengeByIDFn    func(context.Context, int64) (*contestentity.Challenge, error)
 }
 
 func (s submissionRegistrationSourceStub) WithinScoringTransaction(context.Context, func(contestports.ContestSubmissionScoringTxRepository) error) error {
@@ -36,11 +35,11 @@ func (s submissionRegistrationSourceStub) FindContestChallenge(ctx context.Conte
 	return &contestentity.ContestChallenge{}, nil
 }
 
-func (s submissionRegistrationSourceStub) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (s submissionRegistrationSourceStub) FindChallengeByID(ctx context.Context, challengeID int64) (*contestentity.Challenge, error) {
 	if s.findChallengeByIDFn != nil {
 		return s.findChallengeByIDFn(ctx, challengeID)
 	}
-	return &model.Challenge{}, nil
+	return &contestentity.Challenge{}, nil
 }
 
 func (s submissionRegistrationSourceStub) CreateSubmission(context.Context, *contestentity.Submission) error {
@@ -79,7 +78,7 @@ func TestSubmissionRegistrationRepositoryMapsChallengeEntityNotFoundErrors(t *te
 	t.Parallel()
 
 	repo := NewSubmissionRegistrationRepository(submissionRegistrationSourceStub{
-		findChallengeByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+		findChallengeByIDFn: func(context.Context, int64) (*contestentity.Challenge, error) {
 			return nil, gorm.ErrRecordNotFound
 		},
 	})

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
@@ -22,7 +21,7 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if challenge.Status != model.ChallengeStatusPublished {
+	if challenge.Status != contestentity.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublished
 	}
 

@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
@@ -19,7 +18,7 @@ type awdCommandRepoStub struct {
 	findTeamsByContestFn                  func(context.Context, int64) ([]*contestentity.Team, error)
 	findRegistrationFn                    func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
 	findContestTeamByMemberFn             func(context.Context, int64, int64) (*contestentity.Team, error)
-	findChallengeByIDFn                   func(context.Context, int64) (*model.Challenge, error)
+	findChallengeByIDFn                   func(context.Context, int64) (*contestentity.Challenge, error)
 	findContestAWDServiceByContestAndIDFn func(context.Context, int64, int64) (*contestentity.ContestAWDService, error)
 	countSuccessfulAttacksFn              func(context.Context, int64, int64, int64, int64) (int64, error)
 	withinAttackLogTransactionFn          func(context.Context, func(contestports.AWDAttackLogTxRepository) error) error
@@ -117,15 +116,15 @@ func (s awdCommandRepoStub) FindContestTeamByMember(ctx context.Context, contest
 	return &contestentity.Team{ID: 1, ContestID: contestID}, nil
 }
 
-func (s awdCommandRepoStub) ListChallengesByContest(context.Context, int64) ([]model.Challenge, error) {
+func (s awdCommandRepoStub) ListChallengesByContest(context.Context, int64) ([]contestentity.Challenge, error) {
 	return nil, nil
 }
 
-func (s awdCommandRepoStub) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (s awdCommandRepoStub) FindChallengeByID(ctx context.Context, challengeID int64) (*contestentity.Challenge, error) {
 	if s.findChallengeByIDFn != nil {
 		return s.findChallengeByIDFn(ctx, challengeID)
 	}
-	return &model.Challenge{ID: challengeID}, nil
+	return &contestentity.Challenge{ID: challengeID}, nil
 }
 
 func (s awdCommandRepoStub) ListReadinessChallengesByContest(context.Context, int64) ([]contestports.AWDReadinessChallengeRecord, error) {
@@ -381,7 +380,7 @@ func TestAWDServiceLoadChallengeTreatsChallengeSentinelAsErrNotFound(t *testing.
 
 	service := &AWDService{
 		repo: awdCommandRepoStub{
-			findChallengeByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+			findChallengeByIDFn: func(context.Context, int64) (*contestentity.Challenge, error) {
 				return nil, contestports.ErrContestAWDChallengeNotFound
 			},
 		},

@@ -1,13 +1,12 @@
 package commands
 
 import (
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type ChallengeService struct {
 	repo          contestChallengeCommandRepository
-	challengeRepo challengecontracts.ContestChallengeContract
+	challengeRepo contestports.ContestChallengeCatalog
 	contestRepo   contestports.ContestLookupRepository
 	awdRepo       contestports.ContestChallengeAWDServiceListRepository
 }
@@ -18,7 +17,7 @@ type contestChallengeCommandRepository interface {
 
 func NewChallengeService(
 	repo contestChallengeCommandRepository,
-	challengeRepo challengecontracts.ContestChallengeContract,
+	challengeRepo contestports.ContestChallengeCatalog,
 	contestRepo contestports.ContestLookupRepository,
 	awdRepo contestports.ContestChallengeAWDServiceListRepository,
 ) *ChallengeService {

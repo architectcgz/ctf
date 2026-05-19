@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -28,6 +27,22 @@ type awdDefenseWorkspaceSummaryRow struct {
 	ServiceID         int64  `gorm:"column:service_id"`
 	WorkspaceStatus   string `gorm:"column:workspace_status"`
 	WorkspaceRevision int64  `gorm:"column:workspace_revision"`
+}
+
+type awdReadinessImageStatusRow struct {
+	ID     int64  `gorm:"column:id"`
+	Status string `gorm:"column:status"`
+}
+
+type awdChallengeProjectionRow struct {
+	ID         int64  `gorm:"column:id"`
+	Title      string `gorm:"column:title"`
+	Category   string `gorm:"column:category"`
+	Difficulty string `gorm:"column:difficulty"`
+	Points     int    `gorm:"column:points"`
+	Status     string `gorm:"column:status"`
+	FlagType   string `gorm:"column:flag_type"`
+	FlagPrefix string `gorm:"column:flag_prefix"`
 }
 
 func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]contestentity.Contest, error) {
@@ -76,19 +91,19 @@ func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, rec
 	return contests, nil
 }
 
-func (r *AWDRepository) ListChallengesByContest(ctx context.Context, contestID int64) ([]model.Challenge, error) {
+func (r *AWDRepository) ListChallengesByContest(ctx context.Context, contestID int64) ([]contestentity.Challenge, error) {
 	rows, err := r.listContestAWDServiceRuntimeRows(ctx, contestID)
 	if err != nil {
 		return nil, err
 	}
 
-	challenges := make([]model.Challenge, 0, len(rows))
+	challenges := make([]contestentity.Challenge, 0, len(rows))
 	for _, row := range rows {
 		snapshot, decodeErr := contestentity.DecodeContestAWDServiceSnapshot(row.ServiceSnapshot)
 		if decodeErr != nil {
 			return nil, decodeErr
 		}
-		challenges = append(challenges, model.Challenge{
+		challenges = append(challenges, contestentity.Challenge{
 			ID:         row.AWDChallengeID,
 			Title:      resolveContestAWDServiceTitle(snapshot, row.DisplayName),
 			Category:   snapshot.Category,
@@ -96,7 +111,7 @@ func (r *AWDRepository) ListChallengesByContest(ctx context.Context, contestID i
 			FlagType:   resolveContestAWDServiceFlagType(snapshot),
 			FlagPrefix: resolveContestAWDServiceFlagPrefix(snapshot),
 			Points:     resolveContestAWDServiceScore(contestdomain.ParseAWDCheckerConfig(row.ScoreConfig), "points"),
-			Status:     model.ChallengeStatusPublished,
+			Status:     contestentity.ChallengeStatusPublished,
 		})
 	}
 	return challenges, nil
@@ -229,16 +244,17 @@ func (r *AWDRepository) listAWDReadinessImageStatuses(ctx context.Context, image
 	if len(imageIDs) == 0 {
 		return statuses, nil
 	}
-	var images []model.Image
+	var rows []awdReadinessImageStatusRow
 	if err := r.dbWithContext(ctx).
+		Table("images").
 		Select("id", "status").
 		Where("id IN ?", imageIDs).
 		Where("deleted_at IS NULL").
-		Find(&images).Error; err != nil {
+		Scan(&rows).Error; err != nil {
 		return nil, err
 	}
-	for _, image := range images {
-		statuses[image.ID] = image.Status
+	for _, row := range rows {
+		statuses[row.ID] = row.Status
 	}
 	return statuses, nil
 }
@@ -306,7 +322,7 @@ func resolveContestAWDServiceFlagType(snapshot contestentity.ContestAWDServiceSn
 			}
 		}
 	}
-	return model.FlagTypeDynamic
+	return contestentity.ChallengeFlagTypeDynamic
 }
 
 func resolveContestAWDServiceCheckerConfig(runtimeConfig map[string]any) string {
@@ -470,10 +486,24 @@ func marshalContestAWDServiceJSON(value any) string {
 	return string(raw)
 }
 
-func (r *AWDRepository) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
-	var challenge model.Challenge
-	if err := r.dbWithContext(ctx).Where("id = ?", challengeID).First(&challenge).Error; err != nil {
+func (r *AWDRepository) FindChallengeByID(ctx context.Context, challengeID int64) (*contestentity.Challenge, error) {
+	var row awdChallengeProjectionRow
+	if err := r.dbWithContext(ctx).
+		Table("challenges").
+		Select("id", "title", "category", "difficulty", "points", "status", "flag_type", "flag_prefix").
+		Where("id = ?", challengeID).
+		Where("deleted_at IS NULL").
+		Take(&row).Error; err != nil {
 		return nil, err
 	}
-	return &challenge, nil
+	return &contestentity.Challenge{
+		ID:         row.ID,
+		Title:      row.Title,
+		Category:   row.Category,
+		Difficulty: row.Difficulty,
+		Points:     row.Points,
+		Status:     row.Status,
+		FlagType:   row.FlagType,
+		FlagPrefix: row.FlagPrefix,
+	}, nil
 }

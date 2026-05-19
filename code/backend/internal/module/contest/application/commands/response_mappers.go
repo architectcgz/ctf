@@ -3,7 +3,6 @@ package commands
 import (
 	"encoding/json"
 
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 )
@@ -21,7 +20,7 @@ func contestRespFromModel(contest *contestentity.Contest) *ContestResp {
 	return resp
 }
 
-func contestChallengeRespFromModel(cc *contestentity.ContestChallenge, challenge *model.Challenge) *ContestChallengeResp {
+func contestChallengeRespFromModel(cc *contestentity.ContestChallenge, challenge *contestentity.Challenge) *ContestChallengeResp {
 	resp := contestResponseMapperInst.ToContestChallengeRespBasePtr(cc)
 	if resp == nil {
 		return nil

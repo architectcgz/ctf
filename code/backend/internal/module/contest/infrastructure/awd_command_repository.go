@@ -6,7 +6,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
@@ -74,7 +73,7 @@ func (r *AWDCommandRepository) FindContestTeamByMember(ctx context.Context, cont
 	return team, err
 }
 
-func (r *AWDCommandRepository) FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error) {
+func (r *AWDCommandRepository) FindChallengeByID(ctx context.Context, challengeID int64) (*contestentity.Challenge, error) {
 	challenge, err := r.awdCommandRepositorySource.FindChallengeByID(ctx, challengeID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, contestports.ErrContestAWDChallengeNotFound

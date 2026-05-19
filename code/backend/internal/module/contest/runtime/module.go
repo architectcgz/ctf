@@ -68,8 +68,8 @@ type moduleDeps struct {
 	teamQuery             *contestinfra.TeamQueryAdapter
 	participationLookup   *contestinfra.ParticipationRegistrationRepository
 	submissionLookup      *contestinfra.SubmissionRegistrationRepository
-	challengeCatalog      challengecontracts.ContestChallengeContract
-	challengeCatalogCmd   challengecontracts.ContestChallengeContract
+	challengeCatalog      contestports.ContestChallengeCatalog
+	challengeCatalogCmd   contestports.ContestChallengeCatalog
 	awdChallengeQueryRepo challengeports.AWDChallengeQueryRepository
 	awdChallengeQueryCmd  challengeports.AWDChallengeQueryRepository
 	previewChallengeRepo  challengeports.AWDChallengeQueryRepository
@@ -138,7 +138,7 @@ func newModuleDeps(deps Deps) *moduleDeps {
 		teamQuery:             teamQuery,
 		participationLookup:   participationLookup,
 		submissionLookup:      submissionLookup,
-		challengeCatalog:      deps.ChallengeCatalog,
+		challengeCatalog:      challengeCatalogCmd,
 		challengeCatalogCmd:   challengeCatalogCmd,
 		awdChallengeQueryRepo: deps.AWDChallengeQueryRepo,
 		awdChallengeQueryCmd:  awdChallengeQueryCmd,

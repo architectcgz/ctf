@@ -911,7 +911,14 @@ func TestAWDServicePreviewCheckerTCPStandardTokenMakesReadinessPassed(t *testing
 	contestRepo := contestinfra.NewRepository(db)
 	contestChallengeRepo := contestinfra.NewChallengeRepository(db)
 	awdRepo := contestinfra.NewAWDRepository(db)
-	contestService := contestcmd.NewContestAWDServiceService(awdRepo, contestRepo, contestChallengeRepo, challengeRepo, challengeRepo, contestinfra.NewAWDCheckerPreviewTokenStore(redisClient))
+	contestService := contestcmd.NewContestAWDServiceService(
+		awdRepo,
+		contestRepo,
+		contestChallengeRepo,
+		contestinfra.NewContestChallengeLookupAdapter(challengeRepo),
+		challengeRepo,
+		contestinfra.NewAWDCheckerPreviewTokenStore(redisClient),
+	)
 	created, err := contestService.CreateContestAWDService(context.Background(), contestID, contestcmd.CreateContestAWDServiceInput{
 		AWDChallengeID:         awdChallengeID,
 		Points:                 100,

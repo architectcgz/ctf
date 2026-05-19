@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"ctf-platform/internal/model"
 	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
@@ -32,7 +31,7 @@ type ContestSubmissionRegistrationLookupRepository interface {
 
 type ContestSubmissionChallengeLookupRepository interface {
 	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*contestentity.ContestChallenge, error)
-	FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error)
+	FindChallengeByID(ctx context.Context, challengeID int64) (*contestentity.Challenge, error)
 }
 
 type ContestSubmissionWriteRepository interface {

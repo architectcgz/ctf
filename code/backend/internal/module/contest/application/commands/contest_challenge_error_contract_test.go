@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -50,14 +49,14 @@ func (contestChallengeCommandRepoStub) HasSubmissions(context.Context, int64, in
 }
 
 type contestChallengeLookupStub struct {
-	findByIDFn func(context.Context, int64) (*model.Challenge, error)
+	findByIDFn func(context.Context, int64) (*contestentity.Challenge, error)
 }
 
-func (s contestChallengeLookupStub) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (s contestChallengeLookupStub) FindByID(ctx context.Context, id int64) (*contestentity.Challenge, error) {
 	if s.findByIDFn != nil {
 		return s.findByIDFn(ctx, id)
 	}
-	return &model.Challenge{ID: id, Status: model.ChallengeStatusPublished}, nil
+	return &contestentity.Challenge{ID: id, Status: contestentity.ChallengeStatusPublished}, nil
 }
 
 func (s contestChallengeLookupStub) BatchGetSolvedStatus(context.Context, int64, []int64) (map[int64]bool, error) {
@@ -169,7 +168,7 @@ func (contestChallengeRelationStub) HasSubmissions(context.Context, int64, int64
 	return false, nil
 }
 
-var _ challengecontracts.ContestChallengeContract = contestChallengeLookupStub{}
+var _ contestports.ContestChallengeCatalog = contestChallengeLookupStub{}
 
 func TestChallengeServiceAddChallengeToContestTreatsChallengeSentinelAsErrChallengeNotFound(t *testing.T) {
 	t.Parallel()
@@ -177,7 +176,7 @@ func TestChallengeServiceAddChallengeToContestTreatsChallengeSentinelAsErrChalle
 	service := NewChallengeService(
 		contestChallengeCommandRepoStub{},
 		contestChallengeLookupStub{
-			findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+			findByIDFn: func(context.Context, int64) (*contestentity.Challenge, error) {
 				return nil, contestports.ErrContestChallengeEntityNotFound
 			},
 		},
@@ -305,7 +304,7 @@ func TestContestAWDServiceSyncContestChallengeRelationTreatsChallengeSentinelAsE
 		contestChallengeErrorContestLookupStub{},
 		contestChallengeRelationStub{},
 		contestChallengeLookupStub{
-			findByIDFn: func(context.Context, int64) (*model.Challenge, error) {
+			findByIDFn: func(context.Context, int64) (*contestentity.Challenge, error) {
 				return nil, contestports.ErrContestChallengeEntityNotFound
 			},
 		},

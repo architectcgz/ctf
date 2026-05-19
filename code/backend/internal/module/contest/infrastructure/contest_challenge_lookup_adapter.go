@@ -6,9 +6,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
@@ -23,14 +23,26 @@ func NewContestChallengeLookupAdapter(source challengecontracts.ContestChallenge
 	return &ContestChallengeLookupAdapter{source: source}
 }
 
-func (r *ContestChallengeLookupAdapter) FindByID(ctx context.Context, id int64) (*model.Challenge, error) {
+func (r *ContestChallengeLookupAdapter) FindByID(ctx context.Context, id int64) (*contestentity.Challenge, error) {
 	challenge, err := r.source.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) ||
 		errors.Is(err, challengeports.ErrChallengeQueryChallengeNotFound) ||
 		errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 		return nil, contestports.ErrContestChallengeEntityNotFound
 	}
-	return challenge, err
+	if challenge == nil || err != nil {
+		return nil, err
+	}
+	return &contestentity.Challenge{
+		ID:         challenge.ID,
+		Title:      challenge.Title,
+		Category:   challenge.Category,
+		Difficulty: challenge.Difficulty,
+		Points:     challenge.Points,
+		Status:     string(challenge.Status),
+		FlagType:   challenge.FlagType,
+		FlagPrefix: challenge.FlagPrefix,
+	}, nil
 }
 
 func (r *ContestChallengeLookupAdapter) BatchGetSolvedStatus(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error) {
@@ -41,4 +53,4 @@ func (r *ContestChallengeLookupAdapter) BatchGetSolvedCount(ctx context.Context,
 	return r.source.BatchGetSolvedCount(ctx, challengeIDs)
 }
 
-var _ challengecontracts.ContestChallengeContract = (*ContestChallengeLookupAdapter)(nil)
+var _ contestports.ContestChallengeCatalog = (*ContestChallengeLookupAdapter)(nil)
