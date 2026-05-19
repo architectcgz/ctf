@@ -122,7 +122,7 @@ func (s *testChallengeImportTxStore) FindLegacyChallengeForImportedPackageCreate
 	ctx context.Context,
 	title string,
 	category string,
-) (*model.Challenge, bool, error) {
+) (*challengeports.ImportedChallenge, bool, error) {
 	var challenge model.Challenge
 	err := s.tx(ctx).Unscoped().
 		Where("(package_slug IS NULL OR package_slug = '') AND title = ? AND category = ?", title, category).
@@ -133,16 +133,57 @@ func (s *testChallengeImportTxStore) FindLegacyChallengeForImportedPackageCreate
 	case err != nil:
 		return nil, false, fmt.Errorf("find imported challenge %s: %w", title, err)
 	default:
-		return &challenge, true, nil
+		return &challengeports.ImportedChallenge{
+			ID:             challenge.ID,
+			PackageSlug:    challenge.PackageSlug,
+			Title:          challenge.Title,
+			Description:    challenge.Description,
+			Category:       challenge.Category,
+			Difficulty:     challenge.Difficulty,
+			Points:         challenge.Points,
+			ImageID:        challenge.ImageID,
+			AttachmentURL:  challenge.AttachmentURL,
+			Status:         string(challenge.Status),
+			FlagPrefix:     challenge.FlagPrefix,
+			TargetProtocol: challenge.TargetProtocol,
+			TargetPort:     challenge.TargetPort,
+			CreatedBy:      challenge.CreatedBy,
+			CreatedAt:      challenge.CreatedAt,
+			UpdatedAt:      challenge.UpdatedAt,
+		}, true, nil
 	}
 }
 
-func (s *testChallengeImportTxStore) CreateImportedChallenge(ctx context.Context, challenge *model.Challenge) error {
-	return s.tx(ctx).Create(challenge).Error
+func (s *testChallengeImportTxStore) CreateImportedChallenge(ctx context.Context, challenge *challengeports.ImportedChallenge) error {
+	row := &model.Challenge{
+		ID:             challenge.ID,
+		PackageSlug:    challenge.PackageSlug,
+		Title:          challenge.Title,
+		Description:    challenge.Description,
+		Category:       challenge.Category,
+		Difficulty:     challenge.Difficulty,
+		Points:         challenge.Points,
+		ImageID:        challenge.ImageID,
+		AttachmentURL:  challenge.AttachmentURL,
+		Status:         model.ChallengeStatus(challenge.Status),
+		FlagPrefix:     challenge.FlagPrefix,
+		TargetProtocol: challenge.TargetProtocol,
+		TargetPort:     challenge.TargetPort,
+		CreatedBy:      challenge.CreatedBy,
+		CreatedAt:      challenge.CreatedAt,
+		UpdatedAt:      challenge.UpdatedAt,
+	}
+	if err := s.tx(ctx).Create(row).Error; err != nil {
+		return err
+	}
+	challenge.ID = row.ID
+	challenge.CreatedAt = row.CreatedAt
+	challenge.UpdatedAt = row.UpdatedAt
+	return nil
 }
 
-func (s *testChallengeImportTxStore) UpdateImportedChallenge(ctx context.Context, challenge *model.Challenge, updates map[string]any) error {
-	return s.tx(ctx).Unscoped().Model(challenge).Updates(updates).Error
+func (s *testChallengeImportTxStore) UpdateImportedChallenge(ctx context.Context, challenge *challengeports.ImportedChallenge, updates map[string]any) error {
+	return s.tx(ctx).Unscoped().Model(&model.Challenge{}).Where("id = ?", challenge.ID).Updates(updates).Error
 }
 
 func (s *testChallengeImportTxStore) ClearPublishCheckJobs(ctx context.Context, challengeID int64) error {

@@ -241,7 +241,7 @@ func (s *ChallengeService) CommitChallengeImport(
 		return nil, err
 	}
 
-	var challenge *model.Challenge
+	var challenge *challengeports.ImportedChallenge
 	cleanupPaths := make([]string, 0, 2)
 	if s.importTxRunner == nil {
 		return nil, fmt.Errorf("challenge import tx runner is not configured")
@@ -257,14 +257,14 @@ func (s *ChallengeService) CommitChallengeImport(
 		}
 
 		now := time.Now().UTC()
-		var current model.Challenge
+		var current challengeports.ImportedChallenge
 		existing, found, findErr := store.FindLegacyChallengeForImportedPackageCreate(ctx, parsed.Title, parsed.Category)
 
 		switch {
 		case findErr != nil:
 			return findErr
 		case !found:
-			current = model.Challenge{
+			current = challengeports.ImportedChallenge{
 				PackageSlug:    stringPointer(parsed.Slug),
 				Title:          parsed.Title,
 				Description:    parsed.Description,
@@ -273,7 +273,7 @@ func (s *ChallengeService) CommitChallengeImport(
 				Points:         parsed.Points,
 				ImageID:        resolvedImageID,
 				AttachmentURL:  attachmentURL,
-				Status:         model.ChallengeStatusDraft,
+				Status:         challengecontracts.ChallengeStatusDraft,
 				FlagPrefix:     parsed.FlagPrefix,
 				TargetProtocol: parsed.RuntimeProtocol,
 				TargetPort:     parsed.RuntimePort,
@@ -286,6 +286,18 @@ func (s *ChallengeService) CommitChallengeImport(
 			}
 		default:
 			current = *existing
+			current.PackageSlug = stringPointer(parsed.Slug)
+			current.Title = parsed.Title
+			current.Description = parsed.Description
+			current.Category = parsed.Category
+			current.Difficulty = parsed.Difficulty
+			current.Points = parsed.Points
+			current.ImageID = resolvedImageID
+			current.AttachmentURL = attachmentURL
+			current.Status = challengecontracts.ChallengeStatusDraft
+			current.TargetProtocol = parsed.RuntimeProtocol
+			current.TargetPort = parsed.RuntimePort
+			current.UpdatedAt = now
 			updates := map[string]any{
 				"package_slug":    parsed.Slug,
 				"title":           parsed.Title,
@@ -295,7 +307,7 @@ func (s *ChallengeService) CommitChallengeImport(
 				"points":          parsed.Points,
 				"image_id":        resolvedImageID,
 				"attachment_url":  attachmentURL,
-				"status":          model.ChallengeStatusDraft,
+				"status":          challengecontracts.ChallengeStatusDraft,
 				"target_protocol": parsed.RuntimeProtocol,
 				"target_port":     parsed.RuntimePort,
 				"deleted_at":      nil,
@@ -377,7 +389,7 @@ func (s *ChallengeService) CommitChallengeImport(
 	}
 
 	_ = os.RemoveAll(filepath.Join(challengeImportPreviewRoot(), id))
-	return domain.ChallengeRespFromModel(challenge, nil), nil
+	return domain.ChallengeRespFromModel(toImportedChallengeResponseModel(challenge), nil), nil
 }
 
 func (s *ChallengeService) buildChallengeImportPreview(
@@ -942,6 +954,30 @@ func buildImportedChallengeHints(
 		})
 	}
 	return records
+}
+
+func toImportedChallengeResponseModel(source *challengeports.ImportedChallenge) *model.Challenge {
+	if source == nil {
+		return nil
+	}
+	return &model.Challenge{
+		ID:             source.ID,
+		PackageSlug:    source.PackageSlug,
+		Title:          source.Title,
+		Description:    source.Description,
+		Category:       source.Category,
+		Difficulty:     source.Difficulty,
+		Points:         source.Points,
+		ImageID:        source.ImageID,
+		AttachmentURL:  source.AttachmentURL,
+		Status:         model.ChallengeStatus(source.Status),
+		FlagPrefix:     source.FlagPrefix,
+		TargetProtocol: source.TargetProtocol,
+		TargetPort:     source.TargetPort,
+		CreatedBy:      source.CreatedBy,
+		CreatedAt:      source.CreatedAt,
+		UpdatedAt:      source.UpdatedAt,
+	}
 }
 
 func challengeImportPreviewRoot() string {

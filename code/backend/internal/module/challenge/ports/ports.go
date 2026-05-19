@@ -210,12 +210,31 @@ type ChallengeImportedImageTxStore interface {
 	ResolveExistingImageRef(ctx context.Context, packageSlug string, imageRef string) (*ImportedImageResolution, error)
 }
 
+type ImportedChallenge struct {
+	ID             int64
+	PackageSlug    *string
+	Title          string
+	Description    string
+	Category       string
+	Difficulty     string
+	Points         int
+	ImageID        int64
+	AttachmentURL  string
+	Status         string
+	FlagPrefix     string
+	TargetProtocol string
+	TargetPort     int
+	CreatedBy      *int64
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
 type ChallengeImportTxStore interface {
 	ChallengeImportedImageTxStore
 	RejectImportedChallengeSlugConflict(ctx context.Context, packageSlug string) error
-	FindLegacyChallengeForImportedPackageCreate(ctx context.Context, title string, category string) (*model.Challenge, bool, error)
-	CreateImportedChallenge(ctx context.Context, challenge *model.Challenge) error
-	UpdateImportedChallenge(ctx context.Context, challenge *model.Challenge, updates map[string]any) error
+	FindLegacyChallengeForImportedPackageCreate(ctx context.Context, title string, category string) (*ImportedChallenge, bool, error)
+	CreateImportedChallenge(ctx context.Context, challenge *ImportedChallenge) error
+	UpdateImportedChallenge(ctx context.Context, challenge *ImportedChallenge, updates map[string]any) error
 	ClearPublishCheckJobs(ctx context.Context, challengeID int64) error
 	ReplaceImportedHints(ctx context.Context, challengeID int64, hints []challengeentity.ChallengeHint) error
 	ApplyImportedFlagUpdates(ctx context.Context, challengeID int64, updates map[string]any) error

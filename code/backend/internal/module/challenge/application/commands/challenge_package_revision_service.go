@@ -14,7 +14,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -26,7 +25,7 @@ func (s *ChallengeService) createImportedPackageRevision(
 	ctx context.Context,
 	store challengeports.ChallengeImportTxStore,
 	actorUserID int64,
-	challenge *model.Challenge,
+	challenge *challengeports.ImportedChallenge,
 	record storedChallengeImportPreview,
 	parsed *domain.ParsedChallengePackage,
 ) (*challengeentity.ChallengePackageRevision, error) {

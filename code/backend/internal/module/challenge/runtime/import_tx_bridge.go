@@ -132,7 +132,7 @@ func (s *challengeImportTxStore) FindLegacyChallengeForImportedPackageCreate(
 	ctx context.Context,
 	title string,
 	category string,
-) (*model.Challenge, bool, error) {
+) (*challengeports.ImportedChallenge, bool, error) {
 	var challenge model.Challenge
 	err := s.tx(ctx).Unscoped().
 		Where("(package_slug IS NULL OR package_slug = '') AND title = ? AND category = ?", title, category).
@@ -143,26 +143,36 @@ func (s *challengeImportTxStore) FindLegacyChallengeForImportedPackageCreate(
 	case err != nil:
 		return nil, false, fmt.Errorf("find imported challenge %s: %w", strings.TrimSpace(title), err)
 	default:
-		return &challenge, true, nil
+		return importedChallengeFromModel(&challenge), true, nil
 	}
 }
 
-func (s *challengeImportTxStore) CreateImportedChallenge(ctx context.Context, challenge *model.Challenge) error {
+func (s *challengeImportTxStore) CreateImportedChallenge(ctx context.Context, challenge *challengeports.ImportedChallenge) error {
 	if challenge == nil {
 		return fmt.Errorf("challenge is nil")
 	}
-	return s.tx(ctx).Create(challenge).Error
+	row := importedChallengeToModel(challenge)
+	if err := s.tx(ctx).Create(row).Error; err != nil {
+		return err
+	}
+	challenge.ID = row.ID
+	challenge.CreatedAt = row.CreatedAt
+	challenge.UpdatedAt = row.UpdatedAt
+	return nil
 }
 
 func (s *challengeImportTxStore) UpdateImportedChallenge(
 	ctx context.Context,
-	challenge *model.Challenge,
+	challenge *challengeports.ImportedChallenge,
 	updates map[string]any,
 ) error {
 	if challenge == nil {
 		return fmt.Errorf("challenge is nil")
 	}
-	return s.tx(ctx).Unscoped().Model(challenge).Updates(updates).Error
+	return s.tx(ctx).Unscoped().
+		Model(&model.Challenge{}).
+		Where("id = ?", challenge.ID).
+		Updates(updates).Error
 }
 
 func (s *challengeImportTxStore) ClearPublishCheckJobs(ctx context.Context, challengeID int64) error {
@@ -326,4 +336,52 @@ func (s *challengeImportTxStore) ResolveExistingImageRef(
 		ImageID:  image.ID,
 		ImageRef: ref,
 	}, nil
+}
+
+func importedChallengeFromModel(source *model.Challenge) *challengeports.ImportedChallenge {
+	if source == nil {
+		return nil
+	}
+	return &challengeports.ImportedChallenge{
+		ID:             source.ID,
+		PackageSlug:    source.PackageSlug,
+		Title:          source.Title,
+		Description:    source.Description,
+		Category:       source.Category,
+		Difficulty:     source.Difficulty,
+		Points:         source.Points,
+		ImageID:        source.ImageID,
+		AttachmentURL:  source.AttachmentURL,
+		Status:         string(source.Status),
+		FlagPrefix:     source.FlagPrefix,
+		TargetProtocol: source.TargetProtocol,
+		TargetPort:     source.TargetPort,
+		CreatedBy:      source.CreatedBy,
+		CreatedAt:      source.CreatedAt,
+		UpdatedAt:      source.UpdatedAt,
+	}
+}
+
+func importedChallengeToModel(source *challengeports.ImportedChallenge) *model.Challenge {
+	if source == nil {
+		return nil
+	}
+	return &model.Challenge{
+		ID:             source.ID,
+		PackageSlug:    source.PackageSlug,
+		Title:          source.Title,
+		Description:    source.Description,
+		Category:       source.Category,
+		Difficulty:     source.Difficulty,
+		Points:         source.Points,
+		ImageID:        source.ImageID,
+		AttachmentURL:  source.AttachmentURL,
+		Status:         model.ChallengeStatus(source.Status),
+		FlagPrefix:     source.FlagPrefix,
+		TargetProtocol: source.TargetProtocol,
+		TargetPort:     source.TargetPort,
+		CreatedBy:      source.CreatedBy,
+		CreatedAt:      source.CreatedAt,
+		UpdatedAt:      source.UpdatedAt,
+	}
 }
