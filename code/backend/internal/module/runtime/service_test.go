@@ -13,7 +13,6 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -758,14 +757,14 @@ func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
 	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 
-	if err := repo.db.Create(&model.Challenge{
+	if err := repo.db.Create(&runtimeChallengeTestRow{
 		ID:              903,
 		Title:           "Shared Practice",
 		Category:        challengecontracts.DimensionWeb,
-		Difficulty:      model.ChallengeDifficultyEasy,
-		FlagType:        model.FlagTypeStatic,
-		Status:          model.ChallengeStatusPublished,
-		InstanceSharing: model.InstanceSharingShared,
+		Difficulty:      challengecontracts.ChallengeDifficultyEasy,
+		FlagType:        challengecontracts.FlagTypeStatic,
+		Status:          challengecontracts.ChallengeStatusPublished,
+		InstanceSharing: challengecontracts.InstanceSharingShared,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}).Error; err != nil {
@@ -795,14 +794,14 @@ func TestServiceExtendInstanceRejectsSharedInstance(t *testing.T) {
 	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 
-	if err := repo.db.Create(&model.Challenge{
+	if err := repo.db.Create(&runtimeChallengeTestRow{
 		ID:              904,
 		Title:           "Shared Practice",
 		Category:        challengecontracts.DimensionWeb,
-		Difficulty:      model.ChallengeDifficultyEasy,
-		FlagType:        model.FlagTypeStatic,
-		Status:          model.ChallengeStatusPublished,
-		InstanceSharing: model.InstanceSharingShared,
+		Difficulty:      challengecontracts.ChallengeDifficultyEasy,
+		FlagType:        challengecontracts.FlagTypeStatic,
+		Status:          challengecontracts.ChallengeStatusPublished,
+		InstanceSharing: challengecontracts.InstanceSharingShared,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}).Error; err != nil {
@@ -832,13 +831,13 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 
-	if err := repo.db.Create(&model.Challenge{
+	if err := repo.db.Create(&runtimeChallengeTestRow{
 		ID:         101,
 		Title:      "Matrix Web Challenge",
 		Category:   challengecontracts.DimensionWeb,
-		Difficulty: model.ChallengeDifficultyEasy,
-		FlagType:   model.FlagTypeStatic,
-		Status:     model.ChallengeStatusPublished,
+		Difficulty: challengecontracts.ChallengeDifficultyEasy,
+		FlagType:   challengecontracts.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
 		Points:     100,
 		CreatedAt:  now,
 		UpdatedAt:  now,
@@ -873,11 +872,11 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 	if item.Category != challengecontracts.DimensionWeb {
 		t.Fatalf("expected category %q, got %+v", challengecontracts.DimensionWeb, item)
 	}
-	if item.Difficulty != model.ChallengeDifficultyEasy {
-		t.Fatalf("expected difficulty %q, got %+v", model.ChallengeDifficultyEasy, item)
+	if item.Difficulty != challengecontracts.ChallengeDifficultyEasy {
+		t.Fatalf("expected difficulty %q, got %+v", challengecontracts.ChallengeDifficultyEasy, item)
 	}
-	if item.FlagType != model.FlagTypeStatic {
-		t.Fatalf("expected flag type %q, got %+v", model.FlagTypeStatic, item)
+	if item.FlagType != challengecontracts.FlagTypeStatic {
+		t.Fatalf("expected flag type %q, got %+v", challengecontracts.FlagTypeStatic, item)
 	}
 	if item.RemainingExtends != 2 {
 		t.Fatalf("expected remaining extends 2, got %+v", item)
@@ -893,13 +892,13 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 	contestID := int64(501)
 	teamID := int64(601)
 
-	if err := repo.db.Create(&model.Challenge{
+	if err := repo.db.Create(&runtimeChallengeTestRow{
 		ID:         102,
 		Title:      "Shared AWD Challenge",
 		Category:   challengecontracts.DimensionPwn,
-		Difficulty: model.ChallengeDifficultyMedium,
-		FlagType:   model.FlagTypeDynamic,
-		Status:     model.ChallengeStatusPublished,
+		Difficulty: challengecontracts.ChallengeDifficultyMedium,
+		FlagType:   challengecontracts.FlagTypeDynamic,
+		Status:     challengecontracts.ChallengeStatusPublished,
 		Points:     150,
 		CreatedAt:  now,
 		UpdatedAt:  now,
@@ -958,14 +957,14 @@ func TestServiceGetUserInstancesShowsPracticeSharedInstanceToAnyUser(t *testing.
 	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 
-	if err := repo.db.Create(&model.Challenge{
+	if err := repo.db.Create(&runtimeChallengeTestRow{
 		ID:              103,
 		Title:           "Shared Practice",
 		Category:        challengecontracts.DimensionWeb,
-		Difficulty:      model.ChallengeDifficultyEasy,
-		FlagType:        model.FlagTypeStatic,
-		Status:          model.ChallengeStatusPublished,
-		InstanceSharing: model.InstanceSharingShared,
+		Difficulty:      challengecontracts.ChallengeDifficultyEasy,
+		FlagType:        challengecontracts.FlagTypeStatic,
+		Status:          challengecontracts.ChallengeStatusPublished,
+		InstanceSharing: challengecontracts.InstanceSharingShared,
 		Points:          80,
 		CreatedAt:       now,
 		UpdatedAt:       now,
@@ -1187,7 +1186,7 @@ func TestServiceCreateTopologyMarksAWDWorkspaceAsAWDComposeService(t *testing.T)
 				Key:             "workspace",
 				Image:           "python:3.12-alpine",
 				ServicePort:     22,
-				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
 				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 				NetworkAliases:  []string{"awd-ws-c8-t15-s21-r2"},
@@ -1233,7 +1232,7 @@ func TestServiceCreateTopologyPassesMountsAndCommandToEngine(t *testing.T) {
 				Image:           "python:3.12-alpine",
 				Env:             map[string]string{"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "TERM": "xterm-256color"},
 				ServicePort:     22,
-				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
 				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 				WorkingDir:      "/workspace",
@@ -1303,7 +1302,7 @@ func TestServiceCreateTopologyBuildsTCPEntryAccessURL(t *testing.T) {
 				Key:             "pwn",
 				Image:           "ctf/pwn:v1",
 				ServicePort:     31337,
-				ServiceProtocol: model.ChallengeTargetProtocolTCP,
+				ServiceProtocol: challengecontracts.ChallengeTargetProtocolTCP,
 				IsEntryPoint:    true,
 				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 			},
@@ -1315,7 +1314,7 @@ func TestServiceCreateTopologyBuildsTCPEntryAccessURL(t *testing.T) {
 	if result.AccessURL != "tcp://127.0.0.1:30000" {
 		t.Fatalf("expected tcp access url, got %q", result.AccessURL)
 	}
-	if got := result.RuntimeDetails.Containers[0].ServiceProtocol; got != model.ChallengeTargetProtocolTCP {
+	if got := result.RuntimeDetails.Containers[0].ServiceProtocol; got != challengecontracts.ChallengeTargetProtocolTCP {
 		t.Fatalf("expected runtime details service protocol tcp, got %q", got)
 	}
 }
@@ -1778,7 +1777,7 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 	seedUser(t, repo.db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &identitycontracts.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &identitycontracts.User{ID: 3, Username: "bob", StudentNo: "S-1002", Role: identitycontracts.RoleStudent, ClassName: "Class B", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
-	seedChallenge(t, repo.db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
+	seedChallenge(t, repo.db, &runtimeChallengeTestRow{ID: 11, Title: "web-101", Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
 	seedInstance(t, repo.db, &instanceentity.Instance{ID: 101, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 	seedInstance(t, repo.db, &instanceentity.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 	seedInstance(t, repo.db, &instanceentity.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: instanceentity.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
@@ -1841,7 +1840,7 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	seedUser(t, repo.db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &identitycontracts.User{ID: 2, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedUser(t, repo.db, &identitycontracts.User{ID: 3, Username: "bob", Role: identitycontracts.RoleStudent, ClassName: "Class B", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
-	seedChallenge(t, repo.db, &model.Challenge{ID: 11, Title: "web-101", Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
+	seedChallenge(t, repo.db, &runtimeChallengeTestRow{ID: 11, Title: "web-101", Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
 	seedInstance(t, repo.db, &instanceentity.Instance{ID: 201, UserID: 2, ChallengeID: 11, Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 	seedInstance(t, repo.db, &instanceentity.Instance{ID: 202, UserID: 3, ChallengeID: 11, Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 
@@ -1877,7 +1876,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&identitycontracts.User{}, &model.Challenge{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &runtimeChallengeTestRow{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&contestcontracts.Team{}, &contestcontracts.TeamMember{}); err != nil {
@@ -2138,7 +2137,7 @@ func seedUser(t *testing.T, db *gorm.DB, user *identitycontracts.User) {
 	}
 }
 
-func seedChallenge(t *testing.T, db *gorm.DB, challenge *model.Challenge) {
+func seedChallenge(t *testing.T, db *gorm.DB, challenge *runtimeChallengeTestRow) {
 	t.Helper()
 
 	if err := db.Create(challenge).Error; err != nil {

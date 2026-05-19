@@ -3,7 +3,7 @@ package runtime
 import (
 	"testing"
 
-	"ctf-platform/internal/model"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
@@ -19,7 +19,7 @@ func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
 				Image:           "ctf/web:latest",
 				Env:             map[string]string{"MODE": "awd"},
 				ServicePort:     8080,
-				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+				ServiceProtocol: challengecontracts.ChallengeTargetProtocolHTTP,
 				IsEntryPoint:    true,
 				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 				Resources:       &runtimecontracts.ResourceLimits{CPUQuota: 50000, Memory: 256 * 1024 * 1024, PidsLimit: 128},
@@ -37,7 +37,7 @@ func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
 	if len(got.Nodes) != 1 || got.Nodes[0].Image != "ctf/web:latest" {
 		t.Fatalf("expected AWD network aliases to be preserved, got %+v", got.Nodes)
 	}
-	if got.Nodes[0].ServicePort != 8080 || got.Nodes[0].ServiceProtocol != model.ChallengeTargetProtocolHTTP {
+	if got.Nodes[0].ServicePort != 8080 || got.Nodes[0].ServiceProtocol != challengecontracts.ChallengeTargetProtocolHTTP {
 		t.Fatalf("expected runtime service fields to be preserved, got %+v", got.Nodes[0])
 	}
 	if got.Nodes[0].Resources == nil || got.Nodes[0].Resources.CPUQuota != 50000 {
@@ -61,7 +61,7 @@ func TestRuntimeChallengeTopologyAdapterDisablesPublishedEntryPortWithoutAccessH
 				Key:             "web",
 				Image:           "ctf/web:latest",
 				ServicePort:     8080,
-				ServiceProtocol: model.ChallengeTargetProtocolHTTP,
+				ServiceProtocol: challengecontracts.ChallengeTargetProtocolHTTP,
 				IsEntryPoint:    true,
 				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 			},
