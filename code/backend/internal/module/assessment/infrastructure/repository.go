@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -399,7 +398,7 @@ func (r *Repository) fillStudentDimensionFacts(
 			JOIN challenges c ON c.id = s.challenge_id
 			WHERE s.user_id = ? AND s.contest_id IS NULL AND c.status = ?
 			GROUP BY c.category
-		`, userID, model.ChallengeStatusPublished).Scan(&attemptRows).Error; err != nil {
+		`, userID, challengecontracts.ChallengeStatusPublished).Scan(&attemptRows).Error; err != nil {
 			return fmt.Errorf("get student dimension attempt facts: %w", err)
 		}
 		for _, row := range attemptRows {
@@ -427,7 +426,7 @@ func (r *Repository) fillStudentDimensionFacts(
 				AND s.is_correct = TRUE
 				AND c.status = ?
 			GROUP BY c.category, c.difficulty
-		`, userID, model.ChallengeStatusPublished).Scan(&solvedDifficultyRows).Error; err != nil {
+		`, userID, challengecontracts.ChallengeStatusPublished).Scan(&solvedDifficultyRows).Error; err != nil {
 			return fmt.Errorf("get student dimension solved difficulty facts: %w", err)
 		}
 		for _, row := range solvedDifficultyRows {
@@ -455,7 +454,7 @@ func (r *Repository) fillStudentDimensionFacts(
 					AND a.resource_type IN (?, ?)
 					AND c.status = ?
 				GROUP BY c.category
-			`, userID, "instance_access", "instance_proxy_request", model.ChallengeStatusPublished).Scan(&auditRows).Error; err != nil {
+			`, userID, "instance_access", "instance_proxy_request", challengecontracts.ChallengeStatusPublished).Scan(&auditRows).Error; err != nil {
 				return fmt.Errorf("get student audit evidence facts: %w", err)
 			}
 			for _, row := range auditRows {
@@ -478,7 +477,7 @@ func (r *Repository) fillStudentDimensionFacts(
 				JOIN challenges c ON c.id = sw.challenge_id
 				WHERE sw.user_id = ? AND c.status = ?
 				GROUP BY c.category
-			`, userID, model.ChallengeStatusPublished).Scan(&writeupRows).Error; err != nil {
+			`, userID, challengecontracts.ChallengeStatusPublished).Scan(&writeupRows).Error; err != nil {
 				return fmt.Errorf("get student writeup evidence facts: %w", err)
 			}
 			for _, row := range writeupRows {
@@ -503,7 +502,7 @@ func (r *Repository) fillStudentDimensionFacts(
 				AND s.review_status = ?
 				AND c.status = ?
 			GROUP BY c.category
-		`, userID, contestcontracts.SubmissionReviewStatusApproved, model.ChallengeStatusPublished).Scan(&reviewRows).Error; err != nil {
+		`, userID, contestcontracts.SubmissionReviewStatusApproved, challengecontracts.ChallengeStatusPublished).Scan(&reviewRows).Error; err != nil {
 			return fmt.Errorf("get student review evidence facts: %w", err)
 		}
 		for _, row := range reviewRows {

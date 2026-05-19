@@ -10,10 +10,10 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/internal/teaching/evidence"
@@ -301,8 +301,8 @@ func (r *ReportRepository) listClassDistribution(
 		query,
 		className,
 		identitycontracts.RoleStudent,
-		model.ChallengeStatusPublished,
-		model.ChallengeStatusPublished,
+		challengecontracts.ChallengeStatusPublished,
+		challengecontracts.ChallengeStatusPublished,
 	).Scan(&rows).Error
 	return rows, err
 }
@@ -533,8 +533,8 @@ func (r *ReportRepository) ListContestTeams(ctx context.Context, contestID int64
 
 func (r *ReportRepository) CountPublishedChallenges(ctx context.Context) (int64, error) {
 	var count int64
-	err := r.db.WithContext(ctx).Model(&model.Challenge{}).
-		Where("status = ?", model.ChallengeStatusPublished).
+	err := r.db.WithContext(ctx).Table("challenges").
+		Where("status = ?", challengecontracts.ChallengeStatusPublished).
 		Count(&count).Error
 	return count, err
 }
@@ -912,7 +912,7 @@ func (r *ReportRepository) ListStudentManualReviews(ctx context.Context, userID 
 		LEFT JOIN users reviewer ON reviewer.id = s.reviewed_by
 		WHERE s.user_id = ? AND c.flag_type = ?
 		ORDER BY s.updated_at DESC, s.id DESC
-	`, userID, model.FlagTypeManualReview).Scan(&rows).Error
+	`, userID, challengecontracts.FlagTypeManualReview).Scan(&rows).Error
 	return rows, err
 }
 

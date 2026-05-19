@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/auditlog"
-	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -110,7 +109,7 @@ func (r *Repository) listStudentsBaseQuery(ctx context.Context, since time.Time)
 				ORDER BY sp.score ASC, sp.updated_at DESC
 				LIMIT 1
 			) AS weak_dimension
-		`, model.ChallengeStatusPublished, model.ChallengeStatusPublished, since, since, since).
+		`, challengecontracts.ChallengeStatusPublished, challengecontracts.ChallengeStatusPublished, since, since, since).
 		Where("u.role = ? AND u.deleted_at IS NULL", identitycontracts.RoleStudent)
 }
 
@@ -303,8 +302,8 @@ func (r *Repository) ListClassTeachingFactSnapshots(
 
 func (r *Repository) CountPublishedChallenges(ctx context.Context) (int64, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&model.Challenge{}).
-		Where("status = ?", model.ChallengeStatusPublished).
+	if err := r.db.WithContext(ctx).Table("challenges").
+		Where("status = ?", challengecontracts.ChallengeStatusPublished).
 		Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("count published challenges: %w", err)
 	}
@@ -624,7 +623,7 @@ func (r *Repository) fillClassDimensionFacts(
 			JOIN challenges c ON c.id = s.challenge_id
 			WHERE s.user_id IN ? AND s.contest_id IS NULL AND c.status = ?
 			GROUP BY s.user_id, c.category
-		`, userIDs, model.ChallengeStatusPublished).Scan(&attemptRows).Error; err != nil {
+		`, userIDs, challengecontracts.ChallengeStatusPublished).Scan(&attemptRows).Error; err != nil {
 			return fmt.Errorf("get class dimension attempt facts: %w", err)
 		}
 		for _, row := range attemptRows {
@@ -652,7 +651,7 @@ func (r *Repository) fillClassDimensionFacts(
 					AND a.resource_type IN (?, ?)
 					AND c.status = ?
 				GROUP BY a.user_id, c.category
-			`, userIDs, "instance_access", "instance_proxy_request", model.ChallengeStatusPublished).Scan(&auditRows).Error; err != nil {
+			`, userIDs, "instance_access", "instance_proxy_request", challengecontracts.ChallengeStatusPublished).Scan(&auditRows).Error; err != nil {
 				return fmt.Errorf("get class audit dimension facts: %w", err)
 			}
 			for _, row := range auditRows {
@@ -676,7 +675,7 @@ func (r *Repository) fillClassDimensionFacts(
 				JOIN challenges c ON c.id = sw.challenge_id
 				WHERE sw.user_id IN ? AND c.status = ?
 				GROUP BY sw.user_id, c.category
-			`, userIDs, model.ChallengeStatusPublished).Scan(&writeupRows).Error; err != nil {
+			`, userIDs, challengecontracts.ChallengeStatusPublished).Scan(&writeupRows).Error; err != nil {
 				return fmt.Errorf("get class writeup dimension facts: %w", err)
 			}
 			for _, row := range writeupRows {
@@ -702,7 +701,7 @@ func (r *Repository) fillClassDimensionFacts(
 				AND s.review_status = ?
 				AND c.status = ?
 			GROUP BY s.user_id, c.category
-		`, userIDs, contestcontracts.SubmissionReviewStatusApproved, model.ChallengeStatusPublished).Scan(&reviewRows).Error; err != nil {
+		`, userIDs, contestcontracts.SubmissionReviewStatusApproved, challengecontracts.ChallengeStatusPublished).Scan(&reviewRows).Error; err != nil {
 			return fmt.Errorf("get class review dimension facts: %w", err)
 		}
 		for _, row := range reviewRows {
@@ -836,7 +835,7 @@ func (r *Repository) CountSolvedChallenges(ctx context.Context, userID int64) (i
 	var count int64
 	if err := r.db.WithContext(ctx).Table("submissions AS s").
 		Joins("JOIN challenges c ON c.id = s.challenge_id").
-		Where("s.user_id = ? AND s.is_correct = ? AND c.status = ?", userID, true, model.ChallengeStatusPublished).
+		Where("s.user_id = ? AND s.is_correct = ? AND c.status = ?", userID, true, challengecontracts.ChallengeStatusPublished).
 		Distinct("s.challenge_id").
 		Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("count solved challenges: %w", err)
@@ -859,7 +858,7 @@ func (r *Repository) GetCategoryProgress(ctx context.Context, userID int64) ([]q
 		WHERE c.status = ?
 		GROUP BY c.category
 		ORDER BY c.category
-	`, userID, model.ChallengeStatusPublished).Scan(&rows).Error; err != nil {
+	`, userID, challengecontracts.ChallengeStatusPublished).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("get category progress: %w", err)
 	}
 	return rows, nil
@@ -888,7 +887,7 @@ func (r *Repository) GetDifficultyProgress(ctx context.Context, userID int64) ([
 				WHEN 'hell' THEN 5
 				ELSE 99
 			END
-	`, userID, model.ChallengeStatusPublished).Scan(&rows).Error; err != nil {
+	`, userID, challengecontracts.ChallengeStatusPublished).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("get difficulty progress: %w", err)
 	}
 	return rows, nil
@@ -1105,7 +1104,7 @@ func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query
 			"s.score AS score",
 		}, ", ")).
 		Joins("JOIN challenges c ON c.id = s.challenge_id").
-		Where("s.user_id = ? AND c.flag_type = ?", userID, model.FlagTypeManualReview)
+		Where("s.user_id = ? AND c.flag_type = ?", userID, challengecontracts.FlagTypeManualReview)
 	if query.ChallengeID != nil {
 		manualReviewQuery = manualReviewQuery.Where("s.challenge_id = ?", *query.ChallengeID)
 	}
@@ -1598,7 +1597,7 @@ func (r *Repository) getAverageSolvedByClass(ctx context.Context, className stri
 			WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL
 			GROUP BY u.id
 		) student_solved
-	`, model.ChallengeStatusPublished, identitycontracts.RoleStudent, className).Scan(&result).Error; err != nil {
+	`, challengecontracts.ChallengeStatusPublished, identitycontracts.RoleStudent, className).Scan(&result).Error; err != nil {
 		return 0, fmt.Errorf("get average solved by class: %w", err)
 	}
 	return result.AverageSolved, nil

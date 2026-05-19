@@ -34,3 +34,24 @@ const (
 )
 
 type AWDChallenge = challengeentity.AWDChallenge
+
+const (
+	ChallengeDifficultyBeginner = "beginner"
+	ChallengeDifficultyEasy     = "easy"
+	ChallengeDifficultyMedium   = "medium"
+	ChallengeDifficultyHard     = "hard"
+	ChallengeDifficultyInsane   = "insane"
+)
+
+const (
+	ChallengeStatusDraft     = "draft"
+	ChallengeStatusPublished = "published"
+	ChallengeStatusArchived  = "archived"
+)
+
+const (
+	FlagTypeStatic       = "static"
+	FlagTypeDynamic      = "dynamic"
+	FlagTypeRegex        = "regex"
+	FlagTypeManualReview = "manual_review"
+)

@@ -15,6 +15,8 @@ type ImageStore interface {
 	FindByID(ctx context.Context, id int64) (*challengeentity.Image, error)
 }
 
+type RecommendationChallenge = model.Challenge
+
 const ImageStatusAvailable = challengeentity.ImageStatusAvailable
 
 func BuildRuntimeImageRef(image *challengeentity.Image) string {

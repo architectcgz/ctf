@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/model"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -233,11 +232,11 @@ func FillMissingDistributionStats(rows []ClassDistributionStat, keys []string) [
 
 func ClassReportDifficultyOrder() []string {
 	return []string{
-		model.ChallengeDifficultyBeginner,
-		model.ChallengeDifficultyEasy,
-		model.ChallengeDifficultyMedium,
-		model.ChallengeDifficultyHard,
-		model.ChallengeDifficultyInsane,
+		challengecontracts.ChallengeDifficultyBeginner,
+		challengecontracts.ChallengeDifficultyEasy,
+		challengecontracts.ChallengeDifficultyMedium,
+		challengecontracts.ChallengeDifficultyHard,
+		challengecontracts.ChallengeDifficultyInsane,
 	}
 }
 
