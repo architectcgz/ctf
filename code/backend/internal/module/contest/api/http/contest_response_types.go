@@ -3,7 +3,6 @@ package http
 import (
 	"time"
 
-	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
@@ -37,6 +36,11 @@ type MyTeamResp struct {
 	InviteCode string            `json:"invite_code"`
 	CaptainID  int64             `json:"captain_user_id"`
 	Members    []*TeamMemberResp `json:"members"`
+}
+
+type TeamInfoResp struct {
+	Team    *TeamResp         `json:"team"`
+	Members []*TeamMemberResp `json:"members"`
 }
 
 type ContestChallengeResp struct {
@@ -106,12 +110,25 @@ type ContestListSummaryResp struct {
 	EndedCount       int64 `json:"ended_count"`
 }
 
+type ContestListItemResp struct {
+	ID          int64      `json:"id"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	Mode        string     `json:"mode"`
+	StartTime   time.Time  `json:"start_time"`
+	EndTime     time.Time  `json:"end_time"`
+	FreezeTime  *time.Time `json:"freeze_time,omitempty"`
+	Status      string     `json:"status"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+}
+
 type ContestPageResp struct {
-	List     []*contestcmd.ContestResp `json:"list"`
-	Total    int64                     `json:"total"`
-	Page     int                       `json:"page"`
-	PageSize int                       `json:"page_size"`
-	Summary  ContestListSummaryResp    `json:"summary"`
+	List     []*ContestListItemResp `json:"list"`
+	Total    int64                  `json:"total"`
+	Page     int                    `json:"page"`
+	PageSize int                    `json:"page_size"`
+	Summary  ContestListSummaryResp `json:"summary"`
 }
 
 type ScoreboardContestInfo struct {

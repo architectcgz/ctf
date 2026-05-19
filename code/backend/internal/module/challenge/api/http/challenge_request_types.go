@@ -1,7 +1,5 @@
 package http
 
-import "ctf-platform/internal/model"
-
 type ChallengeHintReq struct {
 	Level   int    `json:"level" binding:"required,min=1"`
 	Title   string `json:"title" binding:"omitempty,max=128"`
@@ -16,7 +14,7 @@ type CreateChallengeReq struct {
 	Points          int                   `json:"points" binding:"required,min=1"`
 	ImageID         int64                 `json:"image_id"`
 	AttachmentURL   string                `json:"attachment_url" binding:"omitempty,max=2048"`
-	InstanceSharing model.InstanceSharing `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
+	InstanceSharing string                `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
 	Hints           []ChallengeHintReq    `json:"hints" binding:"omitempty,dive"`
 }
 
@@ -28,7 +26,7 @@ type UpdateChallengeReq struct {
 	Points          int                   `json:"points" binding:"omitempty,min=1"`
 	ImageID         *int64                `json:"image_id"`
 	AttachmentURL   *string               `json:"attachment_url" binding:"omitempty,max=2048"`
-	InstanceSharing model.InstanceSharing `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
+	InstanceSharing string                `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
 	Hints           []ChallengeHintReq    `json:"hints" binding:"omitempty,dive"`
 }
 

@@ -313,6 +313,34 @@ func (c *ContestResponseMapperImpl) ToContestCommandResps(source []*queries.Cont
 	}
 	return pCommandsContestRespList
 }
+func (c *ContestResponseMapperImpl) ToContestListItemRespPtr(source *queries.ContestResult) *ContestListItemResp {
+	var pHttpContestListItemResp *ContestListItemResp
+	if source != nil {
+		var httpContestListItemResp ContestListItemResp
+		httpContestListItemResp.ID = (*source).ID
+		httpContestListItemResp.Title = (*source).Title
+		httpContestListItemResp.Description = (*source).Description
+		httpContestListItemResp.Mode = (*source).Mode
+		httpContestListItemResp.StartTime = CopyTime((*source).StartTime)
+		httpContestListItemResp.EndTime = CopyTime((*source).EndTime)
+		httpContestListItemResp.FreezeTime = CopyTimePtr((*source).FreezeTime)
+		httpContestListItemResp.Status = (*source).Status
+		httpContestListItemResp.CreatedAt = CopyTime((*source).CreatedAt)
+		httpContestListItemResp.UpdatedAt = CopyTime((*source).UpdatedAt)
+		pHttpContestListItemResp = &httpContestListItemResp
+	}
+	return pHttpContestListItemResp
+}
+func (c *ContestResponseMapperImpl) ToContestListItemResps(source []*queries.ContestResult) []*ContestListItemResp {
+	var pHttpContestListItemRespList []*ContestListItemResp
+	if source != nil {
+		pHttpContestListItemRespList = make([]*ContestListItemResp, len(source))
+		for i := 0; i < len(source); i++ {
+			pHttpContestListItemRespList[i] = c.ToContestListItemRespPtr(source[i])
+		}
+	}
+	return pHttpContestListItemRespList
+}
 func (c *ContestResponseMapperImpl) ToContestMyProgressRespPtr(source *queries.ParticipationProgressResult) *ContestMyProgressResp {
 	var pHttpContestMyProgressResp *ContestMyProgressResp
 	if source != nil {

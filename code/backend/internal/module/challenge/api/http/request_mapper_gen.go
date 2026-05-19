@@ -47,7 +47,7 @@ func (c *ChallengeRequestMapperImpl) ToCreateChallengeInput(source CreateChallen
 	commandsCreateChallengeInput.Points = source.Points
 	commandsCreateChallengeInput.ImageID = source.ImageID
 	commandsCreateChallengeInput.AttachmentURL = source.AttachmentURL
-	commandsCreateChallengeInput.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
+	commandsCreateChallengeInput.InstanceSharing = model.InstanceSharing(source.InstanceSharing)
 	if source.Hints != nil {
 		commandsCreateChallengeInput.Hints = make([]commands.ChallengeHintInput, len(source.Hints))
 		for i := 0; i < len(source.Hints); i++ {
@@ -147,7 +147,7 @@ func (c *ChallengeRequestMapperImpl) ToUpdateChallengeInput(source UpdateChallen
 		xstring := *source.AttachmentURL
 		commandsUpdateChallengeInput.AttachmentURL = &xstring
 	}
-	commandsUpdateChallengeInput.InstanceSharing = c.modelInstanceSharingToModelInstanceSharing(source.InstanceSharing)
+	commandsUpdateChallengeInput.InstanceSharing = model.InstanceSharing(source.InstanceSharing)
 	if source.Hints != nil {
 		commandsUpdateChallengeInput.Hints = make([]commands.ChallengeHintInput, len(source.Hints))
 		for i := 0; i < len(source.Hints); i++ {
@@ -268,22 +268,6 @@ func (c *ChallengeRequestMapperImpl) httpTopologyTrafficPolicyReqToContractsTopo
 		}
 	}
 	return contractsTopologyTrafficPolicyReq
-}
-func (c *ChallengeRequestMapperImpl) modelInstanceSharingToModelInstanceSharing(source model.InstanceSharing) model.InstanceSharing {
-	var modelInstanceSharing model.InstanceSharing
-	switch source {
-	case model.InstanceSharingPerTeam:
-		modelInstanceSharing = model.InstanceSharingPerTeam
-	case model.InstanceSharingPerUser:
-		modelInstanceSharing = model.InstanceSharingPerUser
-	case model.InstanceSharingShared:
-		modelInstanceSharing = model.InstanceSharingShared
-	// Skipped ShareScopePerTeam(per_team) -> ShareScopePerTeam(per_team) because it duplicates InstanceSharingPerTeam(per_team) -> InstanceSharingPerTeam(per_team)
-	// Skipped ShareScopePerUser(per_user) -> ShareScopePerUser(per_user) because it duplicates InstanceSharingPerUser(per_user) -> InstanceSharingPerUser(per_user)
-	// Skipped ShareScopeShared(shared) -> ShareScopeShared(shared) because it duplicates InstanceSharingShared(shared) -> InstanceSharingShared(shared)
-	default: // ignored
-	}
-	return modelInstanceSharing
 }
 func (c *ChallengeRequestMapperImpl) pHttpTopologyResourcesReqToPContractsTopologyResourcesReq(source *TopologyResourcesReq) *contracts.TopologyResourcesReq {
 	var pContractsTopologyResourcesReq *contracts.TopologyResourcesReq

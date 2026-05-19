@@ -21,7 +21,7 @@ func buildContestPageResp(
 	}
 
 	resp := ContestPageResp{
-		List:     contestResponseMapper.ToContestCommandResps(contests),
+		List:     contestResponseMapper.ToContestListItemResps(contests),
 		Total:    total,
 		Page:     page,
 		PageSize: size,

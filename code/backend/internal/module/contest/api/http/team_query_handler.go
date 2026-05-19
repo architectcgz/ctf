@@ -22,9 +22,9 @@ func (h *TeamHandler) GetTeamInfo(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{
-		"team":    contestResponseMapper.ToTeamRespPtr(teamResp),
-		"members": contestResponseMapper.ToTeamMemberResps(members),
+	response.Success(c, TeamInfoResp{
+		Team:    contestResponseMapper.ToTeamRespPtr(teamResp),
+		Members: contestResponseMapper.ToTeamMemberResps(members),
 	})
 }
 
