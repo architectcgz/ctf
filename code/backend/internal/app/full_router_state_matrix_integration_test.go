@@ -43,6 +43,7 @@ import (
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
+	"ctf-platform/internal/platform/randomstring"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
 	redislib "github.com/redis/go-redis/v9"
@@ -2868,7 +2869,7 @@ func createReportRecord(t *testing.T, env *fullRouterTestEnv, report assessmente
 func createDraftChallengeRecord(t *testing.T, env *fullRouterTestEnv, title string) *appChallengeRow {
 	t.Helper()
 
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate flag salt: %v", err)
 	}
@@ -2953,7 +2954,7 @@ func seedContestScore(t *testing.T, env *fullRouterTestEnv, contestID, teamID in
 func createRecommendationChallenge(t *testing.T, env *fullRouterTestEnv, title, category string) *appChallengeRow {
 	t.Helper()
 
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate flag salt: %v", err)
 	}

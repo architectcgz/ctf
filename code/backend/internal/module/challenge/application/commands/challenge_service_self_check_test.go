@@ -7,6 +7,7 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	"ctf-platform/internal/platform/randomstring"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
 	"errors"
@@ -54,7 +55,7 @@ func (f *fakeChallengeRuntimeProbe) CleanupRuntimeDetails(_ context.Context, _ r
 func TestChallengeSelfCheckSkipsRuntimeWhenPrecheckFails(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
@@ -94,7 +95,7 @@ func TestChallengeSelfCheckSkipsRuntimeWhenPrecheckFails(t *testing.T) {
 func TestChallengeSelfCheckAttachmentOnlyChallengeSkipsRuntimeStartup(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
@@ -148,7 +149,7 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 		t.Fatalf("create image: %v", err)
 	}
 
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
@@ -210,7 +211,7 @@ func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 		t.Fatalf("create image: %v", err)
 	}
 
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}

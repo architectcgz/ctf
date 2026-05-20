@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	pkgcrypto "ctf-platform/internal/shared/flagcrypto"
+	"ctf-platform/internal/platform/randomstring"
 )
 
 type Config struct {
@@ -858,7 +858,7 @@ func resolveContainerFlagGlobalSecret(secret, secretFile string) (string, error)
 		return persistedSecret, nil
 	}
 
-	generatedSecret, err := pkgcrypto.GenerateNonce()
+	generatedSecret, err := randomstring.Generate()
 	if err != nil {
 		return "", fmt.Errorf("generate container.flag_global_secret: %w", err)
 	}

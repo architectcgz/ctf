@@ -25,6 +25,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/platform/randomstring"
 	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
@@ -881,7 +882,7 @@ func buildImportedFlagUpdates(
 }
 
 func buildImportedStaticFlagUpdates(prefix string, value string, updatedAt time.Time) (map[string]any, error) {
-	salt, err := crypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		return nil, fmt.Errorf("generate salt for imported challenge: %w", err)
 	}

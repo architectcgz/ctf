@@ -10,6 +10,7 @@ import (
 	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/challenge/ports"
+	"ctf-platform/internal/platform/randomstring"
 	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
@@ -48,7 +49,7 @@ func (s *FlagService) ConfigureStaticFlag(ctx context.Context, challengeID int64
 		return err
 	}
 
-	salt, err := crypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		return err
 	}

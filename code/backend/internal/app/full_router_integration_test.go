@@ -41,6 +41,7 @@ import (
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	"ctf-platform/internal/platform/randomstring"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
 )
@@ -1225,7 +1226,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 
 	env.image = createFlowImage(t, env.db)
 
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate flag salt: %v", err)
 	}

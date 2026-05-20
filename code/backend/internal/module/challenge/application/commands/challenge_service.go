@@ -18,6 +18,7 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/platform/randomstring"
 	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
@@ -821,7 +822,7 @@ func (s *ChallengeService) buildRuntimeFlag(challenge *challengeports.ChallengeW
 	case challengecontracts.FlagTypeStatic:
 		return challenge.FlagHash, nil
 	case challengecontracts.FlagTypeDynamic:
-		nonce, err := crypto.GenerateNonce()
+		nonce, err := randomstring.Generate()
 		if err != nil {
 			return "", err
 		}

@@ -17,6 +17,7 @@ import (
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/platform/randomstring"
 	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
@@ -190,7 +191,7 @@ func formatSolveGracePeriod(delay time.Duration) string {
 func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *practiceentity.Challenge) (string, string, error) {
 	switch chal.FlagType {
 	case practiceentity.FlagTypeDynamic:
-		nonce, err := crypto.GenerateNonce()
+		nonce, err := randomstring.Generate()
 		if err != nil {
 			return "", "", apperror.ErrInternal.WithCause(err)
 		}

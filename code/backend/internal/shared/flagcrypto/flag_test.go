@@ -61,39 +61,3 @@ func TestValidateFlag(t *testing.T) {
 		t.Fatal("different flags should not validate")
 	}
 }
-
-func TestGenerateSalt(t *testing.T) {
-	t.Parallel()
-
-	salt, err := GenerateSalt()
-	if err != nil {
-		t.Fatalf("GenerateSalt() error = %v", err)
-	}
-	if len(salt) == 0 {
-		t.Fatal("salt should not be empty")
-	}
-
-	// 两次生成应不同
-	salt2, _ := GenerateSalt()
-	if salt == salt2 {
-		t.Fatal("salts should be unique")
-	}
-}
-
-func TestGenerateNonce(t *testing.T) {
-	t.Parallel()
-
-	nonce, err := GenerateNonce()
-	if err != nil {
-		t.Fatalf("GenerateNonce() error = %v", err)
-	}
-	if len(nonce) == 0 {
-		t.Fatal("nonce should not be empty")
-	}
-
-	// 两次生成应不同
-	nonce2, _ := GenerateNonce()
-	if nonce == nonce2 {
-		t.Fatal("nonces should be unique")
-	}
-}

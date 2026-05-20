@@ -13,6 +13,7 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/platform/randomstring"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
 	"errors"
@@ -134,7 +135,7 @@ func TestServiceCreateChallengeWithoutImageSuccess(t *testing.T) {
 func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
@@ -269,7 +270,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
@@ -363,7 +364,7 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("create teacher: %v", err)
 	}
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
@@ -442,7 +443,7 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	if err := db.Create(teacher).Error; err != nil {
 		t.Fatalf("create teacher: %v", err)
 	}
-	salt, err := flagcrypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		t.Fatalf("generate salt: %v", err)
 	}
