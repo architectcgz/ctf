@@ -29,8 +29,8 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	t.Parallel()
 
 	db := contesttestsupport.SetupAWDTestDB(t)
-	if err := db.AutoMigrate(&runtimeentity.PortAllocation{}); err != nil {
-		t.Fatalf("auto migrate port allocations: %v", err)
+	if err := db.AutoMigrate(&runtimeentity.PortAllocation{}, &runtimeentity.NetworkAllocation{}); err != nil {
+		t.Fatalf("auto migrate runtime allocations: %v", err)
 	}
 	now := time.Now().UTC()
 	contestID := int64(81)
@@ -138,6 +138,15 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	} {
 		if err := db.Create(&allocation).Error; err != nil {
 			t.Fatalf("create port allocation: %v", err)
+		}
+	}
+	for _, allocation := range []runtimeentity.NetworkAllocation{
+		{Subnet: "10.81.1.0/24", InstanceID: int64Ptr(1001), NetworkKey: runtimecontracts.TopologyDefaultNetworkKey, CreatedAt: now, UpdatedAt: now},
+		{Subnet: "10.81.2.0/24", InstanceID: int64Ptr(1002), NetworkKey: runtimecontracts.TopologyDefaultNetworkKey, CreatedAt: now, UpdatedAt: now},
+		{Subnet: "10.82.1.0/24", InstanceID: int64Ptr(1004), NetworkKey: runtimecontracts.TopologyDefaultNetworkKey, CreatedAt: now, UpdatedAt: now},
+	} {
+		if err := db.Create(&allocation).Error; err != nil {
+			t.Fatalf("create network allocation: %v", err)
 		}
 	}
 
@@ -344,6 +353,14 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	if remainingEndedContestAllocations != 0 {
 		t.Fatalf("expected ended contest port allocations to be released, got %d", remainingEndedContestAllocations)
 	}
+	if err := db.Model(&runtimeentity.NetworkAllocation{}).
+		Where("instance_id IN ?", []int64{1001, 1002}).
+		Count(&remainingEndedContestAllocations).Error; err != nil {
+		t.Fatalf("count ended contest network allocations: %v", err)
+	}
+	if remainingEndedContestAllocations != 0 {
+		t.Fatalf("expected ended contest network allocations to be released, got %d", remainingEndedContestAllocations)
+	}
 
 	var otherContestAllocations int64
 	if err := db.Model(&runtimeentity.PortAllocation{}).
@@ -353,6 +370,14 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	}
 	if otherContestAllocations != 1 {
 		t.Fatalf("expected other contest port allocation to stay, got %d", otherContestAllocations)
+	}
+	if err := db.Model(&runtimeentity.NetworkAllocation{}).
+		Where("instance_id = ?", 1004).
+		Count(&otherContestAllocations).Error; err != nil {
+		t.Fatalf("count other contest network allocations: %v", err)
+	}
+	if otherContestAllocations != 1 {
+		t.Fatalf("expected other contest network allocation to stay, got %d", otherContestAllocations)
 	}
 }
 

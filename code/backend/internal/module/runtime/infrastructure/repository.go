@@ -217,6 +217,11 @@ func (r *Repository) updateStatusAndReleasePortWithCurrentStatus(ctx context.Con
 		}
 		if status == instancecontracts.InstanceStatusStopped || status == instancecontracts.InstanceStatusExpired {
 			updates["destroyed_at"] = time.Now()
+			updates["host_port"] = 0
+			updates["container_id"] = ""
+			updates["network_id"] = ""
+			updates["runtime_details"] = ""
+			updates["access_url"] = ""
 		}
 		updateQuery := tx.Model(&instancecontracts.Instance{}).
 			Where("id = ?", id)
