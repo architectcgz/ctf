@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
-
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 const (
@@ -202,5 +200,13 @@ func extractAWDReadinessAccessURL(lastPreviewResult string) *string {
 	if preview == nil {
 		return nil
 	}
-	return commonmapper.NormalizeOptionalTrimmedString(preview.PreviewContext.AccessURL)
+	return normalizeOptionalTrimmedString(preview.PreviewContext.AccessURL)
+}
+
+func normalizeOptionalTrimmedString(value string) *string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
 }

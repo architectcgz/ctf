@@ -7,16 +7,15 @@ import (
 
 	"ctf-platform/internal/apperror"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 func toAdminUserResp(user *identitycontracts.User) identitycontracts.AdminUser {
 	resp := adminUserMapper.ToAdminUserRespPtr(user)
-	resp.Name = commonmapper.NormalizeOptionalTrimmedString(user.Name)
-	resp.Email = commonmapper.NormalizeOptionalTrimmedString(user.Email)
-	resp.StudentNo = commonmapper.NormalizeOptionalTrimmedString(user.StudentNo)
-	resp.TeacherNo = commonmapper.NormalizeOptionalTrimmedString(user.TeacherNo)
-	resp.ClassName = commonmapper.NormalizeOptionalTrimmedString(user.ClassName)
+	resp.Name = normalizeOptionalTrimmedString(user.Name)
+	resp.Email = normalizeOptionalTrimmedString(user.Email)
+	resp.StudentNo = normalizeOptionalTrimmedString(user.StudentNo)
+	resp.TeacherNo = normalizeOptionalTrimmedString(user.TeacherNo)
+	resp.ClassName = normalizeOptionalTrimmedString(user.ClassName)
 	resp.Roles = []string{user.Role}
 	resp.UpdatedAt = copyTimeToPtr(user.UpdatedAt)
 	return *resp

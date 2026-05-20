@@ -9,7 +9,6 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 type AuditOptions struct {
@@ -87,7 +86,7 @@ func Audit(recorder auditlog.Recorder, options AuditOptions, log *zap.Logger) gi
 			ResourceID:   resourceID,
 			Detail:       detail,
 			IPAddress:    c.ClientIP(),
-			UserAgent:    commonmapper.NormalizeOptionalTrimmedString(c.Request.UserAgent()),
+			UserAgent:    normalizeOptionalTrimmedString(c.Request.UserAgent()),
 		}); err != nil {
 			log.Error("audit_log_record_failed",
 				zap.String("action", options.Action),
