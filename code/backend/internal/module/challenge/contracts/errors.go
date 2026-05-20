@@ -14,10 +14,9 @@ var (
 )
 
 var (
-	ErrFlagIncorrect     = apperror.Define(13001, "Flag 错误", http.StatusBadRequest)
-	ErrAlreadySolved     = apperror.Define(13002, "该题目已完成", http.StatusConflict)
-	ErrSubmitTooFrequent = apperror.Define(13003, "提交过于频繁，请稍后再试", http.StatusTooManyRequests)
-	ErrChallengeNotFound = apperror.Define(13004, "靶场不存在", http.StatusNotFound)
+	ErrAlreadySolved       = apperror.Define(13002, "该题目已完成", http.StatusConflict)
+	ErrSubmitTooFrequent   = apperror.Define(13003, "提交过于频繁，请稍后再试", http.StatusTooManyRequests)
+	ErrChallengeNotFound   = apperror.Define(13004, "靶场不存在", http.StatusNotFound)
 	ErrChallengeNotPublish = apperror.Define(
 		13005,
 		"靶场未发布",
