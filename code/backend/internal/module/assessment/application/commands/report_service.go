@@ -28,7 +28,6 @@ import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
-	"ctf-platform/internal/shared/mapperutil"
 	"ctf-platform/internal/shared/taxonomy"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/classreview"
@@ -1613,9 +1612,20 @@ func buildReportExportDataFromModel(report *assessmententity.Report) *ReportExpo
 		}
 	}
 	if report.Status == assessmententity.ReportStatusFailed {
-		resp.ErrorMessage = mapperutil.NormalizeOptionalString(report.ErrorMsg)
+		resp.ErrorMessage = normalizeOptionalReportErrorMessage(report.ErrorMsg)
 	}
 	return resp
+}
+
+func normalizeOptionalReportErrorMessage(value *string) *string {
+	if value == nil {
+		return nil
+	}
+	trimmed := strings.TrimSpace(*value)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
 }
 
 func writePersonalPDF(filePath string, data *personalReportData) error {
