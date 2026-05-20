@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -165,8 +166,14 @@ type ContainerConfig struct {
 	DefenseSSHHostKeyPath           string                   `mapstructure:"defense_ssh_host_key_path"`
 	DefenseWorkbenchReadOnlyEnabled bool                     `mapstructure:"defense_workbench_readonly_enabled"`
 	DefenseWorkbenchRoot            string                   `mapstructure:"defense_workbench_root"`
+	Network                         ContainerNetworkConfig   `mapstructure:"network"`
 	Registry                        ContainerRegistryConfig  `mapstructure:"registry"`
 	Scheduler                       ContainerSchedulerConfig `mapstructure:"scheduler"`
+}
+
+type ContainerNetworkConfig struct {
+	JeopardySubnetBase string `mapstructure:"jeopardy_subnet_base"`
+	SubnetMask         int    `mapstructure:"subnet_mask"`
 }
 
 type ContainerRegistryConfig struct {
@@ -411,6 +418,9 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("container.defense_workbench_root must be an absolute non-root path when container.defense_workbench_readonly_enabled is true")
 		}
 	}
+	if err := validateContainerNetworkConfig(c.Container.Network); err != nil {
+		return err
+	}
 	if c.Container.Registry.Enabled {
 		if strings.TrimSpace(c.Container.Registry.Server) == "" {
 			return fmt.Errorf("container.registry.server must not be empty when container.registry.enabled is true")
@@ -638,6 +648,35 @@ func isPlaceholderSecret(value string) bool {
 	return normalized == "" || normalized == "change_me"
 }
 
+func validateContainerNetworkConfig(cfg ContainerNetworkConfig) error {
+	base := strings.TrimSpace(cfg.JeopardySubnetBase)
+	if base == "" {
+		return fmt.Errorf("container.network.jeopardy_subnet_base must not be empty")
+	}
+	ip, ipNet, err := net.ParseCIDR(base)
+	if err != nil {
+		return fmt.Errorf("container.network.jeopardy_subnet_base must be a valid CIDR")
+	}
+	ip4 := ip.To4()
+	if ip4 == nil {
+		return fmt.Errorf("container.network.jeopardy_subnet_base must be an IPv4 CIDR")
+	}
+	if !ip.Equal(ipNet.IP) {
+		return fmt.Errorf("container.network.jeopardy_subnet_base must use the network address of the CIDR")
+	}
+	basePrefix, bits := ipNet.Mask.Size()
+	if bits != 32 {
+		return fmt.Errorf("container.network.jeopardy_subnet_base must be an IPv4 CIDR")
+	}
+	if cfg.SubnetMask <= 0 || cfg.SubnetMask > 30 {
+		return fmt.Errorf("container.network.subnet_mask must be between 1 and 30")
+	}
+	if cfg.SubnetMask <= basePrefix {
+		return fmt.Errorf("container.network.subnet_mask must be greater than the base CIDR prefix")
+	}
+	return nil
+}
+
 func (c PostgresConfig) DSN() string {
 	return fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
@@ -737,6 +776,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.defense_ssh_host_key_path", "storage/runtime/awd-defense-ssh-host-key.pem")
 	v.SetDefault("container.defense_workbench_readonly_enabled", true)
 	v.SetDefault("container.defense_workbench_root", "/app")
+	v.SetDefault("container.network.jeopardy_subnet_base", "10.10.0.0/16")
+	v.SetDefault("container.network.subnet_mask", 24)
 	v.SetDefault("container.registry.enabled", false)
 	v.SetDefault("container.registry.scheme", "https")
 	v.SetDefault("container.registry.server", "")

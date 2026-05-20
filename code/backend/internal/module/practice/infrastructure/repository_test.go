@@ -19,7 +19,8 @@ import (
 
 func TestRepositoryReserveAvailablePortSkipsAllocatedPort(t *testing.T) {
 	db := newRepositoryTestDB(t, &runtimeentity.PortAllocation{})
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30000}).Error; err != nil {
+	ownerInstanceID := int64(400)
+	if err := db.Create(&runtimeentity.PortAllocation{Port: 30000, InstanceID: &ownerInstanceID}).Error; err != nil {
 		t.Fatalf("seed allocated port: %v", err)
 	}
 

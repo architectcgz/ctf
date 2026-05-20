@@ -137,6 +137,9 @@ container:
   defense_ssh_port: 2222
   defense_workbench_readonly_enabled: true
   defense_workbench_root: /app
+  network:
+    jeopardy_subnet_base: 10.10.0.0/16
+    subnet_mask: 24
   registry:
     enabled: false
     scheme: https

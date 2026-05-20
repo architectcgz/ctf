@@ -29,6 +29,7 @@ type testRuntimeEngine struct {
 type testRuntimeNetwork struct {
 	id       string
 	name     string
+	subnet   string
 	internal bool
 }
 
@@ -71,7 +72,7 @@ func (e *testRuntimeEngine) nextIdentifier(prefix string) string {
 	return fmt.Sprintf("%s-%d", prefix, e.nextID)
 }
 
-func (e *testRuntimeEngine) CreateNetwork(_ context.Context, name string, _ map[string]string, internal bool, allowExisting bool) (string, error) {
+func (e *testRuntimeEngine) CreateNetwork(_ context.Context, name string, _ map[string]string, internal bool, allowExisting bool, subnet string) (string, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -83,7 +84,7 @@ func (e *testRuntimeEngine) CreateNetwork(_ context.Context, name string, _ map[
 	}
 
 	id := e.nextIdentifier("test-net")
-	network := &testRuntimeNetwork{id: id, name: name, internal: internal}
+	network := &testRuntimeNetwork{id: id, name: name, subnet: strings.TrimSpace(subnet), internal: internal}
 	e.networksByID[id] = network
 	e.networksByName[name] = network
 	return id, nil

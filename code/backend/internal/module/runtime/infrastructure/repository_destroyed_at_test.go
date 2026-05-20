@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
@@ -69,6 +70,52 @@ func TestReserveAvailablePortExcludingReusesUnboundAllocation(t *testing.T) {
 	}
 	if !allocations[0].UpdatedAt.After(staleUpdatedAt) {
 		t.Fatalf("expected reused allocation updated_at to advance, got %v <= %v", allocations[0].UpdatedAt, staleUpdatedAt)
+	}
+}
+
+func TestReserveAvailableSubnetForInstanceSkipsAllocatedSubnet(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+	otherInstanceID := int64(9001)
+	if err := db.Create(&runtimeentity.NetworkAllocation{
+		Subnet:     "10.10.0.0/24",
+		InstanceID: &otherInstanceID,
+		NetworkKey: runtimecontracts.TopologyDefaultNetworkKey,
+	}).Error; err != nil {
+		t.Fatalf("seed subnet allocation: %v", err)
+	}
+
+	subnet, err := repo.ReserveAvailableSubnetForInstance(context.Background(), "10.10.0.0/16", 24, 9002, runtimecontracts.TopologyDefaultNetworkKey)
+	if err != nil {
+		t.Fatalf("ReserveAvailableSubnetForInstance() error = %v", err)
+	}
+	if subnet != "10.10.1.0/24" {
+		t.Fatalf("expected next available subnet 10.10.1.0/24, got %q", subnet)
+	}
+}
+
+func TestReserveAvailableSubnetForInstanceReusesOwnerReservation(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+	instanceID := int64(9101)
+	if err := db.Create(&runtimeentity.NetworkAllocation{
+		Subnet:     "10.10.9.0/24",
+		InstanceID: &instanceID,
+		NetworkKey: "backend",
+	}).Error; err != nil {
+		t.Fatalf("seed subnet allocation: %v", err)
+	}
+
+	subnet, err := repo.ReserveAvailableSubnetForInstance(context.Background(), "10.10.0.0/16", 24, instanceID, "backend")
+	if err != nil {
+		t.Fatalf("ReserveAvailableSubnetForInstance() error = %v", err)
+	}
+	if subnet != "10.10.9.0/24" {
+		t.Fatalf("expected existing owner subnet 10.10.9.0/24, got %q", subnet)
 	}
 }
 
@@ -134,6 +181,13 @@ func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.
 	if err := db.Create(&runtimeentity.PortAllocation{Port: instance.HostPort, InstanceID: &instance.ID}).Error; err != nil {
 		t.Fatalf("seed port allocation: %v", err)
 	}
+	if err := db.Create(&runtimeentity.NetworkAllocation{
+		Subnet:     "10.10.7.0/24",
+		InstanceID: &instance.ID,
+		NetworkKey: runtimecontracts.TopologyDefaultNetworkKey,
+	}).Error; err != nil {
+		t.Fatalf("seed network allocation: %v", err)
+	}
 
 	before := time.Now()
 	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, instancecontracts.InstanceStatusStopped); err != nil {
@@ -164,6 +218,12 @@ func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.
 	}
 	if remaining != 0 {
 		t.Fatalf("expected port allocations to be released, got %d", remaining)
+	}
+	if err := db.Model(&runtimeentity.NetworkAllocation{}).Where("instance_id = ?", instance.ID).Count(&remaining).Error; err != nil {
+		t.Fatalf("count remaining network allocations: %v", err)
+	}
+	if remaining != 0 {
+		t.Fatalf("expected network allocations to be released, got %d", remaining)
 	}
 }
 
@@ -282,6 +342,13 @@ func TestExpireInstanceRuntimeClearsRuntimeFieldsAndPortAllocation(t *testing.T)
 	if err := db.Create(&runtimeentity.PortAllocation{Port: instance.HostPort, InstanceID: &instance.ID}).Error; err != nil {
 		t.Fatalf("seed port allocation: %v", err)
 	}
+	if err := db.Create(&runtimeentity.NetworkAllocation{
+		Subnet:     "10.10.8.0/24",
+		InstanceID: &instance.ID,
+		NetworkKey: runtimecontracts.TopologyDefaultNetworkKey,
+	}).Error; err != nil {
+		t.Fatalf("seed network allocation: %v", err)
+	}
 
 	before := time.Now()
 	if err := repo.ExpireInstanceRuntime(context.Background(), instance.ID); err != nil {
@@ -324,6 +391,12 @@ func TestExpireInstanceRuntimeClearsRuntimeFieldsAndPortAllocation(t *testing.T)
 	if remaining != 0 {
 		t.Fatalf("expected port allocations to be released, got %d", remaining)
 	}
+	if err := db.Model(&runtimeentity.NetworkAllocation{}).Where("instance_id = ?", instance.ID).Count(&remaining).Error; err != nil {
+		t.Fatalf("count remaining network allocations: %v", err)
+	}
+	if remaining != 0 {
+		t.Fatalf("expected network allocations to be released, got %d", remaining)
+	}
 }
 
 func newRuntimeRepositoryDestroyedAtTestDB(t *testing.T) *gorm.DB {
@@ -335,7 +408,7 @@ func newRuntimeRepositoryDestroyedAtTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&instancecontracts.Instance{}, &runtimeentity.PortAllocation{}); err != nil {
+	if err := db.AutoMigrate(&instancecontracts.Instance{}, &runtimeentity.PortAllocation{}, &runtimeentity.NetworkAllocation{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 	return db

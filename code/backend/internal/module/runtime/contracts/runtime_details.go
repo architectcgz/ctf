@@ -12,6 +12,7 @@ type InstanceRuntimeNetwork struct {
 	Key       string `json:"key,omitempty"`
 	Name      string `json:"name,omitempty"`
 	NetworkID string `json:"network_id,omitempty"`
+	Subnet    string `json:"subnet,omitempty"`
 	Internal  bool   `json:"internal,omitempty"`
 	Shared    bool   `json:"shared,omitempty"`
 }

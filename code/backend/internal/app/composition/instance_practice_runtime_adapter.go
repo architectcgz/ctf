@@ -78,6 +78,7 @@ func toRuntimeTopologyCreateRequestFromPractice(req *practiceports.TopologyCreat
 		networks = append(networks, runtimeports.TopologyCreateNetwork{
 			Key:      network.Key,
 			Name:     network.Name,
+			Subnet:   network.Subnet,
 			Internal: network.Internal,
 			Shared:   network.Shared,
 		})
@@ -105,6 +106,7 @@ func toRuntimeTopologyCreateRequestFromPractice(req *practiceports.TopologyCreat
 		Networks:                   networks,
 		Nodes:                      nodes,
 		Policies:                   append([]runtimecontracts.TopologyTrafficPolicy(nil), req.Policies...),
+		OwnerInstanceID:            req.OwnerInstanceID,
 		ReservedHostPort:           req.ReservedHostPort,
 		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
 		ContainerName:              req.ContainerName,

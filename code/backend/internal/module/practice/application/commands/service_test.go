@@ -92,7 +92,56 @@ func (s *stubPracticeRuntimeService) CleanupRuntime(ctx context.Context, instanc
 
 func (s *stubPracticeRuntimeService) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 	if s.createTopologyFn == nil {
-		return nil, errors.New("unexpected CreateTopology call")
+		if s.createContainerFn == nil {
+			return nil, errors.New("unexpected CreateTopology call")
+		}
+		if req == nil || len(req.Nodes) != 1 {
+			return nil, errors.New("unexpected CreateTopology call")
+		}
+		node := req.Nodes[0]
+		if !node.IsEntryPoint {
+			return nil, errors.New("unexpected CreateTopology call")
+		}
+		containerID, networkID, hostPort, servicePort, err := s.createContainerFn(ctx, node.Image, node.Env, req.ReservedHostPort)
+		if err != nil {
+			return nil, err
+		}
+		result := &practiceports.TopologyCreateResult{
+			PrimaryContainerID: containerID,
+			NetworkID:          networkID,
+			RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+				Networks: []runtimecontracts.InstanceRuntimeNetwork{
+					{
+						Key:       resolvedPracticeTopologyNetworkKey(req.Networks, node.NetworkKeys),
+						Name:      resolvedPracticeTopologyNetworkName(req.Networks, node.NetworkKeys),
+						NetworkID: networkID,
+						Subnet:    resolvedPracticeTopologyNetworkSubnet(req.Networks, node.NetworkKeys),
+					},
+				},
+				Containers: []runtimecontracts.InstanceRuntimeContainer{
+					{
+						NodeKey:         node.Key,
+						ContainerID:     containerID,
+						HostPort:        hostPort,
+						ServicePort:     servicePort,
+						ServiceProtocol: node.ServiceProtocol,
+						IsEntryPoint:    true,
+						NetworkKeys:     append([]string(nil), node.NetworkKeys...),
+						NetworkAliases:  append([]string(nil), node.NetworkAliases...),
+					},
+				},
+			},
+		}
+		if hostPort > 0 {
+			host := "127.0.0.1"
+			if servicePort <= 0 {
+				servicePort = node.ServicePort
+			}
+			if servicePort > 0 {
+				result.AccessURL = fmt.Sprintf("http://%s:%d", host, hostPort)
+			}
+		}
+		return result, nil
 	}
 	return s.createTopologyFn(ctx, req)
 }
@@ -114,6 +163,36 @@ func (s *stubPracticeRuntimeService) InspectManagedContainer(ctx context.Context
 		}, nil
 	}
 	return s.inspectManagedContainerFn(ctx, containerID)
+}
+
+func resolvedPracticeTopologyNetworkKey(networks []practiceports.TopologyCreateNetwork, nodeNetworkKeys []string) string {
+	if len(nodeNetworkKeys) > 0 && strings.TrimSpace(nodeNetworkKeys[0]) != "" {
+		return strings.TrimSpace(nodeNetworkKeys[0])
+	}
+	if len(networks) > 0 && strings.TrimSpace(networks[0].Key) != "" {
+		return strings.TrimSpace(networks[0].Key)
+	}
+	return challengecontracts.TopologyDefaultNetworkKey
+}
+
+func resolvedPracticeTopologyNetworkName(networks []practiceports.TopologyCreateNetwork, nodeNetworkKeys []string) string {
+	targetKey := resolvedPracticeTopologyNetworkKey(networks, nodeNetworkKeys)
+	for _, network := range networks {
+		if strings.TrimSpace(network.Key) == targetKey {
+			return network.Name
+		}
+	}
+	return ""
+}
+
+func resolvedPracticeTopologyNetworkSubnet(networks []practiceports.TopologyCreateNetwork, nodeNetworkKeys []string) string {
+	targetKey := resolvedPracticeTopologyNetworkKey(networks, nodeNetworkKeys)
+	for _, network := range networks {
+		if strings.TrimSpace(network.Key) == targetKey {
+			return network.Subnet
+		}
+	}
+	return ""
 }
 
 type stubPracticeEventBus struct {
@@ -678,6 +757,7 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&runtimeentity.AWDScopeControl{},
 		&runtimeentity.AWDDefenseWorkspace{},
 		&runtimeentity.PortAllocation{},
+		&runtimeentity.NetworkAllocation{},
 		&contestentity.Submission{},
 	); err != nil {
 		t.Fatalf("migrate practice command tables: %v", err)

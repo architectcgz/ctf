@@ -539,6 +539,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&runtimeentity.AWDScopeControl{},
 		&runtimeentity.AWDDefenseWorkspace{},
 		&runtimeentity.PortAllocation{},
+		&runtimeentity.NetworkAllocation{},
 		&contestentity.Submission{},
 	); err != nil {
 		t.Fatalf("auto migrate contest instance test schema: %v", err)

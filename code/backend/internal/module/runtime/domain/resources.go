@@ -11,6 +11,7 @@ import (
 type ManagedResources struct {
 	ContainerIDs []string
 	NetworkIDs   []string
+	Subnets      []string
 	HostPorts    []int
 	ACLRules     []runtimecontracts.InstanceRuntimeACLRule
 }
@@ -33,6 +34,7 @@ func ExtractManagedResources(instance *instancecontracts.Instance) ManagedResour
 	return ManagedResources{
 		ContainerIDs: uniqueContainerIDs(details, instance.ContainerID),
 		NetworkIDs:   uniqueNetworkIDs(details, instance.NetworkID),
+		Subnets:      uniqueNetworkSubnets(details),
 		HostPorts:    uniqueHostPorts(details, instance.HostPort),
 		ACLRules:     append([]runtimecontracts.InstanceRuntimeACLRule(nil), details.ACLRules...),
 	}
@@ -118,6 +120,22 @@ func uniqueHostPorts(details runtimecontracts.InstanceRuntimeDetails, fallback i
 		if _, exists := seen[fallback]; !exists {
 			result = append(result, fallback)
 		}
+	}
+	return result
+}
+
+func uniqueNetworkSubnets(details runtimecontracts.InstanceRuntimeDetails) []string {
+	result := make([]string, 0, len(details.Networks))
+	seen := make(map[string]struct{}, len(details.Networks))
+	for _, item := range details.Networks {
+		if item.Shared || item.Subnet == "" {
+			continue
+		}
+		if _, exists := seen[item.Subnet]; exists {
+			continue
+		}
+		seen[item.Subnet] = struct{}{}
+		result = append(result, item.Subnet)
 	}
 	return result
 }

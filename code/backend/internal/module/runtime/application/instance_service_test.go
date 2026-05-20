@@ -900,7 +900,7 @@ func newInstanceServiceTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&identitycontracts.User{}, &runtimeApplicationChallengeRow{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &runtimeApplicationChallengeRow{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &runtimeentity.NetworkAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&contestcontracts.Team{}, &contestcontracts.TeamMember{}); err != nil {

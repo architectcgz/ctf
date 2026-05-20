@@ -124,16 +124,23 @@ func (e *Engine) ResolveServicePort(ctx context.Context, imageRef string, prefer
 	return selectServicePort(resp.Config.ExposedPorts, preferredPort), nil
 }
 
-func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool, allowExisting bool) (string, error) {
+func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool, allowExisting bool, subnet string) (string, error) {
 	cli, err := e.requireClient()
 	if err != nil {
 		return "", err
 	}
 
-	resp, err := cli.NetworkCreate(ctx, name, networktypes.CreateOptions{
+	options := networktypes.CreateOptions{
 		Labels:   labels,
 		Internal: internal,
-	})
+	}
+	if strings.TrimSpace(subnet) != "" {
+		options.IPAM = &networktypes.IPAM{
+			Config: []networktypes.IPAMConfig{{Subnet: strings.TrimSpace(subnet)}},
+		}
+	}
+
+	resp, err := cli.NetworkCreate(ctx, name, options)
 	if err != nil {
 		if errdefs.IsConflict(err) {
 			if !allowExisting {
@@ -143,7 +150,7 @@ func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[stri
 			if inspectErr != nil {
 				return "", inspectErr
 			}
-			if err := validateReusableNetwork(name, labels, internal, network); err != nil {
+			if err := validateReusableNetwork(name, labels, internal, strings.TrimSpace(subnet), network); err != nil {
 				return "", err
 			}
 			return network.ID, nil
@@ -153,13 +160,18 @@ func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[stri
 	return resp.ID, nil
 }
 
-func validateReusableNetwork(name string, labels map[string]string, internal bool, network networktypes.Inspect) error {
+func validateReusableNetwork(name string, labels map[string]string, internal bool, subnet string, network networktypes.Inspect) error {
 	if network.Internal != internal {
 		return fmt.Errorf("existing network %q internal=%v does not match requested internal=%v", name, network.Internal, internal)
 	}
 	for key, expected := range labels {
 		if network.Labels[key] != expected {
 			return fmt.Errorf("existing network %q is not a managed runtime network", name)
+		}
+	}
+	if subnet != "" {
+		if len(network.IPAM.Config) == 0 || strings.TrimSpace(network.IPAM.Config[0].Subnet) != subnet {
+			return fmt.Errorf("existing network %q subnet does not match requested subnet %q", name, subnet)
 		}
 	}
 	return nil

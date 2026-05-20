@@ -123,6 +123,7 @@ type TopologyCreateNode struct {
 type TopologyCreateNetwork struct {
 	Key      string
 	Name     string
+	Subnet   string
 	Internal bool
 	Shared   bool
 }
@@ -131,6 +132,7 @@ type TopologyCreateRequest struct {
 	Networks                   []TopologyCreateNetwork
 	Nodes                      []TopologyCreateNode
 	Policies                   []runtimecontracts.TopologyTrafficPolicy
+	OwnerInstanceID            int64
 	ReservedHostPort           int
 	DisableEntryPortPublishing bool
 	ContainerName              string

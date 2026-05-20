@@ -195,6 +195,15 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create port allocation: %v", err)
 	}
+	if err := repo.db.Create(&runtimeentity.NetworkAllocation{
+		Subnet:     "10.10.0.0/24",
+		InstanceID: &instance.ID,
+		NetworkKey: runtimecontracts.TopologyDefaultNetworkKey,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create network allocation: %v", err)
+	}
 
 	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, instanceentity.InstanceStatusFailed); err != nil {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
@@ -214,6 +223,12 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 	}
 	if count != 0 {
 		t.Fatalf("expected port allocation to be removed, count=%d", count)
+	}
+	if err := repo.db.Model(&runtimeentity.NetworkAllocation{}).Where("instance_id = ?", instance.ID).Count(&count).Error; err != nil {
+		t.Fatalf("count network allocations: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected network allocation to be removed, count=%d", count)
 	}
 }
 
@@ -265,6 +280,9 @@ func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
 	}
 	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceJeopardy {
 		t.Fatalf("expected jeopardy network label, got %q", got)
+	}
+	if engine.createdNetworkSubnet != "10.10.0.0/24" {
+		t.Fatalf("expected first jeopardy subnet 10.10.0.0/24, got %q", engine.createdNetworkSubnet)
 	}
 }
 
@@ -376,6 +394,49 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailHostPort(t *testing.T) {
 	}
 	if count != 0 {
 		t.Fatalf("expected owned runtime detail host port to be released, count=%d", count)
+	}
+}
+
+func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailSubnet(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{}
+	service := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
+	now := time.Now()
+	instanceID := int64(3202)
+	if err := repo.db.Create(&runtimeentity.NetworkAllocation{
+		Subnet:     "10.10.5.0/24",
+		InstanceID: &instanceID,
+		NetworkKey: runtimecontracts.TopologyDefaultNetworkKey,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create owned subnet allocation: %v", err)
+	}
+	runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		Networks: []runtimecontracts.InstanceRuntimeNetwork{
+			{
+				Key:       runtimecontracts.TopologyDefaultNetworkKey,
+				NetworkID: "net-owned-subnet",
+				Subnet:    "10.10.5.0/24",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode runtime details: %v", err)
+	}
+
+	if err := service.CleanupRuntime(context.Background(), &instanceentity.Instance{ID: instanceID, RuntimeDetails: runtimeDetails}); err != nil {
+		t.Fatalf("CleanupRuntime() error = %v", err)
+	}
+
+	var count int64
+	if err := repo.db.Model(&runtimeentity.NetworkAllocation{}).Where("subnet = ?", "10.10.5.0/24").Count(&count).Error; err != nil {
+		t.Fatalf("count subnet allocations: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected owned runtime detail subnet to be released, count=%d", count)
 	}
 }
 
@@ -1323,6 +1384,9 @@ func TestServiceCreateTopologyMarksAWDWorkspaceAsAWDComposeService(t *testing.T)
 	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
 		t.Fatalf("expected awd network label, got %q", got)
 	}
+	if engine.createdNetworkSubnet != "" {
+		t.Fatalf("expected shared AWD network to skip explicit subnet allocation, got %q", engine.createdNetworkSubnet)
+	}
 }
 
 func TestServiceCreateTopologyPassesMountsAndCommandToEngine(t *testing.T) {
@@ -1779,6 +1843,15 @@ func TestServiceCreateTopologyCreatesAndConnectsMultipleNetworks(t *testing.T) {
 	if len(engine.connectedNetworks["db-ctr"]) != 0 {
 		t.Fatalf("db container should not need extra network connect, got %+v", engine.connectedNetworks)
 	}
+	if len(engine.createdNetworkSubnets) != 2 {
+		t.Fatalf("expected two explicit network subnets, got %+v", engine.createdNetworkSubnets)
+	}
+	if engine.createdNetworkSubnets[0] == "" || engine.createdNetworkSubnets[1] == "" {
+		t.Fatalf("expected explicit subnets for non-shared topology networks, got %+v", engine.createdNetworkSubnets)
+	}
+	if engine.createdNetworkSubnets[0] == engine.createdNetworkSubnets[1] {
+		t.Fatalf("expected distinct subnets per runtime network, got %+v", engine.createdNetworkSubnets)
+	}
 }
 
 func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
@@ -1997,7 +2070,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&identitycontracts.User{}, &runtimeChallengeTestRow{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &runtimeChallengeTestRow{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &runtimeentity.NetworkAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&contestcontracts.Team{}, &contestcontracts.TeamMember{}); err != nil {
@@ -2076,6 +2149,8 @@ type fakeRuntimeEngine struct {
 	createdNetworkAllowExisting    bool
 	createdNetworkAllowExistingSeq []bool
 	createdNetworkLabel            map[string]string
+	createdNetworkSubnet           string
+	createdNetworkSubnets          []string
 	createdContainerCfg            *runtimecontracts.ContainerConfig
 	createdContainerCfgs           []*runtimecontracts.ContainerConfig
 	removedContainerID             string
@@ -2098,12 +2173,14 @@ type fakeRuntimeEngine struct {
 	removeACLRulesFn               func(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
 }
 
-func (f *fakeRuntimeEngine) CreateNetwork(_ context.Context, name string, labels map[string]string, _ bool, allowExisting bool) (string, error) {
+func (f *fakeRuntimeEngine) CreateNetwork(_ context.Context, name string, labels map[string]string, _ bool, allowExisting bool, subnet string) (string, error) {
 	f.createdNetworkName = name
 	f.createdNetworkNames = append(f.createdNetworkNames, name)
 	f.createdNetworkAllowExisting = allowExisting
 	f.createdNetworkAllowExistingSeq = append(f.createdNetworkAllowExistingSeq, allowExisting)
 	f.createdNetworkLabel = labels
+	f.createdNetworkSubnet = subnet
+	f.createdNetworkSubnets = append(f.createdNetworkSubnets, subnet)
 	if len(f.networkIDs) > 0 {
 		networkID := f.networkIDs[0]
 		f.networkIDs = f.networkIDs[1:]

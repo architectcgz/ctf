@@ -17,6 +17,8 @@ import (
 type runtimeCleanupRepository interface {
 	ReleaseReservedPort(ctx context.Context, port int) error
 	ReleasePortForInstance(ctx context.Context, port int, instanceID int64) error
+	ReleaseReservedSubnet(ctx context.Context, subnet string) error
+	ReleaseSubnetForInstance(ctx context.Context, subnet string, instanceID int64) error
 }
 
 // RuntimeCleanupService 收口实例运行时资源清理能力。
@@ -70,6 +72,11 @@ func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *in
 	}
 	for _, networkID := range resources.NetworkIDs {
 		if err := s.removeNetwork(ctx, networkID); err != nil {
+			return err
+		}
+	}
+	for _, subnet := range resources.Subnets {
+		if err := s.releaseSubnet(ctx, instance.ID, subnet); err != nil {
 			return err
 		}
 	}
@@ -217,6 +224,26 @@ func (s *RuntimeCleanupService) releasePort(ctx context.Context, instanceID int6
 	s.logger.Info("释放运行时端口占用",
 		zap.Int64("instance_id", instanceID),
 		zap.Int("host_port", port))
+	return nil
+}
+
+func (s *RuntimeCleanupService) releaseSubnet(ctx context.Context, instanceID int64, subnet string) error {
+	subnet = strings.TrimSpace(subnet)
+	if subnet == "" || s == nil || s.repo == nil {
+		return nil
+	}
+	var err error
+	if instanceID > 0 {
+		err = s.repo.ReleaseSubnetForInstance(ctx, subnet, instanceID)
+	} else {
+		err = s.repo.ReleaseReservedSubnet(ctx, subnet)
+	}
+	if err != nil {
+		return err
+	}
+	s.logger.Info("释放运行时子网占用",
+		zap.Int64("instance_id", instanceID),
+		zap.String("subnet", subnet))
 	return nil
 }
 

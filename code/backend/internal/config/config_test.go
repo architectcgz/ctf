@@ -164,6 +164,32 @@ func TestValidateAllowsLocalRegistryServerOutsideContainerWithoutAccessServer(t 
 	}
 }
 
+func TestValidateRejectsInvalidJeopardySubnetBase(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.Network.JeopardySubnetBase = "10.10.0.1/16"
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject non-network subnet base, got nil")
+	}
+	if !strings.Contains(err.Error(), "container.network.jeopardy_subnet_base must use the network address") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateRejectsSubnetMaskNotNarrowerThanBase(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.Network.SubnetMask = 16
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject non-narrower subnet mask, got nil")
+	}
+	if !strings.Contains(err.Error(), "container.network.subnet_mask must be greater than the base CIDR prefix") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestLoadRejectsTooShortContainerFlagSecret(t *testing.T) {
 	chdirToBackendRoot(t)
 	setContainerFlagSecretEnv(t, "too-short-secret")
@@ -375,6 +401,10 @@ func validConfigForValidationTests() *Config {
 			CleanupLockTTL:       time.Minute,
 			ProxyTicketTTL:       time.Minute,
 			ProxyBodyPreviewSize: 1024,
+			Network: ContainerNetworkConfig{
+				JeopardySubnetBase: "10.10.0.0/16",
+				SubnetMask:         24,
+			},
 		},
 		Recommendation: RecommendationConfig{
 			WeakThreshold: 0.4,

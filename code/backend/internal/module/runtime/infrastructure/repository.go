@@ -2,8 +2,10 @@ package infrastructure
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"strconv"
 	"strings"
@@ -212,6 +214,9 @@ func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, s
 		if err := deleteQuery.Delete(&runtimeentity.PortAllocation{}).Error; err != nil {
 			return err
 		}
+		if err := tx.Where("instance_id = ?", id).Delete(&runtimeentity.NetworkAllocation{}).Error; err != nil {
+			return err
+		}
 		return nil
 	})
 }
@@ -247,7 +252,10 @@ func (r *Repository) ExpireInstanceRuntime(ctx context.Context, id int64) error 
 		if instance.HostPort > 0 {
 			deleteQuery = deleteQuery.Or("port = ?", instance.HostPort)
 		}
-		return deleteQuery.Delete(&runtimeentity.PortAllocation{}).Error
+		if err := deleteQuery.Delete(&runtimeentity.PortAllocation{}).Error; err != nil {
+			return err
+		}
+		return tx.Where("instance_id = ?", id).Delete(&runtimeentity.NetworkAllocation{}).Error
 	})
 }
 
@@ -876,6 +884,111 @@ func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, insta
 		Delete(&runtimeentity.PortAllocation{}).Error
 }
 
+func (r *Repository) ReserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int) (string, error) {
+	return r.reserveAvailableSubnet(ctx, baseCIDR, subnetMask, 0, "")
+}
+
+func (r *Repository) ReserveAvailableSubnetForInstance(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string) (string, error) {
+	return r.reserveAvailableSubnet(ctx, baseCIDR, subnetMask, instanceID, networkKey)
+}
+
+func (r *Repository) reserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string) (string, error) {
+	normalizedKey := strings.TrimSpace(networkKey)
+	if instanceID > 0 && normalizedKey != "" {
+		existing, err := r.findSubnetAllocationByOwner(ctx, instanceID, normalizedKey)
+		if err != nil {
+			return "", err
+		}
+		if existing != "" {
+			return existing, nil
+		}
+	}
+
+	candidates, err := subnetCandidates(baseCIDR, subnetMask)
+	if err != nil {
+		return "", err
+	}
+	for _, subnet := range candidates {
+		reserved, reserveErr := r.tryReserveSubnet(ctx, subnet, instanceID, normalizedKey)
+		if reserveErr != nil {
+			return "", reserveErr
+		}
+		if reserved {
+			return subnet, nil
+		}
+		if instanceID > 0 && normalizedKey != "" {
+			existing, findErr := r.findSubnetAllocationByOwner(ctx, instanceID, normalizedKey)
+			if findErr != nil {
+				return "", findErr
+			}
+			if existing != "" {
+				return existing, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("no available subnet in %s with /%d", baseCIDR, subnetMask)
+}
+
+func (r *Repository) tryReserveSubnet(ctx context.Context, subnet string, instanceID int64, networkKey string) (bool, error) {
+	now := time.Now().UTC()
+	allocation := &runtimeentity.NetworkAllocation{
+		Subnet:     subnet,
+		NetworkKey: networkKey,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}
+	if instanceID > 0 {
+		allocation.InstanceID = &instanceID
+	}
+
+	result := r.dbWithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(allocation)
+	if result.Error != nil {
+		if isNetworkAllocationConflict(result.Error) {
+			return false, nil
+		}
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) findSubnetAllocationByOwner(ctx context.Context, instanceID int64, networkKey string) (string, error) {
+	if instanceID <= 0 || strings.TrimSpace(networkKey) == "" {
+		return "", nil
+	}
+
+	var allocation runtimeentity.NetworkAllocation
+	err := r.dbWithContext(ctx).
+		Where("instance_id = ? AND network_key = ?", instanceID, networkKey).
+		First(&allocation).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return allocation.Subnet, nil
+}
+
+func (r *Repository) ReleaseReservedSubnet(ctx context.Context, subnet string) error {
+	subnet = strings.TrimSpace(subnet)
+	if subnet == "" {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Where("subnet = ? AND instance_id IS NULL", subnet).
+		Delete(&runtimeentity.NetworkAllocation{}).Error
+}
+
+func (r *Repository) ReleaseSubnetForInstance(ctx context.Context, subnet string, instanceID int64) error {
+	subnet = strings.TrimSpace(subnet)
+	if subnet == "" || instanceID <= 0 {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Where("subnet = ? AND instance_id = ?", subnet, instanceID).
+		Delete(&runtimeentity.NetworkAllocation{}).Error
+}
+
 func (r *Repository) IsHostPortReusableForRestart(ctx context.Context, instanceID int64, hostPort int) (bool, error) {
 	if instanceID <= 0 || hostPort <= 0 {
 		return false, nil
@@ -1092,4 +1205,43 @@ func isPortAllocationConflict(err error) bool {
 	return strings.Contains(lowered, "unique constraint failed") ||
 		strings.Contains(lowered, "duplicate key value") ||
 		strings.Contains(lowered, "duplicate entry")
+}
+
+func isNetworkAllocationConflict(err error) bool {
+	return isPortAllocationConflict(err)
+}
+
+func subnetCandidates(baseCIDR string, subnetMask int) ([]string, error) {
+	baseIP, baseNet, err := net.ParseCIDR(strings.TrimSpace(baseCIDR))
+	if err != nil {
+		return nil, fmt.Errorf("parse subnet base: %w", err)
+	}
+	ip4 := baseIP.To4()
+	if ip4 == nil {
+		return nil, fmt.Errorf("subnet base must be ipv4")
+	}
+	baseNet.IP = ip4
+
+	basePrefix, bits := baseNet.Mask.Size()
+	if bits != 32 {
+		return nil, fmt.Errorf("subnet base must be ipv4")
+	}
+	if subnetMask <= basePrefix || subnetMask > 30 {
+		return nil, fmt.Errorf("invalid subnet mask /%d for base %s", subnetMask, baseCIDR)
+	}
+
+	start := binary.BigEndian.Uint32(baseNet.IP)
+	blockSize := uint32(1) << uint32(32-subnetMask)
+	subnetCount := 1 << uint(subnetMask-basePrefix)
+	result := make([]string, 0, subnetCount)
+	for idx := 0; idx < subnetCount; idx++ {
+		current := start + uint32(idx)*blockSize
+		ip := make(net.IP, net.IPv4len)
+		binary.BigEndian.PutUint32(ip, current)
+		result = append(result, (&net.IPNet{
+			IP:   ip,
+			Mask: net.CIDRMask(subnetMask, 32),
+		}).String())
+	}
+	return result, nil
 }

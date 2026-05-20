@@ -107,32 +107,25 @@ func (a *runtimeChallengeServiceAdapter) CreateContainer(ctx context.Context, im
 		return "", runtimecontracts.InstanceRuntimeDetails{}, fmt.Errorf("runtime provisioning service is not configured")
 	}
 
-	containerID, networkID, hostPort, servicePort, err := a.provisioner.CreateContainer(ctx, imageName, env, 0)
+	result, err := a.provisioner.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{
+				Key:             "default",
+				Image:           imageName,
+				Env:             cloneRuntimeStringMap(env),
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
+				ServiceProtocol: runtimecontracts.ChallengeTargetProtocolHTTP,
+			},
+		},
+	})
 	if err != nil {
 		return "", runtimecontracts.InstanceRuntimeDetails{}, err
 	}
-
-	accessURL := fmt.Sprintf("http://%s:%d", a.accessHost, hostPort)
-	return accessURL, runtimecontracts.InstanceRuntimeDetails{
-		Networks: []runtimecontracts.InstanceRuntimeNetwork{
-			{
-				Key:       runtimecontracts.TopologyDefaultNetworkKey,
-				Name:      runtimecontracts.TopologyDefaultNetworkKey,
-				NetworkID: networkID,
-			},
-		},
-		Containers: []runtimecontracts.InstanceRuntimeContainer{
-			{
-				NodeKey:         "default",
-				ContainerID:     containerID,
-				ServicePort:     servicePort,
-				ServiceProtocol: runtimecontracts.ChallengeTargetProtocolHTTP,
-				HostPort:        hostPort,
-				IsEntryPoint:    true,
-				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
-			},
-		},
-	}, nil
+	return result.AccessURL, result.RuntimeDetails, nil
 }
 
 func (a *runtimeChallengeServiceAdapter) CleanupRuntimeDetails(ctx context.Context, details runtimecontracts.InstanceRuntimeDetails) error {

@@ -25,12 +25,17 @@ const (
 type provisioningRepository interface {
 	ReserveAvailablePort(ctx context.Context, start, end int) (int, error)
 	ReleaseReservedPort(ctx context.Context, port int) error
+	ReserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int) (string, error)
+	ReserveAvailableSubnetForInstance(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string) (string, error)
+	ReleaseReservedSubnet(ctx context.Context, subnet string) error
+	ReleaseSubnetForInstance(ctx context.Context, subnet string, instanceID int64) error
 }
 
 type createdTopologyNetwork struct {
 	key      string
 	name     string
 	id       string
+	subnet   string
 	internal bool
 	shared   bool
 }
@@ -57,11 +62,24 @@ func NewProvisioningService(repo provisioningRepository, engine runtimeports.Con
 	if cfg == nil {
 		cfg = &config.ContainerConfig{}
 	}
+	applyProvisioningConfigDefaults(cfg)
 	return &ProvisioningService{
 		repo:   repo,
 		engine: engine,
 		config: cfg,
 		logger: logger,
+	}
+}
+
+func applyProvisioningConfigDefaults(cfg *config.ContainerConfig) {
+	if cfg == nil {
+		return
+	}
+	if strings.TrimSpace(cfg.Network.JeopardySubnetBase) == "" {
+		cfg.Network.JeopardySubnetBase = "10.10.0.0/16"
+	}
+	if cfg.Network.SubnetMask <= 0 {
+		cfg.Network.SubnetMask = 24
 	}
 }
 
@@ -147,15 +165,22 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	managedLabels := managedContainerLabels(req)
 	for _, network := range networks {
 		networkName := resolveCreateNetworkName(network)
-		networkID, err := s.engine.CreateNetwork(ctx, networkName, managedLabels, network.Internal, network.Shared)
+		subnet, err := s.allocateNetworkSubnet(ctx, req.OwnerInstanceID, network)
 		if err != nil {
-			s.cleanupTopologyResources(ctx, nil, collectOwnedNetworkIDs(createdNetworks))
+			s.cleanupTopologyResources(ctx, nil, createdNetworks, req.OwnerInstanceID)
+			return nil, err
+		}
+		networkID, err := s.engine.CreateNetwork(ctx, networkName, managedLabels, network.Internal, network.Shared, subnet)
+		if err != nil {
+			s.releaseNetworkSubnet(ctx, req.OwnerInstanceID, subnet)
+			s.cleanupTopologyResources(ctx, nil, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
 		item := createdTopologyNetwork{
 			key:      network.Key,
 			name:     networkName,
 			id:       networkID,
+			subnet:   subnet,
 			internal: network.Internal,
 			shared:   network.Shared,
 		}
@@ -172,6 +197,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			Key:       network.key,
 			Name:      network.name,
 			NetworkID: network.id,
+			Subnet:    network.subnet,
 			Internal:  network.internal,
 			Shared:    network.shared,
 		})
@@ -185,7 +211,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		if node.IsEntryPoint && servicePort <= 0 {
 			resolvedPort, err := s.resolveServicePort(ctx, node.Image)
 			if err != nil {
-				s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
+				s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 				return nil, err
 			}
 			servicePort = resolvedPort
@@ -211,25 +237,25 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			NetworkAliases: normalizedNetworkAliases(node.NetworkAliases),
 		})
 		if err != nil {
-			s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
+			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
 		if err := s.engine.StartContainer(ctx, containerID); err != nil {
 			createdContainerIDs = append(createdContainerIDs, containerID)
-			s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
+			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
 		for _, networkKey := range nodeNetworkKeys[1:] {
 			if err := s.engine.ConnectContainerToNetwork(ctx, containerID, networkByKey[networkKey].name); err != nil {
 				createdContainerIDs = append(createdContainerIDs, containerID)
-				s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
+				s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 				return nil, err
 			}
 		}
 		networkIPs, err := s.engine.InspectContainerNetworkIPs(ctx, containerID)
 		if err != nil {
 			createdContainerIDs = append(createdContainerIDs, containerID)
-			s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
+			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
 
@@ -253,12 +279,12 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 
 	resolvedACLRules, err := s.resolveTopologyACLRules(ctx, req, details)
 	if err != nil {
-		s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
+		s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 		return nil, err
 	}
 	if len(resolvedACLRules) > 0 {
 		if err := s.engine.ApplyACLRules(ctx, resolvedACLRules); err != nil {
-			s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
+			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
 		details.ACLRules = resolvedACLRules
@@ -266,7 +292,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 
 	accessURL, err := s.resolveEntryAccessURL(ctx, details, entryNodeIndex, publishEntryPort, hostPort)
 	if err != nil {
-		s.cleanupTopologyResources(ctx, createdContainerIDs, collectOwnedNetworkIDs(createdNetworks))
+		s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 		return nil, err
 	}
 
@@ -377,12 +403,45 @@ func (s *ProvisioningService) allocatePort(ctx context.Context) (int, error) {
 	return s.repo.ReserveAvailablePort(ctx, s.config.PortRangeStart, s.config.PortRangeEnd)
 }
 
-func (s *ProvisioningService) cleanupTopologyResources(ctx context.Context, containerIDs []string, networkIDs []string) {
+func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, ownerInstanceID int64, network runtimeports.TopologyCreateNetwork) (string, error) {
+	if network.Shared {
+		return "", nil
+	}
+	if subnet := strings.TrimSpace(network.Subnet); subnet != "" {
+		return subnet, nil
+	}
+	if s.repo == nil {
+		return "", fmt.Errorf("runtime provisioning repository is not configured")
+	}
+	baseCIDR := s.config.Network.JeopardySubnetBase
+	subnetMask := s.config.Network.SubnetMask
+	if ownerInstanceID > 0 {
+		return s.repo.ReserveAvailableSubnetForInstance(ctx, baseCIDR, subnetMask, ownerInstanceID, network.Key)
+	}
+	return s.repo.ReserveAvailableSubnet(ctx, baseCIDR, subnetMask)
+}
+
+func (s *ProvisioningService) releaseNetworkSubnet(ctx context.Context, ownerInstanceID int64, subnet string) {
+	subnet = strings.TrimSpace(subnet)
+	if subnet == "" || s.repo == nil {
+		return
+	}
+	if ownerInstanceID > 0 {
+		_ = s.repo.ReleaseSubnetForInstance(ctx, subnet, ownerInstanceID)
+		return
+	}
+	_ = s.repo.ReleaseReservedSubnet(ctx, subnet)
+}
+
+func (s *ProvisioningService) cleanupTopologyResources(ctx context.Context, containerIDs []string, networks []createdTopologyNetwork, ownerInstanceID int64) {
 	for idx := len(containerIDs) - 1; idx >= 0; idx-- {
 		_ = s.removeContainer(ctx, containerIDs[idx])
 	}
-	for idx := len(networkIDs) - 1; idx >= 0; idx-- {
-		_ = s.removeNetwork(ctx, networkIDs[idx])
+	for idx := len(networks) - 1; idx >= 0; idx-- {
+		if !networks[idx].shared {
+			_ = s.removeNetwork(ctx, networks[idx].id)
+			s.releaseNetworkSubnet(ctx, ownerInstanceID, networks[idx].subnet)
+		}
 	}
 }
 
@@ -551,16 +610,6 @@ func normalizedNetworkAliases(aliases []string) []string {
 		}
 		seen[trimmed] = struct{}{}
 		result = append(result, trimmed)
-	}
-	return result
-}
-
-func collectOwnedNetworkIDs(networks []createdTopologyNetwork) []string {
-	result := make([]string, 0, len(networks))
-	for _, network := range networks {
-		if network.id != "" && !network.shared {
-			result = append(result, network.id)
-		}
 	}
 	return result
 }

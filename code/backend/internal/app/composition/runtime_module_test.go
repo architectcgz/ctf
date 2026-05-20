@@ -11,6 +11,8 @@ import (
 
 	"ctf-platform/internal/config"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -29,9 +31,12 @@ func TestBuildRuntimeEngineProvidesReachableRuntimeInTestEnv(t *testing.T) {
 	if err != nil {
 		t.Fatalf("BuildRoot() error = %v", err)
 	}
+	if err := db.AutoMigrate(&runtimeentity.NetworkAllocation{}); err != nil {
+		t.Fatalf("auto migrate runtime network allocation: %v", err)
+	}
 
 	engine := buildRuntimeEngine(root)
-	service := runtimecmd.NewProvisioningService(nil, engine, &cfg.Container, zap.NewNop())
+	service := runtimecmd.NewProvisioningService(runtimeinfra.NewRepository(db), engine, &cfg.Container, zap.NewNop())
 
 	containerID, networkID, hostPort, _, err := service.CreateContainer(context.Background(), "ctf/test:v1", nil, 35001)
 	if err != nil {

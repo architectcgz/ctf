@@ -52,8 +52,10 @@ func (a *PracticeRuntimeService) CreateTopology(ctx context.Context, req *practi
 		Networks:                   toRuntimeTopologyNetworks(req.Networks),
 		Nodes:                      toRuntimeTopologyNodes(req.Nodes),
 		Policies:                   append([]runtimecontracts.TopologyTrafficPolicy(nil), req.Policies...),
+		OwnerInstanceID:            req.OwnerInstanceID,
 		ReservedHostPort:           req.ReservedHostPort,
 		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
+		ContainerName:              req.ContainerName,
 	})
 	if err != nil {
 		return nil, err
@@ -94,7 +96,10 @@ func toRuntimeTopologyNetworks(items []practiceports.TopologyCreateNetwork) []ru
 	for _, item := range items {
 		result = append(result, runtimeports.TopologyCreateNetwork{
 			Key:      item.Key,
+			Name:     item.Name,
+			Subnet:   item.Subnet,
 			Internal: item.Internal,
+			Shared:   item.Shared,
 		})
 	}
 	return result

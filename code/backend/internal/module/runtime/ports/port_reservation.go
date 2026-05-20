@@ -11,3 +11,10 @@ type PortReservationOwner interface {
 	IsHostPortReusableForRestart(ctx context.Context, instanceID int64, hostPort int) (bool, error)
 	SyncInstanceHostPortForRestart(ctx context.Context, instanceID int64, hostPort int, preserveHostPort bool) (int, error)
 }
+
+type NetworkReservationOwner interface {
+	ReserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int) (string, error)
+	ReserveAvailableSubnetForInstance(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string) (string, error)
+	ReleaseReservedSubnet(ctx context.Context, subnet string) error
+	ReleaseSubnetForInstance(ctx context.Context, subnet string, instanceID int64) error
+}

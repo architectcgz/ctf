@@ -42,6 +42,7 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 	if err != nil {
 		return err
 	}
+	request.OwnerInstanceID = instance.ID
 	applyAWDStableNetworkToTopologyRequest(instance, chal, request)
 	if awdWorkspacePlan != nil {
 		applyAWDDefenseWorkspaceRuntimeMounts(request, awdWorkspacePlan.runtimeMounts)
@@ -130,6 +131,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 			nodeAliases = []string{buildAWDServiceAlias(instance)}
 		}
 		request := &practiceports.TopologyCreateRequest{
+			OwnerInstanceID:            instance.ID,
 			ReservedHostPort:           instance.HostPort,
 			DisableEntryPortPublishing: shouldDisableEntryPortPublishing(instance, s.config.Container.AccessHost),
 			ContainerName:              buildRuntimeContainerName(chal, instance),
@@ -188,35 +190,33 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 		return nil
 	}
 
-	return s.createRuntimeWithHostPortRebind(ctx, instance, func() error {
-		containerID, networkID, hostPort, servicePort, err := s.runtimeService.CreateContainer(ctx, imageRef, env, instance.HostPort)
-		if err != nil {
-			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
-		}
-
-		runtimeDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
-			Containers: []runtimecontracts.InstanceRuntimeContainer{
-				{
-					NodeKey:         "default",
-					ContainerID:     containerID,
-					ServicePort:     servicePort,
-					ServiceProtocol: practiceentity.ChallengeTargetProtocolHTTP,
-					HostPort:        hostPort,
-					IsEntryPoint:    true,
-				},
+	request := &practiceports.TopologyCreateRequest{
+		OwnerInstanceID:            instance.ID,
+		ReservedHostPort:           instance.HostPort,
+		DisableEntryPortPublishing: shouldDisableEntryPortPublishing(instance, s.config.Container.AccessHost),
+		ContainerName:              buildRuntimeContainerName(chal, instance),
+		Networks: []practiceports.TopologyCreateNetwork{
+			{Key: challengecontracts.TopologyDefaultNetworkKey},
+		},
+		Nodes: []practiceports.TopologyCreateNode{
+			{
+				Key:             "default",
+				Image:           imageRef,
+				Env:             env,
+				ServicePort:     chal.TargetPort,
+				ServiceProtocol: targetProtocol,
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{challengecontracts.TopologyDefaultNetworkKey},
 			},
-		})
+		},
+	}
+	return s.createRuntimeWithHostPortRebind(ctx, instance, func() error {
+		request.ReservedHostPort = instance.HostPort
+		result, err := s.runtimeService.CreateTopology(ctx, request)
 		if err != nil {
 			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 		}
-
-		instance.ContainerID = containerID
-		instance.NetworkID = networkID
-		instance.RuntimeDetails = runtimeDetails
-		instance.HostPort = hostPort
-		host := runtimecontracts.ResolveRuntimePublishedAccessHost(s.config.Container.PublicHost, s.config.Container.AccessHost)
-		instance.AccessURL = fmt.Sprintf("http://%s:%d", host, hostPort)
-		return nil
+		return applyTopologyCreateResultToInstance(instance, result)
 	})
 }
 
