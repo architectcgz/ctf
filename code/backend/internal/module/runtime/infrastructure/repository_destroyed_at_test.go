@@ -141,6 +141,44 @@ func TestReserveAvailableSubnetForInstanceExcludingSkipsExcludedSubnet(t *testin
 	}
 }
 
+func TestReserveAvailableSubnetForInstanceExcludingReassignsExcludedOwnerReservation(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+	instanceID := int64(9301)
+	if err := db.Create(&runtimeentity.NetworkAllocation{
+		Subnet:     "10.10.9.0/24",
+		InstanceID: &instanceID,
+		NetworkKey: "backend",
+	}).Error; err != nil {
+		t.Fatalf("seed subnet allocation: %v", err)
+	}
+
+	subnet, err := repo.ReserveAvailableSubnetForInstanceExcluding(
+		context.Background(),
+		"10.10.0.0/16",
+		24,
+		instanceID,
+		"backend",
+		[]string{"10.10.9.0/24"},
+	)
+	if err != nil {
+		t.Fatalf("ReserveAvailableSubnetForInstanceExcluding() error = %v", err)
+	}
+	if subnet != "10.10.0.0/24" {
+		t.Fatalf("expected owner reservation to move to first available subnet, got %q", subnet)
+	}
+
+	var allocation runtimeentity.NetworkAllocation
+	if err := db.Where("instance_id = ? AND network_key = ?", instanceID, "backend").First(&allocation).Error; err != nil {
+		t.Fatalf("load updated subnet allocation: %v", err)
+	}
+	if allocation.Subnet != "10.10.0.0/24" {
+		t.Fatalf("expected owner allocation to update to 10.10.0.0/24, got %q", allocation.Subnet)
+	}
+}
+
 func TestSyncInstanceHostPortForRestartPreservesAndBindsAllocation(t *testing.T) {
 	t.Parallel()
 

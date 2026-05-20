@@ -32,6 +32,10 @@ func (*typedNilProvisioningEngine) CreateNetwork(context.Context, string, map[st
 	return "", nil
 }
 
+func (*typedNilProvisioningEngine) ListNetworkSubnets(context.Context) ([]string, error) {
+	return nil, nil
+}
+
 func (*typedNilProvisioningEngine) CreateContainer(context.Context, *runtimecontracts.ContainerConfig) (string, error) {
 	return "", nil
 }

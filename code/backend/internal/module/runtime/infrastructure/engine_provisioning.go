@@ -125,6 +125,30 @@ func (e *Engine) ResolveServicePort(ctx context.Context, imageRef string, prefer
 	return selectServicePort(resp.Config.ExposedPorts, preferredPort), nil
 }
 
+func (e *Engine) ListNetworkSubnets(ctx context.Context) ([]string, error) {
+	cli, err := e.requireClient()
+	if err != nil {
+		return nil, err
+	}
+
+	networks, err := cli.NetworkList(ctx, networktypes.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	subnets := make([]string, 0, len(networks))
+	for _, network := range networks {
+		for _, item := range network.IPAM.Config {
+			subnet := strings.TrimSpace(item.Subnet)
+			if subnet == "" {
+				continue
+			}
+			subnets = append(subnets, subnet)
+		}
+	}
+	return subnets, nil
+}
+
 func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool, allowExisting bool, subnet string) (string, error) {
 	cli, err := e.requireClient()
 	if err != nil {

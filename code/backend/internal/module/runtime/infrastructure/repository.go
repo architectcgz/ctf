@@ -1045,6 +1045,16 @@ func (r *Repository) reserveAvailableSubnet(ctx context.Context, baseCIDR string
 				return "", findErr
 			}
 			if existing != "" {
+				if _, excluded := excludedSet[existing]; excluded {
+					moved, moveErr := r.moveSubnetAllocationForOwner(ctx, instanceID, normalizedKey, existing, subnet)
+					if moveErr != nil {
+						return "", moveErr
+					}
+					if moved {
+						return subnet, nil
+					}
+					continue
+				}
 				return existing, nil
 			}
 		}
@@ -1065,6 +1075,32 @@ func (r *Repository) tryReserveSubnet(ctx context.Context, subnet string, instan
 	}
 
 	result := r.dbWithContext(ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(allocation)
+	if result.Error != nil {
+		if isNetworkAllocationConflict(result.Error) {
+			return false, nil
+		}
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) moveSubnetAllocationForOwner(ctx context.Context, instanceID int64, networkKey, currentSubnet, targetSubnet string) (bool, error) {
+	if instanceID <= 0 || strings.TrimSpace(networkKey) == "" {
+		return false, nil
+	}
+	currentSubnet = strings.TrimSpace(currentSubnet)
+	targetSubnet = strings.TrimSpace(targetSubnet)
+	if currentSubnet == "" || targetSubnet == "" || currentSubnet == targetSubnet {
+		return false, nil
+	}
+
+	result := r.dbWithContext(ctx).
+		Model(&runtimeentity.NetworkAllocation{}).
+		Where("instance_id = ? AND network_key = ? AND subnet = ?", instanceID, networkKey, currentSubnet).
+		Updates(map[string]any{
+			"subnet":     targetSubnet,
+			"updated_at": time.Now().UTC(),
+		})
 	if result.Error != nil {
 		if isNetworkAllocationConflict(result.Error) {
 			return false, nil

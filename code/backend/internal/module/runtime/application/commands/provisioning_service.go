@@ -43,6 +43,18 @@ type createdTopologyNetwork struct {
 	shared   bool
 }
 
+type topologyStageContext struct {
+	instanceID  int64
+	stage       string
+	nodeKey     string
+	image       string
+	networkKey  string
+	networkName string
+	subnet      string
+	hostPort    int
+	containerID string
+}
+
 // ProvisioningService 收口运行时资源创建编排，包括单容器与拓扑实例创建。
 type ProvisioningService struct {
 	repo   provisioningRepository
@@ -166,27 +178,42 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	createdNetworks := make([]createdTopologyNetwork, 0, len(networks))
 	networkByKey := make(map[string]createdTopologyNetwork, len(networks))
 	managedLabels := managedContainerLabels(req)
+	occupiedSubnets := make([]string, 0, len(networks))
+	var err error
+	if topologyNeedsRuntimeOccupiedSubnets(networks) {
+		occupiedSubnets, err = s.listRuntimeOccupiedSubnets(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
 	for _, network := range networks {
 		networkName := resolveCreateNetworkName(network)
 		var (
 			subnet    string
 			networkID string
-			err       error
 		)
-		excludedSubnets := make([]string, 0, 2)
 		for {
-			subnet, err = s.allocateNetworkSubnet(ctx, req.OwnerInstanceID, network, excludedSubnets)
+			subnet, err = s.allocateNetworkSubnet(ctx, req.OwnerInstanceID, network, occupiedSubnets)
 			if err != nil {
 				s.cleanupTopologyResources(ctx, nil, createdNetworks, req.OwnerInstanceID)
 				return nil, err
 			}
+			occupiedSubnets = appendUniqueSubnet(occupiedSubnets, subnet)
+			stageStartedAt := time.Now()
 			networkID, err = s.engine.CreateNetwork(ctx, networkName, managedLabels, network.Internal, network.Shared, subnet)
+			s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+				instanceID:  req.OwnerInstanceID,
+				stage:       "network_create",
+				networkKey:  network.Key,
+				networkName: networkName,
+				subnet:      subnet,
+			})
 			if err == nil {
 				break
 			}
 			s.releaseNetworkSubnet(ctx, req.OwnerInstanceID, subnet)
 			if errors.Is(err, runtimeports.ErrRuntimeNetworkSubnetConflict) && canRetrySubnetAllocation(network, subnet) {
-				excludedSubnets = appendUniqueSubnet(excludedSubnets, subnet)
+				occupiedSubnets = appendUniqueSubnet(occupiedSubnets, subnet)
 				continue
 			}
 			s.cleanupTopologyResources(ctx, nil, createdNetworks, req.OwnerInstanceID)
@@ -223,9 +250,23 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	for _, node := range req.Nodes {
 		nodeNetworkKeys := normalizedNodeNetworkKeys(node.NetworkKeys, networks)
 		primaryNetwork := networkByKey[nodeNetworkKeys[0]]
+		nodeHostPort := 0
+		if node.IsEntryPoint && publishEntryPort {
+			nodeHostPort = hostPort
+		}
 		servicePort := node.ServicePort
 		if node.IsEntryPoint && servicePort <= 0 {
+			stageStartedAt := time.Now()
 			resolvedPort, err := s.resolveServicePort(ctx, node.Image)
+			s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+				instanceID:  req.OwnerInstanceID,
+				stage:       "service_port_resolve",
+				nodeKey:     node.Key,
+				image:       node.Image,
+				networkKey:  primaryNetwork.key,
+				networkName: primaryNetwork.name,
+				hostPort:    nodeHostPort,
+			})
 			if err != nil {
 				s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 				return nil, err
@@ -239,6 +280,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			}
 		}
 
+		stageStartedAt := time.Now()
 		containerID, err := s.engine.CreateContainer(ctx, &runtimecontracts.ContainerConfig{
 			Image:          node.Image,
 			Name:           buildManagedContainerName(req.ContainerName),
@@ -252,23 +294,73 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			Network:        primaryNetwork.name,
 			NetworkAliases: normalizedNetworkAliases(node.NetworkAliases),
 		})
+		s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+			instanceID:  req.OwnerInstanceID,
+			stage:       "container_create",
+			nodeKey:     node.Key,
+			image:       node.Image,
+			networkKey:  primaryNetwork.key,
+			networkName: primaryNetwork.name,
+			subnet:      primaryNetwork.subnet,
+			hostPort:    nodeHostPort,
+			containerID: containerID,
+		})
 		if err != nil {
 			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
-		if err := s.engine.StartContainer(ctx, containerID); err != nil {
+		stageStartedAt = time.Now()
+		err = s.engine.StartContainer(ctx, containerID)
+		s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+			instanceID:  req.OwnerInstanceID,
+			stage:       "container_start",
+			nodeKey:     node.Key,
+			image:       node.Image,
+			networkKey:  primaryNetwork.key,
+			networkName: primaryNetwork.name,
+			subnet:      primaryNetwork.subnet,
+			hostPort:    nodeHostPort,
+			containerID: containerID,
+		})
+		if err != nil {
 			createdContainerIDs = append(createdContainerIDs, containerID)
 			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
 		for _, networkKey := range nodeNetworkKeys[1:] {
-			if err := s.engine.ConnectContainerToNetwork(ctx, containerID, networkByKey[networkKey].name); err != nil {
+			extraNetwork := networkByKey[networkKey]
+			stageStartedAt = time.Now()
+			err = s.engine.ConnectContainerToNetwork(ctx, containerID, extraNetwork.name)
+			s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+				instanceID:  req.OwnerInstanceID,
+				stage:       "connect_extra_networks",
+				nodeKey:     node.Key,
+				image:       node.Image,
+				networkKey:  extraNetwork.key,
+				networkName: extraNetwork.name,
+				subnet:      extraNetwork.subnet,
+				hostPort:    nodeHostPort,
+				containerID: containerID,
+			})
+			if err != nil {
 				createdContainerIDs = append(createdContainerIDs, containerID)
 				s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 				return nil, err
 			}
 		}
+		stageStartedAt = time.Now()
 		networkIPs, err := s.engine.InspectContainerNetworkIPs(ctx, containerID)
+		s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+			instanceID:  req.OwnerInstanceID,
+			stage:       "inspect_network_ips",
+			nodeKey:     node.Key,
+			image:       node.Image,
+			networkKey:  primaryNetwork.key,
+			networkName: primaryNetwork.name,
+			subnet:      primaryNetwork.subnet,
+			hostPort:    nodeHostPort,
+			containerID: containerID,
+		})
 		if err != nil {
 			createdContainerIDs = append(createdContainerIDs, containerID)
 			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
@@ -500,6 +592,44 @@ func (s *ProvisioningService) removeNetwork(ctx context.Context, networkID strin
 	return nil
 }
 
+func (s *ProvisioningService) logTopologyStage(startedAt time.Time, err error, stageCtx topologyStageContext) {
+	fields := make([]zap.Field, 0, 10)
+	fields = append(fields,
+		zap.String("stage", stageCtx.stage),
+		zap.Duration("duration", time.Since(startedAt)),
+	)
+	if stageCtx.instanceID > 0 {
+		fields = append(fields, zap.Int64("instance_id", stageCtx.instanceID))
+	}
+	if stageCtx.nodeKey != "" {
+		fields = append(fields, zap.String("node_key", stageCtx.nodeKey))
+	}
+	if stageCtx.image != "" {
+		fields = append(fields, zap.String("image", stageCtx.image))
+	}
+	if stageCtx.networkKey != "" {
+		fields = append(fields, zap.String("network_key", stageCtx.networkKey))
+	}
+	if stageCtx.networkName != "" {
+		fields = append(fields, zap.String("network_name", stageCtx.networkName))
+	}
+	if stageCtx.subnet != "" {
+		fields = append(fields, zap.String("subnet", stageCtx.subnet))
+	}
+	if stageCtx.hostPort > 0 {
+		fields = append(fields, zap.Int("host_port", stageCtx.hostPort))
+	}
+	if stageCtx.containerID != "" {
+		fields = append(fields, zap.String("container_id", stageCtx.containerID))
+	}
+	if err != nil {
+		fields = append(fields, zap.Error(err))
+		s.logger.Warn("runtime provisioning stage failed", fields...)
+		return
+	}
+	s.logger.Info("runtime provisioning stage succeeded", fields...)
+}
+
 func envMapToList(env map[string]string) []string {
 	if len(env) == 0 {
 		return nil
@@ -537,6 +667,23 @@ func resolveCreateNetworkName(network runtimeports.TopologyCreateNetwork) string
 
 func canRetrySubnetAllocation(network runtimeports.TopologyCreateNetwork, subnet string) bool {
 	return strings.TrimSpace(subnet) != "" && !network.Shared && strings.TrimSpace(network.Subnet) == ""
+}
+
+func (s *ProvisioningService) listRuntimeOccupiedSubnets(ctx context.Context) ([]string, error) {
+	if s == nil || s.engine == nil {
+		return nil, nil
+	}
+
+	subnets, err := s.engine.ListNetworkSubnets(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0, len(subnets))
+	for _, subnet := range subnets {
+		result = appendUniqueSubnet(result, subnet)
+	}
+	return result, nil
 }
 
 func appendUniqueSubnet(items []string, subnet string) []string {
@@ -618,6 +765,19 @@ func normalizedCreateNetworks(networks []runtimeports.TopologyCreateNetwork) []r
 		return []runtimeports.TopologyCreateNetwork{{Key: runtimecontracts.TopologyDefaultNetworkKey}}
 	}
 	return networks
+}
+
+func topologyNeedsRuntimeOccupiedSubnets(networks []runtimeports.TopologyCreateNetwork) bool {
+	for _, network := range normalizedCreateNetworks(networks) {
+		if network.Shared {
+			continue
+		}
+		if strings.TrimSpace(network.Subnet) != "" {
+			continue
+		}
+		return true
+	}
+	return false
 }
 
 func normalizedNodeNetworkKeys(keys []string, networks []runtimeports.TopologyCreateNetwork) []string {

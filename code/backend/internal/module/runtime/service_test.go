@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
@@ -1505,6 +1507,9 @@ func TestServiceCreateTopologyMarksAWDWorkspaceAsAWDComposeService(t *testing.T)
 	if engine.createdNetworkSubnet != "" {
 		t.Fatalf("expected shared AWD network to skip explicit subnet allocation, got %q", engine.createdNetworkSubnet)
 	}
+	if engine.listNetworkSubnetsCalls != 0 {
+		t.Fatalf("expected shared-only topology to skip runtime subnet listing, got %d", engine.listNetworkSubnetsCalls)
+	}
 }
 
 func TestServiceCreateTopologyPassesMountsAndCommandToEngine(t *testing.T) {
@@ -2004,6 +2009,111 @@ func TestServiceCreateTopologyCreatesAndConnectsMultipleNetworks(t *testing.T) {
 	}
 }
 
+func TestServiceCreateTopologyLogsProvisioningStages(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkIDs:          []string{"net-stage-primary", "net-stage-extra"},
+		containerIDs:        []string{"web-stage", "worker-stage"},
+		resolvedServicePort: 8080,
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			switch containerID {
+			case "web-stage":
+				return map[string]string{
+					engine.createdNetworkNames[0]: "172.32.0.10",
+					engine.createdNetworkNames[1]: "172.32.1.10",
+				}
+			case "worker-stage":
+				return map[string]string{
+					engine.createdNetworkNames[1]: "172.32.1.20",
+				}
+			default:
+				t.Fatalf("unexpected inspect container id: %s", containerID)
+			}
+			return nil
+		},
+	}
+	core, observed := observer.New(zap.InfoLevel)
+	logger := zap.New(core)
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, logger)
+
+	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		OwnerInstanceID: 4242,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
+			{Key: "extra"},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{
+				Key:          "web",
+				Image:        "ctf/web:v1",
+				IsEntryPoint: true,
+				NetworkKeys:  []string{runtimecontracts.TopologyDefaultNetworkKey, "extra"},
+			},
+			{
+				Key:         "worker",
+				Image:       "ctf/worker:v1",
+				NetworkKeys: []string{"extra"},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+
+	entries := observed.FilterMessage("runtime provisioning stage succeeded").AllUntimed()
+	stageCounts := make(map[string]int, len(entries))
+	var (
+		entryCreateLog  map[string]any
+		workerCreateLog map[string]any
+	)
+	for _, entry := range entries {
+		ctxMap := entry.ContextMap()
+		stage, _ := ctxMap["stage"].(string)
+		stageCounts[stage]++
+		if got, ok := ctxMap["instance_id"].(int64); !ok || got != 4242 {
+			t.Fatalf("expected instance_id=4242 in stage log, got %+v", ctxMap)
+		}
+		if stage == "container_create" {
+			switch ctxMap["node_key"] {
+			case "web":
+				entryCreateLog = ctxMap
+			case "worker":
+				workerCreateLog = ctxMap
+			}
+		}
+	}
+	for _, stage := range []string{
+		"network_create",
+		"service_port_resolve",
+		"container_create",
+		"container_start",
+		"connect_extra_networks",
+		"inspect_network_ips",
+	} {
+		if stageCounts[stage] == 0 {
+			t.Fatalf("expected stage %q to be logged, got counts=%v", stage, stageCounts)
+		}
+	}
+	if entryCreateLog == nil || workerCreateLog == nil {
+		t.Fatalf("expected container_create logs for entry and worker nodes, got entry=%v worker=%v", entryCreateLog, workerCreateLog)
+	}
+	if got, ok := entryCreateLog["host_port"].(int64); !ok || got <= 0 {
+		t.Fatalf("expected entry container_create log to include host_port, got %+v", entryCreateLog)
+	}
+	if got, _ := entryCreateLog["container_id"].(string); got != "web-stage" {
+		t.Fatalf("expected entry container_create log to include container_id=web-stage, got %+v", entryCreateLog)
+	}
+	if _, exists := workerCreateLog["host_port"]; exists {
+		t.Fatalf("expected worker container_create log to omit host_port, got %+v", workerCreateLog)
+	}
+}
+
 func TestServiceCreateTopologySkipsConflictingSubnetAndRetries(t *testing.T) {
 	t.Parallel()
 
@@ -2048,6 +2158,264 @@ func TestServiceCreateTopologySkipsConflictingSubnetAndRetries(t *testing.T) {
 	}
 	if engine.createdNetworkSubnets[1] != "10.10.1.0/24" {
 		t.Fatalf("expected retry to skip conflicting subnet and use 10.10.1.0/24, got %+v", engine.createdNetworkSubnets)
+	}
+}
+
+func TestServiceCreateTopologySkipsRuntimeOccupiedSubnetsBeforeCreate(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:          "net-fresh",
+		containerIDs:       []string{"web-ctr"},
+		listNetworkSubnets: []string{"10.10.0.0/24", "10.10.1.0/24"},
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			if containerID != "web-ctr" {
+				t.Fatalf("unexpected inspect container id: %s", containerID)
+			}
+			return map[string]string{engine.createdNetworkNames[len(engine.createdNetworkNames)-1]: "172.30.0.20"}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		OwnerInstanceID: 7002,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected topology result")
+	}
+	if len(engine.createdNetworkSubnets) != 1 {
+		t.Fatalf("expected a single network create attempt after pre-filtering occupied subnets, got %+v", engine.createdNetworkSubnets)
+	}
+	if engine.createdNetworkSubnets[0] != "10.10.2.0/24" {
+		t.Fatalf("expected first free subnet after occupied runtime subnets to be 10.10.2.0/24, got %+v", engine.createdNetworkSubnets)
+	}
+}
+
+func TestServiceCreateTopologySharesOccupiedSubnetsAcrossNetworks(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkIDs:          []string{"net-explicit", "net-dynamic"},
+		containerIDs:        []string{"web-ctr"},
+		listNetworkSubnets:  []string{"10.10.0.0/24"},
+		resolvedServicePort: 8080,
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			if containerID != "web-ctr" {
+				t.Fatalf("unexpected inspect container id: %s", containerID)
+			}
+			return map[string]string{
+				engine.createdNetworkNames[0]: "172.30.1.10",
+				engine.createdNetworkNames[1]: "172.30.2.10",
+			}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		OwnerInstanceID: 7003,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Subnet: "10.10.1.0/24"},
+			{Key: "backend"},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{
+				Key:          "web",
+				Image:        "ctf/web:v1",
+				IsEntryPoint: true,
+				NetworkKeys:  []string{runtimecontracts.TopologyDefaultNetworkKey, "backend"},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected topology result")
+	}
+	if engine.listNetworkSubnetsCalls != 1 {
+		t.Fatalf("expected ListNetworkSubnets to be called once per topology, got %d", engine.listNetworkSubnetsCalls)
+	}
+	if len(engine.createdNetworkSubnets) != 2 {
+		t.Fatalf("expected two created network subnets, got %+v", engine.createdNetworkSubnets)
+	}
+	if engine.createdNetworkSubnets[0] != "10.10.1.0/24" {
+		t.Fatalf("expected explicit subnet to be used first, got %+v", engine.createdNetworkSubnets)
+	}
+	if engine.createdNetworkSubnets[1] != "10.10.2.0/24" {
+		t.Fatalf("expected dynamic subnet to skip both runtime-occupied and topology-occupied subnets, got %+v", engine.createdNetworkSubnets)
+	}
+}
+
+func TestServiceCreateTopologySkipsRuntimeSubnetListingForExplicitSubnetsOnly(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:    "net-explicit-only",
+		containerIDs: []string{"web-ctr"},
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			if containerID != "web-ctr" {
+				t.Fatalf("unexpected inspect container id: %s", containerID)
+			}
+			return map[string]string{engine.createdNetworkNames[len(engine.createdNetworkNames)-1]: "172.30.3.10"}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		OwnerInstanceID: 7005,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Subnet: "10.10.10.0/24"},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected topology result")
+	}
+	if engine.listNetworkSubnetsCalls != 0 {
+		t.Fatalf("expected explicit-subnet-only topology to skip runtime subnet listing, got %d", engine.listNetworkSubnetsCalls)
+	}
+	if len(engine.createdNetworkSubnets) != 1 || engine.createdNetworkSubnets[0] != "10.10.10.0/24" {
+		t.Fatalf("expected explicit subnet to be used as-is, got %+v", engine.createdNetworkSubnets)
+	}
+}
+
+func TestServiceCreateTopologySkipsRuntimeOccupiedOwnerReservationWithoutRetry(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	instanceID := int64(7004)
+	now := time.Now()
+	if err := repo.db.Create(&runtimeentity.NetworkAllocation{
+		Subnet:     "10.10.9.0/24",
+		InstanceID: &instanceID,
+		NetworkKey: runtimecontracts.TopologyDefaultNetworkKey,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("seed owned subnet allocation: %v", err)
+	}
+
+	engine := &fakeRuntimeEngine{
+		networkID:          "net-owner-refresh",
+		containerIDs:       []string{"web-ctr"},
+		listNetworkSubnets: []string{"10.10.9.0/24"},
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			if containerID != "web-ctr" {
+				t.Fatalf("unexpected inspect container id: %s", containerID)
+			}
+			return map[string]string{engine.createdNetworkNames[len(engine.createdNetworkNames)-1]: "172.30.0.21"}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		OwnerInstanceID: instanceID,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected topology result")
+	}
+	if len(engine.createdNetworkSubnets) != 1 {
+		t.Fatalf("expected owner reservation refresh to avoid retry, got %+v", engine.createdNetworkSubnets)
+	}
+	if engine.createdNetworkSubnets[0] != "10.10.0.0/24" {
+		t.Fatalf("expected runtime-occupied owner subnet to be reassigned before create, got %+v", engine.createdNetworkSubnets)
+	}
+
+	var allocation runtimeentity.NetworkAllocation
+	if err := repo.db.Where("instance_id = ? AND network_key = ?", instanceID, runtimecontracts.TopologyDefaultNetworkKey).First(&allocation).Error; err != nil {
+		t.Fatalf("load updated subnet allocation: %v", err)
+	}
+	if allocation.Subnet != "10.10.0.0/24" {
+		t.Fatalf("expected owner allocation to update to 10.10.0.0/24, got %q", allocation.Subnet)
+	}
+}
+
+func TestServiceCreateTopologyLogsStageFailure(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		createNetworkErrs: []error{context.DeadlineExceeded},
+	}
+	core, observed := observer.New(zap.WarnLevel)
+	logger := zap.New(core)
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, logger)
+
+	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		OwnerInstanceID: 5252,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+		},
+	})
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("expected deadline exceeded, got %v", err)
+	}
+
+	entries := observed.FilterMessage("runtime provisioning stage failed").AllUntimed()
+	if len(entries) != 1 {
+		t.Fatalf("expected one failed stage log, got %d", len(entries))
+	}
+	ctxMap := entries[0].ContextMap()
+	if got, _ := ctxMap["stage"].(string); got != "network_create" {
+		t.Fatalf("expected network_create failure stage, got %+v", ctxMap)
+	}
+	if got, _ := ctxMap["network_key"].(string); got != runtimecontracts.TopologyDefaultNetworkKey {
+		t.Fatalf("expected default network key in failure log, got %+v", ctxMap)
+	}
+	if got, ok := ctxMap["instance_id"].(int64); !ok || got != 5252 {
+		t.Fatalf("expected instance_id=5252 in failure log, got %+v", ctxMap)
+	}
+	if _, exists := ctxMap["error"]; !exists {
+		t.Fatalf("expected failure log to include error field, got %+v", ctxMap)
 	}
 }
 
@@ -2345,6 +2713,9 @@ type fakeRuntimeEngine struct {
 	networkID                      string
 	networkIDs                     []string
 	createNetworkErrs              []error
+	listNetworkSubnets             []string
+	listNetworkSubnetsErr          error
+	listNetworkSubnetsCalls        int
 	containerID                    string
 	containerIDs                   []string
 	startErr                       error
@@ -2403,6 +2774,14 @@ func (f *fakeRuntimeEngine) CreateNetwork(_ context.Context, name string, labels
 		return networkID, nil
 	}
 	return f.networkID, nil
+}
+
+func (f *fakeRuntimeEngine) ListNetworkSubnets(_ context.Context) ([]string, error) {
+	f.listNetworkSubnetsCalls++
+	if f.listNetworkSubnetsErr != nil {
+		return nil, f.listNetworkSubnetsErr
+	}
+	return append([]string(nil), f.listNetworkSubnets...), nil
 }
 
 func (f *fakeRuntimeEngine) CreateContainer(_ context.Context, cfg *runtimecontracts.ContainerConfig) (string, error) {

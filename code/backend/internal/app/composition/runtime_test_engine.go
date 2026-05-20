@@ -90,6 +90,20 @@ func (e *testRuntimeEngine) CreateNetwork(_ context.Context, name string, _ map[
 	return id, nil
 }
 
+func (e *testRuntimeEngine) ListNetworkSubnets(_ context.Context) ([]string, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	subnets := make([]string, 0, len(e.networksByID))
+	for _, network := range e.networksByID {
+		if strings.TrimSpace(network.subnet) == "" {
+			continue
+		}
+		subnets = append(subnets, network.subnet)
+	}
+	return subnets, nil
+}
+
 func (e *testRuntimeEngine) CreateContainer(_ context.Context, cfg *runtimecontracts.ContainerConfig) (string, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()

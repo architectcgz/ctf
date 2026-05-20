@@ -11,6 +11,7 @@ import (
 // ContainerProvisioningRuntime 定义拓扑创建与资源回滚所需的容器运行时能力。
 type ContainerProvisioningRuntime interface {
 	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool, allowExisting bool, subnet string) (string, error)
+	ListNetworkSubnets(ctx context.Context) ([]string, error)
 	CreateContainer(ctx context.Context, cfg *runtimecontracts.ContainerConfig) (string, error)
 	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
 	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
