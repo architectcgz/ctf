@@ -31,6 +31,47 @@ func TestReserveAvailablePortExcludingSkipsExcludedPort(t *testing.T) {
 	}
 }
 
+func TestReserveAvailablePortExcludingReusesUnboundAllocation(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+
+	staleUpdatedAt := time.Now().Add(-time.Hour).UTC()
+	if err := db.Create(&runtimeentity.PortAllocation{
+		Port:      30000,
+		CreatedAt: staleUpdatedAt,
+		UpdatedAt: staleUpdatedAt,
+	}).Error; err != nil {
+		t.Fatalf("seed unbound port allocation: %v", err)
+	}
+
+	port, err := repo.ReserveAvailablePortExcluding(context.Background(), 30000, 30003, 0)
+	if err != nil {
+		t.Fatalf("ReserveAvailablePortExcluding() error = %v", err)
+	}
+	if port != 30000 {
+		t.Fatalf("expected stale unbound allocation on port 30000 to be reused, got %d", port)
+	}
+
+	var allocations []runtimeentity.PortAllocation
+	if err := db.Order("port ASC").Find(&allocations).Error; err != nil {
+		t.Fatalf("load port allocations: %v", err)
+	}
+	if len(allocations) != 1 {
+		t.Fatalf("expected one port allocation row after reuse, got %d", len(allocations))
+	}
+	if allocations[0].Port != 30000 {
+		t.Fatalf("expected reused allocation to stay on port 30000, got %+v", allocations[0])
+	}
+	if allocations[0].InstanceID != nil {
+		t.Fatalf("expected reused allocation to remain unbound before bind, got %+v", allocations[0].InstanceID)
+	}
+	if !allocations[0].UpdatedAt.After(staleUpdatedAt) {
+		t.Fatalf("expected reused allocation updated_at to advance, got %v <= %v", allocations[0].UpdatedAt, staleUpdatedAt)
+	}
+}
+
 func TestSyncInstanceHostPortForRestartPreservesAndBindsAllocation(t *testing.T) {
 	t.Parallel()
 

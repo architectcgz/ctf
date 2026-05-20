@@ -814,15 +814,39 @@ func (r *Repository) ReserveAvailablePortExcluding(ctx context.Context, start, e
 		if excludedPort > 0 && port == excludedPort {
 			continue
 		}
-		if err := r.dbWithContext(ctx).Create(&runtimeentity.PortAllocation{Port: port}).Error; err != nil {
-			if isPortAllocationConflict(err) {
-				continue
-			}
+		reserved, err := r.tryReservePort(ctx, port)
+		if err != nil {
 			return 0, err
 		}
-		return port, nil
+		if reserved {
+			return port, nil
+		}
 	}
 	return 0, fmt.Errorf("no available port in range %d-%d", start, end)
+}
+
+func (r *Repository) tryReservePort(ctx context.Context, port int) (bool, error) {
+	now := time.Now().UTC()
+	result := r.dbWithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "port"}},
+		DoUpdates: clause.Assignments(map[string]any{
+			"updated_at": now,
+		}),
+		Where: clause.Where{Exprs: []clause.Expression{
+			clause.Expr{SQL: "port_allocations.instance_id IS NULL"},
+		}},
+	}).Create(&runtimeentity.PortAllocation{
+		Port:      port,
+		CreatedAt: now,
+		UpdatedAt: now,
+	})
+	if result.Error != nil {
+		if isPortAllocationConflict(result.Error) {
+			return false, nil
+		}
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
 }
 
 func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID int64) error {

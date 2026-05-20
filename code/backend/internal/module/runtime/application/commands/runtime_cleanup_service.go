@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -24,6 +25,9 @@ type RuntimeCleanupService struct {
 	repo   runtimeCleanupRepository
 	logger *zap.Logger
 }
+
+const runtimeCleanupContainerOpTimeout = 10 * time.Second
+const runtimeCleanupContainerRemovalPollInterval = 500 * time.Millisecond
 
 // NewRuntimeCleanupService 创建运行时资源清理服务。
 func NewRuntimeCleanupService(engine runtimeports.ContainerCleanupRuntime, repo runtimeCleanupRepository, logger *zap.Logger) *RuntimeCleanupService {
@@ -98,9 +102,44 @@ func (s *RuntimeCleanupService) removeContainer(ctx context.Context, containerID
 		return errRuntimeEngineUnavailable()
 	}
 
-	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	stopCtx, stopCancel := context.WithTimeout(ctx, runtimeCleanupContainerOpTimeout)
+	_ = s.engine.StopContainer(stopCtx, containerID, 5*time.Second)
+	stopCancel()
+
+	if err := s.removeContainerOnce(ctx, containerID); err != nil {
+		if errors.Is(err, context.DeadlineExceeded) && ctx.Err() == nil {
+			if retryErr := s.removeContainerOnce(ctx, containerID); retryErr == nil {
+				s.logger.Info("删除容器在重试后完成", zap.String("container_id", containerID))
+				return nil
+			} else if isContainerRemovalInProgressError(retryErr) {
+				if waitErr := s.waitForContainerRemoval(ctx, containerID); waitErr == nil {
+					s.logger.Info("删除容器在后台移除后完成", zap.String("container_id", containerID))
+					return nil
+				} else {
+					return waitErr
+				}
+			} else {
+				return retryErr
+			}
+		}
+		if isContainerRemovalInProgressError(err) && ctx.Err() == nil {
+			if waitErr := s.waitForContainerRemoval(ctx, containerID); waitErr == nil {
+				s.logger.Info("删除容器在后台移除后完成", zap.String("container_id", containerID))
+				return nil
+			} else {
+				return waitErr
+			}
+		}
+		return err
+	}
+	s.logger.Info("删除容器", zap.String("container_id", containerID))
+	return nil
+}
+
+func (s *RuntimeCleanupService) removeContainerOnce(ctx context.Context, containerID string) error {
+	timeoutCtx, cancel := context.WithTimeout(ctx, runtimeCleanupContainerOpTimeout)
 	defer cancel()
-	_ = s.engine.StopContainer(timeoutCtx, containerID, 5*time.Second)
+
 	if err := s.engine.RemoveContainer(timeoutCtx, containerID, true); err != nil {
 		if errors.Is(err, runtimeports.ErrRuntimeContainerNotFound) {
 			s.logger.Info("删除容器跳过，容器不存在", zap.String("container_id", containerID))
@@ -108,8 +147,37 @@ func (s *RuntimeCleanupService) removeContainer(ctx context.Context, containerID
 		}
 		return err
 	}
-	s.logger.Info("删除容器", zap.String("container_id", containerID))
 	return nil
+}
+
+func (s *RuntimeCleanupService) waitForContainerRemoval(ctx context.Context, containerID string) error {
+	waitCtx, cancel := context.WithTimeout(ctx, runtimeCleanupContainerOpTimeout)
+	defer cancel()
+
+	ticker := time.NewTicker(runtimeCleanupContainerRemovalPollInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-waitCtx.Done():
+			return waitCtx.Err()
+		default:
+		}
+
+		err := s.removeContainerOnce(waitCtx, containerID)
+		if err == nil {
+			return nil
+		}
+		if !isContainerRemovalInProgressError(err) {
+			return err
+		}
+
+		select {
+		case <-waitCtx.Done():
+			return waitCtx.Err()
+		case <-ticker.C:
+		}
+	}
 }
 
 func (s *RuntimeCleanupService) removeNetwork(ctx context.Context, networkID string) error {
@@ -154,4 +222,12 @@ func (s *RuntimeCleanupService) releasePort(ctx context.Context, instanceID int6
 
 func errRuntimeEngineUnavailable() error {
 	return runtimeports.ErrRuntimeEngineUnavailable
+}
+
+func isContainerRemovalInProgressError(err error) bool {
+	if err == nil {
+		return false
+	}
+	message := strings.ToLower(strings.TrimSpace(err.Error()))
+	return strings.Contains(message, "removal of container") && strings.Contains(message, "already in progress")
 }
