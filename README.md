@@ -1,19 +1,50 @@
 # CTF 平台项目
 
-本仓库主要包含平台实现、架构与契约文档、题目与题包，以及开发过程中沉淀的规则和资料。
+本仓库包含平台代码、架构与契约文档、题目与题包，以及开发过程中沉淀的规则和资料。
 
-- 后端：位于 `code/backend/`，技术栈为 Go + Gin + Viper + Zap；当前按 `auth`、`identity`、`challenge`、`runtime`、`practice`、`contest`、`assessment`、`ops`、`teaching_query` 等模块组织，其中 `teaching_query` 负责教师侧查询聚合
-- 前端：Vue 3 + Vite + TypeScript + Pinia + Vue Router + Tailwind CSS 4 + 仓库内通用前端原语
-- 开发依赖：本项目自带的 Compose 与 infra 入口位于 `docker/ctf/` 和 `docker/ctf/infra/`，可直接启动 `ctf-frontend`、`ctf-api`、`ctf-postgres`、`ctf-redis`、`ctf-registry`
-- 文档入口：架构和页面设计主要看 `docs/architecture/`，接口与题包契约主要看 `docs/contracts/`
+文档入口：
 
-## 启动方式
+- 架构和页面设计：`docs/architecture/`
+- 接口与题包契约：`docs/contracts/`
+- 题目与题包：`challenges/`
 
-后端：
+## 当前技术栈
+
+- 后端：Go 1.24、Gin、GORM、pgx、Viper、PostgreSQL、Redis、Zap
+- 前端：Vue 3.5、Vite 7、TypeScript 5、Pinia、Vue Router、Tailwind CSS 4、Axios、VueUse、Vitest
+- 运行与联调：Docker Compose、PostgreSQL 16、Redis 7、可选本地 registry
+
+## 推荐启动方式
+
+推荐日常开发使用“依赖容器 + 本地前后端”。准备好 Docker、Go 1.24、Node.js 之后，通常只需要两条命令：
+
+1. 启动后端热重载
 
 ```bash
-cd code/backend && APP_ENV=dev go run ./cmd/api
+go install github.com/air-verse/air@latest
+cd code/backend
+./scripts/dev-run.sh --infra --migrate --hot
 ```
+
+2. 启动前端
+
+```bash
+cd code/frontend
+npm install
+npm run dev
+```
+
+启动后默认访问：
+
+- 前端：`http://127.0.0.1:5173`
+- 后端：`http://127.0.0.1:8080`
+
+说明：
+
+- `./scripts/dev-run.sh --infra --migrate --hot` 会自动启动本地 PostgreSQL / Redis 容器，补齐开发环境变量，并在启动前执行数据库迁移
+- 如果 `8080` 已被占用，脚本会自动把后端切到 `18080`
+- 如果不需要热重载，也可以用 `cd code/backend && ./scripts/dev-run.sh --infra --migrate`
+- 如果只想直接运行后端，也可以用 `cd code/backend && APP_ENV=dev go run ./cmd/api`，但这时数据库和 Redis 相关环境变量需要自己提供
 
 默认开发账号由初始迁移写入，密码均为 `Password123`：
 
@@ -22,105 +53,38 @@ cd code/backend && APP_ENV=dev go run ./cmd/api
 - `student`：学员账号，班级 `CTF-1`
 - `student2`：学员账号，班级 `CTF-1`
 
-后端热重载开发（推荐）：
+## 全容器联调
 
-```bash
-go install github.com/air-verse/air@latest
-cd code/backend && ./scripts/dev-run.sh --infra-shared --hot
-```
-
-后端后台启动并保留 Codex 可读日志：
-
-```bash
-cd code/backend && ./scripts/dev-run.sh --infra-shared --background
-tail -f /tmp/ctf-backend.log
-```
-
-脚本会在以下场景自动补齐本地开发环境变量：
-
-- 复用 Docker 中的 PostgreSQL / Redis 时，默认切到 `127.0.0.1:15432` 与 `127.0.0.1:16379`，并注入开发默认密码
-- 如果 `8080` 已被 `ctf-api` 容器占用，默认把本地 API 端口切到 `18080`
-- 默认把后端输出写入 `CTF_BACKEND_LOG`，未指定时为 `/tmp/ctf-backend.log`
-
-如果共享依赖已经在跑，也可以直接：
-
-```bash
-cd code/backend && \
-  APP_ENV=dev \
-  CTF_POSTGRES_PORT=15432 \
-  CTF_POSTGRES_PASSWORD=postgres123456 \
-  CTF_REDIS_ADDR=127.0.0.1:16379 \
-  CTF_REDIS_PASSWORD=redis123456 \
-  CTF_HTTP_PORT=18080 \
-  air -c .air.toml
-```
-
-前端：
-
-```bash
-cd code/frontend && npm run dev
-```
-
-前端容器化运行：
-
-```bash
-CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-frontend ctf-api ctf-postgres ctf-redis
-```
-
-启动后访问 `http://127.0.0.1:5173`。容器内会由 `nginx` 直接把 `/api` 和 `/ws` 转发到 `ctf-api:8080`。
-如果本地已经跑着 `npm run dev` 占用 `5173`，可以改成：
-
-```bash
-CTF_HOST_ROOT="$(pwd)" CTF_FRONTEND_PORT=15173 docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-frontend ctf-api ctf-postgres ctf-redis
-```
-
-此时访问 `http://127.0.0.1:15173`。
-
-开发容器栈（仅在需要整套容器联调时使用）：
+只有在需要验证完整容器编排、Nginx 反代、容器网络或运行时行为时，再启动整套容器：
 
 ```bash
 CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build
 ```
 
-先只启动 CTF 自己的 PostgreSQL / Redis：
+默认端口：
+
+- `ctf-frontend`：`5173`
+- `ctf-api`：`8080`
+- `ctf-api` AWD 防守 SSH 网关：`2222`
+- `ctf-postgres`：`15432`
+- `ctf-redis`：`16379`
+
+如果 `5173` 已被占用，可以改前端容器端口：
 
 ```bash
-CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d ctf-postgres ctf-redis
+CTF_HOST_ROOT="$(pwd)" CTF_FRONTEND_PORT=15173 docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-frontend ctf-api ctf-postgres ctf-redis
 ```
 
-建议日常 Go 开发使用“依赖容器 + 本地热重载”：
+## 可选：本地 registry
 
-- PostgreSQL / Redis 继续跑在 Docker 中
-- Go 后端直接在宿主机执行 `air -c .air.toml`
-- 只有需要验证镜像、容器网络或完整编排时再启动 `ctf-api` 容器
-
-`docker/ctf/docker-compose.dev.yml` 默认端口如下，并且仅绑定到 `127.0.0.1`，避免开发态暴露到局域网：
-
-- `ctf-frontend`: `5173`
-- `ctf-api`: `8080`
-- `ctf-api` AWD 防守 SSH 网关: `2222`
-- `ctf-postgres`: `15432`
-- `ctf-redis`: `16379`
-
-题包镜像构建需要先配置私有 registry。推荐通过脚本部署 registry 并生成 `docker/ctf/infra/registry/ctf-platform-registry.env`：
+只有在需要构建和推送动态题目镜像时，才需要本地 registry。平时开发平台前后端，不需要先处理它。
 
 ```bash
 scripts/registry/deploy-private-registry.sh --force-recreate
 CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-api
 ```
 
-脚本会把私有 registry 作为 `ctf` Compose 项目里的 `ctf-registry` service 启动，并把平台后端唯一使用的 registry env 写到 `docker/ctf/infra/registry/ctf-platform-registry.env`。脚本首次切到新目录时会复用旧的 `$HOME/ctf-registry` 数据和已有凭据；不要把这些凭据写进题包或题目容器。
-
-Docker 编排规范见：`docs/docker-compose-rules.md`。
-
-强制要求摘要：
-
-- CTF 相关容器统一放在 `docker/ctf/` 下
-- CTF 相关 infra 入口统一收口到 `docker/ctf/infra/`
-- CTF 相关容器统一由一个 Compose 项目管理（建议 `name: ctf`）
-- 动态题目容器统一补 Compose 风格项目/服务标签，AWD 归到 `ctf/awd`，普通题目归到 `ctf/jeopardy`
-- CTF 内部统一使用 `ctf-network`
-- 禁止 CTF 容器混用 Compose 与手工 `docker run`
+相关编排细则见 `docs/docker-compose-rules.md`。
 
 ## 仓库内容
 

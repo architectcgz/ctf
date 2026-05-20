@@ -59,7 +59,8 @@
 - `docs/contracts/`：API、OpenAPI、事件、题包格式、导入导出结构等契约。
 - OpenAPI v1 采用双层结构：`docs/contracts/openapi-v1/` 是拆分源，`docs/contracts/openapi-v1.yaml` 是稳定 bundle；修改 OpenAPI 时先改拆分源，再运行 `python3 scripts/sync_openapi_from_contract.py`。
 - `docs/design/`：仍在推演的中间设计稿、设计索引和过期说明。
-- `docs/plan/impl-plan/`：结构性实现方案、阶段计划、执行清单和验证步骤。
+- `docs/plan/impl-plan/`：当前仍在执行或尚未归档的结构性实现方案、阶段计划、执行清单和验证步骤。
+- `docs/plan/archive/impl-plan/`：历史实施计划归档；只保留过程记录，不作为当前事实源或默认读取入口。
 - `docs/reviews/`：代码、架构、UI、流程的 review 记录和 findings。
 - `docs/requirements/`：需求基线、范围说明、差距分析和立项约束。
 - `docs/tasks/`：任务拆解清单和阶段性工作列表；不替代架构或 implementation plan。

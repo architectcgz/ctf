@@ -21,8 +21,9 @@
 4. `docs/architecture/frontend/`：UI 风格、页面结构、组件体系和间距规则。
 5. `docs/architecture/frontend/pages/`：页面参考稿、截图和可复用设计样本。
 6. `docs/architecture/features/`：专题最终设计。
-7. `practice/superpowers-plan-index.md`：历史执行计划索引，只作为当时实现上下文。
-8. `docs/reviews/`：历史评审快照，不作为当前设计事实源。
+7. `docs/plan/README.md`：实施计划入口；先区分当前活动 plan 与历史归档 plan。
+8. `practice/superpowers-plan-index.md`：历史执行计划索引，只作为当时实现上下文。
+9. `docs/reviews/`：历史评审快照，不作为当前设计事实源。
 
 ## 当前事实源
 
@@ -57,7 +58,7 @@
 - 如果只有 review 提到旧问题，不能直接把它当成当前设计；必须回到当前代码、当前事实源和最近索引复核。
 - 纯 UI 代码稿、视觉 token 草稿或 demo 结构，如果已经被 `docs/architecture/frontend/` 的最终事实替代，应该直接移出 `docs/design/` 活动集。
 - 如果 `docs/architecture/frontend/pages/` 中的页面稿与当前代码明显冲突，先判断页面稿是否仍是目标设计；确认仍有效时改代码，确认已过期时更新或移除页面稿。
-- `practice/superpowers-plan-index.md` 里的命令、文件清单和阶段状态只代表当时实施计划，不能覆盖后续代码事实。
+- `docs/plan/archive/impl-plan/` 和 `practice/superpowers-plan-index.md` 里的命令、文件清单和阶段状态只代表当时实施计划，不能覆盖后续代码事实。
 
 ## 已移除的旧设计
 

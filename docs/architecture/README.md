@@ -33,7 +33,7 @@
 2. 再按需要进入 [backend/README.md](./backend/README.md) 或 [frontend/README.md](./frontend/README.md)。
 3. 需要专题边界时，进入 [features/专题架构索引.md](./features/专题架构索引.md)。
 4. 需要接口与字段契约时，进入 `docs/contracts/`。
-5. 需要过程方案、实现计划或历史评审时，回到 `docs/plan/impl-plan/`、`docs/reviews/`、`practice/`。
+5. 需要过程方案、实现计划或历史评审时，先读 `docs/plan/README.md`，再按需要进入活动 `docs/plan/impl-plan/`、历史 `docs/plan/archive/impl-plan/`、`docs/reviews/`、`practice/`。
 
 ## 机械化 Guardrail
 

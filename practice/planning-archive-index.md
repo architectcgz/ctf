@@ -21,7 +21,7 @@
 - 需要追溯“当时如何拆任务”时，查看 Git 历史中的 planning 归档或本文件的分类索引。
 - 需要追溯“执行进度和阶段状态”时，查看 Git 历史中的 progress 记录。
 - 需要追溯“发现了什么结构问题”时，查看 Git 历史中的 findings 记录。
-- 当前事实和新增实施计划仍应写入 `docs/plan/impl-plan/` 或 `docs/architecture/`。
+- 当前事实仍应写入 `docs/architecture/`、`docs/contracts/` 或 `docs/design/`；新增实施计划先从 `docs/plan/README.md` 判断，再进入活动 `docs/plan/impl-plan/`。
 
 ## Harness 结论
 
