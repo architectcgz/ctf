@@ -15,6 +15,10 @@ auth:
 
 container:
   max_concurrent_per_user: 5
+  scheduler:
+    batch_size: 12
+    max_concurrent_starts: 12
+    max_active_instances: 120
   # 开发环境默认经由宿主机本地端口访问实例，避免 localhost 解析到 IPv6 [::1]
   public_host: 127.0.0.1
   defense_ssh_enabled: true

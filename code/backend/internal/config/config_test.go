@@ -238,6 +238,26 @@ func TestLoadDevConfigDoesNotShipDefaultPasswords(t *testing.T) {
 	}
 }
 
+func TestLoadDevConfigOverridesPracticeSchedulerThroughput(t *testing.T) {
+	chdirToBackendRoot(t)
+	setContainerFlagSecretEnv(t, "integration-secret-123456789012345")
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.Container.Scheduler.BatchSize != 12 {
+		t.Fatalf("expected dev scheduler batch_size=12, got %d", cfg.Container.Scheduler.BatchSize)
+	}
+	if cfg.Container.Scheduler.MaxConcurrentStarts != 12 {
+		t.Fatalf("expected dev scheduler max_concurrent_starts=12, got %d", cfg.Container.Scheduler.MaxConcurrentStarts)
+	}
+	if cfg.Container.Scheduler.MaxActiveInstances != 120 {
+		t.Fatalf("expected dev scheduler max_active_instances=120, got %d", cfg.Container.Scheduler.MaxActiveInstances)
+	}
+}
+
 func TestLoadRestoresContainerFlagSecretFromPersistedFile(t *testing.T) {
 	chdirToBackendRoot(t)
 

@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -61,5 +62,65 @@ func TestInstanceReadinessProbeRejectsInvalidURL(t *testing.T) {
 	probe := NewInstanceReadinessProbe()
 	if err := probe.ProbeAccessURL(context.Background(), "://bad-url", time.Second); err == nil {
 		t.Fatal("expected invalid url error")
+	}
+}
+
+func TestInstanceReadinessProbeFallsBackToTCPForMalformedHTTPStatusCode(t *testing.T) {
+	t.Parallel()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen tcp: %v", err)
+	}
+	defer listener.Close()
+
+	accepted := make(chan struct{}, 1)
+	go func() {
+		conn, acceptErr := listener.Accept()
+		if acceptErr != nil {
+			return
+		}
+		defer conn.Close()
+
+		_, _ = fmt.Fprint(conn, "HTTP/1.1 warmup\r\nConnection: close\r\n\r\n")
+		accepted <- struct{}{}
+	}()
+
+	probe := NewInstanceReadinessProbe()
+	accessURL := fmt.Sprintf("http://%s", listener.Addr().String())
+	if err := probe.ProbeAccessURL(context.Background(), accessURL, time.Second); err != nil {
+		t.Fatalf("ProbeAccessURL() error = %v", err)
+	}
+
+	select {
+	case <-accepted:
+	case <-time.After(time.Second):
+		t.Fatal("expected malformed http status code probe to reach tcp listener")
+	}
+}
+
+func TestInstanceReadinessProbeRejectsMalformedHTTPResponseWithoutStatusCodeFallback(t *testing.T) {
+	t.Parallel()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen tcp: %v", err)
+	}
+	defer listener.Close()
+
+	go func() {
+		conn, acceptErr := listener.Accept()
+		if acceptErr != nil {
+			return
+		}
+		defer conn.Close()
+
+		_, _ = fmt.Fprint(conn, "warmup\n")
+	}()
+
+	probe := NewInstanceReadinessProbe()
+	accessURL := fmt.Sprintf("http://%s", listener.Addr().String())
+	if err := probe.ProbeAccessURL(context.Background(), accessURL, time.Second); err == nil {
+		t.Fatal("expected malformed http response to remain an error")
 	}
 }

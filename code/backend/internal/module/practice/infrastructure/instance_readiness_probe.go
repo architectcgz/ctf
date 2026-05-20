@@ -40,6 +40,9 @@ func (instanceReadinessProbe) ProbeAccessURL(ctx context.Context, accessURL stri
 
 	resp, err := client.Do(req)
 	if err != nil {
+		if isMalformedHTTPProbeError(err) {
+			return probeTCPAccessURL(ctx, parsed, timeout)
+		}
 		return err
 	}
 	defer resp.Body.Close()
@@ -49,9 +52,9 @@ func (instanceReadinessProbe) ProbeAccessURL(ctx context.Context, accessURL stri
 }
 
 func probeTCPAccessURL(ctx context.Context, parsed *url.URL, timeout time.Duration) error {
-	host := parsed.Host
-	if strings.TrimSpace(host) == "" {
-		return fmt.Errorf("tcp access url missing host")
+	host, err := dialTargetHost(parsed)
+	if err != nil {
+		return err
 	}
 	dialer := net.Dialer{Timeout: timeout}
 	conn, err := dialer.DialContext(ctx, "tcp", host)
@@ -59,6 +62,32 @@ func probeTCPAccessURL(ctx context.Context, parsed *url.URL, timeout time.Durati
 		return err
 	}
 	return conn.Close()
+}
+
+func dialTargetHost(parsed *url.URL) (string, error) {
+	host := parsed.Host
+	if strings.TrimSpace(host) == "" {
+		return "", fmt.Errorf("tcp access url missing host")
+	}
+	if parsed.Port() != "" {
+		return host, nil
+	}
+
+	switch {
+	case strings.EqualFold(parsed.Scheme, "http"):
+		return net.JoinHostPort(parsed.Hostname(), "80"), nil
+	case strings.EqualFold(parsed.Scheme, "https"):
+		return net.JoinHostPort(parsed.Hostname(), "443"), nil
+	default:
+		return "", fmt.Errorf("tcp access url missing port")
+	}
+}
+
+func isMalformedHTTPProbeError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "malformed HTTP status code")
 }
 
 func withOptionalTimeout(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
