@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"strings"
 
-	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 )
 
 const (
@@ -42,15 +42,15 @@ func (s *casService) Status() *CASStatusResp {
 
 func (s *casService) BuildLogin(context.Context) (*CASLoginResp, error) {
 	if !s.config.Enabled {
-		return nil, apperror.ErrCASDisabled
+		return nil, authcontracts.ErrCASDisabled
 	}
 	if !s.isConfigured() {
-		return nil, apperror.ErrCASNotConfigured
+		return nil, authcontracts.ErrCASNotConfigured
 	}
 
 	loginURL, err := s.buildLoginURL()
 	if err != nil {
-		return nil, apperror.ErrCASNotConfigured.WithCause(err)
+		return nil, authcontracts.ErrCASNotConfigured.WithCause(err)
 	}
 	return authQueryResponseMapperInst.ToCASLoginRespPtr(casLoginSource{
 		Provider:    casProviderName,

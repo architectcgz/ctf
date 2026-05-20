@@ -33,13 +33,13 @@ func mapServiceError(err error) error {
 	case errors.Is(err, identitycontracts.ErrUserNotFound):
 		return apperror.ErrNotFound
 	case errors.Is(err, identitycontracts.ErrUsernameExists):
-		return apperror.ErrUsernameExists
+		return identitycontracts.ErrDuplicateUsername
 	case errors.Is(err, identitycontracts.ErrEmailExists):
-		return apperror.ErrEmailExists
+		return identitycontracts.ErrDuplicateEmail
 	case errors.Is(err, identitycontracts.ErrStudentNoExists):
-		return apperror.ErrStudentNoExists
+		return identitycontracts.ErrDuplicateStudentNo
 	case errors.Is(err, identitycontracts.ErrTeacherNoExists):
-		return apperror.ErrTeacherNoExists
+		return identitycontracts.ErrDuplicateTeacherNo
 	case errors.Is(err, identitycontracts.ErrRoleNotFound):
 		return apperror.ErrInternal.WithCause(err)
 	default:

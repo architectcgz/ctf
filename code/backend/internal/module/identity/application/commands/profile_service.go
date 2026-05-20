@@ -43,11 +43,11 @@ func (s *ProfileService) ChangePassword(ctx context.Context, userID int64, req i
 
 	if !user.CheckPassword(req.OldPassword) {
 		s.log.Warn("identity_change_password_failed_old_password_invalid", zap.Int64("user_id", userID))
-		return apperror.ErrOldPasswordInvalid
+		return identitycontracts.ErrInvalidOldPassword
 	}
 	if req.OldPassword == req.NewPassword {
 		s.log.Warn("identity_change_password_failed_password_unchanged", zap.Int64("user_id", userID))
-		return apperror.ErrPasswordUnchanged
+		return identitycontracts.ErrPasswordReuse
 	}
 
 	if err := user.SetPassword(req.NewPassword); err != nil {

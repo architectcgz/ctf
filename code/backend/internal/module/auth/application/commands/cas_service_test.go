@@ -7,7 +7,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authports "ctf-platform/internal/module/auth/ports"
@@ -185,7 +184,7 @@ func TestCASServiceAuthenticateRejectsUserWhenAutoProvisionDisabled(t *testing.T
 	})
 
 	_, _, err := service.Authenticate(context.Background(), "ST-3")
-	if err != apperror.ErrCASUserNotProvisioned {
+	if err != authcontracts.ErrCASUserNotProvisioned {
 		t.Fatalf("expected ErrCASUserNotProvisioned, got %v", err)
 	}
 }
@@ -204,7 +203,7 @@ func TestCASServiceAuthenticateRejectsInvalidTicket(t *testing.T) {
 	})
 
 	_, _, err := service.Authenticate(context.Background(), "ST-invalid")
-	if err != apperror.ErrCASTicketInvalid {
+	if err != authcontracts.ErrCASTicketInvalid {
 		t.Fatalf("expected ErrCASTicketInvalid, got %v", err)
 	}
 }

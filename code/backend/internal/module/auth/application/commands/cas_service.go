@@ -57,13 +57,13 @@ func NewCASService(cfg config.CASConfig, users casUserRepository, tokenService a
 
 func (s *casService) Authenticate(ctx context.Context, ticket string) (*LoginResp, *authcontracts.Session, error) {
 	if !s.config.Enabled {
-		return nil, nil, apperror.ErrCASDisabled
+		return nil, nil, authcontracts.ErrCASDisabled
 	}
 	if !s.isConfigured() {
-		return nil, nil, apperror.ErrCASNotConfigured
+		return nil, nil, authcontracts.ErrCASNotConfigured
 	}
 	if s.users == nil || s.tokenService == nil || s.validator == nil {
-		return nil, nil, apperror.ErrCASNotImplemented
+		return nil, nil, authcontracts.ErrCASNotImplemented
 	}
 
 	principal, err := s.validateTicket(ctx, ticket)
@@ -82,13 +82,13 @@ func (s *casService) Authenticate(ctx context.Context, ticket string) (*LoginRes
 func (s *casService) validateTicket(ctx context.Context, ticket string) (*authports.CASPrincipal, error) {
 	validateURL, err := s.buildValidateURL(ticket)
 	if err != nil {
-		return nil, apperror.ErrCASNotConfigured.WithCause(err)
+		return nil, authcontracts.ErrCASNotConfigured.WithCause(err)
 	}
 
 	principal, err := s.validator.ValidateTicket(ctx, validateURL)
 	if err != nil {
 		if errors.Is(err, authports.ErrCASTicketInvalid) {
-			return nil, apperror.ErrCASTicketInvalid
+			return nil, authcontracts.ErrCASTicketInvalid
 		}
 		return nil, apperror.ErrServiceUnavailable.WithCause(err)
 	}
@@ -103,7 +103,7 @@ func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrinc
 			return nil, apperror.ErrInternal.WithCause(err)
 		}
 		if !s.config.AutoProvision {
-			return nil, apperror.ErrCASUserNotProvisioned
+			return nil, authcontracts.ErrCASUserNotProvisioned
 		}
 
 		user = &identitycontracts.User{
@@ -126,10 +126,10 @@ func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrinc
 	}
 
 	if user.Status == identitycontracts.UserStatusBanned {
-		return nil, apperror.ErrAccountDisabled
+		return nil, authcontracts.ErrAccountDisabled
 	}
 	if user.Status == identitycontracts.UserStatusLocked && (user.LockedUntil == nil || time.Now().Before(*user.LockedUntil)) {
-		return nil, apperror.ErrAccountLocked
+		return nil, authcontracts.ErrAccountLocked
 	}
 
 	changed := s.mergePrincipal(user, principal)
@@ -187,13 +187,13 @@ func (s *casService) issueLoginResp(ctx context.Context, user *identitycontracts
 func (s *casService) mapUserSyncError(err error) error {
 	switch {
 	case errors.Is(err, identitycontracts.ErrUsernameExists):
-		return apperror.ErrUsernameExists
+		return identitycontracts.ErrDuplicateUsername
 	case errors.Is(err, identitycontracts.ErrEmailExists):
-		return apperror.ErrEmailExists
+		return identitycontracts.ErrDuplicateEmail
 	case errors.Is(err, identitycontracts.ErrStudentNoExists):
-		return apperror.ErrStudentNoExists
+		return identitycontracts.ErrDuplicateStudentNo
 	case errors.Is(err, identitycontracts.ErrTeacherNoExists):
-		return apperror.ErrTeacherNoExists
+		return identitycontracts.ErrDuplicateTeacherNo
 	case errors.Is(err, identitycontracts.ErrRoleNotFound):
 		return apperror.ErrInternal.WithCause(err)
 	default:

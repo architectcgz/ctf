@@ -280,8 +280,8 @@ func TestHTTP_ChangePasswordFlow(t *testing.T) {
 		t.Fatalf("expected old password login to fail, got %d body=%s", oldLoginResp.Code, oldLoginResp.Body.String())
 	}
 	oldLoginBody := decodeEnvelope(t, oldLoginResp)
-	if oldLoginBody.Code != apperror.ErrInvalidCredentials.Code {
-		t.Fatalf("expected invalid credentials code %d, got %d", apperror.ErrInvalidCredentials.Code, oldLoginBody.Code)
+	if oldLoginBody.Code != authcontracts.ErrInvalidCredentials.Code {
+		t.Fatalf("expected invalid credentials code %d, got %d", authcontracts.ErrInvalidCredentials.Code, oldLoginBody.Code)
 	}
 
 	newLoginResp := performJSONRequest(
@@ -495,10 +495,10 @@ func TestHTTP_LoginIsTemporarilyLockedAfterRepeatedFailures(t *testing.T) {
 			nil,
 		)
 		expectedStatus := http.StatusUnauthorized
-		expectedCode := apperror.ErrInvalidCredentials.Code
+		expectedCode := authcontracts.ErrInvalidCredentials.Code
 		if attempt == 3 {
 			expectedStatus = http.StatusTooManyRequests
-			expectedCode = apperror.ErrLoginTooFrequent.Code
+			expectedCode = authcontracts.ErrLoginTooFrequent.Code
 		}
 		if failedResp.Code != expectedStatus {
 			t.Fatalf("attempt %d expected status %d, got %d body=%s", attempt, expectedStatus, failedResp.Code, failedResp.Body.String())
@@ -525,8 +525,8 @@ func TestHTTP_LoginIsTemporarilyLockedAfterRepeatedFailures(t *testing.T) {
 		t.Fatalf("expected locked login status 403, got %d body=%s", lockedResp.Code, lockedResp.Body.String())
 	}
 	lockedBody := decodeEnvelope(t, lockedResp)
-	if lockedBody.Code != apperror.ErrAccountLocked.Code {
-		t.Fatalf("expected account locked code %d, got %d", apperror.ErrAccountLocked.Code, lockedBody.Code)
+	if lockedBody.Code != authcontracts.ErrAccountLocked.Code {
+		t.Fatalf("expected account locked code %d, got %d", authcontracts.ErrAccountLocked.Code, lockedBody.Code)
 	}
 }
 
@@ -644,8 +644,8 @@ func TestHTTP_CASCallbackRejectsUserWhenAutoProvisionDisabled(t *testing.T) {
 		t.Fatalf("unexpected cas callback status: %d body=%s", resp.Code, resp.Body.String())
 	}
 	body := decodeEnvelope(t, resp)
-	if body.Code != apperror.ErrCASUserNotProvisioned.Code {
-		t.Fatalf("expected cas user not provisioned code %d, got %d", apperror.ErrCASUserNotProvisioned.Code, body.Code)
+	if body.Code != authcontracts.ErrCASUserNotProvisioned.Code {
+		t.Fatalf("expected cas user not provisioned code %d, got %d", authcontracts.ErrCASUserNotProvisioned.Code, body.Code)
 	}
 }
 

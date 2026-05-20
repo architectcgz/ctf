@@ -39,7 +39,7 @@ func NewAdminService(repo adminCommandRepository, log *zap.Logger) *AdminService
 func (s *AdminService) CreateUser(ctx context.Context, req identitycontracts.CreateUserInput) (*identitycontracts.AdminUser, error) {
 	username := strings.TrimSpace(req.Username)
 	if existing, err := s.repo.FindByUsername(ctx, username); err == nil && existing != nil {
-		return nil, apperror.ErrUsernameExists
+		return nil, identitycontracts.ErrDuplicateUsername
 	} else if err != nil && !errors.Is(err, identitycontracts.ErrUserNotFound) {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}

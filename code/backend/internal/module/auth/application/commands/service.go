@@ -65,10 +65,10 @@ func (s *service) Register(ctx context.Context, req RegisterInput) (*LoginResp, 
 		switch {
 		case errors.Is(err, identitycontracts.ErrUsernameExists):
 			s.log.Warn("auth_register_failed_username_exists", zap.String("username", req.Username))
-			return nil, nil, apperror.ErrUsernameExists
+			return nil, nil, identitycontracts.ErrDuplicateUsername
 		case errors.Is(err, identitycontracts.ErrEmailExists):
 			s.log.Warn("auth_register_failed_email_exists", zap.String("username", req.Username), zap.String("email", req.Email))
-			return nil, nil, apperror.ErrEmailExists
+			return nil, nil, identitycontracts.ErrDuplicateEmail
 		case errors.Is(err, identitycontracts.ErrRoleNotFound):
 			s.log.Error("auth_register_failed_role_missing", zap.String("username", req.Username), zap.String("role", user.Role))
 			return nil, nil, apperror.ErrInternal.WithCause(err)
@@ -89,7 +89,7 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 	if err != nil {
 		if errors.Is(err, identitycontracts.ErrUserNotFound) {
 			s.log.Warn("auth_login_failed_user_not_found", zap.String("username", req.Username))
-			return nil, nil, apperror.ErrInvalidCredentials
+			return nil, nil, authcontracts.ErrInvalidCredentials
 		}
 		s.log.Error("auth_login_failed_lookup", zap.String("username", req.Username), zap.Error(err))
 		return nil, nil, apperror.ErrInternal.WithCause(err)
@@ -97,12 +97,12 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 
 	if user.Status == identitycontracts.UserStatusBanned {
 		s.log.Warn("auth_login_failed_account_disabled", zap.String("username", req.Username), zap.Int64("user_id", user.ID))
-		return nil, nil, apperror.ErrAccountDisabled
+		return nil, nil, authcontracts.ErrAccountDisabled
 	}
 	if user.Status == identitycontracts.UserStatusLocked {
 		if user.LockedUntil == nil || time.Now().Before(*user.LockedUntil) {
 			s.log.Warn("auth_login_failed_account_locked", zap.String("username", req.Username), zap.Int64("user_id", user.ID))
-			return nil, nil, apperror.ErrAccountLocked
+			return nil, nil, authcontracts.ErrAccountLocked
 		}
 		if err := s.resetLoginTracking(ctx, user, identitycontracts.UserStatusActive); err != nil {
 			s.log.Error("auth_login_failed_unlock_expired_lock", zap.String("username", req.Username), zap.Int64("user_id", user.ID), zap.Error(err))
@@ -118,9 +118,9 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 		}
 		s.log.Warn("auth_login_failed_invalid_password", zap.String("username", req.Username), zap.Int64("user_id", user.ID), zap.Bool("locked", locked))
 		if locked {
-			return nil, nil, apperror.ErrLoginTooFrequent
+			return nil, nil, authcontracts.ErrLoginTooFrequent
 		}
-		return nil, nil, apperror.ErrInvalidCredentials
+		return nil, nil, authcontracts.ErrInvalidCredentials
 	}
 
 	if user.FailedLoginAttempts > 0 || user.LockedUntil != nil || user.Status == identitycontracts.UserStatusLocked {

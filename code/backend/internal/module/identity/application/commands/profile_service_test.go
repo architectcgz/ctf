@@ -8,7 +8,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/apperror"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
@@ -127,7 +126,7 @@ func TestProfileServiceChangePasswordOldPasswordInvalid(t *testing.T) {
 		OldPassword: "wrong-password",
 		NewPassword: "Password456",
 	})
-	if !errors.Is(err, apperror.ErrOldPasswordInvalid) {
+	if !errors.Is(err, identitycontracts.ErrInvalidOldPassword) {
 		t.Fatalf("expected old password invalid, got %v", err)
 	}
 }
@@ -154,7 +153,7 @@ func TestProfileServiceChangePasswordRejectsSamePassword(t *testing.T) {
 		OldPassword: "Password123",
 		NewPassword: "Password123",
 	})
-	if !errors.Is(err, apperror.ErrPasswordUnchanged) {
+	if !errors.Is(err, identitycontracts.ErrPasswordReuse) {
 		t.Fatalf("expected password unchanged error, got %v", err)
 	}
 }

@@ -253,7 +253,7 @@ func TestServiceLoginInvalidPassword(t *testing.T) {
 		Username: "alice_1",
 		Password: "wrong-password",
 	})
-	if !errors.Is(err, apperror.ErrInvalidCredentials) {
+	if !errors.Is(err, authcontracts.ErrInvalidCredentials) {
 		t.Fatalf("expected invalid credentials, got %v", err)
 	}
 }
@@ -296,7 +296,7 @@ func TestServiceLoginLocksAccountAfterExceededAttempts(t *testing.T) {
 		Username: "alice_2",
 		Password: "wrong-password",
 	})
-	if !errors.Is(err, apperror.ErrLoginTooFrequent) {
+	if !errors.Is(err, authcontracts.ErrLoginTooFrequent) {
 		t.Fatalf("expected ErrLoginTooFrequent, got %v", err)
 	}
 	if user.Status != identitycontracts.UserStatusLocked || user.LockedUntil == nil {
