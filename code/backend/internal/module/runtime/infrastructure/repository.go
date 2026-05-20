@@ -984,19 +984,40 @@ func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, insta
 }
 
 func (r *Repository) ReserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int) (string, error) {
-	return r.reserveAvailableSubnet(ctx, baseCIDR, subnetMask, 0, "")
+	return r.ReserveAvailableSubnetExcluding(ctx, baseCIDR, subnetMask, nil)
 }
 
 func (r *Repository) ReserveAvailableSubnetForInstance(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string) (string, error) {
-	return r.reserveAvailableSubnet(ctx, baseCIDR, subnetMask, instanceID, networkKey)
+	return r.ReserveAvailableSubnetForInstanceExcluding(ctx, baseCIDR, subnetMask, instanceID, networkKey, nil)
 }
 
-func (r *Repository) reserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string) (string, error) {
+func (r *Repository) ReserveAvailableSubnetExcluding(ctx context.Context, baseCIDR string, subnetMask int, excludedSubnets []string) (string, error) {
+	return r.reserveAvailableSubnet(ctx, baseCIDR, subnetMask, 0, "", excludedSubnets)
+}
+
+func (r *Repository) ReserveAvailableSubnetForInstanceExcluding(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string, excludedSubnets []string) (string, error) {
+	return r.reserveAvailableSubnet(ctx, baseCIDR, subnetMask, instanceID, networkKey, excludedSubnets)
+}
+
+func (r *Repository) reserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string, excludedSubnets []string) (string, error) {
 	normalizedKey := strings.TrimSpace(networkKey)
+	excludedSet := make(map[string]struct{}, len(excludedSubnets))
+	for _, subnet := range excludedSubnets {
+		subnet = strings.TrimSpace(subnet)
+		if subnet == "" {
+			continue
+		}
+		excludedSet[subnet] = struct{}{}
+	}
 	if instanceID > 0 && normalizedKey != "" {
 		existing, err := r.findSubnetAllocationByOwner(ctx, instanceID, normalizedKey)
 		if err != nil {
 			return "", err
+		}
+		if existing != "" {
+			if _, excluded := excludedSet[existing]; excluded {
+				existing = ""
+			}
 		}
 		if existing != "" {
 			return existing, nil
@@ -1008,6 +1029,9 @@ func (r *Repository) reserveAvailableSubnet(ctx context.Context, baseCIDR string
 		return "", err
 	}
 	for _, subnet := range candidates {
+		if _, excluded := excludedSet[subnet]; excluded {
+			continue
+		}
 		reserved, reserveErr := r.tryReserveSubnet(ctx, subnet, instanceID, normalizedKey)
 		if reserveErr != nil {
 			return "", reserveErr

@@ -3,10 +3,11 @@ package ports
 import "errors"
 
 var (
-	ErrRuntimeEngineUnavailable  = errors.New("runtime engine is not configured")
-	ErrRuntimeContainerNotFound  = errors.New("runtime container not found")
-	ErrRuntimeNetworkNotFound    = errors.New("runtime network not found")
-	ErrPublishedHostPortConflict = errors.New("runtime published host port conflict")
+	ErrRuntimeEngineUnavailable     = errors.New("runtime engine is not configured")
+	ErrRuntimeContainerNotFound     = errors.New("runtime container not found")
+	ErrRuntimeNetworkNotFound       = errors.New("runtime network not found")
+	ErrRuntimeNetworkSubnetConflict = errors.New("runtime network subnet conflict")
+	ErrPublishedHostPortConflict    = errors.New("runtime published host port conflict")
 )
 
 type runtimeError struct {
@@ -51,6 +52,10 @@ func WrapRuntimeContainerNotFound(err error) error {
 
 func WrapRuntimeNetworkNotFound(err error) error {
 	return wrapRuntimeError(ErrRuntimeNetworkNotFound, err)
+}
+
+func WrapRuntimeNetworkSubnetConflict(err error) error {
+	return wrapRuntimeError(ErrRuntimeNetworkSubnetConflict, err)
 }
 
 func WrapPublishedHostPortConflict(err error) error {

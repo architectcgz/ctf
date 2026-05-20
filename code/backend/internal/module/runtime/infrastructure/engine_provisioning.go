@@ -21,6 +21,7 @@ import (
 
 	"ctf-platform/internal/config"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func (e *Engine) CreateContainer(ctx context.Context, cfg *runtimecontracts.ContainerConfig) (string, error) {
@@ -155,6 +156,9 @@ func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[stri
 			}
 			return network.ID, nil
 		}
+		if isRuntimeNetworkSubnetConflictError(err) {
+			return "", runtimeports.WrapRuntimeNetworkSubnetConflict(err)
+		}
 		return "", err
 	}
 	return resp.ID, nil
@@ -175,6 +179,15 @@ func validateReusableNetwork(name string, labels map[string]string, internal boo
 		}
 	}
 	return nil
+}
+
+func isRuntimeNetworkSubnetConflictError(err error) bool {
+	if err == nil {
+		return false
+	}
+	lowered := strings.ToLower(err.Error())
+	return strings.Contains(lowered, "invalid pool request") &&
+		strings.Contains(lowered, "overlaps with other one on this address space")
 }
 
 func buildContainerNetworkingConfig(networkName string, aliases []string) *networktypes.NetworkingConfig {

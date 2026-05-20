@@ -52,3 +52,29 @@ func TestWaitForInstanceReadinessPreservesProbeBudgetForFastFailures(t *testing.
 		t.Fatalf("expected second probe to preserve timeout budget, gap=%s", gap)
 	}
 }
+
+func TestWaitForInstanceReadinessExpandsAttemptsToDeadlineBudget(t *testing.T) {
+	t.Parallel()
+
+	probe := &fastFailThenReadyProbe{readyAfter: 70 * time.Millisecond}
+	service := &Service{
+		config: &config.Config{
+			Container: config.ContainerConfig{
+				StartProbeTimeout:  20 * time.Millisecond,
+				StartProbeInterval: 10 * time.Millisecond,
+				StartProbeAttempts: 2,
+			},
+		},
+		readinessProbe: probe,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 140*time.Millisecond)
+	defer cancel()
+
+	if err := service.waitForInstanceReadiness(ctx, "http://example.internal"); err != nil {
+		t.Fatalf("waitForInstanceReadiness() error = %v", err)
+	}
+	if len(probe.callTimes) < 4 {
+		t.Fatalf("expected readiness attempts to expand beyond configured limit, got %d calls", len(probe.callTimes))
+	}
+}

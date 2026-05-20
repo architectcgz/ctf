@@ -2004,6 +2004,53 @@ func TestServiceCreateTopologyCreatesAndConnectsMultipleNetworks(t *testing.T) {
 	}
 }
 
+func TestServiceCreateTopologySkipsConflictingSubnetAndRetries(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:         "net-retried",
+		containerIDs:      []string{"web-ctr"},
+		createNetworkErrs: []error{runtimeports.WrapRuntimeNetworkSubnetConflict(errors.New("invalid pool request: Pool overlaps with other one on this address space"))},
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			if containerID != "web-ctr" {
+				t.Fatalf("unexpected inspect container id: %s", containerID)
+			}
+			return map[string]string{engine.createdNetworkNames[len(engine.createdNetworkNames)-1]: "172.30.0.20"}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		OwnerInstanceID: 7001,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateTopology() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected topology result")
+	}
+	if len(engine.createdNetworkSubnets) != 2 {
+		t.Fatalf("expected network create to retry with a new subnet, got %+v", engine.createdNetworkSubnets)
+	}
+	if engine.createdNetworkSubnets[0] != "10.10.0.0/24" {
+		t.Fatalf("expected first subnet attempt 10.10.0.0/24, got %+v", engine.createdNetworkSubnets)
+	}
+	if engine.createdNetworkSubnets[1] != "10.10.1.0/24" {
+		t.Fatalf("expected retry to skip conflicting subnet and use 10.10.1.0/24, got %+v", engine.createdNetworkSubnets)
+	}
+}
+
 func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
 	t.Parallel()
 
@@ -2297,6 +2344,7 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 type fakeRuntimeEngine struct {
 	networkID                      string
 	networkIDs                     []string
+	createNetworkErrs              []error
 	containerID                    string
 	containerIDs                   []string
 	startErr                       error
@@ -2342,6 +2390,13 @@ func (f *fakeRuntimeEngine) CreateNetwork(_ context.Context, name string, labels
 	f.createdNetworkLabel = labels
 	f.createdNetworkSubnet = subnet
 	f.createdNetworkSubnets = append(f.createdNetworkSubnets, subnet)
+	if len(f.createNetworkErrs) > 0 {
+		err := f.createNetworkErrs[0]
+		f.createNetworkErrs = f.createNetworkErrs[1:]
+		if err != nil {
+			return "", err
+		}
+	}
 	if len(f.networkIDs) > 0 {
 		networkID := f.networkIDs[0]
 		f.networkIDs = f.networkIDs[1:]

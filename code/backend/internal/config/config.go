@@ -770,7 +770,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.delete_poll_interval", time.Second)
 	v.SetDefault("container.delete_max_concurrent", 8)
 	v.SetDefault("container.orphan_grace_period", 5*time.Minute)
-	v.SetDefault("container.create_timeout", 30*time.Second)
+	v.SetDefault("container.create_timeout", 60*time.Second)
 	v.SetDefault("container.start_probe_timeout", 800*time.Millisecond)
 	v.SetDefault("container.start_probe_interval", 300*time.Millisecond)
 	v.SetDefault("container.start_probe_attempts", 5)

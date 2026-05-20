@@ -110,8 +110,8 @@ func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string
 		return fmt.Errorf("instance readiness probe is not configured")
 	}
 
-	attempts := s.startProbeAttempts()
 	timeout := s.startProbeTimeout()
+	attempts := s.effectiveStartProbeAttempts(ctx, timeout, s.startProbeInterval())
 	var lastErr error
 	for attempt := 0; attempt < attempts; attempt++ {
 		attemptStartedAt := time.Now()
@@ -185,4 +185,38 @@ func (s *Service) startProbeAttempts() int {
 		return 5
 	}
 	return s.config.Container.StartProbeAttempts
+}
+
+func (s *Service) effectiveStartProbeAttempts(ctx context.Context, timeout, interval time.Duration) int {
+	attempts := s.startProbeAttempts()
+	if attempts < 1 {
+		attempts = 1
+	}
+
+	deadline, hasDeadline := ctx.Deadline()
+	if !hasDeadline {
+		return attempts
+	}
+
+	remaining := time.Until(deadline)
+	if remaining <= 0 {
+		return attempts
+	}
+
+	cycleDuration := timeout + interval
+	if cycleDuration <= 0 {
+		cycleDuration = time.Second
+	}
+
+	derivedAttempts := int(remaining / cycleDuration)
+	if remaining%cycleDuration != 0 {
+		derivedAttempts++
+	}
+	if derivedAttempts < 1 {
+		derivedAttempts = 1
+	}
+	if derivedAttempts > attempts {
+		return derivedAttempts
+	}
+	return attempts
 }

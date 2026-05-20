@@ -124,7 +124,7 @@ container:
   delete_poll_interval: 1s
   delete_max_concurrent: 8
   orphan_grace_period: 5m
-  create_timeout: 30s
+  create_timeout: 60s
   start_probe_timeout: 800ms
   start_probe_interval: 300ms
   start_probe_attempts: 5

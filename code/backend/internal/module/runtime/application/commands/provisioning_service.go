@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -27,6 +28,8 @@ type provisioningRepository interface {
 	ReleaseReservedPort(ctx context.Context, port int) error
 	ReserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int) (string, error)
 	ReserveAvailableSubnetForInstance(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string) (string, error)
+	ReserveAvailableSubnetExcluding(ctx context.Context, baseCIDR string, subnetMask int, excludedSubnets []string) (string, error)
+	ReserveAvailableSubnetForInstanceExcluding(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string, excludedSubnets []string) (string, error)
 	ReleaseReservedSubnet(ctx context.Context, subnet string) error
 	ReleaseSubnetForInstance(ctx context.Context, subnet string, instanceID int64) error
 }
@@ -165,14 +168,27 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	managedLabels := managedContainerLabels(req)
 	for _, network := range networks {
 		networkName := resolveCreateNetworkName(network)
-		subnet, err := s.allocateNetworkSubnet(ctx, req.OwnerInstanceID, network)
-		if err != nil {
-			s.cleanupTopologyResources(ctx, nil, createdNetworks, req.OwnerInstanceID)
-			return nil, err
-		}
-		networkID, err := s.engine.CreateNetwork(ctx, networkName, managedLabels, network.Internal, network.Shared, subnet)
-		if err != nil {
+		var (
+			subnet    string
+			networkID string
+			err       error
+		)
+		excludedSubnets := make([]string, 0, 2)
+		for {
+			subnet, err = s.allocateNetworkSubnet(ctx, req.OwnerInstanceID, network, excludedSubnets)
+			if err != nil {
+				s.cleanupTopologyResources(ctx, nil, createdNetworks, req.OwnerInstanceID)
+				return nil, err
+			}
+			networkID, err = s.engine.CreateNetwork(ctx, networkName, managedLabels, network.Internal, network.Shared, subnet)
+			if err == nil {
+				break
+			}
 			s.releaseNetworkSubnet(ctx, req.OwnerInstanceID, subnet)
+			if errors.Is(err, runtimeports.ErrRuntimeNetworkSubnetConflict) && canRetrySubnetAllocation(network, subnet) {
+				excludedSubnets = appendUniqueSubnet(excludedSubnets, subnet)
+				continue
+			}
 			s.cleanupTopologyResources(ctx, nil, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
@@ -403,7 +419,7 @@ func (s *ProvisioningService) allocatePort(ctx context.Context) (int, error) {
 	return s.repo.ReserveAvailablePort(ctx, s.config.PortRangeStart, s.config.PortRangeEnd)
 }
 
-func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, ownerInstanceID int64, network runtimeports.TopologyCreateNetwork) (string, error) {
+func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, ownerInstanceID int64, network runtimeports.TopologyCreateNetwork, excludedSubnets []string) (string, error) {
 	if network.Shared {
 		return "", nil
 	}
@@ -416,9 +432,9 @@ func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, ownerIn
 	baseCIDR := s.config.Network.JeopardySubnetBase
 	subnetMask := s.config.Network.SubnetMask
 	if ownerInstanceID > 0 {
-		return s.repo.ReserveAvailableSubnetForInstance(ctx, baseCIDR, subnetMask, ownerInstanceID, network.Key)
+		return s.repo.ReserveAvailableSubnetForInstanceExcluding(ctx, baseCIDR, subnetMask, ownerInstanceID, network.Key, excludedSubnets)
 	}
-	return s.repo.ReserveAvailableSubnet(ctx, baseCIDR, subnetMask)
+	return s.repo.ReserveAvailableSubnetExcluding(ctx, baseCIDR, subnetMask, excludedSubnets)
 }
 
 func (s *ProvisioningService) releaseNetworkSubnet(ctx context.Context, ownerInstanceID int64, subnet string) {
@@ -517,6 +533,23 @@ func resolveCreateNetworkName(network runtimeports.TopologyCreateNetwork) string
 		return name
 	}
 	return buildManagedNetworkName(network.Key)
+}
+
+func canRetrySubnetAllocation(network runtimeports.TopologyCreateNetwork, subnet string) bool {
+	return strings.TrimSpace(subnet) != "" && !network.Shared && strings.TrimSpace(network.Subnet) == ""
+}
+
+func appendUniqueSubnet(items []string, subnet string) []string {
+	subnet = strings.TrimSpace(subnet)
+	if subnet == "" {
+		return items
+	}
+	for _, item := range items {
+		if item == subnet {
+			return items
+		}
+	}
+	return append(items, subnet)
 }
 
 func managedContainerLabels(req *runtimeports.TopologyCreateRequest) map[string]string {

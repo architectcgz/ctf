@@ -119,6 +119,28 @@ func TestReserveAvailableSubnetForInstanceReusesOwnerReservation(t *testing.T) {
 	}
 }
 
+func TestReserveAvailableSubnetForInstanceExcludingSkipsExcludedSubnet(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+
+	subnet, err := repo.ReserveAvailableSubnetForInstanceExcluding(
+		context.Background(),
+		"10.10.0.0/16",
+		24,
+		9201,
+		runtimecontracts.TopologyDefaultNetworkKey,
+		[]string{"10.10.0.0/24", "10.10.1.0/24"},
+	)
+	if err != nil {
+		t.Fatalf("ReserveAvailableSubnetForInstanceExcluding() error = %v", err)
+	}
+	if subnet != "10.10.2.0/24" {
+		t.Fatalf("expected excluded subnets to be skipped, got %q", subnet)
+	}
+}
+
 func TestSyncInstanceHostPortForRestartPreservesAndBindsAllocation(t *testing.T) {
 	t.Parallel()
 
