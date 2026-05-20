@@ -9,7 +9,6 @@ import (
 	"ctf-platform/internal/config"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 type QueryService struct {
@@ -66,7 +65,7 @@ func (s *QueryService) ListClasses(
 		if err != nil {
 			return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 		}
-		return commonmapper.NonNilSlice(teachingQueryMapper.ToClassItems(items)), total, page, size, nil
+		return nonNilSlice(teachingQueryMapper.ToClassItems(items)), total, page, size, nil
 	}
 
 	className := strings.TrimSpace(requester.ClassName)
@@ -167,7 +166,7 @@ func (s *QueryService) ListStudents(
 	if err != nil {
 		return nil, 0, 0, 0, apperror.ErrInternal.WithCause(err)
 	}
-	return commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(items)), total, page, size, nil
+	return nonNilSlice(teachingQueryMapper.ToStudentItems(items)), total, page, size, nil
 }
 
 func (s *QueryService) normalizeStudentPagination(query *TeacherStudentDirectoryInput) (int, int) {
@@ -216,7 +215,7 @@ func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64,
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
-	return commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(items)), nil
+	return nonNilSlice(teachingQueryMapper.ToStudentItems(items)), nil
 }
 
 type classAccessRepository interface {

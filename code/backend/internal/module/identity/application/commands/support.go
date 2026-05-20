@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"ctf-platform/internal/apperror"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -16,9 +17,14 @@ func toAdminUserResp(user *identitycontracts.User) identitycontracts.AdminUser {
 	resp.StudentNo = commonmapper.NormalizeOptionalTrimmedString(user.StudentNo)
 	resp.TeacherNo = commonmapper.NormalizeOptionalTrimmedString(user.TeacherNo)
 	resp.ClassName = commonmapper.NormalizeOptionalTrimmedString(user.ClassName)
-	resp.Roles = commonmapper.SingleString(user.Role)
-	resp.UpdatedAt = commonmapper.CopyTimeToPtr(user.UpdatedAt)
+	resp.Roles = []string{user.Role}
+	resp.UpdatedAt = copyTimeToPtr(user.UpdatedAt)
 	return *resp
+}
+
+func copyTimeToPtr(value time.Time) *time.Time {
+	copied := value
+	return &copied
 }
 
 func defaultUserStatus(status string) string {

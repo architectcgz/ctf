@@ -11,7 +11,6 @@ import (
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	teachingevidence "ctf-platform/internal/teaching/evidence"
 )
 
@@ -95,8 +94,8 @@ func (s *StudentReviewQueryService) GetStudentRecommendations(ctx context.Contex
 	if resp == nil {
 		return &TeacherRecommendationResp{}, nil
 	}
-	resp.WeakDimensions = commonmapper.NonNilSlice(resp.WeakDimensions)
-	resp.Challenges = commonmapper.NonNilSlice(resp.Challenges)
+	resp.WeakDimensions = nonNilSlice(resp.WeakDimensions)
+	resp.Challenges = nonNilSlice(resp.Challenges)
 	return resp, nil
 }
 
@@ -111,7 +110,7 @@ func (s *StudentReviewQueryService) GetStudentTimeline(ctx context.Context, requ
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
-	return &TimelineResp{Events: commonmapper.NonNilSlice(teachingQueryMapper.ToTimelineEvents(events))}, nil
+	return &TimelineResp{Events: nonNilSlice(teachingQueryMapper.ToTimelineEvents(events))}, nil
 }
 
 func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *TeacherEvidenceInput) (*TeacherEvidenceResp, error) {

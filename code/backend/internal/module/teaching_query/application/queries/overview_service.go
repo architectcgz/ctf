@@ -9,7 +9,6 @@ import (
 	"ctf-platform/internal/apperror"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 type overviewQueryRepository interface {
@@ -62,7 +61,7 @@ func (s *OverviewQueryService) GetOverview(ctx context.Context, requesterID int6
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
-	students := commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(studentItems))
+	students := nonNilSlice(teachingQueryMapper.ToStudentItems(studentItems))
 
 	trend, err := s.repo.GetOverviewTrend(ctx, classNames, startOfDay, 7)
 	if err != nil {
@@ -237,7 +236,7 @@ func (s *OverviewQueryService) buildOverviewClassFocuses(
 		if err != nil {
 			return nil, apperror.ErrInternal.WithCause(err)
 		}
-		students := commonmapper.NonNilSlice(teachingQueryMapper.ToStudentItems(studentItems))
+		students := nonNilSlice(teachingQueryMapper.ToStudentItems(studentItems))
 		dominantWeakDimension, _ := selectOverviewWeakDimensionStudents(students)
 		riskStudents := selectOverviewRiskStudents(students, len(students))
 
