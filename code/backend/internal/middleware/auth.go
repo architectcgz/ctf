@@ -28,7 +28,7 @@ func Auth(tokenService authcontracts.TokenService, cookieName string, users ...i
 
 		session, err := tokenService.GetSession(c.Request.Context(), sessionID)
 		if err != nil {
-			response.FromError(c, apperror.ErrUnauthorized)
+			response.FromError(c, err)
 			c.Abort()
 			return
 		}
@@ -39,7 +39,7 @@ func Auth(tokenService authcontracts.TokenService, cookieName string, users ...i
 			user, err := userRepo.FindByID(c.Request.Context(), session.UserID)
 			if err != nil {
 				if errors.Is(err, identitycontracts.ErrUserNotFound) {
-					response.Error(c, apperror.ErrUnauthorized)
+					response.Error(c, authcontracts.ErrAccessTokenExpired)
 				} else {
 					response.FromError(c, apperror.ErrInternal.WithCause(err))
 				}

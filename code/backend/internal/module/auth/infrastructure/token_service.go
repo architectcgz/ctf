@@ -86,12 +86,12 @@ func (s *tokenService) GetSession(ctx context.Context, sessionID string) (*authc
 		return nil, err
 	}
 	if sessionID == "" {
-		return nil, apperror.ErrUnauthorized
+		return nil, authcontracts.ErrTokenInvalid
 	}
 
 	payload, err := s.cache.Get(ctx, s.sessionKey(sessionID)).Result()
 	if errors.Is(err, redislib.Nil) {
-		return nil, apperror.ErrUnauthorized
+		return nil, authcontracts.ErrAccessTokenExpired
 	}
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
@@ -99,10 +99,14 @@ func (s *tokenService) GetSession(ctx context.Context, sessionID string) (*authc
 
 	var record sessionRecord
 	if err := json.Unmarshal([]byte(payload), &record); err != nil {
-		return nil, apperror.ErrInternal.WithCause(err)
+		return nil, authcontracts.ErrTokenInvalid.WithCause(err)
 	}
-	if record.ID == "" || record.UserID <= 0 || record.Username == "" || record.Role == "" {
-		return nil, apperror.ErrUnauthorized
+	if record.ID == "" || record.UserID <= 0 || record.Username == "" || record.Role == "" || record.ExpiresAt.IsZero() {
+		return nil, authcontracts.ErrTokenInvalid
+	}
+	if !record.ExpiresAt.After(time.Now().UTC()) {
+		_ = s.cache.Del(ctx, s.sessionKey(sessionID)).Err()
+		return nil, authcontracts.ErrAccessTokenExpired
 	}
 
 	return &authcontracts.Session{

@@ -354,8 +354,8 @@ func TestHTTP_LogoutRevokesSessionAndAdminCanQueryAuditLogs(t *testing.T) {
 		t.Fatalf("expected revoked session to return 401, got %d body=%s", revokedResp.Code, revokedResp.Body.String())
 	}
 	revokedBody := decodeEnvelope(t, revokedResp)
-	if revokedBody.Code != apperror.ErrUnauthorized.Code {
-		t.Fatalf("expected unauthorized code %d, got %d", apperror.ErrUnauthorized.Code, revokedBody.Code)
+	if revokedBody.Code != authcontracts.ErrAccessTokenExpired.Code {
+		t.Fatalf("expected access token expired code %d, got %d", authcontracts.ErrAccessTokenExpired.Code, revokedBody.Code)
 	}
 
 	adminLoginResp := performJSONRequest(
@@ -785,9 +785,16 @@ func (s *memoryTokenService) GetSession(_ context.Context, sessionID string) (*a
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if sessionID == "" {
+		return nil, authcontracts.ErrTokenInvalid
+	}
 	session, ok := s.sessions[sessionID]
 	if !ok {
-		return nil, apperror.ErrUnauthorized
+		return nil, authcontracts.ErrAccessTokenExpired
+	}
+	if !session.ExpiresAt.After(time.Now()) {
+		delete(s.sessions, sessionID)
+		return nil, authcontracts.ErrAccessTokenExpired
 	}
 	return &session, nil
 }
@@ -973,7 +980,7 @@ func testAuthMiddleware(tokenService authcontracts.TokenService, cookieName stri
 
 		session, err := tokenService.GetSession(c.Request.Context(), sessionID)
 		if err != nil {
-			response.Error(c, apperror.ErrUnauthorized)
+			response.FromError(c, err)
 			c.Abort()
 			return
 		}

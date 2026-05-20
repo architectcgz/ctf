@@ -17,6 +17,14 @@ func (e *AppError) Unwrap() error {
 	return e.Cause
 }
 
+func (e *AppError) Is(target error) bool {
+	other, ok := target.(*AppError)
+	if !ok || e == nil || other == nil {
+		return false
+	}
+	return e.Code == other.Code
+}
+
 func (e *AppError) WithCause(err error) *AppError {
 	return &AppError{
 		Code:       e.Code,
