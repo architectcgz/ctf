@@ -33,6 +33,7 @@ const {
   railScore,
   railCopy,
   formatPercent,
+  formatUsageBarWidth,
   formatBytes,
   usageTone,
 } = usePlatformOverviewWorkspace(toRef(props, 'dashboard'))
@@ -290,7 +291,7 @@ const {
                       <div
                         class="usage-bar"
                         :class="usageTone(item.cpu_percent)"
-                        :style="{ width: `${Math.round(item.cpu_percent ?? 0)}%` }"
+                        :style="{ width: formatUsageBarWidth(item.cpu_percent) }"
                       />
                     </div>
                   </div>
@@ -304,7 +305,7 @@ const {
                       <div
                         class="usage-bar"
                         :class="usageTone(item.memory_percent)"
-                        :style="{ width: `${Math.round(item.memory_percent ?? 0)}%` }"
+                        :style="{ width: formatUsageBarWidth(item.memory_percent) }"
                       />
                     </div>
                   </div>

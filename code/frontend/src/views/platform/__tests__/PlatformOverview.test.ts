@@ -65,6 +65,36 @@ describe('PlatformOverview', () => {
     expect(wrapper.text()).toContain('web-01')
   })
 
+  it('CPU 占用低于 1% 时应保留小数显示，并给热点条保留最小宽度', async () => {
+    adminApiMocks.getDashboard.mockResolvedValueOnce({
+      online_users: 18,
+      active_containers: 6,
+      cpu_usage: 0.01,
+      memory_usage: 47,
+      container_stats: [
+        {
+          container_id: 'ctf-web-1',
+          container_name: 'web-01',
+          cpu_percent: 0.32,
+          memory_percent: 54,
+          memory_usage: 1073741824,
+          memory_limit: 2147483648,
+        },
+      ],
+      alerts: [],
+    })
+
+    const wrapper = mount(PlatformOverview)
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('0.01%')
+    expect(wrapper.text()).toContain('0.32%')
+
+    const usageBars = wrapper.findAll('.usage-bar')
+    expect(usageBars[0]?.attributes('style')).toContain('width: 1%;')
+  })
+
   it('路由页应只做组合，不直接处理平台概览请求与导航', () => {
     expect(platformOverviewViewSource).toContain('usePlatformOverviewPage')
     expect(platformOverviewViewSource).not.toContain("from '@/api/admin/platform'")

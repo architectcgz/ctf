@@ -3,7 +3,18 @@ import { computed, type Ref } from 'vue'
 import type { AdminDashboardData } from '@/api/contracts'
 
 function formatPercent(value: number | undefined): string {
-  return `${Math.round(value ?? 0)}%`
+  const normalized = value ?? 0
+  if (normalized > 0 && normalized < 1) {
+    return `${normalized.toFixed(2)}%`
+  }
+  return `${Math.round(normalized)}%`
+}
+
+function formatUsageBarWidth(value: number | undefined): string {
+  const normalized = value ?? 0
+  if (normalized <= 0) return '0%'
+  if (normalized < 1) return '1%'
+  return `${Math.round(normalized)}%`
 }
 
 function formatBytes(value: number | undefined): string {
@@ -124,6 +135,7 @@ export function usePlatformOverviewWorkspace(dashboard: Ref<AdminDashboardData |
     railScore,
     railCopy,
     formatPercent,
+    formatUsageBarWidth,
     formatBytes,
     usageTone,
   }
