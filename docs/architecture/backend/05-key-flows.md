@@ -532,6 +532,21 @@ sequenceDiagram
 
 三种机制互为补充，确保不会出现资源泄漏。
 
+当前实现里，主动删除和定时过期共享同一条 runtime cleanup 能力，但 owner 不同：
+
+- `instance/application/commands/instance_service.go`
+  - 负责：学生 / 教师主动删除入口、权限校验，以及把实例原子推进到 `stopping`。
+  - 不负责：直接在 handler 或前端里拼 Docker 删除逻辑，也不负责恢复误删后的实例。
+- `runtime/application/commands/runtime_cleanup_service.go`
+  - 负责：删除容器、删除网络、移除 ACL、释放端口 / 子网占用；网络删除超时或 active endpoints 错误时按短轮询重试。
+  - 不负责：决定实例是否应该进入 `pending`、`stopping` 或 `stopped`。
+- `runtime/infrastructure/repository.go`
+  - 负责：`MarkStopping`、`FinalizeStoppedRuntime`、运行时字段清空和 allocation 删除。
+  - 不负责：直接调用 Docker API。
+- `instance/application/commands/maintenance_service.go`
+  - 负责：恢复 `creating / running` 且仍应被视为 active 的实例，以及后台 `stopping` cleanup worker。
+  - 不负责：恢复已经进入 `stopping` 的实例；删除中的实例只能继续清理，不能重新入队。
+
 ### 5.2 时序图 — 定时过期回收
 
 ```mermaid
@@ -549,14 +564,13 @@ sequenceDiagram
 
     rect rgb(200, 230, 200)
         Note over RS, Docker: 逐个回收（并发度限制为 5）
-        RS->>PG: UPDATE status='destroying'
         RS->>Docker: StopContainer(timeout=10s)
         Docker-->>RS: OK
         RS->>Docker: RemoveContainer
         Docker-->>RS: OK
         RS->>Docker: RemoveNetwork
         Docker-->>RS: OK
-        RS->>PG: UPDATE status='destroyed', destroyed_at=now()
+        RS->>PG: UPDATE status='expired', clear runtime fields, destroyed_at=now()
     end
 
     RS->>WS: 推送过期通知 {type:"expired", instance_id}
@@ -635,6 +649,7 @@ sequenceDiagram
 Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库中仍处于 `running / creating` 的实例可能已经失去实际容器。平台通过 runtime 维护任务和 practice 期望调和做主动对账：
 
 - `maintenance_service.ReconcileLostActiveRuntimes` 负责扫描未过期的 `running / creating` 实例。
+- 主动删除入口会先把实例置为 `stopping`。`stopping` 表示“实例 owner 已确认销毁，但 runtime cleanup 尚未完成”，它不再属于 active runtime recovery 的候选集合。
 - 它会根据 `container_id` 与 `runtime_details.containers[]` 检查入口容器和拓扑容器是否仍存在且处于运行状态；若单个实例 Docker inspect 失败，只记录日志并跳过该实例，本轮继续处理其他实例。
 - 若 active instance 的容器缺失或已退出，就把该实例重新置为 `pending`，交由现有 `practice_instance_scheduler` 按 `pending -> creating -> running` 流程重建。
 - 重新入队时保留 `user_id / contest_id / team_id / challenge_id / service_id / share_scope / nonce / host_port / expires_at`，只清空 `container_id / network_id / runtime_details / access_url` 这类运行时字段。
@@ -646,6 +661,25 @@ Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库�
 
 这两层恢复都不直接创建容器。容器创建、动态 Flag 构造、端口复用、就绪探测与失败标记继续由 practice 实例调度器统一负责。
 
+### 5.4.2 主动删除与 `stopping -> stopped` 收尾
+
+主动删除的当前事实如下：
+
+1. `DestroyInstance` / `DestroyTeacherInstance` 先完成权限校验，再调用 repository 原子 `MarkStopping(instance_id)`。
+2. `MarkStopping` 只允许 `pending / creating / running / failed -> stopping`；如果实例已经是 `stopping / stopped / expired`，删除请求直接返回，不再在 HTTP 链路里重试清理。
+3. 删除请求在写入 `stopping` 后立即返回；实际 Docker 清理由后台任务 `instance_stopping_cleanup` 持续轮询 `status=stopping` 的实例执行。
+4. `instance_stopping_cleanup` 按 `container.delete_poll_interval` 轮询、按 `container.delete_max_concurrent` 控制本进程内并发，避免高并发删除时把 Docker 清理尾延迟直接暴露给用户请求。
+5. 每个 worker 调用 `runtime cleanup` 依次删除 ACL、容器、网络，再释放子网和端口占用。网络删除遇到 `context deadline exceeded` 或 “has active endpoints” 时，会在短窗口内重试确认，避免 Docker 已经在后台删除但第一次调用超时。
+6. cleanup 全部成功后，由 repository `FinalizeStoppedRuntime(instance_id)` 一次性写入 `status=stopped`、`destroyed_at=now()`，并清空 `host_port / container_id / network_id / runtime_details / access_url`，同时删除 `port_allocations / network_allocations`。
+7. 如果 cleanup 失败，实例保持 `stopping`，不会被 maintenance 当成“运行时丢失”重新入队；后台 loop 会在后续轮询里继续重试，直到 cleanup 与 finalize 成功。
+
+这条链路的状态不变量如下：
+
+- `stopping` 的进入条件：实例 owner 已接受销毁请求，请求链路已经放弃继续持有 Docker cleanup 尾延迟。
+- `stopping` 的退出条件：后台 worker `FinalizeStoppedRuntime` 成功，实例变为 `stopped`；否则保持 `stopping`，等待下一轮后台清理。
+- `stopping` 的禁止行为：不能续期、不能访问、不能被 `RequeueLostRuntime` 重置为 `pending`、不能被 orphan inventory 视为“数据库无 owner 的容器”。
+- `stopped` 的结果：不再保留任何运行时连接信息或 allocation 绑定。
+
 ### 5.5 关键决策点
 
 | 决策点 | 方案 | 理由 |
@@ -653,11 +687,15 @@ Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库�
 | 扫描频率 | 过期回收 30s，孤儿对账 5 分钟 | 过期回收需要及时释放资源；孤儿对账是兜底机制，频率可低 |
 | AWD 期望补齐频率 | `container.scheduler.desired_reconcile_interval` | 赛中差集补齐与实例 provisioning 共用同一 loop，但使用独立节流 |
 | 长期坏配置降噪 | scope 级指数 backoff + 超阈值 suppress | 避免同一 `team × service` 每 15s 固定重试并持续制造日志 / operation 噪声 |
+| 主动删除中间态 | `stopping` | 删除失败后实例不再表现成 `running`，maintenance 也不会误恢复 |
+| 主动删除响应策略 | `MarkStopping` 后立即返回 | 避免 20 并发删除时把 Docker cleanup 的 30s 级尾延迟直接暴露给用户请求 |
+| 后台删除并发 | `container.delete_max_concurrent`，默认 `8` | 删除并发受控，避免同时清理过多容器 / 网络拖垮 Docker daemon |
 | 批量回收并发度 | 限制为 5 个并发 goroutine | 避免瞬间大量 Docker API 调用导致 daemon 压力过大 |
 | 行锁策略 | `SELECT ... FOR UPDATE SKIP LOCKED` | 多个回收 worker 不会争抢同一条记录，避免死锁 |
 | 容器停止超时 | 10s graceful shutdown，超时后 SIGKILL | 给容器内进程合理的清理时间 |
 | 崩溃重启策略 | 用户手动触发重启；active runtime 丢失由后台重新入队；缺失 scope 由 desired reconcile 补齐 | 容器进程自身崩溃不盲目重启；Docker daemon 重启或平台恢复后的差集补齐需要平台统一收敛 |
 | 孤儿容器识别 | Docker label `ctf=true` 过滤 | 只清理平台创建的容器，不误删其他容器 |
+| 网络删除策略 | `RemoveNetwork` 短轮询重试 + 最终由 `FinalizeStoppedRuntime` 收尾 | Docker 侧已开始删除但首次调用超时的场景需要与实例状态机解耦 |
 | 恢复重建入口 | 复用 practice 实例调度器 | 避免绕过并发上限、动态 Flag、端口和就绪探测逻辑 |
 
 ### 5.6 异常处理
@@ -667,6 +705,7 @@ Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库�
 | 单个实例 Docker inspect 失败 | 记录错误日志，跳过该实例，下轮重试 |
 | 数据库为运行中但 Docker 容器缺失 | 保留实例作用域，清空运行时字段并重新入队 |
 | 数据库为运行中但 Docker 容器已退出 | 按运行时丢失处理，整条实例重新入队 |
+| 主动删除后后台 cleanup 网络删除超时 | 实例保持 `stopping`，前台请求不再超时；后续由后台 loop 重试，但 maintenance 不会把它恢复为 `pending` |
 | 同一 `team × service` 连续补齐失败 | 记录 Redis backoff / suppress 状态，窗口内跳过自动 operation；等到 `next_attempt_at` 或 `suppressed_until` 后再重试 |
 | 容器停止超时（SIGKILL 也失败） | 标记为 `destroy_failed`，告警通知运维人工处理 |
 | Network 删除失败（仍有容器挂载） | 先强制删除残留容器，再删除 Network |
@@ -676,8 +715,9 @@ Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库�
 ### 5.7 并发与一致性考虑
 
 - **多 worker 并发回收**：`SKIP LOCKED` 保证不同 worker 处理不同实例，无锁竞争。
-- **回收与用户操作的竞态**：用户可能在回收过程中请求续期。通过数据库状态机保证：只有 `status=running` 的实例才能续期，回收时先将状态改为 `destroying`，续期请求会因状态不匹配而失败。
-- **孤儿清理的安全性**：只清理带有 `ctf=true` label 的容器，且清理前再次确认数据库中确实没有对应记录。
+- **回收与用户操作的竞态**：用户可能在回收过程中请求续期。通过数据库状态机保证：只有 `status=running` 的实例才能续期；主动删除会先进入 `stopping`，定时过期只有在 cleanup 成功后才写成 `expired`，因此续期不会把删除中的实例重新拉回活跃态。
+- **主动删除与恢复竞态**：用户删除先把实例推进到 `stopping`，恢复任务只扫描 `creating / running`，后台 cleanup 只消费 `stopping`，因此 Docker 删除超时不会再触发误恢复，也不会出现双 owner 重复清理。
+- **孤儿清理的安全性**：只清理带有 `ctf=true` label 的容器，且清理前再次确认数据库中仍没有 `creating / running / stopping` owner。
 
 ---
 

@@ -184,13 +184,30 @@ func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64
 }
 
 func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
+	_, err := r.updateStatusAndReleasePortWithCurrentStatus(ctx, id, nil, status)
+	return err
+}
+
+func (r *Repository) FailProvisioning(ctx context.Context, id int64) (bool, error) {
+	return r.updateStatusAndReleasePortWithCurrentStatus(ctx, id, []string{instancecontracts.InstanceStatusCreating}, instancecontracts.InstanceStatusFailed)
+}
+
+func (r *Repository) updateStatusAndReleasePortWithCurrentStatus(ctx context.Context, id int64, currentStatuses []string, status string) (bool, error) {
 	if id <= 0 {
-		return nil
+		return false, nil
 	}
 
-	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	changed := false
+	err := r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var instance instancecontracts.Instance
-		if err := tx.Select("id", "host_port").Where("id = ?", id).First(&instance).Error; err != nil {
+		query := tx.Select("id", "host_port").Where("id = ?", id)
+		if len(currentStatuses) > 0 {
+			query = query.Where("status IN ?", currentStatuses)
+		}
+		if err := query.First(&instance).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) && len(currentStatuses) > 0 {
+				return nil
+			}
 			return err
 		}
 
@@ -201,10 +218,17 @@ func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, s
 		if status == instancecontracts.InstanceStatusStopped || status == instancecontracts.InstanceStatusExpired {
 			updates["destroyed_at"] = time.Now()
 		}
-		if err := tx.Model(&instancecontracts.Instance{}).
-			Where("id = ?", id).
-			Updates(updates).Error; err != nil {
-			return err
+		updateQuery := tx.Model(&instancecontracts.Instance{}).
+			Where("id = ?", id)
+		if len(currentStatuses) > 0 {
+			updateQuery = updateQuery.Where("status IN ?", currentStatuses)
+		}
+		result := updateQuery.Updates(updates)
+		if result.Error != nil {
+			return result.Error
+		}
+		if len(currentStatuses) > 0 && result.RowsAffected == 0 {
+			return nil
 		}
 
 		deleteQuery := tx.Where("instance_id = ?", id)
@@ -217,11 +241,44 @@ func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, s
 		if err := tx.Where("instance_id = ?", id).Delete(&runtimeentity.NetworkAllocation{}).Error; err != nil {
 			return err
 		}
+		changed = true
 		return nil
 	})
+	return changed, err
+}
+
+func (r *Repository) MarkStopping(ctx context.Context, id int64) (bool, error) {
+	if id <= 0 {
+		return false, nil
+	}
+
+	result := r.dbWithContext(ctx).
+		Model(&instancecontracts.Instance{}).
+		Where("id = ? AND status IN ?", id, []string{
+			instancecontracts.InstanceStatusPending,
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
+			instancecontracts.InstanceStatusFailed,
+		}).
+		Updates(map[string]any{
+			"status":     instancecontracts.InstanceStatusStopping,
+			"updated_at": time.Now().UTC(),
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
+	return r.finalizeInstanceRuntime(ctx, id, instancecontracts.InstanceStatusStopped)
 }
 
 func (r *Repository) ExpireInstanceRuntime(ctx context.Context, id int64) error {
+	return r.finalizeInstanceRuntime(ctx, id, instancecontracts.InstanceStatusExpired)
+}
+
+func (r *Repository) finalizeInstanceRuntime(ctx context.Context, id int64, status string) error {
 	if id <= 0 {
 		return nil
 	}
@@ -232,11 +289,11 @@ func (r *Repository) ExpireInstanceRuntime(ctx context.Context, id int64) error 
 			return err
 		}
 
-		now := time.Now()
+		now := time.Now().UTC()
 		if err := tx.Model(&instancecontracts.Instance{}).
 			Where("id = ?", id).
 			Updates(map[string]any{
-				"status":          instancecontracts.InstanceStatusExpired,
+				"status":          status,
 				"host_port":       0,
 				"container_id":    "",
 				"network_id":      "",
@@ -260,8 +317,16 @@ func (r *Repository) ExpireInstanceRuntime(ctx context.Context, id int64) error 
 }
 
 func (r *Repository) UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
-	return r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
-		Where("id = ?", instance.ID).
+	_, err := r.PersistProvisionedRuntime(ctx, instance)
+	return err
+}
+
+func (r *Repository) PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error) {
+	if instance == nil || instance.ID <= 0 {
+		return false, nil
+	}
+	result := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("id = ? AND status = ?", instance.ID, instancecontracts.InstanceStatusCreating).
 		Updates(map[string]any{
 			"contest_id":      instance.ContestID,
 			"team_id":         instance.TeamID,
@@ -272,7 +337,11 @@ func (r *Repository) UpdateRuntime(ctx context.Context, instance *instancecontra
 			"access_url":      instance.AccessURL,
 			"status":          instance.Status,
 			"updated_at":      time.Now(),
-		}).Error
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
 }
 
 func (r *Repository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimeentity.AWDDefenseWorkspace, error) {
@@ -402,7 +471,14 @@ func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*in
 		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, contestcontracts.ContestRegistrationStatusApproved)
 	query = joinAWDActiveScopeControls(query, "inst.contest_id", "inst.team_id", "inst.service_id", "visible_team_retired_ctl", "visible_service_disabled_ctl")
 	err := applyAWDActiveScopeFilter(query, "inst.service_id", "visible_team_retired_ctl", "visible_service_disabled_ctl").
-		Where("inst.status IN ?", []string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning, instancecontracts.InstanceStatusFailed, instancecontracts.InstanceStatusExpired}).
+		Where("inst.status IN ?", []string{
+			instancecontracts.InstanceStatusPending,
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
+			instancecontracts.InstanceStatusStopping,
+			instancecontracts.InstanceStatusFailed,
+			instancecontracts.InstanceStatusExpired,
+		}).
 		Where(strings.Join([]string{
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NOT NULL AND reg.user_id IS NOT NULL)",
@@ -443,7 +519,14 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, contestcontracts.ContestRegistrationStatusApproved)
 	query = joinAWDActiveScopeControls(query, "inst.contest_id", "inst.team_id", "inst.service_id", "list_team_retired_ctl", "list_service_disabled_ctl")
 	err := applyAWDActiveScopeFilter(query, "inst.service_id", "list_team_retired_ctl", "list_service_disabled_ctl").
-		Where("inst.status IN ?", []string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning, instancecontracts.InstanceStatusFailed, instancecontracts.InstanceStatusExpired}).
+		Where("inst.status IN ?", []string{
+			instancecontracts.InstanceStatusPending,
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
+			instancecontracts.InstanceStatusStopping,
+			instancecontracts.InstanceStatusFailed,
+			instancecontracts.InstanceStatusExpired,
+		}).
 		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", contestcontracts.ContestModeAWD).
 		Where(strings.Join([]string{
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
@@ -495,6 +578,17 @@ func (r *Repository) ListRecoverableActiveInstances(ctx context.Context) ([]*ins
 		Where("expires_at > ?", time.Now()).
 		Order("updated_at ASC, id ASC").
 		Find(&instances).Error
+	return instances, err
+}
+
+func (r *Repository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time) ([]*instancecontracts.Instance, error) {
+	var instances []*instancecontracts.Instance
+	query := r.dbWithContext(ctx).
+		Where("status = ?", instancecontracts.InstanceStatusStopping)
+	if !updatedBefore.IsZero() {
+		query = query.Where("updated_at <= ?", updatedBefore)
+	}
+	err := query.Order("updated_at ASC, id ASC").Find(&instances).Error
 	return instances, err
 }
 
@@ -1103,7 +1197,11 @@ func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, erro
 		RuntimeDetails string
 	}
 	if err := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
-		Where("status IN ?", []string{instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
+		Where("status IN ?", []string{
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
+			instancecontracts.InstanceStatusStopping,
+		}).
 		Select("container_id, runtime_details").
 		Scan(&items).Error; err != nil {
 		return nil, err
@@ -1136,7 +1234,11 @@ func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, erro
 	if err := r.dbWithContext(ctx).
 		Table("awd_defense_workspaces AS ws").
 		Joins("JOIN instances AS inst ON inst.id = ws.instance_id").
-		Where("inst.status IN ?", []string{instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
+		Where("inst.status IN ?", []string{
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
+			instancecontracts.InstanceStatusStopping,
+		}).
 		Where("ws.status = ? AND ws.container_id <> ''", runtimeentity.AWDDefenseWorkspaceStatusRunning).
 		Select("ws.container_id").
 		Scan(&workspaceItems).Error; err != nil {

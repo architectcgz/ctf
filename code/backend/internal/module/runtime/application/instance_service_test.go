@@ -37,6 +37,7 @@ type runtimeInstanceContextRepo struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*instanceentity.Instance, error)
 	findUserByIDFn                          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
 	listVisibleByUserFn                     func(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error)
+	markStoppingWithContextFn               func(ctx context.Context, id int64) (bool, error)
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
 }
 
@@ -70,6 +71,17 @@ func (r *runtimeInstanceContextRepo) ListTeacherInstances(ctx context.Context, f
 }
 
 func (r *runtimeInstanceContextRepo) AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
+	return nil
+}
+
+func (r *runtimeInstanceContextRepo) MarkStopping(ctx context.Context, id int64) (bool, error) {
+	if r.markStoppingWithContextFn != nil {
+		return r.markStoppingWithContextFn(ctx, id)
+	}
+	return true, nil
+}
+
+func (r *runtimeInstanceContextRepo) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
 	return nil
 }
 
@@ -517,6 +529,48 @@ func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
 	}
 }
 
+func TestInstanceServiceGetUserInstancesMapsStoppingInstanceToDestroying(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+
+	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
+		ID:         107,
+		Title:      "Stopping Challenge",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
+		FlagType:   challengecontracts.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		Points:     120,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{
+		ID:          1007,
+		UserID:      2,
+		ChallengeID: 107,
+		Status:      instanceentity.InstanceStatusStopping,
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
+
+	items, err := service.GetUserInstances(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("GetUserInstances() error = %v", err)
+	}
+	if len(items) != 1 || items[0].ID != 1007 || items[0].Status != "destroying" {
+		t.Fatalf("expected stopping instance to be visible as destroying, got %+v", items)
+	}
+	if items[0].AccessURL != "" || items[0].Access != nil {
+		t.Fatalf("expected destroying instance access to be cleared, got %+v", items[0])
+	}
+}
+
 func TestInstanceServiceGetUserInstancesMarksExpiredRunningInstance(t *testing.T) {
 	t.Parallel()
 
@@ -885,8 +939,33 @@ func TestInstanceServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	if err := db.First(&instance, 201).Error; err != nil {
 		t.Fatalf("load instance: %v", err)
 	}
-	if instance.Status != instanceentity.InstanceStatusStopped {
-		t.Fatalf("expected stopped status, got %s", instance.Status)
+	if instance.Status != instanceentity.InstanceStatusStopping {
+		t.Fatalf("expected stopping status, got %s", instance.Status)
+	}
+}
+
+func TestInstanceServiceListTeacherInstancesMapsStoppingInstanceToDestroying(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 2, Username: "alice", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{ID: 12, Title: "Stopping Review", Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 211, UserID: 2, ChallengeID: 12, Status: instanceentity.InstanceStatusStopping, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+
+	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
+
+	items, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
+	if err != nil {
+		t.Fatalf("ListTeacherInstances() error = %v", err)
+	}
+	if len(items) != 1 || items[0].ID != 211 || items[0].Status != "destroying" {
+		t.Fatalf("expected stopping teacher instance to be visible as destroying, got %+v", items)
+	}
+	if items[0].AccessURL != "" || items[0].Access != nil {
+		t.Fatalf("expected destroying teacher instance access to be cleared, got %+v", items[0])
 	}
 }
 
@@ -963,7 +1042,7 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 	findByIDCalled := false
 	findRequesterCalled := false
 	findOwnerCalled := false
-	updateCalled := false
+	markCalled := false
 	repo := &runtimeInstanceContextRepo{
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*instanceentity.Instance, error) {
 			findByIDCalled = true
@@ -983,15 +1062,15 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 			findOwnerCalled = true
 			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
 		},
-		updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
-			updateCalled = true
+		markStoppingWithContextFn: func(ctx context.Context, id int64) (bool, error) {
+			markCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
-				t.Fatalf("expected update ctx value %v, got %v", expectedCtxValue, got)
+				t.Fatalf("expected mark-stopping ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if id != 201 || status != instanceentity.InstanceStatusStopped {
-				t.Fatalf("unexpected update args: id=%d status=%s", id, status)
+			if id != 201 {
+				t.Fatalf("unexpected mark stopping args: id=%d", id)
 			}
-			return nil
+			return true, nil
 		},
 	}
 	service := instancecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
@@ -1000,8 +1079,8 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 	if err := service.DestroyTeacherInstance(ctx, 201, 1001, identitycontracts.RoleTeacher); err != nil {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
 	}
-	if !findByIDCalled || !findRequesterCalled || !findOwnerCalled || !updateCalled {
-		t.Fatalf("expected all repository calls to happen, got findByID=%v requester=%v owner=%v update=%v", findByIDCalled, findRequesterCalled, findOwnerCalled, updateCalled)
+	if !findByIDCalled || !findRequesterCalled || !findOwnerCalled || !markCalled {
+		t.Fatalf("expected destroy to read scope and mark stopping, got findByID=%v requester=%v owner=%v mark=%v", findByIDCalled, findRequesterCalled, findOwnerCalled, markCalled)
 	}
 }
 
@@ -1015,17 +1094,40 @@ func TestInstanceServiceDestroyTeacherInstanceDoesNotCreateBackgroundContext(t *
 			}
 			return &instanceentity.Instance{ID: id, UserID: 2, Status: instanceentity.InstanceStatusRunning}, nil
 		},
-		updateStatusAndReleasePortWithContextFn: func(ctx context.Context, id int64, status string) error {
+		markStoppingWithContextFn: func(ctx context.Context, id int64) (bool, error) {
 			if ctx != nil {
-				t.Fatalf("expected update ctx to stay nil, got %v", ctx)
+				t.Fatalf("expected mark-stopping ctx to stay nil, got %v", ctx)
 			}
-			return nil
+			return true, nil
 		},
 	}
 	service := instancecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
 
 	if err := service.DestroyTeacherInstance(nil, 201, 1001, identitycontracts.RoleAdmin); err != nil {
 		t.Fatalf("DestroyTeacherInstance() error = %v", err)
+	}
+}
+
+func TestInstanceServiceDestroyTeacherInstanceReturnsImmediatelyForStoppingInstance(t *testing.T) {
+	t.Parallel()
+
+	markCalled := false
+	repo := &runtimeInstanceContextRepo{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*instanceentity.Instance, error) {
+			return &instanceentity.Instance{ID: id, UserID: 2, Status: instanceentity.InstanceStatusStopping}, nil
+		},
+		markStoppingWithContextFn: func(ctx context.Context, id int64) (bool, error) {
+			markCalled = true
+			return true, nil
+		},
+	}
+	service := instancecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil)
+
+	if err := service.DestroyTeacherInstance(context.Background(), 301, 1001, identitycontracts.RoleAdmin); err != nil {
+		t.Fatalf("DestroyTeacherInstance() error = %v", err)
+	}
+	if markCalled {
+		t.Fatal("expected stopping instance destroy retry to skip MarkStopping")
 	}
 }
 

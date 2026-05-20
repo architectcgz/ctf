@@ -397,6 +397,8 @@ func validConfigForValidationTests() *Config {
 			DefaultExposedPort:   8080,
 			PortRangeStart:       30000,
 			PortRangeEnd:         40000,
+			DeletePollInterval:   time.Second,
+			DeleteMaxConcurrent:  8,
 			OrphanGracePeriod:    time.Minute,
 			CleanupLockTTL:       time.Minute,
 			ProxyTicketTTL:       time.Minute,

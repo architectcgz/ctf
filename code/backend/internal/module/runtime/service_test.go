@@ -114,6 +114,30 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 		ContainerID:       "workspace-stopped",
 		SeedSignature:     "seed-stopped",
 	})
+	stoppingContestID := int64(304)
+	stoppingTeamID := int64(404)
+	stoppingServiceID := int64(504)
+	seedInstance(t, repo.db, &instanceentity.Instance{
+		ID:          1008,
+		UserID:      1,
+		ContestID:   &stoppingContestID,
+		TeamID:      &stoppingTeamID,
+		ServiceID:   &stoppingServiceID,
+		ChallengeID: 108,
+		ContainerID: "runtime-awd-stopping",
+		Status:      instanceentity.InstanceStatusStopping,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	})
+	seedAWDDefenseWorkspace(t, repo.db, &runtimeentity.AWDDefenseWorkspace{
+		ContestID:         stoppingContestID,
+		TeamID:            stoppingTeamID,
+		ServiceID:         stoppingServiceID,
+		InstanceID:        1008,
+		WorkspaceRevision: 1,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
+		ContainerID:       "workspace-stopping",
+		SeedSignature:     "seed-stopping",
+	})
 	failedContestID := int64(303)
 	failedTeamID := int64(403)
 	failedServiceID := int64(503)
@@ -143,8 +167,8 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ListActiveContainerIDs() error = %v", err)
 	}
-	if len(containerIDs) != 6 {
-		t.Fatalf("expected 6 active container ids, got %d (%v)", len(containerIDs), containerIDs)
+	if len(containerIDs) != 8 {
+		t.Fatalf("expected 8 active container ids, got %d (%v)", len(containerIDs), containerIDs)
 	}
 
 	got := make(map[string]struct{}, len(containerIDs))
@@ -162,6 +186,12 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 	}
 	if _, exists := got["workspace-running"]; !exists {
 		t.Fatalf("running workspace container not returned: %v", containerIDs)
+	}
+	if _, exists := got["runtime-awd-stopping"]; !exists {
+		t.Fatalf("stopping runtime container not returned: %v", containerIDs)
+	}
+	if _, exists := got["workspace-stopping"]; !exists {
+		t.Fatalf("stopping workspace container not returned: %v", containerIDs)
 	}
 	if _, exists := got["workspace-stopped"]; exists {
 		t.Fatalf("workspace container for stopped instance should not be returned: %v", containerIDs)
@@ -229,6 +259,63 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 	}
 	if count != 0 {
 		t.Fatalf("expected network allocation to be removed, count=%d", count)
+	}
+}
+
+func TestRepositoryListStoppingInstancesFiltersByUpdatedBefore(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	now := time.Now()
+	cutoff := now.Add(-5 * time.Minute)
+	staleUpdatedAt := now.Add(-10 * time.Minute)
+
+	seedInstance(t, repo.db, &instanceentity.Instance{
+		ID:          301,
+		UserID:      1,
+		ChallengeID: 201,
+		Status:      instanceentity.InstanceStatusStopping,
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   staleUpdatedAt,
+		UpdatedAt:   staleUpdatedAt,
+	})
+	seedInstance(t, repo.db, &instanceentity.Instance{
+		ID:          302,
+		UserID:      1,
+		ChallengeID: 202,
+		Status:      instanceentity.InstanceStatusStopping,
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   staleUpdatedAt,
+		UpdatedAt:   staleUpdatedAt,
+	})
+	seedInstance(t, repo.db, &instanceentity.Instance{
+		ID:          303,
+		UserID:      1,
+		ChallengeID: 203,
+		Status:      instanceentity.InstanceStatusStopping,
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now.Add(-time.Minute),
+		UpdatedAt:   now.Add(-time.Minute),
+	})
+	seedInstance(t, repo.db, &instanceentity.Instance{
+		ID:          304,
+		UserID:      1,
+		ChallengeID: 204,
+		Status:      instanceentity.InstanceStatusRunning,
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   staleUpdatedAt,
+		UpdatedAt:   staleUpdatedAt,
+	})
+
+	instances, err := repo.ListStoppingInstances(context.Background(), cutoff)
+	if err != nil {
+		t.Fatalf("ListStoppingInstances() error = %v", err)
+	}
+	if len(instances) != 2 {
+		t.Fatalf("expected 2 stale stopping instances, got %d", len(instances))
+	}
+	if instances[0].ID != 301 || instances[1].ID != 302 {
+		t.Fatalf("expected stale stopping instances ordered by updated_at then id, got ids=%d,%d", instances[0].ID, instances[1].ID)
 	}
 }
 
@@ -658,6 +745,37 @@ func TestServiceCleanupRuntimeIgnoresMissingNetwork(t *testing.T) {
 	}
 }
 
+func TestServiceCleanupRuntimeRetriesDeadlineExceededNetworkRemoval(t *testing.T) {
+	t.Parallel()
+
+	removeCalls := 0
+	engine := &fakeRuntimeEngine{
+		removeNetworkFn: func(ctx context.Context, networkID string) error {
+			removeCalls++
+			if networkID != "net-timeout" {
+				t.Fatalf("unexpected network id: %s", networkID)
+			}
+			if removeCalls == 1 {
+				return context.DeadlineExceeded
+			}
+			return runtimeports.WrapRuntimeNetworkNotFound(errors.New("Error response from daemon: network net-timeout not found"))
+		},
+	}
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
+
+	instance := &instanceentity.Instance{
+		ID:        30041,
+		NetworkID: "net-timeout",
+	}
+
+	if err := cleanupService.CleanupRuntime(context.Background(), instance); err != nil {
+		t.Fatalf("expected network timeout followed by not found to be treated as success, got %v", err)
+	}
+	if removeCalls != 2 {
+		t.Fatalf("expected cleanup to retry remove network once after deadline exceeded, got %d calls", removeCalls)
+	}
+}
+
 func TestServiceCleanupRuntimeRetriesDeadlineExceededContainerRemoval(t *testing.T) {
 	t.Parallel()
 
@@ -811,8 +929,8 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if instance.Status != instanceentity.InstanceStatusStopped {
-		t.Fatalf("expected stopped status, got %s", instance.Status)
+	if instance.Status != instanceentity.InstanceStatusStopping {
+		t.Fatalf("expected stopping status, got %s", instance.Status)
 	}
 }
 
@@ -1504,7 +1622,7 @@ func TestServiceCreateTopologyBuildsTCPEntryAccessURL(t *testing.T) {
 	}
 }
 
-func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) {
+func TestServiceDestroyManagedInstanceMarksStoppingThenBackgroundCleanupRemovesRuntime(t *testing.T) {
 	t.Parallel()
 
 	repo := newTestRepository(t)
@@ -1530,6 +1648,39 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 	if err := service.DestroyInstance(context.Background(), instance.ID, instance.UserID); err != nil {
 		t.Fatalf("DestroyInstance() error = %v", err)
 	}
+	if len(engine.removedContainerIDs) != 0 || len(engine.removedNetworkIDs) != 0 || len(engine.removedACLRules) != 0 {
+		t.Fatalf("expected destroy request to return before runtime cleanup, got containers=%v networks=%v acl=%v", engine.removedContainerIDs, engine.removedNetworkIDs, engine.removedACLRules)
+	}
+
+	updated, err := repo.FindByID(context.Background(), instance.ID)
+	if err != nil {
+		t.Fatalf("FindByID() after destroy error = %v", err)
+	}
+	if updated.Status != instanceentity.InstanceStatusStopping {
+		t.Fatalf("expected instance to enter stopping before background cleanup, got %+v", updated)
+	}
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		service.RunStoppingCleanupLoop(runCtx)
+	}()
+
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		updated, err = repo.FindByID(context.Background(), instance.ID)
+		if err != nil {
+			t.Fatalf("FindByID() during cleanup error = %v", err)
+		}
+		if updated.Status == instanceentity.InstanceStatusStopped {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+	<-done
+
 	if len(engine.removedContainerIDs) != 2 {
 		t.Fatalf("expected 2 removed containers, got %v", engine.removedContainerIDs)
 	}
@@ -1540,12 +1691,11 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		t.Fatalf("expected acl rules to be removed, got %+v", engine.removedACLRules)
 	}
 
-	updated, err := repo.FindByID(context.Background(), instance.ID)
-	if err != nil {
-		t.Fatalf("FindByID() error = %v", err)
-	}
 	if updated.Status != instanceentity.InstanceStatusStopped {
 		t.Fatalf("expected stopped status, got %+v", updated)
+	}
+	if updated.HostPort != 0 || updated.ContainerID != "" || updated.NetworkID != "" || updated.RuntimeDetails != "" || updated.AccessURL != "" {
+		t.Fatalf("expected stopped instance runtime fields to be cleared, got %+v", updated)
 	}
 
 	var count int64
@@ -2050,8 +2200,8 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindByID() error = %v", err)
 	}
-	if instance.Status != instanceentity.InstanceStatusStopped {
-		t.Fatalf("expected stopped status, got %s", instance.Status)
+	if instance.Status != instanceentity.InstanceStatusStopping {
+		t.Fatalf("expected stopping status, got %s", instance.Status)
 	}
 }
 
@@ -2092,8 +2242,9 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 }
 
 type testRuntimeService struct {
-	commands *instancecmd.InstanceService
-	queries  *instanceqry.InstanceService
+	commands    *instancecmd.InstanceService
+	queries     *instanceqry.InstanceService
+	maintenance *instancecmd.InstanceMaintenanceService
 }
 
 func (s *testRuntimeService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
@@ -2120,16 +2271,26 @@ func (s *testRuntimeService) DestroyTeacherInstance(ctx context.Context, instanc
 	return s.commands.DestroyTeacherInstance(ctx, instanceID, requesterID, requesterRole)
 }
 
+func (s *testRuntimeService) RunStoppingCleanupLoop(ctx context.Context) {
+	if s == nil || s.maintenance == nil {
+		return
+	}
+	s.maintenance.RunStoppingCleanupLoop(ctx)
+}
+
 func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine) *testRuntimeService {
 	cfg := &config.ContainerConfig{
-		MaxExtends:        2,
-		ExtendDuration:    30 * time.Minute,
-		OrphanGracePeriod: 5 * time.Minute,
+		MaxExtends:          2,
+		ExtendDuration:      30 * time.Minute,
+		OrphanGracePeriod:   5 * time.Minute,
+		DeletePollInterval:  5 * time.Millisecond,
+		DeleteMaxConcurrent: 2,
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	return &testRuntimeService{
-		commands: instancecmd.NewInstanceService(repo, cleanupService, cfg, nil),
-		queries:  instanceqry.NewInstanceService(repo, cfg),
+		commands:    instancecmd.NewInstanceService(repo, cleanupService, cfg, nil),
+		queries:     instanceqry.NewInstanceService(repo, cfg),
+		maintenance: instancecmd.NewInstanceMaintenanceService(repo, nil, cleanupService, cfg, nil),
 	}
 }
 

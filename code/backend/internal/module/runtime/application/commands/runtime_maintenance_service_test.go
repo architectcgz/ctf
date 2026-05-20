@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -18,13 +19,17 @@ import (
 type maintenanceTestRepository struct {
 	activeContainerIDs                      []string
 	recoverableActiveInstances              []*instanceentity.Instance
+	stoppingInstances                       []*instanceentity.Instance
 	runningWorkspaceByInstanceID            map[int64]*runtimeentity.AWDDefenseWorkspace
 	requeuedIDs                             []int64
+	finalizedStoppedIDs                     []int64
 	operations                              []*runtimeentity.AWDServiceOperation
 	finishedOperations                      []int64
 	findExpiredFn                           func(ctx context.Context) ([]*instanceentity.Instance, error)
+	listStoppingInstancesFn                 func(ctx context.Context, updatedBefore time.Time) ([]*instanceentity.Instance, error)
 	listRecoverableActiveInstancesFn        func(ctx context.Context) ([]*instanceentity.Instance, error)
 	findRunningWorkspaceByInstanceIDFn      func(ctx context.Context, instanceID int64) (*runtimeentity.AWDDefenseWorkspace, error)
+	finalizeStoppedRuntimeFn                func(ctx context.Context, id int64) error
 	requeueLostRuntimeFn                    func(ctx context.Context, id int64) (bool, error)
 	listActiveContainerIDsFn                func(ctx context.Context) ([]string, error)
 	updateStatusAndReleasePortFn            func(id int64, status string) error
@@ -43,6 +48,13 @@ func (r *maintenanceTestRepository) FindExpired(ctx context.Context) ([]*instanc
 		return r.findExpiredFn(ctx)
 	}
 	return nil, nil
+}
+
+func (r *maintenanceTestRepository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time) ([]*instanceentity.Instance, error) {
+	if r.listStoppingInstancesFn != nil {
+		return r.listStoppingInstancesFn(ctx, updatedBefore)
+	}
+	return append([]*instanceentity.Instance(nil), r.stoppingInstances...), nil
 }
 
 func (r *maintenanceTestRepository) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
@@ -84,6 +96,14 @@ func (r *maintenanceTestRepository) FinishAWDServiceOperation(_ context.Context,
 			operation.FinishedAt = &finishedAt
 		}
 	}
+	return nil
+}
+
+func (r *maintenanceTestRepository) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
+	if r.finalizeStoppedRuntimeFn != nil {
+		return r.finalizeStoppedRuntimeFn(ctx, id)
+	}
+	r.finalizedStoppedIDs = append(r.finalizedStoppedIDs, id)
 	return nil
 }
 
@@ -134,9 +154,17 @@ func (e *maintenanceTestEngine) StartContainer(_ context.Context, containerID st
 
 type maintenanceTestCleaner struct {
 	removedContainerIDs []string
+	cleanupInstanceIDs  []int64
+	cleanupRuntimeFn    func(context.Context, *instanceentity.Instance) error
 }
 
-func (c *maintenanceTestCleaner) CleanupRuntime(context.Context, *instanceentity.Instance) error {
+func (c *maintenanceTestCleaner) CleanupRuntime(ctx context.Context, instance *instanceentity.Instance) error {
+	if instance != nil {
+		c.cleanupInstanceIDs = append(c.cleanupInstanceIDs, instance.ID)
+	}
+	if c.cleanupRuntimeFn != nil {
+		return c.cleanupRuntimeFn(ctx, instance)
+	}
 	return nil
 }
 
@@ -292,6 +320,200 @@ func TestRuntimeMaintenanceServiceRequeuesMissingRunningContainer(t *testing.T) 
 	}
 	if len(repo.requeuedIDs) != 1 || repo.requeuedIDs[0] != 42 {
 		t.Fatalf("expected instance 42 requeued, got %v", repo.requeuedIDs)
+	}
+}
+
+func TestRuntimeMaintenanceServiceSkipsStoppingInstanceRecovery(t *testing.T) {
+	t.Parallel()
+
+	repo := &maintenanceTestRepository{
+		recoverableActiveInstances: []*instanceentity.Instance{
+			{
+				ID:          4201,
+				ContainerID: "stopping-container",
+				Status:      instanceentity.InstanceStatusStopping,
+				ExpiresAt:   time.Now().Add(time.Hour),
+				UpdatedAt:   time.Now().Add(-time.Minute),
+			},
+		},
+	}
+	engine := &maintenanceTestEngine{
+		containerStates: map[string]*runtimeports.ManagedContainerState{
+			"stopping-container": {ID: "stopping-container", Exists: false},
+		},
+	}
+	service := instancecmd.NewInstanceMaintenanceService(repo, engine, nil, &config.ContainerConfig{
+		CreateTimeout: 30 * time.Second,
+	}, nil)
+
+	if err := service.ReconcileLostActiveRuntimes(context.Background()); err != nil {
+		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
+	}
+	if len(repo.requeuedIDs) != 0 {
+		t.Fatalf("expected stopping instance to be skipped, got requeue ids %v", repo.requeuedIDs)
+	}
+}
+
+func TestRuntimeMaintenanceServiceRunStoppingCleanupLoopFinalizesStoppingInstances(t *testing.T) {
+	t.Parallel()
+
+	var repoMu sync.Mutex
+	repo := &maintenanceTestRepository{
+		stoppingInstances: []*instanceentity.Instance{
+			{
+				ID:          4301,
+				ContainerID: "stopping-container",
+				Status:      instanceentity.InstanceStatusStopping,
+				ExpiresAt:   time.Now().Add(time.Hour),
+				UpdatedAt:   time.Now().Add(-time.Minute),
+			},
+		},
+	}
+	repo.listStoppingInstancesFn = func(ctx context.Context, updatedBefore time.Time) ([]*instanceentity.Instance, error) {
+		repoMu.Lock()
+		defer repoMu.Unlock()
+		return append([]*instanceentity.Instance(nil), repo.stoppingInstances...), nil
+	}
+	repo.finalizeStoppedRuntimeFn = func(ctx context.Context, id int64) error {
+		repoMu.Lock()
+		defer repoMu.Unlock()
+		repo.finalizedStoppedIDs = append(repo.finalizedStoppedIDs, id)
+		filtered := repo.stoppingInstances[:0]
+		for _, item := range repo.stoppingInstances {
+			if item == nil || item.ID == id {
+				continue
+			}
+			filtered = append(filtered, item)
+		}
+		repo.stoppingInstances = filtered
+		return nil
+	}
+	cleaner := &maintenanceTestCleaner{}
+	service := instancecmd.NewInstanceMaintenanceService(repo, nil, cleaner, &config.ContainerConfig{
+		DeletePollInterval:  5 * time.Millisecond,
+		DeleteMaxConcurrent: 2,
+	}, nil)
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		service.RunStoppingCleanupLoop(runCtx)
+	}()
+
+	deadline := time.Now().Add(time.Second)
+	for len(repo.finalizedStoppedIDs) < 1 && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+	<-done
+
+	if len(cleaner.cleanupInstanceIDs) != 1 || cleaner.cleanupInstanceIDs[0] != 4301 {
+		t.Fatalf("expected stopping instance cleanup, got %v", cleaner.cleanupInstanceIDs)
+	}
+	if len(repo.finalizedStoppedIDs) != 1 || repo.finalizedStoppedIDs[0] != 4301 {
+		t.Fatalf("expected stopping instance finalize, got %v", repo.finalizedStoppedIDs)
+	}
+}
+
+func TestRuntimeMaintenanceServiceRunStoppingCleanupLoopHonorsConcurrencyLimit(t *testing.T) {
+	t.Parallel()
+
+	var repoMu sync.Mutex
+	repo := &maintenanceTestRepository{
+		stoppingInstances: []*instanceentity.Instance{
+			{ID: 4401, Status: instanceentity.InstanceStatusStopping, ExpiresAt: time.Now().Add(time.Hour)},
+			{ID: 4402, Status: instanceentity.InstanceStatusStopping, ExpiresAt: time.Now().Add(time.Hour)},
+			{ID: 4403, Status: instanceentity.InstanceStatusStopping, ExpiresAt: time.Now().Add(time.Hour)},
+		},
+	}
+	repo.listStoppingInstancesFn = func(ctx context.Context, updatedBefore time.Time) ([]*instanceentity.Instance, error) {
+		repoMu.Lock()
+		defer repoMu.Unlock()
+		return append([]*instanceentity.Instance(nil), repo.stoppingInstances...), nil
+	}
+	repo.finalizeStoppedRuntimeFn = func(ctx context.Context, id int64) error {
+		repoMu.Lock()
+		defer repoMu.Unlock()
+		repo.finalizedStoppedIDs = append(repo.finalizedStoppedIDs, id)
+		filtered := repo.stoppingInstances[:0]
+		for _, item := range repo.stoppingInstances {
+			if item == nil || item.ID == id {
+				continue
+			}
+			filtered = append(filtered, item)
+		}
+		repo.stoppingInstances = filtered
+		return nil
+	}
+	started := make(chan int64, 3)
+	release := make(chan struct{})
+	var (
+		mu            sync.Mutex
+		active        int
+		maxConcurrent int
+	)
+	cleaner := &maintenanceTestCleaner{
+		cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
+			mu.Lock()
+			active++
+			if active > maxConcurrent {
+				maxConcurrent = active
+			}
+			mu.Unlock()
+
+			started <- instance.ID
+
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-release:
+			}
+
+			mu.Lock()
+			active--
+			mu.Unlock()
+			return nil
+		},
+	}
+	service := instancecmd.NewInstanceMaintenanceService(repo, nil, cleaner, &config.ContainerConfig{
+		DeletePollInterval:  5 * time.Millisecond,
+		DeleteMaxConcurrent: 2,
+	}, nil)
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		service.RunStoppingCleanupLoop(runCtx)
+	}()
+
+	first := <-started
+	second := <-started
+	if first == second {
+		t.Fatalf("expected distinct stopping instances to start cleanup, got %d twice", first)
+	}
+
+	select {
+	case third := <-started:
+		t.Fatalf("expected cleanup concurrency to stay capped at 2, got third start for %d before release", third)
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	close(release)
+
+	deadline := time.Now().Add(time.Second)
+	for len(repo.finalizedStoppedIDs) < 3 && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+	<-done
+
+	if len(repo.finalizedStoppedIDs) != 3 {
+		t.Fatalf("expected all stopping instances finalized, got %v", repo.finalizedStoppedIDs)
+	}
+	if maxConcurrent != 2 {
+		t.Fatalf("expected max concurrent cleanup workers = 2, got %d", maxConcurrent)
 	}
 }
 

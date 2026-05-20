@@ -149,6 +149,8 @@ type ContainerConfig struct {
 	ExtendDuration                  time.Duration            `mapstructure:"extend_duration"`
 	CleanupInterval                 string                   `mapstructure:"cleanup_interval"`
 	CleanupLockTTL                  time.Duration            `mapstructure:"cleanup_lock_ttl"`
+	DeletePollInterval              time.Duration            `mapstructure:"delete_poll_interval"`
+	DeleteMaxConcurrent             int                      `mapstructure:"delete_max_concurrent"`
 	OrphanGracePeriod               time.Duration            `mapstructure:"orphan_grace_period"`
 	CreateTimeout                   time.Duration            `mapstructure:"create_timeout"`
 	StartProbeTimeout               time.Duration            `mapstructure:"start_probe_timeout"`
@@ -478,6 +480,12 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("container.scheduler.max_active_instances must be greater than or equal to 0")
 		}
 	}
+	if c.Container.DeletePollInterval <= 0 {
+		return fmt.Errorf("container.delete_poll_interval must be greater than 0")
+	}
+	if c.Container.DeleteMaxConcurrent <= 0 {
+		return fmt.Errorf("container.delete_max_concurrent must be greater than 0")
+	}
 	if c.Recommendation.WeakThreshold < 0 || c.Recommendation.WeakThreshold > 1 {
 		return fmt.Errorf("recommendation.weak_threshold must be between 0 and 1")
 	}
@@ -759,6 +767,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.extend_duration", 1*time.Hour)
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
 	v.SetDefault("container.cleanup_lock_ttl", 2*time.Minute)
+	v.SetDefault("container.delete_poll_interval", time.Second)
+	v.SetDefault("container.delete_max_concurrent", 8)
 	v.SetDefault("container.orphan_grace_period", 5*time.Minute)
 	v.SetDefault("container.create_timeout", 30*time.Second)
 	v.SetDefault("container.start_probe_timeout", 800*time.Millisecond)

@@ -516,6 +516,7 @@ type PracticeInstanceLookupRepository interface {
 
 type PracticeInstanceRuntimeWriteRepository interface {
 	UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error
+	PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error)
 	RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
 }
 
@@ -525,6 +526,7 @@ type PracticeInstanceAWDOperationRepository interface {
 
 type PracticeInstanceStatusRepository interface {
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
+	FailProvisioning(ctx context.Context, id int64) (bool, error)
 	TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error)
 }
 

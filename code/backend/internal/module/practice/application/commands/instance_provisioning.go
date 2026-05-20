@@ -32,8 +32,14 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *instancecont
 	if err := s.runtimeService.CleanupRuntime(ctx, instance); err != nil {
 		s.logger.Warn("清理失败实例运行时资源失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
-	if err := s.instanceRepo.UpdateStatusAndReleasePort(ctx, instance.ID, instancecontracts.InstanceStatusFailed); err != nil {
+	failed, err := s.instanceRepo.FailProvisioning(ctx, instance.ID)
+	if err != nil {
 		s.logger.Warn("更新失败实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
+	}
+	if !failed {
+		s.logger.Info("实例已不再处于 creating，跳过 failed 状态写回",
+			zap.Int64("instance_id", instance.ID))
+		return
 	}
 	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, runtimecontracts.AWDServiceOperationStatusFailed, "provision_failed", failedAt); err != nil {
 		s.logger.Warn("更新失败实例 AWD 操作状态失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
@@ -65,10 +71,22 @@ func (s *Service) provisionInstance(ctx context.Context, instance *instancecontr
 	}
 
 	instance.Status = instancecontracts.InstanceStatusRunning
-	if err := s.instanceRepo.UpdateRuntime(ctx, instance); err != nil {
+	persisted, err := s.instanceRepo.PersistProvisionedRuntime(ctx, instance)
+	if err != nil {
 		s.logger.Error("更新实例状态失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
 		s.markInstanceFailed(ctx, instance)
 		return apperror.ErrInternal.WithCause(err)
+	}
+	if !persisted {
+		cleanupCtx := bestEffortFailureContext(ctx)
+		if err := s.runtimeService.CleanupRuntime(cleanupCtx, instance); err != nil {
+			s.logger.Warn("实例已退出 creating，清理已创建运行时失败",
+				zap.Int64("instance_id", instance.ID),
+				zap.Error(err))
+		}
+		s.logger.Info("实例已不再处于 creating，跳过运行时持久化",
+			zap.Int64("instance_id", instance.ID))
+		return nil
 	}
 	if instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil {
 		s.clearDesiredAWDReconcileFailure(ctx, *instance.ContestID, *instance.TeamID, *instance.ServiceID)

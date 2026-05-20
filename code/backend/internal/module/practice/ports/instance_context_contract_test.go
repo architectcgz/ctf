@@ -19,6 +19,10 @@ func (ctxOnlyInstanceRepository) UpdateRuntime(context.Context, *instanceentity.
 	return nil
 }
 
+func (ctxOnlyInstanceRepository) PersistProvisionedRuntime(context.Context, *instanceentity.Instance) (bool, error) {
+	return false, nil
+}
+
 func (ctxOnlyInstanceRepository) FinishActiveAWDServiceOperationForInstance(context.Context, int64, string, string, time.Time) error {
 	return nil
 }
@@ -29,6 +33,10 @@ func (ctxOnlyInstanceRepository) RefreshInstanceExpiry(context.Context, int64, t
 
 func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePort(context.Context, int64, string) error {
 	return nil
+}
+
+func (ctxOnlyInstanceRepository) FailProvisioning(context.Context, int64) (bool, error) {
+	return false, nil
 }
 
 func (ctxOnlyInstanceRepository) FindByUserAndChallenge(context.Context, int64, int64) (*instanceentity.Instance, error) {

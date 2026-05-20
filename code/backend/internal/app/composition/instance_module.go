@@ -100,6 +100,10 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		},
 		cleaner.Stop,
 	))
+	root.RegisterBackgroundJob(NewLoopBackgroundJob(
+		"instance_stopping_cleanup",
+		maintenanceService.RunStoppingCleanupLoop,
+	))
 
 	if cfg.Container.DefenseSSHEnabled && module.InteractiveExecutor != nil {
 		gateway := NewAWDDefenseSSHGateway(

@@ -287,6 +287,108 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 	}
 }
 
+func TestProvisionInstanceCleansRuntimeWhenInstanceLeavesCreatingBeforePersist(t *testing.T) {
+	t.Parallel()
+
+	var cleanupCalls atomic.Int32
+	instanceStore := &stubPracticeInstanceStore{
+		persistProvisionedRuntimeWithContextFn: func(ctx context.Context, instance *instanceentity.Instance) (bool, error) {
+			if instance.Status != instanceentity.InstanceStatusRunning {
+				t.Fatalf("expected running status before conditional persistence, got %+v", instance)
+			}
+			return false, nil
+		},
+	}
+	service := NewService(
+		nil,
+		&stubPracticeImageStore{
+			findByIDFn: func(context.Context, int64) (*challengecontracts.Image, error) {
+				return &challengecontracts.Image{ID: 302, Name: "ctf/web", Tag: "v1", Status: challengecontracts.ImageStatusAvailable}, nil
+			},
+		},
+		instanceStore,
+		&stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				return "ctr-cancelled", "net-cancelled", reservedHostPort, 8080, nil
+			},
+			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
+				cleanupCalls.Add(1)
+				if instance.ContainerID != "ctr-cancelled" || instance.NetworkID != "net-cancelled" {
+					t.Fatalf("expected cleanup of created runtime, got %+v", instance)
+				}
+				return nil
+			},
+		},
+		nil,
+		nil,
+		&config.Config{Container: config.ContainerConfig{PublicHost: "127.0.0.1", CreateTimeout: time.Second, StartProbeTimeout: 50 * time.Millisecond, StartProbeInterval: 10 * time.Millisecond, StartProbeAttempts: 1}},
+		nil).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+	host, port := parseHTTPServerEndpoint(t, server.URL)
+	service.config.Container.PublicHost = host
+
+	instance := &instanceentity.Instance{ID: 953, ChallengeID: 2053, HostPort: port, Status: instanceentity.InstanceStatusCreating}
+	challenge := &challengecontracts.PracticeRuntimeChallenge{ID: 2053, ImageID: 302, Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{cancelled}"}
+
+	if err := service.provisionInstance(context.Background(), instance, toPracticeChallenge(challenge), nil, "flag{cancelled}"); err != nil {
+		t.Fatalf("provisionInstance() error = %v", err)
+	}
+	if cleanupCalls.Load() != 1 {
+		t.Fatalf("expected created runtime to be cleaned once after leaving creating, got %d", cleanupCalls.Load())
+	}
+}
+
+func TestMarkInstanceFailedSkipsFailedTransitionWhenInstanceLeavesCreating(t *testing.T) {
+	t.Parallel()
+
+	var cleanupCalls atomic.Int32
+	finishCalled := false
+	instanceStore := &stubPracticeInstanceStore{
+		failProvisioningWithContextFn: func(ctx context.Context, id int64) (bool, error) {
+			return false, nil
+		},
+		finishActiveAWDServiceOperationFn: func(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
+			finishCalled = true
+			return nil
+		},
+	}
+	service := NewService(
+		nil,
+		nil,
+		instanceStore,
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
+				cleanupCalls.Add(1)
+				return nil
+			},
+		},
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	service.markInstanceFailed(context.Background(), &instanceentity.Instance{
+		ID:          954,
+		ChallengeID: 2054,
+		ContainerID: "ctr-failed-cancelled",
+		NetworkID:   "net-failed-cancelled",
+		Status:      instanceentity.InstanceStatusCreating,
+	})
+
+	if cleanupCalls.Load() != 1 {
+		t.Fatalf("expected failed runtime cleanup once, got %d", cleanupCalls.Load())
+	}
+	if finishCalled {
+		t.Fatal("expected skipped failed transition to avoid finishing active AWD operation as failed")
+	}
+}
+
 func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 	t.Parallel()
 

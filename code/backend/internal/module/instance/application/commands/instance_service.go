@@ -143,13 +143,20 @@ func (s *InstanceService) DestroyTeacherInstance(ctx context.Context, instanceID
 }
 
 func (s *InstanceService) destroyManagedInstance(ctx context.Context, instance *instancecontracts.Instance) error {
-	if s.cleaner != nil {
-		if err := s.cleaner.CleanupRuntime(ctx, instance); err != nil {
-			return apperror.ErrInternal.WithCause(err)
-		}
+	if instance == nil {
+		return nil
 	}
-	if err := s.repo.UpdateStatusAndReleasePort(ctx, instance.ID, instancecontracts.InstanceStatusStopped); err != nil {
+	if instance.Status == instancecontracts.InstanceStatusStopped ||
+		instance.Status == instancecontracts.InstanceStatusExpired ||
+		instance.Status == instancecontracts.InstanceStatusStopping {
+		return nil
+	}
+	stopping, err := s.repo.MarkStopping(ctx, instance.ID)
+	if err != nil {
 		return apperror.ErrInternal.WithCause(err)
+	}
+	if !stopping {
+		return nil
 	}
 	return nil
 }

@@ -227,6 +227,90 @@ func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.
 	}
 }
 
+func TestMarkStoppingTransitionsActiveInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+
+	instance := instancecontracts.Instance{
+		ID:          11,
+		UserID:      7,
+		ChallengeID: 99,
+		Status:      instancecontracts.InstanceStatusRunning,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("seed instance: %v", err)
+	}
+
+	changed, err := repo.MarkStopping(context.Background(), instance.ID)
+	if err != nil {
+		t.Fatalf("MarkStopping() error = %v", err)
+	}
+	if !changed {
+		t.Fatal("expected active instance to transition to stopping")
+	}
+
+	var row struct {
+		Status string `gorm:"column:status"`
+	}
+	if err := db.Table("instances").Select("status").Where("id = ?", instance.ID).Take(&row).Error; err != nil {
+		t.Fatalf("load instance: %v", err)
+	}
+	if row.Status != instancecontracts.InstanceStatusStopping {
+		t.Fatalf("instance status = %q, want %q", row.Status, instancecontracts.InstanceStatusStopping)
+	}
+}
+
+func TestFailProvisioningDoesNotOverrideStoppingInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+
+	instance := instancecontracts.Instance{
+		ID:          12,
+		UserID:      7,
+		ChallengeID: 100,
+		Status:      instancecontracts.InstanceStatusStopping,
+		HostPort:    32012,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("seed instance: %v", err)
+	}
+	if err := db.Create(&runtimeentity.PortAllocation{Port: instance.HostPort, InstanceID: &instance.ID}).Error; err != nil {
+		t.Fatalf("seed port allocation: %v", err)
+	}
+
+	changed, err := repo.FailProvisioning(context.Background(), instance.ID)
+	if err != nil {
+		t.Fatalf("FailProvisioning() error = %v", err)
+	}
+	if changed {
+		t.Fatal("expected stopping instance to reject fail-provisioning update")
+	}
+
+	var row struct {
+		Status string `gorm:"column:status"`
+	}
+	if err := db.Table("instances").Select("status").Where("id = ?", instance.ID).Take(&row).Error; err != nil {
+		t.Fatalf("load instance: %v", err)
+	}
+	if row.Status != instancecontracts.InstanceStatusStopping {
+		t.Fatalf("instance status = %q, want %q", row.Status, instancecontracts.InstanceStatusStopping)
+	}
+
+	var remaining int64
+	if err := db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", instance.HostPort).Count(&remaining).Error; err != nil {
+		t.Fatalf("count remaining port allocations: %v", err)
+	}
+	if remaining != 1 {
+		t.Fatalf("expected fail-provisioning rejection to preserve port allocation, got %d", remaining)
+	}
+}
+
 func TestCountRunningPropagatesContextToGorm(t *testing.T) {
 	t.Parallel()
 
@@ -379,6 +463,89 @@ func TestExpireInstanceRuntimeClearsRuntimeFieldsAndPortAllocation(t *testing.T)
 	}
 	if row.DestroyedAt == nil {
 		t.Fatal("expected destroyed_at to be set for expired instance")
+	}
+	if row.DestroyedAt.Before(before.Add(-time.Second)) || row.DestroyedAt.After(after.Add(time.Second)) {
+		t.Fatalf("destroyed_at = %v, want between %v and %v", row.DestroyedAt, before, after)
+	}
+
+	var remaining int64
+	if err := db.Model(&runtimeentity.PortAllocation{}).Where("instance_id = ? OR port = ?", instance.ID, instance.HostPort).Count(&remaining).Error; err != nil {
+		t.Fatalf("count remaining port allocations: %v", err)
+	}
+	if remaining != 0 {
+		t.Fatalf("expected port allocations to be released, got %d", remaining)
+	}
+	if err := db.Model(&runtimeentity.NetworkAllocation{}).Where("instance_id = ?", instance.ID).Count(&remaining).Error; err != nil {
+		t.Fatalf("count remaining network allocations: %v", err)
+	}
+	if remaining != 0 {
+		t.Fatalf("expected network allocations to be released, got %d", remaining)
+	}
+}
+
+func TestFinalizeStoppedRuntimeClearsRuntimeFieldsAndAllocations(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeRepositoryDestroyedAtTestDB(t)
+	repo := NewRepository(db)
+	now := time.Date(2026, 5, 20, 10, 0, 0, 0, time.UTC)
+	instance := instancecontracts.Instance{
+		ID:             31,
+		UserID:         10,
+		ChallengeID:    16,
+		HostPort:       32031,
+		ContainerID:    "inst-runtime",
+		NetworkID:      "net-runtime",
+		RuntimeDetails: `{"containers":[{"container_id":"inst-runtime","host_port":32031}]}`,
+		Status:         instancecontracts.InstanceStatusStopping,
+		AccessURL:      "http://127.0.0.1:32031",
+		CreatedAt:      now.Add(-5 * time.Minute),
+		UpdatedAt:      now.Add(-2 * time.Minute),
+		ExpiresAt:      now.Add(30 * time.Minute),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("seed instance: %v", err)
+	}
+	if err := db.Create(&runtimeentity.PortAllocation{Port: instance.HostPort, InstanceID: &instance.ID}).Error; err != nil {
+		t.Fatalf("seed port allocation: %v", err)
+	}
+	if err := db.Create(&runtimeentity.NetworkAllocation{
+		Subnet:     "10.10.31.0/24",
+		InstanceID: &instance.ID,
+		NetworkKey: runtimecontracts.TopologyDefaultNetworkKey,
+	}).Error; err != nil {
+		t.Fatalf("seed network allocation: %v", err)
+	}
+
+	before := time.Now()
+	if err := repo.FinalizeStoppedRuntime(context.Background(), instance.ID); err != nil {
+		t.Fatalf("FinalizeStoppedRuntime() error = %v", err)
+	}
+	after := time.Now()
+
+	var row struct {
+		Status         string     `gorm:"column:status"`
+		HostPort       int        `gorm:"column:host_port"`
+		ContainerID    string     `gorm:"column:container_id"`
+		NetworkID      string     `gorm:"column:network_id"`
+		RuntimeDetails string     `gorm:"column:runtime_details"`
+		AccessURL      string     `gorm:"column:access_url"`
+		DestroyedAt    *time.Time `gorm:"column:destroyed_at"`
+	}
+	if err := db.Table("instances").
+		Select("status", "host_port", "container_id", "network_id", "runtime_details", "access_url", "destroyed_at").
+		Where("id = ?", instance.ID).
+		Take(&row).Error; err != nil {
+		t.Fatalf("load stopped instance: %v", err)
+	}
+	if row.Status != instancecontracts.InstanceStatusStopped {
+		t.Fatalf("instance status = %q, want %q", row.Status, instancecontracts.InstanceStatusStopped)
+	}
+	if row.HostPort != 0 || row.ContainerID != "" || row.NetworkID != "" || row.RuntimeDetails != "" || row.AccessURL != "" {
+		t.Fatalf("expected runtime fields to be cleared, got %+v", row)
+	}
+	if row.DestroyedAt == nil {
+		t.Fatal("expected destroyed_at to be set for stopped instance")
 	}
 	if row.DestroyedAt.Before(before.Add(-time.Second)) || row.DestroyedAt.After(after.Add(time.Second)) {
 		t.Fatalf("destroyed_at = %v, want between %v and %v", row.DestroyedAt, before, after)

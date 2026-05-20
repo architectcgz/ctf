@@ -2,6 +2,8 @@ package commands
 
 import (
 	"context"
+	"errors"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -16,10 +18,12 @@ import (
 type instanceMaintenanceRepository interface {
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 	FindExpired(ctx context.Context) ([]*instanceentity.Instance, error)
+	ListStoppingInstances(ctx context.Context, updatedBefore time.Time) ([]*instanceentity.Instance, error)
 	ListRecoverableActiveInstances(ctx context.Context) ([]*instanceentity.Instance, error)
 	FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*runtimecontracts.AWDDefenseWorkspace, error)
 	CreateAWDServiceOperation(ctx context.Context, operation *runtimecontracts.AWDServiceOperation) error
 	FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
+	FinalizeStoppedRuntime(ctx context.Context, id int64) error
 	RequeueLostRuntime(ctx context.Context, id int64) (bool, error)
 	ListActiveContainerIDs(ctx context.Context) ([]string, error)
 }
@@ -43,6 +47,11 @@ type InstanceMaintenanceService struct {
 	config  *config.ContainerConfig
 	logger  *zap.Logger
 }
+
+const (
+	defaultStoppingCleanupPollInterval  = time.Second
+	defaultStoppingCleanupMaxConcurrent = 8
+)
 
 func NewInstanceMaintenanceService(repo instanceMaintenanceRepository, engine instanceMaintenanceEngine, cleaner instanceMaintenanceCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *InstanceMaintenanceService {
 	if logger == nil {
@@ -143,6 +152,71 @@ func (s *InstanceMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Con
 	return nil
 }
 
+func (s *InstanceMaintenanceService) RunStoppingCleanupLoop(ctx context.Context) {
+	if s == nil || s.repo == nil || s.cleaner == nil {
+		return
+	}
+	if ctx == nil {
+		s.logger.Warn("stopping 实例清理循环缺少上下文")
+		return
+	}
+
+	ticker := time.NewTicker(s.stoppingCleanupPollInterval())
+	defer ticker.Stop()
+
+	var (
+		mu       sync.Mutex
+		inFlight = make(map[int64]struct{})
+		wg       sync.WaitGroup
+	)
+
+	for {
+		s.dispatchStoppingCleanup(ctx, &wg, &mu, inFlight)
+
+		select {
+		case <-ctx.Done():
+			wg.Wait()
+			return
+		case <-ticker.C:
+		}
+	}
+}
+
+func (s *InstanceMaintenanceService) dispatchStoppingCleanup(ctx context.Context, wg *sync.WaitGroup, mu *sync.Mutex, inFlight map[int64]struct{}) {
+	if s == nil || s.repo == nil || s.cleaner == nil {
+		return
+	}
+
+	instances, err := s.repo.ListStoppingInstances(ctx, time.Time{})
+	if err != nil {
+		if !errors.Is(err, context.Canceled) {
+			s.logger.Warn("查询 stopping 实例失败", zap.Error(err))
+		}
+		return
+	}
+
+	for _, instance := range instances {
+		if instance == nil || instance.ID <= 0 {
+			continue
+		}
+		if !s.tryClaimStoppingInstance(mu, inFlight, instance.ID) {
+			continue
+		}
+		current := *instance
+		wg.Add(1)
+		go func(item *instanceentity.Instance) {
+			defer wg.Done()
+			defer s.releaseStoppingInstance(mu, inFlight, item.ID)
+
+			if err := s.cleanupStoppingInstance(ctx, item); err != nil && !errors.Is(err, context.Canceled) {
+				s.logger.Warn("清理 stopping 实例运行时失败",
+					zap.Int64("instance_id", item.ID),
+					zap.Error(err))
+			}
+		}(&current)
+	}
+}
+
 func (s *InstanceMaintenanceService) CleanupOrphans(ctx context.Context) error {
 	ctx = normalizeContext(ctx)
 	if s.engine == nil {
@@ -186,6 +260,9 @@ func (s *InstanceMaintenanceService) CleanupOrphans(ctx context.Context) error {
 }
 
 func (s *InstanceMaintenanceService) isInstanceRuntimeLost(ctx context.Context, instance *instanceentity.Instance, now time.Time) (bool, string, []string, error) {
+	if instance.Status == instancecontracts.InstanceStatusStopping {
+		return false, "", nil, nil
+	}
 	if instance.Status == instancecontracts.InstanceStatusCreating && now.Sub(instance.UpdatedAt) < s.runtimeCreateTimeout() {
 		return false, "", nil, nil
 	}
@@ -299,6 +376,63 @@ func (s *InstanceMaintenanceService) runtimeCreateTimeout() time.Duration {
 		return 30 * time.Second
 	}
 	return s.config.CreateTimeout
+}
+
+func (s *InstanceMaintenanceService) stoppingCleanupPollInterval() time.Duration {
+	if s == nil || s.config == nil || s.config.DeletePollInterval <= 0 {
+		return defaultStoppingCleanupPollInterval
+	}
+	return s.config.DeletePollInterval
+}
+
+func (s *InstanceMaintenanceService) stoppingCleanupMaxConcurrent() int {
+	if s == nil || s.config == nil || s.config.DeleteMaxConcurrent <= 0 {
+		return defaultStoppingCleanupMaxConcurrent
+	}
+	return s.config.DeleteMaxConcurrent
+}
+
+func (s *InstanceMaintenanceService) tryClaimStoppingInstance(mu *sync.Mutex, inFlight map[int64]struct{}, instanceID int64) bool {
+	if mu == nil || inFlight == nil || instanceID <= 0 {
+		return false
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if len(inFlight) >= s.stoppingCleanupMaxConcurrent() {
+		return false
+	}
+	if _, exists := inFlight[instanceID]; exists {
+		return false
+	}
+	inFlight[instanceID] = struct{}{}
+	return true
+}
+
+func (s *InstanceMaintenanceService) releaseStoppingInstance(mu *sync.Mutex, inFlight map[int64]struct{}, instanceID int64) {
+	if mu == nil || inFlight == nil || instanceID <= 0 {
+		return
+	}
+
+	mu.Lock()
+	delete(inFlight, instanceID)
+	mu.Unlock()
+}
+
+func (s *InstanceMaintenanceService) cleanupStoppingInstance(ctx context.Context, instance *instanceentity.Instance) error {
+	if instance == nil {
+		return nil
+	}
+	if err := s.cleaner.CleanupRuntime(ctx, instance); err != nil {
+		return err
+	}
+	if err := s.repo.FinalizeStoppedRuntime(ctx, instance.ID); err != nil {
+		return err
+	}
+	s.logger.Info("已收尾 stopping 实例",
+		zap.Int64("instance_id", instance.ID))
+	return nil
 }
 
 func selectOrphanContainers(managedContainers []instanceports.ManagedContainer, activeContainerIDs map[string]struct{}, gracePeriod time.Duration) []instanceports.ManagedContainer {
