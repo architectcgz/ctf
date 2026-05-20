@@ -30,6 +30,8 @@ type RuntimeCleanupService struct {
 
 const runtimeCleanupContainerOpTimeout = 10 * time.Second
 const runtimeCleanupContainerRemovalPollInterval = 500 * time.Millisecond
+const runtimeCleanupNetworkOpTimeout = 10 * time.Second
+const runtimeCleanupNetworkRemovalPollInterval = 500 * time.Millisecond
 
 // NewRuntimeCleanupService 创建运行时资源清理服务。
 func NewRuntimeCleanupService(engine runtimeports.ContainerCleanupRuntime, repo runtimeCleanupRepository, logger *zap.Logger) *RuntimeCleanupService {
@@ -195,8 +197,25 @@ func (s *RuntimeCleanupService) removeNetwork(ctx context.Context, networkID str
 		return errRuntimeEngineUnavailable()
 	}
 
-	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	if err := s.removeNetworkOnce(ctx, networkID); err != nil {
+		if isNetworkRemovalRetryableError(err) && ctx.Err() == nil {
+			if waitErr := s.waitForNetworkRemoval(ctx, networkID); waitErr == nil {
+				s.logger.Info("删除网络在重试后完成", zap.String("network_id", networkID))
+				return nil
+			} else {
+				return waitErr
+			}
+		}
+		return err
+	}
+	s.logger.Info("删除网络", zap.String("network_id", networkID))
+	return nil
+}
+
+func (s *RuntimeCleanupService) removeNetworkOnce(ctx context.Context, networkID string) error {
+	timeoutCtx, cancel := context.WithTimeout(ctx, runtimeCleanupNetworkOpTimeout)
 	defer cancel()
+
 	if err := s.engine.RemoveNetwork(timeoutCtx, networkID); err != nil {
 		if errors.Is(err, runtimeports.ErrRuntimeNetworkNotFound) {
 			s.logger.Info("删除网络跳过，网络不存在", zap.String("network_id", networkID))
@@ -204,8 +223,37 @@ func (s *RuntimeCleanupService) removeNetwork(ctx context.Context, networkID str
 		}
 		return err
 	}
-	s.logger.Info("删除网络", zap.String("network_id", networkID))
 	return nil
+}
+
+func (s *RuntimeCleanupService) waitForNetworkRemoval(ctx context.Context, networkID string) error {
+	waitCtx, cancel := context.WithTimeout(ctx, runtimeCleanupNetworkOpTimeout)
+	defer cancel()
+
+	ticker := time.NewTicker(runtimeCleanupNetworkRemovalPollInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-waitCtx.Done():
+			return waitCtx.Err()
+		default:
+		}
+
+		err := s.removeNetworkOnce(waitCtx, networkID)
+		if err == nil {
+			return nil
+		}
+		if !isNetworkRemovalRetryableError(err) {
+			return err
+		}
+
+		select {
+		case <-waitCtx.Done():
+			return waitCtx.Err()
+		case <-ticker.C:
+		}
+	}
 }
 
 func (s *RuntimeCleanupService) releasePort(ctx context.Context, instanceID int64, port int) error {
@@ -257,4 +305,15 @@ func isContainerRemovalInProgressError(err error) bool {
 	}
 	message := strings.ToLower(strings.TrimSpace(err.Error()))
 	return strings.Contains(message, "removal of container") && strings.Contains(message, "already in progress")
+}
+
+func isNetworkRemovalRetryableError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+	message := strings.ToLower(strings.TrimSpace(err.Error()))
+	return strings.Contains(message, "has active endpoints")
 }

@@ -10,8 +10,16 @@ func InstanceRespFromModel(inst *instancecontracts.Instance, publicHost, accessH
 	if resp == nil {
 		return nil
 	}
-	resp.AccessURL = runtimecontracts.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
-	resp.Access = instancecontracts.BuildInstanceAccessInfo(resp.AccessURL)
+	if inst != nil && inst.Status == instancecontracts.InstanceStatusStopping {
+		resp.Status = "destroying"
+	}
+	if resp.Status == instancecontracts.InstanceStatusRunning {
+		resp.AccessURL = runtimecontracts.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
+		resp.Access = instancecontracts.BuildInstanceAccessInfo(resp.AccessURL)
+	} else {
+		resp.AccessURL = ""
+		resp.Access = nil
+	}
 	resp.RemainingExtends = RemainingExtends(inst)
 	return resp
 }

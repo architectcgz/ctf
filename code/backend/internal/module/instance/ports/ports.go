@@ -33,6 +33,8 @@ type InstanceExtendRepository interface {
 }
 
 type InstanceStatusRepository interface {
+	MarkStopping(ctx context.Context, id int64) (bool, error)
+	FinalizeStoppedRuntime(ctx context.Context, id int64) error
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 }
 

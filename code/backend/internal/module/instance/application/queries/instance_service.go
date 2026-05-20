@@ -109,7 +109,11 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 }
 
 func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, publicHost, accessHost string) *instancecontracts.InstanceInfo {
-	accessURL := runtimecontracts.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
+	status := visibleInstanceStatus(inst.Status, inst.ExpiresAt, now)
+	accessURL := ""
+	if status == instancecontracts.InstanceStatusRunning {
+		accessURL = runtimecontracts.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
+	}
 	if inst.ContestMode == contestcontracts.ContestModeAWD {
 		accessURL = ""
 	}
@@ -121,7 +125,7 @@ func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, pu
 		Category:         inst.Category,
 		Difficulty:       inst.Difficulty,
 		FlagType:         inst.FlagType,
-		Status:           visibleInstanceStatus(inst.Status, inst.ExpiresAt, now),
+		Status:           status,
 		ShareScope:       inst.ShareScope,
 		AccessURL:        accessURL,
 		Access:           instancecontracts.BuildInstanceAccessInfo(accessURL),
@@ -135,7 +139,11 @@ func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, pu
 }
 
 func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time, publicHost, accessHost string) instancecontracts.TeacherInstanceItem {
-	accessURL := runtimecontracts.ResolveRuntimePublicAccessURL(item.AccessURL, publicHost, accessHost)
+	status := visibleInstanceStatus(item.Status, item.ExpiresAt, now)
+	accessURL := ""
+	if status == instancecontracts.InstanceStatusRunning {
+		accessURL = runtimecontracts.ResolveRuntimePublicAccessURL(item.AccessURL, publicHost, accessHost)
+	}
 	return instancecontracts.TeacherInstanceItem{
 		ID:              item.ID,
 		StudentID:       item.StudentID,
@@ -145,7 +153,7 @@ func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time,
 		ClassName:       item.ClassName,
 		ChallengeID:     item.ChallengeID,
 		ChallengeTitle:  item.ChallengeTitle,
-		Status:          visibleInstanceStatus(item.Status, item.ExpiresAt, now),
+		Status:          status,
 		AccessURL:       accessURL,
 		Access:          instancecontracts.BuildInstanceAccessInfo(accessURL),
 		ExpiresAt:       item.ExpiresAt,
@@ -159,6 +167,9 @@ func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time,
 func visibleInstanceStatus(status string, expiresAt, now time.Time) string {
 	if status == instancecontracts.InstanceStatusRunning && !expiresAt.After(now) {
 		return instancecontracts.InstanceStatusExpired
+	}
+	if status == instancecontracts.InstanceStatusStopping {
+		return "destroying"
 	}
 	return status
 }

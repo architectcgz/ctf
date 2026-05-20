@@ -35,6 +35,14 @@ func (ctxOnlyInstanceRepository) AtomicExtendByID(context.Context, int64, int, t
 	return nil
 }
 
+func (ctxOnlyInstanceRepository) MarkStopping(context.Context, int64) (bool, error) {
+	return true, nil
+}
+
+func (ctxOnlyInstanceRepository) FinalizeStoppedRuntime(context.Context, int64) error {
+	return nil
+}
+
 func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePort(context.Context, int64, string) error {
 	return nil
 }

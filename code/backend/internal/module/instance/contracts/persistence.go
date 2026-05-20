@@ -16,6 +16,7 @@ const (
 	InstanceStatusPending  = instanceentity.InstanceStatusPending
 	InstanceStatusCreating = instanceentity.InstanceStatusCreating
 	InstanceStatusRunning  = instanceentity.InstanceStatusRunning
+	InstanceStatusStopping = instanceentity.InstanceStatusStopping
 	InstanceStatusStopped  = instanceentity.InstanceStatusStopped
 	InstanceStatusExpired  = instanceentity.InstanceStatusExpired
 	InstanceStatusFailed   = instanceentity.InstanceStatusFailed

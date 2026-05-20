@@ -422,6 +422,11 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			return apperror.ErrInternal.WithCause(err)
 		}
 		if existingInstance != nil {
+			instance = existingInstance
+			reused = true
+			if existingInstance.Status == instancecontracts.InstanceStatusStopping {
+				return nil
+			}
 			if scope.ContestMode == practiceports.ContestModeAWD {
 				if !existingInstance.ExpiresAt.Equal(expiresAt) {
 					if err := txRepo.RefreshInstanceExpiry(ctx, existingInstance.ID, expiresAt); err != nil {
@@ -439,8 +444,6 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 				}
 				existingInstance.ExpiresAt = refreshedExpiry
 			}
-			instance = existingInstance
-			reused = true
 			return nil
 		}
 

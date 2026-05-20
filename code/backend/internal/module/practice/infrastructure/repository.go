@@ -291,7 +291,11 @@ func (r *Repository) FindScopedExistingInstance(ctx context.Context, userID, cha
 		Where("share_scope = ?", scope.ShareScope).
 		Where(
 			"(status IN ? OR (status = ? AND expires_at > ?))",
-			[]string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating},
+			[]string{
+				instancecontracts.InstanceStatusPending,
+				instancecontracts.InstanceStatusCreating,
+				instancecontracts.InstanceStatusStopping,
+			},
 			instancecontracts.InstanceStatusRunning,
 			now,
 		)
@@ -355,7 +359,11 @@ func (r *Repository) CountScopedRunningInstances(ctx context.Context, userID int
 		Where("share_scope = ?", scope.ShareScope).
 		Where(
 			"(status IN ? OR (status = ? AND expires_at > ?))",
-			[]string{instancecontracts.InstanceStatusPending, instancecontracts.InstanceStatusCreating},
+			[]string{
+				instancecontracts.InstanceStatusPending,
+				instancecontracts.InstanceStatusCreating,
+				instancecontracts.InstanceStatusStopping,
+			},
 			instancecontracts.InstanceStatusRunning,
 			now,
 		)

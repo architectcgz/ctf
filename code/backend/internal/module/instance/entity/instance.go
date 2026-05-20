@@ -37,6 +37,7 @@ const (
 	InstanceStatusPending  = "pending"
 	InstanceStatusCreating = "creating"
 	InstanceStatusRunning  = "running"
+	InstanceStatusStopping = "stopping"
 	InstanceStatusStopped  = "stopped"
 	InstanceStatusExpired  = "expired"
 	InstanceStatusFailed   = "failed"

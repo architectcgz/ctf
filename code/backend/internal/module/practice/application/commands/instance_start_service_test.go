@@ -504,6 +504,99 @@ func TestStartContestAWDServiceRefreshesExistingInstanceExpiryToContestEnd(t *te
 	}
 }
 
+func TestStartContestAWDServiceDoesNotRefreshStoppingInstanceExpiry(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	teamID := int64(4218)
+	serviceID := int64(7218)
+	contestID := int64(3218)
+	userID := int64(5218)
+	contestEnd := now.Add(6 * time.Hour).UTC()
+	existingExpiry := now.Add(5 * time.Minute)
+	existingInstance := &instanceentity.Instance{
+		ID:          9218,
+		UserID:      userID,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 2218,
+		ServiceID:   &serviceID,
+		ShareScope:  instanceentity.ShareScopePerTeam,
+		Status:      instanceentity.InstanceStatusStopping,
+		ExpiresAt:   existingExpiry,
+		MaxExtends:  2,
+	}
+	refreshCalled := false
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*practiceports.ContestRecord, error) {
+			return &practiceports.ContestRecord{ID: gotContestID, Mode: practiceports.ContestModeAWD, Status: practiceports.ContestStatusRunning, EndTime: contestEnd}, nil
+		},
+		findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
+			return &practiceports.ContestAWDServiceRecord{
+				ID:              serviceID,
+				ContestID:       contestID,
+				AWDChallengeID:  2218,
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"awd-service","category":"web","difficulty":"medium","runtime_config":{"image_id":118,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
+			}, nil
+		},
+		findContestRegistrationFn: func(ctx context.Context, gotContestID, gotUserID int64) (*practiceports.ContestParticipation, error) {
+			return &practiceports.ContestParticipation{TeamID: &teamID, Status: contestentity.ContestRegistrationStatusApproved}, nil
+		},
+		findScopedExistingInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, scope practiceports.InstanceScope) (*instanceentity.Instance, error) {
+			if gotUserID != userID || gotChallengeID != 2218 {
+				t.Fatalf("unexpected scoped lookup: user=%d challenge=%d", gotUserID, gotChallengeID)
+			}
+			return existingInstance, nil
+		},
+		refreshInstanceExpiryWithContextFn: func(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+			refreshCalled = true
+			return nil
+		},
+	}
+
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled: true,
+				},
+			},
+		},
+		nil),
+
+		repo, &stubPracticeChallengeContract{})
+
+	resp, err := service.StartContestAWDService(context.Background(), userID, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("StartContestAWDService() error = %v", err)
+	}
+	if resp.ID != existingInstance.ID {
+		t.Fatalf("expected reused awd stopping instance, got %+v", resp)
+	}
+	if refreshCalled {
+		t.Fatal("stopping awd instance should not refresh expiry")
+	}
+	if !resp.ExpiresAt.Equal(existingExpiry) || !existingInstance.ExpiresAt.Equal(existingExpiry) {
+		t.Fatalf("expected stopping awd expiry to remain unchanged, resp=%s stored=%s want=%s", resp.ExpiresAt, existingInstance.ExpiresAt, existingExpiry)
+	}
+	if resp.Status != "destroying" {
+		t.Fatalf("expected stopping awd instance to be exposed as destroying, got %+v", resp)
+	}
+	if resp.AccessURL != "" || resp.Access != nil {
+		t.Fatalf("expected destroying awd response access to be cleared, got %+v", resp)
+	}
+}
+
 func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	t.Parallel()
 
@@ -1604,6 +1697,118 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingShar
 	}
 	if !lockCalled || !findExistingCalled || !refreshCalled {
 		t.Fatalf("expected lock/find/refresh to be called, got lock=%v find=%v refresh=%v", lockCalled, findExistingCalled, refreshCalled)
+	}
+}
+
+func TestStartChallengeReusesStoppingInstanceInsteadOfCreatingNewOne(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	stoppingExpiresAt := now.Add(time.Hour)
+	stoppingUpdatedAt := now.Add(-time.Minute)
+	if err := db.Create(&practiceCommandImageRow{
+		ID:        107,
+		Name:      "ctf/web",
+		Tag:       "v1",
+		Status:    challengecontracts.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	if err := db.Create(&practiceCommandChallengeRow{
+		ID:         207,
+		Title:      "Stopping Reuse",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
+		Points:     100,
+		ImageID:    107,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
+		FlagHash:   "flag{static}",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Create(&identitycontracts.User{ID: 47, Username: "student-47", Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if err := db.Create(&instanceentity.Instance{
+		ID:          9007,
+		UserID:      47,
+		ChallengeID: 207,
+		Status:      instanceentity.InstanceStatusStopping,
+		ExpiresAt:   stoppingExpiresAt,
+		MaxExtends:  2,
+		CreatedAt:   now.Add(-time.Minute),
+		UpdatedAt:   stoppingUpdatedAt,
+	}).Error; err != nil {
+		t.Fatalf("create stopping instance: %v", err)
+	}
+
+	service := wirePracticeScopeAdapters(NewService(
+		practiceinfra.NewRepository(db),
+
+		challengeinfra.NewImageRepository(db),
+		runtimeinfrarepo.NewRepository(db),
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PortRangeStart:       30000,
+				PortRangeEnd:         30010,
+				DefaultExposedPort:   8080,
+				PublicHost:           "127.0.0.1",
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 1,
+				CreateTimeout:        time.Second,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:             true,
+					PollInterval:        10 * time.Millisecond,
+					BatchSize:           1,
+					MaxConcurrentStarts: 1,
+					MaxActiveInstances:  10,
+				},
+			},
+		},
+		nil),
+
+		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+
+	resp, err := service.StartChallenge(context.Background(), 47, 207)
+	if err != nil {
+		t.Fatalf("StartChallenge() error = %v", err)
+	}
+	if resp.ID != 9007 {
+		t.Fatalf("expected stopping instance to be reused, got %+v", resp)
+	}
+	if resp.Status != "destroying" {
+		t.Fatalf("expected stopping instance to be exposed as destroying, got %+v", resp)
+	}
+	if resp.AccessURL != "" || resp.Access != nil {
+		t.Fatalf("expected destroying response access to be cleared, got %+v", resp)
+	}
+
+	var count int64
+	if err := db.Model(&instanceentity.Instance{}).Where("user_id = ? AND challenge_id = ?", 47, 207).Count(&count).Error; err != nil {
+		t.Fatalf("count instances: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected no replacement instance to be created, got %d rows", count)
+	}
+
+	stored, err := runtimeinfrarepo.NewRepository(db).FindByID(context.Background(), 9007)
+	if err != nil {
+		t.Fatalf("load stored stopping instance: %v", err)
+	}
+	if !stored.ExpiresAt.Equal(stoppingExpiresAt) {
+		t.Fatalf("expected stopping instance expiry to remain unchanged, got %s want %s", stored.ExpiresAt, stoppingExpiresAt)
+	}
+	if !stored.UpdatedAt.Equal(stoppingUpdatedAt) {
+		t.Fatalf("expected stopping instance updated_at to remain unchanged, got %s want %s", stored.UpdatedAt, stoppingUpdatedAt)
 	}
 }
 

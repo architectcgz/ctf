@@ -24,7 +24,9 @@ type InstanceModule struct {
 
 	PracticeInstanceRepository interface {
 		FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error)
+		FailProvisioning(ctx context.Context, id int64) (bool, error)
 		UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error
+		PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error)
 		FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
 		RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
 		UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
