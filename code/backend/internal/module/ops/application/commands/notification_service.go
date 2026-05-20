@@ -21,7 +21,6 @@ import (
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 	ctfws "ctf-platform/internal/websocket"
 )
 
@@ -217,7 +216,7 @@ func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificati
 
 func toNotificationInfo(notification *opsentity.Notification) NotificationInfo {
 	resp := notificationMapper.ToNotificationInfoPtr(notification)
-	resp.Content = commonmapper.NormalizeOptionalString(notification.Content)
+	resp.Content = normalizeOptionalString(notification.Content)
 	resp.Unread = !notification.IsRead
 	return *resp
 }

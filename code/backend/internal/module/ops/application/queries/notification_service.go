@@ -9,7 +9,6 @@ import (
 	"ctf-platform/internal/config"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 type NotificationService struct {
@@ -62,7 +61,7 @@ func (s *NotificationService) GetNotifications(ctx context.Context, userID int64
 
 func toNotificationInfo(notification *opsentity.Notification) NotificationInfo {
 	resp := notificationMapper.ToNotificationInfoPtr(notification)
-	resp.Content = commonmapper.NormalizeOptionalString(notification.Content)
+	resp.Content = normalizeOptionalString(notification.Content)
 	resp.Unread = !notification.IsRead
 	return *resp
 }

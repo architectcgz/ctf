@@ -17,7 +17,6 @@ import (
 	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 type authCommandService interface {
@@ -125,7 +124,7 @@ func (h *Handler) Login(c *gin.Context) {
 				"request_id": c.GetString("request_id"),
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
+			UserAgent: normalizeOptionalString(c.Request.UserAgent()),
 		})
 		response.FromError(c, err)
 		return
@@ -143,7 +142,7 @@ func (h *Handler) Login(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
+		UserAgent: normalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, toLoginResp(resp))
 }
@@ -168,7 +167,7 @@ func (h *Handler) Logout(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
+		UserAgent: normalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, nil)
 }
@@ -213,7 +212,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 				"request_id": c.GetString("request_id"),
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
+			UserAgent: normalizeOptionalString(c.Request.UserAgent()),
 		})
 		response.FromError(c, err)
 		return
@@ -229,7 +228,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
+		UserAgent: normalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, nil)
 }
@@ -280,7 +279,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 				"request_id": c.GetString("request_id"),
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
+			UserAgent: normalizeOptionalString(c.Request.UserAgent()),
 		})
 		response.FromError(c, err)
 		return
@@ -299,7 +298,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
-		UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
+		UserAgent: normalizeOptionalString(c.Request.UserAgent()),
 	})
 	response.Success(c, toLoginResp(resp))
 }

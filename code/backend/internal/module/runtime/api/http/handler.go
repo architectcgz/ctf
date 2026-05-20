@@ -22,7 +22,6 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 const proxyAccessCookieName = "ctf_instance_proxy_ticket"
@@ -160,7 +159,7 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 				"username":   currentUser.Username,
 			},
 			IPAddress: c.ClientIP(),
-			UserAgent: commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
+			UserAgent: normalizeOptionalString(c.Request.UserAgent()),
 		})
 	}
 
@@ -622,7 +621,7 @@ func (h *Handler) recordProxyAudit(
 			ResourceID:   &instanceID,
 			Detail:       detail,
 			IPAddress:    c.ClientIP(),
-			UserAgent:    commonmapper.NormalizeOptionalString(c.Request.UserAgent()),
+			UserAgent:    normalizeOptionalString(c.Request.UserAgent()),
 		})
 	}
 	if h.proxyTrafficRecorder != nil {

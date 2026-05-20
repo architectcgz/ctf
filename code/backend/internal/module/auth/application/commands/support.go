@@ -2,7 +2,6 @@ package commands
 
 import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	commonmapper "ctf-platform/internal/shared/mapperhelper"
 )
 
 func buildAuthUser(user *identitycontracts.User) AuthUser {
@@ -11,7 +10,7 @@ func buildAuthUser(user *identitycontracts.User) AuthUser {
 		Username: user.Username,
 		Role:     user.Role,
 	})
-	resp.Name = commonmapper.NormalizeOptionalString(user.Name)
-	resp.ClassName = commonmapper.NormalizeOptionalString(user.ClassName)
+	resp.Name = normalizeOptionalString(user.Name)
+	resp.ClassName = normalizeOptionalString(user.ClassName)
 	return *resp
 }
