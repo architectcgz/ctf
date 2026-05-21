@@ -109,13 +109,13 @@ function openChallenge(challengeId: string): void {
 
       <template v-else-if="student">
         <div v-if="isSectionVisible('overview')" class="insight-overview-layout">
-          <SectionCard title="能力雷达" subtitle="左侧雷达图展示当前能力维度分布。">
+          <SectionCard title="六维能力分布" subtitle="雷达图展示当前六个能力维度的训练分布。">
             <div class="mt-4">
               <SkillRadar :scores="radarScores" />
             </div>
           </SectionCard>
 
-          <SectionCard title="能力比例" subtitle="右侧条状图展示各维度当前分值。">
+          <SectionCard title="维度得分占比" subtitle="条状图展示各维度当前分值。">
             <div v-if="rankedProfileDimensions.length > 0" class="insight-dimension-bars mt-4">
               <article
                 v-for="item in rankedProfileDimensions"
@@ -139,7 +139,7 @@ function openChallenge(challengeId: string): void {
           v-if="isSectionVisible('recommendations')"
           class="insight-tab-section-card"
           title="推荐训练任务"
-          subtitle="根据当前能力薄弱维度筛出的优先训练题目。"
+          subtitle="根据当前薄弱维度筛出的优先训练题目。"
         >
           <AppEmpty
             v-if="recommendations.length === 0"

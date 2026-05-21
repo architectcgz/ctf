@@ -3,17 +3,21 @@ package queries
 import (
 	"context"
 	"fmt"
+	"math"
+	"sort"
+	"strings"
 
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
+	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
-	teachingadvice "ctf-platform/internal/teaching/advice"
+	"ctf-platform/internal/shared/taxonomy"
 )
 
 type RecommendationService struct {
@@ -25,7 +29,7 @@ type RecommendationService struct {
 }
 
 type recommendationRepository interface {
-	assessmentports.RecommendationTeachingFactRepository
+	assessmentports.RecommendationProfileRepository
 	assessmentports.RecommendationSolvedChallengeRepository
 }
 
@@ -92,36 +96,46 @@ func (s *RecommendationService) handleContestCacheRefreshEvent(ctx context.Conte
 }
 
 func (s *RecommendationService) Recommend(ctx context.Context, userID int64, limit int) (*assessmentcontracts.Recommendation, error) {
-	snapshot, evaluation, err := s.evaluateUser(ctx, userID)
+	weakDimensions, weakDimensionScores, targetDimensions, difficultyBand, err := s.loadWeakDimensions(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
+	if len(targetDimensions) == 0 {
+		return &assessmentcontracts.Recommendation{
+			WeakDimensions: weakDimensions,
+			Challenges:     []*assessmentcontracts.ChallengeRecommendation{},
+		}, nil
+	}
 
-	recommendations, err := s.recommendChallengesWithEvaluation(ctx, userID, limit, snapshot, evaluation)
+	recommendations, err := s.recommendChallenges(ctx, userID, limit, targetDimensions, difficultyBand, weakDimensionScores)
 	if err != nil {
 		return nil, err
 	}
 
 	return &assessmentcontracts.Recommendation{
-		WeakDimensions: toWeakDimensionDTOs(evaluation.WeakDimensions),
+		WeakDimensions: weakDimensions,
 		Challenges:     recommendations,
 	}, nil
 }
 
 func (s *RecommendationService) RecommendChallenges(ctx context.Context, userID int64, limit int) ([]*assessmentcontracts.ChallengeRecommendation, error) {
-	snapshot, evaluation, err := s.evaluateUser(ctx, userID)
+	_, weakDimensionScores, targetDimensions, difficultyBand, err := s.loadWeakDimensions(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	return s.recommendChallengesWithEvaluation(ctx, userID, limit, snapshot, evaluation)
+	if len(targetDimensions) == 0 {
+		return []*assessmentcontracts.ChallengeRecommendation{}, nil
+	}
+	return s.recommendChallenges(ctx, userID, limit, targetDimensions, difficultyBand, weakDimensionScores)
 }
 
-func (s *RecommendationService) recommendChallengesWithEvaluation(
+func (s *RecommendationService) recommendChallenges(
 	ctx context.Context,
 	userID int64,
 	limit int,
-	snapshot *teachingadvice.StudentFactSnapshot,
-	evaluation teachingadvice.StudentEvaluation,
+	targetDimensions []string,
+	difficultyBand string,
+	weakDimensionScores map[string]float64,
 ) ([]*assessmentcontracts.ChallengeRecommendation, error) {
 	if limit <= 0 {
 		limit = s.config.DefaultLimit
@@ -141,11 +155,6 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 		}
 	}
 
-	targetDimensions := recommendationTargetDimensions(evaluation)
-	if len(targetDimensions) == 0 {
-		return []*assessmentcontracts.ChallengeRecommendation{}, nil
-	}
-
 	solvedIDs, err := s.getSolvedChallengeIDs(ctx, userID)
 	if err != nil {
 		s.logger.Error("查询已解题目失败", zap.Int64("user_id", userID), zap.Error(err))
@@ -156,7 +165,7 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 		ctx,
 		limit,
 		targetDimensions,
-		string(evaluation.RecommendedDifficultyBand),
+		difficultyBand,
 		solvedIDs,
 	)
 	if err != nil {
@@ -164,51 +173,29 @@ func (s *RecommendationService) recommendChallengesWithEvaluation(
 		return nil, err
 	}
 
-	if snapshot == nil {
-		return []*assessmentcontracts.ChallengeRecommendation{}, nil
-	}
-	candidates := make([]teachingadvice.ChallengeCandidate, 0, len(challenges))
-	for _, challenge := range challenges {
-		if challenge == nil {
-			continue
-		}
-		candidates = append(candidates, teachingadvice.ChallengeCandidate{
-			ID:         challenge.ID,
-			Title:      challenge.Title,
-			Category:   challenge.Category,
-			Dimension:  challenge.RecommendationDimension,
-			Difficulty: challenge.Difficulty,
-			Points:     challenge.Points,
-		})
-	}
-
-	plan := teachingadvice.BuildRecommendationPlan(*snapshot, evaluation, candidates)
-	reasonsByChallengeID := make(map[int64]teachingadvice.RecommendationReason, len(plan.Reasons))
-	for index, reason := range plan.Reasons {
-		if index >= len(candidates) {
-			break
-		}
-		reasonsByChallengeID[candidates[index].ID] = reason
-	}
-
 	recommendations := make([]*assessmentcontracts.ChallengeRecommendation, 0, len(challenges))
 	for _, challenge := range challenges {
 		if challenge == nil {
 			continue
 		}
-		reason := reasonsByChallengeID[challenge.ID]
+		dimension := strings.TrimSpace(challenge.RecommendationDimension)
+		if dimension == "" {
+			dimension = challenge.Category
+		}
+		score := weakDimensionScores[dimension]
+		severity := weakDimensionSeverity(score, s.config.WeakThreshold)
 		recommendations = append(recommendations, &assessmentcontracts.ChallengeRecommendation{
 			ID:             challenge.ID,
 			Title:          challenge.Title,
 			Category:       challenge.Category,
 			Difficulty:     challenge.Difficulty,
 			Points:         challenge.Points,
-			Dimension:      reason.Dimension,
-			DifficultyBand: string(reason.DifficultyBand),
-			Severity:       string(reason.Severity),
-			ReasonCodes:    append([]string(nil), reason.ReasonCodes...),
-			Summary:        reason.Summary,
-			Evidence:       reason.Evidence,
+			Dimension:      dimension,
+			DifficultyBand: difficultyBand,
+			Severity:       string(severity),
+			ReasonCodes:    []string{"low_dimension_score", "coverage_gap"},
+			Summary:        buildRecommendationSummary(dimension, score, difficultyBand),
+			Evidence:       buildRecommendationEvidence(dimension, score),
 		})
 	}
 
@@ -229,47 +216,144 @@ type RecommendationQuery struct {
 	Limit int `form:"limit"`
 }
 
-func (s *RecommendationService) evaluateUser(
+func (s *RecommendationService) loadWeakDimensions(
 	ctx context.Context,
 	userID int64,
-) (*teachingadvice.StudentFactSnapshot, teachingadvice.StudentEvaluation, error) {
-	snapshot, err := s.repo.GetStudentTeachingFactSnapshot(ctx, userID)
+) ([]assessmentcontracts.RecommendationWeakDimension, map[string]float64, []string, string, error) {
+	profiles, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
-		s.logger.Error("查询教学事实快照失败", zap.Int64("user_id", userID), zap.Error(err))
-		return nil, teachingadvice.StudentEvaluation{}, err
+		s.logger.Error("查询能力画像失败", zap.Int64("user_id", userID), zap.Error(err))
+		return nil, nil, nil, "", err
 	}
-	if snapshot == nil {
-		return nil, teachingadvice.StudentEvaluation{}, nil
+	weakDimensions := buildWeakDimensionsFromProfiles(profiles, s.config.WeakThreshold)
+	if len(weakDimensions) == 0 {
+		return []assessmentcontracts.RecommendationWeakDimension{}, map[string]float64{}, []string{}, "", nil
 	}
-	return snapshot, teachingadvice.EvaluateStudent(*snapshot), nil
+	scores := make(map[string]float64, len(weakDimensions))
+	targets := make([]string, 0, 1)
+	for index, item := range weakDimensions {
+		score := clampScore(1 - item.Confidence)
+		scores[item.Dimension] = score
+		if index == 0 {
+			targets = append(targets, item.Dimension)
+		}
+	}
+	lowestScore := scores[weakDimensions[0].Dimension]
+	return weakDimensions, scores, targets, preferredDifficultyForWeakScore(lowestScore, s.config.WeakThreshold), nil
 }
 
-func recommendationTargetDimensions(evaluation teachingadvice.StudentEvaluation) []string {
-	targets := make([]string, 0, len(evaluation.RecommendationTargets))
-	seen := make(map[string]struct{}, len(evaluation.RecommendationTargets))
-	for _, item := range evaluation.RecommendationTargets {
-		dimension := item.Dimension
-		if dimension == "" {
-			continue
-		}
-		if _, ok := seen[dimension]; ok {
-			continue
-		}
-		seen[dimension] = struct{}{}
-		targets = append(targets, dimension)
+func buildWeakDimensionsFromProfiles(
+	profiles []*assessmententity.SkillProfile,
+	weakThreshold float64,
+) []assessmentcontracts.RecommendationWeakDimension {
+	type scoreItem struct {
+		dimension string
+		score     float64
 	}
-	return targets
-}
 
-func toWeakDimensionDTOs(items []teachingadvice.DimensionAdvice) []assessmentcontracts.RecommendationWeakDimension {
+	items := make([]scoreItem, 0, len(profiles))
+	for _, item := range profiles {
+		if item == nil || !taxonomy.IsValidDimension(item.Dimension) {
+			continue
+		}
+		score := clampScore(item.Score)
+		if score >= weakThreshold {
+			continue
+		}
+		items = append(items, scoreItem{dimension: item.Dimension, score: score})
+	}
+
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].score != items[j].score {
+			return items[i].score < items[j].score
+		}
+		return items[i].dimension < items[j].dimension
+	})
+
 	result := make([]assessmentcontracts.RecommendationWeakDimension, 0, len(items))
 	for _, item := range items {
 		result = append(result, assessmentcontracts.RecommendationWeakDimension{
-			Dimension:  item.Dimension,
-			Severity:   string(item.Severity),
-			Confidence: item.Confidence,
-			Evidence:   item.Evidence,
+			Dimension:  item.dimension,
+			Severity:   string(weakDimensionSeverity(item.score, weakThreshold)),
+			Confidence: clampScore(1 - item.score),
+			Evidence:   buildWeakDimensionEvidence(item.dimension, item.score),
 		})
 	}
 	return result
+}
+
+func weakDimensionSeverity(score, weakThreshold float64) string {
+	score = clampScore(score)
+	dangerThreshold := clampScore(weakThreshold / 2)
+	if score <= dangerThreshold {
+		return "danger"
+	}
+	return "warning"
+}
+
+func preferredDifficultyForWeakScore(score, weakThreshold float64) string {
+	score = clampScore(score)
+	if score <= clampScore(weakThreshold/2) {
+		return taxonomy.DifficultyBeginner
+	}
+	return taxonomy.DifficultyEasy
+}
+
+func buildWeakDimensionEvidence(dimension string, score float64) string {
+	return fmt.Sprintf("%s 维度当前完成分值占已发布题目分值的 %.0f%%。", dimensionLabel(dimension), score*100)
+}
+
+func buildRecommendationSummary(dimension string, score float64, difficultyBand string) string {
+	return fmt.Sprintf("当前%s维度训练覆盖为 %.0f%%，建议先补%s难度题。", dimensionLabel(dimension), score*100, difficultyLabel(difficultyBand))
+}
+
+func buildRecommendationEvidence(dimension string, score float64) string {
+	return fmt.Sprintf("%s。优先补齐该维度的基础训练样本。", buildWeakDimensionEvidence(dimension, score))
+}
+
+func dimensionLabel(dimension string) string {
+	switch strings.TrimSpace(dimension) {
+	case taxonomy.DimensionWeb:
+		return "Web"
+	case taxonomy.DimensionPwn:
+		return "Pwn"
+	case taxonomy.DimensionReverse:
+		return "逆向"
+	case taxonomy.DimensionCrypto:
+		return "密码"
+	case taxonomy.DimensionMisc:
+		return "杂项"
+	case taxonomy.DimensionForensics:
+		return "取证"
+	default:
+		return dimension
+	}
+}
+
+func difficultyLabel(difficulty string) string {
+	switch strings.TrimSpace(difficulty) {
+	case taxonomy.DifficultyBeginner:
+		return "入门"
+	case taxonomy.DifficultyEasy:
+		return "简单"
+	case taxonomy.DifficultyMedium:
+		return "中等"
+	case taxonomy.DifficultyHard:
+		return "困难"
+	case taxonomy.DifficultyInsane:
+		return "高难"
+	default:
+		return difficulty
+	}
+}
+
+func clampScore(value float64) float64 {
+	return math.Max(0, math.Min(1, value))
+}
+
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

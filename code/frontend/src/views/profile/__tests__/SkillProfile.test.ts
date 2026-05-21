@@ -80,7 +80,7 @@ describe('SkillProfile', () => {
     teacherApiMocks.getStudentSkillProfile.mockResolvedValue(null)
   })
 
-  it('应该渲染能力画像与推荐靶场', async () => {
+  it('应该渲染六维画像与推荐靶场', async () => {
     const authStore = useAuthStore()
     authStore.setAuth({
       id: 'student-1',
@@ -116,12 +116,12 @@ describe('SkillProfile', () => {
     )
     expect(wrapper.find('#skill-profile-panel-recommendations').classes()).not.toContain('active')
     expect(wrapper.find('.skill-overview-head').exists()).toBe(true)
-    expect(wrapper.find('.skill-overview-head').text()).toContain('能力画像')
+    expect(wrapper.find('.skill-overview-head').text()).toContain('六维学习画像')
     expect(wrapper.find('.skill-overview-head').text()).toContain(
-      '查看当前能力维度表现，并根据薄弱项获取推荐靶场。'
+      '查看当前六个能力维度的训练分布，并根据薄弱维度获取推荐靶场。'
     )
     expect(wrapper.find('.skill-overview-actions').exists()).toBe(true)
-    expect(wrapper.text()).toContain('能力维度分析')
+    expect(wrapper.text()).toContain('六维分布分析')
     expect(wrapper.find('[data-test="radar-chart"]').exists()).toBe(true)
 
     await wrapper.get('#skill-profile-tab-weakness').trigger('click')
@@ -136,7 +136,7 @@ describe('SkillProfile', () => {
     expect(wrapper.find('#skill-profile-panel-weakness .skill-overview-actions').exists()).toBe(
       false
     )
-    expect(wrapper.text()).toContain('薄弱项提示')
+    expect(wrapper.text()).toContain('薄弱维度提示')
 
     await wrapper.get('#skill-profile-tab-recommendations').trigger('click')
     await flushPromises()

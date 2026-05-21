@@ -42,13 +42,13 @@ const contentTabs: Array<{
 }> = [
   {
     key: 'analysis',
-    label: '能力维度分析',
+    label: '六维分布分析',
     buttonId: 'skill-profile-tab-analysis',
     panelId: 'skill-profile-panel-analysis',
   },
   {
     key: 'weakness',
-    label: '薄弱项提示',
+    label: '薄弱维度提示',
     buttonId: 'skill-profile-tab-weakness',
     panelId: 'skill-profile-panel-weakness',
   },
@@ -105,14 +105,14 @@ const skillRadarHeightClass = 'skill-radar-height'
 
     <main v-else-if="!skillProfile" class="content-pane">
       <AppEmpty
-        title="暂无能力画像数据"
-        description="完成更多靶场题目后，系统将为你生成能力画像。"
+        title="暂无六维画像数据"
+        description="完成更多靶场题目后，系统将为你生成六维学习画像。"
         icon="Radar"
       />
     </main>
 
     <div v-else class="skill-profile-page">
-      <nav class="workspace-tabbar top-tabs" role="tablist" aria-label="能力画像内容切换">
+      <nav class="workspace-tabbar top-tabs" role="tablist" aria-label="六维画像内容切换">
         <button
           v-for="(tab, index) in contentTabs"
           :id="tab.buttonId"
@@ -136,11 +136,11 @@ const skillRadarHeightClass = 'skill-radar-height'
         <div class="skill-profile-content">
           <div v-if="isTeacher" class="skill-teacher-panel">
             <div class="skill-section-kicker">Teacher View</div>
-            <h3 class="workspace-tab-heading__title">查看学员能力画像</h3>
+            <h3 class="workspace-tab-heading__title">查看学员六维画像</h3>
             <label for="skill-student-select" class="skill-field-label mt-3 block">选择学员</label>
             <div class="ui-control-wrap mt-2 w-full max-w-sm">
               <select id="skill-student-select" v-model="selectedStudentId" class="ui-control">
-                <option value="">我的能力画像</option>
+                <option value="">我的六维画像</option>
                 <option v-for="student in students" :key="student.id" :value="student.id">
                   {{ student.name || student.username }} ({{ student.username }})
                 </option>
@@ -165,12 +165,12 @@ const skillRadarHeightClass = 'skill-radar-height'
                       Analysis
                     </div>
                     <h1 class="journal-page-title workspace-page-title skill-page-title">
-                      能力画像
+                      六维学习画像
                     </h1>
                     <p class="skill-overview-copy workspace-page-copy">
-                      查看当前能力维度表现，并根据薄弱项获取推荐靶场。
+                      查看当前六个能力维度的训练分布，并根据薄弱维度获取推荐靶场。
                     </p>
-                    <div class="skill-overview-actions" role="group" aria-label="能力画像快捷操作">
+                    <div class="skill-overview-actions" role="group" aria-label="六维画像快捷操作">
                       <button type="button" class="journal-btn" @click="loadCurrentData">
                         刷新
                       </button>
@@ -184,7 +184,7 @@ const skillRadarHeightClass = 'skill-radar-height'
                     </div>
                   </div>
 
-                  <h3 class="workspace-tab-heading__title">能力维度分析</h3>
+                  <h3 class="workspace-tab-heading__title">六维分布分析</h3>
 
                   <div class="skill-dimension-wrap mt-5">
                     <div class="skill-dimension-list mt-2">
@@ -246,7 +246,7 @@ const skillRadarHeightClass = 'skill-radar-height'
                 </div>
                 <div class="skill-weak-title mt-3 flex items-center gap-3 text-base font-semibold">
                   <Flame class="skill-weak-title__icon h-5 w-5" />
-                  薄弱项提示
+                  薄弱维度提示
                 </div>
                 <div v-if="weakDimensions.length > 0" class="skill-weak-list mt-5">
                   <div v-for="dim in weakDimensions.slice(0, 4)" :key="dim" class="skill-weak-item">

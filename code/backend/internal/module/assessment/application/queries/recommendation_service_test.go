@@ -132,6 +132,16 @@ func newRecommendationTestService(db *gorm.DB, challengeRepo assessmentports.Rec
 func TestRecommendationServiceRecommendChallengesUsesCacheForDefaultLimit(t *testing.T) {
 	db := setupRecommendationTestDB(t)
 	stubRepo := &stubChallengeRecommendationRepo{}
+	now := time.Now().UTC()
+
+	if err := db.Create(&assessmententity.SkillProfile{
+		UserID:    1,
+		Dimension: taxonomy.DimensionWeb,
+		Score:     0.2,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed profile: %v", err)
+	}
 
 	mr := miniredis.RunT(t)
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
@@ -229,6 +239,9 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	}
 	if len(stubRepo.lastDims) != 1 || stubRepo.lastDims[0] != taxonomy.DimensionPwn {
 		t.Fatalf("unexpected weak dimensions: %+v", stubRepo.lastDims)
+	}
+	if stubRepo.lastDifficulty != taxonomy.DifficultyBeginner {
+		t.Fatalf("expected preferred difficulty beginner for weakest dimension, got %s", stubRepo.lastDifficulty)
 	}
 	if len(stubRepo.lastSolved) != 1 || stubRepo.lastSolved[0] != 101 {
 		t.Fatalf("unexpected solved challenge ids: %+v", stubRepo.lastSolved)
@@ -330,7 +343,7 @@ func TestRecommendationServiceRecommendChallengesPrefersPreferredDifficultyCandi
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    18,
 		Dimension: taxonomy.DimensionPwn,
-		Score:     0.5,
+		Score:     0.35,
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("seed profile: %v", err)
@@ -479,70 +492,57 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenOnlyHealthyEvidenceExists
 	}
 }
 
-func TestRecommendationServiceRecommendChallengesReturnsProgressionCandidateForStableHealthyDimension(t *testing.T) {
+func TestRecommendationServiceRecommendReturnsWeakDimensionsFromLowestProfileScores(t *testing.T) {
 	db := setupRecommendationTestDB(t)
 	now := time.Now()
 
-	if err := db.Create(&identitycontracts.User{
-		ID:       30,
-		Username: "student-30",
-		Role:     identitycontracts.RoleStudent,
-	}).Error; err != nil {
-		t.Fatalf("seed user: %v", err)
+	profiles := []assessmententity.SkillProfile{
+		{UserID: 30, Dimension: taxonomy.DimensionCrypto, Score: 0.12, UpdatedAt: now},
+		{UserID: 30, Dimension: taxonomy.DimensionPwn, Score: 0.28, UpdatedAt: now},
+		{UserID: 30, Dimension: taxonomy.DimensionWeb, Score: 0.65, UpdatedAt: now},
 	}
-	if err := db.Create(&assessmententity.SkillProfile{
-		UserID:    30,
-		Dimension: taxonomy.DimensionWeb,
-		Score:     0.92,
-		UpdatedAt: now,
-	}).Error; err != nil {
-		t.Fatalf("seed profile: %v", err)
-	}
-
-	solvedChallenges := []assessmentRecommendationChallengeRow{
-		{ID: 3001, Title: "web-easy-a", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 3002, Title: "web-easy-b", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 120, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 3003, Title: "web-medium-a", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyMedium, Points: 150, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 3004, Title: "web-medium-b", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyMedium, Points: 180, Status: challengecontracts.ChallengeStatusPublished},
-	}
-	candidateChallenges := []assessmentRecommendationChallengeRow{
-		{ID: 3005, Title: "web-medium-next", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyMedium, Points: 160, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 3006, Title: "web-hard-next", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyHard, Points: 220, Status: challengecontracts.ChallengeStatusPublished},
-	}
-	for _, challenge := range append(solvedChallenges, candidateChallenges...) {
-		if err := db.Create(&challenge).Error; err != nil {
-			t.Fatalf("seed challenge %s: %v", challenge.Title, err)
-		}
-	}
-	for _, challenge := range solvedChallenges {
-		if err := db.Create(&contestcontracts.Submission{
-			UserID:      30,
-			ChallengeID: challenge.ID,
-			IsCorrect:   true,
-			SubmittedAt: now,
-		}).Error; err != nil {
-			t.Fatalf("seed solved submission for %s: %v", challenge.Title, err)
+	for _, profile := range profiles {
+		if err := db.Create(&profile).Error; err != nil {
+			t.Fatalf("seed profile: %v", err)
 		}
 	}
 
-	service := newRecommendationTestService(db, challengeinfra.NewContractRepository(challengeinfra.NewRepository(db)), nil)
+	stubRepo := &stubChallengeRecommendationRepo{
+		challenges: []*challengecontracts.RecommendationChallenge{
+			{ID: 3005, Title: "crypto-primer", Category: taxonomy.DimensionCrypto, Difficulty: taxonomy.DifficultyBeginner, Points: 160},
+			{ID: 3006, Title: "crypto-retry", Category: taxonomy.DimensionCrypto, Difficulty: taxonomy.DifficultyEasy, Points: 220},
+		},
+	}
+	service := newRecommendationTestService(db, stubRepo, nil)
 
 	resp, err := service.Recommend(context.Background(), 30, 3)
 	if err != nil {
 		t.Fatalf("Recommend() error = %v", err)
 	}
+	if len(resp.WeakDimensions) != 2 {
+		t.Fatalf("expected 2 weak dimensions, got %+v", resp.WeakDimensions)
+	}
+	if resp.WeakDimensions[0].Dimension != taxonomy.DimensionCrypto || resp.WeakDimensions[1].Dimension != taxonomy.DimensionPwn {
+		t.Fatalf("expected weak dimensions sorted by profile score, got %+v", resp.WeakDimensions)
+	}
 	if len(resp.Challenges) == 0 {
-		t.Fatalf("expected progression recommendation for stable healthy dimension, got %+v", resp)
+		t.Fatalf("expected challenge recommendations for weakest dimension, got %+v", resp)
 	}
-	if resp.Challenges[0].DifficultyBand != taxonomy.DifficultyHard {
-		t.Fatalf("expected progression difficulty band hard, got %+v", resp.Challenges[0])
+	if stubRepo.calls != 1 {
+		t.Fatalf("expected challenge repo called once, got %d", stubRepo.calls)
 	}
-	if resp.Challenges[0].Difficulty != taxonomy.DifficultyHard {
-		t.Fatalf("expected hard challenge to rank first for progression recommendation, got %+v", resp.Challenges)
+	if len(stubRepo.lastDims) != 1 || stubRepo.lastDims[0] != taxonomy.DimensionCrypto {
+		t.Fatalf("expected only weakest dimension targeted, got %+v", stubRepo.lastDims)
+	}
+	if resp.Challenges[0].Dimension != taxonomy.DimensionCrypto {
+		t.Fatalf("expected recommendation dimension crypto, got %+v", resp.Challenges[0])
+	}
+	if !strings.Contains(resp.Challenges[0].Summary, "12%") {
+		t.Fatalf("expected summary to use profile coverage score, got %+v", resp.Challenges[0])
 	}
 }
 
-func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgressionTarget(t *testing.T) {
+func TestRecommendationServiceRecommendKeepsWeakDimensionWhenAWDSuccessExists(t *testing.T) {
 	db := setupRecommendationTestDB(t)
 	now := time.Now().UTC()
 
@@ -587,8 +587,8 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 	}
 
 	candidateChallenges := []assessmentRecommendationChallengeRow{
-		{ID: 3111, Title: "pwn-medium-next", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyMedium, Points: 180, Status: challengecontracts.ChallengeStatusPublished},
-		{ID: 3112, Title: "pwn-hard-next", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyHard, Points: 240, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3111, Title: "pwn-beginner-next", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyBeginner, Points: 120, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3112, Title: "pwn-easy-next", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyEasy, Points: 180, Status: challengecontracts.ChallengeStatusPublished},
 	}
 	for _, challenge := range candidateChallenges {
 		if err := db.Create(&challenge).Error; err != nil {
@@ -602,17 +602,20 @@ func TestRecommendationServiceRecommendChallengesUsesAWDSuccessCoverageForProgre
 	if err != nil {
 		t.Fatalf("Recommend() error = %v", err)
 	}
-	if len(resp.WeakDimensions) != 0 {
-		t.Fatalf("expected awd-backed student not to be treated as weak, got %+v", resp.WeakDimensions)
+	if len(resp.WeakDimensions) != 1 {
+		t.Fatalf("expected weak dimension to stay aligned with skill profile, got %+v", resp.WeakDimensions)
+	}
+	if resp.WeakDimensions[0].Dimension != taxonomy.DimensionPwn {
+		t.Fatalf("expected pwn to remain weak dimension, got %+v", resp.WeakDimensions)
 	}
 	if len(resp.Challenges) == 0 {
-		t.Fatalf("expected awd-backed progression recommendation, got %+v", resp)
+		t.Fatalf("expected weak-dimension recommendation even with awd success, got %+v", resp)
 	}
-	if resp.Challenges[0].DifficultyBand != taxonomy.DifficultyHard {
-		t.Fatalf("expected hard progression band from awd-backed snapshot, got %+v", resp.Challenges[0])
+	if resp.Challenges[0].DifficultyBand != taxonomy.DifficultyBeginner {
+		t.Fatalf("expected beginner difficulty band from low profile score, got %+v", resp.Challenges[0])
 	}
-	if resp.Challenges[0].Difficulty != taxonomy.DifficultyHard {
-		t.Fatalf("expected hard challenge to rank first for awd-backed progression recommendation, got %+v", resp.Challenges)
+	if resp.Challenges[0].Difficulty != taxonomy.DifficultyBeginner {
+		t.Fatalf("expected beginner challenge to rank first for weak profile recommendation, got %+v", resp.Challenges)
 	}
 }
 
