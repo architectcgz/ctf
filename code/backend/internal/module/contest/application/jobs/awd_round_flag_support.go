@@ -26,11 +26,21 @@ func (u *AWDRoundUpdater) buildRoundFlagAssignments(ctx context.Context, contest
 	assignments := make([]contestports.AWDFlagAssignment, 0, len(teams)*len(definitions))
 	for _, team := range teams {
 		for _, definition := range definitions {
+			flag := contestdomain.BuildAWDRoundFlag(contestID, round.RoundNumber, team.ID, definition.AWDChallengeID, u.flagSecret, definition.FlagPrefix)
+			if u.stateStore != nil && round != nil {
+				existingFlag, found, loadErr := u.stateStore.LoadAWDRoundFlag(ctx, contestID, round.ID, team.ID, definition.ServiceID)
+				if loadErr != nil {
+					return nil, loadErr
+				}
+				if found {
+					flag = existingFlag
+				}
+			}
 			assignments = append(assignments, contestports.AWDFlagAssignment{
 				ServiceID:      definition.ServiceID,
 				TeamID:         team.ID,
 				AWDChallengeID: definition.AWDChallengeID,
-				Flag:           contestdomain.BuildAWDRoundFlag(contestID, round.RoundNumber, team.ID, definition.AWDChallengeID, u.flagSecret, definition.FlagPrefix),
+				Flag:           flag,
 			})
 		}
 	}

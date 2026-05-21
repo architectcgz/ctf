@@ -119,6 +119,14 @@ func (s awdRoundStateStoreStub) LoadAWDRoundFlag(ctx context.Context, contestID,
 	return "", false, nil
 }
 
+func (s awdRoundStateStoreStub) SetAWDRoundFlag(context.Context, int64, int64, int64, int64, string, time.Duration) error {
+	return nil
+}
+
+func (s awdRoundStateStoreStub) ReplaceAWDRoundFlagIfMatch(context.Context, int64, int64, int64, int64, string, string, time.Duration) (bool, error) {
+	return false, nil
+}
+
 func (s awdRoundStateStoreStub) SyncAWDCurrentRoundState(context.Context, int64, *contestentity.AWDRound, []contestports.AWDFlagAssignment, time.Duration) error {
 	return nil
 }

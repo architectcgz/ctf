@@ -218,6 +218,8 @@ type AWDRoundStateStore interface {
 	IsAWDCurrentRound(ctx context.Context, contestID int64, roundNumber int) (bool, error)
 	LoadAWDCurrentRoundNumber(ctx context.Context, contestID int64) (int, bool, error)
 	LoadAWDRoundFlag(ctx context.Context, contestID, roundID, teamID, serviceID int64) (string, bool, error)
+	SetAWDRoundFlag(ctx context.Context, contestID, roundID, teamID, serviceID int64, flag string, ttl time.Duration) error
+	ReplaceAWDRoundFlagIfMatch(ctx context.Context, contestID, roundID, teamID, serviceID int64, expectedFlag, nextFlag string, ttl time.Duration) (bool, error)
 	SyncAWDCurrentRoundState(ctx context.Context, contestID int64, round *contestentity.AWDRound, assignments []AWDFlagAssignment, ttl time.Duration) error
 	ClearAWDCurrentRoundState(ctx context.Context, contestID int64) error
 	SetAWDServiceStatus(ctx context.Context, contestID, teamID, serviceID int64, status string) error

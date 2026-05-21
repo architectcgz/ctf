@@ -8,6 +8,7 @@ import (
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	platformevents "ctf-platform/internal/platform/events"
 )
@@ -19,6 +20,7 @@ type AWDService struct {
 	previewTokenStore contestports.AWDCheckerPreviewTokenStore
 	scoreboardCache   contestports.ScoreboardCacheWriter
 	contestRepo       contestports.ContestLookupRepository
+	flagInjector      contestports.AWDFlagInjector
 	flagSecret        string
 	awdConfig         config.ContestAWDConfig
 	log               *zap.Logger
@@ -68,6 +70,7 @@ func NewAWDService(
 		previewTokenStore: previewTokenStore,
 		scoreboardCache:   scoreboardCache,
 		contestRepo:       contestRepo,
+		flagInjector:      noopAWDFlagInjector{},
 		flagSecret:        flagSecret,
 		awdConfig:         awdConfig,
 		log:               log,
@@ -77,11 +80,29 @@ func NewAWDService(
 	}
 }
 
+type noopAWDFlagInjector struct{}
+
+func (noopAWDFlagInjector) InjectRoundFlags(context.Context, *contestentity.Contest, *contestentity.AWDRound, []contestports.AWDFlagAssignment) error {
+	return nil
+}
+
 func (s *AWDService) SetEventBus(bus platformevents.Bus) *AWDService {
 	if s == nil {
 		return nil
 	}
 	s.eventBus = bus
+	return s
+}
+
+func (s *AWDService) SetFlagInjector(injector contestports.AWDFlagInjector) *AWDService {
+	if s == nil {
+		return nil
+	}
+	if injector == nil {
+		s.flagInjector = noopAWDFlagInjector{}
+		return s
+	}
+	s.flagInjector = injector
 	return s
 }
 

@@ -30,6 +30,14 @@ func (ctxOnlyAWDRoundStateStore) LoadAWDRoundFlag(context.Context, int64, int64,
 	return "", false, nil
 }
 
+func (ctxOnlyAWDRoundStateStore) SetAWDRoundFlag(context.Context, int64, int64, int64, int64, string, time.Duration) error {
+	return nil
+}
+
+func (ctxOnlyAWDRoundStateStore) ReplaceAWDRoundFlagIfMatch(context.Context, int64, int64, int64, int64, string, string, time.Duration) (bool, error) {
+	return false, nil
+}
+
 func (ctxOnlyAWDRoundStateStore) SyncAWDCurrentRoundState(context.Context, int64, *contestentity.AWDRound, []contestports.AWDFlagAssignment, time.Duration) error {
 	return nil
 }

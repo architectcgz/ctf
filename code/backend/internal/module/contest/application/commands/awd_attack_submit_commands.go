@@ -12,12 +12,32 @@ func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, servic
 		return nil, err
 	}
 
-	return s.createAttackLog(ctx, contestID, attackContext.round.ID, CreateAttackLogInput{
+	matchedFlag, isSuccess := matchSubmittedAttackFlag(req.Flag, attackContext.acceptedFlags)
+	var rotation *rotatedRoundFlag
+	if isSuccess && matchedFlag == attackContext.currentFlag {
+		var claimed bool
+		rotation, claimed, err = s.rotateCurrentRoundFlag(ctx, attackContext, req.VictimTeamID, serviceID)
+		if err != nil {
+			return nil, err
+		}
+		if !claimed {
+			isSuccess = false
+		}
+	}
+
+	resp, err := s.createAttackLog(ctx, contestID, attackContext.round.ID, CreateAttackLogInput{
 		AttackerTeamID: attackContext.attackerTeamID,
 		VictimTeamID:   req.VictimTeamID,
 		ServiceID:      serviceID,
 		AttackType:     contestentity.AWDAttackTypeFlagCapture,
 		SubmittedFlag:  req.Flag,
-		IsSuccess:      validateSubmittedAttackFlag(req.Flag, attackContext.acceptedFlags),
+		IsSuccess:      isSuccess,
 	}, contestentity.AWDAttackSourceSubmission, &userID)
+	if err != nil {
+		if rotation != nil {
+			s.restoreRotatedRoundFlag(ctx, attackContext, rotation)
+		}
+		return nil, err
+	}
+	return resp, nil
 }

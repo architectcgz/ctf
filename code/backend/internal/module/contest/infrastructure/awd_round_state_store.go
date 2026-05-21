@@ -18,6 +18,23 @@ import (
 
 var _ contestports.AWDRoundStateStore = (*AWDRoundStateStore)(nil)
 
+const replaceAWDRoundFlagIfMatchScript = `
+local round_key = KEYS[1]
+local field = ARGV[1]
+local expected = ARGV[2]
+local next_flag = ARGV[3]
+local ttl_millis = tonumber(ARGV[4])
+local current = redis.call("HGET", round_key, field)
+if current and current ~= expected then
+  return 0
+end
+redis.call("HSET", round_key, field, next_flag)
+if ttl_millis and ttl_millis > 0 then
+  redis.call("PEXPIRE", round_key, ttl_millis)
+end
+return 1
+`
+
 type AWDRoundStateStore struct {
 	cache *redislib.Client
 }
@@ -91,6 +108,54 @@ func (s *AWDRoundStateStore) LoadAWDRoundFlag(ctx context.Context, contestID, ro
 		return "", false, nil
 	}
 	return "", false, err
+}
+
+func (s *AWDRoundStateStore) SetAWDRoundFlag(ctx context.Context, contestID, roundID, teamID, serviceID int64, flag string, ttl time.Duration) error {
+	if s == nil || s.cache == nil || contestID <= 0 || roundID <= 0 || teamID <= 0 || serviceID <= 0 || strings.TrimSpace(flag) == "" {
+		return nil
+	}
+
+	roundKey := rediskeys.AWDRoundFlagsKey(contestID, roundID)
+	field := rediskeys.AWDRoundFlagServiceField(teamID, serviceID)
+	pipe := s.cache.TxPipeline()
+	pipe.HSet(ctx, roundKey, field, strings.TrimSpace(flag))
+	if ttl > 0 {
+		pipe.Expire(ctx, roundKey, ttl)
+	}
+	if _, err := pipe.Exec(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *AWDRoundStateStore) ReplaceAWDRoundFlagIfMatch(
+	ctx context.Context,
+	contestID, roundID, teamID, serviceID int64,
+	expectedFlag, nextFlag string,
+	ttl time.Duration,
+) (bool, error) {
+	if s == nil || s.cache == nil || contestID <= 0 || roundID <= 0 || teamID <= 0 || serviceID <= 0 || strings.TrimSpace(nextFlag) == "" {
+		return false, nil
+	}
+
+	ttlMillis := ttl.Milliseconds()
+	if ttl > 0 && ttlMillis <= 0 {
+		ttlMillis = 1
+	}
+	result, err := s.cache.Eval(
+		ctx,
+		replaceAWDRoundFlagIfMatchScript,
+		[]string{rediskeys.AWDRoundFlagsKey(contestID, roundID)},
+		rediskeys.AWDRoundFlagServiceField(teamID, serviceID),
+		strings.TrimSpace(expectedFlag),
+		strings.TrimSpace(nextFlag),
+		ttlMillis,
+	).Result()
+	if err != nil {
+		return false, err
+	}
+	replaced, ok := result.(int64)
+	return ok && replaced == 1, nil
 }
 
 func (s *AWDRoundStateStore) SyncAWDCurrentRoundState(ctx context.Context, contestID int64, round *contestentity.AWDRound, assignments []contestports.AWDFlagAssignment, ttl time.Duration) error {

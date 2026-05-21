@@ -13,10 +13,13 @@ import (
 
 type submitAttackContext struct {
 	attackerTeamID int64
+	victimTeamID   int64
+	contest        *contestentity.Contest
 	round          *contestentity.AWDRound
 	runtimeService *contestentity.ContestAWDService
 	awdChallengeID int64
 	flagPrefix     string
+	currentFlag    string
 	acceptedFlags  []string
 }
 
@@ -52,12 +55,19 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	if err != nil {
 		return nil, err
 	}
+	currentFlag, err := s.resolveRoundFlag(ctx, contestID, round, req.VictimTeamID, runtimeService.AWDChallengeID, flagPrefix, runtimeService.ID)
+	if err != nil {
+		return nil, err
+	}
 	return &submitAttackContext{
 		attackerTeamID: attackerTeamID,
+		victimTeamID:   req.VictimTeamID,
+		contest:        contest,
 		round:          round,
 		runtimeService: runtimeService,
 		awdChallengeID: runtimeService.AWDChallengeID,
 		flagPrefix:     flagPrefix,
+		currentFlag:    currentFlag,
 		acceptedFlags:  acceptedFlags,
 	}, nil
 }
@@ -71,11 +81,11 @@ func resolveSubmitAttackFlagPrefix(snapshot contestentity.ContestAWDServiceSnaps
 	return "flag"
 }
 
-func validateSubmittedAttackFlag(submittedFlag string, acceptedFlags []string) bool {
+func matchSubmittedAttackFlag(submittedFlag string, acceptedFlags []string) (string, bool) {
 	for _, candidate := range acceptedFlags {
 		if crypto.ValidateFlag(submittedFlag, candidate) {
-			return true
+			return candidate, true
 		}
 	}
-	return false
+	return "", false
 }

@@ -223,6 +223,7 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 		deps.runtimeProbe,
 		scoreboardCache,
 	)
+	awdCommands.SetFlagInjector(contestinfra.NewDockerAWDFlagInjector(db, deps.containerFiles, log.Named("awd_flag_injector")))
 	awdCommands.SetEventBus(deps.input.Events)
 	awdQueries := contestqry.NewAWDService(deps.awdQuery, deps.contestLookup)
 	awdServiceCommands := contestcmd.NewContestAWDServiceService(

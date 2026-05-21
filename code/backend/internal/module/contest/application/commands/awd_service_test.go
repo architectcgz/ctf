@@ -115,6 +115,37 @@ type fakeAWDPreviewRoundManager struct {
 	previewRequests  []contestports.AWDServicePreviewRequest
 }
 
+type fakeAWDFlagInjector struct {
+	err         error
+	callCount   int
+	assignments []contestports.AWDFlagAssignment
+}
+
+func (f *fakeAWDFlagInjector) InjectRoundFlags(_ context.Context, _ *contestentity.Contest, _ *contestentity.AWDRound, assignments []contestports.AWDFlagAssignment) error {
+	f.callCount++
+	for _, item := range assignments {
+		f.assignments = append(f.assignments, item)
+	}
+	return f.err
+}
+
+type racingAWDRoundStateStore struct {
+	contestports.AWDRoundStateStore
+	replaceIfMatchFn func(context.Context, int64, int64, int64, int64, string, string, time.Duration) (bool, error)
+}
+
+func (s racingAWDRoundStateStore) ReplaceAWDRoundFlagIfMatch(
+	ctx context.Context,
+	contestID, roundID, teamID, serviceID int64,
+	expectedFlag, nextFlag string,
+	ttl time.Duration,
+) (bool, error) {
+	if s.replaceIfMatchFn != nil {
+		return s.replaceIfMatchFn(ctx, contestID, roundID, teamID, serviceID, expectedFlag, nextFlag, ttl)
+	}
+	return false, nil
+}
+
 func (f *fakeAWDPreviewRoundManager) RunRoundServiceChecks(_ context.Context, _ *contestentity.Contest, _ *contestentity.AWDRound, _ string) error {
 	return errors.New("unexpected RunRoundServiceChecks call")
 }
@@ -191,6 +222,36 @@ func newAWDServiceForTest(db *gorm.DB, redisClient *redis.Client, flagSecret str
 		),
 		queries: contestqry.NewAWDService(newAWDQueryRepositoryForTest(db), contestRepo),
 	}
+}
+
+func newAWDCommandServiceWithStateStoreForTest(
+	db *gorm.DB,
+	redisClient *redis.Client,
+	flagSecret string,
+	cfg config.ContestAWDConfig,
+	stateStore contestports.AWDRoundStateStore,
+) *contestcmd.AWDService {
+	awdRepo := newAWDCommandRepositoryForTest(db)
+	contestRepo := contestinfra.NewRepository(db)
+	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
+	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
+	if stateStore == nil {
+		stateStore = contestinfra.NewAWDRoundStateStore(redisClient)
+	}
+	return contestcmd.NewAWDService(
+		awdRepo,
+		contestRepo,
+		stateStore,
+		previewTokenStore,
+		flagSecret,
+		cfg,
+		zap.NewNop(),
+		newAWDCommandRoundManagerForTest(db, redisClient, cfg, flagSecret, nil, zap.NewNop()),
+		imageRepo,
+		awdChallengeRepo,
+		nil,
+		contestinfra.NewScoreboardCache(db, redisClient),
+	)
 }
 
 func (s *awdServiceForTest) CreateRound(ctx context.Context, contestID int64, req contestcmd.CreateAWDRoundInput) (*contestcmd.AWDRoundResp, error) {
@@ -2014,7 +2075,7 @@ func TestAWDServiceEndedContestManualUpdatesDoNotRestoreLiveServiceStatusCache(t
 	assertAWDServiceStatusCacheMissing(t, redisClient, 17, 1711, serviceID)
 }
 
-func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *testing.T) {
+func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndRejectsStaleFlagAfterRotation(t *testing.T) {
 	db := newAWDTestDB(t)
 
 	mini, err := miniredis.Run()
@@ -2079,7 +2140,7 @@ func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *test
 	if second.Source != contestentity.AWDAttackSourceSubmission {
 		t.Fatalf("expected submission source, got %+v", second)
 	}
-	if !second.IsSuccess || second.ScoreGained != 0 {
+	if second.IsSuccess || second.ScoreGained != 0 {
 		t.Fatalf("unexpected second attack resp: %+v", second)
 	}
 
@@ -2252,7 +2313,7 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SubmitAttack() second error = %v", err)
 	}
-	if !second.IsSuccess || second.ScoreGained != 0 {
+	if second.IsSuccess || second.ScoreGained != 0 {
 		t.Fatalf("unexpected second attack resp: %+v", second)
 	}
 
@@ -2269,6 +2330,307 @@ func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
 	case evt := <-received:
 		t.Fatalf("expected only one accepted event, got %+v", evt)
 	case <-time.After(100 * time.Millisecond):
+	}
+}
+
+func TestAWDServiceSubmitAttackRotatesFlagImmediatelyAfterFirstSuccess(t *testing.T) {
+	db := newAWDTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service := newAWDServiceForTest(db, redisClient, "awd-secret", config.ContestAWDConfig{})
+
+	now := time.Now()
+	createAWDContestFixture(t, db, 15, now)
+	createAWDRoundFixture(t, db, 151, 15, 1, 80, 20, now)
+	createAWDChallengeFixture(t, db, 1501, now)
+	createAWDContestChallengeFixture(t, db, 15, 1501, now)
+	createAWDTeamFixture(t, db, 1511, 15, "Red", now)
+	createAWDTeamFixture(t, db, 1512, 15, "Blue", now)
+	createContestRegistrationForExistingTeam(t, db, 15, 1511, 15001, now)
+	createContestRegistrationForExistingTeam(t, db, 15, 1511, 15002, now)
+	serviceID := defaultAWDContestServiceID(15, 1501)
+
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 1501).Updates(map[string]any{
+		"flag_prefix": "awd",
+	}).Error; err != nil {
+		t.Fatalf("update challenge fields: %v", err)
+	}
+	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(15), "1", 0).Err(); err != nil {
+		t.Fatalf("set current round: %v", err)
+	}
+
+	originalFlag := contestdomain.BuildAWDRoundFlag(15, 1, 1512, 1501, "awd-secret", "awd")
+	flagField := rediskeys.AWDRoundFlagServiceField(1512, serviceID)
+	roundKey := rediskeys.AWDRoundFlagsKey(15, 151)
+	if err := redisClient.HSet(context.Background(), roundKey, map[string]any{
+		flagField: originalFlag,
+	}).Err(); err != nil {
+		t.Fatalf("set round flag: %v", err)
+	}
+
+	first, err := service.SubmitAttack(context.Background(), 15001, 15, serviceID, contestcmd.SubmitAttackInput{
+		VictimTeamID: 1512,
+		Flag:         originalFlag,
+	})
+	if err != nil {
+		t.Fatalf("SubmitAttack() first error = %v", err)
+	}
+	if !first.IsSuccess || first.ScoreGained != 80 {
+		t.Fatalf("unexpected first attack resp: %+v", first)
+	}
+
+	rotatedFlag, err := redisClient.HGet(context.Background(), roundKey, flagField).Result()
+	if err != nil {
+		t.Fatalf("load rotated flag: %v", err)
+	}
+	if rotatedFlag == originalFlag {
+		t.Fatalf("expected rotated flag to change, got same value %q", rotatedFlag)
+	}
+
+	second, err := service.SubmitAttack(context.Background(), 15002, 15, serviceID, contestcmd.SubmitAttackInput{
+		VictimTeamID: 1512,
+		Flag:         originalFlag,
+	})
+	if err != nil {
+		t.Fatalf("SubmitAttack() second error = %v", err)
+	}
+	if second.IsSuccess {
+		t.Fatalf("expected stale flag to fail after rotation, got %+v", second)
+	}
+}
+
+func TestAWDServiceSubmitAttackInjectsRotatedFlag(t *testing.T) {
+	db := newAWDTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service := newAWDServiceForTest(db, redisClient, "awd-secret", config.ContestAWDConfig{})
+	injector := &fakeAWDFlagInjector{}
+	service.commands.SetFlagInjector(injector)
+
+	now := time.Now()
+	createAWDContestFixture(t, db, 16, now)
+	createAWDRoundFixture(t, db, 161, 16, 1, 80, 20, now)
+	createAWDChallengeFixture(t, db, 1601, now)
+	createAWDContestChallengeFixture(t, db, 16, 1601, now)
+	createAWDTeamFixture(t, db, 1611, 16, "Red", now)
+	createAWDTeamFixture(t, db, 1612, 16, "Blue", now)
+	createContestRegistrationForExistingTeam(t, db, 16, 1611, 16001, now)
+	serviceID := defaultAWDContestServiceID(16, 1601)
+
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 1601).Updates(map[string]any{
+		"flag_prefix": "awd",
+	}).Error; err != nil {
+		t.Fatalf("update challenge fields: %v", err)
+	}
+	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(16), "1", 0).Err(); err != nil {
+		t.Fatalf("set current round: %v", err)
+	}
+
+	originalFlag := contestdomain.BuildAWDRoundFlag(16, 1, 1612, 1601, "awd-secret", "awd")
+	flagField := rediskeys.AWDRoundFlagServiceField(1612, serviceID)
+	roundKey := rediskeys.AWDRoundFlagsKey(16, 161)
+	if err := redisClient.HSet(context.Background(), roundKey, map[string]any{
+		flagField: originalFlag,
+	}).Err(); err != nil {
+		t.Fatalf("set round flag: %v", err)
+	}
+
+	resp, err := service.SubmitAttack(context.Background(), 16001, 16, serviceID, contestcmd.SubmitAttackInput{
+		VictimTeamID: 1612,
+		Flag:         originalFlag,
+	})
+	if err != nil {
+		t.Fatalf("SubmitAttack() error = %v", err)
+	}
+	if !resp.IsSuccess {
+		t.Fatalf("expected success, got %+v", resp)
+	}
+	if injector.callCount != 1 {
+		t.Fatalf("expected injector to be called once, got %d", injector.callCount)
+	}
+	if len(injector.assignments) != 1 {
+		t.Fatalf("expected one injected assignment, got %d", len(injector.assignments))
+	}
+
+	rotatedFlag, err := redisClient.HGet(context.Background(), roundKey, flagField).Result()
+	if err != nil {
+		t.Fatalf("load rotated flag: %v", err)
+	}
+	if injector.assignments[0].Flag != rotatedFlag {
+		t.Fatalf("expected injected flag %q to match rotated redis flag %q", injector.assignments[0].Flag, rotatedFlag)
+	}
+}
+
+func TestAWDServiceSubmitAttackPreservesOriginalFlagWhenRotationInjectionFails(t *testing.T) {
+	db := newAWDTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service := newAWDServiceForTest(db, redisClient, "awd-secret", config.ContestAWDConfig{})
+	service.commands.SetFlagInjector(&fakeAWDFlagInjector{err: errors.New("inject failed")})
+
+	now := time.Now()
+	createAWDContestFixture(t, db, 17, now)
+	createAWDRoundFixture(t, db, 171, 17, 1, 80, 20, now)
+	createAWDChallengeFixture(t, db, 1701, now)
+	createAWDContestChallengeFixture(t, db, 17, 1701, now)
+	createAWDTeamFixture(t, db, 1711, 17, "Red", now)
+	createAWDTeamFixture(t, db, 1712, 17, "Blue", now)
+	createContestRegistrationForExistingTeam(t, db, 17, 1711, 17001, now)
+	serviceID := defaultAWDContestServiceID(17, 1701)
+
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 1701).Updates(map[string]any{
+		"flag_prefix": "awd",
+	}).Error; err != nil {
+		t.Fatalf("update challenge fields: %v", err)
+	}
+	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(17), "1", 0).Err(); err != nil {
+		t.Fatalf("set current round: %v", err)
+	}
+
+	originalFlag := contestdomain.BuildAWDRoundFlag(17, 1, 1712, 1701, "awd-secret", "awd")
+	flagField := rediskeys.AWDRoundFlagServiceField(1712, serviceID)
+	roundKey := rediskeys.AWDRoundFlagsKey(17, 171)
+	if err := redisClient.HSet(context.Background(), roundKey, map[string]any{
+		flagField: originalFlag,
+	}).Err(); err != nil {
+		t.Fatalf("set round flag: %v", err)
+	}
+
+	if _, err := service.SubmitAttack(context.Background(), 17001, 17, serviceID, contestcmd.SubmitAttackInput{
+		VictimTeamID: 1712,
+		Flag:         originalFlag,
+	}); err == nil {
+		t.Fatal("expected SubmitAttack() to fail when flag injection fails")
+	}
+
+	roundFlag, err := redisClient.HGet(context.Background(), roundKey, flagField).Result()
+	if err != nil {
+		t.Fatalf("load preserved flag: %v", err)
+	}
+	if roundFlag != originalFlag {
+		t.Fatalf("expected original flag to be preserved, got %q want %q", roundFlag, originalFlag)
+	}
+
+	var count int64
+	if err := db.Model(&contestentity.AWDAttackLog{}).Where("round_id = ?", 171).Count(&count).Error; err != nil {
+		t.Fatalf("count attack logs: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no attack log to be created, got %d", count)
+	}
+}
+
+func TestAWDServiceSubmitAttackTreatsAlreadyClaimedCurrentFlagAsFailure(t *testing.T) {
+	db := newAWDTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service := newAWDServiceForTest(db, redisClient, "awd-secret", config.ContestAWDConfig{})
+
+	now := time.Now()
+	createAWDContestFixture(t, db, 18, now)
+	createAWDRoundFixture(t, db, 181, 18, 1, 80, 20, now)
+	createAWDChallengeFixture(t, db, 1801, now)
+	createAWDContestChallengeFixture(t, db, 18, 1801, now)
+	createAWDTeamFixture(t, db, 1811, 18, "Red", now)
+	createAWDTeamFixture(t, db, 1812, 18, "Blue", now)
+	createContestRegistrationForExistingTeam(t, db, 18, 1811, 18001, now)
+	serviceID := defaultAWDContestServiceID(18, 1801)
+
+	if err := db.Model(&contestCommandChallengeRow{}).Where("id = ?", 1801).Updates(map[string]any{
+		"flag_prefix": "awd",
+	}).Error; err != nil {
+		t.Fatalf("update challenge fields: %v", err)
+	}
+	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(18), "1", 0).Err(); err != nil {
+		t.Fatalf("set current round: %v", err)
+	}
+
+	originalFlag := contestdomain.BuildAWDRoundFlag(18, 1, 1812, 1801, "awd-secret", "awd")
+	competingFlag := "awd{competing-rotation}"
+	flagField := rediskeys.AWDRoundFlagServiceField(1812, serviceID)
+	roundKey := rediskeys.AWDRoundFlagsKey(18, 181)
+	if err := redisClient.HSet(context.Background(), roundKey, map[string]any{
+		flagField: originalFlag,
+	}).Err(); err != nil {
+		t.Fatalf("set round flag: %v", err)
+	}
+
+	realStateStore := contestinfra.NewAWDRoundStateStore(redisClient)
+	service.commands = newAWDCommandServiceWithStateStoreForTest(db, redisClient, "awd-secret", config.ContestAWDConfig{}, racingAWDRoundStateStore{
+		AWDRoundStateStore: realStateStore,
+		replaceIfMatchFn: func(ctx context.Context, contestID, roundID, teamID, targetServiceID int64, expectedFlag, nextFlag string, ttl time.Duration) (bool, error) {
+			if err := realStateStore.SetAWDRoundFlag(ctx, contestID, roundID, teamID, targetServiceID, competingFlag, ttl); err != nil {
+				return false, err
+			}
+			return false, nil
+		},
+	})
+
+	resp, err := service.SubmitAttack(context.Background(), 18001, 18, serviceID, contestcmd.SubmitAttackInput{
+		VictimTeamID: 1812,
+		Flag:         originalFlag,
+	})
+	if err != nil {
+		t.Fatalf("SubmitAttack() error = %v", err)
+	}
+	if resp.IsSuccess || resp.ScoreGained != 0 {
+		t.Fatalf("expected claimed stale flag to fail, got %+v", resp)
+	}
+
+	currentFlag, err := redisClient.HGet(context.Background(), roundKey, flagField).Result()
+	if err != nil {
+		t.Fatalf("load claimed flag: %v", err)
+	}
+	if currentFlag != competingFlag {
+		t.Fatalf("expected competing flag %q to remain current, got %q", competingFlag, currentFlag)
+	}
+
+	var logs []contestentity.AWDAttackLog
+	if err := db.Order("id ASC").Find(&logs).Error; err != nil {
+		t.Fatalf("query attack logs: %v", err)
+	}
+	if len(logs) != 1 || logs[0].IsSuccess {
+		t.Fatalf("expected one failed attack log, got %+v", logs)
 	}
 }
 
@@ -2657,8 +3019,11 @@ func TestAWDServiceSubmitAttackMaterializesMissingCurrentRound(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load materialized round flag: %v", err)
 	}
-	if flagValue != currentFlag {
-		t.Fatalf("unexpected materialized round flag: got %q want %q", flagValue, currentFlag)
+	if flagValue == "" {
+		t.Fatal("expected materialized round flag to be stored after submit")
+	}
+	if flagValue == currentFlag {
+		t.Fatalf("expected materialized round flag to rotate after first success, still got %q", flagValue)
 	}
 }
 
