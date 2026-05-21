@@ -19,9 +19,10 @@ func (s *ContestService) UpdateContest(ctx context.Context, id int64, req Update
 	if err != nil {
 		return nil, err
 	}
+	now := time.Now().UTC()
 	previousStatus := contest.Status
 	previousStatusVersion := contest.StatusVersion
-	if err := validateContestUpdateRequest(contest, req); err != nil {
+	if err := validateContestUpdateRequest(contest, req, now); err != nil {
 		return nil, err
 	}
 	if contestdomain.ShouldGateAWDContestStart(contest.Mode, contest.Status, req.Status) {

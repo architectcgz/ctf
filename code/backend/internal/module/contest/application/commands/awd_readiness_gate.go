@@ -59,7 +59,7 @@ func ensureAWDReadinessGate(ctx context.Context, repo contestports.AWDReadinessQ
 }
 
 func evaluateAWDReadinessGate(ctx context.Context, repo contestports.AWDReadinessQuery, contestID int64, forceOverride *bool, overrideReason *string) (*awdReadinessGateDecision, error) {
-	forced, normalizedReason, err := normalizeAWDReadinessOverride(forceOverride, overrideReason)
+	forced, normalizedReason, err := normalizeForceOverride(forceOverride, overrideReason)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func mapAWDReadinessChallengeRecords(records []contestports.AWDReadinessChalleng
 	return challenges
 }
 
-func normalizeAWDReadinessOverride(forceOverride *bool, overrideReason *string) (bool, string, error) {
+func normalizeForceOverride(forceOverride *bool, overrideReason *string) (bool, string, error) {
 	if forceOverride == nil || !*forceOverride {
 		return false, "", nil
 	}

@@ -301,6 +301,110 @@ func TestContestServiceUpdateContestManualFreezeCreatesFrozenSnapshot(t *testing
 	}
 }
 
+func TestContestServiceUpdateContestBlocksEarlyEndWithoutOverride(t *testing.T) {
+	service, db := newContestCommandServiceForTest(t)
+	now := time.Now().UTC()
+
+	createContestForUpdateTest(t, db, &contestentity.Contest{
+		ID:            808,
+		Title:         "early-end-block",
+		Mode:          contestentity.ContestModeAWD,
+		Status:        contestentity.ContestStatusRunning,
+		StatusVersion: 1,
+		StartTime:     now.Add(-time.Hour),
+		EndTime:       now.Add(time.Hour),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	})
+
+	_, err := service.UpdateContest(context.Background(), 808, contestcmd.UpdateContestInput{
+		Status: strPtr(contestentity.ContestStatusEnded),
+	})
+	assertAppErrorCode(t, err, 14031)
+}
+
+func TestContestServiceUpdateContestAllowsEarlyEndWithOverride(t *testing.T) {
+	service, db := newContestCommandServiceForTest(t)
+	now := time.Now().UTC()
+
+	createContestForUpdateTest(t, db, &contestentity.Contest{
+		ID:            809,
+		Title:         "early-end-override",
+		Mode:          contestentity.ContestModeAWD,
+		Status:        contestentity.ContestStatusRunning,
+		StatusVersion: 1,
+		StartTime:     now.Add(-time.Hour),
+		EndTime:       now.Add(time.Hour),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	})
+
+	resp, err := service.UpdateContest(context.Background(), 809, contestcmd.UpdateContestInput{
+		Status:         strPtr(contestentity.ContestStatusEnded),
+		ForceOverride:  boolPtr(true),
+		OverrideReason: strPtr("teacher drill"),
+	})
+	if err != nil {
+		t.Fatalf("UpdateContest() error = %v", err)
+	}
+	if resp == nil || resp.Status != contestentity.ContestStatusEnded {
+		t.Fatalf("unexpected contest response: %+v", resp)
+	}
+}
+
+func TestContestServiceUpdateContestRejectsEarlyEndBlankOverrideReason(t *testing.T) {
+	service, db := newContestCommandServiceForTest(t)
+	now := time.Now().UTC()
+
+	createContestForUpdateTest(t, db, &contestentity.Contest{
+		ID:            810,
+		Title:         "early-end-blank-reason",
+		Mode:          contestentity.ContestModeAWD,
+		Status:        contestentity.ContestStatusRunning,
+		StatusVersion: 1,
+		StartTime:     now.Add(-time.Hour),
+		EndTime:       now.Add(time.Hour),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	})
+
+	_, err := service.UpdateContest(context.Background(), 810, contestcmd.UpdateContestInput{
+		Status:         strPtr(contestentity.ContestStatusEnded),
+		ForceOverride:  boolPtr(true),
+		OverrideReason: strPtr("   "),
+	})
+	if err != apperror.ErrInvalidParams {
+		t.Fatalf("expected ErrInvalidParams, got %v", err)
+	}
+}
+
+func TestContestServiceUpdateContestAllowsNaturalEndWithoutOverride(t *testing.T) {
+	service, db := newContestCommandServiceForTest(t)
+	now := time.Now().UTC()
+
+	createContestForUpdateTest(t, db, &contestentity.Contest{
+		ID:            811,
+		Title:         "natural-end",
+		Mode:          contestentity.ContestModeAWD,
+		Status:        contestentity.ContestStatusRunning,
+		StatusVersion: 1,
+		StartTime:     now.Add(-2 * time.Hour),
+		EndTime:       now.Add(-time.Minute),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	})
+
+	resp, err := service.UpdateContest(context.Background(), 811, contestcmd.UpdateContestInput{
+		Status: strPtr(contestentity.ContestStatusEnded),
+	})
+	if err != nil {
+		t.Fatalf("UpdateContest() error = %v", err)
+	}
+	if resp == nil || resp.Status != contestentity.ContestStatusEnded {
+		t.Fatalf("unexpected contest response: %+v", resp)
+	}
+}
+
 func newContestCommandServiceForTest(t *testing.T) (*contestcmd.ContestService, *gorm.DB) {
 	return newContestCommandServiceForTestWithRedis(t, nil)
 }
@@ -346,5 +450,14 @@ func assertContestReadinessBlocked(t *testing.T, err error) {
 	var appErr *apperror.AppError
 	if !errors.As(err, &appErr) || appErr.Code != contestcontracts.ErrAWDReadinessBlocked.Code {
 		t.Fatalf("expected ErrAWDReadinessBlocked, got %v", err)
+	}
+}
+
+func assertAppErrorCode(t *testing.T, err error, code int) {
+	t.Helper()
+
+	var appErr *apperror.AppError
+	if !errors.As(err, &appErr) || appErr.Code != code {
+		t.Fatalf("expected app error code %d, got %v", code, err)
 	}
 }
