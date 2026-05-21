@@ -44,6 +44,7 @@ type StudentFactSnapshot struct {
 	WriteupCount           int
 	ApprovedReviewCount    int
 	HandsOnEventCount      int
+	AWDAttemptCount        int
 	AWDSuccessCount        int
 	Dimensions             []DimensionFact
 }
@@ -115,6 +116,7 @@ type ReviewArchiveReflectionAnalysis struct {
 type ReviewArchiveAWDAnalysis struct {
 	Severity          Severity
 	HandsOnEventCount int
+	AWDAttemptCount   int
 	AWDSuccessCount   int
 }
 
@@ -612,7 +614,7 @@ func analyzeReviewArchiveReflection(snapshot StudentFactSnapshot) *ReviewArchive
 }
 
 func analyzeReviewArchiveAWD(snapshot StudentFactSnapshot) *ReviewArchiveAWDAnalysis {
-	if snapshot.HandsOnEventCount+snapshot.AWDSuccessCount == 0 {
+	if snapshot.AWDAttemptCount+snapshot.AWDSuccessCount == 0 {
 		return nil
 	}
 
@@ -620,7 +622,7 @@ func analyzeReviewArchiveAWD(snapshot StudentFactSnapshot) *ReviewArchiveAWDAnal
 	switch {
 	case snapshot.AWDSuccessCount > 0:
 		severity = SeverityGood
-	case snapshot.HandsOnEventCount >= 2:
+	case snapshot.AWDAttemptCount >= 2:
 		severity = SeverityWarning
 	default:
 		severity = SeverityAttention
@@ -629,6 +631,7 @@ func analyzeReviewArchiveAWD(snapshot StudentFactSnapshot) *ReviewArchiveAWDAnal
 	return &ReviewArchiveAWDAnalysis{
 		Severity:          severity,
 		HandsOnEventCount: snapshot.HandsOnEventCount,
+		AWDAttemptCount:   snapshot.AWDAttemptCount,
 		AWDSuccessCount:   snapshot.AWDSuccessCount,
 	}
 }

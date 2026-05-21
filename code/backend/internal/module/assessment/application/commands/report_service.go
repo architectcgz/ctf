@@ -1038,6 +1038,7 @@ func buildReviewArchiveTeachingFactSnapshot(
 
 	snapshot.MaxWrongStreak = submissionStats.MaxWrongStreak
 	snapshot.HandsOnEventCount = countReviewArchiveAWDHandsOnEvidence(timeline, evidence)
+	snapshot.AWDAttemptCount = countReviewArchiveAWDAttempts(timeline, evidence)
 	snapshot.AWDSuccessCount = submissionStats.AWDSuccessCount
 
 	for _, dimension := range skillProfile {
@@ -1388,6 +1389,27 @@ func countReviewArchiveAWDHandsOnEvidence(
 		}
 	}
 	return handsOnCount
+}
+
+func countReviewArchiveAWDAttempts(
+	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+) int {
+	attemptCount := 0
+	for _, item := range evidence {
+		if item.Type == teachingevidence.EventTypeAWDAttackSubmission && isStudentScopedAWDAttackEvidence(item) {
+			attemptCount++
+		}
+	}
+	if attemptCount > 0 {
+		return attemptCount
+	}
+	for _, item := range timeline {
+		if item.Type == "awd_attack_submit" {
+			attemptCount++
+		}
+	}
+	return attemptCount
 }
 
 func includeEvidenceInPersonalActivity(item assessmentdomain.ReviewArchiveEvidenceEvent) bool {
