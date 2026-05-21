@@ -54,6 +54,7 @@ func TestPracticeRuntimeTopologyAdapterPreservesAWDNetworkFields(t *testing.T) {
 
 func TestPracticeRuntimeTopologyAdapterPreservesWorkspaceShellFields(t *testing.T) {
 	req := &practiceports.TopologyCreateRequest{
+		SubnetPool:    practiceports.SubnetPoolSingleContainer,
 		ContainerName: "workspace-companion",
 		Nodes: []practiceports.TopologyCreateNode{
 			{
@@ -78,6 +79,9 @@ func TestPracticeRuntimeTopologyAdapterPreservesWorkspaceShellFields(t *testing.
 	got := toRuntimeTopologyCreateRequestFromPractice(req)
 	if got.ContainerName != "workspace-companion" {
 		t.Fatalf("expected container name preserved, got %+v", got)
+	}
+	if got.SubnetPool != runtimeports.SubnetPoolSingleContainer {
+		t.Fatalf("expected subnet pool preserved, got %q", got.SubnetPool)
 	}
 	if len(got.Nodes) != 1 {
 		t.Fatalf("expected one node, got %+v", got.Nodes)

@@ -26,6 +26,11 @@ var ErrPracticeSolvedSubmissionNotFound = errors.New("practice solved submission
 var ErrPracticeUserNotFound = errors.New("practice user not found")
 
 const (
+	SubnetPoolTopology        = runtimeports.SubnetPoolTopology
+	SubnetPoolSingleContainer = runtimeports.SubnetPoolSingleContainer
+)
+
+const (
 	ContestModeAWD = "awd"
 
 	ContestStatusRegistration = "registration"
@@ -132,6 +137,7 @@ type TopologyCreateRequest struct {
 	Networks                   []TopologyCreateNetwork
 	Nodes                      []TopologyCreateNode
 	Policies                   []runtimecontracts.TopologyTrafficPolicy
+	SubnetPool                 runtimeports.SubnetPoolKind
 	OwnerInstanceID            int64
 	ReservedHostPort           int
 	DisableEntryPortPublishing bool

@@ -278,6 +278,75 @@ func TestCreateSingleContainerRebindsHostPortAfterPublishConflict(t *testing.T) 
 	}
 }
 
+func TestCreateSingleContainerUsesSingleContainerSubnetPool(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&practiceCommandImageRow{
+		ID:        411,
+		Name:      "ctf/web-single",
+		Tag:       "v1",
+		Status:    challengecontracts.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	service := &Service{
+		imageRepo: challengeinfra.NewImageRepository(db),
+		runtimeService: &stubPracticeRuntimeService{
+			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+				if req.SubnetPool != practiceports.SubnetPoolSingleContainer {
+					t.Fatalf("expected single container subnet pool, got %q", req.SubnetPool)
+				}
+				return &practiceports.TopologyCreateResult{
+					PrimaryContainerID: "single-ctr",
+					NetworkID:          "single-net",
+					AccessURL:          "http://127.0.0.1:30031",
+					RuntimeDetails: runtimecontracts.InstanceRuntimeDetails{
+						Networks: []runtimecontracts.InstanceRuntimeNetwork{
+							{
+								Key:       challengecontracts.TopologyDefaultNetworkKey,
+								Name:      "ctf-net-default-single",
+								NetworkID: "single-net",
+								Subnet:    "10.11.0.0/29",
+							},
+						},
+						Containers: []runtimecontracts.InstanceRuntimeContainer{
+							{
+								NodeKey:         "default",
+								ContainerID:     "single-ctr",
+								HostPort:        30031,
+								ServicePort:     8080,
+								ServiceProtocol: challengecontracts.ChallengeTargetProtocolHTTP,
+								IsEntryPoint:    true,
+								NetworkKeys:     []string{challengecontracts.TopologyDefaultNetworkKey},
+							},
+						},
+					},
+				}, nil
+			},
+		},
+		config: &config.Config{},
+	}
+	instance := &instanceentity.Instance{
+		ID:          9102,
+		ChallengeID: 411,
+		HostPort:    30031,
+	}
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
+		ID:       411,
+		ImageID:  411,
+		FlagType: challengecontracts.FlagTypeStatic,
+	}
+
+	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
+		t.Fatalf("createSingleContainer() error = %v", err)
+	}
+}
+
 func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	t.Parallel()
 

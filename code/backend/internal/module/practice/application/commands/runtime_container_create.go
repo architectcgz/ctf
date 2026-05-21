@@ -131,6 +131,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 			nodeAliases = []string{buildAWDServiceAlias(instance)}
 		}
 		request := &practiceports.TopologyCreateRequest{
+			SubnetPool:                 runtimeports.SubnetPoolSingleContainer,
 			OwnerInstanceID:            instance.ID,
 			ReservedHostPort:           instance.HostPort,
 			DisableEntryPortPublishing: shouldDisableEntryPortPublishing(instance, s.config.Container.AccessHost),
@@ -191,6 +192,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 	}
 
 	request := &practiceports.TopologyCreateRequest{
+		SubnetPool:                 runtimeports.SubnetPoolSingleContainer,
 		OwnerInstanceID:            instance.ID,
 		ReservedHostPort:           instance.HostPort,
 		DisableEntryPortPublishing: shouldDisableEntryPortPublishing(instance, s.config.Container.AccessHost),
