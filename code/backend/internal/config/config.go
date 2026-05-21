@@ -174,8 +174,10 @@ type ContainerConfig struct {
 }
 
 type ContainerNetworkConfig struct {
-	JeopardySubnetBase string `mapstructure:"jeopardy_subnet_base"`
-	SubnetMask         int    `mapstructure:"subnet_mask"`
+	SingleContainerSubnetBase string `mapstructure:"single_container_subnet_base"`
+	SingleContainerSubnetMask int    `mapstructure:"single_container_subnet_mask"`
+	TopologySubnetBase        string `mapstructure:"topology_subnet_base"`
+	TopologySubnetMask        int    `mapstructure:"topology_subnet_mask"`
 }
 
 type ContainerRegistryConfig struct {
@@ -657,32 +659,71 @@ func isPlaceholderSecret(value string) bool {
 }
 
 func validateContainerNetworkConfig(cfg ContainerNetworkConfig) error {
-	base := strings.TrimSpace(cfg.JeopardySubnetBase)
-	if base == "" {
-		return fmt.Errorf("container.network.jeopardy_subnet_base must not be empty")
-	}
-	ip, ipNet, err := net.ParseCIDR(base)
+	singleContainerCIDR, err := validateSubnetPoolConfig(
+		"container.network.single_container_subnet_base",
+		"container.network.single_container_subnet_mask",
+		cfg.SingleContainerSubnetBase,
+		cfg.SingleContainerSubnetMask,
+	)
 	if err != nil {
-		return fmt.Errorf("container.network.jeopardy_subnet_base must be a valid CIDR")
+		return err
 	}
-	ip4 := ip.To4()
-	if ip4 == nil {
-		return fmt.Errorf("container.network.jeopardy_subnet_base must be an IPv4 CIDR")
+
+	topologyCIDR, err := validateSubnetPoolConfig(
+		"container.network.topology_subnet_base",
+		"container.network.topology_subnet_mask",
+		cfg.TopologySubnetBase,
+		cfg.TopologySubnetMask,
+	)
+	if err != nil {
+		return err
 	}
-	if !ip.Equal(ipNet.IP) {
-		return fmt.Errorf("container.network.jeopardy_subnet_base must use the network address of the CIDR")
-	}
-	basePrefix, bits := ipNet.Mask.Size()
-	if bits != 32 {
-		return fmt.Errorf("container.network.jeopardy_subnet_base must be an IPv4 CIDR")
-	}
-	if cfg.SubnetMask <= 0 || cfg.SubnetMask > 30 {
-		return fmt.Errorf("container.network.subnet_mask must be between 1 and 30")
-	}
-	if cfg.SubnetMask <= basePrefix {
-		return fmt.Errorf("container.network.subnet_mask must be greater than the base CIDR prefix")
+
+	if cidrOverlaps(singleContainerCIDR, topologyCIDR) {
+		return fmt.Errorf("container.network.single_container_subnet_base and container.network.topology_subnet_base must not overlap")
 	}
 	return nil
+}
+
+func validateSubnetPoolConfig(baseFieldName, maskFieldName, base string, mask int) (*net.IPNet, error) {
+	trimmedBase := strings.TrimSpace(base)
+	if trimmedBase == "" {
+		return nil, fmt.Errorf("%s must not be empty", baseFieldName)
+	}
+
+	ip, ipNet, err := net.ParseCIDR(trimmedBase)
+	if err != nil {
+		return nil, fmt.Errorf("%s must be a valid CIDR", baseFieldName)
+	}
+
+	ip4 := ip.To4()
+	baseIP := ipNet.IP.To4()
+	if ip4 == nil || baseIP == nil {
+		return nil, fmt.Errorf("%s must be an IPv4 CIDR", baseFieldName)
+	}
+	if !ip4.Equal(baseIP) {
+		return nil, fmt.Errorf("%s must use the network address of the CIDR", baseFieldName)
+	}
+
+	basePrefix, bits := ipNet.Mask.Size()
+	if bits != 32 {
+		return nil, fmt.Errorf("%s must be an IPv4 CIDR", baseFieldName)
+	}
+	if mask <= 0 || mask > 30 {
+		return nil, fmt.Errorf("%s must be between 1 and 30", maskFieldName)
+	}
+	if mask <= basePrefix {
+		return nil, fmt.Errorf("%s must be greater than the base CIDR prefix", maskFieldName)
+	}
+
+	return ipNet, nil
+}
+
+func cidrOverlaps(a, b *net.IPNet) bool {
+	if a == nil || b == nil {
+		return false
+	}
+	return a.Contains(b.IP) || b.Contains(a.IP)
 }
 
 func (c PostgresConfig) DSN() string {
@@ -786,8 +827,10 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.defense_ssh_host_key_path", "storage/runtime/awd-defense-ssh-host-key.pem")
 	v.SetDefault("container.defense_workbench_readonly_enabled", true)
 	v.SetDefault("container.defense_workbench_root", "/app")
-	v.SetDefault("container.network.jeopardy_subnet_base", "10.10.0.0/16")
-	v.SetDefault("container.network.subnet_mask", 24)
+	v.SetDefault("container.network.single_container_subnet_base", "10.11.0.0/16")
+	v.SetDefault("container.network.single_container_subnet_mask", 29)
+	v.SetDefault("container.network.topology_subnet_base", "10.10.0.0/16")
+	v.SetDefault("container.network.topology_subnet_mask", 24)
 	v.SetDefault("container.registry.enabled", false)
 	v.SetDefault("container.registry.scheme", "https")
 	v.SetDefault("container.registry.server", "")

@@ -90,11 +90,17 @@ func applyProvisioningConfigDefaults(cfg *config.ContainerConfig) {
 	if cfg == nil {
 		return
 	}
-	if strings.TrimSpace(cfg.Network.JeopardySubnetBase) == "" {
-		cfg.Network.JeopardySubnetBase = "10.10.0.0/16"
+	if strings.TrimSpace(cfg.Network.SingleContainerSubnetBase) == "" {
+		cfg.Network.SingleContainerSubnetBase = "10.11.0.0/16"
 	}
-	if cfg.Network.SubnetMask <= 0 {
-		cfg.Network.SubnetMask = 24
+	if cfg.Network.SingleContainerSubnetMask <= 0 {
+		cfg.Network.SingleContainerSubnetMask = 29
+	}
+	if strings.TrimSpace(cfg.Network.TopologySubnetBase) == "" {
+		cfg.Network.TopologySubnetBase = "10.10.0.0/16"
+	}
+	if cfg.Network.TopologySubnetMask <= 0 {
+		cfg.Network.TopologySubnetMask = 24
 	}
 }
 
@@ -106,6 +112,7 @@ func (s *ProvisioningService) CreateContainer(ctx context.Context, imageName str
 	}
 
 	result, err := s.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
+		SubnetPool:       runtimeports.SubnetPoolSingleContainer,
 		ReservedHostPort: reservedHostPort,
 		Networks: []runtimeports.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
@@ -193,7 +200,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			networkID string
 		)
 		for {
-			subnet, err = s.allocateNetworkSubnet(ctx, req.OwnerInstanceID, network, occupiedSubnets)
+			subnet, err = s.allocateNetworkSubnet(ctx, req, req.OwnerInstanceID, network, occupiedSubnets)
 			if err != nil {
 				s.cleanupTopologyResources(ctx, nil, createdNetworks, req.OwnerInstanceID)
 				return nil, err
@@ -511,7 +518,7 @@ func (s *ProvisioningService) allocatePort(ctx context.Context) (int, error) {
 	return s.repo.ReserveAvailablePort(ctx, s.config.PortRangeStart, s.config.PortRangeEnd)
 }
 
-func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, ownerInstanceID int64, network runtimeports.TopologyCreateNetwork, excludedSubnets []string) (string, error) {
+func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, req *runtimeports.TopologyCreateRequest, ownerInstanceID int64, network runtimeports.TopologyCreateNetwork, excludedSubnets []string) (string, error) {
 	if network.Shared {
 		return "", nil
 	}
@@ -521,12 +528,32 @@ func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, ownerIn
 	if s.repo == nil {
 		return "", fmt.Errorf("runtime provisioning repository is not configured")
 	}
-	baseCIDR := s.config.Network.JeopardySubnetBase
-	subnetMask := s.config.Network.SubnetMask
+	baseCIDR, subnetMask := s.resolveNetworkPool(req)
 	if ownerInstanceID > 0 {
 		return s.repo.ReserveAvailableSubnetForInstanceExcluding(ctx, baseCIDR, subnetMask, ownerInstanceID, network.Key, excludedSubnets)
 	}
 	return s.repo.ReserveAvailableSubnetExcluding(ctx, baseCIDR, subnetMask, excludedSubnets)
+}
+
+func (s *ProvisioningService) resolveNetworkPool(req *runtimeports.TopologyCreateRequest) (string, int) {
+	switch resolveSubnetPoolKind(req) {
+	case runtimeports.SubnetPoolSingleContainer:
+		return s.config.Network.SingleContainerSubnetBase, s.config.Network.SingleContainerSubnetMask
+	default:
+		return s.config.Network.TopologySubnetBase, s.config.Network.TopologySubnetMask
+	}
+}
+
+func resolveSubnetPoolKind(req *runtimeports.TopologyCreateRequest) runtimeports.SubnetPoolKind {
+	if req == nil {
+		return runtimeports.SubnetPoolTopology
+	}
+	switch req.SubnetPool {
+	case runtimeports.SubnetPoolSingleContainer:
+		return runtimeports.SubnetPoolSingleContainer
+	default:
+		return runtimeports.SubnetPoolTopology
+	}
 }
 
 func (s *ProvisioningService) releaseNetworkSubnet(ctx context.Context, ownerInstanceID int64, subnet string) {

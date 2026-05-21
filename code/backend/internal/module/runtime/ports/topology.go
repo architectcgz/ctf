@@ -2,6 +2,13 @@ package ports
 
 import runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 
+type SubnetPoolKind string
+
+const (
+	SubnetPoolTopology        SubnetPoolKind = "topology"
+	SubnetPoolSingleContainer SubnetPoolKind = "single_container"
+)
+
 type TopologyCreateNode struct {
 	Key             string
 	Image           string
@@ -29,6 +36,7 @@ type TopologyCreateRequest struct {
 	Networks                   []TopologyCreateNetwork
 	Nodes                      []TopologyCreateNode
 	Policies                   []runtimecontracts.TopologyTrafficPolicy
+	SubnetPool                 SubnetPoolKind
 	OwnerInstanceID            int64
 	ReservedHostPort           int
 	DisableEntryPortPublishing bool

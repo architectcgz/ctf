@@ -140,8 +140,10 @@ container:
   defense_workbench_readonly_enabled: true
   defense_workbench_root: /app
   network:
-    jeopardy_subnet_base: 10.10.0.0/16
-    subnet_mask: 24
+    single_container_subnet_base: 10.11.0.0/16
+    single_container_subnet_mask: 29
+    topology_subnet_base: 10.10.0.0/16
+    topology_subnet_mask: 24
   registry:
     enabled: false
     scheme: https

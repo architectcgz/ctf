@@ -15,6 +15,7 @@
 
 - `code/backend/internal/module/runtime/runtime/module.go`、`code/backend/internal/module/runtime/runtime/adapters.go`、`code/backend/internal/module/runtime/application/{commands/provisioning_service.go,commands/runtime_cleanup_service.go,container_file_service.go,container_stats_service.go,image_runtime_service.go}`
   - 负责：封装当前单机 Docker Engine 适配、容器创建 / 清理 / 文件 / 镜像 / 统计能力，以及 practice / challenge / ops 仍在复用的底层 runtime adapter
+  - 负责：在 `ProvisioningService.CreateTopology()` 内收口动态子网分配；当前按 `TopologyCreateRequest.SubnetPool` 在两套地址池之间分流，单容器实例使用 `10.11.0.0/16` 的 `/29` 子网，多容器 topology 使用 `10.10.0.0/16` 的 `/24` 子网，`shared=true` 或显式 `subnet` 的网络继续跳过动态分配
   - 不负责：拥有实例命令、实例查询、proxy ticket 或 maintenance 业务 owner；这些已收口到 `instance` 模块和 app composition
 
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`、`awd_desired_runtime_reconciler.go`
@@ -49,11 +50,12 @@
 ## 接口或数据影响
 
 - 当前运行态核心数据在 `instances`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope` 等字段约束。
+- 动态网络预留事实持久化在 `network_allocations`；内部 `TopologyCreateRequest.SubnetPool` 只区分 `single_container` 与 `topology` 两类动态子网池，不向 HTTP 契约直接暴露 Docker 子网选择细节。
 - AWD 比赛时间暂停事实持久化在 `contests.paused_seconds`，同一次宿主机 outage 的幂等账本持久化在 `contests.runtime_recovery_key` 与 `contests.runtime_recovery_applied_seconds`，宿主机恢复检测状态持久化在 Redis `platform_runtime_state`；后端内部不新增比赛暂停枚举，而是统一基于 `effectiveNow / effectiveEnd` 解释活跃 AWD 比赛时间窗。
 - AWD desired reconcile 的 scope 级降噪状态持久化在 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>`，字段包括 `failure_count`、`last_failure_at`、`next_attempt_at`、`suppressed_until` 和 `last_error`；scope 恢复 active 后由 reconcile 主动清除。
 - AWD dynamic flag 的稳定密钥事实最终落在 `container.flag_global_secret_file` 指向的本地文件或持久化卷里；`container.flag_global_secret` 只是当前进程加载后的内存值。
 - 运行时入口与访问相关 API 包括 `POST /api/v1/challenges/:id/instances`、`POST /api/v1/contests/:id/challenges/:cid/instances`、`POST /api/v1/contests/:id/awd/services/:sid/instances`、`POST /api/v1/instances/:id/access` 以及 AWD 相关访问 / 复盘接口；契约以 `docs/contracts/openapi-v1.yaml` 为准。
-- 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.proxy_ticket_ttl`、`container.registry.*`、`contest.awd.scheduler_*`，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
+- 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.proxy_ticket_ttl`、`container.registry.*`、`container.network.single_container_*`、`container.network.topology_*`、`contest.awd.scheduler_*`；两套 CIDR 会在启动时做 IPv4、网络地址、掩码范围和 overlap 校验，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
 
 ## Guardrail
 
@@ -99,7 +101,7 @@ flowchart TD
         JUDGE --> CM
     end
 
-    subgraph 靶机容器层["靶机容器层 — 每实例独立 Docker Network (10.10.x.0/24)"]
+    subgraph 靶机容器层["靶机容器层 — 每实例独立 Docker Network（单容器 /29，多容器 topology /24）"]
         direction LR
         A["靶机 A\nuser_net"]
         B["靶机 B\nuser_net"]
@@ -211,18 +213,18 @@ stateDiagram-v2
 
 ## 3. 网络隔离方案
 
-### 3.1 Jeopardy 模式：每用户实例独立网络
+### 3.1 Jeopardy 模式：按单容器与拓扑分流的独立网络
 
-每个用户启动的靶机实例拥有独立的 Docker Bridge Network，实例间完全隔离：
+每个用户启动的训练实例都会获得独立的 Docker Bridge Network，但网络粒度会按运行形态分流：单容器题目使用更小的子网池，多容器 topology 题目保留更大的地址空间，以兼顾并发容量和拓扑可表达性。
 
 ```mermaid
 flowchart TD
     HOST["宿主机"]
 
     HOST --- PN["platform_net\n172.20.0.0/16\n← 平台服务专用"]
-    HOST --- N1["ctf_user_1001_chall_5\n10.10.1.0/24\n← 用户 1001 的题目 5"]
-    HOST --- N2["ctf_user_1002_chall_5\n10.10.2.0/24\n← 用户 1002 的题目 5"]
-    HOST --- N3["ctf_user_1001_chall_8\n10.10.3.0/24\n← 用户 1001 的题目 8"]
+    HOST --- N1["ctf_user_1001_chall_5\n10.11.0.0/29\n← 用户 1001 的单容器题目"]
+    HOST --- N2["ctf_user_1002_chall_5\n10.11.0.8/29\n← 用户 1002 的单容器题目"]
+    HOST --- N3["ctf_user_1001_chall_8\n10.10.1.0/24\n← 用户 1001 的多容器题目"]
 
     N1 --- C1["container: web_1001_5\n仅此容器"]
     N2 --- C2["container: web_1002_5"]
@@ -231,9 +233,11 @@ flowchart TD
 ```
 
 **子网分配策略：**
-- 子网范围：`10.10.0.0/16`，按 `/24` 划分，最多支持 ~254 个并发实例网络
-- 如需扩展，启用 `10.11.0.0/16` 作为第二段
-- 子网 ID 通过数据库自增序列分配，销毁后回收复用
+- 单容器实例池：`10.11.0.0/16`，按 `/29` 划分，优先给只需要单个容器和单个默认网络的训练题目使用，可提供 8192 个候选独立子网
+- 多容器 topology 池：`10.10.0.0/16`，按 `/24` 划分，给需要多个节点、网络别名或 ACL 编排的拓扑题目使用，保留更宽松的地址空间
+- runtime 通过 `TopologyCreateRequest.SubnetPool` 自动选择地址池；`CreateContainer()` 和 challenge runtime probe 的单容器路径显式标记 `single_container`，其余 topology 路径默认进入 `topology`
+- 两套地址池在配置加载阶段会校验 CIDR 合法性、网络地址、掩码范围以及 overlap，避免不同粒度子网混发导致 Docker 网络冲突
+- 子网预留仍通过 `network_allocations` 保证并发安全；单次 topology 创建只预读一次 Docker 当前已占用子网，并在冲突重试时共享 occupied set
 - 网络命名规则：`ctf_{userID}_{challengeID}_{instanceShortID}`
 
 ### 3.2 AWD 模式：各队独立子网 + 跨队攻击链路
@@ -335,7 +339,7 @@ volumes:
 # 规则 0（基础规则，平台启动时一次性注入）：
 # 默认 DROP 靶机网段的所有出站流量（白名单基线）
 # ============================================================
-iptables -I DOCKER-USER -s 10.10.0.0/16 -j DROP \
+iptables -I DOCKER-USER -s 10.10.0.0/15 -j DROP \
     -m comment --comment "ctf:default-drop"
 
 # ============================================================
@@ -344,30 +348,30 @@ iptables -I DOCKER-USER -s 10.10.0.0/16 -j DROP \
 # 阻断宿主机物理网卡 IP（从配置读取，如 192.168.1.100）
 # 注意：仅阻断特定端口不够，必须阻断宿主机所有 IP，
 # 否则靶机可通过宿主机 IP 访问 PostgreSQL/Redis/API 等服务
-iptables -I DOCKER-USER -s 10.10.0.0/16 -d ${HOST_IP} -j DROP \
+iptables -I DOCKER-USER -s 10.10.0.0/15 -d ${HOST_IP} -j DROP \
     -m comment --comment "ctf:block-host-ip"
 
 # 阻断 Docker 默认网关 IP（172.17.0.1）
-iptables -I DOCKER-USER -s 10.10.0.0/16 -d 172.17.0.1 -j DROP \
+iptables -I DOCKER-USER -s 10.10.0.0/15 -d 172.17.0.1 -j DROP \
     -m comment --comment "ctf:block-docker-gw"
 
 # 阻断平台服务网段（172.20.0.0/16）
-iptables -I DOCKER-USER -s 10.10.0.0/16 -d 172.20.0.0/16 -j DROP \
+iptables -I DOCKER-USER -s 10.10.0.0/15 -d 172.20.0.0/16 -j DROP \
     -m comment --comment "ctf:block-platform-net"
 
 # 阻断 localhost 回环（防止通过 127.0.0.1 绕过）
-iptables -I DOCKER-USER -s 10.10.0.0/16 -d 127.0.0.0/8 -j DROP \
+iptables -I DOCKER-USER -s 10.10.0.0/15 -d 127.0.0.0/8 -j DROP \
     -m comment --comment "ctf:block-loopback"
 
 # 阻断云元数据服务（如果部署在云上）
-iptables -I DOCKER-USER -s 10.10.0.0/16 -d 169.254.169.254 -j DROP \
+iptables -I DOCKER-USER -s 10.10.0.0/15 -d 169.254.169.254 -j DROP \
     -m comment --comment "ctf:block-metadata"
 
 # ============================================================
 # 规则 2：靶机子网间隔离（Jeopardy 模式）
 # ============================================================
-# 不同 /24 子网之间不可达
-iptables -I DOCKER-USER -s 10.10.0.0/16 -d 10.10.0.0/16 -j DROP \
+# 不同 runtime 子网之间不可达（覆盖 `10.10.0.0/16` 的 topology 池和 `10.11.0.0/16` 的单容器池）
+iptables -I DOCKER-USER -s 10.10.0.0/15 -d 10.10.0.0/15 -j DROP \
     -m comment --comment "ctf:isolate-subnets"
 
 # ============================================================
@@ -375,7 +379,7 @@ iptables -I DOCKER-USER -s 10.10.0.0/16 -d 10.10.0.0/16 -j DROP \
 # 允许同一子网内部通信（多容器题目需要）
 # ============================================================
 # 由 NetworkManager.CreateIsolatedNetwork() 在创建网络时自动注入：
-# iptables -I DOCKER-USER -s 10.10.{X}.0/24 -d 10.10.{X}.0/24 -j ACCEPT \
+# iptables -I DOCKER-USER -s ${SUBNET_CIDR} -d ${SUBNET_CIDR} -j ACCEPT \
 #     -m comment --comment "ctf:allow-subnet:{instanceID}"
 
 # ============================================================
@@ -383,7 +387,7 @@ iptables -I DOCKER-USER -s 10.10.0.0/16 -d 10.10.0.0/16 -j DROP \
 # 放行需要外网访问的题目（如 SSRF 类）
 # ============================================================
 # 由 Container Manager 根据 challenge.allow_outbound 配置注入：
-# iptables -I DOCKER-USER -s 10.10.{X}.0/24 ! -d 10.0.0.0/8 -j ACCEPT \
+# iptables -I DOCKER-USER -s ${SUBNET_CIDR} ! -d 10.0.0.0/8 -j ACCEPT \
 #     -m comment --comment "ctf:allow-outbound:{instanceID}"
 ```
 
@@ -417,21 +421,21 @@ func (nm *NetworkManager) InitFirewallRules(ctx context.Context) error {
 
     staticRules := [][]string{
         // 规则 0：默认 DROP（兜底）
-        {"-I", "DOCKER-USER", "-s", "10.10.0.0/16", "-j", "DROP",
+        {"-I", "DOCKER-USER", "-s", "10.10.0.0/15", "-j", "DROP",
             "-m", "comment", "--comment", "ctf:default-drop"},
         // 规则 1：阻断宿主机
-        {"-I", "DOCKER-USER", "-s", "10.10.0.0/16", "-d", hostIP, "-j", "DROP",
+        {"-I", "DOCKER-USER", "-s", "10.10.0.0/15", "-d", hostIP, "-j", "DROP",
             "-m", "comment", "--comment", "ctf:block-host-ip"},
-        {"-I", "DOCKER-USER", "-s", "10.10.0.0/16", "-d", "172.17.0.1", "-j", "DROP",
+        {"-I", "DOCKER-USER", "-s", "10.10.0.0/15", "-d", "172.17.0.1", "-j", "DROP",
             "-m", "comment", "--comment", "ctf:block-docker-gw"},
-        {"-I", "DOCKER-USER", "-s", "10.10.0.0/16", "-d", "172.20.0.0/16", "-j", "DROP",
+        {"-I", "DOCKER-USER", "-s", "10.10.0.0/15", "-d", "172.20.0.0/16", "-j", "DROP",
             "-m", "comment", "--comment", "ctf:block-platform-net"},
-        {"-I", "DOCKER-USER", "-s", "10.10.0.0/16", "-d", "127.0.0.0/8", "-j", "DROP",
+        {"-I", "DOCKER-USER", "-s", "10.10.0.0/15", "-d", "127.0.0.0/8", "-j", "DROP",
             "-m", "comment", "--comment", "ctf:block-loopback"},
-        {"-I", "DOCKER-USER", "-s", "10.10.0.0/16", "-d", "169.254.169.254", "-j", "DROP",
+        {"-I", "DOCKER-USER", "-s", "10.10.0.0/15", "-d", "169.254.169.254", "-j", "DROP",
             "-m", "comment", "--comment", "ctf:block-metadata"},
         // 规则 2：子网间隔离
-        {"-I", "DOCKER-USER", "-s", "10.10.0.0/16", "-d", "10.10.0.0/16", "-j", "DROP",
+        {"-I", "DOCKER-USER", "-s", "10.10.0.0/15", "-d", "10.10.0.0/15", "-j", "DROP",
             "-m", "comment", "--comment", "ctf:isolate-subnets"},
     }
 
@@ -1596,9 +1600,10 @@ flowchart TD
 container:
   # 网络配置
   network:
-    jeopardy_subnet_base: "10.10.0.0/16"   # Jeopardy 子网基地址
-    awd_subnet_base: "10.20.0.0/16"         # AWD 子网基地址
-    subnet_mask: 24                          # 每实例子网掩码
+    single_container_subnet_base: "10.11.0.0/16"  # 单容器训练实例地址池
+    single_container_subnet_mask: 29              # 单容器实例按 /29 切分
+    topology_subnet_base: "10.10.0.0/16"          # 多容器 topology 地址池
+    topology_subnet_mask: 24                      # topology 实例按 /24 切分
 
   # 端口配置
   port:

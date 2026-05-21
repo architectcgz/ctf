@@ -6,6 +6,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
@@ -31,6 +32,9 @@ func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
 	}
 
 	got := toRuntimeChallengeTopologyCreateRequest(req.toPorts(), "host-gateway.internal")
+	if got.SubnetPool != runtimeports.SubnetPoolTopology {
+		t.Fatalf("expected topology subnet pool, got %+v", got.SubnetPool)
+	}
 	if len(got.Networks) != 1 || !got.Networks[0].Internal {
 		t.Fatalf("expected challenge runtime network fields to be preserved, got %+v", got.Networks)
 	}
@@ -71,6 +75,22 @@ func TestRuntimeChallengeTopologyAdapterDisablesPublishedEntryPortWithoutAccessH
 	got := toRuntimeChallengeTopologyCreateRequest(req.toPorts(), "")
 	if !got.DisableEntryPortPublishing {
 		t.Fatalf("expected private entry access without published access host, got %+v", got)
+	}
+}
+
+func TestRuntimeChallengeSingleContainerRequestUsesSingleContainerSubnetPool(t *testing.T) {
+	got := buildRuntimeChallengeSingleContainerCreateRequest("ctf/web:latest", map[string]string{"FLAG": "flag{1}"})
+	if got.SubnetPool != runtimeports.SubnetPoolSingleContainer {
+		t.Fatalf("expected single container subnet pool, got %+v", got.SubnetPool)
+	}
+	if len(got.Networks) != 1 || got.Networks[0].Key != runtimecontracts.TopologyDefaultNetworkKey {
+		t.Fatalf("expected default network request, got %+v", got.Networks)
+	}
+	if len(got.Nodes) != 1 || got.Nodes[0].Image != "ctf/web:latest" {
+		t.Fatalf("expected single container node request, got %+v", got.Nodes)
+	}
+	if got.Nodes[0].Env["FLAG"] != "flag{1}" {
+		t.Fatalf("expected env to be preserved, got %+v", got.Nodes[0].Env)
 	}
 }
 

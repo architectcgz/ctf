@@ -370,8 +370,8 @@ func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
 	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceJeopardy {
 		t.Fatalf("expected jeopardy network label, got %q", got)
 	}
-	if engine.createdNetworkSubnet != "10.10.0.0/24" {
-		t.Fatalf("expected first jeopardy subnet 10.10.0.0/24, got %q", engine.createdNetworkSubnet)
+	if engine.createdNetworkSubnet != "10.11.0.0/29" {
+		t.Fatalf("expected first single-container subnet 10.11.0.0/29, got %q", engine.createdNetworkSubnet)
 	}
 }
 
@@ -1336,6 +1336,9 @@ func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testin
 	}
 	if engine.createdContainerCfgs[0].Network != engine.createdNetworkName || engine.createdContainerCfgs[1].Network != engine.createdNetworkName {
 		t.Fatalf("expected all containers to join shared network")
+	}
+	if engine.createdNetworkSubnet != "10.10.0.0/24" {
+		t.Fatalf("expected topology subnet 10.10.0.0/24, got %q", engine.createdNetworkSubnet)
 	}
 	if engine.createdNetworkAllowExisting {
 		t.Fatal("non-shared topology network must not reuse an existing Docker network")

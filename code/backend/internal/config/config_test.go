@@ -164,28 +164,42 @@ func TestValidateAllowsLocalRegistryServerOutsideContainerWithoutAccessServer(t 
 	}
 }
 
-func TestValidateRejectsInvalidJeopardySubnetBase(t *testing.T) {
+func TestValidateRejectsInvalidSingleContainerSubnetBase(t *testing.T) {
 	cfg := validConfigForValidationTests()
-	cfg.Container.Network.JeopardySubnetBase = "10.10.0.1/16"
+	cfg.Container.Network.SingleContainerSubnetBase = "10.11.0.1/16"
 
 	err := cfg.Validate()
 	if err == nil {
 		t.Fatal("expected Validate() to reject non-network subnet base, got nil")
 	}
-	if !strings.Contains(err.Error(), "container.network.jeopardy_subnet_base must use the network address") {
+	if !strings.Contains(err.Error(), "container.network.single_container_subnet_base must use the network address") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
-func TestValidateRejectsSubnetMaskNotNarrowerThanBase(t *testing.T) {
+func TestValidateRejectsSingleContainerSubnetMaskNotNarrowerThanBase(t *testing.T) {
 	cfg := validConfigForValidationTests()
-	cfg.Container.Network.SubnetMask = 16
+	cfg.Container.Network.SingleContainerSubnetMask = 16
 
 	err := cfg.Validate()
 	if err == nil {
 		t.Fatal("expected Validate() to reject non-narrower subnet mask, got nil")
 	}
-	if !strings.Contains(err.Error(), "container.network.subnet_mask must be greater than the base CIDR prefix") {
+	if !strings.Contains(err.Error(), "container.network.single_container_subnet_mask must be greater than the base CIDR prefix") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateRejectsOverlappingSubnetPools(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.Network.SingleContainerSubnetBase = "10.10.1.0/24"
+	cfg.Container.Network.SingleContainerSubnetMask = 29
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject overlapping subnet pools, got nil")
+	}
+	if !strings.Contains(err.Error(), "container.network.single_container_subnet_base and container.network.topology_subnet_base must not overlap") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -424,8 +438,10 @@ func validConfigForValidationTests() *Config {
 			ProxyTicketTTL:       time.Minute,
 			ProxyBodyPreviewSize: 1024,
 			Network: ContainerNetworkConfig{
-				JeopardySubnetBase: "10.10.0.0/16",
-				SubnetMask:         24,
+				SingleContainerSubnetBase: "10.11.0.0/16",
+				SingleContainerSubnetMask: 29,
+				TopologySubnetBase:        "10.10.0.0/16",
+				TopologySubnetMask:        24,
 			},
 		},
 		Recommendation: RecommendationConfig{

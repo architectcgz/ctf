@@ -42,6 +42,11 @@ container:
   start_probe_timeout: 800ms
   start_probe_interval: 300ms
   start_probe_attempts: 5
+  network:
+    single_container_subnet_base: 10.11.0.0/16
+    single_container_subnet_mask: 29
+    topology_subnet_base: 10.10.0.0/16
+    topology_subnet_mask: 24
   registry:
     enabled: false
     scheme: https

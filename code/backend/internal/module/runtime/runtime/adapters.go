@@ -107,21 +107,7 @@ func (a *runtimeChallengeServiceAdapter) CreateContainer(ctx context.Context, im
 		return "", runtimecontracts.InstanceRuntimeDetails{}, fmt.Errorf("runtime provisioning service is not configured")
 	}
 
-	result, err := a.provisioner.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
-		Networks: []runtimeports.TopologyCreateNetwork{
-			{Key: runtimecontracts.TopologyDefaultNetworkKey},
-		},
-		Nodes: []runtimeports.TopologyCreateNode{
-			{
-				Key:             "default",
-				Image:           imageName,
-				Env:             cloneRuntimeStringMap(env),
-				IsEntryPoint:    true,
-				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
-				ServiceProtocol: runtimecontracts.ChallengeTargetProtocolHTTP,
-			},
-		},
-	})
+	result, err := a.provisioner.CreateTopology(ctx, buildRuntimeChallengeSingleContainerCreateRequest(imageName, env))
 	if err != nil {
 		return "", runtimecontracts.InstanceRuntimeDetails{}, err
 	}
@@ -169,9 +155,29 @@ func toRuntimeChallengeTopologyCreateRequest(req *challengeports.RuntimeTopology
 		})
 	}
 	return &runtimeports.TopologyCreateRequest{
+		SubnetPool:                 runtimeports.SubnetPoolTopology,
 		Networks:                   networks,
 		Nodes:                      nodes,
 		Policies:                   append([]runtimecontracts.TopologyTrafficPolicy(nil), req.Policies...),
 		DisableEntryPortPublishing: strings.TrimSpace(publishedAccessHost) == "",
+	}
+}
+
+func buildRuntimeChallengeSingleContainerCreateRequest(imageName string, env map[string]string) *runtimeports.TopologyCreateRequest {
+	return &runtimeports.TopologyCreateRequest{
+		SubnetPool: runtimeports.SubnetPoolSingleContainer,
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{
+				Key:             "default",
+				Image:           imageName,
+				Env:             cloneRuntimeStringMap(env),
+				IsEntryPoint:    true,
+				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
+				ServiceProtocol: runtimecontracts.ChallengeTargetProtocolHTTP,
+			},
+		},
 	}
 }
