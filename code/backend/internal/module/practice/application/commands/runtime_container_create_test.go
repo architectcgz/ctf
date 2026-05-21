@@ -508,6 +508,13 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	if instance.AccessURL != "http://awd-c7001-t7101-s8001:8080" {
 		t.Fatalf("unexpected access url: %s", instance.AccessURL)
 	}
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	if err != nil {
+		t.Fatalf("DecodeInstanceRuntimeDetails() error = %v", err)
+	}
+	if token := details.FindAWDCheckerToken("CHECKER_TOKEN"); token != contestdomain.BuildAWDCheckerToken(contestID, teamID, serviceID, 501, checkerSecret) {
+		t.Fatalf("unexpected persisted checker token: %+v", details)
+	}
 }
 
 func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testing.T) {

@@ -59,15 +59,19 @@ func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromTCPStandard(
 	if len(instances) == 0 {
 		return buildAWDCheckOutcomeWithoutInstances(result)
 	}
-	checkerToken, err := u.resolveAWDCheckerToken(definition, contestID, teamID)
-	if err != nil {
-		return buildAWDDownCheckOutcome(result, "checker_token_unavailable", sanitizeAWDCheckError(err))
-	}
+	needsCheckerToken := strings.TrimSpace(definition.CheckerToken) != "" || strings.TrimSpace(definition.CheckerTokenEnv) != ""
 
 	targets := make([]awdCheckTargetResult, 0, len(instances))
 	status := contestentity.AWDServiceStatusUp
 	statusReason := "healthy"
 	for _, instance := range instances {
+		checkerToken := ""
+		if needsCheckerToken {
+			checkerToken, err = u.resolveAWDCheckerTokenForInstance(definition, instance, contestID, teamID)
+			if err != nil {
+				return buildAWDDownCheckOutcome(result, "checker_token_unavailable", sanitizeAWDCheckError(err))
+			}
+		}
 		target, targetStatus, reason := u.runAWDTCPCheckerTarget(ctx, config, contestID, round, teamID, definition, instance, flag, checkerToken)
 		targets = append(targets, target)
 		if targetStatus != contestentity.AWDServiceStatusUp && status == contestentity.AWDServiceStatusUp {

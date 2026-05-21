@@ -11,6 +11,7 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestAWDRoundUpdaterRunAWDHTTPCheckerActionUsesHTTPRuntime(t *testing.T) {
@@ -168,6 +169,68 @@ func TestAWDRoundUpdaterHTTPStandardDerivesCheckerTokenForRuntimeChecks(t *testi
 	request := runtime.requests[0]
 	if request.Headers["X-AWD-Checker-Token"] != expectedToken {
 		t.Fatalf("unexpected checker token header: %+v", request.Headers)
+	}
+}
+
+func TestAWDRoundUpdaterHTTPStandardUsesPersistedInstanceCheckerToken(t *testing.T) {
+	runtime := &awdHTTPRuntimeStub{
+		response: contestports.AWDHTTPResponse{
+			StatusCode: http.StatusOK,
+			Body:       "ok",
+		},
+	}
+	updater := NewAWDRoundUpdater(nil, nil, config.ContestAWDConfig{CheckerTimeout: time.Second}, "", nil, nil)
+	updater.SetHTTPRuntime(runtime)
+
+	details := runtimecontracts.InstanceRuntimeDetails{}
+	details.SetAWDCheckerToken("CHECKER_TOKEN", "persisted-runtime-token")
+	rawDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(details)
+	if err != nil {
+		t.Fatalf("EncodeInstanceRuntimeDetails() error = %v", err)
+	}
+
+	outcome, err := updater.buildAWDCheckOutcomeFromHTTPStandard(
+		context.Background(),
+		nil,
+		71,
+		nil,
+		81,
+		contestports.AWDServiceDefinition{
+			ServiceID:       2001,
+			AWDChallengeID:  3001,
+			CheckerType:     contestentity.AWDCheckerTypeHTTPStandard,
+			CheckerTokenEnv: "CHECKER_TOKEN",
+			CheckerConfig: `{
+				"get_flag": {
+					"path": "/api/flag",
+					"headers": {
+						"X-AWD-Checker-Token": "{{CHECKER_TOKEN}}"
+					},
+					"expected_status": 200
+				}
+			}`,
+		},
+		[]contestports.AWDServiceInstance{
+			{
+				ServiceID:      2001,
+				AWDChallengeID: 3001,
+				AccessURL:      "http://service.local:8080",
+				RuntimeDetails: rawDetails,
+			},
+		},
+		"manual",
+	)
+	if err != nil {
+		t.Fatalf("buildAWDCheckOutcomeFromHTTPStandard() error = %v", err)
+	}
+	if outcome.serviceStatus != contestentity.AWDServiceStatusUp {
+		t.Fatalf("unexpected outcome: %+v", outcome)
+	}
+	if len(runtime.requests) != 1 {
+		t.Fatalf("expected 1 request, got %d", len(runtime.requests))
+	}
+	if runtime.requests[0].Headers["X-AWD-Checker-Token"] != "persisted-runtime-token" {
+		t.Fatalf("unexpected checker token header: %+v", runtime.requests[0].Headers)
 	}
 }
 

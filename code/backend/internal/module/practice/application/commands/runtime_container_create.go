@@ -54,6 +54,7 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 		if err != nil {
 			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 		}
+		applyAWDCheckerTokenToRuntimeDetails(result, awdWorkspacePlan)
 		return applyTopologyCreateResultToInstance(instance, result)
 	}); err != nil {
 		if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
@@ -157,6 +158,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 			if err != nil {
 				return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 			}
+			applyAWDCheckerTokenToRuntimeDetails(result, awdWorkspacePlan)
 			return applyTopologyCreateResultToInstance(instance, result)
 		}); err != nil {
 			if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
@@ -396,4 +398,11 @@ func applyAWDCheckerTokenToTopologyRequest(req *practiceports.TopologyCreateRequ
 		}
 		req.Nodes[index].Env[checkerTokenEnv] = checkerToken
 	}
+}
+
+func applyAWDCheckerTokenToRuntimeDetails(result *practiceports.TopologyCreateResult, awdWorkspacePlan *awdDefenseWorkspacePlan) {
+	if result == nil || awdWorkspacePlan == nil {
+		return
+	}
+	result.RuntimeDetails.SetAWDCheckerToken(awdWorkspacePlan.checkerTokenEnv, awdWorkspacePlan.checkerToken)
 }

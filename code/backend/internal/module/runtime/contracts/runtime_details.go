@@ -1,11 +1,15 @@
 package contracts
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 type InstanceRuntimeDetails struct {
 	Networks   []InstanceRuntimeNetwork   `json:"networks,omitempty"`
 	Containers []InstanceRuntimeContainer `json:"containers,omitempty"`
 	ACLRules   []InstanceRuntimeACLRule   `json:"acl_rules,omitempty"`
+	AWD        *InstanceAWDRuntimeDetails `json:"awd,omitempty"`
 }
 
 type InstanceRuntimeNetwork struct {
@@ -40,6 +44,49 @@ type InstanceRuntimeACLRule struct {
 	Action            string `json:"action,omitempty"`
 	Protocol          string `json:"protocol,omitempty"`
 	Ports             []int  `json:"ports,omitempty"`
+}
+
+type InstanceAWDRuntimeDetails struct {
+	Checker *InstanceAWDCheckerRuntimeDetails `json:"checker,omitempty"`
+}
+
+type InstanceAWDCheckerRuntimeDetails struct {
+	TokenEnv string `json:"token_env,omitempty"`
+	Token    string `json:"token,omitempty"`
+}
+
+func (d *InstanceRuntimeDetails) SetAWDCheckerToken(tokenEnv, token string) {
+	if d == nil {
+		return
+	}
+	tokenEnv = strings.TrimSpace(tokenEnv)
+	token = strings.TrimSpace(token)
+	if tokenEnv == "" || token == "" {
+		return
+	}
+	if d.AWD == nil {
+		d.AWD = &InstanceAWDRuntimeDetails{}
+	}
+	d.AWD.Checker = &InstanceAWDCheckerRuntimeDetails{
+		TokenEnv: tokenEnv,
+		Token:    token,
+	}
+}
+
+func (d InstanceRuntimeDetails) FindAWDCheckerToken(expectedEnv string) string {
+	expectedEnv = strings.TrimSpace(expectedEnv)
+	if d.AWD == nil || d.AWD.Checker == nil {
+		return ""
+	}
+	token := strings.TrimSpace(d.AWD.Checker.Token)
+	if token == "" {
+		return ""
+	}
+	tokenEnv := strings.TrimSpace(d.AWD.Checker.TokenEnv)
+	if expectedEnv != "" && !strings.EqualFold(tokenEnv, expectedEnv) {
+		return ""
+	}
+	return token
 }
 
 func EncodeInstanceRuntimeDetails(details InstanceRuntimeDetails) (string, error) {

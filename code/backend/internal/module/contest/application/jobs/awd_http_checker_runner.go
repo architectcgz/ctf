@@ -48,17 +48,11 @@ func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromHTTPStandard(
 			currentFlag = acceptedFlags[0]
 		}
 	}
-	checkerToken := ""
-	if needsAWDHTTPCheckerToken(config) {
-		checkerToken, err = u.resolveAWDCheckerToken(definition, contestID, teamID)
-		if err != nil {
-			return buildAWDDownCheckOutcome(result, "checker_token_unavailable", sanitizeAWDCheckError(err))
-		}
-	}
+	needsCheckerToken := needsAWDHTTPCheckerToken(config)
 
 	targets := make([]awdHTTPCheckerTargetRuntimeResult, 0, len(instances))
 	for _, instance := range instances {
-		targets = append(targets, u.runAWDHTTPCheckerTarget(ctx, instance, round, teamID, definition, config, currentFlag, checkerToken, acceptedFlags))
+		targets = append(targets, u.runAWDHTTPCheckerTarget(ctx, contestID, instance, round, teamID, definition, config, currentFlag, needsCheckerToken, acceptedFlags))
 	}
 
 	status := applyAWDHTTPCheckerAggregateResult(&result, targets)
@@ -67,19 +61,36 @@ func (u *AWDRoundUpdater) buildAWDCheckOutcomeFromHTTPStandard(
 
 func (u *AWDRoundUpdater) runAWDHTTPCheckerTarget(
 	ctx context.Context,
+	contestID int64,
 	instance contestports.AWDServiceInstance,
 	round *contestentity.AWDRound,
 	teamID int64,
 	definition contestports.AWDServiceDefinition,
 	config awdHTTPCheckerConfig,
 	currentFlag string,
-	checkerToken string,
+	needsCheckerToken bool,
 	acceptedFlags []string,
 ) awdHTTPCheckerTargetRuntimeResult {
 	startedAt := time.Now()
 	target := awdCheckTargetResult{
 		AccessURL: instance.AccessURL,
 		Probe:     string(contestentity.AWDCheckerTypeHTTPStandard),
+	}
+
+	checkerToken := ""
+	if needsCheckerToken {
+		var err error
+		checkerToken, err = u.resolveAWDCheckerTokenForInstance(definition, instance, contestID, teamID)
+		if err != nil {
+			target.ErrorCode = "checker_token_unavailable"
+			target.Error = sanitizeAWDCheckError(err)
+			target.LatencyMS = time.Since(startedAt).Milliseconds()
+			return awdHTTPCheckerTargetRuntimeResult{
+				status:       contestentity.AWDServiceStatusDown,
+				statusReason: target.ErrorCode,
+				target:       target,
+			}
+		}
 	}
 
 	templateData := awdHTTPCheckerTemplateData{

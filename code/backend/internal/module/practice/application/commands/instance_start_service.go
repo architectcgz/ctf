@@ -124,9 +124,17 @@ func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdSco
 
 	now := time.Now().UTC()
 	if req.NoopIfActive && isDesiredAWDInstanceActive(instance, now) {
+		reusable, err := s.canReuseActiveAWDInstance(ctx, req.Scope, instance)
+		if err != nil {
+			return nil, err
+		}
+		if !reusable {
+			goto restartInstance
+		}
 		return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 	}
 
+restartInstance:
 	if instance.Status != instancecontracts.InstanceStatusPending && instance.Status != instancecontracts.InstanceStatusCreating {
 		if err := s.runtimeService.CleanupRuntime(ctx, restartCleanupRuntimeView(instance)); err != nil {
 			return nil, apperror.ErrServiceUnavailable.WithCause(err)
@@ -213,6 +221,30 @@ func (s *Service) recordScopedAWDServiceOperation(ctx context.Context, instanceI
 		return
 	}
 	s.recordAWDServiceOperation(ctx, instanceID, contestID, scope, operationType, status, audit.RequestedBy, audit.RequestedByID, audit.Reason, audit.SLABillable)
+}
+
+func (s *Service) canReuseActiveAWDInstance(ctx context.Context, scope practiceports.InstanceScope, instance *instancecontracts.Instance) (bool, error) {
+	if instance == nil || scope.ContestID == nil || scope.ServiceID == nil {
+		return true, nil
+	}
+	if s.contestScope == nil {
+		return false, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
+	}
+	subject, err := s.contestScope.FindContestAWDServiceRuntimeSubject(ctx, *scope.ContestID, *scope.ServiceID)
+	if err != nil {
+		if errors.Is(err, practiceports.ErrPracticeContestAWDServiceNotFound) {
+			return false, contestcontracts.ErrChallengeNotInContest
+		}
+		return false, apperror.ErrInternal.WithCause(err)
+	}
+	if subject == nil || subject.WorkspaceConfig == nil || strings.TrimSpace(subject.WorkspaceConfig.CheckerTokenEnv) == "" {
+		return true, nil
+	}
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	if err != nil {
+		return false, nil
+	}
+	return strings.TrimSpace(details.FindAWDCheckerToken(subject.WorkspaceConfig.CheckerTokenEnv)) != "", nil
 }
 
 func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*AdminAWDInstanceItemResp, error) {

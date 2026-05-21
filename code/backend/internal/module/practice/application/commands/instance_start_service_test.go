@@ -597,6 +597,145 @@ func TestStartContestAWDServiceDoesNotRefreshStoppingInstanceExpiry(t *testing.T
 	}
 }
 
+func TestRestartOrStartScopedAWDServiceRecreatesActiveInstanceWhenCheckerTokenMetadataMissing(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now().UTC()
+	contestID := int64(3319)
+	teamID := int64(4319)
+	serviceID := int64(7319)
+	challengeID := int64(2319)
+	userID := int64(5319)
+	existingInstance := &instanceentity.Instance{
+		ID:          9319,
+		UserID:      userID,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: challengeID,
+		ServiceID:   &serviceID,
+		ShareScope:  instanceentity.ShareScopePerTeam,
+		Status:      instanceentity.InstanceStatusRunning,
+		ExpiresAt:   now.Add(10 * time.Minute),
+		RuntimeDetails: `{"networks":[{"name":"ctf-awd-contest-3319","shared":true}],
+			"containers":[{"container_id":"ctr-3319","is_entry_point":true,"service_port":8080}]}`,
+	}
+	scope := practiceports.InstanceScope{
+		ContestMode: practiceports.ContestModeAWD,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ServiceID:   &serviceID,
+		ShareScope:  instanceentity.ShareScopePerTeam,
+	}
+
+	cleanupCalled := false
+	resetCalled := false
+	repo := &stubPracticeRepository{
+		findContestByIDFn: func(ctx context.Context, gotContestID int64) (*practiceports.ContestRecord, error) {
+			if gotContestID != contestID {
+				t.Fatalf("unexpected contest lookup: %d", gotContestID)
+			}
+			return &practiceports.ContestRecord{
+				ID:      contestID,
+				Mode:    practiceports.ContestModeAWD,
+				Status:  practiceports.ContestStatusRunning,
+				EndTime: now.Add(time.Hour),
+			}, nil
+		},
+		findScopedRestartableInstanceFn: func(ctx context.Context, gotUserID, gotChallengeID int64, gotScope practiceports.InstanceScope) (*instanceentity.Instance, error) {
+			if gotUserID != userID || gotChallengeID != challengeID {
+				t.Fatalf("unexpected restartable lookup: user=%d challenge=%d", gotUserID, gotChallengeID)
+			}
+			if gotScope.ServiceID == nil || *gotScope.ServiceID != serviceID {
+				t.Fatalf("unexpected scope: %+v", gotScope)
+			}
+			return existingInstance, nil
+		},
+		findContestAWDServiceRuntimeSubjectFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
+			if gotContestID != contestID || gotServiceID != serviceID {
+				t.Fatalf("unexpected runtime subject lookup: contest=%d service=%d", gotContestID, gotServiceID)
+			}
+			return &practiceports.ContestAWDServiceRuntimeSubject{
+				ServiceID:   serviceID,
+				ChallengeID: challengeID,
+				Visible:     true,
+				WorkspaceConfig: &practiceports.ContestAWDDefenseWorkspaceConfig{
+					CheckerTokenEnv: "CHECKER_TOKEN",
+				},
+			}, nil
+		},
+		resetInstanceRuntimeForRestartFn: func(ctx context.Context, instanceID int64, status string, expiresAt time.Time, preserveHostPort bool) error {
+			resetCalled = true
+			if instanceID != existingInstance.ID {
+				t.Fatalf("unexpected reset instance: %d", instanceID)
+			}
+			if status != instanceentity.InstanceStatusPending {
+				t.Fatalf("unexpected reset status: %s", status)
+			}
+			if preserveHostPort {
+				t.Fatal("expected awd restart to avoid preserving host port")
+			}
+			return nil
+		},
+		createAWDServiceOperationFn: func(ctx context.Context, operation *runtimeentity.AWDServiceOperation) error {
+			return nil
+		},
+	}
+
+	service := wirePracticeScopeAdapters(NewService(
+		repo,
+
+		nil,
+		&stubPracticeInstanceStore{},
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
+				cleanupCalled = true
+				if instance.ID != existingInstance.ID {
+					t.Fatalf("unexpected cleanup instance: %+v", instance)
+				}
+				return nil
+			},
+		},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled: true,
+				},
+			},
+		},
+		nil),
+
+		repo, nil)
+
+	resp, err := service.restartOrStartScopedAWDService(context.Background(), awdScopedRuntimeRequest{
+		OwnerUserID:  userID,
+		ContestID:    contestID,
+		ChallengeID:  challengeID,
+		Scope:        scope,
+		NoopIfActive: true,
+		Audit: awdScopedRuntimeAudit{
+			RestartOperationType: runtimecontracts.AWDServiceOperationTypeRecreate,
+			RequestedBy:          runtimecontracts.AWDServiceOperationRequestedBySystem,
+			Reason:               "desired_runtime_reconcile",
+		},
+	})
+	if err != nil {
+		t.Fatalf("restartOrStartScopedAWDService() error = %v", err)
+	}
+	if resp == nil || resp.ID != existingInstance.ID {
+		t.Fatalf("expected restarted instance response, got %+v", resp)
+	}
+	if !cleanupCalled || !resetCalled {
+		t.Fatalf("expected active instance to be recreated, cleanup=%v reset=%v", cleanupCalled, resetCalled)
+	}
+	if resp.Status != instanceentity.InstanceStatusPending {
+		t.Fatalf("expected pending status after restart scheduling, got %+v", resp)
+	}
+}
+
 func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 	t.Parallel()
 
