@@ -255,6 +255,24 @@ type testAWDReviewExportBuilder struct {
 	archive *assessmentqry.TeacherAWDReviewArchiveResp
 }
 
+type testAWDReviewArchiveReader struct {
+	archives []*assessmentqry.TeacherAWDReviewArchiveResp
+	inputs   []assessmentqry.GetTeacherAWDReviewArchiveInput
+}
+
+func (r *testAWDReviewArchiveReader) GetContestArchive(ctx context.Context, requesterID, contestID int64, req assessmentqry.GetTeacherAWDReviewArchiveInput) (*assessmentqry.TeacherAWDReviewArchiveResp, error) {
+	_ = ctx
+	_ = requesterID
+	_ = contestID
+	r.inputs = append(r.inputs, req)
+	if len(r.archives) == 0 {
+		return nil, fmt.Errorf("unexpected GetContestArchive call")
+	}
+	archive := r.archives[0]
+	r.archives = r.archives[1:]
+	return archive, nil
+}
+
 func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requesterID, contestID int64, roundNumber *int) (*assessmentqry.TeacherAWDReviewArchiveResp, error) {
 	if b != nil && b.wait != nil {
 		select {
@@ -1441,6 +1459,63 @@ func TestRenderAWDReviewArchiveZipPreservesTeacherAWDReviewJSONFields(t *testing
 	}
 }
 
+func TestTeacherAWDReviewExportBuilderSelectsFocusRoundWhenRoundMissing(t *testing.T) {
+	t.Parallel()
+
+	reader := &testAWDReviewArchiveReader{
+		archives: []*assessmentqry.TeacherAWDReviewArchiveResp{
+			{
+				Contest: assessmentqry.TeacherAWDReviewContestMetaResp{
+					ID:     21,
+					Title:  "awd-review",
+					Status: contestcontracts.ContestStatusEnded,
+				},
+				Rounds: []assessmentqry.TeacherAWDReviewRoundResp{
+					{RoundNumber: 1, ServiceCount: 2, AttackCount: 0, TrafficCount: 1},
+					{RoundNumber: 2, ServiceCount: 2, AttackCount: 3, TrafficCount: 2},
+				},
+			},
+			{
+				Contest: assessmentqry.TeacherAWDReviewContestMetaResp{
+					ID:     21,
+					Title:  "awd-review",
+					Status: contestcontracts.ContestStatusEnded,
+				},
+				Rounds: []assessmentqry.TeacherAWDReviewRoundResp{
+					{RoundNumber: 1, ServiceCount: 2, AttackCount: 0, TrafficCount: 1},
+					{RoundNumber: 2, ServiceCount: 2, AttackCount: 3, TrafficCount: 2},
+				},
+				SelectedRound: &assessmentqry.TeacherAWDSelectedRoundResp{
+					Round: assessmentqry.TeacherAWDReviewRoundResp{
+						RoundNumber:  2,
+						ServiceCount: 2,
+						AttackCount:  3,
+						TrafficCount: 2,
+					},
+				},
+			},
+		},
+	}
+
+	builder := NewAWDReviewExportBuilder(reader)
+	archive, err := builder.BuildArchive(context.Background(), 11, 21, nil)
+	if err != nil {
+		t.Fatalf("BuildArchive() error = %v", err)
+	}
+	if archive == nil || archive.SelectedRound == nil || archive.SelectedRound.Round.RoundNumber != 2 {
+		t.Fatalf("expected selected round 2, got %+v", archive)
+	}
+	if len(reader.inputs) != 2 {
+		t.Fatalf("expected 2 archive reads, got %d", len(reader.inputs))
+	}
+	if reader.inputs[0].RoundNumber != nil {
+		t.Fatalf("expected first archive read without round filter, got %+v", reader.inputs[0])
+	}
+	if reader.inputs[1].RoundNumber == nil || *reader.inputs[1].RoundNumber != 2 {
+		t.Fatalf("expected second archive read with round 2, got %+v", reader.inputs[1])
+	}
+}
+
 func TestRenderAWDReviewReportPDFIncludesSelectedRoundSummary(t *testing.T) {
 	t.Parallel()
 
@@ -1463,10 +1538,27 @@ func TestRenderAWDReviewReportPDFIncludesSelectedRoundSummary(t *testing.T) {
 	}
 	for _, token := range [][]byte{
 		[]byte("awd-review"),
+		[]byte("blue"),
+		[]byte("red"),
+		[]byte("/health"),
 	} {
 		if !pdfContainsText(content, string(token)) {
 			t.Fatalf("expected PDF to contain %q", token)
 		}
+	}
+}
+
+func TestNewReportPDFRegistersBoldFont(t *testing.T) {
+	t.Parallel()
+
+	pdf, err := newReportPDF()
+	if err != nil {
+		t.Fatalf("newReportPDF() error = %v", err)
+	}
+
+	setReportPDFFont(pdf, "B", 14)
+	if err := pdf.Error(); err != nil {
+		t.Fatalf("expected report pdf bold font to be available, got %v", err)
 	}
 }
 

@@ -1,20 +1,18 @@
 package commands
 
 import (
-	_ "embed"
 	"fmt"
 
 	"github.com/jung-kurt/gofpdf"
+
+	"ctf-platform/internal/module/assessment/application/reportassets"
 )
 
 const reportPDFFontFamily = "report-cjk"
 
-//go:embed reportfonts/NotoSansCJKsc-Regular.ttf
-var reportPDFFontRegular []byte
-
 func registerReportPDFFonts(pdf *gofpdf.Fpdf) error {
-	pdf.AddUTF8FontFromBytes(reportPDFFontFamily, "", reportPDFFontRegular)
-	pdf.AddUTF8FontFromBytes(reportPDFFontFamily, "B", reportPDFFontRegular)
+	pdf.AddUTF8FontFromBytes(reportPDFFontFamily, "", reportassets.ReportPDFRegularFont())
+	pdf.AddUTF8FontFromBytes(reportPDFFontFamily, "B", reportassets.ReportPDFBoldFont())
 	if err := pdf.Error(); err != nil {
 		return fmt.Errorf("register report pdf fonts: %w", err)
 	}

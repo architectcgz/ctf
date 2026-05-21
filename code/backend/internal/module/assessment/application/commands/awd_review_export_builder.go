@@ -28,7 +28,19 @@ func (b *teacherAWDReviewExportBuilder) BuildArchive(ctx context.Context, reques
 		return nil, apperror.ErrServiceUnavailable.WithMessage("教师 AWD 复盘导出暂不可用")
 	}
 
-	return b.reader.GetContestArchive(ctx, requesterID, contestID, assessmentqry.GetTeacherAWDReviewArchiveInput{
+	archive, err := b.reader.GetContestArchive(ctx, requesterID, contestID, assessmentqry.GetTeacherAWDReviewArchiveInput{
 		RoundNumber: roundNumber,
+	})
+	if err != nil || roundNumber != nil || archive == nil || archive.SelectedRound != nil {
+		return archive, err
+	}
+
+	focusRound := hottestRound(archive.Rounds)
+	if focusRound == nil {
+		return archive, nil
+	}
+
+	return b.reader.GetContestArchive(ctx, requesterID, contestID, assessmentqry.GetTeacherAWDReviewArchiveInput{
+		RoundNumber: &focusRound.RoundNumber,
 	})
 }

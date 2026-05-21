@@ -47,7 +47,7 @@
   - 不负责：重新定义通用 report 任务生命周期
 
 - `AWDReviewExportBuilder`
-  - 负责：复用 `GetContestArchive` 构建导出输入
+  - 负责：复用 `GetContestArchive` 构建导出输入，并在 PDF 导出未显式指定轮次时补齐焦点轮次
   - 不负责：文件格式渲染
 
 - `ReportService`
@@ -94,6 +94,7 @@
 - `export_ready` 由 contest 状态是否 `ended` 决定，前端据此控制是否允许导出 PDF 报告。
 - AWD 赛事导出的任务状态、下载轮询和过期控制复用共享 `reports` 契约，不在本文重复定义第二套任务模型。
 - AWD 赛事 archive 只服务赛事级复盘；个人 / 班级报告仍沿用练习型统计口径，AWD 个人事件通过证据链和归档页表达，而不是直接抬高 `score / solved / rank`。
+- PDF 报告在未传 `round_number` 时，会自动选择事件最集中的焦点轮次，避免导出结果退化成只有赛事概览。
 - 归档 ZIP 至少包含：
   - `manifest.json`
   - `overview.json`
@@ -115,7 +116,8 @@
 1. 教师在详情页点击“归档导出”或“生成评估报告”。
 2. `TeacherAWDReviewHandler` 调用 `ReportService.CreateTeacherAWDReviewArchive` 或 `CreateTeacherAWDReviewReport`。
 3. `ReportService` 创建 `report` 记录，后台任务通过 `AWDReviewExportBuilder.BuildArchive` 读取当前 archive。
-4. ZIP 或 PDF 渲染完成后，生命周期仓库把状态更新为 `ready`；前端轮询和下载契约复用共享 report 任务链。
+4. PDF 渲染会输出赛事摘要、关键轮次、焦点轮次解读、服务稳定性、攻击有效性、关键样本和复盘建议等中文段落。
+5. ZIP 或 PDF 渲染完成后，生命周期仓库把状态更新为 `ready`；前端轮询和下载契约复用共享 report 任务链。
 
 ## 6. 接口与契约
 
@@ -123,8 +125,8 @@
 
 - `GET /teacher/awd/reviews`
 - `GET /teacher/awd/reviews/:id`
-- `POST /teacher/awd/reviews/:id/archive`
-- `POST /teacher/awd/reviews/:id/report`
+- `POST /teacher/awd/reviews/:id/export/archive`
+- `POST /teacher/awd/reviews/:id/export/report`
 
 ### 6.2 前端导出契约
 

@@ -1939,22 +1939,58 @@ func newReportPDF() (*gofpdf.Fpdf, error) {
 }
 
 func addReportTitle(pdf *gofpdf.Fpdf, title string) {
-	setReportPDFFont(pdf, "B", 18)
-	pdf.CellFormat(0, 12, sanitizePDFText(title), "", 1, "L", false, 0, "")
+	setReportPDFFont(pdf, "B", 20)
+	pdf.SetTextColor(24, 39, 75)
+	pdf.CellFormat(0, 13, sanitizePDFText(title), "", 1, "L", false, 0, "")
+	pdf.SetTextColor(0, 0, 0)
 	pdf.SetDrawColor(180, 180, 180)
 	pdf.Line(16, pdf.GetY(), 194, pdf.GetY())
 	pdf.Ln(6)
 }
 
 func addSummaryBlock(pdf *gofpdf.Fpdf, lines []summaryLine) {
-	setReportPDFFont(pdf, "B", 14)
-	pdf.CellFormat(0, 8, "摘要", "", 1, "L", false, 0, "")
-	setReportPDFFont(pdf, "", 11)
+	addReportSectionTitle(pdf, "摘要")
 	for _, line := range lines {
+		setReportPDFFont(pdf, "B", 11)
+		pdf.SetTextColor(45, 57, 84)
 		pdf.CellFormat(45, 7, sanitizePDFText(line.Label), "0", 0, "L", false, 0, "")
+		setReportPDFFont(pdf, "", 11)
+		pdf.SetTextColor(0, 0, 0)
 		pdf.CellFormat(0, 7, sanitizePDFText(line.Value), "0", 1, "L", false, 0, "")
 	}
 	pdf.Ln(3)
+}
+
+func addReportBulletSection(pdf *gofpdf.Fpdf, title string, items []string) {
+	filtered := make([]string, 0, len(items))
+	for _, item := range items {
+		if strings.TrimSpace(item) == "" {
+			continue
+		}
+		filtered = append(filtered, sanitizePDFText(item))
+	}
+	if len(filtered) == 0 {
+		return
+	}
+
+	ensurePDFSpace(pdf, 16+float64(len(filtered))*8)
+	addReportSectionTitle(pdf, title)
+	setReportPDFFont(pdf, "", 11)
+	for _, item := range filtered {
+		ensurePDFSpace(pdf, 10)
+		pdf.MultiCell(0, 7, sanitizePDFText("• "+item), "", "L", false)
+	}
+	pdf.Ln(2)
+}
+
+func addReportSectionTitle(pdf *gofpdf.Fpdf, title string) {
+	ensurePDFSpace(pdf, 12)
+	setReportPDFFont(pdf, "B", 15)
+	pdf.SetFillColor(235, 240, 250)
+	pdf.SetTextColor(24, 39, 75)
+	pdf.CellFormat(0, 9, sanitizePDFText(title), "", 1, "L", true, 0, "")
+	pdf.SetTextColor(0, 0, 0)
+	pdf.Ln(1.5)
 }
 
 func addDimensionChart(pdf *gofpdf.Fpdf, title string, rows []chartRow) {

@@ -111,8 +111,10 @@ func RenderAWDReviewReportPDF(targetPath string, archive *assessmentqry.TeacherA
 	addAWDReviewRoundsTable(pdf, archive.Rounds)
 	if archive.SelectedRound != nil {
 		addAWDReviewSelectedRoundBlock(pdf, archive.SelectedRound)
+		addAWDReviewFocusSection(pdf, archive.SelectedRound)
 		addAWDReviewServiceInsightSection(pdf, archive.SelectedRound)
 		addAWDReviewAttackInsightSection(pdf, archive.SelectedRound)
+		addAWDReviewEvidenceSampleSection(pdf, archive.SelectedRound)
 		addAWDReviewSuggestionSection(pdf, archive.Rounds, archive.SelectedRound)
 	}
 
@@ -149,8 +151,7 @@ func addAWDReviewRoundsTable(pdf *gofpdf.Fpdf, rounds []assessmentqry.TeacherAWD
 	}
 
 	ensurePDFSpace(pdf, 20+float64(len(rounds))*8)
-	setReportPDFFont(pdf, "B", 14)
-	pdf.CellFormat(0, 8, "轮次概览", "", 1, "L", false, 0, "")
+	addReportSectionTitle(pdf, "轮次概览")
 
 	headers := []string{"轮次", "状态", "服务", "攻击", "流量"}
 	widths := []float64{24, 46, 32, 32, 32}
@@ -185,8 +186,7 @@ func addAWDReviewSelectedRoundBlock(pdf *gofpdf.Fpdf, selected *assessmentqry.Te
 	}
 
 	ensurePDFSpace(pdf, 36)
-	setReportPDFFont(pdf, "B", 14)
-	pdf.CellFormat(0, 8, "选中轮次摘要", "", 1, "L", false, 0, "")
+	addReportSectionTitle(pdf, "选中轮次摘要")
 	setReportPDFFont(pdf, "", 11)
 
 	lines := []summaryLine{
@@ -201,6 +201,36 @@ func addAWDReviewSelectedRoundBlock(pdf *gofpdf.Fpdf, selected *assessmentqry.Te
 		pdf.CellFormat(0, 7, sanitizePDFText(line.Value), "", 1, "L", false, 0, "")
 	}
 	pdf.Ln(3)
+}
+
+func addAWDReviewFocusSection(pdf *gofpdf.Fpdf, selected *assessmentqry.TeacherAWDSelectedRoundResp) {
+	if selected == nil {
+		return
+	}
+
+	totalAttacks := len(selected.Attacks)
+	successCount := 0
+	for _, item := range selected.Attacks {
+		if item.IsSuccess {
+			successCount++
+		}
+	}
+
+	successRate := "0%"
+	if totalAttacks > 0 {
+		successRate = fmt.Sprintf("%.0f%%", float64(successCount)*100/float64(totalAttacks))
+	}
+
+	trafficSummary := summarizeTraffic(selected.Traffic)
+	items := []string{
+		fmt.Sprintf("第 %d 轮共有 %d 个服务状态样本、%d 条攻击记录和 %d 条访问流量，可直接作为本次课堂复盘的主轮次。", selected.Round.RoundNumber, len(selected.Services), totalAttacks, len(selected.Traffic)),
+		fmt.Sprintf("这一轮的攻击成功率为 %s，访问路径主要集中在 %s。", successRate, trafficSummary),
+	}
+	if riskyService := topRiskyService(selected.Services); riskyService != nil {
+		items = append(items, fmt.Sprintf("需要优先关注 %s 队的 %s 服务，当前状态为%s，受击 %d 次。", riskyService.TeamName, riskyService.AWDChallengeTitle, localizeReportTerm(riskyService.ServiceStatus), riskyService.AttackReceived))
+	}
+
+	addReportBulletSection(pdf, "焦点轮次解读", items)
 }
 
 func addAWDReviewKeyRoundSection(pdf *gofpdf.Fpdf, rounds []assessmentqry.TeacherAWDReviewRoundResp) {
@@ -225,8 +255,7 @@ func addAWDReviewKeyRoundSection(pdf *gofpdf.Fpdf, rounds []assessmentqry.Teache
 		highlights = highlights[:3]
 	}
 
-	setReportPDFFont(pdf, "B", 14)
-	pdf.CellFormat(0, 8, "关键轮次", "", 1, "L", false, 0, "")
+	addReportSectionTitle(pdf, "关键轮次")
 	writePDFCustomTableHeader(pdf, []string{"轮次", "主要现象", "服务", "攻击", "流量"}, []float64{20, 72, 26, 26, 26})
 	setReportPDFFont(pdf, "", 10)
 	for _, round := range highlights {
@@ -274,8 +303,7 @@ func addAWDReviewServiceInsightSection(pdf *gofpdf.Fpdf, selected *assessmentqry
 		return left > right
 	})
 
-	setReportPDFFont(pdf, "B", 14)
-	pdf.CellFormat(0, 8, "服务稳定性", "", 1, "L", false, 0, "")
+	addReportSectionTitle(pdf, "服务稳定性")
 	addSummaryBlock(pdf, []summaryLine{
 		{Label: "正常服务数", Value: fmt.Sprintf("%d", upCount)},
 		{Label: "异常服务数", Value: fmt.Sprintf("%d", abnormalCount)},
@@ -336,8 +364,7 @@ func addAWDReviewAttackInsightSection(pdf *gofpdf.Fpdf, selected *assessmentqry.
 
 	trafficSummary := summarizeTraffic(selected.Traffic)
 
-	setReportPDFFont(pdf, "B", 14)
-	pdf.CellFormat(0, 8, "攻击有效性", "", 1, "L", false, 0, "")
+	addReportSectionTitle(pdf, "攻击有效性")
 	addSummaryBlock(pdf, []summaryLine{
 		{Label: "攻击总数", Value: fmt.Sprintf("%d", totalAttacks)},
 		{Label: "成功率", Value: successRate},
@@ -363,20 +390,56 @@ func addAWDReviewAttackInsightSection(pdf *gofpdf.Fpdf, selected *assessmentqry.
 		return attackRows[i].ScoreGained > attackRows[j].ScoreGained
 	})
 
-	writePDFCustomTableHeader(pdf, []string{"攻击方", "目标方", "类型", "结果", "得分"}, []float64{34, 34, 44, 28, 28})
+	writePDFCustomTableHeader(pdf, []string{"攻击方", "目标方", "服务", "类型", "结果", "得分"}, []float64{28, 28, 36, 24, 18, 28})
 	setReportPDFFont(pdf, "", 10)
 	limit := minInt(len(attackRows), 5)
 	for _, item := range attackRows[:limit] {
 		ensurePDFSpace(pdf, 8)
-		writePDFTableRow(pdf, []float64{34, 34, 44, 28, 28}, []string{
+		writePDFTableRow(pdf, []float64{28, 28, 36, 24, 18, 28}, []string{
 			item.AttackerTeamName,
 			item.VictimTeamName,
+			item.AWDChallengeTitle,
 			localizeReportTerm(item.AttackType),
 			boolLabel(item.IsSuccess),
 			fmt.Sprintf("%d", item.ScoreGained),
 		})
 	}
 	pdf.Ln(4)
+}
+
+func addAWDReviewEvidenceSampleSection(pdf *gofpdf.Fpdf, selected *assessmentqry.TeacherAWDSelectedRoundResp) {
+	if selected == nil {
+		return
+	}
+
+	items := make([]string, 0, 6)
+
+	attackRows := append([]assessmentqry.TeacherAWDReviewAttackResp(nil), selected.Attacks...)
+	sort.SliceStable(attackRows, func(i, j int) bool {
+		if attackRows[i].IsSuccess == attackRows[j].IsSuccess {
+			if attackRows[i].ScoreGained == attackRows[j].ScoreGained {
+				return attackRows[i].CreatedAt.Before(attackRows[j].CreatedAt)
+			}
+			return attackRows[i].ScoreGained > attackRows[j].ScoreGained
+		}
+		return attackRows[i].IsSuccess
+	})
+	for _, item := range attackRows[:minInt(len(attackRows), 3)] {
+		items = append(items, fmt.Sprintf("攻击样本：%s 队针对 %s 队的 %s 服务发起%s，结果为%s，得分 %d。", item.AttackerTeamName, item.VictimTeamName, item.AWDChallengeTitle, localizeReportTerm(item.AttackType), boolLabel(item.IsSuccess), item.ScoreGained))
+	}
+
+	trafficRows := append([]assessmentqry.TeacherAWDReviewTrafficResp(nil), selected.Traffic...)
+	sort.SliceStable(trafficRows, func(i, j int) bool {
+		if trafficRows[i].StatusCode == trafficRows[j].StatusCode {
+			return trafficRows[i].CreatedAt.Before(trafficRows[j].CreatedAt)
+		}
+		return trafficRows[i].StatusCode < trafficRows[j].StatusCode
+	})
+	for _, item := range trafficRows[:minInt(len(trafficRows), 3)] {
+		items = append(items, fmt.Sprintf("流量样本：%s 队访问 %s 队的 %s 服务，%s %s 返回 %d，来源为%s。", item.AttackerTeamName, item.VictimTeamName, item.AWDChallengeTitle, item.Method, fallbackString(item.Path, "/"), item.StatusCode, localizeReportTerm(item.Source)))
+	}
+
+	addReportBulletSection(pdf, "关键样本", items)
 }
 
 func addAWDReviewSuggestionSection(pdf *gofpdf.Fpdf, rounds []assessmentqry.TeacherAWDReviewRoundResp, selected *assessmentqry.TeacherAWDSelectedRoundResp) {
@@ -389,13 +452,7 @@ func addAWDReviewSuggestionSection(pdf *gofpdf.Fpdf, rounds []assessmentqry.Teac
 		return
 	}
 
-	setReportPDFFont(pdf, "B", 14)
-	pdf.CellFormat(0, 8, "复盘建议", "", 1, "L", false, 0, "")
-	setReportPDFFont(pdf, "", 11)
-	for _, item := range suggestions {
-		ensurePDFSpace(pdf, 10)
-		pdf.MultiCell(0, 7, sanitizePDFText("• "+item), "", "L", false)
-	}
+	addReportBulletSection(pdf, "复盘建议", suggestions)
 }
 
 func describeAWDRound(round assessmentqry.TeacherAWDReviewRoundResp) string {
