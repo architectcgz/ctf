@@ -235,6 +235,7 @@ type ChallengePublishCheckConfig struct {
 
 type AssessmentConfig struct {
 	RedisKeyPrefix           string        `mapstructure:"redis_key_prefix"`
+	DimensionTotalCacheTTL   time.Duration `mapstructure:"dimension_total_cache_ttl"`
 	FullRebuildCron          string        `mapstructure:"full_rebuild_cron"`
 	FullRebuildTimeout       time.Duration `mapstructure:"full_rebuild_timeout"`
 	LockTTL                  time.Duration `mapstructure:"lock_ttl"`
@@ -863,6 +864,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("score.max_ranking_limit", 100)
 	v.SetDefault("cache.progress_ttl", 10*time.Minute)
 	v.SetDefault("assessment.redis_key_prefix", "ctf:assessment:skill-profile")
+	v.SetDefault("assessment.dimension_total_cache_ttl", 5*time.Minute)
 	v.SetDefault("assessment.full_rebuild_cron", "0 0 * * *")
 	v.SetDefault("assessment.full_rebuild_timeout", 30*time.Minute)
 	v.SetDefault("assessment.lock_ttl", 10*time.Second)

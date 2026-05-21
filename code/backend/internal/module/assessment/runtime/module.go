@@ -58,6 +58,7 @@ type moduleDeps struct {
 	challengeRepo       assessmentports.ChallengeRepository
 	profileLockStore    assessmentports.AssessmentProfileLockStore
 	recommendationCache assessmentports.AssessmentRecommendationCacheStore
+	dimensionTotalCache assessmentports.AssessmentDimensionTotalCacheStore
 }
 
 func Build(deps Deps) *Module {
@@ -70,6 +71,9 @@ func Build(deps Deps) *Module {
 	recommendationService := buildRecommendationHandler(internalDeps)
 	recommendationService.RegisterPracticeEventConsumers(deps.Events)
 	recommendationService.RegisterContestEventConsumers(deps.Events)
+
+	dimensionTotalCacheInvalidationService := buildDimensionTotalCacheInvalidationHandler(internalDeps)
+	dimensionTotalCacheInvalidationService.RegisterChallengeEventConsumers(deps.Events)
 
 	reportService, reportHandler := buildReportHandler(internalDeps, profileCommandService)
 	teacherAWDReviewHandler := buildTeacherAWDReviewHandler(internalDeps, reportService)
@@ -95,7 +99,14 @@ func Build(deps Deps) *Module {
 }
 
 func newModuleDeps(deps Deps) moduleDeps {
-	repo := assessmentinfra.NewRepository(deps.DB)
+	dimensionTotalCache := assessmentinfra.NewDimensionTotalCacheStore(deps.Cache)
+	repo := assessmentinfra.NewRepository(
+		deps.DB,
+		assessmentinfra.WithPublishedDimensionTotalCache(
+			dimensionTotalCache,
+			deps.Config.Assessment.DimensionTotalCacheTTL,
+		),
+	)
 	return moduleDeps{
 		input:               deps,
 		profileRepo:         repo,
@@ -106,6 +117,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 		challengeRepo:       deps.ChallengeRepo,
 		profileLockStore:    assessmentinfra.NewProfileLockStore(deps.Cache, deps.Config.Assessment),
 		recommendationCache: assessmentinfra.NewRecommendationCacheStore(deps.Cache),
+		dimensionTotalCache: dimensionTotalCache,
 	}
 }
 
@@ -127,6 +139,13 @@ func buildRecommendationHandler(deps moduleDeps) *assessmentqry.RecommendationSe
 		deps.recommendationCache,
 		deps.input.Config.Recommendation,
 		deps.input.Logger.Named("recommendation_service"),
+	)
+}
+
+func buildDimensionTotalCacheInvalidationHandler(deps moduleDeps) *assessmentcmd.DimensionTotalCacheInvalidationService {
+	return assessmentcmd.NewDimensionTotalCacheInvalidationService(
+		deps.dimensionTotalCache,
+		deps.input.Logger.Named("assessment_dimension_total_cache_invalidation"),
 	)
 }
 

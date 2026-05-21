@@ -59,6 +59,9 @@ func NormalizeAssessmentConfig(cfg config.AssessmentConfig) config.AssessmentCon
 	if cfg.RedisKeyPrefix == "" {
 		cfg.RedisKeyPrefix = "ctf:assessment:skill-profile"
 	}
+	if cfg.DimensionTotalCacheTTL <= 0 {
+		cfg.DimensionTotalCacheTTL = 5 * time.Minute
+	}
 	if cfg.LockTTL <= 0 {
 		cfg.LockTTL = 10 * time.Second
 	}

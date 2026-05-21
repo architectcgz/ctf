@@ -27,6 +27,7 @@ end
 
 var _ assessmentports.AssessmentProfileLockStore = (*ProfileLockStore)(nil)
 var _ assessmentports.AssessmentRecommendationCacheStore = (*RecommendationCacheStore)(nil)
+var _ assessmentports.AssessmentDimensionTotalCacheStore = (*DimensionTotalCacheStore)(nil)
 
 type ProfileLockStore struct {
 	cache  *redislib.Client
@@ -40,6 +41,10 @@ type profileLockLease struct {
 }
 
 type RecommendationCacheStore struct {
+	cache *redislib.Client
+}
+
+type DimensionTotalCacheStore struct {
 	cache *redislib.Client
 }
 
@@ -61,6 +66,13 @@ func NewRecommendationCacheStore(cache *redislib.Client) *RecommendationCacheSto
 		return nil
 	}
 	return &RecommendationCacheStore{cache: cache}
+}
+
+func NewDimensionTotalCacheStore(cache *redislib.Client) *DimensionTotalCacheStore {
+	if cache == nil {
+		return nil
+	}
+	return &DimensionTotalCacheStore{cache: cache}
 }
 
 func (s *ProfileLockStore) AcquireDimensionUpdateLock(ctx context.Context, userID int64, dimension string, ttl time.Duration) (assessmentports.AssessmentProfileLockLease, bool, error) {
@@ -147,6 +159,51 @@ func (s *RecommendationCacheStore) DeleteRecommendations(ctx context.Context, us
 	}
 	if err := s.cache.Del(ctx, assessmentcachekeys.RecommendationKey(userID)).Err(); err != nil {
 		return fmt.Errorf("delete recommendation cache: %w", err)
+	}
+	return nil
+}
+
+func (s *DimensionTotalCacheStore) LoadPublishedDimensionTotals(ctx context.Context) (map[string]int, bool, error) {
+	if s == nil || s.cache == nil {
+		return nil, false, nil
+	}
+
+	cached, err := s.cache.Get(ctx, assessmentcachekeys.PublishedDimensionTotalsKey()).Result()
+	if err != nil {
+		if errors.Is(err, redislib.Nil) {
+			return nil, false, nil
+		}
+		return nil, false, fmt.Errorf("load published dimension totals cache: %w", err)
+	}
+
+	var totals map[string]int
+	if err := json.Unmarshal([]byte(cached), &totals); err != nil {
+		return nil, false, fmt.Errorf("decode published dimension totals cache: %w", err)
+	}
+	return totals, true, nil
+}
+
+func (s *DimensionTotalCacheStore) StorePublishedDimensionTotals(ctx context.Context, totals map[string]int, ttl time.Duration) error {
+	if s == nil || s.cache == nil || ttl <= 0 {
+		return nil
+	}
+
+	data, err := json.Marshal(totals)
+	if err != nil {
+		return fmt.Errorf("encode published dimension totals cache: %w", err)
+	}
+	if err := s.cache.Set(ctx, assessmentcachekeys.PublishedDimensionTotalsKey(), data, ttl).Err(); err != nil {
+		return fmt.Errorf("store published dimension totals cache: %w", err)
+	}
+	return nil
+}
+
+func (s *DimensionTotalCacheStore) DeletePublishedDimensionTotals(ctx context.Context) error {
+	if s == nil || s.cache == nil {
+		return nil
+	}
+	if err := s.cache.Del(ctx, assessmentcachekeys.PublishedDimensionTotalsKey()).Err(); err != nil {
+		return fmt.Errorf("delete published dimension totals cache: %w", err)
 	}
 	return nil
 }

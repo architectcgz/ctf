@@ -51,6 +51,80 @@ func (s *ChallengeService) publishWeakEvent(ctx context.Context, evt platformeve
 	}
 }
 
+type publishedChallengeCatalogState struct {
+	ID       int64
+	Status   string
+	Category string
+	Points   int
+}
+
+func publishedChallengeCatalogStateFromWriteModel(challenge *challengeports.ChallengeWriteModel) publishedChallengeCatalogState {
+	if challenge == nil {
+		return publishedChallengeCatalogState{}
+	}
+	return publishedChallengeCatalogState{
+		ID:       challenge.ID,
+		Status:   strings.TrimSpace(challenge.Status),
+		Category: strings.TrimSpace(challenge.Category),
+		Points:   challenge.Points,
+	}
+}
+
+func publishedChallengeCatalogStateFromImportedChallenge(challenge *challengeports.ImportedChallenge) publishedChallengeCatalogState {
+	if challenge == nil {
+		return publishedChallengeCatalogState{}
+	}
+	return publishedChallengeCatalogState{
+		ID:       challenge.ID,
+		Status:   strings.TrimSpace(challenge.Status),
+		Category: strings.TrimSpace(challenge.Category),
+		Points:   challenge.Points,
+	}
+}
+
+func (state publishedChallengeCatalogState) isPublished() bool {
+	return state.Status == challengecontracts.ChallengeStatusPublished
+}
+
+func publishedChallengeCatalogChanged(before, after publishedChallengeCatalogState) bool {
+	switch {
+	case before.isPublished() != after.isPublished():
+		return true
+	case before.isPublished() && after.isPublished():
+		return before.Category != after.Category || before.Points != after.Points
+	default:
+		return false
+	}
+}
+
+func (s *ChallengeService) publishPublishedCatalogChangedEvent(
+	ctx context.Context,
+	changeType string,
+	before publishedChallengeCatalogState,
+	after publishedChallengeCatalogState,
+) {
+	if !publishedChallengeCatalogChanged(before, after) {
+		return
+	}
+	challengeID := after.ID
+	if challengeID <= 0 {
+		challengeID = before.ID
+	}
+	s.publishWeakEvent(ctx, platformevents.Event{
+		Name: challengecontracts.EventPublishedCatalogChanged,
+		Payload: challengecontracts.PublishedCatalogChangedEvent{
+			ChallengeID:      challengeID,
+			ChangeType:       changeType,
+			PreviousStatus:   before.Status,
+			CurrentStatus:    after.Status,
+			PreviousCategory: before.Category,
+			CurrentCategory:  after.Category,
+			PreviousPoints:   before.Points,
+			CurrentPoints:    after.Points,
+		},
+	})
+}
+
 func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req CreateChallengeInput) (*challengecontracts.ChallengeResp, error) {
 	if req.ImageID > 0 {
 		if _, err := s.imageRepo.FindByID(ctx, req.ImageID); err != nil {
@@ -96,6 +170,7 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req Up
 		return err
 	}
 	challenge := challengeWriteModel
+	before := publishedChallengeCatalogStateFromWriteModel(challenge)
 
 	if req.Title != "" {
 		challenge.Title = req.Title
@@ -139,7 +214,16 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req Up
 		return err
 	}
 
-	return s.repo.UpdateWithHints(ctx, challenge, hints, replaceHints)
+	if err := s.repo.UpdateWithHints(ctx, challenge, hints, replaceHints); err != nil {
+		return err
+	}
+	s.publishPublishedCatalogChangedEvent(
+		ctx,
+		challengecontracts.ChallengeCatalogChangeTypeUpdated,
+		before,
+		publishedChallengeCatalogStateFromWriteModel(challenge),
+	)
+	return nil
 }
 
 func normalizeInstanceSharing(value string) string {
@@ -200,12 +284,14 @@ func (s *ChallengeService) validateInstanceSharingConfig(ctx context.Context, ch
 }
 
 func (s *ChallengeService) DeleteChallenge(ctx context.Context, id int64) error {
-	if _, err := s.repo.FindByID(ctx, id); err != nil {
+	challengeWriteModel, err := s.repo.FindByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 			return challengecontracts.ErrChallengeNotFound
 		}
 		return err
 	}
+	before := publishedChallengeCatalogStateFromWriteModel(challengeWriteModel)
 
 	hasInstances, err := s.repo.HasRunningInstances(ctx, id)
 	if err != nil {
@@ -215,7 +301,16 @@ func (s *ChallengeService) DeleteChallenge(ctx context.Context, id int64) error 
 		return apperror.ErrConflict.WithMessage(domain.ErrMsgHasRunningStudents).
 			WithCause(errors.New(domain.ErrMsgHasRunningInstances))
 	}
-	return s.repo.Delete(ctx, id)
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+	s.publishPublishedCatalogChangedEvent(
+		ctx,
+		challengecontracts.ChallengeCatalogChangeTypeDeleted,
+		before,
+		publishedChallengeCatalogState{ID: before.ID},
+	)
+	return nil
 }
 
 func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error {
@@ -226,8 +321,18 @@ func (s *ChallengeService) PublishChallenge(ctx context.Context, id int64) error
 		}
 		return err
 	}
+	before := publishedChallengeCatalogStateFromWriteModel(challengeWriteModel)
 	challengeWriteModel.Status = challengecontracts.ChallengeStatusPublished
-	return s.repo.Update(ctx, challengeWriteModel)
+	if err := s.repo.Update(ctx, challengeWriteModel); err != nil {
+		return err
+	}
+	s.publishPublishedCatalogChangedEvent(
+		ctx,
+		challengecontracts.ChallengeCatalogChangeTypePublished,
+		before,
+		publishedChallengeCatalogStateFromWriteModel(challengeWriteModel),
+	)
+	return nil
 }
 
 func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error) {

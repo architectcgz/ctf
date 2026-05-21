@@ -243,6 +243,8 @@ func (s *ChallengeService) CommitChallengeImport(
 
 	var challenge *challengeports.ImportedChallenge
 	cleanupPaths := make([]string, 0, 2)
+	var before publishedChallengeCatalogState
+	var after publishedChallengeCatalogState
 	if s.importTxRunner == nil {
 		return nil, fmt.Errorf("challenge import tx runner is not configured")
 	}
@@ -284,8 +286,11 @@ func (s *ChallengeService) CommitChallengeImport(
 			if err := store.CreateImportedChallenge(ctx, &current); err != nil {
 				return fmt.Errorf("create imported challenge %s: %w", parsed.Slug, err)
 			}
+			before = publishedChallengeCatalogState{}
+			after = publishedChallengeCatalogStateFromImportedChallenge(&current)
 		default:
 			current = *existing
+			before = publishedChallengeCatalogStateFromImportedChallenge(existing)
 			current.PackageSlug = stringPointer(parsed.Slug)
 			current.Title = parsed.Title
 			current.Description = parsed.Description
@@ -316,6 +321,7 @@ func (s *ChallengeService) CommitChallengeImport(
 			if err := store.UpdateImportedChallenge(ctx, &current, updates); err != nil {
 				return fmt.Errorf("update imported challenge %s: %w", parsed.Slug, err)
 			}
+			after = publishedChallengeCatalogStateFromImportedChallenge(&current)
 		}
 
 		if err := store.ClearPublishCheckJobs(ctx, current.ID); err != nil {
@@ -389,6 +395,12 @@ func (s *ChallengeService) CommitChallengeImport(
 	}
 
 	_ = os.RemoveAll(filepath.Join(challengeImportPreviewRoot(), id))
+	s.publishPublishedCatalogChangedEvent(
+		ctx,
+		challengecontracts.ChallengeCatalogChangeTypeImported,
+		before,
+		after,
+	)
 	return domain.ChallengeRespFromWriteModel(toImportedChallengeResponseWriteModel(challenge), nil), nil
 }
 

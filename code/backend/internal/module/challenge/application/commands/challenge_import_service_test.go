@@ -18,6 +18,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
 	"gorm.io/gorm"
 )
@@ -248,6 +249,115 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	if job.Status != challengeentity.ImageBuildJobStatusPending ||
 		job.TargetRef != "127.0.0.1:5000/jeopardy/web-platform-build:v1" {
 		t.Fatalf("unexpected build job: %+v", job)
+	}
+}
+
+func TestCommitChallengeImportDemotesPublishedLegacyChallengeAndPublishesCatalogChangedEvent(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
+	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+	var publishedEvents []platformevents.Event
+	service.SetEventBus(&challengeCommandEventBusStub{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishedEvents = append(publishedEvents, evt)
+			return nil
+		},
+	})
+
+	packageDir := filepath.Join(tempDir, "package")
+	if err := os.MkdirAll(packageDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll(packageDir) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(packageDir, "statement.md"), []byte("updated statement"), 0o644); err != nil {
+		t.Fatalf("WriteFile(statement.md) error = %v", err)
+	}
+	manifest := []byte(`api_version: v1
+kind: challenge
+
+meta:
+  slug: web-import-refresh
+  title: "Legacy Web"
+  category: web
+  difficulty: easy
+  points: 200
+
+content:
+  statement: statement.md
+
+flag:
+  type: static
+  prefix: flag
+  value: flag{web-import-refresh}
+`)
+	if err := os.WriteFile(filepath.Join(packageDir, "challenge.yml"), manifest, 0o644); err != nil {
+		t.Fatalf("WriteFile(challenge.yml) error = %v", err)
+	}
+
+	legacyChallenge := challengeentity.Challenge{
+		Title:       "Legacy Web",
+		Description: "legacy",
+		Category:    taxonomy.DimensionWeb,
+		Difficulty:  challengeentity.ChallengeDifficultyEasy,
+		Points:      100,
+		Status:      challengeentity.ChallengeStatusPublished,
+		CreatedBy:   int64Pointer(4),
+	}
+	if err := db.Create(&legacyChallenge).Error; err != nil {
+		t.Fatalf("seed legacy challenge: %v", err)
+	}
+
+	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+		ID:        "legacy-published-refresh",
+		FileName:  "legacy-published-refresh.zip",
+		SourceDir: packageDir,
+		CreatedBy: 4,
+		CreatedAt: time.Now(),
+		Preview: challengecontracts.ChallengeImportPreviewResp{
+			ID:         "legacy-published-refresh",
+			FileName:   "legacy-published-refresh.zip",
+			Slug:       "web-import-refresh",
+			Title:      "Legacy Web",
+			Category:   "web",
+			Difficulty: "easy",
+			Points:     200,
+			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "static", Prefix: "flag"},
+			CreatedAt:  time.Now(),
+		},
+	})
+
+	resp, err := service.CommitChallengeImport(context.Background(), 4, "legacy-published-refresh")
+	if err != nil {
+		t.Fatalf("CommitChallengeImport() error = %v", err)
+	}
+	if resp.ID != legacyChallenge.ID {
+		t.Fatalf("expected imported challenge to reuse legacy id %d, got %d", legacyChallenge.ID, resp.ID)
+	}
+	if resp.Status != string(challengeentity.ChallengeStatusDraft) {
+		t.Fatalf("expected imported challenge to become draft, got %q", resp.Status)
+	}
+
+	if len(publishedEvents) != 1 {
+		t.Fatalf("expected 1 challenge event, got %+v", publishedEvents)
+	}
+	if publishedEvents[0].Name != challengecontracts.EventPublishedCatalogChanged {
+		t.Fatalf("unexpected event name: %+v", publishedEvents[0])
+	}
+	payload, ok := publishedEvents[0].Payload.(challengecontracts.PublishedCatalogChangedEvent)
+	if !ok {
+		t.Fatalf("unexpected event payload type: %T", publishedEvents[0].Payload)
+	}
+	if payload.ChangeType != challengecontracts.ChallengeCatalogChangeTypeImported ||
+		payload.ChallengeID != legacyChallenge.ID ||
+		payload.PreviousStatus != challengecontracts.ChallengeStatusPublished ||
+		payload.CurrentStatus != challengecontracts.ChallengeStatusDraft ||
+		payload.PreviousPoints != 100 ||
+		payload.CurrentPoints != 200 {
+		t.Fatalf("unexpected event payload: %+v", payload)
 	}
 }
 

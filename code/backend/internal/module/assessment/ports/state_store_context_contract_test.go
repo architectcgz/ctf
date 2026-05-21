@@ -38,6 +38,21 @@ func (ctxOnlyAssessmentRecommendationCacheStore) DeleteRecommendations(context.C
 	return nil
 }
 
+type ctxOnlyAssessmentDimensionTotalCacheStore struct{}
+
+func (ctxOnlyAssessmentDimensionTotalCacheStore) LoadPublishedDimensionTotals(context.Context) (map[string]int, bool, error) {
+	return nil, false, nil
+}
+
+func (ctxOnlyAssessmentDimensionTotalCacheStore) StorePublishedDimensionTotals(context.Context, map[string]int, time.Duration) error {
+	return nil
+}
+
+func (ctxOnlyAssessmentDimensionTotalCacheStore) DeletePublishedDimensionTotals(context.Context) error {
+	return nil
+}
+
 var _ assessmentports.AssessmentProfileLockLease = (*ctxOnlyAssessmentProfileLockLease)(nil)
 var _ assessmentports.AssessmentProfileLockStore = (*ctxOnlyAssessmentProfileLockStore)(nil)
 var _ assessmentports.AssessmentRecommendationCacheStore = (*ctxOnlyAssessmentRecommendationCacheStore)(nil)
+var _ assessmentports.AssessmentDimensionTotalCacheStore = (*ctxOnlyAssessmentDimensionTotalCacheStore)(nil)

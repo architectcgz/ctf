@@ -72,6 +72,12 @@ type AssessmentRecommendationCacheStore interface {
 	DeleteRecommendations(ctx context.Context, userID int64) error
 }
 
+type AssessmentDimensionTotalCacheStore interface {
+	LoadPublishedDimensionTotals(ctx context.Context) (map[string]int, bool, error)
+	StorePublishedDimensionTotals(ctx context.Context, totals map[string]int, ttl time.Duration) error
+	DeletePublishedDimensionTotals(ctx context.Context) error
+}
+
 type ProfileRepository interface {
 	AssessmentProfileLookupRepository
 	AssessmentProfileReadRepository

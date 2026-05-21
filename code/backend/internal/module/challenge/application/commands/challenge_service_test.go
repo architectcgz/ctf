@@ -244,6 +244,13 @@ func TestServicePublishChallengeNoImage(t *testing.T) {
 
 	repo := challengeinfra.NewRepository(db)
 	service := newTestService(repo, nil)
+	var publishedEvents []platformevents.Event
+	service.SetEventBus(&challengeCommandEventBusStub{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishedEvents = append(publishedEvents, evt)
+			return nil
+		},
+	})
 
 	err := service.PublishChallenge(context.Background(), challenge.ID)
 	if err != nil {
@@ -256,6 +263,110 @@ func TestServicePublishChallengeNoImage(t *testing.T) {
 	}
 	if published.Status != challengeentity.ChallengeStatusPublished {
 		t.Fatalf("expected published status, got %s", published.Status)
+	}
+	if len(publishedEvents) != 1 {
+		t.Fatalf("expected 1 challenge event, got %+v", publishedEvents)
+	}
+	if publishedEvents[0].Name != challengecontracts.EventPublishedCatalogChanged {
+		t.Fatalf("unexpected event name: %+v", publishedEvents[0])
+	}
+	payload, ok := publishedEvents[0].Payload.(challengecontracts.PublishedCatalogChangedEvent)
+	if !ok {
+		t.Fatalf("unexpected event payload type: %T", publishedEvents[0].Payload)
+	}
+	if payload.ChangeType != challengecontracts.ChallengeCatalogChangeTypePublished ||
+		payload.PreviousStatus != "" ||
+		payload.CurrentStatus != challengecontracts.ChallengeStatusPublished {
+		t.Fatalf("unexpected event payload: %+v", payload)
+	}
+}
+
+func TestServiceUpdatePublishedChallengePointsPublishesCatalogChangedEvent(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	challenge := &challengeentity.Challenge{
+		Title:      "Published",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
+		Points:     100,
+		Status:     challengeentity.ChallengeStatusPublished,
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	service := newTestService(repo, nil)
+	var publishedEvents []platformevents.Event
+	service.SetEventBus(&challengeCommandEventBusStub{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishedEvents = append(publishedEvents, evt)
+			return nil
+		},
+	})
+
+	err := service.UpdateChallenge(context.Background(), challenge.ID, UpdateChallengeInput{Points: 250})
+	if err != nil {
+		t.Fatalf("UpdateChallenge() error = %v", err)
+	}
+
+	if len(publishedEvents) != 1 {
+		t.Fatalf("expected 1 challenge event, got %+v", publishedEvents)
+	}
+	payload, ok := publishedEvents[0].Payload.(challengecontracts.PublishedCatalogChangedEvent)
+	if !ok {
+		t.Fatalf("unexpected event payload type: %T", publishedEvents[0].Payload)
+	}
+	if payload.ChangeType != challengecontracts.ChallengeCatalogChangeTypeUpdated ||
+		payload.PreviousStatus != challengecontracts.ChallengeStatusPublished ||
+		payload.CurrentStatus != challengecontracts.ChallengeStatusPublished ||
+		payload.PreviousPoints != 100 ||
+		payload.CurrentPoints != 250 {
+		t.Fatalf("unexpected event payload: %+v", payload)
+	}
+}
+
+func TestServiceDeletePublishedChallengePublishesCatalogChangedEvent(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	challenge := &challengeentity.Challenge{
+		Title:      "Published",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
+		Points:     100,
+		Status:     challengeentity.ChallengeStatusPublished,
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	service := newTestService(repo, nil)
+	var publishedEvents []platformevents.Event
+	service.SetEventBus(&challengeCommandEventBusStub{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishedEvents = append(publishedEvents, evt)
+			return nil
+		},
+	})
+
+	err := service.DeleteChallenge(context.Background(), challenge.ID)
+	if err != nil {
+		t.Fatalf("DeleteChallenge() error = %v", err)
+	}
+
+	if len(publishedEvents) != 1 {
+		t.Fatalf("expected 1 challenge event, got %+v", publishedEvents)
+	}
+	payload, ok := publishedEvents[0].Payload.(challengecontracts.PublishedCatalogChangedEvent)
+	if !ok {
+		t.Fatalf("unexpected event payload type: %T", publishedEvents[0].Payload)
+	}
+	if payload.ChangeType != challengecontracts.ChallengeCatalogChangeTypeDeleted ||
+		payload.PreviousStatus != challengecontracts.ChallengeStatusPublished ||
+		payload.CurrentStatus != "" ||
+		payload.PreviousPoints != 100 {
+		t.Fatalf("unexpected event payload: %+v", payload)
 	}
 }
 
@@ -342,18 +453,30 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		t.Fatalf("expected published_at to be set, got %+v", latest)
 	}
 
-	if len(publishedEvents) != 1 {
-		t.Fatalf("expected 1 challenge event, got %+v", publishedEvents)
+	if len(publishedEvents) != 2 {
+		t.Fatalf("expected 2 challenge events, got %+v", publishedEvents)
 	}
-	if publishedEvents[0].Name != challengecontracts.EventPublishCheckFinished {
+	if publishedEvents[0].Name != challengecontracts.EventPublishedCatalogChanged {
 		t.Fatalf("unexpected event name: %+v", publishedEvents[0])
 	}
-	payload, ok := publishedEvents[0].Payload.(challengecontracts.PublishCheckFinishedEvent)
+	catalogPayload, ok := publishedEvents[0].Payload.(challengecontracts.PublishedCatalogChangedEvent)
 	if !ok {
 		t.Fatalf("unexpected event payload type: %T", publishedEvents[0].Payload)
 	}
+	if catalogPayload.ChangeType != challengecontracts.ChallengeCatalogChangeTypePublished ||
+		catalogPayload.ChallengeID != challenge.ID ||
+		catalogPayload.CurrentStatus != challengecontracts.ChallengeStatusPublished {
+		t.Fatalf("unexpected catalog event payload: %+v", catalogPayload)
+	}
+	if publishedEvents[1].Name != challengecontracts.EventPublishCheckFinished {
+		t.Fatalf("unexpected event name: %+v", publishedEvents[1])
+	}
+	payload, ok := publishedEvents[1].Payload.(challengecontracts.PublishCheckFinishedEvent)
+	if !ok {
+		t.Fatalf("unexpected event payload type: %T", publishedEvents[1].Payload)
+	}
 	if !payload.Passed || payload.ChallengeID != challenge.ID || payload.UserID != teacher.ID {
-		t.Fatalf("unexpected event payload: %+v", payload)
+		t.Fatalf("unexpected publish check event payload: %+v", payload)
 	}
 }
 
@@ -504,8 +627,22 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	if latest.Result == nil || !latest.Result.Precheck.Passed || !latest.Result.Runtime.Passed {
 		t.Fatalf("expected successful self-check result, got %+v", latest.Result)
 	}
-	if len(publishedEvents) != 1 {
-		t.Fatalf("expected 1 challenge event, got %+v", publishedEvents)
+	if len(publishedEvents) != 2 {
+		t.Fatalf("expected 2 challenge events, got %+v", publishedEvents)
+	}
+	if publishedEvents[0].Name != challengecontracts.EventPublishedCatalogChanged {
+		t.Fatalf("unexpected event name: %+v", publishedEvents[0])
+	}
+	catalogPayload, ok := publishedEvents[0].Payload.(challengecontracts.PublishedCatalogChangedEvent)
+	if !ok {
+		t.Fatalf("unexpected event payload type: %T", publishedEvents[0].Payload)
+	}
+	if catalogPayload.ChangeType != challengecontracts.ChallengeCatalogChangeTypePublished ||
+		catalogPayload.ChallengeID != challenge.ID {
+		t.Fatalf("unexpected catalog event payload: %+v", catalogPayload)
+	}
+	if publishedEvents[1].Name != challengecontracts.EventPublishCheckFinished {
+		t.Fatalf("unexpected event name: %+v", publishedEvents[1])
 	}
 }
 

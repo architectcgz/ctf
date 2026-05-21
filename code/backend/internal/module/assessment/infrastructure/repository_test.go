@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -16,6 +18,22 @@ import (
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
+type assessmentChallengeRepoRow struct {
+	ID         int64          `gorm:"column:id;primaryKey"`
+	Title      string         `gorm:"column:title"`
+	Category   string         `gorm:"column:category"`
+	Difficulty string         `gorm:"column:difficulty"`
+	Points     int            `gorm:"column:points"`
+	Status     string         `gorm:"column:status"`
+	CreatedAt  time.Time      `gorm:"column:created_at"`
+	UpdatedAt  time.Time      `gorm:"column:updated_at"`
+	DeletedAt  gorm.DeletedAt `gorm:"column:deleted_at"`
+}
+
+func (assessmentChallengeRepoRow) TableName() string {
+	return "challenges"
+}
+
 func setupAssessmentRepoTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
@@ -25,6 +43,7 @@ func setupAssessmentRepoTestDB(t *testing.T) *gorm.DB {
 	}
 	if err := db.AutoMigrate(
 		&identitycontracts.User{},
+		&assessmentChallengeRepoRow{},
 		&contestcontracts.Submission{},
 		&assessmententity.SkillProfile{},
 		&challengecontracts.AWDChallenge{},
@@ -121,6 +140,76 @@ func TestRepositoryGetStudentTeachingFactSnapshotBackfillsAWDSuccessDimensionFac
 	}
 	if web.SolvedDifficultyCounts[taxonomy.DifficultyEasy] != 2 || web.SolvedDifficultyCounts[taxonomy.DifficultyMedium] != 2 {
 		t.Fatalf("expected awd difficulty coverage merged into snapshot, got %+v", web.SolvedDifficultyCounts)
+	}
+}
+
+func TestRepositoryGetDimensionScoresCachesPublishedDimensionTotals(t *testing.T) {
+	db := setupAssessmentRepoTestDB(t)
+	mr := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	repo := NewRepository(
+		db,
+		WithPublishedDimensionTotalCache(
+			NewDimensionTotalCacheStore(redisClient),
+			time.Minute,
+		),
+	)
+	now := time.Now().UTC()
+
+	if err := db.Create(&assessmentChallengeRepoRow{
+		ID:         901,
+		Title:      "web-initial",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
+		Points:     100,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("seed challenge: %v", err)
+	}
+	if err := db.Create(&contestcontracts.Submission{
+		UserID:      7,
+		ChallengeID: 901,
+		IsCorrect:   true,
+		SubmittedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed submission: %v", err)
+	}
+
+	first, err := repo.GetDimensionScores(context.Background(), 7)
+	if err != nil {
+		t.Fatalf("GetDimensionScores() first error = %v", err)
+	}
+	if len(first) != 1 || first[0].TotalScore != 100 || first[0].UserScore != 100 {
+		t.Fatalf("unexpected initial dimension scores: %+v", first)
+	}
+
+	if err := db.Model(&assessmentChallengeRepoRow{}).Where("id = ?", 901).Update("points", 250).Error; err != nil {
+		t.Fatalf("update challenge points: %v", err)
+	}
+
+	cached, err := repo.GetDimensionScores(context.Background(), 7)
+	if err != nil {
+		t.Fatalf("GetDimensionScores() cached error = %v", err)
+	}
+	if len(cached) != 1 || cached[0].TotalScore != 100 || cached[0].UserScore != 250 {
+		t.Fatalf("expected cached total and fresh user score, got %+v", cached)
+	}
+
+	cacheStore := NewDimensionTotalCacheStore(redisClient)
+	if err := cacheStore.DeletePublishedDimensionTotals(context.Background()); err != nil {
+		t.Fatalf("DeletePublishedDimensionTotals() error = %v", err)
+	}
+
+	refreshed, err := repo.GetDimensionScores(context.Background(), 7)
+	if err != nil {
+		t.Fatalf("GetDimensionScores() refreshed error = %v", err)
+	}
+	if len(refreshed) != 1 || refreshed[0].TotalScore != 250 || refreshed[0].UserScore != 250 {
+		t.Fatalf("expected refreshed totals after cache clear, got %+v", refreshed)
 	}
 }
 

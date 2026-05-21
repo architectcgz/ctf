@@ -5,10 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
+	"ctf-platform/internal/config"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	assessmentports "ctf-platform/internal/module/assessment/ports"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -19,11 +22,33 @@ import (
 )
 
 type Repository struct {
-	db *gorm.DB
+	db                     *gorm.DB
+	dimensionTotalCache    assessmentports.AssessmentDimensionTotalCacheStore
+	dimensionTotalCacheTTL time.Duration
 }
 
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+type RepositoryOption func(*Repository)
+
+func WithPublishedDimensionTotalCache(store assessmentports.AssessmentDimensionTotalCacheStore, ttl time.Duration) RepositoryOption {
+	return func(r *Repository) {
+		if r == nil {
+			return
+		}
+		r.dimensionTotalCache = store
+		r.dimensionTotalCacheTTL = assessmentdomain.NormalizeAssessmentConfig(config.AssessmentConfig{
+			DimensionTotalCacheTTL: ttl,
+		}).DimensionTotalCacheTTL
+	}
+}
+
+func NewRepository(db *gorm.DB, opts ...RepositoryOption) *Repository {
+	repo := &Repository{db: db}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(repo)
+		}
+	}
+	return repo
 }
 
 func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
@@ -126,54 +151,159 @@ func (r *Repository) ListStudentIDs(ctx context.Context) ([]int64, error) {
 
 // GetDimensionScores 查询用户各维度得分统计
 func (r *Repository) GetDimensionScores(ctx context.Context, userID int64) ([]assessmentdomain.DimensionScore, error) {
-	var scores []assessmentdomain.DimensionScore
-	err := r.dbWithContext(ctx).Raw(`
-		SELECT
-			c.category AS dimension,
-			COALESCE(SUM(c.points), 0) AS total_score,
-			COALESCE(SUM(
-				CASE WHEN EXISTS (
-					SELECT 1
-					FROM submissions s
-					WHERE s.challenge_id = c.id
-						AND s.user_id = ?
-						AND s.is_correct = TRUE
-						AND s.contest_id IS NULL
-				) THEN c.points ELSE 0 END
-			), 0) AS user_score
-		FROM challenges c
-		WHERE c.status = 'published'
-		GROUP BY c.category
-		ORDER BY c.category
-	`, userID).Scan(&scores).Error
-	return scores, err
+	totals, err := r.loadPublishedDimensionTotals(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(totals) == 0 {
+		return []assessmentdomain.DimensionScore{}, nil
+	}
+
+	userScores, err := r.loadUserDimensionScores(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return composeDimensionScores(totals, userScores), nil
 }
 
 // GetDimensionScore 查询用户单个维度得分统计（增量更新用）
 func (r *Repository) GetDimensionScore(ctx context.Context, userID int64, dimension string) (*assessmentdomain.DimensionScore, error) {
-	var score assessmentdomain.DimensionScore
-	err := r.dbWithContext(ctx).Raw(`
-		SELECT
-			c.category AS dimension,
-			COALESCE(SUM(c.points), 0) AS total_score,
-			COALESCE(SUM(
-				CASE WHEN EXISTS (
-					SELECT 1
-					FROM submissions s
-					WHERE s.challenge_id = c.id
-						AND s.user_id = ?
-						AND s.is_correct = TRUE
-						AND s.contest_id IS NULL
-				) THEN c.points ELSE 0 END
-			), 0) AS user_score
-		FROM challenges c
-		WHERE c.status = 'published' AND c.category = ?
-		GROUP BY c.category
-	`, userID, dimension).Scan(&score).Error
+	totals, err := r.loadPublishedDimensionTotals(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &score, nil
+
+	userScore, err := r.loadUserDimensionScore(ctx, userID, dimension)
+	if err != nil {
+		return nil, err
+	}
+
+	return &assessmentdomain.DimensionScore{
+		Dimension:  dimension,
+		TotalScore: totals[dimension],
+		UserScore:  userScore,
+	}, nil
+}
+
+func (r *Repository) loadPublishedDimensionTotals(ctx context.Context) (map[string]int, error) {
+	if r.dimensionTotalCache != nil {
+		totals, found, err := r.dimensionTotalCache.LoadPublishedDimensionTotals(ctx)
+		if err == nil && found {
+			return totals, nil
+		}
+	}
+
+	type totalRow struct {
+		Dimension  string `gorm:"column:dimension"`
+		TotalScore int    `gorm:"column:total_score"`
+	}
+
+	rows := make([]totalRow, 0)
+	if err := r.dbWithContext(ctx).Raw(`
+		SELECT
+			c.category AS dimension,
+			COALESCE(SUM(c.points), 0) AS total_score
+		FROM challenges c
+		WHERE c.status = ? AND c.deleted_at IS NULL
+		GROUP BY c.category
+	`, challengecontracts.ChallengeStatusPublished).Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	totals := make(map[string]int, len(rows))
+	for _, row := range rows {
+		if !taxonomy.IsValidDimension(row.Dimension) {
+			continue
+		}
+		totals[row.Dimension] = row.TotalScore
+	}
+
+	if r.dimensionTotalCache != nil && r.dimensionTotalCacheTTL > 0 {
+		_ = r.dimensionTotalCache.StorePublishedDimensionTotals(ctx, totals, r.dimensionTotalCacheTTL)
+	}
+	return totals, nil
+}
+
+func (r *Repository) loadUserDimensionScores(ctx context.Context, userID int64) (map[string]int, error) {
+	type userScoreRow struct {
+		Dimension string `gorm:"column:dimension"`
+		UserScore int    `gorm:"column:user_score"`
+	}
+
+	rows := make([]userScoreRow, 0)
+	if err := r.dbWithContext(ctx).Raw(`
+		SELECT
+			c.category AS dimension,
+			COALESCE(SUM(c.points), 0) AS user_score
+		FROM (
+			SELECT DISTINCT s.challenge_id
+			FROM submissions s
+			WHERE s.user_id = ?
+				AND s.is_correct = TRUE
+				AND s.contest_id IS NULL
+		) solved
+		JOIN challenges c ON c.id = solved.challenge_id
+		WHERE c.status = ?
+			AND c.deleted_at IS NULL
+		GROUP BY c.category
+	`, userID, challengecontracts.ChallengeStatusPublished).Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	scores := make(map[string]int, len(rows))
+	for _, row := range rows {
+		if !taxonomy.IsValidDimension(row.Dimension) {
+			continue
+		}
+		scores[row.Dimension] = row.UserScore
+	}
+	return scores, nil
+}
+
+func (r *Repository) loadUserDimensionScore(ctx context.Context, userID int64, dimension string) (int, error) {
+	type userScoreRow struct {
+		UserScore int `gorm:"column:user_score"`
+	}
+
+	row := userScoreRow{}
+	if err := r.dbWithContext(ctx).Raw(`
+		SELECT COALESCE(SUM(c.points), 0) AS user_score
+		FROM (
+			SELECT DISTINCT s.challenge_id
+			FROM submissions s
+			WHERE s.user_id = ?
+				AND s.is_correct = TRUE
+				AND s.contest_id IS NULL
+		) solved
+		JOIN challenges c ON c.id = solved.challenge_id
+		WHERE c.status = ?
+			AND c.deleted_at IS NULL
+			AND c.category = ?
+	`, userID, challengecontracts.ChallengeStatusPublished, dimension).Scan(&row).Error; err != nil {
+		return 0, err
+	}
+	return row.UserScore, nil
+}
+
+func composeDimensionScores(totals map[string]int, userScores map[string]int) []assessmentdomain.DimensionScore {
+	dimensions := make([]string, 0, len(totals))
+	for dimension := range totals {
+		dimensions = append(dimensions, dimension)
+	}
+	sort.Slice(dimensions, func(i, j int) bool {
+		return dimensions[i] < dimensions[j]
+	})
+
+	scores := make([]assessmentdomain.DimensionScore, 0, len(dimensions))
+	for _, dimension := range dimensions {
+		scores = append(scores, assessmentdomain.DimensionScore{
+			Dimension:  dimension,
+			TotalScore: totals[dimension],
+			UserScore:  userScores[dimension],
+		})
+	}
+	return scores
 }
 
 func (r *Repository) fillStudentRecentActivity(

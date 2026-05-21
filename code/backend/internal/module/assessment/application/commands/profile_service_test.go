@@ -63,18 +63,25 @@ func setupAssessmentTestDB(t *testing.T) *gorm.DB {
 
 func newAssessmentTestService(db *gorm.DB, redisClient *redis.Client) *assessmentcmd.Service {
 	var lockStore assessmentports.AssessmentProfileLockStore
+	repoOptions := make([]assessmentinfra.RepositoryOption, 0, 1)
 	if redisClient != nil {
 		lockStore = assessmentinfra.NewProfileLockStore(redisClient, config.AssessmentConfig{
-			RedisKeyPrefix: "assessment:test",
-			LockTTL:        time.Minute,
+			RedisKeyPrefix:         "assessment:test",
+			DimensionTotalCacheTTL: time.Minute,
+			LockTTL:                time.Minute,
 		})
+		repoOptions = append(repoOptions, assessmentinfra.WithPublishedDimensionTotalCache(
+			assessmentinfra.NewDimensionTotalCacheStore(redisClient),
+			time.Minute,
+		))
 	}
 	return assessmentcmd.NewProfileService(
-		assessmentinfra.NewRepository(db),
+		assessmentinfra.NewRepository(db, repoOptions...),
 		lockStore,
 		config.AssessmentConfig{
-			RedisKeyPrefix: "assessment:test",
-			LockTTL:        time.Minute,
+			RedisKeyPrefix:         "assessment:test",
+			DimensionTotalCacheTTL: time.Minute,
+			LockTTL:                time.Minute,
 		},
 		zap.NewNop(),
 	)
