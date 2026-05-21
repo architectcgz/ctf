@@ -345,7 +345,7 @@ func BuildReviewArchiveOutput(snapshot StudentFactSnapshot, analysis ReviewArchi
 			Label:    "实操与 AWD",
 			Severity: analysis.AWD.Severity,
 			Summary:  buildAWDSummary(*analysis.AWD),
-			Evidence: fmt.Sprintf("实例/代理交互 %d 次，AWD 成功 %d 次。", analysis.AWD.HandsOnEventCount, analysis.AWD.AWDSuccessCount),
+			Evidence: fmt.Sprintf("AWD 过程证据 %d 条，AWD 成功 %d 次。", analysis.AWD.HandsOnEventCount, analysis.AWD.AWDSuccessCount),
 			Action:   buildAWDAction(*analysis.AWD),
 		})
 	}

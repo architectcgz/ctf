@@ -777,9 +777,9 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 		return nil, err
 	}
 	for _, row := range awdRows {
-		scope := "team"
+		scope := evidence.EventScopeTeam
 		if row.SubmittedByUserID != nil && *row.SubmittedByUserID == userID {
-			scope = "student"
+			scope = evidence.EventScopeStudent
 		}
 		event := toReviewArchiveEvidenceEvent(evidence.NewAWDAttackEvent(evidence.AWDAttackInput{
 			UserID:            userID,

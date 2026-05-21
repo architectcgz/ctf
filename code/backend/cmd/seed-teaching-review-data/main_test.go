@@ -269,6 +269,41 @@ func TestBuildBaseStudentScenariosIncludeRichAWDReviewData(t *testing.T) {
 	}
 }
 
+func TestBuildBaseStudentScenariosCoverAWDOutcomeEdges(t *testing.T) {
+	t.Parallel()
+
+	hasSuccess := false
+	hasRepeatedFailure := false
+	hasSingleProbe := false
+
+	for _, scenario := range buildBaseStudentScenarios() {
+		if scenario.AWD == nil {
+			continue
+		}
+		submittedByStudent := countStudentSubmittedAWDAttacks(scenario.AWD)
+		successCount := 0
+		for _, round := range scenario.AWD.Rounds {
+			for _, attack := range round.Attacks {
+				if attack.SubmittedByStudent && attack.IsSuccess && attack.ScoreGained > 0 {
+					successCount++
+				}
+			}
+		}
+		switch {
+		case successCount > 0:
+			hasSuccess = true
+		case submittedByStudent >= 2:
+			hasRepeatedFailure = true
+		case submittedByStudent == 1:
+			hasSingleProbe = true
+		}
+	}
+
+	if !hasSuccess || !hasRepeatedFailure || !hasSingleProbe {
+		t.Fatalf("expected AWD seed matrix to cover success/repeated-failure/single-probe edges, got success=%t repeatedFailure=%t singleProbe=%t", hasSuccess, hasRepeatedFailure, hasSingleProbe)
+	}
+}
+
 func TestSeedStudentAWDScenarioBuildsTeacherReviewArchiveEvidence(t *testing.T) {
 	t.Parallel()
 

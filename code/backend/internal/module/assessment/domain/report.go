@@ -9,6 +9,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/internal/shared/taxonomy"
+	teachingevidence "ctf-platform/internal/teaching/evidence"
 )
 
 type ReportDownload struct {
@@ -149,15 +150,15 @@ type ReviewArchiveTimelineEvent struct {
 }
 
 type ReviewArchiveEvidenceEvent struct {
-	Type              string         `json:"type"`
-	ChallengeID       int64          `json:"challenge_id"`
-	AWDChallengeID    int64          `json:"awd_challenge_id,omitempty"`
-	AWDChallengeTitle string         `json:"awd_challenge_title,omitempty"`
-	Category          string         `json:"-"`
-	Title             string         `json:"title"`
-	Timestamp         time.Time      `json:"timestamp"`
-	Detail            string         `json:"detail,omitempty"`
-	Meta              map[string]any `json:"meta,omitempty"`
+	Type              teachingevidence.EventType `json:"type"`
+	ChallengeID       int64                      `json:"challenge_id"`
+	AWDChallengeID    int64                      `json:"awd_challenge_id,omitempty"`
+	AWDChallengeTitle string                     `json:"awd_challenge_title,omitempty"`
+	Category          string                     `json:"-"`
+	Title             string                     `json:"title"`
+	Timestamp         time.Time                  `json:"timestamp"`
+	Detail            string                     `json:"detail,omitempty"`
+	Meta              map[string]any             `json:"meta,omitempty"`
 }
 
 type ReviewArchiveWriteupItem struct {

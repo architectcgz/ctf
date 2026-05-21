@@ -15,8 +15,35 @@ type proxyDetail struct {
 	PayloadPreview string `json:"payload_preview"`
 }
 
+type EventType string
+
+const (
+	EventTypeInstanceAccess      EventType = "instance_access"
+	EventTypeInstanceProxy       EventType = "instance_proxy_request"
+	EventTypeChallengeSubmission EventType = "challenge_submission"
+	EventTypeManualReview        EventType = "manual_review"
+	EventTypeWriteup             EventType = "writeup"
+	EventTypeAWDAttackSubmission EventType = "awd_attack_submission"
+	EventTypeAWDTraffic          EventType = "awd_traffic"
+)
+
+func (t EventType) String() string {
+	return string(t)
+}
+
+type EventScope string
+
+const (
+	EventScopeStudent EventScope = "student"
+	EventScopeTeam    EventScope = "team"
+)
+
+func (s EventScope) String() string {
+	return string(s)
+}
+
 type Event struct {
-	Type              string
+	Type              EventType
 	Source            string
 	Stage             string
 	UserID            int64
@@ -91,7 +118,7 @@ type AWDAttackInput struct {
 	Timestamp         time.Time
 	IsSuccess         bool
 	ScoreGained       int
-	Scope             string
+	Scope             EventScope
 	AttackSource      string
 }
 
@@ -113,7 +140,7 @@ type AWDTrafficInput struct {
 
 func NewInstanceAccessEvent(input InstanceAccessInput) Event {
 	return Event{
-		Type:        "instance_access",
+		Type:        EventTypeInstanceAccess,
 		Source:      "audit_logs",
 		Stage:       "access",
 		UserID:      input.UserID,
@@ -131,7 +158,7 @@ func NewProxyRequestEvent(input ProxyRequestInput) Event {
 	meta := BuildProxyRequestMeta(input.RawDetail)
 	meta["event_stage"] = "exploit"
 	return Event{
-		Type:        "instance_proxy_request",
+		Type:        EventTypeInstanceProxy,
 		Source:      "audit_logs",
 		Stage:       "exploit",
 		UserID:      input.UserID,
@@ -149,7 +176,7 @@ func NewChallengeSubmissionEvent(input ChallengeSubmissionInput) Event {
 		detail = "提交命中 Flag"
 	}
 	return Event{
-		Type:        "challenge_submission",
+		Type:        EventTypeChallengeSubmission,
 		Source:      "submissions",
 		Stage:       "submit",
 		UserID:      input.UserID,
@@ -167,7 +194,7 @@ func NewChallengeSubmissionEvent(input ChallengeSubmissionInput) Event {
 
 func NewManualReviewEvent(input ManualReviewInput) Event {
 	return Event{
-		Type:        "manual_review",
+		Type:        EventTypeManualReview,
 		Source:      "submissions",
 		Stage:       "review",
 		UserID:      input.UserID,
@@ -185,7 +212,7 @@ func NewManualReviewEvent(input ManualReviewInput) Event {
 
 func NewWriteupEvent(input WriteupInput) Event {
 	return Event{
-		Type:        "writeup",
+		Type:        EventTypeWriteup,
 		Source:      "submission_writeups",
 		Stage:       "review",
 		UserID:      input.UserID,
@@ -205,7 +232,7 @@ func NewWriteupEvent(input WriteupInput) Event {
 
 func NewAWDAttackEvent(input AWDAttackInput) Event {
 	return Event{
-		Type:              "awd_attack_submission",
+		Type:              EventTypeAWDAttackSubmission,
 		Source:            "awd_attack_logs",
 		Stage:             "exploit",
 		UserID:            input.UserID,
@@ -232,7 +259,7 @@ func NewAWDAttackEvent(input AWDAttackInput) Event {
 			"service_id":          derefInt64(input.ServiceID),
 			"awd_challenge_id":    input.AWDChallengeID,
 			"awd_challenge_title": input.AWDChallengeTitle,
-			"scope":               input.Scope,
+			"scope":               input.Scope.String(),
 			"source":              input.AttackSource,
 		},
 	}
@@ -240,7 +267,7 @@ func NewAWDAttackEvent(input AWDAttackInput) Event {
 
 func NewAWDTrafficEvent(input AWDTrafficInput) Event {
 	return Event{
-		Type:              "awd_traffic",
+		Type:              EventTypeAWDTraffic,
 		Source:            "awd_traffic_events",
 		Stage:             "exploit",
 		UserID:            input.UserID,

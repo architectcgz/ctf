@@ -468,7 +468,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 			User:                 student,
 			ScenarioLabel:        scenario.Label,
 			PracticeSessionCount: len(scenario.Sessions),
-			AWDAttackCount:       countAWDAttacks(scenario.AWD),
+			AWDAttackCount:       countStudentSubmittedAWDAttacks(scenario.AWD),
 			Recommendations:      studentRecommendations,
 			Archive:              archive,
 		})
@@ -944,6 +944,163 @@ func buildBaseStudentScenarios() []studentScenario {
 							{Offset: 7 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, Method: "GET", Path: "/metrics", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
 							{Offset: 12 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 2, Method: "POST", Path: "/sync", StatusCode: 201, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
 							{Offset: 19 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 0, Method: "GET", Path: "/health", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+						},
+					},
+				},
+			},
+		},
+		{
+			Label: "AWD 多次尝试未命中型",
+			User: userSeed{
+				Username:  "sunhaotian",
+				Name:      "孙昊天",
+				Email:     "2024310108@xinan.example.edu.cn",
+				Role:      identitycontracts.RoleStudent,
+				ClassName: seedClassName,
+				StudentNo: "2024310108",
+			},
+			Profiles: map[string]float64{
+				"web":       0.24,
+				"crypto":    0.43,
+				"forensics": 0.45,
+				"misc":      0.47,
+				"pwn":       0.41,
+				"reverse":   0.44,
+			},
+			Sessions: []sessionSeed{
+				{
+					ChallengeCategory: "misc",
+					ChallengeIndex:    0,
+					StartOffset:       -3*24*time.Hour + 2*time.Hour,
+					Duration:          38 * time.Minute,
+					Access:            true,
+					ProxyRequests: []proxySeed{
+						{Offset: 6 * time.Minute, Method: "GET", Path: "/tips", Status: 200},
+					},
+					Submissions: []submissionSeed{
+						{Offset: 24 * time.Minute, Flag: "flag{misc-note-pass}", Correct: true},
+					},
+				},
+			},
+			AWD: &awdScenario{
+				ChallengeCategory: "web",
+				ChallengeIndex:    0,
+				StartOffset:       -20 * time.Hour,
+				Teams: []awdTeamSeed{
+					{Name: "孙昊天进攻组", CaptainRole: seedAWDCaptainStudent, MemberCount: 2},
+					{Name: "样本靶场蓝队", CaptainRole: seedAWDCaptainTeacher, MemberCount: 2},
+					{Name: "旁路压测队", CaptainRole: seedAWDCaptainSynthetic, MemberCount: 2},
+				},
+				Rounds: []awdRoundSeed{
+					{
+						RoundNumber:  1,
+						StartOffset:  0,
+						Duration:     26 * time.Minute,
+						AttackScore:  40,
+						DefenseScore: 35,
+						Services: []awdServiceSeed{
+							{TeamIndex: 0, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 28, DefenseScore: 18, AttackScore: 0, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":88}`, UpdatedOffset: 21 * time.Minute},
+							{TeamIndex: 1, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 26, DefenseScore: 22, AttackScore: 12, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":76}`, UpdatedOffset: 21 * time.Minute},
+							{TeamIndex: 2, ServiceStatus: contestcontracts.AWDServiceStatusCompromised, AttackReceived: 2, SLAScore: 18, DefenseScore: 12, AttackScore: 10, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"partial","latency_ms":140}`, UpdatedOffset: 22 * time.Minute},
+						},
+						Attacks: []awdAttackSeed{
+							{Offset: 9 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, SubmittedFlag: "awd{web-fail-first}", Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: false, ScoreGained: 0},
+							{Offset: 15 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, AttackType: contestcontracts.AWDAttackTypeServiceExploit, Source: contestcontracts.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 60},
+						},
+						Traffic: []awdTrafficSeed{
+							{Offset: 7 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "GET", Path: "/health", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 11 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "POST", Path: "/debug/export", StatusCode: 403, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 17 * time.Minute, AttackerTeamIndex: 2, VictimTeamIndex: 0, Method: "GET", Path: "/backup", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+						},
+					},
+					{
+						RoundNumber:  2,
+						StartOffset:  33 * time.Minute,
+						Duration:     28 * time.Minute,
+						AttackScore:  44,
+						DefenseScore: 30,
+						Services: []awdServiceSeed{
+							{TeamIndex: 0, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 2, SLAScore: 26, DefenseScore: 14, AttackScore: 0, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":92}`, UpdatedOffset: 24 * time.Minute},
+							{TeamIndex: 1, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 25, DefenseScore: 24, AttackScore: 16, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":74}`, UpdatedOffset: 24 * time.Minute},
+							{TeamIndex: 2, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 24, DefenseScore: 20, AttackScore: 12, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":82}`, UpdatedOffset: 25 * time.Minute},
+						},
+						Attacks: []awdAttackSeed{
+							{Offset: 8 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, SubmittedFlag: "awd{web-fail-second}", Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: false, ScoreGained: 0},
+							{Offset: 19 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 2, AttackType: contestcontracts.AWDAttackTypeServiceExploit, Source: contestcontracts.AWDAttackSourceManual, IsSuccess: true, ScoreGained: 80},
+						},
+						Traffic: []awdTrafficSeed{
+							{Offset: 6 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "GET", Path: "/admin", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 10 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "POST", Path: "/export", StatusCode: 500, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 21 * time.Minute, AttackerTeamIndex: 1, VictimTeamIndex: 2, Method: "POST", Path: "/shell", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+						},
+					},
+				},
+			},
+		},
+		{
+			Label: "AWD 单次试探边界型",
+			User: userSeed{
+				Username:  "yangjingxuan",
+				Name:      "杨景轩",
+				Email:     "2024310109@xinan.example.edu.cn",
+				Role:      identitycontracts.RoleStudent,
+				ClassName: seedClassName,
+				StudentNo: "2024310109",
+			},
+			Profiles: map[string]float64{
+				"web":       0.36,
+				"crypto":    0.48,
+				"forensics": 0.55,
+				"misc":      0.42,
+				"pwn":       0.44,
+				"reverse":   0.46,
+			},
+			Sessions: []sessionSeed{
+				{
+					ChallengeCategory: "forensics",
+					ChallengeIndex:    0,
+					StartOffset:       -2*24*time.Hour + 5*time.Hour,
+					Duration:          42 * time.Minute,
+					Access:            true,
+					ProxyRequests: []proxySeed{
+						{Offset: 5 * time.Minute, Method: "GET", Path: "/capture.pcap", Status: 200},
+					},
+					Submissions: []submissionSeed{
+						{Offset: 27 * time.Minute, Flag: "flag{forensics-wire-pass}", Correct: true},
+					},
+					Writeup: &writeupSeed{
+						Offset:    36 * time.Minute,
+						Title:     "从会话恢复凭据并定位异常主机",
+						Content:   "围绕连接特征与可疑载荷恢复关键凭据，最后定位到异常主机行为。",
+						Published: true,
+					},
+				},
+			},
+			AWD: &awdScenario{
+				ChallengeCategory: "web",
+				ChallengeIndex:    0,
+				StartOffset:       -14 * time.Hour,
+				Teams: []awdTeamSeed{
+					{Name: "杨景轩试探组", CaptainRole: seedAWDCaptainStudent, MemberCount: 2},
+					{Name: "教学蓝队", CaptainRole: seedAWDCaptainTeacher, MemberCount: 2},
+				},
+				Rounds: []awdRoundSeed{
+					{
+						RoundNumber:  1,
+						StartOffset:  0,
+						Duration:     24 * time.Minute,
+						AttackScore:  30,
+						DefenseScore: 28,
+						Services: []awdServiceSeed{
+							{TeamIndex: 0, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 0, SLAScore: 24, DefenseScore: 18, AttackScore: 0, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":79}`, UpdatedOffset: 20 * time.Minute},
+							{TeamIndex: 1, ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 1, SLAScore: 24, DefenseScore: 20, AttackScore: 12, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard, CheckResult: `{"status":"ok","latency_ms":73}`, UpdatedOffset: 20 * time.Minute},
+						},
+						Attacks: []awdAttackSeed{
+							{Offset: 13 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, SubmittedFlag: "awd{single-probe-miss}", Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: false, ScoreGained: 0},
+						},
+						Traffic: []awdTrafficSeed{
+							{Offset: 9 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "GET", Path: "/status", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+							{Offset: 14 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "POST", Path: "/probe", StatusCode: 403, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
 						},
 					},
 				},
@@ -1882,6 +2039,21 @@ func countAWDAttacks(scenario *awdScenario) int {
 	total := 0
 	for _, round := range scenario.Rounds {
 		total += len(round.Attacks)
+	}
+	return total
+}
+
+func countStudentSubmittedAWDAttacks(scenario *awdScenario) int {
+	if scenario == nil {
+		return 0
+	}
+	total := 0
+	for _, round := range scenario.Rounds {
+		for _, attack := range round.Attacks {
+			if attack.SubmittedByStudent {
+				total++
+			}
+		}
 	}
 	return total
 }

@@ -132,7 +132,7 @@ func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requ
 	}
 	for _, event := range events {
 		resp.Events = append(resp.Events, TeacherEvidenceEvent{
-			Type:        event.Type,
+			Type:        event.Type.String(),
 			ChallengeID: event.ChallengeID,
 			Title:       event.Title,
 			Detail:      event.Detail,
@@ -141,9 +141,9 @@ func (s *StudentReviewQueryService) GetStudentEvidence(ctx context.Context, requ
 		})
 		resp.Summary.TotalEvents++
 		switch event.Type {
-		case "instance_proxy_request":
+		case teachingevidence.EventTypeInstanceProxy:
 			resp.Summary.ProxyRequestCount++
-		case "challenge_submission", "awd_attack_submission":
+		case teachingevidence.EventTypeChallengeSubmission, teachingevidence.EventTypeAWDAttackSubmission:
 			resp.Summary.SubmitCount++
 			if evidenceEventSucceeded(event) {
 				resp.Summary.SuccessCount++
@@ -243,7 +243,7 @@ func filterEvidenceEvents(events []queryports.EvidenceEventRecord, query teachin
 		if query.RoundID != nil && !int64PtrEqual(event.RoundID, *query.RoundID) {
 			continue
 		}
-		if query.EventType != "" && event.Type != query.EventType {
+		if query.EventType != "" && event.Type.String() != query.EventType {
 			continue
 		}
 		if query.From != nil && event.Timestamp.Before(*query.From) {
@@ -372,7 +372,7 @@ func toAttackEvent(studentID int64, sessionID string, index int, event queryport
 	return TeacherAttackEvent{
 		ID:         fmt.Sprintf("%s_evt_%d", sessionID, index+1),
 		SessionID:  sessionID,
-		Type:       event.Type,
+		Type:       event.Type.String(),
 		Stage:      evidenceEventStage(event),
 		Source:     evidenceEventSource(event),
 		OccurredAt: event.Timestamp,
@@ -441,7 +441,7 @@ func attackSessionGroupKey(event queryports.EvidenceEventRecord) string {
 }
 
 func attackEventMode(event queryports.EvidenceEventRecord) string {
-	if strings.HasPrefix(event.Type, "awd_") {
+	if strings.HasPrefix(event.Type.String(), "awd_") {
 		return "awd"
 	}
 	if event.ContestID != nil {
@@ -463,12 +463,12 @@ func deriveAttackSessionResult(events []queryports.EvidenceEventRecord) string {
 	hasAction := false
 	for _, event := range events {
 		switch event.Type {
-		case "challenge_submission", "awd_attack_submission":
+		case teachingevidence.EventTypeChallengeSubmission, teachingevidence.EventTypeAWDAttackSubmission:
 			if evidenceEventSucceeded(event) {
 				return "success"
 			}
 			hasFailure = true
-		case "instance_access", "instance_proxy_request", "awd_traffic":
+		case teachingevidence.EventTypeInstanceAccess, teachingevidence.EventTypeInstanceProxy, teachingevidence.EventTypeAWDTraffic:
 			hasAction = true
 		}
 	}
@@ -511,15 +511,15 @@ func evidenceEventSource(event queryports.EvidenceEventRecord) string {
 		return event.Source
 	}
 	switch event.Type {
-	case "instance_access", "instance_proxy_request":
+	case teachingevidence.EventTypeInstanceAccess, teachingevidence.EventTypeInstanceProxy:
 		return "audit_logs"
-	case "challenge_submission", "manual_review":
+	case teachingevidence.EventTypeChallengeSubmission, teachingevidence.EventTypeManualReview:
 		return "submissions"
-	case "writeup":
+	case teachingevidence.EventTypeWriteup:
 		return "submission_writeups"
-	case "awd_attack_submission":
+	case teachingevidence.EventTypeAWDAttackSubmission:
 		return "awd_attack_logs"
-	case "awd_traffic":
+	case teachingevidence.EventTypeAWDTraffic:
 		return "awd_traffic_events"
 	default:
 		return "unknown"

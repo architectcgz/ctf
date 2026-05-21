@@ -845,8 +845,8 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 	}
 
 	awdSummary := findObservation(data.TeacherObservations.Items, "awd_summary")
-	if awdSummary == nil || awdSummary.Severity != "warning" {
-		t.Fatalf("expected awd_summary warning observation, got %#v", awdSummary)
+	if awdSummary != nil {
+		t.Fatalf("expected no awd_summary without awd evidence, got %#v", awdSummary)
 	}
 }
 
@@ -972,6 +972,79 @@ func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *test
 	}
 	if observation := findObservation(observations.Items, "awd_summary"); observation == nil || observation.Severity != "warning" {
 		t.Fatalf("expected awd_summary warning observation from AWD exploit evidence, got %+v", observations.Items)
+	}
+}
+
+func TestBuildReviewArchiveObservationsSkipsAWDSummaryWithoutAWDAttempts(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, 4, 13, 16, 0, 0, 0, time.UTC)
+	observations := buildReviewArchiveObservations(
+		assessmentdomain.ReviewArchiveSummary{
+			TotalAttempts:          1,
+			CorrectSubmissionCount: 0,
+		},
+		[]*assessmentcontracts.SkillDimension{
+			{Dimension: "web", Score: 0.34},
+		},
+		nil,
+		[]assessmentdomain.ReviewArchiveEvidenceEvent{
+			{
+				Type:        "instance_access",
+				ChallengeID: 11,
+				Category:    "web",
+				Title:       "web-1",
+				Timestamp:   now.Add(-2 * time.Minute),
+				Detail:      "进入实例访问页面",
+			},
+			{
+				Type:        "instance_proxy_request",
+				ChallengeID: 11,
+				Category:    "web",
+				Title:       "web-1",
+				Timestamp:   now.Add(-time.Minute),
+				Detail:      "经平台代理发起 GET /debug",
+			},
+		},
+		nil,
+		nil,
+	)
+
+	if observation := findObservation(observations.Items, "awd_summary"); observation != nil {
+		t.Fatalf("expected no awd_summary without awd attempts, got %+v", observation)
+	}
+}
+
+func TestBuildReviewArchiveObservationsMarksSingleAWDProbeAsAttention(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, 4, 13, 16, 5, 0, 0, time.UTC)
+	observations := buildReviewArchiveObservations(
+		assessmentdomain.ReviewArchiveSummary{
+			TotalAttempts:          1,
+			CorrectSubmissionCount: 0,
+		},
+		[]*assessmentcontracts.SkillDimension{
+			{Dimension: "web", Score: 0.36},
+		},
+		nil,
+		[]assessmentdomain.ReviewArchiveEvidenceEvent{
+			{
+				Type:        "awd_attack_submission",
+				ChallengeID: 101,
+				Category:    "web",
+				Title:       "awd-web",
+				Timestamp:   now,
+				Detail:      "AWD 单次试探未命中",
+				Meta:        map[string]any{"is_success": false, "event_stage": "probe"},
+			},
+		},
+		nil,
+		nil,
+	)
+
+	if observation := findObservation(observations.Items, "awd_summary"); observation == nil || observation.Severity != "attention" {
+		t.Fatalf("expected awd_summary attention for single awd probe, got %+v", observations.Items)
 	}
 }
 

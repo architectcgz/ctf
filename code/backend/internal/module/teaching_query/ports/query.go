@@ -43,7 +43,7 @@ type TimelineEventRecord struct {
 }
 
 type EvidenceEventRecord struct {
-	Type         string
+	Type         evidence.EventType
 	Source       string
 	Stage        string
 	UserID       int64

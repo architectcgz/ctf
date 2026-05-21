@@ -32,7 +32,7 @@ import (
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/classreview"
 	"ctf-platform/internal/teaching/classwindow"
-	"ctf-platform/internal/teaching/evidence"
+	teachingevidence "ctf-platform/internal/teaching/evidence"
 )
 
 type ReportService struct {
@@ -852,7 +852,7 @@ func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, stude
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
-	evidence, err := s.reviewArchiveRepo.GetStudentEvidence(ctx, studentID, evidence.Query{})
+	evidence, err := s.reviewArchiveRepo.GetStudentEvidence(ctx, studentID, teachingevidence.Query{})
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
@@ -961,6 +961,9 @@ func latestReviewArchiveActivity(
 		record(&item.Timestamp)
 	}
 	for _, item := range evidence {
+		if !includeEvidenceInPersonalActivity(item) {
+			continue
+		}
 		record(&item.Timestamp)
 	}
 	for _, item := range writeups {
@@ -1033,15 +1036,8 @@ func buildReviewArchiveTeachingFactSnapshot(
 		factMap[dimension] = &teachingadvice.DimensionFact{Dimension: dimensionCopy}
 	}
 
-	handsOnCount := 0
-	for _, item := range evidence {
-		switch item.Type {
-		case "instance_access", "instance_proxy_request", "awd_attack_submission", "awd_traffic":
-			handsOnCount++
-		}
-	}
 	snapshot.MaxWrongStreak = submissionStats.MaxWrongStreak
-	snapshot.HandsOnEventCount = handsOnCount
+	snapshot.HandsOnEventCount = countReviewArchiveAWDHandsOnEvidence(timeline, evidence)
 	snapshot.AWDSuccessCount = submissionStats.AWDSuccessCount
 
 	for _, dimension := range skillProfile {
@@ -1061,13 +1057,16 @@ func buildReviewArchiveTeachingFactSnapshot(
 			continue
 		}
 		switch item.Type {
-		case "challenge_submission", "awd_attack_submission":
+		case teachingevidence.EventTypeChallengeSubmission, teachingevidence.EventTypeAWDAttackSubmission:
+			if item.Type == teachingevidence.EventTypeAWDAttackSubmission && !isStudentScopedAWDAttackEvidence(item) {
+				continue
+			}
 			fact.AttemptCount++
 			if success, tracked := extractEvidenceSubmissionResult(item); tracked && success {
 				fact.SuccessCount++
 			}
 			fact.EvidenceCount++
-		case "instance_access", "instance_proxy_request", "awd_traffic":
+		case teachingevidence.EventTypeInstanceAccess, teachingevidence.EventTypeInstanceProxy, teachingevidence.EventTypeAWDTraffic:
 			fact.EvidenceCount++
 		}
 	}
@@ -1126,6 +1125,9 @@ func recentReviewArchiveActivityStats(
 
 	if len(evidence) > 0 {
 		for _, item := range evidence {
+			if !includeEvidenceInPersonalActivity(item) {
+				continue
+			}
 			record(item.Timestamp)
 		}
 	} else {
@@ -1209,7 +1211,12 @@ func hasRepeatedWrongSubmissions(evidence []assessmentdomain.ReviewArchiveEviden
 
 func hasHandsOnExploit(evidence []assessmentdomain.ReviewArchiveEvidenceEvent) bool {
 	for _, item := range evidence {
-		if item.Type == "instance_access" || item.Type == "instance_proxy_request" || item.Type == "awd_attack_submission" {
+		if item.Type == teachingevidence.EventTypeInstanceAccess ||
+			item.Type == teachingevidence.EventTypeInstanceProxy ||
+			item.Type == teachingevidence.EventTypeAWDTraffic {
+			return true
+		}
+		if item.Type == teachingevidence.EventTypeAWDAttackSubmission && isStudentScopedAWDAttackEvidence(item) {
 			return true
 		}
 	}
@@ -1234,10 +1241,13 @@ func extractEvidenceSubmissionResult(item assessmentdomain.ReviewArchiveEvidence
 	}
 
 	switch item.Type {
-	case "challenge_submission":
+	case teachingevidence.EventTypeChallengeSubmission:
 		isCorrect, ok := item.Meta["is_correct"].(bool)
 		return isCorrect, ok
-	case "awd_attack_submission":
+	case teachingevidence.EventTypeAWDAttackSubmission:
+		if !isStudentScopedAWDAttackEvidence(item) {
+			return false, false
+		}
 		isCorrect, ok := item.Meta["is_success"].(bool)
 		return isCorrect, ok
 	default:
@@ -1302,18 +1312,18 @@ func reviewArchiveSubmissionStatsFromEvidence(
 		}
 		trackedCount++
 		trackedEvents = append(trackedEvents, trackedEvent{timestamp: item.Timestamp, success: isCorrect})
-		if item.Type == "challenge_submission" {
+		if item.Type == teachingevidence.EventTypeChallengeSubmission {
 			stats.HasChallengeEvidence = true
 		}
-		if item.Type == "awd_attack_submission" {
+		if item.Type == teachingevidence.EventTypeAWDAttackSubmission {
 			stats.HasAWDEvidence = true
 		}
 		if isCorrect {
 			stats.SuccessCount++
-			if item.Type == "challenge_submission" {
+			if item.Type == teachingevidence.EventTypeChallengeSubmission {
 				stats.ChallengeSuccessCount++
 			}
-			if item.Type == "awd_attack_submission" {
+			if item.Type == teachingevidence.EventTypeAWDAttackSubmission {
 				stats.AWDSuccessCount++
 			}
 			continue
@@ -1352,6 +1362,57 @@ func countCorrectTimelineChallengeSubmissions(timeline []assessmentdomain.Review
 		}
 	}
 	return count
+}
+
+func countReviewArchiveAWDHandsOnEvidence(
+	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+) int {
+	handsOnCount := 0
+	for _, item := range evidence {
+		switch item.Type {
+		case teachingevidence.EventTypeAWDTraffic:
+			handsOnCount++
+		case teachingevidence.EventTypeAWDAttackSubmission:
+			if isStudentScopedAWDAttackEvidence(item) {
+				handsOnCount++
+			}
+		}
+	}
+	if handsOnCount > 0 {
+		return handsOnCount
+	}
+	for _, item := range timeline {
+		if item.Type == "awd_attack_submit" {
+			handsOnCount++
+		}
+	}
+	return handsOnCount
+}
+
+func includeEvidenceInPersonalActivity(item assessmentdomain.ReviewArchiveEvidenceEvent) bool {
+	switch item.Type {
+	case teachingevidence.EventTypeAWDTraffic:
+		return false
+	case teachingevidence.EventTypeAWDAttackSubmission:
+		return isStudentScopedAWDAttackEvidence(item)
+	default:
+		return true
+	}
+}
+
+func isStudentScopedAWDAttackEvidence(item assessmentdomain.ReviewArchiveEvidenceEvent) bool {
+	if item.Type != teachingevidence.EventTypeAWDAttackSubmission {
+		return false
+	}
+	if item.Meta == nil {
+		return true
+	}
+	scope, ok := item.Meta["scope"].(string)
+	if !ok {
+		return true
+	}
+	return strings.EqualFold(strings.TrimSpace(scope), "student")
 }
 
 func countCorrectTimelineAWDSubmissions(timeline []assessmentdomain.ReviewArchiveTimelineEvent) int {

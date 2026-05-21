@@ -1277,9 +1277,9 @@ func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, query
 			roundID := row.RoundID
 			serviceID := row.ServiceID
 			victimTeamID := row.VictimTeamID
-			scope := "team"
+			scope := evidence.EventScopeTeam
 			if row.SubmittedByUserID != nil && *row.SubmittedByUserID == userID {
-				scope = "student"
+				scope = evidence.EventScopeStudent
 			}
 			events = append(events, toEvidenceRecord(evidence.NewAWDAttackEvent(evidence.AWDAttackInput{
 				UserID:            userID,
