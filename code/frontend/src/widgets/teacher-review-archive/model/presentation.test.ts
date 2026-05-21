@@ -16,7 +16,7 @@ describe('teacher review archive widget presentation', () => {
 
   it('应保持摘要文案出口稳定', () => {
     expect(REVIEW_ARCHIVE_SUMMARY_COPY.summaryTitle).toBe('训练摘要')
-    expect(REVIEW_ARCHIVE_SUMMARY_COPY.skillTitle).toBe('能力画像')
+    expect(REVIEW_ARCHIVE_SUMMARY_COPY.skillTitle).toBe('六维分布')
     expect(REVIEW_ARCHIVE_SUMMARY_COPY.correctSubmissionLabel).toBe('有效提交')
   })
 

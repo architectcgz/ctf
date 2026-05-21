@@ -89,6 +89,43 @@ type ReviewArchiveObservation struct {
 	Action    string
 }
 
+type ReviewArchiveDimensionAnalysis struct {
+	Dimension     string
+	Severity      Severity
+	ProfileScore  float64
+	AttemptCount  int
+	SuccessCount  int
+	EvidenceCount int
+	SuccessRate   float64
+}
+
+type ReviewArchiveActivityAnalysis struct {
+	Severity         Severity
+	ActiveDays7d     int
+	RecentEventCount int
+}
+
+type ReviewArchiveReflectionAnalysis struct {
+	Severity            Severity
+	ChallengeSuccesses  int
+	WriteupCount        int
+	ApprovedReviewCount int
+}
+
+type ReviewArchiveAWDAnalysis struct {
+	Severity          Severity
+	HandsOnEventCount int
+	AWDSuccessCount   int
+}
+
+type ReviewArchiveAnalysis struct {
+	WeakDirection   *ReviewArchiveDimensionAnalysis
+	StableDirection *ReviewArchiveDimensionAnalysis
+	Activity        ReviewArchiveActivityAnalysis
+	Reflection      *ReviewArchiveReflectionAnalysis
+	AWD             *ReviewArchiveAWDAnalysis
+}
+
 type ClassSummarySnapshot struct {
 	ClassName        string
 	StudentCount     int
@@ -235,124 +272,81 @@ func EvaluateStudent(snapshot StudentFactSnapshot) StudentEvaluation {
 }
 
 func BuildReviewArchiveObservations(snapshot StudentFactSnapshot, evaluation StudentEvaluation) []ReviewArchiveObservation {
+	_ = evaluation
+
+	analysis := AnalyzeReviewArchive(snapshot)
+	return BuildReviewArchiveOutput(snapshot, analysis)
+}
+
+func AnalyzeReviewArchive(snapshot StudentFactSnapshot) ReviewArchiveAnalysis {
+	return ReviewArchiveAnalysis{
+		WeakDirection:   analyzeReviewArchiveWeakDirection(snapshot),
+		StableDirection: analyzeReviewArchiveStableDirection(snapshot),
+		Activity:        analyzeReviewArchiveActivity(snapshot),
+		Reflection:      analyzeReviewArchiveReflection(snapshot),
+		AWD:             analyzeReviewArchiveAWD(snapshot),
+	}
+}
+
+func BuildReviewArchiveOutput(snapshot StudentFactSnapshot, analysis ReviewArchiveAnalysis) []ReviewArchiveObservation {
 	items := make([]ReviewArchiveObservation, 0, 5)
-	challengeSuccessCount := challengeSuccessCount(snapshot)
-	submissionSuccessCount := submissionSuccessCount(snapshot)
-	submissionFailureCount := submissionFailureCount(snapshot)
 
-	if challengeSuccessCount > 0 {
-		outputCount := snapshot.WriteupCount + snapshot.ApprovedReviewCount
-		observation := ReviewArchiveObservation{
-			Code:     "training_closure",
-			Label:    "训练闭环",
-			Severity: SeverityAttention,
-			Summary:  "已经拿到训练结果，但复盘输出还没有稳定跟上。",
-			Evidence: buildTrainingClosureEvidence(challengeSuccessCount, submissionSuccessCount, snapshot.AWDSuccessCount, snapshot.WriteupCount, snapshot.ApprovedReviewCount),
-			Action:   "补 1 份复盘材料或课堂讲解记录，把成功经验沉淀下来。",
-		}
-		if outputCount >= challengeSuccessCount {
-			observation.Severity = SeverityGood
-			observation.Summary = "已经形成从解题到复盘输出的训练闭环。"
-			observation.Action = "继续保持输出质量，把高质量复盘沉淀成可复用材料。"
-		} else if outputCount > 0 {
-			observation.Summary = "已经开始补复盘输出，但还没有覆盖到多数成功样本。"
-			observation.Action = "优先把最近一次成功过程写透，再逐步补齐其他关键样本。"
-		}
-		items = append(items, observation)
-	}
-
-	if severity, ok := submissionStabilitySeverity(snapshot); ok {
-		summary := "连续失败事件偏多，当前还没有形成稳定命中。"
-		if submissionSuccessCount > 0 {
-			summary = "已经有成功结果，但重复失败仍在抬高试错成本。"
-		}
+	if analysis.WeakDirection != nil {
+		direction := analysis.WeakDirection
+		dimension := direction.Dimension
 		items = append(items, ReviewArchiveObservation{
-			Code:     "submission_stability",
-			Label:    "提交稳定性",
-			Severity: severity,
-			Summary:  summary,
-			Evidence: fmt.Sprintf("成功事件 %d 次，失败事件 %d 次，最长连续失败 %d 次。", submissionSuccessCount, submissionFailureCount, snapshot.MaxWrongStreak),
-			Action:   "先回看关键一步的利用思路，再继续提交，避免把时间消耗在重复试错上。",
-		})
-	} else if submissionSuccessCount > 0 {
-		summary := "提交节奏整体稳定，归档里没有明显的失败积累。"
-		if submissionFailureCount > 0 {
-			summary = "有少量试错，但整体还能稳定收敛到结果。"
-		}
-		items = append(items, ReviewArchiveObservation{
-			Code:     "submission_stability",
-			Label:    "提交稳定性",
-			Severity: SeverityGood,
-			Summary:  summary,
-			Evidence: fmt.Sprintf("成功事件 %d 次，失败事件 %d 次。", submissionSuccessCount, submissionFailureCount),
-			Action:   "继续保持先验证思路、再提交结果的节奏。",
-		})
-	}
-
-	if observation, ok := buildLowActivityObservation(snapshot); ok {
-		items = append(items, observation)
-	}
-
-	if snapshot.HandsOnEventCount+snapshot.AWDSuccessCount > 0 {
-		severity := SeverityGood
-		summary := "已经开始留下实操过程证据，后续要继续把过程收束成结果。"
-		switch {
-		case snapshot.HandsOnEventCount > 0 && snapshot.AWDSuccessCount > 0:
-			summary = "实操过程证据比较完整，而且已经拿到 AWD 实战结果。"
-		case snapshot.HandsOnEventCount == 0 && snapshot.AWDSuccessCount > 0:
-			summary = "已有 AWD 实战结果，说明能够把技能迁移到攻防场景。"
-		case snapshot.HandsOnEventCount >= 3:
-			summary = "实操交互证据比较充分，训练过程可复盘。"
-		}
-		if submissionSuccessCount == 0 && snapshot.AWDSuccessCount == 0 {
-			severity = SeverityAttention
-		}
-		items = append(items, ReviewArchiveObservation{
-			Code:     "hands_on_depth",
-			Label:    "实操深度",
-			Severity: severity,
-			Summary:  summary,
-			Evidence: fmt.Sprintf("实例/代理交互 %d 次，AWD 成功 %d 次。", snapshot.HandsOnEventCount, snapshot.AWDSuccessCount),
-			Action:   "保留关键操作证据，后续复盘时优先回放这类高价值步骤。",
-		})
-	}
-
-	if len(evaluation.WeakDimensions) > 0 {
-		top := evaluation.WeakDimensions[0]
-		dimension := top.Dimension
-		items = append(items, ReviewArchiveObservation{
-			Code:      "dimension_focus",
-			Label:     "维度聚焦",
-			Severity:  top.Severity,
+			Code:      "weak_direction",
+			Label:     "薄弱方向",
+			Severity:  direction.Severity,
 			Dimension: &dimension,
-			Summary:   buildWeakDimensionObservationSummary(top),
-			Evidence:  top.Evidence,
-			Action:    fmt.Sprintf("接下来优先补 %s 维度的 %s 难度题。", dimensionLabel(top.Dimension), evaluation.RecommendedDifficultyBand),
+			Summary:   buildWeakDirectionSummary(*direction),
+			Evidence:  buildDirectionEvidence(*direction),
+			Action:    buildWeakDirectionAction(*direction),
 		})
-	} else if len(evaluation.RecommendationTargets) > 0 {
-		top := evaluation.RecommendationTargets[0]
-		if !containsReasonCode(top.ReasonCodes, "progression_ready") {
-			dimension := top.Dimension
-			items = append(items, ReviewArchiveObservation{
-				Code:      "dimension_focus",
-				Label:     "维度聚焦",
-				Severity:  SeverityAttention,
-				Dimension: &dimension,
-				Summary:   buildCoverageGapObservationSummary(top),
-				Evidence:  top.Evidence,
-				Action:    fmt.Sprintf("先补 1 道 %s 维度的 %s 难度题，把训练样本补齐。", dimensionLabel(top.Dimension), evaluation.RecommendedDifficultyBand),
-			})
-		}
 	}
 
-	if snapshot.AWDSuccessCount > 0 {
+	if analysis.StableDirection != nil {
+		direction := analysis.StableDirection
+		dimension := direction.Dimension
 		items = append(items, ReviewArchiveObservation{
-			Code:     "awd_participation",
-			Label:    "AWD 实战参与",
-			Severity: SeverityGood,
-			Summary:  "已经在 AWD 场景拿到有效结果，具备一定的实战迁移能力。",
-			Evidence: fmt.Sprintf("AWD 成功攻击 %d 次。", snapshot.AWDSuccessCount),
-			Action:   "后续可以继续用更完整的攻击链复盘，巩固迁移能力。",
+			Code:      "stable_direction",
+			Label:     "稳定方向",
+			Severity:  direction.Severity,
+			Dimension: &dimension,
+			Summary:   buildStableDirectionSummary(*direction),
+			Evidence:  buildDirectionEvidence(*direction),
+			Action:    buildStableDirectionAction(*direction),
+		})
+	}
+
+	items = append(items, ReviewArchiveObservation{
+		Code:     "activity_status",
+		Label:    "活跃情况",
+		Severity: analysis.Activity.Severity,
+		Summary:  buildActivitySummary(analysis.Activity),
+		Evidence: fmt.Sprintf("近 7 天活跃 %d 天，训练事件 %d 次。", analysis.Activity.ActiveDays7d, analysis.Activity.RecentEventCount),
+		Action:   buildActivityAction(analysis.Activity),
+	})
+
+	if analysis.Reflection != nil {
+		items = append(items, ReviewArchiveObservation{
+			Code:     "reflection_status",
+			Label:    "表达与总结",
+			Severity: analysis.Reflection.Severity,
+			Summary:  buildReflectionSummary(*analysis.Reflection),
+			Evidence: buildReflectionEvidence(*analysis.Reflection),
+			Action:   buildReflectionAction(*analysis.Reflection),
+		})
+	}
+
+	if analysis.AWD != nil {
+		items = append(items, ReviewArchiveObservation{
+			Code:     "awd_summary",
+			Label:    "实操与 AWD",
+			Severity: analysis.AWD.Severity,
+			Summary:  buildAWDSummary(*analysis.AWD),
+			Evidence: fmt.Sprintf("实例/代理交互 %d 次，AWD 成功 %d 次。", analysis.AWD.HandsOnEventCount, analysis.AWD.AWDSuccessCount),
+			Action:   buildAWDAction(*analysis.AWD),
 		})
 	}
 
@@ -519,6 +513,298 @@ func BuildRecommendationPlan(snapshot StudentFactSnapshot, evaluation StudentEva
 		Reasons:        reasons,
 		DifficultyBand: evaluation.RecommendedDifficultyBand,
 	}
+}
+
+func analyzeReviewArchiveWeakDirection(snapshot StudentFactSnapshot) *ReviewArchiveDimensionAnalysis {
+	var best *ReviewArchiveDimensionAnalysis
+
+	for _, fact := range snapshot.Dimensions {
+		direction, ok := buildReviewArchiveDirectionAnalysis(fact)
+		if !ok {
+			continue
+		}
+		if direction.SuccessRate >= 0.8 && direction.SuccessCount >= 2 {
+			continue
+		}
+
+		switch {
+		case direction.AttemptCount >= 4 && direction.SuccessCount == 0 && direction.ProfileScore < 0.35:
+			direction.Severity = SeverityDanger
+		case direction.AttemptCount >= 3 && direction.SuccessRate < 0.5 && direction.ProfileScore < 0.5:
+			direction.Severity = SeverityWarning
+		case direction.AttemptCount >= 2 && direction.SuccessRate < 0.6 && direction.ProfileScore < 0.6:
+			direction.Severity = SeverityAttention
+		default:
+			continue
+		}
+
+		if best == nil || compareWeakDirection(direction, *best) < 0 {
+			copyValue := direction
+			best = &copyValue
+		}
+	}
+
+	return best
+}
+
+func analyzeReviewArchiveStableDirection(snapshot StudentFactSnapshot) *ReviewArchiveDimensionAnalysis {
+	var best *ReviewArchiveDimensionAnalysis
+
+	for _, fact := range snapshot.Dimensions {
+		direction, ok := buildReviewArchiveDirectionAnalysis(fact)
+		if !ok {
+			continue
+		}
+		if direction.SuccessCount < 2 || direction.SuccessRate < 0.66 || direction.ProfileScore < 0.65 {
+			continue
+		}
+		direction.Severity = SeverityGood
+
+		if best == nil || compareStableDirection(direction, *best) < 0 {
+			copyValue := direction
+			best = &copyValue
+		}
+	}
+
+	return best
+}
+
+func analyzeReviewArchiveActivity(snapshot StudentFactSnapshot) ReviewArchiveActivityAnalysis {
+	severity := SeverityGood
+	switch {
+	case snapshot.ActiveDays7d <= 1 && snapshot.RecentEventCount7d <= 2:
+		severity = SeverityWarning
+	case snapshot.ActiveDays7d <= 2 || snapshot.RecentEventCount7d <= 2:
+		severity = SeverityAttention
+	}
+
+	return ReviewArchiveActivityAnalysis{
+		Severity:         severity,
+		ActiveDays7d:     snapshot.ActiveDays7d,
+		RecentEventCount: snapshot.RecentEventCount7d,
+	}
+}
+
+func analyzeReviewArchiveReflection(snapshot StudentFactSnapshot) *ReviewArchiveReflectionAnalysis {
+	challengeSuccesses := challengeSuccessCount(snapshot)
+	writeupCount := snapshot.WriteupCount
+	approvedReviewCount := snapshot.ApprovedReviewCount
+	outputCount := writeupCount + approvedReviewCount
+
+	severity := SeverityGood
+	switch {
+	case challengeSuccesses >= 2 && outputCount == 0:
+		severity = SeverityWarning
+	case challengeSuccesses > 0 && outputCount == 0:
+		severity = SeverityAttention
+	case challengeSuccesses > 0 && outputCount < challengeSuccesses:
+		severity = SeverityAttention
+	case challengeSuccesses == 0 && outputCount == 0:
+		severity = SeverityAttention
+	}
+
+	return &ReviewArchiveReflectionAnalysis{
+		Severity:            severity,
+		ChallengeSuccesses:  challengeSuccesses,
+		WriteupCount:        writeupCount,
+		ApprovedReviewCount: approvedReviewCount,
+	}
+}
+
+func analyzeReviewArchiveAWD(snapshot StudentFactSnapshot) *ReviewArchiveAWDAnalysis {
+	if snapshot.HandsOnEventCount+snapshot.AWDSuccessCount == 0 {
+		return nil
+	}
+
+	severity := SeverityGood
+	switch {
+	case snapshot.AWDSuccessCount > 0:
+		severity = SeverityGood
+	case snapshot.HandsOnEventCount >= 2:
+		severity = SeverityWarning
+	default:
+		severity = SeverityAttention
+	}
+
+	return &ReviewArchiveAWDAnalysis{
+		Severity:          severity,
+		HandsOnEventCount: snapshot.HandsOnEventCount,
+		AWDSuccessCount:   snapshot.AWDSuccessCount,
+	}
+}
+
+func buildReviewArchiveDirectionAnalysis(fact DimensionFact) (ReviewArchiveDimensionAnalysis, bool) {
+	dimension := strings.ToLower(strings.TrimSpace(fact.Dimension))
+	if dimension == "" {
+		return ReviewArchiveDimensionAnalysis{}, false
+	}
+
+	attemptCount := maxInt(fact.AttemptCount, fact.SuccessCount)
+	evidenceCount := maxInt(fact.EvidenceCount, attemptCount)
+	if evidenceCount == 0 {
+		return ReviewArchiveDimensionAnalysis{}, false
+	}
+
+	successCount := minInt(fact.SuccessCount, attemptCount)
+	successRate := 0.0
+	if attemptCount > 0 {
+		successRate = float64(successCount) / float64(attemptCount)
+	}
+
+	return ReviewArchiveDimensionAnalysis{
+		Dimension:     dimension,
+		ProfileScore:  clampScore(fact.ProfileScore),
+		AttemptCount:  attemptCount,
+		SuccessCount:  successCount,
+		EvidenceCount: evidenceCount,
+		SuccessRate:   successRate,
+	}, true
+}
+
+func compareWeakDirection(left, right ReviewArchiveDimensionAnalysis) int {
+	if severityRank(left.Severity) != severityRank(right.Severity) {
+		return severityRank(right.Severity) - severityRank(left.Severity)
+	}
+	if left.AttemptCount != right.AttemptCount {
+		return right.AttemptCount - left.AttemptCount
+	}
+	if left.ProfileScore != right.ProfileScore {
+		if left.ProfileScore < right.ProfileScore {
+			return -1
+		}
+		return 1
+	}
+	return strings.Compare(left.Dimension, right.Dimension)
+}
+
+func compareStableDirection(left, right ReviewArchiveDimensionAnalysis) int {
+	if left.SuccessCount != right.SuccessCount {
+		return right.SuccessCount - left.SuccessCount
+	}
+	if left.SuccessRate != right.SuccessRate {
+		if left.SuccessRate > right.SuccessRate {
+			return -1
+		}
+		return 1
+	}
+	if left.ProfileScore != right.ProfileScore {
+		if left.ProfileScore > right.ProfileScore {
+			return -1
+		}
+		return 1
+	}
+	return strings.Compare(left.Dimension, right.Dimension)
+}
+
+func buildWeakDirectionSummary(direction ReviewArchiveDimensionAnalysis) string {
+	if direction.Severity == SeverityDanger {
+		return fmt.Sprintf("%s 方向尝试已经比较集中，但当前还没有形成有效命中，属于优先补强项。", dimensionLabel(direction.Dimension))
+	}
+	if direction.SuccessCount > 0 {
+		return fmt.Sprintf("%s 方向已经出现过成功样本，但整体成功率仍然偏低，结果还不够稳定。", dimensionLabel(direction.Dimension))
+	}
+	return fmt.Sprintf("%s 方向的训练尝试较多，但当前命中率仍然偏低，需要继续补基础。", dimensionLabel(direction.Dimension))
+}
+
+func buildStableDirectionSummary(direction ReviewArchiveDimensionAnalysis) string {
+	return fmt.Sprintf("%s 方向最近已经形成连续完成且错误较少的稳定表现，可以作为当前的相对稳定方向。", dimensionLabel(direction.Dimension))
+}
+
+func buildDirectionEvidence(direction ReviewArchiveDimensionAnalysis) string {
+	return fmt.Sprintf("%s 方向画像 %.0f%%，尝试 %d 次，成功 %d 次，相关证据 %d 条，成功率 %.0f%%。",
+		dimensionLabel(direction.Dimension),
+		direction.ProfileScore*100,
+		direction.AttemptCount,
+		direction.SuccessCount,
+		direction.EvidenceCount,
+		direction.SuccessRate*100,
+	)
+}
+
+func buildWeakDirectionAction(direction ReviewArchiveDimensionAnalysis) string {
+	return fmt.Sprintf("下一步优先围绕 %s 方向补 1 到 2 个基础样本，先把成功率稳定下来。", dimensionLabel(direction.Dimension))
+}
+
+func buildStableDirectionAction(direction ReviewArchiveDimensionAnalysis) string {
+	return fmt.Sprintf("后续可以继续保持 %s 方向训练，并把成功过程整理成可复用的复盘材料。", dimensionLabel(direction.Dimension))
+}
+
+func buildActivitySummary(activity ReviewArchiveActivityAnalysis) string {
+	switch activity.Severity {
+	case SeverityWarning:
+		return "近 7 天训练投入明显不足，当前训练节奏需要尽快恢复。"
+	case SeverityAttention:
+		return "近 7 天训练节奏开始放缓，当前需要继续保持持续训练。"
+	default:
+		return "近 7 天训练节奏整体稳定，当前保持了连续投入。"
+	}
+}
+
+func buildActivityAction(activity ReviewArchiveActivityAnalysis) string {
+	switch activity.Severity {
+	case SeverityWarning:
+		return "建议先安排一个可以当天完成的小目标，把训练频次重新拉起来。"
+	case SeverityAttention:
+		return "建议保持最近一周的训练连续性，避免训练间隔继续拉长。"
+	default:
+		return "继续保持当前训练节奏，并把精力放在薄弱方向补强和复盘整理上。"
+	}
+}
+
+func buildReflectionSummary(reflection ReviewArchiveReflectionAnalysis) string {
+	outputCount := reflection.WriteupCount + reflection.ApprovedReviewCount
+	switch {
+	case reflection.ChallengeSuccesses >= 2 && outputCount == 0:
+		return "已经有多次训练结果，但当前还没有形成对应的复盘材料，表达与总结环节偏弱。"
+	case reflection.ChallengeSuccesses > 0 && outputCount == 0:
+		return "已经拿到训练结果，但当前还没有把关键过程整理成复盘材料。"
+	case reflection.ChallengeSuccesses > 0 && outputCount < reflection.ChallengeSuccesses:
+		return "已经开始整理复盘材料，但目前还没有覆盖到多数成功样本。"
+	case outputCount > 0:
+		return "已经形成一定的复盘输出，表达与总结环节相对完整。"
+	default:
+		return "当前归档里还没有明显的复盘材料，后续可以从一次关键尝试开始整理。"
+	}
+}
+
+func buildReflectionEvidence(reflection ReviewArchiveReflectionAnalysis) string {
+	return fmt.Sprintf("完成题目 %d 道，writeup %d 份，通过评阅 %d 条。",
+		reflection.ChallengeSuccesses,
+		reflection.WriteupCount,
+		reflection.ApprovedReviewCount,
+	)
+}
+
+func buildReflectionAction(reflection ReviewArchiveReflectionAnalysis) string {
+	outputCount := reflection.WriteupCount + reflection.ApprovedReviewCount
+	switch {
+	case reflection.ChallengeSuccesses > 0 && outputCount == 0:
+		return "建议优先把最近一次成功过程整理成 writeup 或课堂复盘记录。"
+	case reflection.ChallengeSuccesses > 0 && outputCount < reflection.ChallengeSuccesses:
+		return "建议继续补齐最近的成功样本，形成更完整的复盘材料。"
+	case outputCount > 0:
+		return "继续保持复盘输出，并优先沉淀可以复用的关键步骤与错误点。"
+	default:
+		return "建议先从一次关键尝试开始记录过程，为后续复盘积累基础材料。"
+	}
+}
+
+func buildAWDSummary(analysis ReviewArchiveAWDAnalysis) string {
+	switch {
+	case analysis.AWDSuccessCount > 0:
+		return "已经在 AWD 场景拿到有效命中，说明训练结果开始具备实战迁移能力。"
+	case analysis.HandsOnEventCount >= 2:
+		return "已经留下较完整的实操过程证据，但当前还没有形成明确的有效命中结果。"
+	default:
+		return "已经开始留下实操过程记录，但当前还需要继续补足有效命中结果。"
+	}
+}
+
+func buildAWDAction(analysis ReviewArchiveAWDAnalysis) string {
+	if analysis.AWDSuccessCount > 0 {
+		return "建议保留关键攻击链条，后续复盘时重点总结命中步骤和复用条件。"
+	}
+	return "建议先回放关键访问和攻击步骤，再继续补足一次完整的有效命中样本。"
 }
 
 func recommendationReasonSummary(

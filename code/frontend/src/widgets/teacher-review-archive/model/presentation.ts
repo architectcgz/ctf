@@ -17,8 +17,8 @@ export const REVIEW_ARCHIVE_SUMMARY_COPY = {
   correctSubmissionHint: '归档内命中 Flag 的提交次数',
   latestActivityLabel: '最近活跃',
   latestActivityHint: '归档内最后一条训练活动',
-  skillTitle: '能力画像',
-  skillSubtitle: '优先识别当前最强与最弱的训练维度。',
+  skillTitle: '六维分布',
+  skillSubtitle: '保留六维得分分布，用作当前训练事实展示。',
 } as const
 
 type ReviewArchiveSummaryCardTone = 'primary' | 'warning' | 'neutral'

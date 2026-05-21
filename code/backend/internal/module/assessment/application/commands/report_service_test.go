@@ -839,14 +839,14 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 		t.Fatal("expected teaching observations to be generated")
 	}
 
-	closure := findObservation(data.TeacherObservations.Items, "training_closure")
-	if closure == nil || closure.Severity != "good" {
-		t.Fatalf("expected training_closure observation, got %#v", closure)
+	reflection := findObservation(data.TeacherObservations.Items, "reflection_status")
+	if reflection == nil || reflection.Severity != "good" {
+		t.Fatalf("expected reflection_status observation, got %#v", reflection)
 	}
 
-	handsOn := findObservation(data.TeacherObservations.Items, "hands_on_depth")
-	if handsOn == nil || handsOn.Severity != "good" {
-		t.Fatalf("expected hands_on_depth good observation, got %#v", handsOn)
+	awdSummary := findObservation(data.TeacherObservations.Items, "awd_summary")
+	if awdSummary == nil || awdSummary.Severity != "warning" {
+		t.Fatalf("expected awd_summary warning observation, got %#v", awdSummary)
 	}
 }
 
@@ -967,11 +967,11 @@ func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *test
 		nil,
 	)
 
-	if findObservation(observations.Items, "submission_stability") == nil {
-		t.Fatalf("expected submission_stability observation from repeated AWD failures, got %+v", observations.Items)
+	if observation := findObservation(observations.Items, "weak_direction"); observation == nil || observation.Dimension == nil || *observation.Dimension != "pwn" {
+		t.Fatalf("expected weak_direction observation from repeated AWD failures, got %+v", observations.Items)
 	}
-	if findObservation(observations.Items, "hands_on_depth") == nil {
-		t.Fatalf("expected hands_on_depth observation from AWD exploit evidence, got %+v", observations.Items)
+	if observation := findObservation(observations.Items, "awd_summary"); observation == nil || observation.Severity != "warning" {
+		t.Fatalf("expected awd_summary warning observation from AWD exploit evidence, got %+v", observations.Items)
 	}
 }
 
@@ -1169,8 +1169,8 @@ func TestBuildReviewArchiveTeachingFactSnapshotCountsRecentManualReviewsAsActivi
 		nil,
 		manualReviews,
 	)
-	if observation := findObservation(observations.Items, "low_activity"); observation != nil {
-		t.Fatalf("expected no low_activity observation when recent manual reviews keep the student active, got %+v", observation)
+	if observation := findObservation(observations.Items, "activity_status"); observation == nil || observation.Severity != "good" {
+		t.Fatalf("expected activity_status good when recent manual reviews keep the student active, got %+v", observation)
 	}
 }
 

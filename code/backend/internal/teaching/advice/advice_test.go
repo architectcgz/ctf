@@ -36,7 +36,7 @@ func TestEvaluateStudentOnlyMarksWeakDimensionsWhenEvidenceIsSufficient(t *testi
 	}
 }
 
-func TestBuildReviewArchiveObservationsKeepsProcessSignalsAndDimensionFocusSeparate(t *testing.T) {
+func TestBuildReviewArchiveObservationsBuildsThreeLayerReviewOutput(t *testing.T) {
 	t.Parallel()
 
 	snapshot := StudentFactSnapshot{
@@ -60,31 +60,31 @@ func TestBuildReviewArchiveObservationsKeepsProcessSignalsAndDimensionFocusSepar
 		t.Fatalf("expected multiple review observations, got %+v", items)
 	}
 
-	var hasClosure, hasStability, hasHandsOn, hasDimension bool
+	var hasWeakDirection, hasActivity, hasReflection, hasAWD bool
 	for _, item := range items {
 		switch item.Code {
-		case "training_closure":
-			hasClosure = true
-			if item.Severity != SeverityAttention {
-				t.Fatalf("expected closure severity attention, got %+v", item)
-			}
-		case "submission_stability":
-			hasStability = true
+		case "weak_direction":
+			hasWeakDirection = true
 			if item.Severity != SeverityDanger {
-				t.Fatalf("expected submission stability severity danger, got %+v", item)
+				t.Fatalf("expected weak direction danger, got %+v", item)
 			}
-		case "hands_on_depth":
-			hasHandsOn = true
-		case "dimension_focus":
-			hasDimension = true
 			if item.Dimension == nil || *item.Dimension != "pwn" {
-				t.Fatalf("expected dimension focus to point at pwn, got %+v", item)
+				t.Fatalf("expected weak direction to point at pwn, got %+v", item)
 			}
+		case "activity_status":
+			hasActivity = true
+			if item.Severity != SeverityGood {
+				t.Fatalf("expected activity status good, got %+v", item)
+			}
+		case "reflection_status":
+			hasReflection = true
+		case "awd_summary":
+			hasAWD = true
 		}
 	}
 
-	if !hasClosure || !hasStability || !hasHandsOn || !hasDimension {
-		t.Fatalf("expected closure/stability/hands-on/dimension observations, got %+v", items)
+	if !hasWeakDirection || !hasActivity || !hasReflection || !hasAWD {
+		t.Fatalf("expected weak/activity/reflection/awd observations, got %+v", items)
 	}
 }
 
@@ -100,18 +100,18 @@ func TestBuildReviewArchiveObservationsAddsLowActivitySignal(t *testing.T) {
 
 	items := BuildReviewArchiveObservations(snapshot, EvaluateStudent(snapshot))
 	for _, item := range items {
-		if item.Code != "low_activity" {
+		if item.Code != "activity_status" {
 			continue
 		}
 		if item.Severity != SeverityWarning {
-			t.Fatalf("expected low_activity warning, got %+v", item)
+			t.Fatalf("expected activity_status warning, got %+v", item)
 		}
 		return
 	}
-	t.Fatalf("expected low_activity observation, got %+v", items)
+	t.Fatalf("expected activity_status observation, got %+v", items)
 }
 
-func TestBuildReviewArchiveObservationsDoesNotWarnForSingleWrongSubmission(t *testing.T) {
+func TestBuildReviewArchiveObservationsDoesNotInventWeakDirectionForSingleWrongSubmission(t *testing.T) {
 	t.Parallel()
 
 	snapshot := StudentFactSnapshot{
@@ -124,8 +124,8 @@ func TestBuildReviewArchiveObservationsDoesNotWarnForSingleWrongSubmission(t *te
 
 	items := BuildReviewArchiveObservations(snapshot, EvaluateStudent(snapshot))
 	for _, item := range items {
-		if item.Code == "submission_stability" {
-			t.Fatalf("expected no submission stability warning for single wrong submission, got %+v", item)
+		if item.Code == "weak_direction" {
+			t.Fatalf("expected no weak direction for single wrong submission, got %+v", item)
 		}
 	}
 }
@@ -210,10 +210,17 @@ func TestEvaluateStudentDoesNotRecommendHealthyDimensionWithOnlyGoodEvidence(t *
 		},
 		evaluation,
 	)
+	var hasStableDirection bool
 	for _, item := range items {
-		if item.Code == "dimension_focus" {
-			t.Fatalf("expected no dimension_focus observation for healthy evidence-backed student, got %+v", item)
+		if item.Code == "weak_direction" {
+			t.Fatalf("expected no weak_direction observation for healthy evidence-backed student, got %+v", item)
 		}
+		if item.Code == "stable_direction" {
+			hasStableDirection = true
+		}
+	}
+	if !hasStableDirection {
+		t.Fatalf("expected stable_direction observation for healthy evidence-backed student, got %+v", items)
 	}
 }
 
@@ -264,13 +271,17 @@ func TestEvaluateStudentCreatesProgressionTargetForStableHealthyDimension(t *tes
 
 	items := BuildReviewArchiveObservations(snapshot, evaluation)
 	for _, item := range items {
-		if item.Code == "dimension_focus" {
-			t.Fatalf("expected progression-ready target not to render as dimension_focus issue, got %+v", item)
+		if item.Code == "weak_direction" {
+			t.Fatalf("expected progression-ready target not to render as weak_direction issue, got %+v", item)
+		}
+		if item.Code == "stable_direction" {
+			return
 		}
 	}
+	t.Fatalf("expected stable_direction observation, got %+v", items)
 }
 
-func TestBuildReviewArchiveObservationsUsesCoverageGapCopyForEarlySuccess(t *testing.T) {
+func TestBuildReviewArchiveObservationsKeepsEarlySuccessOutOfWeakDirection(t *testing.T) {
 	t.Parallel()
 
 	snapshot := StudentFactSnapshot{
@@ -288,21 +299,10 @@ func TestBuildReviewArchiveObservationsUsesCoverageGapCopyForEarlySuccess(t *tes
 
 	items := BuildReviewArchiveObservations(snapshot, EvaluateStudent(snapshot))
 	for _, item := range items {
-		if item.Code != "dimension_focus" {
-			continue
+		if item.Code == "weak_direction" {
+			t.Fatalf("expected no weak_direction observation for early-success sample, got %+v", item)
 		}
-		if item.Severity != SeverityAttention {
-			t.Fatalf("expected attention severity for early-success coverage gap, got %+v", item)
-		}
-		if strings.Contains(item.Summary, "高置信度薄弱") {
-			t.Fatalf("expected dimension focus to avoid explicit weak-signal copy, got %+v", item)
-		}
-		if !strings.Contains(item.Summary, "成功样本") {
-			t.Fatalf("expected dimension focus summary to mention early successful sample, got %+v", item)
-		}
-		return
 	}
-	t.Fatalf("expected dimension_focus observation, got %+v", items)
 }
 
 func TestBuildClassReviewAggregatesWeakDimensionAndRiskSignals(t *testing.T) {
@@ -543,15 +543,15 @@ func TestBuildReviewArchiveObservationsHighlightsHandsOnResultWhenProcessAndOutc
 
 	items := BuildReviewArchiveObservations(snapshot, EvaluateStudent(snapshot))
 	for _, item := range items {
-		if item.Code != "hands_on_depth" {
+		if item.Code != "awd_summary" {
 			continue
 		}
-		if !strings.Contains(item.Summary, "实战结果") {
-			t.Fatalf("expected hands_on_depth summary to mention real outcome, got %+v", item)
+		if !strings.Contains(item.Summary, "实战迁移能力") {
+			t.Fatalf("expected awd_summary to mention real outcome, got %+v", item)
 		}
 		return
 	}
-	t.Fatalf("expected hands_on_depth observation, got %+v", items)
+	t.Fatalf("expected awd_summary observation, got %+v", items)
 }
 
 func TestBuildRecommendationPlanExplainsCandidateDifficultyFallbackInReason(t *testing.T) {

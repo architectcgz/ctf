@@ -167,17 +167,17 @@ describe('TeacherStudentReviewArchive', () => {
       teacher_observations: {
         items: [
           {
-            code: 'training_closure',
-            label: '训练闭环',
+            code: 'reflection_status',
+            label: '表达与总结',
             severity: 'good',
-            summary: '已形成从利用到复盘输出的有效闭环。',
-            evidence: '命中正确提交 1 次，复盘材料 1 份。',
+            summary: '已经形成一定的复盘输出，表达与总结环节相对完整。',
+            evidence: '完成题目 1 道，writeup 1 份，通过评阅 1 条。',
           },
           {
-            code: 'hands_on_depth',
-            label: '实操深度',
+            code: 'awd_summary',
+            label: '实操与 AWD',
             severity: 'good',
-            summary: '实操交互证据比较充分，训练过程可复盘。',
+            summary: '已经在 AWD 场景拿到有效命中，说明训练结果开始具备实战迁移能力。',
             evidence: '实例/代理交互 2 次，AWD 成功 1 次。',
           },
         ],
@@ -201,8 +201,8 @@ describe('TeacherStudentReviewArchive', () => {
     expect(teacherApiMocks.getStudentReviewArchive).toHaveBeenCalledWith('stu-1')
     expect(wrapper.text()).toContain('Alice')
     expect(wrapper.text()).toContain('教学复盘归档')
-    expect(wrapper.text()).toContain('训练闭环')
-    expect(wrapper.text()).toContain('实操深度')
+    expect(wrapper.text()).toContain('表达与总结')
+    expect(wrapper.text()).toContain('实操与 AWD')
     expect(wrapper.text()).toContain('练习复盘')
     expect(wrapper.text()).toContain('AWD 复盘')
     expect(wrapper.text()).toContain('Blue Team')

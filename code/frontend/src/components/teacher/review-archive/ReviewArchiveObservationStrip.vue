@@ -31,11 +31,11 @@ function observationTitle(item: ReviewArchiveObservationItemData): string {
   <section class="observation-strip teacher-surface-section">
     <header class="observation-strip__header">
       <div>
-        <div class="observation-strip__eyebrow">Teaching Signals</div>
-        <h2 class="observation-strip__title">教学观察摘要</h2>
+        <div class="observation-strip__eyebrow">Review Output</div>
+        <h2 class="observation-strip__title">个人训练复盘</h2>
       </div>
       <p class="observation-strip__hint">
-        这些结论全部来自当前归档中的训练事件与评阅记录，没有附加 AI 黑盒判断。
+        这些结论来自训练事实与规则分析结果，重点用于帮助教师快速完成复盘。
       </p>
     </header>
 
