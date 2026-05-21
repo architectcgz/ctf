@@ -1712,37 +1712,43 @@ func normalizeOptionalReportErrorMessage(value *string) *string {
 }
 
 func writePersonalPDF(filePath string, data *personalReportData) error {
-	pdf := newReportPDF()
-	addReportTitle(pdf, "Personal Training Report")
+	pdf, err := newReportPDF()
+	if err != nil {
+		return err
+	}
+	addReportTitle(pdf, "个人训练报告")
 	addSummaryBlock(pdf, []summaryLine{
-		{Label: "Username", Value: sanitizePDFText(data.User.Username)},
-		{Label: "Class", Value: sanitizePDFText(data.User.ClassName)},
-		{Label: "Total Score", Value: fmt.Sprintf("%d", data.Stats.TotalScore)},
-		{Label: "Rank", Value: fmt.Sprintf("%d", data.Stats.Rank)},
-		{Label: "Solved", Value: fmt.Sprintf("%d", data.Stats.TotalSolved)},
-		{Label: "Attempts", Value: fmt.Sprintf("%d", data.Stats.TotalAttempts)},
+		{Label: "用户名", Value: sanitizePDFText(data.User.Username)},
+		{Label: "班级", Value: sanitizePDFText(data.User.ClassName)},
+		{Label: "总分", Value: fmt.Sprintf("%d", data.Stats.TotalScore)},
+		{Label: "排名", Value: fmt.Sprintf("%d", data.Stats.Rank)},
+		{Label: "解出题数", Value: fmt.Sprintf("%d", data.Stats.TotalSolved)},
+		{Label: "尝试次数", Value: fmt.Sprintf("%d", data.Stats.TotalAttempts)},
 	})
-	addDimensionChart(pdf, "Skill Profile", skillProfileChartRows(data.SkillProfile))
-	addDimensionStatsTable(pdf, "Dimension Details", data.DimensionStats)
+	addDimensionChart(pdf, "能力画像", skillProfileChartRows(data.SkillProfile))
+	addDimensionStatsTable(pdf, "维度明细", data.DimensionStats)
 	return pdf.OutputFileAndClose(filePath)
 }
 
 func writeClassPDF(filePath string, data *classReportData) error {
-	pdf := newReportPDF()
-	addReportTitle(pdf, "Class Training Report")
+	pdf, err := newReportPDF()
+	if err != nil {
+		return err
+	}
+	addReportTitle(pdf, "班级训练报告")
 	addSummaryBlock(pdf, []summaryLine{
-		{Label: "Class", Value: sanitizePDFText(data.ClassName)},
-		{Label: "Window", Value: fmt.Sprintf("%s to %s (%d days)", data.Window.FromDate, data.Window.ToDate, data.Window.Days)},
-		{Label: "Total Students", Value: fmt.Sprintf("%d", data.TotalStudents)},
-		{Label: "Average Score", Value: fmt.Sprintf("%.2f", data.AverageScore)},
-		{Label: "Active Rate", Value: fmt.Sprintf("%.0f%%", reviewSummaryActiveRate(data.Summary))},
-		{Label: "Recent Events", Value: fmt.Sprintf("%d", reviewSummaryRecentEvents(data.Summary))},
+		{Label: "班级", Value: sanitizePDFText(data.ClassName)},
+		{Label: "统计窗口", Value: fmt.Sprintf("%s 至 %s（%d 天）", data.Window.FromDate, data.Window.ToDate, data.Window.Days)},
+		{Label: "学生总数", Value: fmt.Sprintf("%d", data.TotalStudents)},
+		{Label: "平均分", Value: fmt.Sprintf("%.2f", data.AverageScore)},
+		{Label: "活跃率", Value: fmt.Sprintf("%.0f%%", reviewSummaryActiveRate(data.Summary))},
+		{Label: "近期事件数", Value: fmt.Sprintf("%d", reviewSummaryRecentEvents(data.Summary))},
 	})
-	addAverageChart(pdf, "Dimension Average", data.DimensionAverages)
-	addClassTrendTable(pdf, "Trend Snapshot", data.Trend)
-	addDistributionTable(pdf, "Category Distribution", data.CategoryDistribution)
-	addDistributionTable(pdf, "Difficulty Distribution", data.DifficultyDistribution)
-	addTopStudentsTable(pdf, "Top Students", data.TopStudents)
+	addAverageChart(pdf, "维度平均分", data.DimensionAverages)
+	addClassTrendTable(pdf, "趋势快照", data.Trend)
+	addDistributionTable(pdf, "分类分布", data.CategoryDistribution)
+	addDistributionTable(pdf, "难度分布", data.DifficultyDistribution)
+	addTopStudentsTable(pdf, "班级前列学生", data.TopStudents)
 	addContestMigrationSection(pdf, data.ContestMigration)
 	addClassReviewOutlineTable(pdf, data.Review)
 	return pdf.OutputFileAndClose(filePath)
@@ -1920,17 +1926,20 @@ type summaryLine struct {
 	Value string
 }
 
-func newReportPDF() *gofpdf.Fpdf {
+func newReportPDF() (*gofpdf.Fpdf, error) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
+	if err := registerReportPDFFonts(pdf); err != nil {
+		return nil, err
+	}
 	pdf.SetMargins(16, 16, 16)
 	pdf.SetAutoPageBreak(true, 16)
 	pdf.AddPage()
-	pdf.SetFont("Helvetica", "", 12)
-	return pdf
+	setReportPDFFont(pdf, "", 12)
+	return pdf, nil
 }
 
 func addReportTitle(pdf *gofpdf.Fpdf, title string) {
-	pdf.SetFont("Helvetica", "B", 18)
+	setReportPDFFont(pdf, "B", 18)
 	pdf.CellFormat(0, 12, sanitizePDFText(title), "", 1, "L", false, 0, "")
 	pdf.SetDrawColor(180, 180, 180)
 	pdf.Line(16, pdf.GetY(), 194, pdf.GetY())
@@ -1938,9 +1947,9 @@ func addReportTitle(pdf *gofpdf.Fpdf, title string) {
 }
 
 func addSummaryBlock(pdf *gofpdf.Fpdf, lines []summaryLine) {
-	pdf.SetFont("Helvetica", "B", 14)
-	pdf.CellFormat(0, 8, "Summary", "", 1, "L", false, 0, "")
-	pdf.SetFont("Helvetica", "", 11)
+	setReportPDFFont(pdf, "B", 14)
+	pdf.CellFormat(0, 8, "摘要", "", 1, "L", false, 0, "")
+	setReportPDFFont(pdf, "", 11)
 	for _, line := range lines {
 		pdf.CellFormat(45, 7, sanitizePDFText(line.Label), "0", 0, "L", false, 0, "")
 		pdf.CellFormat(0, 7, sanitizePDFText(line.Value), "0", 1, "L", false, 0, "")
@@ -1949,12 +1958,12 @@ func addSummaryBlock(pdf *gofpdf.Fpdf, lines []summaryLine) {
 }
 
 func addDimensionChart(pdf *gofpdf.Fpdf, title string, rows []chartRow) {
-	pdf.SetFont("Helvetica", "B", 14)
+	setReportPDFFont(pdf, "B", 14)
 	pdf.CellFormat(0, 8, sanitizePDFText(title), "", 1, "L", false, 0, "")
 	for _, row := range rows {
 		ensurePDFSpace(pdf, 12)
-		pdf.SetFont("Helvetica", "", 10)
-		pdf.CellFormat(28, 7, sanitizePDFText(row.Label), "", 0, "L", false, 0, "")
+		setReportPDFFont(pdf, "", 10)
+		pdf.CellFormat(28, 7, sanitizePDFText(localizeReportTerm(row.Label)), "", 0, "L", false, 0, "")
 		x := pdf.GetX()
 		y := pdf.GetY() + 2
 		pdf.SetFillColor(232, 236, 241)
@@ -1976,23 +1985,23 @@ func addAverageChart(pdf *gofpdf.Fpdf, title string, rows []assessmentdomain.Cla
 }
 
 func addDimensionStatsTable(pdf *gofpdf.Fpdf, title string, rows []assessmentdomain.ReportDimensionStat) {
-	pdf.SetFont("Helvetica", "B", 14)
+	setReportPDFFont(pdf, "B", 14)
 	pdf.CellFormat(0, 8, sanitizePDFText(title), "", 1, "L", false, 0, "")
-	writePDFTableHeader(pdf, []string{"Dimension", "Solved", "Total"})
-	pdf.SetFont("Helvetica", "", 10)
+	writePDFTableHeader(pdf, []string{"维度", "解出题数", "总题数"})
+	setReportPDFFont(pdf, "", 10)
 	for _, row := range rows {
 		ensurePDFSpace(pdf, 8)
-		pdf.CellFormat(70, 7, sanitizePDFText(row.Dimension), "1", 0, "L", false, 0, "")
+		pdf.CellFormat(70, 7, sanitizePDFText(localizeReportTerm(row.Dimension)), "1", 0, "L", false, 0, "")
 		pdf.CellFormat(40, 7, fmt.Sprintf("%d", row.Solved), "1", 0, "C", false, 0, "")
 		pdf.CellFormat(40, 7, fmt.Sprintf("%d", row.Total), "1", 1, "C", false, 0, "")
 	}
 }
 
 func addTopStudentsTable(pdf *gofpdf.Fpdf, title string, rows []assessmentdomain.ClassTopStudent) {
-	pdf.SetFont("Helvetica", "B", 14)
+	setReportPDFFont(pdf, "B", 14)
 	pdf.CellFormat(0, 8, sanitizePDFText(title), "", 1, "L", false, 0, "")
-	writePDFTableHeader(pdf, []string{"Rank", "Username", "Score"})
-	pdf.SetFont("Helvetica", "", 10)
+	writePDFTableHeader(pdf, []string{"排名", "用户名", "分数"})
+	setReportPDFFont(pdf, "", 10)
 	for _, row := range rows {
 		ensurePDFSpace(pdf, 8)
 		pdf.CellFormat(30, 7, fmt.Sprintf("%d", row.Rank), "1", 0, "C", false, 0, "")
@@ -2006,10 +2015,10 @@ func addClassTrendTable(pdf *gofpdf.Fpdf, title string, trend *teachingquerycont
 	if len(points) == 0 {
 		return
 	}
-	pdf.SetFont("Helvetica", "B", 14)
+	setReportPDFFont(pdf, "B", 14)
 	pdf.CellFormat(0, 8, sanitizePDFText(title), "", 1, "L", false, 0, "")
-	writePDFCustomTableHeader(pdf, []string{"Date", "Active", "Events", "Solves"}, []float64{42, 36, 36, 36})
-	pdf.SetFont("Helvetica", "", 10)
+	writePDFCustomTableHeader(pdf, []string{"日期", "活跃学生", "事件数", "解题数"}, []float64{42, 36, 36, 36})
+	setReportPDFFont(pdf, "", 10)
 	for _, point := range points {
 		ensurePDFSpace(pdf, 8)
 		writePDFTableRow(pdf, []float64{42, 36, 36, 36}, []string{
@@ -2025,14 +2034,14 @@ func addDistributionTable(pdf *gofpdf.Fpdf, title string, rows []assessmentdomai
 	if len(rows) == 0 {
 		return
 	}
-	pdf.SetFont("Helvetica", "B", 14)
+	setReportPDFFont(pdf, "B", 14)
 	pdf.CellFormat(0, 8, sanitizePDFText(title), "", 1, "L", false, 0, "")
-	writePDFCustomTableHeader(pdf, []string{"Key", "Solved Students", "Covered", "Total"}, []float64{46, 44, 36, 36})
-	pdf.SetFont("Helvetica", "", 10)
+	writePDFCustomTableHeader(pdf, []string{"项目", "解出学生数", "已覆盖", "总数"}, []float64{46, 44, 36, 36})
+	setReportPDFFont(pdf, "", 10)
 	for _, row := range rows {
 		ensurePDFSpace(pdf, 8)
 		writePDFTableRow(pdf, []float64{46, 44, 36, 36}, []string{
-			row.Key,
+			localizeReportTerm(row.Key),
 			fmt.Sprintf("%d", row.SolvedStudents),
 			fmt.Sprintf("%d", row.CoveredChallenges),
 			fmt.Sprintf("%d", row.TotalChallenges),
@@ -2041,14 +2050,14 @@ func addDistributionTable(pdf *gofpdf.Fpdf, title string, rows []assessmentdomai
 }
 
 func addContestMigrationSection(pdf *gofpdf.Fpdf, summary assessmentdomain.ClassContestMigrationSummary) {
-	pdf.SetFont("Helvetica", "B", 14)
-	pdf.CellFormat(0, 8, "Contest Migration", "", 1, "L", false, 0, "")
+	setReportPDFFont(pdf, "B", 14)
+	pdf.CellFormat(0, 8, "竞赛迁移情况", "", 1, "L", false, 0, "")
 	addSummaryBlock(pdf, []summaryLine{
-		{Label: "Participating Students", Value: fmt.Sprintf("%d", summary.ParticipatingStudents)},
-		{Label: "Successful Students", Value: fmt.Sprintf("%d", summary.SuccessfulStudents)},
-		{Label: "Attack Events", Value: fmt.Sprintf("%d", summary.AttackCount)},
-		{Label: "Success Events", Value: fmt.Sprintf("%d", summary.SuccessCount)},
-		{Label: "Success Dimensions", Value: strings.Join(summary.SuccessDimensions, ", ")},
+		{Label: "参赛学生数", Value: fmt.Sprintf("%d", summary.ParticipatingStudents)},
+		{Label: "成功学生数", Value: fmt.Sprintf("%d", summary.SuccessfulStudents)},
+		{Label: "攻击事件数", Value: fmt.Sprintf("%d", summary.AttackCount)},
+		{Label: "成功事件数", Value: fmt.Sprintf("%d", summary.SuccessCount)},
+		{Label: "成功维度", Value: strings.Join(localizeReportTerms(summary.SuccessDimensions), "、")},
 	})
 }
 
@@ -2057,16 +2066,16 @@ func addClassReviewOutlineTable(pdf *gofpdf.Fpdf, review *teachingquerycontracts
 	if len(items) == 0 {
 		return
 	}
-	pdf.SetFont("Helvetica", "B", 14)
-	pdf.CellFormat(0, 8, "Review Outline", "", 1, "L", false, 0, "")
-	writePDFCustomTableHeader(pdf, []string{"Code", "Severity", "Dimension", "Students"}, []float64{42, 32, 36, 68})
-	pdf.SetFont("Helvetica", "", 10)
+	setReportPDFFont(pdf, "B", 14)
+	pdf.CellFormat(0, 8, "复盘提要", "", 1, "L", false, 0, "")
+	writePDFCustomTableHeader(pdf, []string{"编码", "级别", "维度", "学生"}, []float64{42, 32, 36, 68})
+	setReportPDFFont(pdf, "", 10)
 	for _, item := range items {
 		ensurePDFSpace(pdf, 8)
 		writePDFTableRow(pdf, []float64{42, 32, 36, 68}, []string{
 			item.Code,
-			item.Severity,
-			item.Dimension,
+			localizeReportTerm(item.Severity),
+			localizeReportTerm(item.Dimension),
 			reviewStudentNames(item.Students),
 		})
 	}
@@ -2074,9 +2083,9 @@ func addClassReviewOutlineTable(pdf *gofpdf.Fpdf, review *teachingquerycontracts
 
 func writePDFTableHeader(pdf *gofpdf.Fpdf, headers []string) {
 	pdf.SetFillColor(220, 230, 241)
-	pdf.SetFont("Helvetica", "B", 10)
+	setReportPDFFont(pdf, "B", 10)
 	widths := []float64{70, 40, 40}
-	if len(headers) == 3 && headers[0] == "Rank" {
+	if len(headers) == 3 && headers[0] == "排名" {
 		widths = []float64{30, 90, 30}
 	}
 	for idx, header := range headers {
@@ -2087,7 +2096,7 @@ func writePDFTableHeader(pdf *gofpdf.Fpdf, headers []string) {
 
 func writePDFCustomTableHeader(pdf *gofpdf.Fpdf, headers []string, widths []float64) {
 	pdf.SetFillColor(220, 230, 241)
-	pdf.SetFont("Helvetica", "B", 10)
+	setReportPDFFont(pdf, "B", 10)
 	for idx, header := range headers {
 		pdf.CellFormat(widths[idx], 7, sanitizePDFText(header), "1", 0, "C", true, 0, "")
 	}
@@ -2133,15 +2142,88 @@ func sanitizePDFText(value string) string {
 	if value == "" {
 		return "-"
 	}
-	buf := strings.Builder{}
-	for _, r := range value {
-		if r >= 32 && r <= 126 {
-			buf.WriteRune(r)
-			continue
-		}
-		buf.WriteRune('?')
+	value = strings.ReplaceAll(value, "\r\n", " ")
+	value = strings.ReplaceAll(value, "\n", " ")
+	value = strings.ReplaceAll(value, "\t", " ")
+	return strings.Join(strings.Fields(value), " ")
+}
+
+func localizeReportTerms(values []string) []string {
+	items := make([]string, 0, len(values))
+	for _, value := range values {
+		items = append(items, localizeReportTerm(value))
 	}
-	return buf.String()
+	return items
+}
+
+func localizeReportTerm(value string) string {
+	normalized := strings.TrimSpace(strings.ToLower(value))
+	switch normalized {
+	case "":
+		return ""
+	case "final":
+		return "最终快照"
+	case contestcontracts.ContestStatusDraft:
+		return "草稿"
+	case contestcontracts.ContestStatusRegistration:
+		return "报名中"
+	case contestcontracts.ContestStatusFrozen:
+		return "冻结中"
+	case contestcontracts.ContestStatusEnded:
+		return "已结束"
+	case contestcontracts.AWDRoundStatusPending:
+		return "待开始"
+	case contestcontracts.ContestStatusRunning:
+		return "进行中"
+	case contestcontracts.AWDRoundStatusFinished:
+		return "已完成"
+	case contestcontracts.AWDServiceStatusUp:
+		return "正常"
+	case contestcontracts.AWDServiceStatusDown:
+		return "下线"
+	case contestcontracts.AWDServiceStatusCompromised:
+		return "失陷"
+	case contestcontracts.AWDAttackTypeFlagCapture:
+		return "夺旗"
+	case contestcontracts.AWDAttackTypeServiceExploit:
+		return "服务利用"
+	case contestcontracts.AWDAttackSourceManual:
+		return "手工记录"
+	case contestcontracts.AWDAttackSourceSubmission:
+		return "提交记录"
+	case contestcontracts.AWDTrafficSourceRuntimeProxy:
+		return "代理流量"
+	case "critical":
+		return "高"
+	case "warning":
+		return "中"
+	case "good":
+		return "低"
+	case taxonomy.DimensionWeb:
+		return "Web"
+	case taxonomy.DimensionPwn:
+		return "Pwn"
+	case taxonomy.DimensionReverse:
+		return "逆向"
+	case taxonomy.DimensionCrypto:
+		return "密码"
+	case taxonomy.DimensionMisc:
+		return "综合"
+	case taxonomy.DimensionForensics:
+		return "取证"
+	case taxonomy.DifficultyBeginner:
+		return "入门"
+	case taxonomy.DifficultyEasy:
+		return "简单"
+	case taxonomy.DifficultyMedium:
+		return "中等"
+	case taxonomy.DifficultyHard:
+		return "困难"
+	case taxonomy.DifficultyInsane:
+		return "极难"
+	default:
+		return value
+	}
 }
 
 func mustNewExcelStyle(file *excelize.File, style *excelize.Style) int {

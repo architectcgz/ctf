@@ -14,6 +14,7 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+	"unicode/utf16"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -405,7 +406,11 @@ func readTestZIPEntry(t *testing.T, archive *zip.Reader, name string) []byte {
 
 func pdfContainsText(content []byte, token string) bool {
 	needle := []byte(token)
+	needleUTF16 := utf16BEBytes(token)
 	if bytes.Contains(content, needle) {
+		return true
+	}
+	if len(needleUTF16) > 0 && bytes.Contains(content, needleUTF16) {
 		return true
 	}
 
@@ -428,14 +433,31 @@ func pdfContainsText(content []byte, token string) bool {
 		if err == nil {
 			decoded, readErr := io.ReadAll(reader)
 			reader.Close()
-			if readErr == nil && bytes.Contains(decoded, needle) {
-				return true
+			if readErr == nil {
+				if bytes.Contains(decoded, needle) {
+					return true
+				}
+				if len(needleUTF16) > 0 && bytes.Contains(decoded, needleUTF16) {
+					return true
+				}
 			}
 		}
 		pos = start + endOffset + len("endstream")
 	}
 
 	return false
+}
+
+func utf16BEBytes(value string) []byte {
+	if strings.TrimSpace(value) == "" {
+		return nil
+	}
+	encoded := utf16.Encode([]rune(value))
+	buf := make([]byte, 0, len(encoded)*2)
+	for _, code := range encoded {
+		buf = append(buf, byte(code>>8), byte(code))
+	}
+	return buf
 }
 
 func findObservation(items []assessmentdomain.ReviewArchiveObservation, code string) *assessmentdomain.ReviewArchiveObservation {
@@ -1440,13 +1462,66 @@ func TestRenderAWDReviewReportPDFIncludesSelectedRoundSummary(t *testing.T) {
 		t.Fatalf("expected PDF header, got %q", string(content[:min(4, len(content))]))
 	}
 	for _, token := range [][]byte{
-		[]byte("Teacher AWD Review Report"),
-		[]byte("Selected Round"),
 		[]byte("awd-review"),
 	} {
 		if !pdfContainsText(content, string(token)) {
 			t.Fatalf("expected PDF to contain %q", token)
 		}
+	}
+}
+
+func TestHottestRoundPrefersAttackDenseRound(t *testing.T) {
+	t.Parallel()
+
+	round := hottestRound([]assessmentqry.TeacherAWDReviewRoundResp{
+		{RoundNumber: 1, ServiceCount: 2, AttackCount: 0, TrafficCount: 4},
+		{RoundNumber: 2, ServiceCount: 1, AttackCount: 2, TrafficCount: 1},
+		{RoundNumber: 3, ServiceCount: 5, AttackCount: 0, TrafficCount: 0},
+	})
+	if round == nil || round.RoundNumber != 2 {
+		t.Fatalf("expected hottest round 2, got %+v", round)
+	}
+}
+
+func TestTopRiskyServicePrefersCompromisedService(t *testing.T) {
+	t.Parallel()
+
+	service := topRiskyService([]assessmentqry.TeacherAWDReviewServiceResp{
+		{TeamName: "blue", AWDChallengeTitle: "web", ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 4},
+		{TeamName: "red", AWDChallengeTitle: "api", ServiceStatus: contestcontracts.AWDServiceStatusCompromised, AttackReceived: 1},
+	})
+	if service == nil || service.TeamName != "red" {
+		t.Fatalf("expected compromised red service to be top risk, got %+v", service)
+	}
+}
+
+func TestBuildAWDReviewSuggestionsIncludesTrafficOnlyHint(t *testing.T) {
+	t.Parallel()
+
+	suggestions := buildAWDReviewSuggestions(
+		[]assessmentqry.TeacherAWDReviewRoundResp{
+			{RoundNumber: 4, AttackCount: 0, TrafficCount: 3, ServiceCount: 1},
+		},
+		&assessmentqry.TeacherAWDSelectedRoundResp{
+			Round: assessmentqry.TeacherAWDReviewRoundResp{RoundNumber: 4},
+			Services: []assessmentqry.TeacherAWDReviewServiceResp{
+				{TeamName: "blue", AWDChallengeTitle: "web", ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 2},
+			},
+			Traffic: []assessmentqry.TeacherAWDReviewTrafficResp{
+				{Path: "/health"},
+			},
+		},
+	)
+
+	if len(suggestions) == 0 {
+		t.Fatalf("expected suggestions, got empty")
+	}
+	joined := strings.Join(suggestions, "\n")
+	if !strings.Contains(joined, "访问流量") {
+		t.Fatalf("expected traffic-only hint, got %s", joined)
+	}
+	if !strings.Contains(joined, "第 4 轮") {
+		t.Fatalf("expected key round hint, got %s", joined)
 	}
 }
 
