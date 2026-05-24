@@ -10,7 +10,7 @@ import teacherAwdReviewDirectorySectionSource from '@/widgets/teacher-awd-review
 
 const pushMock = vi.fn()
 
-const teacherApiMocks = vi.hoisted(() => ({
+const teachingApiMocks = vi.hoisted(() => ({
   listTeacherAWDReviews: vi.fn(),
 }))
 
@@ -22,16 +22,16 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/teaching', () => teachingApiMocks)
 
 describe('TeacherAWDReviewIndex', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     setActivePinia(createPinia())
     pushMock.mockReset()
-    Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
+    Object.values(teachingApiMocks).forEach((mock) => mock.mockReset())
 
-    teacherApiMocks.listTeacherAWDReviews.mockResolvedValue({
+    teachingApiMocks.listTeacherAWDReviews.mockResolvedValue({
       list: [
         {
           id: 'contest-1',
@@ -73,7 +73,7 @@ describe('TeacherAWDReviewIndex', () => {
 
     await flushPromises()
 
-    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledWith({
+    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenCalledWith({
       status: undefined,
       keyword: undefined,
       page: 1,
@@ -109,18 +109,18 @@ describe('TeacherAWDReviewIndex', () => {
 
     expect(statusSelect.exists()).toBe(true)
     expect(keywordInput.exists()).toBe(true)
-    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
+    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
 
     await statusSelect.setValue('ended')
     await keywordInput.setValue('期末')
 
-    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
+    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
 
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(2)
-    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenLastCalledWith({
+    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(2)
+    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenLastCalledWith({
       status: 'ended',
       keyword: '期末',
       page: 1,
