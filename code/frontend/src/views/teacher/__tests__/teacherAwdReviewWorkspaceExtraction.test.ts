@@ -12,9 +12,9 @@ import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/TeacherA
 describe('Teacher AWD review workspace extraction', () => {
   it('详情路由页应收敛为 widget 组合层', () => {
     expect(awdReviewDetailSource).toContain(
-      "import { TeacherAWDReviewWorkspace } from '@/widgets/awd-review-workspace'"
+      "import { AwdReviewWorkspace } from '@/widgets/awd-review-workspace'"
     )
-    expect(awdReviewDetailSource).toContain('<TeacherAWDReviewWorkspace')
+    expect(awdReviewDetailSource).toContain('<AwdReviewWorkspace')
     expect(awdReviewDetailSource).not.toContain('class="teacher-management-shell')
     expect(awdReviewDetailSource).not.toContain('class="teacher-topbar')
 

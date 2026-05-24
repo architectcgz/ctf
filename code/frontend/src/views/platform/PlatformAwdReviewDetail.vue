@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TeacherAWDReviewWorkspace } from '@/widgets/awd-review-workspace'
+import { AwdReviewWorkspace } from '@/widgets/awd-review-workspace'
 import { useAwdReviewDetailPage } from '@/features/awd-review-detail-workspace'
 
 const {
@@ -32,7 +32,7 @@ const {
 </script>
 
 <template>
-  <TeacherAWDReviewWorkspace
+  <AwdReviewWorkspace
     :polling="polling"
     :loading="loading"
     :error="error"

@@ -122,7 +122,7 @@
   - `code/frontend/src/__tests__/architectureAllowlist.ts`
   - `.harness/reuse-decisions/frontend-architecture-review-prompt-and-platform-feature-split.md`
 - 依赖：
-  - 继续复用 `TeacherAWDReviewWorkspace` widget 与 `useAwdReviewExportFlow`。
+  - 继续复用 `AwdReviewWorkspace` widget 与 `useAwdReviewExportFlow`。
   - AWD 详情页返回索引与轮次切换继续沿用 `teachingWorkspaceRouting` 做 role-aware 路由解析。
 - 验证：
   - `git diff --check -- <touched files>`

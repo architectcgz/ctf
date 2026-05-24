@@ -7,9 +7,9 @@ import teacherAwdReviewEvidenceGridSource from '@/components/teacher/awd-review/
 describe('Teacher AWD review evidence extraction', () => {
   it('应将服务/攻击/流量证据区下沉到独立组件', () => {
     expect(awdReviewDetailSource).toContain(
-      "import { TeacherAWDReviewWorkspace } from '@/widgets/awd-review-workspace'"
+      "import { AwdReviewWorkspace } from '@/widgets/awd-review-workspace'"
     )
-    expect(awdReviewDetailSource).toContain('<TeacherAWDReviewWorkspace')
+    expect(awdReviewDetailSource).toContain('<AwdReviewWorkspace')
     expect(awdReviewDetailSource).not.toContain('data-testid="awd-review-service-id"')
     expect(awdReviewDetailSource).not.toContain('data-testid="awd-review-attack-service-id"')
     expect(awdReviewDetailSource).not.toContain('data-testid="awd-review-traffic-service-id"')

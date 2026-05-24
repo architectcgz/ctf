@@ -7,9 +7,9 @@ import teacherAwdReviewRoundSelectorSource from '@/components/teacher/awd-review
 describe('Teacher AWD review round selector extraction', () => {
   it('应将轮次切换区块下沉到独立组件', () => {
     expect(awdReviewDetailSource).toContain(
-      "import { TeacherAWDReviewWorkspace } from '@/widgets/awd-review-workspace'"
+      "import { AwdReviewWorkspace } from '@/widgets/awd-review-workspace'"
     )
-    expect(awdReviewDetailSource).toContain('<TeacherAWDReviewWorkspace')
+    expect(awdReviewDetailSource).toContain('<AwdReviewWorkspace')
     expect(awdReviewDetailSource).not.toContain('class="awd-review-round-list custom-scrollbar"')
     expect(awdReviewDetailSource).not.toContain('默认展示整场总览；可切到单轮查看本轮服务、攻击和流量证据。')
 

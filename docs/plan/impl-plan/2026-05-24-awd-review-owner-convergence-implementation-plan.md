@@ -35,6 +35,7 @@
 - 详情 workflow 里的导出流也仍从 `teacher-awd-review` feature 读取。
 - 迁移到中性 owner 后，目录页共享 feature 对外仍暴露 `useTeacherAwdReviewIndex`，teacher-specific 命名还在泄漏共享边界。
 - 详情页共享 feature 对外仍暴露 `useTeacherAwdReviewExportFlow`，teacher-specific 命名同样还在泄漏共享边界。
+- 详情页共享 widget 对外仍暴露 `TeacherAWDReviewWorkspace`，platform route view 还在消费 teacher-specific symbol。
 
 ## 任务切片
 
@@ -128,6 +129,34 @@
   - 共享 feature public API 是否已经移除 teacher-specific 导出流名称。
   - AWD 详情 workflow 是否全部切到新导出流 owner。
   - 旧导出流文件是否已删除而不是保留兼容出口。
+
+### Slice 4：收口 AWD 详情页共享 widget 公共导出命名
+
+- 目标：
+  - 把 `widgets/awd-review-workspace` 的公共导出 `TeacherAWDReviewWorkspace` 收口为中性 `AwdReviewWorkspace`。
+  - 更新 teacher / platform 详情 route view 与源码断言测试。
+  - 不保留旧导出别名。
+- 预期改动：
+  - `.harness/reuse-decisions/awd-review-owner-convergence.md`
+  - `docs/plan/impl-plan/2026-05-24-awd-review-owner-convergence-implementation-plan.md`
+  - `docs/plan/impl-plan/2026-05-24-platform-route-owner-decoupling-implementation-plan.md`
+  - `code/frontend/src/widgets/awd-review-workspace/index.ts`
+  - `code/frontend/src/views/teacher/TeacherAWDReviewDetail.vue`
+  - `code/frontend/src/views/platform/PlatformAwdReviewDetail.vue`
+  - `code/frontend/src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts`
+  - `code/frontend/src/views/teacher/__tests__/teacherAwdReviewWorkspaceExtraction.test.ts`
+  - `code/frontend/src/views/teacher/__tests__/teacherAwdReviewEvidenceExtraction.test.ts`
+  - `code/frontend/src/views/teacher/__tests__/teacherAwdReviewAnalysisExtraction.test.ts`
+  - `code/frontend/src/views/teacher/__tests__/teacherAwdReviewRoundSelectorExtraction.test.ts`
+- 验证：
+  - `rg -n "TeacherAWDReviewWorkspace|AwdReviewWorkspace" code/frontend/src/views/teacher code/frontend/src/views/platform code/frontend/src/widgets/awd-review-workspace/index.ts`
+  - `npm run test:run -- src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts src/views/teacher/__tests__/teacherAwdReviewWorkspaceExtraction.test.ts src/views/teacher/__tests__/teacherAwdReviewEvidenceExtraction.test.ts src/views/teacher/__tests__/teacherAwdReviewAnalysisExtraction.test.ts src/views/teacher/__tests__/teacherAwdReviewRoundSelectorExtraction.test.ts src/views/platform/__tests__/PlatformAwdReviewDetail.test.ts src/__tests__/architectureBoundaries.test.ts src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+  - `npm run typecheck`
+  - `bash scripts/check-consistency.sh`
+  - `git diff --check -- <touched files>`
+- Review focus：
+  - 平台 / 教师详情 route view 是否都只通过中性 widget 导出消费共享详情壳层。
+  - 旧导出名是否已从公共出口彻底退场。
 
 ## 风险
 

@@ -67,4 +67,5 @@ AWD 复盘已经同时被 teacher / platform 两侧 route view 复用，但共�
 - AWD 复盘共享 owner 统一从中性目录暴露，teacher / platform route view 不再直连 role-specific `teacher-awd-review` 路径。
 - AWD 目录页共享 feature 对外不再暴露 `useTeacherAwdReviewIndex` 这类 teacher-specific 命名。
 - AWD 详情页共享 feature 对外不再暴露 `useTeacherAwdReviewExportFlow` 这类 teacher-specific 命名。
+- AWD 详情页共享 widget 对外不再暴露 `TeacherAWDReviewWorkspace` 这类 teacher-specific 命名。
 - 仍然带有 `Teacher*` 前缀的内部 widget 名称先视为实现细节，不在本轮扩大为命名清洗。

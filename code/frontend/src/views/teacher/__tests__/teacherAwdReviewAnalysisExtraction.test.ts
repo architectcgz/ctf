@@ -7,9 +7,9 @@ import teacherAwdReviewAnalysisSectionSource from '@/components/teacher/awd-revi
 describe('Teacher AWD review analysis extraction', () => {
   it('应将轮次分析与队伍目录区下沉到独立组件', () => {
     expect(awdReviewDetailSource).toContain(
-      "import { TeacherAWDReviewWorkspace } from '@/widgets/awd-review-workspace'"
+      "import { AwdReviewWorkspace } from '@/widgets/awd-review-workspace'"
     )
-    expect(awdReviewDetailSource).toContain('<TeacherAWDReviewWorkspace')
+    expect(awdReviewDetailSource).toContain('<AwdReviewWorkspace')
     expect(awdReviewDetailSource).not.toContain('class="awd-review-round-grid"')
     expect(awdReviewDetailSource).not.toContain('class="teacher-directory"')
 
