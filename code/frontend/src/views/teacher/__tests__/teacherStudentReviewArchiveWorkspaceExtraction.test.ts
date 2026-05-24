@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
+import reviewArchiveWidgetIndexSource from '@/widgets/teacher-review-archive/index.ts?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue?raw'
 import reviewArchiveStateSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveState.vue?raw'
 import reviewArchiveSummarySectionSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveSummarySection.vue?raw'
@@ -8,6 +9,12 @@ import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewA
 
 describe('Teacher student review archive workspace extraction', () => {
   it('路由页应收敛为 feature model 与 widget 组合层', () => {
+    expect(reviewArchiveWidgetIndexSource).toContain(
+      "export { default as ReviewArchiveWorkspace } from './TeacherReviewArchiveWorkspace.vue'"
+    )
+    expect(reviewArchiveWidgetIndexSource).not.toContain('TeacherReviewArchiveState')
+    expect(reviewArchiveWidgetIndexSource).not.toContain('TeacherReviewArchiveSummarySection')
+
     expect(reviewArchiveSource).toContain(
       "import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'"
     )
