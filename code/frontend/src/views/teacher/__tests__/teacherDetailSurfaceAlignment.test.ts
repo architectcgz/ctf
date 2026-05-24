@@ -12,7 +12,7 @@ import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.
 import studentInsightWriteupsSource from '@/components/teacher/student-insight/StudentInsightWriteupsSection.vue?raw'
 import studentInsightManualReviewSource from '@/components/teacher/student-insight/StudentInsightManualReviewSection.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
-import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue?raw'
+import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue?raw'
 import reviewArchiveSummarySectionSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveSummarySection.vue?raw'
 
 const teacherSurfaceSource = readFileSync(

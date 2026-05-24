@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
 import type { ReviewArchiveData } from '@/api/contracts'
-import TeacherReviewArchiveWorkspace from './TeacherReviewArchiveWorkspace.vue'
+import ReviewArchiveWorkspace from './ReviewArchiveWorkspace.vue'
 
 function createArchive(): ReviewArchiveData {
   return {
@@ -45,7 +45,7 @@ function createArchive(): ReviewArchiveData {
 
 describe('TeacherReviewArchiveWorkspace', () => {
   it('应透传 hero 和错误态重载事件', async () => {
-    const wrapper = mount(TeacherReviewArchiveWorkspace, {
+    const wrapper = mount(ReviewArchiveWorkspace, {
       props: {
         archive: null,
         loading: false,
@@ -75,7 +75,7 @@ describe('TeacherReviewArchiveWorkspace', () => {
   })
 
   it('应渲染摘要指标和排序后的能力画像', () => {
-    const wrapper = mount(TeacherReviewArchiveWorkspace, {
+    const wrapper = mount(ReviewArchiveWorkspace, {
       props: {
         archive: createArchive(),
         loading: false,

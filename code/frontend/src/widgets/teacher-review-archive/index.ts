@@ -1,1 +1,1 @@
-export { default as ReviewArchiveWorkspace } from './TeacherReviewArchiveWorkspace.vue'
+export { default as ReviewArchiveWorkspace } from './ReviewArchiveWorkspace.vue'

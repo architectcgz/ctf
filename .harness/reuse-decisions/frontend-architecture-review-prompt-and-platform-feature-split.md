@@ -151,6 +151,7 @@ refactor_existing
 - `code/frontend/src/components/teacher/reports/index.ts`
 - `code/frontend/src/widgets/teacher-student-review-workspace/index.ts`
 - `code/frontend/src/widgets/teacher-student-review-workspace/StudentReviewWorkspace.vue`
+- `code/frontend/src/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue`
 - `code/frontend/src/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue`
 - `code/frontend/src/views/teacher/ClassManagement.vue`
 - `code/frontend/src/views/teacher/TeacherStudentManagement.vue`
