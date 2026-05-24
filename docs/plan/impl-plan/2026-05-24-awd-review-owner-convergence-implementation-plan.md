@@ -30,12 +30,11 @@
 ## 当前结论
 
 - AWD 复盘共享逻辑已经被 teacher / platform 两侧共同使用。
-- 平台目录页仍直接依赖 `@/features/teacher-awd-review`。
-- 平台详情页和 teacher 详情页共享 widget，但 widget owner 仍位于 `@/widgets/teacher-awd-review`。
-- 详情 workflow 里的导出流也仍从 `teacher-awd-review` feature 读取。
-- 迁移到中性 owner 后，目录页共享 feature 对外仍暴露 `useTeacherAwdReviewIndex`，teacher-specific 命名还在泄漏共享边界。
-- 详情页共享 feature 对外仍暴露 `useTeacherAwdReviewExportFlow`，teacher-specific 命名同样还在泄漏共享边界。
-- 详情页共享 widget 对外仍暴露 `TeacherAWDReviewWorkspace`，platform route view 还在消费 teacher-specific symbol。
+- 平台目录页、详情页和 teacher 详情页都已经切到中性 `awd-review-workspace` / `awd-review-detail-workspace` owner。
+- 目录页共享 feature 对外已经收口到 `useAwdReviewIndex`。
+- 目录页共享 widget 对外已经收口到 `AwdReviewIndexWorkspace`。
+- 详情页共享 feature 对外已经收口到 `useAwdReviewExportFlow`。
+- 详情页共享 widget 对外已经收口到 `AwdReviewWorkspace`。
 
 ## 任务切片
 

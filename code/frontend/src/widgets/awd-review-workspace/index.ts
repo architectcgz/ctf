@@ -1,5 +1,5 @@
 export { default as AwdReviewWorkspace } from './TeacherAWDReviewWorkspace.vue'
-export { default as TeacherAWDReviewIndexWorkspace } from './TeacherAWDReviewIndexWorkspace.vue'
+export { default as AwdReviewIndexWorkspace } from './TeacherAWDReviewIndexWorkspace.vue'
 export { default as TeacherAWDReviewWorkspaceState } from './TeacherAWDReviewWorkspaceState.vue'
 export { default as TeacherAWDReviewWorkspaceActions } from './TeacherAWDReviewWorkspaceActions.vue'
 export { default as TeacherAWDReviewStatusChip } from './TeacherAWDReviewStatusChip.vue'

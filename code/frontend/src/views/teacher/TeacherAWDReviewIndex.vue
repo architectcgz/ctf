@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TeacherAWDReviewIndexWorkspace } from '@/widgets/awd-review-workspace'
+import { AwdReviewIndexWorkspace } from '@/widgets/awd-review-workspace'
 import { useAwdReviewIndex } from '@/features/awd-review-workspace'
 
 const {
@@ -22,7 +22,7 @@ const {
 </script>
 
 <template>
-  <TeacherAWDReviewIndexWorkspace
+  <AwdReviewIndexWorkspace
     :loading="loading"
     :error="error"
     :contests="contests"

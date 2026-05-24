@@ -89,8 +89,9 @@ describe('TeacherAWDReviewIndex', () => {
   it('页面应通过 feature model 获取筛选与摘要状态，不再直接耦合 teacher api', () => {
     expect(teacherAwdReviewIndexSource).toContain("useAwdReviewIndex } from '@/features/awd-review-workspace'")
     expect(teacherAwdReviewIndexSource).toContain(
-      "import { TeacherAWDReviewIndexWorkspace } from '@/widgets/awd-review-workspace'"
+      "import { AwdReviewIndexWorkspace } from '@/widgets/awd-review-workspace'"
     )
+    expect(teacherAwdReviewIndexSource).not.toContain('TeacherAWDReviewIndexWorkspace')
     expect(teacherAwdReviewIndexSource).not.toContain("from '@/api/teacher'")
     expect(teacherAwdReviewIndexSource).not.toContain('const statusOptions = [')
     expect(teacherAwdReviewIndexSource).not.toContain('function contestStatusLabel')
