@@ -48,7 +48,7 @@ hook / page / layout
 - `code/frontend/src/views/platform/PlatformClassStudents.vue`
 - `code/frontend/src/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue`
 - `code/frontend/src/features/teacher-instances/model/useTeacherInstanceManagementPage.ts`
-- `code/frontend/src/features/teacher-student-management/model/useTeacherStudentManagementPage.ts`
+- `code/frontend/src/features/teacher-student-management/model/useStudentManagementPage.ts`
 - `code/frontend/src/features/teacher-student-analysis/model/useTeacherStudentAnalysisPage.ts`
 - `code/frontend/src/features/teacher-student-analysis/model/useTeacherStudentAnalysisNavigation.ts`
 - `code/frontend/src/views/teacher/TeacherStudentAnalysis.vue`

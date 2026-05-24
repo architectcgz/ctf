@@ -1,1 +1,1 @@
-export * from './useTeacherStudentManagementPage'
+export * from './useStudentManagementPage'

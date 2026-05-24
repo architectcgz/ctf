@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import StudentManagementPage from '@/components/teacher/student-management/StudentManagementPage.vue'
 import { ClassReportExportDialog } from '@/components/teacher/reports'
-import { useTeacherStudentManagementPage } from '@/features/teacher-student-management'
+import { useStudentManagementPage } from '@/features/teacher-student-management'
 
 const {
   classes,
@@ -25,7 +25,7 @@ const {
   selectClass,
   handlePageChange,
   openStudent,
-} = useTeacherStudentManagementPage()
+} = useStudentManagementPage()
 </script>
 
 <template>

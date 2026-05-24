@@ -11,7 +11,7 @@ import {
 } from '@/utils/teachingWorkspaceRouting'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
-export function useTeacherStudentManagementPage() {
+export function useStudentManagementPage() {
   const router = useRouter()
   const authStore = useAuthStore()
 
