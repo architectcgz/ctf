@@ -18,10 +18,10 @@ import type {
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
 import {
-  buildTeacherClassInsightWindowQuery,
-  createTeacherClassInsightWindowDraft,
-  describeTeacherClassInsightWindow,
-  getTeacherClassInsightWindowError,
+  buildClassInsightWindowQuery,
+  createClassInsightWindowDraft,
+  describeClassInsightWindow,
+  getClassInsightWindowError,
 } from '@/features/teacher-class-insight-window'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
@@ -73,12 +73,8 @@ export function useTeacherClassReportExport() {
   )
 
   const normalizedClassNameText = computed(() => normalizeClassName() || '未选择')
-  const selectedWindowLabel = computed(() =>
-    describeTeacherClassInsightWindow(currentInsightWindow())
-  )
-  const selectedWindowError = computed(() =>
-    getTeacherClassInsightWindowError(currentInsightWindow())
-  )
+  const selectedWindowLabel = computed(() => describeClassInsightWindow(currentInsightWindow()))
+  const selectedWindowError = computed(() => getClassInsightWindowError(currentInsightWindow()))
   const selectedFormatLabel = computed(() => (form.value.format === 'pdf' ? 'PDF' : 'Excel'))
 
   const selectedFormatHint = computed(() =>
@@ -141,7 +137,7 @@ export function useTeacherClassReportExport() {
   })
   const latestWindowLabel = computed(() => {
     if (!latestExport.value) return '默认最近 7 天'
-    return describeTeacherClassInsightWindow({
+    return describeClassInsightWindow({
       fromDate: latestExport.value.fromDate,
       toDate: latestExport.value.toDate,
     })
@@ -156,7 +152,7 @@ export function useTeacherClassReportExport() {
   }
 
   function currentInsightWindow() {
-    return createTeacherClassInsightWindowDraft({
+    return createClassInsightWindowDraft({
       fromDate: form.value.fromDate,
       toDate: form.value.toDate,
     })
@@ -171,7 +167,7 @@ export function useTeacherClassReportExport() {
 
   function syncContext(context?: ExportContext): void {
     const nextClassName = resolveContextClassName(context?.className)
-    const nextInsightWindow = createTeacherClassInsightWindowDraft({
+    const nextInsightWindow = createClassInsightWindowDraft({
       fromDate: context?.fromDate,
       toDate: context?.toDate,
     })
@@ -195,7 +191,7 @@ export function useTeacherClassReportExport() {
     }
 
     const insightWindow = currentInsightWindow()
-    const insightWindowError = getTeacherClassInsightWindowError(insightWindow)
+    const insightWindowError = getClassInsightWindowError(insightWindow)
     if (insightWindowError) {
       previewClassName.value = className
       previewError.value = insightWindowError
@@ -203,7 +199,7 @@ export function useTeacherClassReportExport() {
     }
 
     const requestId = ++latestPreviewRequestId
-    const insightWindowQuery = buildTeacherClassInsightWindowQuery(insightWindow)
+    const insightWindowQuery = buildClassInsightWindowQuery(insightWindow)
     previewLoading.value = true
     previewError.value = null
     previewClassName.value = className
@@ -254,7 +250,7 @@ export function useTeacherClassReportExport() {
     }
 
     const insightWindow = currentInsightWindow()
-    const insightWindowError = getTeacherClassInsightWindowError(insightWindow)
+    const insightWindowError = getClassInsightWindowError(insightWindow)
     if (insightWindowError) {
       toast.warning(insightWindowError)
       return
@@ -262,7 +258,7 @@ export function useTeacherClassReportExport() {
 
     submitting.value = true
     try {
-      const insightWindowQuery = buildTeacherClassInsightWindowQuery(insightWindow)
+      const insightWindowQuery = buildClassInsightWindowQuery(insightWindow)
       const result = await exportClassReport({
         class_name: className,
         format: form.value.format,

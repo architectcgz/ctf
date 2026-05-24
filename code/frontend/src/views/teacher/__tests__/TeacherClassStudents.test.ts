@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import TeacherClassStudents from '../TeacherClassStudents.vue'
 import teacherClassStudentsSource from '../TeacherClassStudents.vue?raw'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsPageModelSource from '@/features/class-students-workspace/model/useClassStudentsPage.ts?raw'
 
 const ElTable = { template: '<div><slot /></div>' }
 const ElTableColumn = { template: '<div><slot /></div>' }
@@ -332,6 +333,10 @@ describe('TeacherClassStudents', () => {
       '@/components/teacher/class-management/ClassStudentsPage.vue'
     )
     expect(teacherClassStudentsSource).not.toContain('TeacherClassReportExportDialog.vue')
+    expect(classStudentsPageModelSource).toContain('parseClassInsightWindowQuery')
+    expect(classStudentsPageModelSource).toContain('buildClassInsightWindowQuery')
+    expect(classStudentsPageModelSource).not.toContain('parseTeacherClassInsightWindowQuery')
+    expect(classStudentsPageModelSource).not.toContain('buildTeacherClassInsightWindowQuery')
   })
 
   it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {

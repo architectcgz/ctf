@@ -8,12 +8,12 @@ import type {
   TeacherClassTrendData,
 } from '@/api/contracts'
 import {
-  buildTeacherClassInsightWindowQuery,
-  describeTeacherClassInsightWindow,
-  getTeacherClassInsightWindowError,
-  hasTeacherClassInsightWindow,
-  isSameTeacherClassInsightWindow,
-  parseTeacherClassInsightWindowQuery,
+  buildClassInsightWindowQuery,
+  describeClassInsightWindow,
+  getClassInsightWindowError,
+  hasClassInsightWindow,
+  isSameClassInsightWindow,
+  parseClassInsightWindowQuery,
 } from '@/features/teacher-class-insight-window'
 import { useStudentFilters, useStudentListQuery } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
@@ -46,24 +46,20 @@ export function useClassStudentsPage() {
   const { selectedClassName, studentNoQuery } = filters
   const { students, loading: loadingStudents } = studentListQuery
   const error = computed(() => workspaceError.value ?? studentListQuery.error.value)
-  const activeInsightWindow = computed(() => parseTeacherClassInsightWindowQuery(route.query))
-  const insightWindowDraft = ref(parseTeacherClassInsightWindowQuery(route.query))
-  const insightWindowError = computed(() =>
-    getTeacherClassInsightWindowError(insightWindowDraft.value)
-  )
-  const insightWindowLabel = computed(() =>
-    describeTeacherClassInsightWindow(activeInsightWindow.value)
-  )
+  const activeInsightWindow = computed(() => parseClassInsightWindowQuery(route.query))
+  const insightWindowDraft = ref(parseClassInsightWindowQuery(route.query))
+  const insightWindowError = computed(() => getClassInsightWindowError(insightWindowDraft.value))
+  const insightWindowLabel = computed(() => describeClassInsightWindow(activeInsightWindow.value))
   const canApplyInsightWindow = computed(() => {
     if (insightWindowError.value) {
       return false
     }
-    return !isSameTeacherClassInsightWindow(insightWindowDraft.value, activeInsightWindow.value)
+    return !isSameClassInsightWindow(insightWindowDraft.value, activeInsightWindow.value)
   })
   const canResetInsightWindow = computed(
     () =>
-      hasTeacherClassInsightWindow(insightWindowDraft.value) ||
-      hasTeacherClassInsightWindow(activeInsightWindow.value)
+      hasClassInsightWindow(insightWindowDraft.value) ||
+      hasClassInsightWindow(activeInsightWindow.value)
   )
   let latestWorkspaceRequestID = 0
 
@@ -86,14 +82,14 @@ export function useClassStudentsPage() {
 
     const requestID = ++latestWorkspaceRequestID
     workspaceError.value = null
-    const routeInsightWindow = parseTeacherClassInsightWindowQuery(route.query)
-    const routeInsightWindowError = getTeacherClassInsightWindowError(routeInsightWindow)
+    const routeInsightWindow = parseClassInsightWindowQuery(route.query)
+    const routeInsightWindowError = getClassInsightWindowError(routeInsightWindow)
     if (routeInsightWindowError) {
       workspaceError.value = routeInsightWindowError
       clearWorkspaceDetails()
       return
     }
-    const insightWindowQuery = buildTeacherClassInsightWindowQuery(routeInsightWindow)
+    const insightWindowQuery = buildClassInsightWindowQuery(routeInsightWindow)
 
     try {
       const [nextReview, nextSummary, nextTrend] = await Promise.all([
@@ -193,7 +189,7 @@ export function useClassStudentsPage() {
     }
 
     const nextQuery: LocationQueryRaw = { ...route.query }
-    const nextInsightWindow = buildTeacherClassInsightWindowQuery(insightWindowDraft.value)
+    const nextInsightWindow = buildClassInsightWindowQuery(insightWindowDraft.value)
     if (nextInsightWindow) {
       nextQuery.from_date = nextInsightWindow.from_date
       nextQuery.to_date = nextInsightWindow.to_date
@@ -218,7 +214,7 @@ export function useClassStudentsPage() {
       toDate: '',
     }
 
-    if (!hasTeacherClassInsightWindow(activeInsightWindow.value)) {
+    if (!hasClassInsightWindow(activeInsightWindow.value)) {
       return
     }
 
@@ -231,7 +227,7 @@ export function useClassStudentsPage() {
   watch(
     () => [route.params.className, route.query.from_date, route.query.to_date] as const,
     () => {
-      insightWindowDraft.value = parseTeacherClassInsightWindowQuery(route.query)
+      insightWindowDraft.value = parseClassInsightWindowQuery(route.query)
       void loadClassWorkspace()
     },
     { immediate: true }

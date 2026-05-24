@@ -1,6 +1,6 @@
 import type { TeacherClassInsightQueryData } from '@/api/contracts'
 
-export interface TeacherClassInsightWindowDraft {
+export interface ClassInsightWindowDraft {
   fromDate: string
   toDate: string
 }
@@ -27,31 +27,31 @@ function normalizeDateValue(value?: string): string {
   return value?.trim() || ''
 }
 
-export function createTeacherClassInsightWindowDraft(input?: {
+export function createClassInsightWindowDraft(input?: {
   fromDate?: string
   toDate?: string
-}): TeacherClassInsightWindowDraft {
+}): ClassInsightWindowDraft {
   return {
     fromDate: normalizeDateValue(input?.fromDate),
     toDate: normalizeDateValue(input?.toDate),
   }
 }
 
-export function parseTeacherClassInsightWindowQuery(
+export function parseClassInsightWindowQuery(
   query: TeacherClassInsightQueryInput
-): TeacherClassInsightWindowDraft {
-  return createTeacherClassInsightWindowDraft({
+): ClassInsightWindowDraft {
+  return createClassInsightWindowDraft({
     fromDate: normalizeQueryValue(query.from_date),
     toDate: normalizeQueryValue(query.to_date),
   })
 }
 
-export function hasTeacherClassInsightWindow(window: TeacherClassInsightWindowDraft): boolean {
+export function hasClassInsightWindow(window: ClassInsightWindowDraft): boolean {
   return window.fromDate.length > 0 || window.toDate.length > 0
 }
 
-export function getTeacherClassInsightWindowError(
-  window: TeacherClassInsightWindowDraft
+export function getClassInsightWindowError(
+  window: ClassInsightWindowDraft
 ): string | null {
   const hasFromDate = window.fromDate.length > 0
   const hasToDate = window.toDate.length > 0
@@ -61,10 +61,10 @@ export function getTeacherClassInsightWindowError(
   return null
 }
 
-export function buildTeacherClassInsightWindowQuery(
-  window: TeacherClassInsightWindowDraft
+export function buildClassInsightWindowQuery(
+  window: ClassInsightWindowDraft
 ): TeacherClassInsightQueryData | undefined {
-  if (!hasTeacherClassInsightWindow(window)) {
+  if (!hasClassInsightWindow(window)) {
     return undefined
   }
 
@@ -74,16 +74,16 @@ export function buildTeacherClassInsightWindowQuery(
   }
 }
 
-export function describeTeacherClassInsightWindow(window: TeacherClassInsightWindowDraft): string {
-  if (!hasTeacherClassInsightWindow(window)) {
+export function describeClassInsightWindow(window: ClassInsightWindowDraft): string {
+  if (!hasClassInsightWindow(window)) {
     return '默认最近 7 天'
   }
   return `${window.fromDate} 至 ${window.toDate}`
 }
 
-export function isSameTeacherClassInsightWindow(
-  left: TeacherClassInsightWindowDraft,
-  right: TeacherClassInsightWindowDraft
+export function isSameClassInsightWindow(
+  left: ClassInsightWindowDraft,
+  right: ClassInsightWindowDraft
 ): boolean {
   return left.fromDate === right.fromDate && left.toDate === right.toDate
 }
