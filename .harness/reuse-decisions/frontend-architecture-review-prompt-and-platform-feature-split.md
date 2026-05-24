@@ -5,7 +5,9 @@ hook / page / layout
 
 ## Existing code searched
 - `code/frontend/src/views/platform`
+- `code/frontend/src/views/teacher`
 - `code/frontend/src/features/platform-users`
+- `code/frontend/src/features/class-students-workspace`
 - `code/frontend/src/features/teacher-class-management`
 - `code/frontend/src/features/teacher-class-students`
 - `code/frontend/src/features/teacher-instances`
@@ -21,6 +23,7 @@ hook / page / layout
 - `code/frontend/src/features/platform-users/model/usePlatformInstanceManagementPage.ts`
 - `code/frontend/src/features/teacher-class-management/model/useTeacherClassManagementPage.ts`
 - `code/frontend/src/features/teacher-class-students/model/useTeacherClassStudentsPage.ts`
+- `code/frontend/src/views/teacher/TeacherClassStudents.vue`
 - `code/frontend/src/features/teacher-instances/model/useTeacherInstanceManagementPage.ts`
 - `code/frontend/src/features/teacher-student-management/model/useTeacherStudentManagementPage.ts`
 - `code/frontend/src/features/teacher-student-analysis/model/useTeacherStudentAnalysisPage.ts`
@@ -33,7 +36,7 @@ hook / page / layout
 refactor_existing
 
 ## Reason
-这次不新增并行实现。`platform-users` 已经承担了用户治理之外的班级、学生目录和实例管理职责，适合把现有页面模型迁到更细的 feature owner 下，而不是继续往该桶里加代码。学生目录查询能力继续复用 `student-directory` 里的既有 query owner；平台侧的 `usePlatformStudentManagementPage` 只保留页面级筛选、分页和路由跳转编排，不再新造一条与 `useTeacherStudentManagementPage`、`useTeacherStudentAnalysisPage`、`useStudentListQuery` 平行的学生查询栈。review 提示词也放到现有 `harness/prompts/` 目录，复用已有项目 prompt 资产形态，不新建额外 prompt 目录。
+这次不新增并行实现。`platform-users` 已经承担了用户治理之外的班级、学生目录和实例管理职责，适合把现有页面模型迁到更细的 feature owner 下，而不是继续往该桶里加代码。学生目录查询能力继续复用 `student-directory` 里的既有 query owner；平台侧的 `usePlatformStudentManagementPage` 只保留页面级筛选、分页和路由跳转编排，不再新造一条与 `useTeacherStudentManagementPage`、`useTeacherStudentAnalysisPage`、`useStudentListQuery` 平行的学生查询栈。继续收口 `/platform/classes/:className` 时，也不复制一份 `TeacherClassStudents.vue` 或 `useTeacherClassStudentsPage`；改为把实际 page workflow 上提到中性的 `class-students-workspace` feature，再让 teacher / platform 各自保留 route view owner。review 提示词也放到现有 `harness/prompts/` 目录，复用已有项目 prompt 资产形态，不新建额外 prompt 目录。
 
 ## Files to modify
 - `harness/prompts/AGENTS.md`
@@ -60,6 +63,12 @@ refactor_existing
 - `code/frontend/src/features/platform-instance-management/index.ts`
 - `code/frontend/src/features/platform-instance-management/model/index.ts`
 - `code/frontend/src/features/platform-instance-management/model/usePlatformInstanceManagementPage.ts`
+- `code/frontend/src/router/routes/platformRoutes.ts`
+- `code/frontend/src/views/platform/PlatformClassStudents.vue`
+- `code/frontend/src/views/platform/__tests__/PlatformClassStudents.test.ts`
+- `code/frontend/src/features/class-students-workspace/index.ts`
+- `code/frontend/src/features/class-students-workspace/model/index.ts`
+- `code/frontend/src/features/class-students-workspace/model/useClassStudentsPage.ts`
 
 ## After implementation
 - 如果后续 review 流程继续稳定复用，再考虑补 `feedback/` 记录 prompt 资产化经验；本次先以 `harness/prompts/` 作为唯一事实源。

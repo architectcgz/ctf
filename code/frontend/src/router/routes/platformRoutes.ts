@@ -40,7 +40,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className',
   name: 'PlatformClassStudents',
-  component: () => import('@/views/teacher/TeacherClassStudents.vue'),
+  component: () => import('@/views/platform/PlatformClassStudents.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
