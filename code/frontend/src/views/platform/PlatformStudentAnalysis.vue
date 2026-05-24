@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import StudentAnalysisPage from '@/components/teacher/class-management/StudentAnalysisPage.vue'
+import { StudentAnalysisPage } from '@/components/class-management'
 import { ClassReportExportDialog } from '@/components/teacher/reports'
 import { useStudentAnalysisPage } from '@/features/student-analysis-workspace'
 

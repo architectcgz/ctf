@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ClassStudentsPage from '@/components/teacher/class-management/ClassStudentsPage.vue'
+import { ClassStudentsPage } from '@/components/class-management'
 import { ClassReportExportDialog } from '@/components/teacher/reports'
 import { useClassStudentsPage } from '@/features/class-students-workspace'
 

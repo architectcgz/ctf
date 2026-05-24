@@ -422,10 +422,16 @@ describe('TeacherStudentAnalysis', () => {
   it('路由页应仅负责组合，不直接处理路由解析逻辑', () => {
     expect(teacherStudentAnalysisSource).toContain('useStudentAnalysisPage')
     expect(teacherStudentAnalysisSource).toContain(
+      "import { StudentAnalysisPage } from '@/components/class-management'"
+    )
+    expect(teacherStudentAnalysisSource).toContain(
       "import { ClassReportExportDialog } from '@/components/teacher/reports'"
     )
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassManagementRouteName')
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassStudentsRouteName')
+    expect(teacherStudentAnalysisSource).not.toContain(
+      '@/components/teacher/class-management/StudentAnalysisPage.vue'
+    )
     expect(teacherStudentAnalysisSource).not.toContain('TeacherClassReportExportDialog.vue')
   })
 

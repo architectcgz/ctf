@@ -114,6 +114,9 @@ describe('PlatformClassStudents', () => {
 
   it('应通过平台 route view 复用中性班级工作台 feature', async () => {
     expect(platformClassStudentsSource).toContain(
+      "import { ClassStudentsPage } from '@/components/class-management'"
+    )
+    expect(platformClassStudentsSource).toContain(
       "import { useClassStudentsPage } from '@/features/class-students-workspace'"
     )
     expect(platformClassStudentsSource).toContain(
@@ -121,6 +124,9 @@ describe('PlatformClassStudents', () => {
     )
     expect(platformClassStudentsSource).not.toContain("from '@/views/teacher/TeacherClassStudents.vue'")
     expect(platformClassStudentsSource).not.toContain("from '@/api/teacher'")
+    expect(platformClassStudentsSource).not.toContain(
+      '@/components/teacher/class-management/ClassStudentsPage.vue'
+    )
     expect(platformClassStudentsSource).not.toContain('TeacherClassReportExportDialog.vue')
     expect(classStudentsPageSource).toContain('学生列表')
 

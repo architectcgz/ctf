@@ -322,9 +322,15 @@ describe('TeacherClassStudents', () => {
   it('路由页应仅负责组合，不直接依赖教师接口实现', () => {
     expect(teacherClassStudentsSource).toContain('useClassStudentsPage')
     expect(teacherClassStudentsSource).toContain(
+      "import { ClassStudentsPage } from '@/components/class-management'"
+    )
+    expect(teacherClassStudentsSource).toContain(
       "import { ClassReportExportDialog } from '@/components/teacher/reports'"
     )
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
+    expect(teacherClassStudentsSource).not.toContain(
+      '@/components/teacher/class-management/ClassStudentsPage.vue'
+    )
     expect(teacherClassStudentsSource).not.toContain('TeacherClassReportExportDialog.vue')
   })
 
