@@ -1,1 +1,1 @@
-export * from './useTeacherClassReportExport'
+export * from './useClassReportExport'

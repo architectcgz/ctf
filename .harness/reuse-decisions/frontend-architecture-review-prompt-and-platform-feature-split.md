@@ -146,7 +146,7 @@ refactor_existing
 - `code/frontend/src/features/student-analysis-workspace/model/useStudentAnalysisPage.ts`
 - `code/frontend/src/features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts`
 - `code/frontend/src/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts`
-- `code/frontend/src/features/teacher-class-report-export/model/useTeacherClassReportExport.ts`
+- `code/frontend/src/features/teacher-class-report-export/model/useClassReportExport.ts`
 - `code/frontend/src/components/class-management/index.ts`
 - `code/frontend/src/components/teacher/reports/index.ts`
 - `code/frontend/src/widgets/teacher-student-review-workspace/index.ts`
