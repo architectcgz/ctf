@@ -81,7 +81,7 @@ export const componentNonContractApiAllowlist = new Set([
 ])
 
 export const widgetNonContractApiAllowlist = new Set([
-  'widgets/teacher-student-review-workspace/TeacherStudentReviewWorkspace.vue -> @/api/teacher',
+  'widgets/teacher-student-review-workspace/StudentReviewWorkspace.vue -> @/api/teacher',
 ])
 
 export const commonForbiddenImportAllowlist = new Set([

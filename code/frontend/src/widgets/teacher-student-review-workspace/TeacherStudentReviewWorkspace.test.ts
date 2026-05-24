@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import TeacherStudentReviewWorkspace from './TeacherStudentReviewWorkspace.vue'
+import StudentReviewWorkspace from './StudentReviewWorkspace.vue'
 
 describe('TeacherStudentReviewWorkspace', () => {
   it('应渲染空状态', () => {
-    const wrapper = mount(TeacherStudentReviewWorkspace, {
+    const wrapper = mount(StudentReviewWorkspace, {
       props: {
         evidence: null,
         attackSessions: null,
@@ -18,7 +18,7 @@ describe('TeacherStudentReviewWorkspace', () => {
   })
 
   it('应渲染摘要和事件标签', () => {
-    const wrapper = mount(TeacherStudentReviewWorkspace, {
+    const wrapper = mount(StudentReviewWorkspace, {
       props: {
         evidence: {
           summary: {
@@ -104,7 +104,7 @@ describe('TeacherStudentReviewWorkspace', () => {
   })
 
   it('应在筛选变更时发出查询更新事件', async () => {
-    const wrapper = mount(TeacherStudentReviewWorkspace, {
+    const wrapper = mount(StudentReviewWorkspace, {
       props: {
         evidence: {
           summary: {
