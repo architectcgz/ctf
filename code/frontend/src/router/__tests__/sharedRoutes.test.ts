@@ -59,6 +59,12 @@ describe('shared route canonical paths', () => {
   it('uses platform paths as the canonical location for shared governance pages', () => {
     expect(findChild('platform/students')?.name).toBe('PlatformStudentManagement')
     expect(findChild('platform/classes/:className')?.name).toBe('PlatformClassStudents')
+    expect(findChild('platform/classes/:className/trend')?.name).toBe('PlatformClassTrend')
+    expect(findChild('platform/classes/:className/review')?.name).toBe('PlatformClassReview')
+    expect(findChild('platform/classes/:className/insights')?.name).toBe('PlatformClassInsights')
+    expect(findChild('platform/classes/:className/intervention')?.name).toBe(
+      'PlatformClassIntervention'
+    )
     expect(findChild('platform/classes/:className/students/:studentId')?.name).toBe(
       'PlatformStudentAnalysis'
     )

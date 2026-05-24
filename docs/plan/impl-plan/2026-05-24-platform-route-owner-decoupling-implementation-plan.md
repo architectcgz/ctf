@@ -7,13 +7,12 @@
 ## 目标
 
 - 按最小可审查切片，把 `/platform/*` 对 teacher route view 的直接依赖逐步收口。
-- 当前活动切片只处理 `PlatformStudentAnalysis`，让管理员学生分析页拥有自己的 route view，并把共享 page workflow 上提到中性 feature owner。
+- 当前活动切片处理平台班级工作台别名页，让管理员的 `trend / review / insights / intervention` 路由拥有自己的 route view，并把重定向 owner 上提到中性 feature。
 
 ## 非目标
 
-- 本轮不处理 `PlatformStudentReviewArchive`。
-- 本轮不处理 `PlatformClassTrend`、`PlatformClassReview`、`PlatformClassInsights`、`PlatformClassIntervention`。
-- 本轮不改学生分析页的用户可见流程、接口契约或视觉结构。
+- 本轮不处理 `PlatformAwdReviewDetail`。
+- 本轮不改班级学生页的用户可见内容结构，只收口 alias route owner。
 
 ## 输入依据
 
@@ -25,9 +24,9 @@
 
 ## 当前结论
 
-- `PlatformClassStudents` 已经完成第一刀 owner 解耦，平台路由不再直接挂 teacher route view。
-- `PlatformStudentAnalysis` 仍直接指向 `@/views/teacher/TeacherStudentAnalysis.vue`，是下一条最小连续链路。
-- 共享 workflow 的真正 owner 在 `features/teacher-student-analysis/model/*`；如果只新增一个平台 view 但继续直接引用 teacher feature，结构债仍然原样保留。
+- `PlatformClassStudents`、`PlatformStudentAnalysis`、`PlatformStudentReviewArchive` 已经完成 owner 解耦。
+- 当前剩余最小连续链路是平台班级工作台四个别名页：`PlatformClassTrend`、`PlatformClassReview`、`PlatformClassInsights`、`PlatformClassIntervention`。
+- 这四个路由当前共同指向 `@/views/teacher/TeacherClassWorkspaceSection.vue`，实际职责只是把别名页重定向回 canonical `*ClassStudents` 路由并附带 `panel` query。
 
 ## 任务切片
 
@@ -80,10 +79,37 @@
   - 平台复盘归档页是否摆脱 teacher route view。
   - 导出归档、返回分析页、返回班级页在 admin 角色下是否仍落到平台路由。
 
+### Slice 3：平台班级工作台别名页 owner 解耦
+
+- 目标：
+  - 让 `PlatformClassTrend`、`PlatformClassReview`、`PlatformClassInsights`、`PlatformClassIntervention` 不再直接挂 teacher route view。
+  - 把 alias route -> canonical page 的重定向 owner 上提到中性 feature。
+- 预期改动：
+  - `code/frontend/src/router/routes/platformRoutes.ts`
+  - `code/frontend/src/views/platform/PlatformClassWorkspaceSection.vue`
+  - `code/frontend/src/views/platform/__tests__/PlatformClassWorkspaceSection.test.ts`
+  - `code/frontend/src/features/class-workspace-redirect/**`
+  - `code/frontend/src/features/teacher-class-workspace/model/useTeacherClassWorkspaceSection.ts`
+  - `code/frontend/src/views/teacher/TeacherClassWorkspaceSection.vue`
+  - `code/frontend/src/__tests__/architectureAllowlist.ts`
+  - `.harness/reuse-decisions/frontend-architecture-review-prompt-and-platform-feature-split.md`
+- 依赖：
+  - 继续复用 `PlatformClassStudents` / `TeacherClassStudents` 作为 canonical workspace page。
+  - panel 映射仍沿用现有 `trend / review / insight / action` 约定。
+- 验证：
+  - `git diff --check -- <touched files>`
+  - `npm run test:run -- src/views/platform/__tests__/PlatformClassWorkspaceSection.test.ts src/views/teacher/__tests__/TeacherClassWorkspaceSection.test.ts src/views/platform/__tests__/PlatformClassStudents.test.ts src/__tests__/architectureBoundaries.test.ts src/views/__tests__/routeViewArchitectureBoundary.test.ts src/router/__tests__/sharedRoutes.test.ts`
+  - `npm run typecheck`
+- Review focus：
+  - 平台别名路由是否真正脱离 teacher route view。
+  - admin 角色下 canonical redirect 是否回到 `PlatformClassStudents` 而不是 `TeacherClassStudents`。
+  - teacher 侧旧别名页是否继续保持兼容跳转。
+
 ## 风险
 
 - `useTeacherStudentAnalysisPage` 体量较大，直接整体搬迁会放大 diff；因此本轮只移动 page owner 和导航 owner，保留内部 helper 现状。
 - 复盘归档页虽然更小，但仍涉及导出轮询、文件下载和错误提示；因此本轮只把 page owner 上提到中性 feature，不改稳定的导出实现细节。
+- 班级工作台别名页虽然逻辑更轻，但它同时承接 teacher / platform 两套路由名映射，canonical redirect 的目标路由如果判错，会直接把管理员链路跳回 teacher namespace。
 - 学生分析页涉及 review workspace、writeup、manual review、report export，多处 watch / async flow 同时存在，不能因为 route owner 迁移破坏现有角色分流。
 
 ## 回退方式

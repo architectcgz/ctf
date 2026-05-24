@@ -51,7 +51,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className/trend',
   name: 'PlatformClassTrend',
-  component: () => import('@/views/teacher/TeacherClassWorkspaceSection.vue'),
+  component: () => import('@/views/platform/PlatformClassWorkspaceSection.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -62,7 +62,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className/review',
   name: 'PlatformClassReview',
-  component: () => import('@/views/teacher/TeacherClassWorkspaceSection.vue'),
+  component: () => import('@/views/platform/PlatformClassWorkspaceSection.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -73,7 +73,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className/insights',
   name: 'PlatformClassInsights',
-  component: () => import('@/views/teacher/TeacherClassWorkspaceSection.vue'),
+  component: () => import('@/views/platform/PlatformClassWorkspaceSection.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -84,7 +84,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className/intervention',
   name: 'PlatformClassIntervention',
-  component: () => import('@/views/teacher/TeacherClassWorkspaceSection.vue'),
+  component: () => import('@/views/platform/PlatformClassWorkspaceSection.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
