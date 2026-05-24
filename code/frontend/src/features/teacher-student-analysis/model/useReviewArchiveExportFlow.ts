@@ -2,7 +2,7 @@ import { ref, type Ref } from 'vue'
 
 import { downloadReport } from '@/api/assessment'
 import { ApiError } from '@/api/request'
-import { exportStudentReviewArchive } from '@/api/teacher'
+import { exportStudentReviewArchive } from '@/api/teaching'
 import type { ReportExportData } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
 

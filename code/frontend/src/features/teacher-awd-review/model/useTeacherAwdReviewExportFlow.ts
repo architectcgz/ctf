@@ -5,7 +5,7 @@ import { ApiError } from '@/api/request'
 import {
   exportTeacherAWDReviewArchive,
   exportTeacherAWDReviewReport,
-} from '@/api/teacher'
+} from '@/api/teaching'
 import type { ReportExportData } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
 

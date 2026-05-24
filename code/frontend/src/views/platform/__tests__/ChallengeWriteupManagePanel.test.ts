@@ -12,7 +12,7 @@ const adminApiMocks = vi.hoisted(() => ({
   deleteChallengeWriteup: vi.fn(),
 }))
 
-const teacherApiMocks = vi.hoisted(() => ({
+const teachingApiMocks = vi.hoisted(() => ({
   getTeacherWriteupSubmissions: vi.fn(),
 }))
 
@@ -32,7 +32,7 @@ vi.mock('vue-router', async () => {
 })
 
 vi.mock('@/api/admin/authoring', () => adminApiMocks)
-vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/teaching', () => teachingApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
@@ -45,7 +45,7 @@ describe('ChallengeWriteupManagePanel', () => {
     pushMock.mockReset()
     adminApiMocks.getChallengeWriteup.mockReset()
     adminApiMocks.deleteChallengeWriteup.mockReset()
-    teacherApiMocks.getTeacherWriteupSubmissions.mockReset()
+    teachingApiMocks.getTeacherWriteupSubmissions.mockReset()
     toastMocks.success.mockReset()
     toastMocks.error.mockReset()
     confirmMock.mockReset()
@@ -132,7 +132,7 @@ describe('ChallengeWriteupManagePanel', () => {
       created_at: '2026-03-10T00:00:00.000Z',
       updated_at: '2026-03-10T02:00:00.000Z',
     })
-    teacherApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
+    teachingApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
       list: [
         {
           id: '31',
@@ -211,7 +211,7 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(wrapper.text()).toContain('张三')
     expect(wrapper.text()).toContain('20240001')
     expect(wrapper.text()).toContain('alice_01')
-    expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledWith({
+    expect(teachingApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledWith({
       challenge_id: '11',
       page: 1,
       page_size: 6,
@@ -261,7 +261,7 @@ describe('ChallengeWriteupManagePanel', () => {
         updated_at: '2026-03-10T02:00:00.000Z',
       })
       .mockResolvedValueOnce(null)
-    teacherApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
+    teachingApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
       list: [],
       total: 0,
       page: 1,
@@ -321,7 +321,7 @@ describe('ChallengeWriteupManagePanel', () => {
       created_at: '2026-03-10T00:00:00.000Z',
       updated_at: '2026-03-10T02:00:00.000Z',
     })
-    teacherApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
+    teachingApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
       list: [],
       total: 0,
       page: 1,
@@ -366,7 +366,7 @@ describe('ChallengeWriteupManagePanel', () => {
 
   it('没有题解时应显示空状态并支持编写题解', async () => {
     adminApiMocks.getChallengeWriteup.mockResolvedValue(null)
-    teacherApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
+    teachingApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
       list: [],
       total: 0,
       page: 1,
@@ -408,7 +408,7 @@ describe('ChallengeWriteupManagePanel', () => {
 
   it('题解投稿应显示作者与学号，并支持分页翻页', async () => {
     adminApiMocks.getChallengeWriteup.mockResolvedValue(null)
-    teacherApiMocks.getTeacherWriteupSubmissions
+    teachingApiMocks.getTeacherWriteupSubmissions
       .mockResolvedValueOnce({
         list: [
           {
@@ -513,7 +513,7 @@ describe('ChallengeWriteupManagePanel', () => {
     await nextPageButton!.trigger('click')
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenNthCalledWith(2, {
+    expect(teachingApiMocks.getTeacherWriteupSubmissions).toHaveBeenNthCalledWith(2, {
       challenge_id: '11',
       page: 2,
       page_size: 6,

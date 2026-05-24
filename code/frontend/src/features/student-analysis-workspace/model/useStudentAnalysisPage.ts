@@ -10,7 +10,7 @@ import {
   getStudentTimeline,
   getTeacherManualReviewSubmissions,
   getTeacherWriteupSubmissions,
-} from '@/api/teacher'
+} from '@/api/teaching'
 import type {
   MyProgressData,
   RecommendationItem,

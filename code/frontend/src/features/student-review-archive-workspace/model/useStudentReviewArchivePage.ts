@@ -3,7 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { downloadReport } from '@/api/assessment'
 import { ApiError } from '@/api/request'
-import { exportStudentReviewArchive } from '@/api/teacher'
+import { exportStudentReviewArchive } from '@/api/teaching'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'

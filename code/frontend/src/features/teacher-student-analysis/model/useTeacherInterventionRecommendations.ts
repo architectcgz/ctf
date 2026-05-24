@@ -1,6 +1,6 @@
 import { computed, ref, watch, type Ref } from 'vue'
 
-import { getStudentRecommendations } from '@/api/teacher'
+import { getStudentRecommendations } from '@/api/teaching'
 import type { RecommendationItem, TeacherStudentItem } from '@/api/contracts'
 
 export interface InterventionCandidate {

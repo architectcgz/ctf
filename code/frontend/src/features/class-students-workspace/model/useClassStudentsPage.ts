@@ -1,7 +1,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
 
-import { getClassReview, getClassSummary, getClassTrend } from '@/api/teacher'
+import { getClassReview, getClassSummary, getClassTrend } from '@/api/teaching'
 import type {
   TeacherClassReviewData,
   TeacherClassSummaryData,

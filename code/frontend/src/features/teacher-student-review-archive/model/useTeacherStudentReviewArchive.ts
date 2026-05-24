@@ -1,6 +1,6 @@
 import { onUnmounted, ref, watch, type Ref } from 'vue'
 
-import { getStudentReviewArchive } from '@/api/teacher'
+import { getStudentReviewArchive } from '@/api/teaching'
 import type { ReviewArchiveData } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 

@@ -1,7 +1,7 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getTeacherAWDReview } from '@/api/teacher'
+import { getTeacherAWDReview } from '@/api/teaching'
 import type {
   TeacherAWDReviewArchiveData,
   TeacherAWDReviewTeamItemData,

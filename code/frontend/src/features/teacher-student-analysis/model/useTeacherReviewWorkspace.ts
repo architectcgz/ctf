@@ -5,7 +5,7 @@ import {
   getStudentEvidence,
   type TeacherAttackSessionQuery,
   type TeacherEvidenceQuery,
-} from '@/api/teacher'
+} from '@/api/teaching'
 import type { TeacherAttackSessionResponseData, TeacherEvidenceData } from '@/api/contracts'
 
 export function useTeacherReviewWorkspace() {

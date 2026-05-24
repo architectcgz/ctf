@@ -7,7 +7,7 @@ import {
   getClassStudents,
   getClassSummary,
   getClassTrend,
-} from '@/api/teacher'
+} from '@/api/teaching'
 import type {
   ReportExportData,
   TeacherClassReviewData,

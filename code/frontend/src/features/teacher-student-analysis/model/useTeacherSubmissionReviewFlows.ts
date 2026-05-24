@@ -9,7 +9,7 @@ import {
   restoreTeacherCommunityWriteup,
   reviewTeacherManualReviewSubmission,
   unrecommendTeacherCommunityWriteup,
-} from '@/api/teacher'
+} from '@/api/teaching'
 import type {
   TeacherManualReviewSubmissionDetailData,
   TeacherManualReviewSubmissionItemData,

@@ -15,7 +15,7 @@ const routeMock = {
   query: {} as Record<string, string>,
 }
 
-const teacherApiMocks = vi.hoisted(() => ({
+const teachingApiMocks = vi.hoisted(() => ({
   getTeacherAWDReview: vi.fn(),
   exportTeacherAWDReviewArchive: vi.fn(),
   exportTeacherAWDReviewReport: vi.fn(),
@@ -30,7 +30,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/teaching', () => teachingApiMocks)
 
 describe('PlatformAwdReviewDetail route owner', () => {
   beforeEach(() => {
@@ -39,9 +39,9 @@ describe('PlatformAwdReviewDetail route owner', () => {
     replaceMock.mockReset()
     routeMock.params.contestId = 'contest-1'
     routeMock.query = {}
-    Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
+    Object.values(teachingApiMocks).forEach((mock) => mock.mockReset())
 
-    teacherApiMocks.getTeacherAWDReview.mockResolvedValue({
+    teachingApiMocks.getTeacherAWDReview.mockResolvedValue({
       generated_at: '2026-04-12T10:00:00Z',
       scope: {
         snapshot_type: 'live',
@@ -68,11 +68,11 @@ describe('PlatformAwdReviewDetail route owner', () => {
       rounds: [],
       selected_round: null,
     })
-    teacherApiMocks.exportTeacherAWDReviewArchive.mockResolvedValue({
+    teachingApiMocks.exportTeacherAWDReviewArchive.mockResolvedValue({
       report_id: '31',
       status: 'processing',
     })
-    teacherApiMocks.exportTeacherAWDReviewReport.mockResolvedValue({
+    teachingApiMocks.exportTeacherAWDReviewReport.mockResolvedValue({
       report_id: '32',
       status: 'processing',
     })
@@ -98,7 +98,7 @@ describe('PlatformAwdReviewDetail route owner', () => {
 
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherAWDReview).toHaveBeenCalledWith('contest-1', {
+    expect(teachingApiMocks.getTeacherAWDReview).toHaveBeenCalledWith('contest-1', {
       round: undefined,
       team_id: undefined,
     })

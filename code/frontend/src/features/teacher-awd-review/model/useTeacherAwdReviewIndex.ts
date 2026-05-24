@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 
-import { listTeacherAWDReviews } from '@/api/teacher'
+import { listTeacherAWDReviews } from '@/api/teaching'
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import { useAbortController } from '@/composables/useAbortController'
 import { useAuthStore } from '@/stores/auth'

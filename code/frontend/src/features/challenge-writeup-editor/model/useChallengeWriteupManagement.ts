@@ -1,7 +1,7 @@
 import { computed, onMounted, ref, watch, type Ref } from 'vue'
 
 import { deleteChallengeWriteup, getChallengeWriteup } from '@/api/admin/authoring'
-import { getTeacherWriteupSubmissions } from '@/api/teacher'
+import { getTeacherWriteupSubmissions } from '@/api/teaching'
 import type { AdminChallengeWriteupData, TeacherSubmissionWriteupItemData } from '@/api/contracts'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'

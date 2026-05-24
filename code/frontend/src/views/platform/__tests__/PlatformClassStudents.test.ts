@@ -24,7 +24,7 @@ const routeMock = {
   },
 }
 
-const teacherApiMocks = vi.hoisted(() => ({
+const teachingApiMocks = vi.hoisted(() => ({
   getClassStudents: vi.fn(),
   getClassReview: vi.fn(),
   getClassSummary: vi.fn(),
@@ -40,7 +40,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/teaching', () => teachingApiMocks)
 
 describe('PlatformClassStudents', () => {
   const reportDialogStub = {
@@ -59,12 +59,12 @@ describe('PlatformClassStudents', () => {
     routeMock.query.panel = 'students'
     delete routeMock.query.from_date
     delete routeMock.query.to_date
-    teacherApiMocks.getClassStudents.mockReset()
-    teacherApiMocks.getClassReview.mockReset()
-    teacherApiMocks.getClassSummary.mockReset()
-    teacherApiMocks.getClassTrend.mockReset()
+    teachingApiMocks.getClassStudents.mockReset()
+    teachingApiMocks.getClassReview.mockReset()
+    teachingApiMocks.getClassSummary.mockReset()
+    teachingApiMocks.getClassTrend.mockReset()
 
-    teacherApiMocks.getClassStudents.mockResolvedValue([
+    teachingApiMocks.getClassStudents.mockResolvedValue([
       {
         id: 'stu-1',
         username: 'alice',
@@ -83,11 +83,11 @@ describe('PlatformClassStudents', () => {
         weak_dimension: 'pwn',
       },
     ])
-    teacherApiMocks.getClassReview.mockResolvedValue({
+    teachingApiMocks.getClassReview.mockResolvedValue({
       class_name: 'Class A',
       items: [],
     })
-    teacherApiMocks.getClassSummary.mockResolvedValue({
+    teachingApiMocks.getClassSummary.mockResolvedValue({
       class_name: 'Class A',
       student_count: 2,
       average_solved: 2,
@@ -95,7 +95,7 @@ describe('PlatformClassStudents', () => {
       active_rate: 50,
       recent_event_count: 6,
     })
-    teacherApiMocks.getClassTrend.mockResolvedValue({
+    teachingApiMocks.getClassTrend.mockResolvedValue({
       class_name: 'Class A',
       points: [
         { date: '2026-03-05', active_student_count: 1, event_count: 2, solve_count: 1 },

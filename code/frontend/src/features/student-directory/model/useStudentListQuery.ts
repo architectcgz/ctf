@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { getClassStudents } from '@/api/teacher'
+import { getClassStudents } from '@/api/teaching'
 import type { TeacherStudentItem } from '@/api/contracts'
 
 import type { StudentQueryParams } from './useStudentFilters'

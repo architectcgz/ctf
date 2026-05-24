@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { getStudentsDirectory, type TeacherStudentDirectoryParams } from '@/api/teacher'
+import { getStudentsDirectory, type TeacherStudentDirectoryParams } from '@/api/teaching'
 import type { PageResult, TeacherStudentItem } from '@/api/contracts'
 
 interface UseStudentDirectoryQueryOptions {
