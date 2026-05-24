@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { TeacherAWDReviewWorkspace } from '@/widgets/teacher-awd-review'
-import { useTeacherAwdReviewDetail } from '@/features/teacher-awd-review'
+import { useAwdReviewDetailPage } from '@/features/awd-review-detail-workspace'
 
 const {
   polling,
@@ -28,7 +28,7 @@ const {
   formatServiceRef,
   exportArchive,
   exportReport,
-} = useTeacherAwdReviewDetail()
+} = useAwdReviewDetailPage()
 </script>
 
 <template>

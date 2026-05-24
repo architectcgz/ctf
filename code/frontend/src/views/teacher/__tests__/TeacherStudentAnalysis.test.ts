@@ -19,7 +19,7 @@ const routeMock = reactive({
   query: {},
 })
 
-const teacherApiMocks = vi.hoisted(() => ({
+const teachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
   getClassStudents: vi.fn(),
   getStudentProgress: vi.fn(),
@@ -48,7 +48,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/teaching', () => teachingApiMocks)
 
 describe('TeacherStudentAnalysis', () => {
   const reportDialogStub = {
@@ -67,23 +67,23 @@ describe('TeacherStudentAnalysis', () => {
     routeMock.params.studentId = 'stu-1'
     routeMock.query = {}
 
-    Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
+    Object.values(teachingApiMocks).forEach((mock) => mock.mockReset())
 
-    teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 2 }])
-    teacherApiMocks.getClassStudents.mockResolvedValue([
+    teachingApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 2 }])
+    teachingApiMocks.getClassStudents.mockResolvedValue([
       { id: 'stu-1', username: 'alice' },
       { id: 'stu-2', username: 'bob' },
     ])
-    teacherApiMocks.getStudentProgress.mockResolvedValue({
+    teachingApiMocks.getStudentProgress.mockResolvedValue({
       total_challenges: 4,
       solved_challenges: 2,
       by_category: {},
       by_difficulty: {},
     })
-    teacherApiMocks.getStudentSkillProfile.mockResolvedValue({
+    teachingApiMocks.getStudentSkillProfile.mockResolvedValue({
       dimensions: [{ key: 'crypto', name: '密码', value: 35 }],
     })
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
+    teachingApiMocks.getStudentRecommendations.mockResolvedValue({
       weak_dimensions: [
         {
           dimension: 'crypto',
@@ -104,7 +104,7 @@ describe('TeacherStudentAnalysis', () => {
         },
       ],
     })
-    teacherApiMocks.getStudentTimeline.mockResolvedValue([
+    teachingApiMocks.getStudentTimeline.mockResolvedValue([
       {
         id: 'challenge_detail_view-11-2026-03-11T09:00:00Z',
         type: 'challenge_detail_view',
@@ -162,7 +162,7 @@ describe('TeacherStudentAnalysis', () => {
         },
       },
     ])
-    teacherApiMocks.getStudentEvidence.mockResolvedValue({
+    teachingApiMocks.getStudentEvidence.mockResolvedValue({
       summary: {
         total_events: 5,
         proxy_request_count: 1,
@@ -189,7 +189,7 @@ describe('TeacherStudentAnalysis', () => {
         },
       ],
     })
-    teacherApiMocks.getStudentAttackSessions.mockResolvedValue({
+    teachingApiMocks.getStudentAttackSessions.mockResolvedValue({
       summary: {
         total_sessions: 1,
         success_count: 1,
@@ -233,7 +233,7 @@ describe('TeacherStudentAnalysis', () => {
         },
       ],
     })
-    teacherApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
+    teachingApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
       list: [
         {
           id: 'writeup-1',
@@ -254,7 +254,7 @@ describe('TeacherStudentAnalysis', () => {
       page: 1,
       page_size: 6,
     })
-    teacherApiMocks.getTeacherManualReviewSubmissions.mockResolvedValue({
+    teachingApiMocks.getTeacherManualReviewSubmissions.mockResolvedValue({
       list: [
         {
           id: 'manual-1',
@@ -272,7 +272,7 @@ describe('TeacherStudentAnalysis', () => {
       page: 1,
       page_size: 6,
     })
-    teacherApiMocks.getTeacherManualReviewSubmission.mockResolvedValue({
+    teachingApiMocks.getTeacherManualReviewSubmission.mockResolvedValue({
       id: 'manual-1',
       user_id: 'stu-1',
       student_username: 'alice',
@@ -285,7 +285,7 @@ describe('TeacherStudentAnalysis', () => {
       submitted_at: '2026-03-11T12:00:00Z',
       updated_at: '2026-03-11T12:10:00Z',
     })
-    teacherApiMocks.reviewTeacherManualReviewSubmission.mockResolvedValue({
+    teachingApiMocks.reviewTeacherManualReviewSubmission.mockResolvedValue({
       id: 'manual-1',
       user_id: 'stu-1',
       student_username: 'alice',
@@ -299,7 +299,7 @@ describe('TeacherStudentAnalysis', () => {
       submitted_at: '2026-03-11T12:00:00Z',
       updated_at: '2026-03-11T12:20:00Z',
     })
-    teacherApiMocks.recommendTeacherCommunityWriteup.mockResolvedValue({
+    teachingApiMocks.recommendTeacherCommunityWriteup.mockResolvedValue({
       id: 'writeup-1',
       user_id: 'stu-1',
       challenge_id: '11',
@@ -312,7 +312,7 @@ describe('TeacherStudentAnalysis', () => {
       created_at: '2026-03-11T10:40:00Z',
       updated_at: '2026-03-11T11:00:00Z',
     })
-    teacherApiMocks.unrecommendTeacherCommunityWriteup.mockResolvedValue({
+    teachingApiMocks.unrecommendTeacherCommunityWriteup.mockResolvedValue({
       id: 'writeup-1',
       user_id: 'stu-1',
       challenge_id: '11',
@@ -325,7 +325,7 @@ describe('TeacherStudentAnalysis', () => {
       created_at: '2026-03-11T10:40:00Z',
       updated_at: '2026-03-11T11:00:00Z',
     })
-    teacherApiMocks.hideTeacherCommunityWriteup.mockResolvedValue({
+    teachingApiMocks.hideTeacherCommunityWriteup.mockResolvedValue({
       id: 'writeup-1',
       user_id: 'stu-1',
       challenge_id: '11',
@@ -338,7 +338,7 @@ describe('TeacherStudentAnalysis', () => {
       created_at: '2026-03-11T10:40:00Z',
       updated_at: '2026-03-11T11:00:00Z',
     })
-    teacherApiMocks.restoreTeacherCommunityWriteup.mockResolvedValue({
+    teachingApiMocks.restoreTeacherCommunityWriteup.mockResolvedValue({
       id: 'writeup-1',
       user_id: 'stu-1',
       challenge_id: '11',
@@ -351,7 +351,7 @@ describe('TeacherStudentAnalysis', () => {
       created_at: '2026-03-11T10:40:00Z',
       updated_at: '2026-03-11T11:00:00Z',
     })
-    teacherApiMocks.exportStudentReviewArchive.mockResolvedValue({
+    teachingApiMocks.exportStudentReviewArchive.mockResolvedValue({
       report_id: 'report-1',
       status: 'processing',
     })
@@ -401,26 +401,26 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.text()).toContain('已公开')
     expect(wrapper.text()).toContain('取消推荐')
 
-    expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1', {})
-    expect(teacherApiMocks.getStudentAttackSessions).toHaveBeenCalledWith('stu-1', {
+    expect(teachingApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1', {})
+    expect(teachingApiMocks.getStudentAttackSessions).toHaveBeenCalledWith('stu-1', {
       with_events: true,
       limit: 20,
       offset: 0,
     })
-    expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledWith({
+    expect(teachingApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledWith({
       student_id: 'stu-1',
       submission_status: 'published',
       page: 1,
       page_size: 6,
     })
-    expect(teacherApiMocks.getTeacherManualReviewSubmissions).toHaveBeenCalledWith({
+    expect(teachingApiMocks.getTeacherManualReviewSubmissions).toHaveBeenCalledWith({
       student_id: 'stu-1',
       page_size: 6,
     })
   })
 
   it('路由页应仅负责组合，不直接处理路由解析逻辑', () => {
-    expect(teacherStudentAnalysisSource).toContain('useTeacherStudentAnalysisPage')
+    expect(teacherStudentAnalysisSource).toContain('useStudentAnalysisPage')
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassManagementRouteName')
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassStudentsRouteName')
   })
@@ -472,8 +472,8 @@ describe('TeacherStudentAnalysis', () => {
     await hideButton?.trigger('click')
     await flushPromises()
 
-    expect(teacherApiMocks.hideTeacherCommunityWriteup).toHaveBeenCalledWith('writeup-1')
-    expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledTimes(2)
+    expect(teachingApiMocks.hideTeacherCommunityWriteup).toHaveBeenCalledWith('writeup-1')
+    expect(teachingApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledTimes(2)
   })
 
   it('应在题解列表内打开并处理人工审核提交', async () => {
@@ -497,7 +497,7 @@ describe('TeacherStudentAnalysis', () => {
     await reviewButton?.trigger('click')
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherManualReviewSubmission).toHaveBeenCalledWith('manual-1')
+    expect(teachingApiMocks.getTeacherManualReviewSubmission).toHaveBeenCalledWith('manual-1')
     expect(wrapper.text()).toContain('完整答案正文')
 
     const approveButton = wrapper
@@ -509,7 +509,7 @@ describe('TeacherStudentAnalysis', () => {
     await approveButton?.trigger('click')
     await flushPromises()
 
-    expect(teacherApiMocks.reviewTeacherManualReviewSubmission).toHaveBeenCalledWith('manual-1', {
+    expect(teachingApiMocks.reviewTeacherManualReviewSubmission).toHaveBeenCalledWith('manual-1', {
       review_status: 'approved',
       review_comment: undefined,
     })
@@ -529,7 +529,7 @@ describe('TeacherStudentAnalysis', () => {
 
     await flushPromises()
 
-    expect(teacherApiMocks.getClassStudents).toHaveBeenCalledWith('100% 班级')
+    expect(teachingApiMocks.getClassStudents).toHaveBeenCalledWith('100% 班级')
   })
 
   it('应该支持跳转到完整复盘页', async () => {
@@ -572,7 +572,7 @@ describe('TeacherStudentAnalysis', () => {
     })
 
     await flushPromises()
-    teacherApiMocks.getStudentAttackSessions.mockClear()
+    teachingApiMocks.getStudentAttackSessions.mockClear()
 
     const selects = wrapper.findAll('select')
     await selects[1].setValue('awd')
@@ -580,20 +580,20 @@ describe('TeacherStudentAnalysis', () => {
     await selects[2].setValue('failed')
     await flushPromises()
 
-    expect(teacherApiMocks.getStudentAttackSessions).toHaveBeenNthCalledWith(1, 'stu-1', {
+    expect(teachingApiMocks.getStudentAttackSessions).toHaveBeenNthCalledWith(1, 'stu-1', {
       with_events: true,
       limit: 20,
       offset: 0,
       mode: 'awd',
     })
-    expect(teacherApiMocks.getStudentAttackSessions).toHaveBeenNthCalledWith(2, 'stu-1', {
+    expect(teachingApiMocks.getStudentAttackSessions).toHaveBeenNthCalledWith(2, 'stu-1', {
       with_events: true,
       limit: 20,
       offset: 0,
       mode: 'awd',
       result: 'failed',
     })
-    expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledTimes(1)
+    expect(teachingApiMocks.getStudentEvidence).toHaveBeenCalledTimes(1)
     expect(replaceMock).toHaveBeenNthCalledWith(1, {
       query: {
         reviewMode: 'awd',
@@ -621,17 +621,17 @@ describe('TeacherStudentAnalysis', () => {
     })
 
     await flushPromises()
-    teacherApiMocks.getStudentAttackSessions.mockClear()
-    teacherApiMocks.getStudentEvidence.mockClear()
+    teachingApiMocks.getStudentAttackSessions.mockClear()
+    teachingApiMocks.getStudentEvidence.mockClear()
 
     const selects = wrapper.findAll('select')
     await selects[0].setValue('11')
     await flushPromises()
 
-    expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1', {
+    expect(teachingApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1', {
       challenge_id: '11',
     })
-    expect(teacherApiMocks.getStudentAttackSessions).toHaveBeenCalledWith('stu-1', {
+    expect(teachingApiMocks.getStudentAttackSessions).toHaveBeenCalledWith('stu-1', {
       with_events: true,
       limit: 20,
       offset: 0,
@@ -657,10 +657,10 @@ describe('TeacherStudentAnalysis', () => {
     })
 
     await flushPromises()
-    teacherApiMocks.getStudentEvidence.mockClear()
-    teacherApiMocks.getStudentAttackSessions.mockClear()
-    teacherApiMocks.getStudentProgress.mockClear()
-    teacherApiMocks.getStudentTimeline.mockClear()
+    teachingApiMocks.getStudentEvidence.mockClear()
+    teachingApiMocks.getStudentAttackSessions.mockClear()
+    teachingApiMocks.getStudentProgress.mockClear()
+    teachingApiMocks.getStudentTimeline.mockClear()
 
     routeMock.query = {
       reviewMode: 'awd',
@@ -668,16 +668,16 @@ describe('TeacherStudentAnalysis', () => {
     }
     await flushPromises()
 
-    expect(teacherApiMocks.getStudentAttackSessions).toHaveBeenCalledWith('stu-1', {
+    expect(teachingApiMocks.getStudentAttackSessions).toHaveBeenCalledWith('stu-1', {
       with_events: true,
       limit: 20,
       offset: 0,
       mode: 'awd',
       result: 'failed',
     })
-    expect(teacherApiMocks.getStudentEvidence).not.toHaveBeenCalled()
-    expect(teacherApiMocks.getStudentProgress).not.toHaveBeenCalled()
-    expect(teacherApiMocks.getStudentTimeline).not.toHaveBeenCalled()
+    expect(teachingApiMocks.getStudentEvidence).not.toHaveBeenCalled()
+    expect(teachingApiMocks.getStudentProgress).not.toHaveBeenCalled()
+    expect(teachingApiMocks.getStudentTimeline).not.toHaveBeenCalled()
   })
 
   it('应采用顶部 tabs 工作区壳层而不是把所有内容堆叠在主页面，并去掉页面内重复顶栏', async () => {
@@ -733,7 +733,7 @@ describe('TeacherStudentAnalysis', () => {
   })
 
   it('导出复盘归档失败时不应抛到全局错误页', async () => {
-    teacherApiMocks.exportStudentReviewArchive.mockRejectedValue(new Error('导出失败'))
+    teachingApiMocks.exportStudentReviewArchive.mockRejectedValue(new Error('导出失败'))
 
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {
@@ -753,7 +753,7 @@ describe('TeacherStudentAnalysis', () => {
     await expect(wrapper.get('#export-review-archive').trigger('click')).resolves.toBeUndefined()
     await flushPromises()
 
-    expect(teacherApiMocks.exportStudentReviewArchive).toHaveBeenCalledWith('stu-1', {
+    expect(teachingApiMocks.exportStudentReviewArchive).toHaveBeenCalledWith('stu-1', {
       format: 'json',
     })
   })

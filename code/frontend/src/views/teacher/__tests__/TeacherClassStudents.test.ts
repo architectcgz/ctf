@@ -24,7 +24,7 @@ const routeMock = {
   },
 }
 
-const teacherApiMocks = vi.hoisted(() => ({
+const teachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
   getClassStudents: vi.fn(),
   getClassReview: vi.fn(),
@@ -42,7 +42,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/teaching', () => teachingApiMocks)
 
 function deferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void
@@ -69,15 +69,15 @@ describe('TeacherClassStudents', () => {
     routeMock.query.panel = 'students'
     delete routeMock.query.from_date
     delete routeMock.query.to_date
-    teacherApiMocks.getClasses.mockReset()
-    teacherApiMocks.getClassStudents.mockReset()
-    teacherApiMocks.getClassReview.mockReset()
-    teacherApiMocks.getClassSummary.mockReset()
-    teacherApiMocks.getClassTrend.mockReset()
-    teacherApiMocks.getStudentRecommendations.mockReset()
+    teachingApiMocks.getClasses.mockReset()
+    teachingApiMocks.getClassStudents.mockReset()
+    teachingApiMocks.getClassReview.mockReset()
+    teachingApiMocks.getClassSummary.mockReset()
+    teachingApiMocks.getClassTrend.mockReset()
+    teachingApiMocks.getStudentRecommendations.mockReset()
 
-    teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 2 }])
-    teacherApiMocks.getClassStudents.mockResolvedValue([
+    teachingApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 2 }])
+    teachingApiMocks.getClassStudents.mockResolvedValue([
       {
         id: 'stu-1',
         username: 'alice',
@@ -96,7 +96,7 @@ describe('TeacherClassStudents', () => {
         weak_dimension: 'pwn',
       },
     ])
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
+    teachingApiMocks.getStudentRecommendations.mockResolvedValue({
       weak_dimensions: [
         {
           dimension: 'crypto',
@@ -117,7 +117,7 @@ describe('TeacherClassStudents', () => {
         },
       ],
     })
-    teacherApiMocks.getClassReview.mockResolvedValue({
+    teachingApiMocks.getClassReview.mockResolvedValue({
       class_name: 'Class A',
       items: [
         {
@@ -151,7 +151,7 @@ describe('TeacherClassStudents', () => {
         },
       ],
     })
-    teacherApiMocks.getClassSummary.mockResolvedValue({
+    teachingApiMocks.getClassSummary.mockResolvedValue({
       class_name: 'Class A',
       student_count: 2,
       average_solved: 2,
@@ -159,7 +159,7 @@ describe('TeacherClassStudents', () => {
       active_rate: 50,
       recent_event_count: 6,
     })
-    teacherApiMocks.getClassTrend.mockResolvedValue({
+    teachingApiMocks.getClassTrend.mockResolvedValue({
       class_name: 'Class A',
       points: [
         { date: '2026-03-05', active_student_count: 1, event_count: 2, solve_count: 1 },
@@ -234,8 +234,8 @@ describe('TeacherClassStudents', () => {
     expect(studentsPanel.find('input[placeholder="输入学号精确查询"]').exists()).toBe(true)
     expect(wrapper.find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
     expect(wrapper.find('.teacher-directory-row-points').attributes('title')).toBe('alice')
-    expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
-    expect(teacherApiMocks.getStudentRecommendations).toHaveBeenCalledWith('stu-1')
+    expect(teachingApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
+    expect(teachingApiMocks.getStudentRecommendations).toHaveBeenCalledWith('stu-1')
 
     wrapper.findComponent({ name: 'ClassStudentsPage' }).vm.$emit('openStudent', 'stu-1')
 
@@ -246,11 +246,11 @@ describe('TeacherClassStudents', () => {
   })
 
   it('没有推荐题时应在教师复盘与介入卡片中展示友好提示', async () => {
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
+    teachingApiMocks.getStudentRecommendations.mockResolvedValue({
       weak_dimensions: [],
       challenges: [],
     })
-    teacherApiMocks.getClassReview.mockResolvedValue({
+    teachingApiMocks.getClassReview.mockResolvedValue({
       class_name: 'Class A',
       items: [
         {
@@ -294,7 +294,7 @@ describe('TeacherClassStudents', () => {
   })
 
   it('推荐题加载失败时不应把教师介入卡片伪装成空推荐', async () => {
-    teacherApiMocks.getStudentRecommendations.mockRejectedValue(new Error('boom'))
+    teachingApiMocks.getStudentRecommendations.mockRejectedValue(new Error('boom'))
 
     const wrapper = mount(TeacherClassStudents, {
       global: {
@@ -320,7 +320,7 @@ describe('TeacherClassStudents', () => {
   })
 
   it('路由页应仅负责组合，不直接依赖教师接口实现', () => {
-    expect(teacherClassStudentsSource).toContain('useTeacherClassStudentsPage')
+    expect(teacherClassStudentsSource).toContain('useClassStudentsPage')
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
   })
 
@@ -418,12 +418,12 @@ describe('TeacherClassStudents', () => {
 
     await flushPromises()
 
-    expect(teacherApiMocks.getClassStudents).toHaveBeenCalledWith('100% 班级', {
+    expect(teachingApiMocks.getClassStudents).toHaveBeenCalledWith('100% 班级', {
       student_no: undefined,
     })
-    expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('100% 班级')
-    expect(teacherApiMocks.getClassSummary).toHaveBeenCalledWith('100% 班级')
-    expect(teacherApiMocks.getClassTrend).toHaveBeenCalledWith('100% 班级')
+    expect(teachingApiMocks.getClassReview).toHaveBeenCalledWith('100% 班级')
+    expect(teachingApiMocks.getClassSummary).toHaveBeenCalledWith('100% 班级')
+    expect(teachingApiMocks.getClassTrend).toHaveBeenCalledWith('100% 班级')
   })
 
   it('时间段 query 应驱动班级概览请求，并在应用后回写路由与导出弹窗上下文', async () => {
@@ -447,15 +447,15 @@ describe('TeacherClassStudents', () => {
     await flushPromises()
     await flushPromises()
 
-    expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('Class A', {
+    expect(teachingApiMocks.getClassReview).toHaveBeenCalledWith('Class A', {
       from_date: '2026-03-01',
       to_date: '2026-03-07',
     })
-    expect(teacherApiMocks.getClassSummary).toHaveBeenCalledWith('Class A', {
+    expect(teachingApiMocks.getClassSummary).toHaveBeenCalledWith('Class A', {
       from_date: '2026-03-01',
       to_date: '2026-03-07',
     })
-    expect(teacherApiMocks.getClassTrend).toHaveBeenCalledWith('Class A', {
+    expect(teachingApiMocks.getClassTrend).toHaveBeenCalledWith('Class A', {
       from_date: '2026-03-01',
       to_date: '2026-03-07',
     })
@@ -573,12 +573,12 @@ describe('TeacherClassStudents', () => {
       }>
     >()
 
-    teacherApiMocks.getClassStudents.mockReset()
-    teacherApiMocks.getClassReview.mockReset()
-    teacherApiMocks.getStudentRecommendations.mockReset()
-    teacherApiMocks.getClassSummary.mockReset()
-    teacherApiMocks.getClassTrend.mockReset()
-    teacherApiMocks.getClassStudents
+    teachingApiMocks.getClassStudents.mockReset()
+    teachingApiMocks.getClassReview.mockReset()
+    teachingApiMocks.getStudentRecommendations.mockReset()
+    teachingApiMocks.getClassSummary.mockReset()
+    teachingApiMocks.getClassTrend.mockReset()
+    teachingApiMocks.getClassStudents
       .mockResolvedValueOnce([
         {
           id: 'stu-1',
@@ -600,7 +600,7 @@ describe('TeacherClassStudents', () => {
       ])
       .mockImplementationOnce(() => slowRequest.promise)
       .mockImplementationOnce(() => fastRequest.promise)
-    teacherApiMocks.getClassSummary.mockResolvedValue({
+    teachingApiMocks.getClassSummary.mockResolvedValue({
       class_name: 'Class A',
       student_count: 2,
       average_solved: 2,
@@ -608,14 +608,14 @@ describe('TeacherClassStudents', () => {
       active_rate: 50,
       recent_event_count: 6,
     })
-    teacherApiMocks.getClassTrend.mockResolvedValue({
+    teachingApiMocks.getClassTrend.mockResolvedValue({
       class_name: 'Class A',
       points: [
         { date: '2026-03-05', active_student_count: 1, event_count: 2, solve_count: 1 },
         { date: '2026-03-06', active_student_count: 1, event_count: 3, solve_count: 1 },
       ],
     })
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue({
+    teachingApiMocks.getStudentRecommendations.mockResolvedValue({
       weak_dimensions: [
         {
           dimension: 'crypto',
@@ -636,7 +636,7 @@ describe('TeacherClassStudents', () => {
         },
       ],
     })
-    teacherApiMocks.getClassReview.mockResolvedValue({
+    teachingApiMocks.getClassReview.mockResolvedValue({
       class_name: 'Class A',
       items: [
         {
@@ -735,12 +735,12 @@ describe('TeacherClassStudents', () => {
     expect((studentNoInput.element as HTMLInputElement).value).toBe('')
     expect(wrapper.find('.teacher-filter-reset').exists()).toBe(false)
 
-    expect(teacherApiMocks.getClassStudents).toHaveBeenCalledWith('Class A', {
+    expect(teachingApiMocks.getClassStudents).toHaveBeenCalledWith('Class A', {
       student_no: '20260001',
     })
-    expect(teacherApiMocks.getClassReview).toHaveBeenCalledTimes(1)
-    expect(teacherApiMocks.getClassSummary).toHaveBeenCalledTimes(1)
-    expect(teacherApiMocks.getClassTrend).toHaveBeenCalledTimes(1)
+    expect(teachingApiMocks.getClassReview).toHaveBeenCalledTimes(1)
+    expect(teachingApiMocks.getClassSummary).toHaveBeenCalledTimes(1)
+    expect(teachingApiMocks.getClassTrend).toHaveBeenCalledTimes(1)
   })
 
   it('点击导出班级报告时应打开当前班级上下文对话框', async () => {

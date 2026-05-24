@@ -9,7 +9,7 @@ import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewA
 describe('Teacher student review archive workspace extraction', () => {
   it('路由页应收敛为 feature model 与 widget 组合层', () => {
     expect(reviewArchiveSource).toContain(
-      "import { useTeacherStudentReviewArchivePage } from '@/features/teacher-student-review-archive'"
+      "import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'"
     )
     expect(reviewArchiveSource).toContain(
       "import { TeacherReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"

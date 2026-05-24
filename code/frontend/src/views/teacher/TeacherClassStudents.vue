@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ClassStudentsPage from '@/components/teacher/class-management/ClassStudentsPage.vue'
 import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
-import { useTeacherClassStudentsPage } from '@/features/teacher-class-students'
+import { useClassStudentsPage } from '@/features/class-students-workspace'
 
 const {
   selectedClassName,
@@ -31,7 +31,7 @@ const {
   applyInsightWindow,
   resetInsightWindow,
   openStudent,
-} = useTeacherClassStudentsPage()
+} = useClassStudentsPage()
 </script>
 
 <template>

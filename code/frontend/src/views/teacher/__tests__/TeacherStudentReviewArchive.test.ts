@@ -17,7 +17,7 @@ const routeMock = {
   },
 }
 
-const teacherApiMocks = vi.hoisted(() => ({
+const teachingApiMocks = vi.hoisted(() => ({
   getStudentReviewArchive: vi.fn(),
   exportStudentReviewArchive: vi.fn(),
 }))
@@ -35,7 +35,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/teaching', () => teachingApiMocks)
 vi.mock('@/api/assessment', () => assessmentApiMocks)
 
 describe('TeacherStudentReviewArchive', () => {
@@ -44,10 +44,10 @@ describe('TeacherStudentReviewArchive', () => {
     pushMock.mockReset()
     routeMock.params.className = 'Class A'
     routeMock.params.studentId = 'stu-1'
-    Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
+    Object.values(teachingApiMocks).forEach((mock) => mock.mockReset())
     Object.values(assessmentApiMocks).forEach((mock) => mock.mockReset())
 
-    teacherApiMocks.getStudentReviewArchive.mockResolvedValue({
+    teachingApiMocks.getStudentReviewArchive.mockResolvedValue({
       generated_at: '2026-04-01T09:30:00Z',
       student: {
         id: 'stu-1',
@@ -198,7 +198,7 @@ describe('TeacherStudentReviewArchive', () => {
 
     await flushPromises()
 
-    expect(teacherApiMocks.getStudentReviewArchive).toHaveBeenCalledWith('stu-1')
+    expect(teachingApiMocks.getStudentReviewArchive).toHaveBeenCalledWith('stu-1')
     expect(wrapper.text()).toContain('Alice')
     expect(wrapper.text()).toContain('教学复盘归档')
     expect(wrapper.text()).toContain('表达与总结')
@@ -212,7 +212,7 @@ describe('TeacherStudentReviewArchive', () => {
 
   it('复盘归档操作按钮应接入共享 ui-btn 原语', () => {
     expect(reviewArchiveSource).toContain(
-      "import { useTeacherStudentReviewArchivePage } from '@/features/teacher-student-review-archive'"
+      "import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'"
     )
     expect(reviewArchiveSource).toContain(
       "import { TeacherReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
@@ -258,7 +258,7 @@ describe('TeacherStudentReviewArchive', () => {
   })
 
   it('导出复盘归档失败时不应抛到全局错误页', async () => {
-    teacherApiMocks.exportStudentReviewArchive.mockRejectedValue(new Error('导出失败'))
+    teachingApiMocks.exportStudentReviewArchive.mockRejectedValue(new Error('导出失败'))
 
     const wrapper = mount(TeacherStudentReviewArchive, {
       global: {
@@ -277,7 +277,7 @@ describe('TeacherStudentReviewArchive', () => {
     await expect(wrapper.get('#export-archive').trigger('click')).resolves.toBeUndefined()
     await flushPromises()
 
-    expect(teacherApiMocks.exportStudentReviewArchive).toHaveBeenCalledWith('stu-1', {
+    expect(teachingApiMocks.exportStudentReviewArchive).toHaveBeenCalledWith('stu-1', {
       format: 'json',
     })
   })

@@ -12,7 +12,7 @@ const routeMock = {
   query: {} as Record<string, string>,
 }
 
-const teacherApiMocks = vi.hoisted(() => ({
+const teachingApiMocks = vi.hoisted(() => ({
   getTeacherAWDReview: vi.fn(),
   exportTeacherAWDReviewArchive: vi.fn(),
   exportTeacherAWDReviewReport: vi.fn(),
@@ -27,7 +27,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/teaching', () => teachingApiMocks)
 
 function collectTestIdTexts(testId: string): string[] {
   return [...document.body.querySelectorAll(`[data-testid="${testId}"]`)]
@@ -40,9 +40,9 @@ describe('TeacherAWDReviewDetail', () => {
     setActivePinia(createPinia())
     routeMock.params.contestId = 'contest-1'
     routeMock.query = {}
-    Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
+    Object.values(teachingApiMocks).forEach((mock) => mock.mockReset())
 
-    teacherApiMocks.getTeacherAWDReview.mockResolvedValue({
+    teachingApiMocks.getTeacherAWDReview.mockResolvedValue({
       generated_at: '2026-04-12T10:00:00Z',
       scope: {
         snapshot_type: 'live',
@@ -110,11 +110,11 @@ describe('TeacherAWDReviewDetail', () => {
         traffic: [],
       },
     })
-    teacherApiMocks.exportTeacherAWDReviewArchive.mockResolvedValue({
+    teachingApiMocks.exportTeacherAWDReviewArchive.mockResolvedValue({
       report_id: '31',
       status: 'processing',
     })
-    teacherApiMocks.exportTeacherAWDReviewReport.mockResolvedValue({
+    teachingApiMocks.exportTeacherAWDReviewReport.mockResolvedValue({
       report_id: '32',
       status: 'processing',
     })
@@ -133,7 +133,7 @@ describe('TeacherAWDReviewDetail', () => {
   })
 
   it('页面应通过 feature model 获取详情状态，不再直接耦合 teacher api', () => {
-    expect(awdReviewDetailSource).toContain("useTeacherAwdReviewDetail } from '@/features/teacher-awd-review'")
+    expect(awdReviewDetailSource).toContain("useAwdReviewDetailPage } from '@/features/awd-review-detail-workspace'")
     expect(awdReviewDetailSource).not.toContain("from '@/api/teacher'")
     expect(awdReviewDetailSource).not.toContain('const activeContestTitle = computed')
     expect(awdReviewDetailSource).not.toContain('const summaryStats = computed')
@@ -147,7 +147,7 @@ describe('TeacherAWDReviewDetail', () => {
 
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherAWDReview).toHaveBeenCalledWith('contest-1', {
+    expect(teachingApiMocks.getTeacherAWDReview).toHaveBeenCalledWith('contest-1', {
       round: undefined,
       team_id: undefined,
     })
@@ -160,7 +160,7 @@ describe('TeacherAWDReviewDetail', () => {
 
   it('query 带 round 时应切到单轮摘要，并在赛后开放两个导出按钮', async () => {
     routeMock.query = { round: '2' }
-    teacherApiMocks.getTeacherAWDReview.mockResolvedValueOnce({
+    teachingApiMocks.getTeacherAWDReview.mockResolvedValueOnce({
       generated_at: '2026-04-12T10:00:00Z',
       scope: {
         snapshot_type: 'final',
@@ -206,7 +206,7 @@ describe('TeacherAWDReviewDetail', () => {
 
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherAWDReview).toHaveBeenCalledWith('contest-1', {
+    expect(teachingApiMocks.getTeacherAWDReview).toHaveBeenCalledWith('contest-1', {
       round: 2,
       team_id: undefined,
     })
@@ -221,7 +221,7 @@ describe('TeacherAWDReviewDetail', () => {
 
   it('单轮复盘应在主视图和队伍抽屉中保留运行态 service 标识', async () => {
     routeMock.query = { round: '2' }
-    teacherApiMocks.getTeacherAWDReview.mockResolvedValueOnce({
+    teachingApiMocks.getTeacherAWDReview.mockResolvedValueOnce({
       generated_at: '2026-04-12T10:00:00Z',
       scope: {
         snapshot_type: 'final',
@@ -363,7 +363,7 @@ describe('TeacherAWDReviewDetail', () => {
   })
 
   it('导出归档失败时不应抛到全局错误页', async () => {
-    teacherApiMocks.exportTeacherAWDReviewArchive.mockRejectedValue(new Error('导出失败'))
+    teachingApiMocks.exportTeacherAWDReviewArchive.mockRejectedValue(new Error('导出失败'))
 
     const wrapper = mount(TeacherAWDReviewDetail)
 
@@ -378,7 +378,7 @@ describe('TeacherAWDReviewDetail', () => {
     await expect(exportButton!.trigger('click')).resolves.toBeUndefined()
     await flushPromises()
 
-    expect(teacherApiMocks.exportTeacherAWDReviewArchive).toHaveBeenCalledWith(
+    expect(teachingApiMocks.exportTeacherAWDReviewArchive).toHaveBeenCalledWith(
       'contest-1',
       undefined
     )

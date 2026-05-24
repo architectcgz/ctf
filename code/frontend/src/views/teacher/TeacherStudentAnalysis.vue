@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import StudentAnalysisPage from '@/components/teacher/class-management/StudentAnalysisPage.vue'
 import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
-import { useTeacherStudentAnalysisPage } from '@/features/teacher-student-analysis'
+import { useStudentAnalysisPage } from '@/features/student-analysis-workspace'
 
 const {
   classes,
@@ -48,7 +48,7 @@ const {
   reviewManualReview,
   changeWriteupPage,
   updateReviewWorkspaceFilters,
-} = useTeacherStudentAnalysisPage()
+} = useStudentAnalysisPage()
 </script>
 
 <template>

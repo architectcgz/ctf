@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useTeacherStudentReviewArchivePage } from '@/features/teacher-student-review-archive'
+import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'
 import { TeacherReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'
 
 const {
@@ -11,7 +11,7 @@ const {
   openStudentAnalysis,
   goBack,
   exportArchive,
-} = useTeacherStudentReviewArchivePage()
+} = useStudentReviewArchivePage()
 </script>
 
 <template>
