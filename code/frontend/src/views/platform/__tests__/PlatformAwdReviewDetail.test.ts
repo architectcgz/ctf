@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import { useAuthStore } from '@/stores/auth'
 import platformAwdReviewDetailSource from '../PlatformAwdReviewDetail.vue?raw'
-import TeacherAWDReviewWorkspace from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspace.vue'
+import AwdReviewWorkspace from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -102,7 +102,7 @@ describe('PlatformAwdReviewDetail route owner', () => {
       round: undefined,
       team_id: undefined,
     })
-    expect(wrapper.findComponent(TeacherAWDReviewWorkspace).exists()).toBe(true)
+    expect(wrapper.findComponent(AwdReviewWorkspace).exists()).toBe(true)
     expect(wrapper.text()).toContain('春季 AWD 联训')
 
     const backButton = wrapper

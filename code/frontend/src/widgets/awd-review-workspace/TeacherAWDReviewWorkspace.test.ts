@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import TeacherAWDReviewWorkspace from './TeacherAWDReviewWorkspace.vue'
+import AwdReviewWorkspace from './AwdReviewWorkspace.vue'
 import type { TeacherAWDReviewArchiveData } from '@/api/contracts'
 
 function createReview(): TeacherAWDReviewArchiveData {
@@ -64,7 +64,7 @@ function createProps() {
 
 describe('TeacherAWDReviewWorkspace', () => {
   it('应转发顶部动作事件', async () => {
-    const wrapper = mount(TeacherAWDReviewWorkspace, {
+    const wrapper = mount(AwdReviewWorkspace, {
       props: createProps(),
       global: {
         stubs: {
@@ -88,7 +88,7 @@ describe('TeacherAWDReviewWorkspace', () => {
   })
 
   it('应转发轮次切换、队伍关闭与重试加载事件', async () => {
-    const wrapper = mount(TeacherAWDReviewWorkspace, {
+    const wrapper = mount(AwdReviewWorkspace, {
       props: {
         ...createProps(),
         review: null,

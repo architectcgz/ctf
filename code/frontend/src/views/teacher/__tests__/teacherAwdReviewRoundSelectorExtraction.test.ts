@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
-import teacherAwdReviewWorkspaceSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspace.vue?raw'
+import teacherAwdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import teacherAwdReviewRoundSelectorSource from '@/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue?raw'
 
 describe('Teacher AWD review round selector extraction', () => {

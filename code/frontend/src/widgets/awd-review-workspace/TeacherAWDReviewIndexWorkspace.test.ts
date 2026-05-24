@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import TeacherAWDReviewIndexWorkspace from './TeacherAWDReviewIndexWorkspace.vue'
+import AwdReviewIndexWorkspace from './AwdReviewIndexWorkspace.vue'
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 
 function createContests(): TeacherAWDReviewContestItemData[] {
@@ -45,7 +45,7 @@ function createProps() {
 
 describe('TeacherAWDReviewIndexWorkspace', () => {
   it('应转发顶部动作和进入复盘事件', async () => {
-    const wrapper = mount(TeacherAWDReviewIndexWorkspace, {
+    const wrapper = mount(AwdReviewIndexWorkspace, {
       props: createProps(),
     })
 
@@ -61,7 +61,7 @@ describe('TeacherAWDReviewIndexWorkspace', () => {
   })
 
   it('应转发分页切换事件', async () => {
-    const wrapper = mount(TeacherAWDReviewIndexWorkspace, {
+    const wrapper = mount(AwdReviewIndexWorkspace, {
       props: createProps(),
     })
 
@@ -72,7 +72,7 @@ describe('TeacherAWDReviewIndexWorkspace', () => {
   })
 
   it('应转发筛选输入与错误态重试事件', async () => {
-    const wrapper = mount(TeacherAWDReviewIndexWorkspace, {
+    const wrapper = mount(AwdReviewIndexWorkspace, {
       props: {
         ...createProps(),
         hasContests: false,

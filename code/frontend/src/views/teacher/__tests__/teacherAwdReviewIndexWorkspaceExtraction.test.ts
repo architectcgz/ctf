@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import awdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
 import awdReviewWidgetIndexSource from '@/widgets/awd-review-workspace/index.ts?raw'
-import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/TeacherAWDReviewIndexWorkspace.vue?raw'
+import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceHeader.vue?raw'
 import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSummaryPanel.vue?raw'
@@ -19,10 +19,10 @@ import awdReviewDirectoryStateSource from '@/widgets/awd-review-workspace/Teache
 describe('Teacher AWD review index workspace extraction', () => {
   it('目录页路由应收敛为 widget 组合层', () => {
     expect(awdReviewWidgetIndexSource).toContain(
-      "export { default as AwdReviewIndexWorkspace } from './TeacherAWDReviewIndexWorkspace.vue'"
+      "export { default as AwdReviewIndexWorkspace } from './AwdReviewIndexWorkspace.vue'"
     )
     expect(awdReviewWidgetIndexSource).toContain(
-      "export { default as AwdReviewWorkspace } from './TeacherAWDReviewWorkspace.vue'"
+      "export { default as AwdReviewWorkspace } from './AwdReviewWorkspace.vue'"
     )
     expect(awdReviewWidgetIndexSource).not.toContain('TeacherAWDReviewWorkspaceState')
     expect(awdReviewWidgetIndexSource).not.toContain('TeacherAWDReviewContestDirectory')

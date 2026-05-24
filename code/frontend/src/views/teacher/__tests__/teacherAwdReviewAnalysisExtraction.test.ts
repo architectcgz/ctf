@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
-import teacherAwdReviewWorkspaceSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspace.vue?raw'
+import teacherAwdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import teacherAwdReviewAnalysisSectionSource from '@/components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue?raw'
 
 describe('Teacher AWD review analysis extraction', () => {

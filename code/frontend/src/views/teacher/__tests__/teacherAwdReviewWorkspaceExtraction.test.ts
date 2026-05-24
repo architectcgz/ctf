@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
-import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspace.vue?raw'
+import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import awdReviewWorkspaceStateSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceState.vue?raw'
 import awdReviewWorkspaceActionsSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceActions.vue?raw'
 import awdReviewStatusChipSource from '@/widgets/awd-review-workspace/TeacherAWDReviewStatusChip.vue?raw'
