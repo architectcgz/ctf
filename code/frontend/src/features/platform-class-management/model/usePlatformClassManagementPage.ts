@@ -2,7 +2,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { TeacherClassItem } from '@/api/contracts'
-import { getClasses } from '@/api/teacher'
+import { getClasses } from '@/api/teaching'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 export function usePlatformClassManagementPage() {

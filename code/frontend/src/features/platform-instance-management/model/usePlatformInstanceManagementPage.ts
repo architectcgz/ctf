@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { TeacherInstanceItem } from '@/api/contracts'
-import { destroyTeacherInstance, getTeacherInstances } from '@/api/teacher'
+import { destroyTeacherInstance, getTeacherInstances } from '@/api/teaching'
 import { useAbortController } from '@/composables/useAbortController'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 

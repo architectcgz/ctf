@@ -8,7 +8,7 @@ import instanceManageWorkspacePanelSource from '@/components/platform/instance/I
 
 const pushMock = vi.fn()
 
-const teacherApiMocks = vi.hoisted(() => ({
+const teachingApiMocks = vi.hoisted(() => ({
   getTeacherInstances: vi.fn(),
   destroyTeacherInstance: vi.fn(),
 }))
@@ -23,7 +23,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/teaching', () => teachingApiMocks)
 vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: confirmMock,
 }))
@@ -31,11 +31,11 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 describe('PlatformInstanceManagement', () => {
   beforeEach(() => {
     pushMock.mockReset()
-    teacherApiMocks.getTeacherInstances.mockReset()
-    teacherApiMocks.destroyTeacherInstance.mockReset()
+    teachingApiMocks.getTeacherInstances.mockReset()
+    teachingApiMocks.destroyTeacherInstance.mockReset()
     confirmMock.mockReset()
 
-    teacherApiMocks.getTeacherInstances.mockResolvedValue({
+    teachingApiMocks.getTeacherInstances.mockResolvedValue({
       list: [
         {
           id: 'inst-1',
@@ -82,7 +82,7 @@ describe('PlatformInstanceManagement', () => {
         warning_count: 1,
       },
     })
-    teacherApiMocks.destroyTeacherInstance.mockResolvedValue(undefined)
+    teachingApiMocks.destroyTeacherInstance.mockResolvedValue(undefined)
     confirmMock.mockResolvedValue(true)
   })
 
@@ -137,7 +137,7 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledWith(
+    expect(teachingApiMocks.getTeacherInstances).toHaveBeenCalledWith(
       {
         class_name: undefined,
         keyword: undefined,
@@ -166,7 +166,7 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    teacherApiMocks.getTeacherInstances.mockResolvedValue({
+    teachingApiMocks.getTeacherInstances.mockResolvedValue({
       list: [
         {
           id: 'inst-2',
@@ -201,7 +201,7 @@ describe('PlatformInstanceManagement', () => {
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+    expect(teachingApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
       {
         class_name: undefined,
         keyword: 'Pwn',
@@ -235,7 +235,7 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    teacherApiMocks.getTeacherInstances.mockResolvedValue({
+    teachingApiMocks.getTeacherInstances.mockResolvedValue({
       list: [
         {
           id: 'inst-2',
@@ -273,8 +273,8 @@ describe('PlatformInstanceManagement', () => {
     await flushPromises()
 
     expect(confirmMock).toHaveBeenCalled()
-    expect(teacherApiMocks.destroyTeacherInstance).toHaveBeenCalledWith('inst-1')
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+    expect(teachingApiMocks.destroyTeacherInstance).toHaveBeenCalledWith('inst-1')
+    expect(teachingApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
       {
         class_name: undefined,
         keyword: undefined,

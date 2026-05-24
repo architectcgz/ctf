@@ -8,7 +8,7 @@ import studentManageWorkspacePanelSource from '@/components/platform/student/Stu
 
 const pushMock = vi.fn()
 
-const teacherApiMocks = vi.hoisted(() => ({
+const teachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
   getStudentsDirectory: vi.fn(),
 }))
@@ -21,20 +21,20 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/teaching', () => teachingApiMocks)
 
 describe('PlatformStudentManagement', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     pushMock.mockReset()
-    teacherApiMocks.getClasses.mockReset()
-    teacherApiMocks.getStudentsDirectory.mockReset()
+    teachingApiMocks.getClasses.mockReset()
+    teachingApiMocks.getStudentsDirectory.mockReset()
 
-    teacherApiMocks.getClasses.mockResolvedValue([
+    teachingApiMocks.getClasses.mockResolvedValue([
       { name: 'Class A', student_count: 2 },
       { name: 'Class B', student_count: 1 },
     ])
-    teacherApiMocks.getStudentsDirectory.mockImplementation(async (params) => {
+    teachingApiMocks.getStudentsDirectory.mockImplementation(async (params) => {
       const all = [
         {
           id: 'stu-1',
@@ -127,8 +127,8 @@ describe('PlatformStudentManagement', () => {
     const wrapper = mount(PlatformStudentManagement)
     await flushPromises()
 
-    expect(teacherApiMocks.getClasses).toHaveBeenCalledTimes(1)
-    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenCalledWith({
+    expect(teachingApiMocks.getClasses).toHaveBeenCalledTimes(1)
+    expect(teachingApiMocks.getStudentsDirectory).toHaveBeenCalledWith({
       class_name: undefined,
       keyword: undefined,
       student_no: undefined,
@@ -161,7 +161,7 @@ describe('PlatformStudentManagement', () => {
 
     expect(wrapper.text()).toContain('Alice Zhang')
     expect(wrapper.text()).not.toContain('Bob Li')
-    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
+    expect(teachingApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
       class_name: undefined,
       keyword: 'Alice',
       student_no: undefined,
@@ -182,7 +182,7 @@ describe('PlatformStudentManagement', () => {
 
     expect(wrapper.text()).toContain('Charlie Wang')
     expect(wrapper.text()).not.toContain('Alice Zhang')
-    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
+    expect(teachingApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
       class_name: 'Class B',
       keyword: undefined,
       student_no: undefined,
@@ -196,7 +196,7 @@ describe('PlatformStudentManagement', () => {
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teacherApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
+    expect(teachingApiMocks.getStudentsDirectory).toHaveBeenLastCalledWith({
       class_name: undefined,
       keyword: undefined,
       student_no: undefined,
