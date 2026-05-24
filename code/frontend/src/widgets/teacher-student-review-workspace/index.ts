@@ -1,1 +1,1 @@
-export { default as TeacherStudentReviewWorkspace } from './TeacherStudentReviewWorkspace.vue'
+export { default as StudentReviewWorkspace } from './TeacherStudentReviewWorkspace.vue'
