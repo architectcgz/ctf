@@ -12,9 +12,9 @@ describe('Teacher student review archive workspace extraction', () => {
       "import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'"
     )
     expect(reviewArchiveSource).toContain(
-      "import { TeacherReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
+      "import { ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
     )
-    expect(reviewArchiveSource).toContain('<TeacherReviewArchiveWorkspace')
+    expect(reviewArchiveSource).toContain('<ReviewArchiveWorkspace')
     expect(reviewArchiveSource).not.toContain('exportStudentReviewArchive')
     expect(reviewArchiveSource).not.toContain('<ReviewArchiveHero')
     expect(reviewArchiveSource).not.toContain('class="review-archive-shell')

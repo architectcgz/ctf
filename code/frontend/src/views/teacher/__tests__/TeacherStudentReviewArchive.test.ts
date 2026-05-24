@@ -215,9 +215,9 @@ describe('TeacherStudentReviewArchive', () => {
       "import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'"
     )
     expect(reviewArchiveSource).toContain(
-      "import { TeacherReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
+      "import { ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
     )
-    expect(reviewArchiveSource).toContain('<TeacherReviewArchiveWorkspace')
+    expect(reviewArchiveSource).toContain('<ReviewArchiveWorkspace')
     expect(reviewArchiveSource).not.toContain('exportStudentReviewArchive')
     expect(reviewArchiveWorkspaceSource).toContain('<TeacherReviewArchiveState')
     expect(reviewArchiveStateSource).toContain('class="ui-btn ui-btn--primary"')

@@ -61,6 +61,7 @@
 
 - 目标：
   - 让 `PlatformStudentReviewArchive` 不再直接挂 teacher route view。
+  - 让共享 review archive widget 的 public API 不再暴露 `TeacherReviewArchiveWorkspace` 这类 teacher-specific 命名。
 - 预期改动：
   - `code/frontend/src/router/routes/platformRoutes.ts`
   - `code/frontend/src/views/platform/PlatformStudentReviewArchive.vue`
@@ -70,13 +71,14 @@
   - `code/frontend/src/__tests__/architectureAllowlist.ts`
   - `.harness/reuse-decisions/frontend-architecture-review-prompt-and-platform-feature-split.md`
 - 依赖：
-  - 继续复用 `teacher-student-review-archive` 中已稳定的数据查询、导出消息和 workspace widget，不复制导出轮询链路。
+  - 继续复用 `teacher-student-review-archive` 中已稳定的数据查询、导出消息和 workspace widget 实现，只把 route view 消费点切到中性 `ReviewArchiveWorkspace` 导出，不复制导出轮询链路。
 - 验证：
   - `git diff --check -- <touched files>`
   - `npm run test:run -- src/views/platform/__tests__/PlatformStudentReviewArchive.test.ts src/views/teacher/__tests__/TeacherStudentReviewArchive.test.ts src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts src/__tests__/architectureBoundaries.test.ts src/views/__tests__/routeViewArchitectureBoundary.test.ts src/router/__tests__/sharedRoutes.test.ts`
   - `npm run typecheck`
 - Review focus：
   - 平台复盘归档页是否摆脱 teacher route view。
+  - 平台 / 教师 route view 是否都通过中性 `ReviewArchiveWorkspace` 导出消费共享 widget。
   - 导出归档、返回分析页、返回班级页在 admin 角色下是否仍落到平台路由。
 
 ### Slice 3：平台班级工作台别名页 owner 解耦

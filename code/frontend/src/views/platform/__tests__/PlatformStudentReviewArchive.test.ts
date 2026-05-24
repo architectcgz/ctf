@@ -26,6 +26,9 @@ describe('PlatformStudentReviewArchive route owner', () => {
     expect(platformViewSource).toContain(
       "import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'"
     )
+    expect(platformViewSource).toContain(
+      "import { ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
+    )
     expect(platformViewSource).not.toContain("from '@/views/teacher/TeacherStudentReviewArchive.vue'")
     expect(platformViewSource).not.toContain("from '@/api/teacher'")
   })

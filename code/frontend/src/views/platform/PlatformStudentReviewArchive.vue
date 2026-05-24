@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'
-import { TeacherReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'
+import { ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'
 
 const {
   archive,
@@ -15,7 +15,7 @@ const {
 </script>
 
 <template>
-  <TeacherReviewArchiveWorkspace
+  <ReviewArchiveWorkspace
     :archive="archive"
     :loading="loading"
     :error="error"
