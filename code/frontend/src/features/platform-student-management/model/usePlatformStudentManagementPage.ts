@@ -5,6 +5,7 @@ import { getClasses, getStudentsDirectory } from '@/api/teaching'
 import type { TeacherClassItem } from '@/api/contracts'
 import { useStudentDirectoryQuery } from '@/features/student-directory'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 export function usePlatformStudentManagementPage() {
   const router = useRouter()
@@ -75,7 +76,7 @@ export function usePlatformStudentManagementPage() {
       await loadClasses()
       await loadStudents()
     } catch (err) {
-      console.error('初始化学生管理失败:', err)
+      reportFrontendError('初始化学生管理失败:', err)
       pageError.value = '加载学生管理失败，请稍后重试'
     }
   }

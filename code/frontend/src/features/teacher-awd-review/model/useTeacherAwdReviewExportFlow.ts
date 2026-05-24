@@ -8,6 +8,7 @@ import {
 } from '@/api/teaching'
 import type { ReportExportData } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 type ExportKind = 'archive' | 'report'
 
@@ -51,7 +52,7 @@ export function useTeacherAwdReviewExportFlow(options: UseTeacherAwdReviewExport
   }
 
   function notifyExportError(error: unknown, fallback: string): void {
-    console.error(fallback, error)
+    reportFrontendError(fallback, error)
     if (error instanceof ApiError) {
       return
     }

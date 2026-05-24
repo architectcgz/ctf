@@ -3,6 +3,7 @@ import { useDebounceFn } from '@vueuse/core'
 
 import { getStudentsDirectory, type TeacherStudentDirectoryParams } from '@/api/teaching'
 import type { PageResult, TeacherStudentItem } from '@/api/contracts'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 interface UseStudentDirectoryQueryOptions {
   debounceMs?: number
@@ -58,7 +59,7 @@ export function useStudentDirectoryQuery(options: UseStudentDirectoryQueryOption
           page_size: params?.page_size ?? 20,
         }
       }
-      console.error('加载学生目录失败:', err)
+      reportFrontendError('加载学生目录失败:', err)
       error.value = options.errorMessage
       students.value = []
       total.value = 0

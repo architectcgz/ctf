@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 
 import { getDashboard } from '@/api/admin/platform'
 import type { AdminDashboardData } from '@/api/contracts'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 export function usePlatformOverviewPage() {
   const router = useRouter()
@@ -16,7 +17,7 @@ export function usePlatformOverviewPage() {
     try {
       dashboard.value = await getDashboard()
     } catch (err) {
-      console.error('加载系统概览失败:', err)
+      reportFrontendError('加载系统概览失败:', err)
       error.value = '加载系统概览失败，请稍后重试'
     } finally {
       loading.value = false

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import type { TeacherClassItem } from '@/api/contracts'
 import { getClasses } from '@/api/teaching'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 export function usePlatformClassManagementPage() {
   const router = useRouter()
@@ -34,7 +35,7 @@ export function usePlatformClassManagementPage() {
       page.value = data.page
       pageSize.value = data.page_size
     } catch (err) {
-      console.error('加载班级列表失败:', err)
+      reportFrontendError('加载班级列表失败:', err)
       error.value = '加载班级列表失败，请稍后重试'
       list.value = []
       total.value = 0

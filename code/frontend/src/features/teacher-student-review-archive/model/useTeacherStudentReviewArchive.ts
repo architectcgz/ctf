@@ -3,6 +3,7 @@ import { onUnmounted, ref, watch, type Ref } from 'vue'
 import { getStudentReviewArchive } from '@/api/teaching'
 import type { ReviewArchiveData } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 export function useTeacherStudentReviewArchive(studentId: Readonly<Ref<string>>) {
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
@@ -25,7 +26,7 @@ export function useTeacherStudentReviewArchive(studentId: Readonly<Ref<string>>)
       archive.value = await getStudentReviewArchive(studentId.value)
       setBreadcrumbDetailTitle(archive.value.student.name || archive.value.student.username)
     } catch (err) {
-      console.error('加载学生复盘归档失败:', err)
+      reportFrontendError('加载学生复盘归档失败:', err)
       archive.value = null
       setBreadcrumbDetailTitle()
       error.value = '加载学生复盘归档失败，请稍后重试'

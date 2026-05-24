@@ -7,6 +7,7 @@ import { exportStudentReviewArchive } from '@/api/teaching'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
   resolveClassStudentsRouteName,
   resolveStudentAnalysisRouteName,
@@ -67,7 +68,7 @@ export function useStudentReviewArchivePage() {
   }
 
   function notifyExportActionError(error: unknown, fallback: string): void {
-    console.error(fallback, error)
+    reportFrontendError(fallback, error)
     if (error instanceof ApiError) {
       return
     }

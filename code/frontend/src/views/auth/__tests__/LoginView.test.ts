@@ -16,25 +16,6 @@ const routeState = vi.hoisted(() => ({
 
 vi.mock('@/features/auth', () => ({
   useLoginPage: () => {
-    // eslint-disable-next-line no-console
-    console.log(
-      '%c[CTF COMMAND CENTER] %cSystem online. Initializing monitoring...',
-      'font-weight: bold; font-size: 14px;',
-      'font-style: italic;'
-    )
-    // eslint-disable-next-line no-console
-    console.log(
-      '%cAudit note: %ccuriosity detected. Keep it academic.',
-      'font-weight: bold;',
-      ''
-    )
-    // eslint-disable-next-line no-console
-    console.log(
-      '%cMemo: %cIf this page were the weak point, we would all be having a worse day.',
-      'font-weight: bold;',
-      ''
-    )
-
     const form = reactive({ username: '', password: '' })
     const loading = ref(false)
     const submitError = ref('')
@@ -93,8 +74,6 @@ vi.mock('vue-router', () => ({
 }))
 
 describe('LoginView', () => {
-  let consoleLogSpy: ReturnType<typeof vi.spyOn>
-
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -102,7 +81,6 @@ describe('LoginView', () => {
   beforeEach(() => {
     authMocks.login.mockReset()
     routeState.query.redirect = undefined
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
   function mountLoginView() {
@@ -265,28 +243,6 @@ describe('LoginView', () => {
     )
     expect(wrapper.text()).toContain('用户名或密码错误')
     expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeUndefined()
-  })
-
-  it('应继续输出基础控制台提示并追加审计口吻提示', async () => {
-    mountLoginView()
-
-    await flushPromises()
-
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[CTF COMMAND CENTER]'),
-      expect.any(String),
-      expect.any(String)
-    )
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      '%cAudit note: %ccuriosity detected. Keep it academic.',
-      expect.any(String),
-      expect.any(String)
-    )
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      '%cMemo: %cIf this page were the weak point, we would all be having a worse day.',
-      expect.any(String),
-      expect.any(String)
-    )
   })
 
   it('连续点击品牌区后应出现轻提示且不影响表单提交', async () => {

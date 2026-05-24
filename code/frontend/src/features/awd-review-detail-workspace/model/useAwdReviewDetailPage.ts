@@ -9,6 +9,7 @@ import type {
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
   resolveAwdReviewDetailRouteName,
   resolveAwdReviewIndexRouteName,
@@ -111,7 +112,7 @@ export function useAwdReviewDetailPage() {
         selectedTeamId.value = null
       }
     } catch (err) {
-      console.error('加载 AWD 复盘详情失败:', err)
+      reportFrontendError('加载 AWD 复盘详情失败:', err)
       review.value = null
       setBreadcrumbDetailTitle()
       error.value = '加载 AWD 复盘详情失败，请稍后重试'

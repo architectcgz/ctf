@@ -17,6 +17,7 @@ import {
 } from '@/features/teacher-class-insight-window'
 import { useStudentFilters, useStudentListQuery } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
   resolveClassManagementRouteName,
   resolveStudentAnalysisRouteName,
@@ -116,7 +117,7 @@ export function useClassStudentsPage() {
       if (requestID !== latestWorkspaceRequestID) {
         return
       }
-      console.error('加载班级详情失败:', err)
+      reportFrontendError('加载班级详情失败:', err)
       workspaceError.value = '加载班级数据失败，请稍后重试'
       clearWorkspaceDetails()
     }
@@ -145,7 +146,7 @@ export function useClassStudentsPage() {
     try {
       await loadClassWorkspace()
     } catch (err) {
-      console.error('初始化班级学生页面失败:', err)
+      reportFrontendError('初始化班级学生页面失败:', err)
       workspaceError.value = '加载班级数据失败，请稍后重试'
     }
   }

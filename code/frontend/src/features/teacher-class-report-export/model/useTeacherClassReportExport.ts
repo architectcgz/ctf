@@ -25,6 +25,7 @@ import {
 } from '@/features/teacher-class-insight-window'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 type ReportFormat = 'pdf' | 'excel'
 
@@ -231,7 +232,7 @@ export function useTeacherClassReportExport() {
       if (requestId !== latestPreviewRequestId) {
         return
       }
-      console.error('加载班级报告预览失败:', err)
+      reportFrontendError('加载班级报告预览失败:', err)
       resetPreviewState()
       previewError.value = '加载当前班级预览失败，请稍后重试'
     } finally {
@@ -298,7 +299,7 @@ export function useTeacherClassReportExport() {
       })
       toast.info('报告开始生成，系统会自动刷新任务状态')
     } catch (err) {
-      console.error('创建班级报告导出任务失败:', err)
+      reportFrontendError('创建班级报告导出任务失败:', err)
       toast.error('创建导出任务失败，请稍后重试')
     } finally {
       submitting.value = false
@@ -323,7 +324,7 @@ export function useTeacherClassReportExport() {
       URL.revokeObjectURL(objectUrl)
       toast.success('下载已开始')
     } catch (err) {
-      console.error('下载班级报告失败:', err)
+      reportFrontendError('下载班级报告失败:', err)
       toast.error('下载报告失败，请稍后重试')
     } finally {
       downloading.value = false

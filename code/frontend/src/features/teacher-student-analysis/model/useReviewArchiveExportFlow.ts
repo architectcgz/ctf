@@ -5,6 +5,7 @@ import { ApiError } from '@/api/request'
 import { exportStudentReviewArchive } from '@/api/teaching'
 import type { ReportExportData } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 interface UseReviewArchiveExportFlowOptions {
   selectedStudentId: Ref<string>
@@ -47,7 +48,7 @@ export function useReviewArchiveExportFlow(options: UseReviewArchiveExportFlowOp
   }
 
   function notifyReviewArchiveActionError(error: unknown, fallback: string): void {
-    console.error(fallback, error)
+    reportFrontendError(fallback, error)
     if (error instanceof ApiError) {
       return
     }

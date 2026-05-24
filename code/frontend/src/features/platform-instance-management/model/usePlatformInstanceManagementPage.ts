@@ -5,6 +5,7 @@ import type { TeacherInstanceItem } from '@/api/contracts'
 import { destroyTeacherInstance, getTeacherInstances } from '@/api/teaching'
 import { useAbortController } from '@/composables/useAbortController'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 interface InstanceManageTableRow {
   id: string
@@ -94,7 +95,7 @@ export function usePlatformInstanceManagementPage() {
       ) {
         return
       }
-      console.error('加载实例列表失败:', err)
+      reportFrontendError('加载实例列表失败:', err)
       error.value = '加载实例列表失败，请稍后重试'
       list.value = []
       total.value = 0
@@ -124,7 +125,7 @@ export function usePlatformInstanceManagementPage() {
       }
       await loadInstances()
     } catch (err) {
-      console.error('销毁实例失败:', err)
+      reportFrontendError('销毁实例失败:', err)
       error.value = '销毁实例失败，请稍后重试'
     } finally {
       destroyingId.value = ''

@@ -7,6 +7,7 @@ import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import { useAbortController } from '@/composables/useAbortController'
 import { useAuthStore } from '@/stores/auth'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 import { resolveAwdReviewDetailRouteName } from '@/utils/teachingWorkspaceRouting'
 
 export interface PlatformAwdReviewRow extends TeacherAWDReviewContestItemData {
@@ -91,7 +92,7 @@ export function useTeacherAwdReviewIndex() {
         error.value = null
         return
       }
-      console.error('加载 AWD 复盘目录失败:', err)
+      reportFrontendError('加载 AWD 复盘目录失败:', err)
       contests.value = []
       total.value = 0
       runningCount.value = 0

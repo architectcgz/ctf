@@ -15,46 +15,6 @@ interface SubmitFallbackValues {
   password?: string | null
 }
 
-function emitLoginConsoleHints() {
-  // eslint-disable-next-line no-console
-  console.log(
-    '%c[CTF COMMAND CENTER] %cSystem online. Initializing monitoring...',
-    'font-weight: bold; font-size: 14px;',
-    'font-style: italic;'
-  )
-  // eslint-disable-next-line no-console
-  console.log(
-    `%c
-      :::::::: ::::::::::: :::::::::: 
-    :+:    :+:    :+:     :+:         
-   +:+           +:+     +:+          
-  +#+           +#+     +#++:++#      
- +#+           +#+     +#+            
-#+#    #+#    #+#     #+#             
-########     ###     ###              
-`,
-    'font-weight: bold;'
-  )
-  // eslint-disable-next-line no-console
-  console.log(
-    '%cWARNING: %cUnauthorized debugging may lead to "unexpected" results. Good luck, cadet.',
-    'font-weight: bold;',
-    ''
-  )
-  // eslint-disable-next-line no-console
-  console.log(
-    '%cAudit note: %ccuriosity detected. Keep it academic.',
-    'font-weight: bold;',
-    ''
-  )
-  // eslint-disable-next-line no-console
-  console.log(
-    '%cMemo: %cIf this page were the weak point, we would all be having a worse day.',
-    'font-weight: bold;',
-    ''
-  )
-}
-
 export function useLoginPage() {
   const { login } = useAuth()
   const { redirectTo } = useLoginViewPage()
@@ -68,8 +28,6 @@ export function useLoginPage() {
     password: '',
   })
   let probeMessageTimer: number | null = null
-
-  emitLoginConsoleHints()
 
   function clearSubmitError() {
     submitError.value = ''

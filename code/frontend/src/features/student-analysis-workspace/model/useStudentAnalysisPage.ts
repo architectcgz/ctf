@@ -24,6 +24,7 @@ import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensionLabels } from '@/utils/skillProfile'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
   useReviewArchiveExportFlow,
   useTeacherReviewWorkspace,
@@ -248,7 +249,7 @@ export function useStudentAnalysisPage() {
       await loadStudents()
       await loadStudentDetails()
     } catch (err) {
-      console.error('加载学员分析失败:', err)
+      reportFrontendError('加载学员分析失败:', err)
       error.value = '加载学员分析失败，请稍后重试'
     }
   }

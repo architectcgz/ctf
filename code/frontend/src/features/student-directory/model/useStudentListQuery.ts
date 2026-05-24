@@ -3,6 +3,7 @@ import { useDebounceFn } from '@vueuse/core'
 
 import { getClassStudents } from '@/api/teaching'
 import type { TeacherStudentItem } from '@/api/contracts'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 import type { StudentQueryParams } from './useStudentFilters'
 
@@ -50,7 +51,7 @@ export function useStudentListQuery(options: UseStudentListQueryOptions) {
       if (requestId !== latestRequestId) {
         return students.value
       }
-      console.error('加载学生列表失败:', err)
+      reportFrontendError('加载学生列表失败:', err)
       error.value = options.errorMessage
       students.value = []
       return []

@@ -43,7 +43,6 @@ describe('useLoginPage', () => {
       activated: false,
       count: 1,
     })
-    vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
   it('应提交登录并在根路径重定向时传 undefined', async () => {
