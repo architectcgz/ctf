@@ -11,6 +11,7 @@ api / hook / page
 - `code/frontend/src/features/platform-class-management`
 - `code/frontend/src/features/platform-student-management`
 - `code/frontend/src/features/platform-instance-management`
+- `code/frontend/src/features/admin-notification-publisher`
 - `code/frontend/src/features/class-students-workspace`
 - `code/frontend/src/features/student-analysis-workspace`
 - `code/frontend/src/features/student-review-archive-workspace`
@@ -29,6 +30,7 @@ api / hook / page
 - `code/frontend/src/features/platform-class-management/model/usePlatformClassManagementPage.ts`
 - `code/frontend/src/features/platform-student-management/model/usePlatformStudentManagementPage.ts`
 - `code/frontend/src/features/platform-instance-management/model/usePlatformInstanceManagementPage.ts`
+- `code/frontend/src/features/admin-notification-publisher/model/useAdminNotificationPublisher.ts`
 - `code/frontend/src/features/class-students-workspace/model/useClassStudentsPage.ts`
 - `code/frontend/src/features/student-analysis-workspace/model/useStudentAnalysisPage.ts`
 - `code/frontend/src/features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts`
@@ -58,6 +60,7 @@ refactor_existing
 - `code/frontend/src/features/platform-class-management/model/usePlatformClassManagementPage.ts`
 - `code/frontend/src/features/platform-student-management/model/usePlatformStudentManagementPage.ts`
 - `code/frontend/src/features/platform-instance-management/model/usePlatformInstanceManagementPage.ts`
+- `code/frontend/src/features/admin-notification-publisher/model/useAdminNotificationPublisher.ts`
 - `code/frontend/src/features/student-directory/model/useStudentDirectoryQuery.ts`
 - `code/frontend/src/features/student-directory/model/useStudentListQuery.ts`
 - `code/frontend/src/features/class-students-workspace/model/useClassStudentsPage.ts`
@@ -76,6 +79,7 @@ refactor_existing
 - `code/frontend/src/views/platform/__tests__/ClassManage.test.ts`
 - `code/frontend/src/views/platform/__tests__/StudentManage.test.ts`
 - `code/frontend/src/views/platform/__tests__/InstanceManage.test.ts`
+- `code/frontend/src/features/admin-notification-publisher/model/useAdminNotificationPublisher.test.ts`
 - `code/frontend/src/views/platform/__tests__/PlatformClassStudents.test.ts`
 - `code/frontend/src/views/platform/__tests__/PlatformAwdReviewDetail.test.ts`
 - `code/frontend/src/views/platform/__tests__/AWDReviewIndex.test.ts`

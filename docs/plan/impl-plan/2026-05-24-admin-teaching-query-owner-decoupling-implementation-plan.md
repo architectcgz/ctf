@@ -21,6 +21,7 @@
 - `code/frontend/src/features/platform-class-management/model/usePlatformClassManagementPage.ts`
 - `code/frontend/src/features/platform-student-management/model/usePlatformStudentManagementPage.ts`
 - `code/frontend/src/features/platform-instance-management/model/usePlatformInstanceManagementPage.ts`
+- `code/frontend/src/features/admin-notification-publisher/model/useAdminNotificationPublisher.ts`
 
 ## 任务切片
 
@@ -70,8 +71,9 @@
   - `code/frontend/src/features/class-students-workspace/model/useClassStudentsPage.ts`
   - `code/frontend/src/features/student-analysis-workspace/model/useStudentAnalysisPage.ts`
   - `code/frontend/src/features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts`
-  - `code/frontend/src/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts`
-  - `code/frontend/src/features/teacher-student-analysis/model/useTeacherReviewWorkspace.ts`
+- `code/frontend/src/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts`
+- `code/frontend/src/features/admin-notification-publisher/model/useAdminNotificationPublisher.ts`
+- `code/frontend/src/features/teacher-student-analysis/model/useTeacherReviewWorkspace.ts`
   - `code/frontend/src/features/teacher-student-analysis/model/useTeacherSubmissionReviewFlows.ts`
   - `code/frontend/src/features/teacher-student-analysis/model/useTeacherInterventionRecommendations.ts`
   - `code/frontend/src/features/teacher-student-analysis/model/useReviewArchiveExportFlow.ts`
@@ -79,8 +81,9 @@
   - `code/frontend/src/features/teacher-class-report-export/model/useTeacherClassReportExport.ts`
   - `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewExportFlow.ts`
   - `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewIndex.ts`
-  - `code/frontend/src/features/challenge-writeup-editor/model/useChallengeWriteupManagement.ts`
-  - 受影响平台测试
+- `code/frontend/src/features/challenge-writeup-editor/model/useChallengeWriteupManagement.ts`
+- `code/frontend/src/features/admin-notification-publisher/model/useAdminNotificationPublisher.test.ts`
+- 受影响平台测试
 - Review focus：
   - 中性 workspace 是否已经没有直连 `@/api/teacher`。
   - `writeup/manual review` contract 是否保持原有请求路径与 DTO 形状。
@@ -88,8 +91,8 @@
 
 ## 验证
 
-- `npm run test:run -- src/views/platform/__tests__/ClassManage.test.ts src/views/platform/__tests__/StudentManage.test.ts src/views/platform/__tests__/InstanceManage.test.ts src/api/__tests__/teacher.test.ts`
-- `npm run test:run -- src/views/platform/__tests__/ClassManage.test.ts src/views/platform/__tests__/StudentManage.test.ts src/views/platform/__tests__/InstanceManage.test.ts src/views/platform/__tests__/PlatformClassStudents.test.ts src/views/platform/__tests__/PlatformAwdReviewDetail.test.ts src/views/platform/__tests__/AWDReviewIndex.test.ts src/views/platform/__tests__/ChallengeWriteupManagePanel.test.ts src/api/__tests__/teacher.test.ts`
+- `npm run test:run -- src/views/platform/__tests__/ClassManage.test.ts src/views/platform/__tests__/StudentManage.test.ts src/views/platform/__tests__/InstanceManage.test.ts src/features/admin-notification-publisher/model/useAdminNotificationPublisher.test.ts src/api/__tests__/teacher.test.ts`
+- `npm run test:run -- src/views/platform/__tests__/ClassManage.test.ts src/views/platform/__tests__/StudentManage.test.ts src/views/platform/__tests__/InstanceManage.test.ts src/views/platform/__tests__/PlatformClassStudents.test.ts src/views/platform/__tests__/PlatformAwdReviewDetail.test.ts src/views/platform/__tests__/AWDReviewIndex.test.ts src/views/platform/__tests__/ChallengeWriteupManagePanel.test.ts src/features/admin-notification-publisher/model/useAdminNotificationPublisher.test.ts src/api/__tests__/teacher.test.ts`
 - `npm run typecheck`
 - `bash scripts/check-consistency.sh`
 - `git diff --check -- <touched files>`
