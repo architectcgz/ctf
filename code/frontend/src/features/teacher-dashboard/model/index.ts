@@ -1,4 +1,4 @@
 export * from './useTeacherDashboardMetrics'
-export * from './useTeacherDashboardPage'
+export * from './useDashboardPage'
 export * from './teacherDashboardInsightBuilders'
 export * from './teacherDashboardOverviewBuilders'

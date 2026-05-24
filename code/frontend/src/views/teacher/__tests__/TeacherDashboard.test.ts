@@ -5,7 +5,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import TeacherDashboard from '../TeacherDashboard.vue'
 import teacherDashboardSource from '../TeacherDashboard.vue?raw'
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
-import teacherDashboardHookSource from '@/features/teacher-dashboard/model/useTeacherDashboardPage.ts?raw'
+import teacherDashboardHookSource from '@/features/teacher-dashboard/model/useDashboardPage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -159,7 +159,7 @@ describe('TeacherDashboard', () => {
   })
 
   it('路由页应仅负责组合 overview owner，不直接依赖教师接口实现', () => {
-    expect(teacherDashboardSource).toContain('useTeacherDashboardPage')
+    expect(teacherDashboardSource).toContain('useDashboardPage')
     expect(teacherDashboardSource).not.toContain("from '@/api/teacher'")
     expect(teacherDashboardPageSource).toContain('useTeacherDashboardMetrics')
     expect(teacherDashboardHookSource).toContain("reportFrontendError('加载教师概览失败:', err)")

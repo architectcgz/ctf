@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import TeacherDashboardPage from '@/components/teacher/dashboard/TeacherDashboardPage.vue'
-import { useTeacherDashboardPage } from '@/features/teacher-dashboard'
+import { useDashboardPage } from '@/features/teacher-dashboard'
 
-const { overview, error, initialize, openClassManagement } = useTeacherDashboardPage()
+const { overview, error, initialize, openClassManagement } = useDashboardPage()
 </script>
 
 <template>

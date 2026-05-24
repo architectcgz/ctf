@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import { resolveClassManagementRouteName } from '@/utils/classManagementRouting'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 
-export function useTeacherDashboardPage() {
+export function useDashboardPage() {
   const router = useRouter()
   const authStore = useAuthStore()
 
