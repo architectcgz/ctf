@@ -297,7 +297,11 @@ describe('ClassManagement', () => {
     expect(classManagementViewSource).toContain(
       "import { useTeacherClassManagementPage } from '@/features/teacher-class-management'"
     )
+    expect(classManagementViewSource).toContain(
+      "import { ClassReportExportDialog } from '@/components/teacher/reports'"
+    )
     expect(classManagementViewSource).not.toContain("from '@/api/teacher'")
+    expect(classManagementViewSource).not.toContain('TeacherClassReportExportDialog.vue')
     expect(classManagementViewSource).not.toContain('getClasses')
     expect(classManagementViewSource).not.toContain('const totalPages = computed')
   })

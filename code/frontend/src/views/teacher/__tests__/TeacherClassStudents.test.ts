@@ -321,13 +321,17 @@ describe('TeacherClassStudents', () => {
 
   it('路由页应仅负责组合，不直接依赖教师接口实现', () => {
     expect(teacherClassStudentsSource).toContain('useClassStudentsPage')
+    expect(teacherClassStudentsSource).toContain(
+      "import { ClassReportExportDialog } from '@/components/teacher/reports'"
+    )
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
+    expect(teacherClassStudentsSource).not.toContain('TeacherClassReportExportDialog.vue')
   })
 
   it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {
     expect(teacherClassStudentsSource).toContain('class="teacher-route-root"')
     expect(teacherClassStudentsSource).toMatch(
-      /<template>\s*<section class="teacher-route-root">[\s\S]*<ClassStudentsPage[\s\S]*<TeacherClassReportExportDialog[\s\S]*<\/section>\s*<\/template>/s
+      /<template>\s*<section class="teacher-route-root">[\s\S]*<ClassStudentsPage[\s\S]*<ClassReportExportDialog[\s\S]*<\/section>\s*<\/template>/s
     )
   })
 

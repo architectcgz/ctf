@@ -116,8 +116,12 @@ describe('PlatformClassStudents', () => {
     expect(platformClassStudentsSource).toContain(
       "import { useClassStudentsPage } from '@/features/class-students-workspace'"
     )
+    expect(platformClassStudentsSource).toContain(
+      "import { ClassReportExportDialog } from '@/components/teacher/reports'"
+    )
     expect(platformClassStudentsSource).not.toContain("from '@/views/teacher/TeacherClassStudents.vue'")
     expect(platformClassStudentsSource).not.toContain("from '@/api/teacher'")
+    expect(platformClassStudentsSource).not.toContain('TeacherClassReportExportDialog.vue')
     expect(classStudentsPageSource).toContain('学生列表')
 
     const wrapper = mount(PlatformClassStudents, {

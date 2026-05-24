@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ClassManagementPage from '@/components/teacher/class-management/ClassManagementPage.vue'
-import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
+import { ClassReportExportDialog } from '@/components/teacher/reports'
 import { useTeacherClassManagementPage } from '@/features/teacher-class-management'
 
 const {
@@ -35,7 +35,7 @@ const {
       @open-report-export="openClassReportDialog"
       @open-class="openClass"
     />
-    <TeacherClassReportExportDialog
+    <ClassReportExportDialog
       v-model="reportDialogVisible"
       :default-class-name="defaultReportClassName"
     />

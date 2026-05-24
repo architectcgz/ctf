@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import StudentAnalysisPage from '@/components/teacher/class-management/StudentAnalysisPage.vue'
-import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
+import { ClassReportExportDialog } from '@/components/teacher/reports'
 import { useStudentAnalysisPage } from '@/features/student-analysis-workspace'
 
 const {
@@ -98,7 +98,7 @@ const {
       @change-writeup-page="changeWriteupPage"
       @update-review-workspace-filters="updateReviewWorkspaceFilters"
     />
-    <TeacherClassReportExportDialog
+    <ClassReportExportDialog
       v-model="reportDialogVisible"
       :default-class-name="selectedClassName"
     />

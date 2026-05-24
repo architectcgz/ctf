@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ClassStudentsPage from '@/components/teacher/class-management/ClassStudentsPage.vue'
-import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
+import { ClassReportExportDialog } from '@/components/teacher/reports'
 import { useClassStudentsPage } from '@/features/class-students-workspace'
 
 const {
@@ -62,7 +62,7 @@ const {
       @reset-insight-window="resetInsightWindow"
       @open-student="openStudent"
     />
-    <TeacherClassReportExportDialog
+    <ClassReportExportDialog
       v-model="reportDialogVisible"
       :default-class-name="selectedClassName"
       :default-from-date="activeInsightWindowFromDate"

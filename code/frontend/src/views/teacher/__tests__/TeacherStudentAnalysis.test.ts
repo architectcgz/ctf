@@ -421,14 +421,18 @@ describe('TeacherStudentAnalysis', () => {
 
   it('路由页应仅负责组合，不直接处理路由解析逻辑', () => {
     expect(teacherStudentAnalysisSource).toContain('useStudentAnalysisPage')
+    expect(teacherStudentAnalysisSource).toContain(
+      "import { ClassReportExportDialog } from '@/components/teacher/reports'"
+    )
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassManagementRouteName')
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassStudentsRouteName')
+    expect(teacherStudentAnalysisSource).not.toContain('TeacherClassReportExportDialog.vue')
   })
 
   it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {
     expect(teacherStudentAnalysisSource).toContain('class="teacher-route-root"')
     expect(teacherStudentAnalysisSource).toMatch(
-      /<template>\s*<section class="teacher-route-root">[\s\S]*<StudentAnalysisPage[\s\S]*<TeacherClassReportExportDialog[\s\S]*<\/section>\s*<\/template>/s
+      /<template>\s*<section class="teacher-route-root">[\s\S]*<StudentAnalysisPage[\s\S]*<ClassReportExportDialog[\s\S]*<\/section>\s*<\/template>/s
     )
   })
 

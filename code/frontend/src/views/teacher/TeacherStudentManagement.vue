@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import StudentManagementPage from '@/components/teacher/student-management/StudentManagementPage.vue'
-import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
+import { ClassReportExportDialog } from '@/components/teacher/reports'
 import { useTeacherStudentManagementPage } from '@/features/teacher-student-management'
 
 const {
@@ -52,7 +52,7 @@ const {
       @change-page="handlePageChange"
       @open-student="openStudent"
     />
-    <TeacherClassReportExportDialog
+    <ClassReportExportDialog
       v-model="reportDialogVisible"
       :default-class-name="selectedClassName"
     />

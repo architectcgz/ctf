@@ -25,6 +25,7 @@
 ## 当前结论
 
 - `PlatformClassStudents`、`PlatformStudentAnalysis`、`PlatformStudentReviewArchive`、平台班级工作台别名页都已经完成 owner 解耦。
+- `TeacherClassReportExportDialog` 的 route-level 公共消费点也已经收口到中性 `ClassReportExportDialog` 导出；teacher / platform route view 不再直接依赖 `TeacherClassReportExportDialog.vue` 路径。
 - 当前剩余最小连续链路只剩 `PlatformAwdReviewDetail`。
 - 该路由当前仍直接指向 `@/views/teacher/TeacherAWDReviewDetail.vue`，并复用 teacher page hook；其中 `openReviewIndex()` 仍硬编码返回 `TeacherAWDReviewIndex`，说明 admin 详情页 workflow owner 还没有真正中性化。
 
