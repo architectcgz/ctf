@@ -150,6 +150,8 @@ export const featureRouterImportAllowlist = new Set([
   'features/platform-overview/model/useCheatDetectionPage.ts -> vue-router',
   'features/platform-overview/model/usePlatformOverviewPage.ts -> vue-router',
   'features/class-students-workspace/model/useClassStudentsPage.ts -> vue-router',
+  'features/student-analysis-workspace/model/useStudentAnalysisNavigation.ts -> vue-router',
+  'features/student-analysis-workspace/model/useStudentAnalysisPage.ts -> vue-router',
   'features/platform-class-management/model/usePlatformClassManagementPage.ts -> vue-router',
   'features/platform-instance-management/model/usePlatformInstanceManagementPage.ts -> vue-router',
   'features/platform-student-management/model/usePlatformStudentManagementPage.ts -> vue-router',
@@ -164,8 +166,6 @@ export const featureRouterImportAllowlist = new Set([
   'features/teacher-class-workspace/model/useTeacherClassWorkspaceSection.ts -> vue-router',
   'features/teacher-dashboard/model/useTeacherDashboardPage.ts -> vue-router',
   'features/teacher-instances/model/useTeacherInstanceManagementPage.ts -> vue-router',
-  'features/teacher-student-analysis/model/useTeacherStudentAnalysisNavigation.ts -> vue-router',
-  'features/teacher-student-analysis/model/useTeacherStudentAnalysisPage.ts -> vue-router',
   'features/teacher-student-management/model/useTeacherStudentManagementPage.ts -> vue-router',
   'features/teacher-student-review-archive/model/useTeacherStudentReviewArchivePage.ts -> vue-router',
 ])
