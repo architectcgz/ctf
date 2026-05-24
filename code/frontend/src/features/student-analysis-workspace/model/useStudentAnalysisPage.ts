@@ -24,9 +24,11 @@ import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensionLabels } from '@/utils/skillProfile'
-import { useReviewArchiveExportFlow } from '@/features/teacher-student-analysis/model/useReviewArchiveExportFlow'
-import { useTeacherReviewWorkspace } from '@/features/teacher-student-analysis/model/useTeacherReviewWorkspace'
-import { useTeacherSubmissionReviewFlows } from '@/features/teacher-student-analysis/model/useTeacherSubmissionReviewFlows'
+import {
+  useReviewArchiveExportFlow,
+  useTeacherReviewWorkspace,
+  useTeacherSubmissionReviewFlows,
+} from '@/features/teacher-student-analysis'
 import { useStudentAnalysisNavigation } from './useStudentAnalysisNavigation'
 
 export function useStudentAnalysisPage() {

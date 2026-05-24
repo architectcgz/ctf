@@ -15,8 +15,8 @@ import {
 import {
   resolveTeacherStudentReviewArchiveErrorMessage,
   TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES,
-} from '@/features/teacher-student-review-archive/model/presentation'
-import { useTeacherStudentReviewArchive } from '@/features/teacher-student-review-archive/model/useTeacherStudentReviewArchive'
+  useTeacherStudentReviewArchive,
+} from '@/features/teacher-student-review-archive'
 
 export function useStudentReviewArchivePage() {
   const route = useRoute()

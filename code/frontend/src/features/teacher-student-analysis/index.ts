@@ -1,1 +1,8 @@
-export { useTeacherStudentAnalysisPage, useTeacherInterventionRecommendations } from './model'
+export {
+  useTeacherStudentAnalysisPage,
+  useTeacherInterventionRecommendations,
+  useReviewArchiveExportFlow,
+  useTeacherReviewWorkspace,
+  useTeacherStudentAnalysisNavigation,
+  useTeacherSubmissionReviewFlows,
+} from './model'

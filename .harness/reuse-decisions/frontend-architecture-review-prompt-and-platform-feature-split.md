@@ -8,6 +8,7 @@ hook / page / layout
 - `code/frontend/src/views/teacher`
 - `code/frontend/src/features/platform-users`
 - `code/frontend/src/features/platform-user-management`
+- `code/frontend/src/features/teacher-class-insight-window`
 - `code/frontend/src/features/class-students-workspace`
 - `code/frontend/src/features/student-analysis-workspace`
 - `code/frontend/src/features/student-review-archive-workspace`
@@ -33,6 +34,13 @@ hook / page / layout
 - `code/frontend/src/features/teacher-class-students/model/useTeacherClassStudentsPage.ts`
 - `code/frontend/src/features/teacher-class-workspace/model/useTeacherClassWorkspaceSection.ts`
 - `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewDetail.ts`
+- `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewExportFlow.ts`
+- `code/frontend/src/features/teacher-class-insight-window/model/window.ts`
+- `code/frontend/src/features/teacher-student-analysis/model/useReviewArchiveExportFlow.ts`
+- `code/frontend/src/features/teacher-student-analysis/model/useTeacherReviewWorkspace.ts`
+- `code/frontend/src/features/teacher-student-analysis/model/useTeacherSubmissionReviewFlows.ts`
+- `code/frontend/src/features/teacher-student-review-archive/model/presentation.ts`
+- `code/frontend/src/features/teacher-student-review-archive/model/useTeacherStudentReviewArchive.ts`
 - `code/frontend/src/views/teacher/TeacherClassStudents.vue`
 - `code/frontend/src/views/teacher/TeacherClassWorkspaceSection.vue`
 - `code/frontend/src/views/teacher/TeacherAWDReviewDetail.vue`
@@ -57,7 +65,7 @@ hook / page / layout
 refactor_existing
 
 ## Reason
-这次不新增并行实现。`platform-users` 已经承担了用户治理之外的班级、学生目录和实例管理职责，适合把现有页面模型迁到更细的 feature owner 下，而不是继续往该桶里加代码。学生目录查询能力继续复用 `student-directory` 里的既有 query owner；平台侧的 `usePlatformStudentManagementPage` 只保留页面级筛选、分页和路由跳转编排，不再新造一条与 `useTeacherStudentManagementPage`、`useTeacherStudentAnalysisPage`、`useStudentListQuery` 平行的学生查询栈。继续收口 `/platform/classes/:className`、`/platform/classes/:className/students/:studentId` 与 `/platform/classes/:className/students/:studentId/review-archive` 时，也不复制一份 `TeacherClassStudents.vue`、`TeacherStudentAnalysis.vue`、`TeacherStudentReviewArchive.vue` 或对应 page hook；改为把实际 page workflow 上提到中性的 `class-students-workspace`、`student-analysis-workspace`、`student-review-archive-workspace` feature，再让 teacher / platform 各自保留 route view owner。平台班级工作台别名页也沿用同一模式：不保留 `platformRoutes.ts -> TeacherClassWorkspaceSection.vue` 的跨 namespace 依赖，不复制一份新的 panel redirect 逻辑，而是把 alias route 到 canonical workspace 的重定向 owner 上提到 `class-workspace-redirect`，让 teacher 侧 `useTeacherClassWorkspaceSection` 只保留兼容桥，平台侧 route view 直接复用 `PlatformClassStudents.vue` 作为 canonical workspace 页。`PlatformAwdReviewDetail` 也继续按相同思路处理：不保留 `platformRoutes.ts -> TeacherAWDReviewDetail.vue` 的直连，不额外复制一套 AWD detail widget 或导出流程，而是把页面级路由、轮次切换和返回索引 owner 上提到中性的 `awd-review-detail-workspace`，继续复用 `TeacherAWDReviewWorkspace` 和 `useTeacherAwdReviewExportFlow`，让 teacher 侧 detail hook 退成兼容桥。平台用户治理也沿用同样的收口策略：不删除 `platform-users` 的兼容入口，但把真实用户治理 owner 上提到更窄的 `platform-user-management`，继续复用现有用户 CRUD、导入、筛选和分页实现，让 `platform-users` 只作为历史桥而不再承载主实现。`useStudentReviewArchivePage` 也不是新造一套导出/归档实现：它继续复用 `useTeacherStudentReviewArchive` 作为数据 owner，复用现有 review-archive 导出消息约定，并沿用与 `useReviewArchiveExportFlow`、`useTeacherAwdReviewExportFlow` 一致的“页面 owner 编排 + 导出 helper 复用”模式，只把 route 级导航和页面流程从 teacher 命名空间上提到中性 feature。review 提示词也放到现有 `harness/prompts/` 目录，复用已有项目 prompt 资产形态，不新建额外 prompt 目录。
+这次不新增并行实现。`platform-users` 已经承担了用户治理之外的班级、学生目录和实例管理职责，适合把现有页面模型迁到更细的 feature owner 下，而不是继续往该桶里加代码。学生目录查询能力继续复用 `student-directory` 里的既有 query owner；平台侧的 `usePlatformStudentManagementPage` 只保留页面级筛选、分页和路由跳转编排，不再新造一条与 `useTeacherStudentManagementPage`、`useTeacherStudentAnalysisPage`、`useStudentListQuery` 平行的学生查询栈。继续收口 `/platform/classes/:className`、`/platform/classes/:className/students/:studentId` 与 `/platform/classes/:className/students/:studentId/review-archive` 时，也不复制一份 `TeacherClassStudents.vue`、`TeacherStudentAnalysis.vue`、`TeacherStudentReviewArchive.vue` 或对应 page hook；改为把实际 page workflow 上提到中性的 `class-students-workspace`、`student-analysis-workspace`、`student-review-archive-workspace` feature，再让 teacher / platform 各自保留 route view owner。平台班级工作台别名页也沿用同一模式：不保留 `platformRoutes.ts -> TeacherClassWorkspaceSection.vue` 的跨 namespace 依赖，不复制一份新的 panel redirect 逻辑，而是把 alias route 到 canonical workspace 的重定向 owner 上提到 `class-workspace-redirect`，让 teacher 侧 `useTeacherClassWorkspaceSection` 只保留兼容桥，平台侧 route view 直接复用 `PlatformClassStudents.vue` 作为 canonical workspace 页。`PlatformAwdReviewDetail` 也继续按相同思路处理：不保留 `platformRoutes.ts -> TeacherAWDReviewDetail.vue` 的直连，不额外复制一套 AWD detail widget 或导出流程，而是把页面级路由、轮次切换和返回索引 owner 上提到中性的 `awd-review-detail-workspace`，继续复用 `TeacherAWDReviewWorkspace` 和 `useTeacherAwdReviewExportFlow`，让 teacher 侧 detail hook 退成兼容桥。平台用户治理也沿用同样的收口策略：不删除 `platform-users` 的兼容入口，但把真实用户治理 owner 上提到更窄的 `platform-user-management`，继续复用现有用户 CRUD、导入、筛选和分页实现，让 `platform-users` 只作为历史桥而不再承载主实现。当前这刀的重点是 public API 边界，不新增平行 helper：`class-students-workspace`、`student-analysis-workspace`、`student-review-archive-workspace`、`awd-review-detail-workspace` 与 `teacher-class-report-export` 继续复用 donor feature 里的既有 helper，只把 cross-feature `model/*` 深导入改成 donor feature 的公共出口，让边界测试真正开始约束“跨 feature 只能走 public API”。`useStudentReviewArchivePage` 也不是新造一套导出/归档实现：它继续复用 `useTeacherStudentReviewArchive` 作为数据 owner，复用现有 review-archive 导出消息约定，并沿用与 `useReviewArchiveExportFlow`、`useTeacherAwdReviewExportFlow` 一致的“页面 owner 编排 + 导出 helper 复用”模式，只把 route 级导航和页面流程从 teacher 命名空间上提到中性 feature。review 提示词也放到现有 `harness/prompts/` 目录，复用已有项目 prompt 资产形态，不新建额外 prompt 目录。
 
 ## Files to modify
 - `harness/prompts/AGENTS.md`
@@ -125,6 +133,16 @@ refactor_existing
 - `code/frontend/src/views/platform/UserManage.vue`
 - `code/frontend/src/components/platform/user/PlatformUserFormDialog.vue`
 - `code/frontend/src/views/platform/__tests__/UserManage.test.ts`
+- `code/frontend/src/features/teacher-class-insight-window/index.ts`
+- `code/frontend/src/features/teacher-class-insight-window/model/index.ts`
+- `code/frontend/src/features/teacher-student-analysis/index.ts`
+- `code/frontend/src/features/teacher-awd-review/index.ts`
+- `code/frontend/src/features/class-students-workspace/model/useClassStudentsPage.ts`
+- `code/frontend/src/features/student-analysis-workspace/model/useStudentAnalysisPage.ts`
+- `code/frontend/src/features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts`
+- `code/frontend/src/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts`
+- `code/frontend/src/features/teacher-class-report-export/model/useTeacherClassReportExport.ts`
+- `docs/plan/impl-plan/2026-05-24-feature-public-api-deep-import-cleanup-implementation-plan.md`
 
 ## After implementation
 - 如果后续 review 流程继续稳定复用，再考虑补 `feedback/` 记录 prompt 资产化经验；本次先以 `harness/prompts/` 作为唯一事实源。

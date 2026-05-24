@@ -13,7 +13,7 @@ import {
   resolveAwdReviewDetailRouteName,
   resolveAwdReviewIndexRouteName,
 } from '@/utils/teachingWorkspaceRouting'
-import { useTeacherAwdReviewExportFlow } from '@/features/teacher-awd-review/model/useTeacherAwdReviewExportFlow'
+import { useTeacherAwdReviewExportFlow } from '@/features/teacher-awd-review'
 
 export function useAwdReviewDetailPage() {
   const route = useRoute()
