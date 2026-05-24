@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import PlatformUserFormDialog from '@/components/platform/user/PlatformUserFormDialog.vue'
 import UserGovernancePage from '@/components/platform/user/UserGovernancePage.vue'
-import { usePlatformUserManagePage } from '@/features/platform-users'
+import { usePlatformUserManagePage } from '@/features/platform-user-management'
 
 const {
   list,

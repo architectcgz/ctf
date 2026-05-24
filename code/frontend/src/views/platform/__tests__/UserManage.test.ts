@@ -251,7 +251,9 @@ describe('UserManage', () => {
 
     await flushPromises()
 
-    expect(userManageSource).toContain('usePlatformUserManagePage')
+    expect(userManageSource).toContain(
+      "import { usePlatformUserManagePage } from '@/features/platform-user-management'"
+    )
     expect(userManageSource).not.toContain('onMounted(')
     expect(userManageSource).not.toContain('confirmDestructiveAction')
     expect(userGovernanceSource).toContain(

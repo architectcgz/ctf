@@ -1,2 +1,1 @@
-export { usePlatformUsers, type PlatformUserFormDraft } from '@/features/platform-users'
-
+export { usePlatformUsers, type PlatformUserFormDraft } from '@/features/platform-user-management'
