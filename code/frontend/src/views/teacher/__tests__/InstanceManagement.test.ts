@@ -5,6 +5,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import InstanceManagement from '../InstanceManagement.vue'
 import instanceManagementViewSource from '../InstanceManagement.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherInstancesHookSource from '@/features/teacher-instances/model/useTeacherInstances.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const ElTable = { template: '<div><slot /></div>' }
@@ -140,6 +141,10 @@ describe('InstanceManagement', () => {
     expect(instanceManagementViewSource).toContain('useTeacherInstanceManagementPage')
     expect(instanceManagementViewSource).not.toContain('confirmDestructiveAction')
     expect(instanceManagementViewSource).not.toContain('resolveTeachingDashboardRouteName')
+    expect(teacherInstancesHookSource).toContain("reportFrontendError('加载教师实例管理页失败:', err)")
+    expect(teacherInstancesHookSource).toContain("reportFrontendError('加载教师实例列表失败:', err)")
+    expect(teacherInstancesHookSource).toContain("reportFrontendError('教师销毁实例失败:', err)")
+    expect(teacherInstancesHookSource).not.toContain("console.error('加载教师实例")
   })
 
   it('应该支持输入后自动筛选并销毁实例', async () => {

@@ -5,6 +5,7 @@ import { getTeacherOverview } from '@/api/teacher'
 import type { TeacherOverviewData } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { resolveClassManagementRouteName } from '@/utils/classManagementRouting'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 export function useTeacherDashboardPage() {
   const router = useRouter()
@@ -19,7 +20,7 @@ export function useTeacherDashboardPage() {
     try {
       overview.value = await getTeacherOverview()
     } catch (err) {
-      console.error('加载教师概览失败:', err)
+      reportFrontendError('加载教师概览失败:', err)
       error.value = '加载教师概览失败，请稍后重试'
       overview.value = null
     }

@@ -5,6 +5,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import TeacherDashboard from '../TeacherDashboard.vue'
 import teacherDashboardSource from '../TeacherDashboard.vue?raw'
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import teacherDashboardHookSource from '@/features/teacher-dashboard/model/useTeacherDashboardPage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -161,6 +162,8 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardSource).toContain('useTeacherDashboardPage')
     expect(teacherDashboardSource).not.toContain("from '@/api/teacher'")
     expect(teacherDashboardPageSource).toContain('useTeacherDashboardMetrics')
+    expect(teacherDashboardHookSource).toContain("reportFrontendError('加载教师概览失败:', err)")
+    expect(teacherDashboardHookSource).not.toContain("console.error('加载教师概览失败:'")
     expect(teacherDashboardPageSource).not.toContain('TeacherClassTrendPanel')
     expect(teacherDashboardPageSource).not.toContain('TeacherClassReviewPanel')
     expect(teacherDashboardPageSource).not.toContain('TeacherInterventionPanel')

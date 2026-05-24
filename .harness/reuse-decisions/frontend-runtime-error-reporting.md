@@ -36,6 +36,8 @@ refactor_existing
 - `code/frontend/src/features/platform-student-management/model/usePlatformStudentManagementPage.ts`
 - `code/frontend/src/features/platform-instance-management/model/usePlatformInstanceManagementPage.ts`
 - `code/frontend/src/features/platform-overview/model/usePlatformOverviewPage.ts`
+- `code/frontend/src/features/teacher-dashboard/model/useTeacherDashboardPage.ts`
+- `code/frontend/src/features/teacher-instances/model/useTeacherInstances.ts`
 - `code/frontend/src/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts`
 - `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewIndex.ts`
 - `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewExportFlow.ts`
@@ -43,6 +45,8 @@ refactor_existing
 - `code/frontend/src/features/teacher-student-analysis/model/useReviewArchiveExportFlow.ts`
 - `code/frontend/src/features/teacher-student-review-archive/model/useTeacherStudentReviewArchive.ts`
 - `code/frontend/src/features/teacher-class-report-export/model/useTeacherClassReportExport.ts`
+- `code/frontend/src/views/teacher/__tests__/TeacherDashboard.test.ts`
+- `code/frontend/src/views/teacher/__tests__/InstanceManagement.test.ts`
 
 ## After implementation
 - 后续如果项目需要接真实埋点或前端告警，再让 `reportFrontendError` 成为统一接入点，不再回到页面里直接写原始 `console.error`。

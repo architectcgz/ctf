@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from '@/composables/useToast'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
+import { reportFrontendError } from '@/utils/reportFrontendError'
 
 type TeacherInstanceFilters = {
   className: string
@@ -58,7 +59,7 @@ export function useTeacherInstances() {
       await loadInstances()
       autoSearchReady.value = true
     } catch (err) {
-      console.error('加载教师实例管理页失败:', err)
+      reportFrontendError('加载教师实例管理页失败:', err)
       error.value = '加载实例管理数据失败，请稍后重试'
       classes.value = []
       instances.value = []
@@ -103,7 +104,7 @@ export function useTeacherInstances() {
       ) {
         return
       }
-      console.error('加载教师实例列表失败:', err)
+      reportFrontendError('加载教师实例列表失败:', err)
       error.value = '加载实例列表失败，请稍后重试'
       instances.value = []
       totalCount.value = 0
@@ -148,7 +149,7 @@ export function useTeacherInstances() {
       await loadInstances()
       toast.success('实例已销毁')
     } catch (err) {
-      console.error('教师销毁实例失败:', err)
+      reportFrontendError('教师销毁实例失败:', err)
       const message =
         err instanceof Error && err.message.trim() ? err.message : '销毁实例失败，请稍后重试'
       toast.error(message)
