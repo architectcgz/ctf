@@ -104,7 +104,6 @@ instance.interceptors.response.use(
   },
   async (error: AxiosError<ApiEnvelope<unknown>>) => {
     NProgress.done()
-    const authStore = useAuthStore()
 
     if (axios.isCancel(error) || error.code === AxiosError.ERR_CANCELED) {
       return Promise.reject(error)
@@ -118,7 +117,6 @@ instance.interceptors.response.use(
       const retryMessage = retryAfter
         ? `请求过于频繁，请 ${retryAfter} 秒后重试`
         : '请求过于频繁，请稍后再试'
-      redirectToErrorStatusPage(429, error.config?.url)
       return Promise.reject(
         toApiError(
           code,
@@ -141,6 +139,7 @@ instance.interceptors.response.use(
         error.response?.data?.errors
       )
       if (shouldRedirectToErrorStatusPage(status, error.config?.url)) {
+        const authStore = useAuthStore()
         authStore.logout()
         redirectToErrorStatusPage(status, error.config?.url)
       }
@@ -176,7 +175,6 @@ instance.interceptors.response.use(
       error.response?.data?.message,
       error.response?.data?.errors
     )
-    redirectToErrorStatusPage(status, error.config?.url)
     return Promise.reject(apiError)
   }
 )

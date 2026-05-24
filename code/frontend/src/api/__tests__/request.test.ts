@@ -103,6 +103,104 @@ describe('request cancel handling', () => {
     expect(toastMocks.error).not.toHaveBeenCalled()
   })
 
+  it('429 限流错误不应再由请求层强制跳转错误页', async () => {
+    axiosInstance.defaults.adapter = vi.fn().mockRejectedValue({
+      config: {
+        method: 'get',
+        url: '/rate-limited',
+      },
+      response: {
+        status: 429,
+        headers: {
+          'retry-after': '30',
+        },
+        data: {
+          code: 0,
+          message: '',
+          request_id: 'req-rate',
+        },
+      },
+    })
+
+    await expect(
+      request({
+        method: 'GET',
+        url: '/rate-limited',
+      })
+    ).rejects.toMatchObject({
+      message: '请求过于频繁，请 30 秒后重试',
+      status: 429,
+      requestId: 'req-rate',
+    })
+
+    expect(redirectMocks.redirectToErrorStatusPage).not.toHaveBeenCalled()
+    expect(authStoreMock.logout).not.toHaveBeenCalled()
+  })
+
+  it('普通服务端错误应返回给页面 owner，而不是在请求层统一跳转', async () => {
+    axiosInstance.defaults.adapter = vi.fn().mockRejectedValue({
+      config: {
+        method: 'get',
+        url: '/server-error',
+      },
+      response: {
+        status: 500,
+        data: {
+          code: 0,
+          message: '',
+          request_id: 'req-server',
+        },
+      },
+    })
+
+    await expect(
+      request({
+        method: 'GET',
+        url: '/server-error',
+      })
+    ).rejects.toMatchObject({
+      message: '服务暂时不可用，请稍后重试',
+      status: 500,
+      requestId: 'req-server',
+    })
+
+    expect(redirectMocks.redirectToErrorStatusPage).not.toHaveBeenCalled()
+    expect(authStoreMock.logout).not.toHaveBeenCalled()
+  })
+
+  it('401 全局会话失效仍保留登出并跳转错误页', async () => {
+    redirectMocks.shouldRedirectToErrorStatusPage.mockReturnValue(true)
+    axiosInstance.defaults.adapter = vi.fn().mockRejectedValue({
+      config: {
+        method: 'get',
+        url: '/profile',
+      },
+      response: {
+        status: 401,
+        data: {
+          code: 0,
+          message: '',
+          request_id: 'req-unauthorized',
+        },
+      },
+    })
+
+    await expect(
+      request({
+        method: 'GET',
+        url: '/profile',
+      })
+    ).rejects.toMatchObject({
+      message: '登录状态已失效，请重新登录',
+      status: 401,
+      requestId: 'req-unauthorized',
+    })
+
+    expect(authStoreMock.logout).toHaveBeenCalledTimes(1)
+    expect(redirectMocks.redirectToErrorStatusPage).toHaveBeenCalledWith(401, '/profile')
+    expect(redirectMocks.shouldRedirectToErrorStatusPage).toHaveBeenCalledWith(401, '/profile')
+  })
+
   it('网络错误也不应由请求层直接弹错', async () => {
     axiosInstance.defaults.adapter = vi.fn().mockRejectedValue({
       config: {
