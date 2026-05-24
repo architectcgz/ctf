@@ -14,7 +14,7 @@ import {
   resolveAwdReviewDetailRouteName,
   resolveAwdReviewIndexRouteName,
 } from '@/utils/teachingWorkspaceRouting'
-import { useTeacherAwdReviewExportFlow } from '@/features/awd-review-workspace'
+import { useAwdReviewExportFlow } from '@/features/awd-review-workspace'
 
 export function useAwdReviewDetailPage() {
   const route = useRoute()
@@ -79,7 +79,7 @@ export function useAwdReviewDetailPage() {
       ) ?? []
   )
   const canExportReport = computed(() => Boolean(review.value?.contest.export_ready))
-  const { exporting, exportArchive, exportReport } = useTeacherAwdReviewExportFlow({
+  const { exporting, exportArchive, exportReport } = useAwdReviewExportFlow({
     contestId,
     selectedRoundNumber,
     canExportReport,

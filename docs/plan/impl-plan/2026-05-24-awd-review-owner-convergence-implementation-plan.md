@@ -34,6 +34,7 @@
 - 平台详情页和 teacher 详情页共享 widget，但 widget owner 仍位于 `@/widgets/teacher-awd-review`。
 - 详情 workflow 里的导出流也仍从 `teacher-awd-review` feature 读取。
 - 迁移到中性 owner 后，目录页共享 feature 对外仍暴露 `useTeacherAwdReviewIndex`，teacher-specific 命名还在泄漏共享边界。
+- 详情页共享 feature 对外仍暴露 `useTeacherAwdReviewExportFlow`，teacher-specific 命名同样还在泄漏共享边界。
 
 ## 任务切片
 
@@ -100,6 +101,33 @@
   - 共享 feature public API 是否已经移除 teacher-specific hook 名称。
   - teacher / platform 目录页是否全部切到新 owner 命名。
   - 旧 hook 文件是否已删除而不是保留兼容出口。
+
+### Slice 3：收口 AWD 详情页共享导出流命名
+
+- 目标：
+  - 把 `features/awd-review-workspace/model/useTeacherAwdReviewExportFlow.ts` 收口为中性 `useAwdReviewExportFlow.ts`。
+  - 更新共享 feature 导出、详情页 workflow owner、源码断言测试和活动计划引用。
+  - 删除旧文件，不保留兼容 re-export。
+- 预期改动：
+  - `.harness/reuse-decisions/awd-review-owner-convergence.md`
+  - `docs/plan/impl-plan/2026-05-24-awd-review-owner-convergence-implementation-plan.md`
+  - `docs/plan/impl-plan/2026-05-24-platform-route-owner-decoupling-implementation-plan.md`
+  - `code/frontend/src/features/awd-review-workspace/index.ts`
+  - `code/frontend/src/features/awd-review-workspace/model/index.ts`
+  - `code/frontend/src/features/awd-review-workspace/model/useAwdReviewExportFlow.ts`
+  - `code/frontend/src/features/awd-review-workspace/model/useTeacherAwdReviewExportFlow.ts`
+  - `code/frontend/src/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts`
+  - `code/frontend/src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts`
+- 验证：
+  - `rg -n "useTeacherAwdReviewExportFlow|useAwdReviewExportFlow" code/frontend/src .harness/reuse-decisions docs/plan/impl-plan`
+  - `npm run test:run -- src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts src/views/platform/__tests__/PlatformAwdReviewDetail.test.ts src/__tests__/architectureBoundaries.test.ts src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+  - `npm run typecheck`
+  - `bash scripts/check-consistency.sh`
+  - `git diff --check -- <touched files>`
+- Review focus：
+  - 共享 feature public API 是否已经移除 teacher-specific 导出流名称。
+  - AWD 详情 workflow 是否全部切到新导出流 owner。
+  - 旧导出流文件是否已删除而不是保留兼容出口。
 
 ## 风险
 

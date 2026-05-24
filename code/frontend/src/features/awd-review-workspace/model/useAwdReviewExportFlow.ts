@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef, type Ref } from 'vue'
+import { computed, ref, type ComputedRef } from 'vue'
 
 import { downloadReport } from '@/api/assessment'
 import { ApiError } from '@/api/request'
@@ -12,7 +12,7 @@ import { reportFrontendError } from '@/utils/reportFrontendError'
 
 type ExportKind = 'archive' | 'report'
 
-interface UseTeacherAwdReviewExportFlowOptions {
+interface UseAwdReviewExportFlowOptions {
   contestId: ComputedRef<string>
   selectedRoundNumber: ComputedRef<number | undefined>
   canExportReport: ComputedRef<boolean>
@@ -24,7 +24,7 @@ interface UseTeacherAwdReviewExportFlowOptions {
   stopPolling: () => void
 }
 
-export function useTeacherAwdReviewExportFlow(options: UseTeacherAwdReviewExportFlowOptions) {
+export function useAwdReviewExportFlow(options: UseAwdReviewExportFlowOptions) {
   const { contestId, selectedRoundNumber, canExportReport, startPolling, stopPolling } = options
   const toast = useToast()
 

@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import TeacherAWDReviewDetail from '../TeacherAWDReviewDetail.vue'
 import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
+import awdReviewDetailPageSource from '@/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts?raw'
 
 const routeMock = {
   params: {
@@ -134,6 +135,8 @@ describe('TeacherAWDReviewDetail', () => {
 
   it('页面应通过 feature model 获取详情状态，不再直接耦合 teacher api', () => {
     expect(awdReviewDetailSource).toContain("useAwdReviewDetailPage } from '@/features/awd-review-detail-workspace'")
+    expect(awdReviewDetailPageSource).toContain("useAwdReviewExportFlow } from '@/features/awd-review-workspace'")
+    expect(awdReviewDetailPageSource).not.toContain("useTeacherAwdReviewExportFlow } from '@/features/awd-review-workspace'")
     expect(awdReviewDetailSource).not.toContain("from '@/api/teacher'")
     expect(awdReviewDetailSource).not.toContain('const activeContestTitle = computed')
     expect(awdReviewDetailSource).not.toContain('const summaryStats = computed')
