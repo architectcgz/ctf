@@ -158,9 +158,9 @@ describe('TeacherDashboard', () => {
   })
 
   it('路由页应仅负责组合 overview owner，不直接依赖教师接口实现', () => {
-    expect(teacherDashboardSource).toContain('useTeacherOverviewPage')
+    expect(teacherDashboardSource).toContain('useTeacherDashboardPage')
     expect(teacherDashboardSource).not.toContain("from '@/api/teacher'")
-    expect(teacherDashboardPageSource).toContain('useTeacherOverviewWorkspace')
+    expect(teacherDashboardPageSource).toContain('useTeacherDashboardMetrics')
     expect(teacherDashboardPageSource).not.toContain('TeacherClassTrendPanel')
     expect(teacherDashboardPageSource).not.toContain('TeacherClassReviewPanel')
     expect(teacherDashboardPageSource).not.toContain('TeacherInterventionPanel')

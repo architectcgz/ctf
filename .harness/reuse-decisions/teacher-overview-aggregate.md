@@ -24,7 +24,7 @@
 - `ClassStudentsPage.vue` 已经是班级详情工作区 owner，适合继续承载趋势、复盘、洞察、介入这些完整班级面板。
 - `teaching_readmodel.QueryService` 已经是教师侧只读聚合 owner，班级摘要、趋势、复盘都在这里实现，新增教学概览聚合应继续落在这个模块，而不是在前端并发拼多个班级接口。
 - `TeacherDashboardPage.vue` 当前虽然复用了 `TeacherClassTrendPanel`、`TeacherClassReviewPanel`、`TeacherInterventionPanel`，但这些组件的 contract 明确是班级详情级，不适合作为教学概览长期 owner。
-- `useTeacherWorkspace.ts`、`useTeacherReviewWorkspace.ts`、`useTeacherClassWorkspaceSection.ts` 都是在 feature 内把页面 owner 继续收口到一个语义化 hook 名称。这次新增 `useTeacherOverviewPage.ts` / `useTeacherOverviewWorkspace.ts` 不是复制新逻辑，而是把新的 overview scope owner 和既有 `useTeacherDashboardPage`、`useTeacherDashboardMetrics` 之间建立稳定别名，避免路由页和页面组件继续暴露旧的 dashboard 命名。
+- `useTeacherWorkspace.ts`、`useTeacherReviewWorkspace.ts`、`useTeacherClassWorkspaceSection.ts` 都是在 feature 内把页面 owner 继续收口到一个语义化 hook 名称。当前 `TeacherDashboard.vue` 与 `TeacherDashboardPage.vue` 已经稳定直接依赖 `useTeacherDashboardPage`、`useTeacherDashboardMetrics` 这两个真实 owner，不再额外保留 `useTeacherOverviewPage.ts` / `useTeacherOverviewWorkspace.ts` 这层命名兼容桥。
 
 ## Decision
 +refactor_existing
