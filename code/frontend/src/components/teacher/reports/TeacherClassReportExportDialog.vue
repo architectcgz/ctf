@@ -7,7 +7,7 @@ import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceM
 import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
 import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
 import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
-import { useTeacherClassReportExport } from '@/features/teacher-class-report-export'
+import { useClassReportExport } from '@/features/teacher-class-report-export'
 import { formatDate } from '@/utils/format'
 
 const props = defineProps<{
@@ -50,7 +50,7 @@ const {
   loadPreview,
   handleExport,
   handleDownload,
-} = useTeacherClassReportExport()
+} = useClassReportExport()
 
 const dialogVisible = computed({
   get: () => props.modelValue,

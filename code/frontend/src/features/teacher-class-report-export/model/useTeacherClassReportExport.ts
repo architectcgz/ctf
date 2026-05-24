@@ -44,7 +44,7 @@ interface ExportContext {
   toDate?: string
 }
 
-export function useTeacherClassReportExport() {
+export function useClassReportExport() {
   const authStore = useAuthStore()
   const toast = useToast()
   const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling()

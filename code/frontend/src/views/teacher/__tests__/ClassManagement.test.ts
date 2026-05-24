@@ -5,6 +5,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ClassManagement from '../ClassManagement.vue'
 import classManagementViewSource from '../ClassManagement.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
+import classReportExportDialogSource from '@/components/teacher/reports/TeacherClassReportExportDialog.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const ElTable = { template: '<div><slot /></div>' }
@@ -304,6 +305,10 @@ describe('ClassManagement', () => {
     expect(classManagementViewSource).not.toContain('TeacherClassReportExportDialog.vue')
     expect(classManagementViewSource).not.toContain('getClasses')
     expect(classManagementViewSource).not.toContain('const totalPages = computed')
+    expect(classReportExportDialogSource).toContain(
+      "import { useClassReportExport } from '@/features/teacher-class-report-export'"
+    )
+    expect(classReportExportDialogSource).not.toContain('useTeacherClassReportExport')
   })
 
   it('点击导出班级报告时应打开上下文对话框', async () => {
