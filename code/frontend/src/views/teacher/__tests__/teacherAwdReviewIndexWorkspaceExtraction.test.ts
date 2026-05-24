@@ -1,24 +1,24 @@
 import { describe, expect, it } from 'vitest'
 
 import awdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
-import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
-import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
-import awdReviewWorkspaceHeaderSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspaceHeader.vue?raw'
-import awdReviewSummaryPanelSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSummaryPanel.vue?raw'
-import awdReviewContestDirectorySource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestDirectory.vue?raw'
-import awdReviewIndexFiltersSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexFilters.vue?raw'
-import awdReviewDirectorySectionSource from '@/widgets/teacher-awd-review/TeacherAWDReviewDirectorySection.vue?raw'
-import awdReviewContestHeadSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestHead.vue?raw'
-import awdReviewContestRowSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestRow.vue?raw'
-import awdReviewContestRowCtaSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestRowCta.vue?raw'
-import awdReviewContestRowMetricsSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestRowMetrics.vue?raw'
-import awdReviewContestRowStatusTagsSource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestRowStatusTags.vue?raw'
-import awdReviewDirectoryStateSource from '@/widgets/teacher-awd-review/TeacherAWDReviewDirectoryState.vue?raw'
+import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/TeacherAWDReviewIndexWorkspace.vue?raw'
+import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
+import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceHeader.vue?raw'
+import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSummaryPanel.vue?raw'
+import awdReviewContestDirectorySource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestDirectory.vue?raw'
+import awdReviewIndexFiltersSource from '@/widgets/awd-review-workspace/TeacherAWDReviewIndexFilters.vue?raw'
+import awdReviewDirectorySectionSource from '@/widgets/awd-review-workspace/TeacherAWDReviewDirectorySection.vue?raw'
+import awdReviewContestHeadSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestHead.vue?raw'
+import awdReviewContestRowSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRow.vue?raw'
+import awdReviewContestRowCtaSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRowCta.vue?raw'
+import awdReviewContestRowMetricsSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRowMetrics.vue?raw'
+import awdReviewContestRowStatusTagsSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRowStatusTags.vue?raw'
+import awdReviewDirectoryStateSource from '@/widgets/awd-review-workspace/TeacherAWDReviewDirectoryState.vue?raw'
 
 describe('Teacher AWD review index workspace extraction', () => {
   it('目录页路由应收敛为 widget 组合层', () => {
     expect(awdReviewIndexSource).toContain(
-      "import { TeacherAWDReviewIndexWorkspace } from '@/widgets/teacher-awd-review'"
+      "import { TeacherAWDReviewIndexWorkspace } from '@/widgets/awd-review-workspace'"
     )
     expect(awdReviewIndexSource).toContain('<TeacherAWDReviewIndexWorkspace')
     expect(awdReviewIndexSource).not.toContain('class="teacher-management-shell')

@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
-import awdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
-import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
-import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
+import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/TeacherAWDReviewIndexWorkspace.vue?raw'
+import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspace.vue?raw'
+import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
 
 describe('teacher root shell cleanup', () => {
   it.each([

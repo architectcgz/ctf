@@ -352,7 +352,7 @@ describe('TeacherAWDReviewDetail', () => {
 
   it('页面应通过 widget 组合复盘工作区，不直接承载复盘区块模板', () => {
     expect(awdReviewDetailSource).toContain(
-      "import { TeacherAWDReviewWorkspace } from '@/widgets/teacher-awd-review'"
+      "import { TeacherAWDReviewWorkspace } from '@/widgets/awd-review-workspace'"
     )
     expect(awdReviewDetailSource).toContain('<TeacherAWDReviewWorkspace')
     expect(awdReviewDetailSource).not.toContain('teacher-controls-title')

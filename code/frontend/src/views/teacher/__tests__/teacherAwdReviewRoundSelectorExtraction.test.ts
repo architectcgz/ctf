@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
-import teacherAwdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
+import teacherAwdReviewWorkspaceSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspace.vue?raw'
 import teacherAwdReviewRoundSelectorSource from '@/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue?raw'
 
 describe('Teacher AWD review round selector extraction', () => {
   it('应将轮次切换区块下沉到独立组件', () => {
     expect(awdReviewDetailSource).toContain(
-      "import { TeacherAWDReviewWorkspace } from '@/widgets/teacher-awd-review'"
+      "import { TeacherAWDReviewWorkspace } from '@/widgets/awd-review-workspace'"
     )
     expect(awdReviewDetailSource).toContain('<TeacherAWDReviewWorkspace')
     expect(awdReviewDetailSource).not.toContain('class="awd-review-round-list custom-scrollbar"')

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { TeacherAWDReviewIndexWorkspace } from '@/widgets/teacher-awd-review'
-import { useTeacherAwdReviewIndex } from '@/features/teacher-awd-review'
+import { TeacherAWDReviewIndexWorkspace } from '@/widgets/awd-review-workspace'
+import { useTeacherAwdReviewIndex } from '@/features/awd-review-workspace'
 
 const {
   loading,

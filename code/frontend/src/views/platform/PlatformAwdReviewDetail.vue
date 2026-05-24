@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TeacherAWDReviewWorkspace } from '@/widgets/teacher-awd-review'
+import { TeacherAWDReviewWorkspace } from '@/widgets/awd-review-workspace'
 import { useAwdReviewDetailPage } from '@/features/awd-review-detail-workspace'
 
 const {

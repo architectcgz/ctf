@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import { useAuthStore } from '@/stores/auth'
 import platformAwdReviewDetailSource from '../PlatformAwdReviewDetail.vue?raw'
-import TeacherAWDReviewWorkspace from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue'
+import TeacherAWDReviewWorkspace from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspace.vue'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()

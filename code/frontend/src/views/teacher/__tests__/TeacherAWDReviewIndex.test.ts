@@ -4,9 +4,9 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import TeacherAWDReviewIndex from '../TeacherAWDReviewIndex.vue'
 import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
-import teacherAwdReviewIndexWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewIndexWorkspace.vue?raw'
-import teacherAwdReviewContestDirectorySource from '@/widgets/teacher-awd-review/TeacherAWDReviewContestDirectory.vue?raw'
-import teacherAwdReviewDirectorySectionSource from '@/widgets/teacher-awd-review/TeacherAWDReviewDirectorySection.vue?raw'
+import teacherAwdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/TeacherAWDReviewIndexWorkspace.vue?raw'
+import teacherAwdReviewContestDirectorySource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestDirectory.vue?raw'
+import teacherAwdReviewDirectorySectionSource from '@/widgets/awd-review-workspace/TeacherAWDReviewDirectorySection.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -87,9 +87,9 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('页面应通过 feature model 获取筛选与摘要状态，不再直接耦合 teacher api', () => {
-    expect(teacherAwdReviewIndexSource).toContain("useTeacherAwdReviewIndex } from '@/features/teacher-awd-review'")
+    expect(teacherAwdReviewIndexSource).toContain("useTeacherAwdReviewIndex } from '@/features/awd-review-workspace'")
     expect(teacherAwdReviewIndexSource).toContain(
-      "import { TeacherAWDReviewIndexWorkspace } from '@/widgets/teacher-awd-review'"
+      "import { TeacherAWDReviewIndexWorkspace } from '@/widgets/awd-review-workspace'"
     )
     expect(teacherAwdReviewIndexSource).not.toContain("from '@/api/teacher'")
     expect(teacherAwdReviewIndexSource).not.toContain('const statusOptions = [')

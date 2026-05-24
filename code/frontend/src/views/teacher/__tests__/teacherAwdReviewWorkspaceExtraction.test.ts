@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
 import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
-import awdReviewWorkspaceSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue?raw'
-import awdReviewWorkspaceStateSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspaceState.vue?raw'
-import awdReviewWorkspaceActionsSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspaceActions.vue?raw'
-import awdReviewStatusChipSource from '@/widgets/teacher-awd-review/TeacherAWDReviewStatusChip.vue?raw'
-import awdReviewSurfaceShellSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue?raw'
-import awdReviewWorkspaceHeaderSource from '@/widgets/teacher-awd-review/TeacherAWDReviewWorkspaceHeader.vue?raw'
-import awdReviewSummaryPanelSource from '@/widgets/teacher-awd-review/TeacherAWDReviewSummaryPanel.vue?raw'
+import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspace.vue?raw'
+import awdReviewWorkspaceStateSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceState.vue?raw'
+import awdReviewWorkspaceActionsSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceActions.vue?raw'
+import awdReviewStatusChipSource from '@/widgets/awd-review-workspace/TeacherAWDReviewStatusChip.vue?raw'
+import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
+import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceHeader.vue?raw'
+import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSummaryPanel.vue?raw'
 
 describe('Teacher AWD review workspace extraction', () => {
   it('详情路由页应收敛为 widget 组合层', () => {
     expect(awdReviewDetailSource).toContain(
-      "import { TeacherAWDReviewWorkspace } from '@/widgets/teacher-awd-review'"
+      "import { TeacherAWDReviewWorkspace } from '@/widgets/awd-review-workspace'"
     )
     expect(awdReviewDetailSource).toContain('<TeacherAWDReviewWorkspace')
     expect(awdReviewDetailSource).not.toContain('class="teacher-management-shell')
