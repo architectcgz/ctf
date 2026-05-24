@@ -1,2 +1,2 @@
-export * from './useTeacherStudentReviewArchive'
+export * from './useStudentReviewArchive'
 export * from './presentation'

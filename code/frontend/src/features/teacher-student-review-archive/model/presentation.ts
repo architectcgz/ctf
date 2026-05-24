@@ -1,4 +1,4 @@
-export const TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES = {
+export const STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES = {
   success: '复盘归档已生成并开始下载',
   pending: '复盘归档开始生成，完成后会自动下载',
   downloadFailed: '复盘归档下载失败，请稍后重试',
@@ -7,7 +7,7 @@ export const TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES = {
   exportFailed: '复盘归档导出失败，请稍后重试',
 } as const
 
-export function resolveTeacherStudentReviewArchiveErrorMessage(
+export function resolveStudentReviewArchiveErrorMessage(
   error: unknown,
   fallback: string
 ): string {

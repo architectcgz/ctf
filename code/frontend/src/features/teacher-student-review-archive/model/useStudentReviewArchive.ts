@@ -5,7 +5,7 @@ import type { ReviewArchiveData } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 
-export function useTeacherStudentReviewArchive(studentId: Readonly<Ref<string>>) {
+export function useStudentReviewArchive(studentId: Readonly<Ref<string>>) {
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
   const archive = ref<ReviewArchiveData | null>(null)
   const loading = ref(false)

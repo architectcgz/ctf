@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherStudentReviewArchive from '../TeacherStudentReviewArchive.vue'
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
+import studentReviewArchivePageModelSource from '@/features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveWorkspace.vue?raw'
 import reviewArchiveStateSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveState.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
@@ -218,6 +219,13 @@ describe('TeacherStudentReviewArchive', () => {
       "import { ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
     )
     expect(reviewArchiveSource).toContain('<ReviewArchiveWorkspace')
+    expect(studentReviewArchivePageModelSource).toContain('useStudentReviewArchive(studentId)')
+    expect(studentReviewArchivePageModelSource).toContain('resolveStudentReviewArchiveErrorMessage')
+    expect(studentReviewArchivePageModelSource).toContain('STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES')
+    expect(studentReviewArchivePageModelSource).not.toContain('useTeacherStudentReviewArchive')
+    expect(studentReviewArchivePageModelSource).not.toContain(
+      'resolveTeacherStudentReviewArchiveErrorMessage'
+    )
     expect(reviewArchiveSource).not.toContain('exportStudentReviewArchive')
     expect(reviewArchiveWorkspaceSource).toContain('<TeacherReviewArchiveState')
     expect(reviewArchiveStateSource).toContain('class="ui-btn ui-btn--primary"')

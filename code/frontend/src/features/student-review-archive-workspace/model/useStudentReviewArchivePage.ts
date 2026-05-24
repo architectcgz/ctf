@@ -14,9 +14,9 @@ import {
   resolveStudentManagementRouteName,
 } from '@/utils/teachingWorkspaceRouting'
 import {
-  resolveTeacherStudentReviewArchiveErrorMessage,
-  TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES,
-  useTeacherStudentReviewArchive,
+  resolveStudentReviewArchiveErrorMessage,
+  STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES,
+  useStudentReviewArchive,
 } from '@/features/teacher-student-review-archive'
 
 export function useStudentReviewArchivePage() {
@@ -28,7 +28,7 @@ export function useStudentReviewArchivePage() {
 
   const className = computed(() => String(route.params.className || ''))
   const studentId = computed(() => String(route.params.studentId || ''))
-  const { archive, loading, error, reload } = useTeacherStudentReviewArchive(studentId)
+  const { archive, loading, error, reload } = useStudentReviewArchive(studentId)
 
   const exporting = ref(false)
   const pendingReportId = ref<string | null>(null)
@@ -72,15 +72,15 @@ export function useStudentReviewArchivePage() {
     if (error instanceof ApiError) {
       return
     }
-    toast.error(resolveTeacherStudentReviewArchiveErrorMessage(error, fallback))
+    toast.error(resolveStudentReviewArchiveErrorMessage(error, fallback))
   }
 
   async function downloadArchiveReport(reportId: string): Promise<void> {
     try {
       await downloadGeneratedReport(reportId)
-      toast.success(TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.success)
+      toast.success(STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.success)
     } catch (error) {
-      notifyExportActionError(error, TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.downloadFailed)
+      notifyExportActionError(error, STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.downloadFailed)
     }
   }
 
@@ -100,7 +100,7 @@ export function useStudentReviewArchivePage() {
         pendingReportId.value = null
         stopPolling()
         toast.error(
-          result.error_message || TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.generationFailed
+          result.error_message || STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.generationFailed
         )
         return
       }
@@ -120,7 +120,7 @@ export function useStudentReviewArchivePage() {
             pendingReportId.value = null
             stopPolling()
             toast.error(
-              next.error_message || TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.generationFailed
+              next.error_message || STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.generationFailed
             )
           }
         },
@@ -128,15 +128,15 @@ export function useStudentReviewArchivePage() {
           pendingReportId.value = null
           notifyExportActionError(
             error,
-            TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.pollingFailed
+            STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.pollingFailed
           )
         }
       )
-      toast.info(TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.pending)
+      toast.info(STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.pending)
     } catch (error) {
       pendingReportId.value = null
       stopPolling()
-      notifyExportActionError(error, TEACHER_STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.exportFailed)
+      notifyExportActionError(error, STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES.exportFailed)
     } finally {
       exporting.value = false
     }
