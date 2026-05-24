@@ -129,7 +129,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/awd-reviews/:contestId',
   name: 'PlatformAwdReviewDetail',
-  component: () => import('@/views/teacher/TeacherAWDReviewDetail.vue'),
+  component: () => import('@/views/platform/PlatformAwdReviewDetail.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],

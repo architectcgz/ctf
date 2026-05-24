@@ -7,12 +7,12 @@
 ## 目标
 
 - 按最小可审查切片，把 `/platform/*` 对 teacher route view 的直接依赖逐步收口。
-- 当前活动切片处理平台班级工作台别名页，让管理员的 `trend / review / insights / intervention` 路由拥有自己的 route view，并把重定向 owner 上提到中性 feature。
+- 当前活动切片处理 `PlatformAwdReviewDetail`，让管理员 AWD 复盘详情页拥有自己的 route view，并把 page workflow owner 上提到中性 feature。
 
 ## 非目标
 
-- 本轮不处理 `PlatformAwdReviewDetail`。
-- 本轮不改班级学生页的用户可见内容结构，只收口 alias route owner。
+- 本轮不改 teacher 侧 AWD 复盘详情的用户可见结构。
+- 本轮不处理更大范围的 AWD review widget 中性化，只收口 route/page owner。
 
 ## 输入依据
 
@@ -24,9 +24,9 @@
 
 ## 当前结论
 
-- `PlatformClassStudents`、`PlatformStudentAnalysis`、`PlatformStudentReviewArchive` 已经完成 owner 解耦。
-- 当前剩余最小连续链路是平台班级工作台四个别名页：`PlatformClassTrend`、`PlatformClassReview`、`PlatformClassInsights`、`PlatformClassIntervention`。
-- 这四个路由当前共同指向 `@/views/teacher/TeacherClassWorkspaceSection.vue`，实际职责只是把别名页重定向回 canonical `*ClassStudents` 路由并附带 `panel` query。
+- `PlatformClassStudents`、`PlatformStudentAnalysis`、`PlatformStudentReviewArchive`、平台班级工作台别名页都已经完成 owner 解耦。
+- 当前剩余最小连续链路只剩 `PlatformAwdReviewDetail`。
+- 该路由当前仍直接指向 `@/views/teacher/TeacherAWDReviewDetail.vue`，并复用 teacher page hook；其中 `openReviewIndex()` 仍硬编码返回 `TeacherAWDReviewIndex`，说明 admin 详情页 workflow owner 还没有真正中性化。
 
 ## 任务切片
 
@@ -105,11 +105,39 @@
   - admin 角色下 canonical redirect 是否回到 `PlatformClassStudents` 而不是 `TeacherClassStudents`。
   - teacher 侧旧别名页是否继续保持兼容跳转。
 
+### Slice 4：平台 AWD 复盘详情页 owner 解耦
+
+- 目标：
+  - 让 `PlatformAwdReviewDetail` 不再直接挂 teacher route view。
+  - 把 AWD 复盘详情页 workflow owner 上提到中性 feature，修正 admin 返回索引仍落到 teacher 命名空间的问题。
+- 预期改动：
+  - `code/frontend/src/router/routes/platformRoutes.ts`
+  - `code/frontend/src/views/platform/PlatformAwdReviewDetail.vue`
+  - `code/frontend/src/views/platform/__tests__/PlatformAwdReviewDetail.test.ts`
+  - `code/frontend/src/features/awd-review-detail-workspace/**`
+  - `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewDetail.ts`
+  - `code/frontend/src/views/teacher/TeacherAWDReviewDetail.vue`
+  - `code/frontend/src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts`
+  - `code/frontend/src/__tests__/architectureAllowlist.ts`
+  - `.harness/reuse-decisions/frontend-architecture-review-prompt-and-platform-feature-split.md`
+- 依赖：
+  - 继续复用 `TeacherAWDReviewWorkspace` widget 与 `useTeacherAwdReviewExportFlow`。
+  - AWD 详情页返回索引与轮次切换继续沿用 `teachingWorkspaceRouting` 做 role-aware 路由解析。
+- 验证：
+  - `git diff --check -- <touched files>`
+  - `npm run test:run -- src/views/platform/__tests__/PlatformAwdReviewDetail.test.ts src/views/teacher/__tests__/TeacherAWDReviewDetail.test.ts src/views/platform/__tests__/AWDReviewIndex.test.ts src/__tests__/architectureBoundaries.test.ts src/views/__tests__/routeViewArchitectureBoundary.test.ts src/router/__tests__/sharedRoutes.test.ts`
+  - `npm run typecheck`
+- Review focus：
+  - 平台 AWD 详情路由是否真正脱离 teacher route view。
+  - admin 角色下返回列表、轮次切换是否继续留在 platform 命名空间。
+  - teacher 侧旧详情页是否继续保持兼容行为。
+
 ## 风险
 
 - `useTeacherStudentAnalysisPage` 体量较大，直接整体搬迁会放大 diff；因此本轮只移动 page owner 和导航 owner，保留内部 helper 现状。
 - 复盘归档页虽然更小，但仍涉及导出轮询、文件下载和错误提示；因此本轮只把 page owner 上提到中性 feature，不改稳定的导出实现细节。
 - 班级工作台别名页虽然逻辑更轻，但它同时承接 teacher / platform 两套路由名映射，canonical redirect 的目标路由如果判错，会直接把管理员链路跳回 teacher namespace。
+- AWD 复盘详情页已经有一部分 role-aware 路由逻辑，但返回索引仍写死在 teacher 命名空间；如果只新增平台 view 而不迁移 page owner，管理员会继续被带回 `/academy/awd-reviews`。
 - 学生分析页涉及 review workspace、writeup、manual review、report export，多处 watch / async flow 同时存在，不能因为 route owner 迁移破坏现有角色分流。
 
 ## 回退方式
