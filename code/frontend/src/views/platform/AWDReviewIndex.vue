@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AwdReviewHeroPanel from '@/components/platform/awd-review/AwdReviewHeroPanel.vue'
 import AwdReviewDirectoryPanel from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue'
-import { useTeacherAwdReviewIndex } from '@/features/awd-review-workspace'
+import { useAwdReviewIndex } from '@/features/awd-review-workspace'
 
 const {
   loading,
@@ -20,7 +20,7 @@ const {
   resetFilters,
   openPlatformOverview,
   openContest,
-} = useTeacherAwdReviewIndex()
+} = useAwdReviewIndex()
 </script>
 
 <template>

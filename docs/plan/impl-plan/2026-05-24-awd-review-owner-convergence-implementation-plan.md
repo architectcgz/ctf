@@ -13,7 +13,7 @@
 ## 非目标
 
 - 本轮不改 AWD 复盘页面的可见行为、接口契约或路由名。
-- 本轮不做 `Teacher*` 组件名、常量名、测试描述的大规模命名统一。
+- 本轮不做 `Teacher*` widget、常量名、测试描述的大规模命名统一。
 - 本轮不重排 AWD 复盘内部模板结构或视觉层。
 
 ## 输入依据
@@ -33,6 +33,7 @@
 - 平台目录页仍直接依赖 `@/features/teacher-awd-review`。
 - 平台详情页和 teacher 详情页共享 widget，但 widget owner 仍位于 `@/widgets/teacher-awd-review`。
 - 详情 workflow 里的导出流也仍从 `teacher-awd-review` feature 读取。
+- 迁移到中性 owner 后，目录页共享 feature 对外仍暴露 `useTeacherAwdReviewIndex`，teacher-specific 命名还在泄漏共享边界。
 
 ## 任务切片
 
@@ -70,6 +71,35 @@
   - 平台 / 教师 route views 是否都只依赖中性 owner。
   - 详情 workflow 是否不再回跳到 role-specific feature。
   - 旧 owner 目录是否已完全退场，而不是仅仅换成兼容别名。
+
+### Slice 2：收口 AWD 目录页共享 hook 命名
+
+- 目标：
+  - 把 `features/awd-review-workspace/model/useTeacherAwdReviewIndex.ts` 收口为中性 `useAwdReviewIndex.ts`。
+  - 更新共享 feature 导出、teacher / platform route view、源码断言测试和架构白名单。
+  - 删除旧文件，不保留兼容 re-export。
+- 预期改动：
+  - `.harness/reuse-decisions/awd-review-owner-convergence.md`
+  - `docs/plan/impl-plan/2026-05-24-awd-review-owner-convergence-implementation-plan.md`
+  - `code/frontend/src/features/awd-review-workspace/index.ts`
+  - `code/frontend/src/features/awd-review-workspace/model/index.ts`
+  - `code/frontend/src/features/awd-review-workspace/model/useAwdReviewIndex.ts`
+  - `code/frontend/src/features/awd-review-workspace/model/useTeacherAwdReviewIndex.ts`
+  - `code/frontend/src/views/platform/AWDReviewIndex.vue`
+  - `code/frontend/src/views/teacher/TeacherAWDReviewIndex.vue`
+  - `code/frontend/src/views/platform/__tests__/AWDReviewIndex.test.ts`
+  - `code/frontend/src/views/teacher/__tests__/TeacherAWDReviewIndex.test.ts`
+  - `code/frontend/src/__tests__/architectureAllowlist.ts`
+- 验证：
+  - `rg -n "useTeacherAwdReviewIndex|useAwdReviewIndex" code/frontend/src .harness/reuse-decisions docs/plan/impl-plan`
+  - `npm run test:run -- src/views/platform/__tests__/AWDReviewIndex.test.ts src/views/teacher/__tests__/TeacherAWDReviewIndex.test.ts src/__tests__/architectureBoundaries.test.ts src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+  - `npm run typecheck`
+  - `bash scripts/check-consistency.sh`
+  - `git diff --check -- <touched files>`
+- Review focus：
+  - 共享 feature public API 是否已经移除 teacher-specific hook 名称。
+  - teacher / platform 目录页是否全部切到新 owner 命名。
+  - 旧 hook 文件是否已删除而不是保留兼容出口。
 
 ## 风险
 

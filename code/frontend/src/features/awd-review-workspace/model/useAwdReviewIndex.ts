@@ -14,7 +14,7 @@ export interface PlatformAwdReviewRow extends TeacherAWDReviewContestItemData {
   contestCode: string
 }
 
-export function useTeacherAwdReviewIndex() {
+export function useAwdReviewIndex() {
   const router = useRouter()
   const authStore = useAuthStore()
   const { createController, abort } = useAbortController()

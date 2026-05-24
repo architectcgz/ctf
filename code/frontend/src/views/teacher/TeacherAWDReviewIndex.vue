@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { TeacherAWDReviewIndexWorkspace } from '@/widgets/awd-review-workspace'
-import { useTeacherAwdReviewIndex } from '@/features/awd-review-workspace'
+import { useAwdReviewIndex } from '@/features/awd-review-workspace'
 
 const {
   loading,
@@ -18,7 +18,7 @@ const {
   openDashboard,
   openContest,
   contestStatusLabel,
-} = useTeacherAwdReviewIndex()
+} = useAwdReviewIndex()
 </script>
 
 <template>

@@ -1,4 +1,4 @@
 export {
   useTeacherAwdReviewExportFlow,
-  useTeacherAwdReviewIndex,
+  useAwdReviewIndex,
 } from './model'
