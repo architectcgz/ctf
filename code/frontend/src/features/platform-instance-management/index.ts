@@ -1,0 +1,1 @@
+export { usePlatformInstanceManagementPage } from './model'

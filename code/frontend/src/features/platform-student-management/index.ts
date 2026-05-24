@@ -1,0 +1,1 @@
+export { usePlatformStudentManagementPage } from './model'

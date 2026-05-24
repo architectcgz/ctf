@@ -19,6 +19,8 @@ const routeMock = {
   },
   query: {
     panel: 'students',
+    from_date: undefined as string | undefined,
+    to_date: undefined as string | undefined,
   },
 }
 

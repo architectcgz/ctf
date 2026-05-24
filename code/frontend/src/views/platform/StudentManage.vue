@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import StudentManageHeroPanel from '@/components/platform/student/StudentManageHeroPanel.vue'
 import StudentManageWorkspacePanel from '@/components/platform/student/StudentManageWorkspacePanel.vue'
-import { usePlatformStudentManagementPage } from '@/features/platform-users'
+import { usePlatformStudentManagementPage } from '@/features/platform-student-management'
 
 const {
   classes,

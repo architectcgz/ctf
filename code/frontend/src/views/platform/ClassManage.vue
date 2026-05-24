@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ClassManageHeroPanel from '@/components/platform/class/ClassManageHeroPanel.vue'
 import ClassManageWorkspacePanel from '@/components/platform/class/ClassManageWorkspacePanel.vue'
-import { usePlatformClassManagementPage } from '@/features/platform-users'
+import { usePlatformClassManagementPage } from '@/features/platform-class-management'
 
 const {
   list,

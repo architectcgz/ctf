@@ -6,6 +6,7 @@
 
 - `architecture-diagram-generation.md`：根据当前事实源生成可 review 的架构图输入包。
 - `coding-agent-system-prompt.md`：reuse-first coding agent 约束。
+- `frontend-architecture-review.md`：CTF 前端架构级 code review 提示词。
 
 ## 入口约定
 

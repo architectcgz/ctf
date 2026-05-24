@@ -1,5 +1,5 @@
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
 
 import { getClassReview, getClassSummary, getClassTrend } from '@/api/teacher'
 import type {
@@ -191,7 +191,7 @@ export function useTeacherClassStudentsPage() {
       return
     }
 
-    const nextQuery = { ...route.query }
+    const nextQuery: LocationQueryRaw = { ...route.query }
     const nextInsightWindow = buildTeacherClassInsightWindowQuery(insightWindowDraft.value)
     if (nextInsightWindow) {
       nextQuery.from_date = nextInsightWindow.from_date
@@ -221,7 +221,7 @@ export function useTeacherClassStudentsPage() {
       return
     }
 
-    const nextQuery = { ...route.query }
+    const nextQuery: LocationQueryRaw = { ...route.query }
     delete nextQuery.from_date
     delete nextQuery.to_date
     await router.replace({ query: nextQuery })
