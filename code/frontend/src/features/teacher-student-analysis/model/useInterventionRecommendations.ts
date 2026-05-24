@@ -10,13 +10,11 @@ export interface InterventionCandidate {
   score: number
 }
 
-interface UseTeacherInterventionRecommendationsOptions {
+interface UseInterventionRecommendationsOptions {
   students: Readonly<Ref<TeacherStudentItem[]>>
 }
 
-export function useTeacherInterventionRecommendations(
-  options: UseTeacherInterventionRecommendationsOptions
-) {
+export function useInterventionRecommendations(options: UseInterventionRecommendationsOptions) {
   const recommendationMap = ref<Record<string, RecommendationItem | null>>({})
   const recommendationLoadingMap = ref<Record<string, boolean>>({})
   const recommendationErrorMap = ref<Record<string, boolean>>({})

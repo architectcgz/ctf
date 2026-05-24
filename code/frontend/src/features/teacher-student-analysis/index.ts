@@ -1,5 +1,5 @@
 export {
-  useTeacherInterventionRecommendations,
+  useInterventionRecommendations,
   useReviewArchiveExportFlow,
   useReviewWorkspace,
   useSubmissionReviewFlows,

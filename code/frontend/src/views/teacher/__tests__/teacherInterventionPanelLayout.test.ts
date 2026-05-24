@@ -7,7 +7,8 @@ describe('teacher intervention panel layout', () => {
     expect(teacherInterventionPanelSource).toContain(
       "from '@/features/teacher-student-analysis'"
     )
-    expect(teacherInterventionPanelSource).toContain('useTeacherInterventionRecommendations')
+    expect(teacherInterventionPanelSource).toContain('useInterventionRecommendations')
+    expect(teacherInterventionPanelSource).not.toContain('useTeacherInterventionRecommendations')
     expect(teacherInterventionPanelSource).not.toContain("from '@/api/teacher'")
     expect(teacherInterventionPanelSource).toContain('intervention-item__header')
     expect(teacherInterventionPanelSource).toContain('intervention-item__name-button')

@@ -9,7 +9,7 @@ import {
   ChallengeCategoryPill,
   toChallengeCategory,
 } from '@/entities/challenge'
-import { useTeacherInterventionRecommendations } from '@/features/teacher-student-analysis'
+import { useInterventionRecommendations } from '@/features/teacher-student-analysis'
 
 const props = defineProps<{
   students: TeacherStudentItem[]
@@ -26,7 +26,7 @@ const {
   isRecommendationLoading,
   getCandidateClass,
   getCandidatePriorityLabel,
-} = useTeacherInterventionRecommendations({
+} = useInterventionRecommendations({
   students: toRef(props, 'students'),
 })
 
