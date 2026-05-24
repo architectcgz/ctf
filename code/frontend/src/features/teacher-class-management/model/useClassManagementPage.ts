@@ -6,7 +6,7 @@ import type { TeacherClassItem } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
-export function useTeacherClassManagementPage() {
+export function useClassManagementPage() {
   const router = useRouter()
   const authStore = useAuthStore()
 

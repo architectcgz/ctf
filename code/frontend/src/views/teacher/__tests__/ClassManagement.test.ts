@@ -296,7 +296,7 @@ describe('ClassManagement', () => {
 
   it('页面应通过 feature model 获取班级目录状态，不再直接耦合 teacher api', () => {
     expect(classManagementViewSource).toContain(
-      "import { useTeacherClassManagementPage } from '@/features/teacher-class-management'"
+      "import { useClassManagementPage } from '@/features/teacher-class-management'"
     )
     expect(classManagementViewSource).toContain(
       "import { ClassReportExportDialog } from '@/components/teacher/reports'"

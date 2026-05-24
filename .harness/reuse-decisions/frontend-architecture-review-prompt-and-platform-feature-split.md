@@ -30,7 +30,7 @@ hook / page / layout
 - `code/frontend/src/features/platform-users/model/usePlatformClassManagementPage.ts`
 - `code/frontend/src/features/platform-users/model/usePlatformStudentManagementPage.ts`
 - `code/frontend/src/features/platform-users/model/usePlatformInstanceManagementPage.ts`
-- `code/frontend/src/features/teacher-class-management/model/useTeacherClassManagementPage.ts`
+- `code/frontend/src/features/teacher-class-management/model/useClassManagementPage.ts`
 - `code/frontend/src/features/teacher-class-students/model/useTeacherClassStudentsPage.ts`
 - `code/frontend/src/features/teacher-class-workspace/model/useTeacherClassWorkspaceSection.ts`
 - `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewDetail.ts`
