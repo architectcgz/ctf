@@ -8,7 +8,7 @@ import {
 } from '@/api/teaching'
 import type { TeacherAttackSessionResponseData, TeacherEvidenceData } from '@/api/contracts'
 
-export function useTeacherReviewWorkspace() {
+export function useReviewWorkspace() {
   const evidence = ref<TeacherEvidenceData | null>(null)
   const attackSessions = ref<TeacherAttackSessionResponseData | null>(null)
   const reviewChallengeOptions = ref<Array<{ value: string; label: string }>>([])

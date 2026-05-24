@@ -27,8 +27,8 @@ import { getWeakDimensionLabels } from '@/utils/skillProfile'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
   useReviewArchiveExportFlow,
-  useTeacherReviewWorkspace,
-  useTeacherSubmissionReviewFlows,
+  useReviewWorkspace,
+  useSubmissionReviewFlows,
 } from '@/features/teacher-student-analysis'
 import { useStudentAnalysisNavigation } from './useStudentAnalysisNavigation'
 
@@ -64,7 +64,7 @@ export function useStudentAnalysisPage() {
     reloadAttackSessions,
     resetReviewWorkspace,
     setSessionQuery,
-  } = useTeacherReviewWorkspace()
+  } = useReviewWorkspace()
   const {
     writeupSubmissions,
     writeupPage,
@@ -82,7 +82,7 @@ export function useStudentAnalysisPage() {
     openManualReview,
     reviewManualReview,
     moderateWriteup,
-  } = useTeacherSubmissionReviewFlows({
+  } = useSubmissionReviewFlows({
     getCurrentStudentId: studentIdFromRoute,
   })
 

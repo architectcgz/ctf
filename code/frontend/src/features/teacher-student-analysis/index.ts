@@ -1,6 +1,6 @@
 export {
   useTeacherInterventionRecommendations,
   useReviewArchiveExportFlow,
-  useTeacherReviewWorkspace,
-  useTeacherSubmissionReviewFlows,
+  useReviewWorkspace,
+  useSubmissionReviewFlows,
 } from './model'

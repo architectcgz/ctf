@@ -17,11 +17,11 @@ import type {
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
 
-interface UseTeacherSubmissionReviewFlowsOptions {
+interface UseSubmissionReviewFlowsOptions {
   getCurrentStudentId: () => string
 }
 
-export function useTeacherSubmissionReviewFlows(options: UseTeacherSubmissionReviewFlowsOptions) {
+export function useSubmissionReviewFlows(options: UseSubmissionReviewFlowsOptions) {
   const { getCurrentStudentId } = options
   const toast = useToast()
 

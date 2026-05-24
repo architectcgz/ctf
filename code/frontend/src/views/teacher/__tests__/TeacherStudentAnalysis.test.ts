@@ -5,6 +5,7 @@ import { reactive } from 'vue'
 
 import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
 import teacherStudentAnalysisSource from '../TeacherStudentAnalysis.vue?raw'
+import studentAnalysisPageModelSource from '@/features/student-analysis-workspace/model/useStudentAnalysisPage.ts?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue?raw'
@@ -434,6 +435,10 @@ describe('TeacherStudentAnalysis', () => {
       '@/components/teacher/class-management/StudentAnalysisPage.vue'
     )
     expect(teacherStudentAnalysisSource).not.toContain('TeacherClassReportExportDialog.vue')
+    expect(studentAnalysisPageModelSource).toContain('useReviewWorkspace()')
+    expect(studentAnalysisPageModelSource).toContain('useSubmissionReviewFlows({')
+    expect(studentAnalysisPageModelSource).not.toContain('useTeacherReviewWorkspace')
+    expect(studentAnalysisPageModelSource).not.toContain('useTeacherSubmissionReviewFlows')
   })
 
   it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {

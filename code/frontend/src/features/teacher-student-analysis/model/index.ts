@@ -1,4 +1,4 @@
 export { useTeacherInterventionRecommendations } from './useTeacherInterventionRecommendations'
 export { useReviewArchiveExportFlow } from './useReviewArchiveExportFlow'
-export { useTeacherReviewWorkspace } from './useTeacherReviewWorkspace'
-export { useTeacherSubmissionReviewFlows } from './useTeacherSubmissionReviewFlows'
+export { useReviewWorkspace } from './useReviewWorkspace'
+export { useSubmissionReviewFlows } from './useSubmissionReviewFlows'
