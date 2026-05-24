@@ -62,12 +62,28 @@
 
 - 目标：
   - 让 `PlatformStudentReviewArchive` 不再直接挂 teacher route view。
-- 当前状态：
-  - 本轮不实现，只作为下一刀候选。
+- 预期改动：
+  - `code/frontend/src/router/routes/platformRoutes.ts`
+  - `code/frontend/src/views/platform/PlatformStudentReviewArchive.vue`
+  - `code/frontend/src/views/platform/__tests__/PlatformStudentReviewArchive.test.ts`
+  - `code/frontend/src/features/student-review-archive-workspace/**`
+  - `code/frontend/src/features/teacher-student-review-archive/model/useTeacherStudentReviewArchivePage.ts`
+  - `code/frontend/src/__tests__/architectureAllowlist.ts`
+  - `.harness/reuse-decisions/frontend-architecture-review-prompt-and-platform-feature-split.md`
+- 依赖：
+  - 继续复用 `teacher-student-review-archive` 中已稳定的数据查询、导出消息和 workspace widget，不复制导出轮询链路。
+- 验证：
+  - `git diff --check -- <touched files>`
+  - `npm run test:run -- src/views/platform/__tests__/PlatformStudentReviewArchive.test.ts src/views/teacher/__tests__/TeacherStudentReviewArchive.test.ts src/views/teacher/__tests__/TeacherStudentAnalysis.test.ts src/__tests__/architectureBoundaries.test.ts src/views/__tests__/routeViewArchitectureBoundary.test.ts src/router/__tests__/sharedRoutes.test.ts`
+  - `npm run typecheck`
+- Review focus：
+  - 平台复盘归档页是否摆脱 teacher route view。
+  - 导出归档、返回分析页、返回班级页在 admin 角色下是否仍落到平台路由。
 
 ## 风险
 
 - `useTeacherStudentAnalysisPage` 体量较大，直接整体搬迁会放大 diff；因此本轮只移动 page owner 和导航 owner，保留内部 helper 现状。
+- 复盘归档页虽然更小，但仍涉及导出轮询、文件下载和错误提示；因此本轮只把 page owner 上提到中性 feature，不改稳定的导出实现细节。
 - 学生分析页涉及 review workspace、writeup、manual review、report export，多处 watch / async flow 同时存在，不能因为 route owner 迁移破坏现有角色分流。
 
 ## 回退方式

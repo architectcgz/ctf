@@ -152,6 +152,7 @@ export const featureRouterImportAllowlist = new Set([
   'features/class-students-workspace/model/useClassStudentsPage.ts -> vue-router',
   'features/student-analysis-workspace/model/useStudentAnalysisNavigation.ts -> vue-router',
   'features/student-analysis-workspace/model/useStudentAnalysisPage.ts -> vue-router',
+  'features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts -> vue-router',
   'features/platform-class-management/model/usePlatformClassManagementPage.ts -> vue-router',
   'features/platform-instance-management/model/usePlatformInstanceManagementPage.ts -> vue-router',
   'features/platform-student-management/model/usePlatformStudentManagementPage.ts -> vue-router',
@@ -167,7 +168,6 @@ export const featureRouterImportAllowlist = new Set([
   'features/teacher-dashboard/model/useTeacherDashboardPage.ts -> vue-router',
   'features/teacher-instances/model/useTeacherInstanceManagementPage.ts -> vue-router',
   'features/teacher-student-management/model/useTeacherStudentManagementPage.ts -> vue-router',
-  'features/teacher-student-review-archive/model/useTeacherStudentReviewArchivePage.ts -> vue-router',
 ])
 
 export const utilityBoundaryImportAllowlist = new Set([
