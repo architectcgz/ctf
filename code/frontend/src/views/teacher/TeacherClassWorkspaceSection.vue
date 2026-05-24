@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useTeacherClassWorkspaceSection } from '@/features/teacher-class-workspace'
+import { useClassWorkspaceSection } from '@/features/class-workspace-redirect'
 import TeacherClassStudents from '@/views/teacher/TeacherClassStudents.vue'
 
-useTeacherClassWorkspaceSection()
+useClassWorkspaceSection()
 </script>
 
 <template>

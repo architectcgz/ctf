@@ -27,6 +27,7 @@
 - `featureBoundaries.test.ts` 当前通过一份静态 migrated list 约束 `views` / `components` 不再 import 历史 root composable。
 - 这份名单里的路径现在已经全部没有 runtime 引用；仓库搜索只剩 `featureBoundaries.test.ts` 自己在引用它们。
 - 继续保留根层桥接文件和这份静态名单，会让 “迁移中的目录约定” 持续占用真实目录结构，而不是把收口结果反映到磁盘事实上。
+- 目前仍剩少量单行 re-export 壳没有 runtime 引用；可以继续按小切片删除，避免再次积累到新的 allowlist 债。
 
 ## 任务切片
 
@@ -91,6 +92,7 @@
   - `code/frontend/src/composables/useTeacherStudentAnalysisPage.ts`
   - `code/frontend/src/composables/useTeacherStudentReviewArchive.ts`
   - `code/frontend/src/composables/useTeacherWorkspace.ts`
+  - `code/frontend/src/composables/useNotificationDropdown.ts`
 - 验证：
   - `rg -n "@/composables/use" code/frontend/src`
   - `npm run test:run -- src/features/__tests__/featureBoundaries.test.ts`

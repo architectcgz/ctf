@@ -89,8 +89,9 @@
   - `code/frontend/src/views/platform/PlatformClassWorkspaceSection.vue`
   - `code/frontend/src/views/platform/__tests__/PlatformClassWorkspaceSection.test.ts`
   - `code/frontend/src/features/class-workspace-redirect/**`
-  - `code/frontend/src/features/teacher-class-workspace/model/useTeacherClassWorkspaceSection.ts`
   - `code/frontend/src/views/teacher/TeacherClassWorkspaceSection.vue`
+  - `code/frontend/src/views/teacher/__tests__/TeacherClassWorkspaceSection.test.ts`
+  - `code/frontend/src/features/teacher-class-workspace/**`
   - `code/frontend/src/__tests__/architectureAllowlist.ts`
   - `.harness/reuse-decisions/frontend-architecture-review-prompt-and-platform-feature-split.md`
 - 依赖：
@@ -103,7 +104,7 @@
 - Review focus：
   - 平台别名路由是否真正脱离 teacher route view。
   - admin 角色下 canonical redirect 是否回到 `PlatformClassStudents` 而不是 `TeacherClassStudents`。
-  - teacher 侧旧别名页是否继续保持兼容跳转。
+  - teacher 侧旧别名页是否直接依赖中性 redirect owner，而不再保留 teacher-feature 兼容桥。
 
 ### Slice 4：平台 AWD 复盘详情页 owner 解耦
 

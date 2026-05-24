@@ -19,6 +19,8 @@ composable / test / docs
 - `code/frontend/src/features/platform-awd-challenges/index.ts`
 - `code/frontend/src/features/teacher-awd-review/index.ts`
 - `code/frontend/src/features/platform-overview/index.ts`
+- `code/frontend/src/composables/useNotificationDropdown.ts`
+- `code/frontend/src/features/notifications/index.ts`
 
 ## Decision
 refactor_existing
@@ -31,6 +33,7 @@ refactor_existing
 - `docs/plan/impl-plan/2026-05-24-root-composable-bridge-removal-implementation-plan.md`
 - `code/frontend/src/features/__tests__/featureBoundaries.test.ts`
 - `code/frontend/src/composables/use*.ts` 中仅剩历史桥接职责且无 runtime 引用的文件
+- `code/frontend/src/composables/useNotificationDropdown.ts`
 
 ## After implementation
 - 后续如果再出现 `src/composables` 与 `features/*` 双入口，默认先判断是否已经只剩历史桥接壳；若是，直接按 task-scoped reuse decision + 删除桥接 + 更新边界测试的模式收口，不再长期保留“迁移中”名单。
