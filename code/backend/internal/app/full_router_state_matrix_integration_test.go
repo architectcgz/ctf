@@ -1503,16 +1503,19 @@ func TestFullRouter_InstanceHintAndProxyStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/teacher/instances", nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var teacherInstances []runtimehttp.TeacherInstanceItem
+	var teacherInstances runtimehttp.TeacherInstancePageResp
 	decodeFullRouterData(t, resp, &teacherInstances)
-	if len(teacherInstances) == 0 {
+	if len(teacherInstances.List) == 0 {
 		t.Fatalf("expected teacher instances for own class")
 	}
 	if !strings.Contains(resp.Body.String(), `"student_username"`) || !strings.Contains(resp.Body.String(), `"access_url"`) || !strings.Contains(resp.Body.String(), `"remaining_time"`) {
 		t.Fatalf("expected teacher instance response to preserve key json fields, got %s", resp.Body.String())
 	}
-	if teacherInstances[0].StudentUsername == "" || teacherInstances[0].RemainingTime <= 0 {
-		t.Fatalf("expected decoded teacher instance fields, got %+v", teacherInstances[0])
+	if teacherInstances.List[0].StudentUsername == "" || teacherInstances.List[0].RemainingTime <= 0 {
+		t.Fatalf("expected decoded teacher instance fields, got %+v", teacherInstances.List[0])
+	}
+	if teacherInstances.Summary.TotalCount == 0 {
+		t.Fatalf("expected teacher instance summary fields, got %+v", teacherInstances.Summary)
 	}
 
 	proxyTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

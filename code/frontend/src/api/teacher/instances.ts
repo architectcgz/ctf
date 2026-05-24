@@ -2,22 +2,29 @@ import { request } from '../request'
 
 import type {
   ReportExportData,
+  TeacherInstanceListSummaryData,
+  TeacherInstancePageData,
   TeacherClassReportExportPayload,
   TeacherInstanceItem,
 } from '../contracts'
+
+export type TeacherInstanceStatusFilter = 'running' | 'creating' | 'expired' | 'failed' | 'inactive'
 
 export async function getTeacherInstances(
   params?: {
     class_name?: string
     keyword?: string
     student_no?: string
+    status?: TeacherInstanceStatusFilter
+    page?: number
+    page_size?: number
   },
   options?: {
     signal?: AbortSignal
   }
-): Promise<TeacherInstanceItem[]> {
+): Promise<TeacherInstancePageData<TeacherInstanceItem>> {
   const payload = await request<
-    Array<{
+    TeacherInstancePageData<{
       id: string | number
       student_id: string | number
       student_name: string
@@ -41,16 +48,23 @@ export async function getTeacherInstances(
       class_name: params?.class_name,
       keyword: params?.keyword,
       student_no: params?.student_no,
+      status: params?.status,
+      page: params?.page,
+      page_size: params?.page_size,
     },
     signal: options?.signal,
   })
 
-  return payload.map((item) => ({
-    ...item,
-    id: String(item.id),
-    student_id: String(item.student_id),
-    challenge_id: String(item.challenge_id),
-  }))
+  return {
+    ...payload,
+    summary: payload.summary as TeacherInstanceListSummaryData,
+    list: payload.list.map((item) => ({
+      ...item,
+      id: String(item.id),
+      student_id: String(item.student_id),
+      challenge_id: String(item.challenge_id),
+    })),
+  }
 }
 
 export async function destroyTeacherInstance(id: string): Promise<void> {

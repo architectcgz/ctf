@@ -5,6 +5,7 @@ import type { TeacherClassItem, TeacherInstanceItem } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from '@/composables/useToast'
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 type TeacherInstanceFilters = {
   className: string
@@ -18,6 +19,8 @@ export function useTeacherInstances() {
 
   const classes = ref<TeacherClassItem[]>([])
   const instances = ref<TeacherInstanceItem[]>([])
+  const page = ref(1)
+  const pageSize = ref(DEFAULT_PAGE_SIZE)
   const filters = reactive<TeacherInstanceFilters>({
     className: '',
     keyword: '',
@@ -34,14 +37,11 @@ export function useTeacherInstances() {
   const { createController, abort } = useAbortController()
 
   const isAdmin = computed(() => authStore.user?.role === 'admin')
-  const totalCount = computed(() => instances.value.length)
-  const runningCount = computed(
-    () => instances.value.filter((item) => item.status === 'running').length
-  )
-  const expiringSoonCount = computed(
-    () =>
-      instances.value.filter((item) => item.status === 'running' && item.remaining_time <= 600)
-        .length
+  const totalCount = ref(0)
+  const runningCount = ref(0)
+  const expiringSoonCount = ref(0)
+  const totalPages = computed(() =>
+    Math.max(1, Math.ceil(totalCount.value / Math.max(pageSize.value, 1)))
   )
 
   async function initialize(): Promise<void> {
@@ -54,6 +54,7 @@ export function useTeacherInstances() {
       if (!isAdmin.value) {
         filters.className = authStore.user?.class_name || classes.value[0]?.name || ''
       }
+      page.value = 1
       await loadInstances()
       autoSearchReady.value = true
     } catch (err) {
@@ -61,6 +62,9 @@ export function useTeacherInstances() {
       error.value = '加载实例管理数据失败，请稍后重试'
       classes.value = []
       instances.value = []
+      totalCount.value = 0
+      runningCount.value = 0
+      expiringSoonCount.value = 0
     } finally {
       loadingClasses.value = false
     }
@@ -77,11 +81,18 @@ export function useTeacherInstances() {
         class_name: filters.className || undefined,
         keyword: filters.keyword.trim() || undefined,
         student_no: filters.studentNo.trim() || undefined,
+        page: page.value,
+        page_size: pageSize.value,
       }, {
         signal: controller.signal,
       })
       if (requestID !== latestInstanceRequestID) return
-      instances.value = nextInstances
+      instances.value = nextInstances.list
+      totalCount.value = nextInstances.total
+      page.value = nextInstances.page
+      pageSize.value = nextInstances.page_size
+      runningCount.value = nextInstances.summary.running_count
+      expiringSoonCount.value = nextInstances.summary.expiring_soon_count
     } catch (err) {
       if (requestID !== latestInstanceRequestID) return
       if (
@@ -95,6 +106,9 @@ export function useTeacherInstances() {
       console.error('加载教师实例列表失败:', err)
       error.value = '加载实例列表失败，请稍后重试'
       instances.value = []
+      totalCount.value = 0
+      runningCount.value = 0
+      expiringSoonCount.value = 0
     } finally {
       if (requestID !== latestInstanceRequestID) return
       loadingInstances.value = false
@@ -112,6 +126,7 @@ export function useTeacherInstances() {
     clearScheduledInstanceSearch()
     instanceSearchTimer = window.setTimeout(() => {
       instanceSearchTimer = null
+      page.value = 1
       void loadInstances()
     }, 250)
   }
@@ -127,7 +142,10 @@ export function useTeacherInstances() {
     destroyingId.value = id
     try {
       await destroyTeacherInstance(id)
-      instances.value = instances.value.filter((item) => item.id !== id)
+      if (instances.value.length === 1 && page.value > 1) {
+        page.value -= 1
+      }
+      await loadInstances()
       toast.success('实例已销毁')
     } catch (err) {
       console.error('教师销毁实例失败:', err)
@@ -155,6 +173,8 @@ export function useTeacherInstances() {
   return {
     classes,
     instances,
+    page,
+    pageSize,
     filters,
     loadingClasses,
     loadingInstances,
@@ -164,6 +184,7 @@ export function useTeacherInstances() {
     totalCount,
     runningCount,
     expiringSoonCount,
+    totalPages,
     initialize,
     loadInstances,
     updateFilter,

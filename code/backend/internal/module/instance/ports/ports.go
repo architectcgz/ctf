@@ -25,7 +25,7 @@ type UserVisibleInstanceRepository interface {
 }
 
 type TeacherInstanceQueryRepository interface {
-	ListTeacherInstances(ctx context.Context, filter TeacherInstanceFilter) ([]TeacherInstanceRow, error)
+	ListTeacherInstances(ctx context.Context, filter TeacherInstanceFilter) (*TeacherInstancePage, error)
 }
 
 type InstanceExtendRepository interface {
@@ -46,6 +46,22 @@ type TeacherInstanceFilter struct {
 	ClassName string
 	Keyword   string
 	StudentNo string
+	Status    string
+	Page      int
+	PageSize  int
+}
+
+type TeacherInstanceListSummary struct {
+	TotalCount        int64
+	RunningCount      int64
+	ExpiringSoonCount int64
+	WarningCount      int64
+}
+
+type TeacherInstancePage struct {
+	List    []TeacherInstanceRow
+	Total   int64
+	Summary TeacherInstanceListSummary
 }
 
 type UserVisibleInstanceRow struct {

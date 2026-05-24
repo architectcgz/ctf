@@ -66,7 +66,7 @@ func (r *runtimeInstanceContextRepo) ListVisibleByUser(ctx context.Context, user
 	return nil, nil
 }
 
-func (r *runtimeInstanceContextRepo) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) ([]runtimeports.TeacherInstanceRow, error) {
+func (r *runtimeInstanceContextRepo) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) (*runtimeports.TeacherInstancePage, error) {
 	return nil, nil
 }
 
@@ -761,15 +761,21 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
+	pageResp, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
-	if len(items) != 1 {
-		t.Fatalf("expected 1 visible instance, got %d (%+v)", len(items), items)
+	if len(pageResp.List) != 1 {
+		t.Fatalf("expected 1 visible instance, got %d (%+v)", len(pageResp.List), pageResp.List)
 	}
-	if items[0].StudentUsername != "alice" || items[0].ClassName != "Class A" {
-		t.Fatalf("unexpected item: %+v", items[0])
+	if pageResp.Total != 1 || pageResp.Page != 1 || pageResp.PageSize != 20 {
+		t.Fatalf("unexpected page metadata: %+v", pageResp)
+	}
+	if pageResp.List[0].StudentUsername != "alice" || pageResp.List[0].ClassName != "Class A" {
+		t.Fatalf("unexpected item: %+v", pageResp.List[0])
+	}
+	if pageResp.Summary.TotalCount != 1 || pageResp.Summary.RunningCount != 1 || pageResp.Summary.WarningCount != 0 {
+		t.Fatalf("unexpected summary: %+v", pageResp.Summary)
 	}
 
 	filtered, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
@@ -779,7 +785,7 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() with filters error = %v", err)
 	}
-	if len(filtered) != 1 || filtered[0].ID != 101 {
+	if len(filtered.List) != 1 || filtered.List[0].ID != 101 {
 		t.Fatalf("unexpected filtered result: %+v", filtered)
 	}
 
@@ -789,8 +795,62 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() with student_no keyword error = %v", err)
 	}
-	if len(byStudentNoKeyword) != 1 || byStudentNoKeyword[0].ID != 101 {
+	if len(byStudentNoKeyword.List) != 1 || byStudentNoKeyword.List[0].ID != 101 {
 		t.Fatalf("expected keyword to match student_no, got %+v", byStudentNoKeyword)
+	}
+}
+
+func TestInstanceServiceListTeacherInstancesAppliesStatusAndPagination(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 3, Username: "bob", StudentNo: "S-1002", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 4, Username: "carol", StudentNo: "S-1003", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{ID: 11, Title: "web-101", Status: challengecontracts.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 101, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now.Add(3 * time.Minute), UpdatedAt: now.Add(3 * time.Minute)})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(5 * time.Minute), CreatedAt: now.Add(2 * time.Minute), UpdatedAt: now.Add(2 * time.Minute)})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{ID: 103, UserID: 4, ChallengeID: 11, ContainerID: "inst-c", Status: instanceentity.InstanceStatusFailed, ExpiresAt: now.Add(time.Hour), CreatedAt: now.Add(time.Minute), UpdatedAt: now.Add(time.Minute)})
+
+	service := instanceqry.NewInstanceService(
+		runtimeinfrarepo.NewRepository(db),
+		&config.ContainerConfig{},
+		config.PaginationConfig{DefaultPageSize: 2, MaxPageSize: 2},
+	)
+
+	runningPage, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
+		Status:   instancecontracts.InstanceStatusRunning,
+		Page:     1,
+		PageSize: 1,
+	})
+	if err != nil {
+		t.Fatalf("ListTeacherInstances() with running filter error = %v", err)
+	}
+	if runningPage.Total != 2 || len(runningPage.List) != 1 || runningPage.List[0].ID != 101 {
+		t.Fatalf("expected paged running instances, got %+v", runningPage)
+	}
+	if runningPage.Summary.RunningCount != 2 || runningPage.Summary.ExpiringSoonCount != 1 || runningPage.Summary.WarningCount != 1 {
+		t.Fatalf("unexpected running summary: %+v", runningPage.Summary)
+	}
+
+	fullPage, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
+		Page:     1,
+		PageSize: 99,
+	})
+	if err != nil {
+		t.Fatalf("ListTeacherInstances() with oversized page size error = %v", err)
+	}
+	if fullPage.PageSize != 2 {
+		t.Fatalf("expected page size to clamp to max, got %+v", fullPage)
+	}
+	if fullPage.Total != 3 || len(fullPage.List) != 2 {
+		t.Fatalf("expected paged result, got %+v", fullPage)
+	}
+	if fullPage.Summary.TotalCount != 3 || fullPage.Summary.RunningCount != 2 || fullPage.Summary.ExpiringSoonCount != 1 || fullPage.Summary.WarningCount != 2 {
+		t.Fatalf("unexpected full summary: %+v", fullPage.Summary)
 	}
 }
 
@@ -849,15 +909,15 @@ func TestInstanceServiceListTeacherInstancesPrefersContestAWDServiceMetadata(t *
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
+	pageResp, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
-	if len(items) != 1 {
-		t.Fatalf("expected 1 visible awd teacher instance, got %+v", items)
+	if len(pageResp.List) != 1 {
+		t.Fatalf("expected 1 visible awd teacher instance, got %+v", pageResp)
 	}
-	if items[0].ChallengeID != 212 || items[0].ChallengeTitle != "Bank Portal" {
-		t.Fatalf("expected teacher instance metadata from contest awd service, got %+v", items[0])
+	if pageResp.List[0].ChallengeID != 212 || pageResp.List[0].ChallengeTitle != "Bank Portal" {
+		t.Fatalf("expected teacher instance metadata from contest awd service, got %+v", pageResp.List[0])
 	}
 }
 
@@ -898,12 +958,12 @@ func TestInstanceServiceListTeacherInstancesFiltersLegacyAWDInstanceWithoutServi
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
+	pageResp, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
-	if len(items) != 0 {
-		t.Fatalf("expected legacy awd teacher instance without service_id to be filtered out, got %+v", items)
+	if len(pageResp.List) != 0 {
+		t.Fatalf("expected legacy awd teacher instance without service_id to be filtered out, got %+v", pageResp)
 	}
 }
 
@@ -957,15 +1017,15 @@ func TestInstanceServiceListTeacherInstancesMapsStoppingInstanceToDestroying(t *
 
 	service := instanceqry.NewInstanceService(runtimeinfrarepo.NewRepository(db), &config.ContainerConfig{})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
+	pageResp, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
-	if len(items) != 1 || items[0].ID != 211 || items[0].Status != "destroying" {
-		t.Fatalf("expected stopping teacher instance to be visible as destroying, got %+v", items)
+	if len(pageResp.List) != 1 || pageResp.List[0].ID != 211 || pageResp.List[0].Status != "destroying" {
+		t.Fatalf("expected stopping teacher instance to be visible as destroying, got %+v", pageResp)
 	}
-	if items[0].AccessURL != "" || items[0].Access != nil {
-		t.Fatalf("expected destroying teacher instance access to be cleared, got %+v", items[0])
+	if pageResp.List[0].AccessURL != "" || pageResp.List[0].Access != nil {
+		t.Fatalf("expected destroying teacher instance access to be cleared, got %+v", pageResp.List[0])
 	}
 }
 

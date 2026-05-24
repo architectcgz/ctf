@@ -23,6 +23,17 @@ export interface PageResult<T> {
   page_size: number
 }
 
+export interface TeacherInstanceListSummaryData {
+  total_count: number
+  running_count: number
+  expiring_soon_count: number
+  warning_count: number
+}
+
+export interface TeacherInstancePageData<T> extends PageResult<T> {
+  summary: TeacherInstanceListSummaryData
+}
+
 export interface ContestListSummaryData {
   draft_count: number
   registering_count: number

@@ -7,6 +7,9 @@ func toTeacherInstanceListQuery(source TeacherInstanceQuery) instancecontracts.T
 		ClassName: source.ClassName,
 		Keyword:   source.Keyword,
 		StudentNo: source.StudentNo,
+		Status:    source.Status,
+		Page:      source.Page,
+		PageSize:  source.PageSize,
 	}
 }
 
@@ -33,4 +36,27 @@ func toTeacherInstanceItems(source []instancecontracts.TeacherInstanceItem) []Te
 		}
 	}
 	return items
+}
+
+func toTeacherInstancePageResp(source *instancecontracts.TeacherInstancePageResult) *TeacherInstancePageResp {
+	if source == nil {
+		return &TeacherInstancePageResp{
+			List:     []TeacherInstanceItem{},
+			Page:     1,
+			PageSize: 20,
+		}
+	}
+
+	return &TeacherInstancePageResp{
+		List:     toTeacherInstanceItems(source.List),
+		Total:    source.Total,
+		Page:     source.Page,
+		PageSize: source.PageSize,
+		Summary: TeacherInstanceListSummaryResp{
+			TotalCount:        source.Summary.TotalCount,
+			RunningCount:      source.Summary.RunningCount,
+			ExpiringSoonCount: source.Summary.ExpiringSoonCount,
+			WarningCount:      source.Summary.WarningCount,
+		},
+	}
 }

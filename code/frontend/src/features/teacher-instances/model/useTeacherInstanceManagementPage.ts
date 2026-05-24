@@ -1,9 +1,8 @@
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useAuthStore } from '@/stores/auth'
-import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { resolveTeachingDashboardRouteName } from '@/utils/teachingWorkspaceRouting'
 
 import { useTeacherInstances } from './useTeacherInstances'
@@ -11,12 +10,11 @@ import { useTeacherInstances } from './useTeacherInstances'
 export function useTeacherInstanceManagementPage() {
   const router = useRouter()
   const authStore = useAuthStore()
-  const page = ref(1)
-  const pageSize = ref(DEFAULT_PAGE_SIZE)
 
   const {
     classes,
     instances,
+    page,
     filters,
     loadingClasses,
     loadingInstances,
@@ -26,18 +24,12 @@ export function useTeacherInstanceManagementPage() {
     totalCount,
     runningCount,
     expiringSoonCount,
+    totalPages,
     initialize,
     updateFilter,
+    loadInstances,
     removeInstance,
   } = useTeacherInstances()
-
-  const totalPages = computed(() =>
-    Math.max(1, Math.ceil(totalCount.value / Math.max(pageSize.value, 1)))
-  )
-  const paginatedInstances = computed(() => {
-    const start = (page.value - 1) * pageSize.value
-    return instances.value.slice(start, start + pageSize.value)
-  })
 
   function handlePageChange(nextPage: number): void {
     const normalizedPage = Math.max(1, Math.floor(nextPage))
@@ -45,6 +37,7 @@ export function useTeacherInstanceManagementPage() {
       return
     }
     page.value = normalizedPage
+    void loadInstances()
   }
 
   async function handleDestroy(id: string): Promise<void> {
@@ -68,19 +61,6 @@ export function useTeacherInstanceManagementPage() {
     void initialize()
   })
 
-  watch(
-    () => [filters.className, filters.keyword, filters.studentNo],
-    () => {
-      page.value = 1
-    }
-  )
-
-  watch(totalCount, () => {
-    if (page.value > totalPages.value) {
-      page.value = totalPages.value
-    }
-  })
-
   return {
     classes,
     filters,
@@ -94,7 +74,7 @@ export function useTeacherInstanceManagementPage() {
     totalCount,
     runningCount,
     expiringSoonCount,
-    paginatedInstances,
+    instances,
     initialize,
     updateFilter,
     handlePageChange,

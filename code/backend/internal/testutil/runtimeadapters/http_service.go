@@ -20,7 +20,7 @@ type httpInstanceCommandService interface {
 type httpInstanceQueryService interface {
 	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
 	GetUserInstances(ctx context.Context, userID int64) ([]*instancecontracts.InstanceInfo, error)
-	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error)
+	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) (*instancecontracts.TeacherInstancePageResult, error)
 }
 
 type httpProxyTicketService interface {
@@ -66,7 +66,7 @@ func (a *HTTPService) GetUserInstances(ctx context.Context, userID int64) ([]*in
 	return a.queryService.GetUserInstances(ctx, userID)
 }
 
-func (a *HTTPService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
+func (a *HTTPService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) (*instancecontracts.TeacherInstancePageResult, error) {
 	return a.queryService.ListTeacherInstances(ctx, requesterID, requesterRole, query)
 }
 

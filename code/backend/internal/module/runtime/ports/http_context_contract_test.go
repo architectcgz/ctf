@@ -27,7 +27,7 @@ func (ctxOnlyInstanceRepository) ListVisibleByUser(context.Context, int64) ([]ru
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) ListTeacherInstances(context.Context, runtimeports.TeacherInstanceFilter) ([]runtimeports.TeacherInstanceRow, error) {
+func (ctxOnlyInstanceRepository) ListTeacherInstances(context.Context, runtimeports.TeacherInstanceFilter) (*runtimeports.TeacherInstancePage, error) {
 	return nil, nil
 }
 

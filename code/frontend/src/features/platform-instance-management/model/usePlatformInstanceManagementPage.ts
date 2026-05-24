@@ -1,8 +1,9 @@
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { TeacherInstanceItem } from '@/api/contracts'
 import { destroyTeacherInstance, getTeacherInstances } from '@/api/teacher'
+import { useAbortController } from '@/composables/useAbortController'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 
 interface InstanceManageTableRow {
@@ -24,6 +25,7 @@ type InstanceStatusFilter = 'running' | 'creating' | 'expired' | 'failed' | 'ina
 export function usePlatformInstanceManagementPage() {
   const router = useRouter()
   const list = ref<TeacherInstanceItem[]>([])
+  const total = ref(0)
   const page = ref(1)
   const pageSize = ref(15)
   const loading = ref(false)
@@ -31,43 +33,15 @@ export function usePlatformInstanceManagementPage() {
   const error = ref<string | null>(null)
   const keyword = ref('')
   const statusFilter = ref<InstanceStatusFilter>('')
+  let latestRequestId = 0
+  let scheduledSearchTimer: number | null = null
+  const { createController, abort } = useAbortController()
 
-  const totalInstances = computed(() => list.value.length)
-  const filteredInstances = computed(() => {
-    const query = keyword.value.trim().toLowerCase()
-
-    return list.value.filter((item) => {
-      const statusGroup: Exclude<InstanceStatusFilter, ''> =
-        item.status === 'running' ||
-        item.status === 'creating' ||
-        item.status === 'expired' ||
-        item.status === 'failed'
-          ? item.status
-          : 'inactive'
-      const searchableText = [
-        item.id,
-        item.challenge_title,
-        item.student_name,
-        item.student_username,
-        item.student_no,
-        item.class_name,
-        item.access_url,
-        item.status,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-
-      const matchesKeyword = !query || searchableText.includes(query)
-      const matchesStatus = !statusFilter.value || statusGroup === statusFilter.value
-      return matchesKeyword && matchesStatus
-    })
-  })
-  const filteredTotal = computed(() => filteredInstances.value.length)
-  const totalPages = computed(() => Math.max(1, Math.ceil(filteredTotal.value / pageSize.value)))
+  const totalInstances = computed(() => total.value)
+  const filteredTotal = computed(() => total.value)
+  const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
   const pageRows = computed<InstanceManageTableRow[]>(() => {
-    const start = (page.value - 1) * pageSize.value
-    return filteredInstances.value.slice(start, start + pageSize.value).map((item) => ({
+    return list.value.map((item) => ({
       id: item.id,
       challenge: item.challenge_title,
       student_id: String(item.student_id),
@@ -81,28 +55,53 @@ export function usePlatformInstanceManagementPage() {
       actions: '销毁',
     }))
   })
-  const runningCount = computed(() => list.value.filter((item) => item.status === 'running').length)
-  const warningCount = computed(
-    () => list.value.filter((item) => item.status !== 'running' || item.remaining_time <= 600).length
-  )
+  const runningCount = ref(0)
+  const warningCount = ref(0)
 
   async function loadInstances(): Promise<void> {
+    const requestId = ++latestRequestId
+    const controller = createController()
     loading.value = true
     error.value = null
     try {
-      list.value = await getTeacherInstances({
+      const response = await getTeacherInstances({
         class_name: undefined,
-        keyword: undefined,
+        keyword: keyword.value.trim() || undefined,
         student_no: undefined,
+        status: statusFilter.value || undefined,
+        page: page.value,
+        page_size: pageSize.value,
+      }, {
+        signal: controller.signal,
       })
+      if (requestId !== latestRequestId) return
+      list.value = response.list
+      total.value = response.total
+      page.value = response.page
+      pageSize.value = response.page_size
+      runningCount.value = response.summary.running_count
+      warningCount.value = response.summary.warning_count
       if (page.value > totalPages.value) {
         page.value = totalPages.value
       }
     } catch (err) {
+      if (requestId !== latestRequestId) return
+      if (
+        err &&
+        typeof err === 'object' &&
+        'code' in err &&
+        (err as { code?: unknown }).code === 'ERR_CANCELED'
+      ) {
+        return
+      }
       console.error('加载实例列表失败:', err)
       error.value = '加载实例列表失败，请稍后重试'
       list.value = []
+      total.value = 0
+      runningCount.value = 0
+      warningCount.value = 0
     } finally {
+      if (requestId !== latestRequestId) return
       loading.value = false
     }
   }
@@ -120,10 +119,10 @@ export function usePlatformInstanceManagementPage() {
     try {
       destroyingId.value = instance.id
       await destroyTeacherInstance(instance.id)
-      list.value = list.value.filter((item) => item.id !== instance.id)
-      if (page.value > totalPages.value) {
-        page.value = totalPages.value
+      if (list.value.length === 1 && page.value > 1) {
+        page.value -= 1
       }
+      await loadInstances()
     } catch (err) {
       console.error('销毁实例失败:', err)
       error.value = '销毁实例失败，请稍后重试'
@@ -159,6 +158,7 @@ export function usePlatformInstanceManagementPage() {
     }
 
     page.value = normalizedPage
+    void loadInstances()
   }
 
   function setKeyword(nextKeyword: string): void {
@@ -174,12 +174,33 @@ export function usePlatformInstanceManagementPage() {
     statusFilter.value = ''
   }
 
+  function clearScheduledSearch(): void {
+    if (scheduledSearchTimer !== null) {
+      window.clearTimeout(scheduledSearchTimer)
+      scheduledSearchTimer = null
+    }
+  }
+
+  function scheduleSearch(): void {
+    clearScheduledSearch()
+    scheduledSearchTimer = window.setTimeout(() => {
+      scheduledSearchTimer = null
+      page.value = 1
+      void loadInstances()
+    }, 250)
+  }
+
   watch([keyword, statusFilter], () => {
-    page.value = 1
+    scheduleSearch()
   })
 
   onMounted(() => {
     void loadInstances()
+  })
+
+  onUnmounted(() => {
+    clearScheduledSearch()
+    abort()
   })
 
   return {

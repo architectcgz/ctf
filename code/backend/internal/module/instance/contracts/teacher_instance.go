@@ -8,6 +8,24 @@ type TeacherInstanceListQuery struct {
 	ClassName string
 	Keyword   string
 	StudentNo string
+	Status    string
+	Page      int
+	PageSize  int
+}
+
+type TeacherInstanceListSummary struct {
+	TotalCount        int64
+	RunningCount      int64
+	ExpiringSoonCount int64
+	WarningCount      int64
+}
+
+type TeacherInstancePageResult struct {
+	List     []TeacherInstanceItem
+	Total    int64
+	Page     int
+	PageSize int
+	Summary  TeacherInstanceListSummary
 }
 
 type TeacherInstanceItem struct {

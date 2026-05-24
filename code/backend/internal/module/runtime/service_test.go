@@ -2544,15 +2544,15 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 	seedInstance(t, repo.db, &instanceentity.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: instanceentity.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 	seedInstance(t, repo.db, &instanceentity.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: instanceentity.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 
-	items, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
+	pageResp, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{})
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() error = %v", err)
 	}
-	if len(items) != 1 {
-		t.Fatalf("expected 1 visible instance, got %d (%+v)", len(items), items)
+	if len(pageResp.List) != 1 {
+		t.Fatalf("expected 1 visible instance, got %d (%+v)", len(pageResp.List), pageResp.List)
 	}
-	if items[0].StudentUsername != "alice" || items[0].ClassName != "Class A" {
-		t.Fatalf("unexpected item: %+v", items[0])
+	if pageResp.List[0].StudentUsername != "alice" || pageResp.List[0].ClassName != "Class A" {
+		t.Fatalf("unexpected item: %+v", pageResp.List[0])
 	}
 
 	filtered, err := service.ListTeacherInstances(context.Background(), 1, identitycontracts.RoleTeacher, instancecontracts.TeacherInstanceListQuery{
@@ -2562,7 +2562,7 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() with filters error = %v", err)
 	}
-	if len(filtered) != 1 || filtered[0].ID != 101 {
+	if len(filtered.List) != 1 || filtered.List[0].ID != 101 {
 		t.Fatalf("unexpected filtered result: %+v", filtered)
 	}
 
@@ -2572,7 +2572,7 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 	if err != nil {
 		t.Fatalf("ListTeacherInstances() with student_no keyword error = %v", err)
 	}
-	if len(byStudentNoKeyword) != 1 || byStudentNoKeyword[0].ID != 101 {
+	if len(byStudentNoKeyword.List) != 1 || byStudentNoKeyword.List[0].ID != 101 {
 		t.Fatalf("expected keyword to match student_no, got %+v", byStudentNoKeyword)
 	}
 }
@@ -2681,7 +2681,7 @@ func (s *testRuntimeService) GetAccessURL(ctx context.Context, instanceID, userI
 	return s.queries.GetAccessURL(ctx, instanceID, userID)
 }
 
-func (s *testRuntimeService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
+func (s *testRuntimeService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) (*instancecontracts.TeacherInstancePageResult, error) {
 	return s.queries.ListTeacherInstances(ctx, requesterID, requesterRole, query)
 }
 

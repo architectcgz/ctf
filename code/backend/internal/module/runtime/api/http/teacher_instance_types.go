@@ -9,6 +9,24 @@ type TeacherInstanceQuery struct {
 	ClassName string `form:"class_name" binding:"omitempty,max=128"`
 	Keyword   string `form:"keyword" binding:"omitempty,max=128"`
 	StudentNo string `form:"student_no" binding:"omitempty,max=64"`
+	Status    string `form:"status" binding:"omitempty,oneof=running creating expired failed inactive"`
+	Page      int    `form:"page" binding:"omitempty,min=1"`
+	PageSize  int    `form:"page_size" binding:"omitempty,min=1,max=100"`
+}
+
+type TeacherInstanceListSummaryResp struct {
+	TotalCount        int64 `json:"total_count"`
+	RunningCount      int64 `json:"running_count"`
+	ExpiringSoonCount int64 `json:"expiring_soon_count"`
+	WarningCount      int64 `json:"warning_count"`
+}
+
+type TeacherInstancePageResp struct {
+	List     []TeacherInstanceItem         `json:"list"`
+	Total    int64                         `json:"total"`
+	Page     int                           `json:"page"`
+	PageSize int                           `json:"page_size"`
+	Summary  TeacherInstanceListSummaryResp `json:"summary"`
 }
 
 type TeacherInstanceItem struct {

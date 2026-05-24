@@ -35,42 +35,53 @@ describe('PlatformInstanceManagement', () => {
     teacherApiMocks.destroyTeacherInstance.mockReset()
     confirmMock.mockReset()
 
-    teacherApiMocks.getTeacherInstances.mockResolvedValue([
-      {
-        id: 'inst-1',
-        student_id: 'stu-1',
-        student_name: 'Alice',
-        student_username: 'alice',
-        student_no: 'S-1001',
-        class_name: 'Class A',
-        challenge_id: 'challenge-1',
-        challenge_title: 'Web SQLi 101',
-        status: 'running',
-        access_url: 'http://127.0.0.1:30001',
-        expires_at: '2026-03-09T10:30:00Z',
-        remaining_time: 1200,
-        extend_count: 1,
-        max_extends: 3,
-        created_at: '2026-03-09T09:30:00Z',
+    teacherApiMocks.getTeacherInstances.mockResolvedValue({
+      list: [
+        {
+          id: 'inst-1',
+          student_id: 'stu-1',
+          student_name: 'Alice',
+          student_username: 'alice',
+          student_no: 'S-1001',
+          class_name: 'Class A',
+          challenge_id: 'challenge-1',
+          challenge_title: 'Web SQLi 101',
+          status: 'running',
+          access_url: 'http://127.0.0.1:30001',
+          expires_at: '2026-03-09T10:30:00Z',
+          remaining_time: 1200,
+          extend_count: 1,
+          max_extends: 3,
+          created_at: '2026-03-09T09:30:00Z',
+        },
+        {
+          id: 'inst-2',
+          student_id: 'stu-2',
+          student_name: 'Bob',
+          student_username: 'bob',
+          student_no: 'S-1002',
+          class_name: 'Class B',
+          challenge_id: 'challenge-2',
+          challenge_title: 'Pwn Stack 201',
+          status: 'expired',
+          access_url: '',
+          expires_at: '2026-03-09T09:00:00Z',
+          remaining_time: 0,
+          extend_count: 0,
+          max_extends: 3,
+          created_at: '2026-03-09T08:30:00Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 15,
+      summary: {
+        total_count: 2,
+        running_count: 1,
+        expiring_soon_count: 0,
+        warning_count: 1,
       },
-      {
-        id: 'inst-2',
-        student_id: 'stu-2',
-        student_name: 'Bob',
-        student_username: 'bob',
-        student_no: 'S-1002',
-        class_name: 'Class B',
-        challenge_id: 'challenge-2',
-        challenge_title: 'Pwn Stack 201',
-        status: 'expired',
-        access_url: '',
-        expires_at: '2026-03-09T09:00:00Z',
-        remaining_time: 0,
-        extend_count: 0,
-        max_extends: 3,
-        created_at: '2026-03-09T08:30:00Z',
-      },
-    ])
+    })
     teacherApiMocks.destroyTeacherInstance.mockResolvedValue(undefined)
     confirmMock.mockResolvedValue(true)
   })
@@ -126,11 +137,19 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledWith({
-      class_name: undefined,
-      keyword: undefined,
-      student_no: undefined,
-    })
+    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledWith(
+      {
+        class_name: undefined,
+        keyword: undefined,
+        student_no: undefined,
+        status: undefined,
+        page: 1,
+        page_size: 15,
+      },
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      })
+    )
     expect(wrapper.text()).toContain('实例管理')
     expect(wrapper.text()).toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('Alice')
@@ -143,11 +162,58 @@ describe('PlatformInstanceManagement', () => {
   })
 
   it('应支持按实例关键词筛选目录', async () => {
+    vi.useFakeTimers()
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    await wrapper.get('.workspace-directory-toolbar__search-input').setValue('Pwn')
+    teacherApiMocks.getTeacherInstances.mockResolvedValue({
+      list: [
+        {
+          id: 'inst-2',
+          student_id: 'stu-2',
+          student_name: 'Bob',
+          student_username: 'bob',
+          student_no: 'S-1002',
+          class_name: 'Class B',
+          challenge_id: 'challenge-2',
+          challenge_title: 'Pwn Stack 201',
+          status: 'expired',
+          access_url: '',
+          expires_at: '2026-03-09T09:00:00Z',
+          remaining_time: 0,
+          extend_count: 0,
+          max_extends: 3,
+          created_at: '2026-03-09T08:30:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 15,
+      summary: {
+        total_count: 1,
+        running_count: 0,
+        expiring_soon_count: 0,
+        warning_count: 1,
+      },
+    })
 
+    await wrapper.get('.workspace-directory-toolbar__search-input').setValue('Pwn')
+    vi.advanceTimersByTime(250)
+    await flushPromises()
+
+    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+      {
+        class_name: undefined,
+        keyword: 'Pwn',
+        student_no: undefined,
+        status: undefined,
+        page: 1,
+        page_size: 15,
+      },
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      })
+    )
     expect(wrapper.text()).not.toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('Pwn Stack 201')
     expect(wrapper.text()).toContain('共 1 个实例')
@@ -169,6 +235,37 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
+    teacherApiMocks.getTeacherInstances.mockResolvedValue({
+      list: [
+        {
+          id: 'inst-2',
+          student_id: 'stu-2',
+          student_name: 'Bob',
+          student_username: 'bob',
+          student_no: 'S-1002',
+          class_name: 'Class B',
+          challenge_id: 'challenge-2',
+          challenge_title: 'Pwn Stack 201',
+          status: 'expired',
+          access_url: '',
+          expires_at: '2026-03-09T09:00:00Z',
+          remaining_time: 0,
+          extend_count: 0,
+          max_extends: 3,
+          created_at: '2026-03-09T08:30:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 15,
+      summary: {
+        total_count: 1,
+        running_count: 0,
+        expiring_soon_count: 0,
+        warning_count: 1,
+      },
+    })
+
     await wrapper
       .findAll('button')
       .find((node) => node.text().includes('销毁'))
@@ -177,6 +274,19 @@ describe('PlatformInstanceManagement', () => {
 
     expect(confirmMock).toHaveBeenCalled()
     expect(teacherApiMocks.destroyTeacherInstance).toHaveBeenCalledWith('inst-1')
+    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+      {
+        class_name: undefined,
+        keyword: undefined,
+        student_no: undefined,
+        status: undefined,
+        page: 1,
+        page_size: 15,
+      },
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      })
+    )
     expect(wrapper.text()).not.toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('Pwn Stack 201')
   })

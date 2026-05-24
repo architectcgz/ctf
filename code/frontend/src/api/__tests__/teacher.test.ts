@@ -11,6 +11,7 @@ import {
   exportTeacherAWDReviewArchive,
   exportTeacherAWDReviewReport,
   getClasses,
+  getTeacherInstances,
   getTeacherOverview,
   getStudentAttackSessions,
   getStudentEvidence,
@@ -132,6 +133,95 @@ describe('teacher api contract', () => {
       total: 31,
       page: 2,
       page_size: 10,
+    })
+  })
+
+  it('获取实例目录分页时应透传状态与分页参数，并保留 summary', async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 9,
+          student_id: 12,
+          student_name: 'Alice',
+          student_username: 'alice',
+          student_no: '20240001',
+          class_name: 'Class A',
+          challenge_id: 5,
+          challenge_title: 'Web SQLi 101',
+          status: 'running',
+          access_url: 'http://127.0.0.1:30001',
+          expires_at: '2026-04-10T10:00:00Z',
+          remaining_time: 1800,
+          extend_count: 1,
+          max_extends: 3,
+          created_at: '2026-04-10T09:30:00Z',
+        },
+      ],
+      total: 11,
+      page: 2,
+      page_size: 15,
+      summary: {
+        total_count: 11,
+        running_count: 4,
+        expiring_soon_count: 1,
+        warning_count: 5,
+      },
+    })
+
+    const result = await getTeacherInstances(
+      {
+        class_name: 'Class A',
+        keyword: 'alice',
+        student_no: '20240001',
+        status: 'running',
+        page: 2,
+        page_size: 15,
+      },
+      { signal: AbortSignal.timeout(1000) }
+    )
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/teacher/instances',
+      params: {
+        class_name: 'Class A',
+        keyword: 'alice',
+        student_no: '20240001',
+        status: 'running',
+        page: 2,
+        page_size: 15,
+      },
+      signal: expect.any(AbortSignal),
+    })
+    expect(result).toEqual({
+      list: [
+        {
+          id: '9',
+          student_id: '12',
+          student_name: 'Alice',
+          student_username: 'alice',
+          student_no: '20240001',
+          class_name: 'Class A',
+          challenge_id: '5',
+          challenge_title: 'Web SQLi 101',
+          status: 'running',
+          access_url: 'http://127.0.0.1:30001',
+          expires_at: '2026-04-10T10:00:00Z',
+          remaining_time: 1800,
+          extend_count: 1,
+          max_extends: 3,
+          created_at: '2026-04-10T09:30:00Z',
+        },
+      ],
+      total: 11,
+      page: 2,
+      page_size: 15,
+      summary: {
+        total_count: 11,
+        running_count: 4,
+        expiring_soon_count: 1,
+        warning_count: 5,
+      },
     })
   })
 

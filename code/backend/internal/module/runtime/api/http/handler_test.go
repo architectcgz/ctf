@@ -35,7 +35,7 @@ func (stubRuntimeService) GetUserInstances(context.Context, int64) ([]*instancec
 	return nil, nil
 }
 
-func (stubRuntimeService) ListTeacherInstances(context.Context, int64, string, instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
+func (stubRuntimeService) ListTeacherInstances(context.Context, int64, string, instancecontracts.TeacherInstanceListQuery) (*instancecontracts.TeacherInstancePageResult, error) {
 	return nil, nil
 }
 
@@ -105,10 +105,10 @@ type stubAWDDefenseSSHRuntimeService struct {
 type captureTeacherInstanceRuntimeService struct {
 	stubRuntimeService
 	lastQuery instancecontracts.TeacherInstanceListQuery
-	resp      []instancecontracts.TeacherInstanceItem
+	resp      *instancecontracts.TeacherInstancePageResult
 }
 
-func (s *captureTeacherInstanceRuntimeService) ListTeacherInstances(_ context.Context, _ int64, _ string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
+func (s *captureTeacherInstanceRuntimeService) ListTeacherInstances(_ context.Context, _ int64, _ string, query instancecontracts.TeacherInstanceListQuery) (*instancecontracts.TeacherInstancePageResult, error) {
 	s.lastQuery = query
 	return s.resp, nil
 }
@@ -172,18 +172,29 @@ func TestListTeacherInstancesBindsQueryIntoInstanceContract(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	service := &captureTeacherInstanceRuntimeService{
-		resp: []instancecontracts.TeacherInstanceItem{{
-			ID:              42,
-			StudentID:       11,
-			StudentName:     "Alice",
-			StudentUsername: "alice",
-			ClassName:       "Class A",
-			ChallengeID:     9,
-			ChallengeTitle:  "web-101",
-			Status:          instancecontracts.InstanceStatusRunning,
-			AccessURL:       "https://runtime.example/instances/42",
-			RemainingTime:   1800,
-		}},
+		resp: &instancecontracts.TeacherInstancePageResult{
+			List: []instancecontracts.TeacherInstanceItem{{
+				ID:              42,
+				StudentID:       11,
+				StudentName:     "Alice",
+				StudentUsername: "alice",
+				ClassName:       "Class A",
+				ChallengeID:     9,
+				ChallengeTitle:  "web-101",
+				Status:          instancecontracts.InstanceStatusRunning,
+				AccessURL:       "https://runtime.example/instances/42",
+				RemainingTime:   1800,
+			}},
+			Total:    7,
+			Page:     2,
+			PageSize: 5,
+			Summary: instancecontracts.TeacherInstanceListSummary{
+				TotalCount:        7,
+				RunningCount:      3,
+				ExpiringSoonCount: 1,
+				WarningCount:      4,
+			},
+		},
 	}
 	handler := NewHandler(service, "", "", nil, CookieConfig{}, nil)
 
@@ -193,14 +204,19 @@ func TestListTeacherInstancesBindsQueryIntoInstanceContract(t *testing.T) {
 		handler.ListTeacherInstances(c)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/teacher/instances?class_name=Class%20A&keyword=alice&student_no=S-1001", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/teacher/instances?class_name=Class%20A&keyword=alice&student_no=S-1001&status=running&page=2&page_size=5", nil)
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
 
 	if resp.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d body=%s", resp.Code, resp.Body.String())
 	}
-	if service.lastQuery.ClassName != "Class A" || service.lastQuery.Keyword != "alice" || service.lastQuery.StudentNo != "S-1001" {
+	if service.lastQuery.ClassName != "Class A" ||
+		service.lastQuery.Keyword != "alice" ||
+		service.lastQuery.StudentNo != "S-1001" ||
+		service.lastQuery.Status != instancecontracts.InstanceStatusRunning ||
+		service.lastQuery.Page != 2 ||
+		service.lastQuery.PageSize != 5 {
 		t.Fatalf("unexpected bound query: %+v", service.lastQuery)
 	}
 	if !strings.Contains(resp.Body.String(), `"student_username":"alice"`) {
@@ -208,6 +224,12 @@ func TestListTeacherInstancesBindsQueryIntoInstanceContract(t *testing.T) {
 	}
 	if !strings.Contains(resp.Body.String(), `"remaining_time":1800`) {
 		t.Fatalf("expected response to preserve remaining_time field, got %s", resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), `"page":2`) || !strings.Contains(resp.Body.String(), `"page_size":5`) {
+		t.Fatalf("expected paged response metadata, got %s", resp.Body.String())
+	}
+	if !strings.Contains(resp.Body.String(), `"warning_count":4`) {
+		t.Fatalf("expected summary payload, got %s", resp.Body.String())
 	}
 }
 

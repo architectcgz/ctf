@@ -30,6 +30,10 @@ type RuntimeCleaner = instanceports.RuntimeCleaner
 
 type TeacherInstanceFilter = instanceports.TeacherInstanceFilter
 
+type TeacherInstanceListSummary = instanceports.TeacherInstanceListSummary
+
+type TeacherInstancePage = instanceports.TeacherInstancePage
+
 type AWDDefenseWorkspaceLookupRepository interface {
 	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimeentity.AWDDefenseWorkspace, error)
 }

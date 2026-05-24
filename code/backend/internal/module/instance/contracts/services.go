@@ -19,7 +19,7 @@ type InstanceCommandService interface {
 type InstanceQueryService interface {
 	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
 	GetUserInstances(ctx context.Context, userID int64) ([]*InstanceInfo, error)
-	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query TeacherInstanceListQuery) ([]TeacherInstanceItem, error)
+	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query TeacherInstanceListQuery) (*TeacherInstancePageResult, error)
 }
 
 // ProxyTicketClaims 复用实例 owner 的稳定 ticket claim 结构。

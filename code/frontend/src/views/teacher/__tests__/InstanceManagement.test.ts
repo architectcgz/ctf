@@ -43,25 +43,36 @@ describe('InstanceManagement', () => {
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
     teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 1 }])
-    teacherApiMocks.getTeacherInstances.mockResolvedValue([
-      {
-        id: 'inst-1',
-        student_id: 'stu-1',
-        student_name: 'Alice',
-        student_username: 'alice',
-        student_no: 'S-1001',
-        class_name: 'Class A',
-        challenge_id: 'challenge-1',
-        challenge_title: 'Web SQLi 101',
-        status: 'running',
-        access_url: 'http://127.0.0.1:30001',
-        expires_at: '2026-03-09T10:30:00Z',
-        remaining_time: 1200,
-        extend_count: 1,
-        max_extends: 3,
-        created_at: '2026-03-09T09:30:00Z',
+    teacherApiMocks.getTeacherInstances.mockResolvedValue({
+      list: [
+        {
+          id: 'inst-1',
+          student_id: 'stu-1',
+          student_name: 'Alice',
+          student_username: 'alice',
+          student_no: 'S-1001',
+          class_name: 'Class A',
+          challenge_id: 'challenge-1',
+          challenge_title: 'Web SQLi 101',
+          status: 'running',
+          access_url: 'http://127.0.0.1:30001',
+          expires_at: '2026-03-09T10:30:00Z',
+          remaining_time: 1200,
+          extend_count: 1,
+          max_extends: 3,
+          created_at: '2026-03-09T09:30:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+      summary: {
+        total_count: 1,
+        running_count: 1,
+        expiring_soon_count: 0,
+        warning_count: 0,
       },
-    ])
+    })
     teacherApiMocks.destroyTeacherInstance.mockResolvedValue(undefined)
     confirmMock.mockReset()
     confirmMock.mockResolvedValue(true)
@@ -98,6 +109,8 @@ describe('InstanceManagement', () => {
         class_name: 'Class A',
         keyword: undefined,
         student_no: undefined,
+        page: 1,
+        page_size: 20,
       },
       expect.objectContaining({
         signal: expect.any(AbortSignal),
@@ -153,11 +166,26 @@ describe('InstanceManagement', () => {
         class_name: 'Class A',
         keyword: 'ali',
         student_no: 'S-1001',
+        page: 1,
+        page_size: 20,
       },
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       })
     )
+
+    teacherApiMocks.getTeacherInstances.mockResolvedValue({
+      list: [],
+      total: 0,
+      page: 1,
+      page_size: 20,
+      summary: {
+        total_count: 0,
+        running_count: 0,
+        expiring_soon_count: 0,
+        warning_count: 0,
+      },
+    })
 
     await wrapper.find('[data-instance-id="inst-1"]').trigger('click')
     await flushPromises()
@@ -216,25 +244,70 @@ describe('InstanceManagement', () => {
   })
 
   it('应该支持实例目录分页切换', async () => {
-    teacherApiMocks.getTeacherInstances.mockResolvedValue(
-      Array.from({ length: 21 }, (_, index) => ({
-        id: `inst-${index + 1}`,
-        student_id: `stu-${index + 1}`,
-        student_name: `Student ${index + 1}`,
-        student_username: `student-${index + 1}`,
-        student_no: `S-${String(index + 1).padStart(4, '0')}`,
-        class_name: 'Class A',
-        challenge_id: `challenge-${index + 1}`,
-        challenge_title: `Challenge ${index + 1}`,
-        status: 'running',
-        access_url: `http://127.0.0.1:30${String(index + 1).padStart(3, '0')}`,
-        expires_at: '2026-03-09T10:30:00Z',
-        remaining_time: 1200,
-        extend_count: 1,
-        max_extends: 3,
-        created_at: '2026-03-09T09:30:00Z',
-      }))
-    )
+    teacherApiMocks.getTeacherInstances.mockImplementation(async (params?: { page?: number; page_size?: number }) => {
+      const requestedPage = params?.page ?? 1
+      if (requestedPage === 2) {
+        return {
+          list: [
+            {
+              id: 'inst-21',
+              student_id: 'stu-21',
+              student_name: 'Student 21',
+              student_username: 'student-21',
+              student_no: 'S-0021',
+              class_name: 'Class A',
+              challenge_id: 'challenge-21',
+              challenge_title: 'Challenge 21',
+              status: 'running',
+              access_url: 'http://127.0.0.1:30021',
+              expires_at: '2026-03-09T10:30:00Z',
+              remaining_time: 1200,
+              extend_count: 1,
+              max_extends: 3,
+              created_at: '2026-03-09T09:30:00Z',
+            },
+          ],
+          total: 21,
+          page: 2,
+          page_size: 20,
+          summary: {
+            total_count: 21,
+            running_count: 21,
+            expiring_soon_count: 0,
+            warning_count: 0,
+          },
+        }
+      }
+
+      return {
+        list: Array.from({ length: 20 }, (_, index) => ({
+          id: `inst-${index + 1}`,
+          student_id: `stu-${index + 1}`,
+          student_name: `Student ${index + 1}`,
+          student_username: `student-${index + 1}`,
+          student_no: `S-${String(index + 1).padStart(4, '0')}`,
+          class_name: 'Class A',
+          challenge_id: `challenge-${index + 1}`,
+          challenge_title: `Challenge ${index + 1}`,
+          status: 'running',
+          access_url: `http://127.0.0.1:30${String(index + 1).padStart(3, '0')}`,
+          expires_at: '2026-03-09T10:30:00Z',
+          remaining_time: 1200,
+          extend_count: 1,
+          max_extends: 3,
+          created_at: '2026-03-09T09:30:00Z',
+        })),
+        total: 21,
+        page: 1,
+        page_size: 20,
+        summary: {
+          total_count: 21,
+          running_count: 21,
+          expiring_soon_count: 0,
+          warning_count: 0,
+        },
+      }
+    })
 
     const wrapper = mount(InstanceManagement, {
       global: {
@@ -257,6 +330,18 @@ describe('InstanceManagement', () => {
     await paginationButtons[1].trigger('click')
     await flushPromises()
 
+    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+      {
+        class_name: 'Class A',
+        keyword: undefined,
+        student_no: undefined,
+        page: 2,
+        page_size: 20,
+      },
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+      })
+    )
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('2 / 2')
     expect(wrapper.text()).toContain('Challenge 21')

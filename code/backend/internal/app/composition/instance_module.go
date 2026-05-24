@@ -63,7 +63,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	cleanupService := module.CleanupService
 	provisioningService := module.ProvisioningService
 	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service"))
-	queryService := instanceqry.NewInstanceService(repo, &cfg.Container)
+	queryService := instanceqry.NewInstanceService(repo, &cfg.Container, cfg.Pagination)
 	proxyTicketService := instanceqry.NewProxyTicketService(
 		runtimeinfra.NewProxyTicketStore(root.Cache()),
 		repo,

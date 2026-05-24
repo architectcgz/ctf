@@ -41,7 +41,7 @@ type runtimeService interface {
 	ExtendInstance(ctx context.Context, instanceID, userID int64) (*instancecontracts.InstanceResp, error)
 	GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error)
 	GetUserInstances(ctx context.Context, userID int64) ([]*instancecontracts.InstanceInfo, error)
-	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error)
+	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) (*instancecontracts.TeacherInstancePageResult, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
@@ -333,7 +333,7 @@ func (h *Handler) ListTeacherInstances(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, toTeacherInstanceItems(items))
+	response.Success(c, toTeacherInstancePageResp(items))
 }
 
 func (h *Handler) DestroyTeacherInstance(c *gin.Context) {

@@ -67,6 +67,13 @@ type teacherInstanceRow struct {
 	CreatedAt       time.Time `gorm:"column:created_at"`
 }
 
+type teacherInstanceSummaryRow struct {
+	TotalCount        int64 `gorm:"column:total_count"`
+	RunningCount      int64 `gorm:"column:running_count"`
+	ExpiringSoonCount int64 `gorm:"column:expiring_soon_count"`
+	WarningCount      int64 `gorm:"column:warning_count"`
+}
+
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
@@ -702,10 +709,11 @@ func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID 
 		}).Error
 }
 
-func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) ([]runtimeports.TeacherInstanceRow, error) {
+func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) (*runtimeports.TeacherInstancePage, error) {
 	rows := make([]teacherInstanceRow, 0)
+	now := time.Now()
 
-	query := r.db.WithContext(ctx).
+	query := r.dbWithContext(ctx).
 		Table("instances AS i").
 		Select(strings.Join([]string{
 			"i.id",
@@ -734,22 +742,45 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", contestcontracts.ContestModeAWD).
 		Where("u.role = ? AND u.deleted_at IS NULL", identitycontracts.RoleStudent)
 
-	if filter.ClassName != "" {
-		query = query.Where("u.class_name = ?", filter.ClassName)
-	}
-	if filter.StudentNo != "" {
-		query = query.Where("u.student_no = ?", filter.StudentNo)
-	}
-	if filter.Keyword != "" {
-		pattern := "%" + strings.ToLower(filter.Keyword) + "%"
-		query = query.Where(
-			"(LOWER(u.username) LIKE ? OR LOWER(COALESCE(NULLIF(u.student_no, ''), '')) LIKE ?)",
-			pattern,
-			pattern,
-		)
+	query = applyTeacherInstanceQueryFilters(query, filter, now)
+
+	var summary teacherInstanceSummaryRow
+	summarySelect := strings.Join([]string{
+		"COUNT(*) AS total_count",
+		fmt.Sprintf(
+			"COALESCE(SUM(CASE WHEN i.status = '%s' AND i.expires_at > ? THEN 1 ELSE 0 END), 0) AS running_count",
+			instancecontracts.InstanceStatusRunning,
+		),
+		fmt.Sprintf(
+			"COALESCE(SUM(CASE WHEN i.status = '%s' AND i.expires_at > ? AND i.expires_at <= ? THEN 1 ELSE 0 END), 0) AS expiring_soon_count",
+			instancecontracts.InstanceStatusRunning,
+		),
+		fmt.Sprintf(
+			"COALESCE(SUM(CASE WHEN i.status <> '%s' OR i.expires_at <= ? THEN 1 ELSE 0 END), 0) AS warning_count",
+			instancecontracts.InstanceStatusRunning,
+		),
+	}, ", ")
+	warningThreshold := now.Add(10 * time.Minute)
+	if err := query.Session(&gorm.Session{}).
+		Select(summarySelect, now, now, warningThreshold, warningThreshold).
+		Scan(&summary).Error; err != nil {
+		return nil, fmt.Errorf("summarize teacher instances: %w", err)
 	}
 
-	if err := query.Order("i.created_at DESC").Scan(&rows).Error; err != nil {
+	page := filter.Page
+	if page < 1 {
+		page = 1
+	}
+	pageSize := filter.PageSize
+	if pageSize < 1 {
+		pageSize = 20
+	}
+
+	if err := query.Session(&gorm.Session{}).
+		Order("i.created_at DESC").
+		Limit(pageSize).
+		Offset((page - 1) * pageSize).
+		Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("list teacher instances: %w", err)
 	}
 
@@ -773,7 +804,61 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 			CreatedAt:       row.CreatedAt,
 		}
 	}
-	return items, nil
+	return &runtimeports.TeacherInstancePage{
+		List:  items,
+		Total: summary.TotalCount,
+		Summary: runtimeports.TeacherInstanceListSummary{
+			TotalCount:        summary.TotalCount,
+			RunningCount:      summary.RunningCount,
+			ExpiringSoonCount: summary.ExpiringSoonCount,
+			WarningCount:      summary.WarningCount,
+		},
+	}, nil
+}
+
+func applyTeacherInstanceQueryFilters(query *gorm.DB, filter runtimeports.TeacherInstanceFilter, now time.Time) *gorm.DB {
+	if filter.ClassName != "" {
+		query = query.Where("u.class_name = ?", filter.ClassName)
+	}
+	if filter.StudentNo != "" {
+		query = query.Where("u.student_no = ?", filter.StudentNo)
+	}
+	if filter.Keyword != "" {
+		pattern := "%" + strings.ToLower(filter.Keyword) + "%"
+		query = query.Where(
+			"(LOWER(u.username) LIKE ? OR LOWER(COALESCE(NULLIF(u.student_no, ''), '')) LIKE ?)",
+			pattern,
+			pattern,
+		)
+	}
+
+	switch filter.Status {
+	case instancecontracts.InstanceStatusRunning:
+		query = query.Where("i.status = ? AND i.expires_at > ?", instancecontracts.InstanceStatusRunning, now)
+	case instancecontracts.InstanceStatusCreating:
+		query = query.Where("i.status = ?", instancecontracts.InstanceStatusCreating)
+	case instancecontracts.InstanceStatusExpired:
+		query = query.Where(
+			"(i.status = ? AND i.expires_at <= ?) OR i.status = ?",
+			instancecontracts.InstanceStatusRunning,
+			now,
+			instancecontracts.InstanceStatusExpired,
+		)
+	case instancecontracts.InstanceStatusFailed:
+		query = query.Where("i.status = ?", instancecontracts.InstanceStatusFailed)
+	case "inactive":
+		query = query.Where(
+			"i.status NOT IN ?",
+			[]string{
+				instancecontracts.InstanceStatusRunning,
+				instancecontracts.InstanceStatusCreating,
+				instancecontracts.InstanceStatusExpired,
+				instancecontracts.InstanceStatusFailed,
+			},
+		)
+	}
+
+	return query
 }
 
 type runtimeInstanceMetadata struct {

@@ -16,8 +16,9 @@ import (
 )
 
 type InstanceService struct {
-	repo instanceQueryRepository
-	cfg  *config.ContainerConfig
+	repo       instanceQueryRepository
+	cfg        *config.ContainerConfig
+	pagination config.PaginationConfig
 }
 
 type instanceQueryRepository interface {
@@ -27,11 +28,19 @@ type instanceQueryRepository interface {
 	instanceports.TeacherInstanceQueryRepository
 }
 
-func NewInstanceService(repo instanceQueryRepository, cfg *config.ContainerConfig) *InstanceService {
+func NewInstanceService(
+	repo instanceQueryRepository,
+	cfg *config.ContainerConfig,
+	pagination ...config.PaginationConfig,
+) *InstanceService {
 	if cfg == nil {
 		cfg = &config.ContainerConfig{}
 	}
-	return &InstanceService{repo: repo, cfg: cfg}
+	var resolvedPagination config.PaginationConfig
+	if len(pagination) > 0 {
+		resolvedPagination = pagination[0]
+	}
+	return &InstanceService{repo: repo, cfg: cfg, pagination: resolvedPagination}
 }
 
 func (s *InstanceService) GetAccessURL(ctx context.Context, instanceID, userID int64) (string, error) {
@@ -67,13 +76,23 @@ func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([
 	return result, nil
 }
 
-func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query instancecontracts.TeacherInstanceListQuery) ([]instancecontracts.TeacherInstanceItem, error) {
+func (s *InstanceService) ListTeacherInstances(
+	ctx context.Context,
+	requesterID int64,
+	requesterRole string,
+	query instancecontracts.TeacherInstanceListQuery,
+) (*instancecontracts.TeacherInstancePageResult, error) {
 	ctx = normalizeContext(ctx)
 
-	filter := instanceports.TeacherInstanceFilter{}
-	filter.ClassName = strings.TrimSpace(query.ClassName)
-	filter.Keyword = strings.TrimSpace(query.Keyword)
-	filter.StudentNo = strings.TrimSpace(query.StudentNo)
+	page, pageSize := s.normalizeTeacherInstancePagination(query.Page, query.PageSize)
+	filter := instanceports.TeacherInstanceFilter{
+		ClassName: strings.TrimSpace(query.ClassName),
+		Keyword:   strings.TrimSpace(query.Keyword),
+		StudentNo: strings.TrimSpace(query.StudentNo),
+		Status:    strings.TrimSpace(query.Status),
+		Page:      page,
+		PageSize:  pageSize,
+	}
 
 	if requesterRole != identitycontracts.RoleAdmin {
 		requester, err := s.repo.FindUserByID(ctx, requesterID)
@@ -86,7 +105,13 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 
 		className := strings.TrimSpace(requester.ClassName)
 		if className == "" {
-			return []instancecontracts.TeacherInstanceItem{}, nil
+			return &instancecontracts.TeacherInstancePageResult{
+				List:     []instancecontracts.TeacherInstanceItem{},
+				Total:    0,
+				Page:     page,
+				PageSize: pageSize,
+				Summary:  instancecontracts.TeacherInstanceListSummary{},
+			}, nil
 		}
 		if filter.ClassName != "" && filter.ClassName != className {
 			return nil, apperror.ErrForbidden
@@ -98,14 +123,28 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
+	if items == nil {
+		items = &instanceports.TeacherInstancePage{}
+	}
 
 	now := time.Now()
-	result := make([]instancecontracts.TeacherInstanceItem, len(items))
-	for idx, item := range items {
+	result := make([]instancecontracts.TeacherInstanceItem, len(items.List))
+	for idx, item := range items.List {
 		result[idx] = toTeacherInstanceItem(item, now, s.cfg.PublicHost, s.cfg.AccessHost)
 	}
 
-	return result, nil
+	return &instancecontracts.TeacherInstancePageResult{
+		List:     result,
+		Total:    items.Total,
+		Page:     page,
+		PageSize: pageSize,
+		Summary: instancecontracts.TeacherInstanceListSummary{
+			TotalCount:        items.Summary.TotalCount,
+			RunningCount:      items.Summary.RunningCount,
+			ExpiringSoonCount: items.Summary.ExpiringSoonCount,
+			WarningCount:      items.Summary.WarningCount,
+		},
+	}, nil
 }
 
 func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, publicHost, accessHost string) *instancecontracts.InstanceInfo {
@@ -176,4 +215,30 @@ func visibleInstanceStatus(status string, expiresAt, now time.Time) string {
 
 func normalizeContext(ctx context.Context) context.Context {
 	return ctx
+}
+
+func (s *InstanceService) normalizeTeacherInstancePagination(page, pageSize int) (int, int) {
+	normalizedPage := page
+	if normalizedPage < 1 {
+		normalizedPage = 1
+	}
+
+	defaultPageSize := s.pagination.DefaultPageSize
+	if defaultPageSize < 1 {
+		defaultPageSize = 20
+	}
+	maxPageSize := s.pagination.MaxPageSize
+	if maxPageSize < 1 {
+		maxPageSize = 100
+	}
+
+	normalizedPageSize := pageSize
+	if normalizedPageSize < 1 {
+		normalizedPageSize = defaultPageSize
+	}
+	if normalizedPageSize > maxPageSize {
+		normalizedPageSize = maxPageSize
+	}
+
+	return normalizedPage, normalizedPageSize
 }
