@@ -46,7 +46,6 @@ const migratedComposableImports = [
   '@/composables/usePlatformChallenges',
   '@/composables/usePlatformContests',
   '@/composables/usePlatformOverviewWorkspace',
-  '@/composables/usePlatformUsers',
   '@/composables/useScoreboardView',
   '@/composables/useSkillProfilePage',
   '@/composables/useStudentDirectoryQuery',

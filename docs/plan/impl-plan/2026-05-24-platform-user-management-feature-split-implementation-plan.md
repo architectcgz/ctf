@@ -7,11 +7,10 @@
 ## 目标
 
 - 把平台用户治理的真实 workflow owner 从 `platform-users` 这个过宽 bucket 中收口到更窄的 `platform-user-management` feature。
-- 保留 `platform-users` 为兼容桥，避免一次性删除旧入口。
+- 为后续删除 `platform-users` 空桥接层创造条件。
 
 ## 非目标
 
-- 本轮不删除 `platform-users` 目录中的任何历史桥文件。
 - 本轮不改用户治理页面的用户可见结构、接口契约或交互流程。
 - 本轮不处理 `request.ts` 的全局错误策略。
 
@@ -69,4 +68,4 @@
 ## 回退方式
 
 - 如新 feature 引入回归，可回退 `platform-user-management` 新目录和引用更新，并恢复 `UserManage.vue`、`PlatformUserFormDialog.vue`、`usePlatformUsers.ts` 指向 `platform-users` 的原入口。
-- `platform-users` 兼容桥会保留，不要求本轮继续删旧文件。
+- 空桥接层删除已拆到独立 implementation plan，按后续切片单独回退。
