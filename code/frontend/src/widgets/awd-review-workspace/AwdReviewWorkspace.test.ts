@@ -62,7 +62,7 @@ function createProps() {
   }
 }
 
-describe('TeacherAWDReviewWorkspace', () => {
+describe('AwdReviewWorkspace', () => {
   it('应转发顶部动作事件', async () => {
     const wrapper = mount(AwdReviewWorkspace, {
       props: createProps(),
