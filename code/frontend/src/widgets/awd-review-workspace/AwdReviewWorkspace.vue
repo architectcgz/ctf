@@ -15,7 +15,7 @@ import type {
 } from '@/api/contracts'
 import TeacherAWDReviewAnalysisSection from '@/components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue'
 import TeacherAWDReviewEvidenceGrid from '@/components/teacher/awd-review/TeacherAWDReviewEvidenceGrid.vue'
-import TeacherAWDReviewRoundSelector from '@/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue'
+import AwdReviewRoundSelector from '@/components/teacher/awd-review/AwdReviewRoundSelector.vue'
 import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
 import TeacherAWDReviewStatusChip from './TeacherAWDReviewStatusChip.vue'
 import TeacherAWDReviewWorkspaceActions from './TeacherAWDReviewWorkspaceActions.vue'
@@ -119,7 +119,7 @@ const summaryItems = computed(() =>
         </template>
       </TeacherAWDReviewSummaryPanel>
 
-      <TeacherAWDReviewRoundSelector
+      <AwdReviewRoundSelector
         :rounds="timelineRounds"
         :selected-round-number="selectedRoundNumber"
         @set-round="emit('setRound', $event)"

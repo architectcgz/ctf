@@ -68,7 +68,7 @@ describe('TeacherAWDReviewWorkspace', () => {
       props: createProps(),
       global: {
         stubs: {
-          TeacherAWDReviewRoundSelector: { template: '<div />' },
+          AwdReviewRoundSelector: { template: '<div />' },
           TeacherAWDReviewAnalysisSection: { template: '<div />' },
           TeacherAWDReviewEvidenceGrid: { template: '<div />' },
           TeacherAWDReviewTeamDrawer: { template: '<div />' },
@@ -96,7 +96,7 @@ describe('TeacherAWDReviewWorkspace', () => {
       },
       global: {
         stubs: {
-          TeacherAWDReviewRoundSelector: {
+          AwdReviewRoundSelector: {
             template: '<button data-testid="round-selector" @click="$emit(\'set-round\', 2)">round</button>',
           },
           TeacherAWDReviewTeamDrawer: {

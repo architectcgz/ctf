@@ -26,6 +26,6 @@ refactor_existing
 ## Files to modify
 - .harness/reuse-decisions/academy-awd-review-round-selector-shell-tokens.md
 - code/frontend/src/widgets/teacher-awd-review/TeacherAWDReviewSurfaceShell.vue
-- code/frontend/src/components/teacher/awd-review/TeacherAWDReviewRoundSelector.vue
+- code/frontend/src/components/teacher/awd-review/AwdReviewRoundSelector.vue
 - code/frontend/src/views/__tests__/spacingSystemTokens.test.ts
 - code/frontend/src/views/teacher/__tests__/teacherAwdReviewRoundSelectorExtraction.test.ts
