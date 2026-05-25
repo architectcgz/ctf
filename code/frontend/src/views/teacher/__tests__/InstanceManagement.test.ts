@@ -138,7 +138,7 @@ describe('InstanceManagement', () => {
   })
 
   it('路由页应仅负责组合，不直接依赖页面级流程细节', () => {
-    expect(instanceManagementViewSource).toContain('useTeacherInstanceManagementPage')
+    expect(instanceManagementViewSource).toContain('useInstanceManagementPage')
     expect(instanceManagementViewSource).not.toContain('confirmDestructiveAction')
     expect(instanceManagementViewSource).not.toContain('resolveTeachingDashboardRouteName')
     expect(teacherInstancesHookSource).toContain("reportFrontendError('加载教师实例管理页失败:', err)")

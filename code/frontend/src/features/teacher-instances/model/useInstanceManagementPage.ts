@@ -7,7 +7,7 @@ import { resolveTeachingDashboardRouteName } from '@/utils/teachingWorkspaceRout
 
 import { useTeacherInstances } from './useTeacherInstances'
 
-export function useTeacherInstanceManagementPage() {
+export function useInstanceManagementPage() {
   const router = useRouter()
   const authStore = useAuthStore()
 

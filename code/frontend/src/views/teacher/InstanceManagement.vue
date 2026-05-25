@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import TeacherInstanceManagementPage from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue'
-import { useTeacherInstanceManagementPage } from '@/features/teacher-instances'
+import { useInstanceManagementPage } from '@/features/teacher-instances'
 
 const {
   classes,
@@ -15,13 +15,13 @@ const {
   totalCount,
   runningCount,
   expiringSoonCount,
-  paginatedInstances,
+  instances,
   initialize,
   updateFilter,
   handlePageChange,
   handleDestroy,
   openDashboard,
-} = useTeacherInstanceManagementPage()
+} = useInstanceManagementPage()
 </script>
 
 <template>
@@ -40,7 +40,7 @@ const {
     :total-count="totalCount"
     :running-count="runningCount"
     :expiring-soon-count="expiringSoonCount"
-    :instances="paginatedInstances"
+    :instances="instances"
     @retry="initialize"
     @update-class-name="updateFilter('className', $event)"
     @update-keyword="updateFilter('keyword', $event)"

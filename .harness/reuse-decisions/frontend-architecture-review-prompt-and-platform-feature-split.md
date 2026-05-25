@@ -47,7 +47,7 @@ hook / page / layout
 - `code/frontend/src/views/teacher/TeacherAWDReviewDetail.vue`
 - `code/frontend/src/views/platform/PlatformClassStudents.vue`
 - `code/frontend/src/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue`
-- `code/frontend/src/features/teacher-instances/model/useTeacherInstanceManagementPage.ts`
+- `code/frontend/src/features/teacher-instances/model/useInstanceManagementPage.ts`
 - `code/frontend/src/features/teacher-student-management/model/useStudentManagementPage.ts`
 - `code/frontend/src/features/teacher-student-analysis/model/useTeacherStudentAnalysisPage.ts`
 - `code/frontend/src/features/teacher-student-analysis/model/useTeacherStudentAnalysisNavigation.ts`
@@ -185,7 +185,8 @@ refactor_existing
 - `code/frontend/src/api/teacher/instances.ts`
 - `code/frontend/src/api/__tests__/teacher.test.ts`
 - `code/frontend/src/features/teacher-instances/model/useTeacherInstances.ts`
-- `code/frontend/src/features/teacher-instances/model/useTeacherInstanceManagementPage.ts`
+- `code/frontend/src/features/teacher-instances/model/useInstanceManagementPage.ts`
+- `code/frontend/src/views/teacher/InstanceManagement.vue`
 - `code/frontend/src/views/teacher/__tests__/InstanceManagement.test.ts`
 - `code/frontend/src/features/platform-instance-management/model/usePlatformInstanceManagementPage.ts`
 - `code/frontend/src/views/platform/__tests__/InstanceManage.test.ts`
