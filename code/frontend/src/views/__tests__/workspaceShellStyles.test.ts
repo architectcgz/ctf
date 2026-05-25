@@ -14,7 +14,7 @@ import studentAnalysisPageSource from '@/components/teacher/class-management/Stu
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
 import studentManagementPageSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import teacherInstanceManagementPageSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
-import teacherAwdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceHeader.vue?raw'
+import teacherAwdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceHeader.vue?raw'
 import awdChallengeLibraryPageSource from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue?raw'
 import awdReviewHeroPanelSource from '@/components/platform/awd-review/AwdReviewHeroPanel.vue?raw'
 import auditLogHeroPanelSource from '@/components/platform/audit/AuditLogHeroPanel.vue?raw'

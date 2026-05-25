@@ -172,7 +172,7 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('平台 AWD 复盘页头部应切到 workspace 语义，不再保留 teacher journal eyebrow', () => {
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<AwdReviewWorkspaceHeader')
     expect(teacherAwdReviewIndexWorkspaceSource).toContain('TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY')
     expect(teacherAwdReviewIndexWorkspaceSource).toContain(
       ':overline="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.overline"'

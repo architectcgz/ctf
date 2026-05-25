@@ -6,7 +6,7 @@ import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import TeacherAWDReviewContestDirectory from './TeacherAWDReviewContestDirectory.vue'
 import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
-import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
+import AwdReviewWorkspaceHeader from './AwdReviewWorkspaceHeader.vue'
 import {
   buildTeacherAwdReviewIndexSummaryItems,
   TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY,
@@ -56,7 +56,7 @@ const summaryItems = computed(() =>
 <template>
   <TeacherAWDReviewSurfaceShell>
     <div class="teacher-page">
-      <TeacherAWDReviewWorkspaceHeader
+      <AwdReviewWorkspaceHeader
         :overline="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.overline"
         :title="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.title"
         header-class="awd-review-index-header"
@@ -83,7 +83,7 @@ const summaryItems = computed(() =>
             {{ TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.refreshDirectoryAction }}
           </button>
         </template>
-      </TeacherAWDReviewWorkspaceHeader>
+      </AwdReviewWorkspaceHeader>
 
       <AwdReviewSummaryPanel
         :title="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.summaryTitle"

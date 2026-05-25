@@ -21,7 +21,7 @@ import AwdReviewStatusChip from './AwdReviewStatusChip.vue'
 import AwdReviewWorkspaceActions from './AwdReviewWorkspaceActions.vue'
 import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
-import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
+import AwdReviewWorkspaceHeader from './AwdReviewWorkspaceHeader.vue'
 import AwdReviewWorkspaceState from './AwdReviewWorkspaceState.vue'
 import {
   buildTeacherAwdReviewSummaryItems,
@@ -77,7 +77,7 @@ const summaryItems = computed(() =>
 <template>
   <TeacherAWDReviewSurfaceShell section-class="teacher-review-workspace">
     <div class="teacher-page">
-      <TeacherAWDReviewWorkspaceHeader
+      <AwdReviewWorkspaceHeader
         :overline="TEACHER_AWD_REVIEW_WORKSPACE_COPY.overline"
         :title="TEACHER_AWD_REVIEW_WORKSPACE_COPY.title"
         header-class="awd-review-detail-header"
@@ -100,7 +100,7 @@ const summaryItems = computed(() =>
             @export-report="emit('exportReport')"
           />
         </template>
-      </TeacherAWDReviewWorkspaceHeader>
+      </AwdReviewWorkspaceHeader>
 
       <AwdReviewSummaryPanel
         :title="activeSummaryTitle"
