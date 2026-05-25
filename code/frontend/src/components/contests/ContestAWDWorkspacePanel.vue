@@ -5,11 +5,11 @@ import {
   Sword,
   Terminal,
   ExternalLink,
-  RefreshCw,
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AWDDefenseOperationsPanel from '@/components/contests/awd/AWDDefenseOperationsPanel.vue'
+import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip.vue'
 import AWDDefenseServiceList from '@/components/contests/awd/AWDDefenseServiceList.vue'
 import AWDWorkspaceIntelColumn from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
@@ -132,6 +132,14 @@ const selectedDefenseServiceCard = computed(
   () => defenseServiceCards.value.find((card) => card.serviceId === selectedServiceId.value) || null
 )
 const selectedDefenseServiceTitle = computed(() => selectedDefenseServiceCard.value?.title || '')
+const currentRoundLabel = computed(() =>
+  currentRound.value ? `#${String(currentRound.value.round_number).padStart(2, '0')}` : '--'
+)
+const currentRoundStatusLabel = computed(() => formatRoundStatusLabel(currentRound.value?.status))
+const myTeamRank = computed(
+  () => scoreboardRows.value.find((row) => row.team_id === myTeam.value?.team_id)?.rank || '--'
+)
+const serviceCount = computed(() => workspace.value?.services.length || 0)
 const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
 const lastSyncedLabel = computed(() =>
   lastSyncedAt.value ? formatTime(lastSyncedAt.value) : '未同步'
@@ -373,47 +381,17 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
       @updated="refreshAll"
     />
 
-    <!-- HUD KPI Strip -->
-    <header class="awd-hud-strip">
-      <div class="hud-item">
-        <div class="hud-label">当前回合</div>
-        <div class="hud-value font-mono">
-          {{ currentRound ? `#${String(currentRound.round_number).padStart(2, '0')}` : '--' }}
-        </div>
-        <div class="hud-helper">
-          {{ formatRoundStatusLabel(currentRound?.status) }}
-        </div>
-      </div>
-      <div class="hud-item">
-        <div class="hud-label">我的战队</div>
-        <div class="hud-value">
-          {{ myTeam?.team_name || '未加入' }}
-        </div>
-        <div class="hud-helper">
-          排名 #{{ scoreboardRows.find((r) => r.team_id === myTeam?.team_id)?.rank || '--' }}
-        </div>
-      </div>
-      <div class="hud-item">
-        <div class="hud-label">战队服务</div>
-        <div class="hud-value font-mono">
-          {{ workspace?.services.length || 0 }}
-        </div>
-        <div class="hud-helper">运行中服务</div>
-      </div>
-      <div class="hud-item">
-        <div class="hud-label">最高分</div>
-        <div class="hud-value hud-value--accent font-mono">
-          {{ topScore }}
-        </div>
-        <div class="hud-helper">当前榜首</div>
-      </div>
-      <div class="hud-actions">
-        <button class="hud-refresh-btn" :disabled="loading" @click="refreshAll">
-          <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
-          <span>{{ lastSyncedLabel }}</span>
-        </button>
-      </div>
-    </header>
+    <AWDWorkspaceHudStrip
+      :current-round-label="currentRoundLabel"
+      :current-round-status-label="currentRoundStatusLabel"
+      :team-name="myTeam?.team_name || '未加入'"
+      :team-rank="myTeamRank"
+      :service-count="serviceCount"
+      :top-score="topScore"
+      :last-synced-label="lastSyncedLabel"
+      :loading="loading"
+      @refresh="refreshAll"
+    />
 
     <div v-if="loading && !workspace" class="war-room-loading">
       <div class="radar-scan" />
@@ -634,76 +612,12 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   padding-top: var(--space-4);
 }
 
-/* HUD Strip */
-.awd-hud-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr) auto;
-  gap: var(--space-4);
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  border-radius: 1rem;
-  padding: 1.25rem 1.5rem;
-  box-shadow: var(--color-shadow-soft);
-}
-
-.hud-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.hud-label {
-  font-size: 10px;
-  font-weight: 900;
-  color: var(--color-text-muted);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.hud-value {
-  font-size: var(--font-size-24);
-  font-weight: 900;
-  color: var(--color-text-primary);
-  margin: 0.25rem 0;
-}
-
-.hud-value--accent,
-.ops-panel__icon--accent {
-  color: var(--color-primary);
-}
-
 .ops-panel__icon--warning {
   color: var(--color-warning);
 }
 
 .ops-panel__icon--danger {
   color: var(--color-danger);
-}
-
-.hud-helper {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--color-primary);
-}
-
-.hud-refresh-btn {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0 1.25rem;
-  border-left: 1px solid var(--color-border-subtle);
-  color: var(--color-text-secondary);
-  font-size: 11px;
-  font-weight: 800;
-  cursor: pointer;
-  background: transparent;
-  transition: all 0.2s ease;
-}
-
-.hud-refresh-btn:hover {
-  color: var(--color-text-primary);
 }
 
 /* Layout Grid */

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
+import awdWorkspaceHudStripSource from '@/components/contests/awd/AWDWorkspaceHudStrip.vue?raw'
 import awdWorkspaceIntelColumnSource from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue?raw'
 import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
 import studentRoutesSource from '@/router/routes/studentRoutes.ts?raw'
@@ -18,9 +19,14 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('id="awd-target-challenge"')
     expect(awdWorkspaceSource).toContain('id="awd-target-search"')
     expect(awdWorkspaceSource).toContain('AWDDefenseOperationsPanel')
+    expect(awdWorkspaceSource).toContain('AWDWorkspaceHudStrip')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceIntelColumn')
     expect(awdWorkspaceSource).toContain('getSSHCommand')
     expect(awdWorkspaceSource).toContain('copySSHCommand')
+    expect(awdWorkspaceHudStripSource).toContain('当前回合')
+    expect(awdWorkspaceHudStripSource).toContain('我的战队')
+    expect(awdWorkspaceHudStripSource).toContain('战队服务')
+    expect(awdWorkspaceHudStripSource).toContain('最高分')
     expect(awdWorkspaceIntelColumnSource).toContain('战场情报')
     expect(awdWorkspaceIntelColumnSource).toContain('最近战报')
     expect(awdWorkspaceIntelColumnSource).toContain('data-testid="awd-feedback-challenge-title"')
