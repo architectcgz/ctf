@@ -38,7 +38,7 @@ function deferred<T>() {
 
 describe('TeacherStudentManagement', () => {
   const reportDialogStub = {
-    name: 'TeacherClassReportExportDialog',
+    name: 'ClassReportExportDialog',
     props: ['modelValue', 'defaultClassName'],
     template:
       '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" />',
@@ -110,7 +110,7 @@ describe('TeacherStudentManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -230,7 +230,7 @@ describe('TeacherStudentManagement', () => {
       "import { ClassReportExportDialog } from '@/components/teacher/reports'"
     )
     expect(teacherStudentManagementSource).not.toContain("from '@/api/teacher'")
-    expect(teacherStudentManagementSource).not.toContain('TeacherClassReportExportDialog.vue')
+    expect(teacherStudentManagementSource).not.toContain('ClassReportExportDialog.vue')
     expect(teacherStudentManagementSource).not.toContain('getStudentsDirectory')
     expect(teacherStudentManagementSource).not.toContain('const directoryParams = computed')
   })
@@ -258,7 +258,7 @@ describe('TeacherStudentManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -287,7 +287,7 @@ describe('TeacherStudentManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -367,7 +367,7 @@ describe('TeacherStudentManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -493,7 +493,7 @@ describe('TeacherStudentManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -603,7 +603,7 @@ describe('TeacherStudentManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -669,7 +669,7 @@ describe('TeacherStudentManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -745,7 +745,7 @@ describe('TeacherStudentManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })

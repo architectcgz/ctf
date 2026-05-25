@@ -54,7 +54,7 @@ vi.mock('@/api/teaching', () => teachingApiMocks)
 
 describe('TeacherStudentAnalysis', () => {
   const reportDialogStub = {
-    name: 'TeacherClassReportExportDialog',
+    name: 'ClassReportExportDialog',
     props: ['modelValue', 'defaultClassName'],
     template:
       '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" />',
@@ -372,7 +372,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -434,7 +434,7 @@ describe('TeacherStudentAnalysis', () => {
     expect(teacherStudentAnalysisSource).not.toContain(
       '@/components/teacher/class-management/StudentAnalysisPage.vue'
     )
-    expect(teacherStudentAnalysisSource).not.toContain('TeacherClassReportExportDialog.vue')
+    expect(teacherStudentAnalysisSource).not.toContain('ClassReportExportDialog.vue')
     expect(studentAnalysisPageModelSource).toContain('useReviewWorkspace()')
     expect(studentAnalysisPageModelSource).toContain('useSubmissionReviewFlows({')
     expect(studentAnalysisPageModelSource).not.toContain('useTeacherReviewWorkspace')
@@ -480,7 +480,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -504,7 +504,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -545,7 +545,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -560,7 +560,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -589,7 +589,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -638,7 +638,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -674,7 +674,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -708,7 +708,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -736,7 +736,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -761,7 +761,7 @@ describe('TeacherStudentAnalysis', () => {
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
           StudentAnalysisPage: {
             name: 'StudentAnalysisPage',
             template:
@@ -794,7 +794,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -819,7 +819,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })

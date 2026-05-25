@@ -34,6 +34,6 @@ describe('PlatformStudentAnalysis route owner', () => {
     expect(platformViewSource).not.toContain(
       '@/components/teacher/class-management/StudentAnalysisPage.vue'
     )
-    expect(platformViewSource).not.toContain('TeacherClassReportExportDialog.vue')
+    expect(platformViewSource).not.toContain('ClassReportExportDialog.vue')
   })
 })

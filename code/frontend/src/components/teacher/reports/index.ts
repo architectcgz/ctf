@@ -1,1 +1,1 @@
-export { default as ClassReportExportDialog } from './TeacherClassReportExportDialog.vue'
+export { default as ClassReportExportDialog } from './ClassReportExportDialog.vue'

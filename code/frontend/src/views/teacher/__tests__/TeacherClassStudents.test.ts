@@ -55,7 +55,7 @@ function deferred<T>() {
 
 describe('TeacherClassStudents', () => {
   const reportDialogStub = {
-    name: 'TeacherClassReportExportDialog',
+    name: 'ClassReportExportDialog',
     props: ['modelValue', 'defaultClassName', 'defaultFromDate', 'defaultToDate'],
     template:
       '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" :data-default-from-date="defaultFromDate || \'\'" :data-default-to-date="defaultToDate || \'\'" />',
@@ -187,7 +187,7 @@ describe('TeacherClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -281,7 +281,7 @@ describe('TeacherClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -306,7 +306,7 @@ describe('TeacherClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -332,7 +332,7 @@ describe('TeacherClassStudents', () => {
     expect(teacherClassStudentsSource).not.toContain(
       '@/components/teacher/class-management/ClassStudentsPage.vue'
     )
-    expect(teacherClassStudentsSource).not.toContain('TeacherClassReportExportDialog.vue')
+    expect(teacherClassStudentsSource).not.toContain('ClassReportExportDialog.vue')
     expect(classStudentsPageModelSource).toContain('parseClassInsightWindowQuery')
     expect(classStudentsPageModelSource).toContain('buildClassInsightWindowQuery')
     expect(classStudentsPageModelSource).not.toContain('parseTeacherClassInsightWindowQuery')
@@ -426,7 +426,7 @@ describe('TeacherClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -454,7 +454,7 @@ describe('TeacherClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -516,7 +516,7 @@ describe('TeacherClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -547,7 +547,7 @@ describe('TeacherClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -672,7 +672,7 @@ describe('TeacherClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -723,7 +723,7 @@ describe('TeacherClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -768,7 +768,7 @@ describe('TeacherClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })

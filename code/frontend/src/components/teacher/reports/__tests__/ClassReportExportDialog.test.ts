@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import TeacherClassReportExportDialog from '../TeacherClassReportExportDialog.vue'
-import teacherClassReportExportDialogSource from '../TeacherClassReportExportDialog.vue?raw'
+import ClassReportExportDialog from '../ClassReportExportDialog.vue'
+import classReportExportDialogSource from '../ClassReportExportDialog.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const {
@@ -24,7 +24,7 @@ const {
   getReportStatusMock: vi.fn(),
 }))
 
-vi.mock('@/api/teacher', () => ({
+vi.mock('@/api/teaching', () => ({
   exportClassReport: exportClassReportMock,
   getClassStudents: getClassStudentsMock,
   getClassReview: getClassReviewMock,
@@ -37,7 +37,7 @@ vi.mock('@/api/assessment', () => ({
   getReportStatus: getReportStatusMock,
 }))
 
-describe('TeacherClassReportExportDialog', () => {
+describe('ClassReportExportDialog', () => {
   let pinia: ReturnType<typeof createPinia>
 
   const dialogStub = {
@@ -119,7 +119,7 @@ describe('TeacherClassReportExportDialog', () => {
   })
 
   it('打开后会加载班级预览', async () => {
-    const wrapper = mount(TeacherClassReportExportDialog, {
+    const wrapper = mount(ClassReportExportDialog, {
       props: {
         modelValue: true,
         defaultClassName: 'Class A',
@@ -155,17 +155,17 @@ describe('TeacherClassReportExportDialog', () => {
   })
 
   it('教师班级报告导出弹窗应接入后台共享弹窗与表单原语', () => {
-    expect(teacherClassReportExportDialogSource).toContain(
+    expect(classReportExportDialogSource).toContain(
       "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
     )
-    expect(teacherClassReportExportDialogSource).toContain('<AdminSurfaceModal')
-    expect(teacherClassReportExportDialogSource).not.toContain('<ElDialog')
-    expect(teacherClassReportExportDialogSource).toContain('class="ui-field')
-    expect(teacherClassReportExportDialogSource).toContain('class="ui-control-wrap')
-    expect(teacherClassReportExportDialogSource).toContain('class="ui-control')
-    expect(teacherClassReportExportDialogSource).toContain('class="ui-btn ui-btn--secondary')
-    expect(teacherClassReportExportDialogSource).toContain('class="ui-btn ui-btn--primary')
-    expect(teacherClassReportExportDialogSource).toContain('type="date"')
+    expect(classReportExportDialogSource).toContain('<AdminSurfaceModal')
+    expect(classReportExportDialogSource).not.toContain('<ElDialog')
+    expect(classReportExportDialogSource).toContain('class="ui-field')
+    expect(classReportExportDialogSource).toContain('class="ui-control-wrap')
+    expect(classReportExportDialogSource).toContain('class="ui-control')
+    expect(classReportExportDialogSource).toContain('class="ui-btn ui-btn--secondary')
+    expect(classReportExportDialogSource).toContain('class="ui-btn ui-btn--primary')
+    expect(classReportExportDialogSource).toContain('type="date"')
   })
 
   it('点击创建导出任务会调用 exportClassReport', async () => {
@@ -179,7 +179,7 @@ describe('TeacherClassReportExportDialog', () => {
       expires_at: '2026-03-07T12:00:00Z',
     })
 
-    const wrapper = mount(TeacherClassReportExportDialog, {
+    const wrapper = mount(ClassReportExportDialog, {
       props: {
         modelValue: true,
         defaultClassName: 'Class A',
@@ -222,7 +222,7 @@ describe('TeacherClassReportExportDialog', () => {
       filename: 'class-a-report.pdf',
     })
 
-    const wrapper = mount(TeacherClassReportExportDialog, {
+    const wrapper = mount(ClassReportExportDialog, {
       props: {
         modelValue: true,
         defaultClassName: 'Class A',

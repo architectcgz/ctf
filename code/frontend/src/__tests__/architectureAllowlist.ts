@@ -58,7 +58,7 @@ export const componentFeatureImportAllowlist = new Set([
   'components/scoreboard/ScoreboardRealtimeBridge.vue -> @/features/scoreboard',
   'components/teacher/TeacherInterventionPanel.vue -> @/features/teacher-student-analysis',
   'components/teacher/dashboard/TeacherDashboardPage.vue -> @/features/teacher-dashboard',
-  'components/teacher/reports/TeacherClassReportExportDialog.vue -> @/features/teacher-class-report-export',
+  'components/teacher/reports/ClassReportExportDialog.vue -> @/features/teacher-class-report-export',
 ])
 
 export const widgetLegacyComponentImportAllowlist = new Set([

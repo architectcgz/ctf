@@ -44,7 +44,7 @@ vi.mock('@/api/teaching', () => teachingApiMocks)
 
 describe('PlatformClassStudents', () => {
   const reportDialogStub = {
-    name: 'TeacherClassReportExportDialog',
+    name: 'ClassReportExportDialog',
     props: ['modelValue', 'defaultClassName', 'defaultFromDate', 'defaultToDate'],
     template:
       '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" :data-default-from-date="defaultFromDate || \'\'" :data-default-to-date="defaultToDate || \'\'" />',
@@ -127,7 +127,7 @@ describe('PlatformClassStudents', () => {
     expect(platformClassStudentsSource).not.toContain(
       '@/components/teacher/class-management/ClassStudentsPage.vue'
     )
-    expect(platformClassStudentsSource).not.toContain('TeacherClassReportExportDialog.vue')
+    expect(platformClassStudentsSource).not.toContain('ClassReportExportDialog.vue')
     expect(classStudentsPageSource).toContain('学生列表')
 
     const wrapper = mount(PlatformClassStudents, {
@@ -139,7 +139,7 @@ describe('PlatformClassStudents', () => {
         },
         stubs: {
           LineChart: true,
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })

@@ -19,7 +19,7 @@ api / handler / service / repository / readmodel / frontend page / modal / tests
 - `code/frontend/src/features/teacher-class-students/model/useTeacherClassStudentsPage.ts`
 - `code/frontend/src/features/teacher-class-report-export/model/useTeacherClassReportExport.ts`
 - `code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue`
-- `code/frontend/src/components/teacher/reports/TeacherClassReportExportDialog.vue`
+- `code/frontend/src/components/teacher/reports/ClassReportExportDialog.vue`
 - `docs/contracts/api-contract-v1.md`
 - `docs/contracts/openapi-v1.yaml`
 - `docs/architecture/features/教学复盘优化设计.md`
@@ -99,8 +99,8 @@ extend_existing
 - `code/frontend/src/features/teacher-class-report-export/model/useTeacherClassReportExport.ts`
 - `code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue`
 - `code/frontend/src/components/teacher/TeacherClassTrendPanel.vue`
-- `code/frontend/src/components/teacher/reports/TeacherClassReportExportDialog.vue`
-- `code/frontend/src/components/teacher/reports/__tests__/TeacherClassReportExportDialog.test.ts`
+- `code/frontend/src/components/teacher/reports/ClassReportExportDialog.vue`
+- `code/frontend/src/components/teacher/reports/__tests__/ClassReportExportDialog.test.ts`
 - `code/frontend/src/views/teacher/__tests__/TeacherClassStudents.test.ts`
 - `docs/contracts/api-contract-v1.md`
 - `docs/contracts/openapi-v1.yaml`

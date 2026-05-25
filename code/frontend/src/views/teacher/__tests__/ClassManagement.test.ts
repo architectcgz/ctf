@@ -5,7 +5,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ClassManagement from '../ClassManagement.vue'
 import classManagementViewSource from '../ClassManagement.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
-import classReportExportDialogSource from '@/components/teacher/reports/TeacherClassReportExportDialog.vue?raw'
+import classReportExportDialogSource from '@/components/teacher/reports/ClassReportExportDialog.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const ElTable = { template: '<div><slot /></div>' }
@@ -30,7 +30,7 @@ vi.mock('@/api/teacher', () => teacherApiMocks)
 
 describe('ClassManagement', () => {
   const reportDialogStub = {
-    name: 'TeacherClassReportExportDialog',
+    name: 'ClassReportExportDialog',
     props: ['modelValue', 'defaultClassName'],
     template:
       '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" />',
@@ -70,7 +70,7 @@ describe('ClassManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -125,7 +125,7 @@ describe('ClassManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -175,7 +175,7 @@ describe('ClassManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -221,7 +221,7 @@ describe('ClassManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -302,7 +302,7 @@ describe('ClassManagement', () => {
       "import { ClassReportExportDialog } from '@/components/teacher/reports'"
     )
     expect(classManagementViewSource).not.toContain("from '@/api/teacher'")
-    expect(classManagementViewSource).not.toContain('TeacherClassReportExportDialog.vue')
+    expect(classManagementViewSource).not.toContain('ClassReportExportDialog.vue')
     expect(classManagementViewSource).not.toContain('getClasses')
     expect(classManagementViewSource).not.toContain('const totalPages = computed')
     expect(classReportExportDialogSource).toContain(
@@ -320,7 +320,7 @@ describe('ClassManagement', () => {
           ElButton,
         },
         stubs: {
-          TeacherClassReportExportDialog: reportDialogStub,
+          ClassReportExportDialog: reportDialogStub,
         },
       },
     })
