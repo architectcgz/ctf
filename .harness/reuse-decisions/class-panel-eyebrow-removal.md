@@ -6,7 +6,7 @@ component / layout
 ## Existing code searched
 - code/frontend/src/components/teacher/ClassTrendPanel.vue
 - code/frontend/src/components/teacher/ClassReviewPanel.vue
-- code/frontend/src/components/teacher/TeacherClassInsightsPanel.vue
+- code/frontend/src/components/teacher/ClassInsightsPanel.vue
 - code/frontend/src/components/teacher/TeacherInterventionPanel.vue
 - code/frontend/src/components/teacher/teacher-panel-shell.css
 - code/frontend/src/components/teacher/teacher-workspace-subpanel.css
@@ -28,7 +28,7 @@ refactor_existing
 - .harness/reuse-decisions/class-panel-eyebrow-removal.md
 - code/frontend/src/components/teacher/ClassTrendPanel.vue
 - code/frontend/src/components/teacher/ClassReviewPanel.vue
-- code/frontend/src/components/teacher/TeacherClassInsightsPanel.vue
+- code/frontend/src/components/teacher/ClassInsightsPanel.vue
 - code/frontend/src/components/teacher/TeacherInterventionPanel.vue
 - code/frontend/src/components/teacher/teacher-panel-shell.css
 - code/frontend/src/components/teacher/teacher-workspace-subpanel.css

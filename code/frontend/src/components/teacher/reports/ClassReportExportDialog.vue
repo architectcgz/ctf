@@ -4,7 +4,7 @@ import { FileDown, RefreshCcw } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
-import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
+import ClassInsightsPanel from '@/components/teacher/ClassInsightsPanel.vue'
 import ClassReviewPanel from '@/components/teacher/ClassReviewPanel.vue'
 import ClassTrendPanel from '@/components/teacher/ClassTrendPanel.vue'
 import { useClassReportExport } from '@/features/teacher-class-report-export'
@@ -387,7 +387,7 @@ function closeDialog(): void {
                 :class-name="previewClassName"
               />
 
-              <TeacherClassInsightsPanel
+              <ClassInsightsPanel
                 :students="previewStudents"
                 :class-name="previewClassName"
               />

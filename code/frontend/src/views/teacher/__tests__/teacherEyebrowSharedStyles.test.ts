@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import teacherClassInsightsSource from '@/components/teacher/TeacherClassInsightsPanel.vue?raw'
+import teacherClassInsightsSource from '@/components/teacher/ClassInsightsPanel.vue?raw'
 import teacherClassReviewSource from '@/components/teacher/ClassReviewPanel.vue?raw'
 import teacherClassTrendSource from '@/components/teacher/ClassTrendPanel.vue?raw'
 import teacherInterventionSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'

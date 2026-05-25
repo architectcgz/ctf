@@ -11,7 +11,7 @@ import type {
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
+import ClassInsightsPanel from '@/components/teacher/ClassInsightsPanel.vue'
 import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPanel.vue'
 import ClassReviewPanel from '@/components/teacher/ClassReviewPanel.vue'
 import ClassTrendPanel from '@/components/teacher/ClassTrendPanel.vue'
@@ -132,7 +132,7 @@ function resolveWorkspacePanelComponent(tabKey: WorkspacePanelTab): Component {
     case 'review':
       return ClassReviewPanel
     case 'insight':
-      return TeacherClassInsightsPanel
+      return ClassInsightsPanel
     case 'action':
       return TeacherInterventionPanel
   }

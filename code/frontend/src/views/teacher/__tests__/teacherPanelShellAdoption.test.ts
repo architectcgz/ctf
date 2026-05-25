@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import classTrendPanelSource from '@/components/teacher/ClassTrendPanel.vue?raw'
-import classInsightsPanelSource from '@/components/teacher/TeacherClassInsightsPanel.vue?raw'
+import classInsightsPanelSource from '@/components/teacher/ClassInsightsPanel.vue?raw'
 import classReviewPanelSource from '@/components/teacher/ClassReviewPanel.vue?raw'
 import interventionPanelSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
 
