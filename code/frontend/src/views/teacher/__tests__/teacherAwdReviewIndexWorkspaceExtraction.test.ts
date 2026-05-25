@@ -11,7 +11,7 @@ import awdReviewIndexFiltersSource from '@/widgets/awd-review-workspace/AwdRevie
 import awdReviewDirectorySectionSource from '@/widgets/awd-review-workspace/AwdReviewDirectorySection.vue?raw'
 import awdReviewContestHeadSource from '@/widgets/awd-review-workspace/AwdReviewContestHead.vue?raw'
 import awdReviewContestRowSource from '@/widgets/awd-review-workspace/AwdReviewContestRow.vue?raw'
-import awdReviewContestRowCtaSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRowCta.vue?raw'
+import awdReviewContestRowCtaSource from '@/widgets/awd-review-workspace/AwdReviewContestRowCta.vue?raw'
 import awdReviewContestRowMetricsSource from '@/widgets/awd-review-workspace/AwdReviewContestRowMetrics.vue?raw'
 import awdReviewContestRowStatusTagsSource from '@/widgets/awd-review-workspace/AwdReviewContestRowStatusTags.vue?raw'
 import awdReviewDirectoryStateSource from '@/widgets/awd-review-workspace/AwdReviewDirectoryState.vue?raw'
@@ -58,7 +58,7 @@ describe('Teacher AWD review index workspace extraction', () => {
     expect(awdReviewDirectoryStateSource).toContain('title="AWD复盘目录加载失败"')
     expect(awdReviewContestHeadSource).toContain('class="teacher-directory-head"')
     expect(awdReviewContestHeadSource).toContain("AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA")
-    expect(awdReviewContestRowSource).toContain('<TeacherAWDReviewContestRowCta')
+    expect(awdReviewContestRowSource).toContain('<AwdReviewContestRowCta')
     expect(awdReviewContestRowSource).toContain('<AwdReviewContestRowMetrics')
     expect(awdReviewContestRowSource).toContain('<AwdReviewContestRowStatusTags')
     expect(awdReviewContestRowSource).toContain("AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA")

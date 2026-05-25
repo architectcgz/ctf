@@ -5,7 +5,7 @@ import {
   AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA,
   type AwdReviewDirectoryColumnKey,
 } from './model/directory'
-import TeacherAWDReviewContestRowCta from './TeacherAWDReviewContestRowCta.vue'
+import AwdReviewContestRowCta from './AwdReviewContestRowCta.vue'
 import AwdReviewContestRowMetrics from './AwdReviewContestRowMetrics.vue'
 import AwdReviewContestRowStatusTags from './AwdReviewContestRowStatusTags.vue'
 
@@ -68,7 +68,7 @@ const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
     </div>
 
     <div :class="rowClassByKey.action">
-      <TeacherAWDReviewContestRowCta />
+      <AwdReviewContestRowCta />
     </div>
   </button>
 </template>

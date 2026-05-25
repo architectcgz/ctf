@@ -39,7 +39,7 @@ AWD 复盘已经同时被 teacher / platform 两侧 route view 复用，但共�
 - `code/frontend/src/widgets/awd-review-workspace/AwdReviewContestDirectory.vue`
 - `code/frontend/src/widgets/awd-review-workspace/AwdReviewContestHead.vue`
 - `code/frontend/src/widgets/awd-review-workspace/AwdReviewContestRow.vue`
-- `code/frontend/src/widgets/awd-review-workspace/TeacherAWDReviewContestRowCta.vue`
+- `code/frontend/src/widgets/awd-review-workspace/AwdReviewContestRowCta.vue`
 - `code/frontend/src/widgets/awd-review-workspace/AwdReviewContestRowMetrics.vue`
 - `code/frontend/src/widgets/awd-review-workspace/AwdReviewContestRowStatusTags.vue`
 - `code/frontend/src/widgets/awd-review-workspace/AwdReviewDirectorySection.vue`
