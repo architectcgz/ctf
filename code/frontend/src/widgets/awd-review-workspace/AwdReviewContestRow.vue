@@ -7,7 +7,7 @@ import {
 } from './model/directory'
 import TeacherAWDReviewContestRowCta from './TeacherAWDReviewContestRowCta.vue'
 import AwdReviewContestRowMetrics from './AwdReviewContestRowMetrics.vue'
-import TeacherAWDReviewContestRowStatusTags from './TeacherAWDReviewContestRowStatusTags.vue'
+import AwdReviewContestRowStatusTags from './AwdReviewContestRowStatusTags.vue'
 
 defineProps<{
   contest: TeacherAWDReviewContestItemData
@@ -61,7 +61,7 @@ const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
     </div>
 
     <div :class="rowClassByKey.status">
-      <TeacherAWDReviewContestRowStatusTags
+      <AwdReviewContestRowStatusTags
         :status-label="contestStatusLabel(contest.status)"
         :export-ready="contest.export_ready"
       />

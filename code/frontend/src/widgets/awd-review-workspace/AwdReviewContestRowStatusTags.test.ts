@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import TeacherAWDReviewContestRowStatusTags from './TeacherAWDReviewContestRowStatusTags.vue'
+import AwdReviewContestRowStatusTags from './AwdReviewContestRowStatusTags.vue'
 
-describe('TeacherAWDReviewContestRowStatusTags', () => {
+describe('AwdReviewContestRowStatusTags', () => {
   it('导出可用时应显示可导出标签', () => {
-    const wrapper = mount(TeacherAWDReviewContestRowStatusTags, {
+    const wrapper = mount(AwdReviewContestRowStatusTags, {
       props: {
         statusLabel: '进行中',
         exportReady: true,
@@ -18,7 +18,7 @@ describe('TeacherAWDReviewContestRowStatusTags', () => {
   })
 
   it('导出不可用时应显示实时复盘标签', () => {
-    const wrapper = mount(TeacherAWDReviewContestRowStatusTags, {
+    const wrapper = mount(AwdReviewContestRowStatusTags, {
       props: {
         statusLabel: '已结束',
         exportReady: false,
