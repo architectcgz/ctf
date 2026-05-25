@@ -3,12 +3,6 @@ import { computed, ref, watch } from 'vue'
 import {
   ShieldAlert,
   Sword,
-  Target,
-  Activity,
-  Wifi,
-  Zap,
-  BarChart3,
-  History,
   Terminal,
   ExternalLink,
   RefreshCw,
@@ -17,6 +11,7 @@ import {
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AWDDefenseOperationsPanel from '@/components/contests/awd/AWDDefenseOperationsPanel.vue'
 import AWDDefenseServiceList from '@/components/contests/awd/AWDDefenseServiceList.vue'
+import AWDWorkspaceIntelColumn from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
 import {
   getVSCodeSSHCommand,
@@ -49,7 +44,6 @@ const {
   workspace,
   scoreboardRows,
   loading,
-  error,
   hasTeam,
   submitResult,
   startingServiceKey,
@@ -59,7 +53,6 @@ const {
   sshAccessByServiceId,
   openingTargetKey,
   submittingKey,
-  shouldAutoRefresh,
   lastSyncedAt,
   refreshAll,
   restartService,
@@ -620,66 +613,15 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
         </section>
       </main>
 
-      <!-- 3. Intelligence (Right) -->
-      <aside class="war-room-col column-intel">
-        <section class="ops-panel">
-          <header class="ops-panel__header">
-            <BarChart3 class="ops-panel__icon ops-panel__icon--accent h-4 w-4" />
-            <h3 class="ops-panel__title">战场情报</h3>
-          </header>
-          <div class="ops-panel__content custom-scrollbar">
-            <div
-              v-for="item in scoreboardRows.slice(0, 10)"
-              :key="item.team_id"
-              class="intel-row"
-              :class="{ 'is-me': item.team_id === myTeam?.team_id }"
-            >
-              <span class="intel-rank">#{{ item.rank }}</span>
-              <span class="intel-name truncate">{{ item.team_name }}</span>
-              <span class="intel-score font-mono">{{ item.score }}</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="ops-panel">
-          <header class="ops-panel__header">
-            <History class="h-4 w-4 text-purple-500" />
-            <h3 class="ops-panel__title">最近战报</h3>
-          </header>
-          <div class="ops-panel__content custom-scrollbar">
-            <div
-              v-for="event in workspace?.recent_events"
-              :key="event.id"
-              class="feedback-item"
-              :class="event.direction"
-            >
-              <div class="flex items-center justify-between text-[10px] font-black">
-                <span>{{ eventDirectionLabel(event.direction) }}</span>
-                <span>{{ formatTime(event.created_at) }}</span>
-              </div>
-              <div class="mt-1 text-xs">
-                <span>{{ event.peer_team_name }} / </span>
-                <span data-testid="awd-feedback-challenge-title">{{
-                  getChallengeTitleForEvent(event)
-                }}</span>
-              </div>
-              <div class="feedback-ref">
-                {{ formatServiceRef(event.service_id) }}
-              </div>
-              <div class="mt-1 flex items-center justify-between font-mono text-[10px]">
-                <span
-                  :class="event.is_success ? 'feedback-result--success' : 'feedback-result--muted'"
-                  >{{ eventResultLabel(event.is_success) }}</span
-                >
-                <span class="feedback-score-gain">+{{ event.score_gained }}</span>
-              </div>
-            </div>
-            <div v-if="workspace?.recent_events.length === 0" class="panel-note">
-              暂无最近战报。
-            </div>
-          </div>
-        </section>
-      </aside>
+      <AWDWorkspaceIntelColumn
+        :scoreboard-rows="scoreboardRows"
+        :my-team-id="myTeam?.team_id"
+        :recent-events="workspace?.recent_events || []"
+        :get-challenge-title-for-event="getChallengeTitleForEvent"
+        :event-direction-label="eventDirectionLabel"
+        :event-result-label="eventResultLabel"
+        :format-service-ref="formatServiceRef"
+      />
     </div>
   </div>
 </template>
@@ -785,13 +727,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   grid-area: attack;
 }
 
-.column-intel {
-  grid-area: intel;
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: var(--space-5);
-}
-
 .ops-panel {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-default);
@@ -801,10 +736,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   min-height: 0;
   box-shadow: var(--color-shadow-soft);
   overflow: hidden;
-}
-
-.column-intel .ops-panel {
-  min-height: 18rem;
 }
 
 .ops-panel__header {
@@ -903,8 +834,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   gap: 0.5rem;
 }
 
-.target-ref,
-.feedback-ref {
+.target-ref {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -1007,65 +937,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   cursor: not-allowed;
 }
 
-.feedback-result--success,
-.feedback-score-gain {
-  color: var(--color-success);
-}
-
-.feedback-result--muted {
-  color: var(--color-text-muted);
-}
-
-/* Intel Components */
-.intel-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0;
-  border-bottom: 1px solid var(--color-border-subtle);
-  font-size: 13px;
-}
-
-.intel-row.is-me {
-  color: var(--color-primary);
-}
-.intel-rank {
-  font-weight: 900;
-  color: var(--color-text-muted);
-  width: 2rem;
-}
-.intel-name {
-  flex: 1;
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-.intel-score {
-  font-weight: 900;
-  color: var(--color-text-primary);
-}
-.is-me .intel-name,
-.is-me .intel-score {
-  color: var(--color-primary);
-}
-
-.feedback-item {
-  background: var(--color-bg-elevated);
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  border-left: 2px solid var(--color-border-default);
-  margin-bottom: 0.75rem;
-}
-
-.feedback-item.attack_out {
-  border-left-color: var(--color-danger);
-}
-.feedback-item.attack_in {
-  border-left-color: var(--color-warning);
-}
-.feedback-ref {
-  margin-top: 0.35rem;
-}
-
 .panel-note {
   font-size: 12px;
   font-weight: 700;
@@ -1145,9 +1016,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
       'defense'
       'attack'
       'intel';
-  }
-  .column-intel {
-    grid-template-columns: 1fr;
   }
 }
 

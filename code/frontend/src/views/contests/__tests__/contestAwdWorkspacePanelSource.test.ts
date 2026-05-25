@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
+import awdWorkspaceIntelColumnSource from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue?raw'
 import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
 import studentRoutesSource from '@/router/routes/studentRoutes.ts?raw'
 
@@ -9,8 +10,6 @@ describe('ContestAWDWorkspacePanel source', () => {
   it('AWD 工作台应保留当前战情面板结构与运行态 service 标识', () => {
     expect(awdWorkspaceSource).toContain('我的防守')
     expect(awdWorkspaceSource).toContain('攻击向量')
-    expect(awdWorkspaceSource).toContain('战场情报')
-    expect(awdWorkspaceSource).toContain('最近战报')
     expect(awdWorkspaceSource).toContain('目标题目')
     expect(awdWorkspaceSource).toContain('队伍筛选')
     expect(awdWorkspaceSource).toContain('输入获取到的 Flag...')
@@ -18,10 +17,13 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('formatServiceRef')
     expect(awdWorkspaceSource).toContain('id="awd-target-challenge"')
     expect(awdWorkspaceSource).toContain('id="awd-target-search"')
-    expect(awdWorkspaceSource).toContain('data-testid="awd-feedback-challenge-title"')
     expect(awdWorkspaceSource).toContain('AWDDefenseOperationsPanel')
+    expect(awdWorkspaceSource).toContain('AWDWorkspaceIntelColumn')
     expect(awdWorkspaceSource).toContain('getSSHCommand')
     expect(awdWorkspaceSource).toContain('copySSHCommand')
+    expect(awdWorkspaceIntelColumnSource).toContain('战场情报')
+    expect(awdWorkspaceIntelColumnSource).toContain('最近战报')
+    expect(awdWorkspaceIntelColumnSource).toContain('data-testid="awd-feedback-challenge-title"')
     expect(awdDefenseConnectionPanelSource).toContain('SSH 连接')
     expect(awdDefenseConnectionPanelSource).toContain('复制 SSH 命令')
     expect(awdDefenseConnectionPanelSource).toContain('复制密码')
