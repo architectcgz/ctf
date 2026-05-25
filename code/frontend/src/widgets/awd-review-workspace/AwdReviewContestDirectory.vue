@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
+import AwdReviewDirectorySection from './AwdReviewDirectorySection.vue'
 import AwdReviewIndexFilters from './AwdReviewIndexFilters.vue'
 import TeacherAWDReviewContestHead from './TeacherAWDReviewContestHead.vue'
 import TeacherAWDReviewContestRow from './TeacherAWDReviewContestRow.vue'
-import TeacherAWDReviewDirectorySection from './TeacherAWDReviewDirectorySection.vue'
 import TeacherAWDReviewDirectoryState from './TeacherAWDReviewDirectoryState.vue'
 
 type ContestStatusOption = {
@@ -36,7 +36,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <TeacherAWDReviewDirectorySection
+  <AwdReviewDirectorySection
     :total-count="total"
   >
     <template #filters>
@@ -78,7 +78,7 @@ const emit = defineEmits<{
         @change-page="emit('changePage', $event)"
       />
     </TeacherAWDReviewDirectoryState>
-  </TeacherAWDReviewDirectorySection>
+  </AwdReviewDirectorySection>
 </template>
 
 <style scoped>
