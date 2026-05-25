@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import awdDefenseAlertsPanelSource from '@/components/contests/awd/AWDDefenseAlertsPanel.vue?raw'
+import awdDefenseColumnSource from '@/components/contests/awd/AWDDefenseColumn.vue?raw'
 import awdAttackTargetGridSource from '@/components/contests/awd/AWDAttackTargetGrid.vue?raw'
 import awdAttackResultFooterSource from '@/components/contests/awd/AWDAttackResultFooter.vue?raw'
 import awdAttackToolbarSource from '@/components/contests/awd/AWDAttackToolbar.vue?raw'
@@ -13,19 +14,22 @@ import studentRoutesSource from '@/router/routes/studentRoutes.ts?raw'
 
 describe('ContestAWDWorkspacePanel source', () => {
   it('AWD 工作台应保留当前战情面板结构与运行态 service 标识', () => {
-    expect(awdWorkspaceSource).toContain('我的防守')
     expect(awdWorkspaceSource).toContain('攻击向量')
     expect(awdWorkspaceSource).toContain('当前竞赛暂无可部署服务。')
     expect(awdWorkspaceSource).toContain('formatServiceRef')
-    expect(awdWorkspaceSource).toContain('AWDDefenseAlertsPanel')
+    expect(awdWorkspaceSource).toContain('AWDDefenseColumn')
     expect(awdWorkspaceSource).toContain('AWDAttackToolbar')
     expect(awdWorkspaceSource).toContain('AWDAttackTargetGrid')
     expect(awdWorkspaceSource).toContain('AWDAttackResultFooter')
-    expect(awdWorkspaceSource).toContain('AWDDefenseOperationsPanel')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceHudStrip')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceIntelColumn')
     expect(awdWorkspaceSource).toContain('getSSHCommand')
     expect(awdWorkspaceSource).toContain('copySSHCommand')
+    expect(awdDefenseColumnSource).toContain('我的防守')
+    expect(awdDefenseColumnSource).toContain('AWDDefenseAlertsPanel')
+    expect(awdDefenseColumnSource).toContain('AWDDefenseServiceList')
+    expect(awdDefenseColumnSource).toContain('AWDDefenseOperationsPanel')
+    expect(awdDefenseColumnSource).toContain("emit('refresh')")
     expect(awdDefenseAlertsPanelSource).toContain('defense-alert')
     expect(awdDefenseAlertsPanelSource).toContain('alert.challengeTitle')
     expect(awdDefenseAlertsPanelSource).toContain('alert.statusLabel')

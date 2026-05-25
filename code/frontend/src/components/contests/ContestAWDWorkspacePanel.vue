@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import {
-  ShieldAlert,
-  Sword,
-  Terminal,
-} from 'lucide-vue-next'
+import { Sword } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import AWDDefenseAlertsPanel from '@/components/contests/awd/AWDDefenseAlertsPanel.vue'
+import AWDDefenseColumn from '@/components/contests/awd/AWDDefenseColumn.vue'
 import AWDAttackTargetGrid from '@/components/contests/awd/AWDAttackTargetGrid.vue'
 import AWDAttackResultFooter from '@/components/contests/awd/AWDAttackResultFooter.vue'
 import AWDAttackToolbar from '@/components/contests/awd/AWDAttackToolbar.vue'
-import AWDDefenseOperationsPanel from '@/components/contests/awd/AWDDefenseOperationsPanel.vue'
 import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip.vue'
-import AWDDefenseServiceList from '@/components/contests/awd/AWDDefenseServiceList.vue'
 import AWDWorkspaceIntelColumn from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
 import {
@@ -141,6 +135,14 @@ const selectedDefenseServiceCard = computed(
   () => defenseServiceCards.value.find((card) => card.serviceId === selectedServiceId.value) || null
 )
 const selectedDefenseServiceTitle = computed(() => selectedDefenseServiceCard.value?.title || '')
+const selectedDefenseActionPending = computed(() =>
+  selectedServiceId.value ? Boolean(defenseServiceActionPendingById.value[selectedServiceId.value]) : false
+)
+const selectedDefenseAccess = computed(() => getSSHAccess(selectedServiceId.value))
+const selectedDefenseCopiedCommand = computed(() => copiedSSHCommandKey.value === selectedServiceId.value)
+const selectedDefenseCopiedPassword = computed(
+  () => copiedSSHPasswordKey.value === selectedServiceId.value
+)
 const currentRoundLabel = computed(() =>
   currentRound.value ? `#${String(currentRound.value.round_number).padStart(2, '0')}` : '--'
 )
@@ -416,52 +418,28 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
     />
 
     <div v-else class="war-room-grid">
-      <!-- 1. Defense Monitor (Left) -->
-      <aside class="war-room-col column-defense">
-        <section class="ops-panel">
-          <header class="ops-panel__header">
-            <ShieldAlert class="ops-panel__icon ops-panel__icon--warning h-4 w-4" />
-            <h3 class="ops-panel__title">我的防守</h3>
-          </header>
-
-          <div class="ops-panel__content custom-scrollbar">
-            <AWDDefenseAlertsPanel :alerts="defenseAlerts" />
-
-            <AWDDefenseServiceList
-              :services="defenseServiceCards"
-              :selected-service-id="selectedServiceId"
-              :opening-service-key="openingServiceKey"
-              :opening-ssh-key="openingSSHKey"
-              :service-action-pending-by-id="defenseServiceActionPendingById"
-              @select-service="selectService"
-              @open-service="openDefenseService"
-              @request-ssh="openDefenseSSH"
-              @restart-service="restartService"
-            />
-            <AWDDefenseOperationsPanel
-              :service-card="selectedDefenseServiceCard"
-              :service-title="selectedDefenseServiceTitle"
-              :opening-service-key="openingServiceKey"
-              :opening-ssh-key="openingSSHKey"
-              :action-pending="
-                selectedServiceId
-                  ? Boolean(defenseServiceActionPendingById[selectedServiceId])
-                  : false
-              "
-              :loading="loading"
-              :access="getSSHAccess(selectedServiceId)"
-              :copied-command="copiedSSHCommandKey === selectedServiceId"
-              :copied-password="copiedSSHPasswordKey === selectedServiceId"
-              @open-service="openDefenseService"
-              @request-ssh="openDefenseSSH"
-              @restart-service="restartService"
-              @refresh="refreshAll"
-              @copy-command="copySSHCommand"
-              @copy-password="copySSHPassword"
-            />
-          </div>
-        </section>
-      </aside>
+      <AWDDefenseColumn
+        :alerts="defenseAlerts"
+        :services="defenseServiceCards"
+        :selected-service-id="selectedServiceId"
+        :opening-service-key="openingServiceKey"
+        :opening-ssh-key="openingSSHKey"
+        :service-action-pending-by-id="defenseServiceActionPendingById"
+        :service-card="selectedDefenseServiceCard"
+        :service-title="selectedDefenseServiceTitle"
+        :action-pending="selectedDefenseActionPending"
+        :loading="loading"
+        :access="selectedDefenseAccess"
+        :copied-command="selectedDefenseCopiedCommand"
+        :copied-password="selectedDefenseCopiedPassword"
+        @select-service="selectService"
+        @open-service="openDefenseService"
+        @request-ssh="openDefenseSSH"
+        @restart-service="restartService"
+        @refresh="refreshAll"
+        @copy-command="copySSHCommand"
+        @copy-password="copySSHPassword"
+      />
 
       <!-- 2. Attack Vector (Middle) -->
       <main class="war-room-col column-attack">
@@ -530,10 +508,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   padding-top: var(--space-4);
 }
 
-.ops-panel__icon--warning {
-  color: var(--color-warning);
-}
-
 .ops-panel__icon--danger {
   color: var(--color-danger);
 }
@@ -549,10 +523,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   flex: 1;
   min-height: 0;
   align-items: stretch;
-}
-
-.column-defense {
-  grid-area: defense;
 }
 
 .column-attack {
@@ -656,11 +626,4 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   }
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-border-default);
-  border-radius: 10px;
-}
 </style>

@@ -14,6 +14,7 @@ export const componentFeatureImportAllowlist = new Set([
   'components/challenge/ChallengeSubmissionRecordsPanel.vue -> @/features/challenge-detail',
   'components/contests/ContestAWDWorkspacePanel.vue -> @/features/contest-awd-workspace',
   'components/contests/ContestAnnouncementRealtimeBridge.vue -> @/features/contest-announcements',
+  'components/contests/awd/AWDDefenseColumn.vue -> @/features/contest-awd-workspace',
   'components/contests/awd/AWDDefenseOperationsPanel.vue -> @/features/contest-awd-workspace',
   'components/contests/awd/AWDDefenseServiceList.vue -> @/features/contest-awd-workspace',
   'components/dashboard/student/dashboardPanelRegistry.ts -> @/features/student-dashboard',
