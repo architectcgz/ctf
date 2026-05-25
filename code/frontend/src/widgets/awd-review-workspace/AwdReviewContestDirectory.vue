@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
+import AwdReviewContestHead from './AwdReviewContestHead.vue'
 import AwdReviewDirectorySection from './AwdReviewDirectorySection.vue'
 import AwdReviewDirectoryState from './AwdReviewDirectoryState.vue'
 import AwdReviewIndexFilters from './AwdReviewIndexFilters.vue'
-import TeacherAWDReviewContestHead from './TeacherAWDReviewContestHead.vue'
 import TeacherAWDReviewContestRow from './TeacherAWDReviewContestRow.vue'
 
 type ContestStatusOption = {
@@ -56,7 +56,7 @@ const emit = defineEmits<{
       @reload="emit('reload')"
     >
       <section class="teacher-directory">
-        <TeacherAWDReviewContestHead />
+        <AwdReviewContestHead />
 
         <TeacherAWDReviewContestRow
           v-for="contest in contests"
