@@ -7,6 +7,7 @@ import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
 import teacherStudentAnalysisSource from '../TeacherStudentAnalysis.vue?raw'
 import studentAnalysisPageModelSource from '@/features/student-analysis-workspace/model/useStudentAnalysisPage.ts?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import studentAnalysisOverviewHeroPanelSource from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue?raw'
 import studentInsightOverviewSectionSource from '@/components/teacher/student-insight/StudentInsightOverviewSection.vue?raw'
@@ -438,6 +439,38 @@ describe('TeacherStudentAnalysis', () => {
     })
   })
 
+  it('应只渲染当前激活 tab 的详情内容，切换后再显示对应区块', async () => {
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          ClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('crypto-lab')
+    expect(wrapper.text()).not.toContain('题解列表')
+    expect(wrapper.text()).not.toContain('POST /login')
+
+    await openWorkspaceTab(wrapper, 'recommendations')
+    expect(wrapper.text()).toContain('crypto-lab')
+    expect(wrapper.text()).not.toContain('题解列表')
+    expect(wrapper.text()).not.toContain('POST /login')
+
+    await openWorkspaceTab(wrapper, 'writeups')
+    expect(wrapper.text()).toContain('题解列表')
+    expect(wrapper.text()).not.toContain('crypto-lab')
+    expect(wrapper.text()).not.toContain('POST /login')
+
+    await openWorkspaceTab(wrapper, 'evidence')
+    expect(wrapper.text()).toContain('POST /login')
+    expect(wrapper.text()).not.toContain('crypto-lab')
+    expect(wrapper.text()).not.toContain('题解列表')
+  })
+
   it('路由页应仅负责组合，不直接处理路由解析逻辑', () => {
     expect(teacherStudentAnalysisSource).toContain('useStudentAnalysisPage')
     expect(teacherStudentAnalysisSource).toContain(
@@ -469,15 +502,19 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).not.toContain('Student Analysis')
     expect(studentAnalysisPageSource).not.toContain('teacher-student-chip')
     expect(studentAnalysisPageSource).not.toContain('teacher-eyebrow-row')
-    expect(studentAnalysisPageSource).toContain(
+    expect(studentAnalysisPageSource).toContain('StudentAnalysisOverviewHeroPanel')
+    expect(studentAnalysisPageSource).not.toContain('<span>已做题目数</span>')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain(
       "{{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}"
     )
-    expect(studentAnalysisPageSource).toContain('<span>已做题目数</span>')
-    expect(studentAnalysisPageSource).toContain('<CheckCircle class="h-4 w-4" />')
-    expect(studentAnalysisPageSource).toContain('<span>完成率</span>')
-    expect(studentAnalysisPageSource).toContain('<Trophy class="h-4 w-4" />')
-    expect(studentAnalysisPageSource).toContain('<span>薄弱维度</span>')
-    expect(studentAnalysisPageSource).toContain('<AlertTriangle class="h-4 w-4" />')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('<span>已做题目数</span>')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('<CheckCircle class="h-4 w-4" />')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('<span>完成率</span>')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('<Trophy class="h-4 w-4" />')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('<span>薄弱维度</span>')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('<AlertTriangle class="h-4 w-4" />')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('导出班级报告')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('完整复盘页')
   })
 
   it('学员详情面板应通过 section 组件装配复盘区，而不是直接依赖 review workspace widget', () => {

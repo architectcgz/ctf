@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import classStudentsSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import studentAnalysisSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import studentAnalysisOverviewHeroSource from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue?raw'
 import classTrendPanelSource from '@/components/teacher/ClassTrendPanel.vue?raw'
 import classInsightsPanelSource from '@/components/teacher/ClassInsightsPanel.vue?raw'
 import classReviewPanelSource from '@/components/teacher/ClassReviewPanel.vue?raw'
@@ -38,6 +39,10 @@ const studentInsightCompositeSource = [
   studentInsightWriteupsSource,
   studentInsightManualReviewSource,
 ].join('\n')
+const studentAnalysisCompositeSource = [
+  studentAnalysisSource,
+  studentAnalysisOverviewHeroSource,
+].join('\n')
 
 describe('teacher detail surface alignment', () => {
   it('class students and student analysis pages should soften control and section borders', () => {
@@ -68,52 +73,53 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toContain('class="workspace-shell journal-eyebrow-text"')
     expect(studentAnalysisSource).not.toContain('class="workspace-topbar"')
     expect(studentAnalysisSource).toContain('class="workspace-tabbar top-tabs"')
-    expect(studentAnalysisSource).toContain(
+    expect(studentAnalysisOverviewHeroSource).toContain(
       'class="workspace-panel-header student-analysis-overview-head"'
     )
-    expect(studentAnalysisSource).toContain(
+    expect(studentAnalysisOverviewHeroSource).toContain(
       'class="workspace-panel-header__actions header-actions"'
     )
-    expect(studentAnalysisSource).toContain(
+    expect(studentAnalysisOverviewHeroSource).toContain(
       'class="workspace-panel-header__summary summary-strip metric-panel-grid"'
     )
-    expect(studentAnalysisSource).toContain('class="workspace-panel-divider"')
-    expect(studentAnalysisSource).toContain(
+    expect(studentAnalysisOverviewHeroSource).toContain('class="workspace-panel-divider"')
+    expect(studentAnalysisOverviewHeroSource).toContain(
       'class="teacher-title workspace-page-title student-analysis-title"'
     )
     expect(studentAnalysisSource).not.toContain(
       '查看当前学员的学习进度、推荐任务、题解与审核信息。'
     )
-    expect(studentAnalysisSource).toMatch(
+    expect(studentAnalysisOverviewHeroSource).toMatch(
       /\.student-analysis-title\s*\{[\s\S]*--workspace-page-title-margin-top:\s*0;[\s\S]*max-width:\s*min\(100%,\s*38rem\);/s
     )
     expect(studentAnalysisSource).toMatch(
       /:deep\(\.section-card\)\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*90%,\s*transparent\);/s
     )
     expect(studentAnalysisSource).not.toMatch(/\.content-pane\s*\{[\s\S]*padding-top:/s)
-    expect(studentAnalysisSource).toMatch(
+    expect(studentAnalysisOverviewHeroSource).toMatch(
       /\.summary-strip\s*\{[\s\S]*?margin:\s*0;[\s\S]*?padding:\s*0;/s
     )
-    expect(studentAnalysisSource).not.toMatch(/\.summary-strip\s*\{[^}]*border-bottom:/s)
-    expect(studentAnalysisSource).toContain(
+    expect(studentAnalysisOverviewHeroSource).not.toMatch(/\.summary-strip\s*\{[^}]*border-bottom:/s)
+    expect(studentAnalysisOverviewHeroSource).toContain(
       'class="summary-card summary-card--solved progress-card metric-panel-card"'
     )
-    expect(studentAnalysisSource).toContain(
+    expect(studentAnalysisOverviewHeroSource).toContain(
       'class="summary-card summary-card--completion progress-card metric-panel-card"'
     )
-    expect(studentAnalysisSource).toContain(
+    expect(studentAnalysisOverviewHeroSource).toContain(
       'class="summary-card summary-card--weakness progress-card metric-panel-card"'
     )
-    expect(studentAnalysisSource).toContain('--metric-panel-border:')
-    expect(studentAnalysisSource).toContain('var(--teacher-card-border)')
-    expect(studentAnalysisSource).toContain('--summary-card-accent: var(--workspace-brand);')
-    expect(studentAnalysisSource).toContain('--summary-card-accent: var(--color-primary);')
-    expect(studentAnalysisSource).toContain('--summary-card-accent: var(--color-success);')
-    expect(studentAnalysisSource).not.toContain('--summary-card-accent: var(--color-warning);')
-    expect(studentAnalysisSource).toContain('--metric-panel-value-color:')
+    expect(studentAnalysisOverviewHeroSource).toContain('--metric-panel-border:')
+    expect(studentAnalysisOverviewHeroSource).toContain('var(--teacher-card-border)')
+    expect(studentAnalysisOverviewHeroSource).toContain('--summary-card-accent: var(--workspace-brand);')
+    expect(studentAnalysisOverviewHeroSource).toContain('--summary-card-accent: var(--color-primary);')
+    expect(studentAnalysisOverviewHeroSource).toContain('--summary-card-accent: var(--color-success);')
+    expect(studentAnalysisOverviewHeroSource).not.toContain('--summary-card-accent: var(--color-warning);')
+    expect(studentAnalysisOverviewHeroSource).toContain('--metric-panel-value-color:')
     expect(studentAnalysisSource).toMatch(
       /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed color-mix\(in srgb,\s*var\(--teacher-divider\)\s*86%,\s*transparent\);/s
     )
+    expect(studentAnalysisCompositeSource).toContain('StudentAnalysisOverviewHeroPanel')
 
     expect(reviewArchiveCombinedSource).toContain('--teacher-card-border:')
     expect(reviewArchiveCombinedSource).toContain('--teacher-divider:')
