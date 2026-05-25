@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { ref } from 'vue'
 
 import {
   getTeacherManualReviewSubmission,
@@ -90,6 +90,21 @@ export function useSubmissionReviewFlows(options: UseSubmissionReviewFlowsOption
     await refreshWriteupSubmissions(getCurrentStudentId(), page)
   }
 
+  async function refreshManualReviewSubmissions(studentId = getCurrentStudentId()): Promise<void> {
+    if (!studentId) {
+      manualReviewSubmissions.value = []
+      activeManualReview.value = null
+      return
+    }
+
+    const nextManualReviews = await getTeacherManualReviewSubmissions({
+      student_id: studentId,
+      page_size: 6,
+    })
+    manualReviewSubmissions.value = nextManualReviews.list
+    activeManualReview.value = null
+  }
+
   async function openManualReview(submissionId: string): Promise<void> {
     manualReviewLoading.value = true
     try {
@@ -112,11 +127,7 @@ export function useSubmissionReviewFlows(options: UseSubmissionReviewFlowsOption
       })
       const currentStudentId = getCurrentStudentId()
       if (currentStudentId) {
-        const nextManualReviews = await getTeacherManualReviewSubmissions({
-          student_id: currentStudentId,
-          page_size: 6,
-        })
-        manualReviewSubmissions.value = nextManualReviews.list
+        await refreshManualReviewSubmissions(currentStudentId)
       }
     } finally {
       manualReviewSaving.value = false
@@ -159,8 +170,8 @@ export function useSubmissionReviewFlows(options: UseSubmissionReviewFlowsOption
     manualReviewLoading,
     manualReviewSaving,
     resetSubmissionReviewState,
-    applyWriteupPagePayload,
     refreshWriteupSubmissions,
+    refreshManualReviewSubmissions,
     changeWriteupPage,
     openManualReview,
     reviewManualReview,

@@ -154,6 +154,7 @@ export const featureRouterImportAllowlist = new Set([
   'features/class-students-workspace/model/useClassStudentsPage.ts -> vue-router',
   'features/student-analysis-workspace/model/useStudentAnalysisNavigation.ts -> vue-router',
   'features/student-analysis-workspace/model/useStudentAnalysisPage.ts -> vue-router',
+  'features/student-analysis-workspace/model/useStudentAnalysisReviewQuerySync.ts -> vue-router',
   'features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts -> vue-router',
   'features/platform-class-management/model/usePlatformClassManagementPage.ts -> vue-router',
   'features/platform-instance-management/model/usePlatformInstanceManagementPage.ts -> vue-router',

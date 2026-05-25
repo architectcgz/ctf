@@ -1,34 +1,18 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import {
-  getClassStudents,
-  getStudentProgress,
-  getStudentRecommendations,
-  getStudentSkillProfile,
-  getStudentTimeline,
-  getTeacherManualReviewSubmissions,
-  getTeacherWriteupSubmissions,
-} from '@/api/teaching'
-import type {
-  MyProgressData,
-  RecommendationItem,
-  RecommendationWeakDimension,
-  SkillProfileData,
-  TeacherStudentItem,
-  TimelineEvent,
-} from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
-import { getWeakDimensionLabels } from '@/utils/skillProfile'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
   useReviewArchiveExportFlow,
   useReviewWorkspace,
   useSubmissionReviewFlows,
 } from '@/features/teacher-student-analysis'
+import { useStudentAnalysisDataState } from './useStudentAnalysisDataState'
 import { useStudentAnalysisNavigation } from './useStudentAnalysisNavigation'
+import { useStudentAnalysisReviewQuerySync } from './useStudentAnalysisReviewQuerySync'
 
 export function useStudentAnalysisPage() {
   const route = useRoute()
@@ -37,19 +21,7 @@ export function useStudentAnalysisPage() {
   const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
-  const students = ref<TeacherStudentItem[]>([])
-  const selectedClassName = ref('')
-  const selectedStudentId = ref('')
-
-  const loadingStudents = ref(false)
-  const loadingDetails = ref(false)
   const error = ref<string | null>(null)
-
-  const progress = ref<MyProgressData | null>(null)
-  const skillProfile = ref<SkillProfileData | null>(null)
-  const recommendations = ref<RecommendationItem[]>([])
-  const weakDimensionAdvice = ref<RecommendationWeakDimension[]>([])
-  const timeline = ref<TimelineEvent[]>([])
   const {
     evidence,
     attackSessions,
@@ -72,8 +44,8 @@ export function useStudentAnalysisPage() {
     manualReviewLoading,
     manualReviewSaving,
     resetSubmissionReviewState,
-    applyWriteupPagePayload,
     refreshWriteupSubmissions,
+    refreshManualReviewSubmissions,
     changeWriteupPage,
     openManualReview,
     reviewManualReview,
@@ -82,16 +54,23 @@ export function useStudentAnalysisPage() {
     getCurrentStudentId: studentIdFromRoute,
   })
 
-  const selectedStudent = computed(
-    () => students.value.find((item) => item.id === selectedStudentId.value) ?? null
-  )
-  const solvedRate = computed(() => {
-    if (!progress.value?.total_challenges) return 0
-    return Math.round(
-      ((progress.value.solved_challenges ?? 0) / progress.value.total_challenges) * 100
-    )
+  const {
+    selectedClassName,
+    selectedStudentId,
+    selectedStudent,
+    loadingDetails,
+    progress,
+    skillProfile,
+    recommendations,
+    timeline,
+    solvedRate,
+    weakDimensions,
+    loadStudents,
+    loadStudentDetails,
+  } = useStudentAnalysisDataState({
+    classNameFromRoute,
+    studentIdFromRoute,
   })
-  const weakDimensions = computed(() => getWeakDimensionLabels(weakDimensionAdvice.value))
   const writeupTotalPages = computed(() =>
     Math.max(1, Math.ceil(writeupTotal.value / Math.max(1, writeupPageSize.value)))
   )
@@ -113,119 +92,21 @@ export function useStudentAnalysisPage() {
     return String(route.params.studentId || '')
   }
 
-  function syncReviewWorkspaceQueryFromRoute(): void {
-    const nextQuery = reviewWorkspaceQueryFromRoute()
-
-    setSessionQuery({
-      with_events: true,
-      limit: 20,
-      offset: 0,
-      ...nextQuery,
-    })
-  }
-
-  function reviewWorkspaceQueryFromRoute(): Partial<typeof sessionQuery.value> {
-    return {
-      mode:
-        route.query.reviewMode === 'practice' ||
-        route.query.reviewMode === 'jeopardy' ||
-        route.query.reviewMode === 'awd'
-          ? route.query.reviewMode
-          : undefined,
-      result:
-        route.query.reviewResult === 'success' ||
-        route.query.reviewResult === 'failed' ||
-        route.query.reviewResult === 'in_progress' ||
-        route.query.reviewResult === 'unknown'
-          ? route.query.reviewResult
-          : undefined,
-      challenge_id:
-        typeof route.query.reviewChallengeId === 'string' && route.query.reviewChallengeId.trim()
-          ? route.query.reviewChallengeId.trim()
-          : undefined,
-    }
-  }
-
-  function reviewWorkspaceQueryMatchesState(
-    nextQuery: Partial<typeof sessionQuery.value>
-  ): boolean {
-    return (
-      (nextQuery.mode || undefined) === (sessionQuery.value.mode || undefined) &&
-      (nextQuery.result || undefined) === (sessionQuery.value.result || undefined) &&
-      (nextQuery.challenge_id || undefined) === (sessionQuery.value.challenge_id || undefined)
-    )
-  }
-
-  async function loadStudents(className = classNameFromRoute()): Promise<void> {
-    if (!className) {
-      selectedClassName.value = ''
-      students.value = []
-      return
-    }
-
-    loadingStudents.value = true
-    selectedClassName.value = className
-
-    try {
-      students.value = await getClassStudents(className)
-    } finally {
-      loadingStudents.value = false
-    }
-  }
-
-  async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<void> {
-    if (!studentId) {
-      progress.value = null
-      skillProfile.value = null
-      recommendations.value = []
-      weakDimensionAdvice.value = []
-      timeline.value = []
-      resetReviewWorkspace()
-      resetSubmissionReviewState()
-      selectedStudentId.value = ''
-      return
-    }
-
-    loadingDetails.value = true
-    selectedStudentId.value = studentId
-
-    try {
-      const [
-        nextProgress,
-        nextProfile,
-        nextRecommendations,
-        nextTimeline,
-        _reviewWorkspaceLoaded,
-        nextWriteups,
-        nextManualReviews,
-      ] = await Promise.all([
-        getStudentProgress(studentId),
-        getStudentSkillProfile(studentId),
-        getStudentRecommendations(studentId),
-        getStudentTimeline(studentId),
-        loadReviewWorkspace(studentId),
-        getTeacherWriteupSubmissions({
-          student_id: studentId,
-          submission_status: 'published',
-          page: writeupPage.value,
-          page_size: writeupPageSize.value,
-        }),
-        getTeacherManualReviewSubmissions({ student_id: studentId, page_size: 6 }),
-      ])
-
-      progress.value = nextProgress
-      skillProfile.value = nextProfile
-      recommendations.value = nextRecommendations.challenges
-      weakDimensionAdvice.value = nextRecommendations.weak_dimensions
-      timeline.value = nextTimeline
-      void _reviewWorkspaceLoaded
-      applyWriteupPagePayload(nextWriteups)
-      manualReviewSubmissions.value = nextManualReviews.list
-      activeManualReview.value = null
-    } finally {
-      loadingDetails.value = false
-    }
-  }
+  const {
+    reviewWorkspaceQueryFromRoute,
+    syncReviewWorkspaceQueryFromRoute,
+    reviewWorkspaceQueryMatchesState,
+    updateReviewWorkspaceFilters,
+  } = useStudentAnalysisReviewQuerySync({
+    route,
+    router,
+    sessionQuery,
+    selectedStudentId,
+    setSessionQuery,
+    loadReviewWorkspace,
+    reloadAttackSessions,
+    studentIdFromRoute,
+  })
 
   async function initialize(): Promise<void> {
     error.value = null
@@ -233,44 +114,25 @@ export function useStudentAnalysisPage() {
     try {
       syncReviewWorkspaceQueryFromRoute()
       await loadStudents()
-      await loadStudentDetails()
+      const studentId = studentIdFromRoute()
+
+      if (!studentId) {
+        await loadStudentDetails('')
+        resetReviewWorkspace()
+        resetSubmissionReviewState()
+        return
+      }
+
+      await Promise.all([
+        loadStudentDetails(studentId),
+        loadReviewWorkspace(studentId),
+        refreshWriteupSubmissions(studentId),
+        refreshManualReviewSubmissions(studentId),
+      ])
     } catch (err) {
       reportFrontendError('加载学员分析失败:', err)
       error.value = '加载学员分析失败，请稍后重试'
     }
-  }
-
-  async function updateReviewWorkspaceFilters(
-    nextQuery: Partial<{
-      challenge_id: string
-      mode: 'practice' | 'jeopardy' | 'awd'
-      result: 'success' | 'failed' | 'in_progress' | 'unknown'
-    }>
-  ): Promise<void> {
-    const studentId = selectedStudentId.value || studentIdFromRoute()
-    const mergedQuery = {
-      ...sessionQuery.value,
-      ...nextQuery,
-      offset: 0,
-    }
-
-    setSessionQuery(mergedQuery)
-
-    await router.replace({
-      query: {
-        ...route.query,
-        reviewMode: mergedQuery.mode || undefined,
-        reviewResult: mergedQuery.result || undefined,
-        reviewChallengeId: mergedQuery.challenge_id || undefined,
-      },
-    })
-
-    if (Object.prototype.hasOwnProperty.call(nextQuery, 'challenge_id')) {
-      await loadReviewWorkspace(studentId)
-      return
-    }
-
-    await reloadAttackSessions(studentId)
   }
 
   const {
