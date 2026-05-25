@@ -2,10 +2,10 @@
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import AwdReviewContestHead from './AwdReviewContestHead.vue'
+import AwdReviewContestRow from './AwdReviewContestRow.vue'
 import AwdReviewDirectorySection from './AwdReviewDirectorySection.vue'
 import AwdReviewDirectoryState from './AwdReviewDirectoryState.vue'
 import AwdReviewIndexFilters from './AwdReviewIndexFilters.vue'
-import TeacherAWDReviewContestRow from './TeacherAWDReviewContestRow.vue'
 
 type ContestStatusOption = {
   value: '' | TeacherAWDReviewContestItemData['status']
@@ -58,7 +58,7 @@ const emit = defineEmits<{
       <section class="teacher-directory">
         <AwdReviewContestHead />
 
-        <TeacherAWDReviewContestRow
+        <AwdReviewContestRow
           v-for="contest in contests"
           :key="contest.id"
           :contest="contest"

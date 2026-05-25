@@ -10,7 +10,7 @@ import awdReviewContestDirectorySource from '@/widgets/awd-review-workspace/AwdR
 import awdReviewIndexFiltersSource from '@/widgets/awd-review-workspace/AwdReviewIndexFilters.vue?raw'
 import awdReviewDirectorySectionSource from '@/widgets/awd-review-workspace/AwdReviewDirectorySection.vue?raw'
 import awdReviewContestHeadSource from '@/widgets/awd-review-workspace/AwdReviewContestHead.vue?raw'
-import awdReviewContestRowSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRow.vue?raw'
+import awdReviewContestRowSource from '@/widgets/awd-review-workspace/AwdReviewContestRow.vue?raw'
 import awdReviewContestRowCtaSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRowCta.vue?raw'
 import awdReviewContestRowMetricsSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRowMetrics.vue?raw'
 import awdReviewContestRowStatusTagsSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRowStatusTags.vue?raw'
@@ -51,7 +51,7 @@ describe('Teacher AWD review index workspace extraction', () => {
     expect(awdReviewContestDirectorySource).toContain('<AwdReviewIndexFilters')
     expect(awdReviewContestDirectorySource).toContain('<AwdReviewDirectoryState')
     expect(awdReviewContestDirectorySource).toContain('<AwdReviewContestHead')
-    expect(awdReviewContestDirectorySource).toContain('<TeacherAWDReviewContestRow')
+    expect(awdReviewContestDirectorySource).toContain('<AwdReviewContestRow')
     expect(awdReviewDirectorySectionSource).toContain('class="workspace-directory-section teacher-directory-section"')
     expect(awdReviewDirectorySectionSource).toContain('AWD_REVIEW_DIRECTORY_COLUMNS')
     expect(awdReviewIndexFiltersSource).toContain('class="teacher-directory-filters"')
