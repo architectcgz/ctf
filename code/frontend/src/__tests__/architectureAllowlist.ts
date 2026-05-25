@@ -56,7 +56,7 @@ export const componentFeatureImportAllowlist = new Set([
   'components/platform/writeup/ChallengeWriteupManagePanel.vue -> @/features/challenge-writeup-editor',
   'components/platform/writeup/ChallengeWriteupViewPage.vue -> @/features/challenge-writeup-editor',
   'components/scoreboard/ScoreboardRealtimeBridge.vue -> @/features/scoreboard',
-  'components/teacher/TeacherInterventionPanel.vue -> @/features/teacher-student-analysis',
+  'components/teacher/InterventionPanel.vue -> @/features/teacher-student-analysis',
   'components/teacher/dashboard/TeacherDashboardPage.vue -> @/features/teacher-dashboard',
   'components/teacher/reports/ClassReportExportDialog.vue -> @/features/teacher-class-report-export',
 ])

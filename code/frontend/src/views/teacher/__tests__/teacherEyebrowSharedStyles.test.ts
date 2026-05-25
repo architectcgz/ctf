@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import teacherClassInsightsSource from '@/components/teacher/ClassInsightsPanel.vue?raw'
 import teacherClassReviewSource from '@/components/teacher/ClassReviewPanel.vue?raw'
 import teacherClassTrendSource from '@/components/teacher/ClassTrendPanel.vue?raw'
-import teacherInterventionSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
+import interventionPanelSource from '@/components/teacher/InterventionPanel.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import classStudentsSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import teacherInstanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
@@ -30,7 +30,7 @@ describe('teacher eyebrow shared styles', () => {
       teacherClassInsightsSource,
       teacherClassReviewSource,
       teacherClassTrendSource,
-      teacherInterventionSource,
+      interventionPanelSource,
       classManagementSource,
       classStudentsSource,
       teacherInstanceManagementSource,
@@ -47,7 +47,7 @@ describe('teacher eyebrow shared styles', () => {
       teacherClassInsightsSource,
       teacherClassReviewSource,
       teacherClassTrendSource,
-      teacherInterventionSource,
+      interventionPanelSource,
     ]) {
       expect(source).not.toContain('class="journal-eyebrow"')
     }

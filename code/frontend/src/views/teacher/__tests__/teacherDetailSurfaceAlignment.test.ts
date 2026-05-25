@@ -7,7 +7,7 @@ import studentAnalysisSource from '@/components/teacher/class-management/Student
 import classTrendPanelSource from '@/components/teacher/ClassTrendPanel.vue?raw'
 import classInsightsPanelSource from '@/components/teacher/ClassInsightsPanel.vue?raw'
 import classReviewPanelSource from '@/components/teacher/ClassReviewPanel.vue?raw'
-import interventionPanelSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
+import interventionPanelSource from '@/components/teacher/InterventionPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import studentInsightWriteupsSource from '@/components/teacher/student-insight/StudentInsightWriteupsSection.vue?raw'
 import studentInsightManualReviewSource from '@/components/teacher/student-insight/StudentInsightManualReviewSection.vue?raw'

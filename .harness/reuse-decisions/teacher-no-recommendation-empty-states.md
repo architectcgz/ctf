@@ -9,7 +9,7 @@ component / hook
 - code/frontend/src/components/dashboard/student/StudentRecommendationPage.vue
 - code/frontend/src/components/teacher/StudentInsightPanel.vue
 - code/frontend/src/components/teacher/ClassReviewPanel.vue
-- code/frontend/src/components/teacher/TeacherInterventionPanel.vue
+- code/frontend/src/components/teacher/InterventionPanel.vue
 - code/frontend/src/features/teacher-student-analysis/model/useTeacherInterventionRecommendations.ts
 - code/frontend/src/components/common/AppEmpty.vue
 - code/frontend/src/views/teacher/**tests**/TeacherClassStudents.test.ts
@@ -18,7 +18,7 @@ component / hook
 
 - `StudentRecommendationPage.vue` 已经定义了学生侧“无推荐题”提示和唯一主 CTA，说明空推荐在产品上是正常状态，不需要伪造题目占位。
 - `StudentInsightPanel.vue` 已经在教师学员分析页使用 `AppEmpty` 展示“暂无推荐题目”，说明教师侧详情页也接受明确空状态而不是静默隐藏。
-- `TeacherInterventionPanel.vue` 和 `ClassReviewPanel.vue` 已经各自有推荐题展示区块，适合直接在现有区块内补 empty / error fallback，而不是新增独立卡片或第二套 panel。
+- `InterventionPanel.vue` 和 `ClassReviewPanel.vue` 已经各自有推荐题展示区块，适合直接在现有区块内补 empty / error fallback，而不是新增独立卡片或第二套 panel。
 - `useTeacherInterventionRecommendations.ts` 已经是教师工作台“加载单个学生推荐题”的唯一异步 owner，推荐加载失败与空结果的区分应继续收口在这里。
 
 ## Decision
@@ -33,6 +33,6 @@ extend_existing
 
 - .harness/reuse-decisions/teacher-no-recommendation-empty-states.md
 - code/frontend/src/components/teacher/ClassReviewPanel.vue
-- code/frontend/src/components/teacher/TeacherInterventionPanel.vue
+- code/frontend/src/components/teacher/InterventionPanel.vue
 - code/frontend/src/features/teacher-student-analysis/model/useTeacherInterventionRecommendations.ts
 - code/frontend/src/views/teacher/**tests**/TeacherClassStudents.test.ts

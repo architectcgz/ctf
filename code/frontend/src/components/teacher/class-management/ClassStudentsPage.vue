@@ -12,7 +12,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import ClassInsightsPanel from '@/components/teacher/ClassInsightsPanel.vue'
-import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPanel.vue'
+import InterventionPanel from '@/components/teacher/InterventionPanel.vue'
 import ClassReviewPanel from '@/components/teacher/ClassReviewPanel.vue'
 import ClassTrendPanel from '@/components/teacher/ClassTrendPanel.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
@@ -134,7 +134,7 @@ function resolveWorkspacePanelComponent(tabKey: WorkspacePanelTab): Component {
     case 'insight':
       return ClassInsightsPanel
     case 'action':
-      return TeacherInterventionPanel
+      return InterventionPanel
   }
 }
 

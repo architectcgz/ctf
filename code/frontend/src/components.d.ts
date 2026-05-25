@@ -193,7 +193,7 @@ declare module 'vue' {
     TeacherClassTrendPanel: typeof import('./components/teacher/TeacherClassTrendPanel.vue')['default']
     TeacherDashboardPage: typeof import('./components/teacher/dashboard/TeacherDashboardPage.vue')['default']
     TeacherInstanceManagementPage: typeof import('./components/teacher/instance-management/TeacherInstanceManagementPage.vue')['default']
-    TeacherInterventionPanel: typeof import('./components/teacher/TeacherInterventionPanel.vue')['default']
+    InterventionPanel: typeof import('./components/teacher/InterventionPanel.vue')['default']
     TopNav: typeof import('./components/layout/TopNav.vue')['default']
     TopologyCanvasBoard: typeof import('./components/platform/topology/TopologyCanvasBoard.vue')['default']
     TopologyConnectivitySections: typeof import('./components/platform/topology/TopologyConnectivitySections.vue')['default']

@@ -7,7 +7,7 @@ component / layout
 - code/frontend/src/components/teacher/ClassTrendPanel.vue
 - code/frontend/src/components/teacher/ClassReviewPanel.vue
 - code/frontend/src/components/teacher/ClassInsightsPanel.vue
-- code/frontend/src/components/teacher/TeacherInterventionPanel.vue
+- code/frontend/src/components/teacher/InterventionPanel.vue
 - code/frontend/src/components/teacher/teacher-panel-shell.css
 - code/frontend/src/components/teacher/teacher-workspace-subpanel.css
 - code/frontend/src/views/teacher/__tests__/teacherEyebrowSharedStyles.test.ts
@@ -29,7 +29,7 @@ refactor_existing
 - code/frontend/src/components/teacher/ClassTrendPanel.vue
 - code/frontend/src/components/teacher/ClassReviewPanel.vue
 - code/frontend/src/components/teacher/ClassInsightsPanel.vue
-- code/frontend/src/components/teacher/TeacherInterventionPanel.vue
+- code/frontend/src/components/teacher/InterventionPanel.vue
 - code/frontend/src/components/teacher/teacher-panel-shell.css
 - code/frontend/src/components/teacher/teacher-workspace-subpanel.css
 - code/frontend/src/views/teacher/__tests__/teacherEyebrowSharedStyles.test.ts
