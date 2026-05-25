@@ -5,6 +5,7 @@ import ChallengeTopologyStudioPage from '@/components/platform/topology/Challeng
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'
+import topologyEntryNodeSectionSource from '@/components/platform/topology/TopologyEntryNodeSection.vue?raw'
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
 import topologyNetworkQuickEditorSource from '@/components/platform/topology/TopologyNetworkQuickEditor.vue?raw'
 import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
@@ -211,7 +212,7 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {
-    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}\n${topologyCanvasQuickEditorSource}\n${topologyNetworkQuickEditorSource}`
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}\n${topologyCanvasQuickEditorSource}\n${topologyNetworkQuickEditorSource}\n${topologyEntryNodeSectionSource}`
 
     expect(challengeTopologyStudioPageSource).toContain(
       'class="ui-btn ui-btn--ghost topology-action-btn'
@@ -239,6 +240,14 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(challengeTopologyStudioPageSource).not.toContain('v-model="network.internal"')
     expect(topologyNetworkQuickEditorSource).toContain('网络快速编辑')
     expect(topologyNetworkQuickEditorSource).toContain("emit('updateNetwork'")
+  })
+
+  it('入口节点卡片应从父页下沉到独立组件，同时保留 entry node owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyEntryNodeSection')
+    expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="入口节点"')
+    expect(challengeTopologyStudioPageSource).not.toContain('v-model="draft.entry_node_key"')
+    expect(topologyEntryNodeSectionSource).toContain('title="入口节点"')
+    expect(topologyEntryNodeSectionSource).toContain("emit('updateEntryNodeKey'")
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {

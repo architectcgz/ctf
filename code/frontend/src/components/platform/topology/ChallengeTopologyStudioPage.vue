@@ -5,7 +5,6 @@ import {
   Plus,
   RefreshCw,
   Save,
-  Trash2,
   Layout,
   Server,
   Network,
@@ -31,6 +30,7 @@ import TopologyConnectivitySections from './TopologyConnectivitySections.vue'
 import TopologyNetworkSection from './TopologyNetworkSection.vue'
 import TopologyNetworkQuickEditor from './TopologyNetworkQuickEditor.vue'
 import TopologyNodeSection from './TopologyNodeSection.vue'
+import TopologyEntryNodeSection from './TopologyEntryNodeSection.vue'
 import TopologyStatusNotes from './TopologyStatusNotes.vue'
 import TopologySummaryGrid from './TopologySummaryGrid.vue'
 import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
@@ -191,6 +191,10 @@ function updateSelectedNodeField(payload: {
       selectedNodeDraft.value.tier = String(payload.value) as TopologyTier
       return
   }
+}
+
+function updateEntryNodeKey(value: string) {
+  draft.value.entry_node_key = value
 }
 
 function updateLinkDraft(payload: {
@@ -520,21 +524,11 @@ function removePolicyDraft(uid: string) {
             </div>
 
             <div v-else-if="activeWorkbenchTab === 'compute'" class="space-y-6">
-              <SectionCard title="入口节点" subtitle="实例访问入口和当前草稿的保存范围。">
-                <div class="grid gap-4">
-                  <label class="space-y-2">
-                    <span class="text-sm text-text-secondary">入口节点</span>
-                    <select
-                      v-model="draft.entry_node_key"
-                      class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
-                    >
-                      <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                        {{ node.label }} ({{ node.key }})
-                      </option>
-                    </select>
-                  </label>
-                </div>
-              </SectionCard>
+              <TopologyEntryNodeSection
+                :entry-node-key="draft.entry_node_key"
+                :node-options="nodeOptions"
+                @update-entry-node-key="updateEntryNodeKey"
+              />
 
               <TopologyNodeSection
                 :nodes="draft.nodes"
@@ -780,32 +774,14 @@ function removePolicyDraft(uid: string) {
               </div>
             </SectionCard>
 
-            <SectionCard title="入口节点" subtitle="实例访问入口和当前草稿的保存范围。">
-              <div class="grid gap-4 md:grid-cols-[1fr_auto]">
-                <label class="space-y-2">
-                  <span class="text-sm text-text-secondary">入口节点</span>
-                  <select
-                    v-model="draft.entry_node_key"
-                    class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
-                  >
-                    <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                      {{ node.label }} ({{ node.key }})
-                    </option>
-                  </select>
-                </label>
-
-                <button
-                  v-if="!isTemplateLibraryMode"
-                  type="button"
-                  class="ui-btn ui-btn--danger self-end"
-                  :disabled="saving || !topology"
-                  @click="void handleDeleteTopology()"
-                >
-                  <Trash2 class="h-4 w-4" />
-                  删除已保存拓扑
-                </button>
-              </div>
-            </SectionCard>
+            <TopologyEntryNodeSection
+              :entry-node-key="draft.entry_node_key"
+              :node-options="nodeOptions"
+              :show-delete-action="true"
+              :delete-disabled="saving || !topology"
+              @update-entry-node-key="updateEntryNodeKey"
+              @delete-topology="void handleDeleteTopology()"
+            />
 
             <TopologyNetworkSection
               :networks="draft.networks"
