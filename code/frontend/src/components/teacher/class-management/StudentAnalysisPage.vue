@@ -277,14 +277,6 @@ const activeWorkspaceTab = computed(
   gap: var(--space-section-gap-compact, var(--space-4));
 }
 
-.context-rail {
-  min-width: 0;
-  padding: var(--space-workspace-content-padding, var(--space-7))
-    var(--space-workspace-content-padding, var(--space-7))
-    var(--space-workspace-content-padding, var(--space-7)) 0;
-  border-left: 1px solid color-mix(in srgb, var(--teacher-divider) 80%, transparent);
-}
-
 .workspace-alert {
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-radius-lg);
@@ -308,153 +300,6 @@ const activeWorkspaceTab = computed(
 
 .workspace-alert-actions {
   margin-top: var(--space-3);
-}
-
-.rail-stack {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.class-switch-list {
-  display: grid;
-  gap: var(--space-2-5);
-}
-
-.class-switch-list--scroll,
-.student-directory--scroll {
-  max-height: min(34vh, 21rem);
-  overflow: auto;
-  padding-right: 0.25rem;
-}
-
-.class-switch {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-height: 2.75rem;
-  padding: var(--space-3) var(--space-1);
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
-  border-radius: 0;
-  background: transparent;
-  font-size: var(--font-size-0-86);
-  font-weight: 600;
-  color: var(--journal-ink);
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.class-switch:hover,
-.class-switch:focus-visible,
-.class-switch.active {
-  border-bottom-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
-  color: var(--journal-accent-strong);
-  outline: none;
-}
-
-.student-directory {
-  display: grid;
-}
-
-.student-directory-head,
-.student-directory-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-3);
-  align-items: center;
-}
-
-.student-directory-head {
-  padding: 0 var(--space-1-5) var(--space-2);
-  border-bottom: 1px solid var(--teacher-divider);
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.student-directory-row {
-  padding: var(--space-3-5) var(--space-1);
-  border-bottom: 1px solid var(--teacher-divider);
-  background: transparent;
-  text-align: left;
-  transition: background 160ms ease;
-}
-
-.student-directory-row:hover,
-.student-directory-row:focus-visible,
-.student-directory-row.active {
-  background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
-  outline: none;
-}
-
-.student-directory-main {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.student-directory-avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 16%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent);
-  flex-shrink: 0;
-}
-
-.student-directory-copy {
-  min-width: 0;
-}
-
-.student-directory-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--font-size-0-92);
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.student-directory-meta {
-  margin-top: var(--space-1);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--font-size-0-80);
-  color: var(--journal-muted);
-}
-
-.student-directory-state {
-  font-size: var(--font-size-0-78);
-  font-weight: 600;
-  color: var(--workspace-brand-ink);
-}
-
-.student-directory-skeleton {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.student-directory-skeleton__item {
-  height: 3.5rem;
-  border-radius: 0.95rem;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-border) 80%, transparent),
-    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-  );
-  animation: pulse 1.35s ease-in-out infinite;
 }
 
 .quick-action {
@@ -488,74 +333,6 @@ const activeWorkspaceTab = computed(
   min-height: 42px;
 }
 
-.quick-action--primary {
-  border-bottom-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-}
-
-.context-block {
-  position: relative;
-}
-
-.context-block + .context-block {
-  margin-top: var(--space-2-5);
-}
-
-.context-block--actions {
-  margin-top: auto;
-}
-
-.quick-action__main {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.quick-action__main span:last-child {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.quick-action__main strong {
-  font-size: var(--font-size-0-90);
-  font-weight: 600;
-  color: inherit;
-}
-
-.quick-action__main small {
-  font-size: var(--font-size-0-78);
-  line-height: 1.55;
-  color: var(--journal-muted);
-}
-
-.quick-action__icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 0.85rem;
-  flex-shrink: 0;
-}
-
-.quick-action__icon--neutral {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-}
-
-.quick-action__icon--warning {
-  border: 1px solid color-mix(in srgb, var(--color-warning) 18%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
-  color: color-mix(in srgb, var(--color-warning) 82%, var(--journal-ink));
-}
-
-.quick-action__icon--primary {
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent-strong);
-}
-
 :deep(.section-card) {
   padding: var(--space-3-5) var(--space-1) var(--space-3);
   border: 0;
@@ -575,30 +352,9 @@ const activeWorkspaceTab = computed(
   padding-left: 0;
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.58;
-  }
-
-  50% {
-    opacity: 1;
-  }
-}
-
-@media (max-width: 1279px) {
-  .context-rail {
-    padding: 0 var(--space-workspace-content-padding, var(--space-7))
-      var(--space-workspace-content-padding, var(--space-7));
-    border-left: 0;
-    border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 80%, transparent);
-  }
-}
-
 @media (max-width: 767px) {
   .top-tabs,
-  .content-pane,
-  .context-rail {
+  .content-pane {
     padding-left: var(--space-5);
     padding-right: var(--space-5);
   }
