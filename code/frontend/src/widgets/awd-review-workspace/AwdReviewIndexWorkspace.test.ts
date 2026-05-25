@@ -43,7 +43,7 @@ function createProps() {
   }
 }
 
-describe('TeacherAWDReviewIndexWorkspace', () => {
+describe('AwdReviewIndexWorkspace', () => {
   it('应转发顶部动作和进入复盘事件', async () => {
     const wrapper = mount(AwdReviewIndexWorkspace, {
       props: createProps(),
