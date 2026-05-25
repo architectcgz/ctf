@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
 import type { ReviewArchiveData } from '@/api/contracts'
-import TeacherReviewArchiveSummarySection from './TeacherReviewArchiveSummarySection.vue'
+import ReviewArchiveSummarySection from './ReviewArchiveSummarySection.vue'
 
 function createArchive(): ReviewArchiveData {
   return {
@@ -43,9 +43,9 @@ function createArchive(): ReviewArchiveData {
   }
 }
 
-describe('TeacherReviewArchiveSummarySection', () => {
+describe('ReviewArchiveSummarySection', () => {
   it('应渲染摘要指标与最近活跃信息', () => {
-    const wrapper = mount(TeacherReviewArchiveSummarySection, {
+    const wrapper = mount(ReviewArchiveSummarySection, {
       props: {
         archive: createArchive(),
       },
@@ -59,7 +59,7 @@ describe('TeacherReviewArchiveSummarySection', () => {
   })
 
   it('应按得分从高到低排序能力维度', () => {
-    const wrapper = mount(TeacherReviewArchiveSummarySection, {
+    const wrapper = mount(ReviewArchiveSummarySection, {
       props: {
         archive: createArchive(),
       },

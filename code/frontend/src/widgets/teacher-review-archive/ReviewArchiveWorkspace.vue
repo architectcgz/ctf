@@ -4,8 +4,8 @@ import ReviewArchiveEvidencePanel from '@/components/teacher/review-archive/Revi
 import ReviewArchiveHero from '@/components/teacher/review-archive/ReviewArchiveHero.vue'
 import ReviewArchiveObservationStrip from '@/components/teacher/review-archive/ReviewArchiveObservationStrip.vue'
 import ReviewArchiveReflectionPanel from '@/components/teacher/review-archive/ReviewArchiveReflectionPanel.vue'
-import TeacherReviewArchiveState from './TeacherReviewArchiveState.vue'
-import TeacherReviewArchiveSummarySection from './TeacherReviewArchiveSummarySection.vue'
+import ReviewArchiveState from './ReviewArchiveState.vue'
+import ReviewArchiveSummarySection from './ReviewArchiveSummarySection.vue'
 
 const props = defineProps<{
   archive: ReviewArchiveData | null
@@ -32,7 +32,7 @@ const emit = defineEmits<{
       @export-archive="emit('exportArchive')"
     />
 
-    <TeacherReviewArchiveState
+    <ReviewArchiveState
       :loading="loading"
       :error="error"
       :has-archive="Boolean(archive)"
@@ -41,7 +41,7 @@ const emit = defineEmits<{
       <template v-if="archive">
         <ReviewArchiveObservationStrip :items="archive.teacher_observations.items" />
 
-        <TeacherReviewArchiveSummarySection :archive="archive" />
+        <ReviewArchiveSummarySection :archive="archive" />
 
         <ReviewArchiveEvidencePanel
           :timeline="archive.timeline"
@@ -55,7 +55,7 @@ const emit = defineEmits<{
           :manual-reviews="archive.manual_reviews"
         />
       </template>
-    </TeacherReviewArchiveState>
+    </ReviewArchiveState>
   </div>
 </template>
 

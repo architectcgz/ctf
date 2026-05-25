@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import TeacherReviewArchiveState from './TeacherReviewArchiveState.vue'
+import ReviewArchiveState from './ReviewArchiveState.vue'
 
-describe('TeacherReviewArchiveState', () => {
+describe('ReviewArchiveState', () => {
   it('错误态应透传 reload 事件', async () => {
-    const wrapper = mount(TeacherReviewArchiveState, {
+    const wrapper = mount(ReviewArchiveState, {
       props: {
         loading: false,
         error: '加载失败',
@@ -19,7 +19,7 @@ describe('TeacherReviewArchiveState', () => {
   })
 
   it('有数据时应渲染默认插槽', () => {
-    const wrapper = mount(TeacherReviewArchiveState, {
+    const wrapper = mount(ReviewArchiveState, {
       props: {
         loading: false,
         error: null,

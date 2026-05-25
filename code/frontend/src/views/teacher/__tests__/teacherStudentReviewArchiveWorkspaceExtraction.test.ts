@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
 import reviewArchiveWidgetIndexSource from '@/widgets/teacher-review-archive/index.ts?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue?raw'
-import reviewArchiveStateSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveState.vue?raw'
-import reviewArchiveSummarySectionSource from '@/widgets/teacher-review-archive/TeacherReviewArchiveSummarySection.vue?raw'
+import reviewArchiveStateSource from '@/widgets/teacher-review-archive/ReviewArchiveState.vue?raw'
+import reviewArchiveSummarySectionSource from '@/widgets/teacher-review-archive/ReviewArchiveSummarySection.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 
 describe('Teacher student review archive workspace extraction', () => {
@@ -12,8 +12,8 @@ describe('Teacher student review archive workspace extraction', () => {
     expect(reviewArchiveWidgetIndexSource).toContain(
       "export { default as ReviewArchiveWorkspace } from './ReviewArchiveWorkspace.vue'"
     )
-    expect(reviewArchiveWidgetIndexSource).not.toContain('TeacherReviewArchiveState')
-    expect(reviewArchiveWidgetIndexSource).not.toContain('TeacherReviewArchiveSummarySection')
+    expect(reviewArchiveWidgetIndexSource).not.toContain('ReviewArchiveState')
+    expect(reviewArchiveWidgetIndexSource).not.toContain('ReviewArchiveSummarySection')
 
     expect(reviewArchiveSource).toContain(
       "import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'"
@@ -28,8 +28,8 @@ describe('Teacher student review archive workspace extraction', () => {
 
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveHero')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveObservationStrip')
-    expect(reviewArchiveWorkspaceSource).toContain('<TeacherReviewArchiveState')
-    expect(reviewArchiveWorkspaceSource).toContain('<TeacherReviewArchiveSummarySection')
+    expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveState')
+    expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveSummarySection')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveEvidencePanel')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveReflectionPanel')
     expect(reviewArchiveWorkspaceSource).toContain('class="review-archive-shell')
