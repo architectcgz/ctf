@@ -13,7 +13,7 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
 import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPanel.vue'
-import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
+import ClassReviewPanel from '@/components/teacher/ClassReviewPanel.vue'
 import ClassTrendPanel from '@/components/teacher/ClassTrendPanel.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
@@ -130,7 +130,7 @@ function resolveWorkspacePanelComponent(tabKey: WorkspacePanelTab): Component {
     case 'trend':
       return ClassTrendPanel
     case 'review':
-      return TeacherClassReviewPanel
+      return ClassReviewPanel
     case 'insight':
       return TeacherClassInsightsPanel
     case 'action':

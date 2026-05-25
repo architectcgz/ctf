@@ -6,7 +6,7 @@ import classStudentsSource from '@/components/teacher/class-management/ClassStud
 import studentAnalysisSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import classTrendPanelSource from '@/components/teacher/ClassTrendPanel.vue?raw'
 import classInsightsPanelSource from '@/components/teacher/TeacherClassInsightsPanel.vue?raw'
-import classReviewPanelSource from '@/components/teacher/TeacherClassReviewPanel.vue?raw'
+import classReviewPanelSource from '@/components/teacher/ClassReviewPanel.vue?raw'
 import interventionPanelSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import studentInsightWriteupsSource from '@/components/teacher/student-insight/StudentInsightWriteupsSection.vue?raw'

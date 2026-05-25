@@ -4,7 +4,7 @@
 component / page
 
 ## Existing code searched
-- code/frontend/src/components/teacher/TeacherClassReviewPanel.vue
+- code/frontend/src/components/teacher/ClassReviewPanel.vue
 - code/frontend/src/components/teacher/TeacherClassInsightsPanel.vue
 - code/frontend/src/components/teacher/TeacherInterventionPanel.vue
 - code/frontend/src/components/teacher/teacher-panel-shell.css
@@ -25,7 +25,7 @@ refactor_existing
 
 ## Files to modify
 - .harness/reuse-decisions/class-workspace-card-border-token.md
-- code/frontend/src/components/teacher/TeacherClassReviewPanel.vue
+- code/frontend/src/components/teacher/ClassReviewPanel.vue
 - code/frontend/src/components/teacher/TeacherClassInsightsPanel.vue
 - code/frontend/src/components/teacher/TeacherInterventionPanel.vue
 - code/frontend/src/views/teacher/__tests__/teacherDetailSurfaceAlignment.test.ts

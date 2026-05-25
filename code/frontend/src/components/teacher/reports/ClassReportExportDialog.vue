@@ -5,7 +5,7 @@ import { FileDown, RefreshCcw } from 'lucide-vue-next'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
-import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
+import ClassReviewPanel from '@/components/teacher/ClassReviewPanel.vue'
 import ClassTrendPanel from '@/components/teacher/ClassTrendPanel.vue'
 import { useClassReportExport } from '@/features/teacher-class-report-export'
 import { formatDate } from '@/utils/format'
@@ -382,7 +382,7 @@ function closeDialog(): void {
                 :subtitle="`当前窗口：${selectedWindowLabel}`"
               />
 
-              <TeacherClassReviewPanel
+              <ClassReviewPanel
                 :review="previewReview"
                 :class-name="previewClassName"
               />
