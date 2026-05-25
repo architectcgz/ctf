@@ -31,6 +31,7 @@ import TopologyNetworkSection from './TopologyNetworkSection.vue'
 import TopologyNodeSection from './TopologyNodeSection.vue'
 import TopologyEntryNodeSection from './TopologyEntryNodeSection.vue'
 import TopologyPackageContextPanel from './TopologyPackageContextPanel.vue'
+import TopologyChallengeContextRail from './TopologyChallengeContextRail.vue'
 import TopologyStatusNotes from './TopologyStatusNotes.vue'
 import TopologySummaryGrid from './TopologySummaryGrid.vue'
 import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
@@ -563,44 +564,32 @@ function removePolicyDraft(uid: string) {
             />
           </div>
 
-          <aside class="context-rail topology-context-rail">
-            <div class="topology-context-stack">
-              <TopologyStatusNotes
-                mode="challenge"
-                :status-card="statusCard"
-                :secondary-card="secondaryCard"
-              />
-
-              <TopologyPackageContextPanel
-                :package-source-summary="packageSourceSummary"
-                :package-baseline-summary="packageBaselineSummary"
-                :package-files="packageFiles"
-                :package-revision-history="packageRevisionHistory"
-                :exporting="exporting"
-                @export-package="void handleExportPackage()"
-              />
-
-              <TopologyTemplateSidePanel
-                v-model:template-keyword="templateKeyword"
-                v-model:template-name="templateName"
-                v-model:template-description="templateDescription"
-                :is-template-library-mode="isTemplateLibraryMode"
-                :selected-template-summary="selectedTemplateSummary"
-                :selected-template-id="selectedTemplateId"
-                :templates="templates"
-                :template-busy="templateBusy"
-                @load-template="loadTemplateIntoDraft"
-                @clear-template-selection="clearTemplateSelection"
-                @search-templates="void loadTemplates()"
-                @reset-template-form="resetTemplateForm"
-                @apply-template="(template) => void handleApplyTemplate(template)"
-                @delete-template="(templateId) => void handleDeleteTemplate(templateId)"
-                @reset-template-editor="handleResetTemplateEditor"
-                @create-template="void handleCreateTemplate()"
-                @update-template="void handleUpdateTemplate()"
-              />
-            </div>
-          </aside>
+          <TopologyChallengeContextRail
+            v-model:template-keyword="templateKeyword"
+            v-model:template-name="templateName"
+            v-model:template-description="templateDescription"
+            :status-card="statusCard"
+            :secondary-card="secondaryCard"
+            :package-source-summary="packageSourceSummary"
+            :package-baseline-summary="packageBaselineSummary"
+            :package-files="packageFiles"
+            :package-revision-history="packageRevisionHistory"
+            :exporting="exporting"
+            :selected-template-summary="selectedTemplateSummary"
+            :selected-template-id="selectedTemplateId"
+            :templates="templates"
+            :template-busy="templateBusy"
+            @export-package="void handleExportPackage()"
+            @load-template="loadTemplateIntoDraft"
+            @clear-template-selection="clearTemplateSelection"
+            @search-templates="void loadTemplates()"
+            @reset-template-form="resetTemplateForm"
+            @apply-template="(template) => void handleApplyTemplate(template)"
+            @delete-template="(templateId) => void handleDeleteTemplate(templateId)"
+            @reset-template-editor="handleResetTemplateEditor"
+            @create-template="void handleCreateTemplate()"
+            @update-template="void handleUpdateTemplate()"
+          />
         </main>
       </template>
 

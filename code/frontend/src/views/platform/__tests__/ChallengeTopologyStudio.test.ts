@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyChallengeContextRailSource from '@/components/platform/topology/TopologyChallengeContextRail.vue?raw'
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'
 import topologyCanvasWorkspaceSectionSource from '@/components/platform/topology/TopologyCanvasWorkspaceSection.vue?raw'
@@ -257,11 +258,16 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(topologyEntryNodeSectionSource).toContain("emit('updateEntryNodeKey'")
   })
 
-  it('题包上下文区应从父页下沉到独立组件，同时保留导出动作 owner', () => {
-    expect(challengeTopologyStudioPageSource).toContain('<TopologyPackageContextPanel')
+  it('challenge context rail 应从父页下沉到独立组件，同时保留导出与模板动作 owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyChallengeContextRail')
     expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="题包来源"')
     expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="题包文件"')
     expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="修订历史"')
+    expect(topologyChallengeContextRailSource).toContain('<TopologyStatusNotes')
+    expect(topologyChallengeContextRailSource).toContain('<TopologyPackageContextPanel')
+    expect(topologyChallengeContextRailSource).toContain('<TopologyTemplateSidePanel')
+    expect(topologyChallengeContextRailSource).toContain("emit('exportPackage')")
+    expect(topologyChallengeContextRailSource).toContain("emit('update:templateKeyword'")
     expect(topologyPackageContextPanelSource).toContain('title="题包来源"')
     expect(topologyPackageContextPanelSource).toContain('title="题包文件"')
     expect(topologyPackageContextPanelSource).toContain('title="修订历史"')
