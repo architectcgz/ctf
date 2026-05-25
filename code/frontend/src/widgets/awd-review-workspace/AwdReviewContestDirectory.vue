@@ -2,10 +2,10 @@
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import AwdReviewDirectorySection from './AwdReviewDirectorySection.vue'
+import AwdReviewDirectoryState from './AwdReviewDirectoryState.vue'
 import AwdReviewIndexFilters from './AwdReviewIndexFilters.vue'
 import TeacherAWDReviewContestHead from './TeacherAWDReviewContestHead.vue'
 import TeacherAWDReviewContestRow from './TeacherAWDReviewContestRow.vue'
-import TeacherAWDReviewDirectoryState from './TeacherAWDReviewDirectoryState.vue'
 
 type ContestStatusOption = {
   value: '' | TeacherAWDReviewContestItemData['status']
@@ -49,7 +49,7 @@ const emit = defineEmits<{
       />
     </template>
 
-    <TeacherAWDReviewDirectoryState
+    <AwdReviewDirectoryState
       :loading="loading"
       :error="error"
       :has-contests="hasContests"
@@ -77,7 +77,7 @@ const emit = defineEmits<{
         :total-label="`共 ${total} 场赛事`"
         @change-page="emit('changePage', $event)"
       />
-    </TeacherAWDReviewDirectoryState>
+    </AwdReviewDirectoryState>
   </AwdReviewDirectorySection>
 </template>
 

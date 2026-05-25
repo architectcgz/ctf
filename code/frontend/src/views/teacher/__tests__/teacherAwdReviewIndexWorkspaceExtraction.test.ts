@@ -14,7 +14,7 @@ import awdReviewContestRowSource from '@/widgets/awd-review-workspace/TeacherAWD
 import awdReviewContestRowCtaSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRowCta.vue?raw'
 import awdReviewContestRowMetricsSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRowMetrics.vue?raw'
 import awdReviewContestRowStatusTagsSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestRowStatusTags.vue?raw'
-import awdReviewDirectoryStateSource from '@/widgets/awd-review-workspace/TeacherAWDReviewDirectoryState.vue?raw'
+import awdReviewDirectoryStateSource from '@/widgets/awd-review-workspace/AwdReviewDirectoryState.vue?raw'
 
 describe('Teacher AWD review index workspace extraction', () => {
   it('目录页路由应收敛为 widget 组合层', () => {
@@ -49,7 +49,7 @@ describe('Teacher AWD review index workspace extraction', () => {
     )
     expect(awdReviewContestDirectorySource).toContain('<AwdReviewDirectorySection')
     expect(awdReviewContestDirectorySource).toContain('<AwdReviewIndexFilters')
-    expect(awdReviewContestDirectorySource).toContain('<TeacherAWDReviewDirectoryState')
+    expect(awdReviewContestDirectorySource).toContain('<AwdReviewDirectoryState')
     expect(awdReviewContestDirectorySource).toContain('<TeacherAWDReviewContestHead')
     expect(awdReviewContestDirectorySource).toContain('<TeacherAWDReviewContestRow')
     expect(awdReviewDirectorySectionSource).toContain('class="workspace-directory-section teacher-directory-section"')
