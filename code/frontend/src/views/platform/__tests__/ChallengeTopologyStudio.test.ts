@@ -6,6 +6,7 @@ import challengeTopologyStudioPageSource from '@/components/platform/topology/Ch
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'
 import topologyEntryNodeSectionSource from '@/components/platform/topology/TopologyEntryNodeSection.vue?raw'
+import topologyPackageContextPanelSource from '@/components/platform/topology/TopologyPackageContextPanel.vue?raw'
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
 import topologyNetworkQuickEditorSource from '@/components/platform/topology/TopologyNetworkQuickEditor.vue?raw'
 import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
@@ -212,7 +213,7 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {
-    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}\n${topologyCanvasQuickEditorSource}\n${topologyNetworkQuickEditorSource}\n${topologyEntryNodeSectionSource}`
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}\n${topologyCanvasQuickEditorSource}\n${topologyNetworkQuickEditorSource}\n${topologyEntryNodeSectionSource}\n${topologyPackageContextPanelSource}`
 
     expect(challengeTopologyStudioPageSource).toContain(
       'class="ui-btn ui-btn--ghost topology-action-btn'
@@ -248,6 +249,17 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(challengeTopologyStudioPageSource).not.toContain('v-model="draft.entry_node_key"')
     expect(topologyEntryNodeSectionSource).toContain('title="入口节点"')
     expect(topologyEntryNodeSectionSource).toContain("emit('updateEntryNodeKey'")
+  })
+
+  it('题包上下文区应从父页下沉到独立组件，同时保留导出动作 owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyPackageContextPanel')
+    expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="题包来源"')
+    expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="题包文件"')
+    expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="修订历史"')
+    expect(topologyPackageContextPanelSource).toContain('title="题包来源"')
+    expect(topologyPackageContextPanelSource).toContain('title="题包文件"')
+    expect(topologyPackageContextPanelSource).toContain('title="修订历史"')
+    expect(topologyPackageContextPanelSource).toContain("emit('exportPackage')")
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {

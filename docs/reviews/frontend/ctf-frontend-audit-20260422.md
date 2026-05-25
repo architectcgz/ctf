@@ -8,7 +8,7 @@
 | 审查范围 | `code/frontend/src` 路由、关键视图、composables、stores、共享样式与验证门禁 |
 | 审查日期 | 2026-04-22 |
 | 审查方式 | 静态代码审查 + 最小验证基线检查 |
-| 审查状态 | 已记录，已推进至第八十四轮；当前前端全量测试门禁已通过 |
+| 审查状态 | 已记录，已推进至第八十五轮；当前前端全量测试门禁已通过 |
 
 ## 当前结论
 
@@ -1982,10 +1982,31 @@
   - `npm run typecheck`
   - `git diff --check`
 
+## 第八十五轮修复进展
+
+- 已完成：
+  - `TD-1` 拓扑页第九个切片完成：challenge 模式右侧题包上下文区抽到 `TopologyPackageContextPanel.vue`，父页不再继续内联“题包来源 / 题包文件 / 修订历史”三张卡片模板。
+  - 父组件继续持有 `packageSourceSummary`、`packageBaselineSummary`、`packageFiles`、`packageRevisionHistory` 和导出动作；新组件只通过 `props + emit(exportPackage)` 承接展示与按钮触发，没有吸入导出异步 owner 或 package summary 判定逻辑。
+  - `ChallengeTopologyStudio.test.ts` 与 `sharedThemeTokenAdoption.test.ts` 已同步补新组件护栏，继续按“父页组合 owner + 子组件承接稳定上下文卡片”的方式防回归。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/topology/ChallengeTopologyStudioPage.vue`
+  - `code/frontend/src/components/platform/topology/TopologyPackageContextPanel.vue`
+  - `code/frontend/src/views/platform/__tests__/ChallengeTopologyStudio.test.ts`
+  - `code/frontend/src/views/__tests__/sharedThemeTokenAdoption.test.ts`
+  - `docs/reviews/frontend/README.md`
+  - `docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+
+## 第八十五轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ChallengeTopologyStudio.test.ts src/views/__tests__/sharedThemeTokenAdoption.test.ts src/views/__tests__/asyncChunkBoundaries.test.ts`（3 个测试文件，20 个测试）
+  - `npm run typecheck`
+  - `git diff --check`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
-  - `ChallengeTopologyStudioPage.vue` 已完成模板侧栏、摘要指标、状态说明展示、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区、画布快速编辑区、challenge-only 网络快速编辑区、入口节点卡片抽取；`StudentInsightPanel.vue` 的当前 touched surface 也已在 2026-05-25 切片里收口。当前仍需继续拆分的高复杂度组件主要包括 `ChallengeTopologyStudioPage.vue` 剩余的页面编排壳、`AWDChallengeConfigDialog.vue`、`ContestAWDWorkspacePanel.vue`。
+  - `ChallengeTopologyStudioPage.vue` 已完成模板侧栏、摘要指标、状态说明展示、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区、画布快速编辑区、challenge-only 网络快速编辑区、入口节点卡片、题包上下文区抽取；`StudentInsightPanel.vue` 的当前 touched surface 也已在 2026-05-25 切片里收口。当前仍需继续拆分的高复杂度组件主要包括 `ChallengeTopologyStudioPage.vue` 剩余的页面编排壳、`AWDChallengeConfigDialog.vue`、`ContestAWDWorkspacePanel.vue`。
   - 拆分原则：父页面保留 route/query 同步、页面级数据加载、跨区块协调、错误策略和主业务动作；子组件只承接明确展示区块或局部表单，不允许只为了减少行数而把 owner 边界拆散。
   - 建议顺序：先选一个组件做一个可评审切片，补源码边界测试和行为测试，再继续下一块。
 - `TD-2` Tailwind 任意值与主题 token 尾项：

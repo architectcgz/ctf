@@ -36,7 +36,7 @@
 
 ## 仍然保留为当前 Backlog 的事项
 
-- `TD-1` 超大组件专题拆分：拓扑页已按小切片持续收口，模板侧栏、摘要指标、状态说明、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区、画布快速编辑区、challenge-only 网络快速编辑区、入口节点卡片都已从 `ChallengeTopologyStudioPage.vue` 抽到独立组件；`StudentInsightPanel.vue` 当前 touched surface 已在 2026-05-25 切片里收口。后续继续按父页面 owner 边界处理 `ChallengeTopologyStudioPage.vue` 剩余页面编排壳，以及 `AWDChallengeConfigDialog.vue`、`ContestAWDWorkspacePanel.vue` 等高复杂度组件。
+- `TD-1` 超大组件专题拆分：拓扑页已按小切片持续收口，模板侧栏、摘要指标、状态说明、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区、画布快速编辑区、challenge-only 网络快速编辑区、入口节点卡片、题包上下文区都已从 `ChallengeTopologyStudioPage.vue` 抽到独立组件；`StudentInsightPanel.vue` 当前 touched surface 已在 2026-05-25 切片里收口。后续继续按父页面 owner 边界处理 `ChallengeTopologyStudioPage.vue` 剩余页面编排壳，以及 `AWDChallengeConfigDialog.vue`、`ContestAWDWorkspacePanel.vue` 等高复杂度组件。
 - `TD-3` 性能监控接入：需要先确定指标、上报端点、隐私边界和生产开关。
 - `TD-4` i18n 预留：取决于产品是否需要多语言。
 
