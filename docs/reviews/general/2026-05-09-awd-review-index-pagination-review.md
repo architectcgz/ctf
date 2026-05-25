@@ -1,6 +1,6 @@
 ## Review Target
 - Repository: `ctf`
-- Worktree: `/home/azhi/workspace/projects/ctf/.worktrees/feat/awd-review-pagination`
+- Worktree: `feat/awd-review-pagination`（本地临时工作目录，已清理）
 - Branch: `feat/awd-review-pagination`
 - Diff source: working tree against current branch base
 - Files reviewed:

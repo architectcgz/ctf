@@ -40,8 +40,6 @@
   - 说明：`Draft`。后端模块边界目标设计稿，区分当前事实、目标 owner、依赖方向、对外暴露规则和迁移债务；迁移完成后应回收到 `docs/architecture/backend/07-modular-monolith-refactor.md`，再同步论文。
 - `AWD题目配置面板方案.md`
   - 说明：`Draft`。后台 AWD service 配置面板的中间设计稿，仍包含方案比较和待落地交互。
-- `AWD能力画像回流方案.md`
-  - 说明：`Draft`。AWD 个人攻击证据接入能力画像与推荐链路的中间方案，仍包含数据归因和事件设计取舍。
 - `教学复盘建议优化方案.md`
   - 说明：`Draft`。围绕毕设主线整理“教学证据 -> 能力画像补充信号 -> 推荐理由 -> 教学复盘建议”的中间方案，当前仍包含范围取舍与实现阶段拆分。
 
@@ -58,7 +56,7 @@
 - 如果只有 review 提到旧问题，不能直接把它当成当前设计；必须回到当前代码、当前事实源和最近索引复核。
 - 纯 UI 代码稿、视觉 token 草稿或 demo 结构，如果已经被 `docs/architecture/frontend/` 的最终事实替代，应该直接移出 `docs/design/` 活动集。
 - 如果 `docs/architecture/frontend/pages/` 中的页面稿与当前代码明显冲突，先判断页面稿是否仍是目标设计；确认仍有效时改代码，确认已过期时更新或移除页面稿。
-- `docs/plan/archive/impl-plan/` 和 `practice/superpowers-plan-index.md` 里的命令、文件清单和阶段状态只代表当时实施计划，不能覆盖后续代码事实。
+- `docs/plan/archive/impl-plan/` 的目录说明、相关 Git 历史，以及 `practice/superpowers-plan-index.md` 里的命令、文件清单和阶段状态只代表当时实施计划，不能覆盖后续代码事实。
 
 ## 已移除的旧设计
 
@@ -70,3 +68,7 @@
   - 移除原因：这是早期 Vue + Tailwind 页面骨架稿，不再作为活动设计文档保留。
 - 历史 UI token 草稿 design-system.md
   - 移除原因：这是早期设计系统草稿，不再作为活动设计文档保留。
+- 历史 AWD 能力画像回流方案
+  - 移除原因：其中关于 AWD 个人攻击证据回流 teaching fact snapshot、推荐理由和班级复盘口径的最终结论，已经并入 `docs/architecture/features/教学复盘建议生成架构.md`，不再保留活动 Draft。
+- 历史 Jeopardy 80 真实训练题去重矩阵
+  - 移除原因：这是 Jeopardy 80 扩容时的一次性策划矩阵，不属于持续维护的设计事实源。

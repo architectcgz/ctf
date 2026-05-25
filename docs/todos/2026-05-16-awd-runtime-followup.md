@@ -1,6 +1,6 @@
 # AWD Runtime 后续待办
 
-- Project: `/home/azhi/workspace/projects/ctf`
+- Project: `ctf 仓库根目录`
 - Created: `2026-05-16T21:15+08:00`
 
 ## 背景

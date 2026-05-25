@@ -2,7 +2,7 @@
 
 - Review target:
   - Repository: `ctf`
-  - Worktree: `/home/azhi/workspace/projects/ctf/.worktrees/feat/awd-defense-content-page`
+  - Worktree: `feat/awd-defense-content-page`（本地临时工作目录，已清理）
   - Review date: `2026-05-05`
   - Scope:
     - backend read-only AWD defense file access
@@ -58,4 +58,4 @@ No material findings blocking completion.
 1. Review reran only the directly affected frontend regression tests plus `typecheck`; the broader frontend targeted suite was already run during implementation, but not re-run by the reviewer itself.
 2. `根目录 / 上一级` buttons can still be clicked during initial page loading and may trigger extra read-only requests; current sequence guards and backend permission boundaries keep this low risk.
 3. Backend read-only safety currently relies on rooted path resolution and sensitive path filtering. This review did not add a runtime end-to-end check for symbolic links or other special files inside the mounted root.
-4. [ContestAWDWorkspacePanel.vue](/home/azhi/workspace/projects/ctf/.worktrees/feat/awd-defense-content-page/code/frontend/src/components/contests/ContestAWDWorkspacePanel.vue) 仍是 `1163` 行的超大组件，且已经在 `docs/reviews/frontend/ctf-frontend-audit-20260422.md` 的 `TD-1` backlog 中作为待拆对象存在。本次切片已经把新的防守内容页 owner 抽到 [ContestAWDDefenseWorkbench.vue](/home/azhi/workspace/projects/ctf/.worktrees/feat/awd-defense-content-page/code/frontend/src/views/contests/ContestAWDDefenseWorkbench.vue) 和 [useContestAwdDefenseWorkbenchPage.ts](/home/azhi/workspace/projects/ctf/.worktrees/feat/awd-defense-content-page/code/frontend/src/features/contest-awd-workspace/model/useContestAwdDefenseWorkbenchPage.ts)，避免继续把路由和文件浏览状态堆回父组件，但这不等于父组件拆分债已经消失。更严格的 review 记录应显式保留这一条非阻塞结构风险。
+4. `code/frontend/src/components/contests/ContestAWDWorkspacePanel.vue` 仍是 `1163` 行的超大组件，且已经在 `docs/reviews/frontend/ctf-frontend-audit-20260422.md` 的 `TD-1` backlog 中作为待拆对象存在。本次切片已经把新的防守内容页 owner 抽到 `code/frontend/src/views/contests/ContestAWDDefenseWorkbench.vue` 和 `code/frontend/src/features/contest-awd-workspace/model/useContestAwdDefenseWorkbenchPage.ts`，避免继续把路由和文件浏览状态堆回父组件，但这不等于父组件拆分债已经消失。更严格的 review 记录应显式保留这一条非阻塞结构风险。

@@ -26,7 +26,7 @@
 - 已执行：
 
 ```bash
-cd /home/azhi/workspace/projects/ctf/code/backend
+cd code/backend
 timeout 180s go test ./internal/module/runtime/... ./internal/app/...
 ```
 
@@ -48,7 +48,7 @@ timeout 180s go test ./internal/module/runtime/... ./internal/app/...
 - 2026-04-25 合并后验证：
 
 ```bash
-cd /home/azhi/workspace/projects/ctf/code/backend
+cd code/backend
 timeout 300s go test ./... -count=1
 ```
 
@@ -79,7 +79,7 @@ timeout 300s go test ./... -count=1
 - 第 2 轮验证：
 
 ```bash
-cd /home/azhi/workspace/projects/ctf/.worktrees/backend-runtime-review-round2/code/backend
+cd code/backend
 timeout 300s go test ./... -count=1
 ```
 
@@ -98,7 +98,7 @@ timeout 300s go test ./... -count=1
 - 第 3 轮验证：
 
 ```bash
-cd /home/azhi/workspace/projects/ctf/.worktrees/backend-context-architecture-guards/code/backend
+cd code/backend
 timeout 300s go test ./... -count=1
 ```
 

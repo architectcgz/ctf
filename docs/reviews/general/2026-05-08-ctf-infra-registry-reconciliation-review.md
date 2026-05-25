@@ -3,7 +3,7 @@
 ## Review Target
 
 - Repository: `ctf`
-- Worktree: `/home/azhi/workspace/projects/ctf/.worktrees/fix/docker-project-grouping`
+- Worktree: `fix/docker-project-grouping`（本地临时工作目录，已清理）
 - Branch: `fix/docker-project-grouping`
 - Diff basis: `main..fix/docker-project-grouping`
 - Runtime verification target:

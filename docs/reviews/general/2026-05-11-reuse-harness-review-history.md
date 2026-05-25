@@ -3,7 +3,7 @@
 ## Review Target
 
 - Repository: `ctf`
-- Worktree: `.worktrees/fix/reuse-decision-history`
+- Worktree: `fix/reuse-decision-history`（本地临时工作目录，已清理）
 - Scope:
   - `.harness/reuse-decision.md`
   - `.harness/reuse-index.yaml`

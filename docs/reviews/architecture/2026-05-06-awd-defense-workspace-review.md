@@ -68,7 +68,7 @@ timeout 900s go test ./internal/module/challenge/... ./internal/module/practice/
 cd code/frontend
 timeout 600s npx vitest run src/api/__tests__/contest.test.ts src/views/contests/__tests__ src/features/contest-awd-workspace
 
-cd /home/azhi/workspace/projects/ctf
+cd <repo-root>
 timeout 300s bash scripts/check-consistency.sh
 ```
 

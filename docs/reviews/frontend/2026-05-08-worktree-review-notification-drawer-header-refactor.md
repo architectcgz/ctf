@@ -3,7 +3,7 @@
 ## Review Target
 
 - 仓库：`ctf`
-- worktree：`/home/azhi/workspace/projects/ctf/.worktrees/fix/notification-drawer-header-refactor`
+- worktree：`fix/notification-drawer-header-refactor`（本地临时工作目录，已清理）
 - 分支：`fix/notification-drawer-header-refactor`
 - diff source：worktree 相对 `main` 的本地未提交改动
 - review files：

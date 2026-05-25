@@ -2,7 +2,7 @@
 
 - Review target:
   - Repository: `ctf`
-  - Worktree: `/home/azhi/workspace/projects/ctf/.worktrees/refactor/notification-drawer-widget`
+  - Worktree: `refactor/notification-drawer-widget`（本地临时工作目录，已清理）
   - Branch: `refactor/notification-drawer-widget`
   - Base/Head: `bc158cea..WORKTREE`
   - Files reviewed:

@@ -26,9 +26,9 @@
 
 ## 验证记录
 
-1. `cd /home/azhi/workspace/projects/ctf/code/backend && go test ./internal/module/contest`
-2. `cd /home/azhi/workspace/projects/ctf/code/frontend && npm run typecheck`
-3. `cd /home/azhi/workspace/projects/ctf/code/frontend && npm run test -- --run src/views/admin/__tests__/ContestManage.test.ts src/api/__tests__/admin.test.ts`
+1. `cd code/backend && go test ./internal/module/contest`
+2. `cd code/frontend && npm run typecheck`
+3. `cd code/frontend && npm run test -- --run src/views/admin/__tests__/ContestManage.test.ts src/api/__tests__/admin.test.ts`
 
 ## 不在本轮处理
 

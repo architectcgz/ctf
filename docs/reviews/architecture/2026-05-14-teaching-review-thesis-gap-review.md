@@ -3,7 +3,7 @@
 ## Review Target
 
 - 仓库：`ctf`
-- worktree：`/home/azhi/workspace/projects/ctf/.worktrees/teaching-review-strategy-tuning-wt`
+- worktree：`teaching-review-strategy-tuning-wt`（本地临时工作目录，已清理）
 - 分支：`feat/teaching-review-strategy-tuning-wt`
 - diff source：当前 `main` 与 worktree 上教学复盘相关实现、设计文档和学校材料的静态对照
 - reviewed files:

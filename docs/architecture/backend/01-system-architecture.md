@@ -338,9 +338,8 @@ flowchart LR
 ctf/code/backend/
 ├── cmd/
 │   ├── api/                         # API 入口
-│   ├── server/                      # HTTPServer 启动入口
 │   ├── import-challenge-packs/      # 题包导入工具
-│   └── seed-demo-challenges/        # 演示数据初始化
+│   └── seed-teaching-review-data/   # 教学复盘样本数据生成
 ├── configs/                         # 配置文件与密钥目录
 ├── data/                            # 题目附件、导入预览等数据目录
 ├── internal/

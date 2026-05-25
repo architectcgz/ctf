@@ -24,9 +24,9 @@
 
 ## Review 文档事实源说明
 
-- 本文件是当前前端专项审查的主索引；本目录下历史 `ctf-frontend-code-review-*` 文件只代表对应审查日期和 commit 范围内的快照。
-- 若历史 review 中仍写着“未修复”，但本文件后续轮次已经记录修复进展与验证命令，应以本文件为当前事实源。
-- 历史快照的统一读取规则见 `docs/reviews/frontend/README.md`；后续新增 review 应先判断是更新主索引，还是保留为单次审查快照。
+- 本文件是当前前端专项审查的主索引；早期 `ctf-frontend-code-review-*` 单轮快照的有效结论已经吸收到本文件与 `docs/reviews/frontend/README.md`，不再作为活动目录中的当前事实源保留。
+- 如果早期 review 曾写着“未修复”，但本文件后续轮次已经记录修复进展与验证命令，应以本文件为当前事实源。
+- 已清理快照的统一回读方式见 `docs/reviews/frontend/README.md`；需要追溯原文时使用 Git 历史，后续新增 review 也应先判断是更新主索引，还是临时保留单次审查快照。
 - 已明确过期的历史结论包括：页面组件大量占位未实现、缺少单元测试、竞赛详情题目选中状态未持久化、实例即将过期弹窗缺少对话框语义、实例延时时长常量未使用、实例状态硬编码色值等。
 
 ## 优先级结论
@@ -1901,6 +1901,25 @@
   - `npm run typecheck`
   - `git diff --check`
 
+## 第八十一轮文档治理
+
+- 已完成：
+  - `TD-5` 从“索引治理”推进到“活动目录清理”：早期 `ctf-frontend-code-review-*` 单轮快照的当前结论已明确收敛到本文件与 `docs/reviews/frontend/README.md`，原始快照不再继续保留在活动目录。
+  - `docs/reviews/frontend/README.md` 已改成“主索引 + Git 历史回读”模式，不再把早期单轮快照当作长期保留的活动 review 资产。
+  - 新增 `feedback/2026-05-23-frontend-review-snapshots-can-be-pruned-after-audit-absorption.md`，记录这次目录治理约束，避免后续重复堆积单轮快照。
+- 本轮涉及文件：
+  - `docs/reviews/frontend/README.md`
+  - `docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+  - `feedback/2026-05-23-frontend-review-snapshots-can-be-pruned-after-audit-absorption.md`
+  - `feedback/AGENTS.md`
+
+## 第八十一轮验证
+
+- 已执行：
+  - `rg -n "ctf-frontend-code-review-|已清理快照|Git 历史|单轮快照" docs/reviews/frontend/README.md docs/reviews/frontend/ctf-frontend-audit-20260422.md feedback/2026-05-23-frontend-review-snapshots-can-be-pruned-after-audit-absorption.md`
+  - `bash scripts/check-consistency.sh`
+  - `git diff --check`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
@@ -1917,8 +1936,8 @@
   - 当前未接入 `vue-i18n`，产品文案仍以中文硬编码为主。
   - 是否推进取决于产品是否需要多语言；若推进，应先从路由标题、表单错误、导航与关键空态开始，不建议一次性机械搬迁所有文案。
 - `TD-5` 历史 review 文档清理：
-  - 已在第七十四轮完成主索引与历史快照规则治理。
-  - 后续若继续处理旧文档，只补充交叉引用或新增索引说明，不直接改写历史 review 原文中的当时结论。
+  - 已在第八十一轮完成主索引吸收与活动目录清理；早期 `ctf-frontend-code-review-*` 单轮快照不再保留在活动目录。
+  - 后续若新增单次审查快照，只在尚未被主索引吸收、确实需要独立作为活动证据时临时保留；吸收后直接清理，原文回溯统一走 Git 历史。
 
 ## 备注
 

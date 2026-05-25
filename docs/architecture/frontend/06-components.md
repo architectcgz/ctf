@@ -54,7 +54,7 @@
 
 `workspace-shell.css` 中的 `ui-btn` 是通用工作区按钮原语。页面如果只是需要常规 primary、secondary、ghost、danger 动作，应直接组合 `ui-btn` 与对应变体类；页面局部只允许通过 `--ui-btn-*` 变量调整尺寸、边框强度或主题语义。
 
-当前全仓按钮迁移清单见 `docs/todos/2026-05-10-frontend-button-primitive-migration-audit.md`。该清单是后续迁移顺序和候选范围，不替代本节的共享原语边界。
+按钮迁移清单只保留在 Git 历史里，用于追溯当时的迁移顺序和候选范围；当前共享原语边界以本节为准。
 
 边界：
 

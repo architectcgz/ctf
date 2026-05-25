@@ -7,7 +7,7 @@
 1. 从这里选择一个最接近的模板目录
 2. 复制到 `challenges/jeopardy/packs/<your-slug>/`
 3. 把模板中的占位内容全部替换掉
-4. 按 [teacher-authoring-guide.md](/home/azhi/workspace/projects/ctf/challenges/teacher-authoring-guide.md) 完成自测
+4. 按 [teacher-authoring-guide.md](../../teacher-authoring-guide.md) 完成自测
 5. 生成 `challenges/jeopardy/dist/<your-slug>.zip`
 
 当前模板：
@@ -19,21 +19,21 @@
 ## 推荐复制命令
 
 ```bash
-cd /home/azhi/workspace/projects/ctf/challenges/jeopardy
+cd challenges/jeopardy
 cp -R templates/offline-static-template packs/<your-slug>
 ```
 
 或：
 
 ```bash
-cd /home/azhi/workspace/projects/ctf/challenges/jeopardy
+cd challenges/jeopardy
 cp -R templates/container-web-template packs/<your-slug>
 ```
 
 或：
 
 ```bash
-cd /home/azhi/workspace/projects/ctf/challenges/jeopardy
+cd challenges/jeopardy
 cp -R templates/container-pwn-template packs/<your-slug>
 ```
 
@@ -52,7 +52,7 @@ cp -R templates/container-pwn-template packs/<your-slug>
 模板复制并修改完成后，可用下面的方式刷新外层分发包：
 
 ```bash
-cd /home/azhi/workspace/projects/ctf/challenges/jeopardy
+cd challenges/jeopardy
 mkdir -p dist
 cd packs
 zip -r ../dist/<your-slug>.zip <your-slug>

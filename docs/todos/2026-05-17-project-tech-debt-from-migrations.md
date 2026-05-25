@@ -21,7 +21,7 @@
 - [ ] 竞赛 / AWD 数据已回流到维度事实，但 recommendation / class review 与 practice 语义仍未完全统一。
   - 现状：个人与班级 teaching fact snapshot 已吸收 AWD 成功覆盖、profile score 补充信号与 solved difficulty 覆盖；但推荐与复盘主链路里，attempt / review evidence 仍主要沿用练习侧语义。
   - 影响：当前已经不是“完全没回流”，但仍不是一份完全统一的训练画像。
-  - 依据：`docs/reviews/architecture/2026-05-14-teaching-review-thesis-gap-review.md`、`docs/design/AWD能力画像回流方案.md`
+  - 依据：`docs/reviews/architecture/2026-05-14-teaching-review-thesis-gap-review.md`、`docs/architecture/features/教学复盘建议生成架构.md`
 
 - [ ] `contest_awd_services.runtime_config.challenge_id` 只剩历史兼容清洗层，尚未彻底退场。
   - 现状：新写入已不再持久化该字段，查询返回也会过滤它；但历史数据兼容清洗逻辑仍保留在 query / response mapper 层。

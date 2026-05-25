@@ -19,14 +19,14 @@
 
 如果是 AWD 题目，先看这份契约再落题：
 
-- [awd/challenge-package-contract.md](/home/azhi/workspace/projects/ctf/challenges/awd/challenge-package-contract.md)
+- [awd/challenge-package-contract.md](awd/challenge-package-contract.md)
 
 如果不想从空目录开始，可以直接使用模板：
 
-- [jeopardy/templates/README.md](/home/azhi/workspace/projects/ctf/challenges/jeopardy/templates/README.md)
-- [offline-static-template](/home/azhi/workspace/projects/ctf/challenges/jeopardy/templates/offline-static-template)
-- [container-web-template](/home/azhi/workspace/projects/ctf/challenges/jeopardy/templates/container-web-template)
-- [container-pwn-template](/home/azhi/workspace/projects/ctf/challenges/jeopardy/templates/container-pwn-template)
+- [jeopardy/templates/README.md](jeopardy/templates/README.md)
+- [offline-static-template](jeopardy/templates/offline-static-template)
+- [container-web-template](jeopardy/templates/container-web-template)
+- [container-pwn-template](jeopardy/templates/container-pwn-template)
 
 ## 2. 先决定题型
 

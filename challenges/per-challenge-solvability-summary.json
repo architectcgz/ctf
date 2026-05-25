@@ -4,7 +4,7 @@
   "failed": 137,
   "offline_total": 180,
   "container_total": 153,
-  "report": "/home/azhi/workspace/projects/ctf/challenges/per-challenge-solvability-verify.jsonl",
+  "report": "challenges/per-challenge-solvability-verify.jsonl",
   "failures": [
     {
       "slug": "crypto-bleichenbacher",

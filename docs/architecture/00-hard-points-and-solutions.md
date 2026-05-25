@@ -14,7 +14,7 @@
 
 ## 当前设计
 
-- 本文件当前负责：保留 2026-03 这一轮实现拆分时的风险清单、验收口径与历史上下文，便于回看早期任务分解；相关背景可交叉参考 `docs/tasks/ctf-platform-task-breakdown.md` 与 `docs/architecture/backend/01-system-architecture.md`。
+- 本文件当前负责：保留 2026-03 这一轮实现拆分时的风险清单、验收口径与历史上下文，便于回看早期任务分解；相关背景以当前架构入口与 2026-03 的历史 review / plan 为准。
 - 本文件当前不负责：定义现在的模块 owner、HTTP / WebSocket 契约、前端页面边界或架构 guardrail；当前事实以 `docs/architecture/backend/README.md`、`docs/architecture/frontend/README.md` 和 `docs/architecture/features/专题架构索引.md` 为准。
 - 本文件的后续处理原则：如果还需要保留类似实现回顾，应迁入 `practice/`、`docs/reports/` 或具体 implementation plan，而不是继续扩张 `docs/architecture/`。
 

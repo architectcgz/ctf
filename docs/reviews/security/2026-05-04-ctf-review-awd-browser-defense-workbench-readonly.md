@@ -2,7 +2,7 @@
 
 - Review target:
   - Repository: `ctf`
-  - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf-awd-browser-defense-workbench`
+  - Worktree: `ctf-awd-browser-defense-workbench`（本地临时工作目录，已清理）
   - Diff source: current uncommitted local diff reviewed on 2026-05-04
   - Files reviewed:
     - `code/backend/configs/config.yaml`

@@ -12,5 +12,7 @@
   - `CTF_CONTAINER_PUBLIC_HOST=127.0.0.1`：继续给学生 / 浏览器 / TCP 直连返回宿主机本地地址。
   - `CTF_CONTAINER_ACCESS_HOST=host-gateway.internal`：只给 `ctf-api` 容器内部的实例就绪探测和 HTTP 代理使用。
   - 对应地，compose 需要给 `ctf-api` 增加 `host-gateway.internal:host-gateway`，保证后端容器能回到宿主机发布端口。
+- 如果运行场景从“本机自测”切到“局域网学生访问”，`CTF_CONTAINER_PUBLIC_HOST` 必须改成学生可访问到的宿主机局域网 IP 或内网域名，同时前端 / API / SSH 网关端口绑定也不能继续限制在 `127.0.0.1`。
+- 在 Windows + WSL 场景下，优先使用 Windows 宿主机的局域网 IP；不要默认把 WSL 内部 `172.*` NAT 地址写成学生侧访问地址。
 - `ctf-registry` 的默认认证与数据目录位于 `docker/ctf/infra/registry/runtime/`。
 - 旧的 `$HOME/ctf-registry` 和 `docker/ctf/.env.registry` 只作为迁移来源，不再作为默认配置入口。

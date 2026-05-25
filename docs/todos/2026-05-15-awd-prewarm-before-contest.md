@@ -1,6 +1,6 @@
 # AWD 赛前预热能力
 
-- 项目路径：`/home/azhi/workspace/projects/ctf`
+- 项目路径：`ctf 仓库根目录`
 - 创建时间：`2026-05-15 00:00:00 Asia/Shanghai`
 - 完成时间：`2026-05-15`
 - 背景：当前这轮只把 AWD 队伍服务实例生命周期收口到 `contest.end_time`，没有解决“演示或比赛前统一拉起实例”的运营需求。若宿主机前一晚关机、Docker 重启或 runtime 清空，比赛开始前仍需要一次显式预热。
