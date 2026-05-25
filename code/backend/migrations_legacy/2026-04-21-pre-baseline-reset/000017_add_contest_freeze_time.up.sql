@@ -1,2 +1,0 @@
-ALTER TABLE contests
-    ADD COLUMN IF NOT EXISTS freeze_time TIMESTAMP;
