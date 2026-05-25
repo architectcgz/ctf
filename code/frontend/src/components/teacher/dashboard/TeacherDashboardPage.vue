@@ -3,7 +3,7 @@ import { toRef } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
 
 import type { TeacherOverviewData } from '@/api/contracts'
-import { useTeacherDashboardMetrics } from '@/features/teacher-dashboard'
+import { useDashboardMetrics } from '@/features/teacher-dashboard'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 const props = defineProps<{
@@ -54,7 +54,7 @@ const {
   trendSignals,
   reviewHighlights,
   interventionTargets,
-} = useTeacherDashboardMetrics({
+} = useDashboardMetrics({
   overview: toRef(props, 'overview'),
 })
 </script>

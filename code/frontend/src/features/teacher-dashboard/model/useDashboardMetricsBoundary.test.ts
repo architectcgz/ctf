@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import metricsSource from './useTeacherDashboardMetrics.ts?raw'
+import metricsSource from './useDashboardMetrics.ts?raw'
 
-describe('useTeacherDashboardMetrics boundary', () => {
+describe('useDashboardMetrics boundary', () => {
   it('应组合 overview builders，避免主模块内联大段概览与摘要列表构建', () => {
     expect(metricsSource).toContain("from './teacherDashboardOverviewBuilders'")
     expect(metricsSource).toContain('buildOverviewDescription(')

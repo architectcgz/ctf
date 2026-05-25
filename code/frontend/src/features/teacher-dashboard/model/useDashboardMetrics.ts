@@ -14,17 +14,17 @@ import {
   buildReviewHighlights,
 } from './teacherDashboardOverviewBuilders'
 
-interface UseTeacherDashboardMetricsOptions {
-  overview: Ref<TeacherOverviewData | null>
-}
-
 interface WeakDimensionStat {
   dimension: string
   count: number
   width: string
 }
 
-export function useTeacherDashboardMetrics({ overview }: UseTeacherDashboardMetricsOptions) {
+interface UseDashboardMetricsOptions {
+  overview: Ref<TeacherOverviewData | null>
+}
+
+export function useDashboardMetrics({ overview }: UseDashboardMetricsOptions) {
   const summary = computed(() => overview.value?.summary ?? null)
   const focusClasses = computed(() => overview.value?.focus_classes ?? [])
   const focusStudents = computed(() => overview.value?.focus_students ?? [])
