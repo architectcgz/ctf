@@ -17,7 +17,7 @@ const journalNotesSource = readFileSync(
   'utf-8'
 )
 const teacherAwdReviewSurfaceShellSource = readFileSync(
-  `${process.cwd()}/src/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue`,
+  `${process.cwd()}/src/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue`,
   'utf-8'
 )
 

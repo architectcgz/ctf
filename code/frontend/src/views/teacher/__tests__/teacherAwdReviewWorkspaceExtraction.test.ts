@@ -5,7 +5,7 @@ import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWo
 import awdReviewWorkspaceStateSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceState.vue?raw'
 import awdReviewWorkspaceActionsSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceActions.vue?raw'
 import awdReviewStatusChipSource from '@/widgets/awd-review-workspace/AwdReviewStatusChip.vue?raw'
-import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
+import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceHeader.vue?raw'
 import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/AwdReviewSummaryPanel.vue?raw'
 
@@ -18,7 +18,7 @@ describe('Teacher AWD review workspace extraction', () => {
     expect(awdReviewDetailSource).not.toContain('class="teacher-management-shell')
     expect(awdReviewDetailSource).not.toContain('class="teacher-topbar')
 
-    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSurfaceShell')
+    expect(awdReviewWorkspaceSource).toContain('<AwdReviewSurfaceShell')
     expect(awdReviewWorkspaceSource).toContain('<AwdReviewWorkspaceHeader')
     expect(awdReviewWorkspaceSource).toContain('<AwdReviewSummaryPanel')
     expect(awdReviewWorkspaceSource).toContain('<AwdReviewStatusChip')

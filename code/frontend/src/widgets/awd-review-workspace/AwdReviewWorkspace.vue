@@ -18,9 +18,9 @@ import AwdReviewAnalysisSection from '@/components/teacher/awd-review/AwdReviewA
 import AwdReviewEvidenceGrid from '@/components/teacher/awd-review/AwdReviewEvidenceGrid.vue'
 import AwdReviewTeamDrawer from '@/components/teacher/awd-review/AwdReviewTeamDrawer.vue'
 import AwdReviewStatusChip from './AwdReviewStatusChip.vue'
+import AwdReviewSurfaceShell from './AwdReviewSurfaceShell.vue'
 import AwdReviewWorkspaceActions from './AwdReviewWorkspaceActions.vue'
 import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
-import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import AwdReviewWorkspaceHeader from './AwdReviewWorkspaceHeader.vue'
 import AwdReviewWorkspaceState from './AwdReviewWorkspaceState.vue'
 import {
@@ -75,7 +75,7 @@ const summaryItems = computed(() =>
 </script>
 
 <template>
-  <TeacherAWDReviewSurfaceShell section-class="teacher-review-workspace">
+  <AwdReviewSurfaceShell section-class="teacher-review-workspace">
     <div class="teacher-page">
       <AwdReviewWorkspaceHeader
         :overline="TEACHER_AWD_REVIEW_WORKSPACE_COPY.overline"
@@ -158,7 +158,7 @@ const summaryItems = computed(() =>
         @close="emit('closeTeam')"
       />
     </div>
-  </TeacherAWDReviewSurfaceShell>
+  </AwdReviewSurfaceShell>
 </template>
 
 <style scoped>

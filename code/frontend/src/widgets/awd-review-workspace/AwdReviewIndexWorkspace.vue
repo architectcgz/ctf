@@ -4,8 +4,8 @@ import { FolderKanban, RefreshCcw } from 'lucide-vue-next'
 
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import TeacherAWDReviewContestDirectory from './TeacherAWDReviewContestDirectory.vue'
+import AwdReviewSurfaceShell from './AwdReviewSurfaceShell.vue'
 import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
-import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import AwdReviewWorkspaceHeader from './AwdReviewWorkspaceHeader.vue'
 import {
   buildTeacherAwdReviewIndexSummaryItems,
@@ -54,7 +54,7 @@ const summaryItems = computed(() =>
 </script>
 
 <template>
-  <TeacherAWDReviewSurfaceShell>
+  <AwdReviewSurfaceShell>
     <div class="teacher-page">
       <AwdReviewWorkspaceHeader
         :overline="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.overline"
@@ -113,7 +113,7 @@ const summaryItems = computed(() =>
         @update-keyword-filter="emit('updateKeywordFilter', $event)"
       />
     </div>
-  </TeacherAWDReviewSurfaceShell>
+  </AwdReviewSurfaceShell>
 </template>
 
 <style scoped>

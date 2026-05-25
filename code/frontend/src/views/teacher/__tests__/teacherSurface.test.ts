@@ -9,7 +9,7 @@ import studentManagementSource from '@/components/teacher/student-management/Stu
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
-import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
+import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
@@ -33,7 +33,7 @@ const teacherManagementSources = [
   ['ClassManagementPage.vue', classManagementSource],
   ['StudentManagementPage.vue', studentManagementSource],
   ['TeacherInstanceManagementPage.vue', instanceManagementSource],
-  ['TeacherAWDReviewSurfaceShell.vue', awdReviewSurfaceShellSource],
+  ['AwdReviewSurfaceShell.vue', awdReviewSurfaceShellSource],
 ] as const
 
 const teacherSurfaceForbiddenLiteralCases = teacherSurfaceSources.flatMap(([sourceName, source]) =>
@@ -63,8 +63,8 @@ describe('teacher surface source regression', () => {
   )
 
   it('AWD 复盘 widgets 应通过共享 surface shell 承接教师端外层壳', () => {
-    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSurfaceShell')
-    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSurfaceShell')
+    expect(awdReviewIndexWorkspaceSource).toContain('<AwdReviewSurfaceShell')
+    expect(awdReviewWorkspaceSource).toContain('<AwdReviewSurfaceShell')
   })
 
   it.each(teacherSurfaceForbiddenLiteralCases)(

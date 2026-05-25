@@ -5,14 +5,14 @@ import studentManagementSource from '@/components/teacher/student-management/Stu
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
-import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
+import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'
 
 describe('teacher root shell cleanup', () => {
   it.each([
     ['ClassManagementPage.vue', classManagementSource],
     ['StudentManagementPage.vue', studentManagementSource],
     ['TeacherInstanceManagementPage.vue', instanceManagementSource],
-    ['TeacherAWDReviewSurfaceShell.vue', awdReviewSurfaceShellSource],
+    ['AwdReviewSurfaceShell.vue', awdReviewSurfaceShellSource],
     ['AwdReviewIndexWorkspace.vue', awdReviewIndexWorkspaceSource],
     ['AwdReviewWorkspace.vue', awdReviewWorkspaceSource],
   ])('%s 应切到共享 workspace 根壳，不再手写教师页外层圆角', (_name, source) => {
