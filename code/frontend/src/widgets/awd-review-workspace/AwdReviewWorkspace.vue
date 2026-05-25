@@ -19,7 +19,7 @@ import AwdReviewEvidenceGrid from '@/components/teacher/awd-review/AwdReviewEvid
 import AwdReviewTeamDrawer from '@/components/teacher/awd-review/AwdReviewTeamDrawer.vue'
 import AwdReviewStatusChip from './AwdReviewStatusChip.vue'
 import AwdReviewWorkspaceActions from './AwdReviewWorkspaceActions.vue'
-import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
+import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
 import AwdReviewWorkspaceState from './AwdReviewWorkspaceState.vue'
@@ -102,7 +102,7 @@ const summaryItems = computed(() =>
         </template>
       </TeacherAWDReviewWorkspaceHeader>
 
-      <TeacherAWDReviewSummaryPanel
+      <AwdReviewSummaryPanel
         :title="activeSummaryTitle"
         :items="summaryItems"
         summary-class="awd-review-summary"
@@ -117,7 +117,7 @@ const summaryItems = computed(() =>
             :label="contestStatusLabel(review.contest.status || '')"
           />
         </template>
-      </TeacherAWDReviewSummaryPanel>
+      </AwdReviewSummaryPanel>
 
       <AwdReviewRoundSelector
         :rounds="timelineRounds"

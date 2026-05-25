@@ -7,7 +7,7 @@ import awdReviewWorkspaceActionsSource from '@/widgets/awd-review-workspace/AwdR
 import awdReviewStatusChipSource from '@/widgets/awd-review-workspace/AwdReviewStatusChip.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceHeader.vue?raw'
-import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSummaryPanel.vue?raw'
+import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/AwdReviewSummaryPanel.vue?raw'
 
 describe('Teacher AWD review workspace extraction', () => {
   it('详情路由页应收敛为 widget 组合层', () => {
@@ -20,7 +20,7 @@ describe('Teacher AWD review workspace extraction', () => {
 
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSurfaceShell')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
-    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
+    expect(awdReviewWorkspaceSource).toContain('<AwdReviewSummaryPanel')
     expect(awdReviewWorkspaceSource).toContain('<AwdReviewStatusChip')
     expect(awdReviewWorkspaceSource).toContain('<AwdReviewWorkspaceActions')
     expect(awdReviewWorkspaceSource).toContain('<AwdReviewWorkspaceState')

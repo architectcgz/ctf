@@ -9,7 +9,7 @@ import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdRev
 import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceHeader.vue?raw'
-import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSummaryPanel.vue?raw'
+import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/AwdReviewSummaryPanel.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -53,10 +53,10 @@ describe('teacher dark surface alignment', () => {
     expect(instanceManagementSource).toContain('WorkspaceDataTable')
     expect(instanceManagementSource).toContain('teacher-directory-row')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
-    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
+    expect(awdReviewIndexWorkspaceSource).toContain('<AwdReviewSummaryPanel')
     expect(awdReviewIndexWorkspaceSource).not.toContain('teacher-summary-item')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
-    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
+    expect(awdReviewWorkspaceSource).toContain('<AwdReviewSummaryPanel')
     expect(awdReviewWorkspaceSource).not.toContain('teacher-summary-item')
     expect(awdReviewWorkspaceHeaderSource).toContain('class="workspace-overline"')
     expect(awdReviewWorkspaceHeaderSource).toContain('class="header-actions"')

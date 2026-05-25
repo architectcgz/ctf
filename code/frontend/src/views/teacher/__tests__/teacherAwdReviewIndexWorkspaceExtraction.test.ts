@@ -5,7 +5,7 @@ import awdReviewWidgetIndexSource from '@/widgets/awd-review-workspace/index.ts?
 import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceHeader.vue?raw'
-import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSummaryPanel.vue?raw'
+import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/AwdReviewSummaryPanel.vue?raw'
 import awdReviewContestDirectorySource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestDirectory.vue?raw'
 import awdReviewIndexFiltersSource from '@/widgets/awd-review-workspace/TeacherAWDReviewIndexFilters.vue?raw'
 import awdReviewDirectorySectionSource from '@/widgets/awd-review-workspace/TeacherAWDReviewDirectorySection.vue?raw'
@@ -37,7 +37,7 @@ describe('Teacher AWD review index workspace extraction', () => {
 
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSurfaceShell')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
-    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
+    expect(awdReviewIndexWorkspaceSource).toContain('<AwdReviewSummaryPanel')
     expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewContestDirectory')
     expect(awdReviewIndexWorkspaceSource).toContain('buildTeacherAwdReviewIndexSummaryItems')
     expect(awdReviewIndexWorkspaceSource).toContain('TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY')

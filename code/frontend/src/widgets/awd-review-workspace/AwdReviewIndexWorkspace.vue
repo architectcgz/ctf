@@ -4,7 +4,7 @@ import { FolderKanban, RefreshCcw } from 'lucide-vue-next'
 
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import TeacherAWDReviewContestDirectory from './TeacherAWDReviewContestDirectory.vue'
-import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
+import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
 import {
@@ -85,14 +85,14 @@ const summaryItems = computed(() =>
         </template>
       </TeacherAWDReviewWorkspaceHeader>
 
-      <TeacherAWDReviewSummaryPanel
+      <AwdReviewSummaryPanel
         :title="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.summaryTitle"
         :items="summaryItems"
       >
         <template #title-prefix>
           <FolderKanban class="h-4 w-4" />
         </template>
-      </TeacherAWDReviewSummaryPanel>
+      </AwdReviewSummaryPanel>
 
       <TeacherAWDReviewContestDirectory
         :loading="loading"
