@@ -24,7 +24,7 @@ describe('Teacher AWD review index workspace extraction', () => {
     expect(awdReviewWidgetIndexSource).toContain(
       "export { default as AwdReviewWorkspace } from './AwdReviewWorkspace.vue'"
     )
-    expect(awdReviewWidgetIndexSource).not.toContain('TeacherAWDReviewWorkspaceState')
+    expect(awdReviewWidgetIndexSource).not.toContain('AwdReviewWorkspaceState')
     expect(awdReviewWidgetIndexSource).not.toContain('TeacherAWDReviewContestDirectory')
 
     expect(awdReviewIndexSource).toContain(

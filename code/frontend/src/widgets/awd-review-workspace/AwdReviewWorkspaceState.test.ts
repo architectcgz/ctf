@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import TeacherAWDReviewWorkspaceState from './TeacherAWDReviewWorkspaceState.vue'
+import AwdReviewWorkspaceState from './AwdReviewWorkspaceState.vue'
 
-describe('TeacherAWDReviewWorkspaceState', () => {
+describe('AwdReviewWorkspaceState', () => {
   it('错误态应透传重试事件', async () => {
-    const wrapper = mount(TeacherAWDReviewWorkspaceState, {
+    const wrapper = mount(AwdReviewWorkspaceState, {
       props: {
         loading: false,
         error: '加载失败',
@@ -19,7 +19,7 @@ describe('TeacherAWDReviewWorkspaceState', () => {
   })
 
   it('有数据时应渲染默认插槽', () => {
-    const wrapper = mount(TeacherAWDReviewWorkspaceState, {
+    const wrapper = mount(AwdReviewWorkspaceState, {
       props: {
         loading: false,
         error: null,

@@ -22,7 +22,7 @@ import TeacherAWDReviewWorkspaceActions from './TeacherAWDReviewWorkspaceActions
 import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
-import TeacherAWDReviewWorkspaceState from './TeacherAWDReviewWorkspaceState.vue'
+import AwdReviewWorkspaceState from './AwdReviewWorkspaceState.vue'
 import {
   buildTeacherAwdReviewSummaryItems,
   TEACHER_AWD_REVIEW_WORKSPACE_COPY,
@@ -125,7 +125,7 @@ const summaryItems = computed(() =>
         @set-round="emit('setRound', $event)"
       />
 
-      <TeacherAWDReviewWorkspaceState
+      <AwdReviewWorkspaceState
         :loading="loading"
         :error="error"
         :has-review="Boolean(review)"
@@ -147,7 +147,7 @@ const summaryItems = computed(() =>
             :format-service-ref="formatServiceRef"
           />
         </template>
-      </TeacherAWDReviewWorkspaceState>
+      </AwdReviewWorkspaceState>
 
       <AwdReviewTeamDrawer
         :visible="Boolean(selectedTeam)"
