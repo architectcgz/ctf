@@ -18,7 +18,7 @@ import AwdReviewAnalysisSection from '@/components/teacher/awd-review/AwdReviewA
 import AwdReviewEvidenceGrid from '@/components/teacher/awd-review/AwdReviewEvidenceGrid.vue'
 import AwdReviewTeamDrawer from '@/components/teacher/awd-review/AwdReviewTeamDrawer.vue'
 import AwdReviewStatusChip from './AwdReviewStatusChip.vue'
-import TeacherAWDReviewWorkspaceActions from './TeacherAWDReviewWorkspaceActions.vue'
+import AwdReviewWorkspaceActions from './AwdReviewWorkspaceActions.vue'
 import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
 import TeacherAWDReviewWorkspaceHeader from './TeacherAWDReviewWorkspaceHeader.vue'
@@ -90,7 +90,7 @@ const summaryItems = computed(() =>
         </template>
 
         <template #actions>
-          <TeacherAWDReviewWorkspaceActions
+          <AwdReviewWorkspaceActions
             :loading="loading"
             :has-review="Boolean(review)"
             :exporting="exporting"

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import TeacherAWDReviewWorkspaceActions from './TeacherAWDReviewWorkspaceActions.vue'
+import AwdReviewWorkspaceActions from './AwdReviewWorkspaceActions.vue'
 
-describe('TeacherAWDReviewWorkspaceActions', () => {
+describe('AwdReviewWorkspaceActions', () => {
   it('应透传返回与导出事件', async () => {
-    const wrapper = mount(TeacherAWDReviewWorkspaceActions, {
+    const wrapper = mount(AwdReviewWorkspaceActions, {
       props: {
         loading: false,
         hasReview: true,
@@ -26,7 +26,7 @@ describe('TeacherAWDReviewWorkspaceActions', () => {
   })
 
   it('应根据状态禁用导出按钮', () => {
-    const wrapper = mount(TeacherAWDReviewWorkspaceActions, {
+    const wrapper = mount(AwdReviewWorkspaceActions, {
       props: {
         loading: true,
         hasReview: false,

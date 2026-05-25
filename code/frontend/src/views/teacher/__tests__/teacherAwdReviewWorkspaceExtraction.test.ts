@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import awdReviewWorkspaceStateSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceState.vue?raw'
-import awdReviewWorkspaceActionsSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceActions.vue?raw'
+import awdReviewWorkspaceActionsSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceActions.vue?raw'
 import awdReviewStatusChipSource from '@/widgets/awd-review-workspace/AwdReviewStatusChip.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceHeader.vue?raw'
@@ -22,7 +22,7 @@ describe('Teacher AWD review workspace extraction', () => {
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
     expect(awdReviewWorkspaceSource).toContain('<AwdReviewStatusChip')
-    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceActions')
+    expect(awdReviewWorkspaceSource).toContain('<AwdReviewWorkspaceActions')
     expect(awdReviewWorkspaceSource).toContain('<AwdReviewWorkspaceState')
     expect(awdReviewWorkspaceSource).toContain('buildTeacherAwdReviewSummaryItems')
     expect(awdReviewWorkspaceActionsSource).toContain('data-testid="awd-review-export-archive"')
