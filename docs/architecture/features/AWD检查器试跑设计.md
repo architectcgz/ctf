@@ -15,7 +15,7 @@
 
 ## 1. 背景与问题
 
-管理端现在已经不是“保存后再看 readiness”的被动流程。当前代码允许管理员在 AWD 题目配置对话框里直接试跑 checker，并把试跑结果通过短期 token 绑定到保存动作上。这里需要明确的不是交互草图，而是当前真实执行链：
+管理端现在已经不是“保存后再看 readiness”的被动流程。当前代码允许管理员在 AWD 配置页面里直接试跑 checker，并把试跑结果通过短期 token 绑定到保存动作上。这里需要明确的不是交互草图，而是当前真实执行链：
 
 - 试跑与赛中巡检共用同一套 checker 执行逻辑
 - 试跑结果不会写入 `awd_team_services`，也不会产生轮次副作用
@@ -33,7 +33,7 @@
 
 ### 3.1 模块清单
 
-- `AWDChallengeConfigDialog`
+- `ContestAwdConfig.vue` / `useContestAwdConfigPage`
   - 负责：收集草稿、触发试跑、展示实时进度、在保存时附带 `awd_checker_preview_token`
   - 不负责：自行决定校验状态
 
@@ -80,7 +80,7 @@
 
 ### 5.1 试跑执行链路
 
-1. 管理员在 `AWDChallengeConfigDialog` 中填写 checker 草稿。
+1. 管理员在 `ContestAwdConfig.vue` 中填写 checker 草稿。
 2. 前端调用 `runContestAWDCheckerPreview`，可传显式 `access_url`，也可让后端自动拉起 preview runtime。
 3. `AWDService.PreviewChecker` 校验 AWD 赛事上下文、checker 类型与配置。
 4. 如果未提供 `access_url`，且题目是单容器部署并存在可用镜像，`prepareCheckerPreviewAccessURL` 会通过 `runtimeProbe.CreateContainer` 拉起临时实例。
@@ -130,8 +130,10 @@
 - `code/backend/internal/module/contest/application/commands/awd_checker_preview_token_support.go`
 - `code/backend/internal/module/contest/application/jobs/awd_checker_preview.go`
 - `code/backend/internal/module/contest/api/http/awd_round_check_handler.go`
-- `code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue`
+- `code/frontend/src/views/platform/ContestAwdConfig.vue`
+- `code/frontend/src/components/platform/contest/ContestAwdDebugStation.vue`
 - `code/frontend/src/features/contest-awd-config/model/useAwdCheckerPreview.ts`
+- `code/frontend/src/features/contest-awd-config/model/useContestAwdConfigPage.ts`
 - `code/frontend/src/api/admin/contests.ts`
 
 ## 9. 验证标准

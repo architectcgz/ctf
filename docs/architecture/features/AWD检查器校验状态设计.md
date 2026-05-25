@@ -45,7 +45,7 @@ AWD checker 的“最近通过 / 最近失败 / 未验证 / 待重新验证”�
   - 负责：把保存态校验状态和 `last_preview_result` 暴露给前端
   - 不负责：推导 readiness 阻塞原因
 
-- 前端 `AWDChallengeConfigPanel` / `AWDChallengeConfigDialog`
+- 前端 `AWDChallengeConfigPanel` / `ContestAwdConfig.vue`
   - 负责：展示状态标签、最近校验时间和目标地址摘要
   - 不负责：自行推导状态流转
 
@@ -97,7 +97,7 @@ AWD checker 的“最近通过 / 最近失败 / 未验证 / 待重新验证”�
 
 1. `ListContestAWDServices` 返回 service 当前保存态。
 2. HTTP handler 把 `last_preview_result` 解析成结构化 DTO。
-3. `AWDChallengeConfigPanel`、`AWDChallengeConfigDialog`、`AWDReadinessChecklist` 复用同一份结果快照展示状态与最近访问目标。
+3. `AWDChallengeConfigPanel`、`ContestAwdConfig.vue`、`AWDReadinessChecklist` 复用同一份结果快照展示状态与最近访问目标。
 
 ## 6. 接口与契约
 
@@ -134,7 +134,7 @@ AWD checker 的“最近通过 / 最近失败 / 未验证 / 待重新验证”�
 - `code/backend/internal/module/contest/application/queries/contest_awd_service_query.go`
 - `code/backend/internal/module/contest/api/http/awd_service_manage_handler.go`
 - `code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue`
-- `code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue`
+- `code/frontend/src/views/platform/ContestAwdConfig.vue`
 
 ## 9. 验证标准
 

@@ -271,116 +271,10 @@ const ContestChallengeEditorDialogStub = defineComponent({
   `,
 })
 
-const AWDChallengeConfigDialogStub = defineComponent({
-  name: 'AWDChallengeConfigDialog',
-  props: {
-    open: { type: Boolean, default: false },
-    mode: { type: String, default: 'create' },
-    challengeOptions: { type: Array, default: () => [] },
-    awdChallengeOptions: { type: Array, default: () => [] },
-    existingChallengeIds: { type: Array, default: () => [] },
-    draft: { type: Object, default: null },
-    loadingChallengeCatalog: { type: Boolean, default: false },
-    loadingAwdChallengeCatalog: { type: Boolean, default: false },
-    saving: { type: Boolean, default: false },
-  },
-  emits: ['update:open', 'save'],
-  setup(props, { emit }) {
-    const challengeId = ref('')
-    const awdChallengeId = ref('')
-    const points = ref('100')
-    const order = ref('0')
-    const isVisible = ref('true')
-
-    const selectableChallenges = computed(() =>
-      (props.challengeOptions as Array<{ id: string }>).filter(
-        (item) =>
-          props.mode === 'edit' || !(props.existingChallengeIds as string[]).includes(item.id)
-      )
-    )
-
-    watch(
-      () =>
-        [
-          props.open,
-          props.mode,
-          props.draft,
-          selectableChallenges.value,
-          props.awdChallengeOptions,
-        ] as const,
-      ([open]) => {
-        if (!open) {
-          return
-        }
-
-        challengeId.value =
-          props.mode === 'edit'
-            ? String((props.draft as { challenge_id?: string } | null)?.challenge_id ?? '')
-            : String(selectableChallenges.value[0]?.id ?? '')
-        awdChallengeId.value = String(
-          (props.draft as { awd_challenge_id?: string } | null)?.awd_challenge_id ??
-            (props.awdChallengeOptions as Array<{ id: string }>)[0]?.id ??
-            ''
-        )
-        points.value = String((props.draft as { points?: number } | null)?.points ?? 100)
-        order.value = String((props.draft as { order?: number } | null)?.order ?? 0)
-        isVisible.value =
-          (props.draft as { is_visible?: boolean } | null)?.is_visible === false ? 'false' : 'true'
-      },
-      { immediate: true, deep: true }
-    )
-
-    function submit() {
-      emit('save', {
-        challenge_id: props.mode === 'edit' ? Number(challengeId.value) : undefined,
-        awd_challenge_id: Number(awdChallengeId.value),
-        points: Number(points.value),
-        order: Number(order.value),
-        is_visible: isVisible.value === 'true',
-      })
-    }
-
-    return { challengeId, awdChallengeId, points, order, isVisible, selectableChallenges, submit }
-  },
-  template: `
-    <div v-if="open">
-      <div>{{ mode === 'create' ? '新增 AWD 题库题目' : '编辑 AWD 题目配置' }}</div>
-      <div v-if="mode === 'edit'">{{ draft?.title }}</div>
-      <select
-        id="awd-challenge-config-template"
-        v-model="awdChallengeId"
-        :disabled="loadingAwdChallengeCatalog"
-      >
-        <option
-          v-for="template in awdChallengeOptions"
-          :key="template.id"
-          :value="template.id"
-        >
-          {{ template.name }}
-        </option>
-      </select>
-      <input id="awd-challenge-config-points" v-model="points" />
-      <input id="awd-challenge-config-order" v-model="order" />
-      <select id="awd-challenge-config-visible" v-model="isVisible">
-        <option value="true">可见</option>
-        <option value="false">隐藏</option>
-      </select>
-      <button
-        id="awd-challenge-config-submit"
-        type="button"
-        @click="submit"
-      >
-        {{ saving ? '保存中...' : mode === 'create' ? '新增题目' : '保存配置' }}
-      </button>
-    </div>
-  `,
-})
-
 function mountContestEdit() {
   return mount(ContestEdit, {
     global: {
       stubs: {
-        AWDChallengeConfigDialog: AWDChallengeConfigDialogStub,
         ContestChallengeEditorDialog: ContestChallengeEditorDialogStub,
         AdminSurfaceModal: {
           props: ['open', 'title'],
@@ -414,7 +308,6 @@ function mountContestEditWithRealChallengeDialog() {
   return mount(ContestEdit, {
     global: {
       stubs: {
-        AWDChallengeConfigDialog: AWDChallengeConfigDialogStub,
         AdminSurfaceModal: {
           props: ['open', 'title'],
           template:

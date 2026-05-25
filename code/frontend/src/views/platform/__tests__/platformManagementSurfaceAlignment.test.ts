@@ -41,7 +41,6 @@ import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel
 import awdChallengeConfigPanelSource from '@/components/platform/contest/AWDChallengeConfigPanel.vue?raw'
 import awdReadinessChecklistSource from '@/components/platform/contest/AWDReadinessChecklist.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
-import awdChallengeConfigDialogSource from '@/components/platform/contest/AWDChallengeConfigDialog.vue?raw'
 import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
 import workspaceDirectoryToolbarSource from '@/components/common/WorkspaceDirectoryToolbar.vue?raw'
 import adminContestFormDialogSource from '@/components/platform/contest/PlatformContestFormDialog.vue?raw'
@@ -359,16 +358,6 @@ describe('admin management surface alignment', () => {
     )
   })
 
-  it('awd challenge config dialog should use plain block titles instead of workspace-tab-heading titles', () => {
-    expect(awdChallengeConfigDialogSource).toContain('checker-config-block__title')
-    expect(awdChallengeConfigDialogSource).not.toContain(
-      'workspace-tab-heading__title checker-config-block__title'
-    )
-    expect(awdChallengeConfigDialogSource).toContain('>最终 JSON 预览</h3>')
-    expect(awdChallengeConfigDialogSource).toContain('>最近一次已保存校验</h3>')
-    expect(awdChallengeConfigDialogSource).toContain('>试跑 Checker</h3>')
-  })
-
   it('challenge detail hint section should use list-heading for the hint directory header', () => {
     expect(adminChallengeProfilePanelSource).toMatch(
       /<div class="workspace-overline">\s*Challenge Profile\s*<\/div>/
@@ -665,7 +654,7 @@ describe('admin management surface alignment', () => {
       '.workspace-page-header + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid),'
     )
     expect(journalNotesSource).toContain(
-      '.workspace-hero + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid),'
+      '.workspace-hero + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid) {'
     )
     expect(journalNotesSource).toContain(
       'margin-top: var(--workspace-hero-summary-gap, var(--space-5));'

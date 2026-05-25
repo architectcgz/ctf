@@ -45,7 +45,7 @@ AWD checker 已经不再只有 `legacy_probe` 和 `http_standard` 两种执行�
   - 负责：保存赛事 service 的 `checker_type`、`checker_config` 和 challenge runtime 扩展信息
   - 不负责：直接执行 checker
 
-- `AWDChallengeConfigDialog`
+- `ContestAwdConfig.vue`
   - 负责：暴露四种 checker 类型的结构化配置入口
   - 不负责：定义后端执行语义
 
@@ -144,7 +144,7 @@ AWD checker 已经不再只有 `legacy_probe` 和 `http_standard` 两种执行�
 - `code/backend/internal/module/contest/application/commands/awd_service_run_commands.go`
 - `code/backend/internal/module/contest/application/commands/contest_awd_service_support.go`
 - `code/backend/internal/module/contest/domain/awd_checker_token.go`
-- `code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue`
+- `code/frontend/src/views/platform/ContestAwdConfig.vue`
 - `code/frontend/src/components/platform/contest/awdCheckerConfigSupport.ts`
 
 ## 9. 验证标准

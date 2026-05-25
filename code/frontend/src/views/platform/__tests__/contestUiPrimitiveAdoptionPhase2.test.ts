@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import contestEditSource from '../ContestEdit.vue?raw'
 import contestEditWorkspacePanelSource from '@/components/platform/contest/ContestEditWorkspacePanel.vue?raw'
-import awdChallengeConfigDialogSource from '@/components/platform/contest/AWDChallengeConfigDialog.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
 import awdReadinessChecklistSource from '@/components/platform/contest/AWDReadinessChecklist.vue?raw'
 import contestChallengeOrchestrationPanelSource from '@/components/platform/contest/ContestChallengeOrchestrationPanel.vue?raw'
@@ -66,16 +65,4 @@ describe('contest ui primitive adoption phase 2', () => {
     )
   })
 
-  it('awd challenge config dialog should adopt admin modal shell and shared form primitives', () => {
-    expect(awdChallengeConfigDialogSource).toContain(
-      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
-    )
-    expect(awdChallengeConfigDialogSource).toContain('<AdminSurfaceModal')
-    expect(awdChallengeConfigDialogSource).not.toContain('<ElDialog')
-    expect(awdChallengeConfigDialogSource).toContain('class="ui-field awd-config-field')
-    expect(awdChallengeConfigDialogSource).toContain('class="ui-control-wrap"')
-    expect(awdChallengeConfigDialogSource).toContain('class="ui-control"')
-    expect(awdChallengeConfigDialogSource).toContain('class="ui-btn ui-btn--secondary"')
-    expect(awdChallengeConfigDialogSource).toContain('class="ui-btn ui-btn--primary"')
-  })
 })

@@ -26,8 +26,6 @@ export const componentFeatureImportAllowlist = new Set([
   'components/platform/challenge/AdminChallengeProfilePanel.vue -> @/features/platform-challenge-detail',
   'components/platform/challenge/AdminChallengeWorkspaceTabs.vue -> @/features/platform-challenge-detail',
   'components/platform/challenge/ChallengeManageDirectoryPanel.vue -> @/features/platform-challenges',
-  'components/platform/contest/AWDChallengeConfigDialog.vue -> @/features/awd-inspector',
-  'components/platform/contest/AWDChallengeConfigDialog.vue -> @/features/contest-awd-config',
   'components/platform/contest/AWDChallengeConfigPanel.vue -> @/features/awd-inspector',
   'components/platform/contest/AWDOperationsPanel.vue -> @/features/contest-awd-admin',
   'components/platform/contest/AWDRoundInspector.vue -> @/features/awd-inspector',

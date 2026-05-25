@@ -6,8 +6,10 @@
 - 事实源级别：`final`
 - 适用范围：`frontend`、`backend`、`contracts`
 - 关联模块：
-  - `frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue`
+  - `frontend/src/views/platform/ContestAwdConfig.vue`
+  - `frontend/src/components/platform/contest/ContestAwdDebugStation.vue`
   - `frontend/src/components/platform/contest/awdCheckerConfigSupport.ts`
+  - `frontend/src/features/contest-awd-config/model/useContestAwdConfigPage.ts`
   - `frontend/src/features/contest-awd-admin`
   - `internal/module/contest/application/commands`
 - 过程追溯：`practice/superpowers-plan-index.md` 中的 `2026-04-11-awd-engine-phase5-structured-config-editor`
@@ -17,13 +19,13 @@
 
 当前 AWD checker 配置已经不是 textarea 里塞一段 JSON 的模式。管理端真实架构是“按 checker 类型维护结构化草稿，再统一编译成后端保存的 `checker_config`”。这篇文档要明确：
 
-- 结构化编辑器的 owner 是 `AWDChallengeConfigDialog`，不是独立页面
+- 结构化编辑器的 owner 已经收口到 `ContestAwdConfig.vue` 页面与 `useContestAwdConfigPage.ts`
 - 题目包默认 checker 配置与赛事级覆盖已经在 UI 中分层
 - 前后端都对 checker 类型和配置做归一化，避免自由 JSON 漂移成不可验证状态
 
 ## 2. 架构结论
 
-- `AWDChallengeConfigDialog` 是当前唯一正式的赛事级 checker 编辑入口。
+- `ContestAwdConfig.vue` 是当前正式的赛事级 checker 编辑入口。
 - `awdCheckerConfigSupport.ts` 负责四种 checker 的草稿初始化、结构化校验和配置构建，是前端配置语义唯一 owner。
 - 新建题目时默认继承 AWD 题库题目的 checker 配置；只有开启 `checkerOverrideEnabled` 后，赛事级草稿才脱离题目包默认值。
 - 保存接口始终提交结构化字段 `checker_type`、`checker_config`、`awd_sla_score`、`awd_defense_score`，后端再统一写入 `runtime_config`。
@@ -33,7 +35,7 @@
 
 ### 3.1 模块清单
 
-- `AWDChallengeConfigDialog`
+- `ContestAwdConfig.vue` / `useContestAwdConfigPage`
   - 负责：草稿状态、题目包默认值回填、赛事级覆盖切换、保存与试跑交互
   - 不负责：后端 checker 语义归一化
 
@@ -51,7 +53,7 @@
 
 ### 3.2 事实源与所有权
 
-- 前端草稿事实源：`AWDChallengeConfigDialog` 的 `legacyProbeDraft`、`httpStandardDraft`、`tcpStandardDraft`、`scriptCheckerDraft`
+- 前端草稿事实源：`useContestAwdConfigPage.ts` 持有的 `legacyProbeDraft`、`httpStandardDraft`、`tcpStandardDraft`、`scriptCheckerDraft`
 - 持久化事实源：`contest_awd_services.runtime_config`
 - 题目包默认配置事实源：`AdminAwdChallengeData.checker_type/checker_config`
 
@@ -135,8 +137,10 @@
 
 ## 8. 代码落点
 
-- `code/frontend/src/components/platform/contest/AWDChallengeConfigDialog.vue`
+- `code/frontend/src/views/platform/ContestAwdConfig.vue`
+- `code/frontend/src/components/platform/contest/ContestAwdDebugStation.vue`
 - `code/frontend/src/components/platform/contest/awdCheckerConfigSupport.ts`
+- `code/frontend/src/features/contest-awd-config/model/useContestAwdConfigPage.ts`
 - `code/frontend/src/features/contest-awd-admin/model/useAwdChallengeLinkOperations.ts`
 - `code/frontend/src/utils/platformContestAwdChallengeLinks.ts`
 - `code/backend/internal/module/contest/application/commands/challenge_awd_support.go`

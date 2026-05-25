@@ -190,7 +190,6 @@ describe('AWDOperationsPanel', () => {
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
           AWDChallengeConfigPanel: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -227,7 +226,6 @@ describe('AWDOperationsPanel', () => {
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
           AWDChallengeConfigPanel: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -321,7 +319,6 @@ describe('AWDOperationsPanel', () => {
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -383,7 +380,6 @@ describe('AWDOperationsPanel', () => {
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -444,7 +440,6 @@ describe('AWDOperationsPanel', () => {
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -496,7 +491,6 @@ describe('AWDOperationsPanel', () => {
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -538,7 +532,6 @@ describe('AWDOperationsPanel', () => {
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -581,7 +574,6 @@ describe('AWDOperationsPanel', () => {
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -618,7 +610,6 @@ describe('AWDOperationsPanel', () => {
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -682,7 +673,6 @@ describe('AWDOperationsPanel', () => {
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -736,7 +726,6 @@ describe('AWDOperationsPanel', () => {
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
           AWDChallengeConfigPanel: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -791,7 +780,6 @@ describe('AWDOperationsPanel', () => {
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
           AWDChallengeConfigPanel: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -847,7 +835,6 @@ describe('AWDOperationsPanel', () => {
           AWDServiceCheckDialog: true,
           AWDAttackLogDialog: true,
           AWDChallengeConfigPanel: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
@@ -934,7 +921,6 @@ describe('AWDOperationsPanel', () => {
           AWDServiceCheckDialog: ServiceDialogStub,
           AWDAttackLogDialog: AttackDialogStub,
           AWDChallengeConfigPanel: true,
-          AWDChallengeConfigDialog: true,
         },
       },
     })
