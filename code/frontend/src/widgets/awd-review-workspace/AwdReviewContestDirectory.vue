@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
+import AwdReviewIndexFilters from './AwdReviewIndexFilters.vue'
 import TeacherAWDReviewContestHead from './TeacherAWDReviewContestHead.vue'
 import TeacherAWDReviewContestRow from './TeacherAWDReviewContestRow.vue'
 import TeacherAWDReviewDirectorySection from './TeacherAWDReviewDirectorySection.vue'
 import TeacherAWDReviewDirectoryState from './TeacherAWDReviewDirectoryState.vue'
-import TeacherAWDReviewIndexFilters from './TeacherAWDReviewIndexFilters.vue'
 
 type ContestStatusOption = {
   value: '' | TeacherAWDReviewContestItemData['status']
@@ -40,7 +40,7 @@ const emit = defineEmits<{
     :total-count="total"
   >
     <template #filters>
-      <TeacherAWDReviewIndexFilters
+      <AwdReviewIndexFilters
         :status-options="statusOptions"
         :status-filter="statusFilter"
         :keyword-filter="keywordFilter"
