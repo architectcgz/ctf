@@ -7,7 +7,6 @@ import type {
   SkillProfileData,
   TeacherAttackSessionResponseData,
   TeacherEvidenceData,
-  TeacherClassItem,
   TeacherManualReviewSubmissionDetailData,
   TeacherManualReviewSubmissionItemData,
   TeacherSubmissionWriteupItemData,
@@ -19,13 +18,7 @@ import StudentInsightPanel from '@/components/teacher/StudentInsightPanel.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 const props = defineProps<{
-  classes: TeacherClassItem[]
-  students: TeacherStudentItem[]
-  selectedClassName: string
-  selectedStudentId: string
   selectedStudent: TeacherStudentItem | null
-  loadingClasses: boolean
-  loadingStudents: boolean
   loadingDetails: boolean
   error: string | null
   progress: MyProgressData | null
@@ -52,13 +45,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   retry: []
-  openClassManagement: []
   openClassStudents: []
   openReportExport: []
   openReviewArchive: []
   exportReviewArchive: []
-  selectClass: [className: string]
-  selectStudent: [studentId: string]
   openChallenge: [challengeId: string]
   openManualReview: [submissionId: string]
   moderateWriteup: [

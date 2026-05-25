@@ -4,13 +4,8 @@ import { ClassReportExportDialog } from '@/components/teacher/reports'
 import { useStudentAnalysisPage } from '@/features/student-analysis-workspace'
 
 const {
-  classes,
-  students,
   selectedClassName,
-  selectedStudentId,
   selectedStudent,
-  loadingClasses,
-  loadingStudents,
   loadingDetails,
   error,
   progress,
@@ -35,10 +30,7 @@ const {
   solvedRate,
   weakDimensions,
   initialize,
-  openClassManagement,
   openClassStudents,
-  selectClass,
-  selectStudent,
   openChallenge,
   openClassReportDialog,
   openReviewArchivePage,
@@ -54,13 +46,7 @@ const {
 <template>
   <section class="teacher-route-root">
     <StudentAnalysisPage
-      :classes="classes"
-      :students="students"
-      :selected-class-name="selectedClassName"
-      :selected-student-id="selectedStudentId"
       :selected-student="selectedStudent"
-      :loading-classes="loadingClasses"
-      :loading-students="loadingStudents"
       :loading-details="loadingDetails"
       :error="error"
       :progress="progress"
@@ -84,13 +70,10 @@ const {
       :solved-rate="solvedRate"
       :weak-dimensions="weakDimensions"
       @retry="initialize"
-      @open-class-management="openClassManagement"
       @open-class-students="openClassStudents"
       @open-report-export="openClassReportDialog"
       @open-review-archive="openReviewArchivePage"
       @export-review-archive="handleExportReviewArchive"
-      @select-class="selectClass"
-      @select-student="selectStudent"
       @open-challenge="openChallenge"
       @open-manual-review="openManualReview"
       @moderate-writeup="moderateWriteup"

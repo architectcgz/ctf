@@ -2,7 +2,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
-  getClasses,
   getClassStudents,
   getStudentProgress,
   getStudentRecommendations,
@@ -16,7 +15,6 @@ import type {
   RecommendationItem,
   RecommendationWeakDimension,
   SkillProfileData,
-  TeacherClassItem,
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
@@ -39,12 +37,10 @@ export function useStudentAnalysisPage() {
   const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
-  const classes = ref<TeacherClassItem[]>([])
   const students = ref<TeacherStudentItem[]>([])
   const selectedClassName = ref('')
   const selectedStudentId = ref('')
 
-  const loadingClasses = ref(false)
   const loadingStudents = ref(false)
   const loadingDetails = ref(false)
   const error = ref<string | null>(null)
@@ -160,15 +156,6 @@ export function useStudentAnalysisPage() {
     )
   }
 
-  async function loadClasses(): Promise<void> {
-    loadingClasses.value = true
-    try {
-      classes.value = await getClasses()
-    } finally {
-      loadingClasses.value = false
-    }
-  }
-
   async function loadStudents(className = classNameFromRoute()): Promise<void> {
     if (!className) {
       selectedClassName.value = ''
@@ -245,7 +232,6 @@ export function useStudentAnalysisPage() {
 
     try {
       syncReviewWorkspaceQueryFromRoute()
-      await loadClasses()
       await loadStudents()
       await loadStudentDetails()
     } catch (err) {
@@ -288,10 +274,7 @@ export function useStudentAnalysisPage() {
   }
 
   const {
-    selectClass,
-    openClassManagement,
     openClassStudents,
-    selectStudent,
     openChallenge,
     openReviewArchivePage,
   } = useStudentAnalysisNavigation({
@@ -349,13 +332,8 @@ export function useStudentAnalysisPage() {
   })
 
   return {
-    classes,
-    students,
     selectedClassName,
-    selectedStudentId,
     selectedStudent,
-    loadingClasses,
-    loadingStudents,
     loadingDetails,
     error,
     progress,
@@ -381,10 +359,7 @@ export function useStudentAnalysisPage() {
     solvedRate,
     weakDimensions,
     initialize,
-    openClassManagement,
     openClassStudents,
-    selectClass,
-    selectStudent,
     openChallenge,
     openClassReportDialog,
     openReviewArchivePage,

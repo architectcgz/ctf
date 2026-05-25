@@ -439,6 +439,27 @@ describe('TeacherStudentAnalysis', () => {
     })
   })
 
+  it('班级列表接口失败不应阻断学员分析加载', async () => {
+    teachingApiMocks.getClasses.mockRejectedValue(new Error('班级列表失败'))
+
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          ClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(teachingApiMocks.getClasses).not.toHaveBeenCalled()
+    expect(teachingApiMocks.getClassStudents).toHaveBeenCalledWith('Class A')
+    expect(wrapper.text()).not.toContain('学员分析加载失败')
+    expect(wrapper.text()).toContain('alice')
+    expect(wrapper.text()).toContain('50%')
+  })
+
   it('应只渲染当前激活 tab 的详情内容，切换后再显示对应区块', async () => {
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {
@@ -485,10 +506,22 @@ describe('TeacherStudentAnalysis', () => {
       '@/components/teacher/class-management/StudentAnalysisPage.vue'
     )
     expect(teacherStudentAnalysisSource).not.toContain('ClassReportExportDialog.vue')
+    expect(teacherStudentAnalysisSource).not.toContain(':classes="classes"')
+    expect(teacherStudentAnalysisSource).not.toContain(':students="students"')
+    expect(teacherStudentAnalysisSource).not.toContain(':selected-class-name="selectedClassName"')
+    expect(teacherStudentAnalysisSource).not.toContain(':selected-student-id="selectedStudentId"')
+    expect(teacherStudentAnalysisSource).not.toContain(':loading-classes="loadingClasses"')
+    expect(teacherStudentAnalysisSource).not.toContain(':loading-students="loadingStudents"')
+    expect(teacherStudentAnalysisSource).not.toContain('@open-class-management="openClassManagement"')
+    expect(teacherStudentAnalysisSource).not.toContain('@select-class="selectClass"')
+    expect(teacherStudentAnalysisSource).not.toContain('@select-student="selectStudent"')
     expect(studentAnalysisPageModelSource).toContain('useReviewWorkspace()')
     expect(studentAnalysisPageModelSource).toContain('useSubmissionReviewFlows({')
     expect(studentAnalysisPageModelSource).not.toContain('useTeacherReviewWorkspace')
     expect(studentAnalysisPageModelSource).not.toContain('useTeacherSubmissionReviewFlows')
+    expect(studentAnalysisPageModelSource).not.toContain('openClassManagement')
+    expect(studentAnalysisPageModelSource).not.toContain('selectClass')
+    expect(studentAnalysisPageModelSource).not.toContain('selectStudent')
   })
 
   it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {
@@ -503,6 +536,15 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).not.toContain('teacher-student-chip')
     expect(studentAnalysisPageSource).not.toContain('teacher-eyebrow-row')
     expect(studentAnalysisPageSource).toContain('StudentAnalysisOverviewHeroPanel')
+    expect(studentAnalysisPageSource).not.toContain('classes: TeacherClassItem[]')
+    expect(studentAnalysisPageSource).not.toContain('students: TeacherStudentItem[]')
+    expect(studentAnalysisPageSource).not.toContain('selectedClassName: string')
+    expect(studentAnalysisPageSource).not.toContain('selectedStudentId: string')
+    expect(studentAnalysisPageSource).not.toContain('loadingClasses: boolean')
+    expect(studentAnalysisPageSource).not.toContain('loadingStudents: boolean')
+    expect(studentAnalysisPageSource).not.toContain('openClassManagement: []')
+    expect(studentAnalysisPageSource).not.toContain('selectClass: [className: string]')
+    expect(studentAnalysisPageSource).not.toContain('selectStudent: [studentId: string]')
     expect(studentAnalysisPageSource).not.toContain('<span>已做题目数</span>')
     expect(studentAnalysisOverviewHeroPanelSource).toContain(
       "{{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}"
@@ -843,31 +885,6 @@ describe('TeacherStudentAnalysis', () => {
     expect(teachingApiMocks.exportStudentReviewArchive).toHaveBeenCalledWith('stu-1', {
       format: 'json',
     })
-  })
-
-  it('管理员从学员分析返回班级管理时应回到后台班级页', async () => {
-    const authStore = useAuthStore()
-    authStore.setAuth({
-      id: 'admin-1',
-      username: 'admin',
-      role: 'admin',
-      class_name: 'Class A',
-    })
-
-    const wrapper = mount(TeacherStudentAnalysis, {
-      global: {
-        stubs: {
-          SkillRadar: true,
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
-
-    wrapper.findComponent({ name: 'StudentAnalysisPage' }).vm.$emit('openClassManagement')
-
-    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformClassManagement' })
   })
 
   it('管理员在学员分析内继续切换学生链路时应停留在后台路由', async () => {
