@@ -14,8 +14,8 @@ import type {
   TeacherAWDReviewTrafficItemData,
 } from '@/api/contracts'
 import TeacherAWDReviewAnalysisSection from '@/components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue'
-import TeacherAWDReviewEvidenceGrid from '@/components/teacher/awd-review/TeacherAWDReviewEvidenceGrid.vue'
 import AwdReviewRoundSelector from '@/components/teacher/awd-review/AwdReviewRoundSelector.vue'
+import AwdReviewEvidenceGrid from '@/components/teacher/awd-review/AwdReviewEvidenceGrid.vue'
 import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
 import TeacherAWDReviewStatusChip from './TeacherAWDReviewStatusChip.vue'
 import TeacherAWDReviewWorkspaceActions from './TeacherAWDReviewWorkspaceActions.vue'
@@ -141,7 +141,7 @@ const summaryItems = computed(() =>
             @open-team="emit('openTeam', $event)"
           />
 
-          <TeacherAWDReviewEvidenceGrid
+          <AwdReviewEvidenceGrid
             v-if="selectedRound"
             :selected-round="selectedRound"
             :format-service-ref="formatServiceRef"

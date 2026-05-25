@@ -50,6 +50,7 @@ AWD 复盘已经同时被 teacher / platform 两侧 route view 复用，但共�
 - `code/frontend/src/widgets/awd-review-workspace/TeacherAWDReviewSummaryPanel.vue`
 - `code/frontend/src/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue`
 - `code/frontend/src/widgets/awd-review-workspace/AwdReviewWorkspace.vue`
+- `code/frontend/src/components/teacher/awd-review/AwdReviewEvidenceGrid.vue`
 - `code/frontend/src/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceActions.vue`
 - `code/frontend/src/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceHeader.vue`
 - `code/frontend/src/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceState.vue`
