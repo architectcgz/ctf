@@ -69,7 +69,7 @@ describe('TeacherAWDReviewWorkspace', () => {
       global: {
         stubs: {
           AwdReviewRoundSelector: { template: '<div />' },
-          TeacherAWDReviewAnalysisSection: { template: '<div />' },
+          AwdReviewAnalysisSection: { template: '<div />' },
           AwdReviewEvidenceGrid: { template: '<div />' },
           TeacherAWDReviewTeamDrawer: { template: '<div />' },
         },

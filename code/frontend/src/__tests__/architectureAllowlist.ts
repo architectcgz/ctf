@@ -64,7 +64,7 @@ export const componentFeatureImportAllowlist = new Set([
 export const widgetLegacyComponentImportAllowlist = new Set([
   'widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue -> @/components/platform/challenge/AdminChallengeTopbarPanel.vue',
   'widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue -> @/components/platform/challenge/AdminChallengeWorkspaceTabs.vue',
-  'widgets/awd-review-workspace/AwdReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue',
+  'widgets/awd-review-workspace/AwdReviewWorkspace.vue -> @/components/teacher/awd-review/AwdReviewAnalysisSection.vue',
   'widgets/awd-review-workspace/AwdReviewWorkspace.vue -> @/components/teacher/awd-review/AwdReviewEvidenceGrid.vue',
   'widgets/awd-review-workspace/AwdReviewWorkspace.vue -> @/components/teacher/awd-review/AwdReviewRoundSelector.vue',
   'widgets/awd-review-workspace/AwdReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue',

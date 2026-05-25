@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
 import teacherAwdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
-import teacherAwdReviewAnalysisSectionSource from '@/components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue?raw'
+import awdReviewAnalysisSectionSource from '@/components/teacher/awd-review/AwdReviewAnalysisSection.vue?raw'
 
 describe('Teacher AWD review analysis extraction', () => {
   it('应将轮次分析与队伍目录区下沉到独立组件', () => {
@@ -13,9 +13,9 @@ describe('Teacher AWD review analysis extraction', () => {
     expect(awdReviewDetailSource).not.toContain('class="awd-review-round-grid"')
     expect(awdReviewDetailSource).not.toContain('class="teacher-directory"')
 
-    expect(teacherAwdReviewWorkspaceSource).toContain('<TeacherAWDReviewAnalysisSection')
-    expect(teacherAwdReviewAnalysisSectionSource).toContain('class="awd-review-round-grid"')
-    expect(teacherAwdReviewAnalysisSectionSource).toContain('class="teacher-directory"')
-    expect(teacherAwdReviewAnalysisSectionSource).toContain('Performance Analysis')
+    expect(teacherAwdReviewWorkspaceSource).toContain('<AwdReviewAnalysisSection')
+    expect(awdReviewAnalysisSectionSource).toContain('class="awd-review-round-grid"')
+    expect(awdReviewAnalysisSectionSource).toContain('class="teacher-directory"')
+    expect(awdReviewAnalysisSectionSource).toContain('Performance Analysis')
   })
 })

@@ -183,7 +183,7 @@ declare module 'vue' {
     StudentOverviewVariantSwitcher: typeof import('./components/dashboard/student/StudentOverviewVariantSwitcher.vue')['default']
     StudentRecommendationPage: typeof import('./components/dashboard/student/StudentRecommendationPage.vue')['default']
     StudentTimelinePage: typeof import('./components/dashboard/student/StudentTimelinePage.vue')['default']
-    TeacherAWDReviewAnalysisSection: typeof import('./components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue')['default']
+    AwdReviewAnalysisSection: typeof import('./components/teacher/awd-review/AwdReviewAnalysisSection.vue')['default']
     AwdReviewEvidenceGrid: typeof import('./components/teacher/awd-review/AwdReviewEvidenceGrid.vue')['default']
     AwdReviewRoundSelector: typeof import('./components/teacher/awd-review/AwdReviewRoundSelector.vue')['default']
     TeacherAWDReviewTeamDrawer: typeof import('./components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue')['default']

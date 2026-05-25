@@ -13,8 +13,8 @@ import type {
   TeacherAWDReviewTeamItemData,
   TeacherAWDReviewTrafficItemData,
 } from '@/api/contracts'
-import TeacherAWDReviewAnalysisSection from '@/components/teacher/awd-review/TeacherAWDReviewAnalysisSection.vue'
 import AwdReviewRoundSelector from '@/components/teacher/awd-review/AwdReviewRoundSelector.vue'
+import AwdReviewAnalysisSection from '@/components/teacher/awd-review/AwdReviewAnalysisSection.vue'
 import AwdReviewEvidenceGrid from '@/components/teacher/awd-review/AwdReviewEvidenceGrid.vue'
 import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
 import TeacherAWDReviewStatusChip from './TeacherAWDReviewStatusChip.vue'
@@ -132,7 +132,7 @@ const summaryItems = computed(() =>
         @load-review="emit('loadReview')"
       >
         <template v-if="review">
-          <TeacherAWDReviewAnalysisSection
+          <AwdReviewAnalysisSection
             :active-summary-title="activeSummaryTitle"
             :rounds="review.rounds"
             :selected-round="selectedRound"
