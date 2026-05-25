@@ -7,7 +7,8 @@ describe('student analysis panel extraction', () => {
     const insightPanelMounts = studentAnalysisPageSource.match(/<StudentInsightPanel/g) ?? []
 
     expect(insightPanelMounts).toHaveLength(1)
-    expect(studentAnalysisPageSource).toContain(':active-section="tab.key"')
+    expect(studentAnalysisPageSource).toContain(':active-section="activeTab"')
+    expect(studentAnalysisPageSource).toContain('const activeWorkspaceTab = computed(')
     expect(studentAnalysisPageSource).not.toContain('active-section="overview"')
     expect(studentAnalysisPageSource).not.toContain('active-section="recommendations"')
     expect(studentAnalysisPageSource).not.toContain('active-section="writeups"')

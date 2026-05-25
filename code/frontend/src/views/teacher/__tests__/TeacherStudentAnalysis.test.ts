@@ -9,6 +9,8 @@ import studentAnalysisPageModelSource from '@/features/student-analysis-workspac
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue?raw'
+import studentInsightOverviewSectionSource from '@/components/teacher/student-insight/StudentInsightOverviewSection.vue?raw'
+import studentInsightRecommendationsSectionSource from '@/components/teacher/student-insight/StudentInsightRecommendationsSection.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -51,6 +53,14 @@ vi.mock('vue-router', async () => {
 })
 
 vi.mock('@/api/teaching', () => teachingApiMocks)
+
+async function openWorkspaceTab(
+  wrapper: ReturnType<typeof mount>,
+  tabKey: 'overview' | 'recommendations' | 'writeups' | 'evidence' | 'timeline'
+): Promise<void> {
+  await wrapper.get(`#student-tab-${tabKey}`).trigger('click')
+  await flushPromises()
+}
 
 describe('TeacherStudentAnalysis', () => {
   const reportDialogStub = {
@@ -381,21 +391,28 @@ describe('TeacherStudentAnalysis', () => {
 
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('50%')
+    await openWorkspaceTab(wrapper, 'recommendations')
     expect(wrapper.text()).toContain('crypto-lab')
+
+    await openWorkspaceTab(wrapper, 'timeline')
     expect(wrapper.text()).toContain('web-1')
     expect(wrapper.text()).toContain('查看题目详情')
     expect(wrapper.text()).toContain('解锁第 1 级提示')
     expect(wrapper.text()).toContain('访问攻击目标')
     expect(wrapper.text()).toContain('延长实例有效期')
     expect(wrapper.text()).toContain('第 2 次提交命中 Flag')
+
+    await openWorkspaceTab(wrapper, 'evidence')
     expect(wrapper.text()).toContain('复盘工作台')
-    expect(wrapper.text()).toContain('题解列表')
-    expect(wrapper.text()).toContain('misc-essay')
-    expect(wrapper.text()).toContain('从回显到 flag')
     expect(wrapper.text()).toContain('会话数')
     expect(wrapper.text()).toContain('事件数')
     expect(wrapper.text()).toContain('实操请求')
     expect(wrapper.text()).toContain('POST /login')
+
+    await openWorkspaceTab(wrapper, 'writeups')
+    expect(wrapper.text()).toContain('题解列表')
+    expect(wrapper.text()).toContain('misc-essay')
+    expect(wrapper.text()).toContain('从回显到 flag')
     expect(wrapper.text()).toContain('社区题解状态')
     expect(wrapper.text()).toContain('审核状态')
     expect(wrapper.text()).toContain('查看审核')
@@ -464,8 +481,14 @@ describe('TeacherStudentAnalysis', () => {
   })
 
   it('学员详情面板应通过 section 组件装配复盘区，而不是直接依赖 review workspace widget', () => {
+    expect(studentInsightPanelSource).toContain('StudentInsightOverviewSection')
+    expect(studentInsightPanelSource).toContain('StudentInsightRecommendationsSection')
     expect(studentInsightPanelSource).toContain('StudentInsightAttackSessionsSection')
     expect(studentInsightPanelSource).not.toContain('TeacherStudentReviewWorkspace')
+    expect(studentInsightOverviewSectionSource).toContain('<SkillRadar :scores="radarScores" />')
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      'class="insight-recommendation-list workspace-directory-list"'
+    )
   })
 
   it('复盘区 section 应通过共享 widget 公共出口消费中性符号', () => {
@@ -486,6 +509,7 @@ describe('TeacherStudentAnalysis', () => {
     })
 
     await flushPromises()
+    await openWorkspaceTab(wrapper, 'writeups')
 
     const hideButton = wrapper
       .findAll('button')
@@ -510,6 +534,7 @@ describe('TeacherStudentAnalysis', () => {
     })
 
     await flushPromises()
+    await openWorkspaceTab(wrapper, 'writeups')
 
     const reviewButton = wrapper
       .findAll('button')
@@ -596,6 +621,7 @@ describe('TeacherStudentAnalysis', () => {
 
     await flushPromises()
     teachingApiMocks.getStudentAttackSessions.mockClear()
+    await openWorkspaceTab(wrapper, 'evidence')
 
     const selects = wrapper.findAll('select')
     await selects[1].setValue('awd')
@@ -646,6 +672,7 @@ describe('TeacherStudentAnalysis', () => {
     await flushPromises()
     teachingApiMocks.getStudentAttackSessions.mockClear()
     teachingApiMocks.getStudentEvidence.mockClear()
+    await openWorkspaceTab(wrapper, 'evidence')
 
     const selects = wrapper.findAll('select')
     await selects[0].setValue('11')

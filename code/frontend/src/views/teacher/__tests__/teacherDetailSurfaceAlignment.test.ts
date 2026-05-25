@@ -9,6 +9,8 @@ import classInsightsPanelSource from '@/components/teacher/ClassInsightsPanel.vu
 import classReviewPanelSource from '@/components/teacher/ClassReviewPanel.vue?raw'
 import interventionPanelSource from '@/components/teacher/InterventionPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
+import studentInsightOverviewSectionSource from '@/components/teacher/student-insight/StudentInsightOverviewSection.vue?raw'
+import studentInsightRecommendationsSectionSource from '@/components/teacher/student-insight/StudentInsightRecommendationsSection.vue?raw'
 import studentInsightWriteupsSource from '@/components/teacher/student-insight/StudentInsightWriteupsSection.vue?raw'
 import studentInsightManualReviewSource from '@/components/teacher/student-insight/StudentInsightManualReviewSection.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
@@ -31,6 +33,8 @@ const reviewArchiveCombinedSource = [
 ].join('\n')
 const studentInsightCompositeSource = [
   studentInsightPanelSource,
+  studentInsightOverviewSectionSource,
+  studentInsightRecommendationsSectionSource,
   studentInsightWriteupsSource,
   studentInsightManualReviewSource,
 ].join('\n')
@@ -152,10 +156,10 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightPanelSource).toMatch(
       /:deep\(\.section-card\)\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);/s
     )
-    expect(studentInsightPanelSource).toMatch(
+    expect(studentInsightOverviewSectionSource).toMatch(
       /\.insight-overview-layout\s*\{[\s\S]*?border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);/s
     )
-    expect(studentInsightPanelSource).toMatch(
+    expect(studentInsightOverviewSectionSource).toMatch(
       /\.insight-overview-layout\s*:deep\(\.section-card\)\s*\{[\s\S]*?border-top:\s*0;/s
     )
     expect(studentInsightPanelSource).not.toMatch(/\.insight-rate-panel\s*\{[^}]*border-top:/s)
@@ -191,13 +195,13 @@ describe('teacher detail surface alignment', () => {
     )
     expect(studentInsightPanelSource).not.toContain('challenge-btn-outline')
     expect(studentInsightPanelSource).not.toContain('challenge-btn-primary')
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightRecommendationsSectionSource).toContain(
       'class="insight-recommendation-list workspace-directory-list"'
     )
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightRecommendationsSectionSource).toContain(
       'class="insight-recommendation-row workspace-directory-grid-row"'
     )
-    expect(studentInsightPanelSource).toContain(
+    expect(studentInsightRecommendationsSectionSource).toContain(
       'class="workspace-directory-row-btn insight-recommendation-action"'
     )
     expect(studentInsightPanelSource).not.toContain('variant="action"')
