@@ -1920,10 +1920,51 @@
   - `bash scripts/check-consistency.sh`
   - `git diff --check`
 
+## 第八十二轮修复进展
+
+- 已完成：
+  - `TD-1` 拓扑页第六个切片完成：模板库模式与挑战模式共用的“画布快速编辑”区块抽到 `TopologyCanvasQuickEditor.vue`，父页不再继续内联节点 / 连线快速编辑模板。
+  - 父组件继续持有 `selectedNodeDraft / selectedEdgeMeta`、拓扑草稿、选中态更新函数和 `useChallengeTopologyStudioPage`；新组件只通过 props / emits 承接局部 quick editor 展示与动作转发，没有吸入远端请求、模板写回或页面级错误 owner。
+  - `ChallengeTopologyStudio.test.ts` 与 `sharedThemeTokenAdoption.test.ts` 已同步改成“父页只保留组合 owner，新组件承接源码护栏”的断言方式，避免后续把合理的 owner 下沉误判成回归。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/topology/ChallengeTopologyStudioPage.vue`
+  - `code/frontend/src/components/platform/topology/TopologyCanvasQuickEditor.vue`
+  - `code/frontend/src/views/platform/__tests__/ChallengeTopologyStudio.test.ts`
+  - `code/frontend/src/views/__tests__/sharedThemeTokenAdoption.test.ts`
+  - `docs/reviews/frontend/README.md`
+  - `docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+
+## 第八十二轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ChallengeTopologyStudio.test.ts src/views/__tests__/sharedThemeTokenAdoption.test.ts src/views/__tests__/asyncChunkBoundaries.test.ts`（3 个测试文件，17 个测试）
+  - `npm run typecheck`
+  - `git diff --check`
+
+## 第八十三轮修复进展
+
+- 已完成：
+  - `TD-1` 拓扑页第七个切片完成：challenge-only 的“网络快速编辑”区块抽到 `TopologyNetworkQuickEditor.vue`，父页不再继续直接内联 `draft.networks` 的 quick editor 表单。
+  - 父组件继续持有 `draft.networks` 与 `updateNetworkDraft`；新组件只通过 `props.networks + emit(updateNetwork)` 承接 `key / name / internal` 的局部字段编辑，没有变成第二个网络 owner。
+  - `ChallengeTopologyStudio.test.ts` 与 `sharedThemeTokenAdoption.test.ts` 已同步补新组件护栏，确保父页退成组合 owner 后不会被旧源码断言误判为回归。
+- 本轮涉及文件：
+  - `code/frontend/src/components/platform/topology/ChallengeTopologyStudioPage.vue`
+  - `code/frontend/src/components/platform/topology/TopologyNetworkQuickEditor.vue`
+  - `code/frontend/src/views/platform/__tests__/ChallengeTopologyStudio.test.ts`
+  - `code/frontend/src/views/__tests__/sharedThemeTokenAdoption.test.ts`
+  - `docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+
+## 第八十三轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/platform/__tests__/ChallengeTopologyStudio.test.ts src/views/__tests__/sharedThemeTokenAdoption.test.ts src/views/__tests__/asyncChunkBoundaries.test.ts`（3 个测试文件，18 个测试）
+  - `npm run typecheck`
+  - `git diff --check`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
-  - `ChallengeTopologyStudioPage.vue` 已完成模板侧栏、摘要指标、状态说明展示、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区抽取；当前仍需继续拆分的高复杂度组件包括 `ChallengeTopologyStudioPage.vue` 的画布快速编辑区、`AWDChallengeConfigDialog.vue`、`StudentInsightPanel.vue`、`ContestAWDWorkspacePanel.vue`。
+  - `ChallengeTopologyStudioPage.vue` 已完成模板侧栏、摘要指标、状态说明展示、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区、画布快速编辑区、challenge-only 网络快速编辑区抽取；`StudentInsightPanel.vue` 的当前 touched surface 也已在 2026-05-25 切片里收口。当前仍需继续拆分的高复杂度组件主要包括 `ChallengeTopologyStudioPage.vue` 剩余的页面编排壳、`AWDChallengeConfigDialog.vue`、`ContestAWDWorkspacePanel.vue`。
   - 拆分原则：父页面保留 route/query 同步、页面级数据加载、跨区块协调、错误策略和主业务动作；子组件只承接明确展示区块或局部表单，不允许只为了减少行数而把 owner 边界拆散。
   - 建议顺序：先选一个组件做一个可评审切片，补源码边界测试和行为测试，再继续下一块。
 - `TD-2` Tailwind 任意值与主题 token 尾项：

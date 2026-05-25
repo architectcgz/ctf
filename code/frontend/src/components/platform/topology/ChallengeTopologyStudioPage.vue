@@ -22,20 +22,21 @@ import type {
   TopologyNodeDraft,
   TopologyPolicyDraft,
 } from '@/features/challenge-topology-studio/model'
+import type { TopologyTier } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import TopologyConnectivitySections from './TopologyConnectivitySections.vue'
 import TopologyNetworkSection from './TopologyNetworkSection.vue'
+import TopologyNetworkQuickEditor from './TopologyNetworkQuickEditor.vue'
 import TopologyNodeSection from './TopologyNodeSection.vue'
 import TopologyStatusNotes from './TopologyStatusNotes.vue'
 import TopologySummaryGrid from './TopologySummaryGrid.vue'
 import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
 
-import type { CanvasInteractionMode } from './TopologyCanvasBoard.vue'
-
 const TopologyCanvasBoard = defineAsyncComponent(() => import('./TopologyCanvasBoard.vue'))
+const TopologyCanvasQuickEditor = defineAsyncComponent(() => import('./TopologyCanvasQuickEditor.vue'))
 
 const props = withDefaults(
   defineProps<{
@@ -166,6 +167,30 @@ function updateNodeDraft(payload: { uid: string; node: TopologyNodeDraft }) {
   const index = draft.value.nodes.findIndex((item) => item.uid === payload.uid)
   if (index === -1) return
   draft.value.nodes[index] = payload.node
+}
+
+function updateSelectedNodeField(payload: {
+  field: 'name' | 'image_id' | 'tier' | 'inject_flag'
+  value: string | boolean
+}) {
+  if (!selectedNodeDraft.value) {
+    return
+  }
+
+  switch (payload.field) {
+    case 'inject_flag':
+      selectedNodeDraft.value.inject_flag = Boolean(payload.value)
+      return
+    case 'name':
+      selectedNodeDraft.value.name = String(payload.value)
+      return
+    case 'image_id':
+      selectedNodeDraft.value.image_id = String(payload.value)
+      return
+    case 'tier':
+      selectedNodeDraft.value.tier = String(payload.value) as TopologyTier
+      return
+  }
 }
 
 function updateLinkDraft(payload: {
@@ -469,124 +494,27 @@ function removePolicyDraft(uid: string) {
                 />
 
                 <div class="mt-4 grid gap-4">
-                  <div
-                    class="template-quick-editor rounded-2xl border border-border bg-elevated p-4"
-                  >
-                    <div class="text-sm font-semibold text-text-primary">画布快速编辑</div>
-
-                    <div
-                      v-if="!selectedNodeDraft && !selectedEdgeMeta"
-                      class="mt-3 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
-                    >
-                      请在画布中选择一个节点或连线进行快速配置
-                    </div>
-
-                    <div v-else-if="selectedNodeDraft" class="mt-3 space-y-4">
-                      <div class="grid gap-3 md:grid-cols-2">
-                        <label class="space-y-2">
-                          <span class="text-sm text-text-secondary">节点名称</span>
-                          <input
-                            v-model="selectedNodeDraft.name"
-                            type="text"
-                            class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                          />
-                        </label>
-                        <label class="space-y-2">
-                          <span class="text-sm text-text-secondary">服务端口</span>
-                          <input
-                            :value="selectedNodeDraft.service_port ?? ''"
-                            type="number"
-                            min="1"
-                            max="65535"
-                            class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                            @input="
-                              updateCanvasQuickNumber(
-                                'service_port',
-                                ($event.target as HTMLInputElement).value,
-                                selectedNodeDraft
-                              )
-                            "
-                          />
-                        </label>
-                      </div>
-
-                      <div class="space-y-2">
-                        <div class="text-sm text-text-secondary">所属网络</div>
-                        <div class="flex flex-wrap gap-2">
-                          <label
-                            v-for="network in draft.networks"
-                            :key="network.uid"
-                            class="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary transition hover:border-primary"
-                          >
-                            <input
-                              :checked="selectedNodeDraft.network_keys.includes(network.key)"
-                              type="checkbox"
-                              class="h-4 w-4 rounded border-border bg-transparent"
-                              @change="
-                                toggleSelectedNodeNetwork(
-                                  network.key,
-                                  ($event.target as HTMLInputElement).checked
-                                )
-                              "
-                            />
-                            <span>{{ network.name || network.key }}</span>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div v-else-if="selectedEdgeMeta" class="mt-3 space-y-4">
-                      <div class="grid gap-3 md:grid-cols-2">
-                        <label class="space-y-2">
-                          <span class="text-sm text-text-secondary">源节点</span>
-                          <select
-                            :value="selectedEdgeSourceKey"
-                            class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                            @change="
-                              updateSelectedEdgeSourceKey(
-                                ($event.target as HTMLSelectElement).value
-                              )
-                            "
-                          >
-                            <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                              {{ node.label }}
-                            </option>
-                          </select>
-                        </label>
-                        <label class="space-y-2">
-                          <span class="text-sm text-text-secondary">目标节点</span>
-                          <select
-                            :value="selectedEdgeTargetKey"
-                            class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                            @change="
-                              updateSelectedEdgeTargetKey(
-                                ($event.target as HTMLSelectElement).value
-                              )
-                            "
-                          >
-                            <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                              {{ node.label }}
-                            </option>
-                          </select>
-                        </label>
-                      </div>
-
-                      <label class="space-y-2">
-                        <span class="text-sm text-text-secondary">边类型</span>
-                        <select
-                          :value="selectedEdgeKind"
-                          class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                          @change="
-                            handleSelectedEdgeKindChange(($event.target as HTMLSelectElement).value)
-                          "
-                        >
-                          <option value="link">logic link</option>
-                          <option value="allow">allow</option>
-                          <option value="deny">deny</option>
-                        </select>
-                      </label>
-                    </div>
-                  </div>
+                  <TopologyCanvasQuickEditor
+                    variant="template"
+                    empty-message="请在画布中选择一个节点或连线进行快速配置"
+                    :selected-node-draft="selectedNodeDraft"
+                    :has-selected-edge="Boolean(selectedEdgeMeta)"
+                    :node-options="nodeOptions"
+                    :networks="draft.networks"
+                    :selected-edge-source-key="selectedEdgeSourceKey"
+                    :selected-edge-target-key="selectedEdgeTargetKey"
+                    :selected-edge-kind="selectedEdgeKind"
+                    @update-selected-node-field="updateSelectedNodeField"
+                    @update-selected-node-service-port="
+                      updateCanvasQuickNumber('service_port', $event, selectedNodeDraft)
+                    "
+                    @toggle-selected-node-network="
+                      toggleSelectedNodeNetwork($event.networkKey, $event.checked)
+                    "
+                    @update-selected-edge-source-key="updateSelectedEdgeSourceKey"
+                    @update-selected-edge-target-key="updateSelectedEdgeTargetKey"
+                    @update-selected-edge-kind="handleSelectedEdgeKindChange"
+                  />
                 </div>
               </SectionCard>
             </div>
@@ -824,186 +752,31 @@ function removePolicyDraft(uid: string) {
               />
 
               <div class="mt-4 grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-                <div class="rounded-2xl border border-border bg-elevated p-4">
-                  <div class="text-sm font-semibold text-text-primary">画布快速编辑</div>
+                <TopologyCanvasQuickEditor
+                  :selected-node-draft="selectedNodeDraft"
+                  :has-selected-edge="Boolean(selectedEdgeMeta)"
+                  :node-options="nodeOptions"
+                  :networks="draft.networks"
+                  :images="images"
+                  :selected-edge-source-key="selectedEdgeSourceKey"
+                  :selected-edge-target-key="selectedEdgeTargetKey"
+                  :selected-edge-kind="selectedEdgeKind"
+                  @update-selected-node-field="updateSelectedNodeField"
+                  @update-selected-node-service-port="
+                    updateCanvasQuickNumber('service_port', $event, selectedNodeDraft)
+                  "
+                  @toggle-selected-node-network="
+                    toggleSelectedNodeNetwork($event.networkKey, $event.checked)
+                  "
+                  @update-selected-edge-source-key="updateSelectedEdgeSourceKey"
+                  @update-selected-edge-target-key="updateSelectedEdgeTargetKey"
+                  @update-selected-edge-kind="handleSelectedEdgeKindChange"
+                />
 
-                  <div
-                    v-if="!selectedNodeDraft && !selectedEdgeMeta"
-                    class="mt-3 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
-                  >
-                    请选择一个节点或一条边
-                  </div>
-
-                  <div v-else-if="selectedNodeDraft" class="mt-3 space-y-4">
-                    <div class="grid gap-3 md:grid-cols-2">
-                      <label class="space-y-2">
-                        <span class="text-sm text-text-secondary">节点名称</span>
-                        <input
-                          v-model="selectedNodeDraft.name"
-                          type="text"
-                          class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                        />
-                      </label>
-                      <label class="space-y-2">
-                        <span class="text-sm text-text-secondary">镜像</span>
-                        <select
-                          v-model="selectedNodeDraft.image_id"
-                          class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                        >
-                          <option value="">复用题目主镜像</option>
-                          <option v-for="image in images" :key="image.id" :value="image.id">
-                            {{ image.name }}:{{ image.tag }}
-                          </option>
-                        </select>
-                      </label>
-                      <label class="space-y-2">
-                        <span class="text-sm text-text-secondary">层级</span>
-                        <select
-                          v-model="selectedNodeDraft.tier"
-                          class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                        >
-                          <option value="public">public</option>
-                          <option value="service">service</option>
-                          <option value="internal">internal</option>
-                        </select>
-                      </label>
-                      <label class="space-y-2">
-                        <span class="text-sm text-text-secondary">服务端口</span>
-                        <input
-                          :value="selectedNodeDraft.service_port ?? ''"
-                          type="number"
-                          min="1"
-                          max="65535"
-                          class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                          @input="
-                            updateCanvasQuickNumber(
-                              'service_port',
-                              ($event.target as HTMLInputElement).value,
-                              selectedNodeDraft
-                            )
-                          "
-                        />
-                      </label>
-                    </div>
-
-                    <label
-                      class="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 text-sm text-text-primary"
-                    >
-                      <input
-                        v-model="selectedNodeDraft.inject_flag"
-                        type="checkbox"
-                        class="h-4 w-4 rounded border-border bg-transparent"
-                      />
-                      启用 Flag 注入
-                    </label>
-
-                    <div class="space-y-2">
-                      <div class="text-sm text-text-secondary">所属网络</div>
-                      <div class="grid gap-2 md:grid-cols-2">
-                        <label
-                          v-for="network in draft.networks"
-                          :key="network.uid"
-                          class="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 text-sm text-text-primary"
-                        >
-                          <input
-                            :checked="selectedNodeDraft.network_keys.includes(network.key)"
-                            type="checkbox"
-                            class="h-4 w-4 rounded border-border bg-transparent"
-                            @change="
-                              toggleSelectedNodeNetwork(
-                                network.key,
-                                ($event.target as HTMLInputElement).checked
-                              )
-                            "
-                          />
-                          <span>{{ network.name || network.key }}</span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div v-else-if="selectedEdgeMeta" class="mt-3 space-y-4">
-                    <div class="grid gap-3 md:grid-cols-2">
-                      <label class="space-y-2">
-                        <span class="text-sm text-text-secondary">源节点</span>
-                        <select
-                          :value="selectedEdgeSourceKey"
-                          class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                          @change="
-                            updateSelectedEdgeSourceKey(($event.target as HTMLSelectElement).value)
-                          "
-                        >
-                          <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                            {{ node.label }}
-                          </option>
-                        </select>
-                      </label>
-                      <label class="space-y-2">
-                        <span class="text-sm text-text-secondary">目标节点</span>
-                        <select
-                          :value="selectedEdgeTargetKey"
-                          class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                          @change="
-                            updateSelectedEdgeTargetKey(($event.target as HTMLSelectElement).value)
-                          "
-                        >
-                          <option v-for="node in nodeOptions" :key="node.key" :value="node.key">
-                            {{ node.label }}
-                          </option>
-                        </select>
-                      </label>
-                    </div>
-
-                    <label class="space-y-2">
-                      <span class="text-sm text-text-secondary">边类型</span>
-                      <select
-                        :value="selectedEdgeKind"
-                        class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                        @change="
-                          handleSelectedEdgeKindChange(($event.target as HTMLSelectElement).value)
-                        "
-                      >
-                        <option value="link">logic link</option>
-                        <option value="allow">allow</option>
-                        <option value="deny">deny</option>
-                      </select>
-                    </label>
-                  </div>
-                </div>
-
-                <div class="rounded-2xl border border-border bg-elevated p-4">
-                  <div class="text-sm font-semibold text-text-primary">网络快速编辑</div>
-                  <div class="mt-3 space-y-3">
-                    <div
-                      v-for="network in draft.networks"
-                      :key="network.uid"
-                      class="grid gap-3 rounded-xl border border-border bg-surface p-3 md:grid-cols-[0.9fr_1fr_auto]"
-                    >
-                      <input
-                        v-model="network.key"
-                        type="text"
-                        class="w-full rounded-xl border border-border bg-elevated px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                        placeholder="network key"
-                      />
-                      <input
-                        v-model="network.name"
-                        type="text"
-                        class="w-full rounded-xl border border-border bg-elevated px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
-                        placeholder="网络名称"
-                      />
-                      <label
-                        class="flex items-center gap-2 rounded-xl border border-border bg-elevated px-3 py-2.5 text-sm text-text-primary"
-                      >
-                        <input
-                          v-model="network.internal"
-                          type="checkbox"
-                          class="h-4 w-4 rounded border-border bg-transparent"
-                        />
-                        internal
-                      </label>
-                    </div>
-                  </div>
-                </div>
+                <TopologyNetworkQuickEditor
+                  :networks="draft.networks"
+                  @update-network="updateNetworkDraft"
+                />
               </div>
             </SectionCard>
 

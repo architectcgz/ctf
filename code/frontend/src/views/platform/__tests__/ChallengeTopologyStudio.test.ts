@@ -4,7 +4,9 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
+import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
+import topologyNetworkQuickEditorSource from '@/components/platform/topology/TopologyNetworkQuickEditor.vue?raw'
 import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 import challengeTopologyStudioRouteSource from '../ChallengeTopologyStudio.vue?raw'
@@ -209,7 +211,7 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {
-    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}`
+    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}\n${topologyCanvasQuickEditorSource}\n${topologyNetworkQuickEditorSource}`
 
     expect(challengeTopologyStudioPageSource).toContain(
       'class="ui-btn ui-btn--ghost topology-action-btn'
@@ -219,6 +221,24 @@ describe('ChallengeTopologyStudioPage', () => {
     )
     expect(topologySource).toContain('ui-btn ui-btn--secondary topology-action-btn')
     expect(topologySource).toContain('ui-btn ui-btn--danger topology-action-btn')
+  })
+
+  it('画布快速编辑应从父页下沉到独立组件，同时保留父页 selection owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyCanvasQuickEditor')
+    expect(challengeTopologyStudioPageSource).not.toContain('<div v-else-if="selectedNodeDraft"')
+    expect(challengeTopologyStudioPageSource).not.toContain('<div v-else-if="selectedEdgeMeta"')
+    expect(topologyCanvasQuickEditorSource).toContain('画布快速编辑')
+    expect(topologyCanvasQuickEditorSource).toContain("emit('updateSelectedNodeField'")
+    expect(topologyCanvasQuickEditorSource).toContain("emit('updateSelectedEdgeKind'")
+  })
+
+  it('网络快速编辑应从父页下沉到独立组件，同时保留 draft.networks owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyNetworkQuickEditor')
+    expect(challengeTopologyStudioPageSource).not.toContain('v-model="network.key"')
+    expect(challengeTopologyStudioPageSource).not.toContain('v-model="network.name"')
+    expect(challengeTopologyStudioPageSource).not.toContain('v-model="network.internal"')
+    expect(topologyNetworkQuickEditorSource).toContain('网络快速编辑')
+    expect(topologyNetworkQuickEditorSource).toContain("emit('updateNetwork'")
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {

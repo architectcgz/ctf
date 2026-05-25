@@ -6,6 +6,20 @@
 - 后续判断“是否仍需修复”时，以主索引的 `当前结论`、最近一轮修复进展、`后续技术债 Backlog` 为准。
 - 早期 `ctf-frontend-code-review-*` 单轮快照的有效结论已经吸收到主索引和本文件，原始快照不再作为活动事实源保留；需要追溯原文时直接使用 Git 历史。
 
+## 快速核查入口
+
+- 当用户只是在问“前端技术债现在还在不在”时，默认先读：
+  - `docs/reviews/frontend/README.md`
+  - `docs/reviews/frontend/ctf-frontend-audit-20260422.md` 的 `后续技术债 Backlog`
+  - `docs/reviews/architecture/2026-05-24-frontend-architecture-review.md`
+- 默认先把结论分成三类：仍然成立、已经收口、历史 finding 已被后续代码覆盖，避免重新把旧 review 全量扫一遍。
+- 需要最小代码证据时，优先跑这一组定向护栏，而不是做全量前端扫描：
+  - `npm run test:run -- src/__tests__/architectureBoundaries.test.ts src/views/__tests__/routeViewArchitectureBoundary.test.ts src/views/__tests__/sharedThemeTokenAdoption.test.ts src/views/__tests__/duplicateActionGuardAudit.test.ts src/views/contests/__tests__/contestAwdWorkspacePanelSource.test.ts src/views/teacher/__tests__/studentAnalysisPanelExtraction.test.ts`
+- 2026-05-25 当前快速结论：
+  - 仍成立：`TD-1` 超大组件专题拆分、`TD-3` 性能监控接入、`TD-4` i18n 预留、allowlist 驱动的边界结构债、请求层错误 owner 未完全回到页面层。
+  - 已收口：`TD-2` 主题 token / Tailwind 任意值尾项、`TD-5` 历史 review 快照清理、`StudentInsightPanel.vue` 的当前 `TD-1` touched surface。
+  - 需单独跟踪但不属于主索引既有 `TD-1/3/4/5`：`duplicateActionGuardAudit.test.ts` 当前暴露的图片管理页重复提交 owner 缺口。
+
 ## 已清理快照的回读方式
 
 - 已删除快照中的行号、提交范围、测试数量和“未修复”状态，只代表对应审查日期的代码状态。
@@ -22,7 +36,7 @@
 
 ## 仍然保留为当前 Backlog 的事项
 
-- `TD-1` 超大组件专题拆分：已开始拓扑页切片，模板侧栏、摘要指标、状态说明、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区已从 `ChallengeTopologyStudioPage.vue` 抽到独立组件；后续继续按父页面 owner 边界逐个切片处理。
+- `TD-1` 超大组件专题拆分：已开始拓扑页切片，模板侧栏、摘要指标、状态说明、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区已从 `ChallengeTopologyStudioPage.vue` 抽到独立组件；`StudentInsightPanel.vue` 当前 touched surface 已在 2026-05-25 切片里收口。后续继续按父页面 owner 边界处理 `ChallengeTopologyStudioPage.vue` 的画布快速编辑区、`AWDChallengeConfigDialog.vue`、`ContestAWDWorkspacePanel.vue` 等剩余高复杂度组件。
 - `TD-3` 性能监控接入：需要先确定指标、上报端点、隐私边界和生产开关。
 - `TD-4` i18n 预留：取决于产品是否需要多语言。
 
