@@ -186,7 +186,7 @@ declare module 'vue' {
     AwdReviewAnalysisSection: typeof import('./components/teacher/awd-review/AwdReviewAnalysisSection.vue')['default']
     AwdReviewEvidenceGrid: typeof import('./components/teacher/awd-review/AwdReviewEvidenceGrid.vue')['default']
     AwdReviewRoundSelector: typeof import('./components/teacher/awd-review/AwdReviewRoundSelector.vue')['default']
-    TeacherAWDReviewTeamDrawer: typeof import('./components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue')['default']
+    AwdReviewTeamDrawer: typeof import('./components/teacher/awd-review/AwdReviewTeamDrawer.vue')['default']
     TeacherClassInsightsPanel: typeof import('./components/teacher/TeacherClassInsightsPanel.vue')['default']
     TeacherClassReportExportDialog: typeof import('./components/teacher/reports/TeacherClassReportExportDialog.vue')['default']
     TeacherClassReviewPanel: typeof import('./components/teacher/TeacherClassReviewPanel.vue')['default']

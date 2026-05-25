@@ -16,7 +16,7 @@ import type {
 import AwdReviewRoundSelector from '@/components/teacher/awd-review/AwdReviewRoundSelector.vue'
 import AwdReviewAnalysisSection from '@/components/teacher/awd-review/AwdReviewAnalysisSection.vue'
 import AwdReviewEvidenceGrid from '@/components/teacher/awd-review/AwdReviewEvidenceGrid.vue'
-import TeacherAWDReviewTeamDrawer from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue'
+import AwdReviewTeamDrawer from '@/components/teacher/awd-review/AwdReviewTeamDrawer.vue'
 import TeacherAWDReviewStatusChip from './TeacherAWDReviewStatusChip.vue'
 import TeacherAWDReviewWorkspaceActions from './TeacherAWDReviewWorkspaceActions.vue'
 import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
@@ -149,7 +149,7 @@ const summaryItems = computed(() =>
         </template>
       </TeacherAWDReviewWorkspaceState>
 
-      <TeacherAWDReviewTeamDrawer
+      <AwdReviewTeamDrawer
         :visible="Boolean(selectedTeam)"
         :team="selectedTeam"
         :services="selectedTeamServices"

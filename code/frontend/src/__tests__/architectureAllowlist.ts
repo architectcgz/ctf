@@ -67,7 +67,7 @@ export const widgetLegacyComponentImportAllowlist = new Set([
   'widgets/awd-review-workspace/AwdReviewWorkspace.vue -> @/components/teacher/awd-review/AwdReviewAnalysisSection.vue',
   'widgets/awd-review-workspace/AwdReviewWorkspace.vue -> @/components/teacher/awd-review/AwdReviewEvidenceGrid.vue',
   'widgets/awd-review-workspace/AwdReviewWorkspace.vue -> @/components/teacher/awd-review/AwdReviewRoundSelector.vue',
-  'widgets/awd-review-workspace/AwdReviewWorkspace.vue -> @/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue',
+  'widgets/awd-review-workspace/AwdReviewWorkspace.vue -> @/components/teacher/awd-review/AwdReviewTeamDrawer.vue',
   'widgets/teacher-review-archive/ReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveEvidencePanel.vue',
   'widgets/teacher-review-archive/ReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveHero.vue',
   'widgets/teacher-review-archive/ReviewArchiveWorkspace.vue -> @/components/teacher/review-archive/ReviewArchiveObservationStrip.vue',

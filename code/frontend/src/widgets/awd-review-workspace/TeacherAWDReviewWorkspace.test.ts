@@ -71,7 +71,7 @@ describe('TeacherAWDReviewWorkspace', () => {
           AwdReviewRoundSelector: { template: '<div />' },
           AwdReviewAnalysisSection: { template: '<div />' },
           AwdReviewEvidenceGrid: { template: '<div />' },
-          TeacherAWDReviewTeamDrawer: { template: '<div />' },
+          AwdReviewTeamDrawer: { template: '<div />' },
         },
       },
     })
@@ -99,7 +99,7 @@ describe('TeacherAWDReviewWorkspace', () => {
           AwdReviewRoundSelector: {
             template: '<button data-testid="round-selector" @click="$emit(\'set-round\', 2)">round</button>',
           },
-          TeacherAWDReviewTeamDrawer: {
+          AwdReviewTeamDrawer: {
             template: '<button data-testid="team-drawer" @click="$emit(\'close\')">drawer</button>',
           },
         },

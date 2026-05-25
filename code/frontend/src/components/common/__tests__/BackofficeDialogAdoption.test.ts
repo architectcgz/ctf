@@ -8,7 +8,7 @@ import awdServiceCheckDialogSource from '@/components/platform/contest/AWDServic
 import awdAttackLogDialogSource from '@/components/platform/contest/AWDAttackLogDialog.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
 import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
-import teacherAwdReviewTeamDrawerSource from '@/components/teacher/awd-review/TeacherAWDReviewTeamDrawer.vue?raw'
+import awdReviewTeamDrawerSource from '@/components/teacher/awd-review/AwdReviewTeamDrawer.vue?raw'
 import imageCreateModalSource from '@/components/platform/images/ImageCreateModal.vue?raw'
 import imageDetailModalSource from '@/components/platform/images/ImageDetailModal.vue?raw'
 
@@ -33,7 +33,7 @@ describe('backoffice dialog adoption', () => {
   })
 
   it('drawer-style backoffice panels should adopt AdminSurfaceDrawer', () => {
-    const drawerSources = [adminNotificationPublishDrawerSource, teacherAwdReviewTeamDrawerSource]
+    const drawerSources = [adminNotificationPublishDrawerSource, awdReviewTeamDrawerSource]
 
     drawerSources.forEach((source) => {
       expect(source).toContain("from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'")
