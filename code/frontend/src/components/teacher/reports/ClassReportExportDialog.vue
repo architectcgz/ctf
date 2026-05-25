@@ -6,7 +6,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
 import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
-import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
+import ClassTrendPanel from '@/components/teacher/ClassTrendPanel.vue'
 import { useClassReportExport } from '@/features/teacher-class-report-export'
 import { formatDate } from '@/utils/format'
 
@@ -376,7 +376,7 @@ function closeDialog(): void {
             </section>
 
             <div class="class-report-preview-stack">
-              <TeacherClassTrendPanel
+              <ClassTrendPanel
                 :trend="previewTrend"
                 title="班级训练趋势"
                 :subtitle="`当前窗口：${selectedWindowLabel}`"

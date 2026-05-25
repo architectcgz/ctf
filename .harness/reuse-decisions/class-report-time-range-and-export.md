@@ -98,7 +98,7 @@ extend_existing
 - `code/frontend/src/features/teacher-class-students/model/useTeacherClassStudentsPage.ts`
 - `code/frontend/src/features/teacher-class-report-export/model/useTeacherClassReportExport.ts`
 - `code/frontend/src/components/teacher/class-management/ClassStudentsPage.vue`
-- `code/frontend/src/components/teacher/TeacherClassTrendPanel.vue`
+- `code/frontend/src/components/teacher/ClassTrendPanel.vue`
 - `code/frontend/src/components/teacher/reports/ClassReportExportDialog.vue`
 - `code/frontend/src/components/teacher/reports/__tests__/ClassReportExportDialog.test.ts`
 - `code/frontend/src/views/teacher/__tests__/TeacherClassStudents.test.ts`

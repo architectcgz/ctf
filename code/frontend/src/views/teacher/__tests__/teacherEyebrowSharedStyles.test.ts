@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import teacherClassInsightsSource from '@/components/teacher/TeacherClassInsightsPanel.vue?raw'
 import teacherClassReviewSource from '@/components/teacher/TeacherClassReviewPanel.vue?raw'
-import teacherClassTrendSource from '@/components/teacher/TeacherClassTrendPanel.vue?raw'
+import teacherClassTrendSource from '@/components/teacher/ClassTrendPanel.vue?raw'
 import teacherInterventionSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import classStudentsSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'

@@ -14,7 +14,7 @@ import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
 import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPanel.vue'
 import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
-import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
+import ClassTrendPanel from '@/components/teacher/ClassTrendPanel.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 
@@ -128,7 +128,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 function resolveWorkspacePanelComponent(tabKey: WorkspacePanelTab): Component {
   switch (tabKey) {
     case 'trend':
-      return TeacherClassTrendPanel
+      return ClassTrendPanel
     case 'review':
       return TeacherClassReviewPanel
     case 'insight':
