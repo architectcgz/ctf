@@ -9,6 +9,7 @@ import {
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AWDDefenseAlertsPanel from '@/components/contests/awd/AWDDefenseAlertsPanel.vue'
+import AWDAttackToolbar from '@/components/contests/awd/AWDAttackToolbar.vue'
 import AWDDefenseOperationsPanel from '@/components/contests/awd/AWDDefenseOperationsPanel.vue'
 import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip.vue'
 import AWDDefenseServiceList from '@/components/contests/awd/AWDDefenseServiceList.vue'
@@ -81,6 +82,12 @@ const runtimeChallenges = computed(() =>
   props.challenges.filter((item): item is ContestChallengeItem & { awd_service_id: string } =>
     Boolean(item.awd_service_id)
   )
+)
+const attackToolbarChallengeOptions = computed(() =>
+  runtimeChallenges.value.map((challenge) => ({
+    key: getChallengeRuntimeKey(challenge),
+    title: challenge.title,
+  }))
 )
 
 const defenseServiceCards = computed(() =>
@@ -463,34 +470,13 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
             <h3 class="ops-panel__title">攻击向量</h3>
           </header>
 
-          <div class="ops-panel__toolbar">
-            <div class="toolbar-field">
-              <label>目标题目</label>
-              <select
-                id="awd-target-challenge"
-                v-model="activeChallengeKey"
-                class="war-room-select"
-              >
-                <option
-                  v-for="challenge in runtimeChallenges"
-                  :key="getChallengeRuntimeKey(challenge)"
-                  :value="getChallengeRuntimeKey(challenge)"
-                >
-                  {{ challenge.title }}
-                </option>
-              </select>
-            </div>
-            <div class="toolbar-field">
-              <label>队伍筛选</label>
-              <input
-                id="awd-target-search"
-                v-model="targetKeyword"
-                type="text"
-                placeholder="按队伍名称筛选..."
-                class="war-room-input"
-              />
-            </div>
-          </div>
+          <AWDAttackToolbar
+            :challenge-options="attackToolbarChallengeOptions"
+            :active-challenge-key="activeChallengeKey"
+            :target-keyword="targetKeyword"
+            @update:active-challenge-key="activeChallengeKey = $event"
+            @update:target-keyword="targetKeyword = $event"
+          />
 
           <div class="ops-panel__content custom-scrollbar">
             <div v-if="runtimeChallenges.length === 0" class="panel-note">
@@ -652,45 +638,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   letter-spacing: 0.15em;
   color: var(--color-text-primary);
   margin: 0;
-}
-
-.ops-panel__toolbar {
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--color-border-subtle);
-  display: flex;
-  gap: 1rem;
-  background: var(--color-bg-surface);
-}
-
-.toolbar-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  flex: 1;
-}
-
-.toolbar-field label {
-  font-size: 9px;
-  font-weight: 900;
-  color: var(--color-text-muted);
-  letter-spacing: 0.1em;
-}
-
-.war-room-select,
-.war-room-input {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-default);
-  border-radius: 0.5rem;
-  color: var(--color-text-primary);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 0.5rem 0.75rem;
-  outline: none;
-  transition: all 0.2s ease;
-}
-.war-room-select:focus,
-.war-room-input:focus {
-  border-color: var(--color-primary);
 }
 
 .ops-panel__content {

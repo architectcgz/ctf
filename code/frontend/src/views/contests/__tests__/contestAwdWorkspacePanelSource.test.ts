@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import awdDefenseAlertsPanelSource from '@/components/contests/awd/AWDDefenseAlertsPanel.vue?raw'
+import awdAttackToolbarSource from '@/components/contests/awd/AWDAttackToolbar.vue?raw'
 import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
 import awdWorkspaceHudStripSource from '@/components/contests/awd/AWDWorkspaceHudStrip.vue?raw'
@@ -12,14 +13,11 @@ describe('ContestAWDWorkspacePanel source', () => {
   it('AWD 工作台应保留当前战情面板结构与运行态 service 标识', () => {
     expect(awdWorkspaceSource).toContain('我的防守')
     expect(awdWorkspaceSource).toContain('攻击向量')
-    expect(awdWorkspaceSource).toContain('目标题目')
-    expect(awdWorkspaceSource).toContain('队伍筛选')
     expect(awdWorkspaceSource).toContain('输入获取到的 Flag...')
     expect(awdWorkspaceSource).toContain('当前竞赛暂无可部署服务。')
     expect(awdWorkspaceSource).toContain('formatServiceRef')
-    expect(awdWorkspaceSource).toContain('id="awd-target-challenge"')
-    expect(awdWorkspaceSource).toContain('id="awd-target-search"')
     expect(awdWorkspaceSource).toContain('AWDDefenseAlertsPanel')
+    expect(awdWorkspaceSource).toContain('AWDAttackToolbar')
     expect(awdWorkspaceSource).toContain('AWDDefenseOperationsPanel')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceHudStrip')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceIntelColumn')
@@ -28,6 +26,10 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdDefenseAlertsPanelSource).toContain('defense-alert')
     expect(awdDefenseAlertsPanelSource).toContain('alert.challengeTitle')
     expect(awdDefenseAlertsPanelSource).toContain('alert.statusLabel')
+    expect(awdAttackToolbarSource).toContain('目标题目')
+    expect(awdAttackToolbarSource).toContain('队伍筛选')
+    expect(awdAttackToolbarSource).toContain('id="awd-target-challenge"')
+    expect(awdAttackToolbarSource).toContain('id="awd-target-search"')
     expect(awdWorkspaceHudStripSource).toContain('当前回合')
     expect(awdWorkspaceHudStripSource).toContain('我的战队')
     expect(awdWorkspaceHudStripSource).toContain('战队服务')
