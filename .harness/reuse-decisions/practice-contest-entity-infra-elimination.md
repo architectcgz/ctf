@@ -11,7 +11,7 @@ repository / mapper / persistence row / architecture guardrail
 - `code/backend/internal/module/contest/entity/*.go`
 - `code/backend/internal/module/architecture_allowlist_test.go`
 - `.harness/reuse-decisions/practice-contest-record-localization.md`
-- `docs/plan/impl-plan/2026-05-18-practice-contest-record-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-practice-contest-record-localization-implementation-plan.md`
 
 ## Similar implementations found
 - `practice/infrastructure/repository.go`
@@ -44,7 +44,7 @@ refactor_existing
 - `code/backend/internal/module/practice/infrastructure/contest_persistence_rows.go`
 - `code/backend/internal/module/practice/infrastructure/contest_awd_service_snapshot.go`
 - `code/backend/internal/module/architecture_allowlist_test.go`
-- `docs/plan/impl-plan/2026-05-18-practice-contest-entity-infra-elimination-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-practice-contest-entity-infra-elimination-implementation-plan.md`
 
 ## After implementation
 - `practice` 非测试 `infrastructure` 不再 import `ctf-platform/internal/module/contest/entity`

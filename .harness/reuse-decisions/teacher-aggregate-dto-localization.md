@@ -41,7 +41,7 @@ refactor_existing
 - `code/backend/internal/module/contest/**`
 - `code/backend/internal/app/**test.go`
 - `code/backend/cmd/seed-teaching-review-data/*.go`
-- `docs/plan/impl-plan/2026-05-17-teacher-aggregate-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-teacher-aggregate-dto-localization-implementation-plan.md`
 - `.harness/reuse-decisions/teacher-aggregate-dto-localization.md`
 
 ## Legacy DTO sources to delete after localization
@@ -55,7 +55,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/teacher-aggregate-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-17-teacher-aggregate-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-teacher-aggregate-dto-localization-implementation-plan.md`
 - `code/backend/cmd/seed-teaching-review-data/main.go`
 - `code/backend/cmd/seed-teaching-review-data/main_test.go`
 - `code/backend/internal/app/full_router_integration_test.go`

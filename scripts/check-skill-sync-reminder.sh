@@ -25,7 +25,7 @@ case "$mode" in
 Usage:
   scripts/check-skill-sync-reminder.sh [--staged|--working|--all]
 
-Prints a non-blocking reminder when harness feedback, reuse history,
+Prints a non-blocking reminder when harness feedback,
 prompts, policies, or templates changed and may need synchronization
 back into global Codex skills.
 EOF
@@ -41,7 +41,7 @@ if [[ -z "${changed_files// }" ]]; then
   exit 0
 fi
 
-watch_pattern='(^feedback/.*\.md$|^harness/reuse/(history\.md|index\.yaml)$|^harness/(prompts|policies|templates)/)'
+watch_pattern='(^feedback/.*\.md$|^harness/(prompts|policies|templates)/)'
 matches="$(printf '%s\n' "$changed_files" | grep -E "$watch_pattern" || true)"
 
 if [[ -z "${matches// }" ]]; then

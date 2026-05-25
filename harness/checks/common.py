@@ -12,8 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 REUSE_DECISIONS_DIR = ROOT / ".harness" / "reuse-decisions"
-REUSE_HISTORY_PATH = ROOT / "harness" / "reuse" / "history.md"
-REUSE_INDEX_PATH = ROOT / "harness" / "reuse" / "index.yaml"
+LOCAL_REUSE_INDEX_DIR = ROOT / ".harness" / "reuse-index"
 POLICY_DIR = ROOT / "harness" / "policies"
 TASK_SCOPED_REUSE_DECISION_HINT = ".harness/reuse-decisions/<task-slug>.md"
 
@@ -263,9 +262,10 @@ def reuse_decision_destination_hint() -> str:
 
 def load_reuse_reference_text() -> str:
     parts = [load_reuse_decision_text()]
-    for path in (REUSE_INDEX_PATH, REUSE_HISTORY_PATH):
-        if path.is_file():
-            parts.append(path.read_text(encoding="utf-8"))
+    if LOCAL_REUSE_INDEX_DIR.is_dir():
+        for path in sorted(LOCAL_REUSE_INDEX_DIR.rglob("*")):
+            if path.is_file() and path.suffix in {".md", ".yaml", ".yml"}:
+                parts.append(path.read_text(encoding="utf-8"))
     return "\n".join(part for part in parts if part)
 
 

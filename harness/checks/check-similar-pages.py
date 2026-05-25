@@ -76,7 +76,7 @@ def main() -> int:
         print(
             "Please update a task-scoped reuse decision file under .harness/reuse-decisions/ to reference these files and explain "
             "why you are reusing, extending, refactoring, or creating a new page. "
-            "If this is a reusable pattern, also update harness/reuse/index.yaml after the task.",
+            "If this is a reusable local pattern, also update .harness/reuse-index/index.yaml and the nearest mirrored README under .harness/reuse-index/ after the task.",
             file=sys.stderr,
         )
 

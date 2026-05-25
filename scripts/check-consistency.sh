@@ -108,6 +108,8 @@ echo "[C8] AGENTS captures file placement rules"
 check_file "docs/文档规范.md"
 check_file "docs/contracts/README.md"
 check_file "docs/contracts/openapi-v1/index.yaml"
+check_file "scripts/check-task-intake.sh"
+check_file "scripts/check-open-todos.sh"
 check_file "scripts/sync_openapi_from_contract.py"
 check_contains "AGENTS.md" 'docs/文档规范\.md' "AGENTS references documentation guide"
 check_contains "docs/README.md" 'docs/文档规范\.md' "docs README references documentation guide"
@@ -139,11 +141,21 @@ check_contains "AGENTS.md" 'docs/plan/impl-plan/' "AGENTS references docs/plan/i
 check_contains "AGENTS.md" 'docs/plan/archive/impl-plan/' "AGENTS references docs/plan/archive/impl-plan"
 check_contains "AGENTS.md" 'docs/reviews/' "AGENTS references docs/reviews"
 check_contains "AGENTS.md" 'docs/todos/' "AGENTS references docs/todos"
+check_contains "AGENTS.md" 'scripts/check-task-intake\.sh' "AGENTS references task intake gate"
+check_contains "AGENTS.md" 'scripts/check-open-todos\.sh' "AGENTS references todo reminder script"
 check_contains "AGENTS.md" 'docs/operations/' "AGENTS references docs/operations"
 check_file "docs/plan/README.md"
 check_file "docs/plan/impl-plan/README.md"
 check_file "docs/plan/archive/impl-plan/README.md"
 check_contains "docs/README.md" 'docs/plan/README\.md' "docs README references plan index"
+
+echo "[C8a] open todos are surfaced to the operator"
+if [[ -x "scripts/check-open-todos.sh" ]]; then
+  bash scripts/check-open-todos.sh --quiet-if-empty
+else
+  echo "  $(red FAIL) — scripts/check-open-todos.sh is not executable"
+  fail=1
+fi
 
 echo "[C8b] documentation references stay current"
 python3 scripts/check-docs-consistency.py
@@ -157,6 +169,7 @@ check_contains "works/AGENTS.md" 'harness-good-practices\.md' "works AGENTS refe
 
 echo "[C10] local architecture guardrails are wired"
 check_file "scripts/check-architecture.sh"
+check_file "scripts/check-task-intake.sh"
 check_file "scripts/check-reuse-first.sh"
 check_file "scripts/check-skill-sync-reminder.sh"
 check_file "scripts/doctor-local-harness.sh"
@@ -175,9 +188,6 @@ check_dir ".harness"
 check_dir ".harness/reuse-decisions"
 check_file ".harness/reuse-decisions/.gitkeep"
 check_dir "harness"
-check_dir "harness/reuse"
-check_file "harness/reuse/index.yaml"
-check_file "harness/reuse/history.md"
 check_file "harness/policies/reuse-first.yaml"
 check_file "harness/policies/project-patterns.yaml"
 check_file "harness/templates/reuse-decision.md"
@@ -185,21 +195,28 @@ check_file "harness/templates/pattern-index-example.yaml"
 check_file "harness/prompts/coding-agent-system-prompt.md"
 check_file "harness/checks/common.py"
 check_file "harness/checks/check-reuse-decision.py"
+check_file "harness/checks/check-reuse-startup.py"
 check_file "harness/checks/check-similar-pages.py"
 check_file "harness/checks/check-duplicate-hooks.py"
 check_file "harness/checks/check-api-wrapper-duplication.py"
 check_file "harness/checks/check-backend-reuse.py"
+check_contains "harness/prompts/coding-agent-system-prompt.md" 'scripts/check-task-intake\.sh --reuse-decision' "reuse-first prompt references startup gate"
+check_contains "AGENTS.md" 'scripts/check-task-intake\.sh --reuse-decision' "AGENTS references reuse startup gate"
 check_contains "scripts/check-reuse-first.sh" 'harness/checks/check-backend-reuse\.py' "reuse-first runs backend reuse check"
 check_contains "AGENTS.md" 'reuse-first harness' "AGENTS declares reuse-first harness"
 check_contains "AGENTS.md" 'harness/policies/project-patterns\.yaml' "AGENTS references project patterns index"
 check_contains "AGENTS.md" '\.harness/reuse-decisions/' "AGENTS references task-scoped reuse decision directory"
-check_contains "AGENTS.md" 'harness/reuse/index\.yaml' "AGENTS references durable reuse index"
-check_contains "AGENTS.md" 'harness/reuse/history\.md' "AGENTS references append-only reuse history"
-if [[ -f ".harness/reuse-index.yaml" || -f ".harness/reuse-history.md" ]]; then
-  echo "  $(red FAIL) — durable reuse index/history must live under harness/reuse/, not .harness/"
-  fail=1
+check_contains "AGENTS.md" '\.harness/reuse-index/' "AGENTS references local private reuse index"
+if grep -qx '/.harness/reuse-index/' ".gitignore"; then
+  echo "  $(green PASS) — .gitignore reserves local private reuse index"
 else
-  echo "  $(green PASS) — .harness does not contain durable reuse index/history"
+  echo "  $(red FAIL) — .gitignore must ignore /.harness/reuse-index/"
+  fail=1
+fi
+if [[ -d ".harness/reuse-index" ]]; then
+  echo "  $(green PASS) — local private reuse index exists"
+else
+  echo "  $(green PASS) — local private reuse index is optional and currently absent"
 fi
 if [[ -f ".harness/reuse-decision.md" ]]; then
   echo "  $(red FAIL) — legacy .harness/reuse-decision.md is forbidden; move the task evidence into .harness/reuse-decisions/"
@@ -207,7 +224,7 @@ if [[ -f ".harness/reuse-decision.md" ]]; then
 else
   echo "  $(green PASS) — no legacy single-file reuse decision present"
 fi
-check_contains "AGENTS.md" '本地 workflow 是 reuse-first harness 的权威入口' "AGENTS marks local workflow as authoritative"
+check_contains "AGENTS.md" 'scripts/check-task-intake\.sh.*startup gate' "AGENTS marks startup gate as authoritative"
 
 echo "[C12] changed feedback records declare sedimentation status"
 feedback_changed="$(

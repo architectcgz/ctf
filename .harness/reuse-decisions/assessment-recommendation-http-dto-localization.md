@@ -37,7 +37,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/assessment-recommendation-http-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-17-assessment-recommendation-http-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-assessment-recommendation-http-dto-localization-implementation-plan.md`
 - `docs/architecture/backend/04-api-design.md`
 - `code/backend/internal/module/assessment/api/http/handler.go`
 - `code/backend/internal/module/assessment/api/http/response_mapper.go`

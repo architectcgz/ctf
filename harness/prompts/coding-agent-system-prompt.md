@@ -34,11 +34,12 @@ You must prefer the following order:
 
 You are not allowed to create a parallel implementation if an existing one can be reused, extended, or refactored.
 
-Before implementation, create or update `.harness/reuse-decisions/<task-slug>.md`.
+Before implementation, create or update `.harness/reuse-decisions/<task-slug>.md`, then run `bash scripts/check-task-intake.sh --reuse-decision <task-slug>`.
 
 Task-scoped reuse decision files can coexist under `.harness/reuse-decisions/` without overwriting each other.
-Before searching from scratch, also read `harness/reuse/index.yaml` for durable reusable patterns.
-After implementation, append reusable decisions to `harness/reuse/history.md` and update `harness/reuse/index.yaml` when future agents should find the pattern directly.
+Before searching from scratch, also read `.harness/reuse-index/index.yaml` if it exists.
+If the index routes you to a module or subdirectory, also read the nearest mirrored `README.md` under `.harness/reuse-index/<source-path>/`.
+After implementation, update the local `.harness/reuse-index/index.yaml` entry and the nearest mirrored module `README.md` when future tasks should find the pattern directly.
 
 The Reuse Decision must include:
 
@@ -59,5 +60,7 @@ Required workflow:
    - Search the repository for similar implementations.
 3. Step 3: Decide
    - Choose reuse, extend, refactor, or create-new-with-reason.
-4. Step 4: Implement
-   - Only write code after the first three steps are complete.
+4. Step 4: Gate
+   - Run `bash scripts/check-task-intake.sh --reuse-decision <task-slug>` and pass the startup gate.
+5. Step 5: Implement
+   - Only write code after the first four steps are complete.

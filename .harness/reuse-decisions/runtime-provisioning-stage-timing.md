@@ -39,7 +39,7 @@ extend_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/runtime-provisioning-stage-timing.md`
-- `docs/plan/impl-plan/2026-05-20-runtime-provisioning-stage-timing-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-20-runtime-provisioning-stage-timing-implementation-plan.md`
 - `code/backend/internal/module/runtime/application/commands/provisioning_service.go`
 - `code/backend/internal/module/runtime/service_test.go`
 

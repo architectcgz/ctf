@@ -28,7 +28,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/practice-contest-awd-instance-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-18-practice-contest-awd-instance-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-practice-contest-awd-instance-dto-localization-implementation-plan.md`
 - `code/backend/internal/dto/contest_awd_instance.go`
 - `code/backend/internal/module/practice/api/http/contest_awd_instance_types.go`
 - `code/backend/internal/module/practice/api/http/handler.go`

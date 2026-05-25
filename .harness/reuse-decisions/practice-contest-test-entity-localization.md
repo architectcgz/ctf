@@ -43,7 +43,7 @@ create_new_with_reason
 - `code/backend/internal/module/practice/testsupport/test_helper.go`
 - `code/backend/internal/module/practice/infrastructure/repository_test.go`
 - `code/backend/internal/module/practice/application/commands/*_test.go`
-- `docs/plan/impl-plan/2026-05-18-practice-contest-test-entity-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-practice-contest-test-entity-localization-implementation-plan.md`
 
 ## After implementation
 - `practice` 测试与 testsupport 不再 import `ctf-platform/internal/module/contest/entity`

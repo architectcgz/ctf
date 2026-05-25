@@ -27,7 +27,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/challenge-response-dto-localization-image-tag-flag.md`
-- `docs/plan/impl-plan/2026-05-17-challenge-response-dto-localization-image-tag-flag-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-challenge-response-dto-localization-image-tag-flag-implementation-plan.md`
 - `code/backend/internal/module/challenge/api/http/challenge_response_types.go`
 - `code/backend/internal/module/challenge/api/http/response_mapper.go`
 - `code/backend/internal/module/challenge/api/http/response_mapper_assign.go`

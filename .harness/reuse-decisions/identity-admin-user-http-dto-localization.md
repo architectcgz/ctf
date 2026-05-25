@@ -27,7 +27,7 @@ admin user 这批类型只被 `identity/api/http` 和 app 测试消费，不满�
 ## Files to modify
 
 - `.harness/reuse-decisions/identity-admin-user-http-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-17-identity-admin-user-http-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-identity-admin-user-http-dto-localization-implementation-plan.md`
 - `code/backend/internal/module/identity/api/http/admin_user_types.go`
 - `code/backend/internal/module/identity/api/http/handler.go`
 - `code/backend/internal/module/identity/api/http/request_mapper.go`

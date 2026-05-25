@@ -39,7 +39,7 @@ extend_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/runtime-subnet-pool-split.md`
-- `docs/plan/impl-plan/2026-05-21-runtime-subnet-pool-split-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-21-runtime-subnet-pool-split-implementation-plan.md`
 - `code/backend/internal/config/config.go`
 - `code/backend/configs/config.yaml`
 - `code/backend/configs/config.dev.yaml`

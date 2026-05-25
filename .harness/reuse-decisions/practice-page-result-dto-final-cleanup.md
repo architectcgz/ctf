@@ -28,7 +28,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/practice-page-result-dto-final-cleanup.md`
-- `docs/plan/impl-plan/2026-05-18-practice-page-result-dto-final-cleanup-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-practice-page-result-dto-final-cleanup-implementation-plan.md`
 - `code/backend/internal/module/practice/contracts/page_result.go`
 - `code/backend/internal/module/practice/contracts/page_result_test.go`
 - `code/backend/internal/module/practice/api/http/handler.go`

@@ -43,7 +43,7 @@ extend_existing
 
 ## Files to modify
 - `docs/architecture/backend/05-key-flows.md`
-- `docs/plan/impl-plan/2026-05-20-runtime-instance-delete-cleanup-hardening-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-20-runtime-instance-delete-cleanup-hardening-implementation-plan.md`
 - `code/backend/internal/app/composition/instance_module.go`
 - `code/backend/internal/config/config.go`
 - `code/backend/configs/config.yaml`

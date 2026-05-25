@@ -11,8 +11,8 @@ api / mapper / command / query / contract
 - `code/backend/internal/module/ops/api/http/request_mapper*.go`
 - `code/backend/internal/dto/auth.go`
 - `code/backend/internal/dto/notification.go`
-- `docs/plan/impl-plan/2026-05-17-identity-admin-user-http-dto-localization-implementation-plan.md`
-- `docs/plan/impl-plan/2026-05-17-ops-dashboard-http-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-identity-admin-user-http-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-ops-dashboard-http-dto-localization-implementation-plan.md`
 
 ## Similar implementations found
 
@@ -31,8 +31,8 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/auth-notification-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-17-auth-notification-dto-localization-implementation-plan.md`
-- `docs/plan/impl-plan/2026-05-17-challenge-contest-instance-awd-dto-localization-next-batch-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-auth-notification-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-challenge-contest-instance-awd-dto-localization-next-batch-plan.md`
 - `code/backend/internal/module/auth/**`
 - `code/backend/internal/module/ops/**/*notification*.go`
 - `code/backend/internal/module/ops/api/http/request_mapper*.go`

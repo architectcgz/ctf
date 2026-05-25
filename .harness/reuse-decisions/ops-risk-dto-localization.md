@@ -27,7 +27,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/ops-risk-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-18-ops-risk-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-ops-risk-dto-localization-implementation-plan.md`
 - `code/backend/internal/dto/cheat_detection.go`
 - `code/backend/internal/module/ops/api/http/risk_handler.go`
 - `code/backend/internal/module/ops/application/queries/risk_output.go`

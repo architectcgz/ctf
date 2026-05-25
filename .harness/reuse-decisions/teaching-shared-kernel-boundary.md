@@ -44,7 +44,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/teaching-shared-kernel-boundary.md`
-- `docs/plan/impl-plan/2026-05-19-teaching-shared-kernel-boundary-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-19-teaching-shared-kernel-boundary-implementation-plan.md`
 - `code/backend/internal/shared/taxonomy/*.go`
 - `code/backend/internal/teaching/advice/advice.go`
 - `code/backend/internal/teaching/advice/advice_test.go`

@@ -9,7 +9,7 @@ api / request mapper / dto localization
 - `code/backend/internal/module/challenge/api/http/*.go`
 - `code/backend/internal/module/challenge/api/http/request_mapper*.go`
 - `code/backend/internal/dto/{challenge.go,awd_challenge.go,tag.go,image.go,topology.go}`
-- `docs/plan/impl-plan/2026-05-17-challenge-contest-instance-awd-dto-localization-next-batch-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-challenge-contest-instance-awd-dto-localization-next-batch-plan.md`
 
 ## Similar implementations found
 
@@ -27,7 +27,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/challenge-request-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-17-challenge-request-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-challenge-request-dto-localization-implementation-plan.md`
 - `code/backend/internal/module/challenge/api/http/challenge_request_types.go`
 - `code/backend/internal/module/challenge/api/http/request_mapper.go`
 - `code/backend/internal/module/challenge/api/http/request_mapper_gen.go`

@@ -28,7 +28,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/practice-score-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-18-practice-score-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-practice-score-dto-localization-implementation-plan.md`
 - `code/backend/internal/dto/score.go`
 - `code/backend/internal/module/practice/contracts/score.go`
 - `code/backend/internal/module/practice/api/http/handler.go`

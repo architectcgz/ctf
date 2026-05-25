@@ -42,7 +42,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/assessment-recommendation-contract-convergence.md`
-- `docs/plan/impl-plan/2026-05-17-assessment-recommendation-contract-convergence-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-assessment-recommendation-contract-convergence-implementation-plan.md`
 - `code/backend/internal/module/assessment/api/http/handler.go`
 - `code/backend/internal/module/assessment/api/http/response_mapper.go`
 - `code/backend/internal/module/assessment/api/http/response_mapper_gen.go`

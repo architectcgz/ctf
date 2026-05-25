@@ -27,6 +27,7 @@ check ".githooks/pre-commit is executable" test -x ".githooks/pre-commit"
 
 echo "[doctor] harness scripts"
 check "scripts/check-consistency.sh is executable" test -x "scripts/check-consistency.sh"
+check "scripts/check-task-intake.sh is executable" test -x "scripts/check-task-intake.sh"
 check "scripts/check-reuse-first.sh is executable" test -x "scripts/check-reuse-first.sh"
 check "scripts/check-architecture.sh is executable" test -x "scripts/check-architecture.sh"
 check "scripts/doctor-local-harness.sh is executable" test -x "scripts/doctor-local-harness.sh"
@@ -41,6 +42,7 @@ check "npm is available" command -v npm
 echo "[doctor] reuse-first assets"
 check ".harness/reuse-decisions exists" test -d ".harness/reuse-decisions"
 check "legacy .harness/reuse-decision.md is absent" test ! -f ".harness/reuse-decision.md"
+check ".gitignore ignores .harness/reuse-index/" grep -qx '/.harness/reuse-index/' ".gitignore"
 
 if [[ -d "code/frontend/node_modules" ]]; then
   echo "  $(green PASS) — code/frontend/node_modules exists"

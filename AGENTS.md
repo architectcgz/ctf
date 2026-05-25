@@ -5,6 +5,7 @@
 - 本仓库默认先进入 harness：除非任务明显简单、局部、可逆且不需要沉淀经验，否则开始前必须先按 `harness-router` 判断 `SIMPLE` / `HARNESS`。
 - 路线为 `HARNESS` 时，先读本文件和相关 harness 入口，再决定是否需要计划、review、验证或更新 `feedback/`、`harness/prompts/`、`references/`、`works/`。
 - 任务分流使用全局 `harness-router` skill；机械化检查使用 `bash scripts/check-consistency.sh`。
+- 开始新任务前，先运行 `bash scripts/check-task-intake.sh`；它会调用 `bash scripts/check-open-todos.sh --quiet-if-empty` 提示 `docs/todos/` 里未收口事项。若将进入受保护实现面，必须在动代码前运行 `bash scripts/check-task-intake.sh --reuse-decision <task-slug>`，先让 task-scoped reuse decision 过 startup gate，再进入实现。
 - 对 `API / filter / sort / pagination` 契约改动，plan review 必须写清 `normalize / default / validate` 的唯一 owner，至少覆盖 `handler -> application -> repository` 三层。
 - 对同一输入语义出现跨层重复 `normalize/default/validate` 的情况，默认不视为“安全兜底”。除非其中一层承担明确 trust-boundary 防御且理由写清，否则应继续收口成单点 owner。
 - 内部 `filter / sort / pagination` contract 应收口成 downstream 不易误用的表示，优先 opaque value object、受控构造器或不可直接手工拼装的字段。
@@ -26,10 +27,11 @@
 ## Reuse-First Workflow
 
 - reuse-first harness 是前后端实现前置约束，不是建议项；具体受保护类型、搜索范围和前后端复用模式以 `harness/policies/reuse-first.yaml`、`harness/policies/project-patterns.yaml` 和 `harness/templates/reuse-decision.md` 为准。
+- `scripts/check-task-intake.sh --reuse-decision <task-slug>` 是 reuse-first 的最早启动门禁；它检查 task-scoped reuse decision 是否已经存在且结构完整，然后才允许进入受保护实现。
 - 触发受保护改动时，编码前必须在 `.harness/reuse-decisions/<task-slug>.md` 完成当前任务 reuse decision；当前 diff 里的每个受保护文件都必须被至少一个有效的 reuse decision 文档覆盖。
 - `.harness/reuse-decision.md` 已废弃；仓库只接受 `.harness/reuse-decisions/` 下的 task-scoped reuse decision 文档。
-- 长期复用线索沉淀到 `harness/reuse/index.yaml`，完整历史摘要追加到 `harness/reuse/history.md`；禁止把长期 reuse 索引或历史放回 `.harness/`。
-- 本地 workflow 是 reuse-first harness 的权威入口；`scripts/check-reuse-first.sh` 和 `.githooks/pre-commit` 是 reuse-first 的机械化入口。
+- 长期复用线索改为保存在本地私有的 `.harness/reuse-index/`；仓库级入口用 `.harness/reuse-index/index.yaml`，模块级 / 模块内部二级索引用 `.harness/reuse-index/<source-path>/README.md` 镜像源码目录，不再把这类个人索引提交进仓库。
+- 本地 workflow 是 reuse-first harness 的权威入口；`scripts/check-task-intake.sh` 负责实现前 startup gate，`scripts/check-reuse-first.sh` 和 `.githooks/pre-commit` 负责提交前终态检查。
 
 ## Workflow Overrides
 
@@ -60,7 +62,7 @@
 - OpenAPI v1 采用双层结构：`docs/contracts/openapi-v1/` 是拆分源，`docs/contracts/openapi-v1.yaml` 是稳定 bundle；修改 OpenAPI 时先改拆分源，再运行 `python3 scripts/sync_openapi_from_contract.py`。
 - `docs/design/`：仍在推演的中间设计稿、设计索引和过期说明。
 - `docs/plan/impl-plan/`：当前仍在执行或尚未归档的结构性实现方案、阶段计划、执行清单和验证步骤。
-- `docs/plan/archive/impl-plan/`：历史实施计划归档；只保留过程记录，不作为当前事实源或默认读取入口。
+- `docs/plan/archive/impl-plan/`：历史实施计划目录入口；当前只保留目录说明，旧计划正文默认通过 Git 历史追溯，不作为当前事实源或默认读取入口。
 - `docs/reviews/`：代码、架构、UI、流程的 review 记录和 findings。
 - `docs/requirements/`：需求基线、范围说明、差距分析和立项约束。
 - `docs/tasks/`：任务拆解清单和阶段性工作列表；不替代架构或 implementation plan。
@@ -70,8 +72,7 @@
 - `docs/Q&A/`：会被重复引用的问答式说明。
 - `docs/thesis/`、`docs/weekly-reports/`、`docs/开题报告/`、`docs/文献/`、`docs/毕业设计文档相关/`：论文与学校材料，不混入产品事实源。
 - `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`references/` 是 harness 顶层目录；各目录局部规则见对应 `AGENTS.md`。
-- `.harness/` 只保存当前任务状态和短期执行证据；不得存放长期 reuse 索引、历史、策略、模板或 prompt。
-- `harness/reuse/` 保存长期 reuse 沉淀，`index.yaml` 面向检索和机械检查，`history.md` 面向人工回顾。
+- `.harness/` 保存当前任务状态、短期执行证据和用户本地私有索引；其中 `.harness/reuse-decisions/` 只放任务证据，`.harness/reuse-index/` 只放用户自用的长期复用索引，不进入版本控制。
 - 已稳定的结论要回收到对应事实源；旧中间稿在原位置标记 `Superseded by ...`。
 - 不再新增 `docs/improvements/`、`docs/superpowers/`、`docs/refs/`、`docs/skills/` 作为活动入口；对应内容分别进入 `feedback/`、`practice/`、`references/`、`harness/prompts/`。
 

@@ -37,7 +37,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/assessment-six-dimension-recommendation-simplification.md`
-- `docs/plan/impl-plan/2026-05-21-assessment-six-dimension-recommendation-simplification-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-21-assessment-six-dimension-recommendation-simplification-implementation-plan.md`
 - `code/backend/internal/module/assessment/application/queries/recommendation_service.go`
 - `code/backend/internal/module/assessment/application/queries/recommendation_service_test.go`
 - `code/frontend/src/views/profile/SkillProfile.vue`

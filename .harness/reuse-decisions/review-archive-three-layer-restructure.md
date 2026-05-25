@@ -42,7 +42,7 @@ extend_existing
 - `code/frontend/src/widgets/teacher-review-archive/model/presentation.ts`
 - `code/frontend/src/widgets/teacher-review-archive/model/presentation.test.ts`
 - `code/frontend/src/views/teacher/__tests__/TeacherStudentReviewArchive.test.ts`
-- `docs/plan/impl-plan/2026-05-21-review-archive-three-layer-restructure-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-21-review-archive-three-layer-restructure-implementation-plan.md`
 
 ## After implementation
 

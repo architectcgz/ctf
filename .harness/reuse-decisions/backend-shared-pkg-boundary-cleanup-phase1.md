@@ -46,7 +46,7 @@ refactor_existing
 - `code/backend/pkg/cache/keys.go`
 - `code/backend/pkg/logger/logger.go`
 - `code/backend/pkg/ratelimit/ratelimit.go`
-- `docs/plan/impl-plan/2026-05-19-backend-shared-pkg-boundary-cleanup-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-19-backend-shared-pkg-boundary-cleanup-implementation-plan.md`
 
 ## After implementation
 

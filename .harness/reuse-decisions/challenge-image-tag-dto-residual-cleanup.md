@@ -29,7 +29,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/challenge-image-tag-dto-residual-cleanup.md`
-- `docs/plan/impl-plan/2026-05-18-challenge-image-tag-dto-residual-cleanup-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-challenge-image-tag-dto-residual-cleanup-implementation-plan.md`
 - `code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - `code/backend/internal/dto/image.go`
 - `code/backend/internal/dto/tag.go`

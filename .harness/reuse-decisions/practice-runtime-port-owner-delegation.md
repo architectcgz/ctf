@@ -35,7 +35,7 @@ refactor_existing
 - `code/backend/internal/module/runtime/infrastructure/repository.go`
 - `code/backend/internal/module/runtime/ports/port_reservation.go`
 - `code/backend/internal/module/runtime/infrastructure/repository_destroyed_at_test.go`
-- `docs/plan/impl-plan/2026-05-18-practice-runtime-port-owner-delegation-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-practice-runtime-port-owner-delegation-implementation-plan.md`
 
 ## After implementation
 - `practice` 继续通过本地 port interface 工作，但不再自己直接增删改 `PortAllocation`。

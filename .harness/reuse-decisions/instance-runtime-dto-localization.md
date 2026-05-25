@@ -31,7 +31,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/instance-runtime-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-18-instance-runtime-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-instance-runtime-dto-localization-implementation-plan.md`
 - `code/backend/internal/app/composition/runtime_http_service_adapter.go`
 - `code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - `code/backend/internal/dto/contest_awd_instance.go`

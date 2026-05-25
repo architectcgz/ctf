@@ -1,6 +1,7 @@
 .DS_Store
 .idea/
 .vscode/
+# Git worktrees
 .worktrees/
 /CODEX.md
 
@@ -12,6 +13,8 @@ coverage.out
 logs/
 node_modules/
 docs/*
+!docs/README.md
+!docs/Q&A/
 !docs/文档规范.md
 !docs/reviews/general/
 !docs/reviews/general/*.md
@@ -25,9 +28,12 @@ docs/design/*
 !docs/design/AWD能力画像回流方案.md
 !docs/design/教学复盘建议优化方案.md
 !docs/design/backend-module-boundary-target.md
+!docs/operations/
 !docs/plan/
 !docs/plan/impl-plan/
 !docs/plan/impl-plan/*.md
+!docs/reports/
+!docs/requirements/
 !docs/todos/
 !docs/todos/*.md
 !docs/refs/
@@ -64,8 +70,12 @@ code/frontend/docs/
 /.claude/
 /.playwright-cli/
 /.tmp/
+/.harness/reuse-index/
+/.harness/runtime-runs/
 /backups/
+/tmp/
 /TODO/
+/code/frontend/test-results/
 /code/backend/data/challenge-import-previews/
 /code/backend/data/challenge-image-build-sources/
 /code/backend/internal/module/challenge/application/commands/data/challenge-image-build-sources/

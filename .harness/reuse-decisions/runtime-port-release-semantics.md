@@ -14,7 +14,6 @@ service / repository / port / runtime
 - `code/backend/internal/module/runtime/infrastructure/repository.go`
 - `code/backend/internal/module/runtime/service_test.go`
 - `code/backend/internal/module/runtime/runtime/adapters.go`
-- `docs/todos/2026-05-11-runtime-container-ports-followup.md`
 
 ## Similar implementations found
 - `practice/infrastructure/repository.go`

@@ -27,7 +27,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/assessment-teacher-awd-review-response-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-17-assessment-teacher-awd-review-response-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-assessment-teacher-awd-review-response-dto-localization-implementation-plan.md`
 - `docs/architecture/backend/04-api-design.md`
 - `docs/reviews/backend/2026-05-17-assessment-teacher-awd-review-response-dto-localization-review.md`
 - `code/backend/internal/module/assessment/application/queries/teacher_awd_review_types.go`

@@ -113,7 +113,8 @@ def main() -> int:
         for candidate in top_candidates:
             print(f"- {candidate}", file=sys.stderr)
         print(
-            "Please cite the closest backend implementation(s) in a task-scoped reuse decision file under .harness/reuse-decisions/ and explain whether to reuse, extend, split, or create new with reason.",
+            "Please cite the closest backend implementation(s) in a task-scoped reuse decision file under .harness/reuse-decisions/ and explain whether to reuse, extend, split, or create new with reason. "
+            "If this becomes a reusable local pattern, also update .harness/reuse-index/index.yaml and the nearest mirrored README under .harness/reuse-index/ after the task.",
             file=sys.stderr,
         )
 

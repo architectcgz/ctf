@@ -41,7 +41,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/ops-dashboard-http-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-17-ops-dashboard-http-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-ops-dashboard-http-dto-localization-implementation-plan.md`
 - `code/backend/internal/module/ops/api/http/dashboard_handler.go`
 - `code/backend/internal/module/ops/api/http/response_types.go`
 - `code/backend/internal/module/ops/api/http/response_mapper.go`

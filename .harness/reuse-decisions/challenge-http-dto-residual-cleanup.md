@@ -27,7 +27,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/challenge-http-dto-residual-cleanup.md`
-- `docs/plan/impl-plan/2026-05-18-challenge-http-dto-residual-cleanup-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-challenge-http-dto-residual-cleanup-implementation-plan.md`
 - `code/backend/internal/app/full_router_integration_test.go`
 - `code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - `code/backend/internal/dto/awd_challenge_import.go`

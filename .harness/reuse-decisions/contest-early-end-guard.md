@@ -37,7 +37,7 @@ extend_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/contest-early-end-guard.md`
-- `docs/plan/impl-plan/2026-05-21-contest-early-end-guard-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-21-contest-early-end-guard-implementation-plan.md`
 - `code/backend/internal/module/contest/application/commands/contest_update_support.go`
 - `code/backend/internal/module/contest/application/commands/contest_service_test.go`
 - `code/backend/internal/module/contest/contracts/errors.go`

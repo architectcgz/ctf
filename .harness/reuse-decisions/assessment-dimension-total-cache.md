@@ -42,7 +42,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/assessment-dimension-total-cache.md`
-- `docs/plan/impl-plan/2026-05-21-assessment-dimension-total-cache-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-21-assessment-dimension-total-cache-implementation-plan.md`
 - `code/backend/internal/config/config.go`
 - `code/backend/internal/module/assessment/ports/ports.go`
 - `code/backend/internal/module/assessment/infrastructure/cachekeys/redis_keys.go`

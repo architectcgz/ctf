@@ -14,8 +14,8 @@ cleanup / compatibility shim removal / cross-module entity owner convergence / o
 - `code/backend/internal/module/assessment`
 - `code/backend/internal/module/teaching_query`
 - `code/backend/internal/app`
-- `docs/plan/impl-plan/2026-05-18-contest-core-persistence-entity-owner-localization-implementation-plan.md`
-- `docs/plan/impl-plan/2026-05-18-practice-contest-entity-compat-cleanup-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-contest-core-persistence-entity-owner-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-practice-contest-entity-compat-cleanup-implementation-plan.md`
 
 ## Similar implementations found
 - `code/backend/internal/module/practice`
@@ -107,7 +107,7 @@ refactor_existing
 - `code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - `code/backend/internal/app/practice_flow_integration_test.go`
 - `code/backend/internal/module/architecture_allowlist_test.go`
-- `docs/plan/impl-plan/2026-05-18-contest-submission-registration-challenge-model-alias-removal-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-contest-submission-registration-challenge-model-alias-removal-implementation-plan.md`
 
 ## After implementation
 - `internal/model` 不再保留 `Submission`、`ContestRegistration`、`ContestChallenge` 兼容 alias

@@ -41,7 +41,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/identity-contract-dto-convergence.md`
-- `docs/plan/impl-plan/2026-05-17-identity-contract-dto-convergence-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-identity-contract-dto-convergence-implementation-plan.md`
 - `code/backend/internal/module/auth/api/http/handler.go`
 - `code/backend/internal/module/auth/api/http/response_mapper.go`
 - `code/backend/internal/module/identity/api/http/handler.go`

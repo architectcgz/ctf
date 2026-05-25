@@ -33,7 +33,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/runtime-teacher-instance-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-17-runtime-teacher-instance-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-runtime-teacher-instance-dto-localization-implementation-plan.md`
 - `docs/architecture/backend/04-api-design.md`
 - `docs/reviews/backend/2026-05-17-runtime-teacher-instance-dto-localization-review.md`
 - `code/backend/internal/module/instance/contracts/teacher_instance.go`

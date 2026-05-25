@@ -25,7 +25,7 @@
 ## 沉淀状态
 
 - 状态：已沉淀 / 仅项目保留 / 待同步 skill / 已机械化 / 已废弃
-- Owner：frontend-engineer skill / scripts/check-consistency.sh / ctf AGENTS.md / harness/reuse/index.yaml
+- Owner：frontend-engineer skill / scripts/check-consistency.sh / ctf AGENTS.md / .harness/reuse-index/index.yaml
 - 链接：...
 ```
 
@@ -33,7 +33,7 @@
 
 - 只影响 CTF 项目事实或路径：留在项目 `AGENTS.md`、项目 `harness/` 或对应文档。
 - 能机械化检查：沉到 `harness/checks/`、`scripts/check-*.sh` 或 hook。
-- 项目复用模式：沉到 `harness/reuse/index.yaml` / `history.md`。
+- 项目复用模式：沉到 `.harness/reuse-index/index.yaml` 或对应源码镜像目录下的 `README.md`。
 - 项目 prompt 工作流：沉到 `harness/prompts/`。
 - 跨项目通用方法、坏做法或检查清单：沉到对应全局 skill。
 
@@ -50,5 +50,6 @@
 - `2026-05-10-awd-topology-local-readiness.md`：AWD topology 题本地验题默认使用 `healthcheck + service_healthy + up --wait`，不要把容器 running 误当成服务 ready。
 - `2026-05-10-student-button-dark-mode-token-bridge.md`：学生侧按钮的 primary / secondary / outline 语义必须落到共享按钮变体，并在 light / dark 下保留可见边框。
 - `2026-05-10-error-pages-use-ui-btn.md`：错误页、空状态和恢复动作按钮默认使用通用 `ui-btn`，页面不再私有实现按钮 hover / dark mode。
+- `2026-05-23-frontend-review-snapshots-can-be-pruned-after-audit-absorption.md`：前端 review 单轮快照在主索引吸收后应及时清理，避免旧“未修复”状态继续污染活动目录。
 
 已沉淀到全局 skill、全局 AGENTS 或项目机械检查中的旧反馈不在本目录长期保留；需要追溯原始事故时使用 Git 历史。

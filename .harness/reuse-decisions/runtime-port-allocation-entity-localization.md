@@ -35,7 +35,7 @@ refactor_existing
 - `code/backend/internal/module/contest/infrastructure/ended_contest_runtime_cleaner_test.go`
 - `code/backend/internal/app/full_router_integration_test.go`
 - `code/backend/internal/app/practice_flow_integration_test.go`
-- `docs/plan/impl-plan/2026-05-18-runtime-port-allocation-entity-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-runtime-port-allocation-entity-localization-implementation-plan.md`
 
 ## After implementation
 - 运行中代码和测试默认走 `runtime/entity.PortAllocation`

@@ -9,7 +9,7 @@ api / response mapper / dto localization
 - `code/backend/internal/module/challenge/api/http/handler.go`
 - `code/backend/internal/module/challenge/api/http/response_mapper*.go`
 - `code/backend/internal/dto/{challenge.go,challenge_import.go,common.go}`
-- `docs/plan/impl-plan/2026-05-17-challenge-response-dto-localization-topology-awd-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-challenge-response-dto-localization-topology-awd-implementation-plan.md`
 
 ## Similar implementations found
 
@@ -27,7 +27,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/challenge-response-dto-localization-core-query.md`
-- `docs/plan/impl-plan/2026-05-17-challenge-response-dto-localization-core-query-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-challenge-response-dto-localization-core-query-implementation-plan.md`
 - `code/backend/internal/module/challenge/api/http/challenge_response_types.go`
 - `code/backend/internal/module/challenge/api/http/response_mapper.go`
 - `code/backend/internal/module/challenge/api/http/response_mapper_gen.go`

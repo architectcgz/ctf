@@ -43,7 +43,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/practice-progress-timeline-http-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-17-practice-progress-timeline-http-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-17-practice-progress-timeline-http-dto-localization-implementation-plan.md`
 - `code/backend/internal/module/practice/api/http/*.go`
 - `code/backend/internal/module/practice/api/http/progress_dto.go`
 - `code/backend/internal/module/practice/api/http/response_mapper.go`

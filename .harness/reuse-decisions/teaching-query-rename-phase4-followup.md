@@ -70,7 +70,7 @@ refactor_existing
 - `code/backend/internal/module/teaching_query/ports/query.go`
 - `code/backend/internal/module/teaching_query/runtime/module.go`
 - `code/backend/cmd/seed-teaching-review-data/main.go`
-- `code/backend/docs/reviews/backend/modular-monolith-refactor-checklist.md`
+- 旧版 `code/backend/docs/reviews/backend/modular-monolith-refactor-checklist.md` 已移除；如需追溯请查看 Git 历史
 - `docs/architecture/backend/01-system-architecture.md`
 - `docs/architecture/backend/02-database-design.md`
 - `docs/architecture/backend/04-api-design.md`

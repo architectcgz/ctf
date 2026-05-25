@@ -26,7 +26,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/ops-audit-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-18-ops-audit-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-ops-audit-dto-localization-implementation-plan.md`
 - `code/backend/internal/dto/audit.go`
 - `code/backend/internal/module/ops/api/http/audit_handler.go`
 - `code/backend/internal/module/ops/application/queries/audit_output.go`

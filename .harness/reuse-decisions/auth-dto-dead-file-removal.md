@@ -27,7 +27,7 @@ remove_dead_code
 ## Files to modify
 
 - `.harness/reuse-decisions/auth-dto-dead-file-removal.md`
-- `docs/plan/impl-plan/2026-05-18-auth-dto-dead-file-removal-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-auth-dto-dead-file-removal-implementation-plan.md`
 - `code/backend/internal/dto/auth.go`
 
 ## After implementation

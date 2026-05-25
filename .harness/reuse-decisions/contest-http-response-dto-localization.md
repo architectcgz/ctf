@@ -29,7 +29,7 @@ refactor_existing
 ## Files to modify
 
 - `.harness/reuse-decisions/contest-http-response-dto-localization.md`
-- `docs/plan/impl-plan/2026-05-18-contest-response-dto-localization-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-contest-response-dto-localization-implementation-plan.md`
 - `code/backend/internal/app/challenge_import_integration_test.go`
 - `code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - `code/backend/internal/dto/awd.go`

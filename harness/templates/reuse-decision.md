@@ -6,8 +6,8 @@ This file is task-scoped current-task evidence.
 Keep one reuse decision file per protected task and do not overwrite another task's decision file.
 Durable reuse knowledge belongs in:
 
-- `harness/reuse/index.yaml` for searchable pattern entries.
-- `harness/reuse/history.md` for append-only decision history.
+- `.harness/reuse-index/index.yaml` for searchable local pattern entries.
+- `.harness/reuse-index/<source-path>/README.md` for module-level or module-internal secondary indexes mirrored from real code paths.
 
 ## Change type
 page / component / hook / service / handler / repository / port / job / mapper / readmodel / composition / store / api / form / table / modal / layout / schema / migration
@@ -43,5 +43,5 @@ Explain why the existing implementation can be reused, extended, refactored, or 
 - code/frontend/src/components/common/WorkspaceDataTable.vue
 
 ## After implementation
-- If this decision is reusable, append a short entry to `harness/reuse/history.md`.
-- If future tasks should find this pattern without rereading old decisions, add or update an entry in `harness/reuse/index.yaml`.
+- If future tasks should find this pattern without rereading old decisions, add or update a local entry in `.harness/reuse-index/index.yaml`.
+- If the pattern belongs to a concrete module or subdirectory, also update the nearest mirrored `README.md` under `.harness/reuse-index/`.

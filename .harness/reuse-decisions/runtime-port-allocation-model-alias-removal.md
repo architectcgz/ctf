@@ -24,7 +24,7 @@ refactor_existing
 
 ## Files to modify
 - `code/backend/internal/model/port_allocation.go`
-- `docs/plan/impl-plan/2026-05-18-runtime-port-allocation-model-alias-removal-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-05-18-runtime-port-allocation-model-alias-removal-implementation-plan.md`
 
 ## After implementation
 - `internal/model` 不再保留 `PortAllocation` 兼容别名

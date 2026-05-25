@@ -75,6 +75,49 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 CTF_HOST_ROOT="$(pwd)" CTF_FRONTEND_PORT=15173 docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-frontend ctf-api ctf-postgres ctf-redis
 ```
 
+### 局域网访问部署
+
+`docker/ctf/docker-compose.dev.yml` 默认面向“只在宿主机本机调试”的场景：
+
+- `CTF_CONTAINER_PUBLIC_HOST=127.0.0.1` 会让 Jeopardy / TCP 题目的访问地址返回为宿主机本地地址。
+- `ctf-frontend`、`ctf-api`、`ctf-api` 的 SSH 网关端口默认都只绑定在 `127.0.0.1`，局域网内其他机器无法直接访问。
+
+如果需要让学生从局域网内其他机器访问平台和题目实例，至少要同时调整两类配置：
+
+1. 把 `ctf-api` 环境变量里的 `CTF_CONTAINER_PUBLIC_HOST` 改成学生真实可访问到的宿主机地址，例如固定局域网 IP 或内网域名。
+2. 把 `ctf-frontend`、`ctf-api`、`ctf-api` SSH 网关的端口绑定从 `127.0.0.1:...` 改成 `0.0.0.0:...` 或指定局域网 IP。
+
+可直接按下面的方式修改 `docker/ctf/docker-compose.dev.yml`：
+
+```yaml
+services:
+  ctf-frontend:
+    ports:
+      - "0.0.0.0:${CTF_FRONTEND_PORT:-5173}:80"
+
+  ctf-api:
+    environment:
+      CTF_CONTAINER_PUBLIC_HOST: 192.168.1.50
+      CTF_CONTAINER_ACCESS_HOST: host-gateway.internal
+    ports:
+      - "0.0.0.0:8080:8080"
+      - "0.0.0.0:2222:2222"
+```
+
+选择 `CTF_CONTAINER_PUBLIC_HOST` 时，优先使用“学生机器实际能访问到的宿主机地址”，不要机械地使用当前 shell 里看到的任意 IPv4：
+
+- Linux 服务器通常直接使用服务器网卡的局域网 IP，例如 `192.168.x.x` 或 `10.x.x.x`。
+- 如果平台跑在 Windows + WSL + Docker Desktop 上，优先使用 Windows 宿主机的局域网 IP，不要直接使用 WSL 里的 `172.*` NAT 地址。
+- 如果后续会切域名访问，建议直接填内网 DNS 名称，避免学生侧地址和后端配置再次切换。
+
+修改后建议从另一台局域网机器验证：
+
+```bash
+curl http://<宿主机地址>:8080/health
+```
+
+再登录学生账号创建 Jeopardy 实例，确认页面展示的实例地址和“打开目标”返回地址已经不再是 `127.0.0.1`。
+
 ## 可选：本地 registry
 
 只有在需要构建和推送动态题目镜像时，才需要本地 registry。平时开发平台前后端，不需要先处理它。
