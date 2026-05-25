@@ -4,11 +4,11 @@ import {
   ShieldAlert,
   Sword,
   Terminal,
-  ExternalLink,
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AWDDefenseAlertsPanel from '@/components/contests/awd/AWDDefenseAlertsPanel.vue'
+import AWDAttackTargetGrid from '@/components/contests/awd/AWDAttackTargetGrid.vue'
 import AWDAttackToolbar from '@/components/contests/awd/AWDAttackToolbar.vue'
 import AWDDefenseOperationsPanel from '@/components/contests/awd/AWDDefenseOperationsPanel.vue'
 import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip.vue'
@@ -486,71 +486,18 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
             <div v-else-if="filteredTargets.length === 0" class="panel-note">
               当前题目下没有匹配的目标队伍。
             </div>
-            <div v-else class="target-grid">
-              <article v-for="target in filteredTargets" :key="target.team_id" class="target-card">
-                <div class="target-info">
-                  <div class="target-team font-black">
-                    {{ target.team_name.toUpperCase() }}
-                  </div>
-                  <div class="target-ref">
-                    {{ formatServiceRef(target.active_service?.service_id) }}
-                  </div>
-                  <div class="target-url font-mono">
-                    {{ target.active_service?.reachable ? '代理链路已就绪' : '不可达' }}
-                  </div>
-                </div>
-                <div class="target-action">
-                  <button
-                    :data-testid="`awd-open-target-${activeChallengeRuntimeKey}-${target.team_id}`"
-                    :disabled="
-                      !target.active_service?.reachable ||
-                      openingTargetKey ===
-                        buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
-                    "
-                    class="target-open-btn"
-                    type="button"
-                    @click="openTarget(activeChallengeRuntimeKey, target.team_id)"
-                  >
-                    <ExternalLink class="h-3 w-3" />
-                    <span>{{
-                      openingTargetKey ===
-                      buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
-                        ? '...'
-                        : '打开'
-                    }}</span>
-                  </button>
-                  <input
-                    :value="
-                      flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] ||
-                      ''
-                    "
-                    placeholder="输入获取到的 Flag..."
-                    class="flag-input"
-                    @input="
-                      flagInputs[buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)] =
-                        String(($event.target as HTMLInputElement).value)
-                    "
-                    @keyup.enter="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
-                  />
-                  <button
-                    :disabled="
-                      !target.active_service?.reachable ||
-                      submittingKey ===
-                        buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
-                    "
-                    class="submit-btn"
-                    @click="handleSubmit(activeChallengeRuntimeKey, target.team_id)"
-                  >
-                    {{
-                      submittingKey ===
-                      buildAttackStateKey(activeChallengeRuntimeKey, target.team_id)
-                        ? '...'
-                        : '提交'
-                    }}
-                  </button>
-                </div>
-              </article>
-            </div>
+            <AWDAttackTargetGrid
+              v-else
+              :targets="filteredTargets"
+              :active-challenge-runtime-key="activeChallengeRuntimeKey"
+              :opening-target-key="openingTargetKey"
+              :submitting-key="submittingKey"
+              :flag-inputs="flagInputs"
+              :format-service-ref="formatServiceRef"
+              @open-target="openTarget(activeChallengeRuntimeKey, $event)"
+              @update-flag="flagInputs[$event.stateKey] = $event.value"
+              @submit="handleSubmit(activeChallengeRuntimeKey, $event)"
+            />
           </div>
 
           <footer v-if="submitResult" class="ops-panel__footer">
@@ -654,101 +601,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 }
 
 /* Attack Components */
-.target-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-  gap: 1.25rem;
-}
-
-.target-card {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-default);
-  padding: 1.25rem;
-  border-radius: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.target-team {
-  font-size: 14px;
-  letter-spacing: 0.05em;
-  color: var(--color-primary);
-}
-.target-url {
-  font-size: 11px;
-  color: var(--color-text-muted);
-}
-.target-ref {
-  margin-top: 0.2rem;
-}
-
-.target-action {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.target-open-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-  min-width: 4.5rem;
-  border: 1px solid var(--color-border-default);
-  border-radius: 0.5rem;
-  background: var(--color-bg-surface);
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.target-open-btn:hover:not(:disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.target-open-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.flag-input {
-  flex: 1;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  color: var(--color-text-primary);
-  font-family: var(--font-family-mono);
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-.flag-input:focus {
-  border-color: var(--color-primary);
-}
-
-.submit-btn {
-  background: var(--color-danger);
-  color: var(--color-bg-base);
-  border: none;
-  padding: 0 1.25rem;
-  border-radius: 0.5rem;
-  font-weight: 900;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.submit-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-danger) 80%, var(--color-bg-base));
-}
-.submit-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .panel-note {
   font-size: 12px;
   font-weight: 700;
