@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { FolderKanban, RefreshCcw } from 'lucide-vue-next'
 
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
-import TeacherAWDReviewContestDirectory from './TeacherAWDReviewContestDirectory.vue'
+import AwdReviewContestDirectory from './AwdReviewContestDirectory.vue'
 import AwdReviewSurfaceShell from './AwdReviewSurfaceShell.vue'
 import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
 import AwdReviewWorkspaceHeader from './AwdReviewWorkspaceHeader.vue'
@@ -94,7 +94,7 @@ const summaryItems = computed(() =>
         </template>
       </AwdReviewSummaryPanel>
 
-      <TeacherAWDReviewContestDirectory
+      <AwdReviewContestDirectory
         :loading="loading"
         :error="error"
         :contests="contests"

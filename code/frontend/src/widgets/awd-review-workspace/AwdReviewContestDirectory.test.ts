@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
-import TeacherAWDReviewContestDirectory from './TeacherAWDReviewContestDirectory.vue'
+import AwdReviewContestDirectory from './AwdReviewContestDirectory.vue'
 
 function createContests(): TeacherAWDReviewContestItemData[] {
   return [
@@ -38,9 +38,9 @@ function createProps() {
   }
 }
 
-describe('TeacherAWDReviewContestDirectory', () => {
+describe('AwdReviewContestDirectory', () => {
   it('应透传筛选更新、重试和进入复盘事件', async () => {
-    const wrapper = mount(TeacherAWDReviewContestDirectory, {
+    const wrapper = mount(AwdReviewContestDirectory, {
       props: {
         ...createProps(),
         contests: [],
@@ -64,7 +64,7 @@ describe('TeacherAWDReviewContestDirectory', () => {
   })
 
   it('应透传目录行进入复盘事件', async () => {
-    const wrapper = mount(TeacherAWDReviewContestDirectory, {
+    const wrapper = mount(AwdReviewContestDirectory, {
       props: createProps(),
     })
 
@@ -74,7 +74,7 @@ describe('TeacherAWDReviewContestDirectory', () => {
   })
 
   it('应透传分页切换事件', async () => {
-    const wrapper = mount(TeacherAWDReviewContestDirectory, {
+    const wrapper = mount(AwdReviewContestDirectory, {
       props: createProps(),
     })
 

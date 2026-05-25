@@ -6,7 +6,7 @@ import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdRev
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceHeader.vue?raw'
 import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/AwdReviewSummaryPanel.vue?raw'
-import awdReviewContestDirectorySource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestDirectory.vue?raw'
+import awdReviewContestDirectorySource from '@/widgets/awd-review-workspace/AwdReviewContestDirectory.vue?raw'
 import awdReviewIndexFiltersSource from '@/widgets/awd-review-workspace/TeacherAWDReviewIndexFilters.vue?raw'
 import awdReviewDirectorySectionSource from '@/widgets/awd-review-workspace/TeacherAWDReviewDirectorySection.vue?raw'
 import awdReviewContestHeadSource from '@/widgets/awd-review-workspace/TeacherAWDReviewContestHead.vue?raw'
@@ -25,7 +25,7 @@ describe('Teacher AWD review index workspace extraction', () => {
       "export { default as AwdReviewWorkspace } from './AwdReviewWorkspace.vue'"
     )
     expect(awdReviewWidgetIndexSource).not.toContain('AwdReviewWorkspaceState')
-    expect(awdReviewWidgetIndexSource).not.toContain('TeacherAWDReviewContestDirectory')
+    expect(awdReviewWidgetIndexSource).not.toContain('AwdReviewContestDirectory.vue')
 
     expect(awdReviewIndexSource).toContain(
       "import { AwdReviewIndexWorkspace } from '@/widgets/awd-review-workspace'"
@@ -38,7 +38,7 @@ describe('Teacher AWD review index workspace extraction', () => {
     expect(awdReviewIndexWorkspaceSource).toContain('<AwdReviewSurfaceShell')
     expect(awdReviewIndexWorkspaceSource).toContain('<AwdReviewWorkspaceHeader')
     expect(awdReviewIndexWorkspaceSource).toContain('<AwdReviewSummaryPanel')
-    expect(awdReviewIndexWorkspaceSource).toContain('<TeacherAWDReviewContestDirectory')
+    expect(awdReviewIndexWorkspaceSource).toContain('<AwdReviewContestDirectory')
     expect(awdReviewIndexWorkspaceSource).toContain('buildTeacherAwdReviewIndexSummaryItems')
     expect(awdReviewIndexWorkspaceSource).toContain('TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY')
     expect(awdReviewSurfaceShellSource).toContain('class="teacher-management-shell')
