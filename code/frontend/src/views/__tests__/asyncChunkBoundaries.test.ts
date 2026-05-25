@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-const topologyStudioPageSource = readFileSync(
-  `${process.cwd()}/src/components/platform/topology/ChallengeTopologyStudioPage.vue`,
+const topologyCanvasWorkspaceSectionSource = readFileSync(
+  `${process.cwd()}/src/components/platform/topology/TopologyCanvasWorkspaceSection.vue`,
   'utf-8'
 )
 const topologyNodeSectionSource = readFileSync(
@@ -13,8 +13,8 @@ const topologyNodeSectionSource = readFileSync(
 
 describe('async chunk boundaries', () => {
   it('应当将拓扑页的画布与节点编辑器改为异步加载', () => {
-    expect(topologyStudioPageSource).toContain('defineAsyncComponent')
-    expect(topologyStudioPageSource).toContain("import('./TopologyCanvasBoard.vue')")
+    expect(topologyCanvasWorkspaceSectionSource).toContain('defineAsyncComponent')
+    expect(topologyCanvasWorkspaceSectionSource).toContain("import('./TopologyCanvasBoard.vue')")
     expect(topologyNodeSectionSource).toContain('defineAsyncComponent')
     expect(topologyNodeSectionSource).toContain("import('./TopologyNodeEditor.vue')")
   })

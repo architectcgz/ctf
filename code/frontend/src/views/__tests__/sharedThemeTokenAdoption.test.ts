@@ -48,6 +48,7 @@ import contestOrchestrationSource from '@/components/platform/contest/ContestOrc
 import topologyCanvasBoardSource from '@/components/platform/topology/TopologyCanvasBoard.vue?raw'
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'
+import topologyCanvasWorkspaceSectionSource from '@/components/platform/topology/TopologyCanvasWorkspaceSection.vue?raw'
 import topologyEntryNodeSectionSource from '@/components/platform/topology/TopologyEntryNodeSection.vue?raw'
 import topologyPackageContextPanelSource from '@/components/platform/topology/TopologyPackageContextPanel.vue?raw'
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
@@ -522,6 +523,21 @@ describe('shared theme token adoption', () => {
       'text-[var(--color-warning)]',
       'var(--journal-accent) 88%, black',
     ])
+    expectNoHardcodedThemeTokens(
+      topologyCanvasWorkspaceSectionSource,
+      'TopologyCanvasWorkspaceSection',
+      [
+        'rgba(15, 23, 42, 0.96)',
+        'rgba(15, 23, 42, 0.9)',
+        'border-[var(--color-success)]',
+        'bg-[var(--color-success)]/10',
+        'text-[var(--color-success)]',
+        'border-[var(--color-warning)]/20',
+        'bg-[var(--color-warning)]/10',
+        'text-[var(--color-warning)]',
+        'var(--journal-accent) 88%, black',
+      ]
+    )
     expectNoHardcodedThemeTokens(topologyNetworkQuickEditorSource, 'TopologyNetworkQuickEditor', [
       'rgba(15, 23, 42, 0.96)',
       'rgba(15, 23, 42, 0.9)',

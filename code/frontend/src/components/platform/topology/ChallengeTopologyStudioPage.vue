@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { computed, ref } from 'vue'
 import {
   GitBranch,
   Plus,
@@ -25,19 +25,15 @@ import type { TopologyTier } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
+import TopologyCanvasWorkspaceSection from './TopologyCanvasWorkspaceSection.vue'
 import TopologyConnectivitySections from './TopologyConnectivitySections.vue'
 import TopologyNetworkSection from './TopologyNetworkSection.vue'
-import TopologyNetworkQuickEditor from './TopologyNetworkQuickEditor.vue'
 import TopologyNodeSection from './TopologyNodeSection.vue'
 import TopologyEntryNodeSection from './TopologyEntryNodeSection.vue'
 import TopologyPackageContextPanel from './TopologyPackageContextPanel.vue'
 import TopologyStatusNotes from './TopologyStatusNotes.vue'
 import TopologySummaryGrid from './TopologySummaryGrid.vue'
 import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
-
-const TopologyCanvasBoard = defineAsyncComponent(() => import('./TopologyCanvasBoard.vue'))
-const TopologyCanvasQuickEditor = defineAsyncComponent(() => import('./TopologyCanvasQuickEditor.vue'))
 
 const props = withDefaults(
   defineProps<{
@@ -360,158 +356,42 @@ function removePolicyDraft(uid: string) {
             </div>
 
             <div v-if="activeWorkbenchTab === 'visual'" class="space-y-6">
-              <SectionCard
-                title="图形画布"
-                subtitle="拖拽节点调整视图布局，点击节点可快速跳到对应节点编辑卡片。"
-              >
-                <div class="mb-4 flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    class="rounded-xl border px-3 py-2 text-sm font-medium transition"
-                    :class="
-                      interactionMode === 'pan'
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border text-text-primary hover:border-primary'
-                    "
-                    @click="setInteractionMode('pan')"
-                  >
-                    浏览
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-xl border px-3 py-2 text-sm font-medium transition"
-                    :class="
-                      interactionMode === 'add-node'
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border text-text-primary hover:border-primary'
-                    "
-                    @click="setInteractionMode('add-node')"
-                  >
-                    新增节点
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-xl border px-3 py-2 text-sm font-medium transition"
-                    :class="
-                      interactionMode === 'link'
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border text-text-primary hover:border-primary'
-                    "
-                    @click="setInteractionMode('link')"
-                  >
-                    连线模式
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-xl border px-3 py-2 text-sm font-medium transition"
-                    :class="
-                      interactionMode === 'allow'
-                        ? 'topology-mode-btn--allow-active'
-                        : 'topology-mode-btn--allow-idle'
-                    "
-                    @click="setInteractionMode('allow')"
-                  >
-                    allow
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-xl border px-3 py-2 text-sm font-medium transition"
-                    :class="
-                      interactionMode === 'deny'
-                        ? 'border-danger bg-danger/10 text-danger'
-                        : 'border-border text-text-primary hover:border-danger/60'
-                    "
-                    @click="setInteractionMode('deny')"
-                  >
-                    deny
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-medium text-danger transition hover:bg-danger/15"
-                    @click="removeSelectedCanvasItem"
-                  >
-                    删除选中
-                  </button>
-                </div>
-
-                <div
-                  class="template-canvas-mode-banner mb-4 rounded-2xl border border-border bg-elevated px-4 py-3 text-sm text-text-secondary"
-                >
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span
-                      class="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs text-primary"
-                    >
-                      当前模式：{{ canvasModeLabel }}
-                    </span>
-                    <span
-                      class="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-text-secondary"
-                    >
-                      {{ selectedCanvasSummary }}
-                    </span>
-                    <span
-                      class="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-text-muted"
-                    >
-                      `Esc` 取消 / `Delete` 删除
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  class="mb-4 rounded-2xl border px-4 py-3 text-sm"
-                  :class="
-                    draftValidationIssues.length === 0
-                      ? 'topology-validation-banner--ok'
-                      : 'topology-validation-banner--warn'
-                  "
-                >
-                  <div class="font-medium">
-                    {{ draftValidationIssues.length === 0 ? '基础校验已通过' : '基础校验发现问题' }}
-                  </div>
-                  <ul v-if="draftValidationIssues.length > 0" class="mt-2 space-y-1 text-xs">
-                    <li v-for="issue in draftValidationIssues" :key="issue">
-                      {{ issue }}
-                    </li>
-                  </ul>
-                </div>
-
-                <TopologyCanvasBoard
-                  :graph="canvasGraph"
-                  :interaction-mode="interactionMode"
-                  :pending-source-node-key="pendingSourceNodeKey"
-                  :selected-node-key="selectedNodeKey"
-                  :selected-edge-id="selectedEdgeId"
-                  @select-node="handleCanvasSelectNode"
-                  @select-edge="handleCanvasSelectEdge"
-                  @create-node-at="handleCanvasCreateNode"
-                  @create-edge="handleCanvasCreateEdge"
-                  @clear-pending="pendingSourceNodeKey = null"
-                  @update-position="updateNodePosition"
-                />
-
-                <div class="mt-4 grid gap-4">
-                  <TopologyCanvasQuickEditor
-                    variant="template"
-                    empty-message="请在画布中选择一个节点或连线进行快速配置"
-                    :selected-node-draft="selectedNodeDraft"
-                    :has-selected-edge="Boolean(selectedEdgeMeta)"
-                    :node-options="nodeOptions"
-                    :networks="draft.networks"
-                    :selected-edge-source-key="selectedEdgeSourceKey"
-                    :selected-edge-target-key="selectedEdgeTargetKey"
-                    :selected-edge-kind="selectedEdgeKind"
-                    @update-selected-node-field="updateSelectedNodeField"
-                    @update-selected-node-service-port="
-                      updateCanvasQuickNumber('service_port', $event, selectedNodeDraft)
-                    "
-                    @toggle-selected-node-network="
-                      toggleSelectedNodeNetwork($event.networkKey, $event.checked)
-                    "
-                    @update-selected-edge-source-key="updateSelectedEdgeSourceKey"
-                    @update-selected-edge-target-key="updateSelectedEdgeTargetKey"
-                    @update-selected-edge-kind="handleSelectedEdgeKindChange"
-                  />
-                </div>
-              </SectionCard>
+              <TopologyCanvasWorkspaceSection
+                variant="template"
+                :interaction-mode="interactionMode"
+                :canvas-mode-label="canvasModeLabel"
+                :selected-canvas-summary="selectedCanvasSummary"
+                :draft-validation-issues="draftValidationIssues"
+                :canvas-graph="canvasGraph"
+                :pending-source-node-key="pendingSourceNodeKey"
+                :selected-node-key="selectedNodeKey"
+                :selected-edge-id="selectedEdgeId"
+                :selected-node-draft="selectedNodeDraft"
+                :has-selected-edge="Boolean(selectedEdgeMeta)"
+                :node-options="nodeOptions"
+                :networks="draft.networks"
+                :selected-edge-source-key="selectedEdgeSourceKey"
+                :selected-edge-target-key="selectedEdgeTargetKey"
+                :selected-edge-kind="selectedEdgeKind"
+                @set-interaction-mode="setInteractionMode"
+                @remove-selected-canvas-item="removeSelectedCanvasItem"
+                @select-node="handleCanvasSelectNode"
+                @select-edge="handleCanvasSelectEdge"
+                @create-node-at="handleCanvasCreateNode"
+                @create-edge="handleCanvasCreateEdge"
+                @clear-pending="pendingSourceNodeKey = null"
+                @update-position="updateNodePosition"
+                @update-selected-node-field="updateSelectedNodeField"
+                @update-selected-node-service-port="
+                  updateCanvasQuickNumber('service_port', $event, selectedNodeDraft)
+                "
+                @toggle-selected-node-network="
+                  toggleSelectedNodeNetwork($event.networkKey, $event.checked)
+                "
+                @update-selected-edge-source-key="updateSelectedEdgeSourceKey"
+                @update-selected-edge-target-key="updateSelectedEdgeTargetKey"
+                @update-selected-edge-kind="handleSelectedEdgeKindChange"
+              />
             </div>
 
             <div v-else-if="activeWorkbenchTab === 'compute'" class="space-y-6">
@@ -602,168 +482,44 @@ function removePolicyDraft(uid: string) {
 
         <main class="content-pane topology-workspace">
           <div class="topology-primary-column">
-            <SectionCard
-              title="图形画布"
-              subtitle="拖拽节点调整视图布局，点击节点可快速跳到对应节点编辑卡片。"
-            >
-              <div class="mb-4 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  class="rounded-xl border px-3 py-2 text-sm font-medium transition"
-                  :class="
-                    interactionMode === 'pan'
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border text-text-primary hover:border-primary'
-                  "
-                  @click="setInteractionMode('pan')"
-                >
-                  浏览
-                </button>
-                <button
-                  type="button"
-                  class="rounded-xl border px-3 py-2 text-sm font-medium transition"
-                  :class="
-                    interactionMode === 'add-node'
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border text-text-primary hover:border-primary'
-                  "
-                  @click="setInteractionMode('add-node')"
-                >
-                  画布新增节点
-                </button>
-                <button
-                  type="button"
-                  class="rounded-xl border px-3 py-2 text-sm font-medium transition"
-                  :class="
-                    interactionMode === 'link'
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border text-text-primary hover:border-primary'
-                  "
-                  @click="setInteractionMode('link')"
-                >
-                  连线模式
-                </button>
-                <button
-                  type="button"
-                  class="rounded-xl border px-3 py-2 text-sm font-medium transition"
-                  :class="
-                    interactionMode === 'allow'
-                      ? 'topology-mode-btn--allow-active'
-                      : 'topology-mode-btn--allow-idle'
-                  "
-                  @click="setInteractionMode('allow')"
-                >
-                  allow 模式
-                </button>
-                <button
-                  type="button"
-                  class="rounded-xl border px-3 py-2 text-sm font-medium transition"
-                  :class="
-                    interactionMode === 'deny'
-                      ? 'border-danger bg-danger/10 text-danger'
-                      : 'border-border text-text-primary hover:border-danger/60'
-                  "
-                  @click="setInteractionMode('deny')"
-                >
-                  deny 模式
-                </button>
-                <button
-                  type="button"
-                  class="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-medium text-danger transition hover:bg-danger/15"
-                  @click="removeSelectedCanvasItem"
-                >
-                  删除当前选中
-                </button>
-              </div>
-
-              <div
-                class="mb-4 rounded-2xl border border-border bg-elevated px-4 py-3 text-sm text-text-secondary"
-              >
-                <div class="flex flex-wrap items-center gap-2">
-                  <span
-                    class="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs text-primary"
-                  >
-                    当前模式：{{ canvasModeLabel }}
-                  </span>
-                  <span
-                    class="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-text-secondary"
-                  >
-                    {{ selectedCanvasSummary }}
-                  </span>
-                  <span
-                    class="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-text-muted"
-                  >
-                    `Esc` 取消连线 / `Delete` 删除选中
-                  </span>
-                </div>
-              </div>
-
-              <div
-                class="mb-4 rounded-2xl border px-4 py-3 text-sm"
-                :class="
-                  draftValidationIssues.length === 0
-                    ? 'topology-validation-banner--ok'
-                    : 'topology-validation-banner--warn'
-                "
-              >
-                <div class="font-medium">
-                  {{ draftValidationIssues.length === 0 ? '基础校验已通过' : '基础校验发现问题' }}
-                </div>
-                <div
-                  v-if="draftValidationIssues.length === 0"
-                  class="topology-validation-hint topology-validation-hint--success mt-1 text-xs"
-                >
-                  当前草稿的入口、节点、网络和链路引用关系正常。
-                </div>
-                <ul v-else class="mt-2 space-y-1 text-xs">
-                  <li v-for="issue in draftValidationIssues" :key="issue">
-                    {{ issue }}
-                  </li>
-                </ul>
-              </div>
-
-              <TopologyCanvasBoard
-                :graph="canvasGraph"
-                :interaction-mode="interactionMode"
-                :pending-source-node-key="pendingSourceNodeKey"
-                :selected-node-key="selectedNodeKey"
-                :selected-edge-id="selectedEdgeId"
-                @select-node="handleCanvasSelectNode"
-                @select-edge="handleCanvasSelectEdge"
-                @create-node-at="handleCanvasCreateNode"
-                @create-edge="handleCanvasCreateEdge"
-                @clear-pending="pendingSourceNodeKey = null"
-                @update-position="updateNodePosition"
-              />
-
-              <div class="mt-4 grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-                <TopologyCanvasQuickEditor
-                  :selected-node-draft="selectedNodeDraft"
-                  :has-selected-edge="Boolean(selectedEdgeMeta)"
-                  :node-options="nodeOptions"
-                  :networks="draft.networks"
-                  :images="images"
-                  :selected-edge-source-key="selectedEdgeSourceKey"
-                  :selected-edge-target-key="selectedEdgeTargetKey"
-                  :selected-edge-kind="selectedEdgeKind"
-                  @update-selected-node-field="updateSelectedNodeField"
-                  @update-selected-node-service-port="
-                    updateCanvasQuickNumber('service_port', $event, selectedNodeDraft)
-                  "
-                  @toggle-selected-node-network="
-                    toggleSelectedNodeNetwork($event.networkKey, $event.checked)
-                  "
-                  @update-selected-edge-source-key="updateSelectedEdgeSourceKey"
-                  @update-selected-edge-target-key="updateSelectedEdgeTargetKey"
-                  @update-selected-edge-kind="handleSelectedEdgeKindChange"
-                />
-
-                <TopologyNetworkQuickEditor
-                  :networks="draft.networks"
-                  @update-network="updateNetworkDraft"
-                />
-              </div>
-            </SectionCard>
+            <TopologyCanvasWorkspaceSection
+              variant="challenge"
+              :interaction-mode="interactionMode"
+              :canvas-mode-label="canvasModeLabel"
+              :selected-canvas-summary="selectedCanvasSummary"
+              :draft-validation-issues="draftValidationIssues"
+              :canvas-graph="canvasGraph"
+              :pending-source-node-key="pendingSourceNodeKey"
+              :selected-node-key="selectedNodeKey"
+              :selected-edge-id="selectedEdgeId"
+              :selected-node-draft="selectedNodeDraft"
+              :has-selected-edge="Boolean(selectedEdgeMeta)"
+              :node-options="nodeOptions"
+              :networks="draft.networks"
+              :images="images"
+              :selected-edge-source-key="selectedEdgeSourceKey"
+              :selected-edge-target-key="selectedEdgeTargetKey"
+              :selected-edge-kind="selectedEdgeKind"
+              @set-interaction-mode="setInteractionMode"
+              @remove-selected-canvas-item="removeSelectedCanvasItem"
+              @select-node="handleCanvasSelectNode"
+              @select-edge="handleCanvasSelectEdge"
+              @create-node-at="handleCanvasCreateNode"
+              @create-edge="handleCanvasCreateEdge"
+              @clear-pending="pendingSourceNodeKey = null"
+              @update-position="updateNodePosition"
+              @update-selected-node-field="updateSelectedNodeField"
+              @update-selected-node-service-port="
+                updateCanvasQuickNumber('service_port', $event, selectedNodeDraft)
+              "
+              @toggle-selected-node-network="
+                toggleSelectedNodeNetwork($event.networkKey, $event.checked)
+              "
+              @update-selected-edge-source-key="updateSelectedEdgeSourceKey"
+              @update-selected-edge-target-key="updateSelectedEdgeTargetKey"
+              @update-selected-edge-kind="handleSelectedEdgeKindChange"
+              @update-network="updateNetworkDraft"
+            />
 
             <TopologyEntryNodeSection
               :entry-node-key="draft.entry_node_key"

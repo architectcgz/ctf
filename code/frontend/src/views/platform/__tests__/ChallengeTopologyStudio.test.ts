@@ -5,6 +5,7 @@ import ChallengeTopologyStudioPage from '@/components/platform/topology/Challeng
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'
+import topologyCanvasWorkspaceSectionSource from '@/components/platform/topology/TopologyCanvasWorkspaceSection.vue?raw'
 import topologyEntryNodeSectionSource from '@/components/platform/topology/TopologyEntryNodeSection.vue?raw'
 import topologyPackageContextPanelSource from '@/components/platform/topology/TopologyPackageContextPanel.vue?raw'
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
@@ -225,17 +226,22 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(topologySource).toContain('ui-btn ui-btn--danger topology-action-btn')
   })
 
-  it('画布快速编辑应从父页下沉到独立组件，同时保留父页 selection owner', () => {
-    expect(challengeTopologyStudioPageSource).toContain('<TopologyCanvasQuickEditor')
+  it('画布工作区应从父页下沉到独立组件，同时保留父页 selection owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyCanvasWorkspaceSection')
+    expect(challengeTopologyStudioPageSource).not.toContain('title="图形画布"')
     expect(challengeTopologyStudioPageSource).not.toContain('<div v-else-if="selectedNodeDraft"')
     expect(challengeTopologyStudioPageSource).not.toContain('<div v-else-if="selectedEdgeMeta"')
+    expect(topologyCanvasWorkspaceSectionSource).toContain('title="图形画布"')
+    expect(topologyCanvasWorkspaceSectionSource).toContain('<TopologyCanvasQuickEditor')
+    expect(topologyCanvasWorkspaceSectionSource).toContain("emit('setInteractionMode'")
     expect(topologyCanvasQuickEditorSource).toContain('画布快速编辑')
     expect(topologyCanvasQuickEditorSource).toContain("emit('updateSelectedNodeField'")
     expect(topologyCanvasQuickEditorSource).toContain("emit('updateSelectedEdgeKind'")
   })
 
   it('网络快速编辑应从父页下沉到独立组件，同时保留 draft.networks owner', () => {
-    expect(challengeTopologyStudioPageSource).toContain('<TopologyNetworkQuickEditor')
+    expect(challengeTopologyStudioPageSource).not.toContain('<TopologyNetworkQuickEditor')
+    expect(topologyCanvasWorkspaceSectionSource).toContain('<TopologyNetworkQuickEditor')
     expect(challengeTopologyStudioPageSource).not.toContain('v-model="network.key"')
     expect(challengeTopologyStudioPageSource).not.toContain('v-model="network.name"')
     expect(challengeTopologyStudioPageSource).not.toContain('v-model="network.internal"')
