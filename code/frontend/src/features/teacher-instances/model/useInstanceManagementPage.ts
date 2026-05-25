@@ -5,7 +5,7 @@ import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useAuthStore } from '@/stores/auth'
 import { resolveTeachingDashboardRouteName } from '@/utils/teachingWorkspaceRouting'
 
-import { useTeacherInstances } from './useTeacherInstances'
+import { useInstances } from './useInstances'
 
 export function useInstanceManagementPage() {
   const router = useRouter()
@@ -29,7 +29,7 @@ export function useInstanceManagementPage() {
     updateFilter,
     loadInstances,
     removeInstance,
-  } = useTeacherInstances()
+  } = useInstances()
 
   function handlePageChange(nextPage: number): void {
     const normalizedPage = Math.max(1, Math.floor(nextPage))

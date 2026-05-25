@@ -1,2 +1,2 @@
-export * from './useTeacherInstances'
+export * from './useInstances'
 export * from './useInstanceManagementPage'

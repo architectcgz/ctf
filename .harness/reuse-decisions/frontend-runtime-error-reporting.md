@@ -37,7 +37,7 @@ refactor_existing
 - `code/frontend/src/features/platform-instance-management/model/usePlatformInstanceManagementPage.ts`
 - `code/frontend/src/features/platform-overview/model/usePlatformOverviewPage.ts`
 - `code/frontend/src/features/teacher-dashboard/model/useTeacherDashboardPage.ts`
-- `code/frontend/src/features/teacher-instances/model/useTeacherInstances.ts`
+- `code/frontend/src/features/teacher-instances/model/useInstances.ts`
 - `code/frontend/src/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts`
 - `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewIndex.ts`
 - `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewExportFlow.ts`

@@ -5,7 +5,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import InstanceManagement from '../InstanceManagement.vue'
 import instanceManagementViewSource from '../InstanceManagement.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
-import teacherInstancesHookSource from '@/features/teacher-instances/model/useTeacherInstances.ts?raw'
+import teacherInstancesHookSource from '@/features/teacher-instances/model/useInstances.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const ElTable = { template: '<div><slot /></div>' }

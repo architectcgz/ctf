@@ -184,7 +184,8 @@ refactor_existing
 - `code/frontend/src/api/contracts.ts`
 - `code/frontend/src/api/teacher/instances.ts`
 - `code/frontend/src/api/__tests__/teacher.test.ts`
-- `code/frontend/src/features/teacher-instances/model/useTeacherInstances.ts`
+- `code/frontend/src/features/challenge-detail/model/useChallengeInstance.test.ts`
+- `code/frontend/src/features/teacher-instances/model/useInstances.ts`
 - `code/frontend/src/features/teacher-instances/model/useInstanceManagementPage.ts`
 - `code/frontend/src/views/teacher/InstanceManagement.vue`
 - `code/frontend/src/views/teacher/__tests__/InstanceManagement.test.ts`
