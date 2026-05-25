@@ -6,7 +6,7 @@ import {
   type AwdReviewDirectoryColumnKey,
 } from './model/directory'
 import TeacherAWDReviewContestRowCta from './TeacherAWDReviewContestRowCta.vue'
-import TeacherAWDReviewContestRowMetrics from './TeacherAWDReviewContestRowMetrics.vue'
+import AwdReviewContestRowMetrics from './AwdReviewContestRowMetrics.vue'
 import TeacherAWDReviewContestRowStatusTags from './TeacherAWDReviewContestRowStatusTags.vue'
 
 defineProps<{
@@ -47,14 +47,14 @@ const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
     </div>
 
     <div :class="rowClassByKey.rounds">
-      <TeacherAWDReviewContestRowMetrics
+      <AwdReviewContestRowMetrics
         :primary="contest.current_round ? `第 ${contest.current_round} 轮` : '未开始'"
         :secondary="`共 ${contest.round_count} 轮`"
       />
     </div>
 
     <div :class="rowClassByKey.teams">
-      <TeacherAWDReviewContestRowMetrics
+      <AwdReviewContestRowMetrics
         :primary="`${contest.team_count} 支队伍`"
         :secondary="contest.mode.toUpperCase()"
       />
