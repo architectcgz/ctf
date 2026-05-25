@@ -18,7 +18,7 @@ import type {
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensionLabels } from '@/utils/skillProfile'
 
-export function useTeacherWorkspace() {
+export function useWorkspace() {
   const authStore = useAuthStore()
 
   const classes = ref<TeacherClassItem[]>([])

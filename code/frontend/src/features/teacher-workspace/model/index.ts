@@ -1,1 +1,1 @@
-export * from './useTeacherWorkspace'
+export * from './useWorkspace'
