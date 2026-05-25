@@ -8,6 +8,7 @@ import {
 } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AWDDefenseAlertsPanel from '@/components/contests/awd/AWDDefenseAlertsPanel.vue'
 import AWDDefenseOperationsPanel from '@/components/contests/awd/AWDDefenseOperationsPanel.vue'
 import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip.vue'
 import AWDDefenseServiceList from '@/components/contests/awd/AWDDefenseServiceList.vue'
@@ -416,23 +417,7 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
           </header>
 
           <div class="ops-panel__content custom-scrollbar">
-            <!-- Alerts -->
-            <div v-if="defenseAlerts.length > 0" class="defense-alerts">
-              <div
-                v-for="alert in defenseAlerts"
-                :key="alert.challengeId"
-                class="defense-alert"
-                :class="alert.tone"
-              >
-                <div class="flex items-center justify-between">
-                  <span class="alert-title">{{ alert.challengeTitle }}</span>
-                  <span class="alert-badge">{{ alert.statusLabel }}</span>
-                </div>
-                <div class="alert-issues">
-                  <span v-for="issue in alert.issues" :key="issue">{{ issue }}</span>
-                </div>
-              </div>
-            </div>
+            <AWDDefenseAlertsPanel :alerts="defenseAlerts" />
 
             <AWDDefenseServiceList
               :services="defenseServiceCards"
@@ -712,40 +697,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   flex: 1;
   overflow-y: auto;
   padding: 1.25rem;
-}
-
-/* Defense Components */
-.defense-alert {
-  background: var(--color-warning-soft);
-  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
-  border-left: 3px solid var(--color-warning);
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.defense-alert.danger {
-  background: var(--color-danger-soft);
-  border-color: color-mix(in srgb, var(--color-danger) 20%, transparent);
-  border-left-color: var(--color-danger);
-}
-
-.alert-title {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-}
-.alert-badge {
-  font-size: 10px;
-  font-weight: 900;
-}
-.alert-issues {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  margin-top: 0.35rem;
-  display: flex;
-  gap: 0.5rem;
 }
 
 .target-ref {

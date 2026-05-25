@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import awdDefenseAlertsPanelSource from '@/components/contests/awd/AWDDefenseAlertsPanel.vue?raw'
 import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
 import awdWorkspaceHudStripSource from '@/components/contests/awd/AWDWorkspaceHudStrip.vue?raw'
@@ -18,11 +19,15 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('formatServiceRef')
     expect(awdWorkspaceSource).toContain('id="awd-target-challenge"')
     expect(awdWorkspaceSource).toContain('id="awd-target-search"')
+    expect(awdWorkspaceSource).toContain('AWDDefenseAlertsPanel')
     expect(awdWorkspaceSource).toContain('AWDDefenseOperationsPanel')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceHudStrip')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceIntelColumn')
     expect(awdWorkspaceSource).toContain('getSSHCommand')
     expect(awdWorkspaceSource).toContain('copySSHCommand')
+    expect(awdDefenseAlertsPanelSource).toContain('defense-alert')
+    expect(awdDefenseAlertsPanelSource).toContain('alert.challengeTitle')
+    expect(awdDefenseAlertsPanelSource).toContain('alert.statusLabel')
     expect(awdWorkspaceHudStripSource).toContain('当前回合')
     expect(awdWorkspaceHudStripSource).toContain('我的战队')
     expect(awdWorkspaceHudStripSource).toContain('战队服务')

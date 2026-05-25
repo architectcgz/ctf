@@ -2028,7 +2028,7 @@
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
-  - `ChallengeTopologyStudioPage.vue` 已完成模板侧栏、摘要指标、状态说明展示、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区、画布工作区、入口节点卡片、题包上下文区抽取；`StudentInsightPanel.vue` 的当前 touched surface 也已在 2026-05-25 切片里收口，`ContestAWDWorkspacePanel.vue` 已在 2026-05-26 把顶部 HUD strip 抽到 `AWDWorkspaceHudStrip.vue`、右侧 intelligence rail 抽到 `AWDWorkspaceIntelColumn.vue`，历史 `AWDChallengeConfigDialog.vue` 已由 `ContestAwdConfig.vue` 页面与 `AWDChallengeConfigPanel.vue` 工作室目录视图取代并退场。当前仍需继续拆分的高复杂度组件主要包括 `ChallengeTopologyStudioPage.vue` 剩余的页面编排壳、`ContestAWDWorkspacePanel.vue` 剩余的攻击区与防守编排。
+  - `ChallengeTopologyStudioPage.vue` 已完成模板侧栏、摘要指标、状态说明展示、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区、画布工作区、入口节点卡片、题包上下文区抽取；`StudentInsightPanel.vue` 的当前 touched surface 也已在 2026-05-25 切片里收口，`ContestAWDWorkspacePanel.vue` 已在 2026-05-26 把顶部 HUD strip 抽到 `AWDWorkspaceHudStrip.vue`、右侧 intelligence rail 抽到 `AWDWorkspaceIntelColumn.vue`、左侧防守告警列表抽到 `AWDDefenseAlertsPanel.vue`，历史 `AWDChallengeConfigDialog.vue` 已由 `ContestAwdConfig.vue` 页面与 `AWDChallengeConfigPanel.vue` 工作室目录视图取代并退场。当前仍需继续拆分的高复杂度组件主要包括 `ChallengeTopologyStudioPage.vue` 剩余的页面编排壳、`ContestAWDWorkspacePanel.vue` 剩余的攻击区与左侧服务编排。
   - 拆分原则：父页面保留 route/query 同步、页面级数据加载、跨区块协调、错误策略和主业务动作；子组件只承接明确展示区块或局部表单，不允许只为了减少行数而把 owner 边界拆散。
   - 建议顺序：先选一个组件做一个可评审切片，补源码边界测试和行为测试，再继续下一块。
 - `TD-2` Tailwind 任意值与主题 token 尾项：
