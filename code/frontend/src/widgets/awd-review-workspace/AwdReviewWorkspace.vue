@@ -17,7 +17,7 @@ import AwdReviewRoundSelector from '@/components/teacher/awd-review/AwdReviewRou
 import AwdReviewAnalysisSection from '@/components/teacher/awd-review/AwdReviewAnalysisSection.vue'
 import AwdReviewEvidenceGrid from '@/components/teacher/awd-review/AwdReviewEvidenceGrid.vue'
 import AwdReviewTeamDrawer from '@/components/teacher/awd-review/AwdReviewTeamDrawer.vue'
-import TeacherAWDReviewStatusChip from './TeacherAWDReviewStatusChip.vue'
+import AwdReviewStatusChip from './AwdReviewStatusChip.vue'
 import TeacherAWDReviewWorkspaceActions from './TeacherAWDReviewWorkspaceActions.vue'
 import TeacherAWDReviewSummaryPanel from './TeacherAWDReviewSummaryPanel.vue'
 import TeacherAWDReviewSurfaceShell from './TeacherAWDReviewSurfaceShell.vue'
@@ -111,7 +111,7 @@ const summaryItems = computed(() =>
           <Trophy class="h-4 w-4" />
         </template>
         <template #title-suffix>
-          <TeacherAWDReviewStatusChip
+          <AwdReviewStatusChip
             v-if="review"
             :status="review.contest.status || ''"
             :label="contestStatusLabel(review.contest.status || '')"

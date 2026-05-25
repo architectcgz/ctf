@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import TeacherAWDReviewStatusChip from './TeacherAWDReviewStatusChip.vue'
+import AwdReviewStatusChip from './AwdReviewStatusChip.vue'
 
-describe('TeacherAWDReviewStatusChip', () => {
+describe('AwdReviewStatusChip', () => {
   it('应渲染状态文案和 running 样式类', () => {
-    const wrapper = mount(TeacherAWDReviewStatusChip, {
+    const wrapper = mount(AwdReviewStatusChip, {
       props: {
         status: 'running',
         label: '进行中',
@@ -18,7 +18,7 @@ describe('TeacherAWDReviewStatusChip', () => {
   })
 
   it('空状态应回退到 idle 类名', () => {
-    const wrapper = mount(TeacherAWDReviewStatusChip, {
+    const wrapper = mount(AwdReviewStatusChip, {
       props: {
         status: '',
         label: '未开始',

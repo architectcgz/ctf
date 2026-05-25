@@ -4,7 +4,7 @@ import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import awdReviewWorkspaceStateSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceState.vue?raw'
 import awdReviewWorkspaceActionsSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceActions.vue?raw'
-import awdReviewStatusChipSource from '@/widgets/awd-review-workspace/TeacherAWDReviewStatusChip.vue?raw'
+import awdReviewStatusChipSource from '@/widgets/awd-review-workspace/AwdReviewStatusChip.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/TeacherAWDReviewWorkspaceHeader.vue?raw'
 import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/TeacherAWDReviewSummaryPanel.vue?raw'
@@ -21,7 +21,7 @@ describe('Teacher AWD review workspace extraction', () => {
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSurfaceShell')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceHeader')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewSummaryPanel')
-    expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewStatusChip')
+    expect(awdReviewWorkspaceSource).toContain('<AwdReviewStatusChip')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceActions')
     expect(awdReviewWorkspaceSource).toContain('<TeacherAWDReviewWorkspaceState')
     expect(awdReviewWorkspaceSource).toContain('buildTeacherAwdReviewSummaryItems')
