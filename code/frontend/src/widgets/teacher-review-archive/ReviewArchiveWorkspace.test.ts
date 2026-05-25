@@ -43,7 +43,7 @@ function createArchive(): ReviewArchiveData {
   }
 }
 
-describe('TeacherReviewArchiveWorkspace', () => {
+describe('ReviewArchiveWorkspace', () => {
   it('应透传 hero 和错误态重载事件', async () => {
     const wrapper = mount(ReviewArchiveWorkspace, {
       props: {

@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 
 import StudentReviewWorkspace from './StudentReviewWorkspace.vue'
 
-describe('TeacherStudentReviewWorkspace', () => {
+describe('StudentReviewWorkspace', () => {
   it('应渲染空状态', () => {
     const wrapper = mount(StudentReviewWorkspace, {
       props: {
