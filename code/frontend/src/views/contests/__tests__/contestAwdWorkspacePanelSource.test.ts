@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import awdDefenseAlertsPanelSource from '@/components/contests/awd/AWDDefenseAlertsPanel.vue?raw'
 import awdAttackTargetGridSource from '@/components/contests/awd/AWDAttackTargetGrid.vue?raw'
+import awdAttackResultFooterSource from '@/components/contests/awd/AWDAttackResultFooter.vue?raw'
 import awdAttackToolbarSource from '@/components/contests/awd/AWDAttackToolbar.vue?raw'
 import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
@@ -19,6 +20,7 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('AWDDefenseAlertsPanel')
     expect(awdWorkspaceSource).toContain('AWDAttackToolbar')
     expect(awdWorkspaceSource).toContain('AWDAttackTargetGrid')
+    expect(awdWorkspaceSource).toContain('AWDAttackResultFooter')
     expect(awdWorkspaceSource).toContain('AWDDefenseOperationsPanel')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceHudStrip')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceIntelColumn')
@@ -35,6 +37,8 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdAttackTargetGridSource).toContain('awd-open-target-')
     expect(awdAttackTargetGridSource).toContain("emit('openTarget'")
     expect(awdAttackTargetGridSource).toContain("emit('submit'")
+    expect(awdAttackResultFooterSource).toContain('result-alert')
+    expect(awdAttackResultFooterSource).toContain('Terminal')
     expect(awdWorkspaceHudStripSource).toContain('当前回合')
     expect(awdWorkspaceHudStripSource).toContain('我的战队')
     expect(awdWorkspaceHudStripSource).toContain('战队服务')

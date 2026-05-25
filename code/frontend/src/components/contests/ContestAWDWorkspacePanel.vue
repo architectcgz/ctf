@@ -9,6 +9,7 @@ import {
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AWDDefenseAlertsPanel from '@/components/contests/awd/AWDDefenseAlertsPanel.vue'
 import AWDAttackTargetGrid from '@/components/contests/awd/AWDAttackTargetGrid.vue'
+import AWDAttackResultFooter from '@/components/contests/awd/AWDAttackResultFooter.vue'
 import AWDAttackToolbar from '@/components/contests/awd/AWDAttackToolbar.vue'
 import AWDDefenseOperationsPanel from '@/components/contests/awd/AWDDefenseOperationsPanel.vue'
 import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip.vue'
@@ -500,12 +501,11 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
             />
           </div>
 
-          <footer v-if="submitResult" class="ops-panel__footer">
-            <div class="result-alert" :class="submitResult.is_success ? 'success' : 'danger'">
-              <Terminal class="h-3.5 w-3.5" />
-              <span>{{ getSubmitResultMessage() }}</span>
-            </div>
-          </footer>
+          <AWDAttackResultFooter
+            v-if="submitResult"
+            :success="submitResult.is_success"
+            :message="getSubmitResultMessage()"
+          />
         </section>
       </main>
 
@@ -607,33 +607,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   color: var(--color-text-muted);
   text-align: center;
   padding: 3rem 0;
-}
-
-.ops-panel__footer {
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-surface);
-}
-
-.result-alert {
-  padding: 0.65rem 1rem;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.result-alert.success {
-  background: var(--color-success-soft);
-  color: var(--color-success);
-  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
-}
-.result-alert.danger {
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
-  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
 }
 
 .war-room-loading {
