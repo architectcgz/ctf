@@ -4,7 +4,6 @@ export const oversizedViewAllowlist = new Set([
   'views/platform/ContestAwdConfig.vue',
   'views/profile/SkillProfile.vue',
   'views/profile/UserProfile.vue',
-  'views/scoreboard/ScoreboardView.vue',
 ])
 
 export const componentFeatureImportAllowlist = new Set([

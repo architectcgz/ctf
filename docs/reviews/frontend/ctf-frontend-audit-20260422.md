@@ -2052,10 +2052,34 @@
   - `npm run typecheck`
   - `git diff --check`
 
+## 第八十八轮修复进展
+
+- 已完成：
+  - `TD-1` `ScoreboardView.vue` 的 workspace shell owner 已收口，顶部 tab rail、contest / points 两块 workspace 面板和局部样式统一抽到 `components/scoreboard/ScoreboardWorkspaceShell.vue`。
+  - 父页继续只保留 `useScoreboardRoutePage()` 的 route tab owner、`useScoreboardView()` 的筛选 / 分页 / 刷新 / 数据 owner，以及 contest directory presentation 装配；新 shell 只承接稳定的布局模板和事件转发，没有吸入第二份 route/query 或请求 owner。
+  - `ScoreboardView.vue` 本体行数已从 `591` 行降到 `108` 行，已低于前端 view 行数护栏；`architectureAllowlist.ts` 已同步移除该页的 oversized allowlist。
+  - `ScoreboardView.test.ts`、`pageTabsStyles.test.ts` 和 `journalUserDirectoryStyles.test.ts` 已改成按父页 + workspace shell 组合源码检查，避免后续继续抽壳时把模板回塞父页。
+- 本轮涉及文件：
+  - `code/frontend/src/views/scoreboard/ScoreboardView.vue`
+  - `code/frontend/src/components/scoreboard/ScoreboardWorkspaceShell.vue`
+  - `code/frontend/src/views/scoreboard/__tests__/ScoreboardView.test.ts`
+  - `code/frontend/src/views/__tests__/pageTabsStyles.test.ts`
+  - `code/frontend/src/views/__tests__/journalUserDirectoryStyles.test.ts`
+  - `code/frontend/src/__tests__/architectureAllowlist.ts`
+  - `docs/reviews/frontend/README.md`
+  - `docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+
+## 第八十八轮验证
+
+- 已执行：
+  - `npm run test:run -- src/views/scoreboard/__tests__/ScoreboardView.test.ts src/views/__tests__/pageTabsStyles.test.ts src/views/__tests__/journalUserDirectoryStyles.test.ts src/views/__tests__/sharedThemeTokenAdoption.test.ts src/views/__tests__/journalEyebrowStyles.test.ts src/views/__tests__/journalUserShellStyles.test.ts`（6 个测试文件，47 个测试）
+  - `npm run typecheck`
+  - `git diff --check`
+
 ## 后续技术债 Backlog
 
 - `TD-1` 超大组件专题拆分：
-- `ChallengeTopologyStudioPage.vue` 已完成模板侧栏、摘要指标、状态说明展示、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区、画布工作区、入口节点卡片、题包上下文区、challenge 模式右侧 `context rail`、challenge 主工作区装配壳、template-library 模式 `workbench` 装配壳、template hero 区、challenge 顶部 header，以及 template-library 顶部 `PageHeader` 壳抽取；challenge header / workbench / canvas 与 template-library 的 header / hero / workbench 样式 owner 也已继续收口到对应子组件，页面本地的 `draft` 变更 helper 同时已继续收口到 feature model 的 `useTopologyStructureMutations.ts`，父页只保留主题变量、模式容器样式和加载 / 空状态分支。`ContestDetail.vue` 也继续把公告 section、队伍 section 和队伍对话框壳抽到 `ContestAnnouncementsWorkspaceSection.vue`、`ContestTeamWorkspaceSection.vue`、`ContestTeamDialogs.vue`，本体从 `585` 行进一步降到 `411` 行，父页继续只保留 tab owner、远端数据、队伍动作和路由同步。`ChallengeDetail.vue` 也已把 tab rail、四块主面板与右侧工具栏装配壳统一抽到 `ChallengeWorkspaceShell.vue`，本体从 `574` 行降到 `404` 行，父页继续只保留 route/query、加载错误态、远端数据和主动作 owner。`StudentInsightPanel.vue` 的当前 touched surface 也已在 2026-05-25 切片里收口，`ContestAWDWorkspacePanel.vue` 已在 2026-05-26 把顶部 HUD strip、右侧 intelligence rail、左侧防守列装配壳、中区攻击列装配壳分别抽到 `AWDWorkspaceHudStrip.vue`、`AWDWorkspaceIntelColumn.vue`、`AWDDefenseColumn.vue`、`AWDAttackVectorPanel.vue`，并把攻击向量局部 state 收口到 `useAwdWorkspaceAttackVector.ts`、把防守 access 局部 state 收口到 `useAwdDefenseAccessPanel.ts`、把情报和结果文案 presentation 收口到 `useAwdWorkspacePresentation.ts`、把 HUD 摘要与防守告警派生收口到 `useAwdWorkspaceSummary.ts`，同时统一 AWD runtime challenge 身份，不再回退到历史 `challenge_id`；其中 `AWDAttackVectorPanel.vue` 继续装配 `AWDAttackToolbar.vue`、`AWDAttackTargetGrid.vue`、`AWDAttackResultFooter.vue`，`AWDDefenseColumn.vue` 继续承接 `AWDDefenseAlertsPanel.vue`、`AWDDefenseServiceList.vue`、`AWDDefenseOperationsPanel.vue` 的装配。历史 `AWDChallengeConfigDialog.vue` 已由 `ContestAwdConfig.vue` 页面与 `AWDChallengeConfigPanel.vue` 工作室目录视图取代并退场。`ContestAWDWorkspacePanel.vue` 当前 touched surface 的 `TD-1` 已收口。
+- `ChallengeTopologyStudioPage.vue` 已完成模板侧栏、摘要指标、状态说明展示、网络分段编辑区、节点编辑区、拓扑连线与链路策略编辑区、画布工作区、入口节点卡片、题包上下文区、challenge 模式右侧 `context rail`、challenge 主工作区装配壳、template-library 模式 `workbench` 装配壳、template hero 区、challenge 顶部 header，以及 template-library 顶部 `PageHeader` 壳抽取；challenge header / workbench / canvas 与 template-library 的 header / hero / workbench 样式 owner 也已继续收口到对应子组件，页面本地的 `draft` 变更 helper 同时已继续收口到 feature model 的 `useTopologyStructureMutations.ts`，父页只保留主题变量、模式容器样式和加载 / 空状态分支。`ContestDetail.vue` 也继续把公告 section、队伍 section 和队伍对话框壳抽到 `ContestAnnouncementsWorkspaceSection.vue`、`ContestTeamWorkspaceSection.vue`、`ContestTeamDialogs.vue`，本体从 `585` 行进一步降到 `411` 行，父页继续只保留 tab owner、远端数据、队伍动作和路由同步。`ChallengeDetail.vue` 也已把 tab rail、四块主面板与右侧工具栏装配壳统一抽到 `ChallengeWorkspaceShell.vue`，本体从 `574` 行降到 `404` 行，父页继续只保留 route/query、加载错误态、远端数据和主动作 owner。`ScoreboardView.vue` 也已把顶部 tab rail、contest / points 两块 workspace 面板与局部样式统一抽到 `ScoreboardWorkspaceShell.vue`，本体从 `591` 行降到 `108` 行，父页继续只保留 route tab、筛选、分页、刷新和数据装配 owner。`StudentInsightPanel.vue` 的当前 touched surface 也已在 2026-05-25 切片里收口，`ContestAWDWorkspacePanel.vue` 已在 2026-05-26 把顶部 HUD strip、右侧 intelligence rail、左侧防守列装配壳、中区攻击列装配壳分别抽到 `AWDWorkspaceHudStrip.vue`、`AWDWorkspaceIntelColumn.vue`、`AWDDefenseColumn.vue`、`AWDAttackVectorPanel.vue`，并把攻击向量局部 state 收口到 `useAwdWorkspaceAttackVector.ts`、把防守 access 局部 state 收口到 `useAwdDefenseAccessPanel.ts`、把情报和结果文案 presentation 收口到 `useAwdWorkspacePresentation.ts`、把 HUD 摘要与防守告警派生收口到 `useAwdWorkspaceSummary.ts`，同时统一 AWD runtime challenge 身份，不再回退到历史 `challenge_id`；其中 `AWDAttackVectorPanel.vue` 继续装配 `AWDAttackToolbar.vue`、`AWDAttackTargetGrid.vue`、`AWDAttackResultFooter.vue`，`AWDDefenseColumn.vue` 继续承接 `AWDDefenseAlertsPanel.vue`、`AWDDefenseServiceList.vue`、`AWDDefenseOperationsPanel.vue` 的装配。历史 `AWDChallengeConfigDialog.vue` 已由 `ContestAwdConfig.vue` 页面与 `AWDChallengeConfigPanel.vue` 工作室目录视图取代并退场。`ContestAWDWorkspacePanel.vue` 当前 touched surface 的 `TD-1` 已收口。
   - 拆分原则：父页面保留 route/query 同步、页面级数据加载、跨区块协调、错误策略和主业务动作；子组件只承接明确展示区块或局部表单，不允许只为了减少行数而把 owner 边界拆散。
   - 建议顺序：先选一个组件做一个可评审切片，补源码边界测试和行为测试，再继续下一块。
 - `TD-2` Tailwind 任意值与主题 token 尾项：

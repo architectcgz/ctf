@@ -6,6 +6,7 @@ import userGovernanceSource from '@/components/platform/user/UserGovernancePage.
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import challengeWorkspaceShellSource from '@/components/challenge/ChallengeWorkspaceShell.vue?raw'
+import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
@@ -51,9 +52,11 @@ describe('page tabs shared styles', () => {
     expect(pageTabsSource).toContain('--page-top-tab-min-height: 52px;')
     expect(pageTabsSource).toContain('--page-top-tab-active-border: var(--brand);')
 
-    for (const source of [challengeWorkspaceShellSource, skillProfileSource].filter((source) =>
-      source.includes('class="workspace-tabbar top-tabs"')
-    )) {
+    for (const source of [
+      challengeWorkspaceShellSource,
+      scoreboardWorkspaceShellSource,
+      skillProfileSource,
+    ].filter((source) => source.includes('class="workspace-tabbar top-tabs"'))) {
       expect(source).not.toContain('--page-top-tabs-gap: var(--space-7);')
       expect(source).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
       expect(source).not.toContain('--page-top-tab-min-height: 52px;')

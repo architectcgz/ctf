@@ -10,12 +10,14 @@ import notificationListSource from '@/views/notifications/NotificationList.vue?r
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
+import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'
 
 const journalUserDirectorySource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-directory.css`,
   'utf-8'
 )
 const appStyleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
+const scoreboardWorkspaceSource = `${scoreboardSource}\n${scoreboardWorkspaceShellSource}`
 
 function extractScopedStyle(source: string): string {
   const match = source.match(/<style scoped>([\s\S]*?)<\/style>/)
@@ -168,7 +170,7 @@ describe('journal user directory shared styles', () => {
     expect(contestListSource).toContain(
       'class="student-directory-shell contest-directory workspace-directory-list"'
     )
-    expect(scoreboardSource).toContain(
+    expect(scoreboardWorkspaceSource).toContain(
       'class="student-directory-shell scoreboard-directory workspace-directory-list"'
     )
   })
@@ -179,7 +181,7 @@ describe('journal user directory shared styles', () => {
       /\.student-directory-shell__head[\s\S]*\+\s*:where\([\s\S]*\.workspace-directory-grid-head[\s\S]*\)\s*\{[^}]*margin-top:\s*var\(--space-4\);/s
     )
     expect(contestListSource).toContain('class="workspace-directory-grid-row contest-row"')
-    expect(scoreboardSource).toContain(
+    expect(scoreboardWorkspaceSource).toContain(
       'class="workspace-directory-grid-row scoreboard-card scoreboard-card-link"'
     )
   })
@@ -195,7 +197,7 @@ describe('journal user directory shared styles', () => {
       'class="student-directory-filters notification-filter-section"'
     )
     expect(contestListSource).toContain('class="student-directory-filters contest-directory-filters"')
-    expect(scoreboardSource).toContain(
+    expect(scoreboardWorkspaceSource).toContain(
       'class="student-directory-filters scoreboard-directory-filters"'
     )
   })
@@ -226,10 +228,10 @@ describe('journal user directory shared styles', () => {
       expect(source).toContain(expectedTitleClass)
     }
 
-    expect(scoreboardSource).toContain(expectedHeaderClass)
-    expect(scoreboardSource).toContain(expectedHeadingClass)
-    expect(scoreboardSource).toContain(expectedTitleClass)
-    expect(scoreboardSource).not.toContain(expectedEyebrowClass)
+    expect(scoreboardWorkspaceSource).toContain(expectedHeaderClass)
+    expect(scoreboardWorkspaceSource).toContain(expectedHeadingClass)
+    expect(scoreboardWorkspaceSource).toContain(expectedTitleClass)
+    expect(scoreboardWorkspaceSource).not.toContain(expectedEyebrowClass)
 
     expect(challengeDirectoryPanelSource).not.toContain('challenge-directory-shell__head')
     expect(challengeDirectoryPanelSource).not.toContain('challenge-directory-shell__heading')
