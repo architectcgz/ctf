@@ -5,6 +5,7 @@ export {
   getDisplayedServiceStatus,
   getVSCodeSSHCommand,
   toDefenseServiceCards,
+  useAwdDefenseAccessPanel,
   useAwdDefenseServiceSelection,
   useAwdWorkspaceAttackVector,
   useContestAWDWorkspace,

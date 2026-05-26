@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AWDDefenseColumn from '@/components/contests/awd/AWDDefenseColumn.vue'
@@ -8,8 +8,8 @@ import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip
 import AWDWorkspaceIntelColumn from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
 import {
-  getVSCodeSSHCommand,
   toDefenseServiceCards,
+  useAwdDefenseAccessPanel,
   useAwdDefenseServiceSelection,
   useAwdWorkspaceAttackVector,
   useContestAWDWorkspace,
@@ -19,17 +19,12 @@ import type {
   ContestChallengeItem,
   ContestDetailData,
 } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
 import { formatTime } from '@/utils/format'
 
 const props = defineProps<{
   contest: ContestDetailData
   challenges: ContestChallengeItem[]
 }>()
-
-const toast = useToast()
-const copiedSSHCommandKey = ref('')
-const copiedSSHPasswordKey = ref('')
 
 const {
   workspace,
@@ -140,11 +135,19 @@ const selectedDefenseServiceTitle = computed(() => selectedDefenseServiceCard.va
 const selectedDefenseActionPending = computed(() =>
   selectedServiceId.value ? Boolean(defenseServiceActionPendingById.value[selectedServiceId.value]) : false
 )
-const selectedDefenseAccess = computed(() => getSSHAccess(selectedServiceId.value))
-const selectedDefenseCopiedCommand = computed(() => copiedSSHCommandKey.value === selectedServiceId.value)
-const selectedDefenseCopiedPassword = computed(
-  () => copiedSSHPasswordKey.value === selectedServiceId.value
-)
+const {
+  selectedDefenseAccess,
+  selectedDefenseCopiedCommand,
+  selectedDefenseCopiedPassword,
+  openDefenseService,
+  copySSHCommand,
+  copySSHPassword,
+} = useAwdDefenseAccessPanel({
+  selectedServiceId: computed(() => selectedServiceId.value),
+  servicesByServiceId: computed(() => servicesByServiceId.value),
+  sshAccessByServiceId: computed(() => sshAccessByServiceId.value),
+  openService,
+})
 const currentRoundLabel = computed(() =>
   currentRound.value ? `#${String(currentRound.value.round_number).padStart(2, '0')}` : '--'
 )
@@ -264,55 +267,6 @@ function getWorkspaceService(
 ): ContestAWDWorkspaceServiceData | undefined {
   if (!challenge.awd_service_id) return undefined
   return servicesByServiceId.value.get(challenge.awd_service_id)
-}
-
-function getSSHAccess(serviceId?: string) {
-  if (!serviceId) return undefined
-  return sshAccessByServiceId.value[serviceId]
-}
-
-function getSSHCommand(serviceId?: string): string {
-  return getVSCodeSSHCommand(getSSHAccess(serviceId))
-}
-
-function openDefenseService(serviceId: string): void {
-  const instanceId = servicesByServiceId.value.get(serviceId)?.instance_id
-  if (!instanceId) return
-  void openService(instanceId)
-}
-
-async function copyTextToClipboard(text: string, successMessage: string): Promise<boolean> {
-  if (!text || typeof navigator === 'undefined' || !navigator.clipboard) {
-    toast.error('复制失败，请手动选择文本')
-    return false
-  }
-
-  try {
-    await navigator.clipboard.writeText(text)
-    toast.success(successMessage)
-    return true
-  } catch (err) {
-    console.error(err)
-    toast.error('复制失败，请手动选择文本')
-    return false
-  }
-}
-
-async function copySSHCommand(serviceId?: string): Promise<void> {
-  if (!serviceId) return
-  const copied = await copyTextToClipboard(getSSHCommand(serviceId), 'SSH 命令已复制')
-  if (copied) {
-    copiedSSHCommandKey.value = serviceId
-  }
-}
-
-async function copySSHPassword(serviceId?: string): Promise<void> {
-  if (!serviceId) return
-  const password = getSSHAccess(serviceId)?.password || ''
-  const copied = await copyTextToClipboard(password, 'SSH 密码已复制')
-  if (copied) {
-    copiedSSHPasswordKey.value = serviceId
-  }
 }
 
 </script>

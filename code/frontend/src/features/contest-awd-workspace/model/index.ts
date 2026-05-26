@@ -4,6 +4,7 @@ export { useAwdWorkspaceAttackSubmission } from './useAwdWorkspaceAttackSubmissi
 export { useAwdWorkspaceAttackVector } from './useAwdWorkspaceAttackVector'
 export { useAwdWorkspaceServiceActions } from './useAwdWorkspaceServiceActions'
 export { useAwdDefenseServiceSelection } from './useAwdDefenseServiceSelection'
+export { useAwdDefenseAccessPanel } from './useAwdDefenseAccessPanel'
 export {
   canOpenDefenseService,
   canRequestDefenseSSH,

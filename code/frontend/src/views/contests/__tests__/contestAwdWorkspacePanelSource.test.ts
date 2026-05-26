@@ -7,6 +7,7 @@ import awdAttackResultFooterSource from '@/components/contests/awd/AWDAttackResu
 import awdAttackToolbarSource from '@/components/contests/awd/AWDAttackToolbar.vue?raw'
 import awdAttackVectorPanelSource from '@/components/contests/awd/AWDAttackVectorPanel.vue?raw'
 import awdAttackVectorStateSource from '@/features/contest-awd-workspace/model/useAwdWorkspaceAttackVector.ts?raw'
+import awdDefenseAccessPanelSource from '@/features/contest-awd-workspace/model/useAwdDefenseAccessPanel.ts?raw'
 import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
 import awdWorkspaceHudStripSource from '@/components/contests/awd/AWDWorkspaceHudStrip.vue?raw'
@@ -21,8 +22,7 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).toContain('AWDAttackVectorPanel')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceHudStrip')
     expect(awdWorkspaceSource).toContain('AWDWorkspaceIntelColumn')
-    expect(awdWorkspaceSource).toContain('getSSHCommand')
-    expect(awdWorkspaceSource).toContain('copySSHCommand')
+    expect(awdWorkspaceSource).toContain('useAwdDefenseAccessPanel')
     expect(awdDefenseColumnSource).toContain('我的防守')
     expect(awdDefenseColumnSource).toContain('AWDDefenseAlertsPanel')
     expect(awdDefenseColumnSource).toContain('AWDDefenseServiceList')
@@ -59,8 +59,6 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdDefenseConnectionPanelSource).toContain('密码')
     expect(awdDefenseConnectionPanelSource).toContain('票据将在')
     expect(awdDefenseConnectionPanelSource).toContain('expires_at')
-    expect(awdWorkspaceSource).toContain('复制失败，请手动选择文本')
-    expect(awdWorkspaceSource).toContain('copySSHPassword')
     expect(awdWorkspaceSource).not.toContain('openDefenseWorkbench')
     expect(studentRoutesSource).not.toContain("name: 'ContestAWDDefenseWorkbench'")
     expect(studentRoutesSource).not.toContain("path: 'contests/:id/awd/defense/:serviceId'")
@@ -85,6 +83,16 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdAttackVectorStateSource).toContain('flagInputs')
     expect(awdAttackVectorStateSource).toContain('filteredTargets')
     expect(awdAttackVectorStateSource).toContain('handleSubmit')
+  })
+
+  it('防守 access script owner 应收口到 feature composable', () => {
+    expect(awdWorkspaceSource).toContain('useAwdDefenseAccessPanel')
+    expect(awdWorkspaceSource).not.toContain('copyTextToClipboard')
+    expect(awdWorkspaceSource).not.toContain('getSSHCommand')
+    expect(awdDefenseAccessPanelSource).toContain('selectedDefenseAccess')
+    expect(awdDefenseAccessPanelSource).toContain('selectedDefenseCopiedCommand')
+    expect(awdDefenseAccessPanelSource).toContain('copySSHCommand')
+    expect(awdDefenseAccessPanelSource).toContain('复制失败，请手动选择文本')
   })
 
   it('学生战场页不暴露源码文件防守工作台入口', () => {
