@@ -14,15 +14,14 @@ import {
   useAwdDefenseServiceSelection,
   useAwdWorkspaceAttackVector,
   useAwdWorkspacePresentation,
+  useAwdWorkspaceSummary,
   useContestAWDWorkspace,
 } from '@/features/contest-awd-workspace'
-import type { AWDRuntimeChallenge } from '@/features/contest-awd-workspace'
 import type {
   ContestAWDWorkspaceServiceData,
   ContestChallengeItem,
   ContestDetailData,
 } from '@/api/contracts'
-import { formatTime } from '@/utils/format'
 
 const props = defineProps<{
   contest: ContestDetailData
@@ -119,8 +118,6 @@ const defenseServiceActionPendingById = computed(() => {
 
 const { selectedServiceId, selectService } = useAwdDefenseServiceSelection(defenseServiceCards)
 
-const currentRound = computed(() => workspace.value?.current_round)
-const myTeam = computed(() => workspace.value?.my_team ?? null)
 const selectedDefenseServiceCard = computed(
   () => defenseServiceCards.value.find((card) => card.serviceId === selectedServiceId.value) || null
 )
@@ -141,85 +138,25 @@ const {
   sshAccessByServiceId: computed(() => sshAccessByServiceId.value),
   openService,
 })
-const currentRoundLabel = computed(() =>
-  currentRound.value ? `#${String(currentRound.value.round_number).padStart(2, '0')}` : '--'
-)
-const currentRoundStatusLabel = computed(() => formatRoundStatusLabel(currentRound.value?.status))
-const myTeamRank = computed(
-  () => scoreboardRows.value.find((row) => row.team_id === myTeam.value?.team_id)?.rank || '--'
-)
-const serviceCount = computed(() => workspace.value?.services.length || 0)
-const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
-const lastSyncedLabel = computed(() =>
-  lastSyncedAt.value ? formatTime(lastSyncedAt.value) : '未同步'
-)
+const {
+  myTeam,
+  currentRoundLabel,
+  currentRoundStatusLabel,
+  myTeamRank,
+  serviceCount,
+  topScore,
+  lastSyncedLabel,
+  defenseAlerts,
+} = useAwdWorkspaceSummary({
+  workspace: computed(() => workspace.value),
+  scoreboardRows: computed(() => scoreboardRows.value),
+  runtimeChallenges: computed(() => runtimeChallenges.value),
+  servicesByServiceId: computed(() => servicesByServiceId.value),
+  lastSyncedAt: computed(() => lastSyncedAt.value),
+})
 const submitResultMessage = computed(() =>
   submitResult.value ? formatAttackResultToast(submitResult.value) : ''
 )
-
-const defenseAlerts = computed(() => {
-  const items: Array<{
-    challengeId: string
-    challengeTitle: string
-    statusLabel: string
-    tone: 'danger' | 'warning'
-    issues: string[]
-  }> = []
-
-  for (const challenge of runtimeChallenges.value) {
-    const service = getWorkspaceService(challenge)
-    if (!service) continue
-
-    const issues: string[] = []
-    let statusLabel = '正常'
-    let tone: 'danger' | 'warning' = 'warning'
-
-    if (service.service_status === 'compromised') {
-      issues.push('已失陷')
-      statusLabel = '严重'
-      tone = 'danger'
-    } else if (service.service_status === 'down' && service.instance_status !== 'running') {
-      issues.push('已离线')
-      statusLabel = '告警'
-    }
-
-    if ((service.attack_received ?? 0) > 0) {
-      issues.push(`检测到 ${service.attack_received} 次攻击`)
-    }
-
-    if (issues.length === 0) continue
-
-    items.push({
-      challengeId: challenge.awd_challenge_id,
-      challengeTitle: challenge.title,
-      statusLabel,
-      tone,
-      issues,
-    })
-  }
-  return items
-})
-
-function formatRoundStatusLabel(status?: string): string {
-  switch (status) {
-    case 'running':
-      return '进行中'
-    case 'frozen':
-      return '已冻结'
-    case 'finished':
-    case 'completed':
-    case 'ended':
-      return '已结束'
-    default:
-      return '等待中'
-  }
-}
-
-function getWorkspaceService(
-  challenge: AWDRuntimeChallenge
-): ContestAWDWorkspaceServiceData | undefined {
-  return servicesByServiceId.value.get(challenge.awd_service_id)
-}
 
 </script>
 

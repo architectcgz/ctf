@@ -10,6 +10,7 @@ import awdAttackVectorStateSource from '@/features/contest-awd-workspace/model/u
 import awdDefensePresentationSource from '@/features/contest-awd-workspace/model/awdDefensePresentation.ts?raw'
 import awdDefenseAccessPanelSource from '@/features/contest-awd-workspace/model/useAwdDefenseAccessPanel.ts?raw'
 import awdWorkspacePresentationSource from '@/features/contest-awd-workspace/model/useAwdWorkspacePresentation.ts?raw'
+import awdWorkspaceSummarySource from '@/features/contest-awd-workspace/model/useAwdWorkspaceSummary.ts?raw'
 import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
 import awdWorkspaceHudStripSource from '@/components/contests/awd/AWDWorkspaceHudStrip.vue?raw'
@@ -109,6 +110,16 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspacePresentationSource).toContain('eventDirectionLabel')
     expect(awdWorkspacePresentationSource).toContain('formatServiceRef')
     expect(awdDefensePresentationSource).not.toContain('challenge.awd_challenge_id || challenge.challenge_id')
+  })
+
+  it('战场摘要与防守告警 owner 应收口到 feature composable', () => {
+    expect(awdWorkspaceSource).toContain('useAwdWorkspaceSummary')
+    expect(awdWorkspaceSource).not.toContain('const defenseAlerts = computed')
+    expect(awdWorkspaceSource).not.toContain('function formatRoundStatusLabel')
+    expect(awdWorkspaceSummarySource).toContain('currentRoundLabel')
+    expect(awdWorkspaceSummarySource).toContain('currentRoundStatusLabel')
+    expect(awdWorkspaceSummarySource).toContain('lastSyncedLabel')
+    expect(awdWorkspaceSummarySource).toContain('defenseAlerts')
   })
 
   it('学生战场页不暴露源码文件防守工作台入口', () => {

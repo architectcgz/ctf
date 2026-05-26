@@ -10,7 +10,9 @@ export {
   useAwdDefenseServiceSelection,
   useAwdWorkspaceAttackVector,
   useAwdWorkspacePresentation,
+  useAwdWorkspaceSummary,
   useContestAWDWorkspace,
 } from './model'
 export type { AWDRuntimeChallenge } from './model'
+export type { AWDDefenseAlert } from './model'
 export type { AWDDefenseRiskLevel, AWDDefenseServiceCard } from './model'
