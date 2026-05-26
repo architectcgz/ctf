@@ -345,6 +345,15 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(topologyTemplateLibraryHeaderSource).toContain("emit('refresh')")
   })
 
+  it('template library style owner 应从父页回收到对应子组件', () => {
+    expect(challengeTopologyStudioPageSource).not.toContain('.template-toolbar-tab--active')
+    expect(challengeTopologyStudioPageSource).not.toContain('.topology-hero-badge')
+    expect(challengeTopologyStudioPageSource).not.toContain(':deep(.page-header__eyebrow)')
+    expect(topologyTemplateWorkbenchSource).toContain('.template-toolbar-tab--active')
+    expect(topologyTemplateHeroSectionSource).toContain('.topology-hero-badge')
+    expect(topologyTemplateLibraryHeaderSource).toContain(':deep(.page-header__eyebrow)')
+  })
+
   it('draft 变更 script owner 应收口到 feature model', () => {
     expect(challengeTopologyStudioPageSource).not.toContain('function updateNetworkDraft')
     expect(challengeTopologyStudioPageSource).not.toContain('function updateNodeDraft')

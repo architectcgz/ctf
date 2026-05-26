@@ -45,6 +45,29 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+:deep(.page-header) {
+  border-color: var(--journal-border);
+  border-radius: 0;
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 7%, transparent),
+      transparent 22rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      var(--journal-surface)
+    );
+  box-shadow: 0 22px 50px var(--color-shadow-soft);
+}
+
+:deep(.page-header__eyebrow) {
+  border-left-width: 0;
+  padding-left: 0;
+  color: var(--journal-accent);
+}
+
 .template-library-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -88,5 +111,19 @@ const emit = defineEmits<{
 
 .topology-toolbar-btn--primary:hover {
   background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
+}
+
+:global([data-theme='dark']) .topology-page-header :deep(.page-header) {
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 10%, transparent),
+      transparent 18rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    );
 }
 </style>

@@ -290,3 +290,202 @@ const workbenchTabs: Array<{ id: WorkbenchTab; label: string; icon: typeof Layou
     />
   </section>
 </template>
+
+<style scoped>
+.topology-workbench {
+  gap: var(--space-5);
+}
+
+.template-toolbar-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 2.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.template-toolbar-tab {
+  display: inline-flex;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-0-5);
+  border-bottom: 2px solid transparent;
+  font-size: var(--font-size-0-88);
+  font-weight: 700;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.template-toolbar-tab--idle {
+  color: var(--journal-muted);
+}
+
+.template-toolbar-tab--idle:hover {
+  color: var(--journal-ink);
+}
+
+.template-toolbar-tab--active {
+  border-bottom-color: color-mix(in srgb, var(--journal-accent) 58%, transparent);
+  color: var(--journal-accent);
+}
+
+.template-toolbar-refresh {
+  display: inline-flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--journal-border);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  color: var(--journal-muted);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.template-toolbar-refresh:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  color: var(--journal-accent);
+}
+
+:deep(.topology-action-btn) {
+  --ui-btn-font-size: var(--font-size-0-82);
+  --ui-btn-secondary-border: var(--journal-border);
+  --ui-btn-secondary-background: color-mix(
+    in srgb,
+    var(--journal-surface) 92%,
+    var(--color-bg-base)
+  );
+  --ui-btn-secondary-color: var(--journal-ink);
+  --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
+  --ui-btn-secondary-hover-color: var(--journal-accent);
+  --ui-btn-ghost-color: var(--journal-ink);
+  --ui-btn-ghost-hover-color: var(--journal-accent);
+  --ui-btn-ghost-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
+  --ui-btn-primary-border: transparent;
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 88%,
+    var(--color-bg-base)
+  );
+  --ui-btn-primary-hover-color: var(--color-bg-base);
+  --ui-btn-primary-color: var(--color-bg-base);
+  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
+  --ui-btn-danger-hover-background: color-mix(
+    in srgb,
+    var(--color-danger) 14%,
+    var(--journal-surface)
+  );
+}
+
+:deep(.section-card) {
+  padding: var(--space-4-5) 0 var(--space-1);
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+:deep(.section-card__header) {
+  margin-bottom: var(--space-4);
+  align-items: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0 0 0 var(--space-4);
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+:deep(.section-card__header h2) {
+  font-size: var(--font-size-1-10);
+  color: var(--journal-ink);
+}
+
+:deep(.section-card__header p) {
+  color: var(--journal-muted);
+}
+
+:deep(.section-card__body) {
+  padding-left: 0;
+}
+
+:deep(.section-card__body > .rounded-2xl),
+:deep(.section-card__body > .rounded-xl),
+:deep([data-node-editor]),
+:deep(.topology-canvas-board__root) {
+  box-shadow: none;
+}
+
+:deep(.topology-canvas-board__root) {
+  border: 0;
+}
+
+:deep([data-node-editor]) {
+  border-color: var(--journal-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+}
+
+:deep([data-node-editor].border-primary) {
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+}
+
+:deep(input),
+:deep(select),
+:deep(textarea) {
+  border-color: var(--journal-border);
+  background: var(--journal-surface);
+  color: var(--journal-ink);
+}
+
+:deep(input:focus),
+:deep(select:focus),
+:deep(textarea:focus) {
+  border-color: color-mix(in srgb, var(--journal-accent) 48%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
+  outline: none;
+}
+
+:deep(.topology-canvas-board__surface) {
+  border-color: color-mix(in srgb, var(--journal-border) 70%, transparent);
+}
+
+.template-toolbar-tabs,
+:deep(.template-canvas-mode-banner),
+:deep(.template-quick-editor) {
+  border: 0;
+  box-shadow: none;
+}
+
+:global([data-theme='dark']) .topology-workbench :deep(.topology-action-btn),
+:global([data-theme='dark']) .topology-workbench :deep([data-node-editor]),
+:global([data-theme='dark']) .topology-workbench :deep(input),
+:global([data-theme='dark']) .topology-workbench :deep(select),
+:global([data-theme='dark']) .topology-workbench :deep(textarea) {
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+}
+
+@media (max-width: 767px) {
+  .template-toolbar-tabs {
+    gap: var(--space-3);
+    overflow-x: auto;
+  }
+}
+</style>
