@@ -9,7 +9,17 @@ import cheatDetectionWorkspaceSource from '../../components/platform/cheat/Cheat
 import imageManageSource from '../platform/ImageManage.vue?raw'
 import adminDashboardSource from '../../components/platform/dashboard/PlatformOverviewPage.vue?raw'
 import contestOrchestrationSource from '../../components/platform/contest/ContestOrchestrationPage.vue?raw'
-import userGovernanceSource from '../../components/platform/user/UserGovernancePage.vue?raw'
+import userGovernancePageSource from '../../components/platform/user/UserGovernancePage.vue?raw'
+import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
+
+const userGovernanceSource = [
+  userGovernancePageSource,
+  userGovernanceOverviewPanelSource,
+  userGovernanceDetailModalSource,
+  userGovernanceImportPanelSource,
+].join('\n')
 
 describe('admin full-bleed hero roots', () => {
   it('uses a section root that carries the hero background', () => {

@@ -2,7 +2,10 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernancePageSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import challengeWorkspaceShellSource from '@/components/challenge/ChallengeWorkspaceShell.vue?raw'
@@ -16,6 +19,12 @@ const themeSource = readFileSync(`${process.cwd()}/src/assets/styles/theme.css`,
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
 const globalStyleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
+const userGovernanceSource = [
+  userGovernancePageSource,
+  userGovernanceOverviewPanelSource,
+  userGovernanceDetailModalSource,
+  userGovernanceImportPanelSource,
+].join('\n')
 
 describe('page tabs shared styles', () => {
   it('应该在共享样式里声明通用页签轨道样式', () => {

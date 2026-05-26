@@ -9,9 +9,18 @@ import studentOverviewSource from '@/components/dashboard/student/StudentOvervie
 import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import classManagementPageSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
-import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
-import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
-import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import classStudentsPageSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
+import studentAnalysisPageSourceBase from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import studentAnalysisOverviewHeroPanelSource from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue?raw'
+import teacherDashboardPageSourceBase from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import teacherDashboardPortraitPanelSource from '@/components/teacher/dashboard/TeacherDashboardPortraitPanel.vue?raw'
+import teacherDashboardStudentInsightPanelSource from '@/components/teacher/dashboard/TeacherDashboardStudentInsightPanel.vue?raw'
+import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/TeacherDashboardTrendPanel.vue?raw'
+import teacherDashboardReviewPanelSource from '@/components/teacher/dashboard/TeacherDashboardReviewPanel.vue?raw'
+import teacherDashboardInterventionPanelSource from '@/components/teacher/dashboard/TeacherDashboardInterventionPanel.vue?raw'
 import studentManagementPageSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import teacherInstanceManagementPageSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import teacherAwdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceHeader.vue?raw'
@@ -35,9 +44,40 @@ import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import imageManageSource from '@/views/platform/ImageManage.vue?raw'
 import imageManageHeroPanelSource from '@/components/platform/images/ImageManageHeroPanel.vue?raw'
 import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
-import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernancePageSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
+
+const classStudentsPageSource = [
+  classStudentsPageSourceBase,
+  classStudentsOverviewPanelSource,
+  classStudentsInsightWindowPanelSource,
+  classStudentsDirectoryPanelSource,
+].join('\n')
+
+const teacherDashboardPageSource = [
+  teacherDashboardPageSourceBase,
+  teacherDashboardPortraitPanelSource,
+  teacherDashboardStudentInsightPanelSource,
+  teacherDashboardTrendPanelSource,
+  teacherDashboardReviewPanelSource,
+  teacherDashboardInterventionPanelSource,
+].join('\n')
+
+const studentAnalysisPageSource = [
+  studentAnalysisPageSourceBase,
+  studentAnalysisOverviewHeroPanelSource,
+].join('\n')
+
+const userGovernanceSource = [
+  userGovernancePageSource,
+  userGovernanceOverviewPanelSource,
+  userGovernanceDetailModalSource,
+  userGovernanceImportPanelSource,
+].join('\n')
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'

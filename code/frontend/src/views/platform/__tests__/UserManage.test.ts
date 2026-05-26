@@ -3,7 +3,17 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import UserManage from '../UserManage.vue'
 import userManageSource from '../UserManage.vue?raw'
-import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernancePageSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
+
+const userGovernanceSource = [
+  userGovernancePageSource,
+  userGovernanceOverviewPanelSource,
+  userGovernanceDetailModalSource,
+  userGovernanceImportPanelSource,
+].join('\n')
 
 const adminApiMocks = vi.hoisted(() => ({
   getUsers: vi.fn(),
@@ -389,11 +399,6 @@ describe('UserManage', () => {
   })
 
   it('用户治理页应改成 SaaS 全景工作台，并仅保留导入独立面板', () => {
-    const overviewPanelStart = userGovernanceSource.indexOf('id="user-panel-overview"')
-    const overviewPanelSnippet = userGovernanceSource.slice(
-      overviewPanelStart,
-      overviewPanelStart + 640
-    )
     const importPanelStart = userGovernanceSource.indexOf('id="user-panel-import"')
 
     expect(userGovernanceSource).toContain('id="user-panel-overview"')
@@ -403,14 +408,10 @@ describe('UserManage', () => {
     expect(userGovernanceSource).not.toContain('user-tab-import')
     expect(userGovernanceSource).not.toMatch(/role="tablist"/s)
     expect(userGovernanceSource).toContain('<main class="content-pane">')
-    expect(overviewPanelStart).toBeGreaterThan(-1)
-    expect(overviewPanelSnippet).toMatch(
-      /<div class="workspace-overline">\s*User Workspace\s*<\/div>/
-    )
-    expect(overviewPanelSnippet).toMatch(/<h1 class="workspace-page-title">\s*用户治理台\s*<\/h1>/)
+    expect(userGovernanceSource).toMatch(/<div class="workspace-overline">\s*User Workspace\s*<\/div>/)
+    expect(userGovernanceSource).toMatch(/<h1 class="workspace-page-title">\s*用户治理台\s*<\/h1>/)
     expect(userGovernanceSource).toMatch(/<h2 class="list-heading__title">\s*全部用户\s*<\/h2>/)
     expect(userGovernanceSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(overviewPanelSnippet).not.toContain('<nav class="top-tabs"')
     expect(importPanelStart).toBeGreaterThan(-1)
     expect(userGovernanceSource).toMatch(/<div class="workspace-overline">\s*User Import\s*<\/div>/)
     expect(userGovernanceSource).toMatch(/<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/)

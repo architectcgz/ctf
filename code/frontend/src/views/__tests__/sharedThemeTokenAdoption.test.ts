@@ -69,7 +69,10 @@ import imageManageSource from '@/views/platform/ImageManage.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import adminChallengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
-import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernancePageSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
 import challengeManagePresentationSource from '@/features/platform-challenges/model/useChallengeManagePresentation.ts?raw'
 import skillProfileUtilsSource from '@/utils/skillProfile.ts?raw'
 import challengeUtilsSource from '@/utils/challenge.ts?raw'
@@ -78,6 +81,12 @@ import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewA
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
+const userGovernanceSource = [
+  userGovernancePageSource,
+  userGovernanceOverviewPanelSource,
+  userGovernanceDetailModalSource,
+  userGovernanceImportPanelSource,
+].join('\n')
 
 function expectNoHardcodedThemeTokens(
   source: string,

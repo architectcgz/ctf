@@ -47,7 +47,17 @@ import adminContestFormDialogSource from '@/components/platform/contest/Platform
 import adminContestFormPanelSource from '@/components/platform/contest/PlatformContestFormPanel.vue?raw'
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
 import adminContestTableSource from '@/components/platform/contest/PlatformContestTable.vue?raw'
-import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernancePageSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
+
+const userGovernanceSource = [
+  userGovernancePageSource,
+  userGovernanceOverviewPanelSource,
+  userGovernanceDetailModalSource,
+  userGovernanceImportPanelSource,
+].join('\n')
 
 const styleSource = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8')
 const journalNotesSource = readFileSync(
@@ -136,8 +146,11 @@ describe('admin management surface alignment', () => {
     )
     expect(userGovernanceSource).toContain('class="header-btn header-btn--ghost"')
     expect(userGovernanceSource).toContain('class="header-btn header-btn--primary"')
-    expect(userGovernanceSource).toMatch(
-      /\.user-row__actions\s*>\s*\.ui-btn,[\s\S]*\.user-detail-actions\s*>\s*\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.75rem;[\s\S]*--ui-btn-radius:\s*1rem;/s
+    expect(userGovernanceOverviewPanelSource).toMatch(
+      /\.user-row__actions\s*>\s*\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.75rem;[\s\S]*--ui-btn-radius:\s*1rem;/s
+    )
+    expect(userGovernanceDetailModalSource).toMatch(
+      /\.user-detail-actions\s*>\s*\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.75rem;[\s\S]*--ui-btn-radius:\s*1rem;/s
     )
     expect(styleSource).toMatch(
       /\.workspace-directory-empty\s+\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*var\(--ui-control-height-md\);[\s\S]*--ui-btn-radius:\s*var\(--ui-control-radius-md\);/s

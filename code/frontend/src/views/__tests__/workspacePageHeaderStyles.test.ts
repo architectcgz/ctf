@@ -21,23 +21,72 @@ import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWor
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import classManagementPageSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
-import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
-import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import classStudentsPageSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
+import studentAnalysisPageSourceBase from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import studentAnalysisOverviewHeroPanelSource from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentManagementPageSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import teacherInstanceManagementPageSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
-import topologyStudioSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyTemplateLibraryHeaderSource from '@/components/platform/topology/TopologyTemplateLibraryHeader.vue?raw'
+import topologyTemplateHeroSectionSource from '@/components/platform/topology/TopologyTemplateHeroSection.vue?raw'
+import topologyChallengeWorkspaceHeaderSource from '@/components/platform/topology/TopologyChallengeWorkspaceHeader.vue?raw'
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
 import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
-import teacherDashboardSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import teacherDashboardSourceBase from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import teacherDashboardPortraitPanelSource from '@/components/teacher/dashboard/TeacherDashboardPortraitPanel.vue?raw'
+import teacherDashboardStudentInsightPanelSource from '@/components/teacher/dashboard/TeacherDashboardStudentInsightPanel.vue?raw'
+import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/TeacherDashboardTrendPanel.vue?raw'
+import teacherDashboardReviewPanelSource from '@/components/teacher/dashboard/TeacherDashboardReviewPanel.vue?raw'
+import teacherDashboardInterventionPanelSource from '@/components/teacher/dashboard/TeacherDashboardInterventionPanel.vue?raw'
 import adminDashboardSource from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
-import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernancePageSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
 import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
 import writeupManageSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
 import writeupEditorSource from '@/components/platform/writeup/ChallengeWriteupEditorPage.vue?raw'
+
+const classStudentsPageSource = [
+  classStudentsPageSourceBase,
+  classStudentsOverviewPanelSource,
+  classStudentsInsightWindowPanelSource,
+  classStudentsDirectoryPanelSource,
+].join('\n')
+
+const studentAnalysisPageSource = [
+  studentAnalysisPageSourceBase,
+  studentAnalysisOverviewHeroPanelSource,
+].join('\n')
+
+const teacherDashboardSource = [
+  teacherDashboardSourceBase,
+  teacherDashboardPortraitPanelSource,
+  teacherDashboardStudentInsightPanelSource,
+  teacherDashboardTrendPanelSource,
+  teacherDashboardReviewPanelSource,
+  teacherDashboardInterventionPanelSource,
+].join('\n')
+
+const userGovernanceSource = [
+  userGovernancePageSource,
+  userGovernanceOverviewPanelSource,
+  userGovernanceDetailModalSource,
+  userGovernanceImportPanelSource,
+].join('\n')
+const topologyStudioSource = [
+  topologyStudioPageSource,
+  topologyTemplateLibraryHeaderSource,
+  topologyTemplateHeroSectionSource,
+  topologyChallengeWorkspaceHeaderSource,
+].join('\n')
 import writeupViewSource from '@/components/platform/writeup/ChallengeWriteupViewPage.vue?raw'
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
 import adminChallengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
@@ -303,8 +352,8 @@ describe('workspace page header styles', () => {
       },
       {
         source: topologyStudioSource,
-        include: /<h1 class="hero-title">\s*\{\{ heroTitle \}\}\s*<\/h1>/,
-        exclude: /<h1 class="hero-title workspace-tab-heading__title">\{\{ heroTitle \}\}<\/h1>/,
+        include: /(?:<PageHeader[\s\S]*:title="title"|<h1 class="hero-title">\s*\{\{ title \}\}\s*<\/h1>)/,
+        exclude: /<h1 class="hero-title workspace-tab-heading__title">\s*\{\{ title \}\}\s*<\/h1>/,
       },
       {
         source: pageHeaderSource,

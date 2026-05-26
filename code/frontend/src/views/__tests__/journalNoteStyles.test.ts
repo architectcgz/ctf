@@ -3,7 +3,10 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
-import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernancePageSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
 import auditLogSource from '@/views/platform/AuditLog.vue?raw'
 import challengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
@@ -15,6 +18,12 @@ const journalNotesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-notes.css`,
   'utf-8'
 )
+const userGovernanceSource = [
+  userGovernancePageSource,
+  userGovernanceOverviewPanelSource,
+  userGovernanceDetailModalSource,
+  userGovernanceImportPanelSource,
+].join('\n')
 
 describe('journal note shared styles', () => {
   it('应该在共享样式文件中声明 admin journal 的基础样式与变体', () => {
