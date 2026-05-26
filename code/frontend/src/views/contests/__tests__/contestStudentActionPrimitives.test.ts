@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
+import awdAttackTargetGridSource from '@/components/contests/awd/AWDAttackTargetGrid.vue?raw'
+import awdAttackToolbarSource from '@/components/contests/awd/AWDAttackToolbar.vue?raw'
 import awdDefenseServiceListSource from '@/components/contests/awd/AWDDefenseServiceList.vue?raw'
+import awdWorkspaceHudStripSource from '@/components/contests/awd/AWDWorkspaceHudStrip.vue?raw'
 import contestChallengeWorkspaceSource from '@/components/contests/ContestChallengeWorkspacePanel.vue?raw'
 import contestTeamPanelSource from '@/components/contests/ContestTeamPanel.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
@@ -23,7 +26,13 @@ describe('contest student action primitives', () => {
   })
 
   it('AWD 工作台应保留当前战场控件原语与稳定选择器', () => {
-    const awdActionSurfaceSource = `${awdWorkspaceSource}\n${awdDefenseServiceListSource}`
+    const awdActionSurfaceSource = [
+      awdWorkspaceSource,
+      awdWorkspaceHudStripSource,
+      awdDefenseServiceListSource,
+      awdAttackToolbarSource,
+      awdAttackTargetGridSource,
+    ].join('\n')
 
     expect(awdActionSurfaceSource).toContain('class="hud-refresh-btn"')
     expect(awdActionSurfaceSource).toContain('class="asset-btn asset-btn--primary"')

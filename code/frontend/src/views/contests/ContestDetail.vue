@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { BellRing, CalendarRange, Clock3, Flag, Swords, Trophy, UsersRound } from 'lucide-vue-next'
+import { Trophy } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import CFocusedInputDialog from '@/components/common/modal-templates/CFocusedInputDialog.vue'
-import ContestAnnouncementsPanel from '@/components/contests/ContestAnnouncementsPanel.vue'
+import ContestAnnouncementsWorkspaceSection from '@/components/contests/ContestAnnouncementsWorkspaceSection.vue'
 import ContestAWDWorkspacePanel from '@/components/contests/ContestAWDWorkspacePanel.vue'
 import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnnouncementRealtimeBridge.vue'
 import ContestChallengeWorkspacePanel from '@/components/contests/ContestChallengeWorkspacePanel.vue'
 import ContestOverviewPanel from '@/components/contests/ContestOverviewPanel.vue'
-import ContestTeamPanel from '@/components/contests/ContestTeamPanel.vue'
+import ContestTeamDialogs from '@/components/contests/ContestTeamDialogs.vue'
+import ContestTeamWorkspaceSection from '@/components/contests/ContestTeamWorkspaceSection.vue'
 import { useContestDetailRoutePage } from '@/features/contest-detail'
 
 const {
@@ -118,34 +118,13 @@ const {
             :announcements-error="announcementsError"
           />
 
-          <section
+          <ContestAnnouncementsWorkspaceSection
             v-else-if="activeWorkspaceTab === 'announcements'"
-            id="contest-workspace-panel-announcements"
-            class="workspace-panel"
-            role="tabpanel"
-            aria-labelledby="contest-workspace-tab-announcements"
-          >
-            <section class="contest-section">
-              <div class="contest-section__head workspace-tab-heading">
-                <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">
-                    Announcements
-                  </div>
-                  <h2 class="contest-section__title workspace-tab-heading__title">
-                    公告
-                  </h2>
-                </div>
-                <div class="contest-section__hint">
-                  {{ announcements.length }} 条
-                </div>
-              </div>
-
-              <ContestAnnouncementsPanel
-                :announcements="announcements"
-                :announcements-error="announcementsError"
-              />
-            </section>
-          </section>
+            panel-id="contest-workspace-panel-announcements"
+            tab-id="contest-workspace-tab-announcements"
+            :announcements="announcements"
+            :announcements-error="announcementsError"
+          />
 
           <section
             v-else-if="activeWorkspaceTab === 'challenges'"
@@ -193,62 +172,17 @@ const {
             </section>
           </section>
 
-          <section
+          <ContestTeamWorkspaceSection
             v-else
-            id="contest-workspace-panel-team"
-            class="workspace-panel"
-            role="tabpanel"
-            aria-labelledby="contest-workspace-tab-team"
-          >
-            <section class="contest-section">
-              <div class="contest-section__head workspace-tab-heading">
-                <div class="workspace-tab-heading__main">
-                  <div class="workspace-overline">
-                    Team
-                  </div>
-                  <h2 class="contest-section__title workspace-tab-heading__title">
-                    队伍
-                  </h2>
-                </div>
-                <div class="contest-section__hint">
-                  {{ memberCount }} 人
-                </div>
-              </div>
-
-              <ContestTeamPanel
-                v-if="!team"
-                :team="null"
-                @create-team="openCreateTeam"
-                @join-team="openJoinTeam"
-              />
-
-              <div
-                v-else
-                class="team-board"
-              >
-                <div class="team-summary">
-                  <div>
-                    <div class="workspace-overline">
-                      Current Team
-                    </div>
-                    <h3 class="team-summary__name">
-                      {{ team.name }}
-                    </h3>
-                  </div>
-                  <span
-                    v-if="team.invite_code"
-                    class="team-summary__invite"
-                  >邀请码: {{ team.invite_code }}</span>
-                </div>
-
-                <ContestTeamPanel
-                  :team="team"
-                  :is-captain="isCaptain"
-                  @kick-member="kickMember"
-                />
-              </div>
-            </section>
-          </section>
+            panel-id="contest-workspace-panel-team"
+            tab-id="contest-workspace-tab-team"
+            :team="team"
+            :member-count="memberCount"
+            :is-captain="isCaptain"
+            @create-team="openCreateTeam"
+            @join-team="openJoinTeam"
+            @kick-member="kickMember"
+          />
         </main>
       </template>
 
@@ -299,101 +233,22 @@ const {
       </main>
     </section>
 
-    <CFocusedInputDialog
-      :open="showCreateTeam"
-      title="创建新队伍"
-      description="为你的战队起一个响亮的代号。创建完成后，你可以生成邀请链接让其他队友加入。"
-      width="35rem"
-      aria-label="创建队伍"
-      overlay-class="c-focused-input-shell--plain"
-      :close-on-backdrop="false"
-      @update:open="showCreateTeam = $event"
-      @close="closeCreateTeam"
-    >
-      <template #icon>
-        <UsersRound
-          class="h-6 w-6"
-          :stroke-width="2"
-        />
-      </template>
-
-      <div class="contest-team-dialog-field">
-        <label for="contest-create-team-name">队伍名称</label>
-        <input
-          id="contest-create-team-name"
-          v-model="teamName"
-          type="text"
-          placeholder="例如：HackerG1"
-          @keyup.enter="createTeamAction"
-        >
-      </div>
-
-      <template #footer="{ close }">
-        <button
-          type="button"
-          data-c-modal-action="ghost"
-          @click="close"
-        >
-          取消
-        </button>
-        <button
-          type="button"
-          data-c-modal-action="primary"
-          :disabled="creatingTeam"
-          @click="createTeamAction"
-        >
-          {{ creatingTeam ? '创建中...' : '确认创建' }}
-        </button>
-      </template>
-    </CFocusedInputDialog>
-
-    <CFocusedInputDialog
-      :open="showJoinTeam"
-      title="加入现有队伍"
-      description="输入队伍 ID 后立即加入当前战队。加入成功后，你会同步看到队伍成员与竞赛工作区。"
-      width="34rem"
-      aria-label="加入队伍"
-      overlay-class="c-focused-input-shell--plain"
-      :close-on-backdrop="false"
-      @update:open="showJoinTeam = $event"
-      @close="closeJoinTeam"
-    >
-      <template #icon>
-        <UsersRound
-          class="h-6 w-6"
-          :stroke-width="2"
-        />
-      </template>
-
-      <div class="contest-team-dialog-field">
-        <label for="contest-join-team-id">队伍 ID</label>
-        <input
-          id="contest-join-team-id"
-          v-model="teamIdInput"
-          type="text"
-          placeholder="输入队伍 ID"
-          @keyup.enter="joinTeamAction"
-        >
-      </div>
-
-      <template #footer="{ close }">
-        <button
-          type="button"
-          data-c-modal-action="ghost"
-          @click="close"
-        >
-          取消
-        </button>
-        <button
-          type="button"
-          data-c-modal-action="primary"
-          :disabled="joiningTeam"
-          @click="joinTeamAction"
-        >
-          {{ joiningTeam ? '加入中...' : '确认加入' }}
-        </button>
-      </template>
-    </CFocusedInputDialog>
+    <ContestTeamDialogs
+      :show-create-team="showCreateTeam"
+      :show-join-team="showJoinTeam"
+      :team-name="teamName"
+      :team-id-input="teamIdInput"
+      :creating-team="creatingTeam"
+      :joining-team="joiningTeam"
+      @update:show-create-team="showCreateTeam = $event"
+      @update:show-join-team="showJoinTeam = $event"
+      @update:team-name="teamName = $event"
+      @update:team-id-input="teamIdInput = $event"
+      @close-create-team="closeCreateTeam"
+      @close-join-team="closeJoinTeam"
+      @create-team="createTeamAction"
+      @join-team="joinTeamAction"
+    />
   </div>
 </template>
 
@@ -536,38 +391,9 @@ const {
   color: var(--color-text-secondary);
 }
 
-.team-board {
-  margin-top: 1rem;
-}
-
-.team-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.6rem 1rem;
-}
-
-.team-summary__name {
-  margin-top: 0.35rem;
-  font-size: var(--font-size-1-10);
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.team-summary__invite {
-  font-size: var(--font-size-0-78);
-  color: var(--color-text-secondary);
-}
-
 .contest-not-found {
   display: grid;
   align-content: center;
-}
-
-.contest-team-dialog-field {
-  display: grid;
-  gap: 0.5rem;
 }
 
 @keyframes contestDetailSpin {

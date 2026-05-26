@@ -6,8 +6,11 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import ContestDetail from '../ContestDetail.vue'
 import contestDetailSource from '../ContestDetail.vue?raw'
+import contestAnnouncementsWorkspaceSectionSource from '@/components/contests/ContestAnnouncementsWorkspaceSection.vue?raw'
 import contestOverviewPanelSource from '@/components/contests/ContestOverviewPanel.vue?raw'
 import contestChallengeWorkspacePanelSource from '@/components/contests/ContestChallengeWorkspacePanel.vue?raw'
+import contestTeamDialogsSource from '@/components/contests/ContestTeamDialogs.vue?raw'
+import contestTeamWorkspaceSectionSource from '@/components/contests/ContestTeamWorkspaceSection.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
@@ -164,7 +167,7 @@ describe('ContestDetail', () => {
       attacker_team: 'Red',
       victim_team_id: '14',
       victim_team: 'Blue',
-      challenge_id: '101',
+      awd_challenge_id: 'awd-101',
       attack_type: 'flag_capture',
       source: 'submission',
       submitted_flag: 'flag{demo}',
@@ -293,6 +296,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
@@ -321,7 +325,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: '101',
+          awd_challenge_id: 'awd-101',
           access_url: 'http://red.internal',
           service_status: 'up',
           checker_type: 'http_standard',
@@ -339,7 +343,7 @@ describe('ContestDetail', () => {
           services: [
             {
               service_id: '7009',
-              challenge_id: '101',
+              awd_challenge_id: 'awd-101',
               reachable: true,
             },
           ],
@@ -430,9 +434,10 @@ describe('ContestDetail', () => {
   })
 
   it('队伍页创建和加入弹窗应切换到 C 端输入模板', async () => {
-    const contestDetailSource = (await import('../ContestDetail.vue?raw')).default
-
     expect(contestDetailSource).toContain(
+      "from '@/components/contests/ContestTeamDialogs.vue'"
+    )
+    expect(contestTeamDialogsSource).toContain(
       "from '@/components/common/modal-templates/CFocusedInputDialog.vue'"
     )
     expect(contestDetailSource).not.toContain('class="contest-modal"')
@@ -580,7 +585,8 @@ describe('ContestDetail', () => {
     expect(wrapper.text()).toContain('已选题目')
     expect(wrapper.text()).toContain('主要操作')
     expect(wrapper.text()).toContain('Crypto 102')
-    expect(wrapper.text()).toContain('crypto · 200 分')
+    expect(wrapper.text()).toContain('密码')
+    expect(wrapper.text()).toContain('200 分')
 
     const webChallengeButton = wrapper
       .findAll('button')
@@ -657,6 +663,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
@@ -684,7 +691,8 @@ describe('ContestDetail', () => {
       },
       services: [
         {
-          challenge_id: '101',
+          service_id: '7009',
+          awd_challenge_id: 'awd-101',
           access_url: 'http://red.internal',
           service_status: 'compromised',
           checker_type: 'http_standard',
@@ -702,7 +710,7 @@ describe('ContestDetail', () => {
           services: [
             {
               service_id: '7009',
-              challenge_id: '101',
+              awd_challenge_id: 'awd-101',
               reachable: true,
             },
           ],
@@ -713,7 +721,7 @@ describe('ContestDetail', () => {
           services: [
             {
               service_id: '7009',
-              challenge_id: '101',
+              awd_challenge_id: 'awd-101',
               reachable: false,
             },
           ],
@@ -792,6 +800,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
@@ -820,7 +829,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: '101',
+          awd_challenge_id: 'awd-101',
           access_url: 'http://red.internal',
           service_status: 'up',
           checker_type: 'http_standard',
@@ -838,7 +847,7 @@ describe('ContestDetail', () => {
           services: [
             {
               service_id: '7010',
-              challenge_id: '101',
+              awd_challenge_id: 'awd-101',
               reachable: true,
             },
           ],
@@ -848,7 +857,7 @@ describe('ContestDetail', () => {
         {
           id: 'attack-1',
           service_id: '7010',
-          challenge_id: '101',
+          awd_challenge_id: 'awd-101',
           direction: 'attack_out',
           peer_team_id: '14',
           peer_team_name: 'Blue',
@@ -885,6 +894,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
@@ -913,7 +923,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: '101',
+          awd_challenge_id: 'awd-101',
           instance_id: '9001',
           access_url: 'http://red.internal',
           instance_status: 'running',
@@ -957,6 +967,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
@@ -985,7 +996,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: 'legacy-9',
+          awd_challenge_id: 'awd-101',
           instance_id: '9001',
           service_status: 'up',
           checker_type: 'http_standard',
@@ -1003,7 +1014,7 @@ describe('ContestDetail', () => {
           services: [
             {
               service_id: '7009',
-              challenge_id: 'legacy-9',
+              awd_challenge_id: 'awd-101',
               reachable: true,
             },
           ],
@@ -1040,6 +1051,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
@@ -1068,7 +1080,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: '101',
+          awd_challenge_id: 'awd-101',
           instance_id: '9001',
           instance_status: 'running',
           service_status: 'down',
@@ -1111,6 +1123,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7009',
         title: 'Service A',
         category: 'web',
@@ -1122,6 +1135,7 @@ describe('ContestDetail', () => {
       {
         id: '202',
         challenge_id: '102',
+        awd_challenge_id: 'awd-102',
         awd_service_id: '7010',
         title: 'Service B',
         category: 'pwn',
@@ -1150,7 +1164,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: 'legacy-101',
+          awd_challenge_id: 'awd-101',
           access_url: 'http://red-a.internal',
           service_status: 'up',
           checker_type: 'http_standard',
@@ -1162,7 +1176,7 @@ describe('ContestDetail', () => {
         },
         {
           service_id: '7010',
-          challenge_id: 'legacy-102',
+          awd_challenge_id: 'awd-102',
           access_url: 'http://red-b.internal',
           service_status: 'up',
           checker_type: 'http_standard',
@@ -1180,12 +1194,12 @@ describe('ContestDetail', () => {
           services: [
             {
               service_id: '7009',
-              challenge_id: 'legacy-101',
+              awd_challenge_id: 'awd-101',
               reachable: true,
             },
             {
               service_id: '7010',
-              challenge_id: 'legacy-102',
+              awd_challenge_id: 'awd-102',
               reachable: true,
             },
           ],
@@ -1226,6 +1240,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7009',
         title: 'Bank Portal',
         category: 'web',
@@ -1254,7 +1269,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: 'legacy-101',
+          awd_challenge_id: 'awd-101',
           access_url: 'http://red.internal',
           service_status: 'up',
           checker_type: 'http_standard',
@@ -1270,7 +1285,7 @@ describe('ContestDetail', () => {
         {
           id: 'attack-1',
           service_id: '7009',
-          challenge_id: 'legacy-101',
+          awd_challenge_id: 'awd-101',
           direction: 'attack_out',
           peer_team_id: '14',
           peer_team_name: 'Blue',
@@ -1308,6 +1323,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7010',
         title: 'Admin Gateway',
         category: 'web',
@@ -1336,7 +1352,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: '101',
+          awd_challenge_id: 'awd-101',
           access_url: 'http://wrong.internal',
           service_status: 'up',
           checker_type: 'http_standard',
@@ -1354,7 +1370,7 @@ describe('ContestDetail', () => {
           services: [
             {
               service_id: '7009',
-              challenge_id: '101',
+              awd_challenge_id: 'awd-101',
               reachable: true,
             },
           ],
@@ -1416,7 +1432,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: '101',
+          awd_challenge_id: 'awd-101',
           access_url: 'http://legacy.internal',
           service_status: 'up',
           checker_type: 'http_standard',
@@ -1457,6 +1473,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7009',
         title: 'Bank Portal',
         category: 'web',
@@ -1485,7 +1502,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: 'legacy-101',
+          awd_challenge_id: 'awd-101',
           access_url: 'http://red.internal',
           service_status: 'up',
           checker_type: 'http_standard',
@@ -1503,7 +1520,7 @@ describe('ContestDetail', () => {
           services: [
             {
               service_id: '7009',
-              challenge_id: 'legacy-101',
+              awd_challenge_id: 'awd-101',
               reachable: true,
             },
           ],
@@ -1535,7 +1552,7 @@ describe('ContestDetail', () => {
       victim_team_id: '14',
       victim_team: 'Blue',
       service_id: '7009',
-      challenge_id: 'legacy-101',
+      awd_challenge_id: 'awd-101',
       attack_type: 'flag_capture',
       source: 'submission',
       submitted_flag: 'flag{demo}',
@@ -1577,6 +1594,7 @@ describe('ContestDetail', () => {
       {
         id: '201',
         challenge_id: '101',
+        awd_challenge_id: 'awd-101',
         awd_service_id: '7009',
         title: 'Bank Portal',
         category: 'web',
@@ -1605,7 +1623,7 @@ describe('ContestDetail', () => {
       services: [
         {
           service_id: '7009',
-          challenge_id: 'legacy-101',
+          awd_challenge_id: 'awd-101',
           access_url: 'http://red.internal',
           service_status: 'up',
           checker_type: 'http_standard',
@@ -1623,7 +1641,7 @@ describe('ContestDetail', () => {
           services: [
             {
               service_id: '7009',
-              challenge_id: 'legacy-101',
+              awd_challenge_id: 'awd-101',
               reachable: true,
             },
           ],
@@ -1762,7 +1780,12 @@ describe('ContestDetail', () => {
   })
 
   it('竞赛详情 section heading 应切到共享 workspace overline 语义', () => {
-    const combinedSource = [contestDetailSource, contestOverviewPanelSource].join('\n')
+    const combinedSource = [
+      contestDetailSource,
+      contestOverviewPanelSource,
+      contestAnnouncementsWorkspaceSectionSource,
+      contestTeamWorkspaceSectionSource,
+    ].join('\n')
 
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Rules\s*<\/div>/)
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Schedule\s*<\/div>/)
@@ -1787,14 +1810,18 @@ describe('ContestDetail', () => {
   })
 
   it('竞赛详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
-    const combinedSource = [contestDetailSource, contestChallengeWorkspacePanelSource].join('\n')
+    const combinedSource = [
+      contestDetailSource,
+      contestChallengeWorkspacePanelSource,
+      contestTeamWorkspaceSectionSource,
+    ].join('\n')
 
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*已选题目\s*<\/div>/)
     expect(combinedSource).toMatch(/<div class="workspace-overline">\s*主要操作\s*<\/div>/)
-    expect(contestDetailSource).toMatch(/<div class="workspace-overline">\s*Current Team\s*<\/div>/)
+    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Current Team\s*<\/div>/)
     expect(combinedSource).not.toContain('<div class="contest-overline">已选题目</div>')
     expect(combinedSource).not.toContain('<div class="contest-overline">主要操作</div>')
-    expect(contestDetailSource).not.toContain('<div class="contest-overline">Current Team</div>')
+    expect(combinedSource).not.toContain('<div class="contest-overline">Current Team</div>')
     expect(contestDetailSource).not.toMatch(/^\.contest-overline\s*\{/m)
   })
 })
