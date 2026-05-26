@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
 import topologyChallengeContextRailSource from '@/components/platform/topology/TopologyChallengeContextRail.vue?raw'
+import topologyChallengeWorkbenchSource from '@/components/platform/topology/TopologyChallengeWorkbench.vue?raw'
 import topologyChallengeWorkspaceHeaderSource from '@/components/platform/topology/TopologyChallengeWorkspaceHeader.vue?raw'
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'
@@ -14,6 +15,7 @@ import topologyNetworkSectionSource from '@/components/platform/topology/Topolog
 import topologyNetworkQuickEditorSource from '@/components/platform/topology/TopologyNetworkQuickEditor.vue?raw'
 import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
 import topologyTemplateHeroSectionSource from '@/components/platform/topology/TopologyTemplateHeroSection.vue?raw'
+import topologyTemplateLibraryHeaderSource from '@/components/platform/topology/TopologyTemplateLibraryHeader.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 import topologyTemplateWorkbenchSource from '@/components/platform/topology/TopologyTemplateWorkbench.vue?raw'
 import topologyStructureMutationsSource from '@/features/challenge-topology-studio/model/useTopologyStructureMutations.ts?raw'
@@ -232,10 +234,12 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('画布工作区应从父页下沉到独立组件，同时保留父页 selection owner', () => {
-    expect(challengeTopologyStudioPageSource).toContain('<TopologyCanvasWorkspaceSection')
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyChallengeWorkbench')
+    expect(challengeTopologyStudioPageSource).not.toContain('<TopologyCanvasWorkspaceSection')
     expect(challengeTopologyStudioPageSource).not.toContain('title="图形画布"')
     expect(challengeTopologyStudioPageSource).not.toContain('<div v-else-if="selectedNodeDraft"')
     expect(challengeTopologyStudioPageSource).not.toContain('<div v-else-if="selectedEdgeMeta"')
+    expect(topologyChallengeWorkbenchSource).toContain('<TopologyCanvasWorkspaceSection')
     expect(topologyCanvasWorkspaceSectionSource).toContain('title="图形画布"')
     expect(topologyCanvasWorkspaceSectionSource).toContain('<TopologyCanvasQuickEditor')
     expect(topologyCanvasWorkspaceSectionSource).toContain("emit('setInteractionMode'")
@@ -255,15 +259,18 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('入口节点卡片应从父页下沉到独立组件，同时保留 entry node owner', () => {
-    expect(challengeTopologyStudioPageSource).toContain('<TopologyEntryNodeSection')
+    expect(challengeTopologyStudioPageSource).not.toContain('<TopologyEntryNodeSection')
     expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="入口节点"')
     expect(challengeTopologyStudioPageSource).not.toContain('v-model="draft.entry_node_key"')
+    expect(topologyChallengeWorkbenchSource).toContain('<TopologyEntryNodeSection')
     expect(topologyEntryNodeSectionSource).toContain('title="入口节点"')
     expect(topologyEntryNodeSectionSource).toContain("emit('updateEntryNodeKey'")
   })
 
   it('challenge context rail 应从父页下沉到独立组件，同时保留导出与模板动作 owner', () => {
-    expect(challengeTopologyStudioPageSource).toContain('<TopologyChallengeContextRail')
+    expect(challengeTopologyStudioPageSource).not.toContain('<TopologyChallengeContextRail')
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyChallengeWorkbench')
+    expect(topologyChallengeWorkbenchSource).toContain('<TopologyChallengeContextRail')
     expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="题包来源"')
     expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="题包文件"')
     expect(challengeTopologyStudioPageSource).not.toContain('SectionCard title="修订历史"')
@@ -276,6 +283,20 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(topologyPackageContextPanelSource).toContain('title="题包文件"')
     expect(topologyPackageContextPanelSource).toContain('title="修订历史"')
     expect(topologyPackageContextPanelSource).toContain("emit('exportPackage')")
+  })
+
+  it('challenge workbench 应从父页下沉到独立组件，同时保留画布与模板动作 owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyChallengeWorkbench')
+    expect(challengeTopologyStudioPageSource).not.toContain('<TopologyNetworkSection')
+    expect(challengeTopologyStudioPageSource).not.toContain('<TopologyNodeSection')
+    expect(challengeTopologyStudioPageSource).not.toContain('<TopologyConnectivitySections')
+    expect(topologyChallengeWorkbenchSource).toContain('<TopologyEntryNodeSection')
+    expect(topologyChallengeWorkbenchSource).toContain('<TopologyNetworkSection')
+    expect(topologyChallengeWorkbenchSource).toContain('<TopologyNodeSection')
+    expect(topologyChallengeWorkbenchSource).toContain('<TopologyConnectivitySections')
+    expect(topologyChallengeWorkbenchSource).toContain("emit('deleteTopology')")
+    expect(topologyChallengeWorkbenchSource).toContain("emit('exportPackage')")
+    expect(topologyChallengeWorkbenchSource).toContain("emit('update:templateKeyword'")
   })
 
   it('template workbench 应从父页下沉到独立组件，同时保留 draft 与模板动作 owner', () => {
@@ -311,6 +332,17 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(topologyChallengeWorkspaceHeaderSource).toContain("emit('back')")
     expect(topologyChallengeWorkspaceHeaderSource).toContain("emit('save')")
     expect(topologyChallengeWorkspaceHeaderSource).toContain('<TopologySummaryGrid')
+  })
+
+  it('template library header 应从父页下沉到独立组件，同时保留重置与刷新动作 owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyTemplateLibraryHeader')
+    expect(challengeTopologyStudioPageSource).not.toContain('<PageHeader')
+    expect(challengeTopologyStudioPageSource).not.toContain('新建空白模板')
+    expect(challengeTopologyStudioPageSource).not.toContain('class="topology-page-header"')
+    expect(topologyTemplateLibraryHeaderSource).toContain('<PageHeader')
+    expect(topologyTemplateLibraryHeaderSource).toContain('新建空白模板')
+    expect(topologyTemplateLibraryHeaderSource).toContain("emit('reset')")
+    expect(topologyTemplateLibraryHeaderSource).toContain("emit('refresh')")
   })
 
   it('draft 变更 script owner 应收口到 feature model', () => {

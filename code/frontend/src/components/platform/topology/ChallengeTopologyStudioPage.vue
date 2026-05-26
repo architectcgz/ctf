@@ -1,9 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import {
-  Plus,
-  RefreshCw,
-} from 'lucide-vue-next'
 
 import {
   useChallengeTopologyStudioPage,
@@ -11,15 +7,10 @@ import {
 } from '@/features/challenge-topology-studio'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import TopologyCanvasWorkspaceSection from './TopologyCanvasWorkspaceSection.vue'
-import TopologyConnectivitySections from './TopologyConnectivitySections.vue'
-import TopologyNetworkSection from './TopologyNetworkSection.vue'
-import TopologyNodeSection from './TopologyNodeSection.vue'
-import TopologyEntryNodeSection from './TopologyEntryNodeSection.vue'
-import TopologyChallengeContextRail from './TopologyChallengeContextRail.vue'
+import TopologyChallengeWorkbench from './TopologyChallengeWorkbench.vue'
 import TopologyChallengeWorkspaceHeader from './TopologyChallengeWorkspaceHeader.vue'
 import TopologyTemplateHeroSection from './TopologyTemplateHeroSection.vue'
+import TopologyTemplateLibraryHeader from './TopologyTemplateLibraryHeader.vue'
 import TopologyTemplateWorkbench from './TopologyTemplateWorkbench.vue'
 
 const props = withDefaults(
@@ -139,30 +130,14 @@ const rootClasses = computed(() => [
 
 <template>
   <div :class="rootClasses">
-    <PageHeader
+    <TopologyTemplateLibraryHeader
       v-if="isTemplateLibraryMode"
-      class="topology-page-header"
       :eyebrow="pageHeader.eyebrow"
       :title="pageHeader.title"
       :description="pageHeader.description"
-    >
-      <button
-        type="button"
-        class="topology-toolbar-btn topology-toolbar-btn--primary"
-        @click="handleResetTemplateEditor"
-      >
-        <Plus class="h-4 w-4" />
-        新建空白模板
-      </button>
-      <button
-        type="button"
-        class="topology-toolbar-btn topology-toolbar-btn--ghost"
-        @click="void reloadAll()"
-      >
-        <RefreshCw class="h-4 w-4" />
-        刷新
-      </button>
-    </PageHeader>
+      @reset="handleResetTemplateEditor"
+      @refresh="void reloadAll()"
+    />
 
     <TopologyChallengeWorkspaceHeader
       v-else
@@ -281,116 +256,86 @@ const rootClasses = computed(() => [
       <template v-else>
         <div class="journal-divider" />
 
-        <main class="content-pane topology-workspace">
-          <div class="topology-primary-column">
-            <TopologyCanvasWorkspaceSection
-              variant="challenge"
-              :interaction-mode="interactionMode"
-              :canvas-mode-label="canvasModeLabel"
-              :selected-canvas-summary="selectedCanvasSummary"
-              :draft-validation-issues="draftValidationIssues"
-              :canvas-graph="canvasGraph"
-              :pending-source-node-key="pendingSourceNodeKey"
-              :selected-node-key="selectedNodeKey"
-              :selected-edge-id="selectedEdgeId"
-              :selected-node-draft="selectedNodeDraft"
-              :has-selected-edge="Boolean(selectedEdgeMeta)"
-              :node-options="nodeOptions"
-              :networks="draft.networks"
-              :images="images"
-              :selected-edge-source-key="selectedEdgeSourceKey"
-              :selected-edge-target-key="selectedEdgeTargetKey"
-              :selected-edge-kind="selectedEdgeKind"
-              @set-interaction-mode="setInteractionMode"
-              @remove-selected-canvas-item="removeSelectedCanvasItem"
-              @select-node="handleCanvasSelectNode"
-              @select-edge="handleCanvasSelectEdge"
-              @create-node-at="handleCanvasCreateNode"
-              @create-edge="handleCanvasCreateEdge"
-              @clear-pending="pendingSourceNodeKey = null"
-              @update-position="updateNodePosition"
-              @update-selected-node-field="updateSelectedNodeField"
-              @update-selected-node-service-port="
-                updateCanvasQuickNumber('service_port', $event, selectedNodeDraft)
-              "
-              @toggle-selected-node-network="
-                toggleSelectedNodeNetwork($event.networkKey, $event.checked)
-              "
-              @update-selected-edge-source-key="updateSelectedEdgeSourceKey"
-              @update-selected-edge-target-key="updateSelectedEdgeTargetKey"
-              @update-selected-edge-kind="handleSelectedEdgeKindChange"
-              @update-network="updateNetworkDraft"
-            />
-
-            <TopologyEntryNodeSection
-              :entry-node-key="draft.entry_node_key"
-              :node-options="nodeOptions"
-              :show-delete-action="true"
-              :delete-disabled="saving || !topology"
-              @update-entry-node-key="updateEntryNodeKey"
-              @delete-topology="void handleDeleteTopology()"
-            />
-
-            <TopologyNetworkSection
-              :networks="draft.networks"
-              add-button-class="ui-btn ui-btn--ghost topology-action-btn"
-              @add-network="addNetwork"
-              @remove-network="removeNetwork"
-              @update-network="updateNetworkDraft"
-            />
-
-            <TopologyNodeSection
-              :nodes="draft.nodes"
-              :images="images"
-              :networks="draft.networks"
-              :selected-node-key="selectedNodeKey"
-              add-button-class="ui-btn ui-btn--ghost topology-action-btn"
-              @add-node="addNode"
-              @remove-node="removeNode"
-              @update-node="updateNodeDraft"
-            />
-
-            <TopologyConnectivitySections
-              :links="draft.links"
-              :policies="draft.policies"
-              :node-options="nodeOptions"
-              add-button-class="ui-btn ui-btn--ghost topology-action-btn"
-              @add-link="addLink"
-              @remove-link="removeLinkDraft"
-              @update-link="updateLinkDraft"
-              @add-policy="addPolicy"
-              @remove-policy="removePolicyDraft"
-              @update-policy="updatePolicyDraft"
-            />
-          </div>
-
-          <TopologyChallengeContextRail
-            v-model:template-keyword="templateKeyword"
-            v-model:template-name="templateName"
-            v-model:template-description="templateDescription"
-            :status-card="statusCard"
-            :secondary-card="secondaryCard"
-            :package-source-summary="packageSourceSummary"
-            :package-baseline-summary="packageBaselineSummary"
-            :package-files="packageFiles"
-            :package-revision-history="packageRevisionHistory"
-            :exporting="exporting"
-            :selected-template-summary="selectedTemplateSummary"
-            :selected-template-id="selectedTemplateId"
-            :templates="templates"
-            :template-busy="templateBusy"
-            @export-package="void handleExportPackage()"
-            @load-template="loadTemplateIntoDraft"
-            @clear-template-selection="clearTemplateSelection"
-            @search-templates="void loadTemplates()"
-            @reset-template-form="resetTemplateForm"
-            @apply-template="(template) => void handleApplyTemplate(template)"
-            @delete-template="(templateId) => void handleDeleteTemplate(templateId)"
-            @reset-template-editor="handleResetTemplateEditor"
-            @create-template="void handleCreateTemplate()"
-            @update-template="void handleUpdateTemplate()"
-          />
-        </main>
+        <TopologyChallengeWorkbench
+          v-model:template-keyword="templateKeyword"
+          v-model:template-name="templateName"
+          v-model:template-description="templateDescription"
+          :interaction-mode="interactionMode"
+          :canvas-mode-label="canvasModeLabel"
+          :selected-canvas-summary="selectedCanvasSummary"
+          :draft-validation-issues="draftValidationIssues"
+          :canvas-graph="canvasGraph"
+          :pending-source-node-key="pendingSourceNodeKey"
+          :selected-node-key="selectedNodeKey"
+          :selected-edge-id="selectedEdgeId"
+          :selected-node-draft="selectedNodeDraft"
+          :has-selected-edge="Boolean(selectedEdgeMeta)"
+          :node-options="nodeOptions"
+          :networks="draft.networks"
+          :images="images"
+          :selected-edge-source-key="selectedEdgeSourceKey"
+          :selected-edge-target-key="selectedEdgeTargetKey"
+          :selected-edge-kind="selectedEdgeKind"
+          :entry-node-key="draft.entry_node_key"
+          :nodes="draft.nodes"
+          :links="draft.links"
+          :policies="draft.policies"
+          :saving="saving"
+          :has-saved-topology="Boolean(topology)"
+          :status-card="statusCard"
+          :secondary-card="secondaryCard"
+          :package-source-summary="packageSourceSummary"
+          :package-baseline-summary="packageBaselineSummary"
+          :package-files="packageFiles"
+          :package-revision-history="packageRevisionHistory"
+          :exporting="exporting"
+          :selected-template-summary="selectedTemplateSummary"
+          :selected-template-id="selectedTemplateId"
+          :templates="templates"
+          :template-busy="templateBusy"
+          @set-interaction-mode="setInteractionMode"
+          @remove-selected-canvas-item="removeSelectedCanvasItem"
+          @select-node="handleCanvasSelectNode"
+          @select-edge="handleCanvasSelectEdge"
+          @create-node-at="handleCanvasCreateNode"
+          @create-edge="handleCanvasCreateEdge"
+          @clear-pending="pendingSourceNodeKey = null"
+          @update-position="updateNodePosition"
+          @update-selected-node-field="updateSelectedNodeField"
+          @update-selected-node-service-port="
+            updateCanvasQuickNumber('service_port', $event, selectedNodeDraft)
+          "
+          @toggle-selected-node-network="
+            toggleSelectedNodeNetwork($event.networkKey, $event.checked)
+          "
+          @update-selected-edge-source-key="updateSelectedEdgeSourceKey"
+          @update-selected-edge-target-key="updateSelectedEdgeTargetKey"
+          @update-selected-edge-kind="handleSelectedEdgeKindChange"
+          @update-network="updateNetworkDraft"
+          @update-entry-node-key="updateEntryNodeKey"
+          @add-node="addNode"
+          @remove-node="removeNode"
+          @update-node="updateNodeDraft"
+          @add-network="addNetwork"
+          @remove-network="removeNetwork"
+          @add-link="addLink"
+          @remove-link="removeLinkDraft"
+          @update-link="updateLinkDraft"
+          @add-policy="addPolicy"
+          @remove-policy="removePolicyDraft"
+          @update-policy="updatePolicyDraft"
+          @delete-topology="void handleDeleteTopology()"
+          @export-package="void handleExportPackage()"
+          @load-template="loadTemplateIntoDraft"
+          @clear-template-selection="clearTemplateSelection"
+          @search-templates="void loadTemplates()"
+          @reset-template-form="resetTemplateForm"
+          @apply-template="(template) => void handleApplyTemplate(template)"
+          @delete-template="(templateId) => void handleDeleteTemplate(templateId)"
+          @reset-template-editor="handleResetTemplateEditor"
+          @create-template="void handleCreateTemplate()"
+          @update-template="void handleUpdateTemplate()"
+        />
       </template>
 
       <AppEmpty
@@ -556,44 +501,6 @@ const rootClasses = computed(() => [
 .topology-action-btn--icon {
   min-width: 2.75rem;
   padding-inline: var(--space-3);
-}
-
-.topology-toolbar-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.45rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--journal-border);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-0-84);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease,
-    color 150ms ease;
-}
-
-.topology-toolbar-btn--ghost {
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  color: var(--journal-ink);
-}
-
-.topology-toolbar-btn--ghost:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
-  color: var(--journal-accent);
-}
-
-.topology-toolbar-btn--primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: var(--color-bg-base);
-}
-
-.topology-toolbar-btn--primary:hover {
-  background: color-mix(in srgb, var(--journal-accent) 88%, var(--color-bg-base));
 }
 
 .topology-mode-btn--allow-active {
