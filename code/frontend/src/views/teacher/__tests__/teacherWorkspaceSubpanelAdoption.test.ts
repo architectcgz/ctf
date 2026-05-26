@@ -2,10 +2,32 @@ import { existsSync, readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import classStudentsSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
-import teacherDashboardSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import classStudentsSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
+import teacherDashboardSourceBase from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import teacherDashboardPortraitPanelSource from '@/components/teacher/dashboard/TeacherDashboardPortraitPanel.vue?raw'
+import teacherDashboardStudentInsightPanelSource from '@/components/teacher/dashboard/TeacherDashboardStudentInsightPanel.vue?raw'
+import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/TeacherDashboardTrendPanel.vue?raw'
+import teacherDashboardReviewPanelSource from '@/components/teacher/dashboard/TeacherDashboardReviewPanel.vue?raw'
+import teacherDashboardInterventionPanelSource from '@/components/teacher/dashboard/TeacherDashboardInterventionPanel.vue?raw'
 
 const teacherWorkspaceSubpanelPath = `${process.cwd()}/src/components/teacher/teacher-workspace-subpanel.css`
+const classStudentsSource = [
+  classStudentsSourceBase,
+  classStudentsOverviewPanelSource,
+  classStudentsInsightWindowPanelSource,
+  classStudentsDirectoryPanelSource,
+].join('\n')
+const teacherDashboardSource = [
+  teacherDashboardSourceBase,
+  teacherDashboardPortraitPanelSource,
+  teacherDashboardStudentInsightPanelSource,
+  teacherDashboardTrendPanelSource,
+  teacherDashboardReviewPanelSource,
+  teacherDashboardInterventionPanelSource,
+].join('\n')
 
 describe('teacher workspace subpanel adoption', () => {
   it('teacher workspace 页面应统一复用共享 subpanel 壳层样式，而不是继续各自维护深选择器块', () => {

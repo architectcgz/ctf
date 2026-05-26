@@ -7,7 +7,10 @@ import teacherClassReviewSource from '@/components/teacher/ClassReviewPanel.vue?
 import teacherClassTrendSource from '@/components/teacher/ClassTrendPanel.vue?raw'
 import interventionPanelSource from '@/components/teacher/InterventionPanel.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
-import classStudentsSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
 import teacherInstanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
@@ -17,6 +20,12 @@ const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
   'utf-8'
 )
+const classStudentsSource = [
+  classStudentsSourceBase,
+  classStudentsOverviewPanelSource,
+  classStudentsInsightWindowPanelSource,
+  classStudentsDirectoryPanelSource,
+].join('\n')
 
 describe('teacher eyebrow shared styles', () => {
   it('应该在 teacher surface 共享样式里声明 teacher 页面和 panel 的 eyebrow 规则', () => {

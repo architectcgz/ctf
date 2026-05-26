@@ -3,7 +3,10 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
-import classStudentsSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
 import studentAnalysisSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
@@ -11,6 +14,16 @@ import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdRev
 import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
+import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue?raw'
+
+const classStudentsSource = [
+  classStudentsSourceBase,
+  classStudentsOverviewPanelSource,
+  classStudentsInsightWindowPanelSource,
+  classStudentsDirectoryPanelSource,
+].join('\n')
+
+const reviewArchiveCombinedSource = [reviewArchiveSource, reviewArchiveWorkspaceSource].join('\n')
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -26,7 +39,7 @@ const teacherSurfaceSources = [
   ['teacher-surface.css', teacherSurfaceSource],
   ['ClassStudentsPage.vue', classStudentsSource],
   ['StudentAnalysisPage.vue', studentAnalysisSource],
-  ['TeacherStudentReviewArchive.vue', reviewArchiveSource],
+  ['TeacherStudentReviewArchive.vue', reviewArchiveCombinedSource],
 ] as const
 
 const teacherManagementSources = [

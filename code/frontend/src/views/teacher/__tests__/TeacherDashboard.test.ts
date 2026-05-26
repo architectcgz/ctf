@@ -4,9 +4,23 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherDashboard from '../TeacherDashboard.vue'
 import teacherDashboardSource from '../TeacherDashboard.vue?raw'
-import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import teacherDashboardPageSourceBase from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import teacherDashboardPortraitPanelSource from '@/components/teacher/dashboard/TeacherDashboardPortraitPanel.vue?raw'
+import teacherDashboardStudentInsightPanelSource from '@/components/teacher/dashboard/TeacherDashboardStudentInsightPanel.vue?raw'
+import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/TeacherDashboardTrendPanel.vue?raw'
+import teacherDashboardReviewPanelSource from '@/components/teacher/dashboard/TeacherDashboardReviewPanel.vue?raw'
+import teacherDashboardInterventionPanelSource from '@/components/teacher/dashboard/TeacherDashboardInterventionPanel.vue?raw'
 import teacherDashboardHookSource from '@/features/teacher-dashboard/model/useDashboardPage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
+
+const teacherDashboardPageSource = [
+  teacherDashboardPageSourceBase,
+  teacherDashboardPortraitPanelSource,
+  teacherDashboardStudentInsightPanelSource,
+  teacherDashboardTrendPanelSource,
+  teacherDashboardReviewPanelSource,
+  teacherDashboardInterventionPanelSource,
+].join('\n')
 
 const pushMock = vi.fn()
 const teacherSurfacePattern =

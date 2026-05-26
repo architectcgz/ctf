@@ -4,7 +4,17 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import PlatformClassStudents from '../PlatformClassStudents.vue'
 import platformClassStudentsSource from '../PlatformClassStudents.vue?raw'
-import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsPageSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
+
+const classStudentsPageSource = [
+  classStudentsPageSourceBase,
+  classStudentsOverviewPanelSource,
+  classStudentsInsightWindowPanelSource,
+  classStudentsDirectoryPanelSource,
+].join('\n')
 import { useAuthStore } from '@/stores/auth'
 
 const ElTable = { template: '<div><slot /></div>' }

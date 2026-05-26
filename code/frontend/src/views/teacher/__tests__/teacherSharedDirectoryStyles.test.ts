@@ -3,7 +3,10 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
-import classStudentsSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 
@@ -11,6 +14,12 @@ const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
   'utf-8'
 )
+const classStudentsSource = [
+  classStudentsSourceBase,
+  classStudentsOverviewPanelSource,
+  classStudentsInsightWindowPanelSource,
+  classStudentsDirectoryPanelSource,
+].join('\n')
 
 function extractScopedStyle(source: string): string {
   const match = source.match(/<style scoped>([\s\S]*?)<\/style>/)

@@ -5,8 +5,18 @@ import { useAuthStore } from '@/stores/auth'
 
 import TeacherClassStudents from '../TeacherClassStudents.vue'
 import teacherClassStudentsSource from '../TeacherClassStudents.vue?raw'
-import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsPageSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
 import classStudentsPageModelSource from '@/features/class-students-workspace/model/useClassStudentsPage.ts?raw'
+
+const classStudentsPageSource = [
+  classStudentsPageSourceBase,
+  classStudentsOverviewPanelSource,
+  classStudentsInsightWindowPanelSource,
+  classStudentsDirectoryPanelSource,
+].join('\n')
 
 const ElTable = { template: '<div><slot /></div>' }
 const ElTableColumn = { template: '<div><slot /></div>' }

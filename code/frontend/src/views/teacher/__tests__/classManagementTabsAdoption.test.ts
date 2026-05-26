@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsPageSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
+
+const classStudentsPageSource = [
+  classStudentsPageSourceBase,
+  classStudentsOverviewPanelSource,
+  classStudentsInsightWindowPanelSource,
+  classStudentsDirectoryPanelSource,
+].join('\n')
 
 describe('class management tabs adoption', () => {
   it('ClassStudentsPage 应复用 useUrlSyncedTabs，而不是继续本地维护 URL 同步与键盘导航状态机', () => {
