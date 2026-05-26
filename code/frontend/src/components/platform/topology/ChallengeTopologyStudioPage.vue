@@ -27,8 +27,8 @@ import TopologyNetworkSection from './TopologyNetworkSection.vue'
 import TopologyNodeSection from './TopologyNodeSection.vue'
 import TopologyEntryNodeSection from './TopologyEntryNodeSection.vue'
 import TopologyChallengeContextRail from './TopologyChallengeContextRail.vue'
-import TopologyStatusNotes from './TopologyStatusNotes.vue'
 import TopologySummaryGrid from './TopologySummaryGrid.vue'
+import TopologyTemplateHeroSection from './TopologyTemplateHeroSection.vue'
 import TopologyTemplateWorkbench from './TopologyTemplateWorkbench.vue'
 
 const props = withDefaults(
@@ -291,28 +291,14 @@ function removePolicyDraft(uid: string) {
 
     <template v-else>
       <section v-if="isTemplateLibraryMode" class="content-pane template-library-main">
-        <section class="topology-hero-grid grid gap-4 xl:grid-cols-[1.04fr_0.96fr]">
-          <div class="topology-hero-lead topology-hero-lead--library">
-            <div class="topology-hero-kicker">
-              <span>{{ heroEyebrow }}</span>
-              <span class="topology-hero-badge">真实接口</span>
-            </div>
-            <h1 class="topology-hero-title">
-              {{ heroTitle }}
-            </h1>
-            <p class="topology-hero-description">
-              {{ heroDescription }}
-            </p>
-
-            <TopologySummaryGrid :summary="topologySummary" mode="template-library" />
-          </div>
-
-          <TopologyStatusNotes
-            mode="template-library"
-            :status-card="statusCard"
-            :secondary-card="secondaryCard"
-          />
-        </section>
+        <TopologyTemplateHeroSection
+          :hero-eyebrow="heroEyebrow"
+          :hero-title="heroTitle"
+          :hero-description="heroDescription"
+          :topology-summary="topologySummary"
+          :status-card="statusCard"
+          :secondary-card="secondaryCard"
+        />
 
         <div class="template-library-divider" />
 

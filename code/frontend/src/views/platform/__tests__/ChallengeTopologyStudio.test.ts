@@ -12,6 +12,7 @@ import topologyPackageContextPanelSource from '@/components/platform/topology/To
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
 import topologyNetworkQuickEditorSource from '@/components/platform/topology/TopologyNetworkQuickEditor.vue?raw'
 import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
+import topologyTemplateHeroSectionSource from '@/components/platform/topology/TopologyTemplateHeroSection.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 import topologyTemplateWorkbenchSource from '@/components/platform/topology/TopologyTemplateWorkbench.vue?raw'
 import challengeTopologyStudioRouteSource from '../ChallengeTopologyStudio.vue?raw'
@@ -287,6 +288,16 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(topologyTemplateWorkbenchSource).toContain('<TopologyTemplateSidePanel')
     expect(topologyTemplateWorkbenchSource).toContain("emit('update:activeWorkbenchTab'")
     expect(topologyTemplateWorkbenchSource).toContain("emit('loadTemplate'")
+  })
+
+  it('template hero 应从父页下沉到独立组件，同时保留 summary 与 status 数据 owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyTemplateHeroSection')
+    expect(challengeTopologyStudioPageSource).not.toContain('class="topology-hero-grid')
+    expect(challengeTopologyStudioPageSource).not.toContain('class="topology-hero-kicker"')
+    expect(topologyTemplateHeroSectionSource).toContain('class="topology-hero-grid')
+    expect(topologyTemplateHeroSectionSource).toContain('真实接口')
+    expect(topologyTemplateHeroSectionSource).toContain('<TopologySummaryGrid')
+    expect(topologyTemplateHeroSectionSource).toContain('<TopologyStatusNotes')
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {
