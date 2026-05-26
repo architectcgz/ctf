@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestAwdConfig from '../ContestAwdConfig.vue'
 import contestAwdConfigSource from '../ContestAwdConfig.vue?raw'
+import contestAwdConfigWorkspaceShellSource from '@/components/platform/contest/ContestAwdConfigWorkspaceShell.vue?raw'
 import contestAwdConfigPageSource from '@/features/contest-awd-config/model/useContestAwdConfigPage.ts?raw'
 
 const pushMock = vi.fn()
@@ -110,6 +111,11 @@ function mountPage() {
 }
 
 describe('ContestAwdConfig', () => {
+  const contestAwdConfigWorkspaceSource = [
+    contestAwdConfigSource,
+    contestAwdConfigWorkspaceShellSource,
+  ].join('\n')
+
   beforeEach(() => {
     pushMock.mockReset()
     replaceMock.mockReset()
@@ -136,19 +142,22 @@ describe('ContestAwdConfig', () => {
     )
     expect(contestAwdConfigSource).not.toContain("from '@/api/admin/contests'")
     expect(contestAwdConfigSource).toContain(
+      "import ContestAwdConfigWorkspaceShell from '@/components/platform/contest/ContestAwdConfigWorkspaceShell.vue'"
+    )
+    expect(contestAwdConfigWorkspaceSource).toContain(
       "import ContestAwdConfigTopbar from '@/components/platform/contest/ContestAwdConfigTopbar.vue'"
     )
-    expect(contestAwdConfigSource).toContain(
+    expect(contestAwdConfigWorkspaceSource).toContain(
       "import ContestAwdServiceDirectory from '@/components/platform/contest/ContestAwdServiceDirectory.vue'"
     )
-    expect(contestAwdConfigSource).toContain(
+    expect(contestAwdConfigWorkspaceSource).toContain(
       "import ContestAwdDebugStation from '@/components/platform/contest/ContestAwdDebugStation.vue'"
     )
-    expect(contestAwdConfigSource).toContain(
+    expect(contestAwdConfigWorkspaceSource).toContain(
       "import ContestAwdConfigFooter from '@/components/platform/contest/ContestAwdConfigFooter.vue'"
     )
-    expect(contestAwdConfigSource).toContain('<ContestAwdServiceDirectory')
-    expect(contestAwdConfigSource).toContain('<ContestAwdDebugStation')
+    expect(contestAwdConfigWorkspaceSource).toContain('<ContestAwdServiceDirectory')
+    expect(contestAwdConfigWorkspaceSource).toContain('<ContestAwdDebugStation')
     expect(contestAwdConfigPageSource).not.toContain(
       "from '@/components/platform/contest/awdCheckerConfigSupport'"
     )

@@ -1,8 +1,6 @@
 export const viewLineLimit = 500
 
-export const oversizedViewAllowlist = new Set([
-  'views/platform/ContestAwdConfig.vue',
-])
+export const oversizedViewAllowlist = new Set<string>([])
 
 export const componentFeatureImportAllowlist = new Set([
   'components/challenge/ChallengeWorkspaceShell.vue -> @/features/challenge-detail',
