@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Sword } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AWDDefenseColumn from '@/components/contests/awd/AWDDefenseColumn.vue'
-import AWDAttackTargetGrid from '@/components/contests/awd/AWDAttackTargetGrid.vue'
-import AWDAttackResultFooter from '@/components/contests/awd/AWDAttackResultFooter.vue'
-import AWDAttackToolbar from '@/components/contests/awd/AWDAttackToolbar.vue'
+import AWDAttackVectorPanel from '@/components/contests/awd/AWDAttackVectorPanel.vue'
 import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip.vue'
 import AWDWorkspaceIntelColumn from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
@@ -443,48 +440,26 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
       <!-- 2. Attack Vector (Middle) -->
       <main class="war-room-col column-attack">
-        <section class="ops-panel">
-          <header class="ops-panel__header">
-            <Sword class="ops-panel__icon ops-panel__icon--danger h-4 w-4" />
-            <h3 class="ops-panel__title">攻击向量</h3>
-          </header>
-
-          <AWDAttackToolbar
-            :challenge-options="attackToolbarChallengeOptions"
-            :active-challenge-key="activeChallengeKey"
-            :target-keyword="targetKeyword"
-            @update:active-challenge-key="activeChallengeKey = $event"
-            @update:target-keyword="targetKeyword = $event"
-          />
-
-          <div class="ops-panel__content custom-scrollbar">
-            <div v-if="runtimeChallenges.length === 0" class="panel-note">
-              当前竞赛暂无可部署服务。
-            </div>
-            <div v-else-if="!activeChallenge" class="panel-note">请选择目标题目后开始攻击。</div>
-            <div v-else-if="filteredTargets.length === 0" class="panel-note">
-              当前题目下没有匹配的目标队伍。
-            </div>
-            <AWDAttackTargetGrid
-              v-else
-              :targets="filteredTargets"
-              :active-challenge-runtime-key="activeChallengeRuntimeKey"
-              :opening-target-key="openingTargetKey"
-              :submitting-key="submittingKey"
-              :flag-inputs="flagInputs"
-              :format-service-ref="formatServiceRef"
-              @open-target="openTarget(activeChallengeRuntimeKey, $event)"
-              @update-flag="flagInputs[$event.stateKey] = $event.value"
-              @submit="handleSubmit(activeChallengeRuntimeKey, $event)"
-            />
-          </div>
-
-          <AWDAttackResultFooter
-            v-if="submitResult"
-            :success="submitResult.is_success"
-            :message="getSubmitResultMessage()"
-          />
-        </section>
+        <AWDAttackVectorPanel
+          :challenge-options="attackToolbarChallengeOptions"
+          :active-challenge-key="activeChallengeKey"
+          :target-keyword="targetKeyword"
+          :has-active-challenge="Boolean(activeChallenge)"
+          :targets="filteredTargets"
+          :active-challenge-runtime-key="activeChallengeRuntimeKey"
+          :opening-target-key="openingTargetKey"
+          :submitting-key="submittingKey"
+          :flag-inputs="flagInputs"
+          :show-result="Boolean(submitResult)"
+          :result-success="submitResult?.is_success ?? false"
+          :result-message="getSubmitResultMessage()"
+          :format-service-ref="formatServiceRef"
+          @update:active-challenge-key="activeChallengeKey = $event"
+          @update:target-keyword="targetKeyword = $event"
+          @open-target="openTarget(activeChallengeRuntimeKey, $event)"
+          @update-flag="flagInputs[$event.stateKey] = $event.value"
+          @submit="handleSubmit(activeChallengeRuntimeKey, $event)"
+        />
       </main>
 
       <AWDWorkspaceIntelColumn
@@ -508,10 +483,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
   padding-top: var(--space-4);
 }
 
-.ops-panel__icon--danger {
-  color: var(--color-danger);
-}
-
 /* Layout Grid */
 .war-room-grid {
   display: grid;
@@ -527,56 +498,6 @@ async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
 
 .column-attack {
   grid-area: attack;
-}
-
-.ops-panel {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  border-radius: 1rem;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  box-shadow: var(--color-shadow-soft);
-  overflow: hidden;
-}
-
-.ops-panel__header {
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--color-border-subtle);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: var(--color-bg-elevated);
-}
-
-.ops-panel__title {
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.15em;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.ops-panel__content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.25rem;
-}
-
-.target-ref {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-}
-
-/* Attack Components */
-.panel-note {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  text-align: center;
-  padding: 3rem 0;
 }
 
 .war-room-loading {
