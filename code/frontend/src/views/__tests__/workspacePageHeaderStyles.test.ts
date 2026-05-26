@@ -14,6 +14,7 @@ import challengePackageFormatSource from '@/views/platform/ChallengePackageForma
 import challengeImportManageSource from '@/views/platform/ChallengeImportManage.vue?raw'
 import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
@@ -62,6 +63,7 @@ const challengeDetailWorkspaceSource = [
   challengeSolutionsPanelSource,
 ].join('\n')
 const contestDetailWorkspaceSource = `${contestDetailSource}\n${contestOverviewPanelSource}`
+const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
@@ -158,7 +160,7 @@ describe('workspace page header styles', () => {
     expectNoLocalTitleTypography(imageManageSource, '.image-title')
     expectNoLocalTitleTypography(challengePackageFormatSource, '.hero-title')
     expectNoLocalTitleTypography(cheatDetectionSource, '.hero-title')
-    expectNoLocalTitleTypography(skillProfileSource, '.journal-page-title')
+    expectNoLocalTitleTypography(skillProfileWorkspaceSource, '.journal-page-title')
     expectNoLocalTitleTypography(classManagementPageSource, '.teacher-title')
     expectNoLocalTitleTypography(classStudentsPageSource, '.teacher-title')
     expectNoLocalTitleTypography(studentAnalysisPageSource, '.teacher-title')

@@ -60,6 +60,7 @@ import topologySummaryGridSource from '@/components/platform/topology/TopologySu
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
@@ -73,6 +74,7 @@ import skillProfileUtilsSource from '@/utils/skillProfile.ts?raw'
 import challengeUtilsSource from '@/utils/challenge.ts?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 
+const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 function expectNoHardcodedThemeTokens(
@@ -249,7 +251,9 @@ describe('shared theme token adoption', () => {
     expectNoHardcodedThemeTokens(studentCategoryProgressSource, 'StudentCategoryProgressPage', [
       '#0ea5e9',
     ])
-    expectNoHardcodedThemeTokens(skillProfileSource, 'SkillProfile', ['rgba(148, 163, 184, 0.2)'])
+    expectNoHardcodedThemeTokens(skillProfileWorkspaceSource, 'SkillProfile', [
+      'rgba(148, 163, 184, 0.2)',
+    ])
   })
 
   it('挑战与榜单页不应回退到旧色值', () => {

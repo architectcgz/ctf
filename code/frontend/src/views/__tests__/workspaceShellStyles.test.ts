@@ -36,6 +36,7 @@ import imageManageHeroPanelSource from '@/components/platform/images/ImageManage
 import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
 import userGovernanceSource from '@/components/platform/user/UserGovernancePage.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
@@ -48,6 +49,7 @@ const workspaceShellStylesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,
   'utf-8'
 )
+const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 function escapeRegExp(value: string): string {
@@ -200,11 +202,11 @@ describe('workspace shell shared styles', () => {
       'class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"'
     )
 
-    expect(skillProfileSource).not.toContain(
+    expect(skillProfileWorkspaceSource).not.toContain(
       '<div class="skill-section-kicker">Radar Analysis</div>'
     )
-    expect(skillProfileSource).not.toContain('<div class="skill-section-kicker">Weak Points</div>')
-    expect(skillProfileSource).not.toContain(
+    expect(skillProfileWorkspaceSource).not.toContain('<div class="skill-section-kicker">Weak Points</div>')
+    expect(skillProfileWorkspaceSource).not.toContain(
       '<div class="skill-section-kicker">Recommendations</div>'
     )
 

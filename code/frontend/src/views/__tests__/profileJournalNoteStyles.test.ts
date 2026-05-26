@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 
@@ -11,6 +12,7 @@ const journalNotesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-notes.css`,
   'utf-8'
 )
+const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 describe('profile journal note shared styles', () => {
@@ -21,7 +23,11 @@ describe('profile journal note shared styles', () => {
   })
 
   it('profile 页面不应继续在局部样式里重写共享的基础 note 规则', () => {
-    for (const source of [userProfileWorkspaceSource, skillProfileSource, securitySettingsSource]) {
+    for (const source of [
+      userProfileWorkspaceSource,
+      skillProfileWorkspaceSource,
+      securitySettingsSource,
+    ]) {
       expect(source).not.toMatch(/^\.journal-eyebrow-soft\s*\{/m)
       expect(source).not.toMatch(/^\.journal-note-label\s*\{/m)
       expect(source).not.toMatch(/^\.journal-note-helper\s*\{/m)

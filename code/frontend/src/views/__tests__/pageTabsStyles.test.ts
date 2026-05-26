@@ -7,6 +7,7 @@ import classManagementSource from '@/components/teacher/class-management/ClassMa
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import challengeWorkspaceShellSource from '@/components/challenge/ChallengeWorkspaceShell.vue?raw'
 import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'
+import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
@@ -14,6 +15,7 @@ import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 const themeSource = readFileSync(`${process.cwd()}/src/assets/styles/theme.css`, 'utf-8')
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
 const globalStyleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
+const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 
 describe('page tabs shared styles', () => {
   it('应该在共享样式里声明通用页签轨道样式', () => {
@@ -55,7 +57,7 @@ describe('page tabs shared styles', () => {
     for (const source of [
       challengeWorkspaceShellSource,
       scoreboardWorkspaceShellSource,
-      skillProfileSource,
+      skillProfileWorkspaceSource,
     ].filter((source) => source.includes('class="workspace-tabbar top-tabs"'))) {
       expect(source).not.toContain('--page-top-tabs-gap: var(--space-7);')
       expect(source).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')

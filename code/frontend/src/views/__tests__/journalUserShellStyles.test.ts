@@ -11,6 +11,7 @@ import notificationDetailSource from '@/views/notifications/NotificationDetail.v
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
@@ -27,6 +28,7 @@ const workspaceShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,
   'utf-8'
 )
+const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 function extractScopedStyle(source: string): string {
@@ -58,7 +60,7 @@ describe('journal user shell shared styles', () => {
       notificationListSource,
       scoreboardSource,
       securitySettingsSource,
-      skillProfileSource,
+      skillProfileWorkspaceSource,
       userProfileWorkspaceSource,
     ]) {
       expect(source).toContain('journal-shell-user')
@@ -76,7 +78,7 @@ describe('journal user shell shared styles', () => {
       notificationListSource,
       scoreboardSource,
       securitySettingsSource,
-      skillProfileSource,
+      skillProfileWorkspaceSource,
       userProfileWorkspaceSource,
     ]) {
       expect(extractScopedStyle(source)).not.toMatch(/^\.journal-hero\s*\{/m)

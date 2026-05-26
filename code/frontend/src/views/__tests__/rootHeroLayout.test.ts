@@ -6,6 +6,7 @@ import instanceListSource from '../instances/InstanceList.vue?raw'
 import notificationListSource from '../notifications/NotificationList.vue?raw'
 import securitySettingsSource from '../profile/SecuritySettings.vue?raw'
 import skillProfileSource from '../profile/SkillProfile.vue?raw'
+import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import userProfileSource from '../profile/UserProfile.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import scoreboardViewSource from '../scoreboard/ScoreboardView.vue?raw'
@@ -17,6 +18,7 @@ import timelinePageSource from '../../components/dashboard/student/StudentTimeli
 
 describe('full-bleed hero roots', () => {
   it('uses a section root that carries the hero background', () => {
+    const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
     const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
     const sources = [
       challengeListSource,
@@ -25,7 +27,7 @@ describe('full-bleed hero roots', () => {
       notificationListSource,
       scoreboardViewSource,
       securitySettingsSource,
-      skillProfileSource,
+      skillProfileWorkspaceSource,
       userProfileWorkspaceSource,
       recommendationPageSource,
       categoryProgressSource,

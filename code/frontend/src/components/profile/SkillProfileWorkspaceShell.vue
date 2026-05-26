@@ -1,0 +1,784 @@
+<template>
+  <section
+    class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
+  >
+    <main
+      v-if="loading"
+      class="content-pane"
+    >
+      <div class="space-y-6">
+        <div class="space-y-6">
+          <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90" />
+          <div class="grid gap-6 xl:grid-cols-[minmax(0,1.06fr)_minmax(300px,0.94fr)]">
+            <div class="skill-loading-card h-80 animate-pulse bg-[var(--journal-surface)]" />
+            <div class="skill-loading-card h-80 animate-pulse bg-[var(--journal-surface)]" />
+          </div>
+          <div class="skill-loading-card h-56 animate-pulse bg-[var(--journal-surface)]" />
+          <div class="skill-loading-card h-56 animate-pulse bg-[var(--journal-surface)]" />
+        </div>
+      </div>
+    </main>
+
+    <main
+      v-else-if="error"
+      class="content-pane"
+    >
+      <div class="py-8 text-center">
+        <TriangleAlert class="skill-error-icon mx-auto h-10 w-10" />
+        <p class="skill-error-copy mt-3 text-sm">
+          {{ error }}
+        </p>
+        <button
+          type="button"
+          class="journal-btn journal-btn--primary mt-4"
+          @click="emit('load-current-data')"
+        >
+          重试
+        </button>
+      </div>
+    </main>
+
+    <main
+      v-else-if="!skillProfile"
+      class="content-pane"
+    >
+      <AppEmpty
+        title="暂无六维画像数据"
+        description="完成更多靶场题目后，系统将为你生成六维学习画像。"
+        icon="Radar"
+      />
+    </main>
+
+    <div
+      v-else
+      class="skill-profile-page"
+    >
+      <nav
+        class="workspace-tabbar top-tabs"
+        role="tablist"
+        aria-label="六维画像内容切换"
+      >
+        <button
+          v-for="(tab, index) in contentTabs"
+          :id="tab.buttonId"
+          :key="tab.key"
+          :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
+          class="workspace-tab top-tab"
+          :class="{ active: activeTab === tab.key }"
+          type="button"
+          role="tab"
+          :tabindex="activeTab === tab.key ? 0 : -1"
+          :aria-selected="activeTab === tab.key ? 'true' : 'false'"
+          :aria-controls="tab.panelId"
+          @click="emit('select-tab', tab.key)"
+          @keydown="handleTabKeydown($event, index)"
+        >
+          {{ tab.label }}
+        </button>
+      </nav>
+
+      <main class="content-pane">
+        <div class="skill-profile-content">
+          <div
+            v-if="isTeacher"
+            class="skill-teacher-panel"
+          >
+            <div class="skill-section-kicker">Teacher View</div>
+            <h3 class="workspace-tab-heading__title">查看学员六维画像</h3>
+            <label
+              for="skill-student-select"
+              class="skill-field-label mt-3 block"
+            >
+              选择学员
+            </label>
+            <div class="ui-control-wrap mt-2 w-full max-w-sm">
+              <select
+                id="skill-student-select"
+                :value="selectedStudentId"
+                class="ui-control"
+                @change="handleStudentSelectionChange"
+              >
+                <option value="">我的六维画像</option>
+                <option
+                  v-for="student in students"
+                  :key="student.id"
+                  :value="student.id"
+                >
+                  {{ student.name || student.username }} ({{ student.username }})
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="skill-board px-1 md:px-2">
+            <section
+              v-show="activeTab === 'analysis'"
+              id="skill-profile-panel-analysis"
+              class="tab-panel skill-section"
+              :class="{ active: activeTab === 'analysis' }"
+              role="tabpanel"
+              aria-labelledby="skill-profile-tab-analysis"
+              :aria-hidden="activeTab === 'analysis' ? 'false' : 'true'"
+            >
+              <div class="skill-analysis-stack">
+                <div>
+                  <div class="skill-overview-head">
+                    <div class="workspace-overline">
+                      Analysis
+                    </div>
+                    <h1 class="journal-page-title workspace-page-title skill-page-title">
+                      六维学习画像
+                    </h1>
+                    <p class="skill-overview-copy workspace-page-copy">
+                      查看当前六个能力维度的训练分布，并根据薄弱维度获取推荐靶场。
+                    </p>
+                    <div
+                      class="skill-overview-actions"
+                      role="group"
+                      aria-label="六维画像快捷操作"
+                    >
+                      <button
+                        type="button"
+                        class="journal-btn"
+                        @click="emit('load-current-data')"
+                      >
+                        刷新
+                      </button>
+                      <button
+                        type="button"
+                        class="journal-btn journal-btn--primary"
+                        @click="emit('go-to-challenges')"
+                      >
+                        去做题
+                      </button>
+                    </div>
+                  </div>
+
+                  <h3 class="workspace-tab-heading__title">六维分布分析</h3>
+
+                  <div class="skill-dimension-wrap mt-5">
+                    <div class="skill-dimension-list mt-2">
+                      <div class="skill-dimension-chart">
+                        <div class="skill-dimension-chart__frame">
+                          <div class="skill-dimension-chart__inner">
+                            <RadarChart
+                              :indicators="radarIndicators"
+                              :values="radarValues"
+                              name="维度得分"
+                              :height-class="skillRadarHeightClass"
+                              :label-font-size="20"
+                              :axis-name-gap="12"
+                              radius="74%"
+                              center-y="50%"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="skill-dimension-legend">
+                        <article
+                          v-for="dim in skillProfile.dimensions"
+                          :key="dim.name"
+                          class="skill-dimension-legend__item"
+                        >
+                          <div class="min-w-0">
+                            <div class="skill-dimension-legend__name">
+                              {{ dim.name }}
+                            </div>
+                            <div class="skill-dimension-legend__hint mt-1">当前维度表现</div>
+                          </div>
+                          <div class="text-right">
+                            <div class="skill-dimension-legend__score tech-font">
+                              {{ dim.value }}
+                            </div>
+                            <div class="skill-dimension-legend__total text-xs">/ 100</div>
+                          </div>
+                        </article>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section
+              v-show="activeTab === 'weakness'"
+              id="skill-profile-panel-weakness"
+              class="tab-panel skill-section"
+              :class="{ active: activeTab === 'weakness' }"
+              role="tabpanel"
+              aria-labelledby="skill-profile-tab-weakness"
+              :aria-hidden="activeTab === 'weakness' ? 'false' : 'true'"
+            >
+              <div class="skill-weak-wrap">
+                <div class="workspace-overline">
+                  Weakness
+                </div>
+                <div class="skill-weak-title mt-3 flex items-center gap-3 text-base font-semibold">
+                  <Flame class="skill-weak-title__icon h-5 w-5" />
+                  薄弱维度提示
+                </div>
+                <div
+                  v-if="weakDimensions.length > 0"
+                  class="skill-weak-list mt-5"
+                >
+                  <div
+                    v-for="dim in weakDimensions.slice(0, 4)"
+                    :key="dim"
+                    class="skill-weak-item"
+                  >
+                    <div class="journal-note-label">建议加强</div>
+                    <div class="skill-weak-dimension mt-2 text-sm font-semibold">
+                      <ChallengeCategoryPill
+                        v-if="weakDimensionCategory(dim)"
+                        :category="weakDimensionCategory(dim)!"
+                      />
+                      <span v-else>{{ dim }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  v-else
+                  class="skill-weak-list mt-5"
+                >
+                  <div class="skill-weak-item">
+                    <div class="journal-note-label">当前状态</div>
+                    <div class="skill-weak-dimension mt-2 text-sm font-semibold">
+                      暂时没有明显短板
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section
+              v-show="activeTab === 'recommendations'"
+              id="skill-profile-panel-recommendations"
+              class="tab-panel skill-section"
+              :class="{ active: activeTab === 'recommendations' }"
+              role="tabpanel"
+              aria-labelledby="skill-profile-tab-recommendations"
+              :aria-hidden="activeTab === 'recommendations' ? 'false' : 'true'"
+            >
+              <div class="workspace-overline">
+                Recommendations
+              </div>
+              <h3 class="workspace-tab-heading__title">推荐靶场</h3>
+              <p class="skill-section-copy mt-2 text-sm leading-6">优先从当前最匹配的题目开始。</p>
+
+              <div
+                v-if="loadingRecommendations"
+                class="skill-recommend-feedback skill-recommend-feedback--loading mt-6 flex items-center gap-3 text-sm"
+              >
+                <Loader2 class="h-4 w-4 animate-spin" />
+                加载推荐中…
+              </div>
+
+              <div
+                v-else-if="recommendations.length === 0"
+                class="skill-recommend-feedback mt-6 text-sm"
+              >
+                暂无推荐靶场，完成更多题目后会自动生成。
+              </div>
+
+              <div
+                v-else
+                class="skill-recommend-list mt-5"
+              >
+                <button
+                  v-for="item in recommendations"
+                  :key="item.challenge_id"
+                  type="button"
+                  class="skill-recommend-item w-full text-left"
+                  @click="emit('go-to-challenge', item.challenge_id)"
+                >
+                  <div class="flex items-center justify-between gap-4">
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="skill-recommend-title text-sm font-semibold">{{
+                          item.title
+                        }}</span>
+                        <ChallengeCategoryDifficultyPills
+                          :category="item.category"
+                          :difficulty="item.difficulty"
+                        />
+                      </div>
+                      <p class="skill-recommend-reason mt-1 text-xs leading-5">
+                        {{ item.summary }}
+                      </p>
+                      <p
+                        v-if="item.evidence"
+                        class="skill-recommend-evidence mt-2 text-xs leading-5"
+                      >
+                        {{ item.evidence }}
+                      </p>
+                    </div>
+                    <ChevronRight class="skill-recommend-arrow h-4 w-4 shrink-0" />
+                  </div>
+                </button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { ChevronRight, Flame, Loader2, TriangleAlert } from 'lucide-vue-next'
+
+import RadarChart from '@/components/charts/RadarChart.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import {
+  ChallengeCategoryDifficultyPills,
+  ChallengeCategoryPill,
+  toChallengeCategory,
+} from '@/entities/challenge'
+import type { RecommendationItem, SkillProfileData, TeacherStudentItem } from '@/api/contracts'
+
+type SkillProfileTabKey = 'analysis' | 'weakness' | 'recommendations'
+
+interface SkillProfileContentTab {
+  key: SkillProfileTabKey
+  label: string
+  buttonId: string
+  panelId: string
+}
+
+interface Props {
+  isTeacher: boolean
+  selectedStudentId: string
+  students: TeacherStudentItem[]
+  loading: boolean
+  error: string | null
+  skillProfile: SkillProfileData | null
+  loadingRecommendations: boolean
+  recommendations: RecommendationItem[]
+  weakDimensions: string[]
+  radarIndicators: Array<{ name: string; max: number }>
+  radarValues: number[]
+  activeTab: SkillProfileTabKey
+  contentTabs: SkillProfileContentTab[]
+  setTabButtonRef: (key: SkillProfileTabKey, element: HTMLButtonElement | null) => void
+  handleTabKeydown: (event: KeyboardEvent, index: number) => void
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  'load-current-data': []
+  'go-to-challenges': []
+  'go-to-challenge': [challengeId: string]
+  'select-tab': [tabKey: SkillProfileTabKey]
+  'update-selected-student-id': [studentId: string]
+}>()
+
+function weakDimensionCategory(value: string) {
+  return toChallengeCategory(value)
+}
+
+function handleStudentSelectionChange(event: Event) {
+  emit('update-selected-student-id', (event.target as HTMLSelectElement).value)
+}
+
+const skillRadarHeightClass = 'skill-radar-height'
+</script>
+
+<style scoped>
+.journal-shell {
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
+  --journal-shell-accent: var(--color-primary);
+  --journal-shell-accent-strong: color-mix(
+    in srgb,
+    var(--color-primary-hover) 82%,
+    var(--journal-ink)
+  );
+  --workspace-tabs-panel-gap: var(--space-4);
+  --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-surface) 74%,
+    var(--color-bg-base)
+  );
+  --journal-shell-hero-radial-strength: 12%;
+  --journal-shell-hero-radial-size: 20rem;
+  --journal-shell-hero-end: color-mix(
+    in srgb,
+    var(--journal-surface-subtle, var(--color-bg-elevated)) 94%,
+    var(--color-bg-base)
+  );
+  --journal-shell-dark-ink: var(--color-text-primary);
+  --journal-shell-dark-muted: var(--color-text-secondary);
+  --journal-shell-dark-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-dark-surface: color-mix(
+    in srgb,
+    var(--color-bg-surface) 88%,
+    var(--color-bg-base)
+  );
+  --journal-shell-dark-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-surface) 74%,
+    var(--color-bg-base)
+  );
+  --journal-shell-dark-hero-radial-strength: 16%;
+  --journal-user-button-height: 34px;
+  --journal-user-button-radius: 12px;
+  --journal-user-button-border: var(--journal-control-border);
+  --journal-user-button-background: transparent;
+  --journal-user-button-padding: 0.5rem 1rem;
+  --journal-user-button-size: 0.875rem;
+  --journal-user-button-weight: 500;
+  --journal-user-button-color: var(--color-text-primary);
+  --journal-user-button-hover-border: color-mix(
+    in srgb,
+    var(--journal-accent) 52%,
+    var(--journal-control-border)
+  );
+  --journal-user-button-hover-background: transparent;
+  --journal-user-button-hover-color: var(--journal-accent-strong);
+  --journal-user-button-primary-border: color-mix(in srgb, var(--journal-accent) 50%, transparent);
+  --journal-user-button-primary-background: color-mix(
+    in srgb,
+    var(--journal-accent) 8%,
+    transparent
+  );
+  --journal-user-button-primary-color: var(--journal-accent-strong);
+  --journal-user-button-primary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 14%,
+    transparent
+  );
+  --journal-user-tech-font: var(--font-family-mono);
+  font-family: var(--font-family-sans);
+}
+
+.skill-error-icon,
+.skill-error-copy {
+  color: var(--color-danger);
+}
+
+.skill-loading-card {
+  border-radius: 1.5rem;
+}
+
+.skill-page-title,
+.skill-weak-title,
+.skill-weak-dimension,
+.skill-recommend-title {
+  color: var(--journal-ink);
+}
+
+.skill-profile-page {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.skill-profile-content {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--workspace-tabs-panel-gap);
+}
+
+.skill-teacher-panel {
+  border-radius: 22px;
+  border: 1px solid var(--journal-shell-border);
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
+  padding: 1rem 1.1rem;
+}
+
+.skill-field-label {
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.skill-section-kicker {
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.skill-overview-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-bottom: 1.75rem;
+}
+
+.skill-overview-copy {
+  max-width: 42rem;
+  color: var(--journal-muted);
+}
+
+.skill-overview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.skill-analysis-stack {
+  display: block;
+}
+
+.skill-board {
+  min-width: 0;
+}
+
+.skill-dimension-wrap {
+  margin-top: 1.25rem;
+}
+
+.skill-recommend-list,
+.skill-weak-list {
+  border-radius: 22px;
+  border: 1px solid var(--journal-shell-border);
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
+}
+
+.skill-weak-item,
+.skill-recommend-item {
+  padding: 1rem 1.1rem;
+}
+
+.skill-weak-item + .skill-weak-item,
+.skill-recommend-item + .skill-recommend-item {
+  border-top: 1px solid var(--journal-divider);
+}
+
+.skill-dimension-list {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.skill-dimension-chart__frame {
+  position: relative;
+  margin: 0 auto;
+  width: min(100%, 520px);
+  aspect-ratio: 1.04;
+  overflow: visible;
+}
+
+.skill-dimension-chart__frame::before,
+.skill-dimension-chart__frame::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.skill-dimension-chart__frame::before {
+  inset: 0;
+  clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 94%, var(--color-bg-base)),
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 96%,
+        var(--color-bg-base)
+      )
+    ),
+    linear-gradient(135deg, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent);
+  border: 1px solid var(--journal-shell-border);
+}
+
+.skill-dimension-chart__frame::after {
+  inset: 18px;
+  clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
+  border: 1px solid
+    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 78%, transparent);
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 76%, var(--color-bg-base));
+}
+
+.skill-dimension-chart__inner {
+  position: absolute;
+  inset: 18px;
+  z-index: 1;
+}
+
+.skill-radar-height {
+  height: 30rem;
+}
+
+.skill-dimension-legend__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.skill-dimension-legend__hint {
+  font-size: 0.8rem;
+  color: var(--journal-muted);
+}
+
+.skill-dimension-legend__score {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink);
+}
+
+.skill-dimension-legend__total,
+.skill-section-copy,
+.skill-recommend-feedback,
+.skill-recommend-reason,
+.skill-recommend-evidence {
+  color: var(--journal-muted);
+}
+
+.skill-weak-title__icon {
+  color: var(--journal-accent);
+}
+
+.skill-recommend-arrow {
+  color: var(--journal-accent-strong);
+}
+
+.skill-dimension-legend {
+  display: grid;
+  gap: 0;
+}
+
+.skill-dimension-legend__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.2rem;
+}
+
+@media (min-width: 640px) {
+  .skill-dimension-legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .skill-dimension-legend__item {
+    min-height: 100%;
+  }
+
+  .skill-dimension-legend__item:nth-child(n + 3) {
+    border-top: 1px solid var(--journal-divider);
+  }
+
+  .skill-dimension-legend__item:nth-child(2n) {
+    border-left: 1px solid var(--journal-divider);
+  }
+}
+
+@media (max-width: 639px) {
+  .skill-dimension-legend__item + .skill-dimension-legend__item {
+    border-top: 1px solid var(--journal-divider);
+  }
+}
+
+@media (min-width: 1024px) {
+  .skill-dimension-list {
+    grid-template-columns: minmax(0, 1.18fr) minmax(260px, 0.82fr);
+    align-items: center;
+  }
+}
+
+@media (min-width: 768px) {
+  .skill-radar-height {
+    height: 34rem;
+  }
+
+  .skill-weak-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .skill-weak-item + .skill-weak-item {
+    border-top: 0;
+  }
+
+  .skill-weak-item:nth-child(n + 3) {
+    border-top: 1px solid var(--journal-divider);
+  }
+
+  .skill-weak-item:nth-child(2n) {
+    border-left: 1px solid var(--journal-divider);
+  }
+}
+
+:global([data-theme='dark']) .skill-teacher-panel,
+:global([data-theme='dark']) .skill-recommend-list,
+:global([data-theme='dark']) .skill-weak-list {
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+}
+
+.skill-recommend-item {
+  transition: background 0.2s;
+}
+
+.skill-recommend-item:hover {
+  background: color-mix(in srgb, var(--journal-accent) 4%, transparent);
+}
+
+.skill-recommend-item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--journal-accent) 52%, var(--journal-soft-border));
+  outline-offset: 2px;
+}
+
+:global([data-theme='dark']) .skill-dimension-chart__frame::before {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    ),
+    linear-gradient(135deg, color-mix(in srgb, var(--journal-accent) 18%, transparent), transparent);
+}
+
+:global([data-theme='dark']) .skill-dimension-chart__frame::after {
+  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
+  border-color: color-mix(in srgb, var(--journal-muted) 20%, transparent);
+}
+
+@media (min-width: 1280px) {
+  .skill-radar-height {
+    height: 38rem;
+  }
+
+  .skill-dimension-legend__name {
+    font-size: 1.05rem;
+  }
+
+  .skill-dimension-legend__score {
+    font-size: 2.1rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .journal-shell {
+    --journal-user-button-height: 36px;
+  }
+}
+</style>

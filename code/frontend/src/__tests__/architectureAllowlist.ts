@@ -2,7 +2,6 @@ export const viewLineLimit = 500
 
 export const oversizedViewAllowlist = new Set([
   'views/platform/ContestAwdConfig.vue',
-  'views/profile/SkillProfile.vue',
 ])
 
 export const componentFeatureImportAllowlist = new Set([
