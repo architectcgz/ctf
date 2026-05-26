@@ -330,7 +330,22 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+.content-pane.topology-workspace {
+  display: grid;
+  gap: var(--space-7);
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 22rem);
+  align-items: start;
+  min-width: 0;
+  padding: 0;
+}
+
 .topology-primary-column {
+  display: grid;
+  gap: var(--space-6);
+}
+
+:deep(.topology-context-stack),
+:deep(.topology-side-stack) {
   display: grid;
   gap: var(--space-6);
 }
@@ -349,6 +364,78 @@ const emit = defineEmits<{
 .topology-primary-column :deep(.section-card:first-child) {
   padding-top: 0;
   border-top: 0;
+}
+
+:deep(.topology-side-stack .section-card:first-child) {
+  padding-top: 0;
+  border-top: 0;
+}
+
+:deep(.section-card) {
+  padding: var(--space-5) 0 0;
+  border-top: 1px solid var(--topology-divider);
+}
+
+:deep(.section-card__header) {
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom-color: var(--topology-divider);
+}
+
+:deep(.section-card__header h2) {
+  color: var(--journal-ink);
+  font-size: var(--font-size-1-08);
+}
+
+:deep(.section-card__header p) {
+  color: var(--journal-muted);
+}
+
+:deep(.section-card__body) {
+  padding-left: 0;
+}
+
+:deep(.section-card__body > .rounded-2xl),
+:deep(.section-card__body > .rounded-xl),
+:deep([data-node-editor]),
+:deep(.topology-canvas-board__root) {
+  border-color: var(--journal-border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--topology-panel) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--topology-panel-subtle) 96%, var(--color-bg-base))
+  );
+  box-shadow: 0 14px 30px var(--color-shadow-soft);
+}
+
+:deep(input),
+:deep(select),
+:deep(textarea) {
+  border-color: var(--journal-border);
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  color: var(--journal-ink);
+}
+
+:deep(input::placeholder),
+:deep(textarea::placeholder) {
+  color: color-mix(in srgb, var(--journal-muted) 78%, transparent);
+}
+
+:deep(option) {
+  background: var(--journal-surface);
+  color: var(--journal-ink);
+}
+
+:deep(input:focus),
+:deep(select:focus),
+:deep(textarea:focus) {
+  border-color: color-mix(in srgb, var(--journal-accent) 48%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
+  outline: none;
+}
+
+:deep(.topology-canvas-board__surface) {
+  border-color: color-mix(in srgb, var(--journal-border) 70%, transparent);
 }
 
 :deep(.topology-action-btn) {
@@ -411,6 +498,10 @@ const emit = defineEmits<{
 }
 
 @media (max-width: 1023px) {
+  .content-pane.topology-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   :deep(.topology-context-rail) {
     padding-left: 0;
     padding-top: var(--space-6);

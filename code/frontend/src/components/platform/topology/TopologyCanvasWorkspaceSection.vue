@@ -282,3 +282,36 @@ const escapeHint = computed(() =>
     </div>
   </SectionCard>
 </template>
+
+<style scoped>
+.topology-mode-btn--allow-active {
+  border-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.topology-mode-btn--allow-idle {
+  border-color: var(--color-border-default);
+  color: var(--color-text-primary);
+}
+
+.topology-mode-btn--allow-idle:hover {
+  border-color: color-mix(in srgb, var(--color-success) 60%, var(--color-border-default));
+}
+
+.topology-validation-banner--ok {
+  border-color: color-mix(in srgb, var(--color-success) 20%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.topology-validation-banner--warn {
+  border-color: color-mix(in srgb, var(--color-warning) 20%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: var(--color-warning);
+}
+
+.topology-validation-hint--success {
+  color: color-mix(in srgb, var(--color-success) 80%, transparent);
+}
+</style>

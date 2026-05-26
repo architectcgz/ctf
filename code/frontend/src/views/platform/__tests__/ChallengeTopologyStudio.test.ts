@@ -354,6 +354,19 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(topologyTemplateLibraryHeaderSource).toContain(':deep(.page-header__eyebrow)')
   })
 
+  it('challenge 样式 owner 应从父页回收到对应子组件', () => {
+    expect(challengeTopologyStudioPageSource).not.toContain('.topology-topbar-chip')
+    expect(challengeTopologyStudioPageSource).not.toContain('.topology-page-heading')
+    expect(challengeTopologyStudioPageSource).not.toContain('.content-pane.topology-workspace')
+    expect(challengeTopologyStudioPageSource).not.toContain('.topology-validation-banner--ok')
+    expect(topologyChallengeWorkspaceHeaderSource).toContain('.topology-topbar-chip')
+    expect(topologyChallengeWorkspaceHeaderSource).toContain('.topology-page-heading')
+    expect(topologyChallengeWorkbenchSource).toContain('.content-pane.topology-workspace')
+    expect(topologyChallengeWorkbenchSource).toContain(':deep(.topology-context-rail)')
+    expect(topologyCanvasWorkspaceSectionSource).toContain('.topology-validation-banner--ok')
+    expect(topologyCanvasWorkspaceSectionSource).toContain('.topology-mode-btn--allow-active')
+  })
+
   it('draft 变更 script owner 应收口到 feature model', () => {
     expect(challengeTopologyStudioPageSource).not.toContain('function updateNetworkDraft')
     expect(challengeTopologyStudioPageSource).not.toContain('function updateNodeDraft')
