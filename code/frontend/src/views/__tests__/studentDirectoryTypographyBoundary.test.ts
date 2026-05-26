@@ -76,8 +76,14 @@ describe('student directory typography boundary', () => {
   })
 
   it('教师和管理员列表主标题列也应保持纯净', () => {
-    expect(classStudentsPageSource).toContain('<span>学生名称</span>')
-    expect(classStudentsPageSource).toContain('<span>薄弱项</span>')
+    expect(classStudentsPageSource).toContain("label: '学生名称'")
+    expect(classStudentsPageSource).toContain("label: '薄弱项'")
+    expect(extractTemplateSlot(classStudentsPageSource, 'cell-name')).not.toContain(
+      '(row as ClassStudentDirectoryRow).weak_dimension'
+    )
+    expect(extractTemplateSlot(classStudentsPageSource, 'cell-name')).not.toContain(
+      '(row as ClassStudentDirectoryRow).metrics'
+    )
     expect(extractTemplateSlot(awdReviewDirectorySource, 'cell-title')).not.toContain(
       'latest_evidence_at'
     )
