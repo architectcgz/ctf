@@ -51,6 +51,7 @@ export const componentFeatureImportAllowlist = new Set([
   'components/platform/topology/TopologyNetworkSection.vue -> @/features/challenge-topology-studio/model',
   'components/platform/topology/TopologyNodeEditor.vue -> @/features/challenge-topology-studio/model',
   'components/platform/topology/TopologyNodeSection.vue -> @/features/challenge-topology-studio/model',
+  'components/platform/topology/TopologyTemplateWorkbench.vue -> @/features/challenge-topology-studio/model',
   'components/platform/writeup/ChallengeWriteupEditorPage.vue -> @/features/challenge-writeup-editor',
   'components/platform/writeup/ChallengeWriteupManagePanel.vue -> @/features/challenge-writeup-editor',
   'components/platform/writeup/ChallengeWriteupViewPage.vue -> @/features/challenge-writeup-editor',

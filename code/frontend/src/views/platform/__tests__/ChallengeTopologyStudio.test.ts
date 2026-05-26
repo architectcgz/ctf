@@ -13,6 +13,7 @@ import topologyNetworkSectionSource from '@/components/platform/topology/Topolog
 import topologyNetworkQuickEditorSource from '@/components/platform/topology/TopologyNetworkQuickEditor.vue?raw'
 import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
+import topologyTemplateWorkbenchSource from '@/components/platform/topology/TopologyTemplateWorkbench.vue?raw'
 import challengeTopologyStudioRouteSource from '../ChallengeTopologyStudio.vue?raw'
 import { ApiError } from '@/api/request'
 
@@ -272,6 +273,20 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(topologyPackageContextPanelSource).toContain('title="题包文件"')
     expect(topologyPackageContextPanelSource).toContain('title="修订历史"')
     expect(topologyPackageContextPanelSource).toContain("emit('exportPackage')")
+  })
+
+  it('template workbench 应从父页下沉到独立组件，同时保留 draft 与模板动作 owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyTemplateWorkbench')
+    expect(challengeTopologyStudioPageSource).not.toContain('class="template-toolbar-tab"')
+    expect(challengeTopologyStudioPageSource).not.toContain("activeWorkbenchTab === 'visual'")
+    expect(topologyTemplateWorkbenchSource).toContain('<TopologyCanvasWorkspaceSection')
+    expect(topologyTemplateWorkbenchSource).toContain('<TopologyEntryNodeSection')
+    expect(topologyTemplateWorkbenchSource).toContain('<TopologyNodeSection')
+    expect(topologyTemplateWorkbenchSource).toContain('<TopologyNetworkSection')
+    expect(topologyTemplateWorkbenchSource).toContain('<TopologyConnectivitySections')
+    expect(topologyTemplateWorkbenchSource).toContain('<TopologyTemplateSidePanel')
+    expect(topologyTemplateWorkbenchSource).toContain("emit('update:activeWorkbenchTab'")
+    expect(topologyTemplateWorkbenchSource).toContain("emit('loadTemplate'")
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {

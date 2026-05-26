@@ -5,10 +5,6 @@ import {
   Plus,
   RefreshCw,
   Save,
-  Layout,
-  Server,
-  Network,
-  ShieldCheck,
 } from 'lucide-vue-next'
 
 import {
@@ -30,11 +26,10 @@ import TopologyConnectivitySections from './TopologyConnectivitySections.vue'
 import TopologyNetworkSection from './TopologyNetworkSection.vue'
 import TopologyNodeSection from './TopologyNodeSection.vue'
 import TopologyEntryNodeSection from './TopologyEntryNodeSection.vue'
-import TopologyPackageContextPanel from './TopologyPackageContextPanel.vue'
 import TopologyChallengeContextRail from './TopologyChallengeContextRail.vue'
 import TopologyStatusNotes from './TopologyStatusNotes.vue'
 import TopologySummaryGrid from './TopologySummaryGrid.vue'
-import TopologyTemplateSidePanel from './TopologyTemplateSidePanel.vue'
+import TopologyTemplateWorkbench from './TopologyTemplateWorkbench.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -321,145 +316,77 @@ function removePolicyDraft(uid: string) {
 
         <div class="template-library-divider" />
 
-        <section class="topology-workbench grid gap-6 xl:grid-cols-[1fr_360px]">
-          <div class="space-y-6">
-            <div class="flex items-center gap-2">
-              <div class="template-toolbar-tabs">
-                <button
-                  v-for="tab in [
-                    { id: 'visual', label: '画布', icon: Layout },
-                    { id: 'compute', label: '节点', icon: Server },
-                    { id: 'network', label: '网络', icon: Network },
-                    { id: 'policy', label: '策略', icon: ShieldCheck },
-                  ]"
-                  :key="tab.id"
-                  type="button"
-                  class="template-toolbar-tab"
-                  :class="
-                    activeWorkbenchTab === tab.id
-                      ? 'template-toolbar-tab--active'
-                      : 'template-toolbar-tab--idle'
-                  "
-                  @click="activeWorkbenchTab = tab.id as any"
-                >
-                  <component :is="tab.icon" class="h-4 w-4" />
-                  <span class="hidden sm:inline">{{ tab.label }}</span>
-                </button>
-              </div>
-              <button
-                type="button"
-                class="template-toolbar-refresh"
-                title="刷新数据"
-                @click="void reloadAll()"
-              >
-                <RefreshCw class="h-4 w-4" />
-              </button>
-            </div>
-
-            <div v-if="activeWorkbenchTab === 'visual'" class="space-y-6">
-              <TopologyCanvasWorkspaceSection
-                variant="template"
-                :interaction-mode="interactionMode"
-                :canvas-mode-label="canvasModeLabel"
-                :selected-canvas-summary="selectedCanvasSummary"
-                :draft-validation-issues="draftValidationIssues"
-                :canvas-graph="canvasGraph"
-                :pending-source-node-key="pendingSourceNodeKey"
-                :selected-node-key="selectedNodeKey"
-                :selected-edge-id="selectedEdgeId"
-                :selected-node-draft="selectedNodeDraft"
-                :has-selected-edge="Boolean(selectedEdgeMeta)"
-                :node-options="nodeOptions"
-                :networks="draft.networks"
-                :selected-edge-source-key="selectedEdgeSourceKey"
-                :selected-edge-target-key="selectedEdgeTargetKey"
-                :selected-edge-kind="selectedEdgeKind"
-                @set-interaction-mode="setInteractionMode"
-                @remove-selected-canvas-item="removeSelectedCanvasItem"
-                @select-node="handleCanvasSelectNode"
-                @select-edge="handleCanvasSelectEdge"
-                @create-node-at="handleCanvasCreateNode"
-                @create-edge="handleCanvasCreateEdge"
-                @clear-pending="pendingSourceNodeKey = null"
-                @update-position="updateNodePosition"
-                @update-selected-node-field="updateSelectedNodeField"
-                @update-selected-node-service-port="
-                  updateCanvasQuickNumber('service_port', $event, selectedNodeDraft)
-                "
-                @toggle-selected-node-network="
-                  toggleSelectedNodeNetwork($event.networkKey, $event.checked)
-                "
-                @update-selected-edge-source-key="updateSelectedEdgeSourceKey"
-                @update-selected-edge-target-key="updateSelectedEdgeTargetKey"
-                @update-selected-edge-kind="handleSelectedEdgeKindChange"
-              />
-            </div>
-
-            <div v-else-if="activeWorkbenchTab === 'compute'" class="space-y-6">
-              <TopologyEntryNodeSection
-                :entry-node-key="draft.entry_node_key"
-                :node-options="nodeOptions"
-                @update-entry-node-key="updateEntryNodeKey"
-              />
-
-              <TopologyNodeSection
-                :nodes="draft.nodes"
-                :images="images"
-                :networks="draft.networks"
-                :selected-node-key="selectedNodeKey"
-                add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"
-                @add-node="addNode"
-                @remove-node="removeNode"
-                @update-node="updateNodeDraft"
-              />
-            </div>
-
-            <div v-else-if="activeWorkbenchTab === 'network'" class="space-y-6">
-              <TopologyNetworkSection
-                :networks="draft.networks"
-                add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"
-                @add-network="addNetwork"
-                @remove-network="removeNetwork"
-                @update-network="updateNetworkDraft"
-              />
-            </div>
-
-            <div v-else-if="activeWorkbenchTab === 'policy'" class="space-y-6">
-              <TopologyConnectivitySections
-                :links="draft.links"
-                :policies="draft.policies"
-                :node-options="nodeOptions"
-                add-button-class="topology-toolbar-btn topology-toolbar-btn--ghost"
-                @add-link="addLink"
-                @remove-link="removeLinkDraft"
-                @update-link="updateLinkDraft"
-                @add-policy="addPolicy"
-                @remove-policy="removePolicyDraft"
-                @update-policy="updatePolicyDraft"
-              />
-            </div>
-          </div>
-
-          <TopologyTemplateSidePanel
-            v-model:template-keyword="templateKeyword"
-            v-model:template-name="templateName"
-            v-model:template-description="templateDescription"
-            :is-template-library-mode="isTemplateLibraryMode"
-            :selected-template-summary="selectedTemplateSummary"
-            :selected-template-id="selectedTemplateId"
-            :templates="templates"
-            :template-busy="templateBusy"
-            @load-template="loadTemplateIntoDraft"
-            @clear-template-selection="clearTemplateSelection"
-            @search-templates="void loadTemplates()"
-            @reset-template-form="resetTemplateForm"
-            @apply-template="(template) => void handleApplyTemplate(template)"
-            @delete-template="(templateId) => void handleDeleteTemplate(templateId)"
-            @reset-template-editor="handleResetTemplateEditor"
-            @create-template="void handleCreateTemplate()"
-            @update-template="void handleUpdateTemplate()"
-          />
-        </section>
+        <TopologyTemplateWorkbench
+          v-model:active-workbench-tab="activeWorkbenchTab"
+          v-model:template-keyword="templateKeyword"
+          v-model:template-name="templateName"
+          v-model:template-description="templateDescription"
+          :interaction-mode="interactionMode"
+          :canvas-mode-label="canvasModeLabel"
+          :selected-canvas-summary="selectedCanvasSummary"
+          :draft-validation-issues="draftValidationIssues"
+          :canvas-graph="canvasGraph"
+          :pending-source-node-key="pendingSourceNodeKey"
+          :selected-node-key="selectedNodeKey"
+          :selected-edge-id="selectedEdgeId"
+          :selected-node-draft="selectedNodeDraft"
+          :has-selected-edge="Boolean(selectedEdgeMeta)"
+          :node-options="nodeOptions"
+          :networks="draft.networks"
+          :selected-edge-source-key="selectedEdgeSourceKey"
+          :selected-edge-target-key="selectedEdgeTargetKey"
+          :selected-edge-kind="selectedEdgeKind"
+          :entry-node-key="draft.entry_node_key"
+          :nodes="draft.nodes"
+          :images="images"
+          :links="draft.links"
+          :policies="draft.policies"
+          :selected-template-summary="selectedTemplateSummary"
+          :selected-template-id="selectedTemplateId"
+          :templates="templates"
+          :template-busy="templateBusy"
+          @refresh="void reloadAll()"
+          @set-interaction-mode="setInteractionMode"
+          @remove-selected-canvas-item="removeSelectedCanvasItem"
+          @select-node="handleCanvasSelectNode"
+          @select-edge="handleCanvasSelectEdge"
+          @create-node-at="handleCanvasCreateNode"
+          @create-edge="handleCanvasCreateEdge"
+          @clear-pending="pendingSourceNodeKey = null"
+          @update-position="updateNodePosition"
+          @update-selected-node-field="updateSelectedNodeField"
+          @update-selected-node-service-port="
+            updateCanvasQuickNumber('service_port', $event, selectedNodeDraft)
+          "
+          @toggle-selected-node-network="
+            toggleSelectedNodeNetwork($event.networkKey, $event.checked)
+          "
+          @update-selected-edge-source-key="updateSelectedEdgeSourceKey"
+          @update-selected-edge-target-key="updateSelectedEdgeTargetKey"
+          @update-selected-edge-kind="handleSelectedEdgeKindChange"
+          @update-entry-node-key="updateEntryNodeKey"
+          @add-node="addNode"
+          @remove-node="removeNode"
+          @update-node="updateNodeDraft"
+          @add-network="addNetwork"
+          @remove-network="removeNetwork"
+          @update-network="updateNetworkDraft"
+          @add-link="addLink"
+          @remove-link="removeLinkDraft"
+          @update-link="updateLinkDraft"
+          @add-policy="addPolicy"
+          @remove-policy="removePolicyDraft"
+          @update-policy="updatePolicyDraft"
+          @load-template="loadTemplateIntoDraft"
+          @clear-template-selection="clearTemplateSelection"
+          @search-templates="void loadTemplates()"
+          @reset-template-form="resetTemplateForm"
+          @apply-template="(template) => void handleApplyTemplate(template)"
+          @delete-template="(templateId) => void handleDeleteTemplate(templateId)"
+          @reset-template-editor="handleResetTemplateEditor"
+          @create-template="void handleCreateTemplate()"
+          @update-template="void handleUpdateTemplate()"
+        />
       </section>
 
       <template v-else>
