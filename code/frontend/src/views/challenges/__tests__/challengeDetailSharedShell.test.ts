@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
+import challengeWorkspaceShellSource from '@/components/challenge/ChallengeWorkspaceShell.vue?raw'
 import challengeActionAsideSource from '@/components/challenge/ChallengeActionAside.vue?raw'
 import challengeInstanceCardSource from '@/components/challenge/ChallengeInstanceCard.vue?raw'
 import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
@@ -9,6 +10,7 @@ import challengeWriteupPanelSource from '@/components/challenge/ChallengeWriteup
 
 const challengeDetailWorkspaceSource = [
   challengeDetailSource,
+  challengeWorkspaceShellSource,
   challengeActionAsideSource,
   challengeQuestionPanelSource,
   challengeSolutionsPanelSource,
@@ -41,7 +43,7 @@ describe('challenge detail shared shell alignment', () => {
   })
 
   it('主标签轨道应通过 page-tabs 变量接入共享规则，而不是继续本地声明 top-tabs/top-tab', () => {
-    expect(challengeDetailSource).toContain('class="workspace-tabbar top-tabs"')
+    expect(challengeWorkspaceShellSource).toContain('class="workspace-tabbar top-tabs"')
     expect(challengeDetailSource).not.toContain('--page-top-tabs-gap: var(--space-7);')
     expect(challengeDetailSource).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
     expect(challengeDetailSource).not.toContain('--page-top-tab-active-border: var(--brand);')
@@ -50,8 +52,8 @@ describe('challenge detail shared shell alignment', () => {
   })
 
   it('题目详情的 tab 与操作按钮应复用共享主题按钮和页签栈', () => {
-    expect(challengeDetailSource).toContain('class="workspace-tab top-tab"')
-    expect(challengeDetailSource).toContain(':class="{ active: activeWorkspaceTab === tab.id }"')
+    expect(challengeWorkspaceShellSource).toContain('class="workspace-tab top-tab"')
+    expect(challengeWorkspaceShellSource).toContain(':class="{ active: activeWorkspaceTab === tab.id }"')
     expect(challengeDetailWorkspaceSource).toContain('class="solution-tabbar top-tabs challenge-subtabs"')
     expect(challengeDetailWorkspaceSource).toContain('class="solution-tab top-tab challenge-subtab"')
     expect(challengeDetailWorkspaceSource).toContain('class="ui-btn ui-btn--secondary"')
@@ -101,7 +103,7 @@ describe('challenge detail shared shell alignment', () => {
   })
 
   it('题目详情右侧工具栏与实例卡应避免浅色混入，并在夜间模式切到 dark color-scheme', () => {
-    expect(challengeDetailSource).toMatch(
+    expect(challengeWorkspaceShellSource).toMatch(
       /\.tool-pane\s*\{[\s\S]*background:\s*linear-gradient\([\s\S]*var\(--bg-panel\)[\s\S]*var\(--color-bg-base\)[\s\S]*var\(--bg-shell\)[\s\S]*var\(--color-bg-base\)[\s\S]*\);/s
     )
     expect(challengeDetailWorkspaceSource).toMatch(

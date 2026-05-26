@@ -5,6 +5,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { ApiError } from '@/api/request'
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
+import challengeWorkspaceShellSource from '@/components/challenge/ChallengeWorkspaceShell.vue?raw'
 import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
 import challengeSolutionsPanelSource from '@/components/challenge/ChallengeSolutionsPanel.vue?raw'
 import challengeSubmissionRecordsPanelSource from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue?raw'
@@ -210,10 +211,10 @@ describe('ChallengeDetail', () => {
 
   it('工作区应建立满高伸展布局链', () => {
     expect(challengeDetailSource).toContain('min-height: max(100%, calc(100vh - 5rem));')
-    expect(challengeDetailSource).toContain(
+    expect(challengeWorkspaceShellSource).toContain(
       '.detail-content {\n  display: flex;\n  flex: 1 1 auto;'
     )
-    expect(challengeDetailSource).toMatch(
+    expect(challengeWorkspaceShellSource).toMatch(
       /\.detail-grid,\s*\.workspace-grid\s*{\s*display:\s*grid;\s*flex:\s*1 1 auto;/
     )
   })
@@ -228,10 +229,10 @@ describe('ChallengeDetail', () => {
     expect(challengeDetailSource).toContain(
       '--workspace-panel-padding-top: var(--workspace-tabs-panel-gap);'
     )
-    expect(challengeDetailSource).toMatch(
+    expect(challengeWorkspaceShellSource).toMatch(
       /\.detail-main,\s*\.content-pane\s*\{[\s\S]*padding:\s*0\s+var\(--space-workspace-content-padding,\s*var\(--space-7\)\)\s+var\(--space-workspace-content-padding,\s*var\(--space-7\)\);/s
     )
-    expect(challengeDetailSource).toMatch(
+    expect(challengeWorkspaceShellSource).toMatch(
       /\.tool-pane\s*\{[\s\S]*padding:\s*var\(--workspace-tabs-panel-gap,\s*var\(--space-2\)\)\s+var\(--space-workspace-content-padding,\s*var\(--space-7\)\)\s+var\(--space-workspace-content-padding,\s*var\(--space-7\)\);/s
     )
   })
@@ -239,6 +240,7 @@ describe('ChallengeDetail', () => {
   it('题目详情 section heading 应切到共享 workspace overline 语义', () => {
     const combinedSource = [
       challengeDetailSource,
+      challengeWorkspaceShellSource,
       challengeQuestionPanelSource,
       challengeSolutionsPanelSource,
       challengeSubmissionRecordsPanelSource,
