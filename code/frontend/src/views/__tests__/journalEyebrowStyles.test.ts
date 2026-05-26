@@ -10,12 +10,14 @@ import notificationListSource from '@/views/notifications/NotificationList.vue?r
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 
 const journalEyebrowsSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-eyebrows.css`,
   'utf-8'
 )
+const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 describe('journal eyebrow shared styles', () => {
   it('应该在共享样式文件中声明文字型 eyebrow 规则', () => {
@@ -41,7 +43,7 @@ describe('journal eyebrow shared styles', () => {
       scoreboardSource,
       securitySettingsSource,
       skillProfileSource,
-      userProfileSource,
+      userProfileWorkspaceSource,
     ]) {
       expect(source).not.toContain('journal-eyebrow-text')
       expect(source).not.toMatch(/^\.journal-eyebrow\s*\{/m)

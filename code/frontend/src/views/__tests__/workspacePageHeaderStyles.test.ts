@@ -15,6 +15,7 @@ import challengeImportManageSource from '@/views/platform/ChallengeImportManage.
 import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import classManagementPageSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
@@ -61,6 +62,7 @@ const challengeDetailWorkspaceSource = [
   challengeSolutionsPanelSource,
 ].join('\n')
 const contestDetailWorkspaceSource = `${contestDetailSource}\n${contestOverviewPanelSource}`
+const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
@@ -430,9 +432,9 @@ describe('workspace page header styles', () => {
 
   it('典型工作区页头应优先复用共享 workspace-page-header 结构', () => {
     expect(challengeImportPreviewWorkspaceBundleSource).toContain('<PageHeader')
-    expect(userProfileSource).not.toContain('<PageHeader')
-    expect(userProfileSource).toContain('class="workspace-page-header profile-topbar"')
-    expect(userProfileSource).toContain('class="profile-topbar-meta"')
+    expect(userProfileWorkspaceSource).not.toContain('<PageHeader')
+    expect(userProfileWorkspaceSource).toContain('class="workspace-page-header profile-topbar"')
+    expect(userProfileWorkspaceSource).toContain('class="profile-topbar-meta"')
     expect(securitySettingsSource).not.toContain('<PageHeader')
     expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
     expect(securitySettingsSource).toContain('class="security-topbar-meta"')

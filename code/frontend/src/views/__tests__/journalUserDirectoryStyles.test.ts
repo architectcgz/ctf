@@ -9,6 +9,7 @@ import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'
 
@@ -17,6 +18,7 @@ const journalUserDirectorySource = readFileSync(
   'utf-8'
 )
 const appStyleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
+const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 const scoreboardWorkspaceSource = `${scoreboardSource}\n${scoreboardWorkspaceShellSource}`
 
 function extractScopedStyle(source: string): string {
@@ -30,7 +32,7 @@ describe('journal user directory shared styles', () => {
     expect(contestListSource).toContain('class="workspace-page-header contest-topbar"')
     expect(notificationListSource).toContain('class="workspace-page-header notification-topbar"')
     expect(instanceListSource).toContain('class="workspace-page-header instance-topbar"')
-    expect(userProfileSource).toContain('class="workspace-page-header profile-topbar"')
+    expect(userProfileWorkspaceSource).toContain('class="workspace-page-header profile-topbar"')
     expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
     expect(journalUserDirectorySource).not.toMatch(/\.challenge-topbar[\s\S]*border-bottom:/)
     expect(journalUserDirectorySource).toContain('.challenge-btn')
@@ -105,7 +107,7 @@ describe('journal user directory shared styles', () => {
     expect(instanceStyle).not.toMatch(/^\.instance-directory-meta\s*\{/m)
     expect(instanceStyle).not.toMatch(/^\.instance-btn\s*\{/m)
 
-    const userProfileStyle = extractScopedStyle(userProfileSource)
+    const userProfileStyle = extractScopedStyle(userProfileWorkspaceSource)
     expect(userProfileStyle).not.toMatch(/^\.profile-topbar\s*\{/m)
     expect(userProfileStyle).not.toMatch(/^\.profile-heading\s*\{/m)
     expect(userProfileStyle).not.toMatch(/^\.profile-summary\s*\{/m)
@@ -145,13 +147,15 @@ describe('journal user directory shared styles', () => {
   })
 
   it('profile 与 security 页顶部也应接入共享 topbar 与 summary 骨架', () => {
-    expect(userProfileSource).toContain('class="workspace-page-header profile-topbar"')
-    expect(userProfileSource).toContain('class="profile-topbar-meta"')
-    expect(userProfileSource).toContain('class="profile-summary metric-panel-default-surface"')
-    expect(userProfileSource).toContain('class="profile-summary-title"')
-    expect(userProfileSource).toContain('class="profile-summary-grid metric-panel-grid"')
-    expect(userProfileSource).toContain('class="workspace-overline">Profile</div>')
-    expect(userProfileSource).not.toContain('<PageHeader')
+    expect(userProfileWorkspaceSource).toContain('class="workspace-page-header profile-topbar"')
+    expect(userProfileWorkspaceSource).toContain('class="profile-topbar-meta"')
+    expect(userProfileWorkspaceSource).toContain(
+      'class="profile-summary metric-panel-default-surface"'
+    )
+    expect(userProfileWorkspaceSource).toContain('class="profile-summary-title"')
+    expect(userProfileWorkspaceSource).toContain('class="profile-summary-grid metric-panel-grid"')
+    expect(userProfileWorkspaceSource).toContain('class="workspace-overline">Profile</div>')
+    expect(userProfileWorkspaceSource).not.toContain('<PageHeader')
 
     expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
     expect(securitySettingsSource).toContain('class="security-topbar-meta"')

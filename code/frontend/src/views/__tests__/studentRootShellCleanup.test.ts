@@ -7,6 +7,7 @@ import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 import notificationDetailSource from '@/views/notifications/NotificationDetail.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import scoreboardViewSource from '@/views/scoreboard/ScoreboardView.vue?raw'
@@ -16,6 +17,8 @@ import studentOverviewSource from '@/components/dashboard/student/StudentOvervie
 import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
 
 describe('student root shell cleanup', () => {
+  const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
+
   it.each([
     ['ChallengeList.vue', challengeListSource],
     ['ContestList.vue', contestListSource],
@@ -23,7 +26,7 @@ describe('student root shell cleanup', () => {
     ['InstanceList.vue', instanceListSource],
     ['NotificationList.vue', notificationListSource],
     ['NotificationDetail.vue', notificationDetailSource],
-    ['UserProfile.vue', userProfileSource],
+    ['UserProfile.vue', userProfileWorkspaceSource],
     ['SkillProfile.vue', skillProfileSource],
     ['SecuritySettings.vue', securitySettingsSource],
     ['ScoreboardView.vue', scoreboardViewSource],

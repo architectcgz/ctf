@@ -38,6 +38,7 @@ import userGovernanceSource from '@/components/platform/user/UserGovernancePage.
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import scoreboardDetailSource from '@/views/scoreboard/ScoreboardDetail.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
@@ -47,6 +48,7 @@ const workspaceShellStylesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,
   'utf-8'
 )
+const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -101,7 +103,7 @@ describe('workspace shell shared styles', () => {
       studentManageHeroPanelSource,
       teacherAwdReviewWorkspaceHeaderSource,
       teacherInstanceManagementPageSource,
-      userProfileSource,
+      userProfileWorkspaceSource,
     ]) {
       expect(source).toContain('workspace-page-header')
       expect(source).not.toContain('<section class="workspace-hero">')

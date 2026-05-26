@@ -12,6 +12,7 @@ import notificationListSource from '@/views/notifications/NotificationList.vue?r
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 
 const journalUserShellSource = readFileSync(
@@ -26,6 +27,7 @@ const workspaceShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,
   'utf-8'
 )
+const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 function extractScopedStyle(source: string): string {
   const match = source.match(/<style scoped>([\s\S]*?)<\/style>/)
@@ -57,7 +59,7 @@ describe('journal user shell shared styles', () => {
       scoreboardSource,
       securitySettingsSource,
       skillProfileSource,
-      userProfileSource,
+      userProfileWorkspaceSource,
     ]) {
       expect(source).toContain('journal-shell-user')
     }
@@ -75,7 +77,7 @@ describe('journal user shell shared styles', () => {
       scoreboardSource,
       securitySettingsSource,
       skillProfileSource,
-      userProfileSource,
+      userProfileWorkspaceSource,
     ]) {
       expect(extractScopedStyle(source)).not.toMatch(/^\.journal-hero\s*\{/m)
       expect(extractScopedStyle(source)).not.toMatch(
@@ -88,13 +90,17 @@ describe('journal user shell shared styles', () => {
   })
 
   it('profile 与 security 顶部概况应显式使用 metric-panel 类，旧共享 CSS 只保留变量桥接', () => {
-    expect(userProfileSource).toContain('class="profile-summary metric-panel-default-surface"')
-    expect(userProfileSource).toContain('class="profile-summary-grid metric-panel-grid"')
-    expect(userProfileSource).toContain('class="profile-summary-item progress-card metric-panel-card"')
-    expect(userProfileSource).toContain(
+    expect(userProfileWorkspaceSource).toContain(
+      'class="profile-summary metric-panel-default-surface"'
+    )
+    expect(userProfileWorkspaceSource).toContain('class="profile-summary-grid metric-panel-grid"')
+    expect(userProfileWorkspaceSource).toContain(
+      'class="profile-summary-item progress-card metric-panel-card"'
+    )
+    expect(userProfileWorkspaceSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
     )
-    expect(userProfileSource).toContain(
+    expect(userProfileWorkspaceSource).toContain(
       'class="profile-summary-value progress-card-value metric-panel-value"'
     )
 

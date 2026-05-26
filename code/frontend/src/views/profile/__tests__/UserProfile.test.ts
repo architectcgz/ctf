@@ -4,7 +4,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import UserProfile from '../UserProfile.vue'
 import userProfileSource from '../UserProfile.vue?raw'
+import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import { useAuthStore } from '@/stores/auth'
+
+const userProfileWorkspaceSource = [userProfileSource, userProfileWorkspaceShellSource].join('\n')
 
 const authApiMocks = vi.hoisted(() => ({
   getProfile: vi.fn(),
@@ -131,22 +134,26 @@ describe('UserProfile', () => {
     expect(userProfileSource).toContain('useUserProfilePage')
     expect(userProfileSource).not.toContain("from '@/api/auth'")
     expect(userProfileSource).not.toContain("from '@/api/assessment'")
-    expect(userProfileSource).toContain('class="workspace-page-header profile-topbar"')
-    expect(userProfileSource).toContain('class="profile-topbar-meta"')
-    expect(userProfileSource).not.toContain('<PageHeader')
-    expect(userProfileSource).toContain('class="profile-summary metric-panel-default-surface"')
-    expect(userProfileSource).toContain('class="profile-summary-item progress-card metric-panel-card"')
-    expect(userProfileSource).toContain(
+    expect(userProfileWorkspaceSource).toContain('class="workspace-page-header profile-topbar"')
+    expect(userProfileWorkspaceSource).toContain('class="profile-topbar-meta"')
+    expect(userProfileWorkspaceSource).not.toContain('<PageHeader')
+    expect(userProfileWorkspaceSource).toContain(
+      'class="profile-summary metric-panel-default-surface"'
+    )
+    expect(userProfileWorkspaceSource).toContain(
+      'class="profile-summary-item progress-card metric-panel-card"'
+    )
+    expect(userProfileWorkspaceSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
     )
-    expect(userProfileSource).toContain(
+    expect(userProfileWorkspaceSource).toContain(
       'class="profile-summary-value progress-card-value metric-panel-value"'
     )
-    expect(userProfileSource).toContain(
+    expect(userProfileWorkspaceSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
-    expect(userProfileSource).toContain('<component')
-    expect(userProfileSource).not.toContain('class="profile-summary-icon"')
+    expect(userProfileWorkspaceSource).toContain('<component')
+    expect(userProfileWorkspaceSource).not.toContain('class="profile-summary-icon"')
   })
 
   it('管理员不应该展示个人报告区块', async () => {
@@ -212,27 +219,31 @@ describe('UserProfile', () => {
   })
 
   it('应该移除个人资料页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {
-    expect(userProfileSource).toContain(
+    expect(userProfileWorkspaceSource).toContain(
       'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'
     )
-    expect(userProfileSource).not.toContain('journal-eyebrow-text')
+    expect(userProfileWorkspaceSource).not.toContain('journal-eyebrow-text')
   })
 
   it('应该把个人资料内容区的 soft eyebrow 收敛为局部 section kicker', () => {
-    expect(userProfileSource).toContain('<div class="profile-section-kicker">Account</div>')
-    expect(userProfileSource).toContain('<div class="profile-section-kicker">Report</div>')
-    expect(userProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Account</div>')
-    expect(userProfileSource).not.toContain('<div class="journal-eyebrow journal-eyebrow-soft">Report</div>')
+    expect(userProfileWorkspaceSource).toContain('<div class="profile-section-kicker">Account</div>')
+    expect(userProfileWorkspaceSource).toContain('<div class="profile-section-kicker">Report</div>')
+    expect(userProfileWorkspaceSource).not.toContain(
+      '<div class="journal-eyebrow journal-eyebrow-soft">Account</div>'
+    )
+    expect(userProfileWorkspaceSource).not.toContain(
+      '<div class="journal-eyebrow journal-eyebrow-soft">Report</div>'
+    )
   })
 
   it('应该把个人资料页残留的骨架圆角与内文字色收敛为语义类', () => {
-    expect(userProfileSource).not.toContain('rounded-[24px]')
-    expect(userProfileSource).not.toContain('text-[var(--journal-accent)]')
-    expect(userProfileSource).not.toContain('text-[var(--journal-ink)]')
-    expect(userProfileSource).not.toContain('text-[var(--journal-muted)]')
-    expect(userProfileSource).toContain('profile-loading-card')
-    expect(userProfileSource).toContain('profile-accent-icon')
-    expect(userProfileSource).toContain('profile-format-title')
-    expect(userProfileSource).toContain('profile-format-copy')
+    expect(userProfileWorkspaceSource).not.toContain('rounded-[24px]')
+    expect(userProfileWorkspaceSource).not.toContain('text-[var(--journal-accent)]')
+    expect(userProfileWorkspaceSource).not.toContain('text-[var(--journal-ink)]')
+    expect(userProfileWorkspaceSource).not.toContain('text-[var(--journal-muted)]')
+    expect(userProfileWorkspaceSource).toContain('profile-loading-card')
+    expect(userProfileWorkspaceSource).toContain('profile-accent-icon')
+    expect(userProfileWorkspaceSource).toContain('profile-format-title')
+    expect(userProfileWorkspaceSource).toContain('profile-format-copy')
   })
 })

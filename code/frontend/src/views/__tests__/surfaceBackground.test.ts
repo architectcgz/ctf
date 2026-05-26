@@ -10,11 +10,13 @@ import dashboardViewSource from '../dashboard/DashboardView.vue?raw'
 import notificationListSource from '../notifications/NotificationList.vue?raw'
 import securitySettingsSource from '../profile/SecuritySettings.vue?raw'
 import userProfileSource from '../profile/UserProfile.vue?raw'
+import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 
 const surfaceShellBackgroundSource = readFileSync(
   `${process.cwd()}/src/assets/styles/surface-shell-background.css`,
   'utf-8'
 )
+const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 describe('member-facing page surfaces', () => {
   it('should centralize tokenized hero background formula in shared surface stylesheet', () => {
@@ -36,7 +38,7 @@ describe('member-facing page surfaces', () => {
   it('member pages should consume shared hero shell classes instead of duplicating formula', () => {
     const userShellSources = [
       dashboardViewSource,
-      userProfileSource,
+      userProfileWorkspaceSource,
       securitySettingsSource,
       notificationListSource,
     ]

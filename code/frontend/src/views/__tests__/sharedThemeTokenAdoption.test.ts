@@ -61,6 +61,7 @@ import topologyTemplateSidePanelSource from '@/components/platform/topology/Topo
 import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import imageManageSource from '@/views/platform/ImageManage.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
@@ -71,6 +72,8 @@ import challengeManagePresentationSource from '@/features/platform-challenges/mo
 import skillProfileUtilsSource from '@/utils/skillProfile.ts?raw'
 import challengeUtilsSource from '@/utils/challenge.ts?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
+
+const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 function expectNoHardcodedThemeTokens(
   source: string,
@@ -319,7 +322,7 @@ describe('shared theme token adoption', () => {
   })
 
   it('个人资料与安全设置页不应回退到浅色状态块', () => {
-    expectNoHardcodedThemeTokens(userProfileSource, 'UserProfile', [
+    expectNoHardcodedThemeTokens(userProfileWorkspaceSource, 'UserProfile', [
       '0 18px 40px rgba(15, 23, 42, 0.05)',
       'border: 1px solid rgba(16, 185, 129, 0.22);',
       'background: rgba(16, 185, 129, 0.08);',
