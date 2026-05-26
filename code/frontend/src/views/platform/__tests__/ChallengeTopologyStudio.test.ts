@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
 import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
 import topologyChallengeContextRailSource from '@/components/platform/topology/TopologyChallengeContextRail.vue?raw'
+import topologyChallengeWorkspaceHeaderSource from '@/components/platform/topology/TopologyChallengeWorkspaceHeader.vue?raw'
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'
 import topologyCanvasWorkspaceSectionSource from '@/components/platform/topology/TopologyCanvasWorkspaceSection.vue?raw'
@@ -219,10 +220,10 @@ describe('ChallengeTopologyStudioPage', () => {
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {
     const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}\n${topologyCanvasQuickEditorSource}\n${topologyNetworkQuickEditorSource}\n${topologyEntryNodeSectionSource}\n${topologyPackageContextPanelSource}`
 
-    expect(challengeTopologyStudioPageSource).toContain(
+    expect(topologyChallengeWorkspaceHeaderSource).toContain(
       'class="ui-btn ui-btn--ghost topology-action-btn'
     )
-    expect(challengeTopologyStudioPageSource).toContain(
+    expect(topologyChallengeWorkspaceHeaderSource).toContain(
       'class="ui-btn ui-btn--primary topology-action-btn'
     )
     expect(topologySource).toContain('ui-btn ui-btn--secondary topology-action-btn')
@@ -298,6 +299,17 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(topologyTemplateHeroSectionSource).toContain('真实接口')
     expect(topologyTemplateHeroSectionSource).toContain('<TopologySummaryGrid')
     expect(topologyTemplateHeroSectionSource).toContain('<TopologyStatusNotes')
+  })
+
+  it('challenge header 应从父页下沉到独立组件，同时保留返回与保存动作 owner', () => {
+    expect(challengeTopologyStudioPageSource).toContain('<TopologyChallengeWorkspaceHeader')
+    expect(challengeTopologyStudioPageSource).not.toContain('class="workspace-topbar topology-workspace-topbar"')
+    expect(challengeTopologyStudioPageSource).not.toContain('class="workspace-tab-heading topology-page-heading"')
+    expect(topologyChallengeWorkspaceHeaderSource).toContain('class="workspace-topbar topology-workspace-topbar"')
+    expect(topologyChallengeWorkspaceHeaderSource).toContain('class="workspace-tab-heading topology-page-heading"')
+    expect(topologyChallengeWorkspaceHeaderSource).toContain("emit('back')")
+    expect(topologyChallengeWorkspaceHeaderSource).toContain("emit('save')")
+    expect(topologyChallengeWorkspaceHeaderSource).toContain('<TopologySummaryGrid')
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {

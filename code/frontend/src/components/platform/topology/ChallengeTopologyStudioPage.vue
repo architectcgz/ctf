@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import {
-  GitBranch,
   Plus,
   RefreshCw,
-  Save,
 } from 'lucide-vue-next'
 
 import {
@@ -27,7 +25,7 @@ import TopologyNetworkSection from './TopologyNetworkSection.vue'
 import TopologyNodeSection from './TopologyNodeSection.vue'
 import TopologyEntryNodeSection from './TopologyEntryNodeSection.vue'
 import TopologyChallengeContextRail from './TopologyChallengeContextRail.vue'
-import TopologySummaryGrid from './TopologySummaryGrid.vue'
+import TopologyChallengeWorkspaceHeader from './TopologyChallengeWorkspaceHeader.vue'
 import TopologyTemplateHeroSection from './TopologyTemplateHeroSection.vue'
 import TopologyTemplateWorkbench from './TopologyTemplateWorkbench.vue'
 
@@ -234,47 +232,20 @@ function removePolicyDraft(uid: string) {
       </button>
     </PageHeader>
 
-    <header v-else class="workspace-topbar topology-workspace-topbar">
-      <div class="topology-topbar-leading">
-        <span class="workspace-overline">Challenge Workspace</span>
-        <span class="topology-topbar-chip">{{ pageHeader.eyebrow }}</span>
-      </div>
-      <div class="topology-topbar-actions">
-        <button
-          type="button"
-          class="ui-btn ui-btn--ghost topology-action-btn"
-          @click="emit('back')"
-        >
-          返回题目详情
-        </button>
-        <button
-          type="button"
-          class="ui-btn ui-btn--ghost topology-action-btn"
-          @click="void reloadAll()"
-        >
-          <RefreshCw class="h-4 w-4" />
-          刷新
-        </button>
-        <button
-          type="button"
-          class="ui-btn ui-btn--ghost topology-action-btn"
-          :disabled="exporting || !packageSourceSummary.canExport"
-          @click="void handleExportPackage()"
-        >
-          <GitBranch class="h-4 w-4" />
-          {{ exporting ? '导出中...' : '导出题目包' }}
-        </button>
-        <button
-          type="button"
-          class="ui-btn ui-btn--primary topology-action-btn"
-          :disabled="saving"
-          @click="void handleSaveTopology()"
-        >
-          <Save class="h-4 w-4" />
-          {{ saving ? '保存中...' : '保存拓扑' }}
-        </button>
-      </div>
-    </header>
+    <TopologyChallengeWorkspaceHeader
+      v-else
+      :eyebrow="pageHeader.eyebrow"
+      :title="heroTitle"
+      :description="heroDescription"
+      :summary="topologySummary"
+      :exporting="exporting"
+      :can-export="packageSourceSummary.canExport"
+      :saving="saving"
+      @back="emit('back')"
+      @refresh="void reloadAll()"
+      @export-package="void handleExportPackage()"
+      @save="void handleSaveTopology()"
+    />
 
     <div v-if="loading && !isTemplateLibraryMode" class="content-pane topology-loading-pane">
       <AppLoading>{{ loadingText }}</AppLoading>
@@ -376,22 +347,6 @@ function removePolicyDraft(uid: string) {
       </section>
 
       <template v-else>
-        <section class="workspace-tab-heading topology-page-heading">
-          <div class="workspace-tab-heading__main">
-            <div class="topology-page-kicker">
-              {{ heroEyebrow }}
-            </div>
-            <h1 class="hero-title">
-              {{ heroTitle }}
-            </h1>
-          </div>
-          <p class="workspace-page-copy topology-page-copy">
-            {{ heroDescription }}
-          </p>
-
-          <TopologySummaryGrid :summary="topologySummary" mode="challenge" />
-        </section>
-
         <div class="journal-divider" />
 
         <main class="content-pane topology-workspace">
