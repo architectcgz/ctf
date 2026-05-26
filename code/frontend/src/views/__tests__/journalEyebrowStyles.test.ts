@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import studentAnalysisSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import contestListSource from '@/views/contests/ContestList.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
@@ -19,6 +20,7 @@ const journalEyebrowsSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-eyebrows.css`,
   'utf-8'
 )
+const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
@@ -42,7 +44,7 @@ describe('journal eyebrow shared styles', () => {
     for (const source of [
       challengeListSource,
       contestListSource,
-      instanceListSource,
+      instanceListWorkspaceSource,
       notificationListSource,
       scoreboardSource,
       securitySettingsWorkspaceSource,

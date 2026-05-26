@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'
 import InstanceList from '../InstanceList.vue'
 import instanceListSource from '../InstanceList.vue?raw'
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 
 const journalNotesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-notes.css`,
@@ -19,6 +20,8 @@ const instanceApiMocks = vi.hoisted(() => ({
 vi.mock('@/api/instance', () => instanceApiMocks)
 
 describe('InstanceList', () => {
+  const instanceListWorkspaceSource = [instanceListSource, instanceListWorkspaceShellSource].join('\n')
+
   beforeEach(() => {
     instanceApiMocks.getMyInstances.mockResolvedValue([
       {
@@ -104,14 +107,14 @@ describe('InstanceList', () => {
   })
 
   it('应该为实例列表长标题和访问地址保留省略样式与完整提示', () => {
-    expect(instanceListSource).toMatch(
+    expect(instanceListWorkspaceSource).toMatch(
       /class="[^"]*\binstance-row-title\b[^"]*"[\s\S]*:title="instance\.challenge_title"/s
     )
-    expect(instanceListSource).toMatch(/instance-row-access-value[\s\S]*:title="/s)
-    expect(instanceListSource).toMatch(
+    expect(instanceListWorkspaceSource).toMatch(/instance-row-access-value[\s\S]*:title="/s)
+    expect(instanceListWorkspaceSource).toMatch(
       /\.instance-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )
-    expect(instanceListSource).toMatch(
+    expect(instanceListWorkspaceSource).toMatch(
       /\.instance-row-access-value\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s
     )
   })
@@ -119,28 +122,31 @@ describe('InstanceList', () => {
   it('实例页概况卡片应使用统一 metric-panel 样式类', () => {
     expect(instanceListSource).toContain('useInstanceWarningFocus')
     expect(instanceListSource).not.toContain('watch(showWarning')
-    expect(instanceListSource).toMatch(/<div class="workspace-overline">\s*Instances\s*<\/div>/)
-    expect(instanceListSource).toMatch(
+    expect(instanceListSource).toContain(
+      "import InstanceListWorkspaceShell from '@/components/instance/InstanceListWorkspaceShell.vue'"
+    )
+    expect(instanceListWorkspaceSource).toMatch(/<div class="workspace-overline">\s*Instances\s*<\/div>/)
+    expect(instanceListWorkspaceSource).toMatch(
       /<h1 class="instance-title workspace-page-title">\s*我的实例\s*<\/h1>/
     )
-    expect(instanceListSource).not.toContain('<div class="journal-eyebrow">Instances</div>')
-    expect(instanceListSource).not.toContain('journal-eyebrow-text')
-    expect(instanceListSource).toContain('class="instance-summary-grid metric-panel-grid"')
-    expect(instanceListSource).toContain(
+    expect(instanceListWorkspaceSource).not.toContain('<div class="journal-eyebrow">Instances</div>')
+    expect(instanceListWorkspaceSource).not.toContain('journal-eyebrow-text')
+    expect(instanceListWorkspaceSource).toContain('class="instance-summary-grid metric-panel-grid"')
+    expect(instanceListWorkspaceSource).toContain(
       'class="instance-summary-item progress-card metric-panel-card"'
     )
-    expect(instanceListSource).toContain(
+    expect(instanceListWorkspaceSource).toContain(
       'class="instance-summary-label progress-card-label metric-panel-label"'
     )
-    expect(instanceListSource).toContain(
+    expect(instanceListWorkspaceSource).toContain(
       'class="instance-summary-value progress-card-value metric-panel-value"'
     )
-    expect(instanceListSource).toContain(
+    expect(instanceListWorkspaceSource).toContain(
       'class="instance-summary-helper progress-card-hint metric-panel-helper"'
     )
-    expect(instanceListSource).toContain('<Activity class="h-4 w-4" />')
-    expect(instanceListSource).toContain('<Clock3 class="h-4 w-4" />')
-    expect(instanceListSource).toContain('<Server class="h-4 w-4" />')
+    expect(instanceListWorkspaceSource).toContain('<Activity class="h-4 w-4" />')
+    expect(instanceListWorkspaceSource).toContain('<Clock3 class="h-4 w-4" />')
+    expect(instanceListWorkspaceSource).toContain('<Server class="h-4 w-4" />')
     expect(journalNotesSource).toContain(
       'font-size: var(--metric-panel-label-size, var(--font-size-11));'
     )
@@ -150,18 +156,18 @@ describe('InstanceList', () => {
     expect(journalNotesSource).toContain(
       'font-size: var(--metric-panel-helper-size, var(--font-size-13));'
     )
-    expect(instanceListSource).toContain('当前仍在运行、可直接访问的实例数量')
-    expect(instanceListSource).toContain('已经提交创建请求、正在排队或启动中的实例数量')
-    expect(instanceListSource).toContain('当前账号最多可同时保留的实例数量')
+    expect(instanceListWorkspaceSource).toContain('当前仍在运行、可直接访问的实例数量')
+    expect(instanceListWorkspaceSource).toContain('已经提交创建请求、正在排队或启动中的实例数量')
+    expect(instanceListWorkspaceSource).toContain('当前账号最多可同时保留的实例数量')
   })
 
   it('实例列表页操作按钮应接入共享 ui-btn 原语', () => {
-    expect(instanceListSource).toContain('class="ui-btn ui-btn--link instance-link-btn"')
-    expect(instanceListSource).toContain('class="ui-btn ui-btn--sm ui-btn--primary"')
-    expect(instanceListSource).toContain('class="ui-btn ui-btn--sm ui-btn--danger"')
-    expect(instanceListSource).toContain('class="ui-btn ui-btn--secondary"')
-    expect(instanceListSource).not.toMatch(/^\.instance-link-btn\s*\{/m)
-    expect(instanceListSource).not.toMatch(/^\.instance-btn-danger\s*\{/m)
+    expect(instanceListWorkspaceSource).toContain('class="ui-btn ui-btn--link instance-link-btn"')
+    expect(instanceListWorkspaceSource).toContain('class="ui-btn ui-btn--sm ui-btn--primary"')
+    expect(instanceListWorkspaceSource).toContain('class="ui-btn ui-btn--sm ui-btn--danger"')
+    expect(instanceListWorkspaceSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(instanceListWorkspaceSource).not.toMatch(/^\.instance-link-btn\s*\{/m)
+    expect(instanceListWorkspaceSource).not.toMatch(/^\.instance-btn-danger\s*\{/m)
   })
 
   it('AWD 队伍实例不应显示延时或销毁操作', async () => {

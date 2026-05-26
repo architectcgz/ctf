@@ -23,6 +23,7 @@ import challengeManageHeroPanelSource from '@/components/platform/challenge/Chal
 import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
 import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
 import contestOrchestrationPageSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import dashboardViewSource from '@/views/dashboard/DashboardView.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import contestListSource from '@/views/contests/ContestList.vue?raw'
@@ -53,6 +54,7 @@ const workspaceShellStylesSource = readFileSync(
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
+const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -98,7 +100,7 @@ describe('workspace shell shared styles', () => {
       contestListSource,
       imageManageHeroPanelSource,
       instanceManageHeroPanelSource,
-      instanceListSource,
+      instanceListWorkspaceSource,
       notificationDetailSource,
       notificationListSource,
       scoreboardDetailSource,

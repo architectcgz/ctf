@@ -7,6 +7,7 @@ import studentOverviewSource from '@/components/dashboard/student/StudentOvervie
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
 import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import challengePresentationSource from '@/entities/challenge/model/presentation.ts?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
@@ -21,6 +22,7 @@ const journalUserShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-shell.css`,
   'utf-8'
 )
+const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
 
 describe('student and user surface alignment', () => {
   it('student dashboard panel headers 应复用 timeline 节奏抽出的共享 header 间距原语', () => {
@@ -304,15 +306,15 @@ describe('student and user surface alignment', () => {
     expect(journalUserShellSource).toContain('--journal-border:')
     expect(journalUserShellSource).toContain('--journal-surface:')
 
-    expect(instanceListSource).toContain('journal-shell-user')
-    expect(instanceListSource).not.toContain('border-[var(--journal-border)]')
-    expect(instanceListSource).not.toContain('border-[var(--journal-border)]/80')
-    expect(instanceListSource).toContain(
+    expect(instanceListWorkspaceSource).toContain('journal-shell-user')
+    expect(instanceListWorkspaceSource).not.toContain('border-[var(--journal-border)]')
+    expect(instanceListWorkspaceSource).not.toContain('border-[var(--journal-border)]/80')
+    expect(instanceListWorkspaceSource).toContain(
       'class="instance-summary-label progress-card-label metric-panel-label"'
     )
-    expect(instanceListSource).toContain('<Activity class="h-4 w-4" />')
-    expect(instanceListSource).toContain('<Clock3 class="h-4 w-4" />')
-    expect(instanceListSource).toContain('<Server class="h-4 w-4" />')
+    expect(instanceListWorkspaceSource).toContain('<Activity class="h-4 w-4" />')
+    expect(instanceListWorkspaceSource).toContain('<Clock3 class="h-4 w-4" />')
+    expect(instanceListWorkspaceSource).toContain('<Server class="h-4 w-4" />')
 
     expect(notificationListSource).toContain('journal-shell-user')
     expect(notificationListSource).not.toContain('rgba(148, 163, 184, 0.58)')

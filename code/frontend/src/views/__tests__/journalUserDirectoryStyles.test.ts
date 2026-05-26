@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import challengeDirectoryPanelSource from '@/components/challenge/ChallengeDirectoryPanel.vue?raw'
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import contestListSource from '@/views/contests/ContestList.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
@@ -22,6 +23,7 @@ const appStyleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 const scoreboardWorkspaceSource = `${scoreboardSource}\n${scoreboardWorkspaceShellSource}`
+const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
 
 function extractScopedStyle(source: string): string {
   const match = source.match(/<style scoped>([\s\S]*?)<\/style>/)
@@ -33,7 +35,7 @@ describe('journal user directory shared styles', () => {
     expect(challengeListSource).toContain('class="workspace-page-header challenge-topbar"')
     expect(contestListSource).toContain('class="workspace-page-header contest-topbar"')
     expect(notificationListSource).toContain('class="workspace-page-header notification-topbar"')
-    expect(instanceListSource).toContain('class="workspace-page-header instance-topbar"')
+    expect(instanceListWorkspaceSource).toContain('class="workspace-page-header instance-topbar"')
     expect(userProfileWorkspaceSource).toContain('class="workspace-page-header profile-topbar"')
     expect(securitySettingsWorkspaceSource).toContain('class="workspace-page-header security-topbar"')
     expect(journalUserDirectorySource).not.toMatch(/\.challenge-topbar[\s\S]*border-bottom:/)
@@ -98,7 +100,7 @@ describe('journal user directory shared styles', () => {
     expect(scoreboardStyle).not.toMatch(/^\.scoreboard-directory-meta\s*\{/m)
     expect(scoreboardStyle).not.toMatch(/^\.scoreboard-btn\s*\{/m)
 
-    const instanceStyle = extractScopedStyle(instanceListSource)
+    const instanceStyle = extractScopedStyle(instanceListWorkspaceSource)
     expect(instanceStyle).not.toMatch(/^\.instance-topbar\s*\{/m)
     expect(instanceStyle).not.toMatch(/^\.instance-summary\s*\{/m)
     expect(instanceStyle).not.toMatch(/^\.instance-summary-title\s*\{/m)

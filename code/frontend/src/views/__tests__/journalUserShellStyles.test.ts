@@ -6,6 +6,7 @@ import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import contestListSource from '@/views/contests/ContestList.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationDetailSource from '@/views/notifications/NotificationDetail.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
@@ -29,6 +30,7 @@ const workspaceShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,
   'utf-8'
 )
+const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
@@ -57,7 +59,7 @@ describe('journal user shell shared styles', () => {
       challengeDetailSource,
       contestListSource,
       contestDetailSource,
-      instanceListSource,
+      instanceListWorkspaceSource,
       notificationDetailSource,
       notificationListSource,
       scoreboardSource,
@@ -75,7 +77,7 @@ describe('journal user shell shared styles', () => {
       challengeDetailSource,
       contestListSource,
       contestDetailSource,
-      instanceListSource,
+      instanceListWorkspaceSource,
       notificationDetailSource,
       notificationListSource,
       scoreboardSource,

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
@@ -10,6 +11,7 @@ const journalUserDirectorySource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-directory.css`,
   'utf-8'
 )
+const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
 
 function extractScopedStyle(source: string): string {
   const match = source.match(/<style scoped>([\s\S]*?)<\/style>/)
@@ -39,7 +41,7 @@ describe('journal user directory shared button variants', () => {
     const notificationStyle = extractScopedStyle(notificationListSource)
     expect(notificationStyle).not.toMatch(/^\.notification-btn-primary\s*\{/m)
 
-    const instanceStyle = extractScopedStyle(instanceListSource)
+    const instanceStyle = extractScopedStyle(instanceListWorkspaceSource)
     expect(instanceStyle).not.toMatch(/^\.instance-btn-primary\s*\{/m)
   })
 })

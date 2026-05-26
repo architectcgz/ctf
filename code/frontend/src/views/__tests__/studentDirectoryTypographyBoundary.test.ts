@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
 import contestListSource from '@/views/contests/ContestList.vue?raw'
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import awdReviewDirectorySource from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue?raw'
 import awdChallengeLibrarySource from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue?raw'
@@ -19,6 +20,7 @@ const vueComponentSources = import.meta.glob<string>('/src/**/*.vue', {
   import: 'default',
   eager: true,
 })
+const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
 
 function extractTemplateSlot(source: string, slotName: string): string {
   const match = source.match(new RegExp(`#${slotName}[^>]*>([\\s\\S]*?)<\\/template>`))
@@ -49,7 +51,7 @@ describe('student directory typography boundary', () => {
     expect(appStyleSource).not.toContain('.workspace-directory-row-title--mono')
     expect(contestListSource).not.toContain('workspace-directory-row-title--mono')
     expect(scoreboardSource).not.toContain('workspace-directory-row-title--mono')
-    expect(instanceListSource).not.toContain('workspace-directory-row-title--mono')
+    expect(instanceListWorkspaceSource).not.toContain('workspace-directory-row-title--mono')
   })
 
   it('学生侧赛事与排行榜普通文本不应强制使用等宽字体', () => {
@@ -68,7 +70,7 @@ describe('student directory typography boundary', () => {
 
   it('学生侧列表主标题列应保持纯净，不混入标签、序号或描述', () => {
     expect(contestListSource).not.toContain('contest-row-status-strip')
-    expect(instanceListSource).not.toContain('instance-row-tags')
+    expect(instanceListWorkspaceSource).not.toContain('instance-row-tags')
     expect(scoreboardSource).not.toContain('scoreboard-card-chips')
     expect(scoreboardSource).not.toContain('scoreboard-card-description')
   })

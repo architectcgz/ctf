@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import contestListSource from '@/views/contests/ContestList.vue?raw'
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 import scoreboardViewSource from '@/views/scoreboard/ScoreboardView.vue?raw'
@@ -67,6 +68,7 @@ const contestDetailWorkspaceSource = `${contestDetailSource}\n${contestOverviewP
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
+const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
 
 const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
@@ -154,7 +156,7 @@ describe('workspace page header styles', () => {
   it('不应在页面局部重复声明公共标题排版', () => {
     expectNoLocalTitleTypography(contestListSource, '.contest-title')
     expectNoLocalTitleTypography(challengeListSource, '.challenge-title')
-    expectNoLocalTitleTypography(instanceListSource, '.instance-title')
+    expectNoLocalTitleTypography(instanceListWorkspaceSource, '.instance-title')
     expectNoLocalTitleTypography(notificationListSource, '.notification-title')
     expectNoLocalTitleTypography(scoreboardViewSource, '.scoreboard-title')
     expectNoLocalTitleTypography(challengeManageSource, '.manage-title')
@@ -177,7 +179,7 @@ describe('workspace page header styles', () => {
   it('不应在页面局部重复声明公共说明排版', () => {
     expectNoLocalCopyTypography(contestListSource, '.contest-subtitle')
     expectNoLocalCopyTypography(challengeListSource, '.challenge-subtitle')
-    expectNoLocalCopyTypography(instanceListSource, '.instance-subtitle')
+    expectNoLocalCopyTypography(instanceListWorkspaceSource, '.instance-subtitle')
     expectNoLocalCopyTypography(notificationListSource, '.notification-subtitle')
     expectNoLocalCopyTypography(scoreboardViewSource, '.scoreboard-subtitle')
     expectNoLocalCopyTypography(auditLogSource, '.admin-page-copy')
@@ -443,7 +445,7 @@ describe('workspace page header styles', () => {
     expect(securitySettingsWorkspaceSource).toContain('class="workspace-page-header security-topbar"')
     expect(securitySettingsWorkspaceSource).toContain('class="security-topbar-meta"')
     expect(contestListSource).toContain('class="workspace-page-header contest-topbar"')
-    expect(instanceListSource).toContain('class="workspace-page-header instance-topbar"')
+    expect(instanceListWorkspaceSource).toContain('class="workspace-page-header instance-topbar"')
     expect(notificationListSource).toContain('class="workspace-page-header notification-topbar"')
     expect(challengeImportHeroSource).toContain(
       '<header class="workspace-page-header challenge-import-heading">'

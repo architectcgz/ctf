@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import contestListSource from '@/views/contests/ContestList.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 import notificationDetailSource from '@/views/notifications/NotificationDetail.vue?raw'
@@ -19,6 +20,7 @@ import studentOverviewSource from '@/components/dashboard/student/StudentOvervie
 import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
 
 describe('student root shell cleanup', () => {
+  const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
   const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
   const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
   const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
@@ -27,7 +29,7 @@ describe('student root shell cleanup', () => {
     ['ChallengeList.vue', challengeListSource],
     ['ContestList.vue', contestListSource],
     ['ContestDetail.vue', contestDetailSource],
-    ['InstanceList.vue', instanceListSource],
+    ['InstanceList.vue', instanceListWorkspaceSource],
     ['NotificationList.vue', notificationListSource],
     ['NotificationDetail.vue', notificationDetailSource],
     ['UserProfile.vue', userProfileWorkspaceSource],

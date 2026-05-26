@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import challengeListSource from '../challenges/ChallengeList.vue?raw'
 import contestListSource from '../contests/ContestList.vue?raw'
 import instanceListSource from '../instances/InstanceList.vue?raw'
@@ -22,10 +23,11 @@ describe('full-bleed hero roots', () => {
     const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
     const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
     const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
+    const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
     const sources = [
       challengeListSource,
       contestListSource,
-      instanceListSource,
+      instanceListWorkspaceSource,
       notificationListSource,
       scoreboardViewSource,
       securitySettingsWorkspaceSource,
