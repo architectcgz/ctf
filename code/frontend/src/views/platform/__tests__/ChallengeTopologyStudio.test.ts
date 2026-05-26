@@ -16,6 +16,7 @@ import topologyNodeSectionSource from '@/components/platform/topology/TopologyNo
 import topologyTemplateHeroSectionSource from '@/components/platform/topology/TopologyTemplateHeroSection.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
 import topologyTemplateWorkbenchSource from '@/components/platform/topology/TopologyTemplateWorkbench.vue?raw'
+import topologyStructureMutationsSource from '@/features/challenge-topology-studio/model/useTopologyStructureMutations.ts?raw'
 import challengeTopologyStudioRouteSource from '../ChallengeTopologyStudio.vue?raw'
 import { ApiError } from '@/api/request'
 
@@ -310,6 +311,25 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(topologyChallengeWorkspaceHeaderSource).toContain("emit('back')")
     expect(topologyChallengeWorkspaceHeaderSource).toContain("emit('save')")
     expect(topologyChallengeWorkspaceHeaderSource).toContain('<TopologySummaryGrid')
+  })
+
+  it('draft 变更 script owner 应收口到 feature model', () => {
+    expect(challengeTopologyStudioPageSource).not.toContain('function updateNetworkDraft')
+    expect(challengeTopologyStudioPageSource).not.toContain('function updateNodeDraft')
+    expect(challengeTopologyStudioPageSource).not.toContain('function updateSelectedNodeField')
+    expect(challengeTopologyStudioPageSource).not.toContain('function updateEntryNodeKey')
+    expect(challengeTopologyStudioPageSource).not.toContain('function updateLinkDraft')
+    expect(challengeTopologyStudioPageSource).not.toContain('function removeLinkDraft')
+    expect(challengeTopologyStudioPageSource).not.toContain('function updatePolicyDraft')
+    expect(challengeTopologyStudioPageSource).not.toContain('function removePolicyDraft')
+    expect(topologyStructureMutationsSource).toContain('function updateNetworkDraft')
+    expect(topologyStructureMutationsSource).toContain('function updateNodeDraft')
+    expect(topologyStructureMutationsSource).toContain('function updateSelectedNodeField')
+    expect(topologyStructureMutationsSource).toContain('function updateEntryNodeKey')
+    expect(topologyStructureMutationsSource).toContain('function updateLinkDraft')
+    expect(topologyStructureMutationsSource).toContain('function removeLinkDraft')
+    expect(topologyStructureMutationsSource).toContain('function updatePolicyDraft')
+    expect(topologyStructureMutationsSource).toContain('function removePolicyDraft')
   })
 
   it('删除拓扑失败时应优先展示接口返回消息', async () => {

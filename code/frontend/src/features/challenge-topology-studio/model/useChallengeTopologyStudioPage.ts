@@ -185,13 +185,28 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     resetTemplateForm(null)
   }
 
-  const { addNetwork, removeNetwork, addNode, removeNode, addLink, addPolicy } =
-    useTopologyStructureMutations({
-      draft,
-      selectedNodeKey,
-      selectedEdgeId,
-      syncEntryNode,
-    })
+  const {
+    addNetwork,
+    removeNetwork,
+    addNode,
+    removeNode,
+    addLink,
+    addPolicy,
+    updateNetworkDraft,
+    updateNodeDraft,
+    updateSelectedNodeField,
+    updateEntryNodeKey,
+    updateLinkDraft,
+    removeLinkDraft,
+    updatePolicyDraft,
+    removePolicyDraft,
+  } = useTopologyStructureMutations({
+    draft,
+    selectedNodeKey,
+    selectedEdgeId,
+    selectedNodeDraft,
+    syncEntryNode,
+  })
   const {
     updateNodePosition,
     setInteractionMode,
@@ -279,6 +294,10 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     removeNetwork,
     addNode,
     removeNode,
+    updateNetworkDraft,
+    updateNodeDraft,
+    updateSelectedNodeField,
+    updateEntryNodeKey,
     updateNodePosition,
     setInteractionMode,
     handleCanvasSelectNode,
@@ -288,6 +307,10 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     removeSelectedCanvasItem,
     addLink,
     addPolicy,
+    updateLinkDraft,
+    removeLinkDraft,
+    updatePolicyDraft,
+    removePolicyDraft,
     loadTemplateIntoDraft,
     handleApplyTemplate,
     handleSaveTopology,

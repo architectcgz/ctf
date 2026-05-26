@@ -9,13 +9,6 @@ import {
   useChallengeTopologyStudioPage,
   type TopologyStudioMode,
 } from '@/features/challenge-topology-studio'
-import type {
-  TopologyLinkDraft,
-  TopologyNetworkDraft,
-  TopologyNodeDraft,
-  TopologyPolicyDraft,
-} from '@/features/challenge-topology-studio/model'
-import type { TopologyTier } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -104,6 +97,10 @@ const {
   removeNetwork,
   addNode,
   removeNode,
+  updateNetworkDraft,
+  updateNodeDraft,
+  updateSelectedNodeField,
+  updateEntryNodeKey,
   updateNodePosition,
   setInteractionMode,
   handleCanvasSelectNode,
@@ -113,6 +110,10 @@ const {
   removeSelectedCanvasItem,
   addLink,
   addPolicy,
+  updateLinkDraft,
+  removeLinkDraft,
+  updatePolicyDraft,
+  removePolicyDraft,
   loadTemplateIntoDraft,
   handleApplyTemplate,
   handleSaveTopology,
@@ -134,75 +135,6 @@ const rootClasses = computed(() => [
   isTemplateLibraryMode.value ? 'topology-page--template-library' : 'topology-page--challenge',
   'workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col',
 ])
-
-function updateNetworkDraft(payload: {
-  uid: string
-  patch: Partial<Pick<TopologyNetworkDraft, 'key' | 'name' | 'cidr' | 'internal'>>
-}) {
-  const network = draft.value.networks.find((item) => item.uid === payload.uid)
-  if (!network) return
-  Object.assign(network, payload.patch)
-}
-
-function updateNodeDraft(payload: { uid: string; node: TopologyNodeDraft }) {
-  const index = draft.value.nodes.findIndex((item) => item.uid === payload.uid)
-  if (index === -1) return
-  draft.value.nodes[index] = payload.node
-}
-
-function updateSelectedNodeField(payload: {
-  field: 'name' | 'image_id' | 'tier' | 'inject_flag'
-  value: string | boolean
-}) {
-  if (!selectedNodeDraft.value) {
-    return
-  }
-
-  switch (payload.field) {
-    case 'inject_flag':
-      selectedNodeDraft.value.inject_flag = Boolean(payload.value)
-      return
-    case 'name':
-      selectedNodeDraft.value.name = String(payload.value)
-      return
-    case 'image_id':
-      selectedNodeDraft.value.image_id = String(payload.value)
-      return
-    case 'tier':
-      selectedNodeDraft.value.tier = String(payload.value) as TopologyTier
-      return
-  }
-}
-
-function updateEntryNodeKey(value: string) {
-  draft.value.entry_node_key = value
-}
-
-function updateLinkDraft(payload: {
-  uid: string
-  patch: Partial<Pick<TopologyLinkDraft, 'from_node_key' | 'to_node_key'>>
-}) {
-  const link = draft.value.links.find((item) => item.uid === payload.uid)
-  if (!link) return
-  Object.assign(link, payload.patch)
-}
-
-function removeLinkDraft(uid: string) {
-  draft.value.links = draft.value.links.filter((item) => item.uid !== uid)
-}
-
-function updatePolicyDraft(payload: {
-  uid: string
-  patch: Partial<Pick<TopologyPolicyDraft, 'source_node_key' | 'target_node_key' | 'action'>>
-}) {
-  const policy = draft.value.policies.find((item) => item.uid === payload.uid)
-  if (!policy) return
-  Object.assign(policy, payload.patch)
-}
-
-function removePolicyDraft(uid: string) {
-  draft.value.policies = draft.value.policies.filter((item) => item.uid !== uid)
-}
 </script>
 
 <template>

@@ -45,7 +45,6 @@ export const componentFeatureImportAllowlist = new Set([
   'components/platform/dashboard/PlatformOverviewPage.vue -> @/features/platform-overview',
   'components/platform/user/PlatformUserFormDialog.vue -> @/features/platform-user-management',
   'components/platform/topology/ChallengeTopologyStudioPage.vue -> @/features/challenge-topology-studio',
-  'components/platform/topology/ChallengeTopologyStudioPage.vue -> @/features/challenge-topology-studio/model',
   'components/platform/topology/TopologyCanvasBoard.vue -> @/features/challenge-topology-studio/model',
   'components/platform/topology/TopologyConnectivitySections.vue -> @/features/challenge-topology-studio/model',
   'components/platform/topology/TopologyNetworkSection.vue -> @/features/challenge-topology-studio/model',
