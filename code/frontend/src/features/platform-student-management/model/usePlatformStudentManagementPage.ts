@@ -1,7 +1,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { getClasses, getStudentsDirectory } from '@/api/teaching'
+import { getClasses, getStudentsDirectory } from '@/api/admin'
 import type { TeacherClassItem } from '@/api/contracts'
 import { useStudentDirectoryQuery } from '@/features/student-directory'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'

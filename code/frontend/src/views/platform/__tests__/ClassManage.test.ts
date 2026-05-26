@@ -8,7 +8,7 @@ import classManageWorkspacePanelSource from '@/components/platform/class/ClassMa
 
 const pushMock = vi.fn()
 
-const teachingApiMocks = vi.hoisted(() => ({
+const adminTeachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
 }))
 
@@ -20,13 +20,15 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teaching', () => teachingApiMocks)
+vi.mock('@/api/admin', () => ({
+  getClasses: adminTeachingApiMocks.getClasses,
+}))
 
 describe('PlatformClassManagement', () => {
   beforeEach(() => {
     pushMock.mockReset()
-    teachingApiMocks.getClasses.mockReset()
-    teachingApiMocks.getClasses.mockResolvedValue({
+    adminTeachingApiMocks.getClasses.mockReset()
+    adminTeachingApiMocks.getClasses.mockResolvedValue({
       list: [
         { name: 'Class A', student_count: 2 },
         { name: 'Class B', student_count: 0 },
@@ -79,7 +81,7 @@ describe('PlatformClassManagement', () => {
     const wrapper = mount(PlatformClassManagement)
     await flushPromises()
 
-    expect(teachingApiMocks.getClasses).toHaveBeenCalledWith({ page: 1, page_size: 20 })
+    expect(adminTeachingApiMocks.getClasses).toHaveBeenCalledWith({ page: 1, page_size: 20 })
     expect(wrapper.text()).toContain('班级管理')
     expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).toContain('Class B')

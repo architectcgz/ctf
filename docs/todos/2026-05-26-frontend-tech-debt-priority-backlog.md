@@ -28,15 +28,17 @@
   - 风险：中低。主要是展示区块切分和源码护栏适配，业务 owner 相对清楚。
   - `2026-05-26` 进展：已拆为 `PlatformOverviewHeroPanel` / `PlatformOverviewAlertsSection` / `PlatformOverviewHotspotsSection` 与 `TeacherInstanceHeroPanel` / `TeacherInstanceDirectorySection`，父页继续只保留 page shell、事件桥接和派发展示数据。
 
-- [ ] P1：处理 `platform-users` 过宽职责，把用户治理、班级/学生目录、实例管理继续拆回更清晰的 feature owner
-  - 依据：架构 review 仍明确把 `platform-users` 视为过宽 bucket，当前管理端能力边界仍混杂。
-  - 收益：这是当前比“单个页面行数”更重要的结构债，能直接降低后续继续把 admin 能力堆进同一 feature 的概率。
-  - 风险：中高。会触达 feature 目录、query owner、命名和跨页复用边界，必须按切片推进。
+- [x] P1：处理 `platform-users` 过宽职责，把用户治理、班级/学生目录、实例管理继续拆回更清晰的 feature owner
+  - 依据：原始架构 review 把 `platform-users` 视为过宽 bucket；当前代码事实里，这个桶已经拆成 `platform-user-management`、`platform-class-management`、`platform-student-management`、`platform-instance-management`。
+  - 收益：完成后，admin 侧的用户治理、班级目录、学生目录、实例目录已经不再堆在同一个 feature 名下。
+  - 风险：原始拆桶风险已消化；当前残留风险已转移到下面这条“admin / teacher 结构耦合”。
+  - `2026-05-27` 进展：进一步补上 `api/admin/teaching.ts` owner，platform class / student / instance feature 与 admin 通知发布不再直接引用 `@/api/teaching`。
 
 - [ ] P1：收口 admin / teacher 结构耦合，优先停止让 `/platform/*` 直接依赖 teacher 视图或 teacher 语义 owner
   - 依据：`docs/reviews/architecture/2026-05-24-frontend-architecture-review.md` 仍把这条列为当前 P1 finding。
   - 收益：能减少权限面和页面 owner 的隐式耦合，避免 teacher 改动静默影响 platform。
   - 风险：高。这里不是简单拆模板，涉及 route view、共享 workspace feature 的重新归位。
+  - `2026-05-27` 进展：已先收口 API owner，platform class / student / instance feature 和 admin 通知发布改为通过 `api/admin/teaching.ts` 取教学目录能力；后续仍需继续处理共享页面与 contract 命名里的 teacher 语义。
 
 - [ ] P1：继续拆 contest / AWD 线上的超大组件壳，优先看 `ContestAwdConfigWorkspaceShell.vue`、`ContestChallengeEditorDialog.vue`、`AWDChallengeLibraryPage.vue`
   - 依据：这三者当前约 `1009` / `899` / `896` 行，是现阶段最肥的一批前端组件壳。

@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { TeacherInstanceItem } from '@/api/contracts'
-import { destroyTeacherInstance, getTeacherInstances } from '@/api/teaching'
+import { destroyPlatformInstance, getPlatformInstances } from '@/api/admin'
 import { useAbortController } from '@/composables/useAbortController'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { reportFrontendError } from '@/utils/reportFrontendError'
@@ -65,7 +65,7 @@ export function usePlatformInstanceManagementPage() {
     loading.value = true
     error.value = null
     try {
-      const response = await getTeacherInstances({
+      const response = await getPlatformInstances({
         class_name: undefined,
         keyword: keyword.value.trim() || undefined,
         student_no: undefined,
@@ -119,7 +119,7 @@ export function usePlatformInstanceManagementPage() {
 
     try {
       destroyingId.value = instance.id
-      await destroyTeacherInstance(instance.id)
+      await destroyPlatformInstance(instance.id)
       if (list.value.length === 1 && page.value > 1) {
         page.value -= 1
       }

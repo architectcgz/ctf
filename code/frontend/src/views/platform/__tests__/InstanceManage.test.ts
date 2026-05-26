@@ -8,9 +8,9 @@ import instanceManageWorkspacePanelSource from '@/components/platform/instance/I
 
 const pushMock = vi.fn()
 
-const teachingApiMocks = vi.hoisted(() => ({
-  getTeacherInstances: vi.fn(),
-  destroyTeacherInstance: vi.fn(),
+const adminTeachingApiMocks = vi.hoisted(() => ({
+  getPlatformInstances: vi.fn(),
+  destroyPlatformInstance: vi.fn(),
 }))
 
 const confirmMock = vi.hoisted(() => vi.fn())
@@ -23,7 +23,10 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teaching', () => teachingApiMocks)
+vi.mock('@/api/admin', () => ({
+  getPlatformInstances: adminTeachingApiMocks.getPlatformInstances,
+  destroyPlatformInstance: adminTeachingApiMocks.destroyPlatformInstance,
+}))
 vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: confirmMock,
 }))
@@ -31,11 +34,11 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 describe('PlatformInstanceManagement', () => {
   beforeEach(() => {
     pushMock.mockReset()
-    teachingApiMocks.getTeacherInstances.mockReset()
-    teachingApiMocks.destroyTeacherInstance.mockReset()
+    adminTeachingApiMocks.getPlatformInstances.mockReset()
+    adminTeachingApiMocks.destroyPlatformInstance.mockReset()
     confirmMock.mockReset()
 
-    teachingApiMocks.getTeacherInstances.mockResolvedValue({
+    adminTeachingApiMocks.getPlatformInstances.mockResolvedValue({
       list: [
         {
           id: 'inst-1',
@@ -82,7 +85,7 @@ describe('PlatformInstanceManagement', () => {
         warning_count: 1,
       },
     })
-    teachingApiMocks.destroyTeacherInstance.mockResolvedValue(undefined)
+    adminTeachingApiMocks.destroyPlatformInstance.mockResolvedValue(undefined)
     confirmMock.mockResolvedValue(true)
   })
 
@@ -90,7 +93,7 @@ describe('PlatformInstanceManagement', () => {
     vi.useRealTimers()
   })
 
-  it('应保留当前后台实例页样式并复用 teacher 实例接口', async () => {
+  it('应保留当前后台实例页样式并复用 admin 实例目录接口 owner', async () => {
     expect(adminInstanceManageSource).toContain(
       "usePlatformInstanceManagementPage } from '@/features/platform-instance-management'"
     )
@@ -137,7 +140,7 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    expect(teachingApiMocks.getTeacherInstances).toHaveBeenCalledWith(
+    expect(adminTeachingApiMocks.getPlatformInstances).toHaveBeenCalledWith(
       {
         class_name: undefined,
         keyword: undefined,
@@ -166,7 +169,7 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    teachingApiMocks.getTeacherInstances.mockResolvedValue({
+    adminTeachingApiMocks.getPlatformInstances.mockResolvedValue({
       list: [
         {
           id: 'inst-2',
@@ -201,7 +204,7 @@ describe('PlatformInstanceManagement', () => {
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teachingApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+    expect(adminTeachingApiMocks.getPlatformInstances).toHaveBeenLastCalledWith(
       {
         class_name: undefined,
         keyword: 'Pwn',
@@ -235,7 +238,7 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    teachingApiMocks.getTeacherInstances.mockResolvedValue({
+    adminTeachingApiMocks.getPlatformInstances.mockResolvedValue({
       list: [
         {
           id: 'inst-2',
@@ -273,8 +276,8 @@ describe('PlatformInstanceManagement', () => {
     await flushPromises()
 
     expect(confirmMock).toHaveBeenCalled()
-    expect(teachingApiMocks.destroyTeacherInstance).toHaveBeenCalledWith('inst-1')
-    expect(teachingApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+    expect(adminTeachingApiMocks.destroyPlatformInstance).toHaveBeenCalledWith('inst-1')
+    expect(adminTeachingApiMocks.getPlatformInstances).toHaveBeenLastCalledWith(
       {
         class_name: undefined,
         keyword: undefined,

@@ -8,7 +8,7 @@ const adminApiMocks = vi.hoisted(() => ({
   getUsers: vi.fn(),
 }))
 
-const teachingApiMocks = vi.hoisted(() => ({
+const adminTeachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
 }))
 
@@ -26,7 +26,9 @@ vi.mock('@/api/admin/platform', () => ({
 vi.mock('@/api/admin/users', () => ({
   getUsers: adminApiMocks.getUsers,
 }))
-vi.mock('@/api/teaching', () => teachingApiMocks)
+vi.mock('@/api/admin', () => ({
+  getClasses: adminTeachingApiMocks.getClasses,
+}))
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
@@ -64,7 +66,7 @@ describe('useAdminNotificationPublisher', () => {
   beforeEach(() => {
     adminApiMocks.publishAdminNotification.mockReset()
     adminApiMocks.getUsers.mockReset()
-    teachingApiMocks.getClasses.mockReset()
+    adminTeachingApiMocks.getClasses.mockReset()
     toastMocks.success.mockReset()
     toastMocks.error.mockReset()
     toastMocks.warning.mockReset()
@@ -88,7 +90,7 @@ describe('useAdminNotificationPublisher', () => {
       page: 1,
       page_size: 20,
     })
-    teachingApiMocks.getClasses.mockResolvedValue([{ name: 'Class A' }, { name: 'Class B' }])
+    adminTeachingApiMocks.getClasses.mockResolvedValue([{ name: 'Class A' }, { name: 'Class B' }])
   })
 
   it('assembles audience_rules payload for role/class/user/all modes', async () => {
@@ -137,7 +139,7 @@ describe('useAdminNotificationPublisher', () => {
         signal: expect.any(AbortSignal),
       }
     )
-    expect(teachingApiMocks.getClasses).toHaveBeenCalledTimes(1)
+    expect(adminTeachingApiMocks.getClasses).toHaveBeenCalledTimes(1)
   })
 
   it('submits publish payload successfully and returns publish receipt', async () => {

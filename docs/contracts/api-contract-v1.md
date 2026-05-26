@@ -30,6 +30,7 @@
 
 - 当前 AWD 学生侧前端契约只包含 defense SSH 访问，不包含浏览器文件工作台。
 - 因此不存在 `/api/v1/contests/:id/awd/services/:sid/defense/files`、`/defense/directories`、`/defense/commands` 的前端可用 HTTP 契约条目。
+- `src/api/teacher/*`、`src/api/admin/*` 可以作为语义 owner 对底层实现做薄 wrapper / re-export；只要没有改动 HTTP method、path、query、body、response schema，就不视为新的后端 API contract。
 
 ---
 
