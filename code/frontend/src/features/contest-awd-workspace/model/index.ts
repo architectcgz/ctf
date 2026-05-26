@@ -1,6 +1,7 @@
 export { useContestAWDWorkspace } from './useContestAWDWorkspace'
 export { useAwdWorkspaceAccessActions } from './useAwdWorkspaceAccessActions'
 export { useAwdWorkspaceAttackSubmission } from './useAwdWorkspaceAttackSubmission'
+export { useAwdWorkspaceAttackVector } from './useAwdWorkspaceAttackVector'
 export { useAwdWorkspaceServiceActions } from './useAwdWorkspaceServiceActions'
 export { useAwdDefenseServiceSelection } from './useAwdDefenseServiceSelection'
 export {

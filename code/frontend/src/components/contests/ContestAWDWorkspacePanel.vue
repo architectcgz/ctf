@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AWDDefenseColumn from '@/components/contests/awd/AWDDefenseColumn.vue'
@@ -11,6 +11,7 @@ import {
   getVSCodeSSHCommand,
   toDefenseServiceCards,
   useAwdDefenseServiceSelection,
+  useAwdWorkspaceAttackVector,
   useContestAWDWorkspace,
 } from '@/features/contest-awd-workspace'
 import type {
@@ -27,10 +28,6 @@ const props = defineProps<{
 }>()
 
 const toast = useToast()
-const activeChallengeKey = ref('')
-const flagInputs = ref<Record<string, string>>({})
-const targetKeyword = ref('')
-const showOnlyReachableTargets = ref(false)
 const copiedSSHCommandKey = ref('')
 const copiedSSHPasswordKey = ref('')
 
@@ -75,12 +72,20 @@ const runtimeChallenges = computed(() =>
     Boolean(item.awd_service_id)
   )
 )
-const attackToolbarChallengeOptions = computed(() =>
-  runtimeChallenges.value.map((challenge) => ({
-    key: getChallengeRuntimeKey(challenge),
-    title: challenge.title,
-  }))
-)
+const {
+  activeChallengeKey,
+  flagInputs,
+  targetKeyword,
+  attackToolbarChallengeOptions,
+  activeChallenge,
+  activeChallengeRuntimeKey,
+  filteredTargets,
+  handleSubmit,
+} = useAwdWorkspaceAttackVector({
+  challenges: computed(() => runtimeChallenges.value),
+  targets: computed(() => workspace.value?.targets || []),
+  submitAttack,
+})
 
 const defenseServiceCards = computed(() =>
   toDefenseServiceCards({
@@ -152,38 +157,6 @@ const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
 const lastSyncedLabel = computed(() =>
   lastSyncedAt.value ? formatTime(lastSyncedAt.value) : '未同步'
 )
-const targetFilterKeyword = computed(() => targetKeyword.value.trim().toLowerCase())
-
-const activeChallenge = computed(
-  () =>
-    runtimeChallenges.value.find(
-      (item) => getChallengeRuntimeKey(item) === activeChallengeKey.value
-    ) || null
-)
-const activeChallengeRuntimeKey = computed(() => getChallengeRuntimeKey(activeChallenge.value))
-
-const activeTargets = computed(() => {
-  if (!workspace.value || !activeChallenge.value) {
-    return []
-  }
-  return workspace.value.targets.map((target) => ({
-    ...target,
-    active_service: target.services.find((service) =>
-      isTargetServiceForChallenge(service, activeChallenge.value as ContestChallengeItem)
-    ),
-  }))
-})
-
-const filteredTargets = computed(() =>
-  activeTargets.value.filter((target) => {
-    const matchesKeyword =
-      targetFilterKeyword.value.length === 0 ||
-      target.team_name.toLowerCase().includes(targetFilterKeyword.value)
-    const matchesReachable =
-      !showOnlyReachableTargets.value || Boolean(target.active_service?.reachable)
-    return matchesKeyword && matchesReachable
-  })
-)
 
 const defenseAlerts = computed(() => {
   const items: Array<{
@@ -228,20 +201,6 @@ const defenseAlerts = computed(() => {
   return items
 })
 
-watch(
-  () => runtimeChallenges.value.map((item) => getChallengeRuntimeKey(item)),
-  (challengeKeys) => {
-    if (challengeKeys.length === 0) {
-      activeChallengeKey.value = ''
-      return
-    }
-    if (!challengeKeys.includes(activeChallengeKey.value)) {
-      activeChallengeKey.value = challengeKeys[0]
-    }
-  },
-  { immediate: true }
-)
-
 function eventDirectionLabel(direction: 'attack_in' | 'attack_out'): string {
   return direction === 'attack_out' ? '对外攻击' : '受到攻击'
 }
@@ -267,10 +226,6 @@ function formatRoundStatusLabel(status?: string): string {
     default:
       return '等待中'
   }
-}
-
-function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefined): string {
-  return challenge?.awd_service_id || ''
 }
 
 function getAWDChallengeId(challenge: ContestChallengeItem): string {
@@ -360,25 +315,6 @@ async function copySSHPassword(serviceId?: string): Promise<void> {
   }
 }
 
-function isTargetServiceForChallenge(
-  service: { service_id?: string; awd_challenge_id: string },
-  challenge: ContestChallengeItem
-): boolean {
-  return Boolean(challenge.awd_service_id) && service.service_id === challenge.awd_service_id
-}
-
-function buildAttackStateKey(serviceKey: string, teamId: string): string {
-  return `${serviceKey}:${teamId}`
-}
-
-async function handleSubmit(serviceKey: string, teamId: string): Promise<void> {
-  const stateKey = buildAttackStateKey(serviceKey, teamId)
-  const flag = flagInputs.value[stateKey] || ''
-  const result = await submitAttack(serviceKey, Number(teamId), flag)
-  if (result) {
-    flagInputs.value[stateKey] = ''
-  }
-}
 </script>
 
 <template>

@@ -6,6 +6,7 @@ import awdAttackTargetGridSource from '@/components/contests/awd/AWDAttackTarget
 import awdAttackResultFooterSource from '@/components/contests/awd/AWDAttackResultFooter.vue?raw'
 import awdAttackToolbarSource from '@/components/contests/awd/AWDAttackToolbar.vue?raw'
 import awdAttackVectorPanelSource from '@/components/contests/awd/AWDAttackVectorPanel.vue?raw'
+import awdAttackVectorStateSource from '@/features/contest-awd-workspace/model/useAwdWorkspaceAttackVector.ts?raw'
 import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
 import awdWorkspaceHudStripSource from '@/components/contests/awd/AWDWorkspaceHudStrip.vue?raw'
@@ -70,12 +71,20 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdWorkspaceSource).not.toContain('<section class="ops-panel">')
     expect(awdWorkspaceSource).not.toContain('请选择目标题目后开始攻击。')
     expect(awdWorkspaceSource).not.toContain('当前题目下没有匹配的目标队伍。')
-    expect(awdWorkspaceSource).toContain('handleSubmit')
-    expect(awdWorkspaceSource).toContain('flagInputs')
     expect(awdAttackVectorPanelSource).toContain('<section class="ops-panel">')
     expect(awdAttackVectorPanelSource).toContain("emit('update:activeChallengeKey'")
     expect(awdAttackVectorPanelSource).toContain("emit('updateFlag'")
     expect(awdAttackVectorPanelSource).toContain("emit('submit'")
+  })
+
+  it('攻击向量 script owner 应收口到 feature composable', () => {
+    expect(awdWorkspaceSource).toContain('useAwdWorkspaceAttackVector')
+    expect(awdWorkspaceSource).not.toContain('buildAttackStateKey')
+    expect(awdWorkspaceSource).not.toContain('targetFilterKeyword')
+    expect(awdAttackVectorStateSource).toContain('activeChallengeKey')
+    expect(awdAttackVectorStateSource).toContain('flagInputs')
+    expect(awdAttackVectorStateSource).toContain('filteredTargets')
+    expect(awdAttackVectorStateSource).toContain('handleSubmit')
   })
 
   it('学生战场页不暴露源码文件防守工作台入口', () => {
