@@ -7,7 +7,9 @@ import awdAttackResultFooterSource from '@/components/contests/awd/AWDAttackResu
 import awdAttackToolbarSource from '@/components/contests/awd/AWDAttackToolbar.vue?raw'
 import awdAttackVectorPanelSource from '@/components/contests/awd/AWDAttackVectorPanel.vue?raw'
 import awdAttackVectorStateSource from '@/features/contest-awd-workspace/model/useAwdWorkspaceAttackVector.ts?raw'
+import awdDefensePresentationSource from '@/features/contest-awd-workspace/model/awdDefensePresentation.ts?raw'
 import awdDefenseAccessPanelSource from '@/features/contest-awd-workspace/model/useAwdDefenseAccessPanel.ts?raw'
+import awdWorkspacePresentationSource from '@/features/contest-awd-workspace/model/useAwdWorkspacePresentation.ts?raw'
 import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
 import awdWorkspaceHudStripSource from '@/components/contests/awd/AWDWorkspaceHudStrip.vue?raw'
@@ -93,6 +95,20 @@ describe('ContestAWDWorkspacePanel source', () => {
     expect(awdDefenseAccessPanelSource).toContain('selectedDefenseCopiedCommand')
     expect(awdDefenseAccessPanelSource).toContain('copySSHCommand')
     expect(awdDefenseAccessPanelSource).toContain('复制失败，请手动选择文本')
+  })
+
+  it('情报与结果文案 owner 应收口到 feature composable', () => {
+    expect(awdWorkspaceSource).toContain('useAwdWorkspacePresentation')
+    expect(awdWorkspaceSource).not.toContain('function getChallengeTitleForEvent')
+    expect(awdWorkspaceSource).not.toContain('function eventDirectionLabel')
+    expect(awdWorkspaceSource).not.toContain('function formatAttackResultToast')
+    expect(awdWorkspaceSource).not.toContain('function getAWDChallengeId')
+    expect(awdWorkspaceSource).not.toContain('awd_challenge_id || challenge_id')
+    expect(awdWorkspacePresentationSource).toContain('getChallengeTitleForEvent')
+    expect(awdWorkspacePresentationSource).toContain('formatAttackResultToast')
+    expect(awdWorkspacePresentationSource).toContain('eventDirectionLabel')
+    expect(awdWorkspacePresentationSource).toContain('formatServiceRef')
+    expect(awdDefensePresentationSource).not.toContain('challenge.awd_challenge_id || challenge.challenge_id')
   })
 
   it('学生战场页不暴露源码文件防守工作台入口', () => {

@@ -4,6 +4,7 @@ import type {
   ContestChallengeItem,
   ID,
 } from '@/api/contracts'
+import { isAwdRuntimeChallenge } from './awdChallengeIdentity'
 
 export type AWDDefenseRiskLevel = 'critical' | 'warning' | 'watch' | 'stable'
 
@@ -51,15 +52,13 @@ export function toDefenseServiceCards({
   )
 
   return challenges
-    .filter((challenge): challenge is ContestChallengeItem & { awd_service_id: ID } =>
-      Boolean(challenge.awd_service_id)
-    )
+    .filter(isAwdRuntimeChallenge)
     .map((challenge, index) => {
       const service = serviceById.get(challenge.awd_service_id)
       const risk = getDefenseServiceRisk(service)
       return {
         serviceId: challenge.awd_service_id,
-        challengeId: challenge.awd_challenge_id || challenge.challenge_id,
+        challengeId: challenge.awd_challenge_id,
         instanceId: service?.instance_id,
         title: challenge.title,
         riskLevel: risk.level,

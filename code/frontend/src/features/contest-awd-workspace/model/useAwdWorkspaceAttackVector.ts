@@ -4,8 +4,8 @@ import type {
   ContestAWDWorkspaceTargetServiceData,
   ContestAWDWorkspaceTargetTeamData,
   ContestChallengeItem,
-  ID,
 } from '@/api/contracts'
+import { isAwdRuntimeChallenge, type AWDRuntimeChallenge } from './awdChallengeIdentity'
 
 type AttackTargetItem = ContestAWDWorkspaceTargetTeamData & {
   active_service?: ContestAWDWorkspaceTargetServiceData
@@ -23,9 +23,7 @@ export function useAwdWorkspaceAttackVector(options: UseAwdWorkspaceAttackVector
   const targetKeyword = ref('')
 
   const runtimeChallenges = computed(() =>
-    toValue(options.challenges).filter((item): item is ContestChallengeItem & { awd_service_id: ID } =>
-      Boolean(item.awd_service_id)
-    )
+    toValue(options.challenges).filter(isAwdRuntimeChallenge)
   )
 
   const attackToolbarChallengeOptions = computed(() =>
@@ -109,9 +107,9 @@ function getChallengeRuntimeKey(challenge: ContestChallengeItem | null | undefin
 
 function isTargetServiceForChallenge(
   service: { service_id?: string; awd_challenge_id: string },
-  challenge: ContestChallengeItem
+  challenge: AWDRuntimeChallenge
 ): boolean {
-  return Boolean(challenge.awd_service_id) && service.service_id === challenge.awd_service_id
+  return service.service_id === challenge.awd_service_id
 }
 
 function buildAttackStateKey(serviceKey: string, teamId: string): string {

@@ -8,12 +8,15 @@ import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip
 import AWDWorkspaceIntelColumn from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
 import {
+  isAwdRuntimeChallenge,
   toDefenseServiceCards,
   useAwdDefenseAccessPanel,
   useAwdDefenseServiceSelection,
   useAwdWorkspaceAttackVector,
+  useAwdWorkspacePresentation,
   useContestAWDWorkspace,
 } from '@/features/contest-awd-workspace'
+import type { AWDRuntimeChallenge } from '@/features/contest-awd-workspace'
 import type {
   ContestAWDWorkspaceServiceData,
   ContestChallengeItem,
@@ -25,6 +28,16 @@ const props = defineProps<{
   contest: ContestDetailData
   challenges: ContestChallengeItem[]
 }>()
+
+const {
+  getChallengeTitleForEvent,
+  formatAttackResultToast,
+  eventDirectionLabel,
+  eventResultLabel,
+  formatServiceRef,
+} = useAwdWorkspacePresentation({
+  challenges: computed(() => props.challenges),
+})
 
 const {
   workspace,
@@ -63,9 +76,7 @@ const servicesByServiceId = computed(() => {
 })
 
 const runtimeChallenges = computed(() =>
-  props.challenges.filter((item): item is ContestChallengeItem & { awd_service_id: string } =>
-    Boolean(item.awd_service_id)
-  )
+  props.challenges.filter(isAwdRuntimeChallenge)
 )
 const {
   activeChallengeKey,
@@ -108,24 +119,6 @@ const defenseServiceActionPendingById = computed(() => {
 
 const { selectedServiceId, selectService } = useAwdDefenseServiceSelection(defenseServiceCards)
 
-const challengeByChallengeId = computed(() => {
-  const map = new Map<string, ContestChallengeItem>()
-  for (const item of props.challenges) {
-    map.set(getAWDChallengeId(item), item)
-  }
-  return map
-})
-
-const challengeByServiceId = computed(() => {
-  const map = new Map<string, ContestChallengeItem>()
-  for (const item of props.challenges) {
-    if (item.awd_service_id) {
-      map.set(item.awd_service_id, item)
-    }
-  }
-  return map
-})
-
 const currentRound = computed(() => workspace.value?.current_round)
 const myTeam = computed(() => workspace.value?.my_team ?? null)
 const selectedDefenseServiceCard = computed(
@@ -159,6 +152,9 @@ const serviceCount = computed(() => workspace.value?.services.length || 0)
 const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
 const lastSyncedLabel = computed(() =>
   lastSyncedAt.value ? formatTime(lastSyncedAt.value) : '未同步'
+)
+const submitResultMessage = computed(() =>
+  submitResult.value ? formatAttackResultToast(submitResult.value) : ''
 )
 
 const defenseAlerts = computed(() => {
@@ -194,7 +190,7 @@ const defenseAlerts = computed(() => {
     if (issues.length === 0) continue
 
     items.push({
-      challengeId: getAWDChallengeId(challenge),
+      challengeId: challenge.awd_challenge_id,
       challengeTitle: challenge.title,
       statusLabel,
       tone,
@@ -203,18 +199,6 @@ const defenseAlerts = computed(() => {
   }
   return items
 })
-
-function eventDirectionLabel(direction: 'attack_in' | 'attack_out'): string {
-  return direction === 'attack_out' ? '对外攻击' : '受到攻击'
-}
-
-function eventResultLabel(success: boolean): string {
-  return success ? '成功' : '失败'
-}
-
-function formatServiceRef(serviceId?: string): string {
-  return `服务 #${serviceId || '--'}`
-}
 
 function formatRoundStatusLabel(status?: string): string {
   switch (status) {
@@ -231,41 +215,9 @@ function formatRoundStatusLabel(status?: string): string {
   }
 }
 
-function getAWDChallengeId(challenge: ContestChallengeItem): string {
-  return challenge.awd_challenge_id || challenge.challenge_id
-}
-
-function getChallengeTitleForEvent(event: {
-  service_id?: string
-  awd_challenge_id: string
-}): string {
-  if (event.service_id) {
-    const matchedByService = challengeByServiceId.value.get(event.service_id)
-    if (matchedByService) return matchedByService.title
-  }
-  return challengeByChallengeId.value.get(event.awd_challenge_id)?.title || event.awd_challenge_id
-}
-
-function getSubmitResultMessage(): string {
-  if (!submitResult.value) return ''
-  return formatAttackResultToast(submitResult.value)
-}
-
-function formatAttackResultToast(result: {
-  service_id?: string
-  awd_challenge_id: string
-  is_success: boolean
-  score_gained: number
-}): string {
-  const challengeTitle = getChallengeTitleForEvent(result)
-  if (result.is_success) return `${challengeTitle}: 攻击成功，+${result.score_gained} 分`
-  return `${challengeTitle}: 未获取到有效 Flag。`
-}
-
 function getWorkspaceService(
-  challenge: ContestChallengeItem
+  challenge: AWDRuntimeChallenge
 ): ContestAWDWorkspaceServiceData | undefined {
-  if (!challenge.awd_service_id) return undefined
   return servicesByServiceId.value.get(challenge.awd_service_id)
 }
 
@@ -342,7 +294,7 @@ function getWorkspaceService(
           :flag-inputs="flagInputs"
           :show-result="Boolean(submitResult)"
           :result-success="submitResult?.is_success ?? false"
-          :result-message="getSubmitResultMessage()"
+          :result-message="submitResultMessage"
           :format-service-ref="formatServiceRef"
           @update:active-challenge-key="activeChallengeKey = $event"
           @update:target-keyword="targetKeyword = $event"

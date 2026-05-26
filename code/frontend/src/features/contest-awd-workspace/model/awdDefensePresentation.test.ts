@@ -104,4 +104,27 @@ describe('awdDefensePresentation', () => {
       'B',
     ])
   })
+
+  it('缺少 awd_challenge_id 的挑战不应进入 AWD 服务卡', () => {
+    const challenges: ContestChallengeItem[] = [
+      {
+        id: 'legacy',
+        challenge_id: 'legacy',
+        awd_service_id: 'service-legacy',
+        title: 'Legacy',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ]
+
+    expect(
+      toDefenseServiceCards({
+        challenges,
+        services: [service('service-legacy', { service_status: 'up' })],
+      })
+    ).toEqual([])
+  })
 })

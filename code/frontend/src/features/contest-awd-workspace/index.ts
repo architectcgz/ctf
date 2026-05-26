@@ -1,4 +1,5 @@
 export {
+  isAwdRuntimeChallenge,
   canOpenDefenseService,
   getDefenseInstanceStatusLabel,
   getDefenseServiceStatusLabel,
@@ -8,6 +9,8 @@ export {
   useAwdDefenseAccessPanel,
   useAwdDefenseServiceSelection,
   useAwdWorkspaceAttackVector,
+  useAwdWorkspacePresentation,
   useContestAWDWorkspace,
 } from './model'
+export type { AWDRuntimeChallenge } from './model'
 export type { AWDDefenseRiskLevel, AWDDefenseServiceCard } from './model'
