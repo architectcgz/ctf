@@ -2,7 +2,10 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import adminDashboardSource from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import adminDashboardSourceBase from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import platformOverviewAlertsSectionSource from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue?raw'
+import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
+import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
 import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
 import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
@@ -22,7 +25,9 @@ import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/Tea
 import teacherDashboardReviewPanelSource from '@/components/teacher/dashboard/TeacherDashboardReviewPanel.vue?raw'
 import teacherDashboardInterventionPanelSource from '@/components/teacher/dashboard/TeacherDashboardInterventionPanel.vue?raw'
 import studentManagementPageSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
-import teacherInstanceManagementPageSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceManagementPageSourceBase from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
+import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import teacherAwdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceHeader.vue?raw'
 import awdChallengeLibraryPageSource from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue?raw'
 import awdReviewHeroPanelSource from '@/components/platform/awd-review/AwdReviewHeroPanel.vue?raw'
@@ -65,6 +70,19 @@ const teacherDashboardPageSource = [
   teacherDashboardTrendPanelSource,
   teacherDashboardReviewPanelSource,
   teacherDashboardInterventionPanelSource,
+].join('\n')
+
+const adminDashboardSource = [
+  adminDashboardSourceBase,
+  platformOverviewHeroPanelSource,
+  platformOverviewAlertsSectionSource,
+  platformOverviewHotspotsSectionSource,
+].join('\n')
+
+const teacherInstanceManagementPageSource = [
+  teacherInstanceManagementPageSourceBase,
+  teacherInstanceHeroPanelSource,
+  teacherInstanceDirectorySectionSource,
 ].join('\n')
 
 const studentAnalysisPageSource = [

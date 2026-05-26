@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import adminDashboardSource from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import adminDashboardSourceBase from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import platformOverviewAlertsSectionSource from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue?raw'
+import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
+import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
+
+const adminDashboardSource = [
+  adminDashboardSourceBase,
+  platformOverviewHeroPanelSource,
+  platformOverviewAlertsSectionSource,
+  platformOverviewHotspotsSectionSource,
+].join('\n')
 
 describe('admin dashboard surface alignment', () => {
   it('softens the hero primary action border and focus ring to match the dark surface system', () => {

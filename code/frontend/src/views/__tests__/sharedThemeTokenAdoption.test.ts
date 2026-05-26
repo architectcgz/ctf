@@ -28,7 +28,10 @@ import cLightActionPopoverSource from '@/components/common/modal-templates/CLigh
 import cFocusedInputDialogSource from '@/components/common/modal-templates/CFocusedInputDialog.vue?raw'
 import cImmersiveConfirmDialogSource from '@/components/common/modal-templates/CImmersiveConfirmDialog.vue?raw'
 import challengePackageImportEntrySource from '@/components/platform/challenge/ChallengePackageImportEntry.vue?raw'
-import adminDashboardSource from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import adminDashboardSourceBase from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import platformOverviewAlertsSectionSource from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue?raw'
+import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
+import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
 import platformOverviewWorkspaceSource from '@/features/platform-overview/model/usePlatformOverviewWorkspace.ts?raw'
 import writeupManageSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
@@ -86,6 +89,13 @@ const userGovernanceSource = [
   userGovernanceOverviewPanelSource,
   userGovernanceDetailModalSource,
   userGovernanceImportPanelSource,
+].join('\n')
+
+const adminDashboardSource = [
+  adminDashboardSourceBase,
+  platformOverviewHeroPanelSource,
+  platformOverviewAlertsSectionSource,
+  platformOverviewHotspotsSectionSource,
 ].join('\n')
 
 function expectNoHardcodedThemeTokens(

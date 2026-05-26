@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest'
 
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
-import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import instanceManagementSourceBase from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
+import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'
@@ -15,6 +17,12 @@ const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
   'utf-8'
 )
+
+const instanceManagementSource = [
+  instanceManagementSourceBase,
+  teacherInstanceHeroPanelSource,
+  teacherInstanceDirectorySectionSource,
+].join('\n')
 
 const teacherDirectoryPattern =
   /teacher-directory-shell[\s\S]*workspace-directory-list[\s\S]*WorkspaceDataTable[\s\S]*teacher-directory-cell-name[\s\S]*teacher-directory-row-cta/s

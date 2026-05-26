@@ -4,9 +4,17 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import InstanceManagement from '../InstanceManagement.vue'
 import instanceManagementViewSource from '../InstanceManagement.vue?raw'
-import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import instanceManagementSourceBase from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
+import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import teacherInstancesHookSource from '@/features/teacher-instances/model/useInstances.ts?raw'
 import { useAuthStore } from '@/stores/auth'
+
+const instanceManagementSource = [
+  instanceManagementSourceBase,
+  teacherInstanceHeroPanelSource,
+  teacherInstanceDirectorySectionSource,
+].join('\n')
 
 const ElTable = { template: '<div><slot /></div>' }
 const ElTableColumn = { template: '<div><slot /></div>' }

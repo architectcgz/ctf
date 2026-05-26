@@ -8,7 +8,9 @@ import classStudentsOverviewPanelSource from '@/components/teacher/class-managem
 import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
 import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
-import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import instanceManagementSourceBase from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
+import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -19,6 +21,12 @@ const classStudentsSource = [
   classStudentsOverviewPanelSource,
   classStudentsInsightWindowPanelSource,
   classStudentsDirectoryPanelSource,
+].join('\n')
+
+const instanceManagementSource = [
+  instanceManagementSourceBase,
+  teacherInstanceHeroPanelSource,
+  teacherInstanceDirectorySectionSource,
 ].join('\n')
 
 function extractScopedStyle(source: string): string {

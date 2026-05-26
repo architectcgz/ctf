@@ -10,7 +10,9 @@ import teacherDashboardStudentInsightPanelSource from '@/components/teacher/dash
 import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/TeacherDashboardTrendPanel.vue?raw'
 import teacherDashboardReviewPanelSource from '@/components/teacher/dashboard/TeacherDashboardReviewPanel.vue?raw'
 import teacherDashboardInterventionPanelSource from '@/components/teacher/dashboard/TeacherDashboardInterventionPanel.vue?raw'
-import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import instanceManagementSourceBase from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
+import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'
@@ -23,6 +25,12 @@ const dashboardSource = [
   teacherDashboardTrendPanelSource,
   teacherDashboardReviewPanelSource,
   teacherDashboardInterventionPanelSource,
+].join('\n')
+
+const instanceManagementSource = [
+  instanceManagementSourceBase,
+  teacherInstanceHeroPanelSource,
+  teacherInstanceDirectorySectionSource,
 ].join('\n')
 
 const teacherSurfaceSource = readFileSync(

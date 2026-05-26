@@ -28,7 +28,9 @@ import classStudentsDirectoryPanelSource from '@/components/teacher/class-manage
 import studentAnalysisPageSourceBase from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentManagementPageSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
-import teacherInstanceManagementPageSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceManagementPageSourceBase from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
+import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import topologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
 import topologyTemplateLibraryHeaderSource from '@/components/platform/topology/TopologyTemplateLibraryHeader.vue?raw'
 import topologyTemplateHeroSectionSource from '@/components/platform/topology/TopologyTemplateHeroSection.vue?raw'
@@ -44,7 +46,10 @@ import teacherDashboardStudentInsightPanelSource from '@/components/teacher/dash
 import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/TeacherDashboardTrendPanel.vue?raw'
 import teacherDashboardReviewPanelSource from '@/components/teacher/dashboard/TeacherDashboardReviewPanel.vue?raw'
 import teacherDashboardInterventionPanelSource from '@/components/teacher/dashboard/TeacherDashboardInterventionPanel.vue?raw'
-import adminDashboardSource from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import adminDashboardSourceBase from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import platformOverviewAlertsSectionSource from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue?raw'
+import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
+import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
 import userGovernancePageSource from '@/components/platform/user/UserGovernancePage.vue?raw'
 import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
@@ -73,6 +78,19 @@ const teacherDashboardSource = [
   teacherDashboardTrendPanelSource,
   teacherDashboardReviewPanelSource,
   teacherDashboardInterventionPanelSource,
+].join('\n')
+
+const teacherInstanceManagementPageSource = [
+  teacherInstanceManagementPageSourceBase,
+  teacherInstanceHeroPanelSource,
+  teacherInstanceDirectorySectionSource,
+].join('\n')
+
+const adminDashboardSource = [
+  adminDashboardSourceBase,
+  platformOverviewHeroPanelSource,
+  platformOverviewAlertsSectionSource,
+  platformOverviewHotspotsSectionSource,
 ].join('\n')
 
 const userGovernanceSource = [

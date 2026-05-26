@@ -7,18 +7,28 @@ import challengeImportManageSource from '../platform/ChallengeImportManage.vue?r
 import challengePackageFormatSource from '../platform/ChallengePackageFormat.vue?raw'
 import cheatDetectionWorkspaceSource from '../../components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
 import imageManageSource from '../platform/ImageManage.vue?raw'
-import adminDashboardSource from '../../components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import adminDashboardSourceBase from '../../components/platform/dashboard/PlatformOverviewPage.vue?raw'
 import contestOrchestrationSource from '../../components/platform/contest/ContestOrchestrationPage.vue?raw'
 import userGovernancePageSource from '../../components/platform/user/UserGovernancePage.vue?raw'
 import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
+import platformOverviewAlertsSectionSource from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue?raw'
+import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
+import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
 
 const userGovernanceSource = [
   userGovernancePageSource,
   userGovernanceOverviewPanelSource,
   userGovernanceDetailModalSource,
   userGovernanceImportPanelSource,
+].join('\n')
+
+const adminDashboardSource = [
+  adminDashboardSourceBase,
+  platformOverviewHeroPanelSource,
+  platformOverviewAlertsSectionSource,
+  platformOverviewHotspotsSectionSource,
 ].join('\n')
 
 describe('admin full-bleed hero roots', () => {

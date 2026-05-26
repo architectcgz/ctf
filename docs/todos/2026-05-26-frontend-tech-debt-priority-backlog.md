@@ -1,0 +1,76 @@
+# 前端技术债优先级清单
+
+- Project: `ctf 仓库根目录`
+- Created: `2026-05-26T23:09+08:00`
+- Status: `Open`
+
+## Context
+
+基于当前前端事实源和代码现状整理：
+
+- `docs/reviews/frontend/README.md`
+- `docs/reviews/architecture/2026-05-24-frontend-architecture-review.md`
+- `docs/reviews/frontend/ctf-frontend-audit-20260422.md`
+- `code/frontend/src/__tests__/architectureAllowlist.ts`
+- 当前组件体量扫描结果
+
+排序原则：
+
+- 先做收益高、风险相对可控、能直接复用最近 page shell 拆分模式的项
+- 再做收益高但跨模块耦合更重的结构债
+- 性能监控、i18n 这类前置决策未定的项保留在后面单独跟踪
+
+## Open Items
+
+- [x] P1：继续拆 `PlatformOverviewPage.vue` 与 `TeacherInstanceManagementPage.vue`
+  - 依据：`PlatformOverviewPage.vue` 当前约 `728` 行，`TeacherInstanceManagementPage.vue` 当前约 `597` 行，仍属于明显过宽的 legacy component page。
+  - 收益：最容易复用最近 `TeacherDashboardPage` / `ClassStudentsPage` / `UserGovernancePage` 的 page owner 收口模式，能继续压缩 `legacyComponentPageAllowlist` 的负担。
+  - 风险：中低。主要是展示区块切分和源码护栏适配，业务 owner 相对清楚。
+  - `2026-05-26` 进展：已拆为 `PlatformOverviewHeroPanel` / `PlatformOverviewAlertsSection` / `PlatformOverviewHotspotsSection` 与 `TeacherInstanceHeroPanel` / `TeacherInstanceDirectorySection`，父页继续只保留 page shell、事件桥接和派发展示数据。
+
+- [ ] P1：处理 `platform-users` 过宽职责，把用户治理、班级/学生目录、实例管理继续拆回更清晰的 feature owner
+  - 依据：架构 review 仍明确把 `platform-users` 视为过宽 bucket，当前管理端能力边界仍混杂。
+  - 收益：这是当前比“单个页面行数”更重要的结构债，能直接降低后续继续把 admin 能力堆进同一 feature 的概率。
+  - 风险：中高。会触达 feature 目录、query owner、命名和跨页复用边界，必须按切片推进。
+
+- [ ] P1：收口 admin / teacher 结构耦合，优先停止让 `/platform/*` 直接依赖 teacher 视图或 teacher 语义 owner
+  - 依据：`docs/reviews/architecture/2026-05-24-frontend-architecture-review.md` 仍把这条列为当前 P1 finding。
+  - 收益：能减少权限面和页面 owner 的隐式耦合，避免 teacher 改动静默影响 platform。
+  - 风险：高。这里不是简单拆模板，涉及 route view、共享 workspace feature 的重新归位。
+
+- [ ] P1：继续拆 contest / AWD 线上的超大组件壳，优先看 `ContestAwdConfigWorkspaceShell.vue`、`ContestChallengeEditorDialog.vue`、`AWDChallengeLibraryPage.vue`
+  - 依据：这三者当前约 `1009` / `899` / `896` 行，是现阶段最肥的一批前端组件壳。
+  - 收益：继续收口 `TD-1`，减少单文件模板/样式/局部状态混写。
+  - 风险：中高。比赛与 AWD 页面交互密度高，切片要尽量按稳定展示块或编辑分区拆。
+
+- [ ] P2：收口布局层超大组件，优先看 `NotificationDrawer.vue`、`Sidebar.vue`、`TopNav.vue`
+  - 依据：三者当前约 `1071` / `854` / `781` 行，已经超过普通布局组件可维护范围。
+  - 收益：能降低全局导航和通知能力的维护摩擦，后续做主题、权限、消息交互时更安全。
+  - 风险：中高。属于跨页面共享基础设施，任何切分都需要更谨慎的回归验证。
+
+- [ ] P2：把请求层错误导航 owner 继续收回页面 / feature owner，避免 `request.ts` 直接替页面决定可恢复错误的跳转
+  - 依据：架构 review 仍把这条列为当前 P1/P2 级结构问题。
+  - 收益：失败态、重试、草稿保留和页面内恢复体验会更一致，也更容易测试。
+  - 风险：中高。会触及全局请求策略和多个页面的失败路径，需要先定义“哪些状态码是全局错误，哪些必须局部恢复”。
+
+- [ ] P2：补图片管理页重复提交 owner 收口
+  - 依据：前端主索引仍单独提到 `duplicateActionGuardAudit.test.ts` 暴露的图片管理页重复提交缺口。
+  - 收益：问题集中、收益直接，能补掉一个实际交互安全缺口。
+  - 风险：低到中。范围小，但需要确认按钮态、请求态和错误回退的 owner 不再重复分散。
+
+- [ ] P3：确定前端性能监控接入方案
+  - 依据：主索引里 `TD-3` 仍为未完成项。
+  - 收益：能把目前零散的性能体感问题转成可观测指标。
+  - 风险：中。不是实现难，而是要先明确指标、隐私边界、上报端点和生产开关。
+
+- [ ] P3：确定 i18n 是否进入当前产品路线
+  - 依据：主索引里 `TD-4` 仍为未完成项。
+  - 收益：如果产品后续确定多语言，这条需要尽早前置；如果短期不做，可以明确降级为“暂不推进”。
+  - 风险：低。当前主要是产品决策问题，不是代码实现问题。
+
+## Notes
+
+- 当前 `oversized route view allowlist` 已经清空，所以“还有没有超大页面”这个问题，答案更准确地说是：
+  - route view 层的大页债已大幅收口
+  - 但 component / workspace shell / layout 层的大组件债仍然明显存在
+- 后续如果按这份清单推进，建议继续沿“一个页面或一个组件族一个切片”的方式做，不要把 `TD-1` 和跨模块结构债混在同一次提交里。
