@@ -38,6 +38,7 @@ import userGovernanceSource from '@/components/platform/user/UserGovernancePage.
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import scoreboardDetailSource from '@/views/scoreboard/ScoreboardDetail.vue?raw'
@@ -50,6 +51,7 @@ const workspaceShellStylesSource = readFileSync(
   'utf-8'
 )
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
+const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 function escapeRegExp(value: string): string {
@@ -100,7 +102,7 @@ describe('workspace shell shared styles', () => {
       notificationDetailSource,
       notificationListSource,
       scoreboardDetailSource,
-      securitySettingsSource,
+      securitySettingsWorkspaceSource,
       studentManagementPageSource,
       studentManageHeroPanelSource,
       teacherAwdReviewWorkspaceHeaderSource,

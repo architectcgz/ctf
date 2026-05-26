@@ -18,6 +18,7 @@ import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileW
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import classManagementPageSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
@@ -64,6 +65,7 @@ const challengeDetailWorkspaceSource = [
 ].join('\n')
 const contestDetailWorkspaceSource = `${contestDetailSource}\n${contestOverviewPanelSource}`
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
+const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
@@ -437,9 +439,9 @@ describe('workspace page header styles', () => {
     expect(userProfileWorkspaceSource).not.toContain('<PageHeader')
     expect(userProfileWorkspaceSource).toContain('class="workspace-page-header profile-topbar"')
     expect(userProfileWorkspaceSource).toContain('class="profile-topbar-meta"')
-    expect(securitySettingsSource).not.toContain('<PageHeader')
-    expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
-    expect(securitySettingsSource).toContain('class="security-topbar-meta"')
+    expect(securitySettingsWorkspaceSource).not.toContain('<PageHeader')
+    expect(securitySettingsWorkspaceSource).toContain('class="workspace-page-header security-topbar"')
+    expect(securitySettingsWorkspaceSource).toContain('class="security-topbar-meta"')
     expect(contestListSource).toContain('class="workspace-page-header contest-topbar"')
     expect(instanceListSource).toContain('class="workspace-page-header instance-topbar"')
     expect(notificationListSource).toContain('class="workspace-page-header notification-topbar"')

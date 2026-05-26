@@ -64,6 +64,7 @@ import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileW
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import imageManageSource from '@/views/platform/ImageManage.vue?raw'
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import adminChallengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
@@ -75,6 +76,7 @@ import challengeUtilsSource from '@/utils/challenge.ts?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
+const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
 function expectNoHardcodedThemeTokens(
@@ -335,7 +337,7 @@ describe('shared theme token adoption', () => {
       'background: #94a3b8;',
       'background: #ef4444;',
     ])
-    expectNoHardcodedThemeTokens(securitySettingsSource, 'SecuritySettings', [
+    expectNoHardcodedThemeTokens(securitySettingsWorkspaceSource, 'SecuritySettings', [
       'rgba(15, 23, 42, 0.95)',
       'rgba(2, 6, 23, 0.98)',
       'background: #10b981;',

@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import SecuritySettings from '../SecuritySettings.vue'
 import securitySettingsSource from '../SecuritySettings.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 
 const authApiMocks = vi.hoisted(() => ({
   changePassword: vi.fn(),
@@ -12,6 +13,11 @@ const authApiMocks = vi.hoisted(() => ({
 vi.mock('@/api/auth', () => authApiMocks)
 
 describe('SecuritySettings', () => {
+  const securitySettingsWorkspaceSource = [
+    securitySettingsSource,
+    securitySettingsWorkspaceShellSource,
+  ].join('\n')
+
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
@@ -56,24 +62,29 @@ describe('SecuritySettings', () => {
     expect(securitySettingsSource).toContain('useSecuritySettingsPage')
     expect(securitySettingsSource).not.toContain("from '@/api/auth'")
     expect(securitySettingsSource).not.toContain('validatePasswordForm')
-    expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
-    expect(securitySettingsSource).toContain('class="security-topbar-meta"')
-    expect(securitySettingsSource).not.toContain('<PageHeader')
-    expect(securitySettingsSource).toContain('class="security-summary metric-panel-default-surface"')
     expect(securitySettingsSource).toContain(
+      "import SecuritySettingsWorkspaceShell from '@/components/profile/SecuritySettingsWorkspaceShell.vue'"
+    )
+    expect(securitySettingsWorkspaceSource).toContain('class="workspace-page-header security-topbar"')
+    expect(securitySettingsWorkspaceSource).toContain('class="security-topbar-meta"')
+    expect(securitySettingsWorkspaceSource).not.toContain('<PageHeader')
+    expect(securitySettingsWorkspaceSource).toContain(
+      'class="security-summary metric-panel-default-surface"'
+    )
+    expect(securitySettingsWorkspaceSource).toContain(
       'class="security-summary-item progress-card metric-panel-card"'
     )
-    expect(securitySettingsSource).toContain(
+    expect(securitySettingsWorkspaceSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
     )
-    expect(securitySettingsSource).toContain(
+    expect(securitySettingsWorkspaceSource).toContain(
       'class="security-summary-value progress-card-value metric-panel-value"'
     )
-    expect(securitySettingsSource).toContain(
+    expect(securitySettingsWorkspaceSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
-    expect(securitySettingsSource).toContain('<component :is="stat.icon" class="h-4 w-4" />')
-    expect(securitySettingsSource).not.toContain('class="security-summary-icon"')
+    expect(securitySettingsWorkspaceSource).toContain('<component :is="stat.icon" class="h-4 w-4" />')
+    expect(securitySettingsWorkspaceSource).not.toContain('class="security-summary-icon"')
   })
 
   it('密码修改进行中重复提交表单时只应提交一次', async () => {
@@ -113,46 +124,46 @@ describe('SecuritySettings', () => {
   })
 
   it('应该移除安全设置页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {
-    expect(securitySettingsSource).toContain(
+    expect(securitySettingsWorkspaceSource).toContain(
       'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'
     )
-    expect(securitySettingsSource).not.toContain('journal-eyebrow-text')
+    expect(securitySettingsWorkspaceSource).not.toContain('journal-eyebrow-text')
   })
 
   it('应该把安全设置内容区的 soft eyebrow 收敛为局部 section kicker', () => {
-    expect(securitySettingsSource).toMatch(
+    expect(securitySettingsWorkspaceSource).toMatch(
       /<div class="security-section-kicker">\s*Password\s*<\/div>/
     )
-    expect(securitySettingsSource).toMatch(
+    expect(securitySettingsWorkspaceSource).toMatch(
       /<div class="security-section-kicker">\s*Tips\s*<\/div>/
     )
-    expect(securitySettingsSource).not.toContain(
+    expect(securitySettingsWorkspaceSource).not.toContain(
       '<div class="journal-eyebrow journal-eyebrow-soft">Password</div>'
     )
-    expect(securitySettingsSource).not.toContain(
+    expect(securitySettingsWorkspaceSource).not.toContain(
       '<div class="journal-eyebrow journal-eyebrow-soft">Tips</div>'
     )
   })
 
   it('应使用共享 ui-control 原语承载密码输入框', () => {
-    expect(securitySettingsSource).toContain('class="ui-control-wrap"')
-    expect(securitySettingsSource).toContain('class="ui-control"')
-    expect(securitySettingsSource).not.toMatch(/^\.journal-input\s*\{/m)
-    expect(securitySettingsSource).not.toMatch(/^\.journal-input:focus\s*\{/m)
-    expect(securitySettingsSource).not.toMatch(/^\.journal-input--error\s*\{/m)
+    expect(securitySettingsWorkspaceSource).toContain('class="ui-control-wrap"')
+    expect(securitySettingsWorkspaceSource).toContain('class="ui-control"')
+    expect(securitySettingsWorkspaceSource).not.toMatch(/^\.journal-input\s*\{/m)
+    expect(securitySettingsWorkspaceSource).not.toMatch(/^\.journal-input:focus\s*\{/m)
+    expect(securitySettingsWorkspaceSource).not.toMatch(/^\.journal-input--error\s*\{/m)
   })
 
   it('应把安全提示区的内文字色收敛为语义类', () => {
-    expect(securitySettingsSource).toContain('security-side-status')
-    expect(securitySettingsSource).toContain('security-side-copy')
-    expect(securitySettingsSource).toContain('security-tip-copy')
-    expect(securitySettingsSource).not.toContain(
+    expect(securitySettingsWorkspaceSource).toContain('security-side-status')
+    expect(securitySettingsWorkspaceSource).toContain('security-side-copy')
+    expect(securitySettingsWorkspaceSource).toContain('security-tip-copy')
+    expect(securitySettingsWorkspaceSource).not.toContain(
       'class="flex items-center gap-2 text-sm font-medium text-[var(--journal-ink)]"'
     )
-    expect(securitySettingsSource).not.toContain(
+    expect(securitySettingsWorkspaceSource).not.toContain(
       'class="mt-3 text-sm leading-6 text-[var(--journal-muted)]"'
     )
-    expect(securitySettingsSource).not.toContain(
+    expect(securitySettingsWorkspaceSource).not.toContain(
       'class="mt-2 text-sm leading-6 text-[var(--journal-ink)]"'
     )
   })

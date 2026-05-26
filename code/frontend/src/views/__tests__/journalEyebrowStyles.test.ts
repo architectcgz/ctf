@@ -8,6 +8,7 @@ import contestListSource from '@/views/contests/ContestList.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
@@ -18,6 +19,7 @@ const journalEyebrowsSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-eyebrows.css`,
   'utf-8'
 )
+const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
@@ -43,7 +45,7 @@ describe('journal eyebrow shared styles', () => {
       instanceListSource,
       notificationListSource,
       scoreboardSource,
-      securitySettingsSource,
+      securitySettingsWorkspaceSource,
       skillProfileWorkspaceSource,
       userProfileWorkspaceSource,
     ]) {

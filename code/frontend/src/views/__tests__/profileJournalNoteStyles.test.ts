@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
@@ -12,6 +13,7 @@ const journalNotesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-notes.css`,
   'utf-8'
 )
+const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
@@ -26,7 +28,7 @@ describe('profile journal note shared styles', () => {
     for (const source of [
       userProfileWorkspaceSource,
       skillProfileWorkspaceSource,
-      securitySettingsSource,
+      securitySettingsWorkspaceSource,
     ]) {
       expect(source).not.toMatch(/^\.journal-eyebrow-soft\s*\{/m)
       expect(source).not.toMatch(/^\.journal-note-label\s*\{/m)
@@ -35,9 +37,9 @@ describe('profile journal note shared styles', () => {
   })
 
   it('security settings 仍可通过变量保留自己的 note 密度', () => {
-    expect(securitySettingsSource).toContain('--journal-note-label-size: 0.72rem;')
-    expect(securitySettingsSource).toContain('--journal-note-label-weight: 700;')
-    expect(securitySettingsSource).toContain('--journal-note-label-spacing: 0.16em;')
-    expect(securitySettingsSource).toContain('--journal-note-helper-line-height: 1.45;')
+    expect(securitySettingsWorkspaceSource).toContain('--journal-note-label-size: 0.72rem;')
+    expect(securitySettingsWorkspaceSource).toContain('--journal-note-label-weight: 700;')
+    expect(securitySettingsWorkspaceSource).toContain('--journal-note-label-spacing: 0.16em;')
+    expect(securitySettingsWorkspaceSource).toContain('--journal-note-helper-line-height: 1.45;')
   })
 })

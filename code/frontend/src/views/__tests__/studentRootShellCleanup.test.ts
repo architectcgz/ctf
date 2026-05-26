@@ -11,6 +11,7 @@ import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWor
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import scoreboardViewSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
 import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
@@ -19,6 +20,7 @@ import studentRecommendationSource from '@/components/dashboard/student/StudentR
 
 describe('student root shell cleanup', () => {
   const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
+  const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
   const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
   it.each([
@@ -30,7 +32,7 @@ describe('student root shell cleanup', () => {
     ['NotificationDetail.vue', notificationDetailSource],
     ['UserProfile.vue', userProfileWorkspaceSource],
     ['SkillProfile.vue', skillProfileWorkspaceSource],
-    ['SecuritySettings.vue', securitySettingsSource],
+    ['SecuritySettings.vue', securitySettingsWorkspaceSource],
     ['ScoreboardView.vue', scoreboardViewSource],
   ])('%s 应切到共享学生根壳，不再手写外层圆角', (_name, source) => {
     expect(source).toContain('workspace-shell')

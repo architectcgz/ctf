@@ -8,6 +8,7 @@ import contestListSource from '@/views/contests/ContestList.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
@@ -18,6 +19,7 @@ const journalUserDirectorySource = readFileSync(
   'utf-8'
 )
 const appStyleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
+const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 const scoreboardWorkspaceSource = `${scoreboardSource}\n${scoreboardWorkspaceShellSource}`
 
@@ -33,7 +35,7 @@ describe('journal user directory shared styles', () => {
     expect(notificationListSource).toContain('class="workspace-page-header notification-topbar"')
     expect(instanceListSource).toContain('class="workspace-page-header instance-topbar"')
     expect(userProfileWorkspaceSource).toContain('class="workspace-page-header profile-topbar"')
-    expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
+    expect(securitySettingsWorkspaceSource).toContain('class="workspace-page-header security-topbar"')
     expect(journalUserDirectorySource).not.toMatch(/\.challenge-topbar[\s\S]*border-bottom:/)
     expect(journalUserDirectorySource).toContain('.challenge-btn')
     expect(journalUserDirectorySource).toContain('.contest-btn')
@@ -115,7 +117,7 @@ describe('journal user directory shared styles', () => {
     expect(userProfileStyle).not.toMatch(/^\.profile-summary-grid\s*\{/m)
     expect(userProfileStyle).not.toMatch(/^\.profile-summary-item\s*\{/m)
 
-    const securityStyle = extractScopedStyle(securitySettingsSource)
+    const securityStyle = extractScopedStyle(securitySettingsWorkspaceSource)
     expect(securityStyle).not.toMatch(/^\.security-topbar\s*\{/m)
     expect(securityStyle).not.toMatch(/^\.security-heading\s*\{/m)
     expect(securityStyle).not.toMatch(/^\.security-summary\s*\{/m)
@@ -157,13 +159,13 @@ describe('journal user directory shared styles', () => {
     expect(userProfileWorkspaceSource).toContain('class="workspace-overline">Profile</div>')
     expect(userProfileWorkspaceSource).not.toContain('<PageHeader')
 
-    expect(securitySettingsSource).toContain('class="workspace-page-header security-topbar"')
-    expect(securitySettingsSource).toContain('class="security-topbar-meta"')
-    expect(securitySettingsSource).toContain('class="security-summary metric-panel-default-surface"')
-    expect(securitySettingsSource).toContain('class="security-summary-title"')
-    expect(securitySettingsSource).toContain('class="security-summary-grid metric-panel-grid"')
-    expect(securitySettingsSource).toContain('class="workspace-overline">Security</div>')
-    expect(securitySettingsSource).not.toContain('<PageHeader')
+    expect(securitySettingsWorkspaceSource).toContain('class="workspace-page-header security-topbar"')
+    expect(securitySettingsWorkspaceSource).toContain('class="security-topbar-meta"')
+    expect(securitySettingsWorkspaceSource).toContain('class="security-summary metric-panel-default-surface"')
+    expect(securitySettingsWorkspaceSource).toContain('class="security-summary-title"')
+    expect(securitySettingsWorkspaceSource).toContain('class="security-summary-grid metric-panel-grid"')
+    expect(securitySettingsWorkspaceSource).toContain('class="workspace-overline">Security</div>')
+    expect(securitySettingsWorkspaceSource).not.toContain('<PageHeader')
   })
 
   it('学生侧列表外框不应叠加 workspace-directory-list 的默认上间距', () => {

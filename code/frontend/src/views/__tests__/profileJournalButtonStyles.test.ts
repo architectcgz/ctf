@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
@@ -18,6 +19,7 @@ function extractScopedStyle(source: string): string {
   return match?.[1] ?? ''
 }
 
+const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 
@@ -38,7 +40,7 @@ describe('profile journal shared button styles', () => {
 
   it('profile 页面不应继续在 scoped style 中重复声明 journal 按钮基础规则', () => {
     for (const source of [
-      securitySettingsSource,
+      securitySettingsWorkspaceSource,
       skillProfileWorkspaceSource,
       userProfileWorkspaceSource,
     ]) {

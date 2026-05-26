@@ -10,6 +10,7 @@ import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationDetailSource from '@/views/notifications/NotificationDetail.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
@@ -28,6 +29,7 @@ const workspaceShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,
   'utf-8'
 )
+const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 
@@ -59,7 +61,7 @@ describe('journal user shell shared styles', () => {
       notificationDetailSource,
       notificationListSource,
       scoreboardSource,
-      securitySettingsSource,
+      securitySettingsWorkspaceSource,
       skillProfileWorkspaceSource,
       userProfileWorkspaceSource,
     ]) {
@@ -77,7 +79,7 @@ describe('journal user shell shared styles', () => {
       notificationDetailSource,
       notificationListSource,
       scoreboardSource,
-      securitySettingsSource,
+      securitySettingsWorkspaceSource,
       skillProfileWorkspaceSource,
       userProfileWorkspaceSource,
     ]) {
@@ -106,18 +108,18 @@ describe('journal user shell shared styles', () => {
       'class="profile-summary-value progress-card-value metric-panel-value"'
     )
 
-    expect(securitySettingsSource).toContain('class="security-summary metric-panel-default-surface"')
-    expect(securitySettingsSource).toContain('class="security-summary-grid metric-panel-grid"')
-    expect(securitySettingsSource).toContain(
+    expect(securitySettingsWorkspaceSource).toContain('class="security-summary metric-panel-default-surface"')
+    expect(securitySettingsWorkspaceSource).toContain('class="security-summary-grid metric-panel-grid"')
+    expect(securitySettingsWorkspaceSource).toContain(
       'class="security-summary-item progress-card metric-panel-card"'
     )
-    expect(securitySettingsSource).toContain(
+    expect(securitySettingsWorkspaceSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
     )
-    expect(securitySettingsSource).toContain(
+    expect(securitySettingsWorkspaceSource).toContain(
       'class="security-summary-value progress-card-value metric-panel-value'
     )
-    expect(securitySettingsSource).toContain(
+    expect(securitySettingsWorkspaceSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
 
