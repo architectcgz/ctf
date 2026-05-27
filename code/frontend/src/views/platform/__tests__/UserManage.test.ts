@@ -3,7 +3,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import UserManage from '../UserManage.vue'
 import userManageSource from '../UserManage.vue?raw'
-import userGovernancePageSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernancePageSource from '@/features/platform-user-management/ui/UserGovernancePage.vue?raw'
+import userGovernancePanelRouteSource from '@/features/platform-user-management/model/useUserGovernancePanelRoute.ts?raw'
 import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
@@ -261,11 +262,22 @@ describe('UserManage', () => {
 
     await flushPromises()
 
-    expect(userManageSource).toContain(
-      "import { usePlatformUserManagePage } from '@/features/platform-user-management'"
+    expect(userManageSource).toContain("from '@/features/platform-user-management'")
+    expect(userManageSource).toContain('UserGovernancePage')
+    expect(userManageSource).toContain('usePlatformUserManagePage')
+    expect(userManageSource).not.toContain(
+      "import UserGovernancePage from '@/components/platform/user/UserGovernancePage.vue'"
     )
     expect(userManageSource).not.toContain('onMounted(')
     expect(userManageSource).not.toContain('confirmDestructiveAction')
+    expect(userGovernanceSource).not.toContain("from 'vue-router'")
+    expect(userGovernanceSource).not.toContain('useRoute(')
+    expect(userGovernanceSource).not.toContain('useRouter(')
+    expect(userGovernancePanelRouteSource).toContain("from 'vue-router'")
+    expect(userGovernancePanelRouteSource).toContain('useRoute(')
+    expect(userGovernancePanelRouteSource).toContain('useRouter(')
+    expect(userGovernancePanelRouteSource).toContain("panel === 'import'")
+    expect(userGovernancePanelRouteSource).toContain("return 'overview'")
     expect(userGovernanceSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )

@@ -1,3 +1,5 @@
 export { usePlatformUsers } from './usePlatformUsers'
 export { usePlatformUserManagePage } from './usePlatformUserManagePage'
+export { useUserGovernancePanelRoute } from './useUserGovernancePanelRoute'
 export type { PlatformUserFormDraft } from './usePlatformUsers'
+export type { UserPanelKey } from './useUserGovernancePanelRoute'

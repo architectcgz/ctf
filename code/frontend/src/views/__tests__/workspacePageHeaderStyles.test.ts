@@ -50,7 +50,7 @@ import adminDashboardSourceBase from '@/features/platform-overview/ui/PlatformOv
 import platformOverviewAlertsSectionSource from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue?raw'
 import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
 import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
-import userGovernancePageSource from '@/components/platform/user/UserGovernancePage.vue?raw'
+import userGovernancePageSource from '@/features/platform-user-management/ui/UserGovernancePage.vue?raw'
 import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'

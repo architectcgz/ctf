@@ -202,7 +202,7 @@ declare module 'vue' {
     TopologyStatusNotes: typeof import('./components/platform/topology/TopologyStatusNotes.vue')['default']
     TopologySummaryGrid: typeof import('./components/platform/topology/TopologySummaryGrid.vue')['default']
     TopologyTemplateSidePanel: typeof import('./components/platform/topology/TopologyTemplateSidePanel.vue')['default']
-    UserGovernancePage: typeof import('./components/platform/user/UserGovernancePage.vue')['default']
+    UserGovernancePage: typeof import('./features/platform-user-management/ui/UserGovernancePage.vue')['default']
     WorkspaceDataTable: typeof import('./components/common/WorkspaceDataTable.vue')['default']
     WorkspaceDirectoryPagination: typeof import('./components/common/WorkspaceDirectoryPagination.vue')['default']
     WorkspaceDirectoryToolbar: typeof import('./components/common/WorkspaceDirectoryToolbar.vue')['default']

@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
 
 import type { UserRole } from '@/utils/constants'
-import UserGovernanceDetailModal from './UserGovernanceDetailModal.vue'
-import UserGovernanceImportPanel from './UserGovernanceImportPanel.vue'
-import UserGovernanceOverviewPanel from './UserGovernanceOverviewPanel.vue'
+import UserGovernanceDetailModal from '@/components/platform/user/UserGovernanceDetailModal.vue'
+import UserGovernanceImportPanel from '@/components/platform/user/UserGovernanceImportPanel.vue'
+import UserGovernanceOverviewPanel from '@/components/platform/user/UserGovernanceOverviewPanel.vue'
+import { useUserGovernancePanelRoute } from '../model'
 
 type UserFilterRole = UserRole | 'all'
 type UserFilterStatus = UserStatus | 'all'
-type UserPanelKey = 'overview' | 'import'
 
 const props = defineProps<{
   list: AdminUserListItem[]
@@ -40,19 +39,9 @@ const emit = defineEmits<{
   importFile: [file: File]
 }>()
 
-const route = useRoute()
-const router = useRouter()
+const { activePanel, switchPanel } = useUserGovernancePanelRoute()
 const importInput = useTemplateRef<HTMLInputElement>('importInput')
 const selectedUserId = ref<string | null>(null)
-
-const activePanel = computed<UserPanelKey>(() => {
-  const rawPanel = route.query.panel
-  const panel = Array.isArray(rawPanel) ? rawPanel[0] : rawPanel
-  if (panel === 'import') {
-    return 'import'
-  }
-  return 'overview'
-})
 
 const selectedUser = computed(() =>
   props.list.find((user) => user.id === selectedUserId.value) ?? null
@@ -74,19 +63,6 @@ function handleDetailEdit(user: AdminUserListItem): void {
 function handleDetailDelete(user: AdminUserListItem): void {
   closeUserDetail()
   emit('deleteUser', user.id)
-}
-
-async function switchPanel(panel: UserPanelKey): Promise<void> {
-  if (activePanel.value === panel) return
-
-  const nextQuery = { ...route.query }
-  if (panel === 'overview') {
-    delete nextQuery.panel
-  } else {
-    nextQuery.panel = panel
-  }
-
-  await router.replace({ name: 'UserManage', query: nextQuery })
 }
 
 function triggerImport(): void {
