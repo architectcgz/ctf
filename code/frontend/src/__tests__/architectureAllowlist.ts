@@ -47,7 +47,6 @@ export const componentFeatureImportAllowlist = new Set([
   'components/platform/topology/TopologyTemplateWorkbench.vue -> @/features/challenge-topology-studio/model',
   'components/scoreboard/ScoreboardRealtimeBridge.vue -> @/features/scoreboard',
   'components/teacher/InterventionPanel.vue -> @/features/teacher-student-analysis',
-  'components/teacher/dashboard/TeacherDashboardPage.vue -> @/features/teacher-dashboard',
   'components/teacher/reports/ClassReportExportDialog.vue -> @/features/teacher-class-report-export',
 ])
 
@@ -92,7 +91,6 @@ export const legacyComponentPageAllowlist = new Set([
   'components/teacher/class-management/ClassManagementPage.vue',
   'components/teacher/class-management/ClassStudentsPage.vue',
   'components/teacher/class-management/StudentAnalysisPage.vue',
-  'components/teacher/dashboard/TeacherDashboardPage.vue',
   'components/teacher/instance-management/TeacherInstanceManagementPage.vue',
   'components/teacher/student-management/StudentManagementPage.vue',
 ])

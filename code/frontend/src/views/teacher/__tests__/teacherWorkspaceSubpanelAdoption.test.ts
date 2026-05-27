@@ -6,7 +6,7 @@ import classStudentsSourceBase from '@/components/teacher/class-management/Class
 import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
 import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
-import teacherDashboardSourceBase from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import teacherDashboardSourceBase from '@/features/teacher-dashboard/ui/TeacherDashboardPage.vue?raw'
 import teacherDashboardPortraitPanelSource from '@/components/teacher/dashboard/TeacherDashboardPortraitPanel.vue?raw'
 import teacherDashboardStudentInsightPanelSource from '@/components/teacher/dashboard/TeacherDashboardStudentInsightPanel.vue?raw'
 import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/TeacherDashboardTrendPanel.vue?raw'
@@ -55,8 +55,12 @@ describe('teacher workspace subpanel adoption', () => {
       '.workspace-subpanel :deep(.teacher-panel__header > .teacher-panel__title:first-child),'
     )
 
+    expect(classStudentsSource).toContain("@import '../teacher-workspace-subpanel.css';")
+    expect(teacherDashboardSource).toContain(
+      "@import '@/components/teacher/teacher-workspace-subpanel.css';"
+    )
+
     for (const source of [classStudentsSource, teacherDashboardSource]) {
-      expect(source).toContain("@import '../teacher-workspace-subpanel.css';")
       expect(source).not.toMatch(/\.workspace-subpanel\s*:deep\(\.teacher-panel\)\s*\{/s)
       expect(source).not.toMatch(/\.workspace-subpanel\s*:deep\(\.journal-eyebrow\)\s*\{/s)
       expect(source).not.toMatch(/\.workspace-subpanel--flat\s*:deep\(\.teacher-panel\)\s*\{/s)

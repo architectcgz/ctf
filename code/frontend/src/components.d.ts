@@ -190,7 +190,7 @@ declare module 'vue' {
     TeacherClassReportExportDialog: typeof import('./components/teacher/reports/TeacherClassReportExportDialog.vue')['default']
     TeacherClassReviewPanel: typeof import('./components/teacher/TeacherClassReviewPanel.vue')['default']
     TeacherClassTrendPanel: typeof import('./components/teacher/TeacherClassTrendPanel.vue')['default']
-    TeacherDashboardPage: typeof import('./components/teacher/dashboard/TeacherDashboardPage.vue')['default']
+    TeacherDashboardPage: typeof import('./features/teacher-dashboard/ui/TeacherDashboardPage.vue')['default']
     TeacherInstanceManagementPage: typeof import('./components/teacher/instance-management/TeacherInstanceManagementPage.vue')['default']
     InterventionPanel: typeof import('./components/teacher/InterventionPanel.vue')['default']
     TopNav: typeof import('./components/layout/TopNav.vue')['default']

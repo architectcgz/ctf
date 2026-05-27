@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherDashboard from '../TeacherDashboard.vue'
 import teacherDashboardSource from '../TeacherDashboard.vue?raw'
-import teacherDashboardPageSourceBase from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import teacherDashboardPageSourceBase from '@/features/teacher-dashboard/ui/TeacherDashboardPage.vue?raw'
 import teacherDashboardPortraitPanelSource from '@/components/teacher/dashboard/TeacherDashboardPortraitPanel.vue?raw'
 import teacherDashboardStudentInsightPanelSource from '@/components/teacher/dashboard/TeacherDashboardStudentInsightPanel.vue?raw'
 import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/TeacherDashboardTrendPanel.vue?raw'
