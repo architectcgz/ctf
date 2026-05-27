@@ -8,7 +8,7 @@ import challengePackageFormatSource from '../platform/ChallengePackageFormat.vue
 import cheatDetectionWorkspaceSource from '../../components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
 import imageManageSource from '../platform/ImageManage.vue?raw'
 import adminDashboardSourceBase from '../../features/platform-overview/ui/PlatformOverviewPage.vue?raw'
-import contestOrchestrationSource from '../../components/platform/contest/ContestOrchestrationPage.vue?raw'
+import contestOrchestrationSource from '../../features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 import userGovernancePageSource from '../../components/platform/user/UserGovernancePage.vue?raw'
 import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'

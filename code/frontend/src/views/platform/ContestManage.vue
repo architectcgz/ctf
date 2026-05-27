@@ -2,8 +2,7 @@
 import PlatformContestFormDialog from '@/components/platform/contest/PlatformContestFormDialog.vue'
 import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
 import ContestAnnouncementManageDrawer from '@/components/platform/contest/ContestAnnouncementManageDrawer.vue'
-import ContestOrchestrationPage from '@/components/platform/contest/ContestOrchestrationPage.vue'
-import { useContestManagePage } from '@/features/platform-contests'
+import { ContestOrchestrationPage, useContestManagePage } from '@/features/platform-contests'
 
 const {
   list,
@@ -37,6 +36,8 @@ const {
   openAnnouncementDrawer,
   closeAnnouncementDrawer,
   handleCreateContestSave,
+  openContestEditPage,
+  openContestWorkbench,
 } = useContestManagePage()
 </script>
 
@@ -61,6 +62,8 @@ const {
       @save-create-contest="handleCreateContestSave"
       @update-status-filter="updateStatusFilter"
       @open-edit-dialog="openEditDialog"
+      @open-edit-contest="openContestEditPage"
+      @open-contest-workbench="openContestWorkbench"
       @announce="openAnnouncementDrawer"
       @change-page="changePage"
     />

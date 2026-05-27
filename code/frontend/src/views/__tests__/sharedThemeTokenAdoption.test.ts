@@ -47,7 +47,7 @@ import platformContestFormPanelSource from '@/components/platform/contest/Platfo
 import platformContestTableSource from '@/components/platform/contest/PlatformContestTable.vue?raw'
 import awdRoundHeaderPanelSource from '@/components/platform/contest/AWDRoundHeaderPanel.vue?raw'
 import contestAwdWorkspacePanelSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
-import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
+import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 import topologyCanvasBoardSource from '@/components/platform/topology/TopologyCanvasBoard.vue?raw'
 import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
 import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'

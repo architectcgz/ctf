@@ -55,6 +55,7 @@
   - `2026-05-27` 进展：题解管理三件套 `ChallengeWriteupManagePanel`、`ChallengeWriteupEditorPage`、`ChallengeWriteupViewPage` 已完成迁入 `features/challenge-writeup-editor/ui`，前端架构文档同步补上 `feature-owned UI` 判定规则，题解这组对应的 `componentFeatureImportAllowlist` 与 `legacyComponentPageAllowlist` 已收掉；后续继续优先处理仍然直接依赖单一 feature model 的 legacy component page / panel。
   - `2026-05-27` platform overview 进展：`PlatformOverviewPage.vue` 已迁入 `features/platform-overview/ui`，`PlatformOverview` route 改为直接从 `features/platform-overview` public API 组合 page model 与 page shell；平台总览对应的一条 `componentFeatureImportAllowlist` 和一条 `legacyComponentPageAllowlist` 已收掉，下一批低风险候选可继续看 `TeacherDashboardPage.vue`。
   - `2026-05-27` teacher dashboard 进展：`TeacherDashboardPage.vue` 已迁入 `features/teacher-dashboard/ui`，`TeacherDashboard` route 改为直接从 `features/teacher-dashboard` public API 组合 page model 与 page shell；教师总览对应的一条 `componentFeatureImportAllowlist` 和一条 `legacyComponentPageAllowlist` 已收掉，下一批同模式候选可以继续看 `ContestOrchestrationPage.vue`。
+  - `2026-05-27` contest orchestration 进展：`ContestOrchestrationPage.vue` 已迁入 `features/platform-contests/ui`，竞赛编辑页 / 运维页跳转 owner 已从 page shell 回收到 `useContestManagePage()`；竞赛目录 route 改为直接从 `features/platform-contests` public API 组合 page model 与 page shell，对应的一条 `componentFeatureImportAllowlist` 和一条 `legacyComponentPageAllowlist` 已收掉。
 
 - [ ] P1：继续拆 contest / AWD 线上的超大组件壳，优先看 `ContestAwdConfigWorkspaceShell.vue`、`ContestChallengeEditorDialog.vue`、`AWDChallengeLibraryPage.vue`
   - 依据：这三者当前约 `1009` / `899` / `896` 行，是现阶段最肥的一批前端组件壳。

@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestManage from '../ContestManage.vue'
 import contestManageSource from '../ContestManage.vue?raw'
-import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
+import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 import { ApiError } from '@/api/request'
 
 const pushMock = vi.fn()
@@ -471,6 +471,8 @@ describe('ContestManage', () => {
     expect(contestManageSource).toContain('useContestManagePage')
     expect(contestManageSource).not.toContain('onMounted(')
     expect(contestManageSource).not.toContain("from '@/api/contracts'")
+    expect(contestOrchestrationSource).not.toContain("from 'vue-router'")
+    expect(contestOrchestrationSource).not.toContain('useRouter(')
     expect(contestOrchestrationSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )

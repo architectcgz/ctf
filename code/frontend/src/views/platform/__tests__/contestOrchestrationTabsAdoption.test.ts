@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
+import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 
 describe('contest orchestration tabs adoption', () => {
   it('ContestOrchestrationPage 应复用 useUrlSyncedTabs，而不是继续本地维护 URL 同步与键盘导航状态机', () => {

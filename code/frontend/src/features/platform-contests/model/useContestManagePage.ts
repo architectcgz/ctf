@@ -1,9 +1,11 @@
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import type { ContestDetailData } from '@/api/contracts'
 import { usePlatformContests } from './usePlatformContests'
 
 export function useContestManagePage() {
+  const router = useRouter()
   const {
     list,
     total,
@@ -76,6 +78,14 @@ export function useContestManagePage() {
     }
   }
 
+  function openContestEditPage(contest: ContestDetailData): void {
+    void router.push({ name: 'ContestEdit', params: { id: contest.id } })
+  }
+
+  function openContestWorkbench(contest: ContestDetailData): void {
+    void router.push({ name: 'ContestOperations', params: { id: contest.id } })
+  }
+
   return {
     list,
     total,
@@ -110,5 +120,7 @@ export function useContestManagePage() {
     openAnnouncementDrawer,
     closeAnnouncementDrawer,
     handleCreateContestSave,
+    openContestEditPage,
+    openContestWorkbench,
   }
 }

@@ -54,7 +54,7 @@ import userGovernancePageSource from '@/components/platform/user/UserGovernanceP
 import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
-import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
+import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
 import writeupManageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
 import writeupEditorSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue?raw'

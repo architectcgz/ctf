@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
-import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
+import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 
 describe('contest ui primitive adoption phase 27', () => {
   it('contest operations hub shell should not keep legacy journal-eyebrow-text marker once workspace overline owns the hero copy', () => {

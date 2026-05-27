@@ -8,16 +8,15 @@ import {
   Trophy,
   Users,
 } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
 
-import PlatformContestFormPanel from '@/components/platform/contest/PlatformContestFormPanel.vue'
-import type { ContestDetailData, ContestListSummaryData, ContestStatus } from '@/api/contracts'
-import PlatformContestTable from '@/components/platform/contest/PlatformContestTable.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import PlatformContestFormPanel from '@/components/platform/contest/PlatformContestFormPanel.vue'
+import PlatformContestTable from '@/components/platform/contest/PlatformContestTable.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
-import type { ContestFieldLocks, ContestFormDraft } from '@/features/platform-contests'
+import type { ContestDetailData, ContestListSummaryData, ContestStatus } from '@/api/contracts'
+import type { ContestFieldLocks, ContestFormDraft } from '../model'
 
 type RequestedContestPanelKey = 'overview' | 'list' | 'create'
 type StatusFilter =
@@ -45,12 +44,11 @@ const emit = defineEmits<{
   prepareCreateContest: []
   saveCreateContest: [value: ContestFormDraft]
   updateStatusFilter: [value: StatusFilter]
-  openEditDialog: [contest: ContestDetailData]
   announce: [contest: ContestDetailData]
   changePage: [page: number]
+  openEditContest: [contest: ContestDetailData]
+  openContestWorkbench: [contest: ContestDetailData]
 }>()
-
-const router = useRouter()
 
 type ContestPanelKey = 'overview' | 'create'
 const {
@@ -78,17 +76,6 @@ watch(
 function openCreatePanel() {
   emit('prepareCreateContest')
   selectPanel('create')
-}
-
-function openEditContest(contest: ContestDetailData) {
-  void router.push({ name: 'ContestEdit', params: { id: contest.id } })
-}
-
-function openContestWorkbench(contest: ContestDetailData) {
-  void router.push({
-    name: 'ContestOperations',
-    params: { id: contest.id },
-  })
 }
 </script>
 
@@ -269,9 +256,9 @@ function openContestWorkbench(contest: ContestDetailData) {
             :page="page"
             :page-size="pageSize"
             :total="total"
-            @edit="openEditContest"
+            @edit="emit('openEditContest', $event)"
             @announce="emit('announce', $event)"
-            @workbench="openContestWorkbench"
+            @workbench="emit('openContestWorkbench', $event)"
             @change-page="emit('changePage', $event)"
           />
         </section>

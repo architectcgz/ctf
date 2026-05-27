@@ -39,7 +39,7 @@ import challengeImportHeroPanelSource from '@/components/platform/challenge/Chal
 import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
 import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
 import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
-import contestOrchestrationPageSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
+import contestOrchestrationPageSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import dashboardViewSource from '@/views/dashboard/DashboardView.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
