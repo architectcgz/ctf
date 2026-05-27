@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
+import type { AwdReviewContestItemData } from '@/api/contracts'
 import AwdReviewContestDirectory from './AwdReviewContestDirectory.vue'
 
-function createContests(): TeacherAWDReviewContestItemData[] {
+function createContests(): AwdReviewContestItemData[] {
   return [
     {
       id: 'contest-1',
@@ -32,7 +32,7 @@ function createProps() {
       { value: '', label: '全部状态' },
       { value: 'running', label: '进行中' },
     ] as const,
-    statusFilter: '' as '' | TeacherAWDReviewContestItemData['status'],
+    statusFilter: '' as '' | AwdReviewContestItemData['status'],
     keywordFilter: '',
     contestStatusLabel: () => '进行中',
   }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
+import type { AwdReviewContestItemData } from '@/api/contracts'
 import { formatDate } from '@/utils/format'
 import {
   AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA,
@@ -10,7 +10,7 @@ import AwdReviewContestRowMetrics from './AwdReviewContestRowMetrics.vue'
 import AwdReviewContestRowStatusTags from './AwdReviewContestRowStatusTags.vue'
 
 defineProps<{
-  contest: TeacherAWDReviewContestItemData
+  contest: AwdReviewContestItemData
   contestStatusLabel: (status: string) => string
 }>()
 

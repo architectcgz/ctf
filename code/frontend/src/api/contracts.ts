@@ -1141,7 +1141,7 @@ export interface TeacherClassReportExportPayload extends TeacherClassInsightQuer
   format: 'pdf' | 'excel'
 }
 
-export interface TeacherAWDReviewContestItemData {
+export interface AwdReviewContestItemData {
   id: ID
   title: string
   mode: ContestMode
@@ -1255,7 +1255,7 @@ export interface TeacherAWDReviewSelectedRoundData {
 export interface TeacherAWDReviewArchiveData {
   generated_at: ISODateTime
   scope: TeacherAWDReviewScopeData
-  contest: TeacherAWDReviewContestItemData
+  contest: AwdReviewContestItemData
   overview?: TeacherAWDReviewOverviewData
   rounds: TeacherAWDReviewRoundItemData[]
   selected_round?: TeacherAWDReviewSelectedRoundData

@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
+import type { AwdReviewContestItemData } from '@/api/contracts'
 
 type ContestStatusOption = {
-  value: '' | TeacherAWDReviewContestItemData['status']
+  value: '' | AwdReviewContestItemData['status']
   label: string
 }
 
 defineProps<{
   statusOptions: readonly ContestStatusOption[]
-  statusFilter: '' | TeacherAWDReviewContestItemData['status']
+  statusFilter: '' | AwdReviewContestItemData['status']
   keywordFilter: string
 }>()
 
 const emit = defineEmits<{
-  updateStatusFilter: [status: '' | TeacherAWDReviewContestItemData['status']]
+  updateStatusFilter: [status: '' | AwdReviewContestItemData['status']]
   updateKeywordFilter: [keyword: string]
 }>()
 </script>
@@ -29,7 +29,7 @@ const emit = defineEmits<{
         <select
           :value="statusFilter"
           class="awd-review-field__control"
-          @change="emit('updateStatusFilter', ($event.target as HTMLSelectElement).value as '' | TeacherAWDReviewContestItemData['status'])"
+          @change="emit('updateStatusFilter', ($event.target as HTMLSelectElement).value as '' | AwdReviewContestItemData['status'])"
         >
           <option
             v-for="option in statusOptions"

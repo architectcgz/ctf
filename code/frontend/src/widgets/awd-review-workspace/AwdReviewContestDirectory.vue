@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
+import type { AwdReviewContestItemData } from '@/api/contracts'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import AwdReviewContestHead from './AwdReviewContestHead.vue'
 import AwdReviewContestRow from './AwdReviewContestRow.vue'
@@ -8,20 +8,20 @@ import AwdReviewDirectoryState from './AwdReviewDirectoryState.vue'
 import AwdReviewIndexFilters from './AwdReviewIndexFilters.vue'
 
 type ContestStatusOption = {
-  value: '' | TeacherAWDReviewContestItemData['status']
+  value: '' | AwdReviewContestItemData['status']
   label: string
 }
 
 defineProps<{
   loading: boolean
   error: string | null
-  contests: TeacherAWDReviewContestItemData[]
+  contests: AwdReviewContestItemData[]
   total: number
   page: number
   totalPages: number
   hasContests: boolean
   statusOptions: readonly ContestStatusOption[]
-  statusFilter: '' | TeacherAWDReviewContestItemData['status']
+  statusFilter: '' | AwdReviewContestItemData['status']
   keywordFilter: string
   contestStatusLabel: (status: string) => string
 }>()
@@ -30,7 +30,7 @@ const emit = defineEmits<{
   reload: []
   openContest: [contestId: string]
   changePage: [page: number]
-  updateStatusFilter: [status: '' | TeacherAWDReviewContestItemData['status']]
+  updateStatusFilter: [status: '' | AwdReviewContestItemData['status']]
   updateKeywordFilter: [keyword: string]
 }>()
 </script>

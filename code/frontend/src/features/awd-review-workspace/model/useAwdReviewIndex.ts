@@ -4,14 +4,14 @@ import { useRouter } from 'vue-router'
 
 import { listPlatformAWDReviews } from '@/api/admin'
 import { listTeacherAWDReviews } from '@/api/teacher'
-import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
+import type { AwdReviewContestItemData } from '@/api/contracts'
 import { useAbortController } from '@/composables/useAbortController'
 import { useAuthStore } from '@/stores/auth'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import { resolveAwdReviewDetailRouteName } from '@/utils/teachingWorkspaceRouting'
 
-export interface PlatformAwdReviewRow extends TeacherAWDReviewContestItemData {
+export interface PlatformAwdReviewRow extends AwdReviewContestItemData {
   contestCode: string
 }
 
@@ -22,14 +22,14 @@ export function useAwdReviewIndex() {
 
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const contests = ref<TeacherAWDReviewContestItemData[]>([])
+  const contests = ref<AwdReviewContestItemData[]>([])
   const total = ref(0)
   const page = ref(1)
   const pageSize = ref(DEFAULT_PAGE_SIZE)
   const runningCount = ref(0)
   const exportReadyCount = ref(0)
   const filters = ref({
-    status: '' as '' | TeacherAWDReviewContestItemData['status'],
+    status: '' as '' | AwdReviewContestItemData['status'],
     keyword: '',
   })
   let latestRequestId = 0

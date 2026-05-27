@@ -1,11 +1,11 @@
 import { request } from '../request'
 
 import type {
+  AwdReviewContestItemData,
   PageResult,
   ReportExportData,
   TeacherAWDReviewArchiveData,
   TeacherAWDReviewAttackItemData,
-  TeacherAWDReviewContestItemData,
   TeacherAWDReviewRoundItemData,
   TeacherAWDReviewSelectedRoundData,
   TeacherAWDReviewServiceItemData,
@@ -13,7 +13,7 @@ import type {
   TeacherAWDReviewTrafficItemData,
 } from '../contracts'
 
-interface RawTeacherAWDReviewContestItem extends Omit<TeacherAWDReviewContestItemData, 'id'> {
+interface RawTeacherAWDReviewContestItem extends Omit<AwdReviewContestItemData, 'id'> {
   id: string | number
 }
 
@@ -105,7 +105,7 @@ interface RawTeacherAWDReviewContestPageResponse
 }
 
 export interface TeacherAWDReviewContestPageData
-  extends PageResult<TeacherAWDReviewContestItemData> {
+  extends PageResult<AwdReviewContestItemData> {
   summary: {
     running_count: number
     export_ready_count: number
@@ -123,7 +123,7 @@ function normalizeReportExportData(
 
 function normalizeTeacherAWDReviewContest(
   item: RawTeacherAWDReviewContestItem
-): TeacherAWDReviewContestItemData {
+): AwdReviewContestItemData {
   return {
     ...item,
     id: String(item.id),
@@ -206,7 +206,7 @@ function normalizeTeacherAWDSelectedRound(
 
 export async function listTeacherAWDReviews(
   params?: {
-    status?: TeacherAWDReviewContestItemData['status']
+    status?: AwdReviewContestItemData['status']
     keyword?: string
     page?: number
     page_size?: number

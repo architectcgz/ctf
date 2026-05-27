@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
 import AwdReviewIndexWorkspace from './AwdReviewIndexWorkspace.vue'
-import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
+import type { AwdReviewContestItemData } from '@/api/contracts'
 
-function createContests(): TeacherAWDReviewContestItemData[] {
+function createContests(): AwdReviewContestItemData[] {
   return [
     {
       id: 'contest-1',
@@ -37,7 +37,7 @@ function createProps() {
       runningCount: 1,
       exportReadyCount: 0,
     },
-    statusFilter: '' as '' | TeacherAWDReviewContestItemData['status'],
+    statusFilter: '' as '' | AwdReviewContestItemData['status'],
     keywordFilter: '',
     contestStatusLabel: () => '进行中',
   }
