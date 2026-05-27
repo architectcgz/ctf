@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import contestChallengeSummaryStripSource from '@/components/platform/contest/ContestChallengeSummaryStrip.vue?raw'
-import contestChallengeOrchestrationPanelSource from '@/components/platform/contest/ContestChallengeOrchestrationPanel.vue?raw'
+import contestChallengeSummaryStripSource from '@/features/contest-workbench/ui/ContestChallengeSummaryStrip.vue?raw'
+import contestChallengeOrchestrationPanelSource from '@/features/contest-workbench/ui/ContestChallengeOrchestrationPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 24', () => {
   it('contest challenge orchestration summary should use the full shared metric panel class stack', () => {

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
-import { RouterLink } from 'vue-router'
 import { Plus, RefreshCw, Trash, Boxes, AlertTriangle, MoreHorizontal } from 'lucide-vue-next'
 
 import type {
@@ -16,9 +15,9 @@ import {
   toChallengeCategory,
   toChallengeDifficulty,
 } from '@/entities/challenge'
-import { useContestChallengeOrchestration } from '@/features/contest-workbench'
+import { useContestChallengeOrchestration } from '../model'
 
-import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
+import ContestChallengeEditorDialog from '@/components/platform/contest/ContestChallengeEditorDialog.vue'
 import ContestChallengeFilterStrip from './ContestChallengeFilterStrip.vue'
 import ContestChallengeSummaryStrip from './ContestChallengeSummaryStrip.vue'
 

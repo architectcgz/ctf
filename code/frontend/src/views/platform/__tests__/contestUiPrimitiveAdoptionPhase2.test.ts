@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import contestEditSource from '../ContestEdit.vue?raw'
-import contestEditWorkspacePanelSource from '@/components/platform/contest/ContestEditWorkspacePanel.vue?raw'
+import contestEditWorkspacePanelSource from '@/features/platform-contests/ui/ContestEditWorkspacePanel.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
 import awdReadinessChecklistSource from '@/components/platform/contest/AWDReadinessChecklist.vue?raw'
-import contestChallengeOrchestrationPanelSource from '@/components/platform/contest/ContestChallengeOrchestrationPanel.vue?raw'
+import contestChallengeOrchestrationPanelSource from '@/features/contest-workbench/ui/ContestChallengeOrchestrationPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 2', () => {
   const contestEditCombinedSource = [contestEditSource, contestEditWorkspacePanelSource].join('\n')

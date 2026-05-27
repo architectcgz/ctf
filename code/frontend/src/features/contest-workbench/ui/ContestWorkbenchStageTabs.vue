@@ -6,7 +6,7 @@ import {
   UsersRound,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
-import type { ContestWorkbenchStage, ContestWorkbenchStageKey } from '@/features/contest-workbench'
+import type { ContestWorkbenchStage, ContestWorkbenchStageKey } from '../model'
 
 const props = defineProps<{
   stages: ContestWorkbenchStage[]

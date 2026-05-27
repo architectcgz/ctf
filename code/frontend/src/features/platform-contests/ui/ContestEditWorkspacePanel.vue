@@ -8,13 +8,15 @@ import type {
   ContestFieldLocks,
   ContestFormDraft,
   PlatformContestStatus,
-} from '@/features/platform-contests'
-import type { ContestWorkbenchStageKey } from '@/features/contest-workbench'
+} from '../model'
+import {
+  ContestChallengeOrchestrationPanel,
+  type ContestWorkbenchStageKey,
+} from '@/features/contest-workbench'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AWDChallengeConfigPanel from '@/components/platform/contest/AWDChallengeConfigPanel.vue'
 import ContestAwdPreflightPanel from '@/components/platform/contest/ContestAwdPreflightPanel.vue'
-import ContestChallengeOrchestrationPanel from '@/components/platform/contest/ContestChallengeOrchestrationPanel.vue'
 import PlatformContestFormPanel from '@/components/platform/contest/PlatformContestFormPanel.vue'
 
 defineProps<{

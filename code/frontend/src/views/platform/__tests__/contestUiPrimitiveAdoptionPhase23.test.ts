@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import contestWorkbenchSummaryStripSource from '@/components/platform/contest/ContestWorkbenchSummaryStrip.vue?raw'
+import contestWorkbenchSummaryStripSource from '@/features/contest-workbench/ui/ContestWorkbenchSummaryStrip.vue?raw'
 
 describe('contest ui primitive adoption phase 23', () => {
   it('contest workbench summary strip should use the full shared metric panel class stack', () => {

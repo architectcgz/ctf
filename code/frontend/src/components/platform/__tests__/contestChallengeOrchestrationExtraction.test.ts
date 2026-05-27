@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import contestChallengeFilterStripSource from '../contest/ContestChallengeFilterStrip.vue?raw'
-import contestChallengeOrchestrationPanelSource from '../contest/ContestChallengeOrchestrationPanel.vue?raw'
+import contestChallengeFilterStripSource from '@/features/contest-workbench/ui/ContestChallengeFilterStrip.vue?raw'
+import contestChallengeOrchestrationPanelSource from '@/features/contest-workbench/ui/ContestChallengeOrchestrationPanel.vue?raw'
 
 describe('contest challenge orchestration extraction', () => {
   it('ContestChallengeOrchestrationPanel 应将汇总条和 AWD 筛选条下沉到独立子组件，而不是继续在父组件里内联整段结构', () => {
     expect(contestChallengeOrchestrationPanelSource).toContain('<ContestChallengeSummaryStrip')
     expect(contestChallengeOrchestrationPanelSource).toContain('<ContestChallengeFilterStrip')
-    expect(contestChallengeOrchestrationPanelSource).toContain(
-      "from '@/features/contest-workbench'"
-    )
+    expect(contestChallengeOrchestrationPanelSource).toContain("from '../model'")
     expect(contestChallengeOrchestrationPanelSource).toContain('useContestChallengeOrchestration')
     expect(contestChallengeOrchestrationPanelSource).not.toContain(
       "from '@/api/admin/contests'"

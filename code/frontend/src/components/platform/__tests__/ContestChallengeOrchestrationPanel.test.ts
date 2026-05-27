@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
-import ContestChallengeOrchestrationPanel from '../contest/ContestChallengeOrchestrationPanel.vue'
+import ContestChallengeOrchestrationPanel from '@/features/contest-workbench/ui/ContestChallengeOrchestrationPanel.vue'
 import type { AdminContestChallengeViewData } from '@/api/contracts'
 
 const contestApiMocks = vi.hoisted(() => ({

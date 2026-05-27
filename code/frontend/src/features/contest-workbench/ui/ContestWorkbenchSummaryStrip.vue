@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ContestWorkbenchSummaryItem } from '@/features/contest-workbench'
+import type { ContestWorkbenchSummaryItem } from '../model'
 
 defineProps<{
   items: ContestWorkbenchSummaryItem[]
