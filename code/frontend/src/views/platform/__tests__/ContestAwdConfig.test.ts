@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestAwdConfig from '../ContestAwdConfig.vue'
 import contestAwdConfigSource from '../ContestAwdConfig.vue?raw'
+import contestAwdCheckerConfigSectionSource from '@/components/platform/contest/ContestAwdCheckerConfigSection.vue?raw'
 import contestAwdConfigWorkspaceShellSource from '@/components/platform/contest/ContestAwdConfigWorkspaceShell.vue?raw'
 import contestAwdConfigPageSource from '@/features/contest-awd-config/model/useContestAwdConfigPage.ts?raw'
 
@@ -114,6 +115,7 @@ describe('ContestAwdConfig', () => {
   const contestAwdConfigWorkspaceSource = [
     contestAwdConfigSource,
     contestAwdConfigWorkspaceShellSource,
+    contestAwdCheckerConfigSectionSource,
   ].join('\n')
 
   beforeEach(() => {
@@ -156,7 +158,17 @@ describe('ContestAwdConfig', () => {
     expect(contestAwdConfigWorkspaceSource).toContain(
       "import ContestAwdConfigFooter from '@/components/platform/contest/ContestAwdConfigFooter.vue'"
     )
+    expect(contestAwdConfigWorkspaceShellSource).toContain(
+      "import ContestAwdCheckerConfigSection from '@/components/platform/contest/ContestAwdCheckerConfigSection.vue'"
+    )
+    expect(contestAwdCheckerConfigSectionSource).toContain(
+      "import ContestAwdHttpStandardFields from './ContestAwdHttpStandardFields.vue'"
+    )
+    expect(contestAwdCheckerConfigSectionSource).toContain(
+      "import ContestAwdTcpStandardFields from './ContestAwdTcpStandardFields.vue'"
+    )
     expect(contestAwdConfigWorkspaceSource).toContain('<ContestAwdServiceDirectory')
+    expect(contestAwdConfigWorkspaceSource).toContain('<ContestAwdCheckerConfigSection')
     expect(contestAwdConfigWorkspaceSource).toContain('<ContestAwdDebugStation')
     expect(contestAwdConfigPageSource).not.toContain(
       "from '@/components/platform/contest/awdCheckerConfigSupport'"

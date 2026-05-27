@@ -62,6 +62,7 @@
   - 收益：继续收口 `TD-1`，减少单文件模板/样式/局部状态混写。
   - 风险：中高。比赛与 AWD 页面交互密度高，切片要尽量按稳定展示块或编辑分区拆。
   - `2026-05-27` 进展：`AWDChallengeLibraryPage.vue` 已拆成 `AwdChallengeWorkspaceHeader`、`AwdChallengeLibrarySection`、`AwdChallengeImportSection`，共享 page surface 只保留 mode 与 props / emits owner；`ContestChallengeEditorDialog.vue` 已进一步拆成 `ContestAwdChallengeSelectorSection` 与 `ContestChallengeSettingsSection`，父对话框只保留 form / validation / submit / selection owner。当前这条 P1 的剩余重点已经进一步收敛到 `ContestAwdConfigWorkspaceShell.vue`。
+  - `2026-05-27` AWD config 进展：`ContestAwdConfigWorkspaceShell.vue` 已继续把 `Checker Parameters` 画布拆成 `ContestAwdCheckerConfigSection` 与按 checker type 划分的字段子组件，父壳只保留服务选择、draft、字段错误、保存、预览和 checker type owner；当前这条 P1 在 touched surface 上已不再由单一 1000 行壳体混放四种 checker 模板。
 
 - [ ] P2：收口布局层超大组件，优先看 `NotificationDrawer.vue`、`Sidebar.vue`、`TopNav.vue`
   - 依据：三者当前约 `1071` / `854` / `781` 行，已经超过普通布局组件可维护范围。
