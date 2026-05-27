@@ -5,7 +5,7 @@ import { ArrowRight, ClipboardList, FileText, FolderKanban } from 'lucide-vue-ne
 import type {
   TeacherManualReviewSubmissionDetailData,
   TeacherManualReviewSubmissionItemData,
-  TeacherSubmissionWriteupItemData,
+  WriteupSubmissionItemData,
 } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
@@ -19,7 +19,7 @@ import {
 } from './studentInsightShared'
 
 const props = defineProps<{
-  writeupSubmissions: TeacherSubmissionWriteupItemData[]
+  writeupSubmissions: WriteupSubmissionItemData[]
   writeupPage: number
   writeupTotal: number
   writeupTotalPages: number

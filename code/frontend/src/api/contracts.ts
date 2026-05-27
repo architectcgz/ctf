@@ -166,7 +166,7 @@ export interface CommunityChallengeSolutionData {
   updated_at: ISODateTime
 }
 
-export interface TeacherSubmissionWriteupItemData {
+export interface WriteupSubmissionItemData {
   id: ID
   user_id: ID
   student_username: string

@@ -5,7 +5,7 @@ import {
   getChallengeWriteup,
   getPlatformWriteupSubmissions,
 } from '@/api/admin/authoring'
-import type { AdminChallengeWriteupData, TeacherSubmissionWriteupItemData } from '@/api/contracts'
+import type { AdminChallengeWriteupData, WriteupSubmissionItemData } from '@/api/contracts'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 
@@ -33,7 +33,7 @@ export function useChallengeWriteupManagement(options: UseChallengeWriteupManage
   const deleting = ref(false)
   const submissionLoading = ref(true)
   const writeup = ref<AdminChallengeWriteupData | null>(null)
-  const writeupSubmissions = ref<TeacherSubmissionWriteupItemData[]>([])
+  const writeupSubmissions = ref<WriteupSubmissionItemData[]>([])
   const submissionPage = ref(1)
   const submissionPageSize = ref(6)
   const submissionTotal = ref(0)
@@ -203,25 +203,25 @@ function formatDate(value: string): string {
   return date.toLocaleString('zh-CN')
 }
 
-function submissionStatusLabel(status: TeacherSubmissionWriteupItemData['submission_status']): string {
+function submissionStatusLabel(status: WriteupSubmissionItemData['submission_status']): string {
   return status === 'draft' ? '草稿' : '已发布'
 }
 
-function visibilityStatusLabel(status: TeacherSubmissionWriteupItemData['visibility_status']): string {
+function visibilityStatusLabel(status: WriteupSubmissionItemData['visibility_status']): string {
   return status === 'hidden' ? '已隐藏' : '已公开'
 }
 
-function resolveAuthorName(item: TeacherSubmissionWriteupItemData): string {
+function resolveAuthorName(item: WriteupSubmissionItemData): string {
   const name = item.student_name?.trim()
   return name || item.student_username
 }
 
-function resolveStudentNo(item: TeacherSubmissionWriteupItemData): string {
+function resolveStudentNo(item: WriteupSubmissionItemData): string {
   const studentNo = item.student_no?.trim()
   return studentNo || '未设置学号'
 }
 
-function resolveClassName(item: TeacherSubmissionWriteupItemData): string {
+function resolveClassName(item: WriteupSubmissionItemData): string {
   const className = item.class_name?.trim()
   return className || '未分班'
 }

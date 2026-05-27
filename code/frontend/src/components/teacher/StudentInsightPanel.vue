@@ -12,7 +12,7 @@ import type {
   TeacherEvidenceData,
   TeacherManualReviewSubmissionDetailData,
   TeacherManualReviewSubmissionItemData,
-  TeacherSubmissionWriteupItemData,
+  WriteupSubmissionItemData,
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
@@ -35,7 +35,7 @@ const props = defineProps<{
   reviewChallengeOptions: Array<{ value: string; label: string }>
   reviewWorkspaceLoading: boolean
   reviewWorkspaceQuery: TeacherAttackSessionQuery
-  writeupSubmissions: TeacherSubmissionWriteupItemData[]
+  writeupSubmissions: WriteupSubmissionItemData[]
   writeupPage: number
   writeupTotal: number
   writeupTotalPages: number

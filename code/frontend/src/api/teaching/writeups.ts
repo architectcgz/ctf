@@ -5,11 +5,11 @@ import type {
   SubmissionWriteupData,
   TeacherManualReviewSubmissionDetailData,
   TeacherManualReviewSubmissionItemData,
-  TeacherSubmissionWriteupItemData,
+  WriteupSubmissionItemData,
 } from '../contracts'
 
 interface RawTeacherSubmissionWriteupItem extends Omit<
-  TeacherSubmissionWriteupItemData,
+  WriteupSubmissionItemData,
   'id' | 'user_id' | 'challenge_id'
 > {
   id: string | number
@@ -62,7 +62,7 @@ export async function getTeacherWriteupSubmissions(params?: {
   visibility_status?: 'visible' | 'hidden'
   page?: number
   page_size?: number
-}): Promise<PageResult<TeacherSubmissionWriteupItemData>> {
+}): Promise<PageResult<WriteupSubmissionItemData>> {
   const payload = await request<PageResult<RawTeacherSubmissionWriteupItem>>({
     method: 'GET',
     url: '/teacher/writeup-submissions',

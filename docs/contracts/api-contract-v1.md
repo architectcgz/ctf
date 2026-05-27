@@ -33,6 +33,7 @@
 - `src/api/teacher/*`、`src/api/admin/*` 可以作为语义 owner 对底层实现做薄 wrapper / re-export；只要没有改动 HTTP method、path、query、body、response schema，就不视为新的后端 API contract。
 - 2026-05-27 起，AWD review 目录、详情和导出链路也允许前端通过 `src/api/admin/*` / `src/api/teacher/*` 按角色选择 wrapper owner；底层仍复用既有 `/api/v1/teacher/awd/reviews*` HTTP contract，不新增平台专属 AWD review 路径。
 - 2026-05-27 起，platform 题解管理面板也允许通过 `src/api/admin/authoring.ts` 暴露 `getPlatformWriteupSubmissions` 这类薄 wrapper；底层仍复用既有 `/api/v1/teacher/writeup-submissions` HTTP contract，不改变教师侧题解查看 / 评阅能力。
+- 2026-05-27 起，前端本地共享 DTO 对这条投稿目录 contract 统一使用中性命名 `WriteupSubmissionItemData`；HTTP path 仍保持 `/api/v1/teacher/writeup-submissions`，不改变服务端权限语义。
 
 ---
 
@@ -1411,7 +1412,7 @@ export interface TeacherSubmissionWriteupQuery {
 `data`：
 
 ```ts
-export interface TeacherSubmissionWriteupItem {
+export interface WriteupSubmissionItem {
   id: ID
   user_id: ID
   student_username: string
@@ -1429,7 +1430,7 @@ export interface TeacherSubmissionWriteupItem {
   updated_at: ISODateTime
 }
 
-export type TeacherSubmissionWriteupListData = PageResult<TeacherSubmissionWriteupItem>
+export type WriteupSubmissionListData = PageResult<WriteupSubmissionItem>
 ```
 
 > 说明：

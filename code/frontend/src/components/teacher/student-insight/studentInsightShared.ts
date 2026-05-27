@@ -2,7 +2,7 @@ import type {
   TeacherAttackEventData,
   TeacherAttackSessionData,
   TeacherManualReviewSubmissionItemData,
-  TeacherSubmissionWriteupItemData,
+  WriteupSubmissionItemData,
 } from '@/api/contracts'
 
 export type StudentInsightSection =
@@ -20,13 +20,13 @@ export interface InsightMetaItem {
 }
 
 export function visibilityStatusLabel(
-  status: TeacherSubmissionWriteupItemData['visibility_status']
+  status: WriteupSubmissionItemData['visibility_status']
 ): string {
   return status === 'hidden' ? '已隐藏' : '已公开'
 }
 
 export function visibilityStatusClass(
-  status: TeacherSubmissionWriteupItemData['visibility_status']
+  status: WriteupSubmissionItemData['visibility_status']
 ): string {
   return status === 'hidden'
     ? 'writeup-chip writeup-chip--warning'

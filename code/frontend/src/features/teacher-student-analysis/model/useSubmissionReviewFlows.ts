@@ -13,7 +13,7 @@ import {
 import type {
   TeacherManualReviewSubmissionDetailData,
   TeacherManualReviewSubmissionItemData,
-  TeacherSubmissionWriteupItemData,
+  WriteupSubmissionItemData,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
 
@@ -25,7 +25,7 @@ export function useSubmissionReviewFlows(options: UseSubmissionReviewFlowsOption
   const { getCurrentStudentId } = options
   const toast = useToast()
 
-  const writeupSubmissions = ref<TeacherSubmissionWriteupItemData[]>([])
+  const writeupSubmissions = ref<WriteupSubmissionItemData[]>([])
   const writeupPage = ref(1)
   const writeupPageSize = ref(6)
   const writeupTotal = ref(0)
@@ -44,7 +44,7 @@ export function useSubmissionReviewFlows(options: UseSubmissionReviewFlowsOption
   }
 
   function applyWriteupPagePayload(payload: {
-    list: TeacherSubmissionWriteupItemData[]
+    list: WriteupSubmissionItemData[]
     page: number
     page_size: number
     total: number
