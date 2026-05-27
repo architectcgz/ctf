@@ -14,7 +14,7 @@ import type {
 import { normalizeSkillProfile, type RawSkillProfileResponse } from '@/utils/skillProfile'
 import { normalizeRecommendationData, type RawRecommendationResponse } from '@/utils/skillProfile'
 
-export interface TeacherAttackSessionQuery {
+export interface AttackSessionQuery {
   mode?: 'practice' | 'jeopardy' | 'awd'
   challenge_id?: string
   contest_id?: string
@@ -270,7 +270,7 @@ function optionalId(value: string | number | undefined): string | undefined {
 
 export async function getStudentAttackSessions(
   id: string,
-  query: TeacherAttackSessionQuery = {}
+  query: AttackSessionQuery = {}
 ): Promise<TeacherAttackSessionResponseData> {
   const payload = await request<RawTeacherAttackSessionResponse>({
     method: 'GET',

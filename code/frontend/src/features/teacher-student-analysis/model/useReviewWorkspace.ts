@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import {
   getStudentAttackSessions,
   getStudentEvidence,
-  type TeacherAttackSessionQuery,
+  type AttackSessionQuery,
   type TeacherEvidenceQuery,
 } from '@/api/teaching'
 import type { TeacherAttackSessionResponseData, TeacherEvidenceData } from '@/api/contracts'
@@ -14,7 +14,7 @@ export function useReviewWorkspace() {
   const reviewChallengeOptions = ref<Array<{ value: string; label: string }>>([])
   const reviewWorkspaceLoading = ref(false)
 
-  const sessionQuery = ref<TeacherAttackSessionQuery>({
+  const sessionQuery = ref<AttackSessionQuery>({
     with_events: true,
     limit: 20,
     offset: 0,
@@ -83,7 +83,7 @@ export function useReviewWorkspace() {
     await loadAttackSessions(studentId)
   }
 
-  function setSessionQuery(nextQuery: Partial<TeacherAttackSessionQuery>): void {
+  function setSessionQuery(nextQuery: Partial<AttackSessionQuery>): void {
     sessionQuery.value = {
       ...sessionQuery.value,
       ...nextQuery,

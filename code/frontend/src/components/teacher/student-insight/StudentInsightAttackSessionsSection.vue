@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { StudentReviewWorkspace } from '@/widgets/teacher-student-review-workspace'
-import type { TeacherAttackSessionQuery } from '@/api/teacher'
+import type { AttackSessionQuery } from '@/api/teacher'
 import type { TeacherAttackSessionResponseData, TeacherEvidenceData } from '@/api/contracts'
 import SectionCard from '@/components/common/SectionCard.vue'
 
@@ -9,11 +9,11 @@ defineProps<{
   evidence: TeacherEvidenceData | null
   reviewChallengeOptions: Array<{ value: string; label: string }>
   reviewWorkspaceLoading: boolean
-  reviewWorkspaceQuery: TeacherAttackSessionQuery
+  reviewWorkspaceQuery: AttackSessionQuery
 }>()
 
 const emit = defineEmits<{
-  updateReviewWorkspaceFilters: [payload: Partial<TeacherAttackSessionQuery>]
+  updateReviewWorkspaceFilters: [payload: Partial<AttackSessionQuery>]
 }>()
 </script>
 

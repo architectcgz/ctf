@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { TeacherAttackSessionQuery } from '@/api/teacher'
+import type { AttackSessionQuery } from '@/api/teacher'
 import type {
   ManualReviewSubmissionDetailData,
   ManualReviewSubmissionItemData,
@@ -29,7 +29,7 @@ const props = defineProps<{
   attackSessions: TeacherAttackSessionResponseData | null
   reviewChallengeOptions: Array<{ value: string; label: string }>
   reviewWorkspaceLoading: boolean
-  reviewWorkspaceQuery: TeacherAttackSessionQuery
+  reviewWorkspaceQuery: AttackSessionQuery
   writeupSubmissions: WriteupSubmissionItemData[]
   writeupPage: number
   writeupTotal: number
@@ -62,7 +62,7 @@ const emit = defineEmits<{
     },
   ]
   changeWriteupPage: [page: number]
-  updateReviewWorkspaceFilters: [payload: Partial<TeacherAttackSessionQuery>]
+  updateReviewWorkspaceFilters: [payload: Partial<AttackSessionQuery>]
 }>()
 
 type WorkspaceTab =

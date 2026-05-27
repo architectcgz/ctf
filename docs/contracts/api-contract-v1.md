@@ -851,6 +851,61 @@ export interface TeacherEvidenceData {
 }
 ```
 
+### 6.9 GET `/api/v1/teacher/students/:id/attack-sessions`
+
+`query`：
+
+```ts
+export interface AttackSessionQuery {
+  mode?: 'practice' | 'jeopardy' | 'awd'
+  challenge_id?: ID
+  contest_id?: ID
+  round_id?: ID
+  result?: 'success' | 'failed' | 'in_progress' | 'unknown'
+  with_events?: boolean
+  limit?: number
+  offset?: number
+}
+```
+
+`data`：
+
+```ts
+export interface TeacherAttackSessionData {
+  id: ID
+  mode: 'practice' | 'jeopardy' | 'awd' | string
+  student_id: ID
+  team_id?: ID
+  challenge_id?: ID
+  contest_id?: ID
+  round_id?: ID
+  service_id?: ID
+  victim_team_id?: ID
+  title: string
+  started_at: ISODateTime
+  ended_at: ISODateTime
+  result: 'success' | 'failed' | 'in_progress' | 'unknown' | string
+  event_count: number
+  capture_count: number
+  events?: TeacherAttackEventData[]
+}
+
+export interface TeacherAttackSessionSummaryData {
+  total_sessions: number
+  success_count: number
+  failed_count: number
+  in_progress_count: number
+  unknown_count: number
+  event_count: number
+  capture_available_count: number
+}
+
+export interface TeacherAttackSessionResponseData {
+  summary: TeacherAttackSessionSummaryData
+  sessions: TeacherAttackSessionData[]
+}
+```
+
 ---
 
 ## 7. 技能评估与报告（`/users/*` `/reports/*`）

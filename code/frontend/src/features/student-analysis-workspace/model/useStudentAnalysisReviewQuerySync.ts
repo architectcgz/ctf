@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 import type { RouteLocationNormalizedLoadedGeneric, Router } from 'vue-router'
 
-import type { TeacherAttackSessionQuery } from '@/api/teacher'
+import type { AttackSessionQuery } from '@/api/teacher'
 
 type ReviewRouteLike = Pick<RouteLocationNormalizedLoadedGeneric, 'query'>
 type ReviewRouterLike = Pick<Router, 'replace'>
@@ -9,9 +9,9 @@ type ReviewRouterLike = Pick<Router, 'replace'>
 interface UseStudentAnalysisReviewQuerySyncOptions {
   route: ReviewRouteLike
   router: ReviewRouterLike
-  sessionQuery: Ref<TeacherAttackSessionQuery>
+  sessionQuery: Ref<AttackSessionQuery>
   selectedStudentId: Ref<string>
-  setSessionQuery: (nextQuery: Partial<TeacherAttackSessionQuery>) => void
+  setSessionQuery: (nextQuery: Partial<AttackSessionQuery>) => void
   loadReviewWorkspace: (studentId: string) => Promise<void>
   reloadAttackSessions: (studentId: string) => Promise<void>
   studentIdFromRoute: () => string
@@ -31,7 +31,7 @@ export function useStudentAnalysisReviewQuerySync(
     studentIdFromRoute,
   } = options
 
-  function reviewWorkspaceQueryFromRoute(): Partial<TeacherAttackSessionQuery> {
+  function reviewWorkspaceQueryFromRoute(): Partial<AttackSessionQuery> {
     return {
       mode:
         route.query.reviewMode === 'practice' ||
@@ -65,7 +65,7 @@ export function useStudentAnalysisReviewQuerySync(
   }
 
   function reviewWorkspaceQueryMatchesState(
-    nextQuery: Partial<TeacherAttackSessionQuery>
+    nextQuery: Partial<AttackSessionQuery>
   ): boolean {
     return (
       (nextQuery.mode || undefined) === (sessionQuery.value.mode || undefined) &&

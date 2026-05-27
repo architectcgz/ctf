@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import type { TeacherAttackSessionQuery } from '@/api/teacher'
+import type { AttackSessionQuery } from '@/api/teacher'
 import type { TeacherAttackSessionResponseData, TeacherEvidenceData } from '@/api/contracts'
 import {
   buildChallengeFilterOptions,
@@ -23,11 +23,11 @@ const props = defineProps<{
   attackSessions: TeacherAttackSessionResponseData | null
   challengeOptions?: Array<{ value: string; label: string }>
   loading: boolean
-  query: TeacherAttackSessionQuery
+  query: AttackSessionQuery
 }>()
 
 const emit = defineEmits<{
-  updateFilters: [payload: Partial<TeacherAttackSessionQuery>]
+  updateFilters: [payload: Partial<AttackSessionQuery>]
 }>()
 
 const summaryItems = computed(() =>
@@ -98,7 +98,7 @@ const observations = computed(() =>
           :disabled="loading"
           @change="
             emit('updateFilters', {
-              mode: (($event.target as HTMLSelectElement).value || undefined) as TeacherAttackSessionQuery['mode'],
+              mode: (($event.target as HTMLSelectElement).value || undefined) as AttackSessionQuery['mode'],
             })
           "
         >
@@ -117,7 +117,7 @@ const observations = computed(() =>
           :disabled="loading"
           @change="
             emit('updateFilters', {
-              result: (($event.target as HTMLSelectElement).value || undefined) as TeacherAttackSessionQuery['result'],
+              result: (($event.target as HTMLSelectElement).value || undefined) as AttackSessionQuery['result'],
             })
           "
         >
