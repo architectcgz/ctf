@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import PlatformOverviewPage from '@/components/platform/dashboard/PlatformOverviewPage.vue'
-import { usePlatformOverviewPage } from '@/features/platform-overview'
+import { PlatformOverviewPage, usePlatformOverviewPage } from '@/features/platform-overview'
 
 const { dashboard, loading, error, loadDashboard, openAuditLog, openCheatDetection } =
   usePlatformOverviewPage()

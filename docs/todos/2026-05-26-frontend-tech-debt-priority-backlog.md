@@ -53,6 +53,7 @@
   - 收益：可以把“单一 feature 的 UI 壳”从 legacy component page 通道里迁走，减少 `componentFeatureImportAllowlist` 和 `legacyComponentPageAllowlist`，也给后续其它切片提供明确落点。
   - 风险：中。主要是 import 路径、raw-source 测试和 public API 更新，需要避免把 route owner 或 API owner 从 feature model 重新打散。
   - `2026-05-27` 进展：题解管理三件套 `ChallengeWriteupManagePanel`、`ChallengeWriteupEditorPage`、`ChallengeWriteupViewPage` 已完成迁入 `features/challenge-writeup-editor/ui`，前端架构文档同步补上 `feature-owned UI` 判定规则，题解这组对应的 `componentFeatureImportAllowlist` 与 `legacyComponentPageAllowlist` 已收掉；后续继续优先处理仍然直接依赖单一 feature model 的 legacy component page / panel。
+  - `2026-05-27` platform overview 进展：`PlatformOverviewPage.vue` 已迁入 `features/platform-overview/ui`，`PlatformOverview` route 改为直接从 `features/platform-overview` public API 组合 page model 与 page shell；平台总览对应的一条 `componentFeatureImportAllowlist` 和一条 `legacyComponentPageAllowlist` 已收掉，下一批低风险候选可继续看 `TeacherDashboardPage.vue`。
 
 - [ ] P1：继续拆 contest / AWD 线上的超大组件壳，优先看 `ContestAwdConfigWorkspaceShell.vue`、`ContestChallengeEditorDialog.vue`、`AWDChallengeLibraryPage.vue`
   - 依据：这三者当前约 `1009` / `899` / `896` 行，是现阶段最肥的一批前端组件壳。

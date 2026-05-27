@@ -2,11 +2,10 @@
 import { toRef } from 'vue'
 
 import type { AdminDashboardData } from '@/api/contracts'
-import { usePlatformOverviewWorkspace } from '@/features/platform-overview'
-
-import PlatformOverviewAlertsSection from './PlatformOverviewAlertsSection.vue'
-import PlatformOverviewHeroPanel from './PlatformOverviewHeroPanel.vue'
-import PlatformOverviewHotspotsSection from './PlatformOverviewHotspotsSection.vue'
+import { usePlatformOverviewWorkspace } from '@/features/platform-overview/model/usePlatformOverviewWorkspace'
+import PlatformOverviewAlertsSection from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue'
+import PlatformOverviewHeroPanel from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue'
+import PlatformOverviewHotspotsSection from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue'
 
 const props = defineProps<{
   dashboard: AdminDashboardData | null

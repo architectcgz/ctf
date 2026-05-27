@@ -46,7 +46,7 @@ import teacherDashboardStudentInsightPanelSource from '@/components/teacher/dash
 import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/TeacherDashboardTrendPanel.vue?raw'
 import teacherDashboardReviewPanelSource from '@/components/teacher/dashboard/TeacherDashboardReviewPanel.vue?raw'
 import teacherDashboardInterventionPanelSource from '@/components/teacher/dashboard/TeacherDashboardInterventionPanel.vue?raw'
-import adminDashboardSourceBase from '@/components/platform/dashboard/PlatformOverviewPage.vue?raw'
+import adminDashboardSourceBase from '@/features/platform-overview/ui/PlatformOverviewPage.vue?raw'
 import platformOverviewAlertsSectionSource from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue?raw'
 import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
 import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'

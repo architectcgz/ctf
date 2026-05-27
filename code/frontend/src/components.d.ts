@@ -152,7 +152,7 @@ declare module 'vue' {
     PlatformContestFormDialog: typeof import('./components/platform/contest/PlatformContestFormDialog.vue')['default']
     PlatformContestFormPanel: typeof import('./components/platform/contest/PlatformContestFormPanel.vue')['default']
     PlatformContestTable: typeof import('./components/platform/contest/PlatformContestTable.vue')['default']
-    PlatformOverviewPage: typeof import('./components/platform/dashboard/PlatformOverviewPage.vue')['default']
+    PlatformOverviewPage: typeof import('./features/platform-overview/ui/PlatformOverviewPage.vue')['default']
     PlatformPaginationControls: typeof import('./components/platform/PlatformPaginationControls.vue')['default']
     PlatformUserFormDialog: typeof import('./components/platform/user/PlatformUserFormDialog.vue')['default']
     RadarChart: typeof import('./components/charts/RadarChart.vue')['default']
