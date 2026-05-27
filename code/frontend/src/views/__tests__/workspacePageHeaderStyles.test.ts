@@ -109,7 +109,7 @@ import writeupViewSource from '@/features/challenge-writeup-editor/ui/ChallengeW
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
 import adminChallengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 import challengeImportPreviewSource from '@/views/platform/ChallengeImportPreview.vue?raw'
-import adminChallengeTopbarSource from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue?raw'
+import adminChallengeTopbarSource from '@/features/platform-challenge-detail/ui/AdminChallengeTopbarPanel.vue?raw'
 import challengeImportHeroSource from '@/components/platform/challenge/ChallengeImportHeroPanel.vue?raw'
 import challengeImportPreviewWorkspaceSource from '@/components/platform/challenge/ChallengeImportPreviewWorkspacePanel.vue?raw'
 import challengeManageHeroSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'

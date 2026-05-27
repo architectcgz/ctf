@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
-import adminChallengeTopbarPanelSource from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue?raw'
+import adminChallengeTopbarPanelSource from '@/features/platform-challenge-detail/ui/AdminChallengeTopbarPanel.vue?raw'
 import platformChallengeDetailWorkspaceSource from '@/widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue?raw'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 

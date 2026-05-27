@@ -6,11 +6,8 @@ import {
   ChallengeProfileSummaryStrip,
   getChallengeStatusLabel,
 } from '@/entities/challenge'
-import {
-  PlatformChallengeFlagConfigPanel,
-  type PlatformChallengeFlagDraft,
-  type PlatformChallengeFlagDraftPatch,
-} from '@/features/platform-challenge-detail'
+import type { PlatformChallengeFlagDraft, PlatformChallengeFlagDraftPatch } from '../model'
+import PlatformChallengeFlagConfigPanel from './PlatformChallengeFlagConfigPanel.vue'
 
 interface Props {
   challenge: AdminChallengeListItem

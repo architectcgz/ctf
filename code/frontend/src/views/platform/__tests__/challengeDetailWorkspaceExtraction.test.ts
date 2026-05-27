@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
-import adminChallengeWorkspaceTabsSource from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue?raw'
+import adminChallengeWorkspaceTabsSource from '@/features/platform-challenge-detail/ui/AdminChallengeWorkspaceTabs.vue?raw'
 import platformChallengeFlagActionBarSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagActionBar.vue?raw'
 import platformChallengeFlagConfigPanelSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
 import platformChallengeFlagFieldGridSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagFieldGrid.vue?raw'
@@ -19,6 +19,9 @@ describe('Admin ChallengeDetail workspace extraction', () => {
     )
     expect(challengeDetailSource).not.toContain(
       "import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'"
+    )
+    expect(platformChallengeDetailWorkspaceSource).toContain(
+      "from '@/features/platform-challenge-detail'"
     )
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeWorkspaceTabs')
     expect(platformChallengeDetailWorkspaceSource).toContain('ChallengeWriteupManagePanel')

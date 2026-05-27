@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { AdminChallengeListItem } from '@/api/contracts'
-import AdminChallengeTopbarPanel from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue'
-import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'
 import { ChallengeWriteupManagePanel } from '@/features/challenge-writeup-editor'
-import type { PlatformChallengeFlagDraft, PlatformChallengeFlagDraftPatch } from '@/features/platform-challenge-detail'
+import {
+  AdminChallengeTopbarPanel,
+  AdminChallengeWorkspaceTabs,
+  type PlatformChallengeFlagDraft,
+  type PlatformChallengeFlagDraftPatch,
+} from '@/features/platform-challenge-detail'
 
 type ChallengePanelKey = 'detail' | 'writeup'
 

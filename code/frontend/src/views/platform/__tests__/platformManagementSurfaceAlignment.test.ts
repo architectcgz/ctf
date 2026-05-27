@@ -19,7 +19,7 @@ import classManageWorkspacePanelSource from '@/components/platform/class/ClassMa
 import instanceManageSource from '../InstanceManage.vue?raw'
 import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
 import instanceManageWorkspacePanelSource from '@/components/platform/instance/InstanceManageWorkspacePanel.vue?raw'
-import adminChallengeProfilePanelSource from '@/components/platform/challenge/AdminChallengeProfilePanel.vue?raw'
+import adminChallengeProfilePanelSource from '@/features/platform-challenge-detail/ui/AdminChallengeProfilePanel.vue?raw'
 import challengeWriteupManagePanelSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
 import challengeProfileSummaryStripSource from '@/entities/challenge/ui/ChallengeProfileSummaryStrip.vue?raw'
 import contestEditSource from '../ContestEdit.vue?raw'

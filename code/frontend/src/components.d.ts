@@ -11,9 +11,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AdminChallengeProfilePanel: typeof import('./components/platform/challenge/AdminChallengeProfilePanel.vue')['default']
-    AdminChallengeTopbarPanel: typeof import('./components/platform/challenge/AdminChallengeTopbarPanel.vue')['default']
-    AdminChallengeWorkspaceTabs: typeof import('./components/platform/challenge/AdminChallengeWorkspaceTabs.vue')['default']
+    AdminChallengeProfilePanel: typeof import('./features/platform-challenge-detail/ui/AdminChallengeProfilePanel.vue')['default']
+    AdminChallengeTopbarPanel: typeof import('./features/platform-challenge-detail/ui/AdminChallengeTopbarPanel.vue')['default']
+    AdminChallengeWorkspaceTabs: typeof import('./features/platform-challenge-detail/ui/AdminChallengeWorkspaceTabs.vue')['default']
     AdminNotificationPublishDrawer: typeof import('./components/notifications/AdminNotificationPublishDrawer.vue')['default']
     AdminSurfaceDrawer: typeof import('./components/common/modal-templates/AdminSurfaceDrawer.vue')['default']
     AdminSurfaceModal: typeof import('./components/common/modal-templates/AdminSurfaceModal.vue')['default']

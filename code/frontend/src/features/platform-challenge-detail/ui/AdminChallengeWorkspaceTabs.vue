@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import type { AdminChallengeListItem } from '@/api/contracts'
-import AdminChallengeProfilePanel from '@/components/platform/challenge/AdminChallengeProfilePanel.vue'
-import type {
-  PlatformChallengeFlagDraft,
-  PlatformChallengeFlagDraftPatch,
-} from '@/features/platform-challenge-detail'
+import type { PlatformChallengeFlagDraft, PlatformChallengeFlagDraftPatch } from '../model'
+import AdminChallengeProfilePanel from './AdminChallengeProfilePanel.vue'
 
 type ChallengePanelKey = 'detail' | 'writeup'
 

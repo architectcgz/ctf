@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
-import adminChallengeTopbarPanelSource from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue?raw'
-import adminChallengeWorkspaceTabsSource from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue?raw'
-import adminChallengeProfilePanelSource from '@/components/platform/challenge/AdminChallengeProfilePanel.vue?raw'
+import adminChallengeTopbarPanelSource from '@/features/platform-challenge-detail/ui/AdminChallengeTopbarPanel.vue?raw'
+import adminChallengeWorkspaceTabsSource from '@/features/platform-challenge-detail/ui/AdminChallengeWorkspaceTabs.vue?raw'
+import adminChallengeProfilePanelSource from '@/features/platform-challenge-detail/ui/AdminChallengeProfilePanel.vue?raw'
 import challengeProfileMetaGridSource from '@/entities/challenge/ui/ChallengeProfileMetaGrid.vue?raw'
 import platformChallengeFlagConfigPanelSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
 import platformChallengeFlagActionBarSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagActionBar.vue?raw'
@@ -18,18 +18,18 @@ describe('Admin ChallengeDetail panel extraction', () => {
     )
     expect(challengeDetailSource).toContain('<PlatformChallengeDetailWorkspace')
     expect(platformChallengeDetailWorkspaceSource).toContain(
-      "import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'"
+      "from '@/features/platform-challenge-detail'"
     )
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeWorkspaceTabs')
     expect(adminChallengeWorkspaceTabsSource).toContain(
-      "import AdminChallengeProfilePanel from '@/components/platform/challenge/AdminChallengeProfilePanel.vue'"
+      "import AdminChallengeProfilePanel from './AdminChallengeProfilePanel.vue'"
     )
     expect(adminChallengeWorkspaceTabsSource).toContain('<AdminChallengeProfilePanel')
   })
 
   it('应将题目详情顶栏抽到独立 platform challenge 组件', () => {
     expect(platformChallengeDetailWorkspaceSource).toContain(
-      "import AdminChallengeTopbarPanel from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue'"
+      "from '@/features/platform-challenge-detail'"
     )
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeTopbarPanel')
     expect(adminChallengeTopbarPanelSource).toContain('<span class="workspace-overline">Challenge Profile</span>')
@@ -53,9 +53,10 @@ describe('Admin ChallengeDetail panel extraction', () => {
   })
 
   it('题目详情判题配置应复用 platform challenge detail feature ui', () => {
-    expect(adminChallengeProfilePanelSource).toContain("from '@/features/platform-challenge-detail'")
-    expect(adminChallengeProfilePanelSource).not.toContain('@/features/platform-challenge-detail/model/')
-    expect(adminChallengeProfilePanelSource).not.toContain('@/features/platform-challenge-detail/ui/')
+    expect(adminChallengeProfilePanelSource).toContain("from '../model'")
+    expect(adminChallengeProfilePanelSource).toContain(
+      "import PlatformChallengeFlagConfigPanel from './PlatformChallengeFlagConfigPanel.vue'"
+    )
     expect(adminChallengeProfilePanelSource).toContain('<PlatformChallengeFlagConfigPanel')
     expect(adminChallengeProfilePanelSource).not.toContain('<section class="journal-panel challenge-flag-panel')
     expect(platformChallengeFlagConfigPanelSource).toContain(

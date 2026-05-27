@@ -15,8 +15,6 @@ export const componentFeatureImportAllowlist = new Set([
   'components/layout/NotificationDrawer.vue -> @/features/notifications',
   'components/layout/TopNav.vue -> @/features/auth',
   'components/notifications/AdminNotificationPublishDrawer.vue -> @/features/admin-notification-publisher',
-  'components/platform/challenge/AdminChallengeProfilePanel.vue -> @/features/platform-challenge-detail',
-  'components/platform/challenge/AdminChallengeWorkspaceTabs.vue -> @/features/platform-challenge-detail',
   'components/platform/challenge/ChallengeManageDirectoryPanel.vue -> @/features/platform-challenges',
   'components/platform/contest/AWDChallengeConfigPanel.vue -> @/features/awd-inspector',
   'components/platform/contest/AWDOperationsPanel.vue -> @/features/contest-awd-admin',
@@ -44,10 +42,7 @@ export const componentFeatureImportAllowlist = new Set([
   'components/teacher/reports/ClassReportExportDialog.vue -> @/features/teacher-class-report-export',
 ])
 
-export const widgetLegacyComponentImportAllowlist = new Set([
-  'widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue -> @/components/platform/challenge/AdminChallengeTopbarPanel.vue',
-  'widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue -> @/components/platform/challenge/AdminChallengeWorkspaceTabs.vue',
-])
+export const widgetLegacyComponentImportAllowlist = new Set<string>([])
 
 export const componentNonContractApiAllowlist = new Set([
   'components/teacher/StudentInsightPanel.vue -> @/api/teacher',
