@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 
 import TeacherClassStudents from '../TeacherClassStudents.vue'
 import teacherClassStudentsSource from '../TeacherClassStudents.vue?raw'
-import classStudentsPageSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsPageSourceBase from '@/features/class-students-workspace/ui/ClassStudentsPage.vue?raw'
 import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
 import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
@@ -332,12 +332,12 @@ describe('TeacherClassStudents', () => {
 
   it('路由页应仅负责组合，不直接依赖教师接口实现', () => {
     expect(teacherClassStudentsSource).toContain('useClassStudentsPage')
-    expect(teacherClassStudentsSource).toContain(
-      "import { ClassStudentsPage } from '@/components/class-management'"
-    )
+    expect(teacherClassStudentsSource).toContain("from '@/features/class-students-workspace'")
+    expect(teacherClassStudentsSource).toContain('ClassStudentsPage')
     expect(teacherClassStudentsSource).toContain(
       "import { ClassReportExportDialog } from '@/components/reports'"
     )
+    expect(teacherClassStudentsSource).not.toContain("from '@/components/class-management'")
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
     expect(teacherClassStudentsSource).not.toContain(
       '@/components/teacher/class-management/ClassStudentsPage.vue'

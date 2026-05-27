@@ -23,7 +23,7 @@ import type {
   AwdScriptCheckerDraft,
   AwdTcpCheckerStepDraft,
   AwdTcpStandardDraft,
-} from './contestAwdConfigTypes'
+} from '@/components/platform/contest/contestAwdConfigTypes'
 
 interface Props {
   awdHttpMethodOptions: readonly string[]

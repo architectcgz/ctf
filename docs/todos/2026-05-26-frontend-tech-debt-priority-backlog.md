@@ -59,6 +59,8 @@
   - `2026-05-27` topology studio 进展：`ChallengeTopologyStudioPage.vue` 已迁入 `features/challenge-topology-studio/ui`，拓扑编辑 route 改为直接从 `features/challenge-topology-studio` public API 组合 page model 与 page shell；拓扑页对应的一条 `componentFeatureImportAllowlist` 和一条 `legacyComponentPageAllowlist` 已收掉，下一批同模式候选可继续看 `UserGovernancePage.vue`。
   - `2026-05-27` user governance 进展：`UserGovernancePage.vue` 已迁入 `features/platform-user-management/ui`，`panel=overview/import` 的 query owner 也一并从 page shell 收口到 `useUserGovernancePanelRoute()`；`UserManage` route 改为直接从 `features/platform-user-management` public API 组合 page model 与 page shell，用户治理页对应的一条 `legacyComponentPageAllowlist` 已收掉，并补上 feature model 的 router owner 白名单。
   - `2026-05-27` teacher instance 进展：`TeacherInstanceManagementPage.vue` 已迁入 `features/teacher-instances/ui`，`InstanceManagement` route 改为直接从 `features/teacher-instances` public API 组合 page model 与 page shell；教师实例页对应的一条 `legacyComponentPageAllowlist` 已收掉，教师端 raw-source surface 测试也已切到新 owner。
+  - `2026-05-27` student management 进展：`StudentManagementPage.vue` 已迁入 `features/teacher-student-management/ui`，`TeacherStudentManagement` route 改为直接从 `features/teacher-student-management` public API 组合 page model 与 page shell，并继续在 route 壳里组合 `ClassReportExportDialog`；教师学生管理页对应的一条 `legacyComponentPageAllowlist` 已收掉，教师端 raw-source surface / header / pagination 测试也已切到新 owner。
+  - `2026-05-27` remaining legacy pages 进展：`ClassManagementPage.vue`、`AWDChallengeLibraryPage.vue`、`ClassStudentsPage.vue`、`StudentAnalysisPage.vue` 已分别迁入 `features/teacher-class-management/ui`、`features/platform-awd-challenges/ui`、`features/class-students-workspace/ui`、`features/student-analysis-workspace/ui`；对应 teacher / platform route view 统一改为直接从 feature public API 组合 page model 与 page shell，`components/class-management/index.ts` 这个只服务旧 page path 的 barrel 也已退场。当前 `legacyComponentPageAllowlist` 已只剩 student dashboard 的 5 个页面，`AWDChallengeLibraryPage.vue` 对应的一条 `componentFeatureImportAllowlist` 也已收掉。
 
 - [ ] P1：继续拆 contest / AWD 线上的超大组件壳，优先看 `ContestAwdConfigWorkspaceShell.vue`、`ContestChallengeEditorDialog.vue`、`AWDChallengeLibraryPage.vue`
   - 依据：这三者当前约 `1009` / `899` / `896` 行，是现阶段最肥的一批前端组件壳。
@@ -66,11 +68,14 @@
   - 风险：中高。比赛与 AWD 页面交互密度高，切片要尽量按稳定展示块或编辑分区拆。
   - `2026-05-27` 进展：`AWDChallengeLibraryPage.vue` 已拆成 `AwdChallengeWorkspaceHeader`、`AwdChallengeLibrarySection`、`AwdChallengeImportSection`，共享 page surface 只保留 mode 与 props / emits owner；`ContestChallengeEditorDialog.vue` 已进一步拆成 `ContestAwdChallengeSelectorSection` 与 `ContestChallengeSettingsSection`，父对话框只保留 form / validation / submit / selection owner。当前这条 P1 的剩余重点已经进一步收敛到 `ContestAwdConfigWorkspaceShell.vue`。
   - `2026-05-27` AWD config 进展：`ContestAwdConfigWorkspaceShell.vue` 已继续把 `Checker Parameters` 画布拆成 `ContestAwdCheckerConfigSection` 与按 checker type 划分的字段子组件，父壳只保留服务选择、draft、字段错误、保存、预览和 checker type owner；当前这条 P1 在 touched surface 上已不再由单一 1000 行壳体混放四种 checker 模板。
+  - `2026-05-27` AWD config feature ui 进展：`ContestAwdConfigWorkspaceShell.vue` 已迁入 `features/contest-awd-config/ui`，`ContestAwdConfig` route 改为直接从 `features/contest-awd-config` public API 组合 page model 与 workspace shell；当前这条 P1 在 page-sized shell 落位层面的剩余重点已从 AWD 配置页移除。
 
 - [ ] P2：收口布局层超大组件，优先看 `NotificationDrawer.vue`、`Sidebar.vue`、`TopNav.vue`
   - 依据：三者当前约 `1071` / `854` / `781` 行，已经超过普通布局组件可维护范围。
   - 收益：能降低全局导航和通知能力的维护摩擦，后续做主题、权限、消息交互时更安全。
   - 风险：中高。属于跨页面共享基础设施，任何切分都需要更谨慎的回归验证。
+  - `2026-05-27` 进展：`NotificationDrawer.vue` 已按 layout owner 收口为“trigger / shell / filter state / dismiss owner”，并把 header、summary、tabs、body、footer 稳定视图区块拆到 `components/layout/notification-drawer/*`；相关 raw-source 与主题 token 护栏已切到聚合源码。当前这条 P2 的剩余重点已收敛到 `Sidebar.vue`、`TopNav.vue` 和通知抽屉更深层的行为清理。
+  - `2026-05-27` Sidebar 进展：`Sidebar.vue` 已按“route/navigation owner 留父组件，移动壳 / 桌面壳 / nav tree 拆子组件”的方式收口到 `components/layout/sidebar/*`；raw-source 与主题 token 护栏已同步改为聚合源码。当前这条 P2 的剩余重点进一步收敛到 `TopNav.vue` 和 sidebar/nav 更深层的展示判定清理。
 
 - [ ] P2：把请求层错误导航 owner 继续收回页面 / feature owner，避免 `request.ts` 直接替页面决定可恢复错误的跳转
   - 依据：架构 review 仍把这条列为当前 P1/P2 级结构问题。

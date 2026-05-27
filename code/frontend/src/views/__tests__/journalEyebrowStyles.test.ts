@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import studentAnalysisSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import studentAnalysisSource from '@/features/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
 import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import contestListSource from '@/views/contests/ContestList.vue?raw'

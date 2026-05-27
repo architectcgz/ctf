@@ -5,7 +5,7 @@ import { reactive } from 'vue'
 import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
 import teacherStudentAnalysisSource from '../TeacherStudentAnalysis.vue?raw'
 import studentAnalysisPageModelSource from '@/features/student-analysis-workspace/model/useStudentAnalysisPage.ts?raw'
-import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import studentAnalysisPageSource from '@/features/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue?raw'
@@ -195,12 +195,12 @@ describe('TeacherStudentAnalysis', () => {
 
   it('路由页应仅负责组合，不直接处理路由解析逻辑', () => {
     expect(teacherStudentAnalysisSource).toContain('useStudentAnalysisPage')
-    expect(teacherStudentAnalysisSource).toContain(
-      "import { StudentAnalysisPage } from '@/components/class-management'"
-    )
+    expect(teacherStudentAnalysisSource).toContain("from '@/features/student-analysis-workspace'")
+    expect(teacherStudentAnalysisSource).toContain('StudentAnalysisPage')
     expect(teacherStudentAnalysisSource).toContain(
       "import { ClassReportExportDialog } from '@/components/reports'"
     )
+    expect(teacherStudentAnalysisSource).not.toContain("from '@/components/class-management'")
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassManagementRouteName')
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassStudentsRouteName')
     expect(teacherStudentAnalysisSource).not.toContain(

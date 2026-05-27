@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ContestAwdConfig from '../ContestAwdConfig.vue'
 import contestAwdConfigSource from '../ContestAwdConfig.vue?raw'
 import contestAwdCheckerConfigSectionSource from '@/components/platform/contest/ContestAwdCheckerConfigSection.vue?raw'
-import contestAwdConfigWorkspaceShellSource from '@/components/platform/contest/ContestAwdConfigWorkspaceShell.vue?raw'
+import contestAwdConfigWorkspaceShellSource from '@/features/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue?raw'
 import contestAwdConfigPageSource from '@/features/contest-awd-config/model/useContestAwdConfigPage.ts?raw'
 
 const pushMock = vi.fn()
@@ -139,12 +139,12 @@ describe('ContestAwdConfig', () => {
   })
 
   it('路由页拆分为稳定的 AWD 配置子组件', () => {
-    expect(contestAwdConfigSource).toContain(
-      "import { useContestAwdConfigPage } from '@/features/contest-awd-config'"
-    )
+    expect(contestAwdConfigSource).toContain("from '@/features/contest-awd-config'")
+    expect(contestAwdConfigSource).toContain('ContestAwdConfigWorkspaceShell')
+    expect(contestAwdConfigSource).toContain('useContestAwdConfigPage')
     expect(contestAwdConfigSource).not.toContain("from '@/api/admin/contests'")
-    expect(contestAwdConfigSource).toContain(
-      "import ContestAwdConfigWorkspaceShell from '@/components/platform/contest/ContestAwdConfigWorkspaceShell.vue'"
+    expect(contestAwdConfigSource).not.toContain(
+      "from '@/components/platform/contest/ContestAwdConfigWorkspaceShell.vue'"
     )
     expect(contestAwdConfigWorkspaceSource).toContain(
       "import ContestAwdConfigTopbar from '@/components/platform/contest/ContestAwdConfigTopbar.vue'"

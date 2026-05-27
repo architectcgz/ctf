@@ -2,11 +2,11 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import classStudentsSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsSourceBase from '@/features/class-students-workspace/ui/ClassStudentsPage.vue?raw'
 import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
 import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
-import studentAnalysisSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import studentAnalysisSource from '@/features/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
 import studentAnalysisOverviewHeroSource from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue?raw'
 import classTrendPanelSource from '@/components/teacher/ClassTrendPanel.vue?raw'
 import classInsightsPanelSource from '@/components/teacher/ClassInsightsPanel.vue?raw'

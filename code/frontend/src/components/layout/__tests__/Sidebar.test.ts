@@ -3,9 +3,23 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 
-import sidebarSource from '../Sidebar.vue?raw'
 import Sidebar from '../Sidebar.vue'
+import sidebarDesktopPanelSource from '../sidebar/SidebarDesktopPanel.vue?raw'
+import sidebarMobilePanelSource from '../sidebar/SidebarMobilePanel.vue?raw'
+import sidebarNavTreeSource from '../sidebar/SidebarNavTree.vue?raw'
+import sidebarPanelHeaderSource from '../sidebar/SidebarPanelHeader.vue?raw'
+import sidebarSourceBase from '../Sidebar.vue?raw'
+import sidebarWorkspaceLabelSource from '../sidebar/SidebarWorkspaceLabel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
+
+const sidebarSource = [
+  sidebarSourceBase,
+  sidebarDesktopPanelSource,
+  sidebarMobilePanelSource,
+  sidebarPanelHeaderSource,
+  sidebarWorkspaceLabelSource,
+  sidebarNavTreeSource,
+].join('\n')
 
 describe('Sidebar desktop layout', () => {
   beforeEach(() => {

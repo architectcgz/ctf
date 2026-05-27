@@ -1,267 +1,51 @@
 <template>
-  <div class="contents">
-    <button
-      v-if="mobileOpen"
-      type="button"
-      class="backoffice-sidebar-backdrop fixed inset-0 z-40 md:hidden"
-      aria-label="关闭导航"
-      @click="emit('closeMobile')"
+  <div class="sidebar-host contents">
+    <SidebarMobilePanel
+      :mobile-open="mobileOpen"
+      :brand-kicker="brandKicker"
+      :items="backofficeItems"
+      :item-button-class="backofficeItemButtonClass"
+      :item-icon-class="backofficeItemIconClass"
+      :child-button-class="backofficeChildButtonClass"
+      :is-item-expanded="isBackofficeItemExpanded"
+      :is-item-active="isItemActive"
+      @close-mobile="emit('closeMobile')"
+      @navigate="navigate"
+      @toggle-menu="toggleMenu"
     />
 
-    <aside
-      class="backoffice-sidebar backoffice-sidebar--mobile backoffice-sidebar--expanded fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col transition-all duration-300 md:hidden"
-      :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
-    >
-      <div
-        class="backoffice-sidebar__header relative flex h-16 items-center px-5 overflow-hidden whitespace-nowrap"
-      >
-        <div class="flex items-center gap-3">
-          <div
-            class="backoffice-sidebar__logo-mark flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-xl shadow-sm"
-          >
-            <Box class="h-4 w-4" />
-          </div>
-          <span class="backoffice-sidebar__brand font-black text-lg tracking-tight uppercase">
-            {{ brandKicker }}
-          </span>
-        </div>
-        <button
-          type="button"
-          class="backoffice-sidebar__close ml-auto inline-flex h-9 w-9 items-center justify-center rounded-full p-1.5 shadow-sm transition-all"
-          aria-label="关闭导航"
-          @click="emit('closeMobile')"
-        >
-          <X class="h-4 w-4" />
-        </button>
-      </div>
-
-      <div
-        class="backoffice-sidebar__workspace px-6 py-5 overflow-hidden whitespace-nowrap transition-all duration-200"
-      >
-        <span class="backoffice-sidebar__workspace-label font-black uppercase tracking-widest">
-          Workspace
-        </span>
-      </div>
-
-      <nav class="backoffice-sidebar__nav flex-1 space-y-1.5 overflow-x-hidden px-4">
-        <div
-          v-for="item in backofficeItems"
-          :key="item.name"
-          class="w-full"
-        >
-          <button
-            type="button"
-            class="backoffice-sidebar__item w-full flex items-center justify-between py-2.5 rounded-xl text-sm transition-all overflow-hidden px-3"
-            :class="backofficeItemButtonClass(item)"
-            @click="navigate(item)"
-          >
-            <div class="flex items-center gap-3">
-              <div
-                class="backoffice-sidebar__item-icon shrink-0"
-                :class="backofficeItemIconClass(item)"
-              >
-                <component
-                  :is="item.icon"
-                  class="backoffice-sidebar__icon-svg"
-                />
-              </div>
-              <span class="transition-opacity duration-200 whitespace-nowrap">
-                {{ item.title }}
-              </span>
-            </div>
-            <ChevronDown
-              v-if="item.children?.length"
-              class="backoffice-sidebar__chevron h-3.5 w-3.5 transition-transform duration-200"
-              :class="{ 'backoffice-sidebar__chevron--open': isBackofficeItemExpanded(item) }"
-              @click.stop="toggleMenu(item.name)"
-            />
-          </button>
-
-          <div
-            v-if="item.children?.length && isBackofficeItemExpanded(item)"
-            class="backoffice-sidebar__children mt-1.5 mb-3 pl-3 flex flex-col gap-1.5 animate-in slide-in-from-top-2 duration-200"
-          >
-            <button
-              v-for="child in item.children"
-              :key="child.name"
-              type="button"
-              class="backoffice-sidebar__child text-left py-2 px-3 rounded-lg transition-all relative group"
-              :class="backofficeChildButtonClass(child)"
-              @click="navigate(child)"
-            >
-              <div
-                v-if="isItemActive(child)"
-                class="backoffice-sidebar__child-indicator absolute top-1/2 -translate-y-1/2 h-4 rounded-full"
-              />
-              <span class="relative z-10">{{ child.title }}</span>
-            </button>
-          </div>
-        </div>
-      </nav>
-    </aside>
-
-    <aside
-      class="backoffice-sidebar backoffice-sidebar--desktop sticky top-0 z-[60] hidden min-h-screen shrink-0 self-stretch flex-col transition-all duration-300 md:flex"
-      :class="collapsed ? 'w-20' : 'backoffice-sidebar--expanded'"
-    >
-      <button
-        type="button"
-        class="backoffice-sidebar__collapse absolute -right-3.5 top-5 rounded-full p-1.5 shadow-sm z-10 transition-all cursor-pointer"
-        :aria-label="collapsed ? '展开导航' : '折叠导航'"
-        @click="emit('toggleCollapse')"
-      >
-        <ChevronRight
-          v-if="collapsed"
-          class="h-3.5 w-3.5"
-        />
-        <ChevronLeft
-          v-else
-          class="h-3.5 w-3.5"
-        />
-      </button>
-
-      <div
-        class="backoffice-sidebar__header h-16 flex items-center px-5 overflow-hidden whitespace-nowrap"
-      >
-        <div class="flex items-center gap-3">
-          <div
-            class="backoffice-sidebar__logo-mark w-8.5 h-8.5 shrink-0 rounded-xl flex items-center justify-center shadow-sm"
-          >
-            <Box class="h-4 w-4" />
-          </div>
-          <span
-            class="backoffice-sidebar__brand font-black text-lg tracking-tight uppercase transition-opacity duration-200"
-            :class="collapsed ? 'opacity-0' : 'opacity-100'"
-          >
-            {{ brandKicker }}
-          </span>
-        </div>
-      </div>
-
-      <div
-        class="backoffice-sidebar__workspace px-6 py-5 overflow-hidden whitespace-nowrap transition-all duration-200"
-        :class="collapsed ? 'opacity-0 h-0 p-0' : 'opacity-100 h-14'"
-      >
-        <span class="backoffice-sidebar__workspace-label font-black uppercase tracking-widest">
-          Workspace
-        </span>
-      </div>
-
-      <nav
-        class="backoffice-sidebar__nav flex-1 space-y-1.5 overflow-x-hidden"
-        :class="collapsed ? 'px-3 pt-4' : 'px-4'"
-      >
-        <div
-          v-for="item in backofficeItems"
-          :key="item.name"
-          class="w-full"
-        >
-          <button
-            type="button"
-            class="backoffice-sidebar__item w-full flex items-center justify-between py-2.5 rounded-xl text-sm transition-all overflow-hidden"
-            :class="[backofficeItemButtonClass(item), collapsed ? 'px-0 justify-center' : 'px-3']"
-            :title="collapsed ? item.title : ''"
-            @click="navigate(item)"
-          >
-            <div class="flex items-center gap-3">
-              <div
-                class="backoffice-sidebar__item-icon shrink-0"
-                :class="backofficeItemIconClass(item)"
-              >
-                <component
-                  :is="item.icon"
-                  class="backoffice-sidebar__icon-svg"
-                />
-              </div>
-              <span
-                class="transition-opacity duration-200 whitespace-nowrap"
-                :class="collapsed ? 'opacity-0 hidden' : 'opacity-100'"
-              >
-                {{ item.title }}
-              </span>
-            </div>
-            <ChevronDown
-              v-if="item.children?.length && !collapsed"
-              class="backoffice-sidebar__chevron h-3.5 w-3.5 transition-transform duration-200"
-              :class="{ 'backoffice-sidebar__chevron--open': isBackofficeItemExpanded(item) }"
-              @click.stop="toggleMenu(item.name)"
-            />
-          </button>
-
-          <div
-            v-if="item.children?.length && isBackofficeItemExpanded(item) && !collapsed"
-            class="backoffice-sidebar__children mt-1.5 mb-3 pl-3 flex flex-col gap-1.5 animate-in slide-in-from-top-2 duration-200"
-          >
-            <button
-              v-for="child in item.children"
-              :key="child.name"
-              type="button"
-              class="backoffice-sidebar__child text-left py-2 px-3 rounded-lg transition-all relative group"
-              :class="backofficeChildButtonClass(child)"
-              @click="navigate(child)"
-            >
-              <div
-                v-if="isItemActive(child)"
-                class="backoffice-sidebar__child-indicator absolute top-1/2 -translate-y-1/2 h-4 rounded-full"
-              />
-              <span class="relative z-10">{{ child.title }}</span>
-            </button>
-          </div>
-        </div>
-      </nav>
-    </aside>
+    <SidebarDesktopPanel
+      :collapsed="collapsed"
+      :brand-kicker="brandKicker"
+      :items="backofficeItems"
+      :item-button-class="backofficeItemButtonClass"
+      :item-icon-class="backofficeItemIconClass"
+      :child-button-class="backofficeChildButtonClass"
+      :is-item-expanded="isBackofficeItemExpanded"
+      :is-item-active="isItemActive"
+      @toggle-collapse="emit('toggleCollapse')"
+      @navigate="navigate"
+      @toggle-menu="toggleMenu"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Component } from 'vue'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Circle, GraduationCap, LayoutDashboard, Shield, Swords, Trophy, User } from 'lucide-vue-next'
 
 import {
   type WorkspaceShellModule,
   useWorkspaceShellNavigation,
 } from '@/composables/useWorkspaceShellNavigation'
-import {
-  Box,
-  ChevronLeft,
-  ChevronDown,
-  ChevronRight,
-  Circle,
-  GraduationCap,
-  LayoutDashboard,
-  Shield,
-  Swords,
-  Trophy,
-  User,
-  X,
-} from 'lucide-vue-next'
-
 import { useAuthStore } from '@/stores/auth'
 
-type IconComp = Component
-type NavQuery = Record<string, string>
+import SidebarDesktopPanel from './sidebar/SidebarDesktopPanel.vue'
+import SidebarMobilePanel from './sidebar/SidebarMobilePanel.vue'
+import type { IconComp, NavGroup, NavItem, NavQuery } from './sidebar/types'
 
-type NavItem = {
-  name: string
-  path: string
-  title: string
-  icon: IconComp
-  roles?: string[]
-  query?: NavQuery
-  children?: NavItem[]
-  moduleKey?: string
-  variant?: 'default' | 'backoffice-child'
-}
-
-type NavGroup = {
-  key: string
-  title: string
-  shortTitle: string
-  items: NavItem[]
-}
-
-const props = defineProps<{
+defineProps<{
   collapsed: boolean
   mobileOpen: boolean
 }>()
@@ -339,10 +123,6 @@ function isItemActive(item: NavItem): boolean {
   return queryMatches(item.query)
 }
 
-function itemClass(item: NavItem): string {
-  return isItemActive(item) ? 'sidebar-item-active' : 'sidebar-item-idle'
-}
-
 function hasBackofficeChildren(item: NavItem): boolean {
   return (item.children?.length ?? 0) > 0
 }
@@ -386,16 +166,6 @@ function backofficeChildButtonClass(item: NavItem): string {
     : 'backoffice-sidebar__child--idle'
 }
 
-function childItemClass(item: NavItem): string {
-  if (item.variant === 'backoffice-child') {
-    return isItemActive(item)
-      ? 'sidebar-child-active sidebar-child-active--backoffice'
-      : 'sidebar-child-idle sidebar-child-idle--backoffice'
-  }
-
-  return isItemActive(item) ? 'sidebar-child-active' : 'sidebar-child-idle'
-}
-
 function isMenuExpanded(name: string): boolean {
   return expandedMenus.value[name] ?? activeBackofficeMenuName.value === name
 }
@@ -430,7 +200,7 @@ async function navigate(item: NavItem): Promise<void> {
 }
 </script>
 
-<style scoped>
+<style>
 .sidebar-shell {
   border-right: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
   background:
@@ -464,7 +234,6 @@ async function navigate(item: NavItem): Promise<void> {
   --backoffice-shell-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
   --backoffice-shell-faint: color-mix(in srgb, var(--color-text-muted) 88%, transparent);
   border-right: 1px solid var(--backoffice-shell-line-strong);
-  /* 允许按钮悬浮 */
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   background:
@@ -523,7 +292,7 @@ async function navigate(item: NavItem): Promise<void> {
   background: var(--backoffice-shell-surface);
   color: var(--backoffice-shell-faint);
   box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
-  z-index: 70; /* 提升层级，确保高于 TopNav (50) */
+  z-index: 70;
 }
 
 .backoffice-sidebar__close:hover,
@@ -840,12 +609,6 @@ async function navigate(item: NavItem): Promise<void> {
   box-shadow:
     0 22px 56px color-mix(in srgb, var(--color-shadow-strong) 28%, transparent),
     0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 48%, transparent);
-}
-</style>
-
-<style scoped>
-.backoffice-sidebar__nav {
-  overflow-x: hidden;
 }
 
 .backoffice-sidebar__collapse {

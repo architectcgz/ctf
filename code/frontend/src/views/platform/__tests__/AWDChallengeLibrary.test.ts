@@ -23,6 +23,32 @@ const actionMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/features/platform-awd-challenges', () => ({
+  AWDChallengeLibraryPage: {
+    name: 'AWDChallengeLibraryPage',
+    props: [
+      'mode',
+      'list',
+      'total',
+      'page',
+      'pageSize',
+      'loading',
+      'keyword',
+      'serviceTypeFilter',
+      'statusFilter',
+      'uploading',
+      'queueLoading',
+      'importQueue',
+      'uploadResults',
+      'selectedFileName',
+    ],
+    template: `
+      <div>
+        <h1>{{ mode === 'import' ? '导入 AWD 题目包' : 'AWD 题目库' }}</h1>
+        <button type="button" @click="$emit('openImportPage')">导入题目包</button>
+        <div v-for="item in list" :key="item.id">{{ item.name }}</div>
+      </div>
+    `,
+  },
   useAwdChallengeLibraryPage: () => {
     actionMocks.refresh()
     return {
@@ -115,7 +141,12 @@ describe('AWDChallengeLibrary', () => {
   it('does not add an extra route-level spacing wrapper around the shared workspace shell', () => {
     expect(awdChallengeLibrarySource).toContain('<template>\n  <div>')
     expect(awdChallengeLibrarySource).not.toContain('<div class="space-y-6">')
+    expect(awdChallengeLibrarySource).toContain("from '@/features/platform-awd-challenges'")
+    expect(awdChallengeLibrarySource).toContain('AWDChallengeLibraryPage')
     expect(awdChallengeLibrarySource).toContain('useAwdChallengeLibraryPage')
+    expect(awdChallengeLibrarySource).not.toContain(
+      "from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue'"
+    )
     expect(awdChallengeLibrarySource).not.toContain('useRouter')
     expect(awdChallengeLibrarySource).not.toContain('usePlatformAwdChallenges')
   })
@@ -133,6 +164,8 @@ describe('AWDChallengeImport', () => {
   it('renders the import page mode without a route-level spacing wrapper', () => {
     expect(awdChallengeImportSource).toContain('mode="import"')
     expect(awdChallengeImportSource).not.toContain('<div class="space-y-6">')
+    expect(awdChallengeImportSource).toContain("from '@/features/platform-awd-challenges'")
+    expect(awdChallengeImportSource).toContain('AWDChallengeLibraryPage')
     expect(awdChallengeImportSource).toContain('useAwdChallengeImportPage')
     expect(awdChallengeImportSource).not.toContain('onMounted(')
   })

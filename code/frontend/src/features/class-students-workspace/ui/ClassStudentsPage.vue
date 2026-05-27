@@ -11,9 +11,9 @@ import InterventionPanel from '@/components/teacher/InterventionPanel.vue'
 import ClassReviewPanel from '@/components/teacher/ClassReviewPanel.vue'
 import ClassTrendPanel from '@/components/teacher/ClassTrendPanel.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
-import ClassStudentsDirectoryPanel from './ClassStudentsDirectoryPanel.vue'
-import ClassStudentsInsightWindowPanel from './ClassStudentsInsightWindowPanel.vue'
-import ClassStudentsOverviewPanel from './ClassStudentsOverviewPanel.vue'
+import ClassStudentsDirectoryPanel from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue'
+import ClassStudentsInsightWindowPanel from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue'
+import ClassStudentsOverviewPanel from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue'
 
 const props = defineProps<{
   selectedClassName: string

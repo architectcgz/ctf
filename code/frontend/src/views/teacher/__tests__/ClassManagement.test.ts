@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ClassManagement from '../ClassManagement.vue'
 import classManagementViewSource from '../ClassManagement.vue?raw'
-import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
+import classManagementSource from '@/features/teacher-class-management/ui/ClassManagementPage.vue?raw'
 import classReportExportDialogSource from '@/components/teacher/reports/ClassReportExportDialog.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -295,11 +295,14 @@ describe('ClassManagement', () => {
   })
 
   it('页面应通过 feature model 获取班级目录状态，不再直接耦合 teacher api', () => {
-    expect(classManagementViewSource).toContain(
-      "import { useClassManagementPage } from '@/features/teacher-class-management'"
-    )
+    expect(classManagementViewSource).toContain("from '@/features/teacher-class-management'")
+    expect(classManagementViewSource).toContain('ClassManagementPage')
+    expect(classManagementViewSource).toContain('useClassManagementPage')
     expect(classManagementViewSource).toContain(
       "import { ClassReportExportDialog } from '@/components/reports'"
+    )
+    expect(classManagementViewSource).not.toContain(
+      "from '@/components/teacher/class-management/ClassManagementPage.vue'"
     )
     expect(classManagementViewSource).not.toContain("from '@/api/teacher'")
     expect(classManagementViewSource).not.toContain('ClassReportExportDialog.vue')

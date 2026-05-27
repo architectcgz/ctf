@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import AWDChallengeEditorDialog from '@/components/platform/awd-service/AWDChallengeEditorDialog.vue'
-import AWDChallengeLibraryPage from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue'
-import { useAwdChallengeLibraryPage } from '@/features/platform-awd-challenges'
+import {
+  AWDChallengeLibraryPage,
+  useAwdChallengeLibraryPage,
+} from '@/features/platform-awd-challenges'
 
 const {
   list,

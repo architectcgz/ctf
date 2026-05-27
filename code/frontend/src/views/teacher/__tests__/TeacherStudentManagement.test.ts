@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherStudentManagement from '../TeacherStudentManagement.vue'
 import teacherStudentManagementSource from '../TeacherStudentManagement.vue?raw'
-import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
+import studentManagementSource from '@/features/teacher-student-management/ui/StudentManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const ElTable = { template: '<div><slot /></div>' }
@@ -224,10 +224,15 @@ describe('TeacherStudentManagement', () => {
 
   it('页面应通过 feature model 获取学生目录状态，不再直接耦合 teacher api', () => {
     expect(teacherStudentManagementSource).toContain(
-      "import { useStudentManagementPage } from '@/features/teacher-student-management'"
+      "from '@/features/teacher-student-management'"
     )
+    expect(teacherStudentManagementSource).toContain('StudentManagementPage')
+    expect(teacherStudentManagementSource).toContain('useStudentManagementPage')
     expect(teacherStudentManagementSource).toContain(
       "import { ClassReportExportDialog } from '@/components/reports'"
+    )
+    expect(teacherStudentManagementSource).not.toContain(
+      "from '@/components/teacher/student-management/StudentManagementPage.vue'"
     )
     expect(teacherStudentManagementSource).not.toContain("from '@/api/teacher'")
     expect(teacherStudentManagementSource).not.toContain('ClassReportExportDialog.vue')

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import ContestAwdConfigWorkspaceShell from '@/components/platform/contest/ContestAwdConfigWorkspaceShell.vue'
-import { useContestAwdConfigPage } from '@/features/contest-awd-config'
+import {
+  ContestAwdConfigWorkspaceShell,
+  useContestAwdConfigPage,
+} from '@/features/contest-awd-config'
 
 const {
   AWD_HTTP_METHOD_OPTIONS,

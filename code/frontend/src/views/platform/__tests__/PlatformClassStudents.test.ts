@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import PlatformClassStudents from '../PlatformClassStudents.vue'
 import platformClassStudentsSource from '../PlatformClassStudents.vue?raw'
-import classStudentsPageSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import classStudentsPageSourceBase from '@/features/class-students-workspace/ui/ClassStudentsPage.vue?raw'
 import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
 import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
@@ -123,15 +123,13 @@ describe('PlatformClassStudents', () => {
   })
 
   it('应通过平台 route view 复用中性班级工作台 feature', async () => {
-    expect(platformClassStudentsSource).toContain(
-      "import { ClassStudentsPage } from '@/components/class-management'"
-    )
-    expect(platformClassStudentsSource).toContain(
-      "import { useClassStudentsPage } from '@/features/class-students-workspace'"
-    )
+    expect(platformClassStudentsSource).toContain("from '@/features/class-students-workspace'")
+    expect(platformClassStudentsSource).toContain('ClassStudentsPage')
+    expect(platformClassStudentsSource).toContain('useClassStudentsPage')
     expect(platformClassStudentsSource).toContain(
       "import { ClassReportExportDialog } from '@/components/reports'"
     )
+    expect(platformClassStudentsSource).not.toContain("from '@/components/class-management'")
     expect(platformClassStudentsSource).not.toContain("from '@/views/teacher/TeacherClassStudents.vue'")
     expect(platformClassStudentsSource).not.toContain("from '@/api/teacher'")
     expect(platformClassStudentsSource).not.toContain(

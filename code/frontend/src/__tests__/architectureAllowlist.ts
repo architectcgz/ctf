@@ -17,7 +17,6 @@ export const componentFeatureImportAllowlist = new Set([
   'components/layout/TopNav.vue -> @/features/auth',
   'components/notifications/AdminNotificationPublishDrawer.vue -> @/features/admin-notification-publisher',
   'components/platform/awd-service/AWDChallengeEditorDialog.vue -> @/features/platform-awd-challenges',
-  'components/platform/awd-service/AWDChallengeLibraryPage.vue -> @/features/platform-awd-challenges',
   'components/platform/awd-service/AwdChallengeImportSection.vue -> @/features/platform-awd-challenges',
   'components/platform/challenge/AdminChallengeProfilePanel.vue -> @/features/platform-challenge-detail',
   'components/platform/challenge/AdminChallengeWorkspaceTabs.vue -> @/features/platform-challenge-detail',
@@ -55,7 +54,6 @@ export const widgetLegacyComponentImportAllowlist = new Set([
 
 export const componentNonContractApiAllowlist = new Set([
   'components/teacher/StudentInsightPanel.vue -> @/api/teacher',
-  'components/teacher/class-management/StudentAnalysisPage.vue -> @/api/teacher',
   'components/teacher/student-insight/StudentInsightAttackSessionsSection.vue -> @/api/teacher',
 ])
 
@@ -82,11 +80,6 @@ export const legacyComponentPageAllowlist = new Set([
   'components/dashboard/student/StudentOverviewPage.vue',
   'components/dashboard/student/StudentRecommendationPage.vue',
   'components/dashboard/student/StudentTimelinePage.vue',
-  'components/platform/awd-service/AWDChallengeLibraryPage.vue',
-  'components/teacher/class-management/ClassManagementPage.vue',
-  'components/teacher/class-management/ClassStudentsPage.vue',
-  'components/teacher/class-management/StudentAnalysisPage.vue',
-  'components/teacher/student-management/StudentManagementPage.vue',
 ])
 
 export const featureRouterImportAllowlist = new Set([

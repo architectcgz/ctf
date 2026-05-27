@@ -21,8 +21,18 @@ import studentDifficultySource from '@/components/dashboard/student/StudentDiffi
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
-import notificationDrawerSource from '@/components/layout/NotificationDrawer.vue?raw'
-import sidebarSource from '@/components/layout/Sidebar.vue?raw'
+import notificationDrawerBodySource from '@/components/layout/notification-drawer/NotificationDrawerBody.vue?raw'
+import notificationDrawerFooterSource from '@/components/layout/notification-drawer/NotificationDrawerFooter.vue?raw'
+import notificationDrawerHeaderSource from '@/components/layout/notification-drawer/NotificationDrawerHeader.vue?raw'
+import notificationDrawerSourceBase from '@/components/layout/NotificationDrawer.vue?raw'
+import notificationDrawerSummarySource from '@/components/layout/notification-drawer/NotificationDrawerSummary.vue?raw'
+import notificationDrawerTabsSource from '@/components/layout/notification-drawer/NotificationDrawerTabs.vue?raw'
+import sidebarDesktopPanelSource from '@/components/layout/sidebar/SidebarDesktopPanel.vue?raw'
+import sidebarMobilePanelSource from '@/components/layout/sidebar/SidebarMobilePanel.vue?raw'
+import sidebarNavTreeSource from '@/components/layout/sidebar/SidebarNavTree.vue?raw'
+import sidebarPanelHeaderSource from '@/components/layout/sidebar/SidebarPanelHeader.vue?raw'
+import sidebarSourceBase from '@/components/layout/Sidebar.vue?raw'
+import sidebarWorkspaceLabelSource from '@/components/layout/sidebar/SidebarWorkspaceLabel.vue?raw'
 import topNavSource from '@/components/layout/TopNav.vue?raw'
 import cLightActionPopoverSource from '@/components/common/modal-templates/CLightActionPopover.vue?raw'
 import cFocusedInputDialogSource from '@/components/common/modal-templates/CFocusedInputDialog.vue?raw'
@@ -84,6 +94,22 @@ import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewA
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
+const notificationDrawerSource = [
+  notificationDrawerSourceBase,
+  notificationDrawerHeaderSource,
+  notificationDrawerSummarySource,
+  notificationDrawerTabsSource,
+  notificationDrawerBodySource,
+  notificationDrawerFooterSource,
+].join('\n')
+const sidebarSource = [
+  sidebarSourceBase,
+  sidebarDesktopPanelSource,
+  sidebarMobilePanelSource,
+  sidebarPanelHeaderSource,
+  sidebarWorkspaceLabelSource,
+  sidebarNavTreeSource,
+].join('\n')
 const userGovernanceSource = [
   userGovernancePageSource,
   userGovernanceOverviewPanelSource,

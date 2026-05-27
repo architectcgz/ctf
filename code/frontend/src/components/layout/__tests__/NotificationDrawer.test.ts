@@ -5,8 +5,22 @@ import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent } from 'vue'
 
 import NotificationDrawer from '../NotificationDrawer.vue'
-import notificationDrawerSource from '../NotificationDrawer.vue?raw'
+import notificationDrawerBodySource from '../notification-drawer/NotificationDrawerBody.vue?raw'
+import notificationDrawerFooterSource from '../notification-drawer/NotificationDrawerFooter.vue?raw'
+import notificationDrawerHeaderSource from '../notification-drawer/NotificationDrawerHeader.vue?raw'
+import notificationDrawerSourceBase from '../NotificationDrawer.vue?raw'
+import notificationDrawerSummarySource from '../notification-drawer/NotificationDrawerSummary.vue?raw'
+import notificationDrawerTabsSource from '../notification-drawer/NotificationDrawerTabs.vue?raw'
 import { useNotificationStore } from '@/stores/notification'
+
+const notificationDrawerSource = [
+  notificationDrawerSourceBase,
+  notificationDrawerHeaderSource,
+  notificationDrawerSummarySource,
+  notificationDrawerTabsSource,
+  notificationDrawerBodySource,
+  notificationDrawerFooterSource,
+].join('\n')
 
 const notificationApiMocks = vi.hoisted(() => ({
   markAsRead: vi.fn(),

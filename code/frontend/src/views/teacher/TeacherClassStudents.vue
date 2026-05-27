@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ClassStudentsPage } from '@/components/class-management'
 import { ClassReportExportDialog } from '@/components/reports'
-import { useClassStudentsPage } from '@/features/class-students-workspace'
+import {
+  ClassStudentsPage,
+  useClassStudentsPage,
+} from '@/features/class-students-workspace'
 
 const {
   selectedClassName,

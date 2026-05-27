@@ -203,15 +203,13 @@ describe('PlatformStudentAnalysis route owner', () => {
     }
 
     const platformViewSource = readFileSync(platformViewPath, 'utf-8')
-    expect(platformViewSource).toContain(
-      "import { StudentAnalysisPage } from '@/components/class-management'"
-    )
-    expect(platformViewSource).toContain(
-      "import { useStudentAnalysisPage } from '@/features/student-analysis-workspace'"
-    )
+    expect(platformViewSource).toContain("from '@/features/student-analysis-workspace'")
+    expect(platformViewSource).toContain('StudentAnalysisPage')
+    expect(platformViewSource).toContain('useStudentAnalysisPage')
     expect(platformViewSource).toContain(
       "import { ClassReportExportDialog } from '@/components/reports'"
     )
+    expect(platformViewSource).not.toContain("from '@/components/class-management'")
     expect(platformViewSource).not.toContain("from '@/views/teacher/TeacherStudentAnalysis.vue'")
     expect(platformViewSource).not.toContain("from '@/api/teacher'")
     expect(platformViewSource).not.toContain(

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import studentAnalysisPageSource from '@/features/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
 
 describe('student analysis panel extraction', () => {
   it('StudentAnalysisPage 应复用单个 StudentInsightPanel 挂载，而不是在每个 tab 内复制同一组 props', () => {

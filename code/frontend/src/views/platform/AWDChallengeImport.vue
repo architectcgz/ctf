@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import AWDChallengeLibraryPage from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue'
-import { useAwdChallengeImportPage } from '@/features/platform-awd-challenges'
+import {
+  AWDChallengeLibraryPage,
+  useAwdChallengeImportPage,
+} from '@/features/platform-awd-challenges'
 
 const {
   uploading,

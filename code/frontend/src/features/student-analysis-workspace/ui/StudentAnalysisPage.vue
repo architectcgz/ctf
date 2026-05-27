@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { AttackSessionQuery } from '@/api/teacher'
 import type {
   ManualReviewSubmissionDetailData,
   ManualReviewSubmissionItemData,
@@ -17,6 +16,17 @@ import StudentAnalysisOverviewHeroPanel from '@/components/teacher/class-managem
 import StudentInsightPanel from '@/components/teacher/StudentInsightPanel.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
+interface ReviewWorkspaceQuery {
+  mode?: 'practice' | 'jeopardy' | 'awd'
+  challenge_id?: string
+  contest_id?: string
+  round_id?: string
+  result?: 'success' | 'failed' | 'in_progress' | 'unknown'
+  with_events?: boolean
+  limit?: number
+  offset?: number
+}
+
 const props = defineProps<{
   selectedStudent: TeacherStudentItem | null
   loadingDetails: boolean
@@ -29,7 +39,7 @@ const props = defineProps<{
   attackSessions: TeacherAttackSessionResponseData | null
   reviewChallengeOptions: Array<{ value: string; label: string }>
   reviewWorkspaceLoading: boolean
-  reviewWorkspaceQuery: AttackSessionQuery
+  reviewWorkspaceQuery: ReviewWorkspaceQuery
   writeupSubmissions: WriteupSubmissionItemData[]
   writeupPage: number
   writeupTotal: number
@@ -62,7 +72,7 @@ const emit = defineEmits<{
     },
   ]
   changeWriteupPage: [page: number]
-  updateReviewWorkspaceFilters: [payload: Partial<AttackSessionQuery>]
+  updateReviewWorkspaceFilters: [payload: Partial<ReviewWorkspaceQuery>]
 }>()
 
 type WorkspaceTab =

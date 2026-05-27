@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import ClassManagementPage from '@/components/teacher/class-management/ClassManagementPage.vue'
 import { ClassReportExportDialog } from '@/components/reports'
-import { useClassManagementPage } from '@/features/teacher-class-management'
+import {
+  ClassManagementPage,
+  useClassManagementPage,
+} from '@/features/teacher-class-management'
 
 const {
   classes,
