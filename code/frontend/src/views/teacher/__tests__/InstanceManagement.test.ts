@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import InstanceManagement from '../InstanceManagement.vue'
 import instanceManagementViewSource from '../InstanceManagement.vue?raw'
-import instanceManagementSourceBase from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import instanceManagementSourceBase from '@/features/teacher-instances/ui/TeacherInstanceManagementPage.vue?raw'
 import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
 import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import teacherInstancesHookSource from '@/features/teacher-instances/model/useInstances.ts?raw'
@@ -146,7 +146,12 @@ describe('InstanceManagement', () => {
   })
 
   it('路由页应仅负责组合，不直接依赖页面级流程细节', () => {
+    expect(instanceManagementViewSource).toContain("from '@/features/teacher-instances'")
+    expect(instanceManagementViewSource).toContain('TeacherInstanceManagementPage')
     expect(instanceManagementViewSource).toContain('useInstanceManagementPage')
+    expect(instanceManagementViewSource).not.toContain(
+      "import TeacherInstanceManagementPage from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue'"
+    )
     expect(instanceManagementViewSource).not.toContain('confirmDestructiveAction')
     expect(instanceManagementViewSource).not.toContain('resolveTeachingDashboardRouteName')
     expect(teacherInstancesHookSource).toContain("reportFrontendError('加载教师实例管理页失败:', err)")

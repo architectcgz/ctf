@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import TeacherInstanceManagementPage from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue'
-import { useInstanceManagementPage } from '@/features/teacher-instances'
+import {
+  TeacherInstanceManagementPage,
+  useInstanceManagementPage,
+} from '@/features/teacher-instances'
 
 const {
   classes,

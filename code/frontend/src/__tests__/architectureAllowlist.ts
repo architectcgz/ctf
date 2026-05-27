@@ -86,7 +86,6 @@ export const legacyComponentPageAllowlist = new Set([
   'components/teacher/class-management/ClassManagementPage.vue',
   'components/teacher/class-management/ClassStudentsPage.vue',
   'components/teacher/class-management/StudentAnalysisPage.vue',
-  'components/teacher/instance-management/TeacherInstanceManagementPage.vue',
   'components/teacher/student-management/StudentManagementPage.vue',
 ])
 

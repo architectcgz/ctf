@@ -28,7 +28,7 @@ import classStudentsDirectoryPanelSource from '@/components/teacher/class-manage
 import studentAnalysisPageSourceBase from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentManagementPageSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
-import teacherInstanceManagementPageSourceBase from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceManagementPageSourceBase from '@/features/teacher-instances/ui/TeacherInstanceManagementPage.vue?raw'
 import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
 import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import topologyStudioPageSource from '@/features/challenge-topology-studio/ui/ChallengeTopologyStudioPage.vue?raw'
