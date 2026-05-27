@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
-import { useContestAnnouncementManagement } from '@/features/contest-announcements'
+import { useContestAnnouncementManagement } from '../model'
 
 const props = defineProps<{
   open: boolean
@@ -15,9 +14,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
+  openFullPage: [contest: ContestDetailData]
 }>()
-
-const router = useRouter()
 const management = useContestAnnouncementManagement(computed(() => props.contest))
 
 function formatTime(value: string): string {
@@ -50,10 +48,7 @@ async function handleDelete(announcementId: string): Promise<void> {
 
 function openFullPage(): void {
   if (!props.contest) return
-  void router.push({
-    name: 'ContestAnnouncements',
-    params: { id: props.contest.id },
-  })
+  emit('openFullPage', props.contest)
   emit('close')
 }
 
@@ -260,6 +255,12 @@ watch(
   gap: var(--space-4);
 }
 
+.announcement-drawer__section-head h3,
+.announcement-drawer__item-head h4 {
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
 .announcement-drawer__form,
 .announcement-drawer__field,
 .announcement-drawer__list {
@@ -268,26 +269,17 @@ watch(
 }
 
 .announcement-drawer__textarea {
-  min-height: 8rem;
+  min-height: 9rem;
   resize: vertical;
 }
 
 .announcement-drawer__item {
   display: grid;
-  gap: var(--space-3);
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  gap: var(--space-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-4);
   padding: var(--space-4);
-}
-
-.announcement-drawer__item-head h4,
-.announcement-drawer__content {
-  margin: 0;
-}
-
-.announcement-drawer__item-head {
-  align-items: flex-start;
+  background: var(--color-bg-surface);
 }
 
 .announcement-drawer__item-head > div {
@@ -295,17 +287,10 @@ watch(
   gap: var(--space-1);
 }
 
-.announcement-drawer__content,
-.announcement-drawer__readonly {
+.announcement-drawer__content {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
   white-space: pre-wrap;
-  line-height: 1.6;
-}
-
-.announcement-drawer__load-error,
-.announcement-drawer__readonly {
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  padding: var(--space-4);
 }
 </style>

@@ -762,4 +762,55 @@ describe('ContestManage', () => {
 
     expect(wrapper.get('#contest-announcement-drawer').text()).toContain('2026 春季赛')
   })
+
+  it('公告抽屉请求进入完整管理页时应由页面 owner 执行跳转', async () => {
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-1',
+          title: '2026 春季赛',
+          description: '公告运营',
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: '2026-04-12T09:00:00.000Z',
+          ends_at: '2026-04-12T18:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ContestOrchestrationPage: {
+            props: ['list'],
+            template:
+              '<button id="open-announce-drawer" type="button" @click="$emit(\'announce\', list[0])">发布通知</button>',
+          },
+          ContestAnnouncementManageDrawer: {
+            props: ['open', 'contest'],
+            template:
+              '<button v-if="open" id="open-announcement-page" type="button" @click="$emit(\'openFullPage\', contest)">进入完整管理页</button>',
+          },
+          PlatformContestFormDialog: true,
+          AWDReadinessOverrideDialog: true,
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#open-announce-drawer').trigger('click')
+    await flushPromises()
+    await wrapper.get('#open-announcement-page').trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'ContestAnnouncements',
+      params: { id: 'contest-1' },
+    })
+  })
 })

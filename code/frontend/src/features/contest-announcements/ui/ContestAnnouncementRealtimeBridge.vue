@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 
-import { useContestAnnouncementRealtime } from '@/features/contest-announcements'
+import { useContestAnnouncementRealtime } from '../model'
 
 const props = defineProps<{
   contestId: string

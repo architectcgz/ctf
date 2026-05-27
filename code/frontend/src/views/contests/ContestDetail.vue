@@ -5,11 +5,11 @@ import { RouterLink } from 'vue-router'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import ContestAnnouncementsWorkspaceSection from '@/components/contests/ContestAnnouncementsWorkspaceSection.vue'
 import ContestAWDWorkspacePanel from '@/components/contests/ContestAWDWorkspacePanel.vue'
-import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnnouncementRealtimeBridge.vue'
 import ContestChallengeWorkspacePanel from '@/components/contests/ContestChallengeWorkspacePanel.vue'
 import ContestOverviewPanel from '@/components/contests/ContestOverviewPanel.vue'
 import ContestTeamDialogs from '@/components/contests/ContestTeamDialogs.vue'
 import ContestTeamWorkspaceSection from '@/components/contests/ContestTeamWorkspaceSection.vue'
+import { ContestAnnouncementRealtimeBridge } from '@/features/contest-announcements'
 import { useContestDetailRoutePage } from '@/features/contest-detail'
 
 const {

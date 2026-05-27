@@ -86,6 +86,10 @@ export function useContestManagePage() {
     void router.push({ name: 'ContestOperations', params: { id: contest.id } })
   }
 
+  function openContestAnnouncementsPage(contest: ContestDetailData): void {
+    void router.push({ name: 'ContestAnnouncements', params: { id: contest.id } })
+  }
+
   return {
     list,
     total,
@@ -122,5 +126,6 @@ export function useContestManagePage() {
     handleCreateContestSave,
     openContestEditPage,
     openContestWorkbench,
+    openContestAnnouncementsPage,
   }
 }
