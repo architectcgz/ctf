@@ -11,7 +11,6 @@ export const componentFeatureImportAllowlist = new Set([
   'components/contests/awd/AWDDefenseColumn.vue -> @/features/contest-awd-workspace',
   'components/contests/awd/AWDDefenseOperationsPanel.vue -> @/features/contest-awd-workspace',
   'components/contests/awd/AWDDefenseServiceList.vue -> @/features/contest-awd-workspace',
-  'components/dashboard/student/dashboardPanelRegistry.ts -> @/features/student-dashboard',
   'components/layout/AppLayout.vue -> @/features/notifications',
   'components/layout/NotificationDrawer.vue -> @/features/notifications',
   'components/layout/TopNav.vue -> @/features/auth',
@@ -75,10 +74,6 @@ export const commonForbiddenImportAllowlist = new Set([
 ])
 
 export const legacyComponentPageAllowlist = new Set([
-  'components/dashboard/student/StudentCategoryProgressPage.vue',
-  'components/dashboard/student/StudentDifficultyPage.vue',
-  'components/dashboard/student/StudentOverviewPage.vue',
-  'components/dashboard/student/StudentRecommendationPage.vue',
   'components/dashboard/student/StudentTimelinePage.vue',
 ])
 

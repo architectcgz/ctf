@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
-import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
+import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
+import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import studentOverviewEditorialSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
-import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
+import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 
 const journalSoftSurfacesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-soft-surfaces.css`,

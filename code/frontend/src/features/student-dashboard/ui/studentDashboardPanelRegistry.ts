@@ -2,9 +2,9 @@ import StudentCategoryProgressPage from './StudentCategoryProgressPage.vue'
 import StudentDifficultyPage from './StudentDifficultyPage.vue'
 import StudentOverviewPage from './StudentOverviewPage.vue'
 import StudentRecommendationPage from './StudentRecommendationPage.vue'
-import StudentTimelinePage from './StudentTimelinePage.vue'
+import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
 
-import type { DashboardPanelKey } from '@/features/student-dashboard'
+import type { DashboardPanelKey } from '../model'
 
 export const dashboardPanelComponents: Record<DashboardPanelKey, unknown> = {
   overview: StudentOverviewPage,

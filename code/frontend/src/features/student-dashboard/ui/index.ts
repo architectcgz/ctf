@@ -1,0 +1,1 @@
+export { resolveDashboardPanelComponent } from './studentDashboardPanelRegistry'

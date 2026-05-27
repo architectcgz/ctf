@@ -4,10 +4,11 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import DashboardView from '../DashboardView.vue'
 import dashboardViewSource from '../DashboardView.vue?raw'
-import studentCategoryProgressPageSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
-import studentDifficultyPageSource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
+import studentCategoryProgressPageSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
+import studentDifficultyPageSource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import studentOverviewPageSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
-import studentRecommendationPageSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
+import studentRecommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
+import studentDashboardRegistrySource from '@/features/student-dashboard/ui/studentDashboardPanelRegistry.ts?raw'
 import studentTimelinePageSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
@@ -189,7 +190,11 @@ describe('DashboardView', () => {
 
   it('路由页应仅负责组合，不直接耦合学生仪表盘查询流程', () => {
     expect(dashboardViewSource).toContain('useStudentDashboardPage')
-    expect(dashboardViewSource).toContain('dashboardPanelRegistry')
+    expect(dashboardViewSource).toContain('resolveDashboardPanelComponent')
+    expect(dashboardViewSource).toContain("from '@/features/student-dashboard'")
+    expect(dashboardViewSource).not.toContain(
+      "from '@/components/dashboard/student/dashboardPanelRegistry'"
+    )
     expect(dashboardViewSource).not.toContain("from '@/api/assessment'")
     expect(dashboardViewSource).not.toContain('const dashboardPanelComponents')
     expect(dashboardViewSource).not.toContain('function resolveDashboardPanelComponent(')
@@ -210,6 +215,12 @@ describe('DashboardView', () => {
     )
     expect(studentDashboardPageSource).not.toContain(
       "from '@/components/dashboard/student/StudentDifficultyPage.vue'"
+    )
+    expect(studentDashboardRegistrySource).toContain(
+      "import StudentOverviewPage from './StudentOverviewPage.vue'"
+    )
+    expect(studentDashboardRegistrySource).toContain(
+      "import StudentRecommendationPage from './StudentRecommendationPage.vue'"
     )
   })
 

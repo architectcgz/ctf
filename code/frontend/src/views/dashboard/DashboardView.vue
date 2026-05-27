@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { resolveDashboardPanelComponent } from '@/components/dashboard/student/dashboardPanelRegistry'
-import { useStudentDashboardPage } from '@/features/student-dashboard'
+import { resolveDashboardPanelComponent, useStudentDashboardPage } from '@/features/student-dashboard'
 
 const {
   loading,

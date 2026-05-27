@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import StudentOverviewStyleEditorial from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue'
-import type { StudentOverviewProps } from './overviewProps'
+import type { StudentOverviewProps } from '@/components/dashboard/student/overviewProps'
 
 defineProps<StudentOverviewProps>()
 

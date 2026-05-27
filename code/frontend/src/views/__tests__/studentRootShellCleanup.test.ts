@@ -14,10 +14,10 @@ import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileW
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
 import scoreboardViewSource from '@/views/scoreboard/ScoreboardView.vue?raw'
-import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
-import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
+import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
+import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
-import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
+import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 
 describe('student root shell cleanup', () => {
   const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`

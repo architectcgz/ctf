@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
-import categoryProgressSource from '../../components/dashboard/student/StudentCategoryProgressPage.vue?raw'
-import difficultyPageSource from '../../components/dashboard/student/StudentDifficultyPage.vue?raw'
+import categoryProgressSource from '../../features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
+import difficultyPageSource from '../../features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import overviewPageSource from '../../components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
-import recommendationPageSource from '../../components/dashboard/student/StudentRecommendationPage.vue?raw'
+import recommendationPageSource from '../../features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import timelinePageSource from '../../components/dashboard/student/StudentTimelinePage.vue?raw'
 import dashboardViewSource from '../dashboard/DashboardView.vue?raw'
 import notificationListSource from '../notifications/NotificationList.vue?raw'
