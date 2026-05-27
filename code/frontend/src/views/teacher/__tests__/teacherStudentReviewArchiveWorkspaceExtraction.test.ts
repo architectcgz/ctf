@@ -32,6 +32,10 @@ describe('Teacher student review archive workspace extraction', () => {
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveSummarySection')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveEvidencePanel')
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveReflectionPanel')
+    expect(reviewArchiveWorkspaceSource).toContain("from '@/components/review-archive'")
+    expect(reviewArchiveWorkspaceSource).not.toContain(
+      "from '@/components/teacher/review-archive/ReviewArchiveHero.vue'"
+    )
     expect(reviewArchiveWorkspaceSource).toContain('class="review-archive-shell')
     expect(reviewArchiveStateSource).toContain('class="ui-btn ui-btn--primary"')
     expect(reviewArchiveStateSource).toContain('class="review-archive-loading__hero"')

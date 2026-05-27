@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { ReviewArchiveData } from '@/api/contracts'
-import ReviewArchiveEvidencePanel from '@/components/teacher/review-archive/ReviewArchiveEvidencePanel.vue'
-import ReviewArchiveHero from '@/components/teacher/review-archive/ReviewArchiveHero.vue'
-import ReviewArchiveObservationStrip from '@/components/teacher/review-archive/ReviewArchiveObservationStrip.vue'
-import ReviewArchiveReflectionPanel from '@/components/teacher/review-archive/ReviewArchiveReflectionPanel.vue'
+import {
+  ReviewArchiveEvidencePanel,
+  ReviewArchiveHero,
+  ReviewArchiveObservationStrip,
+  ReviewArchiveReflectionPanel,
+} from '@/components/review-archive'
 import ReviewArchiveState from './ReviewArchiveState.vue'
 import ReviewArchiveSummarySection from './ReviewArchiveSummarySection.vue'
 
