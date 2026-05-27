@@ -252,7 +252,7 @@ export interface ChallengeSubmissionRecordData {
 
 export type TeacherManualReviewStatus = 'pending' | 'approved' | 'rejected'
 
-export interface TeacherManualReviewSubmissionItemData {
+export interface ManualReviewSubmissionItemData {
   id: ID
   user_id: ID
   student_username: string
@@ -267,7 +267,7 @@ export interface TeacherManualReviewSubmissionItemData {
   updated_at: ISODateTime
 }
 
-export interface TeacherManualReviewSubmissionDetailData {
+export interface ManualReviewSubmissionDetailData {
   id: ID
   user_id: ID
   student_username: string

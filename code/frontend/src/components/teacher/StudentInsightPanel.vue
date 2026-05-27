@@ -5,13 +5,13 @@ import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import type { TeacherAttackSessionQuery } from '@/api/teacher'
 import type {
+  ManualReviewSubmissionDetailData,
+  ManualReviewSubmissionItemData,
   MyProgressData,
   RecommendationItem,
   SkillProfileData,
   TeacherAttackSessionResponseData,
   TeacherEvidenceData,
-  TeacherManualReviewSubmissionDetailData,
-  TeacherManualReviewSubmissionItemData,
   WriteupSubmissionItemData,
   TeacherStudentItem,
   TimelineEvent,
@@ -40,8 +40,8 @@ const props = defineProps<{
   writeupTotal: number
   writeupTotalPages: number
   writeupPaginationLoading: boolean
-  manualReviewSubmissions: TeacherManualReviewSubmissionItemData[]
-  activeManualReview: TeacherManualReviewSubmissionDetailData | null
+  manualReviewSubmissions: ManualReviewSubmissionItemData[]
+  activeManualReview: ManualReviewSubmissionDetailData | null
   manualReviewLoading: boolean
   manualReviewSaving: boolean
   loading: boolean

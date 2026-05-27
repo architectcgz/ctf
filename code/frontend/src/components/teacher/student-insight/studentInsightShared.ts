@@ -1,7 +1,7 @@
 import type {
+  ManualReviewSubmissionItemData,
   TeacherAttackEventData,
   TeacherAttackSessionData,
-  TeacherManualReviewSubmissionItemData,
   WriteupSubmissionItemData,
 } from '@/api/contracts'
 
@@ -34,7 +34,7 @@ export function visibilityStatusClass(
 }
 
 export function manualReviewStatusLabel(
-  status: TeacherManualReviewSubmissionItemData['review_status']
+  status: ManualReviewSubmissionItemData['review_status']
 ): string {
   switch (status) {
     case 'approved':
@@ -47,7 +47,7 @@ export function manualReviewStatusLabel(
 }
 
 export function manualReviewStatusClass(
-  status: TeacherManualReviewSubmissionItemData['review_status']
+  status: ManualReviewSubmissionItemData['review_status']
 ): string {
   switch (status) {
     case 'approved':

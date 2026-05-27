@@ -3,8 +3,8 @@ import { computed, ref, watch } from 'vue'
 import { ArrowRight, ClipboardList, FileText, FolderKanban } from 'lucide-vue-next'
 
 import type {
-  TeacherManualReviewSubmissionDetailData,
-  TeacherManualReviewSubmissionItemData,
+  ManualReviewSubmissionDetailData,
+  ManualReviewSubmissionItemData,
   WriteupSubmissionItemData,
 } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -24,8 +24,8 @@ const props = defineProps<{
   writeupTotal: number
   writeupTotalPages: number
   writeupPaginationLoading: boolean
-  manualReviewSubmissions: TeacherManualReviewSubmissionItemData[]
-  activeManualReview: TeacherManualReviewSubmissionDetailData | null
+  manualReviewSubmissions: ManualReviewSubmissionItemData[]
+  activeManualReview: ManualReviewSubmissionDetailData | null
   manualReviewLoading: boolean
   manualReviewSaving: boolean
 }>()
@@ -55,7 +55,7 @@ const publishedChallengeCount = computed(
   () => new Set(publishedWriteupSubmissions.value.map((item) => String(item.challenge_id))).size
 )
 const manualReviewByChallengeId = computed(() => {
-  const items = new Map<string, TeacherManualReviewSubmissionItemData>()
+  const items = new Map<string, ManualReviewSubmissionItemData>()
   for (const item of props.manualReviewSubmissions) {
     if (!items.has(String(item.challenge_id))) {
       items.set(String(item.challenge_id), item)
@@ -115,7 +115,7 @@ function reviewManualReview(reviewStatus: 'approved' | 'rejected'): void {
   })
 }
 
-function findManualReview(challengeId: string): TeacherManualReviewSubmissionItemData | undefined {
+function findManualReview(challengeId: string): ManualReviewSubmissionItemData | undefined {
   return manualReviewByChallengeId.value.get(String(challengeId))
 }
 </script>

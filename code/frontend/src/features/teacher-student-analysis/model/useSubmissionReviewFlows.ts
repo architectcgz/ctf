@@ -11,8 +11,8 @@ import {
   unrecommendTeacherCommunityWriteup,
 } from '@/api/teaching'
 import type {
-  TeacherManualReviewSubmissionDetailData,
-  TeacherManualReviewSubmissionItemData,
+  ManualReviewSubmissionDetailData,
+  ManualReviewSubmissionItemData,
   WriteupSubmissionItemData,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
@@ -30,8 +30,8 @@ export function useSubmissionReviewFlows(options: UseSubmissionReviewFlowsOption
   const writeupPageSize = ref(6)
   const writeupTotal = ref(0)
   const writeupPaginationLoading = ref(false)
-  const manualReviewSubmissions = ref<TeacherManualReviewSubmissionItemData[]>([])
-  const activeManualReview = ref<TeacherManualReviewSubmissionDetailData | null>(null)
+  const manualReviewSubmissions = ref<ManualReviewSubmissionItemData[]>([])
+  const activeManualReview = ref<ManualReviewSubmissionDetailData | null>(null)
   const manualReviewLoading = ref(false)
   const manualReviewSaving = ref(false)
 

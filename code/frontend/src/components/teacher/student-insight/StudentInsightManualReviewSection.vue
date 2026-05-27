@@ -3,8 +3,8 @@ import { computed, ref, watch } from 'vue'
 import { ArrowRight, CheckCircle, ClipboardList, Clock3 } from 'lucide-vue-next'
 
 import type {
-  TeacherManualReviewSubmissionDetailData,
-  TeacherManualReviewSubmissionItemData,
+  ManualReviewSubmissionDetailData,
+  ManualReviewSubmissionItemData,
 } from '@/api/contracts'
 import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -16,8 +16,8 @@ import {
 } from './studentInsightShared'
 
 const props = defineProps<{
-  manualReviewSubmissions: TeacherManualReviewSubmissionItemData[]
-  activeManualReview: TeacherManualReviewSubmissionDetailData | null
+  manualReviewSubmissions: ManualReviewSubmissionItemData[]
+  activeManualReview: ManualReviewSubmissionDetailData | null
   manualReviewLoading: boolean
   manualReviewSaving: boolean
 }>()

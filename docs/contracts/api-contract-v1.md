@@ -1469,7 +1469,7 @@ export interface TeacherManualReviewSubmissionQuery {
 `data`：
 
 ```ts
-export interface TeacherManualReviewSubmissionItemData {
+export interface ManualReviewSubmissionItemData {
   id: ID
   user_id: ID
   student_username: string
@@ -1490,7 +1490,7 @@ export interface TeacherManualReviewSubmissionItemData {
 `data`：
 
 ```ts
-export interface TeacherManualReviewSubmissionDetailData {
+export interface ManualReviewSubmissionDetailData {
   id: ID
   user_id: ID
   student_username: string
@@ -1522,7 +1522,7 @@ export interface ReviewManualReviewSubmissionReq {
 }
 ```
 
-`data`：`TeacherManualReviewSubmissionDetailData`
+`data`：`ManualReviewSubmissionDetailData`
 
 ### 8.20 GET `/api/v1/authoring/challenges/:id/topology` / PUT `/api/v1/authoring/challenges/:id/topology` / DELETE `/api/v1/authoring/challenges/:id/topology`
 

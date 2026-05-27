@@ -1,10 +1,10 @@
 import { request } from '../request'
 
 import type {
+  ManualReviewSubmissionDetailData,
+  ManualReviewSubmissionItemData,
   PageResult,
   SubmissionWriteupData,
-  TeacherManualReviewSubmissionDetailData,
-  TeacherManualReviewSubmissionItemData,
   WriteupSubmissionItemData,
 } from '../contracts'
 
@@ -17,8 +17,8 @@ interface RawTeacherSubmissionWriteupItem extends Omit<
   challenge_id: string | number
 }
 
-interface RawTeacherManualReviewSubmissionItem extends Omit<
-  TeacherManualReviewSubmissionItemData,
+interface RawManualReviewSubmissionItem extends Omit<
+  ManualReviewSubmissionItemData,
   'id' | 'user_id' | 'challenge_id'
 > {
   id: string | number
@@ -26,8 +26,8 @@ interface RawTeacherManualReviewSubmissionItem extends Omit<
   challenge_id: string | number
 }
 
-interface RawTeacherManualReviewSubmissionDetail extends Omit<
-  TeacherManualReviewSubmissionDetailData,
+interface RawManualReviewSubmissionDetail extends Omit<
+  ManualReviewSubmissionDetailData,
   'id' | 'user_id' | 'challenge_id'
 > {
   id: string | number
@@ -161,8 +161,8 @@ export async function getTeacherManualReviewSubmissions(params?: {
   review_status?: 'pending' | 'approved' | 'rejected'
   page?: number
   page_size?: number
-}): Promise<PageResult<TeacherManualReviewSubmissionItemData>> {
-  const payload = await request<PageResult<RawTeacherManualReviewSubmissionItem>>({
+}): Promise<PageResult<ManualReviewSubmissionItemData>> {
+  const payload = await request<PageResult<RawManualReviewSubmissionItem>>({
     method: 'GET',
     url: '/teacher/manual-review-submissions',
     params: {
@@ -188,8 +188,8 @@ export async function getTeacherManualReviewSubmissions(params?: {
 
 export async function getTeacherManualReviewSubmission(
   id: string
-): Promise<TeacherManualReviewSubmissionDetailData> {
-  const payload = await request<RawTeacherManualReviewSubmissionDetail>({
+): Promise<ManualReviewSubmissionDetailData> {
+  const payload = await request<RawManualReviewSubmissionDetail>({
     method: 'GET',
     url: `/teacher/manual-review-submissions/${encodeURIComponent(id)}`,
   })
@@ -208,8 +208,8 @@ export async function reviewTeacherManualReviewSubmission(
     review_status: 'approved' | 'rejected'
     review_comment?: string
   }
-): Promise<TeacherManualReviewSubmissionDetailData> {
-  const response = await request<RawTeacherManualReviewSubmissionDetail>({
+): Promise<ManualReviewSubmissionDetailData> {
+  const response = await request<RawManualReviewSubmissionDetail>({
     method: 'PUT',
     url: `/teacher/manual-review-submissions/${encodeURIComponent(id)}/review`,
     data: payload,
