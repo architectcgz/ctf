@@ -48,10 +48,17 @@
   - `2026-05-27` review archive owner 进展：`ReviewArchiveWorkspace` 已改从中立 `components/review-archive` 入口读取 hero / observation / evidence / reflection 面板，对 `components/teacher/review-archive/*` 的四条直连 import 收敛为一条 barrel；当前剩余重点收口面进一步缩到 AWD review shared widget 的 teacher 组件入口。
   - `2026-05-27` AWD review owner 进展：`AwdReviewWorkspace` 已改从中立 `components/awd-review` 入口读取 round selector / analysis / evidence / team drawer，对 `components/teacher/awd-review/*` 的四条直连 import 完成收口；当前这条 P1 剩余重点开始回到更大颗粒度的页面 / 壳体拆分。
 
+- [ ] P1：把应属于单一 feature 的 page-sized UI 从 `components/**` 继续收口到 `features/*/ui`
+  - 依据：`docs/reviews/architecture/2026-05-24-frontend-architecture-review.md` 指出 allowlist 仍在冻结历史例外；当前题解管理三件套就是典型的 `components/*Page.vue -> @/features/*` 例外。
+  - 收益：可以把“单一 feature 的 UI 壳”从 legacy component page 通道里迁走，减少 `componentFeatureImportAllowlist` 和 `legacyComponentPageAllowlist`，也给后续其它切片提供明确落点。
+  - 风险：中。主要是 import 路径、raw-source 测试和 public API 更新，需要避免把 route owner 或 API owner 从 feature model 重新打散。
+  - `2026-05-27` 进展：题解管理三件套 `ChallengeWriteupManagePanel`、`ChallengeWriteupEditorPage`、`ChallengeWriteupViewPage` 已完成迁入 `features/challenge-writeup-editor/ui`，前端架构文档同步补上 `feature-owned UI` 判定规则，题解这组对应的 `componentFeatureImportAllowlist` 与 `legacyComponentPageAllowlist` 已收掉；后续继续优先处理仍然直接依赖单一 feature model 的 legacy component page / panel。
+
 - [ ] P1：继续拆 contest / AWD 线上的超大组件壳，优先看 `ContestAwdConfigWorkspaceShell.vue`、`ContestChallengeEditorDialog.vue`、`AWDChallengeLibraryPage.vue`
   - 依据：这三者当前约 `1009` / `899` / `896` 行，是现阶段最肥的一批前端组件壳。
   - 收益：继续收口 `TD-1`，减少单文件模板/样式/局部状态混写。
   - 风险：中高。比赛与 AWD 页面交互密度高，切片要尽量按稳定展示块或编辑分区拆。
+  - `2026-05-27` 进展：`AWDChallengeLibraryPage.vue` 已拆成 `AwdChallengeWorkspaceHeader`、`AwdChallengeLibrarySection`、`AwdChallengeImportSection`，共享 page surface 只保留 mode 与 props / emits owner；`ContestChallengeEditorDialog.vue` 已进一步拆成 `ContestAwdChallengeSelectorSection` 与 `ContestChallengeSettingsSection`，父对话框只保留 form / validation / submit / selection owner。当前这条 P1 的剩余重点已经进一步收敛到 `ContestAwdConfigWorkspaceShell.vue`。
 
 - [ ] P2：收口布局层超大组件，优先看 `NotificationDrawer.vue`、`Sidebar.vue`、`TopNav.vue`
   - 依据：三者当前约 `1071` / `854` / `781` 行，已经超过普通布局组件可维护范围。

@@ -72,6 +72,14 @@ export function usePlatformChallengeDetailPage() {
     void router.push('/platform/challenges')
   }
 
+  function openWriteup(mode: 'view' | 'edit'): void {
+    if (!challengeId.value) return
+    void router.push({
+      name: mode === 'view' ? 'PlatformChallengeWriteupView' : 'PlatformChallengeWriteup',
+      params: { id: challengeId.value },
+    })
+  }
+
   function clearRedirectTimer(): void {
     if (redirectTimer === null) {
       return
@@ -243,6 +251,7 @@ export function usePlatformChallengeDetailPage() {
     loading,
     openChallengeList,
     openTopology,
+    openWriteup,
     saveFlagConfig,
     saving,
     updateFlagDraft,

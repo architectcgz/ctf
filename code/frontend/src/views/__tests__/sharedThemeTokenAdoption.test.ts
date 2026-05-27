@@ -33,7 +33,7 @@ import platformOverviewAlertsSectionSource from '@/components/platform/dashboard
 import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
 import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
 import platformOverviewWorkspaceSource from '@/features/platform-overview/model/usePlatformOverviewWorkspace.ts?raw'
-import writeupManageSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
+import writeupManageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
 import awdAttackLogPanelSource from '@/components/platform/contest/AWDAttackLogPanel.vue?raw'
 import awdReadinessSummarySource from '@/components/platform/contest/AWDReadinessSummary.vue?raw'

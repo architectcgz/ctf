@@ -60,13 +60,18 @@ describe('PlatformChallengeDetailWorkspace', () => {
             props: ['workspaceLabel', 'hasChallengeId'],
           },
           AdminChallengeWorkspaceTabs: {
-            template: '<div data-testid="tabs" />',
+            template: '<div data-testid="tabs"><slot name="writeup" :challenge-id="\'challenge-1\'" :challenge-title="\'SQLi\'" /></div>',
+          },
+          ChallengeWriteupManagePanel: {
+            template: '<div data-testid="writeup-panel">{{ challengeId }}-{{ challengeTitle }}</div>',
+            props: ['challengeId', 'challengeTitle'],
           },
         },
       },
     })
 
     expect(wrapper.get('[data-testid="topbar"]').text()).toContain('题目详情-true')
+    expect(wrapper.get('[data-testid="writeup-panel"]').text()).toContain('challenge-1-SQLi')
 
     await wrapper.get('[data-testid="topbar"]').trigger('click')
     expect(wrapper.emitted('openTopology')).toBeTruthy()
@@ -82,11 +87,33 @@ describe('PlatformChallengeDetailWorkspace', () => {
             template:
               '<button data-testid="tabs" @click="$emit(\'update:flag-draft\', { flagType: \'regex\' })">tabs</button>',
           },
+          ChallengeWriteupManagePanel: { template: '<div />' },
         },
       },
     })
 
     await wrapper.get('[data-testid="tabs"]').trigger('click')
     expect(wrapper.emitted('updateFlagDraft')).toEqual([[{ flagType: 'regex' }]])
+  })
+
+  it('应转发题解面板发出的打开事件', async () => {
+    const wrapper = mount(PlatformChallengeDetailWorkspace, {
+      props: createProps(),
+      global: {
+        stubs: {
+          AdminChallengeTopbarPanel: { template: '<div />' },
+          AdminChallengeWorkspaceTabs: {
+            template:
+              '<div><slot name="writeup" :challenge-id="\'challenge-1\'" :challenge-title="\'SQLi\'" /></div>',
+          },
+          ChallengeWriteupManagePanel: {
+            template: '<button data-testid="writeup-open" @click="$emit(\'openWriteup\', \'view\')">open</button>',
+          },
+        },
+      },
+    })
+
+    await wrapper.get('[data-testid="writeup-open"]').trigger('click')
+    expect(wrapper.emitted('openWriteup')).toEqual([['view']])
   })
 })

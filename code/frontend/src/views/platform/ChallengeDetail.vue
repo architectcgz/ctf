@@ -15,6 +15,7 @@
       :challenge-id="challengeId"
       @open-topology="openTopology"
       @open-challenge-list="openChallengeList"
+      @open-writeup="openWriteup"
       @select="switchPanel"
       @keydown="handleTabKeydown($event.event, $event.index)"
       @download-attachment="downloadAttachment"
@@ -38,6 +39,7 @@ const {
   loading,
   openChallengeList,
   openTopology,
+  openWriteup,
   saveFlagConfig,
   updateFlagDraft,
   workspaceLabel,

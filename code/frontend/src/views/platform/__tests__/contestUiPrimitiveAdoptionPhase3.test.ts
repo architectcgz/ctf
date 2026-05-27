@@ -3,7 +3,15 @@ import { describe, expect, it } from 'vitest'
 import awdAttackLogDialogSource from '@/components/platform/contest/AWDAttackLogDialog.vue?raw'
 import awdRoundCreateDialogSource from '@/components/platform/contest/AWDRoundCreateDialog.vue?raw'
 import awdServiceCheckDialogSource from '@/components/platform/contest/AWDServiceCheckDialog.vue?raw'
-import contestChallengeEditorDialogSource from '@/components/platform/contest/ContestChallengeEditorDialog.vue?raw'
+import contestAwdChallengeSelectorSectionSource from '@/components/platform/contest/ContestAwdChallengeSelectorSection.vue?raw'
+import contestChallengeEditorDialogSourceBase from '@/components/platform/contest/ContestChallengeEditorDialog.vue?raw'
+import contestChallengeSettingsSectionSource from '@/components/platform/contest/ContestChallengeSettingsSection.vue?raw'
+
+const contestChallengeEditorDialogSource = [
+  contestChallengeEditorDialogSourceBase,
+  contestAwdChallengeSelectorSectionSource,
+  contestChallengeSettingsSectionSource,
+].join('\n')
 
 describe('contest ui primitive adoption phase 3', () => {
   it('awd round create dialog should consume shared field and button primitives', () => {

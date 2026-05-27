@@ -2,10 +2,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '@/api/request'
 
-import ChallengeWriteupManagePanel from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue'
-import challengeWriteupManagePanelSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
-
-const pushMock = vi.fn()
+import ChallengeWriteupManagePanel from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue'
+import challengeWriteupManagePanelSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
   getChallengeWriteup: vi.fn(),
@@ -20,14 +18,6 @@ const toastMocks = vi.hoisted(() => ({
 
 const confirmMock = vi.hoisted(() => vi.fn())
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
-
 vi.mock('@/api/admin/authoring', () => adminApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
@@ -38,7 +28,6 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 
 describe('ChallengeWriteupManagePanel', () => {
   beforeEach(() => {
-    pushMock.mockReset()
     adminApiMocks.getChallengeWriteup.mockReset()
     adminApiMocks.deleteChallengeWriteup.mockReset()
     adminApiMocks.getPlatformWriteupSubmissions.mockReset()
@@ -86,9 +75,7 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(challengeWriteupManagePanelSource).toContain(
       'class="ui-btn ui-btn--secondary ui-btn--sm"'
     )
-    expect(challengeWriteupManagePanelSource).toContain(
-      "from '@/features/challenge-writeup-editor'"
-    )
+    expect(challengeWriteupManagePanelSource).toContain("from '../model'")
     expect(challengeWriteupManagePanelSource).toContain('useChallengeWriteupManagement')
     expect(challengeWriteupManagePanelSource).not.toContain(
       "from '@/api/admin/authoring'"
@@ -220,9 +207,7 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(moreButton.attributes('aria-expanded')).toBe('false')
 
     await viewButton!.trigger('click')
-    expect(pushMock).toHaveBeenNthCalledWith(1, {
-      path: '/platform/challenges/11/writeup/view',
-    })
+    expect(wrapper.emitted('openWriteup')?.[0]).toEqual(['view'])
 
     await moreButton.trigger('click')
     await flushPromises()
@@ -235,9 +220,7 @@ describe('ChallengeWriteupManagePanel', () => {
 
     editButton?.click()
     await flushPromises()
-    expect(pushMock).toHaveBeenNthCalledWith(2, {
-      path: '/platform/challenges/11/writeup',
-    })
+    expect(wrapper.emitted('openWriteup')?.[1]).toEqual(['edit'])
 
     wrapper.unmount()
   })
@@ -397,9 +380,7 @@ describe('ChallengeWriteupManagePanel', () => {
 
     await createButton!.trigger('click')
 
-    expect(pushMock).toHaveBeenCalledWith({
-      path: '/platform/challenges/11/writeup',
-    })
+    expect(wrapper.emitted('openWriteup')?.[0]).toEqual(['edit'])
   })
 
   it('题解投稿应显示作者与学号，并支持分页翻页', async () => {

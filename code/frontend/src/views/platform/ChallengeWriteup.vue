@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ChallengeWriteupEditorPage from '@/components/platform/writeup/ChallengeWriteupEditorPage.vue'
+import { ChallengeWriteupEditorPage } from '@/features/challenge-writeup-editor'
 import { useChallengeWriteupPage } from '@/features/platform-challenges'
 
 const { challengeId, backToChallengeDetail } = useChallengeWriteupPage()

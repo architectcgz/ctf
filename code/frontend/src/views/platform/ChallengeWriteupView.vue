@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ChallengeWriteupViewPage from '@/components/platform/writeup/ChallengeWriteupViewPage.vue'
+import { ChallengeWriteupViewPage } from '@/features/challenge-writeup-editor'
 import { useChallengeWriteupViewPage } from '@/features/platform-challenges'
 
 const { challengeId, backToChallengeDetail, goToWriteupEditor } = useChallengeWriteupViewPage()

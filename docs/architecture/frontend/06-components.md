@@ -25,9 +25,17 @@
   - 负责：应用总布局、侧栏、顶栏、全局通知实时连接、route transition 和 backoffice/student 的内容壳切换
   - 不负责：页面自己的业务查询、目录筛选或详情页状态机
 
-- `code/frontend/src/views/**` 与 `code/frontend/src/features/**/model`
-  - 负责：view 作为路由入口，feature model 作为页面行为 owner；复杂页面继续优先拆到 feature model 或局部业务组件
-  - 不负责：把页面控制逻辑继续堆回共享原语层
+- `code/frontend/src/views/**`
+  - 负责：路由入口、route page 壳、feature 组合与最外层事件桥接
+  - 不负责：直接持有 feature 级加载/保存/删除状态机，或重新长成第二个业务组件层
+
+- `code/frontend/src/features/**/model`
+  - 负责：页面行为 owner、请求编排、路由参数解析、分页、导出和局部状态机
+  - 不负责：承担大段模板和展示样式壳
+
+- `code/frontend/src/features/**/ui`
+  - 负责：只服务单一 feature 的 workspace、editor、panel 或 page-sized surface，直接消费同 feature 的 model contract
+  - 不负责：跨 feature 复用、直接调用非 contract API，或替 route view 接管路由 owner
 
 ## 1. 组件层次
 
@@ -38,6 +46,7 @@
 | 共享原语 | `components/common/` | 空状态、Toast、Skeleton、目录表格、删除确认、通用局部承载器 |
 | Overlay 模板 | `components/common/modal-templates/` | Teleport、滚动锁、Escape/backdrop 关闭、经典弹窗和抽屉模板 |
 | 布局壳 | `components/layout/` | `AppLayout`、`Sidebar`、`TopNav` 等全局承载 |
+| Feature UI | `features/*/ui/` | 只服务单一 feature 的工作区、编辑器、目录面板与 page-sized surface |
 | 业务展示组件 | `components/teacher/`、`components/platform/`、`components/contests/`、`components/scoreboard/` 等 | 领域相关展示和局部桥接，逐步向 feature owner 过渡 |
 | 路由 view | `views/**` | 页面壳与 feature 组合入口 |
 
@@ -45,6 +54,7 @@
 
 - 能在多个页面复用且不绑业务 owner 的，进 `components/common/`
 - 只解决 overlay 行为和模板骨架的，进 `components/common/modal-templates/`
+- 只服务单一 feature，且直接消费同 feature model 的 UI，进 `features/*/ui/`
 - 强业务语义的展示组件保留在业务目录，不伪装成“通用组件”
 - 页面数据编排和路由交互不放进共享组件
 
@@ -165,8 +175,32 @@
 
 - 共享原语继续沉到 `components/common/`
 - 页面行为优先下沉到 `features/**/model`
+- 只服务单一 feature 的大块 UI 优先收进 `features/**/ui`
 - route view 保持薄壳
 - 业务展示组件可以继续存在，但不要再向其内堆新的页面级状态机
+
+### 5.1 `feature-owned UI` 判定规则
+
+以下条件同时成立时，默认不要继续放在 `components/**`，而是落到 `features/*/ui/`：
+
+- 组件只服务一个 feature 或一个 feature family
+- 组件直接依赖该 feature 的 model/composable，或者只消费该 feature 暴露的 contract
+- 组件承担的是该 feature 的 editor / manage / review / workspace 壳，而不是跨 feature 复用的中立展示
+
+以下条件成立时，继续留在 `components/**`：
+
+- 组件会被多个 feature 或多个 route page 复用
+- 组件不绑定单一 feature model，只接收中立 props / emits
+- 组件本质上是共享原语、布局壳或跨业务复用的展示块
+
+代表性例子：
+
+- `features/platform-challenge-detail/ui/*`
+  - 负责：平台题目详情 feature 自己的 Flag 配置 UI
+  - 不负责：变成跨页面复用组件仓
+- `features/challenge-writeup-editor/ui/*`
+  - 负责：题解管理、编辑、查看这组只服务题解 feature 的 UI 面
+  - 不负责：route view、题目详情导航或 API owner
 
 ## 6. Guardrail
 

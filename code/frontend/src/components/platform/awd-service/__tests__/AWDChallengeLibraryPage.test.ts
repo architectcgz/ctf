@@ -8,7 +8,17 @@ import type {
 import type { PlatformAwdChallengeImportUploadResult } from '@/features/platform-awd-challenges'
 
 import AWDChallengeLibraryPage from '../AWDChallengeLibraryPage.vue'
-import awdChallengeLibraryPageSource from '../AWDChallengeLibraryPage.vue?raw'
+import awdChallengeImportSectionSource from '../AwdChallengeImportSection.vue?raw'
+import awdChallengeLibraryPageSourceBase from '../AWDChallengeLibraryPage.vue?raw'
+import awdChallengeLibrarySectionSource from '../AwdChallengeLibrarySection.vue?raw'
+import awdChallengeWorkspaceHeaderSource from '../AwdChallengeWorkspaceHeader.vue?raw'
+
+const awdChallengeLibraryPageSource = [
+  awdChallengeLibraryPageSourceBase,
+  awdChallengeWorkspaceHeaderSource,
+  awdChallengeLibrarySectionSource,
+  awdChallengeImportSectionSource,
+].join('\n')
 
 describe('AWDChallengeLibraryPage', () => {
   interface TestPageProps {

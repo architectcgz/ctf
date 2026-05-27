@@ -1,20 +1,22 @@
 <script setup lang="ts">
 import { FileText, MoreHorizontal, Users } from 'lucide-vue-next'
 import { ref, toRef } from 'vue'
-import { useRouter } from 'vue-router'
 
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import { useChallengeWriteupManagement } from '@/features/challenge-writeup-editor'
+import { useChallengeWriteupManagement } from '../model'
 
 const props = defineProps<{
   challengeId: string
   challengeTitle?: string
 }>()
 
-const router = useRouter()
+const emit = defineEmits<{
+  openWriteup: [mode: 'view' | 'edit']
+}>()
+
 const actionMenuOpen = ref(false)
 const {
   loading,
@@ -35,12 +37,7 @@ const {
 function openWriteup(mode: 'view' | 'edit') {
   if (!props.challengeId) return
   actionMenuOpen.value = false
-  void router.push({
-    path:
-      mode === 'view'
-        ? `/platform/challenges/${props.challengeId}/writeup/view`
-        : `/platform/challenges/${props.challengeId}/writeup`,
-  })
+  emit('openWriteup', mode)
 }
 
 function closeActionMenu() {

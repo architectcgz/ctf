@@ -5,13 +5,18 @@ import contestListSource from '@/views/contests/ContestList.vue?raw'
 import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import awdReviewDirectorySource from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue?raw'
-import awdChallengeLibrarySource from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue?raw'
+import awdChallengeImportSectionSource from '@/components/platform/awd-service/AwdChallengeImportSection.vue?raw'
+import awdChallengeLibrarySourceBase from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue?raw'
+import awdChallengeLibrarySectionSource from '@/components/platform/awd-service/AwdChallengeLibrarySection.vue?raw'
+import awdChallengeWorkspaceHeaderSource from '@/components/platform/awd-service/AwdChallengeWorkspaceHeader.vue?raw'
 import cheatDetectionPanelsSource from '@/components/platform/cheat/CheatDetectionReviewPanels.vue?raw'
 import classStudentsPageSourceBase from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
 import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
-import contestChallengeEditorDialogSource from '@/components/platform/contest/ContestChallengeEditorDialog.vue?raw'
+import contestAwdChallengeSelectorSectionSource from '@/components/platform/contest/ContestAwdChallengeSelectorSection.vue?raw'
+import contestChallengeEditorDialogSourceBase from '@/components/platform/contest/ContestChallengeEditorDialog.vue?raw'
+import contestChallengeSettingsSectionSource from '@/components/platform/contest/ContestChallengeSettingsSection.vue?raw'
 import contestOperationsHubSource from '@/components/platform/contest/ContestOperationsHubWorkspacePanel.vue?raw'
 import platformContestTableSource from '@/components/platform/contest/PlatformContestTable.vue?raw'
 import scoreboardDetailSource from '@/views/scoreboard/ScoreboardDetail.vue?raw'
@@ -29,6 +34,17 @@ const classStudentsPageSource = [
   classStudentsOverviewPanelSource,
   classStudentsInsightWindowPanelSource,
   classStudentsDirectoryPanelSource,
+].join('\n')
+const awdChallengeLibrarySource = [
+  awdChallengeLibrarySourceBase,
+  awdChallengeWorkspaceHeaderSource,
+  awdChallengeLibrarySectionSource,
+  awdChallengeImportSectionSource,
+].join('\n')
+const contestChallengeEditorDialogSource = [
+  contestChallengeEditorDialogSourceBase,
+  contestAwdChallengeSelectorSectionSource,
+  contestChallengeSettingsSectionSource,
 ].join('\n')
 
 function extractTemplateSlot(source: string, slotName: string): string {

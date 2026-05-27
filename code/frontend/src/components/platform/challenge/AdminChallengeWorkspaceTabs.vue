@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { AdminChallengeListItem } from '@/api/contracts'
 import AdminChallengeProfilePanel from '@/components/platform/challenge/AdminChallengeProfilePanel.vue'
-import ChallengeWriteupManagePanel from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue'
 import type {
   PlatformChallengeFlagDraft,
   PlatformChallengeFlagDraftPatch,
@@ -103,7 +102,8 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
         aria-labelledby="admin-challenge-tab-writeup"
         :aria-hidden="activePanel === 'writeup' ? 'false' : 'true'"
       >
-        <ChallengeWriteupManagePanel
+        <slot
+          name="writeup"
           :challenge-id="challengeId"
           :challenge-title="challenge.title"
         />

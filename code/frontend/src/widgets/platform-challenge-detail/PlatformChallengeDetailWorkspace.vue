@@ -2,6 +2,7 @@
 import type { AdminChallengeListItem } from '@/api/contracts'
 import AdminChallengeTopbarPanel from '@/components/platform/challenge/AdminChallengeTopbarPanel.vue'
 import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'
+import { ChallengeWriteupManagePanel } from '@/features/challenge-writeup-editor'
 import type { PlatformChallengeFlagDraft, PlatformChallengeFlagDraftPatch } from '@/features/platform-challenge-detail'
 
 type ChallengePanelKey = 'detail' | 'writeup'
@@ -29,6 +30,7 @@ defineProps<{
 const emit = defineEmits<{
   openTopology: []
   openChallengeList: []
+  openWriteup: [mode: 'view' | 'edit']
   select: [panel: ChallengePanelKey]
   keydown: [payload: { event: KeyboardEvent; index: number }]
   downloadAttachment: []
@@ -59,5 +61,13 @@ const emit = defineEmits<{
     @download-attachment="emit('downloadAttachment')"
     @save-flag-config="emit('saveFlagConfig')"
     @update:flag-draft="emit('updateFlagDraft', $event)"
-  />
+  >
+    <template #writeup="{ challengeId: writeupChallengeId, challengeTitle }">
+      <ChallengeWriteupManagePanel
+        :challenge-id="writeupChallengeId"
+        :challenge-title="challengeTitle"
+        @open-writeup="emit('openWriteup', $event)"
+      />
+    </template>
+  </AdminChallengeWorkspaceTabs>
 </template>

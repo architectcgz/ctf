@@ -29,7 +29,10 @@ import teacherInstanceManagementPageSourceBase from '@/components/teacher/instan
 import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
 import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import teacherAwdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceHeader.vue?raw'
-import awdChallengeLibraryPageSource from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue?raw'
+import awdChallengeImportSectionSource from '@/components/platform/awd-service/AwdChallengeImportSection.vue?raw'
+import awdChallengeLibraryPageSourceBase from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue?raw'
+import awdChallengeLibrarySectionSource from '@/components/platform/awd-service/AwdChallengeLibrarySection.vue?raw'
+import awdChallengeWorkspaceHeaderSource from '@/components/platform/awd-service/AwdChallengeWorkspaceHeader.vue?raw'
 import awdReviewHeroPanelSource from '@/components/platform/awd-review/AwdReviewHeroPanel.vue?raw'
 import auditLogHeroPanelSource from '@/components/platform/audit/AuditLogHeroPanel.vue?raw'
 import challengeImportHeroPanelSource from '@/components/platform/challenge/ChallengeImportHeroPanel.vue?raw'
@@ -95,6 +98,12 @@ const userGovernanceSource = [
   userGovernanceOverviewPanelSource,
   userGovernanceDetailModalSource,
   userGovernanceImportPanelSource,
+].join('\n')
+const awdChallengeLibraryPageSource = [
+  awdChallengeLibraryPageSourceBase,
+  awdChallengeWorkspaceHeaderSource,
+  awdChallengeLibrarySectionSource,
+  awdChallengeImportSectionSource,
 ].join('\n')
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'

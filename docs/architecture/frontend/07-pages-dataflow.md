@@ -21,6 +21,10 @@
   - 负责：页面级请求编排、路由参数解析、分页、导出、实时桥接和局部状态机
   - 不负责：重复实现共享登录态、通知列表或竞赛公共状态
 
+- `code/frontend/src/features/**/ui`
+  - 负责：承接单一 feature 的 page-sized surface、editor、workspace 壳和目录面板
+  - 不负责：接管 route view 的导航 owner，或绕过 feature model 直接请求 API
+
 - `code/frontend/src/stores/auth.ts`、`notification.ts`、`contest.ts`
   - 负责：跨页共享状态
   - 不负责：替代页面 owner 本身
@@ -36,6 +40,7 @@
 | 竞赛详情 | `features/contest-detail/model` | `useContestDetailPage.ts`、`useContestDetailRoutePage.ts` |
 | 学员分析复盘工作流 | `features/student-analysis-workspace/model`、`features/student-analysis-review/model` | `useStudentAnalysisPage.ts` |
 | 题目管理与导入 | `features/platform-challenges/model`、`features/challenge-package-import/model` | `useChallengeManagePage.ts`、`useChallengeImportManagePage.ts`、`useChallengeImportPreviewPage.ts` |
+| 平台题解管理 | `features/platform-challenges/model`、`features/challenge-writeup-editor/model`、`features/challenge-writeup-editor/ui` | `useChallengeWriteupPage.ts`、`useChallengeWriteupViewPage.ts`、题解 feature UI |
 
 ## 2. 典型数据流
 
@@ -164,6 +169,25 @@
 
 - 上传流程、错误归一化和队列刷新已经拆到 `challengeImportUploadFlow.ts`、`challengeImportErrorSupport.ts`
 - 主组合器 `useChallengePackageImport()` 不再内联上传细节
+
+### 2.7 平台题解管理
+
+题解 route page 当前分成两层 owner：
+
+1. `features/platform-challenges/model/useChallengeWriteupPage.ts` 与 `useChallengeWriteupViewPage.ts`
+   - 负责从 `route.params.id` 解析题目 ID
+   - 负责“返回题目详情”“跳转题解编辑页”这类 route navigation
+2. `features/challenge-writeup-editor/model/*`
+   - 负责题解加载、保存、删除、推荐切换和投稿目录查询
+3. `features/challenge-writeup-editor/ui/*`
+   - 负责题解管理目录、编辑器和查看页的 page-sized surface
+   - 只消费题解 feature model，不直接依赖 route 或 API
+
+这条链路说明：
+
+- route page 可以继续保持薄壳
+- feature model 继续持有真实行为 owner
+- page-sized 业务 UI 不一定非要挂在 `components/*Page.vue`，只要它只服务单一 feature，就应跟随 feature 收进 `features/*/ui`
 
 ## 3. 页面数据流不变量
 

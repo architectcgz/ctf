@@ -56,8 +56,8 @@ import userGovernanceDetailModalSource from '@/components/platform/user/UserGove
 import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
 import contestOrchestrationSource from '@/components/platform/contest/ContestOrchestrationPage.vue?raw'
 import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
-import writeupManageSource from '@/components/platform/writeup/ChallengeWriteupManagePanel.vue?raw'
-import writeupEditorSource from '@/components/platform/writeup/ChallengeWriteupEditorPage.vue?raw'
+import writeupManageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
+import writeupEditorSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue?raw'
 
 const classStudentsPageSource = [
   classStudentsPageSourceBase,
@@ -105,7 +105,7 @@ const topologyStudioSource = [
   topologyTemplateHeroSectionSource,
   topologyChallengeWorkspaceHeaderSource,
 ].join('\n')
-import writeupViewSource from '@/components/platform/writeup/ChallengeWriteupViewPage.vue?raw'
+import writeupViewSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupViewPage.vue?raw'
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
 import adminChallengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
 import challengeImportPreviewSource from '@/views/platform/ChallengeImportPreview.vue?raw'
