@@ -31,7 +31,7 @@ import studentManagementPageSource from '@/components/teacher/student-management
 import teacherInstanceManagementPageSourceBase from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
 import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
-import topologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyStudioPageSource from '@/features/challenge-topology-studio/ui/ChallengeTopologyStudioPage.vue?raw'
 import topologyTemplateLibraryHeaderSource from '@/components/platform/topology/TopologyTemplateLibraryHeader.vue?raw'
 import topologyTemplateHeroSectionSource from '@/components/platform/topology/TopologyTemplateHeroSection.vue?raw'
 import topologyChallengeWorkspaceHeaderSource from '@/components/platform/topology/TopologyChallengeWorkspaceHeader.vue?raw'

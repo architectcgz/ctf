@@ -77,7 +77,7 @@ declare module 'vue' {
     ChallengeQuestionPanel: typeof import('./components/challenge/ChallengeQuestionPanel.vue')['default']
     ChallengeSolutionsPanel: typeof import('./components/challenge/ChallengeSolutionsPanel.vue')['default']
     ChallengeSubmissionRecordsPanel: typeof import('./components/challenge/ChallengeSubmissionRecordsPanel.vue')['default']
-    ChallengeTopologyStudioPage: typeof import('./components/platform/topology/ChallengeTopologyStudioPage.vue')['default']
+    ChallengeTopologyStudioPage: typeof import('./features/challenge-topology-studio/ui/ChallengeTopologyStudioPage.vue')['default']
     ChallengeWriteupEditorPage: typeof import('./features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue')['default']
     ChallengeWriteupManagePanel: typeof import('./features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue')['default']
     ChallengeWriteupPanel: typeof import('./components/challenge/ChallengeWriteupPanel.vue')['default']

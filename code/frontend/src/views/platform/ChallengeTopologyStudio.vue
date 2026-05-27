@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
+import { ChallengeTopologyStudioPage } from '@/features/challenge-topology-studio'
 import { useChallengeTopologyStudioRoutePage } from '@/features/platform-challenges'
 
 const { challengeId, backToChallengeDetail } = useChallengeTopologyStudioRoutePage()

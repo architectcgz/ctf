@@ -57,7 +57,7 @@ import topologyPackageContextPanelSource from '@/components/platform/topology/To
 import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
 import topologyNetworkQuickEditorSource from '@/components/platform/topology/TopologyNetworkQuickEditor.vue?raw'
 import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
-import topologyStudioSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import topologyStudioSource from '@/features/challenge-topology-studio/ui/ChallengeTopologyStudioPage.vue?raw'
 import topologyStatusNotesSource from '@/components/platform/topology/TopologyStatusNotes.vue?raw'
 import topologySummaryGridSource from '@/components/platform/topology/TopologySummaryGrid.vue?raw'
 import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'

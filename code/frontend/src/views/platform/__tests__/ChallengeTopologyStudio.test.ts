@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import ChallengeTopologyStudioPage from '@/components/platform/topology/ChallengeTopologyStudioPage.vue'
-import challengeTopologyStudioPageSource from '@/components/platform/topology/ChallengeTopologyStudioPage.vue?raw'
+import { ChallengeTopologyStudioPage } from '@/features/challenge-topology-studio'
+import challengeTopologyStudioPageSource from '@/features/challenge-topology-studio/ui/ChallengeTopologyStudioPage.vue?raw'
 import topologyChallengeContextRailSource from '@/components/platform/topology/TopologyChallengeContextRail.vue?raw'
 import topologyChallengeWorkbenchSource from '@/components/platform/topology/TopologyChallengeWorkbench.vue?raw'
 import topologyChallengeWorkspaceHeaderSource from '@/components/platform/topology/TopologyChallengeWorkspaceHeader.vue?raw'
