@@ -184,7 +184,7 @@ export interface WriteupSubmissionItemData {
   updated_at: ISODateTime
 }
 
-export interface TeacherSubmissionWriteupDetailData extends SubmissionWriteupData {
+export interface WriteupSubmissionDetailData extends SubmissionWriteupData {
   student_username: string
   student_name?: string
   student_no?: string

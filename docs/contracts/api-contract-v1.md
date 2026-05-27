@@ -1442,7 +1442,7 @@ export type WriteupSubmissionListData = PageResult<WriteupSubmissionItem>
 `data`：
 
 ```ts
-export interface TeacherSubmissionWriteupDetail extends SubmissionWriteupData {
+export interface WriteupSubmissionDetailData extends SubmissionWriteupData {
   student_username: string
   student_name?: string
   student_no?: string
