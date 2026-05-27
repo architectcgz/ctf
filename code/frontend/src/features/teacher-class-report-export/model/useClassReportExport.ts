@@ -22,7 +22,7 @@ import {
   createClassInsightWindowDraft,
   describeClassInsightWindow,
   getClassInsightWindowError,
-} from '@/features/teacher-class-insight-window'
+} from '@/features/class-insight-window'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
 import { reportFrontendError } from '@/utils/reportFrontendError'

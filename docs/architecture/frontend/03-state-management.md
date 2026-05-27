@@ -26,7 +26,7 @@
   - 不负责：承接所有竞赛页面的局部表单、筛选条件或页面 loading 状态
 
 - `code/frontend/src/features/**/model`、`code/frontend/src/composables/use*.ts`
-  - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态，例如 `useChallengeDetailPage.ts`、`useScoreboardDetailPage.ts`、`useTeacherStudentAnalysisPage.ts`
+  - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态，例如 `useChallengeDetailPage.ts`、`useScoreboardDetailPage.ts`、`useStudentAnalysisPage.ts`
   - 不负责：把真正跨页面共享的会话状态重新复制回某个局部 composable
 
 ## 1. 状态归属规则
@@ -123,7 +123,7 @@
 - 题目详情：`code/frontend/src/features/challenge-detail/model/useChallengeDetailPage.ts`
 - 排行榜详情：`code/frontend/src/features/scoreboard/model/useScoreboardDetailPage.ts`
 - 学生仪表盘：`code/frontend/src/features/student-dashboard/model/useStudentDashboardPage.ts`
-- 教师学生分析：`code/frontend/src/features/teacher-student-analysis/model/useTeacherStudentAnalysisPage.ts`
+- 学员分析复盘：`code/frontend/src/features/student-analysis-workspace/model/useStudentAnalysisPage.ts`
 
 通用页面能力则放在 `code/frontend/src/composables/use*.ts`，例如：
 

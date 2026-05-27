@@ -5,6 +5,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import TeacherStudentReviewArchive from '../TeacherStudentReviewArchive.vue'
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
 import studentReviewArchivePageModelSource from '@/features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts?raw'
+import reviewArchiveWidgetOwnerSource from '@/widgets/review-archive-workspace/index.ts?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue?raw'
 import reviewArchiveStateSource from '@/widgets/teacher-review-archive/ReviewArchiveState.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
@@ -212,11 +213,14 @@ describe('TeacherStudentReviewArchive', () => {
   })
 
   it('复盘归档操作按钮应接入共享 ui-btn 原语', () => {
+    expect(reviewArchiveWidgetOwnerSource).toContain(
+      "export { default as ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue'"
+    )
     expect(reviewArchiveSource).toContain(
       "import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'"
     )
     expect(reviewArchiveSource).toContain(
-      "import { ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
+      "import { ReviewArchiveWorkspace } from '@/widgets/review-archive-workspace'"
     )
     expect(reviewArchiveSource).toContain('<ReviewArchiveWorkspace')
     expect(studentReviewArchivePageModelSource).toContain('useStudentReviewArchive(studentId)')

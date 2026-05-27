@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'
-import { ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'
+import { ReviewArchiveWorkspace } from '@/widgets/review-archive-workspace'
 
 const {
   archive,

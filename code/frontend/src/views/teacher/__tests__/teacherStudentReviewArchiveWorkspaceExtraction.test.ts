@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
-import reviewArchiveWidgetIndexSource from '@/widgets/teacher-review-archive/index.ts?raw'
+import reviewArchiveWidgetIndexSource from '@/widgets/review-archive-workspace/index.ts?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue?raw'
 import reviewArchiveStateSource from '@/widgets/teacher-review-archive/ReviewArchiveState.vue?raw'
 import reviewArchiveSummarySectionSource from '@/widgets/teacher-review-archive/ReviewArchiveSummarySection.vue?raw'
@@ -10,7 +10,7 @@ import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewA
 describe('Teacher student review archive workspace extraction', () => {
   it('路由页应收敛为 feature model 与 widget 组合层', () => {
     expect(reviewArchiveWidgetIndexSource).toContain(
-      "export { default as ReviewArchiveWorkspace } from './ReviewArchiveWorkspace.vue'"
+      "export { default as ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue'"
     )
     expect(reviewArchiveWidgetIndexSource).not.toContain('ReviewArchiveState')
     expect(reviewArchiveWidgetIndexSource).not.toContain('ReviewArchiveSummarySection')
@@ -19,7 +19,7 @@ describe('Teacher student review archive workspace extraction', () => {
       "import { useStudentReviewArchivePage } from '@/features/student-review-archive-workspace'"
     )
     expect(reviewArchiveSource).toContain(
-      "import { ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive'"
+      "import { ReviewArchiveWorkspace } from '@/widgets/review-archive-workspace'"
     )
     expect(reviewArchiveSource).toContain('<ReviewArchiveWorkspace')
     expect(reviewArchiveSource).not.toContain('exportStudentReviewArchive')

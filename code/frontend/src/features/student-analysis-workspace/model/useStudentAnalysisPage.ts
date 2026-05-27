@@ -9,7 +9,7 @@ import {
   useReviewArchiveExportFlow,
   useReviewWorkspace,
   useSubmissionReviewFlows,
-} from '@/features/teacher-student-analysis'
+} from '@/features/student-analysis-review'
 import { useStudentAnalysisDataState } from './useStudentAnalysisDataState'
 import { useStudentAnalysisNavigation } from './useStudentAnalysisNavigation'
 import { useStudentAnalysisReviewQuerySync } from './useStudentAnalysisReviewQuerySync'

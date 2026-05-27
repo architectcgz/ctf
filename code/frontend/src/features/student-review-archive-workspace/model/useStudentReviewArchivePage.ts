@@ -17,7 +17,7 @@ import {
   resolveStudentReviewArchiveErrorMessage,
   STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES,
   useStudentReviewArchive,
-} from '@/features/teacher-student-review-archive'
+} from '@/features/student-review-archive'
 
 export function useStudentReviewArchivePage() {
   const route = useRoute()

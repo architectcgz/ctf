@@ -14,7 +14,7 @@ import {
   hasClassInsightWindow,
   isSameClassInsightWindow,
   parseClassInsightWindowQuery,
-} from '@/features/teacher-class-insight-window'
+} from '@/features/class-insight-window'
 import { useStudentFilters, useStudentListQuery } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'

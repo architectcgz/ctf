@@ -34,7 +34,7 @@
 | 通知列表与抽屉 | `features/notifications/model` | `useNotificationListPage.ts`、`useNotificationDrawer.ts` |
 | 排行榜目录与详情 | `features/scoreboard/model` | `useScoreboardView.ts`、`useScoreboardDetailPage.ts` |
 | 竞赛详情 | `features/contest-detail/model` | `useContestDetailPage.ts`、`useContestDetailRoutePage.ts` |
-| 教师学生分析 | `features/teacher-student-analysis/model` | `useTeacherStudentAnalysisPage.ts` |
+| 学员分析复盘工作流 | `features/student-analysis-workspace/model`、`features/student-analysis-review/model` | `useStudentAnalysisPage.ts` |
 | 题目管理与导入 | `features/platform-challenges/model`、`features/challenge-package-import/model` | `useChallengeManagePage.ts`、`useChallengeImportManagePage.ts`、`useChallengeImportPreviewPage.ts` |
 
 ## 2. 典型数据流
