@@ -42,6 +42,7 @@
   - `2026-05-27` 进一步进展：`class-insight-window`、`student-analysis-review`、`student-review-archive` 与 `review-archive-workspace` 已补中立 public owner，`class-students-workspace`、`student-analysis-workspace`、`student-review-archive-workspace` 以及 teacher / platform 的复盘归档 route view 已切到中立入口；剩余重点收口面转到 `PlatformClassWorkspaceSection`、`PlatformAwdReviewDetail` 和更深层 contract 命名。
   - `2026-05-27` AWD 进展：`awd-review-workspace` 与 `awd-review-detail-workspace` 已按角色切换到 `api/admin` / `api/teacher` owner，`PlatformAwdReviewIndex`、`PlatformAwdReviewDetail` 不再通过共享 feature 间接依赖 `@/api/teaching` 的 teacher 命名函数；当前剩余重点收口面收敛到 `PlatformClassWorkspaceSection`、`ChallengeWriteupManagePanel` 和更深层 contract 命名。
   - `2026-05-27` class redirect 进展：`class-workspace-redirect` 已改成只解析 alias route 对应的 `panel`，最终 canonical target route 由 `PlatformClassWorkspaceSection` / `TeacherClassWorkspaceSection` 显式传入；`PlatformClassWorkspaceSection` 的 redirect owner 命名残留已收口，当前剩余重点收口面进一步收敛到 `ChallengeWriteupManagePanel` 和更深层 contract 命名。
+  - `2026-05-27` writeup 进展：`ChallengeWriteupManagePanel` 对应的 `useChallengeWriteupManagement` 已切到 `api/admin/authoring.ts` 下的 platform writeup submissions owner；教师侧 `TeacherStudentAnalysis` / `useSubmissionReviewFlows` 的题解查看与评阅链路保持不变，当前剩余重点收口面进一步收敛到更深层 contract 命名。
 
 - [ ] P1：继续拆 contest / AWD 线上的超大组件壳，优先看 `ContestAwdConfigWorkspaceShell.vue`、`ContestChallengeEditorDialog.vue`、`AWDChallengeLibraryPage.vue`
   - 依据：这三者当前约 `1009` / `899` / `896` 行，是现阶段最肥的一批前端组件壳。

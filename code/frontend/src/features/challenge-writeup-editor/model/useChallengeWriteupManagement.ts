@@ -1,7 +1,10 @@
 import { computed, onMounted, ref, watch, type Ref } from 'vue'
 
-import { deleteChallengeWriteup, getChallengeWriteup } from '@/api/admin/authoring'
-import { getTeacherWriteupSubmissions } from '@/api/teaching'
+import {
+  deleteChallengeWriteup,
+  getChallengeWriteup,
+  getPlatformWriteupSubmissions,
+} from '@/api/admin/authoring'
 import type { AdminChallengeWriteupData, TeacherSubmissionWriteupItemData } from '@/api/contracts'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
@@ -106,7 +109,7 @@ export function useChallengeWriteupManagement(options: UseChallengeWriteupManage
 
     submissionLoading.value = true
     try {
-      const payload = await getTeacherWriteupSubmissions({
+      const payload = await getPlatformWriteupSubmissions({
         challenge_id: options.challengeId.value,
         page: targetPage,
         page_size: submissionPageSize.value,

@@ -1,4 +1,5 @@
 import { ApiError, request } from '../request'
+export { getTeacherWriteupSubmissions as getPlatformWriteupSubmissions } from '../teaching/writeups'
 
 import type {
   AdminChallengeHint,
