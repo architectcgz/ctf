@@ -62,7 +62,7 @@
 
 - 复盘 archive 事实源：`TeacherAWDReviewRepository + TeacherAWDReviewService`
 - 导出任务事实源：`reports` 生命周期与 `ReportService`
-- 前端详情态 owner：`useTeacherAwdReviewDetail`
+- 前端详情态 owner：`useAwdReviewDetailPage`
 
 ## 4. 关键模型与不变量
 
@@ -107,8 +107,8 @@
 ### 5.1 教师目录与详情链路
 
 1. 教师打开 `/academy/awd-reviews`。
-2. 前端调用 `listTeacherAWDReviews`，后端列出所有 AWD 赛事及 `current_round`、`round_count`、`team_count`、`latest_evidence_at`、`export_ready`。
-3. 进入详情页后，`useTeacherAwdReviewDetail` 调用 `getTeacherAWDReview`。
+2. 共享 `useAwdReviewIndex` 会按当前角色选择 `api/teacher` 或 `api/admin` owner，再读取 AWD 赛事目录及 `current_round`、`round_count`、`team_count`、`latest_evidence_at`、`export_ready`。
+3. 进入详情页后，`useAwdReviewDetailPage` 同样按当前角色选择 AWD review query owner，再读取 `getTeacherAWDReview` 对应的底层 contract。
 4. 后端按赛事维度返回 overview、round 列表，必要时附带 `selected_round` 的 service / attack / traffic 明细。
 
 ### 5.2 导出链路
@@ -153,8 +153,10 @@
 - `code/frontend/src/router/routes/teacherRoutes.ts`
 - `code/frontend/src/views/teacher/TeacherAWDReviewIndex.vue`
 - `code/frontend/src/views/teacher/TeacherAWDReviewDetail.vue`
-- `code/frontend/src/features/teacher-awd-review/model/useTeacherAwdReviewDetail.ts`
-- `code/frontend/src/widgets/teacher-awd-review/TeacherAWDReviewWorkspace.vue`
+- `code/frontend/src/features/awd-review-workspace/model/useAwdReviewIndex.ts`
+- `code/frontend/src/features/awd-review-workspace/model/useAwdReviewExportFlow.ts`
+- `code/frontend/src/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts`
+- `code/frontend/src/widgets/awd-review-workspace/AwdReviewWorkspace.vue`
 
 ## 9. 验证标准
 

@@ -2,7 +2,8 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 
-import { listTeacherAWDReviews } from '@/api/teaching'
+import { listPlatformAWDReviews } from '@/api/admin'
+import { listTeacherAWDReviews } from '@/api/teacher'
 import type { TeacherAWDReviewContestItemData } from '@/api/contracts'
 import { useAbortController } from '@/composables/useAbortController'
 import { useAuthStore } from '@/stores/auth'
@@ -63,14 +64,21 @@ export function useAwdReviewIndex() {
     error.value = null
 
     try {
-      const nextPage = await listTeacherAWDReviews({
-        status: filters.value.status || undefined,
-        keyword: filters.value.keyword.trim() || undefined,
-        page: page.value,
-        page_size: pageSize.value,
-      }, {
-        signal: controller.signal,
-      })
+      const listAwdReviews =
+        authStore.user?.role === 'admin'
+          ? listPlatformAWDReviews
+          : listTeacherAWDReviews
+      const nextPage = await listAwdReviews(
+        {
+          status: filters.value.status || undefined,
+          keyword: filters.value.keyword.trim() || undefined,
+          page: page.value,
+          page_size: pageSize.value,
+        },
+        {
+          signal: controller.signal,
+        }
+      )
       if (requestId !== latestRequestId) {
         return
       }

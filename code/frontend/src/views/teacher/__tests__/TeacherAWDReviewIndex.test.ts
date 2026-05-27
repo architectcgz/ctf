@@ -10,7 +10,11 @@ import teacherAwdReviewDirectorySectionSource from '@/widgets/awd-review-workspa
 
 const pushMock = vi.fn()
 
-const teachingApiMocks = vi.hoisted(() => ({
+const adminApiMocks = vi.hoisted(() => ({
+  listPlatformAWDReviews: vi.fn(),
+}))
+
+const teacherApiMocks = vi.hoisted(() => ({
   listTeacherAWDReviews: vi.fn(),
 }))
 
@@ -22,16 +26,18 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teaching', () => teachingApiMocks)
+vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/teacher', () => teacherApiMocks)
 
 describe('TeacherAWDReviewIndex', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     setActivePinia(createPinia())
     pushMock.mockReset()
-    Object.values(teachingApiMocks).forEach((mock) => mock.mockReset())
+    Object.values(adminApiMocks).forEach((mock) => mock.mockReset())
+    Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
-    teachingApiMocks.listTeacherAWDReviews.mockResolvedValue({
+    teacherApiMocks.listTeacherAWDReviews.mockResolvedValue({
       list: [
         {
           id: 'contest-1',
@@ -73,7 +79,7 @@ describe('TeacherAWDReviewIndex', () => {
 
     await flushPromises()
 
-    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenCalledWith({
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledWith({
       status: undefined,
       keyword: undefined,
       page: 1,
@@ -81,6 +87,7 @@ describe('TeacherAWDReviewIndex', () => {
     }, {
       signal: expect.any(AbortSignal),
     })
+    expect(adminApiMocks.listPlatformAWDReviews).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('AWD复盘')
     expect(wrapper.text()).toContain('春季 AWD 联训')
     expect(wrapper.text()).toContain('进入复盘')
@@ -110,18 +117,18 @@ describe('TeacherAWDReviewIndex', () => {
 
     expect(statusSelect.exists()).toBe(true)
     expect(keywordInput.exists()).toBe(true)
-    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
 
     await statusSelect.setValue('ended')
     await keywordInput.setValue('期末')
 
-    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
 
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(2)
-    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenLastCalledWith({
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(2)
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenLastCalledWith({
       status: 'ended',
       keyword: '期末',
       page: 1,

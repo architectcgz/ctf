@@ -15,7 +15,13 @@ const routeMock = {
   query: {} as Record<string, string>,
 }
 
-const teachingApiMocks = vi.hoisted(() => ({
+const adminApiMocks = vi.hoisted(() => ({
+  getPlatformAWDReview: vi.fn(),
+  exportPlatformAWDReviewArchive: vi.fn(),
+  exportPlatformAWDReviewReport: vi.fn(),
+}))
+
+const teacherApiMocks = vi.hoisted(() => ({
   getTeacherAWDReview: vi.fn(),
   exportTeacherAWDReviewArchive: vi.fn(),
   exportTeacherAWDReviewReport: vi.fn(),
@@ -30,7 +36,8 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teaching', () => teachingApiMocks)
+vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/teacher', () => teacherApiMocks)
 
 describe('PlatformAwdReviewDetail route owner', () => {
   beforeEach(() => {
@@ -39,9 +46,10 @@ describe('PlatformAwdReviewDetail route owner', () => {
     replaceMock.mockReset()
     routeMock.params.contestId = 'contest-1'
     routeMock.query = {}
-    Object.values(teachingApiMocks).forEach((mock) => mock.mockReset())
+    Object.values(adminApiMocks).forEach((mock) => mock.mockReset())
+    Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
-    teachingApiMocks.getTeacherAWDReview.mockResolvedValue({
+    adminApiMocks.getPlatformAWDReview.mockResolvedValue({
       generated_at: '2026-04-12T10:00:00Z',
       scope: {
         snapshot_type: 'live',
@@ -68,11 +76,11 @@ describe('PlatformAwdReviewDetail route owner', () => {
       rounds: [],
       selected_round: null,
     })
-    teachingApiMocks.exportTeacherAWDReviewArchive.mockResolvedValue({
+    adminApiMocks.exportPlatformAWDReviewArchive.mockResolvedValue({
       report_id: '31',
       status: 'processing',
     })
-    teachingApiMocks.exportTeacherAWDReviewReport.mockResolvedValue({
+    adminApiMocks.exportPlatformAWDReviewReport.mockResolvedValue({
       report_id: '32',
       status: 'processing',
     })
@@ -98,10 +106,11 @@ describe('PlatformAwdReviewDetail route owner', () => {
 
     await flushPromises()
 
-    expect(teachingApiMocks.getTeacherAWDReview).toHaveBeenCalledWith('contest-1', {
+    expect(adminApiMocks.getPlatformAWDReview).toHaveBeenCalledWith('contest-1', {
       round: undefined,
       team_id: undefined,
     })
+    expect(teacherApiMocks.getTeacherAWDReview).not.toHaveBeenCalled()
     expect(wrapper.findComponent(AwdReviewWorkspace).exists()).toBe(true)
     expect(wrapper.text()).toContain('春季 AWD 联训')
 

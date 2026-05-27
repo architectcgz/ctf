@@ -1,13 +1,18 @@
 import { computed, ref, type ComputedRef } from 'vue'
 
 import { downloadReport } from '@/api/assessment'
+import {
+  exportPlatformAWDReviewArchive,
+  exportPlatformAWDReviewReport,
+} from '@/api/admin'
 import { ApiError } from '@/api/request'
 import {
   exportTeacherAWDReviewArchive,
   exportTeacherAWDReviewReport,
-} from '@/api/teaching'
+} from '@/api/teacher'
 import type { ReportExportData } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 
 type ExportKind = 'archive' | 'report'
@@ -26,6 +31,7 @@ interface UseAwdReviewExportFlowOptions {
 
 export function useAwdReviewExportFlow(options: UseAwdReviewExportFlowOptions) {
   const { contestId, selectedRoundNumber, canExportReport, startPolling, stopPolling } = options
+  const authStore = useAuthStore()
   const toast = useToast()
 
   const exporting = ref<ExportKind | null>(null)
@@ -100,10 +106,18 @@ export function useAwdReviewExportFlow(options: UseAwdReviewExportFlowOptions) {
     exporting.value = kind
     try {
       const payload = buildExportPayload()
+      const exportArchiveRequest =
+        authStore.user?.role === 'admin'
+          ? exportPlatformAWDReviewArchive
+          : exportTeacherAWDReviewArchive
+      const exportReportRequest =
+        authStore.user?.role === 'admin'
+          ? exportPlatformAWDReviewReport
+          : exportTeacherAWDReviewReport
       const result =
         kind === 'archive'
-          ? await exportTeacherAWDReviewArchive(contestId.value, payload)
-          : await exportTeacherAWDReviewReport(contestId.value, payload)
+          ? await exportArchiveRequest(contestId.value, payload)
+          : await exportReportRequest(contestId.value, payload)
 
       if (result.status === 'ready') {
         pendingReportId.value = null

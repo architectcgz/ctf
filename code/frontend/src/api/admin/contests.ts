@@ -163,6 +163,13 @@ export interface AdminAWDTrafficEventsParams {
   page_size?: number
 }
 
+export {
+  listTeacherAWDReviews as listPlatformAWDReviews,
+  getTeacherAWDReview as getPlatformAWDReview,
+  exportTeacherAWDReviewArchive as exportPlatformAWDReviewArchive,
+  exportTeacherAWDReviewReport as exportPlatformAWDReviewReport,
+} from '../teaching/awd-reviews'
+
 interface RawContestItem {
   id: number
   title: string

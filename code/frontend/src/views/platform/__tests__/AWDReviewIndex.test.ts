@@ -10,7 +10,11 @@ import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
 
-const teachingApiMocks = vi.hoisted(() => ({
+const adminApiMocks = vi.hoisted(() => ({
+  listPlatformAWDReviews: vi.fn(),
+}))
+
+const teacherApiMocks = vi.hoisted(() => ({
   listTeacherAWDReviews: vi.fn(),
 }))
 
@@ -22,7 +26,8 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/teaching', () => teachingApiMocks)
+vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/teacher', () => teacherApiMocks)
 
 const combinedSource = [
   platformAwdReviewIndexSource,
@@ -36,8 +41,9 @@ describe('PlatformAWDReviewIndex', () => {
     setActivePinia(createPinia())
     useAuthStore().user = { id: 'admin-1', role: 'admin' } as never
     pushMock.mockReset()
-    teachingApiMocks.listTeacherAWDReviews.mockReset()
-    teachingApiMocks.listTeacherAWDReviews.mockImplementation(async (params) => {
+    adminApiMocks.listPlatformAWDReviews.mockReset()
+    teacherApiMocks.listTeacherAWDReviews.mockReset()
+    adminApiMocks.listPlatformAWDReviews.mockImplementation(async (params) => {
       const contests = [
         {
           id: 'contest-1',
@@ -116,13 +122,14 @@ describe('PlatformAWDReviewIndex', () => {
     const searchInput = wrapper.get('input[placeholder="搜索赛事标题"]')
     await searchInput.setValue('期末')
 
-    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
+    expect(adminApiMocks.listPlatformAWDReviews).toHaveBeenCalledTimes(1)
+    expect(teacherApiMocks.listTeacherAWDReviews).not.toHaveBeenCalled()
 
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(2)
-    expect(teachingApiMocks.listTeacherAWDReviews).toHaveBeenLastCalledWith(
+    expect(adminApiMocks.listPlatformAWDReviews).toHaveBeenCalledTimes(2)
+    expect(adminApiMocks.listPlatformAWDReviews).toHaveBeenLastCalledWith(
       {
         status: undefined,
         keyword: '期末',
