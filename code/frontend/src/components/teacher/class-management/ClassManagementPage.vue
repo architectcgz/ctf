@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { ArrowRight, FolderKanban, Users } from 'lucide-vue-next'
 
-import type { TeacherClassItem } from '@/api/contracts'
+import type { ClassDirectoryItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
@@ -22,7 +22,7 @@ interface ClassDirectoryTableRow {
 type ClassStatusFilter = ClassDirectoryTableRow['status'] | ''
 
 const props = defineProps<{
-  classes: TeacherClassItem[]
+  classes: ClassDirectoryItem[]
   total: number
   page: number
   pageSize: number

@@ -8,11 +8,11 @@ import {
   getClassStudents,
 } from '@/api/teacher'
 import type {
+  ClassDirectoryItem,
   MyProgressData,
   RecommendationItem,
   RecommendationWeakDimension,
   SkillProfileData,
-  TeacherClassItem,
   TeacherStudentItem,
 } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
@@ -21,7 +21,7 @@ import { getWeakDimensionLabels } from '@/utils/skillProfile'
 export function useWorkspace() {
   const authStore = useAuthStore()
 
-  const classes = ref<TeacherClassItem[]>([])
+  const classes = ref<ClassDirectoryItem[]>([])
   const students = ref<TeacherStudentItem[]>([])
   const selectedClassName = ref('')
   const selectedStudentId = ref('')

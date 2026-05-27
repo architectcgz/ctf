@@ -1,9 +1,9 @@
 import { request } from '../request'
 
 import type {
+  ClassDirectoryItem,
   PageResult,
   RecommendationItem,
-  TeacherClassItem,
   TeacherClassInsightQueryData,
   TeacherOverviewData,
   TeacherClassReviewData,
@@ -12,16 +12,16 @@ import type {
   TeacherStudentItem,
 } from '../contracts'
 
-export async function getClasses(): Promise<TeacherClassItem[]>
+export async function getClasses(): Promise<ClassDirectoryItem[]>
 export async function getClasses(params: {
   page?: number
   page_size?: number
-}): Promise<PageResult<TeacherClassItem>>
+}): Promise<PageResult<ClassDirectoryItem>>
 export async function getClasses(params?: {
   page?: number
   page_size?: number
-}): Promise<PageResult<TeacherClassItem> | TeacherClassItem[]> {
-  const payload = await request<PageResult<TeacherClassItem>>({
+}): Promise<PageResult<ClassDirectoryItem> | ClassDirectoryItem[]> {
+  const payload = await request<PageResult<ClassDirectoryItem>>({
     method: 'GET',
     url: '/teacher/classes',
     params: {

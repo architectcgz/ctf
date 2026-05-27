@@ -642,12 +642,12 @@ export type NotificationListData = PageResult<NotificationItem>
 `data`（缺少示例，需确认）：
 
 ```ts
-export interface TeacherClassItem {
+export interface ClassDirectoryItem {
   name: string
   student_count?: number
 }
 
-export type TeacherClassListData = TeacherClassItem[]
+export type ClassDirectoryListData = ClassDirectoryItem[]
 ```
 
 ### 6.2 GET `/api/v1/teacher/overview`

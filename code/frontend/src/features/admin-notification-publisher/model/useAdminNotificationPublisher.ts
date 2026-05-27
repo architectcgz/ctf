@@ -8,7 +8,7 @@ import type {
   AdminNotificationPublishPayload,
   AdminNotificationPublishResult,
   AdminUserListItem,
-  TeacherClassItem,
+  ClassDirectoryItem,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
 import type { UserRole } from '@/utils/constants'
@@ -37,7 +37,7 @@ export function useAdminNotificationPublisher() {
   const loadingUsers = ref(false)
   const submitting = ref(false)
 
-  const classOptions = ref<TeacherClassItem[]>([])
+  const classOptions = ref<ClassDirectoryItem[]>([])
   const userOptions = ref<AdminUserListItem[]>([])
   const userKeyword = ref('')
   let latestUserSearchRequestID = 0

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Search, Trash2 } from 'lucide-vue-next'
 
-import type { TeacherClassItem, TeacherInstanceItem } from '@/api/contracts'
+import type { ClassDirectoryItem, TeacherInstanceItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 
 defineProps<{
-  classes: TeacherClassItem[]
+  classes: ClassDirectoryItem[]
   instances: TeacherInstanceItem[]
   className: string
   keyword: string

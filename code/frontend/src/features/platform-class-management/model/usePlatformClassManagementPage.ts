@@ -1,14 +1,14 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { TeacherClassItem } from '@/api/contracts'
+import type { ClassDirectoryItem } from '@/api/contracts'
 import { getClasses } from '@/api/admin'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 
 export function usePlatformClassManagementPage() {
   const router = useRouter()
-  const list = ref<TeacherClassItem[]>([])
+  const list = ref<ClassDirectoryItem[]>([])
   const total = ref(0)
   const page = ref(1)
   const pageSize = ref(DEFAULT_PAGE_SIZE)

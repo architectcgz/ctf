@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { TeacherClassItem, TeacherInstanceItem } from '@/api/contracts'
+import type { ClassDirectoryItem, TeacherInstanceItem } from '@/api/contracts'
 
 import TeacherInstanceDirectorySection from './TeacherInstanceDirectorySection.vue'
 import TeacherInstanceHeroPanel from './TeacherInstanceHeroPanel.vue'
 
 defineProps<{
-  classes: TeacherClassItem[]
+  classes: ClassDirectoryItem[]
   instances: TeacherInstanceItem[]
   className: string
   keyword: string

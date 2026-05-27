@@ -237,7 +237,7 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).not.toContain('teacher-student-chip')
     expect(studentAnalysisPageSource).not.toContain('teacher-eyebrow-row')
     expect(studentAnalysisPageSource).toContain('StudentAnalysisOverviewHeroPanel')
-    expect(studentAnalysisPageSource).not.toContain('classes: TeacherClassItem[]')
+    expect(studentAnalysisPageSource).not.toContain('classes: ClassDirectoryItem[]')
     expect(studentAnalysisPageSource).not.toContain('students: TeacherStudentItem[]')
     expect(studentAnalysisPageSource).not.toContain('selectedClassName: string')
     expect(studentAnalysisPageSource).not.toContain('selectedStudentId: string')

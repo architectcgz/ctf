@@ -1,7 +1,7 @@
 import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 
 import { destroyTeacherInstance, getClasses, getTeacherInstances } from '@/api/teacher'
-import type { TeacherClassItem, TeacherInstanceItem } from '@/api/contracts'
+import type { ClassDirectoryItem, TeacherInstanceItem } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from '@/composables/useToast'
@@ -18,7 +18,7 @@ export function useInstances() {
   const authStore = useAuthStore()
   const toast = useToast()
 
-  const classes = ref<TeacherClassItem[]>([])
+  const classes = ref<ClassDirectoryItem[]>([])
   const instances = ref<TeacherInstanceItem[]>([])
   const page = ref(1)
   const pageSize = ref(DEFAULT_PAGE_SIZE)

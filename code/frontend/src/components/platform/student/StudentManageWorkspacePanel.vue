@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TeacherClassItem } from '@/api/contracts'
+import type { ClassDirectoryItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
@@ -17,7 +17,7 @@ interface StudentManageTableRow {
 }
 
 defineProps<{
-  classes: TeacherClassItem[]
+  classes: ClassDirectoryItem[]
   loading: boolean
   loadingClasses: boolean
   error: string | null

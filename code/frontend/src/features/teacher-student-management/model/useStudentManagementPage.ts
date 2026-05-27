@@ -2,7 +2,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { getClasses, getStudentsDirectory } from '@/api/teacher'
-import type { TeacherClassItem } from '@/api/contracts'
+import type { ClassDirectoryItem } from '@/api/contracts'
 import { useStudentDirectoryQuery, useStudentFilters } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -15,7 +15,7 @@ export function useStudentManagementPage() {
   const router = useRouter()
   const authStore = useAuthStore()
 
-  const classes = ref<TeacherClassItem[]>([])
+  const classes = ref<ClassDirectoryItem[]>([])
   const loadingClasses = ref(false)
   const pageError = ref<string | null>(null)
   const page = ref(1)

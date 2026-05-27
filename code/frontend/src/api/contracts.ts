@@ -875,7 +875,7 @@ export interface AdminNotificationPublishResult {
   recipient_count: number
 }
 
-export interface TeacherClassItem {
+export interface ClassDirectoryItem {
   name: string
   student_count?: number
 }

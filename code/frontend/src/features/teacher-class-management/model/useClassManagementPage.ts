@@ -2,7 +2,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { getClasses } from '@/api/teacher'
-import type { TeacherClassItem } from '@/api/contracts'
+import type { ClassDirectoryItem } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
@@ -10,7 +10,7 @@ export function useClassManagementPage() {
   const router = useRouter()
   const authStore = useAuthStore()
 
-  const classes = ref<TeacherClassItem[]>([])
+  const classes = ref<ClassDirectoryItem[]>([])
   const total = ref(0)
   const page = ref(1)
   const pageSize = ref(DEFAULT_PAGE_SIZE)

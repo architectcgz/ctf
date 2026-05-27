@@ -2,14 +2,14 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { getClasses, getStudentsDirectory } from '@/api/admin'
-import type { TeacherClassItem } from '@/api/contracts'
+import type { ClassDirectoryItem } from '@/api/contracts'
 import { useStudentDirectoryQuery } from '@/features/student-directory'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 
 export function usePlatformStudentManagementPage() {
   const router = useRouter()
-  const classes = ref<TeacherClassItem[]>([])
+  const classes = ref<ClassDirectoryItem[]>([])
   const loadingClasses = ref(false)
   const pageError = ref<string | null>(null)
   const page = ref(1)
