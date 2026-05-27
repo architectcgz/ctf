@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
-import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
+import trainingTimelineSource from '@/components/training/TrainingTimelinePanel.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
 import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
@@ -61,7 +61,7 @@ describe('student and user surface alignment', () => {
       'class="workspace-panel-header category-header"'
     )
     expect(studentDifficultySource).toContain('class="workspace-panel-header difficulty-header"')
-    expect(studentTimelineSource).toContain('class="workspace-panel-header timeline-header"')
+    expect(trainingTimelineSource).toContain('class="workspace-panel-header timeline-header"')
     expect(studentOverviewSource).toContain('class="workspace-panel-divider"')
     expect(studentRecommendationSource).toContain('class="workspace-panel-divider"')
     expect(studentCategoryProgressSource).toContain('class="workspace-panel-divider"')
@@ -120,11 +120,11 @@ describe('student and user surface alignment', () => {
     expect(studentDifficultySource).not.toContain('rgba(226, 232, 240, 0.72)')
     expect(studentDifficultySource).not.toContain('bg-[rgba(226,232,240,0.65)]')
 
-    expect(studentTimelineSource).toContain('journal-soft-surface')
-    expect(studentTimelineSource).toMatch(
+    expect(trainingTimelineSource).toContain('journal-soft-surface')
+    expect(trainingTimelineSource).toMatch(
       /\.stat-icon\s*\{[\s\S]*border:\s*1px solid var\(--journal-soft-border\);/s
     )
-    expect(studentTimelineSource).not.toContain('rgba(226, 232, 240, 0.72)')
+    expect(trainingTimelineSource).not.toContain('rgba(226, 232, 240, 0.72)')
 
     expect(journalSoftSurfacesSource).toMatch(
       /\.journal-soft-surface \.journal-btn-outline\s*\{[\s\S]*border:\s*1px solid var\(--journal-control-border\);/s
@@ -150,24 +150,24 @@ describe('student and user surface alignment', () => {
   })
 
   it('student timeline 概况卡片应显式采用统一 metric-panel 样式栈', () => {
-    expect(studentTimelineSource).toContain(
+    expect(trainingTimelineSource).toContain(
       'class="workspace-panel-header__summary timeline-metric-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
-    expect(studentTimelineSource).toContain(
+    expect(trainingTimelineSource).toContain(
       'class="timeline-metric-card progress-card metric-panel-card"'
     )
-    expect(studentTimelineSource).toContain(
+    expect(trainingTimelineSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
     )
-    expect(studentTimelineSource).toContain(
+    expect(trainingTimelineSource).toContain(
       'class="journal-note-value progress-card-value metric-panel-value"'
     )
-    expect(studentTimelineSource).toContain(
+    expect(trainingTimelineSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
-    expect(studentTimelineSource).toContain('<component :is="metric.icon" class="h-4 w-4" />')
-    expect(studentTimelineSource).not.toContain('teacher-surface-section')
-    expect(studentTimelineSource).toMatch(
+    expect(trainingTimelineSource).toContain('<component :is="metric.icon" class="h-4 w-4" />')
+    expect(trainingTimelineSource).not.toContain('teacher-surface-section')
+    expect(trainingTimelineSource).toMatch(
       /\.timeline-metric-grid\.metric-panel-default-surface\s*\{[\s\S]*--metric-panel-background:\s*radial-gradient\(/s
     )
   })

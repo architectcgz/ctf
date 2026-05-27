@@ -4,9 +4,12 @@ import { Activity, FileText, Server, Target } from 'lucide-vue-next'
 
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import type { TimelineEvent } from '@/api/contracts'
+import {
+  timelineSummary,
+  timelineTypeLabel,
+  timelineTypeTone,
+} from '@/components/dashboard/student/utils'
 import { formatTime } from '@/utils/format'
-
-import { timelineSummary, timelineTypeLabel, timelineTypeTone } from './utils'
 
 const props = withDefaults(
   defineProps<{

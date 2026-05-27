@@ -5,7 +5,7 @@ import categoryProgressSource from '../../features/student-dashboard/ui/StudentC
 import difficultyPageSource from '../../features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import overviewPageSource from '../../components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import recommendationPageSource from '../../features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
-import timelinePageSource from '../../components/dashboard/student/StudentTimelinePage.vue?raw'
+import trainingTimelineSource from '../../components/training/TrainingTimelinePanel.vue?raw'
 import dashboardViewSource from '../dashboard/DashboardView.vue?raw'
 import notificationListSource from '../notifications/NotificationList.vue?raw'
 import securitySettingsSource from '../profile/SecuritySettings.vue?raw'
@@ -48,7 +48,7 @@ describe('member-facing page surfaces', () => {
       recommendationPageSource,
       categoryProgressSource,
       difficultyPageSource,
-      timelinePageSource,
+      trainingTimelineSource,
       overviewPageSource,
     ]
 

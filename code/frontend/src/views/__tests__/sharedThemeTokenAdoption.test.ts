@@ -18,7 +18,7 @@ import studentLegacyOverviewSource from '@/features/student-dashboard/ui/Student
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
-import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
+import trainingTimelineSource from '@/components/training/TrainingTimelinePanel.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import notificationDrawerBodySource from '@/components/layout/notification-drawer/NotificationDrawerBody.vue?raw'
@@ -283,7 +283,7 @@ describe('shared theme token adoption', () => {
       "hard: '#f97316'",
       "insane: '#ef4444'",
     ])
-    expectNoHardcodedThemeTokens(studentTimelineSource, 'StudentTimelinePage', [
+    expectNoHardcodedThemeTokens(trainingTimelineSource, 'TrainingTimelinePanel', [
       'color: #10b981;',
       'color: #f59e0b;',
       'background: #22c55e;',

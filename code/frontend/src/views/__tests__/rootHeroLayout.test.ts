@@ -16,7 +16,7 @@ import categoryProgressSource from '../../features/student-dashboard/ui/StudentC
 import difficultyPageSource from '../../features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import overviewPageSource from '../../components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import recommendationPageSource from '../../features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
-import timelinePageSource from '../../components/dashboard/student/StudentTimelinePage.vue?raw'
+import trainingTimelineSource from '../../components/training/TrainingTimelinePanel.vue?raw'
 
 describe('full-bleed hero roots', () => {
   it('uses a section root that carries the hero background', () => {
@@ -35,7 +35,7 @@ describe('full-bleed hero roots', () => {
       userProfileWorkspaceSource,
       recommendationPageSource,
       categoryProgressSource,
-      timelinePageSource,
+      trainingTimelineSource,
       difficultyPageSource,
       overviewPageSource,
     ]

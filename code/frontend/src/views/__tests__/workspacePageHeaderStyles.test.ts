@@ -38,7 +38,7 @@ import topologyChallengeWorkspaceHeaderSource from '@/components/platform/topolo
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
-import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
+import trainingTimelineSource from '@/components/training/TrainingTimelinePanel.vue?raw'
 import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import teacherDashboardSourceBase from '@/features/teacher-dashboard/ui/TeacherDashboardPage.vue?raw'
 import teacherDashboardPortraitPanelSource from '@/components/teacher/dashboard/TeacherDashboardPortraitPanel.vue?raw'
@@ -284,7 +284,7 @@ describe('workspace page header styles', () => {
         exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
       },
       {
-        source: studentTimelineSource,
+        source: trainingTimelineSource,
         include: /<h1 class="journal-page-title workspace-page-title[\s\S]*?>/,
         exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
       },
@@ -460,7 +460,7 @@ describe('workspace page header styles', () => {
           '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
       },
       {
-        source: studentTimelineSource,
+        source: trainingTimelineSource,
         include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
         exclude:
           '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',

@@ -6,7 +6,7 @@ import studentCategoryProgressSource from '@/features/student-dashboard/ui/Stude
 import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import studentOverviewEditorialSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
-import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
+import trainingTimelineSource from '@/components/training/TrainingTimelinePanel.vue?raw'
 
 const journalSoftSurfacesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-soft-surfaces.css`,
@@ -34,7 +34,7 @@ describe('student journal soft shared styles', () => {
       studentDifficultySource,
       studentOverviewEditorialSource,
       studentRecommendationSource,
-      studentTimelineSource,
+      trainingTimelineSource,
     ]) {
       expect(source).toContain('journal-soft-surface')
       expect(source).not.toMatch(/^\.journal-eyebrow\s*\{/m)
@@ -46,7 +46,7 @@ describe('student journal soft shared styles', () => {
       studentCategoryProgressSource,
       studentDifficultySource,
       studentRecommendationSource,
-      studentTimelineSource,
+      trainingTimelineSource,
     ]) {
       expect(source).not.toMatch(/^\.journal-note\s*\{/m)
       expect(source).not.toMatch(/^\.journal-note-label\s*\{/m)
@@ -64,7 +64,7 @@ describe('student journal soft shared styles', () => {
       studentCategoryProgressSource,
       studentDifficultySource,
       studentRecommendationSource,
-      studentTimelineSource,
+      trainingTimelineSource,
     ]) {
       expect(source).toContain('journal-soft-empty-state')
       expect(source).not.toContain(
@@ -105,7 +105,7 @@ describe('student journal soft shared styles', () => {
       studentDifficultySource,
       studentOverviewEditorialSource,
       studentRecommendationSource,
-      studentTimelineSource,
+      trainingTimelineSource,
     ]) {
       expect(source).not.toContain('text-[var(--journal-ink)]')
     }
@@ -114,7 +114,7 @@ describe('student journal soft shared styles', () => {
       studentCategoryProgressSource,
       studentOverviewEditorialSource,
       studentRecommendationSource,
-      studentTimelineSource,
+      trainingTimelineSource,
     ]) {
       expect(source).not.toContain('text-[var(--journal-muted)]')
     }

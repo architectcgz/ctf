@@ -2,7 +2,7 @@ import StudentCategoryProgressPage from './StudentCategoryProgressPage.vue'
 import StudentDifficultyPage from './StudentDifficultyPage.vue'
 import StudentOverviewPage from './StudentOverviewPage.vue'
 import StudentRecommendationPage from './StudentRecommendationPage.vue'
-import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
+import TrainingTimelinePanel from '@/components/training/TrainingTimelinePanel.vue'
 
 import type { DashboardPanelKey } from '../model'
 
@@ -10,7 +10,7 @@ export const dashboardPanelComponents: Record<DashboardPanelKey, unknown> = {
   overview: StudentOverviewPage,
   recommendation: StudentRecommendationPage,
   category: StudentCategoryProgressPage,
-  timeline: StudentTimelinePage,
+  timeline: TrainingTimelinePanel,
   difficulty: StudentDifficultyPage,
 }
 

@@ -73,9 +73,7 @@ export const commonForbiddenImportAllowlist = new Set([
   'entities/challenge/ui/ChallengeProfileSummaryStrip.vue -> @/api/contracts',
 ])
 
-export const legacyComponentPageAllowlist = new Set([
-  'components/dashboard/student/StudentTimelinePage.vue',
-])
+export const legacyComponentPageAllowlist = new Set<string>([])
 
 export const featureRouterImportAllowlist = new Set([
   'features/audit-log/model/useAuditLogPage.ts -> vue-router',

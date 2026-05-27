@@ -16,7 +16,7 @@ import type {
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
-import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
+import TrainingTimelinePanel from '@/components/training/TrainingTimelinePanel.vue'
 import StudentInsightAttackSessionsSection from '@/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue'
 import StudentInsightManualReviewSection from '@/components/teacher/student-insight/StudentInsightManualReviewSection.vue'
 import StudentInsightOverviewSection from '@/components/teacher/student-insight/StudentInsightOverviewSection.vue'
@@ -146,7 +146,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
           @update-review-workspace-filters="emit('updateReviewWorkspaceFilters', $event)"
         />
 
-        <StudentTimelinePage v-if="isSectionVisible('timeline')" :timeline="timeline" />
+        <TrainingTimelinePanel v-if="isSectionVisible('timeline')" :timeline="timeline" />
       </template>
     </template>
   </div>
