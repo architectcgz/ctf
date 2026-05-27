@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ClassStudentsPage } from '@/components/class-management'
-import { ClassReportExportDialog } from '@/components/teacher/reports'
+import { ClassReportExportDialog } from '@/components/reports'
 import { useClassStudentsPage } from '@/features/class-students-workspace'
 
 const {

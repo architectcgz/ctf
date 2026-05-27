@@ -336,7 +336,7 @@ describe('TeacherClassStudents', () => {
       "import { ClassStudentsPage } from '@/components/class-management'"
     )
     expect(teacherClassStudentsSource).toContain(
-      "import { ClassReportExportDialog } from '@/components/teacher/reports'"
+      "import { ClassReportExportDialog } from '@/components/reports'"
     )
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
     expect(teacherClassStudentsSource).not.toContain(

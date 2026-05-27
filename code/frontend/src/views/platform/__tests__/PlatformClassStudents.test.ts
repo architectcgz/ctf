@@ -130,7 +130,7 @@ describe('PlatformClassStudents', () => {
       "import { useClassStudentsPage } from '@/features/class-students-workspace'"
     )
     expect(platformClassStudentsSource).toContain(
-      "import { ClassReportExportDialog } from '@/components/teacher/reports'"
+      "import { ClassReportExportDialog } from '@/components/reports'"
     )
     expect(platformClassStudentsSource).not.toContain("from '@/views/teacher/TeacherClassStudents.vue'")
     expect(platformClassStudentsSource).not.toContain("from '@/api/teacher'")

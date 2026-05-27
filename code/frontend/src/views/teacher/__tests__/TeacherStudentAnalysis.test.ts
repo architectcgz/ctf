@@ -199,7 +199,7 @@ describe('TeacherStudentAnalysis', () => {
       "import { StudentAnalysisPage } from '@/components/class-management'"
     )
     expect(teacherStudentAnalysisSource).toContain(
-      "import { ClassReportExportDialog } from '@/components/teacher/reports'"
+      "import { ClassReportExportDialog } from '@/components/reports'"
     )
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassManagementRouteName')
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassStudentsRouteName')

@@ -227,7 +227,7 @@ describe('TeacherStudentManagement', () => {
       "import { useStudentManagementPage } from '@/features/teacher-student-management'"
     )
     expect(teacherStudentManagementSource).toContain(
-      "import { ClassReportExportDialog } from '@/components/teacher/reports'"
+      "import { ClassReportExportDialog } from '@/components/reports'"
     )
     expect(teacherStudentManagementSource).not.toContain("from '@/api/teacher'")
     expect(teacherStudentManagementSource).not.toContain('ClassReportExportDialog.vue')
