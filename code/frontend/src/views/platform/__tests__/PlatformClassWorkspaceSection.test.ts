@@ -26,6 +26,7 @@ describe('PlatformClassWorkspaceSection route owner', () => {
     expect(platformViewSource).toContain(
       "import { useClassWorkspaceSection } from '@/features/class-workspace-redirect'"
     )
+    expect(platformViewSource).toContain("workspaceRouteName: 'PlatformClassStudents'")
     expect(platformViewSource).not.toContain("from '@/views/teacher/TeacherClassWorkspaceSection.vue'")
     expect(platformViewSource).not.toContain("from '@/api/teacher'")
   })

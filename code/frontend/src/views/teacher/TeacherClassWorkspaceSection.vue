@@ -2,7 +2,9 @@
 import { useClassWorkspaceSection } from '@/features/class-workspace-redirect'
 import TeacherClassStudents from '@/views/teacher/TeacherClassStudents.vue'
 
-useClassWorkspaceSection()
+useClassWorkspaceSection({
+  workspaceRouteName: 'TeacherClassStudents',
+})
 </script>
 
 <template>

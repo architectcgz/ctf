@@ -1,61 +1,44 @@
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const targetByRouteName = {
-  TeacherClassTrend: {
-    panel: 'trend',
-    routeName: 'TeacherClassStudents',
-  },
-  TeacherClassReview: {
-    panel: 'review',
-    routeName: 'TeacherClassStudents',
-  },
-  TeacherClassInsights: {
-    panel: 'insight',
-    routeName: 'TeacherClassStudents',
-  },
-  TeacherClassIntervention: {
-    panel: 'action',
-    routeName: 'TeacherClassStudents',
-  },
-  PlatformClassTrend: {
-    panel: 'trend',
-    routeName: 'PlatformClassStudents',
-  },
-  PlatformClassReview: {
-    panel: 'review',
-    routeName: 'PlatformClassStudents',
-  },
-  PlatformClassInsights: {
-    panel: 'insight',
-    routeName: 'PlatformClassStudents',
-  },
-  PlatformClassIntervention: {
-    panel: 'action',
-    routeName: 'PlatformClassStudents',
-  },
+const panelByRouteName = {
+  TeacherClassTrend: 'trend',
+  TeacherClassReview: 'review',
+  TeacherClassInsights: 'insight',
+  TeacherClassIntervention: 'action',
+  PlatformClassTrend: 'trend',
+  PlatformClassReview: 'review',
+  PlatformClassInsights: 'insight',
+  PlatformClassIntervention: 'action',
 } as const
 
-export function useClassWorkspaceSection() {
+type ClassWorkspaceCanonicalRouteName = 'TeacherClassStudents' | 'PlatformClassStudents'
+
+interface UseClassWorkspaceSectionOptions {
+  workspaceRouteName: ClassWorkspaceCanonicalRouteName
+}
+
+export function useClassWorkspaceSection(options: UseClassWorkspaceSectionOptions) {
+  const { workspaceRouteName } = options
   const route = useRoute()
   const router = useRouter()
 
-  const target = computed(() => {
-    const routeName = route.name as keyof typeof targetByRouteName | undefined
-    return routeName ? targetByRouteName[routeName] : null
+  const panel = computed(() => {
+    const routeName = route.name as keyof typeof panelByRouteName | undefined
+    return routeName ? panelByRouteName[routeName] : null
   })
 
   async function redirectToCanonicalWorkspace(): Promise<void> {
-    if (!target.value) return
+    if (!panel.value) return
 
     await router.replace({
-      name: target.value.routeName,
+      name: workspaceRouteName,
       params: {
         className: route.params.className,
       },
       query: {
         ...route.query,
-        panel: target.value.panel,
+        panel: panel.value,
       },
     })
   }
