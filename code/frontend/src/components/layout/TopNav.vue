@@ -5,62 +5,16 @@
       :class="{ 'topnav-inner-shell--sidebar-collapsed': sidebarCollapsed && !isMobile }"
     >
       <div class="topnav-main flex min-w-0 items-center gap-3 md:gap-4">
-        <button
+        <TopNavMobileToggle
           v-if="isMobile"
-          type="button"
-          class="topnav-icon-button"
-          :aria-label="sidebarCollapsed ? '展开导航' : '折叠导航'"
-          @click="isMobile ? $emit('toggleSidebar') : $emit('toggleCollapse')"
-        >
-          <Menu class="h-4 w-4 md:hidden" />
-          <PanelLeftClose
-            v-if="!sidebarCollapsed"
-            class="hidden h-4 w-4 md:block"
-          />
-          <PanelLeftOpen
-            v-else
-            class="hidden h-4 w-4 md:block"
-          />
-        </button>
+          :sidebar-collapsed="sidebarCollapsed"
+          @toggle="emit('toggleSidebar')"
+        />
 
-        <div class="topnav-breadcrumb flex min-w-0 items-center text-sm font-bold">
-          <button
-            type="button"
-            class="topnav-breadcrumb__link topnav-breadcrumb__root whitespace-nowrap"
-            @click="navigateBreadcrumb(backofficeBreadcrumb.workspacePath)"
-          >
-            Workspace
-          </button>
-          <span class="topnav-breadcrumb__divider mx-2">/</span>
-          <button
-            type="button"
-            class="topnav-breadcrumb__link whitespace-nowrap"
-            @click="navigateBreadcrumb(backofficeBreadcrumb.modulePath)"
-          >
-            {{ backofficeBreadcrumb.moduleLabel }}
-          </button>
-          <span class="topnav-breadcrumb__divider mx-2">/</span>
-          <button
-            type="button"
-            class="topnav-breadcrumb__link truncate"
-            :class="{ 'topnav-breadcrumb__current font-black': !backofficeBreadcrumb.detailLabel }"
-            :aria-current="backofficeBreadcrumb.detailLabel ? undefined : 'page'"
-            @click="navigateBreadcrumb(backofficeBreadcrumb.secondaryPath)"
-          >
-            {{ backofficeBreadcrumb.secondaryLabel }}
-          </button>
-          <template v-if="backofficeBreadcrumb.detailLabel">
-            <span class="topnav-breadcrumb__divider mx-2">/</span>
-            <button
-              type="button"
-              class="topnav-breadcrumb__link topnav-breadcrumb__current truncate font-black"
-              aria-current="page"
-              @click="navigateBreadcrumb(backofficeBreadcrumb.detailPath)"
-            >
-              {{ backofficeBreadcrumb.detailLabel }}
-            </button>
-          </template>
-        </div>
+        <TopNavBreadcrumbs
+          :breadcrumb="backofficeBreadcrumb"
+          @navigate="navigateBreadcrumb"
+        />
       </div>
 
       <div class="topnav-actions flex shrink-0 items-center gap-3">
@@ -84,87 +38,35 @@
             />
           </button>
 
-          <div
-            ref="brandPickerRef"
-            class="topnav-brand-picker"
-          >
-            <button
-              type="button"
-              class="topnav-icon-button"
-              aria-label="切换主题色"
-              aria-controls="topnav-brand-picker-panel"
-              :aria-expanded="brandPickerOpen ? 'true' : 'false'"
-              :title="`当前主题色：${currentBrandLabel}`"
-              @click="toggleBrandPicker"
-            >
-              <Palette class="h-4 w-4" />
-            </button>
-
-            <div
-              v-if="brandPickerOpen"
-              id="topnav-brand-picker-panel"
-              class="topnav-brand-picker-panel"
-              role="menu"
-              aria-label="主题色选择"
-            >
-              <button
-                v-for="option in availableBrands"
-                :key="option.value"
-                type="button"
-                class="topnav-brand-dot"
-                :class="{ 'topnav-brand-dot--active': option.value === brand }"
-                role="menuitemradio"
-                :aria-checked="option.value === brand"
-                :aria-label="`切换到${option.label}主题`"
-                :data-brand="option.value"
-                :title="option.label"
-                @click="selectBrand(option.value)"
-              >
-                <span class="sr-only">{{ option.label }}</span>
-              </button>
-            </div>
+          <div ref="brandPickerRef" class="topnav-brand-picker">
+            <TopNavBrandPicker
+              :open="brandPickerOpen"
+              :brand="brand"
+              :current-brand-label="currentBrandLabel"
+              :available-brands="availableBrands"
+              @toggle="toggleBrandPicker"
+              @select="selectBrand"
+            />
           </div>
 
           <NotificationDrawer :realtime-status="notificationStatus">
             <template #trigger="{ open, toggle, hasUnread, unreadBadgeLabel, setTriggerRef }">
-              <button
-                :ref="setTriggerRef"
-                type="button"
-                class="topnav-icon-button topnav-notification-button"
-                :class="{ 'topnav-notification-button--active': open }"
-                aria-label="打开通知中心"
-                aria-haspopup="dialog"
-                :aria-expanded="open ? 'true' : 'false'"
-                @click="toggle"
-              >
-                <Bell class="h-4 w-4" />
-                <span
-                  v-if="hasUnread"
-                  class="topnav-notification-badge"
-                >
-                  {{ unreadBadgeLabel }}
-                </span>
-              </button>
+              <TopNavNotificationTrigger
+                :open="open"
+                :has-unread="hasUnread"
+                :unread-badge-label="unreadBadgeLabel"
+                :set-trigger-ref="setTriggerRef"
+                @toggle="toggle()"
+              />
             </template>
           </NotificationDrawer>
         </div>
 
-        <div
-          class="topnav-user-card flex items-center gap-3 px-2.5 py-1.5 sm:px-3"
-          :class="{ 'topnav-user-card--admin': true }"
-        >
-          <div class="topnav-user-mark">
-            {{ userInitial }}
-          </div>
-          <div class="topnav-user-identity hidden min-w-0 sm:block">
-            <div class="topnav-user-name truncate text-sm font-semibold text-text-primary">
-              {{ userDisplayName }}
-            </div>
-            <div class="topnav-user-role truncate">
-              {{ roleCaption }}
-            </div>
-          </div>
-        </div>
+        <TopNavUserCard
+          :user-initial="userInitial"
+          :user-display-name="userDisplayName"
+          :role-caption="roleCaption"
+        />
 
         <button
           type="button"
@@ -182,9 +84,14 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Bell, LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
+import { LogOut, Moon, Sun } from 'lucide-vue-next'
 
 import NotificationDrawer from '@/components/layout/NotificationDrawer.vue'
+import TopNavBrandPicker from '@/components/layout/topnav/TopNavBrandPicker.vue'
+import TopNavBreadcrumbs from '@/components/layout/topnav/TopNavBreadcrumbs.vue'
+import TopNavMobileToggle from '@/components/layout/topnav/TopNavMobileToggle.vue'
+import TopNavNotificationTrigger from '@/components/layout/topnav/TopNavNotificationTrigger.vue'
+import TopNavUserCard from '@/components/layout/topnav/TopNavUserCard.vue'
 import { useAuth } from '@/features/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
@@ -198,7 +105,7 @@ defineProps<{
   notificationStatus: WebSocketStatus
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   toggleSidebar: []
   toggleCollapse: []
 }>()
@@ -360,7 +267,7 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
+<style>
 .topnav-shell {
   --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
@@ -597,14 +504,6 @@ onUnmounted(() => {
   color: var(--topnav-text);
 }
 
-.font-bold {
-  font-weight: 700;
-}
-
-.font-black {
-  font-weight: 900;
-}
-
 .topnav-title-block {
   min-width: 0;
 }
@@ -687,7 +586,7 @@ onUnmounted(() => {
   color: color-mix(in srgb, var(--color-danger) 96%, var(--topnav-text));
 }
 
-:global([data-theme='light']) .topnav-shell {
+[data-theme='light'] .topnav-shell {
   --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base));
   --topnav-surface-subtle: color-mix(
     in srgb,
@@ -717,7 +616,7 @@ onUnmounted(() => {
     );
 }
 
-:global([data-theme='dark']) .topnav-shell--admin {
+[data-theme='dark'] .topnav-shell--admin {
   --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-base));
   --topnav-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base));
@@ -728,9 +627,9 @@ onUnmounted(() => {
   --topnav-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
 }
 
-:global([data-theme='dark']) .topnav-tool-cluster--admin,
-:global([data-theme='dark']) .topnav-user-card--admin,
-:global([data-theme='dark']) .topnav-brand-picker-panel {
+[data-theme='dark'] .topnav-tool-cluster--admin,
+[data-theme='dark'] .topnav-user-card--admin,
+[data-theme='dark'] .topnav-brand-picker-panel {
   box-shadow:
     0 18px 38px color-mix(in srgb, var(--color-shadow-strong) 34%, transparent),
     0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 56%, transparent);

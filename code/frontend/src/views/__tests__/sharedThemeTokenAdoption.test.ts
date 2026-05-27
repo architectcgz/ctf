@@ -33,7 +33,12 @@ import sidebarNavTreeSource from '@/components/layout/sidebar/SidebarNavTree.vue
 import sidebarPanelHeaderSource from '@/components/layout/sidebar/SidebarPanelHeader.vue?raw'
 import sidebarSourceBase from '@/components/layout/Sidebar.vue?raw'
 import sidebarWorkspaceLabelSource from '@/components/layout/sidebar/SidebarWorkspaceLabel.vue?raw'
-import topNavSource from '@/components/layout/TopNav.vue?raw'
+import topNavBrandPickerSource from '@/components/layout/topnav/TopNavBrandPicker.vue?raw'
+import topNavBreadcrumbsSource from '@/components/layout/topnav/TopNavBreadcrumbs.vue?raw'
+import topNavMobileToggleSource from '@/components/layout/topnav/TopNavMobileToggle.vue?raw'
+import topNavNotificationTriggerSource from '@/components/layout/topnav/TopNavNotificationTrigger.vue?raw'
+import topNavSourceBase from '@/components/layout/TopNav.vue?raw'
+import topNavUserCardSource from '@/components/layout/topnav/TopNavUserCard.vue?raw'
 import cLightActionPopoverSource from '@/components/common/modal-templates/CLightActionPopover.vue?raw'
 import cFocusedInputDialogSource from '@/components/common/modal-templates/CFocusedInputDialog.vue?raw'
 import cImmersiveConfirmDialogSource from '@/components/common/modal-templates/CImmersiveConfirmDialog.vue?raw'
@@ -109,6 +114,14 @@ const sidebarSource = [
   sidebarPanelHeaderSource,
   sidebarWorkspaceLabelSource,
   sidebarNavTreeSource,
+].join('\n')
+const topNavSource = [
+  topNavSourceBase,
+  topNavMobileToggleSource,
+  topNavBreadcrumbsSource,
+  topNavBrandPickerSource,
+  topNavNotificationTriggerSource,
+  topNavUserCardSource,
 ].join('\n')
 const userGovernanceSource = [
   userGovernancePageSource,

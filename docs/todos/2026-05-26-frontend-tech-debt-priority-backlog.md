@@ -76,6 +76,7 @@
   - 风险：中高。属于跨页面共享基础设施，任何切分都需要更谨慎的回归验证。
   - `2026-05-27` 进展：`NotificationDrawer.vue` 已按 layout owner 收口为“trigger / shell / filter state / dismiss owner”，并把 header、summary、tabs、body、footer 稳定视图区块拆到 `components/layout/notification-drawer/*`；相关 raw-source 与主题 token 护栏已切到聚合源码。当前这条 P2 的剩余重点已收敛到 `Sidebar.vue`、`TopNav.vue` 和通知抽屉更深层的行为清理。
   - `2026-05-27` Sidebar 进展：`Sidebar.vue` 已按“route/navigation owner 留父组件，移动壳 / 桌面壳 / nav tree 拆子组件”的方式收口到 `components/layout/sidebar/*`；raw-source 与主题 token 护栏已同步改为聚合源码。当前这条 P2 的剩余重点进一步收敛到 `TopNav.vue` 和 sidebar/nav 更深层的展示判定清理。
+  - `2026-05-27` TopNav 进展：`TopNav.vue` 已按“route/theme/notification/logout owner 留父组件，移动 toggle / breadcrumbs / brand picker / notification trigger / user card 拆子组件”的方式收口到 `components/layout/topnav/*`；相关 raw-source 与主题 token 护栏已同步改为聚合源码。当前这条 P2 在大组件壳体层面的剩余重点开始转向通知抽屉、侧栏和 topnav 更深层的行为 owner 清理，而不是继续停留在单文件模板堆叠。
 
 - [ ] P2：把请求层错误导航 owner 继续收回页面 / feature owner，避免 `request.ts` 直接替页面决定可恢复错误的跳转
   - 依据：架构 review 仍把这条列为当前 P1/P2 级结构问题。

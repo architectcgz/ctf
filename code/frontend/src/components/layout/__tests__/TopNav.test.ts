@@ -4,9 +4,23 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 
 import TopNav from '../TopNav.vue'
-import topNavSource from '../TopNav.vue?raw'
+import topNavBrandPickerSource from '../topnav/TopNavBrandPicker.vue?raw'
+import topNavBreadcrumbsSource from '../topnav/TopNavBreadcrumbs.vue?raw'
+import topNavMobileToggleSource from '../topnav/TopNavMobileToggle.vue?raw'
+import topNavNotificationTriggerSource from '../topnav/TopNavNotificationTrigger.vue?raw'
+import topNavSourceBase from '../TopNav.vue?raw'
+import topNavUserCardSource from '../topnav/TopNavUserCard.vue?raw'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
+
+const topNavSource = [
+  topNavSourceBase,
+  topNavMobileToggleSource,
+  topNavBreadcrumbsSource,
+  topNavBrandPickerSource,
+  topNavNotificationTriggerSource,
+  topNavUserCardSource,
+].join('\n')
 
 const authMocks = vi.hoisted(() => ({
   logout: vi.fn(),
@@ -368,23 +382,23 @@ describe('TopNav', () => {
   it('tokenizes backoffice shell surfaces so dark theme does not fall back to white chrome', () => {
     expect(topNavSource).toContain('--topnav-surface')
     expect(topNavSource).toContain('--topnav-line')
-    expect(topNavSource).toContain(":global([data-theme='dark']) .topnav-shell--admin")
-    expect(topNavSource).toContain(":global([data-theme='dark']) .topnav-tool-cluster--admin")
+    expect(topNavSource).toContain("[data-theme='dark'] .topnav-shell--admin")
+    expect(topNavSource).toContain("[data-theme='dark'] .topnav-tool-cluster--admin")
   })
 
   it('renders backoffice breadcrumbs from sidebar module and submenu instead of the removed horizontal subnav', () => {
     expect(topNavSource).toContain('useWorkspaceShellNavigation')
     expect(topNavSource).toContain('backofficeBreadcrumb')
-    expect(topNavSource).toContain('backofficeBreadcrumb.workspacePath')
-    expect(topNavSource).toContain('backofficeBreadcrumb.moduleLabel')
-    expect(topNavSource).toContain('backofficeBreadcrumb.modulePath')
-    expect(topNavSource).toContain('backofficeBreadcrumb.secondaryLabel')
-    expect(topNavSource).toContain('backofficeBreadcrumb.secondaryPath')
-    expect(topNavSource).toContain('backofficeBreadcrumb.detailLabel')
-    expect(topNavSource).toContain('backofficeBreadcrumb.detailPath')
+    expect(topNavSource).toContain('breadcrumb.workspacePath')
+    expect(topNavSource).toContain('breadcrumb.moduleLabel')
+    expect(topNavSource).toContain('breadcrumb.modulePath')
+    expect(topNavSource).toContain('breadcrumb.secondaryLabel')
+    expect(topNavSource).toContain('breadcrumb.secondaryPath')
+    expect(topNavSource).toContain('breadcrumb.detailLabel')
+    expect(topNavSource).toContain('breadcrumb.detailPath')
     expect(topNavSource).toContain('useBackofficeBreadcrumbDetail')
     expect(topNavSource).toContain('class="topnav-breadcrumb__link')
-    expect(topNavSource).toContain('@click="navigateBreadcrumb(')
+    expect(topNavSource).toContain('@click="$emit(\'navigate\',')
     expect(topNavSource).not.toContain('Backoffice Workspace / {{ pageTitle }}')
   })
 
