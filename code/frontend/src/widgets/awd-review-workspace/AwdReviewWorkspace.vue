@@ -13,10 +13,12 @@ import type {
   TeacherAWDReviewTeamItemData,
   TeacherAWDReviewTrafficItemData,
 } from '@/api/contracts'
-import AwdReviewRoundSelector from '@/components/teacher/awd-review/AwdReviewRoundSelector.vue'
-import AwdReviewAnalysisSection from '@/components/teacher/awd-review/AwdReviewAnalysisSection.vue'
-import AwdReviewEvidenceGrid from '@/components/teacher/awd-review/AwdReviewEvidenceGrid.vue'
-import AwdReviewTeamDrawer from '@/components/teacher/awd-review/AwdReviewTeamDrawer.vue'
+import {
+  AwdReviewAnalysisSection,
+  AwdReviewEvidenceGrid,
+  AwdReviewRoundSelector,
+  AwdReviewTeamDrawer,
+} from '@/components/awd-review'
 import AwdReviewStatusChip from './AwdReviewStatusChip.vue'
 import AwdReviewSurfaceShell from './AwdReviewSurfaceShell.vue'
 import AwdReviewWorkspaceActions from './AwdReviewWorkspaceActions.vue'

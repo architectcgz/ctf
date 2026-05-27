@@ -25,6 +25,10 @@ describe('Teacher AWD review workspace extraction', () => {
     expect(awdReviewWorkspaceSource).toContain('<AwdReviewWorkspaceActions')
     expect(awdReviewWorkspaceSource).toContain('<AwdReviewWorkspaceState')
     expect(awdReviewWorkspaceSource).toContain('buildTeacherAwdReviewSummaryItems')
+    expect(awdReviewWorkspaceSource).toContain("from '@/components/awd-review'")
+    expect(awdReviewWorkspaceSource).not.toContain(
+      "from '@/components/teacher/awd-review/AwdReviewRoundSelector.vue'"
+    )
     expect(awdReviewWorkspaceActionsSource).toContain('data-testid="awd-review-export-archive"')
     expect(awdReviewWorkspaceActionsSource).toContain('data-testid="awd-review-export-report"')
     expect(awdReviewStatusChipSource).toContain('class="awd-review-status-chip"')
