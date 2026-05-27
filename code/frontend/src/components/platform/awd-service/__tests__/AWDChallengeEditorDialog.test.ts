@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
 import { describe, expect, it } from 'vitest'
 
-import AWDChallengeEditorDialog from '../AWDChallengeEditorDialog.vue'
+import AWDChallengeEditorDialog from '@/features/platform-awd-challenges/ui/AWDChallengeEditorDialog.vue'
 
 const SlideOverDrawerStub = defineComponent({
   props: {

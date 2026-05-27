@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import AWDChallengeEditorDialog from '@/components/platform/awd-service/AWDChallengeEditorDialog.vue'
 import {
+  AWDChallengeEditorDialog,
   AWDChallengeLibraryPage,
   useAwdChallengeLibraryPage,
 } from '@/features/platform-awd-challenges'

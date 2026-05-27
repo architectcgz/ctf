@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
-import awdChallengeEditorDialogSource from '@/components/platform/awd-service/AWDChallengeEditorDialog.vue?raw'
+import awdChallengeEditorDialogSource from '@/features/platform-awd-challenges/ui/AWDChallengeEditorDialog.vue?raw'
 import awdAttackLogDialogSource from '@/components/platform/contest/AWDAttackLogDialog.vue?raw'
 import awdServiceCheckDialogSource from '@/components/platform/contest/AWDServiceCheckDialog.vue?raw'
 import awdRoundCreateDialogSource from '@/components/platform/contest/AWDRoundCreateDialog.vue?raw'

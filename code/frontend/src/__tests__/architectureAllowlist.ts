@@ -15,8 +15,6 @@ export const componentFeatureImportAllowlist = new Set([
   'components/layout/NotificationDrawer.vue -> @/features/notifications',
   'components/layout/TopNav.vue -> @/features/auth',
   'components/notifications/AdminNotificationPublishDrawer.vue -> @/features/admin-notification-publisher',
-  'components/platform/awd-service/AWDChallengeEditorDialog.vue -> @/features/platform-awd-challenges',
-  'components/platform/awd-service/AwdChallengeImportSection.vue -> @/features/platform-awd-challenges',
   'components/platform/challenge/AdminChallengeProfilePanel.vue -> @/features/platform-challenge-detail',
   'components/platform/challenge/AdminChallengeWorkspaceTabs.vue -> @/features/platform-challenge-detail',
   'components/platform/challenge/ChallengeManageDirectoryPanel.vue -> @/features/platform-challenges',

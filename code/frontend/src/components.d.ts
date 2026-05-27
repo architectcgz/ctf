@@ -31,7 +31,7 @@ declare module 'vue' {
     AWDAttackLogDialog: typeof import('./components/platform/contest/AWDAttackLogDialog.vue')['default']
     AWDAttackLogPanel: typeof import('./components/platform/contest/AWDAttackLogPanel.vue')['default']
     AWDChallengeConfigPanel: typeof import('./components/platform/contest/AWDChallengeConfigPanel.vue')['default']
-    AWDChallengeEditorDialog: typeof import('./components/platform/awd-service/AWDChallengeEditorDialog.vue')['default']
+    AWDChallengeEditorDialog: typeof import('./features/platform-awd-challenges/ui/AWDChallengeEditorDialog.vue')['default']
     AWDChallengeLibraryPage: typeof import('./features/platform-awd-challenges/ui/AWDChallengeLibraryPage.vue')['default']
     AWDContestSelectorField: typeof import('./components/platform/contest/AWDContestSelectorField.vue')['default']
     AWDDefenseConnectionPanel: typeof import('./components/contests/awd/AWDDefenseConnectionPanel.vue')['default']

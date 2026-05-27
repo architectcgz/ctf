@@ -29,7 +29,7 @@ import teacherInstanceManagementPageSourceBase from '@/features/teacher-instance
 import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
 import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import teacherAwdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceHeader.vue?raw'
-import awdChallengeImportSectionSource from '@/components/platform/awd-service/AwdChallengeImportSection.vue?raw'
+import awdChallengeImportSectionSource from '@/features/platform-awd-challenges/ui/AwdChallengeImportSection.vue?raw'
 import awdChallengeLibraryPageSourceBase from '@/features/platform-awd-challenges/ui/AWDChallengeLibraryPage.vue?raw'
 import awdChallengeLibrarySectionSource from '@/components/platform/awd-service/AwdChallengeLibrarySection.vue?raw'
 import awdChallengeWorkspaceHeaderSource from '@/components/platform/awd-service/AwdChallengeWorkspaceHeader.vue?raw'

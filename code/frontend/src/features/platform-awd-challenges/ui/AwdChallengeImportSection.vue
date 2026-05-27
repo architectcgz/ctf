@@ -2,7 +2,7 @@
 import type { AdminAwdChallengeImportPreview } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import ChallengePackageImportEntry from '@/components/platform/challenge/ChallengePackageImportEntry.vue'
-import type { PlatformAwdChallengeImportUploadResult } from '@/features/platform-awd-challenges'
+import type { PlatformAwdChallengeImportUploadResult } from '../model'
 
 const props = defineProps<{
   uploading: boolean
@@ -106,7 +106,10 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
         />
       </div>
 
-      <div v-if="uploadResults.length > 0" class="awd-challenge-import__uploads">
+      <div
+        v-if="uploadResults.length > 0"
+        class="awd-challenge-import__uploads"
+      >
         <article
           v-for="item in uploadResults"
           :key="item.id"
@@ -131,7 +134,12 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
         <span class="awd-challenge-import__queue-count">共 {{ importQueue.length }} 个待确认包</span>
       </header>
 
-      <div v-if="queueLoading" class="awd-challenge-import__state">正在同步导入队列...</div>
+      <div
+        v-if="queueLoading"
+        class="awd-challenge-import__state"
+      >
+        正在同步导入队列...
+      </div>
       <AppEmpty
         v-else-if="importQueue.length === 0"
         class="awd-challenge-import__empty"
@@ -139,7 +147,10 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
         title="队列为空"
         description="上传题目包后，待确认的项将出现在此处。"
       />
-      <div v-else class="workspace-directory-list awd-challenge-import__queue">
+      <div
+        v-else
+        class="workspace-directory-list awd-challenge-import__queue"
+      >
         <article
           v-for="item in importQueue"
           :key="item.id"
