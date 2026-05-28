@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowRight, Database, Globe2, Server, ShieldAlert, X } from 'lucide-vue-next'
 
-import type { AWDTeamServiceData, ScoreboardRow } from '@/api/contracts'
+import type { ScoreboardRow } from '@/api/contracts'
 import {
   formatProjectorScore,
   formatProjectorTime,
@@ -11,9 +11,12 @@ import type {
   ContestProjectorAttackEdge,
   ContestProjectorAttackTeamPanel,
 } from '../model/projectorTypes'
+import {
+  getProjectorServiceDisplayName,
+  getProjectorServiceIconName,
+  type AttackMapDetailPanel,
+} from '../model'
 import './ContestProjectorAttackDetailOverlay.css'
-
-type AttackMapDetailPanel = 'teams' | 'ranking' | 'attacks'
 
 defineProps<{
   activePanel: AttackMapDetailPanel | null
@@ -31,30 +34,6 @@ function getDetailPanelTitle(panel: AttackMapDetailPanel | null): string {
   if (panel === 'ranking') return '完整团队排名'
   if (panel === 'attacks') return '攻击统计'
   return ''
-}
-
-function getServiceDisplayName(service: AWDTeamServiceData): string {
-  return (
-    service.service_name?.trim() ||
-    service.awd_challenge_title?.trim() ||
-    (service.service_id ? `服务 ${service.service_id}` : `题目 ${service.awd_challenge_id}`)
-  )
-}
-
-function getServiceIconName(
-  service: AWDTeamServiceData
-): 'database' | 'globe' | 'server' | 'shield' {
-  const label = getServiceDisplayName(service).toLowerCase()
-  if (
-    label.includes('drive') ||
-    label.includes('盘') ||
-    label.includes('data') ||
-    label.includes('db')
-  )
-    return 'database'
-  if (label.includes('web') || label.includes('ticket') || label.includes('工单')) return 'globe'
-  if (service.service_status === 'compromised' || service.service_status === 'down') return 'shield'
-  return 'server'
 }
 </script>
 
@@ -97,11 +76,11 @@ function getServiceIconName(
                 :key="service.id"
                 :class="`team-detail-service--${service.service_status}`"
               >
-                <Database v-if="getServiceIconName(service) === 'database'" />
-                <Globe2 v-else-if="getServiceIconName(service) === 'globe'" />
-                <ShieldAlert v-else-if="getServiceIconName(service) === 'shield'" />
+                <Database v-if="getProjectorServiceIconName(service) === 'database'" />
+                <Globe2 v-else-if="getProjectorServiceIconName(service) === 'globe'" />
+                <ShieldAlert v-else-if="getProjectorServiceIconName(service) === 'shield'" />
                 <Server v-else />
-                <strong>{{ getServiceDisplayName(service) }}</strong>
+                <strong>{{ getProjectorServiceDisplayName(service) }}</strong>
                 <small>{{ getServiceStatusLabel(service.service_status) }}</small>
               </span>
             </div>
