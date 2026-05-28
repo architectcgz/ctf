@@ -21,6 +21,7 @@ const {
   handleCreate,
   handleDelete,
   hasActiveFilters,
+  isDeleting,
   keyword,
   list,
   loading,
@@ -75,6 +76,7 @@ const {
         :get-status-label="getStatusLabel"
         :get-status-style="getStatusStyle"
         :format-date-time="formatDateTime"
+        :is-deleting="isDeleting"
         @update:keyword="keyword = $event"
         @update:status-filter="statusFilter = $event"
         @select-sort="setSort"

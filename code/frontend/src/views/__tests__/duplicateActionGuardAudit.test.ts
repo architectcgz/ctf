@@ -24,5 +24,6 @@ describe('duplicate action guard audit', () => {
     expect(contestChallengeEditorDialogSource).toContain('if (props.saving) {')
     expect(platformUserFormDialogSource).toContain('if (props.saving) {')
     expect(imageManageMutationsSource).toContain('if (creating.value) {')
+    expect(imageManageMutationsSource).toContain('if (deletingIds.has(id)) {')
   })
 })

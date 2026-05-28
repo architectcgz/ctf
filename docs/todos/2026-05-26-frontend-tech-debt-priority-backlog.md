@@ -127,10 +127,11 @@
   - 风险：中高。会触及全局请求策略和多个页面的失败路径，需要先定义“哪些状态码是全局错误，哪些必须局部恢复”。
   - `2026-05-28` 结项说明：`request.ts` 已改为只负责 transport error normalization，不再直接 `logout + redirect`；HTTP `401`、WebSocket auth close、Vue runtime error、router runtime error 统一收口到 `runtime/globalErrorRuntime.ts`。可恢复的 `429 / 5xx / 网络错误 / 业务错误` 继续只返回 `ApiError`，由页面 / feature owner 自己决定 toast、inline fallback、retry 和 draft 保留。
 
-- [ ] P2：补图片管理页重复提交 owner 收口
+- [x] P2：补图片管理页重复提交 owner 收口
   - 依据：前端主索引仍单独提到 `duplicateActionGuardAudit.test.ts` 暴露的图片管理页重复提交缺口。
   - 收益：问题集中、收益直接，能补掉一个实际交互安全缺口。
   - 风险：低到中。范围小，但需要确认按钮态、请求态和错误回退的 owner 不再重复分散。
+  - `2026-05-28` 结项说明：`useImageManageMutations.ts` 现在同时持有创建与删除动作的本地 in-flight guard；删除镜像会在确认弹窗阶段和实际删除请求阶段短路同一条记录的重复点击，`ImageDirectoryPanel.vue` 也开始显式消费删除中的状态并禁用对应按钮。`duplicateActionGuardAudit.test.ts` 与 `ImageManage.test.ts` 已补齐这条交互护栏。
 
 - [ ] P3：确定前端性能监控接入方案
   - 依据：主索引里 `TD-3` 仍为未完成项。

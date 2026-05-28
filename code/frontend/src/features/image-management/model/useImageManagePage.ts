@@ -56,7 +56,7 @@ export function useImageManagePage() {
     refresh,
   })
   const statusSummary = computed(() => buildImageStatusSummary(list.value))
-  const { creating, handleCreate, handleDelete } = useImageManageMutations({
+  const { creating, handleCreate, handleDelete, isDeleting } = useImageManageMutations({
     form,
     dialogVisible,
     refresh,
@@ -119,6 +119,7 @@ export function useImageManagePage() {
     refresh,
     refreshHint,
     resetFilters,
+    isDeleting,
     selectedSortLabel: computed(() => sortConfig.value.label),
     setSort,
     sortOptions,

@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { reactive, ref, type Ref } from 'vue'
 
 import { createImage, deleteImage } from '@/api/admin/authoring'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
@@ -17,6 +17,7 @@ export function useImageManageMutations(options: UseImageManageMutationsOptions)
   const toast = useToast()
 
   const creating = ref(false)
+  const deletingIds = reactive(new Set<string>())
 
   async function handleCreate() {
     if (creating.value) {
@@ -43,26 +44,38 @@ export function useImageManageMutations(options: UseImageManageMutationsOptions)
   }
 
   async function handleDelete(id: string) {
-    const confirmed = await confirmDestructiveAction({
-      message: '确定要删除此镜像吗？',
-    })
-    if (!confirmed) {
+    if (deletingIds.has(id)) {
       return
     }
 
+    deletingIds.add(id)
     try {
+      const confirmed = await confirmDestructiveAction({
+        message: '确定要删除此镜像吗？',
+      })
+      if (!confirmed) {
+        return
+      }
+
       await deleteImage(id)
       toast.success('删除成功')
       await refresh()
     } catch (error) {
       const message = error instanceof Error && error.message.trim() ? error.message : '删除失败'
       toast.error(message)
+    } finally {
+      deletingIds.delete(id)
     }
+  }
+
+  function isDeleting(id: string): boolean {
+    return deletingIds.has(id)
   }
 
   return {
     creating,
     handleCreate,
     handleDelete,
+    isDeleting,
   }
 }

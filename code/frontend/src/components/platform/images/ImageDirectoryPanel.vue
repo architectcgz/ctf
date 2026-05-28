@@ -21,6 +21,7 @@ interface Props {
   getStatusLabel: (status: ImageStatus) => string
   getStatusStyle: (status: ImageStatus) => Record<string, string>
   formatDateTime: (value: string) => string
+  isDeleting: (id: string) => boolean
 }
 
 defineProps<Props>()
@@ -241,10 +242,11 @@ function getImageSourceLabel(value?: AdminImageListItem['source_type']): string 
               </button>
               <button
                 type="button"
+                :disabled="isDeleting((row as AdminImageListItem).id)"
                 class="ui-btn ui-btn--sm ui-btn--danger"
                 @click="emit('delete-image', (row as AdminImageListItem).id)"
               >
-                删除
+                {{ isDeleting((row as AdminImageListItem).id) ? '删除中...' : '删除' }}
               </button>
             </div>
           </template>

@@ -73,6 +73,16 @@ function mountPage() {
   })
 }
 
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
+}
+
 const combinedSource = [
   imageManageSource,
   imageDirectoryPanelSource,
@@ -404,5 +414,39 @@ describe('ImageManage', () => {
 
     expect(toastMocks.error).toHaveBeenCalledWith('镜像仍被题目使用，暂时不能删除')
     expect(toastMocks.error).not.toHaveBeenCalledWith('删除失败')
+  })
+
+  it('删除镜像时应在本地 owner 上短路重复点击，并禁用对应行按钮', async () => {
+    const deleteDeferred = createDeferred<void>()
+    deleteImageMock.mockReturnValue(deleteDeferred.promise)
+
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const deleteButton = wrapper
+      .findAll('.image-row__actions button')
+      .find((button) => button.text().trim() === '删除')
+    expect(deleteButton).toBeTruthy()
+
+    await deleteButton!.trigger('click')
+    await deleteButton!.trigger('click')
+    await flushPromises()
+
+    expect(confirmMock).toHaveBeenCalledTimes(1)
+    expect(deleteImageMock).toHaveBeenCalledTimes(1)
+    expect(deleteButton!.attributes('disabled')).toBeDefined()
+    expect(deleteButton!.text()).toContain('删除中...')
+
+    deleteDeferred.resolve()
+    await flushPromises()
+
+    const reenabledDeleteButton = wrapper
+      .findAll('.image-row__actions button')
+      .find((button) => button.text().trim() === '删除')
+
+    expect(toastMocks.success).toHaveBeenCalledWith('删除成功')
+    expect(reenabledDeleteButton).toBeTruthy()
+    expect(reenabledDeleteButton!.attributes('disabled')).toBeUndefined()
+    expect(reenabledDeleteButton!.text()).toContain('删除')
   })
 })
