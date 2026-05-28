@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Search, Trash2 } from 'lucide-vue-next'
 
-import type { ClassDirectoryItem, TeacherInstanceItem } from '@/api/contracts'
+import type { ClassDirectoryItem, InstanceDirectoryItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 
 defineProps<{
   classes: ClassDirectoryItem[]
-  instances: TeacherInstanceItem[]
+  instances: InstanceDirectoryItem[]
   className: string
   keyword: string
   studentNo: string
@@ -224,28 +224,28 @@ function statusMeta(status: string): { label: string; chipClass: string } {
             <div class="teacher-instance-user-cell">
               <span class="teacher-instance-user-meta">
                 {{
-                  (row as TeacherInstanceItem).student_no ||
-                  `@${(row as TeacherInstanceItem).student_username}`
+                  (row as InstanceDirectoryItem).student_no ||
+                  `@${(row as InstanceDirectoryItem).student_username}`
                 }}
               </span>
               <span
                 class="teacher-instance-primary-text"
                 :title="
-                  (row as TeacherInstanceItem).student_name ||
-                  (row as TeacherInstanceItem).student_username
+                  (row as InstanceDirectoryItem).student_name ||
+                  (row as InstanceDirectoryItem).student_username
                 "
               >
                 {{
-                  (row as TeacherInstanceItem).student_name ||
-                  (row as TeacherInstanceItem).student_username
+                  (row as InstanceDirectoryItem).student_name ||
+                  (row as InstanceDirectoryItem).student_username
                 }}
               </span>
               <span
                 class="teacher-instance-secondary-text"
-                :title="`@${(row as TeacherInstanceItem).student_username} · ${(row as TeacherInstanceItem).class_name}`"
+                :title="`@${(row as InstanceDirectoryItem).student_username} · ${(row as InstanceDirectoryItem).class_name}`"
               >
-                @{{ (row as TeacherInstanceItem).student_username }} ·
-                {{ (row as TeacherInstanceItem).class_name }}
+                @{{ (row as InstanceDirectoryItem).student_username }} ·
+                {{ (row as InstanceDirectoryItem).class_name }}
               </span>
             </div>
           </template>
@@ -253,9 +253,9 @@ function statusMeta(status: string): { label: string; chipClass: string } {
           <template #cell-challenge="{ row }">
             <span
               class="teacher-instance-primary-text"
-              :title="(row as TeacherInstanceItem).challenge_title"
+              :title="(row as InstanceDirectoryItem).challenge_title"
             >
-              {{ (row as TeacherInstanceItem).challenge_title }}
+              {{ (row as InstanceDirectoryItem).challenge_title }}
             </span>
           </template>
 
@@ -264,44 +264,44 @@ function statusMeta(status: string): { label: string; chipClass: string } {
               class="instance-status-pill"
               :class="[
                 'workspace-directory-status-pill',
-                statusMeta((row as TeacherInstanceItem).status).chipClass,
+                statusMeta((row as InstanceDirectoryItem).status).chipClass,
               ]"
             >
-              {{ statusMeta((row as TeacherInstanceItem).status).label }}
+              {{ statusMeta((row as InstanceDirectoryItem).status).label }}
             </span>
           </template>
 
           <template #cell-created_at="{ row }">
             <span class="teacher-instance-muted-text">
-              {{ formatDateTime((row as TeacherInstanceItem).created_at) }}
+              {{ formatDateTime((row as InstanceDirectoryItem).created_at) }}
             </span>
           </template>
 
           <template #cell-expires_at="{ row }">
             <span class="teacher-instance-muted-text">
-              {{ formatDateTime((row as TeacherInstanceItem).expires_at) }}
+              {{ formatDateTime((row as InstanceDirectoryItem).expires_at) }}
             </span>
           </template>
 
           <template #cell-extends="{ row }">
             <span class="teacher-instance-muted-text">
-              {{ (row as TeacherInstanceItem).extend_count }} /
-              {{ (row as TeacherInstanceItem).max_extends }}
+              {{ (row as InstanceDirectoryItem).extend_count }} /
+              {{ (row as InstanceDirectoryItem).max_extends }}
             </span>
           </template>
 
           <template #cell-remaining="{ row }">
             <span class="teacher-instance-muted-text">
-              {{ formatRemainingTime((row as TeacherInstanceItem).remaining_time) }}
+              {{ formatRemainingTime((row as InstanceDirectoryItem).remaining_time) }}
             </span>
           </template>
 
           <template #cell-access_url="{ row }">
             <span
               class="teacher-instance-url-text"
-              :title="(row as TeacherInstanceItem).access_url || '暂未分配访问地址'"
+              :title="(row as InstanceDirectoryItem).access_url || '暂未分配访问地址'"
             >
-              {{ (row as TeacherInstanceItem).access_url || '暂未分配访问地址' }}
+              {{ (row as InstanceDirectoryItem).access_url || '暂未分配访问地址' }}
             </span>
           </template>
 
@@ -310,12 +310,12 @@ function statusMeta(status: string): { label: string; chipClass: string } {
               <button
                 type="button"
                 class="ui-btn ui-btn--danger ui-btn--xs teacher-instance-danger-action"
-                :disabled="destroyingId === (row as TeacherInstanceItem).id"
-                :data-instance-id="(row as TeacherInstanceItem).id"
-                @click="emit('destroy', (row as TeacherInstanceItem).id)"
+                :disabled="destroyingId === (row as InstanceDirectoryItem).id"
+                :data-instance-id="(row as InstanceDirectoryItem).id"
+                @click="emit('destroy', (row as InstanceDirectoryItem).id)"
               >
                 <Trash2 class="h-3 w-3" />
-                {{ destroyingId === (row as TeacherInstanceItem).id ? '销毁中' : '销毁' }}
+                {{ destroyingId === (row as InstanceDirectoryItem).id ? '销毁中' : '销毁' }}
               </button>
             </div>
           </template>

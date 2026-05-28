@@ -459,11 +459,13 @@ describe('InstanceManagement', () => {
       'class="teacher-instance-list workspace-directory-list"'
     )
     expect(instanceManagementSource).toMatch(
-      /class="teacher-instance-primary-text"[\s\S]*:title="[\s\S]*\(row as TeacherInstanceItem\)\.student_name \|\|[\s\S]*\(row as TeacherInstanceItem\)\.student_username/s
+      /class="teacher-instance-primary-text"[\s\S]*:title="[\s\S]*\(row as InstanceDirectoryItem\)\.student_name \|\|[\s\S]*\(row as InstanceDirectoryItem\)\.student_username/s
     )
     expect(instanceManagementSource).toMatch(
-      /class="teacher-instance-primary-text"[\s\S]*:title="\((row as TeacherInstanceItem)\)\.challenge_title"/s
+      /class="teacher-instance-primary-text"[\s\S]*:title="\((row as InstanceDirectoryItem)\)\.challenge_title"/s
     )
+    expect(instanceManagementSource).toContain('InstanceDirectoryItem')
+    expect(instanceManagementSource).not.toContain('TeacherInstanceItem')
     expect(instanceManagementSource).toMatch(/class="teacher-instance-secondary-text"[\s\S]*:title="/s)
     expect(instanceManagementSource).toMatch(
       /\.teacher-instance-primary-text,\s*[\s\S]*\.teacher-instance-url-text\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s

@@ -5,6 +5,7 @@ import PlatformInstanceManagement from '../InstanceManage.vue'
 import adminInstanceManageSource from '../InstanceManage.vue?raw'
 import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
 import instanceManageWorkspacePanelSource from '@/components/platform/instance/InstanceManageWorkspacePanel.vue?raw'
+import platformInstanceManagementModelSource from '@/features/platform-instance-management/model/usePlatformInstanceManagementPage.ts?raw'
 
 const pushMock = vi.fn()
 
@@ -97,6 +98,8 @@ describe('PlatformInstanceManagement', () => {
     expect(adminInstanceManageSource).toContain(
       "usePlatformInstanceManagementPage } from '@/features/platform-instance-management'"
     )
+    expect(platformInstanceManagementModelSource).toContain('InstanceDirectoryItem')
+    expect(platformInstanceManagementModelSource).not.toContain('TeacherInstanceItem')
     expect(adminInstanceManageSource).not.toContain("from '@/api/teacher'")
     expect(adminInstanceManageSource).not.toContain("from '@/composables/useDestructiveConfirm'")
     expect(adminInstanceManageSource).not.toContain("from '@/api/admin'")

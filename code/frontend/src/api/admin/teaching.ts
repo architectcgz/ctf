@@ -5,4 +5,6 @@ export {
   getTeacherInstances as getPlatformInstances,
   destroyTeacherInstance as destroyPlatformInstance,
 } from '../teaching/instances'
-export type { TeacherInstanceStatusFilter as PlatformInstanceStatusFilter } from '../teaching/instances'
+export type {
+  InstanceDirectoryStatusFilter as PlatformInstanceStatusFilter,
+} from '../teaching/instances'

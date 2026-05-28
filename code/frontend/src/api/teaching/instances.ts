@@ -2,29 +2,30 @@ import { request } from '../request'
 
 import type {
   ReportExportData,
-  TeacherInstanceListSummaryData,
-  TeacherInstancePageData,
+  InstanceDirectorySummaryData,
+  InstanceDirectoryPageData,
   TeacherClassReportExportPayload,
-  TeacherInstanceItem,
+  InstanceDirectoryItem,
 } from '../contracts'
 
-export type TeacherInstanceStatusFilter = 'running' | 'creating' | 'expired' | 'failed' | 'inactive'
+export type InstanceDirectoryStatusFilter =
+  'running' | 'creating' | 'expired' | 'failed' | 'inactive'
 
 export async function getTeacherInstances(
   params?: {
     class_name?: string
     keyword?: string
     student_no?: string
-    status?: TeacherInstanceStatusFilter
+    status?: InstanceDirectoryStatusFilter
     page?: number
     page_size?: number
   },
   options?: {
     signal?: AbortSignal
   }
-): Promise<TeacherInstancePageData<TeacherInstanceItem>> {
+): Promise<InstanceDirectoryPageData<InstanceDirectoryItem>> {
   const payload = await request<
-    TeacherInstancePageData<{
+    InstanceDirectoryPageData<{
       id: string | number
       student_id: string | number
       student_name: string
@@ -57,7 +58,7 @@ export async function getTeacherInstances(
 
   return {
     ...payload,
-    summary: payload.summary as TeacherInstanceListSummaryData,
+    summary: payload.summary as InstanceDirectorySummaryData,
     list: payload.list.map((item) => ({
       ...item,
       id: String(item.id),

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import teacherAwdReviewApiSource from '@/api/teacher/awd-reviews.ts?raw'
 import teachingAwdReviewApiSource from '@/api/teaching/awd-reviews.ts?raw'
+import teacherInstanceApiSource from '@/api/teacher/instances.ts?raw'
+import teachingInstanceApiSource from '@/api/teaching/instances.ts?raw'
 
 const requestMock = vi.hoisted(() => vi.fn())
 
@@ -41,6 +43,19 @@ describe('teacher api contract', () => {
     expect(teachingAwdReviewApiSource).not.toContain('TeacherAWDReviewArchiveData')
     expect(teachingAwdReviewApiSource).not.toContain('TeacherAWDReviewTeamItemData')
     expect(teachingAwdReviewApiSource).not.toContain('TeacherAWDReviewContestPageData')
+  })
+
+  it('实例目录 shared contract 命名应保持中性 owner', () => {
+    expect(teacherInstanceApiSource).toContain('InstanceDirectoryStatusFilter')
+    expect(teacherInstanceApiSource).not.toContain('TeacherInstanceStatusFilter')
+    expect(teachingInstanceApiSource).toContain('InstanceDirectorySummaryData')
+    expect(teachingInstanceApiSource).toContain('InstanceDirectoryPageData')
+    expect(teachingInstanceApiSource).toContain('InstanceDirectoryItem')
+    expect(teachingInstanceApiSource).toContain('InstanceDirectoryStatusFilter')
+    expect(teachingInstanceApiSource).not.toContain('TeacherInstanceListSummaryData')
+    expect(teachingInstanceApiSource).not.toContain('TeacherInstancePageData')
+    expect(teachingInstanceApiSource).not.toContain('TeacherInstanceItem')
+    expect(teachingInstanceApiSource).not.toContain('TeacherInstanceStatusFilter')
   })
 
   it('不传分页参数时应继续返回班级数组', async () => {

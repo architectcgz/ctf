@@ -23,15 +23,15 @@ export interface PageResult<T> {
   page_size: number
 }
 
-export interface TeacherInstanceListSummaryData {
+export interface InstanceDirectorySummaryData {
   total_count: number
   running_count: number
   expiring_soon_count: number
   warning_count: number
 }
 
-export interface TeacherInstancePageData<T> extends PageResult<T> {
-  summary: TeacherInstanceListSummaryData
+export interface InstanceDirectoryPageData<T> extends PageResult<T> {
+  summary: InstanceDirectorySummaryData
 }
 
 export interface ContestListSummaryData {
@@ -1099,7 +1099,7 @@ export interface TeacherAttackSessionResponseData {
   sessions: TeacherAttackSessionData[]
 }
 
-export interface TeacherInstanceItem {
+export interface InstanceDirectoryItem {
   id: ID
   student_id: ID
   student_name: string

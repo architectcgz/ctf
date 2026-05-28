@@ -1,7 +1,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { TeacherInstanceItem } from '@/api/contracts'
+import type { InstanceDirectoryItem } from '@/api/contracts'
 import { destroyPlatformInstance, getPlatformInstances } from '@/api/admin'
 import { useAbortController } from '@/composables/useAbortController'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
@@ -25,7 +25,7 @@ type InstanceStatusFilter = 'running' | 'creating' | 'expired' | 'failed' | 'ina
 
 export function usePlatformInstanceManagementPage() {
   const router = useRouter()
-  const list = ref<TeacherInstanceItem[]>([])
+  const list = ref<InstanceDirectoryItem[]>([])
   const total = ref(0)
   const page = ref(1)
   const pageSize = ref(15)
@@ -107,7 +107,7 @@ export function usePlatformInstanceManagementPage() {
     }
   }
 
-  async function handleDestroyInstance(instance: TeacherInstanceItem): Promise<void> {
+  async function handleDestroyInstance(instance: InstanceDirectoryItem): Promise<void> {
     const confirmed = await confirmDestructiveAction({
       title: '强制销毁实例',
       message: `您确定要强制销毁实例 ${instance.id} 吗？此操作不可逆，用户当前的运行状态将丢失。`,
