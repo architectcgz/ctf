@@ -1,22 +1,22 @@
-import type { TeacherClassInsightQueryData } from '@/api/contracts'
+import type { ClassInsightQueryData } from '@/api/contracts'
 
 export interface ClassInsightWindowDraft {
   fromDate: string
   toDate: string
 }
 
-type TeacherClassInsightQueryValue =
+type ClassInsightQueryValue =
   | string
   | null
   | undefined
   | Array<string | null | undefined>
 
-interface TeacherClassInsightQueryInput {
-  from_date?: TeacherClassInsightQueryValue
-  to_date?: TeacherClassInsightQueryValue
+interface ClassInsightQueryInput {
+  from_date?: ClassInsightQueryValue
+  to_date?: ClassInsightQueryValue
 }
 
-function normalizeQueryValue(value: TeacherClassInsightQueryValue): string {
+function normalizeQueryValue(value: ClassInsightQueryValue): string {
   if (Array.isArray(value)) {
     return typeof value[0] === 'string' ? value[0].trim() : ''
   }
@@ -38,7 +38,7 @@ export function createClassInsightWindowDraft(input?: {
 }
 
 export function parseClassInsightWindowQuery(
-  query: TeacherClassInsightQueryInput
+  query: ClassInsightQueryInput
 ): ClassInsightWindowDraft {
   return createClassInsightWindowDraft({
     fromDate: normalizeQueryValue(query.from_date),
@@ -63,7 +63,7 @@ export function getClassInsightWindowError(
 
 export function buildClassInsightWindowQuery(
   window: ClassInsightWindowDraft
-): TeacherClassInsightQueryData | undefined {
+): ClassInsightQueryData | undefined {
   if (!hasClassInsightWindow(window)) {
     return undefined
   }

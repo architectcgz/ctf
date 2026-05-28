@@ -2,39 +2,19 @@ import { request } from '../request'
 
 import type {
   AdviceSeverity,
+  AttackSessionQuery,
   MyProgressData,
   RecommendationData,
   ReportExportData,
   ReviewArchiveData,
   SkillProfileData,
-  TeacherAttackSessionResponseData,
-  TeacherEvidenceData,
+  AttackSessionResponseData,
+  StudentEvidenceQuery,
+  StudentEvidenceData,
   TimelineEvent,
 } from '../contracts'
 import { normalizeSkillProfile, type RawSkillProfileResponse } from '@/utils/skillProfile'
 import { normalizeRecommendationData, type RawRecommendationResponse } from '@/utils/skillProfile'
-
-export interface AttackSessionQuery {
-  mode?: 'practice' | 'jeopardy' | 'awd'
-  challenge_id?: string
-  contest_id?: string
-  round_id?: string
-  result?: 'success' | 'failed' | 'in_progress' | 'unknown'
-  with_events?: boolean
-  limit?: number
-  offset?: number
-}
-
-export interface TeacherEvidenceQuery {
-  challenge_id?: string
-  contest_id?: string
-  round_id?: string
-  event_type?: string
-  from?: string
-  to?: string
-  limit?: number
-  offset?: number
-}
 
 interface RawTimelineItem {
   type: string
@@ -105,7 +85,7 @@ interface RawReviewArchiveResponse {
   }
 }
 
-interface RawTeacherEvidenceResponse {
+interface RawStudentEvidenceResponse {
   summary: {
     total_events: number
     proxy_request_count: number
@@ -123,13 +103,13 @@ interface RawTeacherEvidenceResponse {
   }>
 }
 
-interface RawTeacherAttackSessionResponse extends Omit<
-  TeacherAttackSessionResponseData,
+interface RawAttackSessionResponse extends Omit<
+  AttackSessionResponseData,
   'sessions'
 > {
   sessions: Array<
     Omit<
-      TeacherAttackSessionResponseData['sessions'][number],
+      AttackSessionResponseData['sessions'][number],
       | 'student_id'
       | 'team_id'
       | 'challenge_id'
@@ -148,7 +128,7 @@ interface RawTeacherAttackSessionResponse extends Omit<
       victim_team_id?: string | number
       events?: Array<
         Omit<
-          NonNullable<TeacherAttackSessionResponseData['sessions'][number]['events']>[number],
+          NonNullable<AttackSessionResponseData['sessions'][number]['events']>[number],
           'actor' | 'target'
         > & {
           actor: {
@@ -237,9 +217,9 @@ export async function getStudentTimeline(id: string): Promise<TimelineEvent[]> {
 
 export async function getStudentEvidence(
   id: string,
-  query: TeacherEvidenceQuery = {}
-): Promise<TeacherEvidenceData> {
-  const payload = await request<RawTeacherEvidenceResponse>({
+  query: StudentEvidenceQuery = {}
+): Promise<StudentEvidenceData> {
+  const payload = await request<RawStudentEvidenceResponse>({
     method: 'GET',
     url: `/teacher/students/${encodeURIComponent(id)}/evidence`,
     params: {
@@ -273,8 +253,8 @@ function optionalId(value: string | number | undefined): string | undefined {
 export async function getStudentAttackSessions(
   id: string,
   query: AttackSessionQuery = {}
-): Promise<TeacherAttackSessionResponseData> {
-  const payload = await request<RawTeacherAttackSessionResponse>({
+): Promise<AttackSessionResponseData> {
+  const payload = await request<RawAttackSessionResponse>({
     method: 'GET',
     url: `/teacher/students/${encodeURIComponent(id)}/attack-sessions`,
     params: {

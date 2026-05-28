@@ -2,7 +2,7 @@
 import { ArrowRight, Search } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-import type { TeacherStudentItem } from '@/api/contracts'
+import type { StudentDirectoryItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
@@ -21,7 +21,7 @@ interface ClassStudentDirectoryRow {
 }
 
 const props = defineProps<{
-  students: TeacherStudentItem[]
+  students: StudentDirectoryItem[]
   studentNoQuery: string
   loadingStudents: boolean
 }>()

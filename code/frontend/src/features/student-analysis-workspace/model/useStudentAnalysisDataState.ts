@@ -12,7 +12,7 @@ import type {
   RecommendationItem,
   RecommendationWeakDimension,
   SkillProfileData,
-  TeacherStudentItem,
+  StudentDirectoryItem,
   TimelineEvent,
 } from '@/api/contracts'
 import { getWeakDimensionLabels } from '@/utils/skillProfile'
@@ -25,7 +25,7 @@ interface UseStudentAnalysisDataStateOptions {
 export function useStudentAnalysisDataState(options: UseStudentAnalysisDataStateOptions) {
   const { classNameFromRoute, studentIdFromRoute } = options
 
-  const students = ref<TeacherStudentItem[]>([])
+  const students = ref<StudentDirectoryItem[]>([])
   const selectedClassName = ref('')
   const selectedStudentId = ref('')
   const loadingDetails = ref(false)

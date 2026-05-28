@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { TeacherClassTrendData } from '@/api/contracts'
+import type { ClassInsightTrendData } from '@/api/contracts'
 import LineChart from '@/components/charts/LineChart.vue'
 
 const props = defineProps<{
-  trend: TeacherClassTrendData | null
+  trend: ClassInsightTrendData | null
   title?: string
   subtitle?: string
   emptyDescription?: string

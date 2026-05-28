@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { ArrowRight, FolderKanban, Search, Users } from 'lucide-vue-next'
 
-import type { ClassDirectoryItem, TeacherStudentItem } from '@/api/contracts'
+import type { ClassDirectoryItem, StudentDirectoryItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
@@ -27,7 +27,7 @@ const props = defineProps<{
   selectedClassName: string
   searchQuery: string
   studentNoQuery: string
-  filteredStudents: TeacherStudentItem[]
+  filteredStudents: StudentDirectoryItem[]
   filteredTotal: number
   totalStudents: number
   page: number

@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 import type { RouteLocationNormalizedLoadedGeneric, Router } from 'vue-router'
 
-import type { AttackSessionQuery } from '@/api/teacher'
+import type { AttackSessionQuery } from '@/api/contracts'
 
 type ReviewRouteLike = Pick<RouteLocationNormalizedLoadedGeneric, 'query'>
 type ReviewRouterLike = Pick<Router, 'replace'>

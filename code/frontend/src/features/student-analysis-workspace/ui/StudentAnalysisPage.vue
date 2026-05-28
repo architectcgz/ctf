@@ -6,10 +6,10 @@ import type {
   MyProgressData,
   RecommendationItem,
   SkillProfileData,
-  TeacherAttackSessionResponseData,
-  TeacherEvidenceData,
+  AttackSessionResponseData,
+  StudentEvidenceData,
   WriteupSubmissionItemData,
-  TeacherStudentItem,
+  StudentDirectoryItem,
   TimelineEvent,
 } from '@/api/contracts'
 import StudentAnalysisOverviewHeroPanel from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue'
@@ -28,15 +28,15 @@ interface ReviewWorkspaceQuery {
 }
 
 const props = defineProps<{
-  selectedStudent: TeacherStudentItem | null
+  selectedStudent: StudentDirectoryItem | null
   loadingDetails: boolean
   error: string | null
   progress: MyProgressData | null
   skillProfile: SkillProfileData | null
   recommendations: RecommendationItem[]
   timeline: TimelineEvent[]
-  evidence: TeacherEvidenceData | null
-  attackSessions: TeacherAttackSessionResponseData | null
+  evidence: StudentEvidenceData | null
+  attackSessions: AttackSessionResponseData | null
   reviewChallengeOptions: Array<{ value: string; label: string }>
   reviewWorkspaceLoading: boolean
   reviewWorkspaceQuery: ReviewWorkspaceQuery

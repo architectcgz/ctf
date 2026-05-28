@@ -335,7 +335,7 @@ import {
   ChallengeCategoryPill,
   toChallengeCategory,
 } from '@/entities/challenge'
-import type { RecommendationItem, SkillProfileData, TeacherStudentItem } from '@/api/contracts'
+import type { RecommendationItem, SkillProfileData, StudentDirectoryItem } from '@/api/contracts'
 
 type SkillProfileTabKey = 'analysis' | 'weakness' | 'recommendations'
 
@@ -349,7 +349,7 @@ interface SkillProfileContentTab {
 interface Props {
   isTeacher: boolean
   selectedStudentId: string
-  students: TeacherStudentItem[]
+  students: StudentDirectoryItem[]
   loading: boolean
   error: string | null
   skillProfile: SkillProfileData | null

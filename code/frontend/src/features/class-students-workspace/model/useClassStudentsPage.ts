@@ -3,9 +3,9 @@ import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
 
 import { getClassReview, getClassSummary, getClassTrend } from '@/api/teaching'
 import type {
-  TeacherClassReviewData,
-  TeacherClassSummaryData,
-  TeacherClassTrendData,
+  ClassInsightReviewData,
+  ClassInsightSummaryData,
+  ClassInsightTrendData,
 } from '@/api/contracts'
 import {
   buildClassInsightWindowQuery,
@@ -29,9 +29,9 @@ export function useClassStudentsPage() {
   const router = useRouter()
   const authStore = useAuthStore()
 
-  const review = ref<TeacherClassReviewData | null>(null)
-  const summary = ref<TeacherClassSummaryData | null>(null)
-  const trend = ref<TeacherClassTrendData | null>(null)
+  const review = ref<ClassInsightReviewData | null>(null)
+  const summary = ref<ClassInsightSummaryData | null>(null)
+  const trend = ref<ClassInsightTrendData | null>(null)
   const workspaceError = ref<string | null>(null)
   const reportDialogVisible = ref(false)
   const filters = useStudentFilters()

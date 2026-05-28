@@ -7,7 +7,7 @@ import type {
   RecommendationItem,
   RecommendationWeakDimension,
   SkillProfileData,
-  TeacherStudentItem,
+  StudentDirectoryItem,
 } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensionLabels } from '@/utils/skillProfile'
@@ -20,7 +20,7 @@ export function useSkillProfilePage() {
 
   const isTeacher = computed(() => authStore.isTeacher)
   const selectedStudentId = ref('')
-  const students = ref<TeacherStudentItem[]>([])
+  const students = ref<StudentDirectoryItem[]>([])
 
   const loading = ref(false)
   const error = ref<string | null>(null)

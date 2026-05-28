@@ -3,17 +3,17 @@ import { computed } from 'vue'
 
 import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import type { AttackSessionQuery } from '@/api/teacher'
 import type {
+  AttackSessionQuery,
   ManualReviewSubmissionDetailData,
   ManualReviewSubmissionItemData,
   MyProgressData,
   RecommendationItem,
   SkillProfileData,
-  TeacherAttackSessionResponseData,
-  TeacherEvidenceData,
+  AttackSessionResponseData,
+  StudentEvidenceData,
   WriteupSubmissionItemData,
-  TeacherStudentItem,
+  StudentDirectoryItem,
   TimelineEvent,
 } from '@/api/contracts'
 import TrainingTimelinePanel from '@/components/training/TrainingTimelinePanel.vue'
@@ -25,13 +25,13 @@ import StudentInsightWriteupsSection from '@/components/teacher/student-insight/
 import type { StudentInsightSection } from '@/components/teacher/student-insight/studentInsightShared'
 
 const props = defineProps<{
-  student: TeacherStudentItem | null
+  student: StudentDirectoryItem | null
   progress: MyProgressData | null
   profile: SkillProfileData | null
   recommendations: RecommendationItem[]
   timeline: TimelineEvent[]
-  evidence: TeacherEvidenceData | null
-  attackSessions: TeacherAttackSessionResponseData | null
+  evidence: StudentEvidenceData | null
+  attackSessions: AttackSessionResponseData | null
   reviewChallengeOptions: Array<{ value: string; label: string }>
   reviewWorkspaceLoading: boolean
   reviewWorkspaceQuery: AttackSessionQuery

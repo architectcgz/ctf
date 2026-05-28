@@ -1,17 +1,17 @@
 import { computed, ref, watch, type Ref } from 'vue'
 
 import { getStudentRecommendations } from '@/api/teaching'
-import type { RecommendationItem, TeacherStudentItem } from '@/api/contracts'
+import type { RecommendationItem, StudentDirectoryItem } from '@/api/contracts'
 
 export interface InterventionCandidate {
-  student: TeacherStudentItem
+  student: StudentDirectoryItem
   reason: string
   accent: 'danger' | 'warning' | 'primary'
   score: number
 }
 
 interface UseInterventionRecommendationsOptions {
-  students: Readonly<Ref<TeacherStudentItem[]>>
+  students: Readonly<Ref<StudentDirectoryItem[]>>
 }
 
 export function useInterventionRecommendations(options: UseInterventionRecommendationsOptions) {

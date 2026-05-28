@@ -1,20 +1,20 @@
 import { ref } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { getStudentsDirectory, type TeacherStudentDirectoryParams } from '@/api/teaching'
-import type { PageResult, TeacherStudentItem } from '@/api/contracts'
+import { getStudentsDirectory, type StudentDirectoryParams } from '@/api/teaching'
+import type { PageResult, StudentDirectoryItem } from '@/api/contracts'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 
 interface UseStudentDirectoryQueryOptions {
   debounceMs?: number
   errorMessage: string
   request?: (
-    params?: TeacherStudentDirectoryParams
-  ) => Promise<PageResult<TeacherStudentItem>>
+    params?: StudentDirectoryParams
+  ) => Promise<PageResult<StudentDirectoryItem>>
 }
 
 export function useStudentDirectoryQuery(options: UseStudentDirectoryQueryOptions) {
-  const students = ref<TeacherStudentItem[]>([])
+  const students = ref<StudentDirectoryItem[]>([])
   const total = ref(0)
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -25,14 +25,14 @@ export function useStudentDirectoryQuery(options: UseStudentDirectoryQueryOption
     cancel?: () => void
   }
   const debouncedLoadStudents = options.debounceMs
-    ? (useDebounceFn((params?: TeacherStudentDirectoryParams) => {
+    ? (useDebounceFn((params?: StudentDirectoryParams) => {
         void loadStudents(params)
       }, options.debounceMs) as DebouncedStudentLoader)
     : null
 
   async function loadStudents(
-    params?: TeacherStudentDirectoryParams
-  ): Promise<PageResult<TeacherStudentItem>> {
+    params?: StudentDirectoryParams
+  ): Promise<PageResult<StudentDirectoryItem>> {
     const requestId = ++latestRequestId
     loading.value = true
     error.value = null
@@ -76,7 +76,7 @@ export function useStudentDirectoryQuery(options: UseStudentDirectoryQueryOption
     }
   }
 
-  function scheduleLoadStudents(params?: TeacherStudentDirectoryParams): void {
+  function scheduleLoadStudents(params?: StudentDirectoryParams): void {
     if (debouncedLoadStudents) {
       debouncedLoadStudents(params)
       return

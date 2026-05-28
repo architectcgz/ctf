@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Activity, Target, Users } from 'lucide-vue-next'
 
-import type { TeacherClassSummaryData, TeacherStudentItem } from '@/api/contracts'
+import type { ClassInsightSummaryData, StudentDirectoryItem } from '@/api/contracts'
 
 const props = defineProps<{
   selectedClassName: string
-  students: TeacherStudentItem[]
-  summary: TeacherClassSummaryData | null
+  students: StudentDirectoryItem[]
+  summary: ClassInsightSummaryData | null
   error: string | null
 }>()
 

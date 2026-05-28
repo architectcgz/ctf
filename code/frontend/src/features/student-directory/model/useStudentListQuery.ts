@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
 import { getClassStudents } from '@/api/teaching'
-import type { TeacherStudentItem } from '@/api/contracts'
+import type { StudentDirectoryItem } from '@/api/contracts'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 
 import type { StudentQueryParams } from './useStudentFilters'
@@ -11,11 +11,11 @@ interface UseStudentListQueryOptions {
   debounceMs?: number
   errorMessage: string
   getParams?: () => StudentQueryParams | undefined
-  request?: (className: string, params?: StudentQueryParams) => Promise<TeacherStudentItem[]>
+  request?: (className: string, params?: StudentQueryParams) => Promise<StudentDirectoryItem[]>
 }
 
 export function useStudentListQuery(options: UseStudentListQueryOptions) {
-  const students = ref<TeacherStudentItem[]>([])
+  const students = ref<StudentDirectoryItem[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -30,7 +30,7 @@ export function useStudentListQuery(options: UseStudentListQueryOptions) {
       }, options.debounceMs) as DebouncedStudentLoader)
     : null
 
-  async function loadStudents(className: string): Promise<TeacherStudentItem[]> {
+  async function loadStudents(className: string): Promise<StudentDirectoryItem[]> {
     if (!className) {
       clearStudents()
       return []

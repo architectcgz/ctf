@@ -1,7 +1,7 @@
 import type {
   ManualReviewSubmissionItemData,
-  TeacherAttackEventData,
-  TeacherAttackSessionData,
+  AttackEventData,
+  AttackSessionData,
   WriteupSubmissionItemData,
 } from '@/api/contracts'
 
@@ -137,7 +137,7 @@ export function evidenceReviewStatusLabel(status: string): string {
   }
 }
 
-export function eventMetaItems(event: TeacherAttackEventData): InsightMetaItem[] {
+export function eventMetaItems(event: AttackEventData): InsightMetaItem[] {
   const meta = event.meta ?? {}
   const items: InsightMetaItem[] = []
   const requestMethod = stringMeta(meta, 'request_method') || stringMeta(meta, 'method')
@@ -168,7 +168,7 @@ export function eventMetaItems(event: TeacherAttackEventData): InsightMetaItem[]
   return items
 }
 
-export function sessionPathSummary(session: TeacherAttackSessionData): string {
+export function sessionPathSummary(session: AttackSessionData): string {
   const events = session.events ?? []
   if (events.length === 0) return '暂无事件明细'
   return events

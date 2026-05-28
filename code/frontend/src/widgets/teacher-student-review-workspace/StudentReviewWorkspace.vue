@@ -2,8 +2,7 @@
 import { computed } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import type { AttackSessionQuery } from '@/api/teacher'
-import type { TeacherAttackSessionResponseData, TeacherEvidenceData } from '@/api/contracts'
+import type { AttackSessionQuery, AttackSessionResponseData, StudentEvidenceData } from '@/api/contracts'
 import {
   buildChallengeFilterOptions,
   buildReviewWorkspaceObservations,
@@ -19,8 +18,8 @@ import {
 } from './model/presentation'
 
 const props = defineProps<{
-  evidence: TeacherEvidenceData | null
-  attackSessions: TeacherAttackSessionResponseData | null
+  evidence: StudentEvidenceData | null
+  attackSessions: AttackSessionResponseData | null
   challengeOptions?: Array<{ value: string; label: string }>
   loading: boolean
   query: AttackSessionQuery

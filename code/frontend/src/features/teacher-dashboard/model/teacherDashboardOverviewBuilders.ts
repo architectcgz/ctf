@@ -1,7 +1,7 @@
 import type {
   TeacherOverviewClassFocusData,
   TeacherOverviewWeakDimensionData,
-  TeacherStudentItem,
+  StudentDirectoryItem,
 } from '@/api/contracts'
 
 interface BuildOverviewDescriptionOptions {
@@ -150,7 +150,7 @@ export interface TeacherDashboardInterventionTarget {
 }
 
 export function buildInterventionTargets(
-  students: TeacherStudentItem[]
+  students: StudentDirectoryItem[]
 ): TeacherDashboardInterventionTarget[] {
   return students.slice(0, 6).map((student) => {
     const displayName = student.name || student.username

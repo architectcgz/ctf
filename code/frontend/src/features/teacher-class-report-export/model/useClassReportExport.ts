@@ -10,10 +10,10 @@ import {
 } from '@/api/teaching'
 import type {
   ReportExportData,
-  TeacherClassReviewData,
-  TeacherClassSummaryData,
-  TeacherClassTrendData,
-  TeacherStudentItem,
+  ClassInsightReviewData,
+  ClassInsightSummaryData,
+  ClassInsightTrendData,
+  StudentDirectoryItem,
 } from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
@@ -62,10 +62,10 @@ export function useClassReportExport() {
   const previewLoading = ref(false)
   const previewError = ref<string | null>(null)
   const previewClassName = ref('')
-  const previewStudents = ref<TeacherStudentItem[]>([])
-  const previewReview = ref<TeacherClassReviewData | null>(null)
-  const previewSummary = ref<TeacherClassSummaryData | null>(null)
-  const previewTrend = ref<TeacherClassTrendData | null>(null)
+  const previewStudents = ref<StudentDirectoryItem[]>([])
+  const previewReview = ref<ClassInsightReviewData | null>(null)
+  const previewSummary = ref<ClassInsightSummaryData | null>(null)
+  const previewTrend = ref<ClassInsightTrendData | null>(null)
   let latestPreviewRequestId = 0
 
   const classNamePlaceholder = computed(() =>

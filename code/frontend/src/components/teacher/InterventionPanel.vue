@@ -2,7 +2,7 @@
 import { toRef } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { TeacherStudentItem } from '@/api/contracts'
+import type { StudentDirectoryItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import {
   ChallengeCategoryDifficultyPills,
@@ -12,7 +12,7 @@ import {
 import { useInterventionRecommendations } from '@/features/teacher-student-analysis'
 
 const props = defineProps<{
-  students: TeacherStudentItem[]
+  students: StudentDirectoryItem[]
   className?: string
   bare?: boolean
 }>()

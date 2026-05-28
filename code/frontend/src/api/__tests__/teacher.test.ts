@@ -3,6 +3,9 @@ import teacherAwdReviewApiSource from '@/api/teacher/awd-reviews.ts?raw'
 import teachingAwdReviewApiSource from '@/api/teaching/awd-reviews.ts?raw'
 import teacherInstanceApiSource from '@/api/teacher/instances.ts?raw'
 import teachingInstanceApiSource from '@/api/teaching/instances.ts?raw'
+import teacherStudentsApiSource from '@/api/teacher/students.ts?raw'
+import teachingClassesApiSource from '@/api/teaching/classes.ts?raw'
+import teachingStudentsApiSource from '@/api/teaching/students.ts?raw'
 
 const requestMock = vi.hoisted(() => vi.fn())
 
@@ -46,8 +49,14 @@ describe('teacher api contract', () => {
   })
 
   it('实例目录 shared contract 命名应保持中性 owner', () => {
+    expect(teacherInstanceApiSource).toContain('export async function getTeacherInstances')
+    expect(teacherInstanceApiSource).toContain('export async function destroyTeacherInstance')
+    expect(teacherInstanceApiSource).toContain('return getInstanceDirectory(params, options)')
+    expect(teacherInstanceApiSource).toContain('return destroyManagedInstance(id)')
     expect(teacherInstanceApiSource).toContain('InstanceDirectoryStatusFilter')
     expect(teacherInstanceApiSource).not.toContain('TeacherInstanceStatusFilter')
+    expect(teachingInstanceApiSource).toContain('export async function getInstanceDirectory')
+    expect(teachingInstanceApiSource).toContain('export async function destroyManagedInstance')
     expect(teachingInstanceApiSource).toContain('InstanceDirectorySummaryData')
     expect(teachingInstanceApiSource).toContain('InstanceDirectoryPageData')
     expect(teachingInstanceApiSource).toContain('InstanceDirectoryItem')
@@ -56,6 +65,33 @@ describe('teacher api contract', () => {
     expect(teachingInstanceApiSource).not.toContain('TeacherInstancePageData')
     expect(teachingInstanceApiSource).not.toContain('TeacherInstanceItem')
     expect(teachingInstanceApiSource).not.toContain('TeacherInstanceStatusFilter')
+    expect(teachingInstanceApiSource).not.toContain('export async function getTeacherInstances')
+    expect(teachingInstanceApiSource).not.toContain('export async function destroyTeacherInstance')
+  })
+
+  it('班级与学员分析 shared contract 命名应保持中性 owner', () => {
+    expect(teachingClassesApiSource).toContain('normalizeStudentDirectoryItem')
+    expect(teachingClassesApiSource).toContain('export interface StudentDirectoryParams')
+    expect(teachingClassesApiSource).not.toContain('normalizeTeacherStudent')
+    expect(teachingClassesApiSource).not.toContain('TeacherStudentDirectoryParams')
+
+    expect(teachingStudentsApiSource).toContain('type {')
+    expect(teachingStudentsApiSource).toContain('AttackSessionQuery')
+    expect(teachingStudentsApiSource).toContain('StudentEvidenceQuery')
+    expect(teachingStudentsApiSource).toContain('interface RawStudentEvidenceResponse')
+    expect(teachingStudentsApiSource).toContain('interface RawAttackSessionResponse')
+    expect(teachingStudentsApiSource).not.toContain('TeacherEvidenceQuery')
+    expect(teachingStudentsApiSource).not.toContain('RawTeacherEvidenceResponse')
+    expect(teachingStudentsApiSource).not.toContain('RawTeacherAttackSessionResponse')
+
+    expect(teacherStudentsApiSource).toContain('type {')
+    expect(teacherStudentsApiSource).toContain('AttackSessionQuery')
+    expect(teacherStudentsApiSource).toContain('StudentEvidenceQuery')
+    expect(teacherStudentsApiSource).toContain('interface RawStudentEvidenceResponse')
+    expect(teacherStudentsApiSource).toContain('interface RawAttackSessionResponse')
+    expect(teacherStudentsApiSource).not.toContain('TeacherEvidenceQuery')
+    expect(teacherStudentsApiSource).not.toContain('RawTeacherEvidenceResponse')
+    expect(teacherStudentsApiSource).not.toContain('RawTeacherAttackSessionResponse')
   })
 
   it('不传分页参数时应继续返回班级数组', async () => {

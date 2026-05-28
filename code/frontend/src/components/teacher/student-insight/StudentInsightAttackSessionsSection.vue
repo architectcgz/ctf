@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { StudentReviewWorkspace } from '@/widgets/teacher-student-review-workspace'
-import type { AttackSessionQuery } from '@/api/teacher'
-import type { TeacherAttackSessionResponseData, TeacherEvidenceData } from '@/api/contracts'
+import type { AttackSessionQuery, AttackSessionResponseData, StudentEvidenceData } from '@/api/contracts'
 import SectionCard from '@/components/common/SectionCard.vue'
 
 defineProps<{
-  attackSessions: TeacherAttackSessionResponseData | null
-  evidence: TeacherEvidenceData | null
+  attackSessions: AttackSessionResponseData | null
+  evidence: StudentEvidenceData | null
   reviewChallengeOptions: Array<{ value: string; label: string }>
   reviewWorkspaceLoading: boolean
   reviewWorkspaceQuery: AttackSessionQuery

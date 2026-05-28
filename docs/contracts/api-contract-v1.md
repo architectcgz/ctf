@@ -37,6 +37,7 @@
 - 2026-05-28 起，`src/api/teaching/awd-reviews.ts` 的 AWD review 共享实现 owner 也统一改成中性 `AwdReview*` 函数；`src/api/admin/*` / `src/api/teacher/*` 只在前端 public owner 层保留 platform / teacher 命名，不新增任何平台专属 AWD review HTTP 契约。
 - 2026-05-28 起，前端本地共享实例目录 DTO / page data / summary / status filter 统一使用中性命名 `InstanceDirectory*`；`getTeacherInstances()`、`destroyTeacherInstance()` 与 `/api/v1/teacher/instances` 路径继续保留现有 teacher public wrapper / transport 语义，不改变外部 HTTP 字段或权限语义。
 - 2026-05-28 起，前端实例目录共享 feature 也允许通过 `src/api/instances.ts` 作为 role-aware access owner 选择 teacher / platform public wrapper；底层仍复用既有 `/api/v1/teacher/instances` HTTP contract，不新增平台专属实例目录路径。
+- 2026-05-28 起，`src/api/teaching/instances.ts` 的实例目录共享实现 owner 也统一改成中性 `getInstanceDirectory()` / `destroyManagedInstance()`；`src/api/admin/*` / `src/api/teacher/*` 只在前端 public owner 层保留 platform / teacher 命名，不新增任何平台专属实例目录 HTTP 契约。
 - 2026-05-27 起，platform 题解管理面板也允许通过 `src/api/admin/authoring.ts` 暴露 `getPlatformWriteupSubmissions` 这类薄 wrapper；底层仍复用既有 `/api/v1/teacher/writeup-submissions` HTTP contract，不改变教师侧题解查看 / 评阅能力。
 - 2026-05-27 起，前端本地共享 DTO 对这条投稿目录 contract 统一使用中性命名 `WriteupSubmissionItemData`；HTTP path 仍保持 `/api/v1/teacher/writeup-submissions`，不改变服务端权限语义。
 
@@ -695,7 +696,7 @@ export interface TeacherOverviewClassFocusData {
   dominant_weak_dimension?: string
 }
 
-export interface TeacherStudentItem {
+export interface StudentDirectoryItem {
   id: ID
   username: string
   student_no?: string
@@ -712,8 +713,8 @@ export interface TeacherOverviewData {
   summary: TeacherOverviewSummaryData
   trend: TeacherOverviewTrendData
   focus_classes: TeacherOverviewClassFocusData[]
-  focus_students: TeacherStudentItem[]
-  spotlight_student?: TeacherStudentItem | null
+  focus_students: StudentDirectoryItem[]
+  spotlight_student?: StudentDirectoryItem | null
   weak_dimensions: TeacherOverviewWeakDimensionData[]
 }
 ```
@@ -722,14 +723,14 @@ export interface TeacherOverviewData {
 
 ### 6.3 GET `/api/v1/teacher/classes/:name/students`
 
-`data`：`TeacherStudentItem[]`
+`data`：`StudentDirectoryItem[]`
 
 ### 6.4 GET `/api/v1/teacher/classes/:name/summary`
 
 共享查询参数：
 
 ```ts
-export interface TeacherClassInsightQueryData {
+export interface ClassInsightQueryData {
   from_date?: string   // YYYY-MM-DD
   to_date?: string     // YYYY-MM-DD
 }
@@ -745,7 +746,7 @@ export interface TeacherClassInsightQueryData {
 `data`：
 
 ```ts
-export interface TeacherClassSummaryData {
+export interface ClassInsightSummaryData {
   class_name: string
   student_count: number
   average_solved: number
@@ -757,51 +758,51 @@ export interface TeacherClassSummaryData {
 
 ### 6.5 GET `/api/v1/teacher/classes/:name/trend`
 
-共享查询参数：同 `TeacherClassInsightQueryData`
+共享查询参数：同 `ClassInsightQueryData`
 
 `data`：
 
 ```ts
-export interface TeacherClassTrendPoint {
+export interface ClassTrendPointData {
   date: string
   active_student_count: number
   event_count: number
   solve_count: number
 }
 
-export interface TeacherClassTrendData {
+export interface ClassInsightTrendData {
   class_name: string
-  points: TeacherClassTrendPoint[]
+  points: ClassTrendPointData[]
 }
 ```
 
 ### 6.6 GET `/api/v1/teacher/classes/:name/review`
 
-共享查询参数：同 `TeacherClassInsightQueryData`
+共享查询参数：同 `ClassInsightQueryData`
 
 `data`：
 
 ```ts
-export interface TeacherReviewStudentRef {
+export interface ReviewStudentRef {
   id: ID
   username: string
   name?: string
 }
 
-export interface TeacherClassReviewRecommendationData {
+export interface RecommendationItem {
   challenge_id: ID
   title: string
   category: ChallengeCategory
   difficulty: ChallengeDifficulty
   dimension?: string
-  difficulty_band?: 'beginner' | 'easy' | 'medium' | 'hard' | 'insane'
+  difficulty_band?: 'beginner' | 'easy' | 'medium'
   severity?: 'good' | 'attention' | 'warning' | 'danger'
   reason_codes?: string[]
   summary: string
   evidence?: string
 }
 
-export interface TeacherClassReviewItemData {
+export interface ClassInsightReviewItemData {
   code: string
   severity: 'good' | 'attention' | 'warning' | 'danger'
   summary: string
@@ -809,13 +810,13 @@ export interface TeacherClassReviewItemData {
   action?: string
   reason_codes?: string[]
   dimension?: string
-  students?: TeacherReviewStudentRef[]
-  recommendation?: TeacherClassReviewRecommendationData
+  students?: ReviewStudentRef[]
+  recommendation?: RecommendationItem
 }
 
-export interface TeacherClassReviewData {
+export interface ClassInsightReviewData {
   class_name: string
-  items: TeacherClassReviewItemData[]
+  items: ClassInsightReviewItemData[]
 }
 ```
 
@@ -823,6 +824,7 @@ export interface TeacherClassReviewData {
 
 - `summary / trend / review` 三个接口共享同一组时间窗 contract
 - 页面班级详情与班级报告导出预览复用这三条接口，不再各自维护第二套“近 7 天”口径
+- `review.items[].recommendation` 直接复用共享 `RecommendationItem`，不再单独维护 teacher 前缀推荐题 DTO
 
 ### 6.7 GET `/api/v1/teacher/students/:id/progress`
 
@@ -833,7 +835,7 @@ export interface TeacherClassReviewData {
 `data`：
 
 ```ts
-export interface TeacherEvidenceSummaryData {
+export interface StudentEvidenceSummaryData {
   total_events: number
   proxy_request_count: number
   submit_count: number
@@ -841,7 +843,7 @@ export interface TeacherEvidenceSummaryData {
   challenge_id: ID
 }
 
-export interface TeacherEvidenceEventData {
+export interface StudentEvidenceEventData {
   type: string
   challenge_id: ID
   title: string
@@ -850,9 +852,9 @@ export interface TeacherEvidenceEventData {
   meta?: Record<string, unknown>
 }
 
-export interface TeacherEvidenceData {
-  summary: TeacherEvidenceSummaryData
-  events: TeacherEvidenceEventData[]
+export interface StudentEvidenceData {
+  summary: StudentEvidenceSummaryData
+  events: StudentEvidenceEventData[]
 }
 ```
 
@@ -876,7 +878,7 @@ export interface AttackSessionQuery {
 `data`：
 
 ```ts
-export interface TeacherAttackSessionData {
+export interface AttackSessionData {
   id: ID
   mode: 'practice' | 'jeopardy' | 'awd' | string
   student_id: ID
@@ -892,10 +894,10 @@ export interface TeacherAttackSessionData {
   result: 'success' | 'failed' | 'in_progress' | 'unknown' | string
   event_count: number
   capture_count: number
-  events?: TeacherAttackEventData[]
+  events?: AttackEventData[]
 }
 
-export interface TeacherAttackSessionSummaryData {
+export interface AttackSessionSummaryData {
   total_sessions: number
   success_count: number
   failed_count: number
@@ -905,9 +907,9 @@ export interface TeacherAttackSessionSummaryData {
   capture_available_count: number
 }
 
-export interface TeacherAttackSessionResponseData {
-  summary: TeacherAttackSessionSummaryData
-  sessions: TeacherAttackSessionData[]
+export interface AttackSessionResponseData {
+  summary: AttackSessionSummaryData
+  sessions: AttackSessionData[]
 }
 ```
 
@@ -975,7 +977,7 @@ export interface CreateClassReportReq {
 }
 ```
 
-时间窗规则：同 `TeacherClassInsightQueryData`。
+时间窗规则：同 `ClassInsightQueryData`。
 
 `data`：同 `ReportExportData`（大班级建议异步，status=processing；完成后通过通知推送下载地址）。
 

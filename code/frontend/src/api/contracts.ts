@@ -880,12 +880,12 @@ export interface ClassDirectoryItem {
   student_count?: number
 }
 
-export interface TeacherClassInsightQueryData {
+export interface ClassInsightQueryData {
   from_date?: string
   to_date?: string
 }
 
-export interface TeacherClassSummaryData {
+export interface ClassInsightSummaryData {
   class_name: string
   student_count: number
   average_solved: number
@@ -894,19 +894,19 @@ export interface TeacherClassSummaryData {
   recent_event_count: number
 }
 
-export interface TeacherClassTrendPoint {
+export interface ClassTrendPointData {
   date: string
   active_student_count: number
   event_count: number
   solve_count: number
 }
 
-export interface TeacherClassTrendData {
+export interface ClassInsightTrendData {
   class_name: string
-  points: TeacherClassTrendPoint[]
+  points: ClassTrendPointData[]
 }
 
-export interface TeacherReviewStudentRef {
+export interface ReviewStudentRef {
   id: ID
   username: string
   name?: string
@@ -941,7 +941,7 @@ export interface RecommendationData {
   challenges: RecommendationItem[]
 }
 
-export interface TeacherClassReviewItemData {
+export interface ClassInsightReviewItemData {
   code: string
   severity: AdviceSeverity
   summary: string
@@ -949,13 +949,13 @@ export interface TeacherClassReviewItemData {
   action?: string
   reason_codes?: string[]
   dimension?: string
-  students?: TeacherReviewStudentRef[]
+  students?: ReviewStudentRef[]
   recommendation?: RecommendationItem
 }
 
-export interface TeacherClassReviewData {
+export interface ClassInsightReviewData {
   class_name: string
-  items: TeacherClassReviewItemData[]
+  items: ClassInsightReviewItemData[]
 }
 
 export interface TeacherOverviewSummaryData {
@@ -993,7 +993,7 @@ export interface TeacherOverviewClassFocusData {
   dominant_weak_dimension?: string
 }
 
-export interface TeacherStudentItem {
+export interface StudentDirectoryItem {
   id: ID
   username: string
   student_no?: string
@@ -1010,12 +1010,12 @@ export interface TeacherOverviewData {
   summary: TeacherOverviewSummaryData
   trend: TeacherOverviewTrendData
   focus_classes: TeacherOverviewClassFocusData[]
-  focus_students: TeacherStudentItem[]
-  spotlight_student?: TeacherStudentItem | null
+  focus_students: StudentDirectoryItem[]
+  spotlight_student?: StudentDirectoryItem | null
   weak_dimensions: TeacherOverviewWeakDimensionData[]
 }
 
-export interface TeacherEvidenceSummaryData {
+export interface StudentEvidenceSummaryData {
   total_events: number
   proxy_request_count: number
   submit_count: number
@@ -1023,7 +1023,7 @@ export interface TeacherEvidenceSummaryData {
   challenge_id: ID
 }
 
-export interface TeacherEvidenceEventData {
+export interface StudentEvidenceEventData {
   type: string
   challenge_id: ID
   title: string
@@ -1032,17 +1032,39 @@ export interface TeacherEvidenceEventData {
   meta?: Record<string, unknown>
 }
 
-export interface TeacherEvidenceData {
-  summary: TeacherEvidenceSummaryData
-  events: TeacherEvidenceEventData[]
+export interface StudentEvidenceData {
+  summary: StudentEvidenceSummaryData
+  events: StudentEvidenceEventData[]
 }
 
-export interface TeacherAttackActorData {
+export interface AttackSessionQuery {
+  mode?: 'practice' | 'jeopardy' | 'awd'
+  challenge_id?: ID
+  contest_id?: ID
+  round_id?: ID
+  result?: 'success' | 'failed' | 'in_progress' | 'unknown'
+  with_events?: boolean
+  limit?: number
+  offset?: number
+}
+
+export interface StudentEvidenceQuery {
+  challenge_id?: ID
+  contest_id?: ID
+  round_id?: ID
+  event_type?: string
+  from?: string
+  to?: string
+  limit?: number
+  offset?: number
+}
+
+export interface AttackActorData {
   user_id: ID
   team_id?: ID
 }
 
-export interface TeacherAttackTargetData {
+export interface AttackTargetData {
   challenge_id?: ID
   contest_id?: ID
   round_id?: ID
@@ -1050,22 +1072,22 @@ export interface TeacherAttackTargetData {
   victim_team_id?: ID
 }
 
-export interface TeacherAttackEventData {
+export interface AttackEventData {
   id: ID
   session_id?: ID
   type: string
   stage: string
   source: string
   occurred_at: ISODateTime
-  actor: TeacherAttackActorData
-  target: TeacherAttackTargetData
+  actor: AttackActorData
+  target: AttackTargetData
   summary: string
   meta?: Record<string, unknown>
   capture_available: boolean
   capture_ref?: Record<string, unknown>
 }
 
-export interface TeacherAttackSessionData {
+export interface AttackSessionData {
   id: ID
   mode: 'practice' | 'jeopardy' | 'awd' | string
   student_id: ID
@@ -1081,10 +1103,10 @@ export interface TeacherAttackSessionData {
   result: 'success' | 'failed' | 'in_progress' | 'unknown' | string
   event_count: number
   capture_count: number
-  events?: TeacherAttackEventData[]
+  events?: AttackEventData[]
 }
 
-export interface TeacherAttackSessionSummaryData {
+export interface AttackSessionSummaryData {
   total_sessions: number
   success_count: number
   failed_count: number
@@ -1094,9 +1116,9 @@ export interface TeacherAttackSessionSummaryData {
   capture_available_count: number
 }
 
-export interface TeacherAttackSessionResponseData {
-  summary: TeacherAttackSessionSummaryData
-  sessions: TeacherAttackSessionData[]
+export interface AttackSessionResponseData {
+  summary: AttackSessionSummaryData
+  sessions: AttackSessionData[]
 }
 
 export interface InstanceDirectoryItem {
@@ -1136,7 +1158,7 @@ export interface ReportExportData {
   error_message?: string
 }
 
-export interface TeacherClassReportExportPayload extends TeacherClassInsightQueryData {
+export interface ClassReportExportPayload extends ClassInsightQueryData {
   class_name: string
   format: 'pdf' | 'excel'
 }

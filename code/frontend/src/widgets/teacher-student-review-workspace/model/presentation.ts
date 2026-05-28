@@ -2,10 +2,10 @@ import type { Component } from 'vue'
 import { Activity, CheckCircle, MousePointerClick, Waypoints } from 'lucide-vue-next'
 
 import type {
-  TeacherAttackEventData,
-  TeacherAttackSessionData,
-  TeacherEvidenceData,
-  TeacherEvidenceSummaryData,
+  AttackEventData,
+  AttackSessionData,
+  StudentEvidenceData,
+  StudentEvidenceSummaryData,
 } from '@/api/contracts'
 
 export const TEACHER_STUDENT_REVIEW_WORKSPACE_COPY = {
@@ -39,7 +39,7 @@ export function buildTeacherStudentReviewSummaryItems(input: {
     event_count: number
     success_count: number
   } | null
-  evidenceSummary?: Pick<TeacherEvidenceSummaryData, 'proxy_request_count'> | null
+  evidenceSummary?: Pick<StudentEvidenceSummaryData, 'proxy_request_count'> | null
 }): ReviewWorkspaceSummaryItem[] {
   return [
     {
@@ -134,8 +134,8 @@ export function eventTypeLabel(type: string): string {
 }
 
 export function buildChallengeFilterOptions(input: {
-  evidence?: TeacherEvidenceData | null
-  attackSessions?: { sessions: TeacherAttackSessionData[] } | null
+  evidence?: StudentEvidenceData | null
+  attackSessions?: { sessions: AttackSessionData[] } | null
 }): ReviewWorkspaceFilterOption[] {
   const options = new Map<string, string>()
 
@@ -158,8 +158,8 @@ export function buildChallengeFilterOptions(input: {
 }
 
 export function buildReviewWorkspaceObservations(input: {
-  evidence?: TeacherEvidenceData | null
-  attackSessions?: { sessions: TeacherAttackSessionData[] } | null
+  evidence?: StudentEvidenceData | null
+  attackSessions?: { sessions: AttackSessionData[] } | null
 }): ReviewWorkspaceObservationItem[] {
   const evidence = input.evidence
   const sessions = input.attackSessions?.sessions ?? []
@@ -250,7 +250,7 @@ export function evidenceReviewStatusLabel(status: string): string {
 }
 
 export function eventMetaItems(
-  event: TeacherAttackEventData
+  event: AttackEventData
 ): Array<{ key: string; label: string }> {
   const meta = event.meta ?? {}
   const items: Array<{ key: string; label: string }> = []
@@ -280,7 +280,7 @@ export function eventMetaItems(
   return items
 }
 
-export function sessionPathSummary(session: TeacherAttackSessionData): string {
+export function sessionPathSummary(session: AttackSessionData): string {
   const events = session.events ?? []
   if (events.length === 0) return '暂无事件明细'
   return events
@@ -299,11 +299,11 @@ function numberMeta(meta: Record<string, unknown>, key: string): number | undefi
   return typeof value === 'number' ? value : undefined
 }
 
-function hasEvidenceType(evidence: TeacherEvidenceData | null | undefined, type: string): boolean {
+function hasEvidenceType(evidence: StudentEvidenceData | null | undefined, type: string): boolean {
   return evidence?.events.some((event) => event.type === type) ?? false
 }
 
-function hasRepeatedWrongSubmissions(evidence: TeacherEvidenceData | null | undefined): boolean {
+function hasRepeatedWrongSubmissions(evidence: StudentEvidenceData | null | undefined): boolean {
   const events = evidence?.events ?? []
   let streak = 0
 
@@ -323,7 +323,7 @@ function hasRepeatedWrongSubmissions(evidence: TeacherEvidenceData | null | unde
   return false
 }
 
-function submissionResult(event: TeacherEvidenceData['events'][number]): boolean | undefined {
+function submissionResult(event: StudentEvidenceData['events'][number]): boolean | undefined {
   if (!event.meta) return undefined
   if (event.type === 'challenge_submission') {
     return typeof event.meta.is_correct === 'boolean' ? event.meta.is_correct : undefined

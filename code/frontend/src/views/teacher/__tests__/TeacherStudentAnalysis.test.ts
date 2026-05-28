@@ -5,12 +5,14 @@ import { reactive } from 'vue'
 import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
 import teacherStudentAnalysisSource from '../TeacherStudentAnalysis.vue?raw'
 import studentAnalysisPageModelSource from '@/features/student-analysis-workspace/model/useStudentAnalysisPage.ts?raw'
+import studentAnalysisReviewQuerySyncSource from '@/features/student-analysis-workspace/model/useStudentAnalysisReviewQuerySync.ts?raw'
 import studentAnalysisPageSource from '@/features/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue?raw'
 import studentInsightOverviewSectionSource from '@/components/teacher/student-insight/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/components/teacher/student-insight/StudentInsightRecommendationsSection.vue?raw'
+import studentReviewWorkspaceSource from '@/widgets/teacher-student-review-workspace/StudentReviewWorkspace.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 import {
   reportDialogStub,
@@ -238,7 +240,8 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).not.toContain('teacher-eyebrow-row')
     expect(studentAnalysisPageSource).toContain('StudentAnalysisOverviewHeroPanel')
     expect(studentAnalysisPageSource).not.toContain('classes: ClassDirectoryItem[]')
-    expect(studentAnalysisPageSource).not.toContain('students: TeacherStudentItem[]')
+    expect(studentAnalysisPageSource).toContain('selectedStudent: StudentDirectoryItem | null')
+    expect(studentAnalysisPageSource).not.toContain('TeacherStudentItem')
     expect(studentAnalysisPageSource).not.toContain('selectedClassName: string')
     expect(studentAnalysisPageSource).not.toContain('selectedStudentId: string')
     expect(studentAnalysisPageSource).not.toContain('loadingClasses: boolean')
@@ -276,6 +279,12 @@ describe('TeacherStudentAnalysis', () => {
       "import { StudentReviewWorkspace } from '@/widgets/teacher-student-review-workspace'"
     )
     expect(studentInsightAttackSessionsSectionSource).not.toContain('TeacherStudentReviewWorkspace')
+    expect(studentAnalysisReviewQuerySyncSource).toContain("from '@/api/contracts'")
+    expect(studentAnalysisReviewQuerySyncSource).not.toContain("from '@/api/teacher'")
+    expect(studentAnalysisReviewQuerySyncSource).not.toContain("from '@/api/teaching'")
+    expect(studentReviewWorkspaceSource).toContain("from '@/api/contracts'")
+    expect(studentReviewWorkspaceSource).not.toContain("from '@/api/teacher'")
+    expect(studentReviewWorkspaceSource).not.toContain("from '@/api/teaching'")
   })
 
   it('应该支持隐藏社区题解', async () => {

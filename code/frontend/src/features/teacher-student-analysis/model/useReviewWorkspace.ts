@@ -3,14 +3,17 @@ import { computed, ref } from 'vue'
 import {
   getStudentAttackSessions,
   getStudentEvidence,
-  type AttackSessionQuery,
-  type TeacherEvidenceQuery,
 } from '@/api/teaching'
-import type { TeacherAttackSessionResponseData, TeacherEvidenceData } from '@/api/contracts'
+import type {
+  AttackSessionQuery,
+  AttackSessionResponseData,
+  StudentEvidenceData,
+  StudentEvidenceQuery,
+} from '@/api/contracts'
 
 export function useReviewWorkspace() {
-  const evidence = ref<TeacherEvidenceData | null>(null)
-  const attackSessions = ref<TeacherAttackSessionResponseData | null>(null)
+  const evidence = ref<StudentEvidenceData | null>(null)
+  const attackSessions = ref<AttackSessionResponseData | null>(null)
   const reviewChallengeOptions = ref<Array<{ value: string; label: string }>>([])
   const reviewWorkspaceLoading = ref(false)
 
@@ -69,7 +72,7 @@ export function useReviewWorkspace() {
 
     reviewWorkspaceLoading.value = true
     try {
-      const evidenceQuery: TeacherEvidenceQuery = evidenceChallengeId.value
+      const evidenceQuery: StudentEvidenceQuery = evidenceChallengeId.value
         ? {
             challenge_id: evidenceChallengeId.value,
           }

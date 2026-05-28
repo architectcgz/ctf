@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import adminContestApiSource from '@/api/admin/contests.ts?raw'
+import adminTeachingApiSource from '@/api/admin/teaching.ts?raw'
 import teachingAwdReviewApiSource from '@/api/teaching/awd-reviews.ts?raw'
+import teachingInstanceApiSource from '@/api/teaching/instances.ts?raw'
 
 const requestMock = vi.hoisted(() => vi.fn())
 
@@ -106,6 +108,20 @@ describe('admin contest api contract', () => {
     expect(adminContestApiSource).not.toContain(
       'exportTeacherAWDReviewReport as exportPlatformAWDReviewReport'
     )
+  })
+
+  it('实例目录 platform wrapper 与 teaching 实现 owner 应保持中性分层', () => {
+    expect(teachingInstanceApiSource).toContain('export async function getInstanceDirectory')
+    expect(teachingInstanceApiSource).toContain('export async function destroyManagedInstance')
+    expect(teachingInstanceApiSource).not.toContain('export async function getTeacherInstances')
+    expect(teachingInstanceApiSource).not.toContain('export async function destroyTeacherInstance')
+
+    expect(adminTeachingApiSource).toContain('export async function getPlatformInstances')
+    expect(adminTeachingApiSource).toContain('export async function destroyPlatformInstance')
+    expect(adminTeachingApiSource).toContain('return getInstanceDirectory(params, options)')
+    expect(adminTeachingApiSource).toContain('return destroyManagedInstance(id)')
+    expect(adminTeachingApiSource).not.toContain('getTeacherInstances as getPlatformInstances')
+    expect(adminTeachingApiSource).not.toContain('destroyTeacherInstance as destroyPlatformInstance')
   })
 
   it('应该把竞赛列表参数和返回值归一化', async () => {

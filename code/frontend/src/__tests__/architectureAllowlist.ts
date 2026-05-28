@@ -29,14 +29,9 @@ export const componentFeatureImportAllowlist = new Set([
 
 export const widgetLegacyComponentImportAllowlist = new Set<string>([])
 
-export const componentNonContractApiAllowlist = new Set([
-  'components/teacher/StudentInsightPanel.vue -> @/api/teacher',
-  'components/teacher/student-insight/StudentInsightAttackSessionsSection.vue -> @/api/teacher',
-])
+export const componentNonContractApiAllowlist = new Set<string>([])
 
-export const widgetNonContractApiAllowlist = new Set([
-  'widgets/teacher-student-review-workspace/StudentReviewWorkspace.vue -> @/api/teacher',
-])
+export const widgetNonContractApiAllowlist = new Set<string>([])
 
 export const commonForbiddenImportAllowlist = new Set([
   'components/common/InstancePanel.vue -> @/api/contracts',

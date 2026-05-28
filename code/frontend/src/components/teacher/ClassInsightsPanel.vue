@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { TeacherStudentItem } from '@/api/contracts'
+import type { StudentDirectoryItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 
 const props = defineProps<{
-  students: TeacherStudentItem[]
+  students: StudentDirectoryItem[]
   className?: string
   stacked?: boolean
   splitCards?: boolean

@@ -7,4 +7,4 @@ export {
   getClassTrend,
   getClassReview,
 } from '../teaching/classes'
-export type { TeacherStudentDirectoryParams } from '../teaching/classes'
+export type { StudentDirectoryParams } from '../teaching/classes'

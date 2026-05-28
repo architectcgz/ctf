@@ -1,12 +1,12 @@
 import type {
   TeacherOverviewClassFocusData,
   TeacherOverviewTrendData,
-  TeacherStudentItem,
+  StudentDirectoryItem,
 } from '@/api/contracts'
 
 interface BuildStudentInsightRowsOptions {
   riskStudentCount: number
-  spotlightStudent: TeacherStudentItem | null
+  spotlightStudent: StudentDirectoryItem | null
   dominantWeakDimension: string
   strongestDimensionCount: number
   focusClass: TeacherOverviewClassFocusData | null

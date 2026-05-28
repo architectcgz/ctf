@@ -2,9 +2,9 @@
 import { type Component } from 'vue'
 
 import type {
-  TeacherClassReviewData,
-  TeacherClassTrendData,
-  TeacherStudentItem,
+  ClassInsightReviewData,
+  ClassInsightTrendData,
+  StudentDirectoryItem,
 } from '@/api/contracts'
 import ClassInsightsPanel from '@/components/teacher/ClassInsightsPanel.vue'
 import InterventionPanel from '@/components/teacher/InterventionPanel.vue'
@@ -17,10 +17,10 @@ import ClassStudentsOverviewPanel from '@/components/teacher/class-management/Cl
 
 const props = defineProps<{
   selectedClassName: string
-  students: TeacherStudentItem[]
-  review: TeacherClassReviewData | null
-  summary: import('@/api/contracts').TeacherClassSummaryData | null
-  trend: TeacherClassTrendData | null
+  students: StudentDirectoryItem[]
+  review: ClassInsightReviewData | null
+  summary: import('@/api/contracts').ClassInsightSummaryData | null
+  trend: ClassInsightTrendData | null
   studentNoQuery: string
   loadingStudents: boolean
   error: string | null

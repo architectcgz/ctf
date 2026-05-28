@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { AlertTriangle, CheckCircle, Trophy } from 'lucide-vue-next'
 
-import type { MyProgressData, TeacherStudentItem } from '@/api/contracts'
+import type { MyProgressData, StudentDirectoryItem } from '@/api/contracts'
 
 defineProps<{
-  selectedStudent: TeacherStudentItem | null
+  selectedStudent: StudentDirectoryItem | null
   progress: MyProgressData | null
   solvedRate: number
   weakDimensions: string[]

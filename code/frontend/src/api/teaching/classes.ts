@@ -4,12 +4,12 @@ import type {
   ClassDirectoryItem,
   PageResult,
   RecommendationItem,
-  TeacherClassInsightQueryData,
+  ClassInsightQueryData,
   TeacherOverviewData,
-  TeacherClassReviewData,
-  TeacherClassSummaryData,
-  TeacherClassTrendData,
-  TeacherStudentItem,
+  ClassInsightReviewData,
+  ClassInsightSummaryData,
+  ClassInsightTrendData,
+  StudentDirectoryItem,
 } from '../contracts'
 
 export async function getClasses(): Promise<ClassDirectoryItem[]>
@@ -33,7 +33,7 @@ export async function getClasses(params?: {
   return params ? payload : payload.list
 }
 
-function normalizeTeacherStudent(item: {
+function normalizeStudentDirectoryItem(item: {
   id: string | number
   username: string
   student_no?: string
@@ -85,9 +85,9 @@ export async function getTeacherOverview(): Promise<TeacherOverviewData> {
 
   return {
     ...payload,
-    focus_students: payload.focus_students.map(normalizeTeacherStudent),
+    focus_students: payload.focus_students.map(normalizeStudentDirectoryItem),
     spotlight_student: payload.spotlight_student
-      ? normalizeTeacherStudent(payload.spotlight_student)
+      ? normalizeStudentDirectoryItem(payload.spotlight_student)
       : null,
   }
 }
@@ -95,7 +95,7 @@ export async function getTeacherOverview(): Promise<TeacherOverviewData> {
 export async function getClassStudents(
   name: string,
   params?: { keyword?: string; student_no?: string }
-) {
+): Promise<StudentDirectoryItem[]> {
   const payload = await request<
     Array<{
       id: string | number
@@ -116,10 +116,10 @@ export async function getClassStudents(
     },
   })
 
-  return payload.map(normalizeTeacherStudent)
+  return payload.map(normalizeStudentDirectoryItem)
 }
 
-export interface TeacherStudentDirectoryParams {
+export interface StudentDirectoryParams {
   class_name?: string
   keyword?: string
   student_no?: string
@@ -131,8 +131,8 @@ export interface TeacherStudentDirectoryParams {
 }
 
 export async function getStudentsDirectory(
-  params?: TeacherStudentDirectoryParams
-): Promise<PageResult<TeacherStudentItem>> {
+  params?: StudentDirectoryParams
+): Promise<PageResult<StudentDirectoryItem>> {
   const payload = await request<
     PageResult<{
       id: string | number
@@ -162,15 +162,15 @@ export async function getStudentsDirectory(
 
   return {
     ...payload,
-    list: payload.list.map(normalizeTeacherStudent),
+    list: payload.list.map(normalizeStudentDirectoryItem),
   }
 }
 
 export async function getClassSummary(
   name: string,
-  params?: TeacherClassInsightQueryData
-): Promise<TeacherClassSummaryData> {
-  return request<TeacherClassSummaryData>({
+  params?: ClassInsightQueryData
+): Promise<ClassInsightSummaryData> {
+  return request<ClassInsightSummaryData>({
     method: 'GET',
     url: `/teacher/classes/${encodeURIComponent(name)}/summary`,
     params,
@@ -179,9 +179,9 @@ export async function getClassSummary(
 
 export async function getClassTrend(
   name: string,
-  params?: TeacherClassInsightQueryData
-): Promise<TeacherClassTrendData> {
-  return request<TeacherClassTrendData>({
+  params?: ClassInsightQueryData
+): Promise<ClassInsightTrendData> {
+  return request<ClassInsightTrendData>({
     method: 'GET',
     url: `/teacher/classes/${encodeURIComponent(name)}/trend`,
     params,
@@ -190,13 +190,13 @@ export async function getClassTrend(
 
 export async function getClassReview(
   name: string,
-  params?: TeacherClassInsightQueryData
-): Promise<TeacherClassReviewData> {
+  params?: ClassInsightQueryData
+): Promise<ClassInsightReviewData> {
   const payload = await request<{
     class_name: string
     items: Array<{
       code: string
-      severity: TeacherClassReviewData['items'][number]['severity']
+      severity: ClassInsightReviewData['items'][number]['severity']
       summary: string
       evidence?: string
       action?: string

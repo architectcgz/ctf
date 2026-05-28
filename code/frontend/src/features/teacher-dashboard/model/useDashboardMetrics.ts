@@ -1,6 +1,6 @@
 import { computed, type Ref } from 'vue'
 
-import type { TeacherOverviewData, TeacherStudentItem } from '@/api/contracts'
+import type { TeacherOverviewData, StudentDirectoryItem } from '@/api/contracts'
 import {
   buildPortraitSummaryNotes,
   buildStudentInsightRows,
@@ -65,7 +65,7 @@ export function useDashboardMetrics({ overview }: UseDashboardMetricsOptions) {
     return '--'
   })
 
-  const topStudent = computed<TeacherStudentItem | null>(() => spotlightStudent.value ?? null)
+  const topStudent = computed<StudentDirectoryItem | null>(() => spotlightStudent.value ?? null)
 
   const overviewDescription = computed(() =>
     buildOverviewDescription({

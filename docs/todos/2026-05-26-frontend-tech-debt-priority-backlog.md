@@ -34,7 +34,7 @@
   - 风险：原始拆桶风险已消化；当前残留风险已转移到下面这条“admin / teacher 结构耦合”。
   - `2026-05-27` 进展：进一步补上 `api/admin/teaching.ts` owner，platform class / student / instance feature 与 admin 通知发布不再直接引用 `@/api/teaching`。
 
-- [ ] P1：收口 admin / teacher 结构耦合，优先停止让 `/platform/*` 直接依赖 teacher 视图或 teacher 语义 owner
+- [x] P1：收口 admin / teacher 结构耦合，优先停止让 `/platform/*` 直接依赖 teacher 视图或 teacher 语义 owner
   - 依据：`docs/reviews/architecture/2026-05-24-frontend-architecture-review.md` 仍把这条列为当前 P1 finding。
   - 收益：能减少权限面和页面 owner 的隐式耦合，避免 teacher 改动静默影响 platform。
   - 风险：高。这里不是简单拆模板，涉及 route view、共享 workspace feature 的重新归位。
@@ -52,8 +52,12 @@
   - `2026-05-28` AWD review API implementation owner 进展：`api/teaching/awd-reviews.ts` 的共享实现函数已从 `listTeacherAWDReviews()` / `getTeacherAWDReview()` 这类 teacher 命名收口到中性 `AwdReview*` owner，`api/admin/contests.ts` 也改成显式 `listPlatformAWDReviews()` / `getPlatformAWDReview()` 包装，不再 alias teacher 命名函数。当前 AWD review 这条线前端本地残留的 teacher 语义，已进一步收敛到后端 `/api/v1/teacher/awd/reviews*` 路径和 teacher route name。
   - `2026-05-28` instance directory contract naming 进展：实例目录共享 DTO / page data / summary / status filter 已从 `TeacherInstance*` 收口到 `InstanceDirectory*`，teacher / platform 实例目录消费面不再继续共用这组 teacher 前缀 contract。当前这条 P1 在实例目录 contract 层的 teacher 语义，已进一步收敛到 `getTeacherInstances()` / `destroyTeacherInstance()` 这类 public wrapper 名和后端 `/api/v1/teacher/instances` transport path。
   - `2026-05-28` instance role-aware access owner 进展：已新增 `api/instances.ts` 作为实例目录共享 workflow 的中立 facade，`usePlatformInstanceManagementPage.ts` 与 `useInstances.ts` 不再各自直连 `@/api/admin` / `@/api/teacher` 的实例目录函数。当前这条 P1 在实例 access owner 层的 teacher 语义，已进一步收敛到 public wrapper 名和 transport path，不再停留在 shared feature model 的 API 选择面。
+  - `2026-05-28` instance API implementation owner 进展：`api/teaching/instances.ts` 的共享实现函数已从 `getTeacherInstances()` / `destroyTeacherInstance()` 收口到中性 `getInstanceDirectory()` / `destroyManagedInstance()`，`api/admin/teaching.ts` 也改成显式 `getPlatformInstances()` / `destroyPlatformInstance()` 包装，不再 alias teacher 命名函数。当前实例目录这条线前端本地残留的 teacher 语义，已进一步收敛到后端 `/api/v1/teacher/instances*` 路径和 teacher public wrapper 命名。
+  - `2026-05-28` class / student analysis contract naming 进展：班级洞察共享 query / summary / trend / review DTO、学员目录 DTO、证据链 DTO、攻击会话 DTO、证据筛选 query 与班级报告导出 payload 已继续从 `Teacher*` 前缀收口到中性 contract；`api/teaching/classes.ts` / `api/teaching/students.ts` 的局部 normalize / raw response 命名、teacher wrapper 对应 raw type，以及 `class-insight-window` query helper 名称也已同步收口。当前这条 P1 在 shared class / student analysis contract 层的 teacher 语义，已进一步收敛到显式 teacher wrapper / route name / transport path 这类保留边界。
+  - `2026-05-28` 结项说明：再次核查 `views/platform`、shared features 与 shared widgets 后，`/platform/*` 已不再直接依赖 teacher route view，也不再在共享页面 / widget / query sync 里直连 `@/api/teacher` 或 teacher 前缀 shared contract。当前剩余的 teacher 命名主要位于 teacher 自有 feature、显式 public wrapper、teacher route name 与后端 `/api/v1/teacher/*` transport path，属于角色边界而不是 admin / teacher 结构耦合；因此这条 `P1` 结项，后续残留工作转入各自的 `P2/P3` debt。
+  - `2026-05-28` 状态重估：按当前 backlog 范围，这已经是剩余唯一实质未完成的 `P1`。前端本地 admin / teacher 耦合已基本收敛到显式 transport / public wrapper / route 语义；下一步要么继续切最后一刀，要么把这些显式保留边界写成例外说明后降级出 `P1`。
 
-- [ ] P1：把应属于单一 feature 的 page-sized UI 从 `components/**` 继续收口到 `features/*/ui`
+- [x] P1：把应属于单一 feature 的 page-sized UI 从 `components/**` 继续收口到 `features/*/ui`
   - 依据：`docs/reviews/architecture/2026-05-24-frontend-architecture-review.md` 指出 allowlist 仍在冻结历史例外；当前题解管理三件套就是典型的 `components/*Page.vue -> @/features/*` 例外。
   - 收益：可以把“单一 feature 的 UI 壳”从 legacy component page 通道里迁走，减少 `componentFeatureImportAllowlist` 和 `legacyComponentPageAllowlist`，也给后续其它切片提供明确落点。
   - 风险：中。主要是 import 路径、raw-source 测试和 public API 更新，需要避免把 route owner 或 API owner 从 feature model 重新打散。
@@ -86,8 +90,9 @@
   - `2026-05-28` awd operations shell primitives feature UI 进展：`AWDContestSelectorField.vue`、`AWDRuntimePendingState.vue` 已迁入 `features/contest-awd-admin/ui`，`AWDOperationsPanel.vue` 改为 feature 内部相对 import，相关 raw-source / theme token 护栏与组件声明也已切到新 owner。当前 `contest-awd-admin` 在 touched surface 上的 AWD operations 子件 legacy 路径继续缩小。
   - `2026-05-28` AWD operations panel feature UI 进展：`AWDOperationsPanel.vue` 已迁入 `features/contest-awd-admin/ui`，`ContestOperations.vue` 改为通过 `@/features/contest-awd-admin` public API 组合运维 panel；对应的 `components/platform/contest/AWDOperationsPanel.vue -> @/features/contest-awd-admin` allowlist 已收掉。当前这条在 AWD 运维线上的后续重点，开始回到更深层的 runtime 子件 owner，而不是继续保留 panel 本体在旧 `components/platform/contest/*`。
   - `2026-05-28` contest projector ui cluster feature UI 进展：`ContestProjectorToolbar.vue`、`ContestProjectorHero.vue`、`ContestProjectorAttackMap.vue`、`ContestProjectorFocusOverlay.vue` 及其 projector cluster 子件 / 样式已迁入 `features/contest-projector/ui`，`ContestProjector.vue` 改为通过 `@/features/contest-projector` public API 组合 page model 与 UI。当前 `contest-projector` 已同时持有 model 与 UI owner，旧 `components/platform/contest/projector/*` 路径开始退出主消费面。
+  - `2026-05-28` 结项说明：`legacyComponentPageAllowlist` 与 `widgetLegacyComponentImportAllowlist` 已清空；这条债务定义下的 page-sized legacy component 已完成迁移。当前仍存在的 `componentFeatureImportAllowlist` 主要是共享组件 / 基础设施 / 合法跨层例外，不再属于这条“单一 feature 的 page-sized UI 壳”债务。
 
-- [ ] P1：继续拆 contest / AWD 线上的超大组件壳，优先看 `ContestAwdConfigWorkspaceShell.vue`、`ContestChallengeEditorDialog.vue`、`AWDChallengeLibraryPage.vue`
+- [x] P1：继续拆 contest / AWD 线上的超大组件壳，优先看 `ContestAwdConfigWorkspaceShell.vue`、`ContestChallengeEditorDialog.vue`、`AWDChallengeLibraryPage.vue`
   - 依据：这三者当前约 `1009` / `899` / `896` 行，是现阶段最肥的一批前端组件壳。
   - 收益：继续收口 `TD-1`，减少单文件模板/样式/局部状态混写。
   - 风险：中高。比赛与 AWD 页面交互密度高，切片要尽量按稳定展示块或编辑分区拆。
@@ -96,6 +101,13 @@
   - `2026-05-27` AWD config feature ui 进展：`ContestAwdConfigWorkspaceShell.vue` 已迁入 `features/contest-awd-config/ui`，`ContestAwdConfig` route 改为直接从 `features/contest-awd-config` public API 组合 page model 与 workspace shell；当前这条 P1 在 page-sized shell 落位层面的剩余重点已从 AWD 配置页移除。
   - `2026-05-28` AWD config panel cluster feature UI 进展：`ContestAwdConfigTopbar.vue`、`ContestAwdConfigFooter.vue`、`ContestAwdDebugStation.vue`、`ContestAwdEditorHeader.vue`、`ContestAwdScoreWeights.vue`、`ContestAwdServiceDirectory.vue`、`ContestAwdCheckerConfigSection.vue`，以及其依赖的 `ContestAwdHttpStandardFields.vue`、`ContestAwdLegacyProbeFields.vue`、`ContestAwdScriptCheckerFields.vue`、`ContestAwdTcpStandardFields.vue` 与 `contestAwdConfigTypes.ts` 已整体迁入 `features/contest-awd-config/ui`；`ContestAwdConfigWorkspaceShell.vue` 改为 feature 内部相对 import，AWD 配置页的主要编辑 UI cluster 不再散落在旧 `components/platform/contest/*` 路径。
   - `2026-05-28` contest edit follow-up 进展：`ContestChallengeEditorDialog.vue` 在完成 section 拆分后，也已进一步迁入 `features/contest-workbench/ui`，题目编排对话框不再滞留在旧 contest 组件目录。当前这条 P1 的下一批更合适目标已经转到 `AWDChallengeConfigPanel.vue` 这类仍留在 `components/platform/contest/*` 的大尺寸 surface。
+  - `2026-05-28` 结项说明：这条 `P1` 原始点名的 3 个目标都已完成拆分与 feature 落位；剩余 contest / AWD 大组件仍然存在，但它们大多已经处在正确的 feature owner 之下，问题从“legacy shell 落位错误”转成“feature 内部仍有超大组件需要继续拆分”。
+
+- [ ] P2：继续拆 feature-owned 的 contest / AWD 超大组件，优先看 `ContestProjectorAttackMap.vue`、`PlatformContestFormPanel.vue`、`AWDOperationsPanel.vue`、`ContestChallengeOrchestrationPanel.vue`
+  - 依据：当前 contest / AWD 线上剩余的大尺寸 surface 已主要位于 feature 内部，例如 `ContestProjectorAttackMap.vue` 约 `779` 行、`PlatformContestFormPanel.vue` 约 `652` 行、`AWDOperationsPanel.vue` 约 `643` 行、`ContestChallengeOrchestrationPanel.vue` 约 `560` 行；原先那批落在 `components/platform/contest/*` 的 legacy shell 已不再是主矛盾。
+  - 收益：可以继续降低 feature 内部模板 / 样式 / 行为 owner 混写，减少后续 contest/AWD 演进时的大文件回归风险。
+  - 风险：中。当前 owner 已基本正确，后续要按“feature 内局部职责拆分”推进，避免为拆分而拆分。
+  - `2026-05-28` 基线重估：这条是由上面的旧 `P1` 纠偏下放出来的新 residual item；它不再处理 legacy 路径落位问题，而是专门跟踪 feature 内部的超大 UI surface。
 
 - [ ] P2：收口布局层超大组件，优先看 `NotificationDrawer.vue`、`Sidebar.vue`、`TopNav.vue`
   - 依据：三者当前约 `1071` / `854` / `781` 行，已经超过普通布局组件可维护范围。

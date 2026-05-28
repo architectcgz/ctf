@@ -4,14 +4,14 @@ import type {
   ReportExportData,
   InstanceDirectorySummaryData,
   InstanceDirectoryPageData,
-  TeacherClassReportExportPayload,
+  ClassReportExportPayload,
   InstanceDirectoryItem,
 } from '../contracts'
 
 export type InstanceDirectoryStatusFilter =
   'running' | 'creating' | 'expired' | 'failed' | 'inactive'
 
-export async function getTeacherInstances(
+export async function getInstanceDirectory(
   params?: {
     class_name?: string
     keyword?: string
@@ -68,13 +68,13 @@ export async function getTeacherInstances(
   }
 }
 
-export async function destroyTeacherInstance(id: string): Promise<void> {
+export async function destroyManagedInstance(id: string): Promise<void> {
   return request<void>({
     method: 'DELETE',
     url: `/teacher/instances/${encodeURIComponent(id)}`,
   })
 }
 
-export async function exportClassReport(data: TeacherClassReportExportPayload) {
+export async function exportClassReport(data: ClassReportExportPayload) {
   return request<ReportExportData>({ method: 'POST', url: '/reports/class', data })
 }

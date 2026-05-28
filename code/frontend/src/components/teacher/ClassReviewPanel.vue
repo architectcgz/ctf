@@ -3,14 +3,14 @@ import { computed } from 'vue'
 
 import type {
   AdviceSeverity,
-  TeacherClassReviewData,
-  TeacherClassReviewItemData,
+  ClassInsightReviewData,
+  ClassInsightReviewItemData,
 } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
 
 const props = defineProps<{
-  review: TeacherClassReviewData | null
+  review: ClassInsightReviewData | null
   className?: string
   bare?: boolean
 }>()
@@ -22,7 +22,7 @@ const panelSubtitle = computed(() =>
     : '当前班级可直接执行的复盘结论与介入建议。'
 )
 
-function getSeverityClass(severity: TeacherClassReviewItemData['severity']): string {
+function getSeverityClass(severity: ClassInsightReviewItemData['severity']): string {
   if (severity === 'danger') return 'review-item review-item--danger'
   if (severity === 'warning') return 'review-item review-item--warning'
   if (severity === 'good') return 'review-item review-item--success'
@@ -36,7 +36,7 @@ function severityLabel(severity: AdviceSeverity): string {
   return '表现稳定'
 }
 
-function shouldShowRecommendationFallback(item: TeacherClassReviewItemData): boolean {
+function shouldShowRecommendationFallback(item: ClassInsightReviewItemData): boolean {
   return item.severity !== 'good' && !item.recommendation
 }
 </script>
