@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import ContestEditTopbarPanel from '@/components/platform/contest/ContestEditTopbarPanel.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import { ContestWorkbenchStageTabs } from '@/features/contest-workbench'
-import { ContestEditWorkspacePanel, useContestEditPage } from '@/features/platform-contests'
+import {
+  ContestEditTopbarPanel,
+  ContestEditWorkspacePanel,
+  useContestEditPage,
+} from '@/features/platform-contests'
 
 const {
   loading,

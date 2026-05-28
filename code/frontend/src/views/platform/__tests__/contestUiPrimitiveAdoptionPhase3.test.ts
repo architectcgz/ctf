@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest'
 import awdAttackLogDialogSource from '@/components/platform/contest/AWDAttackLogDialog.vue?raw'
 import awdRoundCreateDialogSource from '@/components/platform/contest/AWDRoundCreateDialog.vue?raw'
 import awdServiceCheckDialogSource from '@/components/platform/contest/AWDServiceCheckDialog.vue?raw'
-import contestAwdChallengeSelectorSectionSource from '@/components/platform/contest/ContestAwdChallengeSelectorSection.vue?raw'
-import contestChallengeEditorDialogSourceBase from '@/components/platform/contest/ContestChallengeEditorDialog.vue?raw'
-import contestChallengeSettingsSectionSource from '@/components/platform/contest/ContestChallengeSettingsSection.vue?raw'
+import contestAwdChallengeSelectorSectionSource from '@/features/contest-workbench/ui/ContestAwdChallengeSelectorSection.vue?raw'
+import contestChallengeEditorDialogSourceBase from '@/features/contest-workbench/ui/ContestChallengeEditorDialog.vue?raw'
+import contestChallengeSettingsSectionSource from '@/features/contest-workbench/ui/ContestChallengeSettingsSection.vue?raw'
 
 const contestChallengeEditorDialogSource = [
   contestChallengeEditorDialogSourceBase,

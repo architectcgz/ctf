@@ -23,7 +23,7 @@ import adminChallengeProfilePanelSource from '@/features/platform-challenge-deta
 import challengeWriteupManagePanelSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
 import challengeProfileSummaryStripSource from '@/entities/challenge/ui/ChallengeProfileSummaryStrip.vue?raw'
 import contestEditSource from '../ContestEdit.vue?raw'
-import contestEditTopbarPanelSource from '@/components/platform/contest/ContestEditTopbarPanel.vue?raw'
+import contestEditTopbarPanelSource from '@/features/platform-contests/ui/ContestEditTopbarPanel.vue?raw'
 import contestWorkbenchStageTabsSource from '@/features/contest-workbench/ui/ContestWorkbenchStageTabs.vue?raw'
 import contestEditWorkspacePanelSource from '@/features/platform-contests/ui/ContestEditWorkspacePanel.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'

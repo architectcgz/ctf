@@ -2,4 +2,7 @@ export { default as ContestWorkbenchStageTabs } from './ContestWorkbenchStageTab
 export { default as ContestWorkbenchSummaryStrip } from './ContestWorkbenchSummaryStrip.vue'
 export { default as ContestChallengeFilterStrip } from './ContestChallengeFilterStrip.vue'
 export { default as ContestChallengeSummaryStrip } from './ContestChallengeSummaryStrip.vue'
+export { default as ContestAwdChallengeSelectorSection } from './ContestAwdChallengeSelectorSection.vue'
+export { default as ContestChallengeSettingsSection } from './ContestChallengeSettingsSection.vue'
+export { default as ContestChallengeEditorDialog } from './ContestChallengeEditorDialog.vue'
 export { default as ContestChallengeOrchestrationPanel } from './ContestChallengeOrchestrationPanel.vue'

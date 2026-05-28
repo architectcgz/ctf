@@ -17,7 +17,7 @@ import {
 } from '@/entities/challenge'
 import { useContestChallengeOrchestration } from '../model'
 
-import ContestChallengeEditorDialog from '@/components/platform/contest/ContestChallengeEditorDialog.vue'
+import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
 import ContestChallengeFilterStrip from './ContestChallengeFilterStrip.vue'
 import ContestChallengeSummaryStrip from './ContestChallengeSummaryStrip.vue'
 

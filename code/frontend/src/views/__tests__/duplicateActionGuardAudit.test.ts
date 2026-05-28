@@ -5,7 +5,7 @@ import awdChallengeEditorDialogSource from '@/features/platform-awd-challenges/u
 import awdAttackLogDialogSource from '@/components/platform/contest/AWDAttackLogDialog.vue?raw'
 import awdServiceCheckDialogSource from '@/components/platform/contest/AWDServiceCheckDialog.vue?raw'
 import awdRoundCreateDialogSource from '@/components/platform/contest/AWDRoundCreateDialog.vue?raw'
-import contestChallengeEditorDialogSource from '@/components/platform/contest/ContestChallengeEditorDialog.vue?raw'
+import contestChallengeEditorDialogSource from '@/features/contest-workbench/ui/ContestChallengeEditorDialog.vue?raw'
 import platformUserFormDialogSource from '@/components/platform/user/PlatformUserFormDialog.vue?raw'
 import awdCheckerSaveFlowSource from '@/features/contest-awd-config/model/useAwdCheckerSaveFlow.ts?raw'
 import imageManageMutationsSource from '@/features/image-management/model/useImageManageMutations.ts?raw'

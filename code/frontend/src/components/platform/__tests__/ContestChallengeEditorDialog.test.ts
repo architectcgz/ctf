@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import ContestChallengeEditorDialog from '../contest/ContestChallengeEditorDialog.vue'
+import ContestChallengeEditorDialog from '@/features/contest-workbench/ui/ContestChallengeEditorDialog.vue'
 
 function mountDialog(props?: Record<string, unknown>) {
   return mount(ContestChallengeEditorDialog, {
