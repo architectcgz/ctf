@@ -1,0 +1,18 @@
+flowchart TD
+    Route["SecuritySettings.vue\n路由入口层"] -->|调用| Model["useSecuritySettingsPage()\n页面业务层"]
+    Model -->|返回状态和动作| Route
+    Route -->|传入 props / 事件| Shell["SecuritySettingsWorkspaceShell.vue\n页面展示层"]
+
+    Shell --> Overview["安全概况区"]
+    Shell --> Credential["凭证更新区"]
+    Shell --> Tips["安全提示区"]
+
+    classDef route fill:#eaf2ff,stroke:#3b82f6,color:#0f172a
+    classDef model fill:#edf9ee,stroke:#22c55e,color:#14532d
+    classDef shell fill:#f6efff,stroke:#8b5cf6,color:#4c1d95
+    classDef child fill:#fff8e8,stroke:#f59e0b,color:#7c2d12
+
+    class Route route
+    class Model model
+    class Shell shell
+    class Overview,Credential,Tips child

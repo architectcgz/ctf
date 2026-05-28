@@ -189,6 +189,25 @@
 - feature model 继续持有真实行为 owner
 - page-sized 业务 UI 不一定非要挂在 `components/*Page.vue`，只要它只服务单一 feature，就应跟随 feature 收进 `features/*/ui`
 
+### 2.8 个人安全设置页的 shell 分层
+
+`SecuritySettings` 当前保留了一个典型的 route view -> feature model -> workspace shell 链路：
+
+1. `code/frontend/src/views/profile/SecuritySettings.vue`
+   - 负责：作为路由入口接线 `useSecuritySettingsPage()` 和 `SecuritySettingsWorkspaceShell.vue`
+   - 不负责：内联密码校验、提交流程和展示布局细节
+2. `code/frontend/src/features/profile/model/useSecuritySettingsPage.ts`
+   - 负责：密码表单草稿、字段校验、提交防重、错误提示和成功 toast
+   - 不负责：页面布局、分区标题和视觉样式
+3. `code/frontend/src/components/profile/SecuritySettingsWorkspaceShell.vue`
+   - 负责：安全概况、密码修改区和安全提示区的页面壳布局
+   - 不负责：直接调用 `changePassword()` 或自行管理提交流程
+
+辅助图：
+
+- 渲染图：[`shell方案.png`](./shell方案.png)
+- Mermaid 源：[`07-pages-dataflow-security-settings-shell.mmd`](./07-pages-dataflow-security-settings-shell.mmd)
+
 ## 3. 页面数据流不变量
 
 - route view 默认不直接 import 非 contract API 模块
