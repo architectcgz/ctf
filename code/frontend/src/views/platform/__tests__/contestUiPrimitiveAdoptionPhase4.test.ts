@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
 import awdContestSelectorFieldSource from '@/features/contest-awd-admin/ui/AWDContestSelectorField.vue?raw'
+import awdOperationsPreRuntimeStageSource from '@/features/contest-awd-admin/ui/AWDOperationsPreRuntimeStage.vue?raw'
 import awdReadinessDecisionHUDSource from '@/features/awd-readiness/ui/AWDReadinessDecisionHUD.vue?raw'
 import awdOperationsPanelSource from '@/features/contest-awd-admin/ui/AWDOperationsPanel.vue?raw'
 import awdRoundHeaderPanelSource from '@/features/awd-inspector/ui/AWDRoundHeaderPanel.vue?raw'
@@ -13,7 +14,8 @@ import contestAwdPreflightPanelSource from '@/features/platform-contests/ui/Cont
 describe('contest ui primitive adoption phase 4', () => {
   it('awd operations panel should consume shared field and button primitives for selector and runtime shell', () => {
     expect(awdOperationsPanelSource).toContain('<AWDContestSelectorField')
-    expect(awdOperationsPanelSource).toContain('<AWDRuntimePendingState')
+    expect(awdOperationsPanelSource).toContain('<AWDOperationsPreRuntimeStage')
+    expect(awdOperationsPreRuntimeStageSource).toContain('name="pending"')
     expect(awdContestSelectorFieldSource).toContain('class="ui-field awd-ops-selector-field"')
     expect(awdContestSelectorFieldSource).toContain('class="ui-control-wrap"')
     expect(awdContestSelectorFieldSource).toContain('class="ui-control"')
