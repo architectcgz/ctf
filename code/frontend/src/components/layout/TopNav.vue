@@ -92,10 +92,10 @@ import TopNavBreadcrumbs from '@/components/layout/topnav/TopNavBreadcrumbs.vue'
 import TopNavMobileToggle from '@/components/layout/topnav/TopNavMobileToggle.vue'
 import TopNavNotificationTrigger from '@/components/layout/topnav/TopNavNotificationTrigger.vue'
 import TopNavUserCard from '@/components/layout/topnav/TopNavUserCard.vue'
-import { useAuth } from '@/features/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useTheme } from '@/composables/useTheme'
+import { useLayoutSessionActionsBridge } from '@/widgets/layout-shell'
 import { useWorkspaceShellNavigation } from '@/composables/useWorkspaceShellNavigation'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
 import { resolveRouteTitle } from '@/utils/routeTitle'
@@ -121,7 +121,7 @@ const brandPickerOpen = ref(false)
 function onResize() {
   isMobile.value = window.innerWidth < 768
 }
-const { logout } = useAuth()
+const { logout } = useLayoutSessionActionsBridge()
 const { availableBrands, brand, setBrand, theme, toggleTheme } = useTheme()
 const { breadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 

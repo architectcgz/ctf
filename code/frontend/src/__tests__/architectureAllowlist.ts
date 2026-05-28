@@ -3,9 +3,6 @@ export const viewLineLimit = 500
 export const oversizedViewAllowlist = new Set<string>([])
 
 export const componentFeatureImportAllowlist = new Set([
-  'components/layout/AppLayout.vue -> @/features/notifications',
-  'components/layout/NotificationDrawer.vue -> @/features/notifications',
-  'components/layout/TopNav.vue -> @/features/auth',
   'components/platform/topology/TopologyCanvasBoard.vue -> @/features/challenge-topology-studio/model',
   'components/platform/topology/TopologyConnectivitySections.vue -> @/features/challenge-topology-studio/model',
   'components/platform/topology/TopologyNetworkSection.vue -> @/features/challenge-topology-studio/model',

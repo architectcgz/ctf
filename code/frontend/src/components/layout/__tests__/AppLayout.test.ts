@@ -42,13 +42,13 @@ vi.mock('@/api/admin/authoring', async () => {
     ...adminApiMocks,
   }
 })
-vi.mock('@/features/notifications', async () => {
+vi.mock('@/widgets/layout-shell', async () => {
   const { ref } = await vi.importActual<typeof import('vue')>('vue')
   const actual =
-    await vi.importActual<typeof import('@/features/notifications')>('@/features/notifications')
+    await vi.importActual<typeof import('@/widgets/layout-shell')>('@/widgets/layout-shell')
   return {
     ...actual,
-    useNotificationRealtime: () => ({
+    useLayoutNotificationRealtimeBridge: () => ({
       start: vi.fn(),
       status: ref('idle'),
     }),

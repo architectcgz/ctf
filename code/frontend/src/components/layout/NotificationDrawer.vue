@@ -70,8 +70,8 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Bell } from 'lucide-vue-next'
 
-import { useNotificationDrawer } from '@/features/notifications'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
+import { useLayoutNotificationDrawerBridge } from '@/widgets/layout-shell'
 
 import NotificationDrawerBody from './notification-drawer/NotificationDrawerBody.vue'
 import NotificationDrawerFooter from './notification-drawer/NotificationDrawerFooter.vue'
@@ -100,7 +100,7 @@ const {
   goToNotifications,
   goToNotificationDetail,
   markAllRead,
-} = useNotificationDrawer(() => props.realtimeStatus)
+} = useLayoutNotificationDrawerBridge(() => props.realtimeStatus)
 
 const activeFilter = ref<NotificationFilter>('all')
 const hasUnread = computed(() => unreadCount.value > 0)

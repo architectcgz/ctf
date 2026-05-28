@@ -55,11 +55,11 @@ import { RouterView } from 'vue-router'
 
 import Sidebar from '@/components/layout/Sidebar.vue'
 import TopNav from '@/components/layout/TopNav.vue'
-import { useNotificationRealtime } from '@/features/notifications'
+import { useLayoutNotificationRealtimeBridge } from '@/widgets/layout-shell'
 import { isBackofficeRoute } from '@/utils/backofficeRouteMeta'
 
 const route = useRoute()
-const { start, status: notificationStatus } = useNotificationRealtime()
+const { start, status: notificationStatus } = useLayoutNotificationRealtimeBridge()
 const sidebarCollapsed = ref(false)
 const sidebarOpen = ref(false)
 const isBackofficeLayout = computed(() => isBackofficeRoute(route.path))

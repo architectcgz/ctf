@@ -26,9 +26,15 @@ const authMocks = vi.hoisted(() => ({
   logout: vi.fn(),
 }))
 
-vi.mock('@/features/auth', () => ({
-  useAuth: () => authMocks,
-}))
+vi.mock('@/widgets/layout-shell', async () => {
+  const actual = await vi.importActual<typeof import('@/widgets/layout-shell')>(
+    '@/widgets/layout-shell'
+  )
+  return {
+    ...actual,
+    useLayoutSessionActionsBridge: () => authMocks,
+  }
+})
 
 vi.mock('@/components/layout/NotificationDrawer.vue', () => ({
   default: {
