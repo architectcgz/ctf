@@ -1,7 +1,11 @@
 import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 
-import { destroyTeacherInstance, getClasses, getTeacherInstances } from '@/api/teacher'
+import { getClasses } from '@/api/teacher'
 import type { ClassDirectoryItem, InstanceDirectoryItem } from '@/api/contracts'
+import {
+  destroyManagedInstanceByRole,
+  getInstanceDirectoryByRole,
+} from '@/api/instances'
 import { useAuthStore } from '@/stores/auth'
 import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from '@/composables/useToast'
@@ -78,15 +82,19 @@ export function useInstances() {
     error.value = null
 
     try {
-      const nextInstances = await getTeacherInstances({
-        class_name: filters.className || undefined,
-        keyword: filters.keyword.trim() || undefined,
-        student_no: filters.studentNo.trim() || undefined,
-        page: page.value,
-        page_size: pageSize.value,
-      }, {
-        signal: controller.signal,
-      })
+      const nextInstances = await getInstanceDirectoryByRole(
+        authStore.user?.role,
+        {
+          class_name: filters.className || undefined,
+          keyword: filters.keyword.trim() || undefined,
+          student_no: filters.studentNo.trim() || undefined,
+          page: page.value,
+          page_size: pageSize.value,
+        },
+        {
+          signal: controller.signal,
+        }
+      )
       if (requestID !== latestInstanceRequestID) return
       instances.value = nextInstances.list
       totalCount.value = nextInstances.total
@@ -142,7 +150,7 @@ export function useInstances() {
   async function removeInstance(id: string): Promise<void> {
     destroyingId.value = id
     try {
-      await destroyTeacherInstance(id)
+      await destroyManagedInstanceByRole(authStore.user?.role, id)
       if (instances.value.length === 1 && page.value > 1) {
         page.value -= 1
       }

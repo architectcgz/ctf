@@ -9,9 +9,9 @@ import platformInstanceManagementModelSource from '@/features/platform-instance-
 
 const pushMock = vi.fn()
 
-const adminTeachingApiMocks = vi.hoisted(() => ({
-  getPlatformInstances: vi.fn(),
-  destroyPlatformInstance: vi.fn(),
+const instanceAccessApiMocks = vi.hoisted(() => ({
+  getInstanceDirectoryByRole: vi.fn(),
+  destroyManagedInstanceByRole: vi.fn(),
 }))
 
 const confirmMock = vi.hoisted(() => vi.fn())
@@ -24,10 +24,7 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin', () => ({
-  getPlatformInstances: adminTeachingApiMocks.getPlatformInstances,
-  destroyPlatformInstance: adminTeachingApiMocks.destroyPlatformInstance,
-}))
+vi.mock('@/api/instances', () => instanceAccessApiMocks)
 vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: confirmMock,
 }))
@@ -35,11 +32,11 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 describe('PlatformInstanceManagement', () => {
   beforeEach(() => {
     pushMock.mockReset()
-    adminTeachingApiMocks.getPlatformInstances.mockReset()
-    adminTeachingApiMocks.destroyPlatformInstance.mockReset()
+    instanceAccessApiMocks.getInstanceDirectoryByRole.mockReset()
+    instanceAccessApiMocks.destroyManagedInstanceByRole.mockReset()
     confirmMock.mockReset()
 
-    adminTeachingApiMocks.getPlatformInstances.mockResolvedValue({
+    instanceAccessApiMocks.getInstanceDirectoryByRole.mockResolvedValue({
       list: [
         {
           id: 'inst-1',
@@ -86,7 +83,7 @@ describe('PlatformInstanceManagement', () => {
         warning_count: 1,
       },
     })
-    adminTeachingApiMocks.destroyPlatformInstance.mockResolvedValue(undefined)
+    instanceAccessApiMocks.destroyManagedInstanceByRole.mockResolvedValue(undefined)
     confirmMock.mockResolvedValue(true)
   })
 
@@ -99,7 +96,11 @@ describe('PlatformInstanceManagement', () => {
       "usePlatformInstanceManagementPage } from '@/features/platform-instance-management'"
     )
     expect(platformInstanceManagementModelSource).toContain('InstanceDirectoryItem')
+    expect(platformInstanceManagementModelSource).toContain("from '@/api/instances'")
     expect(platformInstanceManagementModelSource).not.toContain('TeacherInstanceItem')
+    expect(platformInstanceManagementModelSource).not.toContain("from '@/api/admin'")
+    expect(platformInstanceManagementModelSource).not.toContain('getPlatformInstances')
+    expect(platformInstanceManagementModelSource).not.toContain('destroyPlatformInstance')
     expect(adminInstanceManageSource).not.toContain("from '@/api/teacher'")
     expect(adminInstanceManageSource).not.toContain("from '@/composables/useDestructiveConfirm'")
     expect(adminInstanceManageSource).not.toContain("from '@/api/admin'")
@@ -143,7 +144,8 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    expect(adminTeachingApiMocks.getPlatformInstances).toHaveBeenCalledWith(
+    expect(instanceAccessApiMocks.getInstanceDirectoryByRole).toHaveBeenCalledWith(
+      'admin',
       {
         class_name: undefined,
         keyword: undefined,
@@ -172,7 +174,7 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    adminTeachingApiMocks.getPlatformInstances.mockResolvedValue({
+    instanceAccessApiMocks.getInstanceDirectoryByRole.mockResolvedValue({
       list: [
         {
           id: 'inst-2',
@@ -207,7 +209,8 @@ describe('PlatformInstanceManagement', () => {
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(adminTeachingApiMocks.getPlatformInstances).toHaveBeenLastCalledWith(
+    expect(instanceAccessApiMocks.getInstanceDirectoryByRole).toHaveBeenLastCalledWith(
+      'admin',
       {
         class_name: undefined,
         keyword: 'Pwn',
@@ -241,7 +244,7 @@ describe('PlatformInstanceManagement', () => {
     const wrapper = mount(PlatformInstanceManagement)
     await flushPromises()
 
-    adminTeachingApiMocks.getPlatformInstances.mockResolvedValue({
+    instanceAccessApiMocks.getInstanceDirectoryByRole.mockResolvedValue({
       list: [
         {
           id: 'inst-2',
@@ -279,8 +282,12 @@ describe('PlatformInstanceManagement', () => {
     await flushPromises()
 
     expect(confirmMock).toHaveBeenCalled()
-    expect(adminTeachingApiMocks.destroyPlatformInstance).toHaveBeenCalledWith('inst-1')
-    expect(adminTeachingApiMocks.getPlatformInstances).toHaveBeenLastCalledWith(
+    expect(instanceAccessApiMocks.destroyManagedInstanceByRole).toHaveBeenCalledWith(
+      'admin',
+      'inst-1'
+    )
+    expect(instanceAccessApiMocks.getInstanceDirectoryByRole).toHaveBeenLastCalledWith(
+      'admin',
       {
         class_name: undefined,
         keyword: undefined,

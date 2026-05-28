@@ -36,6 +36,7 @@
 - 2026-05-28 起，前端本地共享 DTO 对 AWD review 详情 / 轮次 / 队伍 / 服务 / 攻击 / 流量 / selected round / archive 也统一使用中性命名 `AwdReview*Data`；teacher 语义只保留在 `/api/v1/teacher/awd/reviews*` 路径和 `src/api/teacher/*` public wrapper，不改变外部 HTTP 字段或权限语义。
 - 2026-05-28 起，`src/api/teaching/awd-reviews.ts` 的 AWD review 共享实现 owner 也统一改成中性 `AwdReview*` 函数；`src/api/admin/*` / `src/api/teacher/*` 只在前端 public owner 层保留 platform / teacher 命名，不新增任何平台专属 AWD review HTTP 契约。
 - 2026-05-28 起，前端本地共享实例目录 DTO / page data / summary / status filter 统一使用中性命名 `InstanceDirectory*`；`getTeacherInstances()`、`destroyTeacherInstance()` 与 `/api/v1/teacher/instances` 路径继续保留现有 teacher public wrapper / transport 语义，不改变外部 HTTP 字段或权限语义。
+- 2026-05-28 起，前端实例目录共享 feature 也允许通过 `src/api/instances.ts` 作为 role-aware access owner 选择 teacher / platform public wrapper；底层仍复用既有 `/api/v1/teacher/instances` HTTP contract，不新增平台专属实例目录路径。
 - 2026-05-27 起，platform 题解管理面板也允许通过 `src/api/admin/authoring.ts` 暴露 `getPlatformWriteupSubmissions` 这类薄 wrapper；底层仍复用既有 `/api/v1/teacher/writeup-submissions` HTTP contract，不改变教师侧题解查看 / 评阅能力。
 - 2026-05-27 起，前端本地共享 DTO 对这条投稿目录 contract 统一使用中性命名 `WriteupSubmissionItemData`；HTTP path 仍保持 `/api/v1/teacher/writeup-submissions`，不改变服务端权限语义。
 

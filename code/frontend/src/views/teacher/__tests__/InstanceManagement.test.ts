@@ -24,8 +24,11 @@ const pushMock = vi.fn()
 
 const teacherApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
-  getTeacherInstances: vi.fn(),
-  destroyTeacherInstance: vi.fn(),
+}))
+
+const instanceAccessApiMocks = vi.hoisted(() => ({
+  getInstanceDirectoryByRole: vi.fn(),
+  destroyManagedInstanceByRole: vi.fn(),
 }))
 
 const confirmMock = vi.hoisted(() => vi.fn())
@@ -39,6 +42,7 @@ vi.mock('vue-router', async () => {
 })
 
 vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/api/instances', () => instanceAccessApiMocks)
 vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: confirmMock,
 }))
@@ -50,9 +54,10 @@ describe('InstanceManagement', () => {
     localStorage.clear()
     pushMock.mockReset()
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
+    Object.values(instanceAccessApiMocks).forEach((mock) => mock.mockReset())
 
     teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 1 }])
-    teacherApiMocks.getTeacherInstances.mockResolvedValue({
+    instanceAccessApiMocks.getInstanceDirectoryByRole.mockResolvedValue({
       list: [
         {
           id: 'inst-1',
@@ -82,7 +87,7 @@ describe('InstanceManagement', () => {
         warning_count: 0,
       },
     })
-    teacherApiMocks.destroyTeacherInstance.mockResolvedValue(undefined)
+    instanceAccessApiMocks.destroyManagedInstanceByRole.mockResolvedValue(undefined)
     confirmMock.mockReset()
     confirmMock.mockResolvedValue(true)
 
@@ -113,7 +118,8 @@ describe('InstanceManagement', () => {
 
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledWith(
+    expect(instanceAccessApiMocks.getInstanceDirectoryByRole).toHaveBeenCalledWith(
+      'teacher',
       {
         class_name: 'Class A',
         keyword: undefined,
@@ -154,6 +160,9 @@ describe('InstanceManagement', () => {
     )
     expect(instanceManagementViewSource).not.toContain('confirmDestructiveAction')
     expect(instanceManagementViewSource).not.toContain('resolveTeachingDashboardRouteName')
+    expect(teacherInstancesHookSource).toContain("from '@/api/instances'")
+    expect(teacherInstancesHookSource).not.toContain('getTeacherInstances')
+    expect(teacherInstancesHookSource).not.toContain('destroyTeacherInstance')
     expect(teacherInstancesHookSource).toContain("reportFrontendError('加载教师实例管理页失败:', err)")
     expect(teacherInstancesHookSource).toContain("reportFrontendError('加载教师实例列表失败:', err)")
     expect(teacherInstancesHookSource).toContain("reportFrontendError('教师销毁实例失败:', err)")
@@ -175,11 +184,12 @@ describe('InstanceManagement', () => {
     const inputs = wrapper.findAll('input')
     await inputs[0].setValue('ali')
     await inputs[1].setValue('S-1001')
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledTimes(1)
+    expect(instanceAccessApiMocks.getInstanceDirectoryByRole).toHaveBeenCalledTimes(1)
     vi.advanceTimersByTime(250)
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+    expect(instanceAccessApiMocks.getInstanceDirectoryByRole).toHaveBeenLastCalledWith(
+      'teacher',
       {
         class_name: 'Class A',
         keyword: 'ali',
@@ -192,7 +202,7 @@ describe('InstanceManagement', () => {
       })
     )
 
-    teacherApiMocks.getTeacherInstances.mockResolvedValue({
+    instanceAccessApiMocks.getInstanceDirectoryByRole.mockResolvedValue({
       list: [],
       total: 0,
       page: 1,
@@ -209,7 +219,10 @@ describe('InstanceManagement', () => {
     await flushPromises()
 
     expect(confirmMock).toHaveBeenCalled()
-    expect(teacherApiMocks.destroyTeacherInstance).toHaveBeenCalledWith('inst-1')
+    expect(instanceAccessApiMocks.destroyManagedInstanceByRole).toHaveBeenCalledWith(
+      'teacher',
+      'inst-1'
+    )
     expect(wrapper.text()).not.toContain('Web SQLi 101')
   })
 
@@ -231,7 +244,7 @@ describe('InstanceManagement', () => {
     await flushPromises()
 
     expect(confirmMock).toHaveBeenCalled()
-    expect(teacherApiMocks.destroyTeacherInstance).not.toHaveBeenCalled()
+    expect(instanceAccessApiMocks.destroyManagedInstanceByRole).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('Web SQLi 101')
   })
 
@@ -262,31 +275,68 @@ describe('InstanceManagement', () => {
   })
 
   it('应该支持实例目录分页切换', async () => {
-    teacherApiMocks.getTeacherInstances.mockImplementation(async (params?: { page?: number; page_size?: number }) => {
-      const requestedPage = params?.page ?? 1
-      if (requestedPage === 2) {
+    instanceAccessApiMocks.getInstanceDirectoryByRole.mockImplementation(
+      async (
+        role: string | null | undefined,
+        params?: { page?: number; page_size?: number }
+      ) => {
+        expect(role).toBe('teacher')
+        const requestedPage = params?.page ?? 1
+        if (requestedPage === 2) {
+          return {
+            list: [
+              {
+                id: 'inst-21',
+                student_id: 'stu-21',
+                student_name: 'Student 21',
+                student_username: 'student-21',
+                student_no: 'S-0021',
+                class_name: 'Class A',
+                challenge_id: 'challenge-21',
+                challenge_title: 'Challenge 21',
+                status: 'running',
+                access_url: 'http://127.0.0.1:30021',
+                expires_at: '2026-03-09T10:30:00Z',
+                remaining_time: 1200,
+                extend_count: 1,
+                max_extends: 3,
+                created_at: '2026-03-09T09:30:00Z',
+              },
+            ],
+            total: 21,
+            page: 2,
+            page_size: 20,
+            summary: {
+              total_count: 21,
+              running_count: 21,
+              expiring_soon_count: 0,
+              warning_count: 0,
+            },
+          }
+        }
+
         return {
           list: [
-            {
-              id: 'inst-21',
-              student_id: 'stu-21',
-              student_name: 'Student 21',
-              student_username: 'student-21',
-              student_no: 'S-0021',
+            ...Array.from({ length: 20 }, (_, index) => ({
+              id: `inst-${index + 1}`,
+              student_id: `stu-${index + 1}`,
+              student_name: `Student ${index + 1}`,
+              student_username: `student-${index + 1}`,
+              student_no: `S-${String(index + 1).padStart(4, '0')}`,
               class_name: 'Class A',
-              challenge_id: 'challenge-21',
-              challenge_title: 'Challenge 21',
+              challenge_id: `challenge-${index + 1}`,
+              challenge_title: `Challenge ${index + 1}`,
               status: 'running',
-              access_url: 'http://127.0.0.1:30021',
+              access_url: `http://127.0.0.1:30${String(index + 1).padStart(3, '0')}`,
               expires_at: '2026-03-09T10:30:00Z',
               remaining_time: 1200,
               extend_count: 1,
               max_extends: 3,
               created_at: '2026-03-09T09:30:00Z',
-            },
+            })),
           ],
           total: 21,
-          page: 2,
+          page: 1,
           page_size: 20,
           summary: {
             total_count: 21,
@@ -296,36 +346,7 @@ describe('InstanceManagement', () => {
           },
         }
       }
-
-      return {
-        list: Array.from({ length: 20 }, (_, index) => ({
-          id: `inst-${index + 1}`,
-          student_id: `stu-${index + 1}`,
-          student_name: `Student ${index + 1}`,
-          student_username: `student-${index + 1}`,
-          student_no: `S-${String(index + 1).padStart(4, '0')}`,
-          class_name: 'Class A',
-          challenge_id: `challenge-${index + 1}`,
-          challenge_title: `Challenge ${index + 1}`,
-          status: 'running',
-          access_url: `http://127.0.0.1:30${String(index + 1).padStart(3, '0')}`,
-          expires_at: '2026-03-09T10:30:00Z',
-          remaining_time: 1200,
-          extend_count: 1,
-          max_extends: 3,
-          created_at: '2026-03-09T09:30:00Z',
-        })),
-        total: 21,
-        page: 1,
-        page_size: 20,
-        summary: {
-          total_count: 21,
-          running_count: 21,
-          expiring_soon_count: 0,
-          warning_count: 0,
-        },
-      }
-    })
+    )
 
     const wrapper = mount(InstanceManagement, {
       global: {
@@ -348,7 +369,8 @@ describe('InstanceManagement', () => {
     await paginationButtons[1].trigger('click')
     await flushPromises()
 
-    expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith(
+    expect(instanceAccessApiMocks.getInstanceDirectoryByRole).toHaveBeenLastCalledWith(
+      'teacher',
       {
         class_name: 'Class A',
         keyword: undefined,

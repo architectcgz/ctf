@@ -2,7 +2,10 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { InstanceDirectoryItem } from '@/api/contracts'
-import { destroyPlatformInstance, getPlatformInstances } from '@/api/admin'
+import {
+  destroyManagedInstanceByRole,
+  getInstanceDirectoryByRole,
+} from '@/api/instances'
 import { useAbortController } from '@/composables/useAbortController'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { reportFrontendError } from '@/utils/reportFrontendError'
@@ -65,16 +68,20 @@ export function usePlatformInstanceManagementPage() {
     loading.value = true
     error.value = null
     try {
-      const response = await getPlatformInstances({
-        class_name: undefined,
-        keyword: keyword.value.trim() || undefined,
-        student_no: undefined,
-        status: statusFilter.value || undefined,
-        page: page.value,
-        page_size: pageSize.value,
-      }, {
-        signal: controller.signal,
-      })
+      const response = await getInstanceDirectoryByRole(
+        'admin',
+        {
+          class_name: undefined,
+          keyword: keyword.value.trim() || undefined,
+          student_no: undefined,
+          status: statusFilter.value || undefined,
+          page: page.value,
+          page_size: pageSize.value,
+        },
+        {
+          signal: controller.signal,
+        }
+      )
       if (requestId !== latestRequestId) return
       list.value = response.list
       total.value = response.total
@@ -119,7 +126,7 @@ export function usePlatformInstanceManagementPage() {
 
     try {
       destroyingId.value = instance.id
-      await destroyPlatformInstance(instance.id)
+      await destroyManagedInstanceByRole('admin', instance.id)
       if (list.value.length === 1 && page.value > 1) {
         page.value -= 1
       }

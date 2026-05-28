@@ -16,7 +16,11 @@ const instanceApiMocks = vi.hoisted(() => ({
 }))
 
 const teacherApiMocks = vi.hoisted(() => ({
-  destroyTeacherInstance: vi.fn(),
+  getClasses: vi.fn(),
+}))
+
+const instanceAccessApiMocks = vi.hoisted(() => ({
+  destroyManagedInstanceByRole: vi.fn(),
 }))
 
 const challengeApiMocks = vi.hoisted(() => ({
@@ -39,7 +43,11 @@ vi.mock('@/api/instance', () => ({
 }))
 
 vi.mock('@/api/teacher', () => ({
-  destroyTeacherInstance: teacherApiMocks.destroyTeacherInstance,
+  getClasses: teacherApiMocks.getClasses,
+}))
+
+vi.mock('@/api/instances', () => ({
+  destroyManagedInstanceByRole: instanceAccessApiMocks.destroyManagedInstanceByRole,
 }))
 
 vi.mock('@/api/challenge', () => ({
@@ -68,7 +76,8 @@ describe('instance action errors', () => {
     instanceApiMocks.extendInstance.mockReset()
     instanceApiMocks.getMyInstances.mockReset()
     instanceApiMocks.requestInstanceAccess.mockReset()
-    teacherApiMocks.destroyTeacherInstance.mockReset()
+    teacherApiMocks.getClasses.mockReset()
+    instanceAccessApiMocks.destroyManagedInstanceByRole.mockReset()
     challengeApiMocks.createInstance.mockReset()
     toastMocks.error.mockReset()
     toastMocks.info.mockReset()
@@ -76,6 +85,7 @@ describe('instance action errors', () => {
     confirmMock.mockReset()
     confirmMock.mockResolvedValue(true)
     instanceApiMocks.getMyInstances.mockResolvedValue([])
+    teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 1 }])
   })
 
   it('实例列表销毁失败时应优先展示接口返回消息', async () => {
@@ -308,7 +318,7 @@ describe('instance action errors', () => {
   })
 
   it('教师实例管理销毁失败时应优先展示接口返回消息', async () => {
-    teacherApiMocks.destroyTeacherInstance.mockRejectedValue(
+    instanceAccessApiMocks.destroyManagedInstanceByRole.mockRejectedValue(
       new ApiError('实例所属练习仍在结算中，暂时不能销毁', { status: 409 })
     )
 
