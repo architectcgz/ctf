@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import appCardSource from '@/components/common/AppCard.vue?raw'
@@ -59,6 +61,11 @@ import awdTrafficPanelSource from '@/features/awd-inspector/ui/AWDTrafficPanel.v
 import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
 import contestAwdPreflightPanelSource from '@/features/platform-contests/ui/ContestAwdPreflightPanel.vue?raw'
 import platformContestFormPanelSource from '@/features/platform-contests/ui/PlatformContestFormPanel.vue?raw'
+import contestFormActionsSource from '@/features/platform-contests/ui/PlatformContestFormActions.vue?raw'
+import contestFormIdentitySectionSource from '@/features/platform-contests/ui/PlatformContestIdentitySection.vue?raw'
+import contestFormRulesSectionSource from '@/features/platform-contests/ui/PlatformContestRulesSection.vue?raw'
+import contestFormSectionShellSource from '@/features/platform-contests/ui/PlatformContestFormSectionShell.vue?raw'
+import contestFormTimelineSectionSource from '@/features/platform-contests/ui/PlatformContestTimelineSection.vue?raw'
 import platformContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
 import awdRoundHeaderPanelSource from '@/features/awd-inspector/ui/AWDRoundHeaderPanel.vue?raw'
 import contestAwdWorkspacePanelSource from '@/features/contest-awd-workspace/ui/ContestAWDWorkspacePanel.vue?raw'
@@ -135,6 +142,19 @@ const adminDashboardSource = [
   platformOverviewHeroPanelSource,
   platformOverviewAlertsSectionSource,
   platformOverviewHotspotsSectionSource,
+].join('\n')
+const contestFormPanelStylesSource = readFileSync(
+  resolve(process.cwd(), 'src/features/platform-contests/ui/platformContestFormPanel.css'),
+  'utf8'
+)
+const platformContestFormSource = [
+  platformContestFormPanelSource,
+  contestFormSectionShellSource,
+  contestFormIdentitySectionSource,
+  contestFormRulesSectionSource,
+  contestFormTimelineSectionSource,
+  contestFormActionsSource,
+  contestFormPanelStylesSource,
 ].join('\n')
 
 function expectNoHardcodedThemeTokens(
@@ -494,7 +514,7 @@ describe('shared theme token adoption', () => {
       'color: white',
       'var(--color-warning) 90%, black',
     ])
-    expectNoHardcodedThemeTokens(platformContestFormPanelSource, 'PlatformContestFormPanel', [
+    expectNoHardcodedThemeTokens(platformContestFormSource, 'PlatformContestFormPanel', [
       'text-orange-500',
       'text-slate-300',
     ])

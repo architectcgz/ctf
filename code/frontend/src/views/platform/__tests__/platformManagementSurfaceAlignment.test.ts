@@ -45,6 +45,11 @@ import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue
 import workspaceDirectoryToolbarSource from '@/components/common/WorkspaceDirectoryToolbar.vue?raw'
 import adminContestFormDialogSource from '@/features/platform-contests/ui/PlatformContestFormDialog.vue?raw'
 import adminContestFormPanelSource from '@/features/platform-contests/ui/PlatformContestFormPanel.vue?raw'
+import contestFormActionsSource from '@/features/platform-contests/ui/PlatformContestFormActions.vue?raw'
+import contestFormIdentitySectionSource from '@/features/platform-contests/ui/PlatformContestIdentitySection.vue?raw'
+import contestFormRulesSectionSource from '@/features/platform-contests/ui/PlatformContestRulesSection.vue?raw'
+import contestFormSectionShellSource from '@/features/platform-contests/ui/PlatformContestFormSectionShell.vue?raw'
+import contestFormTimelineSectionSource from '@/features/platform-contests/ui/PlatformContestTimelineSection.vue?raw'
 import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 import adminContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
 import userGovernancePageSource from '@/features/platform-user-management/ui/UserGovernancePage.vue?raw'
@@ -111,6 +116,14 @@ const contestEditCombinedSource = [
   contestEditTopbarPanelSource,
   contestWorkbenchStageTabsSource,
   contestEditWorkspacePanelSource,
+].join('\n')
+const contestFormCombinedSource = [
+  adminContestFormPanelSource,
+  contestFormSectionShellSource,
+  contestFormIdentitySectionSource,
+  contestFormRulesSectionSource,
+  contestFormTimelineSectionSource,
+  contestFormActionsSource,
 ].join('\n')
 
 describe('admin management surface alignment', () => {
@@ -287,13 +300,9 @@ describe('admin management surface alignment', () => {
       ':deep(.contest-form-dialog .modal-template-panel--classic)'
     )
     expect(adminContestFormDialogSource).toContain('Contest Workspace')
-    expect(adminContestFormPanelSource).toMatch(
-      /<h3 class="list-heading__title">\s*基础信息\s*<\/h3>/
-    )
-    expect(adminContestFormPanelSource).toMatch(
-      /<h3 class="list-heading__title">\s*赛制与时间\s*<\/h3>/
-    )
-    expect(adminContestFormPanelSource).toContain(
+    expect(contestFormCombinedSource).toContain('title="基础信息"')
+    expect(contestFormCombinedSource).toContain('title="赛制与时间"')
+    expect(contestFormCombinedSource).toContain(
       'class="ui-btn ui-btn--primary contest-form-button contest-form-button--primary"'
     )
   })

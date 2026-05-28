@@ -1,16 +1,29 @@
 import { describe, expect, it } from 'vitest'
 
 import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
-import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
-import contestOperationsHubWorkspacePanelSource from '@/components/platform/contest/ContestOperationsHubWorkspacePanel.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/features/platform-contests/ui/ContestOperationsHubHeroPanel.vue?raw'
+import contestOperationsHubWorkspacePanelSource from '@/features/platform-contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
 import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 import adminContestFormPanelSource from '@/features/platform-contests/ui/PlatformContestFormPanel.vue?raw'
+import contestFormActionsSource from '@/features/platform-contests/ui/PlatformContestFormActions.vue?raw'
+import contestFormIdentitySectionSource from '@/features/platform-contests/ui/PlatformContestIdentitySection.vue?raw'
+import contestFormRulesSectionSource from '@/features/platform-contests/ui/PlatformContestRulesSection.vue?raw'
+import contestFormSectionShellSource from '@/features/platform-contests/ui/PlatformContestFormSectionShell.vue?raw'
+import contestFormTimelineSectionSource from '@/features/platform-contests/ui/PlatformContestTimelineSection.vue?raw'
 import adminContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
 
 const contestOperationsHubCombinedSource = [
   contestOperationsHubSource,
   contestOperationsHubHeroPanelSource,
   contestOperationsHubWorkspacePanelSource,
+].join('\n')
+const contestFormCombinedSource = [
+  adminContestFormPanelSource,
+  contestFormSectionShellSource,
+  contestFormIdentitySectionSource,
+  contestFormRulesSectionSource,
+  contestFormTimelineSectionSource,
+  contestFormActionsSource,
 ].join('\n')
 
 describe('contest ui primitive adoption', () => {
@@ -55,11 +68,11 @@ describe('contest ui primitive adoption', () => {
   })
 
   it('contest form should consume shared field and button primitives', () => {
-    expect(adminContestFormPanelSource).toContain('class="ui-field contest-form-field')
-    expect(adminContestFormPanelSource).toContain('class="ui-control-wrap')
-    expect(adminContestFormPanelSource).toContain('class="ui-control"')
-    expect(adminContestFormPanelSource).toContain('class="ui-btn ui-btn--secondary')
-    expect(adminContestFormPanelSource).toContain('class="ui-btn ui-btn--primary')
+    expect(contestFormCombinedSource).toContain('class="ui-field contest-form-field')
+    expect(contestFormCombinedSource).toContain('class="ui-control-wrap')
+    expect(contestFormCombinedSource).toContain('class="ui-control')
+    expect(contestFormCombinedSource).toContain('class="ui-btn ui-btn--secondary')
+    expect(contestFormCombinedSource).toContain('class="ui-btn ui-btn--primary')
   })
 
   it('contest directory rows should consume shared badge and row action primitives', () => {

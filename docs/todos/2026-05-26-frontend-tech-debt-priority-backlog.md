@@ -111,6 +111,7 @@
   - 收益：可以继续降低 feature 内部模板 / 样式 / 行为 owner 混写，减少后续 contest/AWD 演进时的大文件回归风险。
   - 风险：中。当前 owner 已基本正确，后续要按“feature 内局部职责拆分”推进，避免为拆分而拆分。
   - `2026-05-28` 基线重估：这条是由上面的旧 `P1` 纠偏下放出来的新 residual item；它不再处理 legacy 路径落位问题，而是专门跟踪 feature 内部的超大 UI surface。
+  - `2026-05-28` contest form 进展：`PlatformContestFormPanel.vue` 已按 section cluster 收口为唯一 `draft sync / validate / submit` owner，基础信息、赛制与状态、时间轴、动作条拆到 `features/platform-contests/ui` 内的 `PlatformContest*Section` 与 `PlatformContestFormActions`，父面板从约 `652` 行降到 `137` 行；这条 P2 的剩余重点已从 contest form 转回 `ContestProjectorAttackMap.vue`、`AWDOperationsPanel.vue` 和 `ContestChallengeOrchestrationPanel.vue`。
 
 - [ ] P2：收口布局层超大组件，优先看 `NotificationDrawer.vue`、`Sidebar.vue`、`TopNav.vue`
   - 依据：三者当前约 `1071` / `854` / `781` 行，已经超过普通布局组件可维护范围。
