@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import awdAttackLogDialogSource from '@/components/platform/contest/AWDAttackLogDialog.vue?raw'
-import awdRoundCreateDialogSource from '@/components/platform/contest/AWDRoundCreateDialog.vue?raw'
-import awdServiceCheckDialogSource from '@/components/platform/contest/AWDServiceCheckDialog.vue?raw'
+import awdAttackLogDialogSource from '@/features/contest-awd-admin/ui/AWDAttackLogDialog.vue?raw'
+import awdRoundCreateDialogSource from '@/features/contest-awd-admin/ui/AWDRoundCreateDialog.vue?raw'
+import awdServiceCheckDialogSource from '@/features/contest-awd-admin/ui/AWDServiceCheckDialog.vue?raw'
 import contestAwdChallengeSelectorSectionSource from '@/features/contest-workbench/ui/ContestAwdChallengeSelectorSection.vue?raw'
 import contestChallengeEditorDialogSourceBase from '@/features/contest-workbench/ui/ContestChallengeEditorDialog.vue?raw'
 import contestChallengeSettingsSectionSource from '@/features/contest-workbench/ui/ContestChallengeSettingsSection.vue?raw'
