@@ -5,7 +5,7 @@ import contestOperationsHubHeroPanelSource from '@/components/platform/contest/C
 import contestOperationsHubWorkspacePanelSource from '@/components/platform/contest/ContestOperationsHubWorkspacePanel.vue?raw'
 import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 import adminContestFormPanelSource from '@/features/platform-contests/ui/PlatformContestFormPanel.vue?raw'
-import adminContestTableSource from '@/components/platform/contest/PlatformContestTable.vue?raw'
+import adminContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
 
 const contestOperationsHubCombinedSource = [
   contestOperationsHubSource,

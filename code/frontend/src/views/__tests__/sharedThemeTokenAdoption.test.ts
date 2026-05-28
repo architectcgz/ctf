@@ -59,7 +59,7 @@ import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel
 import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
 import contestAwdPreflightPanelSource from '@/components/platform/contest/ContestAwdPreflightPanel.vue?raw'
 import platformContestFormPanelSource from '@/features/platform-contests/ui/PlatformContestFormPanel.vue?raw'
-import platformContestTableSource from '@/components/platform/contest/PlatformContestTable.vue?raw'
+import platformContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
 import awdRoundHeaderPanelSource from '@/components/platform/contest/AWDRoundHeaderPanel.vue?raw'
 import contestAwdWorkspacePanelSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
 import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'

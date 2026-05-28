@@ -18,7 +18,7 @@ import contestAwdChallengeSelectorSectionSource from '@/features/contest-workben
 import contestChallengeEditorDialogSourceBase from '@/features/contest-workbench/ui/ContestChallengeEditorDialog.vue?raw'
 import contestChallengeSettingsSectionSource from '@/features/contest-workbench/ui/ContestChallengeSettingsSection.vue?raw'
 import contestOperationsHubSource from '@/components/platform/contest/ContestOperationsHubWorkspacePanel.vue?raw'
-import platformContestTableSource from '@/components/platform/contest/PlatformContestTable.vue?raw'
+import platformContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
 import scoreboardDetailSource from '@/views/scoreboard/ScoreboardDetail.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import appStyleSource from '@/style.css?raw'

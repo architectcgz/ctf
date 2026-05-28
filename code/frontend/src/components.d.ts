@@ -151,7 +151,7 @@ declare module 'vue' {
     PagePaginationControls: typeof import('./components/common/PagePaginationControls.vue')['default']
     PlatformContestFormDialog: typeof import('./features/platform-contests/ui/PlatformContestFormDialog.vue')['default']
     PlatformContestFormPanel: typeof import('./features/platform-contests/ui/PlatformContestFormPanel.vue')['default']
-    PlatformContestTable: typeof import('./components/platform/contest/PlatformContestTable.vue')['default']
+    PlatformContestTable: typeof import('./features/platform-contests/ui/PlatformContestTable.vue')['default']
     PlatformOverviewPage: typeof import('./features/platform-overview/ui/PlatformOverviewPage.vue')['default']
     PlatformPaginationControls: typeof import('./components/platform/PlatformPaginationControls.vue')['default']
     PlatformUserFormDialog: typeof import('./components/platform/user/PlatformUserFormDialog.vue')['default']

@@ -4,3 +4,4 @@ export { default as ContestEditWorkspacePanel } from './ContestEditWorkspacePane
 export { default as ContestEditTopbarPanel } from './ContestEditTopbarPanel.vue'
 export { default as PlatformContestFormPanel } from './PlatformContestFormPanel.vue'
 export { default as PlatformContestFormDialog } from './PlatformContestFormDialog.vue'
+export { default as PlatformContestTable } from './PlatformContestTable.vue'

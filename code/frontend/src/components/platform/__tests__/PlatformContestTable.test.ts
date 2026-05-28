@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import PlatformContestTable from '../contest/PlatformContestTable.vue'
-import adminContestTableSource from '../contest/PlatformContestTable.vue?raw'
+import PlatformContestTable from '@/features/platform-contests/ui/PlatformContestTable.vue'
+import adminContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
 import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
 import type { ContestDetailData } from '@/api/contracts'
 

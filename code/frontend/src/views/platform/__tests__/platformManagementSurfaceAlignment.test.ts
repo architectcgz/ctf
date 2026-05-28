@@ -46,7 +46,7 @@ import workspaceDirectoryToolbarSource from '@/components/common/WorkspaceDirect
 import adminContestFormDialogSource from '@/features/platform-contests/ui/PlatformContestFormDialog.vue?raw'
 import adminContestFormPanelSource from '@/features/platform-contests/ui/PlatformContestFormPanel.vue?raw'
 import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
-import adminContestTableSource from '@/components/platform/contest/PlatformContestTable.vue?raw'
+import adminContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
 import userGovernancePageSource from '@/features/platform-user-management/ui/UserGovernancePage.vue?raw'
 import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'

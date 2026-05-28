@@ -12,11 +12,11 @@ import {
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
-import PlatformContestTable from '@/components/platform/contest/PlatformContestTable.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import type { ContestDetailData, ContestListSummaryData, ContestStatus } from '@/api/contracts'
 import type { ContestFieldLocks, ContestFormDraft } from '../model'
 import PlatformContestFormPanel from './PlatformContestFormPanel.vue'
+import PlatformContestTable from './PlatformContestTable.vue'
 
 type RequestedContestPanelKey = 'overview' | 'list' | 'create'
 type StatusFilter =
