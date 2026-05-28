@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import PlatformContestFormPanel from '@/components/platform/contest/PlatformContestFormPanel.vue'
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
-import type { ContestFieldLocks, ContestFormDraft } from '@/features/platform-contests'
+import type { ContestFieldLocks, ContestFormDraft } from '../model'
+import PlatformContestFormPanel from './PlatformContestFormPanel.vue'
 
 const props = defineProps<{
   open: boolean

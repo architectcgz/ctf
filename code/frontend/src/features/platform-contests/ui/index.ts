@@ -2,3 +2,5 @@ export { default as ContestOrchestrationPage } from './ContestOrchestrationPage.
 export { default as AWDChallengeConfigPanel } from './AWDChallengeConfigPanel.vue'
 export { default as ContestEditWorkspacePanel } from './ContestEditWorkspacePanel.vue'
 export { default as ContestEditTopbarPanel } from './ContestEditTopbarPanel.vue'
+export { default as PlatformContestFormPanel } from './PlatformContestFormPanel.vue'
+export { default as PlatformContestFormDialog } from './PlatformContestFormDialog.vue'

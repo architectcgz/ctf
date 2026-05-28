@@ -2,7 +2,7 @@
 import { reactive, ref, watch } from 'vue'
 import { FileText, Settings, Clock, Swords, Trophy } from 'lucide-vue-next'
 
-import type { ContestFieldLocks, ContestFormDraft } from '@/features/platform-contests'
+import type { ContestFieldLocks, ContestFormDraft } from '../model'
 import { getStatusLabel } from '@/utils/contest'
 
 const props = withDefaults(

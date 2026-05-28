@@ -18,8 +18,6 @@ export const componentFeatureImportAllowlist = new Set([
   'components/platform/contest/AWDOperationsPanel.vue -> @/features/contest-awd-admin',
   'components/platform/contest/AWDRoundInspector.vue -> @/features/awd-inspector',
   'components/platform/contest/AWDTrafficPanel.vue -> @/features/awd-inspector',
-  'components/platform/contest/PlatformContestFormDialog.vue -> @/features/platform-contests',
-  'components/platform/contest/PlatformContestFormPanel.vue -> @/features/platform-contests',
   'components/platform/contest/awdInspector.types.ts -> @/features/awd-inspector',
   'components/platform/user/PlatformUserFormDialog.vue -> @/features/platform-user-management',
   'components/platform/topology/TopologyCanvasBoard.vue -> @/features/challenge-topology-studio/model',

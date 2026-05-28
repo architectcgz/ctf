@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import PlatformContestFormDialog from '@/components/platform/contest/PlatformContestFormDialog.vue'
 import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
 import { ContestAnnouncementManageDrawer } from '@/features/contest-announcements'
-import { ContestOrchestrationPage, useContestManagePage } from '@/features/platform-contests'
+import {
+  ContestOrchestrationPage,
+  PlatformContestFormDialog,
+  useContestManagePage,
+} from '@/features/platform-contests'
 
 const {
   list,

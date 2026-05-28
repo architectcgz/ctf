@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import adminContestFormDialogSource from '@/components/platform/contest/PlatformContestFormDialog.vue?raw'
+import adminContestFormDialogSource from '@/features/platform-contests/ui/PlatformContestFormDialog.vue?raw'
 import contestChallengeEditorDialogSource from '@/features/contest-workbench/ui/ContestChallengeEditorDialog.vue?raw'
 import adminUserFormDialogSource from '@/components/platform/user/PlatformUserFormDialog.vue?raw'
 import awdRoundCreateDialogSource from '@/components/platform/contest/AWDRoundCreateDialog.vue?raw'
