@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
-import awdContestSelectorFieldSource from '@/components/platform/contest/AWDContestSelectorField.vue?raw'
+import awdContestSelectorFieldSource from '@/features/contest-awd-admin/ui/AWDContestSelectorField.vue?raw'
 import awdReadinessDecisionHUDSource from '@/features/awd-readiness/ui/AWDReadinessDecisionHUD.vue?raw'
 import awdOperationsPanelSource from '@/features/contest-awd-admin/ui/AWDOperationsPanel.vue?raw'
 import awdRoundHeaderPanelSource from '@/features/awd-inspector/ui/AWDRoundHeaderPanel.vue?raw'
 import awdRoundInspectorSource from '@/features/awd-inspector/ui/AWDRoundInspector.vue?raw'
-import awdRuntimePendingStateSource from '@/components/platform/contest/AWDRuntimePendingState.vue?raw'
+import awdRuntimePendingStateSource from '@/features/contest-awd-admin/ui/AWDRuntimePendingState.vue?raw'
 import awdTrafficPanelSource from '@/features/awd-inspector/ui/AWDTrafficPanel.vue?raw'
 import contestAwdPreflightPanelSource from '@/features/platform-contests/ui/ContestAwdPreflightPanel.vue?raw'
 

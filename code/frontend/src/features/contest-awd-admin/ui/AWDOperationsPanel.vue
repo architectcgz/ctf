@@ -2,8 +2,6 @@
 import { computed, ref, watch } from 'vue'
 
 import type { AWDTrafficStatusGroup, ContestDetailData } from '@/api/contracts'
-import AWDContestSelectorField from '@/components/platform/contest/AWDContestSelectorField.vue'
-import AWDRuntimePendingState from '@/components/platform/contest/AWDRuntimePendingState.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { AWDRoundInspector } from '@/features/awd-inspector'
 import { AWDReadinessOverrideDialog, AWDReadinessSummary } from '@/features/awd-readiness'
@@ -11,8 +9,10 @@ import { usePlatformContestAwd } from '@/features/contest-awd-admin'
 import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 
 import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
+import AWDContestSelectorField from './AWDContestSelectorField.vue'
 import AWDInstanceOrchestrationPanel from './AWDInstanceOrchestrationPanel.vue'
 import AWDRoundCreateDialog from './AWDRoundCreateDialog.vue'
+import AWDRuntimePendingState from './AWDRuntimePendingState.vue'
 import AWDServiceCheckDialog from './AWDServiceCheckDialog.vue'
 
 const props = defineProps<{
