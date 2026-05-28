@@ -335,7 +335,7 @@ describe('TeacherClassStudents', () => {
     expect(teacherClassStudentsSource).toContain("from '@/features/class-students-workspace'")
     expect(teacherClassStudentsSource).toContain('ClassStudentsPage')
     expect(teacherClassStudentsSource).toContain(
-      "import { ClassReportExportDialog } from '@/components/reports'"
+      "import { ClassReportExportDialog } from '@/features/teacher-class-report-export'"
     )
     expect(teacherClassStudentsSource).not.toContain("from '@/components/class-management'")
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")

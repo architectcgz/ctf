@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import AdminNotificationPublishDrawer from '../AdminNotificationPublishDrawer.vue'
+import { AdminNotificationPublishDrawer } from '@/features/admin-notification-publisher'
 
 const adminApiMocks = vi.hoisted(() => ({
   publishAdminNotification: vi.fn(),

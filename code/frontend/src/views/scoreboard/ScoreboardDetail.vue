@@ -3,8 +3,7 @@ import { BarChart2, CheckCircle, RefreshCw, Shield, Trophy, Users } from 'lucide
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
-import { useScoreboardDetailPage } from '@/features/scoreboard'
+import { ScoreboardRealtimeBridge, useScoreboardDetailPage } from '@/features/scoreboard'
 
 const {
   contest,

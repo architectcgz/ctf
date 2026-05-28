@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
-import { useRouter } from 'vue-router'
 
 import type { StudentDirectoryItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -17,7 +16,9 @@ const props = defineProps<{
   bare?: boolean
 }>()
 
-const router = useRouter()
+const emit = defineEmits<{
+  openStudent: [studentId: string]
+}>()
 
 const {
   candidates,
@@ -31,14 +32,7 @@ const {
 })
 
 function openStudent(studentId: string): void {
-  if (!props.className) return
-  router.push({
-    name: 'TeacherStudentAnalysis',
-    params: {
-      className: props.className,
-      studentId,
-    },
-  })
+  emit('openStudent', studentId)
 }
 
 function weakDimensionCategory(value?: string | null) {
@@ -195,7 +189,7 @@ function weakDimensionCategory(value?: string | null) {
 </template>
 
 <style scoped>
-@import './teacher-panel-shell.css';
+@import '../../../assets/styles/teacher-panel-shell.css';
 
 .intervention-list {
   display: grid;

@@ -5,7 +5,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ClassManagement from '../ClassManagement.vue'
 import classManagementViewSource from '../ClassManagement.vue?raw'
 import classManagementSource from '@/features/teacher-class-management/ui/ClassManagementPage.vue?raw'
-import classReportExportDialogSource from '@/components/teacher/reports/ClassReportExportDialog.vue?raw'
+import classReportExportDialogSource from '@/features/teacher-class-report-export/ui/ClassReportExportDialog.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const ElTable = { template: '<div><slot /></div>' }
@@ -299,7 +299,7 @@ describe('ClassManagement', () => {
     expect(classManagementViewSource).toContain('ClassManagementPage')
     expect(classManagementViewSource).toContain('useClassManagementPage')
     expect(classManagementViewSource).toContain(
-      "import { ClassReportExportDialog } from '@/components/reports'"
+      "import { ClassReportExportDialog } from '@/features/teacher-class-report-export'"
     )
     expect(classManagementViewSource).not.toContain(
       "from '@/components/teacher/class-management/ClassManagementPage.vue'"

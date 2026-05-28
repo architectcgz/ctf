@@ -15,7 +15,7 @@ import awdDefenseOperationsPanelSource from '@/components/contests/awd/AWDDefens
 import awdDefenseConnectionPanelSource from '@/components/contests/awd/AWDDefenseConnectionPanel.vue?raw'
 import awdWorkspaceHudStripSource from '@/components/contests/awd/AWDWorkspaceHudStrip.vue?raw'
 import awdWorkspaceIntelColumnSource from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue?raw'
-import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
+import awdWorkspaceSource from '@/features/contest-awd-workspace/ui/ContestAWDWorkspacePanel.vue?raw'
 import studentRoutesSource from '@/router/routes/studentRoutes.ts?raw'
 
 describe('ContestAWDWorkspacePanel source', () => {

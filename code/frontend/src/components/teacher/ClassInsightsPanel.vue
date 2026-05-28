@@ -183,7 +183,7 @@ function weakDimensionCategory(value?: string | null) {
 </template>
 
 <style scoped>
-@import './teacher-panel-shell.css';
+@import '../../assets/styles/teacher-panel-shell.css';
 
 .teacher-insight-layout {
   display: grid;

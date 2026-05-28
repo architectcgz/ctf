@@ -5,9 +5,9 @@ import { describe, expect, it } from 'vitest'
 import classTrendPanelSource from '@/components/teacher/ClassTrendPanel.vue?raw'
 import classInsightsPanelSource from '@/components/teacher/ClassInsightsPanel.vue?raw'
 import classReviewPanelSource from '@/components/teacher/ClassReviewPanel.vue?raw'
-import interventionPanelSource from '@/components/teacher/InterventionPanel.vue?raw'
+import interventionPanelSource from '@/features/teacher-student-analysis/ui/InterventionPanel.vue?raw'
 
-const teacherPanelShellPath = `${process.cwd()}/src/components/teacher/teacher-panel-shell.css`
+const teacherPanelShellPath = `${process.cwd()}/src/assets/styles/teacher-panel-shell.css`
 
 describe('teacher panel shell adoption', () => {
   it('teacher detail panel 应统一复用共享壳层样式，而不是继续各自维护基础 panel 壳子', () => {
@@ -18,13 +18,13 @@ describe('teacher panel shell adoption', () => {
     expect(teacherPanelShellSource).toContain('.teacher-panel__title {')
     expect(teacherPanelShellSource).toContain('.teacher-panel__subtitle {')
 
-    for (const source of [
-      classTrendPanelSource,
-      classInsightsPanelSource,
-      classReviewPanelSource,
-      interventionPanelSource,
+    for (const [source, importLine] of [
+      [classTrendPanelSource, "@import '../../assets/styles/teacher-panel-shell.css';"],
+      [classInsightsPanelSource, "@import '../../assets/styles/teacher-panel-shell.css';"],
+      [classReviewPanelSource, "@import '../../assets/styles/teacher-panel-shell.css';"],
+      [interventionPanelSource, "@import '../../../assets/styles/teacher-panel-shell.css';"],
     ]) {
-      expect(source).toContain("@import './teacher-panel-shell.css';")
+      expect(source).toContain(importLine)
       expect(source).not.toMatch(/\.teacher-panel\s*\{/s)
       expect(source).not.toMatch(/\.teacher-panel__header\s*\{/s)
       expect(source).not.toMatch(/\.teacher-panel__title\s*\{/s)

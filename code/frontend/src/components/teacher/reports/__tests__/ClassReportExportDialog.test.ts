@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import ClassReportExportDialog from '../ClassReportExportDialog.vue'
-import classReportExportDialogSource from '../ClassReportExportDialog.vue?raw'
+import { ClassReportExportDialog } from '@/features/teacher-class-report-export'
+import classReportExportDialogSource from '@/features/teacher-class-report-export/ui/ClassReportExportDialog.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const {

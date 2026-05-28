@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ClassReportExportDialog } from '@/components/reports'
+import { ClassReportExportDialog } from '@/features/teacher-class-report-export'
 import {
   ClassStudentsPage,
   useClassStudentsPage,

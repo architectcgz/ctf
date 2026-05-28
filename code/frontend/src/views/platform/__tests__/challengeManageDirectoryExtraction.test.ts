@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
 import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
-import challengeManageDirectoryPanelSource from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue?raw'
+import challengeManageDirectoryPanelSource from '@/features/platform-challenges/ui/ChallengeManageDirectoryPanel.vue?raw'
 
 describe('ChallengeManage directory extraction', () => {
   it('应将题目目录工作区抽到独立平台组件', () => {
     expect(challengeManageSource).toContain(
-      "import ChallengeManageDirectoryPanel from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue'"
+      "import { ChallengeManageDirectoryPanel, useChallengeManagePage } from '@/features/platform-challenges'"
     )
     expect(challengeManageSource).toContain('<ChallengeManageDirectoryPanel')
   })

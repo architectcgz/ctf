@@ -6,7 +6,7 @@ import AWDDefenseColumn from '@/components/contests/awd/AWDDefenseColumn.vue'
 import AWDAttackVectorPanel from '@/components/contests/awd/AWDAttackVectorPanel.vue'
 import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip.vue'
 import AWDWorkspaceIntelColumn from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue'
-import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
+import { ScoreboardRealtimeBridge } from '@/features/scoreboard'
 import {
   isAwdRuntimeChallenge,
   toDefenseServiceCards,

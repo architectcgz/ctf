@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ChallengeManage from '../ChallengeManage.vue'
 import challengeManageSource from '../ChallengeManage.vue?raw'
 import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
-import challengeManageDirectoryPanelSource from '@/components/platform/challenge/ChallengeManageDirectoryPanel.vue?raw'
+import challengeManageDirectoryPanelSource from '@/features/platform-challenges/ui/ChallengeManageDirectoryPanel.vue?raw'
 import challengeManagePresentationSource from '@/features/platform-challenges/model/useChallengeManagePresentation.ts?raw'
 
 const pushMock = vi.fn()

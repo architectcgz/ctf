@@ -207,7 +207,7 @@ describe('PlatformStudentAnalysis route owner', () => {
     expect(platformViewSource).toContain('StudentAnalysisPage')
     expect(platformViewSource).toContain('useStudentAnalysisPage')
     expect(platformViewSource).toContain(
-      "import { ClassReportExportDialog } from '@/components/reports'"
+      "import { ClassReportExportDialog } from '@/features/teacher-class-report-export'"
     )
     expect(platformViewSource).not.toContain("from '@/components/class-management'")
     expect(platformViewSource).not.toContain("from '@/views/teacher/TeacherStudentAnalysis.vue'")

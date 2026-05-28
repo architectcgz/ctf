@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { RefreshCw } from 'lucide-vue-next'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import AdminNotificationPublishDrawer from '@/components/notifications/AdminNotificationPublishDrawer.vue'
 import NotificationCategoryFilter from '@/components/notifications/NotificationCategoryFilter.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import { AdminNotificationPublishDrawer } from '@/features/admin-notification-publisher'
 import { useNotificationListPage } from '@/features/notifications'
 import { formatDate } from '@/utils/format'
 

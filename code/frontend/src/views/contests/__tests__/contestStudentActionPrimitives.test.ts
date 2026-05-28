@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import awdWorkspaceSource from '@/components/contests/ContestAWDWorkspacePanel.vue?raw'
+import awdWorkspaceSource from '@/features/contest-awd-workspace/ui/ContestAWDWorkspacePanel.vue?raw'
 import awdAttackTargetGridSource from '@/components/contests/awd/AWDAttackTargetGrid.vue?raw'
 import awdAttackToolbarSource from '@/components/contests/awd/AWDAttackToolbar.vue?raw'
 import awdDefenseServiceListSource from '@/components/contests/awd/AWDDefenseServiceList.vue?raw'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import PlatformUserFormDialog from '@/components/platform/user/PlatformUserFormDialog.vue'
 import {
+  PlatformUserFormDialog,
   UserGovernancePage,
   usePlatformUserManagePage,
 } from '@/features/platform-user-management'

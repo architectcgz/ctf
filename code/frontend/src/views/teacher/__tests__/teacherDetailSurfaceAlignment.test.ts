@@ -11,7 +11,7 @@ import studentAnalysisOverviewHeroSource from '@/components/teacher/class-manage
 import classTrendPanelSource from '@/components/teacher/ClassTrendPanel.vue?raw'
 import classInsightsPanelSource from '@/components/teacher/ClassInsightsPanel.vue?raw'
 import classReviewPanelSource from '@/components/teacher/ClassReviewPanel.vue?raw'
-import interventionPanelSource from '@/components/teacher/InterventionPanel.vue?raw'
+import interventionPanelSource from '@/features/teacher-student-analysis/ui/InterventionPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import studentInsightOverviewSectionSource from '@/components/teacher/student-insight/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/components/teacher/student-insight/StudentInsightRecommendationsSection.vue?raw'
@@ -27,7 +27,7 @@ const teacherSurfaceSource = readFileSync(
 )
 const styleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 const teacherPanelShellSource = readFileSync(
-  `${process.cwd()}/src/components/teacher/teacher-panel-shell.css`,
+  `${process.cwd()}/src/assets/styles/teacher-panel-shell.css`,
   'utf-8'
 )
 const classStudentsSource = [
@@ -162,10 +162,12 @@ describe('teacher detail surface alignment', () => {
     expect(teacherPanelShellSource).toMatch(
       /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
     )
-    expect(classTrendPanelSource).toContain("@import './teacher-panel-shell.css';")
-    expect(classInsightsPanelSource).toContain("@import './teacher-panel-shell.css';")
-    expect(classReviewPanelSource).toContain("@import './teacher-panel-shell.css';")
-    expect(interventionPanelSource).toContain("@import './teacher-panel-shell.css';")
+    expect(classTrendPanelSource).toContain("@import '../../assets/styles/teacher-panel-shell.css';")
+    expect(classInsightsPanelSource).toContain("@import '../../assets/styles/teacher-panel-shell.css';")
+    expect(classReviewPanelSource).toContain("@import '../../assets/styles/teacher-panel-shell.css';")
+    expect(interventionPanelSource).toContain(
+      "@import '../../../assets/styles/teacher-panel-shell.css';"
+    )
     expect(studentInsightPanelSource).toContain('--teacher-card-border:')
     expect(studentInsightPanelSource).toContain('--teacher-divider:')
     expect(studentInsightPanelSource).toMatch(

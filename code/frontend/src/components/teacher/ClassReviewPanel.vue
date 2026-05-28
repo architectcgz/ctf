@@ -135,7 +135,7 @@ function shouldShowRecommendationFallback(item: ClassInsightReviewItemData): boo
 </template>
 
 <style scoped>
-@import './teacher-panel-shell.css';
+@import '../../assets/styles/teacher-panel-shell.css';
 
 .review-list {
   display: grid;

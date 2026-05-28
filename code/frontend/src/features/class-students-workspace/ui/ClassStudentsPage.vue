@@ -7,10 +7,10 @@ import type {
   StudentDirectoryItem,
 } from '@/api/contracts'
 import ClassInsightsPanel from '@/components/teacher/ClassInsightsPanel.vue'
-import InterventionPanel from '@/components/teacher/InterventionPanel.vue'
 import ClassReviewPanel from '@/components/teacher/ClassReviewPanel.vue'
 import ClassTrendPanel from '@/components/teacher/ClassTrendPanel.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
+import { InterventionPanel } from '@/features/teacher-student-analysis'
 import ClassStudentsDirectoryPanel from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue'
 import ClassStudentsInsightWindowPanel from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue'
 import ClassStudentsOverviewPanel from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue'
@@ -213,6 +213,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
             <component
               :is="resolveWorkspacePanelComponent(tab.key)"
               v-bind="resolveWorkspacePanelProps(tab.key)"
+              @open-student="emit('openStudent', $event)"
             />
           </div>
         </section>

@@ -111,7 +111,7 @@ const series = computed(() => [
 </template>
 
 <style scoped>
-@import './teacher-panel-shell.css';
+@import '../../assets/styles/teacher-panel-shell.css';
 
 .teacher-panel__chart {
   background: linear-gradient(
