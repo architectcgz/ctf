@@ -5,9 +5,16 @@ import contestEditWorkspacePanelSource from '@/features/platform-contests/ui/Con
 import awdReadinessOverrideDialogSource from '@/features/awd-readiness/ui/AWDReadinessOverrideDialog.vue?raw'
 import awdReadinessChecklistSource from '@/features/awd-readiness/ui/AWDReadinessChecklist.vue?raw'
 import contestChallengeOrchestrationPanelSource from '@/features/contest-workbench/ui/ContestChallengeOrchestrationPanel.vue?raw'
+import contestChallengeDirectorySectionSource from '@/features/contest-workbench/ui/ContestChallengeDirectorySection.vue?raw'
+import contestChallengeOrchestrationHeaderSource from '@/features/contest-workbench/ui/ContestChallengeOrchestrationHeader.vue?raw'
 
 describe('contest ui primitive adoption phase 2', () => {
   const contestEditCombinedSource = [contestEditSource, contestEditWorkspacePanelSource].join('\n')
+  const contestChallengeOrchestrationCombinedSource = [
+    contestChallengeOrchestrationPanelSource,
+    contestChallengeOrchestrationHeaderSource,
+    contestChallengeDirectorySectionSource,
+  ].join('\n')
 
   it('contest edit workspace should consume shared ui buttons for back and retry actions', () => {
     expect(contestEditCombinedSource).toContain('class="ui-btn ui-btn--ghost"')
@@ -28,21 +35,23 @@ describe('contest ui primitive adoption phase 2', () => {
   })
 
   it('contest challenge orchestration panel should consume shared ui buttons and row actions', () => {
-    expect(contestChallengeOrchestrationPanelSource).toContain(
+    expect(contestChallengeOrchestrationCombinedSource).toContain(
       "from '@/components/common/menus/CActionMenu.vue'"
     )
-    expect(contestChallengeOrchestrationPanelSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(contestChallengeOrchestrationPanelSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(contestChallengeOrchestrationPanelSource).toContain(
+    expect(contestChallengeOrchestrationCombinedSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(contestChallengeOrchestrationCombinedSource).toContain(
+      'class="ui-btn ui-btn--primary"'
+    )
+    expect(contestChallengeOrchestrationCombinedSource).toContain(
       'class="ui-row-actions contest-challenge-row__actions"'
     )
-    expect(contestChallengeOrchestrationPanelSource).toContain(
+    expect(contestChallengeOrchestrationCombinedSource).toContain(
       'class="c-action-menu__trigger c-action-menu__trigger--icon"'
     )
-    expect(contestChallengeOrchestrationPanelSource).toContain(
+    expect(contestChallengeOrchestrationCombinedSource).toContain(
       'class="c-action-menu__item c-action-menu__item--danger"'
     )
-    expect(contestChallengeOrchestrationPanelSource).not.toContain('class="admin-btn')
+    expect(contestChallengeOrchestrationCombinedSource).not.toContain('class="admin-btn')
   })
 
   it('awd readiness checklist should consume shared badges and action primitives', () => {

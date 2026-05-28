@@ -112,6 +112,7 @@
   - 风险：中。当前 owner 已基本正确，后续要按“feature 内局部职责拆分”推进，避免为拆分而拆分。
   - `2026-05-28` 基线重估：这条是由上面的旧 `P1` 纠偏下放出来的新 residual item；它不再处理 legacy 路径落位问题，而是专门跟踪 feature 内部的超大 UI surface。
   - `2026-05-28` contest form 进展：`PlatformContestFormPanel.vue` 已按 section cluster 收口为唯一 `draft sync / validate / submit` owner，基础信息、赛制与状态、时间轴、动作条拆到 `features/platform-contests/ui` 内的 `PlatformContest*Section` 与 `PlatformContestFormActions`，父面板从约 `652` 行降到 `137` 行；这条 P2 的剩余重点已从 contest form 转回 `ContestProjectorAttackMap.vue`、`AWDOperationsPanel.vue` 和 `ContestChallengeOrchestrationPanel.vue`。
+  - `2026-05-28` contest challenge orchestration 进展：`ContestChallengeOrchestrationPanel.vue` 已收口为唯一 orchestration model wiring / dialog owner，header 与 directory section 下沉到 `ContestChallengeOrchestrationHeader.vue`、`ContestChallengeDirectorySection.vue`，父面板从约 `560` 行降到 `156` 行；相关 extraction / primitive adoption 护栏也已改成适配拆分后的聚合源码。当前这条 P2 的剩余重点进一步收敛到 `ContestProjectorAttackMap.vue` 和 `AWDOperationsPanel.vue`。
 
 - [ ] P2：收口布局层超大组件，优先看 `NotificationDrawer.vue`、`Sidebar.vue`、`TopNav.vue`
   - 依据：三者当前约 `1071` / `854` / `781` 行，已经超过普通布局组件可维护范围。
