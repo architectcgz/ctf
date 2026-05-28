@@ -1,4 +1,4 @@
-CREATE TABLE network_allocations (
+CREATE TABLE public.network_allocations (
     subnet TEXT PRIMARY KEY,
     instance_id BIGINT NULL,
     network_key VARCHAR(128) NOT NULL DEFAULT '',
@@ -6,7 +6,7 @@ CREATE TABLE network_allocations (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_network_allocations_instance_id ON network_allocations (instance_id);
+CREATE INDEX idx_network_allocations_instance_id ON public.network_allocations (instance_id);
 
 CREATE UNIQUE INDEX uk_network_allocations_owner_key
-    ON network_allocations (instance_id, network_key);
+    ON public.network_allocations (instance_id, network_key);
