@@ -222,7 +222,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 </template>
 
 <style scoped>
-@import '../teacher-workspace-subpanel.css';
+@import '../../../assets/styles/teacher-workspace-subpanel.css';
 
 .workspace-shell {
   --journal-ink: var(--color-text-primary);

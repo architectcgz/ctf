@@ -231,7 +231,7 @@ const {
 </template>
 
 <style scoped>
-@import '@/components/teacher/teacher-workspace-subpanel.css';
+@import '../../../assets/styles/teacher-workspace-subpanel.css';
 
 .teacher-dashboard-shell {
   --journal-ink: var(--color-text-primary);

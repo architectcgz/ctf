@@ -13,7 +13,7 @@ import teacherDashboardTrendPanelSource from '@/components/teacher/dashboard/Tea
 import teacherDashboardReviewPanelSource from '@/components/teacher/dashboard/TeacherDashboardReviewPanel.vue?raw'
 import teacherDashboardInterventionPanelSource from '@/components/teacher/dashboard/TeacherDashboardInterventionPanel.vue?raw'
 
-const teacherWorkspaceSubpanelPath = `${process.cwd()}/src/components/teacher/teacher-workspace-subpanel.css`
+const teacherWorkspaceSubpanelPath = `${process.cwd()}/src/assets/styles/teacher-workspace-subpanel.css`
 const classStudentsSource = [
   classStudentsSourceBase,
   classStudentsOverviewPanelSource,
@@ -55,9 +55,11 @@ describe('teacher workspace subpanel adoption', () => {
       '.workspace-subpanel :deep(.teacher-panel__header > .teacher-panel__title:first-child),'
     )
 
-    expect(classStudentsSource).toContain("@import '../teacher-workspace-subpanel.css';")
+    expect(classStudentsSource).toContain(
+      "@import '../../../assets/styles/teacher-workspace-subpanel.css';"
+    )
     expect(teacherDashboardSource).toContain(
-      "@import '@/components/teacher/teacher-workspace-subpanel.css';"
+      "@import '../../../assets/styles/teacher-workspace-subpanel.css';"
     )
 
     for (const source of [classStudentsSource, teacherDashboardSource]) {
