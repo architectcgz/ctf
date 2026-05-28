@@ -119,11 +119,13 @@
   - `2026-05-27` 进展：`NotificationDrawer.vue` 已按 layout owner 收口为“trigger / shell / filter state / dismiss owner”，并把 header、summary、tabs、body、footer 稳定视图区块拆到 `components/layout/notification-drawer/*`；相关 raw-source 与主题 token 护栏已切到聚合源码。当前这条 P2 的剩余重点已收敛到 `Sidebar.vue`、`TopNav.vue` 和通知抽屉更深层的行为清理。
   - `2026-05-27` Sidebar 进展：`Sidebar.vue` 已按“route/navigation owner 留父组件，移动壳 / 桌面壳 / nav tree 拆子组件”的方式收口到 `components/layout/sidebar/*`；raw-source 与主题 token 护栏已同步改为聚合源码。当前这条 P2 的剩余重点进一步收敛到 `TopNav.vue` 和 sidebar/nav 更深层的展示判定清理。
   - `2026-05-27` TopNav 进展：`TopNav.vue` 已按“route/theme/notification/logout owner 留父组件，移动 toggle / breadcrumbs / brand picker / notification trigger / user card 拆子组件”的方式收口到 `components/layout/topnav/*`；相关 raw-source 与主题 token 护栏已同步改为聚合源码。当前这条 P2 在大组件壳体层面的剩余重点开始转向通知抽屉、侧栏和 topnav 更深层的行为 owner 清理，而不是继续停留在单文件模板堆叠。
+  - `2026-05-28` feature boundary 进展：`AppLayout.vue`、`NotificationDrawer.vue`、`TopNav.vue` 不再直接从 `@/features/notifications` / `@/features/auth` 取 workflow；layout 改为经由显式 `widgets/layout-shell` bridge 组合 feature owner，相关 3 条 `componentFeatureImportAllowlist` 已清掉。当前这条 P2 在结构边界层面的重点，已从“layout 反向依赖 feature”收敛到更深层的 layout 组件体量与交互 owner 继续瘦身。
 
-- [ ] P2：把请求层错误导航 owner 继续收回页面 / feature owner，避免 `request.ts` 直接替页面决定可恢复错误的跳转
+- [x] P2：把请求层错误导航 owner 继续收回页面 / feature owner，避免 `request.ts` 直接替页面决定可恢复错误的跳转
   - 依据：架构 review 仍把这条列为当前 P1/P2 级结构问题。
   - 收益：失败态、重试、草稿保留和页面内恢复体验会更一致，也更容易测试。
   - 风险：中高。会触及全局请求策略和多个页面的失败路径，需要先定义“哪些状态码是全局错误，哪些必须局部恢复”。
+  - `2026-05-28` 结项说明：`request.ts` 已改为只负责 transport error normalization，不再直接 `logout + redirect`；HTTP `401`、WebSocket auth close、Vue runtime error、router runtime error 统一收口到 `runtime/globalErrorRuntime.ts`。可恢复的 `429 / 5xx / 网络错误 / 业务错误` 继续只返回 `ApiError`，由页面 / feature owner 自己决定 toast、inline fallback、retry 和 draft 保留。
 
 - [ ] P2：补图片管理页重复提交 owner 收口
   - 依据：前端主索引仍单独提到 `duplicateActionGuardAudit.test.ts` 暴露的图片管理页重复提交缺口。

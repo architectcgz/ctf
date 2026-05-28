@@ -1,7 +1,7 @@
 # 前端 API 层设计
 
 > 状态：Current
-> 事实源：`code/frontend/src/api/`、`docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`
+> 事实源：`code/frontend/src/api/`、`code/frontend/src/runtime/globalErrorRuntime.ts`、`docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`
 > 替代：无
 
 ## 定位
@@ -14,8 +14,12 @@
 ## 当前设计
 
 - `code/frontend/src/api/request.ts`
-  - 负责：创建统一 `Axios` 实例、注入 `baseURL / timeout / withCredentials`、解包响应 envelope、构造 `ApiError`、处理 401/429/5xx 状态页回退、暴露 `request<T>()`
-  - 不负责：直接弹 Toast、直接决定页面重试策略，或实现 token refresh 链路
+  - 负责：创建统一 `Axios` 实例、注入 `baseURL / timeout / withCredentials`、解包响应 envelope、构造 `ApiError`、暴露 `request<T>()`
+  - 不负责：直接弹 Toast、直接决定页面重试策略、直接跳错误状态页，或实现 token refresh 链路
+
+- `code/frontend/src/runtime/globalErrorRuntime.ts`
+  - 负责：接管 truly global 的错误导航 owner，包括 HTTP 401 会话失效、WebSocket 鉴权关闭、Vue runtime error 与 router runtime error
+  - 不负责：页面内 429 / 5xx / 业务错误 / 网络错误的 toast、inline fallback、retry 或 draft 保留
 
 - `code/frontend/src/api/auth.ts`、`challenge.ts`、`contest.ts`、`instance.ts`、`notification.ts`、`scoreboard.ts`
   - 负责：按领域封装学生侧和共享能力接口，并在 API 边界完成 ID、可空字段和响应结构归一化
@@ -63,17 +67,23 @@ interface ApiEnvelope<T> {
 - `requestId`
 - `status`
 - `errors`
+- `requestUrl`
 
 当前回退策略：
 
 | 场景 | 当前行为 |
 | --- | --- |
-| `401` | 构造 `ApiError`；非登录/注册请求会执行 `authStore.logout()` 并跳到 `/401` |
-| `429` | 读取 `Retry-After`，构造提示文案，跳到 `/429` |
-| `5xx` / `502` / `503` / `504` | 构造通用失败文案，跳到对应错误页 |
+| `401` | `request.ts` 只构造 `ApiError`；`runtime/globalErrorRuntime.ts` 读取标准化 `401` 后，再决定是否执行 `logout()` 并跳到 `/401` |
+| `429` | 读取 `Retry-After`，构造提示文案并返回 `ApiError`；页面 / feature owner 自己决定如何提示或重试 |
+| `5xx` / `502` / `503` / `504` | 构造通用失败文案并返回 `ApiError`；不再由请求层直接跳状态页 |
 | 后端业务错误码 | 通过 `mapErrorCode()` 生成用户可读文案 |
 | 网络错误 | 返回 `网络连接失败` 的 `ApiError` |
 | 取消请求 | 直接透传，不进入错误状态页 |
+
+补充说明：
+
+- `/500` 这类状态页当前主要用于 Vue runtime error 与 router runtime error，不再把普通 HTTP `5xx` 一律升级成全局跳页。
+- `shouldRedirectToErrorStatusPage()` 仍保留在 `errorStatusPage.ts`，但“何时调用它”已经从请求层挪到 runtime owner。
 
 相关代码：
 
@@ -83,7 +93,7 @@ interface ApiEnvelope<T> {
 说明：
 
 - 当前前端不做 refresh token 重试；认证模式已经切到 HttpOnly session cookie。
-- 请求层只返回错误对象和状态页跳转，不在这里直接展示 Toast。
+- 请求层只返回标准化错误对象，不在这里直接展示 Toast，也不直接决定全局导航。
 
 ## 3. 模块边界
 
@@ -163,9 +173,11 @@ interface ApiEnvelope<T> {
 - 页面 view 不直接 import 非 contract API 模块；业务调用应下沉到 feature model。
 - 请求层当前没有统一的自动重试机制；竞赛实时刷新、导出轮询等重试逻辑继续留在 feature/composable。
 - `getAxiosInstance()` 只作为少量特殊场景的逃生口，默认调用方仍应使用 `request<T>()`。
+- truly global 错误导航只允许通过 `runtime/globalErrorRuntime.ts` 进入；页面 / feature 对可恢复错误保留自己的 UX owner。
 
 ## 7. Guardrail
 
 - 前端分层边界，防止低层 UI 和页面随意穿透到 API：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - route view 不直接依赖业务 API：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- 请求层与 runtime error owner 边界：`code/frontend/src/api/__tests__/request.test.ts`、`code/frontend/src/runtime/__tests__/globalErrorRuntime.test.ts`
 - 长期接口契约：`docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`

@@ -1,7 +1,7 @@
 # 前端构建与运行入口
 
 > 状态：Current
-> 事实源：`code/frontend/vite.config.ts`、`code/frontend/package.json`、`code/frontend/src/main.ts`
+> 事实源：`code/frontend/vite.config.ts`、`code/frontend/package.json`、`code/frontend/src/main.ts`、`code/frontend/src/runtime/globalErrorRuntime.ts`、`code/frontend/src/router/guards.ts`、`code/frontend/src/composables/useWebSocket.ts`
 > 替代：无
 
 ## 定位
@@ -24,6 +24,10 @@
 - `code/frontend/src/main.ts`
   - 负责：创建 Vue 应用、挂载 Pinia 和 Router、接入全局错误处理、提前恢复 session、导入全局样式
   - 不负责：每个页面自己的数据预取或业务重试策略
+
+- `code/frontend/src/runtime/globalErrorRuntime.ts`
+  - 负责：在 bootstrap 阶段安装 HTTP 401、Vue runtime error、router runtime error 的全局错误 owner
+  - 不负责：页面 / feature 对可恢复错误的本地提示、重试和草稿保留
 
 ## 1. 构建入口
 
@@ -90,19 +94,23 @@ dev proxy 规则：
 2. `createPinia()`
 3. `app.use(pinia)`
 4. `app.use(router)`
-5. 注册 `app.config.errorHandler`
+5. `setupGlobalErrorRuntime(app, router, pinia)`
 6. 提前执行 `useAuthStore(pinia).restore()`
 7. `app.mount('#app')`
 
 全局错误处理规则：
 
-- `ApiError` 直接放过，由请求层和页面自己处理
-- 非 `ApiError` 的 Vue 运行时异常跳 `/500`
+- `request.ts` 只生成标准化 `ApiError`，不再直接做全局跳页
+- `setupGlobalErrorRuntime()` 安装 Axios response interceptor，对 truly global 的 `401` 会话失效执行登出与 `/401` 跳转
+- `app.config.errorHandler` 对 `ApiError` 直接放过，对非 `ApiError` 的 Vue 运行时异常跳 `/500`
+- `router.onError` 在 bootstrap/runtime 层统一注册，路由守卫不再重复持有这份 owner
+- `useWebSocket.ts` 的 auth close 复用同一个 runtime owner，而不是自己单独 `logout + redirect`
 
 说明：
 
 - 登录态恢复不会阻塞应用挂载，但 Router guard 会等待同一个 `restorePromise`
 - 页面级数据预取仍放在各自 feature model，不挪到 `main.ts`
+- HTTP 429 / 5xx / 网络错误仍由页面 / feature owner 自己决定 toast、inline fallback 或 retry，不从 bootstrap/runtime 层统一跳页
 
 ## 5. 全局样式入口
 

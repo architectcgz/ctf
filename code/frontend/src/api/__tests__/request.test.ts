@@ -9,15 +9,6 @@ const toastMocks = vi.hoisted(() => ({
   dismiss: vi.fn(),
 }))
 
-const authStoreMock = vi.hoisted(() => ({
-  logout: vi.fn(),
-}))
-
-const redirectMocks = vi.hoisted(() => ({
-  redirectToErrorStatusPage: vi.fn(),
-  shouldRedirectToErrorStatusPage: vi.fn(() => false),
-}))
-
 vi.mock('nprogress', () => ({
   default: {
     start: vi.fn(),
@@ -25,15 +16,9 @@ vi.mock('nprogress', () => ({
   },
 }))
 
-vi.mock('@/stores/auth', () => ({
-  useAuthStore: () => authStoreMock,
-}))
-
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
-
-vi.mock('@/utils/errorStatusPage', () => redirectMocks)
 
 import { getAxiosInstance, request } from '@/api/request'
 
@@ -47,10 +32,6 @@ describe('request cancel handling', () => {
     toastMocks.warning.mockReset()
     toastMocks.info.mockReset()
     toastMocks.dismiss.mockReset()
-    authStoreMock.logout.mockReset()
-    redirectMocks.redirectToErrorStatusPage.mockReset()
-    redirectMocks.shouldRedirectToErrorStatusPage.mockReset()
-    redirectMocks.shouldRedirectToErrorStatusPage.mockReturnValue(false)
   })
 
   afterEach(() => {
@@ -70,7 +51,6 @@ describe('request cancel handling', () => {
     })
 
     expect(toastMocks.error).not.toHaveBeenCalled()
-    expect(redirectMocks.redirectToErrorStatusPage).not.toHaveBeenCalled()
   })
 
   it('业务错误应由调用方决定如何展示，请求层只返回标准化异常', async () => {
@@ -133,8 +113,6 @@ describe('request cancel handling', () => {
       requestId: 'req-rate',
     })
 
-    expect(redirectMocks.redirectToErrorStatusPage).not.toHaveBeenCalled()
-    expect(authStoreMock.logout).not.toHaveBeenCalled()
   })
 
   it('普通服务端错误应返回给页面 owner，而不是在请求层统一跳转', async () => {
@@ -164,12 +142,9 @@ describe('request cancel handling', () => {
       requestId: 'req-server',
     })
 
-    expect(redirectMocks.redirectToErrorStatusPage).not.toHaveBeenCalled()
-    expect(authStoreMock.logout).not.toHaveBeenCalled()
   })
 
-  it('401 全局会话失效仍保留登出并跳转错误页', async () => {
-    redirectMocks.shouldRedirectToErrorStatusPage.mockReturnValue(true)
+  it('401 会话失效只返回标准化异常，由 runtime owner 决定是否全局跳转', async () => {
     axiosInstance.defaults.adapter = vi.fn().mockRejectedValue({
       config: {
         method: 'get',
@@ -194,11 +169,8 @@ describe('request cancel handling', () => {
       message: '登录状态已失效，请重新登录',
       status: 401,
       requestId: 'req-unauthorized',
+      requestUrl: '/profile',
     })
-
-    expect(authStoreMock.logout).toHaveBeenCalledTimes(1)
-    expect(redirectMocks.redirectToErrorStatusPage).toHaveBeenCalledWith(401, '/profile')
-    expect(redirectMocks.shouldRedirectToErrorStatusPage).toHaveBeenCalledWith(401, '/profile')
   })
 
   it('网络错误也不应由请求层直接弹错', async () => {

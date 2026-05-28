@@ -9,7 +9,7 @@ import {
   WS_PONG_TIMEOUT_MS,
   WS_RECONNECT_BASE_DELAY_MS,
 } from '@/utils/constants'
-import { redirectToErrorStatusPage } from '@/utils/errorStatusPage'
+import { handleGlobalSessionExpired } from '@/runtime/globalErrorRuntime'
 
 export type WebSocketStatus = 'idle' | 'connecting' | 'open' | 'closed' | 'error'
 
@@ -81,9 +81,7 @@ export function useWebSocket(endpoint: string, handlers: WebSocketHandlers) {
   }
 
   function handleAuthClosed(): void {
-    const authStore = useAuthStore()
-    authStore.logout()
-    redirectToErrorStatusPage(401)
+    handleGlobalSessionExpired()
   }
 
   function scheduleReconnect(): void {

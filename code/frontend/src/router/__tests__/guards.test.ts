@@ -224,6 +224,12 @@ describe('router guards', () => {
 })
 
 describe('guard helpers', () => {
+  it('guards 不应再注册 router runtime error owner', () => {
+    const { router } = createRouterMock()
+
+    expect(router.onError).not.toHaveBeenCalled()
+  })
+
   it('应该清洗非法 redirect 路径', () => {
     expect(sanitizeRedirectPath('//evil.com')).toBe('/')
     expect(sanitizeRedirectPath('https://evil.com')).toBe('/')

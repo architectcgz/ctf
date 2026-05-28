@@ -5,9 +5,7 @@ import axios, {
 } from 'axios'
 import NProgress from 'nprogress'
 
-import { useAuthStore } from '@/stores/auth'
 import { mapErrorCode } from '@/utils/errorMap'
-import { redirectToErrorStatusPage, shouldRedirectToErrorStatusPage } from '@/utils/errorStatusPage'
 
 export interface ApiEnvelope<T> {
   code: number
@@ -29,10 +27,17 @@ export class ApiError extends Error {
   readonly requestId?: string
   readonly status?: number
   readonly errors?: ApiValidationIssue[]
+  readonly requestUrl?: string
 
   constructor(
     message: string,
-    opts?: { code?: number; requestId?: string; status?: number; errors?: ApiValidationIssue[] }
+    opts?: {
+      code?: number
+      requestId?: string
+      status?: number
+      errors?: ApiValidationIssue[]
+      requestUrl?: string
+    }
   ) {
     super(message)
     this.name = 'ApiError'
@@ -40,6 +45,7 @@ export class ApiError extends Error {
     this.requestId = opts?.requestId
     this.status = opts?.status
     this.errors = opts?.errors
+    this.requestUrl = opts?.requestUrl
   }
 }
 
@@ -73,13 +79,15 @@ function toApiError(
   status: number | undefined,
   fallbackMessage: string,
   message?: string,
-  errors?: ApiValidationIssue[]
+  errors?: ApiValidationIssue[],
+  requestUrl?: string
 ): ApiError {
   return new ApiError(resolveApiMessage(code, message, fallbackMessage), {
     code,
     requestId,
     status,
     errors,
+    requestUrl,
   })
 }
 
@@ -95,7 +103,8 @@ instance.interceptors.response.use(
         response.status,
         '请求失败',
         envelope.message,
-        envelope.errors
+        envelope.errors,
+        response.config?.url
       )
       return Promise.reject(apiError)
     }
@@ -124,26 +133,24 @@ instance.interceptors.response.use(
           status,
           retryMessage,
           error.response?.data?.message,
-          error.response?.data?.errors
+          error.response?.data?.errors,
+          error.config?.url
         )
       )
     }
 
     if (status === 401) {
-      const unauthorizedError = toApiError(
-        code,
-        error.response?.data?.request_id,
-        status,
-        '登录状态已失效，请重新登录',
-        error.response?.data?.message,
-        error.response?.data?.errors
+      return Promise.reject(
+        toApiError(
+          code,
+          error.response?.data?.request_id,
+          status,
+          '登录状态已失效，请重新登录',
+          error.response?.data?.message,
+          error.response?.data?.errors,
+          error.config?.url
+        )
       )
-      if (shouldRedirectToErrorStatusPage(status, error.config?.url)) {
-        const authStore = useAuthStore()
-        authStore.logout()
-        redirectToErrorStatusPage(status, error.config?.url)
-      }
-      return Promise.reject(unauthorizedError)
     }
 
     const mapped = mapErrorCode(code)
@@ -154,7 +161,8 @@ instance.interceptors.response.use(
         status,
         mapped,
         error.response?.data?.message,
-        error.response?.data?.errors
+        error.response?.data?.errors,
+        error.config?.url
       )
       return Promise.reject(apiError)
     }
@@ -173,7 +181,8 @@ instance.interceptors.response.use(
       status,
       fallbackMessage,
       error.response?.data?.message,
-      error.response?.data?.errors
+      error.response?.data?.errors,
+      error.config?.url
     )
     return Promise.reject(apiError)
   }
