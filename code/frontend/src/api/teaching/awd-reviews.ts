@@ -204,7 +204,7 @@ function normalizeAwdReviewSelectedRound(
   }
 }
 
-export async function listTeacherAWDReviews(
+export async function listAwdReviews(
   params?: {
     status?: AwdReviewContestItemData['status']
     keyword?: string
@@ -235,7 +235,7 @@ export async function listTeacherAWDReviews(
   }
 }
 
-export async function getTeacherAWDReview(
+export async function getAwdReview(
   contestId: string,
   params?: {
     round?: number
@@ -265,7 +265,7 @@ export async function getTeacherAWDReview(
   }
 }
 
-export async function exportTeacherAWDReviewArchive(
+export async function exportAwdReviewArchive(
   contestId: string,
   data?: { round_number?: number }
 ): Promise<ReportExportData> {
@@ -278,7 +278,7 @@ export async function exportTeacherAWDReviewArchive(
   return normalizeReportExportData(payload)
 }
 
-export async function exportTeacherAWDReviewReport(
+export async function exportAwdReviewReport(
   contestId: string,
   data?: { round_number?: number }
 ): Promise<ReportExportData> {

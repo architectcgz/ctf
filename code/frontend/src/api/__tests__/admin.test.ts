@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import adminContestApiSource from '@/api/admin/contests.ts?raw'
+import teachingAwdReviewApiSource from '@/api/teaching/awd-reviews.ts?raw'
 
 const requestMock = vi.hoisted(() => vi.fn())
 
@@ -80,6 +82,30 @@ import { getUsers } from '@/api/admin/users'
 describe('admin contest api contract', () => {
   beforeEach(() => {
     requestMock.mockReset()
+  })
+
+  it('AWD review platform wrapper 与 teaching 实现 owner 应保持中性分层', () => {
+    expect(teachingAwdReviewApiSource).toContain('export async function listAwdReviews')
+    expect(teachingAwdReviewApiSource).toContain('export async function getAwdReview')
+    expect(teachingAwdReviewApiSource).toContain('export async function exportAwdReviewArchive')
+    expect(teachingAwdReviewApiSource).toContain('export async function exportAwdReviewReport')
+    expect(teachingAwdReviewApiSource).not.toContain('export async function listTeacherAWDReviews')
+    expect(teachingAwdReviewApiSource).not.toContain('export async function getTeacherAWDReview')
+    expect(teachingAwdReviewApiSource).not.toContain('export async function exportTeacherAWDReviewArchive')
+    expect(teachingAwdReviewApiSource).not.toContain('export async function exportTeacherAWDReviewReport')
+
+    expect(adminContestApiSource).toContain('export async function listPlatformAWDReviews')
+    expect(adminContestApiSource).toContain('export async function getPlatformAWDReview')
+    expect(adminContestApiSource).toContain('export async function exportPlatformAWDReviewArchive')
+    expect(adminContestApiSource).toContain('export async function exportPlatformAWDReviewReport')
+    expect(adminContestApiSource).not.toContain('listTeacherAWDReviews as listPlatformAWDReviews')
+    expect(adminContestApiSource).not.toContain('getTeacherAWDReview as getPlatformAWDReview')
+    expect(adminContestApiSource).not.toContain(
+      'exportTeacherAWDReviewArchive as exportPlatformAWDReviewArchive'
+    )
+    expect(adminContestApiSource).not.toContain(
+      'exportTeacherAWDReviewReport as exportPlatformAWDReviewReport'
+    )
   })
 
   it('应该把竞赛列表参数和返回值归一化', async () => {

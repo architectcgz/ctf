@@ -1,4 +1,10 @@
 import { request } from '../request'
+import {
+  exportAwdReviewArchive,
+  exportAwdReviewReport,
+  getAwdReview,
+  listAwdReviews,
+} from '../teaching/awd-reviews'
 import { normalizeInstanceData, type RawInstanceData } from '../instance'
 
 import type {
@@ -23,6 +29,8 @@ import type {
   AWDTrafficTopPathData,
   AWDTrafficTopTeamData,
   AWDTrafficTrendBucketData,
+  AwdReviewArchiveData,
+  AwdReviewContestItemData,
   AWDTeamServiceData,
   AdminContestAWDInstanceItemData,
   AdminContestAWDInstancePrewarmData,
@@ -163,13 +171,6 @@ export interface AdminAWDTrafficEventsParams {
   page_size?: number
 }
 
-export {
-  listTeacherAWDReviews as listPlatformAWDReviews,
-  getTeacherAWDReview as getPlatformAWDReview,
-  exportTeacherAWDReviewArchive as exportPlatformAWDReviewArchive,
-  exportTeacherAWDReviewReport as exportPlatformAWDReviewReport,
-} from '../teaching/awd-reviews'
-
 interface RawContestItem {
   id: number
   title: string
@@ -268,6 +269,42 @@ interface RawAWDRoundSummaryItem {
   successful_breach_count: number
   unique_attackers_against: number
   total_score: number
+}
+
+export async function listPlatformAWDReviews(
+  params?: {
+    status?: AwdReviewContestItemData['status']
+    keyword?: string
+    page?: number
+    page_size?: number
+  },
+  options?: { signal?: AbortSignal }
+) {
+  return listAwdReviews(params, options)
+}
+
+export async function getPlatformAWDReview(
+  contestId: string,
+  params?: {
+    round?: number
+    team_id?: string
+  }
+): Promise<AwdReviewArchiveData> {
+  return getAwdReview(contestId, params)
+}
+
+export async function exportPlatformAWDReviewArchive(
+  contestId: string,
+  data?: { round_number?: number }
+): Promise<ReportExportData> {
+  return exportAwdReviewArchive(contestId, data)
+}
+
+export async function exportPlatformAWDReviewReport(
+  contestId: string,
+  data?: { round_number?: number }
+): Promise<ReportExportData> {
+  return exportAwdReviewReport(contestId, data)
 }
 
 interface RawAWDRoundMetricsData {

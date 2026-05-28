@@ -33,7 +33,8 @@
 - `src/api/teacher/*`、`src/api/admin/*` 可以作为语义 owner 对底层实现做薄 wrapper / re-export；只要没有改动 HTTP method、path、query、body、response schema，就不视为新的后端 API contract。
 - 2026-05-27 起，AWD review 目录、详情和导出链路也允许前端通过 `src/api/admin/*` / `src/api/teacher/*` 按角色选择 wrapper owner；底层仍复用既有 `/api/v1/teacher/awd/reviews*` HTTP contract，不新增平台专属 AWD review 路径。
 - 2026-05-27 起，前端本地共享 DTO 对 AWD review 赛事目录项 contract 统一使用中性命名 `AwdReviewContestItemData`；HTTP path 仍保持 `/api/v1/teacher/awd/reviews*`，不改变服务端权限语义。
-- 2026-05-28 起，前端本地共享 DTO 对 AWD review 详情 / 轮次 / 队伍 / 服务 / 攻击 / 流量 / selected round / archive 也统一使用中性命名 `AwdReview*Data`；teacher 语义只保留在 `/api/v1/teacher/awd/reviews*` 路径和对应 teacher wrapper function，不改变外部 HTTP 字段或权限语义。
+- 2026-05-28 起，前端本地共享 DTO 对 AWD review 详情 / 轮次 / 队伍 / 服务 / 攻击 / 流量 / selected round / archive 也统一使用中性命名 `AwdReview*Data`；teacher 语义只保留在 `/api/v1/teacher/awd/reviews*` 路径和 `src/api/teacher/*` public wrapper，不改变外部 HTTP 字段或权限语义。
+- 2026-05-28 起，`src/api/teaching/awd-reviews.ts` 的 AWD review 共享实现 owner 也统一改成中性 `AwdReview*` 函数；`src/api/admin/*` / `src/api/teacher/*` 只在前端 public owner 层保留 platform / teacher 命名，不新增任何平台专属 AWD review HTTP 契约。
 - 2026-05-27 起，platform 题解管理面板也允许通过 `src/api/admin/authoring.ts` 暴露 `getPlatformWriteupSubmissions` 这类薄 wrapper；底层仍复用既有 `/api/v1/teacher/writeup-submissions` HTTP contract，不改变教师侧题解查看 / 评阅能力。
 - 2026-05-27 起，前端本地共享 DTO 对这条投稿目录 contract 统一使用中性命名 `WriteupSubmissionItemData`；HTTP path 仍保持 `/api/v1/teacher/writeup-submissions`，不改变服务端权限语义。
 
