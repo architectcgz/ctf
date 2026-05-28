@@ -8,7 +8,7 @@ import {
   Waypoints,
 } from 'lucide-vue-next'
 
-export interface TeacherAwdReviewSummaryStats {
+export interface AwdReviewSummaryStats {
   roundCount: number
   teamCount: number
   serviceCount: number
@@ -16,7 +16,7 @@ export interface TeacherAwdReviewSummaryStats {
   trafficCount: number
 }
 
-export interface TeacherAwdReviewSummaryItem {
+export interface AwdReviewSummaryItem {
   label: string
   value: string | number
   hint: string
@@ -24,20 +24,20 @@ export interface TeacherAwdReviewSummaryItem {
   icon: Component
 }
 
-export interface TeacherAwdReviewIndexSummaryStats {
+export interface AwdReviewIndexSummaryStats {
   totalCount: number
   runningCount: number
   exportReadyCount: number
 }
 
-export const TEACHER_AWD_REVIEW_WORKSPACE_COPY = {
+export const AWD_REVIEW_WORKSPACE_COPY = {
   overline: 'AWD Review',
   title: 'AWD复盘',
   descriptionSuffix:
     '多维复盘攻防实战过程。通过轮次下钻与流量回溯，协助教师评估学生的防御加固能力与漏洞挖掘表现。',
 } as const
 
-export const TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY = {
+export const AWD_REVIEW_INDEX_WORKSPACE_COPY = {
   overline: 'AWD Review',
   title: 'AWD复盘',
   description: '集中查看赛事轮次、状态与导出就绪度，从统一入口进入整场或单轮复盘。',
@@ -46,10 +46,10 @@ export const TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY = {
   refreshDirectoryAction: '刷新目录',
 } as const
 
-export function buildTeacherAwdReviewSummaryItems(
-  summaryStats: TeacherAwdReviewSummaryStats,
+export function buildAwdReviewSummaryItems(
+  summaryStats: AwdReviewSummaryStats,
   polling: boolean
-): TeacherAwdReviewSummaryItem[] {
+): AwdReviewSummaryItem[] {
   return [
     {
       label: '轮次范围',
@@ -79,9 +79,9 @@ export function buildTeacherAwdReviewSummaryItems(
   ]
 }
 
-export function buildTeacherAwdReviewIndexSummaryItems(
-  summaryStats: TeacherAwdReviewIndexSummaryStats
-): TeacherAwdReviewSummaryItem[] {
+export function buildAwdReviewIndexSummaryItems(
+  summaryStats: AwdReviewIndexSummaryStats
+): AwdReviewSummaryItem[] {
   return [
     {
       label: '赛事数量',

@@ -48,6 +48,7 @@
   - `2026-05-27` review archive owner 进展：`ReviewArchiveWorkspace` 已改从中立 `components/review-archive` 入口读取 hero / observation / evidence / reflection 面板，对 `components/teacher/review-archive/*` 的四条直连 import 收敛为一条 barrel；当前剩余重点收口面进一步缩到 AWD review shared widget 的 teacher 组件入口。
   - `2026-05-27` AWD review owner 进展：`AwdReviewWorkspace` 已改从中立 `components/awd-review` 入口读取 round selector / analysis / evidence / team drawer，对 `components/teacher/awd-review/*` 的四条直连 import 完成收口；当前这条 P1 剩余重点开始回到更大颗粒度的页面 / 壳体拆分。
   - `2026-05-28` AWD review access owner 进展：已新增 `api/awd-reviews.ts` 作为 role-aware facade，`useAwdReviewIndex.ts`、`useAwdReviewExportFlow.ts`、`useAwdReviewDetailPage.ts` 不再各自直接双引 `@/api/admin` 与 `@/api/teacher`；当前 AWD review 这条 admin / teacher 耦合残余重点已从共享 feature model 的 access owner 漂移，进一步收敛到更深层的 DTO / contract naming 残片。
+  - `2026-05-28` AWD review shared contract naming 进展：`AwdReviewArchiveData`、`AwdReviewRoundItemData`、`AwdReviewTeamItemData`、`AwdReviewServiceItemData`、`AwdReviewAttackItemData`、`AwdReviewTrafficItemData`、`AwdReviewSelectedRoundData` 与 `AwdReviewContestPageData` 已完成中性化，`AwdReviewWorkspace` / `AwdReviewIndexWorkspace` 的 `AwdReview*` summary types、builder 和 `AWD_REVIEW_*` copy owner 也已同步收口。当前 AWD review 这条线上残留的 teacher 语义，已主要收敛到 route name 和 teacher endpoint function / admin alias 这层显式 transport owner。
 
 - [ ] P1：把应属于单一 feature 的 page-sized UI 从 `components/**` 继续收口到 `features/*/ui`
   - 依据：`docs/reviews/architecture/2026-05-24-frontend-architecture-review.md` 指出 allowlist 仍在冻结历史例外；当前题解管理三件套就是典型的 `components/*Page.vue -> @/features/*` 例外。

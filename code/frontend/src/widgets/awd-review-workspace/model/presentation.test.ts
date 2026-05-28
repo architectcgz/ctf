@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  buildTeacherAwdReviewIndexSummaryItems,
-  buildTeacherAwdReviewSummaryItems,
-  TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY,
-  TEACHER_AWD_REVIEW_WORKSPACE_COPY,
+  AWD_REVIEW_INDEX_WORKSPACE_COPY,
+  AWD_REVIEW_WORKSPACE_COPY,
+  buildAwdReviewIndexSummaryItems,
+  buildAwdReviewSummaryItems,
 } from './presentation'
 
 describe('teacher awd review widget presentation', () => {
   it('应生成固定顺序的摘要项', () => {
-    const items = buildTeacherAwdReviewSummaryItems(
+    const items = buildAwdReviewSummaryItems(
       {
         roundCount: 4,
         teamCount: 6,
@@ -29,7 +29,7 @@ describe('teacher awd review widget presentation', () => {
   })
 
   it('轮询中应显示后台处理中状态', () => {
-    const items = buildTeacherAwdReviewSummaryItems(
+    const items = buildAwdReviewSummaryItems(
       {
         roundCount: 1,
         teamCount: 1,
@@ -44,13 +44,13 @@ describe('teacher awd review widget presentation', () => {
   })
 
   it('应提供工作区文案出口', () => {
-    expect(TEACHER_AWD_REVIEW_WORKSPACE_COPY.overline).toBe('AWD Review')
-    expect(TEACHER_AWD_REVIEW_WORKSPACE_COPY.title).toBe('AWD复盘')
-    expect(TEACHER_AWD_REVIEW_WORKSPACE_COPY.descriptionSuffix).toContain('多维复盘攻防实战过程')
+    expect(AWD_REVIEW_WORKSPACE_COPY.overline).toBe('AWD Review')
+    expect(AWD_REVIEW_WORKSPACE_COPY.title).toBe('AWD复盘')
+    expect(AWD_REVIEW_WORKSPACE_COPY.descriptionSuffix).toContain('多维复盘攻防实战过程')
   })
 
   it('应生成目录页摘要项与文案出口', () => {
-    const items = buildTeacherAwdReviewIndexSummaryItems({
+    const items = buildAwdReviewIndexSummaryItems({
       totalCount: 10,
       runningCount: 4,
       exportReadyCount: 6,
@@ -60,7 +60,7 @@ describe('teacher awd review widget presentation', () => {
     expect(items[0].label).toBe('赛事数量')
     expect(items[1].value).toBe(4)
     expect(items[2].value).toBe(6)
-    expect(TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.summaryTitle).toBe('Review Snapshot')
-    expect(TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.openDashboardAction).toBe('教学概览')
+    expect(AWD_REVIEW_INDEX_WORKSPACE_COPY.summaryTitle).toBe('Review Snapshot')
+    expect(AWD_REVIEW_INDEX_WORKSPACE_COPY.openDashboardAction).toBe('教学概览')
   })
 })

@@ -5,13 +5,13 @@ import {
 } from 'lucide-vue-next'
 
 import type {
-  TeacherAWDReviewArchiveData,
-  TeacherAWDReviewAttackItemData,
-  TeacherAWDReviewRoundItemData,
-  TeacherAWDReviewSelectedRoundData,
-  TeacherAWDReviewServiceItemData,
-  TeacherAWDReviewTeamItemData,
-  TeacherAWDReviewTrafficItemData,
+  AwdReviewArchiveData,
+  AwdReviewAttackItemData,
+  AwdReviewRoundItemData,
+  AwdReviewSelectedRoundData,
+  AwdReviewServiceItemData,
+  AwdReviewTeamItemData,
+  AwdReviewTrafficItemData,
 } from '@/api/contracts'
 import {
   AwdReviewAnalysisSection,
@@ -26,8 +26,8 @@ import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
 import AwdReviewWorkspaceHeader from './AwdReviewWorkspaceHeader.vue'
 import AwdReviewWorkspaceState from './AwdReviewWorkspaceState.vue'
 import {
-  buildTeacherAwdReviewSummaryItems,
-  TEACHER_AWD_REVIEW_WORKSPACE_COPY,
+  AWD_REVIEW_WORKSPACE_COPY,
+  buildAwdReviewSummaryItems,
 } from './model/presentation'
 
 type ExportKind = 'archive' | 'report'
@@ -44,18 +44,18 @@ const props = defineProps<{
   polling: boolean
   loading: boolean
   error: string | null
-  review: TeacherAWDReviewArchiveData | null
+  review: AwdReviewArchiveData | null
   exporting: ExportKind | null
   activeContestTitle: string
   activeSummaryTitle: string
   summaryStats: SummaryStats
-  timelineRounds: TeacherAWDReviewRoundItemData[]
+  timelineRounds: AwdReviewRoundItemData[]
   selectedRoundNumber?: number
-  selectedRound?: TeacherAWDReviewSelectedRoundData
-  selectedTeam: TeacherAWDReviewTeamItemData | null
-  selectedTeamServices: TeacherAWDReviewServiceItemData[]
-  selectedTeamAttacks: TeacherAWDReviewAttackItemData[]
-  selectedTeamTraffic: TeacherAWDReviewTrafficItemData[]
+  selectedRound?: AwdReviewSelectedRoundData
+  selectedTeam: AwdReviewTeamItemData | null
+  selectedTeamServices: AwdReviewServiceItemData[]
+  selectedTeamAttacks: AwdReviewAttackItemData[]
+  selectedTeamTraffic: AwdReviewTrafficItemData[]
   canExportReport: boolean
   contestStatusLabel: (status: string) => string
   formatServiceRef: (serviceId?: string) => string
@@ -67,12 +67,12 @@ const emit = defineEmits<{
   exportReport: []
   loadReview: []
   setRound: [roundNumber?: number]
-  openTeam: [team: TeacherAWDReviewTeamItemData]
+  openTeam: [team: AwdReviewTeamItemData]
   closeTeam: []
 }>()
 
 const summaryItems = computed(() =>
-  buildTeacherAwdReviewSummaryItems(props.summaryStats, props.polling)
+  buildAwdReviewSummaryItems(props.summaryStats, props.polling)
 )
 </script>
 
@@ -80,15 +80,15 @@ const summaryItems = computed(() =>
   <AwdReviewSurfaceShell section-class="teacher-review-workspace">
     <div class="teacher-page">
       <AwdReviewWorkspaceHeader
-        :overline="TEACHER_AWD_REVIEW_WORKSPACE_COPY.overline"
-        :title="TEACHER_AWD_REVIEW_WORKSPACE_COPY.title"
+        :overline="AWD_REVIEW_WORKSPACE_COPY.overline"
+        :title="AWD_REVIEW_WORKSPACE_COPY.title"
         header-class="awd-review-detail-header"
         overline-class="awd-review-detail-overline"
       >
         <template #description>
           <span class="awd-review-detail-contest-title">{{ activeContestTitle }}</span>
           <span> · </span>
-          {{ TEACHER_AWD_REVIEW_WORKSPACE_COPY.descriptionSuffix }}
+          {{ AWD_REVIEW_WORKSPACE_COPY.descriptionSuffix }}
         </template>
 
         <template #actions>

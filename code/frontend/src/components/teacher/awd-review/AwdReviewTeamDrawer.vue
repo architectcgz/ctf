@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Clock3, Trophy, Users } from 'lucide-vue-next'
 import type {
-  TeacherAWDReviewAttackItemData,
-  TeacherAWDReviewServiceItemData,
-  TeacherAWDReviewTeamItemData,
-  TeacherAWDReviewTrafficItemData,
+  AwdReviewAttackItemData,
+  AwdReviewServiceItemData,
+  AwdReviewTeamItemData,
+  AwdReviewTrafficItemData,
 } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
@@ -12,10 +12,10 @@ import { formatDate } from '@/utils/format'
 
 defineProps<{
   visible: boolean
-  team: TeacherAWDReviewTeamItemData | null
-  services: TeacherAWDReviewServiceItemData[]
-  attacks: TeacherAWDReviewAttackItemData[]
-  traffic: TeacherAWDReviewTrafficItemData[]
+  team: AwdReviewTeamItemData | null
+  services: AwdReviewServiceItemData[]
+  attacks: AwdReviewAttackItemData[]
+  traffic: AwdReviewTrafficItemData[]
 }>()
 
 const emit = defineEmits<{

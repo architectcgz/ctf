@@ -1,40 +1,40 @@
 import { request } from '../request'
 
 import type {
+  AwdReviewArchiveData,
   AwdReviewContestItemData,
+  AwdReviewAttackItemData,
+  AwdReviewRoundItemData,
+  AwdReviewSelectedRoundData,
+  AwdReviewServiceItemData,
+  AwdReviewTeamItemData,
+  AwdReviewTrafficItemData,
   PageResult,
   ReportExportData,
-  TeacherAWDReviewArchiveData,
-  TeacherAWDReviewAttackItemData,
-  TeacherAWDReviewRoundItemData,
-  TeacherAWDReviewSelectedRoundData,
-  TeacherAWDReviewServiceItemData,
-  TeacherAWDReviewTeamItemData,
-  TeacherAWDReviewTrafficItemData,
 } from '../contracts'
 
-interface RawTeacherAWDReviewContestItem extends Omit<AwdReviewContestItemData, 'id'> {
+interface RawAwdReviewContestItem extends Omit<AwdReviewContestItemData, 'id'> {
   id: string | number
 }
 
-interface RawTeacherAWDReviewRoundItem extends Omit<
-  TeacherAWDReviewRoundItemData,
+interface RawAwdReviewRoundItem extends Omit<
+  AwdReviewRoundItemData,
   'id' | 'contest_id'
 > {
   id: string | number
   contest_id: string | number
 }
 
-interface RawTeacherAWDReviewTeamItem extends Omit<
-  TeacherAWDReviewTeamItemData,
+interface RawAwdReviewTeamItem extends Omit<
+  AwdReviewTeamItemData,
   'team_id' | 'captain_id'
 > {
   team_id: string | number
   captain_id: string | number
 }
 
-interface RawTeacherAWDReviewServiceItem extends Omit<
-  TeacherAWDReviewServiceItemData,
+interface RawAwdReviewServiceItem extends Omit<
+  AwdReviewServiceItemData,
   'id' | 'round_id' | 'team_id' | 'service_id' | 'challenge_id'
 > {
   id: string | number
@@ -44,8 +44,8 @@ interface RawTeacherAWDReviewServiceItem extends Omit<
   challenge_id: string | number
 }
 
-interface RawTeacherAWDReviewAttackItem extends Omit<
-  TeacherAWDReviewAttackItemData,
+interface RawAwdReviewAttackItem extends Omit<
+  AwdReviewAttackItemData,
   'id' | 'round_id' | 'attacker_team_id' | 'victim_team_id' | 'service_id' | 'challenge_id'
 > {
   id: string | number
@@ -56,8 +56,8 @@ interface RawTeacherAWDReviewAttackItem extends Omit<
   challenge_id: string | number
 }
 
-interface RawTeacherAWDReviewTrafficItem extends Omit<
-  TeacherAWDReviewTrafficItemData,
+interface RawAwdReviewTrafficItem extends Omit<
+  AwdReviewTrafficItemData,
   | 'id'
   | 'contest_id'
   | 'round_id'
@@ -75,19 +75,19 @@ interface RawTeacherAWDReviewTrafficItem extends Omit<
   challenge_id: string | number
 }
 
-interface RawTeacherAWDReviewSelectedRound extends Omit<
-  TeacherAWDReviewSelectedRoundData,
+interface RawAwdReviewSelectedRound extends Omit<
+  AwdReviewSelectedRoundData,
   'round' | 'teams' | 'services' | 'attacks' | 'traffic'
 > {
-  round: RawTeacherAWDReviewRoundItem
-  teams: RawTeacherAWDReviewTeamItem[]
-  services: RawTeacherAWDReviewServiceItem[]
-  attacks: RawTeacherAWDReviewAttackItem[]
-  traffic: RawTeacherAWDReviewTrafficItem[]
+  round: RawAwdReviewRoundItem
+  teams: RawAwdReviewTeamItem[]
+  services: RawAwdReviewServiceItem[]
+  attacks: RawAwdReviewAttackItem[]
+  traffic: RawAwdReviewTrafficItem[]
 }
 
-interface RawTeacherAWDReviewArchiveResponse extends Omit<
-  TeacherAWDReviewArchiveData,
+interface RawAwdReviewArchiveResponse extends Omit<
+  AwdReviewArchiveData,
   'contest' | 'rounds' | 'selected_round' | 'scope'
 > {
   scope: {
@@ -96,20 +96,20 @@ interface RawTeacherAWDReviewArchiveResponse extends Omit<
     requested_id: string | number
     requested_role?: string
   }
-  contest: RawTeacherAWDReviewContestItem
-  rounds: RawTeacherAWDReviewRoundItem[]
-  selected_round?: RawTeacherAWDReviewSelectedRound
+  contest: RawAwdReviewContestItem
+  rounds: RawAwdReviewRoundItem[]
+  selected_round?: RawAwdReviewSelectedRound
 }
 
-interface RawTeacherAWDReviewContestPageResponse
-  extends PageResult<RawTeacherAWDReviewContestItem> {
+interface RawAwdReviewContestPageResponse
+  extends PageResult<RawAwdReviewContestItem> {
   summary?: {
     running_count?: number
     export_ready_count?: number
   }
 }
 
-export interface TeacherAWDReviewContestPageData extends PageResult<AwdReviewContestItemData> {
+export interface AwdReviewContestPageData extends PageResult<AwdReviewContestItemData> {
   summary: {
     running_count: number
     export_ready_count: number
@@ -125,8 +125,8 @@ function normalizeReportExportData(
   }
 }
 
-function normalizeTeacherAWDReviewContest(
-  item: RawTeacherAWDReviewContestItem
+function normalizeAwdReviewContest(
+  item: RawAwdReviewContestItem
 ): AwdReviewContestItemData {
   return {
     ...item,
@@ -134,9 +134,9 @@ function normalizeTeacherAWDReviewContest(
   }
 }
 
-function normalizeTeacherAWDReviewRound(
-  item: RawTeacherAWDReviewRoundItem
-): TeacherAWDReviewRoundItemData {
+function normalizeAwdReviewRound(
+  item: RawAwdReviewRoundItem
+): AwdReviewRoundItemData {
   return {
     ...item,
     id: String(item.id),
@@ -144,9 +144,9 @@ function normalizeTeacherAWDReviewRound(
   }
 }
 
-function normalizeTeacherAWDReviewTeam(
-  item: RawTeacherAWDReviewTeamItem
-): TeacherAWDReviewTeamItemData {
+function normalizeAwdReviewTeam(
+  item: RawAwdReviewTeamItem
+): AwdReviewTeamItemData {
   return {
     ...item,
     team_id: String(item.team_id),
@@ -154,9 +154,9 @@ function normalizeTeacherAWDReviewTeam(
   }
 }
 
-function normalizeTeacherAWDReviewService(
-  item: RawTeacherAWDReviewServiceItem
-): TeacherAWDReviewServiceItemData {
+function normalizeAwdReviewService(
+  item: RawAwdReviewServiceItem
+): AwdReviewServiceItemData {
   return {
     ...item,
     id: String(item.id),
@@ -167,9 +167,9 @@ function normalizeTeacherAWDReviewService(
   }
 }
 
-function normalizeTeacherAWDReviewAttack(
-  item: RawTeacherAWDReviewAttackItem
-): TeacherAWDReviewAttackItemData {
+function normalizeAwdReviewAttack(
+  item: RawAwdReviewAttackItem
+): AwdReviewAttackItemData {
   return {
     ...item,
     id: String(item.id),
@@ -181,9 +181,9 @@ function normalizeTeacherAWDReviewAttack(
   }
 }
 
-function normalizeTeacherAWDReviewTraffic(
-  item: RawTeacherAWDReviewTrafficItem
-): TeacherAWDReviewTrafficItemData {
+function normalizeAwdReviewTraffic(
+  item: RawAwdReviewTrafficItem
+): AwdReviewTrafficItemData {
   return {
     ...item,
     id: String(item.id),
@@ -196,15 +196,15 @@ function normalizeTeacherAWDReviewTraffic(
   }
 }
 
-function normalizeTeacherAWDSelectedRound(
-  item: RawTeacherAWDReviewSelectedRound
-): TeacherAWDReviewSelectedRoundData {
+function normalizeAwdReviewSelectedRound(
+  item: RawAwdReviewSelectedRound
+): AwdReviewSelectedRoundData {
   return {
-    round: normalizeTeacherAWDReviewRound(item.round),
-    teams: item.teams.map(normalizeTeacherAWDReviewTeam),
-    services: item.services.map(normalizeTeacherAWDReviewService),
-    attacks: item.attacks.map(normalizeTeacherAWDReviewAttack),
-    traffic: item.traffic.map(normalizeTeacherAWDReviewTraffic),
+    round: normalizeAwdReviewRound(item.round),
+    teams: item.teams.map(normalizeAwdReviewTeam),
+    services: item.services.map(normalizeAwdReviewService),
+    attacks: item.attacks.map(normalizeAwdReviewAttack),
+    traffic: item.traffic.map(normalizeAwdReviewTraffic),
   }
 }
 
@@ -213,8 +213,8 @@ export async function listTeacherAWDReviews(params?: {
   keyword?: string
   page?: number
   page_size?: number
-}, options?: { signal?: AbortSignal }): Promise<TeacherAWDReviewContestPageData> {
-  const payload = await request<RawTeacherAWDReviewContestPageResponse>({
+}, options?: { signal?: AbortSignal }): Promise<AwdReviewContestPageData> {
+  const payload = await request<RawAwdReviewContestPageResponse>({
     method: 'GET',
     url: '/teacher/awd/reviews',
     params: {
@@ -228,7 +228,7 @@ export async function listTeacherAWDReviews(params?: {
 
   return {
     ...payload,
-    list: payload.list.map(normalizeTeacherAWDReviewContest),
+    list: payload.list.map(normalizeAwdReviewContest),
     summary: {
       running_count: payload.summary?.running_count ?? 0,
       export_ready_count: payload.summary?.export_ready_count ?? 0,
@@ -242,8 +242,8 @@ export async function getTeacherAWDReview(
     round?: number
     team_id?: string
   }
-): Promise<TeacherAWDReviewArchiveData> {
-  const payload = await request<RawTeacherAWDReviewArchiveResponse>({
+): Promise<AwdReviewArchiveData> {
+  const payload = await request<RawAwdReviewArchiveResponse>({
     method: 'GET',
     url: `/teacher/awd/reviews/${encodeURIComponent(contestId)}`,
     params: {
@@ -258,10 +258,10 @@ export async function getTeacherAWDReview(
       ...payload.scope,
       requested_id: String(payload.scope.requested_id),
     },
-    contest: normalizeTeacherAWDReviewContest(payload.contest),
-    rounds: payload.rounds.map(normalizeTeacherAWDReviewRound),
+    contest: normalizeAwdReviewContest(payload.contest),
+    rounds: payload.rounds.map(normalizeAwdReviewRound),
     selected_round: payload.selected_round
-      ? normalizeTeacherAWDSelectedRound(payload.selected_round)
+      ? normalizeAwdReviewSelectedRound(payload.selected_round)
       : undefined,
   }
 }

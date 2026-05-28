@@ -6,7 +6,7 @@
 >
 > 拆分源：`ctf/docs/contracts/openapi-v1/`；修改 OpenAPI 时先改拆分源，再运行 `python3 scripts/sync_openapi_from_contract.py`。
 >
-> 最后更新：2026-05-14
+> 最后更新：2026-05-28
 
 ---
 
@@ -33,6 +33,7 @@
 - `src/api/teacher/*`、`src/api/admin/*` 可以作为语义 owner 对底层实现做薄 wrapper / re-export；只要没有改动 HTTP method、path、query、body、response schema，就不视为新的后端 API contract。
 - 2026-05-27 起，AWD review 目录、详情和导出链路也允许前端通过 `src/api/admin/*` / `src/api/teacher/*` 按角色选择 wrapper owner；底层仍复用既有 `/api/v1/teacher/awd/reviews*` HTTP contract，不新增平台专属 AWD review 路径。
 - 2026-05-27 起，前端本地共享 DTO 对 AWD review 赛事目录项 contract 统一使用中性命名 `AwdReviewContestItemData`；HTTP path 仍保持 `/api/v1/teacher/awd/reviews*`，不改变服务端权限语义。
+- 2026-05-28 起，前端本地共享 DTO 对 AWD review 详情 / 轮次 / 队伍 / 服务 / 攻击 / 流量 / selected round / archive 也统一使用中性命名 `AwdReview*Data`；teacher 语义只保留在 `/api/v1/teacher/awd/reviews*` 路径和对应 teacher wrapper function，不改变外部 HTTP 字段或权限语义。
 - 2026-05-27 起，platform 题解管理面板也允许通过 `src/api/admin/authoring.ts` 暴露 `getPlatformWriteupSubmissions` 这类薄 wrapper；底层仍复用既有 `/api/v1/teacher/writeup-submissions` HTTP contract，不改变教师侧题解查看 / 评阅能力。
 - 2026-05-27 起，前端本地共享 DTO 对这条投稿目录 contract 统一使用中性命名 `WriteupSubmissionItemData`；HTTP path 仍保持 `/api/v1/teacher/writeup-submissions`，不改变服务端权限语义。
 

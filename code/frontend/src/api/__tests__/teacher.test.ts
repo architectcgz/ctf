@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import teacherAwdReviewApiSource from '@/api/teacher/awd-reviews.ts?raw'
+import teachingAwdReviewApiSource from '@/api/teaching/awd-reviews.ts?raw'
 
 const requestMock = vi.hoisted(() => vi.fn())
 
@@ -24,6 +26,21 @@ import {
 describe('teacher api contract', () => {
   beforeEach(() => {
     requestMock.mockReset()
+  })
+
+  it('AWD review shared contract 命名应保持中性 owner', () => {
+    expect(teacherAwdReviewApiSource).toContain('AwdReviewArchiveData')
+    expect(teacherAwdReviewApiSource).toContain('AwdReviewTeamItemData')
+    expect(teacherAwdReviewApiSource).toContain('AwdReviewContestPageData')
+    expect(teacherAwdReviewApiSource).not.toContain('TeacherAWDReviewArchiveData')
+    expect(teacherAwdReviewApiSource).not.toContain('TeacherAWDReviewTeamItemData')
+    expect(teacherAwdReviewApiSource).not.toContain('TeacherAWDReviewContestPageData')
+    expect(teachingAwdReviewApiSource).toContain('AwdReviewArchiveData')
+    expect(teachingAwdReviewApiSource).toContain('AwdReviewTeamItemData')
+    expect(teachingAwdReviewApiSource).toContain('AwdReviewContestPageData')
+    expect(teachingAwdReviewApiSource).not.toContain('TeacherAWDReviewArchiveData')
+    expect(teachingAwdReviewApiSource).not.toContain('TeacherAWDReviewTeamItemData')
+    expect(teachingAwdReviewApiSource).not.toContain('TeacherAWDReviewContestPageData')
   })
 
   it('不传分页参数时应继续返回班级数组', async () => {

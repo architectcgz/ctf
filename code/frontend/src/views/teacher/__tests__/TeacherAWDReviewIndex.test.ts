@@ -184,13 +184,16 @@ describe('TeacherAWDReviewIndex', () => {
 
   it('平台 AWD 复盘页头部应切到 workspace 语义，不再保留 teacher journal eyebrow', () => {
     expect(teacherAwdReviewIndexWorkspaceSource).toContain('<AwdReviewWorkspaceHeader')
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain('TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY')
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('AWD_REVIEW_INDEX_WORKSPACE_COPY')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY')
     expect(teacherAwdReviewIndexWorkspaceSource).toContain(
-      ':overline="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.overline"'
+      ':overline="AWD_REVIEW_INDEX_WORKSPACE_COPY.overline"'
     )
     expect(teacherAwdReviewIndexWorkspaceSource).toContain(
-      ':title="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.title"'
+      ':title="AWD_REVIEW_INDEX_WORKSPACE_COPY.title"'
     )
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain('buildAwdReviewIndexSummaryItems')
+    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('buildTeacherAwdReviewIndexSummaryItems')
     expect(teacherAwdReviewIndexWorkspaceSource).toContain('header-class="awd-review-index-header"')
     expect(teacherAwdReviewIndexWorkspaceSource).toContain(
       'overline-class="awd-review-index-overline"'

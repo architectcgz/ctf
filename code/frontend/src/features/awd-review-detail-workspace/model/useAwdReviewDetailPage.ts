@@ -3,8 +3,8 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { getAwdReviewByRole } from '@/api/awd-reviews'
 import type {
-  TeacherAWDReviewArchiveData,
-  TeacherAWDReviewTeamItemData,
+  AwdReviewArchiveData,
+  AwdReviewTeamItemData,
 } from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
@@ -25,7 +25,7 @@ export function useAwdReviewDetailPage() {
 
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const review = ref<TeacherAWDReviewArchiveData | null>(null)
+  const review = ref<AwdReviewArchiveData | null>(null)
   const selectedTeamId = ref<string | null>(null)
 
   const contestId = computed(() => String(route.params.contestId || ''))
@@ -146,7 +146,7 @@ export function useAwdReviewDetailPage() {
     router.push({ name: resolveAwdReviewIndexRouteName(authStore.user?.role) })
   }
 
-  function openTeam(team: TeacherAWDReviewTeamItemData): void {
+  function openTeam(team: AwdReviewTeamItemData): void {
     selectedTeamId.value = team.team_id
   }
 

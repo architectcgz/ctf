@@ -5,9 +5,9 @@ import {
   listPlatformAWDReviews,
 } from '@/api/admin'
 import type {
+  AwdReviewArchiveData,
   AwdReviewContestItemData,
   ReportExportData,
-  TeacherAWDReviewArchiveData,
 } from '@/api/contracts'
 import {
   exportTeacherAWDReviewArchive,
@@ -49,7 +49,7 @@ export async function getAwdReviewByRole(
   role: AwdReviewAccessRole,
   contestId: string,
   params?: GetAwdReviewParams
-): Promise<TeacherAWDReviewArchiveData> {
+): Promise<AwdReviewArchiveData> {
   return role === 'admin'
     ? getPlatformAWDReview(contestId, params)
     : getTeacherAWDReview(contestId, params)

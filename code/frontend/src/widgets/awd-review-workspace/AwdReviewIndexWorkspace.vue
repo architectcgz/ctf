@@ -8,8 +8,8 @@ import AwdReviewSurfaceShell from './AwdReviewSurfaceShell.vue'
 import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
 import AwdReviewWorkspaceHeader from './AwdReviewWorkspaceHeader.vue'
 import {
-  buildTeacherAwdReviewIndexSummaryItems,
-  TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY,
+  AWD_REVIEW_INDEX_WORKSPACE_COPY,
+  buildAwdReviewIndexSummaryItems,
 } from './model/presentation'
 
 interface ContestSummary {
@@ -49,7 +49,7 @@ const emit = defineEmits<{
 }>()
 
 const summaryItems = computed(() =>
-  buildTeacherAwdReviewIndexSummaryItems(props.contestSummary)
+  buildAwdReviewIndexSummaryItems(props.contestSummary)
 )
 </script>
 
@@ -57,13 +57,13 @@ const summaryItems = computed(() =>
   <AwdReviewSurfaceShell>
     <div class="teacher-page">
       <AwdReviewWorkspaceHeader
-        :overline="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.overline"
-        :title="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.title"
+        :overline="AWD_REVIEW_INDEX_WORKSPACE_COPY.overline"
+        :title="AWD_REVIEW_INDEX_WORKSPACE_COPY.title"
         header-class="awd-review-index-header"
         overline-class="awd-review-index-overline"
       >
         <template #description>
-          {{ TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.description }}
+          {{ AWD_REVIEW_INDEX_WORKSPACE_COPY.description }}
         </template>
 
         <template #actions>
@@ -72,7 +72,7 @@ const summaryItems = computed(() =>
             class="header-btn header-btn--ghost"
             @click="emit('openDashboard')"
           >
-            {{ TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.openDashboardAction }}
+            {{ AWD_REVIEW_INDEX_WORKSPACE_COPY.openDashboardAction }}
           </button>
           <button
             type="button"
@@ -80,13 +80,13 @@ const summaryItems = computed(() =>
             @click="emit('refresh')"
           >
             <RefreshCcw class="h-4 w-4" />
-            {{ TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.refreshDirectoryAction }}
+            {{ AWD_REVIEW_INDEX_WORKSPACE_COPY.refreshDirectoryAction }}
           </button>
         </template>
       </AwdReviewWorkspaceHeader>
 
       <AwdReviewSummaryPanel
-        :title="TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY.summaryTitle"
+        :title="AWD_REVIEW_INDEX_WORKSPACE_COPY.summaryTitle"
         :items="summaryItems"
       >
         <template #title-prefix>

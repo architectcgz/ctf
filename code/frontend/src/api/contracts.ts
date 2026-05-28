@@ -1153,14 +1153,14 @@ export interface AwdReviewContestItemData {
   export_ready: boolean
 }
 
-export interface TeacherAWDReviewScopeData {
+export interface AwdReviewScopeData {
   snapshot_type: 'live' | 'final' | string
   requested_by: number
   requested_id: ID
   requested_role?: string
 }
 
-export interface TeacherAWDReviewOverviewData {
+export interface AwdReviewOverviewData {
   round_count: number
   team_count: number
   service_count: number
@@ -1169,7 +1169,7 @@ export interface TeacherAWDReviewOverviewData {
   latest_evidence_at?: ISODateTime
 }
 
-export interface TeacherAWDReviewRoundItemData {
+export interface AwdReviewRoundItemData {
   id: ID
   contest_id: ID
   round_number: number
@@ -1183,7 +1183,7 @@ export interface TeacherAWDReviewRoundItemData {
   traffic_count: number
 }
 
-export interface TeacherAWDReviewTeamItemData {
+export interface AwdReviewTeamItemData {
   team_id: ID
   team_name: string
   captain_id: ID
@@ -1192,7 +1192,7 @@ export interface TeacherAWDReviewTeamItemData {
   last_solve_at?: ISODateTime
 }
 
-export interface TeacherAWDReviewServiceItemData {
+export interface AwdReviewServiceItemData {
   id: ID
   round_id: ID
   team_id: ID
@@ -1208,7 +1208,7 @@ export interface TeacherAWDReviewServiceItemData {
   updated_at: ISODateTime
 }
 
-export interface TeacherAWDReviewAttackItemData {
+export interface AwdReviewAttackItemData {
   id: ID
   round_id: ID
   attacker_team_id: ID
@@ -1226,7 +1226,7 @@ export interface TeacherAWDReviewAttackItemData {
   created_at: ISODateTime
 }
 
-export interface TeacherAWDReviewTrafficItemData {
+export interface AwdReviewTrafficItemData {
   id: ID
   contest_id: ID
   round_id: ID
@@ -1244,21 +1244,21 @@ export interface TeacherAWDReviewTrafficItemData {
   created_at: ISODateTime
 }
 
-export interface TeacherAWDReviewSelectedRoundData {
-  round: TeacherAWDReviewRoundItemData
-  teams: TeacherAWDReviewTeamItemData[]
-  services: TeacherAWDReviewServiceItemData[]
-  attacks: TeacherAWDReviewAttackItemData[]
-  traffic: TeacherAWDReviewTrafficItemData[]
+export interface AwdReviewSelectedRoundData {
+  round: AwdReviewRoundItemData
+  teams: AwdReviewTeamItemData[]
+  services: AwdReviewServiceItemData[]
+  attacks: AwdReviewAttackItemData[]
+  traffic: AwdReviewTrafficItemData[]
 }
 
-export interface TeacherAWDReviewArchiveData {
+export interface AwdReviewArchiveData {
   generated_at: ISODateTime
-  scope: TeacherAWDReviewScopeData
+  scope: AwdReviewScopeData
   contest: AwdReviewContestItemData
-  overview?: TeacherAWDReviewOverviewData
-  rounds: TeacherAWDReviewRoundItemData[]
-  selected_round?: TeacherAWDReviewSelectedRoundData
+  overview?: AwdReviewOverviewData
+  rounds: AwdReviewRoundItemData[]
+  selected_round?: AwdReviewSelectedRoundData
 }
 
 export interface ReviewArchiveStudentData {

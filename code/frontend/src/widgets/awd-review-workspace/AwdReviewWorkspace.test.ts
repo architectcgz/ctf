@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
 import AwdReviewWorkspace from './AwdReviewWorkspace.vue'
-import type { TeacherAWDReviewArchiveData } from '@/api/contracts'
+import type { AwdReviewArchiveData } from '@/api/contracts'
 
-function createReview(): TeacherAWDReviewArchiveData {
+function createReview(): AwdReviewArchiveData {
   return {
     generated_at: '2026-01-01T00:00:00Z',
     scope: {
