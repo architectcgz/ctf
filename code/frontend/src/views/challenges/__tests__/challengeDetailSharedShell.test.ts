@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
-import challengeWorkspaceShellSource from '@/components/challenge/ChallengeWorkspaceShell.vue?raw'
+import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
 import challengeActionAsideSource from '@/components/challenge/ChallengeActionAside.vue?raw'
 import challengeInstanceCardSource from '@/components/challenge/ChallengeInstanceCard.vue?raw'
 import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
-import challengeSolutionsPanelSource from '@/components/challenge/ChallengeSolutionsPanel.vue?raw'
+import challengeSolutionsPanelSource from '@/features/challenge-detail/ui/ChallengeSolutionsPanel.vue?raw'
 import challengeWriteupPanelSource from '@/components/challenge/ChallengeWriteupPanel.vue?raw'
 
 const challengeDetailWorkspaceSource = [

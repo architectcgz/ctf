@@ -55,7 +55,7 @@ import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGo
 import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
 import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
-import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/features/platform-contests/ui/ContestOperationsHubHeroPanel.vue?raw'
 import writeupManageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
 import writeupEditorSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue?raw'
 
@@ -114,7 +114,7 @@ import challengeImportHeroSource from '@/components/platform/challenge/Challenge
 import challengeImportPreviewWorkspaceSource from '@/components/platform/challenge/ChallengeImportPreviewWorkspacePanel.vue?raw'
 import challengeManageHeroSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
 import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
-import challengeSolutionsPanelSource from '@/components/challenge/ChallengeSolutionsPanel.vue?raw'
+import challengeSolutionsPanelSource from '@/features/challenge-detail/ui/ChallengeSolutionsPanel.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
 import contestOverviewPanelSource from '@/components/contests/ContestOverviewPanel.vue?raw'

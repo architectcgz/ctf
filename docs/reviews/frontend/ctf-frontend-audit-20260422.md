@@ -2031,13 +2031,13 @@
 ## 第八十七轮修复进展
 
 - 已完成：
-  - `TD-1` `ChallengeDetail.vue` 的 workspace shell owner 已收口，tab rail、四块主面板和右侧工具栏装配统一抽到 `components/challenge/ChallengeWorkspaceShell.vue`。
+  - `TD-1` `ChallengeDetail.vue` 的 workspace shell owner 已收口，tab rail、四块主面板和右侧工具栏装配统一抽到 `features/challenge-detail/ui/ChallengeWorkspaceShell.vue`。
   - 父页继续只保留加载 / 错误态、route page 的 tab owner、远端数据与主业务动作；新 shell 只承接稳定的布局装配与面板切换，没有吸入第二份 route/query 或异步 owner。
-  - `ChallengeDetail.vue` 本体行数已从 `574` 行降到 `404` 行，已低于前端 view 行数护栏；`architectureAllowlist.ts` 已同步移除该页的 oversized allowlist，并补充 `ChallengeWorkspaceShell.vue -> @/features/challenge-detail` 的边界白名单。
+  - `ChallengeDetail.vue` 本体行数已从 `574` 行降到 `404` 行，已低于前端 view 行数护栏；后续 `ChallengeWorkspaceShell.vue`、`ChallengeSolutionsPanel.vue` 与 `ChallengeSubmissionRecordsPanel.vue` 也已进一步迁入 `features/challenge-detail/ui`，对应的 `componentFeatureImportAllowlist` 已清理。
   - `ChallengeDetail.test.ts`、`challengeDetailPanelExtraction.test.ts`、`challengeDetailSharedShell.test.ts` 和 `pageTabsStyles.test.ts` 已改成按父页 + workspace shell 组合源码校验，避免后续仅因壳层抽取导致假回归。
 - 本轮涉及文件：
   - `code/frontend/src/views/challenges/ChallengeDetail.vue`
-  - `code/frontend/src/components/challenge/ChallengeWorkspaceShell.vue`
+  - `code/frontend/src/features/challenge-detail/ui/ChallengeWorkspaceShell.vue`
   - `code/frontend/src/views/challenges/__tests__/ChallengeDetail.test.ts`
   - `code/frontend/src/views/challenges/__tests__/challengeDetailPanelExtraction.test.ts`
   - `code/frontend/src/views/challenges/__tests__/challengeDetailSharedShell.test.ts`

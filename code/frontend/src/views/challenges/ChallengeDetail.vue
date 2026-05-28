@@ -114,8 +114,7 @@
 
 <script setup lang="ts">
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import ChallengeWorkspaceShell from '@/components/challenge/ChallengeWorkspaceShell.vue'
-import { useChallengeDetailPage } from '@/features/challenge-detail'
+import { ChallengeWorkspaceShell, useChallengeDetailPage } from '@/features/challenge-detail'
 const {
   activeSolution,
   activeSolutionTab,

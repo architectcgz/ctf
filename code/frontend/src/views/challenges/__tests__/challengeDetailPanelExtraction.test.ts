@@ -1,28 +1,25 @@
 import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
-import challengeWorkspaceShellSource from '@/components/challenge/ChallengeWorkspaceShell.vue?raw'
+import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
 import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
 
 describe('ChallengeDetail panel extraction', () => {
   it('应将工作区壳层与五块主要装配区抽到独立 challenge 组件', () => {
     expect(challengeDetailSource).toContain(
-      "import { useChallengeDetailPage } from '@/features/challenge-detail'"
+      "import { ChallengeWorkspaceShell, useChallengeDetailPage } from '@/features/challenge-detail'"
     )
     expect(challengeDetailSource).not.toContain("from '@/api/challenge'")
-    expect(challengeDetailSource).toContain(
-      "import ChallengeWorkspaceShell from '@/components/challenge/ChallengeWorkspaceShell.vue'"
-    )
     expect(challengeDetailSource).toContain('<ChallengeWorkspaceShell')
 
     expect(challengeWorkspaceShellSource).toContain(
       "import ChallengeQuestionPanel from '@/components/challenge/ChallengeQuestionPanel.vue'"
     )
     expect(challengeWorkspaceShellSource).toContain(
-      "import ChallengeSolutionsPanel from '@/components/challenge/ChallengeSolutionsPanel.vue'"
+      "import ChallengeSolutionsPanel from './ChallengeSolutionsPanel.vue'"
     )
     expect(challengeWorkspaceShellSource).toContain(
-      "import ChallengeSubmissionRecordsPanel from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue'"
+      "import ChallengeSubmissionRecordsPanel from './ChallengeSubmissionRecordsPanel.vue'"
     )
     expect(challengeWorkspaceShellSource).toContain(
       "import ChallengeWriteupPanel from '@/components/challenge/ChallengeWriteupPanel.vue'"

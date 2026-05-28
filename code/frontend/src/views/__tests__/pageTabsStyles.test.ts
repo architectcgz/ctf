@@ -8,7 +8,7 @@ import userGovernanceDetailModalSource from '@/components/platform/user/UserGove
 import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
 import classManagementSource from '@/features/teacher-class-management/ui/ClassManagementPage.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
-import challengeWorkspaceShellSource from '@/components/challenge/ChallengeWorkspaceShell.vue?raw'
+import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
 import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'

@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import type { ChallengeSubmissionRecordStatus } from '@/features/challenge-detail'
+import type { ChallengeSubmissionRecordStatus } from '../model'
 
 interface SubmissionRecordItem {
   id: string

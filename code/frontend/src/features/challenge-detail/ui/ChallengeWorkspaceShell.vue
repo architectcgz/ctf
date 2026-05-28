@@ -129,12 +129,12 @@ import type {
   ChallengeSolutionCard,
   ChallengeSolutionTab,
   ChallengeSubmissionRecordStatus,
-} from '@/features/challenge-detail'
+} from '../model'
 import ChallengeActionAside from '@/components/challenge/ChallengeActionAside.vue'
 import ChallengeQuestionPanel from '@/components/challenge/ChallengeQuestionPanel.vue'
-import ChallengeSolutionsPanel from '@/components/challenge/ChallengeSolutionsPanel.vue'
-import ChallengeSubmissionRecordsPanel from '@/components/challenge/ChallengeSubmissionRecordsPanel.vue'
 import ChallengeWriteupPanel from '@/components/challenge/ChallengeWriteupPanel.vue'
+import ChallengeSolutionsPanel from './ChallengeSolutionsPanel.vue'
+import ChallengeSubmissionRecordsPanel from './ChallengeSubmissionRecordsPanel.vue'
 
 type ChallengeWorkspaceTab = 'question' | 'solution' | 'records' | 'writeup'
 

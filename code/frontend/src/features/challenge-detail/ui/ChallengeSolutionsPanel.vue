@@ -167,7 +167,7 @@
 import type {
   ChallengeSolutionCard,
   ChallengeSolutionTab,
-} from '@/features/challenge-detail'
+} from '../model'
 
 interface Props {
   challengeSolved: boolean
