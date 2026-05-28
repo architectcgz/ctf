@@ -1,1 +1,8 @@
 export { default as ContestAwdConfigWorkspaceShell } from './ContestAwdConfigWorkspaceShell.vue'
+export { default as ContestAwdCheckerConfigSection } from './ContestAwdCheckerConfigSection.vue'
+export { default as ContestAwdConfigFooter } from './ContestAwdConfigFooter.vue'
+export { default as ContestAwdConfigTopbar } from './ContestAwdConfigTopbar.vue'
+export { default as ContestAwdDebugStation } from './ContestAwdDebugStation.vue'
+export { default as ContestAwdEditorHeader } from './ContestAwdEditorHeader.vue'
+export { default as ContestAwdScoreWeights } from './ContestAwdScoreWeights.vue'
+export { default as ContestAwdServiceDirectory } from './ContestAwdServiceDirectory.vue'

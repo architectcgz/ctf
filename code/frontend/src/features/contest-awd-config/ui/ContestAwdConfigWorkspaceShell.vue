@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import ContestAwdCheckerConfigSection from '@/components/platform/contest/ContestAwdCheckerConfigSection.vue'
-import ContestAwdConfigFooter from '@/components/platform/contest/ContestAwdConfigFooter.vue'
-import ContestAwdConfigTopbar from '@/components/platform/contest/ContestAwdConfigTopbar.vue'
-import ContestAwdDebugStation from '@/components/platform/contest/ContestAwdDebugStation.vue'
-import ContestAwdEditorHeader from '@/components/platform/contest/ContestAwdEditorHeader.vue'
-import ContestAwdScoreWeights from '@/components/platform/contest/ContestAwdScoreWeights.vue'
-import ContestAwdServiceDirectory from '@/components/platform/contest/ContestAwdServiceDirectory.vue'
+import ContestAwdCheckerConfigSection from './ContestAwdCheckerConfigSection.vue'
+import ContestAwdConfigFooter from './ContestAwdConfigFooter.vue'
+import ContestAwdConfigTopbar from './ContestAwdConfigTopbar.vue'
+import ContestAwdDebugStation from './ContestAwdDebugStation.vue'
+import ContestAwdEditorHeader from './ContestAwdEditorHeader.vue'
+import ContestAwdScoreWeights from './ContestAwdScoreWeights.vue'
+import ContestAwdServiceDirectory from './ContestAwdServiceDirectory.vue'
 import type {
   AdminContestAWDServiceData,
   AWDCheckerPreviewData,
@@ -23,7 +23,7 @@ import type {
   AwdScriptCheckerDraft,
   AwdTcpCheckerStepDraft,
   AwdTcpStandardDraft,
-} from '@/components/platform/contest/contestAwdConfigTypes'
+} from './contestAwdConfigTypes'
 
 interface Props {
   awdHttpMethodOptions: readonly string[]

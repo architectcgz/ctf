@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestAwdConfig from '../ContestAwdConfig.vue'
 import contestAwdConfigSource from '../ContestAwdConfig.vue?raw'
-import contestAwdCheckerConfigSectionSource from '@/components/platform/contest/ContestAwdCheckerConfigSection.vue?raw'
+import contestAwdCheckerConfigSectionSource from '@/features/contest-awd-config/ui/ContestAwdCheckerConfigSection.vue?raw'
 import contestAwdConfigWorkspaceShellSource from '@/features/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue?raw'
 import contestAwdConfigPageSource from '@/features/contest-awd-config/model/useContestAwdConfigPage.ts?raw'
 
@@ -147,19 +147,19 @@ describe('ContestAwdConfig', () => {
       "from '@/components/platform/contest/ContestAwdConfigWorkspaceShell.vue'"
     )
     expect(contestAwdConfigWorkspaceSource).toContain(
-      "import ContestAwdConfigTopbar from '@/components/platform/contest/ContestAwdConfigTopbar.vue'"
+      "import ContestAwdConfigTopbar from './ContestAwdConfigTopbar.vue'"
     )
     expect(contestAwdConfigWorkspaceSource).toContain(
-      "import ContestAwdServiceDirectory from '@/components/platform/contest/ContestAwdServiceDirectory.vue'"
+      "import ContestAwdServiceDirectory from './ContestAwdServiceDirectory.vue'"
     )
     expect(contestAwdConfigWorkspaceSource).toContain(
-      "import ContestAwdDebugStation from '@/components/platform/contest/ContestAwdDebugStation.vue'"
+      "import ContestAwdDebugStation from './ContestAwdDebugStation.vue'"
     )
     expect(contestAwdConfigWorkspaceSource).toContain(
-      "import ContestAwdConfigFooter from '@/components/platform/contest/ContestAwdConfigFooter.vue'"
+      "import ContestAwdConfigFooter from './ContestAwdConfigFooter.vue'"
     )
     expect(contestAwdConfigWorkspaceShellSource).toContain(
-      "import ContestAwdCheckerConfigSection from '@/components/platform/contest/ContestAwdCheckerConfigSection.vue'"
+      "import ContestAwdCheckerConfigSection from './ContestAwdCheckerConfigSection.vue'"
     )
     expect(contestAwdCheckerConfigSectionSource).toContain(
       "import ContestAwdHttpStandardFields from './ContestAwdHttpStandardFields.vue'"
