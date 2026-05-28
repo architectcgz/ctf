@@ -1,1 +1,6 @@
 export { default as ContestAWDWorkspacePanel } from './ContestAWDWorkspacePanel.vue'
+export { default as AWDDefenseColumn } from './AWDDefenseColumn.vue'
+export { default as AWDDefenseAlertsPanel } from './AWDDefenseAlertsPanel.vue'
+export { default as AWDDefenseOperationsPanel } from './AWDDefenseOperationsPanel.vue'
+export { default as AWDDefenseConnectionPanel } from './AWDDefenseConnectionPanel.vue'
+export { default as AWDDefenseServiceList } from './AWDDefenseServiceList.vue'

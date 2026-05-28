@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ExternalLink } from 'lucide-vue-next'
 
-import type { AWDDefenseServiceCard } from '@/features/contest-awd-workspace'
+import type { AWDDefenseServiceCard } from '../model'
 
 const props = defineProps<{
   services: AWDDefenseServiceCard[]

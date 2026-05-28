@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import AWDDefenseColumn from '@/components/contests/awd/AWDDefenseColumn.vue'
 import AWDAttackVectorPanel from '@/components/contests/awd/AWDAttackVectorPanel.vue'
 import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip.vue'
 import AWDWorkspaceIntelColumn from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue'
@@ -16,12 +15,13 @@ import {
   useAwdWorkspacePresentation,
   useAwdWorkspaceSummary,
   useContestAWDWorkspace,
-} from '@/features/contest-awd-workspace'
+} from '../model'
 import type {
   ContestAWDWorkspaceServiceData,
   ContestChallengeItem,
   ContestDetailData,
 } from '@/api/contracts'
+import AWDDefenseColumn from './AWDDefenseColumn.vue'
 
 const props = defineProps<{
   contest: ContestDetailData

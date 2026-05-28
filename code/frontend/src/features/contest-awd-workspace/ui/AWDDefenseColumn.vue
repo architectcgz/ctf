@@ -2,7 +2,7 @@
 import { ShieldAlert } from 'lucide-vue-next'
 
 import type { AWDDefenseSSHAccessData, ID } from '@/api/contracts'
-import type { AWDDefenseServiceCard } from '@/features/contest-awd-workspace'
+import type { AWDDefenseServiceCard } from '../model'
 import AWDDefenseAlertsPanel from './AWDDefenseAlertsPanel.vue'
 import AWDDefenseOperationsPanel from './AWDDefenseOperationsPanel.vue'
 import AWDDefenseServiceList from './AWDDefenseServiceList.vue'

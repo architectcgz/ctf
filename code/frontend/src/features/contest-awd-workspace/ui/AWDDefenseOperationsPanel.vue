@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { ExternalLink, RefreshCw, RotateCcw, ShieldCheck, Terminal } from 'lucide-vue-next'
 
 import type { AWDDefenseSSHAccessData, ID } from '@/api/contracts'
-import type { AWDDefenseServiceCard } from '@/features/contest-awd-workspace'
+import type { AWDDefenseServiceCard } from '../model'
 import AWDDefenseConnectionPanel from './AWDDefenseConnectionPanel.vue'
 
 const props = defineProps<{
