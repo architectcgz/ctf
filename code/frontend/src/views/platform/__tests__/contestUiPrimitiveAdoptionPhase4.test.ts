@@ -8,7 +8,7 @@ import awdRoundHeaderPanelSource from '@/components/platform/contest/AWDRoundHea
 import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
 import awdRuntimePendingStateSource from '@/components/platform/contest/AWDRuntimePendingState.vue?raw'
 import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel.vue?raw'
-import contestAwdPreflightPanelSource from '@/components/platform/contest/ContestAwdPreflightPanel.vue?raw'
+import contestAwdPreflightPanelSource from '@/features/platform-contests/ui/ContestAwdPreflightPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 4', () => {
   it('awd operations panel should consume shared field and button primitives for selector and runtime shell', () => {

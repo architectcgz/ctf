@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import contestAwdPreflightPanelSource from '@/components/platform/contest/ContestAwdPreflightPanel.vue?raw'
+import contestAwdPreflightPanelSource from '@/features/platform-contests/ui/ContestAwdPreflightPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 18', () => {
   it('contest awd preflight panel should not render a force start override block', () => {

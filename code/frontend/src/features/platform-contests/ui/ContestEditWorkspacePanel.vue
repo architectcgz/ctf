@@ -15,8 +15,8 @@ import {
 } from '@/features/contest-workbench'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import ContestAwdPreflightPanel from '@/components/platform/contest/ContestAwdPreflightPanel.vue'
 import AWDChallengeConfigPanel from './AWDChallengeConfigPanel.vue'
+import ContestAwdPreflightPanel from './ContestAwdPreflightPanel.vue'
 import PlatformContestFormPanel from './PlatformContestFormPanel.vue'
 
 defineProps<{

@@ -102,7 +102,7 @@ declare module 'vue' {
     ContestAwdConfigTopbar: typeof import('./components/platform/contest/ContestAwdConfigTopbar.vue')['default']
     ContestAwdDebugStation: typeof import('./components/platform/contest/ContestAwdDebugStation.vue')['default']
     ContestAwdEditorHeader: typeof import('./components/platform/contest/ContestAwdEditorHeader.vue')['default']
-    ContestAwdPreflightPanel: typeof import('./components/platform/contest/ContestAwdPreflightPanel.vue')['default']
+    ContestAwdPreflightPanel: typeof import('./features/platform-contests/ui/ContestAwdPreflightPanel.vue')['default']
     ContestAwdScoreWeights: typeof import('./components/platform/contest/ContestAwdScoreWeights.vue')['default']
     ContestAwdServiceDirectory: typeof import('./components/platform/contest/ContestAwdServiceDirectory.vue')['default']
     ContestAWDWorkspacePanel: typeof import('./components/contests/ContestAWDWorkspacePanel.vue')['default']
