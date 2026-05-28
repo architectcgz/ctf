@@ -15,7 +15,6 @@ export const componentFeatureImportAllowlist = new Set([
   'components/layout/TopNav.vue -> @/features/auth',
   'components/notifications/AdminNotificationPublishDrawer.vue -> @/features/admin-notification-publisher',
   'components/platform/challenge/ChallengeManageDirectoryPanel.vue -> @/features/platform-challenges',
-  'components/platform/contest/AWDOperationsPanel.vue -> @/features/contest-awd-admin',
   'components/platform/contest/AWDRoundInspector.vue -> @/features/awd-inspector',
   'components/platform/contest/AWDTrafficPanel.vue -> @/features/awd-inspector',
   'components/platform/contest/awdInspector.types.ts -> @/features/awd-inspector',

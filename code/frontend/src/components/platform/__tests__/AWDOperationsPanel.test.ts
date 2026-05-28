@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent } from 'vue'
 
-import AWDOperationsPanel from '../contest/AWDOperationsPanel.vue'
+import AWDOperationsPanel from '@/features/contest-awd-admin/ui/AWDOperationsPanel.vue'
 
 const awdMockModule = vi.hoisted(() => ({
   state: null as any,

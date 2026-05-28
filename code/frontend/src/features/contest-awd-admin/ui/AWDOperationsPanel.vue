@@ -2,19 +2,19 @@
 import { computed, ref, watch } from 'vue'
 
 import type { AWDTrafficStatusGroup, ContestDetailData } from '@/api/contracts'
-import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
-import AWDContestSelectorField from './AWDContestSelectorField.vue'
-import AWDInstanceOrchestrationPanel from './AWDInstanceOrchestrationPanel.vue'
-import AWDReadinessOverrideDialog from './AWDReadinessOverrideDialog.vue'
-import AWDReadinessSummary from './AWDReadinessSummary.vue'
-import AWDRuntimePendingState from './AWDRuntimePendingState.vue'
+import AWDAttackLogDialog from '@/components/platform/contest/AWDAttackLogDialog.vue'
+import AWDContestSelectorField from '@/components/platform/contest/AWDContestSelectorField.vue'
+import AWDInstanceOrchestrationPanel from '@/components/platform/contest/AWDInstanceOrchestrationPanel.vue'
+import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
+import AWDReadinessSummary from '@/components/platform/contest/AWDReadinessSummary.vue'
+import AWDRuntimePendingState from '@/components/platform/contest/AWDRuntimePendingState.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { usePlatformContestAwd } from '@/features/contest-awd-admin'
 import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 
-import AWDRoundCreateDialog from './AWDRoundCreateDialog.vue'
-import AWDRoundInspector from './AWDRoundInspector.vue'
-import AWDServiceCheckDialog from './AWDServiceCheckDialog.vue'
+import AWDRoundCreateDialog from '@/components/platform/contest/AWDRoundCreateDialog.vue'
+import AWDRoundInspector from '@/components/platform/contest/AWDRoundInspector.vue'
+import AWDServiceCheckDialog from '@/components/platform/contest/AWDServiceCheckDialog.vue'
 
 const props = defineProps<{
   contests: ContestDetailData[]

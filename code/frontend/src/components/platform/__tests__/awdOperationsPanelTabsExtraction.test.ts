@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import awdOperationsPanelSource from '../contest/AWDOperationsPanel.vue?raw'
+import awdOperationsPanelSource from '@/features/contest-awd-admin/ui/AWDOperationsPanel.vue?raw'
 
 describe('awd operations panel tabs extraction', () => {
   it('AWDOperationsPanel 应复用 useTabKeyboardNavigation，而不是继续本地维护按钮 ref 与键盘导航状态机', () => {
