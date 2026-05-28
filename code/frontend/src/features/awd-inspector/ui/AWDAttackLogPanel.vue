@@ -4,7 +4,7 @@ import { ShieldCheck, FileDown, ArrowRight, Sword, Target, History } from 'lucid
 import type {
   AWDAttackLogPanelEmits,
   AWDAttackLogPanelProps,
-} from '@/components/platform/contest/awdInspector.types'
+} from './awdInspector.types'
 
 const props = defineProps<AWDAttackLogPanelProps>()
 const emit = defineEmits<AWDAttackLogPanelEmits>()

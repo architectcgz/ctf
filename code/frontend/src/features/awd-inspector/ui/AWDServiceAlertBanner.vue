@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AWDServiceAlertView } from '@/components/platform/contest/awdInspector.types'
+import type { AWDServiceAlertView } from './awdInspector.types'
 
 defineProps<{
   alerts: AWDServiceAlertView[]

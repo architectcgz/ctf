@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AWDServiceAlertBanner from '@/components/platform/contest/AWDServiceAlertBanner.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import { AWDOperationsPanel } from '@/features/contest-awd-admin'
+import { AWDServiceAlertBanner } from '@/features/awd-inspector'
 import { useContestOperationsPage } from '@/features/platform-contests'
 
 const { loading, contest, inspectorRuntimeContent } = useContestOperationsPage()

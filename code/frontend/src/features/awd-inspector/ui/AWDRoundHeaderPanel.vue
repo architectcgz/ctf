@@ -13,7 +13,7 @@ import { computed } from 'vue'
 import type {
   AWDRoundHeaderPanelEmits,
   AWDRoundHeaderPanelProps,
-} from '@/components/platform/contest/awdInspector.types'
+} from './awdInspector.types'
 
 const props = defineProps<AWDRoundHeaderPanelProps & { hideStudioLink?: boolean }>()
 const emit = defineEmits<AWDRoundHeaderPanelEmits & { 'open:contest-edit': [] }>()

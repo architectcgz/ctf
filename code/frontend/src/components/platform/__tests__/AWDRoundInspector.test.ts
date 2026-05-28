@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { h } from 'vue'
 
-import AWDRoundInspector from '../contest/AWDRoundInspector.vue'
+import AWDRoundInspector from '@/features/awd-inspector/ui/AWDRoundInspector.vue'
 
 const baseContest = {
   id: 'contest-1',

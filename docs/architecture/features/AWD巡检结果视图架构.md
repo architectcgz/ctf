@@ -7,10 +7,10 @@
 - 适用范围：`frontend`、`contracts`
 - 关联模块：
   - `frontend/src/features/awd-inspector`
-  - `frontend/src/components/platform/contest/AWDRoundInspector.vue`
+  - `frontend/src/features/awd-inspector/ui/AWDRoundInspector.vue`
   - `frontend/src/api/admin/contests.ts`
 - 过程追溯：`practice/superpowers-plan-index.md` 中的 `2026-04-11-awd-engine-phase3-inspector`
-- 最后更新：`2026-05-07`
+- 最后更新：`2026-05-28`
 
 ## 1. 背景与问题
 
@@ -108,7 +108,7 @@
 - `code/frontend/src/features/awd-inspector/model/useAwdCheckResultPresentation.ts`
 - `code/frontend/src/features/awd-inspector/model/awdInspectorExportPayloads.ts`
 - `code/frontend/src/features/awd-inspector/model/useAwdCheckResultPresentation.test.ts`
-- `code/frontend/src/components/platform/contest/AWDRoundInspector.vue`
+- `code/frontend/src/features/awd-inspector/ui/AWDRoundInspector.vue`
 - `code/frontend/src/api/admin/contests.ts`
 - `code/backend/internal/model/awd.go`
 

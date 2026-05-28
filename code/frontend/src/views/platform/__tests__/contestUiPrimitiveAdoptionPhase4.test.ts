@@ -4,10 +4,10 @@ import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDCh
 import awdContestSelectorFieldSource from '@/components/platform/contest/AWDContestSelectorField.vue?raw'
 import awdReadinessDecisionHUDSource from '@/components/platform/contest/AWDReadinessDecisionHUD.vue?raw'
 import awdOperationsPanelSource from '@/features/contest-awd-admin/ui/AWDOperationsPanel.vue?raw'
-import awdRoundHeaderPanelSource from '@/components/platform/contest/AWDRoundHeaderPanel.vue?raw'
-import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
+import awdRoundHeaderPanelSource from '@/features/awd-inspector/ui/AWDRoundHeaderPanel.vue?raw'
+import awdRoundInspectorSource from '@/features/awd-inspector/ui/AWDRoundInspector.vue?raw'
 import awdRuntimePendingStateSource from '@/components/platform/contest/AWDRuntimePendingState.vue?raw'
-import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel.vue?raw'
+import awdTrafficPanelSource from '@/features/awd-inspector/ui/AWDTrafficPanel.vue?raw'
 import contestAwdPreflightPanelSource from '@/features/platform-contests/ui/ContestAwdPreflightPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 4', () => {

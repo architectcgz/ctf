@@ -9,11 +9,11 @@ import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadine
 import AWDReadinessSummary from '@/components/platform/contest/AWDReadinessSummary.vue'
 import AWDRuntimePendingState from '@/components/platform/contest/AWDRuntimePendingState.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { AWDRoundInspector } from '@/features/awd-inspector'
 import { usePlatformContestAwd } from '@/features/contest-awd-admin'
 import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 
 import AWDRoundCreateDialog from '@/components/platform/contest/AWDRoundCreateDialog.vue'
-import AWDRoundInspector from '@/components/platform/contest/AWDRoundInspector.vue'
 import AWDServiceCheckDialog from '@/components/platform/contest/AWDServiceCheckDialog.vue'
 
 const props = defineProps<{

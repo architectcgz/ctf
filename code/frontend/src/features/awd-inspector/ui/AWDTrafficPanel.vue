@@ -7,8 +7,8 @@ import PlatformPaginationControls from '@/components/platform/PlatformPagination
 import type {
   AWDTrafficPanelEmits,
   AWDTrafficPanelProps,
-} from '@/components/platform/contest/awdInspector.types'
-import { useAwdTrafficPanel } from '@/features/awd-inspector'
+} from './awdInspector.types'
+import { useAwdTrafficPanel } from '@/features/awd-inspector/model'
 
 const props = defineProps<AWDTrafficPanelProps>()
 const emit = defineEmits<AWDTrafficPanelEmits>()

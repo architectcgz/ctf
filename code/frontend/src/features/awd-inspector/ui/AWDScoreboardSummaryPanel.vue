@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Trophy, TrendingUp, Users } from 'lucide-vue-next'
-import type { AWDScoreboardSummaryPanelProps } from '@/components/platform/contest/awdInspector.types'
+import type { AWDScoreboardSummaryPanelProps } from './awdInspector.types'
 
 defineProps<AWDScoreboardSummaryPanelProps>()
 </script>

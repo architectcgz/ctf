@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import awdAttackLogPanelSource from '@/components/platform/contest/AWDAttackLogPanel.vue?raw'
-import awdRoundHeaderPanelSource from '@/components/platform/contest/AWDRoundHeaderPanel.vue?raw'
-import awdRoundInspectorSource from '@/components/platform/contest/AWDRoundInspector.vue?raw'
-import awdScoreboardSummaryPanelSource from '@/components/platform/contest/AWDScoreboardSummaryPanel.vue?raw'
-import awdServiceStatusPanelSource from '@/components/platform/contest/AWDServiceStatusPanel.vue?raw'
-import awdTrafficPanelSource from '@/components/platform/contest/AWDTrafficPanel.vue?raw'
+import awdAttackLogPanelSource from '@/features/awd-inspector/ui/AWDAttackLogPanel.vue?raw'
+import awdRoundHeaderPanelSource from '@/features/awd-inspector/ui/AWDRoundHeaderPanel.vue?raw'
+import awdRoundInspectorSource from '@/features/awd-inspector/ui/AWDRoundInspector.vue?raw'
+import awdScoreboardSummaryPanelSource from '@/features/awd-inspector/ui/AWDScoreboardSummaryPanel.vue?raw'
+import awdServiceStatusPanelSource from '@/features/awd-inspector/ui/AWDServiceStatusPanel.vue?raw'
+import awdTrafficPanelSource from '@/features/awd-inspector/ui/AWDTrafficPanel.vue?raw'
 
 describe('AWDRoundInspector extraction', () => {
   it('应将攻击流量态势区收口到独立的 AWDTrafficPanel，而不是继续堆在 AWDRoundInspector 内', () => {

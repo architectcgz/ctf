@@ -16,7 +16,7 @@ import type { AWDTeamServiceData } from '@/api/contracts'
 import type {
   AWDServiceStatusPanelEmits,
   AWDServiceStatusPanelProps,
-} from '@/components/platform/contest/awdInspector.types'
+} from './awdInspector.types'
 
 const props = defineProps<AWDServiceStatusPanelProps>()
 const emit = defineEmits<AWDServiceStatusPanelEmits>()

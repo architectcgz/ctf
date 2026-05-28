@@ -12,23 +12,25 @@ import {
   Radar
 } from 'lucide-vue-next'
 import type { AWDTeamServiceData } from '@/api/contracts'
-import AWDAttackLogPanel from '@/components/platform/contest/AWDAttackLogPanel.vue'
-import AWDRoundHeaderPanel from '@/components/platform/contest/AWDRoundHeaderPanel.vue'
-import AWDScoreboardSummaryPanel from '@/components/platform/contest/AWDScoreboardSummaryPanel.vue'
-import AWDServiceStatusPanel from '@/components/platform/contest/AWDServiceStatusPanel.vue'
-import AWDTrafficPanel from '@/components/platform/contest/AWDTrafficPanel.vue'
+import AWDAttackLogPanel from './AWDAttackLogPanel.vue'
+import AWDRoundHeaderPanel from './AWDRoundHeaderPanel.vue'
+import AWDScoreboardSummaryPanel from './AWDScoreboardSummaryPanel.vue'
+import AWDServiceStatusPanel from './AWDServiceStatusPanel.vue'
+import AWDTrafficPanel from './AWDTrafficPanel.vue'
 import type {
   AWDServiceAlertView,
   AWDRoundInspectorEmits,
   AWDRoundInspectorProps,
-} from '@/components/platform/contest/awdInspector.types'
+} from './awdInspector.types'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
-import { useAwdInspectorCoreState } from '@/features/awd-inspector'
-import { useAwdInspectorDerivedData } from '@/features/awd-inspector'
-import { useAwdInspectorExports } from '@/features/awd-inspector'
-import { useAwdInspectorFormatting } from '@/features/awd-inspector'
+import {
+  useAwdCheckResultPresentation,
+  useAwdInspectorCoreState,
+  useAwdInspectorDerivedData,
+  useAwdInspectorExports,
+  useAwdInspectorFormatting,
+} from '@/features/awd-inspector/model'
 
 const props = defineProps<AWDRoundInspectorProps & { initialTab?: 'matrix' | 'attacks' | 'traffic' | 'scoreboard', hideStudioLink?: boolean }>()
 
