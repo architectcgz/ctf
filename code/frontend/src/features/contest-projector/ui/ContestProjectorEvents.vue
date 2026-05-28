@@ -6,8 +6,8 @@ import {
   formatProjectorScore,
   formatProjectorTime,
   getAttackTypeLabel,
-} from '@/components/platform/contest/projector/contestProjectorFormatters'
-import type { ContestProjectorAttackLeader } from '@/components/platform/contest/projector/contestProjectorTypes'
+} from '../model/projectorFormatters'
+import type { ContestProjectorAttackLeader } from '../model/projectorTypes'
 
 defineProps<{
   firstBlood: AWDAttackLogData | null

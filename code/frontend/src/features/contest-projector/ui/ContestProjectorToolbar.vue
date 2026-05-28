@@ -7,7 +7,7 @@ import {
   formatProjectorTime,
   getContestStatusLabel,
   getRoundStatusLabel,
-} from '@/components/platform/contest/projector/contestProjectorFormatters'
+} from '../model/projectorFormatters'
 
 const AUTO_FOLLOW_ROUND_VALUE = '__auto_follow_round__'
 

@@ -29,15 +29,15 @@ import {
   formatProjectorScore,
   formatProjectorTime,
   getServiceStatusLabel,
-} from '@/components/platform/contest/projector/contestProjectorFormatters'
+} from '../model/projectorFormatters'
 import type {
   ContestProjectorAttackEdge,
   ContestProjectorAttackTeamPanel,
   ContestProjectorServiceMatrixRow,
-} from '@/components/platform/contest/projector/contestProjectorTypes'
-import ContestProjectorAttackDetailOverlay from '@/components/platform/contest/projector/ContestProjectorAttackDetailOverlay.vue'
-import '@/components/platform/contest/projector/ContestProjectorAttackMap.css'
-import '@/components/platform/contest/projector/ContestProjectorAttackMapResponsive.css'
+} from '../model/projectorTypes'
+import ContestProjectorAttackDetailOverlay from './ContestProjectorAttackDetailOverlay.vue'
+import './ContestProjectorAttackMap.css'
+import './ContestProjectorAttackMapResponsive.css'
 
 type AttackMapDetailPanel = 'teams' | 'ranking' | 'attacks'
 

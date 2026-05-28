@@ -4,9 +4,11 @@ import contestProjectorSource from '@/views/platform/ContestProjector.vue?raw'
 
 describe('ContestProjector page state extraction', () => {
   it('应通过 feature page model 获取大屏生命周期和展示派生状态', () => {
-    expect(contestProjectorSource).toContain(
-      "useContestProjectorPage } from '@/features/contest-projector'"
-    )
+    expect(contestProjectorSource).toContain("from '@/features/contest-projector'")
+    expect(contestProjectorSource).toContain('useContestProjectorPage')
+    expect(contestProjectorSource).toContain('ContestProjectorAttackMap')
+    expect(contestProjectorSource).toContain('ContestProjectorFocusOverlay')
+    expect(contestProjectorSource).not.toContain("from '@/components/platform/contest/projector/")
     expect(contestProjectorSource).not.toContain("from '@/composables/useToast'")
     expect(contestProjectorSource).not.toContain('const projectorStageRef = ref')
     expect(contestProjectorSource).not.toContain('const contestTitle = computed')

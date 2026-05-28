@@ -2,8 +2,8 @@ import { mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 
-import ContestProjectorFocusOverlay from '@/components/platform/contest/projector/ContestProjectorFocusOverlay.vue'
-import focusOverlaySource from '@/components/platform/contest/projector/ContestProjectorFocusOverlay.vue?raw'
+import ContestProjectorFocusOverlay from '@/features/contest-projector/ui/ContestProjectorFocusOverlay.vue'
+import focusOverlaySource from '@/features/contest-projector/ui/ContestProjectorFocusOverlay.vue?raw'
 
 afterEach(() => {
   document.body.innerHTML = ''

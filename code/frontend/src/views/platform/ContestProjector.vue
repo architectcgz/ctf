@@ -2,11 +2,13 @@
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import ContestProjectorAttackMap from '@/components/platform/contest/projector/ContestProjectorAttackMap.vue'
-import ContestProjectorFocusOverlay from '@/components/platform/contest/projector/ContestProjectorFocusOverlay.vue'
-import ContestProjectorHero from '@/components/platform/contest/projector/ContestProjectorHero.vue'
-import ContestProjectorToolbar from '@/components/platform/contest/projector/ContestProjectorToolbar.vue'
-import { useContestProjectorPage } from '@/features/contest-projector'
+import {
+  ContestProjectorAttackMap,
+  ContestProjectorFocusOverlay,
+  ContestProjectorHero,
+  ContestProjectorToolbar,
+  useContestProjectorPage,
+} from '@/features/contest-projector'
 
 const {
   projectorStageRef,

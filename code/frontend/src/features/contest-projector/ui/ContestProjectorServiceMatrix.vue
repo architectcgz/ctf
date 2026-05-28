@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { AWDTeamServiceData } from '@/api/contracts'
-import type { ContestProjectorServiceMatrixRow } from '@/components/platform/contest/projector/contestProjectorTypes'
-import { getServiceStatusLabel } from '@/components/platform/contest/projector/contestProjectorFormatters'
+import type { ContestProjectorServiceMatrixRow } from '../model/projectorTypes'
+import { getServiceStatusLabel } from '../model/projectorFormatters'
 
 defineProps<{
   rows: ContestProjectorServiceMatrixRow[]

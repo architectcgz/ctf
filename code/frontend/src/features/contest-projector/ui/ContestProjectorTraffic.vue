@@ -2,8 +2,8 @@
 import { Activity } from 'lucide-vue-next'
 
 import type { AWDTrafficSummaryData, AWDTrafficTopTeamData } from '@/api/contracts'
-import { formatProjectorTime } from '@/components/platform/contest/projector/contestProjectorFormatters'
-import type { ContestProjectorTrafficTrendBar } from '@/components/platform/contest/projector/contestProjectorTypes'
+import { formatProjectorTime } from '../model/projectorFormatters'
+import type { ContestProjectorTrafficTrendBar } from '../model/projectorTypes'
 
 defineProps<{
   summary: AWDTrafficSummaryData | null

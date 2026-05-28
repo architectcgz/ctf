@@ -6,12 +6,12 @@ import {
   formatProjectorScore,
   formatProjectorTime,
   getServiceStatusLabel,
-} from '@/components/platform/contest/projector/contestProjectorFormatters'
+} from '../model/projectorFormatters'
 import type {
   ContestProjectorAttackEdge,
   ContestProjectorAttackTeamPanel,
-} from '@/components/platform/contest/projector/contestProjectorTypes'
-import '@/components/platform/contest/projector/ContestProjectorAttackDetailOverlay.css'
+} from '../model/projectorTypes'
+import './ContestProjectorAttackDetailOverlay.css'
 
 type AttackMapDetailPanel = 'teams' | 'ranking' | 'attacks'
 

@@ -2,7 +2,7 @@
 import { Trophy } from 'lucide-vue-next'
 
 import type { ScoreboardRow } from '@/api/contracts'
-import { formatProjectorScore } from '@/components/platform/contest/projector/contestProjectorFormatters'
+import { formatProjectorScore } from '../model/projectorFormatters'
 
 defineProps<{
   topThreeRows: ScoreboardRow[]

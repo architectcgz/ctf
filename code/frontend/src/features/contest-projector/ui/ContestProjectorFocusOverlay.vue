@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted } from 'vue'
 import { X } from 'lucide-vue-next'
 
-import type { ContestProjectorFocusPanel } from '@/components/platform/contest/projector/contestProjectorTypes'
+import type { ContestProjectorFocusPanel } from '../model/projectorTypes'
 
 const props = defineProps<{
   activePanel: ContestProjectorFocusPanel | null
