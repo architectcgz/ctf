@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import ContestAnnouncementsTopbarPanel from '@/components/platform/contest/ContestAnnouncementsTopbarPanel.vue'
-import ContestAnnouncementsWorkspacePanel from '@/components/platform/contest/ContestAnnouncementsWorkspacePanel.vue'
-import { useContestAnnouncementsPage } from '@/features/platform-contests'
+import {
+  ContestAnnouncementsTopbarPanel,
+  ContestAnnouncementsWorkspacePanel,
+  useContestAnnouncementsPage,
+} from '@/features/platform-contests'
 
 const {
   contest,

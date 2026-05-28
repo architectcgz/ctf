@@ -1,4 +1,6 @@
 export { default as ContestOrchestrationPage } from './ContestOrchestrationPage.vue'
+export { default as ContestAnnouncementsTopbarPanel } from './ContestAnnouncementsTopbarPanel.vue'
+export { default as ContestAnnouncementsWorkspacePanel } from './ContestAnnouncementsWorkspacePanel.vue'
 export { default as AWDChallengeConfigPanel } from './AWDChallengeConfigPanel.vue'
 export { default as ContestAwdPreflightPanel } from './ContestAwdPreflightPanel.vue'
 export { default as ContestEditWorkspacePanel } from './ContestEditWorkspacePanel.vue'

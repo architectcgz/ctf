@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestAnnouncements from '../ContestAnnouncements.vue'
 import contestAnnouncementsSource from '../ContestAnnouncements.vue?raw'
-import contestAnnouncementsTopbarPanelSource from '@/components/platform/contest/ContestAnnouncementsTopbarPanel.vue?raw'
+import contestAnnouncementsTopbarPanelSource from '@/features/platform-contests/ui/ContestAnnouncementsTopbarPanel.vue?raw'
 import routerSource from '@/router/index.ts?raw'
 
 const pushMock = vi.fn()
