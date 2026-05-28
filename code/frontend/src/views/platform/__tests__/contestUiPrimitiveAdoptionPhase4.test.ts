@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
 import awdContestSelectorFieldSource from '@/components/platform/contest/AWDContestSelectorField.vue?raw'
-import awdReadinessDecisionHUDSource from '@/components/platform/contest/AWDReadinessDecisionHUD.vue?raw'
+import awdReadinessDecisionHUDSource from '@/features/awd-readiness/ui/AWDReadinessDecisionHUD.vue?raw'
 import awdOperationsPanelSource from '@/features/contest-awd-admin/ui/AWDOperationsPanel.vue?raw'
 import awdRoundHeaderPanelSource from '@/features/awd-inspector/ui/AWDRoundHeaderPanel.vue?raw'
 import awdRoundInspectorSource from '@/features/awd-inspector/ui/AWDRoundInspector.vue?raw'

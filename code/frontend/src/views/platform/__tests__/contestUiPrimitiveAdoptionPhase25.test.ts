@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
-import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
-import awdReadinessChecklistSource from '@/components/platform/contest/AWDReadinessChecklist.vue?raw'
+import awdReadinessOverrideDialogSource from '@/features/awd-readiness/ui/AWDReadinessOverrideDialog.vue?raw'
+import awdReadinessChecklistSource from '@/features/awd-readiness/ui/AWDReadinessChecklist.vue?raw'
 
 describe('contest ui primitive adoption phase 25', () => {
   it('awd challenge config panel should use the full shared metric panel class stack', () => {

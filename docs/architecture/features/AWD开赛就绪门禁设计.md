@@ -10,9 +10,10 @@
   - `internal/module/contest/application/queries`
   - `internal/module/contest/application/commands`
   - `internal/module/contest/api/http`
-  - `frontend/src/components/platform/contest`
+  - `frontend/src/features/awd-readiness`
+  - `frontend/src/features/contest-awd-admin`
 - 过程追溯：`practice/superpowers-plan-index.md` 中的 `2026-04-12-awd-engine-phase8-readiness-gate`
-- 最后更新：`2026-05-07`
+- 最后更新：`2026-05-28`
 
 ## 1. 背景与问题
 
@@ -167,8 +168,11 @@ AWD readiness 现在已经是正式门禁，而不是配置列表上的被动提
 - `code/backend/internal/module/contest/application/commands/contest_update_commands.go`
 - `code/backend/internal/module/contest/application/jobs/status_awd_readiness.go`
 - `code/backend/internal/module/contest/api/http/awd_readiness_audit.go`
-- `code/frontend/src/components/platform/contest/AWDOperationsPanel.vue`
-- `code/frontend/src/components/platform/contest/AWDReadinessChecklist.vue`
+- `code/frontend/src/features/contest-awd-admin/ui/AWDOperationsPanel.vue`
+- `code/frontend/src/features/awd-readiness/ui/AWDReadinessChecklist.vue`
+- `code/frontend/src/features/awd-readiness/ui/AWDReadinessDecisionHUD.vue`
+- `code/frontend/src/features/awd-readiness/ui/AWDReadinessSummary.vue`
+- `code/frontend/src/features/awd-readiness/ui/AWDReadinessOverrideDialog.vue`
 - `code/frontend/src/features/contest-awd-admin/model/useAwdReadinessDecision.ts`
 - `code/frontend/src/features/contest-awd-admin/model/useAwdRoundOperations.ts`
 

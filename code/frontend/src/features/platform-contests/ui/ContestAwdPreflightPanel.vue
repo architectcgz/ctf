@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { AWDReadinessData } from '@/api/contracts'
 
-import AWDReadinessChecklist from '@/components/platform/contest/AWDReadinessChecklist.vue'
-import AWDReadinessDecisionHUD from '@/components/platform/contest/AWDReadinessDecisionHUD.vue'
+import { AWDReadinessChecklist, AWDReadinessDecisionHUD } from '@/features/awd-readiness'
 
 const props = defineProps<{
   readiness: AWDReadinessData | null

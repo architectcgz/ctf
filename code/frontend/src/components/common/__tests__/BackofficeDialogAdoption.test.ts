@@ -6,7 +6,7 @@ import adminUserFormDialogSource from '@/components/platform/user/PlatformUserFo
 import awdRoundCreateDialogSource from '@/components/platform/contest/AWDRoundCreateDialog.vue?raw'
 import awdServiceCheckDialogSource from '@/components/platform/contest/AWDServiceCheckDialog.vue?raw'
 import awdAttackLogDialogSource from '@/components/platform/contest/AWDAttackLogDialog.vue?raw'
-import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
+import awdReadinessOverrideDialogSource from '@/features/awd-readiness/ui/AWDReadinessOverrideDialog.vue?raw'
 import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
 import awdReviewTeamDrawerSource from '@/components/teacher/awd-review/AwdReviewTeamDrawer.vue?raw'
 import imageCreateModalSource from '@/components/platform/images/ImageCreateModal.vue?raw'

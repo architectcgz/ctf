@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import contestEditSource from '../ContestEdit.vue?raw'
 import contestEditWorkspacePanelSource from '@/features/platform-contests/ui/ContestEditWorkspacePanel.vue?raw'
-import awdReadinessOverrideDialogSource from '@/components/platform/contest/AWDReadinessOverrideDialog.vue?raw'
-import awdReadinessChecklistSource from '@/components/platform/contest/AWDReadinessChecklist.vue?raw'
+import awdReadinessOverrideDialogSource from '@/features/awd-readiness/ui/AWDReadinessOverrideDialog.vue?raw'
+import awdReadinessChecklistSource from '@/features/awd-readiness/ui/AWDReadinessChecklist.vue?raw'
 import contestChallengeOrchestrationPanelSource from '@/features/contest-workbench/ui/ContestChallengeOrchestrationPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 2', () => {

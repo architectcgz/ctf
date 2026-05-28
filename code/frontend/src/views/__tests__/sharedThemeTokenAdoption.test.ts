@@ -51,7 +51,7 @@ import platformOverviewWorkspaceSource from '@/features/platform-overview/model/
 import writeupManageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
 import awdRoundInspectorSource from '@/features/awd-inspector/ui/AWDRoundInspector.vue?raw'
 import awdAttackLogPanelSource from '@/features/awd-inspector/ui/AWDAttackLogPanel.vue?raw'
-import awdReadinessSummarySource from '@/components/platform/contest/AWDReadinessSummary.vue?raw'
+import awdReadinessSummarySource from '@/features/awd-readiness/ui/AWDReadinessSummary.vue?raw'
 import awdRuntimePendingStateSource from '@/components/platform/contest/AWDRuntimePendingState.vue?raw'
 import awdScoreboardSummaryPanelSource from '@/features/awd-inspector/ui/AWDScoreboardSummaryPanel.vue?raw'
 import awdServiceStatusPanelSource from '@/features/awd-inspector/ui/AWDServiceStatusPanel.vue?raw'

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import awdReadinessSummarySource from '@/components/platform/contest/AWDReadinessSummary.vue?raw'
+import awdReadinessSummarySource from '@/features/awd-readiness/ui/AWDReadinessSummary.vue?raw'
 
 describe('contest ui primitive adoption phase 19', () => {
   it('awd readiness summary should use a header element for readiness decision intro block', () => {

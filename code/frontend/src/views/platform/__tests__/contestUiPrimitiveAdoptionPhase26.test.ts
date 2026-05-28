@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
-import awdReadinessSummarySource from '@/components/platform/contest/AWDReadinessSummary.vue?raw'
+import awdReadinessSummarySource from '@/features/awd-readiness/ui/AWDReadinessSummary.vue?raw'
 
 describe('contest ui primitive adoption phase 26', () => {
   it('awd challenge config panel should use workspace overline in the active tab panel header', () => {

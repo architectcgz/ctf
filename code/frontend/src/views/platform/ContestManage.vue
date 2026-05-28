@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import AWDReadinessOverrideDialog from '@/components/platform/contest/AWDReadinessOverrideDialog.vue'
 import { ContestAnnouncementManageDrawer } from '@/features/contest-announcements'
+import { AWDReadinessOverrideDialog } from '@/features/awd-readiness'
 import {
   ContestOrchestrationPage,
   PlatformContestFormDialog,

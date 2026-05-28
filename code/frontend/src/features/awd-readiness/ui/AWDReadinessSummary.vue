@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import type { AWDReadinessData } from '@/api/contracts'
-import AWDReadinessChecklist from '@/components/platform/contest/AWDReadinessChecklist.vue'
+import AWDReadinessChecklist from './AWDReadinessChecklist.vue'
 
 const props = withDefaults(
   defineProps<{
