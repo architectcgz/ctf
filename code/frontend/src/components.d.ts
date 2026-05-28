@@ -98,6 +98,8 @@ declare module 'vue' {
     ContestAnnouncementsPanel: typeof import('./components/contests/ContestAnnouncementsPanel.vue')['default']
     ContestAnnouncementsTopbarPanel: typeof import('./features/platform-contests/ui/ContestAnnouncementsTopbarPanel.vue')['default']
     ContestAnnouncementsWorkspacePanel: typeof import('./features/platform-contests/ui/ContestAnnouncementsWorkspacePanel.vue')['default']
+    ContestOperationsHubHeroPanel: typeof import('./features/platform-contests/ui/ContestOperationsHubHeroPanel.vue')['default']
+    ContestOperationsHubWorkspacePanel: typeof import('./features/platform-contests/ui/ContestOperationsHubWorkspacePanel.vue')['default']
     ContestAwdConfigFooter: typeof import('./features/contest-awd-config/ui/ContestAwdConfigFooter.vue')['default']
     ContestAwdConfigTopbar: typeof import('./features/contest-awd-config/ui/ContestAwdConfigTopbar.vue')['default']
     ContestAwdDebugStation: typeof import('./features/contest-awd-config/ui/ContestAwdDebugStation.vue')['default']

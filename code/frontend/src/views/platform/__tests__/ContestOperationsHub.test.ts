@@ -3,8 +3,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestOperationsHub from '../ContestOperationsHub.vue'
 import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
-import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
-import contestOperationsHubWorkspacePanelSource from '@/components/platform/contest/ContestOperationsHubWorkspacePanel.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/features/platform-contests/ui/ContestOperationsHubHeroPanel.vue?raw'
+import contestOperationsHubWorkspacePanelSource from '@/features/platform-contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
 
 const pushMock = vi.fn()
 const routeState = vi.hoisted(() => ({

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
-import contestOperationsHubHeroPanelSource from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/features/platform-contests/ui/ContestOperationsHubHeroPanel.vue?raw'
 
 describe('ContestOperationsHub panel extraction', () => {
-  it('应将赛事运维头部与摘要卡抽到独立 platform contest 组件', () => {
+  it('应将赛事运维头部与摘要卡收口到 platform contests feature UI', () => {
     expect(contestOperationsHubSource).toContain(
-      "import ContestOperationsHubHeroPanel from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue'"
+      'ContestOperationsHubHeroPanel,'
     )
+    expect(contestOperationsHubSource).toContain("from '@/features/platform-contests'")
     expect(contestOperationsHubSource).toContain('<ContestOperationsHubHeroPanel')
     expect(contestOperationsHubHeroPanelSource).toContain('Event Operations')
     expect(contestOperationsHubHeroPanelSource).toContain('返回竞赛目录')

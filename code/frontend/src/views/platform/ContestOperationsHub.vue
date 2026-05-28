@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import ContestOperationsHubHeroPanel from '@/components/platform/contest/ContestOperationsHubHeroPanel.vue'
-import ContestOperationsHubWorkspacePanel from '@/components/platform/contest/ContestOperationsHubWorkspacePanel.vue'
-import { useContestOperationsHubPage } from '@/features/platform-contests'
+import {
+  ContestOperationsHubHeroPanel,
+  ContestOperationsHubWorkspacePanel,
+  useContestOperationsHubPage,
+} from '@/features/platform-contests'
 
 const {
   changeContestPage,

@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest'
 import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
 
 describe('ContestOperationsHub workspace extraction', () => {
-  it('应将赛事运维目录工作区抽到独立 platform contest 组件', () => {
+  it('应将赛事运维目录工作区收口到 platform contests feature UI', () => {
     expect(contestOperationsHubSource).toContain(
-      "import ContestOperationsHubWorkspacePanel from '@/components/platform/contest/ContestOperationsHubWorkspacePanel.vue'"
+      'ContestOperationsHubWorkspacePanel,'
     )
+    expect(contestOperationsHubSource).toContain("from '@/features/platform-contests'")
     expect(contestOperationsHubSource).toContain('<ContestOperationsHubWorkspacePanel')
   })
 })
