@@ -7,6 +7,7 @@ import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
 import teacherAwdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import teacherAwdReviewContestDirectorySource from '@/widgets/awd-review-workspace/AwdReviewContestDirectory.vue?raw'
 import teacherAwdReviewDirectorySectionSource from '@/widgets/awd-review-workspace/AwdReviewDirectorySection.vue?raw'
+import awdReviewIndexPageSource from '@/features/awd-review-workspace/model/useAwdReviewIndex.ts?raw'
 
 const pushMock = vi.fn()
 
@@ -95,6 +96,9 @@ describe('TeacherAWDReviewIndex', () => {
 
   it('页面应通过 feature model 获取筛选与摘要状态，不再直接耦合 teacher api', () => {
     expect(teacherAwdReviewIndexSource).toContain("useAwdReviewIndex } from '@/features/awd-review-workspace'")
+    expect(awdReviewIndexPageSource).toContain("from '@/api/awd-reviews'")
+    expect(awdReviewIndexPageSource).not.toContain("from '@/api/admin'")
+    expect(awdReviewIndexPageSource).not.toContain("from '@/api/teacher'")
     expect(teacherAwdReviewIndexSource).toContain(
       "import { AwdReviewIndexWorkspace } from '@/widgets/awd-review-workspace'"
     )

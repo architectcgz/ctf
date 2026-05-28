@@ -1,12 +1,11 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getPlatformAWDReview } from '@/api/admin'
+import { getAwdReviewByRole } from '@/api/awd-reviews'
 import type {
   TeacherAWDReviewArchiveData,
   TeacherAWDReviewTeamItemData,
 } from '@/api/contracts'
-import { getTeacherAWDReview } from '@/api/teacher'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
@@ -99,9 +98,7 @@ export function useAwdReviewDetailPage() {
     error.value = null
 
     try {
-      const getAwdReview =
-        authStore.user?.role === 'admin' ? getPlatformAWDReview : getTeacherAWDReview
-      const next = await getAwdReview(contestId.value, {
+      const next = await getAwdReviewByRole(authStore.user?.role, contestId.value, {
         round: selectedRoundNumber.value,
         team_id: undefined,
       })

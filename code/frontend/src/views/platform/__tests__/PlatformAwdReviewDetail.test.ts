@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import platformAwdReviewDetailSource from '../PlatformAwdReviewDetail.vue?raw'
 import AwdReviewWorkspace from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue'
+import awdReviewDetailPageSource from '@/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -98,6 +99,9 @@ describe('PlatformAwdReviewDetail route owner', () => {
     expect(platformAwdReviewDetailSource).toContain(
       "import { useAwdReviewDetailPage } from '@/features/awd-review-detail-workspace'"
     )
+    expect(awdReviewDetailPageSource).toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDetailPageSource).not.toContain("from '@/api/admin'")
+    expect(awdReviewDetailPageSource).not.toContain("from '@/api/teacher'")
     expect(platformAwdReviewDetailSource).not.toContain("from '@/views/teacher/TeacherAWDReviewDetail.vue'")
     expect(platformAwdReviewDetailSource).not.toContain("from '@/api/teacher'")
 

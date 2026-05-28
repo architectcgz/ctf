@@ -143,6 +143,9 @@ describe('TeacherAWDReviewDetail', () => {
 
   it('页面应通过 feature model 获取详情状态，不再直接耦合 teacher api', () => {
     expect(awdReviewDetailSource).toContain("useAwdReviewDetailPage } from '@/features/awd-review-detail-workspace'")
+    expect(awdReviewDetailPageSource).toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDetailPageSource).not.toContain("from '@/api/admin'")
+    expect(awdReviewDetailPageSource).not.toContain("from '@/api/teacher'")
     expect(awdReviewDetailPageSource).toContain("useAwdReviewExportFlow } from '@/features/awd-review-workspace'")
     expect(awdReviewDetailPageSource).not.toContain("useTeacherAwdReviewExportFlow } from '@/features/awd-review-workspace'")
     expect(awdReviewDetailSource).not.toContain("from '@/api/teacher'")
