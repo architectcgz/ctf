@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import awdChallengeConfigPanelSource from '@/components/platform/contest/AWDChallengeConfigPanel.vue?raw'
+import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
 import awdContestSelectorFieldSource from '@/components/platform/contest/AWDContestSelectorField.vue?raw'
 import awdReadinessDecisionHUDSource from '@/components/platform/contest/AWDReadinessDecisionHUD.vue?raw'
 import awdOperationsPanelSource from '@/components/platform/contest/AWDOperationsPanel.vue?raw'

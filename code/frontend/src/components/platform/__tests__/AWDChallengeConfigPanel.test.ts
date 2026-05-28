@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount, RouterLinkStub } from '@vue/test-utils'
 
-import AWDChallengeConfigPanel from '../contest/AWDChallengeConfigPanel.vue'
+import AWDChallengeConfigPanel from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue'
 import type { AdminContestChallengeViewData } from '@/api/contracts'
 
 function buildChallenge(

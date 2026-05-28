@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import awdChallengeConfigPanelSource from '@/components/platform/contest/AWDChallengeConfigPanel.vue?raw'
+import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
 
 describe('contest ui primitive adoption phase 20', () => {
   it('awd challenge config panel should no longer render the active challenge focus card block', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import awdChallengeConfigPanelSource from '@/components/platform/contest/AWDChallengeConfigPanel.vue?raw'
+import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
 import awdReadinessSummarySource from '@/components/platform/contest/AWDReadinessSummary.vue?raw'
 
 describe('contest ui primitive adoption phase 26', () => {

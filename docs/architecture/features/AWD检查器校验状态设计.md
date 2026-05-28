@@ -133,7 +133,7 @@ AWD checker 的“最近通过 / 最近失败 / 未验证 / 待重新验证”�
 - `code/backend/internal/module/contest/application/commands/contest_awd_service_service.go`
 - `code/backend/internal/module/contest/application/queries/contest_awd_service_query.go`
 - `code/backend/internal/module/contest/api/http/awd_service_manage_handler.go`
-- `code/frontend/src/components/platform/contest/AWDChallengeConfigPanel.vue`
+- `code/frontend/src/features/platform-contests/ui/AWDChallengeConfigPanel.vue`
 - `code/frontend/src/views/platform/ContestAwdConfig.vue`
 
 ## 9. 验证标准
