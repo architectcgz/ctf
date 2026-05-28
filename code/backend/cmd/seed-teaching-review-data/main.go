@@ -25,6 +25,8 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -124,10 +126,20 @@ type challengeCatalog struct {
 }
 
 type awdChallengeRef struct {
-	ID         int64
-	Name       string
-	Category   string
-	Difficulty string
+	ID               int64
+	Name             string
+	Category         string
+	Difficulty       string
+	Description      string
+	ServiceType      string
+	DeploymentMode   string
+	CheckerType      contestcontracts.AWDCheckerType
+	CheckerConfig    string
+	FlagMode         string
+	FlagConfig       string
+	DefenseEntryMode string
+	AccessConfig     string
+	RuntimeConfig    string
 }
 
 type awdChallengeCatalog struct {
@@ -551,10 +563,20 @@ func loadAWDChallengeCatalog(ctx context.Context, db *gorm.DB) (*awdChallengeCat
 			continue
 		}
 		catalog.byCategory[category] = append(catalog.byCategory[category], awdChallengeRef{
-			ID:         row.ID,
-			Name:       row.Name,
-			Category:   category,
-			Difficulty: row.Difficulty,
+			ID:               row.ID,
+			Name:             row.Name,
+			Category:         category,
+			Difficulty:       row.Difficulty,
+			Description:      row.Description,
+			ServiceType:      string(row.ServiceType),
+			DeploymentMode:   string(row.DeploymentMode),
+			CheckerType:      contestcontracts.AWDCheckerType(row.CheckerType),
+			CheckerConfig:    row.CheckerConfig,
+			FlagMode:         row.FlagMode,
+			FlagConfig:       row.FlagConfig,
+			DefenseEntryMode: row.DefenseEntryMode,
+			AccessConfig:     row.AccessConfig,
+			RuntimeConfig:    row.RuntimeConfig,
 		})
 	}
 	return catalog, nil
@@ -1576,6 +1598,9 @@ func resetSeededAWDData(tx *gorm.DB) error {
 	if err := tx.Where("contest_id IN ?", contestIDs).Delete(&contestcontracts.AWDRound{}).Error; err != nil {
 		return fmt.Errorf("delete awd rounds: %w", err)
 	}
+	if err := tx.Unscoped().Where("contest_id IN ?", contestIDs).Delete(&contestcontracts.ContestAWDService{}).Error; err != nil {
+		return fmt.Errorf("delete awd contest services: %w", err)
+	}
 	if err := tx.Unscoped().Where("id IN ?", contestIDs).Delete(&contestcontracts.Contest{}).Error; err != nil {
 		return fmt.Errorf("delete awd contests: %w", err)
 	}
@@ -1788,7 +1813,10 @@ func seedStudentAWDScenario(
 		return fmt.Errorf("create seed awd contest for %s: %w", student.Username, err)
 	}
 
-	serviceID := 7000 + challenge.ID
+	serviceID, err := createSeedAWDContestService(tx, contest.ID, challenge, contestStart.Add(-15*time.Minute))
+	if err != nil {
+		return fmt.Errorf("create seed awd contest service for %s: %w", student.Username, err)
+	}
 	teams := make([]*contestcontracts.Team, 0, len(scenario.Teams))
 	teamScores := make(map[int64]int, len(scenario.Teams))
 	teamLastSolveAt := make(map[int64]time.Time, len(scenario.Teams))
@@ -1979,6 +2007,90 @@ func seedAWDScenarioEndAt(contestStart time.Time, rounds []awdRoundSeed) time.Ti
 		}
 	}
 	return contestEnd
+}
+
+func createSeedAWDContestService(tx *gorm.DB, contestID int64, challenge awdChallengeRef, now time.Time) (int64, error) {
+	record := &contestcontracts.ContestAWDService{
+		ContestID:         contestID,
+		AWDChallengeID:    challenge.ID,
+		DisplayName:       strings.TrimSpace(challenge.Name),
+		ServiceSnapshot:   buildSeedContestAWDServiceSnapshot(challenge),
+		Order:             0,
+		IsVisible:         true,
+		ScoreConfig:       buildSeedContestAWDServiceScoreConfig(100, contestdomain.AWDDefaultServiceSLAScore, contestdomain.AWDDefaultServiceDefenseScore),
+		RuntimeConfig:     buildSeedContestAWDServiceRuntimeConfig(challenge),
+		ValidationState:   contestentity.AWDCheckerValidationStatePending,
+		LastPreviewResult: "",
+		CreatedAt:         now,
+		UpdatedAt:         now,
+	}
+	if err := tx.Create(record).Error; err != nil {
+		return 0, err
+	}
+	return record.ID, nil
+}
+
+func buildSeedContestAWDServiceSnapshot(challenge awdChallengeRef) string {
+	snapshot := contestentity.ContestAWDServiceSnapshot{
+		Name:             strings.TrimSpace(challenge.Name),
+		Category:         strings.TrimSpace(challenge.Category),
+		Difficulty:       strings.TrimSpace(challenge.Difficulty),
+		Description:      strings.TrimSpace(challenge.Description),
+		ServiceType:      contestentity.AWDServiceType(strings.TrimSpace(challenge.ServiceType)),
+		DeploymentMode:   contestentity.AWDDeploymentMode(strings.TrimSpace(challenge.DeploymentMode)),
+		FlagMode:         strings.TrimSpace(challenge.FlagMode),
+		FlagConfig:       parseSeedJSONMap(challenge.FlagConfig),
+		DefenseEntryMode: strings.TrimSpace(challenge.DefenseEntryMode),
+		AccessConfig:     parseSeedJSONMap(challenge.AccessConfig),
+		RuntimeConfig:    parseSeedJSONMap(challenge.RuntimeConfig),
+	}
+	raw, err := contestentity.EncodeContestAWDServiceSnapshot(snapshot)
+	if err != nil {
+		return "{}"
+	}
+	return raw
+}
+
+func buildSeedContestAWDServiceScoreConfig(points, slaScore, defenseScore int) string {
+	raw, err := json.Marshal(map[string]any{
+		"points":            points,
+		"awd_sla_score":     slaScore,
+		"awd_defense_score": defenseScore,
+	})
+	if err != nil {
+		return "{}"
+	}
+	return string(raw)
+}
+
+func buildSeedContestAWDServiceRuntimeConfig(challenge awdChallengeRef) string {
+	value := map[string]any{
+		"checker_type":   contestdomain.NormalizeAWDCheckerType(string(challenge.CheckerType)),
+		"checker_config": contestdomain.ParseAWDCheckerConfig(challenge.CheckerConfig),
+	}
+	if normalizedCheckerConfig, err := contestdomain.MarshalAWDCheckerConfig(contestdomain.ParseAWDCheckerConfig(challenge.CheckerConfig)); err == nil {
+		value["checker_config_raw"] = normalizedCheckerConfig
+	}
+	if challengeRuntime := contestdomain.ParseAWDCheckerConfig(challenge.RuntimeConfig); len(challengeRuntime) > 0 {
+		value["challenge_runtime"] = challengeRuntime
+	}
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return "{}"
+	}
+	return string(raw)
+}
+
+func parseSeedJSONMap(raw string) map[string]any {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return map[string]any{}
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(value), &payload); err != nil {
+		return map[string]any{}
+	}
+	return payload
 }
 
 func resolveSeedAWDCaptainID(role string, teacher *identitycontracts.User, student *identitycontracts.User, contestID int64, teamIndex int) int64 {

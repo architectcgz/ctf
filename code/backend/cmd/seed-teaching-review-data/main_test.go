@@ -16,6 +16,8 @@ import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	"ctf-platform/internal/shared/taxonomy"
+
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -426,6 +428,123 @@ func TestSeedStudentAWDScenarioBuildsTeacherReviewArchiveEvidence(t *testing.T) 
 	}
 	if len(resp.SelectedRound.Traffic) != 3 || resp.SelectedRound.Round.TrafficCount != 3 {
 		t.Fatalf("expected 3 selected-round traffic events, got %+v", resp.SelectedRound.Traffic)
+	}
+}
+
+func TestSeedStudentAWDScenarioCreatesContestAWDServiceParent(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := db.AutoMigrate(
+		&contestcontracts.Contest{},
+		&contestcontracts.ContestAWDService{},
+		&contestcontracts.Team{},
+		&contestcontracts.TeamMember{},
+		&contestcontracts.AWDRound{},
+		&contestcontracts.AWDTeamService{},
+		&contestcontracts.AWDAttackLog{},
+		&contestcontracts.AWDTrafficEvent{},
+	); err != nil {
+		t.Fatalf("auto migrate: %v", err)
+	}
+
+	teacher := &identitycontracts.User{ID: 1001, Username: "teacher"}
+	student := &identitycontracts.User{ID: 1002, Username: "student"}
+	catalog := &awdChallengeCatalog{
+		byCategory: map[string][]awdChallengeRef{
+			"web": {
+				{
+					ID:               16,
+					Name:             "样本 Web AWD",
+					Category:         "web",
+					Difficulty:       "medium",
+					Description:      "seed test",
+					ServiceType:      "web_http",
+					DeploymentMode:   "single_container",
+					CheckerType:      contestcontracts.AWDCheckerTypeHTTPStandard,
+					CheckerConfig:    `{"method":"GET","path":"/health"}`,
+					FlagMode:         "dynamic_per_round",
+					FlagConfig:       `{"flag_prefix":"awd"}`,
+					DefenseEntryMode: "none",
+					AccessConfig:     `{"port":8080}`,
+					RuntimeConfig:    `{"checker_token_env":"TOKEN"}`,
+				},
+			},
+		},
+	}
+	scenario := &awdScenario{
+		ChallengeCategory: "web",
+		ChallengeIndex:    0,
+		StartOffset:       -time.Hour,
+		Teams: []awdTeamSeed{
+			{Name: "红队", CaptainRole: seedAWDCaptainStudent, MemberCount: 2},
+			{Name: "蓝队", CaptainRole: seedAWDCaptainTeacher, MemberCount: 2},
+		},
+		Rounds: []awdRoundSeed{
+			{
+				RoundNumber:  1,
+				StartOffset:  0,
+				Duration:     20 * time.Minute,
+				AttackScore:  30,
+				DefenseScore: 3,
+				Services: []awdServiceSeed{
+					{TeamIndex: 0, ServiceStatus: contestcontracts.AWDServiceStatusUp, SLAScore: 1, DefenseScore: 2, AttackScore: 0, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard},
+					{TeamIndex: 1, ServiceStatus: contestcontracts.AWDServiceStatusUp, SLAScore: 1, DefenseScore: 2, AttackScore: 0, CheckerType: contestcontracts.AWDCheckerTypeHTTPStandard},
+				},
+				Attacks: []awdAttackSeed{
+					{Offset: 5 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, SubmittedFlag: "awd{seed-test}", Source: contestcontracts.AWDAttackSourceSubmission, SubmittedByStudent: true, IsSuccess: true, ScoreGained: 30},
+				},
+				Traffic: []awdTrafficSeed{
+					{Offset: 3 * time.Minute, AttackerTeamIndex: 0, VictimTeamIndex: 1, Method: "GET", Path: "/health", StatusCode: 200, Source: contestcontracts.AWDTrafficSourceRuntimeProxy},
+				},
+			},
+		},
+	}
+
+	base := time.Date(2026, 5, 28, 12, 0, 0, 0, time.UTC)
+	if err := seedStudentAWDScenario(db, teacher, student, scenario, catalog, base); err != nil {
+		t.Fatalf("seed awd scenario: %v", err)
+	}
+
+	var service contestcontracts.ContestAWDService
+	if err := db.First(&service).Error; err != nil {
+		t.Fatalf("load contest awd service: %v", err)
+	}
+	if service.ID == 0 {
+		t.Fatalf("expected generated service id")
+	}
+	if service.AWDChallengeID != 16 {
+		t.Fatalf("unexpected awd challenge id: %d", service.AWDChallengeID)
+	}
+
+	var teamServices []contestcontracts.AWDTeamService
+	if err := db.Order("id asc").Find(&teamServices).Error; err != nil {
+		t.Fatalf("load awd team services: %v", err)
+	}
+	if len(teamServices) != 2 {
+		t.Fatalf("expected 2 awd team services, got %d", len(teamServices))
+	}
+	for _, row := range teamServices {
+		if row.ServiceID != service.ID {
+			t.Fatalf("team service uses orphan service id %d, want %d", row.ServiceID, service.ID)
+		}
+	}
+
+	var attack contestcontracts.AWDAttackLog
+	if err := db.First(&attack).Error; err != nil {
+		t.Fatalf("load awd attack log: %v", err)
+	}
+	if attack.ServiceID != service.ID {
+		t.Fatalf("attack log uses orphan service id %d, want %d", attack.ServiceID, service.ID)
+	}
+
+	var traffic contestcontracts.AWDTrafficEvent
+	if err := db.First(&traffic).Error; err != nil {
+		t.Fatalf("load awd traffic event: %v", err)
+	}
+	if traffic.ServiceID != service.ID {
+		t.Fatalf("traffic event uses orphan service id %d, want %d", traffic.ServiceID, service.ID)
 	}
 }
 
