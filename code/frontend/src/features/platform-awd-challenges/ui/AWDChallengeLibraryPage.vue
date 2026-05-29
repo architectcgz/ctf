@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AdminAwdChallengeData, AdminAwdChallengeImportPreview } from '@/api/contracts'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
 import AwdChallengeLibrarySection from '@/components/platform/awd-service/AwdChallengeLibrarySection.vue'
 import AwdChallengeWorkspaceHeader from '@/components/platform/awd-service/AwdChallengeWorkspaceHeader.vue'
 import AwdChallengeImportSection from './AwdChallengeImportSection.vue'
@@ -24,6 +25,7 @@ const props = withDefaults(
     importQueue: AdminAwdChallengeImportPreview[]
     uploadResults: PlatformAwdChallengeImportUploadResult[]
     selectedFileName?: string
+    importRoute?: AppRouteTarget | null
   }>(),
   {
     mode: 'library',
@@ -38,7 +40,6 @@ const emit = defineEmits<{
   updateStatusFilter: [value: AwdServiceStatusFilter]
   selectImportPackages: [files: File[]]
   commitImport: [preview: AdminAwdChallengeImportPreview]
-  openImportPage: []
   openEditDialog: [challenge: AdminAwdChallengeData]
   deleteChallenge: [challenge: AdminAwdChallengeData]
   changePage: [page: number]
@@ -52,8 +53,8 @@ const emit = defineEmits<{
     <main class="content-pane awd-challenge-library-content">
       <AwdChallengeWorkspaceHeader
         :mode="mode"
+        :import-route="importRoute"
         @refresh="emit('refresh')"
-        @open-import-page="emit('openImportPage')"
         @refresh-import-queue="emit('refreshImportQueue')"
       />
 

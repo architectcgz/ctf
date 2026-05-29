@@ -4,21 +4,25 @@ import { reactive, ref } from 'vue'
 
 import RegisterView from '@/views/auth/RegisterView.vue'
 import registerViewSource from '@/views/auth/RegisterView.vue?raw'
+import registerPageModelSource from '@/features/auth/model/useRegisterPage.ts?raw'
 
 const authMocks = vi.hoisted(() => ({
   register: vi.fn(),
 }))
+const pushMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/features/auth', () => ({
   useRegisterPage: () => {
     const form = reactive({ username: '', password: '', class_name: '' })
     const loading = ref(false)
     const submitError = ref('')
+    const successRedirectTo = ref<string | null>(null)
 
     return {
       form,
       loading,
       submitError,
+      successRedirectTo,
       clearSubmitError: () => {
         submitError.value = ''
       },
@@ -32,6 +36,7 @@ vi.mock('@/features/auth', () => ({
             password: form.password,
             class_name: form.class_name.trim() || undefined,
           })
+          successRedirectTo.value = '/student/dashboard'
         } catch (err) {
           submitError.value = err instanceof Error ? err.message : '注册失败，请稍后重试'
         } finally {
@@ -44,11 +49,13 @@ vi.mock('@/features/auth', () => ({
 
 vi.mock('vue-router', () => ({
   RouterLink: { template: '<a><slot /></a>' },
+  useRouter: () => ({ push: pushMock, replace: vi.fn() }),
 }))
 
 describe('RegisterView', () => {
   beforeEach(() => {
     authMocks.register.mockReset()
+    pushMock.mockReset()
   })
 
   function mountRegisterView() {
@@ -88,12 +95,14 @@ describe('RegisterView', () => {
     await passwordInput.setValue('secure-pass')
     await classNameInput!.setValue('CTF-1')
     await wrapper.find('form').trigger('submit.prevent')
+    await flushPromises()
 
     expect(authMocks.register).toHaveBeenCalledWith({
       username: 'alice',
       password: 'secure-pass',
       class_name: 'CTF-1',
     })
+    expect(pushMock).toHaveBeenCalledWith('/student/dashboard')
   })
 
   it('注册按钮应使用原生 submit 类型以支持表单回车提交', async () => {
@@ -137,6 +146,7 @@ describe('RegisterView', () => {
       password: 'secure-pass',
       class_name: undefined,
     })
+    expect(pushMock).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('用户名已存在')
     expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeUndefined()
   })
@@ -165,6 +175,7 @@ describe('RegisterView', () => {
   })
 
   it('注册表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
+    expect(registerViewSource).toContain("import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'")
     expect(registerViewSource).toContain('useRegisterPage')
     expect(registerViewSource).toContain('class="ui-control-wrap"')
     expect(registerViewSource).toContain('class="ui-control"')
@@ -173,5 +184,6 @@ describe('RegisterView', () => {
     expect(registerViewSource).not.toContain('<ElFormItem')
     expect(registerViewSource).not.toContain('<ElInput')
     expect(registerViewSource).not.toContain('<ElButton')
+    expect(registerPageModelSource).not.toContain("from 'vue-router'")
   })
 })

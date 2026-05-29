@@ -1,10 +1,13 @@
-import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
 
+import {
+  buildChallengeImportPreviewRoute,
+  buildChallengeManageRoute,
+  buildChallengePackageFormatRoute,
+} from './challengeImportRoutes'
 import { useChallengePackageImport } from './useChallengePackageImport'
 
 export function useChallengeImportManagePage() {
-  const router = useRouter()
   const {
     uploading,
     queueLoading,
@@ -16,6 +19,9 @@ export function useChallengeImportManagePage() {
   } = useChallengePackageImport()
 
   const queueCount = computed(() => queue.value.length)
+  const previewRedirectRoute = ref<ReturnType<typeof buildChallengeImportPreviewRoute> | null>(null)
+  const backToChallengesRoute = buildChallengeManageRoute()
+  const packageFormatGuideRoute = buildChallengePackageFormatRoute()
 
   onMounted(() => {
     void refreshQueue()
@@ -27,25 +33,7 @@ export function useChallengeImportManagePage() {
       return
     }
 
-    await router.push({
-      name: 'PlatformChallengeImportPreview',
-      params: { importId: selectedPreview.id },
-    })
-  }
-
-  async function openPackageFormatGuide(): Promise<void> {
-    await router.push({ name: 'PlatformChallengePackageFormat' })
-  }
-
-  async function backToChallenges(): Promise<void> {
-    await router.push({ name: 'ChallengeManage' })
-  }
-
-  async function inspectImportTask(importId: string): Promise<void> {
-    await router.push({
-      name: 'PlatformChallengeImportPreview',
-      params: { importId },
-    })
+    previewRedirectRoute.value = buildChallengeImportPreviewRoute(selectedPreview.id)
   }
 
   function formatDateTime(value: string): string {
@@ -60,10 +48,11 @@ export function useChallengeImportManagePage() {
     uploadResults,
     refreshQueue,
     queueCount,
+    previewRedirectRoute,
+    backToChallengesRoute,
+    packageFormatGuideRoute,
+    buildImportPreviewRoute: buildChallengeImportPreviewRoute,
     handleSelectPackage,
-    openPackageFormatGuide,
-    backToChallenges,
-    inspectImportTask,
     formatDateTime,
   }
 }

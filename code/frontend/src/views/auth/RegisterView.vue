@@ -4,6 +4,8 @@
     panel-title="注册账号"
     panel-description="填写必要的基础信息以完成平台注册。"
   >
+    <AppRouteRedirect :to="successRedirectTo" />
+
     <form
       class="auth-register-form"
       @submit.prevent="onSubmit"
@@ -93,9 +95,11 @@
 import { RouterLink } from 'vue-router'
 
 import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
+import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'
 import { useRegisterPage } from '@/features/auth'
 
-const { form, loading, submitError, clearSubmitError, onSubmit } = useRegisterPage()
+const { form, loading, submitError, successRedirectTo, clearSubmitError, onSubmit } =
+  useRegisterPage()
 </script>
 
 <style scoped>

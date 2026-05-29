@@ -1,5 +1,4 @@
-import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 import type { ContestScoreboardData, ContestStatus } from '@/api/contracts'
 import { getScoreboard } from '@/api/contest'
@@ -8,8 +7,7 @@ import { useToast } from '@/composables/useToast'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { getContestAccentColor, getContestStatusLabel } from '@/entities/contest'
 
-export function useScoreboardDetailPage() {
-  const route = useRoute()
+export function useScoreboardDetailPage(contestId: MaybeRefOrGetter<string>) {
   const toast = useToast()
 
   const scoreboard = ref<ContestScoreboardData | null>(null)
@@ -21,7 +19,7 @@ export function useScoreboardDetailPage() {
   let requestToken = 0
   const { createController } = useAbortController()
 
-  const contestId = computed(() => String(route.params.contestId ?? ''))
+  const currentContestId = computed(() => String(toValue(contestId) ?? ''))
   const rows = computed(() => scoreboard.value?.scoreboard.list ?? [])
   const total = computed(() => scoreboard.value?.scoreboard.total ?? 0)
   const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
@@ -84,8 +82,8 @@ export function useScoreboardDetailPage() {
   }
 
   async function loadScoreboard(silent = false, nextPage = page.value): Promise<void> {
-    const currentContestId = contestId.value
-    if (!currentContestId) {
+    const nextContestId = currentContestId.value
+    if (!nextContestId) {
       return
     }
 
@@ -101,7 +99,7 @@ export function useScoreboardDetailPage() {
 
     try {
       const payload = await getScoreboard(
-        currentContestId,
+        nextContestId,
         {
           page: nextPage,
           page_size: pageSize.value,
@@ -137,7 +135,7 @@ export function useScoreboardDetailPage() {
   }
 
   watch(
-    contestId,
+    currentContestId,
     () => {
       page.value = 1
       void loadScoreboard()

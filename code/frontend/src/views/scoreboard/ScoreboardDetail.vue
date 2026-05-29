@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { toRef } from 'vue'
 import { BarChart2, CheckCircle, RefreshCw, Shield, Trophy, Users } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { ScoreboardRealtimeBridge, useScoreboardDetailPage } from '@/features/scoreboard'
+
+const props = defineProps<{
+  contestId: string
+}>()
 
 const {
   contest,
@@ -28,7 +33,7 @@ const {
   getStatusCopy,
   changePage,
   loadScoreboard,
-} = useScoreboardDetailPage()
+} = useScoreboardDetailPage(toRef(props, 'contestId'))
 </script>
 
 <template>

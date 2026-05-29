@@ -2,11 +2,14 @@
 import { computed } from 'vue'
 
 import ChallengeDescriptionPanel from '@/components/platform/challenge/ChallengeDescriptionPanel.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
 import type { AdminChallengeImportPreview } from '@/api/contracts'
 
 const props = defineProps<{
   preview: AdminChallengeImportPreview
   committing: boolean
+  resetRoute?: AppRouteTarget | null
 }>()
 
 const emit = defineEmits<{
@@ -68,7 +71,14 @@ const imageDeliveryRef = computed(() =>
         </h2>
       </div>
       <div class="import-review__actions">
-        <button class="import-review__ghost" type="button" @click="emit('reset')">重新选择</button>
+        <AppRouteLink
+          v-if="resetRoute"
+          :to="resetRoute"
+          class="import-review__ghost"
+        >
+          重新选择
+        </AppRouteLink>
+        <button v-else class="import-review__ghost" type="button" @click="emit('reset')">重新选择</button>
         <button
           class="import-review__primary"
           type="button"

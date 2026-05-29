@@ -6,6 +6,7 @@ import challengeImportManageSource from '../ChallengeImportManage.vue?raw'
 import challengeImportHeroPanelSource from '@/components/platform/challenge/ChallengeImportHeroPanel.vue?raw'
 import challengeImportQueuePanelSource from '@/components/platform/challenge/ChallengeImportQueuePanel.vue?raw'
 import challengePackageImportEntrySource from '@/components/platform/challenge/ChallengePackageImportEntry.vue?raw'
+import challengeImportManagePageModelSource from '@/features/challenge-package-import/model/useChallengeImportManagePage.ts?raw'
 
 const pushMock = vi.fn()
 const adminApiMocks = vi.hoisted(() => ({
@@ -19,6 +20,7 @@ vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
   return {
     ...actual,
+    RouterLink: { props: ['to'], template: '<a :data-route-target="JSON.stringify(to)"><slot /></a>' },
     useRouter: () => ({ push: pushMock }),
   }
 })
@@ -78,6 +80,10 @@ describe('ChallengeImportManage', () => {
     )
     expect(challengeImportHeroPanelSource).toContain('class="header-btn header-btn--ghost"')
     expect(challengeImportHeroPanelSource).toContain('class="header-btn header-btn--primary"')
+    expect(challengeImportHeroPanelSource).toContain(
+      "import AppRouteLink from '@/components/navigation/AppRouteLink.vue'"
+    )
+    expect(challengeImportQueuePanelSource).toContain('<AppRouteLink')
     expect(challengeImportHeroPanelSource).not.toContain('challenge-import-action')
     expect(challengePackageImportEntrySource).not.toContain('challenge-import-action')
     expect(challengeImportQueuePanelSource).not.toContain('challenge-queue-action')
@@ -91,6 +97,23 @@ describe('ChallengeImportManage', () => {
     expect(wrapper.text()).toContain('最近上传结果')
     expect(wrapper.text()).toContain('待确认导入')
     expect(wrapper.text()).toContain('Web Demo')
+    expect(
+      wrapper.findAll('a').find((link) => link.text().includes('返回题目目录'))?.attributes(
+        'data-route-target'
+      )
+    ).toBe(JSON.stringify({ name: 'ChallengeManage' }))
+    expect(
+      wrapper.findAll('a').find((link) => link.text().includes('题目包规范'))?.attributes(
+        'data-route-target'
+      )
+    ).toBe(JSON.stringify({ name: 'PlatformChallengePackageFormat' }))
+    expect(
+      wrapper.findAll('a').find((link) => link.text().includes('继续查看预览'))?.attributes(
+        'data-route-target'
+      )
+    ).toBe(
+      JSON.stringify({ name: 'PlatformChallengeImportPreview', params: { importId: 'import-1' } })
+    )
   })
 
   it('支持多选上传并在导入页展示最近上传结果', async () => {
@@ -122,6 +145,7 @@ describe('ChallengeImportManage', () => {
     })
     await fileInput.trigger('change')
     await flushPromises()
+    await flushPromises()
 
     expect(wrapper.text()).toContain('ok.zip')
     expect(wrapper.text()).toContain('bad.zip')
@@ -137,5 +161,6 @@ describe('ChallengeImportManage', () => {
     expect(challengeImportManageSource).not.toContain('const difficultyLabels = {')
     expect(challengeImportManageSource).toContain('useChallengeImportManagePage')
     expect(challengeImportManageSource).not.toContain('useRouter')
+    expect(challengeImportManagePageModelSource).not.toContain("from 'vue-router'")
   })
 })

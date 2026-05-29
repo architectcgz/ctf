@@ -191,6 +191,9 @@ export const platformRoutes: RouteRecordRaw[] = [
   path: 'platform/challenges/imports/:importId',
   name: 'PlatformChallengeImportPreview',
   component: () => import('@/views/platform/ChallengeImportPreview.vue'),
+  props: (route) => ({
+    importId: String(route.params.importId || ''),
+  }),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],

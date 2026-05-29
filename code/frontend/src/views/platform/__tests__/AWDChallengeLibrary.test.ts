@@ -6,8 +6,7 @@ import AWDChallengeLibrary from '../AWDChallengeLibrary.vue'
 import AWDChallengeImport from '../AWDChallengeImport.vue'
 import awdChallengeLibrarySource from '../AWDChallengeLibrary.vue?raw'
 import awdChallengeImportSource from '../AWDChallengeImport.vue?raw'
-
-const openImportPageMock = vi.fn()
+import awdChallengeLibraryPageModelSource from '@/features/platform-awd-challenges/model/useAwdChallengeLibraryPage.ts?raw'
 
 const actionMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -23,6 +22,10 @@ const actionMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/features/platform-awd-challenges', () => ({
+  AWDChallengeEditorDialog: {
+    name: 'AWDChallengeEditorDialog',
+    template: '<div data-testid="awd-challenge-editor-dialog" />',
+  },
   AWDChallengeLibraryPage: {
     name: 'AWDChallengeLibraryPage',
     props: [
@@ -40,11 +43,13 @@ vi.mock('@/features/platform-awd-challenges', () => ({
       'importQueue',
       'uploadResults',
       'selectedFileName',
+      'importRoute',
     ],
     template: `
       <div>
         <h1>{{ mode === 'import' ? '导入 AWD 题目包' : 'AWD 题目库' }}</h1>
-        <button type="button" @click="$emit('openImportPage')">导入题目包</button>
+        <div>导入题目包</div>
+        <div data-import-route-name>{{ importRoute?.name }}</div>
         <div v-for="item in list" :key="item.id">{{ item.name }}</div>
       </div>
     `,
@@ -98,7 +103,7 @@ vi.mock('@/features/platform-awd-challenges', () => ({
       updateServiceTypeFilter: vi.fn(),
       updateStatusFilter: vi.fn(),
       handleDialogOpenChange: vi.fn(),
-      openImportPage: openImportPageMock,
+      importRoute: { name: 'PlatformAwdChallengeImport' as const },
       ...actionMocks,
     }
   },
@@ -118,7 +123,6 @@ vi.mock('@/features/platform-awd-challenges', () => ({
 }))
 
 beforeEach(() => {
-  openImportPageMock.mockReset()
   Object.values(actionMocks).forEach((mock) => mock.mockClear())
 })
 
@@ -132,10 +136,7 @@ describe('AWDChallengeLibrary', () => {
     expect(wrapper.text()).toContain('Bank Portal AWD')
     expect(actionMocks.refresh).toHaveBeenCalledTimes(1)
     expect(actionMocks.refreshImportQueue).not.toHaveBeenCalled()
-
-    await wrapper.findAll('button').find((button) => button.text() === '导入题目包')?.trigger('click')
-
-    expect(openImportPageMock).toHaveBeenCalledTimes(1)
+    expect(wrapper.get('[data-import-route-name]').text()).toBe('PlatformAwdChallengeImport')
   })
 
   it('does not add an extra route-level spacing wrapper around the shared workspace shell', () => {
@@ -149,6 +150,7 @@ describe('AWDChallengeLibrary', () => {
     )
     expect(awdChallengeLibrarySource).not.toContain('useRouter')
     expect(awdChallengeLibrarySource).not.toContain('usePlatformAwdChallenges')
+    expect(awdChallengeLibraryPageModelSource).not.toContain("from 'vue-router'")
   })
 })
 

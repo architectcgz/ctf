@@ -63,6 +63,9 @@ export const studentRoutes: RouteRecordRaw[] = [
     path: 'scoreboard/:contestId',
     name: 'ScoreboardDetail',
     component: () => import('@/views/scoreboard/ScoreboardDetail.vue'),
+    props: (route) => ({
+      contestId: String(route.params.contestId || ''),
+    }),
     meta: { requiresAuth: true, title: '排行详情', contentLayout: 'bleed' },
   },
   {

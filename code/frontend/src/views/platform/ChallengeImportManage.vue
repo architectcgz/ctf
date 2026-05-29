@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'
 import ChallengeImportHeroPanel from '@/components/platform/challenge/ChallengeImportHeroPanel.vue'
 import ChallengeImportQueuePanel from '@/components/platform/challenge/ChallengeImportQueuePanel.vue'
 import ChallengePackageImportEntry from '@/components/platform/challenge/ChallengePackageImportEntry.vue'
@@ -12,21 +13,24 @@ const {
   queue,
   uploadResults,
   queueCount,
+  previewRedirectRoute,
+  backToChallengesRoute,
+  packageFormatGuideRoute,
+  buildImportPreviewRoute,
   handleSelectPackage,
-  openPackageFormatGuide,
-  backToChallenges,
-  inspectImportTask,
   formatDateTime,
 } = useChallengeImportManagePage()
 </script>
 
 <template>
   <div class="workspace-shell challenge-import-shell journal-shell journal-shell-admin journal-notes-card">
+    <AppRouteRedirect :to="previewRedirectRoute" />
+
     <main class="content-pane challenge-import-content">
         <section class="challenge-import-panel">
           <ChallengeImportHeroPanel
-            @back="void backToChallenges()"
-            @open-guide="void openPackageFormatGuide()"
+            :back-route="backToChallengesRoute"
+            :package-format-guide-route="packageFormatGuideRoute"
           />
 
           <section
@@ -67,8 +71,8 @@ const {
             :queue-loading="queueLoading"
             :queue-count="queueCount"
             :queue="queue"
+            :build-inspect-route="buildImportPreviewRoute"
             :format-date-time="formatDateTime"
-            @inspect="inspectImportTask"
           />
         </section>
     </main>

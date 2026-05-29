@@ -7,6 +7,7 @@ import ScoreboardView from '../ScoreboardView.vue'
 import scoreboardSource from '../ScoreboardView.vue?raw'
 import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'
 import scoreboardDetailSource from '../ScoreboardDetail.vue?raw'
+import scoreboardDetailPageModelSource from '@/features/scoreboard/model/useScoreboardDetailPage.ts?raw'
 
 const scoreboardWorkspaceSource = [scoreboardSource, scoreboardWorkspaceShellSource].join('\n')
 
@@ -15,7 +16,12 @@ function createScoreboardRouter(initialPath = '/scoreboard') {
     history: createMemoryHistory(),
     routes: [
       { path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView },
-      { path: '/scoreboard/:contestId', name: 'ScoreboardDetail', component: ScoreboardDetail },
+      {
+        path: '/scoreboard/:contestId',
+        name: 'ScoreboardDetail',
+        component: ScoreboardDetail,
+        props: (route) => ({ contestId: String(route.params.contestId || '') }),
+      },
     ],
   })
   return router
@@ -207,8 +213,10 @@ describe('ScoreboardView', () => {
 
   it('排行详情路由页应仅负责组合，不直接耦合排行榜详情加载流程', () => {
     expect(scoreboardDetailSource).toContain('useScoreboardDetailPage')
+    expect(scoreboardDetailSource).toContain("useScoreboardDetailPage(toRef(props, 'contestId'))")
     expect(scoreboardDetailSource).not.toContain("from '@/api/contest'")
     expect(scoreboardDetailSource).not.toContain('watch(')
+    expect(scoreboardDetailPageModelSource).not.toContain("from 'vue-router'")
   })
 
   it('排行详情页应移除返回排行列表按钮，并复用学生通用列表样式', () => {
@@ -389,6 +397,9 @@ describe('ScoreboardView', () => {
 
     const router = await createScoreboardRouter('/scoreboard/contest-running')
     const wrapper = mount(ScoreboardDetail, {
+      props: {
+        contestId: 'contest-running',
+      },
       global: {
         plugins: [router],
       },
@@ -441,6 +452,9 @@ describe('ScoreboardView', () => {
 
     const router = await createScoreboardRouter('/scoreboard/contest-history')
     const wrapper = mount(ScoreboardDetail, {
+      props: {
+        contestId: 'contest-history',
+      },
       global: {
         plugins: [router],
       },
@@ -500,6 +514,9 @@ describe('ScoreboardView', () => {
 
     const router = await createScoreboardRouter('/scoreboard/contest-running')
     const wrapper = mount(ScoreboardDetail, {
+      props: {
+        contestId: 'contest-running',
+      },
       global: {
         plugins: [router],
       },
@@ -568,6 +585,9 @@ describe('ScoreboardView', () => {
 
     const router = await createScoreboardRouter('/scoreboard/contest-running')
     const wrapper = mount(ScoreboardDetail, {
+      props: {
+        contestId: 'contest-running',
+      },
       global: {
         plugins: [router],
       },

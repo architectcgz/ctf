@@ -1,45 +1,31 @@
-import { computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
+import {
+  buildChallengeImportManageRoute,
+  buildChallengeManageRoute,
+} from './challengeImportRoutes'
 import { useChallengePackageImport } from './useChallengePackageImport'
 
-export function useChallengeImportPreviewPage() {
-  const route = useRoute()
-  const router = useRouter()
-
-  const importId = computed(() => {
-    const raw = route.params.importId
-    if (typeof raw === 'string') {
-      return raw
-    }
-    if (Array.isArray(raw)) {
-      return raw[0] ?? ''
-    }
-    return ''
-  })
+export function useChallengeImportPreviewPage(importId: MaybeRefOrGetter<string>) {
+  const currentImportId = computed(() => String(toValue(importId) ?? '').trim())
+  const backToImportRoute = buildChallengeImportManageRoute()
+  const backToQueueRoute = buildChallengeImportManageRoute('#challenge-queue-workspace')
+  const commitSuccessRedirectRoute = ref<ReturnType<typeof buildChallengeManageRoute> | null>(null)
 
   const { preview, uploading, committing, hasPreview, loadPreview, resetPreview, commitPreview } =
     useChallengePackageImport({
-      onCommitted: async () => {
-        await router.push({ name: 'ChallengeManage' })
+      onCommitted: () => {
+        commitSuccessRedirectRoute.value = buildChallengeManageRoute()
       },
     })
 
   async function syncPreviewByRoute(): Promise<void> {
     resetPreview()
-    const id = importId.value.trim()
+    const id = currentImportId.value
     if (!id) {
       return
     }
     await loadPreview(id)
-  }
-
-  async function backToImportPanel(): Promise<void> {
-    await router.push({ name: 'PlatformChallengeImportManage' })
-  }
-
-  async function backToQueuePanel(): Promise<void> {
-    await router.push({ name: 'PlatformChallengeImportManage', hash: '#challenge-queue-workspace' })
   }
 
   async function handleCommitPreview(): Promise<void> {
@@ -50,7 +36,7 @@ export function useChallengeImportPreviewPage() {
     void syncPreviewByRoute()
   })
 
-  watch(importId, () => {
+  watch(currentImportId, () => {
     void syncPreviewByRoute()
   })
 
@@ -59,8 +45,9 @@ export function useChallengeImportPreviewPage() {
     uploading,
     committing,
     hasPreview,
-    backToImportPanel,
-    backToQueuePanel,
+    backToImportRoute,
+    backToQueueRoute,
+    commitSuccessRedirectRoute,
     handleCommitPreview,
   }
 }

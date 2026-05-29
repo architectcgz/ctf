@@ -1,18 +1,13 @@
 <script setup lang="ts">
 import { ArrowLeft, FileSearch, Plus } from 'lucide-vue-next'
 
-const emit = defineEmits<{
-  back: []
-  openGuide: []
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+
+defineProps<{
+  backRoute: AppRouteTarget
+  packageFormatGuideRoute: AppRouteTarget
 }>()
-
-function handleBack(): void {
-  emit('back')
-}
-
-function handleOpenGuide(): void {
-  emit('openGuide')
-}
 </script>
 
 <template>
@@ -29,22 +24,20 @@ function handleOpenGuide(): void {
       </p>
     </div>
     <div class="header-actions challenge-import-hero-actions">
-      <button
-        type="button"
+      <AppRouteLink
+        :to="backRoute"
         class="header-btn header-btn--ghost"
-        @click="handleBack"
       >
         <ArrowLeft class="h-4 w-4" />
         返回题目目录
-      </button>
-      <button
-        type="button"
+      </AppRouteLink>
+      <AppRouteLink
+        :to="packageFormatGuideRoute"
         class="header-btn header-btn--ghost"
-        @click="handleOpenGuide"
       >
         <FileSearch class="h-4 w-4" />
         题目包规范
-      </button>
+      </AppRouteLink>
       <a
         class="header-btn header-btn--primary"
         href="/downloads/challenge-package-sample-v1.zip"

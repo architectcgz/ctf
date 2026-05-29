@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
 import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
 
 type ChallengeImportQueueItem = {
@@ -16,16 +18,9 @@ defineProps<{
   queueLoading: boolean
   queueCount: number
   queue: ChallengeImportQueueItem[]
+  buildInspectRoute: (importId: string) => AppRouteTarget
   formatDateTime: (value: string) => string
 }>()
-
-const emit = defineEmits<{
-  inspect: [importId: string]
-}>()
-
-function handleInspect(importId: string): void {
-  emit('inspect', importId)
-}
 </script>
 
 <template>
@@ -103,13 +98,12 @@ function handleInspect(importId: string): void {
           <div class="challenge-queue-time">
             {{ formatDateTime(item.created_at) }}
           </div>
-          <button
-            type="button"
+          <AppRouteLink
+            :to="buildInspectRoute(item.id)"
             class="ui-btn ui-btn--primary"
-            @click="handleInspect(item.id)"
           >
             继续查看预览
-          </button>
+          </AppRouteLink>
         </div>
       </article>
     </div>

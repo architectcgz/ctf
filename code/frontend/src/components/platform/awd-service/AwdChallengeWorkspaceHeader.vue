@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { RefreshCw, Upload } from 'lucide-vue-next'
 
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+
 defineProps<{
   mode: 'library' | 'import'
+  importRoute?: AppRouteTarget | null
 }>()
 
 const emit = defineEmits<{
   refresh: []
-  openImportPage: []
   refreshImportQueue: []
 }>()
 </script>
@@ -43,16 +46,15 @@ const emit = defineEmits<{
           <RefreshCw class="h-4 w-4" />
           刷新列表
         </button>
-        <button
+        <AppRouteLink
           v-if="mode === 'library'"
           id="awd-challenge-open-import"
-          type="button"
+          :to="importRoute || { name: 'PlatformAwdChallengeImport' }"
           class="header-btn header-btn--primary"
-          @click="emit('openImportPage')"
         >
           <Upload class="h-4 w-4" />
           导入题目包
-        </button>
+        </AppRouteLink>
         <button
           v-if="mode === 'import'"
           type="button"

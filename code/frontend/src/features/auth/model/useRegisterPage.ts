@@ -1,5 +1,4 @@
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { getRoleDashboardPath } from '@/utils/roleRoutes'
 import { useAuth } from './useAuth'
@@ -12,10 +11,10 @@ interface RegisterFormState {
 
 export function useRegisterPage() {
   const { register } = useAuth()
-  const router = useRouter()
 
   const loading = ref(false)
   const submitError = ref('')
+  const successRedirectTo = ref<string | null>(null)
   const form = reactive<RegisterFormState>({
     username: '',
     password: '',
@@ -39,7 +38,7 @@ export function useRegisterPage() {
         password: form.password,
         class_name: form.class_name.trim() || undefined,
       })
-      await router.push(getRoleDashboardPath(user.role))
+      successRedirectTo.value = getRoleDashboardPath(user.role)
     } catch (err) {
       submitError.value = err instanceof Error && err.message.trim() ? err.message : '注册失败，请稍后重试'
     } finally {
@@ -51,6 +50,7 @@ export function useRegisterPage() {
     form,
     loading,
     submitError,
+    successRedirectTo,
     clearSubmitError,
     onSubmit,
   }

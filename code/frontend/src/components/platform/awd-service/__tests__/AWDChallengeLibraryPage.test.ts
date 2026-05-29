@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { mount, RouterLinkStub } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import type {
@@ -27,6 +27,9 @@ describe('AWDChallengeLibraryPage', () => {
     importQueue: AdminAwdChallengeImportPreview[]
     uploadResults: PlatformAwdChallengeImportUploadResult[]
     selectedFileName: string
+    importRoute: {
+      name: 'PlatformAwdChallengeImport'
+    }
     list: AdminAwdChallengeData[]
     total: number
     page: number
@@ -79,6 +82,9 @@ describe('AWDChallengeLibraryPage', () => {
       ],
       uploadResults: [],
       selectedFileName: '',
+      importRoute: {
+        name: 'PlatformAwdChallengeImport',
+      },
       list: [
         {
           id: '1',
@@ -109,6 +115,11 @@ describe('AWDChallengeLibraryPage', () => {
   it('renders awd challenge rows and emits row actions', async () => {
     const wrapper = mount(AWDChallengeLibraryPage, {
       props: createProps(),
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
     })
 
     expect(wrapper.text()).toContain('AWD 题目库')
@@ -124,12 +135,12 @@ describe('AWDChallengeLibraryPage', () => {
     const buttons = wrapper.findAll('button')
     await buttons.find((button) => button.text() === '编辑')?.trigger('click')
     await buttons.find((button) => button.text() === '删除')?.trigger('click')
-    await buttons.find((button) => button.text() === '导入题目包')?.trigger('click')
-
     expect(wrapper.emitted('openEditDialog')).toHaveLength(1)
     expect(wrapper.emitted('deleteChallenge')).toHaveLength(1)
-    expect(wrapper.emitted('openImportPage')).toHaveLength(1)
     expect(wrapper.emitted('commitImport')).toBeUndefined()
+    expect(wrapper.findComponent(RouterLinkStub).props('to')).toEqual({
+      name: 'PlatformAwdChallengeImport',
+    })
   })
 
   it('renders the import workspace as a standalone page mode', async () => {

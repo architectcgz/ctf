@@ -3,27 +3,21 @@ import type { AdminChallengeImportPreview } from '@/api/contracts'
 import ChallengePackageImportReview from '@/components/platform/challenge/ChallengePackageImportReview.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
 
 defineProps<{
   preview: AdminChallengeImportPreview | null
   uploading: boolean
   committing: boolean
   hasPreview: boolean
+  backToImportRoute: AppRouteTarget
+  backToQueueRoute: AppRouteTarget
 }>()
 
 const emit = defineEmits<{
-  back: []
-  'back-queue': []
   confirm: []
 }>()
-
-function handleBack(): void {
-  emit('back')
-}
-
-function handleBackQueue(): void {
-  emit('back-queue')
-}
 
 function handleConfirm(): void {
   emit('confirm')
@@ -39,13 +33,12 @@ function handleConfirm(): void {
         <span class="workspace-overline">Challenge Workspace</span>
         <span class="class-chip">导入预览</span>
       </div>
-      <button
+      <AppRouteLink
+        :to="backToImportRoute"
         class="nav-back"
-        type="button"
-        @click="handleBack"
       >
         返回导入题目包
-      </button>
+      </AppRouteLink>
     </header>
 
     <main class="content-pane">
@@ -74,20 +67,18 @@ function handleConfirm(): void {
       >
         <template #action>
           <div class="import-preview-empty__actions">
-            <button
+            <AppRouteLink
+              :to="backToImportRoute"
               class="nav-back"
-              type="button"
-              @click="handleBack"
             >
               返回导入页
-            </button>
-            <button
+            </AppRouteLink>
+            <AppRouteLink
+              :to="backToQueueRoute"
               class="nav-back"
-              type="button"
-              @click="handleBackQueue"
             >
               查看待确认导入
-            </button>
+            </AppRouteLink>
           </div>
         </template>
       </AppEmpty>
@@ -96,8 +87,8 @@ function handleConfirm(): void {
         v-else
         :preview="preview"
         :committing="committing"
+        :reset-route="backToImportRoute"
         @confirm="handleConfirm"
-        @reset="handleBack"
       />
     </main>
   </section>

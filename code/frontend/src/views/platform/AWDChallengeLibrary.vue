@@ -31,11 +31,11 @@ const {
   commitImportPreview,
   saveChallenge,
   removeChallenge,
+  importRoute,
   updateKeyword,
   updateServiceTypeFilter,
   updateStatusFilter,
   handleDialogOpenChange,
-  openImportPage,
 } = useAwdChallengeLibraryPage()
 
 </script>
@@ -57,6 +57,7 @@ const {
       :import-queue="importQueue"
       :upload-results="uploadResults"
       :selected-file-name="selectedImportFileName"
+      :import-route="importRoute"
       @refresh="refresh"
       @update-keyword="updateKeyword"
       @update-service-type-filter="updateServiceTypeFilter"
@@ -64,7 +65,6 @@ const {
       @refresh-import-queue="refreshImportQueue"
       @select-import-packages="selectImportPackages"
       @commit-import="commitImportPreview"
-      @open-import-page="openImportPage"
       @open-edit-dialog="openEditDialog"
       @delete-challenge="removeChallenge"
       @change-page="changePage"

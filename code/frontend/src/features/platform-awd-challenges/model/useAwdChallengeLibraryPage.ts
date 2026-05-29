@@ -1,10 +1,12 @@
 import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { usePlatformAwdChallenges } from './usePlatformAwdChallenges'
 
+interface PlatformAwdChallengeImportRouteTarget {
+  name: 'PlatformAwdChallengeImport'
+}
+
 export function useAwdChallengeLibraryPage() {
-  const router = useRouter()
   const {
     list,
     total,
@@ -38,9 +40,7 @@ export function useAwdChallengeLibraryPage() {
     void refresh()
   })
 
-  function openImportPage(): void {
-    void router.push({ name: 'PlatformAwdChallengeImport' })
-  }
+  const importRoute: PlatformAwdChallengeImportRouteTarget = { name: 'PlatformAwdChallengeImport' }
 
   function updateKeyword(value: string) {
     keyword.value = value
@@ -90,6 +90,6 @@ export function useAwdChallengeLibraryPage() {
     updateServiceTypeFilter,
     updateStatusFilter,
     handleDialogOpenChange,
-    openImportPage,
+    importRoute,
   }
 }
