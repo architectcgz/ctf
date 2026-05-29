@@ -12,6 +12,13 @@ type ContestStatusOption = {
   label: string
 }
 
+interface AwdReviewDetailRoute {
+  name: 'TeacherAWDReviewDetail' | 'PlatformAwdReviewDetail'
+  params: {
+    contestId: string
+  }
+}
+
 defineProps<{
   loading: boolean
   error: string | null
@@ -21,6 +28,7 @@ defineProps<{
   totalPages: number
   hasContests: boolean
   statusOptions: readonly ContestStatusOption[]
+  buildContestRoute: (contestId: string) => AwdReviewDetailRoute
   statusFilter: '' | AwdReviewContestItemData['status']
   keywordFilter: string
   contestStatusLabel: (status: string) => string
@@ -28,7 +36,6 @@ defineProps<{
 
 const emit = defineEmits<{
   reload: []
-  openContest: [contestId: string]
   changePage: [page: number]
   updateStatusFilter: [status: '' | AwdReviewContestItemData['status']]
   updateKeywordFilter: [keyword: string]
@@ -62,8 +69,8 @@ const emit = defineEmits<{
           v-for="contest in contests"
           :key="contest.id"
           :contest="contest"
+          :build-contest-route="buildContestRoute"
           :contest-status-label="contestStatusLabel"
-          @open-contest="emit('openContest', $event)"
         />
       </section>
 

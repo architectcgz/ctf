@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { FolderKanban, RefreshCcw, ScanEye, Waypoints } from 'lucide-vue-next'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+
+interface AwdReviewIndexHomeRoute {
+  name: 'TeacherDashboard' | 'PlatformOverview'
+}
 
 defineProps<{
   contestCount: number
   runningCount: number
   exportReadyCount: number
+  overviewRoute: AwdReviewIndexHomeRoute
 }>()
 
 const emit = defineEmits<{
-  (event: 'back'): void
   (event: 'refresh'): void
 }>()
 </script>
@@ -28,13 +33,12 @@ const emit = defineEmits<{
     </div>
 
     <div class="header-actions admin-awd-review-shell__hero-actions">
-      <button
-        type="button"
+      <AppRouteLink
+        :to="overviewRoute"
         class="header-btn header-btn--ghost"
-        @click="emit('back')"
       >
         返回平台概览
-      </button>
+      </AppRouteLink>
       <button
         type="button"
         class="header-btn header-btn--primary"

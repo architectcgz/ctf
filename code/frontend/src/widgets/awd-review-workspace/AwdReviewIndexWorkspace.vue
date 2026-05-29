@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { FolderKanban, RefreshCcw } from 'lucide-vue-next'
 
 import type { AwdReviewContestItemData } from '@/api/contracts'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import AwdReviewContestDirectory from './AwdReviewContestDirectory.vue'
 import AwdReviewSurfaceShell from './AwdReviewSurfaceShell.vue'
 import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
@@ -16,6 +17,17 @@ interface ContestSummary {
   totalCount: number
   runningCount: number
   exportReadyCount: number
+}
+
+interface AwdReviewIndexHomeRoute {
+  name: 'TeacherDashboard' | 'PlatformOverview'
+}
+
+interface AwdReviewDetailRoute {
+  name: 'TeacherAWDReviewDetail' | 'PlatformAwdReviewDetail'
+  params: {
+    contestId: string
+  }
 }
 
 type ContestStatusOption = {
@@ -32,6 +44,8 @@ const props = defineProps<{
   totalPages: number
   hasContests: boolean
   statusOptions: readonly ContestStatusOption[]
+  dashboardRoute: AwdReviewIndexHomeRoute
+  buildContestRoute: (contestId: string) => AwdReviewDetailRoute
   contestSummary: ContestSummary
   statusFilter: '' | AwdReviewContestItemData['status']
   keywordFilter: string
@@ -39,10 +53,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  openDashboard: []
   refresh: []
   reload: []
-  openContest: [contestId: string]
   changePage: [page: number]
   updateStatusFilter: [status: '' | AwdReviewContestItemData['status']]
   updateKeywordFilter: [keyword: string]
@@ -67,13 +79,12 @@ const summaryItems = computed(() =>
         </template>
 
         <template #actions>
-          <button
-            type="button"
+          <AppRouteLink
+            :to="dashboardRoute"
             class="header-btn header-btn--ghost"
-            @click="emit('openDashboard')"
           >
             {{ AWD_REVIEW_INDEX_WORKSPACE_COPY.openDashboardAction }}
-          </button>
+          </AppRouteLink>
           <button
             type="button"
             class="header-btn header-btn--primary"
@@ -103,11 +114,11 @@ const summaryItems = computed(() =>
         :total-pages="totalPages"
         :has-contests="hasContests"
         :status-options="statusOptions"
+        :build-contest-route="buildContestRoute"
         :status-filter="statusFilter"
         :keyword-filter="keywordFilter"
         :contest-status-label="contestStatusLabel"
         @reload="emit('reload')"
-        @open-contest="emit('openContest', $event)"
         @change-page="emit('changePage', $event)"
         @update-status-filter="emit('updateStatusFilter', $event)"
         @update-keyword-filter="emit('updateKeywordFilter', $event)"

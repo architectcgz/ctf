@@ -32,6 +32,11 @@ function createProps() {
       { value: '', label: '全部状态' },
       { value: 'running', label: '进行中' },
     ] as const,
+    buildContestRoute: (contestId: string) =>
+      ({
+        name: 'TeacherAWDReviewDetail',
+        params: { contestId },
+      }) as const,
     statusFilter: '' as '' | AwdReviewContestItemData['status'],
     keywordFilter: '',
     contestStatusLabel: () => '进行中',
@@ -39,13 +44,20 @@ function createProps() {
 }
 
 describe('AwdReviewContestDirectory', () => {
-  it('应透传筛选更新、重试和进入复盘事件', async () => {
+  it('应透传筛选更新、重试事件', async () => {
     const wrapper = mount(AwdReviewContestDirectory, {
       props: {
         ...createProps(),
         contests: [],
         hasContests: false,
         error: '加载失败',
+      },
+      global: {
+        stubs: {
+          AppRouteLink: {
+            template: '<a><slot /></a>',
+          },
+        },
       },
     })
 
@@ -63,19 +75,36 @@ describe('AwdReviewContestDirectory', () => {
     expect(wrapper.emitted('reload')).toBeTruthy()
   })
 
-  it('应透传目录行进入复盘事件', async () => {
+  it('应把目录行改成显式 route target link', () => {
     const wrapper = mount(AwdReviewContestDirectory, {
       props: createProps(),
+      global: {
+        stubs: {
+          AppRouteLink: {
+            name: 'AppRouteLink',
+            props: ['to'],
+            template:
+              '<a class="teacher-directory-row" :data-route-name="to.name" :data-contest-id="to.params?.contestId"><slot /></a>',
+          },
+        },
+      },
     })
 
-    await wrapper.find('button.teacher-directory-row').trigger('click')
-
-    expect(wrapper.emitted('openContest')).toEqual([['contest-1']])
+    const rowLink = wrapper.get('a.teacher-directory-row')
+    expect(rowLink.attributes('data-route-name')).toBe('TeacherAWDReviewDetail')
+    expect(rowLink.attributes('data-contest-id')).toBe('contest-1')
   })
 
   it('应透传分页切换事件', async () => {
     const wrapper = mount(AwdReviewContestDirectory, {
       props: createProps(),
+      global: {
+        stubs: {
+          AppRouteLink: {
+            template: '<a><slot /></a>',
+          },
+        },
+      },
     })
 
     const paginationButtons = wrapper.findAll('.page-pagination-controls__button')

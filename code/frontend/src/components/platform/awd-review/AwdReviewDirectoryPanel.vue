@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ContestStatus } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
@@ -21,6 +22,13 @@ interface PlatformAwdReviewRow {
 
 type AwdReviewStatusFilter = '' | ContestStatus
 
+interface AwdReviewDetailRoute {
+  name: 'TeacherAWDReviewDetail' | 'PlatformAwdReviewDetail'
+  params: {
+    contestId: string
+  }
+}
+
 interface Props {
   loading: boolean
   error: string | null
@@ -29,6 +37,7 @@ interface Props {
   page: number
   totalPages: number
   hasContests: boolean
+  buildContestRoute: (contestId: string) => AwdReviewDetailRoute
   keyword: string
   statusFilter: AwdReviewStatusFilter
   hasActiveFilters: boolean
@@ -41,7 +50,6 @@ const emit = defineEmits<{
   'update:statusFilter': [value: AwdReviewStatusFilter]
   'reset-filters': []
   retry: []
-  'open-contest': [contestId: string]
   'change-page': [page: number]
 }>()
 
@@ -253,13 +261,12 @@ function updateStatusFilter(event: Event): void {
 
         <template #cell-actions="{ row }">
           <div class="workspace-directory-row-actions admin-awd-review-table__actions">
-            <button
-              type="button"
+            <AppRouteLink
+              :to="buildContestRoute((row as PlatformAwdReviewRow).id)"
               class="ui-btn ui-btn--primary ui-btn--xs admin-awd-review-table__action"
-              @click="emit('open-contest', (row as PlatformAwdReviewRow).id)"
             >
               进入复盘
-            </button>
+            </AppRouteLink>
           </div>
         </template>
       </WorkspaceDataTable>

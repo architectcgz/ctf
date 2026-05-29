@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AwdReviewContestItemData } from '@/api/contracts'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import { formatDate } from '@/utils/format'
 import {
   AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA,
@@ -9,13 +10,17 @@ import AwdReviewContestRowCta from './AwdReviewContestRowCta.vue'
 import AwdReviewContestRowMetrics from './AwdReviewContestRowMetrics.vue'
 import AwdReviewContestRowStatusTags from './AwdReviewContestRowStatusTags.vue'
 
+interface AwdReviewDetailRoute {
+  name: 'TeacherAWDReviewDetail' | 'PlatformAwdReviewDetail'
+  params: {
+    contestId: string
+  }
+}
+
 defineProps<{
   contest: AwdReviewContestItemData
+  buildContestRoute: (contestId: string) => AwdReviewDetailRoute
   contestStatusLabel: (status: string) => string
-}>()
-
-const emit = defineEmits<{
-  openContest: [contestId: string]
 }>()
 
 const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
@@ -28,11 +33,10 @@ const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
 </script>
 
 <template>
-  <button
-    type="button"
+  <AppRouteLink
+    :to="buildContestRoute(contest.id)"
     class="teacher-directory-row"
     :class="'workspace-directory-grid-row'"
-    @click="emit('openContest', contest.id)"
   >
     <div :class="rowClassByKey.code">AWD-{{ contest.id }}</div>
 
@@ -70,7 +74,7 @@ const rowClassByKey = AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA.reduce(
     <div :class="rowClassByKey.action">
       <AwdReviewContestRowCta />
     </div>
-  </button>
+  </AppRouteLink>
 </template>
 
 <style scoped>

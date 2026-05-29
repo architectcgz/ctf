@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import AwdReviewIndexWorkspace from './AwdReviewIndexWorkspace.vue'
 import type { AwdReviewContestItemData } from '@/api/contracts'
+import AwdReviewIndexWorkspace from './AwdReviewIndexWorkspace.vue'
 
 function createContests(): AwdReviewContestItemData[] {
   return [
@@ -32,6 +32,14 @@ function createProps() {
       { value: '', label: '全部状态' },
       { value: 'running', label: '进行中' },
     ] as const,
+    dashboardRoute: {
+      name: 'TeacherDashboard',
+    } as const,
+    buildContestRoute: (contestId: string) =>
+      ({
+        name: 'TeacherAWDReviewDetail',
+        params: { contestId },
+      }) as const,
     contestSummary: {
       totalCount: 1,
       runningCount: 1,
@@ -44,25 +52,40 @@ function createProps() {
 }
 
 describe('AwdReviewIndexWorkspace', () => {
-  it('应转发顶部动作和进入复盘事件', async () => {
+  it('应透传头部与目录 route target，并转发刷新事件', async () => {
     const wrapper = mount(AwdReviewIndexWorkspace, {
       props: createProps(),
+      global: {
+        stubs: {
+          AppRouteLink: {
+            name: 'AppRouteLink',
+            props: ['to'],
+            template:
+              '<a :data-route-name="to.name" :data-contest-id="to.params?.contestId"><slot /></a>',
+          },
+        },
+      },
     })
 
-    const [dashboardButton, refreshButton] = wrapper.findAll('button')
+    await wrapper.get('button.header-btn--primary').trigger('click')
 
-    await dashboardButton.trigger('click')
-    await refreshButton.trigger('click')
-    await wrapper.find('button.teacher-directory-row').trigger('click')
-
-    expect(wrapper.emitted('openDashboard')).toBeTruthy()
+    const routeLinks = wrapper.findAll('a')
+    expect(routeLinks[0].attributes('data-route-name')).toBe('TeacherDashboard')
+    expect(routeLinks[1].attributes('data-route-name')).toBe('TeacherAWDReviewDetail')
+    expect(routeLinks[1].attributes('data-contest-id')).toBe('contest-1')
     expect(wrapper.emitted('refresh')).toBeTruthy()
-    expect(wrapper.emitted('openContest')).toEqual([['contest-1']])
   })
 
   it('应转发分页切换事件', async () => {
     const wrapper = mount(AwdReviewIndexWorkspace, {
       props: createProps(),
+      global: {
+        stubs: {
+          AppRouteLink: {
+            template: '<a><slot /></a>',
+          },
+        },
+      },
     })
 
     const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
@@ -78,6 +101,13 @@ describe('AwdReviewIndexWorkspace', () => {
         hasContests: false,
         contests: [],
         error: '加载失败',
+      },
+      global: {
+        stubs: {
+          AppRouteLink: {
+            template: '<a><slot /></a>',
+          },
+        },
       },
     })
 

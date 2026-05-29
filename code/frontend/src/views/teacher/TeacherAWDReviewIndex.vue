@@ -15,8 +15,8 @@ const {
   contestSummary,
   loadContests,
   changePage,
-  openHome,
-  openContest,
+  homeRoute,
+  buildContestRoute,
   contestStatusLabel,
 } = useAwdReviewIndexPage('teacher')
 </script>
@@ -31,14 +31,14 @@ const {
     :total-pages="totalPages"
     :has-contests="hasContests"
     :status-options="statusOptions"
+    :dashboard-route="homeRoute"
+    :build-contest-route="buildContestRoute"
     :contest-summary="contestSummary"
     :status-filter="filters.status"
     :keyword-filter="filters.keyword"
     :contest-status-label="contestStatusLabel"
-    @open-dashboard="openHome"
     @refresh="loadContests"
     @reload="loadContests"
-    @open-contest="openContest"
     @change-page="changePage"
     @update-status-filter="filters.status = $event"
     @update-keyword-filter="filters.keyword = $event"

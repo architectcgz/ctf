@@ -18,8 +18,8 @@ const {
   loadContests,
   changePage,
   resetFilters,
-  openHome,
-  openContest,
+  homeRoute,
+  buildContestRoute,
 } = useAwdReviewIndexPage('platform')
 </script>
 
@@ -32,7 +32,7 @@ const {
         :contest-count="contestSummary.totalCount"
         :running-count="contestSummary.runningCount"
         :export-ready-count="contestSummary.exportReadyCount"
-        @back="openHome"
+        :overview-route="homeRoute"
         @refresh="loadContests"
       />
 
@@ -44,6 +44,7 @@ const {
         :page="page"
         :total-pages="totalPages"
         :has-contests="hasContests"
+        :build-contest-route="buildContestRoute"
         :keyword="filters.keyword"
         :status-filter="filters.status"
         :has-active-filters="hasActiveFilters"
@@ -51,7 +52,6 @@ const {
         @update:status-filter="filters.status = $event"
         @reset-filters="resetFilters"
         @retry="loadContests"
-        @open-contest="openContest"
         @change-page="changePage"
       />
     </main>
