@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { APP_TITLE_PREFIX } from '@/utils/constants'
 import { useToast } from '@/composables/useToast'
 import type { UserRole } from '@/utils/constants'
+import { sanitizeRedirectPath } from '@/utils/redirectPath'
 import { resolveRouteTitle } from '@/utils/routeTitle'
 import { getRoleDashboardPath } from '@/utils/roleRoutes'
 
@@ -17,15 +18,6 @@ function isPublicRoute(to: RouteLocationNormalized): boolean {
 
 function isAuthLandingRoute(to: RouteLocationNormalized): boolean {
   return to.path === '/login' || to.path === '/register'
-}
-
-export function sanitizeRedirectPath(input: unknown): string {
-  if (typeof input !== 'string') return '/'
-  if (/^\s*$/.test(input)) return '/'
-  if (/^(?:[a-z][a-z0-9+\-.]*:)?\/\//i.test(input) || input.startsWith('/\\')) return '/'
-  // 移除所有前导斜杠，只保留一个
-  const normalized = '/' + input.replace(/^\/+/, '')
-  return normalized
 }
 
 export function hasRequiredRole(
@@ -101,3 +93,5 @@ export function setupRouterGuards(router: Router): void {
     NProgress.done()
   })
 }
+
+export { sanitizeRedirectPath }

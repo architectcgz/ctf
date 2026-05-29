@@ -1,8 +1,9 @@
 import { computed, getCurrentInstance, onBeforeUnmount, reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
+import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
-import { sanitizeRedirectPath } from '@/router/guards'
+import { sanitizeRedirectPath } from '@/utils/redirectPath'
 import { getRoleDashboardPath } from '@/utils/roleRoutes'
 
 import { useAuth } from './useAuth'
@@ -20,10 +21,10 @@ interface SubmitFallbackValues {
 
 export function useLoginPage() {
   const { login } = useAuth()
-  const route = useRoute()
-  const router = useRouter()
+  const { query } = useRouteQueryTransport()
+  const { push } = useRouteNavigationTransport()
   const { track } = useProbeEasterEggs()
-  const redirectTo = computed(() => sanitizeRedirectPath(route.query.redirect))
+  const redirectTo = computed(() => sanitizeRedirectPath(query.value.redirect))
 
   const loading = ref(false)
   const submitError = ref('')
@@ -81,9 +82,7 @@ export function useLoginPage() {
     submitError.value = ''
     try {
       const user = await login({ username, password })
-      await router.push(
-        resolveLoginRedirectTarget(redirectTo.value, getRoleDashboardPath(user.role))
-      )
+      await push(resolveLoginRedirectTarget(redirectTo.value, getRoleDashboardPath(user.role)))
     } catch (err) {
       submitError.value =
         err instanceof Error && err.message.trim() ? err.message : '身份验证失败，请核对信息'

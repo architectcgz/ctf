@@ -1,16 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import useLoginPageSource from './useLoginPage.ts?raw'
+
 const authMocks = vi.hoisted(() => ({
   login: vi.fn(),
 }))
 
 const routeState = vi.hoisted(() => ({
-  query: {
+  value: {
     redirect: undefined as unknown,
   },
 }))
 
-const routerMocks = vi.hoisted(() => ({
+const navigationMocks = vi.hoisted(() => ({
   push: vi.fn(),
 }))
 
@@ -22,9 +24,14 @@ vi.mock('./useAuth', () => ({
   useAuth: () => authMocks,
 }))
 
-vi.mock('vue-router', () => ({
-  useRoute: () => routeState,
-  useRouter: () => routerMocks,
+vi.mock('@/composables/routeQueryTransport', () => ({
+  useRouteQueryTransport: () => ({
+    query: routeState,
+  }),
+}))
+
+vi.mock('@/composables/routeNavigationTransport', () => ({
+  useRouteNavigationTransport: () => navigationMocks,
 }))
 
 vi.mock('@/composables/useProbeEasterEggs', () => ({
@@ -40,8 +47,8 @@ describe('useLoginPage', () => {
 
   beforeEach(() => {
     authMocks.login.mockReset()
-    routeState.query.redirect = undefined
-    routerMocks.push.mockReset()
+    routeState.value.redirect = undefined
+    navigationMocks.push.mockReset()
     probeMocks.track.mockReset()
     probeMocks.track.mockReturnValue({
       unlocked: false,
@@ -59,7 +66,7 @@ describe('useLoginPage', () => {
     await page.onSubmit()
 
     expect(authMocks.login).toHaveBeenCalledWith({ username: 'alice', password: 'pass' })
-    expect(routerMocks.push).toHaveBeenCalledWith('/academy/overview')
+    expect(navigationMocks.push).toHaveBeenCalledWith('/academy/overview')
   })
 
   it('应支持使用输入框回填值提交', async () => {
@@ -75,7 +82,7 @@ describe('useLoginPage', () => {
       username: 'alice',
       password: 'browser-saved-password',
     })
-    expect(routerMocks.push).toHaveBeenCalledWith('/student/dashboard')
+    expect(navigationMocks.push).toHaveBeenCalledWith('/student/dashboard')
   })
 
   it('应回填登录错误并关闭加载态', async () => {
@@ -88,11 +95,11 @@ describe('useLoginPage', () => {
 
     expect(page.submitError.value).toBe('用户名或密码错误')
     expect(page.loading.value).toBe(false)
-    expect(routerMocks.push).not.toHaveBeenCalled()
+    expect(navigationMocks.push).not.toHaveBeenCalled()
   })
 
   it('应优先使用登录页 redirect 参数', async () => {
-    routeState.query.redirect = '/contests/1'
+    routeState.value.redirect = '/contests/1'
     authMocks.login.mockResolvedValue({ role: 'teacher' })
     const page = useLoginPage()
     page.form.username = 'alice'
@@ -100,7 +107,19 @@ describe('useLoginPage', () => {
 
     await page.onSubmit()
 
-    expect(routerMocks.push).toHaveBeenCalledWith('/contests/1')
+    expect(navigationMocks.push).toHaveBeenCalledWith('/contests/1')
+  })
+
+  it('redirect 参数应先做安全清洗', async () => {
+    routeState.value.redirect = 'https://evil.example/phish'
+    authMocks.login.mockResolvedValue({ role: 'teacher' })
+    const page = useLoginPage()
+    page.form.username = 'alice'
+    page.form.password = 'pass'
+
+    await page.onSubmit()
+
+    expect(navigationMocks.push).toHaveBeenCalledWith('/academy/overview')
   })
 
   it('应在 probe 解锁时显示提示', () => {
@@ -115,5 +134,17 @@ describe('useLoginPage', () => {
 
     expect(probeMocks.track).toHaveBeenCalledWith('login-brand', 4)
     expect(page.probeMessage.value).toBe('隐藏入口排查完毕，结果让你失望了。')
+  })
+
+  it('登录页 route owner 应改为共享 transport 与中性 sanitize util', () => {
+    expect(useLoginPageSource).toContain(
+      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+    )
+    expect(useLoginPageSource).toContain(
+      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+    )
+    expect(useLoginPageSource).toContain("import { sanitizeRedirectPath } from '@/utils/redirectPath'")
+    expect(useLoginPageSource).not.toContain("from 'vue-router'")
+    expect(useLoginPageSource).not.toContain("from '@/router/guards'")
   })
 })
