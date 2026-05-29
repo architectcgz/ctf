@@ -15,6 +15,7 @@ import {
   isSameClassInsightWindow,
   parseClassInsightWindowQuery,
 } from '@/features/class-insight-window'
+import { useClassWorkspaceSection } from '@/features/class-workspace-redirect'
 import { useStudentFilters, useStudentListQuery } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
@@ -28,6 +29,9 @@ export function useClassStudentsPage() {
   const route = useRoute()
   const router = useRouter()
   const authStore = useAuthStore()
+  const { canonicalWorkspaceTarget } = useClassWorkspaceSection({
+    route,
+  })
 
   const review = ref<ClassInsightReviewData | null>(null)
   const summary = ref<ClassInsightSummaryData | null>(null)
@@ -139,6 +143,11 @@ export function useClassStudentsPage() {
   async function initialize(): Promise<void> {
     workspaceError.value = null
 
+    if (canonicalWorkspaceTarget.value) {
+      await router.replace(canonicalWorkspaceTarget.value)
+      return
+    }
+
     try {
       await loadClassWorkspace()
     } catch (err) {
@@ -228,6 +237,10 @@ export function useClassStudentsPage() {
     () => [route.params.className, route.query.from_date, route.query.to_date] as const,
     () => {
       insightWindowDraft.value = parseClassInsightWindowQuery(route.query)
+      if (canonicalWorkspaceTarget.value) {
+        void router.replace(canonicalWorkspaceTarget.value)
+        return
+      }
       void loadClassWorkspace()
     },
     { immediate: true }

@@ -1,5 +1,4 @@
-import { computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed } from 'vue'
 
 const panelByRouteName = {
   TeacherClassTrend: 'trend',
@@ -12,46 +11,74 @@ const panelByRouteName = {
   PlatformClassIntervention: 'action',
 } as const
 
-type ClassWorkspaceCanonicalRouteName = 'TeacherClassStudents' | 'PlatformClassStudents'
+const canonicalRouteNameByAliasRouteName = {
+  TeacherClassTrend: 'TeacherClassStudents',
+  TeacherClassReview: 'TeacherClassStudents',
+  TeacherClassInsights: 'TeacherClassStudents',
+  TeacherClassIntervention: 'TeacherClassStudents',
+  PlatformClassTrend: 'PlatformClassStudents',
+  PlatformClassReview: 'PlatformClassStudents',
+  PlatformClassInsights: 'PlatformClassStudents',
+  PlatformClassIntervention: 'PlatformClassStudents',
+} as const
+
+type ClassWorkspacePanel = (typeof panelByRouteName)[keyof typeof panelByRouteName]
+
+interface ClassWorkspaceRouteLike {
+  name?: string | symbol | null
+  params: {
+    className?: string | string[] | null
+  }
+  query: Record<string, unknown>
+}
 
 interface UseClassWorkspaceSectionOptions {
-  workspaceRouteName: ClassWorkspaceCanonicalRouteName
+  route: ClassWorkspaceRouteLike
 }
 
 export function useClassWorkspaceSection(options: UseClassWorkspaceSectionOptions) {
-  const { workspaceRouteName } = options
-  const route = useRoute()
-  const router = useRouter()
+  const { route } = options
 
   const panel = computed(() => {
-    const routeName = route.name as keyof typeof panelByRouteName | undefined
-    return routeName ? panelByRouteName[routeName] : null
+    if (typeof route.name !== 'string') return null
+
+    return (panelByRouteName[route.name as keyof typeof panelByRouteName] ?? null) as
+      | ClassWorkspacePanel
+      | null
   })
 
-  async function redirectToCanonicalWorkspace(): Promise<void> {
-    if (!panel.value) return
+  const canonicalWorkspaceTarget = computed(() => {
+    if (typeof route.name !== 'string') return null
 
-    await router.replace({
+    const workspaceRouteName =
+      canonicalRouteNameByAliasRouteName[
+        route.name as keyof typeof canonicalRouteNameByAliasRouteName
+      ] ?? null
+    const className = normalizeClassName(route.params.className)
+    if (!workspaceRouteName || !panel.value || !className) return null
+
+    return {
       name: workspaceRouteName,
       params: {
-        className: route.params.className,
+        className,
       },
       query: {
         ...route.query,
         panel: panel.value,
       },
-    })
-  }
-
-  watch(
-    () => [route.name, route.params.className, route.query.panel] as const,
-    () => {
-      void redirectToCanonicalWorkspace()
-    },
-    { immediate: true }
-  )
+    }
+  })
 
   return {
-    redirectToCanonicalWorkspace,
+    canonicalWorkspaceTarget,
+    panel,
   }
+}
+
+function normalizeClassName(className: ClassWorkspaceRouteLike['params']['className']): string | null {
+  if (Array.isArray(className)) {
+    return className[0] ?? null
+  }
+
+  return className ?? null
 }

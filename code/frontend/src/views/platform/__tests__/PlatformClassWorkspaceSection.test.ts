@@ -24,9 +24,12 @@ describe('PlatformClassWorkspaceSection route owner', () => {
 
     const platformViewSource = readFileSync(platformViewPath, 'utf-8')
     expect(platformViewSource).toContain(
-      "import { useClassWorkspaceSection } from '@/features/class-workspace-redirect'"
+      "import PlatformClassStudents from '@/views/platform/PlatformClassStudents.vue'"
     )
-    expect(platformViewSource).toContain("workspaceRouteName: 'PlatformClassStudents'")
+    expect(platformViewSource).not.toContain('useClassWorkspaceSection(')
+    expect(platformViewSource).not.toContain('useRoute(')
+    expect(platformViewSource).not.toContain('useRouter(')
+    expect(platformViewSource).not.toContain('router.replace')
     expect(platformViewSource).not.toContain("from '@/views/teacher/TeacherClassWorkspaceSection.vue'")
     expect(platformViewSource).not.toContain("from '@/api/teacher'")
   })
