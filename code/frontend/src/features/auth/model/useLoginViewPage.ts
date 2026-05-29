@@ -1,13 +1,5 @@
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+export const DEFAULT_LOGIN_REDIRECT = '/'
 
-import { sanitizeRedirectPath } from '@/router/guards'
-
-export function useLoginViewPage() {
-  const route = useRoute()
-  const redirectTo = computed(() => sanitizeRedirectPath(route.query.redirect))
-
-  return {
-    redirectTo,
-  }
+export function resolveLoginRedirectTarget(redirectTo: string, defaultTarget: string): string {
+  return redirectTo === DEFAULT_LOGIN_REDIRECT ? defaultTarget : redirectTo
 }

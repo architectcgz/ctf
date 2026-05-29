@@ -2,9 +2,9 @@ export const viewLineLimit = 500
 
 export const featureRouterImportAllowlist = new Set([
   'features/audit-log/model/useAuditLogPage.ts -> vue-router',
-  'features/auth/model/useAuth.ts -> vue-router',
-  'features/auth/model/useLoginViewPage.ts -> @/router/guards',
-  'features/auth/model/useLoginViewPage.ts -> vue-router',
+  'features/auth/model/useLoginPage.ts -> @/router/guards',
+  'features/auth/model/useLoginPage.ts -> vue-router',
+  'features/auth/model/useRegisterPage.ts -> vue-router',
   'features/challenge-detail/model/useChallengeDetailPage.ts -> vue-router',
   'features/challenge-list/model/useChallengeListPage.ts -> vue-router',
   'features/challenge-package-import/model/useChallengeImportManagePage.ts -> vue-router',

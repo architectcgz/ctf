@@ -4,8 +4,16 @@ const authMocks = vi.hoisted(() => ({
   register: vi.fn(),
 }))
 
+const routerMocks = vi.hoisted(() => ({
+  push: vi.fn(),
+}))
+
 vi.mock('./useAuth', () => ({
   useAuth: () => authMocks,
+}))
+
+vi.mock('vue-router', () => ({
+  useRouter: () => routerMocks,
 }))
 
 import { useRegisterPage } from './useRegisterPage'
@@ -13,10 +21,11 @@ import { useRegisterPage } from './useRegisterPage'
 describe('useRegisterPage', () => {
   beforeEach(() => {
     authMocks.register.mockReset()
+    routerMocks.push.mockReset()
   })
 
   it('应提交注册并清理班级空白字符', async () => {
-    authMocks.register.mockResolvedValue(undefined)
+    authMocks.register.mockResolvedValue({ role: 'admin' })
 
     const page = useRegisterPage()
     page.form.username = 'alice'
@@ -30,6 +39,7 @@ describe('useRegisterPage', () => {
       password: 'secure-pass',
       class_name: 'CTF-1',
     })
+    expect(routerMocks.push).toHaveBeenCalledWith('/platform/overview')
     expect(page.loading.value).toBe(false)
     expect(page.submitError.value).toBe('')
   })
@@ -54,5 +64,6 @@ describe('useRegisterPage', () => {
 
     expect(page.submitError.value).toBe('用户名已存在')
     expect(page.loading.value).toBe(false)
+    expect(routerMocks.push).not.toHaveBeenCalled()
   })
 })

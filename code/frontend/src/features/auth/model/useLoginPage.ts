@@ -1,9 +1,12 @@
-import { getCurrentInstance, onBeforeUnmount, reactive, ref } from 'vue'
+import { computed, getCurrentInstance, onBeforeUnmount, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
+import { sanitizeRedirectPath } from '@/router/guards'
+import { getRoleDashboardPath } from '@/utils/roleRoutes'
 
 import { useAuth } from './useAuth'
-import { useLoginViewPage } from './useLoginViewPage'
+import { resolveLoginRedirectTarget } from './useLoginViewPage'
 
 interface LoginFormState {
   username: string
@@ -17,8 +20,10 @@ interface SubmitFallbackValues {
 
 export function useLoginPage() {
   const { login } = useAuth()
-  const { redirectTo } = useLoginViewPage()
+  const route = useRoute()
+  const router = useRouter()
   const { track } = useProbeEasterEggs()
+  const redirectTo = computed(() => sanitizeRedirectPath(route.query.redirect))
 
   const loading = ref(false)
   const submitError = ref('')
@@ -75,7 +80,10 @@ export function useLoginPage() {
     loading.value = true
     submitError.value = ''
     try {
-      await login({ username, password }, redirectTo.value === '/' ? undefined : redirectTo.value)
+      const user = await login({ username, password })
+      await router.push(
+        resolveLoginRedirectTarget(redirectTo.value, getRoleDashboardPath(user.role))
+      )
     } catch (err) {
       submitError.value =
         err instanceof Error && err.message.trim() ? err.message : '身份验证失败，请核对信息'
@@ -91,6 +99,7 @@ export function useLoginPage() {
   return {
     form,
     loading,
+    redirectTo,
     probeMessage,
     submitError,
     clearSubmitError,

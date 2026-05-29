@@ -1,5 +1,3 @@
-import { useRouter } from 'vue-router'
-
 import {
   login as loginApi,
   logout as logoutApi,
@@ -7,27 +5,25 @@ import {
   type LoginRequest,
   type RegisterRequest,
 } from '@/api/auth'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore, type AuthUser } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
-import { getRoleDashboardPath } from '@/utils/roleRoutes'
 
 export function useAuth() {
-  const router = useRouter()
   const authStore = useAuthStore()
   const toast = useToast()
 
-  async function login(payload: LoginRequest, redirectTo?: string): Promise<void> {
+  async function login(payload: LoginRequest): Promise<AuthUser> {
     const resp = await loginApi(payload)
     authStore.setAuth(resp.user)
     toast.success('登录成功')
-    await router.push(redirectTo || getRoleDashboardPath(resp.user.role))
+    return resp.user
   }
 
-  async function register(payload: RegisterRequest, redirectTo?: string): Promise<void> {
+  async function register(payload: RegisterRequest): Promise<AuthUser> {
     const resp = await registerApi(payload)
     authStore.setAuth(resp.user)
     toast.success('注册成功')
-    await router.push(redirectTo || getRoleDashboardPath(resp.user.role))
+    return resp.user
   }
 
   async function logout(): Promise<void> {
@@ -38,7 +34,6 @@ export function useAuth() {
     } finally {
       authStore.logout()
       toast.info('已退出登录')
-      await router.push('/login')
     }
   }
 
