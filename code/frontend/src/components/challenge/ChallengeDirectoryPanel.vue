@@ -4,6 +4,7 @@ import { Search } from 'lucide-vue-next'
 import type { ChallengeCategory, ChallengeDifficulty, ChallengeListItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
 import { ChallengeDirectoryRow } from '@/entities/challenge'
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
   errorMessage: string
   emptyTitle: string
   emptyDescription: string
+  buildDetailRoute: (challengeId: string) => AppRouteTarget
 }
 
 defineProps<Props>()
@@ -32,7 +34,6 @@ const emit = defineEmits<{
   'filter-change': []
   'reset-filters': []
   refresh: []
-  'open-detail': [challengeId: string]
   'change-page': [page: number]
 }>()
 
@@ -233,7 +234,7 @@ function updateDifficultyFilter(event: Event): void {
           v-for="challenge in list"
           :key="challenge.id"
           :challenge="challenge"
-          @open="emit('open-detail', $event)"
+          :detail-route="buildDetailRoute(challenge.id)"
         />
 
         <div v-if="total > 0" class="challenge-pagination workspace-directory-pagination">

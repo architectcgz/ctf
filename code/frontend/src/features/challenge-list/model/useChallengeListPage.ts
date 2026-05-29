@@ -1,10 +1,15 @@
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
 import { getChallenges } from '@/api/challenge'
 import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import { usePagination } from '@/composables/usePagination'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import {
+  challengeListDashboardRoute,
+  challengeListDetailRoute,
+  challengeListSkillProfileRoute,
+} from './challengeListRoutes'
 
 const validCategories = [
   'web',
@@ -44,14 +49,13 @@ function parseDifficultyFilter(value: unknown): ChallengeDifficulty | '' {
 }
 
 export function useChallengeListPage() {
-  const route = useRoute()
-  const router = useRouter()
+  const { query, replaceQuery } = useRouteQueryTransport()
   const searchQuery = ref('')
   const categoryFilter = ref<ChallengeCategory | ''>('')
   const difficultyFilter = ref<ChallengeDifficulty | ''>('')
 
   async function syncFilterQuery(): Promise<boolean> {
-    const nextQuery = { ...route.query }
+    const nextQuery = { ...query.value }
 
     if (categoryFilter.value) nextQuery.category = categoryFilter.value
     else delete nextQuery.category
@@ -60,13 +64,13 @@ export function useChallengeListPage() {
     else delete nextQuery.difficulty
 
     if (
-      getQueryValue(route.query.category) === getQueryValue(nextQuery.category) &&
-      getQueryValue(route.query.difficulty) === getQueryValue(nextQuery.difficulty)
+      getQueryValue(query.value.category) === getQueryValue(nextQuery.category) &&
+      getQueryValue(query.value.difficulty) === getQueryValue(nextQuery.difficulty)
     ) {
       return false
     }
 
-    await router.replace({ query: nextQuery })
+    await replaceQuery(nextQuery)
     return true
   }
 
@@ -136,20 +140,8 @@ export function useChallengeListPage() {
     })
   }
 
-  function goToDashboard(): void {
-    void router.push({ name: 'Dashboard' })
-  }
-
-  function openSkillProfile(): void {
-    void router.push({ name: 'SkillProfile' })
-  }
-
-  function goToDetail(id: string): void {
-    void router.push(`/challenges/${id}`)
-  }
-
   watch(
-    () => [route.query.category, route.query.difficulty] as const,
+    () => [query.value.category, query.value.difficulty] as const,
     ([nextCategoryQuery, nextDifficultyQuery], previousQuery) => {
       const nextCategory = parseCategoryFilter(nextCategoryQuery)
       const nextDifficulty = parseDifficultyFilter(nextDifficultyQuery)
@@ -191,8 +183,8 @@ export function useChallengeListPage() {
     onSearch,
     onFilterChange,
     resetFilters,
-    goToDashboard,
-    openSkillProfile,
-    goToDetail,
+    dashboardRoute: challengeListDashboardRoute,
+    skillProfileRoute: challengeListSkillProfileRoute,
+    buildChallengeDetailRoute: challengeListDetailRoute,
   }
 }

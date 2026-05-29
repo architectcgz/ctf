@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ArrowRight } from 'lucide-vue-next'
 
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
 import {
   type ChallengeDirectoryListItem,
   getChallengeCategoryColor,
@@ -11,22 +13,18 @@ import {
 
 interface Props {
   challenge: ChallengeDirectoryListItem
+  detailRoute: AppRouteTarget
 }
 
 defineProps<Props>()
-
-defineEmits<{
-  open: [challengeId: string]
-}>()
 </script>
 
 <template>
-  <button
-    type="button"
+  <AppRouteLink
     class="challenge-row"
+    :to="detailRoute"
     :style="{ '--challenge-row-accent': getChallengeCategoryColor(challenge.category) }"
     :aria-label="`${challenge.title}，${getChallengeCategoryLabel(challenge.category)}，${getChallengeDifficultyLabel(challenge.difficulty)}，${challenge.is_solved ? '已解出' : '待攻克'}`"
-    @click="$emit('open', challenge.id)"
   >
     <div class="challenge-row-main">
       <div class="challenge-row-title-group">
@@ -115,7 +113,7 @@ defineEmits<{
         <ArrowRight class="h-4 w-4" />
       </span>
     </div>
-  </button>
+  </AppRouteLink>
 </template>
 
 <style scoped>

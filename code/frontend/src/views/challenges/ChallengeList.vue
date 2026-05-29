@@ -4,6 +4,7 @@ import type { Component } from 'vue'
 import { BookOpen, Layers3, LayoutDashboard, ShieldCheck, Target } from 'lucide-vue-next'
 
 import ChallengeDirectoryPanel from '@/components/challenge/ChallengeDirectoryPanel.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import { useChallengeListPage } from '@/features/challenge-list'
 
 type ChallengeSummaryKey = 'total' | 'visible' | 'solved' | 'unsolved'
@@ -70,9 +71,9 @@ const {
   onSearch,
   onFilterChange,
   resetFilters,
-  goToDashboard,
-  openSkillProfile,
-  goToDetail,
+  dashboardRoute,
+  skillProfileRoute,
+  buildChallengeDetailRoute,
 } = useChallengeListPage()
 </script>
 
@@ -90,13 +91,13 @@ const {
 
           <div class="challenge-hero-rail">
             <div class="challenge-actions">
-              <button type="button" class="ui-btn ui-btn--primary" @click="goToDashboard">
+              <AppRouteLink :to="dashboardRoute" class="ui-btn ui-btn--primary">
                 <LayoutDashboard class="h-4 w-4" />
                 返回仪表盘
-              </button>
-              <button type="button" class="ui-btn ui-btn--ghost" @click="openSkillProfile">
+              </AppRouteLink>
+              <AppRouteLink :to="skillProfileRoute" class="ui-btn ui-btn--ghost">
                 能力画像
-              </button>
+              </AppRouteLink>
             </div>
           </div>
         </header>
@@ -171,7 +172,7 @@ const {
           @filter-change="onFilterChange"
           @reset-filters="resetFilters"
           @refresh="refresh"
-          @open-detail="goToDetail"
+          :build-detail-route="buildChallengeDetailRoute"
           @change-page="changePage"
         />
       </div>

@@ -7,6 +7,8 @@ import ChallengeList from '../ChallengeList.vue'
 import challengeListSource from '../ChallengeList.vue?raw'
 import challengeDirectoryPanelSource from '@/components/challenge/ChallengeDirectoryPanel.vue?raw'
 import challengeDirectoryRowSource from '@/entities/challenge/ui/ChallengeDirectoryRow.vue?raw'
+import challengeListPageSource from '@/features/challenge-list/model/useChallengeListPage.ts?raw'
+import routeQueryTransportSource from '@/composables/routeQueryTransport.ts?raw'
 import { getChallenges } from '@/api/challenge'
 
 vi.mock('@/api/challenge', () => ({
@@ -30,8 +32,10 @@ function createTestRouter() {
   return createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/challenges', component: { template: '<div />' } },
-      { path: '/challenges/:id', component: { template: '<div />' } },
+      { path: '/student/dashboard', name: 'Dashboard', component: { template: '<div />' } },
+      { path: '/student/skill-profile', name: 'SkillProfile', component: { template: '<div />' } },
+      { path: '/challenges', name: 'Challenges', component: { template: '<div />' } },
+      { path: '/challenges/:id', name: 'ChallengeDetail', component: { template: '<div />' } },
     ],
   })
 }
@@ -109,6 +113,10 @@ describe('ChallengeList', () => {
     expect(challengeListSource).not.toContain('const summaryStats = computed(() => [')
     expect(challengeListSource).not.toContain('async function syncFilterQuery()')
     expect(challengeListSource).not.toContain('watch(')
+    expect(challengeListPageSource).not.toContain("from 'vue-router'")
+    expect(challengeListPageSource).toContain("from '@/composables/routeQueryTransport'")
+    expect(routeQueryTransportSource).toContain('const route = useRoute()')
+    expect(routeQueryTransportSource).toContain('const router = useRouter()')
   })
 
   it('题目目录组件应通过 challenge entity 获取分类与难度展示规则', () => {
@@ -443,6 +451,51 @@ describe('ChallengeList', () => {
         difficulty: 'medium',
       })
     )
+  })
+
+  it('页头与目录行应通过 route target，而不是 page model 直接 push', async () => {
+    mockedGetChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          title: 'Route Target Challenge',
+          category: 'web',
+          difficulty: 'easy',
+          tags: ['target'],
+          solved_count: 1,
+          total_attempts: 2,
+          is_solved: false,
+          points: 100,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const { wrapper, router } = await mountPageWithRouter()
+
+    expect(challengeListSource).toContain("import AppRouteLink from '@/components/navigation/AppRouteLink.vue'")
+    expect(challengeDirectoryRowSource).toContain(
+      "import AppRouteLink from '@/components/navigation/AppRouteLink.vue'"
+    )
+    expect(challengeListSource).not.toContain('@click="goToDashboard"')
+    expect(challengeListSource).not.toContain('@click="openSkillProfile"')
+    expect(challengeDirectoryPanelSource).not.toContain("@open-detail")
+
+    const dashboardLink = wrapper.get('a[href="/student/dashboard"]')
+    expect(dashboardLink.text()).toContain('返回仪表盘')
+
+    const skillProfileLink = wrapper.get('a[href="/student/skill-profile"]')
+    expect(skillProfileLink.text()).toContain('能力画像')
+
+    const detailLink = wrapper.get('a[href="/challenges/1"]')
+    expect(detailLink.text()).toContain('Route Target Challenge')
+
+    await detailLink.trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.fullPath).toBe('/challenges/1')
   })
 
   it('应采用平铺目录式题目列表而不是卡片网格', () => {
