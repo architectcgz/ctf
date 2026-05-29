@@ -1,10 +1,10 @@
 import { computed, type ComputedRef } from 'vue'
-import type { RouteLocationNormalizedLoaded, Router } from 'vue-router'
+import { useRoute, useRouter, type RouteLocationNormalizedLoaded, type Router } from 'vue-router'
 import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 
 interface UseRouteQueryTabsOptions<T extends string> {
-  route: RouteLocationNormalizedLoaded
-  router: Router
+  route?: RouteLocationNormalizedLoaded
+  router?: Router
   orderedTabs: readonly T[]
   defaultTab: T
   routeName?: string
@@ -28,10 +28,12 @@ export function useRouteQueryTabs<T extends string>({
   routeParams,
   queryKey = 'panel',
 }: UseRouteQueryTabsOptions<T>): UseRouteQueryTabsResult<T> {
+  const currentRoute = route ?? useRoute()
+  const currentRouter = router ?? useRouter()
   const tabSet = new Set<T>(orderedTabs)
 
   const activeTab = computed<T>(() => {
-    const rawPanel = route.query[queryKey]
+    const rawPanel = currentRoute.query[queryKey]
     const panel = Array.isArray(rawPanel) ? rawPanel[0] : rawPanel
     if (typeof panel === 'string' && tabSet.has(panel as T)) {
       return panel as T
@@ -42,7 +44,7 @@ export function useRouteQueryTabs<T extends string>({
   async function selectTab(tab: T): Promise<void> {
     if (activeTab.value === tab) return
 
-    const nextQuery = { ...route.query }
+    const nextQuery = { ...currentRoute.query }
     if (tab === defaultTab) {
       delete nextQuery[queryKey]
     } else {
@@ -50,16 +52,18 @@ export function useRouteQueryTabs<T extends string>({
     }
 
     if (routeName) {
-      if (routeParams) {
-        await router.replace({ name: routeName, params: routeParams, query: nextQuery })
+      const currentRouteParams = routeParams ?? currentRoute.params
+
+      if (Object.keys(currentRouteParams).length > 0) {
+        await currentRouter.replace({ name: routeName, params: currentRouteParams, query: nextQuery })
         return
       }
 
-      await router.replace({ name: routeName, query: nextQuery })
+      await currentRouter.replace({ name: routeName, query: nextQuery })
       return
     }
 
-    await router.replace({ query: nextQuery })
+    await currentRouter.replace({ query: nextQuery })
   }
   const { setTabButtonRef, handleTabKeydown } = useTabKeyboardNavigation<T>({
     orderedTabs,

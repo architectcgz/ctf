@@ -12,6 +12,9 @@ describe('route query tabs adoption', () => {
     expect(adminChallengeRoutePageSource).toContain('setTabButtonRef: tabState.setTabButtonRef')
     expect(adminChallengeRoutePageSource).toContain('handleTabKeydown: tabState.handleTabKeydown')
     expect(adminChallengeRoutePageSource).toContain('useRouteQueryTabs<ChallengePanelKey>({')
+    expect(adminChallengeRoutePageSource).not.toContain("from 'vue-router'")
+    expect(adminChallengeRoutePageSource).not.toContain('useRoute(')
+    expect(adminChallengeRoutePageSource).not.toContain('useRouter(')
     expect(adminChallengeRoutePageSource).not.toContain(
       'const activePanel = computed<ChallengePanelKey>(() => resolvePanel(route.query.panel))'
     )

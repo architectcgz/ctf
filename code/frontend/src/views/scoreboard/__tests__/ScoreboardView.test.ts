@@ -8,6 +8,8 @@ import scoreboardSource from '../ScoreboardView.vue?raw'
 import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'
 import scoreboardDetailSource from '../ScoreboardDetail.vue?raw'
 import scoreboardDetailPageModelSource from '@/features/scoreboard/model/useScoreboardDetailPage.ts?raw'
+import scoreboardRoutePageSource from '@/features/scoreboard/model/useScoreboardRoutePage.ts?raw'
+import routeQueryTabsSource from '@/composables/useRouteQueryTabs.ts?raw'
 
 const scoreboardWorkspaceSource = [scoreboardSource, scoreboardWorkspaceShellSource].join('\n')
 
@@ -315,6 +317,11 @@ describe('ScoreboardView', () => {
     expect(scoreboardSource).not.toContain('useRoute')
     expect(scoreboardSource).not.toContain('useRouter')
     expect(scoreboardSource).not.toContain('watch(')
+    expect(scoreboardRoutePageSource).not.toContain("from 'vue-router'")
+    expect(scoreboardRoutePageSource).not.toContain('useRoute(')
+    expect(scoreboardRoutePageSource).not.toContain('useRouter(')
+    expect(routeQueryTabsSource).toContain('const currentRoute = route ?? useRoute()')
+    expect(routeQueryTabsSource).toContain('const currentRouter = router ?? useRouter()')
   })
 
   it('竞赛排行列表不直接展开当前排行和历史排行内容', async () => {

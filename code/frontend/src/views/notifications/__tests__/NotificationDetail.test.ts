@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import NotificationDetail from '../NotificationDetail.vue'
 import notificationDetailSource from '../NotificationDetail.vue?raw'
+import notificationDetailPageSource from '@/features/notifications/model/useNotificationDetailPage.ts?raw'
 import { useNotificationStore } from '@/stores/notification'
 
 const notificationApiMocks = vi.hoisted(() => ({
@@ -26,8 +27,16 @@ function createTestRouter() {
   return createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/notifications', component: { template: '<div />' } },
-      { path: '/notifications/:id', component: NotificationDetail },
+      { path: '/notifications', name: 'Notifications', component: { template: '<div />' } },
+      { path: '/platform/overview', component: { template: '<div />' } },
+      { path: '/challenges/:id', component: { template: '<div />' } },
+      { path: '/contests/:id', component: { template: '<div />' } },
+      {
+        path: '/notifications/:id',
+        name: 'NotificationDetail',
+        component: NotificationDetail,
+        props: (route) => ({ id: String(route.params.id || '') }),
+      },
     ],
   })
 }
@@ -38,6 +47,9 @@ async function mountPage(path: string) {
   await router.isReady()
 
   const wrapper = mount(NotificationDetail, {
+    props: {
+      id: String(router.currentRoute.value.params.id || ''),
+    },
     global: {
       plugins: [router],
     },
@@ -87,8 +99,12 @@ describe('NotificationDetail', () => {
 
   it('路由页应仅负责组合，不直接耦合通知详情读取流程', () => {
     expect(notificationDetailSource).toContain('useNotificationDetailPage')
+    expect(notificationDetailSource).toContain("useNotificationDetailPage(toRef(props, 'id'))")
     expect(notificationDetailSource).not.toContain("from '@/api/notification'")
+    expect(notificationDetailSource).not.toContain('useRoute(')
+    expect(notificationDetailSource).not.toContain('useRouter(')
     expect(notificationDetailSource).not.toContain('watch(')
+    expect(notificationDetailPageSource).not.toContain("from 'vue-router'")
   })
 
   it('falls back to notifications list api when store does not contain the item', async () => {
@@ -159,7 +175,7 @@ describe('NotificationDetail', () => {
     expect(notificationDetailSource).not.toMatch(/^\.notification-detail-action--primary\s*\{/m)
   })
 
-  it('存在 link 时应显示关联入口，不再渲染静态禁用占位按钮', async () => {
+  it('存在站内 link 时应通过 route target 渲染关联入口', async () => {
     const store = useNotificationStore()
     store.setNotifications([
       {
@@ -177,6 +193,29 @@ describe('NotificationDetail', () => {
 
     expect(wrapper.text()).toContain('查看关联对象')
     expect(wrapper.find('button[disabled]').exists()).toBe(false)
+    expect(notificationDetailSource).toContain("import AppRouteLink from '@/components/navigation/AppRouteLink.vue'")
+    expect(wrapper.get('a[href="/challenges/9"]').text()).toContain('查看关联对象')
+  })
+
+  it('存在外链时应保留新窗口打开入口', async () => {
+    const store = useNotificationStore()
+    store.setNotifications([
+      {
+        id: '10',
+        type: 'system',
+        title: '外部公告',
+        content: '查看外部公告详情。',
+        link: 'https://example.com/announcements/10',
+        unread: false,
+        created_at: '2026-03-31T10:05:00Z',
+      },
+    ])
+
+    const { wrapper } = await mountPage('/notifications/10')
+
+    const relatedLink = wrapper.get('a[href="https://example.com/announcements/10"]')
+    expect(relatedLink.attributes('target')).toBe('_blank')
+    expect(relatedLink.attributes('rel')).toContain('noopener')
   })
 
   it('连续点击 ID 卡片后应短暂显示值守备注', async () => {

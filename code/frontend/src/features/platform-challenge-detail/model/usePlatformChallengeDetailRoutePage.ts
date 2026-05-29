@@ -1,5 +1,3 @@
-import { useRoute, useRouter } from 'vue-router'
-
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { usePlatformChallengeDetailPage } from './usePlatformChallengeDetailPage'
 
@@ -21,17 +19,12 @@ const panelTabs = [
 ]
 
 export function usePlatformChallengeDetailRoutePage() {
-  const route = useRoute()
-  const router = useRouter()
   const panelTabOrder = panelTabs.map((tab) => tab.key) as ChallengePanelKey[]
   const page = usePlatformChallengeDetailPage()
   const tabState = useRouteQueryTabs<ChallengePanelKey>({
-    route,
-    router,
     orderedTabs: panelTabOrder,
     defaultTab: 'detail',
     routeName: 'PlatformChallengeDetail',
-    routeParams: route.params,
   })
 
   return {

@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import { toRef } from 'vue'
 import { ArrowLeft, BellRing, CalendarClock, CircleCheckBig, Inbox } from 'lucide-vue-next'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import { accentColorMap, useNotificationDetailPage } from '@/features/notifications'
 import { formatDate } from '@/utils/format'
+
+const props = defineProps<{
+  id: string
+}>()
 
 const {
   loading,
@@ -10,12 +16,13 @@ const {
   probeMessage,
   notification,
   hasRelatedLink,
+  notificationsRoute,
+  relatedRoute,
+  relatedExternalHref,
   notificationAccent,
   notificationTypeLabel,
-  goBackToNotifications,
-  openRelatedLink,
   handleIdProbe,
-} = useNotificationDetailPage()
+} = useNotificationDetailPage(toRef(props, 'id'))
 </script>
 
 <template>
@@ -46,13 +53,9 @@ const {
             "
           >
             <template #action>
-              <button
-                type="button"
-                class="ui-btn ui-btn--primary"
-                @click="goBackToNotifications"
-              >
+              <AppRouteLink :to="notificationsRoute" class="ui-btn ui-btn--primary">
                 返回通知列表
-              </button>
+              </AppRouteLink>
             </template>
           </AppEmpty>
         </section>
@@ -63,14 +66,10 @@ const {
         >
           <header class="workspace-page-header notification-detail-header">
             <div class="notification-detail-header-main">
-              <button
-                type="button"
-                class="notification-detail-back"
-                @click="goBackToNotifications"
-              >
+              <AppRouteLink :to="notificationsRoute" class="notification-detail-back">
                 <ArrowLeft class="h-4 w-4" />
                 返回通知列表
-              </button>
+              </AppRouteLink>
 
               <div class="workspace-overline">Notification</div>
               <h1 class="notification-detail-title workspace-page-title">
@@ -145,24 +144,29 @@ const {
           <div class="notification-divider" />
 
           <footer class="notification-detail-footer">
-            <button
-              type="button"
-              class="ui-btn ui-btn--primary"
-              @click="goBackToNotifications"
-            >
+            <AppRouteLink :to="notificationsRoute" class="ui-btn ui-btn--primary">
               返回通知列表
-            </button>
-            <button
-              v-if="hasRelatedLink"
-              type="button"
+            </AppRouteLink>
+            <AppRouteLink
+              v-if="relatedRoute"
+              :to="relatedRoute"
               class="ui-btn ui-btn--secondary"
-              @click="openRelatedLink"
             >
               <Inbox class="h-4 w-4" />
               查看关联对象
-            </button>
+            </AppRouteLink>
+            <a
+              v-else-if="relatedExternalHref"
+              :href="relatedExternalHref"
+              class="ui-btn ui-btn--secondary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Inbox class="h-4 w-4" />
+              查看关联对象
+            </a>
             <div
-              v-else
+              v-else-if="!hasRelatedLink"
               class="notification-detail-related-empty"
             >
               当前通知没有可直接跳转的关联对象。

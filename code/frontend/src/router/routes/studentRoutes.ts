@@ -130,6 +130,9 @@ export const studentRoutes: RouteRecordRaw[] = [
     path: 'notifications/:id',
     name: 'NotificationDetail',
     component: () => import('@/views/notifications/NotificationDetail.vue'),
+    props: (route) => ({
+      id: String(route.params.id || ''),
+    }),
     meta: { requiresAuth: true, title: '通知详情', contentLayout: 'bleed' },
   },
 ]

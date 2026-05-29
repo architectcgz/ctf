@@ -1,7 +1,7 @@
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onBeforeUnmount, ref, watch, type ComputedRef, type Ref } from 'vue'
 
 import { getNotifications, markAsRead } from '@/api/notification'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { useToast } from '@/composables/useToast'
 import { useNotificationStore } from '@/stores/notification'
@@ -15,9 +15,13 @@ export const accentColorMap: Record<NotificationAccent, string> = {
   primary: 'var(--color-primary)',
 }
 
-export function useNotificationDetailPage() {
-  const route = useRoute()
-  const router = useRouter()
+const notificationsRoute: AppRouteTarget = { name: 'Notifications' }
+
+function isExternalLink(link: string): boolean {
+  return /^https?:\/\//.test(link)
+}
+
+export function useNotificationDetailPage(notificationId: Ref<string> | ComputedRef<string>) {
   const toast = useToast()
   const notificationStore = useNotificationStore()
   const { track } = useProbeEasterEggs()
@@ -28,11 +32,23 @@ export function useNotificationDetailPage() {
   const probeMessage = ref('')
   let probeMessageTimer: number | null = null
 
-  const notificationId = computed(() => String(route.params.id ?? ''))
   const notification = computed(
     () => notificationStore.notifications.find((item) => item.id === notificationId.value) ?? null
   )
-  const hasRelatedLink = computed(() => Boolean(notification.value?.link))
+  const relatedLink = computed(() => notification.value?.link?.trim() || '')
+  const relatedRoute = computed<AppRouteTarget | null>(() => {
+    if (!relatedLink.value || isExternalLink(relatedLink.value)) {
+      return null
+    }
+    return relatedLink.value
+  })
+  const relatedExternalHref = computed<string | null>(() => {
+    if (!relatedLink.value || !isExternalLink(relatedLink.value)) {
+      return null
+    }
+    return relatedLink.value
+  })
+  const hasRelatedLink = computed(() => Boolean(relatedRoute.value || relatedExternalHref.value))
 
   function notificationAccent(type: string): NotificationAccent {
     if (type === 'contest') return 'warning'
@@ -83,24 +99,6 @@ export function useNotificationDetailPage() {
     }
   }
 
-  function goBackToNotifications() {
-    void router.push('/notifications')
-  }
-
-  function openRelatedLink() {
-    const link = notification.value?.link
-    if (!link) {
-      return
-    }
-
-    if (/^https?:\/\//.test(link)) {
-      window.open(link, '_blank', 'noopener,noreferrer')
-      return
-    }
-
-    void router.push(link)
-  }
-
   function showProbeMessage(message: string) {
     probeMessage.value = message
     if (probeMessageTimer) {
@@ -145,10 +143,11 @@ export function useNotificationDetailPage() {
     probeMessage,
     notification,
     hasRelatedLink,
+    notificationsRoute,
+    relatedRoute,
+    relatedExternalHref,
     notificationAccent,
     notificationTypeLabel,
-    goBackToNotifications,
-    openRelatedLink,
     handleIdProbe,
   }
 }
