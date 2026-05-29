@@ -4,12 +4,15 @@ import { AlertCircle, ShieldCheck } from 'lucide-vue-next'
 
 import type { AWDReadinessData, AWDReadinessItemData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
 
 const props = withDefaults(
   defineProps<{
     readiness: AWDReadinessData | null
     actionLabel?: string
     hideActions?: boolean
+    buildEditRoute?: (challengeId: string) => AppRouteTarget | null
   }>(),
   {
     actionLabel: '编辑配置',
@@ -101,6 +104,10 @@ function getActionLabel(item: AWDReadinessItemData): string {
     default:
       return props.actionLabel
   }
+}
+
+function getEditRoute(challengeId: string): AppRouteTarget | null {
+  return props.buildEditRoute?.(challengeId) ?? null
 }
 
 function formatDateTime(value?: string): string {
@@ -250,7 +257,16 @@ function formatDateTime(value?: string): string {
                 class="col-actions"
               >
                 <div class="ui-row-actions readiness-row__actions">
+                  <AppRouteLink
+                    v-if="getEditRoute(item.awd_challenge_id)"
+                    :id="`awd-readiness-edit-${item.awd_challenge_id}`"
+                    class="ui-btn ui-btn--sm ui-btn--secondary"
+                    :to="getEditRoute(item.awd_challenge_id)!"
+                  >
+                    {{ getActionLabel(item) }}
+                  </AppRouteLink>
                   <button
+                    v-else
                     :id="`awd-readiness-edit-${item.awd_challenge_id}`"
                     class="ui-btn ui-btn--sm ui-btn--secondary"
                     @click="emit('editConfig', item.awd_challenge_id)"

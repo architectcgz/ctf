@@ -1,25 +1,23 @@
 <script setup lang="ts">
 import { Bell, Save, ShieldCheck, Trophy } from 'lucide-vue-next'
 
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { ContestAnnouncementsRouteTarget } from '../model'
+
 defineProps<{
   pageTitle: string
   contestMode: string
   contestStatus: string
   contestModeLabel: string
   contestStatusLabel: string
+  announcementsRoute: ContestAnnouncementsRouteTarget
   activeStage: string
   saving: boolean
 }>()
 
 const emit = defineEmits<{
-  back: []
-  openAnnouncements: []
   save: []
 }>()
-
-function handleOpenAnnouncements(): void {
-  emit('openAnnouncements')
-}
 
 function handleSave(): void {
   emit('save')
@@ -56,15 +54,14 @@ function handleSave(): void {
     </div>
 
     <div class="top-note">
-      <button
+      <AppRouteLink
         id="contest-open-announcements"
-        type="button"
         class="ui-btn ui-btn--secondary studio-toolbar-btn"
-        @click="handleOpenAnnouncements"
+        :to="announcementsRoute"
       >
         <Bell class="h-3.5 w-3.5" />
         <span>公告管理</span>
-      </button>
+      </AppRouteLink>
 
       <div class="ops-divider" />
 

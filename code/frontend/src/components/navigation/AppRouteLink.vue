@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import type { RouteLocationRaw } from 'vue-router'
 import { RouterLink } from 'vue-router'
+
+import type { AppRouteTarget } from './routeTarget'
 
 defineOptions({
   inheritAttrs: false,
 })
 
 defineProps<{
-  to: RouteLocationRaw
+  to: AppRouteTarget
 }>()
 </script>
 

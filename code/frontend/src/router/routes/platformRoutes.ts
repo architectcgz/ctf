@@ -282,6 +282,9 @@ export const platformRoutes: RouteRecordRaw[] = [
   path: 'platform/contests/:id/edit',
   name: 'ContestEdit',
   component: () => import('@/views/platform/ContestEdit.vue'),
+  props: (route) => ({
+    contestId: String(route.params.id || ''),
+  }),
   meta: {
     requiresAuth: true,
     roles: ['admin'],

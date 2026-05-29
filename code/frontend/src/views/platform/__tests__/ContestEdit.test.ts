@@ -1,17 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 import { computed, defineComponent, ref, watch } from 'vue'
 
 import ContestEdit from '../ContestEdit.vue'
 import contestEditSource from '../ContestEdit.vue?raw'
+import contestEditPageModelSource from '@/features/platform-contests/model/useContestEditPage.ts?raw'
+import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
 import { ApiError } from '@/api/request'
 import type { ContestDetailData } from '@/api/contracts'
 import type { VueWrapper } from '@vue/test-utils'
 
 const pushMock = vi.fn()
-const routeState = vi.hoisted(() => ({
-  params: { id: 'contest-1' } as Record<string, string>,
-}))
 
 const contestApiMocks = vi.hoisted(() => ({
   getContest: vi.fn(),
@@ -41,7 +40,6 @@ vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
   return {
     ...actual,
-    useRoute: () => routeState,
     useRouter: () => ({ push: pushMock, replace: vi.fn(), back: vi.fn() }),
   }
 })
@@ -273,6 +271,9 @@ const ContestChallengeEditorDialogStub = defineComponent({
 
 function mountContestEdit() {
   return mount(ContestEdit, {
+    props: {
+      contestId: 'contest-1',
+    },
     global: {
       stubs: {
         ContestChallengeEditorDialog: ContestChallengeEditorDialogStub,
@@ -295,10 +296,7 @@ function mountContestEdit() {
           props: ['modelValue', 'title'],
           template: '<div><div v-if="title">{{ title }}</div><slot /><slot name="footer" /></div>',
         },
-        RouterLink: {
-          props: ['to'],
-          template: '<a><slot /></a>',
-        },
+        RouterLink: RouterLinkStub,
       },
     },
   })
@@ -306,6 +304,9 @@ function mountContestEdit() {
 
 function mountContestEditWithRealChallengeDialog() {
   return mount(ContestEdit, {
+    props: {
+      contestId: 'contest-1',
+    },
     global: {
       stubs: {
         AdminSurfaceModal: {
@@ -327,10 +328,7 @@ function mountContestEditWithRealChallengeDialog() {
           props: ['modelValue', 'title'],
           template: '<div><div v-if="title">{{ title }}</div><slot /><slot name="footer" /></div>',
         },
-        RouterLink: {
-          props: ['to'],
-          template: '<a><slot /></a>',
-        },
+        RouterLink: RouterLinkStub,
       },
     },
   })
@@ -348,6 +346,10 @@ function createDeferred<T>() {
 
 function getWorkbenchStageRail(wrapper: VueWrapper<any>) {
   return wrapper.get('[role="tablist"][aria-label="竞赛工作台阶段切换"]')
+}
+
+function findRouteLink(wrapper: VueWrapper<any>, id: string) {
+  return wrapper.findAllComponents(RouterLinkStub).find((link) => link.attributes('id') === id)
 }
 
 async function submitContestBasicsForm(wrapper: VueWrapper<any>) {
@@ -377,7 +379,6 @@ describe('ContestEdit', () => {
     toastMocks.error.mockReset()
     toastMocks.warning.mockReset()
     toastMocks.info.mockReset()
-    routeState.params = { id: 'contest-1' }
 
     contestApiMocks.getContest.mockResolvedValue({
       id: 'contest-1',
@@ -579,15 +580,18 @@ describe('ContestEdit', () => {
   it('路由页应仅负责组合，不直接耦合竞赛编辑加载与保存流程', () => {
     expect(contestEditSource).toContain('useContestEditPage')
     expect(contestEditSource).not.toContain("from '@/api/admin/contests'")
+    expect(contestEditPageModelSource).not.toContain("from 'vue-router'")
+    expect(platformRoutesSource).toContain("name: 'ContestEdit'")
+    expect(platformRoutesSource).toContain("component: () => import('@/views/platform/ContestEdit.vue')")
+    expect(platformRoutesSource).toContain('contestId: String(route.params.id || \'\')')
   })
 
-  it('顶部应提供公告入口并跳转到单场公告管理页', async () => {
+  it('顶部应提供公告入口 route target', async () => {
     const wrapper = mountContestEdit()
 
     await flushPromises()
-    await wrapper.get('#contest-open-announcements').trigger('click')
 
-    expect(pushMock).toHaveBeenCalledWith({
+    expect(findRouteLink(wrapper, 'contest-open-announcements')?.props('to')).toEqual({
       name: 'ContestAnnouncements',
       params: { id: 'contest-1' },
     })
@@ -657,10 +661,7 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).toContain('编辑并试跑')
     expect(wrapper.find('#contest-awd-preflight-force-start').exists()).toBe(false)
 
-    await wrapper.get('#awd-readiness-edit-1').trigger('click')
-    await flushPromises()
-
-    expect(pushMock).toHaveBeenCalledWith({
+    expect(findRouteLink(wrapper, 'awd-readiness-edit-1')?.props('to')).toEqual({
       name: 'ContestAWDConfig',
       params: { id: 'contest-1' },
       query: { service: 'service-1' },
@@ -896,6 +897,7 @@ describe('ContestEdit', () => {
 
     await wrapper.get('#contest-title').setValue('2026 春季校园 CTF（更新）')
     await submitContestBasicsForm(wrapper)
+    await flushPromises()
 
     expect(contestApiMocks.updateContest).toHaveBeenCalledWith(
       'contest-1',

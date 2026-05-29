@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import type {
   AdminContestChallengeViewData,
   AWDReadinessData,
   ContestDetailData,
 } from '@/api/contracts'
 import type {
+  ContestAwdConfigRouteTarget,
+  ContestManageListRouteTarget,
   ContestFieldLocks,
   ContestFormDraft,
   PlatformContestStatus,
@@ -21,6 +24,7 @@ import PlatformContestFormPanel from './PlatformContestFormPanel.vue'
 
 defineProps<{
   loadError: string
+  backRoute: ContestManageListRouteTarget
   formDraft: ContestFormDraft | null
   contest: ContestDetailData | null
   activeStage: ContestWorkbenchStageKey
@@ -32,17 +36,19 @@ defineProps<{
   awdChallengePoolCreateRequestKey: number
   awdPreflightLoadError: string
   awdReadiness: AWDReadinessData | null
+  buildAwdConfigRoute: (
+    challenge: AdminContestChallengeViewData
+  ) => ContestAwdConfigRouteTarget | null
+  resolveAwdConfigRouteFromPreflight: (
+    challengeId: string
+  ) => ContestAwdConfigRouteTarget | null
 }>()
 
 const emit = defineEmits<{
-  (event: 'go-back'): void
   (event: 'update:draft', value: ContestFormDraft): void
   (event: 'save', draft: ContestFormDraft): void
   (event: 'refresh-awd-workbench'): void
-  (event: 'edit:awd-challenge', challenge: AdminContestChallengeViewData): void
   (event: 'retry:preflight'): void
-  (event: 'navigate:awd-challenge-from-preflight', challengeId: string): void
-  (event: 'navigate:stage', stage: ContestWorkbenchStageKey): void
 }>()
 </script>
 
@@ -56,13 +62,12 @@ const emit = defineEmits<{
         icon="AlertTriangle"
       >
         <template #action>
-          <button
-            type="button"
+          <AppRouteLink
             class="ui-btn ui-btn--ghost"
-            @click="emit('go-back')"
+            :to="backRoute"
           >
             返回竞赛目录
-          </button>
+          </AppRouteLink>
         </template>
       </AppEmpty>
 
@@ -118,7 +123,7 @@ const emit = defineEmits<{
             <AWDChallengeConfigPanel
               v-else
               :challenge-links="awdChallengeLinks"
-              @edit="emit('edit:awd-challenge', $event)"
+              :build-edit-route="buildAwdConfigRoute"
             />
           </div>
 
@@ -147,8 +152,7 @@ const emit = defineEmits<{
               v-else
               :readiness="awdReadiness"
               :loading="loadingAwdStageData"
-              @navigate:challenge="emit('navigate:awd-challenge-from-preflight', $event)"
-              @navigate:stage="emit('navigate:stage', $event)"
+              :resolve-challenge-route="resolveAwdConfigRouteFromPreflight"
             />
           </div>
 

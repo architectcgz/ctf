@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { toRef } from 'vue'
+
 import AppLoading from '@/components/common/AppLoading.vue'
+import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'
 import { ContestWorkbenchStageTabs } from '@/features/contest-workbench'
 import {
   ContestEditTopbarPanel,
@@ -7,10 +10,15 @@ import {
   useContestEditPage,
 } from '@/features/platform-contests'
 
+const props = defineProps<{
+  contestId: string
+}>()
+
 const {
   loading,
   loadError,
   saving,
+  saveSuccessRedirectRoute,
   contest,
   formDraft,
   fieldLocks,
@@ -26,19 +34,20 @@ const {
   loadingAwdStageData,
   refreshAwdWorkbenchData,
   handleDraftChange,
-  goBackToContestList,
-  goToContestAnnouncements,
-  handleWorkspaceStageNavigation,
-  openAwdConfigPage,
-  handleNavigateAwdChallengeFromPreflight,
+  backToContestListRoute,
+  contestAnnouncementsRoute,
+  buildAwdConfigRoute,
+  resolveAwdConfigRouteFromPreflight,
   handleSave,
   getModeLabel,
   getStatusLabel,
-} = useContestEditPage()
+} = useContestEditPage(toRef(props, 'contestId'))
 </script>
 
 <template>
   <div class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero contest-studio-shell">
+    <AppRouteRedirect :to="saveSuccessRedirectRoute" />
+
     <div
       v-if="loading"
       class="studio-loading-overlay"
@@ -54,10 +63,9 @@ const {
         :contest-status="contest.status"
         :contest-mode-label="getModeLabel(contest.mode)"
         :contest-status-label="getStatusLabel(contest.status)"
+        :announcements-route="contestAnnouncementsRoute"
         :active-stage="activeStage"
         :saving="saving"
-        @back="goBackToContestList"
-        @open-announcements="goToContestAnnouncements"
         @save="formDraft && void handleSave(formDraft)"
       />
 
@@ -70,6 +78,7 @@ const {
 
       <ContestEditWorkspacePanel
         :load-error="loadError"
+        :back-route="backToContestListRoute"
         :form-draft="formDraft"
         :contest="contest"
         :active-stage="activeStage"
@@ -81,14 +90,12 @@ const {
         :awd-challenge-pool-create-request-key="awdChallengePoolCreateRequestKey"
         :awd-preflight-load-error="awdPreflightLoadError"
         :awd-readiness="awdReadiness"
-        @go-back="goBackToContestList"
+        :build-awd-config-route="buildAwdConfigRoute"
+        :resolve-awd-config-route-from-preflight="resolveAwdConfigRouteFromPreflight"
         @update:draft="handleDraftChange"
         @save="handleSave"
         @refresh-awd-workbench="contest && void refreshAwdWorkbenchData(contest.id)"
-        @edit:awd-challenge="openAwdConfigPage"
         @retry:preflight="contest && void refreshAwdWorkbenchData(contest.id)"
-        @navigate:awd-challenge-from-preflight="handleNavigateAwdChallengeFromPreflight"
-        @navigate:stage="handleWorkspaceStageNavigation"
       />
     </main>
   </div>

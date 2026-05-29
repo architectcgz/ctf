@@ -1,22 +1,14 @@
 <script setup lang="ts">
 import type { AWDReadinessData } from '@/api/contracts'
+import type { ContestAwdConfigRouteTarget } from '../model'
 
 import { AWDReadinessChecklist, AWDReadinessDecisionHUD } from '@/features/awd-readiness'
 
-const props = defineProps<{
+defineProps<{
   readiness: AWDReadinessData | null
   loading: boolean
+  resolveChallengeRoute: (challengeId: string) => ContestAwdConfigRouteTarget | null
 }>()
-
-const emit = defineEmits<{
-  'navigate:challenge': [challengeId: string]
-  'navigate:stage': [stage: 'awd-config']
-}>()
-
-function handleNavigateChallenge(challengeId: string) {
-  emit('navigate:challenge', challengeId)
-  emit('navigate:stage', 'awd-config')
-}
 </script>
 
 <template>
@@ -43,7 +35,7 @@ function handleNavigateChallenge(challengeId: string) {
       :readiness="readiness"
       action-label="修正配置"
       data-primary-action-class="ui-btn ui-btn--primary"
-      @edit-config="handleNavigateChallenge"
+      :build-edit-route="resolveChallengeRoute"
     />
   </section>
 </template>

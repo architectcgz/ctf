@@ -5,6 +5,13 @@ export interface ContestEditRouteTarget {
   }
 }
 
+export interface ContestManageListRouteTarget {
+  name: 'ContestManage'
+  query: {
+    panel: 'list'
+  }
+}
+
 export interface ContestOperationsRouteTarget {
   name: 'ContestOperations'
   params: {
@@ -19,10 +26,27 @@ export interface ContestAnnouncementsRouteTarget {
   }
 }
 
+export interface ContestAwdConfigRouteTarget {
+  name: 'ContestAWDConfig'
+  params: {
+    id: string
+  }
+  query?: {
+    service: string
+  }
+}
+
 export function buildContestEditRoute(id: string): ContestEditRouteTarget {
   return {
     name: 'ContestEdit',
     params: { id },
+  }
+}
+
+export function buildContestManageListRoute(): ContestManageListRouteTarget {
+  return {
+    name: 'ContestManage',
+    query: { panel: 'list' },
   }
 }
 
@@ -37,5 +61,16 @@ export function buildContestAnnouncementsRoute(id: string): ContestAnnouncements
   return {
     name: 'ContestAnnouncements',
     params: { id },
+  }
+}
+
+export function buildContestAwdConfigRoute(
+  id: string,
+  serviceId?: string
+): ContestAwdConfigRouteTarget {
+  return {
+    name: 'ContestAWDConfig',
+    params: { id },
+    query: serviceId ? { service: serviceId } : undefined,
   }
 }

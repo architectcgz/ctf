@@ -1,9 +1,11 @@
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, onUnmounted, ref, type ComputedRef, type Ref } from 'vue'
 
 import { getContest, updateContest } from '@/api/admin/contests'
 import type { AdminContestChallengeViewData, ContestDetailData } from '@/api/contracts'
 import {
+  buildContestAnnouncementsRoute,
+  buildContestAwdConfigRoute,
+  buildContestManageListRoute,
   buildContestUpdatePayload,
   confirmContestTermination,
   createContestStatusOptions,
@@ -24,16 +26,15 @@ import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadc
 import { useToast } from '@/composables/useToast'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
-export function useContestEditPage() {
-  const route = useRoute()
-  const router = useRouter()
+export function useContestEditPage(contestId: Ref<string> | ComputedRef<string>) {
   const toast = useToast()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
+  const backToContestListRoute = buildContestManageListRoute()
 
-  const contestId = computed(() => String(route.params.id ?? ''))
   const loading = ref(true)
   const loadError = ref('')
   const saving = ref(false)
+  const saveSuccessRedirectRoute = ref<ReturnType<typeof buildContestManageListRoute> | null>(null)
   const contest = ref<ContestDetailData | null>(null)
   const editingBaseStatus = ref<PlatformContestStatus | null>(null)
   const formDraft = ref<ContestFormDraft | null>(null)
@@ -91,6 +92,7 @@ export function useContestEditPage() {
 
   async function loadContestDetail(): Promise<void> {
     if (!contestId.value) {
+      loading.value = false
       setBreadcrumbDetailTitle()
       return
     }
@@ -111,38 +113,21 @@ export function useContestEditPage() {
     }
   }
 
-  function goBackToContestList() {
-    void router.push({ name: 'ContestManage', query: { panel: 'list' } })
+  function buildAwdConfigRoute(challenge: AdminContestChallengeViewData) {
+    if (!contestId.value) {
+      return null
+    }
+    return buildContestAwdConfigRoute(contestId.value, challenge.awd_service_id)
   }
 
-  function goToContestAnnouncements() {
-    void router.push({ name: 'ContestAnnouncements', params: { id: contestId.value } })
-  }
-
-  function handleWorkspaceStageNavigation(stage: ContestWorkbenchStageKey) {
-    selectTab(stage)
-  }
-
-  function openAwdConfigPage(challenge: AdminContestChallengeViewData) {
-    if (!contest.value) return
-    void router.push({
-      name: 'ContestAWDConfig',
-      params: { id: contest.value.id },
-      query: challenge.awd_service_id ? { service: challenge.awd_service_id } : undefined,
-    })
-  }
-
-  function handleNavigateAwdChallengeFromPreflight(challengeId: string) {
+  function resolveAwdConfigRouteFromPreflight(challengeId: string) {
+    if (!contestId.value) {
+      return null
+    }
     const challenge = awdChallengeLinks.value.find(
       (item) => item.awd_challenge_id === challengeId || item.challenge_id === challengeId
     )
-    if (challenge) {
-      openAwdConfigPage(challenge)
-      return
-    }
-    if (contest.value) {
-      void router.push({ name: 'ContestAWDConfig', params: { id: contest.value.id } })
-    }
+    return buildContestAwdConfigRoute(contestId.value, challenge?.awd_service_id)
   }
 
   async function handleSave(draft: ContestFormDraft): Promise<void> {
@@ -158,7 +143,7 @@ export function useContestEditPage() {
       }
       await updateContest(contestId.value, payload)
       toast.success('竞赛已更新')
-      goBackToContestList()
+      saveSuccessRedirectRoute.value = backToContestListRoute
     } catch (error) {
       toast.error(humanizeRequestError(error, '更新失败'))
     } finally {
@@ -192,6 +177,7 @@ export function useContestEditPage() {
     loading,
     loadError,
     saving,
+    saveSuccessRedirectRoute,
     contest,
     formDraft,
     fieldLocks,
@@ -207,11 +193,10 @@ export function useContestEditPage() {
     loadingAwdStageData,
     refreshAwdWorkbenchData,
     handleDraftChange,
-    goBackToContestList,
-    goToContestAnnouncements,
-    handleWorkspaceStageNavigation,
-    openAwdConfigPage,
-    handleNavigateAwdChallengeFromPreflight,
+    backToContestListRoute,
+    contestAnnouncementsRoute: computed(() => buildContestAnnouncementsRoute(contestId.value)),
+    buildAwdConfigRoute,
+    resolveAwdConfigRouteFromPreflight,
     handleSave,
     getModeLabel,
     getStatusLabel,
