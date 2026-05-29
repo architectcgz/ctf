@@ -4,17 +4,8 @@ import { dirname, join, normalize, relative, resolve, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import {
-  commonForbiddenImportAllowlist,
-  componentFeatureImportAllowlist,
-  componentNonContractApiAllowlist,
-  composableMultiBoundaryAllowlist,
   featureRouterImportAllowlist,
-  legacyComponentPageAllowlist,
-  oversizedViewAllowlist,
-  utilityBoundaryImportAllowlist,
   viewLineLimit,
-  widgetLegacyComponentImportAllowlist,
-  widgetNonContractApiAllowlist,
 } from './architectureAllowlist'
 
 const sourceRoot = join(process.cwd(), 'src')
@@ -158,7 +149,7 @@ describe('frontend architecture boundaries', () => {
       file.relativePath.startsWith(`components${sep}`)
     )
     const featureImports = collectImportKeys(componentFiles, '@/features')
-    expectBaseline(featureImports, componentFeatureImportAllowlist, 'component feature imports')
+    expect(featureImports).toEqual([])
   })
 
   it('widgets should not add new dependencies on legacy business component directories', () => {
@@ -173,11 +164,7 @@ describe('frontend architecture boundaries', () => {
         )
         .map((importPath) => `${file.relativePath} -> ${importPath}`)
     })
-    expectBaseline(
-      legacyComponentImports,
-      widgetLegacyComponentImportAllowlist,
-      'widget legacy component imports'
-    )
+    expect(legacyComponentImports).toEqual([])
   })
 
   it('new route views should stay below the page-size threshold', () => {
@@ -190,14 +177,9 @@ describe('frontend architecture boundaries', () => {
       .filter(({ lines }) => lines > viewLineLimit)
 
     const violations = oversizedViews
-      .filter(({ file }) => !oversizedViewAllowlist.has(file))
       .map(({ file, lines }) => `${file} has ${lines} lines`)
-    const staleAllowlistEntries = Array.from(oversizedViewAllowlist).filter(
-      (file) => !oversizedViews.some((view) => view.file === file)
-    )
 
     expect(violations).toEqual([])
-    expect(staleAllowlistEntries).toEqual([])
   })
 
   it('components and widgets should not add new non-contract API imports', () => {
@@ -213,8 +195,8 @@ describe('frontend architecture boundaries', () => {
       (key) => !key.includes(' -> @/api/contracts')
     )
 
-    expectBaseline(componentApiImports, componentNonContractApiAllowlist, 'component API imports')
-    expectBaseline(widgetApiImports, widgetNonContractApiAllowlist, 'widget API imports')
+    expect(componentApiImports).toEqual([])
+    expect(widgetApiImports).toEqual([])
   })
 
   it('common and entity layers should stay free of app services, router, and stores', () => {
@@ -235,7 +217,7 @@ describe('frontend architecture boundaries', () => {
         .map((importPath) => `${file.relativePath} -> ${importPath}`)
     })
 
-    expectBaseline(forbiddenImports, commonForbiddenImportAllowlist, 'low-level forbidden imports')
+    expect(forbiddenImports).toEqual([])
   })
 
   it('feature UI files should not import non-contract API modules directly', () => {
@@ -257,7 +239,7 @@ describe('frontend architecture boundaries', () => {
       .filter((relativePath) => relativePath.startsWith(`components${sep}`))
       .filter((relativePath) => /Page\.vue$/.test(relativePath))
 
-    expectBaseline(componentPageFiles, legacyComponentPageAllowlist, 'legacy component page files')
+    expect(componentPageFiles).toEqual([])
   })
 
   it('stores and utilities should not depend on UI or app orchestration layers', () => {
@@ -277,7 +259,7 @@ describe('frontend architecture boundaries', () => {
     )
 
     expect(storeForbiddenImports).toEqual([])
-    expectBaseline(utilityForbiddenImports, utilityBoundaryImportAllowlist, 'utility imports')
+    expect(utilityForbiddenImports).toEqual([])
   })
 
   it('feature router access should stay in reviewed route-aware composables', () => {
@@ -323,6 +305,6 @@ describe('frontend architecture boundaries', () => {
       })
       .filter(Boolean)
 
-    expectBaseline(mixedComposables, composableMultiBoundaryAllowlist, 'mixed shared composables')
+    expect(mixedComposables).toEqual([])
   })
 })

@@ -1,19 +1,5 @@
 export const viewLineLimit = 500
 
-export const oversizedViewAllowlist = new Set<string>([])
-
-export const componentFeatureImportAllowlist = new Set<string>([])
-
-export const widgetLegacyComponentImportAllowlist = new Set<string>([])
-
-export const componentNonContractApiAllowlist = new Set<string>([])
-
-export const widgetNonContractApiAllowlist = new Set<string>([])
-
-export const commonForbiddenImportAllowlist = new Set<string>([])
-
-export const legacyComponentPageAllowlist = new Set<string>([])
-
 export const featureRouterImportAllowlist = new Set([
   'features/audit-log/model/useAuditLogPage.ts -> vue-router',
   'features/auth/model/useAuth.ts -> vue-router',
@@ -28,7 +14,6 @@ export const featureRouterImportAllowlist = new Set([
   'features/contest-detail/model/useContestDetailRoutePage.ts -> vue-router',
   'features/contest-detail/model/useContestListPage.ts -> vue-router',
   'features/notifications/model/useNotificationDetailPage.ts -> vue-router',
-  'features/notifications/model/useNotificationDrawer.ts -> vue-router',
   'features/notifications/model/useNotificationListPage.ts -> vue-router',
   'features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts -> vue-router',
   'features/platform-awd-challenges/model/useAwdChallengeLibraryPage.ts -> vue-router',
@@ -65,7 +50,3 @@ export const featureRouterImportAllowlist = new Set([
   'features/teacher-instances/model/useInstanceManagementPage.ts -> vue-router',
   'features/teacher-student-management/model/useStudentManagementPage.ts -> vue-router',
 ])
-
-export const utilityBoundaryImportAllowlist = new Set<string>([])
-
-export const composableMultiBoundaryAllowlist = new Set<string>([])

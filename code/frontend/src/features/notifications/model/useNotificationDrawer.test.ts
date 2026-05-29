@@ -23,4 +23,13 @@ describe('useNotificationDrawer', () => {
     expect(notificationDrawerComposableSource).not.toContain('#8b5cf6')
     expect(notificationDrawerComposableSource).not.toContain('#a78bfa')
   })
+
+  it('keeps notification navigation outside the feature workflow owner', () => {
+    expect(notificationDrawerComposableSource).not.toContain("from 'vue-router'")
+    expect(notificationDrawerComposableSource).not.toContain('useRouter(')
+    expect(notificationDrawerComposableSource).not.toContain("router.push('/notifications')")
+    expect(notificationDrawerComposableSource).not.toContain('router.push(`/notifications/${encodeURIComponent(id)}`)')
+    expect(notificationDrawerComposableSource).toContain('goToNotifications: () => void')
+    expect(notificationDrawerComposableSource).toContain('goToNotificationDetail: (id: string) => void')
+  })
 })

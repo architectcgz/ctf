@@ -1,7 +1,6 @@
 import type { Component, ComponentPublicInstance } from 'vue'
 import { Flag, GraduationCap, Info, Trophy } from 'lucide-vue-next'
 import { computed, nextTick, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { markAsRead as markAsReadApi } from '@/api/notification'
 import { useToast } from '@/composables/useToast'
@@ -19,6 +18,11 @@ export interface NotificationTypeMeta {
 interface StatusMeta {
   label: string
   accentColor: string
+}
+
+interface UseNotificationDrawerActions {
+  goToNotifications: () => void
+  goToNotificationDetail: (id: string) => void
 }
 
 function createNotificationTypeMeta(
@@ -52,8 +56,12 @@ const typeMap: Record<string, NotificationTypeMeta> = {
 
 const fallbackTypeMeta: NotificationTypeMeta = typeMap.system
 
-export function useNotificationDrawer(realtimeStatus: () => WebSocketStatus) {
-  const router = useRouter()
+export function useNotificationDrawer(
+  realtimeStatus: () => WebSocketStatus,
+  actions: UseNotificationDrawerActions
+) {
+  const { goToNotificationDetail: navigateToNotificationDetail, goToNotifications: navigateToNotifications } =
+    actions
   const store = useNotificationStore()
   const toast = useToast()
   const open = ref(false)
@@ -112,12 +120,12 @@ export function useNotificationDrawer(realtimeStatus: () => WebSocketStatus) {
 
   function goToNotifications() {
     close()
-    void router.push('/notifications')
+    navigateToNotifications()
   }
 
   function goToNotificationDetail(id: string) {
     close()
-    void router.push(`/notifications/${encodeURIComponent(id)}`)
+    navigateToNotificationDetail(id)
   }
 
   async function markAllRead() {
