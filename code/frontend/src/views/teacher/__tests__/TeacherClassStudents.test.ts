@@ -25,6 +25,7 @@ const ElButton = { template: '<button><slot /></button>' }
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
 const routeMock = {
+  name: 'TeacherClassStudents',
   params: {
     className: 'Class A',
   },
@@ -76,6 +77,7 @@ describe('TeacherClassStudents', () => {
     localStorage.clear()
     pushMock.mockReset()
     replaceMock.mockReset()
+    routeMock.name = 'TeacherClassStudents'
     routeMock.params.className = 'Class A'
     routeMock.query.panel = 'students'
     delete routeMock.query.from_date
@@ -345,8 +347,43 @@ describe('TeacherClassStudents', () => {
     expect(teacherClassStudentsSource).not.toContain('ClassReportExportDialog.vue')
     expect(classStudentsPageModelSource).toContain('parseClassInsightWindowQuery')
     expect(classStudentsPageModelSource).toContain('buildClassInsightWindowQuery')
+    expect(classStudentsPageModelSource).toContain(
+      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+    )
+    expect(classStudentsPageModelSource).toContain(
+      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+    )
+    expect(classStudentsPageModelSource).toContain("from './classStudentsRoutes'")
+    expect(classStudentsPageModelSource).toContain('classStudentsClassManagementRoute')
+    expect(classStudentsPageModelSource).toContain('classStudentsDashboardRoute')
+    expect(classStudentsPageModelSource).toContain('classStudentsStudentAnalysisRoute')
+    expect(classStudentsPageModelSource).not.toContain("from 'vue-router'")
+    expect(classStudentsPageModelSource).not.toContain('useRoute(')
+    expect(classStudentsPageModelSource).not.toContain('useRouter(')
+    expect(classStudentsPageModelSource).toContain(
+      'const { name: routeName, params, query, replaceQuery } = useRouteQueryTransport()'
+    )
+    expect(classStudentsPageModelSource).toContain(
+      'const { push, replace } = useRouteNavigationTransport()'
+    )
+    expect(classStudentsPageModelSource).toContain('await replace(canonicalWorkspaceTarget.value)')
+    expect(classStudentsPageModelSource).toContain(
+      'await replaceQuery(nextQuery)'
+    )
+    expect(classStudentsPageModelSource).toContain(
+      'void push(classStudentsClassManagementRoute(authStore.user?.role))'
+    )
+    expect(classStudentsPageModelSource).toContain(
+      'void push(classStudentsDashboardRoute(authStore.user?.role))'
+    )
+    expect(classStudentsPageModelSource).toContain(
+      'classStudentsStudentAnalysisRoute(authStore.user?.role, studentId, selectedClassName.value)'
+    )
     expect(classStudentsPageModelSource).not.toContain('parseTeacherClassInsightWindowQuery')
     expect(classStudentsPageModelSource).not.toContain('buildTeacherClassInsightWindowQuery')
+    expect(classStudentsPageModelSource).not.toContain('resolveClassManagementRouteName')
+    expect(classStudentsPageModelSource).not.toContain('resolveStudentAnalysisRouteName')
+    expect(classStudentsPageModelSource).not.toContain('resolveTeachingDashboardRouteName')
   })
 
   it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {

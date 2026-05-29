@@ -1,5 +1,4 @@
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
 
 import { getClassReview, getClassSummary, getClassTrend } from '@/api/teaching'
 import type {
@@ -16,19 +15,34 @@ import {
   parseClassInsightWindowQuery,
 } from '@/features/class-insight-window'
 import { useStudentFilters, useStudentListQuery } from '@/features/student-directory'
+import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
-  resolveClassManagementRouteName,
-  resolveStudentAnalysisRouteName,
-  resolveTeachingDashboardRouteName,
-} from '@/utils/teachingWorkspaceRouting'
+  classStudentsClassManagementRoute,
+  classStudentsDashboardRoute,
+  classStudentsStudentAnalysisRoute,
+} from './classStudentsRoutes'
 import { useClassWorkspaceSection } from './useClassWorkspaceSection'
 
 export function useClassStudentsPage() {
-  const route = useRoute()
-  const router = useRouter()
+  const { name: routeName, params, query, replaceQuery } = useRouteQueryTransport()
+  const { push, replace } = useRouteNavigationTransport()
   const authStore = useAuthStore()
+  const route = {
+    get name() {
+      return routeName.value
+    },
+    get params() {
+      return {
+        className: params.value.className as string | string[] | null | undefined,
+      }
+    },
+    get query() {
+      return query.value
+    },
+  }
   const { canonicalWorkspaceTarget } = useClassWorkspaceSection({
     route,
   })
@@ -50,8 +64,8 @@ export function useClassStudentsPage() {
   const { selectedClassName, studentNoQuery } = filters
   const { students, loading: loadingStudents } = studentListQuery
   const error = computed(() => workspaceError.value ?? studentListQuery.error.value)
-  const activeInsightWindow = computed(() => parseClassInsightWindowQuery(route.query))
-  const insightWindowDraft = ref(parseClassInsightWindowQuery(route.query))
+  const activeInsightWindow = computed(() => parseClassInsightWindowQuery(query.value))
+  const insightWindowDraft = ref(parseClassInsightWindowQuery(query.value))
   const insightWindowError = computed(() => getClassInsightWindowError(insightWindowDraft.value))
   const insightWindowLabel = computed(() => describeClassInsightWindow(activeInsightWindow.value))
   const canApplyInsightWindow = computed(() => {
@@ -68,7 +82,7 @@ export function useClassStudentsPage() {
   let latestWorkspaceRequestID = 0
 
   function classNameFromRoute(): string {
-    return String(route.params.className || '')
+    return String(params.value.className || '')
   }
 
   function clearWorkspaceDetails(): void {
@@ -86,7 +100,7 @@ export function useClassStudentsPage() {
 
     const requestID = ++latestWorkspaceRequestID
     workspaceError.value = null
-    const routeInsightWindow = parseClassInsightWindowQuery(route.query)
+    const routeInsightWindow = parseClassInsightWindowQuery(query.value)
     const routeInsightWindowError = getClassInsightWindowError(routeInsightWindow)
     if (routeInsightWindowError) {
       workspaceError.value = routeInsightWindowError
@@ -144,7 +158,7 @@ export function useClassStudentsPage() {
     workspaceError.value = null
 
     if (canonicalWorkspaceTarget.value) {
-      await router.replace(canonicalWorkspaceTarget.value)
+      await replace(canonicalWorkspaceTarget.value)
       return
     }
 
@@ -157,21 +171,17 @@ export function useClassStudentsPage() {
   }
 
   function openStudent(studentId: string): void {
-    router.push({
-      name: resolveStudentAnalysisRouteName(authStore.user?.role),
-      params: {
-        className: selectedClassName.value,
-        studentId,
-      },
-    })
+    void push(
+      classStudentsStudentAnalysisRoute(authStore.user?.role, studentId, selectedClassName.value)
+    )
   }
 
   function openClassManagement(): void {
-    router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
+    void push(classStudentsClassManagementRoute(authStore.user?.role))
   }
 
   function openDashboard(): void {
-    router.push({ name: resolveTeachingDashboardRouteName(authStore.user?.role) })
+    void push(classStudentsDashboardRoute(authStore.user?.role))
   }
 
   function openClassReportDialog(): void {
@@ -197,7 +207,7 @@ export function useClassStudentsPage() {
       return
     }
 
-    const nextQuery: LocationQueryRaw = { ...route.query }
+    const nextQuery = { ...query.value }
     const nextInsightWindow = buildClassInsightWindowQuery(insightWindowDraft.value)
     if (nextInsightWindow) {
       nextQuery.from_date = nextInsightWindow.from_date
@@ -208,13 +218,13 @@ export function useClassStudentsPage() {
     }
 
     if (
-      String(route.query.from_date || '') === String(nextQuery.from_date || '') &&
-      String(route.query.to_date || '') === String(nextQuery.to_date || '')
+      String(query.value.from_date || '') === String(nextQuery.from_date || '') &&
+      String(query.value.to_date || '') === String(nextQuery.to_date || '')
     ) {
       return
     }
 
-    await router.replace({ query: nextQuery })
+    await replaceQuery(nextQuery)
   }
 
   async function resetInsightWindow(): Promise<void> {
@@ -227,18 +237,18 @@ export function useClassStudentsPage() {
       return
     }
 
-    const nextQuery: LocationQueryRaw = { ...route.query }
+    const nextQuery = { ...query.value }
     delete nextQuery.from_date
     delete nextQuery.to_date
-    await router.replace({ query: nextQuery })
+    await replaceQuery(nextQuery)
   }
 
   watch(
-    () => [route.params.className, route.query.from_date, route.query.to_date] as const,
+    () => [params.value.className, query.value.from_date, query.value.to_date] as const,
     () => {
-      insightWindowDraft.value = parseClassInsightWindowQuery(route.query)
+      insightWindowDraft.value = parseClassInsightWindowQuery(query.value)
       if (canonicalWorkspaceTarget.value) {
-        void router.replace(canonicalWorkspaceTarget.value)
+        void replace(canonicalWorkspaceTarget.value)
         return
       }
       void loadClassWorkspace()

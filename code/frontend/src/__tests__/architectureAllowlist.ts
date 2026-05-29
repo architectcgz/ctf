@@ -9,6 +9,5 @@ export const featureRouterImportAllowlist = new Set([
   'features/platform-challenge-detail/model/usePlatformChallengeDetailPage.ts -> vue-router',
   'features/platform-challenges/model/useChallengeManagePage.ts -> vue-router',
   'features/platform-challenges/model/usePlatformChallengeRoutePage.ts -> vue-router',
-  'features/class-students-workspace/model/useClassStudentsPage.ts -> vue-router',
   'features/student-analysis-workspace/model/useStudentAnalysisPage.ts -> vue-router',
 ])

@@ -24,6 +24,7 @@ const ElButton = { template: '<button><slot /></button>' }
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
 const routeMock = {
+  name: 'PlatformClassStudents',
   params: {
     className: 'Class A',
   },
@@ -65,6 +66,7 @@ describe('PlatformClassStudents', () => {
     localStorage.clear()
     pushMock.mockReset()
     replaceMock.mockReset()
+    routeMock.name = 'PlatformClassStudents'
     routeMock.params.className = 'Class A'
     routeMock.query.panel = 'students'
     delete routeMock.query.from_date

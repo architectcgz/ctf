@@ -5,6 +5,7 @@ export function useRouteQueryTransport() {
   const route = useRoute()
   const router = useRouter()
 
+  const name = computed(() => route.name)
   const params = computed<Record<string, unknown>>(() => route.params)
   const query = computed<Record<string, unknown>>(() => route.query)
 
@@ -15,6 +16,7 @@ export function useRouteQueryTransport() {
   }
 
   return {
+    name,
     params,
     query,
     replaceQuery,
