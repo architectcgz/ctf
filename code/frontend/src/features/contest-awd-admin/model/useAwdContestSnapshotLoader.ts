@@ -13,7 +13,7 @@ import type {
   AdminContestTeamData,
   ContestDetailData,
 } from '@/api/contracts'
-import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
+import { mapPlatformContestAwdServicesToChallengeLinks } from '@/entities/contest-awd-challenge-link'
 
 import {
   createEmptyInstanceOrchestration,

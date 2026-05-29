@@ -18,7 +18,7 @@ export function isStudentVisibleContestStatus(status: ContestStatus): boolean {
   return status !== 'draft'
 }
 
-export function getStatusLabel(status: ContestStatus): string {
+export function getContestStatusLabel(status: ContestStatus): string {
   const labels: Record<ContestStatus, string> = {
     draft: '草稿',
     published: '已发布',
@@ -32,7 +32,7 @@ export function getStatusLabel(status: ContestStatus): string {
   return labels[status] || status
 }
 
-export function getModeLabel(mode: ContestMode): string {
+export function getContestModeLabel(mode: ContestMode): string {
   const labels: Record<ContestMode, string> = {
     jeopardy: 'Jeopardy',
     awd: 'AWD',
@@ -42,7 +42,7 @@ export function getModeLabel(mode: ContestMode): string {
   return labels[mode] || mode
 }
 
-export function getStatusBadgeClass(status: ContestStatus): string {
+export function getContestStatusBadgeClass(status: ContestStatus): string {
   if (status === 'running') return 'contest-status-badge--running'
   if (status === 'registering') return 'contest-status-badge--registering'
   return 'contest-status-badge--neutral'

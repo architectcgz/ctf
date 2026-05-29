@@ -6,7 +6,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import { getModeLabel, getStatusLabel } from '@/utils/contest'
+import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
 
 defineProps<{
   loading: boolean
@@ -130,13 +130,13 @@ const contestTableColumns = [
 
       <template #cell-status="{ row }">
         <span class="contest-ops-table__badge">
-          {{ getStatusLabel((row as ContestDetailData).status) }}
+          {{ getContestStatusLabel((row as ContestDetailData).status) }}
         </span>
       </template>
 
       <template #cell-mode="{ row }">
         <span class="contest-ops-table__badge contest-ops-table__badge--muted">
-          {{ getModeLabel((row as ContestDetailData).mode) }}
+          {{ getContestModeLabel((row as ContestDetailData).mode) }}
         </span>
       </template>
 

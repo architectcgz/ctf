@@ -117,7 +117,7 @@ import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGo
 import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
 import challengeManagePresentationSource from '@/features/platform-challenges/model/useChallengeManagePresentation.ts?raw'
-import skillProfileUtilsSource from '@/utils/skillProfile.ts?raw'
+import skillProfileEntitySource from '@/entities/skill-profile/model/index.ts?raw'
 import challengeUtilsSource from '@/utils/challenge.ts?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 
@@ -782,7 +782,7 @@ describe('shared theme token adoption', () => {
         '#6b7280',
       ]
     )
-    expectNoHardcodedThemeTokens(skillProfileUtilsSource, 'skillProfile utils', [
+    expectNoHardcodedThemeTokens(skillProfileEntitySource, 'skillProfile entity', [
       '#3b82f6',
       '#ef4444',
       '#8b5cf6',
@@ -791,7 +791,7 @@ describe('shared theme token adoption', () => {
       '#06b6d4',
       '#0891b2',
     ])
-    expect(skillProfileUtilsSource).not.toContain("@/api/contracts")
+    expect(skillProfileEntitySource).not.toContain("@/api/contracts")
     expectNoHardcodedThemeTokens(challengeUtilsSource, 'challenge utils', [
       'bg-blue-100',
       'text-blue-700',

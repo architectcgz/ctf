@@ -6,7 +6,7 @@ import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
-import { getModeLabel, getStatusLabel } from '@/utils/contest'
+import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
 
 const props = defineProps<{
   contests: ContestDetailData[]
@@ -112,7 +112,7 @@ function handleAnnounce(contest: ContestDetailData): void {
 
       <template #cell-mode="{ row }">
         <span class="contest-table__muted">
-          {{ getModeLabel((row as ContestDetailData).mode) }}
+          {{ getContestModeLabel((row as ContestDetailData).mode) }}
         </span>
       </template>
 
@@ -121,7 +121,7 @@ function handleAnnounce(contest: ContestDetailData): void {
           class="ui-badge contest-status-pill"
           :class="getStatusPillClass((row as ContestDetailData).status)"
         >
-          {{ getStatusLabel((row as ContestDetailData).status) }}
+          {{ getContestStatusLabel((row as ContestDetailData).status) }}
         </span>
       </template>
 

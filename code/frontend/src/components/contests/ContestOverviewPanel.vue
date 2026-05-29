@@ -3,7 +3,7 @@ import { CheckCircle2, Target, Trophy, UsersRound } from 'lucide-vue-next'
 
 import ContestAnnouncementsPanel from '@/components/contests/ContestAnnouncementsPanel.vue'
 import type { ContestAnnouncement, ContestDetailData } from '@/api/contracts'
-import { getModeLabel, getStatusLabel } from '@/utils/contest'
+import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
 import { formatTime } from '@/utils/format'
 
 interface Props {
@@ -127,7 +127,7 @@ defineProps<Props>()
         <div class="contest-copy-list">
           <div class="contest-copy-row">
             <span>当前状态</span>
-            <strong>{{ getStatusLabel(contest.status) }}</strong>
+            <strong>{{ getContestStatusLabel(contest.status) }}</strong>
           </div>
           <div
             v-if="countdown"
@@ -146,7 +146,7 @@ defineProps<Props>()
           </div>
           <div class="contest-copy-row">
             <span>参赛模式</span>
-            <strong>{{ getModeLabel(contest.mode) }}</strong>
+            <strong>{{ getContestModeLabel(contest.mode) }}</strong>
           </div>
           <div class="contest-copy-row">
             <span>冻结榜单</span>

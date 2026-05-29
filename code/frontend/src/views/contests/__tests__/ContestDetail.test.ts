@@ -1756,7 +1756,7 @@ describe('ContestDetail', () => {
   it('竞赛赛程信息应承接状态和倒计时，而不是继续停留在 hero 里重复展示', () => {
     expect(contestOverviewPanelSource).toContain('<span>当前状态</span>')
     expect(contestOverviewPanelSource).toContain('<span>剩余时间</span>')
-    expect(contestOverviewPanelSource).toContain("{{ getStatusLabel(contest.status) }}")
+    expect(contestOverviewPanelSource).toContain("{{ getContestStatusLabel(contest.status) }}")
     expect(contestOverviewPanelSource).toContain('{{ countdown }}')
   })
 

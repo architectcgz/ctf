@@ -6,7 +6,7 @@
 >
 > 拆分源：`ctf/docs/contracts/openapi-v1/`；修改 OpenAPI 时先改拆分源，再运行 `python3 scripts/sync_openapi_from_contract.py`。
 >
-> 最后更新：2026-05-28
+> 最后更新：2026-05-29
 
 ---
 
@@ -41,6 +41,7 @@
 - 2026-05-28 起，前端 `src/api/request.ts` 的错误导航 owner 已从 transport 层移到 runtime 层；这不改变任何外部 HTTP contract，统一 Envelope、`request_id`、`errors`、以及 `401 / 429 / 5xx` 的状态码语义保持不变。
 - 2026-05-27 起，platform 题解管理面板也允许通过 `src/api/admin/authoring.ts` 暴露 `getPlatformWriteupSubmissions` 这类薄 wrapper；底层仍复用既有 `/api/v1/teacher/writeup-submissions` HTTP contract，不改变教师侧题解查看 / 评阅能力。
 - 2026-05-27 起，前端本地共享 DTO 对这条投稿目录 contract 统一使用中性命名 `WriteupSubmissionItemData`；HTTP path 仍保持 `/api/v1/teacher/writeup-submissions`，不改变服务端权限语义。
+- 2026-05-29 起，`src/api/assessment.ts`、`src/api/teacher/students.ts` 与 `src/api/teaching/students.ts` 内部对 contest / skill profile / recommendation / AWD challenge link 的本地 normalize 与展示 helper owner 已从历史 `utils/*` 收口到 `entities/*`；这不改变任何外部 HTTP method、path、query、body、response schema，也不新增新的后端 API contract。
 
 ---
 

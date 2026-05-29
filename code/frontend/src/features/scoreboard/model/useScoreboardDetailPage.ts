@@ -6,7 +6,7 @@ import { getScoreboard } from '@/api/contest'
 import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from '@/composables/useToast'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
-import { getContestAccentColor, getStatusLabel } from '@/utils/contest'
+import { getContestAccentColor, getContestStatusLabel } from '@/entities/contest'
 
 export function useScoreboardDetailPage() {
   const route = useRoute()
@@ -161,7 +161,7 @@ export function useScoreboardDetailPage() {
     emptyDescription,
     topScore,
     solvedCount,
-    getStatusLabel,
+    getStatusLabel: getContestStatusLabel,
     formatDateTime,
     formatContestWindow,
     getRowClass,

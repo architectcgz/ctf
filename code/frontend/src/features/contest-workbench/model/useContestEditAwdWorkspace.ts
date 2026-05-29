@@ -17,7 +17,7 @@ import type {
 import { ApiError } from '@/api/request'
 import type { ContestWorkbenchStageKey } from './useContestWorkbench'
 import { useToast } from '@/composables/useToast'
-import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
+import { mapPlatformContestAwdServicesToChallengeLinks } from '@/entities/contest-awd-challenge-link'
 
 export interface ContestAwdChallengeConfigPayload {
   challenge_id?: number

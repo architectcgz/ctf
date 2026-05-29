@@ -15,7 +15,7 @@ import type {
   StudentDirectoryItem,
   TimelineEvent,
 } from '@/api/contracts'
-import { getWeakDimensionLabels } from '@/utils/skillProfile'
+import { getWeakDimensionLabels } from '@/entities/skill-profile'
 
 interface UseStudentAnalysisDataStateOptions {
   classNameFromRoute: () => string

@@ -10,7 +10,7 @@ import type {
   StudentDirectoryItem,
 } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
-import { getWeakDimensionLabels } from '@/utils/skillProfile'
+import { getWeakDimensionLabels } from '@/entities/skill-profile'
 
 let loadToken = 0
 

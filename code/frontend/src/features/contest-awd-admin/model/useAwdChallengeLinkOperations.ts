@@ -10,7 +10,7 @@ import type {
   ContestDetailData,
 } from '@/api/contracts'
 import { useToast } from '@/composables/useToast'
-import { mapPlatformContestAwdServicesToChallengeLinks } from '@/utils/platformContestAwdChallengeLinks'
+import { mapPlatformContestAwdServicesToChallengeLinks } from '@/entities/contest-awd-challenge-link'
 
 interface UseAwdChallengeLinkOperationsOptions {
   selectedContest: Readonly<Ref<ContestDetailData | null>>

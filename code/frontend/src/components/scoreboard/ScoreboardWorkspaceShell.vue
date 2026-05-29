@@ -222,13 +222,13 @@
                 </div>
                 <div>
                   <span class="workspace-directory-status-pill sb-status-chip">{{
-                    getStatusLabel(section.contest.status)
+                    getContestStatusLabel(section.contest.status)
                   }}</span>
                 </div>
                 <div>
                   <span
                     class="workspace-directory-status-pill workspace-directory-status-pill--muted sb-mode-chip"
-                    >{{ getModeLabel(section.contest.mode) }}</span
+                    >{{ getContestModeLabel(section.contest.mode) }}</span
                   >
                   <span
                     v-if="section.frozen"
@@ -372,7 +372,7 @@ import { ArrowRight, BarChart2, Clock3, Flag, Shield, Trophy, Users } from 'luci
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import { getModeLabel, getStatusLabel } from '@/utils/contest'
+import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
 
 type ScoreboardPanelKey = 'contest' | 'points'
 type ScoreboardStatusFilter = '' | 'running' | 'frozen' | 'ended'

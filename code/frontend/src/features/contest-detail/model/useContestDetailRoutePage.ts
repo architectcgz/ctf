@@ -3,7 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useAuthStore } from '@/stores/auth'
-import { getContestAccentColor, isStudentVisibleContestStatus } from '@/utils/contest'
+import { getContestAccentColor, isStudentVisibleContestStatus } from '@/entities/contest'
 
 import { useContestDetailPage } from './useContestDetailPage'
 

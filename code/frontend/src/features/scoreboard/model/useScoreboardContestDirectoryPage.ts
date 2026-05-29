@@ -1,7 +1,7 @@
 import { computed, type Ref } from 'vue'
 
 import type { ContestListItem, ContestListSummaryData, ContestStatus } from '@/api/contracts'
-import { getContestAccentColor } from '@/utils/contest'
+import { getContestAccentColor } from '@/entities/contest'
 
 interface ScoreboardSectionItem {
   contest: ContestListItem

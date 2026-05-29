@@ -12,7 +12,7 @@ import {
   normalizeSkillProfile,
   type RawRecommendationResponse,
   type RawSkillProfileResponse,
-} from '@/utils/skillProfile'
+} from '@/entities/skill-profile'
 
 interface RawProgressResponse {
   total_score: number

@@ -12,10 +12,10 @@ import { usePagination } from '@/composables/usePagination'
 import {
   getContestAccentColor,
   getContestActionLabel,
-  getModeLabel,
-  getStatusLabel,
+  getContestModeLabel,
+  getContestStatusLabel,
   isStudentVisibleContestStatus,
-} from '@/utils/contest'
+} from '@/entities/contest'
 
 interface ContestSummaryMetric {
   key: string
@@ -198,8 +198,8 @@ export function useContestListPage() {
     getTimelineHint,
     openContest,
     contestAccentStyle,
-    getStatusLabel,
-    getModeLabel,
+    getStatusLabel: getContestStatusLabel,
+    getModeLabel: getContestModeLabel,
     getContestActionLabel,
   }
 }

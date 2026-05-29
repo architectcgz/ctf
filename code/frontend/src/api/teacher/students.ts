@@ -13,8 +13,12 @@ import type {
   StudentEvidenceData,
   TimelineEvent,
 } from '../contracts'
-import { normalizeSkillProfile, type RawSkillProfileResponse } from '@/utils/skillProfile'
-import { normalizeRecommendationData, type RawRecommendationResponse } from '@/utils/skillProfile'
+import {
+  normalizeRecommendationData,
+  normalizeSkillProfile,
+  type RawRecommendationResponse,
+  type RawSkillProfileResponse,
+} from '@/entities/skill-profile'
 
 interface RawTimelineItem {
   type: string

@@ -4,9 +4,9 @@ import {
   getWeakDimensionLabels,
   normalizeRecommendationData,
   normalizeSkillProfile,
-} from '../skillProfile'
+} from '@/entities/skill-profile'
 
-describe('skillProfile utils', () => {
+describe('skillProfile entity', () => {
   it('应该把后端能力画像转换为前端结构', () => {
     const result = normalizeSkillProfile({
       user_id: 1,

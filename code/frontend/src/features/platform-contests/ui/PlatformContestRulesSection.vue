@@ -2,7 +2,7 @@
 import { Settings, Swords, Trophy } from 'lucide-vue-next'
 
 import type { ContestFieldLocks, ContestFormDraft } from '../model'
-import { getStatusLabel } from '@/utils/contest'
+import { getContestStatusLabel } from '@/entities/contest'
 import PlatformContestFormSectionShell from './PlatformContestFormSectionShell.vue'
 
 withDefaults(
@@ -86,7 +86,7 @@ const emit = defineEmits<{
               :key="option.value"
               :value="option.value"
             >
-              {{ getStatusLabel(option.value) }}
+              {{ getContestStatusLabel(option.value) }}
             </option>
           </select>
         </div>

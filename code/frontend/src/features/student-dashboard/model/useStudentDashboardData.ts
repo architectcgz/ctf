@@ -11,7 +11,7 @@ import type {
   TimelineEvent,
 } from '@/api/contracts'
 import type { useAuthStore } from '@/stores/auth'
-import { getWeakDimensionLabels } from '@/utils/skillProfile'
+import { getWeakDimensionLabels } from '@/entities/skill-profile'
 import type { DashboardHighlightItem } from './studentDashboardTypes'
 
 interface UseStudentDashboardDataOptions {

@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import type { SkillProfileData } from '@/api/contracts'
 import SectionCard from '@/components/common/SectionCard.vue'
 import SkillRadar from '@/components/common/SkillRadar.vue'
-import { toRadarScores } from '@/utils/skillProfile'
+import { toRadarScores } from '@/entities/skill-profile'
 
 const props = defineProps<{
   profile: SkillProfileData | null
