@@ -1,9 +1,17 @@
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
+import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router'
 
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
+import {
+  buildUserGovernancePanelQuery,
+  resolveUserGovernancePanel,
+  type UserPanelKey,
+} from './useUserGovernancePanelRoute'
 import { usePlatformUsers } from './usePlatformUsers'
 
 export function usePlatformUserManagePage() {
+  const route = useRoute()
+  const router = useRouter()
   const {
     list,
     total,
@@ -29,10 +37,22 @@ export function usePlatformUserManagePage() {
     removeUser,
     importUserFile,
   } = usePlatformUsers()
+  const activePanel = computed<UserPanelKey>(() => resolveUserGovernancePanel(route.query.panel))
 
   onMounted(() => {
     void refresh()
   })
+
+  async function switchPanel(panel: UserPanelKey): Promise<void> {
+    if (activePanel.value === panel) {
+      return
+    }
+
+    await router.replace({
+      name: 'UserManage',
+      query: buildUserGovernancePanelQuery(route.query, panel) as LocationQueryRaw,
+    })
+  }
 
   function updateKeyword(value: string) {
     keyword.value = value
@@ -83,8 +103,10 @@ export function usePlatformUserManagePage() {
     page,
     pageSize,
     loading,
+    activePanel,
     refresh,
     changePage,
+    switchPanel,
     keyword,
     studentNo,
     teacherNo,

@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import UserManage from '../UserManage.vue'
 import userManageSource from '../UserManage.vue?raw'
 import userGovernancePageSource from '@/features/platform-user-management/ui/UserGovernancePage.vue?raw'
+import platformUserManagePageSource from '@/features/platform-user-management/model/usePlatformUserManagePage.ts?raw'
 import userGovernancePanelRouteSource from '@/features/platform-user-management/model/useUserGovernancePanelRoute.ts?raw'
 import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
@@ -270,14 +271,22 @@ describe('UserManage', () => {
     )
     expect(userManageSource).not.toContain('onMounted(')
     expect(userManageSource).not.toContain('confirmDestructiveAction')
+    expect(userManageSource).toContain(':active-panel="activePanel"')
+    expect(userManageSource).toContain('@switch-panel="switchPanel"')
     expect(userGovernanceSource).not.toContain("from 'vue-router'")
     expect(userGovernanceSource).not.toContain('useRoute(')
     expect(userGovernanceSource).not.toContain('useRouter(')
-    expect(userGovernancePanelRouteSource).toContain("from 'vue-router'")
-    expect(userGovernancePanelRouteSource).toContain('useRoute(')
-    expect(userGovernancePanelRouteSource).toContain('useRouter(')
-    expect(userGovernancePanelRouteSource).toContain("panel === 'import'")
-    expect(userGovernancePanelRouteSource).toContain("return 'overview'")
+    expect(userGovernancePanelRouteSource).not.toContain("from 'vue-router'")
+    expect(userGovernancePanelRouteSource).not.toContain('useRoute(')
+    expect(userGovernancePanelRouteSource).not.toContain('useRouter(')
+    expect(userGovernancePanelRouteSource).toContain('resolveUserGovernancePanel')
+    expect(userGovernancePanelRouteSource).toContain('buildUserGovernancePanelQuery')
+    expect(platformUserManagePageSource).toContain("from 'vue-router'")
+    expect(platformUserManagePageSource).toContain('useRoute(')
+    expect(platformUserManagePageSource).toContain('useRouter(')
+    expect(platformUserManagePageSource).toContain('resolveUserGovernancePanel(route.query.panel)')
+    expect(platformUserManagePageSource).toContain("name: 'UserManage'")
+    expect(platformUserManagePageSource).toContain('router.replace({')
     expect(userGovernanceSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )

@@ -6,7 +6,7 @@ import type { UserRole } from '@/utils/constants'
 import UserGovernanceDetailModal from '@/components/platform/user/UserGovernanceDetailModal.vue'
 import UserGovernanceImportPanel from '@/components/platform/user/UserGovernanceImportPanel.vue'
 import UserGovernanceOverviewPanel from '@/components/platform/user/UserGovernanceOverviewPanel.vue'
-import { useUserGovernancePanelRoute } from '../model'
+import type { UserPanelKey } from '../model/useUserGovernancePanelRoute'
 
 type UserFilterRole = UserRole | 'all'
 type UserFilterStatus = UserStatus | 'all'
@@ -23,6 +23,7 @@ const props = defineProps<{
   roleFilter: UserFilterRole
   statusFilter: UserFilterStatus
   importResult: AdminUserImportData | null
+  activePanel: UserPanelKey
 }>()
 
 const emit = defineEmits<{
@@ -37,9 +38,8 @@ const emit = defineEmits<{
   deleteUser: [userId: string]
   changePage: [page: number]
   importFile: [file: File]
+  switchPanel: [panel: UserPanelKey]
 }>()
-
-const { activePanel, switchPanel } = useUserGovernancePanelRoute()
 const importInput = useTemplateRef<HTMLInputElement>('importInput')
 const selectedUserId = ref<string | null>(null)
 
@@ -102,7 +102,7 @@ function handleImportChange(event: Event): void {
           :status-filter="statusFilter"
           :import-result="importResult"
           @refresh="emit('refresh')"
-          @open-import="switchPanel('import')"
+          @open-import="emit('switchPanel', 'import')"
           @open-create-dialog="emit('openCreateDialog')"
           @update-keyword="emit('updateKeyword', $event)"
           @update-student-no="emit('updateStudentNo', $event)"
@@ -129,7 +129,7 @@ function handleImportChange(event: Event): void {
       >
         <UserGovernanceImportPanel
           :import-result="importResult"
-          @return-overview="switchPanel('overview')"
+          @return-overview="emit('switchPanel', 'overview')"
           @trigger-import="triggerImport"
         />
       </section>

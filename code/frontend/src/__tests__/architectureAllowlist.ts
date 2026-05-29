@@ -23,7 +23,7 @@ export const featureRouterImportAllowlist = new Set([
   'features/platform-challenges/model/useChallengeTopologyStudioRoutePage.ts -> vue-router',
   'features/platform-challenges/model/useChallengeWriteupPage.ts -> vue-router',
   'features/platform-challenges/model/useChallengeWriteupViewPage.ts -> vue-router',
-  'features/platform-user-management/model/useUserGovernancePanelRoute.ts -> vue-router',
+  'features/platform-user-management/model/usePlatformUserManagePage.ts -> vue-router',
   'features/platform-contests/model/useContestAnnouncementsPage.ts -> vue-router',
   'features/platform-contests/model/useContestManagePage.ts -> vue-router',
   'features/platform-contests/model/useContestEditPage.ts -> vue-router',

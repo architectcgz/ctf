@@ -11,8 +11,10 @@ const {
   page,
   pageSize,
   loading,
+  activePanel,
   refresh,
   changePage,
+  switchPanel,
   keyword,
   studentNo,
   teacherNo,
@@ -51,6 +53,7 @@ const {
       :role-filter="roleFilter"
       :status-filter="statusFilter"
       :import-result="importResult"
+      :active-panel="activePanel"
       @refresh="refresh"
       @update-keyword="updateKeyword"
       @update-student-no="updateStudentNo"
@@ -62,6 +65,7 @@ const {
       @delete-user="handleDelete"
       @change-page="changePage"
       @import-file="importUserFile"
+      @switch-panel="switchPanel"
     />
 
     <PlatformUserFormDialog
