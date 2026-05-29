@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import type { AdminChallengeListItem } from '@/api/contracts'
 import {
+  type ChallengeProfileMetaSummary,
   formatChallengeDateTime,
   getChallengeInstanceSharingLabel,
 } from '../model'
 
 interface Props {
-  challenge: Pick<
-    AdminChallengeListItem,
-    'attachment_url' | 'created_at' | 'image_id' | 'instance_sharing' | 'title' | 'updated_at'
-  >
+  challenge: ChallengeProfileMetaSummary
   downloadingAttachment: boolean
   flagConfigSummary: string
 }

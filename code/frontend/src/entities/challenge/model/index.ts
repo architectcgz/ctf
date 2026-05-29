@@ -1,3 +1,13 @@
+export type {
+  ChallengeCategory,
+  ChallengeDifficulty,
+  ChallengeDirectoryListItem,
+  ChallengeInstanceSharing,
+  ChallengeMetaSummary,
+  ChallengeProfileMetaSummary,
+  ChallengeProfileSummary,
+  ChallengeStatus,
+} from './types'
 export {
   formatChallengeDateTime,
   getChallengeCategoryColor,

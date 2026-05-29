@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { ChallengeDetailData } from '@/api/contracts'
 import {
+  type ChallengeMetaSummary,
   getChallengeCategoryColor,
   getChallengeCategoryLabel,
   getChallengeDifficultyColor,
@@ -8,7 +8,7 @@ import {
 } from '@/entities/challenge/model'
 
 interface Props {
-  challenge: ChallengeDetailData
+  challenge: ChallengeMetaSummary
 }
 
 defineProps<Props>()

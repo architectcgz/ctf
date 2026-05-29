@@ -12,15 +12,6 @@ export const widgetNonContractApiAllowlist = new Set<string>([])
 
 export const commonForbiddenImportAllowlist = new Set([
   'components/common/InstancePanel.vue -> @/api/contracts',
-  'entities/challenge/model/presentation.ts -> @/api/contracts',
-  'entities/challenge/ui/ChallengeCategoryDifficultyPills.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeCategoryPill.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeCategoryText.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeDifficultyText.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeDirectoryRow.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeMetaStrip.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeProfileMetaGrid.vue -> @/api/contracts',
-  'entities/challenge/ui/ChallengeProfileSummaryStrip.vue -> @/api/contracts',
 ])
 
 export const legacyComponentPageAllowlist = new Set<string>([])

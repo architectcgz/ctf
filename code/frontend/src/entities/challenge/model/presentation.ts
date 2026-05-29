@@ -1,12 +1,10 @@
 import type {
   ChallengeCategory,
   ChallengeDifficulty,
+  ChallengeInstanceSharing,
   ChallengeStatus,
-  InstanceSharing,
-} from '@/api/contracts'
-
-const challengeCategories = ['web', 'pwn', 'reverse', 'crypto', 'misc', 'forensics'] as const
-const challengeDifficulties = ['beginner', 'easy', 'medium', 'hard', 'insane'] as const
+} from './types'
+import { challengeCategories, challengeDifficulties } from './types'
 
 export function toChallengeCategory(value?: string | null): ChallengeCategory | null {
   const normalized = value?.trim().toLowerCase()
@@ -96,7 +94,7 @@ export function getChallengeStatusLabel(status?: ChallengeStatus): string {
   }
 }
 
-export function getChallengeInstanceSharingLabel(mode?: InstanceSharing): string {
+export function getChallengeInstanceSharingLabel(mode?: ChallengeInstanceSharing): string {
   switch (mode) {
     case 'shared':
       return '共享实例'

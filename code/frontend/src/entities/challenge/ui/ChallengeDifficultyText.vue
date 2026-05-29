@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ChallengeDifficulty } from '@/api/contracts'
+import type { ChallengeDifficulty } from '@/entities/challenge/model'
 import { getChallengeDifficultyColor, getChallengeDifficultyLabel } from '@/entities/challenge/model'
 
 interface Props {

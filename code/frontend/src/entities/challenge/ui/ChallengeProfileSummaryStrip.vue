@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { CircleDot, Gauge, Tags, Trophy } from 'lucide-vue-next'
 
-import type { AdminChallengeListItem } from '@/api/contracts'
+import type { ChallengeProfileSummary } from '@/entities/challenge/model'
 import ChallengeCategoryText from './ChallengeCategoryText.vue'
 import ChallengeDifficultyText from './ChallengeDifficultyText.vue'
 
 interface Props {
-  challenge: Pick<AdminChallengeListItem, 'category' | 'difficulty' | 'points' | 'status'>
+  challenge: ChallengeProfileSummary
   statusLabel: string
 }
 

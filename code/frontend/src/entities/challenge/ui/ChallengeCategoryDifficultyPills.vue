@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
+import type { ChallengeCategory, ChallengeDifficulty } from '@/entities/challenge/model'
 import { getChallengeDifficultyColor } from '@/entities/challenge/model'
 import ChallengeCategoryPill from './ChallengeCategoryPill.vue'
 import ChallengeDifficultyText from './ChallengeDifficultyText.vue'

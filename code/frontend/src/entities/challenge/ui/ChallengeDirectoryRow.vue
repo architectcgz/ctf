@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ArrowRight } from 'lucide-vue-next'
 
-import type { ChallengeListItem } from '@/api/contracts'
 import {
+  type ChallengeDirectoryListItem,
   getChallengeCategoryColor,
   getChallengeCategoryLabel,
   getChallengeDifficultyColor,
@@ -10,7 +10,7 @@ import {
 } from '@/entities/challenge/model'
 
 interface Props {
-  challenge: ChallengeListItem
+  challenge: ChallengeDirectoryListItem
 }
 
 defineProps<Props>()
