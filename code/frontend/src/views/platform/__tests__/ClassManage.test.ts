@@ -1,32 +1,53 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import PlatformClassManagement from '../ClassManage.vue'
 import adminClassManageSource from '../ClassManage.vue?raw'
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
 import classManageWorkspacePanelSource from '@/components/platform/class/ClassManageWorkspacePanel.vue?raw'
-
-const pushMock = vi.fn()
+import platformClassManagementPageSource from '@/features/platform-class-management/model/usePlatformClassManagementPage.ts?raw'
 
 const adminTeachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
 }))
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
-
 vi.mock('@/api/admin', () => ({
   getClasses: adminTeachingApiMocks.getClasses,
 }))
 
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/platform/classes', component: PlatformClassManagement },
+      {
+        path: '/platform/classes/:className',
+        name: 'PlatformClassStudents',
+        component: { template: '<div>class students</div>' },
+      },
+    ],
+  })
+}
+
+async function mountPage() {
+  const router = createTestRouter()
+  await router.push('/platform/classes')
+  await router.isReady()
+
+  const wrapper = mount(PlatformClassManagement, {
+    global: {
+      plugins: [router],
+    },
+  })
+
+  await flushPromises()
+  return { wrapper, router }
+}
+
 describe('PlatformClassManagement', () => {
   beforeEach(() => {
-    pushMock.mockReset()
     adminTeachingApiMocks.getClasses.mockReset()
     adminTeachingApiMocks.getClasses.mockResolvedValue({
       list: [
@@ -68,18 +89,24 @@ describe('PlatformClassManagement', () => {
     expect(classManageWorkspacePanelSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )
+    expect(classManageWorkspacePanelSource).toContain(
+      "from '@/components/navigation/AppRouteLink.vue'"
+    )
     expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
     expect(classManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
     expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
+    expect(classManageWorkspacePanelSource).toContain('<AppRouteLink')
     expect(classManageWorkspacePanelSource).toContain('search-placeholder="搜索班级名称..."')
     expect(classManageWorkspacePanelSource).toContain('filter-panel-title="班级筛选"')
     expect(classManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
     expect(classManageWorkspacePanelSource).not.toContain('class="ui-btn ui-btn--ghost"')
+    expect(appRouteLinkSource).toContain("from 'vue-router'")
+    expect(platformClassManagementPageSource).not.toContain("from 'vue-router'")
+    expect(platformClassManagementPageSource).toContain('function buildClassRoute')
     expect(adminClassManageSource).not.toContain('teacher-management-shell')
     expect(adminClassManageSource).not.toContain('teacher-directory-row')
 
-    const wrapper = mount(PlatformClassManagement)
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     expect(adminTeachingApiMocks.getClasses).toHaveBeenCalledWith({ page: 1, page_size: 20 })
     expect(wrapper.text()).toContain('班级管理')
@@ -92,8 +119,7 @@ describe('PlatformClassManagement', () => {
   })
 
   it('应支持按班级名称筛选目录', async () => {
-    const wrapper = mount(PlatformClassManagement)
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     await wrapper.get('.workspace-directory-toolbar__search-input').setValue('Class A')
 
@@ -102,17 +128,15 @@ describe('PlatformClassManagement', () => {
   })
 
   it('应支持进入班级详情', async () => {
-    const wrapper = mount(PlatformClassManagement)
+    const { wrapper, router } = await mountPage()
+    const classLink = wrapper.findAll('a').find((node) => node.text().includes('查看班级'))
+
+    expect(classLink).toBeTruthy()
+
+    await classLink!.trigger('click')
     await flushPromises()
 
-    await wrapper
-      .findAll('button')
-      .find((node) => node.text().includes('查看班级'))
-      ?.trigger('click')
-
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'PlatformClassStudents',
-      params: { className: 'Class A' },
-    })
+    expect(router.currentRoute.value.name).toBe('PlatformClassStudents')
+    expect(router.currentRoute.value.params).toEqual({ className: 'Class A' })
   })
 })

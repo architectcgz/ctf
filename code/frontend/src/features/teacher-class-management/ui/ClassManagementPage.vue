@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ArrowRight, FolderKanban, Users } from 'lucide-vue-next'
+import { FolderKanban, Users } from 'lucide-vue-next'
 
 import type { ClassDirectoryItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -8,6 +8,8 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import TeacherClassManagementHeaderActions from '@/components/teacher/class-management/TeacherClassManagementHeaderActions.vue'
+import TeacherClassManagementRowLink from '@/components/teacher/class-management/TeacherClassManagementRowLink.vue'
 
 // PagePaginationControls is provided through WorkspaceDirectoryPagination.
 interface ClassDirectoryTableRow {
@@ -21,6 +23,17 @@ interface ClassDirectoryTableRow {
 
 type ClassStatusFilter = ClassDirectoryTableRow['status'] | ''
 
+interface DashboardRouteTarget {
+  name: string
+}
+
+interface TeacherClassRouteTarget {
+  name: string
+  params: {
+    className: string
+  }
+}
+
 const props = defineProps<{
   classes: ClassDirectoryItem[]
   total: number
@@ -28,14 +41,14 @@ const props = defineProps<{
   pageSize: number
   loading: boolean
   error: string | null
+  dashboardRoute: DashboardRouteTarget
+  buildClassRoute: (className: string) => TeacherClassRouteTarget
 }>()
 
 const emit = defineEmits<{
   retry: []
   changePage: [page: number]
-  openDashboard: []
   openReportExport: []
-  openClass: [className: string]
 }>()
 
 const filterQuery = ref('')
@@ -113,22 +126,10 @@ function handleStatusFilterChange(event: Event): void {
             </p>
           </div>
 
-          <div class="header-actions">
-            <button
-              type="button"
-              class="header-btn header-btn--primary"
-              @click="emit('openDashboard')"
-            >
-              教学概览
-            </button>
-            <button
-              type="button"
-              class="header-btn header-btn--ghost"
-              @click="emit('openReportExport')"
-            >
-              导出班级报告
-            </button>
-          </div>
+          <TeacherClassManagementHeaderActions
+            :dashboard-route="dashboardRoute"
+            @open-report-export="emit('openReportExport')"
+          />
         </header>
 
         <section class="teacher-summary metric-panel-default-surface">
@@ -274,15 +275,11 @@ function handleStatusFilterChange(event: Event): void {
 
                 <template #cell-actions="{ row }">
                   <div class="workspace-directory-row-actions teacher-directory-row-cta">
-                    <button
-                      type="button"
-                      class="ui-btn ui-btn--primary ui-btn--xs"
-                      :aria-label="`${(row as ClassDirectoryTableRow).name}，${(row as ClassDirectoryTableRow).student_count} 名学生，进入班级`"
-                      @click="emit('openClass', (row as ClassDirectoryTableRow).name)"
-                    >
-                      进入班级
-                      <ArrowRight class="h-4 w-4" />
-                    </button>
+                    <TeacherClassManagementRowLink
+                      :class-name="(row as ClassDirectoryTableRow).name"
+                      :student-count="(row as ClassDirectoryTableRow).student_count"
+                      :build-class-route="buildClassRoute"
+                    />
                   </div>
                 </template>
               </WorkspaceDataTable>

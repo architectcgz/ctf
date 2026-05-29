@@ -1,13 +1,13 @@
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { getClasses } from '@/api/teacher'
 import type { ClassDirectoryItem } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
+import { teacherClassStudentsRoute, teacherDashboardRoute } from './teacherClassManagementRoutes'
+
 export function useClassManagementPage() {
-  const router = useRouter()
   const authStore = useAuthStore()
 
   const classes = ref<ClassDirectoryItem[]>([])
@@ -51,12 +51,8 @@ export function useClassManagementPage() {
     void loadClasses(normalizedPage)
   }
 
-  function openClass(className: string): void {
-    router.push({ name: 'TeacherClassStudents', params: { className } })
-  }
-
-  function openDashboard(): void {
-    router.push({ name: 'TeacherDashboard' })
+  function buildClassRoute(className: string) {
+    return teacherClassStudentsRoute(className)
   }
 
   function openClassReportDialog(): void {
@@ -78,8 +74,8 @@ export function useClassManagementPage() {
     defaultReportClassName,
     loadClasses,
     handlePageChange,
-    openClass,
-    openDashboard,
+    buildClassRoute,
+    dashboardRoute: teacherDashboardRoute,
     openClassReportDialog,
   }
 }

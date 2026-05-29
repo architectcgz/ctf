@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ClassManagement from '../ClassManagement.vue'
 import classManagementViewSource from '../ClassManagement.vue?raw'
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import classManagementSource from '@/features/teacher-class-management/ui/ClassManagementPage.vue?raw'
+import classManagementPageModelSource from '@/features/teacher-class-management/model/useClassManagementPage.ts?raw'
+import teacherClassManagementHeaderActionsSource from '@/components/teacher/class-management/TeacherClassManagementHeaderActions.vue?raw'
+import teacherClassManagementRowLinkSource from '@/components/teacher/class-management/TeacherClassManagementRowLink.vue?raw'
 import classReportExportDialogSource from '@/features/teacher-class-report-export/ui/ClassReportExportDialog.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -12,21 +17,30 @@ const ElTable = { template: '<div><slot /></div>' }
 const ElTableColumn = { template: '<div><slot /></div>' }
 const ElButton = { template: '<button><slot /></button>' }
 
-const pushMock = vi.fn()
-
 const teacherApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
 }))
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
-
 vi.mock('@/api/teacher', () => teacherApiMocks)
+
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/academy/classes', component: ClassManagement },
+      {
+        path: '/academy/dashboard',
+        name: 'TeacherDashboard',
+        component: { template: '<div>dashboard</div>' },
+      },
+      {
+        path: '/academy/classes/:className',
+        name: 'TeacherClassStudents',
+        component: { template: '<div>class students</div>' },
+      },
+    ],
+  })
+}
 
 describe('ClassManagement', () => {
   const reportDialogStub = {
@@ -36,34 +50,25 @@ describe('ClassManagement', () => {
       '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" />',
   }
 
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    localStorage.clear()
-    pushMock.mockReset()
-    teacherApiMocks.getClasses.mockReset()
-    teacherApiMocks.getClasses.mockResolvedValue({
-      list: [
-        { name: 'Class A', student_count: 2 },
-        { name: 'Class B', student_count: 3 },
-      ],
-      total: 2,
-      page: 1,
-      page_size: 20,
-    })
+  async function mountPage() {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+
+    const router = createTestRouter()
+    await router.push('/academy/classes')
+    await router.isReady()
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        class_name: 'Class A',
-      })
-  })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      class_name: 'Class A',
+    })
 
-  it('应该展示班级列表并支持进入班级学生页', async () => {
     const wrapper = mount(ClassManagement, {
       global: {
+        plugins: [pinia, router],
         components: {
           ElTable,
           ElTableColumn,
@@ -76,6 +81,25 @@ describe('ClassManagement', () => {
     })
 
     await flushPromises()
+    return { wrapper, router }
+  }
+
+  beforeEach(() => {
+    localStorage.clear()
+    teacherApiMocks.getClasses.mockReset()
+    teacherApiMocks.getClasses.mockResolvedValue({
+      list: [
+        { name: 'Class A', student_count: 2 },
+        { name: 'Class B', student_count: 3 },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+  })
+
+  it('应该展示班级列表并支持进入班级学生页', async () => {
+    const { wrapper, router } = await mountPage()
 
     expect(teacherApiMocks.getClasses).toHaveBeenCalledWith({ page: 1, page_size: 20 })
     expect(wrapper.text()).toContain('班级管理')
@@ -105,32 +129,18 @@ describe('ClassManagement', () => {
     expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).toContain('Class B')
 
-    await wrapper
-      .findAll('button')
-      .find((node) => node.text().includes('进入'))
-      ?.trigger('click')
+    const classLink = wrapper.findAll('a').find((node) => node.text().includes('进入班级'))
+    expect(classLink).toBeTruthy()
 
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'TeacherClassStudents',
-      params: { className: 'Class A' },
-    })
+    await classLink!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('TeacherClassStudents')
+    expect(router.currentRoute.value.params).toEqual({ className: 'Class A' })
   })
 
   it('应该支持按班级编号或班级名称筛选', async () => {
-    const wrapper = mount(ClassManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     expect(wrapper.find('.workspace-directory-section.teacher-directory-section').exists()).toBe(
       true
@@ -167,20 +177,7 @@ describe('ClassManagement', () => {
       page_size: 20,
     })
 
-    const wrapper = mount(ClassManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
     expect(wrapper.text()).toContain('班级筛选')
@@ -213,20 +210,7 @@ describe('ClassManagement', () => {
         page_size: 20,
       })
 
-    const wrapper = mount(ClassManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     expect(wrapper.text()).toContain('共 21 个班级')
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('1 / 2')
@@ -254,6 +238,9 @@ describe('ClassManagement', () => {
     expect(classManagementSource).toContain('<WorkspaceDirectoryToolbar')
     expect(classManagementSource).toContain(':show-total="false"')
     expect(classManagementSource).not.toContain(':show-filter="false"')
+    expect(classManagementSource).not.toContain("from 'vue-router'")
+    expect(classManagementSource).toContain('TeacherClassManagementHeaderActions')
+    expect(classManagementSource).toContain('TeacherClassManagementRowLink')
     expect(classManagementSource).toContain('filter-panel-title="班级筛选"')
     expect(classManagementSource).toContain('<span>班级数量</span>')
     expect(classManagementSource).toContain('<FolderKanban class="h-4 w-4" />')
@@ -312,23 +299,23 @@ describe('ClassManagement', () => {
       "import { useClassReportExport } from '@/features/teacher-class-report-export'"
     )
     expect(classReportExportDialogSource).not.toContain('useTeacherClassReportExport')
+    expect(classManagementPageModelSource).not.toContain("from 'vue-router'")
+    expect(classManagementPageModelSource).toContain('dashboardRoute: teacherDashboardRoute')
+    expect(appRouteLinkSource).toContain("from 'vue-router'")
+    expect(teacherClassManagementHeaderActionsSource).toContain(
+      "from '@/components/navigation/AppRouteLink.vue'"
+    )
+    expect(teacherClassManagementHeaderActionsSource).toContain('<AppRouteLink')
+    expect(teacherClassManagementHeaderActionsSource).not.toContain("from 'vue-router'")
+    expect(teacherClassManagementRowLinkSource).toContain(
+      "from '@/components/navigation/AppRouteLink.vue'"
+    )
+    expect(teacherClassManagementRowLinkSource).toContain('<AppRouteLink')
+    expect(teacherClassManagementRowLinkSource).not.toContain("from 'vue-router'")
   })
 
   it('点击导出班级报告时应打开上下文对话框', async () => {
-    const wrapper = mount(ClassManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     await wrapper
       .findAll('button')
@@ -339,6 +326,17 @@ describe('ClassManagement', () => {
     const dialog = wrapper.get('[data-testid="class-report-dialog"]')
     expect(dialog.attributes('data-open')).toBe('true')
     expect(dialog.attributes('data-default-class-name')).toBe('Class A')
-    expect(pushMock).not.toHaveBeenCalledWith({ name: 'TeacherAWDReviewIndex' })
+  })
+
+  it('应该支持从页头回到教学概览', async () => {
+    const { wrapper, router } = await mountPage()
+    const dashboardLink = wrapper.findAll('a').find((node) => node.text().includes('教学概览'))
+
+    expect(dashboardLink).toBeTruthy()
+
+    await dashboardLink!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('TeacherDashboard')
   })
 })

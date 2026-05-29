@@ -14,7 +14,7 @@ const {
   rows,
   loadClasses,
   handlePageChange,
-  openClass,
+  buildClassRoute,
 } = usePlatformClassManagementPage()
 </script>
 
@@ -35,7 +35,7 @@ const {
           :total-pages="totalPages"
           :total="total"
           :error="error"
-          @open-class="openClass"
+          :build-class-route="buildClassRoute"
           @change-page="handlePageChange"
         />
     </main>

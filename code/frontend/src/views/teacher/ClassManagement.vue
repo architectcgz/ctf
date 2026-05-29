@@ -16,8 +16,8 @@ const {
   defaultReportClassName,
   loadClasses,
   handlePageChange,
-  openClass,
-  openDashboard,
+  buildClassRoute,
+  dashboardRoute,
   openClassReportDialog,
 } = useClassManagementPage()
 </script>
@@ -31,11 +31,11 @@ const {
       :page-size="pageSize"
       :loading="loading"
       :error="error"
+      :dashboard-route="dashboardRoute"
+      :build-class-route="buildClassRoute"
       @retry="loadClasses"
       @change-page="handlePageChange"
-      @open-dashboard="openDashboard"
       @open-report-export="openClassReportDialog"
-      @open-class="openClass"
     />
     <ClassReportExportDialog
       v-model="reportDialogVisible"

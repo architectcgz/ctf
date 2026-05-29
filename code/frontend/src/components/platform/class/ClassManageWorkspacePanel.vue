@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
@@ -17,6 +18,13 @@ interface ClassManageTableRow {
   rowIndex: number
 }
 
+interface ClassManageRouteTarget {
+  name: string
+  params: {
+    className: string
+  }
+}
+
 type ClassStatusFilter = 'ready' | 'empty' | ''
 
 const props = defineProps<{
@@ -27,10 +35,10 @@ const props = defineProps<{
   totalPages: number
   total: number
   error: string | null
+  buildClassRoute: (className: string) => ClassManageRouteTarget
 }>()
 
 const emit = defineEmits<{
-  (event: 'open-class', className: string): void
   (event: 'change-page', page: number): void
 }>()
 
@@ -149,13 +157,12 @@ function handleStatusFilterChange(event: Event): void {
           row-key="id"
         >
           <template #cell-actions="{ row }">
-            <button
-              type="button"
+            <AppRouteLink
+              :to="props.buildClassRoute(String((row as ClassManageTableRow).name))"
               class="ui-btn ui-btn--primary ui-btn--sm"
-              @click="emit('open-class', String((row as ClassManageTableRow).name))"
             >
               查看班级
-            </button>
+            </AppRouteLink>
           </template>
         </WorkspaceDataTable>
 
