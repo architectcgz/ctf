@@ -1,35 +1,56 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import PlatformStudentManagement from '../StudentManage.vue'
 import adminStudentManageSource from '../StudentManage.vue?raw'
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
 import studentManageWorkspacePanelSource from '@/components/platform/student/StudentManageWorkspacePanel.vue?raw'
-
-const pushMock = vi.fn()
+import platformStudentManagementPageSource from '@/features/platform-student-management/model/usePlatformStudentManagementPage.ts?raw'
 
 const adminTeachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
   getStudentsDirectory: vi.fn(),
 }))
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
-
 vi.mock('@/api/admin', () => ({
   getClasses: adminTeachingApiMocks.getClasses,
   getStudentsDirectory: adminTeachingApiMocks.getStudentsDirectory,
 }))
 
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/platform/students', component: PlatformStudentManagement },
+      {
+        path: '/platform/students/:className/:studentId',
+        name: 'PlatformStudentAnalysis',
+        component: { template: '<div>student analysis</div>' },
+      },
+    ],
+  })
+}
+
+async function mountPage() {
+  const router = createTestRouter()
+  await router.push('/platform/students')
+  await router.isReady()
+
+  const wrapper = mount(PlatformStudentManagement, {
+    global: {
+      plugins: [router],
+    },
+  })
+
+  await flushPromises()
+  return { wrapper, router }
+}
+
 describe('PlatformStudentManagement', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    pushMock.mockReset()
     adminTeachingApiMocks.getClasses.mockReset()
     adminTeachingApiMocks.getStudentsDirectory.mockReset()
 
@@ -122,13 +143,19 @@ describe('PlatformStudentManagement', () => {
     expect(studentManageWorkspacePanelSource).toContain(
       "from '@/components/common/WorkspaceDirectoryPagination.vue'"
     )
+    expect(studentManageWorkspacePanelSource).toContain(
+      "from '@/components/navigation/AppRouteLink.vue'"
+    )
     expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
     expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
     expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
+    expect(studentManageWorkspacePanelSource).toContain('<AppRouteLink')
     expect(studentManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
+    expect(appRouteLinkSource).toContain("from 'vue-router'")
+    expect(platformStudentManagementPageSource).not.toContain("from 'vue-router'")
+    expect(platformStudentManagementPageSource).toContain('function buildStudentRoute')
 
-    const wrapper = mount(PlatformStudentManagement)
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     expect(adminTeachingApiMocks.getClasses).toHaveBeenCalledTimes(1)
     expect(adminTeachingApiMocks.getStudentsDirectory).toHaveBeenCalledWith({
@@ -152,10 +179,7 @@ describe('PlatformStudentManagement', () => {
   })
 
   it('应支持检索、班级筛选和进入学员分析页', async () => {
-    const wrapper = mount(PlatformStudentManagement, {
-      attachTo: document.body,
-    })
-    await flushPromises()
+    const { wrapper, router } = await mountPage()
 
     const searchInput = wrapper.get('input[placeholder="检索姓名、用户名或学号..."]')
     await searchInput.setValue('Alice')
@@ -209,16 +233,13 @@ describe('PlatformStudentManagement', () => {
       page_size: 20,
     })
 
-    await wrapper
-      .findAll('button')
-      .find((node) => node.text().includes('查看学员'))
-      ?.trigger('click')
+    const studentLink = wrapper.findAll('a').find((node) => node.text().includes('查看学员'))
+    expect(studentLink).toBeTruthy()
 
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'PlatformStudentAnalysis',
-      params: { className: 'Class A', studentId: 'stu-1' },
-    })
+    await studentLink!.trigger('click')
+    await flushPromises()
 
-    wrapper.unmount()
+    expect(router.currentRoute.value.name).toBe('PlatformStudentAnalysis')
+    expect(router.currentRoute.value.params).toEqual({ className: 'Class A', studentId: 'stu-1' })
   })
 })

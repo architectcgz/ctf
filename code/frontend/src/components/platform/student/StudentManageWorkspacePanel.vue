@@ -5,6 +5,12 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+
+interface StudentRouteTarget {
+  name: string
+  params?: Record<string, string>
+}
 
 interface StudentManageTableRow {
   id: string
@@ -14,6 +20,7 @@ interface StudentManageTableRow {
   class_name: string
   total_score: number
   actions: string
+  studentRoute: StudentRouteTarget
 }
 
 defineProps<{
@@ -35,7 +42,6 @@ const emit = defineEmits<{
   (event: 'change:class-filter', value: string): void
   (event: 'reset-filters'): void
   (event: 'change-page', value: number): void
-  (event: 'open-student', studentId: string): void
 }>()
 
 const columns = [
@@ -111,13 +117,12 @@ const columns = [
           row-key="id"
         >
           <template #cell-actions="{ row }">
-            <button
-              type="button"
+            <AppRouteLink
+              :to="(row as StudentManageTableRow).studentRoute"
               class="ui-btn ui-btn--primary ui-btn--sm"
-              @click="emit('open-student', String((row as StudentManageTableRow).id))"
             >
               查看学员
-            </button>
+            </AppRouteLink>
           </template>
         </WorkspaceDataTable>
 

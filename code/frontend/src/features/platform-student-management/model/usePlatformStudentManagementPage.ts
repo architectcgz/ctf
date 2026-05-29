@@ -1,14 +1,13 @@
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { getClasses, getStudentsDirectory } from '@/api/admin'
 import type { ClassDirectoryItem } from '@/api/contracts'
 import { useStudentDirectoryQuery } from '@/features/student-directory'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { reportFrontendError } from '@/utils/reportFrontendError'
+import { platformStudentAnalysisRoute } from './platformStudentManagementRoutes'
 
 export function usePlatformStudentManagementPage() {
-  const router = useRouter()
   const classes = ref<ClassDirectoryItem[]>([])
   const loadingClasses = ref(false)
   const pageError = ref<string | null>(null)
@@ -52,6 +51,7 @@ export function usePlatformStudentManagementPage() {
       class_name: item.class_name || '未分班',
       total_score: item.total_score ?? 0,
       actions: '查看学员',
+      studentRoute: buildStudentRoute(item.id, item.class_name),
     }))
   )
 
@@ -125,15 +125,8 @@ export function usePlatformStudentManagementPage() {
     void loadStudents()
   }
 
-  function openStudent(studentId: string): void {
-    const student = list.value.find((item) => item.id === studentId)
-    void router.push({
-      name: 'PlatformStudentAnalysis',
-      params: {
-        className: student?.class_name || classFilter.value || '',
-        studentId,
-      },
-    })
+  function buildStudentRoute(studentId: string, className?: string) {
+    return platformStudentAnalysisRoute(studentId, className || classFilter.value || '')
   }
 
   onMounted(() => {
@@ -160,6 +153,6 @@ export function usePlatformStudentManagementPage() {
     handleClassFilterChange,
     resetFilters,
     handlePageChange,
-    openStudent,
+    buildStudentRoute,
   }
 }

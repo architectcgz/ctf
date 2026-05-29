@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TeacherStudentManagement from '../TeacherStudentManagement.vue'
 import teacherStudentManagementSource from '../TeacherStudentManagement.vue?raw'
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import studentManagementPageModelSource from '@/features/teacher-student-management/model/useStudentManagementPage.ts?raw'
 import studentManagementSource from '@/features/teacher-student-management/ui/StudentManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -11,22 +14,73 @@ const ElTable = { template: '<div><slot /></div>' }
 const ElTableColumn = { template: '<div><slot /></div>' }
 const ElButton = { template: '<button><slot /></button>' }
 
-const pushMock = vi.fn()
-
 const teacherApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
   getStudentsDirectory: vi.fn(),
 }))
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
-
 vi.mock('@/api/teacher', () => teacherApiMocks)
+
+const reportDialogStub = {
+  name: 'ClassReportExportDialog',
+  props: ['modelValue', 'defaultClassName'],
+  template:
+    '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" />',
+}
+
+let pinia: ReturnType<typeof createPinia>
+
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/academy/students', component: TeacherStudentManagement },
+      {
+        path: '/academy/classes',
+        name: 'ClassManagement',
+        component: { template: '<div>class management</div>' },
+      },
+      {
+        path: '/platform/classes',
+        name: 'PlatformClassManagement',
+        component: { template: '<div>platform class management</div>' },
+      },
+      {
+        path: '/academy/students/:className/:studentId',
+        name: 'TeacherStudentAnalysis',
+        component: { template: '<div>teacher student analysis</div>' },
+      },
+      {
+        path: '/platform/students/:className/:studentId',
+        name: 'PlatformStudentAnalysis',
+        component: { template: '<div>platform student analysis</div>' },
+      },
+    ],
+  })
+}
+
+async function mountPage() {
+  const router = createTestRouter()
+  await router.push('/academy/students')
+  await router.isReady()
+
+  const wrapper = mount(TeacherStudentManagement, {
+    global: {
+      plugins: [pinia, router],
+      components: {
+        ElTable,
+        ElTableColumn,
+        ElButton,
+      },
+      stubs: {
+        ClassReportExportDialog: reportDialogStub,
+      },
+    },
+  })
+
+  await flushPromises()
+  return { wrapper, router }
+}
 
 function deferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void
@@ -37,18 +91,11 @@ function deferred<T>() {
 }
 
 describe('TeacherStudentManagement', () => {
-  const reportDialogStub = {
-    name: 'ClassReportExportDialog',
-    props: ['modelValue', 'defaultClassName'],
-    template:
-      '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" />',
-  }
-
   beforeEach(() => {
     vi.useFakeTimers()
-    setActivePinia(createPinia())
+    pinia = createPinia()
+    setActivePinia(pinia)
     localStorage.clear()
-    pushMock.mockReset()
     teacherApiMocks.getClasses.mockReset()
     teacherApiMocks.getStudentsDirectory.mockReset()
 
@@ -102,20 +149,7 @@ describe('TeacherStudentManagement', () => {
   })
 
   it('应该支持搜索学生并进入学员分析页', async () => {
-    const wrapper = mount(TeacherStudentManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper, router } = await mountPage()
 
     expect(wrapper.text()).toContain('学生管理')
     expect(wrapper.find('.workspace-directory-section.teacher-directory-section').exists()).toBe(
@@ -183,12 +217,14 @@ describe('TeacherStudentManagement', () => {
     expect(wrapper.text()).toContain('Alice Zhang')
     expect(wrapper.text()).not.toContain('bob')
 
-    await wrapper.find('.workspace-data-table__body tr').find('button').trigger('click')
+    const studentLink = wrapper.findAll('a').find((node) => node.text().includes('学员分析'))
+    expect(studentLink).toBeTruthy()
 
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'TeacherStudentAnalysis',
-      params: { className: 'Class A', studentId: 'stu-1' },
-    })
+    await studentLink!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('TeacherStudentAnalysis')
+    expect(router.currentRoute.value.params).toEqual({ className: 'Class A', studentId: 'stu-1' })
   })
 
   it('学生管理概况卡片应复用 admin dashboard 的共享数值卡片结构', () => {
@@ -238,6 +274,12 @@ describe('TeacherStudentManagement', () => {
     expect(teacherStudentManagementSource).not.toContain('ClassReportExportDialog.vue')
     expect(teacherStudentManagementSource).not.toContain('getStudentsDirectory')
     expect(teacherStudentManagementSource).not.toContain('const directoryParams = computed')
+    expect(studentManagementSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(studentManagementSource).toContain('<AppRouteLink')
+    expect(appRouteLinkSource).toContain("from 'vue-router'")
+    expect(studentManagementPageModelSource).not.toContain("from 'vue-router'")
+    expect(studentManagementPageModelSource).toContain('const classManagementRoute = computed')
+    expect(studentManagementPageModelSource).toContain('function buildStudentRoute')
   })
 
   it('薄弱项列应复用题目分类胶囊色，并先归一化后判断分类值', () => {
@@ -255,24 +297,15 @@ describe('TeacherStudentManagement', () => {
       class_name: 'Class A',
     })
 
-    const wrapper = mount(TeacherStudentManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
+    const { wrapper, router } = await mountPage()
+    const classManagementLink = wrapper.findAll('a').find((node) => node.text().includes('班级管理'))
 
+    expect(classManagementLink).toBeTruthy()
+
+    await classManagementLink!.trigger('click')
     await flushPromises()
 
-    wrapper.findComponent({ name: 'StudentManagementPage' }).vm.$emit('openClassManagement')
-
-    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformClassManagement' })
+    expect(router.currentRoute.value.name).toBe('PlatformClassManagement')
   })
 
   it('管理员从学生管理进入学员分析时应停留在后台路由', async () => {
@@ -284,27 +317,16 @@ describe('TeacherStudentManagement', () => {
       class_name: 'Class A',
     })
 
-    const wrapper = mount(TeacherStudentManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
+    const { wrapper, router } = await mountPage()
+    const studentLink = wrapper.findAll('a').find((node) => node.text().includes('学员分析'))
 
+    expect(studentLink).toBeTruthy()
+
+    await studentLink!.trigger('click')
     await flushPromises()
 
-    wrapper.findComponent({ name: 'StudentManagementPage' }).vm.$emit('openStudent', 'stu-1')
-
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'PlatformStudentAnalysis',
-      params: { className: 'Class A', studentId: 'stu-1' },
-    })
+    expect(router.currentRoute.value.name).toBe('PlatformStudentAnalysis')
+    expect(router.currentRoute.value.params).toEqual({ className: 'Class A', studentId: 'stu-1' })
   })
 
   it('应该忽略过期搜索请求的返回结果', async () => {
@@ -364,20 +386,7 @@ describe('TeacherStudentManagement', () => {
       .mockImplementationOnce(() => slowRequest.promise)
       .mockImplementationOnce(() => fastRequest.promise)
 
-    const wrapper = mount(TeacherStudentManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     const searchInput = wrapper.find('input[placeholder="搜索姓名、用户名或学号"]')
     await searchInput.setValue('A')
@@ -490,20 +499,7 @@ describe('TeacherStudentManagement', () => {
       }
     })
 
-    const wrapper = mount(TeacherStudentManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper, router } = await mountPage()
 
     await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
     const classSelect = wrapper.find('.teacher-directory-filter-control')
@@ -557,12 +553,15 @@ describe('TeacherStudentManagement', () => {
       .findAll('.workspace-data-table__body tr')
       .find((row) => row.text().includes('Carol Chen'))
     expect(carolRow).toBeDefined()
-    await carolRow!.find('button').trigger('click')
 
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'TeacherStudentAnalysis',
-      params: { className: 'Class B', studentId: 'stu-3' },
-    })
+    const studentLink = carolRow!.findAll('a').find((node) => node.text().includes('学员分析'))
+    expect(studentLink).toBeTruthy()
+
+    await studentLink!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('TeacherStudentAnalysis')
+    expect(router.currentRoute.value.params).toEqual({ className: 'Class B', studentId: 'stu-3' })
   })
 
   it('默认班级不是可访问班级时应该回退为全部班级并显示全部学生', async () => {
@@ -600,20 +599,7 @@ describe('TeacherStudentManagement', () => {
       class_name: 'Missing Class',
     })
 
-    const wrapper = mount(TeacherStudentManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     await wrapper.get('.workspace-directory-toolbar__filter-toggle').trigger('click')
     expect(
@@ -666,20 +652,7 @@ describe('TeacherStudentManagement', () => {
       }
     })
 
-    const wrapper = mount(TeacherStudentManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(20)
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('共 21 名学生')
@@ -742,20 +715,7 @@ describe('TeacherStudentManagement', () => {
   })
 
   it('点击导出班级报告时应打开当前筛选班级的上下文对话框', async () => {
-    const wrapper = mount(TeacherStudentManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-        stubs: {
-          ClassReportExportDialog: reportDialogStub,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper, router } = await mountPage()
 
     await wrapper
       .findAll('button')
@@ -766,6 +726,6 @@ describe('TeacherStudentManagement', () => {
     const dialog = wrapper.get('[data-testid="class-report-dialog"]')
     expect(dialog.attributes('data-open')).toBe('true')
     expect(dialog.attributes('data-default-class-name')).toBe('Class A')
-    expect(pushMock).not.toHaveBeenCalledWith({ name: 'TeacherAWDReviewIndex' })
+    expect(router.currentRoute.value.path).toBe('/academy/students')
   })
 })

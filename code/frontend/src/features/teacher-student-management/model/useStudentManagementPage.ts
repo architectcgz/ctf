@@ -1,18 +1,16 @@
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { getClasses, getStudentsDirectory } from '@/api/teacher'
 import type { ClassDirectoryItem } from '@/api/contracts'
 import { useStudentDirectoryQuery, useStudentFilters } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
-import {
-  resolveClassManagementRouteName,
-  resolveStudentAnalysisRouteName,
-} from '@/utils/teachingWorkspaceRouting'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
+import {
+  teacherClassManagementRoute,
+  teacherStudentAnalysisRoute,
+} from './teacherStudentManagementRoutes'
 
 export function useStudentManagementPage() {
-  const router = useRouter()
   const authStore = useAuthStore()
 
   const classes = ref<ClassDirectoryItem[]>([])
@@ -31,6 +29,7 @@ export function useStudentManagementPage() {
   const { selectedClassName, searchQuery, studentNoQuery } = filters
   const { students, total, loading: loadingStudents } = studentDirectoryQuery
   const error = computed(() => pageError.value ?? studentDirectoryQuery.error.value)
+  const classManagementRoute = computed(() => teacherClassManagementRoute(authStore.user?.role))
   const filteredTotal = computed(() => total.value)
   const totalPages = computed(() =>
     Math.max(1, Math.ceil(filteredTotal.value / Math.max(pageSize.value, 1)))
@@ -105,19 +104,14 @@ export function useStudentManagementPage() {
     }
   }
 
-  function openStudent(studentId: string): void {
+  function buildStudentRoute(studentId: string) {
     const student = students.value.find((item) => item.id === studentId)
-    router.push({
-      name: resolveStudentAnalysisRouteName(authStore.user?.role),
-      params: {
-        className: selectedClassName.value || student?.class_name || '',
-        studentId,
-      },
-    })
-  }
 
-  function openClassManagement(): void {
-    router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
+    return teacherStudentAnalysisRoute(
+      authStore.user?.role,
+      studentId,
+      selectedClassName.value || student?.class_name || ''
+    )
   }
 
   function updateSearchQuery(value: string): void {
@@ -175,14 +169,14 @@ export function useStudentManagementPage() {
     loadingClasses,
     loadingStudents,
     error,
+    classManagementRoute,
     reportDialogVisible,
     initialize,
-    openClassManagement,
     openClassReportDialog,
     updateSearchQuery,
     updateStudentNoQuery,
     selectClass,
     handlePageChange,
-    openStudent,
+    buildStudentRoute,
   }
 }

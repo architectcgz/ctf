@@ -1,14 +1,12 @@
 import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useAuthStore } from '@/stores/auth'
-import { resolveTeachingDashboardRouteName } from '@/utils/teachingWorkspaceRouting'
+import { teacherInstanceDashboardRoute } from './teacherInstanceManagementRoutes'
 
 import { useInstances } from './useInstances'
 
 export function useInstanceManagementPage() {
-  const router = useRouter()
   const authStore = useAuthStore()
 
   const {
@@ -30,6 +28,7 @@ export function useInstanceManagementPage() {
     loadInstances,
     removeInstance,
   } = useInstances()
+  const dashboardRoute = teacherInstanceDashboardRoute(authStore.user?.role)
 
   function handlePageChange(nextPage: number): void {
     const normalizedPage = Math.max(1, Math.floor(nextPage))
@@ -53,10 +52,6 @@ export function useInstanceManagementPage() {
     await removeInstance(id)
   }
 
-  function openDashboard(): void {
-    router.push({ name: resolveTeachingDashboardRouteName(authStore.user?.role) })
-  }
-
   onMounted(() => {
     void initialize()
   })
@@ -71,6 +66,7 @@ export function useInstanceManagementPage() {
     destroyingId,
     error,
     isAdmin,
+    dashboardRoute,
     totalCount,
     runningCount,
     expiringSoonCount,
@@ -79,6 +75,5 @@ export function useInstanceManagementPage() {
     updateFilter,
     handlePageChange,
     handleDestroy,
-    openDashboard,
   }
 }

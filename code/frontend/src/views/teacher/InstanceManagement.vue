@@ -14,6 +14,7 @@ const {
   destroyingId,
   error,
   isAdmin,
+  dashboardRoute,
   totalCount,
   runningCount,
   expiringSoonCount,
@@ -22,13 +23,13 @@ const {
   updateFilter,
   handlePageChange,
   handleDestroy,
-  openDashboard,
 } = useInstanceManagementPage()
 </script>
 
 <template>
   <TeacherInstanceManagementPage
     :classes="classes"
+    :dashboard-route="dashboardRoute"
     :class-name="filters.className"
     :keyword="filters.keyword"
     :student-no="filters.studentNo"
@@ -49,6 +50,5 @@ const {
     @update-student-no="updateFilter('studentNo', $event)"
     @change-page="handlePageChange"
     @destroy="handleDestroy"
-    @open-dashboard="openDashboard"
   />
 </template>

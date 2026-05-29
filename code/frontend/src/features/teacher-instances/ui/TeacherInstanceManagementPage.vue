@@ -7,6 +7,9 @@ import TeacherInstanceHeroPanel from '@/components/teacher/instance-management/T
 defineProps<{
   classes: ClassDirectoryItem[]
   instances: InstanceDirectoryItem[]
+  dashboardRoute: {
+    name: string
+  }
   className: string
   keyword: string
   studentNo: string
@@ -24,7 +27,6 @@ defineProps<{
 
 const emit = defineEmits<{
   retry: []
-  openDashboard: []
   updateClassName: [value: string]
   updateKeyword: [value: string]
   updateStudentNo: [value: string]
@@ -41,7 +43,7 @@ const emit = defineEmits<{
           :total-count="totalCount"
           :running-count="runningCount"
           :expiring-soon-count="expiringSoonCount"
-          @open-dashboard="emit('openDashboard')"
+          :dashboard-route="dashboardRoute"
         />
 
         <TeacherInstanceDirectorySection

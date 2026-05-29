@@ -13,13 +13,12 @@ const {
   statusFilter,
   totalInstances,
   filteredTotal,
+  overviewRoute,
   totalPages,
   pageRows,
   runningCount,
   warningCount,
   loadInstances,
-  openOverview,
-  openStudent,
   requestDestroyById,
   handlePageChange,
   setKeyword,
@@ -35,7 +34,7 @@ const {
           :running-count="runningCount"
           :total="totalInstances"
           :warning-count="warningCount"
-          @back="openOverview"
+          :overview-route="overviewRoute"
           @refresh="void loadInstances()"
         />
 
@@ -53,7 +52,6 @@ const {
           @update:keyword="setKeyword"
           @change:status-filter="setStatusFilter"
           @reset-filters="resetFilters"
-          @open-student="openStudent"
           @destroy-instance="requestDestroyById"
           @change-page="handlePageChange"
         />

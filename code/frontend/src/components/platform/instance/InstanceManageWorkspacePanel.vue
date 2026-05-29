@@ -6,6 +6,12 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+
+interface InstanceRouteTarget {
+  name: string
+  params?: Record<string, string>
+}
 
 interface InstanceManageTableRow {
   id: string
@@ -19,6 +25,7 @@ interface InstanceManageTableRow {
   status_label: string
   created_at: string
   actions: string
+  studentRoute: InstanceRouteTarget
 }
 
 type InstanceStatusFilter = 'running' | 'creating' | 'expired' | 'failed' | 'inactive' | ''
@@ -40,7 +47,6 @@ const emit = defineEmits<{
   (event: 'update:keyword', value: string): void
   (event: 'change:status-filter', value: InstanceStatusFilter): void
   (event: 'reset-filters'): void
-  (event: 'open-student', studentId: string, className: string): void
   (event: 'destroy-instance', id: string): void
   (event: 'change-page', page: number): void
 }>()
@@ -140,19 +146,12 @@ function handleStatusFilterChange(event: Event): void {
           </template>
           <template #cell-user="{ row }">
             <div class="instance-user-cell">
-              <button
-                type="button"
+              <AppRouteLink
+                :to="(row as InstanceManageTableRow).studentRoute"
                 class="instance-user-link"
-                @click="
-                  emit(
-                    'open-student',
-                    (row as InstanceManageTableRow).student_id,
-                    (row as InstanceManageTableRow).class_name
-                  )
-                "
               >
                 {{ (row as InstanceManageTableRow).user }}
-              </button>
+              </AppRouteLink>
             </div>
           </template>
           <template #cell-class_name="{ row }">

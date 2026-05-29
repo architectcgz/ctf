@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import InstanceManagement from '../InstanceManagement.vue'
 import instanceManagementViewSource from '../InstanceManagement.vue?raw'
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import instanceManagementSourceBase from '@/features/teacher-instances/ui/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceManagementPageModelSource from '@/features/teacher-instances/model/useInstanceManagementPage.ts?raw'
 import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
 import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import teacherInstancesHookSource from '@/features/teacher-instances/model/useInstances.ts?raw'
@@ -20,8 +23,6 @@ const ElTable = { template: '<div><slot /></div>' }
 const ElTableColumn = { template: '<div><slot /></div>' }
 const ElButton = { template: '<button><slot /></button>' }
 
-const pushMock = vi.fn()
-
 const teacherApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
 }))
@@ -33,26 +34,58 @@ const instanceAccessApiMocks = vi.hoisted(() => ({
 
 const confirmMock = vi.hoisted(() => vi.fn())
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
-
 vi.mock('@/api/teacher', () => teacherApiMocks)
 vi.mock('@/api/instances', () => instanceAccessApiMocks)
 vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: confirmMock,
 }))
 
+let pinia: ReturnType<typeof createPinia>
+
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/academy/instances', component: InstanceManagement },
+      {
+        path: '/academy/dashboard',
+        name: 'TeacherDashboard',
+        component: { template: '<div>teacher dashboard</div>' },
+      },
+      {
+        path: '/platform/overview',
+        name: 'PlatformOverview',
+        component: { template: '<div>platform overview</div>' },
+      },
+    ],
+  })
+}
+
+async function mountPage() {
+  const router = createTestRouter()
+  await router.push('/academy/instances')
+  await router.isReady()
+
+  const wrapper = mount(InstanceManagement, {
+    global: {
+      plugins: [pinia, router],
+      components: {
+        ElTable,
+        ElTableColumn,
+        ElButton,
+      },
+    },
+  })
+  await flushPromises()
+  return { wrapper, router }
+}
+
 describe('InstanceManagement', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    setActivePinia(createPinia())
+    pinia = createPinia()
+    setActivePinia(pinia)
     localStorage.clear()
-    pushMock.mockReset()
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
     Object.values(instanceAccessApiMocks).forEach((mock) => mock.mockReset())
 
@@ -92,13 +125,12 @@ describe('InstanceManagement', () => {
     confirmMock.mockResolvedValue(true)
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'teacher-1',
-        username: 'teacher',
-        role: 'teacher',
-        class_name: 'Class A',
-      })
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      class_name: 'Class A',
+    })
   })
 
   afterEach(() => {
@@ -106,17 +138,7 @@ describe('InstanceManagement', () => {
   })
 
   it('应该按教师所属班级加载实例', async () => {
-    const wrapper = mount(InstanceManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     expect(instanceAccessApiMocks.getInstanceDirectoryByRole).toHaveBeenCalledWith(
       'teacher',
@@ -167,19 +189,17 @@ describe('InstanceManagement', () => {
     expect(teacherInstancesHookSource).toContain("reportFrontendError('加载教师实例列表失败:', err)")
     expect(teacherInstancesHookSource).toContain("reportFrontendError('教师销毁实例失败:', err)")
     expect(teacherInstancesHookSource).not.toContain("console.error('加载教师实例")
+    expect(teacherInstanceManagementPageModelSource).not.toContain("from 'vue-router'")
+    expect(teacherInstanceManagementPageModelSource).toContain(
+      'const dashboardRoute = teacherInstanceDashboardRoute(authStore.user?.role)'
+    )
+    expect(teacherInstanceHeroPanelSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(teacherInstanceHeroPanelSource).toContain('<AppRouteLink')
+    expect(appRouteLinkSource).toContain("from 'vue-router'")
   })
 
   it('应该支持输入后自动筛选并销毁实例', async () => {
-    const wrapper = mount(InstanceManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-      },
-    })
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     const inputs = wrapper.findAll('input')
     await inputs[0].setValue('ali')
@@ -229,16 +249,7 @@ describe('InstanceManagement', () => {
   it('取消危险确认后不应继续销毁实例', async () => {
     confirmMock.mockResolvedValue(false)
 
-    const wrapper = mount(InstanceManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-      },
-    })
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     await wrapper.find('[data-instance-id="inst-1"]').trigger('click')
     await flushPromises()
@@ -250,28 +261,22 @@ describe('InstanceManagement', () => {
 
   it('管理员从实例管理返回概览时应回到后台概览页', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: 'admin-1',
-        username: 'admin',
-        role: 'admin',
-        class_name: 'Class A',
-      })
-
-    const wrapper = mount(InstanceManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-      },
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      class_name: 'Class A',
     })
+
+    const { wrapper, router } = await mountPage()
+    const dashboardLink = wrapper.findAll('a').find((node) => node.text().includes('返回教学概览'))
+
+    expect(dashboardLink).toBeTruthy()
+
+    await dashboardLink!.trigger('click')
     await flushPromises()
 
-    wrapper.findComponent({ name: 'TeacherInstanceManagementPage' }).vm.$emit('openDashboard')
-
-    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformOverview' })
+    expect(router.currentRoute.value.name).toBe('PlatformOverview')
   })
 
   it('应该支持实例目录分页切换', async () => {
@@ -348,16 +353,7 @@ describe('InstanceManagement', () => {
       }
     )
 
-    const wrapper = mount(InstanceManagement, {
-      global: {
-        components: {
-          ElTable,
-          ElTableColumn,
-          ElButton,
-        },
-      },
-    })
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(20)
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('共 21 条实例')
@@ -484,7 +480,7 @@ describe('InstanceManagement', () => {
       /class="teacher-instance-primary-text"[\s\S]*:title="[\s\S]*\(row as InstanceDirectoryItem\)\.student_name \|\|[\s\S]*\(row as InstanceDirectoryItem\)\.student_username/s
     )
     expect(instanceManagementSource).toMatch(
-      /class="teacher-instance-primary-text"[\s\S]*:title="\((row as InstanceDirectoryItem)\)\.challenge_title"/s
+      /class="teacher-instance-primary-text"[\s\S]*:title="\(row as InstanceDirectoryItem\)\.challenge_title"/s
     )
     expect(instanceManagementSource).toContain('InstanceDirectoryItem')
     expect(instanceManagementSource).not.toContain('TeacherInstanceItem')

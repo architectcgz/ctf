@@ -1,5 +1,4 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import type { InstanceDirectoryItem } from '@/api/contracts'
 import {
@@ -9,6 +8,10 @@ import {
 import { useAbortController } from '@/composables/useAbortController'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { reportFrontendError } from '@/utils/reportFrontendError'
+import {
+  platformInstanceStudentAnalysisRoute,
+  platformOverviewRoute,
+} from './platformInstanceManagementRoutes'
 
 interface InstanceManageTableRow {
   id: string
@@ -22,12 +25,15 @@ interface InstanceManageTableRow {
   status_label: string
   created_at: string
   actions: string
+  studentRoute: {
+    name: string
+    params?: Record<string, string>
+  }
 }
 
 type InstanceStatusFilter = 'running' | 'creating' | 'expired' | 'failed' | 'inactive' | ''
 
 export function usePlatformInstanceManagementPage() {
-  const router = useRouter()
   const list = ref<InstanceDirectoryItem[]>([])
   const total = ref(0)
   const page = ref(1)
@@ -43,6 +49,7 @@ export function usePlatformInstanceManagementPage() {
 
   const totalInstances = computed(() => total.value)
   const filteredTotal = computed(() => total.value)
+  const overviewRoute = platformOverviewRoute
   const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
   const pageRows = computed<InstanceManageTableRow[]>(() => {
     return list.value.map((item) => ({
@@ -57,6 +64,7 @@ export function usePlatformInstanceManagementPage() {
       status_label: formatStatus(item.status),
       created_at: formatDateTime(item.created_at),
       actions: '销毁',
+      studentRoute: buildStudentRoute(String(item.student_id), item.class_name),
     }))
   })
   const runningCount = ref(0)
@@ -148,15 +156,8 @@ export function usePlatformInstanceManagementPage() {
     void handleDestroyInstance(instance)
   }
 
-  function openStudent(studentId: string, className: string): void {
-    void router.push({
-      name: 'PlatformStudentAnalysis',
-      params: { className, studentId },
-    })
-  }
-
-  function openOverview(): void {
-    void router.push({ name: 'PlatformOverview' })
+  function buildStudentRoute(studentId: string, className: string) {
+    return platformInstanceStudentAnalysisRoute(studentId, className)
   }
 
   function handlePageChange(p: number): void {
@@ -221,13 +222,13 @@ export function usePlatformInstanceManagementPage() {
     statusFilter,
     totalInstances,
     filteredTotal,
+    overviewRoute,
     totalPages,
     pageRows,
     runningCount,
     warningCount,
     loadInstances,
-    openOverview,
-    openStudent,
+    buildStudentRoute,
     requestDestroyById,
     handlePageChange,
     setKeyword,

@@ -18,21 +18,22 @@ const {
   loadingClasses,
   loadingStudents,
   error,
+  classManagementRoute,
   reportDialogVisible,
   initialize,
-  openClassManagement,
   openClassReportDialog,
   updateSearchQuery,
   updateStudentNoQuery,
   selectClass,
   handlePageChange,
-  openStudent,
+  buildStudentRoute,
 } = useStudentManagementPage()
 </script>
 
 <template>
   <section class="teacher-route-root">
     <StudentManagementPage
+      :class-management-route="classManagementRoute"
       :classes="classes"
       :selected-class-name="selectedClassName"
       :search-query="searchQuery"
@@ -45,14 +46,13 @@ const {
       :loading-classes="loadingClasses"
       :loading-students="loadingStudents"
       :error="error"
+      :build-student-route="buildStudentRoute"
       @retry="initialize"
-      @open-class-management="openClassManagement"
       @open-report-export="openClassReportDialog"
       @update-search-query="updateSearchQuery"
       @update-student-no-query="updateStudentNoQuery"
       @select-class="selectClass"
       @change-page="handlePageChange"
-      @open-student="openStudent"
     />
     <ClassReportExportDialog
       v-model="reportDialogVisible"

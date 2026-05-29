@@ -8,9 +8,15 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 
 // PagePaginationControls is provided through WorkspaceDirectoryPagination.
+interface StudentRouteTarget {
+  name: string
+  params?: Record<string, string>
+}
+
 interface StudentDirectoryTableRow {
   id: string
   student_no: string
@@ -20,9 +26,11 @@ interface StudentDirectoryTableRow {
   solved_count: number
   total_score: number
   actions: string
+  studentRoute: StudentRouteTarget
 }
 
 const props = defineProps<{
+  classManagementRoute: StudentRouteTarget
   classes: ClassDirectoryItem[]
   selectedClassName: string
   searchQuery: string
@@ -35,17 +43,16 @@ const props = defineProps<{
   loadingClasses: boolean
   loadingStudents: boolean
   error: string | null
+  buildStudentRoute: (studentId: string) => StudentRouteTarget
 }>()
 
 const emit = defineEmits<{
   retry: []
-  openClassManagement: []
   openReportExport: []
   updateSearchQuery: [value: string]
   updateStudentNoQuery: [value: string]
   selectClass: [className: string]
   changePage: [page: number]
-  openStudent: [studentId: string]
 }>()
 
 const rows = computed<StudentDirectoryTableRow[]>(() =>
@@ -58,6 +65,7 @@ const rows = computed<StudentDirectoryTableRow[]>(() =>
     solved_count: student.solved_count ?? 0,
     total_score: student.total_score ?? 0,
     actions: 'open',
+    studentRoute: props.buildStudentRoute(student.id),
   }))
 )
 
@@ -114,13 +122,12 @@ function studentWeakCategory(row: StudentDirectoryTableRow) {
           </div>
 
           <div class="header-actions">
-            <button
-              type="button"
+            <AppRouteLink
+              :to="classManagementRoute"
               class="header-btn header-btn--ghost"
-              @click="emit('openClassManagement')"
             >
               班级管理
-            </button>
+            </AppRouteLink>
             <button
               type="button"
               class="header-btn header-btn--ghost"
@@ -288,15 +295,14 @@ function studentWeakCategory(row: StudentDirectoryTableRow) {
 
                 <template #cell-actions="{ row }">
                   <div class="workspace-directory-row-actions teacher-directory-row-cta">
-                    <button
-                      type="button"
+                    <AppRouteLink
+                      :to="(row as StudentDirectoryTableRow).studentRoute"
                       class="ui-btn ui-btn--primary ui-btn--xs"
                       :aria-label="`${(row as StudentDirectoryTableRow).name || (row as StudentDirectoryTableRow).username}，${(row as StudentDirectoryTableRow).solved_count} 题，${(row as StudentDirectoryTableRow).total_score} 分，查看学员分析`"
-                      @click="emit('openStudent', (row as StudentDirectoryTableRow).id)"
                     >
                       学员分析
                       <ArrowRight class="h-4 w-4" />
-                    </button>
+                    </AppRouteLink>
                   </div>
                 </template>
               </WorkspaceDataTable>

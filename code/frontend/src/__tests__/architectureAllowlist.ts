@@ -29,13 +29,9 @@ export const featureRouterImportAllowlist = new Set([
   'features/class-students-workspace/model/useClassStudentsPage.ts -> vue-router',
   'features/student-analysis-workspace/model/useStudentAnalysisPage.ts -> vue-router',
   'features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts -> vue-router',
-  'features/platform-instance-management/model/usePlatformInstanceManagementPage.ts -> vue-router',
-  'features/platform-student-management/model/usePlatformStudentManagementPage.ts -> vue-router',
   'features/scoreboard/model/useScoreboardDetailPage.ts -> vue-router',
   'features/scoreboard/model/useScoreboardRoutePage.ts -> vue-router',
   'features/skill-profile/model/useSkillProfilePage.ts -> vue-router',
   'features/student-dashboard/model/useStudentDashboardPage.ts -> vue-router',
   'features/teacher-dashboard/model/useDashboardPage.ts -> vue-router',
-  'features/teacher-instances/model/useInstanceManagementPage.ts -> vue-router',
-  'features/teacher-student-management/model/useStudentManagementPage.ts -> vue-router',
 ])

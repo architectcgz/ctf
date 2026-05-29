@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { Activity, Clock3, Eye } from 'lucide-vue-next'
 
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+
+interface DashboardRouteTarget {
+  name: string
+}
+
 defineProps<{
   totalCount: number
   runningCount: number
   expiringSoonCount: number
-}>()
-
-const emit = defineEmits<{
-  openDashboard: []
+  dashboardRoute: DashboardRouteTarget
 }>()
 </script>
 
@@ -22,9 +25,9 @@ const emit = defineEmits<{
       </div>
 
       <div class="header-actions">
-        <button type="button" class="header-btn header-btn--primary" @click="emit('openDashboard')">
+        <AppRouteLink :to="dashboardRoute" class="header-btn header-btn--primary">
           返回教学概览
-        </button>
+        </AppRouteLink>
       </div>
     </header>
 

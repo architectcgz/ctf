@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import { Activity, AlertTriangle, RefreshCw, Server } from 'lucide-vue-next'
 
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+
+interface InstanceRouteTarget {
+  name: string
+  params?: Record<string, string>
+}
+
 defineProps<{
   runningCount: number
   total: number
   warningCount: number
+  overviewRoute: InstanceRouteTarget
 }>()
 
 const emit = defineEmits<{
-  back: []
   refresh: []
 }>()
-
-function handleBack(): void {
-  emit('back')
-}
 
 function handleRefresh(): void {
   emit('refresh')
@@ -37,13 +40,12 @@ function handleRefresh(): void {
 
     <div class="awd-library-hero-actions">
       <div class="header-actions quick-actions">
-        <button
-          type="button"
+        <AppRouteLink
+          :to="overviewRoute"
           class="header-btn header-btn--ghost"
-          @click="handleBack"
         >
           返回概览
-        </button>
+        </AppRouteLink>
         <button
           type="button"
           class="header-btn header-btn--primary"

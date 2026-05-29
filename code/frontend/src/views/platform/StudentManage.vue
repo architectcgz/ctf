@@ -22,7 +22,6 @@ const {
   handleClassFilterChange,
   resetFilters,
   handlePageChange,
-  openStudent,
 } = usePlatformStudentManagementPage()
 </script>
 
@@ -52,7 +51,6 @@ const {
           @change:class-filter="handleClassFilterChange"
           @reset-filters="resetFilters"
           @change-page="handlePageChange"
-          @open-student="openStudent"
         />
     </main>
   </div>
