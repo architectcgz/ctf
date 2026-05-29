@@ -3,10 +3,7 @@ import { dirname, join, normalize, relative, resolve, sep } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import {
-  featureRouterImportAllowlist,
-  viewLineLimit,
-} from './architectureAllowlist'
+import { viewLineLimit } from './architectureAllowlist'
 
 const sourceRoot = join(process.cwd(), 'src')
 
@@ -271,7 +268,7 @@ describe('frontend architecture boundaries', () => {
       (_file, importPath) => importPath === 'vue-router' || importPath.startsWith('@/router')
     )
 
-    expectBaseline(routerImports, featureRouterImportAllowlist, 'feature router imports')
+    expect(routerImports).toEqual([])
   })
 
   it('shared composables should not mix API, router, store, and multiple feature owners', () => {
