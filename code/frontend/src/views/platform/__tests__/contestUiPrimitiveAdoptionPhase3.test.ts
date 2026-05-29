@@ -1,11 +1,45 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
-import awdAttackLogDialogSource from '@/features/contest-awd-admin/ui/AWDAttackLogDialog.vue?raw'
-import awdRoundCreateDialogSource from '@/features/contest-awd-admin/ui/AWDRoundCreateDialog.vue?raw'
-import awdServiceCheckDialogSource from '@/features/contest-awd-admin/ui/AWDServiceCheckDialog.vue?raw'
+import awdRoundCreateDialogSourceBase from '@/features/contest-awd-admin/ui/AWDRoundCreateDialog.vue?raw'
+import awdRoundCreateScoreSectionSource from '@/features/contest-awd-admin/ui/AWDRoundCreateScoreSection.vue?raw'
+import awdRoundCreateSettingsSectionSource from '@/features/contest-awd-admin/ui/AWDRoundCreateSettingsSection.vue?raw'
+import awdAttackLogDetailsSectionSource from '@/features/contest-awd-admin/ui/AWDAttackLogDetailsSection.vue?raw'
+import awdAttackLogDialogSourceBase from '@/features/contest-awd-admin/ui/AWDAttackLogDialog.vue?raw'
+import awdAttackLogTargetSectionSource from '@/features/contest-awd-admin/ui/AWDAttackLogTargetSection.vue?raw'
+import awdOperationsDialogFooterSource from '@/features/contest-awd-admin/ui/AWDOperationsDialogFooter.vue?raw'
+import awdServiceCheckDialogSourceBase from '@/features/contest-awd-admin/ui/AWDServiceCheckDialog.vue?raw'
+import awdServiceCheckResultSectionSource from '@/features/contest-awd-admin/ui/AWDServiceCheckResultSection.vue?raw'
+import awdServiceCheckTargetSectionSource from '@/features/contest-awd-admin/ui/AWDServiceCheckTargetSection.vue?raw'
 import contestAwdChallengeSelectorSectionSource from '@/features/contest-workbench/ui/ContestAwdChallengeSelectorSection.vue?raw'
 import contestChallengeEditorDialogSourceBase from '@/features/contest-workbench/ui/ContestChallengeEditorDialog.vue?raw'
 import contestChallengeSettingsSectionSource from '@/features/contest-workbench/ui/ContestChallengeSettingsSection.vue?raw'
+
+const awdRoundCreateDialogSource = [
+  awdRoundCreateDialogSourceBase,
+  awdRoundCreateSettingsSectionSource,
+  awdRoundCreateScoreSectionSource,
+  awdOperationsDialogFooterSource,
+  readFileSync(resolve(process.cwd(), 'src/features/contest-awd-admin/ui/awdOperationsDialogs.css'), 'utf8'),
+].join('\n')
+
+const awdAttackLogDialogSource = [
+  awdAttackLogDialogSourceBase,
+  awdAttackLogTargetSectionSource,
+  awdAttackLogDetailsSectionSource,
+  awdOperationsDialogFooterSource,
+  readFileSync(resolve(process.cwd(), 'src/features/contest-awd-admin/ui/awdOperationsDialogs.css'), 'utf8'),
+].join('\n')
+
+const awdServiceCheckDialogSource = [
+  awdServiceCheckDialogSourceBase,
+  awdServiceCheckTargetSectionSource,
+  awdServiceCheckResultSectionSource,
+  awdOperationsDialogFooterSource,
+  readFileSync(resolve(process.cwd(), 'src/features/contest-awd-admin/ui/awdOperationsDialogs.css'), 'utf8'),
+].join('\n')
 
 const contestChallengeEditorDialogSource = [
   contestChallengeEditorDialogSourceBase,

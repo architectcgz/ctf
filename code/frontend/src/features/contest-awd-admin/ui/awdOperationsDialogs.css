@@ -1,0 +1,43 @@
+.awd-operations-field {
+  --ui-field-gap: var(--space-2);
+}
+
+.awd-operations-field__textarea {
+  min-height: 8.75rem;
+  font-family: var(--font-family-mono);
+}
+
+.awd-operations-field__warning {
+  color: var(--color-warning);
+}
+
+.awd-operations-checkbox {
+  gap: var(--space-3);
+  padding-inline: var(--space-4);
+  color: var(--color-text-primary);
+}
+
+.awd-operations-checkbox__box {
+  width: var(--space-4);
+  height: var(--space-4);
+  flex-shrink: 0;
+}
+
+.awd-operations-checkbox__label {
+  font-size: var(--font-size-13);
+  font-weight: 600;
+}
+
+.awd-operations-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .awd-operations-dialog__footer {
+    flex-direction: column-reverse;
+  }
+}

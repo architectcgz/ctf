@@ -4,6 +4,12 @@ import { computed, reactive, watch } from 'vue'
 import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type { AWDRoundData } from '@/api/contracts'
 
+import AWDOperationsDialogFooter from './AWDOperationsDialogFooter.vue'
+import AWDRoundCreateScoreSection from './AWDRoundCreateScoreSection.vue'
+import AWDRoundCreateSettingsSection from './AWDRoundCreateSettingsSection.vue'
+import type { AwdCreateRoundPayload } from './awdOperationsDialogContracts'
+import './awdOperationsDialogs.css'
+
 const props = defineProps<{
   open: boolean
   nextRoundNumber: number
@@ -12,14 +18,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  save: [
-    value: {
-      round_number: number
-      status: AWDRoundData['status']
-      attack_score: number
-      defense_score: number
-    },
-  ]
+  save: [value: AwdCreateRoundPayload]
 }>()
 
 const form = reactive({
@@ -110,145 +109,28 @@ function handleSubmit() {
       class="space-y-5"
       @submit.prevent="handleSubmit"
     >
-      <div class="ui-field awd-round-field">
-        <label
-          class="ui-field__label"
-          for="awd-round-number"
-        >轮次编号</label>
-        <span
-          class="ui-control-wrap"
-          :class="{ 'is-error': !!fieldErrors.round_number }"
-        >
-          <input
-            id="awd-round-number"
-            v-model.number="form.round_number"
-            type="number"
-            min="1"
-            step="1"
-            class="ui-control"
-          >
-        </span>
-        <p
-          v-if="fieldErrors.round_number"
-          class="ui-field__error"
-        >
-          {{ fieldErrors.round_number }}
-        </p>
-      </div>
+      <AWDRoundCreateSettingsSection
+        :form="form"
+        :field-errors="fieldErrors"
+      />
 
-      <div class="ui-field awd-round-field">
-        <label
-          class="ui-field__label"
-          for="awd-round-status"
-        >初始状态</label>
-        <span class="ui-control-wrap">
-          <select
-            id="awd-round-status"
-            v-model="form.status"
-            class="ui-control"
-          >
-            <option value="pending">待开始</option>
-            <option value="running">进行中</option>
-            <option value="finished">已结束</option>
-          </select>
-        </span>
-      </div>
-
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div class="ui-field awd-round-field">
-          <label
-            class="ui-field__label"
-            for="awd-attack-score"
-          >攻击分</label>
-          <span
-            class="ui-control-wrap"
-            :class="{ 'is-error': !!fieldErrors.attack_score }"
-          >
-            <input
-              id="awd-attack-score"
-              v-model.number="form.attack_score"
-              type="number"
-              min="0"
-              step="1"
-              class="ui-control"
-            >
-          </span>
-          <p
-            v-if="fieldErrors.attack_score"
-            class="ui-field__error"
-          >
-            {{ fieldErrors.attack_score }}
-          </p>
-        </div>
-
-        <div class="ui-field awd-round-field">
-          <label
-            class="ui-field__label"
-            for="awd-defense-score"
-          >防守分</label>
-          <span
-            class="ui-control-wrap"
-            :class="{ 'is-error': !!fieldErrors.defense_score }"
-          >
-            <input
-              id="awd-defense-score"
-              v-model.number="form.defense_score"
-              type="number"
-              min="0"
-              step="1"
-              class="ui-control"
-            >
-          </span>
-          <p
-            v-if="fieldErrors.defense_score"
-            class="ui-field__error"
-          >
-            {{ fieldErrors.defense_score }}
-          </p>
-        </div>
-      </div>
+      <AWDRoundCreateScoreSection
+        :form="form"
+        :field-errors="fieldErrors"
+      />
     </form>
 
     <template #footer>
-      <div class="awd-round-dialog__footer">
-        <button
-          id="awd-round-create-cancel"
-          type="button"
-          class="ui-btn ui-btn--secondary"
-          @click="closeDialog"
-        >
-          取消
-        </button>
-        <button
-          id="awd-round-create-submit"
-          type="button"
-          class="ui-btn ui-btn--primary"
-          :disabled="saving"
-          @click="handleSubmit"
-        >
-          {{ saving ? '创建中...' : '创建轮次' }}
-        </button>
-      </div>
+      <AWDOperationsDialogFooter
+        cancel-id="awd-round-create-cancel"
+        submit-id="awd-round-create-submit"
+        submit-text="创建轮次"
+        saving-text="创建中..."
+        :saving="saving"
+        :disabled="saving"
+        @cancel="closeDialog"
+        @submit="handleSubmit"
+      />
     </template>
   </AdminSurfaceModal>
 </template>
-
-<style scoped>
-.awd-round-field {
-  --ui-field-gap: var(--space-2);
-}
-
-.awd-round-dialog__footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  width: 100%;
-}
-
-@media (max-width: 767px) {
-  .awd-round-dialog__footer {
-    flex-direction: column-reverse;
-  }
-}
-</style>
