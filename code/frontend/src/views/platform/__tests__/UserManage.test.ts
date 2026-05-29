@@ -173,7 +173,6 @@ describe('UserManage', () => {
     await flushPromises()
 
     expect(replaceMock).toHaveBeenLastCalledWith({
-      name: 'UserManage',
       query: { panel: 'import' },
     })
   })
@@ -281,12 +280,19 @@ describe('UserManage', () => {
     expect(userGovernancePanelRouteSource).not.toContain('useRouter(')
     expect(userGovernancePanelRouteSource).toContain('resolveUserGovernancePanel')
     expect(userGovernancePanelRouteSource).toContain('buildUserGovernancePanelQuery')
-    expect(platformUserManagePageSource).toContain("from 'vue-router'")
-    expect(platformUserManagePageSource).toContain('useRoute(')
-    expect(platformUserManagePageSource).toContain('useRouter(')
-    expect(platformUserManagePageSource).toContain('resolveUserGovernancePanel(route.query.panel)')
-    expect(platformUserManagePageSource).toContain("name: 'UserManage'")
-    expect(platformUserManagePageSource).toContain('router.replace({')
+    expect(platformUserManagePageSource).toContain(
+      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+    )
+    expect(platformUserManagePageSource).not.toContain("from 'vue-router'")
+    expect(platformUserManagePageSource).not.toContain('useRoute(')
+    expect(platformUserManagePageSource).not.toContain('useRouter(')
+    expect(platformUserManagePageSource).toContain(
+      'const { query, replaceQuery } = useRouteQueryTransport()'
+    )
+    expect(platformUserManagePageSource).toContain('resolveUserGovernancePanel(query.value.panel)')
+    expect(platformUserManagePageSource).toContain(
+      'await replaceQuery(buildUserGovernancePanelQuery(query.value, panel))'
+    )
     expect(userGovernanceSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )

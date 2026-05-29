@@ -1,7 +1,7 @@
 import { computed, onMounted } from 'vue'
-import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router'
 
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import {
   buildUserGovernancePanelQuery,
   resolveUserGovernancePanel,
@@ -10,8 +10,7 @@ import {
 import { usePlatformUsers } from './usePlatformUsers'
 
 export function usePlatformUserManagePage() {
-  const route = useRoute()
-  const router = useRouter()
+  const { query, replaceQuery } = useRouteQueryTransport()
   const {
     list,
     total,
@@ -37,7 +36,7 @@ export function usePlatformUserManagePage() {
     removeUser,
     importUserFile,
   } = usePlatformUsers()
-  const activePanel = computed<UserPanelKey>(() => resolveUserGovernancePanel(route.query.panel))
+  const activePanel = computed<UserPanelKey>(() => resolveUserGovernancePanel(query.value.panel))
 
   onMounted(() => {
     void refresh()
@@ -48,10 +47,7 @@ export function usePlatformUserManagePage() {
       return
     }
 
-    await router.replace({
-      name: 'UserManage',
-      query: buildUserGovernancePanelQuery(route.query, panel) as LocationQueryRaw,
-    })
+    await replaceQuery(buildUserGovernancePanelQuery(query.value, panel))
   }
 
   function updateKeyword(value: string) {
