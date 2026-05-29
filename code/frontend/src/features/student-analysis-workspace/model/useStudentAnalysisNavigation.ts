@@ -1,5 +1,4 @@
 import type { Ref } from 'vue'
-import type { Router } from 'vue-router'
 
 import {
   resolveClassStudentsRouteName,
@@ -7,35 +6,39 @@ import {
 } from '@/utils/teachingWorkspaceRouting'
 
 interface UseStudentAnalysisNavigationOptions {
-  router: Router
   getRole: () => string | undefined
   selectedClassName: Ref<string>
   selectedStudentId: Ref<string>
+  openClassStudentsRoute: (routeName: string, className: string) => void
+  openChallengeRoute: (challengeId: string) => void
+  openReviewArchiveRoute: (routeName: string, className: string, studentId: string) => void
 }
 
 export function useStudentAnalysisNavigation(options: UseStudentAnalysisNavigationOptions) {
-  const { router, getRole, selectedClassName, selectedStudentId } = options
+  const {
+    getRole,
+    selectedClassName,
+    selectedStudentId,
+    openClassStudentsRoute,
+    openChallengeRoute,
+    openReviewArchiveRoute,
+  } = options
 
   function openClassStudents(): void {
-    router.push({
-      name: resolveClassStudentsRouteName(getRole()),
-      params: { className: selectedClassName.value },
-    })
+    openClassStudentsRoute(resolveClassStudentsRouteName(getRole()), selectedClassName.value)
   }
 
   function openChallenge(challengeId: string): void {
-    router.push(`/challenges/${challengeId}`)
+    openChallengeRoute(challengeId)
   }
 
   function openReviewArchivePage(): void {
     if (!selectedStudentId.value || !selectedClassName.value) return
-    router.push({
-      name: resolveStudentReviewArchiveRouteName(getRole()),
-      params: {
-        className: selectedClassName.value,
-        studentId: selectedStudentId.value,
-      },
-    })
+    openReviewArchiveRoute(
+      resolveStudentReviewArchiveRouteName(getRole()),
+      selectedClassName.value,
+      selectedStudentId.value
+    )
   }
 
   return {

@@ -1,20 +1,24 @@
 import type { Ref } from 'vue'
-import type { RouteLocationNormalizedLoadedGeneric, Router } from 'vue-router'
 
 import type { AttackSessionQuery } from '@/api/contracts'
 
-type ReviewRouteLike = Pick<RouteLocationNormalizedLoadedGeneric, 'query'>
-type ReviewRouterLike = Pick<Router, 'replace'>
+type ReviewRouteLike = {
+  query: Record<string, unknown>
+}
 
 interface UseStudentAnalysisReviewQuerySyncOptions {
   route: ReviewRouteLike
-  router: ReviewRouterLike
   sessionQuery: Ref<AttackSessionQuery>
   selectedStudentId: Ref<string>
   setSessionQuery: (nextQuery: Partial<AttackSessionQuery>) => void
   loadReviewWorkspace: (studentId: string) => Promise<void>
   reloadAttackSessions: (studentId: string) => Promise<void>
   studentIdFromRoute: () => string
+  replaceReviewWorkspaceQuery: (nextQuery: {
+    reviewMode?: 'practice' | 'jeopardy' | 'awd'
+    reviewResult?: 'success' | 'failed' | 'in_progress' | 'unknown'
+    reviewChallengeId?: string
+  }) => Promise<void>
 }
 
 export function useStudentAnalysisReviewQuerySync(
@@ -22,13 +26,13 @@ export function useStudentAnalysisReviewQuerySync(
 ) {
   const {
     route,
-    router,
     sessionQuery,
     selectedStudentId,
     setSessionQuery,
     loadReviewWorkspace,
     reloadAttackSessions,
     studentIdFromRoute,
+    replaceReviewWorkspaceQuery,
   } = options
 
   function reviewWorkspaceQueryFromRoute(): Partial<AttackSessionQuery> {
@@ -90,13 +94,10 @@ export function useStudentAnalysisReviewQuerySync(
 
     setSessionQuery(mergedQuery)
 
-    await router.replace({
-      query: {
-        ...route.query,
-        reviewMode: mergedQuery.mode || undefined,
-        reviewResult: mergedQuery.result || undefined,
-        reviewChallengeId: mergedQuery.challenge_id || undefined,
-      },
+    await replaceReviewWorkspaceQuery({
+      reviewMode: mergedQuery.mode || undefined,
+      reviewResult: mergedQuery.result || undefined,
+      reviewChallengeId: mergedQuery.challenge_id || undefined,
     })
 
     if (Object.prototype.hasOwnProperty.call(nextQuery, 'challenge_id')) {

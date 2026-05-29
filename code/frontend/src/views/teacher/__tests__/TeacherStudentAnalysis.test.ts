@@ -4,6 +4,7 @@ import { reactive } from 'vue'
 
 import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
 import teacherStudentAnalysisSource from '../TeacherStudentAnalysis.vue?raw'
+import studentAnalysisNavigationSource from '@/features/student-analysis-workspace/model/useStudentAnalysisNavigation.ts?raw'
 import studentAnalysisPageModelSource from '@/features/student-analysis-workspace/model/useStudentAnalysisPage.ts?raw'
 import studentAnalysisReviewQuerySyncSource from '@/features/student-analysis-workspace/model/useStudentAnalysisReviewQuerySync.ts?raw'
 import studentAnalysisPageSource from '@/features/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
@@ -220,6 +221,8 @@ describe('TeacherStudentAnalysis', () => {
     expect(teacherStudentAnalysisSource).not.toContain('@select-student="selectStudent"')
     expect(studentAnalysisPageModelSource).toContain('useReviewWorkspace()')
     expect(studentAnalysisPageModelSource).toContain('useSubmissionReviewFlows({')
+    expect(studentAnalysisNavigationSource).not.toContain("from 'vue-router'")
+    expect(studentAnalysisReviewQuerySyncSource).not.toContain("from 'vue-router'")
     expect(studentAnalysisPageModelSource).not.toContain('useTeacherReviewWorkspace')
     expect(studentAnalysisPageModelSource).not.toContain('useTeacherSubmissionReviewFlows')
     expect(studentAnalysisPageModelSource).not.toContain('openClassManagement')

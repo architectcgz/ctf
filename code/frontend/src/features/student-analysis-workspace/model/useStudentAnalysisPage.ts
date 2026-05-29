@@ -99,13 +99,20 @@ export function useStudentAnalysisPage() {
     updateReviewWorkspaceFilters,
   } = useStudentAnalysisReviewQuerySync({
     route,
-    router,
     sessionQuery,
     selectedStudentId,
     setSessionQuery,
     loadReviewWorkspace,
     reloadAttackSessions,
     studentIdFromRoute,
+    replaceReviewWorkspaceQuery: async (nextQuery) => {
+      await router.replace({
+        query: {
+          ...route.query,
+          ...nextQuery,
+        },
+      })
+    },
   })
 
   async function initialize(): Promise<void> {
@@ -140,10 +147,27 @@ export function useStudentAnalysisPage() {
     openChallenge,
     openReviewArchivePage,
   } = useStudentAnalysisNavigation({
-    router,
     getRole: () => authStore.user?.role,
     selectedClassName,
     selectedStudentId,
+    openClassStudentsRoute: (routeName, className) => {
+      void router.push({
+        name: routeName,
+        params: { className },
+      })
+    },
+    openChallengeRoute: (challengeId) => {
+      void router.push(`/challenges/${challengeId}`)
+    },
+    openReviewArchiveRoute: (routeName, className, studentId) => {
+      void router.push({
+        name: routeName,
+        params: {
+          className,
+          studentId,
+        },
+      })
+    },
   })
 
   watch(

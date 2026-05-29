@@ -26,13 +26,13 @@ describe('useStudentAnalysisReviewQuerySync', () => {
 
     const sync = useStudentAnalysisReviewQuerySync({
       route,
-      router: { replace: vi.fn() },
       sessionQuery,
       selectedStudentId: ref('stu-1'),
       setSessionQuery,
       loadReviewWorkspace: vi.fn(),
       reloadAttackSessions: vi.fn(),
       studentIdFromRoute: () => 'stu-1',
+      replaceReviewWorkspaceQuery: vi.fn(),
     })
 
     sync.syncReviewWorkspaceQueryFromRoute()
@@ -64,7 +64,6 @@ describe('useStudentAnalysisReviewQuerySync', () => {
 
     const sync = useStudentAnalysisReviewQuerySync({
       route,
-      router: { replace },
       sessionQuery,
       selectedStudentId: ref('stu-1'),
       setSessionQuery: (next) => {
@@ -76,6 +75,14 @@ describe('useStudentAnalysisReviewQuerySync', () => {
       loadReviewWorkspace,
       reloadAttackSessions,
       studentIdFromRoute: () => 'stu-1',
+      replaceReviewWorkspaceQuery: async (nextQuery) => {
+        await replace({
+          query: {
+            ...route.query,
+            ...nextQuery,
+          },
+        })
+      },
     })
 
     await sync.updateReviewWorkspaceFilters({ challenge_id: '11' })
