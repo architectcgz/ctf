@@ -15,7 +15,6 @@ import {
   isSameClassInsightWindow,
   parseClassInsightWindowQuery,
 } from '@/features/class-insight-window'
-import { useClassWorkspaceSection } from '@/features/class-workspace-redirect'
 import { useStudentFilters, useStudentListQuery } from '@/features/student-directory'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
@@ -24,6 +23,7 @@ import {
   resolveStudentAnalysisRouteName,
   resolveTeachingDashboardRouteName,
 } from '@/utils/teachingWorkspaceRouting'
+import { useClassWorkspaceSection } from './useClassWorkspaceSection'
 
 export function useClassStudentsPage() {
   const route = useRoute()

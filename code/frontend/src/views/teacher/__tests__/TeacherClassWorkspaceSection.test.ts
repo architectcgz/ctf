@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import teacherClassWorkspaceSectionSource from '../TeacherClassWorkspaceSection.vue?raw'
-import classWorkspaceSectionSource from '@/features/class-workspace-redirect/model/useClassWorkspaceSection.ts?raw'
+import classWorkspaceSectionSource from '@/features/class-students-workspace/model/useClassWorkspaceSection.ts?raw'
 import classStudentsPageModelSource from '@/features/class-students-workspace/model/useClassStudentsPage.ts?raw'
 
 describe('TeacherClassWorkspaceSection', () => {
@@ -22,6 +22,7 @@ describe('TeacherClassWorkspaceSection', () => {
     expect(classWorkspaceSectionSource).not.toContain('router.replace')
     expect(classStudentsPageModelSource).toContain('useClassWorkspaceSection')
     expect(classStudentsPageModelSource).toContain('canonicalWorkspaceTarget')
+    expect(classStudentsPageModelSource).toContain("from './useClassWorkspaceSection'")
     expect(classStudentsPageModelSource).toContain('router.replace(canonicalWorkspaceTarget.value)')
   })
 })
