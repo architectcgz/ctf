@@ -223,6 +223,25 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageModelSource).toContain('useSubmissionReviewFlows({')
     expect(studentAnalysisNavigationSource).not.toContain("from 'vue-router'")
     expect(studentAnalysisReviewQuerySyncSource).not.toContain("from 'vue-router'")
+    expect(studentAnalysisPageModelSource).toContain(
+      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+    )
+    expect(studentAnalysisPageModelSource).toContain(
+      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+    )
+    expect(studentAnalysisPageModelSource).toContain(
+      'const { params, query, replaceQuery } = useRouteQueryTransport()'
+    )
+    expect(studentAnalysisPageModelSource).toContain(
+      'const { push } = useRouteNavigationTransport()'
+    )
+    expect(studentAnalysisPageModelSource).not.toContain("from 'vue-router'")
+    expect(studentAnalysisPageModelSource).not.toContain('useRoute(')
+    expect(studentAnalysisPageModelSource).not.toContain('useRouter(')
+    expect(studentAnalysisNavigationSource).toContain("from './studentAnalysisRoutes'")
+    expect(studentAnalysisNavigationSource).toContain('studentAnalysisClassStudentsRoute')
+    expect(studentAnalysisNavigationSource).toContain('studentAnalysisChallengeDetailRoute')
+    expect(studentAnalysisNavigationSource).toContain('studentAnalysisReviewArchiveRoute')
     expect(studentAnalysisPageModelSource).not.toContain('useTeacherReviewWorkspace')
     expect(studentAnalysisPageModelSource).not.toContain('useTeacherSubmissionReviewFlows')
     expect(studentAnalysisPageModelSource).not.toContain('openClassManagement')

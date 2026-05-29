@@ -1,8 +1,9 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
@@ -15,11 +16,16 @@ import { useStudentAnalysisNavigation } from './useStudentAnalysisNavigation'
 import { useStudentAnalysisReviewQuerySync } from './useStudentAnalysisReviewQuerySync'
 
 export function useStudentAnalysisPage() {
-  const route = useRoute()
-  const router = useRouter()
+  const { params, query, replaceQuery } = useRouteQueryTransport()
+  const { push } = useRouteNavigationTransport()
   const authStore = useAuthStore()
   const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
+  const route = {
+    get query() {
+      return query.value
+    },
+  }
 
   const error = ref<string | null>(null)
   const {
@@ -85,11 +91,11 @@ export function useStudentAnalysisPage() {
   })
 
   function classNameFromRoute(): string {
-    return String(route.params.className || '')
+    return String(params.value.className || '')
   }
 
   function studentIdFromRoute(): string {
-    return String(route.params.studentId || '')
+    return String(params.value.studentId || '')
   }
 
   const {
@@ -106,11 +112,9 @@ export function useStudentAnalysisPage() {
     reloadAttackSessions,
     studentIdFromRoute,
     replaceReviewWorkspaceQuery: async (nextQuery) => {
-      await router.replace({
-        query: {
-          ...route.query,
-          ...nextQuery,
-        },
+      await replaceQuery({
+        ...query.value,
+        ...nextQuery,
       })
     },
   })
@@ -150,35 +154,26 @@ export function useStudentAnalysisPage() {
     getRole: () => authStore.user?.role,
     selectedClassName,
     selectedStudentId,
-    openClassStudentsRoute: (routeName, className) => {
-      void router.push({
-        name: routeName,
-        params: { className },
-      })
+    openClassStudentsRoute: (target) => {
+      void push(target)
     },
-    openChallengeRoute: (challengeId) => {
-      void router.push(`/challenges/${challengeId}`)
+    openChallengeRoute: (target) => {
+      void push(target)
     },
-    openReviewArchiveRoute: (routeName, className, studentId) => {
-      void router.push({
-        name: routeName,
-        params: {
-          className,
-          studentId,
-        },
-      })
+    openReviewArchiveRoute: (target) => {
+      void push(target)
     },
   })
 
   watch(
-    () => [route.params.className, route.params.studentId],
+    () => [params.value.className, params.value.studentId],
     () => {
       void initialize()
     }
   )
 
   watch(
-    () => [route.query.reviewMode, route.query.reviewResult, route.query.reviewChallengeId],
+    () => [query.value.reviewMode, query.value.reviewResult, query.value.reviewChallengeId],
     () => {
       const studentId = selectedStudentId.value || studentIdFromRoute()
       if (!studentId) return

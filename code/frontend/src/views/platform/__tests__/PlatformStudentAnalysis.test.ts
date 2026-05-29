@@ -259,7 +259,12 @@ describe('PlatformStudentAnalysis route owner', () => {
         studentId: 'stu-1',
       },
     })
-    expect(pushMock).toHaveBeenCalledWith('/challenges/challenge-1')
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'ChallengeDetail',
+      params: {
+        id: 'challenge-1',
+      },
+    })
 
     const dialog = wrapper.get('[data-testid="class-report-dialog"]')
     expect(dialog.attributes('data-open')).toBe('true')
