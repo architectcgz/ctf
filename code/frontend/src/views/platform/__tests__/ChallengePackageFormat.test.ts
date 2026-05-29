@@ -1,22 +1,27 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { vi } from 'vitest'
 import challengePackageFormatSource from '../ChallengePackageFormat.vue?raw'
 import challengePackageFormatGuidePanelSource from '@/components/platform/challenge/ChallengePackageFormatGuidePanel.vue?raw'
+import challengePackageFormatPageSource from '@/features/challenge-package-import/model/useChallengePackageFormatPage.ts?raw'
 
 import ChallengePackageFormat from '../ChallengePackageFormat.vue'
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: vi.fn() }),
-  }
-})
-
 describe('ChallengePackageFormat', () => {
+  function mountChallengePackageFormat() {
+    return mount(ChallengePackageFormat, {
+      global: {
+        stubs: {
+          RouterLink: {
+            props: ['to'],
+            template: '<a :data-to="JSON.stringify(to)"><slot /></a>',
+          },
+        },
+      },
+    })
+  }
+
   it('应该展示题目包结构与 challenge.yml 示例', () => {
-    const wrapper = mount(ChallengePackageFormat)
+    const wrapper = mountChallengePackageFormat()
 
     expect(wrapper.text()).toContain('题目包示例')
     expect(wrapper.text()).toContain('challenge.yml')
@@ -50,6 +55,10 @@ describe('ChallengePackageFormat', () => {
 
   it('路由页应仅负责组合，不直接耦合返回跳转细节', () => {
     expect(challengePackageFormatSource).toContain('useChallengePackageFormatPage')
+    expect(challengePackageFormatSource).toContain('<RouterLink')
+    expect(challengePackageFormatSource).not.toContain('@click="backToImportManage"')
     expect(challengePackageFormatSource).not.toContain('useRouter')
+    expect(challengePackageFormatPageSource).toContain("name: 'PlatformChallengeImportManage'")
+    expect(challengePackageFormatPageSource).not.toContain("from 'vue-router'")
   })
 })

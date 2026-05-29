@@ -1,13 +1,9 @@
-import { useRouter } from 'vue-router'
+export const challengePackageImportManageRoute = {
+  name: 'PlatformChallengeImportManage',
+} as const
 
 export function useChallengePackageFormatPage() {
-  const router = useRouter()
-
-  function backToImportManage(): void {
-    void router.push({ name: 'PlatformChallengeImportManage' })
-  }
-
   return {
-    backToImportManage,
+    backToImportManage: challengePackageImportManageRoute,
   }
 }

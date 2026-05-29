@@ -14,13 +14,12 @@ const { backToImportManage } = useChallengePackageFormatPage()
         <span class="workspace-overline">Challenge Package</span>
         <span class="class-chip">上传示例</span>
       </div>
-      <button
+      <RouterLink
         class="nav-back"
-        type="button"
-        @click="backToImportManage"
+        :to="backToImportManage"
       >
         返回导入题目包
-      </button>
+      </RouterLink>
     </header>
 
     <ChallengePackageFormatGuidePanel />
@@ -56,6 +55,7 @@ const { backToImportManage } = useChallengePackageFormatPage()
   color: var(--journal-ink);
   font-size: var(--font-size-0-88);
   font-weight: 600;
+  text-decoration: none;
 }
 
 </style>
