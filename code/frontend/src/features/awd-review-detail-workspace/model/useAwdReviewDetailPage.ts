@@ -1,24 +1,22 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
 import { getAwdReviewByRole } from '@/api/awd-reviews'
 import type {
   AwdReviewArchiveData,
   AwdReviewTeamItemData,
 } from '@/api/contracts'
+import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
-import {
-  resolveAwdReviewDetailRouteName,
-  resolveAwdReviewIndexRouteName,
-} from '@/utils/teachingWorkspaceRouting'
 import { useAwdReviewExportFlow } from '@/features/awd-review-workspace'
+import { awdReviewIndexRoute } from './awdReviewDetailRoutes'
 
 export function useAwdReviewDetailPage() {
-  const route = useRoute()
-  const router = useRouter()
+  const { params, query, replaceQuery } = useRouteQueryTransport()
+  const { push } = useRouteNavigationTransport()
   const authStore = useAuthStore()
   const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
@@ -28,8 +26,8 @@ export function useAwdReviewDetailPage() {
   const review = ref<AwdReviewArchiveData | null>(null)
   const selectedTeamId = ref<string | null>(null)
 
-  const contestId = computed(() => String(route.params.contestId || ''))
-  const selectedRoundNumber = computed(() => parseRoundQuery(route.query.round))
+  const contestId = computed(() => String(params.value.contestId || ''))
+  const selectedRoundNumber = computed(() => parseRoundQuery(query.value.round))
   const selectedRound = computed(() => review.value?.selected_round)
   const activeContestTitle = computed(() => review.value?.contest.title || '--')
   const activeSummaryTitle = computed(() =>
@@ -122,28 +120,22 @@ export function useAwdReviewDetailPage() {
   }
 
   function setRound(roundNumber?: number): void {
-    const query = {
-      ...route.query,
+    const nextQuery = {
+      ...query.value,
     } as Record<string, string>
 
     if (roundNumber) {
-      query.round = String(roundNumber)
+      nextQuery.round = String(roundNumber)
     } else {
-      delete query.round
-      delete query.team_id
+      delete nextQuery.round
+      delete nextQuery.team_id
     }
 
-    router.replace({
-      name: resolveAwdReviewDetailRouteName(authStore.user?.role),
-      params: {
-        contestId: contestId.value,
-      },
-      query,
-    })
+    void replaceQuery(nextQuery)
   }
 
   function openReviewIndex(): void {
-    router.push({ name: resolveAwdReviewIndexRouteName(authStore.user?.role) })
+    void push(awdReviewIndexRoute(authStore.user?.role))
   }
 
   function openTeam(team: AwdReviewTeamItemData): void {
@@ -172,7 +164,7 @@ export function useAwdReviewDetailPage() {
   }
 
   watch(
-    () => [route.params.contestId, route.query.round],
+    () => [params.value.contestId, query.value.round],
     () => {
       void loadReview()
     },
@@ -184,7 +176,6 @@ export function useAwdReviewDetailPage() {
   })
 
   return {
-    route,
     polling,
     loading,
     error,

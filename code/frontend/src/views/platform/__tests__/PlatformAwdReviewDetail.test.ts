@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import platformAwdReviewDetailSource from '../PlatformAwdReviewDetail.vue?raw'
 import AwdReviewWorkspace from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue'
+import awdReviewDetailRoutesSource from '@/features/awd-review-detail-workspace/model/awdReviewDetailRoutes.ts?raw'
 import awdReviewDetailPageSource from '@/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts?raw'
 
 const pushMock = vi.fn()
@@ -100,8 +101,18 @@ describe('PlatformAwdReviewDetail route owner', () => {
       "import { useAwdReviewDetailPage } from '@/features/awd-review-detail-workspace'"
     )
     expect(awdReviewDetailPageSource).toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDetailPageSource).toContain(
+      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+    )
+    expect(awdReviewDetailPageSource).toContain(
+      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+    )
+    expect(awdReviewDetailPageSource).toContain("from './awdReviewDetailRoutes'")
     expect(awdReviewDetailPageSource).not.toContain("from '@/api/admin'")
     expect(awdReviewDetailPageSource).not.toContain("from '@/api/teacher'")
+    expect(awdReviewDetailPageSource).not.toContain("from 'vue-router'")
+    expect(awdReviewDetailPageSource).not.toContain('route,')
+    expect(awdReviewDetailRoutesSource).toContain('resolveAwdReviewIndexRouteName')
     expect(platformAwdReviewDetailSource).not.toContain("from '@/views/teacher/TeacherAWDReviewDetail.vue'")
     expect(platformAwdReviewDetailSource).not.toContain("from '@/api/teacher'")
 
