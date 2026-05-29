@@ -1,8 +1,15 @@
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Calendar, SortAsc } from 'lucide-vue-next'
 
+import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
+import {
+  platformChallengeDetailRoute,
+  platformChallengeImportManageRoute,
+  platformChallengeImportPreviewRoute,
+  platformChallengeTopologyRoute,
+  platformChallengeWriteupPanelRoute,
+} from './platformChallengeRoutes'
 import { useChallengeManagePresentation } from './useChallengeManagePresentation'
 import { usePlatformChallenges, type PlatformChallengeListRow } from './usePlatformChallenges'
 
@@ -18,7 +25,7 @@ const sortOptions: ChallengeSortOption[] = [
 ]
 
 export function useChallengeManagePage() {
-  const router = useRouter()
+  const { push } = useRouteNavigationTransport()
   const {
     list,
     total,
@@ -95,23 +102,16 @@ export function useChallengeManagePage() {
     removeChallenge,
   } = useChallengeManagePresentation({
     inspectImportTask: async (item) => {
-      await router.push({
-        name: 'PlatformChallengeImportPreview',
-        params: { importId: item.id },
-      })
+      await push(platformChallengeImportPreviewRoute(item.id))
     },
     openChallengeDetail: async (challengeId) => {
-      await router.push(`/platform/challenges/${challengeId}`)
+      await push(platformChallengeDetailRoute(challengeId))
     },
     openChallengeTopology: async (challengeId) => {
-      await router.push(`/platform/challenges/${challengeId}/topology`)
+      await push(platformChallengeTopologyRoute(challengeId))
     },
     openChallengeWriteup: async (challengeId) => {
-      await router.push({
-        name: 'PlatformChallengeDetail',
-        params: { id: challengeId },
-        query: { panel: 'writeup' },
-      })
+      await push(platformChallengeWriteupPanelRoute(challengeId))
     },
     publish,
     remove,
@@ -141,7 +141,7 @@ export function useChallengeManagePage() {
   }
 
   async function openImportWorkspace(): Promise<void> {
-    await router.push({ name: 'PlatformChallengeImportManage' })
+    await push(platformChallengeImportManageRoute)
   }
 
   return {

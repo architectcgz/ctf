@@ -1,5 +1,12 @@
 import { computed, type ComputedRef } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+
+import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import {
+  platformChallengeDetailRoute,
+  platformChallengeWriteupEditorRoute,
+  platformChallengeWriteupPanelRoute,
+} from './platformChallengeRoutes'
 
 type PlatformChallengeRoutePageMode = 'topology-studio' | 'writeup-editor' | 'writeup-view'
 
@@ -19,16 +26,16 @@ export function usePlatformChallengeRoutePage(
   mode: 'topology-studio' | 'writeup-editor'
 ): PlatformChallengeRoutePageBase
 export function usePlatformChallengeRoutePage(mode: PlatformChallengeRoutePageMode) {
-  const route = useRoute()
-  const router = useRouter()
-  const challengeId = computed(() => String(route.params.id ?? ''))
+  const { params } = useRouteQueryTransport()
+  const { push } = useRouteNavigationTransport()
+  const challengeId = computed(() => String(params.value.id ?? ''))
 
   function backToChallengeDetail(): void {
-    void router.push({
-      name: 'PlatformChallengeDetail',
-      params: { id: challengeId.value },
-      query: mode === 'topology-studio' ? undefined : { panel: 'writeup' },
-    })
+    void push(
+      mode === 'topology-studio'
+        ? platformChallengeDetailRoute(challengeId.value)
+        : platformChallengeWriteupPanelRoute(challengeId.value)
+    )
   }
 
   if (mode === 'writeup-view') {
@@ -36,7 +43,7 @@ export function usePlatformChallengeRoutePage(mode: PlatformChallengeRoutePageMo
       challengeId,
       backToChallengeDetail,
       goToWriteupEditor: () => {
-        void router.push({ name: 'PlatformChallengeWriteup', params: { id: challengeId.value } })
+        void push(platformChallengeWriteupEditorRoute(challengeId.value))
       },
     }
   }

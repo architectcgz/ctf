@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest'
 import ChallengeWriteupEditorPage from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue'
 import ChallengeWriteupViewPage from '@/features/challenge-writeup-editor/ui/ChallengeWriteupViewPage.vue'
 import platformChallengeRoutePageSource from '@/features/platform-challenges/model/usePlatformChallengeRoutePage.ts?raw'
+import platformChallengeRoutesSource from '@/features/platform-challenges/model/platformChallengeRoutes.ts?raw'
 import challengeWriteupPageSource from '@/features/platform-challenges/model/useChallengeWriteupPage.ts?raw'
 import challengeWriteupViewPageSource from '@/features/platform-challenges/model/useChallengeWriteupViewPage.ts?raw'
 import challengeWriteupChallengeRailSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupChallengeRail.vue?raw'
@@ -110,9 +111,14 @@ describe('ChallengeWriteupEditorPage', () => {
       "return usePlatformChallengeRoutePage('writeup-view')"
     )
     expect(challengeWriteupViewPageSource).not.toContain('vue-router')
-    expect(platformChallengeRoutePageSource).toContain("query: mode === 'topology-studio' ? undefined : { panel: 'writeup' }")
+    expect(platformChallengeRoutePageSource).toContain('useRouteQueryTransport')
+    expect(platformChallengeRoutePageSource).toContain('useRouteNavigationTransport')
+    expect(platformChallengeRoutePageSource).toContain('platformChallengeWriteupPanelRoute')
+    expect(platformChallengeRoutePageSource).toContain('platformChallengeWriteupEditorRoute')
     expect(platformChallengeRoutePageSource).toContain("if (mode === 'writeup-view')")
-    expect(platformChallengeRoutePageSource).toContain("name: 'PlatformChallengeWriteup'")
+    expect(platformChallengeRoutePageSource).not.toContain("from 'vue-router'")
+    expect(platformChallengeRoutesSource).toContain("name: 'PlatformChallengeWriteup'")
+    expect(platformChallengeRoutesSource).toContain("panel: 'writeup'")
   })
 
   it('题解查看页和编辑页应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {

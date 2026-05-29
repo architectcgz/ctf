@@ -20,6 +20,7 @@ import topologyTemplateSidePanelSource from '@/features/challenge-topology-studi
 import topologyTemplateWorkbenchSource from '@/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue?raw'
 import challengeTopologyStudioRoutePageSource from '@/features/platform-challenges/model/useChallengeTopologyStudioRoutePage.ts?raw'
 import platformChallengeRoutePageSource from '@/features/platform-challenges/model/usePlatformChallengeRoutePage.ts?raw'
+import platformChallengeRoutesSource from '@/features/platform-challenges/model/platformChallengeRoutes.ts?raw'
 import topologyStructureMutationsSource from '@/features/challenge-topology-studio/model/useTopologyStructureMutations.ts?raw'
 import challengeTopologyStudioRouteSource from '../ChallengeTopologyStudio.vue?raw'
 import { ApiError } from '@/api/request'
@@ -228,8 +229,12 @@ describe('ChallengeTopologyStudioPage', () => {
       "return usePlatformChallengeRoutePage('topology-studio')"
     )
     expect(challengeTopologyStudioRoutePageSource).not.toContain('vue-router')
-    expect(platformChallengeRoutePageSource).toContain('useRoute, useRouter')
+    expect(platformChallengeRoutePageSource).toContain('useRouteQueryTransport')
+    expect(platformChallengeRoutePageSource).toContain('useRouteNavigationTransport')
+    expect(platformChallengeRoutePageSource).toContain('platformChallengeDetailRoute')
     expect(platformChallengeRoutePageSource).toContain("mode === 'topology-studio'")
+    expect(platformChallengeRoutePageSource).not.toContain("from 'vue-router'")
+    expect(platformChallengeRoutesSource).toContain("name: 'PlatformChallengeTopologyStudio'")
   })
 
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {

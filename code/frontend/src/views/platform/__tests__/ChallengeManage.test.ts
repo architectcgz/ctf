@@ -5,7 +5,9 @@ import ChallengeManage from '../ChallengeManage.vue'
 import challengeManageSource from '../ChallengeManage.vue?raw'
 import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
 import challengeManageDirectoryPanelSource from '@/features/platform-challenges/ui/ChallengeManageDirectoryPanel.vue?raw'
+import challengeManagePageSource from '@/features/platform-challenges/model/useChallengeManagePage.ts?raw'
 import challengeManagePresentationSource from '@/features/platform-challenges/model/useChallengeManagePresentation.ts?raw'
+import platformChallengeRoutesSource from '@/features/platform-challenges/model/platformChallengeRoutes.ts?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -226,6 +228,19 @@ describe('ChallengeManage', () => {
     expect(challengeManagePresentationSource).not.toContain("from 'vue-router'")
     expect(challengeManagePresentationSource).not.toContain('function getCategoryLabel(')
     expect(challengeManagePresentationSource).not.toContain('function getDifficultyLabel(')
+  })
+
+  it('题目管理 page model 应通过 feature route target + transport 处理导航，而不是直接 import vue-router', () => {
+    expect(challengeManagePageSource).toContain("from '@/composables/routeNavigationTransport'")
+    expect(challengeManagePageSource).toContain("from './platformChallengeRoutes'")
+    expect(challengeManagePageSource).not.toContain("from 'vue-router'")
+    expect(challengeManagePageSource).toContain('platformChallengeImportPreviewRoute')
+    expect(challengeManagePageSource).toContain('platformChallengeDetailRoute')
+    expect(challengeManagePageSource).toContain('platformChallengeTopologyRoute')
+    expect(challengeManagePageSource).toContain('platformChallengeWriteupPanelRoute')
+    expect(challengeManagePageSource).toContain('platformChallengeImportManageRoute')
+    expect(platformChallengeRoutesSource).toContain("name: 'PlatformChallengeImportPreview'")
+    expect(platformChallengeRoutesSource).toContain("name: 'PlatformChallengeTopologyStudio'")
   })
 
   it('题目管理页应复用共享 spacing token，而不是给 summary strip 叠加额外上下 margin', () => {
