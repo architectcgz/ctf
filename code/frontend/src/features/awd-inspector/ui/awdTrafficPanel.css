@@ -1,0 +1,294 @@
+.studio-traffic-analysis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.studio-metric-band {
+  display: flex;
+  gap: var(--space-2);
+  padding: 1rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 1rem;
+  background: var(--color-bg-elevated);
+}
+
+.metric-pill {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 0.45rem var(--space-4);
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.75rem;
+  background: var(--color-bg-surface);
+}
+
+.metric-pill__label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-10);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.metric-pill__value {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-14);
+  font-weight: 900;
+}
+
+.intelligence-grid {
+  display: grid;
+  grid-template-columns: 1fr 20rem;
+  gap: var(--space-8);
+}
+
+.intel-header {
+  margin-bottom: 1.25rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.intel-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.intel-sub-card {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.sub-card-label {
+  margin-bottom: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-10);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.row-name {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-12);
+  font-weight: 700;
+}
+
+.row-count {
+  color: var(--color-primary);
+  font-size: var(--font-size-12);
+  font-weight: 800;
+}
+
+.row-count--danger {
+  color: var(--color-danger);
+}
+
+.trend-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 1rem;
+  background: var(--color-bg-elevated);
+}
+
+.trend-unit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.trend-meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-10);
+  font-weight: 800;
+}
+
+.trend-bar-track {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--color-border-default);
+}
+
+.trend-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+
+.traffic-empty-hint,
+.traffic-time-cell,
+.traffic-empty-cell {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-11);
+}
+
+.drill-down-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.toolbar-title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-15);
+  font-weight: 900;
+}
+
+.toolbar-hint {
+  margin-top: 0.25rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-12);
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.log-table-wrap {
+  overflow: hidden;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.studio-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.studio-table th {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--color-border-default);
+  border-bottom: 1px solid var(--color-border-default);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-10);
+  font-weight: 800;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.studio-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.studio-row:hover {
+  background: var(--color-bg-elevated);
+}
+
+.team-label {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-12);
+  font-weight: 800;
+}
+
+.traffic-vector-separator {
+  color: var(--color-text-muted);
+}
+
+.challenge-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.challenge-name {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-12);
+  font-weight: 700;
+}
+
+.source-tag {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-10);
+  font-weight: 800;
+}
+
+.request-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 20rem;
+  font-size: var(--font-size-11);
+}
+
+.method-tag {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.path-text {
+  color: var(--color-text-secondary);
+}
+
+.status-badge {
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--awd-status-pill-border, transparent);
+  border-radius: 99px;
+  background: var(--awd-status-pill-bg, var(--color-bg-elevated));
+  color: var(--awd-status-pill-color, var(--color-text-secondary));
+  font-size: var(--font-size-10);
+  font-weight: 900;
+}
+
+.awd-status-pill--success {
+  --awd-status-pill-bg: var(--color-success-soft);
+  --awd-status-pill-border: color-mix(in srgb, var(--color-success) 20%, transparent);
+  --awd-status-pill-color: var(--color-success);
+}
+
+.awd-status-pill--primary {
+  --awd-status-pill-bg: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface));
+  --awd-status-pill-border: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  --awd-status-pill-color: var(--color-primary);
+}
+
+.awd-status-pill--warning {
+  --awd-status-pill-bg: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface));
+  --awd-status-pill-border: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  --awd-status-pill-color: var(--color-warning);
+}
+
+.awd-status-pill--danger {
+  --awd-status-pill-bg: var(--color-danger-soft);
+  --awd-status-pill-border: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  --awd-status-pill-color: var(--color-danger);
+}
+
+.awd-status-pill--muted {
+  --awd-status-pill-bg: color-mix(in srgb, var(--color-text-muted) 10%, var(--color-bg-surface));
+  --awd-status-pill-border: color-mix(in srgb, var(--color-text-muted) 20%, transparent);
+  --awd-status-pill-color: var(--color-text-secondary);
+}
+
+.pagination-footer {
+  padding: 1rem 0;
+  border-top: 1px solid var(--color-border-default);
+}
+
+.w-32 {
+  width: 8rem;
+}
