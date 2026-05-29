@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import type { Router } from 'vue-router'
 
 import type {
   AdminChallengeImportPreview,
@@ -13,13 +12,19 @@ import {
 import type { PlatformChallengeListRow } from './usePlatformChallenges'
 
 interface UseChallengeManagePresentationOptions {
-  router: Router
+  inspectImportTask: (item: AdminChallengeImportPreview) => Promise<void>
+  openChallengeDetail: (challengeId: string) => Promise<void>
+  openChallengeTopology: (challengeId: string) => Promise<void>
+  openChallengeWriteup: (challengeId: string) => Promise<void>
   publish: (row: PlatformChallengeListRow) => Promise<void>
   remove: (challengeId: string) => Promise<void>
 }
 
 export function useChallengeManagePresentation({
-  router,
+  inspectImportTask: inspectImportTaskAction,
+  openChallengeDetail: openChallengeDetailAction,
+  openChallengeTopology: openChallengeTopologyAction,
+  openChallengeWriteup: openChallengeWriteupAction,
   publish,
   remove,
 }: UseChallengeManagePresentationOptions) {
@@ -68,10 +73,7 @@ export function useChallengeManagePresentation({
   }
 
   async function inspectImportTask(item: AdminChallengeImportPreview): Promise<void> {
-    await router.push({
-      name: 'PlatformChallengeImportPreview',
-      params: { importId: item.id },
-    })
+    await inspectImportTaskAction(item)
   }
 
   function toggleActionMenu(challengeId: string): void {
@@ -84,21 +86,17 @@ export function useChallengeManagePresentation({
 
   function openChallengeDetail(challengeId: string): void {
     closeActionMenu()
-    void router.push(`/platform/challenges/${challengeId}`)
+    void openChallengeDetailAction(challengeId)
   }
 
   function openChallengeTopology(challengeId: string): void {
     closeActionMenu()
-    void router.push(`/platform/challenges/${challengeId}/topology`)
+    void openChallengeTopologyAction(challengeId)
   }
 
   function openChallengeWriteup(challengeId: string): void {
     closeActionMenu()
-    void router.push({
-      name: 'PlatformChallengeDetail',
-      params: { id: challengeId },
-      query: { panel: 'writeup' },
-    })
+    void openChallengeWriteupAction(challengeId)
   }
 
   async function submitPublishCheck(row: PlatformChallengeListRow): Promise<void> {

@@ -87,13 +87,32 @@ export function useChallengeManagePage() {
   const {
     openActionMenuId,
     closeActionMenu,
+    inspectImportTask,
     openChallengeDetail,
     openChallengeTopology,
     openChallengeWriteup,
     submitPublishCheck,
     removeChallenge,
   } = useChallengeManagePresentation({
-    router,
+    inspectImportTask: async (item) => {
+      await router.push({
+        name: 'PlatformChallengeImportPreview',
+        params: { importId: item.id },
+      })
+    },
+    openChallengeDetail: async (challengeId) => {
+      await router.push(`/platform/challenges/${challengeId}`)
+    },
+    openChallengeTopology: async (challengeId) => {
+      await router.push(`/platform/challenges/${challengeId}/topology`)
+    },
+    openChallengeWriteup: async (challengeId) => {
+      await router.push({
+        name: 'PlatformChallengeDetail',
+        params: { id: challengeId },
+        query: { panel: 'writeup' },
+      })
+    },
     publish,
     remove,
   })
@@ -139,6 +158,7 @@ export function useChallengeManagePage() {
     loading,
     manageEmptyMessage,
     manageEmptyTitle,
+    inspectImportTask,
     openActionMenuId,
     openChallengeDetail,
     openChallengeTopology,

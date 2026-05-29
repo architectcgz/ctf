@@ -223,6 +223,7 @@ describe('ChallengeManage', () => {
 
   it('平台题目管理展示层应复用 challenge entity 的分类与难度文案规则', () => {
     expect(challengeManagePresentationSource).toContain("from '@/entities/challenge'")
+    expect(challengeManagePresentationSource).not.toContain("from 'vue-router'")
     expect(challengeManagePresentationSource).not.toContain('function getCategoryLabel(')
     expect(challengeManagePresentationSource).not.toContain('function getDifficultyLabel(')
   })
