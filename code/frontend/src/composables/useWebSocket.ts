@@ -1,7 +1,6 @@
 import { onUnmounted, ref } from 'vue'
 
 import { getWsTicket } from '@/api/auth'
-import { useAuthStore } from '@/stores/auth'
 import {
   WS_HEARTBEAT_INTERVAL_MS,
   WS_MAX_RECONNECT_ATTEMPTS,

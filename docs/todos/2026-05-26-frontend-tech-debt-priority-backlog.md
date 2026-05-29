@@ -98,7 +98,8 @@
   - `2026-05-29` instance panel contract 进展：`InstancePanel.vue` 已改为消费 `components/common/instancePanel.types.ts` 内的本地最小展示类型，不再直接 import `@/api/contracts`；对应 raw-source 护栏也已补上 `@/api/contracts` 负向断言。
   - `2026-05-29` utility contract 进展：`utils/contest.ts`、`utils/platformContestAwdChallengeLinks.ts`、`utils/skillProfile.ts` 已切到各自本地最小 contract，不再直接 import `@/api/contracts`；`skillProfile` raw-source 护栏也已补上 `@/api/contracts` 负向断言。
   - `2026-05-29` utility owner 进展：`contest` 展示 helper 已迁入 `entities/contest`，`skill profile / recommendation` normalize 与展示 helper 已迁入 `entities/skill-profile`，`AWD service -> challenge link` mapper 已迁入 `entities/contest-awd-challenge-link`；旧 `utils/contest.ts`、`utils/skillProfile.ts`、`utils/platformContestAwdChallengeLinks.ts` 已退出主路径。
-  - `2026-05-29` 结项说明：`legacyComponentPageAllowlist`、`widgetLegacyComponentImportAllowlist`、`componentFeatureImportAllowlist`、`commonForbiddenImportAllowlist` 与 `utilityBoundaryImportAllowlist` 已全部清空；对应的 `contest / skillProfile / AWD link mapper` 也已经从历史 `utils/*` 落位纠偏到明确 owner。后续前端结构债重点转回 feature 内部的大组件 owner、layout 壳体，以及 router / composable 这类需要单独判断的边界例外。
+  - `2026-05-29` websocket composable 边界进展：`useWebSocket.ts` 中历史残留的 `useAuthStore` import 已移除，shared composable 边界从 `api+store` 收回到 `api+runtime`；`composableMultiBoundaryAllowlist` 已清空。
+  - `2026-05-29` 结项说明：`legacyComponentPageAllowlist`、`widgetLegacyComponentImportAllowlist`、`componentFeatureImportAllowlist`、`commonForbiddenImportAllowlist`、`utilityBoundaryImportAllowlist` 与 `composableMultiBoundaryAllowlist` 已全部清空；对应的 `contest / skillProfile / AWD link mapper` 已从历史 `utils/*` 落位纠偏到明确 owner，`useWebSocket.ts` 也已去掉误挂的 store 边界。后续前端结构债重点转回 feature 内部的大组件 owner、layout 壳体，以及 `featureRouterImportAllowlist` 这类需要单独判断的边界例外。
 
 - [x] P1：继续拆 contest / AWD 线上的超大组件壳，优先看 `ContestAwdConfigWorkspaceShell.vue`、`ContestChallengeEditorDialog.vue`、`AWDChallengeLibraryPage.vue`
   - 依据：这三者当前约 `1009` / `899` / `896` 行，是现阶段最肥的一批前端组件壳。

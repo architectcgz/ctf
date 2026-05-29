@@ -71,6 +71,4 @@ export const featureRouterImportAllowlist = new Set([
 
 export const utilityBoundaryImportAllowlist = new Set<string>([])
 
-export const composableMultiBoundaryAllowlist = new Set([
-  'composables/useWebSocket.ts -> api+store',
-])
+export const composableMultiBoundaryAllowlist = new Set<string>([])
