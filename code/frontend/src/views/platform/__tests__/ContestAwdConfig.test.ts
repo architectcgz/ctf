@@ -6,6 +6,7 @@ import contestAwdConfigSource from '../ContestAwdConfig.vue?raw'
 import contestAwdCheckerConfigSectionSource from '@/features/contest-awd-config/ui/ContestAwdCheckerConfigSection.vue?raw'
 import contestAwdConfigWorkspaceShellSource from '@/features/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue?raw'
 import awdChallengeSelectionSource from '@/features/contest-awd-config/model/useAwdChallengeSelection.ts?raw'
+import contestAwdConfigRoutesSource from '@/features/contest-awd-config/model/contestAwdConfigRoutes.ts?raw'
 import contestAwdConfigPageSource from '@/features/contest-awd-config/model/useContestAwdConfigPage.ts?raw'
 
 const pushMock = vi.fn()
@@ -183,12 +184,22 @@ describe('ContestAwdConfig', () => {
     expect(contestAwdConfigPageSource).toContain(
       "import { useContestAwdConfigDataLoader } from './useContestAwdConfigDataLoader'"
     )
+    expect(contestAwdConfigPageSource).toContain(
+      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+    )
+    expect(contestAwdConfigPageSource).toContain(
+      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+    )
+    expect(contestAwdConfigPageSource).toContain("from './contestAwdConfigRoutes'")
     expect(contestAwdConfigPageSource).toContain("from './awdCheckerLabels'")
     expect(awdChallengeSelectionSource).not.toContain("from 'vue-router'")
+    expect(contestAwdConfigPageSource).not.toContain("from 'vue-router'")
     expect(contestAwdConfigPageSource).not.toContain('runContestAWDCheckerPreview')
     expect(contestAwdConfigPageSource).not.toContain('updateContestAWDService')
     expect(contestAwdConfigPageSource).not.toContain('getContest')
     expect(contestAwdConfigPageSource).not.toContain('listContestAWDServices')
+    expect(contestAwdConfigRoutesSource).toContain("name: 'ContestEdit'")
+    expect(contestAwdConfigRoutesSource).toContain("panel: 'awd-config'")
   })
 
   it('使用独立页面编辑服务配置，并锁定 checker 类型', async () => {
@@ -244,8 +255,6 @@ describe('ContestAwdConfig', () => {
 
     expect(wrapper.text()).toContain('Blog Service')
     expect(replaceMock).toHaveBeenCalledWith({
-      name: 'ContestAWDConfig',
-      params: { id: 'contest-1' },
       query: { service: 'service-2' },
     })
   })

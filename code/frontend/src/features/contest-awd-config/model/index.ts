@@ -1,4 +1,5 @@
 export { useContestAwdConfigPage } from './useContestAwdConfigPage'
+export { contestAwdConfigBackToStudioRoute } from './contestAwdConfigRoutes'
 export { useAwdCheckerConfigDraft } from './useAwdCheckerConfigDraft'
 export { useAwdChallengeSelection } from './useAwdChallengeSelection'
 export { runAwdCheckerPreview, useAwdCheckerPreviewFlow } from './useAwdCheckerPreview'

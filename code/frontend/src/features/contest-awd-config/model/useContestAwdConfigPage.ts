@@ -1,8 +1,10 @@
 import { computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
 import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import { contestAwdConfigBackToStudioRoute } from './contestAwdConfigRoutes'
 import { useAwdChallengeSelection } from './useAwdChallengeSelection'
 import { useAwdCheckerConfigDraft } from './useAwdCheckerConfigDraft'
 import {
@@ -16,13 +18,13 @@ import { useAwdCheckerSaveFlow } from './useAwdCheckerSaveFlow'
 import { useContestAwdConfigDataLoader } from './useContestAwdConfigDataLoader'
 
 export function useContestAwdConfigPage() {
-  const route = useRoute()
-  const router = useRouter()
+  const { params, query, replaceQuery } = useRouteQueryTransport()
+  const { push } = useRouteNavigationTransport()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
-  const contestId = computed(() => String(route.params.id ?? ''))
+  const contestId = computed(() => String(params.value.id ?? ''))
   function readServiceQuery(): string {
-    const value = route.query.service
+    const value = query.value.service
     if (Array.isArray(value)) {
       return String(value[0] ?? '')
     }
@@ -30,11 +32,7 @@ export function useContestAwdConfigPage() {
   }
 
   function replaceServiceQuery(serviceId: string) {
-    void router.replace({
-      name: 'ContestAWDConfig',
-      params: { id: contestId.value },
-      query: { ...route.query, service: serviceId },
-    })
+    void replaceQuery({ ...query.value, service: serviceId })
   }
   const {
     clearBreadcrumbDetailTitle,
@@ -143,11 +141,7 @@ export function useContestAwdConfigPage() {
   )
 
   function goBackToStudio() {
-    void router.push({
-      name: 'ContestEdit',
-      params: { id: contestId.value },
-      query: { panel: 'awd-config' },
-    })
+    void push(contestAwdConfigBackToStudioRoute(contestId.value))
   }
 
   watch(selectedService, (service) => {
