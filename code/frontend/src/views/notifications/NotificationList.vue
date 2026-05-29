@@ -26,7 +26,7 @@ const {
   canPublishNotification,
   typeLabel,
   selectCategory,
-  openNotificationDetail,
+  notificationDetailRoute,
   markCurrentPageRead,
   openPublishDrawer,
   closePublishDrawer,
@@ -155,13 +155,12 @@ const {
                 <span>状态</span>
               </div>
 
-              <button
+              <RouterLink
                 v-for="item in list"
                 :key="item.id"
-                type="button"
+                :to="notificationDetailRoute(item)"
                 class="workspace-directory-grid-row notification-row"
                 :class="{ 'notification-row-unread': item.unread }"
-                @click="openNotificationDetail(item)"
               >
                 <div class="notification-row-type">
                   <span class="workspace-directory-status-pill notification-chip">{{
@@ -202,7 +201,7 @@ const {
                     {{ item.unread ? '未读' : '已读' }}
                   </span>
                 </div>
-              </button>
+              </RouterLink>
             </section>
 
             <div

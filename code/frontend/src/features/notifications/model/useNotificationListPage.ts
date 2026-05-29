@@ -1,5 +1,4 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import type { NotificationItem, NotificationType } from '@/api/contracts'
 import { getNotifications, markAsRead } from '@/api/notification'
@@ -13,7 +12,6 @@ export function useNotificationListPage() {
   const toast = useToast()
   const authStore = useAuthStore()
   const notificationStore = useNotificationStore()
-  const router = useRouter()
   const { track } = useProbeEasterEggs()
   const publishDrawerOpen = ref(false)
   const probeMessage = ref('')
@@ -70,8 +68,9 @@ export function useNotificationListPage() {
     await changePage(1)
   }
 
-  function openNotificationDetail(item: NotificationItem): void {
-    void router.push(`/notifications/${encodeURIComponent(String(item.id))}`)
+  function notificationDetailRoute(item: Pick<NotificationItem, 'id'> | string): string {
+    const notificationId = typeof item === 'string' ? item : item.id
+    return `/notifications/${encodeURIComponent(String(notificationId))}`
   }
 
   function showProbeMessage(message: string) {
@@ -164,7 +163,7 @@ export function useNotificationListPage() {
     canPublishNotification,
     typeLabel,
     selectCategory,
-    openNotificationDetail,
+    notificationDetailRoute,
     markCurrentPageRead,
     openPublishDrawer,
     closePublishDrawer,

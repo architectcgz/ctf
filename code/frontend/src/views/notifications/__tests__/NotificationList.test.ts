@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import NotificationList from '../NotificationList.vue'
 import notificationListSource from '../NotificationList.vue?raw'
+import notificationListPageSource from '@/features/notifications/model/useNotificationListPage.ts?raw'
 import notificationCategoryFilterSource from '@/components/notifications/NotificationCategoryFilter.vue?raw'
 import { useNotificationStore } from '@/stores/notification'
 import { useAuthStore } from '@/stores/auth'
@@ -91,13 +92,13 @@ describe('NotificationList', () => {
   it('navigates to detail page when clicking a notification item', async () => {
     const { wrapper, router } = await mountPage()
 
-    const notificationButton = wrapper
-      .findAll('button')
+    const notificationLink = wrapper
+      .findAll('.notification-row')
       .find((node) => node.text().includes('系统通知'))
 
-    expect(notificationButton).toBeTruthy()
+    expect(notificationLink).toBeTruthy()
 
-    await notificationButton!.trigger('click')
+    await notificationLink!.trigger('click')
     await flushPromises()
 
     expect(router.currentRoute.value.fullPath).toBe('/notifications/1')
@@ -130,6 +131,9 @@ describe('NotificationList', () => {
     expect(notificationListSource).toContain('useNotificationListPage')
     expect(notificationListSource).not.toContain("from '@/api/notification'")
     expect(notificationListSource).not.toContain('usePagination<NotificationItem>')
+    expect(notificationListSource).toContain(':to="notificationDetailRoute(item)"')
+    expect(notificationListPageSource).not.toContain("from 'vue-router'")
+    expect(notificationListPageSource).toContain('function notificationDetailRoute')
   })
 
   it('keeps bulk mark-as-read action working on the list page', async () => {
