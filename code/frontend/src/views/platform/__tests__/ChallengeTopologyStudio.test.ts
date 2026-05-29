@@ -3,21 +3,21 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import { ChallengeTopologyStudioPage } from '@/features/challenge-topology-studio'
 import challengeTopologyStudioPageSource from '@/features/challenge-topology-studio/ui/ChallengeTopologyStudioPage.vue?raw'
-import topologyChallengeContextRailSource from '@/components/platform/topology/TopologyChallengeContextRail.vue?raw'
-import topologyChallengeWorkbenchSource from '@/components/platform/topology/TopologyChallengeWorkbench.vue?raw'
-import topologyChallengeWorkspaceHeaderSource from '@/components/platform/topology/TopologyChallengeWorkspaceHeader.vue?raw'
-import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
-import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'
-import topologyCanvasWorkspaceSectionSource from '@/components/platform/topology/TopologyCanvasWorkspaceSection.vue?raw'
-import topologyEntryNodeSectionSource from '@/components/platform/topology/TopologyEntryNodeSection.vue?raw'
-import topologyPackageContextPanelSource from '@/components/platform/topology/TopologyPackageContextPanel.vue?raw'
-import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
-import topologyNetworkQuickEditorSource from '@/components/platform/topology/TopologyNetworkQuickEditor.vue?raw'
-import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
-import topologyTemplateHeroSectionSource from '@/components/platform/topology/TopologyTemplateHeroSection.vue?raw'
-import topologyTemplateLibraryHeaderSource from '@/components/platform/topology/TopologyTemplateLibraryHeader.vue?raw'
-import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
-import topologyTemplateWorkbenchSource from '@/components/platform/topology/TopologyTemplateWorkbench.vue?raw'
+import topologyChallengeContextRailSource from '@/features/challenge-topology-studio/ui/TopologyChallengeContextRail.vue?raw'
+import topologyChallengeWorkbenchSource from '@/features/challenge-topology-studio/ui/TopologyChallengeWorkbench.vue?raw'
+import topologyChallengeWorkspaceHeaderSource from '@/features/challenge-topology-studio/ui/TopologyChallengeWorkspaceHeader.vue?raw'
+import topologyConnectivitySectionsSource from '@/features/challenge-topology-studio/ui/TopologyConnectivitySections.vue?raw'
+import topologyCanvasQuickEditorSource from '@/features/challenge-topology-studio/ui/TopologyCanvasQuickEditor.vue?raw'
+import topologyCanvasWorkspaceSectionSource from '@/features/challenge-topology-studio/ui/TopologyCanvasWorkspaceSection.vue?raw'
+import topologyEntryNodeSectionSource from '@/features/challenge-topology-studio/ui/TopologyEntryNodeSection.vue?raw'
+import topologyPackageContextPanelSource from '@/features/challenge-topology-studio/ui/TopologyPackageContextPanel.vue?raw'
+import topologyNetworkSectionSource from '@/features/challenge-topology-studio/ui/TopologyNetworkSection.vue?raw'
+import topologyNetworkQuickEditorSource from '@/features/challenge-topology-studio/ui/TopologyNetworkQuickEditor.vue?raw'
+import topologyNodeSectionSource from '@/features/challenge-topology-studio/ui/TopologyNodeSection.vue?raw'
+import topologyTemplateHeroSectionSource from '@/features/challenge-topology-studio/ui/TopologyTemplateHeroSection.vue?raw'
+import topologyTemplateLibraryHeaderSource from '@/features/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue?raw'
+import topologyTemplateSidePanelSource from '@/features/challenge-topology-studio/ui/TopologyTemplateSidePanel.vue?raw'
+import topologyTemplateWorkbenchSource from '@/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue?raw'
 import topologyStructureMutationsSource from '@/features/challenge-topology-studio/model/useTopologyStructureMutations.ts?raw'
 import challengeTopologyStudioRouteSource from '../ChallengeTopologyStudio.vue?raw'
 import { ApiError } from '@/api/request'
@@ -209,6 +209,7 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('管理员挑战拓扑工作台不应继续复用教师端根壳 token', () => {
+    expect(challengeTopologyStudioPageSource).not.toContain('@/components/platform/topology/')
     expect(challengeTopologyStudioPageSource).not.toContain('teacher-management-shell')
     expect(challengeTopologyStudioPageSource).not.toContain('teacher-surface')
     expect(challengeTopologyStudioPageSource).not.toContain('teacher-surface-workspace-bg')

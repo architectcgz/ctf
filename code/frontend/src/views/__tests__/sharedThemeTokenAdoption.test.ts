@@ -29,17 +29,20 @@ import notificationDrawerHeaderSource from '@/components/layout/notification-dra
 import notificationDrawerSourceBase from '@/components/layout/NotificationDrawer.vue?raw'
 import notificationDrawerSummarySource from '@/components/layout/notification-drawer/NotificationDrawerSummary.vue?raw'
 import notificationDrawerTabsSource from '@/components/layout/notification-drawer/NotificationDrawerTabs.vue?raw'
+import notificationDrawerViewStateSource from '@/components/layout/notification-drawer/useNotificationDrawerViewState.ts?raw'
 import sidebarDesktopPanelSource from '@/components/layout/sidebar/SidebarDesktopPanel.vue?raw'
 import sidebarMobilePanelSource from '@/components/layout/sidebar/SidebarMobilePanel.vue?raw'
 import sidebarNavTreeSource from '@/components/layout/sidebar/SidebarNavTree.vue?raw'
 import sidebarPanelHeaderSource from '@/components/layout/sidebar/SidebarPanelHeader.vue?raw'
 import sidebarSourceBase from '@/components/layout/Sidebar.vue?raw'
+import sidebarViewStateSource from '@/components/layout/sidebar/useSidebarNavigationViewState.ts?raw'
 import sidebarWorkspaceLabelSource from '@/components/layout/sidebar/SidebarWorkspaceLabel.vue?raw'
 import topNavBrandPickerSource from '@/components/layout/topnav/TopNavBrandPicker.vue?raw'
 import topNavBreadcrumbsSource from '@/components/layout/topnav/TopNavBreadcrumbs.vue?raw'
 import topNavMobileToggleSource from '@/components/layout/topnav/TopNavMobileToggle.vue?raw'
 import topNavNotificationTriggerSource from '@/components/layout/topnav/TopNavNotificationTrigger.vue?raw'
 import topNavSourceBase from '@/components/layout/TopNav.vue?raw'
+import topNavViewStateSource from '@/components/layout/topnav/useTopNavViewState.ts?raw'
 import topNavUserCardSource from '@/components/layout/topnav/TopNavUserCard.vue?raw'
 import cLightActionPopoverSource from '@/components/common/modal-templates/CLightActionPopover.vue?raw'
 import cFocusedInputDialogSource from '@/components/common/modal-templates/CFocusedInputDialog.vue?raw'
@@ -50,15 +53,30 @@ import platformOverviewAlertsSectionSource from '@/components/platform/dashboard
 import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
 import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
 import platformOverviewWorkspaceSource from '@/features/platform-overview/model/usePlatformOverviewWorkspace.ts?raw'
-import writeupManageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
-import awdRoundInspectorSource from '@/features/awd-inspector/ui/AWDRoundInspector.vue?raw'
+import awdInspectorCanvasWorkspaceSource from '@/features/awd-inspector/ui/AWDInspectorCanvasWorkspace.vue?raw'
+import awdInspectorStatsHudSource from '@/features/awd-inspector/ui/AWDInspectorStatsHud.vue?raw'
+import writeupManageDirectoryRowSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectoryRow.vue?raw'
+import writeupManageDirectorySectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectorySection.vue?raw'
+import writeupManageHeaderSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManageHeader.vue?raw'
+import writeupManageSourceBase from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
+import writeupManageSummaryStripSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSummaryStrip.vue?raw'
+import awdRoundInspectorSourceBase from '@/features/awd-inspector/ui/AWDRoundInspector.vue?raw'
 import awdAttackLogPanelSource from '@/features/awd-inspector/ui/AWDAttackLogPanel.vue?raw'
 import awdReadinessSummarySource from '@/features/awd-readiness/ui/AWDReadinessSummary.vue?raw'
 import awdRuntimePendingStateSource from '@/features/contest-awd-admin/ui/AWDRuntimePendingState.vue?raw'
 import awdScoreboardSummaryPanelSource from '@/features/awd-inspector/ui/AWDScoreboardSummaryPanel.vue?raw'
-import awdServiceStatusPanelSource from '@/features/awd-inspector/ui/AWDServiceStatusPanel.vue?raw'
-import awdTrafficPanelSource from '@/features/awd-inspector/ui/AWDTrafficPanel.vue?raw'
+import awdServiceRoundPerformanceTableSource from '@/features/awd-inspector/ui/AWDServiceRoundPerformanceTable.vue?raw'
+import awdServiceStatusMatrixSource from '@/features/awd-inspector/ui/AWDServiceStatusMatrix.vue?raw'
+import awdServiceStatusPanelSourceBase from '@/features/awd-inspector/ui/AWDServiceStatusPanel.vue?raw'
+import awdServiceStatusToolbarSource from '@/features/awd-inspector/ui/AWDServiceStatusToolbar.vue?raw'
+import awdTrafficEventTableSource from '@/features/awd-inspector/ui/AWDTrafficEventTable.vue?raw'
+import awdTrafficIntelligenceGridSource from '@/features/awd-inspector/ui/AWDTrafficIntelligenceGrid.vue?raw'
+import awdTrafficPanelSourceBase from '@/features/awd-inspector/ui/AWDTrafficPanel.vue?raw'
+import awdTrafficSummaryBandSource from '@/features/awd-inspector/ui/AWDTrafficSummaryBand.vue?raw'
 import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
+import awdChallengeConfigDirectoryRowSource from '@/features/platform-contests/ui/AWDChallengeConfigDirectoryRow.vue?raw'
+import awdChallengeConfigDirectorySectionSource from '@/features/platform-contests/ui/AWDChallengeConfigDirectorySection.vue?raw'
+import awdChallengeConfigHeaderSource from '@/features/platform-contests/ui/AWDChallengeConfigHeader.vue?raw'
 import contestAwdPreflightPanelSource from '@/features/platform-contests/ui/ContestAwdPreflightPanel.vue?raw'
 import platformContestFormPanelSource from '@/features/platform-contests/ui/PlatformContestFormPanel.vue?raw'
 import contestFormActionsSource from '@/features/platform-contests/ui/PlatformContestFormActions.vue?raw'
@@ -70,19 +88,19 @@ import platformContestTableSource from '@/features/platform-contests/ui/Platform
 import awdRoundHeaderPanelSource from '@/features/awd-inspector/ui/AWDRoundHeaderPanel.vue?raw'
 import contestAwdWorkspacePanelSource from '@/features/contest-awd-workspace/ui/ContestAWDWorkspacePanel.vue?raw'
 import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
-import topologyCanvasBoardSource from '@/components/platform/topology/TopologyCanvasBoard.vue?raw'
-import topologyConnectivitySectionsSource from '@/components/platform/topology/TopologyConnectivitySections.vue?raw'
-import topologyCanvasQuickEditorSource from '@/components/platform/topology/TopologyCanvasQuickEditor.vue?raw'
-import topologyCanvasWorkspaceSectionSource from '@/components/platform/topology/TopologyCanvasWorkspaceSection.vue?raw'
-import topologyEntryNodeSectionSource from '@/components/platform/topology/TopologyEntryNodeSection.vue?raw'
-import topologyPackageContextPanelSource from '@/components/platform/topology/TopologyPackageContextPanel.vue?raw'
-import topologyNetworkSectionSource from '@/components/platform/topology/TopologyNetworkSection.vue?raw'
-import topologyNetworkQuickEditorSource from '@/components/platform/topology/TopologyNetworkQuickEditor.vue?raw'
-import topologyNodeSectionSource from '@/components/platform/topology/TopologyNodeSection.vue?raw'
+import topologyCanvasBoardSource from '@/features/challenge-topology-studio/ui/TopologyCanvasBoard.vue?raw'
+import topologyConnectivitySectionsSource from '@/features/challenge-topology-studio/ui/TopologyConnectivitySections.vue?raw'
+import topologyCanvasQuickEditorSource from '@/features/challenge-topology-studio/ui/TopologyCanvasQuickEditor.vue?raw'
+import topologyCanvasWorkspaceSectionSource from '@/features/challenge-topology-studio/ui/TopologyCanvasWorkspaceSection.vue?raw'
+import topologyEntryNodeSectionSource from '@/features/challenge-topology-studio/ui/TopologyEntryNodeSection.vue?raw'
+import topologyPackageContextPanelSource from '@/features/challenge-topology-studio/ui/TopologyPackageContextPanel.vue?raw'
+import topologyNetworkSectionSource from '@/features/challenge-topology-studio/ui/TopologyNetworkSection.vue?raw'
+import topologyNetworkQuickEditorSource from '@/features/challenge-topology-studio/ui/TopologyNetworkQuickEditor.vue?raw'
+import topologyNodeSectionSource from '@/features/challenge-topology-studio/ui/TopologyNodeSection.vue?raw'
 import topologyStudioSource from '@/features/challenge-topology-studio/ui/ChallengeTopologyStudioPage.vue?raw'
-import topologyStatusNotesSource from '@/components/platform/topology/TopologyStatusNotes.vue?raw'
-import topologySummaryGridSource from '@/components/platform/topology/TopologySummaryGrid.vue?raw'
-import topologyTemplateSidePanelSource from '@/components/platform/topology/TopologyTemplateSidePanel.vue?raw'
+import topologyStatusNotesSource from '@/features/challenge-topology-studio/ui/TopologyStatusNotes.vue?raw'
+import topologySummaryGridSource from '@/features/challenge-topology-studio/ui/TopologySummaryGrid.vue?raw'
+import topologyTemplateSidePanelSource from '@/features/challenge-topology-studio/ui/TopologyTemplateSidePanel.vue?raw'
 import adminNotificationPublishDrawerSource from '@/features/admin-notification-publisher/ui/AdminNotificationPublishDrawer.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
@@ -106,6 +124,27 @@ import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewA
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
+const awdServiceStatusPanelSource = [
+  awdServiceStatusPanelSourceBase,
+  awdServiceStatusToolbarSource,
+  awdServiceStatusMatrixSource,
+  awdServiceRoundPerformanceTableSource,
+  readFileSync(
+    resolve(process.cwd(), 'src/features/awd-inspector/ui/awdServiceStatusPanel.css'),
+    'utf8'
+  ),
+].join('\n')
+const awdTrafficPanelSource = [
+  awdTrafficPanelSourceBase,
+  awdTrafficSummaryBandSource,
+  awdTrafficIntelligenceGridSource,
+  awdTrafficEventTableSource,
+  readFileSync(resolve(process.cwd(), 'src/features/awd-inspector/ui/awdTrafficPanel.css'), 'utf8'),
+].join('\n')
+const notificationDrawerStylesSource = readFileSync(
+  resolve(process.cwd(), 'src/components/layout/notification-drawer/notificationDrawer.css'),
+  'utf8'
+)
 const notificationDrawerSource = [
   notificationDrawerSourceBase,
   notificationDrawerHeaderSource,
@@ -113,7 +152,13 @@ const notificationDrawerSource = [
   notificationDrawerTabsSource,
   notificationDrawerBodySource,
   notificationDrawerFooterSource,
+  notificationDrawerViewStateSource,
+  notificationDrawerStylesSource,
 ].join('\n')
+const sidebarStylesSource = readFileSync(
+  resolve(process.cwd(), 'src/components/layout/sidebar/sidebarShell.css'),
+  'utf8'
+)
 const sidebarSource = [
   sidebarSourceBase,
   sidebarDesktopPanelSource,
@@ -121,7 +166,13 @@ const sidebarSource = [
   sidebarPanelHeaderSource,
   sidebarWorkspaceLabelSource,
   sidebarNavTreeSource,
+  sidebarViewStateSource,
+  sidebarStylesSource,
 ].join('\n')
+const topNavStylesSource = readFileSync(
+  resolve(process.cwd(), 'src/components/layout/topnav/topNavShell.css'),
+  'utf8'
+)
 const topNavSource = [
   topNavSourceBase,
   topNavMobileToggleSource,
@@ -129,6 +180,8 @@ const topNavSource = [
   topNavBrandPickerSource,
   topNavNotificationTriggerSource,
   topNavUserCardSource,
+  topNavViewStateSource,
+  topNavStylesSource,
 ].join('\n')
 const userGovernanceSource = [
   userGovernancePageSource,
@@ -142,6 +195,39 @@ const adminDashboardSource = [
   platformOverviewHeroPanelSource,
   platformOverviewAlertsSectionSource,
   platformOverviewHotspotsSectionSource,
+].join('\n')
+const writeupManageSource = [
+  writeupManageSourceBase,
+  writeupManageHeaderSource,
+  writeupManageSummaryStripSource,
+  writeupManageDirectorySectionSource,
+  writeupManageDirectoryRowSource,
+  readFileSync(
+    resolve(
+      process.cwd(),
+      'src/features/challenge-writeup-editor/ui/challengeWriteupManagePanel.css'
+    ),
+    'utf8'
+  ),
+].join('\n')
+const awdRoundInspectorSource = [
+  awdRoundInspectorSourceBase,
+  awdInspectorStatsHudSource,
+  awdInspectorCanvasWorkspaceSource,
+  readFileSync(
+    resolve(process.cwd(), 'src/features/awd-inspector/ui/awdRoundInspector.css'),
+    'utf8'
+  ),
+].join('\n')
+const awdChallengeConfigCombinedSource = [
+  awdChallengeConfigPanelSource,
+  awdChallengeConfigHeaderSource,
+  awdChallengeConfigDirectorySectionSource,
+  awdChallengeConfigDirectoryRowSource,
+  readFileSync(
+    resolve(process.cwd(), 'src/features/platform-contests/ui/awdChallengeConfigPanel.css'),
+    'utf8'
+  ),
 ].join('\n')
 const contestFormPanelStylesSource = readFileSync(
   resolve(process.cwd(), 'src/features/platform-contests/ui/platformContestFormPanel.css'),
@@ -507,7 +593,7 @@ describe('shared theme token adoption', () => {
       'text-slate-400',
       'text-slate-300',
     ])
-    expectNoHardcodedThemeTokens(awdChallengeConfigPanelSource, 'AWDChallengeConfigPanel', [
+    expectNoHardcodedThemeTokens(awdChallengeConfigCombinedSource, 'AWDChallengeConfigPanel', [
       'color: white',
     ])
     expectNoHardcodedThemeTokens(contestAwdPreflightPanelSource, 'ContestAwdPreflightPanel', [

@@ -2,14 +2,7 @@ export const viewLineLimit = 500
 
 export const oversizedViewAllowlist = new Set<string>([])
 
-export const componentFeatureImportAllowlist = new Set([
-  'components/platform/topology/TopologyCanvasBoard.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/topology/TopologyConnectivitySections.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/topology/TopologyNetworkSection.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/topology/TopologyNodeEditor.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/topology/TopologyNodeSection.vue -> @/features/challenge-topology-studio/model',
-  'components/platform/topology/TopologyTemplateWorkbench.vue -> @/features/challenge-topology-studio/model',
-])
+export const componentFeatureImportAllowlist = new Set<string>([])
 
 export const widgetLegacyComponentImportAllowlist = new Set<string>([])
 

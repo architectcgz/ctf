@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
@@ -32,9 +33,9 @@ import teacherInstanceManagementPageSourceBase from '@/features/teacher-instance
 import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
 import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import topologyStudioPageSource from '@/features/challenge-topology-studio/ui/ChallengeTopologyStudioPage.vue?raw'
-import topologyTemplateLibraryHeaderSource from '@/components/platform/topology/TopologyTemplateLibraryHeader.vue?raw'
-import topologyTemplateHeroSectionSource from '@/components/platform/topology/TopologyTemplateHeroSection.vue?raw'
-import topologyChallengeWorkspaceHeaderSource from '@/components/platform/topology/TopologyChallengeWorkspaceHeader.vue?raw'
+import topologyTemplateLibraryHeaderSource from '@/features/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue?raw'
+import topologyTemplateHeroSectionSource from '@/features/challenge-topology-studio/ui/TopologyTemplateHeroSection.vue?raw'
+import topologyChallengeWorkspaceHeaderSource from '@/features/challenge-topology-studio/ui/TopologyChallengeWorkspaceHeader.vue?raw'
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
@@ -56,8 +57,15 @@ import userGovernanceDetailModalSource from '@/components/platform/user/UserGove
 import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
 import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
 import contestOperationsHubHeroPanelSource from '@/features/platform-contests/ui/ContestOperationsHubHeroPanel.vue?raw'
-import writeupManageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
-import writeupEditorSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue?raw'
+import writeupManageDirectoryRowSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectoryRow.vue?raw'
+import writeupManageDirectorySectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectorySection.vue?raw'
+import writeupManageHeaderSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManageHeader.vue?raw'
+import writeupManageSourceBase from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
+import writeupManageSummaryStripSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSummaryStrip.vue?raw'
+import writeupEditorChallengeRailSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupChallengeRail.vue?raw'
+import writeupEditorFormSectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorFormSection.vue?raw'
+import writeupEditorPageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue?raw'
+import writeupEditorSnapshotSectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSnapshotSection.vue?raw'
 
 const classStudentsPageSource = [
   classStudentsPageSourceBase,
@@ -98,6 +106,33 @@ const userGovernanceSource = [
   userGovernanceOverviewPanelSource,
   userGovernanceDetailModalSource,
   userGovernanceImportPanelSource,
+].join('\n')
+const writeupManageSource = [
+  writeupManageSourceBase,
+  writeupManageHeaderSource,
+  writeupManageSummaryStripSource,
+  writeupManageDirectorySectionSource,
+  writeupManageDirectoryRowSource,
+  readFileSync(
+    resolve(
+      process.cwd(),
+      'src/features/challenge-writeup-editor/ui/challengeWriteupManagePanel.css'
+    ),
+    'utf8'
+  ),
+].join('\n')
+const writeupEditorSource = [
+  writeupEditorPageSource,
+  writeupEditorFormSectionSource,
+  writeupEditorSnapshotSectionSource,
+  writeupEditorChallengeRailSource,
+  readFileSync(
+    resolve(
+      process.cwd(),
+      'src/features/challenge-writeup-editor/ui/challengeWriteupEditorPage.css'
+    ),
+    'utf8'
+  ),
 ].join('\n')
 const topologyStudioSource = [
   topologyStudioPageSource,

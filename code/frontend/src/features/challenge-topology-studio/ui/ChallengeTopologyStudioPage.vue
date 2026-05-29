@@ -3,11 +3,11 @@ import { computed, ref } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import TopologyChallengeWorkbench from '@/components/platform/topology/TopologyChallengeWorkbench.vue'
-import TopologyChallengeWorkspaceHeader from '@/components/platform/topology/TopologyChallengeWorkspaceHeader.vue'
-import TopologyTemplateHeroSection from '@/components/platform/topology/TopologyTemplateHeroSection.vue'
-import TopologyTemplateLibraryHeader from '@/components/platform/topology/TopologyTemplateLibraryHeader.vue'
-import TopologyTemplateWorkbench from '@/components/platform/topology/TopologyTemplateWorkbench.vue'
+import TopologyChallengeWorkbench from './TopologyChallengeWorkbench.vue'
+import TopologyChallengeWorkspaceHeader from './TopologyChallengeWorkspaceHeader.vue'
+import TopologyTemplateHeroSection from './TopologyTemplateHeroSection.vue'
+import TopologyTemplateLibraryHeader from './TopologyTemplateLibraryHeader.vue'
+import TopologyTemplateWorkbench from './TopologyTemplateWorkbench.vue'
 import {
   useChallengeTopologyStudioPage,
   type TopologyStudioMode,

@@ -3,11 +3,11 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const topologyCanvasWorkspaceSectionSource = readFileSync(
-  `${process.cwd()}/src/components/platform/topology/TopologyCanvasWorkspaceSection.vue`,
+  `${process.cwd()}/src/features/challenge-topology-studio/ui/TopologyCanvasWorkspaceSection.vue`,
   'utf-8'
 )
 const topologyNodeSectionSource = readFileSync(
-  `${process.cwd()}/src/components/platform/topology/TopologyNodeSection.vue`,
+  `${process.cwd()}/src/features/challenge-topology-studio/ui/TopologyNodeSection.vue`,
   'utf-8'
 )
 
