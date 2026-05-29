@@ -1,10 +1,10 @@
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { getContests } from '@/api/admin/contests'
 import { usePagination } from '@/composables/usePagination'
 import { useAbortController } from '@/composables/useAbortController'
 import type { ContestDetailData, ContestListSummaryData, ContestPageData } from '@/api/contracts'
+import { buildContestManageListRoute, buildContestOperationsRoute } from './contestOperationsHubRoutes'
 
 const OPERABLE_AWD_STATUSES = ['registering', 'running', 'frozen', 'ended'] as const
 const PREFERRED_AWD_STATUSES = ['running', 'frozen'] as const
@@ -20,7 +20,6 @@ function buildFallbackSummary(contests: ContestDetailData[]): ContestListSummary
 }
 
 export function useContestOperationsHubPage() {
-  const router = useRouter()
   const {
     list,
     total,
@@ -115,28 +114,14 @@ export function useContestOperationsHubPage() {
     await changePage(nextPage)
   }
 
-  async function handleEnterOperations(contestId: string): Promise<void> {
-    await router.push({
-      name: 'ContestOperations',
-      params: { id: contestId },
-    })
-  }
-
-  async function handleBackToContestDirectory(): Promise<void> {
-    await router.push({
-      name: 'ContestManage',
-      query: { panel: 'list' },
-    })
-  }
-
   onMounted(() => {
     void loadContests()
   })
 
   return {
     changeContestPage,
-    handleBackToContestDirectory,
-    handleEnterOperations,
+    backToContestDirectoryRoute: buildContestManageListRoute(),
+    buildContestOperationsRoute,
     loadContests,
     loadError,
     loading,

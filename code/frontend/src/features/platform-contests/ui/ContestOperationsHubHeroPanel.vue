@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import { Activity, PauseCircle, Star, Trophy } from 'lucide-vue-next'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 
 defineProps<{
   operableContestCount: number
   runningContestCount: number
   frozenContestCount: number
   preferredContestTitle: string
+  backRoute: {
+    name: string
+    query?: Record<string, string>
+  }
 }>()
-
-const emit = defineEmits<{
-  back: []
-}>()
-
-function handleBack(): void {
-  emit('back')
-}
 </script>
 
 <template>
@@ -30,13 +27,13 @@ function handleBack(): void {
       </div>
 
       <div class="workspace-panel-header__actions header-actions contest-ops-hero__actions">
-        <button
-          type="button"
+        <AppRouteLink
+          id="contest-ops-back-directory"
+          :to="backRoute"
           class="header-btn header-btn--ghost"
-          @click="handleBack"
         >
           返回竞赛目录
-        </button>
+        </AppRouteLink>
       </div>
     </div>
 

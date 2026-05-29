@@ -21,7 +21,6 @@ export const featureRouterImportAllowlist = new Set([
   'features/platform-user-management/model/usePlatformUserManagePage.ts -> vue-router',
   'features/platform-contests/model/useContestAnnouncementsPage.ts -> vue-router',
   'features/platform-contests/model/useContestEditPage.ts -> vue-router',
-  'features/platform-contests/model/useContestOperationsHubPage.ts -> vue-router',
   'features/platform-contests/model/useContestOperationsPage.ts -> vue-router',
   'features/class-students-workspace/model/useClassStudentsPage.ts -> vue-router',
   'features/student-analysis-workspace/model/useStudentAnalysisPage.ts -> vue-router',

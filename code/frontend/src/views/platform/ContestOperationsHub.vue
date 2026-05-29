@@ -17,8 +17,8 @@ const {
   frozenContestCount,
   preferredContest,
   loadContests,
-  handleEnterOperations,
-  handleBackToContestDirectory,
+  buildContestOperationsRoute,
+  backToContestDirectoryRoute,
 } = useContestOperationsHubPage()
 </script>
 
@@ -32,7 +32,7 @@ const {
           :running-contest-count="runningContestCount"
           :frozen-contest-count="frozenContestCount"
           :preferred-contest-title="preferredContest ? preferredContest.title : '暂无'"
-          @back="void handleBackToContestDirectory()"
+          :back-route="backToContestDirectoryRoute"
         />
 
         <ContestOperationsHubWorkspacePanel
@@ -42,10 +42,10 @@ const {
           :page="page"
           :total="total"
           :total-pages="totalPages"
+          :back-route="backToContestDirectoryRoute"
+          :build-operations-route="buildContestOperationsRoute"
           @retry="void loadContests()"
-          @back="void handleBackToContestDirectory()"
           @change-page="void changeContestPage($event)"
-          @enter-operations="void handleEnterOperations($event)"
         />
     </main>
   </section>

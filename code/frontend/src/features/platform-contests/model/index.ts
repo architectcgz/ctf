@@ -1,5 +1,6 @@
 export * from './usePlatformContests'
 export * from './contestManageRoutes'
+export * from './contestOperationsHubRoutes'
 export * from './contestFormSupport'
 export * from './useContestListState'
 export * from './useContestDialogState'

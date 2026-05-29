@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-vue-next'
 import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
@@ -15,13 +16,21 @@ defineProps<{
   page: number
   total: number
   totalPages: number
+  backRoute: {
+    name: string
+    query?: Record<string, string>
+  }
+  buildOperationsRoute: (contestId: string) => {
+    name: string
+    params: {
+      id: string
+    }
+  }
 }>()
 
 const emit = defineEmits<{
   (event: 'retry'): void
-  (event: 'back'): void
   (event: 'change-page', page: number): void
-  (event: 'enter-operations', contestId: string): void
 }>()
 
 function formatDateTime(value: string): string {
@@ -79,13 +88,13 @@ const contestTableColumns = [
     icon="Trophy"
   >
     <template #action>
-      <button
-        type="button"
+      <AppRouteLink
+        id="contest-ops-empty-back"
+        :to="backRoute"
         class="ui-btn ui-btn--ghost"
-        @click="emit('back')"
       >
         返回竞赛目录
-      </button>
+      </AppRouteLink>
     </template>
   </AppEmpty>
 
@@ -154,15 +163,14 @@ const contestTableColumns = [
 
       <template #cell-actions="{ row }">
         <div class="contest-ops-actions">
-          <button
+          <AppRouteLink
             :id="`contest-ops-enter-${(row as ContestDetailData).id}`"
-            type="button"
+            :to="buildOperationsRoute(String((row as ContestDetailData).id))"
             class="ui-btn ui-btn--primary ui-btn--sm"
-            @click="emit('enter-operations', String((row as ContestDetailData).id))"
           >
             <ArrowRight class="h-4 w-4" />
             进入运维台
-          </button>
+          </AppRouteLink>
         </div>
       </template>
     </WorkspaceDataTable>

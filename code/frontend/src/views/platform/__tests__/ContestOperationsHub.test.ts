@@ -1,16 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
 import ContestOperationsHub from '../ContestOperationsHub.vue'
 import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
+import contestOperationsHubPageModelSource from '@/features/platform-contests/model/useContestOperationsHubPage.ts?raw'
+import contestOperationsHubRoutesSource from '@/features/platform-contests/model/contestOperationsHubRoutes.ts?raw'
 import contestOperationsHubHeroPanelSource from '@/features/platform-contests/ui/ContestOperationsHubHeroPanel.vue?raw'
 import contestOperationsHubWorkspacePanelSource from '@/features/platform-contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
 
-const pushMock = vi.fn()
-const routeState = vi.hoisted(() => ({
-  path: '/platform/contest-ops/contests',
-  name: 'PlatformContestOpsIndex',
-}))
 const adminApiMocks = vi.hoisted(() => ({
   getContests: vi.fn(),
 }))
@@ -24,18 +21,8 @@ vi.mock('@/api/admin/contests', async () => {
   }
 })
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRoute: () => routeState,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
-
 describe('ContestOperationsHub', () => {
   beforeEach(() => {
-    pushMock.mockReset()
     adminApiMocks.getContests.mockReset()
     adminApiMocks.getContests.mockImplementation(async (params?: Record<string, unknown>) => {
       if (params?.page_size === 1) {
@@ -101,8 +88,25 @@ describe('ContestOperationsHub', () => {
     })
   })
 
+  function mountPage() {
+    return mount(ContestOperationsHub, {
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
+  }
+
+  function findRouteLink(
+    wrapper: ReturnType<typeof mount>,
+    id: string
+  ) {
+    return wrapper.findAllComponents(RouterLinkStub).find((link) => link.attributes('id') === id)
+  }
+
   it('renders contest ops directory copy and lists operable awd contests', async () => {
-    const wrapper = mount(ContestOperationsHub)
+    const wrapper = mountPage()
     await flushPromises()
 
     expect(wrapper.text()).toContain('赛事运维')
@@ -128,15 +132,17 @@ describe('ContestOperationsHub', () => {
   it('路由页应仅负责组合，不直接耦合赛事运维目录请求流程', () => {
     expect(contestOperationsHubSource).toContain('useContestOperationsHubPage')
     expect(contestOperationsHubSource).not.toContain("from '@/api/admin/contests'")
+    expect(contestOperationsHubPageModelSource).not.toContain("from 'vue-router'")
+    expect(contestOperationsHubPageModelSource).toContain('backToContestDirectoryRoute: buildContestManageListRoute()')
+    expect(contestOperationsHubPageModelSource).toContain('buildContestOperationsRoute')
+    expect(contestOperationsHubRoutesSource).toContain('buildContestManageListRoute')
   })
 
-  it('routes to the per-contest operations workspace from the directory entry', async () => {
-    const wrapper = mount(ContestOperationsHub)
+  it('目录行应暴露进入单场运维台的显式路由目标', async () => {
+    const wrapper = mountPage()
     await flushPromises()
 
-    await wrapper.get('#contest-ops-enter-awd-running').trigger('click')
-
-    expect(pushMock).toHaveBeenCalledWith({
+    expect(findRouteLink(wrapper, 'contest-ops-enter-awd-running')?.props('to')).toEqual({
       name: 'ContestOperations',
       params: { id: 'awd-running' },
     })
@@ -157,11 +163,15 @@ describe('ContestOperationsHub', () => {
       },
     }))
 
-    const wrapper = mount(ContestOperationsHub)
+    const wrapper = mountPage()
     await flushPromises()
 
     expect(wrapper.text()).toContain('当前还没有可进入运维台的 AWD 赛事')
     expect(wrapper.text()).toContain('返回竞赛目录')
+    expect(findRouteLink(wrapper, 'contest-ops-empty-back')?.props('to')).toEqual({
+      name: 'ContestManage',
+      query: { panel: 'list' },
+    })
   })
 
   it('目录支持服务端分页并向后端发起翻页请求', async () => {
@@ -234,7 +244,7 @@ describe('ContestOperationsHub', () => {
       }
     })
 
-    const wrapper = mount(ContestOperationsHub)
+    const wrapper = mountPage()
     await flushPromises()
     await flushPromises()
 
@@ -271,6 +281,10 @@ describe('ContestOperationsHub', () => {
       'class="workspace-panel-header__actions header-actions contest-ops-hero__actions"'
     )
     expect(contestOperationsHubHeroPanelSource).toContain(
+      "from '@/components/navigation/AppRouteLink.vue'"
+    )
+    expect(contestOperationsHubHeroPanelSource).toContain('<AppRouteLink')
+    expect(contestOperationsHubHeroPanelSource).toContain(
       'class="workspace-panel-header__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface contest-ops-summary"'
     )
     expect(contestOperationsHubHeroPanelSource).toContain(
@@ -294,9 +308,13 @@ describe('ContestOperationsHub', () => {
       "import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'"
     )
     expect(contestOperationsHubWorkspacePanelSource).toContain(
+      "import AppRouteLink from '@/components/navigation/AppRouteLink.vue'"
+    )
+    expect(contestOperationsHubWorkspacePanelSource).toContain(
       "import PagePaginationControls from '@/components/common/PagePaginationControls.vue'"
     )
     expect(contestOperationsHubWorkspacePanelSource).toContain('<WorkspaceDataTable')
+    expect(contestOperationsHubWorkspacePanelSource).toContain('<AppRouteLink')
     expect(contestOperationsHubWorkspacePanelSource).toContain(
       'class="workspace-directory-list contest-ops-table"'
     )
