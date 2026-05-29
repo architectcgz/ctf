@@ -1,11 +1,17 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
 import type { AdminChallengeFlagPayload } from '@/api/admin/authoring'
 import { configureChallengeFlag, getChallengeDetail } from '@/api/admin/authoring'
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useToast } from '@/composables/useToast'
+import {
+  platformChallengeListRoute,
+  platformChallengeTopologyStudioRoute,
+  platformChallengeWriteupRoute,
+} from './platformChallengeDetailRoutes'
 import {
   applyChallengeFlagDraftPatch,
   buildChallengeFlagDraftSummary,
@@ -26,8 +32,8 @@ export interface PlatformChallengeFlagDraft {
 export type PlatformChallengeFlagDraftPatch = ChallengeFlagDraftPatch
 
 export function usePlatformChallengeDetailPage() {
-  const route = useRoute()
-  const router = useRouter()
+  const { params } = useRouteQueryTransport()
+  const { push } = useRouteNavigationTransport()
   const toast = useToast()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
@@ -41,7 +47,7 @@ export function usePlatformChallengeDetailPage() {
   const flagPrefix = ref('')
   let redirectTimer: ReturnType<typeof setTimeout> | null = null
 
-  const challengeId = computed(() => String(route.params.id || ''))
+  const challengeId = computed(() => String(params.value.id ?? ''))
   const workspaceLabel = computed(() => challenge.value?.title || '题目详情')
   const flagConfigSummary = computed(() => summarizeChallengeFlagConfig(challenge.value?.flag_config))
   const isSharedInstanceChallenge = computed(() => challenge.value?.instance_sharing === 'shared')
@@ -65,19 +71,16 @@ export function usePlatformChallengeDetailPage() {
 
   function openTopology(): void {
     if (!challengeId.value) return
-    void router.push(`/platform/challenges/${challengeId.value}/topology`)
+    void push(platformChallengeTopologyStudioRoute(challengeId.value))
   }
 
   function openChallengeList(): void {
-    void router.push('/platform/challenges')
+    void push(platformChallengeListRoute)
   }
 
   function openWriteup(mode: 'view' | 'edit'): void {
     if (!challengeId.value) return
-    void router.push({
-      name: mode === 'view' ? 'PlatformChallengeWriteupView' : 'PlatformChallengeWriteup',
-      params: { id: challengeId.value },
-    })
+    void push(platformChallengeWriteupRoute(challengeId.value, mode))
   }
 
   function clearRedirectTimer(): void {
@@ -146,7 +149,7 @@ export function usePlatformChallengeDetailPage() {
       clearRedirectTimer()
       redirectTimer = setTimeout(() => {
         redirectTimer = null
-        void router.push('/platform/challenges')
+        void push(platformChallengeListRoute)
       }, 1500)
     } finally {
       loading.value = false

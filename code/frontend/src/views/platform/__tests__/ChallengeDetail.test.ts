@@ -4,6 +4,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import adminChallengeTopbarPanelSource from '@/features/platform-challenge-detail/ui/AdminChallengeTopbarPanel.vue?raw'
+import platformChallengeDetailPageSource from '@/features/platform-challenge-detail/model/usePlatformChallengeDetailPage.ts?raw'
+import platformChallengeDetailRoutesSource from '@/features/platform-challenge-detail/model/platformChallengeDetailRoutes.ts?raw'
 import platformChallengeDetailWorkspaceSource from '@/widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue?raw'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 
@@ -117,7 +119,10 @@ describe('Admin ChallengeDetail', () => {
 
     await topologyButton!.trigger('click')
 
-    expect(pushMock).toHaveBeenCalledWith('/platform/challenges/11/topology')
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'PlatformChallengeTopologyStudio',
+      params: { id: '11' },
+    })
 
     wrapper.unmount()
     expect(useBackofficeBreadcrumbDetail().breadcrumbDetailTitle.value).toBeNull()
@@ -137,6 +142,21 @@ describe('Admin ChallengeDetail', () => {
     expect(adminChallengeTopbarPanelSource).toContain('class="header-btn header-btn--ghost"')
     expect(challengeDetailSource).not.toContain('admin-btn admin-btn-primary')
     expect(challengeDetailSource).not.toContain('admin-btn admin-btn-ghost')
+  })
+
+  it('详情页 page model 应通过 feature route target + transport 处理导航，而不是直接 import vue-router', () => {
+    expect(platformChallengeDetailPageSource).toContain("from '@/composables/routeNavigationTransport'")
+    expect(platformChallengeDetailPageSource).toContain("from '@/composables/routeQueryTransport'")
+    expect(platformChallengeDetailPageSource).toContain("from './platformChallengeDetailRoutes'")
+    expect(platformChallengeDetailPageSource).not.toContain("from 'vue-router'")
+    expect(platformChallengeDetailPageSource).toContain('platformChallengeListRoute')
+    expect(platformChallengeDetailPageSource).toContain('platformChallengeTopologyStudioRoute')
+    expect(platformChallengeDetailPageSource).toContain('platformChallengeWriteupRoute')
+    expect(platformChallengeDetailRoutesSource).toContain("name: 'ChallengeManage'")
+    expect(platformChallengeDetailRoutesSource).toContain("name: 'PlatformChallengeTopologyStudio'")
+    expect(platformChallengeDetailRoutesSource).toContain(
+      "name: mode === 'view' ? 'PlatformChallengeWriteupView' : 'PlatformChallengeWriteup'"
+    )
   })
 
   it('题目详情页顶部 tab 应复用全局 tab 标准并收紧标题间距', () => {
@@ -375,7 +395,7 @@ describe('Admin ChallengeDetail', () => {
     vi.runAllTimers()
 
     expect(clearTimeoutSpy).toHaveBeenCalled()
-    expect(pushSpy).not.toHaveBeenCalledWith('/platform/challenges')
+    expect(pushSpy).not.toHaveBeenCalledWith({ name: 'ChallengeManage' })
 
     clearTimeoutSpy.mockRestore()
     vi.useRealTimers()
