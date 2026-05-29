@@ -1,9 +1,9 @@
 import { ArrowDownWideNarrow, Calendar, UserRound } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
 import { getAuditLogs } from '@/api/admin/platform'
 import type { AuditLogItem } from '@/api/contracts'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 import { useAbortController } from '@/composables/useAbortController'
 
@@ -20,8 +20,7 @@ const sortOptions: AuditSortOption[] = [
 ]
 
 export function useAuditLogPage() {
-  const route = useRoute()
-  const router = useRouter()
+  const { query, replaceQuery } = useRouteQueryTransport()
 
   const filters = reactive({
     action: '',
@@ -83,23 +82,23 @@ export function useAuditLogPage() {
   }
 
   function hydrateFromRoute(): void {
-    filters.action = normalizeQueryValue(route.query.action)
-    filters.resource_type = normalizeQueryValue(route.query.resource_type)
-    filters.actor_user_id = normalizeQueryValue(route.query.actor_user_id)
+    filters.action = normalizeQueryValue(query.value.action)
+    filters.resource_type = normalizeQueryValue(query.value.resource_type)
+    filters.actor_user_id = normalizeQueryValue(query.value.actor_user_id)
 
-    const nextPage = Number.parseInt(normalizeQueryValue(route.query.page), 10)
+    const nextPage = Number.parseInt(normalizeQueryValue(query.value.page), 10)
     page.value = Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1
   }
 
   async function syncRouteQuery(): Promise<void> {
-    const query: Record<string, string> = {}
+    const nextQuery: Record<string, string> = {}
 
-    if (filters.action) query.action = filters.action
-    if (filters.resource_type) query.resource_type = filters.resource_type
-    if (filters.actor_user_id) query.actor_user_id = filters.actor_user_id
-    if (page.value > 1) query.page = String(page.value)
+    if (filters.action) nextQuery.action = filters.action
+    if (filters.resource_type) nextQuery.resource_type = filters.resource_type
+    if (filters.actor_user_id) nextQuery.actor_user_id = filters.actor_user_id
+    if (page.value > 1) nextQuery.page = String(page.value)
 
-    await router.replace({ name: 'AuditLog', query })
+    await replaceQuery(nextQuery)
   }
 
   function detailPreview(detail: Record<string, unknown> | undefined): string {

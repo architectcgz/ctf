@@ -6,6 +6,8 @@ import auditLogSource from '../AuditLog.vue?raw'
 import auditActorDetailModalSource from '@/components/platform/audit/AuditActorDetailModal.vue?raw'
 import auditLogHeroPanelSource from '@/components/platform/audit/AuditLogHeroPanel.vue?raw'
 import auditLogDirectoryPanelSource from '@/components/platform/audit/AuditLogDirectoryPanel.vue?raw'
+import auditLogPageSource from '@/features/audit-log/model/useAuditLogPage.ts?raw'
+import routeQueryTransportSource from '@/composables/routeQueryTransport.ts?raw'
 
 const replaceMock = vi.fn()
 
@@ -112,7 +114,6 @@ describe('AuditLog', () => {
     await flushPromises()
 
     expect(replaceMock).toHaveBeenLastCalledWith({
-      name: 'AuditLog',
       query: {
         action: 'submit',
         resource_type: 'instance',
@@ -155,6 +156,18 @@ describe('AuditLog', () => {
     expect(combinedSource).not.toContain('audit-filter-label--ghost')
     expect(combinedSource).not.toContain('audit-filter-actions')
     expect(combinedSource).not.toContain('audit-filter-action-row')
+  })
+
+  it('page model 应保留 query owner，但不再直接 import vue-router', () => {
+    expect(auditLogPageSource).toContain(
+      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+    )
+    expect(auditLogPageSource).not.toContain("from 'vue-router'")
+    expect(auditLogPageSource).not.toContain('useRoute(')
+    expect(auditLogPageSource).not.toContain('useRouter(')
+    expect(auditLogPageSource).toContain('const { query, replaceQuery } = useRouteQueryTransport()')
+    expect(auditLogPageSource).toContain('await replaceQuery(nextQuery)')
+    expect(routeQueryTransportSource).toContain('const router = useRouter()')
   })
 
   it('应接入共享目录工具栏与列表表格，而不是继续使用原生 table', () => {
