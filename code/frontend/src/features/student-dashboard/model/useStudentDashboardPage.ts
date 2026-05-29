@@ -1,8 +1,16 @@
 import { computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useAuthStore } from '@/stores/auth'
 import type { DashboardPanelKey, DashboardPanelTab } from './studentDashboardTypes'
+import {
+  studentDashboardCategoryChallengesRoute,
+  studentDashboardChallengeDetailRoute,
+  studentDashboardChallengesRoute,
+  studentDashboardDifficultyChallengesRoute,
+  studentDashboardRoleRedirectRoute,
+  studentDashboardSkillProfileRoute,
+} from './studentDashboardRoutes'
 import { useStudentDashboardData } from './useStudentDashboardData'
 import { useStudentDashboardPanelBindings } from './useStudentDashboardPanelBindings'
 
@@ -10,8 +18,7 @@ export type { DashboardPanelKey }
 
 export function useStudentDashboardPage() {
   const authStore = useAuthStore()
-  const route = useRoute()
-  const router = useRouter()
+  const { push, replace } = useRouteNavigationTransport()
   const panelTabs: DashboardPanelTab[] = [
     { key: 'overview', label: '训练总览', panelId: 'dashboard-panel-overview', tabId: 'dashboard-tab-overview' },
     {
@@ -50,30 +57,28 @@ export function useStudentDashboardPage() {
     selectTab: switchPanel,
     handleTabKeydown,
   } = useRouteQueryTabs<DashboardPanelKey>({
-    route,
-    router,
     orderedTabs: panelTabOrder,
     defaultTab: 'overview',
   })
 
   function openChallenges(): void {
-    router.push({ name: 'Challenges' })
+    void push(studentDashboardChallengesRoute)
   }
 
   function openCategoryChallenges(category: string): void {
-    router.push({ name: 'Challenges', query: { category } })
+    void push(studentDashboardCategoryChallengesRoute(category))
   }
 
   function openDifficultyChallenges(difficulty: string): void {
-    router.push({ name: 'Challenges', query: { difficulty } })
+    void push(studentDashboardDifficultyChallengesRoute(difficulty))
   }
 
   function openSkillProfile(): void {
-    router.push({ name: 'SkillProfile' })
+    void push(studentDashboardSkillProfileRoute)
   }
 
   function openChallenge(challengeId: string): void {
-    router.push(`/challenges/${challengeId}`)
+    void push(studentDashboardChallengeDetailRoute(challengeId))
   }
   const className = computed(() => authStore.user?.class_name)
   const { resolveDashboardPanelBindings } = useStudentDashboardPanelBindings({
@@ -97,7 +102,7 @@ export function useStudentDashboardPage() {
 
   onMounted(() => {
     if (roleRedirectTarget.value) {
-      void router.replace({ name: roleRedirectTarget.value })
+      void replace(studentDashboardRoleRedirectRoute(roleRedirectTarget.value))
       return
     }
     void loadDashboard()

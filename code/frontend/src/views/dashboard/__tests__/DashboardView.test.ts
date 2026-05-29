@@ -12,6 +12,8 @@ import studentDashboardRegistrySource from '@/features/student-dashboard/ui/stud
 import trainingTimelinePanelSource from '@/components/training/TrainingTimelinePanel.vue?raw'
 import studentDashboardDataSource from '@/features/student-dashboard/model/useStudentDashboardData.ts?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
+import studentDashboardRoutesSource from '@/features/student-dashboard/model/studentDashboardRoutes.ts?raw'
+import routeNavigationTransportSource from '@/composables/routeNavigationTransport.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -218,6 +220,16 @@ describe('DashboardView', () => {
       "from '@/components/dashboard/student/StudentDifficultyPage.vue'"
     )
     expect(studentDashboardDataSource).not.toContain("from 'vue-router'")
+    expect(studentDashboardPageSource).not.toContain("from 'vue-router'")
+    expect(studentDashboardPageSource).toContain(
+      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+    )
+    expect(studentDashboardPageSource).toContain("from './studentDashboardRoutes'")
+    expect(studentDashboardPageSource).toContain(
+      'studentDashboardRoleRedirectRoute(roleRedirectTarget.value)'
+    )
+    expect(studentDashboardRoutesSource).toContain("name: 'ChallengeDetail'")
+    expect(routeNavigationTransportSource).toContain('const router = useRouter()')
     expect(studentDashboardRegistrySource).toContain(
       "import StudentOverviewPage from './StudentOverviewPage.vue'"
     )
