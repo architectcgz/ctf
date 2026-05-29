@@ -5,6 +5,8 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { ApiError } from '@/api/request'
 import ChallengeDetail from '../ChallengeDetail.vue'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
+import challengeDetailPageSource from '@/features/challenge-detail/model/useChallengeDetailPage.ts?raw'
+import challengeDetailRoutesSource from '@/features/challenge-detail/model/challengeDetailRoutes.ts?raw'
 import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
 import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
 import challengeSolutionsPanelSource from '@/features/challenge-detail/ui/ChallengeSolutionsPanel.vue?raw'
@@ -54,7 +56,10 @@ describe('ChallengeDetail', () => {
     window.history.replaceState({}, '', '/challenges/1')
     router = createRouter({
       history: createMemoryHistory(),
-      routes: [{ path: '/challenges/:id', component: { template: '<div />' } }],
+      routes: [
+        { path: '/challenges', name: 'Challenges', component: { template: '<div />' } },
+        { path: '/challenges/:id', name: 'ChallengeDetail', component: { template: '<div />' } },
+      ],
     })
 
     Object.values(challengeApiMocks).forEach((mock) => {
@@ -191,6 +196,18 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).toContain('编写题解')
     expect(wrapper.text()).toContain('Test Challenge')
     expect(wrapper.text()).toContain('题目描述')
+  })
+
+  it('题目详情 page feature 应通过共享 route transport 承接路由 owner', () => {
+    expect(challengeDetailPageSource).toContain(
+      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+    )
+    expect(challengeDetailPageSource).toContain(
+      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+    )
+    expect(challengeDetailPageSource).toContain("from './challengeDetailRoutes'")
+    expect(challengeDetailPageSource).not.toContain("from 'vue-router'")
+    expect(challengeDetailRoutesSource).toContain("name: 'Challenges'")
   })
 
   it('应仅保留外层主容器卡片并移除内部二级卡片', async () => {
@@ -332,6 +349,30 @@ describe('ChallengeDetail', () => {
     expect(router.currentRoute.value.fullPath).toBe('/challenges/1')
     expect(wrapper.text()).toContain('已归档题目不可访问')
     expect(wrapper.text()).toContain('当前题目已归档，不再提供访问入口。')
+  })
+
+  it('错误态返回题目列表应命中命名 route target', async () => {
+    challengeApiMocks.getChallengeDetail.mockRejectedValueOnce(new Error('load failed'))
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+
+    const backButton = wrapper.findAll('button').find((node) => node.text().trim() === '返回题目列表')
+    expect(backButton).toBeTruthy()
+
+    await backButton!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('Challenges')
+    expect(router.currentRoute.value.fullPath).toBe('/challenges')
   })
 
   it('快速切换题目时不应被旧详情和旧提交记录回写', async () => {

@@ -4,6 +4,7 @@ export {
   type ChallengeSolutionTab,
   type ChallengeSubmissionRecordStatus,
 } from './useChallengeDetailPresentation'
+export * from './challengeDetailRoutes'
 export { useChallengeDetailPage } from './useChallengeDetailPage'
 export { useChallengeDetailDataLoader } from './useChallengeDetailDataLoader'
 export { useChallengeDetailInteractions } from './useChallengeDetailInteractions'

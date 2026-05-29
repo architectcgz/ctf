@@ -1,5 +1,4 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/request'
 import type {
@@ -8,6 +7,8 @@ import type {
   RecommendedChallengeSolutionData,
 } from '@/api/contracts'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
+import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useSanitize } from '@/composables/useSanitize'
 import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 import { useToast } from '@/composables/useToast'
@@ -18,6 +19,7 @@ import {
   useChallengeDetailPresentation,
   type ChallengeSolutionTab,
 } from '.'
+import { challengeDetailListRoute } from './challengeDetailRoutes'
 import { useChallengeDetailDataLoader } from './useChallengeDetailDataLoader'
 import { useChallengeInstance } from './useChallengeInstance'
 
@@ -31,13 +33,13 @@ interface ChallengeLoadState {
 }
 
 export function useChallengeDetailPage() {
-  const route = useRoute()
-  const router = useRouter()
+  const { params } = useRouteQueryTransport()
+  const { push } = useRouteNavigationTransport()
   const toast = useToast()
   const { sanitizeHtml } = useSanitize()
   const { track } = useProbeEasterEggs()
 
-  const challengeId = computed(() => String(route.params.id ?? ''))
+  const challengeId = computed(() => String(params.value.id ?? ''))
   const challenge = ref<ChallengeDetailData | null>(null)
   const challengeLoadState = ref<ChallengeLoadState | null>(null)
   const loading = ref(false)
@@ -255,7 +257,7 @@ export function useChallengeDetailPage() {
   }
 
   function goBackToChallengeList(): void {
-    void router.push('/challenges')
+    void push(challengeDetailListRoute)
   }
 
   function resetChallengePageState(resetWorkspaceTab = false): void {
