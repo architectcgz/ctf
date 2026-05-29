@@ -304,6 +304,9 @@ export const platformRoutes: RouteRecordRaw[] = [
   path: 'platform/contests/:id/announcements',
   name: 'ContestAnnouncements',
   component: () => import('@/views/platform/ContestAnnouncements.vue'),
+  props: (route) => ({
+    contestId: String(route.params.id || ''),
+  }),
   meta: {
     requiresAuth: true,
     roles: ['admin'],

@@ -1,16 +1,12 @@
-import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, ref, type ComputedRef, type Ref } from 'vue'
 
 import { getContest } from '@/api/admin/contests'
 import type { ContestDetailData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import { useContestAnnouncementManagement } from '@/features/contest-announcements'
+import { buildContestEditRoute } from './contestManageRoutes'
 
-export function useContestAnnouncementsPage() {
-  const route = useRoute()
-  const router = useRouter()
-
-  const contestId = computed(() => String(route.params.id ?? ''))
+export function useContestAnnouncementsPage(contestId: Ref<string> | ComputedRef<string>) {
   const contest = ref<ContestDetailData | null>(null)
   const loading = ref(true)
   const loadError = ref('')
@@ -35,10 +31,6 @@ export function useContestAnnouncementsPage() {
       hour: '2-digit',
       minute: '2-digit',
     })
-  }
-
-  function goBackToStudio(): void {
-    void router.push({ name: 'ContestEdit', params: { id: contestId.value } })
   }
 
   async function loadPage(): Promise<void> {
@@ -76,9 +68,9 @@ export function useContestAnnouncementsPage() {
     contest,
     loading,
     loadError,
+    backToStudioRoute: computed(() => buildContestEditRoute(contestId.value)),
     management,
     formatTime,
-    goBackToStudio,
     loadPage,
     handleSubmit,
     handleDelete,

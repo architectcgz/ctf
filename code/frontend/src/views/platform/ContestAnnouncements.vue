@@ -1,23 +1,30 @@
 <script setup lang="ts">
+import { toRef } from 'vue'
+
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import {
   ContestAnnouncementsTopbarPanel,
   ContestAnnouncementsWorkspacePanel,
   useContestAnnouncementsPage,
 } from '@/features/platform-contests'
 
+const props = defineProps<{
+  contestId: string
+}>()
+
 const {
   contest,
   loading,
   loadError,
+  backToStudioRoute,
   management,
   formatTime,
-  goBackToStudio,
   loadPage,
   handleSubmit,
   handleDelete,
-} = useContestAnnouncementsPage()
+} = useContestAnnouncementsPage(toRef(props, 'contestId'))
 </script>
 
 <template>
@@ -37,7 +44,7 @@ const {
         v-if="contest"
         :contest-title="contest.title"
         :contest-status="contest.status"
-        @back="goBackToStudio"
+        :back-route="backToStudioRoute"
       />
 
       <AppEmpty
@@ -47,13 +54,13 @@ const {
         icon="AlertTriangle"
       >
         <template #action>
-          <button
-            type="button"
+          <AppRouteLink
+            id="contest-announcements-error-back"
+            :to="backToStudioRoute"
             class="ui-btn ui-btn--ghost"
-            @click="goBackToStudio"
           >
             返回竞赛工作台
-          </button>
+          </AppRouteLink>
         </template>
       </AppEmpty>
 

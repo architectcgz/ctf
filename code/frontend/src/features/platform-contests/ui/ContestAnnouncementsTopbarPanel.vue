@@ -1,30 +1,29 @@
 <script setup lang="ts">
 import { Bell, ChevronLeft } from 'lucide-vue-next'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 
 defineProps<{
   contestTitle: string
   contestStatus: string
+  backRoute: {
+    name: string
+    params: {
+      id: string
+    }
+  }
 }>()
-
-const emit = defineEmits<{
-  back: []
-}>()
-
-function handleBack(): void {
-  emit('back')
-}
 </script>
 
 <template>
   <header class="contest-announcement-topbar">
     <div class="contest-announcement-topbar__left">
-      <button
-        type="button"
+      <AppRouteLink
+        id="contest-announcements-back"
+        :to="backRoute"
         class="contest-announcement-back"
-        @click="handleBack"
       >
         <ChevronLeft class="h-5 w-5" />
-      </button>
+      </AppRouteLink>
       <div class="contest-announcement-title-group">
         <div class="contest-announcement-overline">
           Contest Announcements

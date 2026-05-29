@@ -1,15 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
 import ContestAnnouncements from '../ContestAnnouncements.vue'
 import contestAnnouncementsSource from '../ContestAnnouncements.vue?raw'
+import contestAnnouncementsPageModelSource from '@/features/platform-contests/model/useContestAnnouncementsPage.ts?raw'
 import contestAnnouncementsTopbarPanelSource from '@/features/platform-contests/ui/ContestAnnouncementsTopbarPanel.vue?raw'
-import routerSource from '@/router/index.ts?raw'
-
-const pushMock = vi.fn()
-const routeState = vi.hoisted(() => ({
-  params: { id: 'contest-1' } as Record<string, string>,
-}))
+import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
   getContest: vi.fn(),
@@ -24,15 +20,6 @@ const toastMocks = vi.hoisted(() => ({
   warning: vi.fn(),
   info: vi.fn(),
 }))
-
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRoute: () => routeState,
-    useRouter: () => ({ push: pushMock, replace: vi.fn(), back: vi.fn() }),
-  }
-})
 
 vi.mock('@/api/admin/contests', async () => {
   const actual =
@@ -52,7 +39,6 @@ vi.mock('@/composables/useToast', () => ({
 
 describe('ContestAnnouncements', () => {
   beforeEach(() => {
-    pushMock.mockReset()
     adminApiMocks.getContest.mockReset()
     adminApiMocks.getAdminContestAnnouncements.mockReset()
     adminApiMocks.createAdminContestAnnouncement.mockReset()
@@ -89,10 +75,31 @@ describe('ContestAnnouncements', () => {
     adminApiMocks.deleteAdminContestAnnouncement.mockResolvedValue(undefined)
   })
 
+  function mountPage() {
+    return mount(ContestAnnouncements, {
+      props: {
+        contestId: 'contest-1',
+      },
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
+  }
+
+  function findRouteLink(
+    wrapper: ReturnType<typeof mount>,
+    id: string
+  ) {
+    return wrapper.findAllComponents(RouterLinkStub).find((link) => link.attributes('id') === id)
+  }
+
   it('应注册单场公告管理路由', () => {
-    expect(routerSource).toContain("path: 'platform/contests/:id/announcements'")
-    expect(routerSource).toContain("name: 'ContestAnnouncements'")
-    expect(routerSource).toContain(
+    expect(platformRoutesSource).toContain("path: 'platform/contests/:id/announcements'")
+    expect(platformRoutesSource).toContain("name: 'ContestAnnouncements'")
+    expect(platformRoutesSource).toContain("contestId: String(route.params.id || '')")
+    expect(platformRoutesSource).toContain(
       "component: () => import('@/views/platform/ContestAnnouncements.vue')"
     )
   })
@@ -101,7 +108,7 @@ describe('ContestAnnouncements', () => {
     expect(contestAnnouncementsTopbarPanelSource).toContain('Contest Announcements')
     expect(contestAnnouncementsTopbarPanelSource).toContain('class="contest-announcement-status"')
 
-    const wrapper = mount(ContestAnnouncements)
+    const wrapper = mountPage()
 
     await flushPromises()
 
@@ -115,6 +122,12 @@ describe('ContestAnnouncements', () => {
   it('路由页应仅负责组合，不直接耦合公告页加载流程', () => {
     expect(contestAnnouncementsSource).toContain('useContestAnnouncementsPage')
     expect(contestAnnouncementsSource).not.toContain("from '@/api/admin/contests'")
+    expect(contestAnnouncementsPageModelSource).not.toContain("from 'vue-router'")
+    expect(contestAnnouncementsPageModelSource).toContain('backToStudioRoute: computed(() => buildContestEditRoute(contestId.value))')
+    expect(contestAnnouncementsTopbarPanelSource).toContain(
+      "from '@/components/navigation/AppRouteLink.vue'"
+    )
+    expect(contestAnnouncementsTopbarPanelSource).toContain('<AppRouteLink')
   })
 
   it('ended 竞赛应显示只读提示，且不显示发布和删除操作', async () => {
@@ -129,12 +142,23 @@ describe('ContestAnnouncements', () => {
       scoreboard_frozen: false,
     })
 
-    const wrapper = mount(ContestAnnouncements)
+    const wrapper = mountPage()
 
     await flushPromises()
 
     expect(wrapper.text()).toContain('赛事已结束，公告区仅保留查看能力。')
     expect(wrapper.find('#contest-announcement-submit').exists()).toBe(false)
     expect(wrapper.find('#contest-announcement-delete-announcement-1').exists()).toBe(false)
+  })
+
+  it('应通过显式 route target 返回竞赛工作台', async () => {
+    const wrapper = mountPage()
+
+    await flushPromises()
+
+    expect(findRouteLink(wrapper, 'contest-announcements-back')?.props('to')).toEqual({
+      name: 'ContestEdit',
+      params: { id: 'contest-1' },
+    })
   })
 })
