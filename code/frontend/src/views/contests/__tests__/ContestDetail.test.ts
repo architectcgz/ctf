@@ -11,6 +11,8 @@ import contestOverviewPanelSource from '@/components/contests/ContestOverviewPan
 import contestChallengeWorkspacePanelSource from '@/components/contests/ContestChallengeWorkspacePanel.vue?raw'
 import contestTeamDialogsSource from '@/components/contests/ContestTeamDialogs.vue?raw'
 import contestTeamWorkspaceSectionSource from '@/components/contests/ContestTeamWorkspaceSection.vue?raw'
+import contestDetailRoutePageSource from '@/features/contest-detail/model/useContestDetailRoutePage.ts?raw'
+import routeQueryTransportSource from '@/composables/routeQueryTransport.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
@@ -211,6 +213,21 @@ describe('ContestDetail', () => {
     expect(contestDetailSource).not.toContain('const workspaceTabOrder')
     expect(contestDetailSource).not.toContain('const contestAccentStyle = computed')
     expect(contestDetailSource).not.toContain('const contestAccessible = computed')
+    expect(contestDetailSource).not.toContain('router,')
+    expect(contestDetailRoutePageSource).toContain(
+      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+    )
+    expect(contestDetailRoutePageSource).toContain(
+      "import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'"
+    )
+    expect(contestDetailRoutePageSource).not.toContain("from 'vue-router'")
+    expect(contestDetailRoutePageSource).not.toContain("from '@/composables/useUrlSyncedTabs'")
+    expect(contestDetailRoutePageSource).toContain(
+      'const { params, query, replaceQuery } = useRouteQueryTransport()'
+    )
+    expect(routeQueryTransportSource).toContain(
+      'const params = computed<Record<string, unknown>>(() => route.params)'
+    )
   })
 
   it('不应该向学生暴露草稿竞赛详情或报名入口', async () => {
@@ -950,7 +967,7 @@ describe('ContestDetail', () => {
 
     const defenseButton = wrapper.findAll('button').find((node) => node.text().trim() === '防守')
     expect(defenseButton).toBeUndefined()
-    expect(router.currentRoute.value.fullPath).toBe('/contests/1')
+    expect(router.currentRoute.value.fullPath).toBe('/contests/1?panel=challenges')
   })
 
   it('学生 AWD 工作台应优先用 awd service 标识匹配运行态服务', async () => {

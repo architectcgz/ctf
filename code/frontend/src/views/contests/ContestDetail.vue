@@ -13,7 +13,6 @@ import { ContestAWDWorkspacePanel } from '@/features/contest-awd-workspace'
 import { useContestDetailRoutePage } from '@/features/contest-detail'
 
 const {
-  router,
   contest,
   team,
   challenges,

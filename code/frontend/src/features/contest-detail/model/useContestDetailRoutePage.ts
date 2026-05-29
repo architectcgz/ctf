@@ -1,7 +1,7 @@
 import { computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
+import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useAuthStore } from '@/stores/auth'
 import { getContestAccentColor, isStudentVisibleContestStatus } from '@/entities/contest'
 
@@ -10,34 +10,39 @@ import { useContestDetailPage } from './useContestDetailPage'
 export type ContestWorkspaceTab = 'overview' | 'announcements' | 'challenges' | 'team'
 
 export function useContestDetailRoutePage() {
-  const route = useRoute()
-  const router = useRouter()
+  const { params, query, replaceQuery } = useRouteQueryTransport()
   const authStore = useAuthStore()
 
-  const contestId = computed(() => String(route.params.id ?? ''))
+  const contestId = computed(() => String(params.value.id ?? ''))
   const currentUserId = computed(() => authStore.user?.id)
-  const selectedChallengeId = computed(() => route.query.challenge)
+  const selectedChallengeId = computed<string | string[] | undefined>(() => {
+    const challenge = query.value.challenge
+    if (Array.isArray(challenge)) {
+      return challenge.filter((value): value is string => typeof value === 'string')
+    }
+    return typeof challenge === 'string' ? challenge : undefined
+  })
   const workspaceTabOrder: ContestWorkspaceTab[] = ['overview', 'announcements', 'challenges', 'team']
   const {
     activeTab: activeWorkspaceTab,
     setTabButtonRef,
     selectTab: selectWorkspaceTab,
     handleTabKeydown: handleWorkspaceTabKeydown,
-  } = useUrlSyncedTabs<ContestWorkspaceTab>({
+  } = useRouteQueryTabs<ContestWorkspaceTab>({
     orderedTabs: workspaceTabOrder,
     defaultTab: 'overview',
   })
 
   function syncSelectedChallengeQuery(challengeId: string | null): void {
-    const query = { ...route.query }
+    const nextQuery = { ...query.value }
     if (challengeId) {
-      query.challenge = challengeId
-      query.panel = 'challenges'
+      nextQuery.challenge = challengeId
+      nextQuery.panel = 'challenges'
     } else {
-      delete query.challenge
+      delete nextQuery.challenge
     }
 
-    void router.replace({ query })
+    void replaceQuery(nextQuery)
   }
 
   const page = useContestDetailPage({
@@ -72,14 +77,13 @@ export function useContestDetailRoutePage() {
   watch(
     () => page.contest.value?.mode,
     (mode) => {
-      if (mode === 'awd' && !route.query.panel) {
-        selectWorkspaceTab('challenges')
+      if (mode === 'awd' && !query.value.panel) {
+        void selectWorkspaceTab('challenges')
       }
     }
   )
 
   return {
-    router,
     contestId,
     activeWorkspaceTab,
     setTabButtonRef,

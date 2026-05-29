@@ -5,6 +5,7 @@ export function useRouteQueryTransport() {
   const route = useRoute()
   const router = useRouter()
 
+  const params = computed<Record<string, unknown>>(() => route.params)
   const query = computed<Record<string, unknown>>(() => route.query)
 
   async function replaceQuery(nextQuery: Record<string, unknown>): Promise<void> {
@@ -14,6 +15,7 @@ export function useRouteQueryTransport() {
   }
 
   return {
+    params,
     query,
     replaceQuery,
   }
