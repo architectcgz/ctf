@@ -3,6 +3,7 @@ import { toRef } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
 
 import type { TeacherOverviewData } from '@/api/contracts'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useDashboardMetrics } from '../model/useDashboardMetrics'
 import TeacherDashboardInterventionPanel from '@/components/teacher/dashboard/TeacherDashboardInterventionPanel.vue'
@@ -11,14 +12,18 @@ import TeacherDashboardReviewPanel from '@/components/teacher/dashboard/TeacherD
 import TeacherDashboardStudentInsightPanel from '@/components/teacher/dashboard/TeacherDashboardStudentInsightPanel.vue'
 import TeacherDashboardTrendPanel from '@/components/teacher/dashboard/TeacherDashboardTrendPanel.vue'
 
+interface DashboardRouteTarget {
+  name: string
+}
+
 const props = defineProps<{
   overview: TeacherOverviewData | null
   error: string | null
+  classManagementRoute: DashboardRouteTarget
 }>()
 
 const emit = defineEmits<{
   retry: []
-  openClassManagement: []
 }>()
 
 type DashboardTab = 'overview' | 'portrait' | 'insight' | 'trend' | 'review' | 'intervention'
@@ -118,6 +123,12 @@ const {
             >
               {{ pill }}
             </span>
+          </div>
+
+          <div class="workspace-panel-header__actions header-actions">
+            <AppRouteLink :to="classManagementRoute" class="header-btn header-btn--primary">
+              班级管理
+            </AppRouteLink>
           </div>
 
           <div

@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createPinia, setActivePinia } from 'pinia'
+import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TeacherDashboard from '../TeacherDashboard.vue'
 import teacherDashboardSource from '../TeacherDashboard.vue?raw'
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import teacherDashboardPageSourceBase from '@/features/teacher-dashboard/ui/TeacherDashboardPage.vue?raw'
 import teacherDashboardPortraitPanelSource from '@/components/teacher/dashboard/TeacherDashboardPortraitPanel.vue?raw'
 import teacherDashboardStudentInsightPanelSource from '@/components/teacher/dashboard/TeacherDashboardStudentInsightPanel.vue?raw'
@@ -22,7 +24,6 @@ const teacherDashboardPageSource = [
   teacherDashboardInterventionPanelSource,
 ].join('\n')
 
-const pushMock = vi.fn()
 const teacherSurfacePattern =
   /--journal-ink:\s*var\(--color-text-primary\);[\s\S]*--journal-surface:\s*color-mix\(in srgb, var\(--color-bg-surface\) 88%, var\(--color-bg-base\)\);/s
 const forbiddenTeacherSurfaceLiterals = ['rgba(255, 255, 255, 0.98)', '#ffffff', '#f8fafc']
@@ -39,21 +40,39 @@ const teacherApiMocks = vi.hoisted(() => ({
   getStudentSkillProfile: vi.fn(),
 }))
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
-
 vi.mock('@/api/teacher', () => teacherApiMocks)
+
+let pinia: Pinia
+
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/academy/overview', component: TeacherDashboard },
+      {
+        path: '/academy/classes',
+        name: 'ClassManagement',
+        component: { template: '<div>class management</div>' },
+      },
+      {
+        path: '/platform/classes',
+        name: 'PlatformClassManagement',
+        component: { template: '<div>platform class management</div>' },
+      },
+    ],
+  })
+}
 
 async function mountDashboard(path = '/academy/overview') {
   window.history.replaceState(window.history.state, '', path)
 
+  const router = createTestRouter()
+  await router.push(path)
+  await router.isReady()
+
   const wrapper = mount(TeacherDashboard, {
     global: {
+      plugins: [pinia, router],
       stubs: {
         LineChart: true,
         SkillRadar: true,
@@ -63,14 +82,14 @@ async function mountDashboard(path = '/academy/overview') {
 
   await flushPromises()
   await flushPromises()
-  return wrapper
+  return { wrapper, router }
 }
 
 describe('TeacherDashboard', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
+    pinia = createPinia()
+    setActivePinia(pinia)
     localStorage.clear()
-    pushMock.mockReset()
 
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
@@ -138,7 +157,7 @@ describe('TeacherDashboard', () => {
   })
 
   it('应该展示教师概览且不再加载班级详情接口', async () => {
-    const wrapper = await mountDashboard()
+    const { wrapper } = await mountDashboard()
 
     expect(teacherApiMocks.getTeacherOverview).toHaveBeenCalledTimes(1)
     expect(teacherApiMocks.getClasses).not.toHaveBeenCalled()
@@ -176,6 +195,12 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardSource).toContain('useDashboardPage')
     expect(teacherDashboardSource).not.toContain("from '@/api/teacher'")
     expect(teacherDashboardPageSource).toContain('useDashboardMetrics')
+    expect(teacherDashboardPageSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(teacherDashboardPageSource).toContain('<AppRouteLink')
+    expect(appRouteLinkSource).toContain("from 'vue-router'")
+    expect(teacherDashboardHookSource).toContain('teacherClassManagementRoute')
+    expect(teacherDashboardHookSource).toContain('classManagementRoute = computed')
+    expect(teacherDashboardHookSource).not.toContain("from 'vue-router'")
     expect(teacherDashboardHookSource).toContain("reportFrontendError('加载教师概览失败:', err)")
     expect(teacherDashboardHookSource).not.toContain("console.error('加载教师概览失败:'")
     expect(teacherDashboardPageSource).not.toContain('TeacherClassTrendPanel')
@@ -209,6 +234,10 @@ describe('TeacherDashboard', () => {
       'class="workspace-panel-header__summary teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(teacherDashboardPageSource).toContain(
+      'class="workspace-panel-header__actions header-actions"'
+    )
+    expect(teacherDashboardPageSource).toContain('班级管理')
+    expect(teacherDashboardPageSource).toContain(
       'class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(teacherDashboardPageSource).toContain('--workspace-brand: var(--journal-accent);')
@@ -219,9 +248,9 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).toContain('class="workspace-overline"')
     expect(teacherDashboardPageSource).not.toContain('openReportExport')
 
-    const wrapper = await mountDashboard()
-    const summary = wrapper.get('#overview .teacher-overview-summary')
-    const portraitSummary = wrapper.get('#portrait .summary-grid')
+    const { wrapper } = await mountDashboard()
+    const summary = wrapper.find('#overview .teacher-overview-summary')
+    const portraitSummary = wrapper.find('#portrait .summary-grid')
 
     expect(summary.classes()).toContain('progress-strip')
     expect(summary.classes()).toContain('metric-panel-grid')
@@ -231,7 +260,22 @@ describe('TeacherDashboard', () => {
     expect(portraitSummary.classes()).toContain('metric-panel-default-surface')
     expect(wrapper.text()).not.toContain('Quick Actions')
     expect(wrapper.text()).not.toContain('导出报告')
-    expect(wrapper.text()).not.toContain('班级管理')
+    expect(wrapper.text()).toContain('班级管理')
+  })
+
+  it('教师从教师概览进入班级管理时应进入教师班级页', async () => {
+    const { wrapper, router } = await mountDashboard()
+
+    const classManagementLink = wrapper
+      .findAll('a')
+      .find((node) => node.text().includes('班级管理'))
+
+    expect(classManagementLink).toBeDefined()
+
+    await classManagementLink!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('ClassManagement')
   })
 
   it('管理员从教师概览进入班级管理时应回到后台班级页', async () => {
@@ -243,16 +287,24 @@ describe('TeacherDashboard', () => {
       class_name: 'Class A',
     })
 
-    const wrapper = await mountDashboard()
+    const { wrapper, router } = await mountDashboard()
 
-    wrapper.findComponent({ name: 'TeacherDashboardPage' }).vm.$emit('openClassManagement')
+    const classManagementLink = wrapper
+      .findAll('a')
+      .find((node) => node.text().includes('班级管理'))
 
-    expect(pushMock).toHaveBeenCalledWith({ name: 'PlatformClassManagement' })
+    expect(classManagementLink).toBeDefined()
+
+    await classManagementLink!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('PlatformClassManagement')
   })
 
   it('带 panel 查询参数进入时应激活对应教师概览 tab', async () => {
-    const wrapper = await mountDashboard('/academy/overview?panel=portrait')
+    const { wrapper, router } = await mountDashboard('/academy/overview?panel=portrait')
 
+    expect(router.currentRoute.value.query.panel).toBe('portrait')
     expect(window.location.search).toBe('?panel=portrait')
     expect(wrapper.find('#dashboard-tab-portrait').classes()).toContain('active')
     expect(wrapper.find('#portrait').attributes('aria-hidden')).toBe('false')

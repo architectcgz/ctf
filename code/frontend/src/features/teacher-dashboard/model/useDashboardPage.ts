@@ -1,18 +1,17 @@
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
 
 import { getTeacherOverview } from '@/api/teacher'
 import type { TeacherOverviewData } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
-import { resolveClassManagementRouteName } from '@/utils/classManagementRouting'
 import { reportFrontendError } from '@/utils/reportFrontendError'
+import { teacherClassManagementRoute } from './teacherDashboardRoutes'
 
 export function useDashboardPage() {
-  const router = useRouter()
   const authStore = useAuthStore()
 
   const overview = ref<TeacherOverviewData | null>(null)
   const error = ref<string | null>(null)
+  const classManagementRoute = computed(() => teacherClassManagementRoute(authStore.user?.role))
 
   async function initialize(): Promise<void> {
     error.value = null
@@ -26,10 +25,6 @@ export function useDashboardPage() {
     }
   }
 
-  function openClassManagement(): void {
-    router.push({ name: resolveClassManagementRouteName(authStore.user?.role) })
-  }
-
   onMounted(() => {
     void initialize()
   })
@@ -37,7 +32,7 @@ export function useDashboardPage() {
   return {
     overview,
     error,
+    classManagementRoute,
     initialize,
-    openClassManagement,
   }
 }
