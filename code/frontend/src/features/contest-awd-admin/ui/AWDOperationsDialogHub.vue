@@ -2,10 +2,6 @@
 import type {
   AdminContestChallengeViewData,
   AdminContestTeamData,
-  AWDReadinessData,
-  AWDRoundData,
-  AWDAttackLogData,
-  AWDTeamServiceData,
 } from '@/api/contracts'
 
 import { AWDReadinessOverrideDialog } from '@/features/awd-readiness'
@@ -13,6 +9,12 @@ import { AWDReadinessOverrideDialog } from '@/features/awd-readiness'
 import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
 import AWDRoundCreateDialog from './AWDRoundCreateDialog.vue'
 import AWDServiceCheckDialog from './AWDServiceCheckDialog.vue'
+import type {
+  AwdCreateAttackLogPayload,
+  AwdCreateRoundPayload,
+  AwdCreateServiceCheckPayload,
+  AwdOperationsOverrideDialogState,
+} from './awdOperationsDialogContracts'
 
 defineProps<{
   roundDialogOpen: boolean
@@ -24,44 +26,16 @@ defineProps<{
   savingServiceCheck: boolean
   attackLogDialogOpen: boolean
   savingAttackLog: boolean
-  overrideDialogState: {
-    open: boolean
-    title: string
-    readiness: AWDReadinessData | null
-    confirmLoading: boolean
-  }
+  overrideDialogState: AwdOperationsOverrideDialogState
 }>()
 
 const emit = defineEmits<{
   'update:roundDialogOpen': [value: boolean]
-  saveRound: [
-    payload: {
-      round_number: number
-      status: AWDRoundData['status']
-      attack_score: number
-      defense_score: number
-    },
-  ]
+  saveRound: [payload: AwdCreateRoundPayload]
   'update:serviceCheckDialogOpen': [value: boolean]
-  saveServiceCheck: [
-    payload: {
-      team_id: number
-      service_id: number
-      service_status: AWDTeamServiceData['service_status']
-      check_result?: Record<string, unknown>
-    },
-  ]
+  saveServiceCheck: [payload: AwdCreateServiceCheckPayload]
   'update:attackLogDialogOpen': [value: boolean]
-  saveAttackLog: [
-    payload: {
-      attacker_team_id: number
-      victim_team_id: number
-      service_id: number
-      attack_type: AWDAttackLogData['attack_type']
-      submitted_flag?: string
-      is_success: boolean
-    },
-  ]
+  saveAttackLog: [payload: AwdCreateAttackLogPayload]
   'update:overrideDialogOpen': [value: boolean]
   confirmOverride: [reason: string]
 }>()

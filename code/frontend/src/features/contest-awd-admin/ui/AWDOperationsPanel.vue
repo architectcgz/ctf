@@ -1,20 +1,22 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { toRef } from 'vue'
 
-import type { AWDTrafficStatusGroup, ContestDetailData } from '@/api/contracts'
+import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { AWDRoundInspector } from '@/features/awd-inspector'
 import { AWDReadinessSummary } from '@/features/awd-readiness'
 import { usePlatformContestAwd } from '@/features/contest-awd-admin'
-import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 
 import AWDContestSelectorField from './AWDContestSelectorField.vue'
 import AWDOperationsDialogHub from './AWDOperationsDialogHub.vue'
 import AWDInstanceOrchestrationPanel from './AWDInstanceOrchestrationPanel.vue'
 import AWDOperationsPreRuntimeStage from './AWDOperationsPreRuntimeStage.vue'
 import AWDOperationsRuntimeStage from './AWDOperationsRuntimeStage.vue'
-import type { AWDOperationsPanelKey, AWDOperationsTabItem } from './awdOperations.types'
 import AWDRuntimePendingState from './AWDRuntimePendingState.vue'
+import './awdOperationsPanel.css'
+import { useAwdOperationsDialogAvailability } from './useAwdOperationsDialogAvailability'
+import { useAwdOperationsDialogState } from './useAwdOperationsDialogState'
+import { useAwdOperationsPanelViewState } from './useAwdOperationsPanelViewState'
 
 const props = defineProps<{
   contests: ContestDetailData[]
@@ -34,64 +36,28 @@ const emit = defineEmits<{
   'open:contest-edit': []
 }>()
 
-const selectedContest = computed(
-  () => props.contests.find((item) => item.id === props.selectedContestId) || null
-)
-const shouldShowContestSelector = computed(() => !props.hideContestSelector)
-const runtimeStageReady = computed(
-  () =>
-    selectedContest.value?.status === 'running' ||
-    selectedContest.value?.status === 'frozen' ||
-    selectedContest.value?.status === 'ended'
-)
-const roundDialogOpen = ref(false)
-const serviceCheckDialogOpen = ref(false)
-const attackLogDialogOpen = ref(false)
-
-const operationTabs: readonly AWDOperationsTabItem[] = [
-  {
-    key: 'inspector',
-    label: '轮次态势',
-    tabId: 'awd-ops-tab-inspector',
-    panelId: 'awd-ops-panel-inspector',
-  },
-  {
-    key: 'instances',
-    label: '实例编排',
-    tabId: 'awd-ops-tab-instances',
-    panelId: 'awd-ops-panel-instances',
-  },
-] as const
-
-const operationTabOrder = operationTabs.map((tab) => tab.key) as AWDOperationsPanelKey[]
-const activePanel = ref<AWDOperationsPanelKey>(props.operationPanel ?? 'inspector')
-const visibleOperationTabs = computed(() =>
-  runtimeStageReady.value ? operationTabs : operationTabs.filter((tab) => tab.key === 'inspector')
-)
-const shouldShowOperationTabs = computed(() => !props.hideOperationTabs)
-const runtimeContent = computed(() => props.runtimeContent ?? 'all')
-const shouldShowRuntimeReadiness = computed(
-  () => runtimeContent.value === 'all' || runtimeContent.value === 'readiness'
-)
-const shouldShowRoundInspector = computed(
-  () =>
-    activePanel.value === 'inspector' &&
-    (runtimeContent.value === 'all' || runtimeContent.value === 'round-inspector')
-)
-const shouldShowInstanceOrchestration = computed(
-  () =>
-    activePanel.value === 'instances' &&
-    (runtimeContent.value === 'all' || runtimeContent.value === 'instances')
-)
-
-watch(
-  () => props.operationPanel,
-  (panel) => {
-    if (panel) {
-      activePanel.value = panel
-    }
-  }
-)
+const {
+  selectedContest,
+  shouldShowContestSelector,
+  runtimeStageReady,
+  activePanel,
+  visibleOperationTabs,
+  shouldShowOperationTabs,
+  runtimeContent,
+  shouldShowRuntimeReadiness,
+  shouldShowRoundInspector,
+  shouldShowInstanceOrchestration,
+  selectPanel,
+  registerTabButton,
+  handlePanelTabKeydown,
+} = useAwdOperationsPanelViewState({
+  contests: toRef(props, 'contests'),
+  selectedContestId: toRef(props, 'selectedContestId'),
+  operationPanel: toRef(props, 'operationPanel'),
+  hideContestSelector: toRef(props, 'hideContestSelector'),
+  hideOperationTabs: toRef(props, 'hideOperationTabs'),
+  runtimeContent: toRef(props, 'runtimeContent'),
+})
 
 const {
   rounds,
@@ -138,173 +104,43 @@ const {
   createAttackLog,
 } = usePlatformContestAwd(selectedContest)
 
-const nextRoundNumber = computed(() =>
-  rounds.value.length === 0 ? 1 : Math.max(...rounds.value.map((item) => item.round_number)) + 1
-)
-const canRecordServiceChecks = computed(
-  () => teams.value.length > 0 && challengeLinks.value.length > 0
-)
-const canRecordAttackLogs = computed(
-  () => teams.value.length >= 2 && challengeLinks.value.length > 0
-)
-const serviceCheckHint = computed(() => {
-  if (teams.value.length === 0 && challengeLinks.value.length === 0) {
-    return '当前赛事还没有队伍和题目，无法录入服务检查。'
-  }
-  if (teams.value.length === 0) {
-    return '当前赛事还没有队伍，无法录入服务检查。'
-  }
-  if (challengeLinks.value.length === 0) {
-    return '当前赛事还没有关联题目，无法录入服务检查。'
-  }
-  return ''
-})
-const attackLogHint = computed(() => {
-  if (teams.value.length < 2 && challengeLinks.value.length === 0) {
-    return '至少需要 2 支队伍且已关联题目后，才能补录攻击日志。'
-  }
-  if (teams.value.length < 2) {
-    return '至少需要 2 支队伍后，才能补录攻击日志。'
-  }
-  if (challengeLinks.value.length === 0) {
-    return '当前赛事还没有关联题目，无法补录攻击日志。'
-  }
-  return ''
-})
-
-function updateSelectedContestId(value: string) {
-  emit('update:selectedContestId', value)
-}
-
 function updateSelectedRoundId(value: string) {
   selectedRoundId.value = value
 }
 
-function openRoundDialog() {
-  if (!runtimeStageReady.value) {
-    return
-  }
-  roundDialogOpen.value = true
-}
-
-function updateRoundDialogOpen(value: boolean) {
-  roundDialogOpen.value = value
-}
-
-function openServiceCheckDialog() {
-  if (!runtimeStageReady.value) {
-    return
-  }
-  serviceCheckDialogOpen.value = true
-}
-
-function updateServiceCheckDialogOpen(value: boolean) {
-  serviceCheckDialogOpen.value = value
-}
-
-function openAttackLogDialog() {
-  if (!runtimeStageReady.value) {
-    return
-  }
-  attackLogDialogOpen.value = true
-}
-
-function updateAttackLogDialogOpen(value: boolean) {
-  attackLogDialogOpen.value = value
-}
-
-function selectPanel(panel: AWDOperationsPanelKey) {
-  if (props.operationPanel) {
-    return
-  }
-  activePanel.value = panel
-}
-
-function registerTabButton(key: AWDOperationsPanelKey, element: HTMLButtonElement | null) {
-  setTabButtonRef(key, element)
-}
-
-function handlePanelTabKeydown(event: KeyboardEvent, index: number) {
-  handleTabKeydown(event, index)
-}
-
-const { setTabButtonRef, handleTabKeydown } = useTabKeyboardNavigation<AWDOperationsPanelKey>({
-  orderedTabs: operationTabOrder,
-  selectTab: selectPanel,
+const {
+  roundDialogOpen,
+  serviceCheckDialogOpen,
+  attackLogDialogOpen,
+  nextRoundNumber,
+  openRoundDialog,
+  updateRoundDialogOpen,
+  openServiceCheckDialog,
+  updateServiceCheckDialogOpen,
+  openAttackLogDialog,
+  updateAttackLogDialogOpen,
+  handleCreateRound,
+  handleCreateServiceCheck,
+  handleCreateAttackLog,
+  handleOverrideDialogOpenChange,
+} = useAwdOperationsDialogState({
+  runtimeStageReady,
+  rounds,
+  createRound,
+  createServiceCheck,
+  createAttackLog,
+  closeOverrideDialog,
 })
 
-async function handleCreateRound(payload: {
-  round_number: number
-  status: 'pending' | 'running' | 'finished'
-  attack_score: number
-  defense_score: number
-}) {
-  await createRound(payload)
-  roundDialogOpen.value = false
-}
-
-async function handleCreateServiceCheck(payload: {
-  team_id: number
-  service_id: number
-  service_status: 'up' | 'down' | 'compromised'
-  check_result?: Record<string, unknown>
-}) {
-  await createServiceCheck(payload)
-  serviceCheckDialogOpen.value = false
-}
-
-async function handleCreateAttackLog(payload: {
-  attacker_team_id: number
-  victim_team_id: number
-  service_id: number
-  attack_type: 'flag_capture' | 'service_exploit'
-  submitted_flag?: string
-  is_success: boolean
-}) {
-  await createAttackLog(payload)
-  attackLogDialogOpen.value = false
-}
-
-async function handleApplyTrafficFilters(payload: {
-  attacker_team_id?: string
-  victim_team_id?: string
-  service_id?: string
-  awd_challenge_id?: string
-  status_group?: 'all' | AWDTrafficStatusGroup
-  path_keyword?: string
-}) {
-  await applyTrafficFilters(payload)
-}
-
-async function handleTrafficPageChange(page: number) {
-  await setTrafficPage(page)
-}
-
-async function handleResetTrafficFilters() {
-  await resetTrafficFilters()
-}
-
-function handleEditReadinessConfig(challengeId: string) {
-  emit('open:awd-config', challengeId)
-}
-
-async function handleStartTeamServiceInstance(teamId: string, serviceId: string) {
-  await startTeamServiceInstance(teamId, serviceId)
-}
-
-async function handleStartTeamAllServices(teamId: string) {
-  await startTeamAllServices(teamId)
-}
-
-async function handleStartAllTeamServices() {
-  await startAllTeamServices()
-}
-
-function handleOverrideDialogOpenChange(value: boolean) {
-  if (!value) {
-    closeOverrideDialog()
-  }
-}
+const {
+  canRecordServiceChecks,
+  canRecordAttackLogs,
+  serviceCheckHint,
+  attackLogHint,
+} = useAwdOperationsDialogAvailability({
+  teams,
+  challengeLinks,
+})
 </script>
 
 <template>
@@ -313,7 +149,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
       v-if="shouldShowContestSelector"
       :contests="contests"
       :selected-contest-id="selectedContestId"
-      @update:selected-contest-id="updateSelectedContestId"
+      @update:selected-contest-id="emit('update:selectedContestId', $event)"
     />
 
     <AppEmpty
@@ -359,7 +195,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
             :readiness="readiness"
             :loading="loadingReadiness"
             :hide-actions="hideReadinessActions"
-            @edit-config="handleEditReadinessConfig"
+            @edit-config="emit('open:awd-config', $event)"
           />
         </template>
         <template #instances>
@@ -371,9 +207,9 @@ function handleOverrideDialogOpenChange(value: boolean) {
             :loading="loadingInstanceOrchestration"
             :starting-key="startingInstanceKey"
             @refresh="refreshInstanceOrchestration"
-            @start-cell="handleStartTeamServiceInstance"
-            @start-team="handleStartTeamAllServices"
-            @start-all="handleStartAllTeamServices"
+            @start-cell="startTeamServiceInstance"
+            @start-team="startTeamAllServices"
+            @start-all="startAllTeamServices"
           />
         </template>
       </AWDOperationsPreRuntimeStage>
@@ -396,7 +232,7 @@ function handleOverrideDialogOpenChange(value: boolean) {
             :loading="loadingReadiness"
             :hide-actions="hideReadinessActions"
             class="runtime-readiness-strip"
-            @edit-config="handleEditReadinessConfig"
+            @edit-config="emit('open:awd-config', $event)"
           />
         </template>
         <template #inspector>
@@ -430,9 +266,9 @@ function handleOverrideDialogOpenChange(value: boolean) {
             :initial-tab="initialTab"
             :hide-studio-link="hideStudioLink"
             @refresh="refresh"
-            @apply-traffic-filters="handleApplyTrafficFilters"
-            @change-traffic-page="handleTrafficPageChange"
-            @reset-traffic-filters="handleResetTrafficFilters"
+            @apply-traffic-filters="applyTrafficFilters"
+            @change-traffic-page="setTrafficPage"
+            @reset-traffic-filters="resetTrafficFilters"
             @open-create-round-dialog="openRoundDialog"
             @open-service-check-dialog="openServiceCheckDialog"
             @open-attack-log-dialog="openAttackLogDialog"
@@ -457,9 +293,9 @@ function handleOverrideDialogOpenChange(value: boolean) {
             :loading="loadingInstanceOrchestration"
             :starting-key="startingInstanceKey"
             @refresh="refreshInstanceOrchestration"
-            @start-cell="handleStartTeamServiceInstance"
-            @start-team="handleStartTeamAllServices"
-            @start-all="handleStartAllTeamServices"
+            @start-cell="startTeamServiceInstance"
+            @start-team="startTeamAllServices"
+            @start-all="startAllTeamServices"
           />
         </template>
       </AWDOperationsRuntimeStage>
@@ -487,17 +323,3 @@ function handleOverrideDialogOpenChange(value: boolean) {
     />
   </div>
 </template>
-
-<style scoped>
-.studio-ops-shell {
-  min-height: 100%;
-  background: transparent;
-}
-
-.studio-ops-content {
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--workspace-directory-page-block-gap, var(--space-5));
-}
-</style>
