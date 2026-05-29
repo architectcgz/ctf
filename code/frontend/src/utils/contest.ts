@@ -1,4 +1,18 @@
-import type { ContestStatus, ContestMode } from '@/api/contracts'
+export const contestModes = ['jeopardy', 'awd', 'awd_plus', 'king_of_hill'] as const
+
+export const contestStatuses = [
+  'draft',
+  'published',
+  'registering',
+  'running',
+  'frozen',
+  'ended',
+  'cancelled',
+  'archived',
+] as const
+
+export type ContestMode = (typeof contestModes)[number]
+export type ContestStatus = (typeof contestStatuses)[number]
 
 export function isStudentVisibleContestStatus(status: ContestStatus): boolean {
   return status !== 'draft'

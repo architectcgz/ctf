@@ -1,11 +1,73 @@
-import type {
-  AdminContestAWDServiceData,
-  AdminContestChallengeData,
-} from '@/api/contracts'
+import type { ChallengeCategory, ChallengeDifficulty } from '@/entities/challenge/model'
+
+type IDLike = string
+type AWDCheckerType = 'legacy_probe' | 'http_standard' | 'tcp_standard' | 'script_checker'
+type AWDCheckerValidationState = 'pending' | 'passed' | 'failed' | 'stale'
+type AWDServiceStatus = 'up' | 'down' | 'compromised'
+
+interface AwdCheckerPreviewContext {
+  access_url: string
+  preview_flag: string
+  round_number: number
+  team_id: IDLike
+  awd_challenge_id: IDLike
+}
+
+interface AwdCheckerPreviewData {
+  checker_type?: AWDCheckerType
+  service_status: AWDServiceStatus
+  check_result: Record<string, unknown>
+  preview_context: AwdCheckerPreviewContext
+  preview_token?: string
+}
+
+interface ContestAwdServiceLinkSource {
+  id: IDLike
+  contest_id: IDLike
+  awd_challenge_id: IDLike
+  title?: string
+  category?: ChallengeCategory
+  difficulty?: ChallengeDifficulty
+  display_name: string
+  order: number
+  is_visible: boolean
+  score_config?: Record<string, unknown>
+  checker_type?: AWDCheckerType
+  checker_config?: Record<string, unknown>
+  sla_score?: number
+  defense_score?: number
+  validation_state?: AWDCheckerValidationState
+  last_preview_at?: string
+  last_preview_result?: AwdCheckerPreviewData
+  created_at: string
+}
+
+export interface ContestAwdChallengeLink {
+  id: IDLike
+  contest_id: IDLike
+  challenge_id: IDLike
+  awd_challenge_id?: IDLike
+  title?: string
+  category?: ChallengeCategory
+  difficulty?: ChallengeDifficulty
+  points: number
+  order: number
+  is_visible: boolean
+  created_at: string
+  awd_service_id?: IDLike
+  awd_service_display_name?: string
+  awd_checker_type?: AWDCheckerType
+  awd_checker_config?: Record<string, unknown>
+  awd_sla_score?: number
+  awd_defense_score?: number
+  awd_checker_validation_state?: AWDCheckerValidationState
+  awd_checker_last_preview_at?: string
+  awd_checker_last_preview_result?: AwdCheckerPreviewData
+}
 
 function normalizeCheckerConfig(
-  service?: AdminContestAWDServiceData
-): NonNullable<AdminContestChallengeData['awd_checker_config']> {
+  service?: ContestAwdServiceLinkSource
+): NonNullable<ContestAwdChallengeLink['awd_checker_config']> {
   if (service?.checker_config && typeof service.checker_config === 'object') {
     return service.checker_config
   }
@@ -13,8 +75,8 @@ function normalizeCheckerConfig(
 }
 
 export function mapPlatformContestAwdServicesToChallengeLinks(
-  services: AdminContestAWDServiceData[]
-): AdminContestChallengeData[] {
+  services: ContestAwdServiceLinkSource[]
+): ContestAwdChallengeLink[] {
   return services.map((service) => ({
     id: service.id,
     contest_id: service.contest_id,
@@ -39,7 +101,7 @@ export function mapPlatformContestAwdServicesToChallengeLinks(
   }))
 }
 
-function normalizeAwdServicePoints(service: AdminContestAWDServiceData): number {
+function normalizeAwdServicePoints(service: ContestAwdServiceLinkSource): number {
   const value = service.score_config?.points
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }

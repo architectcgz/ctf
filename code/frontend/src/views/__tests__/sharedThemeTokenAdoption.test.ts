@@ -791,6 +791,7 @@ describe('shared theme token adoption', () => {
       '#06b6d4',
       '#0891b2',
     ])
+    expect(skillProfileUtilsSource).not.toContain("@/api/contracts")
     expectNoHardcodedThemeTokens(challengeUtilsSource, 'challenge utils', [
       'bg-blue-100',
       'text-blue-700',

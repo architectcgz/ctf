@@ -69,11 +69,7 @@ export const featureRouterImportAllowlist = new Set([
   'features/teacher-student-management/model/useStudentManagementPage.ts -> vue-router',
 ])
 
-export const utilityBoundaryImportAllowlist = new Set([
-  'utils/contest.ts -> @/api/contracts',
-  'utils/platformContestAwdChallengeLinks.ts -> @/api/contracts',
-  'utils/skillProfile.ts -> @/api/contracts',
-])
+export const utilityBoundaryImportAllowlist = new Set<string>([])
 
 export const composableMultiBoundaryAllowlist = new Set([
   'composables/useWebSocket.ts -> api+store',

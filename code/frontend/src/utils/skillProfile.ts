@@ -1,11 +1,44 @@
-import type {
-  AdviceSeverity,
-  ChallengeCategory,
-  RecommendationData,
-  RecommendationItem,
-  RecommendationWeakDimension,
-  SkillProfileData,
-} from '@/api/contracts'
+import type { ChallengeCategory, ChallengeDifficulty } from '@/entities/challenge/model'
+
+export type AdviceSeverity = 'good' | 'attention' | 'warning' | 'danger'
+export type RecommendationDifficultyBand = 'beginner' | 'easy' | 'medium'
+
+export interface RecommendationWeakDimension {
+  dimension: string
+  label: string
+  severity: AdviceSeverity
+  confidence: number
+  evidence?: string
+}
+
+export interface RecommendationItem {
+  challenge_id: string
+  title: string
+  category: ChallengeCategory
+  difficulty: ChallengeDifficulty
+  dimension?: string
+  difficulty_band?: RecommendationDifficultyBand
+  severity?: AdviceSeverity
+  reason_codes?: string[]
+  summary: string
+  evidence?: string
+}
+
+export interface RecommendationData {
+  weak_dimensions: RecommendationWeakDimension[]
+  challenges: RecommendationItem[]
+}
+
+export interface SkillDimensionScore {
+  key: string
+  name: string
+  value: number
+}
+
+export interface SkillProfileData {
+  dimensions: SkillDimensionScore[]
+  updated_at?: string
+}
 
 export interface RawSkillProfileDimension {
   dimension: ChallengeCategory
