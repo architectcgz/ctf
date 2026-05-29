@@ -1,5 +1,4 @@
-import { computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, ref, type Ref } from 'vue'
 
 import { downloadReport } from '@/api/assessment'
 import { ApiError } from '@/api/request'
@@ -9,51 +8,37 @@ import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
-  resolveClassStudentsRouteName,
-  resolveStudentAnalysisRouteName,
-  resolveStudentManagementRouteName,
-} from '@/utils/teachingWorkspaceRouting'
-import {
   resolveStudentReviewArchiveErrorMessage,
   STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES,
   useStudentReviewArchive,
 } from '@/features/student-review-archive'
+import {
+  studentReviewArchiveAnalysisRoute,
+  studentReviewArchiveBackRoute,
+} from './studentReviewArchiveRoutes'
 
-export function useStudentReviewArchivePage() {
-  const route = useRoute()
-  const router = useRouter()
+interface UseStudentReviewArchivePageOptions {
+  className: Readonly<Ref<string>>
+  studentId: Readonly<Ref<string>>
+}
+
+export function useStudentReviewArchivePage({
+  className,
+  studentId,
+}: UseStudentReviewArchivePageOptions) {
   const toast = useToast()
   const authStore = useAuthStore()
   const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
-
-  const className = computed(() => String(route.params.className || ''))
-  const studentId = computed(() => String(route.params.studentId || ''))
   const { archive, loading, error, reload } = useStudentReviewArchive(studentId)
 
   const exporting = ref(false)
   const pendingReportId = ref<string | null>(null)
-
-  function openStudentAnalysis(): void {
-    if (!studentId.value || !className.value) return
-    router.push({
-      name: resolveStudentAnalysisRouteName(authStore.user?.role),
-      params: {
-        className: className.value,
-        studentId: studentId.value,
-      },
-    })
-  }
-
-  function goBack(): void {
-    if (!className.value) {
-      router.push({ name: resolveStudentManagementRouteName(authStore.user?.role) })
-      return
-    }
-    router.push({
-      name: resolveClassStudentsRouteName(authStore.user?.role),
-      params: { className: className.value },
-    })
-  }
+  const analysisRoute = computed(() =>
+    studentReviewArchiveAnalysisRoute(authStore.user?.role, className.value, studentId.value)
+  )
+  const backRoute = computed(() =>
+    studentReviewArchiveBackRoute(authStore.user?.role, className.value)
+  )
 
   async function downloadGeneratedReport(reportId: string): Promise<void> {
     const { blob, filename } = await downloadReport(reportId)
@@ -148,8 +133,8 @@ export function useStudentReviewArchivePage() {
     error,
     reload,
     exporting,
-    openStudentAnalysis,
-    goBack,
+    analysisRoute,
+    backRoute,
     exportArchive,
   }
 }

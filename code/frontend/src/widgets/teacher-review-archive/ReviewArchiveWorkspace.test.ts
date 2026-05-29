@@ -44,32 +44,52 @@ function createArchive(): ReviewArchiveData {
 }
 
 describe('ReviewArchiveWorkspace', () => {
-  it('应透传 hero 和错误态重载事件', async () => {
+  const analysisRoute = {
+    name: 'TeacherStudentAnalysis',
+    params: {
+      className: 'Class A',
+      studentId: 'stu-1',
+    },
+  } as const
+
+  const backRoute = {
+    name: 'TeacherClassStudents',
+    params: {
+      className: 'Class A',
+    },
+  } as const
+
+  it('应透传 hero 路由 props 和错误态重载事件', async () => {
     const wrapper = mount(ReviewArchiveWorkspace, {
       props: {
         archive: null,
         loading: false,
         error: '加载失败',
         exporting: false,
+        analysisRoute,
+        backRoute,
       },
       global: {
         stubs: {
+          AppRouteLink: {
+            template: '<a><slot /></a>',
+          },
           ReviewArchiveHero: {
             name: 'ReviewArchiveHero',
+            props: ['analysisRoute', 'backRoute', 'exporting'],
             template:
-              '<div><button id="back" @click="$emit(\'back\')" /><button id="open" @click="$emit(\'openAnalysis\')" /><button id="export" @click="$emit(\'exportArchive\')" /></div>',
+              '<div data-analysis-route-name="analysisRoute.name" data-back-route-name="backRoute.name"><button id="export" @click="$emit(\'exportArchive\')" /></div>',
           },
         },
       },
     })
 
-    await wrapper.get('#back').trigger('click')
-    await wrapper.get('#open').trigger('click')
     await wrapper.get('#export').trigger('click')
     await wrapper.get('.ui-btn.ui-btn--primary').trigger('click')
 
-    expect(wrapper.emitted('back')).toBeTruthy()
-    expect(wrapper.emitted('openAnalysis')).toBeTruthy()
+    const hero = wrapper.getComponent({ name: 'ReviewArchiveHero' })
+    expect(hero.props('analysisRoute')).toEqual(analysisRoute)
+    expect(hero.props('backRoute')).toEqual(backRoute)
     expect(wrapper.emitted('exportArchive')).toBeTruthy()
     expect(wrapper.emitted('reload')).toBeTruthy()
   })
@@ -81,6 +101,15 @@ describe('ReviewArchiveWorkspace', () => {
         loading: false,
         error: null,
         exporting: false,
+        analysisRoute,
+        backRoute,
+      },
+      global: {
+        stubs: {
+          AppRouteLink: {
+            template: '<a><slot /></a>',
+          },
+        },
       },
     })
 

@@ -107,6 +107,10 @@ export const platformRoutes: RouteRecordRaw[] = [
   path: 'platform/classes/:className/students/:studentId/review-archive',
   name: 'PlatformStudentReviewArchive',
   component: () => import('@/views/platform/PlatformStudentReviewArchive.vue'),
+  props: (route) => ({
+    className: String(route.params.className || ''),
+    studentId: String(route.params.studentId || ''),
+  }),
   meta: {
     requiresAuth: true,
     roles: ['admin'],

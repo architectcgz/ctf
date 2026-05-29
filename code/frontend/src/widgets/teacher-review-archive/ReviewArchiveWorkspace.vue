@@ -14,12 +14,18 @@ const props = defineProps<{
   loading: boolean
   error: string | null
   exporting: boolean
+  analysisRoute: {
+    name: string
+    params?: Record<string, string>
+  }
+  backRoute: {
+    name: string
+    params?: Record<string, string>
+  }
 }>()
 
 const emit = defineEmits<{
   reload: []
-  back: []
-  openAnalysis: []
   exportArchive: []
 }>()
 </script>
@@ -29,8 +35,8 @@ const emit = defineEmits<{
     <ReviewArchiveHero
       :archive="archive"
       :exporting="exporting"
-      @back="emit('back')"
-      @open-analysis="emit('openAnalysis')"
+      :analysis-route="analysisRoute"
+      :back-route="backRoute"
       @export-archive="emit('exportArchive')"
     />
 

@@ -169,6 +169,10 @@ export const teacherRoutes: RouteRecordRaw[] = [
   path: 'academy/classes/:className/students/:studentId/review-archive',
   name: 'TeacherStudentReviewArchive',
   component: () => import('@/views/teacher/TeacherStudentReviewArchive.vue'),
+  props: (route) => ({
+    className: String(route.params.className || ''),
+    studentId: String(route.params.studentId || ''),
+  }),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],

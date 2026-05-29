@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createPinia, setActivePinia } from 'pinia'
+import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TeacherStudentReviewArchive from '../TeacherStudentReviewArchive.vue'
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
 import studentReviewArchivePageModelSource from '@/features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts?raw'
 import reviewArchiveWidgetOwnerSource from '@/widgets/review-archive-workspace/index.ts?raw'
@@ -10,14 +12,6 @@ import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/Revie
 import reviewArchiveStateSource from '@/widgets/teacher-review-archive/ReviewArchiveState.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 import { useAuthStore } from '@/stores/auth'
-
-const pushMock = vi.fn()
-const routeMock = {
-  params: {
-    className: 'Class A',
-    studentId: 'stu-1',
-  },
-}
 
 const teachingApiMocks = vi.hoisted(() => ({
   getStudentReviewArchive: vi.fn(),
@@ -28,24 +22,81 @@ const assessmentApiMocks = vi.hoisted(() => ({
   downloadReport: vi.fn(),
 }))
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-    useRoute: () => routeMock,
-  }
-})
-
 vi.mock('@/api/teaching', () => teachingApiMocks)
 vi.mock('@/api/assessment', () => assessmentApiMocks)
 
+let pinia: Pinia
+
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      {
+        path: '/academy/classes/:className/students/:studentId/review-archive',
+        component: { template: '<div>teacher student review archive route</div>' },
+      },
+      {
+        path: '/academy/classes/:className/students/:studentId',
+        name: 'TeacherStudentAnalysis',
+        component: { template: '<div>teacher student analysis</div>' },
+      },
+      {
+        path: '/platform/classes/:className/students/:studentId',
+        name: 'PlatformStudentAnalysis',
+        component: { template: '<div>platform student analysis</div>' },
+      },
+      {
+        path: '/academy/classes/:className',
+        name: 'TeacherClassStudents',
+        component: { template: '<div>teacher class students</div>' },
+      },
+      {
+        path: '/platform/classes/:className',
+        name: 'PlatformClassStudents',
+        component: { template: '<div>platform class students</div>' },
+      },
+      {
+        path: '/academy/students',
+        name: 'TeacherStudentManagement',
+        component: { template: '<div>teacher student management</div>' },
+      },
+      {
+        path: '/platform/students',
+        name: 'PlatformStudentManagement',
+        component: { template: '<div>platform student management</div>' },
+      },
+    ],
+  })
+}
+
+async function mountPage(
+  path = '/academy/classes/Class%20A/students/stu-1/review-archive',
+  globalOptions: NonNullable<Parameters<typeof mount>[1]>['global'] = {}
+) {
+  window.history.replaceState(window.history.state, '', path)
+  const router = createTestRouter()
+  await router.push(path)
+  await router.isReady()
+
+  const wrapper = mount(TeacherStudentReviewArchive, {
+    props: {
+      className: 'Class A',
+      studentId: 'stu-1',
+    },
+    global: {
+      plugins: [pinia, router],
+      ...globalOptions,
+    },
+  })
+
+  await flushPromises()
+  return { wrapper, router }
+}
+
 describe('TeacherStudentReviewArchive', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
-    pushMock.mockReset()
-    routeMock.params.className = 'Class A'
-    routeMock.params.studentId = 'stu-1'
+    pinia = createPinia()
+    setActivePinia(pinia)
     Object.values(teachingApiMocks).forEach((mock) => mock.mockReset())
     Object.values(assessmentApiMocks).forEach((mock) => mock.mockReset())
 
@@ -196,9 +247,7 @@ describe('TeacherStudentReviewArchive', () => {
   })
 
   it('应该渲染完整复盘页的核心区块', async () => {
-    const wrapper = mount(TeacherStudentReviewArchive)
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     expect(teachingApiMocks.getStudentReviewArchive).toHaveBeenCalledWith('stu-1')
     expect(wrapper.text()).toContain('Alice')
@@ -226,11 +275,22 @@ describe('TeacherStudentReviewArchive', () => {
     expect(studentReviewArchivePageModelSource).toContain('useStudentReviewArchive(studentId)')
     expect(studentReviewArchivePageModelSource).toContain('resolveStudentReviewArchiveErrorMessage')
     expect(studentReviewArchivePageModelSource).toContain('STUDENT_REVIEW_ARCHIVE_EXPORT_MESSAGES')
+    expect(studentReviewArchivePageModelSource).toContain('studentReviewArchiveAnalysisRoute')
+    expect(studentReviewArchivePageModelSource).toContain('studentReviewArchiveBackRoute')
+    expect(studentReviewArchivePageModelSource).not.toContain('useRouter')
+    expect(studentReviewArchivePageModelSource).not.toContain("from 'vue-router'")
     expect(studentReviewArchivePageModelSource).not.toContain('useTeacherStudentReviewArchive')
     expect(studentReviewArchivePageModelSource).not.toContain(
       'resolveTeacherStudentReviewArchiveErrorMessage'
     )
     expect(reviewArchiveSource).not.toContain('exportStudentReviewArchive')
+    expect(reviewArchiveSource).not.toContain('openStudentAnalysis')
+    expect(reviewArchiveSource).not.toContain('goBack')
+    expect(reviewArchiveWorkspaceSource).toContain(':analysis-route="analysisRoute"')
+    expect(reviewArchiveWorkspaceSource).toContain(':back-route="backRoute"')
+    expect(reviewArchiveHeroSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(reviewArchiveHeroSource).toContain('<AppRouteLink')
+    expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveState')
     expect(reviewArchiveStateSource).toContain('class="ui-btn ui-btn--primary"')
     expect(reviewArchiveWorkspaceSource).not.toContain('<ElButton')
@@ -249,42 +309,72 @@ describe('TeacherStudentReviewArchive', () => {
       class_name: 'Class A',
     })
 
-    const wrapper = mount(TeacherStudentReviewArchive)
+    const { wrapper: analysisWrapper, router: analysisRouter } = await mountPage()
+    const analysisLink = analysisWrapper
+      .findAll('a')
+      .find((node) => node.text().includes('返回学员分析'))
 
+    expect(analysisLink).toBeDefined()
+
+    await analysisLink!.trigger('click')
     await flushPromises()
-
-    wrapper.findComponent({ name: 'ReviewArchiveHero' }).vm.$emit('openAnalysis')
-    wrapper.findComponent({ name: 'ReviewArchiveHero' }).vm.$emit('back')
-
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'PlatformStudentAnalysis',
-      params: {
-        className: 'Class A',
-        studentId: 'stu-1',
-      },
+    expect(analysisRouter.currentRoute.value.name).toBe('PlatformStudentAnalysis')
+    expect(analysisRouter.currentRoute.value.params).toMatchObject({
+      className: 'Class A',
+      studentId: 'stu-1',
     })
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'PlatformClassStudents',
-      params: { className: 'Class A' },
+
+    const { wrapper: backWrapper, router: backRouter } = await mountPage()
+    const backLink = backWrapper
+      .findAll('a')
+      .find((node) => node.text().includes('返回学生列表'))
+
+    expect(backLink).toBeDefined()
+
+    await backLink!.trigger('click')
+    await flushPromises()
+    expect(backRouter.currentRoute.value.name).toBe('PlatformClassStudents')
+    expect(backRouter.currentRoute.value.params).toMatchObject({
+      className: 'Class A',
     })
+  })
+
+  it('教师在复盘归档页返回分析和班级页时应使用教师路由', async () => {
+    const { wrapper: analysisWrapper, router: analysisRouter } = await mountPage()
+    const analysisLink = analysisWrapper
+      .findAll('a')
+      .find((node) => node.text().includes('返回学员分析'))
+
+    expect(analysisLink).toBeDefined()
+
+    await analysisLink!.trigger('click')
+    await flushPromises()
+    expect(analysisRouter.currentRoute.value.name).toBe('TeacherStudentAnalysis')
+
+    const { wrapper: backWrapper, router: backRouter } = await mountPage()
+    const backLink = backWrapper
+      .findAll('a')
+      .find((node) => node.text().includes('返回学生列表'))
+
+    expect(backLink).toBeDefined()
+
+    await backLink!.trigger('click')
+    await flushPromises()
+    expect(backRouter.currentRoute.value.name).toBe('TeacherClassStudents')
   })
 
   it('导出复盘归档失败时不应抛到全局错误页', async () => {
     teachingApiMocks.exportStudentReviewArchive.mockRejectedValue(new Error('导出失败'))
 
-    const wrapper = mount(TeacherStudentReviewArchive, {
-      global: {
-        stubs: {
-          ReviewArchiveHero: {
-            name: 'ReviewArchiveHero',
-            template:
-              '<button id="export-archive" type="button" @click="$emit(\'exportArchive\')">导出复盘归档</button>',
-          },
+    const { wrapper } = await mountPage(undefined, {
+      stubs: {
+        ReviewArchiveHero: {
+          name: 'ReviewArchiveHero',
+          template:
+            '<button id="export-archive" type="button" @click="$emit(\'exportArchive\')">导出复盘归档</button>',
         },
       },
     })
-
-    await flushPromises()
 
     await expect(wrapper.get('#export-archive').trigger('click')).resolves.toBeUndefined()
     await flushPromises()

@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import type { ReviewArchiveData } from '@/api/contracts'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 
 defineProps<{
   archive: ReviewArchiveData | null
   exporting: boolean
+  analysisRoute: {
+    name: string
+    params?: Record<string, string>
+  }
+  backRoute: {
+    name: string
+    params?: Record<string, string>
+  }
 }>()
 
 const emit = defineEmits<{
-  back: []
-  openAnalysis: []
   exportArchive: []
 }>()
 
@@ -37,20 +44,12 @@ const statItems = [
           </p>
         </div>
         <div class="header-actions archive-hero__actions">
-          <button
-            type="button"
-            class="header-btn header-btn--ghost"
-            @click="emit('back')"
-          >
+          <AppRouteLink :to="backRoute" class="header-btn header-btn--ghost">
             返回学生列表
-          </button>
-          <button
-            type="button"
-            class="header-btn header-btn--ghost"
-            @click="emit('openAnalysis')"
-          >
+          </AppRouteLink>
+          <AppRouteLink :to="analysisRoute" class="header-btn header-btn--ghost">
             返回学员分析
-          </button>
+          </AppRouteLink>
           <button
             type="button"
             class="header-btn header-btn--primary"
