@@ -39,9 +39,9 @@ const {
   openAnnouncementDrawer,
   closeAnnouncementDrawer,
   handleCreateContestSave,
-  openContestEditPage,
-  openContestWorkbench,
-  openContestAnnouncementsPage,
+  buildContestEditRoute,
+  buildContestOperationsRoute,
+  buildContestAnnouncementsRoute,
 } = useContestManagePage()
 </script>
 
@@ -61,13 +61,13 @@ const {
       :create-field-locks="fieldLocks"
       :requested-panel="requestedPanel"
       :requested-panel-version="requestedPanelVersion"
+      :build-edit-route="buildContestEditRoute"
+      :build-workbench-route="buildContestOperationsRoute"
       @refresh="refresh"
       @prepare-create-contest="prepareCreateContest"
       @save-create-contest="handleCreateContestSave"
       @update-status-filter="updateStatusFilter"
       @open-edit-dialog="openEditDialog"
-      @open-edit-contest="openContestEditPage"
-      @open-contest-workbench="openContestWorkbench"
       @announce="openAnnouncementDrawer"
       @change-page="changePage"
     />
@@ -75,8 +75,12 @@ const {
     <ContestAnnouncementManageDrawer
       :open="announcementDrawerOpen"
       :contest="activeAnnouncementContest"
+      :full-page-route="
+        activeAnnouncementContest
+          ? buildContestAnnouncementsRoute(activeAnnouncementContest.id)
+          : null
+      "
       @close="closeAnnouncementDrawer"
-      @open-full-page="openContestAnnouncementsPage"
     />
 
     <PlatformContestFormDialog

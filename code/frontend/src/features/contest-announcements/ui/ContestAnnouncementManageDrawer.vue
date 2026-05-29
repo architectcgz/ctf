@@ -5,16 +5,24 @@ import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import { useContestAnnouncementManagement } from '../model'
+
+interface ContestAnnouncementFullPageRoute {
+  name: string
+  params: {
+    id: string
+  }
+}
 
 const props = defineProps<{
   open: boolean
   contest: ContestDetailData | null
+  fullPageRoute: ContestAnnouncementFullPageRoute | null
 }>()
 
 const emit = defineEmits<{
   close: []
-  openFullPage: [contest: ContestDetailData]
 }>()
 const management = useContestAnnouncementManagement(computed(() => props.contest))
 
@@ -44,12 +52,6 @@ async function handleSubmit(): Promise<void> {
 
 async function handleDelete(announcementId: string): Promise<void> {
   await management.deleteAnnouncement(announcementId)
-}
-
-function openFullPage(): void {
-  if (!props.contest) return
-  emit('openFullPage', props.contest)
-  emit('close')
 }
 
 watch(
@@ -84,13 +86,15 @@ watch(
           <span class="announcement-drawer__contest-label">赛事状态</span>
           <strong>{{ contest.status }}</strong>
         </div>
-        <button
-          type="button"
+        <AppRouteLink
+          v-if="fullPageRoute"
+          id="contest-open-announcement-page"
+          :to="fullPageRoute"
           class="ui-btn ui-btn--secondary ui-btn--sm"
-          @click="openFullPage"
+          @click="emit('close')"
         >
           进入完整管理页
-        </button>
+        </AppRouteLink>
       </div>
 
       <section

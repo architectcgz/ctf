@@ -5,20 +5,22 @@ import { MoreHorizontal } from 'lucide-vue-next'
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
 import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
+import type { ContestEditRouteTarget, ContestOperationsRouteTarget } from '../model'
 
 const props = defineProps<{
   contests: ContestDetailData[]
   page: number
   pageSize: number
   total: number
+  buildEditRoute: (contestId: string) => ContestEditRouteTarget
+  buildWorkbenchRoute: (contestId: string) => ContestOperationsRouteTarget
 }>()
 
 const emit = defineEmits<{
-  edit: [contest: ContestDetailData]
   announce: [contest: ContestDetailData]
-  workbench: [contest: ContestDetailData]
   changePage: [page: number]
 }>()
 
@@ -71,11 +73,6 @@ function closeActionMenu(): void {
 
 function setActionMenuOpen(contestId: string, nextOpen: boolean): void {
   openActionMenuId.value = nextOpen ? contestId : null
-}
-
-function handleEdit(contest: ContestDetailData): void {
-  closeActionMenu()
-  emit('edit', contest)
 }
 
 function handleAnnounce(contest: ContestDetailData): void {
@@ -143,23 +140,21 @@ function handleAnnounce(contest: ContestDetailData): void {
           role="group"
           aria-label="竞赛操作"
         >
-          <button
+          <AppRouteLink
             v-if="canEnterWorkbench(row as ContestDetailData)"
             :id="`contest-open-workbench-${(row as ContestDetailData).id}`"
-            type="button"
+            :to="buildWorkbenchRoute((row as ContestDetailData).id)"
             class="ui-btn ui-btn--sm ui-btn--primary contest-action contest-action--workbench ui-row-action--main"
-            @click="emit('workbench', row as ContestDetailData)"
           >
             运维
-          </button>
-          <button
+          </AppRouteLink>
+          <AppRouteLink
             :id="`contest-row-edit-${(row as ContestDetailData).id}`"
-            type="button"
+            :to="buildEditRoute((row as ContestDetailData).id)"
             class="ui-btn ui-btn--sm ui-btn--secondary contest-action contest-action--edit ui-row-action--default"
-            @click="handleEdit(row as ContestDetailData)"
           >
             编辑
-          </button>
+          </AppRouteLink>
           <CActionMenu
             v-if="canOpenActionMenu(row as ContestDetailData)"
             :open="openActionMenuId === (row as ContestDetailData).id"

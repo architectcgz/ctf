@@ -14,7 +14,12 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import type { ContestDetailData, ContestListSummaryData, ContestStatus } from '@/api/contracts'
-import type { ContestFieldLocks, ContestFormDraft } from '../model'
+import type {
+  ContestEditRouteTarget,
+  ContestFieldLocks,
+  ContestFormDraft,
+  ContestOperationsRouteTarget,
+} from '../model'
 import PlatformContestFormPanel from './PlatformContestFormPanel.vue'
 import PlatformContestTable from './PlatformContestTable.vue'
 
@@ -37,6 +42,8 @@ const props = defineProps<{
   createFieldLocks: ContestFieldLocks
   requestedPanel: RequestedContestPanelKey | null
   requestedPanelVersion: number
+  buildEditRoute: (contestId: string) => ContestEditRouteTarget
+  buildWorkbenchRoute: (contestId: string) => ContestOperationsRouteTarget
 }>()
 
 const emit = defineEmits<{
@@ -46,8 +53,6 @@ const emit = defineEmits<{
   updateStatusFilter: [value: StatusFilter]
   announce: [contest: ContestDetailData]
   changePage: [page: number]
-  openEditContest: [contest: ContestDetailData]
-  openContestWorkbench: [contest: ContestDetailData]
 }>()
 
 type ContestPanelKey = 'overview' | 'create'
@@ -256,9 +261,9 @@ function openCreatePanel() {
             :page="page"
             :page-size="pageSize"
             :total="total"
-            @edit="emit('openEditContest', $event)"
+            :build-edit-route="buildEditRoute"
+            :build-workbench-route="buildWorkbenchRoute"
             @announce="emit('announce', $event)"
-            @workbench="emit('openContestWorkbench', $event)"
             @change-page="emit('changePage', $event)"
           />
         </section>

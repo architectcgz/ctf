@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
 import ContestManage from '../ContestManage.vue'
 import contestManageSource from '../ContestManage.vue?raw'
+import contestAnnouncementDrawerSource from '@/features/contest-announcements/ui/ContestAnnouncementManageDrawer.vue?raw'
+import platformContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
 import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
+import contestManagePageModelSource from '@/features/platform-contests/model/useContestManagePage.ts?raw'
 import { ApiError } from '@/api/request'
-
-const pushMock = vi.fn()
 
 const contestMocks = vi.hoisted(() => ({
   getContests: vi.fn(),
@@ -32,21 +33,19 @@ vi.mock('@/api/admin/authoring', () => ({
   getChallenges: contestMocks.getChallenges,
 }))
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock, replace: vi.fn(), back: vi.fn() }),
-  }
-})
-
 vi.mock('@/composables/useDestructiveConfirm', () => ({
   confirmDestructiveAction: destructiveConfirmMock,
 }))
 
+function findRouteLink(
+  wrapper: ReturnType<typeof mount>,
+  id: string
+) {
+  return wrapper.findAllComponents(RouterLinkStub).find((link) => link.attributes('id') === id)
+}
+
 describe('ContestManage', () => {
   beforeEach(() => {
-    pushMock.mockReset()
     contestMocks.getContests.mockReset()
     contestMocks.getChallenges.mockReset()
     contestMocks.createContest.mockReset()
@@ -127,6 +126,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ContestOrchestrationPage: {
             props: ['list'],
             template:
@@ -217,6 +217,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ContestOrchestrationPage: {
             props: ['list'],
             template:
@@ -276,6 +277,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ContestOrchestrationPage: {
             props: ['list'],
             template:
@@ -328,6 +330,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ContestOrchestrationPage: {
             props: ['list'],
             template:
@@ -401,6 +404,7 @@ describe('ContestManage', () => {
       attachTo: document.body,
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ElDialog: {
             template: '<div><slot /><slot name="footer" /></div>',
           },
@@ -452,6 +456,7 @@ describe('ContestManage', () => {
       attachTo: document.body,
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ElDialog: {
             template: '<div><slot /><slot name="footer" /></div>',
           },
@@ -473,6 +478,14 @@ describe('ContestManage', () => {
     expect(contestManageSource).not.toContain("from '@/api/contracts'")
     expect(contestOrchestrationSource).not.toContain("from 'vue-router'")
     expect(contestOrchestrationSource).not.toContain('useRouter(')
+    expect(contestManagePageModelSource).not.toContain("from 'vue-router'")
+    expect(contestManagePageModelSource).toContain('buildContestEditRoute')
+    expect(contestManagePageModelSource).toContain('buildContestOperationsRoute')
+    expect(contestManagePageModelSource).toContain('buildContestAnnouncementsRoute')
+    expect(platformContestTableSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(platformContestTableSource).toContain('<AppRouteLink')
+    expect(contestAnnouncementDrawerSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(contestAnnouncementDrawerSource).toContain('id="contest-open-announcement-page"')
     expect(contestOrchestrationSource).toContain(
       "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
     )
@@ -524,6 +537,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ElDialog: {
             template: '<div><slot /><slot name="footer" /></div>',
           },
@@ -567,6 +581,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ElDialog: {
             template: '<div><slot /><slot name="footer" /></div>',
           },
@@ -576,10 +591,11 @@ describe('ContestManage', () => {
 
     await flushPromises()
 
-    await wrapper.get('#contest-row-edit-contest-1').trigger('click')
-    await flushPromises()
-
-    expect(pushMock).toHaveBeenCalledWith({ name: 'ContestEdit', params: { id: 'contest-1' } })
+    const editLink = findRouteLink(wrapper, 'contest-row-edit-contest-1')
+    expect(editLink?.props('to')).toEqual({
+      name: 'ContestEdit',
+      params: { id: 'contest-1' },
+    })
     wrapper.unmount()
   })
 
@@ -614,6 +630,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ElDialog: {
             template: '<div><slot /><slot name="footer" /></div>',
           },
@@ -626,9 +643,8 @@ describe('ContestManage', () => {
     expect(wrapper.find('#contest-panel-operations').exists()).toBe(false)
     expect(wrapper.get('#contest-open-workbench-awd-running').text()).toBe('运维')
 
-    await wrapper.get('#contest-open-workbench-awd-running').trigger('click')
-
-    expect(pushMock).toHaveBeenCalledWith({
+    const workbenchLink = findRouteLink(wrapper, 'contest-open-workbench-awd-running')
+    expect(workbenchLink?.props('to')).toEqual({
       name: 'ContestOperations',
       params: { id: 'awd-running' },
     })
@@ -664,6 +680,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ElDialog: {
             template: '<div><slot /><slot name="footer" /></div>',
           },
@@ -702,6 +719,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ElDialog: {
             template: '<div><slot /><slot name="footer" /></div>',
           },
@@ -735,6 +753,7 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ContestOrchestrationPage: {
             props: ['list'],
             template:
@@ -763,7 +782,7 @@ describe('ContestManage', () => {
     expect(wrapper.get('#contest-announcement-drawer').text()).toContain('2026 春季赛')
   })
 
-  it('公告抽屉请求进入完整管理页时应由页面 owner 执行跳转', async () => {
+  it('公告抽屉完整管理页入口应暴露显式路由目标，并在点击后关闭抽屉', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [
         {
@@ -784,15 +803,11 @@ describe('ContestManage', () => {
     const wrapper = mount(ContestManage, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           ContestOrchestrationPage: {
             props: ['list'],
             template:
               '<button id="open-announce-drawer" type="button" @click="$emit(\'announce\', list[0])">发布通知</button>',
-          },
-          ContestAnnouncementManageDrawer: {
-            props: ['open', 'contest'],
-            template:
-              '<button v-if="open" id="open-announcement-page" type="button" @click="$emit(\'openFullPage\', contest)">进入完整管理页</button>',
           },
           PlatformContestFormDialog: true,
           AWDReadinessOverrideDialog: true,
@@ -806,11 +821,16 @@ describe('ContestManage', () => {
     await flushPromises()
     await wrapper.get('#open-announce-drawer').trigger('click')
     await flushPromises()
-    await wrapper.get('#open-announcement-page').trigger('click')
 
-    expect(pushMock).toHaveBeenCalledWith({
+    const announcementLink = findRouteLink(wrapper, 'contest-open-announcement-page')
+    expect(announcementLink?.props('to')).toEqual({
       name: 'ContestAnnouncements',
       params: { id: 'contest-1' },
     })
+
+    await announcementLink?.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('#contest-open-announcement-page').exists()).toBe(false)
   })
 })

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import PlatformContestTable from '@/features/platform-contests/ui/PlatformContestTable.vue'
 import adminContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
 import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
@@ -24,6 +25,38 @@ describe('PlatformContestTable', () => {
     document.body.innerHTML = ''
   })
 
+  function mountTable(contests: ContestDetailData[]) {
+    return mount(PlatformContestTable, {
+      attachTo: document.body,
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+      props: {
+        contests,
+        page: 1,
+        pageSize: 20,
+        total: contests.length,
+        buildEditRoute: (contestId: string) => ({
+          name: 'ContestEdit' as const,
+          params: { id: contestId },
+        }),
+        buildWorkbenchRoute: (contestId: string) => ({
+          name: 'ContestOperations' as const,
+          params: { id: contestId },
+        }),
+      },
+    })
+  }
+
+  function findRouteLink(
+    wrapper: ReturnType<typeof mount>,
+    id: string
+  ) {
+    return wrapper.findAllComponents(RouterLinkStub).find((link) => link.attributes('id') === id)
+  }
+
   it('更多菜单应收敛到共享 action menu primitive，而不是继续维护赛事私有浮层', () => {
     expect(adminContestTableSource).toContain("from '@/components/common/menus/CActionMenu.vue'")
     expect(adminContestTableSource).not.toContain('<Teleport to="body">')
@@ -44,9 +77,12 @@ describe('PlatformContestTable', () => {
 
   it('竞赛目录字号应与平台审计列表使用同一组目录 token', () => {
     expect(adminContestTableSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(adminContestTableSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
     expect(adminContestTableSource).toContain('<WorkspaceDataTable')
+    expect(adminContestTableSource).toContain('<AppRouteLink')
     expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')
     expect(workspaceDataTableSource).toContain('font-size: var(--font-size-11);')
+    expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(adminContestTableSource).toContain('font-size: var(--font-size-14);')
     expect(adminContestTableSource).toContain('font-size: var(--font-size-13);')
     expect(adminContestTableSource).toContain('--ui-badge-size: var(--font-size-11);')
@@ -59,24 +95,20 @@ describe('PlatformContestTable', () => {
   })
 
   it('行内操作应直接提供编辑入口，更多菜单不再承载导出结果', async () => {
-    const wrapper = mount(PlatformContestTable, {
-      attachTo: document.body,
-      props: {
-        contests: [buildContest()],
-        page: 1,
-        pageSize: 20,
-        total: 1,
-      },
-    })
+    const wrapper = mountTable([buildContest()])
 
     expect(wrapper.get('#contest-open-workbench-awd-running').text()).toBe('运维')
     expect(wrapper.findAll('.contest-action').length).toBe(2)
     expect(wrapper.get('#contest-row-edit-awd-running').text()).toContain('编辑')
 
-    await wrapper.get('#contest-row-edit-awd-running').trigger('click')
-    await flushPromises()
-
-    expect(wrapper.emitted('edit')?.[0]?.[0]).toMatchObject({ id: 'awd-running' })
+    expect(findRouteLink(wrapper, 'contest-row-edit-awd-running')?.props('to')).toEqual({
+      name: 'ContestEdit',
+      params: { id: 'awd-running' },
+    })
+    expect(findRouteLink(wrapper, 'contest-open-workbench-awd-running')?.props('to')).toEqual({
+      name: 'ContestOperations',
+      params: { id: 'awd-running' },
+    })
 
     await wrapper.get('#contest-row-more-awd-running').trigger('click')
     await flushPromises()
@@ -110,15 +142,7 @@ describe('PlatformContestTable', () => {
   })
 
   it('未结束竞赛的更多菜单应提供发布通知入口并抛出 announce 事件', async () => {
-    const wrapper = mount(PlatformContestTable, {
-      attachTo: document.body,
-      props: {
-        contests: [buildContest()],
-        page: 1,
-        pageSize: 20,
-        total: 1,
-      },
-    })
+    const wrapper = mountTable([buildContest()])
 
     await wrapper.get('#contest-row-more-awd-running').trigger('click')
     await flushPromises()
@@ -137,26 +161,20 @@ describe('PlatformContestTable', () => {
   })
 
   it('已结束竞赛不显示更多菜单，但仍可进入运维与编辑', async () => {
-    const wrapper = mount(PlatformContestTable, {
-      attachTo: document.body,
-      props: {
-        contests: [buildContest({ id: 'contest-ended', status: 'ended' })],
-        page: 1,
-        pageSize: 20,
-        total: 1,
-      },
-    })
+    const wrapper = mountTable([buildContest({ id: 'contest-ended', status: 'ended' })])
 
     expect(wrapper.get('#contest-open-workbench-contest-ended').text()).toBe('运维')
     expect(wrapper.get('#contest-row-edit-contest-ended').text()).toContain('编辑')
     expect(wrapper.find('#contest-row-more-contest-ended').exists()).toBe(false)
 
-    await wrapper.get('#contest-open-workbench-contest-ended').trigger('click')
-    await wrapper.get('#contest-row-edit-contest-ended').trigger('click')
-    await flushPromises()
-
-    expect(wrapper.emitted('workbench')?.[0]?.[0]).toMatchObject({ id: 'contest-ended' })
-    expect(wrapper.emitted('edit')?.[0]?.[0]).toMatchObject({ id: 'contest-ended' })
+    expect(findRouteLink(wrapper, 'contest-open-workbench-contest-ended')?.props('to')).toEqual({
+      name: 'ContestOperations',
+      params: { id: 'contest-ended' },
+    })
+    expect(findRouteLink(wrapper, 'contest-row-edit-contest-ended')?.props('to')).toEqual({
+      name: 'ContestEdit',
+      params: { id: 'contest-ended' },
+    })
 
     wrapper.unmount()
   })
