@@ -18,6 +18,8 @@ import topologyTemplateHeroSectionSource from '@/features/challenge-topology-stu
 import topologyTemplateLibraryHeaderSource from '@/features/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue?raw'
 import topologyTemplateSidePanelSource from '@/features/challenge-topology-studio/ui/TopologyTemplateSidePanel.vue?raw'
 import topologyTemplateWorkbenchSource from '@/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue?raw'
+import challengeTopologyStudioRoutePageSource from '@/features/platform-challenges/model/useChallengeTopologyStudioRoutePage.ts?raw'
+import platformChallengeRoutePageSource from '@/features/platform-challenges/model/usePlatformChallengeRoutePage.ts?raw'
 import topologyStructureMutationsSource from '@/features/challenge-topology-studio/model/useTopologyStructureMutations.ts?raw'
 import challengeTopologyStudioRouteSource from '../ChallengeTopologyStudio.vue?raw'
 import { ApiError } from '@/api/request'
@@ -219,6 +221,15 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(challengeTopologyStudioRouteSource).toContain('useChallengeTopologyStudioRoutePage')
     expect(challengeTopologyStudioRouteSource).not.toContain('useRoute')
     expect(challengeTopologyStudioRouteSource).not.toContain('useRouter')
+  })
+
+  it('平台题目拓扑 route page wrapper 应委托统一 router owner', () => {
+    expect(challengeTopologyStudioRoutePageSource).toContain(
+      "return usePlatformChallengeRoutePage('topology-studio')"
+    )
+    expect(challengeTopologyStudioRoutePageSource).not.toContain('vue-router')
+    expect(platformChallengeRoutePageSource).toContain('useRoute, useRouter')
+    expect(platformChallengeRoutePageSource).toContain("mode === 'topology-studio'")
   })
 
   it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {

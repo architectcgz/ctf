@@ -1,21 +1,5 @@
-import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { usePlatformChallengeRoutePage } from './usePlatformChallengeRoutePage'
 
 export function useChallengeWriteupPage() {
-  const route = useRoute()
-  const router = useRouter()
-  const challengeId = computed(() => String(route.params.id ?? ''))
-
-  function backToChallengeDetail(): void {
-    void router.push({
-      name: 'PlatformChallengeDetail',
-      params: { id: challengeId.value },
-      query: { panel: 'writeup' },
-    })
-  }
-
-  return {
-    challengeId,
-    backToChallengeDetail,
-  }
+  return usePlatformChallengeRoutePage('writeup-editor')
 }

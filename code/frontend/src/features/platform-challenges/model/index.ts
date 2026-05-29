@@ -1,5 +1,6 @@
 export * from './useChallengeManagePage'
 export * from './useChallengeManagePresentation'
+export * from './usePlatformChallengeRoutePage'
 export * from './useChallengeTopologyStudioRoutePage'
 export * from './useChallengeWriteupPage'
 export * from './useChallengeWriteupViewPage'

@@ -1,13 +1,36 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import ChallengeWriteupEditorPage from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue'
 import ChallengeWriteupViewPage from '@/features/challenge-writeup-editor/ui/ChallengeWriteupViewPage.vue'
-import challengeWriteupEditorSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue?raw'
+import platformChallengeRoutePageSource from '@/features/platform-challenges/model/usePlatformChallengeRoutePage.ts?raw'
+import challengeWriteupPageSource from '@/features/platform-challenges/model/useChallengeWriteupPage.ts?raw'
+import challengeWriteupViewPageSource from '@/features/platform-challenges/model/useChallengeWriteupViewPage.ts?raw'
+import challengeWriteupChallengeRailSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupChallengeRail.vue?raw'
+import challengeWriteupEditorFormSectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorFormSection.vue?raw'
+import challengeWriteupEditorPageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue?raw'
+import challengeWriteupSnapshotSectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSnapshotSection.vue?raw'
 import challengeWriteupViewSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupViewPage.vue?raw'
 import challengeWriteupRouteSource from '../ChallengeWriteup.vue?raw'
 import challengeWriteupViewRouteSource from '../ChallengeWriteupView.vue?raw'
 import { ApiError } from '@/api/request'
+
+const challengeWriteupEditorSource = [
+  challengeWriteupEditorPageSource,
+  challengeWriteupEditorFormSectionSource,
+  challengeWriteupSnapshotSectionSource,
+  challengeWriteupChallengeRailSource,
+  readFileSync(
+    resolve(
+      process.cwd(),
+      'src/features/challenge-writeup-editor/ui/challengeWriteupEditorPage.css'
+    ),
+    'utf8'
+  ),
+].join('\n')
 
 const adminApiMocks = vi.hoisted(() => ({
   getChallengeDetail: vi.fn().mockResolvedValue({
@@ -78,6 +101,18 @@ describe('ChallengeWriteupEditorPage', () => {
     expect(challengeWriteupViewRouteSource).toContain('useChallengeWriteupViewPage')
     expect(challengeWriteupViewRouteSource).not.toContain('useRoute')
     expect(challengeWriteupViewRouteSource).not.toContain('useRouter')
+  })
+
+  it('题解 route wrapper 应委托统一 router owner，并只在查看态暴露编辑跳转', () => {
+    expect(challengeWriteupPageSource).toContain("return usePlatformChallengeRoutePage('writeup-editor')")
+    expect(challengeWriteupPageSource).not.toContain('vue-router')
+    expect(challengeWriteupViewPageSource).toContain(
+      "return usePlatformChallengeRoutePage('writeup-view')"
+    )
+    expect(challengeWriteupViewPageSource).not.toContain('vue-router')
+    expect(platformChallengeRoutePageSource).toContain("query: mode === 'topology-studio' ? undefined : { panel: 'writeup' }")
+    expect(platformChallengeRoutePageSource).toContain("if (mode === 'writeup-view')")
+    expect(platformChallengeRoutePageSource).toContain("name: 'PlatformChallengeWriteup'")
   })
 
   it('题解查看页和编辑页应改用共享 ui-btn 原语而不是页面私有 admin-btn 按钮族', () => {
