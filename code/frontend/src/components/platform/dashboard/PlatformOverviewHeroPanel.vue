@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import {
   Activity,
   AlertTriangle,
@@ -12,6 +13,8 @@ import {
 const props = defineProps<{
   error: string | null
   showSkeleton: boolean
+  auditLogRoute: Record<string, unknown>
+  cheatDetectionRoute: Record<string, unknown>
   metaPills: string[]
   railScore: string
   railCopy: string
@@ -25,8 +28,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   retry: []
-  openAuditLog: []
-  openCheatDetection: []
 }>()
 </script>
 
@@ -61,18 +62,14 @@ const emit = defineEmits<{
         </div>
 
         <div class="header-actions overview-action-grid">
-          <button type="button" class="header-btn header-btn--primary" @click="emit('openAuditLog')">
+          <RouterLink :to="props.auditLogRoute" class="header-btn header-btn--primary">
             <Clock class="h-4 w-4" />
             审计日志
-          </button>
-          <button
-            type="button"
-            class="header-btn header-btn--ghost"
-            @click="emit('openCheatDetection')"
-          >
+          </RouterLink>
+          <RouterLink :to="props.cheatDetectionRoute" class="header-btn header-btn--ghost">
             <ShieldCheck class="h-4 w-4" />
             风险研判
-          </button>
+          </RouterLink>
           <a class="header-btn header-btn--ghost overview-anchor-btn" href="#admin-dashboard-alerts">
             <AlertTriangle class="h-4 w-4" />
             当前告警
@@ -147,10 +144,10 @@ const emit = defineEmits<{
           <ArrowRight class="h-4 w-4" />
           重试加载
         </button>
-        <button type="button" class="ui-btn ui-btn--ghost" @click="emit('openAuditLog')">
+        <RouterLink :to="props.auditLogRoute" class="ui-btn ui-btn--ghost">
           <Clock class="h-4 w-4" />
           审计日志
-        </button>
+        </RouterLink>
       </div>
     </div>
   </section>

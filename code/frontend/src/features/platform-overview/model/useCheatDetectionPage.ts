@@ -1,27 +1,33 @@
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import type { AdminCheatDetectionData } from '@/api/contracts'
 import { getCheatDetection } from '@/api/admin/platform'
+import { buildPlatformAuditLogRoute } from './platformOverviewRoutes'
+
+type CheatQuickAction = {
+  title: string
+  description: string
+  actionLabel: string
+  route: ReturnType<typeof buildPlatformAuditLogRoute>
+}
 
 export function useCheatDetectionPage() {
-  const router = useRouter()
   const loading = ref(false)
   const error = ref('')
   const riskData = ref<AdminCheatDetectionData | null>(null)
 
-  const quickActions = [
+  const quickActions: ReadonlyArray<CheatQuickAction> = [
     {
       title: '查看提交记录',
       description: '直接打开审计日志中的 submit 动作，复核高频提交账号。',
       actionLabel: '提交审计',
-      query: { action: 'submit' },
+      route: buildPlatformAuditLogRoute({ action: 'submit' }),
     },
     {
       title: '查看登录记录',
       description: '回看 login 日志，继续确认共享 IP 或短时集中登录。',
       actionLabel: '登录审计',
-      query: { action: 'login' },
+      route: buildPlatformAuditLogRoute({ action: 'login' }),
     },
   ] as const
 
@@ -38,10 +44,6 @@ export function useCheatDetectionPage() {
     }
   }
 
-  function openAudit(query: Record<string, string>) {
-    return router.push({ name: 'AuditLog', query })
-  }
-
   function formatDateTime(value: string): string {
     return new Date(value).toLocaleString('zh-CN')
   }
@@ -54,9 +56,10 @@ export function useCheatDetectionPage() {
     riskData,
     loading,
     error,
+    auditLogRoute: buildPlatformAuditLogRoute(),
+    buildAuditRoute: buildPlatformAuditLogRoute,
     quickActions,
     loadRiskData,
-    openAudit,
     formatDateTime,
   }
 }

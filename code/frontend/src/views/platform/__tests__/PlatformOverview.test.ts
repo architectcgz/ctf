@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
 import adminDashboardPageSourceBase from '@/features/platform-overview/ui/PlatformOverviewPage.vue?raw'
+import platformOverviewPageModelSource from '@/features/platform-overview/model/usePlatformOverviewPage.ts?raw'
+import platformOverviewRoutesSource from '@/features/platform-overview/model/platformOverviewRoutes.ts?raw'
 import platformOverviewAlertsSectionSource from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue?raw'
 import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
 import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
@@ -15,25 +17,14 @@ const adminDashboardPageSource = [
   platformOverviewHotspotsSectionSource,
 ].join('\n')
 
-const pushMock = vi.fn()
-
 const adminApiMocks = vi.hoisted(() => ({
   getDashboard: vi.fn(),
 }))
-
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
 
 vi.mock('@/api/admin/platform', () => adminApiMocks)
 
 describe('PlatformOverview', () => {
   beforeEach(() => {
-    pushMock.mockReset()
     adminApiMocks.getDashboard.mockReset()
     adminApiMocks.getDashboard.mockResolvedValue({
       online_users: 18,
@@ -62,8 +53,18 @@ describe('PlatformOverview', () => {
     })
   })
 
+  function mountPage() {
+    return mount(PlatformOverview, {
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
+  }
+
   it('应该展示系统概览指标与容器告警', async () => {
-    const wrapper = mount(PlatformOverview)
+    const wrapper = mountPage()
 
     await flushPromises()
 
@@ -94,7 +95,7 @@ describe('PlatformOverview', () => {
       alerts: [],
     })
 
-    const wrapper = mount(PlatformOverview)
+    const wrapper = mountPage()
 
     await flushPromises()
 
@@ -109,10 +110,13 @@ describe('PlatformOverview', () => {
     expect(platformOverviewViewSource).toContain('usePlatformOverviewPage')
     expect(platformOverviewViewSource).not.toContain("from '@/api/admin/platform'")
     expect(platformOverviewViewSource).not.toContain("router.push({ name: 'AuditLog' })")
+    expect(platformOverviewPageModelSource).not.toContain("from 'vue-router'")
+    expect(platformOverviewPageModelSource).toContain('auditLogRoute: buildPlatformAuditLogRoute()')
+    expect(platformOverviewRoutesSource).toContain('platformCheatDetectionRoute')
   })
 
   it('应该移除页面内 tab，并直接展示总览、当前告警与资源热点三个区块', async () => {
-    const wrapper = mount(PlatformOverview)
+    const wrapper = mountPage()
 
     await flushPromises()
 
@@ -146,6 +150,22 @@ describe('PlatformOverview', () => {
     expect(adminDashboardPageSource).not.toContain('overview-action-main')
     expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-primary')
     expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-ghost')
+  })
+
+  it('总览页应通过 route target contract 渲染审计与风险研判入口', async () => {
+    const wrapper = mountPage()
+
+    await flushPromises()
+
+    const auditLink = wrapper
+      .findAllComponents(RouterLinkStub)
+      .find((link) => link.text().includes('审计日志'))
+    const cheatLink = wrapper
+      .findAllComponents(RouterLinkStub)
+      .find((link) => link.text().includes('风险研判'))
+
+    expect(auditLink?.props('to')).toEqual({ name: 'AuditLog' })
+    expect(cheatLink?.props('to')).toEqual({ name: 'CheatDetection' })
   })
 
   it('应该采用与 teacher dashboard 一致的 workspace 骨架，并去掉页面内重复顶栏', () => {

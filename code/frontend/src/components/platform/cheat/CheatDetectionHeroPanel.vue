@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import { RefreshCw, SearchCheck } from 'lucide-vue-next'
 
 import CheatDetectionSummaryPanel from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue'
 
 defineProps<{
+  auditLogRoute: Record<string, unknown>
   generatedAtLabel: string | null
   loading: boolean
   summary: {
@@ -14,13 +16,8 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  openAudit: []
   refresh: []
 }>()
-
-function handleOpenAudit(): void {
-  emit('openAudit')
-}
 
 function handleRefresh(): void {
   emit('refresh')
@@ -45,14 +42,10 @@ function handleRefresh(): void {
         <span class="hero-meta-badge__label">最近生成</span>
         <span class="hero-meta-badge__value">{{ generatedAtLabel }}</span>
       </div>
-      <button
-        type="button"
-        class="header-btn header-btn--ghost"
-        @click="handleOpenAudit"
-      >
+      <RouterLink :to="auditLogRoute" class="header-btn header-btn--ghost">
         <SearchCheck class="h-4 w-4" />
         打开审计日志
-      </button>
+      </RouterLink>
       <button
         type="button"
         class="header-btn header-btn--primary"

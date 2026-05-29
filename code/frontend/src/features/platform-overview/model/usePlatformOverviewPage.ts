@@ -1,12 +1,11 @@
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { getDashboard } from '@/api/admin/platform'
 import type { AdminDashboardData } from '@/api/contracts'
 import { reportFrontendError } from '@/utils/reportFrontendError'
+import { buildPlatformAuditLogRoute, platformCheatDetectionRoute } from './platformOverviewRoutes'
 
 export function usePlatformOverviewPage() {
-  const router = useRouter()
   const loading = ref(false)
   const error = ref<string | null>(null)
   const dashboard = ref<AdminDashboardData | null>(null)
@@ -24,14 +23,6 @@ export function usePlatformOverviewPage() {
     }
   }
 
-  function openAuditLog(): void {
-    router.push({ name: 'AuditLog' })
-  }
-
-  function openCheatDetection(): void {
-    router.push({ name: 'CheatDetection' })
-  }
-
   onMounted(() => {
     void loadDashboard()
   })
@@ -41,7 +32,7 @@ export function usePlatformOverviewPage() {
     error,
     dashboard,
     loadDashboard,
-    openAuditLog,
-    openCheatDetection,
+    auditLogRoute: buildPlatformAuditLogRoute(),
+    cheatDetectionRoute: platformCheatDetectionRoute,
   }
 }

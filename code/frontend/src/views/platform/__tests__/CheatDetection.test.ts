@@ -1,38 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
+import cheatDetectionPageSource from '@/features/platform-overview/model/useCheatDetectionPage.ts?raw'
+import platformOverviewRoutesSource from '@/features/platform-overview/model/platformOverviewRoutes.ts?raw'
 import CheatDetection from '../CheatDetection.vue'
 import cheatDetectionSource from '../CheatDetection.vue?raw'
 
-const pushMock = vi.fn()
-const replaceMock = vi.fn()
-const routeState = vi.hoisted(() => ({
-  query: {} as Record<string, string>,
-}))
 const adminApiMocks = vi.hoisted(() => ({
   getCheatDetection: vi.fn(),
 }))
-
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRoute: () => routeState,
-    useRouter: () => ({ push: pushMock, replace: replaceMock }),
-  }
-})
 
 vi.mock('@/api/admin/platform', () => adminApiMocks)
 
 describe('CheatDetection', () => {
   beforeEach(() => {
-    pushMock.mockReset()
-    replaceMock.mockReset()
-    routeState.query = {}
     adminApiMocks.getCheatDetection.mockReset()
   })
 
-  it('应该默认渲染单页风险工作台，并支持从审计联动区跳转到日志', async () => {
+  it('应该默认渲染单页风险工作台，并通过 route target 渲染审计联动入口', async () => {
     adminApiMocks.getCheatDetection.mockResolvedValue({
       generated_at: '2026-03-07T06:00:00.000Z',
       summary: {
@@ -58,7 +43,13 @@ describe('CheatDetection', () => {
       ],
     })
 
-    const wrapper = mount(CheatDetection)
+    const wrapper = mount(CheatDetection, {
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
     await flushPromises()
 
     expect(wrapper.text()).toContain('作弊检测')
@@ -68,13 +59,10 @@ describe('CheatDetection', () => {
     expect(wrapper.text()).toContain('审计联动')
 
     const quickAction = wrapper
-      .findAll('button')
-      .find((button) => button.text().includes('查看提交记录'))
+      .findAllComponents(RouterLinkStub)
+      .find((link) => link.text().includes('查看提交记录'))
     expect(quickAction).toBeTruthy()
-
-    await quickAction!.trigger('click')
-
-    expect(pushMock).toHaveBeenCalledWith({
+    expect(quickAction!.props('to')).toEqual({
       name: 'AuditLog',
       query: { action: 'submit' },
     })
@@ -83,11 +71,13 @@ describe('CheatDetection', () => {
   it('路由页应仅负责组合，不直接耦合风险检测请求流程', () => {
     expect(cheatDetectionSource).toContain('useCheatDetectionPage')
     expect(cheatDetectionSource).not.toContain("from '@/api/admin/platform'")
+    expect(cheatDetectionPageSource).not.toContain("from 'vue-router'")
+    expect(cheatDetectionPageSource).toContain('auditLogRoute: buildPlatformAuditLogRoute()')
+    expect(cheatDetectionPageSource).toContain('buildAuditRoute: buildPlatformAuditLogRoute')
+    expect(platformOverviewRoutesSource).toContain('buildPlatformAuditLogRoute')
   })
 
-  it('应兼容旧 panel query，并继续渲染同一风险工作台', async () => {
-    routeState.query = { panel: 'shared-ip' }
-
+  it('应通过 route target contract 渲染账户和共享 IP 的审计入口', async () => {
     adminApiMocks.getCheatDetection.mockResolvedValue({
       generated_at: '2026-03-07T06:00:00.000Z',
       summary: {
@@ -113,17 +103,27 @@ describe('CheatDetection', () => {
       ],
     })
 
-    const wrapper = mount(CheatDetection)
+    const wrapper = mount(CheatDetection, {
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
     await flushPromises()
 
-    expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
-    expect(wrapper.text()).toContain('高频提交账号')
-    expect(wrapper.text()).toContain('共享 IP 线索')
-    expect(wrapper.text()).toContain('审计联动')
-    expect(replaceMock).not.toHaveBeenCalled()
+    const links = wrapper.findAllComponents(RouterLinkStub)
+    expect(
+      links.some((link) =>
+        JSON.stringify(link.props('to')).includes('"actor_user_id":"8"')
+      )
+    ).toBe(true)
+    expect(
+      links.some((link) => JSON.stringify(link.props('to')).includes('"action":"login"'))
+    ).toBe(true)
   })
 
-  it('父页应保留风险数据刷新和审计跳转 owner', async () => {
+  it('父页应保留风险数据刷新 owner，并把审计跳转下沉为 route target contract', async () => {
     adminApiMocks.getCheatDetection.mockResolvedValue({
       generated_at: '2026-03-07T06:00:00.000Z',
       summary: {
@@ -138,11 +138,12 @@ describe('CheatDetection', () => {
     const wrapper = mount(CheatDetection, {
       global: {
         stubs: {
+          RouterLink: RouterLinkStub,
           CheatDetectionWorkspacePanel: {
-            props: ['riskData', 'loading'],
-            emits: ['open-audit', 'refresh'],
+            props: ['riskData', 'loading', 'auditLogRoute', 'buildAuditRoute'],
+            emits: ['refresh'],
             template:
-              '<div><div data-testid="risk-state">{{ riskData?.generated_at }}::{{ loading }}</div><button id="cheat-open-audit" type="button" @click="$emit(\'open-audit\', { action: \'submit\' })">打开审计</button><button id="cheat-refresh" type="button" @click="$emit(\'refresh\')">刷新</button></div>',
+              '<div><div data-testid="risk-state">{{ riskData?.generated_at }}::{{ loading }}</div><div data-testid="audit-route">{{ JSON.stringify(auditLogRoute) }}</div><div data-testid="audit-route-submit">{{ JSON.stringify(buildAuditRoute({ action: \'submit\' })) }}</div><button id="cheat-refresh" type="button" @click="$emit(\'refresh\')">刷新</button></div>',
           },
         },
       },
@@ -151,13 +152,9 @@ describe('CheatDetection', () => {
     await flushPromises()
 
     expect(wrapper.get('[data-testid="risk-state"]').text()).toContain('2026-03-07T06:00:00.000Z')
+    expect(wrapper.get('[data-testid="audit-route"]').text()).toContain('"name":"AuditLog"')
+    expect(wrapper.get('[data-testid="audit-route-submit"]').text()).toContain('"action":"submit"')
     expect(adminApiMocks.getCheatDetection).toHaveBeenCalledTimes(1)
-
-    await wrapper.get('#cheat-open-audit').trigger('click')
-    expect(pushMock).toHaveBeenLastCalledWith({
-      name: 'AuditLog',
-      query: { action: 'submit' },
-    })
 
     await wrapper.get('#cheat-refresh').trigger('click')
     await flushPromises()

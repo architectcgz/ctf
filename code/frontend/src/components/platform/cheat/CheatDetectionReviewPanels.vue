@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import { ArrowRight } from 'lucide-vue-next'
 
 import type { AdminCheatDetectionData } from '@/api/contracts'
@@ -8,22 +9,15 @@ type CheatQuickAction = {
   title: string
   description: string
   actionLabel: string
-  query: Record<string, string>
+  route: Record<string, unknown>
 }
 
 defineProps<{
   riskData: AdminCheatDetectionData
+  buildAuditRoute: (query: Record<string, string>) => Record<string, unknown>
   quickActions: ReadonlyArray<CheatQuickAction>
   formatDateTime: (value: string) => string
 }>()
-
-const emit = defineEmits<{
-  openAudit: [query: Record<string, string>]
-}>()
-
-function handleOpenAudit(query: Record<string, string>): void {
-  emit('openAudit', query)
-}
 </script>
 
 <template>
@@ -44,12 +38,11 @@ function handleOpenAudit(query: Record<string, string>): void {
     />
 
     <div v-else class="cheat-directory-list">
-      <button
+      <RouterLink
         v-for="suspect in riskData.suspects"
         :key="suspect.user_id"
-        type="button"
+        :to="buildAuditRoute({ action: 'submit', actor_user_id: String(suspect.user_id) })"
         class="cheat-directory-row"
-        @click="handleOpenAudit({ action: 'submit', actor_user_id: String(suspect.user_id) })"
       >
         <div class="cheat-directory-row-main">
           <div class="cheat-directory-row-title">{{ suspect.username }}</div>
@@ -63,7 +56,7 @@ function handleOpenAudit(query: Record<string, string>): void {
             <ArrowRight class="h-3 w-3" />
           </span>
         </div>
-      </button>
+      </RouterLink>
     </div>
   </section>
 
@@ -84,12 +77,11 @@ function handleOpenAudit(query: Record<string, string>): void {
     />
 
     <div v-else class="cheat-directory-list">
-      <button
+      <RouterLink
         v-for="group in riskData.shared_ips"
         :key="group.ip"
-        type="button"
+        :to="buildAuditRoute({ action: 'login' })"
         class="cheat-directory-row"
-        @click="handleOpenAudit({ action: 'login' })"
       >
         <div class="cheat-directory-row-main">
           <div class="cheat-directory-row-title cheat-directory-row-title--mono">
@@ -105,7 +97,7 @@ function handleOpenAudit(query: Record<string, string>): void {
             <ArrowRight class="h-3 w-3" />
           </span>
         </div>
-      </button>
+      </RouterLink>
     </div>
   </section>
 
@@ -118,12 +110,11 @@ function handleOpenAudit(query: Record<string, string>): void {
     </header>
 
     <div class="quick-action-directory">
-      <button
+      <RouterLink
         v-for="action in quickActions"
         :key="action.title"
-        type="button"
+        :to="action.route"
         class="quick-action-row"
-        @click="handleOpenAudit(action.query)"
       >
         <div class="cheat-directory-row-main">
           <div class="cheat-directory-row-title">{{ action.title }}</div>
@@ -136,7 +127,7 @@ function handleOpenAudit(query: Record<string, string>): void {
             <ArrowRight class="h-3 w-3" />
           </span>
         </div>
-      </button>
+      </RouterLink>
     </div>
   </section>
 </template>

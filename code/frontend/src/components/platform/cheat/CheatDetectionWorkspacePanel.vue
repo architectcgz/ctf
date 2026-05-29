@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import { AlertCircle, ShieldQuestion } from 'lucide-vue-next'
 
 import type { AdminCheatDetectionData } from '@/api/contracts'
@@ -10,28 +11,25 @@ type CheatQuickAction = {
   title: string
   description: string
   actionLabel: string
-  query: Record<string, string>
+  route: Record<string, unknown>
 }
 
 defineProps<{
   riskData: AdminCheatDetectionData | null
   loading: boolean
   error: string
+  auditLogRoute: Record<string, unknown>
+  buildAuditRoute: (query: Record<string, string>) => Record<string, unknown>
   quickActions: ReadonlyArray<CheatQuickAction>
   formatDateTime: (value: string) => string
 }>()
 
 const emit = defineEmits<{
   refresh: []
-  openAudit: [query: Record<string, string>]
 }>()
 
 function handleRefresh(): void {
   emit('refresh')
-}
-
-function handleOpenAudit(query: Record<string, string>): void {
-  emit('openAudit', query)
 }
 </script>
 
@@ -39,10 +37,10 @@ function handleOpenAudit(query: Record<string, string>): void {
   <div class="workspace-shell journal-shell journal-shell-admin journal-hero cheat-shell">
     <main class="content-pane">
         <CheatDetectionHeroPanel
+          :audit-log-route="auditLogRoute"
           :generated-at-label="riskData ? formatDateTime(riskData.generated_at) : null"
           :loading="loading"
           :summary="riskData?.summary ?? null"
-          @open-audit="handleOpenAudit({})"
           @refresh="handleRefresh"
         />
 
@@ -60,10 +58,10 @@ function handleOpenAudit(query: Record<string, string>): void {
           class="cheat-workbench"
         >
           <CheatDetectionReviewPanels
+            :build-audit-route="buildAuditRoute"
             :risk-data="riskData"
             :quick-actions="quickActions"
             :format-date-time="formatDateTime"
-            @open-audit="handleOpenAudit"
           />
         </div>
 
@@ -74,13 +72,12 @@ function handleOpenAudit(query: Record<string, string>): void {
         >
           <AlertCircle class="h-4 w-4" />
           <span>{{ error }}</span>
-          <button
-            type="button"
-            class="ui-btn ui-btn--ghost ui-btn--sm"
-            @click="handleRefresh"
-          >
+          <button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" @click="handleRefresh">
             重试
           </button>
+          <RouterLink :to="auditLogRoute" class="ui-btn ui-btn--ghost ui-btn--sm">
+            打开审计日志
+          </RouterLink>
         </div>
 
         <div

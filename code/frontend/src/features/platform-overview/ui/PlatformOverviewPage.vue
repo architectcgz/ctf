@@ -11,12 +11,12 @@ const props = defineProps<{
   dashboard: AdminDashboardData | null
   loading: boolean
   error: string | null
+  auditLogRoute: Record<string, unknown>
+  cheatDetectionRoute: Record<string, unknown>
 }>()
 
 const emit = defineEmits<{
   retry: []
-  openAuditLog: []
-  openCheatDetection: []
 }>()
 
 const {
@@ -39,13 +39,13 @@ const {
       <PlatformOverviewHeroPanel
         :error="error"
         :show-skeleton="loading && !dashboard"
+        :audit-log-route="auditLogRoute"
+        :cheat-detection-route="cheatDetectionRoute"
         :meta-pills="metaPills"
         :rail-score="railScore"
         :rail-copy="railCopy"
         :overview-metrics="overviewMetrics"
         @retry="emit('retry')"
-        @open-audit-log="emit('openAuditLog')"
-        @open-cheat-detection="emit('openCheatDetection')"
       />
 
       <PlatformOverviewAlertsSection

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PlatformOverviewPage, usePlatformOverviewPage } from '@/features/platform-overview'
 
-const { dashboard, loading, error, loadDashboard, openAuditLog, openCheatDetection } =
+const { dashboard, loading, error, loadDashboard, auditLogRoute, cheatDetectionRoute } =
   usePlatformOverviewPage()
 </script>
 
@@ -10,8 +10,8 @@ const { dashboard, loading, error, loadDashboard, openAuditLog, openCheatDetecti
     :dashboard="dashboard"
     :loading="loading"
     :error="error"
+    :audit-log-route="auditLogRoute"
+    :cheat-detection-route="cheatDetectionRoute"
     @retry="loadDashboard"
-    @open-audit-log="openAuditLog"
-    @open-cheat-detection="openCheatDetection"
   />
 </template>
