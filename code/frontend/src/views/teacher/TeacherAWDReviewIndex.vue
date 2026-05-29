@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { AwdReviewIndexWorkspace } from '@/widgets/awd-review-workspace'
-import { useAwdReviewIndex } from '@/features/awd-review-workspace'
+import { useAwdReviewIndexPage } from '@/features/awd-review-workspace'
 
 const {
   loading,
@@ -15,10 +15,10 @@ const {
   contestSummary,
   loadContests,
   changePage,
-  openDashboard,
+  openHome,
   openContest,
   contestStatusLabel,
-} = useAwdReviewIndex()
+} = useAwdReviewIndexPage('teacher')
 </script>
 
 <template>
@@ -35,7 +35,7 @@ const {
     :status-filter="filters.status"
     :keyword-filter="filters.keyword"
     :contest-status-label="contestStatusLabel"
-    @open-dashboard="openDashboard"
+    @open-dashboard="openHome"
     @refresh="loadContests"
     @reload="loadContests"
     @open-contest="openContest"

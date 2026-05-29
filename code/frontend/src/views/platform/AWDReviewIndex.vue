@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AwdReviewHeroPanel from '@/components/platform/awd-review/AwdReviewHeroPanel.vue'
 import AwdReviewDirectoryPanel from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue'
-import { useAwdReviewIndex } from '@/features/awd-review-workspace'
+import { useAwdReviewIndexPage } from '@/features/awd-review-workspace'
 
 const {
   loading,
@@ -18,9 +18,9 @@ const {
   loadContests,
   changePage,
   resetFilters,
-  openPlatformOverview,
+  openHome,
   openContest,
-} = useAwdReviewIndex()
+} = useAwdReviewIndexPage('platform')
 </script>
 
 <template>
@@ -32,7 +32,7 @@ const {
         :contest-count="contestSummary.totalCount"
         :running-count="contestSummary.runningCount"
         :export-ready-count="contestSummary.exportReadyCount"
-        @back="openPlatformOverview"
+        @back="openHome"
         @refresh="loadContests"
       />
 

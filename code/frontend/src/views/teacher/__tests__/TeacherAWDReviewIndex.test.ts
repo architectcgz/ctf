@@ -8,6 +8,7 @@ import teacherAwdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace
 import teacherAwdReviewContestDirectorySource from '@/widgets/awd-review-workspace/AwdReviewContestDirectory.vue?raw'
 import teacherAwdReviewDirectorySectionSource from '@/widgets/awd-review-workspace/AwdReviewDirectorySection.vue?raw'
 import awdReviewIndexPageSource from '@/features/awd-review-workspace/model/useAwdReviewIndex.ts?raw'
+import awdReviewIndexRoutePageSource from '@/features/awd-review-workspace/model/useAwdReviewIndexPage.ts?raw'
 
 const pushMock = vi.fn()
 
@@ -95,7 +96,9 @@ describe('TeacherAWDReviewIndex', () => {
   })
 
   it('页面应通过 feature model 获取筛选与摘要状态，不再直接耦合 teacher api', () => {
-    expect(teacherAwdReviewIndexSource).toContain("useAwdReviewIndex } from '@/features/awd-review-workspace'")
+    expect(teacherAwdReviewIndexSource).toContain(
+      "useAwdReviewIndexPage } from '@/features/awd-review-workspace'"
+    )
     expect(awdReviewIndexPageSource).toContain("from '@/api/awd-reviews'")
     expect(awdReviewIndexPageSource).not.toContain("from '@/api/admin'")
     expect(awdReviewIndexPageSource).not.toContain("from '@/api/teacher'")
@@ -106,7 +109,17 @@ describe('TeacherAWDReviewIndex', () => {
     expect(teacherAwdReviewIndexSource).not.toContain("from '@/api/teacher'")
     expect(teacherAwdReviewIndexSource).not.toContain('const statusOptions = [')
     expect(teacherAwdReviewIndexSource).not.toContain('function contestStatusLabel')
-    expect(teacherAwdReviewIndexSource).not.toContain('router.push({ name: \'TeacherDashboard\' })')
+    expect(awdReviewIndexPageSource).not.toContain("from 'vue-router'")
+    expect(awdReviewIndexPageSource).not.toContain('router.push({ name: \'TeacherDashboard\' })')
+    expect(awdReviewIndexPageSource).not.toContain('resolveAwdReviewDetailRouteName')
+    expect(teacherAwdReviewIndexSource).not.toContain("useRouter } from 'vue-router'")
+    expect(teacherAwdReviewIndexSource).not.toContain("router.push({ name: 'TeacherDashboard' })")
+    expect(awdReviewIndexRoutePageSource).toContain(
+      "name: scope === 'teacher' ? 'TeacherDashboard' : 'PlatformOverview'"
+    )
+    expect(awdReviewIndexRoutePageSource).toContain(
+      "name: scope === 'teacher' ? 'TeacherAWDReviewDetail' : 'PlatformAwdReviewDetail'"
+    )
     expect(teacherAwdReviewIndexSource).not.toContain('contests.filter((item) => item.status ===')
     expect(teacherAwdReviewIndexSource).not.toContain('contests.filter((item) => item.export_ready)')
   })

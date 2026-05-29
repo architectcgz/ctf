@@ -1,6 +1,5 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { useRouter } from 'vue-router'
 
 import { listAwdReviewsByRole } from '@/api/awd-reviews'
 import type { AwdReviewContestItemData } from '@/api/contracts'
@@ -8,14 +7,12 @@ import { useAbortController } from '@/composables/useAbortController'
 import { useAuthStore } from '@/stores/auth'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { reportFrontendError } from '@/utils/reportFrontendError'
-import { resolveAwdReviewDetailRouteName } from '@/utils/teachingWorkspaceRouting'
 
 export interface PlatformAwdReviewRow extends AwdReviewContestItemData {
   contestCode: string
 }
 
 export function useAwdReviewIndex() {
-  const router = useRouter()
   const authStore = useAuthStore()
   const { createController, abort } = useAbortController()
 
@@ -116,21 +113,6 @@ export function useAwdReviewIndex() {
     void loadContests()
   }, 250) as DebouncedContestLoader
 
-  function openContest(contestId: string): void {
-    router.push({
-      name: resolveAwdReviewDetailRouteName(authStore.user?.role),
-      params: { contestId },
-    })
-  }
-
-  function openDashboard(): void {
-    router.push({ name: 'TeacherDashboard' })
-  }
-
-  function openPlatformOverview(): void {
-    router.push({ name: 'PlatformOverview' })
-  }
-
   function resetFilters(): void {
     filters.value.status = ''
     filters.value.keyword = ''
@@ -193,9 +175,6 @@ export function useAwdReviewIndex() {
     loadContests,
     changePage,
     resetFilters,
-    openDashboard,
-    openPlatformOverview,
-    openContest,
     contestStatusLabel,
   }
 }

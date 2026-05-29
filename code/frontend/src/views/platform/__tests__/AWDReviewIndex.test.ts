@@ -4,6 +4,8 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import PlatformAWDReviewIndex from '../AWDReviewIndex.vue'
 import platformAwdReviewIndexSource from '../AWDReviewIndex.vue?raw'
+import awdReviewIndexPageSource from '@/features/awd-review-workspace/model/useAwdReviewIndex.ts?raw'
+import awdReviewIndexRoutePageSource from '@/features/awd-review-workspace/model/useAwdReviewIndexPage.ts?raw'
 import awdReviewHeroPanelSource from '@/components/platform/awd-review/AwdReviewHeroPanel.vue?raw'
 import awdReviewDirectoryPanelSource from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
@@ -165,7 +167,17 @@ describe('PlatformAWDReviewIndex', () => {
   })
 
   it('路由壳页应通过 feature 动作处理返回，而不是模板内直接 push', () => {
-    expect(platformAwdReviewIndexSource).toContain('openPlatformOverview')
+    expect(platformAwdReviewIndexSource).toContain(
+      "useAwdReviewIndexPage } from '@/features/awd-review-workspace'"
+    )
+    expect(awdReviewIndexPageSource).not.toContain("from 'vue-router'")
+    expect(platformAwdReviewIndexSource).not.toContain("useRouter } from 'vue-router'")
     expect(platformAwdReviewIndexSource).not.toContain("router.push({ name: 'PlatformOverview' })")
+    expect(awdReviewIndexRoutePageSource).toContain(
+      "name: scope === 'teacher' ? 'TeacherDashboard' : 'PlatformOverview'"
+    )
+    expect(awdReviewIndexRoutePageSource).toContain(
+      "name: scope === 'teacher' ? 'TeacherAWDReviewDetail' : 'PlatformAwdReviewDetail'"
+    )
   })
 })
