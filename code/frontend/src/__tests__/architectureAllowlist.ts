@@ -24,7 +24,6 @@ export const featureRouterImportAllowlist = new Set([
   'features/challenge-package-import/model/useChallengeImportManagePage.ts -> vue-router',
   'features/challenge-package-import/model/useChallengeImportPreviewPage.ts -> vue-router',
   'features/challenge-package-import/model/useChallengePackageFormatPage.ts -> vue-router',
-  'features/contest-awd-config/model/useAwdChallengeSelection.ts -> vue-router',
   'features/contest-awd-config/model/useContestAwdConfigPage.ts -> vue-router',
   'features/contest-detail/model/useContestDetailRoutePage.ts -> vue-router',
   'features/contest-detail/model/useContestListPage.ts -> vue-router',

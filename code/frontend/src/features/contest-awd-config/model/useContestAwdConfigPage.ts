@@ -21,6 +21,21 @@ export function useContestAwdConfigPage() {
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
   const contestId = computed(() => String(route.params.id ?? ''))
+  function readServiceQuery(): string {
+    const value = route.query.service
+    if (Array.isArray(value)) {
+      return String(value[0] ?? '')
+    }
+    return typeof value === 'string' ? value : ''
+  }
+
+  function replaceServiceQuery(serviceId: string) {
+    void router.replace({
+      name: 'ContestAWDConfig',
+      params: { id: contestId.value },
+      query: { ...route.query, service: serviceId },
+    })
+  }
   const {
     clearBreadcrumbDetailTitle,
     contest,
@@ -40,14 +55,12 @@ export function useContestAwdConfigPage() {
     selectedService,
     selectedCheckerType,
     sortedServices,
-    readServiceQuery,
     reconcileSelectedServiceId,
     selectService,
   } = useAwdChallengeSelection({
-    contestId,
-    route,
-    router,
     services,
+    readServiceQuery,
+    replaceServiceQuery,
   })
   setAfterLoadHandler(reconcileSelectedServiceId)
   const {

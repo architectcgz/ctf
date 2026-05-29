@@ -5,6 +5,7 @@ import ContestAwdConfig from '../ContestAwdConfig.vue'
 import contestAwdConfigSource from '../ContestAwdConfig.vue?raw'
 import contestAwdCheckerConfigSectionSource from '@/features/contest-awd-config/ui/ContestAwdCheckerConfigSection.vue?raw'
 import contestAwdConfigWorkspaceShellSource from '@/features/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue?raw'
+import awdChallengeSelectionSource from '@/features/contest-awd-config/model/useAwdChallengeSelection.ts?raw'
 import contestAwdConfigPageSource from '@/features/contest-awd-config/model/useContestAwdConfigPage.ts?raw'
 
 const pushMock = vi.fn()
@@ -183,6 +184,7 @@ describe('ContestAwdConfig', () => {
       "import { useContestAwdConfigDataLoader } from './useContestAwdConfigDataLoader'"
     )
     expect(contestAwdConfigPageSource).toContain("from './awdCheckerLabels'")
+    expect(awdChallengeSelectionSource).not.toContain("from 'vue-router'")
     expect(contestAwdConfigPageSource).not.toContain('runContestAWDCheckerPreview')
     expect(contestAwdConfigPageSource).not.toContain('updateContestAWDService')
     expect(contestAwdConfigPageSource).not.toContain('getContest')
