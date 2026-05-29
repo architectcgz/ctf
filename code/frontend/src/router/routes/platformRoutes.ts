@@ -318,6 +318,9 @@ export const platformRoutes: RouteRecordRaw[] = [
   path: 'platform/contests/:id/manage',
   name: 'ContestOperations',
   component: () => import('@/views/platform/ContestOperations.vue'),
+  props: (route) => ({
+    contestId: String(route.params.id || ''),
+  }),
   meta: {
     requiresAuth: true,
     roles: ['admin'],

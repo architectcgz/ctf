@@ -1,17 +1,14 @@
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onMounted, onUnmounted, ref, type ComputedRef, type Ref } from 'vue'
 
 import { getContest } from '@/api/admin/contests'
 import type { ContestDetailData } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/composables/useToast'
 
-export function useContestOperationsPage() {
-  const route = useRoute()
+export function useContestOperationsPage(contestId: Ref<string> | ComputedRef<string>) {
   const toast = useToast()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
-  const contestId = computed(() => String(route.params.id ?? ''))
   const loading = ref(true)
   const contest = ref<ContestDetailData | null>(null)
   const runtimeStageReady = computed(
@@ -26,6 +23,7 @@ export function useContestOperationsPage() {
 
   async function loadContest() {
     if (!contestId.value) {
+      loading.value = false
       setBreadcrumbDetailTitle()
       return
     }
