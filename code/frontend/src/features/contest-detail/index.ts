@@ -1,1 +1,6 @@
-export { useContestDetailPage, useContestDetailRoutePage, useContestListPage } from './model'
+export {
+  buildContestDetailRoute,
+  useContestDetailPage,
+  useContestDetailRoutePage,
+  useContestListPage,
+} from './model'

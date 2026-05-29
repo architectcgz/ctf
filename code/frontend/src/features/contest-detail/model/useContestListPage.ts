@@ -1,5 +1,4 @@
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 import type {
   ContestListItem,
@@ -16,6 +15,7 @@ import {
   getContestStatusLabel,
   isStudentVisibleContestStatus,
 } from '@/entities/contest'
+import { buildContestDetailRoute } from './contestListRoutes'
 
 interface ContestSummaryMetric {
   key: string
@@ -39,7 +39,6 @@ function buildFallbackSummary(contests: ContestListItem[]): ContestListSummaryDa
 }
 
 export function useContestListPage() {
-  const router = useRouter()
   const statusFilter = ref<ContestStatusFilter>('')
   const modeFilter = ref<ContestModeFilter>('')
   const activeStatuses = computed<ContestStatus[]>(() =>
@@ -138,14 +137,6 @@ export function useContestListPage() {
     return '竞赛已结束'
   }
 
-  function goToDetail(id: string): void {
-    void router.push(`/contests/${id}`)
-  }
-
-  function openContest(contest: ContestListItem): void {
-    goToDetail(contest.id)
-  }
-
   function contestAccentStyle(status: ContestStatus): Record<string, string> {
     return { '--contest-row-accent': getContestAccentColor(status) }
   }
@@ -196,7 +187,7 @@ export function useContestListPage() {
     loadErrorMessage,
     formatTime,
     getTimelineHint,
-    openContest,
+    buildContestRoute: (contest: ContestListItem) => buildContestDetailRoute(contest.id),
     contestAccentStyle,
     getStatusLabel: getContestStatusLabel,
     getModeLabel: getContestModeLabel,

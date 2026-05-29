@@ -1,5 +1,6 @@
 export { useContestDetailPage } from './useContestDetailPage'
 export { useContestDetailRoutePage } from './useContestDetailRoutePage'
 export { useContestListPage } from './useContestListPage'
+export { buildContestDetailRoute } from './contestListRoutes'
 export { useContestFlagSubmission } from './useContestFlagSubmission'
 export { useContestTeamActions } from './useContestTeamActions'

@@ -1,17 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
+
 import ContestList from '../ContestList.vue'
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import contestListSource from '../ContestList.vue?raw'
-
-const pushMock = vi.fn()
-
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({ push: pushMock }),
-  }
-})
+import contestListPageSource from '@/features/contest-detail/model/useContestListPage.ts?raw'
+import contestListRoutesSource from '@/features/contest-detail/model/contestListRoutes.ts?raw'
 
 vi.mock('@/api/contest', () => ({
   getContests: vi.fn().mockResolvedValue({
@@ -38,14 +33,42 @@ vi.mock('@/api/contest', () => ({
   }),
 }))
 
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      {
+        path: '/contests',
+        name: 'Contests',
+        component: ContestList,
+      },
+      {
+        path: '/contests/:id',
+        name: 'ContestDetail',
+        component: { template: '<div>contest detail</div>' },
+      },
+    ],
+  })
+}
+
+async function mountPage() {
+  const router = createTestRouter()
+  await router.push('/contests')
+  await router.isReady()
+
+  const wrapper = mount(ContestList, {
+    global: {
+      plugins: [router],
+    },
+  })
+
+  await flushPromises()
+  return { wrapper, router }
+}
+
 describe('ContestList', () => {
   it('应该渲染竞赛列表页面', async () => {
-    pushMock.mockReset()
-
-    const wrapper = mount(ContestList)
-
-    await wrapper.vm.$nextTick()
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    const { wrapper } = await mountPage()
 
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.text()).toContain('Contests')
@@ -67,6 +90,24 @@ describe('ContestList', () => {
     expect(contestListSource).toContain('useContestListPage')
     expect(contestListSource).not.toContain("from '@/api/contest'")
     expect(contestListSource).not.toContain('usePagination(getContests)')
+  })
+
+  it('竞赛详情入口应通过 route target，而不是 page model 直接 push', async () => {
+    const { wrapper, router } = await mountPage()
+
+    expect(contestListSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(contestListSource).toContain('<AppRouteLink')
+    expect(contestListPageSource).not.toContain("from 'vue-router'")
+    expect(contestListPageSource).not.toContain('router.push')
+    expect(contestListPageSource).toContain('buildContestRoute: (contest: ContestListItem) =>')
+    expect(contestListRoutesSource).toContain("name: 'ContestDetail'")
+    expect(appRouteLinkSource).toContain('<RouterLink')
+
+    await wrapper.get('a.contest-row').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('ContestDetail')
+    expect(router.currentRoute.value.params).toMatchObject({ id: '1' })
   })
 
   it('应该为竞赛列表长标题保留省略样式和完整悬浮提示', () => {
@@ -107,9 +148,15 @@ describe('ContestList', () => {
   it('竞赛列表应拆分开始时间、结束时间和通用操作按钮图标', () => {
     expect(contestListSource).toContain('<span>开始时间</span>')
     expect(contestListSource).toContain('<span>结束时间</span>')
-    expect(contestListSource).toContain('class="workspace-directory-compact-text contest-row-start-time"')
-    expect(contestListSource).toContain('class="workspace-directory-compact-text contest-row-end-time"')
-    expect(contestListSource).not.toContain('formatTime(contest.starts_at) }} - {{ formatTime(contest.ends_at)')
+    expect(contestListSource).toContain(
+      'class="workspace-directory-compact-text contest-row-start-time"'
+    )
+    expect(contestListSource).toContain(
+      'class="workspace-directory-compact-text contest-row-end-time"'
+    )
+    expect(contestListSource).not.toContain(
+      'formatTime(contest.starts_at) }} - {{ formatTime(contest.ends_at)'
+    )
     expect(contestListSource).toContain('class="workspace-directory-row-btn contest-row-cta"')
     expect(contestListSource).toContain('<ArrowRight class="h-4 w-4" />')
     expect(contestListSource).toContain('minmax(10.5rem, 0.85fr) max-content')
@@ -120,10 +167,11 @@ describe('ContestList', () => {
     const { getContests } = await import('@/api/contest')
     vi.mocked(getContests).mockClear()
 
-    const wrapper = mount(ContestList)
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
-    expect(contestListSource).toContain('class="student-directory-filters contest-directory-filters"')
+    expect(contestListSource).toContain(
+      'class="student-directory-filters contest-directory-filters"'
+    )
     expect(wrapper.find('#contest-status-filter').exists()).toBe(true)
     expect(wrapper.find('#contest-mode-filter').exists()).toBe(true)
 
@@ -186,8 +234,7 @@ describe('ContestList', () => {
       },
     })
 
-    const wrapper = mount(ContestList)
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     expect(wrapper.text()).toContain('2026 春季校园 CTF 挑战赛')
     expect(wrapper.text()).not.toContain('草稿中的隐藏比赛')

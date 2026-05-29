@@ -2,6 +2,7 @@
 import type { Component } from 'vue'
 import { ArrowRight, CalendarRange, Clock3, Flag, Trophy } from 'lucide-vue-next'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { useContestListPage } from '@/features/contest-detail'
 
@@ -21,7 +22,7 @@ const {
   updateModeFilter,
   resetFilters,
   formatTime,
-  openContest,
+  buildContestRoute,
   contestAccentStyle,
   getStatusLabel,
   getModeLabel,
@@ -204,14 +205,13 @@ function onModeFilterChange(event: Event): void {
                 <span>操作</span>
               </div>
 
-              <button
+              <AppRouteLink
                 v-for="contest in visibleContests"
                 :key="contest.id"
-                type="button"
+                :to="buildContestRoute(contest)"
                 class="workspace-directory-grid-row contest-row"
                 :style="contestAccentStyle(contest.status)"
                 :aria-label="`${contest.title}，${getStatusLabel(contest.status)}，${getModeLabel(contest.mode)}`"
-                @click="openContest(contest)"
               >
                 <div class="workspace-directory-cell contest-row-main">
                   <h3
@@ -256,7 +256,7 @@ function onModeFilterChange(event: Event): void {
                   <span>{{ getContestActionLabel(contest.status) }}</span>
                   <ArrowRight class="h-4 w-4" />
                 </div>
-              </button>
+              </AppRouteLink>
 
               <div v-if="total > 0" class="contest-pagination workspace-directory-pagination">
                 <PagePaginationControls
