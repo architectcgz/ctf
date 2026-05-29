@@ -10,17 +10,12 @@ describe('InstancePanel', () => {
         instances: [
           {
             id: '1',
-            challenge_id: '1',
             challenge_title: 'Test Challenge',
-            category: 'web',
-            difficulty: 'easy',
             status: 'running',
             access_url: 'http://test.com',
-            flag_type: 'static',
             share_scope: 'per_user',
             expires_at: new Date(Date.now() + 3600000).toISOString(),
             remaining_extends: 2,
-            created_at: '2024-01-01T00:00:00Z',
           },
         ],
       },
@@ -34,6 +29,7 @@ describe('InstancePanel', () => {
     expect(instancePanelSource).toContain('class="instance-panel"')
     expect(instancePanelSource).toContain('class="ui-btn ui-btn--secondary ui-btn--sm"')
     expect(instancePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
+    expect(instancePanelSource).not.toContain("@/api/contracts")
     expect(instancePanelSource).not.toContain('<ElCard')
     expect(instancePanelSource).not.toContain('<ElButton')
     expect(instancePanelSource).not.toContain('<ElTag')

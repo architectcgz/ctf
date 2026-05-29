@@ -10,9 +10,7 @@ export const componentNonContractApiAllowlist = new Set<string>([])
 
 export const widgetNonContractApiAllowlist = new Set<string>([])
 
-export const commonForbiddenImportAllowlist = new Set([
-  'components/common/InstancePanel.vue -> @/api/contracts',
-])
+export const commonForbiddenImportAllowlist = new Set<string>([])
 
 export const legacyComponentPageAllowlist = new Set<string>([])
 

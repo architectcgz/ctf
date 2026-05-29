@@ -108,11 +108,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import type { InstanceListItem, InstanceStatus } from '@/api/contracts'
+import type { InstancePanelItem, InstancePanelStatus } from './instancePanel.types'
 
 const props = withDefaults(
   defineProps<{
-    instances: InstanceListItem[]
+    instances: InstancePanelItem[]
     loading?: boolean
   }>(),
   {
@@ -125,7 +125,7 @@ const emit = defineEmits<{
   openTarget: [id: string]
   extend: [id: string]
   destroy: [id: string]
-  expiringSoon: [instance: InstanceListItem]
+  expiringSoon: [instance: InstancePanelItem]
 }>()
 
 const instances = computed(() => props.instances)
@@ -170,8 +170,8 @@ function checkExpiringSoon() {
   })
 }
 
-function getStatusLabel(status: InstanceStatus): string {
-  const labels: Record<InstanceStatus, string> = {
+function getStatusLabel(status: InstancePanelStatus): string {
+  const labels: Record<InstancePanelStatus, string> = {
     pending: '等待中',
     creating: '创建中',
     running: '运行中',
@@ -184,8 +184,8 @@ function getStatusLabel(status: InstanceStatus): string {
   return labels[status]
 }
 
-function getStatusChipClass(status: InstanceStatus): string {
-  const colors: Record<InstanceStatus, string> = {
+function getStatusChipClass(status: InstancePanelStatus): string {
+  const colors: Record<InstancePanelStatus, string> = {
     pending: 'instance-chip--muted',
     creating: 'instance-chip--warning',
     running: 'instance-chip--success',
