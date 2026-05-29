@@ -10,6 +10,7 @@ import studentOverviewPageSource from '@/components/dashboard/student/StudentOve
 import studentRecommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import studentDashboardRegistrySource from '@/features/student-dashboard/ui/studentDashboardPanelRegistry.ts?raw'
 import trainingTimelinePanelSource from '@/components/training/TrainingTimelinePanel.vue?raw'
+import studentDashboardDataSource from '@/features/student-dashboard/model/useStudentDashboardData.ts?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -216,6 +217,7 @@ describe('DashboardView', () => {
     expect(studentDashboardPageSource).not.toContain(
       "from '@/components/dashboard/student/StudentDifficultyPage.vue'"
     )
+    expect(studentDashboardDataSource).not.toContain("from 'vue-router'")
     expect(studentDashboardRegistrySource).toContain(
       "import StudentOverviewPage from './StudentOverviewPage.vue'"
     )
@@ -697,6 +699,28 @@ describe('DashboardView', () => {
     await flushPromises()
 
     expect(replaceMock).toHaveBeenCalledWith({ name: 'TeacherDashboard' })
+    expect(assessmentApiMocks.getMyProgress).not.toHaveBeenCalled()
+    expect(assessmentApiMocks.getMyTimeline).not.toHaveBeenCalled()
+    expect(assessmentApiMocks.getRecommendations).not.toHaveBeenCalled()
+    expect(assessmentApiMocks.getSkillProfile).not.toHaveBeenCalled()
+  })
+
+  it('应该把管理员用户重定向到平台总览', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+    })
+
+    mountDashboard()
+    await flushPromises()
+
+    expect(replaceMock).toHaveBeenCalledWith({ name: 'PlatformOverview' })
+    expect(assessmentApiMocks.getMyProgress).not.toHaveBeenCalled()
+    expect(assessmentApiMocks.getMyTimeline).not.toHaveBeenCalled()
+    expect(assessmentApiMocks.getRecommendations).not.toHaveBeenCalled()
+    expect(assessmentApiMocks.getSkillProfile).not.toHaveBeenCalled()
   })
 
   it('应该移除仪表盘页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {

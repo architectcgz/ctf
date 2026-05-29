@@ -31,6 +31,7 @@ export function useStudentDashboardPage() {
     timeline,
     recommendations,
     skillProfile,
+    roleRedirectTarget,
     displayName,
     weakDimensions,
     categoryStats,
@@ -40,7 +41,6 @@ export function useStudentDashboardPage() {
     loadDashboard,
   } = useStudentDashboardData({
     authStore,
-    router,
   })
 
   const panelTabOrder = panelTabs.map((tab) => tab.key) as DashboardPanelKey[]
@@ -96,6 +96,10 @@ export function useStudentDashboardPage() {
   })
 
   onMounted(() => {
+    if (roleRedirectTarget.value) {
+      void router.replace({ name: roleRedirectTarget.value })
+      return
+    }
     void loadDashboard()
   })
 

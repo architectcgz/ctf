@@ -59,7 +59,6 @@ export const featureRouterImportAllowlist = new Set([
   'features/scoreboard/model/useScoreboardDetailPage.ts -> vue-router',
   'features/scoreboard/model/useScoreboardRoutePage.ts -> vue-router',
   'features/skill-profile/model/useSkillProfilePage.ts -> vue-router',
-  'features/student-dashboard/model/useStudentDashboardData.ts -> vue-router',
   'features/student-dashboard/model/useStudentDashboardPage.ts -> vue-router',
   'features/awd-review-workspace/model/useAwdReviewIndex.ts -> vue-router',
   'features/teacher-class-management/model/useClassManagementPage.ts -> vue-router',

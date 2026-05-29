@@ -1,6 +1,5 @@
 import { computed, ref, type Ref } from 'vue'
 import { FileChartColumnIncreasing, Rocket, ShieldAlert } from 'lucide-vue-next'
-import type { Router } from 'vue-router'
 
 import { getMyProgress, getMyTimeline, getRecommendations, getSkillProfile } from '@/api/assessment'
 import type {
@@ -16,10 +15,9 @@ import type { DashboardHighlightItem } from './studentDashboardTypes'
 
 interface UseStudentDashboardDataOptions {
   authStore: ReturnType<typeof useAuthStore>
-  router: Router
 }
 
-export function useStudentDashboardData({ authStore, router }: UseStudentDashboardDataOptions) {
+export function useStudentDashboardData({ authStore }: UseStudentDashboardDataOptions) {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const progress = ref<MyProgressData | null>(null)
@@ -27,6 +25,12 @@ export function useStudentDashboardData({ authStore, router }: UseStudentDashboa
   const recommendations = ref<RecommendationItem[]>([])
   const weakDimensionAdvice = ref<RecommendationWeakDimension[]>([])
   const skillProfile = ref<SkillProfileData | null>(null)
+  const roleRedirectTarget = computed(() => {
+    const role = authStore.user?.role
+    if (role === 'teacher') return 'TeacherDashboard'
+    if (role === 'admin') return 'PlatformOverview'
+    return null
+  })
 
   const displayName = computed(() => authStore.user?.name || authStore.user?.username || '选手')
   const weakDimensions = computed(() =>
@@ -67,13 +71,7 @@ export function useStudentDashboardData({ authStore, router }: UseStudentDashboa
   ])
 
   async function loadDashboard(): Promise<void> {
-    const role = authStore.user?.role
-    if (role === 'teacher') {
-      await router.replace({ name: 'TeacherDashboard' })
-      return
-    }
-    if (role === 'admin') {
-      await router.replace({ name: 'PlatformOverview' })
+    if (roleRedirectTarget.value) {
       return
     }
 
@@ -110,6 +108,7 @@ export function useStudentDashboardData({ authStore, router }: UseStudentDashboa
     timeline,
     recommendations,
     skillProfile,
+    roleRedirectTarget,
     displayName,
     weakDimensions,
     recommendationCount,
