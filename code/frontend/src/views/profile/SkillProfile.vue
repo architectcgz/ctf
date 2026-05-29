@@ -13,11 +13,11 @@ const {
   loadingRecommendations,
   recommendations,
   weakDimensions,
+  challengesRoute,
   radarIndicators,
   radarValues,
   loadCurrentData,
-  goToChallenge,
-  goToChallenges,
+  buildChallengeRoute,
 } = useSkillProfilePage()
 
 type SkillProfileTabKey = 'analysis' | 'weakness' | 'recommendations'
@@ -67,15 +67,15 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
     :loading-recommendations="loadingRecommendations"
     :recommendations="recommendations"
     :weak-dimensions="weakDimensions"
+    :challenges-route="challengesRoute"
     :radar-indicators="radarIndicators"
     :radar-values="radarValues"
     :active-tab="activeTab"
     :content-tabs="contentTabs"
     :set-tab-button-ref="setTabButtonRef"
     :handle-tab-keydown="handleTabKeydown"
+    :build-challenge-route="buildChallengeRoute"
     @load-current-data="loadCurrentData"
-    @go-to-challenges="goToChallenges"
-    @go-to-challenge="goToChallenge"
     @select-tab="selectTab"
     @update-selected-student-id="selectedStudentId = $event"
   />

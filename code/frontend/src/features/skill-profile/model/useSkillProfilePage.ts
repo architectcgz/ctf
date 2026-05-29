@@ -1,5 +1,4 @@
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { getRecommendations, getSkillProfile } from '@/api/assessment'
 import { getClassStudents, getStudentRecommendations, getStudentSkillProfile } from '@/api/teacher'
@@ -11,12 +10,15 @@ import type {
 } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensionLabels } from '@/entities/skill-profile'
+import {
+  skillProfileChallengeDetailRoute,
+  skillProfileChallengesRoute,
+} from './skillProfileRoutes'
 
 let loadToken = 0
 
 export function useSkillProfilePage() {
   const authStore = useAuthStore()
-  const router = useRouter()
 
   const isTeacher = computed(() => authStore.isTeacher)
   const selectedStudentId = ref('')
@@ -31,6 +33,7 @@ export function useSkillProfilePage() {
   const weakDimensionAdvice = ref<RecommendationWeakDimension[]>([])
 
   const weakDimensions = computed(() => getWeakDimensionLabels(weakDimensionAdvice.value))
+  const challengesRoute = skillProfileChallengesRoute
   const radarIndicators = computed(
     () =>
       skillProfile.value?.dimensions.map((dimension) => ({
@@ -122,12 +125,8 @@ export function useSkillProfilePage() {
     await Promise.all([loadSkillProfileData(token), loadRecommendationsData(token)])
   }
 
-  function goToChallenge(id: string) {
-    void router.push(`/challenges/${id}`)
-  }
-
-  function goToChallenges() {
-    void router.push('/challenges')
+  function buildChallengeRoute(id: string) {
+    return skillProfileChallengeDetailRoute(id)
   }
 
   watch(selectedStudentId, () => {
@@ -149,10 +148,10 @@ export function useSkillProfilePage() {
     loadingRecommendations,
     recommendations,
     weakDimensions,
+    challengesRoute,
     radarIndicators,
     radarValues,
     loadCurrentData,
-    goToChallenge,
-    goToChallenges,
+    buildChallengeRoute,
   }
 }

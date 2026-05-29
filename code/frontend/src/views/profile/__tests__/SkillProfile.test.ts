@@ -1,13 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createPinia, setActivePinia } from 'pinia'
+import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 import SkillProfile from '../SkillProfile.vue'
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import skillProfileSource from '../SkillProfile.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
+import skillProfilePageModelSource from '@/features/skill-profile/model/useSkillProfilePage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
-
-const pushMock = vi.fn()
 
 const assessmentApiMocks = vi.hoisted(() => ({
   getSkillProfile: vi.fn(),
@@ -20,26 +21,58 @@ const teacherApiMocks = vi.hoisted(() => ({
   getStudentSkillProfile: vi.fn(),
 }))
 
-vi.mock('vue-router', async () => {
-  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
-  return {
-    ...actual,
-    useRouter: () => ({
-      push: pushMock,
-    }),
-  }
-})
-
 vi.mock('@/api/assessment', () => assessmentApiMocks)
 vi.mock('@/api/teacher', () => teacherApiMocks)
+
+let pinia: Pinia
+
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/profile', component: SkillProfile },
+      {
+        path: '/challenges',
+        name: 'Challenges',
+        component: { template: '<div>challenge list</div>' },
+      },
+      {
+        path: '/challenges/:id',
+        name: 'ChallengeDetail',
+        component: { template: '<div>challenge detail</div>' },
+      },
+    ],
+  })
+}
+
+async function mountPage(path = '/profile') {
+  window.history.replaceState(window.history.state, '', path)
+  const router = createTestRouter()
+  await router.push(path)
+  await router.isReady()
+
+  const wrapper = mount(SkillProfile, {
+    global: {
+      plugins: [pinia, router],
+      stubs: {
+        RadarChart: {
+          template: '<div data-test="radar-chart">Radar</div>',
+        },
+      },
+    },
+  })
+
+  await flushPromises()
+  return { wrapper, router }
+}
 
 describe('SkillProfile', () => {
   const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 
   beforeEach(() => {
-    setActivePinia(createPinia())
+    pinia = createPinia()
+    setActivePinia(pinia)
     localStorage.clear()
-    pushMock.mockReset()
 
     assessmentApiMocks.getSkillProfile.mockReset()
     assessmentApiMocks.getRecommendations.mockReset()
@@ -92,17 +125,7 @@ describe('SkillProfile', () => {
       class_name: 'Class A',
     })
 
-    const wrapper = mount(SkillProfile, {
-      global: {
-        stubs: {
-          RadarChart: {
-            template: '<div data-test="radar-chart">Radar</div>',
-          },
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
 
     expect(wrapper.element.tagName).toBe('SECTION')
     expect(wrapper.classes()).toContain('journal-shell')
@@ -175,22 +198,55 @@ describe('SkillProfile', () => {
       class_name: 'Class A',
     })
 
-    const wrapper = mount(SkillProfile, {
-      global: {
-        stubs: {
-          RadarChart: {
-            template: '<div data-test="radar-chart">Radar</div>',
-          },
-        },
-      },
-    })
-
-    await flushPromises()
+    const { wrapper } = await mountPage()
     await wrapper.get('#skill-profile-tab-weakness').trigger('click')
     await flushPromises()
 
     expect(wrapper.text()).toContain('暂时没有明显短板')
     expect(wrapper.text()).not.toContain('建议加强密码')
+  })
+
+  it('应通过 AppRouteLink 消费做题与推荐题目路由目标', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
+
+    expect(appRouteLinkSource).toContain("from 'vue-router'")
+    expect(skillProfileWorkspaceShellSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(skillProfileWorkspaceShellSource).toContain('<AppRouteLink')
+    expect(skillProfilePageModelSource).toContain('skillProfileChallengesRoute')
+    expect(skillProfilePageModelSource).toContain('buildChallengeRoute')
+    expect(skillProfilePageModelSource).not.toContain("from 'vue-router'")
+
+    const { wrapper, router } = await mountPage()
+
+    const challengesLink = wrapper
+      .findAll('a')
+      .find((node) => node.text().includes('去做题'))
+    expect(challengesLink).toBeDefined()
+
+    await challengesLink!.trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.name).toBe('Challenges')
+
+    await router.push('/profile?panel=recommendations')
+    window.history.replaceState(window.history.state, '', '/profile?panel=recommendations')
+    const { wrapper: recommendationWrapper, router: recommendationRouter } =
+      await mountPage('/profile?panel=recommendations')
+
+    const recommendationLink = recommendationWrapper
+      .findAll('a')
+      .find((node) => node.text().includes('密码学入门'))
+    expect(recommendationLink).toBeDefined()
+
+    await recommendationLink!.trigger('click')
+    await flushPromises()
+    expect(recommendationRouter.currentRoute.value.name).toBe('ChallengeDetail')
+    expect(recommendationRouter.currentRoute.value.params.id).toBe('chal-1')
   })
 
   it('应该将页面顶部标签栏放在内容区外，保持与学生仪表盘一致的层级位置', () => {

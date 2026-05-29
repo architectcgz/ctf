@@ -144,13 +144,12 @@
                       >
                         刷新
                       </button>
-                      <button
-                        type="button"
+                      <AppRouteLink
+                        :to="challengesRoute"
                         class="journal-btn journal-btn--primary"
-                        @click="emit('go-to-challenges')"
                       >
                         去做题
-                      </button>
+                      </AppRouteLink>
                     </div>
                   </div>
 
@@ -285,12 +284,11 @@
                 v-else
                 class="skill-recommend-list mt-5"
               >
-                <button
+                <AppRouteLink
                   v-for="item in recommendations"
                   :key="item.challenge_id"
-                  type="button"
+                  :to="buildChallengeRoute(item.challenge_id)"
                   class="skill-recommend-item w-full text-left"
-                  @click="emit('go-to-challenge', item.challenge_id)"
                 >
                   <div class="flex items-center justify-between gap-4">
                     <div class="min-w-0">
@@ -315,7 +313,7 @@
                     </div>
                     <ChevronRight class="skill-recommend-arrow h-4 w-4 shrink-0" />
                   </div>
-                </button>
+                </AppRouteLink>
               </div>
             </section>
           </div>
@@ -330,6 +328,7 @@ import { ChevronRight, Flame, Loader2, TriangleAlert } from 'lucide-vue-next'
 
 import RadarChart from '@/components/charts/RadarChart.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
 import {
   ChallengeCategoryDifficultyPills,
   ChallengeCategoryPill,
@@ -346,6 +345,11 @@ interface SkillProfileContentTab {
   panelId: string
 }
 
+interface SkillProfileRouteTarget {
+  name: string
+  params?: Record<string, string>
+}
+
 interface Props {
   isTeacher: boolean
   selectedStudentId: string
@@ -356,20 +360,20 @@ interface Props {
   loadingRecommendations: boolean
   recommendations: RecommendationItem[]
   weakDimensions: string[]
+  challengesRoute: SkillProfileRouteTarget
   radarIndicators: Array<{ name: string; max: number }>
   radarValues: number[]
   activeTab: SkillProfileTabKey
   contentTabs: SkillProfileContentTab[]
   setTabButtonRef: (key: SkillProfileTabKey, element: HTMLButtonElement | null) => void
   handleTabKeydown: (event: KeyboardEvent, index: number) => void
+  buildChallengeRoute: (challengeId: string) => SkillProfileRouteTarget
 }
 
 defineProps<Props>()
 
 const emit = defineEmits<{
   'load-current-data': []
-  'go-to-challenges': []
-  'go-to-challenge': [challengeId: string]
   'select-tab': [tabKey: SkillProfileTabKey]
   'update-selected-student-id': [studentId: string]
 }>()

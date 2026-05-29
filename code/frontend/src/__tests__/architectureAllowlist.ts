@@ -31,6 +31,5 @@ export const featureRouterImportAllowlist = new Set([
   'features/student-review-archive-workspace/model/useStudentReviewArchivePage.ts -> vue-router',
   'features/scoreboard/model/useScoreboardDetailPage.ts -> vue-router',
   'features/scoreboard/model/useScoreboardRoutePage.ts -> vue-router',
-  'features/skill-profile/model/useSkillProfilePage.ts -> vue-router',
   'features/student-dashboard/model/useStudentDashboardPage.ts -> vue-router',
 ])
