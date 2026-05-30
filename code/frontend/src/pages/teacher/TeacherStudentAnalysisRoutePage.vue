@@ -44,11 +44,11 @@
 </template>
 
 <script setup lang="ts">
-import { ClassReportExportDialog } from '@/features/teacher-class-report-export'
+import { ClassReportExportDialog } from '@/features/teaching/class-report-export'
 import {
   StudentAnalysisPage,
   useStudentAnalysisPage,
-} from '@/features/student-analysis-workspace'
+} from '@/features/teaching/student-analysis-workspace'
 
 const {
   selectedClassName,

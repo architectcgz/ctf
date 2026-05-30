@@ -36,11 +36,11 @@
 </template>
 
 <script setup lang="ts">
-import { ClassReportExportDialog } from '@/features/teacher-class-report-export'
+import { ClassReportExportDialog } from '@/features/teaching/class-report-export'
 import {
   ClassStudentsPage,
   useClassStudentsPage,
-} from '@/features/class-students-workspace'
+} from '@/features/teaching/class-students-workspace'
 
 const {
   selectedClassName,

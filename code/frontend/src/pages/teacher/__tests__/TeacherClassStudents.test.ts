@@ -5,11 +5,11 @@ import { useAuthStore } from '@/stores/auth'
 
 import TeacherClassStudents from '@/pages/teacher/TeacherClassStudentsRoutePage.vue'
 import teacherClassStudentsSource from '@/pages/teacher/TeacherClassStudentsRoutePage.vue?raw'
-import classStudentsPageSourceBase from '@/features/class-students-workspace/ui/ClassStudentsPage.vue?raw'
-import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
-import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
-import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
-import classStudentsPageModelSource from '@/features/class-students-workspace/model/useClassStudentsPage.ts?raw'
+import classStudentsPageSourceBase from '@/features/teaching/class-students-workspace/ui/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue?raw'
+import classStudentsPageModelSource from '@/features/teaching/class-students-workspace/model/useClassStudentsPage.ts?raw'
 
 const classStudentsPageSource = [
   classStudentsPageSourceBase,
@@ -334,10 +334,10 @@ describe('TeacherClassStudents', () => {
 
   it('路由页应仅负责组合，不直接依赖教师接口实现', () => {
     expect(teacherClassStudentsSource).toContain('useClassStudentsPage')
-    expect(teacherClassStudentsSource).toContain("from '@/features/class-students-workspace'")
+    expect(teacherClassStudentsSource).toContain("from '@/features/teaching/class-students-workspace'")
     expect(teacherClassStudentsSource).toContain('ClassStudentsPage')
     expect(teacherClassStudentsSource).toContain(
-      "import { ClassReportExportDialog } from '@/features/teacher-class-report-export'"
+      "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
     expect(teacherClassStudentsSource).not.toContain("from '@/components/class-management'")
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")

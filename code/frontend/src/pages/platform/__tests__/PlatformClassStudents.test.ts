@@ -4,10 +4,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import PlatformClassStudents from '@/pages/platform/PlatformClassStudentsRoutePage.vue'
 import platformClassStudentsSource from '@/pages/platform/PlatformClassStudentsRoutePage.vue?raw'
-import classStudentsPageSourceBase from '@/features/class-students-workspace/ui/ClassStudentsPage.vue?raw'
-import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
-import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
-import classStudentsDirectoryPanelSource from '@/components/teacher/class-management/ClassStudentsDirectoryPanel.vue?raw'
+import classStudentsPageSourceBase from '@/features/teaching/class-students-workspace/ui/ClassStudentsPage.vue?raw'
+import classStudentsOverviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsOverviewPanel.vue?raw'
+import classStudentsInsightWindowPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsInsightWindowPanel.vue?raw'
+import classStudentsDirectoryPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue?raw'
 
 const classStudentsPageSource = [
   classStudentsPageSourceBase,
@@ -125,11 +125,11 @@ describe('PlatformClassStudents', () => {
   })
 
   it('应通过平台 route view 复用中性班级工作台 feature', async () => {
-    expect(platformClassStudentsSource).toContain("from '@/features/class-students-workspace'")
+    expect(platformClassStudentsSource).toContain("from '@/features/teaching/class-students-workspace'")
     expect(platformClassStudentsSource).toContain('ClassStudentsPage')
     expect(platformClassStudentsSource).toContain('useClassStudentsPage')
     expect(platformClassStudentsSource).toContain(
-      "import { ClassReportExportDialog } from '@/features/teacher-class-report-export'"
+      "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
     expect(platformClassStudentsSource).not.toContain("from '@/components/class-management'")
     expect(platformClassStudentsSource).not.toContain(

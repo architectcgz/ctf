@@ -29,7 +29,7 @@
 import {
   TeacherInstanceManagementPage,
   useInstanceManagementPage,
-} from '@/features/teacher-instances'
+} from '@/features/teacher/instances'
 
 const {
   classes,

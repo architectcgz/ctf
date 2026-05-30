@@ -1,0 +1,6 @@
+export { default as TeacherDashboardPage } from './TeacherDashboardPage.vue'
+export { default as TeacherDashboardInterventionPanel } from './TeacherDashboardInterventionPanel.vue'
+export { default as TeacherDashboardPortraitPanel } from './TeacherDashboardPortraitPanel.vue'
+export { default as TeacherDashboardReviewPanel } from './TeacherDashboardReviewPanel.vue'
+export { default as TeacherDashboardStudentInsightPanel } from './TeacherDashboardStudentInsightPanel.vue'
+export { default as TeacherDashboardTrendPanel } from './TeacherDashboardTrendPanel.vue'

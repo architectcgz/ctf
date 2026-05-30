@@ -30,11 +30,11 @@
 </template>
 
 <script setup lang="ts">
-import { ClassReportExportDialog } from '@/features/teacher-class-report-export'
+import { ClassReportExportDialog } from '@/features/teaching/class-report-export'
 import {
   StudentManagementPage,
   useStudentManagementPage,
-} from '@/features/teacher-student-management'
+} from '@/features/teacher/student-management'
 
 const {
   classes,

@@ -4,16 +4,16 @@ import { reactive } from 'vue'
 
 import TeacherStudentAnalysis from '@/pages/teacher/TeacherStudentAnalysisRoutePage.vue'
 import teacherStudentAnalysisSource from '@/pages/teacher/TeacherStudentAnalysisRoutePage.vue?raw'
-import studentAnalysisNavigationSource from '@/features/student-analysis-workspace/model/useStudentAnalysisNavigation.ts?raw'
-import studentAnalysisPageModelSource from '@/features/student-analysis-workspace/model/useStudentAnalysisPage.ts?raw'
-import studentAnalysisReviewQuerySyncSource from '@/features/student-analysis-workspace/model/useStudentAnalysisReviewQuerySync.ts?raw'
-import studentAnalysisPageSource from '@/features/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
-import studentAnalysisOverviewHeroPanelSource from '@/components/teacher/class-management/StudentAnalysisOverviewHeroPanel.vue?raw'
-import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
-import studentInsightAttackSessionsSectionSource from '@/components/teacher/student-insight/StudentInsightAttackSessionsSection.vue?raw'
-import studentInsightOverviewSectionSource from '@/components/teacher/student-insight/StudentInsightOverviewSection.vue?raw'
-import studentInsightRecommendationsSectionSource from '@/components/teacher/student-insight/StudentInsightRecommendationsSection.vue?raw'
-import studentReviewWorkspaceSource from '@/widgets/teacher-student-review-workspace/StudentReviewWorkspace.vue?raw'
+import studentAnalysisNavigationSource from '@/features/teaching/student-analysis-workspace/model/useStudentAnalysisNavigation.ts?raw'
+import studentAnalysisPageModelSource from '@/features/teaching/student-analysis-workspace/model/useStudentAnalysisPage.ts?raw'
+import studentAnalysisReviewQuerySyncSource from '@/features/teaching/student-analysis-workspace/model/useStudentAnalysisReviewQuerySync.ts?raw'
+import studentAnalysisPageSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
+import studentAnalysisOverviewHeroPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
+import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
+import studentInsightAttackSessionsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightAttackSessionsSection.vue?raw'
+import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
+import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
+import studentReviewWorkspaceSource from '@/features/teaching/student-analysis-workspace/ui/StudentReviewWorkspace.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 import {
   reportDialogStub,
@@ -198,10 +198,10 @@ describe('TeacherStudentAnalysis', () => {
 
   it('路由页应仅负责组合，不直接处理路由解析逻辑', () => {
     expect(teacherStudentAnalysisSource).toContain('useStudentAnalysisPage')
-    expect(teacherStudentAnalysisSource).toContain("from '@/features/student-analysis-workspace'")
+    expect(teacherStudentAnalysisSource).toContain("from '@/features/teaching/student-analysis-workspace'")
     expect(teacherStudentAnalysisSource).toContain('StudentAnalysisPage')
     expect(teacherStudentAnalysisSource).toContain(
-      "import { ClassReportExportDialog } from '@/features/teacher-class-report-export'"
+      "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
     expect(teacherStudentAnalysisSource).not.toContain("from '@/components/class-management'")
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassManagementRouteName')
@@ -296,9 +296,9 @@ describe('TeacherStudentAnalysis', () => {
     )
   })
 
-  it('复盘区 section 应通过共享 widget 公共出口消费中性符号', () => {
+  it('复盘区 section 应直接消费同 feature 下的共享工作台组件', () => {
     expect(studentInsightAttackSessionsSectionSource).toContain(
-      "import { StudentReviewWorkspace } from '@/widgets/teacher-student-review-workspace'"
+      "import StudentReviewWorkspace from './StudentReviewWorkspace.vue'"
     )
     expect(studentInsightAttackSessionsSectionSource).not.toContain('TeacherStudentReviewWorkspace')
     expect(studentAnalysisReviewQuerySyncSource).toContain("from '@/api/contracts'")

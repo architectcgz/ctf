@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-export type FrontendArchitectureLayer = 'common' | 'entities' | 'pages' | 'features' | 'widgets' | 'views'
+export type FrontendArchitectureLayer = 'common' | 'entities' | 'pages' | 'features' | 'widgets'
 
 export interface FrontendArchitecturePolicy {
   layers: Record<
@@ -11,7 +11,7 @@ export interface FrontendArchitecturePolicy {
       forbidden_import_layers: FrontendArchitectureLayer[]
     }
   >
-  view_line_limit: number
+  route_page_line_limit: number
   legacy_business_component_directories: string[]
   component_api_contract_only: boolean
   widget_api_contract_only: boolean
@@ -22,7 +22,7 @@ export interface FrontendArchitecturePolicy {
   utility_forbidden_import_prefixes: string[]
   utility_forbidden_bare_imports: string[]
   feature_router_forbidden_imports: string[]
-  route_view: {
+  route_page: {
     allow_api_contract_imports_only: boolean
     forbidden_runtime_hooks: string[]
   }
@@ -38,4 +38,4 @@ export const frontendArchitecturePolicy = JSON.parse(
   readFileSync(policyPath, 'utf8')
 ) as FrontendArchitecturePolicy
 
-export const viewLineLimit = frontendArchitecturePolicy.view_line_limit
+export const routePageLineLimit = frontendArchitecturePolicy.route_page_line_limit

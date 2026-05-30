@@ -7,7 +7,7 @@ import {
   frontendArchitecturePolicy,
   type FrontendArchitecturePolicy,
   type FrontendArchitectureLayer,
-  viewLineLimit,
+  routePageLineLimit,
 } from './frontendArchitecturePolicy'
 
 const sourceRoot = join(process.cwd(), 'src')
@@ -146,7 +146,6 @@ describe('frontend architecture boundaries', () => {
       pages: frontendArchitecturePolicy.layers.pages.forbidden_import_layers,
       features: frontendArchitecturePolicy.layers.features.forbidden_import_layers,
       widgets: frontendArchitecturePolicy.layers.widgets.forbidden_import_layers,
-      views: frontendArchitecturePolicy.layers.views.forbidden_import_layers,
       other: [],
     })
 
@@ -210,16 +209,20 @@ describe('frontend architecture boundaries', () => {
     expect(violations).toEqual([])
   })
 
-  it('new route views should stay below the page-size threshold', () => {
-    const viewFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`views${sep}`))
-    const oversizedViews = viewFiles
+  it('new route pages should stay below the page-size threshold', () => {
+    const routePageFiles = sourceFiles.filter(
+      (file) =>
+        file.relativePath.startsWith(`pages${sep}`) &&
+        file.relativePath.endsWith(frontendArchitecturePolicy.route_page_suffix)
+    )
+    const oversizedRoutePages = routePageFiles
       .map((file) => ({
         file: file.relativePath,
         lines: readFileSync(file.absolutePath, 'utf-8').split(/\r?\n/).length,
       }))
-      .filter(({ lines }) => lines > viewLineLimit)
+      .filter(({ lines }) => lines > routePageLineLimit)
 
-    const violations = oversizedViews
+    const violations = oversizedRoutePages
       .map(({ file, lines }) => `${file} has ${lines} lines`)
 
     expect(violations).toEqual([])

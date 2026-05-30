@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import interventionPanelSource from '@/features/teacher-student-analysis/ui/InterventionPanel.vue?raw'
+import interventionPanelSource from '@/features/teaching/student-analysis-review/ui/InterventionPanel.vue?raw'
 
 describe('teacher intervention panel layout', () => {
   it('应采用紧凑可穿透的介入列表布局', () => {
     expect(interventionPanelSource).toContain(
-      "from '@/features/teacher-student-analysis'"
+      "from '@/features/teaching/student-analysis-review'"
     )
     expect(interventionPanelSource).toContain('useInterventionRecommendations')
     expect(interventionPanelSource).not.toContain('useTeacherInterventionRecommendations')

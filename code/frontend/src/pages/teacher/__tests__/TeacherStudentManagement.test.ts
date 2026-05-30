@@ -6,8 +6,8 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import TeacherStudentManagement from '@/pages/teacher/StudentManagementRoutePage.vue'
 import teacherStudentManagementSource from '@/pages/teacher/StudentManagementRoutePage.vue?raw'
 import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
-import studentManagementPageModelSource from '@/features/teacher-student-management/model/useStudentManagementPage.ts?raw'
-import studentManagementSource from '@/features/teacher-student-management/ui/StudentManagementPage.vue?raw'
+import studentManagementPageModelSource from '@/features/teacher/student-management/model/useStudentManagementPage.ts?raw'
+import studentManagementSource from '@/features/teacher/student-management/ui/StudentManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const ElTable = { template: '<div><slot /></div>' }
@@ -260,12 +260,12 @@ describe('TeacherStudentManagement', () => {
 
   it('页面应通过 feature model 获取学生目录状态，不再直接耦合 teacher api', () => {
     expect(teacherStudentManagementSource).toContain(
-      "from '@/features/teacher-student-management'"
+      "from '@/features/teacher/student-management'"
     )
     expect(teacherStudentManagementSource).toContain('StudentManagementPage')
     expect(teacherStudentManagementSource).toContain('useStudentManagementPage')
     expect(teacherStudentManagementSource).toContain(
-      "import { ClassReportExportDialog } from '@/features/teacher-class-report-export'"
+      "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
     expect(teacherStudentManagementSource).not.toContain(
       "from '@/components/teacher/student-management/StudentManagementPage.vue'"

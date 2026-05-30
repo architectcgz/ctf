@@ -6,11 +6,11 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import InstanceManagement from '@/pages/teacher/InstanceManagementRoutePage.vue'
 import instanceManagementViewSource from '@/pages/teacher/InstanceManagementRoutePage.vue?raw'
 import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
-import instanceManagementSourceBase from '@/features/teacher-instances/ui/TeacherInstanceManagementPage.vue?raw'
-import teacherInstanceManagementPageModelSource from '@/features/teacher-instances/model/useInstanceManagementPage.ts?raw'
-import teacherInstanceDirectorySectionSource from '@/components/teacher/instance-management/TeacherInstanceDirectorySection.vue?raw'
-import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
-import teacherInstancesHookSource from '@/features/teacher-instances/model/useInstances.ts?raw'
+import instanceManagementSourceBase from '@/features/teacher/instances/ui/TeacherInstanceManagementPage.vue?raw'
+import teacherInstanceManagementPageModelSource from '@/features/teacher/instances/model/useInstanceManagementPage.ts?raw'
+import teacherInstanceDirectorySectionSource from '@/features/teacher/instances/ui/TeacherInstanceDirectorySection.vue?raw'
+import teacherInstanceHeroPanelSource from '@/features/teacher/instances/ui/TeacherInstanceHeroPanel.vue?raw'
+import teacherInstancesHookSource from '@/features/teacher/instances/model/useInstances.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const instanceManagementSource = [
@@ -174,7 +174,7 @@ describe('InstanceManagement', () => {
   })
 
   it('路由页应仅负责组合，不直接依赖页面级流程细节', () => {
-    expect(instanceManagementViewSource).toContain("from '@/features/teacher-instances'")
+    expect(instanceManagementViewSource).toContain("from '@/features/teacher/instances'")
     expect(instanceManagementViewSource).toContain('TeacherInstanceManagementPage')
     expect(instanceManagementViewSource).toContain('useInstanceManagementPage')
     expect(instanceManagementViewSource).not.toContain(
