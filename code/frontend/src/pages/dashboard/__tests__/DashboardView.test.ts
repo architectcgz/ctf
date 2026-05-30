@@ -8,9 +8,7 @@ import studentCategoryProgressPageSource from '@/features/student-dashboard/ui/S
 import studentDifficultyPageSource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import studentOverviewPageSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
-import studentDashboardRegistrySource from '@/features/student-dashboard/ui/studentDashboardPanelRegistry.ts?raw'
 import trainingTimelinePanelSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
-import studentDashboardDataSource from '@/features/student-dashboard/model/useStudentDashboardData.ts?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
 import studentDashboardRoutesSource from '@/features/student-dashboard/model/studentDashboardRoutes.ts?raw'
 import routeNavigationTransportSource from '@/composables/routeNavigationTransport.ts?raw'
@@ -195,31 +193,12 @@ describe('DashboardView', () => {
     expect(dashboardViewSource).toContain('useStudentDashboardPage')
     expect(dashboardViewSource).toContain('resolveDashboardPanelComponent')
     expect(dashboardViewSource).toContain("from '@/features/student-dashboard'")
-    expect(dashboardViewSource).not.toContain(
-      "from '@/components/dashboard/student/dashboardPanelRegistry'"
-    )
     expect(dashboardViewSource).not.toContain("from '@/api/assessment'")
     expect(dashboardViewSource).not.toContain('const dashboardPanelComponents')
     expect(dashboardViewSource).not.toContain('function resolveDashboardPanelComponent(')
     expect(dashboardViewSource).not.toContain(
       'Promise.all([getMyProgress(), getMyTimeline(), getRecommendations(), getSkillProfile()])'
     )
-    expect(studentDashboardPageSource).not.toContain(
-      "from '@/components/dashboard/student/StudentOverviewPage.vue'"
-    )
-    expect(studentDashboardPageSource).not.toContain(
-      "from '@/components/dashboard/student/StudentRecommendationPage.vue'"
-    )
-    expect(studentDashboardPageSource).not.toContain(
-      "from '@/components/dashboard/student/StudentCategoryProgressPage.vue'"
-    )
-    expect(studentDashboardPageSource).not.toContain(
-      "from '@/entities/training-timeline'"
-    )
-    expect(studentDashboardPageSource).not.toContain(
-      "from '@/components/dashboard/student/StudentDifficultyPage.vue'"
-    )
-    expect(studentDashboardDataSource).not.toContain("from 'vue-router'")
     expect(studentDashboardPageSource).not.toContain("from 'vue-router'")
     expect(studentDashboardPageSource).toContain(
       "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
@@ -230,15 +209,6 @@ describe('DashboardView', () => {
     )
     expect(studentDashboardRoutesSource).toContain("name: 'ChallengeDetail'")
     expect(routeNavigationTransportSource).toContain('const router = useRouter()')
-    expect(studentDashboardRegistrySource).toContain(
-      "import StudentOverviewPage from './StudentOverviewPage.vue'"
-    )
-    expect(studentDashboardRegistrySource).toContain(
-      "import StudentRecommendationPage from './StudentRecommendationPage.vue'"
-    )
-    expect(studentDashboardRegistrySource).toContain(
-      "import { TrainingTimelinePanel } from '@/entities/training-timeline'"
-    )
   })
 
   it('应该把竞技表现统计区域渲染为共享摘要卡片', async () => {

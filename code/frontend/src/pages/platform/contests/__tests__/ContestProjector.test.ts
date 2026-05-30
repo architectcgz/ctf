@@ -8,7 +8,6 @@ describe('ContestProjector', () => {
     expect(contestProjectorSource).toContain('useContestProjectorPage')
     expect(contestProjectorSource).toContain('ContestProjectorAttackMap')
     expect(contestProjectorSource).toContain('ContestProjectorFocusOverlay')
-    expect(contestProjectorSource).not.toContain("from '@/components/platform/contest/projector/")
     expect(contestProjectorSource).not.toContain("from '@/composables/useToast'")
     expect(contestProjectorSource).not.toContain('const contestTitle = computed')
     expect(contestProjectorSource).not.toContain('function focusPanel(')

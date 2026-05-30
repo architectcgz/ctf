@@ -177,9 +177,6 @@ describe('InstanceManagement', () => {
     expect(instanceManagementViewSource).toContain("from '@/features/teacher/instances'")
     expect(instanceManagementViewSource).toContain('TeacherInstanceManagementPage')
     expect(instanceManagementViewSource).toContain('useInstanceManagementPage')
-    expect(instanceManagementViewSource).not.toContain(
-      "import TeacherInstanceManagementPage from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue'"
-    )
     expect(instanceManagementViewSource).not.toContain('confirmDestructiveAction')
     expect(instanceManagementViewSource).not.toContain('resolveTeachingDashboardRouteName')
     expect(teacherInstancesHookSource).toContain("from '@/api/instances'")

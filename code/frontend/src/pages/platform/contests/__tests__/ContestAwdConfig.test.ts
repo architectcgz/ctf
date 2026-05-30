@@ -145,9 +145,6 @@ describe('ContestAwdConfig', () => {
     expect(contestAwdConfigSource).toContain('ContestAwdConfigWorkspaceShell')
     expect(contestAwdConfigSource).toContain('useContestAwdConfigPage')
     expect(contestAwdConfigSource).not.toContain("from '@/api/admin/contests'")
-    expect(contestAwdConfigSource).not.toContain(
-      "from '@/components/platform/contest/ContestAwdConfigWorkspaceShell.vue'"
-    )
     expect(contestAwdConfigWorkspaceSource).toContain(
       "import ContestAwdConfigTopbar from './ContestAwdConfigTopbar.vue'"
     )

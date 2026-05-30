@@ -203,13 +203,8 @@ describe('TeacherStudentAnalysis', () => {
     expect(teacherStudentAnalysisSource).toContain(
       "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
-    expect(teacherStudentAnalysisSource).not.toContain("from '@/components/class-management'")
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassManagementRouteName')
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassStudentsRouteName')
-    expect(teacherStudentAnalysisSource).not.toContain(
-      '@/components/teacher/class-management/StudentAnalysisPage.vue'
-    )
-    expect(teacherStudentAnalysisSource).not.toContain('ClassReportExportDialog.vue')
     expect(teacherStudentAnalysisSource).not.toContain(':classes="classes"')
     expect(teacherStudentAnalysisSource).not.toContain(':students="students"')
     expect(teacherStudentAnalysisSource).not.toContain(':selected-class-name="selectedClassName"')

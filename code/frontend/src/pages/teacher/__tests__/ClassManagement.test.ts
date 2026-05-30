@@ -8,8 +8,8 @@ import classManagementViewSource from '@/pages/teacher/ClassManagementRoutePage.
 import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import classManagementSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
 import classManagementPageModelSource from '@/features/teacher/class-management/model/useClassManagementPage.ts?raw'
-import teacherClassManagementHeaderActionsSource from '@/components/teacher/class-management/TeacherClassManagementHeaderActions.vue?raw'
-import teacherClassManagementRowLinkSource from '@/components/teacher/class-management/TeacherClassManagementRowLink.vue?raw'
+import teacherClassManagementHeaderActionsSource from '@/features/teacher/class-management/ui/TeacherClassManagementHeaderActions.vue?raw'
+import teacherClassManagementRowLinkSource from '@/features/teacher/class-management/ui/TeacherClassManagementRowLink.vue?raw'
 import classReportExportDialogSource from '@/features/teaching/class-report-export/ui/ClassReportExportDialog.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -288,11 +288,7 @@ describe('ClassManagement', () => {
     expect(classManagementViewSource).toContain(
       "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
-    expect(classManagementViewSource).not.toContain(
-      "from '@/components/teacher/class-management/ClassManagementPage.vue'"
-    )
     expect(classManagementViewSource).not.toContain("from '@/api/teacher'")
-    expect(classManagementViewSource).not.toContain('ClassReportExportDialog.vue')
     expect(classManagementViewSource).not.toContain('getClasses')
     expect(classManagementViewSource).not.toContain('const totalPages = computed')
     expect(classReportExportDialogSource).toContain(

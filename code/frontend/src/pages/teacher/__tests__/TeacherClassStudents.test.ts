@@ -339,12 +339,7 @@ describe('TeacherClassStudents', () => {
     expect(teacherClassStudentsSource).toContain(
       "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
-    expect(teacherClassStudentsSource).not.toContain("from '@/components/class-management'")
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
-    expect(teacherClassStudentsSource).not.toContain(
-      '@/components/teacher/class-management/ClassStudentsPage.vue'
-    )
-    expect(teacherClassStudentsSource).not.toContain('ClassReportExportDialog.vue')
     expect(classStudentsPageModelSource).toContain('parseClassInsightWindowQuery')
     expect(classStudentsPageModelSource).toContain('buildClassInsightWindowQuery')
     expect(classStudentsPageModelSource).toContain(

@@ -212,7 +212,6 @@ describe('ChallengeTopologyStudioPage', () => {
   })
 
   it('管理员挑战拓扑工作台不应继续复用教师端根壳 token', () => {
-    expect(challengeTopologyStudioPageSource).not.toContain('@/components/platform/topology/')
     expect(challengeTopologyStudioPageSource).not.toContain('teacher-management-shell')
     expect(challengeTopologyStudioPageSource).not.toContain('teacher-surface')
     expect(challengeTopologyStudioPageSource).not.toContain('teacher-surface-workspace-bg')

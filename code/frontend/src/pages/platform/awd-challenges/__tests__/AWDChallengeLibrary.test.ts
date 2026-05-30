@@ -145,9 +145,6 @@ describe('AWDChallengeLibrary', () => {
     expect(awdChallengeLibrarySource).toContain("from '@/features/platform/awd-challenges'")
     expect(awdChallengeLibrarySource).toContain('AWDChallengeLibraryPage')
     expect(awdChallengeLibrarySource).toContain('useAwdChallengeLibraryPage')
-    expect(awdChallengeLibrarySource).not.toContain(
-      "from '@/components/platform/awd-service/AWDChallengeLibraryPage.vue'"
-    )
     expect(awdChallengeLibrarySource).not.toContain('useRouter')
     expect(awdChallengeLibrarySource).not.toContain('usePlatformAwdChallenges')
     expect(awdChallengeLibraryPageModelSource).not.toContain("from 'vue-router'")
