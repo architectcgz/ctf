@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { AdminAwdChallengeData, AdminAwdChallengeImportPreview } from '@/api/contracts'
 import type { AppRouteTarget } from '@/components/navigation/routeTarget'
-import AwdChallengeLibrarySection from '@/components/platform/awd-service/AwdChallengeLibrarySection.vue'
-import AwdChallengeWorkspaceHeader from '@/components/platform/awd-service/AwdChallengeWorkspaceHeader.vue'
 import AwdChallengeImportSection from './AwdChallengeImportSection.vue'
+import AwdChallengeLibrarySection from './AwdChallengeLibrarySection.vue'
+import AwdChallengeWorkspaceHeader from './AwdChallengeWorkspaceHeader.vue'
 import type { PlatformAwdChallengeImportUploadResult } from '../model'
 
 type AwdServiceTypeFilter = AdminAwdChallengeData['service_type'] | ''

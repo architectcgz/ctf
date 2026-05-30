@@ -1,184 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { Activity, Box, CheckCircle, Clock } from 'lucide-vue-next'
-
-import type { AdminAwdChallengeData } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
-import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
-import { ChallengeDifficultyText } from '@/entities/challenge'
-
-type AwdServiceTypeFilter = AdminAwdChallengeData['service_type'] | ''
-type AwdServiceStatusFilter = AdminAwdChallengeData['status'] | ''
-
-const props = defineProps<{
-  list: AdminAwdChallengeData[]
-  total: number
-  page: number
-  pageSize: number
-  loading: boolean
-  keyword: string
-  serviceTypeFilter: AwdServiceTypeFilter
-  statusFilter: AwdServiceStatusFilter
-}>()
-
-const emit = defineEmits<{
-  updateKeyword: [value: string]
-  updateServiceTypeFilter: [value: AwdServiceTypeFilter]
-  updateStatusFilter: [value: AwdServiceStatusFilter]
-  openEditDialog: [challenge: AdminAwdChallengeData]
-  deleteChallenge: [challenge: AdminAwdChallengeData]
-  changePage: [page: number]
-}>()
-
-const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
-const publishedCount = computed(
-  () => props.list.filter((item) => item.status === 'published').length
-)
-const webHttpCount = computed(
-  () => props.list.filter((item) => item.service_type === 'web_http').length
-)
-const pendingReadinessCount = computed(
-  () => props.list.filter((item) => item.readiness_status === 'pending').length
-)
-const hasActiveFilters = computed(() =>
-  Boolean(props.keyword.trim() || props.serviceTypeFilter || props.statusFilter)
-)
-
-const awdChallengeTableColumns = [
-  {
-    key: 'name',
-    label: '题目名称',
-    widthClass: 'w-[22%] min-w-[14rem]',
-    cellClass: 'awd-challenge-table__name-cell',
-  },
-  {
-    key: 'slug',
-    label: '标识',
-    widthClass: 'w-[12%] min-w-[8rem]',
-    cellClass: 'awd-challenge-table__compact-cell',
-  },
-  {
-    key: 'service_type',
-    label: '类型',
-    align: 'center' as const,
-    widthClass: 'w-[12%] min-w-[7rem]',
-    cellClass: 'awd-challenge-table__compact-cell',
-  },
-  {
-    key: 'deployment_mode',
-    label: '部署方式',
-    align: 'center' as const,
-    widthClass: 'w-[12%] min-w-[7rem]',
-    cellClass: 'awd-challenge-table__compact-cell',
-  },
-  {
-    key: 'difficulty',
-    label: '难度',
-    align: 'center' as const,
-    widthClass: 'w-[10%] min-w-[6rem]',
-    cellClass: 'awd-challenge-table__compact-cell',
-  },
-  {
-    key: 'readiness_status',
-    label: '就绪度',
-    align: 'center' as const,
-    widthClass: 'w-[10%] min-w-[6rem]',
-    cellClass: 'awd-challenge-table__compact-cell',
-  },
-  {
-    key: 'status',
-    label: '状态',
-    align: 'center' as const,
-    widthClass: 'w-[10%] min-w-[6rem]',
-    cellClass: 'awd-challenge-table__compact-cell',
-  },
-  {
-    key: 'actions',
-    label: '操作',
-    align: 'right' as const,
-    widthClass: 'w-[10rem]',
-    cellClass: 'awd-challenge-table__actions-cell',
-  },
-]
-
-function getServiceTypeLabel(value: AdminAwdChallengeData['service_type']): string {
-  switch (value) {
-    case 'binary_tcp':
-      return 'Binary TCP'
-    case 'multi_container':
-      return 'Multi Container'
-    case 'web_http':
-    default:
-      return 'Web HTTP'
-  }
-}
-
-function getDeploymentModeLabel(value: AdminAwdChallengeData['deployment_mode']): string {
-  return value === 'topology' ? 'Topology' : 'Single'
-}
-
-function getStatusLabel(value: AdminAwdChallengeData['status']): string {
-  switch (value) {
-    case 'published':
-      return '已发布'
-    case 'archived':
-      return '已归档'
-    case 'draft':
-    default:
-      return '草稿'
-  }
-}
-
-function getReadinessLabel(value: AdminAwdChallengeData['readiness_status']): string {
-  switch (value) {
-    case 'passed':
-      return '已通过'
-    case 'failed':
-      return '未通过'
-    case 'pending':
-    default:
-      return '待验证'
-  }
-}
-
-function getStatusClass(status: AdminAwdChallengeData['status']): string {
-  if (status === 'published') return 'awd-status-pill--success'
-  if (status === 'archived') return 'awd-status-pill--muted'
-  return 'awd-status-pill--primary'
-}
-
-function getReadinessClass(readiness: AdminAwdChallengeData['readiness_status']): string {
-  if (readiness === 'passed') return 'awd-status-pill--success'
-  if (readiness === 'failed') return 'awd-status-pill--danger'
-  return 'awd-status-pill--warning'
-}
-
-function resetFilters(): void {
-  emit('updateKeyword', '')
-  emit('updateServiceTypeFilter', '')
-  emit('updateStatusFilter', '')
-}
-
-function handleServiceTypeFilterChange(event: Event): void {
-  const target = event.target
-  emit(
-    'updateServiceTypeFilter',
-    target instanceof HTMLSelectElement ? (target.value as AwdServiceTypeFilter) : ''
-  )
-}
-
-function handleStatusFilterChange(event: Event): void {
-  const target = event.target
-  emit(
-    'updateStatusFilter',
-    target instanceof HTMLSelectElement ? (target.value as AwdServiceStatusFilter) : ''
-  )
-}
-</script>
-
 <template>
   <div class="awd-library-pane">
     <div
@@ -478,3 +297,184 @@ function handleStatusFilterChange(event: Event): void {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { Activity, Box, CheckCircle, Clock } from 'lucide-vue-next'
+
+import type { AdminAwdChallengeData } from '@/api/contracts'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppLoading from '@/components/common/AppLoading.vue'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
+import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import { ChallengeDifficultyText } from '@/entities/challenge'
+
+type AwdServiceTypeFilter = AdminAwdChallengeData['service_type'] | ''
+type AwdServiceStatusFilter = AdminAwdChallengeData['status'] | ''
+
+const props = defineProps<{
+  list: AdminAwdChallengeData[]
+  total: number
+  page: number
+  pageSize: number
+  loading: boolean
+  keyword: string
+  serviceTypeFilter: AwdServiceTypeFilter
+  statusFilter: AwdServiceStatusFilter
+}>()
+
+const emit = defineEmits<{
+  updateKeyword: [value: string]
+  updateServiceTypeFilter: [value: AwdServiceTypeFilter]
+  updateStatusFilter: [value: AwdServiceStatusFilter]
+  openEditDialog: [challenge: AdminAwdChallengeData]
+  deleteChallenge: [challenge: AdminAwdChallengeData]
+  changePage: [page: number]
+}>()
+
+const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
+const publishedCount = computed(
+  () => props.list.filter((item) => item.status === 'published').length
+)
+const webHttpCount = computed(
+  () => props.list.filter((item) => item.service_type === 'web_http').length
+)
+const pendingReadinessCount = computed(
+  () => props.list.filter((item) => item.readiness_status === 'pending').length
+)
+const hasActiveFilters = computed(() =>
+  Boolean(props.keyword.trim() || props.serviceTypeFilter || props.statusFilter)
+)
+
+const awdChallengeTableColumns = [
+  {
+    key: 'name',
+    label: '题目名称',
+    widthClass: 'w-[22%] min-w-[14rem]',
+    cellClass: 'awd-challenge-table__name-cell',
+  },
+  {
+    key: 'slug',
+    label: '标识',
+    widthClass: 'w-[12%] min-w-[8rem]',
+    cellClass: 'awd-challenge-table__compact-cell',
+  },
+  {
+    key: 'service_type',
+    label: '类型',
+    align: 'center' as const,
+    widthClass: 'w-[12%] min-w-[7rem]',
+    cellClass: 'awd-challenge-table__compact-cell',
+  },
+  {
+    key: 'deployment_mode',
+    label: '部署方式',
+    align: 'center' as const,
+    widthClass: 'w-[12%] min-w-[7rem]',
+    cellClass: 'awd-challenge-table__compact-cell',
+  },
+  {
+    key: 'difficulty',
+    label: '难度',
+    align: 'center' as const,
+    widthClass: 'w-[10%] min-w-[6rem]',
+    cellClass: 'awd-challenge-table__compact-cell',
+  },
+  {
+    key: 'readiness_status',
+    label: '就绪度',
+    align: 'center' as const,
+    widthClass: 'w-[10%] min-w-[6rem]',
+    cellClass: 'awd-challenge-table__compact-cell',
+  },
+  {
+    key: 'status',
+    label: '状态',
+    align: 'center' as const,
+    widthClass: 'w-[10%] min-w-[6rem]',
+    cellClass: 'awd-challenge-table__compact-cell',
+  },
+  {
+    key: 'actions',
+    label: '操作',
+    align: 'right' as const,
+    widthClass: 'w-[10rem]',
+    cellClass: 'awd-challenge-table__actions-cell',
+  },
+]
+
+function getServiceTypeLabel(value: AdminAwdChallengeData['service_type']): string {
+  switch (value) {
+    case 'binary_tcp':
+      return 'Binary TCP'
+    case 'multi_container':
+      return 'Multi Container'
+    case 'web_http':
+    default:
+      return 'Web HTTP'
+  }
+}
+
+function getDeploymentModeLabel(value: AdminAwdChallengeData['deployment_mode']): string {
+  return value === 'topology' ? 'Topology' : 'Single'
+}
+
+function getStatusLabel(value: AdminAwdChallengeData['status']): string {
+  switch (value) {
+    case 'published':
+      return '已发布'
+    case 'archived':
+      return '已归档'
+    case 'draft':
+    default:
+      return '草稿'
+  }
+}
+
+function getReadinessLabel(value: AdminAwdChallengeData['readiness_status']): string {
+  switch (value) {
+    case 'passed':
+      return '已通过'
+    case 'failed':
+      return '未通过'
+    case 'pending':
+    default:
+      return '待验证'
+  }
+}
+
+function getStatusClass(status: AdminAwdChallengeData['status']): string {
+  if (status === 'published') return 'awd-status-pill--success'
+  if (status === 'archived') return 'awd-status-pill--muted'
+  return 'awd-status-pill--primary'
+}
+
+function getReadinessClass(readiness: AdminAwdChallengeData['readiness_status']): string {
+  if (readiness === 'passed') return 'awd-status-pill--success'
+  if (readiness === 'failed') return 'awd-status-pill--danger'
+  return 'awd-status-pill--warning'
+}
+
+function resetFilters(): void {
+  emit('updateKeyword', '')
+  emit('updateServiceTypeFilter', '')
+  emit('updateStatusFilter', '')
+}
+
+function handleServiceTypeFilterChange(event: Event): void {
+  const target = event.target
+  emit(
+    'updateServiceTypeFilter',
+    target instanceof HTMLSelectElement ? (target.value as AwdServiceTypeFilter) : ''
+  )
+}
+
+function handleStatusFilterChange(event: Event): void {
+  const target = event.target
+  emit(
+    'updateStatusFilter',
+    target instanceof HTMLSelectElement ? (target.value as AwdServiceStatusFilter) : ''
+  )
+}
+</script>

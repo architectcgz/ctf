@@ -1,20 +1,3 @@
-<script setup lang="ts">
-import { RefreshCw, Upload } from 'lucide-vue-next'
-
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
-
-defineProps<{
-  mode: 'library' | 'import'
-  importRoute?: AppRouteTarget | null
-}>()
-
-const emit = defineEmits<{
-  refresh: []
-  refreshImportQueue: []
-}>()
-</script>
-
 <template>
   <header class="workspace-page-header">
     <div class="workspace-tab-heading__main">
@@ -104,3 +87,20 @@ const emit = defineEmits<{
   color: var(--journal-muted);
 }
 </style>
+
+<script setup lang="ts">
+import { RefreshCw, Upload } from 'lucide-vue-next'
+
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+
+defineProps<{
+  mode: 'library' | 'import'
+  importRoute?: AppRouteTarget | null
+}>()
+
+const emit = defineEmits<{
+  refresh: []
+  refreshImportQueue: []
+}>()
+</script>
