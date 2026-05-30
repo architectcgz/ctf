@@ -6,12 +6,11 @@ import type {
   AdminAwdChallengeImportPreview,
 } from '@/api/contracts'
 import type { PlatformAwdChallengeImportUploadResult } from '@/features/platform/awd-challenges'
-import awdChallengeImportSectionSource from '@/features/platform/awd-challenges/ui/AwdChallengeImportSection.vue?raw'
-import AWDChallengeLibraryPage from '@/features/platform/awd-challenges/ui/AWDChallengeLibraryPage.vue'
-import awdChallengeLibraryPageSourceBase from '@/features/platform/awd-challenges/ui/AWDChallengeLibraryPage.vue?raw'
-
-import awdChallengeLibrarySectionSource from '@/features/platform/awd-challenges/ui/AwdChallengeLibrarySection.vue?raw'
-import awdChallengeWorkspaceHeaderSource from '@/features/platform/awd-challenges/ui/AwdChallengeWorkspaceHeader.vue?raw'
+import awdChallengeImportSectionSource from './AwdChallengeImportSection.vue?raw'
+import AWDChallengeLibraryPage from './AWDChallengeLibraryPage.vue'
+import awdChallengeLibraryPageSourceBase from './AWDChallengeLibraryPage.vue?raw'
+import awdChallengeLibrarySectionSource from './AwdChallengeLibrarySection.vue?raw'
+import awdChallengeWorkspaceHeaderSource from './AwdChallengeWorkspaceHeader.vue?raw'
 
 const awdChallengeLibraryPageSource = [
   awdChallengeLibraryPageSourceBase,
@@ -223,7 +222,9 @@ describe('AWDChallengeLibraryPage', () => {
   })
 
   it('AWD 难度列应复用 challenge entity 文本单元，并通过局部 override 保留高强度文案', () => {
-    expect(awdChallengeLibraryPageSource).toContain("ChallengeDifficultyText } from '@/entities/challenge'")
+    expect(awdChallengeLibraryPageSource).toContain(
+      "ChallengeDifficultyText } from '@/entities/challenge'"
+    )
     expect(awdChallengeLibraryPageSource).toContain('<ChallengeDifficultyText')
     expect(awdChallengeLibraryPageSource).toContain(":label-overrides=\"{ insane: '高强度' }\"")
     expect(awdChallengeLibraryPageSource).not.toContain('function getDifficultyLabel(')

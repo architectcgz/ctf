@@ -5,25 +5,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import { ClassReportExportDialog } from '@/features/teaching/class-report-export'
-import classReportExportContextSectionSource from '@/features/teaching/class-report-export/ui/ClassReportExportContextSection.vue?raw'
-import classReportExportDialogShellSource from '@/features/teaching/class-report-export/ui/ClassReportExportDialog.vue?raw'
-import classReportExportPreviewSectionSource from '@/features/teaching/class-report-export/ui/ClassReportExportPreviewSection.vue?raw'
-import classReportExportTaskRailSource from '@/features/teaching/class-report-export/ui/ClassReportExportTaskRail.vue?raw'
+import { ClassReportExportDialog } from '..'
 import { useAuthStore } from '@/stores/auth'
+import classReportExportContextSectionSource from './ClassReportExportContextSection.vue?raw'
+import classReportExportDialogShellSource from './ClassReportExportDialog.vue?raw'
+import classReportExportPreviewSectionSource from './ClassReportExportPreviewSection.vue?raw'
+import classReportExportTaskRailSource from './ClassReportExportTaskRail.vue?raw'
 
 const classReportExportDialogSource = [
   classReportExportDialogShellSource,
   classReportExportContextSectionSource,
   classReportExportPreviewSectionSource,
   classReportExportTaskRailSource,
-  readFileSync(
-    resolve(
-      process.cwd(),
-      'src/features/teacher-class-report-export/ui/classReportExportDialog.css'
-    ),
-    'utf8'
-  ),
+  readFileSync(resolve(process.cwd(), 'src/features/teaching/class-report-export/ui/classReportExportDialog.css'), 'utf8'),
 ].join('\n')
 
 const {
@@ -121,14 +115,13 @@ describe('ClassReportExportDialog', () => {
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth(
-      {
-        id: '1',
-        username: 'teacher-a',
-        role: 'teacher',
-        class_name: 'Class A',
-        name: 'Teacher A',
-      })
+    authStore.setAuth({
+      id: '1',
+      username: 'teacher-a',
+      role: 'teacher',
+      class_name: 'Class A',
+      name: 'Teacher A',
+    })
 
     vi.stubGlobal('URL', {
       createObjectURL: vi.fn(() => 'blob:report'),
