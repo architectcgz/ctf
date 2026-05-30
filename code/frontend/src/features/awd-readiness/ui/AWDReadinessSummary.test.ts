@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import { AWDReadinessChecklist, AWDReadinessSummary } from '@/features/awd-readiness'
 import type { AWDReadinessData } from '@/api/contracts'
+import { AWDReadinessChecklist, AWDReadinessSummary } from '..'
 
 function buildReadiness(overrides: Partial<AWDReadinessData> = {}): AWDReadinessData {
   return {

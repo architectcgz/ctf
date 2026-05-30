@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import ContestWorkbenchStageTabs from '@/features/contest-workbench/ui/ContestWorkbenchStageTabs.vue'
+
+import ContestWorkbenchStageTabs from './ContestWorkbenchStageTabs.vue'
 
 type ContestWorkbenchStageKey =
   | 'basics'

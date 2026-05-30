@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { mount, RouterLinkStub } from '@vue/test-utils'
 
-import AWDChallengeConfigPanel from '@/features/platform/contests/ui/AWDChallengeConfigPanel.vue'
 import type { AdminContestChallengeViewData } from '@/api/contracts'
+import AWDChallengeConfigPanel from './AWDChallengeConfigPanel.vue'
 
 function buildChallenge(
   overrides: Partial<AdminContestChallengeViewData> = {},
@@ -48,7 +48,9 @@ describe('AWDChallengeConfigPanel', () => {
       },
     })
 
-    const titleLink = wrapper.findAllComponents(RouterLinkStub).find((link) => link.text() === 'Web 入门')
+    const titleLink = wrapper
+      .findAllComponents(RouterLinkStub)
+      .find((link) => link.text() === 'Web 入门')
 
     expect(titleLink?.props('to')).toEqual({
       name: 'PlatformChallengeDetail',

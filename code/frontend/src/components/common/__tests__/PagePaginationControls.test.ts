@@ -35,4 +35,21 @@ describe('PagePaginationControls', () => {
     expect(wrapper.text()).toContain('1 / 2')
     expect(wrapper.find('form').exists()).toBe(false)
   })
+
+  it('输入非法页码时不应发出 changePage', async () => {
+    const wrapper = mount(PagePaginationControls, {
+      props: {
+        page: 2,
+        totalPages: 5,
+        total: 100,
+        totalLabel: '共 100 条',
+        showJump: true,
+      },
+    })
+
+    await wrapper.get('input').setValue('9')
+    await wrapper.get('form').trigger('submit')
+
+    expect(wrapper.emitted('changePage')).toBeUndefined()
+  })
 })

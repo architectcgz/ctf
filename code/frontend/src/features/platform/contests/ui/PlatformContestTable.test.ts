@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
-import PlatformContestTable from '@/features/platform/contests/ui/PlatformContestTable.vue'
-import adminContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
-import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
 import type { ContestDetailData } from '@/api/contracts'
+import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
+import PlatformContestTable from './PlatformContestTable.vue'
+import adminContestTableSource from './PlatformContestTable.vue?raw'
 
 function buildContest(overrides: Partial<ContestDetailData> = {}): ContestDetailData {
   return {
@@ -127,8 +127,12 @@ describe('PlatformContestTable', () => {
 
   it('行内操作应使用固定槽位，避免不同按钮数量导致编辑和更多入口错位', () => {
     expect(adminContestTableSource).toContain('contestTableColumns')
-    expect(adminContestTableSource).toContain("{ key: 'actions', label: '操作', widthClass: 'w-[14rem]', align: 'right' as const }")
-    expect(adminContestTableSource).toContain('class="ui-row-actions contest-table__actions ui-row-actions--fixed"')
+    expect(adminContestTableSource).toContain(
+      "{ key: 'actions', label: '操作', widthClass: 'w-[14rem]', align: 'right' as const }"
+    )
+    expect(adminContestTableSource).toContain(
+      'class="ui-row-actions contest-table__actions ui-row-actions--fixed"'
+    )
     expect(adminContestTableSource).toContain('ui-row-action--main')
     expect(adminContestTableSource).toContain('ui-row-action--default')
     expect(adminContestTableSource).toContain('ui-row-action--menu')

@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import type { AWDTeamServiceData } from '@/api/contracts'
-import AWDServiceStatusPanel from '@/features/awd-inspector/ui/AWDServiceStatusPanel.vue'
+import AWDServiceStatusPanel from './AWDServiceStatusPanel.vue'
 
 function buildProps() {
   const services: AWDTeamServiceData[] = [
