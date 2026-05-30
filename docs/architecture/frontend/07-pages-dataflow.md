@@ -47,7 +47,7 @@
 | 排行榜目录与详情 | `features/scoreboard/model` | `useScoreboardView.ts`、`useScoreboardDetailPage.ts` |
 | 竞赛详情 | `features/contest-detail/model` | `useContestDetailPage.ts`、`useContestDetailRoutePage.ts` |
 | 学员分析复盘工作流 | `features/student-analysis-workspace/model`、`features/student-analysis-review/model` | `useStudentAnalysisPage.ts` |
-| 题目管理与导入 | `features/platform/challenges/model`、`features/challenge-package-import/model` | `useChallengeManagePage.ts`、`useChallengeImportManagePage.ts`、`useChallengeImportPreviewPage.ts` |
+| 题目管理与导入 | `features/platform/challenges/model`、`features/platform/challenge-package-import/model` | `useChallengeManagePage.ts`、`useChallengeImportManagePage.ts`、`useChallengeImportPreviewPage.ts` |
 | 平台题解管理 | `features/platform/challenges/model`、`features/challenge-writeup-editor/model`、`features/challenge-writeup-editor/ui` | `useChallengeWriteupPage.ts`、`useChallengeWriteupViewPage.ts`、题解 feature UI |
 
 ## 2. 典型数据流
@@ -229,4 +229,4 @@
 - 前端整体分层：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - 学生仪表盘组合边界：`code/frontend/src/features/student-dashboard/model/useStudentDashboardPageBoundary.test.ts`
 - 竞赛详情组合边界：`code/frontend/src/features/contest-detail/model/useContestDetailPageBoundary.test.ts`
-- 题目导入组合边界：`code/frontend/src/features/challenge-package-import/model/useChallengePackageImportBoundary.test.ts`
+- 题目导入组合边界：`code/frontend/src/features/platform/challenge-package-import/model/useChallengePackageImportBoundary.test.ts`

@@ -1,28 +1,3 @@
-<script setup lang="ts">
-import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
-import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
-
-type ChallengeImportQueueItem = {
-  id: string
-  title: string
-  file_name: string
-  category: ChallengeCategory
-  difficulty: ChallengeDifficulty
-  points: number
-  created_at: string
-}
-
-defineProps<{
-  queueLoading: boolean
-  queueCount: number
-  queue: ChallengeImportQueueItem[]
-  buildInspectRoute: (importId: string) => AppRouteTarget
-  formatDateTime: (value: string) => string
-}>()
-</script>
-
 <template>
   <section
     id="challenge-queue-workspace"
@@ -186,5 +161,29 @@ defineProps<{
   font-weight: 700;
   color: var(--challenge-page-muted);
 }
-
 </style>
+
+<script setup lang="ts">
+import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
+
+type ChallengeImportQueueItem = {
+  id: string
+  title: string
+  file_name: string
+  category: ChallengeCategory
+  difficulty: ChallengeDifficulty
+  points: number
+  created_at: string
+}
+
+defineProps<{
+  queueLoading: boolean
+  queueCount: number
+  queue: ChallengeImportQueueItem[]
+  buildInspectRoute: (importId: string) => AppRouteTarget
+  formatDateTime: (value: string) => string
+}>()
+</script>

@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeImportPreview from '@/pages/platform/challenges/ChallengeImportPreviewRoutePage.vue'
 import challengeImportPreviewSource from '@/pages/platform/challenges/ChallengeImportPreviewRoutePage.vue?raw'
-import challengeImportPreviewPageModelSource from '@/features/challenge-package-import/model/useChallengeImportPreviewPage.ts?raw'
+import challengeImportPreviewPageModelSource from '@/features/platform/challenge-package-import/model/useChallengeImportPreviewPage.ts?raw'
 
 const pushMock = vi.fn()
 const adminApiMocks = vi.hoisted(() => ({

@@ -3,10 +3,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeImportManageRoutePage from '@/pages/platform/challenges/ChallengeImportManageRoutePage.vue'
 import challengeImportManageSource from '@/pages/platform/challenges/ChallengeImportManageRoutePage.vue?raw'
-import challengeImportHeroPanelSource from '@/components/platform/challenge/ChallengeImportHeroPanel.vue?raw'
-import challengeImportQueuePanelSource from '@/components/platform/challenge/ChallengeImportQueuePanel.vue?raw'
-import challengePackageImportEntrySource from '@/components/platform/challenge/ChallengePackageImportEntry.vue?raw'
-import challengeImportManagePageModelSource from '@/features/challenge-package-import/model/useChallengeImportManagePage.ts?raw'
+import challengeImportHeroPanelSource from '@/features/platform/challenge-package-import/ui/ChallengeImportHeroPanel.vue?raw'
+import challengeImportQueuePanelSource from '@/features/platform/challenge-package-import/ui/ChallengeImportQueuePanel.vue?raw'
+import challengePackageImportEntrySource from '@/features/platform/challenge-package-import/ui/ChallengePackageImportEntry.vue?raw'
+import challengeImportManagePageModelSource from '@/features/platform/challenge-package-import/model/useChallengeImportManagePage.ts?raw'
 
 const pushMock = vi.fn()
 const adminApiMocks = vi.hoisted(() => ({

@@ -53,8 +53,10 @@
 </style>
 
 <script setup lang="ts">
-import ChallengePackageFormatGuidePanel from '@/components/platform/challenge/ChallengePackageFormatGuidePanel.vue'
-import { useChallengePackageFormatPage } from '@/features/challenge-package-import'
+import {
+  ChallengePackageFormatGuidePanel,
+  useChallengePackageFormatPage,
+} from '@/features/platform/challenge-package-import'
 
 const { backToImportManage } = useChallengePackageFormatPage()
 </script>

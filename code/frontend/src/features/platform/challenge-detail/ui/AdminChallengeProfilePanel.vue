@@ -1,29 +1,3 @@
-<script setup lang="ts">
-import type { AdminChallengeListItem } from '@/api/contracts'
-import ChallengeDescriptionPanel from '@/components/platform/challenge/ChallengeDescriptionPanel.vue'
-import {
-  ChallengeProfileMetaGrid,
-  ChallengeProfileSummaryStrip,
-  getChallengeStatusLabel,
-} from '@/entities/challenge'
-import type { PlatformChallengeFlagDraft, PlatformChallengeFlagDraftPatch } from '../model'
-import PlatformChallengeFlagConfigPanel from './PlatformChallengeFlagConfigPanel.vue'
-
-interface Props {
-  challenge: AdminChallengeListItem
-  downloadingAttachment: boolean
-  flagDraft: PlatformChallengeFlagDraft
-}
-
-defineProps<Props>()
-
-const emit = defineEmits<{
-  'download-attachment': []
-  'save-flag-config': []
-  'update:flag-draft': [value: PlatformChallengeFlagDraftPatch]
-}>()
-</script>
-
 <template>
   <div class="admin-challenge-profile-panel">
     <header class="challenge-detail-header">
@@ -211,3 +185,29 @@ const emit = defineEmits<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import type { AdminChallengeListItem } from '@/api/contracts'
+import {
+  ChallengeDescriptionPanel,
+  ChallengeProfileMetaGrid,
+  ChallengeProfileSummaryStrip,
+  getChallengeStatusLabel,
+} from '@/entities/challenge'
+import type { PlatformChallengeFlagDraft, PlatformChallengeFlagDraftPatch } from '../model'
+import PlatformChallengeFlagConfigPanel from './PlatformChallengeFlagConfigPanel.vue'
+
+interface Props {
+  challenge: AdminChallengeListItem
+  downloadingAttachment: boolean
+  flagDraft: PlatformChallengeFlagDraft
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  'download-attachment': []
+  'save-flag-config': []
+  'update:flag-draft': [value: PlatformChallengeFlagDraftPatch]
+}>()
+</script>

@@ -142,7 +142,7 @@
   - 优先级：`P1`
 - `platform/challenge/*`
   - 当前 consumer：`pages/platform/challenges/ChallengeImportManageRoutePage.vue`、`pages/platform/challenges/ChallengeImportPreviewRoutePage.vue`、`features/platform/challenges/ui/ChallengeManagePage.vue`、`pages/platform/challenges/ChallengeDetailRoutePage.vue`、`pages/platform/challenges/ChallengeWriteupViewRoutePage.vue`
-  - 目标 owner：按能力分拆到 `features/challenge-package-import/ui`、`features/platform/challenges/ui`、`features/platform/challenge-detail/ui`，避免继续留在一个大目录
+  - 目标 owner：按能力分拆到 `features/platform/challenge-package-import/ui`、`features/platform/challenges/ui`、`features/platform/challenge-detail/ui` 与 `entities/challenge/ui`，避免继续留在一个大目录
   - 优先级：`P1`
 - `platform/cheat/*`
   - 当前 consumer：`pages/platform/CheatDetectionRoutePage.vue`

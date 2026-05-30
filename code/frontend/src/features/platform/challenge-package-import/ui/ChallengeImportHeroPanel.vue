@@ -1,15 +1,3 @@
-<script setup lang="ts">
-import { ArrowLeft, FileSearch, Plus } from 'lucide-vue-next'
-
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
-
-defineProps<{
-  backRoute: AppRouteTarget
-  packageFormatGuideRoute: AppRouteTarget
-}>()
-</script>
-
 <template>
   <header class="workspace-page-header challenge-import-heading">
     <div class="workspace-tab-heading__main">
@@ -59,3 +47,15 @@ defineProps<{
   align-items: flex-end;
 }
 </style>
+
+<script setup lang="ts">
+import { ArrowLeft, FileSearch, Plus } from 'lucide-vue-next'
+
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+
+defineProps<{
+  backRoute: AppRouteTarget
+  packageFormatGuideRoute: AppRouteTarget
+}>()
+</script>

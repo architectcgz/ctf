@@ -1,24 +1,3 @@
-<script setup lang="ts">
-import { Edit3, RefreshCw } from 'lucide-vue-next'
-
-import ChallengeDescriptionPanel from '@/components/platform/challenge/ChallengeDescriptionPanel.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import { useChallengeWriteupEditorPage } from '../model'
-
-const props = defineProps<{
-  challengeId: string
-}>()
-
-const emit = defineEmits<{
-  back: []
-  edit: []
-}>()
-
-const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(props.challengeId)
-</script>
-
 <template>
   <section
     class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col"
@@ -222,3 +201,24 @@ const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(
   }
 }
 </style>
+
+<script setup lang="ts">
+import { Edit3, RefreshCw } from 'lucide-vue-next'
+
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppLoading from '@/components/common/AppLoading.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
+import { ChallengeDescriptionPanel } from '@/entities/challenge'
+import { useChallengeWriteupEditorPage } from '../model'
+
+const props = defineProps<{
+  challengeId: string
+}>()
+
+const emit = defineEmits<{
+  back: []
+  edit: []
+}>()
+
+const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(props.challengeId)
+</script>

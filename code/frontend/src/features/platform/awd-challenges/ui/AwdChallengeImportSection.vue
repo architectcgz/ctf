@@ -1,78 +1,3 @@
-<script setup lang="ts">
-import type { AdminAwdChallengeImportPreview } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import ChallengePackageImportEntry from '@/components/platform/challenge/ChallengePackageImportEntry.vue'
-import type { PlatformAwdChallengeImportUploadResult } from '../model'
-
-const props = defineProps<{
-  uploading: boolean
-  queueLoading: boolean
-  importQueue: AdminAwdChallengeImportPreview[]
-  uploadResults: PlatformAwdChallengeImportUploadResult[]
-  selectedFileName?: string
-}>()
-
-const emit = defineEmits<{
-  selectImportPackages: [files: File[]]
-  commitImport: [preview: AdminAwdChallengeImportPreview]
-}>()
-
-function handleSelectImportPackages(files: File[]) {
-  emit('selectImportPackages', files)
-}
-
-function getImageSourceLabel(
-  value?: NonNullable<AdminAwdChallengeImportPreview['image_delivery']>['source_type']
-): string {
-  switch (value) {
-    case 'platform_build':
-      return '平台构建'
-    case 'external_ref':
-      return '外部镜像'
-    case 'manual':
-      return '手工登记'
-    default:
-      return '未声明'
-  }
-}
-
-function getImageStatusLabel(
-  value?: NonNullable<AdminAwdChallengeImportPreview['image_delivery']>['build_status']
-): string {
-  switch (value) {
-    case 'available':
-      return '可用'
-    case 'building':
-      return '构建中'
-    case 'pushed':
-      return '已推送'
-    case 'verifying':
-      return '校验中'
-    case 'failed':
-      return '失败'
-    case 'pending':
-      return '等待中'
-    default:
-      return '待处理'
-  }
-}
-
-function getImportTargetImageRef(item: AdminAwdChallengeImportPreview): string {
-  const runtimeImageRef = item.runtime_config?.image_ref
-  return (
-    item.image_delivery?.target_image_ref ||
-    (typeof runtimeImageRef === 'string' ? runtimeImageRef : '未生成')
-  )
-}
-
-function formatStructuredJSON(value?: Record<string, unknown>): string {
-  if (!value || Object.keys(value).length === 0) {
-    return '{}'
-  }
-  return JSON.stringify(value, null, 2)
-}
-</script>
-
 <template>
   <div class="awd-import-pane">
     <section class="workspace-directory-section awd-import-tool-section">
@@ -359,3 +284,78 @@ function formatStructuredJSON(value?: Record<string, unknown>): string {
   }
 }
 </style>
+
+<script setup lang="ts">
+import type { AdminAwdChallengeImportPreview } from '@/api/contracts'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import { ChallengePackageImportEntry } from '@/features/platform/challenge-package-import'
+import type { PlatformAwdChallengeImportUploadResult } from '../model'
+
+const props = defineProps<{
+  uploading: boolean
+  queueLoading: boolean
+  importQueue: AdminAwdChallengeImportPreview[]
+  uploadResults: PlatformAwdChallengeImportUploadResult[]
+  selectedFileName?: string
+}>()
+
+const emit = defineEmits<{
+  selectImportPackages: [files: File[]]
+  commitImport: [preview: AdminAwdChallengeImportPreview]
+}>()
+
+function handleSelectImportPackages(files: File[]) {
+  emit('selectImportPackages', files)
+}
+
+function getImageSourceLabel(
+  value?: NonNullable<AdminAwdChallengeImportPreview['image_delivery']>['source_type']
+): string {
+  switch (value) {
+    case 'platform_build':
+      return '平台构建'
+    case 'external_ref':
+      return '外部镜像'
+    case 'manual':
+      return '手工登记'
+    default:
+      return '未声明'
+  }
+}
+
+function getImageStatusLabel(
+  value?: NonNullable<AdminAwdChallengeImportPreview['image_delivery']>['build_status']
+): string {
+  switch (value) {
+    case 'available':
+      return '可用'
+    case 'building':
+      return '构建中'
+    case 'pushed':
+      return '已推送'
+    case 'verifying':
+      return '校验中'
+    case 'failed':
+      return '失败'
+    case 'pending':
+      return '等待中'
+    default:
+      return '待处理'
+  }
+}
+
+function getImportTargetImageRef(item: AdminAwdChallengeImportPreview): string {
+  const runtimeImageRef = item.runtime_config?.image_ref
+  return (
+    item.image_delivery?.target_image_ref ||
+    (typeof runtimeImageRef === 'string' ? runtimeImageRef : '未生成')
+  )
+}
+
+function formatStructuredJSON(value?: Record<string, unknown>): string {
+  if (!value || Object.keys(value).length === 0) {
+    return '{}'
+  }
+  return JSON.stringify(value, null, 2)
+}
+</script>

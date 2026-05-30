@@ -123,11 +123,13 @@
 
 <script setup lang="ts">
 import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'
-import ChallengeImportHeroPanel from '@/components/platform/challenge/ChallengeImportHeroPanel.vue'
-import ChallengeImportQueuePanel from '@/components/platform/challenge/ChallengeImportQueuePanel.vue'
-import ChallengePackageImportEntry from '@/components/platform/challenge/ChallengePackageImportEntry.vue'
-import ChallengeImportUploadResultsPanel from '@/components/platform/challenge/ChallengeImportUploadResultsPanel.vue'
-import { useChallengeImportManagePage } from '@/features/challenge-package-import'
+import {
+  ChallengeImportHeroPanel,
+  ChallengeImportQueuePanel,
+  ChallengeImportUploadResultsPanel,
+  ChallengePackageImportEntry,
+  useChallengeImportManagePage,
+} from '@/features/platform/challenge-package-import'
 
 const {
   uploading,

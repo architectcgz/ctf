@@ -1,39 +1,3 @@
-<script setup lang="ts">
-import { useTemplateRef } from 'vue'
-import { UploadCloud } from 'lucide-vue-next'
-
-const props = defineProps<{
-  uploading: boolean
-  selectedFileName?: string
-  hideHeader?: boolean
-}>()
-
-const emit = defineEmits<{
-  select: [files: File[]]
-}>()
-
-const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
-
-function openPicker() {
-  fileInput.value?.click()
-}
-
-function handleFileChange(event: Event) {
-  const target = event.target as HTMLInputElement | null
-  if (!target) {
-    return
-  }
-
-  const files = target?.files ? Array.from(target.files) : []
-  if (files.length === 0) {
-    return
-  }
-
-  emit('select', files)
-  target.value = ''
-}
-</script>
-
 <template>
   <section class="import-entry">
     <div
@@ -212,3 +176,39 @@ function handleFileChange(event: Event) {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { useTemplateRef } from 'vue'
+import { UploadCloud } from 'lucide-vue-next'
+
+const props = defineProps<{
+  uploading: boolean
+  selectedFileName?: string
+  hideHeader?: boolean
+}>()
+
+const emit = defineEmits<{
+  select: [files: File[]]
+}>()
+
+const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
+
+function openPicker() {
+  fileInput.value?.click()
+}
+
+function handleFileChange(event: Event) {
+  const target = event.target as HTMLInputElement | null
+  if (!target) {
+    return
+  }
+
+  const files = target?.files ? Array.from(target.files) : []
+  if (files.length === 0) {
+    return
+  }
+
+  emit('select', files)
+  target.value = ''
+}
+</script>

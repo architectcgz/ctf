@@ -1,66 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-
-import ChallengeDescriptionPanel from '@/components/platform/challenge/ChallengeDescriptionPanel.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
-import type { AdminChallengeImportPreview } from '@/api/contracts'
-
-const props = defineProps<{
-  preview: AdminChallengeImportPreview
-  committing: boolean
-  resetRoute?: AppRouteTarget | null
-}>()
-
-const emit = defineEmits<{
-  confirm: []
-  reset: []
-}>()
-
-const metadata = computed(() => [
-  { label: 'Slug', value: props.preview.slug },
-  { label: '分类', value: props.preview.category },
-  { label: '难度', value: props.preview.difficulty },
-  { label: '分值', value: `${props.preview.points} pts` },
-])
-
-const imageDeliverySourceLabel = computed(() => {
-  switch (props.preview.image_delivery?.source_type) {
-    case 'platform_build':
-      return '平台构建'
-    case 'external_ref':
-      return '外部镜像'
-    case 'manual':
-      return '手工登记'
-    default:
-      return '未声明'
-  }
-})
-
-const imageDeliveryStatusLabel = computed(() => {
-  switch (props.preview.image_delivery?.build_status) {
-    case 'available':
-      return '可用'
-    case 'building':
-      return '构建中'
-    case 'pushed':
-      return '已推送'
-    case 'verifying':
-      return '校验中'
-    case 'failed':
-      return '失败'
-    case 'pending':
-      return '等待中'
-    default:
-      return '待处理'
-  }
-})
-
-const imageDeliveryRef = computed(() =>
-  props.preview.image_delivery?.target_image_ref || props.preview.runtime.image_ref || '未生成'
-)
-</script>
-
 <template>
   <section class="import-review">
     <header class="import-review__header">
@@ -378,49 +315,114 @@ const imageDeliveryRef = computed(() =>
 .import-review__definition dd {
   margin: var(--space-1) 0 0;
   color: var(--journal-ink);
-  line-height: 1.65;
 }
 
 .import-review__list {
   display: grid;
-  gap: var(--space-2-5);
+  gap: var(--space-2);
 }
 
 .import-review__list-item {
-  display: grid;
-  gap: var(--space-1);
-  padding-bottom: var(--space-2-5);
-  border-bottom: 1px dashed
-    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2-5) var(--space-3);
+  border: 1px solid
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 80%, transparent);
+  border-radius: 0.85rem;
+  background: color-mix(
+    in srgb,
+    var(--journal-surface-subtle, var(--color-bg-surface)) 90%,
+    var(--color-bg-base)
+  );
 }
 
 .import-review__list-item strong {
   color: var(--journal-ink);
-  font-size: var(--font-size-0-90);
 }
 
 .import-review__list-item span,
 .import-review__empty {
   color: var(--journal-muted);
-  font-size: var(--font-size-0-88);
-  line-height: 1.7;
 }
 
 .import-review__warnings {
-  margin: 0;
-  padding-left: var(--space-4);
   display: grid;
   gap: var(--space-2);
-  color: color-mix(in srgb, var(--color-warning) 88%, var(--journal-ink));
-  font-size: var(--font-size-0-88);
-  line-height: 1.7;
+  margin: 0;
+  padding-left: var(--space-4);
+  color: var(--color-warning-700, var(--journal-ink));
 }
 
-@media (max-width: 960px) {
-  .import-review__grid,
-  .import-review__meta,
-  .import-review__overview {
-    grid-template-columns: 1fr;
+@media (max-width: 900px) {
+  .import-review__overview,
+  .import-review__meta {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+
+import type { AdminChallengeImportPreview } from '@/api/contracts'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import { ChallengeDescriptionPanel } from '@/entities/challenge'
+
+const props = defineProps<{
+  preview: AdminChallengeImportPreview
+  committing: boolean
+  resetRoute?: AppRouteTarget | null
+}>()
+
+const emit = defineEmits<{
+  confirm: []
+  reset: []
+}>()
+
+const metadata = computed(() => [
+  { label: 'Slug', value: props.preview.slug },
+  { label: '分类', value: props.preview.category },
+  { label: '难度', value: props.preview.difficulty },
+  { label: '分值', value: `${props.preview.points} pts` },
+])
+
+const imageDeliverySourceLabel = computed(() => {
+  switch (props.preview.image_delivery?.source_type) {
+    case 'platform_build':
+      return '平台构建'
+    case 'external_ref':
+      return '外部镜像'
+    case 'manual':
+      return '手工登记'
+    default:
+      return '未声明'
+  }
+})
+
+const imageDeliveryStatusLabel = computed(() => {
+  switch (props.preview.image_delivery?.build_status) {
+    case 'available':
+      return '可用'
+    case 'building':
+      return '构建中'
+    case 'pushed':
+      return '已推送'
+    case 'verifying':
+      return '校验中'
+    case 'failed':
+      return '失败'
+    case 'pending':
+      return '等待中'
+    default:
+      return '待处理'
+  }
+})
+
+const imageDeliveryRef = computed(() =>
+  props.preview.image_delivery?.target_image_ref || props.preview.runtime.image_ref || '未生成'
+)
+</script>

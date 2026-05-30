@@ -1,20 +1,3 @@
-<script setup lang="ts">
-type ChallengeImportUploadResult = {
-  id: string
-  status: 'success' | 'error'
-  fileName: string
-  message: string
-  createdAt: string
-  code?: number
-  requestId?: string
-}
-
-defineProps<{
-  uploadResults: ChallengeImportUploadResult[]
-  formatDateTime: (value: string) => string
-}>()
-</script>
-
 <template>
   <section class="workspace-directory-section challenge-import-directory challenge-plain-section">
     <div class="list-heading">
@@ -165,3 +148,20 @@ defineProps<{
   font-weight: 600;
 }
 </style>
+
+<script setup lang="ts">
+type ChallengeImportUploadResult = {
+  id: string
+  status: 'success' | 'error'
+  fileName: string
+  message: string
+  createdAt: string
+  code?: number
+  requestId?: string
+}
+
+defineProps<{
+  uploadResults: ChallengeImportUploadResult[]
+  formatDateTime: (value: string) => string
+}>()
+</script>

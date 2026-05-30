@@ -1,29 +1,3 @@
-<script setup lang="ts">
-import type { AdminChallengeImportPreview } from '@/api/contracts'
-import ChallengePackageImportReview from '@/components/platform/challenge/ChallengePackageImportReview.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
-
-defineProps<{
-  preview: AdminChallengeImportPreview | null
-  uploading: boolean
-  committing: boolean
-  hasPreview: boolean
-  backToImportRoute: AppRouteTarget
-  backToQueueRoute: AppRouteTarget
-}>()
-
-const emit = defineEmits<{
-  confirm: []
-}>()
-
-function handleConfirm(): void {
-  emit('confirm')
-}
-</script>
-
 <template>
   <section
     class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col"
@@ -135,3 +109,30 @@ function handleConfirm(): void {
   gap: var(--space-2);
 }
 </style>
+
+<script setup lang="ts">
+import type { AdminChallengeImportPreview } from '@/api/contracts'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+
+import ChallengePackageImportReview from './ChallengePackageImportReview.vue'
+
+defineProps<{
+  preview: AdminChallengeImportPreview | null
+  uploading: boolean
+  committing: boolean
+  hasPreview: boolean
+  backToImportRoute: AppRouteTarget
+  backToQueueRoute: AppRouteTarget
+}>()
+
+const emit = defineEmits<{
+  confirm: []
+}>()
+
+function handleConfirm(): void {
+  emit('confirm')
+}
+</script>

@@ -76,7 +76,7 @@
   - 负责：对配置的 registry 做 manifest 检查并返回 digest
   - 不负责：本地镜像构建
 
-- `frontend/src/components/platform/challenge/ChallengePackageImportReview.vue`
+- `frontend/src/features/platform/challenge-package-import/ui/ChallengePackageImportReview.vue`
   - 负责：在导入预览中展示镜像来源、建议 tag、目标镜像和当前状态
   - 不负责：前端自行生成目标镜像名
 
@@ -220,7 +220,7 @@ pending -> building -> pushed -> verifying -> available
 - `code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`
 - `code/backend/internal/config/config.go`
 - `code/frontend/src/api/admin/authoring.ts`
-- `code/frontend/src/components/platform/challenge/ChallengePackageImportReview.vue`
+- `code/frontend/src/features/platform/challenge-package-import/ui/ChallengePackageImportReview.vue`
 - `code/frontend/src/components/platform/images/ImageDirectoryPanel.vue`
 
 ## 9. 验证标准

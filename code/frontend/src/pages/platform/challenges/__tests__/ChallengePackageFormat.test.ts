@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ChallengePackageFormatRoutePage from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue'
 import challengePackageFormatSource from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue?raw'
-import challengePackageFormatGuidePanelSource from '@/components/platform/challenge/ChallengePackageFormatGuidePanel.vue?raw'
-import challengePackageFormatPageSource from '@/features/challenge-package-import/model/useChallengePackageFormatPage.ts?raw'
+import challengePackageFormatGuidePanelSource from '@/features/platform/challenge-package-import/ui/ChallengePackageFormatGuidePanel.vue?raw'
+import challengePackageFormatPageSource from '@/features/platform/challenge-package-import/model/useChallengePackageFormatPage.ts?raw'
 
 describe('ChallengePackageFormat', () => {
   function mountChallengePackageFormat() {
@@ -48,7 +48,7 @@ describe('ChallengePackageFormat', () => {
       '<div class="journal-eyebrow">Uploader Guide</div>'
     )
     expect(challengePackageFormatSource).toContain(
-      "import ChallengePackageFormatGuidePanel from '@/components/platform/challenge/ChallengePackageFormatGuidePanel.vue'"
+      "ChallengePackageFormatGuidePanel,\n  useChallengePackageFormatPage,\n} from '@/features/platform/challenge-package-import'"
     )
   })
 

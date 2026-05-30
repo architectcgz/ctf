@@ -1,33 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { marked } from 'marked'
-
-import { useSanitize } from '@/composables/useSanitize'
-
-const props = withDefaults(
-  defineProps<{
-    content?: string
-    label?: string
-    testId?: string
-  }>(),
-  {
-    label: '题头',
-    testId: 'import-review-description',
-  }
-)
-
-const { sanitizeHtml } = useSanitize()
-
-const renderedContent = computed(() => {
-  if (!props.content) return ''
-  const html = marked.parse(props.content, {
-    gfm: true,
-    breaks: true,
-  })
-  return sanitizeHtml(typeof html === 'string' ? html : props.content)
-})
-</script>
-
 <template>
   <span class="import-review__statement-label">{{ label }}</span>
   <div class="import-review__statement">
@@ -137,3 +107,33 @@ const renderedContent = computed(() => {
   text-underline-offset: 2px;
 }
 </style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { marked } from 'marked'
+
+import { useSanitize } from '@/composables/useSanitize'
+
+const props = withDefaults(
+  defineProps<{
+    content?: string
+    label?: string
+    testId?: string
+  }>(),
+  {
+    label: '题头',
+    testId: 'import-review-description',
+  }
+)
+
+const { sanitizeHtml } = useSanitize()
+
+const renderedContent = computed(() => {
+  if (!props.content) return ''
+  const html = marked.parse(props.content, {
+    gfm: true,
+    breaks: true,
+  })
+  return sanitizeHtml(typeof html === 'string' ? html : props.content)
+})
+</script>

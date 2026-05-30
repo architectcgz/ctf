@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import ChallengePackageImportReview from '../challenge/ChallengePackageImportReview.vue'
-import challengePackageImportReviewSource from '../challenge/ChallengePackageImportReview.vue?raw'
-import challengeDescriptionPanelSource from '../challenge/ChallengeDescriptionPanel.vue?raw'
 import type { AdminChallengeImportPreview } from '@/api/contracts'
+import challengeDescriptionPanelSource from '@/entities/challenge/ui/ChallengeDescriptionPanel.vue?raw'
+
+import { ChallengePackageImportReview } from '..'
+import challengePackageImportReviewSource from './ChallengePackageImportReview.vue?raw'
 
 const preview: AdminChallengeImportPreview = {
   id: 'import-1',

@@ -14,6 +14,7 @@ export {
 export { ChallengeCategoryPill } from './ui'
 export { ChallengeCategoryText } from './ui'
 export { ChallengeCategoryDifficultyPills } from './ui'
+export { ChallengeDescriptionPanel } from './ui'
 export { ChallengeDirectoryRow } from './ui'
 export { ChallengeDifficultyText } from './ui'
 export { ChallengeMetaStrip } from './ui'
