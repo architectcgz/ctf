@@ -1,18 +1,3 @@
-<script setup lang="ts">
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import { REVIEW_ARCHIVE_STATE_COPY } from './model/presentation'
-
-defineProps<{
-  loading: boolean
-  error: string | null
-  hasArchive: boolean
-}>()
-
-const emit = defineEmits<{
-  reload: []
-}>()
-</script>
-
 <template>
   <div
     v-if="loading"
@@ -95,3 +80,18 @@ const emit = defineEmits<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import { REVIEW_ARCHIVE_STATE_COPY } from './model/presentation'
+
+defineProps<{
+  loading: boolean
+  error: string | null
+  hasArchive: boolean
+}>()
+
+const emit = defineEmits<{
+  reload: []
+}>()
+</script>

@@ -8,9 +8,9 @@ import classStudentsInsightWindowPanelSource from '@/features/teaching/class-stu
 import classStudentsDirectoryPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue?raw'
 import studentAnalysisSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
 import studentAnalysisOverviewHeroSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
-import classTrendPanelSource from '@/components/teacher/ClassTrendPanel.vue?raw'
-import classInsightsPanelSource from '@/components/teacher/ClassInsightsPanel.vue?raw'
-import classReviewPanelSource from '@/components/teacher/ClassReviewPanel.vue?raw'
+import classTrendPanelSource from '@/features/teaching/class-students-workspace/ui/ClassTrendPanel.vue?raw'
+import classInsightsPanelSource from '@/features/teaching/class-students-workspace/ui/ClassInsightsPanel.vue?raw'
+import classReviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassReviewPanel.vue?raw'
 import interventionPanelSource from '@/features/teaching/student-analysis-review/ui/InterventionPanel.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
@@ -18,8 +18,8 @@ import studentInsightRecommendationsSectionSource from '@/features/teaching/stud
 import studentInsightWriteupsSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightWriteupsSection.vue?raw'
 import studentInsightManualReviewSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightManualReviewSection.vue?raw'
 import reviewArchiveSource from '@/pages/review-archive/StudentReviewArchiveRoutePage.vue?raw'
-import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue?raw'
-import reviewArchiveSummarySectionSource from '@/widgets/teacher-review-archive/ReviewArchiveSummarySection.vue?raw'
+import reviewArchiveWorkspaceSource from '@/widgets/review-archive-workspace/ReviewArchiveWorkspace.vue?raw'
+import reviewArchiveSummarySectionSource from '@/widgets/review-archive-workspace/ReviewArchiveSummarySection.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,

@@ -1,14 +1,16 @@
-> 状态：Current
-> 事实源：`widgets/teacher-review-archive`、`components/teacher/review-archive`、frontend backlog
-> 替代：无
+> 状态：Superseded
+> 事实源：`widgets/review-archive-workspace`、frontend backlog
+> 替代：`widgets/review-archive-workspace` 最终 owner 收口实现（见 Git 历史与 `.harness/reuse-decisions/review-archive-component-public-owner-neutralization.md`）
 
 # Review Archive Component Public Owner Neutralization Implementation Plan
 
-## 目标
+## 说明
 
-- 为 review archive 的共享面板补中立 public owner `@/components/review-archive`。
-- 让 `ReviewArchiveWorkspace` 不再直连四个 `components/teacher/review-archive/*` 路径。
-- 顺手把对应 architecture allowlist 从四条具体 teacher 组件例外收缩到一条中立 barrel 例外。
+这份计划记录的是 2026-05-27 的中间过渡方案：先补 `components/review-archive` barrel，把 shared workspace 对 `components/teacher/review-archive/*` 的直连收成一条中立入口。
+
+后续实现已经进一步完成最终收口：`ReviewArchiveWorkspace`、`ReviewArchiveState`、`ReviewArchiveSummarySection`、presentation model 与四个 detail 子组件都直接并入 `widgets/review-archive-workspace`，`components/review-archive`、`components/teacher/review-archive` 与 `widgets/teacher-review-archive` 不再保留。
+
+当前以代码现状和 `.harness/reuse-decisions/review-archive-component-public-owner-neutralization.md` 为准，不再按本中间方案继续实施。
 
 ## 非目标
 

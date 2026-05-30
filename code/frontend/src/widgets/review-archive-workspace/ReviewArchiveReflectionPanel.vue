@@ -1,23 +1,3 @@
-<script setup lang="ts">
-import type {
-  ReviewArchiveManualReviewItemData,
-  ReviewArchiveWriteupItemData,
-} from '@/api/contracts'
-
-function submissionStatusLabel(status: ReviewArchiveWriteupItemData['submission_status']): string {
-  return status === 'published' ? '已发布' : '草稿'
-}
-
-function visibilityStatusLabel(status: ReviewArchiveWriteupItemData['visibility_status']): string {
-  return status === 'hidden' ? '已隐藏' : '已公开'
-}
-
-defineProps<{
-  writeups: ReviewArchiveWriteupItemData[]
-  manualReviews: ReviewArchiveManualReviewItemData[]
-}>()
-</script>
-
 <template>
   <section class="archive-grid">
     <article class="archive-panel teacher-surface-section">
@@ -198,3 +178,23 @@ defineProps<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import type {
+  ReviewArchiveManualReviewItemData,
+  ReviewArchiveWriteupItemData,
+} from '@/api/contracts'
+
+function submissionStatusLabel(status: ReviewArchiveWriteupItemData['submission_status']): string {
+  return status === 'published' ? '已发布' : '草稿'
+}
+
+function visibilityStatusLabel(status: ReviewArchiveWriteupItemData['visibility_status']): string {
+  return status === 'hidden' ? '已隐藏' : '已公开'
+}
+
+defineProps<{
+  writeups: ReviewArchiveWriteupItemData[]
+  manualReviews: ReviewArchiveManualReviewItemData[]
+}>()
+</script>

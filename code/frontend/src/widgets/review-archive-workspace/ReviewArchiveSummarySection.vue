@@ -1,46 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-
-import type { ReviewArchiveData } from '@/api/contracts'
-import SectionCard from '@/components/common/SectionCard.vue'
-import { formatDate } from '@/utils/format'
-import {
-  buildReviewArchiveSummaryCards,
-  rankReviewArchiveSkillDimensions,
-  REVIEW_ARCHIVE_SUMMARY_COPY,
-} from './model/presentation'
-
-const props = defineProps<{
-  archive: ReviewArchiveData
-}>()
-
-const solvedRate = computed(() => {
-  if (!props.archive.summary.total_challenges) return 0
-  return Math.round(
-    (props.archive.summary.total_solved / props.archive.summary.total_challenges) * 100
-  )
-})
-
-const formattedLastActivity = computed(() => {
-  if (!props.archive.summary.last_activity_at) return '--'
-  return formatDate(props.archive.summary.last_activity_at)
-})
-
-const rankedSkillDimensions = computed(() =>
-  rankReviewArchiveSkillDimensions(props.archive.skill_profile.dimensions)
-)
-
-const summaryCards = computed(() =>
-  buildReviewArchiveSummaryCards({
-    solvedRate: solvedRate.value,
-    totalSolved: props.archive.summary.total_solved,
-    totalChallenges: props.archive.summary.total_challenges,
-    correctSubmissionCount: props.archive.summary.correct_submission_count,
-    formattedLastActivity: formattedLastActivity.value,
-  })
-)
-</script>
-
 <template>
   <section class="review-archive-summary-grid">
     <SectionCard
@@ -203,3 +160,46 @@ const summaryCards = computed(() =>
   }
 }
 </style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+
+import type { ReviewArchiveData } from '@/api/contracts'
+import SectionCard from '@/components/common/SectionCard.vue'
+import { formatDate } from '@/utils/format'
+import {
+  buildReviewArchiveSummaryCards,
+  rankReviewArchiveSkillDimensions,
+  REVIEW_ARCHIVE_SUMMARY_COPY,
+} from './model/presentation'
+
+const props = defineProps<{
+  archive: ReviewArchiveData
+}>()
+
+const solvedRate = computed(() => {
+  if (!props.archive.summary.total_challenges) return 0
+  return Math.round(
+    (props.archive.summary.total_solved / props.archive.summary.total_challenges) * 100
+  )
+})
+
+const formattedLastActivity = computed(() => {
+  if (!props.archive.summary.last_activity_at) return '--'
+  return formatDate(props.archive.summary.last_activity_at)
+})
+
+const rankedSkillDimensions = computed(() =>
+  rankReviewArchiveSkillDimensions(props.archive.skill_profile.dimensions)
+)
+
+const summaryCards = computed(() =>
+  buildReviewArchiveSummaryCards({
+    solvedRate: solvedRate.value,
+    totalSolved: props.archive.summary.total_solved,
+    totalChallenges: props.archive.summary.total_challenges,
+    correctSubmissionCount: props.archive.summary.correct_submission_count,
+    formattedLastActivity: formattedLastActivity.value,
+  })
+)
+</script>

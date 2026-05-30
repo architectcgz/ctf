@@ -1,35 +1,3 @@
-<script setup lang="ts">
-import type { ReviewArchiveData } from '@/api/contracts'
-import {
-  ReviewArchiveEvidencePanel,
-  ReviewArchiveHero,
-  ReviewArchiveObservationStrip,
-  ReviewArchiveReflectionPanel,
-} from '@/components/review-archive'
-import ReviewArchiveState from './ReviewArchiveState.vue'
-import ReviewArchiveSummarySection from './ReviewArchiveSummarySection.vue'
-
-const props = defineProps<{
-  archive: ReviewArchiveData | null
-  loading: boolean
-  error: string | null
-  exporting: boolean
-  analysisRoute: {
-    name: string
-    params?: Record<string, string>
-  }
-  backRoute: {
-    name: string
-    params?: Record<string, string>
-  }
-}>()
-
-const emit = defineEmits<{
-  reload: []
-  exportArchive: []
-}>()
-</script>
-
 <template>
   <div class="review-archive-shell teacher-surface space-y-8">
     <ReviewArchiveHero
@@ -92,3 +60,33 @@ const emit = defineEmits<{
   border-bottom: 1px dashed var(--teacher-divider);
 }
 </style>
+
+<script setup lang="ts">
+import type { ReviewArchiveData } from '@/api/contracts'
+import ReviewArchiveEvidencePanel from './ReviewArchiveEvidencePanel.vue'
+import ReviewArchiveHero from './ReviewArchiveHero.vue'
+import ReviewArchiveObservationStrip from './ReviewArchiveObservationStrip.vue'
+import ReviewArchiveReflectionPanel from './ReviewArchiveReflectionPanel.vue'
+import ReviewArchiveState from './ReviewArchiveState.vue'
+import ReviewArchiveSummarySection from './ReviewArchiveSummarySection.vue'
+
+defineProps<{
+  archive: ReviewArchiveData | null
+  loading: boolean
+  error: string | null
+  exporting: boolean
+  analysisRoute: {
+    name: string
+    params?: Record<string, string>
+  }
+  backRoute: {
+    name: string
+    params?: Record<string, string>
+  }
+}>()
+
+const emit = defineEmits<{
+  reload: []
+  exportArchive: []
+}>()
+</script>

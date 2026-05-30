@@ -8,9 +8,9 @@ import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import reviewArchiveSource from '@/pages/review-archive/StudentReviewArchiveRoutePage.vue?raw'
 import studentReviewArchivePageModelSource from '@/features/teaching/student-review-archive-workspace/model/useStudentReviewArchivePage.ts?raw'
 import reviewArchiveWidgetOwnerSource from '@/widgets/review-archive-workspace/index.ts?raw'
-import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue?raw'
-import reviewArchiveStateSource from '@/widgets/teacher-review-archive/ReviewArchiveState.vue?raw'
-import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
+import reviewArchiveWorkspaceSource from '@/widgets/review-archive-workspace/ReviewArchiveWorkspace.vue?raw'
+import reviewArchiveStateSource from '@/widgets/review-archive-workspace/ReviewArchiveState.vue?raw'
+import reviewArchiveHeroSource from '@/widgets/review-archive-workspace/ReviewArchiveHero.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const teachingApiMocks = vi.hoisted(() => ({
@@ -263,7 +263,7 @@ describe('TeacherStudentReviewArchive', () => {
 
   it('复盘归档操作按钮应接入共享 ui-btn 原语', () => {
     expect(reviewArchiveWidgetOwnerSource).toContain(
-      "export { default as ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue'"
+      "export { default as ReviewArchiveWorkspace } from './ReviewArchiveWorkspace.vue'"
     )
     expect(reviewArchiveSource).toContain(
       "import { useStudentReviewArchivePage } from '@/features/teaching/student-review-archive-workspace'"

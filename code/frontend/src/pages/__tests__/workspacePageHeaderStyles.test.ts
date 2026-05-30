@@ -154,7 +154,7 @@ import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.v
 import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
 import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
 import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
-import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
+import reviewArchiveHeroSource from '@/widgets/review-archive-workspace/ReviewArchiveHero.vue?raw'
 import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
 
 const challengeManageWorkspaceSource = `${challengeManageSource}\n${challengeManageHeroSource}`

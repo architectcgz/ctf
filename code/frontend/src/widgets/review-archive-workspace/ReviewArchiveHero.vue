@@ -1,32 +1,3 @@
-<script setup lang="ts">
-import type { ReviewArchiveData } from '@/api/contracts'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-
-defineProps<{
-  archive: ReviewArchiveData | null
-  exporting: boolean
-  analysisRoute: {
-    name: string
-    params?: Record<string, string>
-  }
-  backRoute: {
-    name: string
-    params?: Record<string, string>
-  }
-}>()
-
-const emit = defineEmits<{
-  exportArchive: []
-}>()
-
-const statItems = [
-  { key: 'solved', label: '完成题目', field: 'total_solved' },
-  { key: 'attempts', label: '总提交', field: 'total_attempts' },
-  { key: 'evidence', label: '证据事件', field: 'evidence_event_count' },
-  { key: 'writeups', label: '复盘材料', field: 'writeup_count' },
-] as const
-</script>
-
 <template>
   <section class="archive-hero teacher-surface-hero">
     <div class="archive-hero__backdrop" />
@@ -218,26 +189,25 @@ const statItems = [
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-top: var(--space-1-5);
-  color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
+  margin-top: var(--space-2);
+  color: var(--journal-muted);
 }
 
 .archive-hero__stamp {
   display: inline-flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-top: var(--space-4-5);
-  padding: var(--space-3) var(--space-3-5);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--journal-accent) 6%, var(--journal-surface));
-  color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
-  font-family: var(--font-family-mono);
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent-strong);
   font-size: var(--font-size-0-82);
+  font-family: var(--font-family-mono);
 }
 
 .archive-hero__stamp strong {
-  color: var(--journal-ink);
-  font-size: var(--font-size-0-95);
+  font-weight: 700;
 }
 
 .archive-hero__stats {
@@ -252,7 +222,7 @@ const statItems = [
 
 .archive-hero__stat-value {
   margin-top: var(--space-3);
-  font-size: var(--font-size-1-80);
+  font-size: var(--font-size-1-55);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -268,18 +238,33 @@ const statItems = [
     justify-content: flex-start;
   }
 }
-
-@media (max-width: 767px) {
-  .archive-hero {
-    border-radius: 24px;
-  }
-
-  .archive-hero__content {
-    padding: var(--space-4-5);
-  }
-
-  .archive-hero__stats {
-    grid-template-columns: 1fr 1fr;
-  }
-}
 </style>
+
+<script setup lang="ts">
+import type { ReviewArchiveData } from '@/api/contracts'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+
+defineProps<{
+  archive: ReviewArchiveData | null
+  exporting: boolean
+  analysisRoute: {
+    name: string
+    params?: Record<string, string>
+  }
+  backRoute: {
+    name: string
+    params?: Record<string, string>
+  }
+}>()
+
+const emit = defineEmits<{
+  exportArchive: []
+}>()
+
+const statItems = [
+  { key: 'solved', label: '完成题目', field: 'total_solved' },
+  { key: 'attempts', label: '总提交', field: 'total_attempts' },
+  { key: 'evidence', label: '证据事件', field: 'evidence_event_count' },
+  { key: 'writeups', label: '复盘材料', field: 'writeup_count' },
+] as const
+</script>

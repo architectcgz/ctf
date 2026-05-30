@@ -1,5 +1,7 @@
 # Review Archive Component Public Owner Neutralization 收口复核
 
+> 注：本 review 对应的是 2026-05-27 的中间 bridge 方案。后续代码已继续前进到最终 widget owner：workspace、本地 model 与 detail 子组件直接并入 `widgets/review-archive-workspace`，`components/review-archive`、`components/teacher/review-archive` 与 `widgets/teacher-review-archive` 已退出当前结构。当前事实以代码现状为准。
+
 - Review target：
   - repository：`ctf`
   - branch：`main`

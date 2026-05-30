@@ -256,15 +256,14 @@ function ensureAWDBucket(
   buckets: Map<string, AwdBucket>,
   input: { challengeId: string; title: string; victimTeamName: string }
 ): AwdBucket {
-  const victimTeamName = input.victimTeamName || '未标记目标队伍'
-  const key = `${input.challengeId}::${victimTeamName}`
+  const key = `${input.challengeId}:${input.victimTeamName || 'unknown'}`
   const existing = buckets.get(key)
   if (existing) return existing
   const bucket: AwdBucket = {
-    id: `awd-${input.challengeId}-${victimTeamName}`,
+    id: `awd-${key}`,
     challengeId: input.challengeId,
     title: input.title,
-    victimTeamName,
+    victimTeamName: input.victimTeamName || '目标队伍',
     attemptCount: 0,
     successCount: 0,
     scoreEvents: 0,
@@ -276,79 +275,62 @@ function ensureAWDBucket(
   return bucket
 }
 
-function toPracticeCase(bucket: PracticeBucket): ReviewArchiveCase {
-  const statusLabel =
-    bucket.successCount > 0 && bucket.reflectionCount > 0
-      ? '已形成闭环'
-      : bucket.successCount > 0
-        ? '已完成'
-        : bucket.submitCount > 0 || bucket.exploitCount > 0 || bucket.accessCount > 0
-          ? '进行中'
-          : '已记录'
-
-  const tone: CaseTone =
-    bucket.successCount > 0
-      ? 'success'
-      : bucket.submitCount > 0 || bucket.exploitCount > 0
-        ? 'warning'
-        : 'neutral'
-
-  return {
-    id: bucket.id,
-    title: bucket.title,
-    subtitle: '练习轨迹',
-    statusLabel,
-    tone,
-    eventCount: bucket.events.length,
-    lastActivityAt: bucket.lastActivityAt,
-    metrics: [
-      { label: '有效提交', value: String(bucket.successCount) },
-      { label: '复盘材料', value: String(bucket.writeupCount + bucket.manualReviewCount) },
-      { label: '最近活动', value: bucket.lastActivityAt || '--' },
-    ],
-    stages: [
-      { key: 'access', label: '接入', count: bucket.accessCount },
-      { key: 'exploit', label: '利用', count: bucket.exploitCount },
-      { key: 'submit', label: '提交', count: bucket.submitCount },
-      { key: 'reflection', label: '复盘', count: bucket.reflectionCount },
-    ],
-    events: bucket.events.sort(sortEventsByTime),
-  }
+function pushCaseEvent(events: CaseEvent[], event: CaseEvent): void {
+  events.push(event)
+  events.sort((a, b) => compareTimeDesc(a.timestamp, b.timestamp))
 }
 
-function toAWDCase(bucket: AwdBucket): ReviewArchiveCase {
-  const hit = bucket.successCount > 0
-  return {
-    id: bucket.id,
-    title: bucket.title,
-    subtitle: bucket.victimTeamName,
-    statusLabel: hit ? '攻击命中' : '攻击未命中',
-    tone: hit ? 'success' : 'warning',
-    eventCount: bucket.events.length,
-    lastActivityAt: bucket.lastActivityAt,
-    metrics: [
-      { label: '攻击次数', value: String(bucket.attemptCount) },
-      { label: '累计得分', value: String(bucket.scoreTotal) },
-      { label: '最近活动', value: bucket.lastActivityAt || '--' },
-    ],
-    stages: [
-      { key: 'attack', label: '攻击尝试', count: bucket.attemptCount },
-      { key: 'result', label: '命中结果', count: bucket.events.length },
-      { key: 'score', label: '得分变化', count: bucket.scoreEvents },
-    ],
-    events: bucket.events.sort(sortEventsByTime),
-  }
+function latestTime(current: string, incoming: string): string {
+  if (!current) return incoming
+  return compareTimeDesc(current, incoming) <= 0 ? incoming : current
+}
+
+function compareTimeDesc(left: string, right: string): number {
+  return new Date(right).getTime() - new Date(left).getTime()
+}
+
+function rawTimelineType(item: TimelineEvent): string {
+  return asString(item.meta?.raw_type) || item.type || ''
+}
+
+function isAWDTimeline(item: TimelineEvent): boolean {
+  const rawType = rawTimelineType(item)
+  return rawType === 'awd_attack_submit' || rawType === 'awd_attack_submission'
+}
+
+function isPracticeTimeline(item: TimelineEvent): boolean {
+  const rawType = rawTimelineType(item)
+  return (
+    rawType === 'solve' ||
+    rawType === 'submission' ||
+    rawType === 'instance_start' ||
+    rawType === 'instance_destroy' ||
+    item.type === 'solve'
+  )
+}
+
+function isPracticeEvidence(type: string): boolean {
+  return (
+    type === 'instance_access' ||
+    type === 'instance_proxy_request' ||
+    type === 'submission_correct' ||
+    type === 'submission_attempt'
+  )
 }
 
 function practiceEventFromEvidence(
   item: ReviewArchiveEvidenceItemData,
   index: number
-): { stage: PracticeStageKey; event: CaseEvent } {
+): {
+  stage: PracticeStageKey
+  event: CaseEvent
+} {
+  const baseId = `${item.type}-${item.challenge_id}-${item.timestamp}-${index}`
   if (item.type === 'instance_access') {
     return {
       stage: 'access',
       event: {
-        id: `${item.type}-${item.challenge_id}-${item.timestamp}-${index}`,
+        id: baseId,
         label: '接入目标',
         detail: item.detail || item.title,
         timestamp: item.timestamp,
@@ -361,84 +343,95 @@ function practiceEventFromEvidence(
     return {
       stage: 'exploit',
       event: {
-        id: `${item.type}-${item.challenge_id}-${item.timestamp}-${index}`,
-        label: '利用操作',
+        id: baseId,
+        label: '利用动作',
         detail: item.detail || item.title,
         timestamp: item.timestamp,
         stageLabel: '利用',
         tone: 'neutral',
+        meta: asString(item.meta?.method),
       },
     }
   }
-
-  const isCorrect = Boolean(item.meta?.is_correct)
-  const points = numberFromUnknown(item.meta?.points)
+  const isSuccess = item.type === 'submission_correct'
   return {
     stage: 'submit',
     event: {
-      id: `${item.type}-${item.challenge_id}-${item.timestamp}-${index}`,
-      label: isCorrect ? '命中提交' : '提交尝试',
+      id: baseId,
+      label: isSuccess ? '命中提交' : '提交尝试',
       detail: item.detail || item.title,
       timestamp: item.timestamp,
       stageLabel: '提交',
-      tone: isCorrect ? 'success' : 'warning',
-      meta: points > 0 ? `得分 ${points}` : undefined,
+      tone: isSuccess ? 'success' : 'warning',
+      meta: numberFromUnknown(item.meta?.points) > 0 ? `得分 ${item.meta?.points}` : undefined,
     },
   }
 }
 
-function isPracticeTimeline(item: TimelineEvent): boolean {
-  const rawType = rawTimelineType(item)
-  return rawType === 'instance_start' || rawType === 'instance_destroy' || rawType === 'flag_submit'
-}
-
-function isAWDTimeline(item: TimelineEvent): boolean {
-  return rawTimelineType(item) === 'awd_attack_submit'
-}
-
-function rawTimelineType(item: TimelineEvent): string {
-  const raw = asString(item.meta?.raw_type)
-  return raw || item.type
-}
-
-function isPracticeEvidence(type: string): boolean {
-  return (
-    type === 'instance_access' ||
-    type === 'instance_proxy_request' ||
-    type === 'challenge_submission'
-  )
-}
-
 function extractVictimTeamName(detail?: string): string {
   if (!detail) return ''
-  const hit = detail.match(/^AWD 攻击命中\s+(.+?)(?:，得分\s+\d+)?$/)
-  if (hit?.[1]) return hit[1]
-  const fail = detail.match(/^AWD 攻击未命中\s+(.+)$/)
-  if (fail?.[1]) return fail[1]
-  return ''
+  const match = detail.match(/命中\s+(.+?)(?:，|,|$)/)
+  return match?.[1]?.trim() || ''
 }
 
-function latestTime(current: string, next: string): string {
-  if (!current) return next
-  return new Date(next).getTime() > new Date(current).getTime() ? next : current
+function toPracticeCase(bucket: PracticeBucket): ReviewArchiveCase {
+  const stages: Record<PracticeStageKey, ReviewArchiveStageSummary> = {
+    access: { key: 'access', label: '接入', count: bucket.accessCount },
+    exploit: { key: 'exploit', label: '利用', count: bucket.exploitCount },
+    submit: { key: 'submit', label: '提交', count: bucket.submitCount },
+    reflection: { key: 'reflection', label: '复盘', count: bucket.reflectionCount },
+  }
+  return {
+    id: bucket.id,
+    title: bucket.title,
+    subtitle: `${bucket.eventCount ?? bucket.events.length} 条训练事件`,
+    statusLabel: bucket.successCount > 0 ? '已形成命中' : '持续练习中',
+    tone: bucket.successCount > 0 ? 'success' : 'neutral',
+    eventCount: bucket.events.length,
+    lastActivityAt: bucket.lastActivityAt,
+    metrics: [
+      { label: '有效提交', value: String(bucket.successCount) },
+      { label: 'Writeup', value: String(bucket.writeupCount) },
+      { label: '人工审核', value: String(bucket.manualReviewCount) },
+    ],
+    stages: Object.values(stages),
+    events: bucket.events,
+  }
 }
 
-function numberFromUnknown(value: unknown): number {
-  return typeof value === 'number' ? value : 0
+function toAWDCase(bucket: AwdBucket): ReviewArchiveCase {
+  const stages: Record<AwdStageKey, ReviewArchiveStageSummary> = {
+    attack: { key: 'attack', label: '攻击', count: bucket.attemptCount },
+    result: { key: 'result', label: '命中', count: bucket.successCount },
+    score: { key: 'score', label: '得分', count: bucket.scoreEvents },
+  }
+  return {
+    id: bucket.id,
+    title: bucket.title,
+    subtitle: bucket.victimTeamName,
+    statusLabel: bucket.successCount > 0 ? '有效命中' : '持续对抗中',
+    tone: bucket.successCount > 0 ? 'success' : 'warning',
+    eventCount: bucket.events.length,
+    lastActivityAt: bucket.lastActivityAt,
+    metrics: [
+      { label: '攻击次数', value: String(bucket.attemptCount) },
+      { label: '成功命中', value: String(bucket.successCount) },
+      { label: '累计得分', value: String(bucket.scoreTotal) },
+    ],
+    stages: Object.values(stages),
+    events: bucket.events,
+  }
+}
+
+function sortCasesByLastActivity(left: ReviewArchiveCase, right: ReviewArchiveCase): number {
+  return compareTimeDesc(left.lastActivityAt, right.lastActivityAt)
 }
 
 function asString(value: unknown): string {
   return typeof value === 'string' ? value : ''
 }
 
-function pushCaseEvent(events: CaseEvent[], event: CaseEvent): void {
-  events.push(event)
-}
-
-function sortEventsByTime(left: CaseEvent, right: CaseEvent): number {
-  return new Date(left.timestamp).getTime() - new Date(right.timestamp).getTime()
-}
-
-function sortCasesByLastActivity(left: ReviewArchiveCase, right: ReviewArchiveCase): number {
-  return new Date(right.lastActivityAt).getTime() - new Date(left.lastActivityAt).getTime()
+function numberFromUnknown(value: unknown): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
 }

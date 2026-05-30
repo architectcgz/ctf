@@ -1,1 +1,7 @@
-export { default as ReviewArchiveWorkspace } from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue'
+export { default as ReviewArchiveWorkspace } from './ReviewArchiveWorkspace.vue'
+export { default as ReviewArchiveHero } from './ReviewArchiveHero.vue'
+export { default as ReviewArchiveObservationStrip } from './ReviewArchiveObservationStrip.vue'
+export { default as ReviewArchiveEvidencePanel } from './ReviewArchiveEvidencePanel.vue'
+export { default as ReviewArchiveReflectionPanel } from './ReviewArchiveReflectionPanel.vue'
+export { default as ReviewArchiveState } from './ReviewArchiveState.vue'
+export { default as ReviewArchiveSummarySection } from './ReviewArchiveSummarySection.vue'

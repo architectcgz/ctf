@@ -1,32 +1,3 @@
-<script setup lang="ts">
-import type { AdviceSeverity, ReviewArchiveObservationItemData } from '@/api/contracts'
-
-defineProps<{
-  items: ReviewArchiveObservationItemData[]
-}>()
-
-function severityClass(severity: string): string {
-  if (severity === 'good') return 'observation observation--good'
-  if (severity === 'attention') return 'observation observation--attention'
-  if (severity === 'warning') return 'observation observation--warning'
-  if (severity === 'danger') return 'observation observation--danger'
-  return 'observation observation--neutral'
-}
-
-function severityLabel(severity: AdviceSeverity): string {
-  if (severity === 'danger') return '高风险'
-  if (severity === 'warning') return '需处理'
-  if (severity === 'attention') return '建议跟进'
-  return '稳定'
-}
-
-function observationTitle(item: ReviewArchiveObservationItemData): string {
-  if (item.label) return item.label
-  if (item.dimension) return `${item.dimension} 维度聚焦`
-  return item.code.replaceAll('_', ' ')
-}
-</script>
-
 <template>
   <section class="observation-strip teacher-surface-section">
     <header class="observation-strip__header">
@@ -190,3 +161,32 @@ function observationTitle(item: ReviewArchiveObservationItemData): string {
   }
 }
 </style>
+
+<script setup lang="ts">
+import type { AdviceSeverity, ReviewArchiveObservationItemData } from '@/api/contracts'
+
+defineProps<{
+  items: ReviewArchiveObservationItemData[]
+}>()
+
+function severityClass(severity: string): string {
+  if (severity === 'good') return 'observation observation--good'
+  if (severity === 'attention') return 'observation observation--attention'
+  if (severity === 'warning') return 'observation observation--warning'
+  if (severity === 'danger') return 'observation observation--danger'
+  return 'observation observation--neutral'
+}
+
+function severityLabel(severity: AdviceSeverity): string {
+  if (severity === 'danger') return '高风险'
+  if (severity === 'warning') return '需处理'
+  if (severity === 'attention') return '建议跟进'
+  return '稳定'
+}
+
+function observationTitle(item: ReviewArchiveObservationItemData): string {
+  if (item.label) return item.label
+  if (item.dimension) return `${item.dimension} 维度聚焦`
+  return item.code.replaceAll('_', ' ')
+}
+</script>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import ReviewArchiveEvidencePanel from '../ReviewArchiveEvidencePanel.vue'
+import ReviewArchiveEvidencePanel from './ReviewArchiveEvidencePanel.vue'
 import type {
   ReviewArchiveEvidenceItemData,
   ReviewArchiveManualReviewItemData,

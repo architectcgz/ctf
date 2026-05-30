@@ -7,7 +7,7 @@ import {
   REVIEW_ARCHIVE_SUMMARY_COPY,
 } from './presentation'
 
-describe('teacher review archive widget presentation', () => {
+describe('review archive workspace presentation', () => {
   it('应保持状态文案出口稳定', () => {
     expect(REVIEW_ARCHIVE_STATE_COPY.errorTitle).toBe('复盘归档加载失败')
     expect(REVIEW_ARCHIVE_STATE_COPY.emptyTitle).toBe('暂无复盘归档')

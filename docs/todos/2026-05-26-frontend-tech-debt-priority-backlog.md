@@ -64,8 +64,7 @@
 - `components/awd-review`
   - `2026-05-30` 已完成：detail 子组件和中立入口已并入 `widgets/awd-review-workspace`，该目录不再作为活动迁移目标
 - `components/review-archive`
-  - 现状：当前只剩 `index.ts` 中立入口，真正的 route-level 组合已经在 `widgets/review-archive-workspace`
-  - 后续判断：如果确认只服务 review archive workspace，适合并入 `widgets/review-archive-workspace`
+  - `2026-05-30` 已开始最终收口：review archive 子组件与 workspace 正在并入 `widgets/review-archive-workspace`，该目录不再作为长期 owner 保留
 
 ### D. 优先确认是否可删除的残片
 
@@ -77,7 +76,7 @@
 
 1. 先按目录批量清 `components/platform`、`components/teacher`、`components/contests` 里只服务单一 feature 的 UI。
 2. 再收 `components/notifications` 之外的其余单 capability 历史壳；`auth / profile / skill-profile / instance-list / scoreboard / notifications` 这一批已于 `2026-05-30` 收口到 owning feature 的 `ui/`。
-3. 最后评估 `components/review-archive` 是否并入对应 `widgets/*`，以及 `components/class-management` 是否直接删除。
+3. 最后确认 `review-archive` 最终 widget owner 收口完成，并检查 `components/class-management` 是否直接删除。
 
 ### 第 1 批子目录迁移表
 
@@ -241,7 +240,8 @@
   - `2026-05-27` writeup 进展：`ChallengeWriteupManagePanel` 对应的 `useChallengeWriteupManagement` 已切到 `api/admin/authoring.ts` 下的 platform writeup submissions owner；教师侧 `TeacherStudentAnalysis` / `useSubmissionReviewFlows` 的题解查看与评阅链路保持不变，当前剩余重点收口面进一步收敛到更深层 contract 命名。
   - `2026-05-27` contract naming 进展：题解投稿目录的共享 DTO 已从 `TeacherSubmissionWriteupItemData` 收口到 `WriteupSubmissionItemData`，manual review 共享 DTO 已进一步从 `TeacherManualReviewSubmissionItemData` / `TeacherManualReviewSubmissionDetailData` 收口到 `ManualReviewSubmissionItemData` / `ManualReviewSubmissionDetailData`，writeup detail DTO 已从 `TeacherSubmissionWriteupDetailData` 收口到 `WriteupSubmissionDetailData`，班级目录 DTO 已从 `TeacherClassItem` 收口到 `ClassDirectoryItem`，攻击会话筛选 query 已从 `TeacherAttackSessionQuery` 收口到 `AttackSessionQuery`，AWD review 赛事目录项 DTO 已从 `TeacherAWDReviewContestItemData` 收口到 `AwdReviewContestItemData`；platform 题解管理、teacher / platform 学员分析以及共享班级目录 / 复盘筛选 / AWD review index 消费面不再继续共用这组 teacher 前缀 contract，当前更深层命名残片已从这组共享 contract 面清掉。
   - `2026-05-27` report dialog owner 进展：`ClassReportExportDialog` 已补中立 `components/reports` public owner，teacher / platform 的班级管理、班级学员页和学员分析页不再直接从 `components/teacher/reports` 引共享导出对话框；当前剩余重点收口面回到 review archive / AWD review 这类 shared widget 仍直连 teacher 组件入口的存量。
-  - `2026-05-27` review archive owner 进展：`ReviewArchiveWorkspace` 已改从中立 `components/review-archive` 入口读取 hero / observation / evidence / reflection 面板，对 `components/teacher/review-archive/*` 的四条直连 import 收敛为一条 barrel；当前剩余重点收口面进一步缩到 AWD review shared widget 的 teacher 组件入口。
+  - `2026-05-27` review archive owner 进展：`ReviewArchiveWorkspace` 曾先改从中立 `components/review-archive` 入口读取 hero / observation / evidence / reflection 面板，先把 `components/teacher/review-archive/*` 的四条直连 import 收成一条 barrel。
+  - `2026-05-30` review archive owner 最终进展：该中立入口与 `widgets/teacher-review-archive/*` 这层历史壳正在继续收口，workspace、本地 model 和四个 detail 子块统一并入 `widgets/review-archive-workspace/*`，不再保留 teacher/widget 双层命名桥。
   - `2026-05-27` AWD review owner 进展：`AwdReviewWorkspace` 曾先改从中立 `components/awd-review` 入口读取 round selector / analysis / evidence / team drawer，先把 `components/teacher/awd-review/*` 的四条直连 import 收成单一入口。
   - `2026-05-30` AWD review owner 最终进展：上述中立入口已继续下沉并删除，round selector / analysis / evidence / team drawer 已直接并入 `widgets/awd-review-workspace`，`components/awd-review` 与 `components/teacher/awd-review/*` 不再保留。
   - `2026-05-28` AWD review access owner 进展：已新增 `api/awd-reviews.ts` 作为 role-aware facade，`useAwdReviewIndex.ts`、`useAwdReviewExportFlow.ts`、`useAwdReviewDetailPage.ts` 不再各自直接双引 `@/api/admin` 与 `@/api/teacher`；当前 AWD review 这条 admin / teacher 耦合残余重点已从共享 feature model 的 access owner 漂移，进一步收敛到更深层的 DTO / contract naming 残片。
