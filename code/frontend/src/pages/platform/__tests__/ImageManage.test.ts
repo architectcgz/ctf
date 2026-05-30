@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import ImageManage from '../ImageManage.vue'
+import ImageManageRoutePage from '@/pages/platform/ImageManageRoutePage.vue'
 import imageManageSource from '@/pages/platform/ImageManageRoutePage.vue?raw'
 import imageCreateModalSource from '@/features/image-management/ui/ImageCreateModal.vue?raw'
 import imageDetailModalSource from '@/features/image-management/ui/ImageDetailModal.vue?raw'
@@ -55,7 +55,7 @@ function createImagePage(status: 'pending' | 'building' | 'available' | 'failed'
 }
 
 function mountPage() {
-  return mount(ImageManage, {
+  return mount(ImageManageRoutePage, {
     global: {
       stubs: {
         ElTable: true,

@@ -3,7 +3,7 @@ import { join, relative } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-const sourceRoots = ['src/components', 'src/views', 'src/widgets']
+const sourceRoots = ['src/components', 'src/pages', 'src/widgets']
 
 function collectVueFiles(dir: string): string[] {
   const entries = readdirSync(dir)

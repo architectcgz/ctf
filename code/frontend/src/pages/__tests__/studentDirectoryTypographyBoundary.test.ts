@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
-import contestListSource from '@/views/contests/ContestList.vue?raw'
+import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
+import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
 import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
-import instanceListSource from '@/views/instances/InstanceList.vue?raw'
+import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
 import awdReviewDirectorySource from '@/widgets/awd-review-workspace/AwdReviewDirectoryPanel.vue?raw'
 import awdChallengeImportSectionSource from '@/features/platform/awd-challenges/ui/AwdChallengeImportSection.vue?raw'
 import awdChallengeLibrarySourceBase from '@/features/platform/awd-challenges/ui/AWDChallengeLibraryPage.vue?raw'
@@ -19,8 +19,8 @@ import contestChallengeEditorDialogSourceBase from '@/features/contest-workbench
 import contestChallengeSettingsSectionSource from '@/features/contest-workbench/ui/ContestChallengeSettingsSection.vue?raw'
 import contestOperationsHubSource from '@/features/platform/contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
 import platformContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
-import scoreboardDetailSource from '@/views/scoreboard/ScoreboardDetail.vue?raw'
-import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
+import scoreboardDetailSource from '@/pages/scoreboard/ScoreboardDetailRoutePage.vue?raw'
+import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
 import appStyleSource from '@/style.css?raw'
 
 const vueComponentSources = import.meta.glob<string>('/src/**/*.vue', {

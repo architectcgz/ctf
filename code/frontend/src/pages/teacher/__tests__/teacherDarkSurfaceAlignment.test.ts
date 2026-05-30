@@ -12,6 +12,7 @@ import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWo
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceHeader.vue?raw'
 import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/AwdReviewSummaryPanel.vue?raw'
+import teacherClassManagementHeaderActionsSource from '@/components/teacher/class-management/TeacherClassManagementHeaderActions.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -73,8 +74,12 @@ describe('teacher dark surface alignment', () => {
 
   it('class management should not leak element-plus primary plain button chrome', () => {
     expect(classManagementSource).not.toContain('<ElButton type="primary" plain')
-    expect(classManagementSource).toContain('class="header-btn header-btn--primary"')
-    expect(classManagementSource).toContain('class="header-btn header-btn--ghost"')
+    expect(teacherClassManagementHeaderActionsSource).toContain(
+      'class="header-btn header-btn--primary"'
+    )
+    expect(teacherClassManagementHeaderActionsSource).toContain(
+      'class="header-btn header-btn--ghost"'
+    )
   })
 
   it('shared teacher surface should not remap base theme background tokens darker than dashboard', () => {

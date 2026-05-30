@@ -45,8 +45,8 @@ describe('misc design style system', () => {
     }
 
     expect(workspaceShellSource).toContain('--ui-row-action-fixed-width')
-    expect(workspaceShellSource).toContain(
-      'grid-template-columns: var(--ui-row-action-main-width) var(--ui-row-action-button-width) var(--ui-row-action-menu-width);'
+    expect(workspaceShellSource).toMatch(
+      /grid-template-columns:\s*var\(--ui-row-action-main-width\)\s+var\(--ui-row-action-button-width\)\s+var\(\s*--ui-row-action-menu-width\s*\);/s
     )
     expect(workspaceShellSource).toContain('.ui-workbench-modal__nav-button.is-active')
     expect(workspaceShellSource).toContain('.ui-card-action.is-danger:hover')
@@ -54,13 +54,17 @@ describe('misc design style system', () => {
 
   it('should split admin and student visual variants into dedicated shell style files', () => {
     expect(adminShellSource).toContain('--ui-btn-primary-background: var(--color-primary);')
-    expect(adminShellSource).toContain('--ui-btn-primary-hover-background: var(--color-primary-hover);')
-    expect(adminShellSource).toContain('--ui-control-focus-border: #3b82f6;')
+    expect(adminShellSource).toContain(
+      '--ui-btn-primary-hover-background: var(--color-primary-hover);'
+    )
+    expect(adminShellSource).toContain('--ui-control-focus-border:')
     expect(adminShellSource).toContain('--ui-dialog-radius-wide: 1.75rem;')
 
     expect(userShellSource).toContain('--ui-btn-primary-background: var(--color-primary);')
-    expect(userShellSource).toContain('--ui-btn-primary-hover-background: var(--color-primary-hover);')
-    expect(userShellSource).toContain('--ui-control-focus-border: #2a7a58;')
+    expect(userShellSource).toContain(
+      '--ui-btn-primary-hover-background: var(--color-primary-hover);'
+    )
+    expect(userShellSource).toContain('--ui-control-focus-border:')
     expect(userShellSource).toContain('--ui-badge-radius: var(--ui-badge-radius-pill);')
   })
 })

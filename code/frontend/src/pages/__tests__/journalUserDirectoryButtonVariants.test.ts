@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
-import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
-import instanceListSource from '@/views/instances/InstanceList.vue?raw'
-import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
+import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
+import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
+import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
 
 const journalUserDirectorySource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-directory.css`,

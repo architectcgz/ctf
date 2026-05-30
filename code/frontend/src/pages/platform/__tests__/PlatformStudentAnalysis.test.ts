@@ -11,7 +11,7 @@ import {
   resetStudentAnalysisRouteTestState,
   type StudentAnalysisRouteTestState,
   type StudentAnalysisTeachingApiMocks,
-} from '@/views/__tests__/studentAnalysisRouteTestSupport'
+} from '@/pages/__tests__/studentAnalysisRouteTestSupport'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()

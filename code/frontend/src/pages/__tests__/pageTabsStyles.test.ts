@@ -7,13 +7,13 @@ import userGovernanceOverviewPanelSource from '@/features/platform/user-manageme
 import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
 import classManagementSource from '@/features/teacher-class-management/ui/ClassManagementPage.vue?raw'
-import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
+import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
 import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
 import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
-import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
+import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
 import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
-import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import skillProfileSource from '@/pages/profile/SkillProfileRoutePage.vue?raw'
 
 const themeSource = readFileSync(`${process.cwd()}/src/assets/styles/theme.css`, 'utf-8')
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')

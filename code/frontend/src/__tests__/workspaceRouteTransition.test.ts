@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const styleSource = readFileSync(resolve(__dirname, '../../style.css'), 'utf8')
+const styleSource = readFileSync(resolve(__dirname, '../style.css'), 'utf8')
 
 describe('workspace route transition styles', () => {
   it('defines a restrained global route transition with reduced-motion support', () => {

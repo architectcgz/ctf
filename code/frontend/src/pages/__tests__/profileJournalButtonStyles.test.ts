@@ -2,11 +2,11 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsSource from '@/pages/profile/SecuritySettingsRoutePage.vue?raw'
 import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
-import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import skillProfileSource from '@/pages/profile/SkillProfileRoutePage.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
-import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import userProfileSource from '@/pages/profile/UserProfileRoutePage.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
 
 const journalUserShellSource = readFileSync(

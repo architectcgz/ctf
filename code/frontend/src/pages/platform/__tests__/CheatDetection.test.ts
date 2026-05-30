@@ -3,7 +3,7 @@ import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
 import cheatDetectionPageSource from '@/features/platform/overview/model/useCheatDetectionPage.ts?raw'
 import platformOverviewRoutesSource from '@/features/platform/overview/model/platformOverviewRoutes.ts?raw'
-import CheatDetection from '../CheatDetection.vue'
+import CheatDetectionRoutePage from '@/pages/platform/CheatDetectionRoutePage.vue'
 import cheatDetectionSource from '@/pages/platform/CheatDetectionRoutePage.vue?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -43,7 +43,7 @@ describe('CheatDetection', () => {
       ],
     })
 
-    const wrapper = mount(CheatDetection, {
+    const wrapper = mount(CheatDetectionRoutePage, {
       global: {
         stubs: {
           RouterLink: RouterLinkStub,
@@ -103,7 +103,7 @@ describe('CheatDetection', () => {
       ],
     })
 
-    const wrapper = mount(CheatDetection, {
+    const wrapper = mount(CheatDetectionRoutePage, {
       global: {
         stubs: {
           RouterLink: RouterLinkStub,
@@ -135,7 +135,7 @@ describe('CheatDetection', () => {
       shared_ips: [],
     })
 
-    const wrapper = mount(CheatDetection, {
+    const wrapper = mount(CheatDetectionRoutePage, {
       global: {
         stubs: {
           RouterLink: RouterLinkStub,

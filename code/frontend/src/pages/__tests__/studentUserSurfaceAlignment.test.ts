@@ -9,8 +9,8 @@ import studentRecommendationSource from '@/features/student-dashboard/ui/Student
 import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
 import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
 import challengePresentationSource from '@/entities/challenge/model/presentation.ts?raw'
-import instanceListSource from '@/views/instances/InstanceList.vue?raw'
-import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
+import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
+import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
 
 const themeSource = readFileSync(`${process.cwd()}/src/assets/styles/theme.css`, 'utf-8')
 const styleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
