@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useAwdOperationsDialogState } from './useAwdOperationsDialogState'
 
 describe('useAwdOperationsDialogState', () => {
   it('应只在运行态允许打开 dialog', () => {
-    const runtimeStageReady = ref(false)
+    const selectedContest = ref<'registering' | 'running'>('registering')
+    const runtimeStageReady = computed(() => selectedContest.value === 'running')
     const state = useAwdOperationsDialogState({
       runtimeStageReady,
       rounds: ref([]),
@@ -23,7 +24,7 @@ describe('useAwdOperationsDialogState', () => {
     expect(state.serviceCheckDialog.open.value).toBe(false)
     expect(state.attackLogDialog.open.value).toBe(false)
 
-    runtimeStageReady.value = true
+    selectedContest.value = 'running'
 
     state.roundDialog.requestOpen()
     state.serviceCheckDialog.requestOpen()
@@ -40,7 +41,7 @@ describe('useAwdOperationsDialogState', () => {
     const createAttackLog = vi.fn().mockResolvedValue(undefined)
     const closeOverrideDialog = vi.fn()
     const state = useAwdOperationsDialogState({
-      runtimeStageReady: ref(true),
+      runtimeStageReady: computed(() => true),
       rounds: ref([{ round_number: 2 }]),
       createRound,
       createServiceCheck,

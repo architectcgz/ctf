@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { nextTick, ref } from 'vue'
 
+import { computed } from 'vue'
 import type { ContestDetailData } from '@/api/contracts'
 import { useAwdOperationsPanelViewState } from './useAwdOperationsPanelViewState'
 import type { AWDOperationsPanelKey } from './awdOperations.types'
+import { isAwdRuntimeStageStatus } from '../model/useAwdContestStateFlags'
 
 function buildContest(overrides: Partial<ContestDetailData> = {}): ContestDetailData {
   return {
@@ -20,11 +22,11 @@ function buildContest(overrides: Partial<ContestDetailData> = {}): ContestDetail
 
 describe('useAwdOperationsPanelViewState', () => {
   it('应根据赛事状态收口运行态与可见 tab', () => {
-    const contests = ref<ContestDetailData[]>([buildContest()])
+    const selectedContest = ref<ContestDetailData | null>(buildContest())
+    const runtimeStageReady = computed(() => isAwdRuntimeStageStatus(selectedContest.value?.status))
 
     const state = useAwdOperationsPanelViewState({
-      contests,
-      selectedContestId: ref('awd-1'),
+      runtimeStageReady,
       operationPanel: ref<AWDOperationsPanelKey | undefined>(undefined),
       hideContestSelector: ref(false),
       hideOperationTabs: ref(false),
@@ -37,7 +39,7 @@ describe('useAwdOperationsPanelViewState', () => {
       'instances',
     ])
 
-    contests.value = [buildContest({ status: 'registering' })]
+    selectedContest.value = buildContest({ status: 'registering' })
 
     expect(state.runtimeStageReady.value).toBe(false)
     expect(state.visibleOperationTabs.value.map((tab) => tab.key)).toEqual(['inspector'])
@@ -46,10 +48,7 @@ describe('useAwdOperationsPanelViewState', () => {
   it('在非受控模式下应允许切换面板，在受控模式下应跟随外部 prop', async () => {
     const operationPanel = ref<AWDOperationsPanelKey | undefined>(undefined)
     const state = useAwdOperationsPanelViewState({
-      contests: ref([
-        buildContest(),
-      ]),
-      selectedContestId: ref('awd-1'),
+      runtimeStageReady: computed(() => true),
       operationPanel,
       hideContestSelector: ref(false),
       hideOperationTabs: ref(false),
@@ -69,10 +68,7 @@ describe('useAwdOperationsPanelViewState', () => {
 
   it('应根据 runtime content 与 active panel 推导各阶段展示块', () => {
     const state = useAwdOperationsPanelViewState({
-      contests: ref([
-        buildContest(),
-      ]),
-      selectedContestId: ref('awd-1'),
+      runtimeStageReady: computed(() => true),
       operationPanel: ref<AWDOperationsPanelKey | undefined>('instances'),
       hideContestSelector: ref(true),
       hideOperationTabs: ref(true),

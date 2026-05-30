@@ -61,6 +61,7 @@ vi.mock('@/features/contest-awd-admin', async () => {
     savingAttackLog: ref(false),
     savingChallengeConfig: ref(false),
     startingInstanceKey: ref(null),
+    runtimeStageReady: ref(true),
     shouldAutoRefresh: ref(false),
     refresh: vi.fn(),
     refreshInstanceOrchestration: vi.fn(),
@@ -151,6 +152,7 @@ describe('AWDOperationsPanel', () => {
       reason: '',
       readiness: null,
     }
+    awdState.runtimeStageReady.value = true
     awdState.loadChallengeCatalog.mockReset()
     awdState.createChallengeLink.mockReset()
     awdState.updateChallengeLink.mockReset()
@@ -584,6 +586,9 @@ describe('AWDOperationsPanel', () => {
   })
 
   it('未开赛时运行段应显示尚未进入运行阶段', () => {
+    const awdState = getAwdState()
+    awdState.runtimeStageReady.value = false
+
     const wrapper = mount(AWDOperationsPanel, {
       props: {
         contests: [
@@ -623,6 +628,7 @@ describe('AWDOperationsPanel', () => {
 
   it('未开赛实例内容应只显示实例编排，不重复显示开赛就绪摘要', () => {
     const awdState = getAwdState()
+    awdState.runtimeStageReady.value = false
     awdState.readiness.value = buildReadinessState()
     awdState.instanceOrchestration.value = {
       contest_id: 'awd-1',

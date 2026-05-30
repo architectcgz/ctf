@@ -41,28 +41,9 @@ const emit = defineEmits<{
   'open:contest-edit': []
 }>()
 
-const {
-  selectedContest,
-  shouldShowContestSelector,
-  runtimeStageReady,
-  activePanel,
-  visibleOperationTabs,
-  shouldShowOperationTabs,
-  runtimeContent,
-  shouldShowRuntimeReadiness,
-  shouldShowRoundInspector,
-  shouldShowInstanceOrchestration,
-  selectPanel,
-  registerTabButton,
-  handlePanelTabKeydown,
-} = useAwdOperationsPanelViewState({
-  contests: toRef(props, 'contests'),
-  selectedContestId: toRef(props, 'selectedContestId'),
-  operationPanel: toRef(props, 'operationPanel'),
-  hideContestSelector: toRef(props, 'hideContestSelector'),
-  hideOperationTabs: toRef(props, 'hideOperationTabs'),
-  runtimeContent: toRef(props, 'runtimeContent'),
-})
+const selectedContest = computed(
+  () => props.contests.find((item) => item.id === props.selectedContestId) || null
+)
 
 const {
   rounds,
@@ -91,6 +72,7 @@ const {
   savingServiceCheck,
   savingAttackLog,
   startingInstanceKey,
+  runtimeStageReady,
   shouldAutoRefresh,
   overrideDialogState,
   refresh,
@@ -108,6 +90,26 @@ const {
   createServiceCheck,
   createAttackLog,
 } = usePlatformContestAwd(selectedContest)
+
+const {
+  shouldShowContestSelector,
+  activePanel,
+  visibleOperationTabs,
+  shouldShowOperationTabs,
+  runtimeContent,
+  shouldShowRuntimeReadiness,
+  shouldShowRoundInspector,
+  shouldShowInstanceOrchestration,
+  selectPanel,
+  registerTabButton,
+  handlePanelTabKeydown,
+} = useAwdOperationsPanelViewState({
+  runtimeStageReady,
+  operationPanel: toRef(props, 'operationPanel'),
+  hideContestSelector: toRef(props, 'hideContestSelector'),
+  hideOperationTabs: toRef(props, 'hideOperationTabs'),
+  runtimeContent: toRef(props, 'runtimeContent'),
+})
 
 function updateSelectedRoundId(value: string) {
   selectedRoundId.value = value

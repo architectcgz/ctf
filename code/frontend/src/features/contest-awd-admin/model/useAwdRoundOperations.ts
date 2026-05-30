@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef, type Ref } from 'vue'
+import { ref, type ComputedRef, type Ref } from 'vue'
 
 import {
   createContestAWDAttackLog,
@@ -20,7 +20,8 @@ import { humanizeRequestError, isAWDReadinessBlockedError } from './awdAdminSupp
 interface UseAwdRoundOperationsOptions {
   selectedContest: Readonly<Ref<ContestDetailData | null>>
   selectedRoundId: Ref<string | null>
-  selectedRound: ComputedRef<AWDRoundData | null>
+  canOperateSelectedRound: Readonly<ComputedRef<boolean>>
+  shouldUseCurrentRoundCheck: Readonly<ComputedRef<boolean>>
   refresh: (preferredRoundId?: string) => Promise<void>
   refreshRoundDetail: (roundId?: string | null) => Promise<void>
   openOverrideDialog: (
@@ -39,7 +40,8 @@ export function useAwdRoundOperations(options: UseAwdRoundOperationsOptions) {
   const {
     selectedContest,
     selectedRoundId,
-    selectedRound,
+    canOperateSelectedRound,
+    shouldUseCurrentRoundCheck,
     refresh,
     refreshRoundDetail,
     openOverrideDialog,
@@ -51,20 +53,28 @@ export function useAwdRoundOperations(options: UseAwdRoundOperationsOptions) {
   const savingServiceCheck = ref(false)
   const savingAttackLog = ref(false)
 
-  const canOperateRound = computed(() => Boolean(selectedContest.value && selectedRoundId.value))
-
   async function runSelectedRoundCheck() {
     if (!selectedContest.value) {
       return
     }
 
-    const activeRoundId = selectedRoundId.value
-    const shouldRunCurrentRound = selectedRound.value?.status === 'running' || !activeRoundId
+    const shouldRunCurrentRound = shouldUseCurrentRoundCheck.value
+    const activeRoundId = shouldRunCurrentRound ? null : selectedRoundId.value
+    if (!shouldRunCurrentRound && !activeRoundId) {
+      return
+    }
     checking.value = true
     try {
-      const result = shouldRunCurrentRound
-        ? await runContestAWDCurrentRoundCheck(selectedContest.value.id)
-        : await runContestAWDRoundCheck(selectedContest.value.id, activeRoundId)
+      let result
+      if (shouldRunCurrentRound) {
+        result = await runContestAWDCurrentRoundCheck(selectedContest.value.id)
+      } else {
+        const roundId = activeRoundId
+        if (!roundId) {
+          return
+        }
+        result = await runContestAWDRoundCheck(selectedContest.value.id, roundId)
+      }
       toast.success(`第 ${result.round.round_number} 轮服务巡检已执行`)
       await refresh(result.round.id)
     } catch (error) {
@@ -111,7 +121,7 @@ export function useAwdRoundOperations(options: UseAwdRoundOperationsOptions) {
     service_status: AWDTeamServiceData['service_status']
     check_result?: Record<string, unknown>
   }) {
-    if (!selectedContest.value || !canOperateRound.value || !selectedRoundId.value) {
+    if (!selectedContest.value || !canOperateSelectedRound.value || !selectedRoundId.value) {
       return
     }
 
@@ -133,7 +143,7 @@ export function useAwdRoundOperations(options: UseAwdRoundOperationsOptions) {
     submitted_flag?: string
     is_success: boolean
   }) {
-    if (!selectedContest.value || !canOperateRound.value || !selectedRoundId.value) {
+    if (!selectedContest.value || !canOperateSelectedRound.value || !selectedRoundId.value) {
       return
     }
 

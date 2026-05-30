@@ -101,8 +101,15 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   const selectedRound = computed(
     () => rounds.value.find((item) => item.id === selectedRoundId.value) || null
   )
-  const { hasSelectedContest, shouldAutoRefresh } = useAwdContestStateFlags({
+  const {
+    hasSelectedContest,
+    runtimeStageReady,
+    canOperateSelectedRound,
+    shouldUseCurrentRoundCheck,
+    shouldAutoRefresh,
+  } = useAwdContestStateFlags({
     selectedContest,
+    selectedRoundId,
     selectedRound,
   })
   const { applyTrafficFilters, setTrafficPage, resetTrafficFilters } = useAwdTrafficActions({
@@ -141,7 +148,8 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
   } = useAwdRoundOperations({
     selectedContest,
     selectedRoundId,
-    selectedRound,
+    canOperateSelectedRound,
+    shouldUseCurrentRoundCheck,
     refresh,
     refreshRoundDetail,
     openOverrideDialog,
@@ -199,6 +207,8 @@ export function usePlatformContestAwd(selectedContest: Readonly<Ref<ContestDetai
     startingInstanceKey,
     overrideDialogState,
     hasSelectedContest,
+    runtimeStageReady,
+    canOperateSelectedRound,
     shouldAutoRefresh,
     refresh,
     refreshReadiness,

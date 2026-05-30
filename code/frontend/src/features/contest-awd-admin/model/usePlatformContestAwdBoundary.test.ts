@@ -10,6 +10,9 @@ describe('usePlatformContestAwd boundary', () => {
     expect(platformContestAwdSource).toContain(
       "import { useAwdContestStateFlags } from './useAwdContestStateFlags'"
     )
+    expect(platformContestAwdSource).toContain('runtimeStageReady,')
+    expect(platformContestAwdSource).toContain('canOperateSelectedRound,')
+    expect(platformContestAwdSource).toContain('shouldUseCurrentRoundCheck,')
     expect(platformContestAwdSource).not.toContain('async function applyTrafficFilters(')
     expect(platformContestAwdSource).not.toContain('async function setTrafficPage(')
     expect(platformContestAwdSource).not.toContain('async function resetTrafficFilters(')

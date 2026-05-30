@@ -1,6 +1,4 @@
 import { computed, ref, watch, type Ref } from 'vue'
-
-import type { ContestDetailData } from '@/api/contracts'
 import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 
 import type {
@@ -10,8 +8,7 @@ import type {
 } from './awdOperations.types'
 
 interface UseAwdOperationsPanelViewStateOptions {
-  contests: Readonly<Ref<ContestDetailData[]>>
-  selectedContestId: Readonly<Ref<string | null>>
+  runtimeStageReady: Readonly<Ref<boolean>>
   operationPanel: Readonly<Ref<AWDOperationsPanelKey | undefined>>
   hideContestSelector: Readonly<Ref<boolean | undefined>>
   hideOperationTabs: Readonly<Ref<boolean | undefined>>
@@ -35,23 +32,14 @@ const operationTabs: readonly AWDOperationsTabItem[] = [
 
 const operationTabOrder = operationTabs.map((tab) => tab.key) as AWDOperationsPanelKey[]
 
-function isRuntimeStageStatus(status?: ContestDetailData['status']): boolean {
-  return status === 'running' || status === 'frozen' || status === 'ended'
-}
-
 export function useAwdOperationsPanelViewState({
-  contests,
-  selectedContestId,
+  runtimeStageReady,
   operationPanel,
   hideContestSelector,
   hideOperationTabs,
   runtimeContent,
 }: UseAwdOperationsPanelViewStateOptions) {
-  const selectedContest = computed(
-    () => contests.value.find((item) => item.id === selectedContestId.value) || null
-  )
   const shouldShowContestSelector = computed(() => !hideContestSelector.value)
-  const runtimeStageReady = computed(() => isRuntimeStageStatus(selectedContest.value?.status))
   const activePanel = ref<AWDOperationsPanelKey>(operationPanel.value ?? 'inspector')
   const visibleOperationTabs = computed(() =>
     runtimeStageReady.value ? operationTabs : operationTabs.filter((tab) => tab.key === 'inspector')
@@ -100,7 +88,6 @@ export function useAwdOperationsPanelViewState({
   }
 
   return {
-    selectedContest,
     shouldShowContestSelector,
     runtimeStageReady,
     activePanel,
