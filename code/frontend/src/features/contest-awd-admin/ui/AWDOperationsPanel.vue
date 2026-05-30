@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toRef } from 'vue'
+import { computed, toRef } from 'vue'
 
 import type { ContestDetailData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -14,6 +14,11 @@ import AWDOperationsPreRuntimeStage from './AWDOperationsPreRuntimeStage.vue'
 import AWDOperationsRuntimeStage from './AWDOperationsRuntimeStage.vue'
 import AWDRuntimePendingState from './AWDRuntimePendingState.vue'
 import './awdOperationsPanel.css'
+import type {
+  AwdAttackLogDialogBinding,
+  AwdRoundCreateDialogBinding,
+  AwdServiceCheckDialogBinding,
+} from './awdOperationsDialogContracts'
 import { useAwdOperationsDialogAvailability } from './useAwdOperationsDialogAvailability'
 import { useAwdOperationsDialogState } from './useAwdOperationsDialogState'
 import { useAwdOperationsPanelViewState } from './useAwdOperationsPanelViewState'
@@ -109,19 +114,10 @@ function updateSelectedRoundId(value: string) {
 }
 
 const {
-  roundDialogOpen,
-  serviceCheckDialogOpen,
-  attackLogDialogOpen,
+  roundDialog,
+  serviceCheckDialog,
+  attackLogDialog,
   nextRoundNumber,
-  openRoundDialog,
-  updateRoundDialogOpen,
-  openServiceCheckDialog,
-  updateServiceCheckDialogOpen,
-  openAttackLogDialog,
-  updateAttackLogDialogOpen,
-  handleCreateRound,
-  handleCreateServiceCheck,
-  handleCreateAttackLog,
   handleOverrideDialogOpenChange,
 } = useAwdOperationsDialogState({
   runtimeStageReady,
@@ -141,6 +137,26 @@ const {
   teams,
   challengeLinks,
 })
+
+const roundDialogBinding = computed<AwdRoundCreateDialogBinding>(() => ({
+  open: roundDialog.open.value,
+  nextRoundNumber: nextRoundNumber.value,
+  saving: creatingRound.value,
+}))
+
+const serviceCheckDialogBinding = computed<AwdServiceCheckDialogBinding>(() => ({
+  open: serviceCheckDialog.open.value,
+  teams: teams.value,
+  challengeLinks: challengeLinks.value,
+  saving: savingServiceCheck.value,
+}))
+
+const attackLogDialogBinding = computed<AwdAttackLogDialogBinding>(() => ({
+  open: attackLogDialog.open.value,
+  teams: teams.value,
+  challengeLinks: challengeLinks.value,
+  saving: savingAttackLog.value,
+}))
 </script>
 
 <template>
@@ -269,9 +285,9 @@ const {
             @apply-traffic-filters="applyTrafficFilters"
             @change-traffic-page="setTrafficPage"
             @reset-traffic-filters="resetTrafficFilters"
-            @open-create-round-dialog="openRoundDialog"
-            @open-service-check-dialog="openServiceCheckDialog"
-            @open-attack-log-dialog="openAttackLogDialog"
+            @open-create-round-dialog="roundDialog.requestOpen"
+            @open-service-check-dialog="serviceCheckDialog.requestOpen"
+            @open-attack-log-dialog="attackLogDialog.requestOpen"
             @run-selected-round-check="runSelectedRoundCheck"
             @update:selected-round-id="updateSelectedRoundId"
             @open:contest-edit="emit('open:contest-edit')"
@@ -302,22 +318,16 @@ const {
     </div>
 
     <AWDOperationsDialogHub
-      :round-dialog-open="roundDialogOpen"
-      :next-round-number="nextRoundNumber"
-      :creating-round="creatingRound"
-      :service-check-dialog-open="serviceCheckDialogOpen"
-      :teams="teams"
-      :challenge-links="challengeLinks"
-      :saving-service-check="savingServiceCheck"
-      :attack-log-dialog-open="attackLogDialogOpen"
-      :saving-attack-log="savingAttackLog"
+      :round-dialog="roundDialogBinding"
+      :service-check-dialog="serviceCheckDialogBinding"
+      :attack-log-dialog="attackLogDialogBinding"
       :override-dialog-state="overrideDialogState"
-      @update:round-dialog-open="updateRoundDialogOpen"
-      @save-round="handleCreateRound"
-      @update:service-check-dialog-open="updateServiceCheckDialogOpen"
-      @save-service-check="handleCreateServiceCheck"
-      @update:attack-log-dialog-open="updateAttackLogDialogOpen"
-      @save-attack-log="handleCreateAttackLog"
+      @update:round-dialog-open="roundDialog.setOpen"
+      @save-round="roundDialog.submitAndClose"
+      @update:service-check-dialog-open="serviceCheckDialog.setOpen"
+      @save-service-check="serviceCheckDialog.submitAndClose"
+      @update:attack-log-dialog-open="attackLogDialog.setOpen"
+      @save-attack-log="attackLogDialog.submitAndClose"
       @update:override-dialog-open="handleOverrideDialogOpenChange"
       @confirm-override="confirmOverrideAction"
     />

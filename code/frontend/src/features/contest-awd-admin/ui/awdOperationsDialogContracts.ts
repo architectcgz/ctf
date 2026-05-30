@@ -1,4 +1,6 @@
 import type {
+  AdminContestChallengeViewData,
+  AdminContestTeamData,
   AWDAttackLogData,
   AWDReadinessData,
   AWDRoundData,
@@ -33,4 +35,24 @@ export interface AwdOperationsOverrideDialogState {
   title: string
   readiness: AWDReadinessData | null
   confirmLoading: boolean
+}
+
+export interface AwdRoundCreateDialogBinding {
+  open: boolean
+  nextRoundNumber: number
+  saving: boolean
+}
+
+export interface AwdServiceCheckDialogBinding {
+  open: boolean
+  teams: AdminContestTeamData[]
+  challengeLinks: AdminContestChallengeViewData[]
+  saving: boolean
+}
+
+export interface AwdAttackLogDialogBinding {
+  open: boolean
+  teams: AdminContestTeamData[]
+  challengeLinks: AdminContestChallengeViewData[]
+  saving: boolean
 }

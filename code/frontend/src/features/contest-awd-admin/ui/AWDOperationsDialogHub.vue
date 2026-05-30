@@ -1,31 +1,23 @@
 <script setup lang="ts">
-import type {
-  AdminContestChallengeViewData,
-  AdminContestTeamData,
-} from '@/api/contracts'
-
 import { AWDReadinessOverrideDialog } from '@/features/awd-readiness'
 
 import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
 import AWDRoundCreateDialog from './AWDRoundCreateDialog.vue'
 import AWDServiceCheckDialog from './AWDServiceCheckDialog.vue'
 import type {
+  AwdAttackLogDialogBinding,
   AwdCreateAttackLogPayload,
   AwdCreateRoundPayload,
   AwdCreateServiceCheckPayload,
   AwdOperationsOverrideDialogState,
+  AwdRoundCreateDialogBinding,
+  AwdServiceCheckDialogBinding,
 } from './awdOperationsDialogContracts'
 
 defineProps<{
-  roundDialogOpen: boolean
-  nextRoundNumber: number
-  creatingRound: boolean
-  serviceCheckDialogOpen: boolean
-  teams: AdminContestTeamData[]
-  challengeLinks: AdminContestChallengeViewData[]
-  savingServiceCheck: boolean
-  attackLogDialogOpen: boolean
-  savingAttackLog: boolean
+  roundDialog: AwdRoundCreateDialogBinding
+  serviceCheckDialog: AwdServiceCheckDialogBinding
+  attackLogDialog: AwdAttackLogDialogBinding
   overrideDialogState: AwdOperationsOverrideDialogState
 }>()
 
@@ -51,27 +43,19 @@ const emit = defineEmits<{
   </div>
 
   <AWDRoundCreateDialog
-    :open="roundDialogOpen"
-    :next-round-number="nextRoundNumber"
-    :saving="creatingRound"
+    v-bind="roundDialog"
     @update:open="emit('update:roundDialogOpen', $event)"
     @save="emit('saveRound', $event)"
   />
 
   <AWDServiceCheckDialog
-    :open="serviceCheckDialogOpen"
-    :teams="teams"
-    :challenge-links="challengeLinks"
-    :saving="savingServiceCheck"
+    v-bind="serviceCheckDialog"
     @update:open="emit('update:serviceCheckDialogOpen', $event)"
     @save="emit('saveServiceCheck', $event)"
   />
 
   <AWDAttackLogDialog
-    :open="attackLogDialogOpen"
-    :teams="teams"
-    :challenge-links="challengeLinks"
-    :saving="savingAttackLog"
+    v-bind="attackLogDialog"
     @update:open="emit('update:attackLogDialogOpen', $event)"
     @save="emit('saveAttackLog', $event)"
   />

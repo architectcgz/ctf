@@ -17,23 +17,41 @@ interface UseAwdOperationsDialogStateOptions {
   closeOverrideDialog: () => void
 }
 
-function openRuntimeDialog(
-  runtimeStageReady: Readonly<Ref<boolean>>,
-  dialogOpen: Ref<boolean>
-) {
-  if (!runtimeStageReady.value) {
-    return
-  }
-  dialogOpen.value = true
+interface RuntimeDialogController<TPayload> {
+  open: Ref<boolean>
+  requestOpen: () => void
+  setOpen: (value: boolean) => void
+  submitAndClose: (payload: TPayload) => Promise<void>
 }
 
-async function runDialogMutationAndClose<T>(
-  dialogOpen: Ref<boolean>,
-  mutation: (payload: T) => Promise<unknown>,
-  payload: T
-) {
-  await mutation(payload)
-  dialogOpen.value = false
+function createRuntimeDialogController<TPayload>(
+  runtimeStageReady: Readonly<Ref<boolean>>,
+  mutation: (payload: TPayload) => Promise<unknown>
+): RuntimeDialogController<TPayload> {
+  const open = ref(false)
+
+  function requestOpen() {
+    if (!runtimeStageReady.value) {
+      return
+    }
+    open.value = true
+  }
+
+  function setOpen(value: boolean) {
+    open.value = value
+  }
+
+  async function submitAndClose(payload: TPayload) {
+    await mutation(payload)
+    open.value = false
+  }
+
+  return {
+    open,
+    requestOpen,
+    setOpen,
+    submitAndClose,
+  }
 }
 
 export function useAwdOperationsDialogState({
@@ -44,48 +62,12 @@ export function useAwdOperationsDialogState({
   createAttackLog,
   closeOverrideDialog,
 }: UseAwdOperationsDialogStateOptions) {
-  const roundDialogOpen = ref(false)
-  const serviceCheckDialogOpen = ref(false)
-  const attackLogDialogOpen = ref(false)
+  const roundDialog = createRuntimeDialogController(runtimeStageReady, createRound)
+  const serviceCheckDialog = createRuntimeDialogController(runtimeStageReady, createServiceCheck)
+  const attackLogDialog = createRuntimeDialogController(runtimeStageReady, createAttackLog)
   const nextRoundNumber = computed(() =>
     rounds.value.length === 0 ? 1 : Math.max(...rounds.value.map((item) => item.round_number)) + 1
   )
-
-  function openRoundDialog() {
-    openRuntimeDialog(runtimeStageReady, roundDialogOpen)
-  }
-
-  function updateRoundDialogOpen(value: boolean) {
-    roundDialogOpen.value = value
-  }
-
-  function openServiceCheckDialog() {
-    openRuntimeDialog(runtimeStageReady, serviceCheckDialogOpen)
-  }
-
-  function updateServiceCheckDialogOpen(value: boolean) {
-    serviceCheckDialogOpen.value = value
-  }
-
-  function openAttackLogDialog() {
-    openRuntimeDialog(runtimeStageReady, attackLogDialogOpen)
-  }
-
-  function updateAttackLogDialogOpen(value: boolean) {
-    attackLogDialogOpen.value = value
-  }
-
-  async function handleCreateRound(payload: AwdCreateRoundPayload) {
-    await runDialogMutationAndClose(roundDialogOpen, createRound, payload)
-  }
-
-  async function handleCreateServiceCheck(payload: AwdCreateServiceCheckPayload) {
-    await runDialogMutationAndClose(serviceCheckDialogOpen, createServiceCheck, payload)
-  }
-
-  async function handleCreateAttackLog(payload: AwdCreateAttackLogPayload) {
-    await runDialogMutationAndClose(attackLogDialogOpen, createAttackLog, payload)
-  }
 
   function handleOverrideDialogOpenChange(value: boolean) {
     if (!value) {
@@ -94,19 +76,10 @@ export function useAwdOperationsDialogState({
   }
 
   return {
-    roundDialogOpen,
-    serviceCheckDialogOpen,
-    attackLogDialogOpen,
+    roundDialog,
+    serviceCheckDialog,
+    attackLogDialog,
     nextRoundNumber,
-    openRoundDialog,
-    updateRoundDialogOpen,
-    openServiceCheckDialog,
-    updateServiceCheckDialogOpen,
-    openAttackLogDialog,
-    updateAttackLogDialogOpen,
-    handleCreateRound,
-    handleCreateServiceCheck,
-    handleCreateAttackLog,
     handleOverrideDialogOpenChange,
   }
 }

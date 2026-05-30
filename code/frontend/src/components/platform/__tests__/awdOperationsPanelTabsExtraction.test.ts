@@ -55,10 +55,24 @@ describe('awd operations panel tabs extraction', () => {
     )
     expect(awdOperationsPanelSource).toContain("import { useAwdOperationsDialogState } from './useAwdOperationsDialogState'")
     expect(awdOperationsPanelSource).toContain('} = useAwdOperationsDialogAvailability({')
-    expect(awdOperationsDialogStateSource).toContain('const roundDialogOpen = ref(false)')
-    expect(awdOperationsDialogStateSource).toContain('const serviceCheckDialogOpen = ref(false)')
-    expect(awdOperationsDialogStateSource).toContain('const attackLogDialogOpen = ref(false)')
-    expect(awdOperationsDialogStateSource).toContain('runDialogMutationAndClose(')
+    expect(awdOperationsDialogStateSource).toContain('interface RuntimeDialogController<TPayload> {')
+    expect(awdOperationsDialogStateSource).toContain('function createRuntimeDialogController<TPayload>(')
+    expect(awdOperationsDialogStateSource).toContain(
+      'const roundDialog = createRuntimeDialogController(runtimeStageReady, createRound)'
+    )
+    expect(awdOperationsDialogStateSource).toContain('requestOpen: () => void')
+    expect(awdOperationsDialogStateSource).toContain(
+      'submitAndClose: (payload: TPayload) => Promise<void>'
+    )
+    expect(awdOperationsPanelSource).toContain(
+      'const roundDialogBinding = computed<AwdRoundCreateDialogBinding>(() => ({'
+    )
+    expect(awdOperationsPanelSource).toContain(
+      'const serviceCheckDialogBinding = computed<AwdServiceCheckDialogBinding>(() => ({'
+    )
+    expect(awdOperationsPanelSource).toContain(
+      'const attackLogDialogBinding = computed<AwdAttackLogDialogBinding>(() => ({'
+    )
     expect(awdOperationsDialogStateSource).not.toContain('const canRecordServiceChecks = computed(')
     expect(awdOperationsDialogStateSource).not.toContain('const serviceCheckHint = computed(() => {')
     expect(awdOperationsDialogAvailabilitySource).toContain('const canRecordServiceChecks = computed(')
@@ -68,12 +82,20 @@ describe('awd operations panel tabs extraction', () => {
     expect(awdOperationsDialogContractsSource).toContain('export interface AwdCreateRoundPayload')
     expect(awdOperationsDialogContractsSource).toContain('export interface AwdCreateServiceCheckPayload')
     expect(awdOperationsDialogContractsSource).toContain('export interface AwdCreateAttackLogPayload')
+    expect(awdOperationsDialogContractsSource).toContain('export interface AwdRoundCreateDialogBinding')
+    expect(awdOperationsDialogContractsSource).toContain(
+      'export interface AwdServiceCheckDialogBinding'
+    )
+    expect(awdOperationsDialogContractsSource).toContain('export interface AwdAttackLogDialogBinding')
     expect(awdOperationsAggregateSource).toContain('.studio-ops-shell')
     expect(awdOperationsPanelSource).not.toContain('<style scoped>')
     expect(awdOperationsPreRuntimeStageSource).toContain('name="pending"')
     expect(awdOperationsRuntimeStageSource).toContain('name="inspector"')
     expect(awdOperationsDialogHubSource).toContain('<AWDRoundCreateDialog')
     expect(awdOperationsDialogHubSource).toContain('<AWDReadinessOverrideDialog')
+    expect(awdOperationsDialogHubSource).toContain('v-bind="roundDialog"')
+    expect(awdOperationsDialogHubSource).toContain('v-bind="serviceCheckDialog"')
+    expect(awdOperationsDialogHubSource).toContain('v-bind="attackLogDialog"')
     expect(awdOperationsPanelSource).not.toContain('id="awd-runtime-shell-create-round"')
     expect(awdOperationsPanelSource).not.toContain('id="awd-runtime-shell-run-check"')
     expect(awdOperationsPanelSource).not.toContain('id="awd-contest-selector"')
