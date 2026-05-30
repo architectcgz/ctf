@@ -20,7 +20,11 @@ import instanceManageSource from '../InstanceManage.vue?raw'
 import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
 import instanceManageWorkspacePanelSource from '@/components/platform/instance/InstanceManageWorkspacePanel.vue?raw'
 import adminChallengeProfilePanelSource from '@/features/platform-challenge-detail/ui/AdminChallengeProfilePanel.vue?raw'
-import challengeWriteupManagePanelSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
+import challengeWriteupDirectoryRowSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectoryRow.vue?raw'
+import challengeWriteupDirectorySectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectorySection.vue?raw'
+import challengeWriteupManageHeaderSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManageHeader.vue?raw'
+import challengeWriteupManagePanelSourceBase from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
+import challengeWriteupSummaryStripSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSummaryStrip.vue?raw'
 import challengeProfileSummaryStripSource from '@/entities/challenge/ui/ChallengeProfileSummaryStrip.vue?raw'
 import contestEditSource from '../ContestEdit.vue?raw'
 import contestEditTopbarPanelSource from '@/features/platform-contests/ui/ContestEditTopbarPanel.vue?raw'
@@ -127,6 +131,20 @@ const contestFormCombinedSource = [
   contestFormRulesSectionSource,
   contestFormTimelineSectionSource,
   contestFormActionsSource,
+].join('\n')
+const challengeWriteupManagePanelSource = [
+  challengeWriteupManagePanelSourceBase,
+  challengeWriteupManageHeaderSource,
+  challengeWriteupSummaryStripSource,
+  challengeWriteupDirectorySectionSource,
+  challengeWriteupDirectoryRowSource,
+  readFileSync(
+    resolve(
+      process.cwd(),
+      'src/features/challenge-writeup-editor/ui/challengeWriteupManagePanel.css'
+    ),
+    'utf8'
+  ),
 ].join('\n')
 const awdChallengeConfigCombinedSource = [
   awdChallengeConfigPanelSource,

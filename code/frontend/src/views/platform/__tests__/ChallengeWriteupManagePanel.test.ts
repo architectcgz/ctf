@@ -1,9 +1,31 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '@/api/request'
 
 import ChallengeWriteupManagePanel from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue'
-import challengeWriteupManagePanelSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
+import challengeWriteupDirectoryRowSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectoryRow.vue?raw'
+import challengeWriteupDirectorySectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectorySection.vue?raw'
+import challengeWriteupManageHeaderSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManageHeader.vue?raw'
+import challengeWriteupManagePanelSourceBase from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
+import challengeWriteupSummaryStripSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSummaryStrip.vue?raw'
+
+const challengeWriteupManagePanelSource = [
+  challengeWriteupManagePanelSourceBase,
+  challengeWriteupManageHeaderSource,
+  challengeWriteupSummaryStripSource,
+  challengeWriteupDirectorySectionSource,
+  challengeWriteupDirectoryRowSource,
+  readFileSync(
+    resolve(
+      process.cwd(),
+      'src/features/challenge-writeup-editor/ui/challengeWriteupManagePanel.css'
+    ),
+    'utf8'
+  ),
+].join('\n')
 
 const adminApiMocks = vi.hoisted(() => ({
   getChallengeWriteup: vi.fn(),
