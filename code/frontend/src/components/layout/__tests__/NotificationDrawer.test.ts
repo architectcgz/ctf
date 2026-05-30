@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -11,7 +13,13 @@ import notificationDrawerHeaderSource from '../notification-drawer/NotificationD
 import notificationDrawerSourceBase from '../NotificationDrawer.vue?raw'
 import notificationDrawerSummarySource from '../notification-drawer/NotificationDrawerSummary.vue?raw'
 import notificationDrawerTabsSource from '../notification-drawer/NotificationDrawerTabs.vue?raw'
+import notificationDrawerViewStateSource from '../notification-drawer/useNotificationDrawerViewState.ts?raw'
 import { useNotificationStore } from '@/stores/notification'
+
+const notificationDrawerStylesSource = readFileSync(
+  resolve(process.cwd(), 'src/components/layout/notification-drawer/notificationDrawer.css'),
+  'utf8'
+)
 
 const notificationDrawerSource = [
   notificationDrawerSourceBase,
@@ -20,6 +28,8 @@ const notificationDrawerSource = [
   notificationDrawerTabsSource,
   notificationDrawerBodySource,
   notificationDrawerFooterSource,
+  notificationDrawerViewStateSource,
+  notificationDrawerStylesSource,
 ].join('\n')
 
 const notificationApiMocks = vi.hoisted(() => ({
@@ -228,14 +238,14 @@ describe('NotificationDrawer', () => {
     expect(notificationDrawerSource).toContain('--notification-panel-surface: rgb(255 255 255);')
     expect(notificationDrawerSource).toContain('--notification-card-bg')
     expect(notificationDrawerSource).toContain('--notification-footer-bg')
-    expect(notificationDrawerSource).toContain(":global([data-theme='dark']) .notification-panel")
+    expect(notificationDrawerSource).toContain("[data-theme='dark'] .notification-panel")
     expect(notificationDrawerSource).toContain('--notification-panel-surface: rgb(14 23 34);')
     expect(notificationDrawerSource).toContain('--notification-panel-surface-end: rgb(9 18 29);')
     expect(notificationDrawerSource).toContain('background-color: rgb(255 255 255);')
     expect(notificationDrawerSource).toContain(
       'background-image: linear-gradient(180deg, rgb(255 255 255), rgb(244 247 251));'
     )
-    expect(notificationDrawerSource).toContain(":global([data-theme='dark']) .panel-inner")
+    expect(notificationDrawerSource).toContain("[data-theme='dark'] .panel-inner")
     expect(notificationDrawerSource).toContain('background-color: rgb(14 23 34);')
     expect(notificationDrawerSource).toContain(
       'background-image: linear-gradient(180deg, rgb(14 23 34), rgb(9 18 29));'
