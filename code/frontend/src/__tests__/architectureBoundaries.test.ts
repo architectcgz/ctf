@@ -8,7 +8,7 @@ import {
   type FrontendArchitecturePolicy,
   type FrontendArchitectureLayer,
   viewLineLimit,
-} from './architectureAllowlist'
+} from './frontendArchitecturePolicy'
 
 const sourceRoot = join(process.cwd(), 'src')
 

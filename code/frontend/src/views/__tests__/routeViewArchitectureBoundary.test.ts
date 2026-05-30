@@ -3,7 +3,7 @@ import { join, relative } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { frontendArchitecturePolicy } from '@/__tests__/architectureAllowlist'
+import { frontendArchitecturePolicy } from '@/__tests__/frontendArchitecturePolicy'
 
 const sourceRoot = join(process.cwd(), 'src')
 const viewsRoot = join(sourceRoot, 'views')
