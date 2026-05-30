@@ -19,6 +19,22 @@ run_frontend_checks() {
   )
 }
 
+run_frontend_growth_checks() {
+  echo "[architecture] frontend growth guards"
+  (cd "$ROOT_DIR/code/frontend" && npm run check:frontend-growth)
+}
+
+run_frontend_feature_boundary_checks() {
+  echo "[architecture] frontend feature owner boundaries"
+  (
+    cd "$ROOT_DIR/code/frontend"
+    npm run test:run -- \
+      src/features/contest-awd-admin/model/useAwdOwnerBoundaries.test.ts \
+      src/features/contest-awd-admin/model/usePlatformContestAwdBoundary.test.ts \
+      src/components/platform/__tests__/awdOperationsPanelTabsExtraction.test.ts
+  )
+}
+
 run_overlay_checks() {
   echo "[architecture] frontend overlay boundaries"
   (
@@ -40,6 +56,8 @@ case "$MODE" in
   --full|full)
     run_backend_checks
     run_frontend_checks
+    run_frontend_growth_checks
+    run_frontend_feature_boundary_checks
     run_overlay_checks
     run_frontend_theme_checks
     ;;

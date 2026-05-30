@@ -153,6 +153,8 @@ code/frontend/
 
 ## 5. Guardrail
 
+- 前端架构策略单点事实：`code/frontend/scripts/frontend-architecture-policy.json`
+  - 分层、低层 forbidden imports、route view 约束、增长守卫入口都以这份策略为准；以后如果要调整前端结构边界，先改这份策略，再同步对应测试或脚本。
 - 前端分层：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - route view 边界：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
 - 后台导航命名空间：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`

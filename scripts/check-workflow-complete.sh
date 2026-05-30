@@ -44,7 +44,7 @@ run_check() {
 cd "$ROOT_DIR"
 
 changed="$(changed_files)"
-architecture_pattern='(^docs/architecture/|^scripts/check-architecture\.sh$|^code/backend/internal/module/|^code/frontend/src/__tests__/architectureBoundaries\.test\.ts$|^code/frontend/src/views/__tests__/routeViewArchitectureBoundary\.test\.ts$|^code/frontend/src/components/common/__tests__/ModalTemplates\.test\.ts$|^code/frontend/scripts/check-theme-tail\.mjs$)'
+architecture_pattern='(^docs/architecture/|^scripts/check-architecture\.sh$|^code/backend/internal/module/|^code/frontend/package\.json$|^code/frontend/scripts/|^code/frontend/src/|^code/frontend/vite\.config\.[^/]+$)'
 
 run_check "harness consistency" bash scripts/check-consistency.sh
 run_check "code change contract checks" bash scripts/check-code-changes.sh

@@ -3,11 +3,16 @@ import { dirname, join, normalize, relative, resolve, sep } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { viewLineLimit } from './architectureAllowlist'
+import {
+  frontendArchitecturePolicy,
+  type FrontendArchitecturePolicy,
+  type FrontendArchitectureLayer,
+  viewLineLimit,
+} from './architectureAllowlist'
 
 const sourceRoot = join(process.cwd(), 'src')
 
-type Layer = 'common' | 'entities' | 'features' | 'widgets' | 'views' | 'other'
+type Layer = FrontendArchitectureLayer | 'other'
 
 interface SourceFile {
   absolutePath: string
@@ -38,11 +43,17 @@ function collectSourceFiles(directory: string): SourceFile[] {
 }
 
 function classifyLayer(relativePath: string): Layer {
-  if (relativePath.startsWith(`components${sep}common${sep}`)) return 'common'
-  if (relativePath.startsWith(`entities${sep}`)) return 'entities'
-  if (relativePath.startsWith(`features${sep}`)) return 'features'
-  if (relativePath.startsWith(`widgets${sep}`)) return 'widgets'
-  if (relativePath.startsWith(`views${sep}`)) return 'views'
+  for (const [layer, config] of Object.entries(frontendArchitecturePolicy.layers) as Array<
+    [FrontendArchitectureLayer, FrontendArchitecturePolicy['layers'][FrontendArchitectureLayer]]
+  >) {
+    if (
+      config.relative_prefixes.some((prefix) =>
+        relativePath.startsWith(normalize(prefix).replaceAll('/', sep))
+      )
+    ) {
+      return layer
+    }
+  }
   return 'other'
 }
 
@@ -130,11 +141,11 @@ describe('frontend architecture boundaries', () => {
 
   it('lower frontend layers should not import higher product layers', () => {
     const violations = collectLayerViolations(sourceFiles, {
-      common: ['features', 'widgets', 'views'],
-      entities: ['features', 'widgets', 'views'],
-      features: ['widgets', 'views'],
-      widgets: ['views'],
-      views: [],
+      common: frontendArchitecturePolicy.layers.common.forbidden_import_layers,
+      entities: frontendArchitecturePolicy.layers.entities.forbidden_import_layers,
+      features: frontendArchitecturePolicy.layers.features.forbidden_import_layers,
+      widgets: frontendArchitecturePolicy.layers.widgets.forbidden_import_layers,
+      views: frontendArchitecturePolicy.layers.views.forbidden_import_layers,
       other: [],
     })
 
@@ -153,9 +164,12 @@ describe('frontend architecture boundaries', () => {
     const widgetFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`widgets${sep}`))
     const legacyComponentImports = widgetFiles.flatMap((file) => {
       const source = readFileSync(file.absolutePath, 'utf-8')
+      const legacyDirectoryPattern = frontendArchitecturePolicy.legacy_business_component_directories.join(
+        '|'
+      )
       return extractImports(source)
         .filter((importPath) =>
-          /^@\/components\/(platform|teacher|notifications|challenge|dashboard|contests|scoreboard)/.test(
+          new RegExp(`^@/components/(${legacyDirectoryPattern})`).test(
             importPath
           )
         )
@@ -186,10 +200,12 @@ describe('frontend architecture boundaries', () => {
     const widgetFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`widgets${sep}`))
 
     const componentApiImports = collectImportKeys(componentFiles, '@/api/').filter(
-      (key) => !key.includes(' -> @/api/contracts')
+      (key) =>
+        !key.includes(' -> @/api/contracts')
     )
     const widgetApiImports = collectImportKeys(widgetFiles, '@/api/').filter(
-      (key) => !key.includes(' -> @/api/contracts')
+      (key) =>
+        !key.includes(' -> @/api/contracts')
     )
 
     expect(componentApiImports).toEqual([])
@@ -207,9 +223,10 @@ describe('frontend architecture boundaries', () => {
       return extractImports(source)
         .filter(
           (importPath) =>
-            /^@\/(api|features|widgets|views|stores|router)/.test(importPath) ||
-            importPath === 'vue-router' ||
-            importPath === 'pinia'
+            frontendArchitecturePolicy.low_level_forbidden_import_prefixes.some((prefix) =>
+              importPath.startsWith(prefix)
+            ) ||
+            frontendArchitecturePolicy.low_level_forbidden_bare_imports.includes(importPath)
         )
         .map((importPath) => `${file.relativePath} -> ${importPath}`)
     })
@@ -224,7 +241,8 @@ describe('frontend architecture boundaries', () => {
         file.relativePath.includes(`${sep}ui${sep}`)
     )
     const apiImports = collectImportKeys(featureUiFiles, '@/api/').filter(
-      (key) => !key.includes(' -> @/api/contracts')
+      (key) =>
+        !key.includes(' -> @/api/contracts')
     )
 
     expect(apiImports).toEqual([])
@@ -242,17 +260,18 @@ describe('frontend architecture boundaries', () => {
   it('stores and utilities should not depend on UI or app orchestration layers', () => {
     const storeFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`stores${sep}`))
     const storeForbiddenImports = collectImportsMatching(storeFiles, (_file, importPath) =>
-      /^@\/(views|components)/.test(importPath)
+      frontendArchitecturePolicy.store_forbidden_import_prefixes.some((prefix) =>
+        importPath.startsWith(prefix)
+      )
     )
 
     const utilityFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`utils${sep}`))
     const utilityForbiddenImports = collectImportsMatching(
       utilityFiles,
       (_file, importPath) =>
-        /^@\/(api|features|widgets|views|stores|router|components)/.test(importPath) ||
-        importPath === 'vue' ||
-        importPath === 'vue-router' ||
-        importPath === 'pinia'
+        frontendArchitecturePolicy.utility_forbidden_import_prefixes.some((prefix) =>
+          importPath.startsWith(prefix)
+        ) || frontendArchitecturePolicy.utility_forbidden_bare_imports.includes(importPath)
     )
 
     expect(storeForbiddenImports).toEqual([])
@@ -265,7 +284,10 @@ describe('frontend architecture boundaries', () => {
     )
     const routerImports = collectImportsMatching(
       featureFiles,
-      (_file, importPath) => importPath === 'vue-router' || importPath.startsWith('@/router')
+      (_file, importPath) =>
+        frontendArchitecturePolicy.feature_router_forbidden_imports.some((forbiddenImport) =>
+          forbiddenImport.endsWith('/') ? importPath.startsWith(forbiddenImport) : importPath === forbiddenImport
+        ) || importPath.startsWith('@/router/')
     )
 
     expect(routerImports).toEqual([])

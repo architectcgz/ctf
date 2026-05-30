@@ -1,0 +1,27 @@
+{
+  "src/features/contest-awd-admin/ui/AWDOperationsPanel.vue": {
+    "baseline_lines": 337,
+    "max_growth": 40,
+    "max_lines": 380
+  },
+  "src/features/contest-awd-admin/model/usePlatformContestAwd.ts": {
+    "baseline_lines": 234,
+    "max_growth": 30,
+    "max_lines": 260
+  },
+  "src/features/contest-awd-admin/model/useAwdReadinessDecision.ts": {
+    "baseline_lines": 168,
+    "max_growth": 24,
+    "max_lines": 190
+  },
+  "src/features/contest-awd-admin/model/useAwdRoundOperations.ts": {
+    "baseline_lines": 170,
+    "max_growth": 24,
+    "max_lines": 195
+  },
+  "src/features/contest-awd-admin/model/useAwdContestStateFlags.ts": {
+    "baseline_lines": 45,
+    "max_growth": 15,
+    "max_lines": 70
+  }
+}

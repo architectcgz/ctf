@@ -1,0 +1,74 @@
+{
+  "layers": {
+    "common": {
+      "relative_prefixes": ["components/common/"],
+      "forbidden_import_layers": ["features", "widgets", "views"]
+    },
+    "entities": {
+      "relative_prefixes": ["entities/"],
+      "forbidden_import_layers": ["features", "widgets", "views"]
+    },
+    "features": {
+      "relative_prefixes": ["features/"],
+      "forbidden_import_layers": ["widgets", "views"]
+    },
+    "widgets": {
+      "relative_prefixes": ["widgets/"],
+      "forbidden_import_layers": ["views"]
+    },
+    "views": {
+      "relative_prefixes": ["views/"],
+      "forbidden_import_layers": []
+    }
+  },
+  "view_line_limit": 500,
+  "legacy_business_component_directories": [
+    "platform",
+    "teacher",
+    "notifications",
+    "challenge",
+    "dashboard",
+    "contests",
+    "scoreboard"
+  ],
+  "component_api_contract_only": true,
+  "widget_api_contract_only": true,
+  "feature_ui_api_contract_only": true,
+  "low_level_forbidden_import_prefixes": [
+    "@/api",
+    "@/features",
+    "@/widgets",
+    "@/views",
+    "@/stores",
+    "@/router"
+  ],
+  "low_level_forbidden_bare_imports": ["vue-router", "pinia"],
+  "store_forbidden_import_prefixes": ["@/views", "@/components"],
+  "utility_forbidden_import_prefixes": [
+    "@/api",
+    "@/features",
+    "@/widgets",
+    "@/views",
+    "@/stores",
+    "@/router",
+    "@/components"
+  ],
+  "utility_forbidden_bare_imports": ["vue", "vue-router", "pinia"],
+  "feature_router_forbidden_imports": ["vue-router", "@/router"],
+  "route_view": {
+    "allow_api_contract_imports_only": true,
+    "forbidden_runtime_hooks": [
+      "useRoute",
+      "useRouter",
+      "router.push",
+      "router.replace",
+      "useRouteQueryTabs"
+    ]
+  },
+  "growth_baseline_file": "scripts/frontend-growth-baseline.json",
+  "feature_boundary_guard_tests": [
+    "src/features/contest-awd-admin/model/useAwdOwnerBoundaries.test.ts",
+    "src/features/contest-awd-admin/model/usePlatformContestAwdBoundary.test.ts",
+    "src/components/platform/__tests__/awdOperationsPanelTabsExtraction.test.ts"
+  ]
+}

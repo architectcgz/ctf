@@ -38,7 +38,7 @@
 ## 机械化 Guardrail
 
 - `scripts/check-architecture.sh --quick`：快速检查后端模块依赖方向、前端分层边界和关键历史腐蚀基线。
-- `scripts/check-architecture.sh --full`：在 quick 基础上补充 overlay 结构约束和前端主题 token 检查。
+- `scripts/check-architecture.sh --full`：在 quick 基础上补充前端热点文件增长守卫、feature owner boundary、overlay 结构约束和前端主题 token 检查。
 - `python3 scripts/check-docs-consistency.py`：检查架构文档状态、索引引用与 `## 当前设计` 结构底线。
 - `scripts/check-consistency.sh`：检查 harness 入口、脚本接线与本地 guardrail 是否接入。
 
@@ -46,8 +46,12 @@
 
 - 后端：`code/backend/internal/module/architecture_test.go`
 - 进程装配：`code/backend/internal/app/architecture_rules_test.go`
+- 前端架构策略：`code/frontend/scripts/frontend-architecture-policy.json`
+  - 这是前端结构约束的单点事实源；后续若要调整分层、route view 边界或增长守卫，先改策略，再让脚本与测试消费它。
 - 前端分层：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - 路由边界：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- 前端增长守卫：`code/frontend/scripts/check-frontend-growth-guard.mjs`
+- AWD owner 边界：`code/frontend/src/features/contest-awd-admin/model/useAwdOwnerBoundaries.test.ts`
 - 共享模板：`code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`
 
 ## 历史迁移说明
