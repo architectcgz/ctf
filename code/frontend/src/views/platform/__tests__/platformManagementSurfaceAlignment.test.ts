@@ -40,8 +40,13 @@ import cheatDetectionSource from '../CheatDetection.vue?raw'
 import cheatDetectionReviewPanelsSource from '@/components/platform/cheat/CheatDetectionReviewPanels.vue?raw'
 import cheatDetectionSummaryPanelSource from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue?raw'
 import cheatDetectionWorkspacePanelSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
+import awdInspectorCanvasWorkspaceSource from '@/features/awd-inspector/ui/AWDInspectorCanvasWorkspace.vue?raw'
+import awdInspectorStatsHudSource from '@/features/awd-inspector/ui/AWDInspectorStatsHud.vue?raw'
 import awdRoundInspectorSource from '@/features/awd-inspector/ui/AWDRoundInspector.vue?raw'
-import awdTrafficPanelSource from '@/features/awd-inspector/ui/AWDTrafficPanel.vue?raw'
+import awdTrafficEventTableSource from '@/features/awd-inspector/ui/AWDTrafficEventTable.vue?raw'
+import awdTrafficIntelligenceGridSource from '@/features/awd-inspector/ui/AWDTrafficIntelligenceGrid.vue?raw'
+import awdTrafficPanelSourceBase from '@/features/awd-inspector/ui/AWDTrafficPanel.vue?raw'
+import awdTrafficSummaryBandSource from '@/features/awd-inspector/ui/AWDTrafficSummaryBand.vue?raw'
 import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
 import awdChallengeConfigDirectoryRowSource from '@/features/platform-contests/ui/AWDChallengeConfigDirectoryRow.vue?raw'
 import awdChallengeConfigDirectorySectionSource from '@/features/platform-contests/ui/AWDChallengeConfigDirectorySection.vue?raw'
@@ -145,6 +150,22 @@ const challengeWriteupManagePanelSource = [
     ),
     'utf8'
   ),
+].join('\n')
+const awdRoundInspectorCombinedSource = [
+  awdRoundInspectorSource,
+  awdInspectorStatsHudSource,
+  awdInspectorCanvasWorkspaceSource,
+  readFileSync(
+    resolve(process.cwd(), 'src/features/awd-inspector/ui/awdRoundInspector.css'),
+    'utf8'
+  ),
+].join('\n')
+const awdTrafficPanelSource = [
+  awdTrafficPanelSourceBase,
+  awdTrafficSummaryBandSource,
+  awdTrafficIntelligenceGridSource,
+  awdTrafficEventTableSource,
+  readFileSync(resolve(process.cwd(), 'src/features/awd-inspector/ui/awdTrafficPanel.css'), 'utf8'),
 ].join('\n')
 const awdChallengeConfigCombinedSource = [
   awdChallengeConfigPanelSource,
@@ -355,12 +376,12 @@ describe('admin management surface alignment', () => {
   })
 
   it('awd round inspector traffic filters should stay flattened into the table section instead of using a split intro bar', () => {
-    expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
+    expect(awdRoundInspectorCombinedSource).toContain('<AWDTrafficPanel')
     expect(awdTrafficPanelSource).toContain('id="awd-traffic-reset-filters"')
-    expect(awdRoundInspectorSource).not.toContain(
+    expect(awdRoundInspectorCombinedSource).not.toContain(
       '按攻击方、受害方、题目、状态分桶和路径关键字筛选。'
     )
-    expect(awdRoundInspectorSource).not.toContain(
+    expect(awdRoundInspectorCombinedSource).not.toContain(
       'class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/60 px-4 py-3"'
     )
   })
@@ -626,7 +647,7 @@ describe('admin management surface alignment', () => {
     expect(auditLogCombinedSource).toContain('PlatformPaginationControls')
     expect(challengeManageCombinedSource).toContain('WorkspaceDirectoryPagination')
     expect(adminContestTableSource).toContain('PlatformPaginationControls')
-    expect(awdRoundInspectorSource).toContain('<AWDTrafficPanel')
+    expect(awdRoundInspectorCombinedSource).toContain('<AWDTrafficPanel')
     expect(awdTrafficPanelSource).toContain('PlatformPaginationControls')
   })
 

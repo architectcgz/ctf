@@ -1,29 +1,20 @@
 <script setup lang="ts">
 import { ref, toRef, computed } from 'vue'
-import { 
-  Activity, 
-  BarChart3, 
-  Download, 
-  History, 
-  LayoutGrid, 
-  ShieldAlert, 
-  Sword, 
-  Zap,
-  Radar
-} from 'lucide-vue-next'
 import type { AWDTeamServiceData } from '@/api/contracts'
-import AWDAttackLogPanel from './AWDAttackLogPanel.vue'
+import AWDInspectorCanvasWorkspace from './AWDInspectorCanvasWorkspace.vue'
+import AWDInspectorStatsHud from './AWDInspectorStatsHud.vue'
 import AWDRoundHeaderPanel from './AWDRoundHeaderPanel.vue'
-import AWDScoreboardSummaryPanel from './AWDScoreboardSummaryPanel.vue'
-import AWDServiceStatusPanel from './AWDServiceStatusPanel.vue'
-import AWDTrafficPanel from './AWDTrafficPanel.vue'
 import type {
-  AWDServiceAlertView,
+  AWDAttackLogPanelProps,
+  AWDInspectorSubTab,
   AWDRoundInspectorEmits,
   AWDRoundInspectorProps,
+  AWDScoreboardSummaryPanelProps,
+  AWDServiceAlertView,
+  AWDServiceStatusPanelProps,
+  AWDTrafficPanelProps,
 } from './awdInspector.types'
-import AppLoading from '@/components/common/AppLoading.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import './awdRoundInspector.css'
 import {
   useAwdCheckResultPresentation,
   useAwdInspectorCoreState,
@@ -44,7 +35,7 @@ defineSlots<{
   }) => unknown
 }>()
 
-const activeSubTab = ref<'matrix' | 'attacks' | 'traffic' | 'scoreboard'>(props.initialTab || 'matrix')
+const activeSubTab = ref<AWDInspectorSubTab>(props.initialTab || 'matrix')
 
 const {
   serviceTeamFilter,
@@ -190,11 +181,79 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
     ...service.check_result,
   }
 }
+
+const serviceStatusPanelProps = computed<AWDServiceStatusPanelProps>(() => ({
+  services: props.services,
+  filteredServices: filteredServices.value,
+  summary: props.summary,
+  serviceAlerts: serviceAlerts.value,
+  serviceTeamOptions: serviceTeamOptions.value,
+  serviceCheckSourceOptions: serviceCheckSourceOptions.value,
+  serviceTeamFilter: serviceTeamFilter.value,
+  serviceStatusFilter: serviceStatusFilter.value,
+  serviceCheckSourceFilter: serviceCheckSourceFilter.value,
+  serviceAlertReasonFilter: serviceAlertReasonFilter.value,
+  getChallengeTitle,
+  getServiceStatusLabel,
+  getServiceStatusClass,
+  getCheckSourceLabel,
+  getCheckerTypeLabel,
+  getCheckStatusLabel,
+  summarizeCheckResult,
+  getCheckActions,
+  getCheckTargets,
+  getTargetActions,
+  getTargetProbeSummary,
+  getProbeStatusText,
+  formatDateTime,
+  formatLatency,
+  getServiceCheckPresentationResult,
+}))
+
+const scoreboardSummaryPanelProps = computed<AWDScoreboardSummaryPanelProps>(() => ({
+  scoreboardRows: props.scoreboardRows,
+  scoreboardFrozen: props.scoreboardFrozen,
+  summary: props.summary,
+  formatScore,
+  formatDateTime,
+}))
+
+const attackLogPanelProps = computed<AWDAttackLogPanelProps>(() => ({
+  attacks: props.attacks,
+  filteredAttacks: filteredAttacks.value,
+  attackTeamOptions: attackTeamOptions.value,
+  attackSourceOptions: attackSourceOptions.value,
+  attackTeamFilter: attackTeamFilter.value,
+  attackResultFilter: attackResultFilter.value,
+  attackSourceFilter: attackSourceFilter.value,
+  formatDateTime,
+  getChallengeTitle,
+  getAttackTypeLabel,
+  getAttackSourceLabel,
+}))
+
+const trafficPanelProps = computed<AWDTrafficPanelProps>(() => ({
+  updatedAt: selectedRound.value?.updated_at,
+  challengeLinks: props.challengeLinks,
+  trafficSummary: props.trafficSummary,
+  trafficEvents: props.trafficEvents,
+  trafficEventsTotal: props.trafficEventsTotal,
+  trafficFilters: props.trafficFilters,
+  trafficTeamOptions: trafficTeamOptions.value,
+  loadingTrafficSummary: props.loadingTrafficSummary,
+  loadingTrafficEvents: props.loadingTrafficEvents,
+  formatDateTime,
+  formatPercent,
+  getTrafficStatusGroupLabel,
+  getTrafficStatusGroupClass,
+  getTrafficTeamName,
+  getTrafficChallengeTitle,
+  getTrafficSourceLabel,
+}))
 </script>
 
 <template>
   <div class="awd-inspector-workbench">
-    <!-- 1. Header (Stateless Header) -->
     <AWDRoundHeaderPanel
       :contest="contest"
       :rounds="rounds"
@@ -226,320 +285,55 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
       @open:contest-edit="emit('open:contestEdit')"
     />
 
-    <!-- 2. Integrated Metric HUD (Modern Dashboard Style) -->
-    <div
+    <AWDInspectorStatsHud
       v-if="selectedRound"
-      class="awd-stats-hud"
+      :total-service-count="totalServiceCount"
+      :up-count="upCount"
+      :down-count="downCount"
+      :total-attack-count="totalAttackCount"
+      :successful-attack-count="successfulAttackCount"
+      :compromised-count="compromisedCount"
+      :attacked-service-count="attackedServiceCount"
+      :get-source-overview-label="getSourceOverviewLabel"
+      :get-source-overview-description="getSourceOverviewDescription"
+    />
+
+    <AWDInspectorCanvasWorkspace
+      :active-sub-tab="activeSubTab"
+      :selected-round="selectedRound"
+      :loading-round-detail="loadingRoundDetail"
+      :service-alerts="serviceAlerts"
+      :selected-alert-key="serviceAlertReasonFilter"
+      :get-service-alert-class="getServiceAlertClass"
+      :apply-service-alert-filter="applyServiceAlertFilter"
+      :service-status-panel="serviceStatusPanelProps"
+      :scoreboard-summary-panel="scoreboardSummaryPanelProps"
+      :attack-log-panel="attackLogPanelProps"
+      :traffic-panel="trafficPanelProps"
+      @update:active-sub-tab="activeSubTab = $event"
+      @export-review-package="exportReviewPackage"
+      @update-service-team-filter="serviceTeamFilter = $event"
+      @update-service-status-filter="serviceStatusFilter = $event"
+      @update-service-check-source-filter="serviceCheckSourceFilter = $event"
+      @update-service-alert-reason-filter="serviceAlertReasonFilter = $event"
+      @export-services="exportFilteredServices"
+      @update-attack-team-filter="attackTeamFilter = $event"
+      @update-attack-result-filter="attackResultFilter = $event"
+      @update-attack-source-filter="attackSourceFilter = $event"
+      @export-attacks="exportFilteredAttacks"
+      @apply-traffic-filters="emit('applyTrafficFilters', $event)"
+      @change-traffic-page="emit('changeTrafficPage', $event)"
+      @reset-traffic-filters="emit('resetTrafficFilters')"
     >
-      <div class="stat-card">
-        <div class="stat-card__icon stat-card__icon--blue">
-          <Activity class="h-4 w-4" />
-        </div>
-        <div class="stat-card__content">
-          <div class="unit-label">Infrastructure</div>
-          <div class="unit-value font-mono">
-            {{ totalServiceCount }} <small>SRV</small>
-          </div>
-          <div class="unit-helper">
-            ONLINE: {{ upCount }} · OFF: {{ downCount }}
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-card__icon stat-card__icon--green">
-          <Radar class="h-4 w-4" />
-        </div>
-        <div class="stat-card__content">
-          <div class="unit-label">Battle Traffic</div>
-          <div class="unit-value font-mono">
-            {{ totalAttackCount }} <small>HITS</small>
-          </div>
-          <div class="unit-helper unit-helper--success">
-            SUCCESS: {{ successfulAttackCount }}
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-card__icon stat-card__icon--orange">
-          <ShieldAlert class="h-4 w-4" />
-        </div>
-        <div class="stat-card__content">
-          <div class="unit-label">Compromised</div>
-          <div class="unit-value unit-value--warning font-mono">
-            {{ compromisedCount }} <small>EXP</small>
-          </div>
-          <div class="unit-helper">
-            AFFECTED: {{ attackedServiceCount }} TEAMS
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-card__icon stat-card__icon--purple">
-          <LayoutGrid class="h-4 w-4" />
-        </div>
-        <div class="stat-card__content">
-          <div class="unit-label">Composition</div>
-          <div class="unit-value">
-            {{ getSourceOverviewLabel() }}
-          </div>
-          <div class="unit-helper">
-            {{ getSourceOverviewDescription() }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. Main Workspace (Flat Design) -->
-    <div class="awd-detail-canvas">
-      <header class="canvas-tabs-header">
-        <nav class="sub-tabs">
-          <button
-            class="sub-tab"
-            :class="{ active: activeSubTab === 'matrix' }"
-            @click="activeSubTab = 'matrix'"
-          >
-            <LayoutGrid class="h-3.5 w-3.5" /> 运行矩阵
-          </button>
-          <button
-            class="sub-tab"
-            :class="{ active: activeSubTab === 'scoreboard' }"
-            @click="activeSubTab = 'scoreboard'"
-          >
-            <BarChart3 class="h-3.5 w-3.5" /> 排行榜单
-          </button>
-          <button
-            class="sub-tab"
-            :class="{ active: activeSubTab === 'attacks' }"
-            @click="activeSubTab = 'attacks'"
-          >
-            <Sword class="h-3.5 w-3.5" /> 攻击流水
-          </button>
-          <button
-            class="sub-tab"
-            :class="{ active: activeSubTab === 'traffic' }"
-            @click="activeSubTab = 'traffic'"
-          >
-            <Zap class="h-3.5 w-3.5" /> 流量分析
-          </button>
-        </nav>
-
-        <div class="canvas-actions">
-          <button
-            type="button"
-            class="ops-btn ops-btn--neutral"
-            @click="exportReviewPackage"
-          >
-            <Download class="h-3.5 w-3.5 mr-2" /> 导出复盘包
-          </button>
-        </div>
-      </header>
-
-      <div class="canvas-content custom-scrollbar">
-        <div
-          v-if="loadingRoundDetail"
-          class="canvas-loading-overlay"
-        >
-          <AppLoading>同步态势中...</AppLoading>
-        </div>
-
-        <AppEmpty
-          v-else-if="!selectedRound"
-          title="等待激活"
-          description="在上方选择轮次以展开战场监控。"
-          icon="History"
-          class="py-24"
+      <template #service-alerts="slotProps">
+        <slot
+          name="service-alerts"
+          :service-alerts="slotProps.serviceAlerts"
+          :selected-alert-key="slotProps.selectedAlertKey"
+          :get-service-alert-class="slotProps.getServiceAlertClass"
+          :apply-service-alert-filter="slotProps.applyServiceAlertFilter"
         />
-
-        <div
-          v-else
-          class="pane-wrap"
-        >
-          <div
-            v-show="activeSubTab === 'matrix'"
-            class="pane-matrix"
-          >
-            <slot
-              name="service-alerts"
-              :service-alerts="serviceAlerts"
-              :selected-alert-key="serviceAlertReasonFilter"
-              :get-service-alert-class="getServiceAlertClass"
-              :apply-service-alert-filter="applyServiceAlertFilter"
-            />
-            <AWDServiceStatusPanel
-              :services="services"
-              :filtered-services="filteredServices"
-              :summary="summary"
-              :service-alerts="serviceAlerts"
-              :service-team-options="serviceTeamOptions"
-              :service-check-source-options="serviceCheckSourceOptions"
-              :service-team-filter="serviceTeamFilter"
-              :service-status-filter="serviceStatusFilter"
-              :service-check-source-filter="serviceCheckSourceFilter"
-              :service-alert-reason-filter="serviceAlertReasonFilter"
-              :get-challenge-title="getChallengeTitle"
-              :get-service-status-label="getServiceStatusLabel"
-              :get-service-status-class="getServiceStatusClass"
-              :get-check-source-label="getCheckSourceLabel"
-              :get-checker-type-label="getCheckerTypeLabel"
-              :get-check-status-label="getCheckStatusLabel"
-              :summarize-check-result="summarizeCheckResult"
-              :get-check-actions="getCheckActions"
-              :get-check-targets="getCheckTargets"
-              :get-target-actions="getTargetActions"
-              :get-target-probe-summary="getTargetProbeSummary"
-              :get-probe-status-text="getProbeStatusText"
-              :format-date-time="formatDateTime"
-              :format-latency="formatLatency"
-              :get-service-check-presentation-result="getServiceCheckPresentationResult"
-              @update-service-team-filter="serviceTeamFilter = $event"
-              @update-service-status-filter="serviceStatusFilter = $event"
-              @update-service-check-source-filter="serviceCheckSourceFilter = $event"
-              @update-service-alert-reason-filter="serviceAlertReasonFilter = $event"
-              @export-services="exportFilteredServices"
-            />
-          </div>
-
-          <div
-            v-show="activeSubTab === 'scoreboard'"
-            class="pane-scoreboard"
-          >
-            <AWDScoreboardSummaryPanel
-              :scoreboard-rows="scoreboardRows"
-              :scoreboard-frozen="scoreboardFrozen"
-              :summary="summary"
-              :format-score="formatScore"
-              :format-date-time="formatDateTime"
-            />
-          </div>
-
-          <div
-            v-show="activeSubTab === 'attacks'"
-            class="pane-attacks"
-          >
-            <AWDAttackLogPanel
-              :attacks="attacks"
-              :filtered-attacks="filteredAttacks"
-              :attack-team-options="attackTeamOptions"
-              :attack-source-options="attackSourceOptions"
-              :attack-team-filter="attackTeamFilter"
-              :attack-result-filter="attackResultFilter"
-              :attack-source-filter="attackSourceFilter"
-              :format-date-time="formatDateTime"
-              :get-challenge-title="getChallengeTitle"
-              :get-attack-type-label="getAttackTypeLabel"
-              :get-attack-source-label="getAttackSourceLabel"
-              @update-attack-team-filter="attackTeamFilter = $event"
-              @update-attack-result-filter="attackResultFilter = $event"
-              @update-attack-source-filter="attackSourceFilter = $event"
-              @export-attacks="exportFilteredAttacks"
-            />
-          </div>
-
-          <div
-            v-show="activeSubTab === 'traffic'"
-            class="pane-traffic"
-          >
-            <AWDTrafficPanel
-              :updated-at="selectedRound.updated_at"
-              :challenge-links="challengeLinks"
-              :traffic-summary="trafficSummary"
-              :traffic-events="trafficEvents"
-              :traffic-events-total="trafficEventsTotal"
-              :traffic-filters="trafficFilters"
-              :traffic-team-options="trafficTeamOptions"
-              :loading-traffic-summary="loadingTrafficSummary"
-              :loading-traffic-events="loadingTrafficEvents"
-              :format-date-time="formatDateTime"
-              :format-percent="formatPercent"
-              :get-traffic-status-group-label="getTrafficStatusGroupLabel"
-              :get-traffic-status-group-class="getTrafficStatusGroupClass"
-              :get-traffic-team-name="getTrafficTeamName"
-              :get-traffic-challenge-title="getTrafficChallengeTitle"
-              :get-traffic-source-label="getTrafficSourceLabel"
-              @apply-traffic-filters="emit('applyTrafficFilters', $event)"
-              @change-traffic-page="emit('changeTrafficPage', $event)"
-              @reset-traffic-filters="emit('resetTrafficFilters')"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+      </template>
+    </AWDInspectorCanvasWorkspace>
   </div>
 </template>
-
-<style scoped>
-.awd-inspector-workbench { display: flex; flex-direction: column; height: 100%; }
-
-.awd-stats-hud {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-  padding: 1.5rem 0;
-  background: transparent;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 1.25rem;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 1rem;
-  transition: all 0.2s ease;
-}
-
-.stat-card:hover {
-  border-color: var(--color-border-default);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-text-primary) 4%, transparent);
-}
-
-.stat-card__icon {
-  width: 2.75rem;
-  height: 2.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.75rem;
-}
-
-.stat-card__icon--blue { background: color-mix(in srgb, var(--color-primary) 10%, transparent); color: var(--color-primary); }
-.stat-card__icon--green { background: color-mix(in srgb, var(--color-success) 10%, transparent); color: var(--color-success); }
-.stat-card__icon--orange { background: color-mix(in srgb, var(--color-warning) 10%, transparent); color: var(--color-warning); }
-.stat-card__icon--purple { background: color-mix(in srgb, var(--color-secondary) 10%, transparent); color: var(--color-secondary); }
-
-.stat-card__content { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
-
-.unit-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--color-text-muted); letter-spacing: 0.05em; }
-.unit-value { font-size: 1.25rem; font-weight: 900; color: var(--color-text-primary); line-height: 1; }
-.unit-value small { font-size: 11px; opacity: 0.5; margin-left: 2px; }
-.unit-helper { font-size: 11px; font-weight: 600; color: var(--color-text-secondary); }
-.unit-helper--success { color: var(--color-success); }
-.unit-value--warning { color: var(--color-warning); }
-
-.awd-detail-canvas { flex: 1; display: flex; flex-direction: column; background: transparent; min-height: 0; }
-.canvas-tabs-header {
-  height: 3.5rem; padding: 0; border-bottom: 1px solid var(--color-border-default);
-  display: flex; justify-content: space-between; align-items: center; background: transparent;
-}
-.sub-tabs { display: flex; gap: 2rem; height: 100%; }
-.sub-tab {
-  display: flex; align-items: center; gap: 0.5rem; padding: 0 0.25rem;
-  font-size: 13px; font-weight: 800; color: var(--color-text-secondary);
-  border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s ease;
-}
-.sub-tab:hover { color: var(--color-text-primary); }
-.sub-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
-
-.canvas-content { flex: 1; overflow-y: auto; padding: 2rem 0; position: relative; }
-.canvas-loading-overlay { position: absolute; inset: 0; background: color-mix(in srgb, var(--color-bg-base) 70%, transparent); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10; }
-
-.ops-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 2.25rem; padding: 0 1rem; border-radius: 0.75rem;
-  font-size: 12px; font-weight: 700; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); color: var(--color-text-secondary); cursor: pointer;
-}
-</style>

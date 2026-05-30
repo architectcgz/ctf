@@ -38,6 +38,8 @@ export interface AWDRoundInspectorProps {
   attackLogHint?: string
 }
 
+export type AWDInspectorSubTab = 'matrix' | 'attacks' | 'traffic' | 'scoreboard'
+
 export type AWDRoundInspectorEmits = {
   refresh: []
   openCreateRoundDialog: []
@@ -48,6 +50,18 @@ export type AWDRoundInspectorEmits = {
   changeTrafficPage: [page: number]
   resetTrafficFilters: []
   'update:selectedRoundId': [roundId: string]
+}
+
+export interface AWDInspectorStatsHudProps {
+  totalServiceCount: number
+  upCount: number
+  downCount: number
+  totalAttackCount: number
+  successfulAttackCount: number
+  compromisedCount: number
+  attackedServiceCount: number
+  getSourceOverviewLabel: () => string
+  getSourceOverviewDescription: () => string
 }
 
 export interface AWDRoundHeaderPanelProps {
@@ -208,6 +222,37 @@ export interface AWDTrafficPanelProps {
 }
 
 export type AWDTrafficPanelEmits = {
+  applyTrafficFilters: [filters: Partial<AWDTrafficFilters>]
+  changeTrafficPage: [page: number]
+  resetTrafficFilters: []
+}
+
+export interface AWDInspectorCanvasWorkspaceProps {
+  activeSubTab: AWDInspectorSubTab
+  selectedRound: AWDRoundData | null
+  loadingRoundDetail: boolean
+  serviceAlerts: AWDServiceAlertView[]
+  selectedAlertKey: string
+  getServiceAlertClass: (alertKey: string) => string
+  applyServiceAlertFilter: (alertKey: string) => void
+  serviceStatusPanel: AWDServiceStatusPanelProps
+  scoreboardSummaryPanel: AWDScoreboardSummaryPanelProps
+  attackLogPanel: AWDAttackLogPanelProps
+  trafficPanel: AWDTrafficPanelProps
+}
+
+export type AWDInspectorCanvasWorkspaceEmits = {
+  'update:activeSubTab': [tab: AWDInspectorSubTab]
+  exportReviewPackage: []
+  updateServiceTeamFilter: [value: string]
+  updateServiceStatusFilter: [value: 'all' | AWDTeamServiceData['service_status']]
+  updateServiceCheckSourceFilter: [value: string]
+  updateServiceAlertReasonFilter: [value: string]
+  exportServices: []
+  updateAttackTeamFilter: [value: string]
+  updateAttackResultFilter: [value: 'all' | 'success' | 'failed']
+  updateAttackSourceFilter: [value: 'all' | AWDAttackLogData['source']]
+  exportAttacks: []
   applyTrafficFilters: [filters: Partial<AWDTrafficFilters>]
   changeTrafficPage: [page: number]
   resetTrafficFilters: []
