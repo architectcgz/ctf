@@ -1,187 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-
-import type { InstanceData, InstanceSharing, InstanceStatus } from '@/api/contracts'
-import { useCountdown } from '@/composables/useCountdown'
-import { formatTime } from '@/utils/format'
-
-const props = defineProps<{
-  instance: InstanceData | null
-  loading: boolean
-  creating: boolean
-  opening: boolean
-  extending: boolean
-  destroying: boolean
-  challengeSolved: boolean
-  instanceSharing?: InstanceSharing
-}>()
-
-const emit = defineEmits<{
-  start: []
-  open: []
-  extend: []
-  destroy: []
-}>()
-
-const { formatted, isExpired, isUrgent } = useCountdown(() => props.instance?.expires_at)
-
-const effectiveStatus = computed<InstanceStatus | null>(() => {
-  if (!props.instance) return null
-  if (props.instance.status === 'running' && isExpired.value) return 'expired'
-  return props.instance.status
-})
-
-const statusLabel = computed(() => {
-  if (!effectiveStatus.value) return '未创建'
-
-  const labels: Record<InstanceStatus, string> = {
-    pending: '等待中',
-    creating: '创建中',
-    running: '运行中',
-    expired: '已自动回收',
-    destroying: '销毁中',
-    destroyed: '已销毁',
-    failed: '启动失败',
-    crashed: '运行异常',
-  }
-  return labels[effectiveStatus.value]
-})
-
-const statusClass = computed(() => {
-  if (!effectiveStatus.value) return 'instance-status-text--muted'
-
-  const classes: Record<InstanceStatus, string> = {
-    pending: 'instance-status-text--warning',
-    creating: 'instance-status-text--warning',
-    running: 'instance-status-text--success',
-    expired: 'instance-status-text--muted',
-    destroying: 'instance-status-text--warning',
-    destroyed: 'instance-status-text--muted',
-    failed: 'instance-status-text--danger',
-    crashed: 'instance-status-text--danger',
-  }
-  return classes[effectiveStatus.value]
-})
-
-const remainingLabel = computed(() => {
-  if (!props.instance) return '--:--:--'
-  if (effectiveStatus.value === 'expired') return '已自动回收'
-  return formatted.value
-})
-
-function formatEta(seconds?: number) {
-  if (typeof seconds !== 'number' || seconds <= 0) return '预计时间计算中'
-  const minutes = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  if (minutes <= 0) return `${secs} 秒`
-  return `${minutes} 分 ${secs} 秒`
-}
-
-const canOpen = computed(() => effectiveStatus.value === 'running')
-const isWaiting = computed(
-  () => effectiveStatus.value === 'pending' || effectiveStatus.value === 'creating'
-)
-const isFailed = computed(
-  () => effectiveStatus.value === 'failed' || effectiveStatus.value === 'crashed'
-)
-const isReclaimingState = computed(
-  () => effectiveStatus.value === 'expired' || effectiveStatus.value === 'destroyed'
-)
-const isRestartable = computed(() => isFailed.value || isReclaimingState.value)
-const createdAtLabel = computed(() => {
-  if (!props.instance?.created_at) return ''
-  return formatTime(props.instance.created_at)
-})
-
-const remainingExtendsLabel = computed(() => {
-  if (isSharedInstance.value) return '系统托管'
-  if (!props.instance) return '0 次'
-  return `${props.instance.remaining_extends} 次`
-})
-
-const queueLabel = computed(() => {
-  if (!props.instance || !isWaiting.value) return ''
-  if (typeof props.instance.queue_position === 'number' && props.instance.queue_position > 0) {
-    return `当前排队：第 ${props.instance.queue_position} 位`
-  }
-  return '当前排队：排队信息同步中'
-})
-
-const etaLabel = computed(() => {
-  if (!props.instance || !isWaiting.value) return ''
-  return `预计等待：${formatEta(props.instance.eta_seconds)}`
-})
-
-const progressLabel = computed(() => {
-  if (!props.instance || !isWaiting.value || typeof props.instance.progress !== 'number') return ''
-  const normalized = Math.max(0, Math.min(100, Math.round(props.instance.progress)))
-  return `创建进度：${normalized}%`
-})
-
-const accessLabel = computed(() => {
-  if (!props.instance) return ''
-  if (canOpen.value) {
-    if (props.instance.access?.protocol === 'tcp') {
-      return props.instance.access.command || props.instance.access_url || 'TCP 连接命令待同步'
-    }
-    return props.instance.access_url || '通过右侧按钮打开代理访问'
-  }
-  if (isWaiting.value) {
-    return '实例仍在排队/创建中，完成后可打开目标'
-  }
-  if (effectiveStatus.value === 'expired') {
-    return '实例已自动回收，请重新启动'
-  }
-  if (isFailed.value) {
-    return '实例不可访问，请重新启动'
-  }
-  if (effectiveStatus.value === 'destroyed') {
-    return '实例已销毁，请重新启动'
-  }
-  return props.instance.access_url || '--'
-})
-
-const openButtonLabel = computed(() => {
-  if (props.opening) return '正在打开...'
-  if (isWaiting.value) return '等待实例就绪'
-  if (isFailed.value) return '实例不可用'
-  if (props.instance?.access?.protocol === 'tcp') return '复制命令'
-  return '打开目标'
-})
-
-const isSharedInstance = computed(() => props.instance?.share_scope === 'shared')
-
-const sharedStrategyLabel = computed(() => {
-  if (props.instanceSharing === 'shared' || isSharedInstance.value) {
-    return '共享实例'
-  }
-  if (props.instanceSharing === 'per_team') {
-    return '队伍共享'
-  }
-  return ''
-})
-
-const canExtend = computed(
-  () => !isSharedInstance.value && canOpen.value && (props.instance?.remaining_extends ?? 0) > 0
-)
-
-const restartButtonLabel = computed(() => {
-  if (props.creating) return '正在创建实例...'
-  if (props.instanceSharing === 'shared' || isSharedInstance.value) {
-    return '重新进入共享靶机'
-  }
-  return '重启实例'
-})
-
-const startButtonLabel = computed(() => {
-  if (props.creating) return '正在创建实例...'
-  if (props.challengeSolved) {
-    return props.instanceSharing === 'shared' ? '重新进入共享靶机' : '重启实例'
-  }
-  return props.instanceSharing === 'shared' ? '进入共享靶机' : '启动靶机'
-})
-</script>
-
 <template>
   <section class="instance-shell tool-group">
     <div class="instance-kicker">Instance</div>
@@ -517,3 +333,187 @@ const startButtonLabel = computed(() => {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+
+import type { InstanceData, InstanceSharing, InstanceStatus } from '@/api/contracts'
+import { useCountdown } from '@/composables/useCountdown'
+import { formatTime } from '@/utils/format'
+
+const props = defineProps<{
+  instance: InstanceData | null
+  loading: boolean
+  creating: boolean
+  opening: boolean
+  extending: boolean
+  destroying: boolean
+  challengeSolved: boolean
+  instanceSharing?: InstanceSharing
+}>()
+
+const emit = defineEmits<{
+  start: []
+  open: []
+  extend: []
+  destroy: []
+}>()
+
+const { formatted, isExpired, isUrgent } = useCountdown(() => props.instance?.expires_at)
+
+const effectiveStatus = computed<InstanceStatus | null>(() => {
+  if (!props.instance) return null
+  if (props.instance.status === 'running' && isExpired.value) return 'expired'
+  return props.instance.status
+})
+
+const statusLabel = computed(() => {
+  if (!effectiveStatus.value) return '未创建'
+
+  const labels: Record<InstanceStatus, string> = {
+    pending: '等待中',
+    creating: '创建中',
+    running: '运行中',
+    expired: '已自动回收',
+    destroying: '销毁中',
+    destroyed: '已销毁',
+    failed: '启动失败',
+    crashed: '运行异常',
+  }
+  return labels[effectiveStatus.value]
+})
+
+const statusClass = computed(() => {
+  if (!effectiveStatus.value) return 'instance-status-text--muted'
+
+  const classes: Record<InstanceStatus, string> = {
+    pending: 'instance-status-text--warning',
+    creating: 'instance-status-text--warning',
+    running: 'instance-status-text--success',
+    expired: 'instance-status-text--muted',
+    destroying: 'instance-status-text--warning',
+    destroyed: 'instance-status-text--muted',
+    failed: 'instance-status-text--danger',
+    crashed: 'instance-status-text--danger',
+  }
+  return classes[effectiveStatus.value]
+})
+
+const remainingLabel = computed(() => {
+  if (!props.instance) return '--:--:--'
+  if (effectiveStatus.value === 'expired') return '已自动回收'
+  return formatted.value
+})
+
+function formatEta(seconds?: number) {
+  if (typeof seconds !== 'number' || seconds <= 0) return '预计时间计算中'
+  const minutes = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  if (minutes <= 0) return `${secs} 秒`
+  return `${minutes} 分 ${secs} 秒`
+}
+
+const canOpen = computed(() => effectiveStatus.value === 'running')
+const isWaiting = computed(
+  () => effectiveStatus.value === 'pending' || effectiveStatus.value === 'creating'
+)
+const isFailed = computed(
+  () => effectiveStatus.value === 'failed' || effectiveStatus.value === 'crashed'
+)
+const isReclaimingState = computed(
+  () => effectiveStatus.value === 'expired' || effectiveStatus.value === 'destroyed'
+)
+const isRestartable = computed(() => isFailed.value || isReclaimingState.value)
+const createdAtLabel = computed(() => {
+  if (!props.instance?.created_at) return ''
+  return formatTime(props.instance.created_at)
+})
+
+const isSharedInstance = computed(() => props.instance?.share_scope === 'shared')
+
+const remainingExtendsLabel = computed(() => {
+  if (isSharedInstance.value) return '系统托管'
+  if (!props.instance) return '0 次'
+  return `${props.instance.remaining_extends} 次`
+})
+
+const queueLabel = computed(() => {
+  if (!props.instance || !isWaiting.value) return ''
+  if (typeof props.instance.queue_position === 'number' && props.instance.queue_position > 0) {
+    return `当前排队：第 ${props.instance.queue_position} 位`
+  }
+  return '当前排队：排队信息同步中'
+})
+
+const etaLabel = computed(() => {
+  if (!props.instance || !isWaiting.value) return ''
+  return `预计等待：${formatEta(props.instance.eta_seconds)}`
+})
+
+const progressLabel = computed(() => {
+  if (!props.instance || !isWaiting.value || typeof props.instance.progress !== 'number') return ''
+  const normalized = Math.max(0, Math.min(100, Math.round(props.instance.progress)))
+  return `创建进度：${normalized}%`
+})
+
+const accessLabel = computed(() => {
+  if (!props.instance) return ''
+  if (canOpen.value) {
+    if (props.instance.access?.protocol === 'tcp') {
+      return props.instance.access.command || props.instance.access_url || 'TCP 连接命令待同步'
+    }
+    return props.instance.access_url || '通过右侧按钮打开代理访问'
+  }
+  if (isWaiting.value) {
+    return '实例仍在排队/创建中，完成后可打开目标'
+  }
+  if (effectiveStatus.value === 'expired') {
+    return '实例已自动回收，请重新启动'
+  }
+  if (isFailed.value) {
+    return '实例不可访问，请重新启动'
+  }
+  if (effectiveStatus.value === 'destroyed') {
+    return '实例已销毁，请重新启动'
+  }
+  return props.instance.access_url || '--'
+})
+
+const openButtonLabel = computed(() => {
+  if (props.opening) return '正在打开...'
+  if (isWaiting.value) return '等待实例就绪'
+  if (isFailed.value) return '实例不可用'
+  if (props.instance?.access?.protocol === 'tcp') return '复制命令'
+  return '打开目标'
+})
+
+const sharedStrategyLabel = computed(() => {
+  if (props.instanceSharing === 'shared' || isSharedInstance.value) {
+    return '共享实例'
+  }
+  if (props.instanceSharing === 'per_team') {
+    return '队伍共享'
+  }
+  return ''
+})
+
+const canExtend = computed(
+  () => !isSharedInstance.value && canOpen.value && (props.instance?.remaining_extends ?? 0) > 0
+)
+
+const restartButtonLabel = computed(() => {
+  if (props.creating) return '正在创建实例...'
+  if (props.instanceSharing === 'shared' || isSharedInstance.value) {
+    return '重新进入共享靶机'
+  }
+  return '重启实例'
+})
+
+const startButtonLabel = computed(() => {
+  if (props.creating) return '正在创建实例...'
+  if (props.challengeSolved) {
+    return props.instanceSharing === 'shared' ? '重新进入共享靶机' : '重启实例'
+  }
+  return props.instanceSharing === 'shared' ? '进入共享靶机' : '启动靶机'
+})
+</script>

@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs'
 
 import ChallengeList from '@/pages/challenges/ChallengeListRoutePage.vue'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
-import challengeDirectoryPanelSource from '@/components/challenge/ChallengeDirectoryPanel.vue?raw'
+import challengeDirectoryPanelSource from '@/features/challenge-list/ui/ChallengeDirectoryPanel.vue?raw'
 import challengeDirectoryRowSource from '@/entities/challenge/ui/ChallengeDirectoryRow.vue?raw'
 import challengeListPageSource from '@/features/challenge-list/model/useChallengeListPage.ts?raw'
 import routeQueryTransportSource from '@/composables/routeQueryTransport.ts?raw'

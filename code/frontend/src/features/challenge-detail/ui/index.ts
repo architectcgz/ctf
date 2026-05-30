@@ -1,3 +1,7 @@
 export { default as ChallengeWorkspaceShell } from './ChallengeWorkspaceShell.vue'
+export { default as ChallengeActionAside } from './ChallengeActionAside.vue'
+export { default as ChallengeInstanceCard } from './ChallengeInstanceCard.vue'
+export { default as ChallengeQuestionPanel } from './ChallengeQuestionPanel.vue'
 export { default as ChallengeSolutionsPanel } from './ChallengeSolutionsPanel.vue'
 export { default as ChallengeSubmissionRecordsPanel } from './ChallengeSubmissionRecordsPanel.vue'
+export { default as ChallengeWriteupPanel } from './ChallengeWriteupPanel.vue'

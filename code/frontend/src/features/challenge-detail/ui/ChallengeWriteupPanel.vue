@@ -120,37 +120,6 @@
   </section>
 </template>
 
-<script setup lang="ts">
-import type { SubmissionWriteupData, SubmissionWriteupStatus } from '@/api/contracts'
-
-interface Props {
-  challengeSolved: boolean
-  myWriteup: SubmissionWriteupData | null
-  submissionLoading: boolean
-  submissionSaving: 'draft' | 'published' | null
-  writeupTitle: string
-  writeupContent: string
-  formatWriteupTime: (value?: string) => string
-  submissionStatusLabel: (status?: SubmissionWriteupStatus) => string
-}
-
-defineProps<Props>()
-
-const emit = defineEmits<{
-  'update:writeupTitle': [value: string]
-  'update:writeupContent': [value: string]
-  save: [status: 'draft' | 'published']
-}>()
-
-function updateWriteupTitle(event: Event): void {
-  emit('update:writeupTitle', (event.target as HTMLInputElement).value)
-}
-
-function updateWriteupContent(event: Event): void {
-  emit('update:writeupContent', (event.target as HTMLTextAreaElement).value)
-}
-</script>
-
 <style scoped>
 .section--flat {
   padding-top: 0;
@@ -271,18 +240,39 @@ function updateWriteupContent(event: Event): void {
 
 .writeup-actions {
   display: flex;
-  gap: var(--space-3);
+  flex-wrap: wrap;
   justify-content: flex-end;
-}
-
-@media (max-width: 760px) {
-  .writeup-foot {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .writeup-actions {
-    flex-direction: column;
-  }
+  gap: var(--space-3);
 }
 </style>
+
+<script setup lang="ts">
+import type { SubmissionWriteupData, SubmissionWriteupStatus } from '@/api/contracts'
+
+interface Props {
+  challengeSolved: boolean
+  myWriteup: SubmissionWriteupData | null
+  submissionLoading: boolean
+  submissionSaving: 'draft' | 'published' | null
+  writeupTitle: string
+  writeupContent: string
+  formatWriteupTime: (value?: string) => string
+  submissionStatusLabel: (status?: SubmissionWriteupStatus) => string
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  'update:writeupTitle': [value: string]
+  'update:writeupContent': [value: string]
+  save: [status: 'draft' | 'published']
+}>()
+
+function updateWriteupTitle(event: Event): void {
+  emit('update:writeupTitle', (event.target as HTMLInputElement).value)
+}
+
+function updateWriteupContent(event: Event): void {
+  emit('update:writeupContent', (event.target as HTMLTextAreaElement).value)
+}
+</script>

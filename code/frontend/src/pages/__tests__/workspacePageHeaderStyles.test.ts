@@ -148,7 +148,7 @@ import adminChallengeTopbarSource from '@/features/platform/challenge-detail/ui/
 import challengeImportHeroSource from '@/features/platform/challenge-package-import/ui/ChallengeImportHeroPanel.vue?raw'
 import challengeImportPreviewWorkspaceSource from '@/features/platform/challenge-package-import/ui/ChallengeImportPreviewWorkspacePanel.vue?raw'
 import challengeManageHeroSource from '@/features/platform/challenges/ui/ChallengeManageHeroPanel.vue?raw'
-import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
+import challengeQuestionPanelSource from '@/features/challenge-detail/ui/ChallengeQuestionPanel.vue?raw'
 import challengeSolutionsPanelSource from '@/features/challenge-detail/ui/ChallengeSolutionsPanel.vue?raw'
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
 import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'

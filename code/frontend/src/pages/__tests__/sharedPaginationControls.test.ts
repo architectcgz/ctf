@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import challengeDirectoryPanelSource from '@/components/challenge/ChallengeDirectoryPanel.vue?raw'
+import challengeDirectoryPanelSource from '@/features/challenge-list/ui/ChallengeDirectoryPanel.vue?raw'
 import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
 import classManagementSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
 import studentManagementSource from '@/features/teacher/student-management/ui/StudentManagementPage.vue?raw'
