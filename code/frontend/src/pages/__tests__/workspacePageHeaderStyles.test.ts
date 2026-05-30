@@ -152,7 +152,7 @@ import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuesti
 import challengeSolutionsPanelSource from '@/features/challenge-detail/ui/ChallengeSolutionsPanel.vue?raw'
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
 import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
-import contestOverviewPanelSource from '@/components/contests/ContestOverviewPanel.vue?raw'
+import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
 import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
 import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
 import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'

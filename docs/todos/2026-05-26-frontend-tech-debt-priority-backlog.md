@@ -97,6 +97,8 @@
   - `features/image-management/ui`
 - route view 已改为通过 feature public API 组合组件，不再直接引用这些历史 `components/platform/*` 目录。
 - 相关页面回归测试与前端架构边界测试已通过；下一批入口顺延到 `components/teacher`、`components/contests` 与 `platform/challenge|awd-service|awd-review`。
+- `ContestOverviewPanel`、`ContestAnnouncementsPanel`、`ContestAnnouncementsWorkspaceSection`、`ContestChallengeWorkspacePanel`、`ContestTeamPanel`、`ContestTeamWorkspaceSection`、`ContestTeamDialogs` 已迁入 `features/contest-detail/ui`。
+- `ContestDetailRoutePage.vue` 已改为通过 `@/features/contest-detail` 组合 contest detail page model 与这组 UI；`components/contests` 当前优先剩余面收敛到 `contests/awd/*`。
 
 #### `components/platform`
 
@@ -190,22 +192,6 @@
 
 #### `components/contests`
 
-- `ContestOverviewPanel.vue`
-  - 当前 consumer：`views/contests/ContestDetail.vue`
-  - 目标 owner：`features/contest-detail/ui`
-  - 优先级：`P1`
-- `ContestChallengeWorkspacePanel.vue`
-  - 当前 consumer：`views/contests/ContestDetail.vue`
-  - 目标 owner：`features/contest-detail/ui`
-  - 优先级：`P1`
-- `ContestAnnouncementsWorkspaceSection.vue`、`ContestAnnouncementsPanel.vue`
-  - 当前 consumer：`views/contests/ContestDetail.vue`
-  - 目标 owner：优先并入 `features/contest-detail/ui`；若后续 student 侧公告能力继续扩张，再拆单独 feature
-  - 优先级：`P1`
-- `ContestTeamWorkspaceSection.vue`、`ContestTeamPanel.vue`、`ContestTeamDialogs.vue`
-  - 当前 consumer：`views/contests/ContestDetail.vue`
-  - 目标 owner：`features/contest-detail/ui`
-  - 优先级：`P1`
 - `contests/awd/*`
   - 当前 consumer：`features/contest-awd-workspace/ui/ContestAWDWorkspacePanel.vue`
   - 目标 owner：`features/contest-awd-workspace/ui`

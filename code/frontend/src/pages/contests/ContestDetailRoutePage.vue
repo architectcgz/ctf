@@ -349,14 +349,16 @@ import { Trophy } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import ContestAnnouncementsWorkspaceSection from '@/components/contests/ContestAnnouncementsWorkspaceSection.vue'
-import ContestChallengeWorkspacePanel from '@/components/contests/ContestChallengeWorkspacePanel.vue'
-import ContestOverviewPanel from '@/components/contests/ContestOverviewPanel.vue'
-import ContestTeamDialogs from '@/components/contests/ContestTeamDialogs.vue'
-import ContestTeamWorkspaceSection from '@/components/contests/ContestTeamWorkspaceSection.vue'
 import { ContestAnnouncementRealtimeBridge } from '@/features/contest-announcements'
 import { ContestAWDWorkspacePanel } from '@/features/contest-awd-workspace'
-import { useContestDetailRoutePage } from '@/features/contest-detail'
+import {
+  ContestAnnouncementsWorkspaceSection,
+  ContestChallengeWorkspacePanel,
+  ContestOverviewPanel,
+  ContestTeamDialogs,
+  ContestTeamWorkspaceSection,
+  useContestDetailRoutePage,
+} from '@/features/contest-detail'
 
 const {
   contest,

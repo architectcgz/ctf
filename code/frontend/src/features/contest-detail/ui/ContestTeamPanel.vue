@@ -1,26 +1,6 @@
-<script setup lang="ts">
-import type { TeamData } from '@/api/contracts'
-
-const props = withDefaults(
-  defineProps<{
-    team: TeamData | null
-    isCaptain?: boolean
-  }>(),
-  {
-    isCaptain: false,
-  }
-)
-
-const emit = defineEmits<{
-  createTeam: []
-  joinTeam: []
-  kickMember: [userId: string]
-}>()
-</script>
-
 <template>
   <div
-    v-if="!props.team"
+    v-if="!team"
     class="team-empty"
   >
     <div class="contest-inline-note">
@@ -49,20 +29,20 @@ const emit = defineEmits<{
     class="team-member-list"
   >
     <div
-      v-for="member in props.team.members"
+      v-for="member in team.members"
       :key="member.user_id"
       class="team-member"
     >
       <span class="team-member__name">{{ member.username }}</span>
       <div class="team-member__actions">
         <span
-          v-if="member.user_id === props.team.captain_user_id"
+          v-if="member.user_id === team.captain_user_id"
           class="team-member__captain"
         >
           队长
         </span>
         <button
-          v-if="props.isCaptain && member.user_id !== props.team.captain_user_id"
+          v-if="isCaptain && member.user_id !== team.captain_user_id"
           type="button"
           class="team-member__kick"
           @click="emit('kickMember', member.user_id)"
@@ -146,3 +126,23 @@ const emit = defineEmits<{
   outline: none;
 }
 </style>
+
+<script setup lang="ts">
+import type { TeamData } from '@/api/contracts'
+
+withDefaults(
+  defineProps<{
+    team: TeamData | null
+    isCaptain?: boolean
+  }>(),
+  {
+    isCaptain: false,
+  }
+)
+
+const emit = defineEmits<{
+  createTeam: []
+  joinTeam: []
+  kickMember: [userId: string]
+}>()
+</script>

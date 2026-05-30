@@ -6,12 +6,12 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import ContestDetail from '@/pages/contests/ContestDetailRoutePage.vue'
 import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
-import contestAnnouncementsWorkspaceSectionSource from '@/components/contests/ContestAnnouncementsWorkspaceSection.vue?raw'
-import contestOverviewPanelSource from '@/components/contests/ContestOverviewPanel.vue?raw'
-import contestChallengeWorkspacePanelSource from '@/components/contests/ContestChallengeWorkspacePanel.vue?raw'
-import contestTeamDialogsSource from '@/components/contests/ContestTeamDialogs.vue?raw'
-import contestTeamWorkspaceSectionSource from '@/components/contests/ContestTeamWorkspaceSection.vue?raw'
 import contestDetailRoutePageSource from '@/features/contest-detail/model/useContestDetailRoutePage.ts?raw'
+import contestAnnouncementsWorkspaceSectionSource from '@/features/contest-detail/ui/ContestAnnouncementsWorkspaceSection.vue?raw'
+import contestChallengeWorkspacePanelSource from '@/features/contest-detail/ui/ContestChallengeWorkspacePanel.vue?raw'
+import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
+import contestTeamDialogsSource from '@/features/contest-detail/ui/ContestTeamDialogs.vue?raw'
+import contestTeamWorkspaceSectionSource from '@/features/contest-detail/ui/ContestTeamWorkspaceSection.vue?raw'
 import routeQueryTransportSource from '@/composables/routeQueryTransport.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -204,9 +204,8 @@ describe('ContestDetail', () => {
   })
 
   it('页面应通过 feature route model 获取路由与派生状态，不再直接管理 tab 和 contest 可见性逻辑', () => {
-    expect(contestDetailSource).toContain(
-      "useContestDetailRoutePage } from '@/features/contest-detail'"
-    )
+    expect(contestDetailSource).toContain('useContestDetailRoutePage,')
+    expect(contestDetailSource).toContain("} from '@/features/contest-detail'")
     expect(contestDetailSource).not.toContain("from '@/composables/useUrlSyncedTabs'")
     expect(contestDetailSource).not.toContain("from '@/stores/auth'")
     expect(contestDetailSource).not.toContain("from '@/utils/contest'")
@@ -451,9 +450,8 @@ describe('ContestDetail', () => {
   })
 
   it('队伍页创建和加入弹窗应切换到 C 端输入模板', async () => {
-    expect(contestDetailSource).toContain(
-      "from '@/components/contests/ContestTeamDialogs.vue'"
-    )
+    expect(contestDetailSource).toContain("ContestTeamDialogs,")
+    expect(contestDetailSource).toContain("} from '@/features/contest-detail'")
     expect(contestTeamDialogsSource).toContain(
       "from '@/components/common/modal-templates/CFocusedInputDialog.vue'"
     )

@@ -1,23 +1,3 @@
-<script setup lang="ts">
-import type { TeamData } from '@/api/contracts'
-
-import ContestTeamPanel from './ContestTeamPanel.vue'
-
-defineProps<{
-  panelId: string
-  tabId: string
-  team: TeamData | null
-  memberCount: number
-  isCaptain: boolean
-}>()
-
-const emit = defineEmits<{
-  createTeam: []
-  joinTeam: []
-  kickMember: [userId: string]
-}>()
-</script>
-
 <template>
   <section
     :id="panelId"
@@ -121,3 +101,23 @@ const emit = defineEmits<{
   color: var(--color-text-secondary);
 }
 </style>
+
+<script setup lang="ts">
+import type { TeamData } from '@/api/contracts'
+
+import ContestTeamPanel from './ContestTeamPanel.vue'
+
+defineProps<{
+  panelId: string
+  tabId: string
+  team: TeamData | null
+  memberCount: number
+  isCaptain: boolean
+}>()
+
+const emit = defineEmits<{
+  createTeam: []
+  joinTeam: []
+  kickMember: [userId: string]
+}>()
+</script>

@@ -1,25 +1,3 @@
-<script setup lang="ts">
-import { CheckCircle2, Target, Trophy, UsersRound } from 'lucide-vue-next'
-
-import ContestAnnouncementsPanel from '@/components/contests/ContestAnnouncementsPanel.vue'
-import type { ContestAnnouncement, ContestDetailData } from '@/api/contracts'
-import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
-import { formatTime } from '@/utils/format'
-
-interface Props {
-  contest: ContestDetailData
-  countdown: string
-  totalPoints: number
-  solvedCount: number
-  memberCount: number
-  challengeCount: number
-  announcements: ContestAnnouncement[]
-  announcementsError: string
-}
-
-defineProps<Props>()
-</script>
-
 <template>
   <section
     id="contest-workspace-panel-overview"
@@ -41,7 +19,10 @@ defineProps<Props>()
       </div>
     </header>
 
-    <div class="workspace-panel-divider" aria-hidden="true" />
+    <div
+      class="workspace-panel-divider"
+      aria-hidden="true"
+    />
 
     <section class="contest-stat-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
       <article class="contest-stat progress-card metric-panel-card">
@@ -94,7 +75,10 @@ defineProps<Props>()
       </article>
     </section>
 
-    <div class="workspace-panel-divider" aria-hidden="true" />
+    <div
+      class="workspace-panel-divider"
+      aria-hidden="true"
+    />
 
     <div class="contest-overview-grid">
       <section class="contest-section contest-section--flat contest-section--copy-tight">
@@ -156,7 +140,10 @@ defineProps<Props>()
       </section>
     </div>
 
-    <div class="workspace-panel-divider" aria-hidden="true" />
+    <div
+      class="workspace-panel-divider"
+      aria-hidden="true"
+    />
 
     <section class="contest-section contest-section--flat">
       <div class="contest-section__head workspace-tab-heading">
@@ -284,3 +271,24 @@ defineProps<Props>()
   }
 }
 </style>
+
+<script setup lang="ts">
+import { CheckCircle2, Target, Trophy, UsersRound } from 'lucide-vue-next'
+
+import type { ContestAnnouncement, ContestDetailData } from '@/api/contracts'
+import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
+import { formatTime } from '@/utils/format'
+
+import ContestAnnouncementsPanel from './ContestAnnouncementsPanel.vue'
+
+defineProps<{
+  contest: ContestDetailData
+  countdown: string
+  totalPoints: number
+  solvedCount: number
+  memberCount: number
+  challengeCount: number
+  announcements: ContestAnnouncement[]
+  announcementsError: string
+}>()
+</script>

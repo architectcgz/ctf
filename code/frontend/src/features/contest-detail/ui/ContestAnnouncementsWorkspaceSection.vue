@@ -1,16 +1,3 @@
-<script setup lang="ts">
-import type { ContestAnnouncement } from '@/api/contracts'
-
-import ContestAnnouncementsPanel from './ContestAnnouncementsPanel.vue'
-
-defineProps<{
-  panelId: string
-  tabId: string
-  announcements: ContestAnnouncement[]
-  announcementsError: string
-}>()
-</script>
-
 <template>
   <section
     :id="panelId"
@@ -62,3 +49,16 @@ defineProps<{
   color: var(--color-text-secondary);
 }
 </style>
+
+<script setup lang="ts">
+import type { ContestAnnouncement } from '@/api/contracts'
+
+import ContestAnnouncementsPanel from './ContestAnnouncementsPanel.vue'
+
+defineProps<{
+  panelId: string
+  tabId: string
+  announcements: ContestAnnouncement[]
+  announcementsError: string
+}>()
+</script>

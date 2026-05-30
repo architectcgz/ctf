@@ -1,20 +1,3 @@
-<script setup lang="ts">
-import type { ContestAnnouncement } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import { formatTime } from '@/utils/format'
-
-const props = withDefaults(
-  defineProps<{
-    announcements: ContestAnnouncement[]
-    announcementsError: string
-    emptyVariant?: 'inline' | 'empty-state'
-  }>(),
-  {
-    emptyVariant: 'empty-state',
-  }
-)
-</script>
-
 <template>
   <div
     v-if="announcementsError"
@@ -136,3 +119,20 @@ const props = withDefaults(
   color: var(--color-text-secondary);
 }
 </style>
+
+<script setup lang="ts">
+import type { ContestAnnouncement } from '@/api/contracts'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import { formatTime } from '@/utils/format'
+
+withDefaults(
+  defineProps<{
+    announcements: ContestAnnouncement[]
+    announcementsError: string
+    emptyVariant?: 'inline' | 'empty-state'
+  }>(),
+  {
+    emptyVariant: 'empty-state',
+  }
+)
+</script>

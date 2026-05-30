@@ -1,41 +1,3 @@
-<script setup lang="ts">
-import { CheckCircle2, Target, Trophy, UsersRound } from 'lucide-vue-next'
-
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import type { ContestChallengeItem, SubmitFlagData } from '@/api/contracts'
-import { ChallengeCategoryPill, ChallengeDifficultyText } from '@/entities/challenge'
-
-interface Props {
-  challenges: ContestChallengeItem[]
-  selectedChallenge: ContestChallengeItem | null
-  flagInput: string
-  submitting: boolean
-  submitResult: SubmitFlagData | null
-}
-
-const props = defineProps<Props>()
-
-const emit = defineEmits<{
-  'select-challenge': [challenge: ContestChallengeItem]
-  'update:flagInput': [value: string]
-  'submit-flag': []
-}>()
-
-function updateFlagInput(event: Event): void {
-  emit('update:flagInput', (event.target as HTMLInputElement).value)
-}
-
-function challengeClass(challengeId: string, solved: boolean): string[] {
-  const active = props.selectedChallenge?.id === challengeId
-  return [
-    'contest-challenge',
-    active ? 'contest-challenge--active' : '',
-    solved ? 'contest-challenge--solved' : '',
-  ]
-}
-
-</script>
-
 <template>
   <div
     v-if="challenges.length === 0"
@@ -495,3 +457,38 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { CheckCircle2, Target, Trophy, UsersRound } from 'lucide-vue-next'
+
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import type { ContestChallengeItem, SubmitFlagData } from '@/api/contracts'
+import { ChallengeCategoryPill, ChallengeDifficultyText } from '@/entities/challenge'
+
+const props = defineProps<{
+  challenges: ContestChallengeItem[]
+  selectedChallenge: ContestChallengeItem | null
+  flagInput: string
+  submitting: boolean
+  submitResult: SubmitFlagData | null
+}>()
+
+const emit = defineEmits<{
+  'select-challenge': [challenge: ContestChallengeItem]
+  'update:flagInput': [value: string]
+  'submit-flag': []
+}>()
+
+function updateFlagInput(event: Event): void {
+  emit('update:flagInput', (event.target as HTMLInputElement).value)
+}
+
+function challengeClass(challengeId: string, solved: boolean): string[] {
+  const active = props.selectedChallenge?.id === challengeId
+  return [
+    'contest-challenge',
+    active ? 'contest-challenge--active' : '',
+    solved ? 'contest-challenge--solved' : '',
+  ]
+}
+</script>
