@@ -1,32 +1,3 @@
-<script setup lang="ts">
-import { Clock3, Trophy, Users } from 'lucide-vue-next'
-import type {
-  AwdReviewAttackItemData,
-  AwdReviewServiceItemData,
-  AwdReviewTeamItemData,
-  AwdReviewTrafficItemData,
-} from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
-import { formatDate } from '@/utils/format'
-
-defineProps<{
-  visible: boolean
-  team: AwdReviewTeamItemData | null
-  services: AwdReviewServiceItemData[]
-  attacks: AwdReviewAttackItemData[]
-  traffic: AwdReviewTrafficItemData[]
-}>()
-
-const emit = defineEmits<{
-  close: []
-}>()
-
-function formatServiceRef(serviceId?: string): string {
-  return `Service #${serviceId || '--'}`
-}
-</script>
-
 <template>
   <AdminSurfaceDrawer
     :open="visible"
@@ -327,3 +298,33 @@ function formatServiceRef(serviceId?: string): string {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { Clock3, Trophy, Users } from 'lucide-vue-next'
+
+import type {
+  AwdReviewAttackItemData,
+  AwdReviewServiceItemData,
+  AwdReviewTeamItemData,
+  AwdReviewTrafficItemData,
+} from '@/api/contracts'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
+import { formatDate } from '@/utils/format'
+
+defineProps<{
+  visible: boolean
+  team: AwdReviewTeamItemData | null
+  services: AwdReviewServiceItemData[]
+  attacks: AwdReviewAttackItemData[]
+  traffic: AwdReviewTrafficItemData[]
+}>()
+
+const emit = defineEmits<{
+  close: []
+}>()
+
+function formatServiceRef(serviceId?: string): string {
+  return `Service #${serviceId || '--'}`
+}
+</script>

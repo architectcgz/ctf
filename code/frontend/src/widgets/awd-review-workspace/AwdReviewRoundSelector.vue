@@ -1,19 +1,3 @@
-<script setup lang="ts">
-interface RoundSummary {
-  id: string
-  round_number: number
-}
-
-defineProps<{
-  rounds: RoundSummary[]
-  selectedRoundNumber?: number
-}>()
-
-const emit = defineEmits<{
-  setRound: [roundNumber?: number]
-}>()
-</script>
-
 <template>
   <section class="workspace-directory-section teacher-directory-section awd-review-round-section">
     <div class="awd-review-round-shell workspace-directory-list">
@@ -105,3 +89,19 @@ const emit = defineEmits<{
   color: var(--awd-review-primary-strong);
 }
 </style>
+
+<script setup lang="ts">
+interface RoundSummary {
+  id: string
+  round_number: number
+}
+
+defineProps<{
+  rounds: RoundSummary[]
+  selectedRoundNumber?: number
+}>()
+
+const emit = defineEmits<{
+  setRound: [roundNumber?: number]
+}>()
+</script>

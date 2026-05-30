@@ -18,25 +18,33 @@
 - `docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 
 ## Similar implementations found
-- `ClassReportExportDialog` 和 `ReviewArchiveWorkspace` 已经分别通过 `components/reports`、`components/review-archive` 补过中立 public owner，说明共享 UI 壳的 neutral barrel 收口模式已经稳定。
-- `AwdReviewWorkspace` 当前同样被 teacher / platform 两边复用，teacher 组件入口只是历史目录归属残留。
+- `ReviewArchiveWorkspace`、`AwdReviewWorkspace` 这类 route-level workspace 已经稳定作为 shared widget owner；它们内部的 detail 子区块更适合直接并入 widget 本身，而不是再挂一层 legacy `components/*` 中转。
+- `AwdReviewWorkspace` 当前被 teacher / platform 两边复用，teacher 组件入口只是历史目录归属残留。
 
 ## Decision
 refactor_existing
 
 ## Reason
-- `AwdReviewWorkspace` 仍直连四个 `components/teacher/awd-review/*` 路径，会继续放大 shared AWD review workspace 对 teacher 组件命名空间的结构依赖。
-- 这次只增加 `components/awd-review` barrel、迁移 widget import，并同步 allowlist / 测试，不移动实际组件文件，也不改 AWD review 页面行为。
+- `AwdReviewWorkspace` 仍通过 `components/awd-review` -> `components/teacher/awd-review/*` 这条过渡桥读取四个 detail 子组件，会继续保留 shared widget 对 legacy 组件目录的结构依赖。
+- 这次直接把 round selector / analysis / evidence / team drawer 并入 `widgets/awd-review-workspace`，同步更新测试与类型索引，并删除 `components/awd-review` 与 `components/teacher/awd-review` 的残余入口，不保留中间桥接层。
 
 ## Files to modify
 - `.harness/reuse-decisions/awd-review-component-public-owner-neutralization.md`
 - `docs/plan/impl-plan/2026-05-27-awd-review-component-public-owner-neutralization-implementation-plan.md`
-- `code/frontend/src/components/awd-review/index.ts`
 - `code/frontend/src/widgets/awd-review-workspace/AwdReviewWorkspace.vue`
+- `code/frontend/src/widgets/awd-review-workspace/AwdReviewAnalysisSection.vue`
+- `code/frontend/src/widgets/awd-review-workspace/AwdReviewEvidenceGrid.vue`
+- `code/frontend/src/widgets/awd-review-workspace/AwdReviewRoundSelector.vue`
+- `code/frontend/src/widgets/awd-review-workspace/AwdReviewTeamDrawer.vue`
+- `code/frontend/src/widgets/awd-review-workspace/index.ts`
+- `code/frontend/src/widgets/awd-review-workspace/awdReviewWorkspaceUiStrategy.test.ts`
+- `code/frontend/src/components/awd-review/index.ts`
+- `code/frontend/src/components/teacher/awd-review/*`
 - `code/frontend/src/__tests__/architectureAllowlist.ts`
 - `code/frontend/src/views/teacher/__tests__/teacherAwdReviewWorkspaceExtraction.test.ts`
+- `code/frontend/src/components.d.ts`
 - `docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 - `docs/reviews/frontend/2026-05-27-awd-review-component-public-owner-neutralization-review.md`
 
 ## After implementation
-- `AwdReviewWorkspace` 将通过中立 `components/awd-review` public owner 读取 round selector / analysis / evidence / team drawer，相关 allowlist 也会从四条 teacher 组件路径进一步缩小。
+- `AwdReviewWorkspace` 将直接从 `widgets/awd-review-workspace` 内部读取 round selector / analysis / evidence / team drawer，相关 legacy component import 依赖会从这条 shared workspace 上彻底清掉。

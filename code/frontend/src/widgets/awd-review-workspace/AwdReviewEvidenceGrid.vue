@@ -1,48 +1,3 @@
-<script setup lang="ts">
-import { Activity, Target, Waypoints } from 'lucide-vue-next'
-
-import AppEmpty from '@/components/common/AppEmpty.vue'
-
-interface ServiceEvidenceItem {
-  id: string | number
-  team_name: string
-  challenge_title: string
-  service_id?: string
-  service_status: string
-  sla_score: number
-}
-
-interface AttackEvidenceItem {
-  id: string | number
-  attacker_team_name: string
-  victim_team_name: string
-  service_id?: string
-  challenge_title: string
-  attack_type: string
-}
-
-interface TrafficEvidenceItem {
-  id: string | number
-  method: string
-  path: string
-  service_id?: string
-  attacker_team_name: string
-  victim_team_name: string
-  status_code: string | number
-}
-
-interface SelectedRoundEvidence {
-  services: ServiceEvidenceItem[]
-  attacks: AttackEvidenceItem[]
-  traffic: TrafficEvidenceItem[]
-}
-
-defineProps<{
-  selectedRound: SelectedRoundEvidence
-  formatServiceRef: (serviceId?: string) => string
-}>()
-</script>
-
 <template>
   <section class="awd-review-evidence-grid">
     <article class="workspace-directory-section teacher-directory-section awd-review-evidence-panel">
@@ -254,3 +209,48 @@ defineProps<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import { Activity, Target, Waypoints } from 'lucide-vue-next'
+
+import AppEmpty from '@/components/common/AppEmpty.vue'
+
+interface ServiceEvidenceItem {
+  id: string | number
+  team_name: string
+  challenge_title: string
+  service_id?: string
+  service_status: string
+  sla_score: number
+}
+
+interface AttackEvidenceItem {
+  id: string | number
+  attacker_team_name: string
+  victim_team_name: string
+  service_id?: string
+  challenge_title: string
+  attack_type: string
+}
+
+interface TrafficEvidenceItem {
+  id: string | number
+  method: string
+  path: string
+  service_id?: string
+  attacker_team_name: string
+  victim_team_name: string
+  status_code: string | number
+}
+
+interface SelectedRoundEvidence {
+  services: ServiceEvidenceItem[]
+  attacks: AttackEvidenceItem[]
+  traffic: TrafficEvidenceItem[]
+}
+
+defineProps<{
+  selectedRound: SelectedRoundEvidence
+  formatServiceRef: (serviceId?: string) => string
+}>()
+</script>

@@ -1,43 +1,3 @@
-<script setup lang="ts">
-import { ChevronRight } from 'lucide-vue-next'
-
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import { formatDate } from '@/utils/format'
-
-interface RoundSummary {
-  id: string
-  round_number: number
-  service_count: number
-  attack_count: number
-  traffic_count: number
-}
-
-interface TeamSummary {
-  team_id: string
-  team_name: string
-  captain_id: string
-  total_score: number
-  member_count: number
-  last_solve_at?: string
-}
-
-interface SelectedRoundSummary {
-  teams: TeamSummary[]
-}
-
-defineProps<{
-  activeSummaryTitle: string
-  rounds: RoundSummary[]
-  selectedRound?: SelectedRoundSummary
-  teamCount: number
-}>()
-
-const emit = defineEmits<{
-  setRound: [roundNumber?: number]
-  openTeam: [team: TeamSummary]
-}>()
-</script>
-
 <template>
   <section class="workspace-directory-section teacher-directory-section awd-review-analysis-section">
     <header class="list-heading">
@@ -216,3 +176,43 @@ const emit = defineEmits<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import { ChevronRight } from 'lucide-vue-next'
+
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import { formatDate } from '@/utils/format'
+
+interface RoundSummary {
+  id: string
+  round_number: number
+  service_count: number
+  attack_count: number
+  traffic_count: number
+}
+
+interface TeamSummary {
+  team_id: string
+  team_name: string
+  captain_id: string
+  total_score: number
+  member_count: number
+  last_solve_at?: string
+}
+
+interface SelectedRoundSummary {
+  teams: TeamSummary[]
+}
+
+defineProps<{
+  activeSummaryTitle: string
+  rounds: RoundSummary[]
+  selectedRound?: SelectedRoundSummary
+  teamCount: number
+}>()
+
+const emit = defineEmits<{
+  setRound: [roundNumber?: number]
+  openTeam: [team: TeamSummary]
+}>()
+</script>

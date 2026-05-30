@@ -1,5 +1,7 @@
 # AWD Review Component Public Owner Neutralization 收口复核
 
+> 注：本 review 对应的是 2026-05-27 的中间桥接收口方案。后续代码已继续前进到最终 widget owner：四个 detail 子组件直接并入 `widgets/awd-review-workspace`，`components/awd-review` 与 `components/teacher/awd-review` 已退出当前结构。当前事实以代码现状为准。
+
 - Review target：
   - repository：`ctf`
   - branch：`main`

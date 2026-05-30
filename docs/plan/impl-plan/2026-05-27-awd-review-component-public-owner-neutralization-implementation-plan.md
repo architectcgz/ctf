@@ -1,14 +1,17 @@
-> 状态：Current
-> 事实源：`widgets/awd-review-workspace`、`components/teacher/awd-review`、frontend backlog
+> 状态：Superseded
+> 事实源：`widgets/awd-review-workspace`、frontend backlog
+> Superseded by：`widgets/awd-review-workspace` 最终 owner 收口实现（见 Git 历史与 `.harness/reuse-decisions/awd-review-component-public-owner-neutralization.md`）
 > 替代：无
 
 # AWD Review Component Public Owner Neutralization Implementation Plan
 
-## 目标
+## 说明
 
-- 为 AWD review shared workspace 的四个共享面板补中立 public owner `@/components/awd-review`。
-- 让 `AwdReviewWorkspace` 不再直连 `components/teacher/awd-review/*` 路径。
-- 尽量同步缩小 architecture allowlist。
+这份计划记录的是 2026-05-27 的中间过渡方案：先补 `components/awd-review` barrel，把 shared workspace 对 `components/teacher/awd-review/*` 的直连收成一条中立入口。
+
+后续实现已经进一步完成最终收口：四个 detail 子组件直接并入 `widgets/awd-review-workspace`，`components/awd-review` 与 `components/teacher/awd-review` 不再保留。
+
+当前以代码现状和 `.harness/reuse-decisions/awd-review-component-public-owner-neutralization.md` 为准，不再按本中间方案继续实施。
 
 ## 非目标
 

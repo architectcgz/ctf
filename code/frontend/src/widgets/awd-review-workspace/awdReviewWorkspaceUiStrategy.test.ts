@@ -20,9 +20,9 @@ import awdReviewContestRowSource from '@/widgets/awd-review-workspace/AwdReviewC
 import awdReviewContestRowCtaSource from '@/widgets/awd-review-workspace/AwdReviewContestRowCta.vue?raw'
 import awdReviewContestRowMetricsSource from '@/widgets/awd-review-workspace/AwdReviewContestRowMetrics.vue?raw'
 import awdReviewContestRowStatusTagsSource from '@/widgets/awd-review-workspace/AwdReviewContestRowStatusTags.vue?raw'
-import awdReviewAnalysisSectionSource from '@/components/teacher/awd-review/AwdReviewAnalysisSection.vue?raw'
-import awdReviewEvidenceGridSource from '@/components/teacher/awd-review/AwdReviewEvidenceGrid.vue?raw'
-import awdReviewRoundSelectorSource from '@/components/teacher/awd-review/AwdReviewRoundSelector.vue?raw'
+import awdReviewAnalysisSectionSource from '@/widgets/awd-review-workspace/AwdReviewAnalysisSection.vue?raw'
+import awdReviewEvidenceGridSource from '@/widgets/awd-review-workspace/AwdReviewEvidenceGrid.vue?raw'
+import awdReviewRoundSelectorSource from '@/widgets/awd-review-workspace/AwdReviewRoundSelector.vue?raw'
 
 describe('awd review workspace ui strategy', () => {
   it('route pages should stay as widget composition shells instead of rebuilding review workspace internals', () => {
@@ -37,6 +37,18 @@ describe('awd review workspace ui strategy', () => {
     )
     expect(awdReviewWidgetIndexSource).toContain(
       "export { default as AwdReviewDirectoryPanel } from './AwdReviewDirectoryPanel.vue'"
+    )
+    expect(awdReviewWidgetIndexSource).toContain(
+      "export { default as AwdReviewAnalysisSection } from './AwdReviewAnalysisSection.vue'"
+    )
+    expect(awdReviewWidgetIndexSource).toContain(
+      "export { default as AwdReviewEvidenceGrid } from './AwdReviewEvidenceGrid.vue'"
+    )
+    expect(awdReviewWidgetIndexSource).toContain(
+      "export { default as AwdReviewRoundSelector } from './AwdReviewRoundSelector.vue'"
+    )
+    expect(awdReviewWidgetIndexSource).toContain(
+      "export { default as AwdReviewTeamDrawer } from './AwdReviewTeamDrawer.vue'"
     )
     expect(teacherAwdReviewIndexSource).toContain(
       "import { AwdReviewIndexWorkspace } from '@/widgets/awd-review-workspace'"

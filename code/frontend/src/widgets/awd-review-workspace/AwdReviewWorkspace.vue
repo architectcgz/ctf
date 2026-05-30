@@ -1,81 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import {
-  Trophy,
-} from 'lucide-vue-next'
-
-import type {
-  AwdReviewArchiveData,
-  AwdReviewAttackItemData,
-  AwdReviewRoundItemData,
-  AwdReviewSelectedRoundData,
-  AwdReviewServiceItemData,
-  AwdReviewTeamItemData,
-  AwdReviewTrafficItemData,
-} from '@/api/contracts'
-import {
-  AwdReviewAnalysisSection,
-  AwdReviewEvidenceGrid,
-  AwdReviewRoundSelector,
-  AwdReviewTeamDrawer,
-} from '@/components/awd-review'
-import AwdReviewStatusChip from './AwdReviewStatusChip.vue'
-import AwdReviewSurfaceShell from './AwdReviewSurfaceShell.vue'
-import AwdReviewWorkspaceActions from './AwdReviewWorkspaceActions.vue'
-import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
-import AwdReviewWorkspaceHeader from './AwdReviewWorkspaceHeader.vue'
-import AwdReviewWorkspaceState from './AwdReviewWorkspaceState.vue'
-import {
-  AWD_REVIEW_WORKSPACE_COPY,
-  buildAwdReviewSummaryItems,
-} from './model/presentation'
-
-type ExportKind = 'archive' | 'report'
-
-interface SummaryStats {
-  roundCount: number
-  teamCount: number
-  serviceCount: number
-  attackCount: number
-  trafficCount: number
-}
-
-const props = defineProps<{
-  polling: boolean
-  loading: boolean
-  error: string | null
-  review: AwdReviewArchiveData | null
-  exporting: ExportKind | null
-  activeContestTitle: string
-  activeSummaryTitle: string
-  summaryStats: SummaryStats
-  timelineRounds: AwdReviewRoundItemData[]
-  selectedRoundNumber?: number
-  selectedRound?: AwdReviewSelectedRoundData
-  selectedTeam: AwdReviewTeamItemData | null
-  selectedTeamServices: AwdReviewServiceItemData[]
-  selectedTeamAttacks: AwdReviewAttackItemData[]
-  selectedTeamTraffic: AwdReviewTrafficItemData[]
-  canExportReport: boolean
-  contestStatusLabel: (status: string) => string
-  formatServiceRef: (serviceId?: string) => string
-}>()
-
-const emit = defineEmits<{
-  openIndex: []
-  exportArchive: []
-  exportReport: []
-  loadReview: []
-  setRound: [roundNumber?: number]
-  openTeam: [team: AwdReviewTeamItemData]
-  closeTeam: []
-}>()
-
-const summaryItems = computed(() =>
-  buildAwdReviewSummaryItems(props.summaryStats, props.polling)
-)
-</script>
-
 <template>
   <AwdReviewSurfaceShell section-class="teacher-review-workspace">
     <div class="teacher-page">
@@ -193,3 +115,77 @@ const summaryItems = computed(() =>
   color: var(--awd-review-muted);
 }
 </style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { Trophy } from 'lucide-vue-next'
+
+import type {
+  AwdReviewArchiveData,
+  AwdReviewAttackItemData,
+  AwdReviewRoundItemData,
+  AwdReviewSelectedRoundData,
+  AwdReviewServiceItemData,
+  AwdReviewTeamItemData,
+  AwdReviewTrafficItemData,
+} from '@/api/contracts'
+import AwdReviewAnalysisSection from './AwdReviewAnalysisSection.vue'
+import AwdReviewEvidenceGrid from './AwdReviewEvidenceGrid.vue'
+import AwdReviewRoundSelector from './AwdReviewRoundSelector.vue'
+import AwdReviewStatusChip from './AwdReviewStatusChip.vue'
+import AwdReviewSurfaceShell from './AwdReviewSurfaceShell.vue'
+import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'
+import AwdReviewTeamDrawer from './AwdReviewTeamDrawer.vue'
+import AwdReviewWorkspaceActions from './AwdReviewWorkspaceActions.vue'
+import AwdReviewWorkspaceHeader from './AwdReviewWorkspaceHeader.vue'
+import AwdReviewWorkspaceState from './AwdReviewWorkspaceState.vue'
+import {
+  AWD_REVIEW_WORKSPACE_COPY,
+  buildAwdReviewSummaryItems,
+} from './model/presentation'
+
+type ExportKind = 'archive' | 'report'
+
+interface SummaryStats {
+  roundCount: number
+  teamCount: number
+  serviceCount: number
+  attackCount: number
+  trafficCount: number
+}
+
+const props = defineProps<{
+  polling: boolean
+  loading: boolean
+  error: string | null
+  review: AwdReviewArchiveData | null
+  exporting: ExportKind | null
+  activeContestTitle: string
+  activeSummaryTitle: string
+  summaryStats: SummaryStats
+  timelineRounds: AwdReviewRoundItemData[]
+  selectedRoundNumber?: number
+  selectedRound?: AwdReviewSelectedRoundData
+  selectedTeam: AwdReviewTeamItemData | null
+  selectedTeamServices: AwdReviewServiceItemData[]
+  selectedTeamAttacks: AwdReviewAttackItemData[]
+  selectedTeamTraffic: AwdReviewTrafficItemData[]
+  canExportReport: boolean
+  contestStatusLabel: (status: string) => string
+  formatServiceRef: (serviceId?: string) => string
+}>()
+
+const emit = defineEmits<{
+  openIndex: []
+  exportArchive: []
+  exportReport: []
+  loadReview: []
+  setRound: [roundNumber?: number]
+  openTeam: [team: AwdReviewTeamItemData]
+  closeTeam: []
+}>()
+
+const summaryItems = computed(() =>
+  buildAwdReviewSummaryItems(props.summaryStats, props.polling)
+)
+</script>
