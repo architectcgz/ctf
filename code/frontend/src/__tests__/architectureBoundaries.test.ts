@@ -143,6 +143,7 @@ describe('frontend architecture boundaries', () => {
     const violations = collectLayerViolations(sourceFiles, {
       common: frontendArchitecturePolicy.layers.common.forbidden_import_layers,
       entities: frontendArchitecturePolicy.layers.entities.forbidden_import_layers,
+      pages: frontendArchitecturePolicy.layers.pages.forbidden_import_layers,
       features: frontendArchitecturePolicy.layers.features.forbidden_import_layers,
       widgets: frontendArchitecturePolicy.layers.widgets.forbidden_import_layers,
       views: frontendArchitecturePolicy.layers.views.forbidden_import_layers,
@@ -176,6 +177,37 @@ describe('frontend architecture boundaries', () => {
         .map((importPath) => `${file.relativePath} -> ${importPath}`)
     })
     expect(legacyComponentImports).toEqual([])
+  })
+
+  it('route pages should live only in the dedicated pages layer', () => {
+    const routePageSuffix = frontendArchitecturePolicy.route_page_suffix
+    const routePageLayer = frontendArchitecturePolicy.route_page_layer
+    const routePageFiles = sourceFiles.filter((file) => file.relativePath.endsWith(routePageSuffix))
+
+    const violations = routePageFiles
+      .filter((file) => file.layer !== routePageLayer)
+      .map((file) => `${file.relativePath} -> ${file.layer}`)
+
+    expect(violations).toEqual([])
+  })
+
+  it('router runtime entries should point to the dedicated pages layer only', () => {
+    const routerFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`router${sep}`))
+    const routePageSuffix = frontendArchitecturePolicy.route_page_suffix.replace('.', '\\.')
+    const routePageImportPattern = new RegExp(
+      `['"](@\\/[^'"]*${routePageSuffix})['"]`,
+      'g'
+    )
+
+    const violations = routerFiles.flatMap((file) => {
+      const source = readFileSync(file.absolutePath, 'utf-8')
+      return Array.from(source.matchAll(routePageImportPattern))
+        .map((match) => match[1])
+        .filter((importPath) => !importPath.startsWith('@/pages/'))
+        .map((importPath) => `${file.relativePath} -> ${importPath}`)
+    })
+
+    expect(violations).toEqual([])
   })
 
   it('new route views should stay below the page-size threshold', () => {

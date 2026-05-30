@@ -15,7 +15,7 @@ import teacherInstanceHeroPanelSource from '@/components/teacher/instance-manage
 import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'
-import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
+import reviewArchiveSource from '@/pages/review-archive/StudentReviewArchiveRoutePage.vue?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue?raw'
 
 const classStudentsSource = [

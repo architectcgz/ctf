@@ -12,9 +12,9 @@
   - 负责：注册学生端、`/academy/*`、`/platform/*` 路由，维护登录态守卫、默认首页映射和后台导航归属
   - 不负责：页面内部数据流和业务状态机
 
-- `code/frontend/src/views/**`、`code/frontend/src/features/**/model`、`code/frontend/src/composables/use*.ts`
-  - 负责：route view 只保留页面壳，页面级查询、导出、实时桥接和 query 同步下沉到 feature model / composable
-  - 不负责：把 API 调用、路由状态和大段派生数据继续堆回单个 `.vue` 页面
+- `code/frontend/src/pages/**`、`code/frontend/src/features/**/model`、`code/frontend/src/features/**/ui`、`code/frontend/src/widgets/**`、`code/frontend/src/composables/use*.ts`
+  - 负责：路由入口统一落在 `pages/**`；页面级查询、导出、实时桥接和 query 同步下沉到 feature model / composable；`widgets/**` 负责跨 feature 页面区块组合，`features/**/ui` 负责单一能力 surface
+  - 不负责：把 API 调用、路由状态和大段派生数据继续堆回单个 `.vue` 页面，或让 `features/*RoutePage.vue`、`widgets/*RoutePage.vue` 继续兼任页面层
 
 - `code/frontend/src/stores/auth.ts`、`notification.ts`、`contest.ts`
   - 负责：登录快照、通知列表、竞赛共享状态这类跨页面共享数据
@@ -26,12 +26,12 @@
 
 ## 1. 架构骨架
 
-当前前端采用“薄 route view + feature model owner + 轻量 Pinia + 共享样式壳”的结构。
+当前前端采用“薄 `pages/**` 路由入口 + feature model owner + 轻量 Pinia + 共享样式壳”的结构。
 
 主链路：
 
 1. `router` 决定路由命名空间、认证和标题
-2. `views/**` 作为路由页面入口
+2. `pages/**` 作为路由页面入口
 3. `features/**/model` 负责编排 API、query 同步、分页、导出和实时能力
 4. `stores/**` 只承接跨页共享状态
 5. `components/common/**` 和 `assets/styles/*.css` 负责统一交互骨架和视觉节奏
@@ -55,6 +55,9 @@ code/frontend/
 │   │   ├── index.ts
 │   │   ├── guards.ts
 │   │   └── routes/
+│   ├── pages/
+│   │   └── **/
+│   │       └── *RoutePage.vue
 │   ├── stores/
 │   │   ├── auth.ts
 │   │   ├── notification.ts
@@ -70,16 +73,10 @@ code/frontend/
 │   │   ├── teacher/
 │   │   ├── platform/
 │   │   └── contests/ / scoreboard/ ...
+│   ├── widgets/
+│   │   └── */
 │   ├── views/
-│   │   ├── auth/
-│   │   ├── dashboard/
-│   │   ├── challenges/
-│   │   ├── contests/
-│   │   ├── notifications/
-│   │   ├── profile/
-│   │   ├── scoreboard/
-│   │   ├── teacher/
-│   │   └── platform/
+│   │   └── __tests__/
 │   ├── assets/styles/
 │   ├── __tests__/
 │   ├── main.ts
@@ -154,7 +151,7 @@ code/frontend/
 ## 5. Guardrail
 
 - 前端架构策略单点事实：`code/frontend/scripts/frontend-architecture-policy.json`
-  - 分层、低层 forbidden imports、route view 约束、增长守卫入口都以这份策略为准；以后如果要调整前端结构边界，先改这份策略，再同步对应测试或脚本。
+  - 分层、低层 forbidden imports、`pages/**` route entry 约束、增长守卫入口都以这份策略为准；以后如果要调整前端结构边界，先改这份策略，再同步对应测试或脚本。
 - 前端分层：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - route view 边界：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
 - 后台导航命名空间：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`

@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
-import contestOperationsHubHeroPanelSource from '@/features/platform-contests/ui/ContestOperationsHubHeroPanel.vue?raw'
-import contestOperationsHubWorkspacePanelSource from '@/features/platform-contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
-import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
-import adminContestFormPanelSource from '@/features/platform-contests/ui/PlatformContestFormPanel.vue?raw'
-import contestFormActionsSource from '@/features/platform-contests/ui/PlatformContestFormActions.vue?raw'
-import contestFormIdentitySectionSource from '@/features/platform-contests/ui/PlatformContestIdentitySection.vue?raw'
-import contestFormRulesSectionSource from '@/features/platform-contests/ui/PlatformContestRulesSection.vue?raw'
-import contestFormSectionShellSource from '@/features/platform-contests/ui/PlatformContestFormSectionShell.vue?raw'
-import contestFormTimelineSectionSource from '@/features/platform-contests/ui/PlatformContestTimelineSection.vue?raw'
-import adminContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
+import contestOperationsHubSource from '@/pages/platform/contests/ContestOperationsHubRoutePage.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/features/platform/contests/ui/ContestOperationsHubHeroPanel.vue?raw'
+import contestOperationsHubWorkspacePanelSource from '@/features/platform/contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
+import contestOrchestrationSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
+import adminContestFormPanelSource from '@/features/platform/contests/ui/PlatformContestFormPanel.vue?raw'
+import contestFormActionsSource from '@/features/platform/contests/ui/PlatformContestFormActions.vue?raw'
+import contestFormIdentitySectionSource from '@/features/platform/contests/ui/PlatformContestIdentitySection.vue?raw'
+import contestFormRulesSectionSource from '@/features/platform/contests/ui/PlatformContestRulesSection.vue?raw'
+import contestFormSectionShellSource from '@/features/platform/contests/ui/PlatformContestFormSectionShell.vue?raw'
+import contestFormTimelineSectionSource from '@/features/platform/contests/ui/PlatformContestTimelineSection.vue?raw'
+import adminContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
 
 const contestOperationsHubCombinedSource = [
   contestOperationsHubSource,

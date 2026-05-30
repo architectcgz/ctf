@@ -5,7 +5,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { reactive } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import PlatformStudentAnalysis from '../PlatformStudentAnalysis.vue'
+import PlatformStudentAnalysis from '@/pages/platform/PlatformStudentAnalysisRoutePage.vue'
 import {
   reportDialogStub,
   resetStudentAnalysisRouteTestState,
@@ -188,14 +188,17 @@ describe('PlatformStudentAnalysis route owner', () => {
   })
 
   it('应使用平台 route view，并通过中性 feature 承接共享 page workflow', () => {
-    const platformViewPath = resolve(process.cwd(), 'src/views/platform/PlatformStudentAnalysis.vue')
+    const platformViewPath = resolve(
+      process.cwd(),
+      'src/pages/platform/PlatformStudentAnalysisRoutePage.vue'
+    )
     const platformRoutesPath = resolve(process.cwd(), 'src/router/routes/platformRoutes.ts')
 
     expect(existsSync(platformViewPath)).toBe(true)
 
     const platformRoutesSource = readFileSync(platformRoutesPath, 'utf-8')
     expect(platformRoutesSource).toContain(
-      "component: () => import('@/views/platform/PlatformStudentAnalysis.vue')"
+      "component: () => import('@/pages/platform/PlatformStudentAnalysisRoutePage.vue')"
     )
 
     if (!existsSync(platformViewPath)) {
@@ -210,7 +213,9 @@ describe('PlatformStudentAnalysis route owner', () => {
       "import { ClassReportExportDialog } from '@/features/teacher-class-report-export'"
     )
     expect(platformViewSource).not.toContain("from '@/components/class-management'")
-    expect(platformViewSource).not.toContain("from '@/views/teacher/TeacherStudentAnalysis.vue'")
+    expect(platformViewSource).not.toContain(
+      "from '@/pages/teacher/TeacherStudentAnalysisRoutePage.vue'"
+    )
     expect(platformViewSource).not.toContain("from '@/api/teacher'")
     expect(platformViewSource).not.toContain(
       '@/components/teacher/class-management/StudentAnalysisPage.vue'

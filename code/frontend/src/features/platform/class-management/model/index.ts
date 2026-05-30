@@ -1,0 +1,1 @@
+export { usePlatformClassManagementPage } from './usePlatformClassManagementPage'

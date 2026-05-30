@@ -26,16 +26,20 @@
   - 不负责：页面自己的业务查询、目录筛选或详情页状态机
 
 - `code/frontend/src/views/**`
-  - 负责：路由入口、route page 壳、feature 组合与最外层事件桥接
-  - 不负责：直接持有 feature 级加载/保存/删除状态机，或重新长成第二个业务组件层
+  - 负责：在需要时保留路由入口、route page 薄壳、feature 组合与最外层事件桥接
+  - 不负责：直接持有 feature 级加载/保存/删除状态机，重新长成第二个业务组件层，或与 feature page 保留双份 page shell
 
 - `code/frontend/src/features/**/model`
   - 负责：页面行为 owner、请求编排、路由参数解析、分页、导出和局部状态机
   - 不负责：承担大段模板和展示样式壳
 
 - `code/frontend/src/features/**/ui`
-  - 负责：只服务单一 feature 的 workspace、editor、panel 或 page-sized surface，直接消费同 feature 的 model contract
+  - 负责：只服务单一 feature 的 workspace、editor、panel 或 page-sized surface，直接消费同 feature 的 model contract；当页面已经完全 feature-owned 时，也可以直接作为路由入口
   - 不负责：跨 feature 复用、直接调用非 contract API，或替 route view 接管路由 owner
+
+- `code/frontend/src/features/platform/*`
+  - 负责：管理员端 `/platform/*` 路由下按能力分组的 feature 命名空间，例如 `overview`、`user-management`、`class-management`、`student-management`、`instance-management`、`challenges`、`challenge-detail`、`contests`、`awd-challenges`
+  - 不负责：继续维持 `platform-*` 扁平 feature 命名或 page shell 与 feature shell 双份 owner
 
 ## 1. 组件层次
 
@@ -46,7 +50,7 @@
 | 共享原语 | `components/common/` | 空状态、Toast、Skeleton、目录表格、删除确认、通用局部承载器 |
 | Overlay 模板 | `components/common/modal-templates/` | Teleport、滚动锁、Escape/backdrop 关闭、经典弹窗和抽屉模板 |
 | 布局壳 | `components/layout/` | `AppLayout`、`Sidebar`、`TopNav` 等全局承载 |
-| Feature UI | `features/*/ui/` | 只服务单一 feature 的工作区、编辑器、目录面板与 page-sized surface |
+| Feature UI | `features/*/ui/`、`features/platform/*/ui/` | 只服务单一 feature 的工作区、编辑器、目录面板与 page-sized surface |
 | 业务展示组件 | `components/teacher/`、`components/platform/`、`components/contests/`、`components/scoreboard/` 等 | 领域相关展示和局部桥接，逐步向 feature owner 过渡 |
 | 路由 view | `views/**` | 页面壳与 feature 组合入口 |
 
@@ -195,7 +199,7 @@
 
 代表性例子：
 
-- `features/platform-challenge-detail/ui/*`
+- `features/platform/challenge-detail/ui/*`
   - 负责：平台题目详情 feature 自己的 Flag 配置 UI
   - 不负责：变成跨页面复用组件仓
 - `features/challenge-writeup-editor/ui/*`

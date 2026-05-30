@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import AuditActorDetailModal from '@/components/platform/audit/AuditActorDetailModal.vue'
-import AuditLogHeroPanel from '@/components/platform/audit/AuditLogHeroPanel.vue'
-import AuditLogDirectoryPanel from '@/components/platform/audit/AuditLogDirectoryPanel.vue'
-import { useAuditLogPage } from '@/features/audit-log'
+import {
+  AuditActorDetailModal,
+  AuditLogDirectoryPanel,
+  AuditLogHeroPanel,
+  useAuditLogPage,
+} from '@/features/audit-log'
 
 const {
   activeActorLog,

@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import AuditLog from '../AuditLog.vue'
-import auditLogSource from '../AuditLog.vue?raw'
-import auditActorDetailModalSource from '@/components/platform/audit/AuditActorDetailModal.vue?raw'
-import auditLogHeroPanelSource from '@/components/platform/audit/AuditLogHeroPanel.vue?raw'
-import auditLogDirectoryPanelSource from '@/components/platform/audit/AuditLogDirectoryPanel.vue?raw'
+import AuditLog from '@/pages/platform/AuditLogRoutePage.vue'
+import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
+import auditActorDetailModalSource from '@/features/audit-log/ui/AuditActorDetailModal.vue?raw'
+import auditLogHeroPanelSource from '@/features/audit-log/ui/AuditLogHeroPanel.vue?raw'
+import auditLogDirectoryPanelSource from '@/features/audit-log/ui/AuditLogDirectoryPanel.vue?raw'
 import auditLogPageSource from '@/features/audit-log/model/useAuditLogPage.ts?raw'
 import routeQueryTransportSource from '@/composables/routeQueryTransport.ts?raw'
 
@@ -173,9 +173,8 @@ describe('AuditLog', () => {
   it('应接入共享目录工具栏与列表表格，而不是继续使用原生 table', () => {
     expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
     expect(combinedSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
-    expect(auditLogSource).toContain(
-      "import AuditActorDetailModal from '@/components/platform/audit/AuditActorDetailModal.vue'"
-    )
+    expect(auditLogSource).toContain("from '@/features/audit-log'")
+    expect(auditLogSource).toContain('AuditActorDetailModal')
     expect(combinedSource).toContain('<WorkspaceDirectoryToolbar')
     expect(combinedSource).toContain('<WorkspaceDataTable')
     expect(auditLogSource).toContain('<AuditActorDetailModal')
@@ -198,9 +197,8 @@ describe('AuditLog', () => {
   })
 
   it('应使用统一进度卡片样式展示审计摘要', () => {
-    expect(auditLogSource).toContain(
-      "import AuditLogHeroPanel from '@/components/platform/audit/AuditLogHeroPanel.vue'"
-    )
+    expect(auditLogSource).toContain("from '@/features/audit-log'")
+    expect(auditLogSource).toContain('AuditLogHeroPanel')
     expect(auditLogSource).toContain('<AuditLogHeroPanel')
     expect(auditLogSource).toContain('class="audit-log-body"')
     expect(auditLogSource).not.toContain('mt-10 space-y-10')

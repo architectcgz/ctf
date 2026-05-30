@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import InstanceManageHeroPanel from '@/components/platform/instance/InstanceManageHeroPanel.vue'
-import InstanceManageWorkspacePanel from '@/components/platform/instance/InstanceManageWorkspacePanel.vue'
-import { usePlatformInstanceManagementPage } from '@/features/platform-instance-management'
+import {
+  InstanceManageHeroPanel,
+  InstanceManageWorkspacePanel,
+  usePlatformInstanceManagementPage,
+} from '@/features/platform/instance-management'
 
 const {
   list,

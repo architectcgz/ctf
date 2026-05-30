@@ -1,21 +1,19 @@
 import { describe, expect, it } from 'vitest'
 
-import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
-import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
-import challengeManageDirectoryPanelSource from '@/features/platform-challenges/ui/ChallengeManageDirectoryPanel.vue?raw'
+import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
+import challengeManageHeroPanelSource from '@/features/platform/challenges/ui/ChallengeManageHeroPanel.vue?raw'
+import challengeManageDirectoryPanelSource from '@/features/platform/challenges/ui/ChallengeManageDirectoryPanel.vue?raw'
 
 describe('ChallengeManage directory extraction', () => {
   it('应将题目目录工作区抽到独立平台组件', () => {
-    expect(challengeManageSource).toContain(
-      "import { ChallengeManageDirectoryPanel, useChallengeManagePage } from '@/features/platform-challenges'"
-    )
+    expect(challengeManageSource).toContain("from '@/features/platform/challenges'")
+    expect(challengeManageSource).toContain('ChallengeManageDirectoryPanel')
     expect(challengeManageSource).toContain('<ChallengeManageDirectoryPanel')
   })
 
   it('应将题目管理头部摘要抽到独立平台组件', () => {
-    expect(challengeManageSource).toContain(
-      "import ChallengeManageHeroPanel from '@/components/platform/challenge/ChallengeManageHeroPanel.vue'"
-    )
+    expect(challengeManageSource).toContain("from '@/features/platform/challenges'")
+    expect(challengeManageSource).toContain('ChallengeManageHeroPanel')
     expect(challengeManageSource).toContain('<ChallengeManageHeroPanel')
     expect(challengeManageHeroPanelSource).toMatch(
       /<div class="workspace-overline">\s*Challenge Workspace\s*<\/div>/

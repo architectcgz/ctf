@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import challengeDetailSource from '../ChallengeDetail.vue?raw'
-import contestEditSource from '../ContestEdit.vue?raw'
+import challengeDetailSource from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue?raw'
+import contestEditSource from '@/pages/platform/contests/ContestEditRoutePage.vue?raw'
 import cheatDetectionWorkspacePanelSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
-import auditLogSource from '../AuditLog.vue?raw'
+import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
 import challengeImportPreviewWorkspaceSource from '@/components/platform/challenge/ChallengeImportPreviewWorkspacePanel.vue?raw'
 import challengePackageFormatSource from '../ChallengePackageFormat.vue?raw'
-import userGovernancePageSource from '@/features/platform-user-management/ui/UserGovernancePage.vue?raw'
-import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
-import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
-import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
+import userGovernancePageSource from '@/features/platform/user-management/ui/UserGovernancePage.vue?raw'
+import userGovernanceOverviewPanelSource from '@/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
 
 const userGovernanceSource = [
   userGovernancePageSource,

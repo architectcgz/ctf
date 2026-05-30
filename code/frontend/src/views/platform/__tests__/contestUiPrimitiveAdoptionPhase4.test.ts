@@ -3,10 +3,10 @@ import { resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
-import awdChallengeConfigDirectoryRowSource from '@/features/platform-contests/ui/AWDChallengeConfigDirectoryRow.vue?raw'
-import awdChallengeConfigDirectorySectionSource from '@/features/platform-contests/ui/AWDChallengeConfigDirectorySection.vue?raw'
-import awdChallengeConfigHeaderSource from '@/features/platform-contests/ui/AWDChallengeConfigHeader.vue?raw'
+import awdChallengeConfigPanelSource from '@/features/platform/contests/ui/AWDChallengeConfigPanel.vue?raw'
+import awdChallengeConfigDirectoryRowSource from '@/features/platform/contests/ui/AWDChallengeConfigDirectoryRow.vue?raw'
+import awdChallengeConfigDirectorySectionSource from '@/features/platform/contests/ui/AWDChallengeConfigDirectorySection.vue?raw'
+import awdChallengeConfigHeaderSource from '@/features/platform/contests/ui/AWDChallengeConfigHeader.vue?raw'
 import awdContestSelectorFieldSource from '@/features/contest-awd-admin/ui/AWDContestSelectorField.vue?raw'
 import awdInstanceOrchestrationHeaderSource from '@/features/contest-awd-admin/ui/AWDInstanceOrchestrationHeader.vue?raw'
 import awdInstanceOrchestrationMatrixSource from '@/features/contest-awd-admin/ui/AWDInstanceOrchestrationMatrix.vue?raw'
@@ -24,7 +24,7 @@ import awdTrafficEventTableSource from '@/features/awd-inspector/ui/AWDTrafficEv
 import awdTrafficIntelligenceGridSource from '@/features/awd-inspector/ui/AWDTrafficIntelligenceGrid.vue?raw'
 import awdTrafficPanelSourceBase from '@/features/awd-inspector/ui/AWDTrafficPanel.vue?raw'
 import awdTrafficSummaryBandSource from '@/features/awd-inspector/ui/AWDTrafficSummaryBand.vue?raw'
-import contestAwdPreflightPanelSource from '@/features/platform-contests/ui/ContestAwdPreflightPanel.vue?raw'
+import contestAwdPreflightPanelSource from '@/features/platform/contests/ui/ContestAwdPreflightPanel.vue?raw'
 
 const awdRoundInspectorSource = [
   awdRoundInspectorSourceBase,
@@ -41,7 +41,7 @@ const awdChallengeConfigCombinedSource = [
   awdChallengeConfigDirectorySectionSource,
   awdChallengeConfigDirectoryRowSource,
   readFileSync(
-    resolve(process.cwd(), 'src/features/platform-contests/ui/awdChallengeConfigPanel.css'),
+    resolve(process.cwd(), 'src/features/platform/contests/ui/awdChallengeConfigPanel.css'),
     'utf8'
   ),
 ].join('\n')

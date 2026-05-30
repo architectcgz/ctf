@@ -8,7 +8,7 @@ import {
   ContestEditTopbarPanel,
   ContestEditWorkspacePanel,
   useContestEditPage,
-} from '@/features/platform-contests'
+} from '@/features/platform/contests'
 
 const props = defineProps<{
   contestId: string

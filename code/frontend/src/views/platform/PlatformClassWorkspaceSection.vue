@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PlatformClassStudents from '@/views/platform/PlatformClassStudents.vue'
+import PlatformClassStudents from '@/pages/platform/PlatformClassStudentsRoutePage.vue'
 </script>
 
 <template>

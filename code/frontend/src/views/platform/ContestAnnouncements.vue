@@ -8,7 +8,7 @@ import {
   ContestAnnouncementsTopbarPanel,
   ContestAnnouncementsWorkspacePanel,
   useContestAnnouncementsPage,
-} from '@/features/platform-contests'
+} from '@/features/platform/contests'
 
 const props = defineProps<{
   contestId: string

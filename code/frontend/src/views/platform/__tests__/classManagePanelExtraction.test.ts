@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import adminClassManageSource from '../ClassManage.vue?raw'
-import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
+import adminClassManageSource from '@/pages/platform/ClassManageRoutePage.vue?raw'
+import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
 
 describe('Platform ClassManage panel extraction', () => {
   it('应将班级管理头部与摘要卡抽到独立 platform class 组件', () => {
-    expect(adminClassManageSource).toContain(
-      "import ClassManageHeroPanel from '@/components/platform/class/ClassManageHeroPanel.vue'"
-    )
+    expect(adminClassManageSource).toContain("from '@/features/platform/class-management'")
+    expect(adminClassManageSource).toContain('ClassManageHeroPanel')
     expect(adminClassManageSource).toContain('<ClassManageHeroPanel')
     expect(classManageHeroPanelSource).toContain('Class Workspace')
     expect(classManageHeroPanelSource).toContain('刷新目录')

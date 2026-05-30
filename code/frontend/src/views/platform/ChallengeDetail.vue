@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { usePlatformChallengeDetailRoutePage } from '@/features/platform-challenge-detail'
+import { usePlatformChallengeDetailRoutePage } from '@/features/platform/challenge-detail'
 import { PlatformChallengeDetailWorkspace } from '@/widgets/platform-challenge-detail'
 
 const {

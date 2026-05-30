@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import adminNotificationPublishDrawerSource from '@/features/admin-notification-publisher/ui/AdminNotificationPublishDrawer.vue?raw'
-import awdChallengeEditorDialogSource from '@/features/platform-awd-challenges/ui/AWDChallengeEditorDialog.vue?raw'
+import awdChallengeEditorDialogSource from '@/features/platform/awd-challenges/ui/AWDChallengeEditorDialog.vue?raw'
 import awdAttackLogDetailsSectionSource from '@/features/contest-awd-admin/ui/AWDAttackLogDetailsSection.vue?raw'
 import awdAttackLogDialogSourceBase from '@/features/contest-awd-admin/ui/AWDAttackLogDialog.vue?raw'
 import awdAttackLogTargetSectionSource from '@/features/contest-awd-admin/ui/AWDAttackLogTargetSection.vue?raw'
@@ -14,7 +14,7 @@ import awdServiceCheckDialogSourceBase from '@/features/contest-awd-admin/ui/AWD
 import awdServiceCheckResultSectionSource from '@/features/contest-awd-admin/ui/AWDServiceCheckResultSection.vue?raw'
 import awdServiceCheckTargetSectionSource from '@/features/contest-awd-admin/ui/AWDServiceCheckTargetSection.vue?raw'
 import contestChallengeEditorDialogSource from '@/features/contest-workbench/ui/ContestChallengeEditorDialog.vue?raw'
-import platformUserFormDialogSource from '@/features/platform-user-management/ui/PlatformUserFormDialog.vue?raw'
+import platformUserFormDialogSource from '@/features/platform/user-management/ui/PlatformUserFormDialog.vue?raw'
 import awdCheckerSaveFlowSource from '@/features/contest-awd-config/model/useAwdCheckerSaveFlow.ts?raw'
 import imageManageMutationsSource from '@/features/image-management/model/useImageManageMutations.ts?raw'
 

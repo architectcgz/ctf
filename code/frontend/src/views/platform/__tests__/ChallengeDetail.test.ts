@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import ChallengeDetail from '../ChallengeDetail.vue'
-import challengeDetailSource from '../ChallengeDetail.vue?raw'
-import adminChallengeTopbarPanelSource from '@/features/platform-challenge-detail/ui/AdminChallengeTopbarPanel.vue?raw'
-import platformChallengeDetailPageSource from '@/features/platform-challenge-detail/model/usePlatformChallengeDetailPage.ts?raw'
-import platformChallengeDetailRoutesSource from '@/features/platform-challenge-detail/model/platformChallengeDetailRoutes.ts?raw'
+import ChallengeDetail from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue'
+import challengeDetailSource from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue?raw'
+import adminChallengeTopbarPanelSource from '@/features/platform/challenge-detail/ui/AdminChallengeTopbarPanel.vue?raw'
+import platformChallengeDetailPageSource from '@/features/platform/challenge-detail/model/usePlatformChallengeDetailPage.ts?raw'
+import platformChallengeDetailRoutesSource from '@/features/platform/challenge-detail/model/platformChallengeDetailRoutes.ts?raw'
 import platformChallengeDetailWorkspaceSource from '@/widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue?raw'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 

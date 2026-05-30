@@ -2,17 +2,17 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import userGovernancePageSource from '@/features/platform-user-management/ui/UserGovernancePage.vue?raw'
-import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
-import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
-import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
+import userGovernancePageSource from '@/features/platform/user-management/ui/UserGovernancePage.vue?raw'
+import userGovernanceOverviewPanelSource from '@/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
 import classManagementSource from '@/features/teacher-class-management/ui/ClassManagementPage.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
 import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
-import challengeManageSource from '@/views/platform/ChallengeManage.vue?raw'
+import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 
 const themeSource = readFileSync(`${process.cwd()}/src/assets/styles/theme.css`, 'utf-8')

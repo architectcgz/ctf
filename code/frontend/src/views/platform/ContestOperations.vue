@@ -4,7 +4,7 @@ import { toRef } from 'vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import { AWDOperationsPanel } from '@/features/contest-awd-admin'
 import { AWDServiceAlertBanner } from '@/features/awd-inspector'
-import { useContestOperationsPage } from '@/features/platform-contests'
+import { useContestOperationsPage } from '@/features/platform/contests'
 
 const props = defineProps<{
   contestId: string

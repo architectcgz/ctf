@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import UserManage from '../UserManage.vue'
-import userManageSource from '../UserManage.vue?raw'
-import userGovernancePageSource from '@/features/platform-user-management/ui/UserGovernancePage.vue?raw'
-import platformUserManagePageSource from '@/features/platform-user-management/model/usePlatformUserManagePage.ts?raw'
-import userGovernancePanelRouteSource from '@/features/platform-user-management/model/useUserGovernancePanelRoute.ts?raw'
-import userGovernanceOverviewPanelSource from '@/components/platform/user/UserGovernanceOverviewPanel.vue?raw'
-import userGovernanceDetailModalSource from '@/components/platform/user/UserGovernanceDetailModal.vue?raw'
-import userGovernanceImportPanelSource from '@/components/platform/user/UserGovernanceImportPanel.vue?raw'
+import UserManage from '@/pages/platform/UserManageRoutePage.vue'
+import userManageSource from '@/pages/platform/UserManageRoutePage.vue?raw'
+import userGovernancePageSource from '@/features/platform/user-management/ui/UserGovernancePage.vue?raw'
+import platformUserManagePageSource from '@/features/platform/user-management/model/usePlatformUserManagePage.ts?raw'
+import userGovernancePanelRouteSource from '@/features/platform/user-management/model/useUserGovernancePanelRoute.ts?raw'
+import userGovernanceOverviewPanelSource from '@/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue?raw'
+import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
+import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
 
 const userGovernanceSource = [
   userGovernancePageSource,
@@ -262,12 +262,10 @@ describe('UserManage', () => {
 
     await flushPromises()
 
-    expect(userManageSource).toContain("from '@/features/platform-user-management'")
+    expect(userManageSource).toContain("from '@/features/platform/user-management'")
     expect(userManageSource).toContain('UserGovernancePage')
     expect(userManageSource).toContain('usePlatformUserManagePage')
-    expect(userManageSource).not.toContain(
-      "import UserGovernancePage from '@/components/platform/user/UserGovernancePage.vue'"
-    )
+    expect(userManageSource).not.toContain("from '@/features/platform/user-management/ui/'")
     expect(userManageSource).not.toContain('onMounted(')
     expect(userManageSource).not.toContain('confirmDestructiveAction')
     expect(userManageSource).toContain(':active-panel="activePanel"')

@@ -4,7 +4,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/overview',
   name: 'PlatformOverview',
-  component: () => import('@/views/platform/PlatformOverview.vue'),
+  component: () => import('@/pages/platform/PlatformOverviewRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -16,7 +16,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes',
   name: 'PlatformClassManagement',
-  component: () => import('@/views/platform/ClassManage.vue'),
+  component: () => import('@/pages/platform/ClassManageRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -28,7 +28,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/students',
   name: 'PlatformStudentManagement',
-  component: () => import('@/views/platform/StudentManage.vue'),
+  component: () => import('@/pages/platform/StudentManageRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -40,7 +40,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className',
   name: 'PlatformClassStudents',
-  component: () => import('@/views/platform/PlatformClassStudents.vue'),
+  component: () => import('@/pages/platform/PlatformClassStudentsRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -51,7 +51,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className/trend',
   name: 'PlatformClassTrend',
-  component: () => import('@/views/platform/PlatformClassWorkspaceSection.vue'),
+  component: () => import('@/pages/platform/PlatformClassWorkspaceSectionRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -62,7 +62,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className/review',
   name: 'PlatformClassReview',
-  component: () => import('@/views/platform/PlatformClassWorkspaceSection.vue'),
+  component: () => import('@/pages/platform/PlatformClassWorkspaceSectionRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -73,7 +73,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className/insights',
   name: 'PlatformClassInsights',
-  component: () => import('@/views/platform/PlatformClassWorkspaceSection.vue'),
+  component: () => import('@/pages/platform/PlatformClassWorkspaceSectionRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -84,7 +84,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className/intervention',
   name: 'PlatformClassIntervention',
-  component: () => import('@/views/platform/PlatformClassWorkspaceSection.vue'),
+  component: () => import('@/pages/platform/PlatformClassWorkspaceSectionRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -95,7 +95,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className/students/:studentId',
   name: 'PlatformStudentAnalysis',
-  component: () => import('@/views/platform/PlatformStudentAnalysis.vue'),
+  component: () => import('@/pages/platform/PlatformStudentAnalysisRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -106,7 +106,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/classes/:className/students/:studentId/review-archive',
   name: 'PlatformStudentReviewArchive',
-  component: () => import('@/views/platform/PlatformStudentReviewArchive.vue'),
+  component: () => import('@/pages/review-archive/StudentReviewArchiveRoutePage.vue'),
   props: (route) => ({
     className: String(route.params.className || ''),
     studentId: String(route.params.studentId || ''),
@@ -121,7 +121,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/awd-reviews',
   name: 'PlatformAwdReviewIndex',
-  component: () => import('@/views/platform/AWDReviewIndex.vue'),
+  component: () => import('@/pages/awd-review/PlatformAwdReviewIndexRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -144,7 +144,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/instances',
   name: 'PlatformInstanceManagement',
-  component: () => import('@/views/platform/InstanceManage.vue'),
+  component: () => import('@/pages/platform/InstanceManageRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -156,7 +156,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/challenges',
   name: 'ChallengeManage',
-  component: () => import('@/views/platform/ChallengeManage.vue'),
+  component: () => import('@/features/platform/challenges/ui/ChallengeManagePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -190,7 +190,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/challenges/imports/:importId',
   name: 'PlatformChallengeImportPreview',
-  component: () => import('@/views/platform/ChallengeImportPreview.vue'),
+  component: () => import('@/pages/platform/challenges/ChallengeImportPreviewRoutePage.vue'),
   props: (route) => ({
     importId: String(route.params.importId || ''),
   }),
@@ -204,7 +204,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/challenges/:id',
   name: 'PlatformChallengeDetail',
-  component: () => import('@/views/platform/ChallengeDetail.vue'),
+  component: () => import('@/pages/platform/challenges/ChallengeDetailRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -215,7 +215,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/challenges/:id/topology',
   name: 'PlatformChallengeTopologyStudio',
-  component: () => import('@/views/platform/ChallengeTopologyStudio.vue'),
+  component: () => import('@/pages/platform/challenges/ChallengeTopologyStudioRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -226,7 +226,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/awd-challenges',
   name: 'PlatformAwdChallengeLibrary',
-  component: () => import('@/views/platform/AWDChallengeLibrary.vue'),
+  component: () => import('@/pages/platform/awd-challenges/AWDChallengeLibraryRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -238,7 +238,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/awd-challenges/imports',
   name: 'PlatformAwdChallengeImport',
-  component: () => import('@/views/platform/AWDChallengeImport.vue'),
+  component: () => import('@/pages/platform/awd-challenges/AwdChallengeImportRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -250,7 +250,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/challenges/:id/writeup',
   name: 'PlatformChallengeWriteup',
-  component: () => import('@/views/platform/ChallengeWriteup.vue'),
+  component: () => import('@/pages/platform/challenges/ChallengeWriteupRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -261,7 +261,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/challenges/:id/writeup/view',
   name: 'PlatformChallengeWriteupView',
-  component: () => import('@/views/platform/ChallengeWriteupView.vue'),
+  component: () => import('@/pages/platform/challenges/ChallengeWriteupViewRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -272,7 +272,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/contests',
   name: 'ContestManage',
-  component: () => import('@/views/platform/ContestManage.vue'),
+  component: () => import('@/pages/platform/contests/ContestManageRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -284,7 +284,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/contests/:id/edit',
   name: 'ContestEdit',
-  component: () => import('@/views/platform/ContestEdit.vue'),
+  component: () => import('@/pages/platform/contests/ContestEditRoutePage.vue'),
   props: (route) => ({
     contestId: String(route.params.id || ''),
   }),
@@ -298,7 +298,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/contests/:id/awd-config',
   name: 'ContestAWDConfig',
-  component: () => import('@/views/platform/ContestAwdConfig.vue'),
+  component: () => import('@/pages/platform/contests/ContestAwdConfigRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -309,7 +309,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/contests/:id/announcements',
   name: 'ContestAnnouncements',
-  component: () => import('@/views/platform/ContestAnnouncements.vue'),
+  component: () => import('@/pages/platform/contests/ContestAnnouncementsRoutePage.vue'),
   props: (route) => ({
     contestId: String(route.params.id || ''),
   }),
@@ -323,7 +323,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/contests/:id/manage',
   name: 'ContestOperations',
-  component: () => import('@/views/platform/ContestOperations.vue'),
+  component: () => import('@/pages/platform/contests/ContestOperationsRoutePage.vue'),
   props: (route) => ({
     contestId: String(route.params.id || ''),
   }),
@@ -341,7 +341,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/contest-ops/contests',
   name: 'PlatformContestOpsIndex',
-  component: () => import('@/views/platform/ContestOperationsHub.vue'),
+  component: () => import('@/pages/platform/contests/ContestOperationsHubRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -356,7 +356,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/contest-ops/projector',
   name: 'PlatformContestProjector',
-  component: () => import('@/views/platform/ContestProjector.vue'),
+  component: () => import('@/pages/platform/contests/ContestProjectorRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -371,7 +371,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/users',
   name: 'UserManage',
-  component: () => import('@/views/platform/UserManage.vue'),
+  component: () => import('@/pages/platform/UserManageRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -407,7 +407,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/audit',
   name: 'AuditLog',
-  component: () => import('@/views/platform/AuditLog.vue'),
+  component: () => import('@/pages/platform/AuditLogRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],

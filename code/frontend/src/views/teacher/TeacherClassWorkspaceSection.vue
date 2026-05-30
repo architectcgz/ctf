@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import TeacherClassStudents from '@/views/teacher/TeacherClassStudents.vue'
+import TeacherClassStudents from '@/pages/teacher/TeacherClassStudentsRoutePage.vue'
 </script>
 
 <template>

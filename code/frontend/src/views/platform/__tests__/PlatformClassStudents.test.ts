@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import PlatformClassStudents from '../PlatformClassStudents.vue'
-import platformClassStudentsSource from '../PlatformClassStudents.vue?raw'
+import PlatformClassStudents from '@/pages/platform/PlatformClassStudentsRoutePage.vue'
+import platformClassStudentsSource from '@/pages/platform/PlatformClassStudentsRoutePage.vue?raw'
 import classStudentsPageSourceBase from '@/features/class-students-workspace/ui/ClassStudentsPage.vue?raw'
 import classStudentsOverviewPanelSource from '@/components/teacher/class-management/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/components/teacher/class-management/ClassStudentsInsightWindowPanel.vue?raw'
@@ -132,7 +132,9 @@ describe('PlatformClassStudents', () => {
       "import { ClassReportExportDialog } from '@/features/teacher-class-report-export'"
     )
     expect(platformClassStudentsSource).not.toContain("from '@/components/class-management'")
-    expect(platformClassStudentsSource).not.toContain("from '@/views/teacher/TeacherClassStudents.vue'")
+    expect(platformClassStudentsSource).not.toContain(
+      "from '@/pages/teacher/TeacherClassStudentsRoutePage.vue'"
+    )
     expect(platformClassStudentsSource).not.toContain("from '@/api/teacher'")
     expect(platformClassStudentsSource).not.toContain(
       '@/components/teacher/class-management/ClassStudentsPage.vue'

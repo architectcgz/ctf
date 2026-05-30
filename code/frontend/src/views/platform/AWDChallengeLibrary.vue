@@ -3,7 +3,7 @@ import {
   AWDChallengeEditorDialog,
   AWDChallengeLibraryPage,
   useAwdChallengeLibraryPage,
-} from '@/features/platform-awd-challenges'
+} from '@/features/platform/awd-challenges'
 
 const {
   list,

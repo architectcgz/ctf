@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import adminChallengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
-import adminChallengeRoutePageSource from '@/features/platform-challenge-detail/model/usePlatformChallengeDetailRoutePage.ts?raw'
-import adminChallengeWorkspaceTabsSource from '@/features/platform-challenge-detail/ui/AdminChallengeWorkspaceTabs.vue?raw'
+import adminChallengeDetailSource from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue?raw'
+import adminChallengeRoutePageSource from '@/features/platform/challenge-detail/model/usePlatformChallengeDetailRoutePage.ts?raw'
+import adminChallengeWorkspaceTabsSource from '@/features/platform/challenge-detail/ui/AdminChallengeWorkspaceTabs.vue?raw'
 
 describe('route query tabs adoption', () => {
   it('admin 多 panel 页面应统一通过 feature route model 复用 useRouteQueryTabs，而不是继续在 route view 内手写状态机', () => {
@@ -23,7 +23,7 @@ describe('route query tabs adoption', () => {
     )
 
     expect(adminChallengeDetailSource).toContain(
-      "import { usePlatformChallengeDetailRoutePage } from '@/features/platform-challenge-detail'"
+      "import { usePlatformChallengeDetailRoutePage } from '@/features/platform/challenge-detail'"
     )
     expect(adminChallengeDetailSource).toContain('setTabButtonRef')
     expect(adminChallengeDetailSource).not.toContain(

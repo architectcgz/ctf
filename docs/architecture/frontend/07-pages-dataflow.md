@@ -1,7 +1,7 @@
 # 前端页面数据流与 owner
 
 > 状态：Current
-> 事实源：`code/frontend/src/views/`、`code/frontend/src/features/**/model/`、`code/frontend/src/stores/`
+> 事实源：`code/frontend/src/pages/`、`code/frontend/src/views/`、`code/frontend/src/features/**/model/`、`code/frontend/src/stores/`
 > 替代：无
 
 ## 定位
@@ -13,8 +13,8 @@
 
 ## 当前设计
 
-- `code/frontend/src/views/**`
-  - 负责：作为路由入口挂载页面结构、组合 feature model 和共享组件
+- `code/frontend/src/pages/**`
+  - 负责：作为运行时 route entry，挂载页面结构、组合 feature / widget 和共享组件
   - 不负责：直接调用业务 API，或长期持有复杂路由 query 与异步编排
 
 - `code/frontend/src/features/**/model`
@@ -23,7 +23,11 @@
 
 - `code/frontend/src/features/**/ui`
   - 负责：承接单一 feature 的 page-sized surface、editor、workspace 壳和目录面板
-  - 不负责：接管 route view 的导航 owner，或绕过 feature model 直接请求 API
+  - 不负责：绕过 feature model 直接请求 API，或继续承载 `*RoutePage.vue` 运行时入口
+
+- `code/frontend/src/widgets/**`
+  - 负责：跨 feature 页面区块组合，例如 workspace、archive、review 这类可被页面入口直接挂载的组合块
+  - 不负责：继续承载 `*RoutePage.vue` 运行时入口
 
 - `code/frontend/src/stores/auth.ts`、`notification.ts`、`contest.ts`
   - 负责：跨页共享状态
@@ -39,8 +43,8 @@
 | 排行榜目录与详情 | `features/scoreboard/model` | `useScoreboardView.ts`、`useScoreboardDetailPage.ts` |
 | 竞赛详情 | `features/contest-detail/model` | `useContestDetailPage.ts`、`useContestDetailRoutePage.ts` |
 | 学员分析复盘工作流 | `features/student-analysis-workspace/model`、`features/student-analysis-review/model` | `useStudentAnalysisPage.ts` |
-| 题目管理与导入 | `features/platform-challenges/model`、`features/challenge-package-import/model` | `useChallengeManagePage.ts`、`useChallengeImportManagePage.ts`、`useChallengeImportPreviewPage.ts` |
-| 平台题解管理 | `features/platform-challenges/model`、`features/challenge-writeup-editor/model`、`features/challenge-writeup-editor/ui` | `useChallengeWriteupPage.ts`、`useChallengeWriteupViewPage.ts`、题解 feature UI |
+| 题目管理与导入 | `features/platform/challenges/model`、`features/challenge-package-import/model` | `useChallengeManagePage.ts`、`useChallengeImportManagePage.ts`、`useChallengeImportPreviewPage.ts` |
+| 平台题解管理 | `features/platform/challenges/model`、`features/challenge-writeup-editor/model`、`features/challenge-writeup-editor/ui` | `useChallengeWriteupPage.ts`、`useChallengeWriteupViewPage.ts`、题解 feature UI |
 
 ## 2. 典型数据流
 
@@ -174,7 +178,7 @@
 
 题解 route page 当前分成两层 owner：
 
-1. `features/platform-challenges/model/useChallengeWriteupPage.ts` 与 `useChallengeWriteupViewPage.ts`
+1. `features/platform/challenges/model/useChallengeWriteupPage.ts` 与 `useChallengeWriteupViewPage.ts`
    - 负责从 `route.params.id` 解析题目 ID
    - 负责“返回题目详情”“跳转题解编辑页”这类 route navigation
 2. `features/challenge-writeup-editor/model/*`
@@ -185,7 +189,7 @@
 
 这条链路说明：
 
-- route page 可以继续保持薄壳
+- route entry 应继续保持薄壳，并统一落到 `pages/**`
 - feature model 继续持有真实行为 owner
 - page-sized 业务 UI 不一定非要挂在 `components/*Page.vue`，只要它只服务单一 feature，就应跟随 feature 收进 `features/*/ui`
 

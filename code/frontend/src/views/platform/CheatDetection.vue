@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import CheatDetectionWorkspacePanel from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue'
-import { useCheatDetectionPage } from '@/features/platform-overview'
+import { useCheatDetectionPage } from '@/features/platform/overview'
 
 const {
   riskData,

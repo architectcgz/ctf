@@ -17,7 +17,7 @@ import studentInsightOverviewSectionSource from '@/components/teacher/student-in
 import studentInsightRecommendationsSectionSource from '@/components/teacher/student-insight/StudentInsightRecommendationsSection.vue?raw'
 import studentInsightWriteupsSource from '@/components/teacher/student-insight/StudentInsightWriteupsSection.vue?raw'
 import studentInsightManualReviewSource from '@/components/teacher/student-insight/StudentInsightManualReviewSection.vue?raw'
-import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
+import reviewArchiveSource from '@/pages/review-archive/StudentReviewArchiveRoutePage.vue?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue?raw'
 import reviewArchiveSummarySectionSource from '@/widgets/teacher-review-archive/ReviewArchiveSummarySection.vue?raw'
 

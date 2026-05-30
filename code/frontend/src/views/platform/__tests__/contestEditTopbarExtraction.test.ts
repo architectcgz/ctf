@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import contestEditSource from '../ContestEdit.vue?raw'
-import contestEditTopbarPanelSource from '@/features/platform-contests/ui/ContestEditTopbarPanel.vue?raw'
+import contestEditSource from '@/pages/platform/contests/ContestEditRoutePage.vue?raw'
+import contestEditTopbarPanelSource from '@/features/platform/contests/ui/ContestEditTopbarPanel.vue?raw'
 
 describe('ContestEdit topbar extraction', () => {
   it('应将竞赛编辑页顶部工作台壳层抽到独立 platform contest 组件', () => {
     expect(contestEditSource).toContain(
-      "import {\n  ContestEditTopbarPanel,\n  ContestEditWorkspacePanel,\n  useContestEditPage,\n} from '@/features/platform-contests'"
+      "import {\n  ContestEditTopbarPanel,\n  ContestEditWorkspacePanel,\n  useContestEditPage,\n} from '@/features/platform/contests'"
     )
     expect(contestEditSource).toContain('<ContestEditTopbarPanel')
     expect(contestEditTopbarPanelSource).toContain('Contest Studio')

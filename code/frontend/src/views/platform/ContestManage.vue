@@ -5,7 +5,7 @@ import {
   ContestOrchestrationPage,
   PlatformContestFormDialog,
   useContestManagePage,
-} from '@/features/platform-contests'
+} from '@/features/platform/contests'
 
 const {
   list,

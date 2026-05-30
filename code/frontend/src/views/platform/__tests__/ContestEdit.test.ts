@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 import { computed, defineComponent, ref, watch } from 'vue'
 
-import ContestEdit from '../ContestEdit.vue'
-import contestEditSource from '../ContestEdit.vue?raw'
-import contestEditPageModelSource from '@/features/platform-contests/model/useContestEditPage.ts?raw'
+import ContestEdit from '@/pages/platform/contests/ContestEditRoutePage.vue'
+import contestEditSource from '@/pages/platform/contests/ContestEditRoutePage.vue?raw'
+import contestEditPageModelSource from '@/features/platform/contests/model/useContestEditPage.ts?raw'
 import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
 import { ApiError } from '@/api/request'
 import type { ContestDetailData } from '@/api/contracts'
@@ -582,7 +582,9 @@ describe('ContestEdit', () => {
     expect(contestEditSource).not.toContain("from '@/api/admin/contests'")
     expect(contestEditPageModelSource).not.toContain("from 'vue-router'")
     expect(platformRoutesSource).toContain("name: 'ContestEdit'")
-    expect(platformRoutesSource).toContain("component: () => import('@/views/platform/ContestEdit.vue')")
+    expect(platformRoutesSource).toContain(
+      "component: () => import('@/pages/platform/contests/ContestEditRoutePage.vue')"
+    )
     expect(platformRoutesSource).toContain('contestId: String(route.params.id || \'\')')
   })
 

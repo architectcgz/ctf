@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import contestOperationsSource from '../ContestOperations.vue?raw'
+import contestOperationsSource from '@/pages/platform/contests/ContestOperationsRoutePage.vue?raw'
 
 describe('ContestOperations workspace shell', () => {
   it('赛事运维页不应保留额外顶部返回壳层', () => {

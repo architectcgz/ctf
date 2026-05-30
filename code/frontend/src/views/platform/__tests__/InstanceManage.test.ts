@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import PlatformInstanceManagement from '../InstanceManage.vue'
-import adminInstanceManageSource from '../InstanceManage.vue?raw'
+import PlatformInstanceManagement from '@/pages/platform/InstanceManageRoutePage.vue'
+import adminInstanceManageSource from '@/pages/platform/InstanceManageRoutePage.vue?raw'
 import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
-import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
-import instanceManageWorkspacePanelSource from '@/components/platform/instance/InstanceManageWorkspacePanel.vue?raw'
-import platformInstanceManagementModelSource from '@/features/platform-instance-management/model/usePlatformInstanceManagementPage.ts?raw'
+import instanceManageHeroPanelSource from '@/features/platform/instance-management/ui/InstanceManageHeroPanel.vue?raw'
+import instanceManageWorkspacePanelSource from '@/features/platform/instance-management/ui/InstanceManageWorkspacePanel.vue?raw'
+import platformInstanceManagementModelSource from '@/features/platform/instance-management/model/usePlatformInstanceManagementPage.ts?raw'
 
 const instanceAccessApiMocks = vi.hoisted(() => ({
   getInstanceDirectoryByRole: vi.fn(),
@@ -117,9 +117,8 @@ describe('PlatformInstanceManagement', () => {
   })
 
   it('应保留当前后台实例页样式并复用 admin 实例目录接口 owner', async () => {
-    expect(adminInstanceManageSource).toContain(
-      "usePlatformInstanceManagementPage } from '@/features/platform-instance-management'"
-    )
+    expect(adminInstanceManageSource).toContain("from '@/features/platform/instance-management'")
+    expect(adminInstanceManageSource).toContain('usePlatformInstanceManagementPage')
     expect(platformInstanceManagementModelSource).toContain('InstanceDirectoryItem')
     expect(platformInstanceManagementModelSource).toContain("from '@/api/instances'")
     expect(platformInstanceManagementModelSource).not.toContain("from 'vue-router'")
@@ -133,12 +132,8 @@ describe('PlatformInstanceManagement', () => {
     expect(adminInstanceManageSource).not.toContain("from '@/composables/useDestructiveConfirm'")
     expect(adminInstanceManageSource).not.toContain("from '@/api/admin'")
     expect(adminInstanceManageSource).not.toContain("from '@/composables/useAdminDestructiveConfirm'")
-    expect(adminInstanceManageSource).toContain(
-      "import InstanceManageWorkspacePanel from '@/components/platform/instance/InstanceManageWorkspacePanel.vue'"
-    )
-    expect(adminInstanceManageSource).toContain(
-      "import InstanceManageHeroPanel from '@/components/platform/instance/InstanceManageHeroPanel.vue'"
-    )
+    expect(adminInstanceManageSource).toContain('InstanceManageWorkspacePanel')
+    expect(adminInstanceManageSource).toContain('InstanceManageHeroPanel')
     expect(adminInstanceManageSource).toContain('<InstanceManageHeroPanel')
     expect(adminInstanceManageSource).toContain('<InstanceManageWorkspacePanel')
     expect(adminInstanceManageSource).toContain(

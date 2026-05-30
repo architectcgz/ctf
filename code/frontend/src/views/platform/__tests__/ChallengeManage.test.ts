@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import ChallengeManage from '../ChallengeManage.vue'
-import challengeManageSource from '../ChallengeManage.vue?raw'
-import challengeManageHeroPanelSource from '@/components/platform/challenge/ChallengeManageHeroPanel.vue?raw'
-import challengeManageDirectoryPanelSource from '@/features/platform-challenges/ui/ChallengeManageDirectoryPanel.vue?raw'
-import challengeManagePageSource from '@/features/platform-challenges/model/useChallengeManagePage.ts?raw'
-import challengeManagePresentationSource from '@/features/platform-challenges/model/useChallengeManagePresentation.ts?raw'
-import platformChallengeRoutesSource from '@/features/platform-challenges/model/platformChallengeRoutes.ts?raw'
+import ChallengeManage from '@/features/platform/challenges/ui/ChallengeManagePage.vue'
+import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
+import challengeManageHeroPanelSource from '@/features/platform/challenges/ui/ChallengeManageHeroPanel.vue?raw'
+import challengeManageDirectoryPanelSource from '@/features/platform/challenges/ui/ChallengeManageDirectoryPanel.vue?raw'
+import challengeManagePageSource from '@/features/platform/challenges/model/useChallengeManagePage.ts?raw'
+import challengeManagePresentationSource from '@/features/platform/challenges/model/useChallengeManagePresentation.ts?raw'
+import platformChallengeRoutesSource from '@/features/platform/challenges/model/platformChallengeRoutes.ts?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()

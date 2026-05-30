@@ -1,0 +1,248 @@
+# Reuse Decision
+
+## Change type
+frontend architecture inventory / components directory cleanup classification
+
+## Existing code searched
+- docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md
+- docs/architecture/frontend/06-components.md
+- docs/architecture/frontend/01-architecture-overview.md
+- code/frontend/src/components/
+- code/frontend/src/features/
+- code/frontend/src/widgets/
+- code/frontend/src/views/
+
+## Similar implementations found
+- 现有前端 backlog 已经记录了 route view 薄壳化、feature-owned UI 迁移和 layout/widget bridge 收口进展。
+- `docs/architecture/frontend/06-components.md` 已定义 `feature-owned UI` 判定规则，但还没有一份面向当前 `components/*` 存量的具体清单。
+- `code/frontend/src/features/challenge-package-import/model/useChallengePackageImport.test.ts` 已覆盖“导入提交流程由 feature-owned hook 接管”的测试写法，可作为 `useAwdChallengeImportFlow*` 的相似实现参照。
+- `code/frontend/src/features/contest-workbench/model/useContestAwdChallengePicker.ts`
+- `code/frontend/src/features/contest-workbench/model/useContestAwdChallengePicker.test.ts`
+  已覆盖“AWD 题目筛选 / 分页 / 远程列表由独立 hook 持有”的筛选与分页 owner 模式，可作为 `usePlatformAwdChallenges*` 的相似实现参照。
+
+## Decision
+refactor_existing
+
+## Reason
+这轮不是继续盲拆单个页面，而是先根据当前代码事实整理 `components/*` 存量分类清单，明确：
+
+- 哪些目录 / 组件应继续保留在 `components/common` / `components/layout`
+- 哪些业务组件仍应迁入 `features/*/ui`
+- 哪些组合壳更适合进入 `widgets/*`
+
+这样后续迁移可以按目录和 owner 批量推进，而不是继续靠零散记忆判断。
+
+## Files to modify
+- .harness/reuse-decisions/frontend-components-inventory-cleanup.md
+- AGENTS.md
+- code/frontend/scripts/frontend-architecture-policy.json
+- code/frontend/src/__tests__/architectureBoundaries.test.ts
+- code/frontend/src/__tests__/frontendArchitecturePolicy.ts
+- code/frontend/src/features/audit-log/index.ts
+- code/frontend/src/features/audit-log/ui/AuditActorDetailModal.vue
+- code/frontend/src/features/audit-log/ui/AuditLogDirectoryPanel.vue
+- code/frontend/src/features/audit-log/ui/AuditLogHeroPanel.vue
+- code/frontend/src/features/audit-log/ui/index.ts
+- code/frontend/src/features/image-management/index.ts
+- code/frontend/src/features/image-management/ui/ImageCreateModal.vue
+- code/frontend/src/features/image-management/ui/ImageDetailModal.vue
+- code/frontend/src/features/image-management/ui/ImageDirectoryPanel.vue
+- code/frontend/src/features/image-management/ui/ImageManageHeroPanel.vue
+- code/frontend/src/features/image-management/ui/index.ts
+- code/frontend/src/features/platform/awd-challenges/index.ts
+- code/frontend/src/features/platform/awd-challenges/model/index.ts
+- code/frontend/src/features/platform/awd-challenges/model/useAwdChallengeImportFlow.test.ts
+- code/frontend/src/features/platform/awd-challenges/model/useAwdChallengeImportFlow.ts
+- code/frontend/src/features/platform/awd-challenges/model/useAwdChallengeImportPage.ts
+- code/frontend/src/features/platform/awd-challenges/model/useAwdChallengeLibraryPage.ts
+- code/frontend/src/features/platform/awd-challenges/model/usePlatformAwdChallenges.test.ts
+- code/frontend/src/features/platform/awd-challenges/model/usePlatformAwdChallenges.ts
+- code/frontend/src/features/platform/awd-challenges/model/usePlatformAwdChallengesBoundary.test.ts
+- code/frontend/src/features/platform/awd-challenges/ui/AWDChallengeEditorDialog.vue
+- code/frontend/src/features/platform/awd-challenges/ui/AWDChallengeLibraryPage.vue
+- code/frontend/src/features/platform/awd-challenges/ui/AwdChallengeImportSection.vue
+- code/frontend/src/features/platform/awd-challenges/ui/index.ts
+- code/frontend/src/features/platform/challenge-detail/index.ts
+- code/frontend/src/features/platform/challenge-detail/model/index.ts
+- code/frontend/src/features/platform/challenge-detail/model/platformChallengeDetailRoutes.ts
+- code/frontend/src/features/platform/challenge-detail/model/presentation.test.ts
+- code/frontend/src/features/platform/challenge-detail/model/presentation.ts
+- code/frontend/src/features/platform/challenge-detail/model/usePlatformChallengeDetailPage.ts
+- code/frontend/src/features/platform/challenge-detail/model/usePlatformChallengeDetailRoutePage.ts
+- code/frontend/src/features/platform/challenge-detail/ui/AdminChallengeProfilePanel.vue
+- code/frontend/src/features/platform/challenge-detail/ui/AdminChallengeTopbarPanel.vue
+- code/frontend/src/features/platform/challenge-detail/ui/AdminChallengeWorkspaceTabs.vue
+- code/frontend/src/features/platform/challenge-detail/ui/PlatformChallengeFlagActionBar.vue
+- code/frontend/src/features/platform/challenge-detail/ui/PlatformChallengeFlagConfigPanel.test.ts
+- code/frontend/src/features/platform/challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue
+- code/frontend/src/features/platform/challenge-detail/ui/PlatformChallengeFlagFieldGrid.vue
+- code/frontend/src/features/platform/challenge-detail/ui/PlatformChallengeFlagNoticeStack.vue
+- code/frontend/src/features/platform/challenge-detail/ui/index.ts
+- code/frontend/src/features/platform/challenges/index.ts
+- code/frontend/src/features/platform/challenges/model/index.ts
+- code/frontend/src/features/platform/challenges/model/platformChallengeRoutes.ts
+- code/frontend/src/features/platform/challenges/model/useChallengeManagePage.ts
+- code/frontend/src/features/platform/challenges/model/useChallengeManagePresentation.ts
+- code/frontend/src/features/platform/challenges/model/useChallengeTopologyStudioRoutePage.ts
+- code/frontend/src/features/platform/challenges/model/useChallengeWriteupPage.ts
+- code/frontend/src/features/platform/challenges/model/useChallengeWriteupViewPage.ts
+- code/frontend/src/features/platform/challenges/model/usePlatformChallengeRoutePage.ts
+- code/frontend/src/features/platform/challenges/model/usePlatformChallenges.test.ts
+- code/frontend/src/features/platform/challenges/model/usePlatformChallenges.ts
+- code/frontend/src/features/platform/challenges/ui/ChallengeManageDirectoryPanel.vue
+- code/frontend/src/features/platform/challenges/ui/ChallengeManageHeroPanel.vue
+- code/frontend/src/features/platform/challenges/ui/ChallengeManagePage.vue
+- code/frontend/src/features/platform/challenges/ui/index.ts
+- code/frontend/src/features/platform/class-management/index.ts
+- code/frontend/src/features/platform/class-management/model/index.ts
+- code/frontend/src/features/platform/class-management/model/platformClassManagementRoutes.ts
+- code/frontend/src/features/platform/class-management/model/usePlatformClassManagementPage.ts
+- code/frontend/src/features/platform/class-management/ui/ClassManageHeroPanel.vue
+- code/frontend/src/features/platform/class-management/ui/ClassManageWorkspacePanel.vue
+- code/frontend/src/features/platform/class-management/ui/index.ts
+- code/frontend/src/features/platform/contests/index.ts
+- code/frontend/src/features/platform/contests/model/contestFormSupport.ts
+- code/frontend/src/features/platform/contests/model/contestManageRoutes.ts
+- code/frontend/src/features/platform/contests/model/contestOperationsHubRoutes.ts
+- code/frontend/src/features/platform/contests/model/index.ts
+- code/frontend/src/features/platform/contests/model/platformContestsModelBoundary.test.ts
+- code/frontend/src/features/platform/contests/model/useAwdStartOverrideFlow.ts
+- code/frontend/src/features/platform/contests/model/useContestAnnouncementsPage.ts
+- code/frontend/src/features/platform/contests/model/useContestDialogState.ts
+- code/frontend/src/features/platform/contests/model/useContestEditPage.ts
+- code/frontend/src/features/platform/contests/model/useContestListState.ts
+- code/frontend/src/features/platform/contests/model/useContestManagePage.ts
+- code/frontend/src/features/platform/contests/model/useContestOperationsHubPage.ts
+- code/frontend/src/features/platform/contests/model/useContestOperationsPage.ts
+- code/frontend/src/features/platform/contests/model/useContestSaveFlow.ts
+- code/frontend/src/features/platform/contests/model/usePlatformContests.ts
+- code/frontend/src/features/platform/contests/ui/AWDChallengeConfigDirectoryRow.vue
+- code/frontend/src/features/platform/contests/ui/AWDChallengeConfigDirectorySection.vue
+- code/frontend/src/features/platform/contests/ui/AWDChallengeConfigHeader.vue
+- code/frontend/src/features/platform/contests/ui/AWDChallengeConfigPanel.vue
+- code/frontend/src/features/platform/contests/ui/ContestAnnouncementsTopbarPanel.vue
+- code/frontend/src/features/platform/contests/ui/ContestAnnouncementsWorkspacePanel.vue
+- code/frontend/src/features/platform/contests/ui/ContestAwdPreflightPanel.vue
+- code/frontend/src/features/platform/contests/ui/ContestEditTopbarPanel.vue
+- code/frontend/src/features/platform/contests/ui/ContestEditWorkspacePanel.vue
+- code/frontend/src/features/platform/contests/ui/ContestOperationsHubHeroPanel.vue
+- code/frontend/src/features/platform/contests/ui/ContestOperationsHubWorkspacePanel.vue
+- code/frontend/src/features/platform/contests/ui/ContestOrchestrationPage.vue
+- code/frontend/src/features/platform/contests/ui/PlatformContestFormActions.vue
+- code/frontend/src/features/platform/contests/ui/PlatformContestFormDialog.vue
+- code/frontend/src/features/platform/contests/ui/PlatformContestFormPanel.vue
+- code/frontend/src/features/platform/contests/ui/PlatformContestFormSectionShell.vue
+- code/frontend/src/features/platform/contests/ui/PlatformContestIdentitySection.vue
+- code/frontend/src/features/platform/contests/ui/PlatformContestRulesSection.vue
+- code/frontend/src/features/platform/contests/ui/PlatformContestTable.vue
+- code/frontend/src/features/platform/contests/ui/PlatformContestTimelineSection.vue
+- code/frontend/src/features/platform/contests/ui/awdChallengeConfigPanel.css
+- code/frontend/src/features/platform/contests/ui/awdChallengeConfigPanel.types.ts
+- code/frontend/src/features/platform/contests/ui/index.ts
+- code/frontend/src/features/platform/contests/ui/platformContestFormPanel.css
+- code/frontend/src/features/platform/instance-management/index.ts
+- code/frontend/src/features/platform/instance-management/model/index.ts
+- code/frontend/src/features/platform/instance-management/model/platformInstanceManagementRoutes.ts
+- code/frontend/src/features/platform/instance-management/model/usePlatformInstanceManagementPage.ts
+- code/frontend/src/features/platform/instance-management/ui/InstanceManageHeroPanel.vue
+- code/frontend/src/features/platform/instance-management/ui/InstanceManageWorkspacePanel.vue
+- code/frontend/src/features/platform/instance-management/ui/index.ts
+- code/frontend/src/features/platform/overview/index.ts
+- code/frontend/src/features/platform/overview/model/index.ts
+- code/frontend/src/features/platform/overview/model/platformOverviewRoutes.ts
+- code/frontend/src/features/platform/overview/model/useCheatDetectionPage.ts
+- code/frontend/src/features/platform/overview/model/usePlatformOverviewPage.ts
+- code/frontend/src/features/platform/overview/model/usePlatformOverviewWorkspace.ts
+- code/frontend/src/features/platform/overview/ui/PlatformOverviewAlertsSection.vue
+- code/frontend/src/features/platform/overview/ui/PlatformOverviewHeroPanel.vue
+- code/frontend/src/features/platform/overview/ui/PlatformOverviewHotspotsSection.vue
+- code/frontend/src/features/platform/overview/ui/PlatformOverviewPage.vue
+- code/frontend/src/features/platform/overview/ui/index.ts
+- code/frontend/src/features/platform/student-management/index.ts
+- code/frontend/src/features/platform/student-management/model/index.ts
+- code/frontend/src/features/platform/student-management/model/platformStudentManagementRoutes.ts
+- code/frontend/src/features/platform/student-management/model/usePlatformStudentManagementPage.ts
+- code/frontend/src/features/platform/student-management/ui/StudentManageHeroPanel.vue
+- code/frontend/src/features/platform/student-management/ui/StudentManageWorkspacePanel.vue
+- code/frontend/src/features/platform/student-management/ui/index.ts
+- code/frontend/src/features/platform/user-management/index.ts
+- code/frontend/src/features/platform/user-management/model/index.ts
+- code/frontend/src/features/platform/user-management/model/usePlatformUserManagePage.ts
+- code/frontend/src/features/platform/user-management/model/usePlatformUsers.ts
+- code/frontend/src/features/platform/user-management/model/useUserGovernancePanelRoute.test.ts
+- code/frontend/src/features/platform/user-management/model/useUserGovernancePanelRoute.ts
+- code/frontend/src/features/platform/user-management/ui/PlatformUserFormDialog.vue
+- code/frontend/src/features/platform/user-management/ui/UserGovernanceDetailModal.vue
+- code/frontend/src/features/platform/user-management/ui/UserGovernanceImportPanel.vue
+- code/frontend/src/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue
+- code/frontend/src/features/platform/user-management/ui/UserGovernancePage.vue
+- code/frontend/src/features/platform/user-management/ui/index.ts
+- code/frontend/src/pages/awd-review/PlatformAwdReviewIndexRoutePage.vue
+- code/frontend/src/pages/awd-review/TeacherAwdReviewIndexRoutePage.vue
+- code/frontend/src/pages/platform/AuditLogRoutePage.vue
+- code/frontend/src/pages/platform/ClassManageRoutePage.vue
+- code/frontend/src/pages/platform/InstanceManageRoutePage.vue
+- code/frontend/src/pages/platform/PlatformClassStudentsRoutePage.vue
+- code/frontend/src/pages/platform/PlatformClassWorkspaceSectionRoutePage.vue
+- code/frontend/src/pages/platform/PlatformOverviewRoutePage.vue
+- code/frontend/src/pages/platform/PlatformStudentAnalysisRoutePage.vue
+- code/frontend/src/pages/platform/StudentManageRoutePage.vue
+- code/frontend/src/pages/platform/UserManageRoutePage.vue
+- code/frontend/src/pages/platform/awd-challenges/AWDChallengeLibraryRoutePage.vue
+- code/frontend/src/pages/platform/awd-challenges/AwdChallengeImportRoutePage.vue
+- code/frontend/src/pages/platform/challenges/ChallengeDetailRoutePage.vue
+- code/frontend/src/pages/platform/challenges/ChallengeImportPreviewRoutePage.vue
+- code/frontend/src/pages/platform/challenges/ChallengeTopologyStudioRoutePage.vue
+- code/frontend/src/pages/platform/challenges/ChallengeWriteupRoutePage.vue
+- code/frontend/src/pages/platform/challenges/ChallengeWriteupViewRoutePage.vue
+- code/frontend/src/pages/platform/contests/ContestAnnouncementsRoutePage.vue
+- code/frontend/src/pages/platform/contests/ContestAwdConfigRoutePage.vue
+- code/frontend/src/pages/platform/contests/ContestEditRoutePage.vue
+- code/frontend/src/pages/platform/contests/ContestManageRoutePage.vue
+- code/frontend/src/pages/platform/contests/ContestOperationsHubRoutePage.vue
+- code/frontend/src/pages/platform/contests/ContestOperationsRoutePage.vue
+- code/frontend/src/pages/platform/contests/ContestProjectorRoutePage.vue
+- code/frontend/src/pages/review-archive/StudentReviewArchiveRoutePage.vue
+- code/frontend/src/pages/teacher/ClassManagementRoutePage.vue
+- code/frontend/src/pages/teacher/InstanceManagementRoutePage.vue
+- code/frontend/src/pages/teacher/StudentManagementRoutePage.vue
+- code/frontend/src/pages/teacher/TeacherClassStudentsRoutePage.vue
+- code/frontend/src/pages/teacher/TeacherClassWorkspaceSectionRoutePage.vue
+- code/frontend/src/pages/teacher/TeacherDashboardRoutePage.vue
+- code/frontend/src/pages/teacher/TeacherStudentAnalysisRoutePage.vue
+- code/frontend/src/router/index.ts
+- code/frontend/src/router/routes/platformRoutes.ts
+- code/frontend/src/router/routes/teacherRoutes.ts
+- code/frontend/src/views/platform/AWDChallengeLibrary.vue
+- code/frontend/src/views/platform/AuditLog.vue
+- code/frontend/src/views/platform/ChallengeDetail.vue
+- code/frontend/src/views/platform/CheatDetection.vue
+- code/frontend/src/views/platform/ClassManage.vue
+- code/frontend/src/views/platform/ContestAnnouncements.vue
+- code/frontend/src/views/platform/ContestEdit.vue
+- code/frontend/src/views/platform/ContestManage.vue
+- code/frontend/src/views/platform/ContestOperations.vue
+- code/frontend/src/views/platform/ContestOperationsHub.vue
+- code/frontend/src/views/platform/ImageManage.vue
+- code/frontend/src/views/platform/InstanceManage.vue
+- code/frontend/src/views/platform/PlatformClassWorkspaceSection.vue
+- code/frontend/src/views/platform/StudentManage.vue
+- code/frontend/src/views/platform/UserManage.vue
+- code/frontend/src/views/teacher/TeacherClassWorkspaceSection.vue
+- code/frontend/src/widgets/awd-review-workspace/AwdReviewDirectoryPanel.vue
+- code/frontend/src/widgets/awd-review-workspace/AwdReviewHeroPanel.vue
+- code/frontend/src/widgets/awd-review-workspace/index.ts
+- code/frontend/src/widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue
+- docs/architecture/frontend/01-architecture-overview.md
+- docs/architecture/frontend/02-routing.md
+- docs/architecture/frontend/06-components.md
+- docs/architecture/frontend/07-pages-dataflow.md
+- docs/plan/impl-plan/2026-05-30-frontend-components-inventory-cleanup-plan.md
+- docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md
+
+## After implementation
+- backlog 中已新增基于当前事实的 `components/*` 存量清理清单
+- 第 1 批 `components/platform` 下的 7 组 feature-owned UI 已完成迁移，并同步更新 route view / 测试 / feature public API
+- 平台管理员端 feature 命名空间已统一为 `features/platform/*`，不再保留 `platform-*` 扁平目录
+- 对已经完全 feature-owned 的页面壳，路由入口可以直接挂到 `features/*/ui/*Page.vue`，不再强制保留 `views/**` 薄壳
+- 后续可以直接从 `components/teacher`、`components/contests` 与 `platform/challenge|awd-service|awd-review` 继续推进，而不是重复人工盘点

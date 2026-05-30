@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import awdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
+import awdReviewIndexSource from '@/pages/awd-review/TeacherAwdReviewIndexRoutePage.vue?raw'
 import awdReviewWidgetIndexSource from '@/widgets/awd-review-workspace/index.ts?raw'
 import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'

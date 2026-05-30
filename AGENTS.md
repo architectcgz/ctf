@@ -23,6 +23,7 @@
 - 通用前端工程守则由 `frontend-engineer` skill 承接；本节只保留 CTF 项目特有约束。
 - 管理员端“目录标题 + `WorkspaceDirectoryToolbar` + 列表/表格/空状态/分页”结构的垂直节奏由页面目录 section 统一控制，避免 section `gap` 与 toolbar `margin-bottom` 叠加。
 - 前端页面路由命名空间：教师端只使用 `/academy/*`，管理员端只使用 `/platform/*`；不再新增 `/teacher/*`、`/admin/*` 页面路由、重定向或兼容入口。
+- Vue 单文件组件统一采用 `template -> style -> script` 块顺序；`<script setup>` 或 `<script>` 必须放在文件最下方，不再写在 `<template>` 上方。
 
 ## Reuse-First Workflow
 

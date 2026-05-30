@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import contestProjectorSource from '@/views/platform/ContestProjector.vue?raw'
+import contestProjectorSource from '@/pages/platform/contests/ContestProjectorRoutePage.vue?raw'
 
 describe('ContestProjector page state extraction', () => {
   it('应通过 feature page model 获取大屏生命周期和展示派生状态', () => {

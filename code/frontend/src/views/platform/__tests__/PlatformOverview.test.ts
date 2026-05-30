@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
-import adminDashboardPageSourceBase from '@/features/platform-overview/ui/PlatformOverviewPage.vue?raw'
-import platformOverviewPageModelSource from '@/features/platform-overview/model/usePlatformOverviewPage.ts?raw'
-import platformOverviewRoutesSource from '@/features/platform-overview/model/platformOverviewRoutes.ts?raw'
-import platformOverviewAlertsSectionSource from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue?raw'
-import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
-import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
-import PlatformOverview from '../PlatformOverview.vue'
-import platformOverviewViewSource from '../PlatformOverview.vue?raw'
+import adminDashboardPageSourceBase from '@/features/platform/overview/ui/PlatformOverviewPage.vue?raw'
+import platformOverviewPageModelSource from '@/features/platform/overview/model/usePlatformOverviewPage.ts?raw'
+import platformOverviewRoutesSource from '@/features/platform/overview/model/platformOverviewRoutes.ts?raw'
+import platformOverviewAlertsSectionSource from '@/features/platform/overview/ui/PlatformOverviewAlertsSection.vue?raw'
+import platformOverviewHeroPanelSource from '@/features/platform/overview/ui/PlatformOverviewHeroPanel.vue?raw'
+import platformOverviewHotspotsSectionSource from '@/features/platform/overview/ui/PlatformOverviewHotspotsSection.vue?raw'
+import PlatformOverview from '@/pages/platform/PlatformOverviewRoutePage.vue'
+import platformOverviewViewSource from '@/pages/platform/PlatformOverviewRoutePage.vue?raw'
 
 const adminDashboardPageSource = [
   adminDashboardPageSourceBase,

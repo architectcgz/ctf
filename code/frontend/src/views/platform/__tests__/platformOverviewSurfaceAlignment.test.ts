@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import adminDashboardSourceBase from '@/features/platform-overview/ui/PlatformOverviewPage.vue?raw'
-import platformOverviewAlertsSectionSource from '@/components/platform/dashboard/PlatformOverviewAlertsSection.vue?raw'
-import platformOverviewHeroPanelSource from '@/components/platform/dashboard/PlatformOverviewHeroPanel.vue?raw'
-import platformOverviewHotspotsSectionSource from '@/components/platform/dashboard/PlatformOverviewHotspotsSection.vue?raw'
+import adminDashboardSourceBase from '@/features/platform/overview/ui/PlatformOverviewPage.vue?raw'
+import platformOverviewAlertsSectionSource from '@/features/platform/overview/ui/PlatformOverviewAlertsSection.vue?raw'
+import platformOverviewHeroPanelSource from '@/features/platform/overview/ui/PlatformOverviewHeroPanel.vue?raw'
+import platformOverviewHotspotsSectionSource from '@/features/platform/overview/ui/PlatformOverviewHotspotsSection.vue?raw'
 
 const adminDashboardSource = [
   adminDashboardSourceBase,

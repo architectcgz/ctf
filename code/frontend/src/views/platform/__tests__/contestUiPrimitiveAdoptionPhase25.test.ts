@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
-import awdChallengeConfigDirectoryRowSource from '@/features/platform-contests/ui/AWDChallengeConfigDirectoryRow.vue?raw'
-import awdChallengeConfigDirectorySectionSource from '@/features/platform-contests/ui/AWDChallengeConfigDirectorySection.vue?raw'
-import awdChallengeConfigHeaderSource from '@/features/platform-contests/ui/AWDChallengeConfigHeader.vue?raw'
+import awdChallengeConfigPanelSource from '@/features/platform/contests/ui/AWDChallengeConfigPanel.vue?raw'
+import awdChallengeConfigDirectoryRowSource from '@/features/platform/contests/ui/AWDChallengeConfigDirectoryRow.vue?raw'
+import awdChallengeConfigDirectorySectionSource from '@/features/platform/contests/ui/AWDChallengeConfigDirectorySection.vue?raw'
+import awdChallengeConfigHeaderSource from '@/features/platform/contests/ui/AWDChallengeConfigHeader.vue?raw'
 import awdReadinessOverrideDialogSource from '@/features/awd-readiness/ui/AWDReadinessOverrideDialog.vue?raw'
 import awdReadinessChecklistSource from '@/features/awd-readiness/ui/AWDReadinessChecklist.vue?raw'
 
@@ -15,7 +15,7 @@ const awdChallengeConfigCombinedSource = [
   awdChallengeConfigDirectorySectionSource,
   awdChallengeConfigDirectoryRowSource,
   readFileSync(
-    resolve(process.cwd(), 'src/features/platform-contests/ui/awdChallengeConfigPanel.css'),
+    resolve(process.cwd(), 'src/features/platform/contests/ui/awdChallengeConfigPanel.css'),
     'utf8'
   ),
 ].join('\n')

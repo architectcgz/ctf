@@ -1,21 +1,19 @@
 import { describe, expect, it } from 'vitest'
 
-import auditLogSource from '@/views/platform/AuditLog.vue?raw'
-import auditActorDetailModalSource from '@/components/platform/audit/AuditActorDetailModal.vue?raw'
-import auditLogHeroPanelSource from '@/components/platform/audit/AuditLogHeroPanel.vue?raw'
+import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
+import auditActorDetailModalSource from '@/features/audit-log/ui/AuditActorDetailModal.vue?raw'
+import auditLogHeroPanelSource from '@/features/audit-log/ui/AuditLogHeroPanel.vue?raw'
 
 describe('AuditLog workspace extraction', () => {
   it('应将操作流水工作区抽到独立平台组件', () => {
-    expect(auditLogSource).toContain(
-      "import AuditLogDirectoryPanel from '@/components/platform/audit/AuditLogDirectoryPanel.vue'"
-    )
+    expect(auditLogSource).toContain("from '@/features/audit-log'")
+    expect(auditLogSource).toContain('AuditLogDirectoryPanel')
     expect(auditLogSource).toContain('<AuditLogDirectoryPanel')
   })
 
   it('应将执行人详情弹窗抽到独立平台组件', () => {
-    expect(auditLogSource).toContain(
-      "import AuditActorDetailModal from '@/components/platform/audit/AuditActorDetailModal.vue'"
-    )
+    expect(auditLogSource).toContain("from '@/features/audit-log'")
+    expect(auditLogSource).toContain('AuditActorDetailModal')
     expect(auditLogSource).toContain('<AuditActorDetailModal')
     expect(auditLogSource).not.toContain('<AdminSurfaceModal')
     expect(auditActorDetailModalSource).toContain('<AdminSurfaceModal')
@@ -23,9 +21,8 @@ describe('AuditLog workspace extraction', () => {
   })
 
   it('应将 hero 与审计摘要抽到独立平台组件', () => {
-    expect(auditLogSource).toContain(
-      "import AuditLogHeroPanel from '@/components/platform/audit/AuditLogHeroPanel.vue'"
-    )
+    expect(auditLogSource).toContain("from '@/features/audit-log'")
+    expect(auditLogSource).toContain('AuditLogHeroPanel')
     expect(auditLogSource).toContain('<AuditLogHeroPanel')
     expect(auditLogHeroPanelSource).toContain('<div class="workspace-overline">Audit Log</div>')
     expect(auditLogHeroPanelSource).toContain('同步日志')

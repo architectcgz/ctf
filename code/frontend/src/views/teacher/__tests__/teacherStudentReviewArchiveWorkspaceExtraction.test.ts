@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import reviewArchiveSource from '../TeacherStudentReviewArchive.vue?raw'
+import reviewArchiveSource from '@/pages/review-archive/StudentReviewArchiveRoutePage.vue?raw'
 import reviewArchiveWidgetIndexSource from '@/widgets/review-archive-workspace/index.ts?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/teacher-review-archive/ReviewArchiveWorkspace.vue?raw'
 import reviewArchiveStateSource from '@/widgets/teacher-review-archive/ReviewArchiveState.vue?raw'

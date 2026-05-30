@@ -3,9 +3,9 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import TeacherAWDReviewIndex from '../TeacherAWDReviewIndex.vue'
+import TeacherAWDReviewIndex from '@/pages/awd-review/TeacherAwdReviewIndexRoutePage.vue'
 import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
-import teacherAwdReviewIndexSource from '../TeacherAWDReviewIndex.vue?raw'
+import teacherAwdReviewIndexSource from '@/pages/awd-review/TeacherAwdReviewIndexRoutePage.vue?raw'
 import teacherAwdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import teacherAwdReviewContestDirectorySource from '@/widgets/awd-review-workspace/AwdReviewContestDirectory.vue?raw'
 import teacherAwdReviewDirectorySectionSource from '@/widgets/awd-review-workspace/AwdReviewDirectorySection.vue?raw'
@@ -277,5 +277,9 @@ describe('TeacherAWDReviewIndex', () => {
     expect(teacherAwdReviewIndexWorkspaceSource).not.toContain(
       '支持按状态或关键字快速定位要进入的 AWD 赛事。'
     )
+  })
+
+  it('教师端路由入口应已迁到 widget route page，而不是旧 views 层', () => {
+    expect(teacherAwdReviewIndexSource).not.toContain('@/views/teacher/TeacherAWDReviewIndex.vue')
   })
 })

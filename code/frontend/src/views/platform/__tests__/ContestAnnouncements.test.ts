@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
-import ContestAnnouncements from '../ContestAnnouncements.vue'
-import contestAnnouncementsSource from '../ContestAnnouncements.vue?raw'
-import contestAnnouncementsPageModelSource from '@/features/platform-contests/model/useContestAnnouncementsPage.ts?raw'
-import contestAnnouncementsTopbarPanelSource from '@/features/platform-contests/ui/ContestAnnouncementsTopbarPanel.vue?raw'
+import ContestAnnouncements from '@/pages/platform/contests/ContestAnnouncementsRoutePage.vue'
+import contestAnnouncementsSource from '@/pages/platform/contests/ContestAnnouncementsRoutePage.vue?raw'
+import contestAnnouncementsPageModelSource from '@/features/platform/contests/model/useContestAnnouncementsPage.ts?raw'
+import contestAnnouncementsTopbarPanelSource from '@/features/platform/contests/ui/ContestAnnouncementsTopbarPanel.vue?raw'
 import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -100,7 +100,7 @@ describe('ContestAnnouncements', () => {
     expect(platformRoutesSource).toContain("name: 'ContestAnnouncements'")
     expect(platformRoutesSource).toContain("contestId: String(route.params.id || '')")
     expect(platformRoutesSource).toContain(
-      "component: () => import('@/views/platform/ContestAnnouncements.vue')"
+      "component: () => import('@/pages/platform/contests/ContestAnnouncementsRoutePage.vue')"
     )
   })
 

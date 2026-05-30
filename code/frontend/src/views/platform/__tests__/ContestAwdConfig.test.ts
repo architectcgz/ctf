@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import ContestAwdConfig from '../ContestAwdConfig.vue'
-import contestAwdConfigSource from '../ContestAwdConfig.vue?raw'
+import ContestAwdConfig from '@/pages/platform/contests/ContestAwdConfigRoutePage.vue'
+import contestAwdConfigSource from '@/pages/platform/contests/ContestAwdConfigRoutePage.vue?raw'
 import contestAwdCheckerConfigSectionSource from '@/features/contest-awd-config/ui/ContestAwdCheckerConfigSection.vue?raw'
 import contestAwdConfigWorkspaceShellSource from '@/features/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue?raw'
 import awdChallengeSelectionSource from '@/features/contest-awd-config/model/useAwdChallengeSelection.ts?raw'

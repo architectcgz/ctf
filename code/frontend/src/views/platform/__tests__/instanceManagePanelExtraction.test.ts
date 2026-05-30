@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import adminInstanceManageSource from '../InstanceManage.vue?raw'
-import instanceManageHeroPanelSource from '@/components/platform/instance/InstanceManageHeroPanel.vue?raw'
+import adminInstanceManageSource from '@/pages/platform/InstanceManageRoutePage.vue?raw'
+import instanceManageHeroPanelSource from '@/features/platform/instance-management/ui/InstanceManageHeroPanel.vue?raw'
 
 describe('Platform InstanceManage panel extraction', () => {
   it('应将实例管理头部与摘要卡抽到独立 platform instance 组件', () => {
-    expect(adminInstanceManageSource).toContain(
-      "import InstanceManageHeroPanel from '@/components/platform/instance/InstanceManageHeroPanel.vue'"
-    )
+    expect(adminInstanceManageSource).toContain("from '@/features/platform/instance-management'")
+    expect(adminInstanceManageSource).toContain('InstanceManageHeroPanel')
     expect(adminInstanceManageSource).toContain('<InstanceManageHeroPanel')
     expect(instanceManageHeroPanelSource).toContain('<div class="workspace-overline">')
     expect(instanceManageHeroPanelSource).toContain('Instance Workspace')

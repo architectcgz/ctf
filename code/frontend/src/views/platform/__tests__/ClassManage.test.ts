@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import PlatformClassManagement from '../ClassManage.vue'
-import adminClassManageSource from '../ClassManage.vue?raw'
+import PlatformClassManagement from '@/pages/platform/ClassManageRoutePage.vue'
+import adminClassManageSource from '@/pages/platform/ClassManageRoutePage.vue?raw'
 import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
-import classManageHeroPanelSource from '@/components/platform/class/ClassManageHeroPanel.vue?raw'
-import classManageWorkspacePanelSource from '@/components/platform/class/ClassManageWorkspacePanel.vue?raw'
-import platformClassManagementPageSource from '@/features/platform-class-management/model/usePlatformClassManagementPage.ts?raw'
+import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
+import classManageWorkspacePanelSource from '@/features/platform/class-management/ui/ClassManageWorkspacePanel.vue?raw'
+import platformClassManagementPageSource from '@/features/platform/class-management/model/usePlatformClassManagementPage.ts?raw'
 
 const adminTeachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
@@ -61,18 +61,13 @@ describe('PlatformClassManagement', () => {
   })
 
   it('应使用后台工作台目录组件而不是教师端班级目录壳层', async () => {
-    expect(adminClassManageSource).toContain(
-      "usePlatformClassManagementPage } from '@/features/platform-class-management'"
-    )
+    expect(adminClassManageSource).toContain("from '@/features/platform/class-management'")
+    expect(adminClassManageSource).toContain('usePlatformClassManagementPage')
     expect(adminClassManageSource).not.toContain("from '@/api/teacher'")
     expect(adminClassManageSource).not.toContain("from '@/api/admin'")
     expect(adminClassManageSource).not.toContain('getAdminClasses')
-    expect(adminClassManageSource).toContain(
-      "import ClassManageHeroPanel from '@/components/platform/class/ClassManageHeroPanel.vue'"
-    )
-    expect(adminClassManageSource).toContain(
-      "import ClassManageWorkspacePanel from '@/components/platform/class/ClassManageWorkspacePanel.vue'"
-    )
+    expect(adminClassManageSource).toContain('ClassManageHeroPanel')
+    expect(adminClassManageSource).toContain('ClassManageWorkspacePanel')
     expect(adminClassManageSource).toContain('<ClassManageHeroPanel')
     expect(adminClassManageSource).toContain('<ClassManageWorkspacePanel')
     expect(adminClassManageSource).toContain(

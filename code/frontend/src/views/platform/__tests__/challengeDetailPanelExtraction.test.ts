@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import challengeDetailSource from '@/views/platform/ChallengeDetail.vue?raw'
-import adminChallengeTopbarPanelSource from '@/features/platform-challenge-detail/ui/AdminChallengeTopbarPanel.vue?raw'
-import adminChallengeWorkspaceTabsSource from '@/features/platform-challenge-detail/ui/AdminChallengeWorkspaceTabs.vue?raw'
-import adminChallengeProfilePanelSource from '@/features/platform-challenge-detail/ui/AdminChallengeProfilePanel.vue?raw'
+import challengeDetailSource from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue?raw'
+import adminChallengeTopbarPanelSource from '@/features/platform/challenge-detail/ui/AdminChallengeTopbarPanel.vue?raw'
+import adminChallengeWorkspaceTabsSource from '@/features/platform/challenge-detail/ui/AdminChallengeWorkspaceTabs.vue?raw'
+import adminChallengeProfilePanelSource from '@/features/platform/challenge-detail/ui/AdminChallengeProfilePanel.vue?raw'
 import challengeProfileMetaGridSource from '@/entities/challenge/ui/ChallengeProfileMetaGrid.vue?raw'
-import platformChallengeFlagConfigPanelSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
-import platformChallengeFlagActionBarSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagActionBar.vue?raw'
-import platformChallengeFlagFieldGridSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagFieldGrid.vue?raw'
-import platformChallengeFlagNoticeStackSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagNoticeStack.vue?raw'
+import platformChallengeFlagConfigPanelSource from '@/features/platform/challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
+import platformChallengeFlagActionBarSource from '@/features/platform/challenge-detail/ui/PlatformChallengeFlagActionBar.vue?raw'
+import platformChallengeFlagFieldGridSource from '@/features/platform/challenge-detail/ui/PlatformChallengeFlagFieldGrid.vue?raw'
+import platformChallengeFlagNoticeStackSource from '@/features/platform/challenge-detail/ui/PlatformChallengeFlagNoticeStack.vue?raw'
 import platformChallengeDetailWorkspaceSource from '@/widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue?raw'
 
 describe('Admin ChallengeDetail panel extraction', () => {
@@ -18,7 +18,7 @@ describe('Admin ChallengeDetail panel extraction', () => {
     )
     expect(challengeDetailSource).toContain('<PlatformChallengeDetailWorkspace')
     expect(platformChallengeDetailWorkspaceSource).toContain(
-      "from '@/features/platform-challenge-detail'"
+      "from '@/features/platform/challenge-detail'"
     )
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeWorkspaceTabs')
     expect(adminChallengeWorkspaceTabsSource).toContain(
@@ -29,7 +29,7 @@ describe('Admin ChallengeDetail panel extraction', () => {
 
   it('应将题目详情顶栏抽到独立 platform challenge 组件', () => {
     expect(platformChallengeDetailWorkspaceSource).toContain(
-      "from '@/features/platform-challenge-detail'"
+      "from '@/features/platform/challenge-detail'"
     )
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeTopbarPanel')
     expect(adminChallengeTopbarPanelSource).toContain('<span class="workspace-overline">Challenge Profile</span>')

@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
-import ContestManage from '../ContestManage.vue'
-import contestManageSource from '../ContestManage.vue?raw'
+import ContestManage from '@/pages/platform/contests/ContestManageRoutePage.vue'
+import contestManageSource from '@/pages/platform/contests/ContestManageRoutePage.vue?raw'
 import contestAnnouncementDrawerSource from '@/features/contest-announcements/ui/ContestAnnouncementManageDrawer.vue?raw'
-import platformContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
-import contestOrchestrationSource from '@/features/platform-contests/ui/ContestOrchestrationPage.vue?raw'
-import contestManagePageModelSource from '@/features/platform-contests/model/useContestManagePage.ts?raw'
+import platformContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
+import contestOrchestrationSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
+import contestManagePageModelSource from '@/features/platform/contests/model/useContestManagePage.ts?raw'
 import { ApiError } from '@/api/request'
 
 const contestMocks = vi.hoisted(() => ({

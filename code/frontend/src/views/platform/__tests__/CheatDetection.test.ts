@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
-import cheatDetectionPageSource from '@/features/platform-overview/model/useCheatDetectionPage.ts?raw'
-import platformOverviewRoutesSource from '@/features/platform-overview/model/platformOverviewRoutes.ts?raw'
+import cheatDetectionPageSource from '@/features/platform/overview/model/useCheatDetectionPage.ts?raw'
+import platformOverviewRoutesSource from '@/features/platform/overview/model/platformOverviewRoutes.ts?raw'
 import CheatDetection from '../CheatDetection.vue'
 import cheatDetectionSource from '../CheatDetection.vue?raw'
 

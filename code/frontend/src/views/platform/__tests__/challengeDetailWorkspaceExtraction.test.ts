@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import challengeDetailSource from '../ChallengeDetail.vue?raw'
-import adminChallengeWorkspaceTabsSource from '@/features/platform-challenge-detail/ui/AdminChallengeWorkspaceTabs.vue?raw'
-import platformChallengeFlagActionBarSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagActionBar.vue?raw'
-import platformChallengeFlagConfigPanelSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
-import platformChallengeFlagFieldGridSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagFieldGrid.vue?raw'
-import platformChallengeFlagNoticeStackSource from '@/features/platform-challenge-detail/ui/PlatformChallengeFlagNoticeStack.vue?raw'
+import challengeDetailSource from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue?raw'
+import adminChallengeWorkspaceTabsSource from '@/features/platform/challenge-detail/ui/AdminChallengeWorkspaceTabs.vue?raw'
+import platformChallengeFlagActionBarSource from '@/features/platform/challenge-detail/ui/PlatformChallengeFlagActionBar.vue?raw'
+import platformChallengeFlagConfigPanelSource from '@/features/platform/challenge-detail/ui/PlatformChallengeFlagConfigPanel.vue?raw'
+import platformChallengeFlagFieldGridSource from '@/features/platform/challenge-detail/ui/PlatformChallengeFlagFieldGrid.vue?raw'
+import platformChallengeFlagNoticeStackSource from '@/features/platform/challenge-detail/ui/PlatformChallengeFlagNoticeStack.vue?raw'
 import platformChallengeDetailWorkspaceSource from '@/widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue?raw'
 
 describe('Admin ChallengeDetail workspace extraction', () => {
@@ -21,7 +21,7 @@ describe('Admin ChallengeDetail workspace extraction', () => {
       "import AdminChallengeWorkspaceTabs from '@/components/platform/challenge/AdminChallengeWorkspaceTabs.vue'"
     )
     expect(platformChallengeDetailWorkspaceSource).toContain(
-      "from '@/features/platform-challenge-detail'"
+      "from '@/features/platform/challenge-detail'"
     )
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeWorkspaceTabs')
     expect(platformChallengeDetailWorkspaceSource).toContain('ChallengeWriteupManagePanel')
@@ -39,10 +39,10 @@ describe('Admin ChallengeDetail workspace extraction', () => {
 
   it('应将题目详情加载与 Flag 配置流程下沉到 feature model', () => {
     expect(challengeDetailSource).toContain(
-      "import { usePlatformChallengeDetailRoutePage } from '@/features/platform-challenge-detail'"
+      "import { usePlatformChallengeDetailRoutePage } from '@/features/platform/challenge-detail'"
     )
-    expect(challengeDetailSource).not.toContain('@/features/platform-challenge-detail/model/')
-    expect(challengeDetailSource).not.toContain('@/features/platform-challenge-detail/ui/')
+    expect(challengeDetailSource).not.toContain('@/features/platform/challenge-detail/model/')
+    expect(challengeDetailSource).not.toContain('@/features/platform/challenge-detail/ui/')
     expect(challengeDetailSource).toContain('} = usePlatformChallengeDetailRoutePage()')
     expect(challengeDetailSource).not.toContain("from '@/api/admin/authoring'")
     expect(challengeDetailSource).not.toContain("from '@/api/challenge'")
@@ -58,8 +58,8 @@ describe('Admin ChallengeDetail workspace extraction', () => {
     expect(adminChallengeWorkspaceTabsSource).toContain(
       "@update:flag-draft=\"emit('update:flag-draft', $event)\""
     )
-    expect(adminChallengeWorkspaceTabsSource).not.toContain('@/features/platform-challenge-detail/model/')
-    expect(adminChallengeWorkspaceTabsSource).not.toContain('@/features/platform-challenge-detail/ui/')
+    expect(adminChallengeWorkspaceTabsSource).not.toContain('@/features/platform/challenge-detail/model/')
+    expect(adminChallengeWorkspaceTabsSource).not.toContain('@/features/platform/challenge-detail/ui/')
     expect(adminChallengeWorkspaceTabsSource).not.toContain(':flag-type="flagType"')
     expect(platformChallengeFlagConfigPanelSource).toContain(
       '<section class="journal-panel challenge-flag-panel p-5 md:p-6">'

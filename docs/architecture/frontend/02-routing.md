@@ -18,7 +18,7 @@
   - 不负责：承载页面内的数据请求、筛选状态或业务动作
 
 - `code/frontend/src/router/routes/studentRoutes.ts`、`teacherRoutes.ts`、`platformRoutes.ts`
-  - 负责：声明各工作区的正式 URL、组件入口和 `meta.requiresAuth / meta.roles / meta.title / meta.icon`
+  - 负责：声明各工作区的正式 URL、`pages/**` 组件入口，以及 `meta.requiresAuth / meta.roles / meta.title / meta.icon`
   - 不负责：根据角色动态拼接第二套路由树，也不在页面组件里复制权限判断
 
 - `code/frontend/src/router/guards.ts`
@@ -146,6 +146,6 @@
 
 ## 6. Guardrail
 
-- 路由 view 不能直接持有路由状态或 query-tab 逻辑：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- route page 入口只能落在 `pages/**`，且不能直接持有业务 API、路由状态或 query-tab 逻辑：`code/frontend/src/__tests__/architectureBoundaries.test.ts`、`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
 - 教师/管理员导航映射和命名空间匹配：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`
 - 默认首页与角色跳转：`code/frontend/src/utils/roleRoutes.ts`

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import ContestOperations from '../ContestOperations.vue'
-import contestOperationsSource from '../ContestOperations.vue?raw'
-import contestOperationsPageModelSource from '@/features/platform-contests/model/useContestOperationsPage.ts?raw'
+import ContestOperations from '@/pages/platform/contests/ContestOperationsRoutePage.vue'
+import contestOperationsSource from '@/pages/platform/contests/ContestOperationsRoutePage.vue?raw'
+import contestOperationsPageModelSource from '@/features/platform/contests/model/useContestOperationsPage.ts?raw'
 import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -78,7 +78,9 @@ describe('ContestOperations', () => {
     expect(contestOperationsSource).not.toContain("from '@/api/admin/contests'")
     expect(contestOperationsPageModelSource).not.toContain("from 'vue-router'")
     expect(platformRoutesSource).toContain("name: 'ContestOperations'")
-    expect(platformRoutesSource).toContain("component: () => import('@/views/platform/ContestOperations.vue')")
+    expect(platformRoutesSource).toContain(
+      "component: () => import('@/pages/platform/contests/ContestOperationsRoutePage.vue')"
+    )
     expect(platformRoutesSource).toContain('contestId: String(route.params.id || \'\')')
   })
 

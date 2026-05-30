@@ -3,7 +3,7 @@ import {
   PlatformUserFormDialog,
   UserGovernancePage,
   usePlatformUserManagePage,
-} from '@/features/platform-user-management'
+} from '@/features/platform/user-management'
 
 const {
   list,

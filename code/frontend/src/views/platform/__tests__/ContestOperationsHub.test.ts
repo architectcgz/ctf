@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
-import ContestOperationsHub from '../ContestOperationsHub.vue'
-import contestOperationsHubSource from '../ContestOperationsHub.vue?raw'
-import contestOperationsHubPageModelSource from '@/features/platform-contests/model/useContestOperationsHubPage.ts?raw'
-import contestOperationsHubRoutesSource from '@/features/platform-contests/model/contestOperationsHubRoutes.ts?raw'
-import contestOperationsHubHeroPanelSource from '@/features/platform-contests/ui/ContestOperationsHubHeroPanel.vue?raw'
-import contestOperationsHubWorkspacePanelSource from '@/features/platform-contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
+import ContestOperationsHub from '@/pages/platform/contests/ContestOperationsHubRoutePage.vue'
+import contestOperationsHubSource from '@/pages/platform/contests/ContestOperationsHubRoutePage.vue?raw'
+import contestOperationsHubPageModelSource from '@/features/platform/contests/model/useContestOperationsHubPage.ts?raw'
+import contestOperationsHubRoutesSource from '@/features/platform/contests/model/contestOperationsHubRoutes.ts?raw'
+import contestOperationsHubHeroPanelSource from '@/features/platform/contests/ui/ContestOperationsHubHeroPanel.vue?raw'
+import contestOperationsHubWorkspacePanelSource from '@/features/platform/contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
   getContests: vi.fn(),

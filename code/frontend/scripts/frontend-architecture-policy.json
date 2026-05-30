@@ -2,25 +2,31 @@
   "layers": {
     "common": {
       "relative_prefixes": ["components/common/"],
-      "forbidden_import_layers": ["features", "widgets", "views"]
+      "forbidden_import_layers": ["pages", "features", "widgets", "views"]
     },
     "entities": {
       "relative_prefixes": ["entities/"],
-      "forbidden_import_layers": ["features", "widgets", "views"]
+      "forbidden_import_layers": ["pages", "features", "widgets", "views"]
+    },
+    "pages": {
+      "relative_prefixes": ["pages/"],
+      "forbidden_import_layers": ["views"]
     },
     "features": {
       "relative_prefixes": ["features/"],
-      "forbidden_import_layers": ["widgets", "views"]
+      "forbidden_import_layers": ["pages", "widgets", "views"]
     },
     "widgets": {
       "relative_prefixes": ["widgets/"],
-      "forbidden_import_layers": ["views"]
+      "forbidden_import_layers": ["pages", "views"]
     },
     "views": {
-      "relative_prefixes": ["views/"],
+      "relative_prefixes": ["views/__tests__/"],
       "forbidden_import_layers": []
     }
   },
+  "route_page_layer": "pages",
+  "route_page_suffix": "RoutePage.vue",
   "view_line_limit": 500,
   "legacy_business_component_directories": [
     "platform",

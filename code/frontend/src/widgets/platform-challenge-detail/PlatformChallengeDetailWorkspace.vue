@@ -6,7 +6,7 @@ import {
   AdminChallengeWorkspaceTabs,
   type PlatformChallengeFlagDraft,
   type PlatformChallengeFlagDraftPatch,
-} from '@/features/platform-challenge-detail'
+} from '@/features/platform/challenge-detail'
 
 type ChallengePanelKey = 'detail' | 'writeup'
 

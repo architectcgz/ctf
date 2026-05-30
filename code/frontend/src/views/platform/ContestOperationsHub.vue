@@ -3,7 +3,7 @@ import {
   ContestOperationsHubHeroPanel,
   ContestOperationsHubWorkspacePanel,
   useContestOperationsHubPage,
-} from '@/features/platform-contests'
+} from '@/features/platform/contests'
 
 const {
   changeContestPage,

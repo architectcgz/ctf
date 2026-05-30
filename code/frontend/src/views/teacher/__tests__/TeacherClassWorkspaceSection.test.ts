@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import teacherClassWorkspaceSectionSource from '../TeacherClassWorkspaceSection.vue?raw'
+import teacherClassWorkspaceSectionSource from '@/pages/teacher/TeacherClassWorkspaceSectionRoutePage.vue?raw'
 import classWorkspaceSectionSource from '@/features/class-students-workspace/model/useClassWorkspaceSection.ts?raw'
 import classStudentsPageModelSource from '@/features/class-students-workspace/model/useClassStudentsPage.ts?raw'
 
 describe('TeacherClassWorkspaceSection', () => {
   it('maps legacy detail entry routes back to the canonical class workspace with panel query state', () => {
-    expect(teacherClassWorkspaceSectionSource).toContain("import TeacherClassStudents from '@/views/teacher/TeacherClassStudents.vue'")
+    expect(teacherClassWorkspaceSectionSource).toContain(
+      "import TeacherClassStudentsRoutePage from '@/pages/teacher/TeacherClassStudentsRoutePage.vue'"
+    )
     expect(teacherClassWorkspaceSectionSource).not.toContain('useClassWorkspaceSection(')
     expect(teacherClassWorkspaceSectionSource).not.toContain('useRoute(')
     expect(teacherClassWorkspaceSectionSource).not.toContain('useRouter(')

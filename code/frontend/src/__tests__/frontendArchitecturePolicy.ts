@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-export type FrontendArchitectureLayer = 'common' | 'entities' | 'features' | 'widgets' | 'views'
+export type FrontendArchitectureLayer = 'common' | 'entities' | 'pages' | 'features' | 'widgets' | 'views'
 
 export interface FrontendArchitecturePolicy {
   layers: Record<
@@ -26,6 +26,8 @@ export interface FrontendArchitecturePolicy {
     allow_api_contract_imports_only: boolean
     forbidden_runtime_hooks: string[]
   }
+  route_page_layer: FrontendArchitectureLayer
+  route_page_suffix: string
   growth_baseline_file: string
   feature_boundary_guard_tests: string[]
 }

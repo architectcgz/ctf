@@ -2,11 +2,11 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import AWDChallengeLibrary from '../AWDChallengeLibrary.vue'
-import AWDChallengeImport from '../AWDChallengeImport.vue'
-import awdChallengeLibrarySource from '../AWDChallengeLibrary.vue?raw'
-import awdChallengeImportSource from '../AWDChallengeImport.vue?raw'
-import awdChallengeLibraryPageModelSource from '@/features/platform-awd-challenges/model/useAwdChallengeLibraryPage.ts?raw'
+import AWDChallengeLibrary from '@/pages/platform/awd-challenges/AWDChallengeLibraryRoutePage.vue'
+import AWDChallengeImport from '@/pages/platform/awd-challenges/AwdChallengeImportRoutePage.vue'
+import awdChallengeLibrarySource from '@/pages/platform/awd-challenges/AWDChallengeLibraryRoutePage.vue?raw'
+import awdChallengeImportSource from '@/pages/platform/awd-challenges/AwdChallengeImportRoutePage.vue?raw'
+import awdChallengeLibraryPageModelSource from '@/features/platform/awd-challenges/model/useAwdChallengeLibraryPage.ts?raw'
 
 const actionMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -21,7 +21,7 @@ const actionMocks = vi.hoisted(() => ({
   commitImportPreview: vi.fn(),
 }))
 
-vi.mock('@/features/platform-awd-challenges', () => ({
+vi.mock('@/features/platform/awd-challenges', () => ({
   AWDChallengeEditorDialog: {
     name: 'AWDChallengeEditorDialog',
     template: '<div data-testid="awd-challenge-editor-dialog" />',
@@ -142,7 +142,7 @@ describe('AWDChallengeLibrary', () => {
   it('does not add an extra route-level spacing wrapper around the shared workspace shell', () => {
     expect(awdChallengeLibrarySource).toContain('<template>\n  <div>')
     expect(awdChallengeLibrarySource).not.toContain('<div class="space-y-6">')
-    expect(awdChallengeLibrarySource).toContain("from '@/features/platform-awd-challenges'")
+    expect(awdChallengeLibrarySource).toContain("from '@/features/platform/awd-challenges'")
     expect(awdChallengeLibrarySource).toContain('AWDChallengeLibraryPage')
     expect(awdChallengeLibrarySource).toContain('useAwdChallengeLibraryPage')
     expect(awdChallengeLibrarySource).not.toContain(
@@ -166,7 +166,7 @@ describe('AWDChallengeImport', () => {
   it('renders the import page mode without a route-level spacing wrapper', () => {
     expect(awdChallengeImportSource).toContain('mode="import"')
     expect(awdChallengeImportSource).not.toContain('<div class="space-y-6">')
-    expect(awdChallengeImportSource).toContain("from '@/features/platform-awd-challenges'")
+    expect(awdChallengeImportSource).toContain("from '@/features/platform/awd-challenges'")
     expect(awdChallengeImportSource).toContain('AWDChallengeLibraryPage')
     expect(awdChallengeImportSource).toContain('useAwdChallengeImportPage')
     expect(awdChallengeImportSource).not.toContain('onMounted(')

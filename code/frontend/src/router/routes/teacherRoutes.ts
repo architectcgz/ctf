@@ -6,7 +6,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/overview',
   name: 'TeacherDashboard',
-  component: () => import('@/views/teacher/TeacherDashboard.vue'),
+  component: () => import('@/pages/teacher/TeacherDashboardRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -22,7 +22,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/classes',
   name: 'ClassManagement',
-  component: () => import('@/views/teacher/ClassManagement.vue'),
+  component: () => import('@/pages/teacher/ClassManagementRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -38,7 +38,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/students',
   name: 'TeacherStudentManagement',
-  component: () => import('@/views/teacher/TeacherStudentManagement.vue'),
+  component: () => import('@/pages/teacher/StudentManagementRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -54,7 +54,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/classes/:className',
   name: 'TeacherClassStudents',
-  component: () => import('@/views/teacher/TeacherClassStudents.vue'),
+  component: () => import('@/pages/teacher/TeacherClassStudentsRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -73,7 +73,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/classes/:className/trend',
   name: 'TeacherClassTrend',
-  component: () => import('@/views/teacher/TeacherClassWorkspaceSection.vue'),
+  component: () => import('@/pages/teacher/TeacherClassWorkspaceSectionRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -92,7 +92,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/classes/:className/review',
   name: 'TeacherClassReview',
-  component: () => import('@/views/teacher/TeacherClassWorkspaceSection.vue'),
+  component: () => import('@/pages/teacher/TeacherClassWorkspaceSectionRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -111,7 +111,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/classes/:className/insights',
   name: 'TeacherClassInsights',
-  component: () => import('@/views/teacher/TeacherClassWorkspaceSection.vue'),
+  component: () => import('@/pages/teacher/TeacherClassWorkspaceSectionRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -130,7 +130,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/classes/:className/intervention',
   name: 'TeacherClassIntervention',
-  component: () => import('@/views/teacher/TeacherClassWorkspaceSection.vue'),
+  component: () => import('@/pages/teacher/TeacherClassWorkspaceSectionRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -149,7 +149,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/classes/:className/students/:studentId',
   name: 'TeacherStudentAnalysis',
-  component: () => import('@/views/teacher/TeacherStudentAnalysis.vue'),
+  component: () => import('@/pages/teacher/TeacherStudentAnalysisRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -168,7 +168,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/classes/:className/students/:studentId/review-archive',
   name: 'TeacherStudentReviewArchive',
-  component: () => import('@/views/teacher/TeacherStudentReviewArchive.vue'),
+  component: () => import('@/pages/review-archive/StudentReviewArchiveRoutePage.vue'),
   props: (route) => ({
     className: String(route.params.className || ''),
     studentId: String(route.params.studentId || ''),
@@ -191,7 +191,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/awd-reviews',
   name: 'TeacherAWDReviewIndex',
-  component: () => import('@/views/teacher/TeacherAWDReviewIndex.vue'),
+  component: () => import('@/pages/awd-review/TeacherAwdReviewIndexRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -226,7 +226,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/instances',
   name: 'TeacherInstanceManagement',
-  component: () => import('@/views/teacher/InstanceManagement.vue'),
+  component: () => import('@/pages/teacher/InstanceManagementRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],

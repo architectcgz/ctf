@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import PlatformStudentManagement from '../StudentManage.vue'
-import adminStudentManageSource from '../StudentManage.vue?raw'
+import PlatformStudentManagement from '@/pages/platform/StudentManageRoutePage.vue'
+import adminStudentManageSource from '@/pages/platform/StudentManageRoutePage.vue?raw'
 import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
-import studentManageHeroPanelSource from '@/components/platform/student/StudentManageHeroPanel.vue?raw'
-import studentManageWorkspacePanelSource from '@/components/platform/student/StudentManageWorkspacePanel.vue?raw'
-import platformStudentManagementPageSource from '@/features/platform-student-management/model/usePlatformStudentManagementPage.ts?raw'
+import studentManageHeroPanelSource from '@/features/platform/student-management/ui/StudentManageHeroPanel.vue?raw'
+import studentManageWorkspacePanelSource from '@/features/platform/student-management/ui/StudentManageWorkspacePanel.vue?raw'
+import platformStudentManagementPageSource from '@/features/platform/student-management/model/usePlatformStudentManagementPage.ts?raw'
 
 const adminTeachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
@@ -113,17 +113,12 @@ describe('PlatformStudentManagement', () => {
   })
 
   it('应复用后台工作台目录组件和 admin 教学目录接口 owner', async () => {
-    expect(adminStudentManageSource).toContain(
-      "import StudentManageWorkspacePanel from '@/components/platform/student/StudentManageWorkspacePanel.vue'"
-    )
-    expect(adminStudentManageSource).toContain(
-      "usePlatformStudentManagementPage } from '@/features/platform-student-management'"
-    )
+    expect(adminStudentManageSource).toContain("from '@/features/platform/student-management'")
+    expect(adminStudentManageSource).toContain('usePlatformStudentManagementPage')
+    expect(adminStudentManageSource).toContain('StudentManageWorkspacePanel')
     expect(adminStudentManageSource).not.toContain("from '@/api/teacher'")
     expect(adminStudentManageSource).not.toContain("from '@/features/student-directory'")
-    expect(adminStudentManageSource).toContain(
-      "import StudentManageHeroPanel from '@/components/platform/student/StudentManageHeroPanel.vue'"
-    )
+    expect(adminStudentManageSource).toContain('StudentManageHeroPanel')
     expect(adminStudentManageSource).not.toContain("from '@/composables/usePlatformStudentDirectory'")
     expect(adminStudentManageSource).toContain('<StudentManageHeroPanel')
     expect(adminStudentManageSource).toContain('<StudentManageWorkspacePanel')

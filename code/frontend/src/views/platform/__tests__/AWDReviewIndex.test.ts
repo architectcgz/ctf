@@ -3,14 +3,14 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import PlatformAWDReviewIndex from '../AWDReviewIndex.vue'
+import PlatformAWDReviewIndex from '@/pages/awd-review/PlatformAwdReviewIndexRoutePage.vue'
 import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
-import platformAwdReviewIndexSource from '../AWDReviewIndex.vue?raw'
+import platformAwdReviewIndexSource from '@/pages/awd-review/PlatformAwdReviewIndexRoutePage.vue?raw'
 import awdReviewIndexPageSource from '@/features/awd-review-workspace/model/useAwdReviewIndex.ts?raw'
 import awdReviewIndexRoutePageSource from '@/features/awd-review-workspace/model/useAwdReviewIndexPage.ts?raw'
 import awdReviewIndexRoutesSource from '@/features/awd-review-workspace/model/awdReviewIndexRoutes.ts?raw'
-import awdReviewHeroPanelSource from '@/components/platform/awd-review/AwdReviewHeroPanel.vue?raw'
-import awdReviewDirectoryPanelSource from '@/components/platform/awd-review/AwdReviewDirectoryPanel.vue?raw'
+import awdReviewHeroPanelSource from '@/widgets/awd-review-workspace/AwdReviewHeroPanel.vue?raw'
+import awdReviewDirectoryPanelSource from '@/widgets/awd-review-workspace/AwdReviewDirectoryPanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -218,5 +218,9 @@ describe('PlatformAWDReviewIndex', () => {
       "name: scope === 'teacher' ? 'TeacherAWDReviewDetail' : 'PlatformAwdReviewDetail'"
     )
     expect(appRouteLinkSource).toContain('<RouterLink')
+  })
+
+  it('路由入口应已迁到 widget route page，而不是旧 views 层', () => {
+    expect(platformAwdReviewIndexSource).not.toContain('@/views/platform/AWDReviewIndex.vue')
   })
 })

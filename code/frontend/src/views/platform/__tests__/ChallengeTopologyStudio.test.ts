@@ -18,11 +18,11 @@ import topologyTemplateHeroSectionSource from '@/features/challenge-topology-stu
 import topologyTemplateLibraryHeaderSource from '@/features/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue?raw'
 import topologyTemplateSidePanelSource from '@/features/challenge-topology-studio/ui/TopologyTemplateSidePanel.vue?raw'
 import topologyTemplateWorkbenchSource from '@/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue?raw'
-import challengeTopologyStudioRoutePageSource from '@/features/platform-challenges/model/useChallengeTopologyStudioRoutePage.ts?raw'
-import platformChallengeRoutePageSource from '@/features/platform-challenges/model/usePlatformChallengeRoutePage.ts?raw'
-import platformChallengeRoutesSource from '@/features/platform-challenges/model/platformChallengeRoutes.ts?raw'
+import challengeTopologyStudioRoutePageSource from '@/features/platform/challenges/model/useChallengeTopologyStudioRoutePage.ts?raw'
+import platformChallengeRoutePageSource from '@/features/platform/challenges/model/usePlatformChallengeRoutePage.ts?raw'
+import platformChallengeRoutesSource from '@/features/platform/challenges/model/platformChallengeRoutes.ts?raw'
 import topologyStructureMutationsSource from '@/features/challenge-topology-studio/model/useTopologyStructureMutations.ts?raw'
-import challengeTopologyStudioRouteSource from '../ChallengeTopologyStudio.vue?raw'
+import challengeTopologyStudioRouteSource from '@/pages/platform/challenges/ChallengeTopologyStudioRoutePage.vue?raw'
 import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({

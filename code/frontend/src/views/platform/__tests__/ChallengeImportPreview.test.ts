@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import ChallengeImportPreview from '../ChallengeImportPreview.vue'
-import challengeImportPreviewSource from '../ChallengeImportPreview.vue?raw'
+import ChallengeImportPreview from '@/pages/platform/challenges/ChallengeImportPreviewRoutePage.vue'
+import challengeImportPreviewSource from '@/pages/platform/challenges/ChallengeImportPreviewRoutePage.vue?raw'
 import challengeImportPreviewPageModelSource from '@/features/challenge-package-import/model/useChallengeImportPreviewPage.ts?raw'
 
 const pushMock = vi.fn()

@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import ImageManage from '../ImageManage.vue'
 import imageManageSource from '../ImageManage.vue?raw'
-import imageCreateModalSource from '@/components/platform/images/ImageCreateModal.vue?raw'
-import imageDetailModalSource from '@/components/platform/images/ImageDetailModal.vue?raw'
-import imageDirectoryPanelSource from '@/components/platform/images/ImageDirectoryPanel.vue?raw'
-import imageManageHeroPanelSource from '@/components/platform/images/ImageManageHeroPanel.vue?raw'
+import imageCreateModalSource from '@/features/image-management/ui/ImageCreateModal.vue?raw'
+import imageDetailModalSource from '@/features/image-management/ui/ImageDetailModal.vue?raw'
+import imageDirectoryPanelSource from '@/features/image-management/ui/ImageDirectoryPanel.vue?raw'
+import imageManageHeroPanelSource from '@/features/image-management/ui/ImageManageHeroPanel.vue?raw'
 import imageManagePageSource from '@/features/image-management/model/useImageManagePage.ts?raw'
 import { ApiError } from '@/api/request'
 
@@ -120,9 +120,8 @@ describe('ImageManage', () => {
   })
 
   it('应在头部展示轻量状态条而不是总量卡片', () => {
-    expect(imageManageSource).toContain(
-      "import ImageManageHeroPanel from '@/components/platform/images/ImageManageHeroPanel.vue'"
-    )
+    expect(imageManageSource).toContain("from '@/features/image-management'")
+    expect(imageManageSource).toContain('ImageManageHeroPanel')
     expect(imageManageSource).toContain('<ImageManageHeroPanel')
     expect(imageManageHeroPanelSource).toContain('class="image-status-strip"')
     expect(imageManageHeroPanelSource).toContain('data-testid="image-status-pill"')
@@ -141,9 +140,8 @@ describe('ImageManage', () => {
   })
 
   it('创建镜像弹窗应改用后台表单原语而不是 Element Plus 表单', () => {
-    expect(imageManageSource).toContain(
-      "import ImageCreateModal from '@/components/platform/images/ImageCreateModal.vue'"
-    )
+    expect(imageManageSource).toContain("from '@/features/image-management'")
+    expect(imageManageSource).toContain('ImageCreateModal')
     expect(imageManageSource).toContain('<ImageCreateModal')
     expect(imageCreateModalSource).toContain(
       "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
@@ -173,9 +171,8 @@ describe('ImageManage', () => {
   })
 
   it('镜像详情弹窗应抽到独立平台组件并保留后台 surface modal', () => {
-    expect(imageManageSource).toContain(
-      "import ImageDetailModal from '@/components/platform/images/ImageDetailModal.vue'"
-    )
+    expect(imageManageSource).toContain("from '@/features/image-management'")
+    expect(imageManageSource).toContain('ImageDetailModal')
     expect(imageManageSource).toContain('<ImageDetailModal')
     expect(imageDetailModalSource).toContain(
       "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"

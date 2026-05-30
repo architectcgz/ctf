@@ -1,0 +1,5 @@
+export { default as UserGovernancePage } from './UserGovernancePage.vue'
+export { default as PlatformUserFormDialog } from './PlatformUserFormDialog.vue'
+export { default as UserGovernanceDetailModal } from './UserGovernanceDetailModal.vue'
+export { default as UserGovernanceImportPanel } from './UserGovernanceImportPanel.vue'
+export { default as UserGovernanceOverviewPanel } from './UserGovernanceOverviewPanel.vue'

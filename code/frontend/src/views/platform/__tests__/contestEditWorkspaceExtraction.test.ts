@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import contestEditWorkspacePanelSource from '@/features/platform-contests/ui/ContestEditWorkspacePanel.vue?raw'
-import contestEditSource from '@/views/platform/ContestEdit.vue?raw'
+import contestEditWorkspacePanelSource from '@/features/platform/contests/ui/ContestEditWorkspacePanel.vue?raw'
+import contestEditSource from '@/pages/platform/contests/ContestEditRoutePage.vue?raw'
 
 describe('ContestEdit workspace extraction', () => {
   it('应将竞赛编辑 stage 工作区抽到独立组件', () => {
-    expect(contestEditSource).toContain(
-      "import { ContestEditWorkspacePanel, useContestEditPage } from '@/features/platform-contests'"
-    )
+    expect(contestEditSource).toContain("from '@/features/platform/contests'")
+    expect(contestEditSource).toContain('ContestEditWorkspacePanel')
+    expect(contestEditSource).toContain('useContestEditPage')
     expect(contestEditSource).toContain('<ContestEditWorkspacePanel')
   })
 
