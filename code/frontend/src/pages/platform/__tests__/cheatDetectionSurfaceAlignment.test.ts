@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import cheatDetectionSource from '@/pages/platform/CheatDetectionRoutePage.vue?raw'
-import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
-import cheatDetectionReviewPanelsSource from '@/components/platform/cheat/CheatDetectionReviewPanels.vue?raw'
-import cheatDetectionSummaryPanelSource from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue?raw'
-import cheatDetectionWorkspacePanelSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
+import cheatDetectionHeroPanelSource from '@/features/platform/cheat-detection/ui/CheatDetectionHeroPanel.vue?raw'
+import cheatDetectionReviewPanelsSource from '@/features/platform/cheat-detection/ui/CheatDetectionReviewPanels.vue?raw'
+import cheatDetectionSummaryPanelSource from '@/features/platform/cheat-detection/ui/CheatDetectionSummaryPanel.vue?raw'
+import cheatDetectionWorkspacePanelSource from '@/features/platform/cheat-detection/ui/CheatDetectionWorkspacePanel.vue?raw'
 
 const journalNotesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-notes.css`,

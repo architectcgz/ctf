@@ -1,8 +1,9 @@
 import { onMounted, ref } from 'vue'
 
-import type { AdminCheatDetectionData } from '@/api/contracts'
 import { getCheatDetection } from '@/api/admin/platform'
-import { buildPlatformAuditLogRoute } from './platformOverviewRoutes'
+import type { AdminCheatDetectionData } from '@/api/contracts'
+import { reportFrontendError } from '@/utils/reportFrontendError'
+import { buildPlatformAuditLogRoute } from './cheatDetectionRoutes'
 
 type CheatQuickAction = {
   title: string
@@ -37,7 +38,7 @@ export function useCheatDetectionPage() {
     try {
       riskData.value = await getCheatDetection()
     } catch (err) {
-      console.error(err)
+      reportFrontendError('加载作弊检测结果失败:', err)
       error.value = '加载作弊检测结果失败，请稍后重试。'
     } finally {
       loading.value = false

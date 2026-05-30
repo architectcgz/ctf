@@ -9,7 +9,7 @@ import awdChallengeImportSectionSource from '@/features/platform/awd-challenges/
 import awdChallengeLibrarySourceBase from '@/features/platform/awd-challenges/ui/AWDChallengeLibraryPage.vue?raw'
 import awdChallengeLibrarySectionSource from '@/components/platform/awd-service/AwdChallengeLibrarySection.vue?raw'
 import awdChallengeWorkspaceHeaderSource from '@/components/platform/awd-service/AwdChallengeWorkspaceHeader.vue?raw'
-import cheatDetectionPanelsSource from '@/components/platform/cheat/CheatDetectionReviewPanels.vue?raw'
+import cheatDetectionPanelsSource from '@/features/platform/cheat-detection/ui/CheatDetectionReviewPanels.vue?raw'
 import classStudentsPageSourceBase from '@/features/teaching/class-students-workspace/ui/ClassStudentsPage.vue?raw'
 import classStudentsOverviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsInsightWindowPanel.vue?raw'

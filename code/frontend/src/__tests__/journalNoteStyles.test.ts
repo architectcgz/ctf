@@ -11,7 +11,7 @@ import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
 import challengeDetailSource from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue?raw'
 import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
 import challengePackageFormatSource from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue?raw'
-import cheatDetectionWorkspaceSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
+import cheatDetectionWorkspaceSource from '@/features/platform/cheat-detection/ui/CheatDetectionWorkspacePanel.vue?raw'
 import imageManageSource from '@/pages/platform/ImageManageRoutePage.vue?raw'
 
 const journalNotesSource = readFileSync(

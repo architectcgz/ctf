@@ -1,29 +1,3 @@
-<script setup lang="ts">
-import { RouterLink } from 'vue-router'
-import { RefreshCw, SearchCheck } from 'lucide-vue-next'
-
-import CheatDetectionSummaryPanel from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue'
-
-defineProps<{
-  auditLogRoute: Record<string, unknown>
-  generatedAtLabel: string | null
-  loading: boolean
-  summary: {
-    submit_burst_users: number
-    shared_ip_groups: number
-    affected_users: number
-  } | null
-}>()
-
-const emit = defineEmits<{
-  refresh: []
-}>()
-
-function handleRefresh(): void {
-  emit('refresh')
-}
-</script>
-
 <template>
   <header class="workspace-page-header">
     <div class="workspace-tab-heading__main">
@@ -42,10 +16,10 @@ function handleRefresh(): void {
         <span class="hero-meta-badge__label">最近生成</span>
         <span class="hero-meta-badge__value">{{ generatedAtLabel }}</span>
       </div>
-      <RouterLink :to="auditLogRoute" class="header-btn header-btn--ghost">
+      <AppRouteLink :to="auditLogRoute" class="header-btn header-btn--ghost">
         <SearchCheck class="h-4 w-4" />
         打开审计日志
-      </RouterLink>
+      </AppRouteLink>
       <button
         type="button"
         class="header-btn header-btn--primary"
@@ -114,3 +88,29 @@ function handleRefresh(): void {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { RefreshCw, SearchCheck } from 'lucide-vue-next'
+
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import CheatDetectionSummaryPanel from './CheatDetectionSummaryPanel.vue'
+
+defineProps<{
+  auditLogRoute: Record<string, unknown>
+  generatedAtLabel: string | null
+  loading: boolean
+  summary: {
+    submit_burst_users: number
+    shared_ip_groups: number
+    affected_users: number
+  } | null
+}>()
+
+const emit = defineEmits<{
+  refresh: []
+}>()
+
+function handleRefresh(): void {
+  emit('refresh')
+}
+</script>

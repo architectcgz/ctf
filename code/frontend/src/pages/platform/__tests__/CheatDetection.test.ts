@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
-import cheatDetectionPageSource from '@/features/platform/overview/model/useCheatDetectionPage.ts?raw'
-import platformOverviewRoutesSource from '@/features/platform/overview/model/platformOverviewRoutes.ts?raw'
+import cheatDetectionPageSource from '@/features/platform/cheat-detection/model/useCheatDetectionPage.ts?raw'
+import cheatDetectionRoutesSource from '@/features/platform/cheat-detection/model/cheatDetectionRoutes.ts?raw'
 import CheatDetectionRoutePage from '@/pages/platform/CheatDetectionRoutePage.vue'
 import cheatDetectionSource from '@/pages/platform/CheatDetectionRoutePage.vue?raw'
 
@@ -74,7 +74,7 @@ describe('CheatDetection', () => {
     expect(cheatDetectionPageSource).not.toContain("from 'vue-router'")
     expect(cheatDetectionPageSource).toContain('auditLogRoute: buildPlatformAuditLogRoute()')
     expect(cheatDetectionPageSource).toContain('buildAuditRoute: buildPlatformAuditLogRoute')
-    expect(platformOverviewRoutesSource).toContain('buildPlatformAuditLogRoute')
+    expect(cheatDetectionRoutesSource).toContain('buildPlatformAuditLogRoute')
   })
 
   it('应通过 route target contract 渲染账户和共享 IP 的审计入口', async () => {

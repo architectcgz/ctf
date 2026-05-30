@@ -8,7 +8,7 @@ import userGovernanceOverviewPanelSource from '@/features/platform/user-manageme
 import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
 import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
-import cheatDetectionWorkspaceSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
+import cheatDetectionWorkspaceSource from '@/features/platform/cheat-detection/ui/CheatDetectionWorkspacePanel.vue?raw'
 import challengeDetailSource from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue?raw'
 import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
 import challengeImportManageSource from '@/pages/platform/challenges/ChallengeImportManageRoutePage.vue?raw'

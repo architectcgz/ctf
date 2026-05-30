@@ -1,15 +1,3 @@
-<script setup lang="ts">
-import { Fingerprint, ShieldAlert, Users } from 'lucide-vue-next'
-
-defineProps<{
-  summary: {
-    submit_burst_users: number
-    shared_ip_groups: number
-    affected_users: number
-  }
-}>()
-</script>
-
 <template>
   <div
     class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
@@ -72,3 +60,15 @@ defineProps<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import { Fingerprint, ShieldAlert, Users } from 'lucide-vue-next'
+
+defineProps<{
+  summary: {
+    submit_burst_users: number
+    shared_ip_groups: number
+    affected_users: number
+  }
+}>()
+</script>

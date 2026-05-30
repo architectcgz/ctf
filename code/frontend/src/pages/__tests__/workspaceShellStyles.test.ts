@@ -37,7 +37,7 @@ import awdReviewHeroPanelSource from '@/widgets/awd-review-workspace/AwdReviewHe
 import auditLogHeroPanelSource from '@/features/audit-log/ui/AuditLogHeroPanel.vue?raw'
 import challengeImportHeroPanelSource from '@/features/platform/challenge-package-import/ui/ChallengeImportHeroPanel.vue?raw'
 import challengeManageHeroPanelSource from '@/features/platform/challenges/ui/ChallengeManageHeroPanel.vue?raw'
-import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
+import cheatDetectionHeroPanelSource from '@/features/platform/cheat-detection/ui/CheatDetectionHeroPanel.vue?raw'
 import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
 import contestOrchestrationPageSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
 import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'

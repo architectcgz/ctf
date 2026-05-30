@@ -1,25 +1,3 @@
-<script setup lang="ts">
-import { RouterLink } from 'vue-router'
-import { ArrowRight } from 'lucide-vue-next'
-
-import type { AdminCheatDetectionData } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-
-type CheatQuickAction = {
-  title: string
-  description: string
-  actionLabel: string
-  route: Record<string, unknown>
-}
-
-defineProps<{
-  riskData: AdminCheatDetectionData
-  buildAuditRoute: (query: Record<string, string>) => Record<string, unknown>
-  quickActions: ReadonlyArray<CheatQuickAction>
-  formatDateTime: (value: string) => string
-}>()
-</script>
-
 <template>
   <section class="workspace-directory-section cheat-directory-section">
     <header class="list-heading">
@@ -38,7 +16,7 @@ defineProps<{
     />
 
     <div v-else class="cheat-directory-list">
-      <RouterLink
+      <AppRouteLink
         v-for="suspect in riskData.suspects"
         :key="suspect.user_id"
         :to="buildAuditRoute({ action: 'submit', actor_user_id: String(suspect.user_id) })"
@@ -56,7 +34,7 @@ defineProps<{
             <ArrowRight class="h-3 w-3" />
           </span>
         </div>
-      </RouterLink>
+      </AppRouteLink>
     </div>
   </section>
 
@@ -77,7 +55,7 @@ defineProps<{
     />
 
     <div v-else class="cheat-directory-list">
-      <RouterLink
+      <AppRouteLink
         v-for="group in riskData.shared_ips"
         :key="group.ip"
         :to="buildAuditRoute({ action: 'login' })"
@@ -97,7 +75,7 @@ defineProps<{
             <ArrowRight class="h-3 w-3" />
           </span>
         </div>
-      </RouterLink>
+      </AppRouteLink>
     </div>
   </section>
 
@@ -110,7 +88,7 @@ defineProps<{
     </header>
 
     <div class="quick-action-directory">
-      <RouterLink
+      <AppRouteLink
         v-for="action in quickActions"
         :key="action.title"
         :to="action.route"
@@ -127,7 +105,7 @@ defineProps<{
             <ArrowRight class="h-3 w-3" />
           </span>
         </div>
-      </RouterLink>
+      </AppRouteLink>
     </div>
   </section>
 </template>
@@ -256,3 +234,25 @@ defineProps<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import { ArrowRight } from 'lucide-vue-next'
+
+import type { AdminCheatDetectionData } from '@/api/contracts'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+
+type CheatQuickAction = {
+  title: string
+  description: string
+  actionLabel: string
+  route: Record<string, unknown>
+}
+
+defineProps<{
+  riskData: AdminCheatDetectionData
+  buildAuditRoute: (query: Record<string, string>) => Record<string, unknown>
+  quickActions: ReadonlyArray<CheatQuickAction>
+  formatDateTime: (value: string) => string
+}>()
+</script>
