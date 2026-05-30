@@ -1,19 +1,3 @@
-<script setup lang="ts">
-defineProps<{
-  challengeOptions: Array<{
-    key: string
-    title: string
-  }>
-  activeChallengeKey: string
-  targetKeyword: string
-}>()
-
-const emit = defineEmits<{
-  'update:activeChallengeKey': [value: string]
-  'update:targetKeyword': [value: string]
-}>()
-</script>
-
 <template>
   <div class="ops-panel__toolbar">
     <div class="toolbar-field">
@@ -24,7 +8,11 @@ const emit = defineEmits<{
         class="war-room-select"
         @change="emit('update:activeChallengeKey', String(($event.target as HTMLSelectElement).value))"
       >
-        <option v-for="challenge in challengeOptions" :key="challenge.key" :value="challenge.key">
+        <option
+          v-for="challenge in challengeOptions"
+          :key="challenge.key"
+          :value="challenge.key"
+        >
           {{ challenge.title }}
         </option>
       </select>
@@ -90,3 +78,19 @@ const emit = defineEmits<{
   }
 }
 </style>
+
+<script setup lang="ts">
+defineProps<{
+  challengeOptions: Array<{
+    key: string
+    title: string
+  }>
+  activeChallengeKey: string
+  targetKeyword: string
+}>()
+
+const emit = defineEmits<{
+  'update:activeChallengeKey': [value: string]
+  'update:targetKeyword': [value: string]
+}>()
+</script>

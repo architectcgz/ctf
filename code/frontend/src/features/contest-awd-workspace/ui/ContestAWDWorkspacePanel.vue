@@ -2,9 +2,6 @@
 import { computed } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import AWDAttackVectorPanel from '@/components/contests/awd/AWDAttackVectorPanel.vue'
-import AWDWorkspaceHudStrip from '@/components/contests/awd/AWDWorkspaceHudStrip.vue'
-import AWDWorkspaceIntelColumn from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue'
 import { ScoreboardRealtimeBridge } from '@/features/scoreboard'
 import {
   isAwdRuntimeChallenge,
@@ -21,7 +18,10 @@ import type {
   ContestChallengeItem,
   ContestDetailData,
 } from '@/api/contracts'
+import AWDAttackVectorPanel from './AWDAttackVectorPanel.vue'
 import AWDDefenseColumn from './AWDDefenseColumn.vue'
+import AWDWorkspaceHudStrip from './AWDWorkspaceHudStrip.vue'
+import AWDWorkspaceIntelColumn from './AWDWorkspaceIntelColumn.vue'
 
 const props = defineProps<{
   contest: ContestDetailData

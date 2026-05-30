@@ -1,39 +1,10 @@
-<script setup lang="ts">
-import { ExternalLink } from 'lucide-vue-next'
-
-import type {
-  ContestAWDWorkspaceTargetServiceData,
-  ContestAWDWorkspaceTargetTeamData,
-  ID,
-} from '@/api/contracts'
-
-type AttackTargetItem = ContestAWDWorkspaceTargetTeamData & {
-  active_service?: ContestAWDWorkspaceTargetServiceData
-}
-
-const props = defineProps<{
-  targets: AttackTargetItem[]
-  activeChallengeRuntimeKey: string
-  openingTargetKey: string
-  submittingKey: string
-  flagInputs: Record<string, string>
-  formatServiceRef: (serviceId?: string) => string
-}>()
-
-const emit = defineEmits<{
-  openTarget: [teamId: ID]
-  updateFlag: [payload: { stateKey: string; value: string }]
-  submit: [teamId: ID]
-}>()
-
-function buildAttackStateKey(teamId: string): string {
-  return `${props.activeChallengeRuntimeKey}:${teamId}`
-}
-</script>
-
 <template>
   <div class="target-grid">
-    <article v-for="target in targets" :key="target.team_id" class="target-card">
+    <article
+      v-for="target in targets"
+      :key="target.team_id"
+      class="target-card"
+    >
       <div class="target-info">
         <div class="target-team font-black">
           {{ target.team_name.toUpperCase() }}
@@ -197,3 +168,36 @@ function buildAttackStateKey(teamId: string): string {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { ExternalLink } from 'lucide-vue-next'
+
+import type {
+  ContestAWDWorkspaceTargetServiceData,
+  ContestAWDWorkspaceTargetTeamData,
+  ID,
+} from '@/api/contracts'
+
+type AttackTargetItem = ContestAWDWorkspaceTargetTeamData & {
+  active_service?: ContestAWDWorkspaceTargetServiceData
+}
+
+const props = defineProps<{
+  targets: AttackTargetItem[]
+  activeChallengeRuntimeKey: string
+  openingTargetKey: string
+  submittingKey: string
+  flagInputs: Record<string, string>
+  formatServiceRef: (serviceId?: string) => string
+}>()
+
+const emit = defineEmits<{
+  openTarget: [teamId: ID]
+  updateFlag: [payload: { stateKey: string; value: string }]
+  submit: [teamId: ID]
+}>()
+
+function buildAttackStateKey(teamId: string): string {
+  return `${props.activeChallengeRuntimeKey}:${teamId}`
+}
+</script>

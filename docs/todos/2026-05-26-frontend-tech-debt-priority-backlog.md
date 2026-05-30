@@ -99,6 +99,8 @@
 - 相关页面回归测试与前端架构边界测试已通过；下一批入口顺延到 `components/teacher`、`components/contests` 与 `platform/challenge|awd-service|awd-review`。
 - `ContestOverviewPanel`、`ContestAnnouncementsPanel`、`ContestAnnouncementsWorkspaceSection`、`ContestChallengeWorkspacePanel`、`ContestTeamPanel`、`ContestTeamWorkspaceSection`、`ContestTeamDialogs` 已迁入 `features/contest-detail/ui`。
 - `ContestDetailRoutePage.vue` 已改为通过 `@/features/contest-detail` 组合 contest detail page model 与这组 UI；`components/contests` 当前优先剩余面收敛到 `contests/awd/*`。
+- `AWDAttackResultFooter`、`AWDAttackTargetGrid`、`AWDAttackToolbar`、`AWDAttackVectorPanel`、`AWDDefenseFileWorkbench`、`AWDWorkspaceHudStrip`、`AWDWorkspaceIntelColumn` 已迁入 `features/contest-awd-workspace/ui`，对应测试也已迁到 feature 邻近目录。
+- `ContestAWDWorkspacePanel.vue` 已完全改为 feature 内部相对 import；`components/contests` 不再保留学生 AWD workspace 这一支 owner。
 
 #### `components/platform`
 

@@ -1,22 +1,3 @@
-<script setup lang="ts">
-import { RefreshCw } from 'lucide-vue-next'
-
-defineProps<{
-  currentRoundLabel: string
-  currentRoundStatusLabel: string
-  teamName: string
-  teamRank: string | number
-  serviceCount: number
-  topScore: number
-  lastSyncedLabel: string
-  loading: boolean
-}>()
-
-defineEmits<{
-  refresh: []
-}>()
-</script>
-
 <template>
   <header class="awd-hud-strip">
     <div class="hud-item">
@@ -50,8 +31,15 @@ defineEmits<{
       <div class="hud-helper">当前榜首</div>
     </div>
     <div class="hud-actions">
-      <button class="hud-refresh-btn" :disabled="loading" @click="$emit('refresh')">
-        <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': loading }" />
+      <button
+        class="hud-refresh-btn"
+        :disabled="loading"
+        @click="$emit('refresh')"
+      >
+        <RefreshCw
+          class="h-4 w-4"
+          :class="{ 'animate-spin': loading }"
+        />
         <span>{{ lastSyncedLabel }}</span>
       </button>
     </div>
@@ -144,3 +132,22 @@ defineEmits<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import { RefreshCw } from 'lucide-vue-next'
+
+defineProps<{
+  currentRoundLabel: string
+  currentRoundStatusLabel: string
+  teamName: string
+  teamRank: string | number
+  serviceCount: number
+  topScore: number
+  lastSyncedLabel: string
+  loading: boolean
+}>()
+
+defineEmits<{
+  refresh: []
+}>()
+</script>

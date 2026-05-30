@@ -1,15 +1,9 @@
-<script setup lang="ts">
-import { Terminal } from 'lucide-vue-next'
-
-defineProps<{
-  success: boolean
-  message: string
-}>()
-</script>
-
 <template>
   <footer class="ops-panel__footer">
-    <div class="result-alert" :class="success ? 'success' : 'danger'">
+    <div
+      class="result-alert"
+      :class="success ? 'success' : 'danger'"
+    >
       <Terminal class="h-3.5 w-3.5" />
       <span>{{ message }}</span>
     </div>
@@ -45,3 +39,12 @@ defineProps<{
   border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
 }
 </style>
+
+<script setup lang="ts">
+import { Terminal } from 'lucide-vue-next'
+
+defineProps<{
+  success: boolean
+  message: string
+}>()
+</script>

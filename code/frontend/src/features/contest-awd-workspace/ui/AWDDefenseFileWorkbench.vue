@@ -1,174 +1,18 @@
-<script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { FileText, Folder } from 'lucide-vue-next'
-
-import type { AWDDefenseDirectoryData, AWDDefenseFileData } from '@/api/contracts'
-
-const props = defineProps<{
-  serviceTitle: string
-  directory?: AWDDefenseDirectoryData | null
-  file?: AWDDefenseFileData | null
-  loading: boolean
-  fileLoading?: boolean
-  error: string
-  fileError?: string
-  saving?: boolean
-  saveError?: string
-  editablePaths?: string[]
-  currentDirectoryPath?: string
-}>()
-
-const emit = defineEmits<{
-  openDirectory: [path: string]
-  openFile: [path: string]
-  saveFile: [path: string, content: string]
-}>()
-
-const draftContent = ref('')
-const gutterRef = ref<HTMLElement | null>(null)
-
-function formatSize(size?: number): string {
-  if (!size) return '0 B'
-  if (size < 1024) return `${size} B`
-  return `${Math.ceil(size / 1024)} KiB`
-}
-
-function normalizePath(path?: string | null): string {
-  if (!path) return '.'
-  const normalized = path.replace(/^\.?\//, '').replace(/\/+/g, '/').replace(/\/$/, '')
-  return normalized.length > 0 ? normalized : '.'
-}
-
-function parentDirectoryPath(currentPath?: string | null): string {
-  if (!currentPath || currentPath === '.') return '.'
-  const parts = currentPath.split('/').filter(Boolean)
-  if (parts.length <= 1) return '.'
-  return parts.slice(0, -1).join('/')
-}
-
-function canOpenParent(currentPath?: string | null): boolean {
-  return Boolean(currentPath && currentPath !== '.')
-}
-
-function isPathWithin(basePath: string, targetPath?: string | null): boolean {
-  const normalizedBase = normalizePath(basePath)
-  const normalizedTarget = normalizePath(targetPath)
-  return (
-    normalizedTarget === normalizedBase || normalizedTarget.startsWith(`${normalizedBase}/`)
-  )
-}
-
-function detectFileLanguage(path?: string | null): string {
-  const extension = path?.split('.').pop()?.toLowerCase()
-  switch (extension) {
-    case 'py':
-      return 'Python'
-    case 'sh':
-      return 'Shell'
-    case 'js':
-    case 'ts':
-      return 'Script'
-    case 'json':
-      return 'JSON'
-    case 'yaml':
-    case 'yml':
-      return 'YAML'
-    default:
-      return 'Text'
-  }
-}
-
-function syncGutterScroll(event: Event): void {
-  const target = event.target
-  if (!(target instanceof HTMLElement) || !gutterRef.value) return
-  gutterRef.value.scrollTop = target.scrollTop
-}
-
-const activeDirectoryPath = computed(() => props.currentDirectoryPath || props.directory?.path || '.')
-const isEditableFile = computed(() =>
-  Boolean(
-    props.file &&
-      (props.editablePaths || []).some(
-        (path) =>
-          isPathWithin(path, props.file?.path) || isPathWithin(path, activeDirectoryPath.value)
-      )
-  )
-)
-const isDirty = computed(() =>
-  Boolean(props.file && isEditableFile.value && draftContent.value !== (props.file.content || ''))
-)
-const editorText = computed(() =>
-  isEditableFile.value ? draftContent.value : props.file?.content || ''
-)
-const editorLineNumbers = computed(() => {
-  const lineCount = Math.max(editorText.value.split('\n').length, 1)
-  return Array.from({ length: lineCount }, (_, index) => index + 1)
-})
-const fileLanguageLabel = computed(() => detectFileLanguage(props.file?.path))
-const currentFileName = computed(() => props.file?.path?.split('/').pop() || '未选择文件')
-const editorStateText = computed(() => {
-  if (!isEditableFile.value) return '只读'
-  if (props.saving) return '保存中'
-  if (props.saveError && !isDirty.value) return '保存失败'
-  if (isDirty.value) return '未保存'
-  return '已保存'
-})
-const editorStateClass = computed(() => {
-  if (!isEditableFile.value) return 'defense-file-workbench__editor-state--readonly'
-  if (props.saving) return 'defense-file-workbench__editor-state--saving'
-  if (props.saveError && !isDirty.value) return 'defense-file-workbench__editor-state--error'
-  if (isDirty.value) return 'defense-file-workbench__editor-state--dirty'
-  return 'defense-file-workbench__editor-state--saved'
-})
-
-function handleEditorKeydown(event: KeyboardEvent): void {
-  if (event.key.toLowerCase() !== 's' || (!event.ctrlKey && !event.metaKey)) {
-    return
-  }
-  event.preventDefault()
-  triggerSave()
-}
-
-function triggerSave(): void {
-  if (!props.file || !isEditableFile.value || props.saving || !isDirty.value) {
-    return
-  }
-  emit('saveFile', props.file.path, draftContent.value)
-}
-
-// Use a window-level shortcut so Ctrl+S still works after focus drifts out of the textarea.
-function handleWindowKeydown(event: KeyboardEvent): void {
-  if (event.key.toLowerCase() !== 's' || (!event.ctrlKey && !event.metaKey)) {
-    return
-  }
-  event.preventDefault()
-  triggerSave()
-}
-
-watch(
-  () => [props.file?.path, props.file?.content],
-  () => {
-    draftContent.value = props.file?.content || ''
-  },
-  { immediate: true }
-)
-
-onMounted(() => {
-  window.addEventListener('keydown', handleWindowKeydown)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleWindowKeydown)
-})
-</script>
-
 <template>
   <section
     class="defense-file-workbench metric-panel-default-surface metric-panel-workspace-surface"
     aria-label="防守文件"
   >
-    <div v-if="error" class="defense-file-workbench__notice">{{ error }}</div>
-    <div v-else class="defense-file-workbench__body">
+    <div
+      v-if="error"
+      class="defense-file-workbench__notice"
+    >
+      {{ error }}
+    </div>
+    <div
+      v-else
+      class="defense-file-workbench__body"
+    >
       <aside class="defense-file-workbench__sidebar defense-file-workbench__sidebar--nav">
         <div class="defense-file-workbench__sidebar-head">
           <div class="defense-file-workbench__section-label">目录入口</div>
@@ -194,12 +38,28 @@ onBeforeUnmount(() => {
           </div>
           <span class="font-mono">{{ activeDirectoryPath }}</span>
         </div>
-        <div v-if="loading && !directory" class="defense-file-workbench__notice">正在读取目录...</div>
-        <div v-else-if="!directory" class="defense-file-workbench__notice">暂无文件列表。</div>
-        <div v-else-if="directory.entries.length === 0" class="defense-file-workbench__notice">
+        <div
+          v-if="loading && !directory"
+          class="defense-file-workbench__notice"
+        >
+          正在读取目录...
+        </div>
+        <div
+          v-else-if="!directory"
+          class="defense-file-workbench__notice"
+        >
+          暂无文件列表。
+        </div>
+        <div
+          v-else-if="directory.entries.length === 0"
+          class="defense-file-workbench__notice"
+        >
           当前目录为空。
         </div>
-        <div v-else class="defense-file-workbench__entries">
+        <div
+          v-else
+          class="defense-file-workbench__entries"
+        >
           <button
             v-for="entry in directory.entries"
             :key="entry.path"
@@ -207,8 +67,14 @@ onBeforeUnmount(() => {
             type="button"
             @click="entry.type === 'dir' ? emit('openDirectory', entry.path) : emit('openFile', entry.path)"
           >
-            <Folder v-if="entry.type === 'dir'" class="h-3.5 w-3.5" />
-            <FileText v-else class="h-3.5 w-3.5" />
+            <Folder
+              v-if="entry.type === 'dir'"
+              class="h-3.5 w-3.5"
+            />
+            <FileText
+              v-else
+              class="h-3.5 w-3.5"
+            />
             <span class="defense-file-workbench__entry-name">{{ entry.name }}</span>
             <span class="defense-file-workbench__entry-size font-mono">{{ formatSize(entry.size) }}</span>
           </button>
@@ -216,10 +82,28 @@ onBeforeUnmount(() => {
       </aside>
 
       <article class="defense-file-workbench__file">
-        <div v-if="fileLoading" class="defense-file-workbench__empty">正在读取文件...</div>
-        <div v-else-if="fileError" class="defense-file-workbench__empty">{{ fileError }}</div>
-        <div v-else-if="!file" class="defense-file-workbench__empty">点击左侧文件后在这里查看或修改内容。</div>
-        <div v-else class="defense-file-workbench__editor-shell">
+        <div
+          v-if="fileLoading"
+          class="defense-file-workbench__empty"
+        >
+          正在读取文件...
+        </div>
+        <div
+          v-else-if="fileError"
+          class="defense-file-workbench__empty"
+        >
+          {{ fileError }}
+        </div>
+        <div
+          v-else-if="!file"
+          class="defense-file-workbench__empty"
+        >
+          点击左侧文件后在这里查看或修改内容。
+        </div>
+        <div
+          v-else
+          class="defense-file-workbench__editor-shell"
+        >
           <div class="defense-file-workbench__editor-bar">
             <div class="defense-file-workbench__editor-bar-main">
               <span class="defense-file-workbench__editor-name font-mono">{{ currentFileName }}</span>
@@ -236,8 +120,15 @@ onBeforeUnmount(() => {
             </span>
           </div>
           <div class="defense-file-workbench__editor-frame">
-            <div ref="gutterRef" class="defense-file-workbench__editor-gutter" aria-hidden="true">
-              <span v-for="line in editorLineNumbers" :key="line">{{ line }}</span>
+            <div
+              ref="gutterRef"
+              class="defense-file-workbench__editor-gutter"
+              aria-hidden="true"
+            >
+              <span
+                v-for="line in editorLineNumbers"
+                :key="line"
+              >{{ line }}</span>
             </div>
             <textarea
               v-if="isEditableFile"
@@ -247,7 +138,11 @@ onBeforeUnmount(() => {
               @keydown="handleEditorKeydown"
               @scroll="syncGutterScroll"
             />
-            <pre v-else class="defense-file-workbench__content" @scroll="syncGutterScroll"><code>{{ file.content }}</code></pre>
+            <pre
+              v-else
+              class="defense-file-workbench__content"
+              @scroll="syncGutterScroll"
+            ><code>{{ file.content }}</code></pre>
           </div>
         </div>
       </article>
@@ -566,3 +461,164 @@ onBeforeUnmount(() => {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { FileText, Folder } from 'lucide-vue-next'
+
+import type { AWDDefenseDirectoryData, AWDDefenseFileData } from '@/api/contracts'
+
+const props = defineProps<{
+  serviceTitle: string
+  directory?: AWDDefenseDirectoryData | null
+  file?: AWDDefenseFileData | null
+  loading: boolean
+  fileLoading?: boolean
+  error: string
+  fileError?: string
+  saving?: boolean
+  saveError?: string
+  editablePaths?: string[]
+  currentDirectoryPath?: string
+}>()
+
+const emit = defineEmits<{
+  openDirectory: [path: string]
+  openFile: [path: string]
+  saveFile: [path: string, content: string]
+}>()
+
+const draftContent = ref('')
+const gutterRef = ref<HTMLElement | null>(null)
+
+function formatSize(size?: number): string {
+  if (!size) return '0 B'
+  if (size < 1024) return `${size} B`
+  return `${Math.ceil(size / 1024)} KiB`
+}
+
+function normalizePath(path?: string | null): string {
+  if (!path) return '.'
+  const normalized = path.replace(/^\.?\//, '').replace(/\/+/g, '/').replace(/\/$/, '')
+  return normalized.length > 0 ? normalized : '.'
+}
+
+function parentDirectoryPath(currentPath?: string | null): string {
+  if (!currentPath || currentPath === '.') return '.'
+  const parts = currentPath.split('/').filter(Boolean)
+  if (parts.length <= 1) return '.'
+  return parts.slice(0, -1).join('/')
+}
+
+function canOpenParent(currentPath?: string | null): boolean {
+  return Boolean(currentPath && currentPath !== '.')
+}
+
+function isPathWithin(basePath: string, targetPath?: string | null): boolean {
+  const normalizedBase = normalizePath(basePath)
+  const normalizedTarget = normalizePath(targetPath)
+  return normalizedTarget === normalizedBase || normalizedTarget.startsWith(`${normalizedBase}/`)
+}
+
+function detectFileLanguage(path?: string | null): string {
+  const extension = path?.split('.').pop()?.toLowerCase()
+  switch (extension) {
+    case 'py':
+      return 'Python'
+    case 'sh':
+      return 'Shell'
+    case 'js':
+    case 'ts':
+      return 'Script'
+    case 'json':
+      return 'JSON'
+    case 'yaml':
+    case 'yml':
+      return 'YAML'
+    default:
+      return 'Text'
+  }
+}
+
+function syncGutterScroll(event: Event): void {
+  const target = event.target
+  if (!(target instanceof HTMLElement) || !gutterRef.value) return
+  gutterRef.value.scrollTop = target.scrollTop
+}
+
+const activeDirectoryPath = computed(() => props.currentDirectoryPath || props.directory?.path || '.')
+const isEditableFile = computed(() =>
+  Boolean(
+    props.file &&
+      (props.editablePaths || []).some(
+        (path) =>
+          isPathWithin(path, props.file?.path) || isPathWithin(path, activeDirectoryPath.value)
+      )
+  )
+)
+const isDirty = computed(() =>
+  Boolean(props.file && isEditableFile.value && draftContent.value !== (props.file.content || ''))
+)
+const editorText = computed(() =>
+  isEditableFile.value ? draftContent.value : props.file?.content || ''
+)
+const editorLineNumbers = computed(() => {
+  const lineCount = Math.max(editorText.value.split('\n').length, 1)
+  return Array.from({ length: lineCount }, (_, index) => index + 1)
+})
+const fileLanguageLabel = computed(() => detectFileLanguage(props.file?.path))
+const currentFileName = computed(() => props.file?.path?.split('/').pop() || '未选择文件')
+const editorStateText = computed(() => {
+  if (!isEditableFile.value) return '只读'
+  if (props.saving) return '保存中'
+  if (props.saveError && !isDirty.value) return '保存失败'
+  if (isDirty.value) return '未保存'
+  return '已保存'
+})
+const editorStateClass = computed(() => {
+  if (!isEditableFile.value) return 'defense-file-workbench__editor-state--readonly'
+  if (props.saving) return 'defense-file-workbench__editor-state--saving'
+  if (props.saveError && !isDirty.value) return 'defense-file-workbench__editor-state--error'
+  if (isDirty.value) return 'defense-file-workbench__editor-state--dirty'
+  return 'defense-file-workbench__editor-state--saved'
+})
+
+function handleEditorKeydown(event: KeyboardEvent): void {
+  if (event.key.toLowerCase() !== 's' || (!event.ctrlKey && !event.metaKey)) {
+    return
+  }
+  event.preventDefault()
+  triggerSave()
+}
+
+function triggerSave(): void {
+  if (!props.file || !isEditableFile.value || props.saving || !isDirty.value) {
+    return
+  }
+  emit('saveFile', props.file.path, draftContent.value)
+}
+
+function handleWindowKeydown(event: KeyboardEvent): void {
+  if (event.key.toLowerCase() !== 's' || (!event.ctrlKey && !event.metaKey)) {
+    return
+  }
+  event.preventDefault()
+  triggerSave()
+}
+
+watch(
+  () => [props.file?.path, props.file?.content],
+  () => {
+    draftContent.value = props.file?.content || ''
+  },
+  { immediate: true }
+)
+
+onMounted(() => {
+  window.addEventListener('keydown', handleWindowKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleWindowKeydown)
+})
+</script>

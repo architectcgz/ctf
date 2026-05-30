@@ -1,47 +1,3 @@
-<script setup lang="ts">
-import { Sword } from 'lucide-vue-next'
-
-import type {
-  ContestAWDWorkspaceTargetServiceData,
-  ContestAWDWorkspaceTargetTeamData,
-  ID,
-} from '@/api/contracts'
-import AWDAttackResultFooter from './AWDAttackResultFooter.vue'
-import AWDAttackTargetGrid from './AWDAttackTargetGrid.vue'
-import AWDAttackToolbar from './AWDAttackToolbar.vue'
-
-type AttackTargetItem = ContestAWDWorkspaceTargetTeamData & {
-  active_service?: ContestAWDWorkspaceTargetServiceData
-}
-
-defineProps<{
-  challengeOptions: Array<{
-    key: string
-    title: string
-  }>
-  activeChallengeKey: string
-  targetKeyword: string
-  hasActiveChallenge: boolean
-  targets: AttackTargetItem[]
-  activeChallengeRuntimeKey: string
-  openingTargetKey: string
-  submittingKey: string
-  flagInputs: Record<string, string>
-  showResult: boolean
-  resultSuccess: boolean
-  resultMessage: string
-  formatServiceRef: (serviceId?: string) => string
-}>()
-
-const emit = defineEmits<{
-  'update:activeChallengeKey': [value: string]
-  'update:targetKeyword': [value: string]
-  openTarget: [teamId: ID]
-  updateFlag: [payload: { stateKey: string; value: string }]
-  submit: [teamId: ID]
-}>()
-</script>
-
 <template>
   <section class="ops-panel">
     <header class="ops-panel__header">
@@ -58,11 +14,22 @@ const emit = defineEmits<{
     />
 
     <div class="ops-panel__content custom-scrollbar">
-      <div v-if="challengeOptions.length === 0" class="panel-note">
+      <div
+        v-if="challengeOptions.length === 0"
+        class="panel-note"
+      >
         当前竞赛暂无可部署服务。
       </div>
-      <div v-else-if="!hasActiveChallenge" class="panel-note">请选择目标题目后开始攻击。</div>
-      <div v-else-if="targets.length === 0" class="panel-note">
+      <div
+        v-else-if="!hasActiveChallenge"
+        class="panel-note"
+      >
+        请选择目标题目后开始攻击。
+      </div>
+      <div
+        v-else-if="targets.length === 0"
+        class="panel-note"
+      >
         当前题目下没有匹配的目标队伍。
       </div>
       <AWDAttackTargetGrid
@@ -134,3 +101,48 @@ const emit = defineEmits<{
   padding: 3rem 0;
 }
 </style>
+
+<script setup lang="ts">
+import { Sword } from 'lucide-vue-next'
+
+import type {
+  ContestAWDWorkspaceTargetServiceData,
+  ContestAWDWorkspaceTargetTeamData,
+  ID,
+} from '@/api/contracts'
+
+import AWDAttackResultFooter from './AWDAttackResultFooter.vue'
+import AWDAttackTargetGrid from './AWDAttackTargetGrid.vue'
+import AWDAttackToolbar from './AWDAttackToolbar.vue'
+
+type AttackTargetItem = ContestAWDWorkspaceTargetTeamData & {
+  active_service?: ContestAWDWorkspaceTargetServiceData
+}
+
+defineProps<{
+  challengeOptions: Array<{
+    key: string
+    title: string
+  }>
+  activeChallengeKey: string
+  targetKeyword: string
+  hasActiveChallenge: boolean
+  targets: AttackTargetItem[]
+  activeChallengeRuntimeKey: string
+  openingTargetKey: string
+  submittingKey: string
+  flagInputs: Record<string, string>
+  showResult: boolean
+  resultSuccess: boolean
+  resultMessage: string
+  formatServiceRef: (serviceId?: string) => string
+}>()
+
+const emit = defineEmits<{
+  'update:activeChallengeKey': [value: string]
+  'update:targetKeyword': [value: string]
+  openTarget: [teamId: ID]
+  updateFlag: [payload: { stateKey: string; value: string }]
+  submit: [teamId: ID]
+}>()
+</script>

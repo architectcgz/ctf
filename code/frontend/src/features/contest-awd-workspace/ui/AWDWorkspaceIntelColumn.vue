@@ -1,30 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { BarChart3, History } from 'lucide-vue-next'
-
-import type {
-  ContestAWDWorkspaceEventDirection,
-  ContestAWDWorkspaceRecentEventData,
-  ScoreboardRow,
-} from '@/api/contracts'
-import { formatTime } from '@/utils/format'
-
-const props = defineProps<{
-  scoreboardRows: ScoreboardRow[]
-  myTeamId?: string
-  recentEvents: ContestAWDWorkspaceRecentEventData[]
-  getChallengeTitleForEvent: (event: {
-    service_id?: string
-    awd_challenge_id: string
-  }) => string
-  eventDirectionLabel: (direction: ContestAWDWorkspaceEventDirection) => string
-  eventResultLabel: (success: boolean) => string
-  formatServiceRef: (serviceId?: string) => string
-}>()
-
-const topScoreboardRows = computed(() => props.scoreboardRows.slice(0, 10))
-</script>
-
 <template>
   <aside class="war-room-col column-intel">
     <section class="ops-panel">
@@ -78,7 +51,12 @@ const topScoreboardRows = computed(() => props.scoreboardRows.slice(0, 10))
             <span class="feedback-score-gain">+{{ event.score_gained }}</span>
           </div>
         </div>
-        <div v-if="recentEvents.length === 0" class="panel-note">暂无最近战报。</div>
+        <div
+          v-if="recentEvents.length === 0"
+          class="panel-note"
+        >
+          暂无最近战报。
+        </div>
       </div>
     </section>
   </aside>
@@ -240,3 +218,30 @@ const topScoreboardRows = computed(() => props.scoreboardRows.slice(0, 10))
   }
 }
 </style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { BarChart3, History } from 'lucide-vue-next'
+
+import type {
+  ContestAWDWorkspaceEventDirection,
+  ContestAWDWorkspaceRecentEventData,
+  ScoreboardRow,
+} from '@/api/contracts'
+import { formatTime } from '@/utils/format'
+
+const props = defineProps<{
+  scoreboardRows: ScoreboardRow[]
+  myTeamId?: string
+  recentEvents: ContestAWDWorkspaceRecentEventData[]
+  getChallengeTitleForEvent: (event: {
+    service_id?: string
+    awd_challenge_id: string
+  }) => string
+  eventDirectionLabel: (direction: ContestAWDWorkspaceEventDirection) => string
+  eventResultLabel: (success: boolean) => string
+  formatServiceRef: (serviceId?: string) => string
+}>()
+
+const topScoreboardRows = computed(() => props.scoreboardRows.slice(0, 10))
+</script>

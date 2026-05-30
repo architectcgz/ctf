@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import awdWorkspaceSource from '@/features/contest-awd-workspace/ui/ContestAWDWorkspacePanel.vue?raw'
+import awdAttackResultFooterSource from '@/features/contest-awd-workspace/ui/AWDAttackResultFooter.vue?raw'
+import awdAttackTargetGridSource from '@/features/contest-awd-workspace/ui/AWDAttackTargetGrid.vue?raw'
+import awdAttackToolbarSource from '@/features/contest-awd-workspace/ui/AWDAttackToolbar.vue?raw'
+import awdAttackVectorPanelSource from '@/features/contest-awd-workspace/ui/AWDAttackVectorPanel.vue?raw'
 import awdDefenseColumnSource from '@/features/contest-awd-workspace/ui/AWDDefenseColumn.vue?raw'
 import awdDefenseServiceListSource from '@/features/contest-awd-workspace/ui/AWDDefenseServiceList.vue?raw'
 import awdDefenseAlertsPanelSource from '@/features/contest-awd-workspace/ui/AWDDefenseAlertsPanel.vue?raw'
-import awdAttackTargetGridSource from '@/components/contests/awd/AWDAttackTargetGrid.vue?raw'
-import awdAttackResultFooterSource from '@/components/contests/awd/AWDAttackResultFooter.vue?raw'
-import awdAttackToolbarSource from '@/components/contests/awd/AWDAttackToolbar.vue?raw'
-import awdAttackVectorPanelSource from '@/components/contests/awd/AWDAttackVectorPanel.vue?raw'
 import awdAttackVectorStateSource from '@/features/contest-awd-workspace/model/useAwdWorkspaceAttackVector.ts?raw'
 import awdDefensePresentationSource from '@/features/contest-awd-workspace/model/awdDefensePresentation.ts?raw'
 import awdDefenseAccessPanelSource from '@/features/contest-awd-workspace/model/useAwdDefenseAccessPanel.ts?raw'
@@ -15,8 +15,8 @@ import awdWorkspacePresentationSource from '@/features/contest-awd-workspace/mod
 import awdWorkspaceSummarySource from '@/features/contest-awd-workspace/model/useAwdWorkspaceSummary.ts?raw'
 import awdDefenseOperationsPanelSource from '@/features/contest-awd-workspace/ui/AWDDefenseOperationsPanel.vue?raw'
 import awdDefenseConnectionPanelSource from '@/features/contest-awd-workspace/ui/AWDDefenseConnectionPanel.vue?raw'
-import awdWorkspaceHudStripSource from '@/components/contests/awd/AWDWorkspaceHudStrip.vue?raw'
-import awdWorkspaceIntelColumnSource from '@/components/contests/awd/AWDWorkspaceIntelColumn.vue?raw'
+import awdWorkspaceHudStripSource from '@/features/contest-awd-workspace/ui/AWDWorkspaceHudStrip.vue?raw'
+import awdWorkspaceIntelColumnSource from '@/features/contest-awd-workspace/ui/AWDWorkspaceIntelColumn.vue?raw'
 import studentRoutesSource from '@/router/routes/studentRoutes.ts?raw'
 
 const awdActionSurfaceSource = [
