@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -9,9 +11,15 @@ import topNavBreadcrumbsSource from '../topnav/TopNavBreadcrumbs.vue?raw'
 import topNavMobileToggleSource from '../topnav/TopNavMobileToggle.vue?raw'
 import topNavNotificationTriggerSource from '../topnav/TopNavNotificationTrigger.vue?raw'
 import topNavSourceBase from '../TopNav.vue?raw'
+import topNavViewStateSource from '../topnav/useTopNavViewState.ts?raw'
 import topNavUserCardSource from '../topnav/TopNavUserCard.vue?raw'
 import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
+
+const topNavStylesSource = readFileSync(
+  resolve(process.cwd(), 'src/components/layout/topnav/topNavShell.css'),
+  'utf8'
+)
 
 const topNavSource = [
   topNavSourceBase,
@@ -20,6 +28,8 @@ const topNavSource = [
   topNavBrandPickerSource,
   topNavNotificationTriggerSource,
   topNavUserCardSource,
+  topNavViewStateSource,
+  topNavStylesSource,
 ].join('\n')
 
 const authMocks = vi.hoisted(() => ({
