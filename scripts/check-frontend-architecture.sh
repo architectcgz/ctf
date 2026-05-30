@@ -26,7 +26,7 @@ run_frontend_feature_boundary_checks() {
     npm run test:run -- \
       src/features/contest-awd-admin/model/useAwdOwnerBoundaries.test.ts \
       src/features/contest-awd-admin/model/usePlatformContestAwdBoundary.test.ts \
-      src/components/platform/__tests__/awdOperationsPanelTabsExtraction.test.ts
+      src/features/contest-awd-admin/ui/useAwdOperationsPanelViewState.test.ts
   )
 }
 

@@ -2,32 +2,28 @@
   "layers": {
     "common": {
       "relative_prefixes": ["components/common/"],
-      "forbidden_import_layers": ["pages", "features", "widgets", "views"]
+      "forbidden_import_layers": ["pages", "features", "widgets"]
     },
     "entities": {
       "relative_prefixes": ["entities/"],
-      "forbidden_import_layers": ["pages", "features", "widgets", "views"]
+      "forbidden_import_layers": ["pages", "features", "widgets"]
     },
     "pages": {
       "relative_prefixes": ["pages/"],
-      "forbidden_import_layers": ["views"]
+      "forbidden_import_layers": []
     },
     "features": {
       "relative_prefixes": ["features/"],
-      "forbidden_import_layers": ["pages", "widgets", "views"]
+      "forbidden_import_layers": ["pages", "widgets"]
     },
     "widgets": {
       "relative_prefixes": ["widgets/"],
-      "forbidden_import_layers": ["pages", "views"]
-    },
-    "views": {
-      "relative_prefixes": ["views/__tests__/"],
-      "forbidden_import_layers": []
+      "forbidden_import_layers": ["pages"]
     }
   },
   "route_page_layer": "pages",
   "route_page_suffix": "RoutePage.vue",
-  "view_line_limit": 500,
+  "route_page_line_limit": 500,
   "legacy_business_component_directories": [
     "platform",
     "teacher",
@@ -61,7 +57,7 @@
   ],
   "utility_forbidden_bare_imports": ["vue", "vue-router", "pinia"],
   "feature_router_forbidden_imports": ["vue-router", "@/router"],
-  "route_view": {
+  "route_page": {
     "allow_api_contract_imports_only": true,
     "forbidden_runtime_hooks": [
       "useRoute",
@@ -75,6 +71,6 @@
   "feature_boundary_guard_tests": [
     "src/features/contest-awd-admin/model/useAwdOwnerBoundaries.test.ts",
     "src/features/contest-awd-admin/model/usePlatformContestAwdBoundary.test.ts",
-    "src/components/platform/__tests__/awdOperationsPanelTabsExtraction.test.ts"
+    "src/features/contest-awd-admin/ui/useAwdOperationsPanelViewState.test.ts"
   ]
 }
