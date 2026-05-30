@@ -24,9 +24,11 @@
 </template>
 
 <script setup lang="ts">
-import SkillProfileWorkspaceShell from '@/components/profile/SkillProfileWorkspaceShell.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
-import { useSkillProfilePage } from '@/features/skill-profile'
+import {
+  SkillProfileWorkspaceShell,
+  useSkillProfilePage,
+} from '@/features/skill-profile'
 
 const {
   isTeacher,

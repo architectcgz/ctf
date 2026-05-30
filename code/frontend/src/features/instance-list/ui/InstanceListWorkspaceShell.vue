@@ -1,66 +1,3 @@
-<script setup lang="ts">
-import type { ComponentPublicInstance } from 'vue'
-import { Activity, Clock3, Server } from 'lucide-vue-next'
-
-import type {
-  ChallengeDifficulty,
-  InstanceListItem,
-  InstanceStatus,
-} from '@/api/contracts'
-import {
-  ChallengeCategoryPill,
-  ChallengeDifficultyText,
-  getChallengeDifficultyColor,
-} from '@/entities/challenge'
-
-interface InstanceViewModel extends InstanceListItem {
-  remaining: number
-}
-
-interface Props {
-  loading: boolean
-  maxInstances: number
-  instances: InstanceViewModel[]
-  runningCount: number
-  waitingCount: number
-  showWarning: boolean
-  warningInstance: InstanceViewModel | null
-  warningThresholdSeconds: number
-  extendDurationSeconds: number
-  copyAddress: (value: string) => void
-  extendTime: (instanceId: string) => Promise<void> | void
-  openTarget: (instanceId: string) => Promise<void> | void
-  destroyInstance: (instanceId: string) => Promise<void> | void
-  extendFromWarning: () => Promise<void> | void
-  closeWarning: () => void
-  setWarningCloseButton: (refTarget: Element | ComponentPublicInstance | null) => void
-  canOpenInstanceInBrowser: (instance: Pick<InstanceListItem, 'access_url' | 'access'>) => boolean
-  formatInstanceAccessDisplay: (
-    instance: Pick<InstanceListItem, 'access_url' | 'access' | 'ssh_info'>
-  ) => string
-  formatRemainingTime: (seconds: number) => string
-  getInstanceStatusClass: (status: InstanceStatus) => string
-  getInstanceStatusLabel: (status: InstanceStatus) => string
-  getInstanceWaitingHint: (
-    instance: Pick<InstanceListItem, 'status' | 'queue_position' | 'eta_seconds' | 'progress'>
-  ) => string
-  isInstanceManualActionAllowed: (
-    instance: Pick<InstanceListItem, 'contest_mode' | 'share_scope'>
-  ) => boolean
-}
-
-defineProps<Props>()
-
-function difficultyPillStyle(difficulty: ChallengeDifficulty): Record<string, string> {
-  const color = getChallengeDifficultyColor(difficulty)
-  return {
-    '--instance-difficulty-pill-color': color,
-    '--instance-difficulty-pill-bg': `color-mix(in srgb, ${color} 10%, transparent)`,
-    '--instance-difficulty-pill-border': `color-mix(in srgb, ${color} 22%, transparent)`,
-  }
-}
-</script>
-
 <template>
   <section
     class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
@@ -502,3 +439,67 @@ function difficultyPillStyle(difficulty: ChallengeDifficulty): Record<string, st
   }
 }
 </style>
+
+<script setup lang="ts">
+import type { ComponentPublicInstance } from 'vue'
+
+import { Activity, Clock3, Server } from 'lucide-vue-next'
+
+import type {
+  ChallengeDifficulty,
+  InstanceListItem,
+  InstanceStatus,
+} from '@/api/contracts'
+import {
+  ChallengeCategoryPill,
+  ChallengeDifficultyText,
+  getChallengeDifficultyColor,
+} from '@/entities/challenge'
+
+interface InstanceViewModel extends InstanceListItem {
+  remaining: number
+}
+
+interface Props {
+  loading: boolean
+  maxInstances: number
+  instances: InstanceViewModel[]
+  runningCount: number
+  waitingCount: number
+  showWarning: boolean
+  warningInstance: InstanceViewModel | null
+  warningThresholdSeconds: number
+  extendDurationSeconds: number
+  copyAddress: (value: string) => void
+  extendTime: (instanceId: string) => Promise<void> | void
+  openTarget: (instanceId: string) => Promise<void> | void
+  destroyInstance: (instanceId: string) => Promise<void> | void
+  extendFromWarning: () => Promise<void> | void
+  closeWarning: () => void
+  setWarningCloseButton: (refTarget: Element | ComponentPublicInstance | null) => void
+  canOpenInstanceInBrowser: (instance: Pick<InstanceListItem, 'access_url' | 'access'>) => boolean
+  formatInstanceAccessDisplay: (
+    instance: Pick<InstanceListItem, 'access_url' | 'access' | 'ssh_info'>
+  ) => string
+  formatRemainingTime: (seconds: number) => string
+  getInstanceStatusClass: (status: InstanceStatus) => string
+  getInstanceStatusLabel: (status: InstanceStatus) => string
+  getInstanceWaitingHint: (
+    instance: Pick<InstanceListItem, 'status' | 'queue_position' | 'eta_seconds' | 'progress'>
+  ) => string
+  isInstanceManualActionAllowed: (
+    instance: Pick<InstanceListItem, 'contest_mode' | 'share_scope'>
+  ) => boolean
+}
+
+defineProps<Props>()
+
+function difficultyPillStyle(difficulty: ChallengeDifficulty): Record<string, string> {
+  const color = getChallengeDifficultyColor(difficulty)
+  return {
+    '--instance-difficulty-pill-color': color,
+    '--instance-difficulty-pill-bg': `color-mix(in srgb, ${color} 10%, transparent)`,
+    '--instance-difficulty-pill-border': `color-mix(in srgb, ${color} 22%, transparent)`,
+  }
+}
+</script>

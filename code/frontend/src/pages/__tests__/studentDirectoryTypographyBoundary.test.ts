@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
 import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
-import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
+import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
 import awdReviewDirectorySource from '@/widgets/awd-review-workspace/AwdReviewDirectoryPanel.vue?raw'
 import awdChallengeImportSectionSource from '@/features/platform/awd-challenges/ui/AwdChallengeImportSection.vue?raw'

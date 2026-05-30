@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'
 import InstanceList from '@/pages/instances/InstanceListRoutePage.vue'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
-import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
+import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 
 const journalNotesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-notes.css`,
@@ -122,9 +122,8 @@ describe('InstanceList', () => {
   it('实例页概况卡片应使用统一 metric-panel 样式类', () => {
     expect(instanceListSource).toContain('useInstanceWarningFocus')
     expect(instanceListSource).not.toContain('watch(showWarning')
-    expect(instanceListSource).toContain(
-      "import InstanceListWorkspaceShell from '@/components/instance/InstanceListWorkspaceShell.vue'"
-    )
+    expect(instanceListSource).toContain("from '@/features/instance-list'")
+    expect(instanceListSource).toContain('InstanceListWorkspaceShell')
     expect(instanceListWorkspaceSource).toMatch(/<div class="workspace-overline">\s*Instances\s*<\/div>/)
     expect(instanceListWorkspaceSource).toMatch(
       /<h1 class="instance-title workspace-page-title">\s*我的实例\s*<\/h1>/

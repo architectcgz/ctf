@@ -1,18 +1,5 @@
-<script setup lang="ts">
-defineProps<{
-  panelEyebrow: string
-  panelTitle: string
-  panelDescription: string
-}>()
-
-const emit = defineEmits<{
-  heroProbe: []
-}>()
-</script>
-
 <template>
   <div class="auth-entry-shell">
-    <!-- 背景层：网格与环境光 -->
     <div class="auth-entry-shell__bg">
       <div class="technical-grid" />
       <div class="ambient-glow ambient-glow--1" />
@@ -20,7 +7,6 @@ const emit = defineEmits<{
     </div>
 
     <div class="auth-entry-shell__container">
-      <!-- 左侧：视觉锚点 -->
       <section
         class="auth-entry-shell__hero"
         @click="emit('heroProbe')"
@@ -32,7 +18,7 @@ const emit = defineEmits<{
           </h1>
           <div class="branding-decoration" />
         </header>
-        
+
         <div class="hero-features">
           <p class="hero-copy">
             统一身份认证系统。集成训练靶场、教学协同与系统值守链路，为网络安全实战提供全栈技术支持。
@@ -54,7 +40,6 @@ const emit = defineEmits<{
         </div>
       </section>
 
-      <!-- 右侧：表单面板 -->
       <main class="auth-entry-shell__content">
         <div class="auth-panel">
           <header class="auth-panel__header">
@@ -67,7 +52,10 @@ const emit = defineEmits<{
             <slot />
           </div>
 
-          <footer v-if="$slots.footer" class="auth-panel__footer">
+          <footer
+            v-if="$slots.footer"
+            class="auth-panel__footer"
+          >
             <slot name="footer" />
           </footer>
         </div>
@@ -87,7 +75,6 @@ const emit = defineEmits<{
   overflow: hidden;
 }
 
-/* 背景系统 */
 .auth-entry-shell__bg {
   position: absolute;
   inset: 0;
@@ -97,7 +84,7 @@ const emit = defineEmits<{
 .technical-grid {
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     linear-gradient(var(--color-border-subtle) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px);
   background-size: var(--space-16, 4rem) var(--space-16, 4rem);
@@ -113,14 +100,18 @@ const emit = defineEmits<{
 }
 
 .ambient-glow--1 {
-  top: -10%; left: -10%;
-  width: 40rem; height: 40rem;
+  top: -10%;
+  left: -10%;
+  width: 40rem;
+  height: 40rem;
   background: var(--color-primary);
 }
 
 .ambient-glow--2 {
-  bottom: -5%; right: -5%;
-  width: 30rem; height: 30rem;
+  right: -5%;
+  bottom: -5%;
+  width: 30rem;
+  height: 30rem;
   background: color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
@@ -132,11 +123,10 @@ const emit = defineEmits<{
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
-  padding: var(--space-8) var(--space-12);
   align-items: center;
+  padding: var(--space-8) var(--space-12);
 }
 
-/* 左侧设计 */
 .auth-entry-shell__hero {
   padding-right: var(--space-12);
 }
@@ -147,20 +137,20 @@ const emit = defineEmits<{
 }
 
 .branding-overline {
+  margin-bottom: var(--space-6);
   font-size: var(--font-size-12);
   font-weight: 800;
   letter-spacing: 0.4em;
   text-transform: uppercase;
   color: var(--color-primary);
-  margin-bottom: var(--space-6);
 }
 
 .branding-title {
+  margin: 0;
   font-size: clamp(48px, 6vw, 84px);
   font-weight: 900;
   line-height: 0.9;
   letter-spacing: -0.05em;
-  margin: 0;
   color: var(--color-text-primary);
 }
 
@@ -181,10 +171,10 @@ const emit = defineEmits<{
 }
 
 .hero-copy {
+  margin-bottom: var(--space-12);
   font-size: var(--font-size-15);
   line-height: 1.8;
   color: var(--color-text-secondary);
-  margin-bottom: var(--space-12);
 }
 
 .signal-list {
@@ -211,39 +201,38 @@ const emit = defineEmits<{
   box-shadow: 0 0 10px var(--color-primary);
 }
 
-/* 右侧表单面板 */
 .auth-panel {
-  background: color-mix(in srgb, var(--color-bg-surface) 60%, transparent);
-  backdrop-filter: blur(24px);
+  padding: var(--space-10) var(--space-12);
   border: 1px solid var(--color-border-default);
   border-radius: var(--space-6);
-  padding: var(--space-10) var(--space-12);
+  background: color-mix(in srgb, var(--color-bg-surface) 60%, transparent);
+  backdrop-filter: blur(24px);
   box-shadow:
     0 40px 100px -20px color-mix(in srgb, var(--color-shadow-strong) 40%, transparent),
     inset 0 0 0 1px color-mix(in srgb, var(--color-border-default) 18%, transparent);
 }
 
 .auth-panel__eyebrow {
+  margin-bottom: var(--space-3);
   font-size: var(--font-size-10, 10px);
   font-weight: 900;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--color-text-muted);
-  margin-bottom: var(--space-3);
 }
 
 .auth-panel__title {
+  margin: 0 0 var(--space-2);
   font-size: var(--font-size-24);
   font-weight: 900;
   letter-spacing: -0.02em;
-  margin: 0 0 var(--space-2);
 }
 
 .auth-panel__desc {
-  font-size: var(--font-size-13);
-  color: var(--color-text-secondary);
-  line-height: 1.6;
   margin: 0 0 var(--space-12);
+  font-size: var(--font-size-13);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
 }
 
 .auth-panel__footer {
@@ -258,9 +247,11 @@ const emit = defineEmits<{
     grid-template-columns: 1fr;
     padding: var(--space-12) var(--space-8);
   }
+
   .auth-entry-shell__hero {
     display: none;
   }
+
   .auth-panel {
     max-width: 32rem;
     margin: 0 auto;
@@ -268,3 +259,15 @@ const emit = defineEmits<{
   }
 }
 </style>
+
+<script setup lang="ts">
+defineProps<{
+  panelEyebrow: string
+  panelTitle: string
+  panelDescription: string
+}>()
+
+const emit = defineEmits<{
+  heroProbe: []
+}>()
+</script>

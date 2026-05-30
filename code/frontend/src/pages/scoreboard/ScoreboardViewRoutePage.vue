@@ -49,8 +49,8 @@
 </style>
 
 <script setup lang="ts">
-import ScoreboardWorkspaceShell from '@/components/scoreboard/ScoreboardWorkspaceShell.vue'
 import {
+  ScoreboardWorkspaceShell,
   useScoreboardContestDirectoryPage,
   useScoreboardRoutePage,
   useScoreboardView,

@@ -22,8 +22,10 @@
 </template>
 
 <script setup lang="ts">
-import UserProfileWorkspaceShell from '@/components/profile/UserProfileWorkspaceShell.vue'
-import { useUserProfilePage } from '@/features/profile'
+import {
+  UserProfileWorkspaceShell,
+  useUserProfilePage,
+} from '@/features/profile'
 
 const {
   loading,

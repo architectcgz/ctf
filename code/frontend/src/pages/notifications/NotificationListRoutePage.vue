@@ -347,9 +347,11 @@ import { RefreshCw } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import NotificationCategoryFilter from '@/components/notifications/NotificationCategoryFilter.vue'
 import { AdminNotificationPublishDrawer } from '@/features/admin-notification-publisher'
-import { useNotificationListPage } from '@/features/notifications'
+import {
+  NotificationCategoryFilter,
+  useNotificationListPage,
+} from '@/features/notifications'
 import { formatDate } from '@/utils/format'
 
 const {

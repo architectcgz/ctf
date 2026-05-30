@@ -3,17 +3,17 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import challengeDirectoryPanelSource from '@/components/challenge/ChallengeDirectoryPanel.vue?raw'
-import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
+import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
 import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
 import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
 import securitySettingsSource from '@/pages/profile/SecuritySettingsRoutePage.vue?raw'
-import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/features/profile/ui/SecuritySettingsWorkspaceShell.vue?raw'
 import userProfileSource from '@/pages/profile/UserProfileRoutePage.vue?raw'
-import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
+import userProfileWorkspaceShellSource from '@/features/profile/ui/UserProfileWorkspaceShell.vue?raw'
 import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
-import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'
+import scoreboardWorkspaceShellSource from '@/features/scoreboard/ui/ScoreboardWorkspaceShell.vue?raw'
 
 const journalUserDirectorySource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-directory.css`,

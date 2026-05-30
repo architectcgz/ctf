@@ -361,87 +361,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import type {
-  ContestListItem,
-  ContestMode,
-  ContestStatus,
-  PracticeRankingItemData,
-} from '@/api/contracts'
-import { ArrowRight, BarChart2, Clock3, Flag, Shield, Trophy, Users } from 'lucide-vue-next'
-
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
-
-type ScoreboardPanelKey = 'contest' | 'points'
-type ScoreboardStatusFilter = '' | 'running' | 'frozen' | 'ended'
-type ScoreboardModeFilter = '' | Extract<ContestMode, 'jeopardy' | 'awd'>
-
-interface ScoreboardPanelTab {
-  key: ScoreboardPanelKey
-  label: string
-  panelId: string
-  tabId: string
-}
-
-interface ScoreboardSection {
-  contest: ContestListItem
-  frozen: boolean
-}
-
-interface Props {
-  panelTabs: ScoreboardPanelTab[]
-  activeTab: ScoreboardPanelKey
-  setTabButtonRef: (key: ScoreboardPanelKey, element: HTMLButtonElement | null) => void
-  handleTabKeydown: (event: KeyboardEvent, index: number) => void
-  contestCount: number
-  runningCount: number
-  frozenCount: number
-  endedCount: number
-  contestPageStartIndex: number
-  paginatedSections: ScoreboardSection[]
-  emptyTitle: string
-  pointsEmptyTitle: string
-  formatContestWindow: (startsAt: string, endsAt: string) => string
-  sectionAccentStyle: (status: ContestStatus) => Record<string, string>
-  getRowClass: (rank: number) => string
-  getRankPillClass: (rank: number) => string[]
-  contestPage: number
-  contestTotal: number
-  contestTotalPages: number
-  contestStatusFilter: ScoreboardStatusFilter
-  contestModeFilter: ScoreboardModeFilter
-  hasSections: boolean
-  hasRankingRows: boolean
-  loading: boolean
-  rankingHint: string
-  rankingLoading: boolean
-  rankingRows: PracticeRankingItemData[]
-  selectionHint: string
-}
-
-defineProps<Props>()
-
-const emit = defineEmits<{
-  'select-tab': [tab: ScoreboardPanelKey]
-  'update-status-filter': [value: ScoreboardStatusFilter]
-  'update-mode-filter': [value: ScoreboardModeFilter]
-  'reset-filters': []
-  'refresh': []
-  'refresh-practice-ranking': []
-  'change-contest-page': [page: number]
-}>()
-
-function emitContestStatusFilterChange(event: Event): void {
-  emit('update-status-filter', (event.target as HTMLSelectElement).value as ScoreboardStatusFilter)
-}
-
-function emitContestModeFilterChange(event: Event): void {
-  emit('update-mode-filter', (event.target as HTMLSelectElement).value as ScoreboardModeFilter)
-}
-</script>
-
 <style scoped>
 .scoreboard-page {
   display: flex;
@@ -601,3 +520,85 @@ function emitContestModeFilterChange(event: Event): void {
   }
 }
 </style>
+
+<script setup lang="ts">
+import type {
+  ContestListItem,
+  ContestMode,
+  ContestStatus,
+  PracticeRankingItemData,
+} from '@/api/contracts'
+
+import { ArrowRight, BarChart2, Clock3, Flag, Shield, Trophy, Users } from 'lucide-vue-next'
+
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
+
+type ScoreboardPanelKey = 'contest' | 'points'
+type ScoreboardStatusFilter = '' | 'running' | 'frozen' | 'ended'
+type ScoreboardModeFilter = '' | Extract<ContestMode, 'jeopardy' | 'awd'>
+
+interface ScoreboardPanelTab {
+  key: ScoreboardPanelKey
+  label: string
+  panelId: string
+  tabId: string
+}
+
+interface ScoreboardSection {
+  contest: ContestListItem
+  frozen: boolean
+}
+
+interface Props {
+  panelTabs: ScoreboardPanelTab[]
+  activeTab: ScoreboardPanelKey
+  setTabButtonRef: (key: ScoreboardPanelKey, element: HTMLButtonElement | null) => void
+  handleTabKeydown: (event: KeyboardEvent, index: number) => void
+  contestCount: number
+  runningCount: number
+  frozenCount: number
+  endedCount: number
+  contestPageStartIndex: number
+  paginatedSections: ScoreboardSection[]
+  emptyTitle: string
+  pointsEmptyTitle: string
+  formatContestWindow: (startsAt: string, endsAt: string) => string
+  sectionAccentStyle: (status: ContestStatus) => Record<string, string>
+  getRowClass: (rank: number) => string
+  getRankPillClass: (rank: number) => string[]
+  contestPage: number
+  contestTotal: number
+  contestTotalPages: number
+  contestStatusFilter: ScoreboardStatusFilter
+  contestModeFilter: ScoreboardModeFilter
+  hasSections: boolean
+  hasRankingRows: boolean
+  loading: boolean
+  rankingHint: string
+  rankingLoading: boolean
+  rankingRows: PracticeRankingItemData[]
+  selectionHint: string
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  'select-tab': [tab: ScoreboardPanelKey]
+  'update-status-filter': [value: ScoreboardStatusFilter]
+  'update-mode-filter': [value: ScoreboardModeFilter]
+  'reset-filters': []
+  'refresh': []
+  'refresh-practice-ranking': []
+  'change-contest-page': [page: number]
+}>()
+
+function emitContestStatusFilterChange(event: Event): void {
+  emit('update-status-filter', (event.target as HTMLSelectElement).value as ScoreboardStatusFilter)
+}
+
+function emitContestModeFilterChange(event: Event): void {
+  emit('update-mode-filter', (event.target as HTMLSelectElement).value as ScoreboardModeFilter)
+}
+</script>

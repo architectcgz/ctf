@@ -11,8 +11,10 @@
 </template>
 
 <script setup lang="ts">
-import SecuritySettingsWorkspaceShell from '@/components/profile/SecuritySettingsWorkspaceShell.vue'
-import { useSecuritySettingsPage } from '@/features/profile'
+import {
+  SecuritySettingsWorkspaceShell,
+  useSecuritySettingsPage,
+} from '@/features/profile'
 
 const {
   passwordSaving,

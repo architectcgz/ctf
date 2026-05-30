@@ -6,7 +6,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import NotificationList from '@/pages/notifications/NotificationListRoutePage.vue'
 import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
 import notificationListPageSource from '@/features/notifications/model/useNotificationListPage.ts?raw'
-import notificationCategoryFilterSource from '@/components/notifications/NotificationCategoryFilter.vue?raw'
+import notificationCategoryFilterSource from '@/features/notifications/ui/NotificationCategoryFilter.vue?raw'
 import { useNotificationStore } from '@/stores/notification'
 import { useAuthStore } from '@/stores/auth'
 

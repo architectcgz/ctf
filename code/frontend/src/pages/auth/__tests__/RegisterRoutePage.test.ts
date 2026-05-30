@@ -12,6 +12,26 @@ const authMocks = vi.hoisted(() => ({
 const pushMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/features/auth', () => ({
+  AuthEntryShell: {
+    props: ['panelEyebrow', 'panelTitle', 'panelDescription'],
+    template: `
+      <div class="auth-entry-shell">
+        <section class="auth-entry-shell__hero">
+          <div>CTF Platform Infrastructure</div>
+          <div>训练空间</div>
+          <div>教学协同</div>
+          <div>系统值守</div>
+        </section>
+        <main>
+          <div>{{ panelEyebrow }}</div>
+          <h2>{{ panelTitle }}</h2>
+          <p>{{ panelDescription }}</p>
+          <slot />
+          <slot name="footer" />
+        </main>
+      </div>
+    `,
+  },
   useRegisterPage: () => {
     const form = reactive({ username: '', password: '', class_name: '' })
     const loading = ref(false)

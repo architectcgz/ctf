@@ -6,7 +6,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import SkillProfile from '@/pages/profile/SkillProfileRoutePage.vue'
 import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
 import skillProfileSource from '@/pages/profile/SkillProfileRoutePage.vue?raw'
-import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
+import skillProfileWorkspaceShellSource from '@/features/skill-profile/ui/SkillProfileWorkspaceShell.vue?raw'
 import skillProfilePageModelSource from '@/features/skill-profile/model/useSkillProfilePage.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 

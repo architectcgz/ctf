@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import SecuritySettings from '@/pages/profile/SecuritySettingsRoutePage.vue'
 import securitySettingsSource from '@/pages/profile/SecuritySettingsRoutePage.vue?raw'
-import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/features/profile/ui/SecuritySettingsWorkspaceShell.vue?raw'
 
 const authApiMocks = vi.hoisted(() => ({
   changePassword: vi.fn(),
@@ -62,9 +62,8 @@ describe('SecuritySettings', () => {
     expect(securitySettingsSource).toContain('useSecuritySettingsPage')
     expect(securitySettingsSource).not.toContain("from '@/api/auth'")
     expect(securitySettingsSource).not.toContain('validatePasswordForm')
-    expect(securitySettingsSource).toContain(
-      "import SecuritySettingsWorkspaceShell from '@/components/profile/SecuritySettingsWorkspaceShell.vue'"
-    )
+    expect(securitySettingsSource).toContain("from '@/features/profile'")
+    expect(securitySettingsSource).toContain('SecuritySettingsWorkspaceShell')
     expect(securitySettingsWorkspaceSource).toContain('class="workspace-page-header security-topbar"')
     expect(securitySettingsWorkspaceSource).toContain('class="security-topbar-meta"')
     expect(securitySettingsWorkspaceSource).not.toContain('<PageHeader')

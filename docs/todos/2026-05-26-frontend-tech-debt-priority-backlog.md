@@ -56,16 +56,6 @@
 - `components/dashboard`
   - 现状：student dashboard 相关变体和样式编辑块仍留在旧目录。
   - 代表：`dashboard/student/*`
-- `components/profile`
-  - 现状：`UserProfileWorkspaceShell.vue`、`SkillProfileWorkspaceShell.vue`、`SecuritySettingsWorkspaceShell.vue` 已基本只服务 `features/profile`
-- `components/auth`
-  - 现状：`AuthEntryShell.vue` 只服务 auth route，长期更适合并入 `features/auth/ui`
-- `components/notifications`
-  - 现状：`NotificationCategoryFilter.vue` 目前只服务通知能力，本质更像 feature-owned UI
-- `components/instance`
-  - 现状：`InstanceListWorkspaceShell.vue` 只服务实例目录能力，更适合并回 `features/instance-list/ui`
-- `components/scoreboard`
-  - 现状：`ScoreboardWorkspaceShell.vue` 只服务 scoreboard capability，更适合并回 `features/scoreboard/ui`
 - `components/training`
   - 现状：训练时间线 panel 已经是中立共享展示，但如果后续 consumer 继续局限在 student dashboard / teacher insight，仍可评估并回 owning feature
 
@@ -87,7 +77,7 @@
 ### 执行顺序建议
 
 1. 先按目录批量清 `components/platform`、`components/teacher`、`components/contests` 里只服务单一 feature 的 UI。
-2. 再收 `components/profile`、`components/auth`、`components/instance`、`components/scoreboard` 这类“单 capability workspace shell”。
+2. 再收 `components/notifications` 之外的其余单 capability 历史壳；`auth / profile / skill-profile / instance-list / scoreboard / notifications` 这一批已于 `2026-05-30` 收口到 owning feature 的 `ui/`。
 3. 最后评估 `components/awd-review`、`components/review-archive` 是否并入对应 `widgets/*`，以及 `components/class-management` 是否直接删除。
 
 ### 第 1 批子目录迁移表

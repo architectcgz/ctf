@@ -1,41 +1,3 @@
-<script setup lang="ts">
-import type { Component } from 'vue'
-
-import { KeyRound, Loader2 } from 'lucide-vue-next'
-
-interface SecurityStat {
-  key: string
-  label: string
-  value: string
-  helper: string
-  icon: Component
-}
-
-interface PasswordFormDraft {
-  oldPassword: string
-  newPassword: string
-  confirmPassword: string
-}
-
-interface PasswordFieldErrors {
-  oldPassword: string
-  newPassword: string
-  confirmPassword: string
-}
-
-interface Props {
-  passwordSaving: boolean
-  passwordError: string | null
-  passwordForm: PasswordFormDraft
-  passwordFieldErrors: PasswordFieldErrors
-  securityStats: SecurityStat[]
-  passwordTips: string[]
-  submitPasswordChange: () => Promise<void> | void
-}
-
-defineProps<Props>()
-</script>
-
 <template>
   <section
     class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"
@@ -510,3 +472,41 @@ defineProps<Props>()
   }
 }
 </style>
+
+<script setup lang="ts">
+import type { Component } from 'vue'
+
+import { KeyRound, Loader2 } from 'lucide-vue-next'
+
+interface SecurityStat {
+  key: string
+  label: string
+  value: string
+  helper: string
+  icon: Component
+}
+
+interface PasswordFormDraft {
+  oldPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
+interface PasswordFieldErrors {
+  oldPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
+interface Props {
+  passwordSaving: boolean
+  passwordError: string | null
+  passwordForm: PasswordFormDraft
+  passwordFieldErrors: PasswordFieldErrors
+  securityStats: SecurityStat[]
+  passwordTips: string[]
+  submitPasswordChange: () => Promise<void> | void
+}
+
+defineProps<Props>()
+</script>

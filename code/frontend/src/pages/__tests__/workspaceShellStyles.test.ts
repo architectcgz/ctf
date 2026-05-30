@@ -40,7 +40,7 @@ import challengeManageHeroPanelSource from '@/features/platform/challenges/ui/Ch
 import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
 import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
 import contestOrchestrationPageSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
-import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
+import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
@@ -60,7 +60,7 @@ import userGovernanceOverviewPanelSource from '@/features/platform/user-manageme
 import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
 import skillProfileSource from '@/pages/profile/SkillProfileRoutePage.vue?raw'
-import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
+import skillProfileWorkspaceShellSource from '@/features/skill-profile/ui/SkillProfileWorkspaceShell.vue?raw'
 
 const classStudentsPageSource = [
   classStudentsPageSourceBase,
@@ -109,9 +109,9 @@ const awdChallengeLibraryPageSource = [
   awdChallengeImportSectionSource,
 ].join('\n')
 import securitySettingsSource from '@/pages/profile/SecuritySettingsRoutePage.vue?raw'
-import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
+import securitySettingsWorkspaceShellSource from '@/features/profile/ui/SecuritySettingsWorkspaceShell.vue?raw'
 import userProfileSource from '@/pages/profile/UserProfileRoutePage.vue?raw'
-import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
+import userProfileWorkspaceShellSource from '@/features/profile/ui/UserProfileWorkspaceShell.vue?raw'
 import scoreboardDetailSource from '@/pages/scoreboard/ScoreboardDetailRoutePage.vue?raw'
 import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
 import studentManageHeroPanelSource from '@/features/platform/student-management/ui/StudentManageHeroPanel.vue?raw'

@@ -323,72 +323,6 @@
   </section>
 </template>
 
-<script setup lang="ts">
-import { ChevronRight, Flame, Loader2, TriangleAlert } from 'lucide-vue-next'
-
-import RadarChart from '@/components/charts/RadarChart.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import {
-  ChallengeCategoryDifficultyPills,
-  ChallengeCategoryPill,
-  toChallengeCategory,
-} from '@/entities/challenge'
-import type { RecommendationItem, SkillProfileData, StudentDirectoryItem } from '@/api/contracts'
-
-type SkillProfileTabKey = 'analysis' | 'weakness' | 'recommendations'
-
-interface SkillProfileContentTab {
-  key: SkillProfileTabKey
-  label: string
-  buttonId: string
-  panelId: string
-}
-
-interface SkillProfileRouteTarget {
-  name: string
-  params?: Record<string, string>
-}
-
-interface Props {
-  isTeacher: boolean
-  selectedStudentId: string
-  students: StudentDirectoryItem[]
-  loading: boolean
-  error: string | null
-  skillProfile: SkillProfileData | null
-  loadingRecommendations: boolean
-  recommendations: RecommendationItem[]
-  weakDimensions: string[]
-  challengesRoute: SkillProfileRouteTarget
-  radarIndicators: Array<{ name: string; max: number }>
-  radarValues: number[]
-  activeTab: SkillProfileTabKey
-  contentTabs: SkillProfileContentTab[]
-  setTabButtonRef: (key: SkillProfileTabKey, element: HTMLButtonElement | null) => void
-  handleTabKeydown: (event: KeyboardEvent, index: number) => void
-  buildChallengeRoute: (challengeId: string) => SkillProfileRouteTarget
-}
-
-defineProps<Props>()
-
-const emit = defineEmits<{
-  'load-current-data': []
-  'select-tab': [tabKey: SkillProfileTabKey]
-  'update-selected-student-id': [studentId: string]
-}>()
-
-function weakDimensionCategory(value: string) {
-  return toChallengeCategory(value)
-}
-
-function handleStudentSelectionChange(event: Event) {
-  emit('update-selected-student-id', (event.target as HTMLSelectElement).value)
-}
-
-const skillRadarHeightClass = 'skill-radar-height'
-</script>
-
 <style scoped>
 .journal-shell {
   --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
@@ -786,3 +720,69 @@ const skillRadarHeightClass = 'skill-radar-height'
   }
 }
 </style>
+
+<script setup lang="ts">
+import { ChevronRight, Flame, Loader2, TriangleAlert } from 'lucide-vue-next'
+
+import type { RecommendationItem, SkillProfileData, StudentDirectoryItem } from '@/api/contracts'
+import RadarChart from '@/components/charts/RadarChart.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import {
+  ChallengeCategoryDifficultyPills,
+  ChallengeCategoryPill,
+  toChallengeCategory,
+} from '@/entities/challenge'
+
+type SkillProfileTabKey = 'analysis' | 'weakness' | 'recommendations'
+
+interface SkillProfileContentTab {
+  key: SkillProfileTabKey
+  label: string
+  buttonId: string
+  panelId: string
+}
+
+interface SkillProfileRouteTarget {
+  name: string
+  params?: Record<string, string>
+}
+
+interface Props {
+  isTeacher: boolean
+  selectedStudentId: string
+  students: StudentDirectoryItem[]
+  loading: boolean
+  error: string | null
+  skillProfile: SkillProfileData | null
+  loadingRecommendations: boolean
+  recommendations: RecommendationItem[]
+  weakDimensions: string[]
+  challengesRoute: SkillProfileRouteTarget
+  radarIndicators: Array<{ name: string; max: number }>
+  radarValues: number[]
+  activeTab: SkillProfileTabKey
+  contentTabs: SkillProfileContentTab[]
+  setTabButtonRef: (key: SkillProfileTabKey, element: HTMLButtonElement | null) => void
+  handleTabKeydown: (event: KeyboardEvent, index: number) => void
+  buildChallengeRoute: (challengeId: string) => SkillProfileRouteTarget
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  'load-current-data': []
+  'select-tab': [tabKey: SkillProfileTabKey]
+  'update-selected-student-id': [studentId: string]
+}>()
+
+function weakDimensionCategory(value: string) {
+  return toChallengeCategory(value)
+}
+
+function handleStudentSelectionChange(event: Event) {
+  emit('update-selected-student-id', (event.target as HTMLSelectElement).value)
+}
+
+const skillRadarHeightClass = 'skill-radar-height'
+</script>

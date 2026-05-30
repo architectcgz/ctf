@@ -198,7 +198,7 @@
 <script setup lang="ts">
 import { useTemplateRef } from 'vue'
 
-import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
+import { AuthEntryShell } from '@/features/auth'
 import { useLoginPage } from '@/features/auth'
 
 const {

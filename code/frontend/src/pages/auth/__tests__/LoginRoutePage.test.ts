@@ -15,6 +15,27 @@ const routeState = vi.hoisted(() => ({
 }))
 
 vi.mock('@/features/auth', () => ({
+  AuthEntryShell: {
+    props: ['panelEyebrow', 'panelTitle', 'panelDescription'],
+    emits: ['heroProbe'],
+    template: `
+      <div class="auth-entry-shell">
+        <section class="auth-entry-shell__hero" @click="$emit('heroProbe')">
+          <div>CTF Platform Infrastructure</div>
+          <div>训练空间</div>
+          <div>教学协同</div>
+          <div>系统值守</div>
+        </section>
+        <main>
+          <div>{{ panelEyebrow }}</div>
+          <h2>{{ panelTitle }}</h2>
+          <p>{{ panelDescription }}</p>
+          <slot />
+          <slot name="footer" />
+        </main>
+      </div>
+    `,
+  },
   useLoginPage: () => {
     const form = reactive({ username: '', password: '' })
     const loading = ref(false)

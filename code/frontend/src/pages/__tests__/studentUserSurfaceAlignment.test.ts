@@ -7,7 +7,7 @@ import studentOverviewSource from '@/components/dashboard/student/StudentOvervie
 import trainingTimelineSource from '@/components/training/TrainingTimelinePanel.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
-import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
+import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import challengePresentationSource from '@/entities/challenge/model/presentation.ts?raw'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
 import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'

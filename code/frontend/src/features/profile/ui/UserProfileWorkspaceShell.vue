@@ -308,62 +308,6 @@
   </section>
 </template>
 
-<script setup lang="ts">
-import type { AuthUser, ReportExportData } from '@/api/contracts'
-import type { Component } from 'vue'
-import { Activity, FileDown, Loader2, RefreshCw, ShieldCheck, UserCircle2 } from 'lucide-vue-next'
-
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import { formatDate } from '@/utils/format'
-
-type ReportFormat = 'pdf' | 'excel'
-interface ProfileField {
-  label: string
-  value: string
-}
-
-interface ReportTaskMeta {
-  label: string
-  status: string
-  chipClass: string
-}
-
-interface ProfileSummaryItem {
-  key: string
-  label: string
-  value: string
-  helper: string
-  icon: Component
-  techFont: boolean
-}
-
-interface Props {
-  loading: boolean
-  error: string | null
-  profile: AuthUser | null
-  exportLoading: boolean
-  exportError: string | null
-  reportFormat: ReportFormat
-  latestReport: ReportExportData | null
-  latestReportFormat: ReportFormat
-  latestReportCreatedAt: string | null
-  canManagePersonalReport: boolean
-  pageCopy: string
-  profileFields: ProfileField[]
-  reportTaskMeta: ReportTaskMeta
-  profileSummaryItems: ProfileSummaryItem[]
-}
-
-defineProps<Props>()
-
-const emit = defineEmits<{
-  'load-profile': []
-  'create-report': []
-  'download-report': []
-  'update-report-format': [value: ReportFormat]
-}>()
-</script>
-
 <style scoped>
 .journal-shell {
   --journal-shell-font: var(--font-family-sans);
@@ -747,3 +691,60 @@ const emit = defineEmits<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import type { AuthUser, ReportExportData } from '@/api/contracts'
+import type { Component } from 'vue'
+import { Activity, FileDown, Loader2, RefreshCw, ShieldCheck, UserCircle2 } from 'lucide-vue-next'
+
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import { formatDate } from '@/utils/format'
+
+type ReportFormat = 'pdf' | 'excel'
+
+interface ProfileField {
+  label: string
+  value: string
+}
+
+interface ReportTaskMeta {
+  label: string
+  status: string
+  chipClass: string
+}
+
+interface ProfileSummaryItem {
+  key: string
+  label: string
+  value: string
+  helper: string
+  icon: Component
+  techFont: boolean
+}
+
+interface Props {
+  loading: boolean
+  error: string | null
+  profile: AuthUser | null
+  exportLoading: boolean
+  exportError: string | null
+  reportFormat: ReportFormat
+  latestReport: ReportExportData | null
+  latestReportFormat: ReportFormat
+  latestReportCreatedAt: string | null
+  canManagePersonalReport: boolean
+  pageCopy: string
+  profileFields: ProfileField[]
+  reportTaskMeta: ReportTaskMeta
+  profileSummaryItems: ProfileSummaryItem[]
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  'load-profile': []
+  'create-report': []
+  'download-report': []
+  'update-report-format': [value: ReportFormat]
+}>()
+</script>

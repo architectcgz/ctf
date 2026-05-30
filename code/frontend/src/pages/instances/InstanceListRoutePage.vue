@@ -29,7 +29,6 @@
 <script setup lang="ts">
 import { ref, type ComponentPublicInstance } from 'vue'
 
-import InstanceListWorkspaceShell from '@/components/instance/InstanceListWorkspaceShell.vue'
 import {
   EXTEND_DURATION_SECONDS,
   WARNING_THRESHOLD_SECONDS,
@@ -40,6 +39,7 @@ import {
   getInstanceStatusLabel,
   getInstanceWaitingHint,
   isInstanceManualActionAllowed,
+  InstanceListWorkspaceShell,
   useInstanceListPage,
   useInstanceWarningFocus,
 } from '@/features/instance-list'

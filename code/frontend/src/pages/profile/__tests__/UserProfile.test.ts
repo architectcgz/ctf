@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import UserProfile from '@/pages/profile/UserProfileRoutePage.vue'
 import userProfileSource from '@/pages/profile/UserProfileRoutePage.vue?raw'
-import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
+import userProfileWorkspaceShellSource from '@/features/profile/ui/UserProfileWorkspaceShell.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const userProfileWorkspaceSource = [userProfileSource, userProfileWorkspaceShellSource].join('\n')

@@ -132,7 +132,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 
-import AuthEntryShell from '@/components/auth/AuthEntryShell.vue'
+import { AuthEntryShell } from '@/features/auth'
 import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'
 import { useRegisterPage } from '@/features/auth'
 
