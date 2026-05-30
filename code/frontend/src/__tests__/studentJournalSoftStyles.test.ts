@@ -6,7 +6,7 @@ import studentCategoryProgressSource from '@/features/student-dashboard/ui/Stude
 import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import studentOverviewEditorialSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
-import trainingTimelineSource from '@/components/training/TrainingTimelinePanel.vue?raw'
+import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 
 const journalSoftSurfacesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-soft-surfaces.css`,
