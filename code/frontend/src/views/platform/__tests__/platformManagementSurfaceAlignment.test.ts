@@ -39,6 +39,9 @@ import cheatDetectionWorkspacePanelSource from '@/components/platform/cheat/Chea
 import awdRoundInspectorSource from '@/features/awd-inspector/ui/AWDRoundInspector.vue?raw'
 import awdTrafficPanelSource from '@/features/awd-inspector/ui/AWDTrafficPanel.vue?raw'
 import awdChallengeConfigPanelSource from '@/features/platform-contests/ui/AWDChallengeConfigPanel.vue?raw'
+import awdChallengeConfigDirectoryRowSource from '@/features/platform-contests/ui/AWDChallengeConfigDirectoryRow.vue?raw'
+import awdChallengeConfigDirectorySectionSource from '@/features/platform-contests/ui/AWDChallengeConfigDirectorySection.vue?raw'
+import awdChallengeConfigHeaderSource from '@/features/platform-contests/ui/AWDChallengeConfigHeader.vue?raw'
 import awdReadinessChecklistSource from '@/features/awd-readiness/ui/AWDReadinessChecklist.vue?raw'
 import awdReadinessOverrideDialogSource from '@/features/awd-readiness/ui/AWDReadinessOverrideDialog.vue?raw'
 import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
@@ -124,6 +127,16 @@ const contestFormCombinedSource = [
   contestFormRulesSectionSource,
   contestFormTimelineSectionSource,
   contestFormActionsSource,
+].join('\n')
+const awdChallengeConfigCombinedSource = [
+  awdChallengeConfigPanelSource,
+  awdChallengeConfigHeaderSource,
+  awdChallengeConfigDirectorySectionSource,
+  awdChallengeConfigDirectoryRowSource,
+  readFileSync(
+    resolve(process.cwd(), 'src/features/platform-contests/ui/awdChallengeConfigPanel.css'),
+    'utf8'
+  ),
 ].join('\n')
 
 describe('admin management surface alignment', () => {
@@ -335,12 +348,12 @@ describe('admin management surface alignment', () => {
   })
 
   it('awd challenge config and readiness sections should use list-heading for directory blocks', () => {
-    expect(awdChallengeConfigPanelSource).toMatch(/class="[^"]*\bworkspace-directory-section\b[^"]*"/)
-    expect(awdChallengeConfigPanelSource).toMatch(/class="[^"]*list-heading[^"]*"/)
-    expect(awdChallengeConfigPanelSource).toMatch(
+    expect(awdChallengeConfigCombinedSource).toMatch(/class="[^"]*\bworkspace-directory-section\b[^"]*"/)
+    expect(awdChallengeConfigCombinedSource).toMatch(/class="[^"]*list-heading[^"]*"/)
+    expect(awdChallengeConfigCombinedSource).toMatch(
       /<h3 class="list-heading__title">\s*题目目录\s*<\/h3>/
     )
-    expect(awdChallengeConfigPanelSource).not.toContain(
+    expect(awdChallengeConfigCombinedSource).not.toContain(
       'workspace-tab-heading__title">已关联题目</h3>'
     )
 
