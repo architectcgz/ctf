@@ -618,6 +618,49 @@ describe('usePlatformContestAwd', () => {
     wrapper.unmount()
   })
 
+  it('readiness 摘要刷新失败时应提示错误并继续用缓存快照打开 override 弹层', async () => {
+    adminApiMocks.createContestAWDRound.mockRejectedValueOnce(
+      new ApiError('开赛就绪门禁阻止了创建轮次', { code: 14025, status: 409 })
+    )
+
+    let composable!: ReturnType<typeof usePlatformContestAwd>
+    const selectedContest = ref<ContestDetailData | null>(buildContest())
+    const Harness = defineComponent({
+      setup() {
+        composable = usePlatformContestAwd(selectedContest)
+        return () => null
+      },
+    })
+
+    const wrapper = mount(Harness)
+    await flushPromises()
+
+    const cachedReadiness = composable.readiness.value
+    adminApiMocks.getContestAWDReadiness.mockClear()
+    adminApiMocks.getContestAWDReadiness.mockRejectedValueOnce(
+      new ApiError('读取开赛就绪摘要失败', { code: 15001, status: 500 })
+    )
+
+    await composable.createRound({
+      round_number: 1,
+      status: 'pending',
+      attack_score: 50,
+      defense_score: 50,
+    })
+    await flushPromises()
+
+    expect(adminApiMocks.getContestAWDReadiness).toHaveBeenCalledTimes(1)
+    expect(toastMocks.error).toHaveBeenCalledWith('读取开赛就绪摘要失败')
+    expect(composable.overrideDialogState.value).toMatchObject({
+      open: true,
+      action: 'create_round',
+      title: '创建轮次',
+      readiness: cachedReadiness,
+    })
+
+    wrapper.unmount()
+  })
+
   it('录入服务检查时应提交 service_id 载荷', async () => {
     let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
