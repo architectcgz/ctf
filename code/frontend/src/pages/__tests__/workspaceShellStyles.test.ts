@@ -8,7 +8,7 @@ import platformOverviewHeroPanelSource from '@/features/platform/overview/ui/Pla
 import platformOverviewHotspotsSectionSource from '@/features/platform/overview/ui/PlatformOverviewHotspotsSection.vue?raw'
 import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
 import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
-import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
+import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import trainingTimelineSource from '@/components/training/TrainingTimelinePanel.vue?raw'
 import classManagementPageSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'

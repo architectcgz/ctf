@@ -21,7 +21,7 @@ import categoryProgressSource from '@/features/student-dashboard/ui/StudentCateg
 import difficultyPageSource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import recommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import trainingTimelineSource from '@/components/training/TrainingTimelinePanel.vue?raw'
-import overviewPageSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
+import overviewPageSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
 import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
 
 const journalUserShellSource = readFileSync(
