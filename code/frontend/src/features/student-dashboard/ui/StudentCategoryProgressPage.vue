@@ -8,7 +8,7 @@ import {
   toChallengeCategory,
 } from '@/entities/challenge'
 
-import { rankCategoryActionItems } from '@/components/dashboard/student/utils'
+import { rankCategoryActionItems } from '@/entities/training-timeline'
 
 interface CategoryStat {
   category: string

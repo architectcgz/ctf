@@ -20,7 +20,7 @@ import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw
 import categoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
 import difficultyPageSource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import recommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
-import trainingTimelineSource from '@/components/training/TrainingTimelinePanel.vue?raw'
+import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import overviewPageSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
 

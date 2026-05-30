@@ -16,7 +16,7 @@ import type {
   StudentDirectoryItem,
   TimelineEvent,
 } from '@/api/contracts'
-import TrainingTimelinePanel from '@/components/training/TrainingTimelinePanel.vue'
+import { TrainingTimelinePanel } from '@/entities/training-timeline'
 import StudentInsightAttackSessionsSection from './StudentInsightAttackSessionsSection.vue'
 import StudentInsightManualReviewSection from './StudentInsightManualReviewSection.vue'
 import StudentInsightOverviewSection from './StudentInsightOverviewSection.vue'

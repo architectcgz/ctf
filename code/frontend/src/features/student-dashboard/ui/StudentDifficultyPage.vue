@@ -12,7 +12,7 @@ import { difficultyLabel } from '@/utils/challenge'
 import {
   orderDifficultyActionItems,
   selectDifficultyPriority,
-} from '@/components/dashboard/student/utils'
+} from '@/entities/training-timeline'
 
 interface DifficultyStat {
   difficulty: string

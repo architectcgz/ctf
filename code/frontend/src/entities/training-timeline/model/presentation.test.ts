@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import type { TimelineEvent } from '@/api/contracts'
+import { timelineTypeTone } from './presentation'
+import type { TimelineEvent } from './types'
 
-import { timelineTypeTone } from '../utils'
-
-describe('student dashboard utils', () => {
+describe('training timeline presentation', () => {
   const buildTimelineEvent = (type: TimelineEvent['type']): TimelineEvent => ({
     id: '1',
     type,

@@ -9,7 +9,7 @@ import studentDifficultyPageSource from '@/features/student-dashboard/ui/Student
 import studentOverviewPageSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import studentDashboardRegistrySource from '@/features/student-dashboard/ui/studentDashboardPanelRegistry.ts?raw'
-import trainingTimelinePanelSource from '@/components/training/TrainingTimelinePanel.vue?raw'
+import trainingTimelinePanelSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import studentDashboardDataSource from '@/features/student-dashboard/model/useStudentDashboardData.ts?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
 import studentDashboardRoutesSource from '@/features/student-dashboard/model/studentDashboardRoutes.ts?raw'
@@ -214,7 +214,7 @@ describe('DashboardView', () => {
       "from '@/components/dashboard/student/StudentCategoryProgressPage.vue'"
     )
     expect(studentDashboardPageSource).not.toContain(
-      "from '@/components/training/TrainingTimelinePanel.vue'"
+      "from '@/entities/training-timeline'"
     )
     expect(studentDashboardPageSource).not.toContain(
       "from '@/components/dashboard/student/StudentDifficultyPage.vue'"
@@ -237,7 +237,7 @@ describe('DashboardView', () => {
       "import StudentRecommendationPage from './StudentRecommendationPage.vue'"
     )
     expect(studentDashboardRegistrySource).toContain(
-      "import TrainingTimelinePanel from '@/components/training/TrainingTimelinePanel.vue'"
+      "import { TrainingTimelinePanel } from '@/entities/training-timeline'"
     )
   })
 

@@ -1,113 +1,3 @@
-<script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { Activity, FileText, Server, Target } from 'lucide-vue-next'
-
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import type { TimelineEvent } from '@/api/contracts'
-import {
-  timelineSummary,
-  timelineTypeLabel,
-  timelineTypeTone,
-} from '@/components/dashboard/student/utils'
-import { formatTime } from '@/utils/format'
-
-const props = withDefaults(
-  defineProps<{
-    timeline: TimelineEvent[]
-    embedded?: boolean
-    pageSize?: number
-  }>(),
-  {
-    embedded: false,
-    pageSize: 10,
-  }
-)
-
-const solveCount = computed(() => props.timeline.filter((item) => item.type === 'solve').length)
-const submitCount = computed(() => props.timeline.filter((item) => item.type === 'submit').length)
-const instanceCount = computed(
-  () =>
-    props.timeline.filter(
-      (item) =>
-        item.type === 'instance' ||
-        item.type === 'instance_access' ||
-        item.type === 'instance_proxy_request' ||
-        item.type === 'instance_extend' ||
-        (item.meta?.raw_type as string | undefined) === 'instance_access' ||
-        (item.meta?.raw_type as string | undefined) === 'instance_proxy_request' ||
-        (item.meta?.raw_type as string | undefined) === 'instance_extend'
-    ).length
-)
-const sortedTimeline = computed(() =>
-  [...props.timeline].sort(
-    (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
-  )
-)
-const totalTimelineCount = computed(() => sortedTimeline.value.length)
-const totalTimelinePages = computed(() =>
-  Math.max(1, Math.ceil(totalTimelineCount.value / Math.max(1, props.pageSize)))
-)
-const timelinePage = ref(1)
-const timelineMetrics = computed(() => [
-  {
-    key: 'solve',
-    label: '成功解题',
-    value: solveCount.value,
-    icon: Activity,
-    helper: '累计命中 Flag 的训练次数',
-  },
-  {
-    key: 'submit',
-    label: '提交次数',
-    value: submitCount.value,
-    icon: Target,
-    helper: '最近训练周期内的提交总量',
-  },
-  {
-    key: 'instance',
-    label: '实例操作',
-    value: instanceCount.value,
-    icon: Server,
-    helper: '启动、访问和续期等实例相关动作',
-  },
-  {
-    key: 'total',
-    label: '总记录',
-    value: totalTimelineCount.value,
-    icon: FileText,
-    helper: '当前时间线中收录的训练事件数量',
-  },
-])
-
-watch(
-  () => totalTimelinePages.value,
-  (nextTotalPages) => {
-    timelinePage.value = Math.min(timelinePage.value, nextTotalPages)
-  },
-  { immediate: true }
-)
-
-const pagedTimeline = computed(() => {
-  const safePage = Math.max(1, Math.floor(timelinePage.value || 1))
-  const safePageSize = Math.max(1, Math.floor(props.pageSize || 10))
-  const start = (safePage - 1) * safePageSize
-  return sortedTimeline.value.slice(start, start + safePageSize)
-})
-
-const groupedTimeline = computed(() => {
-  const groups = new Map<string, TimelineEvent[]>()
-  pagedTimeline.value.forEach((event) => {
-    const key = new Date(event.created_at).toLocaleDateString('zh-CN')
-    groups.set(key, [...(groups.get(key) || []), event])
-  })
-  return Array.from(groups.entries()).map(([date, events]) => ({ date, events }))
-})
-
-function changeTimelinePage(page: number): void {
-  timelinePage.value = page
-}
-</script>
-
 <template>
   <section
     class="journal-soft-surface space-y-6 flex min-h-full flex-1 flex-col"
@@ -485,3 +375,114 @@ function changeTimelinePage(page: number): void {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 </style>
+
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { Activity, FileText, Server, Target } from 'lucide-vue-next'
+
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import { formatTime } from '@/utils/format'
+
+import {
+  timelineSummary,
+  timelineTypeLabel,
+  timelineTypeTone,
+  type TimelineEvent,
+} from '../model'
+
+const props = withDefaults(
+  defineProps<{
+    timeline: TimelineEvent[]
+    embedded?: boolean
+    pageSize?: number
+  }>(),
+  {
+    embedded: false,
+    pageSize: 10,
+  }
+)
+
+const solveCount = computed(() => props.timeline.filter((item) => item.type === 'solve').length)
+const submitCount = computed(() => props.timeline.filter((item) => item.type === 'submit').length)
+const instanceCount = computed(
+  () =>
+    props.timeline.filter(
+      (item) =>
+        item.type === 'instance' ||
+        item.type === 'instance_access' ||
+        item.type === 'instance_proxy_request' ||
+        item.type === 'instance_extend' ||
+        (item.meta?.raw_type as string | undefined) === 'instance_access' ||
+        (item.meta?.raw_type as string | undefined) === 'instance_proxy_request' ||
+        (item.meta?.raw_type as string | undefined) === 'instance_extend'
+    ).length
+)
+const sortedTimeline = computed(() =>
+  [...props.timeline].sort(
+    (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+  )
+)
+const totalTimelineCount = computed(() => sortedTimeline.value.length)
+const totalTimelinePages = computed(() =>
+  Math.max(1, Math.ceil(totalTimelineCount.value / Math.max(1, props.pageSize)))
+)
+const timelinePage = ref(1)
+const timelineMetrics = computed(() => [
+  {
+    key: 'solve',
+    label: '成功解题',
+    value: solveCount.value,
+    icon: Activity,
+    helper: '累计命中 Flag 的训练次数',
+  },
+  {
+    key: 'submit',
+    label: '提交次数',
+    value: submitCount.value,
+    icon: Target,
+    helper: '最近训练周期内的提交总量',
+  },
+  {
+    key: 'instance',
+    label: '实例操作',
+    value: instanceCount.value,
+    icon: Server,
+    helper: '启动、访问和续期等实例相关动作',
+  },
+  {
+    key: 'total',
+    label: '总记录',
+    value: totalTimelineCount.value,
+    icon: FileText,
+    helper: '当前时间线中收录的训练事件数量',
+  },
+])
+
+watch(
+  () => totalTimelinePages.value,
+  (nextTotalPages) => {
+    timelinePage.value = Math.min(timelinePage.value, nextTotalPages)
+  },
+  { immediate: true }
+)
+
+const pagedTimeline = computed(() => {
+  const safePage = Math.max(1, Math.floor(timelinePage.value || 1))
+  const safePageSize = Math.max(1, Math.floor(props.pageSize || 10))
+  const start = (safePage - 1) * safePageSize
+  return sortedTimeline.value.slice(start, start + safePageSize)
+})
+
+const groupedTimeline = computed(() => {
+  const groups = new Map<string, TimelineEvent[]>()
+  pagedTimeline.value.forEach((event) => {
+    const key = new Date(event.created_at).toLocaleDateString('zh-CN')
+    groups.set(key, [...(groups.get(key) || []), event])
+  })
+  return Array.from(groups.entries()).map(([date, events]) => ({ date, events }))
+})
+
+function changeTimelinePage(page: number): void {
+  timelinePage.value = page
+}
+</script>
