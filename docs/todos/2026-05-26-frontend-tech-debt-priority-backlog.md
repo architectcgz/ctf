@@ -53,6 +53,7 @@
 - `components/challenge`
   - 现状：挑战目录 / 题面 / 实例 / 题解等块仍有较多单一 challenge capability UI。
   - 代表：`ChallengeDirectoryPanel.vue`、`ChallengeQuestionPanel.vue`、`ChallengeWriteupPanel.vue`
+  - `2026-05-30` challenge feature boundary 进展：`ChallengeDirectoryPanel.vue` 已迁入 `features/challenge-list/ui`，`ChallengeQuestionPanel.vue`、`ChallengeWriteupPanel.vue`、`ChallengeActionAside.vue`、`ChallengeInstanceCard.vue` 已迁入 `features/challenge-detail/ui`；`ChallengeListRoutePage.vue` 与 `ChallengeWorkspaceShell.vue` 也已改为直接消费 feature owner，相关 raw-source 护栏与组件声明同步切到新路径。当前 `components/challenge` 这条后续更适合只盯尚未明确 owner 的残余块，而不是继续让这组 student challenge 私有 UI 留在历史目录。
 - `components/dashboard`
   - 现状：student dashboard 相关变体和样式编辑块仍留在旧目录。
   - 代表：`dashboard/student/*`

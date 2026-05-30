@@ -88,51 +88,6 @@
   </aside>
 </template>
 
-<script setup lang="ts">
-import type { InstanceData, InstanceSharing } from '@/api/contracts'
-import ChallengeInstanceCard from '@/components/challenge/ChallengeInstanceCard.vue'
-
-interface SubmitResultState {
-  variant: 'success' | 'error' | 'pending'
-  message: string
-}
-
-interface Props {
-  needTarget: boolean
-  challengeSolved: boolean
-  submitPanelTitle: string
-  submitPanelCopy: string
-  submitFieldLabel: string
-  submitInputClass: string
-  submitPlaceholder: string
-  submitting: boolean
-  flagInput: string
-  submitResult: SubmitResultState | null
-  instance: InstanceData | null
-  instanceSharing: InstanceSharing
-  instanceLoading: boolean
-  instanceCreating: boolean
-  instanceOpening: boolean
-  instanceExtending: boolean
-  instanceDestroying: boolean
-}
-
-defineProps<Props>()
-
-const emit = defineEmits<{
-  'update:flagInput': [value: string]
-  'submit-flag': []
-  'start-instance': []
-  'open-instance': []
-  'extend-instance': []
-  'destroy-instance': []
-}>()
-
-function updateFlagInput(event: Event): void {
-  emit('update:flagInput', (event.target as HTMLInputElement).value)
-}
-</script>
-
 <style scoped>
 .tool-pane-inner {
   display: flex;
@@ -262,30 +217,54 @@ function updateFlagInput(event: Event): void {
   align-items: center;
   min-height: 34px;
   padding: 0 var(--space-3-5);
-  border: 1px solid var(--line-soft);
+  border: 1px solid color-mix(in srgb, var(--color-success) 18%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--bg-panel) 72%, transparent);
-  font-size: var(--font-size-13);
-  font-weight: 600;
-  color: var(--text-subtle);
-}
-
-.writeup-status-pill--success {
-  border-color: color-mix(in srgb, var(--color-success) 18%, transparent);
   background: var(--journal-success-soft);
   color: var(--journal-success-ink);
 }
-
-@media (max-width: 1080px) {
-  .tool-pane-inner {
-    min-height: 0;
-    position: static;
-  }
-}
-
-@media (max-width: 760px) {
-  .flag-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 </style>
+
+<script setup lang="ts">
+import type { InstanceData, InstanceSharing } from '@/api/contracts'
+import ChallengeInstanceCard from './ChallengeInstanceCard.vue'
+
+interface SubmitResultState {
+  variant: 'success' | 'error' | 'pending'
+  message: string
+}
+
+interface Props {
+  needTarget: boolean
+  challengeSolved: boolean
+  submitPanelTitle: string
+  submitPanelCopy: string
+  submitFieldLabel: string
+  submitInputClass: string
+  submitPlaceholder: string
+  submitting: boolean
+  flagInput: string
+  submitResult: SubmitResultState | null
+  instance: InstanceData | null
+  instanceSharing: InstanceSharing
+  instanceLoading: boolean
+  instanceCreating: boolean
+  instanceOpening: boolean
+  instanceExtending: boolean
+  instanceDestroying: boolean
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  'update:flagInput': [value: string]
+  'submit-flag': []
+  'start-instance': []
+  'open-instance': []
+  'extend-instance': []
+  'destroy-instance': []
+}>()
+
+function updateFlagInput(event: Event): void {
+  emit('update:flagInput', (event.target as HTMLInputElement).value)
+}
+</script>

@@ -130,9 +130,9 @@ import type {
   ChallengeSolutionTab,
   ChallengeSubmissionRecordStatus,
 } from '../model'
-import ChallengeActionAside from '@/components/challenge/ChallengeActionAside.vue'
-import ChallengeQuestionPanel from '@/components/challenge/ChallengeQuestionPanel.vue'
-import ChallengeWriteupPanel from '@/components/challenge/ChallengeWriteupPanel.vue'
+import ChallengeActionAside from './ChallengeActionAside.vue'
+import ChallengeQuestionPanel from './ChallengeQuestionPanel.vue'
+import ChallengeWriteupPanel from './ChallengeWriteupPanel.vue'
 import ChallengeSolutionsPanel from './ChallengeSolutionsPanel.vue'
 import ChallengeSubmissionRecordsPanel from './ChallengeSubmissionRecordsPanel.vue'
 

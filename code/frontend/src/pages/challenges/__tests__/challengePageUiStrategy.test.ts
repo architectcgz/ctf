@@ -5,12 +5,12 @@ import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?r
 import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
 import challengeDetailPageSource from '@/features/challenge-detail/model/useChallengeDetailPage.ts?raw'
 import challengeDetailPresentationSource from '@/features/challenge-detail/model/useChallengeDetailPresentation.ts?raw'
-import challengeDirectoryPanelSource from '@/components/challenge/ChallengeDirectoryPanel.vue?raw'
-import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
+import challengeDirectoryPanelSource from '@/features/challenge-list/ui/ChallengeDirectoryPanel.vue?raw'
+import challengeQuestionPanelSource from '@/features/challenge-detail/ui/ChallengeQuestionPanel.vue?raw'
 import challengeSolutionsPanelSource from '@/features/challenge-detail/ui/ChallengeSolutionsPanel.vue?raw'
 import challengeSubmissionRecordsPanelSource from '@/features/challenge-detail/ui/ChallengeSubmissionRecordsPanel.vue?raw'
-import challengeWriteupPanelSource from '@/components/challenge/ChallengeWriteupPanel.vue?raw'
-import challengeActionAsideSource from '@/components/challenge/ChallengeActionAside.vue?raw'
+import challengeWriteupPanelSource from '@/features/challenge-detail/ui/ChallengeWriteupPanel.vue?raw'
+import challengeActionAsideSource from '@/features/challenge-detail/ui/ChallengeActionAside.vue?raw'
 
 const challengeDetailWorkspaceSource = [
   challengeDetailSource,
@@ -67,7 +67,7 @@ describe('challenge page ui strategy', () => {
 
   it('challenge list route should stay as a thin page shell that delegates directory rendering to shared challenge UI', () => {
     expect(challengeListSource).toContain(
-      "import ChallengeDirectoryPanel from '@/components/challenge/ChallengeDirectoryPanel.vue'"
+      "import { ChallengeDirectoryPanel, useChallengeListPage } from '@/features/challenge-list'"
     )
     expect(challengeListSource).toContain('<ChallengeDirectoryPanel')
     expect(challengeDirectoryPanelSource).toContain(

@@ -1,61 +1,3 @@
-<script setup lang="ts">
-import { Search } from 'lucide-vue-next'
-
-import type { ChallengeCategory, ChallengeDifficulty, ChallengeListItem } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
-import { ChallengeDirectoryRow } from '@/entities/challenge'
-
-interface Props {
-  list: ChallengeListItem[]
-  total: number
-  page: number
-  totalPages: number
-  searchQuery: string
-  categoryFilter: ChallengeCategory | ''
-  difficultyFilter: ChallengeDifficulty | ''
-  loading: boolean
-  hasActiveFilters: boolean
-  hasLoadError: boolean
-  errorMessage: string
-  emptyTitle: string
-  emptyDescription: string
-  buildDetailRoute: (challengeId: string) => AppRouteTarget
-}
-
-defineProps<Props>()
-
-const emit = defineEmits<{
-  'update:searchQuery': [value: string]
-  'update:categoryFilter': [value: ChallengeCategory | '']
-  'update:difficultyFilter': [value: ChallengeDifficulty | '']
-  search: []
-  'filter-change': []
-  'reset-filters': []
-  refresh: []
-  'change-page': [page: number]
-}>()
-
-function updateSearchQuery(event: Event): void {
-  emit('update:searchQuery', (event.target as HTMLInputElement).value)
-  emit('search')
-}
-
-function updateCategoryFilter(event: Event): void {
-  emit('update:categoryFilter', (event.target as HTMLSelectElement).value as ChallengeCategory | '')
-  emit('filter-change')
-}
-
-function updateDifficultyFilter(event: Event): void {
-  emit(
-    'update:difficultyFilter',
-    (event.target as HTMLSelectElement).value as ChallengeDifficulty | ''
-  )
-  emit('filter-change')
-}
-</script>
-
 <template>
   <section
     class="student-directory-section workspace-directory-section challenge-directory-section"
@@ -300,3 +242,61 @@ function updateDifficultyFilter(event: Event): void {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { Search } from 'lucide-vue-next'
+
+import type { ChallengeCategory, ChallengeDifficulty, ChallengeListItem } from '@/api/contracts'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import { ChallengeDirectoryRow } from '@/entities/challenge'
+
+interface Props {
+  list: ChallengeListItem[]
+  total: number
+  page: number
+  totalPages: number
+  searchQuery: string
+  categoryFilter: ChallengeCategory | ''
+  difficultyFilter: ChallengeDifficulty | ''
+  loading: boolean
+  hasActiveFilters: boolean
+  hasLoadError: boolean
+  errorMessage: string
+  emptyTitle: string
+  emptyDescription: string
+  buildDetailRoute: (challengeId: string) => AppRouteTarget
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  'update:searchQuery': [value: string]
+  'update:categoryFilter': [value: ChallengeCategory | '']
+  'update:difficultyFilter': [value: ChallengeDifficulty | '']
+  search: []
+  'filter-change': []
+  'reset-filters': []
+  refresh: []
+  'change-page': [page: number]
+}>()
+
+function updateSearchQuery(event: Event): void {
+  emit('update:searchQuery', (event.target as HTMLInputElement).value)
+  emit('search')
+}
+
+function updateCategoryFilter(event: Event): void {
+  emit('update:categoryFilter', (event.target as HTMLSelectElement).value as ChallengeCategory | '')
+  emit('filter-change')
+}
+
+function updateDifficultyFilter(event: Event): void {
+  emit(
+    'update:difficultyFilter',
+    (event.target as HTMLSelectElement).value as ChallengeDifficulty | ''
+  )
+  emit('filter-change')
+}
+</script>

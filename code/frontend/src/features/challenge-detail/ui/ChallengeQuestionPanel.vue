@@ -114,26 +114,6 @@
   </section>
 </template>
 
-<script setup lang="ts">
-import type { ChallengeDetailData } from '@/api/contracts'
-import { ChallengeMetaStrip } from '@/entities/challenge'
-
-interface Props {
-  challenge: ChallengeDetailData
-  sanitizedDescription: string
-  scoreRailProbeMessage: string
-  isHintExpanded: (level: number) => boolean
-}
-
-defineProps<Props>()
-
-const emit = defineEmits<{
-  'download-attachment': []
-  'toggle-hint': [level: number]
-  'score-rail-probe': []
-}>()
-</script>
-
 <style scoped>
 .question-hero {
   display: grid;
@@ -294,3 +274,23 @@ const emit = defineEmits<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import type { ChallengeDetailData } from '@/api/contracts'
+import { ChallengeMetaStrip } from '@/entities/challenge'
+
+interface Props {
+  challenge: ChallengeDetailData
+  sanitizedDescription: string
+  scoreRailProbeMessage: string
+  isHintExpanded: (level: number) => boolean
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  'download-attachment': []
+  'toggle-hint': [level: number]
+  'score-rail-probe': []
+}>()
+</script>

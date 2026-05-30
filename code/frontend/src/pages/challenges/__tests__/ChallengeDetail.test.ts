@@ -8,11 +8,11 @@ import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.v
 import challengeDetailPageSource from '@/features/challenge-detail/model/useChallengeDetailPage.ts?raw'
 import challengeDetailRoutesSource from '@/features/challenge-detail/model/challengeDetailRoutes.ts?raw'
 import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
-import challengeQuestionPanelSource from '@/components/challenge/ChallengeQuestionPanel.vue?raw'
+import challengeQuestionPanelSource from '@/features/challenge-detail/ui/ChallengeQuestionPanel.vue?raw'
 import challengeSolutionsPanelSource from '@/features/challenge-detail/ui/ChallengeSolutionsPanel.vue?raw'
 import challengeSubmissionRecordsPanelSource from '@/features/challenge-detail/ui/ChallengeSubmissionRecordsPanel.vue?raw'
-import challengeWriteupPanelSource from '@/components/challenge/ChallengeWriteupPanel.vue?raw'
-import challengeActionAsideSource from '@/components/challenge/ChallengeActionAside.vue?raw'
+import challengeWriteupPanelSource from '@/features/challenge-detail/ui/ChallengeWriteupPanel.vue?raw'
+import challengeActionAsideSource from '@/features/challenge-detail/ui/ChallengeActionAside.vue?raw'
 
 const challengeApiMocks = vi.hoisted(() => ({
   getChallengeDetail: vi.fn(),
