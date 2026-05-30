@@ -5,11 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import { ClassReportExportDialog } from '@/features/teacher-class-report-export'
-import classReportExportContextSectionSource from '@/features/teacher-class-report-export/ui/ClassReportExportContextSection.vue?raw'
-import classReportExportDialogShellSource from '@/features/teacher-class-report-export/ui/ClassReportExportDialog.vue?raw'
-import classReportExportPreviewSectionSource from '@/features/teacher-class-report-export/ui/ClassReportExportPreviewSection.vue?raw'
-import classReportExportTaskRailSource from '@/features/teacher-class-report-export/ui/ClassReportExportTaskRail.vue?raw'
+import { ClassReportExportDialog } from '@/features/teaching/class-report-export'
+import classReportExportContextSectionSource from '@/features/teaching/class-report-export/ui/ClassReportExportContextSection.vue?raw'
+import classReportExportDialogShellSource from '@/features/teaching/class-report-export/ui/ClassReportExportDialog.vue?raw'
+import classReportExportPreviewSectionSource from '@/features/teaching/class-report-export/ui/ClassReportExportPreviewSection.vue?raw'
+import classReportExportTaskRailSource from '@/features/teaching/class-report-export/ui/ClassReportExportTaskRail.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const classReportExportDialogSource = [

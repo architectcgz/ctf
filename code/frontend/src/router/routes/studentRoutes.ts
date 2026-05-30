@@ -6,7 +6,7 @@ export const studentRoutes: RouteRecordRaw[] = [
   {
     path: 'student/dashboard',
     name: 'Dashboard',
-    component: () => import('@/views/dashboard/DashboardView.vue'),
+    component: () => import('@/pages/dashboard/DashboardRoutePage.vue'),
     meta: {
       requiresAuth: true,
       title: '仪表盘',
@@ -21,7 +21,7 @@ export const studentRoutes: RouteRecordRaw[] = [
   {
     path: 'challenges',
     name: 'Challenges',
-    component: () => import('@/views/challenges/ChallengeList.vue'),
+    component: () => import('@/pages/challenges/ChallengeListRoutePage.vue'),
     meta: {
       requiresAuth: true,
       roles: ['student', 'teacher'],
@@ -33,7 +33,7 @@ export const studentRoutes: RouteRecordRaw[] = [
   {
     path: 'challenges/:id',
     name: 'ChallengeDetail',
-    component: () => import('@/views/challenges/ChallengeDetail.vue'),
+    component: () => import('@/pages/challenges/ChallengeDetailRoutePage.vue'),
     meta: {
       requiresAuth: true,
       roles: ['student', 'teacher'],
@@ -44,25 +44,25 @@ export const studentRoutes: RouteRecordRaw[] = [
   {
     path: 'contests',
     name: 'Contests',
-    component: () => import('@/views/contests/ContestList.vue'),
+    component: () => import('@/pages/contests/ContestListRoutePage.vue'),
     meta: { requiresAuth: true, title: '竞赛', icon: 'Trophy', contentLayout: 'bleed' },
   },
   {
     path: 'contests/:id',
     name: 'ContestDetail',
-    component: () => import('@/views/contests/ContestDetail.vue'),
+    component: () => import('@/pages/contests/ContestDetailRoutePage.vue'),
     meta: { requiresAuth: true, title: '竞赛详情', contentLayout: 'bleed' },
   },
   {
     path: 'scoreboard',
     name: 'Scoreboard',
-    component: () => import('@/views/scoreboard/ScoreboardView.vue'),
+    component: () => import('@/pages/scoreboard/ScoreboardViewRoutePage.vue'),
     meta: { requiresAuth: true, title: '排行榜', icon: 'BarChart3', contentLayout: 'bleed' },
   },
   {
     path: 'scoreboard/:contestId',
     name: 'ScoreboardDetail',
-    component: () => import('@/views/scoreboard/ScoreboardDetail.vue'),
+    component: () => import('@/pages/scoreboard/ScoreboardDetailRoutePage.vue'),
     props: (route) => ({
       contestId: String(route.params.contestId || ''),
     }),
@@ -71,7 +71,7 @@ export const studentRoutes: RouteRecordRaw[] = [
   {
     path: 'student/instances',
     name: 'Instances',
-    component: () => import('@/views/instances/InstanceList.vue'),
+    component: () => import('@/pages/instances/InstanceListRoutePage.vue'),
     meta: {
       requiresAuth: true,
       roles: ['student'],
@@ -87,7 +87,7 @@ export const studentRoutes: RouteRecordRaw[] = [
   {
     path: 'student/skill-profile',
     name: 'SkillProfile',
-    component: () => import('@/views/profile/SkillProfile.vue'),
+    component: () => import('@/pages/profile/SkillProfileRoutePage.vue'),
     meta: {
       requiresAuth: true,
       roles: ['student'],
@@ -103,7 +103,7 @@ export const studentRoutes: RouteRecordRaw[] = [
   {
     path: 'profile',
     name: 'Profile',
-    component: () => import('@/views/profile/UserProfile.vue'),
+    component: () => import('@/pages/profile/UserProfileRoutePage.vue'),
     meta: { requiresAuth: true, title: '个人资料', icon: 'User', contentLayout: 'bleed' },
   },
   {
@@ -113,7 +113,7 @@ export const studentRoutes: RouteRecordRaw[] = [
   {
     path: 'settings/security',
     name: 'SecuritySettings',
-    component: () => import('@/views/profile/SecuritySettings.vue'),
+    component: () => import('@/pages/profile/SecuritySettingsRoutePage.vue'),
     meta: { requiresAuth: true, title: '安全设置', icon: 'Settings', contentLayout: 'bleed' },
   },
   {
@@ -123,13 +123,13 @@ export const studentRoutes: RouteRecordRaw[] = [
   {
     path: 'notifications',
     name: 'Notifications',
-    component: () => import('@/views/notifications/NotificationList.vue'),
+    component: () => import('@/pages/notifications/NotificationListRoutePage.vue'),
     meta: { requiresAuth: true, title: '通知', icon: 'Bell', contentLayout: 'bleed' },
   },
   {
     path: 'notifications/:id',
     name: 'NotificationDetail',
-    component: () => import('@/views/notifications/NotificationDetail.vue'),
+    component: () => import('@/pages/notifications/NotificationDetailRoutePage.vue'),
     props: (route) => ({
       id: String(route.params.id || ''),
     }),

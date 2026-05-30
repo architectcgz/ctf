@@ -73,7 +73,7 @@
 
 - 目标：
   - 新增 `features/teacher-class-management/ui/ClassManagementPage.vue`
-  - route view 改从 `@/features/teacher-class-management` 取 page shell
+  - route view 改从 `@/features/teacher/class-management` 取 page shell
 - 验证：
   - `npm run test:run -- src/views/teacher/__tests__/ClassManagement.test.ts`
 - Review focus：

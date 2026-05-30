@@ -6,7 +6,7 @@ import userGovernancePageSource from '@/features/platform/user-management/ui/Use
 import userGovernanceOverviewPanelSource from '@/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
-import classManagementSource from '@/features/teacher-class-management/ui/ClassManagementPage.vue?raw'
+import classManagementSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
 import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
 import scoreboardWorkspaceShellSource from '@/components/scoreboard/ScoreboardWorkspaceShell.vue?raw'

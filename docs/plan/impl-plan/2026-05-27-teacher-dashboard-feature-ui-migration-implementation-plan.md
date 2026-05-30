@@ -55,7 +55,7 @@
 ### `components/teacher/dashboard/*` 继续保留
 
 - 教师总览的稳定展示分区
-- 不直接引入 `@/features/teacher-dashboard`
+- 不直接引入 `@/features/teacher/dashboard`
 
 ## 任务切片
 

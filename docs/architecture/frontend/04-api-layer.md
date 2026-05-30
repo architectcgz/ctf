@@ -170,7 +170,7 @@ interface ApiEnvelope<T> {
 
 ## 6. 边界与已知例外
 
-- 页面 view 不直接 import 非 contract API 模块；业务调用应下沉到 feature model。
+- route page 不直接 import 非 contract API 模块；业务调用应下沉到 feature model。
 - 请求层当前没有统一的自动重试机制；竞赛实时刷新、导出轮询等重试逻辑继续留在 feature/composable。
 - `getAxiosInstance()` 只作为少量特殊场景的逃生口，默认调用方仍应使用 `request<T>()`。
 - truly global 错误导航只允许通过 `runtime/globalErrorRuntime.ts` 进入；页面 / feature 对可恢复错误保留自己的 UX owner。
@@ -178,6 +178,6 @@ interface ApiEnvelope<T> {
 ## 7. Guardrail
 
 - 前端分层边界，防止低层 UI 和页面随意穿透到 API：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
-- route view 不直接依赖业务 API：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- route page 不直接依赖业务 API：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 请求层与 runtime error owner 边界：`code/frontend/src/api/__tests__/request.test.ts`、`code/frontend/src/runtime/__tests__/globalErrorRuntime.test.ts`
 - 长期接口契约：`docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`

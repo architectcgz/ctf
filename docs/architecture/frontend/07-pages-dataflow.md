@@ -1,7 +1,7 @@
 # 前端页面数据流与 owner
 
 > 状态：Current
-> 事实源：`code/frontend/src/pages/`、`code/frontend/src/features/**/model/`、`code/frontend/src/stores/`、`code/frontend/src/views/__tests__/`
+> 事实源：`code/frontend/src/pages/`、`code/frontend/src/features/**/model/`、`code/frontend/src/stores/`、`code/frontend/src/__tests__/`
 > 替代：无
 
 ## 定位
@@ -17,9 +17,9 @@
   - 负责：作为运行时 route entry，挂载页面结构、组合 feature / widget 和共享组件
   - 不负责：直接调用业务 API，或长期持有复杂路由 query 与异步编排
 
-- `code/frontend/src/views/**`
-  - 负责：仅保留测试支撑与必要桥接壳，帮助 `views/**/__tests__` 在迁移期继续贴近页面断言
-  - 不负责：再作为运行时路由入口或新的页面 owner
+- `code/frontend/src/__tests__`
+  - 负责：全局前端架构守卫与跨页面稳定策略测试
+  - 不负责：替代 route page、feature 或 widget 的行为测试 owner
 
 - `code/frontend/src/features/**/model`
   - 负责：页面级请求编排、路由参数解析、分页、导出、实时桥接和局部状态机
@@ -199,9 +199,9 @@
 
 ### 2.8 个人安全设置页的 shell 分层
 
-`SecuritySettings` 当前保留了一个典型的 route view -> feature model -> workspace shell 链路：
+`SecuritySettings` 当前保留了一个典型的 route page -> feature model -> workspace shell 链路：
 
-1. `code/frontend/src/views/profile/SecuritySettings.vue`
+1. `code/frontend/src/pages/profile/SecuritySettingsRoutePage.vue`
    - 负责：作为路由入口接线 `useSecuritySettingsPage()` 和 `SecuritySettingsWorkspaceShell.vue`
    - 不负责：内联密码校验、提交流程和展示布局细节
 2. `code/frontend/src/features/profile/model/useSecuritySettingsPage.ts`
@@ -218,14 +218,14 @@
 
 ## 3. 页面数据流不变量
 
-- route view 默认不直接 import 非 contract API 模块
+- route page 默认不直接 import 非 contract API 模块
 - 页面 owner 优先以 feature model 组合多个子 composable，而不是新增一个更大的页面文件
 - query/tab 同步继续通过 `useRouteQueryTabs()` 或 `useUrlSyncedTabs()` 收口
 - 只有跨页面共享的数据进 store；其余数据跟随页面生命周期释放
 
 ## 4. Guardrail
 
-- route view 与页面路由边界：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- route page 与页面路由边界：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 前端整体分层：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - 学生仪表盘组合边界：`code/frontend/src/features/student-dashboard/model/useStudentDashboardPageBoundary.test.ts`
 - 竞赛详情组合边界：`code/frontend/src/features/contest-detail/model/useContestDetailPageBoundary.test.ts`

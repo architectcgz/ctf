@@ -1,0 +1,63 @@
+import { describe, expect, it } from 'vitest'
+import { mount } from '@vue/test-utils'
+import ChallengePackageFormatRoutePage from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue'
+import challengePackageFormatSource from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue?raw'
+import challengePackageFormatGuidePanelSource from '@/components/platform/challenge/ChallengePackageFormatGuidePanel.vue?raw'
+import challengePackageFormatPageSource from '@/features/challenge-package-import/model/useChallengePackageFormatPage.ts?raw'
+
+describe('ChallengePackageFormat', () => {
+  function mountChallengePackageFormat() {
+    return mount(ChallengePackageFormatRoutePage, {
+      global: {
+        stubs: {
+          RouterLink: {
+            props: ['to'],
+            template: '<a :data-to="JSON.stringify(to)"><slot /></a>',
+          },
+        },
+      },
+    })
+  }
+
+  it('应该展示题目包结构与 challenge.yml 示例', () => {
+    const wrapper = mountChallengePackageFormat()
+
+    expect(wrapper.text()).toContain('题目包示例')
+    expect(wrapper.text()).toContain('challenge.yml')
+    expect(wrapper.text()).toContain('statement.md')
+    expect(wrapper.text()).toContain('Dockerfile')
+    expect(wrapper.text()).toContain('app.py')
+    expect(wrapper.text()).toContain('不要写 # 题目名')
+    expect(wrapper.text()).toContain('不要写 ## 题目描述')
+    expect(wrapper.text()).toContain('api_version: v1')
+    expect(wrapper.text()).toContain('flag:')
+    expect(wrapper.text()).toContain('checker:')
+    expect(wrapper.text()).toContain('http_standard')
+    expect(wrapper.text()).toContain('tcp_standard')
+    expect(wrapper.text()).toContain('script_checker')
+    expect(wrapper.text()).toContain('SET_FLAG {{FLAG}}')
+    expect(wrapper.text()).toContain('docker/check/protocol.py')
+    expect(wrapper.text()).toContain('X-AWD-Checker-Token')
+  })
+
+  it('应使用共享 workspace overline 作为上传示例页的 hero 标记', () => {
+    expect(challengePackageFormatGuidePanelSource).toContain(
+      '<div class="workspace-overline">Uploader Guide</div>'
+    )
+    expect(challengePackageFormatGuidePanelSource).not.toContain(
+      '<div class="journal-eyebrow">Uploader Guide</div>'
+    )
+    expect(challengePackageFormatSource).toContain(
+      "import ChallengePackageFormatGuidePanel from '@/components/platform/challenge/ChallengePackageFormatGuidePanel.vue'"
+    )
+  })
+
+  it('路由页应仅负责组合，不直接耦合返回跳转细节', () => {
+    expect(challengePackageFormatSource).toContain('useChallengePackageFormatPage')
+    expect(challengePackageFormatSource).toContain('<RouterLink')
+    expect(challengePackageFormatSource).not.toContain('@click="backToImportManage"')
+    expect(challengePackageFormatSource).not.toContain('useRouter')
+    expect(challengePackageFormatPageSource).toContain("name: 'PlatformChallengeImportManage'")
+    expect(challengePackageFormatPageSource).not.toContain("from 'vue-router'")
+  })
+})

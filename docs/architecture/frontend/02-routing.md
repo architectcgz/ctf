@@ -146,6 +146,6 @@
 
 ## 6. Guardrail
 
-- route page 入口只能落在 `pages/**`，且不能直接持有业务 API、路由状态或 query-tab 逻辑：`code/frontend/src/__tests__/architectureBoundaries.test.ts`、`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- route page 入口只能落在 `pages/**`，且不能直接持有业务 API、路由状态或 query-tab 逻辑：`code/frontend/src/__tests__/architectureBoundaries.test.ts`、`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 教师/管理员导航映射和命名空间匹配：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`
 - 默认首页与角色跳转：`code/frontend/src/utils/roleRoutes.ts`

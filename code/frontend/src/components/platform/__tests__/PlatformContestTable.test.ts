@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
 import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
-import PlatformContestTable from '@/features/platform-contests/ui/PlatformContestTable.vue'
-import adminContestTableSource from '@/features/platform-contests/ui/PlatformContestTable.vue?raw'
+import PlatformContestTable from '@/features/platform/contests/ui/PlatformContestTable.vue'
+import adminContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
 import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
 import type { ContestDetailData } from '@/api/contracts'
 

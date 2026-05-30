@@ -54,7 +54,7 @@
 - 前端架构策略：`code/frontend/scripts/frontend-architecture-policy.json`
   - 这是前端结构约束的单点事实源；后续若要调整分层、route view 边界或增长守卫，先改策略，再让脚本与测试消费它。
 - 前端分层：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
-- 路由边界：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- 路由边界：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 前端增长守卫：`code/frontend/scripts/check-frontend-growth-guard.mjs`
 - AWD owner 边界：`code/frontend/src/features/contest-awd-admin/model/useAwdOwnerBoundaries.test.ts`
 - 共享模板：`code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`

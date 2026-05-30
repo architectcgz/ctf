@@ -5,10 +5,10 @@ import type {
   AdminAwdChallengeData,
   AdminAwdChallengeImportPreview,
 } from '@/api/contracts'
-import type { PlatformAwdChallengeImportUploadResult } from '@/features/platform-awd-challenges'
-import awdChallengeImportSectionSource from '@/features/platform-awd-challenges/ui/AwdChallengeImportSection.vue?raw'
-import AWDChallengeLibraryPage from '@/features/platform-awd-challenges/ui/AWDChallengeLibraryPage.vue'
-import awdChallengeLibraryPageSourceBase from '@/features/platform-awd-challenges/ui/AWDChallengeLibraryPage.vue?raw'
+import type { PlatformAwdChallengeImportUploadResult } from '@/features/platform/awd-challenges'
+import awdChallengeImportSectionSource from '@/features/platform/awd-challenges/ui/AwdChallengeImportSection.vue?raw'
+import AWDChallengeLibraryPage from '@/features/platform/awd-challenges/ui/AWDChallengeLibraryPage.vue'
+import awdChallengeLibraryPageSourceBase from '@/features/platform/awd-challenges/ui/AWDChallengeLibraryPage.vue?raw'
 
 import awdChallengeLibrarySectionSource from '../AwdChallengeLibrarySection.vue?raw'
 import awdChallengeWorkspaceHeaderSource from '../AwdChallengeWorkspaceHeader.vue?raw'

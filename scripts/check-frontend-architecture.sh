@@ -10,7 +10,7 @@ run_frontend_layer_checks() {
     cd "$ROOT_DIR/code/frontend"
     npm run test:run -- \
       src/__tests__/architectureBoundaries.test.ts \
-      src/views/__tests__/routeViewArchitectureBoundary.test.ts
+      src/__tests__/routePageArchitectureBoundary.test.ts
   )
 }
 

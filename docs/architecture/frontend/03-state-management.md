@@ -157,7 +157,7 @@
 边界约束：
 
 - store 不直接持有路由对象
-- view 不直接 import 非 contract API 模块
+- route page 不直接 import 非 contract API 模块
 - 低层 UI 不直接依赖 store、router 和业务 API
 
 ## 7. 兼容与历史例外
@@ -168,5 +168,5 @@
 ## 8. Guardrail
 
 - 前端分层与 import 边界：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
-- route view 不直接拥有业务 API 和路由 query hook：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- route page 不直接拥有业务 API 和路由 query hook：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 通知实时状态同步：`code/frontend/src/features/notifications/model/useNotificationRealtime.test.ts`

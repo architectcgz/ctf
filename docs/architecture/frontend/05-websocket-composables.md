@@ -144,5 +144,5 @@
 ## 6. Guardrail
 
 - 通知实时同步行为测试：`code/frontend/src/features/notifications/model/useNotificationRealtime.test.ts`
-- 页面层不能直接持有复杂路由/业务 owner：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- 页面层不能直接持有复杂路由/业务 owner：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 后端实时端点注册：`code/backend/internal/app/router.go`

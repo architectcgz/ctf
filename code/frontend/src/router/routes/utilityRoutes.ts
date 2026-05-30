@@ -8,7 +8,7 @@ export const utilityRoutes: RouteRecordRaw[] = [
 {
   path: '/ui-lab',
   name: 'UILab',
-  component: () => import('@/views/UILab.vue'),
+  component: () => import('@/pages/utility/UILabRoutePage.vue'),
   meta: { requiresAuth: true, roles: ['admin'], title: 'UI 设计实验室' },
 },
 ]

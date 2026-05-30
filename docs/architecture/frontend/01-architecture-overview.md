@@ -75,8 +75,6 @@ code/frontend/
 │   │   └── contests/ / scoreboard/ ...
 │   ├── widgets/
 │   │   └── */
-│   ├── views/
-│   │   └── __tests__/
 │   ├── assets/styles/
 │   ├── __tests__/
 │   ├── main.ts
@@ -153,7 +151,7 @@ code/frontend/
 - 前端架构策略单点事实：`code/frontend/scripts/frontend-architecture-policy.json`
   - 分层、低层 forbidden imports、`pages/**` route entry 约束、增长守卫入口都以这份策略为准；以后如果要调整前端结构边界，先改这份策略，再同步对应测试或脚本。
 - 前端分层：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
-- route view 边界：`code/frontend/src/views/__tests__/routeViewArchitectureBoundary.test.ts`
+- route page 边界：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 后台导航命名空间：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`
 - 共享弹窗模板：`code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`
 - 主题尾部硬编码检查：`cd code/frontend && npm run check:theme-tail`

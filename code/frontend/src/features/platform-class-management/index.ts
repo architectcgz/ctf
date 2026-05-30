@@ -1,1 +1,0 @@
-export { usePlatformClassManagementPage } from './model'

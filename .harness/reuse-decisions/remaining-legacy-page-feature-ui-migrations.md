@@ -94,3 +94,9 @@ refactor_existing
 - 如果迁移顺利，`legacyComponentPageAllowlist` 会只剩学生 dashboard 那 5 个 page，teacher / platform 这批 page shell 会全部切到各自 feature 的 `model + ui` public API。
 - 本轮不改 `useClassManagementPage.ts`、`useClassStudentsPage.ts`、`useStudentAnalysisPage.ts`、`useAwdChallengeLibraryPage.ts`、`useAwdChallengeImportPage.ts` 的 router / API / async owner，只收口 page shell 落位和 route import 边界。
 - 后续同一条链路继续把 `ChallengePackageFormat`、`ChallengeImportManage`、`ImageManage`、`CheatDetection`、`TeacherAWDReviewDetail`、`PlatformAwdReviewDetail` 的运行时路由入口从 `views/**` 迁到 `pages/**`，并把 `views/*.vue` 降级成测试桥接壳。
+
+## 2026-05-30 student route-page closeout
+- 学生侧 `dashboard`、`challenges`、`contests`、`scoreboard`、`instances`、`profile`、`notifications` 的运行时路由入口已经统一切到 `pages/**`。
+- 对应学生旧 `views/*.vue` 不再保留桥接壳，物理文件直接删除；`views/` 在这组能力下只剩 `__tests__/`。
+- 架构守卫同步从 `route view` 语义收口到 `route page`：扫描运行时 `pages/**`，并把页面大小阈值检查限定到 `*RoutePage.vue`。
+- 同一轮已继续完成 `auth`、`errors`、`UILab` 运行时入口迁移到 `pages/**`，对应旧 `views/*.vue` 也已删除；运行时入口层现已完全退出 `views/`。

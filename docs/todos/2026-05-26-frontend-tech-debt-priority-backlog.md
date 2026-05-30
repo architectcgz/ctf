@@ -119,39 +119,39 @@
   - 目标 owner：`features/platform/user-management/ui`
   - 优先级：`P1`
 - `platform/class/*`
-  - 当前 consumer：`views/platform/ClassManage.vue`
+  - 当前 consumer：`pages/platform/ClassManageRoutePage.vue`
   - 目标 owner：`features/platform/class-management/ui`
   - 优先级：`P1`
 - `platform/student/*`
-  - 当前 consumer：`views/platform/StudentManage.vue`
+  - 当前 consumer：`pages/platform/StudentManageRoutePage.vue`
   - 目标 owner：`features/platform/student-management/ui`
   - 优先级：`P1`
 - `platform/instance/*`
-  - 当前 consumer：`views/platform/InstanceManage.vue`
+  - 当前 consumer：`pages/platform/InstanceManageRoutePage.vue`
   - 目标 owner：`features/platform/instance-management/ui`
   - 优先级：`P1`
 - `platform/audit/*`
-  - 当前 consumer：`views/platform/AuditLog.vue`
+  - 当前 consumer：`pages/platform/AuditLogRoutePage.vue`
   - 目标 owner：`features/audit-log/ui`
   - 优先级：`P1`
 - `platform/images/*`
-  - 当前 consumer：`views/platform/ImageManage.vue`
+  - 当前 consumer：`pages/platform/ImageManageRoutePage.vue`
   - 目标 owner：`features/image-management/ui`
   - 优先级：`P1`
 - `platform/awd-review/*`
-  - 当前 consumer：`views/platform/AWDReviewIndex.vue`
-  - 目标 owner：`features/awd-review-workspace/ui`
+  - 当前 consumer：`pages/awd-review/PlatformAwdReviewIndexRoutePage.vue`、`pages/awd-review/PlatformAwdReviewDetailRoutePage.vue`
+  - 目标 owner：`widgets/awd-review-workspace`、`features/awd-review-detail-workspace`
   - 优先级：`P1`
 - `platform/awd-service/*`
   - 当前 consumer：`features/platform/awd-challenges/ui/AWDChallengeLibraryPage.vue`
   - 目标 owner：`features/platform/awd-challenges/ui`
   - 优先级：`P1`
 - `platform/challenge/*`
-  - 当前 consumer：`views/platform/ChallengeImportManage.vue`、`views/platform/ChallengeImportPreview.vue`、`views/platform/ChallengeManage.vue`、`features/platform/challenge-detail/ui/AdminChallengeProfilePanel.vue`、`features/challenge-writeup-editor/ui/ChallengeWriteupViewPage.vue`
+  - 当前 consumer：`pages/platform/challenges/ChallengeImportManageRoutePage.vue`、`pages/platform/challenges/ChallengeImportPreviewRoutePage.vue`、`features/platform/challenges/ui/ChallengeManagePage.vue`、`pages/platform/challenges/ChallengeDetailRoutePage.vue`、`pages/platform/challenges/ChallengeWriteupViewRoutePage.vue`
   - 目标 owner：按能力分拆到 `features/challenge-package-import/ui`、`features/platform/challenges/ui`、`features/platform/challenge-detail/ui`，避免继续留在一个大目录
   - 优先级：`P1`
 - `platform/cheat/*`
-  - 当前 consumer：`views/platform/CheatDetection.vue`
+  - 当前 consumer：`pages/platform/CheatDetectionRoutePage.vue`
   - 目标 owner：当前先并入 `features/platform/overview/ui`；若后续 capability 继续增长，再独立成 `platform-cheat-detection`
   - 优先级：`P2`
 - `platform/contest/*`
@@ -231,12 +231,15 @@
 
 ## Open Items
 
-- [ ] P1：清空运行时 `views/*.vue` 入口层
+- [x] P1：清空运行时 `views/*.vue` 入口层
   - 依据：当前前端不应再用 `views/*.vue` 承载运行时页面入口；同时也不再让 `features/*RoutePage.vue` 或 `widgets/*RoutePage.vue` 兼任页面层语义。
   - 目标：router 运行时入口统一收敛到 `pages/**`；`features/**` 回到能力 owner，`widgets/**` 回到页面区块组合，`views/` 仅保留 `__tests__/` 与必要测试支撑文件。
   - `2026-05-30` 进展：`ChallengeManage`、`PlatformOverview`、`TeacherDashboard`、`ChallengeTopologyStudio`、`ChallengeWriteup`、`ChallengeWriteupView`、`AWDChallengeImport`、`ChallengeImportPreview`、`PlatformStudentReviewArchive`、`AWDReviewIndex`、`TeacherAWDReviewIndex`、`ImageManage`、`CheatDetection`、`PlatformAwdReviewDetail`、`TeacherAWDReviewDetail`、`ChallengePackageFormat`、`ChallengeImportManage` 已切到 `pages/**` 运行时入口；对应 `views/*.vue` 当前只保留测试桥接壳。
-  - 当前剩余运行时 `@/views/*` 路由入口只剩学生侧/公开页/错误页/工具页：`dashboard`、`challenges`、`contests`、`scoreboard`、`instances`、`profile`、`notifications`、`auth`、`errors`、`UILab`。
-  - 下一批建议：优先把学生侧运行时页从 `views/**` 收到 `pages/student/**` 与 `pages/shared/**`，最后再决定 `auth/errors/UILab` 是否也统一迁入 `pages/**`。
+  - `2026-05-30` 学生侧进一步进展：`dashboard`、`challenges`、`contests`、`scoreboard`、`instances`、`profile`、`notifications` 已全部切到 `pages/**`，对应学生旧 `views/*.vue` 已删除；当前 `views/` 在这组能力下只剩 `__tests__/`。
+  - `2026-05-30` 最终进展：`auth`、`errors`、`UILab` 也已统一迁入 `pages/**`，对应旧 `views/*.vue` 已删除。
+  - `2026-05-30` platform 清场进展：`views/platform/*.vue` 旧页面残片已删除，相关 raw-source 测试也已切到 `pages/**` 或 feature / widget owner。
+  - `2026-05-30` teacher 清场进展：`views/teacher/*.vue` 旧页面残片也已删除，教师侧相关测试入口已切到 `pages/teacher/**` 或 `pages/awd-review/**`。
+  - 当前结论：运行时路由入口已经完全退出 `views/`；`views/` 现在只保留 `__tests__/` 邻近测试支撑。
 
 - [x] P1：继续拆 `PlatformOverviewPage.vue` 与 `TeacherInstanceManagementPage.vue`
   - 依据：`PlatformOverviewPage.vue` 当前约 `728` 行，`TeacherInstanceManagementPage.vue` 当前约 `597` 行，仍属于明显过宽的 legacy component page。
