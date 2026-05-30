@@ -6,7 +6,7 @@ import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import CActionMenu from '@/components/common/menus/CActionMenu.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
 import type { ContestEditRouteTarget, ContestOperationsRouteTarget } from '../model'
 
@@ -196,11 +196,12 @@ function handleAnnounce(contest: ContestDetailData): void {
     </WorkspaceDataTable>
 
     <div class="admin-pagination workspace-directory-pagination contest-pagination-tone text-sm">
-      <PlatformPaginationControls
+      <PagePaginationControls
         :page="page"
         :total-pages="totalPages"
         :total="total"
         :total-label="`共 ${total} 场竞赛`"
+        :show-jump="true"
         @change-page="emit('changePage', $event)"
       />
     </div>

@@ -1,91 +1,3 @@
-<script setup lang="ts">
-import type { AuditLogItem } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
-import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
-import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
-
-interface Props {
-  rows: AuditLogItem[]
-  total: number
-  page: number
-  totalPages: number
-  loading: boolean
-  error: string | null
-  keyword: string
-  hasActiveFilters: boolean
-  selectedSortLabel: string
-  sortOptions: WorkspaceDirectorySortOption[]
-  actionFilter: string
-  resourceTypeFilter: string
-  actorUserIdFilter: string
-  formatDate: (value: string) => string
-  detailPreview: (detail: Record<string, unknown> | undefined) => string
-  actorDisplayName: (item: AuditLogItem) => string
-}
-
-defineProps<Props>()
-
-const emit = defineEmits<{
-  'update:keyword': [value: string]
-  'update:actionFilter': [value: string]
-  'update:resourceTypeFilter': [value: string]
-  'update:actorUserIdFilter': [value: string]
-  'select-sort': [option: WorkspaceDirectorySortOption]
-  'reset-filters': []
-  retry: []
-  'open-actor-detail': [row: AuditLogItem]
-  'change-page': [page: number]
-}>()
-
-const auditTableColumns = [
-  {
-    key: 'created_at',
-    label: '时间',
-    widthClass: 'w-[18%] min-w-[11rem]',
-    cellClass: 'audit-table__time-cell',
-  },
-  {
-    key: 'action',
-    label: '动作',
-    widthClass: 'w-[12%] min-w-[7rem]',
-    cellClass: 'audit-table__action-cell',
-  },
-  {
-    key: 'resource',
-    label: '资源',
-    widthClass: 'w-[18%] min-w-[10rem]',
-    cellClass: 'audit-table__resource-cell',
-  },
-  {
-    key: 'actor',
-    label: '执行人',
-    widthClass: 'w-[18%] min-w-[10rem]',
-    cellClass: 'audit-table__actor-cell',
-  },
-  {
-    key: 'detail',
-    label: '明细',
-    widthClass: 'w-[34%] min-w-[16rem]',
-    cellClass: 'audit-table__detail-cell',
-  },
-]
-
-function updateActionFilter(event: Event): void {
-  emit('update:actionFilter', (event.target as HTMLSelectElement).value)
-}
-
-function updateResourceTypeFilter(event: Event): void {
-  emit('update:resourceTypeFilter', (event.target as HTMLInputElement).value)
-}
-
-function updateActorUserIdFilter(event: Event): void {
-  emit('update:actorUserIdFilter', (event.target as HTMLInputElement).value)
-}
-</script>
-
 <template>
   <section class="admin-board workspace-directory-section">
     <header class="list-heading admin-board__head">
@@ -226,11 +138,12 @@ function updateActorUserIdFilter(event: Event): void {
       </WorkspaceDataTable>
 
       <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
-        <PlatformPaginationControls
+        <PagePaginationControls
           :page="page"
           :total-pages="totalPages"
           :total="total"
           total-label="条记录"
+          :show-jump="true"
           @change-page="emit('change-page', $event)"
         />
       </div>
@@ -358,3 +271,91 @@ function updateActorUserIdFilter(event: Event): void {
   overflow: hidden;
 }
 </style>
+
+<script setup lang="ts">
+import type { AuditLogItem } from '@/api/contracts'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppLoading from '@/components/common/AppLoading.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
+
+interface Props {
+  rows: AuditLogItem[]
+  total: number
+  page: number
+  totalPages: number
+  loading: boolean
+  error: string | null
+  keyword: string
+  hasActiveFilters: boolean
+  selectedSortLabel: string
+  sortOptions: WorkspaceDirectorySortOption[]
+  actionFilter: string
+  resourceTypeFilter: string
+  actorUserIdFilter: string
+  formatDate: (value: string) => string
+  detailPreview: (detail: Record<string, unknown> | undefined) => string
+  actorDisplayName: (item: AuditLogItem) => string
+}
+
+defineProps<Props>()
+
+const emit = defineEmits<{
+  'update:keyword': [value: string]
+  'update:actionFilter': [value: string]
+  'update:resourceTypeFilter': [value: string]
+  'update:actorUserIdFilter': [value: string]
+  'select-sort': [option: WorkspaceDirectorySortOption]
+  'reset-filters': []
+  retry: []
+  'open-actor-detail': [row: AuditLogItem]
+  'change-page': [page: number]
+}>()
+
+const auditTableColumns = [
+  {
+    key: 'created_at',
+    label: '时间',
+    widthClass: 'w-[18%] min-w-[11rem]',
+    cellClass: 'audit-table__time-cell',
+  },
+  {
+    key: 'action',
+    label: '动作',
+    widthClass: 'w-[12%] min-w-[7rem]',
+    cellClass: 'audit-table__action-cell',
+  },
+  {
+    key: 'resource',
+    label: '资源',
+    widthClass: 'w-[18%] min-w-[10rem]',
+    cellClass: 'audit-table__resource-cell',
+  },
+  {
+    key: 'actor',
+    label: '执行人',
+    widthClass: 'w-[18%] min-w-[10rem]',
+    cellClass: 'audit-table__actor-cell',
+  },
+  {
+    key: 'detail',
+    label: '明细',
+    widthClass: 'w-[34%] min-w-[16rem]',
+    cellClass: 'audit-table__detail-cell',
+  },
+]
+
+function updateActionFilter(event: Event): void {
+  emit('update:actionFilter', (event.target as HTMLSelectElement).value)
+}
+
+function updateResourceTypeFilter(event: Event): void {
+  emit('update:resourceTypeFilter', (event.target as HTMLInputElement).value)
+}
+
+function updateActorUserIdFilter(event: Event): void {
+  emit('update:actorUserIdFilter', (event.target as HTMLInputElement).value)
+}
+</script>

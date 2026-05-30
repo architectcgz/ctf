@@ -16,7 +16,7 @@
         class="image-directory-shell workspace-directory-list"
         class="image-list"
         class="admin-pagination workspace-directory-pagination"
-        PlatformPaginationControls
+        PagePaginationControls
       -->
       <ImageDirectoryPanel
         :list="list"

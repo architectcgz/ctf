@@ -642,13 +642,13 @@ describe('admin management surface alignment', () => {
   })
 
   it('admin paginations should expose a shared jump-page control instead of prev-next only', () => {
-    expect(userGovernanceSource).toContain('PlatformPaginationControls')
-    expect(imageManageSource).toContain('PlatformPaginationControls')
-    expect(auditLogCombinedSource).toContain('PlatformPaginationControls')
+    expect(userGovernanceSource).toContain('PagePaginationControls')
+    expect(imageManageSource).toContain('PagePaginationControls')
+    expect(auditLogCombinedSource).toContain('PagePaginationControls')
     expect(challengeManageCombinedSource).toContain('WorkspaceDirectoryPagination')
-    expect(adminContestTableSource).toContain('PlatformPaginationControls')
+    expect(adminContestTableSource).toContain('PagePaginationControls')
     expect(awdRoundInspectorCombinedSource).toContain('<AWDTrafficPanel')
-    expect(awdTrafficPanelSource).toContain('PlatformPaginationControls')
+    expect(awdTrafficPanelSource).toContain('PagePaginationControls')
   })
 
   it('admin summary grids should use shared summary-grid base styles', () => {

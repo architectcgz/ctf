@@ -77,7 +77,7 @@ const globalStubs = {
     props: ['title', 'description'],
     template: '<div>{{ title }}{{ description }}</div>',
   },
-  PlatformPaginationControls: {
+  PagePaginationControls: {
     template: '<div />',
   },
 }
@@ -241,7 +241,7 @@ describe('AWDRoundInspector', () => {
             props: ['title', 'description'],
             template: '<div>{{ title }}{{ description }}</div>',
           },
-          PlatformPaginationControls: {
+          PagePaginationControls: {
             template: '<div />',
           },
         },
@@ -337,7 +337,7 @@ describe('AWDRoundInspector', () => {
             props: ['title', 'description'],
             template: '<div>{{ title }}{{ description }}</div>',
           },
-          PlatformPaginationControls: {
+          PagePaginationControls: {
             template: '<div />',
           },
         },

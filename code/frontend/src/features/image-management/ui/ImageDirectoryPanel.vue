@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
@@ -253,11 +253,12 @@ function getImageSourceLabel(value?: AdminImageListItem['source_type']): string 
         </WorkspaceDataTable>
 
         <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
-          <PlatformPaginationControls
+          <PagePaginationControls
             :page="page"
             :total-pages="totalPages"
             :total="total"
             :total-label="`共 ${total} 条`"
+            :show-jump="true"
             @change-page="emit('change-page', $event)"
           />
         </div>

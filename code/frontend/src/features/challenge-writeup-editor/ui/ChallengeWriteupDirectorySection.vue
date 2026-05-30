@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 
 import type { WriteupDirectoryRow } from '../model/useChallengeWriteupManagement'
 import ChallengeWriteupDirectoryRow from './ChallengeWriteupDirectoryRow.vue'
@@ -96,12 +96,13 @@ defineProps<{
           />
         </section>
 
-        <PlatformPaginationControls
+        <PagePaginationControls
           :page="submissionPage"
           :total-pages="submissionTotalPages"
           :total="submissionTotal"
           :disabled="submissionLoading"
           :total-label="`共 ${submissionTotal} 篇题解`"
+          :show-jump="true"
           @change-page="void changeSubmissionPage($event)"
         />
       </template>

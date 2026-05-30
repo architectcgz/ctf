@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import PlatformPaginationControls from '../PlatformPaginationControls.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 
-describe('PlatformPaginationControls', () => {
+describe('PagePaginationControls jump mode', () => {
   it('应在提交合法页码时发出 changePage', async () => {
-    const wrapper = mount(PlatformPaginationControls, {
+    const wrapper = mount(PagePaginationControls, {
       props: {
         page: 2,
         totalPages: 5,
         total: 100,
         totalLabel: '共 100 条',
+        showJump: true,
       },
     })
 
@@ -21,12 +22,13 @@ describe('PlatformPaginationControls', () => {
   })
 
   it('输入非法页码时不应发出 changePage', async () => {
-    const wrapper = mount(PlatformPaginationControls, {
+    const wrapper = mount(PagePaginationControls, {
       props: {
         page: 2,
         totalPages: 5,
         total: 100,
         totalLabel: '共 100 条',
+        showJump: true,
       },
     })
 

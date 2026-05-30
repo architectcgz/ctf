@@ -7,7 +7,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
-import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import type { UserRole } from '@/utils/constants'
 
 type UserFilterRole = UserRole | 'all'
@@ -357,11 +357,12 @@ function resetDirectoryFilters(): void {
       </WorkspaceDataTable>
 
       <div v-if="list.length > 0" class="admin-pagination workspace-directory-pagination">
-        <PlatformPaginationControls
+        <PagePaginationControls
           :page="page"
           :total-pages="totalPages"
           :total="total"
           :total-label="`共 ${total} 个用户`"
+          :show-jump="true"
           @change-page="emit('changePage', $event)"
         />
       </div>

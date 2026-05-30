@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Search } from 'lucide-vue-next'
 
-import PlatformPaginationControls from '@/components/platform/PlatformPaginationControls.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import type { AWDTrafficStatusGroup, AWDTrafficEventData } from '@/api/contracts'
 import type { AWDTrafficFilters } from '@/features/awd-inspector/model'
 
@@ -234,11 +234,12 @@ const emit = defineEmits<{
     </div>
 
     <div class="pagination-footer">
-      <PlatformPaginationControls
+      <PagePaginationControls
         :page="trafficFilters.page"
         :total-pages="trafficTotalPages"
         :total="trafficEventsTotal"
         :disabled="loadingTrafficEvents"
+        :show-jump="true"
         @change-page="emit('handleTrafficPageChange', $event)"
       />
     </div>
