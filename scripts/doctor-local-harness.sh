@@ -32,6 +32,8 @@ check "scripts/check-task-intake.sh is executable" test -x "scripts/check-task-i
 check "scripts/check-commit-message.sh is executable" test -x "scripts/check-commit-message.sh"
 check "scripts/check-reuse-first.sh is executable" test -x "scripts/check-reuse-first.sh"
 check "scripts/check-architecture.sh is executable" test -x "scripts/check-architecture.sh"
+check "scripts/check-backend-architecture.sh is executable" test -x "scripts/check-backend-architecture.sh"
+check "scripts/check-frontend-architecture.sh is executable" test -x "scripts/check-frontend-architecture.sh"
 check "scripts/doctor-local-harness.sh is executable" test -x "scripts/doctor-local-harness.sh"
 
 echo "[doctor] local tools"

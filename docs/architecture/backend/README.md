@@ -45,7 +45,9 @@
 
 ## Guardrail
 
+- 后端架构脚本入口：`scripts/check-backend-architecture.sh`
 - 模块依赖方向：`code/backend/internal/module/architecture_test.go`
 - 进程级装配边界：`code/backend/internal/app/architecture_rules_test.go`
+- backend context 架构：`code/backend/internal/app/backend_context_architecture_test.go`
 - 路由与组合装配：`code/backend/internal/app/router_test.go`
 - 全链路装配验证：`code/backend/internal/app/full_router_integration_test.go`
