@@ -41,13 +41,16 @@ import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDete
 import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
 import contestOrchestrationPageSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
 import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
-import dashboardViewSource from '@/views/dashboard/DashboardView.vue?raw'
-import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
-import contestListSource from '@/views/contests/ContestList.vue?raw'
-import instanceListSource from '@/views/instances/InstanceList.vue?raw'
-import notificationDetailSource from '@/views/notifications/NotificationDetail.vue?raw'
-import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
+import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
+import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
+import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
+import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
+import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
+import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
+import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
+import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
 import challengeImportManageSource from '@/pages/platform/challenges/ChallengeImportManageRoutePage.vue?raw'
+import challengePackageFormatSource from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue?raw'
 import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
 import imageManageSource from '@/pages/platform/ImageManageRoutePage.vue?raw'
 import imageManageHeroPanelSource from '@/features/image-management/ui/ImageManageHeroPanel.vue?raw'
@@ -56,7 +59,7 @@ import userGovernancePageSource from '@/features/platform/user-management/ui/Use
 import userGovernanceOverviewPanelSource from '@/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
-import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import skillProfileSource from '@/pages/profile/SkillProfileRoutePage.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
 
 const classStudentsPageSource = [
@@ -105,12 +108,12 @@ const awdChallengeLibraryPageSource = [
   awdChallengeLibrarySectionSource,
   awdChallengeImportSectionSource,
 ].join('\n')
-import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import securitySettingsSource from '@/pages/profile/SecuritySettingsRoutePage.vue?raw'
 import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
-import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import userProfileSource from '@/pages/profile/UserProfileRoutePage.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
-import scoreboardDetailSource from '@/views/scoreboard/ScoreboardDetail.vue?raw'
-import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
+import scoreboardDetailSource from '@/pages/scoreboard/ScoreboardDetailRoutePage.vue?raw'
+import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
 import studentManageHeroPanelSource from '@/features/platform/student-management/ui/StudentManageHeroPanel.vue?raw'
 import contestOperationsHubHeroPanelSource from '@/features/platform/contests/ui/ContestOperationsHubHeroPanel.vue?raw'
 
@@ -181,6 +184,39 @@ describe('workspace shell shared styles', () => {
       expect(source).toContain('workspace-page-header')
       expect(source).not.toContain('<section class="workspace-hero">')
       expect(source).not.toMatch(/\.workspace-hero\s*\{/)
+    }
+  })
+
+  it('admin 与 workspace 首屏页应把 hero 背景放在 section root 或 workspace shell root 上，而不是退回 div 包裹壳层', () => {
+    const sources = [
+      adminDashboardSource,
+      contestOrchestrationPageSource,
+      userGovernanceSource,
+      challengeDetailSource,
+      challengePackageFormatSource,
+      imageManageSource,
+      challengeManageSource,
+      auditLogSource,
+      challengeImportManageSource,
+      awdChallengeLibraryPageSource,
+      classManagementPageSource,
+      teacherInstanceManagementPageSource,
+      studentManagementPageSource,
+      instanceListWorkspaceSource,
+    ]
+
+    for (const source of sources) {
+      expect(source).not.toMatch(/<div class="journal-shell/)
+      const hasSectionHeroRoot =
+        /<section[\s\S]*?class="[^"]*workspace-shell[^"]*journal-shell[^"]*journal-hero[^"]*"/s.test(
+          source
+        ) ||
+        /<section[\s\S]*?class="[^"]*journal-shell[^"]*journal-hero[^"]*workspace-shell[^"]*"/s.test(
+          source
+        )
+      const hasWorkspaceShellRoot = /<div[\s\S]*?class="[^"]*workspace-shell[^"]*"/s.test(source)
+
+      expect(hasSectionHeroRoot || hasWorkspaceShellRoot).toBe(true)
     }
   })
 

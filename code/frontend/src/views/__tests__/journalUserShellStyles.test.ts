@@ -2,21 +2,27 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
-import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
-import contestListSource from '@/views/contests/ContestList.vue?raw'
-import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
+import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
+import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
+import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
+import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
 import instanceListWorkspaceShellSource from '@/components/instance/InstanceListWorkspaceShell.vue?raw'
-import instanceListSource from '@/views/instances/InstanceList.vue?raw'
-import notificationDetailSource from '@/views/notifications/NotificationDetail.vue?raw'
-import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
-import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
+import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
+import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
+import securitySettingsSource from '@/pages/profile/SecuritySettingsRoutePage.vue?raw'
 import securitySettingsWorkspaceShellSource from '@/components/profile/SecuritySettingsWorkspaceShell.vue?raw'
-import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import skillProfileSource from '@/pages/profile/SkillProfileRoutePage.vue?raw'
 import skillProfileWorkspaceShellSource from '@/components/profile/SkillProfileWorkspaceShell.vue?raw'
-import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import userProfileSource from '@/pages/profile/UserProfileRoutePage.vue?raw'
 import userProfileWorkspaceShellSource from '@/components/profile/UserProfileWorkspaceShell.vue?raw'
-import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
+import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
+import categoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
+import difficultyPageSource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
+import recommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
+import trainingTimelineSource from '@/components/training/TrainingTimelinePanel.vue?raw'
+import overviewPageSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
+import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
 
 const journalUserShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-shell.css`,
@@ -49,7 +55,16 @@ describe('journal user shell shared styles', () => {
       "[data-theme='dark'] .journal-shell.journal-shell-user"
     )
     expect(surfaceShellBackgroundSource).toContain(
+      '.journal-soft-surface .journal-shell.journal-hero'
+    )
+    expect(surfaceShellBackgroundSource).toContain(
       "[data-theme='dark'] .journal-shell.journal-shell-user.journal-hero"
+    )
+    expect(surfaceShellBackgroundSource).toContain(
+      "[data-theme='dark'] .journal-soft-surface .journal-shell.journal-hero"
+    )
+    expect(surfaceShellBackgroundSource).toMatch(
+      /background:\s*radial-gradient\([\s\S]*linear-gradient\(180deg,\s*var\(--surface-shell-top\),\s*var\(--surface-shell-end\)\);/s
     )
   })
 
@@ -68,6 +83,47 @@ describe('journal user shell shared styles', () => {
       userProfileWorkspaceSource,
     ]) {
       expect(source).toContain('journal-shell-user')
+    }
+  })
+
+  it('成员侧页面应把 hero 背景放在 section 根节点或软表面 root 上，而不是退回 div 包裹壳层', () => {
+    const directHeroRootSources = [
+      challengeListSource,
+      challengeDetailSource,
+      contestListSource,
+      contestDetailSource,
+      instanceListWorkspaceSource,
+      notificationDetailSource,
+      notificationListSource,
+      scoreboardSource,
+      securitySettingsWorkspaceSource,
+      skillProfileWorkspaceSource,
+      userProfileWorkspaceSource,
+      dashboardViewSource,
+    ]
+    const embeddableHeroRootSources = [
+      recommendationPageSource,
+      categoryProgressSource,
+      difficultyPageSource,
+      trainingTimelineSource,
+      overviewPageSource,
+    ]
+
+    for (const source of [...directHeroRootSources, ...embeddableHeroRootSources]) {
+      expect(source).not.toMatch(/<div class="journal-shell/)
+    }
+
+    for (const source of directHeroRootSources) {
+      expect(source).toMatch(
+        /<section[\s\S]*?class="[^"]*journal-shell[^"]*journal-hero[^"]*min-h-full[^"]*"/s
+      )
+    }
+
+    for (const source of embeddableHeroRootSources) {
+      expect(source).toContain('journal-hero')
+      expect(source).toMatch(
+        /<section[\s\S]*?class="[^"]*journal-soft-surface[^"]*flex[^"]*min-h-full[^"]*flex-1[^"]*flex-col[^"]*"/s
+      )
     }
   })
 
