@@ -4,6 +4,8 @@ export { usePlatformAwdChallenges } from './model'
 export { AWDChallengeLibraryPage } from './ui'
 export { AWDChallengeEditorDialog } from './ui'
 export { AwdChallengeImportSection } from './ui'
+export { AwdChallengeLibrarySection } from './ui'
+export { AwdChallengeWorkspaceHeader } from './ui'
 export type {
   PlatformAwdChallengeFormDraft,
   PlatformAwdChallengeImportUploadResult,

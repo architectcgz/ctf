@@ -1,110 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { Activity, BellRing, MapPinned, Trophy } from 'lucide-vue-next'
-
-import RadarChart from '@/components/charts/RadarChart.vue'
-import type { SkillDimensionScore } from '@/api/contracts'
-
-import type { StudentOverviewProps } from './overviewProps'
-
-const props = withDefaults(
-  defineProps<
-    StudentOverviewProps & {
-      embedded?: boolean
-    }
-  >(),
-  {
-    embedded: false,
-  }
-)
-
-const emit = defineEmits<{
-  openChallenges: []
-  openSkillProfile: []
-  openChallenge: [challengeId: string]
-}>()
-
-const storyMetrics = computed(() => [
-  {
-    label: '总得分',
-    value: props.progress.total_score ?? 0,
-    helper: '当前累计获得的训练积分',
-  },
-  {
-    label: '已解题数',
-    value: props.progress.total_solved ?? 0,
-    helper: '累计提交成功并完成的题目数量',
-  },
-  {
-    label: '当前排名',
-    value: `#${props.progress.rank ?? '-'}`,
-    helper: '按当前积分统计的实时名次',
-  },
-  {
-    label: '完成率',
-    value: `${props.completionRate}%`,
-    helper: '按当前分类题量计算的覆盖比例',
-  },
-])
-const hasStoryMetrics = computed(() => storyMetrics.value.length > 0)
-const storyMetricGridClass = computed(() => [
-  'story-metric-grid mt-6 progress-strip metric-panel-grid metric-panel-default-surface',
-  props.embedded ? 'story-metric-grid--embedded' : '',
-])
-const normalizedSkillDimensions = computed<SkillDimensionScore[]>(() =>
-  props.skillDimensions
-    .map((item, index) => {
-      const normalizedName = item.name?.trim()
-      const numericValue = Number(item.value)
-      if (!normalizedName || !Number.isFinite(numericValue)) {
-        return null
-      }
-      return {
-        ...item,
-        key: item.key || `${normalizedName}-${index}`,
-        name: normalizedName,
-        value: Math.min(100, Math.max(0, numericValue)),
-      }
-    })
-    .filter((item): item is SkillDimensionScore => item !== null)
-)
-const hasRadarData = computed(() => normalizedSkillDimensions.value.length > 0)
-const radarIndicators = computed(() =>
-  normalizedSkillDimensions.value.map((item) => ({ name: item.name, max: 100 }))
-)
-const radarValues = computed(() => normalizedSkillDimensions.value.map((item) => item.value))
-const radarHeightClass = 'student-overview-radar-height'
-const rankSummary = computed(() => props.progress.rank ?? '-')
-const operationsSummary = computed(() => [
-  {
-    label: '环境状态',
-    value: props.recommendations.length > 0 ? '可训练' : '空闲',
-    description:
-      props.recommendations.length > 0 ? '存在可立即进入的推荐题目' : '当前没有推荐训练任务',
-    status: props.recommendations.length > 0 ? 'ready' : 'idle',
-    icon: Activity,
-  },
-  {
-    label: '能力分布',
-    value: props.skillDimensions.length > 0 ? `${props.skillDimensions.length} 维` : '未生成',
-    description:
-      props.skillDimensions.length > 0 ? '基于当前训练数据实时更新' : '完成更多题目后将自动生成',
-    status: props.skillDimensions.length > 0 ? 'ready' : 'idle',
-    icon: MapPinned,
-  },
-  {
-    label: '训练提示',
-    value: props.weakDimensions[0] || '保持节奏',
-    description:
-      props.weakDimensions.length > 0
-        ? `优先补强 ${props.weakDimensions.join(' / ')}`
-        : '当前结构比较均衡，继续推进即可',
-    status: props.weakDimensions.length > 0 ? 'warning' : 'ready',
-    icon: BellRing,
-  },
-])
-</script>
-
 <template>
   <section
     class="journal-soft-surface space-y-6 flex min-h-full flex-1 flex-col"
@@ -520,58 +413,120 @@ const operationsSummary = computed(() => [
 
 @keyframes dot-pulse {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 38%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 42%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 8px transparent;
+    box-shadow: 0 0 0 10px transparent;
   }
   100% {
     box-shadow: 0 0 0 0 transparent;
   }
 }
-
-@media (max-width: 767px) {
-  .journal-soft-surface {
-    --journal-soft-button-height: 38px;
-    --journal-soft-button-padding: var(--space-2) var(--space-4);
-  }
-
-  .story-metric-grid,
-  .story-metric-grid--embedded {
-    --metric-panel-columns: minmax(0, 1fr);
-  }
-
-  .journal-radar-dimensions {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .journal-radar-dimension:nth-child(2n) {
-    border-left: 0;
-  }
-
-  .journal-radar-dimension + .journal-radar-dimension {
-    border-top: 1px solid var(--journal-divider);
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1279px) {
-  .student-overview-radar-height {
-    height: 21rem;
-  }
-}
-
-:global([data-theme='dark']) .skill-dimension-chart__frame::before {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
-    ),
-    linear-gradient(135deg, color-mix(in srgb, var(--journal-accent) 18%, transparent), transparent);
-}
-
-:global([data-theme='dark']) .skill-dimension-chart__frame::after {
-  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
-  border-color: color-mix(in srgb, var(--journal-muted) 20%, transparent);
-}
 </style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { Activity, BellRing, MapPinned, Trophy } from 'lucide-vue-next'
+
+import RadarChart from '@/components/charts/RadarChart.vue'
+import type { SkillDimensionScore } from '@/api/contracts'
+
+import type { StudentOverviewProps } from './studentOverviewProps'
+
+const props = withDefaults(
+  defineProps<
+    StudentOverviewProps & {
+      embedded?: boolean
+    }
+  >(),
+  {
+    embedded: false,
+  }
+)
+
+const emit = defineEmits<{
+  openChallenges: []
+  openSkillProfile: []
+  openChallenge: [challengeId: string]
+}>()
+
+const storyMetrics = computed(() => [
+  {
+    label: '总得分',
+    value: props.progress.total_score ?? 0,
+    helper: '当前累计获得的训练积分',
+  },
+  {
+    label: '已解题数',
+    value: props.progress.total_solved ?? 0,
+    helper: '累计提交成功并完成的题目数量',
+  },
+  {
+    label: '当前排名',
+    value: `#${props.progress.rank ?? '-'}`,
+    helper: '按当前积分统计的实时名次',
+  },
+  {
+    label: '完成率',
+    value: `${props.completionRate}%`,
+    helper: '按当前分类题量计算的覆盖比例',
+  },
+])
+const hasStoryMetrics = computed(() => storyMetrics.value.length > 0)
+const storyMetricGridClass = computed(() => [
+  'story-metric-grid mt-6 progress-strip metric-panel-grid metric-panel-default-surface',
+  props.embedded ? 'story-metric-grid--embedded' : '',
+])
+const normalizedSkillDimensions = computed<SkillDimensionScore[]>(() =>
+  props.skillDimensions
+    .map((item, index) => {
+      const normalizedName = item.name?.trim()
+      const numericValue = Number(item.value)
+      if (!normalizedName || !Number.isFinite(numericValue)) {
+        return null
+      }
+      return {
+        ...item,
+        key: item.key || `${normalizedName}-${index}`,
+        name: normalizedName,
+        value: Math.min(100, Math.max(0, numericValue)),
+      }
+    })
+    .filter((item): item is SkillDimensionScore => item !== null)
+)
+const hasRadarData = computed(() => normalizedSkillDimensions.value.length > 0)
+const radarIndicators = computed(() =>
+  normalizedSkillDimensions.value.map((item) => ({ name: item.name, max: 100 }))
+)
+const radarValues = computed(() => normalizedSkillDimensions.value.map((item) => item.value))
+const radarHeightClass = 'student-overview-radar-height'
+const rankSummary = computed(() => props.progress.rank ?? '-')
+const operationsSummary = computed(() => [
+  {
+    label: '环境状态',
+    value: props.recommendations.length > 0 ? '可训练' : '空闲',
+    description:
+      props.recommendations.length > 0 ? '存在可立即进入的推荐题目' : '当前没有推荐训练任务',
+    status: props.recommendations.length > 0 ? 'ready' : 'idle',
+    icon: Activity,
+  },
+  {
+    label: '能力分布',
+    value: props.skillDimensions.length > 0 ? `${props.skillDimensions.length} 维` : '未生成',
+    description:
+      props.skillDimensions.length > 0 ? '基于当前训练数据实时更新' : '完成更多题目后将自动生成',
+    status: props.skillDimensions.length > 0 ? 'ready' : 'idle',
+    icon: MapPinned,
+  },
+  {
+    label: '训练提示',
+    value: props.weakDimensions[0] || '保持节奏',
+    description:
+      props.weakDimensions.length > 0
+        ? `优先补强 ${props.weakDimensions.join(' / ')}`
+        : '当前结构比较均衡，继续推进即可',
+    status: props.weakDimensions.length > 0 ? 'warning' : 'ready',
+    icon: BellRing,
+  },
+])
+</script>

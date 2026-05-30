@@ -36,7 +36,7 @@ import topologyStudioPageSource from '@/features/challenge-topology-studio/ui/Ch
 import topologyTemplateLibraryHeaderSource from '@/features/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue?raw'
 import topologyTemplateHeroSectionSource from '@/features/challenge-topology-studio/ui/TopologyTemplateHeroSection.vue?raw'
 import topologyChallengeWorkspaceHeaderSource from '@/features/challenge-topology-studio/ui/TopologyChallengeWorkspaceHeader.vue?raw'
-import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
+import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'

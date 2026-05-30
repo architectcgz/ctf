@@ -5,7 +5,7 @@ import type {
   TimelineEvent,
 } from '@/api/contracts'
 
-import type { DashboardHighlightItem } from './types'
+import type { DashboardHighlightItem } from '../model/types'
 
 export interface StudentOverviewProps {
   displayName: string

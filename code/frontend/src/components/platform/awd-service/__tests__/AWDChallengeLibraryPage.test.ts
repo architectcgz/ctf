@@ -10,8 +10,8 @@ import awdChallengeImportSectionSource from '@/features/platform/awd-challenges/
 import AWDChallengeLibraryPage from '@/features/platform/awd-challenges/ui/AWDChallengeLibraryPage.vue'
 import awdChallengeLibraryPageSourceBase from '@/features/platform/awd-challenges/ui/AWDChallengeLibraryPage.vue?raw'
 
-import awdChallengeLibrarySectionSource from '../AwdChallengeLibrarySection.vue?raw'
-import awdChallengeWorkspaceHeaderSource from '../AwdChallengeWorkspaceHeader.vue?raw'
+import awdChallengeLibrarySectionSource from '@/features/platform/awd-challenges/ui/AwdChallengeLibrarySection.vue?raw'
+import awdChallengeWorkspaceHeaderSource from '@/features/platform/awd-challenges/ui/AwdChallengeWorkspaceHeader.vue?raw'
 
 const awdChallengeLibraryPageSource = [
   awdChallengeLibraryPageSourceBase,

@@ -173,7 +173,7 @@ describe('ContestAwdConfig', () => {
     expect(contestAwdConfigWorkspaceSource).toContain('<ContestAwdCheckerConfigSection')
     expect(contestAwdConfigWorkspaceSource).toContain('<ContestAwdDebugStation')
     expect(contestAwdConfigPageSource).not.toContain(
-      "from '@/components/platform/contest/awdCheckerConfigSupport'"
+      "from '@/features/contest-awd-config/model/awdCheckerConfigSupport'"
     )
     expect(contestAwdConfigPageSource).toContain(
       "import { useAwdCheckerPreviewFlow } from './useAwdCheckerPreview'"
