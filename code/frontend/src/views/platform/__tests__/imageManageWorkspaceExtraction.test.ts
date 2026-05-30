@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import imageManageSource from '@/views/platform/ImageManage.vue?raw'
+import imageManageSource from '@/pages/platform/ImageManageRoutePage.vue?raw'
 import imageManageHeroPanelSource from '@/features/image-management/ui/ImageManageHeroPanel.vue?raw'
 
 describe('ImageManage workspace extraction', () => {

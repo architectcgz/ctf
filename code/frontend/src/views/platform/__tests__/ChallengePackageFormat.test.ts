@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-import challengePackageFormatSource from '../ChallengePackageFormat.vue?raw'
+import challengePackageFormatSource from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue?raw'
 import challengePackageFormatGuidePanelSource from '@/components/platform/challenge/ChallengePackageFormatGuidePanel.vue?raw'
 import challengePackageFormatPageSource from '@/features/challenge-package-import/model/useChallengePackageFormatPage.ts?raw'
 

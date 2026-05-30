@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import challengePackageFormatSource from '../ChallengePackageFormat.vue?raw'
+import challengePackageFormatSource from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue?raw'
 import challengePackageFormatGuidePanelSource from '@/components/platform/challenge/ChallengePackageFormatGuidePanel.vue?raw'
 
 describe('ChallengePackageFormat guide extraction', () => {

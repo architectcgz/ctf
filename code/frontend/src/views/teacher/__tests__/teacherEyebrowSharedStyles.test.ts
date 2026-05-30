@@ -16,7 +16,7 @@ import teacherInstanceDirectorySectionSource from '@/components/teacher/instance
 import teacherInstanceHeroPanelSource from '@/components/teacher/instance-management/TeacherInstanceHeroPanel.vue?raw'
 import studentManagementSource from '@/features/teacher-student-management/ui/StudentManagementPage.vue?raw'
 import awdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
-import awdReviewDetailSource from '@/views/teacher/TeacherAWDReviewDetail.vue?raw'
+import awdReviewDetailSource from '@/pages/awd-review/TeacherAwdReviewDetailRoutePage.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,

@@ -1,7 +1,7 @@
 # 前端页面数据流与 owner
 
 > 状态：Current
-> 事实源：`code/frontend/src/pages/`、`code/frontend/src/views/`、`code/frontend/src/features/**/model/`、`code/frontend/src/stores/`
+> 事实源：`code/frontend/src/pages/`、`code/frontend/src/features/**/model/`、`code/frontend/src/stores/`、`code/frontend/src/views/__tests__/`
 > 替代：无
 
 ## 定位
@@ -16,6 +16,10 @@
 - `code/frontend/src/pages/**`
   - 负责：作为运行时 route entry，挂载页面结构、组合 feature / widget 和共享组件
   - 不负责：直接调用业务 API，或长期持有复杂路由 query 与异步编排
+
+- `code/frontend/src/views/**`
+  - 负责：仅保留测试支撑与必要桥接壳，帮助 `views/**/__tests__` 在迁移期继续贴近页面断言
+  - 不负责：再作为运行时路由入口或新的页面 owner
 
 - `code/frontend/src/features/**/model`
   - 负责：页面级请求编排、路由参数解析、分页、导出、实时桥接和局部状态机

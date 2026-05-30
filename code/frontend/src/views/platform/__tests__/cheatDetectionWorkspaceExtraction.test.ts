@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import cheatDetectionSource from '../CheatDetection.vue?raw'
+import cheatDetectionSource from '@/pages/platform/CheatDetectionRoutePage.vue?raw'
 
 describe('CheatDetection workspace extraction', () => {
   it('应将作弊检测工作区壳层抽到独立 platform cheat 组件', () => {

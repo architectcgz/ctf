@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
 import { useAuthStore } from '@/stores/auth'
-import platformAwdReviewDetailSource from '../PlatformAwdReviewDetail.vue?raw'
+import platformAwdReviewDetailSource from '@/pages/awd-review/PlatformAwdReviewDetailRoutePage.vue?raw'
 import AwdReviewWorkspace from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue'
 import awdReviewDetailRoutesSource from '@/features/awd-review-detail-workspace/model/awdReviewDetailRoutes.ts?raw'
 import awdReviewDetailPageSource from '@/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts?raw'

@@ -207,7 +207,7 @@ export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/awd-reviews/:contestId',
   name: 'TeacherAWDReviewDetail',
-  component: () => import('@/views/teacher/TeacherAWDReviewDetail.vue'),
+  component: () => import('@/pages/awd-review/TeacherAwdReviewDetailRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],

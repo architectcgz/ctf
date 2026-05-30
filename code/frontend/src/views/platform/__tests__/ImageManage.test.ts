@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import ImageManage from '../ImageManage.vue'
-import imageManageSource from '../ImageManage.vue?raw'
+import imageManageSource from '@/pages/platform/ImageManageRoutePage.vue?raw'
 import imageCreateModalSource from '@/features/image-management/ui/ImageCreateModal.vue?raw'
 import imageDetailModalSource from '@/features/image-management/ui/ImageDetailModal.vue?raw'
 import imageDirectoryPanelSource from '@/features/image-management/ui/ImageDirectoryPanel.vue?raw'

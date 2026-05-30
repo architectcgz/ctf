@@ -133,7 +133,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/awd-reviews/:contestId',
   name: 'PlatformAwdReviewDetail',
-  component: () => import('@/views/platform/PlatformAwdReviewDetail.vue'),
+  component: () => import('@/pages/awd-review/PlatformAwdReviewDetailRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],
@@ -168,7 +168,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/challenges/package-format',
   name: 'PlatformChallengePackageFormat',
-  component: () => import('@/views/platform/ChallengePackageFormat.vue'),
+  component: () => import('@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -179,7 +179,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/challenges/imports',
   name: 'PlatformChallengeImportManage',
-  component: () => import('@/views/platform/ChallengeImportManage.vue'),
+  component: () => import('@/pages/platform/challenges/ChallengeImportManageRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -383,7 +383,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/images',
   name: 'ImageManage',
-  component: () => import('@/views/platform/ImageManage.vue'),
+  component: () => import('@/pages/platform/ImageManageRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],
@@ -395,7 +395,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/integrity',
   name: 'CheatDetection',
-  component: () => import('@/views/platform/CheatDetection.vue'),
+  component: () => import('@/pages/platform/CheatDetectionRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['admin'],

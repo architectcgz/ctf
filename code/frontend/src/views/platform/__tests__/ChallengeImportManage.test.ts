@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeImportManage from '../ChallengeImportManage.vue'
-import challengeImportManageSource from '../ChallengeImportManage.vue?raw'
+import challengeImportManageSource from '@/pages/platform/challenges/ChallengeImportManageRoutePage.vue?raw'
 import challengeImportHeroPanelSource from '@/components/platform/challenge/ChallengeImportHeroPanel.vue?raw'
 import challengeImportQueuePanelSource from '@/components/platform/challenge/ChallengeImportQueuePanel.vue?raw'
 import challengePackageImportEntrySource from '@/components/platform/challenge/ChallengePackageImportEntry.vue?raw'

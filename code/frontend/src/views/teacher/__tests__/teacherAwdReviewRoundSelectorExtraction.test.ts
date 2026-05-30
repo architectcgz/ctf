@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
+import awdReviewDetailSource from '@/pages/awd-review/TeacherAwdReviewDetailRoutePage.vue?raw'
 import teacherAwdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue?raw'
 import awdReviewRoundSelectorSource from '@/components/teacher/awd-review/AwdReviewRoundSelector.vue?raw'
 

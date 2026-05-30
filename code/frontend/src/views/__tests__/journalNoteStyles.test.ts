@@ -10,9 +10,9 @@ import userGovernanceImportPanelSource from '@/features/platform/user-management
 import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
 import challengeDetailSource from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue?raw'
 import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
-import challengePackageFormatSource from '@/views/platform/ChallengePackageFormat.vue?raw'
+import challengePackageFormatSource from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue?raw'
 import cheatDetectionWorkspaceSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'
-import imageManageSource from '@/views/platform/ImageManage.vue?raw'
+import imageManageSource from '@/pages/platform/ImageManageRoutePage.vue?raw'
 
 const journalNotesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-notes.css`,

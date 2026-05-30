@@ -1,7 +1,7 @@
 # 前端组件体系设计
 
 > 状态：Current
-> 事实源：`code/frontend/src/components/`、`code/frontend/src/views/`、`code/frontend/src/features/**/model/`
+> 事实源：`code/frontend/src/components/`、`code/frontend/src/pages/`、`code/frontend/src/views/`、`code/frontend/src/features/**/model/`
 > 替代：无
 
 ## 定位
@@ -26,8 +26,8 @@
   - 不负责：页面自己的业务查询、目录筛选或详情页状态机
 
 - `code/frontend/src/views/**`
-  - 负责：在需要时保留路由入口、route page 薄壳、feature 组合与最外层事件桥接
-  - 不负责：直接持有 feature 级加载/保存/删除状态机，重新长成第二个业务组件层，或与 feature page 保留双份 page shell
+  - 负责：保留 `__tests__/` 与必要测试支撑薄壳；在迁移收尾阶段承接极少量桥接兼容
+  - 不负责：继续承载运行时路由入口、feature 组合主壳，或重新长成第二个页面层
 
 - `code/frontend/src/features/**/model`
   - 负责：页面行为 owner、请求编排、路由参数解析、分页、导出和局部状态机
@@ -52,7 +52,8 @@
 | 布局壳 | `components/layout/` | `AppLayout`、`Sidebar`、`TopNav` 等全局承载 |
 | Feature UI | `features/*/ui/`、`features/platform/*/ui/` | 只服务单一 feature 的工作区、编辑器、目录面板与 page-sized surface |
 | 业务展示组件 | `components/teacher/`、`components/platform/`、`components/contests/`、`components/scoreboard/` 等 | 领域相关展示和局部桥接，逐步向 feature owner 过渡 |
-| 路由 view | `views/**` | 页面壳与 feature 组合入口 |
+| 页面入口 | `pages/**` | 运行时 route entry、页面结构组合与最外层事件桥接 |
+| 测试支撑 view | `views/**` | `__tests__/` 邻近支撑、源码断言桥接与迁移期兼容壳 |
 
 判断原则：
 

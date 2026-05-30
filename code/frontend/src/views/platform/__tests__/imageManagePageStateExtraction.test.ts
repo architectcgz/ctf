@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import imageManageSource from '@/views/platform/ImageManage.vue?raw'
+import imageManageSource from '@/pages/platform/ImageManageRoutePage.vue?raw'
 
 describe('ImageManage page state extraction', () => {
   it('应将镜像管理页面状态与行为抽到独立 composable', () => {

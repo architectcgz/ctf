@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import imageManageSource from '@/views/platform/ImageManage.vue?raw'
+import imageManageSource from '@/pages/platform/ImageManageRoutePage.vue?raw'
 
 describe('ImageManage modal extraction', () => {
   it('应将镜像详情和创建弹窗抽到独立平台组件', () => {

@@ -64,15 +64,33 @@ refactor_existing
 - code/frontend/src/views/teacher/ClassManagement.vue
 - code/frontend/src/views/platform/AWDChallengeLibrary.vue
 - code/frontend/src/views/platform/AWDChallengeImport.vue
+- code/frontend/src/views/platform/ChallengePackageFormat.vue
+- code/frontend/src/views/platform/ChallengeImportManage.vue
+- code/frontend/src/views/platform/ImageManage.vue
+- code/frontend/src/views/platform/CheatDetection.vue
+- code/frontend/src/views/platform/PlatformAwdReviewDetail.vue
+- code/frontend/src/views/platform/__tests__/challengePackageFormatGuideExtraction.test.ts
 - code/frontend/src/views/teacher/TeacherClassStudents.vue
 - code/frontend/src/views/platform/PlatformClassStudents.vue
 - code/frontend/src/views/teacher/TeacherStudentAnalysis.vue
 - code/frontend/src/views/platform/PlatformStudentAnalysis.vue
+- code/frontend/src/views/teacher/TeacherAWDReviewDetail.vue
+- code/frontend/src/pages/platform/challenges/ChallengePackageFormatRoutePage.vue
+- code/frontend/src/pages/platform/challenges/ChallengeImportManageRoutePage.vue
+- code/frontend/src/pages/platform/ImageManageRoutePage.vue
+- code/frontend/src/pages/platform/CheatDetectionRoutePage.vue
+- code/frontend/src/pages/awd-review/PlatformAwdReviewDetailRoutePage.vue
+- code/frontend/src/pages/awd-review/TeacherAwdReviewDetailRoutePage.vue
+- code/frontend/src/router/routes/platformRoutes.ts
+- code/frontend/src/router/routes/teacherRoutes.ts
 - code/frontend/src/__tests__/architectureAllowlist.ts
 - code/frontend/src/components.d.ts
 - code/frontend/src/views/**/__tests__/*
 - docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md
+- docs/architecture/frontend/06-components.md
+- docs/architecture/frontend/07-pages-dataflow.md
 
 ## After implementation
 - 如果迁移顺利，`legacyComponentPageAllowlist` 会只剩学生 dashboard 那 5 个 page，teacher / platform 这批 page shell 会全部切到各自 feature 的 `model + ui` public API。
 - 本轮不改 `useClassManagementPage.ts`、`useClassStudentsPage.ts`、`useStudentAnalysisPage.ts`、`useAwdChallengeLibraryPage.ts`、`useAwdChallengeImportPage.ts` 的 router / API / async owner，只收口 page shell 落位和 route import 边界。
+- 后续同一条链路继续把 `ChallengePackageFormat`、`ChallengeImportManage`、`ImageManage`、`CheatDetection`、`TeacherAWDReviewDetail`、`PlatformAwdReviewDetail` 的运行时路由入口从 `views/**` 迁到 `pages/**`，并把 `views/*.vue` 降级成测试桥接壳。

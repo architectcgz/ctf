@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
 import TeacherAWDReviewDetail from '../TeacherAWDReviewDetail.vue'
-import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
+import awdReviewDetailSource from '@/pages/awd-review/TeacherAwdReviewDetailRoutePage.vue?raw'
 import awdReviewDetailPageSource from '@/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts?raw'
 
 const routeMock = {

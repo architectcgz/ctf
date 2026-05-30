@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import challengeImportManageSource from '../ChallengeImportManage.vue?raw'
+import challengeImportManageSource from '@/pages/platform/challenges/ChallengeImportManageRoutePage.vue?raw'
 import challengeImportUploadResultsPanelSource from '@/components/platform/challenge/ChallengeImportUploadResultsPanel.vue?raw'
 
 describe('ChallengeImportManage upload results extraction', () => {

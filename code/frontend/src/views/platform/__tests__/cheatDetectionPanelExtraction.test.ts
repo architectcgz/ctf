@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import cheatDetectionSource from '@/views/platform/CheatDetection.vue?raw'
+import cheatDetectionSource from '@/pages/platform/CheatDetectionRoutePage.vue?raw'
 import cheatDetectionHeroPanelSource from '@/components/platform/cheat/CheatDetectionHeroPanel.vue?raw'
 import cheatDetectionSummaryPanelSource from '@/components/platform/cheat/CheatDetectionSummaryPanel.vue?raw'
 import cheatDetectionWorkspacePanelSource from '@/components/platform/cheat/CheatDetectionWorkspacePanel.vue?raw'

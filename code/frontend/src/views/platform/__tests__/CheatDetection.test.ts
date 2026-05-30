@@ -4,7 +4,7 @@ import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 import cheatDetectionPageSource from '@/features/platform/overview/model/useCheatDetectionPage.ts?raw'
 import platformOverviewRoutesSource from '@/features/platform/overview/model/platformOverviewRoutes.ts?raw'
 import CheatDetection from '../CheatDetection.vue'
-import cheatDetectionSource from '../CheatDetection.vue?raw'
+import cheatDetectionSource from '@/pages/platform/CheatDetectionRoutePage.vue?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
   getCheatDetection: vi.fn(),
