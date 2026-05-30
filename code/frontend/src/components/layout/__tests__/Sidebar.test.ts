@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -9,8 +11,14 @@ import sidebarMobilePanelSource from '../sidebar/SidebarMobilePanel.vue?raw'
 import sidebarNavTreeSource from '../sidebar/SidebarNavTree.vue?raw'
 import sidebarPanelHeaderSource from '../sidebar/SidebarPanelHeader.vue?raw'
 import sidebarSourceBase from '../Sidebar.vue?raw'
+import sidebarViewStateSource from '../sidebar/useSidebarNavigationViewState.ts?raw'
 import sidebarWorkspaceLabelSource from '../sidebar/SidebarWorkspaceLabel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
+
+const sidebarStylesSource = readFileSync(
+  resolve(process.cwd(), 'src/components/layout/sidebar/sidebarShell.css'),
+  'utf8'
+)
 
 const sidebarSource = [
   sidebarSourceBase,
@@ -19,6 +27,8 @@ const sidebarSource = [
   sidebarPanelHeaderSource,
   sidebarWorkspaceLabelSource,
   sidebarNavTreeSource,
+  sidebarViewStateSource,
+  sidebarStylesSource,
 ].join('\n')
 
 describe('Sidebar desktop layout', () => {
@@ -69,7 +79,7 @@ describe('Sidebar desktop layout', () => {
   it('tokenizes backoffice sidebar surfaces for dark theme instead of keeping white utility backgrounds', () => {
     expect(sidebarSource).toContain('backoffice-sidebar')
     expect(sidebarSource).toContain('--backoffice-shell-surface')
-    expect(sidebarSource).toContain(":global([data-theme='dark']) .backoffice-sidebar")
+    expect(sidebarSource).toContain("[data-theme='dark'] .backoffice-sidebar")
     expect(sidebarSource).toContain('backoffice-sidebar__collapse')
   })
 
