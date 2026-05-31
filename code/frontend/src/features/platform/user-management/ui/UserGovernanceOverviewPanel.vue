@@ -8,6 +8,7 @@ import AppLoading from '@/shared/ui/common/AppLoading.vue'
 import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryToolbar from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'
 import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
+import { getUserDisplayName, getUserUsernameHandle } from '@/entities/user'
 import type { UserRole } from '@/utils/constants'
 
 type UserFilterRole = UserRole | 'all'
@@ -306,13 +307,15 @@ function resetDirectoryFilters(): void {
       >
         <template #cell-username="{ row }">
           <div class="user-row__username">
-            <span class="user-row__username-handle">@{{ (row as AdminUserListItem).username }}</span>
+            <span class="user-row__username-handle">{{
+              getUserUsernameHandle(row as AdminUserListItem, '--')
+            }}</span>
           </div>
         </template>
 
         <template #cell-name="{ row }">
           <span class="user-row__name">
-            {{ (row as AdminUserListItem).name || (row as AdminUserListItem).username }}
+            {{ getUserDisplayName(row as AdminUserListItem, '--') }}
           </span>
         </template>
 

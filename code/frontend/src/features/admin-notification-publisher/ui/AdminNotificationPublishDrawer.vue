@@ -3,6 +3,7 @@ import { onUnmounted, watch } from 'vue'
 
 import type { AdminNotificationPublishResult } from '@/api/contracts'
 import AdminSurfaceDrawer from '@/shared/ui/common/modal-templates/AdminSurfaceDrawer.vue'
+import { getUserDisplayLabel } from '@/entities/user'
 import { useAdminNotificationPublisher } from '@/features/admin-notification-publisher'
 import { USER_ROLES, type UserRole } from '@/utils/constants'
 
@@ -302,7 +303,7 @@ onUnmounted(() => {
                 :checked="publisher.selectedUserIds.value.includes(user.id)"
                 @change="toggleUser(user.id, ($event.target as HTMLInputElement).checked)"
               >
-              <span>{{ user.name || user.username }}（{{ user.username }}）</span>
+              <span>{{ getUserDisplayLabel(user, '--') }}</span>
             </label>
             <div
               v-if="publisher.userOptions.value.length === 0 && !publisher.loadingUsers.value"

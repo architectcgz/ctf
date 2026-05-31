@@ -25,11 +25,14 @@
 - `code/frontend/src/features/teaching/class-students-workspace/ui/ClassReviewPanel.vue`
 - `code/frontend/src/features/teaching/student-analysis-review/ui/InterventionPanel.vue`
 - `code/frontend/src/features/platform/user-management/ui/UserGovernanceDetailModal.vue`
+- `code/frontend/src/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue`
 - `code/frontend/src/features/skill-profile/ui/SkillProfileWorkspaceShell.vue`
+- `code/frontend/src/features/admin-notification-publisher/ui/AdminNotificationPublishDrawer.vue`
 - `code/frontend/src/pages/teacher/__tests__/TeacherClassStudents.test.ts`
 - `code/frontend/src/pages/teacher/__tests__/teacherInterventionPanelLayout.test.ts`
 - `code/frontend/src/pages/platform/__tests__/UserManage.test.ts`
 - `code/frontend/src/pages/profile/__tests__/SkillProfile.test.ts`
+- `code/frontend/src/features/admin-notification-publisher/ui/__tests__/AdminNotificationPublishDrawer.test.ts`
 - `code/frontend/src/pages/dashboard/__tests__/DashboardView.test.ts`
 - `code/frontend/src/pages/review-archive/__tests__/TeacherStudentReviewArchive.test.ts`
 - `code/frontend/src/pages/teacher/__tests__/TeacherStudentManagement.test.ts`
@@ -93,21 +96,26 @@
 ### Slice 5: 收口剩余 feature-level 用户展示散点
 
 - 目标：把班级学生目录、班级洞察、教学复盘、优先介入列表、平台用户详情和能力画像教师学员选择里的用户展示 fallback 收到 `entities/user`。
+- 目标：把班级学生目录、班级洞察、教学复盘、优先介入列表、平台用户治理、能力画像教师学员选择和通知发布用户候选项里的用户展示 fallback 收到 `entities/user`。
 - 变更面：
   - `code/frontend/src/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue`
   - `code/frontend/src/features/teaching/class-students-workspace/ui/ClassInsightsPanel.vue`
   - `code/frontend/src/features/teaching/class-students-workspace/ui/ClassReviewPanel.vue`
   - `code/frontend/src/features/teaching/student-analysis-review/ui/InterventionPanel.vue`
   - `code/frontend/src/features/platform/user-management/ui/UserGovernanceDetailModal.vue`
+  - `code/frontend/src/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue`
   - `code/frontend/src/features/skill-profile/ui/SkillProfileWorkspaceShell.vue`
+  - `code/frontend/src/features/admin-notification-publisher/ui/AdminNotificationPublishDrawer.vue`
 - 风险：
   - 如果把“姓名列必须只看实名”和“展示名可回退用户名”混成一个 helper，会让目录类场景再次退化。
+  - 如果 option label 仍然由各处本地拼装，后续括号、用户名 fallback 和文案风格会再次分叉。
 
 ## Validation Plan
 
 - `bash scripts/check-task-intake.sh --reuse-decision user-entity-presentation-owner`
 - `npm run test:run -- src/entities/user/model/presentation.test.ts src/pages/dashboard/__tests__/DashboardView.test.ts src/pages/review-archive/__tests__/TeacherStudentReviewArchive.test.ts src/pages/teacher/__tests__/TeacherStudentManagement.test.ts`
 - `npm run test:run -- src/entities/user/model/presentation.test.ts src/pages/teacher/__tests__/TeacherClassStudents.test.ts src/pages/teacher/__tests__/teacherInterventionPanelLayout.test.ts src/pages/platform/__tests__/UserManage.test.ts src/pages/profile/__tests__/SkillProfile.test.ts`
+- `npm run test:run -- src/entities/user/model/presentation.test.ts src/pages/teacher/__tests__/TeacherClassStudents.test.ts src/pages/teacher/__tests__/teacherInterventionPanelLayout.test.ts src/pages/platform/__tests__/UserManage.test.ts src/pages/profile/__tests__/SkillProfile.test.ts src/features/admin-notification-publisher/ui/__tests__/AdminNotificationPublishDrawer.test.ts`
 - `git diff --check -- .harness/reuse-decisions/user-entity-presentation-owner.md docs/plan/impl-plan/2026-05-31-user-entity-presentation-owner-plan.md code/frontend/src/entities/user/index.ts code/frontend/src/entities/user/model/index.ts code/frontend/src/entities/user/model/presentation.ts code/frontend/src/entities/user/model/presentation.test.ts code/frontend/src/features/student-dashboard/model/useStudentDashboardData.ts code/frontend/src/widgets/review-archive-workspace/ReviewArchiveHero.vue code/frontend/src/features/teaching/student-review-archive/model/useStudentReviewArchive.ts code/frontend/src/features/teacher/dashboard/model/teacherDashboardOverviewBuilders.ts code/frontend/src/features/teacher/dashboard/model/teacherDashboardInsightBuilders.ts code/frontend/src/features/teacher/student-management/ui/StudentManagementPage.vue code/frontend/src/pages/dashboard/__tests__/DashboardView.test.ts code/frontend/src/pages/review-archive/__tests__/TeacherStudentReviewArchive.test.ts code/frontend/src/pages/teacher/__tests__/TeacherStudentManagement.test.ts TODO/frontend-sliced-architecture.md`
 - `git diff --check -- .harness/reuse-decisions/user-entity-presentation-owner.md docs/plan/impl-plan/2026-05-31-user-entity-presentation-owner-plan.md code/frontend/src/entities/user/index.ts code/frontend/src/entities/user/model/index.ts code/frontend/src/entities/user/model/presentation.ts code/frontend/src/entities/user/model/presentation.test.ts code/frontend/src/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue code/frontend/src/features/teaching/class-students-workspace/ui/ClassInsightsPanel.vue code/frontend/src/features/teaching/class-students-workspace/ui/ClassReviewPanel.vue code/frontend/src/features/teaching/student-analysis-review/ui/InterventionPanel.vue code/frontend/src/features/platform/user-management/ui/UserGovernanceDetailModal.vue code/frontend/src/features/skill-profile/ui/SkillProfileWorkspaceShell.vue code/frontend/src/pages/teacher/__tests__/TeacherClassStudents.test.ts code/frontend/src/pages/teacher/__tests__/teacherInterventionPanelLayout.test.ts code/frontend/src/pages/platform/__tests__/UserManage.test.ts code/frontend/src/pages/profile/__tests__/SkillProfile.test.ts TODO/frontend-sliced-architecture.md`
 - `bash scripts/check-consistency.sh`
@@ -119,6 +127,7 @@
 - `entities/user` 是否只承接稳定用户展示规则，没有吸入权限、角色跳转或 session owner。
 - student dashboard、review archive、teacher dashboard 和 teacher student management 是否已停止本地持有 `name || username` 与 `@username`。
 - class students、intervention、platform user detail 和 skill profile teacher select 是否也已经停止本地持有 `name || username`。
+- platform user overview 和 admin notification publish drawer 是否也已经停止本地持有 `name || username` 与组合 option label。
 - 教师和学生现有页面行为是否保持不变。
 
 ## Rollback / Recovery

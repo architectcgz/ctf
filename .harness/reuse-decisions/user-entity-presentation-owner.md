@@ -15,11 +15,14 @@ frontend refactor / entity presentation owner strengthening
 - `code/frontend/src/features/teaching/class-students-workspace/ui/ClassReviewPanel.vue`
 - `code/frontend/src/features/teaching/student-analysis-review/ui/InterventionPanel.vue`
 - `code/frontend/src/features/platform/user-management/ui/UserGovernanceDetailModal.vue`
+- `code/frontend/src/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue`
 - `code/frontend/src/features/skill-profile/ui/SkillProfileWorkspaceShell.vue`
+- `code/frontend/src/features/admin-notification-publisher/ui/AdminNotificationPublishDrawer.vue`
 - `code/frontend/src/pages/teacher/__tests__/TeacherClassStudents.test.ts`
 - `code/frontend/src/pages/teacher/__tests__/teacherInterventionPanelLayout.test.ts`
 - `code/frontend/src/pages/platform/__tests__/UserManage.test.ts`
 - `code/frontend/src/pages/profile/__tests__/SkillProfile.test.ts`
+- `code/frontend/src/features/admin-notification-publisher/ui/__tests__/AdminNotificationPublishDrawer.test.ts`
 - `code/frontend/src/pages/dashboard/__tests__/DashboardView.test.ts`
 - `code/frontend/src/pages/review-archive/__tests__/TeacherStudentReviewArchive.test.ts`
 - `code/frontend/src/pages/teacher/__tests__/TeacherStudentManagement.test.ts`
@@ -42,13 +45,14 @@ refactor_existing
 - `useStudentReviewArchive.ts` 仍直接用 `name || username` 写 breadcrumb 详情标题
 - 教师仪表盘 builders 与学生目录表格仍各自维护 `name || username` 或 `未设置姓名`
 - 班级学生目录 / Top 学生 / 教学复盘 chips / 优先介入列表仍在 feature ui 内联 `name || username`
-- 平台用户详情和能力画像教师学员选择仍各自维护用户展示 fallback
+- 平台用户总览 / 用户详情、能力画像教师学员选择和通知发布候选项仍各自维护用户展示 fallback 或组合标签
 
 本轮最小正确改动是：
 
 - 新建 `entities/user`，承接显示名、用户名 handle 和带 fallback 的稳定展示兜底
 - 让 student dashboard、review archive、teacher dashboard 和 teacher student management 直接消费实体层公共入口
-- 继续让 class students、student analysis review、platform user detail 和 skill profile teacher select 复用同一个实体展示 owner
+- 继续让 class students、student analysis review、platform user governance、skill profile teacher select 和 admin notification publish drawer 复用同一个实体展示 owner
+- 对“显示名 + 用户名”的稳定 option label 也收进 `entities/user`
 - 用测试锁住 `name || username` 与 `@username` owner 不再回流到 feature model / widget / feature ui
 
 本轮不做：
@@ -75,7 +79,9 @@ refactor_existing
 - `code/frontend/src/features/teaching/class-students-workspace/ui/ClassReviewPanel.vue`
 - `code/frontend/src/features/teaching/student-analysis-review/ui/InterventionPanel.vue`
 - `code/frontend/src/features/platform/user-management/ui/UserGovernanceDetailModal.vue`
+- `code/frontend/src/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue`
 - `code/frontend/src/features/skill-profile/ui/SkillProfileWorkspaceShell.vue`
+- `code/frontend/src/features/admin-notification-publisher/ui/AdminNotificationPublishDrawer.vue`
 - `code/frontend/src/pages/dashboard/__tests__/DashboardView.test.ts`
 - `code/frontend/src/pages/review-archive/__tests__/TeacherStudentReviewArchive.test.ts`
 - `code/frontend/src/pages/teacher/__tests__/TeacherStudentManagement.test.ts`
@@ -83,9 +89,10 @@ refactor_existing
 - `code/frontend/src/pages/teacher/__tests__/teacherInterventionPanelLayout.test.ts`
 - `code/frontend/src/pages/platform/__tests__/UserManage.test.ts`
 - `code/frontend/src/pages/profile/__tests__/SkillProfile.test.ts`
+- `code/frontend/src/features/admin-notification-publisher/ui/__tests__/AdminNotificationPublishDrawer.test.ts`
 
 ## After implementation
 - `entities/user` 会成为这批 student / teacher surface 的显示名、用户名 handle 和稳定 fallback 展示 owner。
 - student dashboard、review archive、teacher dashboard 和 teacher student management 不再本地维护 `name || username` 和 `@username`。
-- class students、student analysis review、platform user detail 和 skill profile teacher select 也会停止散落 `name || username`。
-- `user` 仍有后续消费面待继续收口，完成这一批后再评估剩余零散展示位还是切到 `instance`。
+- class students、student analysis review、platform user governance、skill profile teacher select 和 admin notification publish drawer 也会停止散落 `name || username` 或本地拼 option label。
+- `user` 纯展示 owner 会基本收口，剩余若有散点将主要挂在 `instance` 等其他对象页面内，后续再按对象边界处理。

@@ -1,4 +1,5 @@
 export {
+  getUserDisplayLabel,
   getUserDisplayName,
   getUserName,
   getUserUsername,

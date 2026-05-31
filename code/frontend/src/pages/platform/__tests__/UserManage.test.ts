@@ -137,6 +137,16 @@ describe('UserManage', () => {
     expect(userGovernanceDetailModalSource).not.toContain('{{ user.name || user.username }}')
   })
 
+  it('用户总览表格里的用户名和姓名展示应由 user entity 承接', () => {
+    expect(userGovernanceOverviewPanelSource).toContain("from '@/entities/user'")
+    expect(userGovernanceOverviewPanelSource).toContain('getUserDisplayName')
+    expect(userGovernanceOverviewPanelSource).toContain('getUserUsernameHandle')
+    expect(userGovernanceOverviewPanelSource).not.toContain('@{{ (row as AdminUserListItem).username }}')
+    expect(userGovernanceOverviewPanelSource).not.toContain(
+      '{{ (row as AdminUserListItem).name || (row as AdminUserListItem).username }}'
+    )
+  })
+
   it('应该将用户总览与目录合并为一个工作台，并保留导入用户独立面板', async () => {
     adminApiMocks.getUsers.mockResolvedValue({
       list: [

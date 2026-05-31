@@ -47,3 +47,17 @@ export function getUserUsernameHandle(
   const username = normalizeValue(user?.username)
   return username ? `@${username}` : fallback
 }
+
+export function getUserDisplayLabel(
+  user: UserIdentityInput | null | undefined,
+  fallback = '--'
+): string {
+  const displayName = getUserDisplayName(user, fallback)
+  const username = normalizeValue(user?.username)
+
+  if (!username || username === displayName) {
+    return displayName
+  }
+
+  return `${displayName} (${username})`
+}

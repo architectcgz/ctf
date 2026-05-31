@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  getUserDisplayLabel,
   getUserDisplayName,
   getUserName,
   getUserUsername,
@@ -30,5 +31,12 @@ describe('user presentation', () => {
     expect(getUserUsernameHandle({ username: 'alice' })).toBe('@alice')
     expect(getUserUsernameHandle({ username: '' })).toBe('--')
     expect(getUserUsernameHandle(null, '未设置用户名')).toBe('未设置用户名')
+  })
+
+  it('builds stable option labels from display name and username', () => {
+    expect(getUserDisplayLabel({ name: 'Alice', username: 'alice' })).toBe('Alice (alice)')
+    expect(getUserDisplayLabel({ username: 'alice' })).toBe('alice')
+    expect(getUserDisplayLabel({ name: 'Alice', username: 'Alice' })).toBe('Alice')
+    expect(getUserDisplayLabel(null, '未设置用户')).toBe('未设置用户')
   })
 })

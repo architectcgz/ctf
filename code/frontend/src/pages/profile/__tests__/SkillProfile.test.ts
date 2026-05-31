@@ -360,10 +360,9 @@ describe('SkillProfile', () => {
 
     expect(options).toEqual(['我的六维画像', 'Alice Zhang (alice)', 'bob'])
     expect(skillProfileWorkspaceShellSource).toContain("from '@/entities/user'")
-    expect(skillProfileWorkspaceShellSource).toContain('getUserDisplayName')
-    expect(skillProfileWorkspaceShellSource).toContain('getUserUsername')
-    expect(skillProfileWorkspaceShellSource).toContain('formatStudentOptionLabel')
+    expect(skillProfileWorkspaceShellSource).toContain('getUserDisplayLabel')
     expect(skillProfileWorkspaceShellSource).not.toContain('{{ student.name || student.username }}')
+    expect(skillProfileWorkspaceShellSource).not.toContain('formatStudentOptionLabel')
   })
 
   it('应该把能力画像页残留的图表高度、骨架圆角和小字号收敛为语义类', () => {
