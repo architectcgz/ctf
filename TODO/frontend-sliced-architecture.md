@@ -86,7 +86,6 @@ src/
 
 当前 `challenge` 已经形成实体层入口，但下面这些对象还没有形成同等稳定的展示规则 owner：
 
-- `notification`
 - `contest`
 - `team`
 - `user`
@@ -132,7 +131,7 @@ src/
 
 ### P2：补强实体层
 
-按 `notification -> contest -> team -> user -> instance` 的顺序补实体展示和状态映射，不做一口气大搬迁。
+`notification` 的类型文案、accent 和已读状态展示已收口到 `entities/notification`；后续按 `contest -> team -> user -> instance` 的顺序继续补实体展示和状态映射，不做一口气大搬迁。
 
 ### P3：同步文档与 guardrail
 

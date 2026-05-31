@@ -8,6 +8,7 @@ import notificationListSource from '@/pages/notifications/NotificationListRouteP
 import notificationListPageSource from '@/features/notifications/model/useNotificationListPage.ts?raw'
 import notificationCategoryFilterSource from '@/features/notifications/ui/NotificationCategoryFilter.vue?raw'
 import notificationListWorkspaceSource from '@/widgets/notification-list-workspace/NotificationListWorkspace.vue?raw'
+import notificationPresentationSource from '@/entities/notification/model/presentation.ts?raw'
 import { useNotificationStore } from '@/stores/notification'
 import { useAuthStore } from '@/stores/auth'
 
@@ -139,6 +140,10 @@ describe('NotificationList', () => {
     expect(notificationListSource).not.toContain('workspace-directory-grid-row')
     expect(notificationListPageSource).not.toContain("from 'vue-router'")
     expect(notificationListPageSource).toContain('function notificationDetailRoute')
+    expect(notificationListPageSource).toContain(
+      "import { getNotificationTypeLabel } from '@/entities/notification'"
+    )
+    expect(notificationListPageSource).not.toContain('function typeLabel')
   })
 
   it('keeps bulk mark-as-read action working on the list page', async () => {
@@ -212,6 +217,9 @@ describe('NotificationList', () => {
 
     expect(notificationListWorkspaceSource).toContain('NotificationCategoryFilter')
     expect(notificationListWorkspaceSource).toContain(
+      "import { NotificationReadStatePill, NotificationTypePill } from '@/entities/notification'"
+    )
+    expect(notificationListWorkspaceSource).toContain(
       'student-directory-filters notification-filter-section'
     )
     expect(notificationCategoryFilterSource).toContain('student-directory-filters')
@@ -230,6 +238,7 @@ describe('NotificationList', () => {
       })
     )
     expect(notificationListWorkspaceSource).not.toContain('class="notification-directory-meta"')
+    expect(notificationPresentationSource).toContain("challenge: '训练'")
   })
 
   it('通知页操作按钮应接入共享 ui-btn 原语', () => {

@@ -50,23 +50,8 @@
               </h1>
 
               <div class="notification-detail-meta">
-                <span
-                  class="notification-detail-badge"
-                  :style="{
-                    color: accentColorMap[notificationAccent(notification.type)],
-                    borderColor: `color-mix(in srgb, ${accentColorMap[notificationAccent(notification.type)]} 22%, transparent)`,
-                    backgroundColor: `color-mix(in srgb, ${accentColorMap[notificationAccent(notification.type)]} 12%, transparent)`,
-                  }"
-                >
-                  {{ notificationTypeLabel(notification.type) }}
-                </span>
-                <span
-                  class="notification-detail-status"
-                  :class="{ 'notification-detail-status--read': !notification.unread }"
-                >
-                  <CircleCheckBig class="h-3.5 w-3.5" />
-                  {{ notification.unread ? '未读' : '已读' }}
-                </span>
+                <NotificationTypePill :type="notification.type" variant="detail" />
+                <NotificationReadStatePill :unread="notification.unread" variant="detail" show-icon />
                 <span class="notification-detail-meta-text">
                   {{ formatDate(notification.created_at) }}
                 </span>
@@ -82,7 +67,7 @@
                 </div>
                 <div class="notification-detail-side-item">
                   <BellRing class="h-3.5 w-3.5" />
-                  <span>{{ notificationTypeLabel(notification.type) }}</span>
+                  <span>{{ getNotificationTypeLabel(notification.type) }}</span>
                 </div>
               </div>
 
@@ -252,31 +237,9 @@
   gap: 0.65rem;
 }
 
-.notification-detail-badge,
-.notification-detail-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  padding: 0.4rem 0.8rem;
-  font-size: var(--font-size-0-74);
-  font-weight: 700;
-}
-
 .notification-detail-meta-text {
   font-size: var(--font-size-0-82);
   color: var(--journal-muted);
-}
-
-.notification-detail-status {
-  color: var(--color-warning);
-  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-}
-
-.notification-detail-status--read {
-  color: var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 10%, transparent);
 }
 
 .notification-detail-side {
@@ -377,15 +340,18 @@
 </style>
 
 <script setup lang="ts">
-import { ArrowLeft, BellRing, CalendarClock, CircleCheckBig, Inbox } from 'lucide-vue-next'
+import { ArrowLeft, BellRing, CalendarClock, Inbox } from 'lucide-vue-next'
 
 import type { NotificationItem } from '@/api/contracts'
+import {
+  getNotificationTypeLabel,
+  NotificationReadStatePill,
+  NotificationTypePill,
+} from '@/entities/notification'
 import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import { formatDate } from '@/utils/format'
-
-type NotificationAccent = 'primary' | 'success' | 'warning' | 'violet'
 
 defineProps<{
   loading: boolean
@@ -396,9 +362,6 @@ defineProps<{
   notificationsRoute: AppRouteTarget
   relatedRoute: AppRouteTarget | null
   relatedExternalHref: string | null
-  accentColorMap: Record<NotificationAccent, string>
-  notificationAccent: (type: string) => NotificationAccent
-  notificationTypeLabel: (type: string) => string
   handleIdProbe: () => void
 }>()
 </script>

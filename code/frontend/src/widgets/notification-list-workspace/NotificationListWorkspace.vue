@@ -126,9 +126,7 @@
                 :class="{ 'notification-row-unread': item.unread }"
               >
                 <div class="notification-row-type">
-                  <span class="workspace-directory-status-pill notification-chip">{{
-                    typeLabel(item.type)
-                  }}</span>
+                  <NotificationTypePill :type="item.type" />
                 </div>
                 <div class="workspace-directory-cell notification-row-main">
                   <div
@@ -153,16 +151,11 @@
                   {{ formatDate(item.created_at) }}
                 </div>
                 <div class="notification-row-state">
-                  <span
-                    class="workspace-directory-status-pill notification-state-chip"
-                    :class="{
-                      'workspace-directory-status-pill--primary notification-state-chip-unread':
-                        item.unread,
-                      'workspace-directory-status-pill--muted': !item.unread,
-                    }"
-                  >
-                    {{ item.unread ? '未读' : '已读' }}
-                  </span>
+                  <NotificationReadStatePill
+                    :unread="item.unread"
+                    class="workspace-directory-status-pill"
+                    :class="item.unread ? 'workspace-directory-status-pill--primary' : 'workspace-directory-status-pill--muted'"
+                  />
                 </div>
               </RouterLink>
             </section>
@@ -295,12 +288,6 @@
   cursor: pointer;
 }
 
-.notification-chip {
-  border-color: color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent);
-}
-
 .notification-row-main {
   min-width: 0;
 }
@@ -346,6 +333,7 @@
 import { RefreshCw } from 'lucide-vue-next'
 
 import type { NotificationItem, NotificationType } from '@/api/contracts'
+import { NotificationReadStatePill, NotificationTypePill } from '@/entities/notification'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import { AdminNotificationPublishDrawer } from '@/features/admin-notification-publisher'
@@ -367,7 +355,6 @@ defineProps<{
   selectedCategory: NotificationType | 'all'
   selectedCategoryLabel: string
   canPublishNotification: boolean
-  typeLabel: (type: string) => string
   selectCategory: (next: NotificationType | 'all') => Promise<void>
   notificationDetailRoute: (item: Pick<NotificationItem, 'id'> | string) => string
   markCurrentPageRead: () => Promise<void>

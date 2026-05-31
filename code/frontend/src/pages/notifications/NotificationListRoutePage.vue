@@ -14,7 +14,6 @@
     :selected-category="selectedCategory"
     :selected-category-label="selectedCategoryLabel"
     :can-publish-notification="canPublishNotification"
-    :type-label="typeLabel"
     :select-category="selectCategory"
     :notification-detail-route="notificationDetailRoute"
     :mark-current-page-read="markCurrentPageRead"
@@ -46,7 +45,6 @@ const {
   selectedCategory,
   selectedCategoryLabel,
   canPublishNotification,
-  typeLabel,
   selectCategory,
   notificationDetailRoute,
   markCurrentPageRead,

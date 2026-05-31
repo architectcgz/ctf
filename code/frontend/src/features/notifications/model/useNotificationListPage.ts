@@ -2,6 +2,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import type { NotificationItem, NotificationType } from '@/api/contracts'
 import { getNotifications, markAsRead } from '@/api/notification'
+import { getNotificationTypeLabel } from '@/entities/notification'
 import { usePagination } from '@/shared/model/common/usePagination'
 import { useProbeEasterEggs } from '@/shared/model/common/useProbeEasterEggs'
 import { useToast } from '@/shared/model/common/useToast'
@@ -41,19 +42,12 @@ export function useNotificationListPage() {
     return '通知加载失败，请稍后重试。'
   })
 
-  function typeLabel(type: string): string {
-    if (type === 'contest') return '竞赛'
-    if (type === 'challenge') return '训练'
-    if (type === 'team') return '团队'
-    return '系统'
-  }
-
   const categoryOptions: Array<{ key: NotificationType | 'all'; label: string }> = [
     { key: 'all', label: '全部' },
-    { key: 'system', label: '系统' },
-    { key: 'contest', label: '竞赛' },
-    { key: 'challenge', label: '训练' },
-    { key: 'team', label: '团队' },
+    { key: 'system', label: getNotificationTypeLabel('system') },
+    { key: 'contest', label: getNotificationTypeLabel('contest') },
+    { key: 'challenge', label: getNotificationTypeLabel('challenge') },
+    { key: 'team', label: getNotificationTypeLabel('team') },
   ]
 
   const selectedCategoryLabel = computed(
@@ -161,7 +155,6 @@ export function useNotificationListPage() {
     selectedCategory,
     selectedCategoryLabel,
     canPublishNotification,
-    typeLabel,
     selectCategory,
     notificationDetailRoute,
     markCurrentPageRead,

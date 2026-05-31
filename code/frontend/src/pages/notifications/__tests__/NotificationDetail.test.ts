@@ -7,6 +7,7 @@ import NotificationDetail from '@/pages/notifications/NotificationDetailRoutePag
 import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
 import notificationDetailPageSource from '@/features/notifications/model/useNotificationDetailPage.ts?raw'
 import notificationDetailWorkspaceSource from '@/widgets/notification-detail-workspace/NotificationDetailWorkspace.vue?raw'
+import notificationPresentationSource from '@/entities/notification/model/presentation.ts?raw'
 import { useNotificationStore } from '@/stores/notification'
 
 const notificationApiMocks = vi.hoisted(() => ({
@@ -110,6 +111,9 @@ describe('NotificationDetail', () => {
     expect(notificationDetailSource).not.toContain('watch(')
     expect(notificationDetailSource).not.toContain('workspace-overline')
     expect(notificationDetailPageSource).not.toContain("from 'vue-router'")
+    expect(notificationDetailPageSource).not.toContain('accentColorMap')
+    expect(notificationDetailPageSource).not.toContain('function notificationAccent')
+    expect(notificationDetailPageSource).not.toContain('function notificationTypeLabel')
   })
 
   it('falls back to notifications list api when store does not contain the item', async () => {
@@ -183,6 +187,9 @@ describe('NotificationDetail', () => {
       '<div class="notification-overline">Message</div>'
     )
     expect(notificationDetailWorkspaceSource).not.toMatch(/^\.notification-overline\s*\{/m)
+    expect(notificationDetailWorkspaceSource).toContain(
+      "import {\n  getNotificationTypeLabel,\n  NotificationReadStatePill,\n  NotificationTypePill,\n} from '@/entities/notification'"
+    )
   })
 
   it('通知详情页操作按钮应接入共享 ui-btn 原语', () => {
@@ -192,6 +199,7 @@ describe('NotificationDetail', () => {
     expect(notificationDetailWorkspaceSource).not.toMatch(
       /^\.notification-detail-action--primary\s*\{/m
     )
+    expect(notificationPresentationSource).toContain("team: 'violet'")
   })
 
   it('存在站内 link 时应通过 route target 渲染关联入口', async () => {

@@ -6,15 +6,6 @@ import { useProbeEasterEggs } from '@/shared/model/common/useProbeEasterEggs'
 import { useToast } from '@/shared/model/common/useToast'
 import { useNotificationStore } from '@/stores/notification'
 
-export type NotificationAccent = 'primary' | 'success' | 'warning' | 'violet'
-
-export const accentColorMap: Record<NotificationAccent, string> = {
-  warning: 'var(--color-warning)',
-  success: 'var(--color-success)',
-  violet: 'var(--color-cat-reverse)',
-  primary: 'var(--color-primary)',
-}
-
 const notificationsRoute: AppRouteTarget = { name: 'Notifications' }
 
 function isExternalLink(link: string): boolean {
@@ -49,20 +40,6 @@ export function useNotificationDetailPage(notificationId: Ref<string> | Computed
     return relatedLink.value
   })
   const hasRelatedLink = computed(() => Boolean(relatedRoute.value || relatedExternalHref.value))
-
-  function notificationAccent(type: string): NotificationAccent {
-    if (type === 'contest') return 'warning'
-    if (type === 'challenge') return 'success'
-    if (type === 'team') return 'violet'
-    return 'primary'
-  }
-
-  function notificationTypeLabel(type: string): string {
-    if (type === 'contest') return '竞赛'
-    if (type === 'challenge') return '训练'
-    if (type === 'team') return '团队'
-    return '系统'
-  }
 
   async function ensureNotificationLoaded(id: string) {
     if (notification.value || !id) {
@@ -146,8 +123,6 @@ export function useNotificationDetailPage(notificationId: Ref<string> | Computed
     notificationsRoute,
     relatedRoute,
     relatedExternalHref,
-    notificationAccent,
-    notificationTypeLabel,
     handleIdProbe,
   }
 }
