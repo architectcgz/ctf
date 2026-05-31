@@ -144,7 +144,7 @@ describe('ImageManage', () => {
     expect(imageManageSource).toContain('ImageCreateModal')
     expect(imageManageSource).toContain('<ImageCreateModal')
     expect(imageCreateModalSource).toContain(
-      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+      "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
     )
     expect(imageCreateModalSource).toContain("from '@/entities/image'")
     expect(imageCreateModalSource).not.toContain("from '@/api/admin/authoring'")
@@ -175,7 +175,7 @@ describe('ImageManage', () => {
     expect(imageManageSource).toContain('ImageDetailModal')
     expect(imageManageSource).toContain('<ImageDetailModal')
     expect(imageDetailModalSource).toContain(
-      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+      "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
     )
     expect(imageDetailModalSource).toContain('<AdminSurfaceModal')
     expect(imageDetailModalSource).toContain('class="image-detail__grid"')
@@ -246,8 +246,8 @@ describe('ImageManage', () => {
       page_size: 20,
     })
 
-    expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
-    expect(combinedSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'")
+    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(combinedSource).toContain('<WorkspaceDirectoryToolbar')
     expect(combinedSource).toContain('<WorkspaceDataTable')
     expect(combinedSource).toMatch(

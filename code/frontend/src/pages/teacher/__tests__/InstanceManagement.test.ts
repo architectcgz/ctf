@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import InstanceManagement from '@/pages/teacher/InstanceManagementRoutePage.vue'
 import instanceManagementViewSource from '@/pages/teacher/InstanceManagementRoutePage.vue?raw'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import instanceManagementSourceBase from '@/features/teacher/instances/ui/TeacherInstanceManagementPage.vue?raw'
 import teacherInstanceManagementPageModelSource from '@/features/teacher/instances/model/useInstanceManagementPage.ts?raw'
 import teacherInstanceDirectorySectionSource from '@/features/teacher/instances/ui/TeacherInstanceDirectorySection.vue?raw'
@@ -193,7 +193,7 @@ describe('InstanceManagement', () => {
     expect(teacherInstanceManagementPageModelSource).toContain(
       'const dashboardRoute = teacherInstanceDashboardRoute(authStore.user?.role)'
     )
-    expect(teacherInstanceHeroPanelSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(teacherInstanceHeroPanelSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(teacherInstanceHeroPanelSource).toContain('<AppRouteLink')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
   })
@@ -420,14 +420,14 @@ describe('InstanceManagement', () => {
     expect(instanceManagementSource).not.toContain('teacher-controls-title')
     expect(instanceManagementSource).not.toContain('teacher-controls-copy')
     expect(instanceManagementSource).toContain(
-      "from '@/components/common/WorkspaceDataTable.vue'"
+      "from '@/shared/ui/common/WorkspaceDataTable.vue'"
     )
     expect(instanceManagementSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
+      "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
     )
     expect(instanceManagementSource).toContain('<WorkspaceDataTable')
     expect(instanceManagementSource).toContain('<WorkspaceDirectoryPagination')
-    expect(instanceManagementSource).not.toContain("from '@/components/common/PagePaginationControls.vue'")
+    expect(instanceManagementSource).not.toContain("from '@/shared/ui/common/PagePaginationControls.vue'")
     expect(instanceManagementSource).toContain('用户关键字')
     expect(instanceManagementSource).toContain('按用户名或学号搜索')
     expect(instanceManagementSource).toContain("label: '学生'")

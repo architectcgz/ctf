@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TeacherAWDReviewIndex from '@/pages/awd-review/TeacherAwdReviewIndexRoutePage.vue'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import teacherAwdReviewIndexSource from '@/pages/awd-review/TeacherAwdReviewIndexRoutePage.vue?raw'
 import teacherAwdReviewIndexWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewIndexWorkspace.vue?raw'
 import teacherAwdReviewContestDirectorySource from '@/widgets/awd-review-workspace/AwdReviewContestDirectory.vue?raw'
@@ -146,7 +146,7 @@ describe('TeacherAWDReviewIndex', () => {
     expect(teacherAwdReviewIndexSource).not.toContain("router.push({ name: 'TeacherDashboard' })")
     expect(teacherAwdReviewIndexSource).toContain(':dashboard-route="homeRoute"')
     expect(teacherAwdReviewIndexSource).toContain(':build-contest-route="buildContestRoute"')
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(teacherAwdReviewIndexWorkspaceSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(teacherAwdReviewIndexWorkspaceSource).toContain('<AppRouteLink')
     expect(teacherAwdReviewContestDirectorySource).toContain(':build-contest-route="buildContestRoute"')
     expect(teacherAwdReviewContestDirectorySource).not.toContain("@open-contest=\"emit('openContest', $event)\"")

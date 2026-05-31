@@ -9,13 +9,14 @@ import {
   Users,
 } from 'lucide-vue-next'
 
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 
 const props = defineProps<{
   error: string | null
   showSkeleton: boolean
-  auditLogRoute: Record<string, unknown>
-  cheatDetectionRoute: Record<string, unknown>
+  auditLogRoute: AppRouteTarget
+  cheatDetectionRoute: AppRouteTarget
   metaPills: string[]
   railScore: string
   railCopy: string

@@ -213,7 +213,7 @@
 <script setup lang="ts">
 import { Activity, Target, Waypoints } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 
 interface ServiceEvidenceItem {
   id: string | number

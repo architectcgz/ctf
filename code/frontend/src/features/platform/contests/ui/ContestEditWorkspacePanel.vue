@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import type {
   AdminContestChallengeViewData,
   AWDReadinessData,
@@ -16,8 +16,8 @@ import {
   ContestChallengeOrchestrationPanel,
   type ContestWorkbenchStageKey,
 } from '@/features/contest-workbench'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
 import AWDChallengeConfigPanel from './AWDChallengeConfigPanel.vue'
 import ContestAwdPreflightPanel from './ContestAwdPreflightPanel.vue'
 import PlatformContestFormPanel from './PlatformContestFormPanel.vue'

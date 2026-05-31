@@ -384,7 +384,7 @@ function toPracticeCase(bucket: PracticeBucket): ReviewArchiveCase {
   return {
     id: bucket.id,
     title: bucket.title,
-    subtitle: `${bucket.eventCount ?? bucket.events.length} 条训练事件`,
+    subtitle: `${bucket.events.length} 条训练事件`,
     statusLabel: bucket.successCount > 0 ? '已形成命中' : '持续练习中',
     tone: bucket.successCount > 0 ? 'success' : 'neutral',
     eventCount: bucket.events.length,

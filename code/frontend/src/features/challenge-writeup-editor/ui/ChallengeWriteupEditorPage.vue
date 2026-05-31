@@ -2,8 +2,8 @@
 import { RefreshCw } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-import AppLoading from '@/components/common/AppLoading.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import PageHeader from '@/shared/ui/common/PageHeader.vue'
 import { useChallengeWriteupEditorPage } from '../model'
 
 import ChallengeWriteupChallengeRail from './ChallengeWriteupChallengeRail.vue'

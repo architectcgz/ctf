@@ -247,9 +247,9 @@
 import { Search } from 'lucide-vue-next'
 
 import type { ChallengeCategory, ChallengeDifficulty, ChallengeListItem } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import { ChallengeDirectoryRow } from '@/entities/challenge'
 
 interface Props {

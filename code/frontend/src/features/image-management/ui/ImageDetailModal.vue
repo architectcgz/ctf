@@ -10,7 +10,7 @@ import {
 } from 'lucide-vue-next'
 
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
-import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import AdminSurfaceModal from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'
 
 const props = defineProps<{
   open: boolean

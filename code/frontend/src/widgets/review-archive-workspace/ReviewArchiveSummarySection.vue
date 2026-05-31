@@ -165,7 +165,7 @@
 import { computed } from 'vue'
 
 import type { ReviewArchiveData } from '@/api/contracts'
-import SectionCard from '@/components/common/SectionCard.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
 import { formatDate } from '@/utils/format'
 import {
   buildReviewArchiveSummaryCards,

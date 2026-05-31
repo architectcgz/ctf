@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-export type FrontendArchitectureLayer = 'common' | 'entities' | 'pages' | 'features' | 'widgets'
+export type FrontendArchitectureLayer =
+  | 'common'
+  | 'shared'
+  | 'entities'
+  | 'pages'
+  | 'features'
+  | 'widgets'
 
 export interface FrontendArchitecturePolicy {
   layers: Record<

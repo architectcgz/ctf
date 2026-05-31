@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ContestList from '@/pages/contests/ContestListRoutePage.vue'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
 import contestListPageSource from '@/features/contest-detail/model/useContestListPage.ts?raw'
 import contestListRoutesSource from '@/features/contest-detail/model/contestListRoutes.ts?raw'
@@ -95,7 +95,7 @@ describe('ContestList', () => {
   it('竞赛详情入口应通过 route target，而不是 page model 直接 push', async () => {
     const { wrapper, router } = await mountPage()
 
-    expect(contestListSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(contestListSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(contestListSource).toContain('<AppRouteLink')
     expect(contestListPageSource).not.toContain("from 'vue-router'")
     expect(contestListPageSource).not.toContain('router.push')

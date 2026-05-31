@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ClassManagement from '@/pages/teacher/ClassManagementRoutePage.vue'
 import classManagementViewSource from '@/pages/teacher/ClassManagementRoutePage.vue?raw'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import classManagementSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
 import classManagementPageModelSource from '@/features/teacher/class-management/model/useClassManagementPage.ts?raw'
 import teacherClassManagementHeaderActionsSource from '@/components/teacher/class-management/TeacherClassManagementHeaderActions.vue?raw'
@@ -303,12 +303,12 @@ describe('ClassManagement', () => {
     expect(classManagementPageModelSource).toContain('dashboardRoute: teacherDashboardRoute')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(teacherClassManagementHeaderActionsSource).toContain(
-      "from '@/components/navigation/AppRouteLink.vue'"
+      "from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
     expect(teacherClassManagementHeaderActionsSource).toContain('<AppRouteLink')
     expect(teacherClassManagementHeaderActionsSource).not.toContain("from 'vue-router'")
     expect(teacherClassManagementRowLinkSource).toContain(
-      "from '@/components/navigation/AppRouteLink.vue'"
+      "from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
     expect(teacherClassManagementRowLinkSource).toContain('<AppRouteLink')
     expect(teacherClassManagementRowLinkSource).not.toContain("from 'vue-router'")

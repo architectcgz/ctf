@@ -6,9 +6,9 @@ import type {
   ManualReviewSubmissionDetailData,
   ManualReviewSubmissionItemData,
 } from '@/api/contracts'
-import AppCard from '@/components/common/AppCard.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
+import AppCard from '@/shared/ui/common/AppCard.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
 import {
   formatDateTime,
   manualReviewStatusClass,

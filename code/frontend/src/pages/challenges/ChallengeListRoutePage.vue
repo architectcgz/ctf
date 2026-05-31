@@ -187,7 +187,7 @@ import type { Component } from 'vue'
 
 import { BookOpen, Layers3, LayoutDashboard, ShieldCheck, Target } from 'lucide-vue-next'
 
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import { ChallengeDirectoryPanel, useChallengeListPage } from '@/features/challenge-list'
 
 type ChallengeSummaryKey = 'total' | 'visible' | 'solved' | 'unsolved'

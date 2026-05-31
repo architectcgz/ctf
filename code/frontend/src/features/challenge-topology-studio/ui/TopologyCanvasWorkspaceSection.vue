@@ -2,7 +2,7 @@
 import { computed, defineAsyncComponent } from 'vue'
 
 import type { AdminImageListItem } from '@/api/contracts'
-import SectionCard from '@/components/common/SectionCard.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
 import TopologyCanvasQuickEditor from './TopologyCanvasQuickEditor.vue'
 import TopologyNetworkQuickEditor from './TopologyNetworkQuickEditor.vue'
 

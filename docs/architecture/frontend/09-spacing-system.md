@@ -175,6 +175,6 @@
 
 - 主题尾部硬编码检查：`code/frontend/scripts/check-theme-tail.mjs`
 - 运行命令：`cd code/frontend && npm run check:theme-tail`
-- 目录表格继续走主题 token：`code/frontend/src/components/common/__tests__/WorkspaceDataTable.test.ts`
-- 布局壳和 full-bleed 内容壳：`code/frontend/src/components/layout/__tests__/AppLayout.test.ts`
+- 目录表格继续走主题 token：`code/frontend/src/shared/ui/common/__tests__/WorkspaceDataTable.test.ts`
+- 布局壳和 full-bleed 内容壳：`code/frontend/src/shared/ui/layout/__tests__/AppLayout.test.ts`
 

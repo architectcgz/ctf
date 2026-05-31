@@ -9,9 +9,9 @@ import {
   Users,
 } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import WorkspaceDirectoryToolbar from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import type { ContestDetailData, ContestListSummaryData, ContestStatus } from '@/api/contracts'
 import type {

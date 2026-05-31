@@ -3,6 +3,7 @@ import { toRef } from 'vue'
 
 import type { AdminDashboardData } from '@/api/contracts'
 import { usePlatformOverviewWorkspace } from '@/features/platform/overview/model/usePlatformOverviewWorkspace'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import PlatformOverviewAlertsSection from './PlatformOverviewAlertsSection.vue'
 import PlatformOverviewHeroPanel from './PlatformOverviewHeroPanel.vue'
 import PlatformOverviewHotspotsSection from './PlatformOverviewHotspotsSection.vue'
@@ -11,8 +12,8 @@ const props = defineProps<{
   dashboard: AdminDashboardData | null
   loading: boolean
   error: string | null
-  auditLogRoute: Record<string, unknown>
-  cheatDetectionRoute: Record<string, unknown>
+  auditLogRoute: AppRouteTarget
+  cheatDetectionRoute: AppRouteTarget
 }>()
 
 const emit = defineEmits<{

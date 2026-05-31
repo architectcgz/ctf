@@ -165,8 +165,8 @@
 
 <script setup lang="ts">
 import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
 
 type ChallengeImportQueueItem = {

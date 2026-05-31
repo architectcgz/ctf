@@ -287,7 +287,7 @@
 
 <script setup lang="ts">
 import type { AdminAwdChallengeImportPreview } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { ChallengePackageImportEntry } from '@/features/platform/challenge-package-import'
 import type { PlatformAwdChallengeImportUploadResult } from '../model'
 

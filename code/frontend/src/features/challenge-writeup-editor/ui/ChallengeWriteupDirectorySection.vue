@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 
 import type { WriteupDirectoryRow } from '../model/useChallengeWriteupManagement'
 import ChallengeWriteupDirectoryRow from './ChallengeWriteupDirectoryRow.vue'

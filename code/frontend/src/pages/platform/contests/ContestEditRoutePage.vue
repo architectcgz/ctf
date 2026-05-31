@@ -58,8 +58,8 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
 
-import AppLoading from '@/components/common/AppLoading.vue'
-import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import AppRouteRedirect from '@/shared/ui/navigation/AppRouteRedirect.vue'
 import { ContestWorkbenchStageTabs } from '@/features/contest-workbench'
 import {
   ContestEditTopbarPanel,

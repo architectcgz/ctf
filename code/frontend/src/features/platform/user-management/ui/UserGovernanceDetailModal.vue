@@ -2,7 +2,7 @@
 import { UserRoundCheck } from 'lucide-vue-next'
 
 import type { AdminUserListItem, UserStatus } from '@/api/contracts'
-import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import AdminSurfaceModal from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'
 
 const props = defineProps<{
   user: AdminUserListItem | null

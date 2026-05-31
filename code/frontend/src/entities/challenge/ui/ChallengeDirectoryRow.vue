@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ArrowRight } from 'lucide-vue-next'
 
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import {
   type ChallengeDirectoryListItem,
   getChallengeCategoryColor,

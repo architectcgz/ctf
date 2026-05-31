@@ -20,8 +20,8 @@
   - 负责：登录快照、通知列表、竞赛共享状态这类跨页面共享数据
   - 不负责：单页筛选、局部表单和一次性临时状态
 
-- `code/frontend/src/components/common/`、`code/frontend/src/components/common/modal-templates/`、`code/frontend/src/components/layout/`
-  - 负责：共享 UI 原语、overlay 模板和应用总布局；Guardrail 见 `code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`、`code/frontend/src/components/layout/__tests__/AppLayout.test.ts`
+- `code/frontend/src/shared/ui/common/`、`code/frontend/src/shared/ui/common/modal-templates/`、`code/frontend/src/shared/ui/layout/`
+  - 负责：共享 UI 原语、overlay 模板和应用总布局；Guardrail 见 `code/frontend/src/shared/ui/common/__tests__/ModalTemplates.test.ts`、`code/frontend/src/shared/ui/layout/__tests__/AppLayout.test.ts`
   - 不负责：承载具体业务 owner
 
 ## 1. 架构骨架
@@ -34,7 +34,7 @@
 2. `pages/**` 作为路由页面入口
 3. `features/**/model` 负责编排 API、query 同步、分页、导出和实时能力
 4. `stores/**` 只承接跨页共享状态
-5. `components/common/**` 和 `assets/styles/*.css` 负责统一交互骨架和视觉节奏
+5. `shared/ui/common/**` 和 `assets/styles/*.css` 负责统一交互骨架和视觉节奏
 
 ## 2. 当前目录骨架
 
@@ -117,8 +117,8 @@ code/frontend/
 
 ### 3.4 共享原语与样式
 
-- 共享组件集中在 `components/common/`
-- overlay 模板集中在 `components/common/modal-templates/`
+- 共享组件集中在 `shared/ui/common/`
+- overlay 模板集中在 `shared/ui/common/modal-templates/`
 - 全局节奏和主题由 `theme.css`、`style.css`、`workspace-shell.css`、`page-tabs.css`、`teacher-surface.css` 等样式文件共同维护
 
 详情见：
@@ -153,7 +153,7 @@ code/frontend/
 - 前端分层：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - route page 边界：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 后台导航命名空间：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`
-- 共享弹窗模板：`code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`
+- 共享弹窗模板：`code/frontend/src/shared/ui/common/__tests__/ModalTemplates.test.ts`
 - 主题尾部硬编码检查：`cd code/frontend && npm run check:theme-tail`
 
 ## 6. 读取顺序

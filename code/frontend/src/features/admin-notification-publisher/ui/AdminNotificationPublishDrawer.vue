@@ -2,7 +2,7 @@
 import { onUnmounted, watch } from 'vue'
 
 import type { AdminNotificationPublishResult } from '@/api/contracts'
-import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
+import AdminSurfaceDrawer from '@/shared/ui/common/modal-templates/AdminSurfaceDrawer.vue'
 import { useAdminNotificationPublisher } from '@/features/admin-notification-publisher'
 import { USER_ROLES, type UserRole } from '@/utils/constants'
 

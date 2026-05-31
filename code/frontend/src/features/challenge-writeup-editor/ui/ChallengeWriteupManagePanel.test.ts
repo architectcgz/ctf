@@ -104,7 +104,7 @@ describe('ChallengeWriteupManagePanel', () => {
     )
     expect(challengeWriteupManagePanelSource).not.toContain("from '@/api/teacher'")
     expect(challengeWriteupManagePanelSource).toContain(
-      "from '@/components/common/menus/CActionMenu.vue'"
+      "from '@/shared/ui/common/menus/CActionMenu.vue'"
     )
     expect(challengeWriteupManagePanelSource).toContain('class="c-action-menu__item"')
     expect(challengeWriteupManagePanelSource).toContain(
@@ -118,7 +118,7 @@ describe('ChallengeWriteupManagePanel', () => {
 
   it('官方题解更多操作应改用共享 action menu primitive，而不是页面内 hover 浮层', () => {
     expect(challengeWriteupManagePanelSource).toContain(
-      "from '@/components/common/menus/CActionMenu.vue'"
+      "from '@/shared/ui/common/menus/CActionMenu.vue'"
     )
     expect(challengeWriteupManagePanelSource).not.toContain('@mouseenter="openActionMenu"')
     expect(challengeWriteupManagePanelSource).not.toContain('class="writeup-actions-menu"')

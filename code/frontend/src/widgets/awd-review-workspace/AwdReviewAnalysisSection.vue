@@ -180,7 +180,7 @@
 <script setup lang="ts">
 import { ChevronRight } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { formatDate } from '@/utils/format'
 
 interface RoundSummary {

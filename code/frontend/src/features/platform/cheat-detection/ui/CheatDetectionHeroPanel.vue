@@ -92,11 +92,12 @@
 <script setup lang="ts">
 import { RefreshCw, SearchCheck } from 'lucide-vue-next'
 
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import CheatDetectionSummaryPanel from './CheatDetectionSummaryPanel.vue'
 
 defineProps<{
-  auditLogRoute: Record<string, unknown>
+  auditLogRoute: AppRouteTarget
   generatedAtLabel: string | null
   loading: boolean
   summary: {

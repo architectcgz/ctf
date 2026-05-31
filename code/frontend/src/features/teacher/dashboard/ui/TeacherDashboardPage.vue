@@ -3,7 +3,7 @@ import { toRef } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
 
 import type { TeacherOverviewData } from '@/api/contracts'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useDashboardMetrics } from '../model/useDashboardMetrics'
 import TeacherDashboardInterventionPanel from './TeacherDashboardInterventionPanel.vue'

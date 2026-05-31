@@ -3,8 +3,8 @@ import { computed } from 'vue'
 import { Layout, Network, Plus, RefreshCw, Server, Trash2 } from 'lucide-vue-next'
 
 import type { EnvironmentTemplateData } from '@/api/contracts'
-import AppCard from '@/components/common/AppCard.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
+import AppCard from '@/shared/ui/common/AppCard.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
 
 const props = defineProps<{
   isTemplateLibraryMode: boolean

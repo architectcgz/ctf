@@ -428,7 +428,7 @@
 import { computed } from 'vue'
 import { Activity, BellRing, MapPinned, Trophy } from 'lucide-vue-next'
 
-import RadarChart from '@/components/charts/RadarChart.vue'
+import RadarChart from '@/shared/ui/charts/RadarChart.vue'
 import type { SkillDimensionScore } from '@/api/contracts'
 
 import type { StudentOverviewProps } from './studentOverviewProps'

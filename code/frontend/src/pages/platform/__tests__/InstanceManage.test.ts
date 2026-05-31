@@ -4,7 +4,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import PlatformInstanceManagement from '@/pages/platform/InstanceManageRoutePage.vue'
 import adminInstanceManageSource from '@/pages/platform/InstanceManageRoutePage.vue?raw'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import instanceManageHeroPanelSource from '@/features/platform/instance-management/ui/InstanceManageHeroPanel.vue?raw'
 import instanceManageWorkspacePanelSource from '@/features/platform/instance-management/ui/InstanceManageWorkspacePanel.vue?raw'
 import platformInstanceManagementModelSource from '@/features/platform/instance-management/model/usePlatformInstanceManagementPage.ts?raw'
@@ -139,7 +139,7 @@ describe('PlatformInstanceManagement', () => {
     expect(adminInstanceManageSource).toContain(
       'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-instance-manage-shell"'
     )
-    expect(instanceManageHeroPanelSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(instanceManageHeroPanelSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(instanceManageHeroPanelSource).toContain('<AppRouteLink')
     expect(instanceManageHeroPanelSource).toContain('返回概览')
     expect(instanceManageHeroPanelSource).toContain('刷新列表')
@@ -147,15 +147,15 @@ describe('PlatformInstanceManagement', () => {
     expect(instanceManageHeroPanelSource).toContain(
       'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(instanceManageWorkspacePanelSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(instanceManageWorkspacePanelSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(instanceManageWorkspacePanelSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
+      "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
     )
     expect(instanceManageWorkspacePanelSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
     expect(instanceManageWorkspacePanelSource).toContain(
-      "from '@/components/navigation/AppRouteLink.vue'"
+      "from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
     expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
     expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')

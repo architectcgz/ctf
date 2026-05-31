@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Search } from 'lucide-vue-next'
 
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import type { AWDTrafficStatusGroup, AWDTrafficEventData } from '@/api/contracts'
 import type { AWDTrafficFilters } from '@/features/awd-inspector/model'
 

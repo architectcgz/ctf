@@ -112,10 +112,10 @@
 
 <script setup lang="ts">
 import type { AdminChallengeImportPreview } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import PageHeader from '@/shared/ui/common/PageHeader.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 
 import ChallengePackageImportReview from './ChallengePackageImportReview.vue'
 

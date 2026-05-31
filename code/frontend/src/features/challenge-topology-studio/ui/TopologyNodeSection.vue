@@ -2,7 +2,7 @@
 import { defineAsyncComponent } from 'vue'
 import { Plus } from 'lucide-vue-next'
 
-import SectionCard from '@/components/common/SectionCard.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
 import type { AdminImageListItem } from '@/api/contracts'
 import type { TopologyNetworkDraft, TopologyNodeDraft } from '@/features/challenge-topology-studio/model'
 

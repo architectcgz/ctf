@@ -81,7 +81,7 @@ describe('ChallengeImportManage', () => {
     expect(challengeImportHeroPanelSource).toContain('class="header-btn header-btn--ghost"')
     expect(challengeImportHeroPanelSource).toContain('class="header-btn header-btn--primary"')
     expect(challengeImportHeroPanelSource).toContain(
-      "import AppRouteLink from '@/components/navigation/AppRouteLink.vue'"
+      "import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
     expect(challengeImportQueuePanelSource).toContain('<AppRouteLink')
     expect(challengeImportHeroPanelSource).not.toContain('challenge-import-action')

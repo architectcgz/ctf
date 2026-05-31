@@ -1,8 +1,16 @@
 {
   "layers": {
     "common": {
-      "relative_prefixes": ["components/common/"],
+      "relative_prefixes": [
+        "shared/ui/common/",
+        "shared/model/common/",
+        "shared/lib/"
+      ],
       "forbidden_import_layers": ["pages", "features", "widgets"]
+    },
+    "shared": {
+      "relative_prefixes": ["shared/"],
+      "forbidden_import_layers": []
     },
     "entities": {
       "relative_prefixes": ["entities/"],

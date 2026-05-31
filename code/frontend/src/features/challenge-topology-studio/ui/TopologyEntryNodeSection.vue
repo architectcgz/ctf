@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Trash2 } from 'lucide-vue-next'
 
-import SectionCard from '@/components/common/SectionCard.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
 
 type NodeOption = {
   key: string

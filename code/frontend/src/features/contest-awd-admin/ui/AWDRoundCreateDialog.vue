@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
 
-import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import AdminSurfaceModal from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'
 
 import AWDOperationsDialogFooter from './AWDOperationsDialogFooter.vue'
 import AWDRoundCreateScoreSection from './AWDRoundCreateScoreSection.vue'

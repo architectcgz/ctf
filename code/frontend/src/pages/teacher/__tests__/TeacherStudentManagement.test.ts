@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TeacherStudentManagement from '@/pages/teacher/StudentManagementRoutePage.vue'
 import teacherStudentManagementSource from '@/pages/teacher/StudentManagementRoutePage.vue?raw'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import studentManagementPageModelSource from '@/features/teacher/student-management/model/useStudentManagementPage.ts?raw'
 import studentManagementSource from '@/features/teacher/student-management/ui/StudentManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
@@ -274,7 +274,7 @@ describe('TeacherStudentManagement', () => {
     expect(teacherStudentManagementSource).not.toContain('ClassReportExportDialog.vue')
     expect(teacherStudentManagementSource).not.toContain('getStudentsDirectory')
     expect(teacherStudentManagementSource).not.toContain('const directoryParams = computed')
-    expect(studentManagementSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(studentManagementSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(studentManagementSource).toContain('<AppRouteLink')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(studentManagementPageModelSource).not.toContain("from 'vue-router'")

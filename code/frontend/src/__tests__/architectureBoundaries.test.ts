@@ -142,6 +142,7 @@ describe('frontend architecture boundaries', () => {
   it('lower frontend layers should not import higher product layers', () => {
     const violations = collectLayerViolations(sourceFiles, {
       common: frontendArchitecturePolicy.layers.common.forbidden_import_layers,
+      shared: frontendArchitecturePolicy.layers.shared.forbidden_import_layers,
       entities: frontendArchitecturePolicy.layers.entities.forbidden_import_layers,
       pages: frontendArchitecturePolicy.layers.pages.forbidden_import_layers,
       features: frontendArchitecturePolicy.layers.features.forbidden_import_layers,
@@ -247,21 +248,28 @@ describe('frontend architecture boundaries', () => {
     expect(widgetApiImports).toEqual([])
   })
 
-  it('common and entity layers should stay free of app services, router, and stores', () => {
+  it('common, shared lib, and entity layers should stay free of app services, router, and stores', () => {
     const lowLevelFiles = sourceFiles.filter(
       (file) =>
-        file.relativePath.startsWith(`components${sep}common${sep}`) ||
+        file.relativePath.startsWith(`shared${sep}ui${sep}common${sep}`) ||
+        file.relativePath.startsWith(`shared${sep}model${sep}common${sep}`) ||
+        file.relativePath.startsWith(`shared${sep}lib${sep}`) ||
         file.relativePath.startsWith(`entities${sep}`)
     )
+    const allowedBareImportsByFile = new Map<string, string[]>([
+      [`shared${sep}lib${sep}navigation${sep}routeTarget.ts`, ['vue-router']],
+    ])
     const forbiddenImports = lowLevelFiles.flatMap((file) => {
       const source = readFileSync(file.absolutePath, 'utf-8')
       return extractImports(source)
         .filter(
           (importPath) =>
+            !allowedBareImportsByFile.get(file.relativePath)?.includes(importPath) &&
             frontendArchitecturePolicy.low_level_forbidden_import_prefixes.some((prefix) =>
               importPath.startsWith(prefix)
             ) ||
-            frontendArchitecturePolicy.low_level_forbidden_bare_imports.includes(importPath)
+            (!allowedBareImportsByFile.get(file.relativePath)?.includes(importPath) &&
+              frontendArchitecturePolicy.low_level_forbidden_bare_imports.includes(importPath))
         )
         .map((importPath) => `${file.relativePath} -> ${importPath}`)
     })

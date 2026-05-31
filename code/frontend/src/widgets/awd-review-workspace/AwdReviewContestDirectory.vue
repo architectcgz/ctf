@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AwdReviewContestItemData } from '@/api/contracts'
-import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
+import WorkspaceDirectoryPagination from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'
 import AwdReviewContestHead from './AwdReviewContestHead.vue'
 import AwdReviewContestRow from './AwdReviewContestRow.vue'
 import AwdReviewDirectorySection from './AwdReviewDirectorySection.vue'

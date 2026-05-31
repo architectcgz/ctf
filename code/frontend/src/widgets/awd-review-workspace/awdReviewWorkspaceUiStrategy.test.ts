@@ -73,7 +73,7 @@ describe('awd review workspace ui strategy', () => {
     expect(awdReviewIndexWorkspaceSource).not.toContain('TEACHER_AWD_REVIEW_INDEX_WORKSPACE_COPY')
     expect(awdReviewHeroPanelSource).toContain('<header class="workspace-page-header admin-awd-review-shell__hero">')
     expect(awdReviewHeroPanelSource).toContain('返回平台概览')
-    expect(awdReviewDirectoryPanelSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(awdReviewDirectoryPanelSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(awdReviewDirectoryPanelSource).toContain('<WorkspaceDirectoryToolbar')
     expect(awdReviewDirectoryPanelSource).toContain('<WorkspaceDataTable')
     expect(awdReviewContestDirectorySource).toContain('<AwdReviewDirectorySection')

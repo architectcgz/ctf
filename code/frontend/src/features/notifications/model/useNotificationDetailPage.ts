@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, ref, watch, type ComputedRef, type Ref } from 'vue'
 
 import { getNotifications, markAsRead } from '@/api/notification'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { useToast } from '@/composables/useToast'
 import { useNotificationStore } from '@/stores/notification'

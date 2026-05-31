@@ -1,0 +1,277 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { flushPromises, mount } from '@vue/test-utils'
+
+import { ClassReportExportDialog } from '@/features/teaching/class-report-export'
+import classReportExportContextSectionSource from '@/features/teaching/class-report-export/ui/ClassReportExportContextSection.vue?raw'
+import classReportExportDialogShellSource from '@/features/teaching/class-report-export/ui/ClassReportExportDialog.vue?raw'
+import classReportExportPreviewSectionSource from '@/features/teaching/class-report-export/ui/ClassReportExportPreviewSection.vue?raw'
+import classReportExportTaskRailSource from '@/features/teaching/class-report-export/ui/ClassReportExportTaskRail.vue?raw'
+import { useAuthStore } from '@/stores/auth'
+
+const classReportExportDialogSource = [
+  classReportExportDialogShellSource,
+  classReportExportContextSectionSource,
+  classReportExportPreviewSectionSource,
+  classReportExportTaskRailSource,
+  readFileSync(
+    resolve(
+      process.cwd(),
+      'src/features/teaching/class-report-export/ui/classReportExportDialog.css'
+    ),
+    'utf8'
+  ),
+].join('\n')
+
+const {
+  downloadReportMock,
+  exportClassReportMock,
+  getClassReviewMock,
+  getClassStudentsMock,
+  getClassSummaryMock,
+  getClassTrendMock,
+  getReportStatusMock,
+} = vi.hoisted(() => ({
+  exportClassReportMock: vi.fn(),
+  downloadReportMock: vi.fn(),
+  getClassStudentsMock: vi.fn(),
+  getClassReviewMock: vi.fn(),
+  getClassSummaryMock: vi.fn(),
+  getClassTrendMock: vi.fn(),
+  getReportStatusMock: vi.fn(),
+}))
+
+vi.mock('@/api/teaching', () => ({
+  exportClassReport: exportClassReportMock,
+  getClassStudents: getClassStudentsMock,
+  getClassReview: getClassReviewMock,
+  getClassSummary: getClassSummaryMock,
+  getClassTrend: getClassTrendMock,
+}))
+
+vi.mock('@/api/assessment', () => ({
+  downloadReport: downloadReportMock,
+  getReportStatus: getReportStatusMock,
+}))
+
+describe('ClassReportExportDialog', () => {
+  let pinia: ReturnType<typeof createPinia>
+
+  const dialogStub = {
+    props: ['open'],
+    template: '<div v-if="open"><slot /><slot name="footer" /></div>',
+  }
+
+  beforeEach(() => {
+    pinia = createPinia()
+    setActivePinia(pinia)
+    exportClassReportMock.mockReset()
+    downloadReportMock.mockReset()
+    getClassStudentsMock.mockReset()
+    getClassReviewMock.mockReset()
+    getClassSummaryMock.mockReset()
+    getClassTrendMock.mockReset()
+    getReportStatusMock.mockReset()
+    localStorage.clear()
+
+    getClassStudentsMock.mockResolvedValue([
+      {
+        id: 'stu-1',
+        username: 'alice',
+        solved_count: 4,
+        total_score: 320,
+        weak_dimension: 'crypto',
+      },
+      {
+        id: 'stu-2',
+        username: 'bob',
+        solved_count: 2,
+        total_score: 180,
+        weak_dimension: 'web',
+      },
+    ])
+    getClassReviewMock.mockResolvedValue({
+      class_name: 'Class A',
+      items: [
+        {
+          key: 'activity',
+          title: '班级活跃度需要补强',
+          detail: '建议优先跟进低活跃学生。',
+          accent: 'warning',
+        },
+      ],
+    })
+    getClassSummaryMock.mockResolvedValue({
+      class_name: 'Class A',
+      student_count: 2,
+      average_solved: 3,
+      active_student_count: 2,
+      active_rate: 100,
+      recent_event_count: 8,
+    })
+    getClassTrendMock.mockResolvedValue({
+      class_name: 'Class A',
+      points: [
+        { date: '2026-03-05', active_student_count: 1, event_count: 2, solve_count: 1 },
+        { date: '2026-03-06', active_student_count: 2, event_count: 4, solve_count: 3 },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: '1',
+        username: 'teacher-a',
+        role: 'teacher',
+        class_name: 'Class A',
+        name: 'Teacher A',
+      })
+
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => 'blob:report'),
+      revokeObjectURL: vi.fn(),
+    })
+
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  })
+
+  it('打开后会加载班级预览', async () => {
+    const wrapper = mount(ClassReportExportDialog, {
+      props: {
+        modelValue: true,
+        defaultClassName: 'Class A',
+        defaultFromDate: '2026-03-01',
+        defaultToDate: '2026-03-07',
+      },
+      global: {
+        plugins: [pinia],
+        stubs: {
+          AdminSurfaceModal: dialogStub,
+          LineChart: true,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(getClassStudentsMock).toHaveBeenCalledWith('Class A')
+    expect(getClassReviewMock).toHaveBeenCalledWith('Class A', {
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
+    })
+    expect(getClassSummaryMock).toHaveBeenCalledWith('Class A', {
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
+    })
+    expect(getClassTrendMock).toHaveBeenCalledWith('Class A', {
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
+    })
+    expect(wrapper.text()).toContain('当前班级报告预览')
+    expect(wrapper.text()).toContain('当前窗口：2026-03-01 至 2026-03-07')
+  })
+
+  it('教师班级报告导出弹窗应接入后台共享弹窗与表单原语', () => {
+    expect(classReportExportDialogSource).toContain(
+      "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
+    )
+    expect(classReportExportDialogSource).toContain('<AdminSurfaceModal')
+    expect(classReportExportDialogSource).not.toContain('<ElDialog')
+    expect(classReportExportDialogSource).toContain('class="ui-field')
+    expect(classReportExportDialogSource).toContain('class="ui-control-wrap')
+    expect(classReportExportDialogSource).toContain('class="ui-control')
+    expect(classReportExportDialogSource).toContain('class="ui-btn ui-btn--secondary')
+    expect(classReportExportDialogSource).toContain('class="ui-btn ui-btn--primary')
+    expect(classReportExportDialogSource).toContain('type="date"')
+  })
+
+  it('点击创建导出任务会调用 exportClassReport', async () => {
+    exportClassReportMock.mockResolvedValue({
+      report_id: '101',
+      status: 'processing',
+    })
+    getReportStatusMock.mockResolvedValue({
+      report_id: '101',
+      status: 'ready',
+      expires_at: '2026-03-07T12:00:00Z',
+    })
+
+    const wrapper = mount(ClassReportExportDialog, {
+      props: {
+        modelValue: true,
+        defaultClassName: 'Class A',
+        defaultFromDate: '2026-03-01',
+        defaultToDate: '2026-03-07',
+      },
+      global: {
+        plugins: [pinia],
+        stubs: {
+          AdminSurfaceModal: dialogStub,
+          LineChart: true,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('创建导出任务'))
+      ?.trigger('click')
+    await flushPromises()
+
+    expect(exportClassReportMock).toHaveBeenCalledWith({
+      class_name: 'Class A',
+      format: 'pdf',
+      from_date: '2026-03-01',
+      to_date: '2026-03-07',
+    })
+  })
+
+  it('ready 状态下可下载', async () => {
+    exportClassReportMock.mockResolvedValue({
+      report_id: '102',
+      status: 'ready',
+      expires_at: '2026-03-07T12:00:00Z',
+    })
+    downloadReportMock.mockResolvedValue({
+      blob: new Blob(['ok']),
+      filename: 'class-a-report.pdf',
+    })
+
+    const wrapper = mount(ClassReportExportDialog, {
+      props: {
+        modelValue: true,
+        defaultClassName: 'Class A',
+        defaultFromDate: '2026-03-01',
+        defaultToDate: '2026-03-07',
+      },
+      global: {
+        plugins: [pinia],
+        stubs: {
+          AdminSurfaceModal: dialogStub,
+          LineChart: true,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('创建导出任务'))
+      ?.trigger('click')
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('下载报告'))
+      ?.trigger('click')
+    await flushPromises()
+
+    expect(downloadReportMock).toHaveBeenCalledWith('102')
+  })
+})

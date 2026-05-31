@@ -16,5 +16,5 @@
 <script setup lang="ts">
 import { ArrowLeft, Gauge, Home } from 'lucide-vue-next'
 
-import ErrorStatusShell from '@/components/errors/ErrorStatusShell.vue'
+import ErrorStatusShell from '@/shared/ui/errors/ErrorStatusShell.vue'
 </script>

@@ -196,7 +196,7 @@ describe('RegisterRoutePage', () => {
 
   it('注册表单应切到共享控件原语而不是继续使用 Element Plus 表单', () => {
     expect(registerRoutePageSource).toContain(
-      "import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'"
+      "import AppRouteRedirect from '@/shared/ui/navigation/AppRouteRedirect.vue'"
     )
     expect(registerRoutePageSource).toContain('useRegisterPage')
     expect(registerRoutePageSource).toContain('class="ui-control-wrap"')

@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
 
-import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'
+import AppRouteRedirect from '@/shared/ui/navigation/AppRouteRedirect.vue'
 import {
   ChallengeImportPreviewWorkspacePanel,
   useChallengeImportPreviewPage,

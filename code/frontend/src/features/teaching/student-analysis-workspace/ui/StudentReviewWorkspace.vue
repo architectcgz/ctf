@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import type { AttackSessionQuery, AttackSessionResponseData, StudentEvidenceData } from '@/api/contracts'
 import {
   buildChallengeFilterOptions,
@@ -446,9 +446,3 @@ const observations = computed(() =>
   font-size: var(--font-size-0-72);
 }
 </style>
-
-<script lang="ts">
-import { eventTypeLabel } from './studentInsightShared'
-
-export { eventTypeLabel }
-</script>

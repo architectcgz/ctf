@@ -7,8 +7,8 @@ import {
   Zap,
 } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
 
 import AWDAttackLogPanel from './AWDAttackLogPanel.vue'
 import AWDScoreboardSummaryPanel from './AWDScoreboardSummaryPanel.vue'

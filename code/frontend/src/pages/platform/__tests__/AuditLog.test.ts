@@ -171,8 +171,8 @@ describe('AuditLog', () => {
   })
 
   it('应接入共享目录工具栏与列表表格，而不是继续使用原生 table', () => {
-    expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
-    expect(combinedSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'")
+    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(auditLogSource).toContain("from '@/features/audit-log'")
     expect(auditLogSource).toContain('AuditActorDetailModal')
     expect(combinedSource).toContain('<WorkspaceDirectoryToolbar')

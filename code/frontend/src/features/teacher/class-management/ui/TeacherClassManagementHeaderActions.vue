@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 
 interface DashboardRouteTarget {
   name: string

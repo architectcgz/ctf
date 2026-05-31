@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { FolderKanban, RefreshCcw } from 'lucide-vue-next'
 
 import type { AwdReviewContestItemData } from '@/api/contracts'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import AwdReviewContestDirectory from './AwdReviewContestDirectory.vue'
 import AwdReviewSurfaceShell from './AwdReviewSurfaceShell.vue'
 import AwdReviewSummaryPanel from './AwdReviewSummaryPanel.vue'

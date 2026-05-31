@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
 
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import {
   studentAnalysisChallengeDetailRoute,
   studentAnalysisClassStudentsRoute,

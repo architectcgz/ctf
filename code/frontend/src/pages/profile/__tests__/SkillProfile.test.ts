@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import SkillProfile from '@/pages/profile/SkillProfileRoutePage.vue'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import skillProfileSource from '@/pages/profile/SkillProfileRoutePage.vue?raw'
 import skillProfileWorkspaceShellSource from '@/features/skill-profile/ui/SkillProfileWorkspaceShell.vue?raw'
 import skillProfilePageModelSource from '@/features/skill-profile/model/useSkillProfilePage.ts?raw'
@@ -216,7 +216,7 @@ describe('SkillProfile', () => {
     })
 
     expect(appRouteLinkSource).toContain("from 'vue-router'")
-    expect(skillProfileWorkspaceShellSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(skillProfileWorkspaceShellSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(skillProfileWorkspaceShellSource).toContain('<AppRouteLink')
     expect(skillProfilePageModelSource).toContain('skillProfileChallengesRoute')
     expect(skillProfilePageModelSource).toContain('buildChallengeRoute')

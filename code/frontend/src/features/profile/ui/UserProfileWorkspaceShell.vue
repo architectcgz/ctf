@@ -697,7 +697,7 @@ import type { AuthUser, ReportExportData } from '@/api/contracts'
 import type { Component } from 'vue'
 import { Activity, FileDown, Loader2, RefreshCw, ShieldCheck, UserCircle2 } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { formatDate } from '@/utils/format'
 
 type ReportFormat = 'pdf' | 'excel'

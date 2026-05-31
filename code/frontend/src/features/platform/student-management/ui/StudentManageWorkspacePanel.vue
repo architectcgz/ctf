@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { ClassDirectoryItem } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
-import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryPagination from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'
+import WorkspaceDirectoryToolbar from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 
 interface StudentRouteTarget {
   name: string

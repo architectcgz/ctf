@@ -308,8 +308,8 @@ import type {
   AwdReviewTeamItemData,
   AwdReviewTrafficItemData,
 } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AdminSurfaceDrawer from '@/shared/ui/common/modal-templates/AdminSurfaceDrawer.vue'
 import { formatDate } from '@/utils/format'
 
 defineProps<{

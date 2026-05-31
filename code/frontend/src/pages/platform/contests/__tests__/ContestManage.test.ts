@@ -492,12 +492,12 @@ describe('ContestManage', () => {
     expect(contestManagePageModelSource).toContain('buildContestEditRoute')
     expect(contestManagePageModelSource).toContain('buildContestOperationsRoute')
     expect(contestManagePageModelSource).toContain('buildContestAnnouncementsRoute')
-    expect(platformContestTableSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(platformContestTableSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(platformContestTableSource).toContain('<AppRouteLink')
-    expect(contestAnnouncementDrawerSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(contestAnnouncementDrawerSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(contestAnnouncementDrawerSource).toContain('id="contest-open-announcement-page"')
     expect(contestOrchestrationSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
     expect(contestOrchestrationSource).toContain('<WorkspaceDirectoryToolbar')
     expect(contestOrchestrationSource).toContain('filter-panel-title="赛事筛选"')

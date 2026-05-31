@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TeacherDashboard from '@/pages/teacher/TeacherDashboardRoutePage.vue'
 import teacherDashboardSource from '@/pages/teacher/TeacherDashboardRoutePage.vue?raw'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import teacherDashboardPageSourceBase from '@/features/teacher/dashboard/ui/TeacherDashboardPage.vue?raw'
 import teacherDashboardPortraitPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardPortraitPanel.vue?raw'
 import teacherDashboardStudentInsightPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardStudentInsightPanel.vue?raw'
@@ -195,7 +195,7 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardSource).toContain('useDashboardPage')
     expect(teacherDashboardSource).not.toContain("from '@/api/teacher'")
     expect(teacherDashboardPageSource).toContain('useDashboardMetrics')
-    expect(teacherDashboardPageSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(teacherDashboardPageSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(teacherDashboardPageSource).toContain('<AppRouteLink')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(teacherDashboardHookSource).toContain('teacherClassManagementRoute')

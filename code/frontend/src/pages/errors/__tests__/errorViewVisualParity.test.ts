@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import shellSource from '@/components/errors/ErrorStatusShell.vue?raw'
+import shellSource from '@/shared/ui/errors/ErrorStatusShell.vue?raw'
 import forbiddenSource from '@/pages/errors/ForbiddenRoutePage.vue?raw'
 import notFoundSource from '@/pages/errors/NotFoundRoutePage.vue?raw'
 

@@ -2,9 +2,9 @@
 import { Search, Trash2 } from 'lucide-vue-next'
 
 import type { ClassDirectoryItem, InstanceDirectoryItem } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryPagination from '@/components/common/WorkspaceDirectoryPagination.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryPagination from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'
 
 defineProps<{
   classes: ClassDirectoryItem[]

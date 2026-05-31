@@ -179,7 +179,7 @@ describe('ChallengeManage', () => {
     expect(challengeManageSource).toContain('--workspace-shell-bg')
     expect(challengeManageSource).toContain('var(--journal-surface)')
     expect(challengeManageSource).toContain('var(--journal-surface-subtle)')
-    expect(combinedSource).toContain("from '@/components/common/menus/CActionMenu.vue'")
+    expect(combinedSource).toContain("from '@/shared/ui/common/menus/CActionMenu.vue'")
     expect(combinedSource).not.toContain('--challenge-action-surface')
     expect(combinedSource).not.toContain(":global([data-theme='light']) .challenge-manage-shell")
     expect(combinedSource).not.toContain(":global([data-theme='dark']) .challenge-manage-shell")
@@ -193,7 +193,7 @@ describe('ChallengeManage', () => {
   })
 
   it('题目管理列表应改用共享列表组件，并且不再显示题目 ID 列', async () => {
-    expect(combinedSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(combinedSource).toContain('<WorkspaceDataTable')
     expect(combinedSource).not.toContain('>题目 ID<')
     expect(combinedSource).not.toContain('检索题目 ID 或名称...')
@@ -207,8 +207,8 @@ describe('ChallengeManage', () => {
   })
 
   it('筛选排序工具栏和分页应接入共享组件，而不是继续内联实现', () => {
-    expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
-    expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryPagination.vue'")
+    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'")
+    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'")
     expect(combinedSource).toContain('<WorkspaceDirectoryToolbar')
     expect(combinedSource).toContain('<WorkspaceDirectoryPagination')
     expect(combinedSource).not.toContain('<PlatformPaginationControls')

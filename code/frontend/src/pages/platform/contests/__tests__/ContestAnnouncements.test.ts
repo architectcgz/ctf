@@ -134,7 +134,7 @@ describe('ContestAnnouncements', () => {
     expect(contestAnnouncementsSource).toContain('ContestAnnouncementsTopbarPanel')
     expect(contestAnnouncementsSource).toContain('ContestAnnouncementsWorkspacePanel')
     expect(contestAnnouncementsTopbarPanelSource).toContain(
-      "from '@/components/navigation/AppRouteLink.vue'"
+      "from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
     expect(contestAnnouncementsTopbarPanelSource).toContain('<AppRouteLink')
   })

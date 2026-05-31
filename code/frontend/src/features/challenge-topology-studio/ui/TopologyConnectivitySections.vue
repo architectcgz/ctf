@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link2, ShieldBan, Trash2 } from 'lucide-vue-next'
 
-import SectionCard from '@/components/common/SectionCard.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
 import type { TopologyLinkDraft, TopologyPolicyDraft } from '@/features/challenge-topology-studio/model'
 
 type NodeOption = {

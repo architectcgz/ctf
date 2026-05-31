@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Activity, Clock3, Eye } from 'lucide-vue-next'
 
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 
 interface DashboardRouteTarget {
   name: string

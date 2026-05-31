@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AwdReviewContestItemData } from '@/api/contracts'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import { formatDate } from '@/utils/format'
 import {
   AWD_REVIEW_DIRECTORY_COLUMN_SCHEMA,

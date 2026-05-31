@@ -368,8 +368,8 @@
 import { computed } from 'vue'
 
 import type { AdminChallengeImportPreview } from '@/api/contracts'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import { ChallengeDescriptionPanel } from '@/entities/challenge'
 
 const props = defineProps<{
