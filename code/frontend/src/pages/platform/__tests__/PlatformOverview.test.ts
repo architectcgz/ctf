@@ -3,6 +3,7 @@ import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
 import adminDashboardPageSourceBase from '@/features/platform/overview/ui/PlatformOverviewPage.vue?raw'
 import platformOverviewPageModelSource from '@/features/platform/overview/model/usePlatformOverviewPage.ts?raw'
+import platformOverviewDataSource from '@/features/platform/overview/model/usePlatformOverviewData.ts?raw'
 import platformOverviewRoutesSource from '@/features/platform/overview/model/platformOverviewRoutes.ts?raw'
 import platformOverviewAlertsSectionSource from '@/features/platform/overview/ui/PlatformOverviewAlertsSection.vue?raw'
 import platformOverviewHeroPanelSource from '@/features/platform/overview/ui/PlatformOverviewHeroPanel.vue?raw'
@@ -111,6 +112,9 @@ describe('PlatformOverview', () => {
     expect(platformOverviewViewSource).not.toContain("from '@/api/admin/platform'")
     expect(platformOverviewViewSource).not.toContain("router.push({ name: 'AuditLog' })")
     expect(platformOverviewPageModelSource).not.toContain("from 'vue-router'")
+    expect(platformOverviewPageModelSource).toContain("from './usePlatformOverviewData'")
+    expect(platformOverviewPageModelSource).not.toContain("from '@/api/admin/platform'")
+    expect(platformOverviewDataSource).toContain("from '@/api/admin/platform'")
     expect(platformOverviewPageModelSource).toContain('auditLogRoute: buildPlatformAuditLogRoute()')
     expect(platformOverviewRoutesSource).toContain('platformCheatDetectionRoute')
   })

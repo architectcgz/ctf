@@ -13,6 +13,7 @@ import teacherDashboardTrendPanelSource from '@/features/teacher/dashboard/ui/Te
 import teacherDashboardReviewPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardReviewPanel.vue?raw'
 import teacherDashboardInterventionPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardInterventionPanel.vue?raw'
 import teacherDashboardHookSource from '@/features/teacher/dashboard/model/useDashboardPage.ts?raw'
+import teacherOverviewDataSource from '@/features/teacher/dashboard/model/useTeacherOverviewData.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const teacherDashboardPageSource = [
@@ -200,8 +201,11 @@ describe('TeacherDashboard', () => {
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(teacherDashboardHookSource).toContain('teacherClassManagementRoute')
     expect(teacherDashboardHookSource).toContain('classManagementRoute = computed')
+    expect(teacherDashboardHookSource).toContain("from './useTeacherOverviewData'")
+    expect(teacherDashboardHookSource).not.toContain("from '@/api/teacher'")
     expect(teacherDashboardHookSource).not.toContain("from 'vue-router'")
-    expect(teacherDashboardHookSource).toContain("reportFrontendError('加载教师概览失败:', err)")
+    expect(teacherOverviewDataSource).toContain("from '@/api/teacher'")
+    expect(teacherOverviewDataSource).toContain("reportFrontendError('加载教师概览失败:', err)")
     expect(teacherDashboardHookSource).not.toContain("console.error('加载教师概览失败:'")
     expect(teacherDashboardPageSource).not.toContain('TeacherClassTrendPanel')
     expect(teacherDashboardPageSource).not.toContain('TeacherClassReviewPanel')
