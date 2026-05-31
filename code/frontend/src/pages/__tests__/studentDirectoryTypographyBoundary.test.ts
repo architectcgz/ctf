@@ -20,6 +20,7 @@ import contestChallengeSettingsSectionSource from '@/features/contest-workbench/
 import contestOperationsHubSource from '@/features/platform/contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
 import platformContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
 import scoreboardDetailSource from '@/pages/scoreboard/ScoreboardDetailRoutePage.vue?raw'
+import scoreboardDetailWorkspaceSource from '@/widgets/scoreboard-detail-workspace/ScoreboardDetailWorkspace.vue?raw'
 import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
 import appStyleSource from '@/style.css?raw'
 
@@ -86,11 +87,13 @@ describe('student directory typography boundary', () => {
     expect(scoreboardSource).not.toMatch(
       /\.sb-cell--(?:rank|mono)\s*[\s\S]*?font-family:\s*var\(--font-family-mono\)/m
     )
-    expect(scoreboardDetailSource).not.toMatch(
+    expect(`${scoreboardDetailSource}\n${scoreboardDetailWorkspaceSource}`).not.toMatch(
       /\.sb-cell--(?:rank|mono)\s*[\s\S]*?font-family:\s*var\(--font-family-mono\)/m
     )
     expect(scoreboardSource).not.toContain('class="sb-cell--mono"')
-    expect(scoreboardDetailSource).not.toContain('class="sb-cell--mono"')
+    expect(`${scoreboardDetailSource}\n${scoreboardDetailWorkspaceSource}`).not.toContain(
+      'class="sb-cell--mono"'
+    )
   })
 
   it('学生侧列表主标题列应保持纯净，不混入标签、序号或描述', () => {

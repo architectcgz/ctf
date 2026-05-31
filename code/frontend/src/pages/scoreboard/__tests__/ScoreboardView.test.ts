@@ -8,6 +8,7 @@ import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw
 import scoreboardWorkspaceShellSource from '@/features/scoreboard/ui/ScoreboardWorkspaceShell.vue?raw'
 import scoreboardDetailSource from '@/pages/scoreboard/ScoreboardDetailRoutePage.vue?raw'
 import scoreboardDetailPageModelSource from '@/features/scoreboard/model/useScoreboardDetailPage.ts?raw'
+import scoreboardDetailWorkspaceSource from '@/widgets/scoreboard-detail-workspace/ScoreboardDetailWorkspace.vue?raw'
 import scoreboardRoutePageSource from '@/features/scoreboard/model/useScoreboardRoutePage.ts?raw'
 import routeQueryTabsSource from '@/shared/model/navigation/useRouteQueryTabs.ts?raw'
 
@@ -216,34 +217,39 @@ describe('ScoreboardView', () => {
   it('排行详情路由页应仅负责组合，不直接耦合排行榜详情加载流程', () => {
     expect(scoreboardDetailSource).toContain('useScoreboardDetailPage')
     expect(scoreboardDetailSource).toContain("useScoreboardDetailPage(toRef(props, 'contestId'))")
+    expect(scoreboardDetailSource).toContain(
+      "import { ScoreboardDetailWorkspace } from '@/widgets/scoreboard-detail-workspace'"
+    )
     expect(scoreboardDetailSource).not.toContain("from '@/api/contest'")
     expect(scoreboardDetailSource).not.toContain('watch(')
+    expect(scoreboardDetailSource).not.toContain('scoreboard-summary-grid metric-panel-grid')
+    expect(scoreboardDetailSource).not.toContain('scoreboard-detail-directory-section')
     expect(scoreboardDetailPageModelSource).not.toContain("from 'vue-router'")
   })
 
   it('排行详情页应移除返回排行列表按钮，并复用学生通用列表样式', () => {
-    expect(scoreboardDetailSource).not.toContain('返回排行列表')
-    expect(scoreboardDetailSource).not.toContain('scoreboard-back-link')
-    expect(scoreboardDetailSource).not.toContain('ArrowLeft')
-    expect(scoreboardDetailSource).toContain(
+    expect(scoreboardDetailWorkspaceSource).not.toContain('返回排行列表')
+    expect(scoreboardDetailWorkspaceSource).not.toContain('scoreboard-back-link')
+    expect(scoreboardDetailWorkspaceSource).not.toContain('ArrowLeft')
+    expect(scoreboardDetailWorkspaceSource).toContain(
       'class="student-directory-section workspace-directory-section scoreboard-detail-directory-section"'
     )
-    expect(scoreboardDetailSource).toContain(
+    expect(scoreboardDetailWorkspaceSource).toContain(
       'class="student-directory-shell scoreboard-detail-directory workspace-directory-list"'
     )
-    expect(scoreboardDetailSource).toContain(
+    expect(scoreboardDetailWorkspaceSource).toContain(
       'class="student-directory-shell__head student-directory-list-heading list-heading"'
     )
-    expect(scoreboardDetailSource).toContain(
+    expect(scoreboardDetailWorkspaceSource).toContain(
       'class="workspace-directory-grid-head scoreboard-detail-directory-head"'
     )
-    expect(scoreboardDetailSource).toContain(
+    expect(scoreboardDetailWorkspaceSource).toContain(
       'class="workspace-directory-grid-row scoreboard-detail-row"'
     )
-    expect(scoreboardDetailSource).not.toContain('scoreboard-directory-top')
-    expect(scoreboardDetailSource).not.toContain('scoreboard-directory-title')
-    expect(scoreboardDetailSource).not.toContain('scoreboard-directory-meta')
-    expect(scoreboardDetailSource).not.toContain('<table class="sb-table">')
+    expect(scoreboardDetailWorkspaceSource).not.toContain('scoreboard-directory-top')
+    expect(scoreboardDetailWorkspaceSource).not.toContain('scoreboard-directory-title')
+    expect(scoreboardDetailWorkspaceSource).not.toContain('scoreboard-directory-meta')
+    expect(scoreboardDetailWorkspaceSource).not.toContain('<table class="sb-table">')
   })
 
   it('竞赛排行列表应提供学生通用状态与模式筛选，并透传后端查询参数', async () => {
@@ -675,16 +681,16 @@ describe('ScoreboardView', () => {
     expect(scoreboardWorkspaceShellSource).toContain('<Clock3 class="h-4 w-4" />')
     expect(scoreboardWorkspaceShellSource).toContain('<Shield class="h-4 w-4" />')
     expect(scoreboardWorkspaceShellSource).toContain('<Flag class="h-4 w-4" />')
-    expect(scoreboardDetailSource).toContain(
+    expect(scoreboardDetailWorkspaceSource).toContain(
       'class="scoreboard-summary-item progress-card metric-panel-card"'
     )
-    expect(scoreboardDetailSource).toContain(
+    expect(scoreboardDetailWorkspaceSource).toContain(
       'class="scoreboard-summary-label progress-card-label metric-panel-label"'
     )
-    expect(scoreboardDetailSource).toContain('<Users class="h-4 w-4" />')
-    expect(scoreboardDetailSource).toContain('<Trophy class="h-4 w-4" />')
-    expect(scoreboardDetailSource).toContain('<CheckCircle class="h-4 w-4" />')
-    expect(scoreboardDetailSource).toContain('<Shield class="h-4 w-4" />')
+    expect(scoreboardDetailWorkspaceSource).toContain('<Users class="h-4 w-4" />')
+    expect(scoreboardDetailWorkspaceSource).toContain('<Trophy class="h-4 w-4" />')
+    expect(scoreboardDetailWorkspaceSource).toContain('<CheckCircle class="h-4 w-4" />')
+    expect(scoreboardDetailWorkspaceSource).toContain('<Shield class="h-4 w-4" />')
   })
 
   it('tabs 应直接位于页面顶部，面板内容应补齐统一 eyebrow', () => {

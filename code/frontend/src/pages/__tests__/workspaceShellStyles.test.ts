@@ -45,9 +45,12 @@ import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
 import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
+import contestListWorkspaceSource from '@/widgets/contest-list-workspace/ContestListWorkspace.vue?raw'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
 import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
 import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
+import notificationDetailWorkspaceSource from '@/widgets/notification-detail-workspace/NotificationDetailWorkspace.vue?raw'
+import notificationListWorkspaceSource from '@/widgets/notification-list-workspace/NotificationListWorkspace.vue?raw'
 import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
 import challengeImportManageSource from '@/pages/platform/challenges/ChallengeImportManageRoutePage.vue?raw'
 import challengePackageFormatSource from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue?raw'
@@ -113,6 +116,7 @@ import securitySettingsWorkspaceShellSource from '@/features/profile/ui/Security
 import userProfileSource from '@/pages/profile/UserProfileRoutePage.vue?raw'
 import userProfileWorkspaceShellSource from '@/features/profile/ui/UserProfileWorkspaceShell.vue?raw'
 import scoreboardDetailSource from '@/pages/scoreboard/ScoreboardDetailRoutePage.vue?raw'
+import scoreboardDetailWorkspaceSource from '@/widgets/scoreboard-detail-workspace/ScoreboardDetailWorkspace.vue?raw'
 import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
 import studentManageHeroPanelSource from '@/features/platform/student-management/ui/StudentManageHeroPanel.vue?raw'
 import contestOperationsHubHeroPanelSource from '@/features/platform/contests/ui/ContestOperationsHubHeroPanel.vue?raw'
@@ -125,6 +129,9 @@ const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorksp
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
 const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
+const contestListWorkspaceCombinedSource = `${contestListSource}\n${contestListWorkspaceSource}`
+const notificationDetailWorkspaceCombinedSource = `${notificationDetailSource}\n${notificationDetailWorkspaceSource}`
+const notificationListWorkspaceCombinedSource = `${notificationListSource}\n${notificationListWorkspaceSource}`
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -167,13 +174,13 @@ describe('workspace shell shared styles', () => {
       cheatDetectionHeroPanelSource,
       classManageHeroPanelSource,
       classManagementPageSource,
-      contestListSource,
+      contestListWorkspaceCombinedSource,
       imageManageHeroPanelSource,
       instanceManageHeroPanelSource,
       instanceListWorkspaceSource,
-      notificationDetailSource,
-      notificationListSource,
-      scoreboardDetailSource,
+      notificationDetailWorkspaceCombinedSource,
+      notificationListWorkspaceCombinedSource,
+      `${scoreboardDetailSource}\n${scoreboardDetailWorkspaceSource}`,
       securitySettingsWorkspaceSource,
       studentManagementPageSource,
       studentManageHeroPanelSource,

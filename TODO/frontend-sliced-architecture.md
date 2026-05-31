@@ -49,6 +49,9 @@ src/
 - `ContestListRoutePage.vue` 已收口成 route entry + widget 组合：
   - `pages/contests/ContestListRoutePage.vue`
   - `widgets/contest-list-workspace/ContestListWorkspace.vue`
+- `ScoreboardDetailRoutePage.vue` 已收口成 route entry + widget 组合：
+  - `pages/scoreboard/ScoreboardDetailRoutePage.vue`
+  - `widgets/scoreboard-detail-workspace/ScoreboardDetailWorkspace.vue`
 
 ## 当前做得好的地方
 
@@ -69,7 +72,6 @@ src/
 
 当前最需要继续瘦身的页面不是 API owner 混乱，而是 page shell 过重：
 
-- `pages/scoreboard/ScoreboardDetailRoutePage.vue`
 - `pages/challenges/ChallengeDetailRoutePage.vue`
 
 这些页面已经不直接调用业务 API，但仍然持有大量模板分支、样式壳层和页面区块编排，后续适合继续下沉到 widget 或更清晰的 page workspace 组件。
@@ -116,8 +118,7 @@ src/
 
 优先顺序：
 
-1. `pages/scoreboard/ScoreboardDetailRoutePage.vue`
-2. `pages/challenges/ChallengeDetailRoutePage.vue`
+1. `pages/challenges/ChallengeDetailRoutePage.vue`
 
 每次只切一个页面，目标是：
 
