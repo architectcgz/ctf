@@ -7,6 +7,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import ContestDetail from '@/pages/contests/ContestDetailRoutePage.vue'
 import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
 import contestDetailRoutePageSource from '@/features/contest-detail/model/useContestDetailRoutePage.ts?raw'
+import contestDetailWorkspaceSource from '@/widgets/contest-detail-workspace/ContestDetailWorkspace.vue?raw'
 import contestAnnouncementsWorkspaceSectionSource from '@/features/contest-detail/ui/ContestAnnouncementsWorkspaceSection.vue?raw'
 import contestChallengeWorkspacePanelSource from '@/features/contest-detail/ui/ContestChallengeWorkspacePanel.vue?raw'
 import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
@@ -204,14 +205,18 @@ describe('ContestDetail', () => {
   })
 
   it('页面应通过 feature route model 获取路由与派生状态，不再直接管理 tab 和 contest 可见性逻辑', () => {
-    expect(contestDetailSource).toContain('useContestDetailRoutePage,')
-    expect(contestDetailSource).toContain("} from '@/features/contest-detail'")
+    expect(contestDetailSource).toContain('useContestDetailRoutePage')
+    expect(contestDetailSource).toContain(
+      "import { ContestDetailWorkspace } from '@/widgets/contest-detail-workspace'"
+    )
     expect(contestDetailSource).not.toContain("from '@/composables/useUrlSyncedTabs'")
     expect(contestDetailSource).not.toContain("from '@/stores/auth'")
     expect(contestDetailSource).not.toContain("from '@/utils/contest'")
     expect(contestDetailSource).not.toContain('const workspaceTabOrder')
     expect(contestDetailSource).not.toContain('const contestAccentStyle = computed')
     expect(contestDetailSource).not.toContain('const contestAccessible = computed')
+    expect(contestDetailSource).not.toContain('ContestOverviewPanel')
+    expect(contestDetailSource).not.toContain('ContestTeamDialogs')
     expect(contestDetailSource).not.toContain('router,')
     expect(contestDetailRoutePageSource).toContain(
       "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
@@ -450,12 +455,12 @@ describe('ContestDetail', () => {
   })
 
   it('队伍页创建和加入弹窗应切换到 C 端输入模板', async () => {
-    expect(contestDetailSource).toContain("ContestTeamDialogs,")
-    expect(contestDetailSource).toContain("} from '@/features/contest-detail'")
+    expect(contestDetailWorkspaceSource).toContain("ContestTeamDialogs,")
+    expect(contestDetailWorkspaceSource).toContain("} from '@/features/contest-detail'")
     expect(contestTeamDialogsSource).toContain(
       "from '@/shared/ui/common/modal-templates/CFocusedInputDialog.vue'"
     )
-    expect(contestDetailSource).not.toContain('class="contest-modal"')
+    expect(contestDetailWorkspaceSource).not.toContain('class="contest-modal"')
 
     const wrapper = mount(ContestDetail, {
       global: {
@@ -1796,7 +1801,7 @@ describe('ContestDetail', () => {
 
   it('竞赛详情 section heading 应切到共享 workspace overline 语义', () => {
     const combinedSource = [
-      contestDetailSource,
+      contestDetailWorkspaceSource,
       contestOverviewPanelSource,
       contestAnnouncementsWorkspaceSectionSource,
       contestTeamWorkspaceSectionSource,
@@ -1819,14 +1824,14 @@ describe('ContestDetail', () => {
     expect(pageTabsSource).toContain(
       'padding-top: var(--workspace-panel-padding-top, 0);'
     )
-    expect(contestDetailSource).toContain('--workspace-panel-padding-top: 0;')
-    expect(contestDetailSource).not.toMatch(/\.workspace-panel\s*\{\s*padding-top:\s*0;\s*\}/)
-    expect(contestDetailSource).not.toContain('padding-top: 1.35rem;')
+    expect(contestDetailWorkspaceSource).toContain('--workspace-panel-padding-top: 0;')
+    expect(contestDetailWorkspaceSource).not.toMatch(/\.workspace-panel\s*\{\s*padding-top:\s*0;\s*\}/)
+    expect(contestDetailWorkspaceSource).not.toContain('padding-top: 1.35rem;')
   })
 
   it('竞赛详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
     const combinedSource = [
-      contestDetailSource,
+      contestDetailWorkspaceSource,
       contestChallengeWorkspacePanelSource,
       contestTeamWorkspaceSectionSource,
     ].join('\n')
@@ -1837,6 +1842,6 @@ describe('ContestDetail', () => {
     expect(combinedSource).not.toContain('<div class="contest-overline">已选题目</div>')
     expect(combinedSource).not.toContain('<div class="contest-overline">主要操作</div>')
     expect(combinedSource).not.toContain('<div class="contest-overline">Current Team</div>')
-    expect(contestDetailSource).not.toMatch(/^\.contest-overline\s*\{/m)
+    expect(contestDetailWorkspaceSource).not.toMatch(/^\.contest-overline\s*\{/m)
   })
 })

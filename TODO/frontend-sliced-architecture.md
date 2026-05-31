@@ -43,6 +43,9 @@ src/
 - `NotificationListRoutePage.vue` 已收口成 route entry + widget 组合：
   - `pages/notifications/NotificationListRoutePage.vue`
   - `widgets/notification-list-workspace/NotificationListWorkspace.vue`
+- `ContestDetailRoutePage.vue` 已收口成 route entry + widget 组合：
+  - `pages/contests/ContestDetailRoutePage.vue`
+  - `widgets/contest-detail-workspace/ContestDetailWorkspace.vue`
 
 ## 当前做得好的地方
 
@@ -63,7 +66,6 @@ src/
 
 当前最需要继续瘦身的页面不是 API owner 混乱，而是 page shell 过重：
 
-- `pages/contests/ContestDetailRoutePage.vue`
 - `pages/contests/ContestListRoutePage.vue`
 - `pages/scoreboard/ScoreboardDetailRoutePage.vue`
 - `pages/challenges/ChallengeDetailRoutePage.vue`
@@ -112,10 +114,9 @@ src/
 
 优先顺序：
 
-1. `pages/contests/ContestDetailRoutePage.vue`
-2. `pages/contests/ContestListRoutePage.vue`
-3. `pages/scoreboard/ScoreboardDetailRoutePage.vue`
-4. `pages/challenges/ChallengeDetailRoutePage.vue`
+1. `pages/contests/ContestListRoutePage.vue`
+2. `pages/scoreboard/ScoreboardDetailRoutePage.vue`
+3. `pages/challenges/ChallengeDetailRoutePage.vue`
 
 每次只切一个页面，目标是：
 
