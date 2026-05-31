@@ -1,27 +1,17 @@
-import { computed, onMounted, ref, type ComputedRef, type Ref } from 'vue'
+import { computed, type ComputedRef, type Ref } from 'vue'
 
-import { getContest } from '@/api/admin/contests'
-import type { ContestDetailData } from '@/api/contracts'
-import { ApiError } from '@/api/request'
 import { useContestAnnouncementManagement } from '@/features/contest-announcements'
 import { buildContestEditRoute } from './contestManageRoutes'
+import { useContestAnnouncementsData } from './useContestAnnouncementsData'
 
 export function useContestAnnouncementsPage(contestId: Ref<string> | ComputedRef<string>) {
-  const contest = ref<ContestDetailData | null>(null)
-  const loading = ref(true)
-  const loadError = ref('')
+  let management!: ReturnType<typeof useContestAnnouncementManagement>
+  const contestData = useContestAnnouncementsData(contestId, () => management.loadAnnouncements())
+  const contest = contestData.contest
+  management = useContestAnnouncementManagement(computed(() => contest.value))
 
-  const management = useContestAnnouncementManagement(computed(() => contest.value))
-
-  function humanizeRequestError(error: unknown, fallback: string): string {
-    if (error instanceof ApiError && error.message.trim()) {
-      return error.message
-    }
-    if (error instanceof Error && error.message.trim()) {
-      return error.message
-    }
-    return fallback
-  }
+  const loading = contestData.loading
+  const loadError = contestData.loadError
 
   function formatTime(value: string): string {
     return new Date(value).toLocaleString('zh-CN', {
@@ -33,24 +23,7 @@ export function useContestAnnouncementsPage(contestId: Ref<string> | ComputedRef
     })
   }
 
-  async function loadPage(): Promise<void> {
-    if (!contestId.value) {
-      loadError.value = '缺少竞赛编号。'
-      loading.value = false
-      return
-    }
-
-    loading.value = true
-    loadError.value = ''
-    try {
-      contest.value = await getContest(contestId.value)
-      await management.loadAnnouncements()
-    } catch (error) {
-      loadError.value = humanizeRequestError(error, '竞赛公告加载失败')
-    } finally {
-      loading.value = false
-    }
-  }
+  const loadPage = contestData.loadPage
 
   async function handleSubmit(): Promise<void> {
     await management.publishAnnouncement()
@@ -59,10 +32,6 @@ export function useContestAnnouncementsPage(contestId: Ref<string> | ComputedRef
   async function handleDelete(announcementId: string): Promise<void> {
     await management.deleteAnnouncement(announcementId)
   }
-
-  onMounted(() => {
-    void loadPage()
-  })
 
   return {
     contest,
