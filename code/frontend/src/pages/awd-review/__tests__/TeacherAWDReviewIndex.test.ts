@@ -12,6 +12,7 @@ import teacherAwdReviewDirectorySectionSource from '@/widgets/awd-review-workspa
 import awdReviewIndexPageSource from '@/features/awd-review-workspace/model/useAwdReviewIndex.ts?raw'
 import awdReviewIndexRoutePageSource from '@/features/awd-review-workspace/model/useAwdReviewIndexPage.ts?raw'
 import awdReviewIndexRoutesSource from '@/features/awd-review-workspace/model/awdReviewIndexRoutes.ts?raw'
+import awdReviewDirectorySource from '@/features/awd-review-workspace/model/useAwdReviewDirectory.ts?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
   listPlatformAWDReviews: vi.fn(),
@@ -130,9 +131,11 @@ describe('TeacherAWDReviewIndex', () => {
     expect(teacherAwdReviewIndexSource).toContain(
       "useAwdReviewIndexPage } from '@/features/awd-review-workspace'"
     )
-    expect(awdReviewIndexPageSource).toContain("from '@/api/awd-reviews'")
-    expect(awdReviewIndexPageSource).not.toContain("from '@/api/admin'")
-    expect(awdReviewIndexPageSource).not.toContain("from '@/api/teacher'")
+    expect(awdReviewIndexPageSource).toContain("from './useAwdReviewDirectory'")
+    expect(awdReviewIndexPageSource).not.toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDirectorySource).toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDirectorySource).not.toContain("from '@/api/admin'")
+    expect(awdReviewDirectorySource).not.toContain("from '@/api/teacher'")
     expect(teacherAwdReviewIndexSource).toContain(
       "import { AwdReviewIndexWorkspace } from '@/widgets/awd-review-workspace'"
     )

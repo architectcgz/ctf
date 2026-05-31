@@ -9,6 +9,7 @@ import platformAwdReviewIndexSource from '@/pages/awd-review/PlatformAwdReviewIn
 import awdReviewIndexPageSource from '@/features/awd-review-workspace/model/useAwdReviewIndex.ts?raw'
 import awdReviewIndexRoutePageSource from '@/features/awd-review-workspace/model/useAwdReviewIndexPage.ts?raw'
 import awdReviewIndexRoutesSource from '@/features/awd-review-workspace/model/awdReviewIndexRoutes.ts?raw'
+import awdReviewDirectorySource from '@/features/awd-review-workspace/model/useAwdReviewDirectory.ts?raw'
 import awdReviewHeroPanelSource from '@/widgets/awd-review-workspace/AwdReviewHeroPanel.vue?raw'
 import awdReviewDirectoryPanelSource from '@/widgets/awd-review-workspace/AwdReviewDirectoryPanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
@@ -197,6 +198,9 @@ describe('PlatformAWDReviewIndex', () => {
     expect(platformAwdReviewIndexSource).toContain(
       "useAwdReviewIndexPage } from '@/features/awd-review-workspace'"
     )
+    expect(awdReviewIndexPageSource).toContain("from './useAwdReviewDirectory'")
+    expect(awdReviewIndexPageSource).not.toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDirectorySource).toContain("from '@/api/awd-reviews'")
     expect(awdReviewIndexPageSource).not.toContain("from 'vue-router'")
     expect(awdReviewIndexRoutePageSource).not.toContain("from 'vue-router'")
     expect(platformAwdReviewIndexSource).not.toContain("useRouter } from 'vue-router'")
