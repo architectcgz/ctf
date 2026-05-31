@@ -1,7 +1,7 @@
 import type { NotificationItem } from '@/api/contracts'
 import { getNotifications } from '@/api/notification'
 import { useToast } from '@/shared/model/common/useToast'
-import { useWebSocket } from '@/composables/useWebSocket'
+import { useWebSocket } from '@/shared/model/realtime/useWebSocket'
 import { useNotificationStore } from '@/stores/notification'
 
 interface NotificationPayload {

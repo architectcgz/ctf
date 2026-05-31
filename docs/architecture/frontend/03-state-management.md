@@ -149,7 +149,7 @@
 - `shared/lib/sanitize/useSanitize.ts`：受控 HTML sanitize
 - `shared/lib/keyboard/useTabKeyboardNavigation.ts`：tab 键盘导航
 
-剩余 `code/frontend/src/composables/` 当前只保留 realtime owner `useWebSocket.ts`。
+共享 realtime runtime owner 已收口到 `code/frontend/src/shared/model/realtime/useWebSocket.ts`，历史 `code/frontend/src/composables/` 不再保留运行时代码。
 
 `useReportStatusPolling.ts`、路由 query/tab 同步与 route transport 已收口到 `shared/model/*`，不再继续留在历史 `composables/`。
 
@@ -171,7 +171,7 @@
 
 实时链路：
 
-1. `useWebSocket()` 建连
+1. `shared/model/realtime/useWebSocket()` 建连
 2. feature realtime composable 解析事件
 3. 写 store 或触发页面回调刷新
 

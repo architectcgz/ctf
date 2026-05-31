@@ -80,7 +80,7 @@ vi.mock('@/api/scoreboard', () => ({
   getPracticeRanking: getPracticeRankingMock,
 }))
 
-vi.mock('@/composables/useWebSocket', () => ({
+vi.mock('@/shared/model/realtime/useWebSocket', () => ({
   useWebSocket: webSocketMocks.useWebSocket,
 }))
 

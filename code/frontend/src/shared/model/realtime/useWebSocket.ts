@@ -1,6 +1,7 @@
 import { onUnmounted, ref } from 'vue'
 
 import { getWsTicket } from '@/api/auth'
+import { handleGlobalSessionExpired } from '@/runtime/globalErrorRuntime'
 import {
   WS_HEARTBEAT_INTERVAL_MS,
   WS_MAX_RECONNECT_ATTEMPTS,
@@ -8,7 +9,6 @@ import {
   WS_PONG_TIMEOUT_MS,
   WS_RECONNECT_BASE_DELAY_MS,
 } from '@/utils/constants'
-import { handleGlobalSessionExpired } from '@/runtime/globalErrorRuntime'
 
 export type WebSocketStatus = 'idle' | 'connecting' | 'open' | 'closed' | 'error'
 

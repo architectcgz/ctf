@@ -60,7 +60,7 @@ const webSocketMocks = vi.hoisted(() => {
 const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/contest', () => contestApiMocks)
-vi.mock('@/composables/useWebSocket', () => ({
+vi.mock('@/shared/model/realtime/useWebSocket', () => ({
   useWebSocket: webSocketMocks.useWebSocket,
 }))
 vi.mock('@/shared/model/common/useDestructiveConfirm', () => ({

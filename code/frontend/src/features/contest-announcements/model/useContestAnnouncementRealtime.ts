@@ -1,4 +1,4 @@
-import { useWebSocket } from '@/composables/useWebSocket'
+import { useWebSocket } from '@/shared/model/realtime/useWebSocket'
 
 export function useContestAnnouncementRealtime(contestId: string, onUpdated: () => void) {
   const { status, connect, disconnect } = useWebSocket(`contests/${contestId}/announcements`, {

@@ -4,7 +4,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 
 import { markAsRead as markAsReadApi } from '@/api/notification'
 import { useToast } from '@/shared/model/common/useToast'
-import type { WebSocketStatus } from '@/composables/useWebSocket'
+import type { WebSocketStatus } from '@/shared/model/realtime/useWebSocket'
 import { useNotificationStore } from '@/stores/notification'
 
 export interface NotificationTypeMeta {

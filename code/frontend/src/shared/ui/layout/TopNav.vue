@@ -90,7 +90,7 @@ import TopNavBreadcrumbs from '@/shared/ui/layout/topnav/TopNavBreadcrumbs.vue'
 import TopNavMobileToggle from '@/shared/ui/layout/topnav/TopNavMobileToggle.vue'
 import TopNavNotificationTrigger from '@/shared/ui/layout/topnav/TopNavNotificationTrigger.vue'
 import TopNavUserCard from '@/shared/ui/layout/topnav/TopNavUserCard.vue'
-import type { WebSocketStatus } from '@/composables/useWebSocket'
+import type { WebSocketStatus } from '@/shared/model/realtime/useWebSocket'
 import { useTopNavViewState } from '@/shared/model/layout/topnav/useTopNavViewState'
 import '@/shared/ui/layout/topnav/topNavShell.css'
 

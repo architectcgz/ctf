@@ -1,4 +1,4 @@
-import { useWebSocket } from '@/composables/useWebSocket'
+import { useWebSocket } from '@/shared/model/realtime/useWebSocket'
 import { useToast } from '@/shared/model/common/useToast'
 
 export function useContestScoreboardRealtime(contestId: string, onUpdated: () => void) {

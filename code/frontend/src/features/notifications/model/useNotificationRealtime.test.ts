@@ -44,7 +44,7 @@ vi.mock('@/api/notification', () => notificationApiMocks)
 vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
-vi.mock('@/composables/useWebSocket', () => ({
+vi.mock('@/shared/model/realtime/useWebSocket', () => ({
   useWebSocket: webSocketMocks.useWebSocket,
 }))
 

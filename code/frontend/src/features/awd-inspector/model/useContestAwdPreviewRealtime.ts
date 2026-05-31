@@ -1,4 +1,4 @@
-import { useWebSocket } from '@/composables/useWebSocket'
+import { useWebSocket } from '@/shared/model/realtime/useWebSocket'
 
 export interface ContestAwdPreviewProgressEvent {
   contest_id?: string | number

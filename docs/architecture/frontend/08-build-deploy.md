@@ -1,7 +1,7 @@
 # 前端构建与运行入口
 
 > 状态：Current
-> 事实源：`code/frontend/vite.config.ts`、`code/frontend/package.json`、`code/frontend/src/main.ts`、`code/frontend/src/runtime/globalErrorRuntime.ts`、`code/frontend/src/router/guards.ts`、`code/frontend/src/composables/useWebSocket.ts`
+> 事实源：`code/frontend/vite.config.ts`、`code/frontend/package.json`、`code/frontend/src/main.ts`、`code/frontend/src/runtime/globalErrorRuntime.ts`、`code/frontend/src/router/guards.ts`、`code/frontend/src/shared/model/realtime/useWebSocket.ts`
 > 替代：无
 
 ## 定位
@@ -104,7 +104,7 @@ dev proxy 规则：
 - `setupGlobalErrorRuntime()` 安装 Axios response interceptor，对 truly global 的 `401` 会话失效执行登出与 `/401` 跳转
 - `app.config.errorHandler` 对 `ApiError` 直接放过，对非 `ApiError` 的 Vue 运行时异常跳 `/500`
 - `router.onError` 在 bootstrap/runtime 层统一注册，路由守卫不再重复持有这份 owner
-- `useWebSocket.ts` 的 auth close 复用同一个 runtime owner，而不是自己单独 `logout + redirect`
+- `shared/model/realtime/useWebSocket.ts` 的 auth close 复用同一个 runtime owner，而不是自己单独 `logout + redirect`
 
 说明：
 

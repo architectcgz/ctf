@@ -30,7 +30,7 @@ const webSocketMocks = vi.hoisted(() => {
   }
 })
 
-vi.mock('@/composables/useWebSocket', () => ({
+vi.mock('@/shared/model/realtime/useWebSocket', () => ({
   useWebSocket: webSocketMocks.useWebSocket,
 }))
 

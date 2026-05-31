@@ -1,6 +1,6 @@
 import { useRouter } from 'vue-router'
 
-import type { WebSocketStatus } from '@/composables/useWebSocket'
+import type { WebSocketStatus } from '@/shared/model/realtime/useWebSocket'
 import { useNotificationDrawer } from '@/features/notifications'
 
 export function useLayoutNotificationDrawerBridge(realtimeStatus: () => WebSocketStatus) {

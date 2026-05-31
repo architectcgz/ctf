@@ -1,19 +1,19 @@
 # 前端 WebSocket 与实时 Composable 设计
 
 > 状态：Current
-> 事实源：`code/frontend/src/composables/useWebSocket.ts`、`code/frontend/src/features/*/model/*Realtime*.ts`、`code/backend/internal/app/router.go`
+> 事实源：`code/frontend/src/shared/model/realtime/useWebSocket.ts`、`code/frontend/src/features/*/model/*Realtime*.ts`、`code/backend/internal/app/router.go`
 > 替代：无
 
 ## 定位
 
 本文档只说明前端实时连接层的 owner、连接生命周期和当前落地的实时能力。
 
-- 覆盖：`useWebSocket()`、通知实时、竞赛公告实时、排行榜实时、AWD 预览实时。
+- 覆盖：`shared/model/realtime/useWebSocket()`、通知实时、竞赛公告实时、排行榜实时、AWD 预览实时。
 - 不覆盖：所有通用 composable 的总览。分页、登录、tab 同步等通用能力继续在各自 owning 文档中说明。
 
 ## 当前设计
 
-- `code/frontend/src/composables/useWebSocket.ts`
+- `code/frontend/src/shared/model/realtime/useWebSocket.ts`
   - 负责：获取一次性 ticket、拼接 WS 地址、发送心跳、pong 超时关闭、指数退避重连、鉴权失败登出和组件卸载清理
   - 不负责：理解具体业务事件 payload，也不直接写业务 store
 
@@ -27,7 +27,7 @@
 
 ## 1. 连接入口
 
-前端所有业务实时连接都以 `useWebSocket(endpoint, handlers)` 为统一入口。
+前端所有业务实时连接都以 `shared/model/realtime/useWebSocket(endpoint, handlers)` 为统一入口。
 
 当前固定规则：
 
@@ -139,7 +139,7 @@
 安全边界：
 
 - ticket 通过 query 传递，因此服务端和网关不能把 `/ws` querystring 原样记进 access log
-- 业务 payload 解析放在具体 realtime composable，不在 `useWebSocket()` 里混入业务判断
+- 业务 payload 解析放在具体 realtime composable，不在 `shared/model/realtime/useWebSocket()` 里混入业务判断
 
 ## 6. Guardrail
 

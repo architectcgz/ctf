@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import { Bell } from 'lucide-vue-next'
 
-import type { WebSocketStatus } from '@/composables/useWebSocket'
+import type { WebSocketStatus } from '@/shared/model/realtime/useWebSocket'
 import { useLayoutNotificationDrawerBridge } from '@/shared/model/layout'
 
 import NotificationDrawerBody from './notification-drawer/NotificationDrawerBody.vue'
