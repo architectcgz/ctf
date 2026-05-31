@@ -8,6 +8,7 @@ import classManagementViewSource from '@/pages/teacher/ClassManagementRoutePage.
 import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import classManagementSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
 import classManagementPageModelSource from '@/features/teacher/class-management/model/useClassManagementPage.ts?raw'
+import teacherClassDirectorySource from '@/features/teacher/class-management/model/useTeacherClassDirectory.ts?raw'
 import teacherClassManagementHeaderActionsSource from '@/features/teacher/class-management/ui/TeacherClassManagementHeaderActions.vue?raw'
 import teacherClassManagementRowLinkSource from '@/features/teacher/class-management/ui/TeacherClassManagementRowLink.vue?raw'
 import classReportExportDialogSource from '@/features/teaching/class-report-export/ui/ClassReportExportDialog.vue?raw'
@@ -296,6 +297,9 @@ describe('ClassManagement', () => {
     )
     expect(classReportExportDialogSource).not.toContain('useTeacherClassReportExport')
     expect(classManagementPageModelSource).not.toContain("from 'vue-router'")
+    expect(classManagementPageModelSource).toContain("from './useTeacherClassDirectory'")
+    expect(classManagementPageModelSource).not.toContain("from '@/api/teacher'")
+    expect(teacherClassDirectorySource).toContain("from '@/api/teacher'")
     expect(classManagementPageModelSource).toContain('dashboardRoute: teacherDashboardRoute')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(teacherClassManagementHeaderActionsSource).toContain(
