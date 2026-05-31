@@ -6,6 +6,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import NotificationDetail from '@/pages/notifications/NotificationDetailRoutePage.vue'
 import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
 import notificationDetailPageSource from '@/features/notifications/model/useNotificationDetailPage.ts?raw'
+import notificationDetailWorkspaceSource from '@/widgets/notification-detail-workspace/NotificationDetailWorkspace.vue?raw'
 import { useNotificationStore } from '@/stores/notification'
 
 const notificationApiMocks = vi.hoisted(() => ({
@@ -100,10 +101,14 @@ describe('NotificationDetail', () => {
   it('路由页应仅负责组合，不直接耦合通知详情读取流程', () => {
     expect(notificationDetailSource).toContain('useNotificationDetailPage')
     expect(notificationDetailSource).toContain("useNotificationDetailPage(toRef(props, 'id'))")
+    expect(notificationDetailSource).toContain(
+      "import { NotificationDetailWorkspace } from '@/widgets/notification-detail-workspace'"
+    )
     expect(notificationDetailSource).not.toContain("from '@/api/notification'")
     expect(notificationDetailSource).not.toContain('useRoute(')
     expect(notificationDetailSource).not.toContain('useRouter(')
     expect(notificationDetailSource).not.toContain('watch(')
+    expect(notificationDetailSource).not.toContain('workspace-overline')
     expect(notificationDetailPageSource).not.toContain("from 'vue-router'")
   })
 
@@ -140,39 +145,53 @@ describe('NotificationDetail', () => {
   })
 
   it('uses a full-width detail surface instead of a centered outer card shell', () => {
-    expect(notificationDetailSource).toMatch(
+    expect(notificationDetailWorkspaceSource).toMatch(
       /\.notification-detail-shell\s*\{[\s\S]*width:\s*100%;/s
     )
-    expect(notificationDetailSource).not.toContain('width: min(72rem, 100%)')
-    expect(notificationDetailSource).toMatch(
+    expect(notificationDetailWorkspaceSource).not.toContain('width: min(72rem, 100%)')
+    expect(notificationDetailWorkspaceSource).toMatch(
       /\.notification-detail-page\s*\{[\s\S]*background:\s*transparent;[\s\S]*\}/s
     )
-    expect(notificationDetailSource).not.toMatch(
+    expect(notificationDetailWorkspaceSource).not.toMatch(
       /\.notification-detail-page\s*\{[\s\S]*box-shadow:\s*0 20px 40px var\(--color-shadow-soft\);[\s\S]*\}/s
     )
   })
 
   it('通知详情页 overline 应接入 workspace-overline 共享语义', () => {
-    expect(notificationDetailSource).toMatch(
+    expect(notificationDetailWorkspaceSource).toMatch(
       /<div class="workspace-overline">\s*Notification\s*<\/div>/
     )
-    expect(notificationDetailSource).toMatch(/<div class="workspace-overline">\s*Meta\s*<\/div>/)
-    expect(notificationDetailSource).toMatch(/<div class="workspace-overline">\s*ID\s*<\/div>/)
-    expect(notificationDetailSource).toMatch(
+    expect(notificationDetailWorkspaceSource).toMatch(
+      /<div class="workspace-overline">\s*Meta\s*<\/div>/
+    )
+    expect(notificationDetailWorkspaceSource).toMatch(
+      /<div class="workspace-overline">\s*ID\s*<\/div>/
+    )
+    expect(notificationDetailWorkspaceSource).toMatch(
       /<div class="workspace-overline">\s*Message\s*<\/div>/
     )
-    expect(notificationDetailSource).not.toContain('<div class="notification-overline">Notification</div>')
-    expect(notificationDetailSource).not.toContain('<div class="notification-overline">Meta</div>')
-    expect(notificationDetailSource).not.toContain('<div class="notification-overline">ID</div>')
-    expect(notificationDetailSource).not.toContain('<div class="notification-overline">Message</div>')
-    expect(notificationDetailSource).not.toMatch(/^\.notification-overline\s*\{/m)
+    expect(notificationDetailWorkspaceSource).not.toContain(
+      '<div class="notification-overline">Notification</div>'
+    )
+    expect(notificationDetailWorkspaceSource).not.toContain(
+      '<div class="notification-overline">Meta</div>'
+    )
+    expect(notificationDetailWorkspaceSource).not.toContain(
+      '<div class="notification-overline">ID</div>'
+    )
+    expect(notificationDetailWorkspaceSource).not.toContain(
+      '<div class="notification-overline">Message</div>'
+    )
+    expect(notificationDetailWorkspaceSource).not.toMatch(/^\.notification-overline\s*\{/m)
   })
 
   it('通知详情页操作按钮应接入共享 ui-btn 原语', () => {
-    expect(notificationDetailSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(notificationDetailSource).not.toContain('notification-detail-action')
-    expect(notificationDetailSource).not.toMatch(/^\.notification-detail-action\s*\{/m)
-    expect(notificationDetailSource).not.toMatch(/^\.notification-detail-action--primary\s*\{/m)
+    expect(notificationDetailWorkspaceSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(notificationDetailWorkspaceSource).not.toContain('notification-detail-action')
+    expect(notificationDetailWorkspaceSource).not.toMatch(/^\.notification-detail-action\s*\{/m)
+    expect(notificationDetailWorkspaceSource).not.toMatch(
+      /^\.notification-detail-action--primary\s*\{/m
+    )
   })
 
   it('存在站内 link 时应通过 route target 渲染关联入口', async () => {
@@ -193,7 +212,9 @@ describe('NotificationDetail', () => {
 
     expect(wrapper.text()).toContain('查看关联对象')
     expect(wrapper.find('button[disabled]').exists()).toBe(false)
-    expect(notificationDetailSource).toContain("import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'")
+    expect(notificationDetailWorkspaceSource).toContain(
+      "import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'"
+    )
     expect(wrapper.get('a[href="/challenges/9"]').text()).toContain('查看关联对象')
   })
 
