@@ -73,7 +73,7 @@ code/frontend/
 │   │       ├── common/
 │   │       └── layout/
 │   ├── composables/
-│   │   └── useWebSocket.ts / useProbeEasterEggs.ts
+│   │   └── useWebSocket.ts
 │   ├── widgets/
 │   │   └── */
 │   ├── assets/styles/

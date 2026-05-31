@@ -34,7 +34,7 @@ vi.mock('@/shared/model/navigation/useRouteNavigationTransport', () => ({
   useRouteNavigationTransport: () => navigationMocks,
 }))
 
-vi.mock('@/composables/useProbeEasterEggs', () => ({
+vi.mock('@/shared/model/common/useProbeEasterEggs', () => ({
   useProbeEasterEggs: () => probeMocks,
 }))
 

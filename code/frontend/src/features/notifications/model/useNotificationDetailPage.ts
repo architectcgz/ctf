@@ -2,7 +2,7 @@ import { computed, onBeforeUnmount, ref, watch, type ComputedRef, type Ref } fro
 
 import { getNotifications, markAsRead } from '@/api/notification'
 import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
-import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
+import { useProbeEasterEggs } from '@/shared/model/common/useProbeEasterEggs'
 import { useToast } from '@/shared/model/common/useToast'
 import { useNotificationStore } from '@/stores/notification'
 

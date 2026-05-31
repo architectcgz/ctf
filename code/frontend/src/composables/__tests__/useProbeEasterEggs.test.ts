@@ -1,7 +1,7 @@
 import { createApp, type App } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
+import { useProbeEasterEggs } from '@/shared/model/common/useProbeEasterEggs'
 
 function withSetup<T>(composable: () => T): [T, App] {
   let result!: T

@@ -2,7 +2,7 @@ import { computed, getCurrentInstance, onBeforeUnmount, reactive, ref } from 'vu
 
 import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
 import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
-import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
+import { useProbeEasterEggs } from '@/shared/model/common/useProbeEasterEggs'
 import { sanitizeRedirectPath } from '@/utils/redirectPath'
 import { getRoleDashboardPath } from '@/utils/roleRoutes'
 

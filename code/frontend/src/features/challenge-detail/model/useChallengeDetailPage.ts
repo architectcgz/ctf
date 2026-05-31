@@ -6,7 +6,7 @@ import type {
   CommunityChallengeSolutionData,
   RecommendedChallengeSolutionData,
 } from '@/api/contracts'
-import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
+import { useProbeEasterEggs } from '@/shared/model/common/useProbeEasterEggs'
 import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
 import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'

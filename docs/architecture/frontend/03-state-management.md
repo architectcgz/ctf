@@ -131,6 +131,7 @@
 - `shared/model/common/useToast.ts`：全局反馈
 - `shared/model/common/useDestructiveConfirm.ts`：危险确认流
 - `shared/model/common/useClipboard.ts`：统一复制反馈
+- `shared/model/common/useProbeEasterEggs.ts`：共享 probe 计数与会话激活状态
 - `shared/model/theme/useTheme.ts`：全局主题与品牌切换
 - `shared/model/reporting/useReportStatusPolling.ts`：报告导出状态轮询
 - `shared/model/navigation/useRouteQueryTabs.ts`：route query tab 同步
@@ -148,7 +149,7 @@
 - `shared/lib/sanitize/useSanitize.ts`：受控 HTML sanitize
 - `shared/lib/keyboard/useTabKeyboardNavigation.ts`：tab 键盘导航
 
-剩余 `code/frontend/src/composables/` 当前只保留更局部或实时连接型能力，例如 `useWebSocket.ts`、`useProbeEasterEggs.ts`。
+剩余 `code/frontend/src/composables/` 当前只保留 realtime owner `useWebSocket.ts`。
 
 `useReportStatusPolling.ts`、路由 query/tab 同步与 route transport 已收口到 `shared/model/*`，不再继续留在历史 `composables/`。
 

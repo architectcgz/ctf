@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
+import { useProbeEasterEggs } from '@/shared/model/common/useProbeEasterEggs'
 import { useAuthStore } from '@/stores/auth'
 import { getNavigationType, redirectTo, reloadPage } from '@/utils/browser'
 import { resolveErrorStatusRetryTarget } from '@/utils/errorStatusPage'
