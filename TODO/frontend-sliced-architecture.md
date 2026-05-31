@@ -69,7 +69,8 @@ src/
 
 - 当前产品规则要求教师端只使用 `/academy/*`。
 - 代码里仍保留多条 `/teacher/* -> /academy/*` redirect。
-- 这说明“新入口已统一”与“旧入口仍兼容”同时存在，后续需要明确兼容窗口和下线顺序。
+- 本轮已经先把这些遗留入口收口成 `teacherRoutes.ts` 单点 allowlist，并用路由测试限制不能继续新增。
+- 下一步仍然需要明确兼容窗口和下线顺序，再决定直接删除哪些入口。
 
 ### 2. route page 厚壳层主问题已基本收口
 
@@ -116,7 +117,7 @@ src/
 
 ### P0：继续收口入口一致性
 
-- 收掉教师端 `/teacher/*` 兼容入口，至少先整理成有明确退场边界的 allowlist。
+- 收掉教师端 `/teacher/*` 兼容入口；当前 allowlist 已固定，下一步重点是逐条评估退场顺序。
 - 保持 router runtime 只从 `pages` 取页面组件，不再新增绕过 `pages` 的入口。
 
 ### P1：补 route/widget/entity 边界 guardrail

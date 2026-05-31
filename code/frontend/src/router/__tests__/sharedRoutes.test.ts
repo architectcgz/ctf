@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { routes } from '@/router'
+import { teacherLegacyRedirectAllowlist } from '@/router/routes/teacherRoutes'
 
 function getRootChildren() {
   const root = routes.find((route) => route.path === '/')
@@ -44,15 +45,17 @@ describe('shared route canonical paths', () => {
     expect(findChild('academy/instances')?.name).toBe('TeacherInstanceManagement')
     expect(findChild('academy/reports')).toBeUndefined()
 
-    expect(findChild('teacher/dashboard')?.redirect).toBeTruthy()
-    expect(findChild('teacher/classes')?.redirect).toBeTruthy()
-    expect(findChild('teacher/students')?.redirect).toBeTruthy()
-    expect(findChild('teacher/classes/:className')?.redirect).toBeTruthy()
-    expect(findChild('teacher/classes/:className/students/:studentId')?.redirect).toBeTruthy()
-    expect(
-      findChild('teacher/classes/:className/students/:studentId/review-archive')?.redirect
-    ).toBeTruthy()
-    expect(findChild('teacher/instances')?.redirect).toBeTruthy()
+    const teacherLegacyRedirectPaths = getRootChildren()
+      .filter((route) => typeof route.path === 'string' && route.path.startsWith('teacher/'))
+      .map((route) => route.path as string)
+
+    expect(teacherLegacyRedirectPaths).toEqual(teacherLegacyRedirectAllowlist)
+
+    teacherLegacyRedirectAllowlist.forEach((path) => {
+      expect(findChild(path)?.redirect).toBeTruthy()
+      expect(findChild(path)?.name).toBeUndefined()
+    })
+
     expect(findChild('teacher/reports')).toBeUndefined()
   })
 

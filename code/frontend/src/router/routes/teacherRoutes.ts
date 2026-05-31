@@ -2,6 +2,104 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import { redirectWithQuery } from './route-helpers'
 
+function encodeRouteParam(value: unknown): string {
+  return encodeURIComponent(String(value || ''))
+}
+
+function redirectWithDynamicAcademyPath(
+  buildPath: (route: Parameters<NonNullable<RouteRecordRaw['redirect']>>[0]) => string
+): NonNullable<RouteRecordRaw['redirect']> {
+  return (to) => ({
+    path: buildPath(to),
+    query: to.query,
+    hash: to.hash,
+  })
+}
+
+const teacherLegacyRedirectDefinitions = [
+  {
+    legacyPath: 'teacher/dashboard',
+    redirect: redirectWithQuery('/academy/overview'),
+  },
+  {
+    legacyPath: 'teacher/classes',
+    redirect: redirectWithQuery('/academy/classes'),
+  },
+  {
+    legacyPath: 'teacher/students',
+    redirect: redirectWithQuery('/academy/students'),
+  },
+  {
+    legacyPath: 'teacher/classes/:className',
+    redirect: redirectWithDynamicAcademyPath(
+      (to) => `/academy/classes/${encodeRouteParam(to.params.className)}`
+    ),
+  },
+  {
+    legacyPath: 'teacher/classes/:className/trend',
+    redirect: redirectWithDynamicAcademyPath(
+      (to) => `/academy/classes/${encodeRouteParam(to.params.className)}/trend`
+    ),
+  },
+  {
+    legacyPath: 'teacher/classes/:className/review',
+    redirect: redirectWithDynamicAcademyPath(
+      (to) => `/academy/classes/${encodeRouteParam(to.params.className)}/review`
+    ),
+  },
+  {
+    legacyPath: 'teacher/classes/:className/insights',
+    redirect: redirectWithDynamicAcademyPath(
+      (to) => `/academy/classes/${encodeRouteParam(to.params.className)}/insights`
+    ),
+  },
+  {
+    legacyPath: 'teacher/classes/:className/intervention',
+    redirect: redirectWithDynamicAcademyPath(
+      (to) => `/academy/classes/${encodeRouteParam(to.params.className)}/intervention`
+    ),
+  },
+  {
+    legacyPath: 'teacher/classes/:className/students/:studentId',
+    redirect: redirectWithDynamicAcademyPath(
+      (to) =>
+        `/academy/classes/${encodeRouteParam(to.params.className)}/students/${encodeRouteParam(to.params.studentId)}`
+    ),
+  },
+  {
+    legacyPath: 'teacher/classes/:className/students/:studentId/review-archive',
+    redirect: redirectWithDynamicAcademyPath(
+      (to) =>
+        `/academy/classes/${encodeRouteParam(to.params.className)}/students/${encodeRouteParam(to.params.studentId)}/review-archive`
+    ),
+  },
+  {
+    legacyPath: 'teacher/awd-reviews',
+    redirect: redirectWithQuery('/academy/awd-reviews'),
+  },
+  {
+    legacyPath: 'teacher/awd-reviews/:contestId',
+    redirect: redirectWithDynamicAcademyPath(
+      (to) => `/academy/awd-reviews/${encodeRouteParam(to.params.contestId)}`
+    ),
+  },
+  {
+    legacyPath: 'teacher/instances',
+    redirect: redirectWithQuery('/academy/instances'),
+  },
+] as const
+
+export const teacherLegacyRedirectAllowlist = teacherLegacyRedirectDefinitions.map(
+  ({ legacyPath }) => legacyPath
+)
+
+const teacherLegacyRedirectRoutes: RouteRecordRaw[] = teacherLegacyRedirectDefinitions.map(
+  ({ legacyPath, redirect }) => ({
+    path: legacyPath,
+    redirect,
+  })
+)
+
 export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/overview',
@@ -16,10 +114,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
   },
 },
 {
-  path: 'teacher/dashboard',
-  redirect: redirectWithQuery('/academy/overview'),
-},
-{
   path: 'academy/classes',
   name: 'ClassManagement',
   component: () => import('@/pages/teacher/ClassManagementRoutePage.vue'),
@@ -30,10 +124,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
     icon: 'Users',
     contentLayout: 'bleed',
   },
-},
-{
-  path: 'teacher/classes',
-  redirect: redirectWithQuery('/academy/classes'),
 },
 {
   path: 'academy/students',
@@ -48,10 +138,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
   },
 },
 {
-  path: 'teacher/students',
-  redirect: redirectWithQuery('/academy/students'),
-},
-{
   path: 'academy/classes/:className',
   name: 'TeacherClassStudents',
   component: () => import('@/pages/teacher/TeacherClassStudentsRoutePage.vue'),
@@ -61,14 +147,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
     title: '班级学生',
     contentLayout: 'bleed',
   },
-},
-{
-  path: 'teacher/classes/:className',
-  redirect: (to) => ({
-    path: `/academy/classes/${encodeURIComponent(String(to.params.className || ''))}`,
-    query: to.query,
-    hash: to.hash,
-  }),
 },
 {
   path: 'academy/classes/:className/trend',
@@ -82,14 +160,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
   },
 },
 {
-  path: 'teacher/classes/:className/trend',
-  redirect: (to) => ({
-    path: `/academy/classes/${encodeURIComponent(String(to.params.className || ''))}/trend`,
-    query: to.query,
-    hash: to.hash,
-  }),
-},
-{
   path: 'academy/classes/:className/review',
   name: 'TeacherClassReview',
   component: () => import('@/pages/teacher/TeacherClassWorkspaceSectionRoutePage.vue'),
@@ -99,14 +169,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
     title: '教学复盘',
     contentLayout: 'bleed',
   },
-},
-{
-  path: 'teacher/classes/:className/review',
-  redirect: (to) => ({
-    path: `/academy/classes/${encodeURIComponent(String(to.params.className || ''))}/review`,
-    query: to.query,
-    hash: to.hash,
-  }),
 },
 {
   path: 'academy/classes/:className/insights',
@@ -120,14 +182,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
   },
 },
 {
-  path: 'teacher/classes/:className/insights',
-  redirect: (to) => ({
-    path: `/academy/classes/${encodeURIComponent(String(to.params.className || ''))}/insights`,
-    query: to.query,
-    hash: to.hash,
-  }),
-},
-{
   path: 'academy/classes/:className/intervention',
   name: 'TeacherClassIntervention',
   component: () => import('@/pages/teacher/TeacherClassWorkspaceSectionRoutePage.vue'),
@@ -139,14 +193,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
   },
 },
 {
-  path: 'teacher/classes/:className/intervention',
-  redirect: (to) => ({
-    path: `/academy/classes/${encodeURIComponent(String(to.params.className || ''))}/intervention`,
-    query: to.query,
-    hash: to.hash,
-  }),
-},
-{
   path: 'academy/classes/:className/students/:studentId',
   name: 'TeacherStudentAnalysis',
   component: () => import('@/pages/teacher/TeacherStudentAnalysisRoutePage.vue'),
@@ -156,14 +202,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
     title: '学员分析',
     contentLayout: 'bleed',
   },
-},
-{
-  path: 'teacher/classes/:className/students/:studentId',
-  redirect: (to) => ({
-    path: `/academy/classes/${encodeURIComponent(String(to.params.className || ''))}/students/${encodeURIComponent(String(to.params.studentId || ''))}`,
-    query: to.query,
-    hash: to.hash,
-  }),
 },
 {
   path: 'academy/classes/:className/students/:studentId/review-archive',
@@ -181,14 +219,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
   },
 },
 {
-  path: 'teacher/classes/:className/students/:studentId/review-archive',
-  redirect: (to) => ({
-    path: `/academy/classes/${encodeURIComponent(String(to.params.className || ''))}/students/${encodeURIComponent(String(to.params.studentId || ''))}/review-archive`,
-    query: to.query,
-    hash: to.hash,
-  }),
-},
-{
   path: 'academy/awd-reviews',
   name: 'TeacherAWDReviewIndex',
   component: () => import('@/pages/awd-review/TeacherAwdReviewIndexRoutePage.vue'),
@@ -199,10 +229,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
     icon: 'ScanEye',
     contentLayout: 'bleed',
   },
-},
-{
-  path: 'teacher/awd-reviews',
-  redirect: redirectWithQuery('/academy/awd-reviews'),
 },
 {
   path: 'academy/awd-reviews/:contestId',
@@ -216,14 +242,6 @@ export const teacherRoutes: RouteRecordRaw[] = [
   },
 },
 {
-  path: 'teacher/awd-reviews/:contestId',
-  redirect: (to) => ({
-    path: `/academy/awd-reviews/${encodeURIComponent(String(to.params.contestId || ''))}`,
-    query: to.query,
-    hash: to.hash,
-  }),
-},
-{
   path: 'academy/instances',
   name: 'TeacherInstanceManagement',
   component: () => import('@/pages/teacher/InstanceManagementRoutePage.vue'),
@@ -235,8 +253,5 @@ export const teacherRoutes: RouteRecordRaw[] = [
     contentLayout: 'bleed',
   },
 },
-{
-  path: 'teacher/instances',
-  redirect: redirectWithQuery('/academy/instances'),
-},
+...teacherLegacyRedirectRoutes,
 ]
