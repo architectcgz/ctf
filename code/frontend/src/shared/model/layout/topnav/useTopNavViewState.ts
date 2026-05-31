@@ -3,7 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
 import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
-import { useTheme } from '@/composables/useTheme'
+import { useTheme } from '@/shared/model/theme/useTheme'
 import { useLayoutSessionActionsBridge } from '@/shared/model/layout'
 import { useWorkspaceShellNavigation } from '@/shared/model/layout/useWorkspaceShellNavigation'
 import { resolveRouteTitle } from '@/utils/routeTitle'

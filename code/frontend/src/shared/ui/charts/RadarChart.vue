@@ -7,7 +7,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { LegendComponent, RadarComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { RADAR_AREA_FILL, resolveRadarCanvasVisuals } from '@/shared/lib/charts/radarVisuals'
-import { useTheme } from '@/composables/useTheme'
+import { useTheme } from '@/shared/model/theme/useTheme'
 import { useEChartsMountGate } from '@/shared/lib/charts/echartsMountGate'
 
 use([RadarComponent, TooltipComponent, LegendComponent, EChartsRadarChart, CanvasRenderer])

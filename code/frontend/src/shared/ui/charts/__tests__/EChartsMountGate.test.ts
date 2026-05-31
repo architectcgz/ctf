@@ -8,7 +8,7 @@ import lineChartSource from '../LineChart.vue?raw'
 import barChartSource from '../BarChart.vue?raw'
 import gaugeChartSource from '../GaugeChart.vue?raw'
 import radarChartSource from '../RadarChart.vue?raw'
-import { useTheme } from '@/composables/useTheme'
+import { useTheme } from '@/shared/model/theme/useTheme'
 
 vi.mock('vue-echarts', () => ({
   default: {

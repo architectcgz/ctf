@@ -6,7 +6,7 @@ import { LineChart as EChartsLineChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
-import { useTheme } from '@/composables/useTheme'
+import { useTheme } from '@/shared/model/theme/useTheme'
 import { useEChartsMountGate } from '@/shared/lib/charts/echartsMountGate'
 
 use([GridComponent, TooltipComponent, LegendComponent, EChartsLineChart, CanvasRenderer])

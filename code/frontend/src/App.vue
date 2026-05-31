@@ -22,7 +22,7 @@ import { RouterView } from 'vue-router'
 import { onMounted } from 'vue'
 import AppDestructiveConfirm from '@/shared/ui/common/AppDestructiveConfirm.vue'
 import AppToast from '@/shared/ui/common/AppToast.vue'
-import { useTheme } from '@/composables/useTheme'
+import { useTheme } from '@/shared/model/theme/useTheme'
 
 const { initTheme } = useTheme()
 

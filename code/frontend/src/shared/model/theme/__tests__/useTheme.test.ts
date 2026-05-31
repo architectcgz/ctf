@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+
 import { useTheme } from '../useTheme'
 
 describe('useTheme', () => {
@@ -8,7 +9,6 @@ describe('useTheme', () => {
     document.documentElement.removeAttribute('data-brand')
     vi.clearAllMocks()
 
-    // Mock window.matchMedia
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: vi.fn().mockImplementation((query) => ({

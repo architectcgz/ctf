@@ -5,7 +5,7 @@ import { use } from 'echarts/core'
 import { GaugeChart as EChartsGaugeChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
-import { useTheme } from '@/composables/useTheme'
+import { useTheme } from '@/shared/model/theme/useTheme'
 import { useEChartsMountGate } from '@/shared/lib/charts/echartsMountGate'
 
 use([EChartsGaugeChart, CanvasRenderer])

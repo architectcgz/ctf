@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { Palette } from 'lucide-vue-next'
 
-import type { ThemeBrand } from '@/composables/useTheme'
+import type { ThemeBrand } from '@/shared/model/theme/useTheme'
 
 interface ThemeBrandOption {
   value: ThemeBrand

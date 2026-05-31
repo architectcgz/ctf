@@ -13,7 +13,7 @@
   - 不负责：页面内部数据流和业务状态机
 
 - `code/frontend/src/pages/**`、`code/frontend/src/features/**/model`、`code/frontend/src/features/**/ui`、`code/frontend/src/widgets/**`、`code/frontend/src/shared/model/**`、`code/frontend/src/shared/lib/**`、`code/frontend/src/composables/use*.ts`
-  - 负责：路由入口统一落在 `pages/**`；页面级查询、导出、实时桥接和 query 同步下沉到 feature model / shared model / shared lib / composable；`widgets/**` 负责跨 feature 页面区块组合，`features/**/ui` 负责单一能力 surface，`shared/model/common` 和 `shared/model/layout` 承接共享反馈、危险确认、复制反馈、工作区导航、面包屑细节与分页状态这类跨 feature 但不带业务 owner 的状态，`shared/model/reporting` 承接报告轮询这类共享 reporting workflow owner，`shared/lib/*` 承接时间倒计时、请求取消、sanitize、键盘导航等无业务语义的基础能力
+  - 负责：路由入口统一落在 `pages/**`；页面级查询、导出、实时桥接和 query 同步下沉到 feature model / shared model / shared lib / composable；`widgets/**` 负责跨 feature 页面区块组合，`features/**/ui` 负责单一能力 surface，`shared/model/common` 和 `shared/model/layout` 承接共享反馈、危险确认、复制反馈、工作区导航、面包屑细节与分页状态这类跨 feature 但不带业务 owner 的状态，`shared/model/theme` 承接全局主题与品牌 owner，`shared/model/reporting` 承接报告轮询这类共享 reporting workflow owner，`shared/lib/*` 承接时间倒计时、请求取消、sanitize、键盘导航等无业务语义的基础能力
   - 不负责：把 API 调用、路由状态和大段派生数据继续堆回单个 `.vue` 页面，或让 `features/*RoutePage.vue`、`widgets/*RoutePage.vue` 继续兼任页面层
 
 - `code/frontend/src/stores/auth.ts`、`notification.ts`、`contest.ts`
