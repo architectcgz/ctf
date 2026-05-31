@@ -23,12 +23,14 @@ import {
   useContestWorkbench,
 } from '@/features/contest-workbench'
 import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import { useToast } from '@/shared/model/common/useToast'
 import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 
 export function useContestEditPage(contestId: Ref<string> | ComputedRef<string>) {
   const toast = useToast()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
+  const { query } = useRouteQueryTransport()
   const backToContestListRoute = buildContestManageListRoute()
 
   const loading = ref(true)
@@ -71,8 +73,10 @@ export function useContestEditPage(contestId: Ref<string> | ComputedRef<string>)
 
   function syncWorkbenchStageSelection(): void {
     const visibleStageKeys = workbench.visibleStages.map((stage) => stage.key)
-    const searchParams = new URLSearchParams(window.location.search)
-    const requestedStage = searchParams.get('panel') as ContestWorkbenchStageKey | null
+    const requestedStageValue = query.value.panel
+    const requestedStage = (
+      Array.isArray(requestedStageValue) ? requestedStageValue[0] : requestedStageValue
+    ) as ContestWorkbenchStageKey | undefined
     if (requestedStage && visibleStageKeys.includes(requestedStage)) {
       if (activeStage.value !== requestedStage) selectTab(requestedStage)
       return

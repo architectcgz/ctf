@@ -40,6 +40,11 @@ vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
   return {
     ...actual,
+    useRoute: () => ({
+      name: 'ContestEdit',
+      params: { id: 'contest-1' },
+      query: Object.fromEntries(new URLSearchParams(window.location.search)),
+    }),
     useRouter: () => ({ push: pushMock, replace: vi.fn(), back: vi.fn() }),
   }
 })
@@ -581,6 +586,10 @@ describe('ContestEdit', () => {
     expect(contestEditSource).toContain('useContestEditPage')
     expect(contestEditSource).not.toContain("from '@/api/admin/contests'")
     expect(contestEditPageModelSource).not.toContain("from 'vue-router'")
+    expect(contestEditPageModelSource).toContain(
+      "from '@/shared/model/navigation/useRouteQueryTransport'"
+    )
+    expect(contestEditPageModelSource).not.toContain('window.location.search')
     expect(platformRoutesSource).toContain("name: 'ContestEdit'")
     expect(platformRoutesSource).toContain(
       "component: () => import('@/pages/platform/contests/ContestEditRoutePage.vue')"
