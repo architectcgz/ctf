@@ -122,7 +122,7 @@
 </style>
 
 <script setup lang="ts">
-import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'
+import AppRouteRedirect from '@/shared/ui/navigation/AppRouteRedirect.vue'
 import {
   ChallengeImportHeroPanel,
   ChallengeImportQueuePanel,

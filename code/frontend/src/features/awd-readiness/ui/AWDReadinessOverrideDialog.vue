@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import AdminSurfaceModal from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'
 import type { AWDReadinessData, AWDReadinessItemData } from '@/api/contracts'
 
 const props = defineProps<{

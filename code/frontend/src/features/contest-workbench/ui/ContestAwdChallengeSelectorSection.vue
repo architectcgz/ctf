@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
 import type { AdminAwdChallengeData } from '@/api/contracts'
 
 const props = defineProps<{

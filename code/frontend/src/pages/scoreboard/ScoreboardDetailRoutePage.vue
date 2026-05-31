@@ -340,8 +340,8 @@ import { toRef } from 'vue'
 
 import { BarChart2, CheckCircle, RefreshCw, Shield, Trophy, Users } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import { ScoreboardRealtimeBridge, useScoreboardDetailPage } from '@/features/scoreboard'
 
 const props = defineProps<{

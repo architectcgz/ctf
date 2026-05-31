@@ -339,9 +339,9 @@ import type { Component } from 'vue'
 
 import { ArrowRight, CalendarRange, Clock3, Flag, Trophy } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import { useContestListPage } from '@/features/contest-detail'
 
 const {

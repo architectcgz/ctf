@@ -531,8 +531,8 @@ import type {
 
 import { ArrowRight, BarChart2, Clock3, Flag, Shield, Trophy, Users } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
 
 type ScoreboardPanelKey = 'contest' | 'points'

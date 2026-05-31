@@ -108,7 +108,7 @@
 <script setup lang="ts">
 import { UsersRound } from 'lucide-vue-next'
 
-import CFocusedInputDialog from '@/components/common/modal-templates/CFocusedInputDialog.vue'
+import CFocusedInputDialog from '@/shared/ui/common/modal-templates/CFocusedInputDialog.vue'
 
 defineProps<{
   showCreateTeam: boolean

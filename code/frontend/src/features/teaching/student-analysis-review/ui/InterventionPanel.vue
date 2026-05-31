@@ -444,7 +444,7 @@
 import { toRef } from 'vue'
 
 import type { StudentDirectoryItem } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import {
   ChallengeCategoryDifficultyPills,
   ChallengeCategoryPill,

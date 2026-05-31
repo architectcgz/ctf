@@ -242,7 +242,7 @@
 
 <script setup lang="ts">
 import type { ReviewArchiveData } from '@/api/contracts'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 
 defineProps<{
   archive: ReviewArchiveData | null

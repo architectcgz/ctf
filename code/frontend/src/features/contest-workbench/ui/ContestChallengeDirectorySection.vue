@@ -2,9 +2,9 @@
 import { MoreHorizontal, Trash } from 'lucide-vue-next'
 
 import type { AdminContestChallengeViewData } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import CActionMenu from '@/components/common/menus/CActionMenu.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import CActionMenu from '@/shared/ui/common/menus/CActionMenu.vue'
 import {
   ChallengeCategoryPill,
   ChallengeDifficultyText,

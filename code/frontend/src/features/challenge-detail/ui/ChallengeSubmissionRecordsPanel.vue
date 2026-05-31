@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import type { ChallengeSubmissionRecordStatus } from '../model'
 
 interface SubmissionRecordItem {

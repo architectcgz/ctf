@@ -8,20 +8,20 @@
 
 本文档只说明前端组件应该放在哪一层、共享原语有哪些、弹窗模板怎么复用，以及布局壳的 owner。
 
-- 覆盖：`components/common/`、`components/layout/`、`components/common/modal-templates/`、遗留业务组件目录和 route view 的边界。
+- 覆盖：`shared/ui/common/`、`shared/ui/layout/`、`shared/ui/common/modal-templates/`、遗留业务组件目录和 route view 的边界。
 - 不覆盖：单个页面的数据流细节；这些见 `07-pages-dataflow.md`。
 
 ## 当前设计
 
-- `code/frontend/src/components/common/`
+- `code/frontend/src/shared/ui/common/`
   - 负责：共享展示原语和通用交互壳，例如 `AppEmpty.vue`、`AppToast.vue`、`AppSkeleton.vue`、`WorkspaceDataTable.vue`、`DeleteConfirmModal.vue`
   - 不负责：直接发业务请求、直接依赖 store/router，或内置某个页面的专用流程
 
-- `code/frontend/src/components/common/modal-templates/`
+- `code/frontend/src/shared/ui/common/modal-templates/`
   - 负责：Overlay 行为层、居中弹窗、侧边抽屉和后台工作区模板，例如 `OverlayPortal.vue`、`ModalTemplateShell.vue`、`ClassicCenteredModal.vue`、`SlideOverDrawer.vue`、`AdminSurfaceModal.vue`、`AdminSurfaceDrawer.vue`
   - 不负责：把所有业务弹窗都揉成一套万能模板；业务样式明显不同的 overlay 仍应自有 DOM/CSS，只复用 headless 行为层
 
-- `code/frontend/src/components/layout/AppLayout.vue`
+- `code/frontend/src/shared/ui/layout/AppLayout.vue`
   - 负责：应用总布局、侧栏、顶栏、全局通知实时连接、route transition 和 backoffice/student 的内容壳切换
   - 不负责：页面自己的业务查询、目录筛选或详情页状态机
 
@@ -47,9 +47,9 @@
 
 | 层级 | 当前位置 | 当前职责 |
 | --- | --- | --- |
-| 共享原语 | `components/common/` | 空状态、Toast、Skeleton、目录表格、删除确认、通用局部承载器 |
-| Overlay 模板 | `components/common/modal-templates/` | Teleport、滚动锁、Escape/backdrop 关闭、经典弹窗和抽屉模板 |
-| 布局壳 | `components/layout/` | `AppLayout`、`Sidebar`、`TopNav` 等全局承载 |
+| 共享原语 | `shared/ui/common/` | 空状态、Toast、Skeleton、目录表格、删除确认、通用局部承载器 |
+| Overlay 模板 | `shared/ui/common/modal-templates/` | Teleport、滚动锁、Escape/backdrop 关闭、经典弹窗和抽屉模板 |
+| 布局壳 | `shared/ui/layout/` | `AppLayout`、`Sidebar`、`TopNav` 等全局承载 |
 | Feature UI | `features/*/ui/`、`features/platform/*/ui/` | 只服务单一 feature 的工作区、编辑器、目录面板与 page-sized surface |
 | 业务展示组件 | `components/teacher/`、`components/platform/`、`components/contests/`、`components/scoreboard/` 等 | 领域相关展示和局部桥接，逐步向 feature owner 过渡 |
 | 页面入口 | `pages/**` | 运行时 route entry、页面结构组合与最外层事件桥接 |
@@ -57,8 +57,8 @@
 
 判断原则：
 
-- 能在多个页面复用且不绑业务 owner 的，进 `components/common/`
-- 只解决 overlay 行为和模板骨架的，进 `components/common/modal-templates/`
+- 能在多个页面复用且不绑业务 owner 的，进 `shared/ui/common/`
+- 只解决 overlay 行为和模板骨架的，进 `shared/ui/common/modal-templates/`
 - 只服务单一 feature，且直接消费同 feature model 的 UI，进 `features/*/ui/`
 - 强业务语义的展示组件保留在业务目录，不伪装成“通用组件”
 - 页面数据编排和路由交互不放进共享组件
@@ -102,9 +102,9 @@
 
 | 文件 | 当前负责 |
 | --- | --- |
-| `components/common/WorkspaceDataTable.vue` | 工作区目录表格骨架、列配置、插槽型单元格渲染 |
-| `components/common/AppEmpty.vue` | 统一空状态壳和图标映射 |
-| `components/common/AppSkeleton.vue` | 页面或局部数据加载骨架 |
+| `shared/ui/common/WorkspaceDataTable.vue` | 工作区目录表格骨架、列配置、插槽型单元格渲染 |
+| `shared/ui/common/AppEmpty.vue` | 统一空状态壳和图标映射 |
+| `shared/ui/common/AppSkeleton.vue` | 页面或局部数据加载骨架 |
 
 说明：
 
@@ -115,8 +115,8 @@
 
 | 文件 | 当前负责 |
 | --- | --- |
-| `components/common/AppToast.vue` | 全局 toast 渲染，消费 `useToast()` 的状态 |
-| `components/common/DeleteConfirmModal.vue` | 危险确认弹窗，基于 `ModalTemplateShell` 组合默认文案和动作 |
+| `shared/ui/common/AppToast.vue` | 全局 toast 渲染，消费 `useToast()` 的状态 |
+| `shared/ui/common/DeleteConfirmModal.vue` | 危险确认弹窗，基于 `ModalTemplateShell` 组合默认文案和动作 |
 
 边界：
 
@@ -157,7 +157,7 @@
 
 ## 4. 布局壳
 
-`code/frontend/src/components/layout/AppLayout.vue` 当前是全局路由承载壳。
+`code/frontend/src/shared/ui/layout/AppLayout.vue` 当前是全局路由承载壳。
 
 负责内容：
 
@@ -178,7 +178,7 @@
 
 后续约束：
 
-- 共享原语继续沉到 `components/common/`
+- 共享原语继续沉到 `shared/ui/common/`
 - 页面行为优先下沉到 `features/**/model`
 - 只服务单一 feature 的大块 UI 优先收进 `features/**/ui`
 - route view 保持薄壳
@@ -209,9 +209,9 @@
 
 ## 6. Guardrail
 
-- 共享弹窗模板存在性、关闭行为和 fallthrough 约束：`code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`
-- 目录表格应继续使用主题 token：`code/frontend/src/components/common/__tests__/WorkspaceDataTable.test.ts`
-- 空状态表面样式：`code/frontend/src/components/common/__tests__/AppEmptySurface.test.ts`
-- Toast 样式与交互：`code/frontend/src/components/common/__tests__/AppToast.test.ts`
-- 布局壳与 backoffice/student 内容壳切换：`code/frontend/src/components/layout/__tests__/AppLayout.test.ts`
+- 共享弹窗模板存在性、关闭行为和 fallthrough 约束：`code/frontend/src/shared/ui/common/__tests__/ModalTemplates.test.ts`
+- 目录表格应继续使用主题 token：`code/frontend/src/shared/ui/common/__tests__/WorkspaceDataTable.test.ts`
+- 空状态表面样式：`code/frontend/src/shared/ui/common/__tests__/AppEmptySurface.test.ts`
+- Toast 样式与交互：`code/frontend/src/shared/ui/common/__tests__/AppToast.test.ts`
+- 布局壳与 backoffice/student 内容壳切换：`code/frontend/src/shared/ui/layout/__tests__/AppLayout.test.ts`
 - 分层约束：`code/frontend/src/__tests__/architectureBoundaries.test.ts`

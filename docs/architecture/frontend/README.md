@@ -45,4 +45,4 @@
 - 路由与页面边界：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 前端分层约束：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - 导航命名空间：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`
-- 共享弹窗模板：`code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`
+- 共享弹窗模板：`code/frontend/src/shared/ui/common/__tests__/ModalTemplates.test.ts`

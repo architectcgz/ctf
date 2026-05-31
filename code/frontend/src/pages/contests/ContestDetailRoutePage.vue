@@ -348,7 +348,7 @@
 import { Trophy } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { ContestAnnouncementRealtimeBridge } from '@/features/contest-announcements'
 import { ContestAWDWorkspacePanel } from '@/features/contest-awd-workspace'
 import {

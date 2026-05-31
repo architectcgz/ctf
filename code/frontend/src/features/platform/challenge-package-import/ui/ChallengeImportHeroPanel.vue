@@ -51,8 +51,8 @@
 <script setup lang="ts">
 import { ArrowLeft, FileSearch, Plus } from 'lucide-vue-next'
 
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 
 defineProps<{
   backRoute: AppRouteTarget

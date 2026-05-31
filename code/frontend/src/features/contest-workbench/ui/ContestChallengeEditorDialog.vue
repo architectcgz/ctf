@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 
-import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import AdminSurfaceModal from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'
 import type {
   AdminAwdChallengeData,
   AdminChallengeListItem,

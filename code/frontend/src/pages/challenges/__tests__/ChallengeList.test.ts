@@ -476,9 +476,9 @@ describe('ChallengeList', () => {
 
     const { wrapper, router } = await mountPageWithRouter()
 
-    expect(challengeListSource).toContain("import AppRouteLink from '@/components/navigation/AppRouteLink.vue'")
+    expect(challengeListSource).toContain("import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(challengeDirectoryRowSource).toContain(
-      "import AppRouteLink from '@/components/navigation/AppRouteLink.vue'"
+      "import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
     expect(challengeListSource).not.toContain('@click="goToDashboard"')
     expect(challengeListSource).not.toContain('@click="openSkillProfile"')

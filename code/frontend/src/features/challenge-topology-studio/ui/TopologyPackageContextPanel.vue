@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { GitBranch } from 'lucide-vue-next'
 
-import SectionCard from '@/components/common/SectionCard.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
 
 type PackageSourceSummary = {
   title: string

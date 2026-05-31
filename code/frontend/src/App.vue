@@ -20,8 +20,8 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import { onMounted } from 'vue'
-import AppDestructiveConfirm from '@/components/common/AppDestructiveConfirm.vue'
-import AppToast from '@/components/common/AppToast.vue'
+import AppDestructiveConfirm from '@/shared/ui/common/AppDestructiveConfirm.vue'
+import AppToast from '@/shared/ui/common/AppToast.vue'
 import { useTheme } from '@/composables/useTheme'
 
 const { initTheme } = useTheme()

@@ -3,9 +3,9 @@ import { ArrowRight, Search } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import type { StudentDirectoryItem } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 
 interface ClassStudentDirectoryRow {

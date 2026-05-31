@@ -17,7 +17,13 @@ const classReportExportDialogSource = [
   classReportExportContextSectionSource,
   classReportExportPreviewSectionSource,
   classReportExportTaskRailSource,
-  readFileSync(resolve(process.cwd(), 'src/features/teaching/class-report-export/ui/classReportExportDialog.css'), 'utf8'),
+  readFileSync(
+    resolve(
+      process.cwd(),
+      'src/features/teaching/class-report-export/ui/classReportExportDialog.css'
+    ),
+    'utf8'
+  ),
 ].join('\n')
 
 const {
@@ -169,7 +175,7 @@ describe('ClassReportExportDialog', () => {
 
   it('教师班级报告导出弹窗应接入后台共享弹窗与表单原语', () => {
     expect(classReportExportDialogSource).toContain(
-      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+      "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
     )
     expect(classReportExportDialogSource).toContain('<AdminSurfaceModal')
     expect(classReportExportDialogSource).not.toContain('<ElDialog')

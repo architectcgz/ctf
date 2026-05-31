@@ -2,8 +2,8 @@
 import { ArrowRight } from 'lucide-vue-next'
 
 import type { RecommendationItem } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
 import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
 
 defineProps<{

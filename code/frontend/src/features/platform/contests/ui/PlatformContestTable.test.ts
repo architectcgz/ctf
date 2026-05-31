@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
 import type { ContestDetailData } from '@/api/contracts'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
-import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
+import workspaceDataTableSource from '@/shared/ui/common/WorkspaceDataTable.vue?raw'
 import PlatformContestTable from './PlatformContestTable.vue'
 import adminContestTableSource from './PlatformContestTable.vue?raw'
 
@@ -58,7 +58,7 @@ describe('PlatformContestTable', () => {
   }
 
   it('更多菜单应收敛到共享 action menu primitive，而不是继续维护赛事私有浮层', () => {
-    expect(adminContestTableSource).toContain("from '@/components/common/menus/CActionMenu.vue'")
+    expect(adminContestTableSource).toContain("from '@/shared/ui/common/menus/CActionMenu.vue'")
     expect(adminContestTableSource).not.toContain('<Teleport to="body">')
     expect(adminContestTableSource).not.toContain('class="contest-row-menu__title">Management</div>')
   })
@@ -76,8 +76,8 @@ describe('PlatformContestTable', () => {
   })
 
   it('竞赛目录字号应与平台审计列表使用同一组目录 token', () => {
-    expect(adminContestTableSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
-    expect(adminContestTableSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(adminContestTableSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
+    expect(adminContestTableSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(adminContestTableSource).toContain('<WorkspaceDataTable')
     expect(adminContestTableSource).toContain('<AppRouteLink')
     expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')

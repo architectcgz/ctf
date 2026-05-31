@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import type { ClassInsightTrendData } from '@/api/contracts'
-import LineChart from '@/components/charts/LineChart.vue'
+import LineChart from '@/shared/ui/charts/LineChart.vue'
 
 const props = defineProps<{
   trend: ClassInsightTrendData | null

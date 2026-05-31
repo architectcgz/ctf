@@ -381,8 +381,8 @@ import { toRef } from 'vue'
 
 import { ArrowLeft, BellRing, CalendarClock, CircleCheckBig, Inbox } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import { accentColorMap, useNotificationDetailPage } from '@/features/notifications'
 import { formatDate } from '@/utils/format'
 

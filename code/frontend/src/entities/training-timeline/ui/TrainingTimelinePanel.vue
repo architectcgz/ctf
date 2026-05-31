@@ -380,7 +380,7 @@
 import { computed, ref, watch } from 'vue'
 import { Activity, FileText, Server, Target } from 'lucide-vue-next'
 
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import { formatTime } from '@/utils/format'
 
 import {

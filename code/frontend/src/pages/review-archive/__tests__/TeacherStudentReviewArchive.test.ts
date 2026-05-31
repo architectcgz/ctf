@@ -4,7 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TeacherStudentReviewArchive from '@/pages/review-archive/StudentReviewArchiveRoutePage.vue'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import reviewArchiveSource from '@/pages/review-archive/StudentReviewArchiveRoutePage.vue?raw'
 import studentReviewArchivePageModelSource from '@/features/teaching/student-review-archive-workspace/model/useStudentReviewArchivePage.ts?raw'
 import reviewArchiveWidgetOwnerSource from '@/widgets/review-archive-workspace/index.ts?raw'
@@ -288,7 +288,7 @@ describe('TeacherStudentReviewArchive', () => {
     expect(reviewArchiveSource).not.toContain('goBack')
     expect(reviewArchiveWorkspaceSource).toContain(':analysis-route="analysisRoute"')
     expect(reviewArchiveWorkspaceSource).toContain(':back-route="backRoute"')
-    expect(reviewArchiveHeroSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(reviewArchiveHeroSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(reviewArchiveHeroSource).toContain('<AppRouteLink')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveState')

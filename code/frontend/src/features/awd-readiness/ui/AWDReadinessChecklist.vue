@@ -3,9 +3,9 @@ import { computed } from 'vue'
 import { AlertCircle, ShieldCheck } from 'lucide-vue-next'
 
 import type { AWDReadinessData, AWDReadinessItemData } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 
 const props = withDefaults(
   defineProps<{

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 
 defineProps<{
   loading: boolean

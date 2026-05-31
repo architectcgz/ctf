@@ -2,7 +2,7 @@
 import { computed, toRef } from 'vue'
 
 import type { ContestDetailData } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { AWDRoundInspector } from '@/features/awd-inspector'
 import { AWDReadinessSummary } from '@/features/awd-readiness'
 import { usePlatformContestAwd } from '@/features/contest-awd-admin'

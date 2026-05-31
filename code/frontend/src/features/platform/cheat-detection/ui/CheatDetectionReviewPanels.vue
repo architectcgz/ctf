@@ -239,19 +239,20 @@
 import { ArrowRight } from 'lucide-vue-next'
 
 import type { AdminCheatDetectionData } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 
 type CheatQuickAction = {
   title: string
   description: string
   actionLabel: string
-  route: Record<string, unknown>
+  route: AppRouteTarget
 }
 
 defineProps<{
   riskData: AdminCheatDetectionData
-  buildAuditRoute: (query: Record<string, string>) => Record<string, unknown>
+  buildAuditRoute: (query: Record<string, string>) => AppRouteTarget
   quickActions: ReadonlyArray<CheatQuickAction>
   formatDateTime: (value: string) => string
 }>()

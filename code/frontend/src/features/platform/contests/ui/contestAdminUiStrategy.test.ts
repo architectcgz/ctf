@@ -167,7 +167,7 @@ describe('contest admin ui strategy', () => {
     expect(contestFormCombinedSource).toContain('class="ui-btn ui-btn--primary')
     expect(adminContestTableSource).toContain('class="ui-badge contest-status-pill')
     expect(adminContestTableSource).toContain('class="ui-row-actions contest-table__actions')
-    expect(adminContestTableSource).toContain("from '@/components/common/menus/CActionMenu.vue'")
+    expect(adminContestTableSource).toContain("from '@/shared/ui/common/menus/CActionMenu.vue'")
     expect(adminContestTableSource).toContain('aria-label="更多竞赛操作"')
     expect(adminContestTableSource).not.toContain('<Teleport to="body">')
     expect(contestEditCombinedSource).toContain('class="ui-btn ui-btn--ghost"')
@@ -251,7 +251,7 @@ describe('contest admin ui strategy', () => {
     expect(awdRoundHeaderPanelSource).toContain('class="ops-btn ops-btn--neutral"')
     expect(awdRoundHeaderPanelSource).toContain('class="ops-btn ops-btn--primary"')
     expect(contestChallengeOrchestrationCombinedSource).toContain(
-      "from '@/components/common/menus/CActionMenu.vue'"
+      "from '@/shared/ui/common/menus/CActionMenu.vue'"
     )
     expect(contestChallengeOrchestrationCombinedSource).toContain(
       'class="ui-row-actions contest-challenge-row__actions"'

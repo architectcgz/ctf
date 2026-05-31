@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
+import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryToolbar from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'
 import type { AdminImageListItem, ImageStatus } from '@/api/contracts'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 

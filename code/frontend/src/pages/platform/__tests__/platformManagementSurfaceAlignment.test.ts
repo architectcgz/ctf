@@ -53,8 +53,8 @@ import awdChallengeConfigDirectorySectionSource from '@/features/platform/contes
 import awdChallengeConfigHeaderSource from '@/features/platform/contests/ui/AWDChallengeConfigHeader.vue?raw'
 import awdReadinessChecklistSource from '@/features/awd-readiness/ui/AWDReadinessChecklist.vue?raw'
 import awdReadinessOverrideDialogSource from '@/features/awd-readiness/ui/AWDReadinessOverrideDialog.vue?raw'
-import workspaceDataTableSource from '@/components/common/WorkspaceDataTable.vue?raw'
-import workspaceDirectoryToolbarSource from '@/components/common/WorkspaceDirectoryToolbar.vue?raw'
+import workspaceDataTableSource from '@/shared/ui/common/WorkspaceDataTable.vue?raw'
+import workspaceDirectoryToolbarSource from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue?raw'
 import adminContestFormDialogSource from '@/features/platform/contests/ui/PlatformContestFormDialog.vue?raw'
 import adminContestFormPanelSource from '@/features/platform/contests/ui/PlatformContestFormPanel.vue?raw'
 import contestFormActionsSource from '@/features/platform/contests/ui/PlatformContestFormActions.vue?raw'
@@ -282,7 +282,7 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--ghost"')
     expect(contestOrchestrationSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
     expect(contestOrchestrationSource).toContain('<WorkspaceDirectoryToolbar')
     expect(contestOrchestrationSource).toContain('class="ui-field contest-filter-field"')
@@ -346,7 +346,7 @@ describe('admin management surface alignment', () => {
   it('contest form dialog should adopt the admin workspace dialog shell and section headings', () => {
     expect(adminContestFormDialogSource).toContain('class="contest-form-dialog"')
     expect(adminContestFormDialogSource).toContain(
-      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+      "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
     )
     expect(adminContestFormDialogSource).toContain(
       ':deep(.contest-form-dialog .modal-template-panel--classic)'

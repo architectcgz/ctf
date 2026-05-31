@@ -29,6 +29,10 @@
   - 负责：教师/管理员导航高亮、详情页回归所属目录项、角色默认首页和页面标题解析
   - 不负责：替代路由注册本身，也不决定页面内的 tab 或二级状态
 
+- `code/frontend/src/shared/lib/navigation/routeTarget.ts`
+  - 负责：共享导航表面对 `vue-router` `RouteLocationRaw` 的薄契约别名，给 `AppRouteLink`、`AppRouteRedirect` 和 feature/page props 提供统一 target 类型
+  - 不负责：持有 `push / replace / useRoute / useRouter` 等运行时路由 owner，也不承载业务跳转策略
+
 ## 1. 运行入口
 
 路由注册从 `code/frontend/src/router/index.ts` 开始：
@@ -42,7 +46,7 @@
 `appShellRoute` 当前是整个受保护应用的唯一壳：
 
 - 路径：`/`
-- 组件：`@/components/layout/AppLayout.vue`
+- 组件：`@/shared/ui/layout/AppLayout.vue`
 - 默认跳转：`/student/dashboard`
 - 子路由来源：
   - `studentRoutes`

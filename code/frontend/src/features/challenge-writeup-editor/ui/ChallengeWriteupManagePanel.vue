@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, toRef } from 'vue'
 
-import AppLoading from '@/components/common/AppLoading.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
 
 import { useChallengeWriteupManagement } from '../model'
 

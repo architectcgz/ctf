@@ -193,7 +193,7 @@ describe('NotificationDetail', () => {
 
     expect(wrapper.text()).toContain('查看关联对象')
     expect(wrapper.find('button[disabled]').exists()).toBe(false)
-    expect(notificationDetailSource).toContain("import AppRouteLink from '@/components/navigation/AppRouteLink.vue'")
+    expect(notificationDetailSource).toContain("import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(wrapper.get('a[href="/challenges/9"]').text()).toContain('查看关联对象')
   })
 

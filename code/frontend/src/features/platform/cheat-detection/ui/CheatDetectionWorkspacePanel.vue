@@ -110,8 +110,9 @@
 import { AlertCircle, ShieldQuestion } from 'lucide-vue-next'
 
 import type { AdminCheatDetectionData } from '@/api/contracts'
-import AppLoading from '@/components/common/AppLoading.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import CheatDetectionHeroPanel from './CheatDetectionHeroPanel.vue'
 import CheatDetectionReviewPanels from './CheatDetectionReviewPanels.vue'
 
@@ -119,15 +120,15 @@ type CheatQuickAction = {
   title: string
   description: string
   actionLabel: string
-  route: Record<string, unknown>
+  route: AppRouteTarget
 }
 
 defineProps<{
   riskData: AdminCheatDetectionData | null
   loading: boolean
   error: string
-  auditLogRoute: Record<string, unknown>
-  buildAuditRoute: (query: Record<string, string>) => Record<string, unknown>
+  auditLogRoute: AppRouteTarget
+  buildAuditRoute: (query: Record<string, string>) => AppRouteTarget
   quickActions: ReadonlyArray<CheatQuickAction>
   formatDateTime: (value: string) => string
 }>()

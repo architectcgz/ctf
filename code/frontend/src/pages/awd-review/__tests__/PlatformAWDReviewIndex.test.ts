@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import PlatformAWDReviewIndex from '@/pages/awd-review/PlatformAwdReviewIndexRoutePage.vue'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import platformAwdReviewIndexSource from '@/pages/awd-review/PlatformAwdReviewIndexRoutePage.vue?raw'
 import awdReviewIndexPageSource from '@/features/awd-review-workspace/model/useAwdReviewIndex.ts?raw'
 import awdReviewIndexRoutePageSource from '@/features/awd-review-workspace/model/useAwdReviewIndexPage.ts?raw'
@@ -123,8 +123,8 @@ describe('PlatformAWDReviewIndex', () => {
   })
 
   it('应使用平台工作台目录壳层而不是教师目录模板', async () => {
-    expect(combinedSource).toContain("from '@/components/common/WorkspaceDirectoryToolbar.vue'")
-    expect(combinedSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'")
+    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(platformAwdReviewIndexSource).toContain(
       'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-awd-review-shell flex min-h-full flex-1 flex-col"'
     )
@@ -203,9 +203,9 @@ describe('PlatformAWDReviewIndex', () => {
     expect(platformAwdReviewIndexSource).not.toContain("router.push({ name: 'PlatformOverview' })")
     expect(platformAwdReviewIndexSource).toContain(':overview-route="homeRoute"')
     expect(platformAwdReviewIndexSource).toContain(':build-contest-route="buildContestRoute"')
-    expect(awdReviewHeroPanelSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(awdReviewHeroPanelSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(awdReviewHeroPanelSource).toContain('<AppRouteLink')
-    expect(awdReviewDirectoryPanelSource).toContain("from '@/components/navigation/AppRouteLink.vue'")
+    expect(awdReviewDirectoryPanelSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(awdReviewDirectoryPanelSource).toContain('<AppRouteLink')
     expect(awdReviewIndexRoutePageSource).toContain('homeRoute: resolveAwdReviewIndexHomeRoute(scope)')
     expect(awdReviewIndexRoutePageSource).toContain(

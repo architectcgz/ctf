@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AttackSessionQuery, AttackSessionResponseData, StudentEvidenceData } from '@/api/contracts'
-import SectionCard from '@/components/common/SectionCard.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
 import StudentReviewWorkspace from './StudentReviewWorkspace.vue'
 
 defineProps<{

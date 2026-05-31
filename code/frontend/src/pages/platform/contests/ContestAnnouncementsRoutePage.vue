@@ -60,9 +60,9 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import {
   ContestAnnouncementsTopbarPanel,
   ContestAnnouncementsWorkspacePanel,

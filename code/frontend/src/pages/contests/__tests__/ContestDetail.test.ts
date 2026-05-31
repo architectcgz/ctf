@@ -453,7 +453,7 @@ describe('ContestDetail', () => {
     expect(contestDetailSource).toContain("ContestTeamDialogs,")
     expect(contestDetailSource).toContain("} from '@/features/contest-detail'")
     expect(contestTeamDialogsSource).toContain(
-      "from '@/components/common/modal-templates/CFocusedInputDialog.vue'"
+      "from '@/shared/ui/common/modal-templates/CFocusedInputDialog.vue'"
     )
     expect(contestDetailSource).not.toContain('class="contest-modal"')
 

@@ -2,10 +2,10 @@
 import { computed, watch } from 'vue'
 
 import type { ContestDetailData } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import AdminSurfaceDrawer from '@/shared/ui/common/modal-templates/AdminSurfaceDrawer.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import { useContestAnnouncementManagement } from '../model'
 
 interface ContestAnnouncementFullPageRoute {

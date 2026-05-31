@@ -133,7 +133,7 @@
 import { RouterLink } from 'vue-router'
 
 import { AuthEntryShell } from '@/features/auth'
-import AppRouteRedirect from '@/components/navigation/AppRouteRedirect.vue'
+import AppRouteRedirect from '@/shared/ui/navigation/AppRouteRedirect.vue'
 import { useRegisterPage } from '@/features/auth'
 
 const { form, loading, submitError, successRedirectTo, clearSubmitError, onSubmit } =

@@ -725,9 +725,9 @@
 import { ChevronRight, Flame, Loader2, TriangleAlert } from 'lucide-vue-next'
 
 import type { RecommendationItem, SkillProfileData, StudentDirectoryItem } from '@/api/contracts'
-import RadarChart from '@/components/charts/RadarChart.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import RadarChart from '@/shared/ui/charts/RadarChart.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import {
   ChallengeCategoryDifficultyPills,
   ChallengeCategoryPill,

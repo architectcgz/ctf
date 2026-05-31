@@ -292,9 +292,9 @@ describe('UserManage', () => {
       'await replaceQuery(buildUserGovernancePanelQuery(query.value, panel))'
     )
     expect(userGovernanceSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(userGovernanceSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(userGovernanceSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(userGovernanceSource).toContain('<WorkspaceDirectoryToolbar')
     expect(userGovernanceSource).toContain('<WorkspaceDataTable')
     expect(userGovernanceSource).not.toContain('<table class="user-table min-w-full text-sm">')
@@ -325,7 +325,7 @@ describe('UserManage', () => {
 
     const drawer = document.body.querySelector<HTMLElement>('.user-detail-drawer')
     expect(userGovernanceSource).toContain(
-      "from '@/components/common/modal-templates/AdminSurfaceModal.vue'"
+      "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
     )
     expect(userGovernanceSource).toContain('<AdminSurfaceModal')
     expect(userGovernanceSource).toContain('width="40rem"')

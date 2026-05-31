@@ -9,7 +9,7 @@ import {
 } from 'lucide-vue-next'
 
 import type { AuditLogItem } from '@/api/contracts'
-import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
+import AdminSurfaceModal from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'
 
 defineProps<{
   open: boolean

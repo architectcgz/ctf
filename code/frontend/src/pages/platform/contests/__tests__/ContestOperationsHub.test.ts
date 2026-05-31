@@ -289,7 +289,7 @@ describe('ContestOperationsHub', () => {
       'class="workspace-panel-header__actions header-actions contest-ops-hero__actions"'
     )
     expect(contestOperationsHubHeroPanelSource).toContain(
-      "from '@/components/navigation/AppRouteLink.vue'"
+      "from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
     expect(contestOperationsHubHeroPanelSource).toContain('<AppRouteLink')
     expect(contestOperationsHubHeroPanelSource).toContain(
@@ -313,13 +313,13 @@ describe('ContestOperationsHub', () => {
     expect(contestOperationsHubSource).toContain('<ContestOperationsHubWorkspacePanel')
     expect(contestOperationsHubWorkspacePanelSource).toContain('contest-ops-directory')
     expect(contestOperationsHubWorkspacePanelSource).toContain(
-      "import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'"
+      "import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'"
     )
     expect(contestOperationsHubWorkspacePanelSource).toContain(
-      "import AppRouteLink from '@/components/navigation/AppRouteLink.vue'"
+      "import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
     expect(contestOperationsHubWorkspacePanelSource).toContain(
-      "import PagePaginationControls from '@/components/common/PagePaginationControls.vue'"
+      "import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'"
     )
     expect(contestOperationsHubWorkspacePanelSource).toContain('<WorkspaceDataTable')
     expect(contestOperationsHubWorkspacePanelSource).toContain('<AppRouteLink')

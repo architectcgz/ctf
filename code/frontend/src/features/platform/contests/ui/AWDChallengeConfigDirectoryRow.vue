@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Edit } from 'lucide-vue-next'
 
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 
 import type { ContestAwdConfigRouteTarget } from '../model'

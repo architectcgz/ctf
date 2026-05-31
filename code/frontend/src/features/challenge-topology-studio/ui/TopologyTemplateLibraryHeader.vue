@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Plus, RefreshCw } from 'lucide-vue-next'
 
-import PageHeader from '@/components/common/PageHeader.vue'
+import PageHeader from '@/shared/ui/common/PageHeader.vue'
 
 defineProps<{
   eyebrow: string

@@ -2,11 +2,11 @@
 import { ArrowRight } from 'lucide-vue-next'
 
 import type { ContestDetailData } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
+import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
 import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
 
 defineProps<{

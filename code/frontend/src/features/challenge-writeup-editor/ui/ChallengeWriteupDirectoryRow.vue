@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { MoreHorizontal } from 'lucide-vue-next'
 
-import CActionMenu from '@/components/common/menus/CActionMenu.vue'
+import CActionMenu from '@/shared/ui/common/menus/CActionMenu.vue'
 import type { WriteupDirectoryRow } from '../model/useChallengeWriteupManagement'
 
 defineProps<{

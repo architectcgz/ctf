@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import AppCard from '@/components/common/AppCard.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppCard from '@/shared/ui/common/AppCard.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import type {
   AttackSessionQuery,
   ManualReviewSubmissionDetailData,

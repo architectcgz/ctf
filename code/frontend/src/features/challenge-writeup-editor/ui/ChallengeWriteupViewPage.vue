@@ -205,9 +205,9 @@
 <script setup lang="ts">
 import { Edit3, RefreshCw } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import PageHeader from '@/shared/ui/common/PageHeader.vue'
 import { ChallengeDescriptionPanel } from '@/entities/challenge'
 import { useChallengeWriteupEditorPage } from '../model'
 

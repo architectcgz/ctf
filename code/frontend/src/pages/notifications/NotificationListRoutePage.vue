@@ -345,8 +345,8 @@
 <script setup lang="ts">
 import { RefreshCw } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import { AdminNotificationPublishDrawer } from '@/features/admin-notification-publisher'
 import {
   NotificationCategoryFilter,

@@ -141,7 +141,7 @@ const topologyStudioSource = [
   topologyChallengeWorkspaceHeaderSource,
 ].join('\n')
 import writeupViewSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupViewPage.vue?raw'
-import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
+import pageHeaderSource from '@/shared/ui/common/PageHeader.vue?raw'
 import adminChallengeDetailSource from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue?raw'
 import challengeImportPreviewSource from '@/pages/platform/challenges/ChallengeImportPreviewRoutePage.vue?raw'
 import adminChallengeTopbarSource from '@/features/platform/challenge-detail/ui/AdminChallengeTopbarPanel.vue?raw'
@@ -155,7 +155,7 @@ import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw
 import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
 import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
 import reviewArchiveHeroSource from '@/widgets/review-archive-workspace/ReviewArchiveHero.vue?raw'
-import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
+import errorStatusShellSource from '@/shared/ui/errors/ErrorStatusShell.vue?raw'
 
 const challengeManageWorkspaceSource = `${challengeManageSource}\n${challengeManageHeroSource}`
 const challengeImportManageWorkspaceSource = `${challengeImportManageSource}\n${challengeImportHeroSource}`

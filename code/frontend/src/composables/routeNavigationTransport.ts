@@ -1,6 +1,6 @@
 import { useRouter, type RouteLocationRaw } from 'vue-router'
 
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 
 export function useRouteNavigationTransport() {
   const router = useRouter()

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AdminAwdChallengeData, AdminAwdChallengeImportPreview } from '@/api/contracts'
-import type { AppRouteTarget } from '@/components/navigation/routeTarget'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import AwdChallengeImportSection from './AwdChallengeImportSection.vue'
 import AwdChallengeLibrarySection from './AwdChallengeLibrarySection.vue'
 import AwdChallengeWorkspaceHeader from './AwdChallengeWorkspaceHeader.vue'

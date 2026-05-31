@@ -274,11 +274,11 @@
 
 <script setup lang="ts">
 import type { AuditLogItem } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
-import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
-import WorkspaceDirectoryToolbar from '@/components/common/WorkspaceDirectoryToolbar.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import AppLoading from '@/shared/ui/common/AppLoading.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
+import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
+import WorkspaceDirectoryToolbar from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 
 interface Props {

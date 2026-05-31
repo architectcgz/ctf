@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Bell, Save, ShieldCheck, Trophy } from 'lucide-vue-next'
 
-import AppRouteLink from '@/components/navigation/AppRouteLink.vue'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import type { ContestAnnouncementsRouteTarget } from '../model'
 
 defineProps<{

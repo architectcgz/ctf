@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AdminContestAWDServiceData, AWDCheckerType } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 
 defineProps<{

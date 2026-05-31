@@ -4,7 +4,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import PlatformClassManagement from '@/pages/platform/ClassManageRoutePage.vue'
 import adminClassManageSource from '@/pages/platform/ClassManageRoutePage.vue?raw'
-import appRouteLinkSource from '@/components/navigation/AppRouteLink.vue?raw'
+import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
 import classManageWorkspacePanelSource from '@/features/platform/class-management/ui/ClassManageWorkspacePanel.vue?raw'
 import platformClassManagementPageSource from '@/features/platform/class-management/model/usePlatformClassManagementPage.ts?raw'
@@ -77,15 +77,15 @@ describe('PlatformClassManagement', () => {
     expect(classManageHeroPanelSource).toContain(
       'class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(classManageWorkspacePanelSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(classManageWorkspacePanelSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(classManageWorkspacePanelSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryPagination.vue'"
+      "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
     )
     expect(classManageWorkspacePanelSource).toContain(
-      "from '@/components/common/WorkspaceDirectoryToolbar.vue'"
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
     expect(classManageWorkspacePanelSource).toContain(
-      "from '@/components/navigation/AppRouteLink.vue'"
+      "from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
     expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
     expect(classManageWorkspacePanelSource).toContain('<WorkspaceDataTable')

@@ -461,7 +461,7 @@
 <script setup lang="ts">
 import { CheckCircle2, Target, Trophy, UsersRound } from 'lucide-vue-next'
 
-import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import type { ContestChallengeItem, SubmitFlagData } from '@/api/contracts'
 import { ChallengeCategoryPill, ChallengeDifficultyText } from '@/entities/challenge'
 
