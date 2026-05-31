@@ -8,6 +8,7 @@ import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import skillProfileSource from '@/pages/profile/SkillProfileRoutePage.vue?raw'
 import skillProfileWorkspaceShellSource from '@/features/skill-profile/ui/SkillProfileWorkspaceShell.vue?raw'
 import skillProfilePageModelSource from '@/features/skill-profile/model/useSkillProfilePage.ts?raw'
+import skillProfilePanelRouteSource from '@/features/skill-profile/model/skillProfilePanelRoute.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const assessmentApiMocks = vi.hoisted(() => ({
@@ -220,7 +221,18 @@ describe('SkillProfile', () => {
     expect(skillProfileWorkspaceShellSource).toContain('<AppRouteLink')
     expect(skillProfilePageModelSource).toContain('skillProfileChallengesRoute')
     expect(skillProfilePageModelSource).toContain('buildChallengeRoute')
+    expect(skillProfilePageModelSource).toContain(
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
+    )
+    expect(skillProfilePageModelSource).toContain('resolveSkillProfilePanel(query.value.panel)')
+    expect(skillProfilePageModelSource).toContain(
+      'await replaceQuery(buildSkillProfilePanelQuery(query.value, panel))'
+    )
+    expect(skillProfilePanelRouteSource).toContain('resolveSkillProfilePanel')
+    expect(skillProfilePanelRouteSource).toContain('buildSkillProfilePanelQuery')
     expect(skillProfilePageModelSource).not.toContain("from 'vue-router'")
+    expect(skillProfileSource).toContain("from '@/shared/lib/keyboard/useTabKeyboardNavigation'")
+    expect(skillProfileSource).not.toContain("from '@/shared/model/navigation/useUrlSyncedTabs'")
 
     const { wrapper, router } = await mountPage()
 
@@ -238,6 +250,16 @@ describe('SkillProfile', () => {
     const { wrapper: recommendationWrapper, router: recommendationRouter } =
       await mountPage('/profile?panel=recommendations')
 
+    expect(
+      recommendationWrapper.find('#skill-profile-tab-recommendations').attributes('aria-selected')
+    ).toBe('true')
+    expect(
+      recommendationWrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')
+    ).toBe('false')
+    expect(
+      recommendationWrapper.find('#skill-profile-panel-analysis').attributes('aria-hidden')
+    ).toBe('true')
+
     const recommendationLink = recommendationWrapper
       .findAll('a')
       .find((node) => node.text().includes('密码学入门'))
@@ -247,6 +269,25 @@ describe('SkillProfile', () => {
     await flushPromises()
     expect(recommendationRouter.currentRoute.value.name).toBe('ChallengeDetail')
     expect(recommendationRouter.currentRoute.value.params.id).toBe('chal-1')
+  })
+
+  it('点击能力画像标签时应回写 panel 查询参数', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    })
+
+    const { wrapper, router } = await mountPage('/profile')
+
+    await wrapper.get('#skill-profile-tab-weakness').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.query.panel).toBe('weakness')
+    expect(wrapper.find('#skill-profile-panel-weakness').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#skill-profile-panel-analysis').attributes('aria-hidden')).toBe('true')
   })
 
   it('应该将页面顶部标签栏放在内容区外，保持与学生仪表盘一致的层级位置', () => {

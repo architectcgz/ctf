@@ -10,14 +10,21 @@ import type {
 } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensionLabels } from '@/entities/skill-profile'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import {
   skillProfileChallengeDetailRoute,
   skillProfileChallengesRoute,
 } from './skillProfileRoutes'
+import {
+  buildSkillProfilePanelQuery,
+  resolveSkillProfilePanel,
+  type SkillProfilePanelKey,
+} from './skillProfilePanelRoute'
 
 let loadToken = 0
 
 export function useSkillProfilePage() {
+  const { query, replaceQuery } = useRouteQueryTransport()
   const authStore = useAuthStore()
 
   const isTeacher = computed(() => authStore.isTeacher)
@@ -34,6 +41,9 @@ export function useSkillProfilePage() {
 
   const weakDimensions = computed(() => getWeakDimensionLabels(weakDimensionAdvice.value))
   const challengesRoute = skillProfileChallengesRoute
+  const activePanel = computed<SkillProfilePanelKey>(() =>
+    resolveSkillProfilePanel(query.value.panel)
+  )
   const radarIndicators = computed(
     () =>
       skillProfile.value?.dimensions.map((dimension) => ({
@@ -125,6 +135,14 @@ export function useSkillProfilePage() {
     await Promise.all([loadSkillProfileData(token), loadRecommendationsData(token)])
   }
 
+  async function switchPanel(panel: SkillProfilePanelKey): Promise<void> {
+    if (activePanel.value === panel) {
+      return
+    }
+
+    await replaceQuery(buildSkillProfilePanelQuery(query.value, panel))
+  }
+
   function buildChallengeRoute(id: string) {
     return skillProfileChallengeDetailRoute(id)
   }
@@ -149,9 +167,11 @@ export function useSkillProfilePage() {
     recommendations,
     weakDimensions,
     challengesRoute,
+    activePanel,
     radarIndicators,
     radarValues,
     loadCurrentData,
+    switchPanel,
     buildChallengeRoute,
   }
 }

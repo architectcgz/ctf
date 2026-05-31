@@ -12,21 +12,22 @@
     :challenges-route="challengesRoute"
     :radar-indicators="radarIndicators"
     :radar-values="radarValues"
-    :active-tab="activeTab"
+    :active-tab="activePanel"
     :content-tabs="contentTabs"
     :set-tab-button-ref="setTabButtonRef"
     :handle-tab-keydown="handleTabKeydown"
     :build-challenge-route="buildChallengeRoute"
     @load-current-data="loadCurrentData"
-    @select-tab="selectTab"
+    @select-tab="switchPanel"
     @update-selected-student-id="selectedStudentId = $event"
   />
 </template>
 
 <script setup lang="ts">
-import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
+import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 import {
   SkillProfileWorkspaceShell,
+  type SkillProfilePanelKey,
   useSkillProfilePage,
 } from '@/features/skill-profile'
 
@@ -41,16 +42,16 @@ const {
   recommendations,
   weakDimensions,
   challengesRoute,
+  activePanel,
   radarIndicators,
   radarValues,
   loadCurrentData,
+  switchPanel,
   buildChallengeRoute,
 } = useSkillProfilePage()
 
-type SkillProfileTabKey = 'analysis' | 'weakness' | 'recommendations'
-
 const contentTabs: Array<{
-  key: SkillProfileTabKey
+  key: SkillProfilePanelKey
   label: string
   buttonId: string
   panelId: string
@@ -75,10 +76,9 @@ const contentTabs: Array<{
   },
 ]
 
-const contentTabOrder = contentTabs.map((tab) => tab.key) as SkillProfileTabKey[]
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
-  useUrlSyncedTabs<SkillProfileTabKey>({
-    orderedTabs: contentTabOrder,
-    defaultTab: 'analysis',
-  })
+const contentTabOrder = contentTabs.map((tab) => tab.key) as SkillProfilePanelKey[]
+const { setTabButtonRef, handleTabKeydown } = useTabKeyboardNavigation<SkillProfilePanelKey>({
+  orderedTabs: contentTabOrder,
+  selectTab: (tab) => void switchPanel(tab),
+})
 </script>
