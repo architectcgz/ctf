@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestOperations from '@/pages/platform/contests/ContestOperationsRoutePage.vue'
+import contestOperationsDataSource from '@/features/platform/contests/model/useContestOperationsData.ts?raw'
 import contestOperationsSource from '@/pages/platform/contests/ContestOperationsRoutePage.vue?raw'
 import contestOperationsPageModelSource from '@/features/platform/contests/model/useContestOperationsPage.ts?raw'
 import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
@@ -76,6 +77,9 @@ describe('ContestOperations', () => {
   it('路由页应仅负责组合，不直接耦合单场赛事查询流程', () => {
     expect(contestOperationsSource).toContain('useContestOperationsPage')
     expect(contestOperationsSource).not.toContain("from '@/api/admin/contests'")
+    expect(contestOperationsPageModelSource).toContain("from './useContestOperationsData'")
+    expect(contestOperationsPageModelSource).not.toContain("from '@/api/admin/contests'")
+    expect(contestOperationsDataSource).toContain("from '@/api/admin/contests'")
     expect(contestOperationsPageModelSource).not.toContain("from 'vue-router'")
     expect(platformRoutesSource).toContain("name: 'ContestOperations'")
     expect(platformRoutesSource).toContain(

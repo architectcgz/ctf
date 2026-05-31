@@ -1,16 +1,15 @@
-import { computed, onMounted, onUnmounted, ref, type ComputedRef, type Ref } from 'vue'
+import { computed, onMounted, onUnmounted, type ComputedRef, type Ref } from 'vue'
 
-import { getContest } from '@/api/admin/contests'
-import type { ContestDetailData } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
 import { useToast } from '@/shared/model/common/useToast'
+import { useContestOperationsData } from './useContestOperationsData'
 
 export function useContestOperationsPage(contestId: Ref<string> | ComputedRef<string>) {
   const toast = useToast()
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
-
-  const loading = ref(true)
-  const contest = ref<ContestDetailData | null>(null)
+  const contestData = useContestOperationsData(contestId)
+  const loading = contestData.loading
+  const contest = contestData.contest
   const runtimeStageReady = computed(
     () =>
       contest.value?.status === 'running' ||
@@ -21,26 +20,21 @@ export function useContestOperationsPage(contestId: Ref<string> | ComputedRef<st
     runtimeStageReady.value ? 'round-inspector' : 'readiness'
   )
 
-  async function loadContest() {
-    if (!contestId.value) {
-      loading.value = false
-      setBreadcrumbDetailTitle()
+  async function initialize(): Promise<void> {
+    const loadedContest = await contestData.loadContest()
+    if (loadedContest) {
+      setBreadcrumbDetailTitle(loadedContest.title)
       return
     }
-    loading.value = true
-    try {
-      contest.value = await getContest(contestId.value)
-      setBreadcrumbDetailTitle(contest.value.title)
-    } catch {
-      setBreadcrumbDetailTitle()
+
+    setBreadcrumbDetailTitle()
+    if (contestId.value && contestData.loadError.value) {
       toast.error('加载竞赛信息失败')
-    } finally {
-      loading.value = false
     }
   }
 
   onMounted(() => {
-    void loadContest()
+    void initialize()
   })
 
   onUnmounted(() => {
