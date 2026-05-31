@@ -8,6 +8,7 @@ import teacherStudentManagementSource from '@/pages/teacher/StudentManagementRou
 import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import studentManagementPageModelSource from '@/features/teacher/student-management/model/useStudentManagementPage.ts?raw'
 import studentManagementSource from '@/features/teacher/student-management/ui/StudentManagementPage.vue?raw'
+import userPresentationSource from '@/entities/user/model/presentation.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const ElTable = { template: '<div><slot /></div>' }
@@ -276,6 +277,16 @@ describe('TeacherStudentManagement', () => {
     expect(studentManagementPageModelSource).not.toContain("from 'vue-router'")
     expect(studentManagementPageModelSource).toContain('const classManagementRoute = computed')
     expect(studentManagementPageModelSource).toContain('function buildStudentRoute')
+  })
+
+  it('学生目录显示名应由 user entity 承接，而不是继续在表格行映射里内联兜底', () => {
+    expect(studentManagementSource).toContain("from '@/entities/user'")
+    expect(studentManagementSource).toContain('getUserName')
+    expect(studentManagementSource).toContain('getUserUsername')
+    expect(studentManagementSource).not.toContain("name: student.name || '未设置姓名'")
+    expect(studentManagementSource).toContain("name: getUserName(student, '未设置姓名')")
+    expect(userPresentationSource).toContain('getUserDisplayName')
+    expect(userPresentationSource).toContain('getUserName')
   })
 
   it('薄弱项列应复用题目分类胶囊色，并先归一化后判断分类值', () => {

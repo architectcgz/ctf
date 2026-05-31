@@ -3,6 +3,7 @@ import type {
   TeacherOverviewTrendData,
   StudentDirectoryItem,
 } from '@/api/contracts'
+import { getUserDisplayName } from '@/entities/user'
 
 interface BuildStudentInsightRowsOptions {
   riskStudentCount: number
@@ -54,11 +55,11 @@ export function buildStudentInsightRows(
   rows.push({
     key: 'strong',
     title: spotlightStudent
-      ? `头部样本: ${spotlightStudent.name || spotlightStudent.username} 当前保持领先`
+      ? `头部样本: ${getUserDisplayName(spotlightStudent)} 当前保持领先`
       : '进步组: 暂无头部样本',
     chips: spotlightStudent ? ['头部样本', '可转入更高阶题单'] : ['等待样本'],
     detail: spotlightStudent
-      ? `${spotlightStudent.name || spotlightStudent.username} 当前累计 ${spotlightStudent.solved_count ?? 0} 题、${spotlightStudent.total_score ?? 0} 分，可作为课堂示范样本继续拉动训练氛围。`
+      ? `${getUserDisplayName(spotlightStudent)} 当前累计 ${spotlightStudent.solved_count ?? 0} 题、${spotlightStudent.total_score ?? 0} 分，可作为课堂示范样本继续拉动训练氛围。`
       : '还没有足够的学生表现数据用于识别班级示范样本。',
     status: spotlightStudent ? '可推进' : '待观察',
     tone: spotlightStudent ? 'ready' : 'warning',

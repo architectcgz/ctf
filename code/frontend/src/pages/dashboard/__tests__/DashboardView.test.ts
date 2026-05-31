@@ -10,8 +10,10 @@ import studentOverviewPageSource from '@/features/student-dashboard/ui/StudentOv
 import studentRecommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import trainingTimelinePanelSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
+import studentDashboardDataSource from '@/features/student-dashboard/model/useStudentDashboardData.ts?raw'
 import studentDashboardRoutesSource from '@/features/student-dashboard/model/studentDashboardRoutes.ts?raw'
 import routeNavigationTransportSource from '@/shared/model/navigation/useRouteNavigationTransport.ts?raw'
+import userPresentationSource from '@/entities/user/model/presentation.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -209,6 +211,14 @@ describe('DashboardView', () => {
     )
     expect(studentDashboardRoutesSource).toContain("name: 'ChallengeDetail'")
     expect(routeNavigationTransportSource).toContain('const router = useRouter()')
+  })
+
+  it('学生仪表盘展示名应由 user entity 承接，而不是继续在 data model 内联兜底', () => {
+    expect(studentDashboardDataSource).toContain("import { getUserDisplayName } from '@/entities/user'")
+    expect(studentDashboardDataSource).not.toContain(
+      "authStore.user?.name || authStore.user?.username || '选手'"
+    )
+    expect(userPresentationSource).toContain('getUserDisplayName')
   })
 
   it('应该把竞技表现统计区域渲染为共享摘要卡片', async () => {

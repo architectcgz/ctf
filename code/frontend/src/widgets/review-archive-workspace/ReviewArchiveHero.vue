@@ -38,10 +38,10 @@
             当前学员
           </div>
           <div class="archive-hero__student">
-            {{ archive?.student.name || archive?.student.username || '--' }}
+            {{ studentDisplayName }}
           </div>
           <div class="archive-hero__student-subline">
-            <span>@{{ archive?.student.username || '--' }}</span>
+            <span>{{ studentUsernameHandle }}</span>
             <span>{{ archive?.student.class_name || '--' }}</span>
           </div>
           <div class="archive-hero__stamp">
@@ -241,10 +241,13 @@
 </style>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import type { ReviewArchiveData } from '@/api/contracts'
+import { getUserDisplayName, getUserUsernameHandle } from '@/entities/user'
 import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 
-defineProps<{
+const props = defineProps<{
   archive: ReviewArchiveData | null
   exporting: boolean
   analysisRoute: {
@@ -260,6 +263,9 @@ defineProps<{
 const emit = defineEmits<{
   exportArchive: []
 }>()
+
+const studentDisplayName = computed(() => getUserDisplayName(props.archive?.student, '--'))
+const studentUsernameHandle = computed(() => getUserUsernameHandle(props.archive?.student, '--'))
 
 const statItems = [
   { key: 'solved', label: '完成题目', field: 'total_solved' },

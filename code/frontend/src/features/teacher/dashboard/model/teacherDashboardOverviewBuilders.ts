@@ -3,6 +3,7 @@ import type {
   TeacherOverviewWeakDimensionData,
   StudentDirectoryItem,
 } from '@/api/contracts'
+import { getUserDisplayName } from '@/entities/user'
 
 interface BuildOverviewDescriptionOptions {
   classCount: number
@@ -153,7 +154,7 @@ export function buildInterventionTargets(
   students: StudentDirectoryItem[]
 ): TeacherDashboardInterventionTarget[] {
   return students.slice(0, 6).map((student) => {
-    const displayName = student.name || student.username
+    const displayName = getUserDisplayName(student)
     return {
       id: String(student.id),
       title: displayName,

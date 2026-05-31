@@ -11,6 +11,8 @@ import reviewArchiveWidgetOwnerSource from '@/widgets/review-archive-workspace/i
 import reviewArchiveWorkspaceSource from '@/widgets/review-archive-workspace/ReviewArchiveWorkspace.vue?raw'
 import reviewArchiveStateSource from '@/widgets/review-archive-workspace/ReviewArchiveState.vue?raw'
 import reviewArchiveHeroSource from '@/widgets/review-archive-workspace/ReviewArchiveHero.vue?raw'
+import studentReviewArchiveModelSource from '@/features/teaching/student-review-archive/model/useStudentReviewArchive.ts?raw'
+import userPresentationSource from '@/entities/user/model/presentation.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const teachingApiMocks = vi.hoisted(() => ({
@@ -20,6 +22,7 @@ const teachingApiMocks = vi.hoisted(() => ({
 
 const assessmentApiMocks = vi.hoisted(() => ({
   downloadReport: vi.fn(),
+  getReportStatus: vi.fn(),
 }))
 
 vi.mock('@/api/teaching', () => teachingApiMocks)
@@ -99,6 +102,10 @@ describe('TeacherStudentReviewArchive', () => {
     setActivePinia(pinia)
     Object.values(teachingApiMocks).forEach((mock) => mock.mockReset())
     Object.values(assessmentApiMocks).forEach((mock) => mock.mockReset())
+    assessmentApiMocks.getReportStatus.mockResolvedValue({
+      report_id: 'review-archive-report-1',
+      status: 'processing',
+    })
 
     teachingApiMocks.getStudentReviewArchive.mockResolvedValue({
       generated_at: '2026-04-01T09:30:00Z',
@@ -298,6 +305,21 @@ describe('TeacherStudentReviewArchive', () => {
     expect(reviewArchiveHeroSource).toContain('class="header-btn header-btn--ghost"')
     expect(reviewArchiveHeroSource).toContain('class="header-btn header-btn--primary"')
     expect(reviewArchiveHeroSource).not.toContain('<ElButton')
+  })
+
+  it('复盘归档中的学员显示名与用户名 handle 应由 user entity 承接', () => {
+    expect(reviewArchiveHeroSource).toContain(
+      "import { getUserDisplayName, getUserUsernameHandle } from '@/entities/user'"
+    )
+    expect(reviewArchiveHeroSource).not.toContain('archive?.student.name || archive?.student.username')
+    expect(reviewArchiveHeroSource).not.toContain('@{{ archive?.student.username')
+    expect(studentReviewArchiveModelSource).toContain(
+      "import { getUserDisplayName } from '@/entities/user'"
+    )
+    expect(studentReviewArchiveModelSource).not.toContain(
+      'archive.value.student.name || archive.value.student.username'
+    )
+    expect(userPresentationSource).toContain('getUserUsernameHandle')
   })
 
   it('管理员在复盘归档页返回分析和班级页时应使用后台路由', async () => {

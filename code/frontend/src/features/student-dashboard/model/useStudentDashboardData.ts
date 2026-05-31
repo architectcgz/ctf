@@ -11,6 +11,7 @@ import type {
 } from '@/api/contracts'
 import type { useAuthStore } from '@/stores/auth'
 import { getWeakDimensionLabels } from '@/entities/skill-profile'
+import { getUserDisplayName } from '@/entities/user'
 import type { DashboardHighlightItem } from './studentDashboardTypes'
 
 interface UseStudentDashboardDataOptions {
@@ -32,7 +33,7 @@ export function useStudentDashboardData({ authStore }: UseStudentDashboardDataOp
     return null
   })
 
-  const displayName = computed(() => authStore.user?.name || authStore.user?.username || '选手')
+  const displayName = computed(() => getUserDisplayName(authStore.user, '选手'))
   const weakDimensions = computed(() =>
     getWeakDimensionLabels(weakDimensionAdvice.value).slice(0, 3)
   )

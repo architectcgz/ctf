@@ -89,6 +89,8 @@ src/
 - `user`
 - `instance`
 
+其中 `user` 的显示名 / 用户名 handle owner 已开始收口到 `entities/user`，当前已覆盖 student dashboard、review archive、teacher dashboard 和 teacher student management；但 student analysis、platform user management、class insights 等消费面仍待继续收口。
+
 后续优先迁入：
 
 - 状态文案和 badge 映射
@@ -129,7 +131,7 @@ src/
 
 ### P2：补强实体层
 
-`notification` 的类型文案、accent 和已读状态展示已收口到 `entities/notification`；`contest` 的状态 / 模式 / CTA / accent / status badge class 已进一步收口到 `entities/contest`；`team` 的成员数、队长关系、邀请码文案和成员展示项也已经收口到 `entities/team`。后续按 `user -> instance` 的顺序继续补实体展示和状态映射，不做一口气大搬迁。
+`notification` 的类型文案、accent 和已读状态展示已收口到 `entities/notification`；`contest` 的状态 / 模式 / CTA / accent / status badge class 已进一步收口到 `entities/contest`；`team` 的成员数、队长关系、邀请码文案和成员展示项也已经收口到 `entities/team`；`user` 已开始收口显示名 / 用户名 handle owner，但还需要继续补剩余消费面。后续优先 `user batch2 -> instance`，不做一口气大搬迁。
 
 ### P3：同步文档与 guardrail
 

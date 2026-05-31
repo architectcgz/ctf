@@ -10,6 +10,7 @@ import WorkspaceDirectoryPagination from '@/shared/ui/common/WorkspaceDirectoryP
 import WorkspaceDirectoryToolbar from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'
 import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
+import { getUserName, getUserUsername } from '@/entities/user'
 
 // PagePaginationControls is provided through WorkspaceDirectoryPagination.
 interface StudentRouteTarget {
@@ -59,8 +60,8 @@ const rows = computed<StudentDirectoryTableRow[]>(() =>
   props.filteredStudents.map((student) => ({
     id: student.id,
     student_no: student.student_no || '未设置学号',
-    name: student.name || '未设置姓名',
-    username: student.username,
+    name: getUserName(student, '未设置姓名'),
+    username: getUserUsername(student, '--'),
     weak_dimension: student.weak_dimension || '暂无薄弱项',
     solved_count: student.solved_count ?? 0,
     total_score: student.total_score ?? 0,
@@ -298,7 +299,7 @@ function studentWeakCategory(row: StudentDirectoryTableRow) {
                     <AppRouteLink
                       :to="(row as StudentDirectoryTableRow).studentRoute"
                       class="ui-btn ui-btn--primary ui-btn--xs"
-                      :aria-label="`${(row as StudentDirectoryTableRow).name || (row as StudentDirectoryTableRow).username}，${(row as StudentDirectoryTableRow).solved_count} 题，${(row as StudentDirectoryTableRow).total_score} 分，查看学员分析`"
+                      :aria-label="`${(row as StudentDirectoryTableRow).name}，${(row as StudentDirectoryTableRow).solved_count} 题，${(row as StudentDirectoryTableRow).total_score} 分，查看学员分析`"
                     >
                       学员分析
                       <ArrowRight class="h-4 w-4" />
