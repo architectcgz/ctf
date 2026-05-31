@@ -4,7 +4,7 @@ import { Activity, ShieldCheck, UserCircle2 } from 'lucide-vue-next'
 import { downloadReport, exportPersonalReport, getReportStatus } from '@/api/assessment'
 import { getProfile } from '@/api/auth'
 import type { AuthUser, ReportExportData } from '@/api/contracts'
-import { useReportStatusPolling } from '@/shared/model/common/useReportStatusPolling'
+import { useReportStatusPolling } from '@/shared/model/reporting/useReportStatusPolling'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
 

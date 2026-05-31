@@ -40,7 +40,7 @@
 | 竞赛摘要、公告、排行榜冻结态 | `stores/contest.ts` | 竞赛相关页面共享 |
 | 列表分页、筛选、表单草稿、局部 loading | `features/**/model` 或 `shared/model/common/*` | 跟随页面生命周期销毁 |
 | 共享反馈、危险确认、工作区导航与面包屑细节 | `shared/model/common/*`、`shared/model/layout/*` | 跨 feature 复用，但不升级成 Pinia 全局 store |
-| 路由 query tab、导出任务轮询 | `composables/useRouteQueryTabs.ts`、`shared/model/common/useReportStatusPolling.ts` 等 | query 同步继续按页面能力域切分；共享报告轮询进入 shared model owner |
+| 路由 query tab、导出任务轮询 | `composables/useRouteQueryTabs.ts`、`shared/model/reporting/useReportStatusPolling.ts` 等 | query 同步继续按页面能力域切分；共享报告轮询进入 reporting owner |
 
 判断原则：
 
@@ -130,7 +130,7 @@
 
 - `shared/model/common/useToast.ts`：全局反馈
 - `shared/model/common/useDestructiveConfirm.ts`：危险确认流
-- `shared/model/common/useReportStatusPolling.ts`：报告导出状态轮询
+- `shared/model/reporting/useReportStatusPolling.ts`：报告导出状态轮询
 - `shared/model/layout/useWorkspaceShellNavigation.ts`：工作区导航壳
 - `shared/model/layout/useBackofficeBreadcrumbDetail.ts`：后台详情面包屑细节
 
@@ -145,7 +145,7 @@
 
 - `useRouteQueryTabs.ts`、`useUrlSyncedTabs.ts`：query 同步和 tab 切换
 
-`useReportStatusPolling.ts` 已收口到 `shared/model/common/`，不再继续留在历史 `composables/`。
+`useReportStatusPolling.ts` 已收口到 `shared/model/reporting/`，不再继续留在历史 `composables/`。
 
 这样做的直接目的是：
 

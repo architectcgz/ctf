@@ -1,7 +1,9 @@
 # 2026-05-31 composables owner cleanup batch3 report polling plan
 
-> 状态：Draft
+> 状态：Superseded by `docs/plan/impl-plan/2026-05-31-report-status-polling-reporting-owner-tightening-plan.md`
 > 关联 reuse decision：`.harness/reuse-decisions/composables-owner-cleanup-batch3-report-polling.md`
+
+> 说明：本计划记录了从历史 `composables/` 收口到共享 model 的第一步。当前最终 owner 已进一步从 `shared/model/common/` 收紧到 `shared/model/reporting/`，以后以替代计划和当前架构文档为准。
 
 ## 目标
 

@@ -15,7 +15,7 @@ import type {
   ClassInsightTrendData,
   StudentDirectoryItem,
 } from '@/api/contracts'
-import { useReportStatusPolling } from '@/shared/model/common/useReportStatusPolling'
+import { useReportStatusPolling } from '@/shared/model/reporting/useReportStatusPolling'
 import { useToast } from '@/shared/model/common/useToast'
 import {
   buildClassInsightWindowQuery,

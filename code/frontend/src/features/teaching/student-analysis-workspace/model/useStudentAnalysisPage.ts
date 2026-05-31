@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { getReportStatus } from '@/api/assessment'
 import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
-import { useReportStatusPolling } from '@/shared/model/common/useReportStatusPolling'
+import { useReportStatusPolling } from '@/shared/model/reporting/useReportStatusPolling'
 import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useAuthStore } from '@/stores/auth'

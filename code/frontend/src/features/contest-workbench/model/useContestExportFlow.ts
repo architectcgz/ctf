@@ -4,7 +4,7 @@ import { downloadReport, getReportStatus } from '@/api/assessment'
 import { exportContestArchive } from '@/api/admin/contests'
 import type { ContestDetailData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
-import { useReportStatusPolling } from '@/shared/model/common/useReportStatusPolling'
+import { useReportStatusPolling } from '@/shared/model/reporting/useReportStatusPolling'
 import { useToast } from '@/shared/model/common/useToast'
 
 export function useContestExportFlow() {
