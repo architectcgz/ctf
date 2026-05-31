@@ -34,7 +34,7 @@ run_frontend_overlay_checks() {
   echo "[architecture][frontend] overlay boundaries"
   (
     cd "$ROOT_DIR/code/frontend"
-    npm run test:run -- src/components/common/__tests__/ModalTemplates.test.ts
+    npm run test:run -- src/shared/ui/common/__tests__/ModalTemplates.test.ts
   )
 }
 
