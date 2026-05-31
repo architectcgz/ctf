@@ -2,12 +2,12 @@
 import { computed, ref } from 'vue'
 import { MoreHorizontal } from 'lucide-vue-next'
 
-import type { ContestDetailData, ContestStatus } from '@/api/contracts'
+import type { ContestDetailData } from '@/api/contracts'
 import CActionMenu from '@/shared/ui/common/menus/CActionMenu.vue'
 import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
 import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
-import { getContestModeLabel, getContestStatusLabel } from '@/entities/contest'
+import { getContestModeLabel, getContestStatusBadgeClass, getContestStatusLabel } from '@/entities/contest'
 import type { ContestEditRouteTarget, ContestOperationsRouteTarget } from '../model'
 
 const props = defineProps<{
@@ -44,16 +44,6 @@ function formatTime(value: string): string {
     hour: '2-digit',
     minute: '2-digit',
   })
-}
-
-function getStatusPillClass(status: ContestStatus): string {
-  if (status === 'running') return 'contest-status-pill--running'
-  if (status === 'registering') return 'contest-status-pill--registering'
-  if (status === 'draft' || status === 'published') return 'contest-status-pill--draft'
-  if (status === 'frozen') return 'contest-status-pill--frozen'
-  if (status === 'ended' || status === 'archived') return 'contest-status-pill--ended'
-  if (status === 'cancelled') return 'contest-status-pill--cancelled'
-  return 'contest-status-pill--neutral'
 }
 
 function canEnterWorkbench(contest: ContestDetailData): boolean {
@@ -116,7 +106,7 @@ function handleAnnounce(contest: ContestDetailData): void {
       <template #cell-status="{ row }">
         <span
           class="ui-badge contest-status-pill"
-          :class="getStatusPillClass((row as ContestDetailData).status)"
+          :class="getContestStatusBadgeClass((row as ContestDetailData).status)"
         >
           {{ getContestStatusLabel((row as ContestDetailData).status) }}
         </span>

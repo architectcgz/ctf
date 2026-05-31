@@ -8,6 +8,7 @@ import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
 import contestListPageSource from '@/features/contest-detail/model/useContestListPage.ts?raw'
 import contestListWorkspaceSource from '@/widgets/contest-list-workspace/ContestListWorkspace.vue?raw'
 import contestListRoutesSource from '@/features/contest-detail/model/contestListRoutes.ts?raw'
+import contestPresentationSource from '@/entities/contest/model/presentation.ts?raw'
 
 vi.mock('@/api/contest', () => ({
   getContests: vi.fn().mockResolvedValue({
@@ -96,18 +97,30 @@ describe('ContestList', () => {
     expect(contestListSource).not.toContain('usePagination(getContests)')
     expect(contestListSource).not.toContain('summaryMetricIcon')
     expect(contestListSource).not.toContain('contest-directory-filters')
+    expect(contestListSource).not.toContain(':contest-accent-style')
+    expect(contestListSource).not.toContain(':get-status-label')
+    expect(contestListSource).not.toContain(':get-mode-label')
+    expect(contestListSource).not.toContain(':get-contest-action-label')
+    expect(contestListPageSource).not.toContain('getContestAccentColor')
+    expect(contestListPageSource).not.toContain('getContestStatusLabel')
+    expect(contestListPageSource).not.toContain('getContestModeLabel')
+    expect(contestListPageSource).not.toContain('getContestActionLabel')
   })
 
   it('竞赛详情入口应通过 route target，而不是 page model 直接 push', async () => {
     const { wrapper, router } = await mountPage()
 
     expect(contestListWorkspaceSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
+    expect(contestListWorkspaceSource).toContain(
+      "import {\n  getContestAccentVarStyle,\n  getContestActionLabel,\n  getContestModeLabel,\n  getContestStatusLabel,\n} from '@/entities/contest'"
+    )
     expect(contestListWorkspaceSource).toContain('<AppRouteLink')
     expect(contestListPageSource).not.toContain("from 'vue-router'")
     expect(contestListPageSource).not.toContain('router.push')
     expect(contestListPageSource).toContain('buildContestRoute: (contest: ContestListItem) =>')
     expect(contestListRoutesSource).toContain("name: 'ContestDetail'")
     expect(appRouteLinkSource).toContain('<RouterLink')
+    expect(contestPresentationSource).toContain('getContestAccentVarStyle')
 
     await wrapper.get('a.contest-row').trigger('click')
     await flushPromises()

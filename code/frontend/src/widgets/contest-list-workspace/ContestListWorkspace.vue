@@ -65,10 +65,10 @@
                       @change="onStatusFilterChange"
                     >
                       <option value="">全部状态</option>
-                      <option value="registering">报名中</option>
-                      <option value="running">进行中</option>
-                      <option value="frozen">已冻结</option>
-                      <option value="ended">已结束</option>
+                      <option value="registering">{{ getContestStatusLabel('registering') }}</option>
+                      <option value="running">{{ getContestStatusLabel('running') }}</option>
+                      <option value="frozen">{{ getContestStatusLabel('frozen') }}</option>
+                      <option value="ended">{{ getContestStatusLabel('ended') }}</option>
                     </select>
                   </div>
                 </label>
@@ -83,8 +83,8 @@
                       @change="onModeFilterChange"
                     >
                       <option value="">全部模式</option>
-                      <option value="jeopardy">Jeopardy</option>
-                      <option value="awd">AWD</option>
+                      <option value="jeopardy">{{ getContestModeLabel('jeopardy') }}</option>
+                      <option value="awd">{{ getContestModeLabel('awd') }}</option>
                     </select>
                   </div>
                 </label>
@@ -151,8 +151,8 @@
                 :key="contest.id"
                 :to="buildContestRoute(contest)"
                 class="workspace-directory-grid-row contest-row"
-                :style="contestAccentStyle(contest.status)"
-                :aria-label="`${contest.title}，${getStatusLabel(contest.status)}，${getModeLabel(contest.mode)}`"
+                :style="getContestAccentVarStyle(contest.status, '--contest-row-accent')"
+                :aria-label="`${contest.title}，${getContestStatusLabel(contest.status)}，${getContestModeLabel(contest.mode)}`"
               >
                 <div class="workspace-directory-cell contest-row-main">
                   <h3 class="contest-row-title workspace-directory-row-title" :title="contest.title">
@@ -165,7 +165,7 @@
                     class="workspace-directory-status-pill contest-state-chip"
                     :style="{ '--contest-state-color': 'var(--contest-row-accent)' }"
                   >
-                    {{ getStatusLabel(contest.status) }}
+                    {{ getContestStatusLabel(contest.status) }}
                   </span>
                 </div>
 
@@ -173,7 +173,7 @@
                   <span
                     class="workspace-directory-status-pill workspace-directory-status-pill--muted contest-chip contest-chip-muted"
                   >
-                    {{ getModeLabel(contest.mode) }}
+                    {{ getContestModeLabel(contest.mode) }}
                   </span>
                 </div>
 
@@ -331,7 +331,13 @@ import type { Component } from 'vue'
 
 import { ArrowRight, CalendarRange, Clock3, Flag, Trophy } from 'lucide-vue-next'
 
-import type { ContestListItem, ContestMode, ContestStatus } from '@/api/contracts'
+import type { ContestListItem, ContestMode } from '@/api/contracts'
+import {
+  getContestAccentVarStyle,
+  getContestActionLabel,
+  getContestModeLabel,
+  getContestStatusLabel,
+} from '@/entities/contest'
 import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
@@ -364,10 +370,6 @@ const props = defineProps<{
   resetFilters: () => void | Promise<void>
   formatTime: (value: string) => string
   buildContestRoute: (contest: ContestListItem) => AppRouteTarget
-  contestAccentStyle: (status: ContestStatus) => Record<string, string>
-  getStatusLabel: (status: ContestStatus) => string
-  getModeLabel: (mode: ContestMode) => string
-  getContestActionLabel: (status: ContestStatus) => string
 }>()
 
 function summaryMetricIcon(key: string): Component {

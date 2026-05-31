@@ -43,9 +43,13 @@ export function getContestModeLabel(mode: ContestMode): string {
 }
 
 export function getContestStatusBadgeClass(status: ContestStatus): string {
-  if (status === 'running') return 'contest-status-badge--running'
-  if (status === 'registering') return 'contest-status-badge--registering'
-  return 'contest-status-badge--neutral'
+  if (status === 'running') return 'contest-status-pill--running'
+  if (status === 'registering') return 'contest-status-pill--registering'
+  if (status === 'draft' || status === 'published') return 'contest-status-pill--draft'
+  if (status === 'frozen') return 'contest-status-pill--frozen'
+  if (status === 'ended' || status === 'archived') return 'contest-status-pill--ended'
+  if (status === 'cancelled') return 'contest-status-pill--cancelled'
+  return 'contest-status-pill--neutral'
 }
 
 export function getContestAccentColor(status: ContestStatus): string {
@@ -61,4 +65,13 @@ export function getContestActionLabel(status: ContestStatus): string {
   if (status === 'running') return '进入竞赛'
   if (status === 'registering') return '立即报名'
   return '查看详情'
+}
+
+export function getContestAccentVarStyle(
+  status: ContestStatus,
+  cssVarName = '--contest-accent'
+): Record<string, string> {
+  return {
+    [cssVarName]: getContestAccentColor(status),
+  }
 }

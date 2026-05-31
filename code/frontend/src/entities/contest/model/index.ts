@@ -1,6 +1,7 @@
 export type { ContestMode, ContestStatus } from './presentation'
 export {
   getContestAccentColor,
+  getContestAccentVarStyle,
   getContestActionLabel,
   getContestModeLabel,
   getContestStatusBadgeClass,

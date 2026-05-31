@@ -8,13 +8,7 @@ import type {
 } from '@/api/contracts'
 import { getContests, type GetContestsData } from '@/api/contest'
 import { usePagination } from '@/shared/model/common/usePagination'
-import {
-  getContestAccentColor,
-  getContestActionLabel,
-  getContestModeLabel,
-  getContestStatusLabel,
-  isStudentVisibleContestStatus,
-} from '@/entities/contest'
+import { isStudentVisibleContestStatus } from '@/entities/contest'
 import { buildContestDetailRoute } from './contestListRoutes'
 
 interface ContestSummaryMetric {
@@ -137,10 +131,6 @@ export function useContestListPage() {
     return '竞赛已结束'
   }
 
-  function contestAccentStyle(status: ContestStatus): Record<string, string> {
-    return { '--contest-row-accent': getContestAccentColor(status) }
-  }
-
   async function refresh(): Promise<void> {
     await refreshPage()
   }
@@ -188,9 +178,5 @@ export function useContestListPage() {
     formatTime,
     getTimelineHint,
     buildContestRoute: (contest: ContestListItem) => buildContestDetailRoute(contest.id),
-    contestAccentStyle,
-    getStatusLabel: getContestStatusLabel,
-    getModeLabel: getContestModeLabel,
-    getContestActionLabel,
   }
 }

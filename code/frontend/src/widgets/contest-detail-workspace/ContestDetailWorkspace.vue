@@ -1,5 +1,5 @@
 <template>
-  <div class="contest-page-shell" :style="contestAccentStyle">
+  <div class="contest-page-shell" :style="contest ? getContestAccentVarStyle(contest.status) : undefined">
     <section
       class="workspace-shell journal-shell journal-shell-user journal-hero contest-detail-view flex min-h-full flex-1 flex-col"
     >
@@ -328,6 +328,7 @@ import type {
   SubmitFlagData,
   TeamData,
 } from '@/api/contracts'
+import { getContestAccentVarStyle } from '@/entities/contest'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { ContestAnnouncementRealtimeBridge } from '@/features/contest-announcements'
 import { ContestAWDWorkspacePanel } from '@/features/contest-awd-workspace'
@@ -365,7 +366,6 @@ defineProps<{
   solvedCount: number
   totalPoints: number
   memberCount: number
-  contestAccentStyle?: Record<string, string>
   contestAccessible: boolean
   setTabButtonRef: (tabId: ContestDetailWorkspaceTab, element: HTMLButtonElement | null) => void
   selectWorkspaceTab: (tabId: ContestDetailWorkspaceTab) => void

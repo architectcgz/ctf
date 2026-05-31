@@ -23,7 +23,6 @@
     :solved-count="solvedCount"
     :total-points="totalPoints"
     :member-count="memberCount"
-    :contest-accent-style="contestAccentStyle"
     :contest-accessible="contestAccessible"
     :set-tab-button-ref="setTabButtonRef"
     :select-workspace-tab="selectWorkspaceTab"
@@ -77,7 +76,6 @@ const {
   solvedCount,
   totalPoints,
   memberCount,
-  contestAccentStyle,
   contestAccessible,
   selectChallenge,
   submitFlagAction,

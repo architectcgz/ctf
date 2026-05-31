@@ -6,6 +6,7 @@ import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import workspaceDataTableSource from '@/shared/ui/common/WorkspaceDataTable.vue?raw'
 import PlatformContestTable from './PlatformContestTable.vue'
 import adminContestTableSource from './PlatformContestTable.vue?raw'
+import contestPresentationSource from '@/entities/contest/model/presentation.ts?raw'
 
 function buildContest(overrides: Partial<ContestDetailData> = {}): ContestDetailData {
   return {
@@ -78,6 +79,9 @@ describe('PlatformContestTable', () => {
   it('竞赛目录字号应与平台审计列表使用同一组目录 token', () => {
     expect(adminContestTableSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(adminContestTableSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
+    expect(adminContestTableSource).toContain(
+      "import { getContestModeLabel, getContestStatusBadgeClass, getContestStatusLabel } from '@/entities/contest'"
+    )
     expect(adminContestTableSource).toContain('<WorkspaceDataTable')
     expect(adminContestTableSource).toContain('<AppRouteLink')
     expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')
@@ -92,6 +96,8 @@ describe('PlatformContestTable', () => {
     expect(adminContestTableSource).not.toContain('font-size: var(--font-size-0-90);')
     expect(workspaceDataTableSource).not.toContain('font-size: 0.6875rem;')
     expect(adminContestTableSource).not.toContain('--ui-badge-size: var(--font-size-0-78);')
+    expect(adminContestTableSource).not.toContain('function getStatusPillClass')
+    expect(contestPresentationSource).toContain('contest-status-pill--running')
   })
 
   it('行内操作应直接提供编辑入口，更多菜单不再承载导出结果', async () => {

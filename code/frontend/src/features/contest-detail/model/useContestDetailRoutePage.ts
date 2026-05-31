@@ -3,7 +3,7 @@ import { computed, watch } from 'vue'
 import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'
 import { useAuthStore } from '@/stores/auth'
-import { getContestAccentColor, isStudentVisibleContestStatus } from '@/entities/contest'
+import { isStudentVisibleContestStatus } from '@/entities/contest'
 
 import { useContestDetailPage } from './useContestDetailPage'
 
@@ -64,12 +64,6 @@ export function useContestDetailRoutePage() {
     page.challenges.value.reduce((sum, item) => sum + (item.points || 0), 0)
   )
   const memberCount = computed(() => page.team.value?.members.length ?? 0)
-  const contestAccentStyle = computed<Record<string, string> | undefined>(() => {
-    if (!page.contest.value) return undefined
-    return {
-      '--contest-accent': getContestAccentColor(page.contest.value.status),
-    }
-  })
   const contestAccessible = computed(() =>
     page.contest.value ? isStudentVisibleContestStatus(page.contest.value.status) : false
   )
@@ -94,7 +88,6 @@ export function useContestDetailRoutePage() {
     solvedCount,
     totalPoints,
     memberCount,
-    contestAccentStyle,
     contestAccessible,
     ...page,
   }

@@ -8,6 +8,7 @@ import ContestDetail from '@/pages/contests/ContestDetailRoutePage.vue'
 import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
 import contestDetailRoutePageSource from '@/features/contest-detail/model/useContestDetailRoutePage.ts?raw'
 import contestDetailWorkspaceSource from '@/widgets/contest-detail-workspace/ContestDetailWorkspace.vue?raw'
+import contestPresentationSource from '@/entities/contest/model/presentation.ts?raw'
 import contestAnnouncementsWorkspaceSectionSource from '@/features/contest-detail/ui/ContestAnnouncementsWorkspaceSection.vue?raw'
 import contestChallengeWorkspacePanelSource from '@/features/contest-detail/ui/ContestChallengeWorkspacePanel.vue?raw'
 import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
@@ -215,6 +216,7 @@ describe('ContestDetail', () => {
     expect(contestDetailSource).not.toContain('const workspaceTabOrder')
     expect(contestDetailSource).not.toContain('const contestAccentStyle = computed')
     expect(contestDetailSource).not.toContain('const contestAccessible = computed')
+    expect(contestDetailSource).not.toContain(':contest-accent-style')
     expect(contestDetailSource).not.toContain('ContestOverviewPanel')
     expect(contestDetailSource).not.toContain('ContestTeamDialogs')
     expect(contestDetailSource).not.toContain('router,')
@@ -226,12 +228,17 @@ describe('ContestDetail', () => {
     )
     expect(contestDetailRoutePageSource).not.toContain("from 'vue-router'")
     expect(contestDetailRoutePageSource).not.toContain("from '@/shared/model/navigation/useUrlSyncedTabs'")
+    expect(contestDetailRoutePageSource).not.toContain('getContestAccentColor')
     expect(contestDetailRoutePageSource).toContain(
       'const { params, query, replaceQuery } = useRouteQueryTransport()'
     )
     expect(routeQueryTransportSource).toContain(
       'const params = computed<Record<string, unknown>>(() => route.params)'
     )
+    expect(contestDetailWorkspaceSource).toContain(
+      "import { getContestAccentVarStyle } from '@/entities/contest'"
+    )
+    expect(contestPresentationSource).toContain('getContestAccentVarStyle')
   })
 
   it('不应该向学生暴露草稿竞赛详情或报名入口', async () => {

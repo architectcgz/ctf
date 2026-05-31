@@ -16,10 +16,6 @@
     :reset-filters="resetFilters"
     :format-time="formatTime"
     :build-contest-route="buildContestRoute"
-    :contest-accent-style="contestAccentStyle"
-    :get-status-label="getStatusLabel"
-    :get-mode-label="getModeLabel"
-    :get-contest-action-label="getContestActionLabel"
   />
 </template>
 
@@ -44,9 +40,5 @@ const {
   resetFilters,
   formatTime,
   buildContestRoute,
-  contestAccentStyle,
-  getStatusLabel,
-  getModeLabel,
-  getContestActionLabel,
 } = useContestListPage()
 </script>
