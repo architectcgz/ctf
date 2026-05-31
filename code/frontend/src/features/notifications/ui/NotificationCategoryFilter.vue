@@ -5,7 +5,7 @@ defineProps<{
   total: number
   selectedCategory: NotificationType | 'all'
   selectedCategoryLabel: string
-  categoryOptions: Array<{ key: NotificationType | 'all'; label: string }>
+  categoryOptions: ReadonlyArray<{ key: NotificationType | 'all'; label: string }>
 }>()
 
 const emit = defineEmits<{

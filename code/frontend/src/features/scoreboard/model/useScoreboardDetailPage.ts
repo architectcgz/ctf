@@ -50,7 +50,9 @@ export function useScoreboardDetailPage(contestId: MaybeRefOrGetter<string>) {
     })
   }
 
-  function formatContestWindow(payload?: ContestScoreboardData['contest']): string {
+  function formatContestWindow(
+    payload: ContestScoreboardData['contest'] | null | undefined
+  ): string {
     if (!payload) return '未记录'
     return `${formatDateTime(payload.started_at)} ~ ${formatDateTime(payload.ends_at)}`
   }

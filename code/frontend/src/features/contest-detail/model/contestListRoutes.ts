@@ -1,11 +1,6 @@
-interface ContestDetailRouteTarget {
-  name: 'ContestDetail'
-  params: {
-    id: string
-  }
-}
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 
-export function buildContestDetailRoute(id: string): ContestDetailRouteTarget {
+export function buildContestDetailRoute(id: string): AppRouteTarget {
   return {
     name: 'ContestDetail',
     params: { id },

@@ -332,6 +332,7 @@ import type { Component } from 'vue'
 import { ArrowRight, CalendarRange, Clock3, Flag, Trophy } from 'lucide-vue-next'
 
 import type { ContestListItem, ContestMode, ContestStatus } from '@/api/contracts'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
@@ -362,7 +363,7 @@ const props = defineProps<{
   updateModeFilter: (value: ContestModeFilter) => void | Promise<void>
   resetFilters: () => void | Promise<void>
   formatTime: (value: string) => string
-  buildContestRoute: (contest: ContestListItem) => string | Record<string, unknown>
+  buildContestRoute: (contest: ContestListItem) => AppRouteTarget
   contestAccentStyle: (status: ContestStatus) => Record<string, string>
   getStatusLabel: (status: ContestStatus) => string
   getModeLabel: (mode: ContestMode) => string

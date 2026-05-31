@@ -346,7 +346,7 @@ defineProps<{
   solvedCount: number
   getStatusLabel: (status: ContestStatus) => string
   formatDateTime: (value?: string) => string
-  formatContestWindow: (payload?: ContestScoreboardData['contest']) => string
+  formatContestWindow: (payload: ContestScoreboardData['contest'] | null | undefined) => string
   getRowClass: (rank: number) => string
   getRankPillClass: (rank: number) => string[]
   getStatusCopy: (status?: ContestStatus, frozen?: boolean) => string
