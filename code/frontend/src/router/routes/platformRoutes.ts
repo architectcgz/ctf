@@ -156,7 +156,7 @@ export const platformRoutes: RouteRecordRaw[] = [
 {
   path: 'platform/challenges',
   name: 'ChallengeManage',
-  component: () => import('@/features/platform/challenges/ui/ChallengeManagePage.vue'),
+  component: () => import('@/pages/platform/challenges/ChallengeManageRoutePage.vue'),
   meta: {
     requiresAuth: true,
     roles: ['teacher', 'admin'],

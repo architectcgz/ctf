@@ -193,17 +193,17 @@ describe('frontend architecture boundaries', () => {
 
   it('router runtime entries should point to the dedicated pages layer only', () => {
     const routerFiles = sourceFiles.filter((file) => file.relativePath.startsWith(`router${sep}`))
-    const routePageSuffix = frontendArchitecturePolicy.route_page_suffix.replace('.', '\\.')
-    const routePageImportPattern = new RegExp(
-      `['"](@\\/[^'"]*${routePageSuffix})['"]`,
-      'g'
-    )
+    const routeComponentImportPattern = /component:\s*\(\)\s*=>\s*import\(\s*['"](@\/[^'"]+)['"]\s*\)/g
+    const routerComponentAllowlist = new Set(['@/shared/ui/layout/AppLayout.vue'])
 
     const violations = routerFiles.flatMap((file) => {
       const source = readFileSync(file.absolutePath, 'utf-8')
-      return Array.from(source.matchAll(routePageImportPattern))
+      return Array.from(source.matchAll(routeComponentImportPattern))
         .map((match) => match[1])
-        .filter((importPath) => !importPath.startsWith('@/pages/'))
+        .filter(
+          (importPath) =>
+            !importPath.startsWith('@/pages/') && !routerComponentAllowlist.has(importPath)
+        )
         .map((importPath) => `${file.relativePath} -> ${importPath}`)
     })
 
