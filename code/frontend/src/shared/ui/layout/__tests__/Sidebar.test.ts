@@ -11,7 +11,7 @@ import sidebarMobilePanelSource from '../sidebar/SidebarMobilePanel.vue?raw'
 import sidebarNavTreeSource from '../sidebar/SidebarNavTree.vue?raw'
 import sidebarPanelHeaderSource from '../sidebar/SidebarPanelHeader.vue?raw'
 import sidebarSourceBase from '../Sidebar.vue?raw'
-import sidebarViewStateSource from '../sidebar/useSidebarNavigationViewState.ts?raw'
+import sidebarViewStateSource from '../../../model/layout/sidebar/useSidebarNavigationViewState.ts?raw'
 import sidebarWorkspaceLabelSource from '../sidebar/SidebarWorkspaceLabel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
