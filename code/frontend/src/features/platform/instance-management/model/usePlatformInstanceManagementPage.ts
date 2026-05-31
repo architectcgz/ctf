@@ -1,13 +1,10 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import type { InstanceDirectoryItem } from '@/api/contracts'
-import {
-  destroyManagedInstanceByRole,
-  getInstanceDirectoryByRole,
-} from '@/api/instances'
+import { getInstanceDirectoryByRole } from '@/api/instances'
 import { getInstanceStudentDisplayName } from '@/entities/instance'
+import { useManagedInstanceDestroyAction } from '@/features/managed-instance-workflow'
 import { useAbortController } from '@/shared/lib/request/useAbortController'
-import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
   platformInstanceStudentAnalysisRoute,
@@ -38,7 +35,6 @@ export function usePlatformInstanceManagementPage() {
   const page = ref(1)
   const pageSize = ref(15)
   const loading = ref(false)
-  const destroyingId = ref('')
   const error = ref<string | null>(null)
   const keyword = ref('')
   const statusFilter = ref<InstanceStatusFilter>('')
@@ -119,38 +115,30 @@ export function usePlatformInstanceManagementPage() {
     }
   }
 
-  async function handleDestroyInstance(instance: InstanceDirectoryItem): Promise<void> {
-    const confirmed = await confirmDestructiveAction({
+  const { destroyingId, destroyManagedInstance } = useManagedInstanceDestroyAction({
+    role: 'admin',
+    resolveTarget: (id) =>
+      list.value.find((instance) => instance.id === id) ?? ({ id } as InstanceDirectoryItem),
+    buildConfirmOptions: (instance) => ({
       title: '强制销毁实例',
       message: `您确定要强制销毁实例 ${instance.id} 吗？此操作不可逆，用户当前的运行状态将丢失。`,
       confirmButtonText: '强制销毁',
       cancelButtonText: '取消',
-    })
-
-    if (!confirmed) return
-
-    try {
-      destroyingId.value = instance.id
-      await destroyManagedInstanceByRole('admin', instance.id)
+    }),
+    onDestroyed: async () => {
       if (list.value.length === 1 && page.value > 1) {
         page.value -= 1
       }
       await loadInstances()
-    } catch (err) {
+    },
+    onDestroyError: ({ error: err }) => {
       reportFrontendError('销毁实例失败:', err)
       error.value = '销毁实例失败，请稍后重试'
-    } finally {
-      destroyingId.value = ''
-    }
-  }
+    },
+  })
 
   function requestDestroyById(id: string): void {
-    const instance = list.value.find((item) => item.id === id)
-    if (!instance) {
-      return
-    }
-
-    void handleDestroyInstance(instance)
+    void destroyManagedInstance(id)
   }
 
   function buildStudentRoute(studentId: string, className: string) {

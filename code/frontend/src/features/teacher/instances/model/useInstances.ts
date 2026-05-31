@@ -2,10 +2,8 @@ import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 
 import { getClasses } from '@/api/teacher'
 import type { ClassDirectoryItem, InstanceDirectoryItem } from '@/api/contracts'
-import {
-  destroyManagedInstanceByRole,
-  getInstanceDirectoryByRole,
-} from '@/api/instances'
+import { getInstanceDirectoryByRole } from '@/api/instances'
+import { useManagedInstanceDestroyAction } from '@/features/managed-instance-workflow'
 import { useAuthStore } from '@/stores/auth'
 import { useAbortController } from '@/shared/lib/request/useAbortController'
 import { useToast } from '@/shared/model/common/useToast'
@@ -34,7 +32,6 @@ export function useInstances() {
 
   const loadingClasses = ref(false)
   const loadingInstances = ref(false)
-  const destroyingId = ref('')
   const error = ref<string | null>(null)
   const autoSearchReady = ref(false)
   let latestInstanceRequestID = 0
@@ -147,24 +144,30 @@ export function useInstances() {
     filters[key] = value
   }
 
-  async function removeInstance(id: string): Promise<void> {
-    destroyingId.value = id
-    try {
-      await destroyManagedInstanceByRole(authStore.user?.role, id)
+  const { destroyingId, destroyManagedInstance: removeInstance } = useManagedInstanceDestroyAction({
+    role: () => authStore.user?.role,
+    resolveTarget: (id) =>
+      instances.value.find((instance) => instance.id === id) ??
+      ({ id } as InstanceDirectoryItem),
+    buildConfirmOptions: () => ({
+      title: '确认销毁实例',
+      message: '确定要销毁该实例吗？此操作不可恢复。',
+      confirmButtonText: '确认销毁',
+      cancelButtonText: '取消',
+    }),
+    onDestroyed: async () => {
       if (instances.value.length === 1 && page.value > 1) {
         page.value -= 1
       }
       await loadInstances()
       toast.success('实例已销毁')
-    } catch (err) {
+    },
+    onDestroyError: ({ error: err, message }) => {
       reportFrontendError('教师销毁实例失败:', err)
-      const message =
-        err instanceof Error && err.message.trim() ? err.message : '销毁实例失败，请稍后重试'
       toast.error(message)
-    } finally {
-      destroyingId.value = ''
-    }
-  }
+    },
+    fallbackErrorMessage: '销毁实例失败，请稍后重试',
+  })
 
   watch(
     () => [filters.className, filters.keyword, filters.studentNo],

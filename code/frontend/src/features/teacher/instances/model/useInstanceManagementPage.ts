@@ -1,6 +1,5 @@
 import { onMounted } from 'vue'
 
-import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
 import { useAuthStore } from '@/stores/auth'
 import { teacherInstanceDashboardRoute } from './teacherInstanceManagementRoutes'
 
@@ -40,15 +39,6 @@ export function useInstanceManagementPage() {
   }
 
   async function handleDestroy(id: string): Promise<void> {
-    const confirmed = await confirmDestructiveAction({
-      title: '确认销毁实例',
-      message: '确定要销毁该实例吗？此操作不可恢复。',
-      confirmButtonText: '确认销毁',
-      cancelButtonText: '取消',
-    })
-    if (!confirmed) {
-      return
-    }
     await removeInstance(id)
   }
 
