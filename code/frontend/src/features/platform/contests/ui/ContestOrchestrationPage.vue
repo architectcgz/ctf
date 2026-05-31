@@ -12,7 +12,7 @@ import {
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import AppLoading from '@/shared/ui/common/AppLoading.vue'
 import WorkspaceDirectoryToolbar from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
+import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 import type { ContestDetailData, ContestListSummaryData, ContestStatus } from '@/api/contracts'
 import type {
   ContestEditRouteTarget,

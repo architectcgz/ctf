@@ -1,4 +1,4 @@
-import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
+import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'
 
 type ScoreboardPanelKey = 'contest' | 'points'
 

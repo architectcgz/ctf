@@ -1,7 +1,7 @@
 import { computed, watch } from 'vue'
 
-import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
-import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
+import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'
 import { useAuthStore } from '@/stores/auth'
 import { getContestAccentColor, isStudentVisibleContestStatus } from '@/entities/contest'
 

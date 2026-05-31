@@ -12,7 +12,7 @@ import contestChallengeWorkspacePanelSource from '@/features/contest-detail/ui/C
 import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
 import contestTeamDialogsSource from '@/features/contest-detail/ui/ContestTeamDialogs.vue?raw'
 import contestTeamWorkspaceSectionSource from '@/features/contest-detail/ui/ContestTeamWorkspaceSection.vue?raw'
-import routeQueryTransportSource from '@/composables/routeQueryTransport.ts?raw'
+import routeQueryTransportSource from '@/shared/model/navigation/useRouteQueryTransport.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
@@ -214,13 +214,13 @@ describe('ContestDetail', () => {
     expect(contestDetailSource).not.toContain('const contestAccessible = computed')
     expect(contestDetailSource).not.toContain('router,')
     expect(contestDetailRoutePageSource).toContain(
-      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(contestDetailRoutePageSource).toContain(
-      "import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'"
+      "import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'"
     )
     expect(contestDetailRoutePageSource).not.toContain("from 'vue-router'")
-    expect(contestDetailRoutePageSource).not.toContain("from '@/composables/useUrlSyncedTabs'")
+    expect(contestDetailRoutePageSource).not.toContain("from '@/shared/model/navigation/useUrlSyncedTabs'")
     expect(contestDetailRoutePageSource).toContain(
       'const { params, query, replaceQuery } = useRouteQueryTransport()'
     )

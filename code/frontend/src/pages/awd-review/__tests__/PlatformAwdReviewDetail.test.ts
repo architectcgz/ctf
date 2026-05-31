@@ -103,10 +103,10 @@ describe('PlatformAwdReviewDetail route owner', () => {
     )
     expect(awdReviewDetailPageSource).toContain("from '@/api/awd-reviews'")
     expect(awdReviewDetailPageSource).toContain(
-      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(awdReviewDetailPageSource).toContain(
-      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+      "import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'"
     )
     expect(awdReviewDetailPageSource).toContain("from './awdReviewDetailRoutes'")
     expect(awdReviewDetailPageSource).not.toContain("from '@/api/admin'")

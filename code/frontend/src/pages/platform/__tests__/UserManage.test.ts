@@ -279,7 +279,7 @@ describe('UserManage', () => {
     expect(userGovernancePanelRouteSource).toContain('resolveUserGovernancePanel')
     expect(userGovernancePanelRouteSource).toContain('buildUserGovernancePanelQuery')
     expect(platformUserManagePageSource).toContain(
-      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(platformUserManagePageSource).not.toContain("from 'vue-router'")
     expect(platformUserManagePageSource).not.toContain('useRoute(')

@@ -11,7 +11,7 @@ import studentRecommendationPageSource from '@/features/student-dashboard/ui/Stu
 import trainingTimelinePanelSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
 import studentDashboardRoutesSource from '@/features/student-dashboard/model/studentDashboardRoutes.ts?raw'
-import routeNavigationTransportSource from '@/composables/routeNavigationTransport.ts?raw'
+import routeNavigationTransportSource from '@/shared/model/navigation/useRouteNavigationTransport.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -201,7 +201,7 @@ describe('DashboardView', () => {
     )
     expect(studentDashboardPageSource).not.toContain("from 'vue-router'")
     expect(studentDashboardPageSource).toContain(
-      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+      "import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'"
     )
     expect(studentDashboardPageSource).toContain("from './studentDashboardRoutes'")
     expect(studentDashboardPageSource).toContain(

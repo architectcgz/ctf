@@ -4,7 +4,7 @@ import { getChallenges } from '@/api/challenge'
 import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import { usePagination } from '@/shared/model/common/usePagination'
-import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import {
   challengeListDashboardRoute,
   challengeListDetailRoute,

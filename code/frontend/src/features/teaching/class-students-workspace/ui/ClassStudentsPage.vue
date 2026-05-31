@@ -142,7 +142,7 @@ import type {
 import ClassInsightsPanel from './ClassInsightsPanel.vue'
 import ClassReviewPanel from './ClassReviewPanel.vue'
 import ClassTrendPanel from './ClassTrendPanel.vue'
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
+import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 import { InterventionPanel } from '@/features/teaching/student-analysis-review'
 import ClassStudentsDirectoryPanel from './ClassStudentsDirectoryPanel.vue'
 import ClassStudentsInsightWindowPanel from './ClassStudentsInsightWindowPanel.vue'

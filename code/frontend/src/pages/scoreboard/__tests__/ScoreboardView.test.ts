@@ -9,7 +9,7 @@ import scoreboardWorkspaceShellSource from '@/features/scoreboard/ui/ScoreboardW
 import scoreboardDetailSource from '@/pages/scoreboard/ScoreboardDetailRoutePage.vue?raw'
 import scoreboardDetailPageModelSource from '@/features/scoreboard/model/useScoreboardDetailPage.ts?raw'
 import scoreboardRoutePageSource from '@/features/scoreboard/model/useScoreboardRoutePage.ts?raw'
-import routeQueryTabsSource from '@/composables/useRouteQueryTabs.ts?raw'
+import routeQueryTabsSource from '@/shared/model/navigation/useRouteQueryTabs.ts?raw'
 
 const scoreboardWorkspaceSource = [scoreboardSource, scoreboardWorkspaceShellSource].join('\n')
 

@@ -56,7 +56,7 @@
 
 `useStudentDashboardPage()` 当前负责两件事：
 
-1. 用 `useRouteQueryTabs()` 管理 `overview / recommendation / category / timeline / difficulty`
+1. 用 `shared/model/navigation/useRouteQueryTabs()` 管理 `overview / recommendation / category / timeline / difficulty`
 2. 把数据加载委托给 `useStudentDashboardData()`，把展示绑定委托给 `useStudentDashboardPanelBindings()`
 
 `useStudentDashboardData()` 当前流程：
@@ -94,7 +94,7 @@
 
 - 只有题目已解出时，才加载推荐题解和社区题解
 - 实例状态轮询只在 `pending / creating` 时继续
-- 页面 tab 与 query 同步走 `useUrlSyncedTabs()`
+- 页面 tab 与 query 同步走 `shared/model/navigation/useUrlSyncedTabs()`
 
 ### 2.3 通知页与通知抽屉
 
@@ -220,7 +220,7 @@
 
 - route page 默认不直接 import 非 contract API 模块
 - 页面 owner 优先以 feature model 组合多个子 composable，而不是新增一个更大的页面文件
-- query/tab 同步继续通过 `useRouteQueryTabs()` 或 `useUrlSyncedTabs()` 收口
+- query/tab 同步继续通过 `shared/model/navigation/useRouteQueryTabs()` 或 `shared/model/navigation/useUrlSyncedTabs()` 收口
 - 只有跨页面共享的数据进 store；其余数据跟随页面生命周期释放
 
 ## 4. Guardrail

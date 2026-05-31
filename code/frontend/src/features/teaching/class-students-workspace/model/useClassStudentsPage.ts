@@ -15,8 +15,8 @@ import {
   parseClassInsightWindowQuery,
 } from '@/features/teaching/class-insight-window'
 import { useStudentFilters, useStudentListQuery } from '@/features/student-directory'
-import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
-import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {

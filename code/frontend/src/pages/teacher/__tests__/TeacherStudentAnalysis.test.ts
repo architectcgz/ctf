@@ -219,10 +219,10 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisNavigationSource).not.toContain("from 'vue-router'")
     expect(studentAnalysisReviewQuerySyncSource).not.toContain("from 'vue-router'")
     expect(studentAnalysisPageModelSource).toContain(
-      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+      "import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'"
     )
     expect(studentAnalysisPageModelSource).toContain(
-      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(studentAnalysisPageModelSource).toContain(
       'const { params, query, replaceQuery } = useRouteQueryTransport()'

@@ -182,10 +182,10 @@ describe('ContestAwdConfig', () => {
       "import { useContestAwdConfigDataLoader } from './useContestAwdConfigDataLoader'"
     )
     expect(contestAwdConfigPageSource).toContain(
-      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(contestAwdConfigPageSource).toContain(
-      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+      "import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'"
     )
     expect(contestAwdConfigPageSource).toContain("from './contestAwdConfigRoutes'")
     expect(contestAwdConfigPageSource).toContain("from './awdCheckerLabels'")

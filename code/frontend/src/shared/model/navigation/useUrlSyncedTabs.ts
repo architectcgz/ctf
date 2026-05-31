@@ -1,4 +1,5 @@
 import { ref, type Ref } from 'vue'
+
 import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 
 interface UseUrlSyncedTabsOptions<T extends string> {
@@ -45,6 +46,7 @@ export function useUrlSyncedTabs<T extends string>({
     activeTab.value = tab
     syncPanelToLocation(tab)
   }
+
   const { setTabButtonRef, handleTabKeydown } = useTabKeyboardNavigation<T>({
     orderedTabs,
     selectTab,

@@ -200,10 +200,10 @@ describe('ChallengeDetail', () => {
 
   it('题目详情 page feature 应通过共享 route transport 承接路由 owner', () => {
     expect(challengeDetailPageSource).toContain(
-      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(challengeDetailPageSource).toContain(
-      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+      "import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'"
     )
     expect(challengeDetailPageSource).toContain("from './challengeDetailRoutes'")
     expect(challengeDetailPageSource).not.toContain("from 'vue-router'")

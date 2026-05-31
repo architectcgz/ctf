@@ -7,12 +7,12 @@ import type {
   RecommendedChallengeSolutionData,
 } from '@/api/contracts'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
-import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
-import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 import { useSanitize } from '@/shared/lib/sanitize/useSanitize'
 import { useToast } from '@/shared/model/common/useToast'
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
+import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 
 import {
   useChallengeDetailInteractions,

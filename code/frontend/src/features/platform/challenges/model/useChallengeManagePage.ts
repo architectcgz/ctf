@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Calendar, SortAsc } from 'lucide-vue-next'
 
-import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
+import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 import {
   platformChallengeDetailRoute,

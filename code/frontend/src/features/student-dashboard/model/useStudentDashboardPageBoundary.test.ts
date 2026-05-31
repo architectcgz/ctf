@@ -4,7 +4,7 @@ import source from './useStudentDashboardPage.ts?raw'
 
 describe('useStudentDashboardPage boundary', () => {
   it('应组合数据加载、route target 与面板绑定子模块，避免主组合器重新持有 router transport', () => {
-    expect(source).toContain("from '@/composables/routeNavigationTransport'")
+    expect(source).toContain("from '@/shared/model/navigation/useRouteNavigationTransport'")
     expect(source).toContain("from './useStudentDashboardData'")
     expect(source).toContain("from './useStudentDashboardPanelBindings'")
     expect(source).toContain("from './studentDashboardRoutes'")

@@ -4,7 +4,7 @@ import { AlertTriangle } from 'lucide-vue-next'
 
 import type { TeacherOverviewData } from '@/api/contracts'
 import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
+import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 import { useDashboardMetrics } from '../model/useDashboardMetrics'
 import TeacherDashboardInterventionPanel from './TeacherDashboardInterventionPanel.vue'
 import TeacherDashboardPortraitPanel from './TeacherDashboardPortraitPanel.vue'

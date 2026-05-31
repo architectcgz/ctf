@@ -1,5 +1,6 @@
 import { computed, type ComputedRef } from 'vue'
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded, type Router } from 'vue-router'
+
 import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 
 interface UseRouteQueryTabsOptions<T extends string> {
@@ -65,6 +66,7 @@ export function useRouteQueryTabs<T extends string>({
 
     await currentRouter.replace({ query: nextQuery })
   }
+
   const { setTabButtonRef, handleTabKeydown } = useTabKeyboardNavigation<T>({
     orderedTabs,
     selectTab,

@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
 import { getAuditLogs } from '@/api/admin/platform'
 import type { AuditLogItem } from '@/api/contracts'
-import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 import { useAbortController } from '@/shared/lib/request/useAbortController'
 

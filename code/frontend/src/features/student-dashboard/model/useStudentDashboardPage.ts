@@ -1,6 +1,6 @@
 import { computed, onMounted } from 'vue'
-import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
-import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
+import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
+import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'
 import { useAuthStore } from '@/stores/auth'
 import type { DashboardPanelKey, DashboardPanelTab } from './studentDashboardTypes'
 import {

@@ -343,10 +343,10 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageModelSource).toContain('parseClassInsightWindowQuery')
     expect(classStudentsPageModelSource).toContain('buildClassInsightWindowQuery')
     expect(classStudentsPageModelSource).toContain(
-      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+      "import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'"
     )
     expect(classStudentsPageModelSource).toContain(
-      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(classStudentsPageModelSource).toContain("from './classStudentsRoutes'")
     expect(classStudentsPageModelSource).toContain('classStudentsClassManagementRoute')

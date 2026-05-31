@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
+import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 import {
   SkillProfileWorkspaceShell,
   useSkillProfilePage,

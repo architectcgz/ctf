@@ -145,8 +145,12 @@ describe('Admin ChallengeDetail', () => {
   })
 
   it('详情页 page model 应通过 feature route target + transport 处理导航，而不是直接 import vue-router', () => {
-    expect(platformChallengeDetailPageSource).toContain("from '@/composables/routeNavigationTransport'")
-    expect(platformChallengeDetailPageSource).toContain("from '@/composables/routeQueryTransport'")
+    expect(platformChallengeDetailPageSource).toContain(
+      "from '@/shared/model/navigation/useRouteNavigationTransport'"
+    )
+    expect(platformChallengeDetailPageSource).toContain(
+      "from '@/shared/model/navigation/useRouteQueryTransport'"
+    )
     expect(platformChallengeDetailPageSource).toContain("from './platformChallengeDetailRoutes'")
     expect(platformChallengeDetailPageSource).not.toContain("from 'vue-router'")
     expect(platformChallengeDetailPageSource).toContain('platformChallengeListRoute')

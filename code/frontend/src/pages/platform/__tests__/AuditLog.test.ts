@@ -7,7 +7,7 @@ import auditActorDetailModalSource from '@/features/audit-log/ui/AuditActorDetai
 import auditLogHeroPanelSource from '@/features/audit-log/ui/AuditLogHeroPanel.vue?raw'
 import auditLogDirectoryPanelSource from '@/features/audit-log/ui/AuditLogDirectoryPanel.vue?raw'
 import auditLogPageSource from '@/features/audit-log/model/useAuditLogPage.ts?raw'
-import routeQueryTransportSource from '@/composables/routeQueryTransport.ts?raw'
+import routeQueryTransportSource from '@/shared/model/navigation/useRouteQueryTransport.ts?raw'
 
 const replaceMock = vi.fn()
 
@@ -160,7 +160,7 @@ describe('AuditLog', () => {
 
   it('page model 应保留 query owner，但不再直接 import vue-router', () => {
     expect(auditLogPageSource).toContain(
-      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(auditLogPageSource).not.toContain("from 'vue-router'")
     expect(auditLogPageSource).not.toContain('useRoute(')

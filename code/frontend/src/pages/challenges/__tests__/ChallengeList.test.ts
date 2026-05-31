@@ -8,7 +8,7 @@ import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?r
 import challengeDirectoryPanelSource from '@/features/challenge-list/ui/ChallengeDirectoryPanel.vue?raw'
 import challengeDirectoryRowSource from '@/entities/challenge/ui/ChallengeDirectoryRow.vue?raw'
 import challengeListPageSource from '@/features/challenge-list/model/useChallengeListPage.ts?raw'
-import routeQueryTransportSource from '@/composables/routeQueryTransport.ts?raw'
+import routeQueryTransportSource from '@/shared/model/navigation/useRouteQueryTransport.ts?raw'
 import { getChallenges } from '@/api/challenge'
 
 vi.mock('@/api/challenge', () => ({
@@ -114,7 +114,9 @@ describe('ChallengeList', () => {
     expect(challengeListSource).not.toContain('async function syncFilterQuery()')
     expect(challengeListSource).not.toContain('watch(')
     expect(challengeListPageSource).not.toContain("from 'vue-router'")
-    expect(challengeListPageSource).toContain("from '@/composables/routeQueryTransport'")
+    expect(challengeListPageSource).toContain(
+      "from '@/shared/model/navigation/useRouteQueryTransport'"
+    )
     expect(routeQueryTransportSource).toContain('const route = useRoute()')
     expect(routeQueryTransportSource).toContain('const router = useRouter()')
   })

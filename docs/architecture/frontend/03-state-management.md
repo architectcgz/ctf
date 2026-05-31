@@ -26,7 +26,7 @@
   - 不负责：承接所有竞赛页面的局部表单、筛选条件或页面 loading 状态
 
 - `code/frontend/src/features/**/model`、`code/frontend/src/shared/model/**`、`code/frontend/src/shared/lib/**`、`code/frontend/src/composables/use*.ts`
-  - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态；其中 `shared/model/common` 承接 `useToast`、`useDestructiveConfirm`、`useClipboard` 与 `usePagination` 这类共享反馈 / 通用状态 owner，`shared/model/layout` 承接工作区导航与后台面包屑细节，`shared/model/theme` 承接全局主题与品牌 owner，`shared/lib/*` 承接时间倒计时、请求取消、sanitize、键盘导航等无业务语义的基础能力，剩余浏览器 / 路由同步型通用能力继续留在 `composables/`
+  - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态；其中 `shared/model/common` 承接 `useToast`、`useDestructiveConfirm`、`useClipboard` 与 `usePagination` 这类共享反馈 / 通用状态 owner，`shared/model/layout` 承接工作区导航与后台面包屑细节，`shared/model/theme` 承接全局主题与品牌 owner，`shared/model/navigation` 承接 route-aware transport 与 query/tab 同步 owner，`shared/lib/*` 承接时间倒计时、请求取消、sanitize、键盘导航和 route target 契约等无业务语义的基础能力
   - 不负责：把真正跨页面共享的会话状态重新复制回某个局部 composable
 
 ## 1. 状态归属规则
@@ -40,7 +40,7 @@
 | 竞赛摘要、公告、排行榜冻结态 | `stores/contest.ts` | 竞赛相关页面共享 |
 | 列表分页、筛选、表单草稿、局部 loading | `features/**/model` 或 `shared/model/common/*` | 跟随页面生命周期销毁 |
 | 共享反馈、危险确认、工作区导航与面包屑细节 | `shared/model/common/*`、`shared/model/layout/*` | 跨 feature 复用，但不升级成 Pinia 全局 store |
-| 路由 query tab、导出任务轮询 | `composables/useRouteQueryTabs.ts`、`shared/model/reporting/useReportStatusPolling.ts` 等 | query 同步继续按页面能力域切分；共享报告轮询进入 reporting owner |
+| 路由 query tab、route-aware transport、导出任务轮询 | `shared/model/navigation/useRouteQueryTabs.ts`、`shared/model/navigation/useUrlSyncedTabs.ts`、`shared/model/navigation/useRouteQueryTransport.ts`、`shared/model/navigation/useRouteNavigationTransport.ts`、`shared/model/reporting/useReportStatusPolling.ts` 等 | query/tab 与 route-aware transport 统一由 navigation owner 承接；共享报告轮询进入 reporting owner |
 
 判断原则：
 
@@ -133,6 +133,10 @@
 - `shared/model/common/useClipboard.ts`：统一复制反馈
 - `shared/model/theme/useTheme.ts`：全局主题与品牌切换
 - `shared/model/reporting/useReportStatusPolling.ts`：报告导出状态轮询
+- `shared/model/navigation/useRouteQueryTabs.ts`：route query tab 同步
+- `shared/model/navigation/useUrlSyncedTabs.ts`：URL tab 同步
+- `shared/model/navigation/useRouteQueryTransport.ts`：route query 读取与替换
+- `shared/model/navigation/useRouteNavigationTransport.ts`：route push / replace transport
 - `shared/model/layout/useWorkspaceShellNavigation.ts`：工作区导航壳
 - `shared/model/layout/useBackofficeBreadcrumbDetail.ts`：后台详情面包屑细节
 
@@ -144,11 +148,9 @@
 - `shared/lib/sanitize/useSanitize.ts`：受控 HTML sanitize
 - `shared/lib/keyboard/useTabKeyboardNavigation.ts`：tab 键盘导航
 
-剩余更偏浏览器、路由同步或基础传输的通用页面能力继续放在 `code/frontend/src/composables/`，例如：
+剩余 `code/frontend/src/composables/` 当前只保留更局部或实时连接型能力，例如 `useWebSocket.ts`、`useProbeEasterEggs.ts`。
 
-- `useRouteQueryTabs.ts`、`useUrlSyncedTabs.ts`：query 同步和 tab 切换
-
-`useReportStatusPolling.ts` 已收口到 `shared/model/reporting/`，不再继续留在历史 `composables/`。
+`useReportStatusPolling.ts`、路由 query/tab 同步与 route transport 已收口到 `shared/model/*`，不再继续留在历史 `composables/`。
 
 这样做的直接目的是：
 

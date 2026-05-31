@@ -4,8 +4,8 @@ import type { AdminChallengeFlagPayload } from '@/api/admin/authoring'
 import { configureChallengeFlag, getChallengeDetail } from '@/api/admin/authoring'
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
-import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
-import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import { useToast } from '@/shared/model/common/useToast'
 import {
   platformChallengeListRoute,

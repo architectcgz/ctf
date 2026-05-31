@@ -14,7 +14,7 @@ import type {
 } from '@/api/contracts'
 import StudentAnalysisOverviewHeroPanel from './StudentAnalysisOverviewHeroPanel.vue'
 import StudentInsightPanel from './StudentInsightPanel.vue'
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
+import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 
 interface ReviewWorkspaceQuery {
   mode?: 'practice' | 'jeopardy' | 'awd'

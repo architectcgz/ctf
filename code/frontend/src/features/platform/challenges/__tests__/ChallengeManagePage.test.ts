@@ -231,7 +231,9 @@ describe('ChallengeManage', () => {
   })
 
   it('题目管理 page model 应通过 feature route target + transport 处理导航，而不是直接 import vue-router', () => {
-    expect(challengeManagePageSource).toContain("from '@/composables/routeNavigationTransport'")
+    expect(challengeManagePageSource).toContain(
+      "from '@/shared/model/navigation/useRouteNavigationTransport'"
+    )
     expect(challengeManagePageSource).toContain("from './platformChallengeRoutes'")
     expect(challengeManagePageSource).not.toContain("from 'vue-router'")
     expect(challengeManagePageSource).toContain('platformChallengeImportPreviewRoute')

@@ -24,13 +24,13 @@ vi.mock('./useAuth', () => ({
   useAuth: () => authMocks,
 }))
 
-vi.mock('@/composables/routeQueryTransport', () => ({
+vi.mock('@/shared/model/navigation/useRouteQueryTransport', () => ({
   useRouteQueryTransport: () => ({
     query: routeState,
   }),
 }))
 
-vi.mock('@/composables/routeNavigationTransport', () => ({
+vi.mock('@/shared/model/navigation/useRouteNavigationTransport', () => ({
   useRouteNavigationTransport: () => navigationMocks,
 }))
 
@@ -138,10 +138,10 @@ describe('useLoginPage', () => {
 
   it('登录页 route owner 应改为共享 transport 与中性 sanitize util', () => {
     expect(useLoginPageSource).toContain(
-      "import { useRouteQueryTransport } from '@/composables/routeQueryTransport'"
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(useLoginPageSource).toContain(
-      "import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'"
+      "import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'"
     )
     expect(useLoginPageSource).toContain("import { sanitizeRedirectPath } from '@/utils/redirectPath'")
     expect(useLoginPageSource).not.toContain("from 'vue-router'")

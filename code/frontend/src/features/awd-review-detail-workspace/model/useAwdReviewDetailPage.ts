@@ -6,8 +6,8 @@ import type {
   AwdReviewArchiveData,
   AwdReviewTeamItemData,
 } from '@/api/contracts'
-import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
-import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
 import { useReportStatusPolling } from '@/shared/model/reporting/useReportStatusPolling'
 import { useAuthStore } from '@/stores/auth'

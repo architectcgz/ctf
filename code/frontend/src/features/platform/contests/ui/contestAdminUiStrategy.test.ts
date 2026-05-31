@@ -139,7 +139,7 @@ describe('contest admin ui strategy', () => {
     expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--primary"')
     expect(contestOrchestrationSource).toContain('class="ui-field contest-filter-field"')
     expect(contestOrchestrationSource).toContain(
-      "import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'"
+      "import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'"
     )
     expect(contestOrchestrationSource).toContain('useUrlSyncedTabs<ContestPanelKey>(')
     expect(contestOrchestrationSource).toContain('<header class="list-heading contest-create-head">')

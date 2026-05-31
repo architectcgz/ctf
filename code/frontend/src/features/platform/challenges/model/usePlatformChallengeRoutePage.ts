@@ -1,7 +1,7 @@
 import { computed, type ComputedRef } from 'vue'
 
-import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
-import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
+import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import {
   platformChallengeDetailRoute,
   platformChallengeWriteupEditorRoute,
