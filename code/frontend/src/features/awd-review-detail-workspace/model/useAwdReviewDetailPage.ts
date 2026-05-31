@@ -1,14 +1,15 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 
 import { getAwdReviewByRole } from '@/api/awd-reviews'
+import { getReportStatus } from '@/api/assessment'
 import type {
   AwdReviewArchiveData,
   AwdReviewTeamItemData,
 } from '@/api/contracts'
 import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
-import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
+import { useReportStatusPolling } from '@/shared/model/common/useReportStatusPolling'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import { useAwdReviewExportFlow } from '@/features/awd-review-workspace'
@@ -18,7 +19,7 @@ export function useAwdReviewDetailPage() {
   const { params, query, replaceQuery } = useRouteQueryTransport()
   const { push } = useRouteNavigationTransport()
   const authStore = useAuthStore()
-  const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling()
+  const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling(getReportStatus)
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
 
   const loading = ref(false)

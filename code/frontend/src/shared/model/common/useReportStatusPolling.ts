@@ -1,21 +1,25 @@
 import { onUnmounted, ref } from 'vue'
 
-import { getReportStatus } from '@/api/assessment'
-import type { ReportExportData } from '@/api/contracts'
-
 const POLL_INTERVAL_MS = 3000
 
-export function useReportStatusPolling() {
+export interface PollingReportStatus {
+  report_id: string
+  status: string
+}
+
+export function useReportStatusPolling<T extends PollingReportStatus>(
+  fetchStatus: (reportId: string) => Promise<T>
+) {
   const polling = ref(false)
   let timer: number | null = null
 
   async function pollOnce(
     reportId: string,
-    onUpdate: (report: ReportExportData) => void,
+    onUpdate: (report: T) => void,
     onError?: (error: unknown) => void
   ) {
     try {
-      const report = await getReportStatus(reportId)
+      const report = await fetchStatus(reportId)
       onUpdate(report)
       if (report.status !== 'processing') {
         stop()
@@ -29,7 +33,7 @@ export function useReportStatusPolling() {
 
   function start(
     reportId: string,
-    onUpdate: (report: ReportExportData) => void,
+    onUpdate: (report: T) => void,
     onError?: (error: unknown) => void
   ) {
     stop()

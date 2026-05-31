@@ -1,7 +1,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
+import { getReportStatus } from '@/api/assessment'
 import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
+import { useReportStatusPolling } from '@/shared/model/common/useReportStatusPolling'
 import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useAuthStore } from '@/stores/auth'
@@ -19,7 +20,7 @@ export function useStudentAnalysisPage() {
   const { params, query, replaceQuery } = useRouteQueryTransport()
   const { push } = useRouteNavigationTransport()
   const authStore = useAuthStore()
-  const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
+  const { start: startPolling, stop: stopPolling } = useReportStatusPolling(getReportStatus)
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
   const route = {
     get query() {

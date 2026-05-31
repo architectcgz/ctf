@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 
-import { downloadReport } from '@/api/assessment'
+import { downloadReport, getReportStatus } from '@/api/assessment'
 import {
   exportClassReport,
   getClassReview,
@@ -15,7 +15,7 @@ import type {
   ClassInsightTrendData,
   StudentDirectoryItem,
 } from '@/api/contracts'
-import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
+import { useReportStatusPolling } from '@/shared/model/common/useReportStatusPolling'
 import { useToast } from '@/shared/model/common/useToast'
 import {
   buildClassInsightWindowQuery,
@@ -47,7 +47,7 @@ interface ExportContext {
 export function useClassReportExport() {
   const authStore = useAuthStore()
   const toast = useToast()
-  const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling()
+  const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling(getReportStatus)
 
   const form = ref({
     className: authStore.user?.class_name ?? '',

@@ -1,10 +1,10 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Activity, ShieldCheck, UserCircle2 } from 'lucide-vue-next'
 
-import { downloadReport, exportPersonalReport } from '@/api/assessment'
+import { downloadReport, exportPersonalReport, getReportStatus } from '@/api/assessment'
 import { getProfile } from '@/api/auth'
 import type { AuthUser, ReportExportData } from '@/api/contracts'
-import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
+import { useReportStatusPolling } from '@/shared/model/common/useReportStatusPolling'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
 
@@ -20,7 +20,7 @@ export function useUserProfilePage() {
   const latestReport = ref<ReportExportData | null>(null)
   const latestReportFormat = ref<'pdf' | 'excel'>('pdf')
   const latestReportCreatedAt = ref<string | null>(null)
-  const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
+  const { start: startPolling, stop: stopPolling } = useReportStatusPolling(getReportStatus)
   const currentRole = computed(() => profile.value?.role ?? authStore.user?.role)
   const canManagePersonalReport = computed(() => currentRole.value !== 'admin')
   const currentProfile = computed(() => profile.value ?? authStore.user ?? null)

@@ -1,15 +1,15 @@
 import { ref } from 'vue'
 
-import { downloadReport } from '@/api/assessment'
+import { downloadReport, getReportStatus } from '@/api/assessment'
 import { exportContestArchive } from '@/api/admin/contests'
 import type { ContestDetailData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
-import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
+import { useReportStatusPolling } from '@/shared/model/common/useReportStatusPolling'
 import { useToast } from '@/shared/model/common/useToast'
 
 export function useContestExportFlow() {
   const toast = useToast()
-  const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
+  const { start: startPolling, stop: stopPolling } = useReportStatusPolling(getReportStatus)
 
   const exportingContestId = ref<string | null>(null)
   const downloadingContestReport = ref(false)

@@ -1,9 +1,9 @@
 import { computed, ref, type Ref } from 'vue'
 
-import { downloadReport } from '@/api/assessment'
+import { downloadReport, getReportStatus } from '@/api/assessment'
 import { ApiError } from '@/api/request'
 import { exportStudentReviewArchive } from '@/api/teaching'
-import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
+import { useReportStatusPolling } from '@/shared/model/common/useReportStatusPolling'
 import { useToast } from '@/shared/model/common/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
@@ -28,7 +28,7 @@ export function useStudentReviewArchivePage({
 }: UseStudentReviewArchivePageOptions) {
   const toast = useToast()
   const authStore = useAuthStore()
-  const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
+  const { start: startPolling, stop: stopPolling } = useReportStatusPolling(getReportStatus)
   const { archive, loading, error, reload } = useStudentReviewArchive(studentId)
 
   const exporting = ref(false)
