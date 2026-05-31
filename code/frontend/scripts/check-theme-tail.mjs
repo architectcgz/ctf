@@ -1,10 +1,11 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
-const roots = ['src/components', 'src/views', 'src/composables', 'src/utils']
+const roots = ['src/pages', 'src/features', 'src/widgets', 'src/shared/ui', 'src/shared/model', 'src/utils']
 const allowedRelativeFiles = new Set([
   'src/views/UILab.vue',
   'src/views/platform/ThemePreview.vue',
+  'src/pages/utility/UILabRoutePage.vue',
 ])
 const allowedPathParts = new Set(['__tests__', 'refs'])
 const sourceExtensions = new Set(['.vue', '.ts'])
@@ -15,6 +16,7 @@ const forbiddenThemePattern =
 function shouldSkip(path) {
   const normalized = path.split('/').join('/')
   if (allowedRelativeFiles.has(normalized)) return true
+  if (normalized.endsWith('.test.ts') || normalized.endsWith('.spec.ts')) return true
   return normalized.split('/').some((part) => allowedPathParts.has(part))
 }
 

@@ -26,7 +26,7 @@
   - 不负责：允许页面继续写一套脱离 token 的平行间距系统
 
 - `code/frontend/scripts/check-theme-tail.mjs`
-  - 负责：阻止 `src/components`、`src/views`、`src/composables`、`src/utils` 中继续写硬编码主题尾部 token
+  - 负责：阻止 `src/pages`、`src/features`、`src/widgets`、`src/shared/ui`、`src/shared/model`、`src/utils` 中继续写硬编码主题尾部 token
   - 不负责：自动修正页面样式；它只做守门
 
 ## 1. 全局间距刻度
@@ -177,4 +177,3 @@
 - 运行命令：`cd code/frontend && npm run check:theme-tail`
 - 目录表格继续走主题 token：`code/frontend/src/shared/ui/common/__tests__/WorkspaceDataTable.test.ts`
 - 布局壳和 full-bleed 内容壳：`code/frontend/src/shared/ui/layout/__tests__/AppLayout.test.ts`
-

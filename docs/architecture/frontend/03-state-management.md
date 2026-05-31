@@ -1,7 +1,7 @@
 # 前端状态管理设计
 
 > 状态：Current
-> 事实源：`code/frontend/src/stores/`、`code/frontend/src/features/**/model/`、`code/frontend/src/shared/model/**`、`code/frontend/src/shared/lib/**`、`code/frontend/src/composables/use*.ts`
+> 事实源：`code/frontend/src/stores/`、`code/frontend/src/features/**/model/`、`code/frontend/src/shared/model/**`、`code/frontend/src/shared/lib/**`
 > 替代：无
 
 ## 定位
@@ -25,8 +25,8 @@
   - 负责：承接竞赛级共享状态，如当前竞赛摘要、排行榜、公告和冻结态
   - 不负责：承接所有竞赛页面的局部表单、筛选条件或页面 loading 状态
 
-- `code/frontend/src/features/**/model`、`code/frontend/src/shared/model/**`、`code/frontend/src/shared/lib/**`、`code/frontend/src/composables/use*.ts`
-  - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态；其中 `shared/model/common` 承接 `useToast`、`useDestructiveConfirm`、`useClipboard` 与 `usePagination` 这类共享反馈 / 通用状态 owner，`shared/model/layout` 承接工作区导航与后台面包屑细节，`shared/model/theme` 承接全局主题与品牌 owner，`shared/model/navigation` 承接 route-aware transport 与 query/tab 同步 owner，`shared/lib/*` 承接时间倒计时、请求取消、sanitize、键盘导航和 route target 契约等无业务语义的基础能力
+- `code/frontend/src/features/**/model`、`code/frontend/src/shared/model/**`、`code/frontend/src/shared/lib/**`
+  - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态；其中 `shared/model/common` 承接 `useToast`、`useDestructiveConfirm`、`useClipboard`、`usePagination` 与 `useProbeEasterEggs` 这类共享反馈 / 通用状态 owner，`shared/model/layout` 承接工作区导航与后台面包屑细节，`shared/model/theme` 承接全局主题与品牌 owner，`shared/model/navigation` 承接 route-aware transport 与 query/tab 同步 owner，`shared/lib/*` 承接时间倒计时、请求取消、sanitize、键盘导航和 route target 契约等无业务语义的基础能力
   - 不负责：把真正跨页面共享的会话状态重新复制回某个局部 composable
 
 ## 1. 状态归属规则
@@ -149,9 +149,9 @@
 - `shared/lib/sanitize/useSanitize.ts`：受控 HTML sanitize
 - `shared/lib/keyboard/useTabKeyboardNavigation.ts`：tab 键盘导航
 
-共享 realtime runtime owner 已收口到 `code/frontend/src/shared/model/realtime/useWebSocket.ts`，历史 `code/frontend/src/composables/` 不再保留运行时代码。
+共享 realtime runtime owner 已收口到 `code/frontend/src/shared/model/realtime/useWebSocket.ts`。
 
-`useReportStatusPolling.ts`、路由 query/tab 同步与 route transport 已收口到 `shared/model/*`，不再继续留在历史 `composables/`。
+`useReportStatusPolling.ts`、路由 query/tab 同步、route transport 与 `useProbeEasterEggs` 测试 owner 都已收口到 `shared/model/*`，历史 `code/frontend/src/composables/` 已退出活动层。
 
 这样做的直接目的是：
 

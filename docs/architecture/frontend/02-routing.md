@@ -9,7 +9,7 @@
 本文档只说明前端页面路由的注册方式、命名空间、权限守卫、错误页回退和导航匹配规则。
 
 - 覆盖：`Vue Router` 路由树、`/academy/*` 与 `/platform/*` 命名空间、登录态恢复、角色校验、错误状态页和默认首页映射。
-- 不覆盖：页面内部的 tab/query 状态、列表筛选、异步数据加载和业务流程编排；这些能力由 `code/frontend/src/features/**/model` 或 `code/frontend/src/composables/use*.ts` 负责。
+- 不覆盖：页面内部的 tab/query 状态、列表筛选、异步数据加载和业务流程编排；这些能力由 `code/frontend/src/features/**/model` 或 `code/frontend/src/shared/model/navigation/*` 等共享 model owner 负责。
 
 ## 当前设计
 

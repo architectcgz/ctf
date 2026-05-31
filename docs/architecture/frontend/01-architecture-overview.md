@@ -12,8 +12,8 @@
   - 负责：注册学生端、`/academy/*`、`/platform/*` 路由，维护登录态守卫、默认首页映射和后台导航归属
   - 不负责：页面内部数据流和业务状态机
 
-- `code/frontend/src/pages/**`、`code/frontend/src/features/**/model`、`code/frontend/src/features/**/ui`、`code/frontend/src/widgets/**`、`code/frontend/src/shared/model/**`、`code/frontend/src/shared/lib/**`、`code/frontend/src/composables/use*.ts`
-  - 负责：路由入口统一落在 `pages/**`；页面级查询、导出、实时桥接和 query 同步下沉到 feature model / shared model / shared lib / composable；`widgets/**` 负责跨 feature 页面区块组合，`features/**/ui` 负责单一能力 surface，`shared/model/common` 和 `shared/model/layout` 承接共享反馈、危险确认、复制反馈、工作区导航、面包屑细节与分页状态这类跨 feature 但不带业务 owner 的状态，`shared/model/theme` 承接全局主题与品牌 owner，`shared/model/reporting` 承接报告轮询这类共享 reporting workflow owner，`shared/model/navigation` 承接 route-aware transport 与 query/tab 同步 owner，`shared/model/realtime` 承接 WebSocket ticket、心跳、重连和 session 过期回退这类共享 realtime runtime owner，`shared/lib/*` 承接时间倒计时、请求取消、sanitize、键盘导航和 route target 契约等无业务语义的基础能力
+- `code/frontend/src/pages/**`、`code/frontend/src/features/**/model`、`code/frontend/src/features/**/ui`、`code/frontend/src/widgets/**`、`code/frontend/src/shared/model/**`、`code/frontend/src/shared/lib/**`
+  - 负责：路由入口统一落在 `pages/**`；页面级查询、导出、实时桥接和 query 同步下沉到 feature model / shared model / shared lib；`widgets/**` 负责跨 feature 页面区块组合，`features/**/ui` 负责单一能力 surface，`shared/model/common` 和 `shared/model/layout` 承接共享反馈、危险确认、复制反馈、工作区导航、面包屑细节与分页状态这类跨 feature 但不带业务 owner 的状态，`shared/model/theme` 承接全局主题与品牌 owner，`shared/model/reporting` 承接报告轮询这类共享 reporting workflow owner，`shared/model/navigation` 承接 route-aware transport 与 query/tab 同步 owner，`shared/model/realtime` 承接 WebSocket ticket、心跳、重连和 session 过期回退这类共享 realtime runtime owner，`shared/lib/*` 承接时间倒计时、请求取消、sanitize、键盘导航和 route target 契约等无业务语义的基础能力
   - 不负责：把 API 调用、路由状态和大段派生数据继续堆回单个 `.vue` 页面，或让 `features/*RoutePage.vue`、`widgets/*RoutePage.vue` 继续兼任页面层
 
 - `code/frontend/src/stores/auth.ts`、`notification.ts`、`contest.ts`
@@ -73,8 +73,6 @@ code/frontend/
 │   │   └── ui/
 │   │       ├── common/
 │   │       └── layout/
-│   ├── composables/
-│   │   └── __tests__/
 │   ├── widgets/
 │   │   └── */
 │   ├── assets/styles/
