@@ -7,6 +7,7 @@ import TeacherStudentManagement from '@/pages/teacher/StudentManagementRoutePage
 import teacherStudentManagementSource from '@/pages/teacher/StudentManagementRoutePage.vue?raw'
 import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import studentManagementPageModelSource from '@/features/teacher/student-management/model/useStudentManagementPage.ts?raw'
+import teacherStudentDirectorySource from '@/features/teacher/student-management/model/useTeacherStudentDirectory.ts?raw'
 import studentManagementSource from '@/features/teacher/student-management/ui/StudentManagementPage.vue?raw'
 import userPresentationSource from '@/entities/user/model/presentation.ts?raw'
 import { useAuthStore } from '@/stores/auth'
@@ -275,6 +276,9 @@ describe('TeacherStudentManagement', () => {
     expect(studentManagementSource).toContain('<AppRouteLink')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(studentManagementPageModelSource).not.toContain("from 'vue-router'")
+    expect(studentManagementPageModelSource).toContain("from './useTeacherStudentDirectory'")
+    expect(studentManagementPageModelSource).not.toContain("from '@/api/teacher'")
+    expect(teacherStudentDirectorySource).toContain("from '@/api/teacher'")
     expect(studentManagementPageModelSource).toContain('const classManagementRoute = computed')
     expect(studentManagementPageModelSource).toContain('function buildStudentRoute')
   })
