@@ -70,6 +70,7 @@ describe('PlatformStudentAnalysis route owner', () => {
       'reviewChallengeOptions',
       'reviewWorkspaceLoading',
       'reviewWorkspaceQuery',
+      'activeWorkspaceTab',
       'writeupSubmissions',
       'writeupPage',
       'writeupTotal',
@@ -396,6 +397,40 @@ describe('PlatformStudentAnalysis route owner', () => {
       with_events: true,
       limit: 20,
       offset: 0,
+    })
+  })
+
+  it('应从 panel query 恢复共享标签页，并在切换标签时保留已有复盘 query', async () => {
+    routeMock.query = {
+      panel: 'writeups',
+      reviewMode: 'awd',
+      reviewChallengeId: '11',
+    }
+
+    const wrapper = mount(PlatformStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          ClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('题解列表')
+    expect(wrapper.text()).not.toContain('复盘工作台')
+
+    replaceMock.mockClear()
+    await wrapper.get('#student-tab-evidence').trigger('click')
+    await flushPromises()
+
+    expect(replaceMock).toHaveBeenCalledWith({
+      query: {
+        panel: 'evidence',
+        reviewMode: 'awd',
+        reviewChallengeId: '11',
+      },
     })
   })
 })

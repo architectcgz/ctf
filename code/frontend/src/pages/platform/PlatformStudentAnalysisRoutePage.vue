@@ -13,6 +13,7 @@
       :review-challenge-options="reviewChallengeOptions"
       :review-workspace-loading="reviewWorkspaceLoading"
       :review-workspace-query="reviewWorkspaceQuery"
+      :active-workspace-tab="activeWorkspaceTab"
       :writeup-submissions="writeupSubmissions"
       :writeup-page="writeupPage"
       :writeup-total="writeupTotal"
@@ -29,6 +30,7 @@
       @open-report-export="openClassReportDialog"
       @open-review-archive="openReviewArchivePage"
       @export-review-archive="handleExportReviewArchive"
+      @select-workspace-tab="selectWorkspaceTab"
       @open-challenge="openChallenge"
       @open-manual-review="openManualReview"
       @moderate-writeup="moderateWriteup"
@@ -64,6 +66,7 @@ const {
   reviewChallengeOptions,
   reviewWorkspaceLoading,
   reviewWorkspaceQuery,
+  activeWorkspaceTab,
   writeupSubmissions,
   writeupPage,
   writeupTotal,
@@ -82,6 +85,7 @@ const {
   openClassReportDialog,
   openReviewArchivePage,
   handleExportReviewArchive,
+  selectWorkspaceTab,
   openManualReview,
   moderateWriteup,
   reviewManualReview,

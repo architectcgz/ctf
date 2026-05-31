@@ -225,6 +225,9 @@ describe('TeacherStudentAnalysis', () => {
       "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(studentAnalysisPageModelSource).toContain(
+      "import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'"
+    )
+    expect(studentAnalysisPageModelSource).toContain(
       'const { params, query, replaceQuery } = useRouteQueryTransport()'
     )
     expect(studentAnalysisPageModelSource).toContain(
@@ -242,6 +245,8 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageModelSource).not.toContain('openClassManagement')
     expect(studentAnalysisPageModelSource).not.toContain('selectClass')
     expect(studentAnalysisPageModelSource).not.toContain('selectStudent')
+    expect(studentAnalysisPageModelSource).toContain('activeTab: activeWorkspaceTab')
+    expect(studentAnalysisPageModelSource).toContain('selectTab: selectWorkspaceTab')
   })
 
   it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {
@@ -255,6 +260,9 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).not.toContain('Student Analysis')
     expect(studentAnalysisPageSource).not.toContain('teacher-student-chip')
     expect(studentAnalysisPageSource).not.toContain('teacher-eyebrow-row')
+    expect(studentAnalysisPageSource).not.toContain('useUrlSyncedTabs')
+    expect(studentAnalysisPageSource).toContain("from '@/shared/lib/keyboard/useTabKeyboardNavigation'")
+    expect(studentAnalysisPageSource).toContain('selectWorkspaceTab: [tab: StudentAnalysisWorkspaceTab]')
     expect(studentAnalysisPageSource).toContain('StudentAnalysisOverviewHeroPanel')
     expect(studentAnalysisPageSource).not.toContain('classes: ClassDirectoryItem[]')
     expect(studentAnalysisPageSource).toContain('selectedStudent: StudentDirectoryItem | null')
@@ -428,10 +436,12 @@ describe('TeacherStudentAnalysis', () => {
     await flushPromises()
     teachingApiMocks.getStudentAttackSessions.mockClear()
     await openWorkspaceTab(wrapper, 'evidence')
+    replaceMock.mockClear()
 
-    const selects = wrapper.findAll('select')
+    let selects = wrapper.findAll('select')
     await selects[1].setValue('awd')
     await flushPromises()
+    selects = wrapper.findAll('select')
     await selects[2].setValue('failed')
     await flushPromises()
 
@@ -441,7 +451,7 @@ describe('TeacherStudentAnalysis', () => {
       offset: 0,
       mode: 'awd',
     })
-    expect(teachingApiMocks.getStudentAttackSessions).toHaveBeenNthCalledWith(2, 'stu-1', {
+    expect(teachingApiMocks.getStudentAttackSessions).toHaveBeenLastCalledWith('stu-1', {
       with_events: true,
       limit: 20,
       offset: 0,
@@ -451,16 +461,52 @@ describe('TeacherStudentAnalysis', () => {
     expect(teachingApiMocks.getStudentEvidence).toHaveBeenCalledTimes(1)
     expect(replaceMock).toHaveBeenNthCalledWith(1, {
       query: {
+        panel: 'evidence',
         reviewMode: 'awd',
         reviewResult: undefined,
         reviewChallengeId: undefined,
       },
     })
-    expect(replaceMock).toHaveBeenNthCalledWith(2, {
+    expect(replaceMock).toHaveBeenLastCalledWith({
       query: {
+        panel: 'evidence',
         reviewMode: 'awd',
         reviewResult: 'failed',
         reviewChallengeId: undefined,
+      },
+    })
+  })
+
+  it('应从 panel query 恢复当前标签页，并在切换标签时保留已有复盘 query', async () => {
+    routeMock.query = {
+      panel: 'writeups',
+      reviewMode: 'awd',
+      reviewChallengeId: '11',
+    }
+
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          ClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('题解列表')
+    expect(wrapper.text()).not.toContain('复盘工作台')
+
+    replaceMock.mockClear()
+    await wrapper.get('#student-tab-evidence').trigger('click')
+    await flushPromises()
+
+    expect(replaceMock).toHaveBeenCalledWith({
+      query: {
+        panel: 'evidence',
+        reviewMode: 'awd',
+        reviewChallengeId: '11',
       },
     })
   })
@@ -479,6 +525,7 @@ describe('TeacherStudentAnalysis', () => {
     teachingApiMocks.getStudentAttackSessions.mockClear()
     teachingApiMocks.getStudentEvidence.mockClear()
     await openWorkspaceTab(wrapper, 'evidence')
+    replaceMock.mockClear()
 
     const selects = wrapper.findAll('select')
     await selects[0].setValue('11')
@@ -495,6 +542,7 @@ describe('TeacherStudentAnalysis', () => {
     })
     expect(replaceMock).toHaveBeenCalledWith({
       query: {
+        panel: 'evidence',
         reviewMode: undefined,
         reviewResult: undefined,
         reviewChallengeId: '11',

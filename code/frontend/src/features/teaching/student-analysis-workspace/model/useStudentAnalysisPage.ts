@@ -2,6 +2,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { getReportStatus } from '@/api/assessment'
 import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
+import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'
 import { useReportStatusPolling } from '@/shared/model/reporting/useReportStatusPolling'
 import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
 import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
@@ -16,12 +17,33 @@ import { useStudentAnalysisDataState } from './useStudentAnalysisDataState'
 import { useStudentAnalysisNavigation } from './useStudentAnalysisNavigation'
 import { useStudentAnalysisReviewQuerySync } from './useStudentAnalysisReviewQuerySync'
 
+export type StudentAnalysisWorkspaceTab =
+  | 'overview'
+  | 'recommendations'
+  | 'writeups'
+  | 'evidence'
+  | 'timeline'
+
 export function useStudentAnalysisPage() {
   const { params, query, replaceQuery } = useRouteQueryTransport()
   const { push } = useRouteNavigationTransport()
   const authStore = useAuthStore()
   const { start: startPolling, stop: stopPolling } = useReportStatusPolling(getReportStatus)
   const { setBreadcrumbDetailTitle } = useBackofficeBreadcrumbDetail()
+  const workspaceTabOrder: StudentAnalysisWorkspaceTab[] = [
+    'overview',
+    'recommendations',
+    'writeups',
+    'evidence',
+    'timeline',
+  ]
+  const {
+    activeTab: activeWorkspaceTab,
+    selectTab: selectWorkspaceTab,
+  } = useRouteQueryTabs<StudentAnalysisWorkspaceTab>({
+    orderedTabs: workspaceTabOrder,
+    defaultTab: 'overview',
+  })
   const route = {
     get query() {
       return query.value
@@ -227,6 +249,7 @@ export function useStudentAnalysisPage() {
     reviewChallengeOptions,
     reviewWorkspaceLoading,
     reviewWorkspaceQuery: sessionQuery,
+    activeWorkspaceTab,
     writeupSubmissions,
     writeupPage,
     writeupPageSize,
@@ -246,6 +269,7 @@ export function useStudentAnalysisPage() {
     openClassReportDialog,
     openReviewArchivePage,
     handleExportReviewArchive,
+    selectWorkspaceTab,
     openManualReview,
     moderateWriteup,
     reviewManualReview,

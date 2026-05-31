@@ -60,6 +60,17 @@ export function resetStudentAnalysisRouteTestState(
   routeMock.params.className = 'Class A'
   routeMock.params.studentId = 'stu-1'
   routeMock.query = {}
+  replaceMock.mockImplementation(async (target: { params?: StudentAnalysisRouteTestState['params']; query?: Record<string, unknown> }) => {
+    if (target.params) {
+      routeMock.params = {
+        ...routeMock.params,
+        ...target.params,
+      }
+    }
+    if (target.query) {
+      routeMock.query = { ...target.query }
+    }
+  })
 
   Object.values(teachingApiMocks).forEach((mock) => mock.mockReset())
 
