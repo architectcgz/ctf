@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import { routes } from '@/router'
-import { teacherLegacyRedirectAllowlist } from '@/router/routes/teacherRoutes'
 
 function getRootChildren() {
   const root = routes.find((route) => route.path === '/')
@@ -45,18 +44,12 @@ describe('shared route canonical paths', () => {
     expect(findChild('academy/instances')?.name).toBe('TeacherInstanceManagement')
     expect(findChild('academy/reports')).toBeUndefined()
 
-    const teacherLegacyRedirectPaths = getRootChildren()
-      .filter((route) => typeof route.path === 'string' && route.path.startsWith('teacher/'))
-      .map((route) => route.path as string)
-
-    expect(teacherLegacyRedirectPaths).toEqual(teacherLegacyRedirectAllowlist)
-
-    teacherLegacyRedirectAllowlist.forEach((path) => {
-      expect(findChild(path)?.redirect).toBeTruthy()
-      expect(findChild(path)?.name).toBeUndefined()
-    })
-
     expect(findChild('teacher/reports')).toBeUndefined()
+    expect(
+      getRootChildren().some(
+        (route) => typeof route.path === 'string' && route.path.startsWith('teacher/')
+      )
+    ).toBe(false)
   })
 
   it('uses platform paths as the canonical location for shared governance pages', () => {

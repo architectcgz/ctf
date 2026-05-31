@@ -68,11 +68,10 @@ src/
 ### 1. 教师端兼容命名空间还没退场
 
 - 当前产品规则要求教师端只使用 `/academy/*`。
-- 代码里仍保留多条 `/teacher/* -> /academy/*` redirect。
-- 本轮已经先把这些遗留入口收口成 `teacherRoutes.ts` 单点 allowlist，并用路由测试限制不能继续新增。
+- router runtime 已不再注册 `/teacher/* -> /academy/*` 页面 redirect。
 - 登录 redirect 参数已经先在共享 sanitize owner 归一到 `/academy/*`，不会再把 `/teacher/*` 旧页面路径继续传入登录后导航。
-- 当前前端活跃源码里，旧教师端页面路径 producer 已收口到 `teacherLegacyRedirect.ts`；其它页面/feature 不再直接产出 `/teacher/*` 前端跳转。
-- 下一步仍然需要明确兼容窗口和下线顺序，再决定直接删除哪些入口。
+- 当前前端活跃源码里，旧教师端页面路径 literal 仍只保留在 `teacherLegacyRedirect.ts`，用于 redirect 参数 canonicalize；其它页面/feature/router 不再直接产出或注册 `/teacher/*` 前端页面入口。
+- 下一步需要决定是否继续删除 `teacherLegacyRedirect.ts` 这层 redirect 参数兼容，还是保留为登录后导航的历史兜底。
 
 ### 2. route page 厚壳层主问题已基本收口
 
@@ -80,7 +79,7 @@ src/
 
 后续重点更适合转向：
 
-- 教师端旧兼容入口退场
+- 教师端 redirect 参数兼容是否继续保留
 - `entities` 展示 owner 补强
 - 继续把 guardrail 跟现状一起机械化
 
@@ -119,8 +118,8 @@ src/
 
 ### P0：继续收口入口一致性
 
-- 收掉教师端 `/teacher/*` 兼容入口；当前 allowlist 已固定，登录 redirect 也已归一到 `/academy/*`，下一步重点是逐条评估 runtime redirect 的退场顺序。
-- 继续用源码级 guardrail 限制新的 `/teacher/*` 前端页面路径 producer，只保留 runtime redirect owner 作为兼容出口。
+- 保持教师端页面 runtime 只认 `/academy/*`，不再回流 `/teacher/*` route。
+- 继续用源码级 guardrail 限制新的 `/teacher/*` 前端页面路径 producer；当前兼容面只剩登录 redirect 参数的 canonicalize owner。
 - 保持 router runtime 只从 `pages` 取页面组件，不再新增绕过 `pages` 的入口。
 
 ### P1：补 route/widget/entity 边界 guardrail

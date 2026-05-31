@@ -95,10 +95,6 @@ export const teacherLegacyRedirectDefinitions: TeacherLegacyRedirectDefinition[]
   createStaticTeacherLegacyRedirectDefinition('teacher/instances', '/academy/instances'),
 ]
 
-export const teacherLegacyRedirectAllowlist = teacherLegacyRedirectDefinitions.map(
-  ({ legacyPath }) => legacyPath
-)
-
 export function canonicalizeTeacherLegacyRedirectPath(path: string): string {
   const match = path.match(/^([^?#]*)(.*)$/u)
   const pathname = match?.[1] ?? path

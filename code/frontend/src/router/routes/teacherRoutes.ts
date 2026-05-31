@@ -1,23 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
 
-import {
-  teacherLegacyRedirectDefinitions,
-  teacherLegacyRedirectAllowlist,
-} from '@/utils/teacherLegacyRedirect'
-
-export { teacherLegacyRedirectAllowlist }
-
-const teacherLegacyRedirectRoutes: RouteRecordRaw[] = teacherLegacyRedirectDefinitions.map(
-  ({ legacyPath, buildCanonicalPathFromParams }) => ({
-    path: legacyPath,
-    redirect: (to) => ({
-      path: buildCanonicalPathFromParams(to.params as Record<string, unknown>),
-      query: to.query,
-      hash: to.hash,
-    }),
-  })
-)
-
 export const teacherRoutes: RouteRecordRaw[] = [
 {
   path: 'academy/overview',
@@ -171,5 +153,4 @@ export const teacherRoutes: RouteRecordRaw[] = [
     contentLayout: 'bleed',
   },
 },
-...teacherLegacyRedirectRoutes,
 ]
