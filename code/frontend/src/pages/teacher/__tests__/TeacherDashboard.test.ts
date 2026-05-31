@@ -13,6 +13,7 @@ import teacherDashboardTrendPanelSource from '@/features/teacher/dashboard/ui/Te
 import teacherDashboardReviewPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardReviewPanel.vue?raw'
 import teacherDashboardInterventionPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardInterventionPanel.vue?raw'
 import teacherDashboardHookSource from '@/features/teacher/dashboard/model/useDashboardPage.ts?raw'
+import teacherDashboardPanelRouteSource from '@/features/teacher/dashboard/model/teacherDashboardPanelRoute.ts?raw'
 import teacherOverviewDataSource from '@/features/teacher/dashboard/model/useTeacherOverviewData.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -197,10 +198,20 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardSource).not.toContain("from '@/api/teacher'")
     expect(teacherDashboardPageSource).toContain('useDashboardMetrics')
     expect(teacherDashboardPageSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
+    expect(teacherDashboardPageSource).toContain("from '@/shared/lib/keyboard/useTabKeyboardNavigation'")
     expect(teacherDashboardPageSource).toContain('<AppRouteLink')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(teacherDashboardHookSource).toContain('teacherClassManagementRoute')
     expect(teacherDashboardHookSource).toContain('classManagementRoute = computed')
+    expect(teacherDashboardHookSource).toContain(
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
+    )
+    expect(teacherDashboardHookSource).toContain('resolveTeacherDashboardPanel(query.value.panel)')
+    expect(teacherDashboardHookSource).toContain(
+      'await replaceQuery(buildTeacherDashboardPanelQuery(query.value, panel))'
+    )
+    expect(teacherDashboardPanelRouteSource).toContain('resolveTeacherDashboardPanel')
+    expect(teacherDashboardPanelRouteSource).toContain('buildTeacherDashboardPanelQuery')
     expect(teacherDashboardHookSource).toContain("from './useTeacherOverviewData'")
     expect(teacherDashboardHookSource).not.toContain("from '@/api/teacher'")
     expect(teacherDashboardHookSource).not.toContain("from 'vue-router'")
@@ -210,6 +221,10 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).not.toContain('TeacherClassTrendPanel')
     expect(teacherDashboardPageSource).not.toContain('TeacherClassReviewPanel')
     expect(teacherDashboardPageSource).not.toContain('TeacherInterventionPanel')
+    expect(teacherDashboardPageSource).not.toContain(
+      "import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'"
+    )
+    expect(teacherDashboardPageSource).not.toContain('useUrlSyncedTabs<DashboardTab>(')
   })
 
   it('教师概览夜间模式样式应继续基于主题变量且不回流亮色硬编码', () => {
@@ -312,6 +327,17 @@ describe('TeacherDashboard', () => {
     expect(window.location.search).toBe('?panel=portrait')
     expect(wrapper.find('#dashboard-tab-portrait').classes()).toContain('active')
     expect(wrapper.find('#portrait').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#overview').attributes('aria-hidden')).toBe('true')
+  })
+
+  it('点击教师概览标签时应回写 panel 查询参数', async () => {
+    const { wrapper, router } = await mountDashboard('/academy/overview')
+
+    await wrapper.get('#dashboard-tab-review').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.query.panel).toBe('review')
+    expect(wrapper.find('#review').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('#overview').attributes('aria-hidden')).toBe('true')
   })
 })

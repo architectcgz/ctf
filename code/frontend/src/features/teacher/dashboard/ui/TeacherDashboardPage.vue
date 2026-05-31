@@ -3,9 +3,10 @@ import { toRef } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
 
 import type { TeacherOverviewData } from '@/api/contracts'
+import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
-import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 import { useDashboardMetrics } from '../model/useDashboardMetrics'
+import type { TeacherDashboardPanelKey } from '../model'
 import TeacherDashboardInterventionPanel from './TeacherDashboardInterventionPanel.vue'
 import TeacherDashboardPortraitPanel from './TeacherDashboardPortraitPanel.vue'
 import TeacherDashboardReviewPanel from './TeacherDashboardReviewPanel.vue'
@@ -20,16 +21,16 @@ const props = defineProps<{
   overview: TeacherOverviewData | null
   error: string | null
   classManagementRoute: DashboardRouteTarget
+  activePanel: TeacherDashboardPanelKey
 }>()
 
 const emit = defineEmits<{
   retry: []
+  switchPanel: [panel: TeacherDashboardPanelKey]
 }>()
 
-type DashboardTab = 'overview' | 'portrait' | 'insight' | 'trend' | 'review' | 'intervention'
-
 const dashboardTabs: Array<{
-  key: DashboardTab
+  key: TeacherDashboardPanelKey
   label: string
   buttonId: string
   panelId: string
@@ -47,10 +48,10 @@ const dashboardTabs: Array<{
   },
 ]
 
-const dashboardTabOrder = dashboardTabs.map((tab) => tab.key) as DashboardTab[]
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<DashboardTab>({
+const dashboardTabOrder = dashboardTabs.map((tab) => tab.key) as TeacherDashboardPanelKey[]
+const { setTabButtonRef, handleTabKeydown } = useTabKeyboardNavigation<TeacherDashboardPanelKey>({
   orderedTabs: dashboardTabOrder,
-  defaultTab: 'overview',
+  selectTab: (tab) => emit('switchPanel', tab),
 })
 
 const {
@@ -80,13 +81,13 @@ const {
         :key="tab.key"
         :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
         class="workspace-tab top-tab"
-        :class="{ active: activeTab === tab.key }"
+        :class="{ active: activePanel === tab.key }"
         type="button"
         role="tab"
-        :tabindex="activeTab === tab.key ? 0 : -1"
-        :aria-selected="activeTab === tab.key ? 'true' : 'false'"
+        :tabindex="activePanel === tab.key ? 0 : -1"
+        :aria-selected="activePanel === tab.key ? 'true' : 'false'"
         :aria-controls="tab.panelId"
-        @click="selectTab(tab.key)"
+        @click="emit('switchPanel', tab.key)"
         @keydown="handleTabKeydown($event, index)"
       >
         {{ tab.label }}
@@ -95,13 +96,13 @@ const {
 
     <main class="content-pane teacher-dashboard-content">
       <section
-        v-show="activeTab === 'overview'"
+        v-show="activePanel === 'overview'"
         id="overview"
         class="tab-panel teacher-dashboard-overview"
-        :class="{ active: activeTab === 'overview' }"
+        :class="{ active: activePanel === 'overview' }"
         role="tabpanel"
         aria-labelledby="dashboard-tab-overview"
-        :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
+        :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
         <header class="workspace-panel-header teacher-dashboard-overview-head">
           <div class="workspace-panel-header__intro">
@@ -173,13 +174,13 @@ const {
       </section>
 
       <section
-        v-show="activeTab === 'portrait'"
+        v-show="activePanel === 'portrait'"
         id="portrait"
         class="tab-panel"
-        :class="{ active: activeTab === 'portrait' }"
+        :class="{ active: activePanel === 'portrait' }"
         role="tabpanel"
         aria-labelledby="dashboard-tab-portrait"
-        :aria-hidden="activeTab === 'portrait' ? 'false' : 'true'"
+        :aria-hidden="activePanel === 'portrait' ? 'false' : 'true'"
       >
         <TeacherDashboardPortraitPanel
           :portrait-summary-notes="portraitSummaryNotes"
@@ -188,25 +189,25 @@ const {
       </section>
 
       <section
-        v-show="activeTab === 'insight'"
+        v-show="activePanel === 'insight'"
         id="insight"
         class="tab-panel"
-        :class="{ active: activeTab === 'insight' }"
+        :class="{ active: activePanel === 'insight' }"
         role="tabpanel"
         aria-labelledby="dashboard-tab-insight"
-        :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
+        :aria-hidden="activePanel === 'insight' ? 'false' : 'true'"
       >
         <TeacherDashboardStudentInsightPanel :student-insight-rows="studentInsightRows" />
       </section>
 
       <section
-        v-show="activeTab === 'trend'"
+        v-show="activePanel === 'trend'"
         id="trend"
         class="tab-panel"
-        :class="{ active: activeTab === 'trend' }"
+        :class="{ active: activePanel === 'trend' }"
         role="tabpanel"
         aria-labelledby="dashboard-tab-trend"
-        :aria-hidden="activeTab === 'trend' ? 'false' : 'true'"
+        :aria-hidden="activePanel === 'trend' ? 'false' : 'true'"
       >
         <TeacherDashboardTrendPanel
           :trend-signals="trendSignals"
@@ -215,25 +216,25 @@ const {
       </section>
 
       <section
-        v-show="activeTab === 'review'"
+        v-show="activePanel === 'review'"
         id="review"
         class="tab-panel"
-        :class="{ active: activeTab === 'review' }"
+        :class="{ active: activePanel === 'review' }"
         role="tabpanel"
         aria-labelledby="dashboard-tab-review"
-        :aria-hidden="activeTab === 'review' ? 'false' : 'true'"
+        :aria-hidden="activePanel === 'review' ? 'false' : 'true'"
       >
         <TeacherDashboardReviewPanel :review-highlights="reviewHighlights" />
       </section>
 
       <section
-        v-show="activeTab === 'intervention'"
+        v-show="activePanel === 'intervention'"
         id="intervention"
         class="tab-panel"
-        :class="{ active: activeTab === 'intervention' }"
+        :class="{ active: activePanel === 'intervention' }"
         role="tabpanel"
         aria-labelledby="dashboard-tab-intervention"
-        :aria-hidden="activeTab === 'intervention' ? 'false' : 'true'"
+        :aria-hidden="activePanel === 'intervention' ? 'false' : 'true'"
       >
         <TeacherDashboardInterventionPanel :intervention-targets="interventionTargets" />
       </section>
