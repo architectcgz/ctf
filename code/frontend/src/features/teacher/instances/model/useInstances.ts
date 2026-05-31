@@ -1,13 +1,11 @@
-import { computed, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 import { getClasses } from '@/api/teacher'
 import type { ClassDirectoryItem, InstanceDirectoryItem } from '@/api/contracts'
-import { getInstanceDirectoryByRole } from '@/api/instances'
+import { useManagedInstanceDirectory } from '@/features/managed-instance-directory'
 import { useManagedInstanceDestroyAction } from '@/features/managed-instance-workflow'
 import { useAuthStore } from '@/stores/auth'
-import { useAbortController } from '@/shared/lib/request/useAbortController'
 import { useToast } from '@/shared/model/common/useToast'
-import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 
 type TeacherInstanceFilters = {
@@ -21,9 +19,6 @@ export function useInstances() {
   const toast = useToast()
 
   const classes = ref<ClassDirectoryItem[]>([])
-  const instances = ref<InstanceDirectoryItem[]>([])
-  const page = ref(1)
-  const pageSize = ref(DEFAULT_PAGE_SIZE)
   const filters = reactive<TeacherInstanceFilters>({
     className: '',
     keyword: '',
@@ -31,24 +26,47 @@ export function useInstances() {
   })
 
   const loadingClasses = ref(false)
-  const loadingInstances = ref(false)
-  const error = ref<string | null>(null)
   const autoSearchReady = ref(false)
-  let latestInstanceRequestID = 0
-  let instanceSearchTimer: number | null = null
-  const { createController, abort } = useAbortController()
-
-  const isAdmin = computed(() => authStore.user?.role === 'admin')
   const totalCount = ref(0)
   const runningCount = ref(0)
   const expiringSoonCount = ref(0)
-  const totalPages = computed(() =>
-    Math.max(1, Math.ceil(totalCount.value / Math.max(pageSize.value, 1)))
-  )
+  const {
+    list: instances,
+    page,
+    pageSize,
+    loading: loadingInstances,
+    error,
+    totalPages,
+    total,
+    loadInstances,
+    scheduleSearch: scheduleInstanceSearch,
+  } = useManagedInstanceDirectory({
+    role: () => authStore.user?.role,
+    buildQuery: ({ page, pageSize }) => ({
+      class_name: filters.className || undefined,
+      keyword: filters.keyword.trim() || undefined,
+      student_no: filters.studentNo.trim() || undefined,
+      page,
+      page_size: pageSize,
+    }),
+    errorMessage: '加载实例列表失败，请稍后重试',
+    onLoaded: (response) => {
+      totalCount.value = response.total
+      runningCount.value = response.summary.running_count
+      expiringSoonCount.value = response.summary.expiring_soon_count
+    },
+    onLoadError: (err) => {
+      reportFrontendError('加载教师实例列表失败:', err)
+      totalCount.value = 0
+      runningCount.value = 0
+      expiringSoonCount.value = 0
+    },
+  })
+
+  const isAdmin = computed(() => authStore.user?.role === 'admin')
 
   async function initialize(): Promise<void> {
     loadingClasses.value = true
-    error.value = null
     autoSearchReady.value = false
 
     try {
@@ -64,77 +82,13 @@ export function useInstances() {
       error.value = '加载实例管理数据失败，请稍后重试'
       classes.value = []
       instances.value = []
+      total.value = 0
       totalCount.value = 0
       runningCount.value = 0
       expiringSoonCount.value = 0
     } finally {
       loadingClasses.value = false
     }
-  }
-
-  async function loadInstances(): Promise<void> {
-    const requestID = ++latestInstanceRequestID
-    const controller = createController()
-    loadingInstances.value = true
-    error.value = null
-
-    try {
-      const nextInstances = await getInstanceDirectoryByRole(
-        authStore.user?.role,
-        {
-          class_name: filters.className || undefined,
-          keyword: filters.keyword.trim() || undefined,
-          student_no: filters.studentNo.trim() || undefined,
-          page: page.value,
-          page_size: pageSize.value,
-        },
-        {
-          signal: controller.signal,
-        }
-      )
-      if (requestID !== latestInstanceRequestID) return
-      instances.value = nextInstances.list
-      totalCount.value = nextInstances.total
-      page.value = nextInstances.page
-      pageSize.value = nextInstances.page_size
-      runningCount.value = nextInstances.summary.running_count
-      expiringSoonCount.value = nextInstances.summary.expiring_soon_count
-    } catch (err) {
-      if (requestID !== latestInstanceRequestID) return
-      if (
-        err &&
-        typeof err === 'object' &&
-        'code' in err &&
-        (err as { code?: unknown }).code === 'ERR_CANCELED'
-      ) {
-        return
-      }
-      reportFrontendError('加载教师实例列表失败:', err)
-      error.value = '加载实例列表失败，请稍后重试'
-      instances.value = []
-      totalCount.value = 0
-      runningCount.value = 0
-      expiringSoonCount.value = 0
-    } finally {
-      if (requestID !== latestInstanceRequestID) return
-      loadingInstances.value = false
-    }
-  }
-
-  function clearScheduledInstanceSearch(): void {
-    if (instanceSearchTimer !== null) {
-      window.clearTimeout(instanceSearchTimer)
-      instanceSearchTimer = null
-    }
-  }
-
-  function scheduleInstanceSearch(): void {
-    clearScheduledInstanceSearch()
-    instanceSearchTimer = window.setTimeout(() => {
-      instanceSearchTimer = null
-      page.value = 1
-      void loadInstances()
-    }, 250)
   }
 
   function updateFilter<K extends keyof TeacherInstanceFilters>(
@@ -176,11 +130,6 @@ export function useInstances() {
       scheduleInstanceSearch()
     }
   )
-
-  onUnmounted(() => {
-    clearScheduledInstanceSearch()
-    abort()
-  })
 
   return {
     classes,

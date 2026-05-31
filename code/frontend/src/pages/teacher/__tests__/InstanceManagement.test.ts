@@ -12,6 +12,7 @@ import teacherInstanceManagementPageModelSource from '@/features/teacher/instanc
 import teacherInstanceDirectorySectionSource from '@/features/teacher/instances/ui/TeacherInstanceDirectorySection.vue?raw'
 import teacherInstanceHeroPanelSource from '@/features/teacher/instances/ui/TeacherInstanceHeroPanel.vue?raw'
 import teacherInstancesHookSource from '@/features/teacher/instances/model/useInstances.ts?raw'
+import managedInstanceDirectorySource from '@/features/managed-instance-directory/model/useManagedInstanceDirectory.ts?raw'
 import managedInstanceDestroyWorkflowSource from '@/features/managed-instance-workflow/model/useManagedInstanceDestroyAction.ts?raw'
 import { useAuthStore } from '@/stores/auth'
 
@@ -181,12 +182,12 @@ describe('InstanceManagement', () => {
     expect(instanceManagementViewSource).toContain('useInstanceManagementPage')
     expect(instanceManagementViewSource).not.toContain('confirmDestructiveAction')
     expect(instanceManagementViewSource).not.toContain('resolveTeachingDashboardRouteName')
-    expect(teacherInstancesHookSource).toContain("from '@/api/instances'")
+    expect(teacherInstancesHookSource).toContain("from '@/features/managed-instance-directory'")
     expect(teacherInstancesHookSource).toContain("from '@/features/managed-instance-workflow'")
+    expect(teacherInstancesHookSource).not.toContain("from '@/api/instances'")
     expect(teacherInstancesHookSource).not.toContain('getTeacherInstances')
     expect(teacherInstancesHookSource).not.toContain('destroyTeacherInstance')
     expect(teacherInstancesHookSource).toContain("reportFrontendError('加载教师实例管理页失败:', err)")
-    expect(teacherInstancesHookSource).toContain("reportFrontendError('加载教师实例列表失败:', err)")
     expect(teacherInstancesHookSource).toContain("reportFrontendError('教师销毁实例失败:', err)")
     expect(teacherInstancesHookSource).not.toContain("console.error('加载教师实例")
     expect(teacherInstanceManagementPageModelSource).not.toContain('confirmDestructiveAction')
@@ -196,6 +197,9 @@ describe('InstanceManagement', () => {
     )
     expect(managedInstanceDestroyWorkflowSource).toContain('destroyManagedInstanceByRole')
     expect(managedInstanceDestroyWorkflowSource).toContain('confirmDestructiveAction')
+    expect(managedInstanceDirectorySource).toContain('getInstanceDirectoryByRole')
+    expect(managedInstanceDirectorySource).toContain('useAbortController')
+    expect(managedInstanceDirectorySource).toContain('scheduleSearch')
     expect(teacherInstanceHeroPanelSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(teacherInstanceHeroPanelSource).toContain('<AppRouteLink')
     expect(appRouteLinkSource).toContain("from 'vue-router'")

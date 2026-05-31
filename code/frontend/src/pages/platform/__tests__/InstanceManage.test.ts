@@ -9,6 +9,7 @@ import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import instanceManageHeroPanelSource from '@/features/platform/instance-management/ui/InstanceManageHeroPanel.vue?raw'
 import instanceManageWorkspacePanelSource from '@/features/platform/instance-management/ui/InstanceManageWorkspacePanel.vue?raw'
 import platformInstanceManagementModelSource from '@/features/platform/instance-management/model/usePlatformInstanceManagementPage.ts?raw'
+import managedInstanceDirectorySource from '@/features/managed-instance-directory/model/useManagedInstanceDirectory.ts?raw'
 import managedInstanceDestroyWorkflowSource from '@/features/managed-instance-workflow/model/useManagedInstanceDestroyAction.ts?raw'
 
 const instanceAccessApiMocks = vi.hoisted(() => ({
@@ -122,10 +123,13 @@ describe('PlatformInstanceManagement', () => {
     expect(adminInstanceManageSource).toContain("from '@/features/platform/instance-management'")
     expect(adminInstanceManageSource).toContain('usePlatformInstanceManagementPage')
     expect(platformInstanceManagementModelSource).toContain('InstanceDirectoryItem')
-    expect(platformInstanceManagementModelSource).toContain("from '@/api/instances'")
+    expect(platformInstanceManagementModelSource).toContain(
+      "from '@/features/managed-instance-directory'"
+    )
     expect(platformInstanceManagementModelSource).toContain(
       "from '@/features/managed-instance-workflow'"
     )
+    expect(platformInstanceManagementModelSource).not.toContain("from '@/api/instances'")
     expect(platformInstanceManagementModelSource).toContain("from '@/entities/instance'")
     expect(platformInstanceManagementModelSource).not.toContain("from 'vue-router'")
     expect(platformInstanceManagementModelSource).toContain('const overviewRoute = platformOverviewRoute')
@@ -135,6 +139,9 @@ describe('PlatformInstanceManagement', () => {
     expect(platformInstanceManagementModelSource).not.toContain("from '@/api/admin'")
     expect(platformInstanceManagementModelSource).not.toContain('getPlatformInstances')
     expect(platformInstanceManagementModelSource).not.toContain('destroyPlatformInstance')
+    expect(managedInstanceDirectorySource).toContain('getInstanceDirectoryByRole')
+    expect(managedInstanceDirectorySource).toContain('useAbortController')
+    expect(managedInstanceDirectorySource).toContain('scheduleSearch')
     expect(managedInstanceDestroyWorkflowSource).toContain('destroyManagedInstanceByRole')
     expect(adminInstanceManageSource).not.toContain("from '@/api/teacher'")
     expect(adminInstanceManageSource).not.toContain("from '@/shared/model/common/useDestructiveConfirm'")

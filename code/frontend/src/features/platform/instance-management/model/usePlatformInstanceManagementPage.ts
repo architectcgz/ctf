@@ -1,10 +1,9 @@
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import type { InstanceDirectoryItem } from '@/api/contracts'
-import { getInstanceDirectoryByRole } from '@/api/instances'
 import { getInstanceStudentDisplayName } from '@/entities/instance'
+import { useManagedInstanceDirectory } from '@/features/managed-instance-directory'
 import { useManagedInstanceDestroyAction } from '@/features/managed-instance-workflow'
-import { useAbortController } from '@/shared/lib/request/useAbortController'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
   platformInstanceStudentAnalysisRoute,
@@ -30,22 +29,47 @@ interface InstanceManageTableRow {
 type InstanceStatusFilter = 'running' | 'creating' | 'expired' | 'failed' | 'inactive' | ''
 
 export function usePlatformInstanceManagementPage() {
-  const list = ref<InstanceDirectoryItem[]>([])
-  const total = ref(0)
-  const page = ref(1)
-  const pageSize = ref(15)
-  const loading = ref(false)
-  const error = ref<string | null>(null)
   const keyword = ref('')
   const statusFilter = ref<InstanceStatusFilter>('')
-  let latestRequestId = 0
-  let scheduledSearchTimer: number | null = null
-  const { createController, abort } = useAbortController()
+  const runningCount = ref(0)
+  const warningCount = ref(0)
+  const {
+    list,
+    total,
+    page,
+    pageSize,
+    loading,
+    error,
+    totalPages,
+    loadInstances,
+    scheduleSearch,
+    handlePageChange,
+  } = useManagedInstanceDirectory({
+    role: 'admin',
+    initialPageSize: 15,
+    buildQuery: ({ page, pageSize }) => ({
+      class_name: undefined,
+      keyword: keyword.value.trim() || undefined,
+      student_no: undefined,
+      status: statusFilter.value || undefined,
+      page,
+      page_size: pageSize,
+    }),
+    errorMessage: '加载实例列表失败，请稍后重试',
+    onLoaded: (response) => {
+      runningCount.value = response.summary.running_count
+      warningCount.value = response.summary.warning_count
+    },
+    onLoadError: (err) => {
+      reportFrontendError('加载实例列表失败:', err)
+      runningCount.value = 0
+      warningCount.value = 0
+    },
+  })
 
   const totalInstances = computed(() => total.value)
   const filteredTotal = computed(() => total.value)
   const overviewRoute = platformOverviewRoute
-  const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
   const pageRows = computed<InstanceManageTableRow[]>(() => {
     return list.value.map((item) => ({
       id: item.id,
@@ -60,60 +84,6 @@ export function usePlatformInstanceManagementPage() {
       studentRoute: buildStudentRoute(String(item.student_id), item.class_name),
     }))
   })
-  const runningCount = ref(0)
-  const warningCount = ref(0)
-
-  async function loadInstances(): Promise<void> {
-    const requestId = ++latestRequestId
-    const controller = createController()
-    loading.value = true
-    error.value = null
-    try {
-      const response = await getInstanceDirectoryByRole(
-        'admin',
-        {
-          class_name: undefined,
-          keyword: keyword.value.trim() || undefined,
-          student_no: undefined,
-          status: statusFilter.value || undefined,
-          page: page.value,
-          page_size: pageSize.value,
-        },
-        {
-          signal: controller.signal,
-        }
-      )
-      if (requestId !== latestRequestId) return
-      list.value = response.list
-      total.value = response.total
-      page.value = response.page
-      pageSize.value = response.page_size
-      runningCount.value = response.summary.running_count
-      warningCount.value = response.summary.warning_count
-      if (page.value > totalPages.value) {
-        page.value = totalPages.value
-      }
-    } catch (err) {
-      if (requestId !== latestRequestId) return
-      if (
-        err &&
-        typeof err === 'object' &&
-        'code' in err &&
-        (err as { code?: unknown }).code === 'ERR_CANCELED'
-      ) {
-        return
-      }
-      reportFrontendError('加载实例列表失败:', err)
-      error.value = '加载实例列表失败，请稍后重试'
-      list.value = []
-      total.value = 0
-      runningCount.value = 0
-      warningCount.value = 0
-    } finally {
-      if (requestId !== latestRequestId) return
-      loading.value = false
-    }
-  }
 
   const { destroyingId, destroyManagedInstance } = useManagedInstanceDestroyAction({
     role: 'admin',
@@ -145,16 +115,6 @@ export function usePlatformInstanceManagementPage() {
     return platformInstanceStudentAnalysisRoute(studentId, className)
   }
 
-  function handlePageChange(p: number): void {
-    const normalizedPage = Math.max(1, Math.floor(p))
-    if (normalizedPage === page.value || normalizedPage > totalPages.value) {
-      return
-    }
-
-    page.value = normalizedPage
-    void loadInstances()
-  }
-
   function setKeyword(nextKeyword: string): void {
     keyword.value = nextKeyword
   }
@@ -168,33 +128,12 @@ export function usePlatformInstanceManagementPage() {
     statusFilter.value = ''
   }
 
-  function clearScheduledSearch(): void {
-    if (scheduledSearchTimer !== null) {
-      window.clearTimeout(scheduledSearchTimer)
-      scheduledSearchTimer = null
-    }
-  }
-
-  function scheduleSearch(): void {
-    clearScheduledSearch()
-    scheduledSearchTimer = window.setTimeout(() => {
-      scheduledSearchTimer = null
-      page.value = 1
-      void loadInstances()
-    }, 250)
-  }
-
   watch([keyword, statusFilter], () => {
     scheduleSearch()
   })
 
   onMounted(() => {
     void loadInstances()
-  })
-
-  onUnmounted(() => {
-    clearScheduledSearch()
-    abort()
   })
 
   return {
@@ -215,7 +154,9 @@ export function usePlatformInstanceManagementPage() {
     loadInstances,
     buildStudentRoute,
     requestDestroyById,
-    handlePageChange,
+    handlePageChange: (pageNumber: number) => {
+      void handlePageChange(pageNumber)
+    },
     setKeyword,
     setStatusFilter,
     resetFilters,
