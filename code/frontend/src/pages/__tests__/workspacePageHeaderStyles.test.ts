@@ -4,9 +4,11 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
+import contestListWorkspaceSource from '@/widgets/contest-list-workspace/ContestListWorkspace.vue?raw'
 import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
 import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
+import notificationListWorkspaceSource from '@/widgets/notification-list-workspace/NotificationListWorkspace.vue?raw'
 import scoreboardViewSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
 import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
@@ -151,9 +153,12 @@ import challengeManageHeroSource from '@/features/platform/challenges/ui/Challen
 import challengeQuestionPanelSource from '@/features/challenge-detail/ui/ChallengeQuestionPanel.vue?raw'
 import challengeSolutionsPanelSource from '@/features/challenge-detail/ui/ChallengeSolutionsPanel.vue?raw'
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
+import challengeDetailWidgetSource from '@/widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue?raw'
 import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
+import contestDetailWidgetSource from '@/widgets/contest-detail-workspace/ContestDetailWorkspace.vue?raw'
 import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
 import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
+import notificationDetailWorkspaceSource from '@/widgets/notification-detail-workspace/NotificationDetailWorkspace.vue?raw'
 import reviewArchiveHeroSource from '@/widgets/review-archive-workspace/ReviewArchiveHero.vue?raw'
 import errorStatusShellSource from '@/shared/ui/errors/ErrorStatusShell.vue?raw'
 
@@ -163,10 +168,18 @@ const challengeImportPreviewWorkspaceBundleSource = `${challengeImportPreviewSou
 const adminChallengeDetailWorkspaceSource = `${adminChallengeDetailSource}\n${adminChallengeTopbarSource}`
 const challengeDetailWorkspaceSource = [
   challengeDetailSource,
+  challengeDetailWidgetSource,
   challengeQuestionPanelSource,
   challengeSolutionsPanelSource,
 ].join('\n')
-const contestDetailWorkspaceSource = `${contestDetailSource}\n${contestOverviewPanelSource}`
+const contestDetailWorkspaceSource = [
+  contestDetailSource,
+  contestDetailWidgetSource,
+  contestOverviewPanelSource,
+].join('\n')
+const contestListWorkspaceCombinedSource = `${contestListSource}\n${contestListWorkspaceSource}`
+const notificationDetailWorkspaceCombinedSource = `${notificationDetailSource}\n${notificationDetailWorkspaceSource}`
+const notificationListWorkspaceCombinedSource = `${notificationListSource}\n${notificationListWorkspaceSource}`
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
@@ -440,7 +453,7 @@ describe('workspace page header styles', () => {
         exclude: '<h1 class="contest-hero__title">{{ contest.title }}</h1>',
       },
       {
-        source: notificationDetailSource,
+        source: notificationDetailWorkspaceCombinedSource,
         include: /<h1 class="notification-detail-title workspace-page-title">\s*/,
         exclude: '<h1 class="notification-detail-title">',
       },
@@ -546,9 +559,11 @@ describe('workspace page header styles', () => {
     expect(securitySettingsWorkspaceSource).not.toContain('<PageHeader')
     expect(securitySettingsWorkspaceSource).toContain('class="workspace-page-header security-topbar"')
     expect(securitySettingsWorkspaceSource).toContain('class="security-topbar-meta"')
-    expect(contestListSource).toContain('class="workspace-page-header contest-topbar"')
+    expect(contestListWorkspaceCombinedSource).toContain('class="workspace-page-header contest-topbar"')
     expect(instanceListWorkspaceSource).toContain('class="workspace-page-header instance-topbar"')
-    expect(notificationListSource).toContain('class="workspace-page-header notification-topbar"')
+    expect(notificationListWorkspaceCombinedSource).toContain(
+      'class="workspace-page-header notification-topbar"'
+    )
     expect(challengeImportHeroSource).toContain(
       '<header class="workspace-page-header challenge-import-heading">'
     )
@@ -588,7 +603,7 @@ describe('workspace page header styles', () => {
     expect(challengeDetailWorkspaceSource).not.toMatch(
       /\.challenge-subtabs\s*\{[\s\S]*--page-top-tab-min-height: 2\.5rem;/s
     )
-    expect(contestDetailSource).toContain('--page-top-tab-min-height: 3rem;')
-    expect(contestDetailSource).not.toContain('--page-top-tab-min-height: 2.5rem;')
+    expect(contestDetailWorkspaceSource).toContain('--page-top-tab-min-height: 3rem;')
+    expect(contestDetailWorkspaceSource).not.toContain('--page-top-tab-min-height: 2.5rem;')
   })
 })

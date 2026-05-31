@@ -52,6 +52,9 @@ src/
 - `ScoreboardDetailRoutePage.vue` 已收口成 route entry + widget 组合：
   - `pages/scoreboard/ScoreboardDetailRoutePage.vue`
   - `widgets/scoreboard-detail-workspace/ScoreboardDetailWorkspace.vue`
+- `ChallengeDetailRoutePage.vue` 已收口成 route entry + widget 组合：
+  - `pages/challenges/ChallengeDetailRoutePage.vue`
+  - `widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue`
 
 ## 当前做得好的地方
 
@@ -68,13 +71,15 @@ src/
 - 代码里仍保留多条 `/teacher/* -> /academy/*` redirect。
 - 这说明“新入口已统一”与“旧入口仍兼容”同时存在，后续需要明确兼容窗口和下线顺序。
 
-### 2. 一批 route page 仍然偏厚
+### 2. route page 厚壳层主问题已基本收口
 
-当前最需要继续瘦身的页面不是 API owner 混乱，而是 page shell 过重：
+当前主链路里的高优先级 runtime route page 已基本收口成 route entry + widget / feature 组合。
 
-- `pages/challenges/ChallengeDetailRoutePage.vue`
+后续重点更适合转向：
 
-这些页面已经不直接调用业务 API，但仍然持有大量模板分支、样式壳层和页面区块编排，后续适合继续下沉到 widget 或更清晰的 page workspace 组件。
+- 教师端旧兼容入口退场
+- `entities` 展示 owner 补强
+- 继续把 guardrail 跟现状一起机械化
 
 ### 3. `entities` 仍然偏薄
 
@@ -114,17 +119,13 @@ src/
 - 收掉教师端 `/teacher/*` 兼容入口，至少先整理成有明确退场边界的 allowlist。
 - 保持 router runtime 只从 `pages` 取页面组件，不再新增绕过 `pages` 的入口。
 
-### P1：继续瘦身最厚的 route page
+### P1：补 route/widget/entity 边界 guardrail
 
-优先顺序：
+重点不是继续找新的厚 route page，而是防止已收口页面回退：
 
-1. `pages/challenges/ChallengeDetailRoutePage.vue`
-
-每次只切一个页面，目标是：
-
-- route page 保留入口、装配和少量布局变量
-- workspace 区块抽到 widget
-- 展示规则下沉到 entity
+- route page 继续只保留入口、装配和少量局部桥接
+- workspace 区块继续留在 widget
+- 展示规则继续下沉到 entity
 - 业务流程继续留在 feature model
 
 ### P2：补强实体层

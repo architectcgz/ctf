@@ -44,6 +44,7 @@ import instanceListWorkspaceShellSource from '@/features/instance-list/ui/Instan
 import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
+import challengeDetailWorkspaceSource from '@/widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue?raw'
 import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
 import contestListWorkspaceSource from '@/widgets/contest-list-workspace/ContestListWorkspace.vue?raw'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
@@ -132,6 +133,7 @@ const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorksp
 const contestListWorkspaceCombinedSource = `${contestListSource}\n${contestListWorkspaceSource}`
 const notificationDetailWorkspaceCombinedSource = `${notificationDetailSource}\n${notificationDetailWorkspaceSource}`
 const notificationListWorkspaceCombinedSource = `${notificationListSource}\n${notificationListWorkspaceSource}`
+const challengeDetailWorkspaceCombinedSource = `${challengeDetailSource}\n${challengeDetailWorkspaceSource}`
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -199,7 +201,7 @@ describe('workspace shell shared styles', () => {
       adminDashboardSource,
       contestOrchestrationPageSource,
       userGovernanceSource,
-      challengeDetailSource,
+      challengeDetailWorkspaceCombinedSource,
       challengePackageFormatSource,
       imageManageSource,
       challengeManageSource,

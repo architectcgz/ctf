@@ -6,6 +6,7 @@ import { ApiError } from '@/api/request'
 import ChallengeDetail from '@/pages/challenges/ChallengeDetailRoutePage.vue'
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
 import challengeDetailPageSource from '@/features/challenge-detail/model/useChallengeDetailPage.ts?raw'
+import challengeDetailWorkspaceSource from '@/widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue?raw'
 import challengeDetailRoutesSource from '@/features/challenge-detail/model/challengeDetailRoutes.ts?raw'
 import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
 import challengeQuestionPanelSource from '@/features/challenge-detail/ui/ChallengeQuestionPanel.vue?raw'
@@ -227,7 +228,7 @@ describe('ChallengeDetail', () => {
   })
 
   it('工作区应建立满高伸展布局链', () => {
-    expect(challengeDetailSource).toContain('min-height: max(100%, calc(100vh - 5rem));')
+    expect(challengeDetailWorkspaceSource).toContain('min-height: max(100%, calc(100vh - 5rem));')
     expect(challengeWorkspaceShellSource).toContain(
       '.detail-content {\n  display: flex;\n  flex: 1 1 auto;'
     )
@@ -242,8 +243,8 @@ describe('ChallengeDetail', () => {
   })
 
   it('题目详情应把 tab 下方面板间距收口到共享 workspace token', () => {
-    expect(challengeDetailSource).toContain('--workspace-tabs-panel-gap: var(--space-2);')
-    expect(challengeDetailSource).toContain(
+    expect(challengeDetailWorkspaceSource).toContain('--workspace-tabs-panel-gap: var(--space-2);')
+    expect(challengeDetailWorkspaceSource).toContain(
       '--workspace-panel-padding-top: var(--workspace-tabs-panel-gap);'
     )
     expect(challengeWorkspaceShellSource).toMatch(
@@ -256,7 +257,7 @@ describe('ChallengeDetail', () => {
 
   it('题目详情 section heading 应切到共享 workspace overline 语义', () => {
     const combinedSource = [
-      challengeDetailSource,
+      challengeDetailWorkspaceSource,
       challengeWorkspaceShellSource,
       challengeQuestionPanelSource,
       challengeSolutionsPanelSource,
@@ -279,7 +280,7 @@ describe('ChallengeDetail', () => {
   it('题目详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
     expect(challengeActionAsideSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
     expect(challengeActionAsideSource).not.toContain('<div class="overline">Primary Action</div>')
-    expect(challengeDetailSource).not.toMatch(/^\.overline\s*\{/m)
+    expect(challengeDetailWorkspaceSource).not.toMatch(/^\.overline\s*\{/m)
   })
 
   it('未解题时应显示题解锁定态', async () => {
@@ -975,7 +976,7 @@ describe('ChallengeDetail', () => {
     expect(recordsTab).toBeTruthy()
 
     await recordsTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.find('.submission-pagination').exists()).toBe(true)
     expect(wrapper.find('.submission-pagination').text()).toContain('1 / 2')
@@ -985,7 +986,7 @@ describe('ChallengeDetail', () => {
 
     const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
     await paginationButtons[1].trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.find('.submission-pagination').text()).toContain('2 / 2')
     expect(wrapper.text()).toContain('flag{11}')

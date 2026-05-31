@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
+import challengeDetailWidgetSource from '@/widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue?raw'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
 import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
 import challengeDetailPageSource from '@/features/challenge-detail/model/useChallengeDetailPage.ts?raw'
@@ -14,6 +15,7 @@ import challengeActionAsideSource from '@/features/challenge-detail/ui/Challenge
 
 const challengeDetailWorkspaceSource = [
   challengeDetailSource,
+  challengeDetailWidgetSource,
   challengeWorkspaceShellSource,
   challengeSolutionsPanelSource,
   challengeSubmissionRecordsPanelSource,
@@ -24,11 +26,16 @@ const challengeDetailWorkspaceSource = [
 describe('challenge page ui strategy', () => {
   it('challenge detail route should stay as a thin page shell that delegates to feature-owned workspace sections', () => {
     expect(challengeDetailSource).toContain(
-      "import { ChallengeWorkspaceShell, useChallengeDetailPage } from '@/features/challenge-detail'"
+      "import { useChallengeDetailPage } from '@/features/challenge-detail'"
     )
-    expect(challengeDetailSource).toContain('<ChallengeWorkspaceShell')
+    expect(challengeDetailSource).toContain(
+      "import { ChallengeDetailWorkspace } from '@/widgets/challenge-detail-workspace'"
+    )
+    expect(challengeDetailSource).toContain('<ChallengeDetailWorkspace')
+    expect(challengeDetailSource).not.toContain('<ChallengeWorkspaceShell')
     expect(challengeDetailSource).not.toContain("from '@/api/challenge'")
 
+    expect(challengeDetailWidgetSource).toContain('<ChallengeWorkspaceShell')
     expect(challengeWorkspaceShellSource).toContain('<ChallengeQuestionPanel')
     expect(challengeWorkspaceShellSource).toContain('<ChallengeSolutionsPanel')
     expect(challengeWorkspaceShellSource).toContain('<ChallengeSubmissionRecordsPanel')
@@ -39,7 +46,7 @@ describe('challenge page ui strategy', () => {
   })
 
   it('challenge detail should keep shared shell, tab, button, and semantic status primitives instead of page-local variants', () => {
-    expect(challengeDetailSource).toContain(
+    expect(challengeDetailWorkspaceSource).toContain(
       'class="journal-shell journal-shell-user journal-hero workspace-shell min-h-full"'
     )
     expect(challengeDetailWorkspaceSource).toContain('class="workspace-tabbar top-tabs"')
@@ -59,6 +66,7 @@ describe('challenge page ui strategy', () => {
       "import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'"
     )
     expect(challengeDetailPageSource).toContain('useTabKeyboardNavigation<ChallengeSolutionTab>({')
+    expect(challengeDetailSource).toContain('function setSelectedSolutionId(value: string | null): void {')
     expect(challengeDetailSource).not.toContain('function focusTab(id: string): void {')
     expect(challengeDetailSource).not.toContain('function handleSolutionTabKeydown(')
     expect(challengeDetailPresentationSource).not.toContain('function handleSolutionTabKeydown(')

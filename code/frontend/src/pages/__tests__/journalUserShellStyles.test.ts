@@ -4,12 +4,17 @@ import { describe, expect, it } from 'vitest'
 
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
+import challengeDetailWorkspaceSource from '@/widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue?raw'
 import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
 import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
+import contestListWorkspaceSource from '@/widgets/contest-list-workspace/ContestListWorkspace.vue?raw'
+import contestDetailWorkspaceSource from '@/widgets/contest-detail-workspace/ContestDetailWorkspace.vue?raw'
 import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
 import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
 import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
+import notificationDetailWorkspaceSource from '@/widgets/notification-detail-workspace/NotificationDetailWorkspace.vue?raw'
+import notificationListWorkspaceSource from '@/widgets/notification-list-workspace/NotificationListWorkspace.vue?raw'
 import securitySettingsSource from '@/pages/profile/SecuritySettingsRoutePage.vue?raw'
 import securitySettingsWorkspaceShellSource from '@/features/profile/ui/SecuritySettingsWorkspaceShell.vue?raw'
 import skillProfileSource from '@/pages/profile/SkillProfileRoutePage.vue?raw'
@@ -36,7 +41,12 @@ const workspaceShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,
   'utf-8'
 )
+const challengeDetailWorkspaceCombinedSource = `${challengeDetailSource}\n${challengeDetailWorkspaceSource}`
+const contestListWorkspaceCombinedSource = `${contestListSource}\n${contestListWorkspaceSource}`
+const contestDetailWorkspaceCombinedSource = `${contestDetailSource}\n${contestDetailWorkspaceSource}`
 const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
+const notificationDetailWorkspaceCombinedSource = `${notificationDetailSource}\n${notificationDetailWorkspaceSource}`
+const notificationListWorkspaceCombinedSource = `${notificationListSource}\n${notificationListWorkspaceSource}`
 const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
 const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
 const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
@@ -71,12 +81,12 @@ describe('journal user shell shared styles', () => {
   it('列表页和 profile 页应通过 journal-shell-user 接入共享 shell', () => {
     for (const source of [
       challengeListSource,
-      challengeDetailSource,
-      contestListSource,
-      contestDetailSource,
+      challengeDetailWorkspaceCombinedSource,
+      contestListWorkspaceCombinedSource,
+      contestDetailWorkspaceCombinedSource,
       instanceListWorkspaceSource,
-      notificationDetailSource,
-      notificationListSource,
+      notificationDetailWorkspaceCombinedSource,
+      notificationListWorkspaceCombinedSource,
       scoreboardSource,
       securitySettingsWorkspaceSource,
       skillProfileWorkspaceSource,
@@ -89,12 +99,12 @@ describe('journal user shell shared styles', () => {
   it('成员侧页面应把 hero 背景放在 section 根节点或软表面 root 上，而不是退回 div 包裹壳层', () => {
     const directHeroRootSources = [
       challengeListSource,
-      challengeDetailSource,
-      contestListSource,
-      contestDetailSource,
+      challengeDetailWorkspaceCombinedSource,
+      contestListWorkspaceCombinedSource,
+      contestDetailWorkspaceCombinedSource,
       instanceListWorkspaceSource,
-      notificationDetailSource,
-      notificationListSource,
+      notificationDetailWorkspaceCombinedSource,
+      notificationListWorkspaceCombinedSource,
       scoreboardSource,
       securitySettingsWorkspaceSource,
       skillProfileWorkspaceSource,
@@ -130,12 +140,12 @@ describe('journal user shell shared styles', () => {
   it('目标页面不应继续本地重写 hero 背景壳子', () => {
     for (const source of [
       challengeListSource,
-      challengeDetailSource,
-      contestListSource,
-      contestDetailSource,
+      challengeDetailWorkspaceCombinedSource,
+      contestListWorkspaceCombinedSource,
+      contestDetailWorkspaceCombinedSource,
       instanceListWorkspaceSource,
-      notificationDetailSource,
-      notificationListSource,
+      notificationDetailWorkspaceCombinedSource,
+      notificationListWorkspaceCombinedSource,
       scoreboardSource,
       securitySettingsWorkspaceSource,
       skillProfileWorkspaceSource,
