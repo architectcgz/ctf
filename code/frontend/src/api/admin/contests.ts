@@ -1469,6 +1469,7 @@ export async function runContestAWDCheckerPreview(
     method: 'POST',
     url: `/admin/contests/${encodeURIComponent(contestId)}/awd/checker-preview`,
     data,
+    timeout: 30000,
   })
   return normalizeAWDCheckerPreview(response)
 }

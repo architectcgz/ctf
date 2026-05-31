@@ -68,9 +68,9 @@ func TestAWDRoundUpdaterRunAWDHTTPCheckerActionUsesHTTPRuntime(t *testing.T) {
 
 func TestAWDRoundUpdaterPreviewHTTPStandardUsesCheckerToken(t *testing.T) {
 	runtime := &awdHTTPRuntimeStub{
-		response: contestports.AWDHTTPResponse{
-			StatusCode: http.StatusOK,
-			Body:       "flag{preview}",
+		responses: []contestports.AWDHTTPResponse{
+			{StatusCode: http.StatusOK},
+			{StatusCode: http.StatusOK, Body: "flag{preview}"},
 		},
 	}
 	updater := NewAWDRoundUpdater(nil, nil, config.ContestAWDConfig{CheckerTimeout: time.Second}, "", nil, nil)
@@ -101,12 +101,80 @@ func TestAWDRoundUpdaterPreviewHTTPStandardUsesCheckerToken(t *testing.T) {
 	if resp.ServiceStatus != contestentity.AWDServiceStatusUp {
 		t.Fatalf("unexpected preview status: %s; result=%s", resp.ServiceStatus, resp.CheckResult)
 	}
-	if len(runtime.requests) != 1 {
-		t.Fatalf("expected 1 request, got %d", len(runtime.requests))
+	if len(runtime.requests) != 2 {
+		t.Fatalf("expected 2 requests, got %d", len(runtime.requests))
 	}
-	request := runtime.requests[0]
+	if runtime.requests[0].URL != "http://service.local:8080/health" {
+		t.Fatalf("expected health probe before get_flag, got %s", runtime.requests[0].URL)
+	}
+	request := runtime.requests[1]
 	if request.Headers["X-AWD-Checker-Token"] != "preview-checker-token" {
 		t.Fatalf("unexpected checker token header: %+v", request.Headers)
+	}
+}
+
+func TestAWDRoundUpdaterPreviewHTTPStandardWaitsForHealthBeforePutFlag(t *testing.T) {
+	runtime := &awdHTTPRuntimeStub{
+		responses: []contestports.AWDHTTPResponse{
+			{StatusCode: http.StatusBadGateway},
+			{StatusCode: http.StatusOK},
+			{StatusCode: http.StatusOK},
+			{StatusCode: http.StatusOK, Body: "flag{preview}"},
+			{StatusCode: http.StatusOK},
+		},
+	}
+	updater := NewAWDRoundUpdater(nil, nil, config.ContestAWDConfig{CheckerTimeout: time.Second}, "", nil, nil)
+	updater.SetHTTPRuntime(runtime)
+
+	resp, err := updater.PreviewServiceCheck(context.Background(), contestports.AWDServicePreviewRequest{
+		ServiceID:      2001,
+		AWDChallengeID: 3001,
+		CheckerType:    contestentity.AWDCheckerTypeHTTPStandard,
+		CheckerConfig: `{
+			"put_flag": {
+				"method": "PUT",
+				"path": "/api/flag",
+				"headers": {
+					"X-AWD-Checker-Token": "{{CHECKER_TOKEN}}"
+				},
+				"expected_status": 200,
+				"body_template": "{{FLAG}}"
+			},
+			"get_flag": {
+				"path": "/api/flag",
+				"headers": {
+					"X-AWD-Checker-Token": "{{CHECKER_TOKEN}}"
+				},
+				"expected_status": 200,
+				"expected_substring": "{{FLAG}}"
+			},
+			"havoc": {
+				"path": "/health",
+				"expected_status": 200
+			}
+		}`,
+		CheckerTokenEnv: "CHECKER_TOKEN",
+		CheckerToken:    "preview-checker-token",
+		AccessURL:       "http://service.local:8080",
+		PreviewFlag:     "flag{preview}",
+	})
+	if err != nil {
+		t.Fatalf("PreviewServiceCheck() error = %v", err)
+	}
+	if resp.ServiceStatus != contestentity.AWDServiceStatusUp {
+		t.Fatalf("unexpected preview status: %s; result=%s", resp.ServiceStatus, resp.CheckResult)
+	}
+	if len(runtime.requests) != 5 {
+		t.Fatalf("expected 5 requests, got %d", len(runtime.requests))
+	}
+	if runtime.requests[0].URL != "http://service.local:8080/health" {
+		t.Fatalf("expected first request to be health probe, got %s", runtime.requests[0].URL)
+	}
+	if runtime.requests[1].URL != "http://service.local:8080/health" {
+		t.Fatalf("expected second request to retry health probe, got %s", runtime.requests[1].URL)
+	}
+	if runtime.requests[2].Method != http.MethodPut || runtime.requests[2].URL != "http://service.local:8080/api/flag" {
+		t.Fatalf("expected put_flag after health wait, got %+v", runtime.requests[2])
 	}
 }
 

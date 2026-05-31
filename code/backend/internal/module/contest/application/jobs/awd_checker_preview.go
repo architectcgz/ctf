@@ -117,8 +117,10 @@ func (u *AWDRoundUpdater) buildAWDPreviewOutcomeFromHTTPStandard(
 		AWDChallengeID: previewContext.AWDChallengeID,
 	}
 	acceptedFlags := []string{previewContext.PreviewFlag}
+	warmupHealthPath := resolveAWDPreviewWarmupHealthPath(definition.CheckerConfig, u.cfg.CheckerHealthPath)
 	targets := make([]awdHTTPCheckerTargetRuntimeResult, 0, len(instances))
 	for _, instance := range instances {
+		u.waitForAWDPreviewHTTPInstanceReady(ctx, instance, warmupHealthPath)
 		targets = append(targets, u.runAWDHTTPCheckerPreviewTarget(ctx, instance, config, templateData, acceptedFlags))
 	}
 
@@ -206,6 +208,27 @@ func normalizeAWDCheckerPreviewFlag(value string) string {
 		return defaultAWDCheckerPreviewFlag
 	}
 	return strings.TrimSpace(value)
+}
+
+func (u *AWDRoundUpdater) waitForAWDPreviewHTTPInstanceReady(ctx context.Context, instance contestports.AWDServiceInstance, healthPath string) {
+	timeout := normalizedAWDCheckerPreviewWarmupTimeout(u.cfg.CheckerTimeout)
+	deadline := time.Now().Add(timeout)
+	interval := normalizedAWDCheckerPreviewWarmupInterval(timeout)
+
+	for {
+		probe := u.probeServiceInstance(ctx, instance.AccessURL, instance.RuntimeDetails, healthPath)
+		if probe.healthy {
+			return
+		}
+		if time.Now().After(deadline) {
+			return
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(interval):
+		}
+	}
 }
 
 func previewContextServiceStatus(outcome *awdServiceCheckOutcome) string {

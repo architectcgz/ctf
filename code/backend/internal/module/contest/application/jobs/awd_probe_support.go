@@ -70,6 +70,25 @@ func normalizedAWDCheckerTimeout(value time.Duration) time.Duration {
 	return value
 }
 
+func normalizedAWDCheckerPreviewWarmupTimeout(checkerTimeout time.Duration) time.Duration {
+	timeout := normalizedAWDCheckerTimeout(checkerTimeout) / 2
+	if timeout < 300*time.Millisecond {
+		return 300 * time.Millisecond
+	}
+	if timeout > 2*time.Second {
+		return 2 * time.Second
+	}
+	return timeout
+}
+
+func normalizedAWDCheckerPreviewWarmupInterval(timeout time.Duration) time.Duration {
+	interval := timeout / 4
+	if interval < 100*time.Millisecond {
+		return 100 * time.Millisecond
+	}
+	return interval
+}
+
 func normalizedAWDCheckerHealthPath(value string) string {
 	trimmed := strings.TrimSpace(value)
 	if trimmed == "" {

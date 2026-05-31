@@ -22,6 +22,18 @@ func resolveAWDCheckerHealthPath(checkerConfig, fallback string) string {
 	return normalizedAWDCheckerHealthPath(fallback)
 }
 
+func resolveAWDPreviewWarmupHealthPath(checkerConfig, fallback string) string {
+	if strings.TrimSpace(checkerConfig) != "" {
+		config, err := parseAWDHTTPCheckerConfig(checkerConfig)
+		if err == nil {
+			if path := strings.TrimSpace(config.Havoc.Path); path != "" {
+				return normalizedAWDCheckerHealthPath(path)
+			}
+		}
+	}
+	return normalizedAWDCheckerHealthPath(fallback)
+}
+
 func parseAWDCheckerHealthPath(value string) string {
 	if strings.TrimSpace(value) == "" {
 		return ""

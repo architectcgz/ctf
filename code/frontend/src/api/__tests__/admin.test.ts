@@ -824,6 +824,7 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'POST',
       url: '/admin/contests/7/awd/checker-preview',
+      timeout: 30000,
       data: {
         awd_challenge_id: 101,
         checker_type: 'http_standard',

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -17,6 +18,7 @@ import (
 
 const defaultAWDPreviewFlag = "flag{preview}"
 const contestPreviewImageStatusAvailable = "available"
+const awdCheckerPreviewCleanupTimeout = 10 * time.Second
 
 func normalizeAWDPreviewFlag(value string) string {
 	if strings.TrimSpace(value) == "" {
@@ -251,7 +253,13 @@ func (s *AWDService) cleanupCheckerPreviewRuntime(ctx context.Context, cleanup f
 	if cleanup == nil {
 		return nil
 	}
-	if err := cleanup(ctx); err != nil {
+	cleanupBaseCtx := context.Background()
+	if ctx != nil {
+		cleanupBaseCtx = context.WithoutCancel(ctx)
+	}
+	cleanupCtx, cancel := context.WithTimeout(cleanupBaseCtx, awdCheckerPreviewCleanupTimeout)
+	defer cancel()
+	if err := cleanup(cleanupCtx); err != nil {
 		if previewErr != nil {
 			s.log.Warn("cleanup_checker_preview_runtime_failed", zap.Error(err))
 			return nil

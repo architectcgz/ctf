@@ -125,3 +125,28 @@ func TestAWDServicePrepareCheckerPreviewAccessURLRejectsExplicitURLWhenPreviewIm
 		t.Fatalf("expected apperror.ErrNotFound, got %v", err)
 	}
 }
+
+func TestAWDServiceCleanupCheckerPreviewRuntimeIgnoresCanceledRequestContext(t *testing.T) {
+	t.Parallel()
+
+	service := &AWDService{}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	cleanupCalled := false
+	var cleanupCtxErr error
+	err := service.cleanupCheckerPreviewRuntime(ctx, func(cleanupCtx context.Context) error {
+		cleanupCalled = true
+		cleanupCtxErr = cleanupCtx.Err()
+		return nil
+	}, nil)
+	if err != nil {
+		t.Fatalf("cleanupCheckerPreviewRuntime() error = %v", err)
+	}
+	if !cleanupCalled {
+		t.Fatal("expected cleanup to be called")
+	}
+	if cleanupCtxErr != nil {
+		t.Fatalf("expected cleanup context to stay active, got %v", cleanupCtxErr)
+	}
+}
