@@ -8,6 +8,7 @@ import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
 import classManageWorkspacePanelSource from '@/features/platform/class-management/ui/ClassManageWorkspacePanel.vue?raw'
 import platformClassManagementPageSource from '@/features/platform/class-management/model/usePlatformClassManagementPage.ts?raw'
+import platformClassDirectorySource from '@/features/platform/class-management/model/usePlatformClassDirectory.ts?raw'
 
 const adminTeachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
@@ -97,6 +98,9 @@ describe('PlatformClassManagement', () => {
     expect(classManageWorkspacePanelSource).not.toContain('class="ui-btn ui-btn--ghost"')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(platformClassManagementPageSource).not.toContain("from 'vue-router'")
+    expect(platformClassManagementPageSource).toContain("from './usePlatformClassDirectory'")
+    expect(platformClassManagementPageSource).not.toContain("from '@/api/admin'")
+    expect(platformClassDirectorySource).toContain("from '@/api/admin'")
     expect(platformClassManagementPageSource).toContain('function buildClassRoute')
     expect(adminClassManageSource).not.toContain('teacher-management-shell')
     expect(adminClassManageSource).not.toContain('teacher-directory-row')
