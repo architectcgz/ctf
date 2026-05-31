@@ -124,6 +124,15 @@ function collectImportsMatching(
   })
 }
 
+function collectSourceMatches(
+  files: SourceFile[],
+  predicate: (file: SourceFile, source: string) => boolean
+): string[] {
+  return files
+    .filter((file) => predicate(file, readFileSync(file.absolutePath, 'utf-8')))
+    .map((file) => file.relativePath)
+}
+
 function expectBaseline(
   actualEntries: string[],
   allowlist: Set<string>,
@@ -319,6 +328,24 @@ describe('frontend architecture boundaries', () => {
 
     expect(storeForbiddenImports).toEqual([])
     expect(utilityForbiddenImports).toEqual([])
+  })
+
+  it('legacy teacher frontend route paths should stay isolated in the redirect compatibility owner', () => {
+    const legacyTeacherFrontendRoutePattern =
+      /['"`]\/?teacher\/(?:dashboard|classes|students|awd-reviews|instances)(?:[/'"`:?]|$)/
+
+    const scannedFiles = sourceFiles.filter(
+      (file) =>
+        !file.relativePath.startsWith(`api${sep}`) &&
+        file.relativePath !== `utils${sep}teacherLegacyRedirect.ts`
+    )
+
+    const violations = collectSourceMatches(
+      scannedFiles,
+      (_file, source) => legacyTeacherFrontendRoutePattern.test(source)
+    )
+
+    expect(violations).toEqual([])
   })
 
   it('feature router access should stay in reviewed route-aware composables', () => {
