@@ -1,9 +1,5 @@
-import { onMounted, ref } from 'vue'
-
-import { getCheatDetection } from '@/api/admin/platform'
-import type { AdminCheatDetectionData } from '@/api/contracts'
-import { reportFrontendError } from '@/utils/reportFrontendError'
 import { buildPlatformAuditLogRoute } from './cheatDetectionRoutes'
+import { useCheatDetectionData } from './useCheatDetectionData'
 
 type CheatQuickAction = {
   title: string
@@ -13,9 +9,7 @@ type CheatQuickAction = {
 }
 
 export function useCheatDetectionPage() {
-  const loading = ref(false)
-  const error = ref('')
-  const riskData = ref<AdminCheatDetectionData | null>(null)
+  const cheatDetectionData = useCheatDetectionData()
 
   const quickActions: ReadonlyArray<CheatQuickAction> = [
     {
@@ -32,35 +26,18 @@ export function useCheatDetectionPage() {
     },
   ] as const
 
-  async function loadRiskData() {
-    loading.value = true
-    error.value = ''
-    try {
-      riskData.value = await getCheatDetection()
-    } catch (err) {
-      reportFrontendError('加载作弊检测结果失败:', err)
-      error.value = '加载作弊检测结果失败，请稍后重试。'
-    } finally {
-      loading.value = false
-    }
-  }
-
   function formatDateTime(value: string): string {
     return new Date(value).toLocaleString('zh-CN')
   }
 
-  onMounted(() => {
-    void loadRiskData()
-  })
-
   return {
-    riskData,
-    loading,
-    error,
+    riskData: cheatDetectionData.riskData,
+    loading: cheatDetectionData.loading,
+    error: cheatDetectionData.error,
     auditLogRoute: buildPlatformAuditLogRoute(),
     buildAuditRoute: buildPlatformAuditLogRoute,
     quickActions,
-    loadRiskData,
+    loadRiskData: cheatDetectionData.loadRiskData,
     formatDateTime,
   }
 }

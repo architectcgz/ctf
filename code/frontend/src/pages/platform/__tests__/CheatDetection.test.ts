@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
+import cheatDetectionDataSource from '@/features/platform/cheat-detection/model/useCheatDetectionData.ts?raw'
 import cheatDetectionPageSource from '@/features/platform/cheat-detection/model/useCheatDetectionPage.ts?raw'
 import cheatDetectionRoutesSource from '@/features/platform/cheat-detection/model/cheatDetectionRoutes.ts?raw'
 import CheatDetectionRoutePage from '@/pages/platform/CheatDetectionRoutePage.vue'
@@ -71,7 +72,10 @@ describe('CheatDetection', () => {
   it('路由页应仅负责组合，不直接耦合风险检测请求流程', () => {
     expect(cheatDetectionSource).toContain('useCheatDetectionPage')
     expect(cheatDetectionSource).not.toContain("from '@/api/admin/platform'")
+    expect(cheatDetectionPageSource).toContain("from './useCheatDetectionData'")
+    expect(cheatDetectionPageSource).not.toContain("from '@/api/admin/platform'")
     expect(cheatDetectionPageSource).not.toContain("from 'vue-router'")
+    expect(cheatDetectionDataSource).toContain("from '@/api/admin/platform'")
     expect(cheatDetectionPageSource).toContain('auditLogRoute: buildPlatformAuditLogRoute()')
     expect(cheatDetectionPageSource).toContain('buildAuditRoute: buildPlatformAuditLogRoute')
     expect(cheatDetectionRoutesSource).toContain('buildPlatformAuditLogRoute')
