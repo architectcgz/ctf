@@ -1,30 +1,20 @@
 import { onUnmounted, ref, watch, type MaybeRefOrGetter, toValue } from 'vue'
 
 import { createInstance } from '@/api/challenge'
-import {
-  destroyInstance as apiDestroyInstance,
-  extendInstance as apiExtendInstance,
-  getMyInstances,
-  requestInstanceAccess,
-} from '@/api/instance'
+import { getMyInstances } from '@/api/instance'
 import type { InstanceData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
-import { useClipboard } from '@/shared/model/common/useClipboard'
-import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
+import { useInstanceWorkflowActions } from '@/features/instance-workflow'
 import { useToast } from '@/shared/model/common/useToast'
 
 const CHALLENGE_INSTANCE_POLL_INTERVAL_MS = 3000
 
 export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | undefined>) {
   const toast = useToast()
-  const { copy } = useClipboard()
 
   const instance = ref<InstanceData | null>(null)
   const loading = ref(false)
   const creating = ref(false)
-  const opening = ref(false)
-  const extending = ref(false)
-  const destroying = ref(false)
   let pollingTimer: number | null = null
 
   function isWaitingStatus(status: InstanceData['status'] | undefined) {
@@ -110,83 +100,39 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
     }
   }
 
-  async function open() {
-    if (!instance.value) return
-
-    opening.value = true
-    try {
-      const result = await requestInstanceAccess(instance.value.id)
-      const command = result.access?.protocol === 'tcp' ? result.access.command : ''
-      if (command) {
-        await copy(command)
-        toast.info('TCP 连接命令已复制')
-        return
-      }
-      window.open(result.access_url, '_blank', 'noopener,noreferrer')
-    } catch (error) {
-      toast.error('打开目标失败')
-    } finally {
-      opening.value = false
-    }
-  }
-
-  async function extend() {
-    if (!instance.value) return
-    if (instance.value.share_scope === 'shared') {
-      toast.error('共享实例不支持手动延时')
-      return
-    }
-
-    extending.value = true
-    try {
-      const result = await apiExtendInstance(instance.value.id)
+  const {
+    opening,
+    extending,
+    destroying,
+    openInstance: open,
+    extendInstance: extend,
+    destroyInstance: destroy,
+  } = useInstanceWorkflowActions({
+    resolveTarget: () => instance.value,
+    getExtendBlockedMessage: (target) =>
+      target.share_scope === 'shared' ? '共享实例不支持手动延时' : null,
+    getDestroyBlockedMessage: (target) =>
+      target.share_scope === 'shared' ? '共享实例不支持手动销毁' : null,
+    onExtended: async ({ target, result }) => {
       if (result) {
         instance.value = {
-          ...instance.value,
+          ...target,
           expires_at: result.expires_at,
           remaining_extends: result.remaining_extends,
         }
-      } else {
-        await refresh()
+        return
       }
-      toast.success('延时成功')
-    } catch (error) {
-      toast.error('延时失败')
-    } finally {
-      extending.value = false
-    }
-  }
-
-  async function destroy() {
-    if (!instance.value) return
-    if (instance.value.share_scope === 'shared') {
-      toast.error('共享实例不支持手动销毁')
-      return
-    }
-    const confirmed = await confirmDestructiveAction({
-      title: '确认销毁实例',
-      message: '确定要销毁该实例吗？此操作不可恢复。',
-      confirmButtonText: '确认销毁',
-      cancelButtonText: '取消',
-    })
-    if (!confirmed) {
-      return
-    }
-
-    destroying.value = true
-    try {
-      await apiDestroyInstance(instance.value.id)
+      await refresh()
+    },
+    onDestroyed: () => {
       instance.value = null
       clearPollingTimer()
-      toast.success('实例已销毁')
-    } catch (error) {
-      const message =
-        error instanceof Error && error.message.trim() ? error.message : '销毁实例失败'
-      toast.error(message)
-    } finally {
-      destroying.value = false
-    }
-  }
+    },
+    extendSuccessMessage: '延时成功',
+    extendErrorMessage: '延时失败',
+    destroySuccessMessage: '实例已销毁',
+    destroyErrorMessage: '销毁实例失败',
+  })
 
   watch(
     () => toValue(challengeId),

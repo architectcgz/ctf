@@ -1,13 +1,7 @@
 import { type Ref } from 'vue'
 
-import {
-  destroyInstance as apiDestroyInstance,
-  extendInstance,
-  requestInstanceAccess,
-} from '@/api/instance'
+import { useInstanceWorkflowActions } from '@/features/instance-workflow'
 import { useClipboard } from '@/shared/model/common/useClipboard'
-import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
-import { useToast } from '@/shared/model/common/useToast'
 
 import type { InstanceViewModel } from './useInstanceListPage'
 
@@ -33,8 +27,57 @@ export function useInstanceOperations(options: UseInstanceOperationsOptions) {
     calculateRemaining,
     loadInstances,
   } = options
-  const toast = useToast()
   const { copy } = useClipboard()
+  const {
+    extendInstance: extendWorkflowInstance,
+    openInstance: openWorkflowInstance,
+    destroyInstance: destroyWorkflowInstance,
+  } = useInstanceWorkflowActions({
+    resolveTarget: (id) =>
+      instances.value.find((instance) => instance.id === id) ??
+      (id ? ({ id } as InstanceViewModel) : null),
+    getExtendBlockedMessage: (target) =>
+      !isInstanceManualActionAllowed(target)
+        ? isAWDTeamInstance(target)
+          ? 'AWD 队伍实例不支持在此处延时或销毁'
+          : '共享实例不支持手动延时'
+        : null,
+    getDestroyBlockedMessage: (target) =>
+      !isInstanceManualActionAllowed(target)
+        ? isAWDTeamInstance(target)
+          ? 'AWD 队伍实例不支持在此处延时或销毁'
+          : '共享实例不支持手动销毁'
+        : null,
+    onExtended: async ({ target, result }) => {
+      if (result) {
+        instances.value = instances.value.map((instance) =>
+          instance.id === target.id
+            ? {
+                ...instance,
+                remaining: calculateRemaining(result.expires_at),
+                expires_at: result.expires_at,
+                remaining_extends: result.remaining_extends,
+              }
+            : instance
+        )
+        warnedInstances.delete(target.id)
+        return
+      }
+
+      await loadInstances()
+    },
+    onDestroyed: ({ target }) => {
+      instances.value = instances.value.filter((instance) => instance.id !== target.id)
+      warnedInstances.delete(target.id)
+      if (warningInstance.value?.id === target.id) {
+        warningInstance.value = null
+        showWarning.value = false
+      }
+    },
+    openErrorMessage: '打开目标失败，请稍后重试',
+    extendErrorMessage: '延时失败，请稍后重试',
+    destroyErrorMessage: '销毁失败，请稍后重试',
+  })
 
   async function copyAddress(address: string) {
     if (!address) {
@@ -44,84 +87,15 @@ export function useInstanceOperations(options: UseInstanceOperationsOptions) {
   }
 
   async function extendTime(id: string) {
-    const target = instances.value.find((instance) => instance.id === id)
-    if (target && !isInstanceManualActionAllowed(target)) {
-      toast.error(
-        isAWDTeamInstance(target) ? 'AWD 队伍实例不支持在此处延时或销毁' : '共享实例不支持手动延时'
-      )
-      return
-    }
-    try {
-      const result = await extendInstance(id)
-      if (result) {
-        instances.value = instances.value.map((instance) =>
-          instance.id === id
-            ? {
-                ...instance,
-                remaining: calculateRemaining(result.expires_at),
-                expires_at: result.expires_at,
-                remaining_extends: result.remaining_extends,
-              }
-            : instance
-        )
-        warnedInstances.delete(id)
-      } else {
-        await loadInstances()
-      }
-    } catch (error) {
-      console.error('延时失败:', error)
-      toast.error('延时失败，请稍后重试')
-    }
+    await extendWorkflowInstance(id)
   }
 
   async function openTarget(id: string) {
-    try {
-      const result = await requestInstanceAccess(id)
-      const command = result.access?.protocol === 'tcp' ? result.access.command : ''
-      if (command) {
-        await copy(command)
-        toast.info('TCP 连接命令已复制')
-        return
-      }
-      window.open(result.access_url, '_blank', 'noopener,noreferrer')
-    } catch (error) {
-      console.error('打开目标失败:', error)
-      toast.error('打开目标失败，请稍后重试')
-    }
+    await openWorkflowInstance(id)
   }
 
   async function destroyInstance(id: string) {
-    const target = instances.value.find((instance) => instance.id === id)
-    if (target && !isInstanceManualActionAllowed(target)) {
-      toast.error(
-        isAWDTeamInstance(target) ? 'AWD 队伍实例不支持在此处延时或销毁' : '共享实例不支持手动销毁'
-      )
-      return
-    }
-    const confirmed = await confirmDestructiveAction({
-      title: '确认销毁实例',
-      message: '确定要销毁该实例吗？此操作不可恢复。',
-      confirmButtonText: '确认销毁',
-      cancelButtonText: '取消',
-    })
-    if (!confirmed) {
-      return
-    }
-
-    try {
-      await apiDestroyInstance(id)
-      instances.value = instances.value.filter((instance) => instance.id !== id)
-      warnedInstances.delete(id)
-      if (warningInstance.value?.id === id) {
-        warningInstance.value = null
-        showWarning.value = false
-      }
-    } catch (error) {
-      console.error('销毁失败:', error)
-      const message =
-        error instanceof Error && error.message.trim() ? error.message : '销毁失败，请稍后重试'
-      toast.error(message)
-    }
+    await destroyWorkflowInstance(id)
   }
 
   return {
