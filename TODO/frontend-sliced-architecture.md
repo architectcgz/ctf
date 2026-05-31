@@ -84,9 +84,8 @@ src/
 
 ### 3. `entities` 仍然偏薄
 
-当前 `challenge` 已经形成实体层入口，但下面这些对象还没有形成同等稳定的展示规则 owner：
+当前 `challenge`、`notification`、`contest`、`team` 都已经形成实体层入口，但下面这些对象还没有形成同等稳定的展示规则 owner：
 
-- `team`
 - `user`
 - `instance`
 
@@ -130,7 +129,7 @@ src/
 
 ### P2：补强实体层
 
-`notification` 的类型文案、accent 和已读状态展示已收口到 `entities/notification`；`contest` 的状态 / 模式 / CTA / accent / status badge class 也已经进一步收口到 `entities/contest`。后续按 `team -> user -> instance` 的顺序继续补实体展示和状态映射，不做一口气大搬迁。
+`notification` 的类型文案、accent 和已读状态展示已收口到 `entities/notification`；`contest` 的状态 / 模式 / CTA / accent / status badge class 已进一步收口到 `entities/contest`；`team` 的成员数、队长关系、邀请码文案和成员展示项也已经收口到 `entities/team`。后续按 `user -> instance` 的顺序继续补实体展示和状态映射，不做一口气大搬迁。
 
 ### P3：同步文档与 guardrail
 

@@ -4,6 +4,7 @@ import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryT
 import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'
 import { useAuthStore } from '@/stores/auth'
 import { isStudentVisibleContestStatus } from '@/entities/contest'
+import { getTeamMemberCount } from '@/entities/team'
 
 import { useContestDetailPage } from './useContestDetailPage'
 
@@ -63,7 +64,7 @@ export function useContestDetailRoutePage() {
   const totalPoints = computed(() =>
     page.challenges.value.reduce((sum, item) => sum + (item.points || 0), 0)
   )
-  const memberCount = computed(() => page.team.value?.members.length ?? 0)
+  const memberCount = computed(() => getTeamMemberCount(page.team.value))
   const contestAccessible = computed(() =>
     page.contest.value ? isStudentVisibleContestStatus(page.contest.value.status) : false
   )

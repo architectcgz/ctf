@@ -41,9 +41,9 @@
             </h3>
           </div>
           <span
-            v-if="team.invite_code"
+            v-if="inviteCodeLabel"
             class="team-summary__invite"
-          >邀请码: {{ team.invite_code }}</span>
+          >{{ inviteCodeLabel }}</span>
         </div>
 
         <ContestTeamPanel
@@ -103,11 +103,14 @@
 </style>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import type { TeamData } from '@/api/contracts'
+import { getTeamInviteCodeLabel } from '@/entities/team'
 
 import ContestTeamPanel from './ContestTeamPanel.vue'
 
-defineProps<{
+const props = defineProps<{
   panelId: string
   tabId: string
   team: TeamData | null
@@ -120,4 +123,6 @@ const emit = defineEmits<{
   joinTeam: []
   kickMember: [userId: string]
 }>()
+
+const inviteCodeLabel = computed(() => getTeamInviteCodeLabel(props.team?.invite_code))
 </script>

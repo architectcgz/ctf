@@ -8,6 +8,7 @@ import type {
   SubmitFlagData,
   TeamData,
 } from '@/api/contracts'
+import { isCurrentUserTeamCaptain } from '@/entities/team'
 import { useToast } from '@/shared/model/common/useToast'
 import { useContestDetailCountdown } from './useContestDetailCountdown'
 import { useContestDetailDataLoader } from './useContestDetailDataLoader'
@@ -72,7 +73,7 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
 
   const isCaptain = computed(() => {
     const currentUserId = toValue(options.currentUserId)
-    return Boolean(team.value && currentUserId && team.value.captain_user_id === currentUserId)
+    return isCurrentUserTeamCaptain(team.value, currentUserId)
   })
 
   function resetPageState() {

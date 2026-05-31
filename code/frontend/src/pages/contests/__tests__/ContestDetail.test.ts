@@ -6,13 +6,16 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import ContestDetail from '@/pages/contests/ContestDetailRoutePage.vue'
 import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
+import contestDetailPageSource from '@/features/contest-detail/model/useContestDetailPage.ts?raw'
 import contestDetailRoutePageSource from '@/features/contest-detail/model/useContestDetailRoutePage.ts?raw'
 import contestDetailWorkspaceSource from '@/widgets/contest-detail-workspace/ContestDetailWorkspace.vue?raw'
 import contestPresentationSource from '@/entities/contest/model/presentation.ts?raw'
+import teamPresentationSource from '@/entities/team/model/presentation.ts?raw'
 import contestAnnouncementsWorkspaceSectionSource from '@/features/contest-detail/ui/ContestAnnouncementsWorkspaceSection.vue?raw'
 import contestChallengeWorkspacePanelSource from '@/features/contest-detail/ui/ContestChallengeWorkspacePanel.vue?raw'
 import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
 import contestTeamDialogsSource from '@/features/contest-detail/ui/ContestTeamDialogs.vue?raw'
+import contestTeamPanelSource from '@/features/contest-detail/ui/ContestTeamPanel.vue?raw'
 import contestTeamWorkspaceSectionSource from '@/features/contest-detail/ui/ContestTeamWorkspaceSection.vue?raw'
 import routeQueryTransportSource from '@/shared/model/navigation/useRouteQueryTransport.ts?raw'
 import { useAuthStore } from '@/stores/auth'
@@ -239,6 +242,29 @@ describe('ContestDetail', () => {
       "import { getContestAccentVarStyle } from '@/entities/contest'"
     )
     expect(contestPresentationSource).toContain('getContestAccentVarStyle')
+  })
+
+  it('队伍展示 owner 应由 team entity 承接，而不是继续散落在 route model 和 feature ui', () => {
+    expect(contestDetailPageSource).toContain(
+      "import { isCurrentUserTeamCaptain } from '@/entities/team'"
+    )
+    expect(contestDetailPageSource).not.toContain('team.value.captain_user_id === currentUserId')
+    expect(contestDetailRoutePageSource).toContain(
+      "import { getTeamMemberCount } from '@/entities/team'"
+    )
+    expect(contestDetailRoutePageSource).not.toContain('page.team.value?.members.length ?? 0')
+    expect(contestTeamPanelSource).toContain(
+      "import { buildTeamMemberPresentation, getTeamEmptyStateLabel } from '@/entities/team'"
+    )
+    expect(contestTeamPanelSource).not.toContain('member.user_id === team.captain_user_id')
+    expect(contestTeamPanelSource).not.toContain('当前账号尚未加入队伍。')
+    expect(contestTeamWorkspaceSectionSource).toContain(
+      "import { getTeamInviteCodeLabel } from '@/entities/team'"
+    )
+    expect(contestTeamWorkspaceSectionSource).not.toContain('邀请码: {{ team.invite_code }}')
+    expect(teamPresentationSource).toContain('isCurrentUserTeamCaptain')
+    expect(teamPresentationSource).toContain('getTeamInviteCodeLabel')
+    expect(teamPresentationSource).toContain('buildTeamMemberPresentation')
   })
 
   it('不应该向学生暴露草稿竞赛详情或报名入口', async () => {

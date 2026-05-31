@@ -4,7 +4,7 @@
     class="team-empty"
   >
     <div class="contest-inline-note">
-      当前账号尚未加入队伍。
+      {{ getTeamEmptyStateLabel() }}
     </div>
     <div class="team-actions">
       <button
@@ -29,23 +29,23 @@
     class="team-member-list"
   >
     <div
-      v-for="member in team.members"
-      :key="member.user_id"
+      v-for="member in presentedMembers"
+      :key="member.userId"
       class="team-member"
     >
       <span class="team-member__name">{{ member.username }}</span>
       <div class="team-member__actions">
         <span
-          v-if="member.user_id === team.captain_user_id"
+          v-if="member.roleLabel"
           class="team-member__captain"
         >
-          队长
+          {{ member.roleLabel }}
         </span>
         <button
-          v-if="isCaptain && member.user_id !== team.captain_user_id"
+          v-if="isCaptain && !member.isCaptain"
           type="button"
           class="team-member__kick"
-          @click="emit('kickMember', member.user_id)"
+          @click="emit('kickMember', member.userId)"
         >
           踢出
         </button>
@@ -128,9 +128,12 @@
 </style>
 
 <script setup lang="ts">
-import type { TeamData } from '@/api/contracts'
+import { computed } from 'vue'
 
-withDefaults(
+import type { TeamData } from '@/api/contracts'
+import { buildTeamMemberPresentation, getTeamEmptyStateLabel } from '@/entities/team'
+
+const props = withDefaults(
   defineProps<{
     team: TeamData | null
     isCaptain?: boolean
@@ -145,4 +148,6 @@ const emit = defineEmits<{
   joinTeam: []
   kickMember: [userId: string]
 }>()
+
+const presentedMembers = computed(() => buildTeamMemberPresentation(props.team))
 </script>
