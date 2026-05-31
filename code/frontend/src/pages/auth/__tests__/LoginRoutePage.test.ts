@@ -4,6 +4,7 @@ import { reactive, ref } from 'vue'
 
 import LoginRoutePage from '@/pages/auth/LoginRoutePage.vue'
 import loginRoutePageSource from '@/pages/auth/LoginRoutePage.vue?raw'
+import { sanitizeRedirectPath } from '@/utils/redirectPath'
 
 const authMocks = vi.hoisted(() => ({
   login: vi.fn(),
@@ -62,7 +63,7 @@ vi.mock('@/features/auth', () => ({
         try {
           await authMocks.login(
             { username, password },
-            routeState.query.redirect ? routeState.query.redirect : undefined
+            routeState.query.redirect ? sanitizeRedirectPath(routeState.query.redirect) : undefined
           )
         } catch (err) {
           submitError.value = err instanceof Error ? err.message : '身份验证失败，请核对信息'
@@ -79,7 +80,7 @@ vi.mock('@/features/auth', () => ({
         try {
           await authMocks.login(
             { username, password },
-            routeState.query.redirect ? routeState.query.redirect : undefined
+            routeState.query.redirect ? sanitizeRedirectPath(routeState.query.redirect) : undefined
           )
         } catch (err) {
           submitError.value = err instanceof Error ? err.message : '身份验证失败，请核对信息'
@@ -219,7 +220,7 @@ describe('LoginRoutePage', () => {
 
     expect(authMocks.login).toHaveBeenCalledWith(
       { username: 'alice', password: 'saved-password' },
-      '/teacher/dashboard'
+      '/academy/overview'
     )
   })
 

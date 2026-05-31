@@ -1,102 +1,20 @@
 import type { RouteRecordRaw } from 'vue-router'
 
-import { redirectWithQuery } from './route-helpers'
+import {
+  teacherLegacyRedirectDefinitions,
+  teacherLegacyRedirectAllowlist,
+} from '@/utils/teacherLegacyRedirect'
 
-function encodeRouteParam(value: unknown): string {
-  return encodeURIComponent(String(value || ''))
-}
-
-function redirectWithDynamicAcademyPath(
-  buildPath: (route: Parameters<NonNullable<RouteRecordRaw['redirect']>>[0]) => string
-): NonNullable<RouteRecordRaw['redirect']> {
-  return (to) => ({
-    path: buildPath(to),
-    query: to.query,
-    hash: to.hash,
-  })
-}
-
-const teacherLegacyRedirectDefinitions = [
-  {
-    legacyPath: 'teacher/dashboard',
-    redirect: redirectWithQuery('/academy/overview'),
-  },
-  {
-    legacyPath: 'teacher/classes',
-    redirect: redirectWithQuery('/academy/classes'),
-  },
-  {
-    legacyPath: 'teacher/students',
-    redirect: redirectWithQuery('/academy/students'),
-  },
-  {
-    legacyPath: 'teacher/classes/:className',
-    redirect: redirectWithDynamicAcademyPath(
-      (to) => `/academy/classes/${encodeRouteParam(to.params.className)}`
-    ),
-  },
-  {
-    legacyPath: 'teacher/classes/:className/trend',
-    redirect: redirectWithDynamicAcademyPath(
-      (to) => `/academy/classes/${encodeRouteParam(to.params.className)}/trend`
-    ),
-  },
-  {
-    legacyPath: 'teacher/classes/:className/review',
-    redirect: redirectWithDynamicAcademyPath(
-      (to) => `/academy/classes/${encodeRouteParam(to.params.className)}/review`
-    ),
-  },
-  {
-    legacyPath: 'teacher/classes/:className/insights',
-    redirect: redirectWithDynamicAcademyPath(
-      (to) => `/academy/classes/${encodeRouteParam(to.params.className)}/insights`
-    ),
-  },
-  {
-    legacyPath: 'teacher/classes/:className/intervention',
-    redirect: redirectWithDynamicAcademyPath(
-      (to) => `/academy/classes/${encodeRouteParam(to.params.className)}/intervention`
-    ),
-  },
-  {
-    legacyPath: 'teacher/classes/:className/students/:studentId',
-    redirect: redirectWithDynamicAcademyPath(
-      (to) =>
-        `/academy/classes/${encodeRouteParam(to.params.className)}/students/${encodeRouteParam(to.params.studentId)}`
-    ),
-  },
-  {
-    legacyPath: 'teacher/classes/:className/students/:studentId/review-archive',
-    redirect: redirectWithDynamicAcademyPath(
-      (to) =>
-        `/academy/classes/${encodeRouteParam(to.params.className)}/students/${encodeRouteParam(to.params.studentId)}/review-archive`
-    ),
-  },
-  {
-    legacyPath: 'teacher/awd-reviews',
-    redirect: redirectWithQuery('/academy/awd-reviews'),
-  },
-  {
-    legacyPath: 'teacher/awd-reviews/:contestId',
-    redirect: redirectWithDynamicAcademyPath(
-      (to) => `/academy/awd-reviews/${encodeRouteParam(to.params.contestId)}`
-    ),
-  },
-  {
-    legacyPath: 'teacher/instances',
-    redirect: redirectWithQuery('/academy/instances'),
-  },
-] as const
-
-export const teacherLegacyRedirectAllowlist = teacherLegacyRedirectDefinitions.map(
-  ({ legacyPath }) => legacyPath
-)
+export { teacherLegacyRedirectAllowlist }
 
 const teacherLegacyRedirectRoutes: RouteRecordRaw[] = teacherLegacyRedirectDefinitions.map(
-  ({ legacyPath, redirect }) => ({
+  ({ legacyPath, buildCanonicalPathFromParams }) => ({
     path: legacyPath,
-    redirect,
+    redirect: (to) => ({
+      path: buildCanonicalPathFromParams(to.params as Record<string, unknown>),
+      query: to.query,
+      hash: to.hash,
+    }),
   })
 )
 

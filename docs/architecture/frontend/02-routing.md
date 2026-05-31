@@ -118,7 +118,7 @@
 `code/frontend/src/router/guards.ts` 当前守卫顺序如下：
 
 1. 命中公开页 `/login` 或 `/register` 时直接放行
-2. 对公开页也会尝试 `ensureSessionRestored()`，已登录用户访问登录/注册页时，按 `redirect` 参数或 `getRoleDashboardPath()` 跳转
+2. 对公开页也会尝试 `ensureSessionRestored()`，已登录用户访问登录/注册页时，先通过 `sanitizeRedirectPath()` 做 open redirect 防御和 legacy `/teacher/* -> /academy/*` 归一化，再按 `redirect` 参数或 `getRoleDashboardPath()` 跳转
 3. 受保护页面在首次进入时调用 `authStore.restore()`
 4. 恢复后仍未登录时，跳转到 `/login?redirect=${to.fullPath}`
 5. `meta.roles` 与当前用户角色不匹配时，提示“无权限访问该页面”并跳 `/403`
@@ -144,7 +144,7 @@
 
 ## 5. 兼容与历史例外
 
-- `/teacher/*` 当前仍保留 redirect，属于旧命名空间迁移兼容；正式事实源只认 `/academy/*`。
+- `/teacher/*` 当前仍保留 redirect，属于旧命名空间迁移兼容；正式事实源只认 `/academy/*`，登录 redirect 参数也会在进入登录后导航前先归一到 `/academy/*`。
 - `/dashboard`、`/instances`、`/skill-profile` 当前仍保留 redirect，属于学生端早期路径兼容。
 - `resolveRouteTitle()` 对 `/dashboard` 和 `/student/dashboard` 做了特例处理，允许通过 query/变体路由生成不同标题。
 

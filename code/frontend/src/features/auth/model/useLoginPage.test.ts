@@ -110,6 +110,18 @@ describe('useLoginPage', () => {
     expect(navigationMocks.push).toHaveBeenCalledWith('/contests/1')
   })
 
+  it('应把 legacy 教师端 redirect 参数归一到 academy 命名空间', async () => {
+    routeState.value.redirect = '/teacher/dashboard'
+    authMocks.login.mockResolvedValue({ role: 'teacher' })
+    const page = useLoginPage()
+    page.form.username = 'alice'
+    page.form.password = 'pass'
+
+    await page.onSubmit()
+
+    expect(navigationMocks.push).toHaveBeenCalledWith('/academy/overview')
+  })
+
   it('redirect 参数应先做安全清洗', async () => {
     routeState.value.redirect = 'https://evil.example/phish'
     authMocks.login.mockResolvedValue({ role: 'teacher' })
