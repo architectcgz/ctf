@@ -30,13 +30,11 @@
               <button
                 type="button"
                 class="intervention-item__name-button"
-                :aria-label="`${item.student.name || item.student.username}，查看学员分析`"
+                :aria-label="`${candidateDisplayName(item.student)}，查看学员分析`"
                 :disabled="!className"
                 @click="openStudent(item.student.id)"
               >
-                <span class="intervention-item__name">{{
-                  item.student.name || item.student.username
-                }}</span>
+                <span class="intervention-item__name">{{ candidateDisplayName(item.student) }}</span>
               </button>
               <span class="intervention-item__priority">
                 {{ getCandidatePriorityLabel(item.accent) }}
@@ -47,7 +45,7 @@
                 {{ item.reason }}
               </span>
               <span class="intervention-item__meta-inline intervention-item__meta-inline--username">
-                {{ item.student.username }}
+                {{ candidateUsername(item.student) }}
               </span>
               <span
                 v-if="item.student.weak_dimension"
@@ -450,6 +448,7 @@ import {
   ChallengeCategoryPill,
   toChallengeCategory,
 } from '@/entities/challenge'
+import { getUserDisplayName, getUserUsername } from '@/entities/user'
 import { useInterventionRecommendations } from '@/features/teaching/student-analysis-review'
 
 const props = defineProps<{
@@ -479,5 +478,13 @@ function openStudent(studentId: string): void {
 
 function weakDimensionCategory(value?: string | null) {
   return toChallengeCategory(value)
+}
+
+function candidateDisplayName(student: StudentDirectoryItem): string {
+  return getUserDisplayName(student, '--')
+}
+
+function candidateUsername(student: StudentDirectoryItem): string {
+  return getUserUsername(student, '--')
 }
 </script>

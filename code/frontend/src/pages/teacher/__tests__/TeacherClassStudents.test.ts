@@ -9,13 +9,18 @@ import classStudentsPageSourceBase from '@/features/teaching/class-students-work
 import classStudentsOverviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsInsightWindowPanel.vue?raw'
 import classStudentsDirectoryPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue?raw'
+import classInsightsPanelSource from '@/features/teaching/class-students-workspace/ui/ClassInsightsPanel.vue?raw'
+import classReviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassReviewPanel.vue?raw'
 import classStudentsPageModelSource from '@/features/teaching/class-students-workspace/model/useClassStudentsPage.ts?raw'
+import userPresentationSource from '@/entities/user/model/presentation.ts?raw'
 
 const classStudentsPageSource = [
   classStudentsPageSourceBase,
   classStudentsOverviewPanelSource,
   classStudentsInsightWindowPanelSource,
   classStudentsDirectoryPanelSource,
+  classInsightsPanelSource,
+  classReviewPanelSource,
 ].join('\n')
 
 const ElTable = { template: '<div><slot /></div>' }
@@ -245,8 +250,11 @@ describe('TeacherClassStudents', () => {
     expect(studentsPanel.text()).not.toContain('返回列表')
     expect(studentsPanel.find('select').exists()).toBe(false)
     expect(studentsPanel.find('input[placeholder="输入学号精确查询"]').exists()).toBe(true)
-    expect(wrapper.find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
-    expect(wrapper.find('.teacher-directory-row-points').attributes('title')).toBe('alice')
+    const rows = studentsPanel.findAll('tbody tr')
+    expect(rows[0].find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
+    expect(rows[0].find('.teacher-directory-row-points').attributes('title')).toBe('alice')
+    expect(rows[1].find('.teacher-directory-row-title').text()).toContain('未设置姓名')
+    expect(rows[1].find('.teacher-directory-row-points').text()).toContain('bob')
     expect(teachingApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
     expect(teachingApiMocks.getStudentRecommendations).toHaveBeenCalledWith('stu-1')
 
@@ -391,6 +399,23 @@ describe('TeacherClassStudents', () => {
   it('班级学生薄弱项应复用题目分类胶囊色，并先归一化后判断分类值', () => {
     expect(classStudentsPageSource).toContain('ChallengeCategoryPill')
     expect(classStudentsPageSource).toContain('toChallengeCategory(student.weak_dimension)')
+  })
+
+  it('班级学生与复盘相关展示名应由 user entity 承接', () => {
+    expect(classStudentsDirectoryPanelSource).toContain("from '@/entities/user'")
+    expect(classStudentsDirectoryPanelSource).toContain('getUserName')
+    expect(classStudentsDirectoryPanelSource).toContain('getUserUsername')
+    expect(classStudentsDirectoryPanelSource).not.toContain("name: student.name || '未设置姓名'")
+    expect(classStudentsDirectoryPanelSource).not.toContain('username: student.username')
+    expect(classInsightsPanelSource).toContain("from '@/entities/user'")
+    expect(classInsightsPanelSource).toContain('getUserDisplayName')
+    expect(classInsightsPanelSource).toContain('getUserUsernameHandle')
+    expect(classInsightsPanelSource).not.toContain('student.name || student.username')
+    expect(classReviewPanelSource).toContain("from '@/entities/user'")
+    expect(classReviewPanelSource).toContain('getUserDisplayName')
+    expect(classReviewPanelSource).not.toContain('student.name || student.username')
+    expect(userPresentationSource).toContain('getUserName')
+    expect(userPresentationSource).toContain('getUserDisplayName')
   })
 
   it('班级详情页应采用与教学概览一致的顶部 tabs 壳层结构，并去掉页面内重复顶栏', () => {

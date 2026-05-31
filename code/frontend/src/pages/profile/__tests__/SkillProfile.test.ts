@@ -341,6 +341,31 @@ describe('SkillProfile', () => {
     expect(skillProfileWorkspaceSource).not.toMatch(/^\.skill-student-select:focus-visible\s*\{/m)
   })
 
+  it('教师视角学员选择框应复用 user entity 的展示名 owner', async () => {
+    teacherApiMocks.getClassStudents.mockResolvedValue([
+      { id: 'stu-1', username: 'alice', name: 'Alice Zhang' },
+      { id: 'stu-2', username: 'bob' },
+    ])
+
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'teacher-1',
+      username: 'teacher',
+      role: 'teacher',
+      class_name: 'Class A',
+    })
+
+    const { wrapper } = await mountPage()
+    const options = wrapper.findAll('#skill-student-select option').map((option) => option.text())
+
+    expect(options).toEqual(['我的六维画像', 'Alice Zhang (alice)', 'bob'])
+    expect(skillProfileWorkspaceShellSource).toContain("from '@/entities/user'")
+    expect(skillProfileWorkspaceShellSource).toContain('getUserDisplayName')
+    expect(skillProfileWorkspaceShellSource).toContain('getUserUsername')
+    expect(skillProfileWorkspaceShellSource).toContain('formatStudentOptionLabel')
+    expect(skillProfileWorkspaceShellSource).not.toContain('{{ student.name || student.username }}')
+  })
+
   it('应该把能力画像页残留的图表高度、骨架圆角和小字号收敛为语义类', () => {
     expect(skillProfileWorkspaceSource).not.toContain('rounded-[24px]')
     expect(skillProfileWorkspaceSource).not.toContain('h-[30rem]')

@@ -7,6 +7,7 @@ import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import AppLoading from '@/shared/ui/common/AppLoading.vue'
 import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
+import { getUserName, getUserUsername } from '@/entities/user'
 
 interface ClassStudentDirectoryRow {
   id: string
@@ -35,8 +36,8 @@ const rows = computed<ClassStudentDirectoryRow[]>(() =>
   props.students.map((student) => ({
     id: student.id,
     student_no: student.student_no || '未设置学号',
-    name: student.name || '未设置姓名',
-    username: student.username,
+    name: getUserName(student, '未设置姓名'),
+    username: getUserUsername(student, '--'),
     weak_dimension: student.weak_dimension || '暂无薄弱项',
     metrics: `${student.solved_count ?? 0} 题 / ${student.total_score ?? 0} 分`,
     solved_count: student.solved_count ?? 0,

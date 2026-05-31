@@ -8,6 +8,7 @@ import type {
 } from '@/api/contracts'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
+import { getUserDisplayName } from '@/entities/user'
 
 const props = defineProps<{
   review: ClassInsightReviewData | null
@@ -91,7 +92,7 @@ function shouldShowRecommendationFallback(item: ClassInsightReviewItemData): boo
             class="review-item__student-chip review-item__student-chip--premium"
             :class="'workspace-directory-status-pill'"
           >
-            {{ student.name || student.username }}
+            {{ getUserDisplayName(student, '--') }}
           </span>
         </div>
 

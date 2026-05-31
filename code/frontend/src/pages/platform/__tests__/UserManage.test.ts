@@ -113,6 +113,7 @@ describe('UserManage', () => {
     const detailDrawer = document.body.querySelector<HTMLElement>('.user-detail-drawer')
     expect(detailDrawer).not.toBeNull()
     expect(detailDrawer?.textContent).toContain('alice@example.com')
+    expect(detailDrawer?.textContent).toContain('未设置姓名')
     expect(adminApiMocks.getUsers).toHaveBeenCalledWith(
       {
         page: 1,
@@ -127,6 +128,13 @@ describe('UserManage', () => {
         signal: expect.any(AbortSignal),
       }
     )
+  })
+
+  it('用户详情里的姓名展示应由 user entity 承接，而不是回退成用户名', () => {
+    expect(userGovernanceDetailModalSource).toContain("from '@/entities/user'")
+    expect(userGovernanceDetailModalSource).toContain('getUserName')
+    expect(userGovernanceDetailModalSource).toContain("{{ getUserName(user, '未设置姓名') }}")
+    expect(userGovernanceDetailModalSource).not.toContain('{{ user.name || user.username }}')
   })
 
   it('应该将用户总览与目录合并为一个工作台，并保留导入用户独立面板', async () => {

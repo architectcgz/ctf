@@ -100,11 +100,11 @@
               >
                 <option value="">我的六维画像</option>
                 <option
-                  v-for="student in students"
+                  v-for="student in props.students"
                   :key="student.id"
                   :value="student.id"
                 >
-                  {{ student.name || student.username }} ({{ student.username }})
+                  {{ formatStudentOptionLabel(student) }}
                 </option>
               </select>
             </div>
@@ -733,6 +733,7 @@ import {
   ChallengeCategoryPill,
   toChallengeCategory,
 } from '@/entities/challenge'
+import { getUserDisplayName, getUserUsername } from '@/entities/user'
 
 type SkillProfileTabKey = 'analysis' | 'weakness' | 'recommendations'
 
@@ -768,7 +769,7 @@ interface Props {
   buildChallengeRoute: (challengeId: string) => SkillProfileRouteTarget
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'load-current-data': []
@@ -782,6 +783,12 @@ function weakDimensionCategory(value: string) {
 
 function handleStudentSelectionChange(event: Event) {
   emit('update-selected-student-id', (event.target as HTMLSelectElement).value)
+}
+
+function formatStudentOptionLabel(student: StudentDirectoryItem): string {
+  const displayName = getUserDisplayName(student, '--')
+  const username = getUserUsername(student, '')
+  return username && username !== displayName ? `${displayName} (${username})` : displayName
 }
 
 const skillRadarHeightClass = 'skill-radar-height'

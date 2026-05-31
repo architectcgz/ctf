@@ -3,6 +3,7 @@ import { UserRoundCheck } from 'lucide-vue-next'
 
 import type { AdminUserListItem, UserStatus } from '@/api/contracts'
 import AdminSurfaceModal from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'
+import { getUserName } from '@/entities/user'
 
 const props = defineProps<{
   user: AdminUserListItem | null
@@ -67,7 +68,7 @@ function formatCreatedAt(value: string): string {
         </div>
         <div class="user-detail-item">
           <dt>姓名</dt>
-          <dd>{{ user.name || user.username }}</dd>
+          <dd>{{ getUserName(user, '未设置姓名') }}</dd>
         </div>
         <div class="user-detail-item">
           <dt>邮箱</dt>

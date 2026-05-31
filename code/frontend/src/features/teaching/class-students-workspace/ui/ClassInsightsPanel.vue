@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import type { StudentDirectoryItem } from '@/api/contracts'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
+import { getUserDisplayName, getUserUsernameHandle } from '@/entities/user'
 
 const props = defineProps<{
   students: StudentDirectoryItem[]
@@ -104,10 +105,10 @@ function weakDimensionCategory(value?: string | null) {
                 <span class="top-student-item__rank">
                   {{ index + 1 }}
                 </span>
-                <span class="top-student-item__name">{{ student.name || student.username }}</span>
+                <span class="top-student-item__name">{{ getUserDisplayName(student, '--') }}</span>
               </div>
               <div class="top-student-item__meta">
-                @{{ student.username }}
+                {{ getUserUsernameHandle(student, '--') }}
                 <span v-if="student.weak_dimension" class="top-student-item__weak">
                   <span>薄弱项</span>
                   <ChallengeCategoryPill
