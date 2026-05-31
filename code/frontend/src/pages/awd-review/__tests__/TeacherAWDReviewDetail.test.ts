@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import TeacherAwdReviewDetailRoutePage from '@/pages/awd-review/TeacherAwdReviewDetailRoutePage.vue'
 import awdReviewDetailSource from '@/pages/awd-review/TeacherAwdReviewDetailRoutePage.vue?raw'
 import awdReviewDetailPageSource from '@/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts?raw'
+import awdReviewDetailDataSource from '@/features/awd-review-detail-workspace/model/useAwdReviewDetailData.ts?raw'
 
 const routeMock = {
   params: {
@@ -143,13 +144,15 @@ describe('TeacherAWDReviewDetail', () => {
 
   it('页面应通过 feature model 获取详情状态，不再直接耦合 teacher api', () => {
     expect(awdReviewDetailSource).toContain("useAwdReviewDetailPage } from '@/features/awd-review-detail-workspace'")
-    expect(awdReviewDetailPageSource).toContain("from '@/api/awd-reviews'")
-    expect(awdReviewDetailPageSource).not.toContain("from '@/api/admin'")
-    expect(awdReviewDetailPageSource).not.toContain("from '@/api/teacher'")
-    expect(awdReviewDetailPageSource).toContain('AwdReviewArchiveData')
-    expect(awdReviewDetailPageSource).toContain('AwdReviewTeamItemData')
-    expect(awdReviewDetailPageSource).not.toContain('TeacherAWDReviewArchiveData')
-    expect(awdReviewDetailPageSource).not.toContain('TeacherAWDReviewTeamItemData')
+    expect(awdReviewDetailPageSource).toContain("from './useAwdReviewDetailData'")
+    expect(awdReviewDetailPageSource).not.toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDetailDataSource).toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDetailDataSource).not.toContain("from '@/api/admin'")
+    expect(awdReviewDetailDataSource).not.toContain("from '@/api/teacher'")
+    expect(awdReviewDetailDataSource).toContain('AwdReviewArchiveData')
+    expect(awdReviewDetailDataSource).toContain('AwdReviewTeamItemData')
+    expect(awdReviewDetailDataSource).not.toContain('TeacherAWDReviewArchiveData')
+    expect(awdReviewDetailDataSource).not.toContain('TeacherAWDReviewTeamItemData')
     expect(awdReviewDetailPageSource).toContain("useAwdReviewExportFlow } from '@/features/awd-review-workspace'")
     expect(awdReviewDetailPageSource).not.toContain("useTeacherAwdReviewExportFlow } from '@/features/awd-review-workspace'")
     expect(awdReviewDetailSource).not.toContain("from '@/api/teacher'")

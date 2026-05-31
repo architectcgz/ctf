@@ -8,6 +8,7 @@ import platformAwdReviewDetailSource from '@/pages/awd-review/PlatformAwdReviewD
 import AwdReviewWorkspace from '@/widgets/awd-review-workspace/AwdReviewWorkspace.vue'
 import awdReviewDetailRoutesSource from '@/features/awd-review-detail-workspace/model/awdReviewDetailRoutes.ts?raw'
 import awdReviewDetailPageSource from '@/features/awd-review-detail-workspace/model/useAwdReviewDetailPage.ts?raw'
+import awdReviewDetailDataSource from '@/features/awd-review-detail-workspace/model/useAwdReviewDetailData.ts?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -101,7 +102,7 @@ describe('PlatformAwdReviewDetail route owner', () => {
     expect(platformAwdReviewDetailSource).toContain(
       "import { useAwdReviewDetailPage } from '@/features/awd-review-detail-workspace'"
     )
-    expect(awdReviewDetailPageSource).toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDetailPageSource).toContain("from './useAwdReviewDetailData'")
     expect(awdReviewDetailPageSource).toContain(
       "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
     )
@@ -109,8 +110,10 @@ describe('PlatformAwdReviewDetail route owner', () => {
       "import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'"
     )
     expect(awdReviewDetailPageSource).toContain("from './awdReviewDetailRoutes'")
-    expect(awdReviewDetailPageSource).not.toContain("from '@/api/admin'")
-    expect(awdReviewDetailPageSource).not.toContain("from '@/api/teacher'")
+    expect(awdReviewDetailPageSource).not.toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDetailDataSource).toContain("from '@/api/awd-reviews'")
+    expect(awdReviewDetailDataSource).not.toContain("from '@/api/admin'")
+    expect(awdReviewDetailDataSource).not.toContain("from '@/api/teacher'")
     expect(awdReviewDetailPageSource).not.toContain("from 'vue-router'")
     expect(awdReviewDetailPageSource).not.toContain('route,')
     expect(awdReviewDetailRoutesSource).toContain('resolveAwdReviewIndexRouteName')
