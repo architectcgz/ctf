@@ -8,6 +8,7 @@ import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import studentManageHeroPanelSource from '@/features/platform/student-management/ui/StudentManageHeroPanel.vue?raw'
 import studentManageWorkspacePanelSource from '@/features/platform/student-management/ui/StudentManageWorkspacePanel.vue?raw'
 import platformStudentManagementPageSource from '@/features/platform/student-management/model/usePlatformStudentManagementPage.ts?raw'
+import platformStudentDirectorySource from '@/features/platform/student-management/model/usePlatformStudentDirectory.ts?raw'
 
 const adminTeachingApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
@@ -148,6 +149,9 @@ describe('PlatformStudentManagement', () => {
     expect(studentManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(platformStudentManagementPageSource).not.toContain("from 'vue-router'")
+    expect(platformStudentManagementPageSource).toContain("from './usePlatformStudentDirectory'")
+    expect(platformStudentManagementPageSource).not.toContain("from '@/api/admin'")
+    expect(platformStudentDirectorySource).toContain("from '@/api/admin'")
     expect(platformStudentManagementPageSource).toContain('function buildStudentRoute')
 
     const { wrapper } = await mountPage()
