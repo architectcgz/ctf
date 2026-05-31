@@ -56,7 +56,7 @@ describe('challenge page ui strategy', () => {
 
   it('challenge detail state ownership should keep tab keyboard logic in the page model and keep presentation pure', () => {
     expect(challengeDetailPageSource).toContain(
-      "import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'"
+      "import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'"
     )
     expect(challengeDetailPageSource).toContain('useTabKeyboardNavigation<ChallengeSolutionTab>({')
     expect(challengeDetailSource).not.toContain('function focusTab(id: string): void {')

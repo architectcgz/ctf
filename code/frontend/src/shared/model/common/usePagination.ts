@@ -1,10 +1,16 @@
 import { ref, shallowRef, type Ref } from 'vue'
 
-import { useAbortController } from '@/composables/useAbortController'
+import { useAbortController } from '@/shared/lib/request/useAbortController'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
-import type { PageResult } from '@/api/contracts'
 
-export interface PaginationState<T, R extends PageResult<T> = PageResult<T>> {
+export interface PaginationResult<T> {
+  list: T[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export interface PaginationState<T, R extends PaginationResult<T> = PaginationResult<T>> {
   list: Ref<T[]>
   total: Ref<number>
   page: Ref<number>
@@ -22,16 +28,16 @@ export function usePagination<T>(
     page: number
     page_size: number
     signal: AbortSignal
-  }) => Promise<PageResult<T>>
+  }) => Promise<PaginationResult<T>>
 ): PaginationState<T>
-export function usePagination<T, R extends PageResult<T>>(
+export function usePagination<T, R extends PaginationResult<T>>(
   fetchFn: (params: {
     page: number
     page_size: number
     signal: AbortSignal
   }) => Promise<R>
 ): PaginationState<T, R>
-export function usePagination<T, R extends PageResult<T>>(
+export function usePagination<T, R extends PaginationResult<T>>(
   fetchFn: (params: {
     page: number
     page_size: number

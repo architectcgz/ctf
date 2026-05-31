@@ -3,7 +3,7 @@ import { reactive, ref } from 'vue'
 import { publishAdminNotification } from '@/api/admin/platform'
 import { getClasses } from '@/api/admin'
 import { getUsers } from '@/api/admin/users'
-import { useAbortController } from '@/composables/useAbortController'
+import { useAbortController } from '@/shared/lib/request/useAbortController'
 import type {
   AdminNotificationPublishPayload,
   AdminNotificationPublishResult,

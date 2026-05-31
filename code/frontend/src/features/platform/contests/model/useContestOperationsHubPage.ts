@@ -1,8 +1,8 @@
 import { computed, onMounted, ref } from 'vue'
 
 import { getContests } from '@/api/admin/contests'
-import { usePagination } from '@/composables/usePagination'
-import { useAbortController } from '@/composables/useAbortController'
+import { usePagination } from '@/shared/model/common/usePagination'
+import { useAbortController } from '@/shared/lib/request/useAbortController'
 import type { ContestDetailData, ContestListSummaryData, ContestPageData } from '@/api/contracts'
 import { buildContestManageListRoute, buildContestOperationsRoute } from './contestOperationsHubRoutes'
 

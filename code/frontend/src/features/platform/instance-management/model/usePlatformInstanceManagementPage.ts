@@ -5,7 +5,7 @@ import {
   destroyManagedInstanceByRole,
   getInstanceDirectoryByRole,
 } from '@/api/instances'
-import { useAbortController } from '@/composables/useAbortController'
+import { useAbortController } from '@/shared/lib/request/useAbortController'
 import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {

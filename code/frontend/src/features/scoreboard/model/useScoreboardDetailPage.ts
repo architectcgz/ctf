@@ -2,7 +2,7 @@ import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 import type { ContestScoreboardData, ContestStatus } from '@/api/contracts'
 import { getScoreboard } from '@/api/contest'
-import { useAbortController } from '@/composables/useAbortController'
+import { useAbortController } from '@/shared/lib/request/useAbortController'
 import { useToast } from '@/shared/model/common/useToast'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { getContestAccentColor, getContestStatusLabel } from '@/entities/contest'

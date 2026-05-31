@@ -12,7 +12,7 @@ import {
 } from '@/api/admin/users'
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
 import { ApiError } from '@/api/request'
-import { usePagination } from '@/composables/usePagination'
+import { usePagination } from '@/shared/model/common/usePagination'
 import { useToast } from '@/shared/model/common/useToast'
 import type { UserRole } from '@/utils/constants'
 

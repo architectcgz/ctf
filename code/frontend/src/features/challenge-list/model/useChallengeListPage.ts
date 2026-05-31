@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { getChallenges } from '@/api/challenge'
 import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
 import { ApiError } from '@/api/request'
-import { usePagination } from '@/composables/usePagination'
+import { usePagination } from '@/shared/model/common/usePagination'
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import {
   challengeListDashboardRoute,

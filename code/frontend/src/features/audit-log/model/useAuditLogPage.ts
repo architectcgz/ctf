@@ -5,7 +5,7 @@ import { getAuditLogs } from '@/api/admin/platform'
 import type { AuditLogItem } from '@/api/contracts'
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
-import { useAbortController } from '@/composables/useAbortController'
+import { useAbortController } from '@/shared/lib/request/useAbortController'
 
 type AuditSortKey = 'created_at' | 'action' | 'actor'
 type AuditSortOption = WorkspaceDirectorySortOption & {

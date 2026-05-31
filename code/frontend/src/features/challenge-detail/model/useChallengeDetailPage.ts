@@ -9,8 +9,8 @@ import type {
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
-import { useSanitize } from '@/composables/useSanitize'
-import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
+import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
+import { useSanitize } from '@/shared/lib/sanitize/useSanitize'
 import { useToast } from '@/shared/model/common/useToast'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 

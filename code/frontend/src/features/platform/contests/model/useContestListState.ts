@@ -2,7 +2,7 @@ import { computed, ref, watch } from 'vue'
 
 import { getContests } from '@/api/admin/contests'
 import type { ContestDetailData, ContestListSummaryData, ContestPageData } from '@/api/contracts'
-import { usePagination } from '@/composables/usePagination'
+import { usePagination } from '@/shared/model/common/usePagination'
 
 import type { PlatformContestStatus } from './contestFormSupport'
 

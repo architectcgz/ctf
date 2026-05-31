@@ -3,7 +3,7 @@ import { useDebounceFn } from '@vueuse/core'
 
 import { listAdminAwdChallenges } from '@/api/admin/awd-authoring'
 import { ApiError } from '@/api/request'
-import { usePagination } from '@/composables/usePagination'
+import { usePagination } from '@/shared/model/common/usePagination'
 import type {
   AdminAwdChallengeData,
   AWDDeploymentMode,

@@ -7,7 +7,7 @@ import type {
   ContestStatus,
 } from '@/api/contracts'
 import { getContests, type GetContestsData } from '@/api/contest'
-import { usePagination } from '@/composables/usePagination'
+import { usePagination } from '@/shared/model/common/usePagination'
 import {
   getContestAccentColor,
   getContestActionLabel,

@@ -2,7 +2,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import type { NotificationItem, NotificationType } from '@/api/contracts'
 import { getNotifications, markAsRead } from '@/api/notification'
-import { usePagination } from '@/composables/usePagination'
+import { usePagination } from '@/shared/model/common/usePagination'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
 import { useToast } from '@/shared/model/common/useToast'
 import { useAuthStore } from '@/stores/auth'

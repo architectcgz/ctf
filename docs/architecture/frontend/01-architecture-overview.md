@@ -12,8 +12,8 @@
   - 负责：注册学生端、`/academy/*`、`/platform/*` 路由，维护登录态守卫、默认首页映射和后台导航归属
   - 不负责：页面内部数据流和业务状态机
 
-- `code/frontend/src/pages/**`、`code/frontend/src/features/**/model`、`code/frontend/src/features/**/ui`、`code/frontend/src/widgets/**`、`code/frontend/src/shared/model/**`、`code/frontend/src/composables/use*.ts`
-  - 负责：路由入口统一落在 `pages/**`；页面级查询、导出、实时桥接和 query 同步下沉到 feature model / shared model / composable；`widgets/**` 负责跨 feature 页面区块组合，`features/**/ui` 负责单一能力 surface，`shared/model/common` 和 `shared/model/layout` 承接共享反馈、危险确认、工作区导航和面包屑细节这类跨 feature 但不带业务 owner 的状态
+- `code/frontend/src/pages/**`、`code/frontend/src/features/**/model`、`code/frontend/src/features/**/ui`、`code/frontend/src/widgets/**`、`code/frontend/src/shared/model/**`、`code/frontend/src/shared/lib/**`、`code/frontend/src/composables/use*.ts`
+  - 负责：路由入口统一落在 `pages/**`；页面级查询、导出、实时桥接和 query 同步下沉到 feature model / shared model / shared lib / composable；`widgets/**` 负责跨 feature 页面区块组合，`features/**/ui` 负责单一能力 surface，`shared/model/common` 和 `shared/model/layout` 承接共享反馈、危险确认、工作区导航、面包屑细节与分页状态这类跨 feature 但不带业务 owner 的状态，`shared/lib/*` 承接请求取消、sanitize、键盘导航等无业务语义的基础能力
   - 不负责：把 API 调用、路由状态和大段派生数据继续堆回单个 `.vue` 页面，或让 `features/*RoutePage.vue`、`widgets/*RoutePage.vue` 继续兼任页面层
 
 - `code/frontend/src/stores/auth.ts`、`notification.ts`、`contest.ts`
@@ -99,7 +99,7 @@ code/frontend/
 ### 3.2 状态 owner
 
 - 全局共享状态只保留 `auth`、`notification`、`contest`
-- 页面级状态默认进 `features/**/model`；跨 feature 的共享工作区状态进 `shared/model/**`；剩余与浏览器、路由同步、传输封装强相关的通用能力继续留在 `composables/`
+- 页面级状态默认进 `features/**/model`；跨 feature 的共享工作区状态进 `shared/model/**`；无业务语义的基础能力进 `shared/lib/**`；剩余与浏览器、路由同步、传输封装强相关的通用能力继续留在 `composables/`
 
 详情见：
 

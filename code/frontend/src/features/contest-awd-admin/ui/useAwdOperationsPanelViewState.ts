@@ -1,5 +1,5 @@
 import { computed, ref, watch, type Ref } from 'vue'
-import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
+import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 
 import type {
   AWDOperationsPanelKey,

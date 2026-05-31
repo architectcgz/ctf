@@ -2,7 +2,7 @@ import { computed, ref } from 'vue'
 
 import { getContests, type GetContestsData } from '@/api/contest'
 import { getPracticeRanking } from '@/api/scoreboard'
-import { usePagination } from '@/composables/usePagination'
+import { usePagination } from '@/shared/model/common/usePagination'
 import type {
   ContestListItem,
   ContestMode,

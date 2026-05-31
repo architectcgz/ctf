@@ -1,6 +1,6 @@
 import { computed, type ComputedRef } from 'vue'
 import { useRoute, useRouter, type RouteLocationNormalizedLoaded, type Router } from 'vue-router'
-import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
+import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 
 interface UseRouteQueryTabsOptions<T extends string> {
   route?: RouteLocationNormalizedLoaded

@@ -7,7 +7,7 @@ import {
   getInstanceDirectoryByRole,
 } from '@/api/instances'
 import { useAuthStore } from '@/stores/auth'
-import { useAbortController } from '@/composables/useAbortController'
+import { useAbortController } from '@/shared/lib/request/useAbortController'
 import { useToast } from '@/shared/model/common/useToast'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { reportFrontendError } from '@/utils/reportFrontendError'

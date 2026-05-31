@@ -3,7 +3,7 @@ import { useDebounceFn } from '@vueuse/core'
 
 import { listAwdReviewsByRole } from '@/api/awd-reviews'
 import type { AwdReviewContestItemData } from '@/api/contracts'
-import { useAbortController } from '@/composables/useAbortController'
+import { useAbortController } from '@/shared/lib/request/useAbortController'
 import { useAuthStore } from '@/stores/auth'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { reportFrontendError } from '@/utils/reportFrontendError'

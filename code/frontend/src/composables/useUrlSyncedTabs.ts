@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue'
-import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
+import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 
 interface UseUrlSyncedTabsOptions<T extends string> {
   orderedTabs: readonly T[]

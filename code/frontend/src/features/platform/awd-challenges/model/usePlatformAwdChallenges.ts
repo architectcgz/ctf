@@ -19,7 +19,7 @@ import type {
   ChallengeDifficulty,
 } from '@/api/contracts'
 import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
-import { usePagination } from '@/composables/usePagination'
+import { usePagination } from '@/shared/model/common/usePagination'
 import { useToast } from '@/shared/model/common/useToast'
 import { useAwdChallengeImportFlow } from './useAwdChallengeImportFlow'
 

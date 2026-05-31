@@ -17,7 +17,7 @@ import {
   getImageStatusStyle,
   type ImageSortConfig,
 } from './imageManagePresentation'
-import { usePagination } from '@/composables/usePagination'
+import { usePagination } from '@/shared/model/common/usePagination'
 import { useImageManageAutoRefresh } from './useImageManageAutoRefresh'
 import { useImageManageMutations } from './useImageManageMutations'
 

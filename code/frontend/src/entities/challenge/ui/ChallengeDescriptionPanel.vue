@@ -112,7 +112,7 @@
 import { computed } from 'vue'
 import { marked } from 'marked'
 
-import { useSanitize } from '@/composables/useSanitize'
+import { useSanitize } from '@/shared/lib/sanitize/useSanitize'
 
 const props = withDefaults(
   defineProps<{
