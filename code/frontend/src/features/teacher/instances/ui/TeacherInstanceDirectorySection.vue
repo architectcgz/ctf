@@ -2,6 +2,14 @@
 import { Search, Trash2 } from 'lucide-vue-next'
 
 import type { ClassDirectoryItem, InstanceDirectoryItem } from '@/api/contracts'
+import {
+  formatInstanceRemainingTime,
+  getInstanceStatusLabel,
+  getInstanceStatusPillClass,
+  getInstanceStudentDisplayName,
+  getInstanceStudentIdentityLabel,
+  getInstanceStudentSecondaryLabel,
+} from '@/entities/instance'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
 import WorkspaceDirectoryPagination from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'
@@ -101,41 +109,6 @@ function formatDateTime(value: string): string {
     minute: '2-digit',
   }).format(date)
 }
-
-function formatRemainingTime(seconds: number): string {
-  if (seconds <= 0) return '已到期'
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const restSeconds = seconds % 60
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(restSeconds).padStart(2, '0')}`
-}
-
-function statusMeta(status: string): { label: string; chipClass: string } {
-  switch (status) {
-    case 'running':
-      return {
-        label: '运行中',
-        chipClass: 'instance-status-pill--running',
-      }
-    case 'creating':
-      return {
-        label: '创建中',
-        chipClass: 'instance-status-pill--pending',
-      }
-    case 'expired':
-      return {
-        label: '已过期',
-        chipClass: 'instance-status-pill--inactive',
-      }
-    case 'failed':
-      return {
-        label: '异常',
-        chipClass: 'instance-status-pill--danger',
-      }
-    default:
-      return { label: status, chipClass: 'instance-status-pill--inactive' }
-  }
-}
 </script>
 
 <template>
@@ -223,29 +196,19 @@ function statusMeta(status: string): { label: string; chipClass: string } {
           <template #cell-student="{ row }">
             <div class="teacher-instance-user-cell">
               <span class="teacher-instance-user-meta">
-                {{
-                  (row as InstanceDirectoryItem).student_no ||
-                  `@${(row as InstanceDirectoryItem).student_username}`
-                }}
+                {{ getInstanceStudentIdentityLabel(row as InstanceDirectoryItem) }}
               </span>
               <span
                 class="teacher-instance-primary-text"
-                :title="
-                  (row as InstanceDirectoryItem).student_name ||
-                  (row as InstanceDirectoryItem).student_username
-                "
+                :title="getInstanceStudentDisplayName(row as InstanceDirectoryItem)"
               >
-                {{
-                  (row as InstanceDirectoryItem).student_name ||
-                  (row as InstanceDirectoryItem).student_username
-                }}
+                {{ getInstanceStudentDisplayName(row as InstanceDirectoryItem) }}
               </span>
               <span
                 class="teacher-instance-secondary-text"
-                :title="`@${(row as InstanceDirectoryItem).student_username} · ${(row as InstanceDirectoryItem).class_name}`"
+                :title="getInstanceStudentSecondaryLabel(row as InstanceDirectoryItem)"
               >
-                @{{ (row as InstanceDirectoryItem).student_username }} ·
-                {{ (row as InstanceDirectoryItem).class_name }}
+                {{ getInstanceStudentSecondaryLabel(row as InstanceDirectoryItem) }}
               </span>
             </div>
           </template>
@@ -264,10 +227,10 @@ function statusMeta(status: string): { label: string; chipClass: string } {
               class="instance-status-pill"
               :class="[
                 'workspace-directory-status-pill',
-                statusMeta((row as InstanceDirectoryItem).status).chipClass,
+                getInstanceStatusPillClass((row as InstanceDirectoryItem).status),
               ]"
             >
-              {{ statusMeta((row as InstanceDirectoryItem).status).label }}
+              {{ getInstanceStatusLabel((row as InstanceDirectoryItem).status) }}
             </span>
           </template>
 
@@ -292,7 +255,11 @@ function statusMeta(status: string): { label: string; chipClass: string } {
 
           <template #cell-remaining="{ row }">
             <span class="teacher-instance-muted-text">
-              {{ formatRemainingTime((row as InstanceDirectoryItem).remaining_time) }}
+              {{
+                formatInstanceRemainingTime((row as InstanceDirectoryItem).remaining_time, {
+                  expiredLabel: '已到期',
+                })
+              }}
             </span>
           </template>
 

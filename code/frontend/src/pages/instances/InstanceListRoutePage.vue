@@ -18,8 +18,8 @@
     :set-warning-close-button="setWarningCloseButton"
     :can-open-instance-in-browser="canOpenInstanceInBrowser"
     :format-instance-access-display="formatInstanceAccessDisplay"
-    :format-remaining-time="formatRemainingTime"
-    :get-instance-status-class="getInstanceStatusClass"
+    :format-remaining-time="formatInstanceRemainingTime"
+    :get-instance-status-class="getInstanceStatusDotClass"
     :get-instance-status-label="getInstanceStatusLabel"
     :get-instance-waiting-hint="getInstanceWaitingHint"
     :is-instance-manual-action-allowed="isInstanceManualActionAllowed"
@@ -30,14 +30,16 @@
 import { ref, type ComponentPublicInstance } from 'vue'
 
 import {
+  formatInstanceAccessDisplay,
+  formatInstanceRemainingTime,
+  getInstanceStatusDotClass,
+  getInstanceStatusLabel,
+  getInstanceWaitingHint,
+} from '@/entities/instance'
+import {
   EXTEND_DURATION_SECONDS,
   WARNING_THRESHOLD_SECONDS,
   canOpenInstanceInBrowser,
-  formatInstanceAccessDisplay,
-  formatRemainingTime,
-  getInstanceStatusClass,
-  getInstanceStatusLabel,
-  getInstanceWaitingHint,
   isInstanceManualActionAllowed,
   InstanceListWorkspaceShell,
   useInstanceListPage,

@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
+import instancePresentationSource from '@/entities/instance/model/presentation.ts?raw'
 import InstanceManagement from '@/pages/teacher/InstanceManagementRoutePage.vue'
 import instanceManagementViewSource from '@/pages/teacher/InstanceManagementRoutePage.vue?raw'
 import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
@@ -419,6 +420,9 @@ describe('InstanceManagement', () => {
     expect(instanceManagementSource).toContain(
       "from '@/shared/ui/common/WorkspaceDataTable.vue'"
     )
+    expect(teacherInstanceDirectorySectionSource).toContain("from '@/entities/instance'")
+    expect(instancePresentationSource).toContain('getInstanceStudentDisplayName')
+    expect(instancePresentationSource).toContain('getInstanceStatusPillClass')
     expect(instanceManagementSource).toContain(
       "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
     )
@@ -474,7 +478,7 @@ describe('InstanceManagement', () => {
       'class="teacher-instance-list workspace-directory-list"'
     )
     expect(instanceManagementSource).toMatch(
-      /class="teacher-instance-primary-text"[\s\S]*:title="[\s\S]*\(row as InstanceDirectoryItem\)\.student_name \|\|[\s\S]*\(row as InstanceDirectoryItem\)\.student_username/s
+      /class="teacher-instance-primary-text"[\s\S]*:title="getInstanceStudentDisplayName\(\s*row as InstanceDirectoryItem\s*\)"/s
     )
     expect(instanceManagementSource).toMatch(
       /class="teacher-instance-primary-text"[\s\S]*:title="\(row as InstanceDirectoryItem\)\.challenge_title"/s
@@ -482,6 +486,10 @@ describe('InstanceManagement', () => {
     expect(instanceManagementSource).toContain('InstanceDirectoryItem')
     expect(instanceManagementSource).not.toContain('TeacherInstanceItem')
     expect(instanceManagementSource).toMatch(/class="teacher-instance-secondary-text"[\s\S]*:title="/s)
+    expect(instanceManagementSource).toContain('getInstanceStudentIdentityLabel')
+    expect(instanceManagementSource).toContain('getInstanceStudentSecondaryLabel')
+    expect(instanceManagementSource).toContain('getInstanceStatusPillClass')
+    expect(instanceManagementSource).toContain('formatInstanceRemainingTime')
     expect(instanceManagementSource).toMatch(
       /\.teacher-instance-primary-text,\s*[\s\S]*\.teacher-instance-url-text\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )

@@ -14,6 +14,8 @@ import challengeSolutionsPanelSource from '@/features/challenge-detail/ui/Challe
 import challengeSubmissionRecordsPanelSource from '@/features/challenge-detail/ui/ChallengeSubmissionRecordsPanel.vue?raw'
 import challengeWriteupPanelSource from '@/features/challenge-detail/ui/ChallengeWriteupPanel.vue?raw'
 import challengeActionAsideSource from '@/features/challenge-detail/ui/ChallengeActionAside.vue?raw'
+import challengeInstanceCardSource from '@/features/challenge-detail/ui/ChallengeInstanceCard.vue?raw'
+import instancePresentationSource from '@/entities/instance/model/presentation.ts?raw'
 
 const challengeApiMocks = vi.hoisted(() => ({
   getChallengeDetail: vi.fn(),
@@ -281,6 +283,18 @@ describe('ChallengeDetail', () => {
     expect(challengeActionAsideSource).toMatch(/<div class="workspace-overline">\s*Primary Action\s*<\/div>/)
     expect(challengeActionAsideSource).not.toContain('<div class="overline">Primary Action</div>')
     expect(challengeDetailWorkspaceSource).not.toMatch(/^\.overline\s*\{/m)
+  })
+
+  it('题目详情实例卡片应复用实例实体展示 owner', () => {
+    expect(challengeInstanceCardSource).toContain("from '@/entities/instance'")
+    expect(challengeInstanceCardSource).toContain('getInstanceStatusTone')
+    expect(challengeInstanceCardSource).toContain('getInstanceWaitingQueueLabel')
+    expect(challengeInstanceCardSource).toContain('getInstanceWaitingEtaLabel')
+    expect(challengeInstanceCardSource).toContain('getInstanceWaitingProgressLabel')
+    expect(challengeInstanceCardSource).toContain('formatInstanceAccessDisplay')
+    expect(instancePresentationSource).toContain('getInstanceWaitingQueueLabel')
+    expect(instancePresentationSource).toContain('getInstanceWaitingEtaLabel')
+    expect(instancePresentationSource).toContain('getInstanceWaitingProgressLabel')
   })
 
   it('未解题时应显示题解锁定态', async () => {

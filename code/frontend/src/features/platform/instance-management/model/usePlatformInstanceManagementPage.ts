@@ -5,6 +5,7 @@ import {
   destroyManagedInstanceByRole,
   getInstanceDirectoryByRole,
 } from '@/api/instances'
+import { getInstanceStudentDisplayName } from '@/entities/instance'
 import { useAbortController } from '@/shared/lib/request/useAbortController'
 import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
 import { reportFrontendError } from '@/utils/reportFrontendError'
@@ -18,11 +19,9 @@ interface InstanceManageTableRow {
   challenge: string
   student_id: string
   user: string
-  username: string
   class_name: string
   ip_address: string
   status: string
-  status_label: string
   created_at: string
   actions: string
   studentRoute: {
@@ -56,12 +55,10 @@ export function usePlatformInstanceManagementPage() {
       id: item.id,
       challenge: item.challenge_title,
       student_id: String(item.student_id),
-      user: item.student_name || item.student_username,
-      username: item.student_username,
+      user: getInstanceStudentDisplayName(item),
       class_name: item.class_name,
       ip_address: item.access_url || '暂未分配',
       status: item.status,
-      status_label: formatStatus(item.status),
       created_at: formatDateTime(item.created_at),
       actions: '销毁',
       studentRoute: buildStudentRoute(String(item.student_id), item.class_name),
@@ -234,21 +231,6 @@ export function usePlatformInstanceManagementPage() {
     setKeyword,
     setStatusFilter,
     resetFilters,
-  }
-}
-
-function formatStatus(status: string): string {
-  switch (status) {
-    case 'running':
-      return '运行中'
-    case 'creating':
-      return '创建中'
-    case 'expired':
-      return '已过期'
-    case 'failed':
-      return '异常'
-    default:
-      return status
   }
 }
 

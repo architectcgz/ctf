@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
+import instancePresentationSource from '@/entities/instance/model/presentation.ts?raw'
 import PlatformInstanceManagement from '@/pages/platform/InstanceManageRoutePage.vue'
 import adminInstanceManageSource from '@/pages/platform/InstanceManageRoutePage.vue?raw'
 import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
@@ -121,6 +122,7 @@ describe('PlatformInstanceManagement', () => {
     expect(adminInstanceManageSource).toContain('usePlatformInstanceManagementPage')
     expect(platformInstanceManagementModelSource).toContain('InstanceDirectoryItem')
     expect(platformInstanceManagementModelSource).toContain("from '@/api/instances'")
+    expect(platformInstanceManagementModelSource).toContain("from '@/entities/instance'")
     expect(platformInstanceManagementModelSource).not.toContain("from 'vue-router'")
     expect(platformInstanceManagementModelSource).toContain('const overviewRoute = platformOverviewRoute')
     expect(platformInstanceManagementModelSource).toContain('function buildStudentRoute')
@@ -154,6 +156,9 @@ describe('PlatformInstanceManagement', () => {
     expect(instanceManageWorkspacePanelSource).toContain(
       "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
+    expect(instanceManageWorkspacePanelSource).toContain("from '@/entities/instance'")
+    expect(instancePresentationSource).toContain('getInstanceStatusLabel')
+    expect(instancePresentationSource).toContain('getInstanceStudentDisplayName')
     expect(instanceManageWorkspacePanelSource).toContain(
       "from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
@@ -166,6 +171,7 @@ describe('PlatformInstanceManagement', () => {
     expect(instanceManageWorkspacePanelSource).toContain("label: '班级'")
     expect(instanceManageWorkspacePanelSource).toContain('class="instance-user-link"')
     expect(instanceManageWorkspacePanelSource).toContain('class="instance-status-pill"')
+    expect(instanceManageWorkspacePanelSource).toContain('getInstanceStatusPillClass')
     expect(instanceManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--danger ui-btn--xs"')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(adminInstanceManageSource).not.toContain('bg-green-100 text-green-700')

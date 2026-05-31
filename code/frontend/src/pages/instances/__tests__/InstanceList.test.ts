@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'
+import instancePresentationSource from '@/entities/instance/model/presentation.ts?raw'
 import InstanceList from '@/pages/instances/InstanceListRoutePage.vue'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
 import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
@@ -123,7 +124,10 @@ describe('InstanceList', () => {
     expect(instanceListSource).toContain('useInstanceWarningFocus')
     expect(instanceListSource).not.toContain('watch(showWarning')
     expect(instanceListSource).toContain("from '@/features/instance-list'")
+    expect(instanceListSource).toContain("from '@/entities/instance'")
     expect(instanceListSource).toContain('InstanceListWorkspaceShell')
+    expect(instancePresentationSource).toContain('getInstanceStatusDotClass')
+    expect(instancePresentationSource).toContain('getInstanceWaitingHint')
     expect(instanceListWorkspaceSource).toMatch(/<div class="workspace-overline">\s*Instances\s*<\/div>/)
     expect(instanceListWorkspaceSource).toMatch(
       /<h1 class="instance-title workspace-page-title">\s*我的实例\s*<\/h1>/

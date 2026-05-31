@@ -71,7 +71,7 @@
                 class="instance-card__access-link"
                 @click="emit('openTarget', instance.id)"
               >
-                {{ instance.access_url }}
+                {{ formatInstanceAccessDisplay(instance) }}
               </button>
             </div>
           </div>
@@ -108,6 +108,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+
+import {
+  formatInstanceAccessDisplay,
+  getInstanceRemainingSeconds,
+  getInstanceRemainingTone,
+  getInstanceStatusLabel,
+  getInstanceStatusTone,
+} from '@/entities/instance'
 import type { InstancePanelItem, InstancePanelStatus } from '@/shared/model/common/instancePanel.types'
 
 const props = withDefaults(
@@ -134,8 +142,7 @@ const warnedInstances = new Set<string>()
 let timer: number | null = null
 
 function formatCountdown(expiresAt: string): string {
-  const expires = new Date(expiresAt).getTime()
-  const diff = expires - now.value
+  const diff = getInstanceRemainingSeconds(expiresAt, now.value) * 1000
 
   if (diff <= 0) return '已过期'
 
@@ -149,13 +156,15 @@ function formatCountdown(expiresAt: string): string {
 }
 
 function getTimeColor(expiresAt: string): string {
-  const expires = new Date(expiresAt).getTime()
-  const diff = expires - now.value
+  const tone = getInstanceRemainingTone(getInstanceRemainingSeconds(expiresAt, now.value), {
+    warningSeconds: 600,
+    dangerSeconds: 300,
+  })
 
-  if (diff <= 0) return 'instance-countdown--muted'
-  if (diff < 300000) return 'instance-countdown--danger'
-  if (diff < 600000) return 'instance-countdown--warning'
-  return 'instance-countdown--success'
+  if (tone === 'danger') return 'instance-countdown--danger'
+  if (tone === 'warning') return 'instance-countdown--warning'
+  if (tone === 'success') return 'instance-countdown--success'
+  return 'instance-countdown--muted'
 }
 
 function checkExpiringSoon() {
@@ -171,31 +180,15 @@ function checkExpiringSoon() {
 }
 
 function getStatusLabel(status: InstancePanelStatus): string {
-  const labels: Record<InstancePanelStatus, string> = {
-    pending: '等待中',
-    creating: '创建中',
-    running: '运行中',
-    expired: '已过期',
-    destroying: '销毁中',
-    destroyed: '已销毁',
-    failed: '失败',
-    crashed: '崩溃',
-  }
-  return labels[status]
+  return getInstanceStatusLabel(status)
 }
 
 function getStatusChipClass(status: InstancePanelStatus): string {
-  const colors: Record<InstancePanelStatus, string> = {
-    pending: 'instance-chip--muted',
-    creating: 'instance-chip--warning',
-    running: 'instance-chip--success',
-    expired: 'instance-chip--muted',
-    destroying: 'instance-chip--warning',
-    destroyed: 'instance-chip--muted',
-    failed: 'instance-chip--danger',
-    crashed: 'instance-chip--danger',
-  }
-  return colors[status]
+  const tone = getInstanceStatusTone(status)
+  if (tone === 'warning') return 'instance-chip--warning'
+  if (tone === 'success') return 'instance-chip--success'
+  if (tone === 'danger') return 'instance-chip--danger'
+  return 'instance-chip--muted'
 }
 
 onMounted(() => {

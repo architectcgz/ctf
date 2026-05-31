@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Trash2 } from 'lucide-vue-next'
 
+import { getInstanceStatusLabel, getInstanceStatusPillClass } from '@/entities/instance'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import AppLoading from '@/shared/ui/common/AppLoading.vue'
 import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'
@@ -18,11 +19,9 @@ interface InstanceManageTableRow {
   challenge: string
   student_id: string
   user: string
-  username: string
   class_name: string
   ip_address: string
   status: string
-  status_label: string
   created_at: string
   actions: string
   studentRoute: InstanceRouteTarget
@@ -164,12 +163,10 @@ function handleStatusFilterChange(event: Event): void {
               class="instance-status-pill"
               :class="[
                 'workspace-directory-status-pill',
-                (row as InstanceManageTableRow).status === 'running'
-                  ? 'instance-status-pill--running'
-                  : 'instance-status-pill--inactive',
+                getInstanceStatusPillClass((row as InstanceManageTableRow).status),
               ]"
             >
-              {{ (row as InstanceManageTableRow).status_label }}
+              {{ getInstanceStatusLabel((row as InstanceManageTableRow).status) }}
             </span>
           </template>
           <template #cell-actions="{ row }">
