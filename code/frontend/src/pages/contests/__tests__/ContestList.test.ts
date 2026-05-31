@@ -6,6 +6,7 @@ import ContestList from '@/pages/contests/ContestListRoutePage.vue'
 import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
 import contestListPageSource from '@/features/contest-detail/model/useContestListPage.ts?raw'
+import contestListWorkspaceSource from '@/widgets/contest-list-workspace/ContestListWorkspace.vue?raw'
 import contestListRoutesSource from '@/features/contest-detail/model/contestListRoutes.ts?raw'
 
 vi.mock('@/api/contest', () => ({
@@ -88,15 +89,20 @@ describe('ContestList', () => {
 
   it('路由页应仅负责组合，不直接耦合竞赛列表查询流程', () => {
     expect(contestListSource).toContain('useContestListPage')
+    expect(contestListSource).toContain(
+      "import { ContestListWorkspace } from '@/widgets/contest-list-workspace'"
+    )
     expect(contestListSource).not.toContain("from '@/api/contest'")
     expect(contestListSource).not.toContain('usePagination(getContests)')
+    expect(contestListSource).not.toContain('summaryMetricIcon')
+    expect(contestListSource).not.toContain('contest-directory-filters')
   })
 
   it('竞赛详情入口应通过 route target，而不是 page model 直接 push', async () => {
     const { wrapper, router } = await mountPage()
 
-    expect(contestListSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
-    expect(contestListSource).toContain('<AppRouteLink')
+    expect(contestListWorkspaceSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
+    expect(contestListWorkspaceSource).toContain('<AppRouteLink')
     expect(contestListPageSource).not.toContain("from 'vue-router'")
     expect(contestListPageSource).not.toContain('router.push')
     expect(contestListPageSource).toContain('buildContestRoute: (contest: ContestListItem) =>')
@@ -111,56 +117,60 @@ describe('ContestList', () => {
   })
 
   it('应该为竞赛列表长标题保留省略样式和完整悬浮提示', () => {
-    expect(contestListSource).toMatch(
+    expect(contestListWorkspaceSource).toMatch(
       /class="[^"]*\bcontest-row-title\b[^"]*"[\s\S]*:title="contest\.title"/s
     )
-    expect(contestListSource).toMatch(
+    expect(contestListWorkspaceSource).toMatch(
       /\.contest-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )
   })
 
   it('竞赛页概况卡片应使用统一 metric-panel 样式类', () => {
-    expect(contestListSource).toContain('<div class="workspace-overline">Contests</div>')
-    expect(contestListSource).toContain('<h1 class="contest-title workspace-page-title">竞赛中心</h1>')
-    expect(contestListSource).not.toContain('<div class="journal-eyebrow">Contests</div>')
-    expect(contestListSource).not.toContain('journal-eyebrow-text')
-    expect(contestListSource).toContain('class="contest-summary-grid metric-panel-grid"')
-    expect(contestListSource).toContain('class="contest-summary-item progress-card metric-panel-card"')
-    expect(contestListSource).toContain(
+    expect(contestListWorkspaceSource).toContain('<div class="workspace-overline">Contests</div>')
+    expect(contestListWorkspaceSource).toContain(
+      '<h1 class="contest-title workspace-page-title">竞赛中心</h1>'
+    )
+    expect(contestListWorkspaceSource).not.toContain('<div class="journal-eyebrow">Contests</div>')
+    expect(contestListWorkspaceSource).not.toContain('journal-eyebrow-text')
+    expect(contestListWorkspaceSource).toContain('class="contest-summary-grid metric-panel-grid"')
+    expect(contestListWorkspaceSource).toContain(
+      'class="contest-summary-item progress-card metric-panel-card"'
+    )
+    expect(contestListWorkspaceSource).toContain(
       'class="contest-summary-label progress-card-label metric-panel-label"'
     )
-    expect(contestListSource).toContain(
+    expect(contestListWorkspaceSource).toContain(
       'class="contest-summary-value progress-card-value metric-panel-value"'
     )
-    expect(contestListSource).toContain(
+    expect(contestListWorkspaceSource).toContain(
       'class="contest-summary-helper progress-card-hint metric-panel-helper"'
     )
-    expect(contestListSource).toContain(
+    expect(contestListWorkspaceSource).toContain(
       '<component :is="summaryMetricIcon(stat.key)" class="h-4 w-4" />'
     )
   })
 
   it('竞赛列表错误态操作按钮应接入共享 ui-btn 原语', () => {
-    expect(contestListSource).toContain('class="ui-btn ui-btn--secondary"')
-    expect(contestListSource).not.toContain('class="contest-btn"')
+    expect(contestListWorkspaceSource).toContain('class="ui-btn ui-btn--secondary"')
+    expect(contestListWorkspaceSource).not.toContain('class="contest-btn"')
   })
 
   it('竞赛列表应拆分开始时间、结束时间和通用操作按钮图标', () => {
-    expect(contestListSource).toContain('<span>开始时间</span>')
-    expect(contestListSource).toContain('<span>结束时间</span>')
-    expect(contestListSource).toContain(
+    expect(contestListWorkspaceSource).toContain('<span>开始时间</span>')
+    expect(contestListWorkspaceSource).toContain('<span>结束时间</span>')
+    expect(contestListWorkspaceSource).toContain(
       'class="workspace-directory-compact-text contest-row-start-time"'
     )
-    expect(contestListSource).toContain(
+    expect(contestListWorkspaceSource).toContain(
       'class="workspace-directory-compact-text contest-row-end-time"'
     )
-    expect(contestListSource).not.toContain(
+    expect(contestListWorkspaceSource).not.toContain(
       'formatTime(contest.starts_at) }} - {{ formatTime(contest.ends_at)'
     )
-    expect(contestListSource).toContain('class="workspace-directory-row-btn contest-row-cta"')
-    expect(contestListSource).toContain('<ArrowRight class="h-4 w-4" />')
-    expect(contestListSource).toContain('minmax(10.5rem, 0.85fr) max-content')
-    expect(contestListSource).toMatch(/\.contest-row-cta\s*\{[^}]*justify-self:\s*end;/s)
+    expect(contestListWorkspaceSource).toContain('class="workspace-directory-row-btn contest-row-cta"')
+    expect(contestListWorkspaceSource).toContain('<ArrowRight class="h-4 w-4" />')
+    expect(contestListWorkspaceSource).toContain('minmax(10.5rem, 0.85fr) max-content')
+    expect(contestListWorkspaceSource).toMatch(/\.contest-row-cta\s*\{[^}]*justify-self:\s*end;/s)
   })
 
   it('竞赛列表应提供学生通用状态与模式筛选，并透传后端查询参数', async () => {
@@ -169,7 +179,7 @@ describe('ContestList', () => {
 
     const { wrapper } = await mountPage()
 
-    expect(contestListSource).toContain(
+    expect(contestListWorkspaceSource).toContain(
       'class="student-directory-filters contest-directory-filters"'
     )
     expect(wrapper.find('#contest-status-filter').exists()).toBe(true)
