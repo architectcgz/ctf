@@ -144,14 +144,14 @@
 
 ## 5. 兼容与历史例外
 
-- `/teacher/*` 已不再注册为 router runtime page route；正式事实源只认 `/academy/*`。
-- 旧教师端页面路径目前只保留在 `code/frontend/src/utils/teacherLegacyRedirect.ts`，用途是把登录 redirect 参数中的 legacy 路径归一到 `/academy/*`，而不是继续提供页面入口。
+- `/teacher/*` 已不再注册为 router runtime page route，登录 redirect 参数也不再对它做 canonicalize；正式事实源只认 `/academy/*`。
+- 遇到旧教师端页面路径 redirect 参数时，`sanitizeRedirectPath()` 会直接回退到 `/`，再由登录 redirect fallback 导向角色默认首页。
 - `/dashboard`、`/instances`、`/skill-profile` 当前仍保留 redirect，属于学生端早期路径兼容。
 - `resolveRouteTitle()` 对 `/dashboard` 和 `/student/dashboard` 做了特例处理，允许通过 query/变体路由生成不同标题。
 
 ## 6. Guardrail
 
 - route page 入口只能落在 `pages/**`，且不能直接持有业务 API、路由状态或 query-tab 逻辑：`code/frontend/src/__tests__/architectureBoundaries.test.ts`、`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
-- legacy 教师端前端路径 producer 只能保留在 redirect compatibility owner，且 router runtime 不再注册 `/teacher/*` 页面 route：`code/frontend/src/__tests__/architectureBoundaries.test.ts`、`code/frontend/src/router/__tests__/sharedRoutes.test.ts`
+- legacy 教师端前端页面路径不再允许出现在活跃前端源码里，且 router runtime 不再注册 `/teacher/*` 页面 route：`code/frontend/src/__tests__/architectureBoundaries.test.ts`、`code/frontend/src/router/__tests__/sharedRoutes.test.ts`
 - 教师/管理员导航映射和命名空间匹配：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`
 - 默认首页与角色跳转：`code/frontend/src/utils/roleRoutes.ts`

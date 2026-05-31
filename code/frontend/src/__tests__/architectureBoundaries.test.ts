@@ -330,14 +330,12 @@ describe('frontend architecture boundaries', () => {
     expect(utilityForbiddenImports).toEqual([])
   })
 
-  it('legacy teacher frontend route paths should stay isolated in the redirect compatibility owner', () => {
+  it('legacy teacher frontend route paths should not remain in active frontend source', () => {
     const legacyTeacherFrontendRoutePattern =
       /['"`]\/?teacher\/(?:dashboard|classes|students|awd-reviews|instances)(?:[/'"`:?]|$)/
 
     const scannedFiles = sourceFiles.filter(
-      (file) =>
-        !file.relativePath.startsWith(`api${sep}`) &&
-        file.relativePath !== `utils${sep}teacherLegacyRedirect.ts`
+      (file) => !file.relativePath.startsWith(`api${sep}`)
     )
 
     const violations = collectSourceMatches(

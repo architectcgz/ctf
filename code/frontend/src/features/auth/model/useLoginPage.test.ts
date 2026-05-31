@@ -110,7 +110,7 @@ describe('useLoginPage', () => {
     expect(navigationMocks.push).toHaveBeenCalledWith('/contests/1')
   })
 
-  it('应把 legacy 教师端 redirect 参数归一到 academy 命名空间', async () => {
+  it('应把 legacy 教师端 redirect 参数回退到角色默认首页', async () => {
     routeState.value.redirect = '/teacher/dashboard'
     authMocks.login.mockResolvedValue({ role: 'teacher' })
     const page = useLoginPage()

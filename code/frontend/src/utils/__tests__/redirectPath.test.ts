@@ -8,17 +8,15 @@ describe('sanitizeRedirectPath', () => {
     expect(sanitizeRedirectPath('https://evil.com/phish')).toBe('/')
   })
 
-  it('应把 legacy 教师端路径归一到 academy 命名空间', () => {
-    expect(sanitizeRedirectPath('/teacher/dashboard')).toBe('/academy/overview')
-    expect(sanitizeRedirectPath('/teacher/instances?tab=running#lab')).toBe(
-      '/academy/instances?tab=running#lab'
-    )
+  it('应拒绝 legacy 教师端前端页面路径', () => {
+    expect(sanitizeRedirectPath('/teacher/dashboard')).toBe('/')
+    expect(sanitizeRedirectPath('/teacher/instances?tab=running#lab')).toBe('/')
   })
 
-  it('应保留 dynamic legacy 教师端路径的参数与后缀', () => {
+  it('应拒绝 dynamic legacy 教师端前端页面路径', () => {
     expect(
       sanitizeRedirectPath('/teacher/classes/class-a/students/student-1/review-archive?tab=all#top')
-    ).toBe('/academy/classes/class-a/students/student-1/review-archive?tab=all#top')
+    ).toBe('/')
   })
 
   it('非 legacy 前端路径应保持原样', () => {

@@ -65,13 +65,13 @@ src/
 
 ## 当前还需要继续迁移的工作
 
-### 1. 教师端兼容命名空间还没退场
+### 1. 教师端兼容命名空间已基本退场
 
 - 当前产品规则要求教师端只使用 `/academy/*`。
 - router runtime 已不再注册 `/teacher/* -> /academy/*` 页面 redirect。
-- 登录 redirect 参数已经先在共享 sanitize owner 归一到 `/academy/*`，不会再把 `/teacher/*` 旧页面路径继续传入登录后导航。
-- 当前前端活跃源码里，旧教师端页面路径 literal 仍只保留在 `teacherLegacyRedirect.ts`，用于 redirect 参数 canonicalize；其它页面/feature/router 不再直接产出或注册 `/teacher/*` 前端页面入口。
-- 下一步需要决定是否继续删除 `teacherLegacyRedirect.ts` 这层 redirect 参数兼容，还是保留为登录后导航的历史兜底。
+- 登录 redirect 参数已经不再接受 `/teacher/*` 旧页面路径。
+- 前端活跃源码里已经不再保留 `/teacher/*` 前端页面路径兼容 owner。
+- 登录 redirect 参数遇到旧教师端页面路径时，会直接回退到角色默认首页，而不是再 canonicalize 成 `/academy/*`。
 
 ### 2. route page 厚壳层主问题已基本收口
 
@@ -79,7 +79,6 @@ src/
 
 后续重点更适合转向：
 
-- 教师端 redirect 参数兼容是否继续保留
 - `entities` 展示 owner 补强
 - 继续把 guardrail 跟现状一起机械化
 
@@ -119,7 +118,7 @@ src/
 ### P0：继续收口入口一致性
 
 - 保持教师端页面 runtime 只认 `/academy/*`，不再回流 `/teacher/*` route。
-- 继续用源码级 guardrail 限制新的 `/teacher/*` 前端页面路径 producer；当前兼容面只剩登录 redirect 参数的 canonicalize owner。
+- 继续用源码级 guardrail 限制新的 `/teacher/*` 前端页面路径 producer；当前前端已不再保留这类页面兼容 owner。
 - 保持 router runtime 只从 `pages` 取页面组件，不再新增绕过 `pages` 的入口。
 
 ### P1：补 route/widget/entity 边界 guardrail

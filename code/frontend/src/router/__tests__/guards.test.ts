@@ -207,7 +207,7 @@ describe('router guards', () => {
     expect(next).toHaveBeenCalledWith('/academy/overview')
   })
 
-  it('已登录用户访问登录页时应把 legacy 教师端 redirect 归一到 academy 命名空间', async () => {
+  it('已登录用户访问登录页时应把 legacy 教师端 redirect 回退到角色默认首页', async () => {
     const authStore = useAuthStore()
     authStore.setAuth(buildUser('teacher'))
     authStore.sessionRestored = true
@@ -240,18 +240,18 @@ describe('router guards', () => {
   })
 })
 
-describe('guard helpers', () => {
+  describe('guard helpers', () => {
   it('guards 不应再注册 router runtime error owner', () => {
     const { router } = createRouterMock()
 
     expect(router.onError).not.toHaveBeenCalled()
   })
 
-  it('应该清洗非法 redirect 路径并归一 legacy 教师端入口', () => {
+  it('应该清洗非法 redirect 路径并拒绝 legacy 教师端页面入口', () => {
     expect(sanitizeRedirectPath('//evil.com')).toBe('/')
     expect(sanitizeRedirectPath('https://evil.com')).toBe('/')
     expect(sanitizeRedirectPath('/dashboard')).toBe('/dashboard')
-    expect(sanitizeRedirectPath('/teacher/dashboard')).toBe('/academy/overview')
+    expect(sanitizeRedirectPath('/teacher/dashboard')).toBe('/')
   })
 
   it('应该正确判断角色权限', () => {
