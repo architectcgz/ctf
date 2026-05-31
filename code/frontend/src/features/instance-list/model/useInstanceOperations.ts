@@ -5,7 +5,7 @@ import {
   extendInstance,
   requestInstanceAccess,
 } from '@/api/instance'
-import { useClipboard } from '@/composables/useClipboard'
+import { useClipboard } from '@/shared/model/common/useClipboard'
 import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
 import { useToast } from '@/shared/model/common/useToast'
 

@@ -9,7 +9,7 @@ import {
 } from '@/api/instance'
 import type { InstanceData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
-import { useClipboard } from '@/composables/useClipboard'
+import { useClipboard } from '@/shared/model/common/useClipboard'
 import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
 import { useToast } from '@/shared/model/common/useToast'
 

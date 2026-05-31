@@ -338,7 +338,7 @@
 import { computed } from 'vue'
 
 import type { InstanceData, InstanceSharing, InstanceStatus } from '@/api/contracts'
-import { useCountdown } from '@/composables/useCountdown'
+import { useCountdown } from '@/shared/lib/time/useCountdown'
 import { formatTime } from '@/utils/format'
 
 const props = defineProps<{

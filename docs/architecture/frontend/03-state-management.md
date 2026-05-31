@@ -26,7 +26,7 @@
   - 不负责：承接所有竞赛页面的局部表单、筛选条件或页面 loading 状态
 
 - `code/frontend/src/features/**/model`、`code/frontend/src/shared/model/**`、`code/frontend/src/shared/lib/**`、`code/frontend/src/composables/use*.ts`
-  - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态；其中 `shared/model/common` 承接 `useToast`、`useDestructiveConfirm` 与 `usePagination` 这类共享反馈 / 通用状态 owner，`shared/model/layout` 承接工作区导航与后台面包屑细节，`shared/lib/*` 承接请求取消、sanitize、键盘导航等无业务语义的基础能力，剩余浏览器 / 路由同步型通用能力继续留在 `composables/`
+  - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态；其中 `shared/model/common` 承接 `useToast`、`useDestructiveConfirm`、`useClipboard` 与 `usePagination` 这类共享反馈 / 通用状态 owner，`shared/model/layout` 承接工作区导航与后台面包屑细节，`shared/lib/*` 承接时间倒计时、请求取消、sanitize、键盘导航等无业务语义的基础能力，剩余浏览器 / 路由同步型通用能力继续留在 `composables/`
   - 不负责：把真正跨页面共享的会话状态重新复制回某个局部 composable
 
 ## 1. 状态归属规则
@@ -130,12 +130,14 @@
 
 - `shared/model/common/useToast.ts`：全局反馈
 - `shared/model/common/useDestructiveConfirm.ts`：危险确认流
+- `shared/model/common/useClipboard.ts`：统一复制反馈
 - `shared/model/reporting/useReportStatusPolling.ts`：报告导出状态轮询
 - `shared/model/layout/useWorkspaceShellNavigation.ts`：工作区导航壳
 - `shared/model/layout/useBackofficeBreadcrumbDetail.ts`：后台详情面包屑细节
 
 无业务语义的共享基础能力放在 `code/frontend/src/shared/lib/**`，例如：
 
+- `shared/lib/time/useCountdown.ts`：时间倒计时派生
 - `shared/lib/request/useAbortController.ts`：请求取消控制
 - `shared/model/common/usePagination.ts`：分页状态与请求编排
 - `shared/lib/sanitize/useSanitize.ts`：受控 HTML sanitize

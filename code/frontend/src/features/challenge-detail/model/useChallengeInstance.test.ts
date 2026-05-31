@@ -54,7 +54,7 @@ vi.mock('@/api/challenge', () => ({
   createInstance: challengeApiMocks.createInstance,
 }))
 
-vi.mock('@/composables/useClipboard', () => ({
+vi.mock('@/shared/model/common/useClipboard', () => ({
   useClipboard: () => ({
     copy: vi.fn(),
   }),
