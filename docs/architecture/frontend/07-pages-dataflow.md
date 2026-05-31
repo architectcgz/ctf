@@ -207,7 +207,7 @@
 2. `code/frontend/src/features/profile/model/useSecuritySettingsPage.ts`
    - 负责：密码表单草稿、字段校验、提交防重、错误提示和成功 toast
    - 不负责：页面布局、分区标题和视觉样式
-3. `code/frontend/src/components/profile/SecuritySettingsWorkspaceShell.vue`
+3. `code/frontend/src/features/profile/ui/SecuritySettingsWorkspaceShell.vue`
    - 负责：安全概况、密码修改区和安全提示区的页面壳布局
    - 不负责：直接调用 `changePassword()` 或自行管理提交流程
 

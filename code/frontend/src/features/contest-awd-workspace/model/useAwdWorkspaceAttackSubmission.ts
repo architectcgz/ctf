@@ -2,7 +2,7 @@ import { ref, toValue, type MaybeRefOrGetter } from 'vue'
 
 import { submitContestAWDAttack } from '@/api/contest'
 import type { AWDAttackLogData } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 
 interface UseAwdWorkspaceAttackSubmissionOptions {
   contestId: MaybeRefOrGetter<string>

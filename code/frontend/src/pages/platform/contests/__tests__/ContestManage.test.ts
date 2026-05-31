@@ -33,7 +33,7 @@ vi.mock('@/api/admin/authoring', () => ({
   getChallenges: contestMocks.getChallenges,
 }))
 
-vi.mock('@/composables/useDestructiveConfirm', () => ({
+vi.mock('@/shared/model/common/useDestructiveConfirm', () => ({
   confirmDestructiveAction: destructiveConfirmMock,
 }))
 

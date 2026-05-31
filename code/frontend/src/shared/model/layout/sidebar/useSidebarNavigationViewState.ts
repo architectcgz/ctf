@@ -13,7 +13,7 @@ import {
 import {
   type WorkspaceShellModule,
   useWorkspaceShellNavigation,
-} from '@/composables/useWorkspaceShellNavigation'
+} from '@/shared/model/layout/useWorkspaceShellNavigation'
 import { useAuthStore } from '@/stores/auth'
 
 import type { IconComp, NavGroup, NavItem, NavQuery } from './types'

@@ -47,7 +47,7 @@ vi.mock('@/api/admin/contests', async () => {
   }
 })
 
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 

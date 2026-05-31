@@ -48,7 +48,7 @@
 import type { Component } from 'vue'
 import { AlertTriangle, CheckCircle2, Info, OctagonX, X } from 'lucide-vue-next'
 
-import { provideToast, type ToastType, useToast, useToastState } from '@/composables/useToast'
+import { provideToast, type ToastType, useToast, useToastState } from '@/shared/model/common/useToast'
 
 provideToast()
 

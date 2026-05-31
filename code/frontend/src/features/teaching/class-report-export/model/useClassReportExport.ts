@@ -16,7 +16,7 @@ import type {
   StudentDirectoryItem,
 } from '@/api/contracts'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import {
   buildClassInsightWindowQuery,
   createClassInsightWindowDraft,

@@ -5,7 +5,7 @@ import {
   upsertChallengeWriteupSubmission,
 } from '@/api/challenge'
 import type { ChallengeDetailData, SubmissionWriteupData } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 
 type EditableWriteupStatus = 'draft' | 'published'
 

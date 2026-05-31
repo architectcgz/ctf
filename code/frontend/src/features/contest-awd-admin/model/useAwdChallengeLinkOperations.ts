@@ -9,7 +9,7 @@ import type {
   AdminContestChallengeData,
   ContestDetailData,
 } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import { mapPlatformContestAwdServicesToChallengeLinks } from '@/entities/contest-awd-challenge-link'
 
 interface UseAwdChallengeLinkOperationsOptions {

@@ -4,7 +4,7 @@ import { downloadReport } from '@/api/assessment'
 import { ApiError } from '@/api/request'
 import { exportStudentReviewArchive } from '@/api/teaching'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {

@@ -19,7 +19,7 @@ const toastMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/api/notification', () => notificationApiMocks)
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 

@@ -16,7 +16,7 @@ vi.mock('nprogress', () => ({
   },
 }))
 
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 

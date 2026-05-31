@@ -4,7 +4,7 @@ import type { NotificationItem, NotificationType } from '@/api/contracts'
 import { getNotifications, markAsRead } from '@/api/notification'
 import { usePagination } from '@/composables/usePagination'
 import { useProbeEasterEggs } from '@/composables/useProbeEasterEggs'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
 

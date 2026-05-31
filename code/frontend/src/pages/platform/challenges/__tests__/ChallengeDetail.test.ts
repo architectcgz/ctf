@@ -7,7 +7,7 @@ import adminChallengeTopbarPanelSource from '@/features/platform/challenge-detai
 import platformChallengeDetailPageSource from '@/features/platform/challenge-detail/model/usePlatformChallengeDetailPage.ts?raw'
 import platformChallengeDetailRoutesSource from '@/features/platform/challenge-detail/model/platformChallengeDetailRoutes.ts?raw'
 import platformChallengeDetailWorkspaceSource from '@/widgets/platform-challenge-detail/PlatformChallengeDetailWorkspace.vue?raw'
-import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -41,7 +41,7 @@ vi.mock('vue-router', async () => {
 
 vi.mock('@/api/admin/authoring', () => adminApiMocks)
 vi.mock('@/api/challenge', () => challengeApiMocks)
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 

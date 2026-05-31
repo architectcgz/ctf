@@ -6,7 +6,7 @@ import {
   getInstanceDirectoryByRole,
 } from '@/api/instances'
 import { useAbortController } from '@/composables/useAbortController'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
+import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import {
   platformInstanceStudentAnalysisRoute,

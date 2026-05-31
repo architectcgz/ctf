@@ -1,7 +1,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
-import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
 import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useAuthStore } from '@/stores/auth'

@@ -26,7 +26,7 @@ vi.mock('@/stores/auth', () => ({
   useAuthStore: () => authStoreMocks,
 }))
 
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 

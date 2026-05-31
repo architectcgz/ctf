@@ -50,7 +50,7 @@ vi.mock('vue-router', async () => {
     useRouter: () => ({ push: pushMock, replace: replaceMock }),
   }
 })
-vi.mock('@/composables/useDestructiveConfirm', () => ({
+vi.mock('@/shared/model/common/useDestructiveConfirm', () => ({
   confirmDestructiveAction: destructiveConfirmMock,
 }))
 

@@ -63,7 +63,7 @@ vi.mock('@/api/contest', () => contestApiMocks)
 vi.mock('@/composables/useWebSocket', () => ({
   useWebSocket: webSocketMocks.useWebSocket,
 }))
-vi.mock('@/composables/useDestructiveConfirm', () => ({
+vi.mock('@/shared/model/common/useDestructiveConfirm', () => ({
   confirmDestructiveAction: destructiveConfirmMock,
 }))
 

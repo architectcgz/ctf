@@ -8,7 +8,7 @@ import type {
 import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
-import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 import { useAwdReviewExportFlow } from '@/features/awd-review-workspace'

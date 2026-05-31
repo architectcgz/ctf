@@ -29,7 +29,7 @@ vi.mock('@/api/admin/users', () => ({
 vi.mock('@/api/admin', () => ({
   getClasses: adminTeachingApiMocks.getClasses,
 }))
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 

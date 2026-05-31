@@ -4,7 +4,7 @@ import { nextTick } from 'vue'
 
 import AppToast from '../AppToast.vue'
 import appToastSource from '../AppToast.vue?raw'
-import { useToast, useToastState } from '@/composables/useToast'
+import { useToast, useToastState } from '@/shared/model/common/useToast'
 
 function resetToastState() {
   const toast = useToast()

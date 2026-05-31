@@ -14,9 +14,9 @@ import type {
   ChallengeDifficulty,
   ChallengeStatus,
 } from '@/api/contracts'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
+import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 
 const POLL_INTERVAL_MS = 3000
 

@@ -3,7 +3,7 @@ import { reactive, ref } from 'vue'
 import { Activity, Clock3, ShieldCheck, UsersRound } from 'lucide-vue-next'
 
 import { changePassword } from '@/api/auth'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 
 export function useSecuritySettingsPage() {
   const toast = useToast()

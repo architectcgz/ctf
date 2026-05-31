@@ -8,7 +8,7 @@ describe('ContestProjector', () => {
     expect(contestProjectorSource).toContain('useContestProjectorPage')
     expect(contestProjectorSource).toContain('ContestProjectorAttackMap')
     expect(contestProjectorSource).toContain('ContestProjectorFocusOverlay')
-    expect(contestProjectorSource).not.toContain("from '@/composables/useToast'")
+    expect(contestProjectorSource).not.toContain("from '@/shared/model/common/useToast'")
     expect(contestProjectorSource).not.toContain('const contestTitle = computed')
     expect(contestProjectorSource).not.toContain('function focusPanel(')
     expect(contestProjectorSource).not.toContain('async function toggleFullscreen(')

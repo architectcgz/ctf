@@ -8,7 +8,7 @@ import {
 } from '@/api/instances'
 import { useAuthStore } from '@/stores/auth'
 import { useAbortController } from '@/composables/useAbortController'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 

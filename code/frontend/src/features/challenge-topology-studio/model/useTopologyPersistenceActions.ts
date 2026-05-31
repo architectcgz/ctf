@@ -6,8 +6,8 @@ import {
   saveChallengeTopology,
 } from '@/api/admin/authoring'
 import type { ChallengeTopologyData } from '@/api/contracts'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { useToast } from '@/composables/useToast'
+import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
+import { useToast } from '@/shared/model/common/useToast'
 
 import {
   createDraftFromTopology,

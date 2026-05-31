@@ -69,11 +69,11 @@ vi.mock('@/api/admin/authoring', () => ({
   getChallenges: contestApiMocks.getChallenges,
 }))
 
-vi.mock('@/composables/useDestructiveConfirm', () => ({
+vi.mock('@/shared/model/common/useDestructiveConfirm', () => ({
   confirmDestructiveAction: destructiveConfirmMock,
 }))
 
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 

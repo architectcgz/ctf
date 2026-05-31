@@ -2,8 +2,8 @@ import { ref, type Ref } from 'vue'
 
 import { createTeam, joinTeam, kickTeamMember } from '@/api/contest'
 import type { ContestDetailData, TeamData } from '@/api/contracts'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { useToast } from '@/composables/useToast'
+import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
+import { useToast } from '@/shared/model/common/useToast'
 
 interface UseContestTeamActionsOptions {
   contest: Ref<ContestDetailData | null>

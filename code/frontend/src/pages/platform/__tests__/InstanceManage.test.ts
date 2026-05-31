@@ -17,7 +17,7 @@ const instanceAccessApiMocks = vi.hoisted(() => ({
 const confirmMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/instances', () => instanceAccessApiMocks)
-vi.mock('@/composables/useDestructiveConfirm', () => ({
+vi.mock('@/shared/model/common/useDestructiveConfirm', () => ({
   confirmDestructiveAction: confirmMock,
 }))
 
@@ -129,7 +129,7 @@ describe('PlatformInstanceManagement', () => {
     expect(platformInstanceManagementModelSource).not.toContain('getPlatformInstances')
     expect(platformInstanceManagementModelSource).not.toContain('destroyPlatformInstance')
     expect(adminInstanceManageSource).not.toContain("from '@/api/teacher'")
-    expect(adminInstanceManageSource).not.toContain("from '@/composables/useDestructiveConfirm'")
+    expect(adminInstanceManageSource).not.toContain("from '@/shared/model/common/useDestructiveConfirm'")
     expect(adminInstanceManageSource).not.toContain("from '@/api/admin'")
     expect(adminInstanceManageSource).not.toContain("from '@/composables/useAdminDestructiveConfirm'")
     expect(adminInstanceManageSource).toContain('InstanceManageWorkspacePanel')

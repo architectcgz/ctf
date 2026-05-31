@@ -1,7 +1,7 @@
 import { computed, onMounted, onUnmounted, watch } from 'vue'
 
 import { useAwdCheckResultPresentation } from '@/features/awd-inspector'
-import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
 import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { contestAwdConfigBackToStudioRoute } from './contestAwdConfigRoutes'

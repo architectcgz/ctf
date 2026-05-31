@@ -11,7 +11,7 @@ import { useRouteNavigationTransport } from '@/composables/routeNavigationTransp
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
 import { useSanitize } from '@/composables/useSanitize'
 import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 import {

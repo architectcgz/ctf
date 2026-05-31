@@ -27,7 +27,7 @@ vi.mock('@/api/admin/users', () => ({
   getUsers: adminApiMocks.getUsers,
 }))
 vi.mock('@/api/teacher', () => teacherApiMocks)
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 

@@ -14,7 +14,7 @@ import type {
   ContestDetailData,
   ContestScoreboardData,
 } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import { useProjectorRoundSelection } from './useProjectorRoundSelection'
 import { useProjectorRoundSnapshotLoader } from './useProjectorRoundSnapshotLoader'
 

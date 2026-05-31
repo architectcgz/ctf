@@ -3,10 +3,10 @@ import { computed, onUnmounted, ref, watch } from 'vue'
 import type { AdminChallengeFlagPayload } from '@/api/admin/authoring'
 import { configureChallengeFlag, getChallengeDetail } from '@/api/admin/authoring'
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
-import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
 import { useRouteNavigationTransport } from '@/composables/routeNavigationTransport'
 import { useRouteQueryTransport } from '@/composables/routeQueryTransport'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import {
   platformChallengeListRoute,
   platformChallengeTopologyStudioRoute,

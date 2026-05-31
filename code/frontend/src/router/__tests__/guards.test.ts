@@ -24,7 +24,7 @@ vi.mock('@/api/auth', () => ({
   getProfile: getProfileMock,
 }))
 
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => ({
     success: vi.fn(),
     info: vi.fn(),

@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import type { WorkspaceShellBreadcrumb } from '@/composables/useWorkspaceShellNavigation'
+import type { WorkspaceShellBreadcrumb } from '@/shared/model/layout/useWorkspaceShellNavigation'
 
 defineProps<{
   breadcrumb: WorkspaceShellBreadcrumb

@@ -41,7 +41,7 @@ const webSocketMocks = vi.hoisted(() => {
 })
 
 vi.mock('@/api/notification', () => notificationApiMocks)
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 vi.mock('@/composables/useWebSocket', () => ({

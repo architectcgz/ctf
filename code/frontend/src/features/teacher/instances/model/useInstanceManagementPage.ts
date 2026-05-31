@@ -1,6 +1,6 @@
 import { onMounted } from 'vue'
 
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
+import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
 import { useAuthStore } from '@/stores/auth'
 import { teacherInstanceDashboardRoute } from './teacherInstanceManagementRoutes'
 

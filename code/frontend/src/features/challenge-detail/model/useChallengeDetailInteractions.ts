@@ -6,7 +6,7 @@ import {
 } from '@/api/challenge'
 import type { ChallengeDetailData, SubmitFlagData } from '@/api/contracts'
 import type { ChallengeSubmissionRecordStatus } from './useChallengeDetailPresentation'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import { useChallengeWriteupSubmissionFlow } from './useChallengeWriteupSubmissionFlow'
 
 interface SubmissionRecordItem {

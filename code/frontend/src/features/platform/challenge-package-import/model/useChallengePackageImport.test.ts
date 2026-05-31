@@ -23,7 +23,7 @@ const uploadFlowMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/api/admin/authoring', () => authoringApiMocks)
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 vi.mock('./challengeImportUploadFlow', () => ({

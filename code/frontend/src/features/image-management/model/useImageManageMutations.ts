@@ -1,8 +1,8 @@
 import { reactive, ref, type Ref } from 'vue'
 
 import { createImage, deleteImage } from '@/api/admin/authoring'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { useToast } from '@/composables/useToast'
+import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
+import { useToast } from '@/shared/model/common/useToast'
 import type { ImageCreateForm } from '@/entities/image'
 import { createEmptyImageCreateForm } from '@/entities/image'
 

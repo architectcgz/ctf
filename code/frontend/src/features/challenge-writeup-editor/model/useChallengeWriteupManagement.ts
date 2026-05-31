@@ -6,8 +6,8 @@ import {
   getPlatformWriteupSubmissions,
 } from '@/api/admin/authoring'
 import type { AdminChallengeWriteupData, WriteupSubmissionItemData } from '@/api/contracts'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { useToast } from '@/composables/useToast'
+import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
+import { useToast } from '@/shared/model/common/useToast'
 
 export type WriteupDirectoryRow = {
   key: string

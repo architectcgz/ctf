@@ -46,11 +46,11 @@ vi.mock('@/api/admin/awd-authoring', () => ({
   listAdminAwdChallenges: contestApiMocks.listAdminAwdChallenges,
 }))
 
-vi.mock('@/composables/useToast', () => ({
+vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
 
-vi.mock('@/composables/useDestructiveConfirm', () => ({
+vi.mock('@/shared/model/common/useDestructiveConfirm', () => ({
   confirmDestructiveAction: vi.fn(),
 }))
 

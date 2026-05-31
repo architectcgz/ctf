@@ -6,8 +6,8 @@ import {
   updateEnvironmentTemplate,
 } from '@/api/admin/authoring'
 import type { EnvironmentTemplateData } from '@/api/contracts'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { useToast } from '@/composables/useToast'
+import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
+import { useToast } from '@/shared/model/common/useToast'
 
 import {
   serializeEnvironmentTemplateDraft,

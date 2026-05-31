@@ -2,7 +2,7 @@ import { ref, type Ref } from 'vue'
 
 import { submitContestFlag } from '@/api/contest'
 import type { ContestChallengeItem, ContestDetailData, SubmitFlagData } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 
 interface UseContestFlagSubmissionOptions {
   contest: Ref<ContestDetailData | null>

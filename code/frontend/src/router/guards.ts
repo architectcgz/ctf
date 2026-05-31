@@ -4,7 +4,7 @@ import 'nprogress/nprogress.css'
 
 import { useAuthStore } from '@/stores/auth'
 import { APP_TITLE_PREFIX } from '@/utils/constants'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import type { UserRole } from '@/utils/constants'
 import { sanitizeRedirectPath } from '@/utils/redirectPath'
 import { resolveRouteTitle } from '@/utils/routeTitle'

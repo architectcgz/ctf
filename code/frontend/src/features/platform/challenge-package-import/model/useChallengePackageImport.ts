@@ -5,7 +5,7 @@ import {
   getChallengeImport,
 } from '@/api/admin/authoring'
 import type { AdminChallengeImportCommitData, AdminChallengeImportPreview } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import {
   useChallengeImportUploadFlow,
   type ChallengePackageUploadResult,

@@ -6,7 +6,7 @@ import {
 } from '@/api/contest'
 import { requestInstanceAccess } from '@/api/instance'
 import type { AWDDefenseSSHAccessData } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 
 interface UseAwdWorkspaceAccessActionsOptions {
   contestId: MaybeRefOrGetter<string>

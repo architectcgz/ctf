@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createWorkspaceShellNavigation } from '@/composables/useWorkspaceShellNavigation'
+import { createWorkspaceShellNavigation } from '@/shared/model/layout/useWorkspaceShellNavigation'
 
 describe('useWorkspaceShellNavigation', () => {
   it('builds student workspace modules for the shared shell', () => {

@@ -6,8 +6,8 @@ import {
   requestInstanceAccess,
 } from '@/api/instance'
 import { useClipboard } from '@/composables/useClipboard'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { useToast } from '@/composables/useToast'
+import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
+import { useToast } from '@/shared/model/common/useToast'
 
 import type { InstanceViewModel } from './useInstanceListPage'
 

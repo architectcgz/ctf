@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import DeleteConfirmModal from '@/shared/ui/common/DeleteConfirmModal.vue'
-import { useDestructiveConfirmState } from '@/composables/useDestructiveConfirm'
+import { useDestructiveConfirmState } from '@/shared/model/common/useDestructiveConfirm'
 
 const { current, visible, confirm, cancel } = useDestructiveConfirmState()
 

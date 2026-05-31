@@ -36,7 +36,7 @@ const confirmMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/teacher', () => teacherApiMocks)
 vi.mock('@/api/instances', () => instanceAccessApiMocks)
-vi.mock('@/composables/useDestructiveConfirm', () => ({
+vi.mock('@/shared/model/common/useDestructiveConfirm', () => ({
   confirmDestructiveAction: confirmMock,
 }))
 

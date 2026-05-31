@@ -2,7 +2,7 @@ import { onUnmounted, ref, watch, type Ref } from 'vue'
 
 import { getStudentReviewArchive } from '@/api/teaching'
 import type { ReviewArchiveData } from '@/api/contracts'
-import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
 import { reportFrontendError } from '@/utils/reportFrontendError'
 
 export function useStudentReviewArchive(studentId: Readonly<Ref<string>>) {

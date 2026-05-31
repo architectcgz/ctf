@@ -2,8 +2,8 @@ import { computed, onMounted, onUnmounted, ref, type ComputedRef, type Ref } fro
 
 import { getContest } from '@/api/admin/contests'
 import type { ContestDetailData } from '@/api/contracts'
-import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
-import { useToast } from '@/composables/useToast'
+import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
+import { useToast } from '@/shared/model/common/useToast'
 
 export function useContestOperationsPage(contestId: Ref<string> | ComputedRef<string>) {
   const toast = useToast()

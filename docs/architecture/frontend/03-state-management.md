@@ -1,14 +1,14 @@
 # 前端状态管理设计
 
 > 状态：Current
-> 事实源：`code/frontend/src/stores/`、`code/frontend/src/features/**/model/`、`code/frontend/src/composables/use*.ts`
+> 事实源：`code/frontend/src/stores/`、`code/frontend/src/features/**/model/`、`code/frontend/src/shared/model/**`、`code/frontend/src/composables/use*.ts`
 > 替代：无
 
 ## 定位
 
 本文档只说明前端状态应该放在哪一层，以及当前跨页面共享状态、页面级状态和实时状态的 owner。
 
-- 覆盖：Pinia store、页面级 feature model、通用 composable、登录态恢复、通知和竞赛共享状态。
+- 覆盖：Pinia store、页面级 feature model、共享 model、通用 composable、登录态恢复、通知和竞赛共享状态。
 - 不覆盖：具体页面的视觉结构、组件样式和构建配置。
 
 ## 当前设计
@@ -25,8 +25,8 @@
   - 负责：承接竞赛级共享状态，如当前竞赛摘要、排行榜、公告和冻结态
   - 不负责：承接所有竞赛页面的局部表单、筛选条件或页面 loading 状态
 
-- `code/frontend/src/features/**/model`、`code/frontend/src/composables/use*.ts`
-  - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态，例如 `useChallengeDetailPage.ts`、`useScoreboardDetailPage.ts`、`useStudentAnalysisPage.ts`
+- `code/frontend/src/features/**/model`、`code/frontend/src/shared/model/**`、`code/frontend/src/composables/use*.ts`
+  - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态；其中 `shared/model/common` 承接 `useToast`、`useDestructiveConfirm` 这类共享反馈状态，`shared/model/layout` 承接工作区导航与后台面包屑细节，剩余浏览器 / 路由同步型通用能力继续留在 `composables/`
   - 不负责：把真正跨页面共享的会话状态重新复制回某个局部 composable
 
 ## 1. 状态归属规则
@@ -38,8 +38,9 @@
 | 登录用户、角色、是否已恢复 session | `stores/auth.ts` | 跨页共享，且守卫依赖 |
 | 通知列表、未读数 | `stores/notification.ts` | 顶栏、列表页和详情页共享 |
 | 竞赛摘要、公告、排行榜冻结态 | `stores/contest.ts` | 竞赛相关页面共享 |
-| 列表分页、筛选、表单草稿、局部 loading | `features/**/model` 或 `composables/use*.ts` | 跟随页面生命周期销毁 |
-| 路由 query tab、导出任务轮询、删除确认流 | `composables/useRouteQueryTabs.ts`、`useReportStatusPolling.ts`、`useDestructiveConfirm.ts` 等 | 以“页面能力域”切分 |
+| 列表分页、筛选、表单草稿、局部 loading | `features/**/model` 或剩余 `composables/use*.ts` | 跟随页面生命周期销毁 |
+| 共享反馈、危险确认、工作区导航与面包屑细节 | `shared/model/common/*`、`shared/model/layout/*` | 跨 feature 复用，但不升级成 Pinia 全局 store |
+| 路由 query tab、导出任务轮询 | `composables/useRouteQueryTabs.ts`、`useReportStatusPolling.ts` 等 | 以“页面能力域”切分 |
 
 判断原则：
 
@@ -125,12 +126,18 @@
 - 学生仪表盘：`code/frontend/src/features/student-dashboard/model/useStudentDashboardPage.ts`
 - 学员分析复盘：`code/frontend/src/features/student-analysis-workspace/model/useStudentAnalysisPage.ts`
 
-通用页面能力则放在 `code/frontend/src/composables/use*.ts`，例如：
+共享但不适合进 Pinia 的跨 feature 状态放在 `code/frontend/src/shared/model/**`，例如：
+
+- `shared/model/common/useToast.ts`：全局反馈
+- `shared/model/common/useDestructiveConfirm.ts`：危险确认流
+- `shared/model/layout/useWorkspaceShellNavigation.ts`：工作区导航壳
+- `shared/model/layout/useBackofficeBreadcrumbDetail.ts`：后台详情面包屑细节
+
+剩余更偏浏览器、路由同步或基础传输的通用页面能力继续放在 `code/frontend/src/composables/`，例如：
 
 - `usePagination.ts`：分页请求、取消旧请求、页码切换
 - `useRouteQueryTabs.ts`、`useUrlSyncedTabs.ts`：query 同步和 tab 切换
 - `useReportStatusPolling.ts`：导出/生成任务轮询
-- `useToast.ts`：全局反馈
 
 这样做的直接目的是：
 

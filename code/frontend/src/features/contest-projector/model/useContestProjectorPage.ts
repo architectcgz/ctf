@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import type { ContestProjectorFocusPanel } from './projectorTypes'
 
 import { useContestProjectorData } from './useContestProjectorData'

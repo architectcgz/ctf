@@ -1,5 +1,5 @@
 import { useWebSocket } from '@/composables/useWebSocket'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 
 export function useContestScoreboardRealtime(contestId: string, onUpdated: () => void) {
   const toast = useToast()

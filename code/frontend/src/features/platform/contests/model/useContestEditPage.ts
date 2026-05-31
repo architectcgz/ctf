@@ -22,8 +22,8 @@ import {
   useContestEditAwdWorkspace,
   useContestWorkbench,
 } from '@/features/contest-workbench'
-import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
-import { useToast } from '@/composables/useToast'
+import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
+import { useToast } from '@/shared/model/common/useToast'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 export function useContestEditPage(contestId: Ref<string> | ComputedRef<string>) {

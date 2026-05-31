@@ -6,7 +6,7 @@ import {
   type RegisterRequest,
 } from '@/api/auth'
 import { useAuthStore, type AuthUser } from '@/stores/auth'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 
 export function useAuth() {
   const authStore = useAuthStore()

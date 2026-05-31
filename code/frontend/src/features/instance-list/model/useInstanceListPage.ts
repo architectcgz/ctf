@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { getMyInstances } from '@/api/instance'
 import type { InstanceListItem, InstanceStatus } from '@/api/contracts'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import { useInstanceOperations } from './useInstanceOperations'
 import { useInstanceWarningState } from './useInstanceWarningState'
 

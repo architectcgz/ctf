@@ -57,7 +57,7 @@
 - 路由边界：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 前端增长守卫：`code/frontend/scripts/check-frontend-growth-guard.mjs`
 - AWD owner 边界：`code/frontend/src/features/contest-awd-admin/model/useAwdOwnerBoundaries.test.ts`
-- 共享模板：`code/frontend/src/components/common/__tests__/ModalTemplates.test.ts`
+- 共享模板：`code/frontend/src/shared/ui/common/__tests__/ModalTemplates.test.ts`
 
 ## 历史迁移说明
 

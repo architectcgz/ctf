@@ -13,7 +13,7 @@ import topNavNotificationTriggerSource from '../topnav/TopNavNotificationTrigger
 import topNavSourceBase from '../TopNav.vue?raw'
 import topNavViewStateSource from '../../../model/layout/topnav/useTopNavViewState.ts?raw'
 import topNavUserCardSource from '../topnav/TopNavUserCard.vue?raw'
-import { useBackofficeBreadcrumbDetail } from '@/composables/useBackofficeBreadcrumbDetail'
+import { useBackofficeBreadcrumbDetail } from '@/shared/model/layout/useBackofficeBreadcrumbDetail'
 import { useAuthStore } from '@/stores/auth'
 
 const topNavStylesSource = readFileSync(

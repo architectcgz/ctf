@@ -10,8 +10,8 @@ import {
 import type { InstanceData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import { useClipboard } from '@/composables/useClipboard'
-import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
-import { useToast } from '@/composables/useToast'
+import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
+import { useToast } from '@/shared/model/common/useToast'
 
 const CHALLENGE_INSTANCE_POLL_INTERVAL_MS = 3000
 

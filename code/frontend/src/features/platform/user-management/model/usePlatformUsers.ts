@@ -13,7 +13,7 @@ import {
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import { usePagination } from '@/composables/usePagination'
-import { useToast } from '@/composables/useToast'
+import { useToast } from '@/shared/model/common/useToast'
 import type { UserRole } from '@/utils/constants'
 
 type UserFilterRole = UserRole | 'all'

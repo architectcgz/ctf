@@ -1,14 +1,14 @@
 # 前端组件体系设计
 
 > 状态：Current
-> 事实源：`code/frontend/src/components/`、`code/frontend/src/pages/`、`code/frontend/src/__tests__/`、`code/frontend/src/features/**/model/`
+> 事实源：`code/frontend/src/shared/ui/`、`code/frontend/src/shared/model/`、`code/frontend/src/pages/`、`code/frontend/src/__tests__/`、`code/frontend/src/features/**/{model,ui}/`
 > 替代：无
 
 ## 定位
 
-本文档只说明前端组件应该放在哪一层、共享原语有哪些、弹窗模板怎么复用，以及布局壳的 owner。
+本文档只说明前端组件应该放在哪一层、共享原语有哪些、弹窗模板怎么复用，以及布局壳和共享 UI 状态的 owner。
 
-- 覆盖：`shared/ui/common/`、`shared/ui/layout/`、`shared/ui/common/modal-templates/`、遗留业务组件目录和 route view 的边界。
+- 覆盖：`shared/ui/common/`、`shared/ui/layout/`、`shared/ui/common/modal-templates/`、`shared/model/common/`、`shared/model/layout/` 和 route view 的边界。
 - 不覆盖：单个页面的数据流细节；这些见 `07-pages-dataflow.md`。
 
 ## 当前设计
@@ -24,6 +24,10 @@
 - `code/frontend/src/shared/ui/layout/AppLayout.vue`
   - 负责：应用总布局、侧栏、顶栏、全局通知实时连接、route transition 和 backoffice/student 的内容壳切换
   - 不负责：页面自己的业务查询、目录筛选或详情页状态机
+
+- `code/frontend/src/shared/model/common/`、`code/frontend/src/shared/model/layout/`
+  - 负责：共享 UI 原语背后的状态 owner，例如 Toast、危险确认、工作区导航和后台面包屑细节
+  - 不负责：业务数据加载、领域流程编排或页面级异步状态机
 
 - `code/frontend/src/__tests__`
   - 负责：全局前端架构守卫与跨页面稳定策略测试
@@ -51,7 +55,6 @@
 | Overlay 模板 | `shared/ui/common/modal-templates/` | Teleport、滚动锁、Escape/backdrop 关闭、经典弹窗和抽屉模板 |
 | 布局壳 | `shared/ui/layout/` | `AppLayout`、`Sidebar`、`TopNav` 等全局承载 |
 | Feature UI | `features/*/ui/`、`features/platform/*/ui/` | 只服务单一 feature 的工作区、编辑器、目录面板与 page-sized surface |
-| 业务展示组件 | `components/teacher/`、`components/platform/`、`components/contests/`、`components/scoreboard/` 等 | 领域相关展示和局部桥接，逐步向 feature owner 过渡 |
 | 页面入口 | `pages/**` | 运行时 route entry、页面结构组合与最外层事件桥接 |
 | 全局前端守卫 | `src/__tests__` | 架构、route page 与跨页面稳定策略测试 |
 
@@ -60,7 +63,7 @@
 - 能在多个页面复用且不绑业务 owner 的，进 `shared/ui/common/`
 - 只解决 overlay 行为和模板骨架的，进 `shared/ui/common/modal-templates/`
 - 只服务单一 feature，且直接消费同 feature model 的 UI，进 `features/*/ui/`
-- 强业务语义的展示组件保留在业务目录，不伪装成“通用组件”
+- 强业务语义的展示组件默认跟随 feature UI / feature model，不回流到新的 `components/**` 历史目录
 - 页面数据编排和路由交互不放进共享组件
 
 ## 2. 当前共享原语
@@ -116,12 +119,12 @@
 | 文件 | 当前负责 |
 | --- | --- |
 | `shared/ui/common/AppToast.vue` | 全局 toast 渲染，消费 `useToast()` 的状态 |
-| `shared/ui/common/DeleteConfirmModal.vue` | 危险确认弹窗，基于 `ModalTemplateShell` 组合默认文案和动作 |
+| `shared/ui/common/AppDestructiveConfirm.vue` | 危险确认弹窗壳，消费 `useDestructiveConfirmState()` 的状态 |
 
 边界：
 
 - `AppToast` 负责视觉呈现，不负责业务动作触发。
-- `DeleteConfirmModal` 可以给危险动作提供统一交互，但不直接删除资源；真正的删除逻辑仍在 feature model。
+- `AppDestructiveConfirm` 可以给危险动作提供统一交互，但不直接删除资源；真正的删除逻辑仍在 feature model。
 
 ## 3. Overlay 模板体系
 
@@ -174,25 +177,26 @@
 
 ## 5. 组件边界与迁移方向
 
-当前代码里仍存在 `components/teacher/`、`components/platform/`、`components/contests/` 等业务目录，这是现状事实，不是新的共享组件入口。
+历史 `components/` 目录已经清空；原先挂在这里的共享原语、布局壳和 feature-owned 大块 UI 已分别迁到 `shared/ui/**`、`shared/model/**`、`features/**/ui`。
 
 后续约束：
 
 - 共享原语继续沉到 `shared/ui/common/`
+- 共享 UI 状态继续沉到 `shared/model/common/` 和 `shared/model/layout/`
 - 页面行为优先下沉到 `features/**/model`
 - 只服务单一 feature 的大块 UI 优先收进 `features/**/ui`
 - route view 保持薄壳
-- 业务展示组件可以继续存在，但不要再向其内堆新的页面级状态机
+- 不再新建回 `components/**` 作为长期 owner 层
 
 ### 5.1 `feature-owned UI` 判定规则
 
-以下条件同时成立时，默认不要继续放在 `components/**`，而是落到 `features/*/ui/`：
+以下条件同时成立时，默认直接落到 `features/*/ui/`，不要再新建 `components/**`：
 
 - 组件只服务一个 feature 或一个 feature family
 - 组件直接依赖该 feature 的 model/composable，或者只消费该 feature 暴露的 contract
 - 组件承担的是该 feature 的 editor / manage / review / workspace 壳，而不是跨 feature 复用的中立展示
 
-以下条件成立时，继续留在 `components/**`：
+以下条件成立时，优先判断是否进入 `shared/ui/**` 或 `shared/model/**`：
 
 - 组件会被多个 feature 或多个 route page 复用
 - 组件不绑定单一 feature model，只接收中立 props / emits
