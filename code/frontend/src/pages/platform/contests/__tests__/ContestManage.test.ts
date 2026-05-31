@@ -7,6 +7,7 @@ import contestAnnouncementDrawerSource from '@/features/contest-announcements/ui
 import platformContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
 import contestOrchestrationSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
 import contestManagePageModelSource from '@/features/platform/contests/model/useContestManagePage.ts?raw'
+import contestManagePanelRouteSource from '@/features/platform/contests/model/useContestManagePanelRoute.ts?raw'
 import { ApiError } from '@/api/request'
 
 const contestMocks = vi.hoisted(() => ({
@@ -17,6 +18,9 @@ const contestMocks = vi.hoisted(() => ({
   getContestAWDReadiness: vi.fn(),
 }))
 const destructiveConfirmMock = vi.hoisted(() => vi.fn())
+const routeState = vi.hoisted(() => ({
+  query: {} as Record<string, string>,
+}))
 
 vi.mock('@/api/admin/contests', async () => {
   const actual =
@@ -32,6 +36,31 @@ vi.mock('@/api/admin/contests', async () => {
 vi.mock('@/api/admin/authoring', () => ({
   getChallenges: contestMocks.getChallenges,
 }))
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
+  return {
+    ...actual,
+    useRoute: () => ({
+      name: 'ContestManage',
+      params: {},
+      query: routeState.query,
+    }),
+    useRouter: () => ({
+      replace: vi.fn(async ({ query }: { query?: Record<string, unknown> }) => {
+        routeState.query = Object.fromEntries(
+          Object.entries(query ?? {})
+            .filter(([, value]) => value !== undefined && value !== null && value !== '')
+            .map(([key, value]) => [key, String(value)])
+        )
+        const search = new URLSearchParams(routeState.query).toString()
+        const nextUrl = search ? `/platform/contests?${search}` : '/platform/contests'
+        window.history.replaceState({}, '', nextUrl)
+      }),
+      push: vi.fn(),
+      back: vi.fn(),
+    }),
+  }
+})
 
 vi.mock('@/shared/model/common/useDestructiveConfirm', () => ({
   confirmDestructiveAction: destructiveConfirmMock,
@@ -46,6 +75,8 @@ function findRouteLink(
 
 describe('ContestManage', () => {
   beforeEach(() => {
+    window.history.replaceState({}, '', '/platform/contests')
+    routeState.query = {}
     contestMocks.getContests.mockReset()
     contestMocks.getChallenges.mockReset()
     contestMocks.createContest.mockReset()
@@ -190,10 +221,25 @@ describe('ContestManage', () => {
     expect(contestManageSource).toContain("from '@/features/platform/contests'")
     expect(contestManageSource).toContain('ContestOrchestrationPage')
     expect(contestManageSource).toContain('useContestManagePage')
+    expect(contestManageSource).toContain(':active-panel="activePanel"')
+    expect(contestManageSource).toContain('@switch-panel="switchPanel"')
     expect(contestManageSource).not.toContain('useContestExportFlow')
     expect(contestManageSource).not.toContain('@export-contest')
     expect(contestManageSource).toContain('<ContestAnnouncementManageDrawer')
     expect(contestAnnouncementDrawerSource).toContain('fullPageRoute')
+    expect(contestOrchestrationSource).not.toContain("from '@/shared/model/navigation/useUrlSyncedTabs'")
+    expect(contestOrchestrationSource).not.toContain('useUrlSyncedTabs<ContestPanelKey>(')
+    expect(contestManagePanelRouteSource).toContain('resolveContestManagePanel')
+    expect(contestManagePanelRouteSource).toContain('buildContestManagePanelQuery')
+    expect(contestManagePageModelSource).toContain(
+      "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
+    )
+    expect(contestManagePageModelSource).toContain(
+      'const activePanel = computed<ContestManagePanelKey>(() => resolveContestManagePanel(query.value.panel))'
+    )
+    expect(contestManagePageModelSource).toContain(
+      'await replaceQuery(buildContestManagePanelQuery(query.value, panel))'
+    )
   })
 
   it('应该忽略普通 409，不误打开启动赛事 gate 弹层', async () => {
@@ -661,6 +707,7 @@ describe('ContestManage', () => {
   })
 
   it('应该在创建竞赛成功后切回赛事工作台', async () => {
+    window.history.replaceState({}, '', '/platform/contests?panel=create')
     contestMocks.getContests.mockResolvedValue({
       list: [
         {

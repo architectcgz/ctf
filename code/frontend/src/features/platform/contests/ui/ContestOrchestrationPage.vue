@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import {
   Activity,
   Layers,
@@ -12,9 +12,9 @@ import {
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import AppLoading from '@/shared/ui/common/AppLoading.vue'
 import WorkspaceDirectoryToolbar from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'
-import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 import type { ContestDetailData, ContestListSummaryData, ContestStatus } from '@/api/contracts'
 import type {
+  ContestManagePanelKey,
   ContestEditRouteTarget,
   ContestFieldLocks,
   ContestFormDraft,
@@ -23,7 +23,6 @@ import type {
 import PlatformContestFormPanel from './PlatformContestFormPanel.vue'
 import PlatformContestTable from './PlatformContestTable.vue'
 
-type RequestedContestPanelKey = 'overview' | 'list' | 'create'
 type StatusFilter =
   | 'all'
   | Extract<ContestStatus, 'draft' | 'registering' | 'running' | 'frozen' | 'ended'>
@@ -40,8 +39,7 @@ const props = defineProps<{
   createDraft: ContestFormDraft
   createSaving: boolean
   createFieldLocks: ContestFieldLocks
-  requestedPanel: RequestedContestPanelKey | null
-  requestedPanelVersion: number
+  activePanel: ContestManagePanelKey
   buildEditRoute: (contestId: string) => ContestEditRouteTarget
   buildWorkbenchRoute: (contestId: string) => ContestOperationsRouteTarget
 }>()
@@ -50,37 +48,20 @@ const emit = defineEmits<{
   refresh: []
   prepareCreateContest: []
   saveCreateContest: [value: ContestFormDraft]
+  switchPanel: [panel: ContestManagePanelKey]
   updateStatusFilter: [value: StatusFilter]
   announce: [contest: ContestDetailData]
   changePage: [page: number]
 }>()
-
-type ContestPanelKey = 'overview' | 'create'
-const {
-  activeTab: activePanel,
-  selectTab: selectPanel,
-} = useUrlSyncedTabs<ContestPanelKey>({
-  orderedTabs: ['overview', 'create'],
-  defaultTab: 'overview',
-})
 
 const registeringCount = computed(() => props.summary.registering_count)
 const runningCount = computed(() => props.summary.running_count)
 const awdCount = computed(() => props.awdContests.length)
 const hasStatusFilter = computed(() => props.statusFilter !== 'all')
 
-watch(
-  () => props.requestedPanelVersion,
-  () => {
-    if (props.requestedPanel) {
-      selectPanel(props.requestedPanel === 'create' ? 'create' : 'overview')
-    }
-  }
-)
-
 function openCreatePanel() {
   emit('prepareCreateContest')
-  selectPanel('create')
+  emit('switchPanel', 'create')
 }
 </script>
 
@@ -293,7 +274,7 @@ function openCreatePanel() {
               <button
                 type="button"
                 class="ui-btn ui-btn--ghost"
-                @click="selectPanel('overview')"
+                @click="emit('switchPanel', 'overview')"
               >
                 返回工作台
               </button>
@@ -307,7 +288,7 @@ function openCreatePanel() {
             :field-locks="createFieldLocks"
             :show-cancel="true"
             :note="'创建后可继续在赛事工作台中筛选目录、编辑详情或进入具体 AWD 赛区。'"
-            @cancel="selectPanel('overview')"
+            @cancel="emit('switchPanel', 'overview')"
             @save="emit('saveCreateContest', $event)"
           />
         </section>

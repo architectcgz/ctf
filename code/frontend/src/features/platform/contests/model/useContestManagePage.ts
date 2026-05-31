@@ -1,14 +1,21 @@
 import { computed, onMounted, ref } from 'vue'
 
 import type { ContestDetailData } from '@/api/contracts'
+import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import {
   buildContestAnnouncementsRoute,
   buildContestEditRoute,
   buildContestOperationsRoute,
 } from './contestManageRoutes'
+import {
+  buildContestManagePanelQuery,
+  resolveContestManagePanel,
+  type ContestManagePanelKey,
+} from './useContestManagePanelRoute'
 import { usePlatformContests } from './usePlatformContests'
 
 export function useContestManagePage() {
+  const { query, replaceQuery } = useRouteQueryTransport()
   const {
     list,
     total,
@@ -35,8 +42,7 @@ export function useContestManagePage() {
   } = usePlatformContests()
 
   const awdContests = computed(() => list.value.filter((item) => item.mode === 'awd'))
-  const requestedPanel = ref<'overview' | 'list' | 'create' | null>(null)
-  const requestedPanelVersion = ref(0)
+  const activePanel = computed<ContestManagePanelKey>(() => resolveContestManagePanel(query.value.panel))
   const announcementDrawerOpen = ref(false)
   const activeAnnouncementContest = ref<ContestDetailData | null>(null)
 
@@ -48,9 +54,12 @@ export function useContestManagePage() {
     statusFilter.value = value
   }
 
-  function requestContestPanel(panel: 'overview' | 'list' | 'create') {
-    requestedPanel.value = panel
-    requestedPanelVersion.value += 1
+  async function switchPanel(panel: ContestManagePanelKey): Promise<void> {
+    if (activePanel.value === panel) {
+      return
+    }
+
+    await replaceQuery(buildContestManagePanelQuery(query.value, panel))
   }
 
   function handleDialogOpenChange(value: boolean) {
@@ -77,7 +86,7 @@ export function useContestManagePage() {
   async function handleCreateContestSave(draft: Parameters<typeof saveContest>[0]): Promise<void> {
     const result = await saveContest(draft)
     if (result === 'create') {
-      requestContestPanel('list')
+      await switchPanel('overview')
     }
   }
 
@@ -99,8 +108,7 @@ export function useContestManagePage() {
     statusOptions,
     awdStartOverrideDialogState,
     awdContests,
-    requestedPanel,
-    requestedPanelVersion,
+    activePanel,
     announcementDrawerOpen,
     activeAnnouncementContest,
     prepareCreateContest,
@@ -110,6 +118,7 @@ export function useContestManagePage() {
     confirmAWDStartOverride,
     saveContest,
     updateStatusFilter,
+    switchPanel,
     handleDialogOpenChange,
     handleAwdStartOverrideDialogOpenChange,
     openAnnouncementDrawer,

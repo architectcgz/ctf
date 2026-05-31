@@ -12,13 +12,13 @@
       :create-draft="formDraft"
       :create-saving="saving"
       :create-field-locks="fieldLocks"
-      :requested-panel="requestedPanel"
-      :requested-panel-version="requestedPanelVersion"
+      :active-panel="activePanel"
       :build-edit-route="buildContestEditRoute"
       :build-workbench-route="buildContestOperationsRoute"
       @refresh="refresh"
       @prepare-create-contest="prepareCreateContest"
       @save-create-contest="handleCreateContestSave"
+      @switch-panel="switchPanel"
       @update-status-filter="updateStatusFilter"
       @open-edit-dialog="openEditDialog"
       @announce="openAnnouncementDrawer"
@@ -89,11 +89,11 @@ const {
   confirmAWDStartOverride,
   saveContest,
   awdContests,
-  requestedPanel,
-  requestedPanelVersion,
+  activePanel,
   announcementDrawerOpen,
   activeAnnouncementContest,
   updateStatusFilter,
+  switchPanel,
   handleDialogOpenChange,
   handleAwdStartOverrideDialogOpenChange,
   openAnnouncementDrawer,
