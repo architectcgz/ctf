@@ -5,16 +5,16 @@
         v-for="(tab, index) in workspaceTabs"
         :id="tab.buttonId"
         :key="tab.key"
-        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
+        :ref="(element) => props.setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
         class="top-tab"
-        :class="{ active: activeTab === tab.key }"
+        :class="{ active: props.activeTab === tab.key }"
         type="button"
         role="tab"
-        :tabindex="activeTab === tab.key ? 0 : -1"
-        :aria-selected="activeTab === tab.key ? 'true' : 'false'"
+        :tabindex="props.activeTab === tab.key ? 0 : -1"
+        :aria-selected="props.activeTab === tab.key ? 'true' : 'false'"
         :aria-controls="tab.panelId"
-        @click="selectTab(tab.key)"
-        @keydown="handleTabKeydown($event, index)"
+        @click="emit('selectTab', tab.key)"
+        @keydown="props.handleTabKeydown($event, index)"
       >
         {{ tab.label }}
       </button>
@@ -35,13 +35,13 @@
       />
 
       <section
-        v-show="activeTab === 'overview'"
+        v-show="props.activeTab === 'overview'"
         id="class-overview"
         class="tab-panel section active"
-        :class="{ active: activeTab === 'overview' }"
+        :class="{ active: props.activeTab === 'overview' }"
         role="tabpanel"
         aria-labelledby="class-tab-overview"
-        :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
+        :aria-hidden="props.activeTab === 'overview' ? 'false' : 'true'"
       >
         <ClassStudentsOverviewPanel
           :selected-class-name="selectedClassName"
@@ -56,13 +56,13 @@
       </section>
 
       <section
-        v-show="activeTab === 'students'"
+        v-show="props.activeTab === 'students'"
         id="class-students"
         class="tab-panel section"
-        :class="{ active: activeTab === 'students' }"
+        :class="{ active: props.activeTab === 'students' }"
         role="tabpanel"
         aria-labelledby="class-tab-students"
-        :aria-hidden="activeTab === 'students' ? 'false' : 'true'"
+        :aria-hidden="props.activeTab === 'students' ? 'false' : 'true'"
       >
         <ClassStudentsDirectoryPanel
           :students="students"
@@ -75,11 +75,11 @@
 
       <section
         v-for="tab in panelWorkspaceTabs"
-        v-show="activeTab === tab.key"
+        v-show="props.activeTab === tab.key"
         :id="tab.panelId"
         :key="tab.panelId"
         class="tab-panel section active"
-        :class="{ active: activeTab === tab.key }"
+        :class="{ active: props.activeTab === tab.key }"
         role="tabpanel"
       >
         <div :class="resolveWorkspacePanelWrapperClass(tab.key)">
@@ -142,7 +142,6 @@ import type {
 import ClassInsightsPanel from './ClassInsightsPanel.vue'
 import ClassReviewPanel from './ClassReviewPanel.vue'
 import ClassTrendPanel from './ClassTrendPanel.vue'
-import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 import { InterventionPanel } from '@/features/teaching/student-analysis-review'
 import ClassStudentsDirectoryPanel from './ClassStudentsDirectoryPanel.vue'
 import ClassStudentsInsightWindowPanel from './ClassStudentsInsightWindowPanel.vue'
@@ -157,6 +156,9 @@ const props = defineProps<{
   studentNoQuery: string
   loadingStudents: boolean
   error: string | null
+  activeTab: WorkspaceTab
+  setTabButtonRef: (key: WorkspaceTab, element: HTMLButtonElement | null) => void
+  handleTabKeydown: (event: KeyboardEvent, index: number) => void
   insightWindowFromDate: string
   insightWindowToDate: string
   insightWindowError: string | null
@@ -170,6 +172,7 @@ const emit = defineEmits<{
   openClassManagement: []
   openDashboard: []
   openReportExport: []
+  selectTab: [value: WorkspaceTab]
   updateStudentNoQuery: [value: string]
   updateInsightWindowFromDate: [value: string]
   updateInsightWindowToDate: [value: string]
@@ -201,15 +204,9 @@ const workspaceTabs: WorkspaceTabItem[] = [
   { key: 'action', label: '介入建议', buttonId: 'class-tab-action', panelId: 'class-action' },
 ]
 
-const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
 const panelWorkspaceTabs = workspaceTabs.filter(
   (tab): tab is WorkspacePanelTabItem => tab.key !== 'overview' && tab.key !== 'students'
 )
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
-  useUrlSyncedTabs<WorkspaceTab>({
-    orderedTabs: workspaceTabOrder,
-    defaultTab: 'overview',
-  })
 
 function resolveWorkspacePanelComponent(tabKey: WorkspacePanelTab): Component {
   switch (tabKey) {

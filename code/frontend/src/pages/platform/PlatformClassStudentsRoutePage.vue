@@ -9,6 +9,9 @@
       :student-no-query="studentNoQuery"
       :loading-students="loadingStudents"
       :error="error"
+      :active-tab="activeWorkspaceTab"
+      :set-tab-button-ref="setTabButtonRef"
+      :handle-tab-keydown="handleWorkspaceTabKeydown"
       :insight-window-from-date="insightWindowFromDate"
       :insight-window-to-date="insightWindowToDate"
       :insight-window-error="insightWindowError"
@@ -19,6 +22,7 @@
       @open-class-management="openClassManagement"
       @open-dashboard="openDashboard"
       @open-report-export="openClassReportDialog"
+      @select-tab="selectWorkspaceTab"
       @update-student-no-query="updateStudentNoQuery"
       @update-insight-window-from-date="updateInsightWindowFromDate"
       @update-insight-window-to-date="updateInsightWindowToDate"
@@ -51,6 +55,10 @@ const {
   studentNoQuery,
   loadingStudents,
   error,
+  activeWorkspaceTab,
+  setTabButtonRef,
+  selectWorkspaceTab,
+  handleWorkspaceTabKeydown,
   reportDialogVisible,
   insightWindowFromDate,
   insightWindowToDate,

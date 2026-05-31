@@ -348,6 +348,9 @@ describe('TeacherClassStudents', () => {
       "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
+    expect(classStudentsPageModelSource).toContain(
+      "import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'"
+    )
     expect(classStudentsPageModelSource).toContain('parseClassInsightWindowQuery')
     expect(classStudentsPageModelSource).toContain('buildClassInsightWindowQuery')
     expect(classStudentsPageModelSource).toContain(
@@ -369,6 +372,9 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageModelSource).toContain(
       'const { push, replace } = useRouteNavigationTransport()'
     )
+    expect(classStudentsPageModelSource).toContain("defaultTab: 'overview'")
+    expect(classStudentsPageModelSource).toContain('activeTab: activeWorkspaceTab')
+    expect(classStudentsPageModelSource).toContain('selectTab: selectWorkspaceTab')
     expect(classStudentsPageModelSource).toContain('await replace(canonicalWorkspaceTarget.value)')
     expect(classStudentsPageModelSource).toContain(
       'await replaceQuery(nextQuery)'
@@ -387,6 +393,12 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageModelSource).not.toContain('resolveClassManagementRouteName')
     expect(classStudentsPageModelSource).not.toContain('resolveStudentAnalysisRouteName')
     expect(classStudentsPageModelSource).not.toContain('resolveTeachingDashboardRouteName')
+    expect(classStudentsPageSource).not.toContain(
+      "import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'"
+    )
+    expect(classStudentsPageSource).not.toContain('useUrlSyncedTabs<WorkspaceTab>({')
+    expect(classStudentsPageSource).toContain('activeTab: WorkspaceTab')
+    expect(classStudentsPageSource).toContain('selectTab: [value: WorkspaceTab]')
   })
 
   it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {
@@ -561,6 +573,40 @@ describe('TeacherClassStudents', () => {
         panel: 'students',
         from_date: '2026-03-05',
         to_date: '2026-03-09',
+      },
+    })
+  })
+
+  it('panel query 应驱动班级工作区初始标签恢复，并在点击后回写 query', async () => {
+    routeMock.query.panel = 'review'
+
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+          ClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.find('#class-tab-review').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#class-overview').attributes('aria-hidden')).toBe('true')
+
+    await wrapper.find('#class-tab-insight').trigger('click')
+
+    expect(replaceMock).toHaveBeenCalledWith({
+      query: {
+        panel: 'insight',
+        from_date: undefined,
+        to_date: undefined,
       },
     })
   })

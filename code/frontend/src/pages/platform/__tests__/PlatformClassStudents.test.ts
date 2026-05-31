@@ -8,6 +8,7 @@ import classStudentsPageSourceBase from '@/features/teaching/class-students-work
 import classStudentsOverviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsInsightWindowPanel.vue?raw'
 import classStudentsDirectoryPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue?raw'
+import classStudentsPageModelSource from '@/features/teaching/class-students-workspace/model/useClassStudentsPage.ts?raw'
 
 const classStudentsPageSource = [
   classStudentsPageSourceBase,
@@ -133,6 +134,10 @@ describe('PlatformClassStudents', () => {
     )
     expect(platformClassStudentsSource).not.toContain("from '@/api/teacher'")
     expect(classStudentsPageSource).toContain('学生列表')
+    expect(classStudentsPageModelSource).toContain('useRouteQueryTabs')
+    expect(classStudentsPageSource).not.toContain(
+      "import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'"
+    )
 
     const wrapper = mount(PlatformClassStudents, {
       global: {
@@ -165,6 +170,35 @@ describe('PlatformClassStudents', () => {
       params: {
         className: 'Class A',
         studentId: 'stu-1',
+      },
+    })
+  })
+
+  it('平台班级工作区点击标签时应回写 panel query', async () => {
+    const wrapper = mount(PlatformClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+          ClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    await wrapper.find('#class-tab-review').trigger('click')
+
+    expect(replaceMock).toHaveBeenCalledWith({
+      query: {
+        panel: 'review',
+        from_date: undefined,
+        to_date: undefined,
       },
     })
   })

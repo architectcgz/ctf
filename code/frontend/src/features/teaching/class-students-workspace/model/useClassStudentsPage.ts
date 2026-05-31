@@ -16,6 +16,7 @@ import {
 } from '@/features/teaching/class-insight-window'
 import { useStudentFilters, useStudentListQuery } from '@/features/student-directory'
 import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
+import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'
 import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import { useAuthStore } from '@/stores/auth'
 import { reportFrontendError } from '@/utils/reportFrontendError'
@@ -26,10 +27,35 @@ import {
 } from './classStudentsRoutes'
 import { useClassWorkspaceSection } from './useClassWorkspaceSection'
 
+type ClassStudentsWorkspaceTab =
+  | 'overview'
+  | 'trend'
+  | 'students'
+  | 'review'
+  | 'insight'
+  | 'action'
+
 export function useClassStudentsPage() {
   const { name: routeName, params, query, replaceQuery } = useRouteQueryTransport()
   const { push, replace } = useRouteNavigationTransport()
   const authStore = useAuthStore()
+  const workspaceTabOrder: ClassStudentsWorkspaceTab[] = [
+    'overview',
+    'trend',
+    'students',
+    'review',
+    'insight',
+    'action',
+  ]
+  const {
+    activeTab: activeWorkspaceTab,
+    setTabButtonRef,
+    selectTab: selectWorkspaceTab,
+    handleTabKeydown: handleWorkspaceTabKeydown,
+  } = useRouteQueryTabs<ClassStudentsWorkspaceTab>({
+    orderedTabs: workspaceTabOrder,
+    defaultTab: 'overview',
+  })
   const route = {
     get name() {
       return routeName.value
@@ -270,6 +296,10 @@ export function useClassStudentsPage() {
     studentNoQuery,
     loadingStudents,
     error,
+    activeWorkspaceTab,
+    setTabButtonRef,
+    selectWorkspaceTab,
+    handleWorkspaceTabKeydown,
     reportDialogVisible,
     insightWindowFromDate: computed(() => insightWindowDraft.value.fromDate),
     insightWindowToDate: computed(() => insightWindowDraft.value.toDate),
