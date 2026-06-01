@@ -43,3 +43,8 @@ refactor_existing
 - code/frontend/src/router/routes/appShellRoute.ts
 - code/frontend/scripts/frontend-architecture-policy.json
 - code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts
+
+- code/frontend/src/features/layout/model/useLayoutBridgeBoundaries.test.ts (新)
+- code/frontend/src/features/layout/model/useLayoutPublicApiBoundary.test.ts (新)
+- code/frontend/src/features/auth/model/useAuthPublicApiBoundary.test.ts (新)
+- code/frontend/src/features/notifications/model/useNotificationDrawerPublicApiBoundary.test.ts (新)

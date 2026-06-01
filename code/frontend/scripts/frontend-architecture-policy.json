@@ -71,6 +71,10 @@
   "feature_boundary_guard_tests": [
     "src/features/contest-awd-admin/model/useAwdOwnerBoundaries.test.ts",
     "src/features/contest-awd-admin/model/usePlatformContestAwdBoundary.test.ts",
-    "src/features/contest-awd-admin/ui/useAwdOperationsPanelViewState.test.ts"
+    "src/features/contest-awd-admin/ui/useAwdOperationsPanelViewState.test.ts",
+    "src/features/layout/model/useLayoutBridgeBoundaries.test.ts",
+    "src/features/layout/model/useLayoutPublicApiBoundary.test.ts",
+    "src/features/auth/model/useAuthPublicApiBoundary.test.ts",
+    "src/features/notifications/model/useNotificationDrawerPublicApiBoundary.test.ts"
   ]
 }
