@@ -1,5 +1,5 @@
 <template>
-  <header class="topnav-shell topnav-shell--admin sticky top-0 z-50 h-16 shrink-0">
+  <header class="topnav-shell topnav-shell--workspace sticky top-0 z-50 h-16 shrink-0">
     <div
       class="topnav-inner topnav-inner-shell mx-auto flex h-full w-full items-center justify-between gap-4 px-4 md:px-6 xl:px-8"
       :class="{ 'topnav-inner-shell--sidebar-collapsed': sidebarCollapsed && !isMobile }"
@@ -20,7 +20,7 @@
       <div class="topnav-actions flex shrink-0 items-center gap-3">
         <div
           class="topnav-tool-cluster"
-          :class="{ 'topnav-tool-cluster--admin': true }"
+          :class="{ 'topnav-tool-cluster--workspace': true }"
         >
           <button
             type="button"

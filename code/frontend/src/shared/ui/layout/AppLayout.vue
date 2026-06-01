@@ -105,6 +105,10 @@ watch(
   );
 }
 
+[data-theme='dark'] .app-layout-top-glow {
+  background: none;
+}
+
 .app-layout-side-rail {
   background: linear-gradient(
     180deg,

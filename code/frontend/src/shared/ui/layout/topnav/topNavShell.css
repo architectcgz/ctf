@@ -1,73 +1,22 @@
 .topnav-shell {
-  --topnav-surface: color-mix(
-    in srgb,
-    var(--journal-surface, var(--color-bg-surface)) 99%,
-    var(--color-bg-base)
-  );
-  --topnav-surface-subtle: color-mix(
-    in srgb,
-    var(--journal-surface-subtle, var(--color-bg-elevated)) 95%,
-    var(--color-bg-base)
-  );
-  --topnav-surface-elevated: color-mix(
-    in srgb,
-    var(--journal-surface, var(--color-bg-surface)) 92%,
-    var(--journal-surface-subtle, var(--color-bg-elevated))
-  );
-  --topnav-line: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  --topnav-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --topnav-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
-  --topnav-faint: color-mix(in srgb, var(--color-text-muted) 92%, transparent);
+  --topnav-surface: var(--workspace-chrome-surface);
+  --topnav-surface-subtle: var(--workspace-chrome-surface-subtle);
+  --topnav-surface-elevated: var(--workspace-chrome-surface-elevated);
+  --topnav-line: var(--workspace-chrome-line);
+  --topnav-line-strong: var(--workspace-chrome-line-strong);
+  --topnav-text: var(--workspace-chrome-text);
+  --topnav-muted: var(--workspace-chrome-muted);
+  --topnav-faint: var(--workspace-chrome-faint);
   --topnav-soft-accent: color-mix(in srgb, var(--color-primary) 10%, transparent);
   --topnav-danger-line: color-mix(in srgb, var(--color-danger) 30%, var(--topnav-line));
   --topnav-danger-soft: color-mix(in srgb, var(--color-danger) 12%, var(--topnav-surface));
   border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(
-        in srgb,
-        var(--journal-surface, var(--color-bg-surface)) 100%,
-        var(--color-bg-base)
-      ),
-      color-mix(
-        in srgb,
-        var(--journal-surface-subtle, var(--color-bg-elevated)) 97%,
-        var(--color-bg-base)
-      )
-    ),
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--color-primary) 10%, transparent),
-      transparent 20rem
-    ),
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary-hover) 6%, transparent),
-      transparent 14rem
-    );
+  background: var(--workspace-chrome-background);
   backdrop-filter: blur(14px);
 }
 
-.topnav-shell--admin {
+.topnav-shell--workspace {
   border-bottom-color: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, #ffffff 92%, var(--topnav-surface)),
-      color-mix(in srgb, #ffffff 84%, var(--topnav-surface-subtle))
-    ),
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--color-primary) 7%, transparent),
-      transparent 18rem
-    ),
-    radial-gradient(
-      circle at 82% -30%,
-      color-mix(in srgb, var(--color-primary-hover) 4%, transparent),
-      transparent 12rem
-    );
   box-shadow: none;
   backdrop-filter: none;
 }
@@ -98,7 +47,7 @@
   background: var(--topnav-surface-subtle);
 }
 
-.topnav-tool-cluster--admin {
+.topnav-tool-cluster--workspace {
   border-color: var(--topnav-line);
   border-radius: 999px;
   background: var(--topnav-surface);
@@ -279,7 +228,7 @@
   padding: 0 0.75rem;
 }
 
-.topnav-user-card--admin {
+.topnav-user-card--workspace {
   border-radius: 999px;
   background: var(--topnav-surface);
   border-color: var(--topnav-line);
@@ -299,23 +248,23 @@
   color: var(--topnav-muted);
 }
 
-.topnav-shell--admin .topnav-user-mark {
+.topnav-shell--workspace .topnav-user-mark {
   border-radius: 999px;
 }
 
-.topnav-shell--admin .topnav-icon-button {
+.topnav-shell--workspace .topnav-icon-button {
   border-radius: 999px;
   border-color: var(--topnav-line);
   background: var(--topnav-surface);
 }
 
-.topnav-shell--admin .topnav-icon-button:hover {
+.topnav-shell--workspace .topnav-icon-button:hover {
   border-color: var(--topnav-line-strong);
   background: var(--topnav-surface-subtle);
 }
 
-.topnav-shell--admin .topnav-icon-button.topnav-notification-button--active,
-.topnav-shell--admin .topnav-icon-button.topnav-notification-button--active:hover {
+.topnav-shell--workspace .topnav-icon-button.topnav-notification-button--active,
+.topnav-shell--workspace .topnav-icon-button.topnav-notification-button--active:hover {
   border-color: color-mix(in srgb, var(--color-primary) 24%, var(--topnav-line-strong));
   background: color-mix(in srgb, var(--color-primary) 10%, var(--topnav-surface-subtle));
 }
@@ -343,51 +292,8 @@
   color: color-mix(in srgb, var(--color-danger) 96%, var(--topnav-text));
 }
 
-[data-theme='light'] .topnav-shell {
-  --topnav-surface: color-mix(
-    in srgb,
-    var(--journal-surface, var(--color-bg-surface)) 100%,
-    var(--color-bg-base)
-  );
-  --topnav-surface-subtle: color-mix(
-    in srgb,
-    var(--journal-surface-subtle, var(--color-bg-elevated)) 98%,
-    var(--color-bg-base)
-  );
-  --topnav-surface-elevated: color-mix(
-    in srgb,
-    var(--journal-surface, var(--color-bg-surface)) 100%,
-    var(--journal-surface-subtle, var(--color-bg-elevated))
-  );
-  --topnav-line: color-mix(in srgb, var(--color-border-default) 90%, transparent);
-  --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --topnav-text: var(--color-text-primary);
-  --topnav-muted: var(--color-text-secondary);
-  --topnav-faint: var(--color-text-muted);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, #ffffff 94%, var(--journal-surface, var(--color-bg-surface))),
-      color-mix(
-        in srgb,
-        #ffffff 86%,
-        var(--journal-surface-subtle, var(--color-bg-elevated))
-      )
-    ),
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--color-primary-hover) 5%, transparent),
-      transparent 18rem
-    ),
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 2%, transparent),
-      transparent 12rem
-    );
-}
-
-[data-theme='dark'] .topnav-tool-cluster--admin,
-[data-theme='dark'] .topnav-user-card--admin,
+[data-theme='dark'] .topnav-tool-cluster--workspace,
+[data-theme='dark'] .topnav-user-card--workspace,
 [data-theme='dark'] .topnav-brand-picker-panel {
   box-shadow:
     0 18px 38px color-mix(in srgb, var(--color-shadow-strong) 34%, transparent),

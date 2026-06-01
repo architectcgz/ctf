@@ -1,7 +1,7 @@
 <template>
   <div
     class="topnav-user-card flex items-center gap-3 px-2.5 py-1.5 sm:px-3"
-    :class="{ 'topnav-user-card--admin': true }"
+    :class="{ 'topnav-user-card--workspace': true }"
   >
     <div class="topnav-user-mark">
       {{ userInitial }}

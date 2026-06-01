@@ -380,7 +380,7 @@ describe('TopNav', () => {
 
   it('supports the shared admin workspace treatment across all role shells', () => {
     expect(topNavSource).toContain('useWorkspaceShellNavigation')
-    expect(topNavSource).toContain('topnav-shell--admin')
+    expect(topNavSource).toContain('topnav-shell--workspace')
     expect(topNavSource).toContain('Workspace')
   })
 
@@ -422,8 +422,9 @@ describe('TopNav', () => {
   it('tokenizes backoffice shell surfaces so dark theme does not fall back to white chrome', () => {
     expect(topNavSource).toContain('--topnav-surface')
     expect(topNavSource).toContain('--topnav-line')
-    expect(topNavSource).toContain("[data-theme='dark'] .topnav-shell--admin")
-    expect(topNavSource).toContain("[data-theme='dark'] .topnav-tool-cluster--admin")
+    expect(topNavSource).toContain('topnav-shell--workspace')
+    expect(topNavSource).toContain("[data-theme='dark'] .topnav-tool-cluster--workspace")
+    expect(topNavSource).toContain("[data-theme='dark'] .topnav-user-card--workspace")
   })
 
   it('renders backoffice breadcrumbs from sidebar module and submenu instead of the removed horizontal subnav', () => {
@@ -648,7 +649,7 @@ describe('TopNav', () => {
   it('renders student routes with the same topnav shell and workspace breadcrumb treatment', async () => {
     const { wrapper } = await mountTopNav()
 
-    expect(wrapper.find('.topnav-shell--admin').exists()).toBe(true)
+    expect(wrapper.find('.topnav-shell--workspace').exists()).toBe(true)
     expect(wrapper.find('.topnav-breadcrumb').exists()).toBe(true)
     expect(wrapper.findAll('.topnav-breadcrumb button').map((button) => button.text())).toEqual([
       'Workspace',

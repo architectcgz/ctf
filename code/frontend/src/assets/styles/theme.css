@@ -249,6 +249,29 @@
   --ui-action-divider: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --ui-card-action-bg: color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base));
   --ui-card-action-hover: color-mix(in srgb, var(--color-border-default) 8%, transparent);
+  --workspace-chrome-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --workspace-chrome-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 84%,
+    var(--color-bg-base)
+  );
+  --workspace-chrome-surface-elevated: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 92%,
+    var(--color-bg-base)
+  );
+  --workspace-chrome-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  --workspace-chrome-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --workspace-chrome-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
+  --workspace-chrome-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  --workspace-chrome-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
+  --workspace-chrome-background:
+    linear-gradient(180deg, var(--workspace-chrome-surface), var(--workspace-chrome-surface-subtle)),
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 22rem
+    );
 }
 
 [data-brand='green'] {
@@ -289,4 +312,27 @@
   --theme-warning: #b45309;
   --theme-shadow-strong: rgba(15, 23, 42, 0.16);
   --theme-shadow-soft: rgba(15, 23, 42, 0.08);
+  --workspace-chrome-surface: var(--color-bg-surface);
+  --workspace-chrome-surface-subtle: var(--color-bg-elevated);
+  --workspace-chrome-surface-elevated: color-mix(
+    in srgb,
+    var(--color-bg-surface) 100%,
+    var(--color-bg-elevated)
+  );
+  --workspace-chrome-line: color-mix(in srgb, var(--color-border-default) 92%, transparent);
+  --workspace-chrome-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
+  --workspace-chrome-text: var(--color-text-primary);
+  --workspace-chrome-muted: var(--color-text-secondary);
+  --workspace-chrome-faint: var(--color-text-muted);
+  --workspace-chrome-background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--workspace-chrome-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--workspace-chrome-surface-subtle) 95%, var(--color-bg-base))
+    ),
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary) 6%, transparent),
+      transparent 14rem
+    );
 }

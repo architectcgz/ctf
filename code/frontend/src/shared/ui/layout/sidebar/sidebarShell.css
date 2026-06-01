@@ -1,49 +1,21 @@
 .sidebar-shell {
-  border-right: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-surface) 99%, var(--color-bg-base))
-    ),
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--color-primary) 7%, transparent),
-      transparent 14rem
-    );
+  border-right: 1px solid var(--workspace-chrome-line);
+  background: var(--workspace-chrome-background);
 }
 
 .backoffice-sidebar {
-  --backoffice-shell-surface: color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base));
-  --backoffice-shell-surface-subtle: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 84%,
-    var(--color-bg-surface)
-  );
-  --backoffice-shell-surface-strong: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 94%,
-    var(--color-bg-surface)
-  );
-  --backoffice-shell-line: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --backoffice-shell-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --backoffice-shell-text: color-mix(in srgb, var(--color-text-primary) 96%, transparent);
-  --backoffice-shell-muted: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
-  --backoffice-shell-faint: color-mix(in srgb, var(--color-text-muted) 88%, transparent);
+  --backoffice-shell-surface: var(--workspace-chrome-surface);
+  --backoffice-shell-surface-subtle: var(--workspace-chrome-surface-subtle);
+  --backoffice-shell-surface-strong: var(--workspace-chrome-surface-elevated);
+  --backoffice-shell-line: var(--workspace-chrome-line);
+  --backoffice-shell-line-strong: var(--workspace-chrome-line-strong);
+  --backoffice-shell-text: var(--workspace-chrome-text);
+  --backoffice-shell-muted: var(--workspace-chrome-muted);
+  --backoffice-shell-faint: var(--workspace-chrome-faint);
   border-right: 1px solid var(--backoffice-shell-line-strong);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--backoffice-shell-surface) 99%, transparent),
-      color-mix(in srgb, var(--backoffice-shell-surface-subtle) 96%, transparent)
-    ),
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--color-primary) 6%, transparent),
-      transparent 22rem
-    );
+  background: var(--workspace-chrome-background);
 }
 
 .backoffice-sidebar-backdrop {
@@ -361,48 +333,7 @@
   border-left: 1px solid color-mix(in srgb, var(--color-border-default) 60%, transparent);
 }
 
-[data-theme='light'] .sidebar-shell {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-elevated) 95%, var(--color-bg-base))
-    ),
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--color-primary) 6%, transparent),
-      transparent 14rem
-    );
-}
-
-[data-theme='light'] .backoffice-sidebar {
-  --backoffice-shell-surface: var(--color-bg-surface);
-  --backoffice-shell-surface-subtle: var(--color-bg-elevated);
-  --backoffice-shell-surface-strong: var(--color-bg-surface);
-  --backoffice-shell-line: color-mix(in srgb, var(--color-border-default) 92%, transparent);
-  --backoffice-shell-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --backoffice-shell-text: var(--color-text-primary);
-  --backoffice-shell-muted: var(--color-text-secondary);
-  --backoffice-shell-faint: var(--color-text-muted);
-}
-
 [data-theme='dark'] .backoffice-sidebar {
-  --backoffice-shell-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --backoffice-shell-surface-subtle: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 84%,
-    var(--color-bg-base)
-  );
-  --backoffice-shell-surface-strong: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 92%,
-    var(--color-bg-base)
-  );
-  --backoffice-shell-line: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  --backoffice-shell-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
-  --backoffice-shell-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --backoffice-shell-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
-  --backoffice-shell-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
   box-shadow:
     0 22px 56px color-mix(in srgb, var(--color-shadow-strong) 28%, transparent),
     0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 48%, transparent);
