@@ -9,6 +9,9 @@ import studentAnalysisPageModelSource from '@/features/teaching/student-analysis
 import studentAnalysisReviewQuerySyncSource from '@/features/teaching/student-analysis-workspace/model/useStudentAnalysisReviewQuerySync.ts?raw'
 import studentAnalysisPageSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
 import studentAnalysisWorkspacePageSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisWorkspacePage.vue?raw'
+import studentAnalysisWorkspaceContentSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisWorkspaceContent.vue?raw'
+import studentAnalysisWorkspaceTabsSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisWorkspaceTabs.vue?raw'
+import studentAnalysisWorkspaceTabsHelperSource from '@/features/teaching/student-analysis-workspace/ui/studentAnalysisWorkspaceTabs.ts?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/features/teaching/student-analysis-review/ui/StudentInsightAttackSessionsSection.vue?raw'
@@ -272,9 +275,11 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).not.toContain('teacher-student-chip')
     expect(studentAnalysisPageSource).not.toContain('teacher-eyebrow-row')
     expect(studentAnalysisPageSource).not.toContain('useUrlSyncedTabs')
-    expect(studentAnalysisPageSource).toContain("from '@/shared/lib/keyboard/useTabKeyboardNavigation'")
-    expect(studentAnalysisPageSource).toContain('selectWorkspaceTab: [tab: StudentAnalysisWorkspaceTab]')
-    expect(studentAnalysisPageSource).toContain('StudentAnalysisOverviewHeroPanel')
+    expect(studentAnalysisPageSource).toContain('StudentAnalysisWorkspaceTabs')
+    expect(studentAnalysisPageSource).toContain('StudentAnalysisWorkspaceContent')
+    expect(studentAnalysisPageSource).not.toContain("from '@/shared/lib/keyboard/useTabKeyboardNavigation'")
+    expect(studentAnalysisPageSource).not.toContain('StudentAnalysisOverviewHeroPanel')
+    expect(studentAnalysisPageSource).not.toContain('StudentInsightPanel')
     expect(studentAnalysisPageSource).not.toContain('classes: ClassDirectoryItem[]')
     expect(studentAnalysisPageSource).toContain('selectedStudent: StudentDirectoryItem | null')
     expect(studentAnalysisPageSource).not.toContain('TeacherStudentItem')
@@ -286,6 +291,14 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).not.toContain('selectClass: [className: string]')
     expect(studentAnalysisPageSource).not.toContain('selectStudent: [studentId: string]')
     expect(studentAnalysisPageSource).not.toContain('<span>已做题目数</span>')
+    expect(studentAnalysisWorkspaceTabsSource).toContain(
+      "from '@/shared/lib/keyboard/useTabKeyboardNavigation'"
+    )
+    expect(studentAnalysisWorkspaceTabsSource).toContain('selectWorkspaceTab: [tab: StudentAnalysisWorkspaceTab]')
+    expect(studentAnalysisWorkspaceTabsHelperSource).toContain("label: '学员画像'")
+    expect(studentAnalysisWorkspaceTabsHelperSource).toContain("label: '证据链'")
+    expect(studentAnalysisWorkspaceContentSource).toContain('StudentAnalysisOverviewHeroPanel')
+    expect(studentAnalysisWorkspaceContentSource).toContain('StudentInsightPanel')
     expect(studentAnalysisOverviewHeroPanelSource).toContain(
       "{{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}"
     )
@@ -622,10 +635,11 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.find('#student-tab-timeline').exists()).toBe(true)
     expect(studentAnalysisPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
     expect(studentAnalysisPageSource).not.toContain('class="workspace-topbar"')
-    expect(studentAnalysisPageSource).toContain('class="workspace-tabbar top-tabs"')
     expect(studentAnalysisPageSource).toContain('class="content-pane"')
+    expect(studentAnalysisPageSource).toContain('StudentAnalysisWorkspaceTabs')
+    expect(studentAnalysisWorkspaceTabsSource).toContain('class="workspace-tabbar top-tabs"')
     expect(studentAnalysisPageSource).toMatch(
-      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<nav class="workspace-tabbar top-tabs"[\s\S]*<main class="content-pane">/s
+      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<StudentAnalysisWorkspaceTabs[\s\S]*<main class="content-pane">/s
     )
   })
 

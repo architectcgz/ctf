@@ -1,24 +1,9 @@
 <template>
   <div class="workspace-shell journal-eyebrow-text">
-    <nav class="workspace-tabbar top-tabs" role="tablist" aria-label="学员分析标签页">
-      <button
-        v-for="(tab, index) in workspaceTabs"
-        :id="tab.buttonId"
-        :key="tab.key"
-        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-        class="workspace-tab top-tab"
-        :class="{ active: props.activeWorkspaceTab === tab.key }"
-        type="button"
-        role="tab"
-        :tabindex="props.activeWorkspaceTab === tab.key ? 0 : -1"
-        :aria-selected="props.activeWorkspaceTab === tab.key ? 'true' : 'false'"
-        :aria-controls="tab.panelId"
-        @click="emit('selectWorkspaceTab', tab.key)"
-        @keydown="handleTabKeydown($event, index)"
-      >
-        {{ tab.label }}
-      </button>
-    </nav>
+    <StudentAnalysisWorkspaceTabs
+      :active-workspace-tab="props.activeWorkspaceTab"
+      @select-workspace-tab="emit('selectWorkspaceTab', $event)"
+    />
 
     <main class="content-pane">
       <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
@@ -40,61 +25,41 @@
         </div>
       </div>
 
-      <section
-        :id="activeWorkspaceTab.panelId"
-        class="tab-panel section"
-        :class="{
-          active: true,
-          'student-analysis-overview-panel': activeWorkspaceTab.key === 'overview',
-        }"
-        role="tabpanel"
-        :aria-labelledby="activeWorkspaceTab.buttonId"
-        aria-hidden="false"
-      >
-        <template v-if="activeWorkspaceTab.key === 'overview'">
-          <StudentAnalysisOverviewHeroPanel
-            :selected-student="selectedStudent"
-            :progress="progress"
-            :solved-rate="solvedRate"
-            :weak-dimensions="weakDimensions"
-            @open-class-students="emit('openClassStudents')"
-            @open-report-export="emit('openReportExport')"
-            @open-review-archive="emit('openReviewArchive')"
-            @export-review-archive="emit('exportReviewArchive')"
-          />
-        </template>
-
-        <StudentInsightPanel
-          :active-section="props.activeWorkspaceTab"
-          :student="selectedStudent"
-          :progress="progress"
-          :profile="skillProfile"
-          :recommendations="recommendations"
-          :timeline="timeline"
-          :evidence="evidence"
-          :attack-sessions="attackSessions"
-          :review-challenge-options="reviewChallengeOptions"
-          :review-workspace-loading="reviewWorkspaceLoading"
-          :review-workspace-query="reviewWorkspaceQuery"
-          :writeup-submissions="writeupSubmissions"
-          :writeup-page="writeupPage"
-          :writeup-total="writeupTotal"
-          :writeup-total-pages="writeupTotalPages"
-          :writeup-pagination-loading="writeupPaginationLoading"
-          :manual-review-submissions="manualReviewSubmissions"
-          :active-manual-review="activeManualReview"
-          :manual-review-loading="manualReviewLoading"
-          :manual-review-saving="manualReviewSaving"
-          :loading="loadingDetails"
-          empty-text="请先选择一名学生。"
-          @open-challenge="emit('openChallenge', $event)"
-          @open-manual-review="emit('openManualReview', $event)"
-          @moderate-writeup="emit('moderateWriteup', $event)"
-          @review-manual-review="emit('reviewManualReview', $event)"
-          @change-writeup-page="emit('changeWriteupPage', $event)"
-          @update-review-workspace-filters="emit('updateReviewWorkspaceFilters', $event)"
-        />
-      </section>
+      <StudentAnalysisWorkspaceContent
+        :selected-student="selectedStudent"
+        :loading-details="loadingDetails"
+        :progress="progress"
+        :skill-profile="skillProfile"
+        :recommendations="recommendations"
+        :timeline="timeline"
+        :evidence="evidence"
+        :attack-sessions="attackSessions"
+        :review-challenge-options="reviewChallengeOptions"
+        :review-workspace-loading="reviewWorkspaceLoading"
+        :review-workspace-query="reviewWorkspaceQuery"
+        :active-workspace-tab="activeWorkspaceTab"
+        :writeup-submissions="writeupSubmissions"
+        :writeup-page="writeupPage"
+        :writeup-total="writeupTotal"
+        :writeup-total-pages="writeupTotalPages"
+        :writeup-pagination-loading="writeupPaginationLoading"
+        :manual-review-submissions="manualReviewSubmissions"
+        :active-manual-review="activeManualReview"
+        :manual-review-loading="manualReviewLoading"
+        :manual-review-saving="manualReviewSaving"
+        :solved-rate="solvedRate"
+        :weak-dimensions="weakDimensions"
+        @open-class-students="emit('openClassStudents')"
+        @open-report-export="emit('openReportExport')"
+        @open-review-archive="emit('openReviewArchive')"
+        @export-review-archive="emit('exportReviewArchive')"
+        @open-challenge="emit('openChallenge', $event)"
+        @open-manual-review="emit('openManualReview', $event)"
+        @moderate-writeup="emit('moderateWriteup', $event)"
+        @review-manual-review="emit('reviewManualReview', $event)"
+        @change-writeup-page="emit('changeWriteupPage', $event)"
+        @update-review-workspace-filters="emit('updateReviewWorkspaceFilters', $event)"
+      />
     </main>
   </div>
 </template>
@@ -191,25 +156,6 @@
   min-height: 42px;
 }
 
-:deep(.section-card) {
-  padding: var(--space-3-5) var(--space-1) var(--space-3);
-  border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 90%, transparent);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-:deep(.section-card__header) {
-  margin-bottom: var(--space-4);
-  border-bottom: 1px dashed color-mix(in srgb, var(--teacher-divider) 86%, transparent);
-  padding-bottom: var(--space-3);
-}
-
-:deep(.section-card__body) {
-  padding-left: 0;
-}
-
 @media (max-width: 767px) {
   .top-tabs,
   .content-pane {
@@ -224,9 +170,8 @@
 </style>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import type {
+  AttackSessionQuery,
   AttackSessionResponseData,
   ManualReviewSubmissionDetailData,
   ManualReviewSubmissionItemData,
@@ -238,28 +183,9 @@ import type {
   TimelineEvent,
   WriteupSubmissionItemData,
 } from '@/api/contracts'
-import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 import type { StudentAnalysisWorkspaceTab } from '../model/useStudentAnalysisPage'
-import StudentAnalysisOverviewHeroPanel from './StudentAnalysisOverviewHeroPanel.vue'
-import StudentInsightPanel from './StudentInsightPanel.vue'
-
-interface ReviewWorkspaceQuery {
-  mode?: 'practice' | 'jeopardy' | 'awd'
-  challenge_id?: string
-  contest_id?: string
-  round_id?: string
-  result?: 'success' | 'failed' | 'in_progress' | 'unknown'
-  with_events?: boolean
-  limit?: number
-  offset?: number
-}
-
-interface WorkspaceTabItem {
-  key: StudentAnalysisWorkspaceTab
-  label: string
-  buttonId: string
-  panelId: string
-}
+import StudentAnalysisWorkspaceContent from './StudentAnalysisWorkspaceContent.vue'
+import StudentAnalysisWorkspaceTabs from './StudentAnalysisWorkspaceTabs.vue'
 
 const props = defineProps<{
   selectedStudent: StudentDirectoryItem | null
@@ -273,7 +199,7 @@ const props = defineProps<{
   attackSessions: AttackSessionResponseData | null
   reviewChallengeOptions: Array<{ value: string; label: string }>
   reviewWorkspaceLoading: boolean
-  reviewWorkspaceQuery: ReviewWorkspaceQuery
+  reviewWorkspaceQuery: AttackSessionQuery
   activeWorkspaceTab: StudentAnalysisWorkspaceTab
   writeupSubmissions: WriteupSubmissionItemData[]
   writeupPage: number
@@ -308,49 +234,6 @@ const emit = defineEmits<{
     },
   ]
   changeWriteupPage: [page: number]
-  updateReviewWorkspaceFilters: [payload: Partial<ReviewWorkspaceQuery>]
+  updateReviewWorkspaceFilters: [payload: Partial<AttackSessionQuery>]
 }>()
-
-const workspaceTabs: WorkspaceTabItem[] = [
-  {
-    key: 'overview',
-    label: '学员画像',
-    buttonId: 'student-tab-overview',
-    panelId: 'student-overview',
-  },
-  {
-    key: 'recommendations',
-    label: '推荐任务',
-    buttonId: 'student-tab-recommendations',
-    panelId: 'student-recommendations',
-  },
-  {
-    key: 'writeups',
-    label: '发布的题解',
-    buttonId: 'student-tab-writeups',
-    panelId: 'student-writeups',
-  },
-  {
-    key: 'evidence',
-    label: '证据链',
-    buttonId: 'student-tab-evidence',
-    panelId: 'student-evidence',
-  },
-  {
-    key: 'timeline',
-    label: '训练记录',
-    buttonId: 'student-tab-timeline',
-    panelId: 'student-timeline',
-  },
-]
-
-const activeWorkspaceTab = computed(
-  () => workspaceTabs.find((tab) => tab.key === props.activeWorkspaceTab) ?? workspaceTabs[0]
-)
-const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as StudentAnalysisWorkspaceTab[]
-const { setTabButtonRef, handleTabKeydown } =
-  useTabKeyboardNavigation<StudentAnalysisWorkspaceTab>({
-    orderedTabs: workspaceTabOrder,
-    selectTab: (tab) => emit('selectWorkspaceTab', tab),
-  })
 </script>
