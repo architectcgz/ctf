@@ -4,6 +4,10 @@
 frontend style alignment / shared topnav surface
 
 ## Existing code searched
+- `code/frontend/src/components`
+- `code/frontend/src/features`
+- `code/frontend/src/widgets`
+- `code/frontend/src/views`
 - `code/frontend/src/shared/ui/layout/TopNav.vue`
 - `code/frontend/src/shared/ui/layout/topnav/topNavShell.css`
 - `code/frontend/src/shared/ui/layout/topnav/TopNavUserCard.vue`
