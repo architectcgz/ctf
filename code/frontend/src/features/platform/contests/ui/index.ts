@@ -2,6 +2,7 @@ export { default as ContestOrchestrationPage } from './ContestOrchestrationPage.
 export { default as PlatformContestManagePage } from './PlatformContestManagePage.vue'
 export { default as ContestAnnouncementsTopbarPanel } from './ContestAnnouncementsTopbarPanel.vue'
 export { default as ContestAnnouncementsWorkspacePanel } from './ContestAnnouncementsWorkspacePanel.vue'
+export { default as PlatformContestOperationsHubPage } from './PlatformContestOperationsHubPage.vue'
 export { default as ContestOperationsHubHeroPanel } from './ContestOperationsHubHeroPanel.vue'
 export { default as ContestOperationsHubWorkspacePanel } from './ContestOperationsHubWorkspacePanel.vue'
 export { default as AWDChallengeConfigPanel } from './AWDChallengeConfigPanel.vue'

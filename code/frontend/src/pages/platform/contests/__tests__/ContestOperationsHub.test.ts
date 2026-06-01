@@ -5,6 +5,7 @@ import ContestOperationsHub from '@/pages/platform/contests/ContestOperationsHub
 import contestOperationsHubSource from '@/pages/platform/contests/ContestOperationsHubRoutePage.vue?raw'
 import contestOperationsHubPageModelSource from '@/features/platform/contests/model/useContestOperationsHubPage.ts?raw'
 import contestOperationsHubRoutesSource from '@/features/platform/contests/model/contestOperationsHubRoutes.ts?raw'
+import platformContestOperationsHubPageSource from '@/features/platform/contests/ui/PlatformContestOperationsHubPage.vue?raw'
 import contestOperationsHubHeroPanelSource from '@/features/platform/contests/ui/ContestOperationsHubHeroPanel.vue?raw'
 import contestOperationsHubWorkspacePanelSource from '@/features/platform/contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
 
@@ -130,14 +131,16 @@ describe('ContestOperationsHub', () => {
   })
 
   it('路由页应仅负责组合，不直接耦合赛事运维目录请求流程', () => {
-    expect(contestOperationsHubSource).toContain('useContestOperationsHubPage')
+    expect(contestOperationsHubSource).toContain('PlatformContestOperationsHubPage')
+    expect(contestOperationsHubSource).not.toContain('useContestOperationsHubPage')
     expect(contestOperationsHubSource).not.toContain("from '@/api/admin/contests'")
     expect(contestOperationsHubPageModelSource).not.toContain("from 'vue-router'")
     expect(contestOperationsHubPageModelSource).toContain('backToContestDirectoryRoute: buildContestManageListRoute()')
     expect(contestOperationsHubPageModelSource).toContain('buildContestOperationsRoute')
     expect(contestOperationsHubRoutesSource).toContain('buildContestManageListRoute')
-    expect(contestOperationsHubSource).toContain('ContestOperationsHubWorkspacePanel')
-    expect(contestOperationsHubSource).toContain('<ContestOperationsHubWorkspacePanel')
+    expect(platformContestOperationsHubPageSource).toContain('useContestOperationsHubPage')
+    expect(platformContestOperationsHubPageSource).toContain('ContestOperationsHubWorkspacePanel')
+    expect(platformContestOperationsHubPageSource).toContain('<ContestOperationsHubWorkspacePanel')
     expect(contestOperationsHubWorkspacePanelSource).toContain('<WorkspaceDataTable')
     expect(contestOperationsHubHeroPanelSource).toContain('Event Operations')
     expect(contestOperationsHubHeroPanelSource).toContain('返回竞赛目录')
@@ -306,11 +309,11 @@ describe('ContestOperationsHub', () => {
     expect(contestOperationsHubHeroPanelSource).toContain('<Activity class="h-4 w-4" />')
     expect(contestOperationsHubHeroPanelSource).toContain('<PauseCircle class="h-4 w-4" />')
     expect(contestOperationsHubHeroPanelSource).toContain('<Star class="h-4 w-4" />')
-    expect(contestOperationsHubSource).toContain('class="content-pane contest-ops-content"')
-    expect(contestOperationsHubSource).toContain(
+    expect(platformContestOperationsHubPageSource).toContain('class="content-pane contest-ops-content"')
+    expect(platformContestOperationsHubPageSource).toContain(
       'gap: var(--workspace-directory-page-block-gap, var(--space-5));'
     )
-    expect(contestOperationsHubSource).toContain('<ContestOperationsHubWorkspacePanel')
+    expect(platformContestOperationsHubPageSource).toContain('<ContestOperationsHubWorkspacePanel')
     expect(contestOperationsHubWorkspacePanelSource).toContain('contest-ops-directory')
     expect(contestOperationsHubWorkspacePanelSource).toContain(
       "import WorkspaceDataTable from '@/shared/ui/common/WorkspaceDataTable.vue'"
