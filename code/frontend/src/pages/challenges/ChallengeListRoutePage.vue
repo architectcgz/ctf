@@ -180,6 +180,100 @@
   background: color-mix(in srgb, var(--color-primary) 70%, transparent);
   box-shadow: 0 0 0 var(--space-1) color-mix(in srgb, var(--color-primary) 14%, transparent);
 }
+
+.challenge-page .challenge-summary .challenge-summary-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.challenge-page .challenge-summary-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 72%, var(--color-bg-base))
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--challenge-summary-accent) 5%, transparent),
+      transparent 62%
+    );
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--color-shadow-soft) 14%, transparent);
+}
+
+.challenge-page .challenge-summary-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.92;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--challenge-summary-accent) 7%, transparent),
+    color-mix(in srgb, var(--challenge-summary-accent) 2%, transparent)
+  );
+}
+
+.challenge-summary-icon-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex-shrink: 0;
+  width: calc(var(--space-12) + var(--space-4));
+  height: calc(var(--space-12) + var(--space-4));
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--challenge-summary-accent) 18%, var(--journal-surface)),
+    color-mix(in srgb, var(--challenge-summary-accent) 6%, var(--journal-surface))
+  );
+  color: var(--challenge-summary-accent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--journal-border) 32%, transparent),
+    0 8px 18px color-mix(in srgb, var(--challenge-summary-accent) 8%, transparent);
+}
+
+.challenge-summary-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-1-5);
+  min-width: 0;
+}
+
+.challenge-page .challenge-summary-item .challenge-summary-label {
+  color: var(--journal-muted);
+  margin: 0;
+}
+
+.challenge-page .challenge-summary-item .challenge-summary-value {
+  color: var(--journal-ink);
+  margin: 0;
+}
+
+.challenge-page .challenge-summary-item .challenge-summary-helper {
+  max-width: 16rem;
+  margin: 0;
+}
+
+.challenge-summary-wave {
+  position: absolute;
+  right: -0.25rem;
+  bottom: -0.5rem;
+  z-index: 0;
+  width: 12rem;
+  color: color-mix(in srgb, var(--challenge-summary-accent) 10%, transparent);
+  pointer-events: none;
+}
 </style>
 
 <script setup lang="ts">

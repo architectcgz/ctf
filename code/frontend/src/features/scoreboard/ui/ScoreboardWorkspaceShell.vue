@@ -222,7 +222,7 @@
                 </div>
                 <div>
                   <span class="workspace-directory-status-pill sb-status-chip">{{
-                    getContestStatusLabel(section.contest.status)
+                    section.frozen ? '已冻结' : getContestStatusLabel(section.contest.status)
                   }}</span>
                 </div>
                 <div>
@@ -230,12 +230,6 @@
                     class="workspace-directory-status-pill workspace-directory-status-pill--muted sb-mode-chip"
                     >{{ getContestModeLabel(section.contest.mode) }}</span
                   >
-                  <span
-                    v-if="section.frozen"
-                    class="workspace-directory-status-pill sb-frozen-chip"
-                  >
-                    <Shield class="h-3 w-3" /> 已冻结
-                  </span>
                 </div>
                 <div class="workspace-directory-compact-text scoreboard-card-time">
                   {{ formatContestWindow(section.contest.starts_at, section.contest.ends_at) }}
@@ -454,8 +448,7 @@
   color: var(--scoreboard-accent, var(--journal-accent));
 }
 
-.sb-status-chip,
-.sb-frozen-chip {
+.sb-status-chip {
   border-color: color-mix(
     in srgb,
     var(--scoreboard-accent, var(--journal-accent)) 22%,

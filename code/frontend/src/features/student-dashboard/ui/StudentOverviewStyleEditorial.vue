@@ -366,7 +366,7 @@
   }
 
   .journal-bento > .journal-panel + .journal-panel {
-    padding-top: 0;
+    padding-top: 1.5rem;
   }
 
   .journal-bento > .journal-panel + .journal-panel::before {

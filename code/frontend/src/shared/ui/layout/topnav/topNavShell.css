@@ -346,17 +346,6 @@
     );
 }
 
-[data-theme='dark'] .topnav-shell--admin {
-  --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-base));
-  --topnav-surface-elevated: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base));
-  --topnav-line: color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 92%, transparent);
-  --topnav-text: color-mix(in srgb, var(--color-text-primary) 94%, transparent);
-  --topnav-muted: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
-  --topnav-faint: color-mix(in srgb, var(--color-text-muted) 90%, transparent);
-}
-
 [data-theme='dark'] .topnav-tool-cluster--admin,
 [data-theme='dark'] .topnav-user-card--admin,
 [data-theme='dark'] .topnav-brand-picker-panel {
