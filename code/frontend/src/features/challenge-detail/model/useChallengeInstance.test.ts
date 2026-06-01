@@ -5,7 +5,7 @@ import { defineComponent, ref } from 'vue'
 
 import { useChallengeInstance } from '@/features/challenge-detail'
 import { useInstanceListPage } from '@/features/instance-list'
-import { useInstances } from '@/features/teacher/instances'
+import { useTeacherInstanceDirectoryState } from '@/features/teacher/instances'
 import { ApiError } from '@/api/request'
 
 const instanceApiMocks = vi.hoisted(() => ({
@@ -322,10 +322,10 @@ describe('instance action errors', () => {
       new ApiError('实例所属练习仍在结算中，暂时不能销毁', { status: 409 })
     )
 
-    let composable!: ReturnType<typeof useInstances>
+    let composable!: ReturnType<typeof useTeacherInstanceDirectoryState>
     const Harness = defineComponent({
       setup() {
-        composable = useInstances()
+        composable = useTeacherInstanceDirectoryState()
         return () => null
       },
     })

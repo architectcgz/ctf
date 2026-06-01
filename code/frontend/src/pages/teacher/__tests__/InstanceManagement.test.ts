@@ -179,17 +179,25 @@ describe('InstanceManagement', () => {
   it('路由页应仅负责组合，不直接依赖页面级流程细节', () => {
     expect(instanceManagementViewSource).toContain("from '@/features/teacher/instances'")
     expect(instanceManagementViewSource).toContain('TeacherInstanceManagementPage')
-    expect(instanceManagementViewSource).toContain('useInstanceManagementPage')
+    expect(instanceManagementViewSource).toContain('useTeacherInstanceManagementPage')
+    expect(instanceManagementViewSource).not.toContain('useInstanceManagementPage')
     expect(instanceManagementViewSource).not.toContain('confirmDestructiveAction')
     expect(instanceManagementViewSource).not.toContain('resolveTeachingDashboardRouteName')
     expect(teacherInstancesHookSource).toContain("from '@/features/managed-instance-directory'")
     expect(teacherInstancesHookSource).toContain("from '@/features/managed-instance-workflow'")
+    expect(teacherInstancesHookSource).toContain('export function useTeacherInstanceDirectoryState()')
+    expect(teacherInstancesHookSource).not.toContain('export function useInstances()')
     expect(teacherInstancesHookSource).not.toContain("from '@/api/instances'")
     expect(teacherInstancesHookSource).not.toContain('getTeacherInstances')
     expect(teacherInstancesHookSource).not.toContain('destroyTeacherInstance')
     expect(teacherInstancesHookSource).toContain("reportFrontendError('加载教师实例管理页失败:', err)")
     expect(teacherInstancesHookSource).toContain("reportFrontendError('教师销毁实例失败:', err)")
     expect(teacherInstancesHookSource).not.toContain("console.error('加载教师实例")
+    expect(teacherInstanceManagementPageModelSource).toContain(
+      'export function useTeacherInstanceManagementPage()'
+    )
+    expect(teacherInstanceManagementPageModelSource).toContain('useTeacherInstanceDirectoryState()')
+    expect(teacherInstanceManagementPageModelSource).not.toContain('useInstances()')
     expect(teacherInstanceManagementPageModelSource).not.toContain('confirmDestructiveAction')
     expect(teacherInstanceManagementPageModelSource).not.toContain("from 'vue-router'")
     expect(teacherInstanceManagementPageModelSource).toContain(

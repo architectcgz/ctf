@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import {
   TeacherInstanceManagementPage,
-  useInstanceManagementPage,
+  useTeacherInstanceManagementPage,
 } from '@/features/teacher/instances'
 
 const {
@@ -50,5 +50,5 @@ const {
   updateFilter,
   handlePageChange,
   handleDestroy,
-} = useInstanceManagementPage()
+} = useTeacherInstanceManagementPage()
 </script>

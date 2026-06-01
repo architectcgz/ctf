@@ -3,9 +3,9 @@ import { onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { teacherInstanceDashboardRoute } from './teacherInstanceManagementRoutes'
 
-import { useInstances } from './useInstances'
+import { useTeacherInstanceDirectoryState } from './useInstances'
 
-export function useInstanceManagementPage() {
+export function useTeacherInstanceManagementPage() {
   const authStore = useAuthStore()
 
   const {
@@ -26,7 +26,7 @@ export function useInstanceManagementPage() {
     updateFilter,
     loadInstances,
     removeInstance,
-  } = useInstances()
+  } = useTeacherInstanceDirectoryState()
   const dashboardRoute = teacherInstanceDashboardRoute(authStore.user?.role)
 
   function handlePageChange(nextPage: number): void {

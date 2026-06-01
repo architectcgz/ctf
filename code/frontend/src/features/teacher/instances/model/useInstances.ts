@@ -14,7 +14,7 @@ type TeacherInstanceFilters = {
   studentNo: string
 }
 
-export function useInstances() {
+export function useTeacherInstanceDirectoryState() {
   const authStore = useAuthStore()
   const toast = useToast()
 
