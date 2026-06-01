@@ -18,8 +18,10 @@
   );
   min-height: 100%;
   border: 1px solid var(--workspace-shell-border);
+  border-top: 0;
+  border-left: 0;
   border-radius: var(--workspace-shell-radius);
-  box-shadow: var(--workspace-shell-shadow);
+  box-shadow: none;
   overflow: clip;
   font-family: var(--workspace-font-sans, var(--font-family-sans));
   color: var(--journal-ink, var(--color-text-primary));
@@ -98,7 +100,7 @@
   display: flex;
   gap: var(--workspace-tabs-gap, var(--space-workspace-tabs-gap));
   padding: 0 var(--workspace-side-padding, var(--space-workspace-side-padding));
-  margin-top: var(--workspace-tabs-offset-top, var(--space-workspace-tabs-offset-top));
+  margin-top: 0;
   border-bottom: 1px solid var(--workspace-shell-border);
   overflow-x: auto;
   scrollbar-width: none;

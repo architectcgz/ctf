@@ -20,7 +20,7 @@
 .journal-shell.journal-shell-admin.journal-hero {
   border-color: var(--journal-shell-hero-border, var(--journal-border));
   border-radius: 0 !important;
-  box-shadow: var(--journal-shell-hero-shadow, 0 18px 40px var(--color-shadow-soft));
+  box-shadow: none;
 }
 
 .journal-shell.journal-shell-admin .journal-panel {
