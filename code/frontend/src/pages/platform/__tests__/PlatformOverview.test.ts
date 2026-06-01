@@ -109,6 +109,12 @@ describe('PlatformOverview', () => {
 
   it('路由页应只做组合，不直接处理平台概览请求与导航', () => {
     expect(platformOverviewViewSource).toContain('usePlatformOverviewPage')
+    expect(platformOverviewViewSource).toContain(
+      "from '@/features/platform/overview'"
+    )
+    expect(platformOverviewViewSource).not.toContain(
+      "from '@/features/platform/overview/model/usePlatformOverviewPage'"
+    )
     expect(platformOverviewViewSource).not.toContain("from '@/api/admin/platform'")
     expect(platformOverviewViewSource).not.toContain("router.push({ name: 'AuditLog' })")
     expect(platformOverviewPageModelSource).not.toContain("from 'vue-router'")

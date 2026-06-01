@@ -46,6 +46,23 @@ describe('route page architecture boundaries', () => {
     expect(violations).toEqual([])
   })
 
+  it('route pages should consume features through public APIs instead of internal modules', () => {
+    const violations = collectSourceFiles(pagesRoot)
+      .filter(isRoutePageRuntimeFile)
+      .flatMap((filePath) => {
+        const source = readFileSync(filePath, 'utf-8')
+        const matches = Array.from(source.matchAll(/from\s+['"](@\/features\/[^'"]+)['"]/g))
+        return matches
+          .map((match) => match[1])
+          .filter((importPath) =>
+            /@\/features\/.+\/(model|ui|lib|api|types)(\/|$)/.test(importPath)
+          )
+          .map((importPath) => `${relative(sourceRoot, filePath)} -> ${importPath}`)
+      })
+
+    expect(violations).toEqual([])
+  })
+
   it('route pages should not own route navigation and query-tab hooks directly', () => {
     const violations = collectSourceFiles(pagesRoot)
       .filter(isRoutePageRuntimeFile)

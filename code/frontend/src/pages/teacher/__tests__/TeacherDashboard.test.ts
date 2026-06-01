@@ -195,6 +195,12 @@ describe('TeacherDashboard', () => {
 
   it('路由页应仅负责组合 overview owner，不直接依赖教师接口实现', () => {
     expect(teacherDashboardSource).toContain('useDashboardPage')
+    expect(teacherDashboardSource).toContain(
+      "from '@/features/teacher/dashboard'"
+    )
+    expect(teacherDashboardSource).not.toContain(
+      "from '@/features/teacher/dashboard/model/useDashboardPage'"
+    )
     expect(teacherDashboardSource).not.toContain("from '@/api/teacher'")
     expect(teacherDashboardPageSource).toContain('useDashboardMetrics')
     expect(teacherDashboardPageSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { TeacherDashboardPage } from '@/features/teacher/dashboard'
-import { useDashboardPage } from '@/features/teacher/dashboard/model/useDashboardPage'
+import { TeacherDashboardPage, useDashboardPage } from '@/features/teacher/dashboard'
 
 const { overview, error, classManagementRoute, activePanel, switchPanel, initialize } =
   useDashboardPage()

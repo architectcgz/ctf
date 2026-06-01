@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { PlatformOverviewPage } from '@/features/platform/overview'
-import { usePlatformOverviewPage } from '@/features/platform/overview/model/usePlatformOverviewPage'
+import { PlatformOverviewPage, usePlatformOverviewPage } from '@/features/platform/overview'
 
 const { dashboard, loading, error, loadDashboard, auditLogRoute, cheatDetectionRoute } =
   usePlatformOverviewPage()
