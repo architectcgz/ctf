@@ -145,7 +145,7 @@
 </template>
 
 <style scoped>
-@import '../../../assets/styles/teacher-panel-shell.css';
+@import '@/assets/styles/teacher-panel-shell.css';
 
 .intervention-list {
   display: grid;
