@@ -51,7 +51,7 @@
 }
 
 .topnav-shell--admin {
-  border-bottom-color: color-mix(in srgb, var(--color-border-default) 60%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   background:
     linear-gradient(
       180deg,
@@ -68,8 +68,7 @@
       color-mix(in srgb, var(--color-primary-hover) 4%, transparent),
       transparent 12rem
     );
-  box-shadow:
-    0 8px 22px color-mix(in srgb, var(--color-shadow-soft) 10%, transparent);
+  box-shadow: none;
   backdrop-filter: none;
 }
 
