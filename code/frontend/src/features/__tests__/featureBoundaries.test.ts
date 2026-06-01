@@ -65,4 +65,29 @@ describe('feature boundaries', () => {
 
     expect(violations).toEqual([])
   })
+
+  it('feature index.ts should not re-export sibling features as a compatibility barrel', () => {
+    const featuresRoot = join(sourceRoot, 'features')
+
+    const violations = collectSourceFiles(featuresRoot)
+      .filter((filePath) => filePath.endsWith('/index.ts'))
+      .filter((filePath) => {
+        const dir = filePath.substring(0, filePath.lastIndexOf('/'))
+        const source = readFileSync(filePath, 'utf-8')
+        // Match `export * from '../<sibling>'` — a barrel re-exporting from a sibling
+        // feature directory, which creates an unwanted cross-slice compatibility layer.
+        const siblingExports = Array.from(
+          source.matchAll(/export\s+\*\s+from\s+['"]\.\.\/([^'"]+)['"]/g)
+        )
+        return siblingExports.some((match) => {
+          const targetDir = match[1].split('/')[0]
+          // Allow re-export from self, disallow re-export from sibling features
+          const featureParent = dir.substring(0, dir.lastIndexOf('/'))
+          return join(featureParent, targetDir) !== dir
+        })
+      })
+      .map((filePath) => relative(sourceRoot, filePath))
+
+    expect(violations).toEqual([])
+  })
 })

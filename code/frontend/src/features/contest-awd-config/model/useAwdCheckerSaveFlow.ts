@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue'
 
-import { updateContestAWDService } from '@/api/admin/contests'
+import { updateContestAWDService } from '@/api/admin/contest-awd-admin'
 import type { AdminContestAWDServiceData, AWDCheckerType } from '@/api/contracts'
 import { useToast } from '@/shared/model/common/useToast'
 

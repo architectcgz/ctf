@@ -1,12 +1,8 @@
 import { type Ref } from 'vue'
 
-import {
-  getContestAWDReadiness,
-  getContestAWDInstanceOrchestration,
-  listContestTeams,
-  listContestAWDRounds,
-  listContestAWDServices,
-} from '@/api/admin/contests'
+import { listContestTeams } from '@/api/admin/contest-manage'
+import { getContestAWDReadiness, listContestAWDRounds } from '@/api/admin/contest-operations'
+import { getContestAWDInstanceOrchestration, listContestAWDServices } from '@/api/admin/contest-awd-admin'
 import type {
   AWDRoundData,
   AdminContestChallengeData,

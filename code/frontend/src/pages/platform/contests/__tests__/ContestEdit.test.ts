@@ -50,22 +50,36 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin/contests', async () => {
+vi.mock('@/api/admin/contest-manage', async () => {
   const actual =
-    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
+    await vi.importActual<typeof import('@/api/admin/contest-manage')>('@/api/admin/contest-manage')
   return {
     ...actual,
     getContest: contestApiMocks.getContest,
     updateContest: contestApiMocks.updateContest,
-    getContestAWDReadiness: contestApiMocks.getContestAWDReadiness,
     listAdminContestChallenges: contestApiMocks.listAdminContestChallenges,
+    createAdminContestChallenge: contestApiMocks.createAdminContestChallenge,
+    updateAdminContestChallenge: contestApiMocks.updateAdminContestChallenge,
+    deleteAdminContestChallenge: contestApiMocks.deleteAdminContestChallenge,
+  }
+})
+vi.mock('@/api/admin/contest-operations', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contest-operations')>('@/api/admin/contest-operations')
+  return {
+    ...actual,
+    getContestAWDReadiness: contestApiMocks.getContestAWDReadiness,
+  }
+})
+vi.mock('@/api/admin/contest-awd-admin', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contest-awd-admin')>('@/api/admin/contest-awd-admin')
+  return {
+    ...actual,
     listContestAWDServices: contestApiMocks.listContestAWDServices,
     createContestAWDService: contestApiMocks.createContestAWDService,
     deleteContestAWDService: contestApiMocks.deleteContestAWDService,
     updateContestAWDService: contestApiMocks.updateContestAWDService,
-    createAdminContestChallenge: contestApiMocks.createAdminContestChallenge,
-    updateAdminContestChallenge: contestApiMocks.updateAdminContestChallenge,
-    deleteAdminContestChallenge: contestApiMocks.deleteAdminContestChallenge,
   }
 })
 vi.mock('@/api/admin/awd-authoring', () => ({

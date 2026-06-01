@@ -6,31 +6,34 @@ import { usePlatformContestAwd } from '@/features/contest-awd-admin'
 import type { ContestDetailData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 
-const adminApiMocks = vi.hoisted(() => ({
+const contestManageMocks = vi.hoisted(() => ({
   createAdminContestChallenge: vi.fn(),
-  createContestAWDService: vi.fn(),
+  getAdminContestLiveScoreboard: vi.fn(),
+  listAdminContestChallenges: vi.fn(),
+  listContestTeams: vi.fn(),
+  updateAdminContestChallenge: vi.fn(),
+}))
+const contestOperationsMocks = vi.hoisted(() => ({
   createContestAWDAttackLog: vi.fn(),
   createContestAWDRound: vi.fn(),
   createContestAWDServiceCheck: vi.fn(),
-  getAdminContestLiveScoreboard: vi.fn(),
-  getChallenges: vi.fn(),
-  getContestAWDInstanceOrchestration: vi.fn(),
   getContestAWDReadiness: vi.fn(),
   getContestAWDRoundSummary: vi.fn(),
-  getContestAWDRoundTrafficSummary: vi.fn(),
-  listAdminContestChallenges: vi.fn(),
-  listContestAWDServices: vi.fn(),
   listContestAWDRoundAttacks: vi.fn(),
   listContestAWDRoundServices: vi.fn(),
   listContestAWDRounds: vi.fn(),
-  listContestAWDRoundTrafficEvents: vi.fn(),
-  listContestTeams: vi.fn(),
-  prewarmContestAWDInstances: vi.fn(),
   runContestAWDCurrentRoundCheck: vi.fn(),
   runContestAWDRoundCheck: vi.fn(),
+}))
+const contestAwdAdminMocks = vi.hoisted(() => ({
+  createContestAWDService: vi.fn(),
+  getContestAWDInstanceOrchestration: vi.fn(),
+  getContestAWDRoundTrafficSummary: vi.fn(),
+  listContestAWDServices: vi.fn(),
+  listContestAWDRoundTrafficEvents: vi.fn(),
+  prewarmContestAWDInstances: vi.fn(),
   startContestAWDTeamServiceInstance: vi.fn(),
   updateContestAWDService: vi.fn(),
-  updateAdminContestChallenge: vi.fn(),
 }))
 
 const toastMocks = vi.hoisted(() => ({
@@ -38,7 +41,9 @@ const toastMocks = vi.hoisted(() => ({
   error: vi.fn(),
 }))
 
-vi.mock('@/api/admin/contests', () => adminApiMocks)
+vi.mock('@/api/admin/contest-manage', () => contestManageMocks)
+vi.mock('@/api/admin/contest-operations', () => contestOperationsMocks)
+vi.mock('@/api/admin/contest-awd-admin', () => contestAwdAdminMocks)
 vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))
@@ -154,49 +159,48 @@ describe('usePlatformContestAwd', () => {
     vi.useRealTimers()
     toastMocks.success.mockReset()
     toastMocks.error.mockReset()
-    adminApiMocks.createAdminContestChallenge.mockReset()
-    adminApiMocks.createContestAWDService.mockReset()
-    adminApiMocks.createContestAWDAttackLog.mockReset()
-    adminApiMocks.createContestAWDRound.mockReset()
-    adminApiMocks.createContestAWDServiceCheck.mockReset()
-    adminApiMocks.getAdminContestLiveScoreboard.mockReset()
-    adminApiMocks.getChallenges.mockReset()
-    adminApiMocks.getContestAWDInstanceOrchestration.mockReset()
-    adminApiMocks.getContestAWDReadiness.mockReset()
-    adminApiMocks.getContestAWDRoundSummary.mockReset()
-    adminApiMocks.getContestAWDRoundTrafficSummary.mockReset()
-    adminApiMocks.listAdminContestChallenges.mockReset()
-    adminApiMocks.listContestAWDServices.mockReset()
-    adminApiMocks.listContestAWDRoundAttacks.mockReset()
-    adminApiMocks.listContestAWDRoundServices.mockReset()
-    adminApiMocks.listContestAWDRounds.mockReset()
-    adminApiMocks.listContestAWDRoundTrafficEvents.mockReset()
-    adminApiMocks.listContestTeams.mockReset()
-    adminApiMocks.prewarmContestAWDInstances.mockReset()
-    adminApiMocks.runContestAWDCurrentRoundCheck.mockReset()
-    adminApiMocks.runContestAWDRoundCheck.mockReset()
-    adminApiMocks.startContestAWDTeamServiceInstance.mockReset()
-    adminApiMocks.updateContestAWDService.mockReset()
-    adminApiMocks.updateAdminContestChallenge.mockReset()
+    contestManageMocks.createAdminContestChallenge.mockReset()
+    contestAwdAdminMocks.createContestAWDService.mockReset()
+    contestOperationsMocks.createContestAWDAttackLog.mockReset()
+    contestOperationsMocks.createContestAWDRound.mockReset()
+    contestOperationsMocks.createContestAWDServiceCheck.mockReset()
+    contestManageMocks.getAdminContestLiveScoreboard.mockReset()
+    contestAwdAdminMocks.getContestAWDInstanceOrchestration.mockReset()
+    contestOperationsMocks.getContestAWDReadiness.mockReset()
+    contestOperationsMocks.getContestAWDRoundSummary.mockReset()
+    contestAwdAdminMocks.getContestAWDRoundTrafficSummary.mockReset()
+    contestManageMocks.listAdminContestChallenges.mockReset()
+    contestAwdAdminMocks.listContestAWDServices.mockReset()
+    contestOperationsMocks.listContestAWDRoundAttacks.mockReset()
+    contestOperationsMocks.listContestAWDRoundServices.mockReset()
+    contestOperationsMocks.listContestAWDRounds.mockReset()
+    contestAwdAdminMocks.listContestAWDRoundTrafficEvents.mockReset()
+    contestManageMocks.listContestTeams.mockReset()
+    contestAwdAdminMocks.prewarmContestAWDInstances.mockReset()
+    contestOperationsMocks.runContestAWDCurrentRoundCheck.mockReset()
+    contestOperationsMocks.runContestAWDRoundCheck.mockReset()
+    contestAwdAdminMocks.startContestAWDTeamServiceInstance.mockReset()
+    contestAwdAdminMocks.updateContestAWDService.mockReset()
+    contestManageMocks.updateAdminContestChallenge.mockReset()
 
-    adminApiMocks.listContestAWDRounds.mockResolvedValue([])
-    adminApiMocks.getContestAWDInstanceOrchestration.mockResolvedValue({
+    contestOperationsMocks.listContestAWDRounds.mockResolvedValue([])
+    contestAwdAdminMocks.getContestAWDInstanceOrchestration.mockResolvedValue({
       contest_id: 'awd-1',
       teams: [],
       services: [],
       instances: [],
     })
-    adminApiMocks.listContestTeams.mockResolvedValue([])
-    adminApiMocks.listAdminContestChallenges.mockResolvedValue([])
-    adminApiMocks.listContestAWDServices.mockResolvedValue([])
-    adminApiMocks.getContestAWDReadiness.mockResolvedValue(buildReadiness())
-    adminApiMocks.listContestAWDRoundServices.mockResolvedValue([])
-    adminApiMocks.listContestAWDRoundAttacks.mockResolvedValue([])
-    adminApiMocks.getContestAWDRoundSummary.mockResolvedValue({
+    contestManageMocks.listContestTeams.mockResolvedValue([])
+    contestManageMocks.listAdminContestChallenges.mockResolvedValue([])
+    contestAwdAdminMocks.listContestAWDServices.mockResolvedValue([])
+    contestOperationsMocks.getContestAWDReadiness.mockResolvedValue(buildReadiness())
+    contestOperationsMocks.listContestAWDRoundServices.mockResolvedValue([])
+    contestOperationsMocks.listContestAWDRoundAttacks.mockResolvedValue([])
+    contestOperationsMocks.getContestAWDRoundSummary.mockResolvedValue({
       round: buildRound(),
       items: [],
     })
-    adminApiMocks.getContestAWDRoundTrafficSummary.mockResolvedValue({
+    contestAwdAdminMocks.getContestAWDRoundTrafficSummary.mockResolvedValue({
       contest_id: 'awd-1',
       round_id: 'round-1',
       total_request_count: 0,
@@ -211,13 +215,13 @@ describe('usePlatformContestAwd', () => {
       top_error_paths: [],
       trend_buckets: [],
     })
-    adminApiMocks.listContestAWDRoundTrafficEvents.mockResolvedValue({
+    contestAwdAdminMocks.listContestAWDRoundTrafficEvents.mockResolvedValue({
       list: [],
       total: 0,
       page: 1,
       page_size: 20,
     })
-    adminApiMocks.getAdminContestLiveScoreboard.mockResolvedValue({
+    contestManageMocks.getAdminContestLiveScoreboard.mockResolvedValue({
       contest: {
         id: 'awd-1',
         title: '2026 AWD 联赛',
@@ -234,17 +238,11 @@ describe('usePlatformContestAwd', () => {
       frozen: false,
       current_team_id: undefined,
     })
-    adminApiMocks.getChallenges.mockResolvedValue({
-      list: [],
-      total: 0,
-      page: 1,
-      page_size: 100,
-    })
-    adminApiMocks.createContestAWDAttackLog.mockResolvedValue(undefined)
-    adminApiMocks.createContestAWDServiceCheck.mockResolvedValue(undefined)
-    adminApiMocks.createAdminContestChallenge.mockResolvedValue(undefined)
-    adminApiMocks.createContestAWDService.mockResolvedValue(undefined)
-    adminApiMocks.prewarmContestAWDInstances.mockResolvedValue({
+    contestOperationsMocks.createContestAWDAttackLog.mockResolvedValue(undefined)
+    contestOperationsMocks.createContestAWDServiceCheck.mockResolvedValue(undefined)
+    contestManageMocks.createAdminContestChallenge.mockResolvedValue(undefined)
+    contestAwdAdminMocks.createContestAWDService.mockResolvedValue(undefined)
+    contestAwdAdminMocks.prewarmContestAWDInstances.mockResolvedValue({
       contest_id: 'awd-1',
       results: [],
       summary: {
@@ -254,17 +252,17 @@ describe('usePlatformContestAwd', () => {
         failed: 0,
       },
     })
-    adminApiMocks.updateContestAWDService.mockResolvedValue(undefined)
-    adminApiMocks.startContestAWDTeamServiceInstance.mockResolvedValue({
+    contestAwdAdminMocks.updateContestAWDService.mockResolvedValue(undefined)
+    contestAwdAdminMocks.startContestAWDTeamServiceInstance.mockResolvedValue({
       team_id: 'team-1',
       service_id: 'service-1',
       instance: undefined,
     })
-    adminApiMocks.updateAdminContestChallenge.mockResolvedValue(undefined)
+    contestManageMocks.updateAdminContestChallenge.mockResolvedValue(undefined)
   })
 
   it('初次加载时应从 AWD service 列表合并 checker 与验证信息', async () => {
-    adminApiMocks.listContestAWDServices.mockResolvedValue([
+    contestAwdAdminMocks.listContestAWDServices.mockResolvedValue([
       buildContestAWDService({
         challenge_id: 'challenge-1',
         awd_challenge_id: 'template-9',
@@ -289,7 +287,7 @@ describe('usePlatformContestAwd', () => {
     await composable.loadChallengeCatalog()
     await flushPromises()
 
-    expect(adminApiMocks.listContestAWDServices).toHaveBeenCalledWith('awd-1')
+    expect(contestAwdAdminMocks.listContestAWDServices).toHaveBeenCalledWith('awd-1')
     expect(composable.challengeLinks.value).toEqual([
       expect.objectContaining({
         challenge_id: 'template-9',
@@ -318,7 +316,7 @@ describe('usePlatformContestAwd', () => {
   })
 
   it('报名阶段批量启动本队时应调用赛前预热接口', async () => {
-    adminApiMocks.getContestAWDInstanceOrchestration.mockResolvedValue({
+    contestAwdAdminMocks.getContestAWDInstanceOrchestration.mockResolvedValue({
       contest_id: 'awd-1',
       teams: [
         {
@@ -337,7 +335,7 @@ describe('usePlatformContestAwd', () => {
       ],
       instances: [],
     })
-    adminApiMocks.prewarmContestAWDInstances.mockResolvedValue({
+    contestAwdAdminMocks.prewarmContestAWDInstances.mockResolvedValue({
       contest_id: 'awd-1',
       results: [
         {
@@ -371,18 +369,18 @@ describe('usePlatformContestAwd', () => {
     await composable.startTeamAllServices('team-1')
     await flushPromises()
 
-    expect(adminApiMocks.prewarmContestAWDInstances).toHaveBeenCalledWith('awd-1', {
+    expect(contestAwdAdminMocks.prewarmContestAWDInstances).toHaveBeenCalledWith('awd-1', {
       team_id: 'team-1',
     })
-    expect(adminApiMocks.startContestAWDTeamServiceInstance).not.toHaveBeenCalled()
+    expect(contestAwdAdminMocks.startContestAWDTeamServiceInstance).not.toHaveBeenCalled()
     expect(toastMocks.success).toHaveBeenCalled()
 
     wrapper.unmount()
   })
 
   it('应用流量筛选时应提交 service_id 参数', async () => {
-    adminApiMocks.listContestAWDRounds.mockResolvedValue([buildRound({ status: 'running' })])
-    adminApiMocks.listContestAWDRoundTrafficEvents.mockResolvedValue({
+    contestOperationsMocks.listContestAWDRounds.mockResolvedValue([buildRound({ status: 'running' })])
+    contestAwdAdminMocks.listContestAWDRoundTrafficEvents.mockResolvedValue({
       list: [],
       total: 0,
       page: 1,
@@ -401,14 +399,14 @@ describe('usePlatformContestAwd', () => {
     const wrapper = mount(Harness)
     await flushPromises()
 
-    adminApiMocks.listContestAWDRoundTrafficEvents.mockClear()
+    contestAwdAdminMocks.listContestAWDRoundTrafficEvents.mockClear()
 
     await composable.applyTrafficFilters({
       service_id: '7009',
     })
     await flushPromises()
 
-    expect(adminApiMocks.listContestAWDRoundTrafficEvents).toHaveBeenCalledWith(
+    expect(contestAwdAdminMocks.listContestAWDRoundTrafficEvents).toHaveBeenCalledWith(
       'awd-1',
       'round-1',
       {
@@ -427,7 +425,7 @@ describe('usePlatformContestAwd', () => {
   })
 
   it('合并管理侧 AWD 题目视图时应只信任 service 顶层配置字段', async () => {
-    adminApiMocks.listContestAWDServices.mockResolvedValue([
+    contestAwdAdminMocks.listContestAWDServices.mockResolvedValue([
       buildContestAWDService({
         challenge_id: 'challenge-1',
         awd_challenge_id: 'template-9',
@@ -482,7 +480,7 @@ describe('usePlatformContestAwd', () => {
   })
 
   it('在创建轮次被 readiness 门禁拦截后会拉取摘要并允许 override 重试', async () => {
-    adminApiMocks.createContestAWDRound
+    contestOperationsMocks.createContestAWDRound
       .mockRejectedValueOnce(
         new ApiError('开赛就绪门禁阻止了创建轮次', { code: 14025, status: 409 })
       )
@@ -500,7 +498,7 @@ describe('usePlatformContestAwd', () => {
     const wrapper = mount(Harness)
     await flushPromises()
 
-    adminApiMocks.getContestAWDReadiness.mockClear()
+    contestOperationsMocks.getContestAWDReadiness.mockClear()
 
     await composable.createRound({
       round_number: 1,
@@ -510,13 +508,13 @@ describe('usePlatformContestAwd', () => {
     })
     await flushPromises()
 
-    expect(adminApiMocks.createContestAWDRound).toHaveBeenCalledWith('awd-1', {
+    expect(contestOperationsMocks.createContestAWDRound).toHaveBeenCalledWith('awd-1', {
       round_number: 1,
       status: 'pending',
       attack_score: 50,
       defense_score: 50,
     })
-    expect(adminApiMocks.getContestAWDReadiness).toHaveBeenCalledWith('awd-1')
+    expect(contestOperationsMocks.getContestAWDReadiness).toHaveBeenCalledWith('awd-1')
     expect(composable.overrideDialogState.value).toMatchObject({
       open: true,
       action: 'create_round',
@@ -526,7 +524,7 @@ describe('usePlatformContestAwd', () => {
     await composable.confirmOverrideAction(' teacher drill ')
     await flushPromises()
 
-    expect(adminApiMocks.createContestAWDRound).toHaveBeenLastCalledWith('awd-1', {
+    expect(contestOperationsMocks.createContestAWDRound).toHaveBeenLastCalledWith('awd-1', {
       round_number: 1,
       status: 'pending',
       attack_score: 50,
@@ -540,7 +538,7 @@ describe('usePlatformContestAwd', () => {
   })
 
   it('在当前轮巡检被 readiness 门禁拦截后会拉取摘要并允许 override 重试', async () => {
-    adminApiMocks.runContestAWDCurrentRoundCheck
+    contestOperationsMocks.runContestAWDCurrentRoundCheck
       .mockRejectedValueOnce(new ApiError('开赛就绪门禁阻止了巡检', { code: 14025, status: 409 }))
       .mockResolvedValueOnce({
         round: buildRound({ status: 'running' }),
@@ -559,13 +557,13 @@ describe('usePlatformContestAwd', () => {
     const wrapper = mount(Harness)
     await flushPromises()
 
-    adminApiMocks.getContestAWDReadiness.mockClear()
+    contestOperationsMocks.getContestAWDReadiness.mockClear()
 
     await composable.runSelectedRoundCheck()
     await flushPromises()
 
-    expect(adminApiMocks.runContestAWDCurrentRoundCheck).toHaveBeenCalledWith('awd-1')
-    expect(adminApiMocks.getContestAWDReadiness).toHaveBeenCalledWith('awd-1')
+    expect(contestOperationsMocks.runContestAWDCurrentRoundCheck).toHaveBeenCalledWith('awd-1')
+    expect(contestOperationsMocks.getContestAWDReadiness).toHaveBeenCalledWith('awd-1')
     expect(composable.overrideDialogState.value).toMatchObject({
       open: true,
       action: 'run_current_round_check',
@@ -575,7 +573,7 @@ describe('usePlatformContestAwd', () => {
     await composable.confirmOverrideAction(' emergency drill ')
     await flushPromises()
 
-    expect(adminApiMocks.runContestAWDCurrentRoundCheck).toHaveBeenLastCalledWith('awd-1', {
+    expect(contestOperationsMocks.runContestAWDCurrentRoundCheck).toHaveBeenLastCalledWith('awd-1', {
       force_override: true,
       override_reason: 'emergency drill',
     })
@@ -585,7 +583,7 @@ describe('usePlatformContestAwd', () => {
   })
 
   it('遇到非 readiness 错误时不会误打开 override 弹层', async () => {
-    adminApiMocks.createContestAWDRound.mockRejectedValueOnce(
+    contestOperationsMocks.createContestAWDRound.mockRejectedValueOnce(
       new ApiError('普通冲突', { code: 14099, status: 409 })
     )
 
@@ -601,7 +599,7 @@ describe('usePlatformContestAwd', () => {
     const wrapper = mount(Harness)
     await flushPromises()
 
-    adminApiMocks.getContestAWDReadiness.mockClear()
+    contestOperationsMocks.getContestAWDReadiness.mockClear()
 
     await composable.createRound({
       round_number: 1,
@@ -611,7 +609,7 @@ describe('usePlatformContestAwd', () => {
     })
     await flushPromises()
 
-    expect(adminApiMocks.getContestAWDReadiness).not.toHaveBeenCalled()
+    expect(contestOperationsMocks.getContestAWDReadiness).not.toHaveBeenCalled()
     expect(composable.overrideDialogState.value.open).toBe(false)
     expect(toastMocks.error).toHaveBeenCalledWith('普通冲突')
 
@@ -619,7 +617,7 @@ describe('usePlatformContestAwd', () => {
   })
 
   it('readiness 摘要刷新失败时应提示错误并继续用缓存快照打开 override 弹层', async () => {
-    adminApiMocks.createContestAWDRound.mockRejectedValueOnce(
+    contestOperationsMocks.createContestAWDRound.mockRejectedValueOnce(
       new ApiError('开赛就绪门禁阻止了创建轮次', { code: 14025, status: 409 })
     )
 
@@ -636,8 +634,8 @@ describe('usePlatformContestAwd', () => {
     await flushPromises()
 
     const cachedReadiness = composable.readiness.value
-    adminApiMocks.getContestAWDReadiness.mockClear()
-    adminApiMocks.getContestAWDReadiness.mockRejectedValueOnce(
+    contestOperationsMocks.getContestAWDReadiness.mockClear()
+    contestOperationsMocks.getContestAWDReadiness.mockRejectedValueOnce(
       new ApiError('读取开赛就绪摘要失败', { code: 15001, status: 500 })
     )
 
@@ -649,7 +647,7 @@ describe('usePlatformContestAwd', () => {
     })
     await flushPromises()
 
-    expect(adminApiMocks.getContestAWDReadiness).toHaveBeenCalledTimes(1)
+    expect(contestOperationsMocks.getContestAWDReadiness).toHaveBeenCalledTimes(1)
     expect(toastMocks.error).toHaveBeenCalledWith('读取开赛就绪摘要失败')
     expect(composable.overrideDialogState.value).toMatchObject({
       open: true,
@@ -664,7 +662,7 @@ describe('usePlatformContestAwd', () => {
   it('录入服务检查时应提交 service_id 载荷', async () => {
     let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
-    adminApiMocks.listContestAWDRounds.mockResolvedValueOnce([buildRound()])
+    contestOperationsMocks.listContestAWDRounds.mockResolvedValueOnce([buildRound()])
 
     const Harness = defineComponent({
       setup() {
@@ -684,7 +682,7 @@ describe('usePlatformContestAwd', () => {
     })
     await flushPromises()
 
-    expect(adminApiMocks.createContestAWDServiceCheck).toHaveBeenCalledWith('awd-1', 'round-1', {
+    expect(contestOperationsMocks.createContestAWDServiceCheck).toHaveBeenCalledWith('awd-1', 'round-1', {
       team_id: 12,
       service_id: 7009,
       service_status: 'up',
@@ -697,7 +695,7 @@ describe('usePlatformContestAwd', () => {
   it('补录攻击日志时应提交 service_id 载荷', async () => {
     let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
-    adminApiMocks.listContestAWDRounds.mockResolvedValueOnce([buildRound()])
+    contestOperationsMocks.listContestAWDRounds.mockResolvedValueOnce([buildRound()])
 
     const Harness = defineComponent({
       setup() {
@@ -719,7 +717,7 @@ describe('usePlatformContestAwd', () => {
     })
     await flushPromises()
 
-    expect(adminApiMocks.createContestAWDAttackLog).toHaveBeenCalledWith('awd-1', 'round-1', {
+    expect(contestOperationsMocks.createContestAWDAttackLog).toHaveBeenCalledWith('awd-1', 'round-1', {
       attacker_team_id: 12,
       victim_team_id: 13,
       service_id: 7009,
@@ -759,7 +757,7 @@ describe('usePlatformContestAwd', () => {
     })
     await flushPromises()
 
-    expect(adminApiMocks.createContestAWDService).toHaveBeenCalledWith('awd-1', {
+    expect(contestAwdAdminMocks.createContestAWDService).toHaveBeenCalledWith('awd-1', {
       awd_challenge_id: 5,
       points: 120,
       order: 2,
@@ -770,7 +768,7 @@ describe('usePlatformContestAwd', () => {
       awd_defense_score: 2,
       awd_checker_preview_token: 'preview-token',
     })
-    expect(adminApiMocks.updateAdminContestChallenge).not.toHaveBeenCalled()
+    expect(contestManageMocks.updateAdminContestChallenge).not.toHaveBeenCalled()
 
     wrapper.unmount()
   })
@@ -778,7 +776,7 @@ describe('usePlatformContestAwd', () => {
   it('更新 AWD 配置时应优先更新显式 service，关系层只更新分值', async () => {
     let composable!: ReturnType<typeof usePlatformContestAwd>
     const selectedContest = ref<ContestDetailData | null>(buildContest())
-    adminApiMocks.listContestAWDServices.mockResolvedValueOnce([
+    contestAwdAdminMocks.listContestAWDServices.mockResolvedValueOnce([
       buildContestAWDService({
         challenge_id: '101',
         awd_challenge_id: '4',
@@ -811,7 +809,7 @@ describe('usePlatformContestAwd', () => {
     })
     await flushPromises()
 
-    expect(adminApiMocks.updateContestAWDService).toHaveBeenCalledWith('awd-1', 'service-1', {
+    expect(contestAwdAdminMocks.updateContestAWDService).toHaveBeenCalledWith('awd-1', 'service-1', {
       awd_challenge_id: 6,
       points: 150,
       order: 3,
@@ -822,7 +820,7 @@ describe('usePlatformContestAwd', () => {
       awd_defense_score: 3,
       awd_checker_preview_token: 'preview-token-2',
     })
-    expect(adminApiMocks.updateAdminContestChallenge).not.toHaveBeenCalled()
+    expect(contestManageMocks.updateAdminContestChallenge).not.toHaveBeenCalled()
 
     wrapper.unmount()
   })

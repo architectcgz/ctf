@@ -35,12 +35,19 @@ vi.mock('vue-router', async () => {
   }
 })
 
-vi.mock('@/api/admin/contests', async () => {
+vi.mock('@/api/admin/contest-manage', async () => {
   const actual =
-    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
+    await vi.importActual<typeof import('@/api/admin/contest-manage')>('@/api/admin/contest-manage')
   return {
     ...actual,
     getContest: adminApiMocks.getContest,
+  }
+})
+vi.mock('@/api/admin/contest-awd-admin', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contest-awd-admin')>('@/api/admin/contest-awd-admin')
+  return {
+    ...actual,
     listContestAWDServices: adminApiMocks.listContestAWDServices,
     updateContestAWDService: adminApiMocks.updateContestAWDService,
     runContestAWDCheckerPreview: adminApiMocks.runContestAWDCheckerPreview,

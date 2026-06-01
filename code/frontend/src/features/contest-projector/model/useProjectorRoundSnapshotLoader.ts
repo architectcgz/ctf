@@ -1,11 +1,7 @@
 import type { Ref } from 'vue'
 
-import {
-  getContestAWDRoundSummary,
-  getContestAWDRoundTrafficSummary,
-  listContestAWDRoundAttacks,
-  listContestAWDRoundServices,
-} from '@/api/admin/contests'
+import { getContestAWDRoundSummary, listContestAWDRoundAttacks, listContestAWDRoundServices } from '@/api/admin/contest-operations'
+import { getContestAWDRoundTrafficSummary } from '@/api/admin/contest-awd-admin'
 import type {
   AWDAttackLogData,
   AWDRoundSummaryData,

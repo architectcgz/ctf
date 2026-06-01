@@ -24,9 +24,20 @@
 
 `2026-06-01` 复扫结论：
 
-- `code/frontend/src/components` 已不存在，不应再作为“当前迁移目标”出现在 backlog 的行动指南里。
+- `code/frontend/src/components` 已不存在，不应再作为”当前迁移目标”出现在 backlog 的行动指南里。
 - 当前运行时主结构已经收口到 `pages / widgets / features / entities / shared`。
 - 这份 backlog 下方仍保留大量 `components/*` 路径记录，它们是迁移轨迹，不是当前目录事实。
+
+`2026-06-01` contest domain convergence 收口（已完成）：
+
+- `features/platform/contests/` 兼容 barrel 已删除，route entry 全部切到 owning feature public API。✅
+- `api/admin/contests.ts` 已按 use case 拆为 5 个 transport owner（`contest-manage` / `contest-announcements` / `contest-operations` / `contest-awd-admin` / `contest-reviews`）。✅
+- 所有 24 个运行时 feature consumer 已从 `@/api/admin/contests` 迁到具体 owning module。✅
+- `api/admin/index.ts` 已直接导出 5 个新模块（`contest-reviews` 不再经过旧 barrel 桥接）。✅
+- 旧 `contests.ts` 缩为极薄 re-export barrel，仅保留向后兼容测试 mock，不可用于新代码。✅
+- `featureBoundaries.test.ts` 新增 guardrail 禁止跨-slice compatibility barrel。✅
+- 12 个测试文件同步更新 vi.mock 路径以匹配新 transport owner。✅
+- `frontend-growth-baseline.json` 扩展到 12 项，覆盖 P1/P2 owner 面关键 page model。✅
 
 ### 当前稳定 owner
 

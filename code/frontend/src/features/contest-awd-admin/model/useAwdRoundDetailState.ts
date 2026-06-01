@@ -1,14 +1,8 @@
 import { ref, type Ref } from 'vue'
 
-import {
-  type AdminAWDTrafficEventsParams,
-  getAdminContestLiveScoreboard,
-  getContestAWDRoundSummary,
-  getContestAWDRoundTrafficSummary,
-  listContestAWDRoundAttacks,
-  listContestAWDRoundServices,
-  listContestAWDRoundTrafficEvents,
-} from '@/api/admin/contests'
+import { getAdminContestLiveScoreboard } from '@/api/admin/contest-manage'
+import { getContestAWDRoundSummary, listContestAWDRoundAttacks, listContestAWDRoundServices } from '@/api/admin/contest-operations'
+import { getContestAWDRoundTrafficSummary, listContestAWDRoundTrafficEvents, type AdminAWDTrafficEventsParams } from '@/api/admin/contest-awd-admin'
 import type {
   AWDAttackLogData,
   AWDRoundSummaryData,

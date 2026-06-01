@@ -1,6 +1,6 @@
 import { ref, type ComputedRef, type Ref } from 'vue'
 
-import { getContest } from '@/api/admin/contests'
+import { getContest } from '@/api/admin/contest-manage'
 import type { ContestDetailData } from '@/api/contracts'
 
 export function useContestOperationsData(contestId: Ref<string> | ComputedRef<string>) {

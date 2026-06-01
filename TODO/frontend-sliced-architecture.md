@@ -55,6 +55,22 @@ src/
 - `ChallengeDetailRoutePage.vue` 已收口成 route entry + widget 组合：
   - `pages/challenges/ChallengeDetailRoutePage.vue`
   - `widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue`
+- **Contest domain convergence (2026-06-01，已完成)**：
+  - 平台竞赛 route entry 已从兼容 barrel `@/features/platform/contests` 切到 owning feature public API：
+    - `ContestManageRoutePage.vue` → `@/features/platform/contest-manage`
+    - `ContestEditRoutePage.vue` → `@/features/platform/contest-manage`
+    - `ContestAnnouncementsRoutePage.vue` → `@/features/platform/contest-announcements`
+    - `ContestOperationsRoutePage.vue` / `ContestOperationsHubRoutePage.vue` → `@/features/platform/contest-operations`
+  - `features/platform/contests/` 兼容 barrel 已删除。
+  - 新增 `featureBoundaries.test.ts` guardrail：禁止 feature index.ts 跨-slice re-export 形成兼容聚合层。
+  - `api/admin/contests.ts` 超级模块（原 1501 行）已按 use case 拆为 5 个 transport owner：
+    - `api/admin/contest-manage.ts` — 竞赛 CRUD + 挑战 + 队伍 + 排行榜
+    - `api/admin/contest-announcements.ts` — 公告
+    - `api/admin/contest-operations.ts` — 轮次 + readiness + checker + attack log
+    - `api/admin/contest-awd-admin.ts` — AWD 服务管理 + 实例编排 + 流量
+    - `api/admin/contest-reviews.ts` — AWD review 的 platform public owner；当前底层实现仍复用 `api/teaching/awd-reviews.ts`
+  - `api/admin/index.ts` 已直接导出 5 个新模块，旧 `contests.ts` 保留为短期兼容 barrel（带 DEPRECATED 标记）。
+  - `frontend-growth-baseline.json` 扩展到 12 项，覆盖 `contest-manage`、`contest-operations`、`contest-awd-admin`、`contest-projector`、`contest-workbench` 关键 page model。
 
 ## 当前做得好的地方
 

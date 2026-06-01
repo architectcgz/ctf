@@ -3,5 +3,5 @@
 </template>
 
 <script setup lang="ts">
-import { PlatformContestManagePage } from '@/features/platform/contests'
+import { PlatformContestManagePage } from '@/features/platform/contest-manage'
 </script>

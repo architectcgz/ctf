@@ -1,6 +1,7 @@
 import { ref, type Ref } from 'vue'
 
-import { getContestAWDReadiness, updateContest, type AdminContestUpdatePayload } from '@/api/admin/contests'
+import { updateContest, type AdminContestUpdatePayload } from '@/api/admin/contest-manage'
+import { getContestAWDReadiness } from '@/api/admin/contest-operations'
 import type { AWDReadinessData } from '@/api/contracts'
 
 export interface AWDStartOverrideDialogState {

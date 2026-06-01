@@ -1,10 +1,6 @@
 import { computed, reactive, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
-import {
-  createAdminContestAnnouncement,
-  deleteAdminContestAnnouncement,
-  getAdminContestAnnouncements,
-} from '@/api/admin/contests'
+import { createAdminContestAnnouncement, deleteAdminContestAnnouncement, getAdminContestAnnouncements } from '@/api/admin/contest-announcements'
 import type { ContestAnnouncement, ContestDetailData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import { useToast } from '@/shared/model/common/useToast'

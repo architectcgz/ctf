@@ -1,6 +1,6 @@
 import { computed, reactive, ref, type Ref } from 'vue'
 
-import { runContestAWDCheckerPreview } from '@/api/admin/contests'
+import { runContestAWDCheckerPreview } from '@/api/admin/contest-awd-admin'
 import type {
   AdminContestAWDServiceData,
   AWDCheckerPreviewData,

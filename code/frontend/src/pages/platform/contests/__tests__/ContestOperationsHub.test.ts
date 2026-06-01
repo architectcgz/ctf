@@ -13,9 +13,9 @@ const adminApiMocks = vi.hoisted(() => ({
   getContests: vi.fn(),
 }))
 
-vi.mock('@/api/admin/contests', async () => {
+vi.mock('@/api/admin/contest-manage', async () => {
   const actual =
-    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
+    await vi.importActual<typeof import('@/api/admin/contest-manage')>('@/api/admin/contest-manage')
   return {
     ...actual,
     getContests: adminApiMocks.getContests,

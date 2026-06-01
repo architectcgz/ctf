@@ -1,10 +1,6 @@
 import { ref, type Ref } from 'vue'
 
-import {
-  createContestAWDRound,
-  getContestAWDReadiness,
-  runContestAWDCurrentRoundCheck,
-} from '@/api/admin/contests'
+import { createContestAWDRound, getContestAWDReadiness, runContestAWDCurrentRoundCheck } from '@/api/admin/contest-operations'
 import type {
   AWDReadinessAction,
   AWDReadinessData,

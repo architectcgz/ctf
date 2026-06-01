@@ -24,12 +24,19 @@ const toastMocks = vi.hoisted(() => ({
   info: vi.fn(),
 }))
 
-vi.mock('@/api/admin/contests', async () => {
+vi.mock('@/api/admin/contest-manage', async () => {
   const actual =
-    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
+    await vi.importActual<typeof import('@/api/admin/contest-manage')>('@/api/admin/contest-manage')
   return {
     ...actual,
     getContest: adminApiMocks.getContest,
+  }
+})
+vi.mock('@/api/admin/contest-announcements', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contest-announcements')>('@/api/admin/contest-announcements')
+  return {
+    ...actual,
     getAdminContestAnnouncements: adminApiMocks.getAdminContestAnnouncements,
     createAdminContestAnnouncement: adminApiMocks.createAdminContestAnnouncement,
     deleteAdminContestAnnouncement: adminApiMocks.deleteAdminContestAnnouncement,
@@ -136,7 +143,7 @@ describe('ContestAnnouncements', () => {
     expect(contestAnnouncementsPageModelSource).not.toContain("from '@/api/admin/contests'")
     expect(contestAnnouncementsPageModelSource).not.toContain("from 'vue-router'")
     expect(contestAnnouncementsPageModelSource).toContain('backToStudioRoute: computed(() => buildContestEditRoute(contestId.value))')
-    expect(contestAnnouncementsDataSource).toContain("from '@/api/admin/contests'")
+    expect(contestAnnouncementsDataSource).toContain("from '@/api/admin/contest-manage'")
     expect(platformContestAnnouncementsPageSource).toContain('useContestAnnouncementsPage')
     expect(platformContestAnnouncementsPageSource).toContain('ContestAnnouncementsTopbarPanel')
     expect(platformContestAnnouncementsPageSource).toContain('ContestAnnouncementsWorkspacePanel')
