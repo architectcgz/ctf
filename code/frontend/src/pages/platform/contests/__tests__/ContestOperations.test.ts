@@ -5,6 +5,7 @@ import ContestOperations from '@/pages/platform/contests/ContestOperationsRouteP
 import contestOperationsDataSource from '@/features/platform/contests/model/useContestOperationsData.ts?raw'
 import contestOperationsSource from '@/pages/platform/contests/ContestOperationsRoutePage.vue?raw'
 import contestOperationsPageModelSource from '@/features/platform/contests/model/useContestOperationsPage.ts?raw'
+import platformContestOperationsPageSource from '@/features/platform/contests/ui/PlatformContestOperationsPage.vue?raw'
 import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -75,7 +76,8 @@ describe('ContestOperations', () => {
   })
 
   it('路由页应仅负责组合，不直接耦合单场赛事查询流程', () => {
-    expect(contestOperationsSource).toContain('useContestOperationsPage')
+    expect(contestOperationsSource).toContain('PlatformContestOperationsPage')
+    expect(contestOperationsSource).not.toContain('useContestOperationsPage')
     expect(contestOperationsSource).not.toContain("from '@/api/admin/contests'")
     expect(contestOperationsPageModelSource).toContain("from './useContestOperationsData'")
     expect(contestOperationsPageModelSource).not.toContain("from '@/api/admin/contests'")
@@ -86,11 +88,16 @@ describe('ContestOperations', () => {
       "component: () => import('@/pages/platform/contests/ContestOperationsRoutePage.vue')"
     )
     expect(platformRoutesSource).toContain('contestId: String(route.params.id || \'\')')
-    expect(contestOperationsSource).toContain('workspace-shell journal-shell journal-shell-admin')
+    expect(platformContestOperationsPageSource).toContain(
+      'workspace-shell journal-shell journal-shell-admin'
+    )
+    expect(platformContestOperationsPageSource).toContain('useContestOperationsPage')
+    expect(platformContestOperationsPageSource).toContain('AWDOperationsPanel')
+    expect(platformContestOperationsPageSource).toContain('AWDServiceAlertBanner')
     expect(contestOperationsSource).not.toContain('ContestOperationsTopbarPanel')
     expect(contestOperationsSource).not.toContain('class="ops-topbar"')
-    expect(contestOperationsSource).not.toContain('height: 100vh')
-    expect(contestOperationsSource).not.toContain('overflow: hidden')
+    expect(platformContestOperationsPageSource).not.toContain('height: 100vh')
+    expect(platformContestOperationsPageSource).not.toContain('overflow: hidden')
   })
 
   it('父页不再提供实例编排 tab，而是固定组合运维态面板', async () => {

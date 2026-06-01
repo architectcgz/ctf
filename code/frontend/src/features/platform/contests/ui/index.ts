@@ -1,6 +1,7 @@
 export { default as ContestOrchestrationPage } from './ContestOrchestrationPage.vue'
 export { default as PlatformContestManagePage } from './PlatformContestManagePage.vue'
 export { default as PlatformContestAnnouncementsPage } from './PlatformContestAnnouncementsPage.vue'
+export { default as PlatformContestOperationsPage } from './PlatformContestOperationsPage.vue'
 export { default as ContestAnnouncementsTopbarPanel } from './ContestAnnouncementsTopbarPanel.vue'
 export { default as ContestAnnouncementsWorkspacePanel } from './ContestAnnouncementsWorkspacePanel.vue'
 export { default as PlatformContestOperationsHubPage } from './PlatformContestOperationsHubPage.vue'
