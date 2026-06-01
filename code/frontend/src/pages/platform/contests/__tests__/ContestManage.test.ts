@@ -8,6 +8,7 @@ import contestManageSource from '@/pages/platform/contests/ContestManageRoutePag
 import contestAnnouncementDrawerSource from '@/features/contest-announcements/ui/ContestAnnouncementManageDrawer.vue?raw'
 import platformContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
 import contestOrchestrationSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
+import platformContestManagePageSource from '@/features/platform/contests/ui/PlatformContestManagePage.vue?raw'
 import contestManageCreatePanelSource from '@/features/platform/contests/ui/ContestManageCreatePanel.vue?raw'
 import contestManageOverviewPanelSource from '@/features/platform/contests/ui/ContestManageOverviewPanel.vue?raw'
 import contestManagePageModelSource from '@/features/platform/contests/model/useContestManagePage.ts?raw'
@@ -232,13 +233,19 @@ describe('ContestManage', () => {
 
   it('路由页应把导出与多面板编排留在 feature owner，而不是继续在页面内联流程', () => {
     expect(contestManageSource).toContain("from '@/features/platform/contests'")
-    expect(contestManageSource).toContain('ContestOrchestrationPage')
-    expect(contestManageSource).toContain('useContestManagePage')
-    expect(contestManageSource).toContain(':active-panel="activePanel"')
-    expect(contestManageSource).toContain('@switch-panel="switchPanel"')
+    expect(contestManageSource).toContain('PlatformContestManagePage')
+    expect(contestManageSource).not.toContain('ContestOrchestrationPage')
+    expect(contestManageSource).not.toContain('useContestManagePage')
+    expect(contestManageSource).not.toContain(':active-panel="activePanel"')
+    expect(contestManageSource).not.toContain('@switch-panel="switchPanel"')
     expect(contestManageSource).not.toContain('useContestExportFlow')
     expect(contestManageSource).not.toContain('@export-contest')
-    expect(contestManageSource).toContain('<ContestAnnouncementManageDrawer')
+    expect(contestManageSource).not.toContain('<ContestAnnouncementManageDrawer')
+    expect(platformContestManagePageSource).toContain('ContestOrchestrationPage')
+    expect(platformContestManagePageSource).toContain('useContestManagePage')
+    expect(platformContestManagePageSource).toContain('<ContestAnnouncementManageDrawer')
+    expect(platformContestManagePageSource).toContain('<PlatformContestFormDialog')
+    expect(platformContestManagePageSource).toContain('<AWDReadinessOverrideDialog')
     expect(contestAnnouncementDrawerSource).toContain('fullPageRoute')
     expect(contestOrchestrationSource).not.toContain("from '@/shared/model/navigation/useUrlSyncedTabs'")
     expect(contestOrchestrationSource).not.toContain('useUrlSyncedTabs<ContestPanelKey>(')
@@ -545,9 +552,11 @@ describe('ContestManage', () => {
   })
 
   it('赛事目录筛选应切到共享目录工具栏', () => {
-    expect(contestManageSource).toContain('useContestManagePage')
+    expect(contestManageSource).toContain('PlatformContestManagePage')
+    expect(contestManageSource).not.toContain('useContestManagePage')
     expect(contestManageSource).not.toContain('onMounted(')
     expect(contestManageSource).not.toContain("from '@/api/contracts'")
+    expect(platformContestManagePageSource).toContain('useContestManagePage')
     expect(contestOrchestrationSource).not.toContain("from 'vue-router'")
     expect(contestOrchestrationSource).not.toContain('useRouter(')
     expect(contestManagePageModelSource).not.toContain("from 'vue-router'")
