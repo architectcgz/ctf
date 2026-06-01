@@ -4,8 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
-import { defineComponent } from 'vue'
+import { computed, defineComponent, ref } from 'vue'
 
+import type { NotificationItem } from '@/api/contracts'
+import type { NotificationDrawerController } from '@/shared/model/layout/notificationDrawerController'
 import NotificationDrawer from '../NotificationDrawer.vue'
 import notificationDrawerBodySource from '../notification-drawer/NotificationDrawerBody.vue?raw'
 import notificationDrawerFooterSource from '../notification-drawer/NotificationDrawerFooter.vue?raw'
@@ -56,12 +58,61 @@ function createTestRouter() {
   })
 }
 
+function mockNotificationDrawerController(router?: ReturnType<typeof createRouter>): NotificationDrawerController {
+  const store = useNotificationStore()
+  const open = ref(false)
+  const isMarkingAllRead = ref(false)
+
+  async function markAllRead() {
+    if (isMarkingAllRead.value) return
+    const unreadItems = store.notifications.filter((item) => item.unread)
+    if (unreadItems.length === 0) return
+    isMarkingAllRead.value = true
+    try {
+      const results = await Promise.allSettled(unreadItems.map((item) => notificationApiMocks.markAsRead(item.id)))
+      unreadItems.forEach((item, index) => {
+        if (results[index]?.status === 'fulfilled') store.markAsRead(item.id)
+      })
+      const failedCount = results.filter((r) => r.status === 'rejected').length
+      if (failedCount === 0) store.markAllRead()
+    } finally {
+      isMarkingAllRead.value = false
+    }
+  }
+
+  return {
+    open,
+    setTriggerRef: vi.fn(),
+    unreadCount: computed(() => store.unreadCount),
+    isMarkingAllRead,
+    items: computed(() => store.notifications as NotificationItem[]),
+    typeMeta: vi.fn().mockReturnValue({ icon: { name: 'Info' }, label: '系统', accentColor: '#000' }),
+    close: () => { open.value = false },
+    toggleOpen: () => { open.value = !open.value },
+    goToNotifications: () => {
+      open.value = false
+      void router?.push('/notifications')
+    },
+    goToNotificationDetail: (id: string) => {
+      open.value = false
+      void router?.push(`/notifications/${encodeURIComponent(id)}`)
+    },
+    markAllRead,
+  }
+}
+
 const NotificationDrawerSlotHost = defineComponent({
   components: {
     NotificationDrawer,
   },
+  props: {
+    controller: {
+      type: Object as () => NotificationDrawerController,
+      required: true,
+    },
+  },
   template: `
-    <NotificationDrawer realtime-status="open">
+    <NotificationDrawer realtime-status="open" :controller="controller">
       <template #trigger="{ open, toggle, unreadBadgeLabel, setTriggerRef }">
         <button
           :ref="setTriggerRef"
@@ -86,6 +137,7 @@ async function openDrawer() {
     attachTo: document.body,
     props: {
       realtimeStatus: 'open',
+      controller: mockNotificationDrawerController(router),
     },
     global: {
       plugins: [router],
@@ -106,6 +158,9 @@ async function openDrawerWithCustomTrigger() {
 
   const wrapper = mount(NotificationDrawerSlotHost, {
     attachTo: document.body,
+    props: {
+      controller: mockNotificationDrawerController(router),
+    },
     global: {
       plugins: [router],
     },

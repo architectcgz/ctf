@@ -49,7 +49,7 @@
             />
           </div>
 
-          <NotificationDrawer :realtime-status="notificationStatus">
+          <NotificationDrawer :realtime-status="props.notificationStatus" :controller="props.notificationDrawerController">
             <template #trigger="{ open, toggle, hasUnread, unreadBadgeLabel, setTriggerRef }">
               <TopNavNotificationTrigger
                 :open="open"
@@ -72,7 +72,7 @@
           type="button"
           class="topnav-icon-button topnav-icon-button--quiet topnav-logout h-9 w-9"
           aria-label="退出登录"
-          @click="logout"
+          @click="props.logout"
         >
           <LogOut class="h-4 w-4" />
         </button>
@@ -94,9 +94,11 @@ import type { WebSocketStatus } from '@/shared/model/realtime/useWebSocket'
 import { useTopNavViewState } from '@/shared/model/layout/topnav/useTopNavViewState'
 import '@/shared/ui/layout/topnav/topNavShell.css'
 
-defineProps<{
+const props = defineProps<{
   sidebarCollapsed: boolean
   notificationStatus: WebSocketStatus
+  logout: () => Promise<void>
+  notificationDrawerController: import('@/shared/model/layout/notificationDrawerController').NotificationDrawerController
 }>()
 
 const emit = defineEmits<{
@@ -113,7 +115,6 @@ const {
   currentBrandLabel,
   userDisplayName,
   userInitial,
-  logout,
   availableBrands,
   brand,
   theme,
@@ -121,5 +122,5 @@ const {
   toggleBrandPicker,
   selectBrand,
   navigateBreadcrumb,
-} = useTopNavViewState()
+} = useTopNavViewState(props.logout)
 </script>

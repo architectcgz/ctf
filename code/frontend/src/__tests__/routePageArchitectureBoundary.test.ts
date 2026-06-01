@@ -63,9 +63,16 @@ describe('route page architecture boundaries', () => {
     expect(violations).toEqual([])
   })
 
+  // AppShellRoutePage 是 app shell 的组装根，需要 useRouter 来为 features/layout bridge 注入导航回调。
+  // 它不是普通的业务路由页，不适用 route page 对 router hooks 的禁令。
+  const routePageHooksExemptFiles = new Set([
+    'pages/AppShellRoutePage.vue',
+  ])
+
   it('route pages should not own route navigation and query-tab hooks directly', () => {
     const violations = collectSourceFiles(pagesRoot)
       .filter(isRoutePageRuntimeFile)
+      .filter((filePath) => !routePageHooksExemptFiles.has(relative(sourceRoot, filePath)))
       .flatMap((filePath) => {
         const source = readFileSync(filePath, 'utf-8')
         const hits = frontendArchitecturePolicy.route_page.forbidden_runtime_hooks.filter((hook) => {

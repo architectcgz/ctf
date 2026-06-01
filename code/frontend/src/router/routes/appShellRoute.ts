@@ -6,7 +6,7 @@ import { teacherRoutes } from './teacherRoutes'
 
 export const appShellRoute: RouteRecordRaw = {
   path: '/',
-  component: () => import('@/shared/ui/layout/AppLayout.vue'),
+  component: () => import('@/pages/AppShellRoutePage.vue'),
   redirect: '/student/dashboard',
   meta: { requiresAuth: true },
   children: [...studentRoutes, ...teacherRoutes, ...platformRoutes],

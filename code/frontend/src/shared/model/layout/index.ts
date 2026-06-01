@@ -1,7 +1,5 @@
-export { useLayoutNotificationDrawerBridge } from './useLayoutNotificationDrawerBridge'
-export { useLayoutNotificationRealtimeBridge } from './useLayoutNotificationRealtimeBridge'
-export { useLayoutSessionActionsBridge } from './useLayoutSessionActionsBridge'
 export { useBackofficeBreadcrumbDetail } from './useBackofficeBreadcrumbDetail'
+export type { NotificationDrawerController } from './notificationDrawerController'
 export {
   createWorkspaceShellNavigation,
   useWorkspaceShellNavigation,

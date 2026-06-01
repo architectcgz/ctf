@@ -10,7 +10,7 @@
     },
     "shared": {
       "relative_prefixes": ["shared/"],
-      "forbidden_import_layers": []
+      "forbidden_import_layers": ["features", "widgets", "pages"]
     },
     "entities": {
       "relative_prefixes": ["entities/"],
@@ -32,15 +32,7 @@
   "route_page_layer": "pages",
   "route_page_suffix": "RoutePage.vue",
   "route_page_line_limit": 500,
-  "legacy_business_component_directories": [
-    "platform",
-    "teacher",
-    "notifications",
-    "challenge",
-    "dashboard",
-    "contests",
-    "scoreboard"
-  ],
+  "legacy_business_component_directories": [],
   "component_api_contract_only": true,
   "widget_api_contract_only": true,
   "feature_ui_api_contract_only": true,

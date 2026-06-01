@@ -70,7 +70,7 @@
 import { Bell } from 'lucide-vue-next'
 
 import type { WebSocketStatus } from '@/shared/model/realtime/useWebSocket'
-import { useLayoutNotificationDrawerBridge } from '@/shared/model/layout'
+import type { NotificationDrawerController } from '@/shared/model/layout/notificationDrawerController'
 
 import NotificationDrawerBody from './notification-drawer/NotificationDrawerBody.vue'
 import NotificationDrawerFooter from './notification-drawer/NotificationDrawerFooter.vue'
@@ -86,6 +86,7 @@ defineOptions({
 
 const props = defineProps<{
   realtimeStatus: WebSocketStatus
+  controller: NotificationDrawerController
 }>()
 
 const {
@@ -100,7 +101,7 @@ const {
   goToNotifications,
   goToNotificationDetail,
   markAllRead,
-} = useLayoutNotificationDrawerBridge(() => props.realtimeStatus)
+} = props.controller
 
 const {
   activeFilter,

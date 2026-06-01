@@ -15,7 +15,9 @@
       <div class="min-w-0 flex flex-1 flex-col">
         <TopNav
           :sidebar-collapsed="sidebarCollapsed"
-          :notification-status="notificationStatus"
+          :notification-status="props.notificationStatus"
+          :logout="props.logout"
+          :notification-drawer-controller="props.notificationDrawerController"
           @toggle-sidebar="sidebarOpen = true"
           @toggle-collapse="sidebarCollapsed = !sidebarCollapsed"
         />
@@ -53,13 +55,19 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { RouterView } from 'vue-router'
 
+import type { NotificationDrawerController } from '@/shared/model/layout/notificationDrawerController'
 import Sidebar from '@/shared/ui/layout/Sidebar.vue'
 import TopNav from '@/shared/ui/layout/TopNav.vue'
-import { useLayoutNotificationRealtimeBridge } from '@/shared/model/layout'
+import type { WebSocketStatus } from '@/shared/model/realtime/useWebSocket'
 import { isBackofficeRoute } from '@/utils/backofficeRouteMeta'
 
+const props = defineProps<{
+  notificationStatus: WebSocketStatus
+  logout: () => Promise<void>
+  notificationDrawerController: NotificationDrawerController
+}>()
+
 const route = useRoute()
-const { start, status: notificationStatus } = useLayoutNotificationRealtimeBridge()
 const sidebarCollapsed = ref(false)
 const sidebarOpen = ref(false)
 const isBackofficeLayout = computed(() => isBackofficeRoute(route.path))
@@ -77,7 +85,7 @@ const routeRootClass = computed(() =>
 )
 
 onMounted(() => {
-  void start()
+  // notification realtime 启动已由 AppShellRoutePage 在组装层处理
 })
 
 watch(

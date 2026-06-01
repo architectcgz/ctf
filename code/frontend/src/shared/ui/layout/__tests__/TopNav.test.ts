@@ -4,7 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
+import { ref } from 'vue'
 
+import type { NotificationDrawerController } from '@/shared/model/layout/notificationDrawerController'
 import TopNav from '../TopNav.vue'
 import topNavBrandPickerSource from '../topnav/TopNavBrandPicker.vue?raw'
 import topNavBreadcrumbsSource from '../topnav/TopNavBreadcrumbs.vue?raw'
@@ -188,6 +190,24 @@ function createTestRouter() {
   })
 }
 
+function mockNotificationDrawerController(): NotificationDrawerController {
+  return {
+    open: ref(false),
+    setTriggerRef: vi.fn(),
+    unreadCount: ref(0),
+    isMarkingAllRead: ref(false),
+    items: ref([]),
+    typeMeta: vi.fn().mockReturnValue({ icon: { name: 'Info' }, label: '系统', accentColor: '#000' }),
+    close: vi.fn(),
+    toggleOpen: vi.fn(),
+    goToNotifications: vi.fn(),
+    goToNotificationDetail: vi.fn(),
+    markAllRead: vi.fn().mockResolvedValue(undefined),
+  }
+}
+
+const mockLogout = vi.fn().mockResolvedValue(undefined)
+
 async function mountTopNav() {
   setActivePinia(createPinia())
   localStorage.clear()
@@ -212,6 +232,8 @@ async function mountTopNav() {
     props: {
       sidebarCollapsed: false,
       notificationStatus: 'open',
+      logout: mockLogout,
+      notificationDrawerController: mockNotificationDrawerController(),
     },
     global: {
       plugins: [router],
@@ -253,6 +275,8 @@ async function mountBackofficeTopNav(
     props: {
       sidebarCollapsed: options?.sidebarCollapsed ?? false,
       notificationStatus: 'open',
+      logout: mockLogout,
+      notificationDrawerController: mockNotificationDrawerController(),
     },
     global: {
       plugins: [router],
