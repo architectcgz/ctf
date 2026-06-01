@@ -100,7 +100,7 @@
 
             <AppEmpty
               v-if="!loading && !hasLoadError && list.length === 0"
-              class="notification-empty-state student-directory-state workspace-directory-empty"
+              class="notification-empty-state notification-empty-state--list student-directory-state workspace-directory-empty"
               icon="Inbox"
               title="暂无通知"
               description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
@@ -268,8 +268,8 @@
   justify-content: center;
 }
 
-:deep(.notification-empty-state) {
-  margin-top: 0;
+:deep(.notification-empty-state--list) {
+  margin-top: calc(var(--student-directory-shell-section-gap) + var(--space-2));
 }
 
 .notification-filter-section {

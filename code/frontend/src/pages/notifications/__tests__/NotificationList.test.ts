@@ -210,6 +210,10 @@ describe('NotificationList', () => {
     expect(notificationListWorkspaceSource).not.toContain('本页消息')
     expect(notificationListWorkspaceSource).not.toContain('已读消息')
     expect(notificationListWorkspaceSource).not.toContain('总消息数')
+    expect(notificationListWorkspaceSource).toContain('notification-empty-state--list')
+    expect(notificationListWorkspaceSource).toMatch(
+      /:deep\(\.notification-empty-state--list\)\s*\{[^}]*margin-top:\s*calc\(var\(--student-directory-shell-section-gap\)\s*\+\s*var\(--space-2\)\);/s
+    )
   })
 
   it('通知分类筛选应复用学生目录筛选样式并透传 type 查询参数', async () => {
