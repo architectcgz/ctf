@@ -81,19 +81,7 @@ src/
 
 ## 当前还需要继续迁移的工作
 
-### 1. `contest` domain 仍是当前最重的结构 debt
-
-- 当前 route page / feature page shell 已经基本薄化，但 `contest` 这条线还保留两类活动兼容层：
-  - `features/platform/contests/index.ts`
-    - 当前只是兼容重导出层，但 `ContestManageRoutePage.vue`、`ContestEditRoutePage.vue`、`ContestOperationsRoutePage.vue`、`ContestOperationsHubRoutePage.vue`、`ContestAnnouncementsRoutePage.vue` 与 `useContestEditPage.ts` 仍直接依赖它。
-  - `api/admin/contests.ts`
-    - 当前同时承接 contest CRUD、announcement、AWD round、readiness、service orchestration、traffic、scoreboard、attack log、review archive export，是实际运行时里的超级 API owner。
-- 这说明前端当前最大的剩余问题已经不是 `views/components` 目录迁移，而是：
-  - feature public API 还没有在 `contest` 这条线上彻底收口
-  - transport owner 还没有跟着 feature split 一起拆开
-- 后续优先级应先处理这条线，再继续扩展 entity 补强。
-
-### 2. 教师端兼容命名空间已基本退场
+### 1. 教师端兼容命名空间已基本退场
 
 - 当前产品规则要求教师端只使用 `/academy/*`。
 - router runtime 已不再注册 `/teacher/* -> /academy/*` 页面 redirect。
@@ -101,7 +89,7 @@ src/
 - 前端活跃源码里已经不再保留 `/teacher/*` 前端页面路径兼容 owner。
 - 登录 redirect 参数遇到旧教师端页面路径时，会直接回退到角色默认首页，而不是再 canonicalize 成 `/academy/*`。
 
-### 3. route page 厚壳层主问题已基本收口
+### 2. route page 厚壳层主问题已基本收口
 
 当前主链路里的高优先级 runtime route page 已基本收口成 route entry + widget / feature 组合。
 
@@ -110,7 +98,7 @@ src/
 - `entities` 展示 owner 补强
 - 继续把 guardrail 跟现状一起机械化
 
-### 4. `entities` 仍然偏薄
+### 3. `entities` 仍然偏薄
 
 当前 `challenge`、`notification`、`contest`、`team` 都已经形成实体层入口，但下面这些对象还没有形成同等稳定的展示规则 owner：
 
@@ -132,7 +120,7 @@ src/
 - API mutation
 - 轮询和跨模块 workflow
 
-### 5. 边界测试需要继续跟着现状更新
+### 4. 边界测试需要继续跟着现状更新
 
 当前 guardrail 已经有效，但还需要继续补：
 
@@ -148,20 +136,7 @@ src/
 - 继续用源码级 guardrail 限制新的 `/teacher/*` 前端页面路径 producer；当前前端已不再保留这类页面兼容 owner。
 - 保持 router runtime 只从 `pages` 取页面组件，不再新增绕过 `pages` 的入口。
 
-### P1：先收口 `contest` domain 的 public API 与 transport owner
-
-优先顺序：
-
-- 清退 `features/platform/contests/index.ts` 这类活动兼容 barrel，让 route page 和 feature consumer 回到真实 owning feature。
-- 拆分 `api/admin/contests.ts`，至少把：
-  - contest manage
-  - contest announcements
-  - contest operations / AWD admin
-  - contest review archive
-  分回更窄的 API client owner。
-- 在这条线收口后，再补对应 guardrail，防止兼容 barrel 与超级 API owner 回流。
-
-### P2：补 route/widget/entity 边界 guardrail
+### P1：补 route/widget/entity 边界 guardrail
 
 重点不是继续找新的厚 route page，而是防止已收口页面回退：
 
@@ -170,11 +145,11 @@ src/
 - 展示规则继续下沉到 entity
 - 业务流程继续留在 feature model
 
-### P3：补强实体层
+### P2：补强实体层
 
 `notification` 的类型文案、accent 和已读状态展示已收口到 `entities/notification`；`contest` 的状态 / 模式 / CTA / accent / status badge class 已进一步收口到 `entities/contest`；`team` 的成员数、队长关系、邀请码文案和成员展示项也已经收口到 `entities/team`；`user` 的主消费面已经完成收口，下一步转向 `instance` 实体层，不做一口气大搬迁。
 
-### P4：同步文档与 guardrail
+### P3：同步文档与 guardrail
 
 - 每完成一个结构切片，就更新这份台账，不再保留失效目录名和历史迁移说法。
 - 结构收口完成后，再决定是否需要把这份台账继续拆成事实文档和 backlog。
