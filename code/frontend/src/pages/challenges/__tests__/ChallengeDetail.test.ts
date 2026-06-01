@@ -208,9 +208,80 @@ describe('ChallengeDetail', () => {
     expect(challengeDetailPageSource).toContain(
       "import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'"
     )
+    expect(challengeDetailPageSource).toContain(
+      "import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'"
+    )
+    expect(challengeDetailPageSource).not.toContain(
+      "import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'"
+    )
+    expect(challengeDetailPageSource).toContain('useRouteQueryTabs<WorkspaceTab>({')
     expect(challengeDetailPageSource).toContain("from './challengeDetailRoutes'")
     expect(challengeDetailPageSource).not.toContain("from 'vue-router'")
     expect(challengeDetailRoutesSource).toContain("name: 'Challenges'")
+  })
+
+  it('应根据 panel query 初始化到对应 workspace tab', async () => {
+    await router.push('/challenges/1?panel=writeup')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(router.currentRoute.value.query.panel).toBe('writeup')
+    expect(challengeApiMocks.getMyChallengeWriteupSubmission).toHaveBeenCalledWith('1')
+    expect(wrapper.find('input[placeholder*="完整链路"]').exists()).toBe(true)
+  })
+
+  it('切到非默认 workspace tab 时应写回 panel query', async () => {
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const recordsTab = wrapper.findAll('button').find((node) => node.text().trim() === '提交记录')
+    expect(recordsTab).toBeTruthy()
+
+    await recordsTab!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.query.panel).toBe('records')
+    expect(router.currentRoute.value.fullPath).toBe('/challenges/1?panel=records')
+  })
+
+  it('切回默认题目 tab 时应清掉 panel query', async () => {
+    await router.push('/challenges/1?panel=records')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const questionTab = wrapper.findAll('button').find((node) => node.text().trim() === '题目')
+    expect(questionTab).toBeTruthy()
+
+    await questionTab!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.query.panel).toBeUndefined()
+    expect(router.currentRoute.value.fullPath).toBe('/challenges/1')
   })
 
   it('应仅保留外层主容器卡片并移除内部二级卡片', async () => {
@@ -314,7 +385,7 @@ describe('ChallengeDetail', () => {
     expect(solutionTab).toBeTruthy()
 
     await solutionTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.text()).toContain('解出题目后可查看推荐题解与社区题解')
     expect(wrapper.text()).not.toContain('精选官方题解')
@@ -535,7 +606,7 @@ describe('ChallengeDetail', () => {
     expect(writeupTab).toBeTruthy()
 
     await writeupTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.text()).toContain('解题过程复盘')
   })
@@ -576,7 +647,7 @@ describe('ChallengeDetail', () => {
     expect(topTabs[1].attributes('aria-selected')).toBe('false')
 
     await topTabs[1].trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     const nestedTablists = wrapper.findAll('[role="tablist"]')
     expect(nestedTablists.length).toBeGreaterThanOrEqual(2)
@@ -615,7 +686,7 @@ describe('ChallengeDetail', () => {
     expect(solutionTab).toBeTruthy()
 
     await solutionTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     const recommendedTab = wrapper.get('#challenge-solutions-tab-recommended')
     const communityTab = wrapper.get('#challenge-solutions-tab-community')
@@ -677,7 +748,7 @@ describe('ChallengeDetail', () => {
     const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '编写题解')
     expect(writeupTab).toBeTruthy()
     await writeupTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     const titleInput = wrapper.find('input[placeholder*="完整链路"]')
     const contentInput = wrapper.find('textarea')
@@ -749,19 +820,19 @@ describe('ChallengeDetail', () => {
     expect(writeupTab).toBeTruthy()
 
     await solutionTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.text()).not.toContain('Flag 提交')
     expect(wrapper.text()).toContain('题解区')
 
     await recordsTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.text()).not.toContain('Flag 提交')
     expect(wrapper.text()).toContain('提交记录')
 
     await writeupTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.text()).not.toContain('Flag 提交')
     expect(wrapper.text()).toContain('解题过程复盘')
@@ -801,7 +872,7 @@ describe('ChallengeDetail', () => {
     expect(solutionTab).toBeTruthy()
 
     await solutionTab!.trigger('click')
-    await wrapper.vm.$nextTick()
+    await flushPromises()
 
     expect(wrapper.text()).not.toContain('Solved Challenge')
     expect(wrapper.text()).not.toContain('分值')

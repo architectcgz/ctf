@@ -12,7 +12,6 @@
     :go-back-to-challenge-list="goBackToChallengeList"
     :handle-score-rail-probe="handleScoreRailProbe"
     :handle-solution-tab-keydown="handleSolutionTabKeydown"
-    :handle-workspace-tab-keydown="handleWorkspaceTabKeydown"
     :instance="instance"
     :instance-creating="instanceCreating"
     :instance-destroying="instanceDestroying"
@@ -31,11 +30,10 @@
     :sanitized-active-solution-content="sanitizedActiveSolutionContent"
     :sanitized-description="sanitizedDescription"
     :score-rail-probe-message="scoreRailProbeMessage"
-    :select-solution-tab="selectSolutionTabFromWidget"
-    :select-workspace-tab="selectWorkspaceTabFromWidget"
+    :select-solution-tab="selectSolutionTab"
+    :select-workspace-tab="selectWorkspaceTab"
     :set-selected-solution-id="setSelectedSolutionId"
     :set-solution-tab-button-ref="setSolutionTabButtonRef"
-    :set-tab-button-ref="setTabButtonRef"
     :start-instance="startInstance"
     :submission-loading="submissionLoading"
     :submission-record-message="submissionRecordMessage"
@@ -72,11 +70,8 @@
 </template>
 
 <script setup lang="ts">
-import type { ChallengeSolutionTab } from '@/features/challenge-detail'
 import { useChallengeDetailPage } from '@/features/challenge-detail'
 import { ChallengeDetailWorkspace } from '@/widgets/challenge-detail-workspace'
-
-type WorkspaceTab = 'question' | 'solution' | 'records' | 'writeup'
 
 const {
   activeSolution,
@@ -95,7 +90,6 @@ const {
   goBackToChallengeList,
   handleScoreRailProbe,
   handleSolutionTabKeydown,
-  handleWorkspaceTabKeydown,
   instance,
   instanceCreating,
   instanceDestroying,
@@ -118,7 +112,6 @@ const {
   selectWorkspaceTab,
   selectedSolutionId,
   setSolutionTabButtonRef,
-  setTabButtonRef,
   startInstance,
   submissionLoading,
   submissionRecordMessage,
@@ -160,13 +153,5 @@ function setWriteupContent(value: string): void {
 
 function setWriteupTitle(value: string): void {
   writeupTitle.value = value
-}
-
-function selectWorkspaceTabFromWidget(tab: WorkspaceTab): void {
-  selectWorkspaceTab(tab)
-}
-
-function selectSolutionTabFromWidget(tab: ChallengeSolutionTab): void {
-  selectSolutionTab(tab)
 }
 </script>

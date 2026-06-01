@@ -61,12 +61,25 @@ describe('challenge page ui strategy', () => {
     expect(challengeDetailPresentationSource).not.toContain('bg-[var(--color-success)]')
   })
 
-  it('challenge detail state ownership should keep tab keyboard logic in the page model and keep presentation pure', () => {
+  it('challenge detail state ownership should keep workspace panel query in the page model while moving workspace tab keyboard logic to the widget', () => {
+    expect(challengeDetailPageSource).toContain(
+      "import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'"
+    )
+    expect(challengeDetailPageSource).not.toContain(
+      "import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'"
+    )
+    expect(challengeDetailPageSource).toContain('useRouteQueryTabs<WorkspaceTab>({')
     expect(challengeDetailPageSource).toContain(
       "import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'"
     )
     expect(challengeDetailPageSource).toContain('useTabKeyboardNavigation<ChallengeSolutionTab>({')
+    expect(challengeDetailWidgetSource).toContain(
+      "import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'"
+    )
+    expect(challengeDetailWidgetSource).toContain('useTabKeyboardNavigation<WorkspaceTab>({')
     expect(challengeDetailSource).toContain('function setSelectedSolutionId(value: string | null): void {')
+    expect(challengeDetailSource).not.toContain('function selectWorkspaceTabFromWidget(')
+    expect(challengeDetailSource).not.toContain('function selectSolutionTabFromWidget(')
     expect(challengeDetailSource).not.toContain('function focusTab(id: string): void {')
     expect(challengeDetailSource).not.toContain('function handleSolutionTabKeydown(')
     expect(challengeDetailPresentationSource).not.toContain('function handleSolutionTabKeydown(')

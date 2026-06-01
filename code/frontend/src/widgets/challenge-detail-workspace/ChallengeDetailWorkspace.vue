@@ -259,6 +259,7 @@
 </style>
 
 <script setup lang="ts">
+import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import type {
   ChallengeDetailData,
@@ -297,7 +298,7 @@ interface SubmissionRecordItem {
   submittedAt?: string
 }
 
-defineProps<{
+const props = defineProps<{
   activeSolution: ChallengeSolutionCard | null
   activeSolutionTab: ChallengeSolutionTab
   activeWorkspaceTab: WorkspaceTab
@@ -310,7 +311,6 @@ defineProps<{
   goBackToChallengeList: () => void | Promise<void>
   handleScoreRailProbe: () => void
   handleSolutionTabKeydown: (event: KeyboardEvent, index: number) => void
-  handleWorkspaceTabKeydown: (event: KeyboardEvent, index: number) => void
   instance: InstanceData | null
   instanceCreating: boolean
   instanceDestroying: boolean
@@ -329,11 +329,10 @@ defineProps<{
   sanitizedActiveSolutionContent: string
   sanitizedDescription: string
   scoreRailProbeMessage: string
-  selectSolutionTab: (tab: ChallengeSolutionTab) => void
-  selectWorkspaceTab: (tab: WorkspaceTab) => void
+  selectSolutionTab: (tab: ChallengeSolutionTab) => void | Promise<void>
+  selectWorkspaceTab: (tab: WorkspaceTab) => void | Promise<void>
   setSelectedSolutionId: (value: string | null) => void
   setSolutionTabButtonRef: (tabId: ChallengeSolutionTab, element: HTMLButtonElement | null) => void
-  setTabButtonRef: (tabId: WorkspaceTab, element: HTMLButtonElement | null) => void
   startInstance: () => void | Promise<void>
   submissionLoading: boolean
   submissionRecordMessage: (status: ChallengeSubmissionRecordStatus) => string
@@ -367,4 +366,11 @@ defineProps<{
   downloadAttachment: () => void | Promise<void>
   changeSubmissionRecordPage: (page: number) => void
 }>()
+
+const workspaceTabOrder = props.workspaceTabs.map((tab) => tab.id) as WorkspaceTab[]
+const { setTabButtonRef, handleTabKeydown: handleWorkspaceTabKeydown } =
+  useTabKeyboardNavigation<WorkspaceTab>({
+    orderedTabs: workspaceTabOrder,
+    selectTab: (tab) => props.selectWorkspaceTab(tab),
+  })
 </script>

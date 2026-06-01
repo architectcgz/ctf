@@ -8,11 +8,11 @@ import type {
 } from '@/api/contracts'
 import { useProbeEasterEggs } from '@/shared/model/common/useProbeEasterEggs'
 import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
+import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'
 import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 import { useSanitize } from '@/shared/lib/sanitize/useSanitize'
 import { useToast } from '@/shared/model/common/useToast'
-import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'
 
 import {
   useChallengeDetailInteractions,
@@ -77,10 +77,8 @@ export function useChallengeDetailPage() {
   const workspaceTabOrder = workspaceTabs.map((tab) => tab.id) as WorkspaceTab[]
   const {
     activeTab: activeWorkspaceTab,
-    setTabButtonRef,
     selectTab: selectWorkspaceTab,
-    handleTabKeydown: handleWorkspaceTabKeydown,
-  } = useUrlSyncedTabs<WorkspaceTab>({
+  } = useRouteQueryTabs<WorkspaceTab>({
     orderedTabs: workspaceTabOrder,
     defaultTab: 'question',
   })
@@ -260,7 +258,7 @@ export function useChallengeDetailPage() {
     void push(challengeDetailListRoute)
   }
 
-  function resetChallengePageState(resetWorkspaceTab = false): void {
+  function resetChallengePageState(): void {
     challenge.value = null
     challengeLoadState.value = null
     submissionRecordPage.value = 1
@@ -269,9 +267,6 @@ export function useChallengeDetailPage() {
     hasLoadedWriteup.value = false
     resetChallengeInteractions()
     clearSolutions()
-    if (resetWorkspaceTab) {
-      selectWorkspaceTab('question')
-    }
   }
 
   async function ensureWorkspaceTabData(tab: WorkspaceTab): Promise<void> {
@@ -325,8 +320,10 @@ export function useChallengeDetailPage() {
   watch(
     challengeId,
     () => {
-      resetChallengePageState(true)
-      void initializeChallengePage()
+      void (async () => {
+        resetChallengePageState()
+        await initializeChallengePage()
+      })()
     },
     { immediate: true }
   )
@@ -365,7 +362,6 @@ export function useChallengeDetailPage() {
     goBackToChallengeList,
     handleScoreRailProbe,
     handleSolutionTabKeydown,
-    handleWorkspaceTabKeydown,
     instance,
     instanceCreating,
     instanceDestroying,
@@ -392,7 +388,6 @@ export function useChallengeDetailPage() {
     selectWorkspaceTab,
     selectedSolutionId,
     setSolutionTabButtonRef,
-    setTabButtonRef,
     startInstance,
     submissionLoading,
     submissionRecordMessage,
