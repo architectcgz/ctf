@@ -222,6 +222,7 @@
 - 页面 owner 优先以 feature model 组合多个子 composable，而不是新增一个更大的页面文件
 - query/tab 同步继续通过 `shared/model/navigation/useRouteQueryTabs()` 或 `shared/model/navigation/useUrlSyncedTabs()` 收口
 - 只有跨页面共享的数据进 store；其余数据跟随页面生命周期释放
+- 同一份输入语义的 `normalize / default / validate` 只能有一个 owner：route/query 语义留在 page model 或 feature 本地 helper，持久化配置回填留在 feature 内 hydration owner，payload builder 留在 feature support；`shared/model/navigation/*` 和 transport flow 不复制业务 normalize
 
 ## 4. Guardrail
 

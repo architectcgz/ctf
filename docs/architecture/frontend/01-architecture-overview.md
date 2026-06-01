@@ -90,7 +90,7 @@ code/frontend/
 - 教师工作区正式 URL：`/academy/*`
 - 平台工作区正式 URL：`/platform/*`
 - 学生端当前是混合命名，不是统一 `/student/*` 前缀
-- 旧 `/teacher/*` 当前只保留 redirect 兼容，不再作为活动入口
+- 旧 `/teacher/*` 不再作为前端运行时入口；登录 redirect 参数遇到旧教师端路径时，回退到角色默认首页
 
 详情见：
 
