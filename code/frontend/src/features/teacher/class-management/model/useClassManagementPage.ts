@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { teacherClassStudentsRoute, teacherDashboardRoute } from './teacherClassManagementRoutes'
 import { useTeacherClassDirectory } from './useTeacherClassDirectory'
 
-export function useClassManagementPage() {
+export function useTeacherClassManagementPage() {
   const authStore = useAuthStore()
   const reportDialogVisible = ref(false)
   const directory = useTeacherClassDirectory()

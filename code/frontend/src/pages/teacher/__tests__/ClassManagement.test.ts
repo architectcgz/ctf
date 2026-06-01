@@ -7,6 +7,7 @@ import ClassManagement from '@/pages/teacher/ClassManagementRoutePage.vue'
 import classManagementViewSource from '@/pages/teacher/ClassManagementRoutePage.vue?raw'
 import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import classManagementSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
+import teacherClassManagementPageSource from '@/features/teacher/class-management/ui/TeacherClassManagementPage.vue?raw'
 import classManagementPageModelSource from '@/features/teacher/class-management/model/useClassManagementPage.ts?raw'
 import teacherClassDirectorySource from '@/features/teacher/class-management/model/useTeacherClassDirectory.ts?raw'
 import teacherClassManagementHeaderActionsSource from '@/features/teacher/class-management/ui/TeacherClassManagementHeaderActions.vue?raw'
@@ -284,14 +285,19 @@ describe('ClassManagement', () => {
 
   it('页面应通过 feature model 获取班级目录状态，不再直接耦合 teacher api', () => {
     expect(classManagementViewSource).toContain("from '@/features/teacher/class-management'")
-    expect(classManagementViewSource).toContain('ClassManagementPage')
-    expect(classManagementViewSource).toContain('useClassManagementPage')
-    expect(classManagementViewSource).toContain(
+    expect(classManagementViewSource).toContain('TeacherClassManagementPage')
+    expect(classManagementViewSource).not.toContain('useClassManagementPage')
+    expect(classManagementViewSource).not.toContain(
       "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
     expect(classManagementViewSource).not.toContain("from '@/api/teacher'")
     expect(classManagementViewSource).not.toContain('getClasses')
     expect(classManagementViewSource).not.toContain('const totalPages = computed')
+    expect(teacherClassManagementPageSource).toContain(
+      "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
+    )
+    expect(teacherClassManagementPageSource).toContain('useTeacherClassManagementPage')
+    expect(teacherClassManagementPageSource).toContain('ClassManagementPage')
     expect(classReportExportDialogSource).toContain(
       "import { useClassReportExport } from '@/features/teaching/class-report-export'"
     )
@@ -299,6 +305,10 @@ describe('ClassManagement', () => {
     expect(classManagementPageModelSource).not.toContain("from 'vue-router'")
     expect(classManagementPageModelSource).toContain("from './useTeacherClassDirectory'")
     expect(classManagementPageModelSource).not.toContain("from '@/api/teacher'")
+    expect(classManagementPageModelSource).toContain(
+      'export function useTeacherClassManagementPage()'
+    )
+    expect(classManagementPageModelSource).not.toContain('export function useClassManagementPage()')
     expect(teacherClassDirectorySource).toContain("from '@/api/teacher'")
     expect(classManagementPageModelSource).toContain('dashboardRoute: teacherDashboardRoute')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
