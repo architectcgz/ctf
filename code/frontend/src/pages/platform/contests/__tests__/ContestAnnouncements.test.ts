@@ -5,6 +5,7 @@ import ContestAnnouncements from '@/pages/platform/contests/ContestAnnouncements
 import contestAnnouncementsSource from '@/pages/platform/contests/ContestAnnouncementsRoutePage.vue?raw'
 import contestAnnouncementsDataSource from '@/features/platform/contests/model/useContestAnnouncementsData.ts?raw'
 import contestAnnouncementsPageModelSource from '@/features/platform/contests/model/useContestAnnouncementsPage.ts?raw'
+import platformContestAnnouncementsPageSource from '@/features/platform/contests/ui/PlatformContestAnnouncementsPage.vue?raw'
 import contestAnnouncementsTopbarPanelSource from '@/features/platform/contests/ui/ContestAnnouncementsTopbarPanel.vue?raw'
 import contestAnnouncementsWorkspacePanelSource from '@/features/platform/contests/ui/ContestAnnouncementsWorkspacePanel.vue?raw'
 import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
@@ -128,15 +129,17 @@ describe('ContestAnnouncements', () => {
   })
 
   it('路由页应仅负责组合，不直接耦合公告页加载流程', () => {
-    expect(contestAnnouncementsSource).toContain('useContestAnnouncementsPage')
+    expect(contestAnnouncementsSource).toContain('PlatformContestAnnouncementsPage')
+    expect(contestAnnouncementsSource).not.toContain('useContestAnnouncementsPage')
     expect(contestAnnouncementsSource).not.toContain("from '@/api/admin/contests'")
     expect(contestAnnouncementsPageModelSource).toContain("from './useContestAnnouncementsData'")
     expect(contestAnnouncementsPageModelSource).not.toContain("from '@/api/admin/contests'")
     expect(contestAnnouncementsPageModelSource).not.toContain("from 'vue-router'")
     expect(contestAnnouncementsPageModelSource).toContain('backToStudioRoute: computed(() => buildContestEditRoute(contestId.value))')
     expect(contestAnnouncementsDataSource).toContain("from '@/api/admin/contests'")
-    expect(contestAnnouncementsSource).toContain('ContestAnnouncementsTopbarPanel')
-    expect(contestAnnouncementsSource).toContain('ContestAnnouncementsWorkspacePanel')
+    expect(platformContestAnnouncementsPageSource).toContain('useContestAnnouncementsPage')
+    expect(platformContestAnnouncementsPageSource).toContain('ContestAnnouncementsTopbarPanel')
+    expect(platformContestAnnouncementsPageSource).toContain('ContestAnnouncementsWorkspacePanel')
     expect(contestAnnouncementsTopbarPanelSource).toContain(
       "from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
