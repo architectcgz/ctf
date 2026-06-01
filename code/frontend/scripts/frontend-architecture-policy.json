@@ -77,6 +77,7 @@
     "src/features/auth/model/useAuthPublicApiBoundary.test.ts",
     "src/features/notifications/model/useNotificationDrawerPublicApiBoundary.test.ts",
     "src/entities/notification/model/notificationTypeMetaOwnershipBoundary.test.ts",
-    "src/entities/instance/model/presentationBoundary.test.ts"
+    "src/entities/instance/model/presentationBoundary.test.ts",
+    "src/features/challenge-topology-studio/model/topologyStudioBoundary.test.ts"
   ]
 }
