@@ -6,6 +6,7 @@ import instancePresentationSource from '@/entities/instance/model/presentation.t
 import PlatformInstanceManagement from '@/pages/platform/InstanceManageRoutePage.vue'
 import adminInstanceManageSource from '@/pages/platform/InstanceManageRoutePage.vue?raw'
 import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
+import platformInstanceManagementPageSource from '@/features/platform/instance-management/ui/PlatformInstanceManagementPage.vue?raw'
 import instanceManageHeroPanelSource from '@/features/platform/instance-management/ui/InstanceManageHeroPanel.vue?raw'
 import instanceManageWorkspacePanelSource from '@/features/platform/instance-management/ui/InstanceManageWorkspacePanel.vue?raw'
 import platformInstanceManagementModelSource from '@/features/platform/instance-management/model/usePlatformInstanceManagementPage.ts?raw'
@@ -121,7 +122,10 @@ describe('PlatformInstanceManagement', () => {
 
   it('应保留当前后台实例页样式并复用 admin 实例目录接口 owner', async () => {
     expect(adminInstanceManageSource).toContain("from '@/features/platform/instance-management'")
-    expect(adminInstanceManageSource).toContain('usePlatformInstanceManagementPage')
+    expect(adminInstanceManageSource).toContain('PlatformInstanceManagementPage')
+    expect(adminInstanceManageSource).not.toContain('usePlatformInstanceManagementPage')
+    expect(adminInstanceManageSource).not.toContain('InstanceManageHeroPanel')
+    expect(adminInstanceManageSource).not.toContain('InstanceManageWorkspacePanel')
     expect(platformInstanceManagementModelSource).toContain('InstanceDirectoryItem')
     expect(platformInstanceManagementModelSource).toContain(
       "from '@/features/managed-instance-directory'"
@@ -147,13 +151,15 @@ describe('PlatformInstanceManagement', () => {
     expect(adminInstanceManageSource).not.toContain("from '@/shared/model/common/useDestructiveConfirm'")
     expect(adminInstanceManageSource).not.toContain("from '@/api/admin'")
     expect(adminInstanceManageSource).not.toContain("from '@/composables/useAdminDestructiveConfirm'")
-    expect(adminInstanceManageSource).toContain('InstanceManageWorkspacePanel')
-    expect(adminInstanceManageSource).toContain('InstanceManageHeroPanel')
-    expect(adminInstanceManageSource).toContain('<InstanceManageHeroPanel')
-    expect(adminInstanceManageSource).toContain('<InstanceManageWorkspacePanel')
-    expect(adminInstanceManageSource).toContain(
+    expect(platformInstanceManagementPageSource).toContain('usePlatformInstanceManagementPage')
+    expect(platformInstanceManagementPageSource).toContain('InstanceManageWorkspacePanel')
+    expect(platformInstanceManagementPageSource).toContain('InstanceManageHeroPanel')
+    expect(platformInstanceManagementPageSource).toContain('<InstanceManageHeroPanel')
+    expect(platformInstanceManagementPageSource).toContain('<InstanceManageWorkspacePanel')
+    expect(platformInstanceManagementPageSource).toContain(
       'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-instance-manage-shell"'
     )
+    expect(platformInstanceManagementPageSource).not.toContain("from '@/api/instances'")
     expect(instanceManageHeroPanelSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(instanceManageHeroPanelSource).toContain('<AppRouteLink')
     expect(instanceManageHeroPanelSource).toContain('返回概览')
@@ -181,14 +187,13 @@ describe('PlatformInstanceManagement', () => {
     expect(instanceManageWorkspacePanelSource).toContain('<AppRouteLink')
     expect(instanceManageWorkspacePanelSource).toContain('search-placeholder="检索实例、题目、用户或访问地址..."')
     expect(instanceManageWorkspacePanelSource).toContain('filter-panel-title="实例筛选"')
-    expect(instanceManageWorkspacePanelSource).toContain("label: '班级'")
     expect(instanceManageWorkspacePanelSource).toContain('class="instance-user-link"')
     expect(instanceManageWorkspacePanelSource).toContain('class="instance-status-pill"')
     expect(instanceManageWorkspacePanelSource).toContain('getInstanceStatusPillClass')
     expect(instanceManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--danger ui-btn--xs"')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
-    expect(adminInstanceManageSource).not.toContain('bg-green-100 text-green-700')
-    expect(adminInstanceManageSource).not.toContain('bg-slate-100 text-slate-600')
+    expect(platformInstanceManagementPageSource).not.toContain('bg-green-100 text-green-700')
+    expect(platformInstanceManagementPageSource).not.toContain('bg-slate-100 text-slate-600')
 
     const { wrapper } = await mountPage()
 
