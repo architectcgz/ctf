@@ -1,14 +1,8 @@
-import type { Component, ComponentPublicInstance } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import type { Ref } from 'vue'
 
 import type { NotificationItem } from '@/api/contracts'
-
-/** 通知类型元数据的展示信息（纯展示，来自 features/layout bridge） */
-export interface NotificationDrawerTypeMeta {
-  icon: Component
-  label: string
-  accentColor: string
-}
+import type { NotificationTypeMeta } from '@/entities/notification'
 
 /**
  * 通知抽屉控制器的公共接口。
@@ -21,7 +15,7 @@ export interface NotificationDrawerController {
   unreadCount: Ref<number>
   isMarkingAllRead: Ref<boolean>
   items: Ref<NotificationItem[]>
-  typeMeta: (type: string) => NotificationDrawerTypeMeta
+  typeMeta: (type: string) => NotificationTypeMeta
   close: () => void
   toggleOpen: () => void
   goToNotifications: () => void

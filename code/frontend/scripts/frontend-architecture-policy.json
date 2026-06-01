@@ -75,6 +75,8 @@
     "src/features/layout/model/useLayoutBridgeBoundaries.test.ts",
     "src/features/layout/model/useLayoutPublicApiBoundary.test.ts",
     "src/features/auth/model/useAuthPublicApiBoundary.test.ts",
-    "src/features/notifications/model/useNotificationDrawerPublicApiBoundary.test.ts"
+    "src/features/notifications/model/useNotificationDrawerPublicApiBoundary.test.ts",
+    "src/entities/notification/model/notificationTypeMetaOwnershipBoundary.test.ts",
+    "src/entities/instance/model/presentationBoundary.test.ts"
   ]
 }

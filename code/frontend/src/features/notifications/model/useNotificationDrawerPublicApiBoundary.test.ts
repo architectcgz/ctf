@@ -29,10 +29,10 @@ describe('notification drawer public API boundaries', () => {
     expect(useNotificationDrawerSource).toContain('unreadCount,')
   })
 
-  it('NotificationTypeMeta 应在 feature 内部定义，不应散落到 shared 层', () => {
-    expect(useNotificationDrawerSource).toContain('export interface NotificationTypeMeta')
-    expect(useNotificationDrawerSource).toContain('icon: Component')
-    expect(useNotificationDrawerSource).toContain('label: string')
-    expect(useNotificationDrawerSource).toContain('accentColor: string')
+  it('NotificationTypeMeta 应来自 entities/notification，不在 feature 或 shared 中重复定义', () => {
+    expect(useNotificationDrawerSource).toContain("import type { NotificationTypeMeta } from '@/entities/notification'")
+    // 不应在 feature 内部重新定义
+    expect(useNotificationDrawerSource).not.toContain('export interface NotificationTypeMeta')
+    expect(useNotificationDrawerSource).not.toContain('interface NotificationTypeMeta')
   })
 })

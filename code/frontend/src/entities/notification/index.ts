@@ -1,4 +1,4 @@
-export type { NotificationAccent, NotificationType } from './model'
+export type { NotificationAccent, NotificationType, NotificationTypeMeta } from './model'
 export {
   getNotificationAccentColor,
   getNotificationReadStateLabel,

@@ -47,17 +47,11 @@
 </template>
 
 <script setup lang="ts">
-import type { Component } from 'vue'
 import { Bell } from 'lucide-vue-next'
 
+import type { NotificationTypeMeta } from '@/entities/notification'
 import type { StoredNotificationItem } from '@/stores/notification'
 import { formatDate } from '@/utils/format'
-
-interface NotificationDrawerTypeMeta {
-  icon: Component
-  label: string
-  accentColor: string
-}
 
 defineProps<{
   items: StoredNotificationItem[]
@@ -65,7 +59,7 @@ defineProps<{
     title: string
     copy: string
   }
-  typeMeta: (type: string) => NotificationDrawerTypeMeta
+  typeMeta: (type: string) => NotificationTypeMeta
 }>()
 
 const emit = defineEmits<{

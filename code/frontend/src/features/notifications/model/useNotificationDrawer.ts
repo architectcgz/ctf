@@ -6,14 +6,7 @@ import { markAsRead as markAsReadApi } from '@/api/notification'
 import { useToast } from '@/shared/model/common/useToast'
 import type { WebSocketStatus } from '@/shared/model/realtime/useWebSocket'
 import { useNotificationStore } from '@/stores/notification'
-
-export interface NotificationTypeMeta {
-  icon: Component
-  label: string
-  accentColor: string
-  iconWrapStyle: Record<string, string>
-  badgeStyle: Record<string, string>
-}
+import type { NotificationTypeMeta } from '@/entities/notification'
 
 interface StatusMeta {
   label: string
