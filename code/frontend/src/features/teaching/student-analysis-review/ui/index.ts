@@ -1,1 +1,6 @@
 export { default as InterventionPanel } from './InterventionPanel.vue'
+export { default as StudentInsightAttackSessionsSection } from './StudentInsightAttackSessionsSection.vue'
+export { default as StudentInsightManualReviewSection } from './StudentInsightManualReviewSection.vue'
+export { default as StudentInsightWriteupsSection } from './StudentInsightWriteupsSection.vue'
+export { default as StudentReviewWorkspace } from './StudentReviewWorkspace.vue'
+export type { StudentInsightSection } from './studentInsightShared'

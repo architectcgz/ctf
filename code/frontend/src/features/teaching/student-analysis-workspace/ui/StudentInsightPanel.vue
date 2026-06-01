@@ -17,12 +17,14 @@ import type {
   TimelineEvent,
 } from '@/api/contracts'
 import { TrainingTimelinePanel } from '@/entities/training-timeline'
-import StudentInsightAttackSessionsSection from './StudentInsightAttackSessionsSection.vue'
-import StudentInsightManualReviewSection from './StudentInsightManualReviewSection.vue'
+import {
+  StudentInsightAttackSessionsSection,
+  StudentInsightManualReviewSection,
+  StudentInsightWriteupsSection,
+  type StudentInsightSection,
+} from '@/features/teaching/student-analysis-review'
 import StudentInsightOverviewSection from './StudentInsightOverviewSection.vue'
 import StudentInsightRecommendationsSection from './StudentInsightRecommendationsSection.vue'
-import StudentInsightWriteupsSection from './StudentInsightWriteupsSection.vue'
-import type { StudentInsightSection } from './studentInsightShared'
 
 const props = defineProps<{
   student: StudentDirectoryItem | null

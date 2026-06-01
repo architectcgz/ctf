@@ -11,10 +11,10 @@ import studentAnalysisPageSource from '@/features/teaching/student-analysis-work
 import studentAnalysisWorkspacePageSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisWorkspacePage.vue?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
-import studentInsightAttackSessionsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightAttackSessionsSection.vue?raw'
+import studentInsightAttackSessionsSectionSource from '@/features/teaching/student-analysis-review/ui/StudentInsightAttackSessionsSection.vue?raw'
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
-import studentReviewWorkspaceSource from '@/features/teaching/student-analysis-workspace/ui/StudentReviewWorkspace.vue?raw'
+import studentReviewWorkspaceSource from '@/features/teaching/student-analysis-review/ui/StudentReviewWorkspace.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 import {
   reportDialogStub,
@@ -303,6 +303,12 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightPanelSource).toContain('StudentInsightOverviewSection')
     expect(studentInsightPanelSource).toContain('StudentInsightRecommendationsSection')
     expect(studentInsightPanelSource).toContain('StudentInsightAttackSessionsSection')
+    expect(studentInsightPanelSource).toContain(
+      "from '@/features/teaching/student-analysis-review'"
+    )
+    expect(studentInsightPanelSource).not.toContain(
+      "from './StudentInsightAttackSessionsSection.vue'"
+    )
     expect(studentInsightPanelSource).not.toContain('TeacherStudentReviewWorkspace')
     expect(studentInsightOverviewSectionSource).toContain('<SkillRadar :scores="radarScores" />')
     expect(studentInsightRecommendationsSectionSource).toContain(
@@ -310,7 +316,7 @@ describe('TeacherStudentAnalysis', () => {
     )
   })
 
-  it('复盘区 section 应直接消费同 feature 下的共享工作台组件', () => {
+  it('复盘区 section 应由 student-analysis-review feature 承接共享工作台组件', () => {
     expect(studentInsightAttackSessionsSectionSource).toContain(
       "import StudentReviewWorkspace from './StudentReviewWorkspace.vue'"
     )
