@@ -177,6 +177,10 @@ describe('ClassReportExportDialog', () => {
     expect(classReportExportDialogSource).toContain(
       "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
     )
+    expect(classReportExportPreviewSectionSource).toContain("from '@/entities/class-insight'")
+    expect(classReportExportPreviewSectionSource).not.toContain(
+      "@/features/teaching/class-students-workspace/ui/ClassInsightsPanel.vue"
+    )
     expect(classReportExportDialogSource).toContain('<AdminSurfaceModal')
     expect(classReportExportDialogSource).not.toContain('<ElDialog')
     expect(classReportExportDialogSource).toContain('class="ui-field')

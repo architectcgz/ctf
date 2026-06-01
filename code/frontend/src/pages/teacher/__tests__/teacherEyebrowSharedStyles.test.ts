@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import teacherClassInsightsSource from '@/features/teaching/class-students-workspace/ui/ClassInsightsPanel.vue?raw'
-import teacherClassReviewSource from '@/features/teaching/class-students-workspace/ui/ClassReviewPanel.vue?raw'
-import teacherClassTrendSource from '@/features/teaching/class-students-workspace/ui/ClassTrendPanel.vue?raw'
+import teacherClassInsightsSource from '@/entities/class-insight/ui/ClassInsightsPanel.vue?raw'
+import teacherClassReviewSource from '@/entities/class-insight/ui/ClassReviewPanel.vue?raw'
+import teacherClassTrendSource from '@/entities/class-insight/ui/ClassTrendPanel.vue?raw'
 import interventionPanelSource from '@/features/teaching/student-analysis-review/ui/InterventionPanel.vue?raw'
 import classManagementSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
 import classStudentsSourceBase from '@/features/teaching/class-students-workspace/ui/ClassStudentsPage.vue?raw'

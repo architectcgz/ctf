@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { ClassInsightTrendData } from '@/api/contracts'
+import type { ClassInsightTrendData } from '../../../api/contracts'
 import LineChart from '@/shared/ui/charts/LineChart.vue'
 
 const props = defineProps<{
@@ -111,7 +111,7 @@ const series = computed(() => [
 </template>
 
 <style scoped>
-@import '../../assets/styles/teacher-panel-shell.css';
+@import '../../../assets/styles/teacher-panel-shell.css';
 
 .teacher-panel__chart {
   background: linear-gradient(

@@ -181,6 +181,7 @@
   - 当前 consumer：`features/class-students-workspace/ui/ClassStudentsPage.vue`、`features/teacher-class-report-export/ui/ClassReportExportPreviewSection.vue`
   - 目标 owner：优先中性化后并入 `features/class-students-workspace/ui` 或提炼为实体/共享展示块；不要继续顶层挂在 `components/teacher`
   - 优先级：`P1`
+  - `2026-06-01` 进展：`entities/class-insight` 已承接 `ClassInsightsPanel.vue`、`ClassReviewPanel.vue`、`ClassTrendPanel.vue` 三块稳定展示 panel，`ClassStudentsPage.vue` 与 `ClassReportExportPreviewSection.vue` 也已改为只通过实体 public API 复用；这条线在 teacher 顶层 panel 上的 cross-feature deep import 已收口，当前剩余重点转向 `StudentInsightPanel.vue` 与更深层 workspace owner。
 - `teacher/StudentInsightPanel.vue`
   - 当前 consumer：`features/student-analysis-workspace/ui/StudentAnalysisPage.vue`
   - 目标 owner：`features/student-analysis-workspace/ui`

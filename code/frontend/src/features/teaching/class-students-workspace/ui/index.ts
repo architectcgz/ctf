@@ -1,8 +1,5 @@
 export { default as ClassStudentsPage } from './ClassStudentsPage.vue'
 export { default as TeacherClassStudentsPage } from './TeacherClassStudentsPage.vue'
-export { default as ClassInsightsPanel } from './ClassInsightsPanel.vue'
-export { default as ClassReviewPanel } from './ClassReviewPanel.vue'
-export { default as ClassTrendPanel } from './ClassTrendPanel.vue'
 export { default as ClassStudentsDirectoryPanel } from './ClassStudentsDirectoryPanel.vue'
 export { default as ClassStudentsInsightWindowPanel } from './ClassStudentsInsightWindowPanel.vue'
 export { default as ClassStudentsOverviewPanel } from './ClassStudentsOverviewPanel.vue'

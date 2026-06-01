@@ -5,7 +5,7 @@ import type {
   AdviceSeverity,
   ClassInsightReviewData,
   ClassInsightReviewItemData,
-} from '@/api/contracts'
+} from '../../../api/contracts'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
 import { getUserDisplayName } from '@/entities/user'
@@ -136,7 +136,7 @@ function shouldShowRecommendationFallback(item: ClassInsightReviewItemData): boo
 </template>
 
 <style scoped>
-@import '../../assets/styles/teacher-panel-shell.css';
+@import '../../../assets/styles/teacher-panel-shell.css';
 
 .review-list {
   display: grid;

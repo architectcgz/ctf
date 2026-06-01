@@ -139,9 +139,7 @@ import type {
   ClassInsightTrendData,
   StudentDirectoryItem,
 } from '@/api/contracts'
-import ClassInsightsPanel from './ClassInsightsPanel.vue'
-import ClassReviewPanel from './ClassReviewPanel.vue'
-import ClassTrendPanel from './ClassTrendPanel.vue'
+import { ClassInsightsPanel, ClassReviewPanel, ClassTrendPanel } from '@/entities/class-insight'
 import { InterventionPanel } from '@/features/teaching/student-analysis-review'
 import ClassStudentsDirectoryPanel from './ClassStudentsDirectoryPanel.vue'
 import ClassStudentsInsightWindowPanel from './ClassStudentsInsightWindowPanel.vue'

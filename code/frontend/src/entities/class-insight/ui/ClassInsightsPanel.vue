@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { StudentDirectoryItem } from '@/api/contracts'
+import type { StudentDirectoryItem } from '../../../api/contracts'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import { ChallengeCategoryPill, toChallengeCategory } from '@/entities/challenge'
 import { getUserDisplayName, getUserUsernameHandle } from '@/entities/user'
@@ -184,7 +184,7 @@ function weakDimensionCategory(value?: string | null) {
 </template>
 
 <style scoped>
-@import '../../assets/styles/teacher-panel-shell.css';
+@import '../../../assets/styles/teacher-panel-shell.css';
 
 .teacher-insight-layout {
   display: grid;

@@ -12,7 +12,7 @@ import awdReviewWorkspaceSource from '@/widgets/awd-review-workspace/AwdReviewWo
 import awdReviewSurfaceShellSource from '@/widgets/awd-review-workspace/AwdReviewSurfaceShell.vue?raw'
 import awdReviewWorkspaceHeaderSource from '@/widgets/awd-review-workspace/AwdReviewWorkspaceHeader.vue?raw'
 import awdReviewSummaryPanelSource from '@/widgets/awd-review-workspace/AwdReviewSummaryPanel.vue?raw'
-import teacherClassManagementHeaderActionsSource from '@/components/teacher/class-management/TeacherClassManagementHeaderActions.vue?raw'
+import teacherClassManagementHeaderActionsSource from '@/features/teacher/class-management/ui/TeacherClassManagementHeaderActions.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,

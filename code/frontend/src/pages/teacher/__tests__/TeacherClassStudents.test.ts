@@ -10,8 +10,8 @@ import teacherClassStudentsPageSource from '@/features/teaching/class-students-w
 import classStudentsOverviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsInsightWindowPanel.vue?raw'
 import classStudentsDirectoryPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue?raw'
-import classInsightsPanelSource from '@/features/teaching/class-students-workspace/ui/ClassInsightsPanel.vue?raw'
-import classReviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassReviewPanel.vue?raw'
+import classInsightsPanelSource from '@/entities/class-insight/ui/ClassInsightsPanel.vue?raw'
+import classReviewPanelSource from '@/entities/class-insight/ui/ClassReviewPanel.vue?raw'
 import classStudentsPageModelSource from '@/features/teaching/class-students-workspace/model/useClassStudentsPage.ts?raw'
 import userPresentationSource from '@/entities/user/model/presentation.ts?raw'
 
@@ -423,6 +423,7 @@ describe('TeacherClassStudents', () => {
   })
 
   it('班级学生与复盘相关展示名应由 user entity 承接', () => {
+    expect(classStudentsPageSourceBase).toContain("from '@/entities/class-insight'")
     expect(classStudentsDirectoryPanelSource).toContain("from '@/entities/user'")
     expect(classStudentsDirectoryPanelSource).toContain('getUserName')
     expect(classStudentsDirectoryPanelSource).toContain('getUserUsername')

@@ -8,9 +8,9 @@ import classStudentsInsightWindowPanelSource from '@/features/teaching/class-stu
 import classStudentsDirectoryPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue?raw'
 import studentAnalysisSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
 import studentAnalysisOverviewHeroSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
-import classTrendPanelSource from '@/features/teaching/class-students-workspace/ui/ClassTrendPanel.vue?raw'
-import classInsightsPanelSource from '@/features/teaching/class-students-workspace/ui/ClassInsightsPanel.vue?raw'
-import classReviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassReviewPanel.vue?raw'
+import classTrendPanelSource from '@/entities/class-insight/ui/ClassTrendPanel.vue?raw'
+import classInsightsPanelSource from '@/entities/class-insight/ui/ClassInsightsPanel.vue?raw'
+import classReviewPanelSource from '@/entities/class-insight/ui/ClassReviewPanel.vue?raw'
 import interventionPanelSource from '@/features/teaching/student-analysis-review/ui/InterventionPanel.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
@@ -162,9 +162,9 @@ describe('teacher detail surface alignment', () => {
     expect(teacherPanelShellSource).toMatch(
       /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
     )
-    expect(classTrendPanelSource).toContain("@import '../../assets/styles/teacher-panel-shell.css';")
-    expect(classInsightsPanelSource).toContain("@import '../../assets/styles/teacher-panel-shell.css';")
-    expect(classReviewPanelSource).toContain("@import '../../assets/styles/teacher-panel-shell.css';")
+    expect(classTrendPanelSource).toContain("@import '../../../assets/styles/teacher-panel-shell.css';")
+    expect(classInsightsPanelSource).toContain("@import '../../../assets/styles/teacher-panel-shell.css';")
+    expect(classReviewPanelSource).toContain("@import '../../../assets/styles/teacher-panel-shell.css';")
     expect(interventionPanelSource).toContain(
       "@import '../../../assets/styles/teacher-panel-shell.css';"
     )
