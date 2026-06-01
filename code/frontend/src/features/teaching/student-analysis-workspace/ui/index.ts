@@ -1,4 +1,5 @@
 export { default as StudentAnalysisPage } from './StudentAnalysisPage.vue'
+export { default as StudentAnalysisWorkspacePage } from './StudentAnalysisWorkspacePage.vue'
 export { default as StudentAnalysisOverviewHeroPanel } from './StudentAnalysisOverviewHeroPanel.vue'
 export { default as StudentInsightAttackSessionsSection } from './StudentInsightAttackSessionsSection.vue'
 export { default as StudentInsightManualReviewSection } from './StudentInsightManualReviewSection.vue'

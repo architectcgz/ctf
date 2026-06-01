@@ -1,0 +1,97 @@
+<template>
+  <section :class="routeRootClass">
+    <StudentAnalysisPage
+      :selected-student="selectedStudent"
+      :loading-details="loadingDetails"
+      :error="error"
+      :progress="progress"
+      :skill-profile="skillProfile"
+      :recommendations="recommendations"
+      :timeline="timeline"
+      :evidence="evidence"
+      :attack-sessions="attackSessions"
+      :review-challenge-options="reviewChallengeOptions"
+      :review-workspace-loading="reviewWorkspaceLoading"
+      :review-workspace-query="reviewWorkspaceQuery"
+      :active-workspace-tab="activeWorkspaceTab"
+      :writeup-submissions="writeupSubmissions"
+      :writeup-page="writeupPage"
+      :writeup-total="writeupTotal"
+      :writeup-total-pages="writeupTotalPages"
+      :writeup-pagination-loading="writeupPaginationLoading"
+      :manual-review-submissions="manualReviewSubmissions"
+      :active-manual-review="activeManualReview"
+      :manual-review-loading="manualReviewLoading"
+      :manual-review-saving="manualReviewSaving"
+      :solved-rate="solvedRate"
+      :weak-dimensions="weakDimensions"
+      @retry="initialize"
+      @open-class-students="openClassStudents"
+      @open-report-export="openClassReportDialog"
+      @open-review-archive="openReviewArchivePage"
+      @export-review-archive="handleExportReviewArchive"
+      @select-workspace-tab="selectWorkspaceTab"
+      @open-challenge="openChallenge"
+      @open-manual-review="openManualReview"
+      @moderate-writeup="moderateWriteup"
+      @review-manual-review="reviewManualReview"
+      @change-writeup-page="changeWriteupPage"
+      @update-review-workspace-filters="updateReviewWorkspaceFilters"
+    />
+    <ClassReportExportDialog
+      v-model="reportDialogVisible"
+      :default-class-name="selectedClassName"
+    />
+  </section>
+</template>
+
+<script setup lang="ts">
+import { ClassReportExportDialog } from '@/features/teaching/class-report-export'
+import { useStudentAnalysisPage } from '../model'
+import StudentAnalysisPage from './StudentAnalysisPage.vue'
+
+defineProps<{
+  routeRootClass: string
+}>()
+
+const {
+  selectedClassName,
+  selectedStudent,
+  loadingDetails,
+  error,
+  progress,
+  skillProfile,
+  recommendations,
+  timeline,
+  evidence,
+  attackSessions,
+  reviewChallengeOptions,
+  reviewWorkspaceLoading,
+  reviewWorkspaceQuery,
+  activeWorkspaceTab,
+  writeupSubmissions,
+  writeupPage,
+  writeupTotal,
+  writeupTotalPages,
+  writeupPaginationLoading,
+  manualReviewSubmissions,
+  activeManualReview,
+  manualReviewLoading,
+  manualReviewSaving,
+  reportDialogVisible,
+  solvedRate,
+  weakDimensions,
+  initialize,
+  openClassStudents,
+  openChallenge,
+  openClassReportDialog,
+  openReviewArchivePage,
+  handleExportReviewArchive,
+  selectWorkspaceTab,
+  openManualReview,
+  moderateWriteup,
+  reviewManualReview,
+  changeWriteupPage,
+  updateReviewWorkspaceFilters,
+} = useStudentAnalysisPage()
+</script>

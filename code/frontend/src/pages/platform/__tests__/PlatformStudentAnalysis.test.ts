@@ -208,9 +208,10 @@ describe('PlatformStudentAnalysis route owner', () => {
 
     const platformViewSource = readFileSync(platformViewPath, 'utf-8')
     expect(platformViewSource).toContain("from '@/features/teaching/student-analysis-workspace'")
-    expect(platformViewSource).toContain('StudentAnalysisPage')
-    expect(platformViewSource).toContain('useStudentAnalysisPage')
-    expect(platformViewSource).toContain(
+    expect(platformViewSource).toContain('StudentAnalysisWorkspacePage')
+    expect(platformViewSource).not.toContain('StudentAnalysisPage')
+    expect(platformViewSource).not.toContain('useStudentAnalysisPage')
+    expect(platformViewSource).not.toContain(
       "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
     expect(platformViewSource).not.toContain("from '@/api/teacher'")
@@ -223,6 +224,7 @@ describe('PlatformStudentAnalysis route owner', () => {
     expect(platformViewSource).not.toContain('@open-class-management="openClassManagement"')
     expect(platformViewSource).not.toContain('@select-class="selectClass"')
     expect(platformViewSource).not.toContain('@select-student="selectStudent"')
+    expect(platformViewSource).toContain('route-root-class="platform-route-root"')
   })
 
   it('应在运行时把共享页面事件桥接到平台路由和导出弹窗 owner', async () => {

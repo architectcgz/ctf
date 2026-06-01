@@ -176,6 +176,7 @@
   - 当前 consumer：teacher 学员洞察 / student analysis 相关 route 和 feature
   - 目标 owner：`features/student-analysis-workspace/ui`
   - 优先级：`P1`
+  - `2026-06-01` student analysis 进展：teacher / platform 两侧的学员分析 route page 已退回薄壳，`StudentAnalysisWorkspacePage.vue` 现在负责组合 `StudentAnalysisPage`、`ClassReportExportDialog` 与共享 `useStudentAnalysisPage()` page model；由于这条 page model 同时服务 teacher / platform，本轮保持中性命名不再硬收成单角色 owner。
 - `teacher/ClassInsightsPanel.vue`、`ClassReviewPanel.vue`、`ClassTrendPanel.vue`
   - 当前 consumer：`features/class-students-workspace/ui/ClassStudentsPage.vue`、`features/teacher-class-report-export/ui/ClassReportExportPreviewSection.vue`
   - 目标 owner：优先中性化后并入 `features/class-students-workspace/ui` 或提炼为实体/共享展示块；不要继续顶层挂在 `components/teacher`

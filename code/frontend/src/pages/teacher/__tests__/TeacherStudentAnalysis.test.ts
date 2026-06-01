@@ -8,6 +8,7 @@ import studentAnalysisNavigationSource from '@/features/teaching/student-analysi
 import studentAnalysisPageModelSource from '@/features/teaching/student-analysis-workspace/model/useStudentAnalysisPage.ts?raw'
 import studentAnalysisReviewQuerySyncSource from '@/features/teaching/student-analysis-workspace/model/useStudentAnalysisReviewQuerySync.ts?raw'
 import studentAnalysisPageSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
+import studentAnalysisWorkspacePageSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisWorkspacePage.vue?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightAttackSessionsSection.vue?raw'
@@ -197,12 +198,18 @@ describe('TeacherStudentAnalysis', () => {
   })
 
   it('路由页应仅负责组合，不直接处理路由解析逻辑', () => {
-    expect(teacherStudentAnalysisSource).toContain('useStudentAnalysisPage')
+    expect(teacherStudentAnalysisSource).toContain('StudentAnalysisWorkspacePage')
     expect(teacherStudentAnalysisSource).toContain("from '@/features/teaching/student-analysis-workspace'")
-    expect(teacherStudentAnalysisSource).toContain('StudentAnalysisPage')
-    expect(teacherStudentAnalysisSource).toContain(
+    expect(teacherStudentAnalysisSource).not.toContain('useStudentAnalysisPage')
+    expect(teacherStudentAnalysisSource).not.toContain('StudentAnalysisPage')
+    expect(teacherStudentAnalysisSource).not.toContain(
       "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
+    expect(studentAnalysisWorkspacePageSource).toContain(
+      "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
+    )
+    expect(studentAnalysisWorkspacePageSource).toContain('useStudentAnalysisPage')
+    expect(studentAnalysisWorkspacePageSource).toContain('StudentAnalysisPage')
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassManagementRouteName')
     expect(teacherStudentAnalysisSource).not.toContain('resolveClassStudentsRouteName')
     expect(teacherStudentAnalysisSource).not.toContain(':classes="classes"')
@@ -250,9 +257,13 @@ describe('TeacherStudentAnalysis', () => {
   })
 
   it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {
-    expect(teacherStudentAnalysisSource).toContain('class="teacher-route-root"')
+    expect(teacherStudentAnalysisSource).not.toContain('<section class="teacher-route-root">')
     expect(teacherStudentAnalysisSource).toMatch(
-      /<template>\s*<section class="teacher-route-root">[\s\S]*<StudentAnalysisPage[\s\S]*<ClassReportExportDialog[\s\S]*<\/section>\s*<\/template>/s
+      /<template>\s*<StudentAnalysisWorkspacePage route-root-class="teacher-route-root" \/>\s*<\/template>/s
+    )
+    expect(studentAnalysisWorkspacePageSource).toContain(':class="routeRootClass"')
+    expect(studentAnalysisWorkspacePageSource).toMatch(
+      /<template>\s*<section :class="routeRootClass">[\s\S]*<StudentAnalysisPage[\s\S]*<ClassReportExportDialog[\s\S]*<\/section>\s*<\/template>/s
     )
   })
 
