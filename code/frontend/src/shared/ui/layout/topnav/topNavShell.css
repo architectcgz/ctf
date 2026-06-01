@@ -1,10 +1,18 @@
 .topnav-shell {
-  --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --topnav-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
+  --topnav-surface: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 99%,
+    var(--color-bg-base)
+  );
+  --topnav-surface-subtle: color-mix(
+    in srgb,
+    var(--journal-surface-subtle, var(--color-bg-elevated)) 95%,
+    var(--color-bg-base)
+  );
   --topnav-surface-elevated: color-mix(
     in srgb,
-    var(--color-bg-elevated) 86%,
-    var(--color-bg-surface)
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--journal-surface-subtle, var(--color-bg-elevated))
   );
   --topnav-line: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 88%, transparent);
@@ -18,13 +26,26 @@
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-bg-base) 97%, var(--color-bg-surface)),
-      color-mix(in srgb, var(--color-bg-base) 99%, var(--color-bg-surface))
+      color-mix(
+        in srgb,
+        var(--journal-surface, var(--color-bg-surface)) 100%,
+        var(--color-bg-base)
+      ),
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 97%,
+        var(--color-bg-base)
+      )
     ),
     radial-gradient(
       circle at top left,
-      color-mix(in srgb, var(--color-primary) 8%, transparent),
-      transparent 18rem
+      color-mix(in srgb, var(--color-primary) 10%, transparent),
+      transparent 20rem
+    ),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary-hover) 6%, transparent),
+      transparent 14rem
     );
   backdrop-filter: blur(14px);
 }
@@ -34,14 +55,22 @@
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--topnav-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--topnav-surface-subtle) 96%, var(--color-bg-base))
+      color-mix(in srgb, #ffffff 92%, var(--topnav-surface)),
+      color-mix(in srgb, #ffffff 84%, var(--topnav-surface-subtle))
     ),
     radial-gradient(
       circle at top left,
-      color-mix(in srgb, var(--color-primary) 8%, transparent),
-      transparent 20rem
+      color-mix(in srgb, var(--color-primary) 7%, transparent),
+      transparent 18rem
+    ),
+    radial-gradient(
+      circle at 82% -30%,
+      color-mix(in srgb, var(--color-primary-hover) 4%, transparent),
+      transparent 12rem
     );
+  box-shadow:
+    0 8px 22px color-mix(in srgb, var(--color-shadow-soft) 10%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--color-border-default) 50%, transparent);
   backdrop-filter: none;
 }
 
@@ -317,13 +346,21 @@
 }
 
 [data-theme='light'] .topnav-shell {
-  --topnav-surface: color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base));
+  --topnav-surface: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 100%,
+    var(--color-bg-base)
+  );
   --topnav-surface-subtle: color-mix(
     in srgb,
-    var(--color-bg-elevated) 92%,
-    var(--color-bg-surface)
+    var(--journal-surface-subtle, var(--color-bg-elevated)) 98%,
+    var(--color-bg-base)
   );
-  --topnav-surface-elevated: var(--color-bg-surface);
+  --topnav-surface-elevated: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 100%,
+    var(--journal-surface-subtle, var(--color-bg-elevated))
+  );
   --topnav-line: color-mix(in srgb, var(--color-border-default) 90%, transparent);
   --topnav-line-strong: color-mix(in srgb, var(--color-border-default) 94%, transparent);
   --topnav-text: var(--color-text-primary);
@@ -332,17 +369,22 @@
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 97%, var(--color-bg-base)),
+      color-mix(in srgb, #ffffff 94%, var(--journal-surface, var(--color-bg-surface))),
       color-mix(
         in srgb,
-        var(--journal-surface-subtle, var(--color-bg-elevated)) 95%,
-        var(--color-bg-base)
+        #ffffff 86%,
+        var(--journal-surface-subtle, var(--color-bg-elevated))
       )
     ),
     radial-gradient(
       circle at top left,
-      color-mix(in srgb, var(--color-primary-hover) 6%, transparent),
+      color-mix(in srgb, var(--color-primary-hover) 5%, transparent),
       transparent 18rem
+    ),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 2%, transparent),
+      transparent 12rem
     );
 }
 
