@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 import ContestManage from '@/pages/platform/contests/ContestManageRoutePage.vue'
 import contestManageSource from '@/pages/platform/contests/ContestManageRoutePage.vue?raw'
 import contestAnnouncementDrawerSource from '@/features/contest-announcements/ui/ContestAnnouncementManageDrawer.vue?raw'
 import platformContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
 import contestOrchestrationSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
+import contestManageCreatePanelSource from '@/features/platform/contests/ui/ContestManageCreatePanel.vue?raw'
+import contestManageOverviewPanelSource from '@/features/platform/contests/ui/ContestManageOverviewPanel.vue?raw'
 import contestManagePageModelSource from '@/features/platform/contests/model/useContestManagePage.ts?raw'
 import contestManagePanelRouteSource from '@/features/platform/contests/model/useContestManagePanelRoute.ts?raw'
 import { ApiError } from '@/api/request'
@@ -21,6 +25,15 @@ const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 const routeState = vi.hoisted(() => ({
   query: {} as Record<string, string>,
 }))
+const contestOrchestrationCombinedSource = [
+  contestOrchestrationSource,
+  contestManageOverviewPanelSource,
+  contestManageCreatePanelSource,
+  readFileSync(
+    resolve(process.cwd(), 'src/features/platform/contests/ui/contestOrchestrationPage.css'),
+    'utf8'
+  ),
+].join('\n')
 
 vi.mock('@/api/admin/contests', async () => {
   const actual =
@@ -229,6 +242,9 @@ describe('ContestManage', () => {
     expect(contestAnnouncementDrawerSource).toContain('fullPageRoute')
     expect(contestOrchestrationSource).not.toContain("from '@/shared/model/navigation/useUrlSyncedTabs'")
     expect(contestOrchestrationSource).not.toContain('useUrlSyncedTabs<ContestPanelKey>(')
+    expect(contestOrchestrationSource).toContain('<ContestManageOverviewPanel')
+    expect(contestOrchestrationSource).toContain('<ContestManageCreatePanel')
+    expect(contestOrchestrationSource).not.toContain('<WorkspaceDirectoryToolbar')
     expect(contestManagePanelRouteSource).toContain('resolveContestManagePanel')
     expect(contestManagePanelRouteSource).toContain('buildContestManagePanelQuery')
     expect(contestManagePageModelSource).toContain(
@@ -542,32 +558,32 @@ describe('ContestManage', () => {
     expect(platformContestTableSource).toContain('<AppRouteLink')
     expect(contestAnnouncementDrawerSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(contestAnnouncementDrawerSource).toContain('id="contest-open-announcement-page"')
-    expect(contestOrchestrationSource).toContain(
+    expect(contestOrchestrationCombinedSource).toContain(
       "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(contestOrchestrationSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(contestOrchestrationSource).toContain('filter-panel-title="赛事筛选"')
-    expect(contestOrchestrationSource).toContain('total-suffix="场赛事"')
-    expect(contestOrchestrationSource).not.toMatch(
+    expect(contestOrchestrationCombinedSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(contestOrchestrationCombinedSource).toContain('filter-panel-title="赛事筛选"')
+    expect(contestOrchestrationCombinedSource).toContain('total-suffix="场赛事"')
+    expect(contestOrchestrationCombinedSource).not.toMatch(
       /\.contest-directory-section,\s*\.contest-create-panel\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
     )
-    expect(contestOrchestrationSource).not.toMatch(
+    expect(contestOrchestrationCombinedSource).not.toMatch(
       /\.contest-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
     )
-    expect(contestOrchestrationSource).not.toContain('<nav class="top-tabs"')
-    expect(contestOrchestrationSource).not.toContain('class="contest-filter-grid"')
-    expect(contestOrchestrationSource).not.toContain('class="contest-filter-strip"')
-    expect(contestOrchestrationSource).toContain(
+    expect(contestOrchestrationCombinedSource).not.toContain('<nav class="top-tabs"')
+    expect(contestOrchestrationCombinedSource).not.toContain('class="contest-filter-grid"')
+    expect(contestOrchestrationCombinedSource).not.toContain('class="contest-filter-strip"')
+    expect(contestOrchestrationCombinedSource).toContain(
       '<header class="workspace-panel-header contest-overview-head">'
     )
-    expect(contestOrchestrationSource).toContain('class="workspace-panel-header__intro"')
-    expect(contestOrchestrationSource).toContain(
+    expect(contestOrchestrationCombinedSource).toContain('class="workspace-panel-header__intro"')
+    expect(contestOrchestrationCombinedSource).toContain(
       'class="workspace-panel-header__actions ui-toolbar-actions contest-panel-actions"'
     )
-    expect(contestOrchestrationSource).toContain(
+    expect(contestOrchestrationCombinedSource).toContain(
       'class="workspace-panel-header__summary admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(contestOrchestrationSource).not.toMatch(
+    expect(contestOrchestrationCombinedSource).not.toMatch(
       /\.contest-overview-head\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
     )
   })

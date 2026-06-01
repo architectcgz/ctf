@@ -6,6 +6,8 @@ import contestOperationsHubSource from '@/pages/platform/contests/ContestOperati
 import contestOperationsHubHeroPanelSource from '@/features/platform/contests/ui/ContestOperationsHubHeroPanel.vue?raw'
 import contestOperationsHubWorkspacePanelSource from '@/features/platform/contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
 import contestOrchestrationSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
+import contestManageCreatePanelSource from '@/features/platform/contests/ui/ContestManageCreatePanel.vue?raw'
+import contestManageOverviewPanelSource from '@/features/platform/contests/ui/ContestManageOverviewPanel.vue?raw'
 import adminContestFormPanelSource from '@/features/platform/contests/ui/PlatformContestFormPanel.vue?raw'
 import contestFormActionsSource from '@/features/platform/contests/ui/PlatformContestFormActions.vue?raw'
 import contestFormIdentitySectionSource from '@/features/platform/contests/ui/PlatformContestIdentitySection.vue?raw'
@@ -60,6 +62,15 @@ const contestOperationsHubCombinedSource = [
   contestOperationsHubSource,
   contestOperationsHubHeroPanelSource,
   contestOperationsHubWorkspacePanelSource,
+].join('\n')
+const contestOrchestrationCombinedSource = [
+  contestOrchestrationSource,
+  contestManageOverviewPanelSource,
+  contestManageCreatePanelSource,
+  readFileSync(
+    resolve(process.cwd(), 'src/features/platform/contests/ui/contestOrchestrationPage.css'),
+    'utf8'
+  ),
 ].join('\n')
 const contestFormCombinedSource = [
   adminContestFormPanelSource,
@@ -135,13 +146,15 @@ describe('contest admin ui strategy', () => {
     )
     expect(contestOperationsHubCombinedSource).toContain('<WorkspaceDataTable')
     expect(contestOperationsHubCombinedSource).toContain('contestTableColumns')
-    expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(contestOrchestrationSource).toContain('class="ui-field contest-filter-field"')
+    expect(contestOrchestrationCombinedSource).toContain('class="ui-btn ui-btn--ghost"')
+    expect(contestOrchestrationCombinedSource).toContain('class="ui-btn ui-btn--primary"')
+    expect(contestOrchestrationCombinedSource).toContain('class="ui-field contest-filter-field"')
     expect(contestOrchestrationSource).toContain('activePanel: ContestManagePanelKey')
     expect(contestOrchestrationSource).toContain('switchPanel: [panel: ContestManagePanelKey]')
-    expect(contestOrchestrationSource).toContain('<header class="list-heading contest-create-head">')
-    expect(contestOrchestrationSource).toContain(
+    expect(contestOrchestrationSource).toContain('<ContestManageOverviewPanel')
+    expect(contestOrchestrationSource).toContain('<ContestManageCreatePanel')
+    expect(contestOrchestrationCombinedSource).toContain('<header class="list-heading contest-create-head">')
+    expect(contestOrchestrationCombinedSource).toContain(
       '<header class="workspace-panel-header contest-overview-head">'
     )
     expect(contestOrchestrationSource).not.toContain(
@@ -209,7 +222,7 @@ describe('contest admin ui strategy', () => {
   })
 
   it('contest admin metric panels and workspace overlines should follow the shared summary contract instead of historical local variants', () => {
-    expect(contestOrchestrationSource).not.toContain('journal-eyebrow-text')
+    expect(contestOrchestrationCombinedSource).not.toContain('journal-eyebrow-text')
     expect(contestOperationsHubSource).not.toContain('journal-eyebrow-text')
     expect(awdChallengeConfigCombinedSource).toContain(
       'class="progress-strip metric-panel-grid metric-panel-default-surface"'
