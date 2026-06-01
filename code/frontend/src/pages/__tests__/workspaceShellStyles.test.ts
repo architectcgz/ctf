@@ -39,7 +39,7 @@ import challengeImportHeroPanelSource from '@/features/platform/challenge-packag
 import challengeManageHeroPanelSource from '@/features/platform/challenges/ui/ChallengeManageHeroPanel.vue?raw'
 import cheatDetectionHeroPanelSource from '@/features/platform/cheat-detection/ui/CheatDetectionHeroPanel.vue?raw'
 import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
-import contestOrchestrationPageSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
+import contestOrchestrationPageSource from '@/features/platform/contest-manage/ui/ContestOrchestrationPage.vue?raw'
 import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
@@ -120,7 +120,7 @@ import scoreboardDetailSource from '@/pages/scoreboard/ScoreboardDetailRoutePage
 import scoreboardDetailWorkspaceSource from '@/widgets/scoreboard-detail-workspace/ScoreboardDetailWorkspace.vue?raw'
 import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
 import studentManageHeroPanelSource from '@/features/platform/student-management/ui/StudentManageHeroPanel.vue?raw'
-import contestOperationsHubHeroPanelSource from '@/features/platform/contests/ui/ContestOperationsHubHeroPanel.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/features/platform/contest-operations/ui/ContestOperationsHubHeroPanel.vue?raw'
 
 const workspaceShellStylesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/workspace-shell.css`,

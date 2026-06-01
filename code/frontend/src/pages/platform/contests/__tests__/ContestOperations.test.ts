@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestOperations from '@/pages/platform/contests/ContestOperationsRoutePage.vue'
-import contestOperationsDataSource from '@/features/platform/contests/model/useContestOperationsData.ts?raw'
+import contestOperationsDataSource from '@/features/platform/contest-operations/model/useContestOperationsData.ts?raw'
 import contestOperationsSource from '@/pages/platform/contests/ContestOperationsRoutePage.vue?raw'
-import contestOperationsPageModelSource from '@/features/platform/contests/model/useContestOperationsPage.ts?raw'
-import platformContestOperationsPageSource from '@/features/platform/contests/ui/PlatformContestOperationsPage.vue?raw'
+import contestOperationsPageModelSource from '@/features/platform/contest-operations/model/useContestOperationsPage.ts?raw'
+import platformContestOperationsPageSource from '@/features/platform/contest-operations/ui/PlatformContestOperationsPage.vue?raw'
 import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
 
 const adminApiMocks = vi.hoisted(() => ({

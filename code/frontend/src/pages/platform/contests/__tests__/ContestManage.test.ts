@@ -6,13 +6,13 @@ import { resolve } from 'node:path'
 import ContestManage from '@/pages/platform/contests/ContestManageRoutePage.vue'
 import contestManageSource from '@/pages/platform/contests/ContestManageRoutePage.vue?raw'
 import contestAnnouncementDrawerSource from '@/features/contest-announcements/ui/ContestAnnouncementManageDrawer.vue?raw'
-import platformContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
-import contestOrchestrationSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
-import platformContestManagePageSource from '@/features/platform/contests/ui/PlatformContestManagePage.vue?raw'
-import contestManageCreatePanelSource from '@/features/platform/contests/ui/ContestManageCreatePanel.vue?raw'
-import contestManageOverviewPanelSource from '@/features/platform/contests/ui/ContestManageOverviewPanel.vue?raw'
-import contestManagePageModelSource from '@/features/platform/contests/model/useContestManagePage.ts?raw'
-import contestManagePanelRouteSource from '@/features/platform/contests/model/useContestManagePanelRoute.ts?raw'
+import platformContestTableSource from '@/features/platform/contest-manage/ui/PlatformContestTable.vue?raw'
+import contestOrchestrationSource from '@/features/platform/contest-manage/ui/ContestOrchestrationPage.vue?raw'
+import platformContestManagePageSource from '@/features/platform/contest-manage/ui/PlatformContestManagePage.vue?raw'
+import contestManageCreatePanelSource from '@/features/platform/contest-manage/ui/ContestManageCreatePanel.vue?raw'
+import contestManageOverviewPanelSource from '@/features/platform/contest-manage/ui/ContestManageOverviewPanel.vue?raw'
+import contestManagePageModelSource from '@/features/platform/contest-manage/model/useContestManagePage.ts?raw'
+import contestManagePanelRouteSource from '@/features/platform/contest-manage/model/useContestManagePanelRoute.ts?raw'
 import { ApiError } from '@/api/request'
 
 const contestMocks = vi.hoisted(() => ({
@@ -31,7 +31,7 @@ const contestOrchestrationCombinedSource = [
   contestManageOverviewPanelSource,
   contestManageCreatePanelSource,
   readFileSync(
-    resolve(process.cwd(), 'src/features/platform/contests/ui/contestOrchestrationPage.css'),
+    resolve(process.cwd(), 'src/features/platform/contest-manage/ui/contestOrchestrationPage.css'),
     'utf8'
   ),
 ].join('\n')

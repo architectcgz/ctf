@@ -3,11 +3,11 @@ import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
 import ContestAnnouncements from '@/pages/platform/contests/ContestAnnouncementsRoutePage.vue'
 import contestAnnouncementsSource from '@/pages/platform/contests/ContestAnnouncementsRoutePage.vue?raw'
-import contestAnnouncementsDataSource from '@/features/platform/contests/model/useContestAnnouncementsData.ts?raw'
-import contestAnnouncementsPageModelSource from '@/features/platform/contests/model/useContestAnnouncementsPage.ts?raw'
-import platformContestAnnouncementsPageSource from '@/features/platform/contests/ui/PlatformContestAnnouncementsPage.vue?raw'
-import contestAnnouncementsTopbarPanelSource from '@/features/platform/contests/ui/ContestAnnouncementsTopbarPanel.vue?raw'
-import contestAnnouncementsWorkspacePanelSource from '@/features/platform/contests/ui/ContestAnnouncementsWorkspacePanel.vue?raw'
+import contestAnnouncementsDataSource from '@/features/platform/contest-announcements/model/useContestAnnouncementsData.ts?raw'
+import contestAnnouncementsPageModelSource from '@/features/platform/contest-announcements/model/useContestAnnouncementsPage.ts?raw'
+import platformContestAnnouncementsPageSource from '@/features/platform/contest-announcements/ui/PlatformContestAnnouncementsPage.vue?raw'
+import contestAnnouncementsTopbarPanelSource from '@/features/platform/contest-announcements/ui/ContestAnnouncementsTopbarPanel.vue?raw'
+import contestAnnouncementsWorkspacePanelSource from '@/features/platform/contest-announcements/ui/ContestAnnouncementsWorkspacePanel.vue?raw'
 import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
 
 const adminApiMocks = vi.hoisted(() => ({

@@ -3,26 +3,26 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import contestOperationsHubSource from '@/pages/platform/contests/ContestOperationsHubRoutePage.vue?raw'
-import contestOperationsHubHeroPanelSource from '@/features/platform/contests/ui/ContestOperationsHubHeroPanel.vue?raw'
-import contestOperationsHubWorkspacePanelSource from '@/features/platform/contests/ui/ContestOperationsHubWorkspacePanel.vue?raw'
-import contestOrchestrationSource from '@/features/platform/contests/ui/ContestOrchestrationPage.vue?raw'
-import contestManageCreatePanelSource from '@/features/platform/contests/ui/ContestManageCreatePanel.vue?raw'
-import contestManageOverviewPanelSource from '@/features/platform/contests/ui/ContestManageOverviewPanel.vue?raw'
-import adminContestFormPanelSource from '@/features/platform/contests/ui/PlatformContestFormPanel.vue?raw'
-import contestFormActionsSource from '@/features/platform/contests/ui/PlatformContestFormActions.vue?raw'
-import contestFormIdentitySectionSource from '@/features/platform/contests/ui/PlatformContestIdentitySection.vue?raw'
-import contestFormRulesSectionSource from '@/features/platform/contests/ui/PlatformContestRulesSection.vue?raw'
-import contestFormSectionShellSource from '@/features/platform/contests/ui/PlatformContestFormSectionShell.vue?raw'
-import contestFormTimelineSectionSource from '@/features/platform/contests/ui/PlatformContestTimelineSection.vue?raw'
-import adminContestTableSource from '@/features/platform/contests/ui/PlatformContestTable.vue?raw'
+import contestOperationsHubHeroPanelSource from '@/features/platform/contest-manage/ui/ContestOperationsHubHeroPanel.vue?raw'
+import contestOperationsHubWorkspacePanelSource from '@/features/platform/contest-manage/ui/ContestOperationsHubWorkspacePanel.vue?raw'
+import contestOrchestrationSource from '@/features/platform/contest-manage/ui/ContestOrchestrationPage.vue?raw'
+import contestManageCreatePanelSource from '@/features/platform/contest-manage/ui/ContestManageCreatePanel.vue?raw'
+import contestManageOverviewPanelSource from '@/features/platform/contest-manage/ui/ContestManageOverviewPanel.vue?raw'
+import adminContestFormPanelSource from '@/features/platform/contest-manage/ui/PlatformContestFormPanel.vue?raw'
+import contestFormActionsSource from '@/features/platform/contest-manage/ui/PlatformContestFormActions.vue?raw'
+import contestFormIdentitySectionSource from '@/features/platform/contest-manage/ui/PlatformContestIdentitySection.vue?raw'
+import contestFormRulesSectionSource from '@/features/platform/contest-manage/ui/PlatformContestRulesSection.vue?raw'
+import contestFormSectionShellSource from '@/features/platform/contest-manage/ui/PlatformContestFormSectionShell.vue?raw'
+import contestFormTimelineSectionSource from '@/features/platform/contest-manage/ui/PlatformContestTimelineSection.vue?raw'
+import adminContestTableSource from '@/features/platform/contest-manage/ui/PlatformContestTable.vue?raw'
 import contestEditSource from '@/pages/platform/contests/ContestEditRoutePage.vue?raw'
-import contestEditTopbarPanelSource from '@/features/platform/contests/ui/ContestEditTopbarPanel.vue?raw'
-import contestEditWorkspacePanelSource from '@/features/platform/contests/ui/ContestEditWorkspacePanel.vue?raw'
-import contestAwdPreflightPanelSource from '@/features/platform/contests/ui/ContestAwdPreflightPanel.vue?raw'
-import awdChallengeConfigPanelSource from '@/features/platform/contests/ui/AWDChallengeConfigPanel.vue?raw'
-import awdChallengeConfigDirectoryRowSource from '@/features/platform/contests/ui/AWDChallengeConfigDirectoryRow.vue?raw'
-import awdChallengeConfigDirectorySectionSource from '@/features/platform/contests/ui/AWDChallengeConfigDirectorySection.vue?raw'
-import awdChallengeConfigHeaderSource from '@/features/platform/contests/ui/AWDChallengeConfigHeader.vue?raw'
+import contestEditTopbarPanelSource from '@/features/platform/contest-manage/ui/ContestEditTopbarPanel.vue?raw'
+import contestEditWorkspacePanelSource from '@/features/platform/contest-manage/ui/ContestEditWorkspacePanel.vue?raw'
+import contestAwdPreflightPanelSource from '@/features/platform/contest-manage/ui/ContestAwdPreflightPanel.vue?raw'
+import awdChallengeConfigPanelSource from '@/features/platform/contest-manage/ui/AWDChallengeConfigPanel.vue?raw'
+import awdChallengeConfigDirectoryRowSource from '@/features/platform/contest-manage/ui/AWDChallengeConfigDirectoryRow.vue?raw'
+import awdChallengeConfigDirectorySectionSource from '@/features/platform/contest-manage/ui/AWDChallengeConfigDirectorySection.vue?raw'
+import awdChallengeConfigHeaderSource from '@/features/platform/contest-manage/ui/AWDChallengeConfigHeader.vue?raw'
 import awdContestSelectorFieldSource from '@/features/contest-awd-admin/ui/AWDContestSelectorField.vue?raw'
 import awdOperationsPanelSource from '@/features/contest-awd-admin/ui/AWDOperationsPanel.vue?raw'
 import awdOperationsPreRuntimeStageSource from '@/features/contest-awd-admin/ui/AWDOperationsPreRuntimeStage.vue?raw'
@@ -68,7 +68,7 @@ const contestOrchestrationCombinedSource = [
   contestManageOverviewPanelSource,
   contestManageCreatePanelSource,
   readFileSync(
-    resolve(process.cwd(), 'src/features/platform/contests/ui/contestOrchestrationPage.css'),
+    resolve(process.cwd(), 'src/features/platform/contest-manage/ui/contestOrchestrationPage.css'),
     'utf8'
   ),
 ].join('\n')
@@ -92,7 +92,7 @@ const awdChallengeConfigCombinedSource = [
   awdChallengeConfigDirectorySectionSource,
   awdChallengeConfigDirectoryRowSource,
   readFileSync(
-    resolve(process.cwd(), 'src/features/platform/contests/ui/awdChallengeConfigPanel.css'),
+    resolve(process.cwd(), 'src/features/platform/contest-manage/ui/awdChallengeConfigPanel.css'),
     'utf8'
   ),
 ].join('\n')

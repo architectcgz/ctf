@@ -1,7 +1,7 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
 
 import { useContestAnnouncementManagement } from '@/features/contest-announcements'
-import { buildContestEditRoute } from './contestManageRoutes'
+import { buildContestEditRoute } from '@/features/platform/contest-manage'
 import { useContestAnnouncementsData } from './useContestAnnouncementsData'
 
 export function useContestAnnouncementsPage(contestId: Ref<string> | ComputedRef<string>) {
