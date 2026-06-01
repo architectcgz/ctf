@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import TeacherClassStudents from '@/pages/teacher/TeacherClassStudentsRoutePage.vue'
 import teacherClassStudentsSource from '@/pages/teacher/TeacherClassStudentsRoutePage.vue?raw'
 import classStudentsPageSourceBase from '@/features/teaching/class-students-workspace/ui/ClassStudentsPage.vue?raw'
+import teacherClassStudentsPageSource from '@/features/teaching/class-students-workspace/ui/TeacherClassStudentsPage.vue?raw'
 import classStudentsOverviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsOverviewPanel.vue?raw'
 import classStudentsInsightWindowPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsInsightWindowPanel.vue?raw'
 import classStudentsDirectoryPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue?raw'
@@ -341,13 +342,18 @@ describe('TeacherClassStudents', () => {
   })
 
   it('路由页应仅负责组合，不直接依赖教师接口实现', () => {
-    expect(teacherClassStudentsSource).toContain('useClassStudentsPage')
+    expect(teacherClassStudentsSource).toContain('TeacherClassStudentsPage')
     expect(teacherClassStudentsSource).toContain("from '@/features/teaching/class-students-workspace'")
-    expect(teacherClassStudentsSource).toContain('ClassStudentsPage')
-    expect(teacherClassStudentsSource).toContain(
+    expect(teacherClassStudentsSource).not.toContain('useClassStudentsPage')
+    expect(teacherClassStudentsSource).not.toContain(
       "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
     )
     expect(teacherClassStudentsSource).not.toContain("from '@/api/teacher'")
+    expect(teacherClassStudentsPageSource).toContain(
+      "import { ClassReportExportDialog } from '@/features/teaching/class-report-export'"
+    )
+    expect(teacherClassStudentsPageSource).toContain('useClassStudentsPage')
+    expect(teacherClassStudentsPageSource).toContain('ClassStudentsPage')
     expect(classStudentsPageModelSource).toContain(
       "import { useRouteQueryTabs } from '@/shared/model/navigation/useRouteQueryTabs'"
     )
@@ -366,6 +372,7 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageModelSource).not.toContain("from 'vue-router'")
     expect(classStudentsPageModelSource).not.toContain('useRoute(')
     expect(classStudentsPageModelSource).not.toContain('useRouter(')
+    expect(classStudentsPageModelSource).toContain('export function useClassStudentsPage()')
     expect(classStudentsPageModelSource).toContain(
       'const { name: routeName, params, query, replaceQuery } = useRouteQueryTransport()'
     )
@@ -402,8 +409,10 @@ describe('TeacherClassStudents', () => {
   })
 
   it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {
-    expect(teacherClassStudentsSource).toContain('class="teacher-route-root"')
-    expect(teacherClassStudentsSource).toMatch(
+    expect(teacherClassStudentsSource).not.toContain('class="teacher-route-root"')
+    expect(teacherClassStudentsSource).toMatch(/<template>\s*<TeacherClassStudentsPage \/>\s*<\/template>/s)
+    expect(teacherClassStudentsPageSource).toContain('class="teacher-route-root"')
+    expect(teacherClassStudentsPageSource).toMatch(
       /<template>\s*<section class="teacher-route-root">[\s\S]*<ClassStudentsPage[\s\S]*<ClassReportExportDialog[\s\S]*<\/section>\s*<\/template>/s
     )
   })

@@ -171,6 +171,7 @@
   - 目标 owner：拆到 `features/class-students-workspace/ui`、`features/student-analysis-workspace/ui`、`features/teacher/class-management/ui`
   - 优先级：`P1`
   - `2026-06-01` 进展：`ClassManagementRoutePage.vue` 已退回薄壳，`TeacherClassManagementPage.vue` 现在负责组合 page model 与 `ClassReportExportDialog`；同时 `useTeacherClassManagementPage()` 已替换旧的泛命名 `useClassManagementPage()`，当前这条线剩余重点转向 `class-students-workspace`、`student-analysis-workspace` 与顶层 teacher panels。
+  - `2026-06-01` class students 进展：`TeacherClassStudentsRoutePage.vue` 已退回薄壳，`TeacherClassStudentsPage.vue` 现在负责组合 workspace 壳、`ClassReportExportDialog` 与共享 `useClassStudentsPage()` page model；由于这条 page model 也被 platform route 复用，本轮保持中性命名不再硬收成 teacher-specific owner。这条线后续继续集中在 `student-analysis-workspace` 与顶层 teacher panels。
 - `teacher/student-insight/*`
   - 当前 consumer：teacher 学员洞察 / student analysis 相关 route 和 feature
   - 目标 owner：`features/student-analysis-workspace/ui`
