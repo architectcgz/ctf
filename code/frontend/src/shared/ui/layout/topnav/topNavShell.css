@@ -1,17 +1,17 @@
 .topnav-shell {
-  --topnav-surface: var(--workspace-chrome-surface);
-  --topnav-surface-subtle: var(--workspace-chrome-surface-subtle);
-  --topnav-surface-elevated: var(--workspace-chrome-surface-elevated);
-  --topnav-line: var(--workspace-chrome-line);
-  --topnav-line-strong: var(--workspace-chrome-line-strong);
-  --topnav-text: var(--workspace-chrome-text);
-  --topnav-muted: var(--workspace-chrome-muted);
-  --topnav-faint: var(--workspace-chrome-faint);
+  --topnav-surface: var(--workspace-frame-surface);
+  --topnav-surface-subtle: var(--workspace-frame-surface-subtle);
+  --topnav-surface-elevated: var(--workspace-frame-surface-elevated);
+  --topnav-line: var(--workspace-frame-line);
+  --topnav-line-strong: var(--workspace-frame-line-strong);
+  --topnav-text: var(--workspace-frame-text);
+  --topnav-muted: var(--workspace-frame-muted);
+  --topnav-faint: var(--workspace-frame-faint);
   --topnav-soft-accent: color-mix(in srgb, var(--color-primary) 10%, transparent);
   --topnav-danger-line: color-mix(in srgb, var(--color-danger) 30%, var(--topnav-line));
   --topnav-danger-soft: color-mix(in srgb, var(--color-danger) 12%, var(--topnav-surface));
   border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
-  background: var(--workspace-chrome-background);
+  background: var(--workspace-frame-background);
   backdrop-filter: blur(14px);
 }
 

@@ -1,21 +1,21 @@
 .sidebar-shell {
-  border-right: 1px solid var(--workspace-chrome-line);
-  background: var(--workspace-chrome-background);
+  border-right: 1px solid var(--workspace-frame-line);
+  background: var(--workspace-frame-background);
 }
 
 .backoffice-sidebar {
-  --backoffice-shell-surface: var(--workspace-chrome-surface);
-  --backoffice-shell-surface-subtle: var(--workspace-chrome-surface-subtle);
-  --backoffice-shell-surface-strong: var(--workspace-chrome-surface-elevated);
-  --backoffice-shell-line: var(--workspace-chrome-line);
-  --backoffice-shell-line-strong: var(--workspace-chrome-line-strong);
-  --backoffice-shell-text: var(--workspace-chrome-text);
-  --backoffice-shell-muted: var(--workspace-chrome-muted);
-  --backoffice-shell-faint: var(--workspace-chrome-faint);
+  --backoffice-shell-surface: var(--workspace-frame-surface);
+  --backoffice-shell-surface-subtle: var(--workspace-frame-surface-subtle);
+  --backoffice-shell-surface-strong: var(--workspace-frame-surface-elevated);
+  --backoffice-shell-line: var(--workspace-frame-line);
+  --backoffice-shell-line-strong: var(--workspace-frame-line-strong);
+  --backoffice-shell-text: var(--workspace-frame-text);
+  --backoffice-shell-muted: var(--workspace-frame-muted);
+  --backoffice-shell-faint: var(--workspace-frame-faint);
   border-right: 1px solid var(--backoffice-shell-line-strong);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  background: var(--workspace-chrome-background);
+  background: var(--workspace-frame-background);
 }
 
 .backoffice-sidebar-backdrop {
