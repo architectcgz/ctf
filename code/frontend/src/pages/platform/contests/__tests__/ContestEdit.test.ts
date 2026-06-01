@@ -5,6 +5,7 @@ import { computed, defineComponent, ref, watch } from 'vue'
 import ContestEdit from '@/pages/platform/contests/ContestEditRoutePage.vue'
 import contestEditSource from '@/pages/platform/contests/ContestEditRoutePage.vue?raw'
 import contestEditPageModelSource from '@/features/platform/contests/model/useContestEditPage.ts?raw'
+import platformContestEditPageSource from '@/features/platform/contests/ui/PlatformContestEditPage.vue?raw'
 import platformRoutesSource from '@/router/routes/platformRoutes.ts?raw'
 import { ApiError } from '@/api/request'
 import type { ContestDetailData } from '@/api/contracts'
@@ -583,7 +584,8 @@ describe('ContestEdit', () => {
   })
 
   it('路由页应仅负责组合，不直接耦合竞赛编辑加载与保存流程', () => {
-    expect(contestEditSource).toContain('useContestEditPage')
+    expect(contestEditSource).toContain('PlatformContestEditPage')
+    expect(contestEditSource).not.toContain('useContestEditPage')
     expect(contestEditSource).not.toContain("from '@/api/admin/contests'")
     expect(contestEditPageModelSource).not.toContain("from 'vue-router'")
     expect(contestEditPageModelSource).toContain(
@@ -595,6 +597,10 @@ describe('ContestEdit', () => {
       "component: () => import('@/pages/platform/contests/ContestEditRoutePage.vue')"
     )
     expect(platformRoutesSource).toContain('contestId: String(route.params.id || \'\')')
+    expect(platformContestEditPageSource).toContain('useContestEditPage')
+    expect(platformContestEditPageSource).toContain('ContestEditTopbarPanel')
+    expect(platformContestEditPageSource).toContain('ContestEditWorkspacePanel')
+    expect(platformContestEditPageSource).toContain('ContestWorkbenchStageTabs')
   })
 
   it('顶部应提供公告入口 route target', async () => {
