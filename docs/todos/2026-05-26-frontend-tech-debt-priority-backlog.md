@@ -20,9 +20,84 @@
 - 再做收益高但跨模块耦合更重的结构债
 - 性能监控、i18n 这类前置决策未定的项保留在后面单独跟踪
 
-## Components 存量清理清单
+## 当前结构与下一步
 
-当前前端已经不是“中间迁移态”，但仍保留大量历史业务组件目录。后续如果要继续朝更纯的 `views -> widgets -> features -> entities -> common` 形态收口，优先按下面三类推进。
+`2026-06-01` 复扫结论：
+
+- `code/frontend/src/components` 已不存在，不应再作为“当前迁移目标”出现在 backlog 的行动指南里。
+- 当前运行时主结构已经收口到 `pages / widgets / features / entities / shared`。
+- 这份 backlog 下方仍保留大量 `components/*` 路径记录，它们是迁移轨迹，不是当前目录事实。
+
+### 当前稳定 owner
+
+- `shared/ui/common`、`shared/ui/layout`、`shared/ui/navigation`
+  - 当前承接真正跨业务的原语、布局壳、导航契约和通用弹层模板。
+- `entities/*`
+  - 当前承接稳定业务对象表达，例如 `entities/challenge`、`entities/class-insight`、`entities/training-timeline`。
+- `widgets/*`
+  - 当前承接跨页面区块组合，例如 `widgets/awd-review-workspace`、`widgets/review-archive-workspace`、`widgets/contest-detail-workspace`。
+- `features/*`
+  - 当前已经是绝大多数页面能力 owner 的主落点；下一步前端迁移不再是“把旧组件挪进 feature”，而是继续收口 feature 内部过宽 owner。
+
+### 当前真实偏大的 owner 面
+
+以下数据基于当前非测试 `.vue/.ts` 文件体量扫描，按“owner 仍偏大且后续拆分收益明显”排序。
+
+#### P1：优先继续收口的 feature owner
+
+- `features/teaching/student-analysis-workspace/ui`
+  - 现状：约 `94 KB / 12` 个运行时文件，是当前 teacher / platform 共享教学分析面里最明显的过宽 UI owner。
+  - 代表：`StudentAnalysisPage.vue`、`StudentReviewWorkspace.vue`、`StudentInsightWriteupsSection.vue`、`StudentInsightManualReviewSection.vue`、`studentInsightShared.ts`
+- `features/platform/contests/*`
+  - 现状：`ui` 约 `91 KB / 22` 文件，`model` 约 `40 KB / 17` 文件，是当前平台竞赛目录与运维入口最重的 capability owner。
+  - 代表：`ContestOrchestrationPage.vue` 与相关目录 / 运维 / 公告区块
+- `features/contest-awd-admin/*`
+  - 现状：整组约 `120 KB / 46` 文件，admin 侧 AWD 运维、实例编排、攻击日志和 readiness 动作仍集中。
+  - 代表：`AWDOperationsPanel.vue` 及其周边 workflow / dialog / orchestration surface
+- `features/contest-awd-workspace/*`
+  - 现状：整组约 `111 KB / 28` 文件，学生 AWD 工作区本身仍是大 capability。
+  - 代表：`AWDDefenseFileWorkbench.vue`、攻击 / 防守 / 情报区块
+
+#### P2：owner 已正确，但体量仍然偏大的能力面
+
+- `features/challenge-topology-studio/*`
+  - 现状：整组约 `217 KB / 38` 文件，其中 `ui` 单独约 `154 KB / 21` 文件，是当前最大的单 feature。
+  - 代表：`ChallengeTopologyStudioPage.vue`、`TopologyTemplateSidePanel.vue`、`TopologyTemplateWorkbench.vue`、`TopologyChallengeWorkbench.vue`
+- `features/awd-inspector/*`
+  - 现状：整组约 `152 KB / 33` 文件。
+- `features/contest-awd-config/*`
+  - 现状：整组约 `109 KB / 30` 文件。
+- `features/contest-workbench/*`
+  - 现状：整组约 `95 KB / 25` 文件。
+
+#### P3：中等体量，但下一步收益低于上面几组
+
+- `features/student-dashboard/ui`
+  - 现状：约 `56 KB / 8` 文件。
+- `features/platform/user-management/ui`
+  - 现状：约 `43 KB / 6` 文件，主要集中在 `UserGovernanceOverviewPanel.vue`。
+- `features/teacher/dashboard/*`
+  - 现状：整组约 `54 KB / 15` 文件，page shell 和 route owner 已经比较清楚。
+- `features/profile/ui`、`features/scoreboard/ui`、`features/image-management/ui`
+  - 现状：都有中等体量 surface，但相比前几组，结构性收益更低。
+
+### widgets / entities 现状
+
+- `widgets/awd-review-workspace` 约 `76 KB / 26` 文件，是当前最大的 widget owner。
+- `widgets/review-archive-workspace` 约 `57 KB / 10` 文件，体量次之。
+- `entities/challenge` 约 `30 KB / 14` 文件，是当前最大的 entity owner；`entities/class-insight` 约 `23 KB / 5` 文件，仍符合稳定展示对象的预期体量。
+
+### 当前推荐切片顺序
+
+1. `teaching/student-analysis-workspace + teaching/student-analysis-review`
+2. `platform/contests + contest-awd-admin + contest-awd-workspace`
+3. `challenge-topology-studio`
+4. `awd-inspector + contest-awd-config + contest-workbench`
+5. `student-dashboard + platform/user-management + teacher/dashboard`
+
+## 历史 components 迁移轨迹（已归档）
+
+下面这组 `components/*` 记录保留为迁移历史，用于追溯当时的收口顺序和 owner 判断；它们不再代表当前目录事实。
 
 ### A. 保留在 `components/*`
 
@@ -73,13 +148,13 @@
   - 现状：当前目录下没有活动源码文件，也没有 consumer
   - 后续动作：优先确认是否已完全退出主路径；若无残余引用，直接从 backlog 进入删除清理而不是继续视作迁移目标
 
-### 执行顺序建议
+### 当时执行顺序建议（历史）
 
 1. 先按目录批量清 `components/platform`、`components/teacher`、`components/contests` 里只服务单一 feature 的 UI。
 2. 再收 `components/notifications` 之外的其余单 capability 历史壳；`auth / profile / skill-profile / instance-list / scoreboard / notifications` 这一批已于 `2026-05-30` 收口到 owning feature 的 `ui/`。
 3. 最后确认 `review-archive` 最终 widget owner 收口完成，并检查 `components/class-management` 是否直接删除。
 
-### 第 1 批子目录迁移表
+### 第 1 批子目录迁移表（历史）
 
 以下清单只覆盖当前收益最高的三组历史业务目录：`components/platform`、`components/teacher`、`components/contests`。
 
