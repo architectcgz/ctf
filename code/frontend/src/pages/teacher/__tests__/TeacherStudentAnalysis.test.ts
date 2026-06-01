@@ -14,9 +14,11 @@ import studentAnalysisWorkspaceTabsSource from '@/features/teaching/student-anal
 import studentAnalysisWorkspaceTabsHelperSource from '@/features/teaching/student-analysis-workspace/ui/studentAnalysisWorkspaceTabs.ts?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
+import studentInsightPrimarySectionsSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPrimarySections.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/features/teaching/student-analysis-review/ui/StudentInsightAttackSessionsSection.vue?raw'
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
+import studentInsightReviewSectionsSource from '@/features/teaching/student-analysis-review/ui/StudentInsightReviewSections.vue?raw'
 import studentReviewWorkspaceSource from '@/features/teaching/student-analysis-review/ui/StudentReviewWorkspace.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -313,16 +315,18 @@ describe('TeacherStudentAnalysis', () => {
   })
 
   it('学员详情面板应通过 section 组件装配复盘区，而不是直接依赖 review workspace widget', () => {
-    expect(studentInsightPanelSource).toContain('StudentInsightOverviewSection')
-    expect(studentInsightPanelSource).toContain('StudentInsightRecommendationsSection')
-    expect(studentInsightPanelSource).toContain('StudentInsightAttackSessionsSection')
+    expect(studentInsightPanelSource).toContain('StudentInsightPrimarySections')
+    expect(studentInsightPanelSource).toContain('StudentInsightReviewSections')
     expect(studentInsightPanelSource).toContain(
       "from '@/features/teaching/student-analysis-review'"
     )
-    expect(studentInsightPanelSource).not.toContain(
-      "from './StudentInsightAttackSessionsSection.vue'"
-    )
+    expect(studentInsightPanelSource).not.toContain('StudentInsightOverviewSection')
+    expect(studentInsightPanelSource).not.toContain('StudentInsightRecommendationsSection')
+    expect(studentInsightPanelSource).not.toContain('StudentInsightAttackSessionsSection')
     expect(studentInsightPanelSource).not.toContain('TeacherStudentReviewWorkspace')
+    expect(studentInsightPrimarySectionsSource).toContain('StudentInsightOverviewSection')
+    expect(studentInsightPrimarySectionsSource).toContain('StudentInsightRecommendationsSection')
+    expect(studentInsightPrimarySectionsSource).toContain('TrainingTimelinePanel')
     expect(studentInsightOverviewSectionSource).toContain('<SkillRadar :scores="radarScores" />')
     expect(studentInsightRecommendationsSectionSource).toContain(
       'class="insight-recommendation-list workspace-directory-list"'
@@ -330,6 +334,9 @@ describe('TeacherStudentAnalysis', () => {
   })
 
   it('复盘区 section 应由 student-analysis-review feature 承接共享工作台组件', () => {
+    expect(studentInsightReviewSectionsSource).toContain('StudentInsightWriteupsSection')
+    expect(studentInsightReviewSectionsSource).toContain('StudentInsightManualReviewSection')
+    expect(studentInsightReviewSectionsSource).toContain('StudentInsightAttackSessionsSection')
     expect(studentInsightAttackSessionsSectionSource).toContain(
       "import StudentReviewWorkspace from './StudentReviewWorkspace.vue'"
     )

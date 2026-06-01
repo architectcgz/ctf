@@ -3,4 +3,5 @@ export { default as StudentAnalysisWorkspacePage } from './StudentAnalysisWorksp
 export { default as StudentAnalysisOverviewHeroPanel } from './StudentAnalysisOverviewHeroPanel.vue'
 export { default as StudentInsightOverviewSection } from './StudentInsightOverviewSection.vue'
 export { default as StudentInsightPanel } from './StudentInsightPanel.vue'
+export { default as StudentInsightPrimarySections } from './StudentInsightPrimarySections.vue'
 export { default as StudentInsightRecommendationsSection } from './StudentInsightRecommendationsSection.vue'

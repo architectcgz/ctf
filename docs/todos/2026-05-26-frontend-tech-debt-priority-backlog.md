@@ -48,7 +48,7 @@
 - `features/teaching/student-analysis-workspace/ui`
   - 现状：约 `94 KB / 12` 个运行时文件，是当前 teacher / platform 共享教学分析面里最明显的过宽 UI owner。
   - 代表：`StudentAnalysisPage.vue`、`StudentReviewWorkspace.vue`、`StudentInsightWriteupsSection.vue`、`StudentInsightManualReviewSection.vue`、`studentInsightShared.ts`
-  - `2026-06-01` 进展：review / writeup / manual review / evidence 这组区块已经从 `student-analysis-workspace/ui` 收回 `student-analysis-review/ui`；`StudentAnalysisPage.vue` 也继续收成 shell owner，tab 导航与 content 装配已经拆到内部子组件，workspace 现在更接近只保留 page shell、tab 组合和学员洞察总装配。
+  - `2026-06-01` 进展：review / writeup / manual review / evidence 这组区块已经从 `student-analysis-workspace/ui` 收回 `student-analysis-review/ui`；`StudentAnalysisPage.vue` 也继续收成 shell owner，tab 导航与 content 装配已经拆到内部子组件。当前 `StudentInsightPanel.vue` 又进一步退回 empty/loading shell，workspace 只保留 primary sections 组合，review feature 统一承接 review sections 组合。
 - `features/platform/contests/*`
   - 现状：`ui` 约 `91 KB / 22` 文件，`model` 约 `40 KB / 17` 文件，是当前平台竞赛目录与运维入口最重的 capability owner。
   - 代表：`ContestOrchestrationPage.vue` 与相关目录 / 运维 / 公告区块

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import AppCard from '@/shared/ui/common/AppCard.vue'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import type {
@@ -16,15 +14,11 @@ import type {
   StudentDirectoryItem,
   TimelineEvent,
 } from '@/api/contracts'
-import { TrainingTimelinePanel } from '@/entities/training-timeline'
 import {
-  StudentInsightAttackSessionsSection,
-  StudentInsightManualReviewSection,
-  StudentInsightWriteupsSection,
+  StudentInsightReviewSections,
   type StudentInsightSection,
 } from '@/features/teaching/student-analysis-review'
-import StudentInsightOverviewSection from './StudentInsightOverviewSection.vue'
-import StudentInsightRecommendationsSection from './StudentInsightRecommendationsSection.vue'
+import StudentInsightPrimarySections from './StudentInsightPrimarySections.vue'
 
 const props = defineProps<{
   student: StudentDirectoryItem | null
@@ -67,12 +61,6 @@ const emit = defineEmits<{
   changeWriteupPage: [page: number]
   updateReviewWorkspaceFilters: [payload: Partial<AttackSessionQuery>]
 }>()
-
-const showManualReviewSection = computed(() => props.activeSection === 'manual-review')
-
-function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boolean {
-  return !props.activeSection || props.activeSection === 'all' || props.activeSection === section
-}
 </script>
 
 <template>
@@ -99,19 +87,21 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
       </div>
 
       <template v-else-if="student">
-        <StudentInsightOverviewSection
-          v-if="isSectionVisible('overview')"
+        <StudentInsightPrimarySections
           :profile="profile"
-        />
-
-        <StudentInsightRecommendationsSection
-          v-if="isSectionVisible('recommendations')"
           :recommendations="recommendations"
+          :timeline="timeline"
+          :active-section="activeSection"
           @open-challenge="emit('openChallenge', $event)"
         />
 
-        <StudentInsightWriteupsSection
-          v-if="isSectionVisible('writeups')"
+        <StudentInsightReviewSections
+          :active-section="activeSection"
+          :attack-sessions="attackSessions"
+          :evidence="evidence"
+          :review-challenge-options="reviewChallengeOptions"
+          :review-workspace-loading="reviewWorkspaceLoading"
+          :review-workspace-query="reviewWorkspaceQuery"
           :writeup-submissions="writeupSubmissions"
           :writeup-page="writeupPage"
           :writeup-total="writeupTotal"
@@ -126,29 +116,8 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
           @moderate-writeup="emit('moderateWriteup', $event)"
           @review-manual-review="emit('reviewManualReview', $event)"
           @change-writeup-page="emit('changeWriteupPage', $event)"
-        />
-
-        <StudentInsightManualReviewSection
-          v-if="showManualReviewSection"
-          :manual-review-submissions="manualReviewSubmissions"
-          :active-manual-review="activeManualReview"
-          :manual-review-loading="manualReviewLoading"
-          :manual-review-saving="manualReviewSaving"
-          @open-manual-review="emit('openManualReview', $event)"
-          @review-manual-review="emit('reviewManualReview', $event)"
-        />
-
-        <StudentInsightAttackSessionsSection
-          v-if="isSectionVisible('evidence')"
-          :attack-sessions="attackSessions"
-          :evidence="evidence"
-          :review-challenge-options="reviewChallengeOptions"
-          :review-workspace-loading="reviewWorkspaceLoading"
-          :review-workspace-query="reviewWorkspaceQuery"
           @update-review-workspace-filters="emit('updateReviewWorkspaceFilters', $event)"
         />
-
-        <TrainingTimelinePanel v-if="isSectionVisible('timeline')" :timeline="timeline" />
       </template>
     </template>
   </div>
