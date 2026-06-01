@@ -122,9 +122,9 @@ watch(
         ? props.draft?.challenge_id || ''
         : isAwdContest.value
           ? ''
-          : selectableChallenges.value[0]?.id || ''
+          : ''
     form.awd_challenge_id = isAwdContest.value
-      ? props.draft?.awd_challenge_id || selectableAwdChallenges.value[0]?.id || ''
+      ? props.draft?.awd_challenge_id || ''
       : ''
     form.awd_challenge_ids = isAwdCreateMode.value && form.awd_challenge_id ? [form.awd_challenge_id] : []
     form.points = String(props.draft?.points ?? 100)

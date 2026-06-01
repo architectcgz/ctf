@@ -87,7 +87,7 @@ describe('ContestChallengeEditorDialog', () => {
     expect(wrapper.text()).not.toContain('multi-step banking target')
     expect(wrapper.text()).not.toContain('device control target')
     expect(wrapper.find('#contest-challenge-template').exists()).toBe(false)
-    expect(wrapper.find('#contest-awd-challenge-option-11').classes()).toContain('is-selected')
+    expect(wrapper.find('#contest-awd-challenge-option-11').exists()).toBe(true)
     expect(wrapper.find('#contest-awd-service-points').exists()).toBe(false)
     expect(wrapper.find('#contest-awd-service-order').exists()).toBe(false)
     expect(wrapper.find('#contest-awd-service-visibility').exists()).toBe(false)
@@ -103,8 +103,8 @@ describe('ContestChallengeEditorDialog', () => {
     expect(wrapper.emitted('save')?.[0]).toEqual([
       {
         challenge_id: undefined,
-        awd_challenge_id: 11,
-        awd_challenge_ids: [11, 12],
+        awd_challenge_id: 12,
+        awd_challenge_ids: [12],
         points: 100,
         order: 0,
         is_visible: true,
@@ -115,6 +115,7 @@ describe('ContestChallengeEditorDialog', () => {
   it('AWD 题目池创建时应该支持复选多个题目', async () => {
     const wrapper = mountDialog()
 
+    await wrapper.get('#contest-awd-challenge-option-11').trigger('click')
     await wrapper.get('#contest-awd-challenge-option-12').trigger('click')
 
     expect(wrapper.find('#contest-awd-challenge-option-11').classes()).toContain('is-selected')
