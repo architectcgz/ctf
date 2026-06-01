@@ -1,4 +1,4 @@
-import type { AdminContestUpdatePayload } from '@/api/admin/contests'
+import type { AdminContestUpdatePayload } from '@/api/admin/contest-manage'
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 
 export type PlatformContestStatus = Extract<

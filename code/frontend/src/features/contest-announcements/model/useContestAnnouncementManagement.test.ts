@@ -17,7 +17,7 @@ const toastMocks = vi.hoisted(() => ({
   warning: vi.fn(),
 }))
 
-vi.mock('@/api/admin/contests', () => adminApiMocks)
+vi.mock('@/api/admin/contest-announcements', () => adminApiMocks)
 vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))

@@ -1,10 +1,6 @@
 import { ref, type Ref } from 'vue'
 
-import {
-  getContestAWDInstanceOrchestration,
-  prewarmContestAWDInstances,
-  startContestAWDTeamServiceInstance,
-} from '@/api/admin/contests'
+import { getContestAWDInstanceOrchestration, prewarmContestAWDInstances, startContestAWDTeamServiceInstance } from '@/api/admin/contest-awd-admin'
 import type {
   AdminContestAWDInstancePrewarmSummaryData,
   ContestDetailData,

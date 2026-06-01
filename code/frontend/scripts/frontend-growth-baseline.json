@@ -23,5 +23,40 @@
     "baseline_lines": 45,
     "max_growth": 15,
     "max_lines": 70
+  },
+  "src/features/platform/contest-manage/model/useContestEditPage.ts": {
+    "baseline_lines": 208,
+    "max_growth": 30,
+    "max_lines": 250
+  },
+  "src/features/platform/contest-manage/model/contestFormSupport.ts": {
+    "baseline_lines": 137,
+    "max_growth": 20,
+    "max_lines": 170
+  },
+  "src/features/platform/contest-operations/model/useContestOperationsHubPage.ts": {
+    "baseline_lines": 137,
+    "max_growth": 20,
+    "max_lines": 170
+  },
+  "src/features/contest-awd-admin/model/useAwdServiceOperations.ts": {
+    "baseline_lines": 175,
+    "max_growth": 24,
+    "max_lines": 210
+  },
+  "src/features/contest-awd-admin/model/useAwdChallengeLinkOperations.ts": {
+    "baseline_lines": 141,
+    "max_growth": 20,
+    "max_lines": 175
+  },
+  "src/features/contest-projector/model/useContestProjectorData.ts": {
+    "baseline_lines": 256,
+    "max_growth": 34,
+    "max_lines": 300
+  },
+  "src/features/contest-workbench/model/useContestEditAwdWorkspace.ts": {
+    "baseline_lines": 209,
+    "max_growth": 30,
+    "max_lines": 250
   }
 }

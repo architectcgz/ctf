@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { PlatformContestAnnouncementsPage } from '@/features/platform/contests'
+import { PlatformContestAnnouncementsPage } from '@/features/platform/contest-announcements'
 
 defineProps<{
   contestId: string

@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted, ref, type ComputedRef, type Ref } from 'vue'
 
-import { getContest, updateContest } from '@/api/admin/contests'
+import { getContest, updateContest } from '@/api/admin/contest-manage'
 import type { AdminContestChallengeViewData, ContestDetailData } from '@/api/contracts'
 import {
   buildContestAnnouncementsRoute,
@@ -15,7 +15,7 @@ import {
   shouldConfirmContestTermination,
   type ContestFormDraft,
   type PlatformContestStatus,
-} from '@/features/platform/contests'
+} from '@/features/platform/contest-manage'
 import {
   CONTEST_WORKBENCH_STAGE_ORDER,
   type ContestWorkbenchStageKey,

@@ -1,6 +1,6 @@
 import { computed, ref, watch } from 'vue'
 
-import { getContests } from '@/api/admin/contests'
+import { getContests } from '@/api/admin/contest-manage'
 import type { ContestDetailData, ContestListSummaryData, ContestPageData } from '@/api/contracts'
 import { usePagination } from '@/shared/model/common/usePagination'
 

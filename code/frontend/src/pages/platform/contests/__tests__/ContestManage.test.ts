@@ -36,14 +36,21 @@ const contestOrchestrationCombinedSource = [
   ),
 ].join('\n')
 
-vi.mock('@/api/admin/contests', async () => {
+vi.mock('@/api/admin/contest-manage', async () => {
   const actual =
-    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
+    await vi.importActual<typeof import('@/api/admin/contest-manage')>('@/api/admin/contest-manage')
   return {
     ...actual,
     getContests: contestMocks.getContests,
     createContest: contestMocks.createContest,
     updateContest: contestMocks.updateContest,
+  }
+})
+vi.mock('@/api/admin/contest-operations', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/api/admin/contest-operations')>('@/api/admin/contest-operations')
+  return {
+    ...actual,
     getContestAWDReadiness: contestMocks.getContestAWDReadiness,
   }
 })
@@ -232,7 +239,7 @@ describe('ContestManage', () => {
   })
 
   it('路由页应把导出与多面板编排留在 feature owner，而不是继续在页面内联流程', () => {
-    expect(contestManageSource).toContain("from '@/features/platform/contests'")
+    expect(contestManageSource).toContain("from '@/features/platform/contest-manage'")
     expect(contestManageSource).toContain('PlatformContestManagePage')
     expect(contestManageSource).not.toContain('ContestOrchestrationPage')
     expect(contestManageSource).not.toContain('useContestManagePage')

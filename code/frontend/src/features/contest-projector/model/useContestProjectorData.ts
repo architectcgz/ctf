@@ -1,10 +1,7 @@
 import { computed, ref } from 'vue'
 
-import {
-  getAdminContestLiveScoreboard,
-  getContests,
-  listContestAWDRounds,
-} from '@/api/admin/contests'
+import { getContests, getAdminContestLiveScoreboard } from '@/api/admin/contest-manage'
+import { listContestAWDRounds } from '@/api/admin/contest-operations'
 import type {
   AWDAttackLogData,
   AWDRoundData,

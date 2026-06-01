@@ -19,7 +19,19 @@ const toastMocks = vi.hoisted(() => ({
   error: vi.fn(),
 }))
 
-vi.mock('@/api/admin/contests', () => adminApiMocks)
+vi.mock('@/api/admin/contest-manage', () => ({
+  getContests: adminApiMocks.getContests,
+  getAdminContestLiveScoreboard: adminApiMocks.getAdminContestLiveScoreboard,
+}))
+vi.mock('@/api/admin/contest-operations', () => ({
+  listContestAWDRounds: adminApiMocks.listContestAWDRounds,
+  listContestAWDRoundServices: adminApiMocks.listContestAWDRoundServices,
+  listContestAWDRoundAttacks: adminApiMocks.listContestAWDRoundAttacks,
+  getContestAWDRoundSummary: adminApiMocks.getContestAWDRoundSummary,
+}))
+vi.mock('@/api/admin/contest-awd-admin', () => ({
+  getContestAWDRoundTrafficSummary: adminApiMocks.getContestAWDRoundTrafficSummary,
+}))
 vi.mock('@/shared/model/common/useToast', () => ({
   useToast: () => toastMocks,
 }))

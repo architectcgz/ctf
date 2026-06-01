@@ -1,11 +1,6 @@
 import { ref, type ComputedRef, type Ref } from 'vue'
 
-import {
-  createContest,
-  updateContest,
-  type AdminContestCreatePayload,
-  type AdminContestUpdatePayload,
-} from '@/api/admin/contests'
+import { createContest, updateContest, type AdminContestCreatePayload, type AdminContestUpdatePayload } from '@/api/admin/contest-manage'
 import { ApiError } from '@/api/request'
 
 import type {

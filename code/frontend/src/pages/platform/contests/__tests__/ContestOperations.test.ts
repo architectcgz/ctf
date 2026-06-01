@@ -12,9 +12,9 @@ const adminApiMocks = vi.hoisted(() => ({
   getContest: vi.fn(),
 }))
 
-vi.mock('@/api/admin/contests', async () => {
+vi.mock('@/api/admin/contest-manage', async () => {
   const actual =
-    await vi.importActual<typeof import('@/api/admin/contests')>('@/api/admin/contests')
+    await vi.importActual<typeof import('@/api/admin/contest-manage')>('@/api/admin/contest-manage')
   return {
     ...actual,
     getContest: adminApiMocks.getContest,
@@ -81,7 +81,7 @@ describe('ContestOperations', () => {
     expect(contestOperationsSource).not.toContain("from '@/api/admin/contests'")
     expect(contestOperationsPageModelSource).toContain("from './useContestOperationsData'")
     expect(contestOperationsPageModelSource).not.toContain("from '@/api/admin/contests'")
-    expect(contestOperationsDataSource).toContain("from '@/api/admin/contests'")
+    expect(contestOperationsDataSource).toContain("from '@/api/admin/contest-manage'")
     expect(contestOperationsPageModelSource).not.toContain("from 'vue-router'")
     expect(platformRoutesSource).toContain("name: 'ContestOperations'")
     expect(platformRoutesSource).toContain(

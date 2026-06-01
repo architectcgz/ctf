@@ -1,12 +1,7 @@
 import { computed, ref, type Ref } from 'vue'
 
-import {
-  createContestAWDService,
-  getContestAWDReadiness,
-  listContestAWDServices,
-  updateContestAWDService,
-  type AdminContestAWDServiceCreatePayload,
-} from '@/api/admin/contests'
+import { getContestAWDReadiness } from '@/api/admin/contest-operations'
+import { createContestAWDService, listContestAWDServices, updateContestAWDService, type AdminContestAWDServiceCreatePayload } from '@/api/admin/contest-awd-admin'
 import { listAdminAwdChallenges } from '@/api/admin/awd-authoring'
 import type {
   AdminAwdChallengeData,

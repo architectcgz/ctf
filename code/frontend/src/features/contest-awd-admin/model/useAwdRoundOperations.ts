@@ -1,12 +1,6 @@
 import { ref, type ComputedRef, type Ref } from 'vue'
 
-import {
-  createContestAWDAttackLog,
-  createContestAWDRound,
-  createContestAWDServiceCheck,
-  runContestAWDCurrentRoundCheck,
-  runContestAWDRoundCheck,
-} from '@/api/admin/contests'
+import { createContestAWDAttackLog, createContestAWDRound, createContestAWDServiceCheck, runContestAWDCurrentRoundCheck, runContestAWDRoundCheck } from '@/api/admin/contest-operations'
 import type {
   AWDAttackLogData,
   AWDRoundData,

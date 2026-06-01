@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import adminContestApiSource from '@/api/admin/contests.ts?raw'
+import adminContestReviewsSource from '@/api/admin/contest-reviews.ts?raw'
 import adminTeachingApiSource from '@/api/admin/teaching.ts?raw'
 import teachingAwdReviewApiSource from '@/api/teaching/awd-reviews.ts?raw'
 import teachingInstanceApiSource from '@/api/teaching/instances.ts?raw'
@@ -96,16 +97,16 @@ describe('admin contest api contract', () => {
     expect(teachingAwdReviewApiSource).not.toContain('export async function exportTeacherAWDReviewArchive')
     expect(teachingAwdReviewApiSource).not.toContain('export async function exportTeacherAWDReviewReport')
 
-    expect(adminContestApiSource).toContain('export async function listPlatformAWDReviews')
-    expect(adminContestApiSource).toContain('export async function getPlatformAWDReview')
-    expect(adminContestApiSource).toContain('export async function exportPlatformAWDReviewArchive')
-    expect(adminContestApiSource).toContain('export async function exportPlatformAWDReviewReport')
-    expect(adminContestApiSource).not.toContain('listTeacherAWDReviews as listPlatformAWDReviews')
-    expect(adminContestApiSource).not.toContain('getTeacherAWDReview as getPlatformAWDReview')
-    expect(adminContestApiSource).not.toContain(
+    expect(adminContestReviewsSource).toContain('export async function listPlatformAWDReviews')
+    expect(adminContestReviewsSource).toContain('export async function getPlatformAWDReview')
+    expect(adminContestReviewsSource).toContain('export async function exportPlatformAWDReviewArchive')
+    expect(adminContestReviewsSource).toContain('export async function exportPlatformAWDReviewReport')
+    expect(adminContestReviewsSource).not.toContain('listTeacherAWDReviews as listPlatformAWDReviews')
+    expect(adminContestReviewsSource).not.toContain('getTeacherAWDReview as getPlatformAWDReview')
+    expect(adminContestReviewsSource).not.toContain(
       'exportTeacherAWDReviewArchive as exportPlatformAWDReviewArchive'
     )
-    expect(adminContestApiSource).not.toContain(
+    expect(adminContestReviewsSource).not.toContain(
       'exportTeacherAWDReviewReport as exportPlatformAWDReviewReport'
     )
   })

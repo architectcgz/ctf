@@ -1,9 +1,7 @@
 import { computed, onMounted, ref, watch, type Ref } from 'vue'
 
-import {
-  listAdminContestChallenges,
-  listContestAWDServices,
-} from '@/api/admin/contests'
+import { listAdminContestChallenges } from '@/api/admin/contest-manage'
+import { listContestAWDServices } from '@/api/admin/contest-awd-admin'
 import { getChallenges } from '@/api/admin/authoring'
 import type {
   AdminChallengeListItem,

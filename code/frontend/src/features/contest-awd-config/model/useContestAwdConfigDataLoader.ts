@@ -1,6 +1,7 @@
 import { ref, type Ref } from 'vue'
 
-import { getContest, listContestAWDServices } from '@/api/admin/contests'
+import { getContest } from '@/api/admin/contest-manage'
+import { listContestAWDServices } from '@/api/admin/contest-awd-admin'
 import type { AdminContestAWDServiceData, ContestDetailData } from '@/api/contracts'
 
 interface UseContestAwdConfigDataLoaderOptions {
