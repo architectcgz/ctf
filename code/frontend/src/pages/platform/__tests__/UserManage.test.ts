@@ -23,6 +23,9 @@ const adminApiMocks = vi.hoisted(() => ({
   updateUser: vi.fn(),
   deleteUser: vi.fn(),
   importUsers: vi.fn(),
+  getUserSessions: vi.fn(),
+  revokeUserSession: vi.fn(),
+  revokeAllUserSessions: vi.fn(),
 }))
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -40,6 +43,9 @@ vi.mock('@/api/admin/users', async () => {
     updateUser: adminApiMocks.updateUser,
     deleteUser: adminApiMocks.deleteUser,
     importUsers: adminApiMocks.importUsers,
+    getUserSessions: adminApiMocks.getUserSessions,
+    revokeUserSession: adminApiMocks.revokeUserSession,
+    revokeAllUserSessions: adminApiMocks.revokeAllUserSessions,
   }
 })
 vi.mock('vue-router', async () => {
@@ -88,6 +94,14 @@ describe('UserManage', () => {
       page: 1,
       page_size: 20,
     })
+    adminApiMocks.getUserSessions.mockResolvedValue([
+      {
+        id: 'session-abcd1234',
+        username: 'alice',
+        role: 'teacher' as const,
+        expires_at: '2026-04-01T12:00:00.000Z',
+      },
+    ])
 
     const wrapper = mount(UserManage, {
       global: {
@@ -114,6 +128,9 @@ describe('UserManage', () => {
     expect(detailDrawer).not.toBeNull()
     expect(detailDrawer?.textContent).toContain('alice@example.com')
     expect(detailDrawer?.textContent).toContain('未设置姓名')
+    expect(adminApiMocks.getUserSessions).toHaveBeenCalledWith('1', expect.any(Object))
+    expect(detailDrawer?.textContent).toContain('活跃会话')
+    expect(detailDrawer?.textContent).toContain('过期')
     expect(adminApiMocks.getUsers).toHaveBeenCalledWith(
       {
         page: 1,

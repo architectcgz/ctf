@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Copy, LogOut, UserRoundCheck } from 'lucide-vue-next'
 
 import type { AdminUserListItem, UserStatus } from '@/api/contracts'
@@ -28,9 +28,29 @@ const {
   revokeOne: handleRevokeSession,
   revokeAll: handleRevokeAll,
   copySessionIdToClipboard: copySessionId,
+  reset: resetSessions,
 } = usePlatformUserSessions(() => userId.value)
 
 const showRevokeAllConfirm = ref(false)
+
+// 切换用户或关窗时清除确认态，防止跨用户泄漏
+watch(
+  () => props.user?.id,
+  (newId, oldId) => {
+    if (newId !== oldId) {
+      showRevokeAllConfirm.value = false
+    }
+  }
+)
+watch(
+  () => props.user,
+  (newUser) => {
+    if (!newUser) {
+      showRevokeAllConfirm.value = false
+      resetSessions()
+    }
+  }
+)
 
 function handleRevokeAllWithConfirm() {
   showRevokeAllConfirm.value = true

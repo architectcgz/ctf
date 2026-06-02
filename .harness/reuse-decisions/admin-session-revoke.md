@@ -44,6 +44,8 @@ extend_existing
 - code/frontend/src/api/admin/users.ts
 - code/frontend/src/features/platform/user-management/model/usePlatformUserSessions.ts
 - code/frontend/src/features/platform/user-management/ui/UserGovernanceDetailModal.vue
+- code/frontend/src/pages/platform/__tests__/UserManage.test.ts
+- code/backend/internal/app/router_session_routes_test.go
 
 ## After implementation
 - 若后续 session 管理能力在其他页面复用（如审计页展示在线用户），在 `.harness/reuse-index/` 中添加 session API 模块级入口

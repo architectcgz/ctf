@@ -144,10 +144,14 @@ export async function deleteUser(id: string) {
   return request<void>({ method: 'DELETE', url: `/admin/users/${encodeURIComponent(id)}` })
 }
 
-export async function getUserSessions(userId: string) {
+export async function getUserSessions(
+  userId: string,
+  options?: { signal?: AbortSignal }
+) {
   const response = await request<{ sessions: RawUserSession[] }>({
     method: 'GET',
     url: `/admin/users/${encodeURIComponent(userId)}/sessions`,
+    signal: options?.signal,
   })
   return response.sessions.map(normalizeUserSession)
 }

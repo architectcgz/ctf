@@ -22,10 +22,16 @@ export function usePlatformUserSessions(userId: () => string | undefined) {
   async function fetch() {
     const uid = userId()
     if (!uid) return
+    fetchController?.abort()
+    fetchController = new AbortController()
+    const { signal } = fetchController
     loading.value = true
     try {
-      sessions.value = await getUserSessions(uid)
+      sessions.value = await getUserSessions(uid, { signal })
     } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') {
+        return
+      }
       console.warn('[usePlatformUserSessions] Failed to fetch sessions:', e)
       sessions.value = []
     } finally {
