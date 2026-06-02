@@ -2450,6 +2450,7 @@ func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
 	}, nil)
 
 	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		OwnerInstanceID: 4242,
 		Networks: []runtimeports.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
@@ -2464,8 +2465,14 @@ func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateTopology() error = %v", err)
 	}
+	if engine.appliedACLHandle == nil || engine.appliedACLHandle.Chain != "CTF-INS-4242" {
+		t.Fatalf("expected acl handle CTF-INS-4242, got %+v", engine.appliedACLHandle)
+	}
 	if len(engine.appliedACLRules) != 2 {
 		t.Fatalf("expected 2 acl rules, got %+v", engine.appliedACLRules)
+	}
+	if result.RuntimeDetails.ACL == nil || result.RuntimeDetails.ACL.Chain != "CTF-INS-4242" {
+		t.Fatalf("expected runtime acl handle, got %+v", result.RuntimeDetails.ACL)
 	}
 	if len(result.RuntimeDetails.ACLRules) != 2 {
 		t.Fatalf("expected runtime acl rules, got %+v", result.RuntimeDetails.ACLRules)
@@ -2475,6 +2482,53 @@ func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
 	}
 	if engine.appliedACLRules[1].Action != runtimecontracts.TopologyPolicyActionDeny || len(engine.appliedACLRules[1].Ports) != 0 {
 		t.Fatalf("unexpected fallback deny rule: %+v", engine.appliedACLRules[1])
+	}
+}
+
+func TestServiceCreateTopologyRejectsACLWithoutOwnerInstanceID(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:    "net-no-owner",
+		containerIDs: []string{"web-ctr", "db-ctr"},
+		inspectContainerNetworkIPsFunc: func(containerID string, engine *fakeRuntimeEngine) map[string]string {
+			if len(engine.createdNetworkNames) == 0 {
+				return nil
+			}
+			switch containerID {
+			case "web-ctr":
+				return map[string]string{engine.createdNetworkNames[0]: "172.30.0.2"}
+			case "db-ctr":
+				return map[string]string{engine.createdNetworkNames[0]: "172.30.0.3"}
+			default:
+				return nil
+			}
+		},
+	}
+	service := runtimecmd.NewProvisioningService(repo, engine, &config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30010,
+		PublicHost:     "127.0.0.1",
+	}, nil)
+
+	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		Networks: []runtimeports.TopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
+		},
+		Nodes: []runtimeports.TopologyCreateNode{
+			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+		},
+		Policies: []runtimecontracts.TopologyTrafficPolicy{
+			{SourceNodeKey: "web", TargetNodeKey: "db", Action: runtimecontracts.TopologyPolicyActionAllow, Protocol: runtimecontracts.TopologyPolicyProtocolTCP, Ports: []int{3306}},
+		},
+	})
+	if err == nil {
+		t.Fatal("expected CreateTopology() to fail without owner instance id")
+	}
+	if !strings.Contains(err.Error(), "owner instance id") {
+		t.Fatalf("expected owner instance id error, got %v", err)
 	}
 }
 
@@ -2740,6 +2794,8 @@ type fakeRuntimeEngine struct {
 	removedContainerIDs            []string
 	removedNetworkID               string
 	removedNetworkIDs              []string
+	appliedACLHandle               *runtimecontracts.InstanceRuntimeACLHandle
+	removedACLHandle               *runtimecontracts.InstanceRuntimeACLHandle
 	appliedACLRules                []runtimecontracts.InstanceRuntimeACLRule
 	removedACLRules                []runtimecontracts.InstanceRuntimeACLRule
 	connectedNetworks              map[string][]string
@@ -2881,6 +2937,20 @@ func (f *fakeRuntimeEngine) RemoveACLRules(ctx context.Context, rules []runtimec
 		return f.removeACLRulesFn(ctx, rules)
 	}
 	f.removedACLRules = append(f.removedACLRules, rules...)
+	return nil
+}
+
+func (f *fakeRuntimeEngine) ApplyACL(_ context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle, rules []runtimecontracts.InstanceRuntimeACLRule) error {
+	if f.applyACLErr != nil {
+		return f.applyACLErr
+	}
+	f.appliedACLHandle = handle
+	f.appliedACLRules = append(f.appliedACLRules, rules...)
+	return nil
+}
+
+func (f *fakeRuntimeEngine) RemoveACL(_ context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle) error {
+	f.removedACLHandle = handle
 	return nil
 }
 

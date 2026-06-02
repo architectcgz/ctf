@@ -261,6 +261,14 @@ func (e *testRuntimeEngine) RemoveACLRules(_ context.Context, _ []runtimecontrac
 	return nil
 }
 
+func (e *testRuntimeEngine) ApplyACL(_ context.Context, _ *runtimecontracts.InstanceRuntimeACLHandle, _ []runtimecontracts.InstanceRuntimeACLRule) error {
+	return nil
+}
+
+func (e *testRuntimeEngine) RemoveACL(_ context.Context, _ *runtimecontracts.InstanceRuntimeACLHandle) error {
+	return nil
+}
+
 func (e *testRuntimeEngine) ReadFileFromContainer(_ context.Context, containerID, filePath string, limit int64) ([]byte, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()

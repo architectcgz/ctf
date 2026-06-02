@@ -13,6 +13,7 @@ type ManagedResources struct {
 	NetworkIDs   []string
 	Subnets      []string
 	HostPorts    []int
+	ACLHandle    *runtimecontracts.InstanceRuntimeACLHandle
 	ACLRules     []runtimecontracts.InstanceRuntimeACLRule
 }
 
@@ -36,6 +37,7 @@ func ExtractManagedResources(instance *instancecontracts.Instance) ManagedResour
 		NetworkIDs:   uniqueNetworkIDs(details, instance.NetworkID),
 		Subnets:      uniqueNetworkSubnets(details),
 		HostPorts:    uniqueHostPorts(details, instance.HostPort),
+		ACLHandle:    details.ACL,
 		ACLRules:     append([]runtimecontracts.InstanceRuntimeACLRule(nil), details.ACLRules...),
 	}
 }

@@ -326,6 +326,14 @@ func (e *Engine) RemoveACLRules(ctx context.Context, rules []runtimecontracts.In
 	return removeACLRules(ctx, rules)
 }
 
+func (e *Engine) ApplyACL(ctx context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle, rules []runtimecontracts.InstanceRuntimeACLRule) error {
+	return applyInstanceACL(ctx, handle, rules)
+}
+
+func (e *Engine) RemoveACL(ctx context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle) error {
+	return removeInstanceACL(ctx, handle)
+}
+
 func (e *Engine) ensureImagePresent(ctx context.Context, imageRef string) error {
 	cli, err := e.requireClient()
 	if err != nil {

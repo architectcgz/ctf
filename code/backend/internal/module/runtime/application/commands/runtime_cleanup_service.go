@@ -64,7 +64,7 @@ func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *in
 	}
 
 	resources := runtimedomain.ExtractManagedResources(instance)
-	if err := s.removeACLRules(ctx, resources.ACLRules); err != nil {
+	if err := s.removeACL(ctx, resources); err != nil {
 		s.logger.Warn("删除实例 ACL 规则失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 	for _, containerID := range resources.ContainerIDs {
@@ -87,6 +87,27 @@ func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *in
 			return err
 		}
 	}
+	return nil
+}
+
+func (s *RuntimeCleanupService) removeACL(ctx context.Context, resources runtimedomain.ManagedResources) error {
+	if s == nil || s.engine == nil {
+		return errRuntimeEngineUnavailable()
+	}
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	// 新实例：优先按 ACL handle 删除。
+	if resources.ACLHandle != nil {
+		return s.engine.RemoveACL(timeoutCtx, resources.ACLHandle)
+	}
+
+	// 旧实例兼容：无 handle 时 fallback 到逐规则删除。
+	if len(resources.ACLRules) > 0 {
+		return s.engine.RemoveACLRules(timeoutCtx, resources.ACLRules)
+	}
+
 	return nil
 }
 

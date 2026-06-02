@@ -398,10 +398,18 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		return nil, err
 	}
 	if len(resolvedACLRules) > 0 {
-		if err := s.engine.ApplyACLRules(ctx, resolvedACLRules); err != nil {
+		if req.OwnerInstanceID <= 0 {
+			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
+			return nil, fmt.Errorf("topology acl requires a stable owner instance id, got %d", req.OwnerInstanceID)
+		}
+		handle := &runtimecontracts.InstanceRuntimeACLHandle{
+			Chain: fmt.Sprintf("CTF-INS-%d", req.OwnerInstanceID),
+		}
+		if err := s.engine.ApplyACL(ctx, handle, resolvedACLRules); err != nil {
 			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
+		details.ACL = handle
 		details.ACLRules = resolvedACLRules
 	}
 

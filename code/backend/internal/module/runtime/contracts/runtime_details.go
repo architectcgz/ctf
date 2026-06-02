@@ -5,11 +5,17 @@ import (
 	"strings"
 )
 
+// InstanceRuntimeACLHandle 表示实例级 ACL 资源句柄，是 cleanup 的 authority source。
+type InstanceRuntimeACLHandle struct {
+	Chain string `json:"chain"`
+}
+
 type InstanceRuntimeDetails struct {
-	Networks   []InstanceRuntimeNetwork   `json:"networks,omitempty"`
-	Containers []InstanceRuntimeContainer `json:"containers,omitempty"`
-	ACLRules   []InstanceRuntimeACLRule   `json:"acl_rules,omitempty"`
-	AWD        *InstanceAWDRuntimeDetails `json:"awd,omitempty"`
+	Networks   []InstanceRuntimeNetwork    `json:"networks,omitempty"`
+	Containers []InstanceRuntimeContainer  `json:"containers,omitempty"`
+	ACL        *InstanceRuntimeACLHandle   `json:"acl,omitempty"`
+	ACLRules   []InstanceRuntimeACLRule    `json:"acl_rules,omitempty"`
+	AWD        *InstanceAWDRuntimeDetails  `json:"awd,omitempty"`
 }
 
 type InstanceRuntimeNetwork struct {

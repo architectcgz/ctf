@@ -9,8 +9,8 @@
   `docker/ctf/docker-compose.dev.yml:66` — `/var/run/docker.sock` 直接挂载到 API 容器，容器被攻破后攻击者可控制宿主机 Docker daemon。考虑：Docker TLS 远程访问 + 受限权限、只读 rootfs、非 root 运行 API 容器。
   关联：`docker/ctf/docker-compose.dev.yml:63-66`
 
-- [ ] **iptables 命令参数校验加固**
-  `code/backend/internal/module/runtime/infrastructure/acl.go:45-72` — `buildACLCommand` 将 `InstanceRuntimeACLRule` 的 `SourceIP`、`TargetIP`、`Comment` 等字段直接拼入 iptables 参数。需确认数据来源是否用户可控，并对所有字段做白名单校验（IP 格式、协议名、action 名、Comment 字符集限制）。
+- [x] **iptables 命令参数校验加固**（2026-06-02 已修复）
+  `code/backend/internal/module/runtime/infrastructure/acl.go` — 已在 `validateAndCanonicalizeACLRule()` 中对 SourceIP/TargetIP（`net/netip` 单 IPv4）、Action（`allow`/`deny` 白名单）、Protocol（`any`/`tcp`/`udp` 白名单）、Ports（1-65535 去重排序、multiport 上限 15、`protocol=any` 禁止端口）、Comment（系统重建，不信任持久化值）做执行前白名单校验。同时 ACL cleanup authority 已从 `acl_rules` 数据库字段收口到实例级 iptables chain handle（`runtime_details.acl`），`acl_rules` 降级为调试快照。
 
 ## P2 — 中等风险
 

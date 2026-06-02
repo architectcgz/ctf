@@ -21,6 +21,7 @@ type ContainerProvisioningRuntime interface {
 	RemoveContainer(ctx context.Context, containerID string, force bool) error
 	RemoveNetwork(ctx context.Context, networkID string) error
 	ApplyACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
+	ApplyACL(ctx context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle, rules []runtimecontracts.InstanceRuntimeACLRule) error
 }
 
 // ContainerCleanupRuntime 定义实例运行时清理所需的容器运行时能力。
@@ -29,6 +30,7 @@ type ContainerCleanupRuntime interface {
 	RemoveContainer(ctx context.Context, containerID string, force bool) error
 	RemoveNetwork(ctx context.Context, networkID string) error
 	RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
+	RemoveACL(ctx context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle) error
 }
 
 // ContainerFileWriter 定义向容器写入文件的最小能力。

@@ -26,6 +26,10 @@ func (*typedNilCleanupEngine) RemoveACLRules(context.Context, []runtimecontracts
 	return nil
 }
 
+func (*typedNilCleanupEngine) RemoveACL(context.Context, *runtimecontracts.InstanceRuntimeACLHandle) error {
+	return nil
+}
+
 type typedNilProvisioningEngine struct{}
 
 func (*typedNilProvisioningEngine) CreateNetwork(context.Context, string, map[string]string, bool, bool, string) (string, error) {
@@ -69,6 +73,10 @@ func (*typedNilProvisioningEngine) RemoveNetwork(context.Context, string) error 
 }
 
 func (*typedNilProvisioningEngine) ApplyACLRules(context.Context, []runtimecontracts.InstanceRuntimeACLRule) error {
+	return nil
+}
+
+func (*typedNilProvisioningEngine) ApplyACL(context.Context, *runtimecontracts.InstanceRuntimeACLHandle, []runtimecontracts.InstanceRuntimeACLRule) error {
 	return nil
 }
 
