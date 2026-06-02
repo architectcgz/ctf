@@ -31,6 +31,14 @@ func (s *stubTokenService) DeleteSession(context.Context, string) error {
 	panic("unexpected call to DeleteSession")
 }
 
+func (s *stubTokenService) RevokeAllUserSessions(context.Context, int64) error {
+	panic("unexpected call to RevokeAllUserSessions")
+}
+
+func (s *stubTokenService) ListUserSessions(context.Context, int64) ([]authcontracts.Session, error) {
+	panic("unexpected call to ListUserSessions")
+}
+
 func (s *stubTokenService) IssueWSTicket(context.Context, authctx.CurrentUser) (*authcontracts.WSTicket, error) {
 	panic("unexpected call to IssueWSTicket")
 }

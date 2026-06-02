@@ -752,6 +752,8 @@ volumes:
 
 CTF 靶场的核心安全挑战：靶机容器本身就是"有漏洞的服务"，必须严格隔离，防止选手通过靶机攻击平台或其他用户。
 
+这里的关键前提不是“API 一定已经存在可利用漏洞”，而是平台边界必须按“API 迟早会出现实现缺陷、配置缺陷或外部集成缺陷”来设计。当前 `code/backend/internal/app/router.go` 对外暴露了认证、文件上传、WebSocket、竞赛实时通道等入口；`code/backend/internal/module/challenge/api/http/handler.go`、`code/backend/internal/module/challenge/application/commands/challenge_import_service.go`、`code/backend/internal/module/auth/infrastructure/cas_ticket_validator.go` 会处理 zip / YAML / CAS 外部响应等不可信输入；`code/backend/internal/module/runtime/infrastructure/engine_provisioning.go`、`code/backend/internal/module/runtime/infrastructure/engine_files.go`、`code/backend/internal/module/contest/infrastructure/docker_checker_runner.go` 又掌握容器创建、镜像拉取、网络创建、容器内 exec 与 checker sandbox 管理等高权限能力。因此部署边界不能建立在“API 永远不会被打穿”这个假设上，而应保证 API 失陷后不会直接升级成宿主机级控制。
+
 #### 网络隔离模型
 
 ```mermaid
@@ -788,6 +790,31 @@ flowchart TD
 | 禁止特权模式 | 禁止 `--privileged`，最小化 capabilities | Drop ALL，仅保留必要的 NET_BIND_SERVICE 等 |
 | 禁止访问宿主机 | iptables 规则阻断靶机到宿主机 IP 的流量 | 防止通过 Docker Gateway 攻击宿主机服务 |
 | 自动清理 | 过期容器定时扫描 + 强制删除 | 防止僵尸容器堆积 |
+
+#### API 控制面威胁模型
+
+当前平台不是普通 CRUD 服务。`ContainerRuntimeModule` 与 `InstanceModule` 之后接的能力，最终会落到 Docker Engine、iptables、文件系统和 checker sandbox 上。对这类服务，安全边界默认按以下假设成立：
+
+| 假设 | 说明 |
+|------|------|
+| API 暴露面长期存在 | 登录、CAS、文件上传、WebSocket、竞赛实时通道、题目导入、实例控制等入口都持续接收不可信输入 |
+| 实现缺陷迟早会出现 | 真实风险不只来自 RCE，也包括认证绕过、对象级授权遗漏、路径穿越、参数校验不严、SSRF、反序列化、资源耗尽等 |
+| 攻击者只需要一个可利用点 | 守方需要长期保证所有入口、依赖和配置都不出错，因此部署边界必须默认允许局部失陷 |
+| API 拿到 Docker root 等于宿主机级控制 | 若 API 进程可直接操作本机 Docker daemon，被打穿后攻击者通常可以创建特权容器、挂载宿主目录、操控其他容器或接管运行时网络 |
+
+因此，平台应追求的不是“证明 API 不会被攻破”，而是“即使 API 被攻破，也不能顺手变成宿主机 root 或 Docker root”。
+
+#### 平台控制面部署建议
+
+针对 API 与 Docker Engine 的放置方式，当前采用以下分级建议：
+
+| 方案 | 适用阶段 | 结论 | 说明 |
+|------|----------|------|------|
+| API 容器直接挂载宿主 `/var/run/docker.sock` | 仅限一次性本机开发排障 | 不推荐作为默认路径 | API 容器失陷后会直接继承宿主 Docker daemon 的控制权，不能作为共享开发、演示或正式环境边界 |
+| API 直接跑宿主机进程，Docker Engine 仍在本机 | 本地开发、小规模单机试运行 | 可作为过渡方案 | 能去掉“容器内通过 docker.sock 直接提权”的捷径，但 API 一旦失陷，攻击者仍可能利用 API 所在主机上的 Docker 控制能力继续扩大权限 |
+| API 主机与靶机 Docker 主机分离，`DOCKER_HOST=tcp://host:2376` + mTLS | 共享开发、校内试运行、正式比赛 | 推荐的正式目标 | 把平台控制面与靶机宿主隔离开，API 失陷后不会自动获得 API 所在主机的本地 Docker root；mTLS 只解决传输与身份认证，若还需要继续收窄控制面权限，应在 Docker daemon 前增加 AuthZ plugin 或自定义最小权限代理 |
+
+单机阶段的推荐动作是：默认让 `ctf-api` 以宿主机进程运行，`docker compose` 只承担 PostgreSQL / Redis 等开发依赖；不要把“容器内 API + 宿主 docker.sock 挂载”作为默认开发路径。正式对外提供多人使用、共享演示或比赛服务时，推荐拆成 API 主机与靶机 Docker 主机两台物理机或两组安全边界明确的运行节点。
 
 ### 7.6 配置文件结构
 

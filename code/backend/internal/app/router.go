@@ -70,6 +70,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	engine.Use(middleware.Recovery(log))
 	engine.Use(middleware.RequestID())
 	engine.Use(middleware.CORS(cfg.CORS))
+	engine.Use(middleware.SecurityHeaders())
 	engine.Use(middleware.AccessLog(log))
 
 	rateChecker := ratelimitpkg.NewChecker(cache, cfg.RateLimit.RedisKeyPrefix)

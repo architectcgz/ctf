@@ -45,6 +45,7 @@ npm run dev
 - 如果 `8080` 已被占用，脚本会自动把后端切到 `18080`
 - 如果不需要热重载，也可以用 `cd code/backend && ./scripts/dev-run.sh --infra --migrate`
 - 如果只想直接运行后端，也可以用 `cd code/backend && APP_ENV=dev go run ./cmd/api`，但这时数据库和 Redis 相关环境变量需要自己提供
+- 这是默认推荐路径。当前架构假设 API 迟早会出现实现或配置缺陷，因此默认开发链路不让 `ctf-api` 容器直接持有宿主 Docker daemon 控制权；部署边界说明见 `docs/architecture/backend/01-system-architecture.md` 的“7.5 安全边界设计”
 
 默认开发账号由初始迁移写入，密码均为 `Password123`：
 
@@ -60,6 +61,14 @@ npm run dev
 ```bash
 CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build
 ```
+
+这条路径默认只适合单用户、本机临时联调，不适合作为共享开发、演示或正式部署方案。原因是 `docker/ctf/docker-compose.dev.yml` 里的 `ctf-api` 会直接访问宿主 Docker daemon，用来管理靶机、checker sandbox 和运行时网络；如果 API 容器失陷，攻击者通常可以继续控制宿主 Docker 运行时。因此：
+
+- 日常开发优先使用上面的“依赖容器 + 本机前后端”
+- 需要多人长期使用时，至少把 API 改成宿主机进程运行
+- 正式比赛或共享环境，推荐把 API 主机与靶机 Docker 主机拆开，通过 `DOCKER_HOST` + mTLS 管理远端 Docker Engine
+
+更完整的威胁模型与部署建议见 `docs/architecture/backend/01-system-architecture.md` 的“7.5 安全边界设计”。
 
 默认端口：
 
