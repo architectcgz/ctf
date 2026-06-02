@@ -93,9 +93,9 @@ export function useSecuritySettingsPage() {
     )
   }
 
-  async function submitPasswordChange(): Promise<void> {
+  async function submitPasswordChange(): Promise<boolean> {
     if (passwordSaving.value || !validatePasswordForm()) {
-      return
+      return false
     }
 
     passwordSaving.value = true
@@ -108,10 +108,12 @@ export function useSecuritySettingsPage() {
       passwordForm.oldPassword = ''
       passwordForm.newPassword = ''
       passwordForm.confirmPassword = ''
-      toast.success('密码修改成功')
+      toast.success('密码修改成功，请重新登录')
+      return true
     } catch (err) {
       console.error('修改密码失败:', err)
       passwordError.value = err instanceof Error ? err.message : '修改密码失败，请稍后重试'
+      return false
     } finally {
       passwordSaving.value = false
     }
