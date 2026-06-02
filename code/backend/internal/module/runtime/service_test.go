@@ -2561,6 +2561,7 @@ func TestServiceCreateTopologyRollsBackWhenACLApplyFails(t *testing.T) {
 	}, nil)
 
 	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+			OwnerInstanceID: 1,
 		Networks: []runtimeports.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
