@@ -8,6 +8,7 @@ import {
 import type { AdminChallengeWriteupData, WriteupSubmissionItemData } from '@/api/contracts'
 import { confirmDestructiveAction } from '@/shared/model/common/useDestructiveConfirm'
 import { useToast } from '@/shared/model/common/useToast'
+import { WRITEUP_PAGE_SIZE } from '@/utils/constants'
 
 export type WriteupDirectoryRow = {
   key: string
@@ -35,7 +36,7 @@ export function useChallengeWriteupManagement(options: UseChallengeWriteupManage
   const writeup = ref<AdminChallengeWriteupData | null>(null)
   const writeupSubmissions = ref<WriteupSubmissionItemData[]>([])
   const submissionPage = ref(1)
-  const submissionPageSize = ref(6)
+  const submissionPageSize = ref(WRITEUP_PAGE_SIZE)
   const submissionTotal = ref(0)
 
   const submissionTotalPages = computed(() =>

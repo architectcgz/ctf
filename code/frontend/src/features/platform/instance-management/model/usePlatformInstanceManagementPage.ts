@@ -5,6 +5,7 @@ import { getInstanceStudentDisplayName } from '@/entities/instance'
 import { useManagedInstanceDirectory } from '@/features/managed-instance-directory'
 import { useManagedInstanceDestroyAction } from '@/features/managed-instance-workflow'
 import { reportFrontendError } from '@/utils/reportFrontendError'
+import { INSTANCE_MANAGEMENT_PAGE_SIZE } from '@/utils/constants'
 import {
   platformInstanceStudentAnalysisRoute,
   platformOverviewRoute,
@@ -46,7 +47,7 @@ export function usePlatformInstanceManagementPage() {
     handlePageChange,
   } = useManagedInstanceDirectory({
     role: 'admin',
-    initialPageSize: 15,
+    initialPageSize: INSTANCE_MANAGEMENT_PAGE_SIZE,
     buildQuery: ({ page, pageSize }) => ({
       class_name: undefined,
       keyword: keyword.value.trim() || undefined,

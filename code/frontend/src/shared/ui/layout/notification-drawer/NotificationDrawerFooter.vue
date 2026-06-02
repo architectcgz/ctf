@@ -27,13 +27,13 @@ defineEmits<{
   padding: var(--space-3) 0 calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
   z-index: 1;
   border-top: 1px solid var(--notification-panel-edge-soft);
-  background-color: rgb(255 255 255);
+  background-color: var(--color-bg-surface);
   background-image: var(--notification-footer-bg);
   box-shadow: none;
 }
 
 :global([data-theme='dark']) .panel-footer {
-  background-color: rgb(10 19 30);
+  background-color: var(--color-bg-surface);
 }
 
 .view-all-btn {
@@ -45,7 +45,7 @@ defineEmits<{
   column-gap: var(--space-3);
   padding: 0 1.75rem 0 1.5rem;
   border: 0;
-  background-color: rgb(255 255 255);
+  background-color: var(--color-bg-surface);
   background-image: var(--notification-footer-bg);
   color: var(--notification-footer-text);
   cursor: pointer;
@@ -53,11 +53,12 @@ defineEmits<{
 }
 
 :global([data-theme='dark']) .view-all-btn {
-  background-color: rgb(10 19 30);
+  background-color: var(--color-bg-surface);
 }
 
 .view-all-btn:focus-visible {
-  outline: var(--ui-focus-ring-width) solid rgb(114 184 255 / 0.46);
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 46%, var(--color-border-default));
   outline-offset: var(--space-1);
 }
 

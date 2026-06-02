@@ -21,3 +21,9 @@ export const TOAST_DURATION = {
 
 // 分页配置
 export const DEFAULT_PAGE_SIZE = 20
+/** 提交记录分页大小 */
+export const SUBMISSION_RECORDS_PAGE_SIZE = 10
+/** 题解/写作文档分页大小 */
+export const WRITEUP_PAGE_SIZE = 6
+/** 平台实例管理分页大小 */
+export const INSTANCE_MANAGEMENT_PAGE_SIZE = 15

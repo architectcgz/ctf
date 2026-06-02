@@ -58,7 +58,9 @@ defineEmits<{
 .bell-icon {
   width: var(--space-5);
   height: var(--space-5);
-  filter: drop-shadow(0 0 0.4375rem rgb(90 163 255 / 0.12));
+  filter: drop-shadow(
+    0 0 0.4375rem color-mix(in srgb, var(--color-primary) 16%, var(--color-bg-surface))
+  );
 }
 
 .bell-dot {
@@ -113,7 +115,8 @@ defineEmits<{
 }
 
 .close-btn:focus-visible {
-  outline: var(--ui-focus-ring-width) solid rgb(114 184 255 / 0.46);
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 46%, var(--color-border-default));
   outline-offset: var(--space-1);
 }
 </style>

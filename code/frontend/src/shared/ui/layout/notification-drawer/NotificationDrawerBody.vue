@@ -165,7 +165,8 @@ function selectNotification(id: string): void {
 }
 
 .notice-card:focus-visible {
-  outline: var(--ui-focus-ring-width) solid rgb(114 184 255 / 0.46);
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 46%, var(--color-border-default));
   outline-offset: var(--space-1);
 }
 
@@ -179,13 +180,13 @@ function selectNotification(id: string): void {
   justify-content: center;
   background: radial-gradient(
     circle at 48% 43%,
-    rgb(81 240 130 / 0.2),
-    rgb(58 188 101 / 0.14) 52%,
-    rgb(58 188 101 / 0.09)
+    color-mix(in srgb, var(--color-success) 20%, transparent),
+    color-mix(in srgb, var(--color-success) 14%, transparent) 52%,
+    color-mix(in srgb, var(--color-success) 9%, transparent)
   );
   box-shadow:
-    0 0 1.75rem rgb(67 225 121 / 0.09),
-    inset 0 0 0 1px rgb(76 230 126 / 0.04);
+    0 0 1.75rem color-mix(in srgb, var(--color-success) 9%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--color-success) 4%, transparent);
 }
 
 .notice-icon__glyph {
@@ -261,7 +262,7 @@ function selectNotification(id: string): void {
   background: var(--notification-signal);
   box-shadow:
     0 0 1.125rem color-mix(in srgb, var(--notification-signal) 72%, transparent),
-    0 0 0.125rem rgb(255 255 255 / 0.4) inset;
+    0 0 0.125rem color-mix(in srgb, var(--color-bg-surface) 40%, transparent) inset;
 }
 
 @media (max-width: 768px) {

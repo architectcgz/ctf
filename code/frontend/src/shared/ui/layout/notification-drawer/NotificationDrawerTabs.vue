@@ -71,8 +71,8 @@ defineEmits<{
 }
 
 .tab-btn:focus-visible {
-  outline: var(--ui-focus-ring-width) solid rgb(114 184 255 / 0.46);
-  outline-color: var(--color-primary);
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 46%, var(--color-border-default));
   outline-offset: calc(var(--space-0-5) * -1);
 }
 

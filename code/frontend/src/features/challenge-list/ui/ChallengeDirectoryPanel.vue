@@ -200,10 +200,12 @@
   justify-content: center;
 }
 
+/* 通过 CSS 变量定制 AppEmpty 内部样式，避免直接覆盖内部属性 */
 :deep(.challenge-empty-state.challenge-directory-state) {
-  margin-top: 0;
-  border-color: color-mix(in srgb, var(--journal-border) 80%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
+  --app-empty-margin-top: 0;
+  --app-empty-border-top: 1px solid color-mix(in srgb, var(--journal-border) 80%, transparent);
+  --app-empty-border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 80%, transparent);
+  --app-empty-background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
 }
 
 .challenge-directory {
