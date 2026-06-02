@@ -116,6 +116,10 @@ func (m *mockTokenService) ConsumeWSTicket(context.Context, string) (*authctx.Cu
 	return nil, nil
 }
 
+func (m *mockTokenService) RevokeAllUserSessions(context.Context, int64) error {
+	return nil
+}
+
 func TestServiceRegisterSuccess(t *testing.T) {
 	t.Parallel()
 

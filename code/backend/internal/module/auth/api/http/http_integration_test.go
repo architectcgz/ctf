@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -97,8 +98,9 @@ type testAuditLogItem struct {
 }
 
 type integrationTestEnv struct {
-	router *gin.Engine
-	db     *gorm.DB
+	router       *gin.Engine
+	db           *gorm.DB
+	tokenService *memoryTokenService
 }
 
 type memoryTokenService struct {
@@ -108,6 +110,7 @@ type memoryTokenService struct {
 	mu       sync.Mutex
 	sessions map[string]authcontracts.Session
 	tickets  map[string]authctx.CurrentUser
+	revokeErr error
 }
 
 var fallbackRequestIDCounter atomic.Uint64
@@ -264,6 +267,26 @@ func TestHTTP_ChangePasswordFlow(t *testing.T) {
 		t.Fatalf("unexpected change password code: %d body=%s", changeBody.Code, changeResp.Body.String())
 	}
 
+	// 改密后响应应清除 session cookie
+	clearedCookie := cloneCookie(changeResp.Result().Cookies(), "ctf_session")
+	if clearedCookie == nil || clearedCookie.MaxAge >= 0 {
+		t.Fatalf("expected cleared session cookie after password change")
+	}
+
+	// 改密后旧 session 应被拒绝
+	protectedResp := performJSONRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		"/api/v1/auth/profile",
+		nil,
+		nil,
+		[]*http.Cookie{sessionCookie},
+	)
+	if protectedResp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected old session to be rejected after password change, got %d body=%s", protectedResp.Code, protectedResp.Body.String())
+	}
+
 	oldLoginResp := performJSONRequest(
 		t,
 		env.router,
@@ -301,6 +324,47 @@ func TestHTTP_ChangePasswordFlow(t *testing.T) {
 	}
 	if cookieValue(newLoginResp.Result().Cookies(), "ctf_session") == "" {
 		t.Fatalf("expected new session cookie after password change")
+	}
+}
+
+func TestHTTP_ChangePasswordReturnsErrorWhenSessionRevocationFails(t *testing.T) {
+	env := newIntegrationTestEnv(t)
+	env.tokenService.revokeErr = errors.New("redis unavailable")
+
+	registerResp := performJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/auth/register",
+		map[string]any{
+			"username": "change_pwd_fail_user",
+			"password": "Password123",
+		},
+		nil,
+		nil,
+	)
+	if registerResp.Code != http.StatusOK {
+		t.Fatalf("unexpected register status: %d body=%s", registerResp.Code, registerResp.Body.String())
+	}
+	sessionCookie := cloneCookie(registerResp.Result().Cookies(), "ctf_session")
+	if sessionCookie == nil {
+		t.Fatal("expected session cookie from register response")
+	}
+
+	changeResp := performJSONRequest(
+		t,
+		env.router,
+		http.MethodPut,
+		"/api/v1/auth/password",
+		map[string]any{
+			"old_password": "Password123",
+			"new_password": "Password456",
+		},
+		nil,
+		[]*http.Cookie{sessionCookie},
+	)
+	if changeResp.Code == http.StatusOK {
+		t.Fatalf("expected password change to fail when session revocation fails, body=%s", changeResp.Body.String())
 	}
 }
 
@@ -735,8 +799,9 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	})
 
 	return &integrationTestEnv{
-		router: router,
-		db:     db,
+		router:       router,
+		db:           db,
+		tokenService: tokenService,
 	}
 }
 
@@ -753,7 +818,7 @@ func newTestAuthConfig(t *testing.T) config.AuthConfig {
 	}
 }
 
-func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig) authcontracts.TokenService {
+func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig) *memoryTokenService {
 	return &memoryTokenService{
 		config:   cfg,
 		wsConfig: wsCfg,
@@ -803,6 +868,20 @@ func (s *memoryTokenService) DeleteSession(_ context.Context, sessionID string) 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.sessions, sessionID)
+	return nil
+}
+
+func (s *memoryTokenService) RevokeAllUserSessions(_ context.Context, userID int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.revokeErr != nil {
+		return s.revokeErr
+	}
+	for id, sess := range s.sessions {
+		if sess.UserID == userID {
+			delete(s.sessions, id)
+		}
+	}
 	return nil
 }
 

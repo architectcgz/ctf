@@ -25,11 +25,12 @@ type wsTicketPayload struct {
 }
 
 type sessionRecord struct {
-	ID        string    `json:"id"`
-	UserID    int64     `json:"user_id"`
-	Username  string    `json:"username"`
-	Role      string    `json:"role"`
-	ExpiresAt time.Time `json:"expires_at"`
+	ID             string    `json:"id"`
+	UserID         int64     `json:"user_id"`
+	Username       string    `json:"username"`
+	Role           string    `json:"role"`
+	SessionVersion int64     `json:"session_version,omitempty"`
+	ExpiresAt      time.Time `json:"expires_at"`
 }
 
 type tokenService struct {
@@ -56,13 +57,19 @@ func (s *tokenService) CreateSession(ctx context.Context, userID int64, username
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
+	sessionVersion, err := s.getUserSessionVersion(ctx, userID)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+
 	expiresAt := time.Now().Add(s.config.SessionTTL).UTC()
 	record := sessionRecord{
-		ID:        sessionID,
-		UserID:    userID,
-		Username:  username,
-		Role:      role,
-		ExpiresAt: expiresAt,
+		ID:             sessionID,
+		UserID:         userID,
+		Username:       username,
+		Role:           role,
+		SessionVersion: sessionVersion,
+		ExpiresAt:      expiresAt,
 	}
 	payload, err := json.Marshal(record)
 	if err != nil {
@@ -70,6 +77,17 @@ func (s *tokenService) CreateSession(ctx context.Context, userID int64, username
 	}
 	if err := s.cache.Set(ctx, s.sessionKey(sessionID), payload, s.config.SessionTTL).Err(); err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
+	}
+
+	// 维护 user→sessions 反向索引，仅用于撤销后的存储清理；安全语义由 session version 判定。
+	userSessionsKey := s.userSessionsKey(userID)
+	indexTTL := s.config.SessionTTL + time.Hour
+	pipe := s.cache.Pipeline()
+	pipe.SAdd(ctx, userSessionsKey, sessionID)
+	pipe.Expire(ctx, userSessionsKey, indexTTL)
+	if _, pipeErr := pipe.Exec(ctx); pipeErr != nil {
+		// 索引维护失败不影响鉴权正确性，只会让撤销后的物理清理退化为延迟过期。
+		_ = pipeErr
 	}
 
 	return &authcontracts.Session{
@@ -108,6 +126,17 @@ func (s *tokenService) GetSession(ctx context.Context, sessionID string) (*authc
 		_ = s.cache.Del(ctx, s.sessionKey(sessionID)).Err()
 		return nil, authcontracts.ErrAccessTokenExpired
 	}
+	currentVersion, err := s.getUserSessionVersion(ctx, record.UserID)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	if record.SessionVersion != currentVersion {
+		_ = s.cache.Del(ctx, s.sessionKey(sessionID)).Err()
+		if record.UserID > 0 {
+			_ = s.cache.SRem(ctx, s.userSessionsKey(record.UserID), sessionID).Err()
+		}
+		return nil, authcontracts.ErrAccessTokenExpired
+	}
 
 	return &authcontracts.Session{
 		ID:        record.ID,
@@ -125,9 +154,55 @@ func (s *tokenService) DeleteSession(ctx context.Context, sessionID string) erro
 	if sessionID == "" {
 		return nil
 	}
-	if err := s.cache.Del(ctx, s.sessionKey(sessionID)).Err(); err != nil {
+
+	// 尝试读取会话记录以获取 userID，用于清理反向索引
+	payload, err := s.cache.Get(ctx, s.sessionKey(sessionID)).Result()
+	if err != nil && !errors.Is(err, redislib.Nil) {
 		return err
 	}
+
+	pipe := s.cache.Pipeline()
+	pipe.Del(ctx, s.sessionKey(sessionID))
+	if payload != "" {
+		var record sessionRecord
+		if json.Unmarshal([]byte(payload), &record) == nil && record.UserID > 0 {
+			pipe.SRem(ctx, s.userSessionsKey(record.UserID), sessionID)
+		}
+	}
+	_, err = pipe.Exec(ctx)
+	return err
+}
+
+func (s *tokenService) RevokeAllUserSessions(ctx context.Context, userID int64) error {
+	if err := requireContext(ctx); err != nil {
+		return err
+	}
+	if userID <= 0 {
+		return nil
+	}
+
+	if _, err := s.cache.Incr(ctx, s.userSessionVersionKey(userID)).Result(); err != nil {
+		return err
+	}
+
+	userSessionsKey := s.userSessionsKey(userID)
+	sessionIDs, err := s.cache.SMembers(ctx, userSessionsKey).Result()
+	if err != nil {
+		return nil
+	}
+	if len(sessionIDs) == 0 {
+		// 即使没有活跃会话，也清理可能残留的空集合
+		_ = s.cache.Del(ctx, userSessionsKey).Err()
+		return nil
+	}
+
+	keys := make([]string, 0, len(sessionIDs)+1)
+	for _, sid := range sessionIDs {
+		keys = append(keys, s.sessionKey(sid))
+	}
+	keys = append(keys, userSessionsKey)
+
+	_ = s.cache.Del(ctx, keys...).Err()
 	return nil
 }
 
@@ -194,6 +269,25 @@ func (s *tokenService) ConsumeWSTicket(ctx context.Context, ticket string) (*aut
 
 func (s *tokenService) sessionKey(sessionID string) string {
 	return fmt.Sprintf("%s:%s", s.config.SessionKeyPrefix, sessionID)
+}
+
+func (s *tokenService) userSessionsKey(userID int64) string {
+	return fmt.Sprintf("%s:user_sessions:%d", s.config.SessionKeyPrefix, userID)
+}
+
+func (s *tokenService) userSessionVersionKey(userID int64) string {
+	return fmt.Sprintf("%s:user_session_version:%d", s.config.SessionKeyPrefix, userID)
+}
+
+func (s *tokenService) getUserSessionVersion(ctx context.Context, userID int64) (int64, error) {
+	if userID <= 0 {
+		return 0, nil
+	}
+	version, err := s.cache.Get(ctx, s.userSessionVersionKey(userID)).Int64()
+	if errors.Is(err, redislib.Nil) {
+		return 0, nil
+	}
+	return version, err
 }
 
 func requireContext(ctx context.Context) error {

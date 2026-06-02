@@ -218,6 +218,17 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
+	// 密码变更后撤销该用户所有会话，强制所有设备重新登录
+	if err := h.tokenService.RevokeAllUserSessions(c.Request.Context(), authUser.UserID); err != nil {
+		h.log.Error("auth_change_password_revoke_sessions_failed",
+			zap.Int64("user_id", authUser.UserID),
+			zap.Error(err),
+		)
+		response.FromError(c, apperror.ErrInternal.WithCause(err))
+		return
+	}
+	h.clearSessionCookie(c)
+
 	h.recordAudit(c, auditlog.Entry{
 		UserID:       &authUser.UserID,
 		Action:       auditlog.ActionUpdate,

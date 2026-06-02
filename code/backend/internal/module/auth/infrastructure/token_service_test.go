@@ -14,6 +14,25 @@ import (
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 )
 
+type failDelHook struct{}
+
+func (failDelHook) DialHook(next redislib.DialHook) redislib.DialHook {
+	return next
+}
+
+func (failDelHook) ProcessHook(next redislib.ProcessHook) redislib.ProcessHook {
+	return func(ctx context.Context, cmd redislib.Cmder) error {
+		if cmd.Name() == "del" {
+			return errors.New("forced del failure")
+		}
+		return next(ctx, cmd)
+	}
+}
+
+func (failDelHook) ProcessPipelineHook(next redislib.ProcessPipelineHook) redislib.ProcessPipelineHook {
+	return next
+}
+
 func TestTokenServiceCreateGetAndDeleteSession(t *testing.T) {
 	mini := miniredis.RunT(t)
 	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
@@ -113,6 +132,48 @@ func TestTokenServiceCreateSessionRejectsNilContext(t *testing.T) {
 
 	if _, err := service.CreateSession(nil, 42, "alice", "student"); err == nil {
 		t.Fatal("expected CreateSession() to reject nil context")
+	}
+}
+
+func TestTokenServiceRevokeAllUserSessionsInvalidatesLegacySessionWithoutIndex(t *testing.T) {
+	mini := miniredis.RunT(t)
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	cfg := newTestAuthConfig()
+	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient)
+
+	payload := `{"id":"legacy-session","user_id":42,"username":"alice","role":"student","expires_at":"2099-01-01T00:00:00Z"}`
+	if err := redisClient.Set(context.Background(), cfg.SessionKeyPrefix+":legacy-session", payload, time.Hour).Err(); err != nil {
+		t.Fatalf("seed legacy payload: %v", err)
+	}
+
+	if err := service.RevokeAllUserSessions(context.Background(), 42); err != nil {
+		t.Fatalf("RevokeAllUserSessions() error = %v", err)
+	}
+
+	if _, err := service.GetSession(context.Background(), "legacy-session"); !errors.Is(err, authcontracts.ErrAccessTokenExpired) {
+		t.Fatalf("expected legacy session to be revoked after user-wide revocation, got %v", err)
+	}
+}
+
+func TestTokenServiceRevokeAllUserSessionsIgnoresCleanupDeleteFailureAfterVersionIncrement(t *testing.T) {
+	mini := miniredis.RunT(t)
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	redisClient.AddHook(failDelHook{})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	service := authinfra.NewTokenService(newTestAuthConfig(), testWebSocketConfig(), redisClient)
+	session, err := service.CreateSession(context.Background(), 42, "alice", "student")
+	if err != nil {
+		t.Fatalf("CreateSession() error = %v", err)
+	}
+
+	if err := service.RevokeAllUserSessions(context.Background(), 42); err != nil {
+		t.Fatalf("expected cleanup delete failure to be ignored, got %v", err)
+	}
+	if _, err := service.GetSession(context.Background(), session.ID); !errors.Is(err, authcontracts.ErrAccessTokenExpired) {
+		t.Fatalf("expected session to be invalidated after version increment, got %v", err)
 	}
 }
 
