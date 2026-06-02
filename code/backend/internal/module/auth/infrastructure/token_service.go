@@ -206,6 +206,70 @@ func (s *tokenService) RevokeAllUserSessions(ctx context.Context, userID int64) 
 	return nil
 }
 
+func (s *tokenService) ListUserSessions(ctx context.Context, userID int64) ([]authcontracts.Session, error) {
+	if err := requireContext(ctx); err != nil {
+		return nil, err
+	}
+	if userID <= 0 {
+		return nil, nil
+	}
+
+	userSessionsKey := s.userSessionsKey(userID)
+	sessionIDs, err := s.cache.SMembers(ctx, userSessionsKey).Result()
+	if err != nil {
+		return nil, fmt.Errorf("list user sessions: SMembers: %w", err)
+	}
+	if len(sessionIDs) == 0 {
+		return nil, nil
+	}
+
+	sessionKeys := make([]string, 0, len(sessionIDs))
+	for _, sid := range sessionIDs {
+		sessionKeys = append(sessionKeys, s.sessionKey(sid))
+	}
+
+	raw, err := s.cache.MGet(ctx, sessionKeys...).Result()
+	if err != nil {
+		return nil, fmt.Errorf("list user sessions: MGet: %w", err)
+	}
+
+	currentVersion, versionErr := s.getUserSessionVersion(ctx, userID)
+	if versionErr != nil {
+		return nil, fmt.Errorf("list user sessions: version: %w", versionErr)
+	}
+
+	now := time.Now().UTC()
+	sessions := make([]authcontracts.Session, 0, len(raw))
+	for _, val := range raw {
+		if val == nil {
+			continue
+		}
+		str, ok := val.(string)
+		if !ok {
+			continue
+		}
+		var record sessionRecord
+		if err := json.Unmarshal([]byte(str), &record); err != nil {
+			continue
+		}
+		if !record.ExpiresAt.After(now) {
+			continue
+		}
+		if record.SessionVersion != currentVersion {
+			continue
+		}
+		sessions = append(sessions, authcontracts.Session{
+			ID:        record.ID,
+			UserID:    record.UserID,
+			Username:  record.Username,
+			Role:      record.Role,
+			ExpiresAt: record.ExpiresAt,
+		})
+	}
+
+	return sessions, nil
+}
+
 func (s *tokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*authcontracts.WSTicket, error) {
 	if err := requireContext(ctx); err != nil {
 		return nil, err

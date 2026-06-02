@@ -61,3 +61,11 @@ type ImportUserError struct {
 	Row     int    `json:"row"`
 	Message string `json:"message"`
 }
+
+// UserSessionResp 管理员视角的用户会话信息。
+type UserSessionResp struct {
+	ID        string    `json:"id"`
+	Username  string    `json:"username"`
+	Role      string    `json:"role"`
+	ExpiresAt time.Time `json:"expires_at"`
+}

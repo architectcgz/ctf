@@ -167,6 +167,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		challenge:       challengeModule,
 		contest:         contestModule,
 		ops:             opsModule,
+		tokenService:    tokenService,
 	})
 	registerAdminRoutes(adminOnly, adminRouteDeps{
 		identityHandler: identityModule.AdminHandler,
@@ -177,6 +178,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		contest:         contestModule,
 		ops:             opsModule,
 		practice:        practiceModule,
+		tokenService:    tokenService,
 	})
 	registerUserRoutes(apiV1, protected, teacherOrAbove, userRouteDeps{
 		auditLogger:   composition.NamedAuditLogger(log),

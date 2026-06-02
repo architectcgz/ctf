@@ -1414,6 +1414,13 @@ export interface AdminUserImportData {
   errors?: Array<{ row: number; message: string }>
 }
 
+export interface UserSessionData {
+  id: string
+  username: string
+  role: UserRole
+  expires_at: ISODateTime
+}
+
 export interface AdminCheatDetectionSummary {
   submit_burst_users: number
   shared_ip_groups: number

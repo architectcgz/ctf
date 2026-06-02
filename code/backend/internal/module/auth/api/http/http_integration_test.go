@@ -885,6 +885,18 @@ func (s *memoryTokenService) RevokeAllUserSessions(_ context.Context, userID int
 	return nil
 }
 
+func (s *memoryTokenService) ListUserSessions(_ context.Context, userID int64) ([]authcontracts.Session, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	result := make([]authcontracts.Session, 0)
+	for _, sess := range s.sessions {
+		if sess.UserID == userID {
+			result = append(result, sess)
+		}
+	}
+	return result, nil
+}
+
 func (s *memoryTokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*authcontracts.WSTicket, error) {
 	ticket := fmt.Sprintf("ticket_%s", randomHex(12))
 	expiresAt := time.Now().Add(s.wsConfig.TicketTTL)

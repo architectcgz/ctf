@@ -120,6 +120,10 @@ func (m *mockTokenService) RevokeAllUserSessions(context.Context, int64) error {
 	return nil
 }
 
+func (m *mockTokenService) ListUserSessions(context.Context, int64) ([]authcontracts.Session, error) {
+	return nil, nil
+}
+
 func TestServiceRegisterSuccess(t *testing.T) {
 	t.Parallel()
 

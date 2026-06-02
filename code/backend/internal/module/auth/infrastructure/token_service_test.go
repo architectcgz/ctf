@@ -177,6 +177,93 @@ func TestTokenServiceRevokeAllUserSessionsIgnoresCleanupDeleteFailureAfterVersio
 	}
 }
 
+func TestTokenServiceListUserSessionsReturnsActiveSessions(t *testing.T) {
+	mini := miniredis.RunT(t)
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	service := authinfra.NewTokenService(newTestAuthConfig(), testWebSocketConfig(), redisClient)
+
+	s1, err := service.CreateSession(context.Background(), 42, "alice", "student")
+	if err != nil {
+		t.Fatalf("CreateSession() error = %v", err)
+	}
+	s2, err := service.CreateSession(context.Background(), 42, "alice", "student")
+	if err != nil {
+		t.Fatalf("CreateSession() error = %v", err)
+	}
+
+	sessions, err := service.ListUserSessions(context.Background(), 42)
+	if err != nil {
+		t.Fatalf("ListUserSessions() error = %v", err)
+	}
+	if len(sessions) != 2 {
+		t.Fatalf("expected 2 active sessions, got %d", len(sessions))
+	}
+
+	ids := map[string]bool{}
+	for _, s := range sessions {
+		ids[s.ID] = true
+	}
+	if !ids[s1.ID] || !ids[s2.ID] {
+		t.Fatalf("expected both session ids in result, got %+v", sessions)
+	}
+}
+
+func TestTokenServiceListUserSessionsEmptyForUnknownUser(t *testing.T) {
+	mini := miniredis.RunT(t)
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	service := authinfra.NewTokenService(newTestAuthConfig(), testWebSocketConfig(), redisClient)
+
+	sessions, err := service.ListUserSessions(context.Background(), 999)
+	if err != nil {
+		t.Fatalf("ListUserSessions() error = %v", err)
+	}
+	if len(sessions) != 0 {
+		t.Fatalf("expected no sessions for unknown user, got %d", len(sessions))
+	}
+}
+
+func TestTokenServiceListUserSessionsFiltersExpired(t *testing.T) {
+	mini := miniredis.RunT(t)
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	cfg := newTestAuthConfig()
+	cfg.SessionTTL = 1 * time.Hour
+	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient)
+
+	_, err := service.CreateSession(context.Background(), 42, "alice", "student")
+	if err != nil {
+		t.Fatalf("CreateSession() error = %v", err)
+	}
+
+	// Fast-forward redis time to expire the session
+	mini.FastForward(2 * time.Hour)
+
+	sessions, err := service.ListUserSessions(context.Background(), 42)
+	if err != nil {
+		t.Fatalf("ListUserSessions() error = %v", err)
+	}
+	if len(sessions) != 0 {
+		t.Fatalf("expected no sessions after expiry, got %d", len(sessions))
+	}
+}
+
+func TestTokenServiceListUserSessionsRejectsNilContext(t *testing.T) {
+	mini := miniredis.RunT(t)
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	service := authinfra.NewTokenService(newTestAuthConfig(), testWebSocketConfig(), redisClient)
+
+	if _, err := service.ListUserSessions(nil, 42); err == nil {
+		t.Fatal("expected ListUserSessions() to reject nil context")
+	}
+}
+
 func testWebSocketConfig() config.WebSocketConfig {
 	return config.WebSocketConfig{
 		TicketTTL:       time.Minute,

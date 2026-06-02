@@ -5,6 +5,7 @@ import type {
   AdminUserListItem,
   AdminUserUpsertData,
   PageResult,
+  UserSessionData,
 } from '../contracts'
 import type { UserRole } from '@/utils/constants'
 
@@ -72,6 +73,22 @@ function normalizeAdminUser(item: RawAdminUser): AdminUserListItem {
   }
 }
 
+interface RawUserSession {
+  id: string
+  username: string
+  role: UserRole
+  expires_at: string
+}
+
+function normalizeUserSession(item: RawUserSession): UserSessionData {
+  return {
+    id: item.id,
+    username: item.username,
+    role: item.role,
+    expires_at: item.expires_at,
+  }
+}
+
 export async function getUsers(
   params?: UserListParams,
   options?: { signal?: AbortSignal }
@@ -125,6 +142,28 @@ export async function updateUser(
 
 export async function deleteUser(id: string) {
   return request<void>({ method: 'DELETE', url: `/admin/users/${encodeURIComponent(id)}` })
+}
+
+export async function getUserSessions(userId: string) {
+  const response = await request<{ sessions: RawUserSession[] }>({
+    method: 'GET',
+    url: `/admin/users/${encodeURIComponent(userId)}/sessions`,
+  })
+  return response.sessions.map(normalizeUserSession)
+}
+
+export async function revokeUserSession(userId: string, sessionId: string) {
+  return request<void>({
+    method: 'DELETE',
+    url: `/admin/users/${encodeURIComponent(userId)}/sessions/${encodeURIComponent(sessionId)}`,
+  })
+}
+
+export async function revokeAllUserSessions(userId: string) {
+  return request<void>({
+    method: 'DELETE',
+    url: `/admin/users/${encodeURIComponent(userId)}/sessions`,
+  })
 }
 
 export async function importUsers(file: File) {
