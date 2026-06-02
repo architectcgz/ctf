@@ -49,9 +49,21 @@ body {
   background-color: var(--color-bg-base);
   color: var(--color-text-primary);
   background-image:
-    radial-gradient(circle at top left, rgba(8, 145, 178, 0.14), transparent 26rem),
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 20rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 28rem);
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary) 28%, var(--color-bg-base)),
+      transparent 26rem
+    ),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 18%, var(--color-bg-base)),
+      transparent 20rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 30%, transparent),
+      transparent 28rem
+    );
 }
 
 #app {
@@ -1041,10 +1053,10 @@ option {
   background-color: var(--color-bg-surface);
   border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
   border-radius: 1.5rem;
-  /* 关键：使用双重描边（外白内黑影），创造极致的区分度 */
+  /* 关键：使用双重描边，创造极致的区分度 */
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 90%, white),
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 0 0 1px color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-text-primary)),
+    0 10px 15px -3px color-mix(in srgb, var(--color-shadow-strong) 40%, transparent),
     0 25px 50px -12px var(--color-shadow-soft);
   overflow: hidden;
 }

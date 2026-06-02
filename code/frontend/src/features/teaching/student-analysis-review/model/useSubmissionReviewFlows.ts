@@ -16,6 +16,7 @@ import type {
   WriteupSubmissionItemData,
 } from '@/api/contracts'
 import { useToast } from '@/shared/model/common/useToast'
+import { WRITEUP_PAGE_SIZE } from '@/utils/constants'
 
 interface UseSubmissionReviewFlowsOptions {
   getCurrentStudentId: () => string
@@ -27,7 +28,7 @@ export function useSubmissionReviewFlows(options: UseSubmissionReviewFlowsOption
 
   const writeupSubmissions = ref<WriteupSubmissionItemData[]>([])
   const writeupPage = ref(1)
-  const writeupPageSize = ref(6)
+  const writeupPageSize = ref(WRITEUP_PAGE_SIZE)
   const writeupTotal = ref(0)
   const writeupPaginationLoading = ref(false)
   const manualReviewSubmissions = ref<ManualReviewSubmissionItemData[]>([])

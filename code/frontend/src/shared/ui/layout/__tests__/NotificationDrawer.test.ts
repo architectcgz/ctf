@@ -289,43 +289,20 @@ describe('NotificationDrawer', () => {
     expect(tabActiveBlock).toContain('border-color: var(--notification-tab-active-border);')
   })
 
-  it('通知抽屉应同时定义白天与夜间模式面板变量', () => {
-    expect(notificationDrawerSource).toContain('--notification-panel-surface: rgb(255 255 255);')
+  it('通知抽屉应同时定义白天与夜间模式面板变量，且使用 design token 替代硬编码颜色', () => {
+    // 默认（亮色）面板使用 design token
+    expect(notificationDrawerSource).toContain('--notification-panel-surface: var(--color-bg-surface);')
     expect(notificationDrawerSource).toContain('--notification-card-bg')
     expect(notificationDrawerSource).toContain('--notification-footer-bg')
+    // 深色模式覆盖存在
     expect(notificationDrawerSource).toContain("[data-theme='dark'] .notification-panel")
-    expect(notificationDrawerSource).toContain('--notification-panel-surface: rgb(14 23 34);')
-    expect(notificationDrawerSource).toContain('--notification-panel-surface-end: rgb(9 18 29);')
-    expect(notificationDrawerSource).toContain('background-color: rgb(255 255 255);')
-    expect(notificationDrawerSource).toContain(
-      'background-image: linear-gradient(180deg, rgb(255 255 255), rgb(244 247 251));'
-    )
     expect(notificationDrawerSource).toContain("[data-theme='dark'] .panel-inner")
-    expect(notificationDrawerSource).toContain('background-color: rgb(14 23 34);')
-    expect(notificationDrawerSource).toContain(
-      'background-image: linear-gradient(180deg, rgb(14 23 34), rgb(9 18 29));'
-    )
-    expect(notificationDrawerSource).toContain(
-      '--notification-card-bg: linear-gradient(180deg, rgb(255 255 255), rgb(248 250 252));'
-    )
-    expect(notificationDrawerSource).toContain(
-      '--notification-card-bg: linear-gradient(180deg, rgb(18 31 45), rgb(13 23 35));'
-    )
-    expect(notificationDrawerSource).toContain(
-      '--notification-footer-bg: linear-gradient(180deg, rgb(255 255 255), rgb(244 247 251));'
-    )
-    expect(notificationDrawerSource).toContain(
-      '--notification-footer-bg: linear-gradient(180deg, rgb(10 19 30), rgb(8 17 27));'
-    )
-    expect(notificationDrawerSource).toContain(
-      '--notification-panel-shell-bg: linear-gradient(180deg, rgb(255 255 255), rgb(244 247 251));'
-    )
-    expect(notificationDrawerSource).toContain(
-      '--notification-panel-shell-bg: linear-gradient(180deg, rgb(14 23 34), rgb(9 18 29));'
-    )
+    // 面板背景使用 token
+    expect(notificationDrawerSource).toContain('background-color: var(--color-bg-surface);')
     expect(notificationDrawerSource).toContain(
       'background-image: var(--notification-panel-shell-bg);'
     )
+    // CSS 变量定义中不应再残留硬编码 rgb()
     expect(notificationDrawerSource).not.toContain('rgb(255 255 255 / 0.98)')
     expect(notificationDrawerSource).not.toContain('rgb(244 247 251 / 0.99)')
     expect(notificationDrawerSource).not.toContain('rgb(14 23 34 / 0.98)')
@@ -353,10 +330,10 @@ describe('NotificationDrawer', () => {
     expect(footerBlock).toContain(
       'padding: var(--space-3) 0 calc(var(--space-3) + env(safe-area-inset-bottom, 0px));'
     )
-    expect(footerBlock).toContain('background-color: rgb(255 255 255);')
+    expect(footerBlock).toContain('background-color: var(--color-bg-surface);')
     expect(footerBlock).toContain('background-image: var(--notification-footer-bg);')
     expect(viewAllButtonBlock).toContain('min-height: var(--ui-control-height-lg);')
-    expect(viewAllButtonBlock).toContain('background-color: rgb(255 255 255);')
+    expect(viewAllButtonBlock).toContain('background-color: var(--color-bg-surface);')
     expect(viewAllButtonBlock).toContain('background-image: var(--notification-footer-bg);')
     expect(footerBlock).not.toContain('min-height: calc(5.75rem')
     expect(viewAllButtonBlock).not.toContain('height: 5.75rem;')

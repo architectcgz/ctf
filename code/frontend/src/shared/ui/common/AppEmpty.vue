@@ -66,8 +66,15 @@ const iconComp = computed<IconComp>(() => iconRegistry[props.icon] || Inbox)
 
 <style scoped>
 .app-empty {
-  border-top: 1px solid color-mix(in srgb, var(--color-border-subtle) 74%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border-subtle) 74%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 38%, transparent);
+  --app-empty-border-top: 1px solid
+    color-mix(in srgb, var(--color-border-subtle) 74%, transparent);
+  --app-empty-border-bottom: 1px solid
+    color-mix(in srgb, var(--color-border-subtle) 74%, transparent);
+  --app-empty-background: color-mix(in srgb, var(--color-bg-surface) 38%, transparent);
+  --app-empty-margin-top: 0;
+  margin-top: var(--app-empty-margin-top);
+  border-top: var(--app-empty-border-top);
+  border-bottom: var(--app-empty-border-bottom);
+  background: var(--app-empty-background);
 }
 </style>

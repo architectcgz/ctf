@@ -6,6 +6,7 @@ import type { AuditLogItem } from '@/api/contracts'
 import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import type { WorkspaceDirectorySortOption } from '@/entities/workspace-directory'
 import { useAbortController } from '@/shared/lib/request/useAbortController'
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 type AuditSortKey = 'created_at' | 'action' | 'actor'
 type AuditSortOption = WorkspaceDirectorySortOption & {
@@ -31,7 +32,7 @@ export function useAuditLogPage() {
   const list = ref<AuditLogItem[]>([])
   const total = ref(0)
   const page = ref(1)
-  const pageSize = ref(20)
+  const pageSize = ref(DEFAULT_PAGE_SIZE)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const keyword = ref('')

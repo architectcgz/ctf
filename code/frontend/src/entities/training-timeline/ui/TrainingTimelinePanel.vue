@@ -382,6 +382,7 @@ import { Activity, FileText, Server, Target } from 'lucide-vue-next'
 
 import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import { formatTime } from '@/utils/format'
+import { SUBMISSION_RECORDS_PAGE_SIZE } from '@/utils/constants'
 
 import {
   timelineSummary,
@@ -468,7 +469,7 @@ watch(
 
 const pagedTimeline = computed(() => {
   const safePage = Math.max(1, Math.floor(timelinePage.value || 1))
-  const safePageSize = Math.max(1, Math.floor(props.pageSize || 10))
+  const safePageSize = Math.max(1, Math.floor(props.pageSize || SUBMISSION_RECORDS_PAGE_SIZE))
   const start = (safePage - 1) * safePageSize
   return sortedTimeline.value.slice(start, start + safePageSize)
 })

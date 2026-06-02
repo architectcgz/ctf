@@ -13,6 +13,7 @@ import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryT
 import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
 import { useSanitize } from '@/shared/lib/sanitize/useSanitize'
 import { useToast } from '@/shared/model/common/useToast'
+import { SUBMISSION_RECORDS_PAGE_SIZE } from '@/utils/constants'
 
 import {
   useChallengeDetailInteractions,
@@ -84,7 +85,7 @@ export function useChallengeDetailPage() {
   })
 
   const solutionTabOrder: ChallengeSolutionTab[] = ['recommended', 'community']
-  const submissionRecordPageSize = 10
+  const submissionRecordPageSize = SUBMISSION_RECORDS_PAGE_SIZE
   const { clearSolutions, loadSolutions, loadChallenge } = useChallengeDetailDataLoader({
     challengeId,
     challenge,

@@ -98,7 +98,8 @@ defineEmits<{
 }
 
 .text-action:focus-visible {
-  outline: var(--ui-focus-ring-width) solid rgb(114 184 255 / 0.46);
+  outline: var(--ui-focus-ring-width) solid
+    color-mix(in srgb, var(--color-primary) 46%, var(--color-border-default));
   outline-offset: var(--space-1);
 }
 
