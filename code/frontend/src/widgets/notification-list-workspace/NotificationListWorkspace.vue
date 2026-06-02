@@ -273,14 +273,16 @@
 }
 
 .notification-filter-section {
+  --notification-filter-cluster-gap: var(--space-5);
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--notification-filter-cluster-gap);
 }
 
 .notification-directory-shell {
+  --student-directory-shell-section-gap: var(--space-6);
   --workspace-directory-grid-columns: 8.75rem minmax(0, 1fr) 11.25rem 7.5rem;
 }
 

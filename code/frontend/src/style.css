@@ -471,6 +471,7 @@ option {
 }
 
 .student-directory-shell {
+  --student-directory-shell-section-gap: var(--space-4);
   --workspace-directory-shell-padding: var(--space-5);
   --workspace-directory-shell-radius: var(--radius-2xl);
   --workspace-directory-shell-border: color-mix(
@@ -509,7 +510,7 @@ option {
     .notification-directory,
     .scoreboard-table-scroll
   ) {
-  margin-top: var(--space-4);
+  margin-top: var(--student-directory-shell-section-gap);
 }
 
 .student-directory-filters
@@ -519,7 +520,7 @@ option {
     .challenge-directory,
     .notification-directory
   ) {
-  margin-top: var(--space-4);
+  margin-top: var(--student-directory-shell-section-gap);
 }
 
 .student-directory-shell__head {

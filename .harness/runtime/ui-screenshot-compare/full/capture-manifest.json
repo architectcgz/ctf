@@ -1,0 +1,582 @@
+[
+  {
+    "version": "before",
+    "role": "guest",
+    "route": "/login",
+    "file": "before-guest-login.png",
+    "requestedUrl": "http://127.0.0.1:5173/login",
+    "finalUrl": "http://127.0.0.1:5173/401?from=%2Flogin",
+    "title": "CTF 靶场平台 - 未认证",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "student",
+    "route": "/student/dashboard",
+    "file": "before-student-student-dashboard.png",
+    "requestedUrl": "http://127.0.0.1:5173/student/dashboard",
+    "finalUrl": "http://127.0.0.1:5173/student/dashboard",
+    "title": "CTF 靶场平台 - 仪表盘",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "student",
+    "route": "/challenges",
+    "file": "before-student-challenges.png",
+    "requestedUrl": "http://127.0.0.1:5173/challenges",
+    "finalUrl": "http://127.0.0.1:5173/challenges",
+    "title": "CTF 靶场平台 - 题目",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "student",
+    "route": "/contests",
+    "file": "before-student-contests.png",
+    "requestedUrl": "http://127.0.0.1:5173/contests",
+    "finalUrl": "http://127.0.0.1:5173/contests",
+    "title": "CTF 靶场平台 - 竞赛",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "student",
+    "route": "/scoreboard",
+    "file": "before-student-scoreboard.png",
+    "requestedUrl": "http://127.0.0.1:5173/scoreboard",
+    "finalUrl": "http://127.0.0.1:5173/scoreboard",
+    "title": "CTF 靶场平台 - 排行榜",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "student",
+    "route": "/student/instances",
+    "file": "before-student-student-instances.png",
+    "requestedUrl": "http://127.0.0.1:5173/student/instances",
+    "finalUrl": "http://127.0.0.1:5173/student/instances",
+    "title": "CTF 靶场平台 - 我的实例",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "student",
+    "route": "/student/skill-profile",
+    "file": "before-student-student-skill-profile.png",
+    "requestedUrl": "http://127.0.0.1:5173/student/skill-profile",
+    "finalUrl": "http://127.0.0.1:5173/student/skill-profile",
+    "title": "CTF 靶场平台 - 能力画像",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "student",
+    "route": "/profile",
+    "file": "before-student-profile.png",
+    "requestedUrl": "http://127.0.0.1:5173/profile",
+    "finalUrl": "http://127.0.0.1:5173/profile",
+    "title": "CTF 靶场平台 - 个人资料",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "student",
+    "route": "/settings/security",
+    "file": "before-student-settings-security.png",
+    "requestedUrl": "http://127.0.0.1:5173/settings/security",
+    "finalUrl": "http://127.0.0.1:5173/settings/security",
+    "title": "CTF 靶场平台 - 安全设置",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "student",
+    "route": "/notifications",
+    "file": "before-student-notifications.png",
+    "requestedUrl": "http://127.0.0.1:5173/notifications",
+    "finalUrl": "http://127.0.0.1:5173/notifications",
+    "title": "CTF 靶场平台 - 通知",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "teacher",
+    "route": "/academy/overview",
+    "file": "before-teacher-academy-overview.png",
+    "requestedUrl": "http://127.0.0.1:5173/academy/overview",
+    "finalUrl": "http://127.0.0.1:5173/academy/overview",
+    "title": "CTF 靶场平台 - 教学概览",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "teacher",
+    "route": "/academy/classes",
+    "file": "before-teacher-academy-classes.png",
+    "requestedUrl": "http://127.0.0.1:5173/academy/classes",
+    "finalUrl": "http://127.0.0.1:5173/academy/classes",
+    "title": "CTF 靶场平台 - 班级管理",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "teacher",
+    "route": "/academy/students",
+    "file": "before-teacher-academy-students.png",
+    "requestedUrl": "http://127.0.0.1:5173/academy/students",
+    "finalUrl": "http://127.0.0.1:5173/academy/students",
+    "title": "CTF 靶场平台 - 学生管理",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "teacher",
+    "route": "/academy/awd-reviews",
+    "file": "before-teacher-academy-awd-reviews.png",
+    "requestedUrl": "http://127.0.0.1:5173/academy/awd-reviews",
+    "finalUrl": "http://127.0.0.1:5173/academy/awd-reviews",
+    "title": "CTF 靶场平台 - AWD复盘",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "teacher",
+    "route": "/academy/instances",
+    "file": "before-teacher-academy-instances.png",
+    "requestedUrl": "http://127.0.0.1:5173/academy/instances",
+    "finalUrl": "http://127.0.0.1:5173/academy/instances",
+    "title": "CTF 靶场平台 - 实例管理",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/overview",
+    "file": "before-admin-platform-overview.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/overview",
+    "finalUrl": "http://127.0.0.1:5173/platform/overview",
+    "title": "CTF 靶场平台 - 系统概览",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/classes",
+    "file": "before-admin-platform-classes.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/classes",
+    "finalUrl": "http://127.0.0.1:5173/platform/classes",
+    "title": "CTF 靶场平台 - 班级管理",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/students",
+    "file": "before-admin-platform-students.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/students",
+    "finalUrl": "http://127.0.0.1:5173/platform/students",
+    "title": "CTF 靶场平台 - 学生管理",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/awd-reviews",
+    "file": "before-admin-platform-awd-reviews.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/awd-reviews",
+    "finalUrl": "http://127.0.0.1:5173/platform/awd-reviews",
+    "title": "CTF 靶场平台 - AWD复盘",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/instances",
+    "file": "before-admin-platform-instances.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/instances",
+    "finalUrl": "http://127.0.0.1:5173/platform/instances",
+    "title": "CTF 靶场平台 - 实例管理",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/challenges",
+    "file": "before-admin-platform-challenges.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/challenges",
+    "finalUrl": "http://127.0.0.1:5173/platform/challenges",
+    "title": "CTF 靶场平台 - Jeopardy题库",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/challenges/imports",
+    "file": "before-admin-platform-challenges-imports.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/challenges/imports",
+    "finalUrl": "http://127.0.0.1:5173/platform/challenges/imports",
+    "title": "CTF 靶场平台 - 导入题目",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/awd-challenges",
+    "file": "before-admin-platform-awd-challenges.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/awd-challenges",
+    "finalUrl": "http://127.0.0.1:5173/platform/awd-challenges",
+    "title": "CTF 靶场平台 - AWD 题目",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/contests",
+    "file": "before-admin-platform-contests.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/contests",
+    "finalUrl": "http://127.0.0.1:5173/platform/contests",
+    "title": "CTF 靶场平台 - 竞赛目录",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/contest-ops/contests",
+    "file": "before-admin-platform-contest-ops-contests.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/contest-ops/contests",
+    "finalUrl": "http://127.0.0.1:5173/platform/contest-ops/contests",
+    "title": "CTF 靶场平台 - 竞赛列表",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/users",
+    "file": "before-admin-platform-users.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/users",
+    "finalUrl": "http://127.0.0.1:5173/platform/users",
+    "title": "CTF 靶场平台 - 用户管理",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/images",
+    "file": "before-admin-platform-images.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/images",
+    "finalUrl": "http://127.0.0.1:5173/platform/images",
+    "title": "CTF 靶场平台 - 镜像管理",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/integrity",
+    "file": "before-admin-platform-integrity.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/integrity",
+    "finalUrl": "http://127.0.0.1:5173/platform/integrity",
+    "title": "CTF 靶场平台 - 作弊检测",
+    "ok": true
+  },
+  {
+    "version": "before",
+    "role": "admin",
+    "route": "/platform/audit",
+    "file": "before-admin-platform-audit.png",
+    "requestedUrl": "http://127.0.0.1:5173/platform/audit",
+    "finalUrl": "http://127.0.0.1:5173/platform/audit",
+    "title": "CTF 靶场平台 - 审计日志",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "guest",
+    "route": "/login",
+    "file": "after-guest-login.png",
+    "requestedUrl": "http://127.0.0.1:15173/login",
+    "finalUrl": "http://127.0.0.1:15173/401?from=%2Flogin",
+    "title": "CTF 靶场平台 - 未认证",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "student",
+    "route": "/student/dashboard",
+    "file": "after-student-student-dashboard.png",
+    "requestedUrl": "http://127.0.0.1:15173/student/dashboard",
+    "finalUrl": "http://127.0.0.1:15173/student/dashboard",
+    "title": "CTF 靶场平台 - 仪表盘",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "student",
+    "route": "/challenges",
+    "file": "after-student-challenges.png",
+    "requestedUrl": "http://127.0.0.1:15173/challenges",
+    "finalUrl": "http://127.0.0.1:15173/challenges",
+    "title": "CTF 靶场平台 - 题目",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "student",
+    "route": "/contests",
+    "file": "after-student-contests.png",
+    "requestedUrl": "http://127.0.0.1:15173/contests",
+    "finalUrl": "http://127.0.0.1:15173/contests",
+    "title": "CTF 靶场平台 - 竞赛",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "student",
+    "route": "/scoreboard",
+    "file": "after-student-scoreboard.png",
+    "requestedUrl": "http://127.0.0.1:15173/scoreboard",
+    "finalUrl": "http://127.0.0.1:15173/scoreboard",
+    "title": "CTF 靶场平台 - 排行榜",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "student",
+    "route": "/student/instances",
+    "file": "after-student-student-instances.png",
+    "requestedUrl": "http://127.0.0.1:15173/student/instances",
+    "finalUrl": "http://127.0.0.1:15173/student/instances",
+    "title": "CTF 靶场平台 - 我的实例",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "student",
+    "route": "/student/skill-profile",
+    "file": "after-student-student-skill-profile.png",
+    "requestedUrl": "http://127.0.0.1:15173/student/skill-profile",
+    "finalUrl": "http://127.0.0.1:15173/student/skill-profile",
+    "title": "CTF 靶场平台 - 能力画像",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "student",
+    "route": "/profile",
+    "file": "after-student-profile.png",
+    "requestedUrl": "http://127.0.0.1:15173/profile",
+    "finalUrl": "http://127.0.0.1:15173/profile",
+    "title": "CTF 靶场平台 - 个人资料",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "student",
+    "route": "/settings/security",
+    "file": "after-student-settings-security.png",
+    "requestedUrl": "http://127.0.0.1:15173/settings/security",
+    "finalUrl": "http://127.0.0.1:15173/settings/security",
+    "title": "CTF 靶场平台 - 安全设置",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "student",
+    "route": "/notifications",
+    "file": "after-student-notifications.png",
+    "requestedUrl": "http://127.0.0.1:15173/notifications",
+    "finalUrl": "http://127.0.0.1:15173/notifications",
+    "title": "CTF 靶场平台 - 通知",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "teacher",
+    "route": "/academy/overview",
+    "file": "after-teacher-academy-overview.png",
+    "requestedUrl": "http://127.0.0.1:15173/academy/overview",
+    "finalUrl": "http://127.0.0.1:15173/academy/overview",
+    "title": "CTF 靶场平台 - 教学概览",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "teacher",
+    "route": "/academy/classes",
+    "file": "after-teacher-academy-classes.png",
+    "requestedUrl": "http://127.0.0.1:15173/academy/classes",
+    "finalUrl": "http://127.0.0.1:15173/academy/classes",
+    "title": "CTF 靶场平台 - 班级管理",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "teacher",
+    "route": "/academy/students",
+    "file": "after-teacher-academy-students.png",
+    "requestedUrl": "http://127.0.0.1:15173/academy/students",
+    "finalUrl": "http://127.0.0.1:15173/academy/students",
+    "title": "CTF 靶场平台 - 学生管理",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "teacher",
+    "route": "/academy/awd-reviews",
+    "file": "after-teacher-academy-awd-reviews.png",
+    "requestedUrl": "http://127.0.0.1:15173/academy/awd-reviews",
+    "finalUrl": "http://127.0.0.1:15173/academy/awd-reviews",
+    "title": "CTF 靶场平台 - AWD复盘",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "teacher",
+    "route": "/academy/instances",
+    "file": "after-teacher-academy-instances.png",
+    "requestedUrl": "http://127.0.0.1:15173/academy/instances",
+    "finalUrl": "http://127.0.0.1:15173/academy/instances",
+    "title": "CTF 靶场平台 - 实例管理",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/overview",
+    "file": "after-admin-platform-overview.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/overview",
+    "finalUrl": "http://127.0.0.1:15173/platform/overview",
+    "title": "CTF 靶场平台 - 系统概览",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/classes",
+    "file": "after-admin-platform-classes.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/classes",
+    "finalUrl": "http://127.0.0.1:15173/platform/classes",
+    "title": "CTF 靶场平台 - 班级管理",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/students",
+    "file": "after-admin-platform-students.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/students",
+    "finalUrl": "http://127.0.0.1:15173/platform/students",
+    "title": "CTF 靶场平台 - 学生管理",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/awd-reviews",
+    "file": "after-admin-platform-awd-reviews.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/awd-reviews",
+    "finalUrl": "http://127.0.0.1:15173/platform/awd-reviews",
+    "title": "CTF 靶场平台 - AWD复盘",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/instances",
+    "file": "after-admin-platform-instances.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/instances",
+    "finalUrl": "http://127.0.0.1:15173/platform/instances",
+    "title": "CTF 靶场平台 - 实例管理",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/challenges",
+    "file": "after-admin-platform-challenges.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/challenges",
+    "finalUrl": "http://127.0.0.1:15173/platform/challenges",
+    "title": "CTF 靶场平台 - Jeopardy题库",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/challenges/imports",
+    "file": "after-admin-platform-challenges-imports.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/challenges/imports",
+    "finalUrl": "http://127.0.0.1:15173/platform/challenges/imports",
+    "title": "CTF 靶场平台 - 导入题目",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/awd-challenges",
+    "file": "after-admin-platform-awd-challenges.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/awd-challenges",
+    "finalUrl": "http://127.0.0.1:15173/platform/awd-challenges",
+    "title": "CTF 靶场平台 - AWD 题目",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/contests",
+    "file": "after-admin-platform-contests.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/contests",
+    "finalUrl": "http://127.0.0.1:15173/platform/contests",
+    "title": "CTF 靶场平台 - 竞赛目录",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/contest-ops/contests",
+    "file": "after-admin-platform-contest-ops-contests.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/contest-ops/contests",
+    "finalUrl": "http://127.0.0.1:15173/platform/contest-ops/contests",
+    "title": "CTF 靶场平台 - 竞赛列表",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/users",
+    "file": "after-admin-platform-users.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/users",
+    "finalUrl": "http://127.0.0.1:15173/platform/users",
+    "title": "CTF 靶场平台 - 用户管理",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/images",
+    "file": "after-admin-platform-images.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/images",
+    "finalUrl": "http://127.0.0.1:15173/platform/images",
+    "title": "CTF 靶场平台 - 镜像管理",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/integrity",
+    "file": "after-admin-platform-integrity.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/integrity",
+    "finalUrl": "http://127.0.0.1:15173/platform/integrity",
+    "title": "CTF 靶场平台 - 作弊检测",
+    "ok": true
+  },
+  {
+    "version": "after",
+    "role": "admin",
+    "route": "/platform/audit",
+    "file": "after-admin-platform-audit.png",
+    "requestedUrl": "http://127.0.0.1:15173/platform/audit",
+    "finalUrl": "http://127.0.0.1:15173/platform/audit",
+    "title": "CTF 靶场平台 - 审计日志",
+    "ok": true
+  }
+]

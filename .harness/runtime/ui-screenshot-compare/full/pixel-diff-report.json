@@ -1,0 +1,488 @@
+{
+  "summary": {
+    "total": 29,
+    "zeroDiff": 28,
+    "nonZero": 1,
+    "nonZeroRoutes": [
+      {
+        "role": "teacher",
+        "route": "/academy/instances",
+        "ratioPercent": 86.3936,
+        "changedPixels": 3429896,
+        "beforeFinalUrl": "http://127.0.0.1:5173/academy/instances",
+        "afterFinalUrl": "http://127.0.0.1:15173/academy/instances"
+      }
+    ]
+  },
+  "results": [
+    {
+      "role": "guest",
+      "route": "/login",
+      "beforeFile": "before-guest-login.png",
+      "afterFile": "after-guest-login.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/401?from=%2Flogin",
+      "afterFinalUrl": "http://127.0.0.1:15173/401?from=%2Flogin"
+    },
+    {
+      "role": "student",
+      "route": "/student/dashboard",
+      "beforeFile": "before-student-student-dashboard.png",
+      "afterFile": "after-student-student-dashboard.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/student/dashboard",
+      "afterFinalUrl": "http://127.0.0.1:15173/student/dashboard"
+    },
+    {
+      "role": "student",
+      "route": "/challenges",
+      "beforeFile": "before-student-challenges.png",
+      "afterFile": "after-student-challenges.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/challenges",
+      "afterFinalUrl": "http://127.0.0.1:15173/challenges"
+    },
+    {
+      "role": "student",
+      "route": "/contests",
+      "beforeFile": "before-student-contests.png",
+      "afterFile": "after-student-contests.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/contests",
+      "afterFinalUrl": "http://127.0.0.1:15173/contests"
+    },
+    {
+      "role": "student",
+      "route": "/scoreboard",
+      "beforeFile": "before-student-scoreboard.png",
+      "afterFile": "after-student-scoreboard.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/scoreboard",
+      "afterFinalUrl": "http://127.0.0.1:15173/scoreboard"
+    },
+    {
+      "role": "student",
+      "route": "/student/instances",
+      "beforeFile": "before-student-student-instances.png",
+      "afterFile": "after-student-student-instances.png",
+      "size": [
+        1440,
+        5991
+      ],
+      "changedPixels": 0,
+      "totalPixels": 8627040,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/student/instances",
+      "afterFinalUrl": "http://127.0.0.1:15173/student/instances"
+    },
+    {
+      "role": "student",
+      "route": "/student/skill-profile",
+      "beforeFile": "before-student-student-skill-profile.png",
+      "afterFile": "after-student-student-skill-profile.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/student/skill-profile",
+      "afterFinalUrl": "http://127.0.0.1:15173/student/skill-profile"
+    },
+    {
+      "role": "student",
+      "route": "/profile",
+      "beforeFile": "before-student-profile.png",
+      "afterFile": "after-student-profile.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/profile",
+      "afterFinalUrl": "http://127.0.0.1:15173/profile"
+    },
+    {
+      "role": "student",
+      "route": "/settings/security",
+      "beforeFile": "before-student-settings-security.png",
+      "afterFile": "after-student-settings-security.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/settings/security",
+      "afterFinalUrl": "http://127.0.0.1:15173/settings/security"
+    },
+    {
+      "role": "student",
+      "route": "/notifications",
+      "beforeFile": "before-student-notifications.png",
+      "afterFile": "after-student-notifications.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/notifications",
+      "afterFinalUrl": "http://127.0.0.1:15173/notifications"
+    },
+    {
+      "role": "teacher",
+      "route": "/academy/overview",
+      "beforeFile": "before-teacher-academy-overview.png",
+      "afterFile": "after-teacher-academy-overview.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/academy/overview",
+      "afterFinalUrl": "http://127.0.0.1:15173/academy/overview"
+    },
+    {
+      "role": "teacher",
+      "route": "/academy/classes",
+      "beforeFile": "before-teacher-academy-classes.png",
+      "afterFile": "after-teacher-academy-classes.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/academy/classes",
+      "afterFinalUrl": "http://127.0.0.1:15173/academy/classes"
+    },
+    {
+      "role": "teacher",
+      "route": "/academy/students",
+      "beforeFile": "before-teacher-academy-students.png",
+      "afterFile": "after-teacher-academy-students.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/academy/students",
+      "afterFinalUrl": "http://127.0.0.1:15173/academy/students"
+    },
+    {
+      "role": "teacher",
+      "route": "/academy/awd-reviews",
+      "beforeFile": "before-teacher-academy-awd-reviews.png",
+      "afterFile": "after-teacher-academy-awd-reviews.png",
+      "size": [
+        1440,
+        2569
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3699360,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/academy/awd-reviews",
+      "afterFinalUrl": "http://127.0.0.1:15173/academy/awd-reviews"
+    },
+    {
+      "role": "teacher",
+      "route": "/academy/instances",
+      "beforeFile": "before-teacher-academy-instances.png",
+      "afterFile": "after-teacher-academy-instances.png",
+      "size": [
+        1440,
+        2757
+      ],
+      "changedPixels": 3429896,
+      "totalPixels": 3970080,
+      "ratioPercent": 86.3936,
+      "diffBox": [
+        0,
+        2200,
+        1440,
+        2757
+      ],
+      "beforeFinalUrl": "http://127.0.0.1:5173/academy/instances",
+      "afterFinalUrl": "http://127.0.0.1:15173/academy/instances"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/overview",
+      "beforeFile": "before-admin-platform-overview.png",
+      "afterFile": "after-admin-platform-overview.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/overview",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/overview"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/classes",
+      "beforeFile": "before-admin-platform-classes.png",
+      "afterFile": "after-admin-platform-classes.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/classes",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/classes"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/students",
+      "beforeFile": "before-admin-platform-students.png",
+      "afterFile": "after-admin-platform-students.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/students",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/students"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/awd-reviews",
+      "beforeFile": "before-admin-platform-awd-reviews.png",
+      "afterFile": "after-admin-platform-awd-reviews.png",
+      "size": [
+        1440,
+        2589
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3728160,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/awd-reviews",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/awd-reviews"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/instances",
+      "beforeFile": "before-admin-platform-instances.png",
+      "afterFile": "after-admin-platform-instances.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/instances",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/instances"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/challenges",
+      "beforeFile": "before-admin-platform-challenges.png",
+      "afterFile": "after-admin-platform-challenges.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/challenges",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/challenges"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/challenges/imports",
+      "beforeFile": "before-admin-platform-challenges-imports.png",
+      "afterFile": "after-admin-platform-challenges-imports.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/challenges/imports",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/challenges/imports"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/awd-challenges",
+      "beforeFile": "before-admin-platform-awd-challenges.png",
+      "afterFile": "after-admin-platform-awd-challenges.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/awd-challenges",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/awd-challenges"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/contests",
+      "beforeFile": "before-admin-platform-contests.png",
+      "afterFile": "after-admin-platform-contests.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/contests",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/contests"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/contest-ops/contests",
+      "beforeFile": "before-admin-platform-contest-ops-contests.png",
+      "afterFile": "after-admin-platform-contest-ops-contests.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/contest-ops/contests",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/contest-ops/contests"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/users",
+      "beforeFile": "before-admin-platform-users.png",
+      "afterFile": "after-admin-platform-users.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/users",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/users"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/images",
+      "beforeFile": "before-admin-platform-images.png",
+      "afterFile": "after-admin-platform-images.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/images",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/images"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/integrity",
+      "beforeFile": "before-admin-platform-integrity.png",
+      "afterFile": "after-admin-platform-integrity.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/integrity",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/integrity"
+    },
+    {
+      "role": "admin",
+      "route": "/platform/audit",
+      "beforeFile": "before-admin-platform-audit.png",
+      "afterFile": "after-admin-platform-audit.png",
+      "size": [
+        1440,
+        2200
+      ],
+      "changedPixels": 0,
+      "totalPixels": 3168000,
+      "ratioPercent": 0.0,
+      "diffBox": null,
+      "beforeFinalUrl": "http://127.0.0.1:5173/platform/audit",
+      "afterFinalUrl": "http://127.0.0.1:15173/platform/audit"
+    }
+  ]
+}
