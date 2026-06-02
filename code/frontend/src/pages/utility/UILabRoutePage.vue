@@ -157,11 +157,12 @@
                   <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Server_Primary</span>
                 </div>
                 <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden shadow-sm p-0.5">
-                  <img
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-                    class="rounded-xl"
-                    alt="avatar"
+                  <div
+                    class="w-full h-full rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-cyan-500 flex items-center justify-center text-white text-[10px] font-black tracking-[0.18em]"
+                    aria-label="server avatar"
                   >
+                    SP
+                  </div>
                 </div>
               </div>
             </div>

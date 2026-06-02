@@ -23,8 +23,8 @@
 - [ ] **生产配置中去掉 `change_me` 占位**
   `code/backend/configs/config.prod.yaml:11,18` — PostgreSQL 和 Redis 密码的 `change_me` 占位符虽然启动校验会拦截，但仍应替换为空字符串，强制通过环境变量注入，降低校验被绕过的风险面。
 
-- [ ] **添加 Content-Security-Policy 响应头**
-  当前缺少 CSP 头。建议在中间件或反向代理层添加合理的 CSP 策略（至少 `default-src 'self'; script-src 'self'`），作为 XSS 纵深防御。
+- [x] **添加 Content-Security-Policy 响应头**（2026-06-02 已修复）
+  `code/frontend/nginx/default.conf` 已增加文档响应 CSP，并将 allowlist 收紧为当前前端真实依赖：脚本仅 `self`，样式 / 字体仅放行 Google Fonts，`img-src` 收口为 `self + data:`，`connect-src` 收口为 `self`。`code/backend/internal/middleware/security_headers.go` 同时为 API 响应补充最小防御头；原先把 `img-src https:` 放宽的 DiceBear 外链头像已从 `code/frontend/src/pages/utility/UILabRoutePage.vue` 移除。
 
 ## P3 — 低风险
 
