@@ -56,7 +56,7 @@ func applyACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntime
 }
 
 func removeACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
-	validated, err := validateACLRules(rules)
+	validated, err := validateACLRulesForDelete(rules)
 	if err != nil {
 		return err
 	}
@@ -277,7 +277,30 @@ func validateACLRules(rules []runtimecontracts.InstanceRuntimeACLRule) ([]runtim
 	return validated, nil
 }
 
+func validateACLRulesForDelete(rules []runtimecontracts.InstanceRuntimeACLRule) ([]runtimecontracts.InstanceRuntimeACLRule, error) {
+	if len(rules) == 0 {
+		return nil, nil
+	}
+	validated := make([]runtimecontracts.InstanceRuntimeACLRule, 0, len(rules))
+	for i, rule := range rules {
+		v, err := validateACLRuleForDelete(rule)
+		if err != nil {
+			return nil, fmt.Errorf("acl rule[%d] delete validation failed: %w", i, err)
+		}
+		validated = append(validated, v)
+	}
+	return validated, nil
+}
+
 func validateAndCanonicalizeACLRule(rule runtimecontracts.InstanceRuntimeACLRule) (runtimecontracts.InstanceRuntimeACLRule, error) {
+	return validateACLRule(rule, false)
+}
+
+func validateACLRuleForDelete(rule runtimecontracts.InstanceRuntimeACLRule) (runtimecontracts.InstanceRuntimeACLRule, error) {
+	return validateACLRule(rule, true)
+}
+
+func validateACLRule(rule runtimecontracts.InstanceRuntimeACLRule, preserveComment bool) (runtimecontracts.InstanceRuntimeACLRule, error) {
 	// SourceIP: 必须是单 IP。
 	srcIP := strings.TrimSpace(rule.SourceIP)
 	if srcIP == "" {
@@ -345,8 +368,15 @@ func validateAndCanonicalizeACLRule(rule runtimecontracts.InstanceRuntimeACLRule
 		rule.Ports = deduped
 	}
 
-	// Comment: 统一系统重建，不信任持久化值。
-	rule.Comment = systemACLComment(rule)
+	if preserveComment {
+		rule.Comment = strings.TrimSpace(rule.Comment)
+		if rule.Comment == "" {
+			rule.Comment = systemACLComment(rule)
+		}
+	} else {
+		// Comment: 统一系统重建，不信任持久化值。
+		rule.Comment = systemACLComment(rule)
+	}
 	if err := validateACLComment(rule.Comment); err != nil {
 		return rule, err
 	}
