@@ -331,134 +331,17 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 }
 
 func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
-	audit := func(options middleware.AuditOptions) gin.HandlerFunc {
-		return routeAudit(deps.auditRecorder, deps.auditLogger, options)
-	}
-
-	adminOnly.GET("/audit-logs", deps.ops.AuditHandler.ListAuditLogs)
-	adminOnly.GET("/dashboard", deps.ops.DashboardHandler.GetDashboard)
-	adminOnly.GET("/cheat-detection", deps.ops.RiskHandler.GetCheatDetection)
-	adminOnly.POST("/notifications",
-		audit(middleware.AuditOptions{
-			Action:       auditlog.ActionAdminOp,
-			ResourceType: "notification_batch",
-		}),
-		deps.ops.NotificationHandler.PublishAdminNotification,
-	)
-	adminOnly.GET("/users", deps.identityHandler.ListUsers)
-	adminOnly.POST("/users",
-		audit(middleware.AuditOptions{
-			Action:       auditlog.ActionCreate,
-			ResourceType: "user",
-		}),
-		deps.identityHandler.CreateUser,
-	)
-	adminOnly.PUT("/users/:id",
-		middleware.ParseInt64Param("id"),
-		audit(middleware.AuditOptions{
-			Action:          auditlog.ActionUpdate,
-			ResourceType:    "user",
-			ResourceIDParam: "id",
-		}),
-		deps.identityHandler.UpdateUser,
-	)
-	adminOnly.DELETE("/users/:id",
-		middleware.ParseInt64Param("id"),
-		audit(middleware.AuditOptions{
-			Action:          auditlog.ActionDelete,
-			ResourceType:    "user",
-			ResourceIDParam: "id",
-		}),
-		deps.identityHandler.DeleteUser,
-	)
-	adminOnly.POST("/users/import",
-		audit(middleware.AuditOptions{
-			Action:       auditlog.ActionCreate,
-			ResourceType: "user_import",
-		}),
-		deps.identityHandler.ImportUsers,
-	)
-
-	// Session management
-	adminOnly.GET("/users/:id/sessions",
-		middleware.ParseInt64Param("id"),
-		audit(middleware.AuditOptions{
-			Action:          auditlog.ActionRead,
-			ResourceType:    "user_session",
-			ResourceIDParam: "id",
-		}),
-		func(c *gin.Context) {
-			userID := c.GetInt64("id")
-			sessions, err := deps.tokenService.ListUserSessions(c.Request.Context(), userID)
-			if err != nil {
-				response.FromError(c, err)
-				return
-			}
-			resps := make([]identityhttp.UserSessionResp, 0, len(sessions))
-			for _, s := range sessions {
-				resps = append(resps, identityhttp.UserSessionResp{
-					ID:        s.ID,
-					Username:  s.Username,
-					Role:      s.Role,
-					ExpiresAt: s.ExpiresAt,
-				})
-			}
-			response.Success(c, gin.H{"sessions": resps})
-		},
-	)
-	adminOnly.DELETE("/users/:id/sessions/:sid",
-		middleware.ParseInt64Param("id"),
-		audit(middleware.AuditOptions{
-			Action:          auditlog.ActionAdminOp,
-			ResourceType:    "user_session",
-			ResourceIDParam: "id",
-			DetailBuilder:   middleware.DetailFromParams("id", "sid"),
-		}),
-		func(c *gin.Context) {
-			sessionID := c.Param("sid")
-			if sessionID == "" {
-				response.InvalidParams(c, "缺少会话ID")
-				return
-			}
-			// 验证会话归属：先获取会话，确认属于该用户
-			session, err := deps.tokenService.GetSession(c.Request.Context(), sessionID)
-			if err != nil {
-				if errors.Is(err, authcontracts.ErrAccessTokenExpired) {
-					response.Error(c, apperror.ErrNotFound.WithMessage("该会话已不活跃或已被撤销"))
-					return
-				}
-				response.FromError(c, err)
-				return
-			}
-			userID := c.GetInt64("id")
-			if session.UserID != userID {
-				response.Error(c, apperror.ErrForbidden)
-				return
-			}
-			if err := deps.tokenService.DeleteSession(c.Request.Context(), sessionID); err != nil {
-				response.FromError(c, err)
-				return
-			}
-			response.Success(c, gin.H{"message": "会话已撤销"})
-		},
-	)
-	adminOnly.DELETE("/users/:id/sessions",
-		middleware.ParseInt64Param("id"),
-		audit(middleware.AuditOptions{
-			Action:          auditlog.ActionAdminOp,
-			ResourceType:    "user_session",
-			ResourceIDParam: "id",
-			DetailBuilder:   middleware.DetailFromParams("id"),
-		}),
-		func(c *gin.Context) {
-			userID := c.GetInt64("id")
-			if err := deps.tokenService.RevokeAllUserSessions(c.Request.Context(), userID); err != nil {
-				response.FromError(c, err)
-				return
-			}
-			response.Success(c, gin.H{"message": "已撤销该用户所有会话"})
-		},
-	)
+	registerAdminOpsRoutes(adminOnly, adminOpsRouteDeps{
+		auditRecorder: deps.auditRecorder,
+		auditLogger:   deps.auditLogger,
+		ops:           deps.ops,
+	})
+	registerAdminIdentityRoutes(adminOnly, adminIdentityRouteDeps{
+		auditRecorder:   deps.auditRecorder,
+		auditLogger:     deps.auditLogger,
+		identityHandler: deps.identityHandler,
+		tokenService:    deps.tokenService,
+	})
 
 	registerAdminContestRoutes(adminOnly, adminContestRouteDeps{
 		auditRecorder: deps.auditRecorder,
