@@ -1644,7 +1644,7 @@ func TestServiceDestroyManagedInstanceMarksStoppingThenBackgroundCleanupRemovesR
 		HostPort:       30001,
 		ContainerID:    "web-ctr",
 		NetworkID:      "net-1",
-		RuntimeDetails: `{"containers":[{"container_id":"web-ctr"},{"container_id":"db-ctr"}],"acl_rules":[{"comment":"ctf:acl:test","source_ip":"172.30.0.2","target_ip":"172.30.0.3","action":"allow","protocol":"tcp","ports":[3306]}]}`,
+		RuntimeDetails: `{"containers":[{"container_id":"web-ctr"},{"container_id":"db-ctr"}],"acl":{"chain":"CTF-INS-1"},"acl_rules":[{"comment":"ctf:acl:test","source_ip":"172.30.0.2","target_ip":"172.30.0.3","action":"allow","protocol":"tcp","ports":[3306]}]}`,
 		Status:         instanceentity.InstanceStatusRunning,
 		ExpiresAt:      time.Now().Add(time.Hour),
 	}
@@ -1695,8 +1695,11 @@ func TestServiceDestroyManagedInstanceMarksStoppingThenBackgroundCleanupRemovesR
 	if len(engine.removedNetworkIDs) != 1 || engine.removedNetworkIDs[0] != "net-1" {
 		t.Fatalf("expected 1 removed network, got %v", engine.removedNetworkIDs)
 	}
-	if len(engine.removedACLRules) != 1 || engine.removedACLRules[0].Comment != "ctf:acl:test" {
-		t.Fatalf("expected acl rules to be removed, got %+v", engine.removedACLRules)
+	if engine.removedACLHandle == nil || engine.removedACLHandle.Chain != "CTF-INS-1" {
+		t.Fatalf("expected acl handle to be removed, got %+v", engine.removedACLHandle)
+	}
+	if len(engine.removedACLRules) != 0 {
+		t.Fatalf("expected no legacy acl rule removal, got %+v", engine.removedACLRules)
 	}
 
 	if updated.Status != instanceentity.InstanceStatusStopped {
@@ -2561,7 +2564,7 @@ func TestServiceCreateTopologyRollsBackWhenACLApplyFails(t *testing.T) {
 	}, nil)
 
 	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
-			OwnerInstanceID: 1,
+		OwnerInstanceID: 1,
 		Networks: []runtimeports.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},

@@ -279,7 +279,7 @@ flowchart TD
 - 运行时已把“无端口/协议限定”的 `allow/deny` 策略下沉为节点对级别的网络隔离；这是一种对等、粗粒度的链路控制。
 - 基于 `ports/protocol` 的细粒度 ACL 已在实例启动时按 `source_node_key -> target_node_key` 方向解析为容器 IP 级规则，并通过实例级 `iptables` chain（`CTF-INS-<instanceID>`）下发。chain 会挂接到 `DOCKER-USER`，确保规则生命周期归实例 owner 统一管理。
 - 细粒度 `allow` 规则会让对应方向进入 allow-list 模式：显式允许的协议/端口先放行，其余同方向流量追加兜底 `DROP`；细粒度 `deny` 规则优先于同方向 `allow`。
-- ACL 的 cleanup authority 为实例级 chain handle，持久化在 `runtime_details.acl`；`runtime_details.acl_rules` 仅作为调试快照与旧实例兼容回退，不再作为主路径 cleanup 依据。
+- ACL 的 cleanup authority 为实例级 chain handle，持久化在 `runtime_details.acl`；runtime startup 会把仍只有 legacy 平铺规则的实例迁成实例级 chain，随后 cleanup 只按 handle 删除。`runtime_details.acl_rules` 仅保留为调试快照，不再参与 cleanup authority。
 - 所有进入 `iptables` 的 ACL 字段（IP、协议、action、端口、comment）在执行前均经过白名单校验与 canonicalize，不再信任数据库持久化值直接驱动防火墙参数。
 
 ### 3.3 网络拓扑编排：多容器组网方案

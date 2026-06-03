@@ -20,7 +20,9 @@ import (
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
+	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -267,6 +269,162 @@ func TestBuildContainerRuntimeModuleSelectsConfiguredDefaultRuntimeNode(t *testi
 	}
 	if binding.NodeID == legacyNode.ID {
 		t.Fatalf("expected selector to avoid legacy local-default node, got %+v", binding)
+	}
+}
+
+func TestBuildContainerRuntimeModuleMigratesLegacyInstanceACLRulesToHandle(t *testing.T) {
+	cfg, db, cache := newRootTestDependencies(t)
+
+	if err := db.AutoMigrate(&runtimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
+		t.Fatalf("auto migrate runtime migration dependencies: %v", err)
+	}
+
+	node := runtimeentity.RuntimeNode{
+		Name:             "local-default",
+		Endpoint:         "local://docker",
+		Schedulable:      true,
+		Labels:           "{}",
+		HealthStatus:     runtimeentity.RuntimeNodeHealthReady,
+		CapacitySnapshot: "{}",
+		CreatedAt:        time.Now().UTC(),
+		UpdatedAt:        time.Now().UTC(),
+	}
+	if err := db.Create(&node).Error; err != nil {
+		t.Fatalf("create runtime node: %v", err)
+	}
+
+	legacyDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		ACLRules: []runtimecontracts.InstanceRuntimeACLRule{
+			{Comment: "ctf:acl:test", SourceIP: "172.30.0.2", TargetIP: "172.30.0.3", Action: "allow", Protocol: "tcp", Ports: []int{3306}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode legacy runtime details: %v", err)
+	}
+
+	nodeID := node.ID
+	instance := instanceentity.Instance{
+		ID:             1001,
+		UserID:         2001,
+		ChallengeID:    3001,
+		NodeID:         &nodeID,
+		RuntimeDetails: legacyDetails,
+		ShareScope:     instanceentity.ShareScopePerUser,
+		Status:         instanceentity.InstanceStatusRunning,
+		ExpiresAt:      time.Now().UTC().Add(time.Hour),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("create instance: %v", err)
+	}
+
+	executor := &stubRuntimeNodeHostExecutor{}
+	overrideRuntimeNodeClientBuilder(t, map[int64]runtimeNodeClient{
+		node.ID: newStubNodeRuntimeClient(executor, nil),
+	})
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	if _, err := BuildContainerRuntimeModule(root); err != nil {
+		t.Fatalf("BuildContainerRuntimeModule() error = %v", err)
+	}
+
+	if len(executor.appliedACLCalls) != 1 {
+		t.Fatalf("expected 1 apply acl migration call, got %+v", executor.appliedACLCalls)
+	}
+	if len(executor.removedACLRulesCalls) != 1 {
+		t.Fatalf("expected 1 legacy acl removal call, got %+v", executor.removedACLRulesCalls)
+	}
+
+	var stored instanceentity.Instance
+	if err := db.First(&stored, instance.ID).Error; err != nil {
+		t.Fatalf("reload instance: %v", err)
+	}
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(stored.RuntimeDetails)
+	if err != nil {
+		t.Fatalf("decode migrated runtime details: %v", err)
+	}
+	if details.ACL == nil || details.ACL.Chain != "CTF-INS-1001" {
+		t.Fatalf("expected acl handle CTF-INS-1001, got %+v", details.ACL)
+	}
+	if len(details.ACLRules) != 1 || details.ACLRules[0].Comment != "ctf:acl:test" {
+		t.Fatalf("expected acl rules snapshot preserved, got %+v", details.ACLRules)
+	}
+}
+
+func TestBuildContainerRuntimeModuleIgnoresMissingLegacyACLRuleDuringMigration(t *testing.T) {
+	cfg, db, cache := newRootTestDependencies(t)
+
+	if err := db.AutoMigrate(&runtimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
+		t.Fatalf("auto migrate runtime migration dependencies: %v", err)
+	}
+
+	node := runtimeentity.RuntimeNode{
+		Name:             "local-default",
+		Endpoint:         "local://docker",
+		Schedulable:      true,
+		Labels:           "{}",
+		HealthStatus:     runtimeentity.RuntimeNodeHealthReady,
+		CapacitySnapshot: "{}",
+		CreatedAt:        time.Now().UTC(),
+		UpdatedAt:        time.Now().UTC(),
+	}
+	if err := db.Create(&node).Error; err != nil {
+		t.Fatalf("create runtime node: %v", err)
+	}
+
+	legacyDetails, err := runtimecontracts.EncodeInstanceRuntimeDetails(runtimecontracts.InstanceRuntimeDetails{
+		ACLRules: []runtimecontracts.InstanceRuntimeACLRule{
+			{Comment: "ctf:acl:test", SourceIP: "172.30.0.2", TargetIP: "172.30.0.3", Action: "allow", Protocol: "tcp", Ports: []int{3306}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode legacy runtime details: %v", err)
+	}
+
+	nodeID := node.ID
+	instance := instanceentity.Instance{
+		ID:             1002,
+		UserID:         2002,
+		ChallengeID:    3002,
+		NodeID:         &nodeID,
+		RuntimeDetails: legacyDetails,
+		ShareScope:     instanceentity.ShareScopePerUser,
+		Status:         instanceentity.InstanceStatusRunning,
+		ExpiresAt:      time.Now().UTC().Add(time.Hour),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("create instance: %v", err)
+	}
+
+	executor := &stubRuntimeNodeHostExecutor{
+		removeACLRulesErr: errors.New("iptables -D DOCKER-USER failed: does a matching rule exist in that chain?"),
+	}
+	overrideRuntimeNodeClientBuilder(t, map[int64]runtimeNodeClient{
+		node.ID: newStubNodeRuntimeClient(executor, nil),
+	})
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	if _, err := BuildContainerRuntimeModule(root); err != nil {
+		t.Fatalf("BuildContainerRuntimeModule() error = %v", err)
+	}
+
+	var stored instanceentity.Instance
+	if err := db.First(&stored, instance.ID).Error; err != nil {
+		t.Fatalf("reload instance: %v", err)
+	}
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(stored.RuntimeDetails)
+	if err != nil {
+		t.Fatalf("decode migrated runtime details: %v", err)
+	}
+	if details.ACL == nil || details.ACL.Chain != "CTF-INS-1002" {
+		t.Fatalf("expected acl handle CTF-INS-1002, got %+v", details.ACL)
 	}
 }
 

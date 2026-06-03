@@ -9,7 +9,6 @@ import (
 	"go.uber.org/zap"
 
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -103,25 +102,7 @@ func (s *RuntimeCleanupService) removeACL(ctx context.Context, resources runtime
 		return s.engine.RemoveACL(timeoutCtx, resources.ACLHandle)
 	}
 
-	// 旧实例兼容：无 handle 时 fallback 到逐规则删除。
-	if len(resources.ACLRules) > 0 {
-		return s.engine.RemoveACLRules(timeoutCtx, resources.ACLRules)
-	}
-
 	return nil
-}
-
-func (s *RuntimeCleanupService) removeACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
-	if len(rules) == 0 {
-		return nil
-	}
-	if s == nil || s.engine == nil {
-		return errRuntimeEngineUnavailable()
-	}
-
-	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	return s.engine.RemoveACLRules(timeoutCtx, rules)
 }
 
 func (s *RuntimeCleanupService) removeContainer(ctx context.Context, containerID string) error {

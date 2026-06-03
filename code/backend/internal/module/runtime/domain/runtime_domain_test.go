@@ -39,9 +39,6 @@ func TestExtractManagedResourcesPrefersRuntimeDetails(t *testing.T) {
 	if len(resources.NetworkIDs) != 2 || resources.NetworkIDs[0] != "net-a" || resources.NetworkIDs[1] != "net-b" {
 		t.Fatalf("unexpected network ids: %+v", resources.NetworkIDs)
 	}
-	if len(resources.ACLRules) != 1 || resources.ACLRules[0].Comment != "ctf:acl:test" {
-		t.Fatalf("unexpected acl rules: %+v", resources.ACLRules)
-	}
 }
 
 func TestExtractManagedResourcesSkipsSharedNetworks(t *testing.T) {
@@ -106,9 +103,6 @@ func TestExtractManagedResourcesFallsBackToLegacyFields(t *testing.T) {
 	}
 	if len(resources.NetworkIDs) != 1 || resources.NetworkIDs[0] != "legacy-net" {
 		t.Fatalf("unexpected network ids: %+v", resources.NetworkIDs)
-	}
-	if len(resources.ACLRules) != 0 {
-		t.Fatalf("expected no acl rules, got %+v", resources.ACLRules)
 	}
 }
 

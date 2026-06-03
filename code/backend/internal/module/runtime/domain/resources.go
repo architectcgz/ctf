@@ -14,7 +14,6 @@ type ManagedResources struct {
 	Subnets      []string
 	HostPorts    []int
 	ACLHandle    *runtimecontracts.InstanceRuntimeACLHandle
-	ACLRules     []runtimecontracts.InstanceRuntimeACLRule
 }
 
 // ExtractManagedResources 提取实例持有的容器、网络和 ACL 资源标识。
@@ -38,7 +37,6 @@ func ExtractManagedResources(instance *instancecontracts.Instance) ManagedResour
 		Subnets:      uniqueNetworkSubnets(details),
 		HostPorts:    uniqueHostPorts(details, instance.HostPort),
 		ACLHandle:    details.ACL,
-		ACLRules:     append([]runtimecontracts.InstanceRuntimeACLRule(nil), details.ACLRules...),
 	}
 }
 

@@ -395,7 +395,15 @@ type stubRuntimeNodeHostExecutor struct {
 	writeCalls                  []runtimeNodeWriteCall
 	listManagedContainersResult []runtimeports.ManagedContainer
 	removedContainers           []string
+	appliedACLCalls             []stubRuntimeNodeACLCall
+	removedACLRulesCalls        [][]runtimecontracts.InstanceRuntimeACLRule
+	removeACLRulesErr           error
 	startedContainers           []string
+}
+
+type stubRuntimeNodeACLCall struct {
+	handle *runtimecontracts.InstanceRuntimeACLHandle
+	rules  []runtimecontracts.InstanceRuntimeACLRule
 }
 
 func (s *stubRuntimeNodeHostExecutor) CreateNetwork(context.Context, string, map[string]string, bool, bool, string) (string, error) {
@@ -444,12 +452,22 @@ func (s *stubRuntimeNodeHostExecutor) ApplyACLRules(context.Context, []runtimeco
 	return nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) ApplyACL(context.Context, *runtimecontracts.InstanceRuntimeACLHandle, []runtimecontracts.InstanceRuntimeACLRule) error {
+func (s *stubRuntimeNodeHostExecutor) ApplyACL(_ context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle, rules []runtimecontracts.InstanceRuntimeACLRule) error {
+	var copiedHandle *runtimecontracts.InstanceRuntimeACLHandle
+	if handle != nil {
+		handleCopy := *handle
+		copiedHandle = &handleCopy
+	}
+	s.appliedACLCalls = append(s.appliedACLCalls, stubRuntimeNodeACLCall{
+		handle: copiedHandle,
+		rules:  append([]runtimecontracts.InstanceRuntimeACLRule(nil), rules...),
+	})
 	return nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) RemoveACLRules(context.Context, []runtimecontracts.InstanceRuntimeACLRule) error {
-	return nil
+func (s *stubRuntimeNodeHostExecutor) RemoveACLRules(_ context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
+	s.removedACLRulesCalls = append(s.removedACLRulesCalls, append([]runtimecontracts.InstanceRuntimeACLRule(nil), rules...))
+	return s.removeACLRulesErr
 }
 
 func (s *stubRuntimeNodeHostExecutor) RemoveACL(context.Context, *runtimecontracts.InstanceRuntimeACLHandle) error {

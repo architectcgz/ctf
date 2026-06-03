@@ -21,7 +21,9 @@ import (
 type runtimeNodeClient interface {
 	CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error)
+	ApplyACL(ctx context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle, rules []runtimecontracts.InstanceRuntimeACLRule) error
 	CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
+	RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
 	RemoveContainer(ctx context.Context, containerID string) error
 	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
 	ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error)
@@ -205,6 +207,13 @@ func (c *nodeRuntimeClient) CreateContainer(ctx context.Context, imageName strin
 	return c.provisioner.CreateContainer(ctx, imageName, env, reservedHostPort)
 }
 
+func (c *nodeRuntimeClient) ApplyACL(ctx context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle, rules []runtimecontracts.InstanceRuntimeACLRule) error {
+	if c == nil || c.executor == nil {
+		return runtimeports.ErrRuntimeNodeUnavailable
+	}
+	return c.executor.ApplyACL(ctx, handle, rules)
+}
+
 func (r *runtimeNodeExecutionRouter) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, nodeID int64) (string, string, int, int, error) {
 	if r == nil {
 		return "", "", 0, 0, nil
@@ -221,6 +230,13 @@ func (c *nodeRuntimeClient) CleanupRuntime(ctx context.Context, instance *instan
 		return nil
 	}
 	return c.cleaner.CleanupRuntime(ctx, instance)
+}
+
+func (c *nodeRuntimeClient) RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
+	if c == nil || c.executor == nil {
+		return runtimeports.ErrRuntimeNodeUnavailable
+	}
+	return c.executor.RemoveACLRules(ctx, rules)
 }
 
 func (r *runtimeNodeExecutionRouter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
@@ -436,7 +452,7 @@ func (r *runtimeNodeExecutionRouter) clientForConcreteNode(ctx context.Context, 
 	r.mu.Lock()
 	if existing, ok := r.clients[node.ID]; ok && existing != nil {
 		r.mu.Unlock()
-		_ = client.Close(context.Background())
+		_ = client.Close(ctx)
 		return existing, node.ID, nil
 	}
 	r.clients[node.ID] = client

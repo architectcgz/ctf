@@ -253,10 +253,16 @@ func (s *AWDService) cleanupCheckerPreviewRuntime(ctx context.Context, cleanup f
 	if cleanup == nil {
 		return nil
 	}
-	cleanupBaseCtx := context.Background()
-	if ctx != nil {
-		cleanupBaseCtx = context.WithoutCancel(ctx)
+	if ctx == nil {
+		if err := cleanup(nil); err != nil {
+			if previewErr == nil {
+				return err
+			}
+			return fmt.Errorf("%w; cleanup preview runtime: %v", previewErr, err)
+		}
+		return previewErr
 	}
+	cleanupBaseCtx := context.WithoutCancel(ctx)
 	cleanupCtx, cancel := context.WithTimeout(cleanupBaseCtx, awdCheckerPreviewCleanupTimeout)
 	defer cancel()
 	if err := cleanup(cleanupCtx); err != nil {

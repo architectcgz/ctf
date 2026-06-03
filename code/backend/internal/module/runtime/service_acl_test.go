@@ -36,7 +36,7 @@ func TestServiceCleanupRuntimeRemovesACLByHandle(t *testing.T) {
 	}
 }
 
-func TestServiceCleanupRuntimeFallsBackToLegacyACLRules(t *testing.T) {
+func TestServiceCleanupRuntimeSkipsLegacyACLRulesWithoutHandle(t *testing.T) {
 	t.Parallel()
 
 	engine := &fakeRuntimeEngine{}
@@ -55,10 +55,10 @@ func TestServiceCleanupRuntimeFallsBackToLegacyACLRules(t *testing.T) {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 	if engine.removedACLHandle != nil {
-		t.Fatalf("expected legacy fallback removal, got handle=%+v", engine.removedACLHandle)
+		t.Fatalf("expected no acl handle removal, got handle=%+v", engine.removedACLHandle)
 	}
-	if len(engine.removedACLRules) != 1 {
-		t.Fatalf("expected 1 legacy acl rule removed, got %v", engine.removedACLRules)
+	if len(engine.removedACLRules) != 0 {
+		t.Fatalf("expected no legacy acl rule removal, got %v", engine.removedACLRules)
 	}
 }
 

@@ -75,6 +75,14 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	if nodeRouter != nil && defaultNode != nil && defaultNode.ID > 0 {
 		nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)
 	}
+	if err := migrateLegacyInstanceACLHandles(root.Context(), runtimeRepo, nodeRouter, defaultNodeClient, log.Named("runtime_acl_migration")); err != nil {
+		if nodeRouter != nil {
+			_ = nodeRouter.Close(root.Context())
+		} else if defaultNodeClient != nil {
+			_ = defaultNodeClient.Close(root.Context())
+		}
+		return nil, err
+	}
 
 	for _, job := range module.BackgroundJobs {
 		root.RegisterBackgroundJob(NewBackgroundJob(job.Name, job.Start, job.Stop))

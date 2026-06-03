@@ -1,5 +1,7 @@
 # 2026-06-02 runtime ACL authority hardening plan
 
+> 后续：legacy cleanup fallback 已由 `docs/plan/impl-plan/2026-06-03-runtime-acl-legacy-fallback-retirement-plan.md` 继续推进；本文中关于 fallback 窗口的描述仅保留当时的实施背景。
+
 ## Objective
 
 - 把 runtime ACL 从“数据库中的可回放规则明细”收口为“runtime 拥有的宿主机防火墙资源”。
@@ -148,18 +150,18 @@
 ## Data / API / compatibility impact
 
 - `runtime_details` JSON 结构会新增 `acl` 字段，保存实例级 ACL handle。
-- `acl_rules` 字段本轮不删除，作为调试快照和 legacy cleanup fallback 输入，避免影响运行中的老实例。
+- `acl_rules` 字段本轮不删除，作为调试快照保留；后续 fallback 退场见 `2026-06-03-runtime-acl-legacy-fallback-retirement-plan.md`。
 - 细粒度 ACL 创建将要求 `OwnerInstanceID` 存在；如果调用方无法提供稳定实例 owner，需要先回到调用链补 owner，再创建 topology ACL。
-- cleanup 兼容策略：
+- cleanup authority 目标：
   - 新实例：`ACLHandle` 为 authority
-  - 老实例：无 `ACLHandle` 时才 fallback 到 `ACLRules`
-  - 后续待所有运行实例完成迁移后，才能考虑移除 fallback
+  - 旧实例：先通过 runtime startup migration 补齐 `ACLHandle`
+  - `ACLRules` 只保留为调试快照，不再作为长期 cleanup owner
 
 ## Validation matrix
 
 - 新创建 topology 实例在 `runtime_details.acl` 中记录实例级 handle。
 - cleanup 对新实例只按 handle 删除，不依赖 `acl_rules` 明细。
-- 旧实例只有 `acl_rules` 时，cleanup 仍可完成。
+- 旧实例在 startup migration 后也按 `ACLHandle` 完成 cleanup。
 - 旧实例 `acl_rules` 含非法字段时，不会把原始污染值直接交给 `iptables`。
 - `OwnerInstanceID <= 0` 且存在细粒度 ACL 时，创建流程失败并返回明确错误。
 - `docs/architecture/backend/03-container-architecture.md` 与实际 authority model 一致。
@@ -185,7 +187,7 @@
 
 - 若新 chain 模型上线后出现问题，可回退本次 runtime ACL 改动；`runtime_details.acl` 是附加字段，不涉及 schema migration。
 - 回退时必须保留 legacy fallback，确保当前运行中的实例仍可按旧 `acl_rules` 清理。
-- 若回退代码，需同时回退架构文档和 todo 状态更新，避免事实源漂移。
+- 若回退代码，需同时回退架构文档和 todo 状态更新，并重新确认 legacy 实例的 cleanup 策略，避免事实源漂移。
 
 ## Open implementation choices
 
