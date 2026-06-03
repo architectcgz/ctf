@@ -17,6 +17,7 @@
 - 测试文件应尽量只表达场景，不再内嵌环境搭建和数据种子细节。
 - 当前首个落点是 `tests/system/http/practiceflow/`，这里承接 `practice_flow` 的场景断言 owner。
 - `tests/system/http/fullrouteraccess/` 承接 `full_router_access` 的场景断言 owner，当前仍通过 glue code 复用 `internal/app` 里的 full router fixture。
+- `tests/system/http/fullrouteradmin/` 承接 `full_router_admin` 的 HTTP 场景断言 owner，当前仍通过 glue code 复用 `internal/app` 的 full router fixture 与场景 seed。
 
 ### `tests/runtime`
 
