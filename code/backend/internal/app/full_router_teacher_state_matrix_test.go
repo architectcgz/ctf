@@ -285,8 +285,12 @@ func TestFullRouter_TeacherAWDReviewExportStateMatrix(t *testing.T) {
 		t.Fatalf("expected pdf body prefix, got %q", resp.Body.Bytes())
 	}
 	for _, token := range [][]byte{
-		[]byte("Teacher AWD Review Report"),
-		[]byte("Selected Round"),
+		[]byte("摘要"),
+		[]byte("关键轮次"),
+		[]byte("轮次概览"),
+		[]byte("选中轮次摘要"),
+		[]byte("攻击有效性"),
+		[]byte("关键样本"),
 	} {
 		if !fullRouterPDFContainsText(resp.Body.Bytes(), string(token)) {
 			t.Fatalf("expected pdf body to contain %q", token)

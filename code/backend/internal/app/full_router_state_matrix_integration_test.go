@@ -11,8 +11,10 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
+	"unicode/utf16"
 
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
@@ -132,7 +134,11 @@ func readFullRouterZIPEntry(t *testing.T, archive *zip.Reader, name string) []by
 
 func fullRouterPDFContainsText(content []byte, token string) bool {
 	needle := []byte(token)
+	needleUTF16 := fullRouterUTF16BEBytes(token)
 	if bytes.Contains(content, needle) {
+		return true
+	}
+	if len(needleUTF16) > 0 && bytes.Contains(content, needleUTF16) {
 		return true
 	}
 
@@ -155,14 +161,31 @@ func fullRouterPDFContainsText(content []byte, token string) bool {
 		if err == nil {
 			decoded, readErr := io.ReadAll(reader)
 			reader.Close()
-			if readErr == nil && bytes.Contains(decoded, needle) {
-				return true
+			if readErr == nil {
+				if bytes.Contains(decoded, needle) {
+					return true
+				}
+				if len(needleUTF16) > 0 && bytes.Contains(decoded, needleUTF16) {
+					return true
+				}
 			}
 		}
 		pos = start + endOffset + len("endstream")
 	}
 
 	return false
+}
+
+func fullRouterUTF16BEBytes(value string) []byte {
+	if strings.TrimSpace(value) == "" {
+		return nil
+	}
+	encoded := utf16.Encode([]rune(value))
+	buf := make([]byte, 0, len(encoded)*2)
+	for _, code := range encoded {
+		buf = append(buf, byte(code>>8), byte(code))
+	}
+	return buf
 }
 
 type fullRouterWSEnvelope struct {
