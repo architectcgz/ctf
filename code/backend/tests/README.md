@@ -18,6 +18,7 @@
 - 当前首个落点是 `tests/system/http/practiceflow/`，这里承接 `practice_flow` 的场景断言 owner。
 - `tests/system/http/fullrouteraccess/` 承接 `full_router_access` 的场景断言 owner，当前仍通过 glue code 复用 `internal/app` 里的 full router fixture。
 - `tests/system/http/fullrouteradmin/` 承接 `full_router_admin` 的 HTTP 场景断言 owner，当前仍通过 glue code 复用 `internal/app` 的 full router fixture 与场景 seed。
+- `tests/system/http/fullrouterteacherauthoring/` 承接 `full_router_teacher_authoring` 的 HTTP 场景断言 owner，当前仍通过 glue code 复用 `internal/app` 的 full router fixture，并保留少量 DB / 文件系统 seed。
 
 ### `tests/runtime`
 
