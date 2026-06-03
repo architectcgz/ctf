@@ -22,6 +22,7 @@
 - `tests/system/http/fullrouterawdstate/` 承接 `full_router_awd_state_matrix` 的 HTTP 场景断言 owner，当前仍通过 glue code 复用 `internal/app` 的 AWD/contest seed 和实例状态更新 helper。
 - `tests/system/http/fullrouterconteststate/` 承接 `full_router_contest_state_matrix` 的 HTTP 场景断言 owner，当前仍通过 glue code 复用 `internal/app` 的 contest/challenge/user seed、scoreboard seed 和 report wait helper。
 - `tests/system/http/fullrouterteacherstate/` 承接 `full_router_teacher_state_matrix` 中非 AWD review 的 HTTP 场景断言 owner；`TeacherAWDReviewExportStateMatrix` 因既有失败暂留 `internal/app` 单独处理。
+- `tests/system/http/fullrouterreportstate/` 承接 `ReportPreviewAndDownloadStateMatrix` 的 HTTP 场景断言 owner；module builder 测试和报表共享 helper 仍暂留 `internal/app`。
 
 ### `tests/runtime`
 

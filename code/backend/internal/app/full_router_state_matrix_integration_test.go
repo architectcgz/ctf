@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
@@ -28,6 +27,7 @@ import (
 	"ctf-platform/internal/platform/randomstring"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
+	fullrouterreportstate "ctf-platform/tests/system/http/fullrouterreportstate"
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	xws "golang.org/x/net/websocket"
@@ -108,168 +108,44 @@ func TestStudentPracticeReadRoutesAreServedByPracticeModule(t *testing.T) {
 func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
-	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
-	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
-	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
-
-	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/reports/personal", map[string]any{
-		"format": assessmententity.ReportFormatExcel,
-	}, studentHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	var personalReport assessmentcmd.ReportExportData
-	decodeFullRouterData(t, resp, &personalReport)
-	if personalReport.Status != assessmententity.ReportStatusReady || personalReport.DownloadURL == nil {
-		t.Fatalf("expected ready personal report with download url, got %+v", personalReport)
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", personalReport.ReportID), nil, studentHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	var personalStatus assessmentcmd.ReportExportData
-	decodeFullRouterData(t, resp, &personalStatus)
-	if personalStatus.Status != assessmententity.ReportStatusReady || personalStatus.DownloadURL == nil {
-		t.Fatalf("expected ready personal report status, got %+v", personalStatus)
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d/download", personalReport.ReportID), nil, studentHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-	if contentType := resp.Header().Get("Content-Type"); contentType != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" {
-		t.Fatalf("expected xlsx content-type, got %q", contentType)
-	}
-
-	processingReport := createReportRecord(t, env, assessmententity.Report{
-		Type:   assessmententity.ReportTypePersonal,
-		Format: assessmententity.ReportFormatPDF,
-		UserID: &env.student.ID,
-		Status: assessmententity.ReportStatusProcessing,
-	})
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", processingReport.ID), nil, studentHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	var processingStatus assessmentcmd.ReportExportData
-	decodeFullRouterData(t, resp, &processingStatus)
-	if processingStatus.Status != assessmententity.ReportStatusProcessing {
-		t.Fatalf("expected processing status, got %+v", processingStatus)
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d/download", processingReport.ID), nil, studentHeaders)
-	assertFullRouterStatus(t, resp, http.StatusConflict)
-
-	failedMessage := "generation failed in matrix"
-	failedReport := createReportRecord(t, env, assessmententity.Report{
-		Type:     assessmententity.ReportTypePersonal,
-		Format:   assessmententity.ReportFormatPDF,
-		UserID:   &env.student.ID,
-		Status:   assessmententity.ReportStatusFailed,
-		ErrorMsg: &failedMessage,
-	})
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", failedReport.ID), nil, studentHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	var failedStatus assessmentcmd.ReportExportData
-	decodeFullRouterData(t, resp, &failedStatus)
-	if failedStatus.Status != assessmententity.ReportStatusFailed || failedStatus.ErrorMessage == nil || *failedStatus.ErrorMessage != failedMessage {
-		t.Fatalf("expected failed status with message, got %+v", failedStatus)
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d/download", failedReport.ID), nil, studentHeaders)
-	assertFullRouterStatus(t, resp, http.StatusConflict)
-
-	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/reports/class", map[string]any{
-		"class_name": env.otherStudent.ClassName,
-		"format":     assessmententity.ReportFormatPDF,
-	}, teacherHeaders)
-	assertFullRouterStatus(t, resp, http.StatusForbidden)
-
-	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/reports/class", map[string]any{
-		"class_name": env.className,
-		"format":     assessmententity.ReportFormatPDF,
-	}, teacherHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	var classReport assessmentcmd.ReportExportData
-	decodeFullRouterData(t, resp, &classReport)
-	if classReport.Status != assessmententity.ReportStatusProcessing {
-		t.Fatalf("expected class report to start in processing state, got %+v", classReport)
-	}
-
-	classReady := waitForReportStatus(t, env, classReport.ReportID, teacherHeaders, assessmententity.ReportStatusReady, 5*time.Second)
-	if classReady.DownloadURL == nil {
-		t.Fatalf("expected class report download url after ready, got %+v", classReady)
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d/download", classReport.ReportID), nil, teacherHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-	if contentType := resp.Header().Get("Content-Type"); contentType != "application/pdf" {
-		t.Fatalf("expected pdf content-type, got %q", contentType)
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", classReport.ReportID), nil, studentHeaders)
-	assertFullRouterStatus(t, resp, http.StatusForbidden)
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", classReport.ReportID), nil, adminHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/admin/contests/%d/export", env.contest.ID), map[string]any{
-		"format": assessmententity.ReportFormatJSON,
-	}, adminHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	var contestExport assessmentcmd.ReportExportData
-	decodeFullRouterData(t, resp, &contestExport)
-	if contestExport.Status != assessmententity.ReportStatusProcessing {
-		t.Fatalf("expected contest export processing status, got %+v", contestExport)
-	}
-
-	contestExportReady := waitForReportStatus(t, env, contestExport.ReportID, adminHeaders, assessmententity.ReportStatusReady, 5*time.Second)
-	if contestExportReady.DownloadURL == nil {
-		t.Fatalf("expected contest export download url, got %+v", contestExportReady)
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d/download", contestExport.ReportID), nil, adminHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-	if contentType := resp.Header().Get("Content-Type"); contentType != "application/json" {
-		t.Fatalf("expected json content-type, got %q", contentType)
-	}
-	if !strings.Contains(resp.Body.String(), "\"contest\"") {
-		t.Fatalf("expected contest export json payload, got %s", resp.Body.String())
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive/export", env.otherStudent.ID), map[string]any{
-		"format": assessmententity.ReportFormatJSON,
-	}, teacherHeaders)
-	assertFullRouterStatus(t, resp, http.StatusForbidden)
-
-	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive/export", env.student.ID), map[string]any{
-		"format": assessmententity.ReportFormatJSON,
-	}, teacherHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	var reviewArchive assessmentcmd.ReportExportData
-	decodeFullRouterData(t, resp, &reviewArchive)
-	if reviewArchive.Status != assessmententity.ReportStatusProcessing {
-		t.Fatalf("expected review archive processing status, got %+v", reviewArchive)
-	}
-
-	reviewArchiveReady := waitForReportStatus(t, env, reviewArchive.ReportID, teacherHeaders, assessmententity.ReportStatusReady, 5*time.Second)
-	if reviewArchiveReady.DownloadURL == nil {
-		t.Fatalf("expected review archive download url, got %+v", reviewArchiveReady)
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d/download", reviewArchive.ReportID), nil, teacherHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-	if contentType := resp.Header().Get("Content-Type"); contentType != "application/json" {
-		t.Fatalf("expected json content-type, got %q", contentType)
-	}
-	if !strings.Contains(resp.Body.String(), "\"manual_reviews\"") {
-		t.Fatalf("expected review archive json payload, got %s", resp.Body.String())
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", reviewArchive.ReportID), nil, studentHeaders)
-	assertFullRouterStatus(t, resp, http.StatusForbidden)
+	fullrouterreportstate.VerifyReportPreviewAndDownloadStateMatrix(
+		t,
+		fullrouterreportstate.ReportPreviewAndDownloadStateMatrixDriver{
+			Request: func(method, target string, payload any, headers map[string]string) *httptest.ResponseRecorder {
+				return performFullRouterRequest(t, env.router, method, target, payload, headers)
+			},
+			AdminHeaders:   bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd)),
+			TeacherHeaders: bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd)),
+			StudentHeaders: bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd)),
+			ClassName:      env.className,
+			OtherClassName: env.otherStudent.ClassName,
+			ContestID:      env.contest.ID,
+			StudentID:      env.student.ID,
+			OtherStudentID: env.otherStudent.ID,
+			CreateProcessingReport: func(t *testing.T) fullrouterreportstate.ReportRecord {
+				report := createReportRecord(t, env, assessmententity.Report{
+					Type:   assessmententity.ReportTypePersonal,
+					Format: assessmententity.ReportFormatPDF,
+					UserID: &env.student.ID,
+					Status: assessmententity.ReportStatusProcessing,
+				})
+				return fullrouterreportstate.ReportRecord{ID: report.ID}
+			},
+			CreateFailedReport: func(t *testing.T, message string) fullrouterreportstate.ReportRecord {
+				report := createReportRecord(t, env, assessmententity.Report{
+					Type:     assessmententity.ReportTypePersonal,
+					Format:   assessmententity.ReportFormatPDF,
+					UserID:   &env.student.ID,
+					Status:   assessmententity.ReportStatusFailed,
+					ErrorMsg: &message,
+				})
+				return fullrouterreportstate.ReportRecord{ID: report.ID}
+			},
+			WaitForReportStatus: func(t *testing.T, reportID int64, headers map[string]string, wantStatus string) *assessmentcmd.ReportExportData {
+				return waitForReportStatus(t, env, reportID, headers, wantStatus, 5*time.Second)
+			},
+		},
+	)
 }
 
 func assertFullRouterStatus(t *testing.T, resp *httptest.ResponseRecorder, want int) {
