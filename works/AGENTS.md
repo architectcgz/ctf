@@ -12,3 +12,4 @@
 - `ctf-harness-map.md`：CTF harness 结构说明。
 - `harness-migration-map.md`：旧积累迁入严格 harness 的映射。
 - `harness-good-practices.md`：本仓库当前采用的 harness 归档好做法。
+- `backend-test-architecture-rewrite-blueprint.md`：如果按当前认知重做后端测试架构，推荐的分层、目录和断言 owner 布局。
