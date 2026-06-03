@@ -1014,6 +1014,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 func newPracticeFlowTestConfig(t *testing.T) *config.Config {
 	t.Helper()
 
+	portRangeStart, portRangeEnd := reserveInternalAppTestPortRange(t, 101)
+
 	return &config.Config{
 		App: config.AppConfig{
 			Name: "ctf-platform-test",
@@ -1050,8 +1052,8 @@ func newPracticeFlowTestConfig(t *testing.T) *config.Config {
 			CreateTimeout:        5 * time.Second,
 			PublicHost:           "127.0.0.1",
 			DefaultExposedPort:   80,
-			PortRangeStart:       30000,
-			PortRangeEnd:         30100,
+			PortRangeStart:       portRangeStart,
+			PortRangeEnd:         portRangeEnd,
 			ProxyTicketTTL:       15 * time.Minute,
 			ProxyBodyPreviewSize: 1024,
 		},
