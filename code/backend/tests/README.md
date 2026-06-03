@@ -17,7 +17,7 @@
 - 测试文件应尽量只表达场景，不再内嵌环境搭建和数据种子细节。
 - 当前首个落点是 `tests/system/http/practiceflow/`，这里承接 `practice_flow` 的场景断言 owner。
 - `tests/system/http/fullrouteraccess/` 承接 `full_router_access` 的场景断言 owner，当前仍通过 glue code 复用 `internal/app` 里的 full router fixture。
-- `tests/system/http/fullrouteradmin/` 承接 `full_router_admin` 的 HTTP 场景断言 owner，当前已覆盖 AWD control、publish request lifecycle 和 admin challenge management 场景；admin ops/notification 与 page size 小回归仍暂留 `internal/app`。
+- `tests/system/http/fullrouteradmin/` 承接 `full_router_admin` 的 HTTP 场景断言 owner，当前已覆盖 AWD control、publish request lifecycle、admin challenge management 和 admin ops/notification 场景；page size 小回归仍暂留 `internal/app`。
 - `tests/system/http/fullrouterteacherauthoring/` 承接 `full_router_teacher_authoring` 的 HTTP 场景断言 owner，当前仍通过 glue code 复用 `internal/app` 的 full router fixture，并保留少量 DB / 文件系统 seed。
 - `tests/system/http/fullrouterawdstate/` 承接 `full_router_awd_state_matrix` 的 HTTP 场景断言 owner，当前仍通过 glue code 复用 `internal/app` 的 AWD/contest seed 和实例状态更新 helper。
 - `tests/system/http/fullrouterconteststate/` 承接 `full_router_contest_state_matrix` 的 HTTP 场景断言 owner，当前仍通过 glue code 复用 `internal/app` 的 contest/challenge/user seed、scoreboard seed 和 report wait helper。

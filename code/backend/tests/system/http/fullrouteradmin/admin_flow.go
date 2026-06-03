@@ -5,19 +5,28 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	identityhttp "ctf-platform/internal/module/identity/api/http"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	opshttp "ctf-platform/internal/module/ops/api/http"
+	opsqry "ctf-platform/internal/module/ops/application/queries"
+	opsentity "ctf-platform/internal/module/ops/entity"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/internal/shared/taxonomy"
+	xws "golang.org/x/net/websocket"
 )
 
 type RequestFunc func(method, target string, payload any, headers map[string]string) *httptest.ResponseRecorder
+type MultipartRequestFunc func(method, target, fieldName, fileName, content string, headers map[string]string) *httptest.ResponseRecorder
 
 type AWDControlTarget struct {
 	ContestID int64
@@ -44,6 +53,20 @@ type ChallengeManagementDriver struct {
 	CreateDeleteBlockedChallenge        func(t *testing.T, title string) int64
 	CreateRunningInstanceForDeleteBlock func(t *testing.T, challengeID int64)
 	StopInstancesForChallenge           func(t *testing.T, challengeID int64)
+}
+
+type AdminOpsAndNotificationDriver struct {
+	Request           RequestFunc
+	MultipartRequest  MultipartRequestFunc
+	Router            http.Handler
+	AdminHeaders      map[string]string
+	TeacherHeaders    map[string]string
+	StudentHeaders    map[string]string
+	PeerHeaders       map[string]string
+	SeededImageID     int64
+	NotificationID    int64
+	SeedOnlineSession func(t *testing.T)
+	SeedAuditLogs     func(t *testing.T)
 }
 
 type envelope struct {
@@ -671,6 +694,283 @@ func VerifyAdminChallengeManagementStateMatrix(t *testing.T, driver ChallengeMan
 
 	resp = driver.Request(http.MethodDelete, fmt.Sprintf("/api/v1/authoring/environment-templates/%d", template.ID), nil, driver.AdminHeaders)
 	assertStatus(t, resp, http.StatusOK)
+}
+
+func VerifyAdminOpsAndNotificationStateMatrix(t *testing.T, driver AdminOpsAndNotificationDriver) {
+	t.Helper()
+
+	resp := driver.Request(http.MethodPost, "/api/v1/authoring/images", map[string]any{
+		"name":        "matrix/webapp",
+		"tag":         "v2",
+		"description": "integration image",
+	}, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	var freeImage challengehttp.ImageResp
+	decodeEnvelopeData(t, resp, &freeImage)
+	if freeImage.Name != "matrix/webapp" {
+		t.Fatalf("unexpected created image: %+v", freeImage)
+	}
+
+	resp = driver.Request(http.MethodPost, "/api/v1/authoring/images", map[string]any{
+		"name":        "matrix/webapp",
+		"tag":         "v2",
+		"description": "duplicate image",
+	}, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusConflict)
+
+	resp = driver.Request(http.MethodGet, "/api/v1/authoring/images?name=matrix/status=available", nil, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	resp = driver.Request(http.MethodPut, fmt.Sprintf("/api/v1/authoring/images/%d", freeImage.ID), map[string]any{
+		"description": "updated image",
+		"status":      "failed",
+	}, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	resp = driver.Request(http.MethodGet, fmt.Sprintf("/api/v1/authoring/images/%d", freeImage.ID), nil, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	var loadedImage challengehttp.ImageResp
+	decodeEnvelopeData(t, resp, &loadedImage)
+	if loadedImage.Status != "failed" || loadedImage.Description != "updated image" {
+		t.Fatalf("unexpected loaded image: %+v", loadedImage)
+	}
+
+	resp = driver.Request(http.MethodDelete, fmt.Sprintf("/api/v1/authoring/images/%d", driver.SeededImageID), nil, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusConflict)
+
+	resp = driver.Request(http.MethodDelete, fmt.Sprintf("/api/v1/authoring/images/%d", freeImage.ID), nil, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	resp = driver.Request(http.MethodGet, "/api/v1/admin/users?role=student&class_name=ClassA", nil, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	var userPage map[string]any
+	decodeEnvelopeData(t, resp, &userPage)
+	if int(userPage["total"].(float64)) < 2 {
+		t.Fatalf("expected student page results, got %+v", userPage)
+	}
+
+	resp = driver.Request(http.MethodPost, "/api/v1/admin/users", map[string]any{
+		"username":   "admin_created_student",
+		"name":       "Created Student",
+		"password":   "Password123",
+		"email":      "created_student@example.com",
+		"student_no": "20260001",
+		"class_name": "ClassA",
+		"role":       identitycontracts.RoleStudent,
+		"status":     identitycontracts.UserStatusActive,
+	}, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	var createdUserWrap map[string]json.RawMessage
+	decodeEnvelopeData(t, resp, &createdUserWrap)
+
+	var createdUser identityhttp.AdminUserResp
+	if err := json.Unmarshal(createdUserWrap["user"], &createdUser); err != nil {
+		t.Fatalf("decode created user: %v", err)
+	}
+	if createdUser.Username != "admin_created_student" {
+		t.Fatalf("unexpected created user: %+v", createdUser)
+	}
+
+	resp = driver.Request(http.MethodPost, "/api/v1/admin/users", map[string]any{
+		"username": "admin_created_student",
+		"password": "Password123",
+		"role":     identitycontracts.RoleStudent,
+	}, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusConflict)
+
+	updatedTeacherNo := "T-9001"
+	updatedRole := identitycontracts.RoleTeacher
+	resp = driver.Request(http.MethodPut, fmt.Sprintf("/api/v1/admin/users/%d", createdUser.ID), map[string]any{
+		"role":       updatedRole,
+		"teacher_no": updatedTeacherNo,
+		"class_name": "ClassTeach",
+	}, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	var updatedUserWrap map[string]json.RawMessage
+	decodeEnvelopeData(t, resp, &updatedUserWrap)
+
+	var updatedUser identityhttp.AdminUserResp
+	if err := json.Unmarshal(updatedUserWrap["user"], &updatedUser); err != nil {
+		t.Fatalf("decode updated user: %v", err)
+	}
+	if updatedUser.TeacherNo == nil || *updatedUser.TeacherNo != updatedTeacherNo || updatedUser.StudentNo != nil {
+		t.Fatalf("unexpected updated user: %+v", updatedUser)
+	}
+
+	csvContent := strings.Join([]string{
+		"username,password,email,class_name,role,status,student_no,teacher_no,name",
+		"import_new,Password123,import_new@example.com,ClassA,student,active,20260002,,Import New",
+		"admin_created_student,,updated_import@example.com,ClassTeach,teacher,inactive,,T-9002,Imported Update",
+		",Password123,bad@example.com,ClassA,student,active,20260003,,Bad Row",
+	}, "\n")
+	resp = driver.MultipartRequest(http.MethodPost, "/api/v1/admin/users/import", "file", "users.csv", csvContent, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusCreated)
+
+	var importResult identityhttp.ImportUsersResp
+	decodeEnvelopeData(t, resp, &importResult)
+	if importResult.Created != 1 || importResult.Updated != 1 || importResult.Failed != 1 {
+		t.Fatalf("unexpected import result: %+v", importResult)
+	}
+
+	resp = driver.Request(http.MethodDelete, fmt.Sprintf("/api/v1/admin/users/%d", createdUser.ID), nil, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	driver.SeedOnlineSession(t)
+
+	resp = driver.Request(http.MethodGet, "/api/v1/admin/dashboard", nil, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	var dashboard opshttp.DashboardStats
+	decodeEnvelopeData(t, resp, &dashboard)
+	if dashboard.OnlineUsers < 1 || dashboard.ActiveContainers < 1 {
+		t.Fatalf("unexpected dashboard stats: %+v", dashboard)
+	}
+
+	driver.SeedAuditLogs(t)
+
+	resp = driver.Request(http.MethodGet, "/api/v1/admin/audit-logs?action=submit&page=1&page_size=10", nil, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	var auditPage map[string]any
+	decodeEnvelopeData(t, resp, &auditPage)
+	if int(auditPage["total"].(float64)) < 5 {
+		t.Fatalf("unexpected audit page: %+v", auditPage)
+	}
+
+	resp = driver.Request(http.MethodGet, "/api/v1/admin/audit-logs?start_time=bad-time", nil, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusBadRequest)
+
+	resp = driver.Request(http.MethodGet, "/api/v1/admin/cheat-detection", nil, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	var cheat opsqry.CheatDetectionResp
+	decodeEnvelopeData(t, resp, &cheat)
+	if cheat.Summary.SubmitBurstUsers < 1 || cheat.Summary.SharedIPGroups < 1 {
+		t.Fatalf("unexpected cheat detection response: %+v", cheat)
+	}
+
+	resp = driver.Request(http.MethodPost, "/api/v1/admin/notifications", map[string]any{
+		"type":    opsentity.NotificationTypeSystem,
+		"title":   "全员通知",
+		"content": "full-router matrix admin publish",
+		"audience_rules": map[string]any{
+			"mode": "union",
+			"rules": []map[string]any{
+				{"type": "all"},
+			},
+		},
+	}, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	var publishResult opshttp.AdminNotificationPublishResp
+	decodeEnvelopeData(t, resp, &publishResult)
+	if publishResult.BatchID <= 0 || publishResult.RecipientCount < 4 {
+		t.Fatalf("unexpected publish result: %+v", publishResult)
+	}
+
+	resp = driver.Request(http.MethodPost, "/api/v1/admin/notifications", map[string]any{
+		"type":    opsentity.NotificationTypeSystem,
+		"title":   "teacher forbidden",
+		"content": "teacher should not publish",
+		"audience_rules": map[string]any{
+			"mode": "union",
+			"rules": []map[string]any{
+				{"type": "all"},
+			},
+		},
+	}, driver.TeacherHeaders)
+	assertStatus(t, resp, http.StatusForbidden)
+
+	resp = driver.Request(http.MethodPost, "/api/v1/admin/notifications", map[string]any{
+		"type":    opsentity.NotificationTypeSystem,
+		"title":   "invalid audience",
+		"content": "missing roles",
+		"audience_rules": map[string]any{
+			"mode": "union",
+			"rules": []map[string]any{
+				{"type": "role"},
+			},
+		},
+	}, driver.AdminHeaders)
+	assertStatus(t, resp, http.StatusBadRequest)
+
+	resp = driver.Request(http.MethodGet, "/api/v1/notifications?page=1&page_size=10", nil, driver.StudentHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	var notificationPage map[string]any
+	decodeEnvelopeData(t, resp, &notificationPage)
+	if int(notificationPage["total"].(float64)) < 2 {
+		t.Fatalf("unexpected notifications page: %+v", notificationPage)
+	}
+
+	resp = driver.Request(http.MethodPut, fmt.Sprintf("/api/v1/notifications/%d/read", driver.NotificationID), nil, driver.PeerHeaders)
+	assertStatus(t, resp, http.StatusNotFound)
+
+	resp = driver.Request(http.MethodPut, fmt.Sprintf("/api/v1/notifications/%d/read", driver.NotificationID), nil, driver.StudentHeaders)
+	assertStatus(t, resp, http.StatusOK)
+
+	server := httptest.NewServer(driver.Router)
+	defer server.Close()
+
+	ticketResp := driver.Request(http.MethodPost, "/api/v1/auth/ws-ticket", nil, driver.StudentHeaders)
+	assertStatus(t, ticketResp, http.StatusOK)
+
+	var wsTicket map[string]any
+	decodeEnvelopeData(t, ticketResp, &wsTicket)
+	ticket, _ := wsTicket["ticket"].(string)
+	if ticket == "" {
+		t.Fatalf("expected websocket ticket")
+	}
+
+	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws/notifications?ticket=" + ticket
+	wsConfig, err := xws.NewConfig(wsURL, server.URL)
+	if err != nil {
+		t.Fatalf("new websocket config: %v", err)
+	}
+	conn, err := xws.DialConfig(wsConfig)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close()
+
+	message := receiveWSMessageByType(t, conn, "system.connected")
+	if message.Type != "system.connected" {
+		t.Fatalf("unexpected websocket message: %+v", message)
+	}
+
+	reusedConfig, _ := xws.NewConfig(wsURL, server.URL)
+	if _, err := xws.DialConfig(reusedConfig); err == nil {
+		t.Fatal("expected consumed websocket ticket to be rejected")
+	}
+}
+
+type wsEnvelope struct {
+	Type      string          `json:"type"`
+	Payload   json.RawMessage `json:"payload"`
+	Timestamp time.Time       `json:"timestamp"`
+}
+
+func receiveWSMessageByType(t *testing.T, conn *xws.Conn, expectedType string) wsEnvelope {
+	t.Helper()
+
+	deadline := time.Now().Add(3 * time.Second)
+	if err := conn.SetDeadline(deadline); err != nil {
+		t.Fatalf("set websocket deadline: %v", err)
+	}
+	for {
+		var message wsEnvelope
+		if err := xws.JSON.Receive(conn, &message); err != nil {
+			t.Fatalf("receive websocket message: %v", err)
+		}
+		if message.Type == expectedType {
+			return message
+		}
+	}
 }
 
 func assertStatus(t *testing.T, resp *httptest.ResponseRecorder, want int) {
