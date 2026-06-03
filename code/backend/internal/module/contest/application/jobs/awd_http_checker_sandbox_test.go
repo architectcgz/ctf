@@ -62,6 +62,7 @@ func TestAWDHTTPStandardUsesSandboxNetworkForAliasTarget(t *testing.T) {
 		},
 		awdHTTPCheckerTemplateData{CheckerToken: "sandbox-checker-token"},
 		[]string{"flag{round}"},
+		0,
 	)
 
 	if !result.summary.Healthy {

@@ -72,7 +72,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
-			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				return "container-queued", "network-queued", hostPort, 8080, nil
 			},
 		},
@@ -192,7 +192,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 				cleanupCalls.Add(1)
 				return nil
 			},
-			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				return "container-readiness", "network-readiness", reservedHostPort, 8080, nil
 			},
 		},
@@ -259,7 +259,7 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 		},
 		instanceStore,
 		&stubPracticeRuntimeService{
-			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected runtime create ctx value %v, got %v", expectedCtxValue, got)
 				}
@@ -308,7 +308,7 @@ func TestProvisionInstanceCleansRuntimeWhenInstanceLeavesCreatingBeforePersist(t
 		},
 		instanceStore,
 		&stubPracticeRuntimeService{
-			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				return "ctr-cancelled", "net-cancelled", reservedHostPort, 8080, nil
 			},
 			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
@@ -797,7 +797,7 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 			},
 		},
 		&stubPracticeRuntimeService{
-			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {
 					t.Fatalf("expected create container ctx value %v, got %v", expectedCtxValue, got)
 				}
@@ -877,7 +877,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
-			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				started <- reservedHostPort
 				<-release
 				return "container-capacity", "network-capacity", reservedHostPort, 8080, nil

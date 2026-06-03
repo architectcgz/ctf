@@ -28,6 +28,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerActionInSandbox(
 	action awdHTTPCheckerActionConfig,
 	headers map[string]string,
 	bodyValue string,
+	nodeID int64,
 ) (awdHTTPSandboxResponse, bool) {
 	networkMode := resolveAWDCheckerNetworkMode(accessURL, runtimeDetails)
 	if u.checkerRunner == nil || networkMode == "" {
@@ -68,6 +69,9 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerActionInSandbox(
 			PidsLimit:        u.cfg.CheckerSandbox.PidsLimit,
 			NofileLimit:      u.cfg.CheckerSandbox.NofileLimit,
 			OutputLimitBytes: u.cfg.CheckerSandbox.OutputLimitBytes,
+		},
+		Metadata: contestports.CheckerRunMetadata{
+			NodeID: nodeID,
 		},
 	}
 

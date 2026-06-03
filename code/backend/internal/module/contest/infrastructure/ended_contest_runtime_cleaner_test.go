@@ -25,6 +25,34 @@ func (s *endedContestRuntimeCleanupStub) CleanupRuntime(_ context.Context, insta
 	return s.err
 }
 
+func TestContestEndedRuntimeCleanerCleanupDefenseWorkspaceUsesContainerAuthorityPayload(t *testing.T) {
+	runtimeCleaner := &endedContestRuntimeCleanupStub{}
+	cleaner := &ContestEndedRuntimeCleaner{runtime: runtimeCleaner}
+
+	err := cleaner.cleanupDefenseWorkspaceRuntime(context.Background(), 1001, &runtimecontracts.AWDDefenseWorkspace{
+		ContainerID: "workspace-ended-ctr",
+	})
+	if err != nil {
+		t.Fatalf("cleanupDefenseWorkspaceRuntime() error = %v", err)
+	}
+	if len(runtimeCleaner.cleaned) != 1 {
+		t.Fatalf("expected one cleanup payload, got %d", len(runtimeCleaner.cleaned))
+	}
+	payload := runtimeCleaner.cleaned[0]
+	if payload.ID != 1001 {
+		t.Fatalf("expected cleanup payload to preserve instance id, got %+v", payload)
+	}
+	if payload.NodeID != nil {
+		t.Fatalf("expected workspace cleanup payload to leave node resolution to router, got node_id=%d", *payload.NodeID)
+	}
+	if payload.ContainerID != "workspace-ended-ctr" {
+		t.Fatalf("expected workspace cleanup payload to carry container id, got %+v", payload)
+	}
+	if strings.TrimSpace(payload.RuntimeDetails) != "" {
+		t.Fatalf("expected workspace cleanup payload runtime_details to stay empty, got %+v", payload)
+	}
+}
+
 func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testing.T) {
 	t.Parallel()
 

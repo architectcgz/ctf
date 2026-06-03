@@ -43,6 +43,7 @@ type CheckerRunMetadata struct {
 	ServiceID   int64
 	TeamID      int64
 	RoundNumber int
+	NodeID      int64
 }
 
 type CheckerRunResult struct {

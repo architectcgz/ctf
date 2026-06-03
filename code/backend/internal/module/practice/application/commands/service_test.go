@@ -79,7 +79,7 @@ func wirePracticeSubmissionAdapters(
 type stubPracticeRuntimeService struct {
 	cleanupRuntimeFn          func(ctx context.Context, instance *instanceentity.Instance) error
 	createTopologyFn          func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
-	createContainerFn         func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
+	createContainerFn         func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, nodeID int64) (containerID, networkID string, hostPort, servicePort int, err error)
 	inspectManagedContainerFn func(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error)
 }
 
@@ -102,7 +102,7 @@ func (s *stubPracticeRuntimeService) CreateTopology(ctx context.Context, req *pr
 		if !node.IsEntryPoint {
 			return nil, errors.New("unexpected CreateTopology call")
 		}
-		containerID, networkID, hostPort, servicePort, err := s.createContainerFn(ctx, node.Image, node.Env, req.ReservedHostPort)
+		containerID, networkID, hostPort, servicePort, err := s.createContainerFn(ctx, node.Image, node.Env, req.ReservedHostPort, req.NodeID)
 		if err != nil {
 			return nil, err
 		}
@@ -146,11 +146,11 @@ func (s *stubPracticeRuntimeService) CreateTopology(ctx context.Context, req *pr
 	return s.createTopologyFn(ctx, req)
 }
 
-func (s *stubPracticeRuntimeService) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+func (s *stubPracticeRuntimeService) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, nodeID int64) (string, string, int, int, error) {
 	if s.createContainerFn == nil {
 		return "", "", 0, 0, errors.New("unexpected CreateContainer call")
 	}
-	return s.createContainerFn(ctx, imageName, env, reservedHostPort)
+	return s.createContainerFn(ctx, imageName, env, reservedHostPort, nodeID)
 }
 
 func (s *stubPracticeRuntimeService) InspectManagedContainer(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {
@@ -163,6 +163,17 @@ func (s *stubPracticeRuntimeService) InspectManagedContainer(ctx context.Context
 		}, nil
 	}
 	return s.inspectManagedContainerFn(ctx, containerID)
+}
+
+type stubPracticeRuntimeNodeSelector struct {
+	selectRuntimeNodeFn func(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error)
+}
+
+func (s *stubPracticeRuntimeNodeSelector) SelectRuntimeNode(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error) {
+	if s == nil || s.selectRuntimeNodeFn == nil {
+		return nil, nil
+	}
+	return s.selectRuntimeNodeFn(ctx, scope)
 }
 
 func resolvedPracticeTopologyNetworkKey(networks []practiceports.TopologyCreateNetwork, nodeNetworkKeys []string) string {
@@ -500,6 +511,36 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 	}
 }
 
+func TestCleanupAWDDefenseWorkspaceCompanionUsesContainerAuthorityPayload(t *testing.T) {
+	service := &Service{
+		runtimeService: &stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
+				if instance == nil {
+					t.Fatal("expected cleanup instance payload")
+				}
+				if instance.NodeID != nil {
+					t.Fatalf("expected workspace cleanup payload to leave node resolution to router, got node_id=%d", *instance.NodeID)
+				}
+				if strings.TrimSpace(instance.ContainerID) != "" {
+					t.Fatalf("expected workspace cleanup payload to use runtime_details only, got container_id=%q", instance.ContainerID)
+				}
+				details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+				if err != nil {
+					t.Fatalf("decode cleanup runtime details: %v", err)
+				}
+				if len(details.Containers) != 1 || details.Containers[0].ContainerID != "workspace-cleanup-ctr" {
+					t.Fatalf("expected cleanup runtime details to carry workspace container id, got %+v", details.Containers)
+				}
+				return nil
+			},
+		},
+	}
+
+	if err := service.cleanupAWDDefenseWorkspaceCompanion(context.Background(), "workspace-cleanup-ctr"); err != nil {
+		t.Fatalf("cleanupAWDDefenseWorkspaceCompanion() error = %v", err)
+	}
+}
+
 func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFails(t *testing.T) {
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
@@ -758,11 +799,43 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&runtimeentity.AWDDefenseWorkspace{},
 		&runtimeentity.PortAllocation{},
 		&runtimeentity.NetworkAllocation{},
+		&runtimeentity.RuntimeNode{},
 		&contestentity.Submission{},
 	); err != nil {
 		t.Fatalf("migrate practice command tables: %v", err)
 	}
 	return db
+}
+
+func TestPracticeCommandDBMigratesRuntimeNodeSchema(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+
+	type sqliteMasterRow struct {
+		Name string `gorm:"column:name"`
+	}
+	var runtimeNodesTable sqliteMasterRow
+	if err := db.Raw("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?", "runtime_nodes").Scan(&runtimeNodesTable).Error; err != nil {
+		t.Fatalf("query runtime_nodes table: %v", err)
+	}
+	if runtimeNodesTable.Name != "runtime_nodes" {
+		t.Fatalf("expected runtime_nodes table to be migrated, got %+v", runtimeNodesTable)
+	}
+
+	type tableInfoRow struct {
+		Name string `gorm:"column:name"`
+	}
+	var columns []tableInfoRow
+	if err := db.Raw("PRAGMA table_info(instances)").Scan(&columns).Error; err != nil {
+		t.Fatalf("query instances table info: %v", err)
+	}
+	for _, column := range columns {
+		if column.Name == "node_id" {
+			return
+		}
+	}
+	t.Fatalf("expected instances table to contain node_id column, got %+v", columns)
 }
 
 func reserveClosedLoopbackPort(t *testing.T) int {

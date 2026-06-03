@@ -772,7 +772,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		buildPracticeModule = originalBuildPracticeModule
 	}()
 
-	buildContainerRuntimeModule = func(root *composition.Root) *composition.ContainerRuntimeModule {
+	buildContainerRuntimeModule = func(root *composition.Root) (*composition.ContainerRuntimeModule, error) {
 		if root == nil {
 			t.Fatal("expected root for container runtime module builder")
 		}

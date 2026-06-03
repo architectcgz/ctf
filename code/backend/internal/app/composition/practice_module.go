@@ -8,16 +8,17 @@ type PracticeModule = practiceruntime.Module
 
 func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *InstanceModule) *PracticeModule {
 	module := practiceruntime.Build(practiceruntime.Deps{
-		AppContext:     root.Context(),
-		Config:         root.Config(),
-		Logger:         root.Logger(),
-		DB:             root.DB(),
-		Cache:          root.Cache(),
-		Events:         root.Events,
-		InstanceRepo:   instance.PracticeInstanceRepository,
-		RuntimeService: instance.PracticeRuntimeService,
-		ChallengeRepo:  challenge.Catalog,
-		ImageStore:     challenge.ImageStore,
+		AppContext:          root.Context(),
+		Config:              root.Config(),
+		Logger:              root.Logger(),
+		DB:                  root.DB(),
+		Cache:               root.Cache(),
+		Events:              root.Events,
+		InstanceRepo:        instance.PracticeInstanceRepository,
+		RuntimeService:      instance.PracticeRuntimeService,
+		RuntimeNodeSelector: instance.PracticeRuntimeNodeSelector,
+		ChallengeRepo:       challenge.Catalog,
+		ImageStore:          challenge.ImageStore,
 	})
 	if instance != nil && module != nil && module.AWDDesiredRuntimeReconciler != nil {
 		instance.SetAWDDesiredRuntimeReconciler(module.AWDDesiredRuntimeReconciler)

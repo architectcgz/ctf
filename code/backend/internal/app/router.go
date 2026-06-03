@@ -81,7 +81,10 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	engine.GET("/health/db", health.GetDB)
 	engine.GET("/health/redis", health.GetRedis)
 
-	containerRuntimeModule := buildContainerRuntimeModule(root)
+	containerRuntimeModule, err := buildContainerRuntimeModule(root)
+	if err != nil {
+		return nil, err
+	}
 	opsModule := buildOpsModule(root, containerRuntimeModule)
 	instanceModule := buildInstanceModule(root, containerRuntimeModule)
 
@@ -205,6 +208,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 			{name: "report_export_tasks", closer: assessmentModule.BackgroundTasks},
 			{name: "image_cleanup_tasks", closer: challengeModule.BackgroundTasks},
 			{name: "practice_async_tasks", closer: practiceModule.BackgroundTasks},
+			{name: "runtime_execution_bridge", closer: containerRuntimeModule.LifecycleCloser},
 		},
 	}, nil
 }

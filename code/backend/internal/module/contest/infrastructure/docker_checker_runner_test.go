@@ -1,11 +1,19 @@
 package infrastructure
 
 import (
-	"os"
-	"path/filepath"
+	"archive/tar"
+	"bytes"
+	"context"
+	"io"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	networktypes "github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/pkg/stdcopy"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -29,7 +37,7 @@ func TestDockerCheckerRunnerBuildsLockedDownContainerSpec(t *testing.T) {
 			TeamID:      30,
 			RoundNumber: 4,
 		},
-	}, "/tmp/checker-work")
+	})
 	if err != nil {
 		t.Fatalf("buildContainerSpec() error = %v", err)
 	}
@@ -61,15 +69,8 @@ func TestDockerCheckerRunnerBuildsLockedDownContainerSpec(t *testing.T) {
 	if len(spec.HostConfig.Resources.Ulimits) != 1 || spec.HostConfig.Resources.Ulimits[0].Name != "nofile" || spec.HostConfig.Resources.Ulimits[0].Soft != 128 {
 		t.Fatalf("Ulimits = %+v, want nofile=128", spec.HostConfig.Resources.Ulimits)
 	}
-	if len(spec.HostConfig.Mounts) != 1 {
-		t.Fatalf("Mounts = %+v, want exactly one checker mount", spec.HostConfig.Mounts)
-	}
-	mount := spec.HostConfig.Mounts[0]
-	if !mount.ReadOnly || mount.Target != "/checker" || mount.Source != "/tmp/checker-work" {
-		t.Fatalf("checker mount = %+v, want read-only /tmp/checker-work:/checker", mount)
-	}
-	if strings.Contains(mount.Source, "docker.sock") || strings.Contains(mount.Target, "docker.sock") {
-		t.Fatalf("checker sandbox must not mount docker socket: %+v", mount)
+	if len(spec.HostConfig.Mounts) != 0 {
+		t.Fatalf("Mounts = %+v, want no host bind mounts", spec.HostConfig.Mounts)
 	}
 	if spec.ContainerConfig.User != "65532:65532" {
 		t.Fatalf("User = %q, want 65532:65532", spec.ContainerConfig.User)
@@ -102,7 +103,7 @@ func TestDockerCheckerRunnerEnablesOnlyExplicitTargetNetwork(t *testing.T) {
 		Entry:           "check.py",
 		NetworkMode:     "ctf-awd-target-10",
 		TargetAllowlist: []string{"10.10.0.23:8080"},
-	}, "/tmp/checker-work")
+	})
 	if err != nil {
 		t.Fatalf("buildContainerSpec() error = %v", err)
 	}
@@ -145,25 +146,83 @@ func TestParseCheckerJSONOutput(t *testing.T) {
 	}
 }
 
-func TestMaterializeCheckerFilesUsesConfiguredHostRoot(t *testing.T) {
+func TestDockerCheckerRunnerCopiesCheckerFilesToContainerBeforeStart(t *testing.T) {
 	t.Parallel()
 
-	hostRoot := filepath.Join(t.TempDir(), "checker-sandboxes")
-	workDir, err := materializeCheckerFiles([]contestports.CheckerRunFile{
-		{Path: "docker/check/check.py", Content: []byte("print('ok')\n"), Mode: 0o500},
-	}, hostRoot)
-	if err != nil {
-		t.Fatalf("materializeCheckerFiles() error = %v", err)
+	fake := &fakeDockerCheckerClient{
+		logs: dockerCheckerLogStream(t, "checker-ok", ""),
 	}
-	defer func() {
-		_ = os.RemoveAll(workDir)
-	}()
+	runner := NewDockerCheckerRunnerWithClient(fake, checkerSandboxConfigForTest())
 
-	if !strings.HasPrefix(workDir, hostRoot+string(filepath.Separator)) {
-		t.Fatalf("workDir = %q, want under %q", workDir, hostRoot)
+	result, err := runner.RunChecker(t.Context(), contestports.CheckerRunJob{
+		Runtime: "python3",
+		Entry:   "docker/check/check.py",
+		Files: []contestports.CheckerRunFile{
+			{Path: "docker/check/check.py", Content: []byte("print('ok')\n"), Mode: 0o500},
+		},
+	})
+	if err != nil {
+		t.Fatalf("RunChecker() error = %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(workDir, "docker/check/check.py")); err != nil {
-		t.Fatalf("expected checker file to be materialized: %v", err)
+	if result.Status != contestports.CheckerRunStatusOK {
+		t.Fatalf("result.Status = %s, want ok", result.Status)
+	}
+	if got := strings.Join(fake.calls, " -> "); got != "create -> copy -> start -> wait -> logs -> remove" {
+		t.Fatalf("call order = %q, want create -> copy -> start -> wait -> logs -> remove", got)
+	}
+	if fake.copyDestination != "/checker" {
+		t.Fatalf("CopyToContainer destination = %q, want /checker", fake.copyDestination)
+	}
+	file, ok := fake.copiedFiles["docker/check/check.py"]
+	if !ok {
+		t.Fatalf("copied files = %+v, want docker/check/check.py", fake.copiedFiles)
+	}
+	if string(file.content) != "print('ok')\n" {
+		t.Fatalf("copied content = %q, want %q", string(file.content), "print('ok')\n")
+	}
+	if file.mode != 0o500 {
+		t.Fatalf("copied mode = %o, want 0500", file.mode)
+	}
+}
+
+func TestBuildCheckerFilesArchivePreservesPathsAndModes(t *testing.T) {
+	t.Parallel()
+
+	archive, err := buildCheckerFilesArchive([]contestports.CheckerRunFile{
+		{Path: "docker/check/check.py", Content: []byte("print('ok')\n"), Mode: 0o500},
+	})
+	if err != nil {
+		t.Fatalf("buildCheckerFilesArchive() error = %v", err)
+	}
+
+	tr := tar.NewReader(archive)
+	entries := make(map[string]copiedCheckerFile)
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatalf("tar reader next error = %v", err)
+		}
+		content, err := io.ReadAll(tr)
+		if err != nil {
+			t.Fatalf("tar reader read error = %v", err)
+		}
+		entries[header.Name] = copiedCheckerFile{content: content, mode: header.Mode}
+	}
+	if _, ok := entries["docker"]; !ok {
+		t.Fatalf("archive entries = %+v, want docker directory", entries)
+	}
+	file, ok := entries["docker/check/check.py"]
+	if !ok {
+		t.Fatalf("archive entries = %+v, want docker/check/check.py", entries)
+	}
+	if string(file.content) != "print('ok')\n" {
+		t.Fatalf("archive content = %q, want %q", string(file.content), "print('ok')\n")
+	}
+	if file.mode != 0o500 {
+		t.Fatalf("archive mode = %o, want 0500", file.mode)
 	}
 }
 
@@ -171,7 +230,6 @@ func checkerSandboxConfigForTest() config.CheckerSandboxConfig {
 	return config.CheckerSandboxConfig{
 		Image:            "python:3.12-alpine",
 		User:             "65532:65532",
-		HostWorkRoot:     "",
 		WorkDir:          "/checker",
 		Timeout:          10 * time.Second,
 		CPUQuota:         0.5,
@@ -189,4 +247,92 @@ func containsString(values []string, want string) bool {
 		}
 	}
 	return false
+}
+
+type fakeDockerCheckerClient struct {
+	calls           []string
+	logs            []byte
+	copyDestination string
+	copiedFiles     map[string]copiedCheckerFile
+}
+
+type copiedCheckerFile struct {
+	content []byte
+	mode    int64
+}
+
+func (f *fakeDockerCheckerClient) ContainerCreate(context.Context, *container.Config, *container.HostConfig, *networktypes.NetworkingConfig, *ocispec.Platform, string) (container.CreateResponse, error) {
+	f.calls = append(f.calls, "create")
+	return container.CreateResponse{ID: "checker-container"}, nil
+}
+
+func (f *fakeDockerCheckerClient) CopyToContainer(_ context.Context, _ string, dst string, content io.Reader, _ container.CopyToContainerOptions) error {
+	f.calls = append(f.calls, "copy")
+	f.copyDestination = dst
+
+	tr := tar.NewReader(content)
+	f.copiedFiles = make(map[string]copiedCheckerFile)
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		payload, err := io.ReadAll(tr)
+		if err != nil {
+			return err
+		}
+		f.copiedFiles[header.Name] = copiedCheckerFile{
+			content: payload,
+			mode:    header.Mode,
+		}
+	}
+}
+
+func (f *fakeDockerCheckerClient) ContainerStart(context.Context, string, container.StartOptions) error {
+	f.calls = append(f.calls, "start")
+	return nil
+}
+
+func (f *fakeDockerCheckerClient) ContainerWait(context.Context, string, container.WaitCondition) (<-chan container.WaitResponse, <-chan error) {
+	f.calls = append(f.calls, "wait")
+	waitCh := make(chan container.WaitResponse, 1)
+	errCh := make(chan error, 1)
+	waitCh <- container.WaitResponse{StatusCode: 0}
+	return waitCh, errCh
+}
+
+func (f *fakeDockerCheckerClient) ContainerLogs(context.Context, string, container.LogsOptions) (io.ReadCloser, error) {
+	f.calls = append(f.calls, "logs")
+	return io.NopCloser(bytes.NewReader(f.logs)), nil
+}
+
+func (*fakeDockerCheckerClient) ContainerInspect(context.Context, string) (types.ContainerJSON, error) {
+	return types.ContainerJSON{}, nil
+}
+
+func (f *fakeDockerCheckerClient) ContainerRemove(context.Context, string, container.RemoveOptions) error {
+	f.calls = append(f.calls, "remove")
+	return nil
+}
+
+func dockerCheckerLogStream(t *testing.T, stdout, stderr string) []byte {
+	t.Helper()
+
+	var stream bytes.Buffer
+	if stdout != "" {
+		writer := stdcopy.NewStdWriter(&stream, stdcopy.Stdout)
+		if _, err := writer.Write([]byte(stdout)); err != nil {
+			t.Fatalf("stdout log stream write error = %v", err)
+		}
+	}
+	if stderr != "" {
+		writer := stdcopy.NewStdWriter(&stream, stdcopy.Stderr)
+		if _, err := writer.Write([]byte(stderr)); err != nil {
+			t.Fatalf("stderr log stream write error = %v", err)
+		}
+	}
+	return stream.Bytes()
 }

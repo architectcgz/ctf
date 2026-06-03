@@ -66,9 +66,9 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 
 - 日常开发优先使用上面的“依赖容器 + 本机前后端”
 - 需要多人长期使用时，至少把 API 改成宿主机进程运行
-- 正式比赛或共享环境，推荐把 API 主机与靶机 Docker 主机拆开，通过 `DOCKER_HOST` + mTLS 管理远端 Docker Engine
+- 正式比赛或共享环境，推荐把 API 主机与靶机 Docker 主机拆开，由 API 通过 `runtime-agent` + mTLS 调用执行面；`DOCKER_HOST` 只能作为底层 Docker client 连接参数，不再等同于完整多机方案
 
-更完整的威胁模型与部署建议见 `docs/architecture/backend/01-system-architecture.md` 的“7.5 安全边界设计”。
+更完整的威胁模型与部署建议见 `docs/architecture/backend/01-system-architecture.md` 的“7.5 安全边界设计”；运行模式和最小配置见 `docs/operations/runtime-agent-deployment.md`。
 
 默认端口：
 

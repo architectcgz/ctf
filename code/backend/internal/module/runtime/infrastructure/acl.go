@@ -56,7 +56,7 @@ func applyACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntime
 }
 
 func removeACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
-	validated, err := validateLegacyACLRulesForDelete(rules)
+	validated, err := validateACLRules(rules)
 	if err != nil {
 		return err
 	}
@@ -263,27 +263,12 @@ func buildInstanceChainRuleArgs(chain string, rule runtimecontracts.InstanceRunt
 
 // validateACLRules 对所有规则做白名单校验与 canonicalize，fail fast 模式。
 func validateACLRules(rules []runtimecontracts.InstanceRuntimeACLRule) ([]runtimecontracts.InstanceRuntimeACLRule, error) {
-	return validateACLRulesWithCommentMode(rules, aclCommentModeRebuild)
-}
-
-func validateLegacyACLRulesForDelete(rules []runtimecontracts.InstanceRuntimeACLRule) ([]runtimecontracts.InstanceRuntimeACLRule, error) {
-	return validateACLRulesWithCommentMode(rules, aclCommentModePreserve)
-}
-
-type aclCommentMode int
-
-const (
-	aclCommentModeRebuild aclCommentMode = iota
-	aclCommentModePreserve
-)
-
-func validateACLRulesWithCommentMode(rules []runtimecontracts.InstanceRuntimeACLRule, commentMode aclCommentMode) ([]runtimecontracts.InstanceRuntimeACLRule, error) {
 	if len(rules) == 0 {
 		return nil, nil
 	}
 	validated := make([]runtimecontracts.InstanceRuntimeACLRule, 0, len(rules))
 	for i, rule := range rules {
-		v, err := validateAndCanonicalizeACLRuleWithCommentMode(rule, commentMode)
+		v, err := validateAndCanonicalizeACLRule(rule)
 		if err != nil {
 			return nil, fmt.Errorf("acl rule[%d] validation failed: %w", i, err)
 		}
@@ -293,10 +278,6 @@ func validateACLRulesWithCommentMode(rules []runtimecontracts.InstanceRuntimeACL
 }
 
 func validateAndCanonicalizeACLRule(rule runtimecontracts.InstanceRuntimeACLRule) (runtimecontracts.InstanceRuntimeACLRule, error) {
-	return validateAndCanonicalizeACLRuleWithCommentMode(rule, aclCommentModeRebuild)
-}
-
-func validateAndCanonicalizeACLRuleWithCommentMode(rule runtimecontracts.InstanceRuntimeACLRule, commentMode aclCommentMode) (runtimecontracts.InstanceRuntimeACLRule, error) {
 	// SourceIP: 必须是单 IP。
 	srcIP := strings.TrimSpace(rule.SourceIP)
 	if srcIP == "" {
@@ -364,21 +345,10 @@ func validateAndCanonicalizeACLRuleWithCommentMode(rule runtimecontracts.Instanc
 		rule.Ports = deduped
 	}
 
-	// Comment:
-	// - 新规则执行前统一系统重建，不信任持久化值。
-	// - legacy 删除兼容路径保留原 comment，但要求其满足平台 comment 格式约束。
-	comment := strings.TrimSpace(rule.Comment)
-	switch commentMode {
-	case aclCommentModePreserve:
-		if err := validateACLComment(comment); err != nil {
-			return rule, err
-		}
-		rule.Comment = comment
-	default:
-		rule.Comment = systemACLComment(rule)
-		if err := validateACLComment(rule.Comment); err != nil {
-			return rule, err
-		}
+	// Comment: 统一系统重建，不信任持久化值。
+	rule.Comment = systemACLComment(rule)
+	if err := validateACLComment(rule.Comment); err != nil {
+		return rule, err
 	}
 
 	return rule, nil

@@ -309,9 +309,7 @@ func TestDeduplicateAndSortPorts(t *testing.T) {
 	}
 }
 
-func TestRemoveACLRulesPreservesLegacyComment(t *testing.T) {
-	t.Parallel()
-
+func TestRemoveACLRulesRebuildsCanonicalComment(t *testing.T) {
 	originalLookPath := iptablesLookPath
 	originalRun := runACLCommand
 	t.Cleanup(func() {
@@ -328,7 +326,6 @@ func TestRemoveACLRulesPreservesLegacyComment(t *testing.T) {
 		return nil
 	}
 
-	legacyComment := "ctf:acl:4a51f4cb6b8c2f17"
 	rules := []runtimecontracts.InstanceRuntimeACLRule{
 		{
 			SourceIP: "172.30.0.2",
@@ -336,7 +333,7 @@ func TestRemoveACLRulesPreservesLegacyComment(t *testing.T) {
 			Action:   runtimecontracts.TopologyPolicyActionAllow,
 			Protocol: runtimecontracts.TopologyPolicyProtocolTCP,
 			Ports:    []int{3306},
-			Comment:  legacyComment,
+			Comment:  "ctf:acl:4a51f4cb6b8c2f17",
 		},
 	}
 
@@ -347,8 +344,51 @@ func TestRemoveACLRulesPreservesLegacyComment(t *testing.T) {
 		t.Fatalf("expected 1 command, got %d (%v)", len(captured), captured)
 	}
 	joined := strings.Join(captured[0], " ")
-	if !strings.Contains(joined, "--comment "+legacyComment) {
-		t.Fatalf("expected legacy comment to be preserved, command = %q", joined)
+	if !strings.Contains(joined, "--comment ctf:acl:172.30.0.2:172.30.0.3:allow:tcp:3306") {
+		t.Fatalf("expected canonical comment to be rebuilt, command = %q", joined)
+	}
+}
+
+func TestRemoveACLRulesCanonicalizesMultiportOrder(t *testing.T) {
+	originalLookPath := iptablesLookPath
+	originalRun := runACLCommand
+	t.Cleanup(func() {
+		iptablesLookPath = originalLookPath
+		runACLCommand = originalRun
+	})
+
+	var captured [][]string
+	iptablesLookPath = func(file string) (string, error) {
+		return "/usr/sbin/iptables", nil
+	}
+	runACLCommand = func(_ context.Context, args []string) error {
+		captured = append(captured, append([]string(nil), args...))
+		return nil
+	}
+
+	rules := []runtimecontracts.InstanceRuntimeACLRule{
+		{
+			SourceIP: "172.30.0.2",
+			TargetIP: "172.30.0.3",
+			Action:   runtimecontracts.TopologyPolicyActionAllow,
+			Protocol: runtimecontracts.TopologyPolicyProtocolTCP,
+			Ports:    []int{8080, 3306},
+			Comment:  "ctf:acl:4a51f4cb6b8c2f17",
+		},
+	}
+
+	if err := removeACLRules(context.Background(), rules); err != nil {
+		t.Fatalf("removeACLRules() error = %v", err)
+	}
+	if len(captured) != 1 {
+		t.Fatalf("expected 1 command, got %d (%v)", len(captured), captured)
+	}
+	joined := strings.Join(captured[0], " ")
+	if !strings.Contains(joined, "--dports 3306,8080") {
+		t.Fatalf("expected canonical multiport order, command = %q", joined)
+	}
+	if strings.Contains(joined, "--dports 8080,3306") {
+		t.Fatalf("expected command not to preserve non-canonical multiport order, command = %q", joined)
 	}
 }
 

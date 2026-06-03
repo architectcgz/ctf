@@ -110,6 +110,15 @@ type InstanceScope struct {
 	ShareScope    instancecontracts.ShareScope
 }
 
+type RuntimeNodeBinding struct {
+	NodeID   int64
+	NodeName string
+}
+
+type RuntimeNodeSelector interface {
+	SelectRuntimeNode(ctx context.Context, scope InstanceScope) (*RuntimeNodeBinding, error)
+}
+
 type TopologyCreateNode struct {
 	Key             string
 	Image           string
@@ -138,6 +147,7 @@ type TopologyCreateRequest struct {
 	Nodes                      []TopologyCreateNode
 	Policies                   []runtimecontracts.TopologyTrafficPolicy
 	SubnetPool                 runtimeports.SubnetPoolKind
+	NodeID                     int64
 	OwnerInstanceID            int64
 	ReservedHostPort           int
 	DisableEntryPortPublishing bool
@@ -547,6 +557,6 @@ type PracticeInstanceStatsRepository interface {
 type RuntimeInstanceService interface {
 	CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
 	CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error)
-	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
+	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, nodeID int64) (containerID, networkID string, hostPort, servicePort int, err error)
 	InspectManagedContainer(ctx context.Context, containerID string) (*ManagedContainerState, error)
 }

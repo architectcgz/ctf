@@ -19,8 +19,8 @@
   - 不负责：把只读取 practice 自有事实的用户态查询继续拆成独立查询模块，或作为业务 owner 模块修改练习、竞赛、评估等业务状态
 
 - `code/backend/internal/module/runtime`、`code/backend/internal/module/instance`、`code/backend/internal/app/composition/runtime_module.go`、`code/backend/internal/app/composition/instance_module.go`
-  - 负责：`internal/module/runtime/*` 当前承接 container runtime capability、共享 adapter 与底层运行时 ports，并通过显式 capability fields 暴露 provisioning / cleanup / file / inventory / interactive 等能力；`internal/module/instance/*` 负责实例命令、查询、proxy ticket 与 maintenance owner；app 层再把它们收口成 `ContainerRuntimeModule` 与 `InstanceModule` 两个组合视图，并在 composition 本地拼出 maintenance 所需的 inspect/start 视图
-  - 不负责：把 `runtime` 继续当成实例业务 owner，或让 `practice`、用户实例路由重新直接依赖整块容器运行时视图
+  - 负责：`internal/module/runtime/*` 当前承接 container runtime capability、共享 adapter、runtime agent 协议与 `runtime_nodes` 数据模型，并通过显式 capability fields 暴露 provisioning / cleanup / file / inventory / interactive 等能力；`internal/module/instance/*` 负责实例命令、查询、proxy ticket 与 maintenance owner；app 层再把它们收口成 `ContainerRuntimeModule` 与 `InstanceModule` 两个组合视图，其中 `runtime_node_execution_router` 会按 `instance.node_id`、AWD service `node_id` 和 checker metadata `node_id` 路由到单节点执行 client；Guardrail 见 `code/backend/internal/app/composition/runtime_node_execution_router.go`、`code/backend/internal/app/composition/runtime_node_execution_router_test.go`
+  - 不负责：把 `runtime` 继续当成实例业务 owner，或让 `practice`、用户实例路由重新直接依赖整块容器运行时视图；也不再把“当前 API 进程连到哪台 Docker 宿主机”当成执行 authority
 
 ## 1. 架构概览
 
@@ -36,15 +36,15 @@ flowchart TD
         API["Go API Server\n(Gin + WebSocket)"]
         PG["PostgreSQL\n(主存储)"]
         Redis["Redis\n(缓存/会话)"]
-        Docker["Docker Engine"]
+        Runtime["runtime-agent / 本地 executor"]
         Containers["靶机容器集群\n(隔离网络/限资源)"]
 
         Browser <-->|"HTTPS/WSS"| Nginx
         Nginx --> API
         API --> PG
         API --> Redis
-        API --> Docker
-        Docker -->|"管理靶机"| Containers
+        API --> Runtime
+        Runtime -->|"管理靶机"| Containers
     end
 ```
 
@@ -648,7 +648,7 @@ flowchart TD
 | 前端部署 | `vite build` 产物放到 Nginx 静态目录，Nginx 配置 SPA fallback |
 | 数据备份 | cron 定时 `pg_dump` 备份数据库，保留最近 7 天 |
 
-### 7.2 多物理机方案（竞赛高峰扩展）
+### 7.2 API 控制面与 runtime-agent 分离部署
 
 当单机资源不足（如大型竞赛 500+ 并发）时，可拆分为两台物理机：
 
@@ -657,26 +657,30 @@ flowchart LR
     subgraph HostA["主机 A（平台服务）"]
         NginxA["Nginx + Go API Server"]
         DBA["PostgreSQL + Redis"]
-        DockerCfg["管理 Docker Engine:\nDOCKER_HOST=tcp://B:2376"]
+        Control["runtime_nodes + 调度/审计"]
     end
 
     subgraph HostB["主机 B（靶机宿主）"]
+        AgentB["runtime-agent\nmTLS gRPC"]
         DockerB["Docker Engine"]
         TargetsB["靶机容器 x N\n开放端口范围: 30000-39999"]
     end
 
-    HostA -->|"TCP"| HostB
+    HostA -->|"mTLS gRPC"| AgentB
+    AgentB --> DockerB
+    DockerB --> TargetsB
 ```
 
-#### 多机部署要点
+#### 分离部署要点
 
 | 项目 | 说明 |
 |------|------|
-| Docker 远程访问 | 主机 B 开启 Docker TCP 监听（2376 端口），配置 TLS 双向认证 |
-| 网络要求 | 主机 A 和 B 在同一内网段，延迟 < 1ms |
-| 端口转发 | 用户通过 Nginx 访问主机 A，靶机端口直接暴露在主机 B 上，Nginx 按需代理 |
-| 容器配置 | Go API Server 通过配置文件切换 `DOCKER_HOST`，代码无需修改 |
-| 扩展性 | 可继续增加主机 C、D 作为靶机宿主，API Server 轮询分配 |
+| 控制面职责 | 主机 A 负责认证、业务状态、实例生命周期编排、节点选择与审计，不直接执行宿主机 `iptables`、checker 本地落盘或远端文件注入 |
+| 执行面职责 | 每台靶机宿主机运行一个 `runtime-agent`，负责容器 / 网络 / 镜像、ACL apply/remove、checker sandbox、容器文件 copy / exec |
+| 网络要求 | API 主机与 runtime-agent 节点保持内网互通；当前默认只做显式绑定或单节点默认，不做自动均衡 |
+| 端口暴露 | 用户仍通过 Nginx 访问主机 A；题目实例端口和 AWD SSH 网关按业务配置直接暴露在对应 runtime node 上 |
+| 节点 authority | 实例、AWD service、checker 执行都绑定 `node_id`；容器创建、清理、checker 和 AWD 文件写入均按 `node_id` 路由 |
+| 兼容边界 | `DOCKER_HOST` 仍可作为底层 Docker client 的连接参数，但不再是完整多机方案；正式多机边界以 `runtime_agent` 协议和 `runtime_nodes` 数据模型为准 |
 
 ### 7.3 Docker Compose 编排（平台基础设施）
 
@@ -812,86 +816,70 @@ flowchart TD
 |------|----------|------|------|
 | API 容器直接挂载宿主 `/var/run/docker.sock` | 仅限一次性本机开发排障 | 不推荐作为默认路径 | API 容器失陷后会直接继承宿主 Docker daemon 的控制权，不能作为共享开发、演示或正式环境边界 |
 | API 直接跑宿主机进程，Docker Engine 仍在本机 | 本地开发、小规模单机试运行 | 可作为过渡方案 | 能去掉“容器内通过 docker.sock 直接提权”的捷径，但 API 一旦失陷，攻击者仍可能利用 API 所在主机上的 Docker 控制能力继续扩大权限 |
-| API 主机与靶机 Docker 主机分离，`DOCKER_HOST=tcp://host:2376` + mTLS | 共享开发、校内试运行、正式比赛 | 推荐的正式目标 | 把平台控制面与靶机宿主隔离开，API 失陷后不会自动获得 API 所在主机的本地 Docker root；mTLS 只解决传输与身份认证，若还需要继续收窄控制面权限，应在 Docker daemon 前增加 AuthZ plugin 或自定义最小权限代理 |
+| API 主机与靶机 Docker 主机分离，API 通过 `runtime-agent` + mTLS 调用执行面 | 共享开发、校内试运行、正式比赛 | 推荐的正式目标 | 把平台控制面与靶机宿主隔离开，并把 ACL、checker sandbox、容器文件写入、容器 exec 等宿主机副作用下沉到节点 agent；API 失陷后不会自动获得 API 所在主机的本地 Docker root，也不会再因为本地 bind mount 假设而误写远端宿主 |
 
 单机阶段的推荐动作是：默认让 `ctf-api` 以宿主机进程运行，`docker compose` 只承担 PostgreSQL / Redis 等开发依赖；不要把“容器内 API + 宿主 docker.sock 挂载”作为默认开发路径。正式对外提供多人使用、共享演示或比赛服务时，推荐拆成 API 主机与靶机 Docker 主机两台物理机或两组安全边界明确的运行节点。
 
-### 7.6 配置文件结构
+### 7.6 runtime control plane 相关配置摘录
 
 ```yaml
-# configs/config.yaml — 主配置文件模板
-server:
-  host: "0.0.0.0"
-  port: 8080
-  mode: "release"                    # debug / release
-
-database:
-  host: "localhost"
-  port: 5432
-  name: "ctf_platform"
-  user: "ctf"
-  password: "${DB_PASSWORD}"         # 通过环境变量注入
-  max_open_conns: 50
-  max_idle_conns: 10
-  conn_max_lifetime: "1h"
+# configs/config.yaml — 与 runtime control plane / agent split 直接相关的字段摘录
+app:
+  env: dev
 
 redis:
-  host: "localhost"
-  port: 6379
-  password: "${REDIS_PASSWORD}"
+  addr: 127.0.0.1:6379
+  password: ""
   db: 0
-  pool_size: 20
 
-auth:
-  session_ttl: "168h"                # 7 天
-  session_cookie_name: "ctf_session"
-  session_cookie_path: "/api/v1"
-  session_cookie_secure: true
-  session_cookie_http_only: true
-  session_cookie_same_site: "lax"
+postgres:
+  host: 127.0.0.1
+  port: 5432
+  database: ctf_platform
+  username: ctf
+  password: "${DB_PASSWORD}"
 
-docker:
-  host: "unix:///var/run/docker.sock" # 单机模式
-  # host: "tcp://10.0.1.2:2376"      # 多机模式
-  api_version: "1.43"
-  timeout: "30s"
+runtime_agent:
+  enabled: false                     # 本地单机 fallback；API 直接复用本机 executor
+  endpoint: ""                       # 例如 "10.0.1.2:9443"
+  dial_timeout: 5s
+  server_name: ""                    # 目标 node 的 tls_identity
+  ca_file: ""
+  cert_file: ""
+  key_file: ""
+  server:
+    enabled: false                   # runtime-agent 进程所在节点打开
+    host: 0.0.0.0
+    port: 9443
+    cert_file: ""
+    key_file: ""
+    client_ca_file: ""
+    shutdown_timeout: 10s
 
 container:
-  port_range_start: 30000            # 动态端口分配范围（可配置）
+  public_host: 127.0.0.1
+  access_host: host-gateway.internal
+  port_range_start: 30000
   port_range_end: 39999
-  default_cpu_limit: 0.5             # 核
-  default_memory_limit: "256m"
-  default_storage_limit: "1g"
-  default_pids_limit: 100
-  max_instances_per_user: 3
-  instance_ttl: "2h"
-  instance_extend_ttl: "1h"
-  cleanup_interval: "5m"            # 过期容器扫描间隔
+  cleanup_interval: 5m
+  defense_ssh_enabled: true
+  defense_ssh_host: ssh.ctf.local
+  defense_ssh_port: 2222
 
-rate_limit:
-  global_qps: 50                    # 全局每 IP 每秒请求数
-  global_burst: 100
-  login_max_attempts: 10            # 登录 5 分钟内最大尝试次数
-  login_lock_duration: "15m"
-  submit_max_attempts: 5            # Flag 提交 60 秒内最大次数
-  submit_window: "60s"
-
-log:
-  level: "info"                     # debug / info / warn / error
-  format: "json"                    # json / console
-  output: "stdout"                  # stdout / file
-  file_path: "/var/log/ctf/app.log"
-  max_size_mb: 100
-  max_backups: 10
-  max_age_days: 30
-
-cors:
-  allowed_origins:
-    - "http://localhost:5173"       # Vite 开发服务器
-    - "https://ctf.campus.edu"      # 生产域名
-  allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-  allowed_headers: ["Content-Type", "X-Request-ID"]
+contest:
+  awd:
+    checker_sandbox:
+      image: python:3.12-alpine
+      work_dir: /checker
+      timeout: 10s
+      network_mode: ""               # 默认关闭网络，由平台按目标服务显式传入
 ```
+
+补充说明：
+
+- 本地开发单机模式默认保持 `runtime_agent.enabled: false`，API 直接复用本机 executor，方便本地联调。
+- API + 单 remote agent 模式由 API 侧开启 `runtime_agent.enabled: true`，并在默认 `runtime_nodes` 里注册 `agent-default`；实例 / checker / AWD service 仍按 `node_id` 路由。
+- 正式多 node 模式在同一份 `runtime_nodes` 表里登记多个 schedulable node；当前调度仍以显式绑定或单节点默认为主，不把复杂自动均衡写成已落地事实。
 
 ---
 

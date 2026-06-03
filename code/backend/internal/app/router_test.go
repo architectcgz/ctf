@@ -2,7 +2,13 @@ package app
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"errors"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -219,6 +225,29 @@ func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/instances", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "DELETE", "/api/v1/teacher/instances/:id", "internal/module/runtime")
+}
+
+func TestNewRouterFailsWhenRemoteRuntimeAgentDialFails(t *testing.T) {
+	cfg, db, cache := newAppTestDependencies(t)
+	cfg.App.Env = "dev"
+	caFile, certFile, keyFile := writeRouterRemoteAgentClientTLSFiles(t)
+	cfg.RuntimeAgent = config.RuntimeAgentConfig{
+		Enabled:     true,
+		Endpoint:    "127.0.0.1:1",
+		DialTimeout: 50 * time.Millisecond,
+		ServerName:  "runtime-agent.local",
+		CAFile:      caFile,
+		CertFile:    certFile,
+		KeyFile:     keyFile,
+	}
+
+	router, err := NewRouter(cfg, zap.NewNop(), db, cache)
+	if err == nil {
+		t.Fatal("expected NewRouter() to fail when runtime agent dial fails")
+	}
+	if router != nil {
+		t.Fatalf("expected router to be nil on runtime agent dial failure, got %+v", router)
+	}
 }
 
 func TestTeacherAWDReviewArchiveReqUsesPlannedQueryParams(t *testing.T) {
@@ -444,8 +473,10 @@ func TestBuildContainerRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
 	expected := []string{
 		"type ContainerRuntimeModule struct",
 		"type RuntimeModule = ContainerRuntimeModule",
-		"func BuildContainerRuntimeModule(root *Root) *ContainerRuntimeModule {",
-		"func BuildRuntimeModule(root *Root) *RuntimeModule {",
+		"func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {",
+		"func BuildRuntimeModule(root *Root) (*RuntimeModule, error) {",
+		"defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, runtimeRepo, defaultNode)",
+		"nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)",
 		"module := runtimemodule.Build(",
 		"runtimemodule.Deps{",
 		"module.BackgroundJobs",
@@ -734,6 +765,8 @@ func TestContestRuntimeUsesTypedCrossModuleDeps(t *testing.T) {
 		"challengecontracts.FlagValidator",
 		"ContainerFiles",
 		"contestports.AWDContainerFileWriter",
+		"CheckerRunner",
+		"contestports.CheckerRunner",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -746,6 +779,7 @@ func TestContestRuntimeUsesTypedCrossModuleDeps(t *testing.T) {
 		"runtime           *RuntimeModule",
 		"deps.challenge.Catalog",
 		"deps.challenge.FlagValidator",
+		"NewDockerCheckerRunner(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
@@ -1215,4 +1249,59 @@ func newAppTestDependencies(t *testing.T) (*config.Config, *gorm.DB, *redislib.C
 	}
 
 	return newPracticeFlowTestConfig(t), db, cache
+}
+
+func writeRouterRemoteAgentClientTLSFiles(t *testing.T) (string, string, string) {
+	t.Helper()
+
+	dir := t.TempDir()
+	certPEM, keyPEM := newRouterSelfSignedClientCertificatePEM(t, "runtime-agent.local")
+	caFile := filepath.Join(dir, "ca.pem")
+	certFile := filepath.Join(dir, "client.pem")
+	keyFile := filepath.Join(dir, "client-key.pem")
+
+	for _, file := range []struct {
+		path string
+		data []byte
+	}{
+		{path: caFile, data: certPEM},
+		{path: certFile, data: certPEM},
+		{path: keyFile, data: keyPEM},
+	} {
+		if err := os.WriteFile(file.path, file.data, 0o600); err != nil {
+			t.Fatalf("WriteFile(%s) error = %v", file.path, err)
+		}
+	}
+
+	return caFile, certFile, keyFile
+}
+
+func newRouterSelfSignedClientCertificatePEM(t *testing.T, commonName string) ([]byte, []byte) {
+	t.Helper()
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("GenerateKey() error = %v", err)
+	}
+
+	template := &x509.Certificate{
+		SerialNumber: big.NewInt(time.Now().UnixNano()),
+		Subject: pkix.Name{
+			CommonName: commonName,
+		},
+		NotBefore:   time.Now().Add(-time.Hour),
+		NotAfter:    time.Now().Add(24 * time.Hour),
+		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageCertSign,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		IsCA:        true,
+		DNSNames:    []string{commonName},
+	}
+
+	derBytes, err := x509.CreateCertificate(rand.Reader, template, template, &privateKey.PublicKey, privateKey)
+	if err != nil {
+		t.Fatalf("CreateCertificate() error = %v", err)
+	}
+
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes}),
+		pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)})
 }

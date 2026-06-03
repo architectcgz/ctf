@@ -596,7 +596,7 @@ func (contestInstanceTestRuntimeService) CreateTopology(_ context.Context, req *
 	}, nil
 }
 
-func (contestInstanceTestRuntimeService) CreateContainer(_ context.Context, _ string, _ map[string]string, reservedHostPort int) (string, string, int, int, error) {
+func (contestInstanceTestRuntimeService) CreateContainer(_ context.Context, _ string, _ map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 	return fmt.Sprintf("contest-container-%d", reservedHostPort), fmt.Sprintf("contest-network-%d", reservedHostPort), reservedHostPort, 8080, nil
 }
 

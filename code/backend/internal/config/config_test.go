@@ -418,6 +418,159 @@ func TestValidateRejectsNonPositiveContestSubmissionRateLimitTTL(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsIncompleteRuntimeAgentClientConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		mutate    func(*Config)
+		wantError string
+	}{
+		{
+			name: "missing endpoint",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Enabled = true
+			},
+			wantError: "runtime_agent.endpoint must not be empty",
+		},
+		{
+			name: "missing server name",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Enabled = true
+				cfg.RuntimeAgent.Endpoint = "127.0.0.1:9443"
+			},
+			wantError: "runtime_agent.server_name must not be empty",
+		},
+		{
+			name: "missing ca file",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Enabled = true
+				cfg.RuntimeAgent.Endpoint = "127.0.0.1:9443"
+				cfg.RuntimeAgent.ServerName = "runtime-agent.local"
+			},
+			wantError: "runtime_agent.ca_file must not be empty",
+		},
+		{
+			name: "missing client cert file",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Enabled = true
+				cfg.RuntimeAgent.Endpoint = "127.0.0.1:9443"
+				cfg.RuntimeAgent.ServerName = "runtime-agent.local"
+				cfg.RuntimeAgent.CAFile = "/etc/ctf/ca.pem"
+			},
+			wantError: "runtime_agent.cert_file must not be empty",
+		},
+		{
+			name: "missing client key file",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Enabled = true
+				cfg.RuntimeAgent.Endpoint = "127.0.0.1:9443"
+				cfg.RuntimeAgent.ServerName = "runtime-agent.local"
+				cfg.RuntimeAgent.CAFile = "/etc/ctf/ca.pem"
+				cfg.RuntimeAgent.CertFile = "/etc/ctf/client.pem"
+			},
+			wantError: "runtime_agent.key_file must not be empty",
+		},
+		{
+			name: "missing dial timeout",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Enabled = true
+				cfg.RuntimeAgent.Endpoint = "127.0.0.1:9443"
+				cfg.RuntimeAgent.ServerName = "runtime-agent.local"
+				cfg.RuntimeAgent.CAFile = "/etc/ctf/ca.pem"
+				cfg.RuntimeAgent.CertFile = "/etc/ctf/client.pem"
+				cfg.RuntimeAgent.KeyFile = "/etc/ctf/client-key.pem"
+				cfg.RuntimeAgent.DialTimeout = 0
+			},
+			wantError: "runtime_agent.dial_timeout must be greater than 0",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := validConfigForValidationTests()
+			tc.mutate(cfg)
+
+			err := cfg.Validate()
+			if err == nil {
+				t.Fatalf("expected Validate() to reject incomplete runtime agent client config, got nil")
+			}
+			if !strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestValidateRejectsIncompleteRuntimeAgentServerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		mutate    func(*Config)
+		wantError string
+	}{
+		{
+			name: "missing port",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Server.Enabled = true
+				cfg.RuntimeAgent.Server.Port = 0
+			},
+			wantError: "runtime_agent.server.port must be between 1 and 65535",
+		},
+		{
+			name: "missing cert file",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Server.Enabled = true
+				cfg.RuntimeAgent.Server.Port = 9443
+			},
+			wantError: "runtime_agent.server.cert_file must not be empty",
+		},
+		{
+			name: "missing key file",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Server.Enabled = true
+				cfg.RuntimeAgent.Server.Port = 9443
+				cfg.RuntimeAgent.Server.CertFile = "/etc/ctf/runtime-agent/server.pem"
+			},
+			wantError: "runtime_agent.server.key_file must not be empty",
+		},
+		{
+			name: "missing client ca file",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Server.Enabled = true
+				cfg.RuntimeAgent.Server.Port = 9443
+				cfg.RuntimeAgent.Server.CertFile = "/etc/ctf/runtime-agent/server.pem"
+				cfg.RuntimeAgent.Server.KeyFile = "/etc/ctf/runtime-agent/server-key.pem"
+			},
+			wantError: "runtime_agent.server.client_ca_file must not be empty",
+		},
+		{
+			name: "missing shutdown timeout",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Server.Enabled = true
+				cfg.RuntimeAgent.Server.Port = 9443
+				cfg.RuntimeAgent.Server.CertFile = "/etc/ctf/runtime-agent/server.pem"
+				cfg.RuntimeAgent.Server.KeyFile = "/etc/ctf/runtime-agent/server-key.pem"
+				cfg.RuntimeAgent.Server.ClientCAFile = "/etc/ctf/runtime-agent/ca.pem"
+				cfg.RuntimeAgent.Server.ShutdownTimeout = 0
+			},
+			wantError: "runtime_agent.server.shutdown_timeout must be greater than 0",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := validConfigForValidationTests()
+			tc.mutate(cfg)
+
+			err := cfg.Validate()
+			if err == nil {
+				t.Fatalf("expected Validate() to reject incomplete runtime agent server config, got nil")
+			}
+			if !strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func validConfigForValidationTests() *Config {
 	return &Config{
 		CORS: CORSConfig{
@@ -494,6 +647,13 @@ func validConfigForValidationTests() *Config {
 					NofileLimit:      128,
 					OutputLimitBytes: 32768,
 				},
+			},
+		},
+		RuntimeAgent: RuntimeAgentConfig{
+			DialTimeout: 5 * time.Second,
+			Server: RuntimeAgentServerConfig{
+				Host:            "0.0.0.0",
+				ShutdownTimeout: 10 * time.Second,
 			},
 		},
 	}

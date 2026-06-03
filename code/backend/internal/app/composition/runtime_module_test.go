@@ -2,21 +2,31 @@ package composition
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"ctf-platform/internal/authctx"
+	"encoding/pem"
+	"errors"
+	"math/big"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
+	contestports "ctf-platform/internal/module/contest/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
-func TestBuildRuntimeEngineProvidesReachableRuntimeInTestEnv(t *testing.T) {
+func TestBuildRuntimeHostExecutorProvidesReachableRuntimeInTestEnv(t *testing.T) {
 	t.Parallel()
 
 	cfg, db, cache := newRootTestDependencies(t)
@@ -35,8 +45,8 @@ func TestBuildRuntimeEngineProvidesReachableRuntimeInTestEnv(t *testing.T) {
 		t.Fatalf("auto migrate runtime network allocation: %v", err)
 	}
 
-	engine := buildRuntimeEngine(root)
-	service := runtimecmd.NewProvisioningService(runtimeinfra.NewRepository(db), engine, &cfg.Container, zap.NewNop())
+	executor := buildRuntimeHostExecutor(root)
+	service := runtimecmd.NewProvisioningService(runtimeinfra.NewRepository(db), executor, &cfg.Container, zap.NewNop())
 
 	containerID, networkID, hostPort, _, err := service.CreateContainer(context.Background(), "ctf/test:v1", nil, 35001)
 	if err != nil {
@@ -62,12 +72,12 @@ func TestBuildRuntimeEngineProvidesReachableRuntimeInTestEnv(t *testing.T) {
 		t.Fatalf("expected runtime probe status 200, got %d", resp.StatusCode)
 	}
 
-	cleanup := runtimecmd.NewRuntimeCleanupService(engine, nil, zap.NewNop())
+	cleanup := runtimecmd.NewRuntimeCleanupService(executor, nil, zap.NewNop())
 	if err := cleanup.RemoveContainer(context.Background(), containerID); err != nil {
 		t.Fatalf("RemoveContainer() error = %v", err)
 	}
-	if engine != nil && networkID != "" {
-		if err := engine.RemoveNetwork(context.Background(), networkID); err != nil {
+	if executor != nil && networkID != "" {
+		if err := executor.RemoveNetwork(context.Background(), networkID); err != nil {
 			t.Fatalf("RemoveNetwork() error = %v", err)
 		}
 	}
@@ -107,6 +117,159 @@ func TestRuntimeHTTPServiceAdapterReturnsSSHAccessWithoutProfile(t *testing.T) {
 	}
 }
 
+func TestBuildContainerRuntimeModuleFailsWhenRemoteRuntimeAgentDialFails(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.App.Env = "dev"
+	caFile, certFile, keyFile := writeRemoteAgentClientTLSFiles(t)
+	cfg.RuntimeAgent = config.RuntimeAgentConfig{
+		Enabled:     true,
+		Endpoint:    "127.0.0.1:1",
+		DialTimeout: 50 * time.Millisecond,
+		ServerName:  "runtime-agent.local",
+		CAFile:      caFile,
+		CertFile:    certFile,
+		KeyFile:     keyFile,
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	module, err := BuildContainerRuntimeModule(root)
+	if err == nil {
+		t.Fatal("expected BuildContainerRuntimeModule() to fail when runtime agent dial fails")
+	}
+	if module != nil {
+		t.Fatalf("expected module to be nil on runtime agent dial failure, got %+v", module)
+	}
+}
+
+func TestBuildContainerRuntimeModuleFailsWhenLocalCheckerRunnerInitFails(t *testing.T) {
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.App.Env = "dev"
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	originalNewLocalRuntimeHostRunner := newLocalRuntimeHostRunner
+	originalNewLocalCheckerRunner := newLocalCheckerRunner
+	newLocalRuntimeHostRunner = func(*config.ContainerConfig) (runtimeports.RuntimeHostExecutor, error) {
+		return newTestRuntimeEngine(zap.NewNop()), nil
+	}
+	newLocalCheckerRunner = func(config.CheckerSandboxConfig) (contestports.CheckerRunner, error) {
+		return nil, errors.New("checker init failed")
+	}
+	t.Cleanup(func() {
+		newLocalRuntimeHostRunner = originalNewLocalRuntimeHostRunner
+		newLocalCheckerRunner = originalNewLocalCheckerRunner
+	})
+
+	module, err := BuildContainerRuntimeModule(root)
+	if err == nil {
+		t.Fatal("expected BuildContainerRuntimeModule() to fail when local checker runner init fails")
+	}
+	if module != nil {
+		t.Fatalf("expected module to be nil on checker runner init failure, got %+v", module)
+	}
+	if err.Error() != "checker init failed" {
+		t.Fatalf("error = %v, want checker init failed", err)
+	}
+}
+
+func TestBuildContainerRuntimeModuleProvidesDefaultRuntimeNodeSelector(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newRootTestDependencies(t)
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	module, err := BuildContainerRuntimeModule(root)
+	if err != nil {
+		t.Fatalf("BuildContainerRuntimeModule() error = %v", err)
+	}
+	if module == nil || module.RuntimeNodeSelector == nil {
+		t.Fatalf("expected runtime node selector, got %+v", module)
+	}
+
+	binding, err := module.RuntimeNodeSelector.SelectDefaultNode(context.Background())
+	if err != nil {
+		t.Fatalf("SelectDefaultNode() error = %v", err)
+	}
+	if binding == nil || binding.NodeID <= 0 {
+		t.Fatalf("expected persisted default runtime node binding, got %+v", binding)
+	}
+
+	var stored runtimeentity.RuntimeNode
+	if err := db.First(&stored, binding.NodeID).Error; err != nil {
+		t.Fatalf("load runtime node: %v", err)
+	}
+	if !stored.Schedulable {
+		t.Fatalf("expected default runtime node to be schedulable, got %+v", stored)
+	}
+}
+
+func TestBuildContainerRuntimeModuleSelectsConfiguredDefaultRuntimeNode(t *testing.T) {
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.RuntimeAgent = config.RuntimeAgentConfig{
+		Enabled:    true,
+		Endpoint:   "runtime-agent.internal:7443",
+		ServerName: "runtime-agent.internal",
+	}
+
+	if err := db.AutoMigrate(&runtimeentity.RuntimeNode{}); err != nil {
+		t.Fatalf("auto migrate runtime nodes: %v", err)
+	}
+
+	legacyNode := runtimeentity.RuntimeNode{
+		Name:             "local-default",
+		Endpoint:         "local://docker",
+		Schedulable:      true,
+		Labels:           "{}",
+		HealthStatus:     runtimeentity.RuntimeNodeHealthReady,
+		CapacitySnapshot: "{}",
+		CreatedAt:        time.Now().UTC().Add(-time.Hour),
+		UpdatedAt:        time.Now().UTC().Add(-time.Hour),
+	}
+	if err := db.Create(&legacyNode).Error; err != nil {
+		t.Fatalf("create legacy runtime node: %v", err)
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	module, err := BuildContainerRuntimeModule(root)
+	if err != nil {
+		t.Fatalf("BuildContainerRuntimeModule() error = %v", err)
+	}
+	if module == nil || module.RuntimeNodeSelector == nil {
+		t.Fatalf("expected runtime node selector, got %+v", module)
+	}
+
+	binding, err := module.RuntimeNodeSelector.SelectDefaultNode(context.Background())
+	if err != nil {
+		t.Fatalf("SelectDefaultNode() error = %v", err)
+	}
+	if binding == nil {
+		t.Fatal("expected runtime node binding")
+	}
+	if binding.NodeName != "agent-default" {
+		t.Fatalf("expected configured default node agent-default, got %+v", binding)
+	}
+	if binding.NodeID == legacyNode.ID {
+		t.Fatalf("expected selector to avoid legacy local-default node, got %+v", binding)
+	}
+}
+
 type stubRuntimeHTTPProxyTickets struct {
 	ticket    string
 	expiresAt time.Time
@@ -134,4 +297,63 @@ func (s stubRuntimeHTTPProxyTickets) ResolveAWDTargetAccessURL(context.Context, 
 
 func (s stubRuntimeHTTPProxyTickets) MaxAge() int {
 	return 900
+}
+
+func writeRemoteAgentClientTLSFiles(t *testing.T) (string, string, string) {
+	t.Helper()
+
+	dir := t.TempDir()
+	certPEM, keyPEM := newSelfSignedClientCertificatePEM(t, "runtime-agent.local")
+	caFile := filepath.Join(dir, "ca.pem")
+	certFile := filepath.Join(dir, "client.pem")
+	keyFile := filepath.Join(dir, "client-key.pem")
+
+	for _, file := range []struct {
+		path string
+		data []byte
+	}{
+		{path: caFile, data: certPEM},
+		{path: certFile, data: certPEM},
+		{path: keyFile, data: keyPEM},
+	} {
+		if err := os.WriteFile(file.path, file.data, 0o600); err != nil {
+			t.Fatalf("WriteFile(%s) error = %v", file.path, err)
+		}
+	}
+
+	return caFile, certFile, keyFile
+}
+
+func newSelfSignedClientCertificatePEM(t *testing.T, commonName string) ([]byte, []byte) {
+	t.Helper()
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("GenerateKey() error = %v", err)
+	}
+
+	template := &x509.Certificate{
+		SerialNumber: bigIntFromTime(time.Now()),
+		Subject: pkix.Name{
+			CommonName: commonName,
+		},
+		NotBefore:   time.Now().Add(-time.Hour),
+		NotAfter:    time.Now().Add(24 * time.Hour),
+		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageCertSign,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		IsCA:        true,
+		DNSNames:    []string{commonName},
+	}
+
+	derBytes, err := x509.CreateCertificate(rand.Reader, template, template, &privateKey.PublicKey, privateKey)
+	if err != nil {
+		t.Fatalf("CreateCertificate() error = %v", err)
+	}
+
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes}),
+		pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)})
+}
+
+func bigIntFromTime(ts time.Time) *big.Int {
+	return big.NewInt(ts.UnixNano())
 }

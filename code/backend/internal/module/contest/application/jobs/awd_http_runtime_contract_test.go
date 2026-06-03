@@ -37,6 +37,7 @@ func TestAWDRoundUpdaterRunAWDHTTPCheckerActionUsesHTTPRuntime(t *testing.T) {
 		},
 		awdHTTPCheckerTemplateData{Flag: "awd{flag-1}"},
 		[]string{"awd{flag-1}"},
+		0,
 	)
 
 	if result.summary == nil || !result.summary.Healthy {
@@ -323,6 +324,7 @@ func TestAWDRoundUpdaterRunAWDHTTPCheckerActionMapsReadError(t *testing.T) {
 		},
 		awdHTTPCheckerTemplateData{},
 		nil,
+		0,
 	)
 
 	if result.summary == nil {

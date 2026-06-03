@@ -136,10 +136,12 @@ func (c *ContestEndedRuntimeCleaner) clearDefenseWorkspaceRuntimeState(ctx conte
 func endedContestRuntimeView(item contestports.AWDServiceInstance) *instancecontracts.Instance {
 	serviceID := item.ServiceID
 	teamID := item.TeamID
+	nodeID := item.NodeID
 	return &instancecontracts.Instance{
 		ID:             item.InstanceID,
 		TeamID:         &teamID,
 		ServiceID:      &serviceID,
+		NodeID:         &nodeID,
 		HostPort:       item.HostPort,
 		ContainerID:    item.ContainerID,
 		NetworkID:      item.NetworkID,

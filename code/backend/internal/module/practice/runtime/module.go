@@ -51,9 +51,10 @@ type Deps struct {
 		practiceports.PracticePendingInstanceRepository
 		practiceports.PracticeInstanceStatsRepository
 	}
-	RuntimeService practiceports.RuntimeInstanceService
-	ChallengeRepo  challengecontracts.PracticeChallengeContract
-	ImageStore     challengecontracts.ImageStore
+	RuntimeService      practiceports.RuntimeInstanceService
+	RuntimeNodeSelector practiceports.RuntimeNodeSelector
+	ChallengeRepo       challengecontracts.PracticeChallengeContract
+	ImageStore          challengecontracts.ImageStore
 }
 
 type moduleDeps struct {
@@ -109,6 +110,9 @@ type moduleDeps struct {
 		practiceports.PracticePendingInstanceRepository
 		practiceports.PracticeInstanceStatsRepository
 	}
+	// runtimeNodeSelector practiceports.RuntimeNodeSelector
+	runtimeNodeSelector practiceports.RuntimeNodeSelector
+	// runtimeService practiceports.RuntimeInstanceService
 	runtimeService practiceports.RuntimeInstanceService
 	challengeRepo  challengecontracts.PracticeChallengeContract
 	imageStore     challengecontracts.ImageStore
@@ -136,17 +140,18 @@ func Build(deps Deps) *Module {
 func newModuleDeps(deps Deps) moduleDeps {
 	repo := practiceinfra.NewRepository(deps.DB)
 	return moduleDeps{
-		input:          deps,
-		commandRepo:    repo,
-		scoreRepo:      repo,
-		rankingRepo:    repo,
-		queryRepo:      repo,
-		instanceRepo:   deps.InstanceRepo,
-		runtimeService: deps.RuntimeService,
-		challengeRepo:  deps.ChallengeRepo,
-		imageStore:     deps.ImageStore,
-		progressCache:  practiceinfra.NewProgressCache(deps.Cache),
-		desiredState:   practiceinfra.NewDesiredAWDReconcileStateStore(deps.Cache),
+		input:               deps,
+		commandRepo:         repo,
+		scoreRepo:           repo,
+		rankingRepo:         repo,
+		queryRepo:           repo,
+		instanceRepo:        deps.InstanceRepo,
+		runtimeNodeSelector: deps.RuntimeNodeSelector,
+		runtimeService:      deps.RuntimeService,
+		challengeRepo:       deps.ChallengeRepo,
+		imageStore:          deps.ImageStore,
+		progressCache:       practiceinfra.NewProgressCache(deps.Cache),
+		desiredState:        practiceinfra.NewDesiredAWDReconcileStateStore(deps.Cache),
 	}
 }
 
@@ -173,6 +178,7 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 		flagSubmitRateLimitStore,
 		cfg,
 		log.Named("practice_service")).
+		SetRuntimeNodeSelector(deps.runtimeNodeSelector).
 		SetDesiredAWDReconcileStateStore(deps.desiredState).
 		SetSolvedSubmissionRepository(practiceinfra.NewSolvedSubmissionRepository(deps.commandRepo)).
 		SetManualReviewRepository(practiceinfra.NewManualReviewRepository(deps.commandRepo)).

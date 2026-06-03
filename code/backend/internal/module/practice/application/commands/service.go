@@ -55,24 +55,25 @@ type instanceRepository interface {
 }
 
 type Service struct {
-	repo             practiceCommandRepository
-	contestScope     practiceports.PracticeContestScopeRepository
-	imageRepo        challengecontracts.ImageStore
-	instanceRepo     instanceRepository
-	manualReviewRepo practiceports.PracticeManualReviewRepository
-	solvedSubmission practiceports.PracticeSolvedSubmissionRepository
-	readinessProbe   practiceports.PracticeInstanceReadinessProbe
-	runtimeSubject   practiceports.PracticeRuntimeSubjectRepository
-	runtimeService   practiceports.RuntimeInstanceService
-	scoreService     ScoreUpdater
-	rateLimitStore   practiceports.PracticeFlagSubmitRateLimitStore
-	desiredState     practiceports.PracticeDesiredAWDReconcileStateStore
-	config           *config.Config
-	logger           *zap.Logger
-	eventBus         platformevents.Bus
-	baseCtx          context.Context
-	cancel           context.CancelFunc
-	tasks            sync.WaitGroup
+	repo                practiceCommandRepository
+	contestScope        practiceports.PracticeContestScopeRepository
+	imageRepo           challengecontracts.ImageStore
+	instanceRepo        instanceRepository
+	manualReviewRepo    practiceports.PracticeManualReviewRepository
+	solvedSubmission    practiceports.PracticeSolvedSubmissionRepository
+	readinessProbe      practiceports.PracticeInstanceReadinessProbe
+	runtimeSubject      practiceports.PracticeRuntimeSubjectRepository
+	runtimeNodeSelector practiceports.RuntimeNodeSelector
+	runtimeService      practiceports.RuntimeInstanceService
+	scoreService        ScoreUpdater
+	rateLimitStore      practiceports.PracticeFlagSubmitRateLimitStore
+	desiredState        practiceports.PracticeDesiredAWDReconcileStateStore
+	config              *config.Config
+	logger              *zap.Logger
+	eventBus            platformevents.Bus
+	baseCtx             context.Context
+	cancel              context.CancelFunc
+	tasks               sync.WaitGroup
 }
 
 func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
@@ -112,6 +113,14 @@ func (s *Service) SetRuntimeSubjectRepository(repo practiceports.PracticeRuntime
 		return nil
 	}
 	s.runtimeSubject = repo
+	return s
+}
+
+func (s *Service) SetRuntimeNodeSelector(selector practiceports.RuntimeNodeSelector) *Service {
+	if s == nil {
+		return nil
+	}
+	s.runtimeNodeSelector = selector
 	return s
 }
 

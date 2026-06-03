@@ -14,6 +14,7 @@ type practiceRuntimeServiceAdapter struct {
 	cleaner     *runtimecmd.RuntimeCleanupService
 	provisioner *runtimecmd.ProvisioningService
 	inspector   practiceManagedContainerInspector
+	router      *runtimeNodeExecutionRouter
 }
 
 type practiceManagedContainerInspector interface {
@@ -35,7 +36,17 @@ func newPracticeRuntimeServiceAdapter(
 	}
 }
 
+func newNodeScopedPracticeRuntimeServiceAdapter(router *runtimeNodeExecutionRouter) practiceports.RuntimeInstanceService {
+	if router == nil {
+		return nil
+	}
+	return &practiceRuntimeServiceAdapter{router: router}
+}
+
 func (a *practiceRuntimeServiceAdapter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	if a != nil && a.router != nil {
+		return a.router.CleanupRuntime(ctx, instance)
+	}
 	if a == nil || a.cleaner == nil {
 		return nil
 	}
@@ -43,6 +54,9 @@ func (a *practiceRuntimeServiceAdapter) CleanupRuntime(ctx context.Context, inst
 }
 
 func (a *practiceRuntimeServiceAdapter) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+	if a != nil && a.router != nil {
+		return a.router.CreateTopology(ctx, req)
+	}
 	if a == nil || a.provisioner == nil || req == nil {
 		return nil, nil
 	}
@@ -54,7 +68,10 @@ func (a *practiceRuntimeServiceAdapter) CreateTopology(ctx context.Context, req 
 	return fromRuntimeTopologyCreateResultForPractice(result), nil
 }
 
-func (a *practiceRuntimeServiceAdapter) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error) {
+func (a *practiceRuntimeServiceAdapter) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, nodeID int64) (containerID, networkID string, hostPort, servicePort int, err error) {
+	if a != nil && a.router != nil {
+		return a.router.CreateContainer(ctx, imageName, env, reservedHostPort, nodeID)
+	}
 	if a == nil || a.provisioner == nil {
 		return "", "", 0, 0, nil
 	}
@@ -62,6 +79,9 @@ func (a *practiceRuntimeServiceAdapter) CreateContainer(ctx context.Context, ima
 }
 
 func (a *practiceRuntimeServiceAdapter) InspectManagedContainer(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {
+	if a != nil && a.router != nil {
+		return a.router.InspectManagedContainer(ctx, containerID)
+	}
 	if a == nil || a.inspector == nil {
 		return nil, nil
 	}

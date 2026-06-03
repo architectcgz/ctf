@@ -1,12 +1,13 @@
 package infrastructure
 
 import (
+	"archive/tar"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
 	networktypes "github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -27,6 +27,7 @@ import (
 
 type dockerCheckerClient interface {
 	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *networktypes.NetworkingConfig, platform *ocispec.Platform, containerName string) (container.CreateResponse, error)
+	CopyToContainer(ctx context.Context, containerID string, dstPath string, content io.Reader, options container.CopyToContainerOptions) error
 	ContainerStart(ctx context.Context, container string, options container.StartOptions) error
 	ContainerWait(ctx context.Context, container string, condition container.WaitCondition) (<-chan container.WaitResponse, <-chan error)
 	ContainerLogs(ctx context.Context, container string, options container.LogsOptions) (io.ReadCloser, error)
@@ -38,6 +39,8 @@ type DockerCheckerRunner struct {
 	cli dockerCheckerClient
 	cfg config.CheckerSandboxConfig
 }
+
+var _ contestports.CheckerRunner = (*DockerCheckerRunner)(nil)
 
 type dockerCheckerContainerSpec struct {
 	ContainerConfig *container.Config
@@ -88,6 +91,10 @@ func NewDockerCheckerRunner(cfg config.CheckerSandboxConfig) (*DockerCheckerRunn
 	return NewDockerCheckerRunnerWithClient(cli, cfg), nil
 }
 
+func NewLocalCheckerRunner(cfg config.CheckerSandboxConfig) (contestports.CheckerRunner, error) {
+	return NewDockerCheckerRunner(cfg)
+}
+
 func NewDockerCheckerRunnerWithClient(cli dockerCheckerClient, cfg config.CheckerSandboxConfig) *DockerCheckerRunner {
 	return &DockerCheckerRunner{cli: cli, cfg: cfg}
 }
@@ -115,17 +122,7 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	workDir, err := materializeCheckerFiles(job.Files, strings.TrimSpace(r.cfg.HostWorkRoot))
-	if err != nil {
-		result.FinishedAt = time.Now()
-		result.Duration = result.FinishedAt.Sub(startedAt)
-		return result, err
-	}
-	defer func() {
-		_ = os.RemoveAll(workDir)
-	}()
-
-	spec, err := r.buildContainerSpec(job, workDir)
+	spec, err := r.buildContainerSpec(job)
 	if err != nil {
 		result.FinishedAt = time.Now()
 		result.Duration = result.FinishedAt.Sub(startedAt)
@@ -146,6 +143,12 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 			_ = r.cli.ContainerRemove(cleanupCtx, containerID, container.RemoveOptions{Force: true, RemoveVolumes: true})
 		}
 	}()
+
+	if err := r.copyCheckerFilesToContainer(runCtx, containerID, spec.ContainerConfig.WorkingDir, job.Files); err != nil {
+		result.FinishedAt = time.Now()
+		result.Duration = result.FinishedAt.Sub(startedAt)
+		return result, err
+	}
 
 	if err := r.cli.ContainerStart(runCtx, containerID, container.StartOptions{}); err != nil {
 		result.FinishedAt = time.Now()
@@ -200,7 +203,7 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 	return result, nil
 }
 
-func (r *DockerCheckerRunner) buildContainerSpec(job contestports.CheckerRunJob, hostWorkDir string) (dockerCheckerContainerSpec, error) {
+func (r *DockerCheckerRunner) buildContainerSpec(job contestports.CheckerRunJob) (dockerCheckerContainerSpec, error) {
 	image := strings.TrimSpace(job.Image)
 	if image == "" {
 		image = strings.TrimSpace(r.cfg.Image)
@@ -238,14 +241,6 @@ func (r *DockerCheckerRunner) buildContainerSpec(job contestports.CheckerRunJob,
 			PidsLimit: &pidsLimit,
 			Ulimits: []*container.Ulimit{
 				{Name: "nofile", Soft: limits.NofileLimit, Hard: limits.NofileLimit},
-			},
-		},
-		Mounts: []mount.Mount{
-			{
-				Type:     mount.TypeBind,
-				Source:   hostWorkDir,
-				Target:   workDir,
-				ReadOnly: true,
 			},
 		},
 		Tmpfs: map[string]string{
@@ -303,47 +298,92 @@ func (r *DockerCheckerRunner) collectLogs(ctx context.Context, containerID strin
 	return stdout.String(), stderr.String(), stdout.exceeded || stderr.exceeded
 }
 
-func materializeCheckerFiles(files []contestports.CheckerRunFile, hostWorkRoot string) (string, error) {
-	var (
-		root string
-		err  error
-	)
-	if strings.TrimSpace(hostWorkRoot) == "" {
-		root, err = os.MkdirTemp("", "ctf-checker-*")
-	} else {
-		if err := os.MkdirAll(hostWorkRoot, 0o755); err != nil {
-			return "", err
-		}
-		root, err = os.MkdirTemp(hostWorkRoot, "ctf-checker-*")
+func (r *DockerCheckerRunner) copyCheckerFilesToContainer(ctx context.Context, containerID, workDir string, files []contestports.CheckerRunFile) error {
+	if len(files) == 0 {
+		return nil
 	}
+	if strings.TrimSpace(containerID) == "" {
+		return fmt.Errorf("checker container id is empty")
+	}
+
+	archive, err := buildCheckerFilesArchive(files)
 	if err != nil {
-		return "", err
+		return err
 	}
-	if err := os.Chmod(root, 0o755); err != nil {
-		_ = os.RemoveAll(root)
-		return "", err
+
+	dstDir := strings.TrimSpace(workDir)
+	if dstDir == "" {
+		dstDir = "/"
 	}
+	return r.cli.CopyToContainer(ctx, containerID, dstDir, archive, container.CopyToContainerOptions{})
+}
+
+func buildCheckerFilesArchive(files []contestports.CheckerRunFile) (io.Reader, error) {
+	var archive bytes.Buffer
+	tw := tar.NewWriter(&archive)
+	createdDirs := make(map[string]struct{})
+
 	for _, file := range files {
 		rel, err := cleanCheckerFilePath(file.Path)
 		if err != nil {
-			_ = os.RemoveAll(root)
-			return "", err
+			return nil, err
 		}
-		target := filepath.Join(root, rel)
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
-			_ = os.RemoveAll(root)
-			return "", err
+		rel = filepath.ToSlash(rel)
+		if err := writeCheckerArchiveDirectories(tw, rel, createdDirs); err != nil {
+			return nil, err
 		}
+
 		mode := file.Mode
 		if mode == 0 {
 			mode = 0o500
 		}
-		if err := os.WriteFile(target, file.Content, os.FileMode(mode)); err != nil {
-			_ = os.RemoveAll(root)
-			return "", err
+		header := &tar.Header{
+			Name: rel,
+			Mode: int64(mode),
+			Size: int64(len(file.Content)),
+		}
+		if err := tw.WriteHeader(header); err != nil {
+			return nil, err
+		}
+		if _, err := tw.Write(file.Content); err != nil {
+			return nil, err
 		}
 	}
-	return root, nil
+	if err := tw.Close(); err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(archive.Bytes()), nil
+}
+
+func writeCheckerArchiveDirectories(tw *tar.Writer, filePath string, created map[string]struct{}) error {
+	dir := path.Dir(filePath)
+	if dir == "." || dir == "" {
+		return nil
+	}
+
+	current := ""
+	for _, segment := range strings.Split(dir, "/") {
+		if segment == "" || segment == "." {
+			continue
+		}
+		if current == "" {
+			current = segment
+		} else {
+			current = current + "/" + segment
+		}
+		if _, exists := created[current]; exists {
+			continue
+		}
+		if err := tw.WriteHeader(&tar.Header{
+			Name:     current,
+			Typeflag: tar.TypeDir,
+			Mode:     0o755,
+		}); err != nil {
+			return err
+		}
+		created[current] = struct{}{}
+	}
+	return nil
 }
 
 func cleanCheckerFilePath(raw string) (string, error) {

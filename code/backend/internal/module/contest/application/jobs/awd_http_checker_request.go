@@ -15,6 +15,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
 	action awdHTTPCheckerActionConfig,
 	templateData awdHTTPCheckerTemplateData,
 	expectedSubstrings []string,
+	nodeID int64,
 ) awdHTTPCheckerActionRuntimeResult {
 	summary := &awdCheckActionResult{
 		Healthy: false,
@@ -41,7 +42,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerAction(
 		headers[key] = renderAWDHTTPCheckerTemplate(value, templateData)
 	}
 
-	if response, ok := u.runAWDHTTPCheckerActionInSandbox(ctx, targetURL, accessURL, runtimeDetails, action, headers, bodyValue); ok {
+	if response, ok := u.runAWDHTTPCheckerActionInSandbox(ctx, targetURL, accessURL, runtimeDetails, action, headers, bodyValue, nodeID); ok {
 		if response.Error != "" {
 			summary.ErrorCode = "http_request_failed"
 			summary.Error = response.Error

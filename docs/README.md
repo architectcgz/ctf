@@ -10,6 +10,7 @@
 ## 过程资料入口
 
 - `docs/plan/README.md`：实施计划入口；区分当前活动 plan 与历史归档 plan。
+- `docs/operations/`：运行、演练、联调和部署说明；runtime-agent 相关说明见 `docs/operations/runtime-agent-deployment.md`。
 
 ## 读取原则
 

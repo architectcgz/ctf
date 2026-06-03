@@ -131,6 +131,7 @@ func (u *AWDRoundUpdater) runAWDTCPCheckerTarget(
 			ServiceID:   definition.ServiceID,
 			TeamID:      teamID,
 			RoundNumber: awdScriptRoundNumber(round),
+			NodeID:      instance.NodeID,
 		},
 	}
 	timeout := config.timeout(u.cfg.CheckerTimeout)

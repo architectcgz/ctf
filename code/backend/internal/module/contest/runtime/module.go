@@ -47,6 +47,7 @@ type Deps struct {
 	ImageRepo             challengecontracts.ImageStore
 	FlagValidator         challengecontracts.FlagValidator
 	ContainerFiles        contestports.AWDContainerFileWriter
+	CheckerRunner         contestports.CheckerRunner
 	RuntimeProbe          challengeports.ChallengeRuntimeProbe
 	EndedRuntimeCleaner   contestports.ContestEndedRuntimeCleaner
 }
@@ -77,6 +78,7 @@ type moduleDeps struct {
 	previewImageRepo      challengecontracts.ImageStore
 	flagValidator         challengecontracts.FlagValidator
 	containerFiles        contestports.AWDContainerFileWriter
+	checkerRunner         contestports.CheckerRunner
 	runtimeProbe          challengeports.ChallengeRuntimeProbe
 	endedRuntimeCleaner   contestports.ContestEndedRuntimeCleaner
 }
@@ -147,6 +149,7 @@ func newModuleDeps(deps Deps) *moduleDeps {
 		previewImageRepo:      deps.ImageRepo,
 		flagValidator:         deps.FlagValidator,
 		containerFiles:        deps.ContainerFiles,
+		checkerRunner:         deps.CheckerRunner,
 		runtimeProbe:          deps.RuntimeProbe,
 		endedRuntimeCleaner:   deps.EndedRuntimeCleaner,
 	}
@@ -202,10 +205,8 @@ func buildAWDHandler(deps *moduleDeps) (*contesthttp.AWDHandler, *contestjobs.AW
 		scoreboardCache,
 	)
 	awdUpdater.SetHTTPRuntime(contestinfra.NewAWDHTTPRuntimeAdapter(nil, cfg.Contest.AWD.CheckerTimeout))
-	if checkerRunner, err := contestinfra.NewDockerCheckerRunner(cfg.Contest.AWD.CheckerSandbox); err == nil {
-		awdUpdater.SetCheckerRunner(checkerRunner)
-	} else {
-		log.Named("awd_round_updater").Warn("checker_sandbox_runner_unavailable", zap.Error(err))
+	if deps.checkerRunner != nil {
+		awdUpdater.SetCheckerRunner(deps.checkerRunner)
 	}
 	awdCommandRepo := contestinfra.NewAWDCommandRepository(deps.awdRepo)
 	awdCommandRoundManager := contestinfra.NewAWDRoundManagerAdapter(awdUpdater)

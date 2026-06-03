@@ -435,6 +435,10 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	if err != nil {
 		return nil, err
 	}
+	nodeBinding, err := s.selectRuntimeNode(ctx, scope)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
 
 	var (
 		instance *instancecontracts.Instance
@@ -507,6 +511,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			TeamID:      scope.TeamID,
 			ChallengeID: challengeID,
 			ServiceID:   scope.ServiceID,
+			NodeID:      runtimeNodeIDFromBinding(nodeBinding),
 			HostPort:    hostPort,
 			ShareScope:  scope.ShareScope,
 			Status:      initialStatus,
@@ -541,6 +546,28 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		return nil, err
 	}
 	return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
+}
+
+func (s *Service) selectRuntimeNode(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error) {
+	if s == nil || s.runtimeNodeSelector == nil {
+		return nil, nil
+	}
+	return s.runtimeNodeSelector.SelectRuntimeNode(ctx, scope)
+}
+
+func runtimeNodeIDFromBinding(binding *practiceports.RuntimeNodeBinding) *int64 {
+	if binding == nil || binding.NodeID <= 0 {
+		return nil
+	}
+	nodeID := binding.NodeID
+	return &nodeID
+}
+
+func runtimeNodeIDValue(nodeID *int64) int64 {
+	if nodeID == nil || *nodeID <= 0 {
+		return 0
+	}
+	return *nodeID
 }
 
 func instanceRespForScope(instance *instancecontracts.Instance, scope practiceports.InstanceScope, publicHost, accessHost string) *instancecontracts.InstanceResp {

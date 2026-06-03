@@ -8,6 +8,7 @@ var (
 	ErrRuntimeNetworkNotFound       = errors.New("runtime network not found")
 	ErrRuntimeNetworkSubnetConflict = errors.New("runtime network subnet conflict")
 	ErrPublishedHostPortConflict    = errors.New("runtime published host port conflict")
+	ErrRuntimeNodeUnavailable       = errors.New("runtime node is not available")
 )
 
 type runtimeError struct {

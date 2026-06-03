@@ -16,6 +16,8 @@ type Engine struct {
 	containerCfg *config.ContainerConfig
 }
 
+var _ runtimeports.RuntimeHostExecutor = (*Engine)(nil)
+
 type limitedBuffer struct {
 	buffer *bytes.Buffer
 	limit  int64
@@ -46,6 +48,10 @@ func NewEngine(cfg *config.ContainerConfig) (*Engine, error) {
 		cli:          cli,
 		containerCfg: cfg,
 	}, nil
+}
+
+func NewLocalHostExecutor(cfg *config.ContainerConfig) (runtimeports.RuntimeHostExecutor, error) {
+	return NewEngine(cfg)
 }
 
 func (e *Engine) requireClient() (*client.Client, error) {

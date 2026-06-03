@@ -1,10 +1,13 @@
 package composition
 
 import (
+	"context"
+
 	"go.uber.org/zap"
 
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	contestruntime "ctf-platform/internal/module/contest/runtime"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
@@ -24,6 +27,7 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Contain
 		ImageRepo:             challenge.ImageStore,
 		FlagValidator:         challenge.FlagValidator,
 		ContainerFiles:        runtime.ContestContainerFiles,
+		CheckerRunner:         runtime.ContestCheckerRunner,
 		RuntimeProbe:          runtime.ChallengeRuntimeProbe,
 		EndedRuntimeCleaner:   buildContestEndedRuntimeCleaner(root, runtime),
 	})
@@ -44,11 +48,16 @@ func buildContestEndedRuntimeCleaner(root *Root, runtime *ContainerRuntimeModule
 	}
 
 	runtimeRepo := runtimeinfra.NewRepository(root.DB())
-	cleanupService := runtimecmd.NewRuntimeCleanupService(
+	var cleanupService interface {
+		CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
+	} = runtimecmd.NewRuntimeCleanupService(
 		runtime.runtime.CleanupRuntime,
 		runtimeRepo,
 		logger.Named("contest_ended_runtime_cleanup_service"),
 	)
+	if runtime.nodeRouter != nil {
+		cleanupService = runtime.nodeRouter
+	}
 	awdRepo := contestinfra.NewAWDRepository(root.DB())
 	return contestinfra.NewContestEndedRuntimeCleaner(awdRepo, awdRepo, cleanupService, runtimeRepo)
 }

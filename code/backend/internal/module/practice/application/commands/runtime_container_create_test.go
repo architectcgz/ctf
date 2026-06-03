@@ -213,7 +213,7 @@ func TestCreateSingleContainerRebindsHostPortAfterPublishConflict(t *testing.T) 
 		},
 		imageRepo: challengeinfra.NewImageRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
-			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				createContainerCalls++
 				switch createContainerCalls {
 				case 1:
@@ -474,7 +474,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 					return nil, nil
 				}
 			},
-			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				t.Fatal("AWD service instances must not use host-port CreateContainer")
 				return "", "", 0, 0, nil
 			},
@@ -625,7 +625,7 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 					return nil, nil
 				}
 			},
-			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				t.Fatal("AWD service instances must not use host-port CreateContainer")
 				return "", "", 0, 0, nil
 			},

@@ -1,13 +1,29 @@
 package composition
 
 import (
+	"context"
+	"strings"
+
+	"ctf-platform/internal/config"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
+	"ctf-platform/internal/module/runtime/infrastructure/agentclient"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	runtimemodule "ctf-platform/internal/module/runtime/runtime"
-	"go.uber.org/zap"
+)
+
+type runtimeLifecycleCloser interface {
+	Close(ctx context.Context) error
+}
+
+var (
+	dialRuntimeAgent          = agentclient.DialContext
+	newLocalRuntimeHostRunner = runtimeinfra.NewLocalHostExecutor
+	newLocalCheckerRunner     = contestinfra.NewLocalCheckerRunner
 )
 
 type ContainerRuntimeModule struct {
@@ -16,42 +32,61 @@ type ContainerRuntimeModule struct {
 	OpsRuntimeQuery         opsports.RuntimeQuery
 	OpsRuntimeStatsProvider opsports.RuntimeStatsProvider
 	ContestContainerFiles   contestports.AWDContainerFileWriter
+	ContestCheckerRunner    contestports.CheckerRunner
+	RuntimeNodeSelector     runtimeports.RuntimeNodeSelector
+	LifecycleCloser         runtimeLifecycleCloser
 
-	runtime *runtimemodule.Module
+	nodeRouter *runtimeNodeExecutionRouter
+	runtime    *runtimemodule.Module
 }
 
 type RuntimeModule = ContainerRuntimeModule
 
-type runtimeCapabilityEngine interface {
-	runtimeports.ContainerProvisioningRuntime
-	runtimeports.ContainerCleanupRuntime
-	runtimeports.ContainerFileRuntime
-	runtimeports.ContainerImageRuntime
-	runtimeports.ManagedContainerInventory
-	runtimeports.ManagedContainerStatsReader
-	runtimeports.ContainerInteractiveExecutor
-}
-
-func BuildContainerRuntimeModule(root *Root) *ContainerRuntimeModule {
+func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	cfg := root.Config()
 	log := root.Logger()
-	engine := buildRuntimeEngine(root)
+	runtimeRepo := runtimeinfra.NewRepository(root.DB())
+	defaultNodeName := defaultRuntimeNodeName(cfg)
+	nodeSelector, nodeRepo, defaultNode, err := buildDefaultRuntimeNodeSelector(root, defaultNodeName)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, runtimeRepo, defaultNode)
+	if err != nil {
+		return nil, err
+	}
+	executor := defaultNodeClient.executor
+	checkerRunner := defaultNodeClient.checkerRunner
 	module := runtimemodule.Build(runtimemodule.Deps{
 		Config:                    cfg,
 		Logger:                    log,
 		DB:                        root.DB(),
 		Cache:                     root.Cache(),
-		ProvisioningRuntime:       engine,
-		CleanupRuntime:            engine,
-		FileRuntime:               engine,
-		ImageRuntime:              engine,
-		ManagedContainerInventory: engine,
-		ManagedContainerStats:     engine,
-		InteractiveExecutor:       engine,
+		ProvisioningRuntime:       executor,
+		CleanupRuntime:            executor,
+		FileRuntime:               executor,
+		ImageRuntime:              executor,
+		ManagedContainerInventory: executor,
+		ManagedContainerStats:     executor,
+		InteractiveExecutor:       executor,
 	})
+	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), runtimeRepo, nodeRepo, defaultNodeName)
+	if nodeRouter != nil && defaultNode != nil && defaultNode.ID > 0 {
+		nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)
+	}
 
 	for _, job := range module.BackgroundJobs {
 		root.RegisterBackgroundJob(NewBackgroundJob(job.Name, job.Start, job.Stop))
+	}
+
+	contestContainerFiles := module.ContestContainerFiles
+	contestCheckerRunner := checkerRunner
+	lifecycleCloser := runtimeLifecycleCloser(defaultNodeClient)
+	if nodeRouter != nil {
+		contestContainerFiles = nodeRouter
+		contestCheckerRunner = nodeRouter
+		lifecycleCloser = nodeRouter
 	}
 
 	return &ContainerRuntimeModule{
@@ -59,38 +94,148 @@ func BuildContainerRuntimeModule(root *Root) *ContainerRuntimeModule {
 		ChallengeRuntimeProbe:   module.ChallengeRuntimeProbe,
 		OpsRuntimeQuery:         module.OpsRuntimeQuery,
 		OpsRuntimeStatsProvider: module.OpsRuntimeStatsProvider,
-		ContestContainerFiles:   module.ContestContainerFiles,
+		ContestContainerFiles:   contestContainerFiles,
+		ContestCheckerRunner:    contestCheckerRunner,
+		RuntimeNodeSelector:     nodeSelector,
+		LifecycleCloser:         lifecycleCloser,
+		nodeRouter:              nodeRouter,
 		runtime:                 module,
-	}
+	}, nil
 }
 
-func BuildRuntimeModule(root *Root) *RuntimeModule {
+func BuildRuntimeModule(root *Root) (*RuntimeModule, error) {
 	return BuildContainerRuntimeModule(root)
 }
 
-func buildRuntimeEngine(root *Root) runtimeCapabilityEngine {
-	if root == nil {
+func buildRuntimeHostExecutor(root *Root) runtimeports.RuntimeHostExecutor {
+	client, err := buildDefaultRuntimeNodeClient(root)
+	if err != nil || client == nil {
 		return nil
 	}
+	return client.executor
+}
 
+func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtimeports.RuntimeNodeSelector, *runtimeinfra.RuntimeNodeRepository, *runtimeentity.RuntimeNode, error) {
+	if root == nil || root.DB() == nil {
+		return nil, nil, nil, nil
+	}
 	cfg := root.Config()
-	log := root.Logger()
 	if cfg == nil {
-		return nil
+		cfg = &config.Config{}
 	}
 	if cfg.App.Env == "test" {
-		if log != nil {
-			log.Info("runtime_engine_enabled_with_test_adapter_for_router")
+		if err := root.DB().AutoMigrate(&runtimeentity.RuntimeNode{}); err != nil {
+			return nil, nil, nil, err
 		}
-		return newTestRuntimeEngine(log.Named("runtime_test_engine"))
 	}
 
-	engine, err := runtimeinfra.NewEngine(&cfg.Container)
+	repo := runtimeinfra.NewRuntimeNodeRepository(root.DB())
+	if repo == nil {
+		return nil, nil, nil, nil
+	}
+	spec := runtimeports.RuntimeNodeBootstrapSpec{
+		Name:        defaultNodeName,
+		Endpoint:    defaultRuntimeNodeEndpoint(cfg),
+		TLSIdentity: defaultRuntimeNodeTLSIdentity(cfg),
+		Schedulable: true,
+	}
+	node, err := repo.EnsureDefaultNode(root.Context(), spec)
 	if err != nil {
-		if log != nil {
-			log.Warn("runtime_engine_init_failed_for_router", zap.Error(err))
+		lowerErr := strings.ToLower(err.Error())
+		if strings.Contains(lowerErr, "no such table") || strings.Contains(lowerErr, "does not exist") {
+			if migrateErr := root.DB().AutoMigrate(&runtimeentity.RuntimeNode{}); migrateErr != nil {
+				return nil, nil, nil, migrateErr
+			}
+			node, err = repo.EnsureDefaultNode(root.Context(), spec)
 		}
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	}
+	return runtimeinfra.NewDefaultRuntimeNodeSelector(repo, defaultNodeName), repo, node, nil
+}
+
+func buildDefaultRuntimeNodeClient(root *Root) (*nodeRuntimeClient, error) {
+	if root == nil {
+		return nil, nil
+	}
+	runtimeRepo := runtimeinfra.NewRepository(root.DB())
+	_, _, defaultNode, err := buildDefaultRuntimeNodeSelector(root, defaultRuntimeNodeName(root.Config()))
+	if err != nil {
+		return nil, err
+	}
+	return buildDefaultNodeRuntimeClient(root, runtimeRepo, defaultNode)
+}
+
+func buildDefaultNodeRuntimeClient(root *Root, runtimeRepo *runtimeinfra.Repository, node *runtimeentity.RuntimeNode) (*nodeRuntimeClient, error) {
+	if root == nil {
+		return nil, nil
+	}
+	client, err := buildRuntimeNodeClient(root.Context(), root.Config(), root.Logger(), runtimeRepo, node)
+	if err != nil {
+		return nil, err
+	}
+	typedClient, ok := client.(*nodeRuntimeClient)
+	if !ok {
+		return nil, runtimeports.ErrRuntimeNodeUnavailable
+	}
+	return typedClient, nil
+}
+
+func defaultRuntimeNodeName(cfg *config.Config) string {
+	if cfg != nil && cfg.RuntimeAgent.Enabled {
+		return "agent-default"
+	}
+	return "local-default"
+}
+
+func defaultRuntimeNodeEndpoint(cfg *config.Config) string {
+	if cfg != nil && cfg.RuntimeAgent.Enabled {
+		return cfg.RuntimeAgent.Endpoint
+	}
+	return "local://docker"
+}
+
+func defaultRuntimeNodeTLSIdentity(cfg *config.Config) string {
+	if cfg == nil {
+		return ""
+	}
+	return cfg.RuntimeAgent.ServerName
+}
+
+type chainedRuntimeLifecycleCloser struct {
+	closers []runtimeLifecycleCloser
+}
+
+func chainRuntimeLifecycleClosers(closers ...runtimeLifecycleCloser) runtimeLifecycleCloser {
+	items := make([]runtimeLifecycleCloser, 0, len(closers))
+	for _, closer := range closers {
+		if closer == nil {
+			continue
+		}
+		items = append(items, closer)
+	}
+	if len(items) == 0 {
 		return nil
 	}
-	return engine
+	if len(items) == 1 {
+		return items[0]
+	}
+	return &chainedRuntimeLifecycleCloser{closers: items}
+}
+
+func (c *chainedRuntimeLifecycleCloser) Close(ctx context.Context) error {
+	if c == nil {
+		return nil
+	}
+	var closeErr error
+	for _, closer := range c.closers {
+		if closer == nil {
+			continue
+		}
+		if err := closer.Close(ctx); err != nil && closeErr == nil {
+			closeErr = err
+		}
+	}
+	return closeErr
 }

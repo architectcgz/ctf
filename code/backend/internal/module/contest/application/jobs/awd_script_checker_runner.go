@@ -134,6 +134,7 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 			ServiceID:   definition.ServiceID,
 			TeamID:      teamID,
 			RoundNumber: awdScriptRoundNumber(round),
+			NodeID:      instance.NodeID,
 		},
 	}
 	if files, ok, err := loadAWDScriptCheckerArtifacts(cfg); err != nil {

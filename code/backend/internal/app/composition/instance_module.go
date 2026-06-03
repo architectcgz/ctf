@@ -35,7 +35,8 @@ type InstanceModule struct {
 		TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error)
 		CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error)
 	}
-	PracticeRuntimeService practiceports.RuntimeInstanceService
+	PracticeRuntimeService      practiceports.RuntimeInstanceService
+	PracticeRuntimeNodeSelector practiceports.RuntimeNodeSelector
 
 	service              *runtimeHTTPServiceAdapter
 	proxyTrafficRecorder runtimeProxyTrafficRecorder
@@ -60,8 +61,23 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 
 	repo := runtimeinfra.NewRepository(root.DB())
-	cleanupService := module.CleanupService
+	defaultCleanupService := module.CleanupService
+	var cleanupService interface {
+		instanceports.RuntimeCleaner
+		RemoveContainer(ctx context.Context, containerID string) error
+	} = defaultCleanupService
 	provisioningService := module.ProvisioningService
+	var maintenanceRuntime interface {
+		ListManagedContainers(ctx context.Context) ([]instanceports.ManagedContainer, error)
+		InspectManagedContainer(ctx context.Context, containerID string) (*instanceports.ManagedContainerState, error)
+		StartContainer(ctx context.Context, containerID string) error
+	} = newInstanceMaintenanceRuntime(module.ManagedContainerInventory, module.ProvisioningRuntime)
+	practiceRuntimeService := newPracticeRuntimeServiceAdapter(defaultCleanupService, provisioningService, module.ManagedContainerInventory)
+	if runtime.nodeRouter != nil {
+		cleanupService = runtime.nodeRouter
+		maintenanceRuntime = runtime.nodeRouter
+		practiceRuntimeService = newNodeScopedPracticeRuntimeServiceAdapter(runtime.nodeRouter)
+	}
 	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service"))
 	queryService := instanceqry.NewInstanceService(repo, &cfg.Container, cfg.Pagination)
 	proxyTicketService := instanceqry.NewProxyTicketService(
@@ -71,7 +87,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
 		repo,
-		newInstanceMaintenanceRuntime(module.ManagedContainerInventory, module.ProvisioningRuntime),
+		maintenanceRuntime,
 		cleanupService,
 		&cfg.Container,
 		log.Named("instance_maintenance_service"),
@@ -124,8 +140,9 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 
 	return &InstanceModule{
-		PracticeInstanceRepository: repo,
-		PracticeRuntimeService:     newPracticeRuntimeServiceAdapter(cleanupService, provisioningService, module.ManagedContainerInventory),
+		PracticeInstanceRepository:  repo,
+		PracticeRuntimeService:      practiceRuntimeService,
+		PracticeRuntimeNodeSelector: newPracticeRuntimeNodeSelectorAdapter(runtime.RuntimeNodeSelector),
 		service: newRuntimeHTTPServiceAdapter(
 			commandService,
 			queryService,

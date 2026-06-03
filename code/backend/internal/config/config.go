@@ -35,6 +35,7 @@ type Config struct {
 	Dashboard      DashboardConfig      `mapstructure:"dashboard"`
 	WebSocket      WebSocketConfig      `mapstructure:"websocket"`
 	Contest        ContestConfig        `mapstructure:"contest"`
+	RuntimeAgent   RuntimeAgentConfig   `mapstructure:"runtime_agent"`
 }
 
 var runningInContainer = func() bool {
@@ -274,6 +275,27 @@ type WebSocketConfig struct {
 	RetryMaxDelay     time.Duration `mapstructure:"retry_max_delay"`
 }
 
+type RuntimeAgentConfig struct {
+	Enabled     bool                     `mapstructure:"enabled"`
+	Endpoint    string                   `mapstructure:"endpoint"`
+	DialTimeout time.Duration            `mapstructure:"dial_timeout"`
+	ServerName  string                   `mapstructure:"server_name"`
+	CAFile      string                   `mapstructure:"ca_file"`
+	CertFile    string                   `mapstructure:"cert_file"`
+	KeyFile     string                   `mapstructure:"key_file"`
+	Server      RuntimeAgentServerConfig `mapstructure:"server"`
+}
+
+type RuntimeAgentServerConfig struct {
+	Enabled         bool          `mapstructure:"enabled"`
+	Host            string        `mapstructure:"host"`
+	Port            int           `mapstructure:"port"`
+	CertFile        string        `mapstructure:"cert_file"`
+	KeyFile         string        `mapstructure:"key_file"`
+	ClientCAFile    string        `mapstructure:"client_ca_file"`
+	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
+}
+
 type ContestConfig struct {
 	StatusUpdateInterval   time.Duration    `mapstructure:"status_update_interval"`
 	StatusUpdateBatchSize  int              `mapstructure:"status_update_batch_size"`
@@ -301,7 +323,6 @@ type ContestAWDConfig struct {
 type CheckerSandboxConfig struct {
 	Image            string        `mapstructure:"image"`
 	User             string        `mapstructure:"user"`
-	HostWorkRoot     string        `mapstructure:"host_work_root"`
 	WorkDir          string        `mapstructure:"work_dir"`
 	Timeout          time.Duration `mapstructure:"timeout"`
 	CPUQuota         float64       `mapstructure:"cpu_quota"`
@@ -546,6 +567,46 @@ func (c *Config) Validate() error {
 	if c.WebSocket.RetryMaxDelay < c.WebSocket.RetryInitialDelay {
 		return fmt.Errorf("websocket.retry_max_delay must be greater than or equal to retry_initial_delay")
 	}
+	if c.RuntimeAgent.Enabled {
+		if strings.TrimSpace(c.RuntimeAgent.Endpoint) == "" {
+			return fmt.Errorf("runtime_agent.endpoint must not be empty when runtime_agent.enabled is true")
+		}
+		if c.RuntimeAgent.DialTimeout <= 0 {
+			return fmt.Errorf("runtime_agent.dial_timeout must be greater than 0 when runtime_agent.enabled is true")
+		}
+		if strings.TrimSpace(c.RuntimeAgent.ServerName) == "" {
+			return fmt.Errorf("runtime_agent.server_name must not be empty when runtime_agent.enabled is true")
+		}
+		if strings.TrimSpace(c.RuntimeAgent.CAFile) == "" {
+			return fmt.Errorf("runtime_agent.ca_file must not be empty when runtime_agent.enabled is true")
+		}
+		if strings.TrimSpace(c.RuntimeAgent.CertFile) == "" {
+			return fmt.Errorf("runtime_agent.cert_file must not be empty when runtime_agent.enabled is true")
+		}
+		if strings.TrimSpace(c.RuntimeAgent.KeyFile) == "" {
+			return fmt.Errorf("runtime_agent.key_file must not be empty when runtime_agent.enabled is true")
+		}
+	}
+	if c.RuntimeAgent.Server.Enabled {
+		if strings.TrimSpace(c.RuntimeAgent.Server.Host) == "" {
+			return fmt.Errorf("runtime_agent.server.host must not be empty when runtime_agent.server.enabled is true")
+		}
+		if c.RuntimeAgent.Server.Port <= 0 || c.RuntimeAgent.Server.Port > 65535 {
+			return fmt.Errorf("runtime_agent.server.port must be between 1 and 65535 when runtime_agent.server.enabled is true")
+		}
+		if strings.TrimSpace(c.RuntimeAgent.Server.CertFile) == "" {
+			return fmt.Errorf("runtime_agent.server.cert_file must not be empty when runtime_agent.server.enabled is true")
+		}
+		if strings.TrimSpace(c.RuntimeAgent.Server.KeyFile) == "" {
+			return fmt.Errorf("runtime_agent.server.key_file must not be empty when runtime_agent.server.enabled is true")
+		}
+		if strings.TrimSpace(c.RuntimeAgent.Server.ClientCAFile) == "" {
+			return fmt.Errorf("runtime_agent.server.client_ca_file must not be empty when runtime_agent.server.enabled is true")
+		}
+		if c.RuntimeAgent.Server.ShutdownTimeout <= 0 {
+			return fmt.Errorf("runtime_agent.server.shutdown_timeout must be greater than 0 when runtime_agent.server.enabled is true")
+		}
+	}
 	if isProductionEnv(c.App.Env) {
 		if isPlaceholderSecret(c.Postgres.Password) {
 			return fmt.Errorf("postgres.password must be provided from a non-placeholder secret in prod")
@@ -589,11 +650,6 @@ func (c *Config) Validate() error {
 	}
 	if strings.TrimSpace(c.Contest.AWD.CheckerSandbox.Image) == "" {
 		return fmt.Errorf("contest.awd.checker_sandbox.image must not be empty")
-	}
-	if root := strings.TrimSpace(c.Contest.AWD.CheckerSandbox.HostWorkRoot); root != "" {
-		if !strings.HasPrefix(root, "/") || root == "/" {
-			return fmt.Errorf("contest.awd.checker_sandbox.host_work_root must be an absolute non-root path when configured")
-		}
 	}
 	if strings.TrimSpace(c.Contest.AWD.CheckerSandbox.WorkDir) == "" {
 		return fmt.Errorf("contest.awd.checker_sandbox.work_dir must not be empty")
@@ -889,6 +945,20 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("websocket.read_timeout", 75*time.Second)
 	v.SetDefault("websocket.retry_initial_delay", time.Second)
 	v.SetDefault("websocket.retry_max_delay", 30*time.Second)
+	v.SetDefault("runtime_agent.enabled", false)
+	v.SetDefault("runtime_agent.endpoint", "")
+	v.SetDefault("runtime_agent.dial_timeout", 5*time.Second)
+	v.SetDefault("runtime_agent.server_name", "")
+	v.SetDefault("runtime_agent.ca_file", "")
+	v.SetDefault("runtime_agent.cert_file", "")
+	v.SetDefault("runtime_agent.key_file", "")
+	v.SetDefault("runtime_agent.server.enabled", false)
+	v.SetDefault("runtime_agent.server.host", "0.0.0.0")
+	v.SetDefault("runtime_agent.server.port", 9443)
+	v.SetDefault("runtime_agent.server.cert_file", "")
+	v.SetDefault("runtime_agent.server.key_file", "")
+	v.SetDefault("runtime_agent.server.client_ca_file", "")
+	v.SetDefault("runtime_agent.server.shutdown_timeout", 10*time.Second)
 	v.SetDefault("contest.status_update_interval", 1*time.Minute)
 	v.SetDefault("contest.status_update_batch_size", 1000)
 	v.SetDefault("contest.status_update_lock_ttl", 30*time.Second)
@@ -907,7 +977,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("contest.awd.checker_health_path", "/health")
 	v.SetDefault("contest.awd.checker_sandbox.image", "python:3.12-alpine")
 	v.SetDefault("contest.awd.checker_sandbox.user", "65532:65532")
-	v.SetDefault("contest.awd.checker_sandbox.host_work_root", "")
 	v.SetDefault("contest.awd.checker_sandbox.work_dir", "/checker")
 	v.SetDefault("contest.awd.checker_sandbox.timeout", 10*time.Second)
 	v.SetDefault("contest.awd.checker_sandbox.cpu_quota", 0.5)
