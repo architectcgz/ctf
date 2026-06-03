@@ -27,7 +27,8 @@ export function usePlatformUserSessions(userId: () => string | undefined) {
     const { signal } = fetchController
     loading.value = true
     try {
-      sessions.value = await getUserSessions(uid, { signal })
+      const response = await getUserSessions(uid, { signal })
+      sessions.value = Array.isArray(response) ? response : []
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') {
         return

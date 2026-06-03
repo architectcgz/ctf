@@ -64,6 +64,7 @@ describe('UserManage', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     Object.values(adminApiMocks).forEach((mock) => mock.mockReset())
+    adminApiMocks.getUserSessions.mockResolvedValue([])
     destructiveConfirmMock.mockReset()
     destructiveConfirmMock.mockResolvedValue(true)
     pushMock.mockReset()
@@ -145,6 +146,158 @@ describe('UserManage', () => {
         signal: expect.any(AbortSignal),
       }
     )
+  })
+
+  it('切换详情用户时应重置撤销全部确认态，避免跨用户残留', async () => {
+    adminApiMocks.getUsers.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          username: 'alice',
+          email: 'alice@example.com',
+          class_name: 'Class A',
+          status: 'active',
+          roles: ['teacher'],
+          created_at: '2026-03-01T00:00:00.000Z',
+        },
+        {
+          id: '2',
+          username: 'bob',
+          email: 'bob@example.com',
+          class_name: 'Class B',
+          status: 'locked',
+          roles: ['student'],
+          created_at: '2026-03-02T00:00:00.000Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+    adminApiMocks.getUserSessions.mockResolvedValue([
+      {
+        id: 'sess-1',
+        username: 'alice',
+        role: 'teacher',
+        expires_at: '2026-04-01T12:00:00.000Z',
+      },
+    ])
+
+    const wrapper = mount(UserManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper.get('#user-row-detail-1').trigger('click')
+    await flushPromises()
+
+    const revokeAllButton = document.body.querySelector<HTMLButtonElement>(
+      '.user-detail-section__action-btn--danger'
+    )
+    expect(revokeAllButton).not.toBeNull()
+    revokeAllButton?.click()
+    await flushPromises()
+
+    expect(document.body.textContent).toContain('确认撤销全部会话')
+
+    await wrapper.get('#user-row-detail-2').trigger('click')
+    await flushPromises()
+
+    const drawer = document.body.querySelector<HTMLElement>('.user-detail-drawer')
+    expect(drawer?.textContent).toContain('bob@example.com')
+    expect(document.body.textContent).not.toContain('确认撤销全部会话')
+  })
+
+  it('快速切换详情用户时应中止旧会话请求，并只保留最后一次结果', async () => {
+    adminApiMocks.getUsers.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          username: 'alice',
+          email: 'alice@example.com',
+          class_name: 'Class A',
+          status: 'active',
+          roles: ['teacher'],
+          created_at: '2026-03-01T00:00:00.000Z',
+        },
+        {
+          id: '2',
+          username: 'bob',
+          email: 'bob@example.com',
+          class_name: 'Class B',
+          status: 'locked',
+          roles: ['student'],
+          created_at: '2026-03-02T00:00:00.000Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+
+    const pending = new Map<
+      string,
+      {
+        resolve: (value: Array<{ id: string; username: string; role: 'teacher' | 'student'; expires_at: string }>) => void
+        signal?: AbortSignal
+      }
+    >()
+    adminApiMocks.getUserSessions.mockImplementation(
+      (userId: string, options?: { signal?: AbortSignal }) =>
+        new Promise((resolve, reject) => {
+          options?.signal?.addEventListener('abort', () => {
+            reject(new DOMException('Aborted', 'AbortError'))
+          })
+          pending.set(userId, { resolve, signal: options?.signal })
+        })
+    )
+
+    const wrapper = mount(UserManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper.get('#user-row-detail-1').trigger('click')
+    await Promise.resolve()
+
+    const firstSignal = pending.get('1')?.signal
+    expect(firstSignal).toBeInstanceOf(AbortSignal)
+    expect(firstSignal?.aborted).toBe(false)
+
+    await wrapper.get('#user-row-detail-2').trigger('click')
+    await Promise.resolve()
+
+    expect(firstSignal?.aborted).toBe(true)
+    expect(pending.get('2')?.signal).toBeInstanceOf(AbortSignal)
+
+    pending.get('2')?.resolve([
+      {
+        id: 'sess-2',
+        username: 'bob',
+        role: 'student',
+        expires_at: '2026-04-02T12:00:00.000Z',
+      },
+    ])
+    await flushPromises()
+
+    const drawer = document.body.querySelector<HTMLElement>('.user-detail-drawer')
+    expect(drawer?.textContent).toContain('bob@example.com')
+    expect(drawer?.textContent).toContain('sess-2')
+    expect(drawer?.textContent).not.toContain('alice@example.com')
   })
 
   it('用户详情里的姓名展示应由 user entity 承接，而不是回退成用户名', () => {
