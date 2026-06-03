@@ -61,8 +61,21 @@ func TestPracticeFlow_PublishedChallengeGeneratesTeacherEvidenceAndAuditTrail(t 
 		t.Fatalf("expected events to be omitted when with_events=false, got %+v", result.attackSessions.Sessions[0].Events)
 	}
 
-	if len(result.auditPage.List) != 2 {
-		t.Fatalf("expected 2 submit audit logs, got %+v", result.auditPage.List)
+	challengeSubmitAuditCount := 0
+	proxySubmitAuditCount := 0
+	for _, item := range result.auditPage.List {
+		switch item.ResourceType {
+		case "challenge_submission":
+			challengeSubmitAuditCount++
+		case "instance_proxy_request":
+			proxySubmitAuditCount++
+		}
+	}
+	if challengeSubmitAuditCount != 2 {
+		t.Fatalf("expected 2 challenge submission audit logs, got %+v", result.auditPage.List)
+	}
+	if proxySubmitAuditCount < 1 {
+		t.Fatalf("expected submit audit page to include proxy request logs, got %+v", result.auditPage.List)
 	}
 }
 
