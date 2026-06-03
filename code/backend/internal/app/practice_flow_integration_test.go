@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -18,14 +17,12 @@ import (
 	"github.com/gin-gonic/gin"
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/middleware"
-	assessmententity "ctf-platform/internal/module/assessment/entity"
 	authhttp "ctf-platform/internal/module/auth/api/http"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authqry "ctf-platform/internal/module/auth/application/queries"
@@ -34,7 +31,6 @@ import (
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeruntime "ctf-platform/internal/module/challenge/runtime"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -48,18 +44,14 @@ import (
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
-	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
-	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
@@ -830,39 +822,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		t.Fatalf("ping test redis: %v", err)
 	}
 
-	dbPath := filepath.Join(t.TempDir(), "practice-flow.sqlite")
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	if err := db.AutoMigrate(
-		&identitycontracts.Role{},
-		&identitycontracts.User{},
-		&identitycontracts.UserRole{},
-		&opsentity.AuditLog{},
-		&contestcontracts.Contest{},
-		&contestcontracts.ContestRegistration{},
-		&contestcontracts.Team{},
-		&contestcontracts.TeamMember{},
-		&appImageRow{},
-		&appChallengeRow{},
-		&challengeentity.ChallengePublishCheckJob{},
-		&challengeentity.ChallengeHint{},
-		&challengeentity.ChallengeWriteup{},
-		&challengeentity.ChallengeTopology{},
-		&challengeentity.ChallengePackageRevision{},
-		&challengeentity.EnvironmentTemplate{},
-		&contestcontracts.ContestAWDService{},
-		&contestcontracts.Submission{},
-		&instancecontracts.Instance{},
-		&runtimeentity.PortAllocation{},
-		&runtimecontracts.AWDServiceOperation{},
-		&runtimecontracts.AWDScopeControl{},
-		&assessmententity.SkillProfile{},
-		&practiceentity.UserScore{},
-	); err != nil {
-		t.Fatalf("auto migrate test schema: %v", err)
-	}
+	db := openInternalAppTestSQLite(t, "practice-flow.sqlite")
 
 	cfg := newPracticeFlowTestConfig(t)
 	logger := zap.NewNop()

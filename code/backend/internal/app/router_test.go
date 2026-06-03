@@ -22,7 +22,6 @@ import (
 	"github.com/gin-gonic/gin"
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/app/composition"
@@ -1242,11 +1241,7 @@ func newAppTestDependencies(t *testing.T) (*config.Config, *gorm.DB, *redislib.C
 		t.Fatalf("ping redis: %v", err)
 	}
 
-	dbPath := filepath.Join(t.TempDir(), "router.sqlite")
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := openInternalAppTestSQLite(t, "router.sqlite")
 
 	return newPracticeFlowTestConfig(t), db, cache
 }

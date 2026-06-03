@@ -5,14 +5,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -20,7 +18,6 @@ import (
 	"github.com/gin-gonic/gin"
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/app/composition"
@@ -40,7 +37,6 @@ import (
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	"ctf-platform/internal/platform/randomstring"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
@@ -74,53 +70,6 @@ type fullRouterTestEnv struct {
 	instance     *instancecontracts.Instance
 	notification *opsentity.Notification
 	report       *assessmententity.Report
-}
-
-var (
-	fullRouterSchemaTemplateOnce sync.Once
-	fullRouterSchemaTemplatePath string
-	fullRouterSchemaTemplateErr  error
-)
-
-var fullRouterTestSchemaModels = []any{
-	&identitycontracts.Role{},
-	&identitycontracts.User{},
-	&identitycontracts.UserRole{},
-	&appImageRow{},
-	&appChallengeRow{},
-	&challengecontracts.AWDChallenge{},
-	&challengeentity.ChallengePublishCheckJob{},
-	&challengeentity.Tag{},
-	&challengeentity.ChallengeTag{},
-	&challengeentity.ChallengeHint{},
-	&challengeentity.ChallengeWriteup{},
-	&challengeentity.SubmissionWriteup{},
-	&challengeentity.EnvironmentTemplate{},
-	&challengeentity.ChallengeTopology{},
-	&challengeentity.ChallengePackageRevision{},
-	&contestcontracts.Submission{},
-	&instancecontracts.Instance{},
-	&runtimeentity.PortAllocation{},
-	&practiceentity.UserScore{},
-	&opsentity.AuditLog{},
-	&opsentity.NotificationBatch{},
-	&opsentity.Notification{},
-	&assessmententity.SkillProfile{},
-	&contestcontracts.Contest{},
-	&contestentity.ContestStatusTransition{},
-	&contestcontracts.ContestChallenge{},
-	&contestcontracts.ContestAWDService{},
-	&contestcontracts.ContestRegistration{},
-	&contestentity.ContestAnnouncement{},
-	&contestcontracts.Team{},
-	&contestcontracts.TeamMember{},
-	&contestcontracts.AWDRound{},
-	&contestcontracts.AWDTeamService{},
-	&contestcontracts.AWDAttackLog{},
-	&contestcontracts.AWDTrafficEvent{},
-	&runtimecontracts.AWDServiceOperation{},
-	&runtimecontracts.AWDScopeControl{},
-	&assessmententity.Report{},
 }
 
 func TestFullRouter_AccessControlMatrix(t *testing.T) {
@@ -1081,85 +1030,7 @@ func newFullRouterTestEnv(t *testing.T) *fullRouterTestEnv {
 
 func openFullRouterTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
-
-	templatePath, err := ensureFullRouterSchemaTemplate()
-	if err != nil {
-		t.Fatalf("prepare full router schema template: %v", err)
-	}
-
-	dbPath := filepath.Join(t.TempDir(), "full-router.sqlite")
-	if err := copySQLiteTemplate(templatePath, dbPath); err != nil {
-		t.Fatalf("clone sqlite schema template: %v", err)
-	}
-
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	return db
-}
-
-func ensureFullRouterSchemaTemplate() (string, error) {
-	fullRouterSchemaTemplateOnce.Do(func() {
-		dir, err := os.MkdirTemp("", "full-router-schema-*")
-		if err != nil {
-			fullRouterSchemaTemplateErr = fmt.Errorf("create schema temp dir: %w", err)
-			return
-		}
-
-		fullRouterSchemaTemplatePath = filepath.Join(dir, "schema.sqlite")
-		fullRouterSchemaTemplateErr = buildFullRouterSchemaTemplate(fullRouterSchemaTemplatePath)
-	})
-
-	if fullRouterSchemaTemplateErr != nil {
-		return "", fullRouterSchemaTemplateErr
-	}
-	return fullRouterSchemaTemplatePath, nil
-}
-
-func buildFullRouterSchemaTemplate(path string) error {
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
-	if err != nil {
-		return fmt.Errorf("open sqlite template: %w", err)
-	}
-
-	sqlDB, err := db.DB()
-	if err != nil {
-		return fmt.Errorf("get sqlite template handle: %w", err)
-	}
-	defer func() { _ = sqlDB.Close() }()
-
-	if err := db.AutoMigrate(fullRouterTestSchemaModels...); err != nil {
-		return fmt.Errorf("auto migrate sqlite template: %w", err)
-	}
-
-	return nil
-}
-
-func copySQLiteTemplate(srcPath, dstPath string) error {
-	src, err := os.Open(srcPath)
-	if err != nil {
-		return fmt.Errorf("open sqlite template: %w", err)
-	}
-	defer func() { _ = src.Close() }()
-
-	dst, err := os.Create(dstPath)
-	if err != nil {
-		return fmt.Errorf("create sqlite copy: %w", err)
-	}
-
-	if _, err := io.Copy(dst, src); err != nil {
-		_ = dst.Close()
-		return fmt.Errorf("copy sqlite template: %w", err)
-	}
-	if err := dst.Sync(); err != nil {
-		_ = dst.Close()
-		return fmt.Errorf("sync sqlite copy: %w", err)
-	}
-	if err := dst.Close(); err != nil {
-		return fmt.Errorf("close sqlite copy: %w", err)
-	}
-	return nil
+	return openInternalAppTestSQLite(t, "full-router.sqlite")
 }
 
 func newFullRouterTestConfig(t *testing.T) *config.Config {
