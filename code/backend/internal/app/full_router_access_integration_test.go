@@ -2,74 +2,75 @@ package app
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	fullrouteraccess "ctf-platform/tests/system/http/fullrouteraccess"
 )
 
 func TestFullRouter_AccessControlMatrix(t *testing.T) {
 	env := newFullRouterTestEnv(t)
-
-	for _, route := range filteredRouterRoutes(env.router.Routes()) {
-		access := classifyRouteAccess(route.Method, route.Path)
-		if access == routeAccessPublic {
-			continue
-		}
-
-		target := materializeRoutePath(route.Path, env)
-		resp := performFullRouterRequest(t, env.router, route.Method, target, nil, nil)
-		if resp.Code != http.StatusUnauthorized {
-			t.Errorf("expected unauthorized for %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
-			continue
-		}
-
-		if access == routeAccessTeacher || access == routeAccessAdmin {
-			studentHeaders := sessionHeaders(loginForSession(t, env.router, env.student.Username, env.studentPwd))
-			resp = performFullRouterRequest(t, env.router, route.Method, target, nil, studentHeaders)
-			if resp.Code != http.StatusForbidden {
-				t.Errorf("expected forbidden for student on %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
-			}
-		}
-
-		if access == routeAccessAdmin {
-			teacherHeaders := sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
-			resp = performFullRouterRequest(t, env.router, route.Method, target, nil, teacherHeaders)
-			if resp.Code != http.StatusForbidden {
-				t.Errorf("expected forbidden for teacher on %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
-			}
-		}
-	}
+	fullrouteraccess.VerifyAccessControlMatrix(t, fullrouteraccess.AccessMatrixDriver{
+		Routes: fullRouterAccessRoutes(env),
+		Classify: func(route fullrouteraccess.Route) string {
+			return string(classifyRouteAccess(route.Method, route.Path))
+		},
+		Materialize: func(route fullrouteraccess.Route) string {
+			return materializeRoutePath(route.Path, env)
+		},
+		Request: func(method, target string, payload any, headers map[string]string) *httptest.ResponseRecorder {
+			return performFullRouterRequest(t, env.router, method, target, payload, headers)
+		},
+		StudentHeaders: func() map[string]string {
+			return sessionHeaders(loginForSession(t, env.router, env.student.Username, env.studentPwd))
+		},
+		TeacherHeaders: func() map[string]string {
+			return sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
+		},
+	})
 }
 
 func TestFullRouter_AuthorizedSmokeMatrix(t *testing.T) {
 	baseEnv := newFullRouterTestEnv(t)
+	routes := fullRouterAccessRoutes(baseEnv)
+	driver := fullrouteraccess.AuthorizedSmokeDriver{
+		Classify: func(route fullrouteraccess.Route) string {
+			return string(classifyRouteAccess(route.Method, route.Path))
+		},
+		Request: func(method, target string, payload any, headers map[string]string) *httptest.ResponseRecorder {
+			panic("request should be bound per subtest")
+		},
+		AcceptableStatus: func(route fullrouteraccess.Route, status int) bool {
+			return isAcceptableSmokeStatus(route.Method, route.Path, status)
+		},
+	}
 
-	for _, route := range filteredRouterRoutes(baseEnv.router.Routes()) {
+	for _, route := range routes {
 		route := route
 		t.Run(route.Method+" "+route.Path, func(t *testing.T) {
 			env := newFullRouterTestEnv(t)
-			target := materializeRoutePath(route.Path, env)
-			headers := authorizedHeadersForRoute(t, env, route.Method, route.Path)
-			payload := routePayload(route.Method, route.Path)
-
-			resp := performFullRouterRequest(t, env.router, route.Method, target, payload, headers)
-			if !isAcceptableSmokeStatus(route.Method, route.Path, resp.Code) {
-				t.Errorf("expected non-5xx for %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
-				return
+			driver.Request = func(method, target string, payload any, headers map[string]string) *httptest.ResponseRecorder {
+				return performFullRouterRequest(t, env.router, method, target, payload, headers)
+			}
+			driver.AfterResponse = func(t *testing.T, route fullrouteraccess.Route, resp *httptest.ResponseRecorder, headers map[string]string) {
+				if route.Method == http.MethodPost && route.Path == "/api/v1/reports/class" && resp.Code == http.StatusOK {
+					var report assessmentcmd.ReportExportData
+					decodeFullRouterData(t, resp, &report)
+					waitForReportStatus(t, env, report.ReportID, headers, assessmententity.ReportStatusReady, 5*time.Second)
+				}
 			}
 
-			if route.Method == http.MethodPost && route.Path == "/api/v1/reports/class" && resp.Code == http.StatusOK {
-				var report assessmentcmd.ReportExportData
-				decodeFullRouterData(t, resp, &report)
-				waitForReportStatus(t, env, report.ReportID, headers, assessmententity.ReportStatusReady, 5*time.Second)
-			}
-
-			access := classifyRouteAccess(route.Method, route.Path)
-			if access != routeAccessPublic && resp.Code == http.StatusUnauthorized {
-				t.Errorf("expected authorized request for %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
-			}
+			fullrouteraccess.VerifyAuthorizedSmokeRoute(
+				t,
+				route,
+				materializeRoutePath(route.Path, env),
+				routePayload(route.Method, route.Path),
+				authorizedHeadersForRoute(t, env, route.Method, route.Path),
+				driver,
+			)
 		})
 	}
 }
@@ -78,47 +79,32 @@ func TestFullRouter_ListInstancesMatchesContract(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
 	headers := sessionHeaders(loginForSession(t, env.router, env.student.Username, env.studentPwd))
-	resp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/instances", nil, headers)
-	assertFullRouterStatus(t, resp, http.StatusOK)
+	fullrouteraccess.VerifyListInstancesMatchesContract(
+		t,
+		func(method, target string, payload any, reqHeaders map[string]string) *httptest.ResponseRecorder {
+			return performFullRouterRequest(t, env.router, method, target, payload, reqHeaders)
+		},
+		headers,
+		fullrouteraccess.ExpectedInstance{
+			ID:               env.instance.ID,
+			ChallengeID:      env.challenge.ID,
+			ChallengeTitle:   env.challenge.Title,
+			Category:         env.challenge.Category,
+			Difficulty:       env.challenge.Difficulty,
+			FlagType:         env.challenge.FlagType,
+			RemainingExtends: env.instance.MaxExtends - env.instance.ExtendCount,
+		},
+	)
+}
 
-	var items []struct {
-		ID               int64     `json:"id"`
-		ChallengeID      int64     `json:"challenge_id"`
-		ChallengeTitle   string    `json:"challenge_title"`
-		Category         string    `json:"category"`
-		Difficulty       string    `json:"difficulty"`
-		FlagType         string    `json:"flag_type"`
-		Status           string    `json:"status"`
-		AccessURL        string    `json:"access_url"`
-		ExpiresAt        time.Time `json:"expires_at"`
-		RemainingTime    int64     `json:"remaining_time"`
-		RemainingExtends int       `json:"remaining_extends"`
+func fullRouterAccessRoutes(env *fullRouterTestEnv) []fullrouteraccess.Route {
+	routes := filteredRouterRoutes(env.router.Routes())
+	items := make([]fullrouteraccess.Route, 0, len(routes))
+	for _, route := range routes {
+		items = append(items, fullrouteraccess.Route{
+			Method: route.Method,
+			Path:   route.Path,
+		})
 	}
-	decodeFullRouterData(t, resp, &items)
-
-	if len(items) != 1 {
-		t.Fatalf("expected 1 instance, got %+v", items)
-	}
-	item := items[0]
-	if item.ID != env.instance.ID {
-		t.Fatalf("expected instance id %d, got %d", env.instance.ID, item.ID)
-	}
-	if item.ChallengeID != env.challenge.ID {
-		t.Fatalf("expected challenge id %d, got %d", env.challenge.ID, item.ChallengeID)
-	}
-	if item.ChallengeTitle != env.challenge.Title {
-		t.Fatalf("expected challenge title %q, got %q", env.challenge.Title, item.ChallengeTitle)
-	}
-	if item.Category != env.challenge.Category {
-		t.Fatalf("expected category %q, got %q", env.challenge.Category, item.Category)
-	}
-	if item.Difficulty != env.challenge.Difficulty {
-		t.Fatalf("expected difficulty %q, got %q", env.challenge.Difficulty, item.Difficulty)
-	}
-	if item.FlagType != env.challenge.FlagType {
-		t.Fatalf("expected flag type %q, got %q", env.challenge.FlagType, item.FlagType)
-	}
-	if item.RemainingExtends != env.instance.MaxExtends-env.instance.ExtendCount {
-		t.Fatalf("expected remaining_extends %d, got %d", env.instance.MaxExtends-env.instance.ExtendCount, item.RemainingExtends)
-	}
+	return items
 }
