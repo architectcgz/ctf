@@ -20,6 +20,14 @@ run_backend_app_architecture_checks() {
   )
 }
 
+run_backend_test_architecture_checks() {
+  echo "[architecture][backend] test architecture boundaries"
+  (
+    cd "$ROOT_DIR/code/backend"
+    go test ./tests/architecture
+  )
+}
+
 case "$MODE" in
   --quick|quick)
     run_backend_module_checks
@@ -27,6 +35,7 @@ case "$MODE" in
   --full|full)
     run_backend_module_checks
     run_backend_app_architecture_checks
+    run_backend_test_architecture_checks
     ;;
   *)
     echo "usage: scripts/check-backend-architecture.sh [--quick|--full]" >&2

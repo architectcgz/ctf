@@ -10,6 +10,12 @@
 
 ## 目标目录
 
+### `tests/architecture`
+
+- 放测试架构 guardrail。
+- 关注 `internal/app` 系统测试壳是否继续变薄，以及 `tests/system/http` 是否仍然只持有 scenario/assertion owner。
+- 这里不跑业务语义回归，只做低噪音的源码级边界检查。
+
 ### `tests/system/http`
 
 - 放黑盒 HTTP / router 级系统测试。
