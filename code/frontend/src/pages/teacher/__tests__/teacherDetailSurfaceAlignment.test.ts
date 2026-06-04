@@ -17,6 +17,7 @@ import studentInsightPanelSource from '@/features/teaching/student-analysis-work
 import studentInsightPrimarySectionsSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPrimarySections.vue?raw'
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
+import studentInsightTimelineSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightTimelineSection.vue?raw'
 import studentInsightStateSurfaceSource from '@/features/teaching/student-analysis-shared/ui/StudentInsightStateSurface.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/features/teaching/student-analysis-review/ui/StudentInsightAttackSessionsSection.vue?raw'
 import studentInsightWriteupsSource from '@/features/teaching/student-analysis-review/ui/StudentInsightWriteupsSection.vue?raw'
@@ -217,6 +218,9 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightOverviewSectionSource).not.toMatch(
       /\.insight-overview-layout\s*\{[\s\S]*border-top:/s
     )
+    expect(studentInsightTimelineSectionSource).not.toMatch(
+      /\.student-insight-timeline-section\s*\{[\s\S]*padding-top:/s
+    )
     expect(studentInsightOverviewSectionSource).toContain('variant="teacher-flat"')
     expect(studentInsightOverviewSectionSource).toMatch(
       /\.insight-overview-card\s*\{[\s\S]*?--section-card-border-top-width:\s*0;/s
@@ -276,7 +280,7 @@ describe('teacher detail surface alignment', () => {
     )
     expect(studentInsightPanelSource).toContain(':loading="loading"')
     expect(studentInsightPanelSource).not.toContain('insight-loading-shell')
-    expect(studentInsightPrimarySectionsSource).toContain('StudentInsightLoadingSurface')
+    expect(studentInsightTimelineSectionSource).toContain('StudentInsightLoadingSurface')
     expect(studentInsightLoadingSurfaceSource).toContain('student-insight-glass-surface')
     expect(studentInsightManualReviewSource).toContain('StudentInsightStateSurface')
     expect(studentInsightManualReviewSource).toContain(

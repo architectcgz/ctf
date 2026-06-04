@@ -36,10 +36,6 @@
 </template>
 
 <style scoped>
-.student-insight-timeline-section {
-  padding-top: var(--space-5);
-}
-
 .student-insight-timeline-content {
   min-width: 0;
 }

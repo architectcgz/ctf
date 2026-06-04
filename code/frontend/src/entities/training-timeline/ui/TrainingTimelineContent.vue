@@ -35,10 +35,6 @@
     </div>
 
     <div class="timeline-board mt-0 px-0 pt-0 md:px-0 md:pt-0">
-      <div
-        class="journal-divider timeline-board-divider"
-        aria-hidden="true"
-      />
       <section class="timeline-section workspace-directory-section">
         <section
           class="timeline-directory-shell teacher-directory-shell workspace-directory-list workspace-directory-list--catalog"
@@ -49,9 +45,6 @@
               <h3 class="list-heading__title journal-soft-section-title">
                 训练记录
               </h3>
-              <p class="journal-soft-body-copy timeline-list-heading__copy">
-                按日期回看最近的提交、解题和实例操作。
-              </p>
             </div>
           </header>
 
@@ -162,11 +155,7 @@
 }
 
 .timeline-header + .timeline-board {
-  margin-top: var(--space-1) !important;
-}
-
-.timeline-board-divider {
-  --journal-divider-margin-block: 0 var(--space-1-5);
+  margin-top: var(--workspace-panel-divider-gap, var(--space-workspace-panel-divider-gap));
 }
 
 .timeline-list-heading__body {
@@ -217,6 +206,8 @@
 
 .timeline-group-list {
   min-width: 0;
+  border-top: 1px solid var(--workspace-directory-row-divider);
+  padding-top: var(--space-4);
 }
 
 .timeline-group {
@@ -276,7 +267,7 @@
 }
 
 .timeline-event-item + .timeline-event-item {
-  border-top: 1px solid var(--journal-divider);
+  border-top: 1px solid var(--workspace-directory-row-divider);
 }
 
 .timeline-pagination {

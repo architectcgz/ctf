@@ -5,7 +5,7 @@
     <TrainingTimelineContent
       :timeline="timeline"
       :page-size="pageSize"
-      class="px-6 py-6 md:px-8"
+      class="px-6 pt-0 pb-6 md:px-8"
     />
   </section>
 </template>

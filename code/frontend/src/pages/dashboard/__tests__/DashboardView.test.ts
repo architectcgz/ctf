@@ -8,8 +8,8 @@ import studentCategoryProgressPageSource from '@/features/student-dashboard/ui/S
 import studentDifficultyPageSource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
 import studentOverviewPageSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
 import studentRecommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
-import trainingTimelinePanelSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
+import studentDashboardPanelRegistrySource from '@/features/student-dashboard/ui/studentDashboardPanelRegistry.ts?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
 import studentDashboardDataSource from '@/features/student-dashboard/model/useStudentDashboardData.ts?raw'
 import studentDashboardRoutesSource from '@/features/student-dashboard/model/studentDashboardRoutes.ts?raw'
@@ -441,7 +441,8 @@ describe('DashboardView', () => {
     expect(studentCategoryProgressPageSource).toContain('Category')
     expect(trainingTimelineContentSource).toContain('<div class="workspace-overline">')
     expect(trainingTimelineContentSource).toContain('Timeline')
-    expect(trainingTimelinePanelSource).toContain('journal-shell journal-hero timeline-shell-flat')
+    expect(studentDashboardPanelRegistrySource).toContain('timeline: TrainingTimelineContent')
+    expect(studentDashboardPanelRegistrySource).not.toContain('timeline: TrainingTimelinePanel')
     expect(studentDifficultyPageSource).toContain('<div class="workspace-overline">')
     expect(studentDifficultyPageSource).toContain('Difficulty')
   })

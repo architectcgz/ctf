@@ -92,6 +92,18 @@ describe('student and user surface alignment', () => {
     expect(studentDifficultySource).not.toMatch(
       /\.difficulty-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
     )
+
+    expect(trainingTimelineContentSource).toMatch(
+      /\.timeline-group-list\s*\{[\s\S]*border-top:\s*1px solid var\(--workspace-directory-row-divider\);/s
+    )
+    expect(trainingTimelineContentSource).toMatch(
+      /\.timeline-event-item \+ \.timeline-event-item\s*\{[\s\S]*border-top:\s*1px solid var\(--workspace-directory-row-divider\);/s
+    )
+    expect(trainingTimelineContentSource).toContain(
+      'margin-top: var(--workspace-panel-divider-gap, var(--space-workspace-panel-divider-gap));'
+    )
+    expect(trainingTimelineContentSource).not.toContain('margin-top: var(--space-1) !important;')
+    expect(trainingTimelineContentSource).not.toContain('按日期回看最近的提交、解题和实例操作。')
   })
 
   it('student dashboard detail pages should use softened control and track tokens instead of bright hardcoded borders', () => {
