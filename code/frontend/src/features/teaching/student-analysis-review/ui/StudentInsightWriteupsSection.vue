@@ -1,12 +1,12 @@
 <template>
   <SectionCard
-    class="writeup-section-card insight-tab-section-card"
+    class="writeup-section-card student-insight-section-card"
     variant="teacher-flat"
     title="题解列表"
     subtitle="集中处理发布状态、可见性与人工审核。"
   >
     <StudentInsightStateSurface
-      class="writeup-state-surface"
+      class="writeup-state-surface student-insight-state-surface--spacious"
       :loading="loading && !hasWriteupRows"
       :empty="!loading && !hasWriteupRows"
     >
@@ -50,40 +50,40 @@
       </template>
 
       <template #default>
-        <div class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface">
+        <div class="student-insight-kpi-grid writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface">
           <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-            <div class="insight-kpi-label progress-card-label metric-panel-label">
+            <div class="student-insight-kpi-label progress-card-label metric-panel-label">
               <span>已发布题解</span>
               <FileText class="h-4 w-4" />
             </div>
-            <div class="insight-kpi-value progress-card-value metric-panel-value">
+            <div class="student-insight-kpi-value progress-card-value metric-panel-value">
               {{ publishedWriteupSubmissions.length }}
             </div>
-            <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+            <div class="student-insight-kpi-hint progress-card-hint metric-panel-helper">
               当前学员已发布题解
             </div>
           </article>
           <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-            <div class="insight-kpi-label progress-card-label metric-panel-label">
+            <div class="student-insight-kpi-label progress-card-label metric-panel-label">
               <span>对应题目</span>
               <FolderKanban class="h-4 w-4" />
             </div>
-            <div class="insight-kpi-value progress-card-value metric-panel-value">
+            <div class="student-insight-kpi-value progress-card-value metric-panel-value">
               {{ publishedChallengeCount }}
             </div>
-            <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+            <div class="student-insight-kpi-hint progress-card-hint metric-panel-helper">
               已发布题解覆盖题目
             </div>
           </article>
           <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-            <div class="insight-kpi-label progress-card-label metric-panel-label">
+            <div class="student-insight-kpi-label progress-card-label metric-panel-label">
               <span>待审核</span>
               <ClipboardList class="h-4 w-4" />
             </div>
-            <div class="insight-kpi-value progress-card-value metric-panel-value">
+            <div class="student-insight-kpi-value progress-card-value metric-panel-value">
               {{ pendingManualReviewCount }}
             </div>
-            <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+            <div class="student-insight-kpi-hint progress-card-hint metric-panel-helper">
               人工审核待处理
             </div>
           </article>
@@ -258,77 +258,74 @@
           class="writeup-review-panel"
           aria-live="polite"
         >
-        <div v-if="manualReviewLoading" class="space-y-3">
-          <div class="student-insight-skeleton-line h-5 w-32 rounded" />
-          <div class="student-insight-skeleton-block h-24 rounded-2xl" />
-        </div>
-
-        <template v-else-if="activeManualReview">
-          <div class="writeup-review-panel__head">
-            <div>
-              <div class="journal-eyebrow">Writeup Review</div>
-              <h4 class="writeup-review-panel__title">
-                {{ activeManualReview.challenge_title }}
-              </h4>
-            </div>
-            <span :class="manualReviewStatusClass(activeManualReview.review_status)">
-              {{ manualReviewStatusLabel(activeManualReview.review_status) }}
-            </span>
+          <div v-if="manualReviewLoading" class="space-y-3">
+            <div class="student-insight-skeleton-line h-5 w-32 rounded" />
+            <div class="student-insight-skeleton-block h-24 rounded-2xl" />
           </div>
 
-          <div class="insight-answer-panel mt-5 rounded-2xl px-4 py-4">
-            <div class="insight-answer-panel__label">题解内容</div>
-            <p class="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--color-text-primary)]">
-              {{ activeManualReview.answer }}
-            </p>
-          </div>
-
-          <label class="mt-5 block">
-            <span class="text-sm font-medium text-[var(--color-text-primary)]">审核意见</span>
-            <textarea
-              v-model="manualReviewComment"
-              rows="4"
-              class="challenge-input insight-manual-input mt-3 w-full rounded-2xl border px-4 py-3 text-sm leading-7 transition-colors focus:outline-none"
-              placeholder="记录你的判定依据、补充建议或要求学员修改的点。"
-            />
-          </label>
-
-          <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
-            <div class="text-xs text-[var(--color-text-secondary)]">
-              最近更新：{{ formatDateTime(activeManualReview.updated_at) }}
+          <template v-else-if="activeManualReview">
+            <div class="writeup-review-panel__head">
+              <div>
+                <div class="journal-eyebrow">Writeup Review</div>
+                <h4 class="writeup-review-panel__title">
+                  {{ activeManualReview.challenge_title }}
+                </h4>
+              </div>
+              <span :class="manualReviewStatusClass(activeManualReview.review_status)">
+                {{ manualReviewStatusLabel(activeManualReview.review_status) }}
+              </span>
             </div>
-            <div class="flex flex-wrap gap-3">
-              <button
-                type="button"
-                class="ui-btn ui-btn--secondary insight-outline-action disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="manualReviewSaving || activeManualReview.review_status !== 'pending'"
-                @click="reviewManualReview('rejected')"
-              >
-                {{ manualReviewSaving ? '提交中...' : '驳回' }}
-              </button>
-              <button
-                type="button"
-                class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
-                :disabled="manualReviewSaving || activeManualReview.review_status !== 'pending'"
-                @click="reviewManualReview('approved')"
-              >
-                {{ manualReviewSaving ? '提交中...' : '审核通过' }}
-              </button>
+
+            <div class="insight-answer-panel mt-5 rounded-2xl px-4 py-4">
+              <div class="insight-answer-panel__label">题解内容</div>
+              <p class="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--color-text-primary)]">
+                {{ activeManualReview.answer }}
+              </p>
             </div>
-          </div>
-        </template>
+
+            <label class="mt-5 block">
+              <span class="text-sm font-medium text-[var(--color-text-primary)]">审核意见</span>
+              <textarea
+                v-model="manualReviewComment"
+                rows="4"
+                class="challenge-input insight-manual-input mt-3 w-full rounded-2xl border px-4 py-3 text-sm leading-7 transition-colors focus:outline-none"
+                placeholder="记录你的判定依据、补充建议或要求学员修改的点。"
+              />
+            </label>
+
+            <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <div class="text-xs text-[var(--color-text-secondary)]">
+                最近更新：{{ formatDateTime(activeManualReview.updated_at) }}
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  class="ui-btn ui-btn--secondary insight-outline-action disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="manualReviewSaving || activeManualReview.review_status !== 'pending'"
+                  @click="reviewManualReview('rejected')"
+                >
+                  {{ manualReviewSaving ? '提交中...' : '驳回' }}
+                </button>
+                <button
+                  type="button"
+                  class="ui-btn ui-btn--primary disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="manualReviewSaving || activeManualReview.review_status !== 'pending'"
+                  @click="reviewManualReview('approved')"
+                >
+                  {{ manualReviewSaving ? '提交中...' : '审核通过' }}
+                </button>
+              </div>
+            </div>
+          </template>
         </section>
       </template>
     </StudentInsightStateSurface>
   </SectionCard>
 </template>
 
-<style scoped>
-.insight-tab-section-card {
-  --section-card-border-top-width: 0;
-  --section-card-header-border-bottom: 0;
-}
+<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSections.css"></style>
 
+<style scoped>
 .writeup-chip {
   display: inline-flex;
   align-items: center;
@@ -358,33 +355,6 @@
   color: var(--journal-muted);
 }
 
-.insight-kpi-grid {
-  --metric-panel-grid-gap: var(--space-3);
-  align-items: stretch;
-}
-
-.insight-kpi-label {
-  --metric-panel-label-size: var(--font-size-0-70);
-  --metric-panel-label-spacing: 0.15em;
-}
-
-.insight-kpi-value {
-  --metric-panel-value-margin-top: var(--space-2);
-  --metric-panel-value-size: var(--font-size-1-00);
-  --metric-panel-value-line-height: 1.5;
-  --metric-panel-value-spacing: 0;
-}
-
-.insight-kpi-hint {
-  --metric-panel-helper-margin-top: var(--space-2);
-  --metric-panel-helper-size: var(--font-size-0-80);
-  --metric-panel-helper-line-height: 1.55;
-}
-
-.writeup-state-surface {
-  --student-insight-state-gap: var(--space-4);
-}
-
 .writeup-directory {
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 84%, transparent);
   background: transparent;
@@ -394,10 +364,6 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
-  --metric-panel-border: color-mix(in srgb, var(--teacher-divider) 88%, transparent);
-  --metric-panel-background: transparent;
-  --metric-panel-shadow: none;
-  --metric-panel-radius: 0;
 }
 
 .writeup-directory-head,

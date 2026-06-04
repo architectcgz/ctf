@@ -1,0 +1,41 @@
+.student-insight-section-card {
+  --section-card-border-top-width: 0;
+  --section-card-header-border-bottom: 0;
+}
+
+.student-insight-state-surface--spacious {
+  --student-insight-state-gap: var(--space-4);
+}
+
+.student-insight-kpi-grid {
+  --metric-panel-grid-gap: var(--space-3);
+  --metric-panel-border: color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  --metric-panel-background: transparent;
+  --metric-panel-shadow: none;
+  --metric-panel-radius: 0;
+  align-items: stretch;
+}
+
+.student-insight-kpi-label {
+  --metric-panel-label-size: var(--font-size-0-70);
+  --metric-panel-label-spacing: 0.15em;
+}
+
+.student-insight-kpi-value {
+  --metric-panel-value-margin-top: var(--space-2);
+  --metric-panel-value-size: var(--font-size-1-00);
+  --metric-panel-value-line-height: 1.5;
+  --metric-panel-value-spacing: 0;
+}
+
+.student-insight-kpi-hint {
+  --metric-panel-helper-margin-top: var(--space-2);
+  --metric-panel-helper-size: var(--font-size-0-80);
+  --metric-panel-helper-line-height: 1.55;
+}
+
+.student-insight-detail-shell {
+  padding: var(--space-4) 0;
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  background: transparent;
+}

@@ -18,6 +18,7 @@ import studentInsightPrimarySectionsSource from '@/features/teaching/student-ana
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
 import studentInsightStateSurfaceSource from '@/features/teaching/student-analysis-shared/ui/StudentInsightStateSurface.vue?raw'
+import studentInsightAttackSessionsSectionSource from '@/features/teaching/student-analysis-review/ui/StudentInsightAttackSessionsSection.vue?raw'
 import studentInsightWriteupsSource from '@/features/teaching/student-analysis-review/ui/StudentInsightWriteupsSection.vue?raw'
 import studentInsightManualReviewSource from '@/features/teaching/student-analysis-review/ui/StudentInsightManualReviewSection.vue?raw'
 import reviewArchiveSource from '@/pages/review-archive/StudentReviewArchiveRoutePage.vue?raw'
@@ -32,6 +33,10 @@ const teacherSurfaceSource = readFileSync(
 const styleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 const teacherPanelShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-panel-shell.css`,
+  'utf-8'
+)
+const studentInsightSectionsSharedSource = readFileSync(
+  `${process.cwd()}/src/features/teaching/student-analysis-shared/ui/studentInsightSections.css`,
   'utf-8'
 )
 const classStudentsSource = [
@@ -153,8 +158,11 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).not.toContain(':deep(.section-card)')
     expect(studentAnalysisSource).not.toContain(':deep(.section-card__header)')
     expect(studentInsightRecommendationsSectionSource).toContain('variant="teacher-flat"')
-    expect(studentInsightRecommendationsSectionSource).toMatch(
-      /\.insight-tab-section-card\s*\{[\s\S]*--section-card-border-top-width:\s*0;[\s\S]*--section-card-header-border-bottom:\s*0;/s
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      '<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSections.css"></style>'
+    )
+    expect(studentInsightSectionsSharedSource).toMatch(
+      /\.student-insight-section-card\s*\{[\s\S]*--section-card-border-top-width:\s*0;[\s\S]*--section-card-header-border-bottom:\s*0;/s
     )
     expect(studentAnalysisSource).toContain('StudentAnalysisWorkspaceContent')
 
@@ -208,42 +216,53 @@ describe('teacher detail surface alignment', () => {
       /\.insight-dimension-frame\s*\{[\s\S]*border:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);/s
     )
     expect(studentInsightPanelSource).not.toMatch(/\.insight-rate-panel\s*\{[^}]*border-top:/s)
-    expect(studentInsightCompositeSource).toMatch(
-      /\.insight-kpi-value\s*\{[\s\S]*--metric-panel-value-size:\s*var\(--font-size-1-00\);/s
+    expect(studentInsightSectionsSharedSource).toMatch(
+      /\.student-insight-kpi-value\s*\{[\s\S]*--metric-panel-value-size:\s*var\(--font-size-1-00\);/s
     )
     expect(studentInsightCompositeSource).toContain(
-      'class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="student-insight-kpi-grid writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
-    expect(studentInsightWriteupsSource).toMatch(
-      /\.writeup-kpi-grid\s*\{[\s\S]*--metric-panel-background:\s*transparent;[\s\S]*--metric-panel-shadow:\s*none;[\s\S]*--metric-panel-radius:\s*0;/s
+    expect(studentInsightWriteupsSource).toContain(
+      '<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSections.css"></style>'
+    )
+    expect(studentInsightManualReviewSource).toContain(
+      '<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSections.css"></style>'
+    )
+    expect(studentInsightAttackSessionsSectionSource).toContain(
+      '<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSections.css"></style>'
+    )
+    expect(studentInsightSectionsSharedSource).toMatch(
+      /\.student-insight-kpi-grid\s*\{[\s\S]*--metric-panel-background:\s*transparent;[\s\S]*--metric-panel-shadow:\s*none;[\s\S]*--metric-panel-radius:\s*0;/s
     )
     expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card"'
     )
     expect(studentInsightCompositeSource).toContain(
-      'class="insight-kpi-label progress-card-label metric-panel-label"'
+      'class="student-insight-kpi-label progress-card-label metric-panel-label"'
     )
     expect(studentInsightCompositeSource).toContain(
-      'class="insight-kpi-value progress-card-value metric-panel-value"'
+      'class="student-insight-kpi-value progress-card-value metric-panel-value"'
     )
     expect(studentInsightCompositeSource).toContain(
-      'class="insight-kpi-hint progress-card-hint metric-panel-helper"'
+      'class="student-insight-kpi-hint progress-card-hint metric-panel-helper"'
     )
     expect(studentInsightCompositeSource).toContain(
-      'class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"'
+      'class="student-insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"'
     )
     expect(studentInsightPanelSource).toContain(':loading="loading"')
     expect(studentInsightPanelSource).not.toContain('insight-loading-shell')
     expect(studentInsightPrimarySectionsSource).toContain('StudentInsightLoadingSurface')
     expect(studentInsightLoadingSurfaceSource).toContain('student-insight-glass-surface')
-    expect(studentInsightManualReviewSource).toMatch(
-      /\.insight-kpi-grid\s*\{[\s\S]*--metric-panel-background:\s*transparent;[\s\S]*--metric-panel-shadow:\s*none;[\s\S]*--metric-panel-radius:\s*0;/s
-    )
     expect(studentInsightManualReviewSource).toContain('StudentInsightStateSurface')
-    expect(studentInsightManualReviewSource).toContain('class="manual-review-detail-shell"')
-    expect(studentInsightManualReviewSource).toMatch(
-      /\.manual-review-detail-shell\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);[\s\S]*background:\s*transparent;/s
+    expect(studentInsightManualReviewSource).toContain(
+      'class="manual-review-detail-shell student-insight-detail-shell"'
     )
+    expect(studentInsightSectionsSharedSource).toMatch(
+      /\.student-insight-detail-shell\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);[\s\S]*background:\s*transparent;/s
+    )
+    expect(studentInsightManualReviewSource).toContain('student-insight-state-surface--spacious')
+    expect(studentInsightAttackSessionsSectionSource).toContain('student-insight-state-surface--spacious')
+    expect(studentInsightWriteupsSource).toContain('student-insight-state-surface--spacious')
     expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-card progress-card metric-panel-card"'
     )

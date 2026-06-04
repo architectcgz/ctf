@@ -107,7 +107,7 @@
 
 </template>
 
-<style src="../../student-analysis-shared/ui/studentInsightSurface.css"></style>
+<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSurface.css"></style>
 
 <style scoped>
 .student-analysis-title {

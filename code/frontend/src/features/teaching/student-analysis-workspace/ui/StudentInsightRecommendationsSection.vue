@@ -1,6 +1,6 @@
 <template>
   <SectionCard
-    class="insight-tab-section-card"
+    class="student-insight-section-card"
     variant="teacher-flat"
     title="推荐训练任务"
     subtitle="根据当前薄弱维度筛出的优先训练题目。"
@@ -81,12 +81,9 @@
   </SectionCard>
 </template>
 
-<style scoped>
-.insight-tab-section-card {
-  --section-card-border-top-width: 0;
-  --section-card-header-border-bottom: 0;
-}
+<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSections.css"></style>
 
+<style scoped>
 .insight-recommendation-pills {
   display: inline-flex;
   flex: 0 0 auto;

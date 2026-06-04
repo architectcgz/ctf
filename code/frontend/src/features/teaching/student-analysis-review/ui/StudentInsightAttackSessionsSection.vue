@@ -1,34 +1,34 @@
 <template>
   <SectionCard
-    class="insight-tab-section-card"
+    class="student-insight-section-card"
     variant="teacher-flat"
     title="复盘工作台"
     subtitle="按攻击会话查看访问、请求、提交和复盘输出。"
   >
     <div
       v-if="summaryItems.length > 0"
-      class="insight-kpi-grid teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4"
+      class="student-insight-kpi-grid evidence-summary-grid teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4"
     >
       <article
         v-for="item in summaryItems"
         :key="item.key"
         class="insight-kpi-card progress-card metric-panel-card"
       >
-        <div class="insight-kpi-label progress-card-label metric-panel-label">
+        <div class="student-insight-kpi-label progress-card-label metric-panel-label">
           <span>{{ item.label }}</span>
           <component :is="item.icon" class="h-4 w-4" />
         </div>
-        <div class="insight-kpi-value progress-card-value metric-panel-value">
+        <div class="student-insight-kpi-value progress-card-value metric-panel-value">
           {{ item.value }}
         </div>
-        <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+        <div class="student-insight-kpi-hint progress-card-hint metric-panel-helper">
           {{ item.hint }}
         </div>
       </article>
     </div>
 
     <StudentInsightStateSurface
-      class="evidence-state-surface"
+      class="evidence-state-surface student-insight-state-surface--spacious"
       :loading="reviewWorkspaceLoading && !attackSessions"
       :empty="!reviewWorkspaceLoading && (!attackSessions || attackSessions.sessions.length === 0)"
     >
@@ -79,19 +79,14 @@
   </SectionCard>
 </template>
 
-<style scoped>
-.insight-tab-section-card {
-  --section-card-border-top-width: 0;
-  --section-card-header-border-bottom: 0;
-}
+<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSections.css"></style>
 
-.insight-kpi-grid {
+<style scoped>
+.evidence-summary-grid {
   --teacher-summary-columns: repeat(4, minmax(0, 1fr));
-  align-items: stretch;
 }
 
 .evidence-state-surface {
-  --student-insight-state-gap: var(--space-4);
   margin-top: var(--space-5);
 }
 
