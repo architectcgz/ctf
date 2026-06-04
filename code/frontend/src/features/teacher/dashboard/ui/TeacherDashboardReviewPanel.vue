@@ -30,17 +30,19 @@ defineProps<{
         class="review-highlight-item"
       >
         <div class="review-highlight-item__main">
-          <h3 class="review-highlight-item__title">{{ item.title }}</h3>
-          <p class="review-highlight-item__detail">{{ item.detail }}</p>
-          <div class="review-highlight-item__chips">
-            <span
-              v-for="chip in item.chips"
-              :key="chip"
-              class="workspace-directory-status-pill workspace-directory-status-pill--muted"
-            >
-              {{ chip }}
-            </span>
+          <div class="review-highlight-item__title-line">
+            <h3 class="review-highlight-item__title">{{ item.title }}</h3>
+            <div class="review-highlight-item__chips">
+              <span
+                v-for="chip in item.chips"
+                :key="chip"
+                class="workspace-directory-status-pill workspace-directory-status-pill--muted"
+              >
+                {{ chip }}
+              </span>
+            </div>
           </div>
+          <p class="review-highlight-item__detail">{{ item.detail }}</p>
         </div>
       </article>
     </div>
@@ -97,9 +99,18 @@ defineProps<{
 
 .review-highlight-item__title {
   margin: 0;
+  flex: 1 1 16rem;
+  min-width: 0;
   font-size: var(--font-size-16);
   font-weight: 800;
   color: var(--journal-ink);
+}
+
+.review-highlight-item__title-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
 
 .review-highlight-item__detail {
@@ -113,6 +124,17 @@ defineProps<{
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-3);
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 760px) {
+  .review-highlight-item__title-line {
+    flex-direction: column;
+  }
+
+  .review-highlight-item__chips {
+    justify-content: flex-start;
+  }
 }
 </style>

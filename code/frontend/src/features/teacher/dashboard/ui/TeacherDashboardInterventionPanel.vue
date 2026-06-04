@@ -29,17 +29,19 @@ defineProps<{
         class="intervention-target-row"
       >
         <div class="intervention-target-row__main">
-          <h3 class="intervention-target-row__title">{{ item.title }}</h3>
-          <p class="intervention-target-row__detail">{{ item.detail }}</p>
-          <div class="intervention-target-row__meta">
-            <span
-              v-for="meta in item.meta"
-              :key="meta"
-              class="workspace-directory-status-pill workspace-directory-status-pill--muted"
-            >
-              {{ meta }}
-            </span>
+          <div class="intervention-target-row__title-line">
+            <h3 class="intervention-target-row__title">{{ item.title }}</h3>
+            <div class="intervention-target-row__meta">
+              <span
+                v-for="meta in item.meta"
+                :key="meta"
+                class="workspace-directory-status-pill workspace-directory-status-pill--muted"
+              >
+                {{ meta }}
+              </span>
+            </div>
           </div>
+          <p class="intervention-target-row__detail">{{ item.detail }}</p>
         </div>
       </article>
     </div>
@@ -96,9 +98,18 @@ defineProps<{
 
 .intervention-target-row__title {
   margin: 0;
+  flex: 1 1 16rem;
+  min-width: 0;
   font-size: var(--font-size-16);
   font-weight: 800;
   color: var(--journal-ink);
+}
+
+.intervention-target-row__title-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
 
 .intervention-target-row__detail {
@@ -112,6 +123,17 @@ defineProps<{
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-3);
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 760px) {
+  .intervention-target-row__title-line {
+    flex-direction: column;
+  }
+
+  .intervention-target-row__meta {
+    justify-content: flex-start;
+  }
 }
 </style>

@@ -61,7 +61,17 @@ defineProps<{
             {{ `${index + 1}`.padStart(2, '0') }}
           </div>
           <div class="focus-class-row__main">
-            <h3 class="focus-class-row__title">{{ item.class_name }}</h3>
+            <div class="focus-class-row__title-line">
+              <h3 class="focus-class-row__title">{{ item.class_name }}</h3>
+              <div class="focus-class-row__chips">
+                <span class="workspace-directory-status-pill workspace-directory-status-pill--muted">
+                  活跃率 {{ Math.round(item.active_rate) }}%
+                </span>
+                <span class="workspace-directory-status-pill workspace-directory-status-pill--muted">
+                  近 7 天 {{ item.recent_event_count }} 次事件
+                </span>
+              </div>
+            </div>
             <p class="focus-class-row__detail">
               {{
                 item.dominant_weak_dimension
@@ -69,14 +79,6 @@ defineProps<{
                   : `当前共有 ${item.risk_student_count} 名待跟进学生，薄弱维度仍在形成中。`
               }}
             </p>
-            <div class="focus-class-row__chips">
-              <span class="workspace-directory-status-pill workspace-directory-status-pill--muted">
-                活跃率 {{ Math.round(item.active_rate) }}%
-              </span>
-              <span class="workspace-directory-status-pill workspace-directory-status-pill--muted">
-                近 7 天 {{ item.recent_event_count }} 次事件
-              </span>
-            </div>
           </div>
         </article>
       </div>
@@ -164,9 +166,18 @@ defineProps<{
 
 .focus-class-row__title {
   margin: 0;
+  flex: 1 1 16rem;
+  min-width: 0;
   font-size: var(--font-size-16);
   font-weight: 800;
   color: var(--journal-ink);
+}
+
+.focus-class-row__title-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
 
 .focus-class-row__detail {
@@ -180,12 +191,21 @@ defineProps<{
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-3);
+  justify-content: flex-end;
+  flex: 0 0 auto;
 }
 
 @media (max-width: 760px) {
   .summary-grid {
     --metric-panel-columns: 1fr;
+  }
+
+  .focus-class-row__title-line {
+    flex-direction: column;
+  }
+
+  .focus-class-row__chips {
+    justify-content: flex-start;
   }
 }
 </style>
