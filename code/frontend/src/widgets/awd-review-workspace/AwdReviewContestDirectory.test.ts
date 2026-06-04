@@ -90,7 +90,7 @@ describe('AwdReviewContestDirectory', () => {
       },
     })
 
-    const rowLink = wrapper.get('a.teacher-directory-row')
+    const rowLink = wrapper.get('a')
     expect(rowLink.attributes('data-route-name')).toBe('TeacherAWDReviewDetail')
     expect(rowLink.attributes('data-contest-id')).toBe('contest-1')
   })
@@ -107,8 +107,11 @@ describe('AwdReviewContestDirectory', () => {
       },
     })
 
-    const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
-    await paginationButtons[1].trigger('click')
+    const nextPageButton = wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('下一页'))
+    expect(nextPageButton).toBeTruthy()
+    await nextPageButton!.trigger('click')
 
     expect(wrapper.emitted('changePage')).toEqual([[2]])
   })

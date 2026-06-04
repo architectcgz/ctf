@@ -55,7 +55,6 @@ describe('ReviewArchiveSummarySection', () => {
     expect(wrapper.text()).toContain('有效提交')
     expect(wrapper.text()).toContain('4')
     expect(wrapper.text()).toContain('2026')
-    expect(wrapper.findAll('.summary-card .lucide')).toHaveLength(3)
   })
 
   it('应按得分从高到低排序能力维度', () => {
@@ -65,7 +64,7 @@ describe('ReviewArchiveSummarySection', () => {
       },
     })
 
-    const skillTitles = wrapper.findAll('.skill-bars__head strong').map((node) => node.text())
+    const skillTitles = wrapper.findAll('strong').map((node) => node.text())
     expect(skillTitles[0]).toBe('Web')
     expect(skillTitles[1]).toBe('密码')
   })

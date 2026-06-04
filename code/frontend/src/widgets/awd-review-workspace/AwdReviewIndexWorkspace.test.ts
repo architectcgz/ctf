@@ -67,7 +67,11 @@ describe('AwdReviewIndexWorkspace', () => {
       },
     })
 
-    await wrapper.get('button.header-btn--primary').trigger('click')
+    const refreshButton = wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('刷新目录'))
+    expect(refreshButton).toBeTruthy()
+    await refreshButton!.trigger('click')
 
     const routeLinks = wrapper.findAll('a')
     expect(routeLinks[0].attributes('data-route-name')).toBe('TeacherDashboard')
@@ -88,8 +92,11 @@ describe('AwdReviewIndexWorkspace', () => {
       },
     })
 
-    const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
-    await paginationButtons[1].trigger('click')
+    const nextPageButton = wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('下一页'))
+    expect(nextPageButton).toBeTruthy()
+    await nextPageButton!.trigger('click')
 
     expect(wrapper.emitted('changePage')).toEqual([[2]])
   })
