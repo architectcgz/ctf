@@ -11,6 +11,7 @@ import platformChallengeRoutesSource from '@/features/platform/challenges/model/
 import challengeWriteupPageSource from '@/features/platform/challenges/model/useChallengeWriteupPage.ts?raw'
 import challengeWriteupViewPageSource from '@/features/platform/challenges/model/useChallengeWriteupViewPage.ts?raw'
 import challengeWriteupChallengeRailSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupChallengeRail.vue?raw'
+import challengeWriteupEditorContentSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorContent.vue?raw'
 import challengeWriteupEditorFormSectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorFormSection.vue?raw'
 import challengeWriteupEditorPageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue?raw'
 import challengeWriteupSnapshotSectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSnapshotSection.vue?raw'
@@ -21,6 +22,7 @@ import { ApiError } from '@/api/request'
 
 const challengeWriteupEditorSource = [
   challengeWriteupEditorPageSource,
+  challengeWriteupEditorContentSource,
   challengeWriteupEditorFormSectionSource,
   challengeWriteupSnapshotSectionSource,
   challengeWriteupChallengeRailSource,
@@ -137,18 +139,18 @@ describe('ChallengeWriteupEditorPage', () => {
     expect(challengeWriteupEditorSource).not.toContain('admin-btn admin-btn-danger')
   })
 
-  it('嵌入态题解编辑页应使用统一头部样式而不是旧 workspace-tab-heading', () => {
-    expect(challengeWriteupEditorSource).toContain('class="list-heading writeup-tab-heading"')
-    expect(challengeWriteupEditorSource).toContain(
-      '<div class="workspace-overline">Admin Writeup</div>'
+  it('题解编辑页应拆成页面壳与内容 owner，而不是继续用 embedded 切两套布局', () => {
+    expect(challengeWriteupEditorPageSource).toContain(
+      "import ChallengeWriteupEditorContent from './ChallengeWriteupEditorContent.vue'"
     )
-    expect(challengeWriteupEditorSource).not.toContain(
-      '<div class="journal-note-label">Admin Writeup</div>'
+    expect(challengeWriteupEditorPageSource).toContain(
+      '<ChallengeWriteupEditorContent :challenge-id="challengeId" @back="emit(\'back\')" />'
     )
-    expect(challengeWriteupEditorSource).toContain('<h1 class="workspace-page-title">题解管理</h1>')
-    expect(challengeWriteupEditorSource).not.toContain(
-      'class="workspace-tab-heading writeup-tab-heading"'
-    )
+    expect(challengeWriteupEditorContentSource).toContain('class="workspace-topbar"')
+    expect(challengeWriteupEditorContentSource).toContain('eyebrow="Admin Writeup"')
+    expect(challengeWriteupEditorPageSource).not.toContain('embedded?: boolean')
+    expect(challengeWriteupEditorPageSource).not.toContain('writeup-embedded-shell')
+    expect(challengeWriteupEditorPageSource).not.toContain('isEmbedded')
   })
 
   it('题解页根壳应统一挂到管理员 workspace shell，不再手写外层圆角', async () => {

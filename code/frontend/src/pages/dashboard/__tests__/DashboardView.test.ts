@@ -4,10 +4,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import DashboardView from '@/pages/dashboard/DashboardRoutePage.vue'
 import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
-import studentCategoryProgressPageSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
-import studentDifficultyPageSource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
-import studentOverviewPageSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
-import studentRecommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
+import studentCategoryProgressPageSource from '@/features/student-dashboard/ui/StudentCategoryProgressContent.vue?raw'
+import studentDifficultyPageSource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
+import studentOverviewPageSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
+import studentRecommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
 import trainingTimelinePanelSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 import studentDashboardPageSource from '@/features/student-dashboard/model/useStudentDashboardPage.ts?raw'
@@ -442,6 +442,7 @@ describe('DashboardView', () => {
     expect(trainingTimelineContentSource).toContain('<div class="workspace-overline">')
     expect(trainingTimelineContentSource).toContain('Timeline')
     expect(trainingTimelinePanelSource).toContain('journal-shell journal-hero timeline-shell-flat')
+    expect(trainingTimelinePanelSource).not.toContain('embedded')
     expect(studentDifficultyPageSource).toContain('<div class="workspace-overline">')
     expect(studentDifficultyPageSource).toContain('Difficulty')
   })

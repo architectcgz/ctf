@@ -1,5 +1,4 @@
-.journal-soft-surface .journal-shell,
-.journal-soft-surface .journal-shell-embedded {
+.journal-soft-surface .journal-shell {
   --journal-accent: var(--color-primary);
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-ink: var(--color-text-primary);
@@ -12,14 +11,6 @@
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
   font-family: var(--font-family-sans);
-}
-
-.journal-soft-surface .journal-shell-embedded {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
 }
 
 .journal-soft-surface .journal-shell.journal-hero {

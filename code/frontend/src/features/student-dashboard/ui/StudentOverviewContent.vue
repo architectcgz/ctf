@@ -1,0 +1,505 @@
+<template>
+  <div class="journal-soft-surface space-y-6 flex min-h-full flex-1 flex-col">
+    <div class="workspace-panel-header">
+      <div class="workspace-panel-header__intro">
+        <div class="workspace-overline">Overview</div>
+        <h1 class="journal-page-title workspace-page-title journal-soft-page-title max-w-3xl">
+          {{ displayName }} 的训练总览
+        </h1>
+        <p class="workspace-page-copy max-w-2xl">先看进度、短板和最近状态，再决定下一步训练。</p>
+      </div>
+
+      <div class="workspace-panel-header__actions journal-actions">
+        <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
+          继续训练
+        </button>
+        <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
+          查看能力画像
+        </button>
+      </div>
+    </div>
+    <div class="workspace-panel-divider" aria-hidden="true" />
+    <div class="journal-board">
+      <section class="journal-bento">
+        <article class="journal-panel journal-radar-card px-6 py-6">
+          <div class="journal-panel-head">
+            <div>
+              <h3 class="journal-soft-section-title text-xl font-semibold">能力雷达</h3>
+            </div>
+            <MapPinned class="journal-soft-accent-icon h-5 w-5" />
+          </div>
+          <div v-if="hasRadarData" class="journal-radar-body mt-4">
+            <div class="journal-radar-chart">
+              <div class="skill-dimension-chart__frame">
+                <div class="skill-dimension-chart__inner">
+                  <RadarChart
+                    :indicators="radarIndicators"
+                    :values="radarValues"
+                    name="能力值"
+                    :height-class="radarHeightClass"
+                    :label-font-size="15"
+                    :axis-name-gap="10"
+                    radius="70%"
+                    center-y="50%"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="journal-radar-dimensions mt-4">
+              <article
+                v-for="item in normalizedSkillDimensions"
+                :key="item.key"
+                class="journal-radar-dimension"
+              >
+                <div class="journal-radar-dimension__label">
+                  {{ item.name }}
+                </div>
+                <div class="journal-radar-dimension__value tech-font">
+                  {{ item.value }}
+                </div>
+              </article>
+            </div>
+          </div>
+          <div v-else class="journal-soft-empty-state journal-soft-empty-state--compact mt-6">
+            当前能力数据不足，完成更多题目后将生成雷达图。
+          </div>
+        </article>
+
+        <article class="journal-panel journal-rank-card px-6 py-6">
+          <div class="journal-panel-head">
+            <div>
+              <h3 class="journal-soft-section-title text-xl font-semibold">竞技表现</h3>
+            </div>
+            <Trophy class="journal-soft-accent-icon h-5 w-5" />
+          </div>
+          <div v-if="hasStoryMetrics" :class="storyMetricGridClass">
+            <article
+              v-for="item in storyMetrics"
+              :key="item.label"
+              class="journal-metric progress-card metric-panel-card"
+            >
+              <div class="progress-card-label metric-panel-label">
+                {{ item.label }}
+              </div>
+              <div class="progress-card-value metric-panel-value">
+                {{ item.value }}
+              </div>
+              <div class="progress-card-hint metric-panel-helper">
+                {{ item.helper }}
+              </div>
+            </article>
+          </div>
+          <div
+            class="journal-rank-summary mt-5 progress-card metric-panel-card metric-panel-default-surface"
+          >
+            <div class="journal-rank-summary__label progress-card-label metric-panel-label">
+              <span class="status-dot status-dot-solved" />
+              当前排名
+            </div>
+            <div class="journal-rank-summary__value progress-card-value metric-panel-value tech-font">
+              #{{ rankSummary }}
+            </div>
+            <div class="journal-rank-summary__helper progress-card-hint metric-panel-helper">
+              当前所在积分排名，继续解题后会按最新积分刷新。
+            </div>
+          </div>
+        </article>
+
+        <article class="journal-panel journal-ops-card px-6 py-6">
+          <div class="journal-panel-head">
+            <div>
+              <h3 class="journal-soft-section-title text-xl font-semibold">公告与状态</h3>
+            </div>
+            <BellRing class="journal-soft-accent-icon h-5 w-5" />
+          </div>
+          <div class="mt-5 space-y-3">
+            <article
+              v-for="item in operationsSummary"
+              :key="item.label"
+              class="journal-inline-item px-4 py-4"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <component :is="item.icon" class="journal-soft-accent-icon h-4 w-4" />
+                  <div class="journal-soft-body-title text-sm font-medium">
+                    {{ item.label }}
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="status-dot" :class="`status-dot-${item.status}`" />
+                  <span class="journal-soft-body-title tech-font text-sm font-medium">{{
+                    item.value
+                  }}</span>
+                </div>
+              </div>
+              <div class="journal-soft-body-copy mt-2 text-sm leading-6">
+                {{ item.description }}
+              </div>
+            </article>
+          </div>
+        </article>
+      </section>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.journal-soft-surface {
+  --journal-soft-eyebrow-size: 11px;
+  --journal-soft-eyebrow-spacing: 0.12em;
+  --journal-soft-eyebrow-color: var(--journal-accent-strong);
+  --journal-soft-button-height: 36px;
+  --journal-soft-button-padding: var(--space-2) var(--space-4);
+  --journal-soft-button-hover-transform: translateY(-1px);
+}
+
+.journal-panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.journal-inline-item {
+  border: 1px solid var(--journal-shell-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  box-shadow: none;
+}
+
+.story-metric-grid {
+  --metric-panel-columns: repeat(2, minmax(0, 1fr));
+}
+
+.journal-rank-summary {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.journal-rank-summary__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.journal-rank-summary__value {
+  margin-top: 0;
+}
+
+.journal-bento {
+  display: grid;
+  gap: 0;
+  --journal-bento-divider: color-mix(in srgb, var(--journal-ink) 22%, transparent);
+}
+
+.journal-bento > .journal-panel + .journal-panel {
+  position: relative;
+  padding-top: 1.25rem;
+}
+
+.journal-bento > .journal-panel + .journal-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--journal-bento-divider);
+}
+
+.journal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.journal-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.journal-radar-body {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.journal-radar-chart {
+  width: min(100%, 420px);
+  margin: 0 auto;
+}
+
+.student-overview-radar-height {
+  height: 18rem;
+}
+
+.skill-dimension-chart__frame {
+  position: relative;
+  margin: 0 auto;
+  width: min(100%, 420px);
+  aspect-ratio: 1.04;
+  overflow: visible;
+}
+
+.skill-dimension-chart__frame::before,
+.skill-dimension-chart__frame::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.skill-dimension-chart__frame::before {
+  inset: 0;
+  clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 94%, var(--color-bg-base)),
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 96%,
+        var(--color-bg-base)
+      )
+    ),
+    linear-gradient(135deg, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent);
+  border: 1px solid var(--journal-shell-border);
+}
+
+.skill-dimension-chart__frame::after {
+  inset: 18px;
+  clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
+  border: 1px solid
+    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 78%, transparent);
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 76%, var(--color-bg-base));
+}
+
+.skill-dimension-chart__inner {
+  position: absolute;
+  inset: 18px;
+  z-index: 1;
+}
+
+.journal-radar-dimensions {
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-radius: 16px;
+  border: 1px solid var(--journal-shell-border);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+}
+
+.journal-radar-dimension {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3-5) var(--space-4);
+}
+
+.journal-radar-dimension:nth-child(n + 3) {
+  border-top: 1px solid var(--journal-divider);
+}
+
+.journal-radar-dimension:nth-child(2n) {
+  border-left: 1px solid var(--journal-divider);
+}
+
+.journal-radar-dimension__label {
+  font-size: var(--font-size-0-82);
+  color: var(--journal-muted);
+}
+
+.journal-radar-dimension__value {
+  font-size: var(--font-size-0-88);
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+@media (min-width: 1280px) {
+  .student-overview-radar-height {
+    height: 23rem;
+  }
+
+  .journal-bento {
+    grid-template-columns: 1.1fr 0.92fr 0.88fr;
+    grid-template-areas: 'radar rank ops';
+  }
+
+  .journal-radar-card {
+    grid-area: radar;
+    position: relative;
+    padding-right: 1.25rem;
+  }
+
+  .journal-rank-card {
+    grid-area: rank;
+    position: relative;
+    padding-right: 1.25rem;
+    padding-left: 1.25rem;
+  }
+
+  .journal-ops-card {
+    grid-area: ops;
+    padding-left: 1.25rem;
+  }
+
+  .journal-bento > .journal-panel + .journal-panel {
+    padding-top: 1.5rem;
+  }
+
+  .journal-bento > .journal-panel + .journal-panel::before {
+    top: 0.5rem;
+    right: auto;
+    bottom: 0.5rem;
+    width: 1px;
+    height: auto;
+  }
+}
+
+.journal-inline-item + .journal-inline-item {
+  margin-top: 0.75rem;
+}
+
+.tech-font {
+  font-family: var(--font-family-mono);
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.status-dot-ready {
+  background: var(--color-success);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 40%, transparent);
+  animation: dot-pulse 1.8s infinite;
+}
+
+.status-dot-idle {
+  background: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
+}
+
+.status-dot-warning {
+  background: var(--color-warning);
+}
+
+.status-dot-solved {
+  background: color-mix(in srgb, var(--color-success) 82%, var(--journal-ink));
+}
+
+@keyframes dot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 42%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+</style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { Activity, BellRing, MapPinned, Trophy } from 'lucide-vue-next'
+
+import RadarChart from '@/shared/ui/charts/RadarChart.vue'
+import type { SkillDimensionScore } from '@/api/contracts'
+
+import type { StudentOverviewProps } from './studentOverviewProps'
+
+const props = defineProps<StudentOverviewProps>()
+
+const emit = defineEmits<{
+  openChallenges: []
+  openSkillProfile: []
+  openChallenge: [challengeId: string]
+}>()
+
+const storyMetrics = computed(() => [
+  {
+    label: '总得分',
+    value: props.progress.total_score ?? 0,
+    helper: '当前累计获得的训练积分',
+  },
+  {
+    label: '已解题数',
+    value: props.progress.total_solved ?? 0,
+    helper: '累计提交成功并完成的题目数量',
+  },
+  {
+    label: '当前排名',
+    value: `#${props.progress.rank ?? '-'}`,
+    helper: '按当前积分统计的实时名次',
+  },
+  {
+    label: '完成率',
+    value: `${props.completionRate}%`,
+    helper: '按当前分类题量计算的覆盖比例',
+  },
+])
+const hasStoryMetrics = computed(() => storyMetrics.value.length > 0)
+const storyMetricGridClass = 'story-metric-grid mt-6 progress-strip metric-panel-grid metric-panel-default-surface'
+const normalizedSkillDimensions = computed<SkillDimensionScore[]>(() =>
+  props.skillDimensions
+    .map((item, index) => {
+      const normalizedName = item.name?.trim()
+      const numericValue = Number(item.value)
+      if (!normalizedName || !Number.isFinite(numericValue)) {
+        return null
+      }
+      return {
+        ...item,
+        key: item.key || `${normalizedName}-${index}`,
+        name: normalizedName,
+        value: Math.min(100, Math.max(0, numericValue)),
+      }
+    })
+    .filter((item): item is SkillDimensionScore => item !== null)
+)
+const hasRadarData = computed(() => normalizedSkillDimensions.value.length > 0)
+const radarIndicators = computed(() =>
+  normalizedSkillDimensions.value.map((item) => ({ name: item.name, max: 100 }))
+)
+const radarValues = computed(() => normalizedSkillDimensions.value.map((item) => item.value))
+const radarHeightClass = 'student-overview-radar-height'
+const rankSummary = computed(() => props.progress.rank ?? '-')
+const operationsSummary = computed(() => [
+  {
+    label: '环境状态',
+    value: props.recommendations.length > 0 ? '可训练' : '空闲',
+    description:
+      props.recommendations.length > 0 ? '存在可立即进入的推荐题目' : '当前没有推荐训练任务',
+    status: props.recommendations.length > 0 ? 'ready' : 'idle',
+    icon: Activity,
+  },
+  {
+    label: '能力分布',
+    value: props.skillDimensions.length > 0 ? `${props.skillDimensions.length} 维` : '未生成',
+    description:
+      props.skillDimensions.length > 0 ? '基于当前训练数据实时更新' : '完成更多题目后将自动生成',
+    status: props.skillDimensions.length > 0 ? 'ready' : 'idle',
+    icon: MapPinned,
+  },
+  {
+    label: '训练提示',
+    value: props.weakDimensions[0] || '保持节奏',
+    description:
+      props.weakDimensions.length > 0
+        ? `优先补强 ${props.weakDimensions.join(' / ')}`
+        : '当前结构比较均衡，继续推进即可',
+    status: props.weakDimensions.length > 0 ? 'warning' : 'ready',
+    icon: BellRing,
+  },
+])
+</script>

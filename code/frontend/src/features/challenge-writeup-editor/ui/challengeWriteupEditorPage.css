@@ -1,5 +1,4 @@
-.writeup-editor-page-shell,
-.writeup-embedded-shell {
+.writeup-editor-page-shell {
   --journal-topbar-padding-bottom: var(--space-3);
   --journal-shell-hero-radial-strength: 7%;
   --journal-shell-hero-radial-size: 22rem;
@@ -7,17 +6,7 @@
   --journal-shell-hero-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
-.writeup-embedded-shell {
-  display: grid;
-  gap: var(--space-5);
-}
-
-.writeup-tab-heading {
-  margin-bottom: var(--space-1);
-}
-
-.writeup-editor-page-shell .list-heading,
-.writeup-embedded-shell .list-heading {
+.writeup-editor-page-shell .list-heading {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -25,8 +14,7 @@
   gap: var(--space-3);
 }
 
-.writeup-editor-page-shell .workspace-overline,
-.writeup-embedded-shell .workspace-overline {
+.writeup-editor-page-shell .workspace-overline {
   font-size: var(--font-size-0-70);
   font-weight: 700;
   letter-spacing: 0.2em;
@@ -322,8 +310,7 @@
 }
 
 @media (max-width: 760px) {
-  .writeup-editor-page-shell .list-heading,
-  .writeup-embedded-shell .list-heading {
+  .writeup-editor-page-shell .list-heading {
     align-items: flex-start;
     flex-direction: column;
   }

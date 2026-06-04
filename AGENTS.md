@@ -24,6 +24,9 @@
 - 管理员端“目录标题 + `WorkspaceDirectoryToolbar` + 列表/表格/空状态/分页”结构的垂直节奏由页面目录 section 统一控制，避免 section `gap` 与 toolbar `margin-bottom` 叠加。
 - 前端页面路由命名空间：教师端只使用 `/academy/*`，管理员端只使用 `/platform/*`；不再新增 `/teacher/*`、`/admin/*` 页面路由、重定向或兼容入口。
 - Vue 单文件组件统一采用 `template -> style -> script` 块顺序；`<script setup>` 或 `<script>` 必须放在文件最下方，不再写在 `<template>` 上方。
+- 前端组件不得再用 `embedded` 之类的布尔开关同时切换 page shell、section shell、content root、主 padding 或 divider 等布局 owner 语义。
+  - 如果同一份内容要出现在完整页、tab 面板、drawer 或 section 中，默认做法是“共享内容组件 + 各入口自己的壳组件”。
+  - `embedded` 只允许用于不会改变 owner 边界的局部视觉嵌入态；一旦它开始切换完整布局节奏，就必须回到显式拆壳。
 - `entities/*` 只放稳定业务对象表达，不放页面流程 owner。
   - 适合进入 `entities/*` 的内容：某个业务对象的共享展示组件、状态/文案映射、轻量类型或多个 feature 都会复用且语义仍然明显属于该对象的 UI。
   - 不适合进入 `entities/*` 的内容：上传/提交/导入/发布/筛选/保存/跳转这类用户动作流程，或依赖 route、弹窗编排、异步工作流的页面壳；这些应留在 `features/*`。

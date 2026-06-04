@@ -22,10 +22,10 @@ import skillProfileWorkspaceShellSource from '@/features/skill-profile/ui/SkillP
 import userProfileSource from '@/pages/profile/UserProfileRoutePage.vue?raw'
 import userProfileWorkspaceShellSource from '@/features/profile/ui/UserProfileWorkspaceShell.vue?raw'
 import scoreboardSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
-import categoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
-import difficultyPageSource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
-import recommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
-import overviewPageSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
+import categoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressContent.vue?raw'
+import difficultyPageSource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
+import recommendationPageSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
+import overviewPageSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
 
@@ -115,7 +115,6 @@ describe('journal user shell shared styles', () => {
       recommendationPageSource,
       categoryProgressSource,
       difficultyPageSource,
-      trainingTimelineSource,
       overviewPageSource,
     ]
 
@@ -130,9 +129,8 @@ describe('journal user shell shared styles', () => {
     }
 
     for (const source of embeddableHeroRootSources) {
-      expect(source).toContain('journal-hero')
       expect(source).toMatch(
-        /<section[\s\S]*?class="[^"]*journal-soft-surface[^"]*flex[^"]*min-h-full[^"]*flex-1[^"]*flex-col[^"]*"/s
+        /<(?:section|div)[\s\S]*?class="[^"]*journal-soft-surface[^"]*flex[^"]*min-h-full[^"]*flex-1[^"]*flex-col[^"]*"/s
       )
     }
   })

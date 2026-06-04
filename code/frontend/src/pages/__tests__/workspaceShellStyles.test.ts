@@ -6,10 +6,10 @@ import adminDashboardSourceBase from '@/features/platform/overview/ui/PlatformOv
 import platformOverviewAlertsSectionSource from '@/features/platform/overview/ui/PlatformOverviewAlertsSection.vue?raw'
 import platformOverviewHeroPanelSource from '@/features/platform/overview/ui/PlatformOverviewHeroPanel.vue?raw'
 import platformOverviewHotspotsSectionSource from '@/features/platform/overview/ui/PlatformOverviewHotspotsSection.vue?raw'
-import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
-import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
-import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
-import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
+import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressContent.vue?raw'
+import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
+import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
+import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 import classManagementPageSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
@@ -41,6 +41,7 @@ import challengeManageHeroPanelSource from '@/features/platform/challenges/ui/Ch
 import cheatDetectionHeroPanelSource from '@/features/platform/cheat-detection/ui/CheatDetectionHeroPanel.vue?raw'
 import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
 import contestOrchestrationPageSource from '@/features/platform/contest-manage/ui/ContestOrchestrationPage.vue?raw'
+import contestManageOverviewPanelSource from '@/features/platform/contest-manage/ui/ContestManageOverviewPanel.vue?raw'
 import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import dashboardViewSource from '@/pages/dashboard/DashboardRoutePage.vue?raw'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
@@ -235,10 +236,10 @@ describe('workspace shell shared styles', () => {
     expect(userGovernanceSource).not.toContain(
       '<header class="workspace-page-header user-overview-head">'
     )
-    expect(contestOrchestrationPageSource).toContain(
+    expect(contestManageOverviewPanelSource).toContain(
       '<header class="workspace-panel-header contest-overview-head">'
     )
-    expect(contestOrchestrationPageSource).not.toContain(
+    expect(contestManageOverviewPanelSource).not.toContain(
       '<header class="workspace-page-header contest-overview-head">'
     )
     expect(teacherDashboardPageSource).toContain(
@@ -336,7 +337,6 @@ describe('workspace shell shared styles', () => {
       [studentRecommendationSource, 'Action Queue'],
       [studentCategoryProgressSource, 'Action Ranking'],
       [studentDifficultySource, 'Intensity Workspace'],
-      [trainingTimelineContentSource, 'Timeline Log'],
     ] as const) {
       expect(source).not.toContain(label)
     }

@@ -38,12 +38,12 @@ import topologyStudioPageSource from '@/features/challenge-topology-studio/ui/Ch
 import topologyTemplateLibraryHeaderSource from '@/features/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue?raw'
 import topologyTemplateHeroSectionSource from '@/features/challenge-topology-studio/ui/TopologyTemplateHeroSection.vue?raw'
 import topologyChallengeWorkspaceHeaderSource from '@/features/challenge-topology-studio/ui/TopologyChallengeWorkspaceHeader.vue?raw'
-import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
-import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
-import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
+import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
+import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
+import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressContent.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
-import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
+import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
 import teacherDashboardSourceBase from '@/features/teacher/dashboard/ui/TeacherDashboardPage.vue?raw'
 import teacherDashboardPortraitPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardPortraitPanel.vue?raw'
 import teacherDashboardStudentInsightPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardStudentInsightPanel.vue?raw'
@@ -59,6 +59,7 @@ import userGovernanceOverviewPanelSource from '@/features/platform/user-manageme
 import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
 import contestOrchestrationSource from '@/features/platform/contest-manage/ui/ContestOrchestrationPage.vue?raw'
+import contestManageOverviewPanelSource from '@/features/platform/contest-manage/ui/ContestManageOverviewPanel.vue?raw'
 import contestOperationsHubHeroPanelSource from '@/features/platform/contest-operations/ui/ContestOperationsHubHeroPanel.vue?raw'
 import writeupManageDirectoryRowSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectoryRow.vue?raw'
 import writeupManageDirectorySectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectorySection.vue?raw'
@@ -66,6 +67,7 @@ import writeupManageHeaderSource from '@/features/challenge-writeup-editor/ui/Ch
 import writeupManageSourceBase from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
 import writeupManageSummaryStripSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSummaryStrip.vue?raw'
 import writeupEditorChallengeRailSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupChallengeRail.vue?raw'
+import writeupEditorContentSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorContent.vue?raw'
 import writeupEditorFormSectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorFormSection.vue?raw'
 import writeupEditorPageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue?raw'
 import writeupEditorSnapshotSectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSnapshotSection.vue?raw'
@@ -126,6 +128,7 @@ const writeupManageSource = [
 ].join('\n')
 const writeupEditorSource = [
   writeupEditorPageSource,
+  writeupEditorContentSource,
   writeupEditorFormSectionSource,
   writeupEditorSnapshotSectionSource,
   writeupEditorChallengeRailSource,
@@ -378,7 +381,7 @@ describe('workspace page header styles', () => {
         exclude: '<h1 class="workspace-tab-heading__title">用户治理台</h1>',
       },
       {
-        source: contestOrchestrationSource,
+        source: contestManageOverviewPanelSource,
         include: '<h1 class="workspace-page-title">竞赛目录</h1>',
         exclude: '<h1 class="workspace-page-title workspace-tab-heading__title">竞赛目录</h1>',
       },
@@ -577,10 +580,10 @@ describe('workspace page header styles', () => {
     expect(userGovernanceSource).not.toContain(
       '<header class="workspace-page-header user-overview-head">'
     )
-    expect(contestOrchestrationSource).toContain(
+    expect(contestManageOverviewPanelSource).toContain(
       '<header class="workspace-panel-header contest-overview-head">'
     )
-    expect(contestOrchestrationSource).not.toContain(
+    expect(contestManageOverviewPanelSource).not.toContain(
       '<header class="workspace-page-header contest-overview-head">'
     )
     expect(teacherDashboardSource).toContain(

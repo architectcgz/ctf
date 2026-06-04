@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
-import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
-import studentOverviewEditorialSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
-import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
+import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressContent.vue?raw'
+import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
+import studentOverviewEditorialSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
+import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 
@@ -17,7 +17,7 @@ const journalSoftSurfacesSource = readFileSync(
 describe('student journal soft shared styles', () => {
   it('应该在共享样式文件中声明 student soft journal 的 shell、note 与 eyebrow 规则', () => {
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-shell')
-    expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-shell-embedded')
+    expect(journalSoftSurfacesSource).not.toContain('.journal-soft-surface .journal-shell-embedded')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-shell.journal-hero')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-note')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-note-label')
@@ -47,7 +47,6 @@ describe('student journal soft shared styles', () => {
       studentCategoryProgressSource,
       studentDifficultySource,
       studentRecommendationSource,
-      trainingTimelineSource,
     ]) {
       expect(source).not.toMatch(/^\.journal-note\s*\{/m)
       expect(source).not.toMatch(/^\.journal-note-label\s*\{/m)
@@ -56,6 +55,10 @@ describe('student journal soft shared styles', () => {
       expect(source).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{/m)
       expect(source).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-hero\s*\{/m)
     }
+
+    expect(trainingTimelineContentSource).not.toMatch(/^\.journal-eyebrow\s*\{/m)
+    expect(trainingTimelineContentSource).not.toMatch(/^\.journal-shell-embedded,\s*$/m)
+    expect(trainingTimelineContentSource).not.toMatch(/^\.journal-shell-embedded\s*\{/m)
   })
 
   it('student journal 页面应复用共享空态面板样式，而不是重复写裸圆角和主题色类', () => {

@@ -49,7 +49,6 @@ export function useStudentDashboardPanelBindings({
     switch (panelKey) {
       case 'overview':
         return {
-          embedded: true,
           displayName: displayName.value,
           className: className.value,
           progress: progress.value,
@@ -65,7 +64,6 @@ export function useStudentDashboardPanelBindings({
         }
       case 'recommendation':
         return {
-          embedded: true,
           weakDimensions: weakDimensions.value,
           recommendations: recommendations.value,
           onOpenChallenge: openChallenge,
@@ -74,7 +72,6 @@ export function useStudentDashboardPanelBindings({
         }
       case 'category':
         return {
-          embedded: true,
           categoryStats: categoryStats.value,
           completionRate: completionRate.value,
           onOpenChallenges: openChallenges,
@@ -83,12 +80,10 @@ export function useStudentDashboardPanelBindings({
         }
       case 'timeline':
         return {
-          embedded: true,
           timeline: timeline.value,
         }
       case 'difficulty':
         return {
-          embedded: true,
           difficultyStats: difficultyStats.value,
           onOpenChallenges: openChallenges,
           onOpenDifficultyChallenges: openDifficultyChallenges,

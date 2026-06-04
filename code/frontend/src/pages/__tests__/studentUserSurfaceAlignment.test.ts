@@ -2,16 +2,17 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
+import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
 import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
-import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
-import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
-import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
+import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
+import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
+import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressContent.vue?raw'
 import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import challengePresentationSource from '@/entities/challenge/model/presentation.ts?raw'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
 import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
+import notificationListWorkspaceSourceBase from '@/widgets/notification-list-workspace/NotificationListWorkspace.vue?raw'
 
 const themeSource = readFileSync(`${process.cwd()}/src/assets/styles/theme.css`, 'utf-8')
 const styleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
@@ -24,6 +25,7 @@ const journalUserShellSource = readFileSync(
   'utf-8'
 )
 const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
+const notificationListWorkspaceSource = `${notificationListSource}\n${notificationListWorkspaceSourceBase}`
 
 describe('student and user surface alignment', () => {
   it('student dashboard panel headers 应复用 timeline 节奏抽出的共享 header 间距原语', () => {
@@ -330,7 +332,7 @@ describe('student and user surface alignment', () => {
     expect(instanceListWorkspaceSource).toContain('<Clock3 class="h-4 w-4" />')
     expect(instanceListWorkspaceSource).toContain('<Server class="h-4 w-4" />')
 
-    expect(notificationListSource).toContain('journal-shell-user')
-    expect(notificationListSource).not.toContain('rgba(148, 163, 184, 0.58)')
+    expect(notificationListWorkspaceSource).toContain('journal-shell-user')
+    expect(notificationListWorkspaceSource).not.toContain('rgba(148, 163, 184, 0.58)')
   })
 })
