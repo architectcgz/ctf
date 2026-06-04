@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest'
 
 import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
-import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
 import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressContent.vue?raw'
@@ -22,10 +21,6 @@ const journalSoftSurfacesSource = readFileSync(
 )
 const journalUserShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-shell.css`,
-  'utf-8'
-)
-const workspaceGlassSource = readFileSync(
-  `${process.cwd()}/src/assets/styles/workspace-glass.css`,
   'utf-8'
 )
 const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
@@ -68,7 +63,6 @@ describe('student and user surface alignment', () => {
       'class="workspace-panel-header category-header"'
     )
     expect(studentDifficultySource).toContain('class="workspace-panel-header difficulty-header"')
-    expect(trainingTimelineContentSource).toContain('class="workspace-panel-header timeline-header"')
     expect(studentOverviewSource).toContain('class="workspace-panel-divider"')
     expect(studentRecommendationSource).toContain('class="workspace-panel-divider"')
     expect(studentCategoryProgressSource).toContain('class="workspace-panel-divider"')
@@ -97,20 +91,6 @@ describe('student and user surface alignment', () => {
       /\.difficulty-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
     )
 
-    expect(trainingTimelineContentSource).toMatch(
-      /\.timeline-group-list\s*\{[^}]*display:\s*grid;[^}]*gap:\s*var\(--space-3\);[^}]*\}/s
-    )
-    expect(trainingTimelineContentSource).toMatch(
-      /\.timeline-event-item\s*\{[^}]*border:\s*1px solid var\(--timeline-list-border\);[^}]*background:\s*var\(--timeline-list-background\);[^}]*\}/s
-    )
-    expect(trainingTimelineContentSource).not.toMatch(
-      /\.timeline-group-list\s*\{[^}]*border:\s*1px solid var\(--timeline-list-border\);[^}]*\}/s
-    )
-    expect(trainingTimelineContentSource).toContain(
-      'margin-top: var(--workspace-panel-divider-gap, var(--space-workspace-panel-divider-gap));'
-    )
-    expect(trainingTimelineContentSource).not.toContain('margin-top: var(--space-1) !important;')
-    expect(trainingTimelineContentSource).not.toContain('按日期回看最近的提交、解题和实例操作。')
   })
 
   it('student dashboard detail pages should use softened control and track tokens instead of bright hardcoded borders', () => {
@@ -143,10 +123,6 @@ describe('student and user surface alignment', () => {
     expect(studentDifficultySource).not.toContain('bg-[rgba(226,232,240,0.65)]')
 
     expect(trainingTimelineSource).toContain('journal-soft-surface')
-    expect(trainingTimelineContentSource).toMatch(
-      /\.stat-icon\s*\{[\s\S]*border:\s*1px solid var\(--journal-soft-border\);/s
-    )
-    expect(trainingTimelineContentSource).not.toContain('rgba(226, 232, 240, 0.72)')
 
     expect(journalSoftSurfacesSource).toMatch(
       /\.journal-soft-surface \.journal-btn-outline\s*\{[\s\S]*border:\s*1px solid var\(--journal-control-border\);/s
@@ -169,47 +145,6 @@ describe('student and user surface alignment', () => {
     )
     expect(studentCategoryProgressSource).not.toMatch(/^\.journal-btn-outline\s*\{/m)
     expect(studentCategoryProgressSource).not.toContain('rgba(226, 232, 240, 0.65)')
-  })
-
-  it('student timeline 概况卡片应显式采用统一 metric-panel 样式栈', () => {
-    expect(trainingTimelineContentSource).toContain(
-      'class="workspace-panel-header__summary timeline-metric-grid progress-strip metric-panel-grid"'
-    )
-    expect(trainingTimelineContentSource).toContain(
-      'class="timeline-section workspace-directory-section"'
-    )
-    expect(trainingTimelineContentSource).toContain(
-      'class="timeline-directory-shell workspace-directory-list"'
-    )
-    expect(trainingTimelineContentSource).toContain(
-      'class="timeline-group-list"'
-    )
-    expect(trainingTimelineContentSource).toContain(
-      'class="timeline-pagination workspace-directory-pagination"'
-    )
-    expect(trainingTimelineContentSource).toContain(
-      'class="timeline-metric-card progress-card metric-panel-card metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(trainingTimelineContentSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
-    )
-    expect(trainingTimelineContentSource).toContain(
-      'class="journal-note-value progress-card-value metric-panel-value"'
-    )
-    expect(trainingTimelineContentSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(trainingTimelineContentSource).toContain('<component :is="metric.icon" class="h-4 w-4" />')
-    expect(trainingTimelineContentSource).not.toContain('teacher-surface-section')
-    expect(trainingTimelineContentSource).not.toContain('workspace-glass-metric-surface')
-    expect(trainingTimelineContentSource).not.toContain('workspace-glass-region')
-    expect(trainingTimelineContentSource).toContain('workspace-directory-list')
-    expect(trainingTimelineContentSource).toContain('metric-panel-workspace-surface')
-    expect(trainingTimelineContentSource).not.toContain('.teacher-directory-shell {')
-    expect(trainingTimelineContentSource).not.toContain('.timeline-metric-grid.metric-panel-default-surface {')
-    expect(workspaceGlassSource).toContain('.workspace-glass-region')
-    expect(workspaceGlassSource).toContain('.workspace-glass-metric-surface')
-    expect(trainingTimelineContentSource).toContain('class="workspace-overline">Timeline Log</div>')
   })
 
   it('student overview 当前排名卡片应切换到 shared metric-panel 卡片栈，而不是继续复用本地 note 边框样式', () => {

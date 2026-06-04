@@ -51,5 +51,6 @@
 - `2026-05-10-student-button-dark-mode-token-bridge.md`：学生侧按钮的 primary / secondary / outline 语义必须落到共享按钮变体，并在 light / dark 下保留可见边框。
 - `2026-05-10-error-pages-use-ui-btn.md`：错误页、空状态和恢复动作按钮默认使用通用 `ui-btn`，页面不再私有实现按钮 hover / dark mode。
 - `2026-05-23-frontend-review-snapshots-can-be-pruned-after-audit-absorption.md`：前端 review 单轮快照在主索引吸收后应及时清理，避免旧“未修复”状态继续污染活动目录。
+- `2026-06-04-frontend-state-surface-owner-and-ui-test-layering.md`：前端 loading / empty / loaded 状态 surface owner 应收口到同一视觉区域，同时 UI 测试需要从大量源码字符串断言转向分层覆盖。
 
 已沉淀到全局 skill、全局 AGENTS 或项目机械检查中的旧反馈不在本目录长期保留；需要追溯原始事故时使用 Git 历史。

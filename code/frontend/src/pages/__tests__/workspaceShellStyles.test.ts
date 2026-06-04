@@ -10,8 +10,6 @@ import studentCategoryProgressSource from '@/features/student-dashboard/ui/Stude
 import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
 import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
-import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
-import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 import classManagementPageSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
 import classStudentsPageSourceBase from '@/features/teaching/class-students-workspace/ui/ClassStudentsPage.vue?raw'
 import classStudentsOverviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsOverviewPanel.vue?raw'
