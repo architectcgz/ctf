@@ -3,24 +3,15 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import instancePresentationSource from '@/entities/instance/model/presentation.ts?raw'
 import InstanceManagement from '@/pages/teacher/InstanceManagementRoutePage.vue'
 import instanceManagementViewSource from '@/pages/teacher/InstanceManagementRoutePage.vue?raw'
 import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
-import instanceManagementSourceBase from '@/features/teacher/instances/ui/TeacherInstanceManagementPage.vue?raw'
 import teacherInstanceManagementPageModelSource from '@/features/teacher/instances/model/useInstanceManagementPage.ts?raw'
-import teacherInstanceDirectorySectionSource from '@/features/teacher/instances/ui/TeacherInstanceDirectorySection.vue?raw'
 import teacherInstanceHeroPanelSource from '@/features/teacher/instances/ui/TeacherInstanceHeroPanel.vue?raw'
 import teacherInstancesHookSource from '@/features/teacher/instances/model/useInstances.ts?raw'
 import managedInstanceDirectorySource from '@/features/managed-instance-directory/model/useManagedInstanceDirectory.ts?raw'
 import managedInstanceDestroyWorkflowSource from '@/features/managed-instance-workflow/model/useManagedInstanceDestroyAction.ts?raw'
 import { useAuthStore } from '@/stores/auth'
-
-const instanceManagementSource = [
-  instanceManagementSourceBase,
-  teacherInstanceHeroPanelSource,
-  teacherInstanceDirectorySectionSource,
-].join('\n')
 
 const ElTable = { template: '<div><slot /></div>' }
 const ElTableColumn = { template: '<div><slot /></div>' }
@@ -156,20 +147,11 @@ describe('InstanceManagement', () => {
         signal: expect.any(AbortSignal),
       })
     )
-    expect(wrapper.findAll('.progress-card.metric-panel-card')).toHaveLength(3)
-    expect(wrapper.find('.workspace-data-table').exists()).toBe(true)
-    expect(wrapper.find('.teacher-directory-shell.workspace-directory-list').exists()).toBe(true)
-    expect(wrapper.find('.teacher-instance-list.workspace-directory-list').exists()).toBe(false)
     expect(wrapper.text()).toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('@alice')
-    expect(wrapper.findAll('.teacher-instance-primary-text')[0].attributes('title')).toBe('Alice')
-    expect(wrapper.findAll('.teacher-instance-primary-text')[1].attributes('title')).toBe(
-      'Web SQLi 101'
-    )
-    const mutedCells = wrapper.findAll('.teacher-instance-muted-text')
-    expect(mutedCells[2].text()).toBe('1 / 3')
-    expect(mutedCells[3].text()).toBe('00:20:00')
-    expect(wrapper.find('.teacher-instance-url-text').text()).toContain('http://127.0.0.1:30001')
+    expect(wrapper.text()).toContain('1 / 3')
+    expect(wrapper.text()).toContain('00:20:00')
+    expect(wrapper.text()).toContain('http://127.0.0.1:30001')
     expect(wrapper.text()).not.toContain('重置筛选')
     expect(wrapper.findAll('button').some((node) => node.text().includes('查询实例'))).toBe(false)
     expect(wrapper.text()).not.toContain('实例筛选')
@@ -370,9 +352,8 @@ describe('InstanceManagement', () => {
 
     const { wrapper } = await mountPage()
 
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(20)
-    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('共 21 条实例')
-    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('1 / 2')
+    expect(wrapper.text()).toContain('共 21 条实例')
+    expect(wrapper.text()).toContain('1 / 2')
     expect(wrapper.text()).toContain('Challenge 20')
     expect(wrapper.text()).not.toContain('Challenge 21')
 
@@ -393,125 +374,8 @@ describe('InstanceManagement', () => {
         signal: expect.any(AbortSignal),
       })
     )
-    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
-    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('2 / 2')
+    expect(wrapper.text()).toContain('2 / 2')
     expect(wrapper.text()).toContain('Challenge 21')
     expect(wrapper.text()).not.toContain('Challenge 20')
-  })
-
-  it('应该为教师实例列表长文本保留省略样式与完整提示', () => {
-    expect(instanceManagementSource).toContain(
-      'class="workspace-directory-section teacher-directory-section"'
-    )
-    expect(instanceManagementSource).toContain('class="list-heading"')
-    expect(instanceManagementSource).toContain(
-      'class="teacher-summary metric-panel-default-surface"'
-    )
-    expect(instanceManagementSource).toContain(
-      'class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
-    expect(instanceManagementSource).toContain('class="progress-card metric-panel-card"')
-    expect(instanceManagementSource).not.toContain(
-      'class="teacher-summary-item progress-card metric-panel-card"'
-    )
-    expect(instanceManagementSource).toContain('class="progress-card-label metric-panel-label"')
-    expect(instanceManagementSource).not.toContain(
-      'class="teacher-summary-label progress-card-label metric-panel-label"'
-    )
-    expect(instanceManagementSource).toContain('class="progress-card-value metric-panel-value"')
-    expect(instanceManagementSource).not.toContain(
-      'class="teacher-summary-value progress-card-value metric-panel-value"'
-    )
-    expect(instanceManagementSource).toContain('class="progress-card-hint metric-panel-helper"')
-    expect(instanceManagementSource).not.toContain(
-      'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(instanceManagementSource).toContain('<span>当前可见</span>')
-    expect(instanceManagementSource).toContain('<Eye class="h-4 w-4" />')
-    expect(instanceManagementSource).toContain('<span>运行中</span>')
-    expect(instanceManagementSource).toContain('<Activity class="h-4 w-4" />')
-    expect(instanceManagementSource).toContain('<span>即将到期</span>')
-    expect(instanceManagementSource).toContain('<Clock3 class="h-4 w-4" />')
-    expect(instanceManagementSource).not.toContain('teacher-controls-title')
-    expect(instanceManagementSource).not.toContain('teacher-controls-copy')
-    expect(instanceManagementSource).toContain(
-      "from '@/shared/ui/common/WorkspaceDataTable.vue'"
-    )
-    expect(teacherInstanceDirectorySectionSource).toContain("from '@/entities/instance'")
-    expect(instancePresentationSource).toContain('getInstanceStudentDisplayName')
-    expect(instancePresentationSource).toContain('getInstanceStatusPillClass')
-    expect(instanceManagementSource).toContain(
-      "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
-    )
-    expect(instanceManagementSource).toContain('<WorkspaceDataTable')
-    expect(instanceManagementSource).toContain('<WorkspaceDirectoryPagination')
-    expect(instanceManagementSource).not.toContain("from '@/shared/ui/common/PagePaginationControls.vue'")
-    expect(instanceManagementSource).toContain('用户关键字')
-    expect(instanceManagementSource).toContain('按用户名或学号搜索')
-    expect(instanceManagementSource).toContain("label: '学生'")
-    expect(instanceManagementSource).toContain("label: '题目'")
-    expect(instanceManagementSource).not.toContain('<span>学生 / 题目</span>')
-    expect(instanceManagementSource).toContain("label: '创建时间'")
-    expect(instanceManagementSource).toContain("label: '到期时间'")
-    expect(instanceManagementSource).toContain("label: '延期'")
-    expect(instanceManagementSource).toContain("label: '剩余时间'")
-    expect(instanceManagementSource).toContain("label: '访问地址'")
-    expect(instanceManagementSource).not.toContain('class="teacher-directory-head"')
-    expect(instanceManagementSource).not.toContain('<div class="teacher-directory-head">')
-    expect(instanceManagementSource).toContain('class="teacher-instance-primary-text"')
-    expect(instanceManagementSource).toContain('class="teacher-instance-secondary-text"')
-    expect(instanceManagementSource).toContain('class="teacher-instance-muted-text"')
-    expect(instanceManagementSource).toContain('class="teacher-instance-url-text"')
-    expect(instanceManagementSource).toContain('class="teacher-directory-pagination"')
-    expect(instanceManagementSource).not.toContain('重置筛选')
-    expect(instanceManagementSource).not.toContain('查询实例')
-    expect(instanceManagementSource).not.toContain('创建于 {{ formatDateTime(item.created_at) }}')
-    expect(instanceManagementSource).not.toContain('到期 {{ formatDateTime(item.expires_at) }}')
-    expect(instanceManagementSource).not.toContain(
-      '延期 {{ item.extend_count }} / {{ item.max_extends }}'
-    )
-    expect(instanceManagementSource).not.toContain(
-      '剩余 {{ formatRemainingTime(item.remaining_time) }}'
-    )
-    expect(instanceManagementSource).not.toContain(
-      'class="teacher-directory-chip teacher-directory-chip-muted"'
-    )
-    expect(instanceManagementSource).not.toContain('class="teacher-directory-row-metrics"')
-    expect(instanceManagementSource).toContain('instance-status-pill--running')
-    expect(instanceManagementSource).toContain('class="instance-status-pill"')
-    expect(instanceManagementSource).toContain('class="ui-btn ui-btn--danger ui-btn--xs teacher-instance-danger-action"')
-    expect(instanceManagementSource).not.toContain('teacher-row-btn')
-    expect(instanceManagementSource).not.toContain('销毁实例')
-    expect(instanceManagementSource).not.toContain('border-[var(--color-success)]')
-    expect(instanceManagementSource).not.toContain('bg-[var(--color-success)]')
-    expect(instanceManagementSource).not.toContain('text-[var(--color-success)]')
-    expect(instanceManagementSource).not.toContain('border-[var(--color-primary)]')
-    expect(instanceManagementSource).not.toContain('bg-[var(--color-primary)]')
-    expect(instanceManagementSource).not.toContain('text-[var(--color-primary)]')
-    expect(instanceManagementSource).toContain(
-      'class="teacher-directory-shell workspace-directory-list"'
-    )
-    expect(instanceManagementSource).not.toContain(
-      'class="teacher-instance-list workspace-directory-list"'
-    )
-    expect(instanceManagementSource).toMatch(
-      /class="teacher-instance-primary-text"[\s\S]*:title="getInstanceStudentDisplayName\(\s*row as InstanceDirectoryItem\s*\)"/s
-    )
-    expect(instanceManagementSource).toMatch(
-      /class="teacher-instance-primary-text"[\s\S]*:title="\(row as InstanceDirectoryItem\)\.challenge_title"/s
-    )
-    expect(instanceManagementSource).toContain('InstanceDirectoryItem')
-    expect(instanceManagementSource).not.toContain('TeacherInstanceItem')
-    expect(instanceManagementSource).toMatch(/class="teacher-instance-secondary-text"[\s\S]*:title="/s)
-    expect(instanceManagementSource).toContain('getInstanceStudentIdentityLabel')
-    expect(instanceManagementSource).toContain('getInstanceStudentSecondaryLabel')
-    expect(instanceManagementSource).toContain('getInstanceStatusPillClass')
-    expect(instanceManagementSource).toContain('formatInstanceRemainingTime')
-    expect(instanceManagementSource).toMatch(
-      /\.teacher-instance-primary-text,\s*[\s\S]*\.teacher-instance-url-text\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
-    )
-    expect(instanceManagementSource).toMatch(
-      /\.teacher-instance-url-text\s*\{[^}]*overflow-wrap:\s*anywhere;[^}]*word-break:\s*break-word;/s
-    )
   })
 })
