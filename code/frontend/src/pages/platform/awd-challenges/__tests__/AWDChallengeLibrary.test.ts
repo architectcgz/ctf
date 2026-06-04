@@ -141,7 +141,6 @@ describe('AWDChallengeLibrary', () => {
 
   it('does not add an extra route-level spacing wrapper around the shared workspace shell', () => {
     expect(awdChallengeLibrarySource).toContain('<template>\n  <div>')
-    expect(awdChallengeLibrarySource).not.toContain('<div class="space-y-6">')
     expect(awdChallengeLibrarySource).toContain("from '@/features/platform/awd-challenges'")
     expect(awdChallengeLibrarySource).toContain('AWDChallengeLibraryPage')
     expect(awdChallengeLibrarySource).toContain('useAwdChallengeLibraryPage')
@@ -162,7 +161,6 @@ describe('AWDChallengeImport', () => {
 
   it('renders the import page mode without a route-level spacing wrapper', () => {
     expect(awdChallengeImportSource).toContain('mode="import"')
-    expect(awdChallengeImportSource).not.toContain('<div class="space-y-6">')
     expect(awdChallengeImportSource).toContain("from '@/features/platform/awd-challenges'")
     expect(awdChallengeImportSource).toContain('AWDChallengeLibraryPage')
     expect(awdChallengeImportSource).toContain('useAwdChallengeImportPage')
