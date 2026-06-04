@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs'
-
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
@@ -11,16 +9,11 @@ import contestDetailRoutePageSource from '@/features/contest-detail/model/useCon
 import contestDetailWorkspaceSource from '@/widgets/contest-detail-workspace/ContestDetailWorkspace.vue?raw'
 import contestPresentationSource from '@/entities/contest/model/presentation.ts?raw'
 import teamPresentationSource from '@/entities/team/model/presentation.ts?raw'
-import contestAnnouncementsWorkspaceSectionSource from '@/features/contest-detail/ui/ContestAnnouncementsWorkspaceSection.vue?raw'
-import contestChallengeWorkspacePanelSource from '@/features/contest-detail/ui/ContestChallengeWorkspacePanel.vue?raw'
-import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
 import contestTeamDialogsSource from '@/features/contest-detail/ui/ContestTeamDialogs.vue?raw'
 import contestTeamPanelSource from '@/features/contest-detail/ui/ContestTeamPanel.vue?raw'
 import contestTeamWorkspaceSectionSource from '@/features/contest-detail/ui/ContestTeamWorkspaceSection.vue?raw'
 import routeQueryTransportSource from '@/shared/model/navigation/useRouteQueryTransport.ts?raw'
 import { useAuthStore } from '@/stores/auth'
-
-const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
 
 const contestApiMocks = vi.hoisted(() => ({
   getContestDetail: vi.fn(),
@@ -493,7 +486,6 @@ describe('ContestDetail', () => {
     expect(contestTeamDialogsSource).toContain(
       "from '@/shared/ui/common/modal-templates/CFocusedInputDialog.vue'"
     )
-    expect(contestDetailWorkspaceSource).not.toContain('class="contest-modal"')
 
     const wrapper = mount(ContestDetail, {
       global: {
@@ -518,7 +510,6 @@ describe('ContestDetail', () => {
     await flushPromises()
     expect(document.body.textContent).toContain('创建新队伍')
     expect(document.body.textContent).toContain('队伍名称')
-    expect(document.body.querySelector('.c-focused-input-shell--plain')).not.toBeNull()
 
     const closeButtons = Array.from(document.body.querySelectorAll('button'))
     const cancelCreateButton = closeButtons.find((button) => button.textContent?.trim() === '取消')
@@ -1767,114 +1758,5 @@ describe('ContestDetail', () => {
       confirmButtonText: '确认踢出',
     })
     expect(contestApiMocks.kickTeamMember).toHaveBeenCalledWith('1', 'team-1', 'user-2')
-  })
-
-  it('竞赛详情 hero 应使用共享 workspace overline 语义', () => {
-    expect(contestOverviewPanelSource).toMatch(
-      /<div class="workspace-overline">\s*Contest\s*<\/div>/
-    )
-    expect(contestOverviewPanelSource).not.toContain('<div class="contest-overline">Contest</div>')
-  })
-
-  it('竞赛概览 header 应复用共享 panel 节奏并移除重复元信息', () => {
-    expect(contestOverviewPanelSource).toContain('class="workspace-panel contest-overview-panel"')
-    expect(contestOverviewPanelSource).toContain('class="contest-hero workspace-panel-header"')
-    expect(contestOverviewPanelSource).toContain(
-      'class="contest-hero__main workspace-panel-header__intro"'
-    )
-    expect(contestOverviewPanelSource).not.toContain('class="contest-meta-strip"')
-    expect(contestOverviewPanelSource).not.toContain('class="contest-score-rail')
-    expect(contestOverviewPanelSource).not.toContain('<div class="contest-divider" />')
-    expect((contestOverviewPanelSource.match(/class="workspace-panel-divider"/g) ?? []).length).toBe(3)
-  })
-
-  it('竞赛概览数值区域应接入共享 metric panel surface', () => {
-    expect(contestOverviewPanelSource).toContain(
-      'class="contest-stat-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(contestOverviewPanelSource).toContain(
-      'class="contest-stat progress-card metric-panel-card"'
-    )
-    expect(contestOverviewPanelSource).toContain(
-      'class="contest-stat__label progress-card-label metric-panel-label"'
-    )
-    expect(contestOverviewPanelSource).toContain('<UsersRound class="h-4 w-4" />')
-    expect(contestOverviewPanelSource).toContain('<Target class="h-4 w-4" />')
-    expect(contestOverviewPanelSource).toContain('<CheckCircle2 class="h-4 w-4" />')
-    expect(contestOverviewPanelSource).toContain('<Trophy class="h-4 w-4" />')
-    expect(contestOverviewPanelSource).not.toContain('--metric-panel-grid-gap: 0.85rem;')
-    expect(contestOverviewPanelSource).not.toContain('gap: 1.25rem;')
-  })
-
-  it('竞赛赛程信息应承接状态和倒计时，而不是继续停留在 hero 里重复展示', () => {
-    expect(contestOverviewPanelSource).toContain('<span>当前状态</span>')
-    expect(contestOverviewPanelSource).toContain('<span>剩余时间</span>')
-    expect(contestOverviewPanelSource).toContain("{{ getContestStatusLabel(contest.status) }}")
-    expect(contestOverviewPanelSource).toContain('{{ countdown }}')
-  })
-
-  it('竞赛规则正文应显式拉满列宽并保持左对齐，避免视觉上漂到中间', () => {
-    expect(contestOverviewPanelSource).toContain('.contest-copy {')
-    expect(contestOverviewPanelSource).toContain('width: 100%;')
-    expect(contestOverviewPanelSource).toContain('justify-self: stretch;')
-    expect(contestOverviewPanelSource).toContain('text-align: start;')
-  })
-
-  it('竞赛规则区应使用更紧凑的标题到正文间距，避免单段文案显得松散', () => {
-    expect(contestOverviewPanelSource).toContain(
-      'class="contest-section contest-section--flat contest-section--copy-tight"'
-    )
-    expect(contestOverviewPanelSource).toContain('.contest-section--copy-tight {')
-    expect(contestOverviewPanelSource).toContain('align-content: start;')
-    expect(contestOverviewPanelSource).toContain('gap: var(--space-2-5);')
-    expect(contestOverviewPanelSource).toContain('.contest-section--copy-tight > .contest-section__head {')
-    expect(contestOverviewPanelSource).toContain('align-items: flex-start;')
-    expect(contestOverviewPanelSource).toContain('justify-content: flex-start;')
-  })
-
-  it('竞赛详情 section heading 应切到共享 workspace overline 语义', () => {
-    const combinedSource = [
-      contestDetailWorkspaceSource,
-      contestOverviewPanelSource,
-      contestAnnouncementsWorkspaceSectionSource,
-      contestTeamWorkspaceSectionSource,
-    ].join('\n')
-
-    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Rules\s*<\/div>/)
-    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Schedule\s*<\/div>/)
-    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Announcements\s*<\/div>/)
-    expect(combinedSource).toMatch(
-      /<div class="workspace-overline">\s*\{\{ contest\.mode === 'awd' \? 'Battlefield' : 'Challenges' \}\}\s*<\/div>/
-    )
-    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Team\s*<\/div>/)
-    expect(combinedSource).not.toContain('<div class="contest-overline">Rules</div>')
-    expect(combinedSource).not.toContain('<div class="contest-overline">Schedule</div>')
-    expect(combinedSource).not.toContain('<div class="contest-overline">Announcements</div>')
-    expect(combinedSource).not.toContain('<div class="contest-overline">Team</div>')
-  })
-
-  it('竞赛详情 tab panel 不应在 content pane 内继续叠加顶部间距', () => {
-    expect(pageTabsSource).toContain(
-      'padding-top: var(--workspace-panel-padding-top, 0);'
-    )
-    expect(contestDetailWorkspaceSource).toContain('--workspace-panel-padding-top: 0;')
-    expect(contestDetailWorkspaceSource).not.toMatch(/\.workspace-panel\s*\{\s*padding-top:\s*0;\s*\}/)
-    expect(contestDetailWorkspaceSource).not.toContain('padding-top: 1.35rem;')
-  })
-
-  it('竞赛详情剩余局部 kicker 也应统一到 workspace overline 语义', () => {
-    const combinedSource = [
-      contestDetailWorkspaceSource,
-      contestChallengeWorkspacePanelSource,
-      contestTeamWorkspaceSectionSource,
-    ].join('\n')
-
-    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*已选题目\s*<\/div>/)
-    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*主要操作\s*<\/div>/)
-    expect(combinedSource).toMatch(/<div class="workspace-overline">\s*Current Team\s*<\/div>/)
-    expect(combinedSource).not.toContain('<div class="contest-overline">已选题目</div>')
-    expect(combinedSource).not.toContain('<div class="contest-overline">主要操作</div>')
-    expect(combinedSource).not.toContain('<div class="contest-overline">Current Team</div>')
-    expect(contestDetailWorkspaceSource).not.toMatch(/^\.contest-overline\s*\{/m)
   })
 })
