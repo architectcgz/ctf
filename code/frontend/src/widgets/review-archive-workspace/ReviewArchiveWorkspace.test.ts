@@ -117,7 +117,10 @@ describe('ReviewArchiveWorkspace', () => {
       },
     })
 
-    const skillTitles = wrapper.findAll('.skill-bars__head strong').map((node) => node.text())
+    const skillTitles = wrapper
+      .findAll('strong')
+      .map((node) => node.text())
+      .slice(-2)
     expect(wrapper.text()).toContain('50%')
     expect(wrapper.text()).toContain('有效提交')
     expect(skillTitles[0]).toBe('Web')

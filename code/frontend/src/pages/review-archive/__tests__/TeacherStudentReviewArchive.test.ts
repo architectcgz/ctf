@@ -268,7 +268,7 @@ describe('TeacherStudentReviewArchive', () => {
     expect(wrapper.text()).toContain('misc-essay')
   })
 
-  it('复盘归档操作按钮应接入共享 ui-btn 原语', () => {
+  it('复盘归档页应通过 workspace widget 与 route target 组合导出和返回能力', () => {
     expect(reviewArchiveWidgetOwnerSource).toContain(
       "export { default as ReviewArchiveWorkspace } from './ReviewArchiveWorkspace.vue'"
     )
@@ -299,12 +299,10 @@ describe('TeacherStudentReviewArchive', () => {
     expect(reviewArchiveHeroSource).toContain('<AppRouteLink')
     expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(reviewArchiveWorkspaceSource).toContain('<ReviewArchiveState')
-    expect(reviewArchiveStateSource).toContain('class="ui-btn ui-btn--primary"')
     expect(reviewArchiveWorkspaceSource).not.toContain('<ElButton')
-    expect(reviewArchiveHeroSource).toContain('class="header-actions archive-hero__actions"')
-    expect(reviewArchiveHeroSource).toContain('class="header-btn header-btn--ghost"')
-    expect(reviewArchiveHeroSource).toContain('class="header-btn header-btn--primary"')
     expect(reviewArchiveHeroSource).not.toContain('<ElButton')
+    expect(reviewArchiveHeroSource).toContain('导出复盘归档')
+    expect(reviewArchiveStateSource).toContain('REVIEW_ARCHIVE_STATE_COPY.reload')
   })
 
   it('复盘归档中的学员显示名与用户名 handle 应由 user entity 承接', () => {

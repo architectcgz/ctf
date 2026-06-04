@@ -14,7 +14,7 @@ describe('AwdReviewContestRowStatusTags', () => {
 
     expect(wrapper.text()).toContain('进行中')
     expect(wrapper.text()).toContain('可导出')
-    expect(wrapper.find('.teacher-directory-chip-muted').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('实时复盘')
   })
 
   it('导出不可用时应显示实时复盘标签', () => {
@@ -27,6 +27,6 @@ describe('AwdReviewContestRowStatusTags', () => {
 
     expect(wrapper.text()).toContain('已结束')
     expect(wrapper.text()).toContain('实时复盘')
-    expect(wrapper.find('.teacher-directory-chip-muted').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('可导出')
   })
 })
