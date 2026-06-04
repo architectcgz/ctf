@@ -44,7 +44,7 @@
       </button>
     </div>
 
-    <div class="workspace-panel-header__summary summary-strip metric-panel-grid">
+    <div class="workspace-panel-header__summary student-insight-summary-grid metric-panel-grid">
       <template v-if="loading">
         <article
           v-for="card in loadingMetricCards"
@@ -115,13 +115,6 @@
   max-width: min(100%, 38rem);
 }
 
-.summary-strip {
-  --metric-panel-grid-gap: var(--space-2-5) var(--space-4);
-  --metric-panel-columns: repeat(3, minmax(0, 1fr));
-  margin: var(--space-6) 0 0;
-  padding: 0;
-}
-
 .summary-card {
   --summary-card-accent: var(--workspace-brand);
   min-width: 0;
@@ -188,17 +181,7 @@
   height: var(--space-3);
 }
 
-@media (max-width: 1023px) {
-  .summary-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 767px) {
-  .summary-strip {
-    grid-template-columns: 1fr;
-  }
-
   .header-actions {
     width: 100%;
   }

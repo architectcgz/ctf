@@ -39,6 +39,10 @@ const studentInsightSectionsSharedSource = readFileSync(
   `${process.cwd()}/src/features/teaching/student-analysis-shared/ui/studentInsightSections.css`,
   'utf-8'
 )
+const studentInsightSurfaceSharedSource = readFileSync(
+  `${process.cwd()}/src/features/teaching/student-analysis-shared/ui/studentInsightSurface.css`,
+  'utf-8'
+)
 const classStudentsSource = [
   classStudentsSourceBase,
   classStudentsOverviewPanelSource,
@@ -101,7 +105,7 @@ describe('teacher detail surface alignment', () => {
       'class="workspace-panel-header__actions header-actions"'
     )
     expect(studentAnalysisOverviewHeroSource).toContain(
-      'class="workspace-panel-header__summary summary-strip metric-panel-grid"'
+      'class="workspace-panel-header__summary student-insight-summary-grid metric-panel-grid"'
     )
     expect(studentAnalysisOverviewHeroSource).not.toContain('class="workspace-panel-divider"')
     expect(studentAnalysisOverviewHeroSource).toContain(
@@ -127,10 +131,16 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).not.toMatch(
       /\.student-analysis-shell\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent;[\s\S]*box-shadow:\s*none;[\s\S]*overflow:\s*visible;/s
     )
-    expect(studentAnalysisOverviewHeroSource).toMatch(
-      /\.summary-strip\s*\{[\s\S]*?margin:\s*var\(--space-6\)\s*0\s*0;[\s\S]*?padding:\s*0;/s
+    expect(studentInsightSurfaceSharedSource).toMatch(
+      /\.student-insight-summary-grid\s*\{[\s\S]*margin:\s*var\(--space-6\)\s*0\s*0;[\s\S]*padding:\s*0;/s
     )
-    expect(studentAnalysisOverviewHeroSource).not.toMatch(/\.summary-strip\s*\{[^}]*border-bottom:/s)
+    expect(studentInsightSurfaceSharedSource).toMatch(
+      /@media \(max-width:\s*1023px\)\s*\{[\s\S]*\.student-insight-summary-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/s
+    )
+    expect(studentInsightSurfaceSharedSource).toMatch(
+      /@media \(max-width:\s*767px\)\s*\{[\s\S]*\.student-insight-summary-grid\s*\{[\s\S]*grid-template-columns:\s*1fr;/s
+    )
+    expect(studentAnalysisOverviewHeroSource).not.toMatch(/\.summary-strip\s*\{/)
     expect(studentAnalysisOverviewHeroSource).toContain(
       'class="summary-card summary-card--solved progress-card metric-panel-card"'
     )
