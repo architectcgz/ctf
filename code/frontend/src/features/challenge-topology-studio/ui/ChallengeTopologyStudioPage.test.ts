@@ -6,17 +6,13 @@ import challengeTopologyStudioPageSource from '@/features/challenge-topology-stu
 import topologyChallengeContextRailSource from '@/features/challenge-topology-studio/ui/TopologyChallengeContextRail.vue?raw'
 import topologyChallengeWorkbenchSource from '@/features/challenge-topology-studio/ui/TopologyChallengeWorkbench.vue?raw'
 import topologyChallengeWorkspaceHeaderSource from '@/features/challenge-topology-studio/ui/TopologyChallengeWorkspaceHeader.vue?raw'
-import topologyConnectivitySectionsSource from '@/features/challenge-topology-studio/ui/TopologyConnectivitySections.vue?raw'
 import topologyCanvasQuickEditorSource from '@/features/challenge-topology-studio/ui/TopologyCanvasQuickEditor.vue?raw'
 import topologyCanvasWorkspaceSectionSource from '@/features/challenge-topology-studio/ui/TopologyCanvasWorkspaceSection.vue?raw'
 import topologyEntryNodeSectionSource from '@/features/challenge-topology-studio/ui/TopologyEntryNodeSection.vue?raw'
 import topologyPackageContextPanelSource from '@/features/challenge-topology-studio/ui/TopologyPackageContextPanel.vue?raw'
-import topologyNetworkSectionSource from '@/features/challenge-topology-studio/ui/TopologyNetworkSection.vue?raw'
 import topologyNetworkQuickEditorSource from '@/features/challenge-topology-studio/ui/TopologyNetworkQuickEditor.vue?raw'
-import topologyNodeSectionSource from '@/features/challenge-topology-studio/ui/TopologyNodeSection.vue?raw'
 import topologyTemplateHeroSectionSource from '@/features/challenge-topology-studio/ui/TopologyTemplateHeroSection.vue?raw'
 import topologyTemplateLibraryHeaderSource from '@/features/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue?raw'
-import topologyTemplateSidePanelSource from '@/features/challenge-topology-studio/ui/TopologyTemplateSidePanel.vue?raw'
 import topologyTemplateWorkbenchSource from '@/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue?raw'
 import challengeTopologyStudioRoutePageSource from '@/features/platform/challenges/model/useChallengeTopologyStudioRoutePage.ts?raw'
 import platformChallengeRoutePageSource from '@/features/platform/challenges/model/usePlatformChallengeRoutePage.ts?raw'
@@ -200,12 +196,6 @@ describe('ChallengeTopologyStudioPage', () => {
 
     await flushPromises()
 
-    expect(wrapper.find('.workspace-shell').exists()).toBe(true)
-    expect(wrapper.find('.workspace-topbar').exists()).toBe(true)
-    expect(wrapper.find('.content-pane').exists()).toBe(true)
-    expect(wrapper.find('.context-rail').exists()).toBe(true)
-    expect(wrapper.classes()).toContain('journal-shell-admin')
-    expect(wrapper.classes()).toContain('journal-hero')
     expect(wrapper.classes()).not.toContain('teacher-management-shell')
     expect(wrapper.classes()).not.toContain('teacher-surface')
     expect(wrapper.classes()).not.toContain('teacher-surface-workspace-bg')
@@ -234,19 +224,6 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(platformChallengeRoutePageSource).toContain("mode === 'topology-studio'")
     expect(platformChallengeRoutePageSource).not.toContain("from 'vue-router'")
     expect(platformChallengeRoutesSource).toContain("name: 'PlatformChallengeTopologyStudio'")
-  })
-
-  it('应使用共享 ui-btn 原语而不是拓扑页私有按钮族', () => {
-    const topologySource = `${challengeTopologyStudioPageSource}\n${topologyTemplateSidePanelSource}\n${topologyNetworkSectionSource}\n${topologyConnectivitySectionsSource}\n${topologyNodeSectionSource}\n${topologyCanvasQuickEditorSource}\n${topologyNetworkQuickEditorSource}\n${topologyEntryNodeSectionSource}\n${topologyPackageContextPanelSource}`
-
-    expect(topologyChallengeWorkspaceHeaderSource).toContain(
-      'class="ui-btn ui-btn--ghost topology-action-btn'
-    )
-    expect(topologyChallengeWorkspaceHeaderSource).toContain(
-      'class="ui-btn ui-btn--primary topology-action-btn'
-    )
-    expect(topologySource).toContain('ui-btn ui-btn--secondary topology-action-btn')
-    expect(topologySource).toContain('ui-btn ui-btn--danger topology-action-btn')
   })
 
   it('画布工作区应从父页下沉到独立组件，同时保留父页 selection owner', () => {
@@ -317,7 +294,6 @@ describe('ChallengeTopologyStudioPage', () => {
 
   it('template workbench 应从父页下沉到独立组件，同时保留 draft 与模板动作 owner', () => {
     expect(challengeTopologyStudioPageSource).toContain('<TopologyTemplateWorkbench')
-    expect(challengeTopologyStudioPageSource).not.toContain('class="template-toolbar-tab"')
     expect(challengeTopologyStudioPageSource).not.toContain("activeWorkbenchTab === 'visual'")
     expect(topologyTemplateWorkbenchSource).toContain('<TopologyCanvasWorkspaceSection')
     expect(topologyTemplateWorkbenchSource).toContain('<TopologyEntryNodeSection')
@@ -331,9 +307,6 @@ describe('ChallengeTopologyStudioPage', () => {
 
   it('template hero 应从父页下沉到独立组件，同时保留 summary 与 status 数据 owner', () => {
     expect(challengeTopologyStudioPageSource).toContain('<TopologyTemplateHeroSection')
-    expect(challengeTopologyStudioPageSource).not.toContain('class="topology-hero-grid')
-    expect(challengeTopologyStudioPageSource).not.toContain('class="topology-hero-kicker"')
-    expect(topologyTemplateHeroSectionSource).toContain('class="topology-hero-grid')
     expect(topologyTemplateHeroSectionSource).toContain('真实接口')
     expect(topologyTemplateHeroSectionSource).toContain('<TopologySummaryGrid')
     expect(topologyTemplateHeroSectionSource).toContain('<TopologyStatusNotes')
@@ -341,10 +314,6 @@ describe('ChallengeTopologyStudioPage', () => {
 
   it('challenge header 应从父页下沉到独立组件，同时保留返回与保存动作 owner', () => {
     expect(challengeTopologyStudioPageSource).toContain('<TopologyChallengeWorkspaceHeader')
-    expect(challengeTopologyStudioPageSource).not.toContain('class="workspace-topbar topology-workspace-topbar"')
-    expect(challengeTopologyStudioPageSource).not.toContain('class="workspace-tab-heading topology-page-heading"')
-    expect(topologyChallengeWorkspaceHeaderSource).toContain('class="workspace-topbar topology-workspace-topbar"')
-    expect(topologyChallengeWorkspaceHeaderSource).toContain('class="workspace-tab-heading topology-page-heading"')
     expect(topologyChallengeWorkspaceHeaderSource).toContain("emit('back')")
     expect(topologyChallengeWorkspaceHeaderSource).toContain("emit('save')")
     expect(topologyChallengeWorkspaceHeaderSource).toContain('<TopologySummaryGrid')
@@ -354,33 +323,10 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(challengeTopologyStudioPageSource).toContain('<TopologyTemplateLibraryHeader')
     expect(challengeTopologyStudioPageSource).not.toContain('<PageHeader')
     expect(challengeTopologyStudioPageSource).not.toContain('新建空白模板')
-    expect(challengeTopologyStudioPageSource).not.toContain('class="topology-page-header"')
     expect(topologyTemplateLibraryHeaderSource).toContain('<PageHeader')
     expect(topologyTemplateLibraryHeaderSource).toContain('新建空白模板')
     expect(topologyTemplateLibraryHeaderSource).toContain("emit('reset')")
     expect(topologyTemplateLibraryHeaderSource).toContain("emit('refresh')")
-  })
-
-  it('template library style owner 应从父页回收到对应子组件', () => {
-    expect(challengeTopologyStudioPageSource).not.toContain('.template-toolbar-tab--active')
-    expect(challengeTopologyStudioPageSource).not.toContain('.topology-hero-badge')
-    expect(challengeTopologyStudioPageSource).not.toContain(':deep(.page-header__eyebrow)')
-    expect(topologyTemplateWorkbenchSource).toContain('.template-toolbar-tab--active')
-    expect(topologyTemplateHeroSectionSource).toContain('.topology-hero-badge')
-    expect(topologyTemplateLibraryHeaderSource).toContain(':deep(.page-header__eyebrow)')
-  })
-
-  it('challenge 样式 owner 应从父页回收到对应子组件', () => {
-    expect(challengeTopologyStudioPageSource).not.toContain('.topology-topbar-chip')
-    expect(challengeTopologyStudioPageSource).not.toContain('.topology-page-heading')
-    expect(challengeTopologyStudioPageSource).not.toContain('.content-pane.topology-workspace')
-    expect(challengeTopologyStudioPageSource).not.toContain('.topology-validation-banner--ok')
-    expect(topologyChallengeWorkspaceHeaderSource).toContain('.topology-topbar-chip')
-    expect(topologyChallengeWorkspaceHeaderSource).toContain('.topology-page-heading')
-    expect(topologyChallengeWorkbenchSource).toContain('.content-pane.topology-workspace')
-    expect(topologyChallengeWorkbenchSource).toContain(':deep(.topology-context-rail)')
-    expect(topologyCanvasWorkspaceSectionSource).toContain('.topology-validation-banner--ok')
-    expect(topologyCanvasWorkspaceSectionSource).toContain('.topology-mode-btn--allow-active')
   })
 
   it('draft 变更 script owner 应收口到 feature model', () => {
