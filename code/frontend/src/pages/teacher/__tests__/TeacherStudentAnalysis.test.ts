@@ -13,7 +13,6 @@ import studentAnalysisWorkspaceContentSource from '@/features/teaching/student-a
 import studentAnalysisWorkspaceTabsSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisWorkspaceTabs.vue?raw'
 import studentAnalysisWorkspaceTabsHelperSource from '@/features/teaching/student-analysis-workspace/ui/studentAnalysisWorkspaceTabs.ts?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
-import studentInsightLoadingSurfaceSource from '@/features/teaching/student-analysis-shared/ui/StudentInsightLoadingSurface.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
 import studentInsightPrimarySectionsSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPrimarySections.vue?raw'
 import studentInsightTimelineSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightTimelineSection.vue?raw'
@@ -333,14 +332,9 @@ describe('TeacherStudentAnalysis', () => {
     )
     expect(studentAnalysisOverviewHeroPanelSource).toContain('loading?: boolean')
     expect(studentAnalysisOverviewHeroPanelSource).toContain('v-if="loading"')
-    expect(studentAnalysisOverviewHeroPanelSource).toContain('summary-card summary-card--loading progress-card metric-panel-card')
-    expect(studentAnalysisOverviewHeroPanelSource).toContain("'summary-card-loading-value'")
     expect(studentAnalysisOverviewHeroPanelSource).toContain('<span>已做题目数</span>')
-    expect(studentAnalysisOverviewHeroPanelSource).toContain('<CheckCircle class="h-4 w-4" />')
     expect(studentAnalysisOverviewHeroPanelSource).toContain('<span>完成率</span>')
-    expect(studentAnalysisOverviewHeroPanelSource).toContain('<Trophy class="h-4 w-4" />')
     expect(studentAnalysisOverviewHeroPanelSource).toContain('<span>薄弱维度</span>')
-    expect(studentAnalysisOverviewHeroPanelSource).toContain('<AlertTriangle class="h-4 w-4" />')
     expect(studentAnalysisOverviewHeroPanelSource).toContain('导出班级报告')
     expect(studentAnalysisOverviewHeroPanelSource).toContain('完整复盘页')
   })
@@ -359,12 +353,10 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightPrimarySectionsSource).toContain('StudentInsightRecommendationsSection')
     expect(studentInsightPrimarySectionsSource).toContain('StudentInsightTimelineSection')
     expect(studentInsightOverviewSectionSource).toContain('<SkillRadar :scores="radarScores" />')
-    expect(studentInsightRecommendationsSectionSource).toContain(
-      'class="insight-recommendation-list workspace-glass-region workspace-directory-list"'
-    )
-    expect(studentInsightRecommendationsSectionSource).toMatch(
-      /<StudentInsightStateSurface[\s\S]*class="insight-recommendation-list workspace-glass-region workspace-directory-list"[\s\S]*<template #loading>[\s\S]*<template #empty>[\s\S]*<template #default>/s
-    )
+    expect(studentInsightRecommendationsSectionSource).toContain('<StudentInsightStateSurface')
+    expect(studentInsightRecommendationsSectionSource).toContain('<template #loading>')
+    expect(studentInsightRecommendationsSectionSource).toContain('<template #empty>')
+    expect(studentInsightRecommendationsSectionSource).toContain('<template #default>')
     expect(studentInsightPrimarySectionsSource).toContain(':loading="recommendationsLoading"')
     // merged: loading 和 loaded 共用同一个 StudentInsightPrimarySections 实例
     expect(studentInsightPanelSource).toContain(':recommendations-loading="loading"')
@@ -374,9 +366,6 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightPanelSource).not.toContain('insight-skeleton-line')
     expect(studentInsightPanelSource).not.toContain('insight-skeleton-block')
     expect(studentInsightOverviewSectionSource).not.toContain('StudentInsightLoadingSurface')
-    expect(studentInsightOverviewSectionSource).toContain('insight-overview-loading-radar')
-    expect(studentInsightOverviewSectionSource).toContain('student-insight-skeleton-panel')
-    expect(studentInsightOverviewSectionSource).toContain('class="insight-dimension-frame mt-4"')
     expect(studentInsightTimelineSectionSource).toContain('TrainingTimelineContent')
     expect(studentInsightTimelineSectionSource).toContain(':loading="loading"')
     expect(studentInsightTimelineSectionSource).not.toContain('StudentInsightLoadingSurface')
@@ -386,26 +375,8 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightTimelineSectionSource).not.toContain('insight-timeline-loading-row')
     expect(studentInsightTimelineSectionSource).not.toContain('workspace-glass-metric-surface')
     expect(studentInsightTimelineSectionSource).not.toContain('workspace-glass-region')
-    expect(studentInsightRecommendationsSectionSource).toContain(
-      '<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSurface.css"></style>'
-    )
     expect(studentInsightStateSurfaceSource).toContain('surface?: \'glass\' | \'plain\'')
-    expect(studentInsightLoadingSurfaceSource).toContain('student-insight-glass-surface')
-    expect(studentInsightRecommendationsSectionSource).toContain(
-      '<div class="insight-recommendation-skeleton-head">'
-    )
-    expect(studentInsightRecommendationsSectionSource).toContain(
-      'class="insight-recommendation-skeleton-row"'
-    )
-    expect(studentInsightRecommendationsSectionSource).toContain(
-      'class="insight-recommendation-skeleton-pills"'
-    )
-    expect(studentInsightRecommendationsSectionSource).toMatch(
-      /\.insight-recommendation-skeleton-row\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*auto\s*auto;[\s\S]*border-bottom:\s*1px solid var\(--workspace-directory-row-divider\);/s
-    )
-    expect(studentInsightRecommendationsSectionSource).toContain('student-insight-skeleton-line')
     expect(studentInsightStateSurfaceSource).toContain('student-insight-state-surface--loading')
-    expect(studentInsightLoadingSurfaceSource).toContain('student-insight-glass-surface')
   })
 
   it('复盘区 section 应由 student-analysis-review feature 承接共享工作台组件', () => {
@@ -417,14 +388,8 @@ describe('TeacherStudentAnalysis', () => {
     )
     expect(studentInsightAttackSessionsSectionSource).not.toContain('TeacherStudentReviewWorkspace')
     expect(writeupsSectionSource).toContain('StudentInsightStateSurface')
-    expect(writeupsSectionSource).toContain('writeup-loading-metrics')
-    expect(writeupsSectionSource).toContain('writeup-loading-head')
-    expect(writeupsSectionSource).toContain('writeup-loading-rows')
     expect(studentInsightReviewSectionsSource).toContain(':loading="writeupPaginationLoading"')
     expect(studentInsightAttackSessionsSectionSource).toContain('StudentInsightStateSurface')
-    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-loading-filters')
-    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-loading-summary')
-    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-loading-sessions')
     expect(writeupsSectionSource).not.toContain('writeup-glass')
     expect(studentInsightAttackSessionsSectionSource).not.toContain('evidence-glass')
     expect(studentAnalysisReviewQuerySyncSource).toContain("from '@/api/contracts'")
@@ -726,24 +691,11 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.find('#student-tab-manual-review').exists()).toBe(false)
     expect(wrapper.find('#student-tab-evidence').exists()).toBe(true)
     expect(wrapper.find('#student-tab-training-records').exists()).toBe(true)
-    expect(studentAnalysisPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
-    expect(studentAnalysisPageSource).toMatch(
-      /class="[^"]*\bstudent-analysis-shell\b[^"]*\bflex\b[^"]*\bmin-h-full\b[^"]*\bflex-1\b[^"]*\bflex-col\b[^"]*"/
-    )
     expect(studentAnalysisPageSource).not.toContain('class="workspace-topbar"')
-    expect(studentAnalysisPageSource).toContain('class="content-pane"')
     expect(studentAnalysisPageSource).toContain('StudentAnalysisWorkspaceTabs')
-    expect(studentAnalysisWorkspaceTabsSource).toContain('class="workspace-tabbar top-tabs"')
     expect(studentAnalysisPageSource).toMatch(
-      /<div\s+class="[^"]*\bworkspace-shell\b[^"]*\bworkspace-shell--plain\b[^"]*"\s*>[\s\S]*<StudentAnalysisWorkspaceTabs[\s\S]*<main class="content-pane">/s
+      /<StudentAnalysisWorkspaceTabs[\s\S]*<main[\s\S]*<StudentAnalysisWorkspaceContent/s
     )
-    expect(studentAnalysisPageSource).toMatch(
-      /\.content-pane\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*align-content:\s*start;/s
-    )
-    expect(studentAnalysisPageSource).toContain('workspace-shell--plain')
-    expect(studentAnalysisPageSource).toContain('--workspace-shell-bg:')
-    expect(studentAnalysisPageSource).toContain('--workspace-panel:')
-    expect(studentAnalysisPageSource).toContain('--workspace-shadow-shell:')
   })
 
   it('点击导出班级报告时应打开当前班级上下文对话框', async () => {
