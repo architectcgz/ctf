@@ -65,7 +65,7 @@ function activeRateText() {
       </div>
 
       <div
-        class="workspace-panel-header__summary teacher-summary-grid class-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"
+        class="workspace-panel-header__summary teacher-summary-grid teacher-summary-grid--header progress-strip metric-panel-grid metric-panel-default-surface"
       >
         <article class="progress-card metric-panel-card">
           <div class="progress-card-label metric-panel-label">
@@ -119,9 +119,5 @@ function activeRateText() {
 <style scoped>
 .class-overview-title {
   max-width: min(100%, 38rem);
-}
-
-.class-overview-summary {
-  padding: 0;
 }
 </style>

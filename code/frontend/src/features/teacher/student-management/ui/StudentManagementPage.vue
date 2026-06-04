@@ -451,10 +451,6 @@ function studentWeakCategory(row: StudentDirectoryTableRow) {
     flex-direction: column;
   }
 
-  .teacher-summary-grid {
-    grid-template-columns: 1fr;
-  }
-
   .teacher-directory-row-cta {
     justify-content: flex-start;
   }

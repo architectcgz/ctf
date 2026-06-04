@@ -217,6 +217,10 @@
   --metric-panel-grid-gap: var(--teacher-summary-grid-gap, 0.75rem);
 }
 
+.teacher-management-shell .teacher-summary-grid--header {
+  padding: 0;
+}
+
 .teacher-management-shell .teacher-controls {
   display: grid;
   gap: 1rem;
@@ -347,4 +351,11 @@
 .teacher-management-shell .teacher-summary,
 .teacher-management-shell .report-summary {
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+@media (max-width: 1080px) {
+  .teacher-management-shell .teacher-summary-grid,
+  .teacher-management-shell .report-summary-grid {
+    grid-template-columns: 1fr;
+  }
 }

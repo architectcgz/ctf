@@ -48,6 +48,7 @@ describe('teacher base surface alignment', () => {
     expect(teacherSurfaceSource).toContain('.teacher-management-shell {')
     expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-hero')
     expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-summary')
+    expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-summary-grid--header')
 
     expect(classManagementSource).toContain('teacher-management-shell')
     expect(classManagementSource).not.toMatch(/\.teacher-(?:btn)\s*\{/)
@@ -64,6 +65,7 @@ describe('teacher base surface alignment', () => {
     expect(studentManagementSource).not.toMatch(/\.teacher-(?:btn)\s*\{/)
     expect(studentManagementSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(studentManagementSource).not.toMatch(/^\.teacher-summary\s*\{/m)
+    expect(studentManagementSource).not.toMatch(/\.teacher-summary-grid\s*\{[\s\S]*grid-template-columns:\s*1fr;/s)
     expect(studentManagementSource).toMatch(
       /\.teacher-badge-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
@@ -160,6 +162,13 @@ describe('teacher base surface alignment', () => {
     expect(instanceManagementSource).toContain('class="progress-card-hint metric-panel-helper"')
     expect(instanceManagementSource).not.toContain(
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
+    )
+
+    expect(teacherSurfaceSource).toMatch(
+      /@media \(max-width:\s*1080px\)\s*\{[\s\S]*\.teacher-management-shell \.teacher-summary-grid,\s*[\s\S]*\.teacher-management-shell \.report-summary-grid\s*\{[\s\S]*grid-template-columns:\s*1fr;/s
+    )
+    expect(teacherSurfaceSource).toMatch(
+      /\.teacher-management-shell \.teacher-summary-grid--header\s*\{[\s\S]*padding:\s*0;/s
     )
 
     expect(awdReviewIndexWorkspaceSource).toContain('<AwdReviewSummaryPanel')
