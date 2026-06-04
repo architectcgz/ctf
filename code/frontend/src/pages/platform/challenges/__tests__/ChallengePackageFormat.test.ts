@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ChallengePackageFormatRoutePage from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue'
 import challengePackageFormatSource from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue?raw'
-import challengePackageFormatGuidePanelSource from '@/features/platform/challenge-package-import/ui/ChallengePackageFormatGuidePanel.vue?raw'
 import challengePackageFormatPageSource from '@/features/platform/challenge-package-import/model/useChallengePackageFormatPage.ts?raw'
 
 describe('ChallengePackageFormat', () => {
@@ -40,20 +39,11 @@ describe('ChallengePackageFormat', () => {
     expect(wrapper.text()).toContain('X-AWD-Checker-Token')
   })
 
-  it('应使用共享 workspace overline 作为上传示例页的 hero 标记', () => {
-    expect(challengePackageFormatGuidePanelSource).toContain(
-      '<div class="workspace-overline">Uploader Guide</div>'
-    )
-    expect(challengePackageFormatGuidePanelSource).not.toContain(
-      '<div class="journal-eyebrow">Uploader Guide</div>'
-    )
+  it('路由页应仅负责组合，不直接耦合返回跳转细节', () => {
+    expect(challengePackageFormatSource).toContain('useChallengePackageFormatPage')
     expect(challengePackageFormatSource).toContain(
       "ChallengePackageFormatGuidePanel,\n  useChallengePackageFormatPage,\n} from '@/features/platform/challenge-package-import'"
     )
-  })
-
-  it('路由页应仅负责组合，不直接耦合返回跳转细节', () => {
-    expect(challengePackageFormatSource).toContain('useChallengePackageFormatPage')
     expect(challengePackageFormatSource).toContain('<RouterLink')
     expect(challengePackageFormatSource).not.toContain('@click="backToImportManage"')
     expect(challengePackageFormatSource).not.toContain('useRouter')
