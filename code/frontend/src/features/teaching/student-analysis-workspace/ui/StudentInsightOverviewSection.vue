@@ -43,8 +43,7 @@
   gap: var(--space-6);
   grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
   align-items: start;
-  padding-top: var(--space-3);
-  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  padding-top: var(--space-5);
 }
 
 .insight-overview-card {

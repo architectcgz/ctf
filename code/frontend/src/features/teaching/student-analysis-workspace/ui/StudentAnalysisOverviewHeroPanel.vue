@@ -104,14 +104,9 @@ const emit = defineEmits<{
     </div>
   </header>
 
-  <div class="workspace-panel-divider" aria-hidden="true" />
 </template>
 
 <style scoped>
-.student-analysis-overview-head {
-  --workspace-panel-divider-gap: var(--space-divider-gap);
-}
-
 .student-analysis-title {
   --workspace-page-title-margin-top: 0;
   max-width: min(100%, 38rem);
@@ -120,7 +115,7 @@ const emit = defineEmits<{
 .summary-strip {
   --metric-panel-grid-gap: var(--space-2-5) var(--space-4);
   --metric-panel-columns: repeat(3, minmax(0, 1fr));
-  margin: 0;
+  margin: var(--space-6) 0 0;
   padding: 0;
 }
 
