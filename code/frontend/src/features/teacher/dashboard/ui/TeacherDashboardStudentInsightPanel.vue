@@ -33,21 +33,23 @@ defineProps<{
             {{ row.status }}
           </div>
           <div class="student-insight-row__main">
-            <h3 class="student-insight-row__title" :title="row.title">
-              {{ row.title }}
-            </h3>
+            <div class="student-insight-row__title-line">
+              <h3 class="student-insight-row__title" :title="row.title">
+                {{ row.title }}
+              </h3>
+              <div v-if="row.chips.length > 0" class="student-insight-row__chips">
+                <span
+                  v-for="chip in row.chips"
+                  :key="chip"
+                  class="student-insight-chip workspace-directory-status-pill workspace-directory-status-pill--muted"
+                >
+                  {{ chip }}
+                </span>
+              </div>
+            </div>
             <p class="student-insight-row__detail">
               {{ row.detail }}
             </p>
-            <div class="student-insight-row__chips">
-              <span
-                v-for="chip in row.chips"
-                :key="chip"
-                class="student-insight-chip workspace-directory-status-pill workspace-directory-status-pill--muted"
-              >
-                {{ chip }}
-              </span>
-            </div>
           </div>
         </article>
       </div>
@@ -129,12 +131,21 @@ defineProps<{
 
 .student-insight-row__title {
   margin: 0;
+  flex: 1 1 16rem;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--font-size-16);
   font-weight: 800;
   color: var(--journal-ink);
+}
+
+.student-insight-row__title-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
 
 .student-insight-row__detail {
@@ -148,7 +159,8 @@ defineProps<{
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: var(--space-3);
+  justify-content: flex-end;
+  flex: 0 0 auto;
 }
 
 .student-insight-chip {
@@ -160,6 +172,14 @@ defineProps<{
   .student-insight-row {
     grid-template-columns: 1fr;
     gap: var(--space-3);
+  }
+
+  .student-insight-row__title-line {
+    flex-direction: column;
+  }
+
+  .student-insight-row__chips {
+    justify-content: flex-start;
   }
 }
 </style>
