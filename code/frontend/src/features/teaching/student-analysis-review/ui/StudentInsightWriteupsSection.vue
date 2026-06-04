@@ -5,8 +5,38 @@
     title="题解列表"
     subtitle="集中处理发布状态、可见性与人工审核。"
   >
+    <div v-if="loading && !hasWriteupRows" class="writeup-glass">
+      <div class="writeup-glass__metrics">
+        <span
+          v-for="index in 3"
+          :key="index"
+          class="writeup-glass__metric"
+        />
+      </div>
+      <div class="writeup-glass__head">
+        <span
+          v-for="index in 5"
+          :key="index"
+          class="writeup-glass__head-cell"
+        />
+      </div>
+      <div class="writeup-glass__rows">
+        <div
+          v-for="index in 3"
+          :key="index"
+          class="writeup-glass__row"
+        >
+          <span
+            v-for="cell in 5"
+            :key="cell"
+            class="writeup-glass__cell"
+          />
+        </div>
+      </div>
+    </div>
+
     <AppEmpty
-      v-if="!hasWriteupRows"
+      v-else-if="!hasWriteupRows"
       title="暂无题解记录"
       description="当前学员还没有发布题解或提交人工审核内容。"
       icon="FileText"
@@ -569,6 +599,179 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
 }
 
+/* ── Glass skeleton ── */
+
+.writeup-glass {
+  position: relative;
+  overflow: hidden;
+  margin-top: var(--space-5);
+  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
+  border-radius: var(--workspace-radius-lg);
+  padding: var(--space-4);
+  background:
+    radial-gradient(
+      ellipse at top right,
+      color-mix(in srgb, var(--journal-accent) 9%, transparent),
+      transparent 46%
+    ),
+    radial-gradient(
+      ellipse at bottom left,
+      color-mix(in srgb, var(--color-bg-surface) 58%, transparent),
+      transparent 52%
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base))
+    );
+  box-shadow: var(--workspace-shadow-panel);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.writeup-glass::before {
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  content: '';
+  border-radius: calc(var(--workspace-radius-lg) - 1px);
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      color-mix(in srgb, var(--color-bg-surface) 34%, transparent) 38%,
+      transparent 72%
+    );
+  opacity: 0.54;
+}
+
+.writeup-glass__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.writeup-glass__metric {
+  display: block;
+  height: var(--space-20);
+  overflow: hidden;
+  border-radius: var(--workspace-radius-lg);
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
+      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
+      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
+    );
+  background-size: 220% 100%;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
+    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
+  animation: writeupGlassSkeletonSweep 1.55s ease-in-out infinite;
+}
+
+.writeup-glass__head {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.2fr)
+    minmax(0, 2fr)
+    minmax(0, 1.2fr)
+    minmax(0, 1.35fr)
+    minmax(108px, 0.9fr);
+  gap: var(--space-3-5);
+  padding: var(--space-1-5) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 68%, transparent);
+}
+
+.writeup-glass__head-cell {
+  display: block;
+  height: var(--space-2-5);
+  overflow: hidden;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
+      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
+      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
+    );
+  background-size: 220% 100%;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
+    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
+  animation: writeupGlassSkeletonSweep 1.55s ease-in-out infinite;
+}
+
+.writeup-glass__rows {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.writeup-glass__row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.2fr)
+    minmax(0, 2fr)
+    minmax(0, 1.2fr)
+    minmax(0, 1.35fr)
+    minmax(108px, 0.9fr);
+  gap: var(--space-3-5);
+  padding: var(--space-2) 0;
+}
+
+.writeup-glass__cell {
+  display: block;
+  height: var(--space-3);
+  overflow: hidden;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
+      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
+      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
+    );
+  background-size: 220% 100%;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
+    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
+  animation: writeupGlassSkeletonSweep 1.55s ease-in-out infinite;
+}
+
+@media (max-width: 1023px) {
+  .writeup-glass__head {
+    display: none;
+  }
+
+  .writeup-glass__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .writeup-glass__metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .writeup-glass__metric,
+  .writeup-glass__head-cell,
+  .writeup-glass__cell {
+    animation: none;
+  }
+}
+
+@keyframes writeupGlassSkeletonSweep {
+  0% {
+    background-position: 120% 0;
+  }
+
+  100% {
+    background-position: -120% 0;
+  }
+}
+
 @media (max-width: 1023px) {
   .writeup-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -626,6 +829,7 @@ const props = defineProps<{
   activeManualReview: ManualReviewSubmissionDetailData | null
   manualReviewLoading: boolean
   manualReviewSaving: boolean
+  loading?: boolean
 }>()
 
 const emit = defineEmits<{

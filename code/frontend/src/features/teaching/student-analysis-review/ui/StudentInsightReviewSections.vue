@@ -10,6 +10,7 @@
     :active-manual-review="activeManualReview"
     :manual-review-loading="manualReviewLoading"
     :manual-review-saving="manualReviewSaving"
+    :loading="writeupPaginationLoading"
     @open-challenge="emit('openChallenge', $event)"
     @open-manual-review="emit('openManualReview', $event)"
     @moderate-writeup="emit('moderateWriteup', $event)"

@@ -19,6 +19,7 @@ import studentInsightAttackSessionsSectionSource from '@/features/teaching/stude
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
 import studentInsightReviewSectionsSource from '@/features/teaching/student-analysis-review/ui/StudentInsightReviewSections.vue?raw'
+import writeupsSectionSource from '@/features/teaching/student-analysis-review/ui/StudentInsightWriteupsSection.vue?raw'
 import studentReviewWorkspaceSource from '@/features/teaching/student-analysis-review/ui/StudentReviewWorkspace.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -409,6 +410,32 @@ describe('TeacherStudentAnalysis', () => {
       "import StudentReviewWorkspace from './StudentReviewWorkspace.vue'"
     )
     expect(studentInsightAttackSessionsSectionSource).not.toContain('TeacherStudentReviewWorkspace')
+    // writeups glass skeleton
+    expect(writeupsSectionSource).toContain('writeup-glass')
+    expect(writeupsSectionSource).toContain('writeup-glass__metrics')
+    expect(writeupsSectionSource).toContain('writeup-glass__head')
+    expect(writeupsSectionSource).toContain('writeup-glass__rows')
+    expect(writeupsSectionSource).toMatch(
+      /\.writeup-glass\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
+    )
+    expect(writeupsSectionSource).toMatch(
+      /\.writeup-glass__metric\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*writeupGlassSkeletonSweep 1\.55s ease-in-out infinite;/s
+    )
+    expect(writeupsSectionSource).toContain(
+      '@media (prefers-reduced-motion: reduce)'
+    )
+    expect(studentInsightReviewSectionsSource).toContain(':loading="writeupPaginationLoading"')
+    // evidence glass skeleton
+    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-glass')
+    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-glass__filters')
+    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-glass__summary')
+    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-glass__sessions')
+    expect(studentInsightAttackSessionsSectionSource).toMatch(
+      /\.evidence-glass\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
+    )
+    expect(studentInsightAttackSessionsSectionSource).toMatch(
+      /\.evidence-glass__filter\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*evidenceGlassSkeletonSweep 1\.55s ease-in-out infinite;/s
+    )
     expect(studentAnalysisReviewQuerySyncSource).toContain("from '@/api/contracts'")
     expect(studentAnalysisReviewQuerySyncSource).not.toContain("from '@/api/teacher'")
     expect(studentAnalysisReviewQuerySyncSource).not.toContain("from '@/api/teaching'")
