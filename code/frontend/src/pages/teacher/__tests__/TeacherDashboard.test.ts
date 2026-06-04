@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -27,6 +29,10 @@ const teacherDashboardPageSource = [
   teacherDashboardReviewPanelSource,
   teacherDashboardInterventionPanelSource,
 ].join('\n')
+const teacherDashboardSummaryStyleSource = readFileSync(
+  `${process.cwd()}/src/features/teacher/dashboard/ui/teacherDashboardSummary.css`,
+  'utf-8'
+)
 
 const teacherSurfacePattern =
   /--journal-ink:\s*var\(--color-text-primary\);[\s\S]*--journal-surface:\s*color-mix\(in srgb, var\(--color-bg-surface\) 88%, var\(--color-bg-base\)\);/s
@@ -210,9 +216,11 @@ describe('TeacherDashboard', () => {
     expect(wrapper.find('#overview .workspace-overline').text()).toBe('Teaching Overview')
 
     expect(
-      wrapper.findAll('#overview .teacher-overview-card.progress-card.metric-panel-card')
+      wrapper.findAll('#overview .teacher-dashboard-overview-card.progress-card.metric-panel-card')
     ).toHaveLength(4)
-    expect(wrapper.findAll('#portrait .summary-note.progress-card.metric-panel-card')).toHaveLength(
+    expect(
+      wrapper.findAll('#portrait .teacher-dashboard-summary-card.progress-card.metric-panel-card')
+    ).toHaveLength(
       3
     )
     expect(wrapper.findAll('#trend .focus-class-row')).toHaveLength(1)
@@ -291,14 +299,29 @@ describe('TeacherDashboard', () => {
       'class="workspace-panel-header__meta meta-strip"'
     )
     expect(teacherDashboardPageSource).toContain(
-      'class="workspace-panel-header__summary teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="workspace-panel-header__summary teacher-dashboard-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(teacherDashboardPageSource).toContain(
       'class="workspace-panel-header__actions header-actions"'
     )
     expect(teacherDashboardPageSource).toContain('班级管理')
     expect(teacherDashboardPageSource).toContain(
-      'class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+      '<style src="@/features/teacher/dashboard/ui/teacherDashboardSummary.css"></style>'
+    )
+    expect(teacherDashboardPortraitPanelSource).toContain(
+      '<style src="@/features/teacher/dashboard/ui/teacherDashboardSummary.css"></style>'
+    )
+    expect(teacherDashboardTrendPanelSource).toContain(
+      '<style src="@/features/teacher/dashboard/ui/teacherDashboardSummary.css"></style>'
+    )
+    expect(teacherDashboardSummaryStyleSource).toMatch(
+      /\.teacher-dashboard-summary-grid\s*\{[\s\S]*--metric-panel-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s
+    )
+    expect(teacherDashboardSummaryStyleSource).toMatch(
+      /\.teacher-dashboard-summary-card\s*\{[\s\S]*min-height:\s*7\.25rem;/s
+    )
+    expect(teacherDashboardSummaryStyleSource).toMatch(
+      /\.teacher-dashboard-overview-card\s*\{[\s\S]*min-height:\s*7\.75rem;/s
     )
     expect(teacherDashboardPageSource).toContain('--workspace-brand: var(--journal-accent);')
     expect(teacherDashboardPageSource).toContain(
@@ -309,8 +332,8 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).not.toContain('openReportExport')
 
     const { wrapper } = await mountDashboard()
-    const summary = wrapper.find('#overview .teacher-overview-summary')
-    const portraitSummary = wrapper.find('#portrait .summary-grid')
+    const summary = wrapper.find('#overview .teacher-dashboard-overview-summary')
+    const portraitSummary = wrapper.find('#portrait .teacher-dashboard-summary-grid')
 
     expect(summary.classes()).toContain('progress-strip')
     expect(summary.classes()).toContain('metric-panel-grid')

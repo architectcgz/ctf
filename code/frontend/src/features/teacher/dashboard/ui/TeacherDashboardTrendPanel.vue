@@ -31,12 +31,12 @@ defineProps<{
     <div class="teacher-dashboard-panel-body trend-grid">
       <div
         v-if="trendSignals.some((item) => item.value !== '--')"
-        class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
+        class="teacher-dashboard-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
       >
         <article
           v-for="item in trendSignals"
           :key="item.key"
-          class="summary-note progress-card metric-panel-card"
+          class="teacher-dashboard-summary-card progress-card metric-panel-card"
         >
           <div class="summary-note-label progress-card-label metric-panel-label">
             {{ item.label }}
@@ -44,7 +44,7 @@ defineProps<{
           <div class="summary-note-value progress-card-value metric-panel-value">
             {{ item.value }}
           </div>
-          <div class="summary-note-copy progress-card-hint metric-panel-helper">
+          <div class="teacher-dashboard-summary-copy progress-card-hint metric-panel-helper">
             {{ item.copy }}
           </div>
         </article>
@@ -87,6 +87,8 @@ defineProps<{
   </section>
 </template>
 
+<style src="@/features/teacher/dashboard/ui/teacherDashboardSummary.css"></style>
+
 <style scoped>
 .overview-panel {
   --workspace-directory-section-padding: 0;
@@ -108,21 +110,6 @@ defineProps<{
 .focus-class-list {
   display: grid;
   gap: var(--space-5);
-}
-
-.summary-grid {
-  --metric-panel-columns: repeat(3, minmax(0, 1fr));
-}
-
-.summary-note {
-  min-height: 7.25rem;
-}
-
-.summary-note-copy {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .portrait-empty {
@@ -196,10 +183,6 @@ defineProps<{
 }
 
 @media (max-width: 760px) {
-  .summary-grid {
-    --metric-panel-columns: 1fr;
-  }
-
   .focus-class-row__title-line {
     flex-direction: column;
   }

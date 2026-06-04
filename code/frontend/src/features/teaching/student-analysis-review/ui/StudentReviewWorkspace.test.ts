@@ -95,7 +95,7 @@ describe('StudentReviewWorkspace', () => {
     expect(wrapper.text()).toContain('POST')
     expect(wrapper.text()).toContain('/login')
     expect(wrapper.find('.review-observation-strip').exists()).toBe(false)
-    expect(wrapper.find('.insight-kpi-grid').exists()).toBe(false)
+    expect(wrapper.find('.student-insight-kpi-grid').exists()).toBe(false)
     expect(studentReviewWorkspaceSource).toMatch(
       /\.attack-session-list\s*\{[\s\S]*gap:\s*var\(--space-3\);/s
     )
@@ -107,7 +107,7 @@ describe('StudentReviewWorkspace', () => {
     )
     expect(studentReviewWorkspaceSource).not.toContain("formatDateTime(session.started_at)")
     expect(studentReviewWorkspaceSource).not.toContain(
-      'class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-teacher-surface md:grid-cols-4"'
+      'class="student-insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-teacher-surface md:grid-cols-4"'
     )
   })
 

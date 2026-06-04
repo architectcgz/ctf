@@ -28,11 +28,11 @@ defineProps<{
 
     <div class="teacher-dashboard-panel-body portrait-grid">
       <div class="portrait-summary-block">
-        <div class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+        <div class="teacher-dashboard-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
           <article
             v-for="item in portraitSummaryNotes"
             :key="item.key"
-            class="summary-note progress-card metric-panel-card"
+            class="teacher-dashboard-summary-card progress-card metric-panel-card"
           >
             <div class="summary-note-label progress-card-label metric-panel-label">
               {{ item.label }}
@@ -40,7 +40,7 @@ defineProps<{
             <div class="summary-note-value progress-card-value metric-panel-value">
               {{ item.value }}
             </div>
-            <div class="summary-note-copy progress-card-hint metric-panel-helper">
+            <div class="teacher-dashboard-summary-copy progress-card-hint metric-panel-helper">
               {{ item.copy || '画像摘要' }}
             </div>
           </article>
@@ -89,6 +89,8 @@ defineProps<{
   </section>
 </template>
 
+<style src="@/features/teacher/dashboard/ui/teacherDashboardSummary.css"></style>
+
 <style scoped>
 .overview-panel {
   --workspace-directory-section-padding: 0;
@@ -125,21 +127,6 @@ defineProps<{
   display: grid;
   gap: var(--space-5);
   min-width: 0;
-}
-
-.summary-grid {
-  --metric-panel-columns: repeat(3, minmax(0, 1fr));
-}
-
-.summary-note {
-  min-height: 7.25rem;
-}
-
-.summary-note-copy {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .portrait-guidance {
@@ -280,10 +267,6 @@ defineProps<{
 }
 
 @media (max-width: 760px) {
-  .summary-grid {
-    --metric-panel-columns: 1fr;
-  }
-
   .weak-item {
     grid-template-columns: auto minmax(0, 1fr);
   }

@@ -1,0 +1,29 @@
+.teacher-dashboard-overview-summary {
+  --metric-panel-columns: repeat(4, minmax(0, 1fr));
+}
+
+.teacher-dashboard-overview-card {
+  min-height: 7.75rem;
+}
+
+.teacher-dashboard-summary-grid {
+  --metric-panel-columns: repeat(3, minmax(0, 1fr));
+}
+
+.teacher-dashboard-summary-card {
+  min-height: 7.25rem;
+}
+
+.teacher-dashboard-summary-copy {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (max-width: 760px) {
+  .teacher-dashboard-overview-summary,
+  .teacher-dashboard-summary-grid {
+    --metric-panel-columns: 1fr;
+  }
+}

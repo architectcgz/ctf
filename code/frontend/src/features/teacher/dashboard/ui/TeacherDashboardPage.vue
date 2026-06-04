@@ -156,12 +156,12 @@ function openStudentListDialog(input: { title: string; studentTargets?: Dashboar
           </div>
 
           <div
-            class="workspace-panel-header__summary teacher-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"
+            class="workspace-panel-header__summary teacher-dashboard-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"
           >
             <article
               v-for="item in overviewMetrics"
               :key="item.key"
-              class="teacher-overview-card progress-card metric-panel-card"
+              class="teacher-dashboard-overview-card progress-card metric-panel-card"
             >
               <div class="progress-card-label metric-panel-label">
                 {{ item.label }}
@@ -278,6 +278,8 @@ function openStudentListDialog(input: { title: string; studentTargets?: Dashboar
   </div>
 </template>
 
+<style src="@/features/teacher/dashboard/ui/teacherDashboardSummary.css"></style>
+
 <style scoped>
 @import '@/assets/styles/teacher-workspace-subpanel.css';
 
@@ -345,14 +347,6 @@ function openStudentListDialog(input: { title: string; studentTargets?: Dashboar
   border-color: color-mix(in srgb, var(--journal-accent) 34%, transparent);
   background: var(--workspace-brand-soft);
   color: var(--journal-accent-strong);
-}
-
-.summary-grid {
-  --metric-panel-columns: repeat(3, minmax(0, 1fr));
-}
-
-.teacher-overview-card {
-  min-height: 7.75rem;
 }
 
 @media (max-width: 760px) {
