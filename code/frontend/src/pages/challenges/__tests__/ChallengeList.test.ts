@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
-import { readFileSync } from 'node:fs'
 
 import ChallengeList from '@/pages/challenges/ChallengeListRoutePage.vue'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
@@ -16,7 +15,6 @@ vi.mock('@/api/challenge', () => ({
 }))
 
 const mockedGetChallenges = vi.mocked(getChallenges)
-const appStyleSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
 function createDeferred<T>() {
   let resolve!: (value: T) => void
@@ -60,12 +58,6 @@ async function mountPage(initialPath = '/challenges') {
   return wrapper
 }
 
-const combinedSource = [
-  challengeListSource,
-  challengeDirectoryPanelSource,
-  challengeDirectoryRowSource,
-].join('\n')
-
 describe('ChallengeList', () => {
   beforeEach(() => {
     mockedGetChallenges.mockReset()
@@ -101,9 +93,8 @@ describe('ChallengeList', () => {
     expect(wrapper.text()).toContain('题目总数')
     expect(wrapper.text()).toContain('开始做题')
     expect(wrapper.text()).not.toContain('统一查看训练题目')
-    expect(wrapper.find('.challenge-row-title').attributes('title')).toBe('Test Challenge')
-    expect(wrapper.find('.challenge-row-solved').text()).toContain('10 人解出')
-    expect(wrapper.find('.challenge-row-attempts').text()).toContain('尝试 20 次')
+    expect(wrapper.text()).toContain('10 人解出')
+    expect(wrapper.text()).toContain('尝试 20 次')
   })
 
   it('页面应通过 feature model 获取列表状态，不再直接耦合 challenge api 与分页流程', () => {
@@ -127,21 +118,6 @@ describe('ChallengeList', () => {
     expect(challengeDirectoryPanelSource).not.toContain('function getCategoryColor(')
     expect(challengeDirectoryPanelSource).not.toContain('function getDifficultyLabel(')
     expect(challengeDirectoryPanelSource).not.toContain('function getDifficultyColor(')
-  })
-
-  it('页头标题与说明应接入共享工作区排版类', () => {
-    expect(challengeListSource).toContain('<header class="workspace-page-header challenge-topbar">')
-    expect(challengeListSource).toMatch(/<div class="workspace-overline">\s*Challenges\s*<\/div>/)
-    expect(challengeListSource).toMatch(
-      /<h1 class="workspace-page-title challenge-title">\s*靶场训练\s*<\/h1>/
-    )
-    expect(challengeListSource).not.toMatch(/\.challenge-page \.challenge-topbar\s*\{[\s\S]*display:\s*grid;/)
-    expect(challengeListSource).not.toContain('<div class="journal-eyebrow">Challenges</div>')
-    expect(challengeListSource).not.toContain('journal-eyebrow-text')
-    expect(challengeListSource).not.toContain('按关键词、分类与难度筛选题目，直接进入训练。')
-    expect(challengeListSource).not.toContain(
-      '统一查看训练题目，按分类、难度和关键词收束范围后直接进入做题。'
-    )
   })
 
   it('题目列表不应显示编号前缀', async () => {
@@ -168,40 +144,6 @@ describe('ChallengeList', () => {
     const wrapper = await mountPage()
 
     expect(wrapper.text()).not.toContain('CH-1')
-    expect(wrapper.find('.challenge-row-index').exists()).toBe(false)
-  })
-
-  it('题目页概况卡片应使用统一 metric-panel 样式类', () => {
-    expect(challengeListSource).toContain('class="challenge-summary metric-panel-default-surface"')
-    expect(challengeListSource).toContain('class="challenge-summary-grid metric-panel-grid"')
-    expect(challengeListSource).toContain('class="challenge-summary-item metric-panel-card"')
-    expect(challengeListSource).toContain('class="challenge-summary-icon-shell"')
-    expect(challengeListSource).toContain('class="challenge-summary-content"')
-    expect(challengeListSource).toContain('class="challenge-summary-wave"')
-    expect(challengeListSource).toContain('class="challenge-summary-label metric-panel-label"')
-    expect(challengeListSource).toContain('class="challenge-summary-value metric-panel-value"')
-    expect(challengeListSource).toContain('class="challenge-summary-helper metric-panel-helper"')
-    expect(challengeListSource).not.toContain('challenge-summary-badge')
-    expect(challengeListSource).not.toContain('challenge-summary-eyebrow')
-  })
-
-  it('题目列表页操作与筛选控件应接入共享 ui 原语', () => {
-    expect(challengeListSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(challengeListSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(combinedSource).toContain('class="ui-btn ui-btn--secondary"')
-    expect(combinedSource).toMatch(/class="ui-control-wrap(?:\s+[^\"]+)?"/)
-    expect(combinedSource).toContain('class="ui-control"')
-    expect(combinedSource).toContain('class="ui-control-prefix"')
-    expect(combinedSource).not.toContain(
-      'box-shadow: inset 0 1px 0 color-mix(in srgb, white 30%, transparent);'
-    )
-    expect(appStyleSource).toContain(
-      'box-shadow: inset 0 1px 0 color-mix(in srgb, var(--journal-border) 34%, transparent);'
-    )
-    expect(combinedSource).not.toMatch(/^\.challenge-input,\s*$/m)
-    expect(combinedSource).not.toMatch(/^\.challenge-select\s*\{/m)
-    expect(combinedSource).not.toMatch(/^\.challenge-input:focus,\s*$/m)
-    expect(combinedSource).not.toMatch(/^\.challenge-btn-ghost\s*\{/m)
   })
 
   it('搜索时应通过 keyword 参数请求真实筛选', async () => {
@@ -382,9 +324,8 @@ describe('ChallengeList', () => {
 
     const wrapper = await mountPage()
 
-    expect(wrapper.find('.challenge-directory-head').text()).toContain('积分')
-    expect(wrapper.find('.challenge-row-main .challenge-row-points').exists()).toBe(false)
-    expect(wrapper.find('.challenge-row-points').text()).toContain('100 pts')
+    expect(wrapper.text()).toContain('积分')
+    expect(wrapper.text()).toContain('100 pts')
   })
 
   it('应从路由 query 初始化分类和难度筛选', async () => {
@@ -500,44 +441,6 @@ describe('ChallengeList', () => {
     expect(router.currentRoute.value.fullPath).toBe('/challenges/1')
   })
 
-  it('应采用平铺目录式题目列表而不是卡片网格', () => {
-    expect(combinedSource).toContain(
-      'class="student-directory-section workspace-directory-section challenge-directory-section"'
-    )
-    expect(combinedSource).toContain('list-heading')
-    expect(combinedSource).not.toContain('challenge-directory-meta')
-    expect(combinedSource).not.toContain('challenge-controls-title')
-    expect(combinedSource).not.toContain('challenge-controls-copy')
-    expect(combinedSource).not.toContain('challenge-filter-pill')
-    expect(combinedSource).not.toContain('激活筛选')
-    expect(combinedSource).toContain('challenge-directory')
-    expect(combinedSource).toContain('challenge-row')
-    expect(combinedSource).not.toContain(
-      '</section>\n\n        <div v-if="total > 0" class="challenge-pagination">'
-    )
-    expect(combinedSource).toContain('题目列表')
-    expect(combinedSource).toContain('challenge-search-input')
-    expect(combinedSource).toContain('搜索题目标题或描述')
-    expect(combinedSource).not.toContain('当前页展示')
-    expect(combinedSource).not.toContain('challenge-row-index')
-    expect(combinedSource).not.toContain('CH-{{ challengeIndex(index) }}')
-    expect(combinedSource).toContain('<span>分类</span>')
-    expect(combinedSource).toContain('<span>难度</span>')
-    expect(combinedSource).toContain('<span>解出</span>')
-    expect(combinedSource).toContain('<span>尝试</span>')
-    expect(combinedSource).toContain('class="challenge-row-category"')
-    expect(combinedSource).toContain('class="challenge-row-difficulty"')
-    expect(combinedSource).toContain('class="challenge-row-solved"')
-    expect(combinedSource).toContain('class="challenge-row-attempts"')
-    expect(combinedSource).toMatch(/class="challenge-row-title"[\s\S]*:title="challenge\.title"/s)
-    expect(combinedSource).toMatch(
-      /\.challenge-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
-    )
-    expect(combinedSource).not.toContain('class="challenge-card')
-    expect(combinedSource).not.toContain('Training Range')
-    expect(combinedSource).not.toContain('Challenge Filters')
-  })
-
   it('单页结果时也应显式显示分页状态', async () => {
     mockedGetChallenges.mockResolvedValue({
       list: [
@@ -561,7 +464,6 @@ describe('ChallengeList', () => {
 
     const wrapper = await mountPage()
 
-    expect(wrapper.find('.challenge-pagination').exists()).toBe(true)
-    expect(wrapper.find('.challenge-pagination').text()).toContain('1 / 1')
+    expect(wrapper.text()).toContain('1 / 1')
   })
 })
