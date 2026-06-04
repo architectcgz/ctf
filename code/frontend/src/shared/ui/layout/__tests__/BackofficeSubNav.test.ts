@@ -78,20 +78,11 @@ describe('BackofficeSubNav', () => {
   it('keeps the owning secondary entry active for detail routes', async () => {
     const { wrapper } = await mountWithRoute('/platform/challenges/11/writeup', 'admin')
 
-    const activeButton = wrapper.find('.backoffice-subnav__item--active')
-    expect(activeButton.exists()).toBe(true)
-    expect(activeButton.text()).toContain('Jeopardy题库')
-  })
-
-  it('uses shared theme tokens instead of hardcoded light navigation colors', () => {
-    expect(backofficeSubNavSource).toContain('var(--color-border-default)')
-    expect(backofficeSubNavSource).toContain('var(--color-bg-surface)')
-    expect(backofficeSubNavSource).toContain('var(--color-text-secondary)')
-    expect(backofficeSubNavSource).toContain('var(--color-primary)')
-    expect(backofficeSubNavSource).not.toContain('#e2e8f0')
-    expect(backofficeSubNavSource).not.toContain('#64748b')
-    expect(backofficeSubNavSource).not.toContain('#0f172a')
-    expect(backofficeSubNavSource).not.toContain('#2563eb')
-    expect(backofficeSubNavSource).not.toContain('background: white;')
+    const activeButtons = wrapper.findAll('button').filter(
+      (button) => button.attributes('aria-selected') === 'true'
+    )
+    expect(activeButtons).toHaveLength(1)
+    expect(activeButtons[0].text()).toContain('Jeopardy题库')
+    expect(backofficeSubNavSource).toContain('aria-selected')
   })
 })

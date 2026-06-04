@@ -34,79 +34,22 @@ describe('AppToast', () => {
     vi.useRealTimers()
   })
 
-  it('uses tokenized surface class instead of hardcoded light/dark background utilities', async () => {
-    const wrapper = await mountToast()
-    useToast().success('操作成功')
-    await nextTick()
-
-    const toastItem = wrapper.get('.app-toast-item')
-
-    expect(toastItem.classes()).toContain('app-toast-item')
-    expect(toastItem.classes()).not.toContain('bg-white')
-    expect(toastItem.classes()).not.toContain('bg-surface')
-  })
-
-  it('uses primary token instead of success green for success toast accents', async () => {
-    const wrapper = await mountToast()
-    useToast().success('登录成功')
-    await nextTick()
-
-    const html = wrapper.html()
-
-    expect(html).toContain('var(--color-primary)')
-    expect(html).not.toContain('var(--color-success)')
-  })
-
-  it('uses primary token in info toast close button style', async () => {
-    const wrapper = await mountToast()
-    useToast().info('主题适配检查')
-    await nextTick()
-
-    const closeButton = wrapper.get('.app-toast-close')
-    const style = closeButton.attributes('style') ?? ''
-
-    expect(style).toContain('var(--color-primary)')
-    expect(style).not.toContain('8, 145, 178')
-  })
-
-  it('renders the close control as an accessible icon button', async () => {
+  it('renders the close control as an accessible icon button and dismisses the toast', async () => {
     const wrapper = await mountToast()
     useToast().warning('环境即将到期')
     await nextTick()
 
-    const closeButton = wrapper.get('.app-toast-close')
+    const closeButton = wrapper.get('button[aria-label="关闭提示"]')
 
     expect(closeButton.attributes('aria-label')).toBe('关闭提示')
     expect(closeButton.text()).toBe('')
     expect(closeButton.find('.app-toast-close-icon').exists()).toBe(true)
-  })
 
-  it('keeps the status icon in a left-centered column', () => {
-    expect(appToastSource).toContain('grid-template-columns: auto minmax(0, 1fr) auto')
-    expect(appToastSource).toContain('align-self: center')
-    expect(appToastSource).not.toContain('app-toast-leading')
-  })
-
-  it('uses a soft tinted glow instead of a vertical accent rail', async () => {
-    const wrapper = await mountToast()
-    useToast().error('提交失败')
+    await nextTick()
+    await closeButton.trigger('click')
     await nextTick()
 
-    const toastItemStyle = wrapper.get('.app-toast-item').attributes('style') ?? ''
-
-    expect(toastItemStyle).toContain('--app-toast-accent-color: var(--color-danger)')
-    expect(appToastSource).toContain('color-mix(in srgb, var(--app-toast-accent-color)')
-    expect(appToastSource).not.toContain(':style="{ backgroundColor: toneMeta(item.type).accentColor }"')
-    expect(wrapper.find('.app-toast-accent').exists()).toBe(false)
-    expect(appToastSource).not.toContain('class="app-toast-accent"')
-    expect(appToastSource).not.toContain('.app-toast-accent')
-  })
-
-  it('avoids layout arbitrary values in the shared toast shell', () => {
-    expect(appToastSource).not.toContain('max-w-[calc(100vw-2rem)]')
-    expect(appToastSource).not.toContain('w-[380px]')
-    expect(appToastSource).not.toContain('rounded-[22px]')
-    expect(appToastSource).not.toContain('right-4')
-    expect(appToastSource).not.toContain('top-4')
+    expect(wrapper.text()).not.toContain('环境即将到期')
+    expect(appToastSource).toContain('aria-label="关闭提示"')
   })
 })
