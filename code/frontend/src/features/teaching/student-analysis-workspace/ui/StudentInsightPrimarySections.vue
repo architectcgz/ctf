@@ -10,7 +10,7 @@
     @open-challenge="emit('openChallenge', $event)"
   />
 
-  <template v-if="isSectionVisible('timeline')">
+  <template v-if="isSectionVisible('training-records')">
     <StudentInsightTimelineSection :timeline="timeline" :loading="loading" />
   </template>
 </template>

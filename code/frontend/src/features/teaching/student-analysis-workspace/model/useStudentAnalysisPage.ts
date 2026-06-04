@@ -22,7 +22,7 @@ export type StudentAnalysisWorkspaceTab =
   | 'recommendations'
   | 'writeups'
   | 'evidence'
-  | 'timeline'
+  | 'training-records'
 
 export function useStudentAnalysisPage() {
   const { params, query, replaceQuery } = useRouteQueryTransport()
@@ -35,7 +35,7 @@ export function useStudentAnalysisPage() {
     'recommendations',
     'writeups',
     'evidence',
-    'timeline',
+    'training-records',
   ]
   const {
     activeTab: activeWorkspaceTab,
@@ -44,6 +44,19 @@ export function useStudentAnalysisPage() {
     orderedTabs: workspaceTabOrder,
     defaultTab: 'overview',
   })
+  watch(
+    () => query.value.panel,
+    (panel) => {
+      const rawPanel = Array.isArray(panel) ? panel[0] : panel
+      if (rawPanel === 'timeline') {
+        void replaceQuery({
+          ...query.value,
+          panel: 'training-records',
+        })
+      }
+    },
+    { immediate: true }
+  )
   const route = {
     get query() {
       return query.value

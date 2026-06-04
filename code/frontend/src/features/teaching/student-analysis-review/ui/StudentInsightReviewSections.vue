@@ -88,7 +88,7 @@ const emit = defineEmits<{
   updateReviewWorkspaceFilters: [payload: Partial<AttackSessionQuery>]
 }>()
 
-function isSectionVisible(section: Exclude<StudentInsightSection, 'all' | 'overview' | 'recommendations' | 'timeline'>): boolean {
+function isSectionVisible(section: Exclude<StudentInsightSection, 'all' | 'overview' | 'recommendations' | 'training-records'>): boolean {
   return !props.activeSection || props.activeSection === 'all' || props.activeSection === section
 }
 </script>

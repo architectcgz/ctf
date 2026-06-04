@@ -16,7 +16,7 @@ export type StudentInsightSection =
   | 'writeups'
   | 'manual-review'
   | 'evidence'
-  | 'timeline'
+  | 'training-records'
 
 export interface InsightMetaItem {
   key: string

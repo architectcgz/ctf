@@ -1,6 +1,6 @@
 <template>
   <div
-    class="workspace-shell teacher-management-shell teacher-surface student-analysis-shell journal-eyebrow-text flex min-h-full flex-1 flex-col"
+    class="workspace-shell workspace-shell--plain teacher-management-shell teacher-surface student-analysis-shell journal-eyebrow-text flex min-h-full flex-1 flex-col"
   >
     <StudentAnalysisWorkspaceTabs
       :active-workspace-tab="props.activeWorkspaceTab"

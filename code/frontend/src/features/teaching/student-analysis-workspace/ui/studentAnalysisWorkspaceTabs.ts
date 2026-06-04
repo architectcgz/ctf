@@ -33,10 +33,10 @@ export const studentAnalysisWorkspaceTabs: StudentAnalysisWorkspaceTabItem[] = [
     panelId: 'student-evidence',
   },
   {
-    key: 'timeline',
+    key: 'training-records',
     label: '训练记录',
-    buttonId: 'student-tab-timeline',
-    panelId: 'student-timeline',
+    buttonId: 'student-tab-training-records',
+    panelId: 'student-training-records',
   },
 ]
 

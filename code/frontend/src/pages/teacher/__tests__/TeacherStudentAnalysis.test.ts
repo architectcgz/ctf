@@ -75,7 +75,7 @@ vi.mock('@/api/teaching', () => teachingApiMocks)
 
 async function openWorkspaceTab(
   wrapper: ReturnType<typeof mount>,
-  tabKey: 'overview' | 'recommendations' | 'writeups' | 'evidence' | 'timeline'
+  tabKey: 'overview' | 'recommendations' | 'writeups' | 'evidence' | 'training-records'
 ): Promise<void> {
   await wrapper.get(`#student-tab-${tabKey}`).trigger('click')
   await flushPromises()
@@ -109,7 +109,7 @@ describe('TeacherStudentAnalysis', () => {
     await openWorkspaceTab(wrapper, 'recommendations')
     expect(wrapper.text()).toContain('crypto-lab')
 
-    await openWorkspaceTab(wrapper, 'timeline')
+    await openWorkspaceTab(wrapper, 'training-records')
     expect(wrapper.text()).toContain('web-1')
     expect(wrapper.text()).toContain('查看题目详情')
     expect(wrapper.text()).toContain('解锁第 1 级提示')
@@ -151,6 +151,28 @@ describe('TeacherStudentAnalysis', () => {
       student_id: 'stu-1',
       page_size: 6,
     })
+  })
+
+  it('应兼容旧的 timeline query 并归一到 training-records', async () => {
+    routeMock.query = { panel: 'timeline' }
+
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          ClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(replaceMock).toHaveBeenCalledWith({
+      query: { panel: 'training-records' },
+    })
+    expect(wrapper.find('#student-tab-training-records').exists()).toBe(true)
+    expect(wrapper.text()).toContain('训练记录')
+    expect(wrapper.text()).toContain('web-1')
   })
 
   it('班级列表接口失败不应阻断学员分析加载', async () => {
@@ -338,10 +360,10 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightPrimarySectionsSource).toContain('StudentInsightTimelineSection')
     expect(studentInsightOverviewSectionSource).toContain('<SkillRadar :scores="radarScores" />')
     expect(studentInsightRecommendationsSectionSource).toContain(
-      'class="insight-recommendation-list workspace-directory-list"'
+      'class="insight-recommendation-list workspace-glass-region workspace-directory-list"'
     )
     expect(studentInsightRecommendationsSectionSource).toMatch(
-      /<StudentInsightStateSurface[\s\S]*class="insight-recommendation-list workspace-directory-list"[\s\S]*<template #loading>[\s\S]*<template #empty>[\s\S]*<template #default>/s
+      /<StudentInsightStateSurface[\s\S]*class="insight-recommendation-list workspace-glass-region workspace-directory-list"[\s\S]*<template #loading>[\s\S]*<template #empty>[\s\S]*<template #default>/s
     )
     expect(studentInsightPrimarySectionsSource).toContain(':loading="recommendationsLoading"')
     // merged: loading 和 loaded 共用同一个 StudentInsightPrimarySections 实例
@@ -360,9 +382,11 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightTimelineSectionSource).toContain('insight-timeline-loading-hero')
     expect(studentInsightTimelineSectionSource).toContain('insight-timeline-loading-metrics')
     expect(studentInsightTimelineSectionSource).toContain('insight-timeline-loading-list')
-    expect(studentInsightRecommendationsSectionSource).toMatch(
-      /\.insight-recommendation-list\s*\{[\s\S]*--workspace-directory-shell-border:\s*color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);[\s\S]*--workspace-directory-shell-background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*--workspace-directory-shell-radius:\s*var\(--workspace-radius-lg\);[\s\S]*overflow:\s*hidden;[\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      '<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSurface.css"></style>'
     )
+    expect(studentInsightStateSurfaceSource).toContain('surface?: \'glass\' | \'plain\'')
+    expect(studentInsightLoadingSurfaceSource).toContain('student-insight-glass-surface')
     expect(studentInsightRecommendationsSectionSource).toContain(
       '<div class="insight-recommendation-skeleton-head">'
     )
@@ -697,7 +721,7 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.find('#student-tab-writeups').exists()).toBe(true)
     expect(wrapper.find('#student-tab-manual-review').exists()).toBe(false)
     expect(wrapper.find('#student-tab-evidence').exists()).toBe(true)
-    expect(wrapper.find('#student-tab-timeline').exists()).toBe(true)
+    expect(wrapper.find('#student-tab-training-records').exists()).toBe(true)
     expect(studentAnalysisPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
     expect(studentAnalysisPageSource).toMatch(
       /class="[^"]*\bstudent-analysis-shell\b[^"]*\bflex\b[^"]*\bmin-h-full\b[^"]*\bflex-1\b[^"]*\bflex-col\b[^"]*"/
@@ -707,11 +731,12 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).toContain('StudentAnalysisWorkspaceTabs')
     expect(studentAnalysisWorkspaceTabsSource).toContain('class="workspace-tabbar top-tabs"')
     expect(studentAnalysisPageSource).toMatch(
-      /<div\s+class="[^"]*\bworkspace-shell\b[^"]*"\s*>[\s\S]*<StudentAnalysisWorkspaceTabs[\s\S]*<main class="content-pane">/s
+      /<div\s+class="[^"]*\bworkspace-shell\b[^"]*\bworkspace-shell--plain\b[^"]*"\s*>[\s\S]*<StudentAnalysisWorkspaceTabs[\s\S]*<main class="content-pane">/s
     )
     expect(studentAnalysisPageSource).toMatch(
       /\.content-pane\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*align-content:\s*start;/s
     )
+    expect(studentAnalysisPageSource).toContain('workspace-shell--plain')
     expect(studentAnalysisPageSource).toContain('--workspace-shell-bg:')
     expect(studentAnalysisPageSource).toContain('--workspace-panel:')
     expect(studentAnalysisPageSource).toContain('--workspace-shadow-shell:')

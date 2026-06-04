@@ -24,6 +24,10 @@ const journalUserShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-shell.css`,
   'utf-8'
 )
+const workspaceGlassSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/workspace-glass.css`,
+  'utf-8'
+)
 const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
 const notificationListWorkspaceSource = `${notificationListSource}\n${notificationListWorkspaceSourceBase}`
 
@@ -166,19 +170,19 @@ describe('student and user surface alignment', () => {
 
   it('student timeline 概况卡片应显式采用统一 metric-panel 样式栈', () => {
     expect(trainingTimelineContentSource).toContain(
-      'class="workspace-panel-header__summary timeline-metric-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="workspace-panel-header__summary timeline-metric-grid progress-strip metric-panel-grid"'
     )
     expect(trainingTimelineContentSource).toContain(
       'class="timeline-section workspace-directory-section"'
     )
     expect(trainingTimelineContentSource).toContain(
-      'class="timeline-directory-shell teacher-directory-shell workspace-directory-list workspace-directory-list--catalog"'
+      'class="timeline-directory-shell workspace-glass-region workspace-directory-list"'
     )
     expect(trainingTimelineContentSource).toContain(
       'class="timeline-pagination workspace-directory-pagination"'
     )
     expect(trainingTimelineContentSource).toContain(
-      'class="timeline-metric-card progress-card metric-panel-card"'
+      'class="timeline-metric-card progress-card metric-panel-card metric-panel-default-surface workspace-glass-metric-surface"'
     )
     expect(trainingTimelineContentSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
@@ -191,12 +195,12 @@ describe('student and user surface alignment', () => {
     )
     expect(trainingTimelineContentSource).toContain('<component :is="metric.icon" class="h-4 w-4" />')
     expect(trainingTimelineContentSource).not.toContain('teacher-surface-section')
-    expect(trainingTimelineContentSource).toMatch(
-      /\.timeline-metric-grid\.metric-panel-default-surface\s*\{[\s\S]*--metric-panel-background:\s*radial-gradient\(/s
-    )
-    expect(trainingTimelineContentSource).toMatch(
-      /\.timeline-directory-shell\s*\{[\s\S]*--workspace-directory-shell-border:\s*var\(--journal-soft-border\);[\s\S]*--workspace-directory-row-divider:\s*var\(--journal-divider\);/s
-    )
+    expect(trainingTimelineContentSource).toContain('workspace-glass-metric-surface')
+    expect(trainingTimelineContentSource).toContain('workspace-glass-region workspace-directory-list')
+    expect(trainingTimelineContentSource).not.toContain('.teacher-directory-shell {')
+    expect(trainingTimelineContentSource).not.toContain('.timeline-metric-grid.metric-panel-default-surface {')
+    expect(workspaceGlassSource).toContain('.workspace-glass-region')
+    expect(workspaceGlassSource).toContain('.workspace-glass-metric-surface')
     expect(trainingTimelineContentSource).toContain('class="workspace-overline">Timeline Log</div>')
   })
 

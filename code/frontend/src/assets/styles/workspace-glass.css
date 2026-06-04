@@ -1,0 +1,97 @@
+.workspace-glass-region {
+  --workspace-glass-border: color-mix(
+    in srgb,
+    var(--teacher-card-border, var(--journal-border, var(--color-border-default))) 88%,
+    transparent
+  );
+  --workspace-glass-background:
+    radial-gradient(
+      ellipse at top right,
+      color-mix(
+        in srgb,
+        var(--workspace-brand, var(--journal-accent, var(--color-primary))) 9%,
+        transparent
+      ),
+      transparent 46%
+    ),
+    radial-gradient(
+      ellipse at bottom left,
+      color-mix(in srgb, var(--color-bg-surface) 58%, transparent),
+      transparent 52%
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(
+        in srgb,
+        var(--workspace-panel, var(--journal-surface, var(--color-bg-surface))) 96%,
+        var(--color-bg-base)
+      ),
+      color-mix(
+        in srgb,
+        var(
+          --workspace-panel-soft,
+          var(--journal-surface-subtle, var(--workspace-panel, var(--color-bg-elevated)))
+        ) 88%,
+        var(--color-bg-base)
+      )
+    );
+  --workspace-glass-shadow: var(
+    --workspace-shadow-panel,
+    0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent)
+  );
+  --workspace-directory-shell-border: var(--workspace-glass-border);
+  --workspace-directory-shell-background: var(--workspace-glass-background);
+  --workspace-directory-shell-radius: var(--workspace-radius-lg, 18px);
+  --workspace-directory-shell-padding: var(--space-4);
+  --workspace-directory-row-divider: color-mix(
+    in srgb,
+    var(--workspace-directory-shell-border) 82%,
+    transparent
+  );
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--workspace-directory-shell-border);
+  border-radius: var(--workspace-directory-shell-radius);
+  background: var(--workspace-directory-shell-background);
+  box-shadow: var(--workspace-glass-shadow);
+}
+
+.workspace-glass-region::before {
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  content: '';
+  border-radius: calc(var(--workspace-directory-shell-radius) - 1px);
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      color-mix(in srgb, var(--color-bg-surface) 34%, transparent) 38%,
+      transparent 72%
+    );
+  opacity: 0.54;
+}
+
+.workspace-glass-metric-surface {
+  --metric-panel-border: var(
+    --workspace-glass-border,
+    color-mix(in srgb, var(--color-border-default) 82%, transparent)
+  );
+  --metric-panel-background: var(
+    --workspace-glass-background,
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent, var(--color-primary-default)) 16%, transparent),
+      transparent 44%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base))
+    )
+  );
+  --metric-panel-shadow: var(
+    --workspace-glass-shadow,
+    0 14px 28px color-mix(in srgb, var(--color-shadow-soft) 55%, transparent)
+  );
+}

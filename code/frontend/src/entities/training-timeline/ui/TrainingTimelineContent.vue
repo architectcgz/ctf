@@ -13,12 +13,12 @@
         </p>
       </div>
       <div
-        class="workspace-panel-header__summary timeline-metric-grid progress-strip metric-panel-grid metric-panel-default-surface"
+        class="workspace-panel-header__summary timeline-metric-grid progress-strip metric-panel-grid"
       >
         <article
           v-for="metric in timelineMetrics"
           :key="metric.key"
-          class="timeline-metric-card progress-card metric-panel-card"
+          class="timeline-metric-card progress-card metric-panel-card metric-panel-default-surface workspace-glass-metric-surface"
         >
           <div class="journal-note-label progress-card-label metric-panel-label">
             <span>{{ metric.label }}</span>
@@ -37,7 +37,7 @@
     <div class="timeline-board mt-0 px-0 pt-0 md:px-0 md:pt-0">
       <section class="timeline-section workspace-directory-section">
         <section
-          class="timeline-directory-shell teacher-directory-shell workspace-directory-list workspace-directory-list--catalog"
+          class="timeline-directory-shell workspace-glass-region workspace-directory-list"
         >
           <header class="list-heading timeline-list-heading">
             <div class="timeline-list-heading__body">
@@ -130,22 +130,6 @@
   --metric-panel-columns: repeat(4, minmax(0, 1fr));
 }
 
-.timeline-metric-grid.metric-panel-default-surface {
-  --metric-panel-border: var(--journal-soft-border);
-  --metric-panel-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 14%, transparent),
-      transparent 44%
-    ),
-    linear-gradient(
-      165deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
-    );
-  --metric-panel-shadow: 0 10px 20px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
-}
-
 .timeline-metric-card {
   min-height: 100%;
 }
@@ -172,31 +156,8 @@
 }
 
 .timeline-directory-shell {
-  --workspace-directory-shell-padding: var(--space-5);
-  --workspace-directory-shell-radius: var(--radius-2xl);
-  --workspace-directory-shell-border: var(--journal-soft-border);
-  --workspace-directory-row-divider: var(--journal-divider);
   display: grid;
   gap: var(--space-4);
-  box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
-    color-mix(in srgb, var(--color-shadow-soft) 18%, transparent);
-}
-
-.teacher-directory-shell {
-  --workspace-directory-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  --workspace-directory-shell-background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--color-primary) 6%, transparent),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 74%, var(--color-bg-base))
-    );
-  box-shadow: 0 calc(var(--space-4) + var(--space-0-5)) calc(var(--space-8) + var(--space-0-5))
-    color-mix(in srgb, var(--color-shadow-soft) 20%, transparent);
 }
 
 .timeline-empty-state {

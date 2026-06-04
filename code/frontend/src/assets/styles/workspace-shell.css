@@ -27,6 +27,10 @@
   color: var(--journal-ink, var(--color-text-primary));
 }
 
+.workspace-shell.workspace-shell--plain {
+  background: var(--workspace-shell-background);
+}
+
 .workspace-shell > .workspace-topbar {
   display: flex;
   align-items: center;

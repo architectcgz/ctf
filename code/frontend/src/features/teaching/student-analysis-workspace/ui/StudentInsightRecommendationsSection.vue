@@ -6,7 +6,7 @@
     subtitle="根据当前薄弱维度筛出的优先训练题目。"
   >
     <StudentInsightStateSurface
-      class="insight-recommendation-list workspace-directory-list"
+      class="insight-recommendation-list workspace-glass-region workspace-directory-list"
       :loading="loading"
       :empty="!loading && recommendations.length === 0"
       surface="plain"
@@ -82,6 +82,7 @@
 </template>
 
 <style src="@/features/teaching/student-analysis-shared/ui/studentInsightSections.css"></style>
+<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSurface.css"></style>
 
 <style scoped>
 .insight-recommendation-pills {
@@ -94,50 +95,8 @@
 
 .insight-recommendation-list {
   --workspace-directory-grid-columns: minmax(0, 1fr) auto auto;
-  --workspace-directory-shell-border: color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  --workspace-directory-shell-background:
-    radial-gradient(
-      ellipse at top right,
-      color-mix(in srgb, var(--journal-accent) 9%, transparent),
-      transparent 46%
-    ),
-    radial-gradient(
-      ellipse at bottom left,
-      color-mix(in srgb, var(--color-bg-surface) 58%, transparent),
-      transparent 52%
-    ),
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base))
-    );
-  --workspace-directory-shell-radius: var(--workspace-radius-lg);
   --workspace-directory-shell-padding: var(--space-3) var(--space-4);
-  --workspace-directory-row-divider: color-mix(
-    in srgb,
-    var(--workspace-directory-shell-border) 82%,
-    transparent
-  );
   margin-top: var(--space-5);
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--workspace-shadow-panel);
-}
-
-.insight-recommendation-list::before {
-  position: absolute;
-  inset: 1px;
-  pointer-events: none;
-  content: '';
-  border-radius: calc(var(--workspace-radius-lg) - 1px);
-  background:
-    linear-gradient(
-      115deg,
-      transparent 0%,
-      color-mix(in srgb, var(--color-bg-surface) 34%, transparent) 38%,
-      transparent 72%
-    );
-  opacity: 0.54;
 }
 
 .insight-recommendation-row {

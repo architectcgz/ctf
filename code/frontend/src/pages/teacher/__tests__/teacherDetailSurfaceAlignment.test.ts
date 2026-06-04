@@ -44,6 +44,10 @@ const studentInsightSurfaceSharedSource = readFileSync(
   `${process.cwd()}/src/features/teaching/student-analysis-shared/ui/studentInsightSurface.css`,
   'utf-8'
 )
+const workspaceGlassSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/workspace-glass.css`,
+  'utf-8'
+)
 const classStudentsSource = [
   classStudentsSourceBase,
   classStudentsOverviewPanelSource,
@@ -95,7 +99,7 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toContain('--teacher-card-border:')
     expect(studentAnalysisSource).toContain('--teacher-divider:')
     expect(studentAnalysisSource).toContain(
-      'class="workspace-shell teacher-management-shell teacher-surface student-analysis-shell journal-eyebrow-text flex min-h-full flex-1 flex-col"'
+      'class="workspace-shell workspace-shell--plain teacher-management-shell teacher-surface student-analysis-shell journal-eyebrow-text flex min-h-full flex-1 flex-col"'
     )
     expect(studentAnalysisSource).not.toContain('class="workspace-topbar"')
     expect(studentAnalysisSource).toContain('StudentAnalysisWorkspaceTabs')
@@ -282,6 +286,9 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightPanelSource).not.toContain('insight-loading-shell')
     expect(studentInsightTimelineSectionSource).toContain('StudentInsightLoadingSurface')
     expect(studentInsightLoadingSurfaceSource).toContain('student-insight-glass-surface')
+    expect(studentInsightSurfaceSharedSource).not.toContain('.student-insight-glass-region')
+    expect(workspaceGlassSource).toContain('.workspace-glass-region')
+    expect(workspaceGlassSource).toContain('.workspace-glass-metric-surface')
     expect(studentInsightManualReviewSource).toContain('StudentInsightStateSurface')
     expect(studentInsightManualReviewSource).toContain(
       'class="manual-review-detail-shell student-insight-detail-shell"'
@@ -314,13 +321,13 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightPanelSource).not.toContain('challenge-btn-outline')
     expect(studentInsightPanelSource).not.toContain('challenge-btn-primary')
     expect(studentInsightRecommendationsSectionSource).toContain(
-      'class="insight-recommendation-list workspace-directory-list"'
+      'class="insight-recommendation-list workspace-glass-region workspace-directory-list"'
     )
     expect(studentInsightRecommendationsSectionSource).toMatch(
-      /<StudentInsightStateSurface[\s\S]*class="insight-recommendation-list workspace-directory-list"[\s\S]*<template #loading>[\s\S]*<template #empty>[\s\S]*<template #default>/s
+      /<StudentInsightStateSurface[\s\S]*class="insight-recommendation-list workspace-glass-region workspace-directory-list"[\s\S]*<template #loading>[\s\S]*<template #empty>[\s\S]*<template #default>/s
     )
-    expect(studentInsightRecommendationsSectionSource).toMatch(
-      /\.insight-recommendation-list\s*\{[\s\S]*--workspace-directory-shell-border:\s*color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);[\s\S]*--workspace-directory-shell-background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*--workspace-directory-shell-radius:\s*var\(--workspace-radius-lg\);[\s\S]*overflow:\s*hidden;[\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
+    expect(workspaceGlassSource).toMatch(
+      /\.workspace-glass-region\s*\{[\s\S]*--workspace-directory-shell-border:\s*var\(--workspace-glass-border\);[\s\S]*background:\s*var\(--workspace-directory-shell-background\);[\s\S]*box-shadow:\s*var\(--workspace-glass-shadow\);/s
     )
     expect(studentInsightRecommendationsSectionSource).toContain('student-insight-skeleton-line')
     expect(studentInsightRecommendationsSectionSource).toContain(
