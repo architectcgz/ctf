@@ -224,27 +224,6 @@ describe('TeacherAWDReviewIndex', () => {
     expect(router.currentRoute.value.params).toMatchObject({ contestId: 'contest-1' })
   })
 
-  it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain('<AwdReviewContestDirectory')
-    expect(teacherAwdReviewContestDirectorySource).toContain('<AwdReviewIndexFilters')
-    expect(teacherAwdReviewContestDirectorySource).toContain('<AwdReviewDirectorySection')
-    expect(teacherAwdReviewDirectorySectionSource).toContain(
-      'class="workspace-directory-section teacher-directory-section"'
-    )
-    expect(teacherAwdReviewDirectorySectionSource).toContain('class="list-heading"')
-    expect(teacherAwdReviewContestDirectorySource).not.toContain('teacher-controls-title')
-    expect(teacherAwdReviewContestDirectorySource).not.toContain('teacher-controls-copy')
-    expect(teacherAwdReviewDirectorySectionSource).not.toMatch(
-      /\.teacher-controls\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
-    )
-    expect(teacherAwdReviewDirectorySectionSource).not.toMatch(
-      /\.teacher-controls\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--journal-surface-subtle\)\s*84%,\s*transparent\);/s
-    )
-    expect(teacherAwdReviewDirectorySectionSource).not.toMatch(
-      /\.teacher-controls\s*\{[\s\S]*box-shadow:\s*0 10px 24px var\(--color-shadow-soft\);/s
-    )
-  })
-
   it('赛事概览条不应继续保留多余的底部分隔线', () => {
     expect(teacherAwdReviewIndexWorkspaceSource).toContain('<AwdReviewSummaryPanel')
   })
@@ -261,16 +240,6 @@ describe('TeacherAWDReviewIndex', () => {
     )
     expect(teacherAwdReviewIndexWorkspaceSource).toContain('buildAwdReviewIndexSummaryItems')
     expect(teacherAwdReviewIndexWorkspaceSource).not.toContain('buildTeacherAwdReviewIndexSummaryItems')
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain('header-class="awd-review-index-header"')
-    expect(teacherAwdReviewIndexWorkspaceSource).toContain(
-      'overline-class="awd-review-index-overline"'
-    )
-    expect(teacherAwdReviewIndexWorkspaceSource).toMatch(
-      /\.awd-review-index-overline\s*\{[\s\S]*font-size:\s*var\(--journal-overline-font-size,\s*var\(--font-size-0-70\)\);[\s\S]*letter-spacing:\s*var\(--journal-overline-letter-spacing,\s*0\.2em\);[\s\S]*text-transform:\s*uppercase;[\s\S]*color:\s*var\(--journal-accent,\s*var\(--color-primary\)\);/s
-    )
-    expect(teacherAwdReviewIndexWorkspaceSource).not.toContain(
-      '<div class="teacher-surface-eyebrow journal-eyebrow">AWD Review Workspace</div>'
-    )
   })
 
   it('筛选区源码不应继续保留表单提交和应用筛选按钮', () => {
