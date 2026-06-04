@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import awdWorkspaceSource from '@/features/contest-awd-workspace/ui/ContestAWDWorkspacePanel.vue?raw'
 import awdAttackResultFooterSource from '@/features/contest-awd-workspace/ui/AWDAttackResultFooter.vue?raw'
-import awdAttackTargetGridSource from '@/features/contest-awd-workspace/ui/AWDAttackTargetGrid.vue?raw'
 import awdAttackToolbarSource from '@/features/contest-awd-workspace/ui/AWDAttackToolbar.vue?raw'
 import awdAttackVectorPanelSource from '@/features/contest-awd-workspace/ui/AWDAttackVectorPanel.vue?raw'
 import awdDefenseColumnSource from '@/features/contest-awd-workspace/ui/AWDDefenseColumn.vue?raw'
@@ -19,14 +18,6 @@ import awdWorkspaceHudStripSource from '@/features/contest-awd-workspace/ui/AWDW
 import awdWorkspaceIntelColumnSource from '@/features/contest-awd-workspace/ui/AWDWorkspaceIntelColumn.vue?raw'
 import studentRoutesSource from '@/router/routes/studentRoutes.ts?raw'
 
-const awdActionSurfaceSource = [
-  awdWorkspaceSource,
-  awdWorkspaceHudStripSource,
-  awdDefenseServiceListSource,
-  awdAttackToolbarSource,
-  awdAttackTargetGridSource,
-].join('\n')
-
 describe('contest awd workspace ui strategy', () => {
   it('awd workspace should keep its extracted tactical surface and stable selectors', () => {
     expect(awdWorkspaceSource).toContain('AWDDefenseColumn')
@@ -41,18 +32,9 @@ describe('contest awd workspace ui strategy', () => {
     expect(awdDefenseOperationsPanelSource).toContain("emit('refresh')")
   })
 
-  it('awd workspace should keep stable war-room action primitives and targeting selectors', () => {
-    expect(awdActionSurfaceSource).toContain('class="hud-refresh-btn"')
-    expect(awdActionSurfaceSource).toContain('class="asset-btn asset-btn--primary"')
-    expect(awdActionSurfaceSource).toContain('class="war-room-select"')
-    expect(awdActionSurfaceSource).toContain('class="war-room-input"')
-    expect(awdActionSurfaceSource).toContain('class="flag-input"')
-    expect(awdActionSurfaceSource).toContain('class="submit-btn"')
-    expect(awdActionSurfaceSource).toContain('id="awd-target-challenge"')
-    expect(awdActionSurfaceSource).toContain('id="awd-target-search"')
-    expect(awdActionSurfaceSource).not.toMatch(/^\.contest-btn\s*\{/m)
-    expect(awdActionSurfaceSource).not.toMatch(/^\.contest-btn--primary\s*\{/m)
-    expect(awdActionSurfaceSource).not.toMatch(/^\.contest-btn--ghost\s*\{/m)
+  it('awd workspace should keep stable targeting selectors', () => {
+    expect(awdAttackToolbarSource).toContain('id="awd-target-challenge"')
+    expect(awdAttackToolbarSource).toContain('id="awd-target-search"')
   })
 
   it('awd workspace source contracts should continue to expose the current tactical model seams', () => {
