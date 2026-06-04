@@ -8,42 +8,43 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from fnmatch import fnmatch
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 REUSE_DECISIONS_DIR = ROOT / ".harness" / "reuse-decisions"
 LOCAL_REUSE_INDEX_DIR = ROOT / ".harness" / "reuse-index"
 POLICY_DIR = ROOT / "harness" / "policies"
+REUSE_POLICY_FILE = POLICY_DIR / "reuse-first.yaml"
 TASK_SCOPED_REUSE_DECISION_HINT = ".harness/reuse-decisions/<task-slug>.md"
-
-SEARCH_ROOTS = [
-    "code/frontend/src/views",
-    "code/frontend/src/components",
-    "code/frontend/src/features",
-    "code/frontend/src/widgets",
-    "code/frontend/src/composables",
-    "code/frontend/src/api",
-    "code/frontend/src/stores",
-    "code/backend/internal/module",
-    "code/backend/internal/app/composition",
-    "code/backend/internal/model",
-    "code/backend/migrations",
-]
+ALLOWED_EXISTING_SEARCH_PREFIXES = (
+    "code/",
+    "harness/",
+    "scripts/",
+    ".harness/",
+)
 
 PROTECTED_PATTERNS = {
     "page": [
+        "code/frontend/src/pages/**/*.vue",
         "code/frontend/src/views/**/*.vue",
         "code/frontend/src/components/**/*Page.vue",
         "code/frontend/src/components/**/*View.vue",
     ],
     "component": [
         "code/frontend/src/components/**/*.vue",
+        "code/frontend/src/shared/ui/**/*.vue",
+        "code/frontend/src/entities/**/ui/**/*.vue",
+        "code/frontend/src/features/**/ui/**/*.vue",
         "code/frontend/src/widgets/**/*.vue",
     ],
     "hook": [
         "code/frontend/src/composables/use*.ts",
+        "code/frontend/src/shared/**/use*.ts",
+        "code/frontend/src/entities/**/model/use*.ts",
         "code/frontend/src/features/**/model/use*.ts",
         "code/frontend/src/components/**/use*.ts",
+        "code/frontend/src/widgets/**/model/use*.ts",
     ],
     "service": [
         "code/backend/internal/**/*service*.go",
@@ -185,6 +186,31 @@ class ReuseDecisionDocument:
     text: str
 
 
+@lru_cache(maxsize=1)
+def load_reuse_policy() -> dict[str, object]:
+    try:
+        return json.loads(REUSE_POLICY_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+@lru_cache(maxsize=1)
+def configured_search_roots() -> tuple[str, ...]:
+    policy = load_reuse_policy()
+    roots = policy.get("must_search_before_create", [])
+    if not isinstance(roots, list):
+        return ()
+
+    normalized = []
+    for root in roots:
+        if not isinstance(root, str):
+            continue
+        cleaned = root.strip().rstrip("/")
+        if cleaned:
+            normalized.append(cleaned)
+    return tuple(normalized)
+
+
 def run_git(*args: str) -> str:
     result = subprocess.run(
         ["git", *args],
@@ -269,6 +295,57 @@ def load_reuse_reference_text() -> str:
     return "\n".join(part for part in parts if part)
 
 
+def extract_markdown_section(text: str, heading: str) -> str:
+    pattern = re.compile(rf"^## {re.escape(heading)}\s*$([\s\S]*?)(?=^## |\Z)", re.MULTILINE)
+    match = pattern.search(text)
+    return match.group(1).strip() if match else ""
+
+
+def extract_markdown_list(section_text: str) -> list[str]:
+    entries: list[str] = []
+    for raw_line in section_text.splitlines():
+        line = raw_line.strip()
+        if not line.startswith("- "):
+            continue
+        entries.append(line[2:].strip())
+    return entries
+
+
+def normalize_search_entry(entry: str) -> str:
+    return entry.strip().strip("`").strip().rstrip("/")
+
+
+def is_existing_repo_search_path(path: str) -> bool:
+    if not path:
+        return False
+
+    candidate = path[:-4] if path.endswith("/...") else path
+    if not candidate.startswith(ALLOWED_EXISTING_SEARCH_PREFIXES):
+        return False
+
+    resolved = (ROOT / candidate).resolve()
+    try:
+        resolved.relative_to(ROOT)
+    except ValueError:
+        return False
+    return resolved.exists()
+
+
+def has_valid_existing_code_searched_entry(text: str) -> bool:
+    search_roots = configured_search_roots()
+    section = extract_markdown_section(text, "Existing code searched")
+    entries = extract_markdown_list(section)
+    for entry in entries:
+        normalized = normalize_search_entry(entry)
+        if not normalized:
+            continue
+        if any(normalized == root or normalized.startswith(f"{root}/") for root in search_roots):
+            return True
+        if is_existing_repo_search_path(normalized):
+            return True
+    return False
+
+
 def validate_reuse_decision(text: str, protected_paths: list[str] | None = None) -> list[str]:
     errors: list[str] = []
     required_sections = [
@@ -286,8 +363,10 @@ def validate_reuse_decision(text: str, protected_paths: list[str] | None = None)
     if "待填写" in text or "TBD" in text or "TODO" in text:
         errors.append("reuse decision still contains placeholders")
 
-    if not any(root in text for root in SEARCH_ROOTS):
-        errors.append("reuse decision does not mention any configured search roots")
+    if not has_valid_existing_code_searched_entry(text):
+        errors.append(
+            "reuse decision Existing code searched must mention a configured search root or an existing repo file/directory"
+        )
 
     if not any(
         decision in text
