@@ -1,30 +1,22 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-
-import type { SkillProfileData } from '@/api/contracts'
-import SectionCard from '@/shared/ui/common/SectionCard.vue'
-import SkillRadar from '@/shared/ui/common/SkillRadar.vue'
-import { toRadarScores } from '@/entities/skill-profile'
-
-const props = defineProps<{
-  profile: SkillProfileData | null
-}>()
-
-const radarScores = computed(() => toRadarScores(props.profile))
-const rankedProfileDimensions = computed(() =>
-  [...(props.profile?.dimensions ?? [])].sort((left, right) => right.value - left.value)
-)
-</script>
-
 <template>
   <div class="insight-overview-layout">
-    <SectionCard title="六维能力分布" subtitle="雷达图展示当前六个能力维度的训练分布。">
+    <SectionCard
+      class="insight-overview-card"
+      variant="teacher-flat"
+      title="六维能力分布"
+      subtitle="雷达图展示当前六个能力维度的训练分布。"
+    >
       <div class="mt-4">
         <SkillRadar :scores="radarScores" />
       </div>
     </SectionCard>
 
-    <SectionCard title="维度得分占比" subtitle="条状图展示各维度当前分值。">
+    <SectionCard
+      class="insight-overview-card"
+      variant="teacher-flat"
+      title="维度得分占比"
+      subtitle="条状图展示各维度当前分值。"
+    >
       <div v-if="rankedProfileDimensions.length > 0" class="insight-dimension-bars mt-4">
         <article
           v-for="item in rankedProfileDimensions"
@@ -55,8 +47,8 @@ const rankedProfileDimensions = computed(() =>
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
 }
 
-.insight-overview-layout :deep(.section-card) {
-  border-top: 0;
+.insight-overview-card {
+  --section-card-border-top-width: 0;
 }
 
 .insight-dimension-bars {
@@ -111,3 +103,21 @@ const rankedProfileDimensions = computed(() =>
   }
 }
 </style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+
+import type { SkillProfileData } from '@/api/contracts'
+import { toRadarScores } from '@/entities/skill-profile'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
+import SkillRadar from '@/shared/ui/common/SkillRadar.vue'
+
+const props = defineProps<{
+  profile: SkillProfileData | null
+}>()
+
+const radarScores = computed(() => toRadarScores(props.profile))
+const rankedProfileDimensions = computed(() =>
+  [...(props.profile?.dimensions ?? [])].sort((left, right) => right.value - left.value)
+)
+</script>

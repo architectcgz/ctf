@@ -1,68 +1,3 @@
-<script setup lang="ts">
-import AppCard from '@/shared/ui/common/AppCard.vue'
-import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
-import type {
-  AttackSessionQuery,
-  ManualReviewSubmissionDetailData,
-  ManualReviewSubmissionItemData,
-  MyProgressData,
-  RecommendationItem,
-  SkillProfileData,
-  AttackSessionResponseData,
-  StudentEvidenceData,
-  WriteupSubmissionItemData,
-  StudentDirectoryItem,
-  TimelineEvent,
-} from '@/api/contracts'
-import {
-  StudentInsightReviewSections,
-  type StudentInsightSection,
-} from '@/features/teaching/student-analysis-review'
-import StudentInsightPrimarySections from './StudentInsightPrimarySections.vue'
-
-const props = defineProps<{
-  student: StudentDirectoryItem | null
-  progress: MyProgressData | null
-  profile: SkillProfileData | null
-  recommendations: RecommendationItem[]
-  timeline: TimelineEvent[]
-  evidence: StudentEvidenceData | null
-  attackSessions: AttackSessionResponseData | null
-  reviewChallengeOptions: Array<{ value: string; label: string }>
-  reviewWorkspaceLoading: boolean
-  reviewWorkspaceQuery: AttackSessionQuery
-  writeupSubmissions: WriteupSubmissionItemData[]
-  writeupPage: number
-  writeupTotal: number
-  writeupTotalPages: number
-  writeupPaginationLoading: boolean
-  manualReviewSubmissions: ManualReviewSubmissionItemData[]
-  activeManualReview: ManualReviewSubmissionDetailData | null
-  manualReviewLoading: boolean
-  manualReviewSaving: boolean
-  loading: boolean
-  emptyText?: string
-  activeSection?: StudentInsightSection
-}>()
-
-const emit = defineEmits<{
-  openChallenge: [challengeId: string]
-  openManualReview: [submissionId: string]
-  moderateWriteup: [
-    payload: { submissionId: string; action: 'recommend' | 'unrecommend' | 'hide' | 'restore' },
-  ]
-  reviewManualReview: [
-    payload: {
-      submissionId: string
-      reviewStatus: 'approved' | 'rejected'
-      reviewComment?: string
-    },
-  ]
-  changeWriteupPage: [page: number]
-  updateReviewWorkspaceFilters: [payload: Partial<AttackSessionQuery>]
-}>()
-</script>
-
 <template>
   <div class="student-insight-shell teacher-surface space-y-6">
     <AppEmpty
@@ -144,31 +79,69 @@ const emit = defineEmits<{
     color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
   );
 }
-
-:deep(.section-card) {
-  padding: var(--space-4) var(--space-1) var(--space-3);
-  border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-:deep(.section-card__header) {
-  margin-bottom: var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: 1px dashed color-mix(in srgb, var(--teacher-divider) 86%, transparent);
-}
-
-:deep(.section-card__body) {
-  padding-left: 0;
-}
-
-.insight-tab-section-card :deep(.section-card__header) {
-  border-bottom: 0;
-}
-
-.insight-tab-section-card.section-card {
-  border-top: 0;
-}
 </style>
+
+<script setup lang="ts">
+import type {
+  AttackSessionQuery,
+  AttackSessionResponseData,
+  ManualReviewSubmissionDetailData,
+  ManualReviewSubmissionItemData,
+  MyProgressData,
+  RecommendationItem,
+  SkillProfileData,
+  StudentDirectoryItem,
+  StudentEvidenceData,
+  TimelineEvent,
+  WriteupSubmissionItemData,
+} from '@/api/contracts'
+import {
+  StudentInsightReviewSections,
+  type StudentInsightSection,
+} from '@/features/teaching/student-analysis-review'
+import AppCard from '@/shared/ui/common/AppCard.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import StudentInsightPrimarySections from './StudentInsightPrimarySections.vue'
+
+const props = defineProps<{
+  student: StudentDirectoryItem | null
+  progress: MyProgressData | null
+  profile: SkillProfileData | null
+  recommendations: RecommendationItem[]
+  timeline: TimelineEvent[]
+  evidence: StudentEvidenceData | null
+  attackSessions: AttackSessionResponseData | null
+  reviewChallengeOptions: Array<{ value: string; label: string }>
+  reviewWorkspaceLoading: boolean
+  reviewWorkspaceQuery: AttackSessionQuery
+  writeupSubmissions: WriteupSubmissionItemData[]
+  writeupPage: number
+  writeupTotal: number
+  writeupTotalPages: number
+  writeupPaginationLoading: boolean
+  manualReviewSubmissions: ManualReviewSubmissionItemData[]
+  activeManualReview: ManualReviewSubmissionDetailData | null
+  manualReviewLoading: boolean
+  manualReviewSaving: boolean
+  loading: boolean
+  emptyText?: string
+  activeSection?: StudentInsightSection
+}>()
+
+const emit = defineEmits<{
+  openChallenge: [challengeId: string]
+  openManualReview: [submissionId: string]
+  moderateWriteup: [
+    payload: { submissionId: string; action: 'recommend' | 'unrecommend' | 'hide' | 'restore' },
+  ]
+  reviewManualReview: [
+    payload: {
+      submissionId: string
+      reviewStatus: 'approved' | 'rejected'
+      reviewComment?: string
+    },
+  ]
+  changeWriteupPage: [page: number]
+  updateReviewWorkspaceFilters: [payload: Partial<AttackSessionQuery>]
+}>()
+</script>

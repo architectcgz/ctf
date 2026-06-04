@@ -1,128 +1,7 @@
-<script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { ArrowRight, ClipboardList, FileText, FolderKanban } from 'lucide-vue-next'
-
-import type {
-  ManualReviewSubmissionDetailData,
-  ManualReviewSubmissionItemData,
-  WriteupSubmissionItemData,
-} from '@/api/contracts'
-import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
-import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
-import SectionCard from '@/shared/ui/common/SectionCard.vue'
-import {
-  visibilityStatusClass,
-  visibilityStatusLabel,
-  formatDateTime,
-  manualReviewStatusClass,
-  manualReviewStatusLabel,
-} from './studentInsightShared'
-
-const props = defineProps<{
-  writeupSubmissions: WriteupSubmissionItemData[]
-  writeupPage: number
-  writeupTotal: number
-  writeupTotalPages: number
-  writeupPaginationLoading: boolean
-  manualReviewSubmissions: ManualReviewSubmissionItemData[]
-  activeManualReview: ManualReviewSubmissionDetailData | null
-  manualReviewLoading: boolean
-  manualReviewSaving: boolean
-}>()
-
-const emit = defineEmits<{
-  openChallenge: [challengeId: string]
-  openManualReview: [submissionId: string]
-  moderateWriteup: [
-    payload: { submissionId: string; action: 'recommend' | 'unrecommend' | 'hide' | 'restore' },
-  ]
-  reviewManualReview: [
-    payload: {
-      submissionId: string
-      reviewStatus: 'approved' | 'rejected'
-      reviewComment?: string
-    },
-  ]
-  changeWriteupPage: [page: number]
-}>()
-
-const publishedWriteupSubmissions = computed(() =>
-  props.writeupSubmissions.filter(
-    (item) => item.submission_status === 'published'
-  )
-)
-const publishedChallengeCount = computed(
-  () => new Set(publishedWriteupSubmissions.value.map((item) => String(item.challenge_id))).size
-)
-const manualReviewByChallengeId = computed(() => {
-  const items = new Map<string, ManualReviewSubmissionItemData>()
-  for (const item of props.manualReviewSubmissions) {
-    if (!items.has(String(item.challenge_id))) {
-      items.set(String(item.challenge_id), item)
-    }
-  }
-  return items
-})
-const standaloneManualReviewSubmissions = computed(() => {
-  const publishedChallengeIds = new Set(
-    publishedWriteupSubmissions.value.map((item) => String(item.challenge_id))
-  )
-  return props.manualReviewSubmissions.filter(
-    (item) => !publishedChallengeIds.has(String(item.challenge_id))
-  )
-})
-const pendingManualReviewCount = computed(
-  () => props.manualReviewSubmissions.filter((item) => item.review_status === 'pending').length
-)
-const hasWriteupRows = computed(
-  () => publishedWriteupSubmissions.value.length > 0 || props.manualReviewSubmissions.length > 0
-)
-const manualReviewComment = ref('')
-
-watch(
-  () => props.activeManualReview,
-  (value) => {
-    manualReviewComment.value = value?.review_comment ?? ''
-  },
-  { immediate: true }
-)
-
-function openChallenge(challengeId: string): void {
-  emit('openChallenge', challengeId)
-}
-
-function openManualReview(submissionId: string): void {
-  emit('openManualReview', submissionId)
-}
-
-function changeWriteupPage(page: number): void {
-  emit('changeWriteupPage', page)
-}
-
-function moderateWriteup(
-  submissionId: string,
-  action: 'recommend' | 'unrecommend' | 'hide' | 'restore'
-): void {
-  emit('moderateWriteup', { submissionId, action })
-}
-
-function reviewManualReview(reviewStatus: 'approved' | 'rejected'): void {
-  if (!props.activeManualReview) return
-  emit('reviewManualReview', {
-    submissionId: props.activeManualReview.id,
-    reviewStatus,
-    reviewComment: manualReviewComment.value.trim() || undefined,
-  })
-}
-
-function findManualReview(challengeId: string): ManualReviewSubmissionItemData | undefined {
-  return manualReviewByChallengeId.value.get(String(challengeId))
-}
-</script>
-
 <template>
   <SectionCard
     class="writeup-section-card insight-tab-section-card"
+    variant="teacher-flat"
     title="题解列表"
     subtitle="集中处理发布状态、可见性与人工审核。"
   >
@@ -407,6 +286,11 @@ function findManualReview(challengeId: string): ManualReviewSubmissionItemData |
 </template>
 
 <style scoped>
+.insight-tab-section-card {
+  --section-card-border-top-width: 0;
+  --section-card-header-border-bottom: 0;
+}
+
 .writeup-chip {
   display: inline-flex;
   align-items: center;
@@ -706,3 +590,123 @@ function findManualReview(challengeId: string): ManualReviewSubmissionItemData |
   }
 }
 </style>
+
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { ArrowRight, ClipboardList, FileText, FolderKanban } from 'lucide-vue-next'
+
+import type {
+  ManualReviewSubmissionDetailData,
+  ManualReviewSubmissionItemData,
+  WriteupSubmissionItemData,
+} from '@/api/contracts'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
+import {
+  visibilityStatusClass,
+  visibilityStatusLabel,
+  formatDateTime,
+  manualReviewStatusClass,
+  manualReviewStatusLabel,
+} from './studentInsightShared'
+
+const props = defineProps<{
+  writeupSubmissions: WriteupSubmissionItemData[]
+  writeupPage: number
+  writeupTotal: number
+  writeupTotalPages: number
+  writeupPaginationLoading: boolean
+  manualReviewSubmissions: ManualReviewSubmissionItemData[]
+  activeManualReview: ManualReviewSubmissionDetailData | null
+  manualReviewLoading: boolean
+  manualReviewSaving: boolean
+}>()
+
+const emit = defineEmits<{
+  openChallenge: [challengeId: string]
+  openManualReview: [submissionId: string]
+  moderateWriteup: [
+    payload: { submissionId: string; action: 'recommend' | 'unrecommend' | 'hide' | 'restore' },
+  ]
+  reviewManualReview: [
+    payload: {
+      submissionId: string
+      reviewStatus: 'approved' | 'rejected'
+      reviewComment?: string
+    },
+  ]
+  changeWriteupPage: [page: number]
+}>()
+
+const publishedWriteupSubmissions = computed(() =>
+  props.writeupSubmissions.filter((item) => item.submission_status === 'published')
+)
+const publishedChallengeCount = computed(
+  () => new Set(publishedWriteupSubmissions.value.map((item) => String(item.challenge_id))).size
+)
+const manualReviewByChallengeId = computed(() => {
+  const items = new Map<string, ManualReviewSubmissionItemData>()
+  for (const item of props.manualReviewSubmissions) {
+    if (!items.has(String(item.challenge_id))) {
+      items.set(String(item.challenge_id), item)
+    }
+  }
+  return items
+})
+const standaloneManualReviewSubmissions = computed(() => {
+  const publishedChallengeIds = new Set(
+    publishedWriteupSubmissions.value.map((item) => String(item.challenge_id))
+  )
+  return props.manualReviewSubmissions.filter(
+    (item) => !publishedChallengeIds.has(String(item.challenge_id))
+  )
+})
+const pendingManualReviewCount = computed(
+  () => props.manualReviewSubmissions.filter((item) => item.review_status === 'pending').length
+)
+const hasWriteupRows = computed(
+  () => publishedWriteupSubmissions.value.length > 0 || props.manualReviewSubmissions.length > 0
+)
+const manualReviewComment = ref('')
+
+watch(
+  () => props.activeManualReview,
+  (value) => {
+    manualReviewComment.value = value?.review_comment ?? ''
+  },
+  { immediate: true }
+)
+
+function openChallenge(challengeId: string): void {
+  emit('openChallenge', challengeId)
+}
+
+function openManualReview(submissionId: string): void {
+  emit('openManualReview', submissionId)
+}
+
+function changeWriteupPage(page: number): void {
+  emit('changeWriteupPage', page)
+}
+
+function moderateWriteup(
+  submissionId: string,
+  action: 'recommend' | 'unrecommend' | 'hide' | 'restore'
+): void {
+  emit('moderateWriteup', { submissionId, action })
+}
+
+function reviewManualReview(reviewStatus: 'approved' | 'rejected'): void {
+  if (!props.activeManualReview) return
+  emit('reviewManualReview', {
+    submissionId: props.activeManualReview.id,
+    reviewStatus,
+    reviewComment: manualReviewComment.value.trim() || undefined,
+  })
+}
+
+function findManualReview(challengeId: string): ManualReviewSubmissionItemData | undefined {
+  return manualReviewByChallengeId.value.get(String(challengeId))
+}
+</script>

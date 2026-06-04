@@ -14,6 +14,11 @@ run_frontend_layer_checks() {
   )
 }
 
+run_frontend_vue_deep_checks() {
+  echo "[architecture][frontend] vue deep guard"
+  (cd "$ROOT_DIR/code/frontend" && npm run check:vue-deep)
+}
+
 run_frontend_growth_checks() {
   echo "[architecture][frontend] growth guards"
   (cd "$ROOT_DIR/code/frontend" && npm run check:frontend-growth)
@@ -45,9 +50,11 @@ run_frontend_theme_checks() {
 
 case "$MODE" in
   --quick|quick)
+    run_frontend_vue_deep_checks
     run_frontend_layer_checks
     ;;
   --full|full)
+    run_frontend_vue_deep_checks
     run_frontend_layer_checks
     run_frontend_growth_checks
     run_frontend_feature_boundary_checks

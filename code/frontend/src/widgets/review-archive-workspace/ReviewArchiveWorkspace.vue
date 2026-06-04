@@ -49,16 +49,6 @@
   min-height: 100%;
   padding: var(--space-1) 0 var(--space-8);
 }
-
-:deep(.section-card) {
-  border: 1px solid var(--teacher-card-border);
-  background: var(--journal-surface-subtle);
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
-}
-
-:deep(.section-card__header) {
-  border-bottom: 1px dashed var(--teacher-divider);
-}
 </style>
 
 <script setup lang="ts">

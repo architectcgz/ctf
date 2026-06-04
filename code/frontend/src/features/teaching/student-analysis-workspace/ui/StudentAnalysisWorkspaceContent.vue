@@ -56,27 +56,6 @@
   </section>
 </template>
 
-<style scoped>
-:deep(.section-card) {
-  padding: var(--space-3-5) var(--space-1) var(--space-3);
-  border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 90%, transparent);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-:deep(.section-card__header) {
-  margin-bottom: var(--space-4);
-  border-bottom: 1px dashed color-mix(in srgb, var(--teacher-divider) 86%, transparent);
-  padding-bottom: var(--space-3);
-}
-
-:deep(.section-card__body) {
-  padding-left: 0;
-}
-</style>
-
 <script setup lang="ts">
 import { computed } from 'vue'
 

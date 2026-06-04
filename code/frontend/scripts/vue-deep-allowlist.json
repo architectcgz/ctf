@@ -1,0 +1,302 @@
+{
+  "src/assets/styles/teacher-workspace-subpanel.css": {
+    ":deep(.dimension-item)": 1,
+    ":deep(.intervention-item)": 1,
+    ":deep(.review-item)": 2,
+    ":deep(.review-item__recommendation)": 1,
+    ":deep(.teacher-panel)": 2,
+    ":deep(.teacher-panel.teacher-panel--shellless)": 1,
+    ":deep(.teacher-panel__chart)": 2,
+    ":deep(.teacher-panel__header > .teacher-panel__title:first-child)": 1,
+    ":deep(.teacher-panel__header)": 1,
+    ":deep(.teacher-panel__title)": 1,
+    ":deep(.teacher-subsection + .teacher-subsection)": 1,
+    ":deep(.teacher-subsection__header > .teacher-panel__title:first-child)": 1,
+    ":deep(.teacher-subsection__header)": 1,
+    ":deep(.teacher-tip-index)": 1,
+    ":deep(.top-student-item)": 1,
+    ":deep(.top-student-item__rank)": 1
+  },
+  "src/entities/challenge/ui/ChallengeDescriptionPanel.vue": {
+    ":deep(*:first-child)": 1,
+    ":deep(*:last-child)": 1,
+    ":deep(a)": 1,
+    ":deep(blockquote)": 1,
+    ":deep(code)": 1,
+    ":deep(h1)": 2,
+    ":deep(h2)": 2,
+    ":deep(h3)": 1,
+    ":deep(h4)": 1,
+    ":deep(ol)": 2,
+    ":deep(p)": 1,
+    ":deep(pre)": 3,
+    ":deep(ul)": 2
+  },
+  "src/features/admin-notification-publisher/ui/AdminNotificationPublishDrawer.vue": {
+    ":deep(.modal-template-panel--drawer)": 1
+  },
+  "src/features/audit-log/ui/AuditLogDirectoryPanel.vue": {
+    ":deep(.workspace-data-table__row)": 1,
+    ":deep(.workspace-directory-toolbar)": 1
+  },
+  "src/features/challenge-detail/ui/ChallengeActionAside.vue": {
+    ":deep(.instance-shell)": 1
+  },
+  "src/features/challenge-detail/ui/ChallengeQuestionPanel.vue": {
+    ":deep(code)": 1,
+    ":deep(h1)": 1,
+    ":deep(h2)": 1,
+    ":deep(h3)": 1,
+    ":deep(ol)": 1,
+    ":deep(p)": 1,
+    ":deep(pre)": 1,
+    ":deep(strong)": 1,
+    ":deep(ul)": 1
+  },
+  "src/features/challenge-detail/ui/ChallengeSolutionsPanel.vue": {
+    ":deep(code)": 1,
+    ":deep(h1)": 2,
+    ":deep(h2)": 2,
+    ":deep(h3)": 2,
+    ":deep(ol)": 1,
+    ":deep(p)": 1,
+    ":deep(pre)": 1,
+    ":deep(strong)": 1,
+    ":deep(ul)": 1
+  },
+  "src/features/challenge-list/ui/ChallengeDirectoryPanel.vue": {
+    ":deep(.challenge-empty-state.challenge-directory-state)": 1
+  },
+  "src/features/challenge-topology-studio/ui/TopologyChallengeWorkbench.vue": {
+    ":deep(.section-card)": 1,
+    ":deep(.section-card:first-child)": 1,
+    ":deep(.section-card__body > .rounded-2xl)": 1,
+    ":deep(.section-card__body > .rounded-xl)": 1,
+    ":deep(.section-card__body)": 1,
+    ":deep(.section-card__header h2)": 1,
+    ":deep(.section-card__header p)": 1,
+    ":deep(.section-card__header)": 1,
+    ":deep(.topology-action-btn)": 1,
+    ":deep(.topology-action-btn--icon)": 1,
+    ":deep(.topology-action-btn:disabled)": 1,
+    ":deep(.topology-canvas-board__root)": 1,
+    ":deep(.topology-canvas-board__surface)": 1,
+    ":deep(.topology-context-rail)": 2,
+    ":deep(.topology-context-stack)": 3,
+    ":deep(.topology-side-stack .section-card:first-child)": 1,
+    ":deep(.topology-side-stack)": 1,
+    ":deep([data-node-editor])": 1,
+    ":deep(input)": 1,
+    ":deep(input::placeholder)": 1,
+    ":deep(input:focus)": 1,
+    ":deep(option)": 1,
+    ":deep(select)": 1,
+    ":deep(select:focus)": 1,
+    ":deep(textarea)": 1,
+    ":deep(textarea::placeholder)": 1,
+    ":deep(textarea:focus)": 1
+  },
+  "src/features/challenge-topology-studio/ui/TopologyTemplateHeroSection.vue": {
+    ":deep(.topology-hero-aside--library > section h2)": 1,
+    ":deep(.topology-hero-aside--library > section p)": 1,
+    ":deep(.topology-hero-aside--library > section)": 1
+  },
+  "src/features/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue": {
+    ":deep(.page-header)": 2,
+    ":deep(.page-header__eyebrow)": 1
+  },
+  "src/features/challenge-topology-studio/ui/TopologyTemplateSidePanel.vue": {
+    ":deep(.section-card:first-child)": 1
+  },
+  "src/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue": {
+    ":deep(.section-card)": 1,
+    ":deep(.section-card__body > .rounded-2xl)": 1,
+    ":deep(.section-card__body > .rounded-xl)": 1,
+    ":deep(.section-card__body)": 1,
+    ":deep(.section-card__header h2)": 1,
+    ":deep(.section-card__header p)": 1,
+    ":deep(.section-card__header)": 1,
+    ":deep(.template-canvas-mode-banner)": 1,
+    ":deep(.template-quick-editor)": 1,
+    ":deep(.topology-action-btn)": 2,
+    ":deep(.topology-canvas-board__root)": 2,
+    ":deep(.topology-canvas-board__surface)": 1,
+    ":deep([data-node-editor].border-primary)": 1,
+    ":deep([data-node-editor])": 3,
+    ":deep(input)": 2,
+    ":deep(input:focus)": 1,
+    ":deep(select)": 2,
+    ":deep(select:focus)": 1,
+    ":deep(textarea)": 2,
+    ":deep(textarea:focus)": 1
+  },
+  "src/features/challenge-writeup-editor/ui/challengeWriteupManagePanel.css": {
+    ":deep(.app-empty__actions .ui-btn)": 1
+  },
+  "src/features/contest-awd-config/ui/ContestAwdCheckerConfigSection.vue": {
+    ":deep(.awd-config-control--mono)": 1,
+    ":deep(.awd-config-small-field)": 1,
+    ":deep(.checker-action-extra-grid--http)": 3,
+    ":deep(.checker-action-extra-grid--script)": 3,
+    ":deep(.checker-action-extra-grid--tcp)": 3,
+    ":deep(.checker-action-extra-grid)": 3,
+    ":deep(.checker-action-extra-grid__wide)": 3,
+    ":deep(.checker-action-grid--http)": 3,
+    ":deep(.checker-action-grid--script-meta)": 2,
+    ":deep(.checker-action-grid)": 3,
+    ":deep(.checker-action-section--panel .ui-control-wrap)": 1,
+    ":deep(.checker-action-section--panel .ui-control-wrap:focus-within)": 1,
+    ":deep(.checker-action-section--panel .ui-control)": 1,
+    ":deep(.checker-action-section--panel textarea.ui-control)": 1,
+    ":deep(.checker-action-section--panel)": 1,
+    ":deep(.checker-action-section--tcp.is-collapsed)": 1,
+    ":deep(.checker-action-section)": 1,
+    ":deep(.checker-action-section__head)": 1,
+    ":deep(.checker-action-section__heading)": 1,
+    ":deep(.checker-action-section__hint)": 1,
+    ":deep(.checker-action-section__title)": 1,
+    ":deep(.checker-field--method)": 1,
+    ":deep(.checker-field--path)": 1,
+    ":deep(.checker-field--status)": 1,
+    ":deep(.checker-field--wide)": 3,
+    ":deep(.checker-preset-strip--compact)": 1,
+    ":deep(.checker-preset-strip)": 1,
+    ":deep(.checker-step-toggle)": 1,
+    ":deep(.checker-step-toggle[aria-expanded='true'] .checker-step-toggle__icon)": 1,
+    ":deep(.checker-step-toggle:focus-visible)": 1,
+    ":deep(.checker-step-toggle__icon)": 1,
+    ":deep(.checker-toolbar)": 1,
+    ":deep(.ui-control)": 1,
+    ":deep(.ui-field)": 1,
+    ":deep(.ui-field__label)": 1,
+    ":deep(textarea.ui-control)": 1
+  },
+  "src/features/contest-awd-config/ui/ContestAwdDebugStation.vue": {
+    ":deep(.ui-control)": 1,
+    ":deep(.ui-field)": 1,
+    ":deep(.ui-field__label)": 1
+  },
+  "src/features/contest-awd-config/ui/ContestAwdScoreWeights.vue": {
+    ":deep(.ui-control)": 1,
+    ":deep(.ui-field)": 1,
+    ":deep(.ui-field__label)": 1
+  },
+  "src/features/contest-projector/ui/ContestProjectorFocusOverlay.vue": {
+    ":deep(.attack-feed-panel)": 1,
+    ":deep(.attack-map-panel--board-only)": 1,
+    ":deep(.attack-panel)": 1,
+    ":deep(.first-blood-panel)": 1,
+    ":deep(.leaderboard-panel)": 1,
+    ":deep(.service-matrix-panel)": 1,
+    ":deep(.traffic-panel)": 1
+  },
+  "src/features/contest-workbench/ui/ContestAwdChallengeSelectorSection.vue": {
+    ":deep(.workspace-data-table)": 1,
+    ":deep(.workspace-data-table__head-cell)": 1
+  },
+  "src/features/image-management/ui/ImageDirectoryPanel.vue": {
+    ":deep(.workspace-data-table__body tr:last-child)": 1,
+    ":deep(.workspace-data-table__body-cell)": 1,
+    ":deep(.workspace-data-table__head-cell)": 1,
+    ":deep(.workspace-data-table__row)": 1,
+    ":deep(.workspace-directory-toolbar)": 1
+  },
+  "src/features/platform/contest-manage/ui/PlatformContestFormDialog.vue": {
+    ":deep(.contest-form-dialog .modal-template-classic__body)": 2,
+    ":deep(.contest-form-dialog .modal-template-classic__header)": 2,
+    ":deep(.contest-form-dialog .modal-template-panel--classic)": 1
+  },
+  "src/features/platform/contest-manage/ui/PlatformContestTable.vue": {
+    ":deep(.workspace-data-table)": 1,
+    ":deep(.workspace-data-table__cell + .workspace-data-table__cell)": 1
+  },
+  "src/features/platform/contest-operations/ui/ContestOperationsHubWorkspacePanel.vue": {
+    ":deep(.workspace-data-table)": 1,
+    ":deep(.workspace-data-table__cell + .workspace-data-table__cell)": 1
+  },
+  "src/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue": {
+    ":deep(.workspace-data-table__body-cell)": 1
+  },
+  "src/features/scoreboard/ui/ScoreboardWorkspaceShell.vue": {
+    ":deep(.scoreboard-empty-state)": 1
+  },
+  "src/features/teacher/class-management/ui/ClassManagementPage.vue": {
+    ":deep(.workspace-data-table__row:hover)": 1,
+    ":deep(.workspace-directory-pagination-shell)": 1
+  },
+  "src/features/teacher/student-management/ui/StudentManagementPage.vue": {
+    ":deep(.workspace-data-table__row:hover)": 1,
+    ":deep(.workspace-directory-pagination-shell)": 1
+  },
+  "src/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue": {
+    ":deep(.workspace-data-table__row:hover)": 1
+  },
+  "src/shared/ui/common/DeleteConfirmModal.vue": {
+    ":deep(.delete-confirm-modal__panel)": 1
+  },
+  "src/shared/ui/common/menus/CActionMenu.vue": {
+    ":deep(.c-action-menu__item)": 1,
+    ":deep(.c-action-menu__item--danger)": 1,
+    ":deep(.c-action-menu__item--danger:hover)": 1,
+    ":deep(.c-action-menu__item--success)": 1,
+    ":deep(.c-action-menu__item--success:hover)": 1,
+    ":deep(.c-action-menu__item:focus-visible)": 1,
+    ":deep(.c-action-menu__item:hover)": 1,
+    ":deep(.c-action-menu__trigger)": 1,
+    ":deep(.c-action-menu__trigger--active)": 1,
+    ":deep(.c-action-menu__trigger--icon)": 1,
+    ":deep(.c-action-menu__trigger:focus-visible)": 1,
+    ":deep(.c-action-menu__trigger:hover)": 1,
+    ":deep(.c-action-menu__trigger[aria-expanded='true'])": 1
+  },
+  "src/shared/ui/common/modal-templates/CFocusedInputDialog.vue": {
+    ":deep([data-c-modal-action='ghost'])": 3,
+    ":deep([data-c-modal-action='ghost']:hover)": 1,
+    ":deep([data-c-modal-action='primary'])": 3,
+    ":deep([data-c-modal-action='primary']:hover)": 1,
+    ":deep(input)": 1,
+    ":deep(input::placeholder)": 1,
+    ":deep(input:focus)": 1,
+    ":deep(label)": 1,
+    ":deep(select)": 1,
+    ":deep(select:focus)": 1,
+    ":deep(textarea)": 1,
+    ":deep(textarea::placeholder)": 1,
+    ":deep(textarea:focus)": 1
+  },
+  "src/shared/ui/common/modal-templates/MinimalFloatingModal.vue": {
+    ":deep(input)": 1,
+    ":deep(input:focus)": 1,
+    ":deep(select)": 1,
+    ":deep(select:focus)": 1,
+    ":deep(textarea)": 1,
+    ":deep(textarea:focus)": 1
+  },
+  "src/shared/ui/common/modal-templates/SlideOverDrawer.vue": {
+    ":deep(.drawer-footer-action)": 1,
+    ":deep(.drawer-footer-action:focus-visible)": 1,
+    ":deep(.drawer-footer-action:hover)": 1,
+    ":deep(.modal-template-panel--drawer)": 2
+  },
+  "src/shared/ui/layout/AppLayout.vue": {
+    ":deep(.dashboard-view.workspace-route-root--bleed > .journal-shell)": 1,
+    ":deep(.workspace-route-root--bleed)": 1,
+    ":deep(.workspace-shell > .workspace-topbar)": 1
+  },
+  "src/widgets/awd-review-workspace/AwdReviewContestDirectory.vue": {
+    ":deep(.workspace-directory-pagination-shell)": 1
+  },
+  "src/widgets/awd-review-workspace/AwdReviewDirectoryPanel.vue": {
+    ":deep(.admin-awd-review-table__mono)": 1,
+    ":deep(.workspace-data-table__row:hover)": 1
+  },
+  "src/widgets/contest-list-workspace/ContestListWorkspace.vue": {
+    ":deep(.contest-empty-state)": 1
+  },
+  "src/widgets/notification-list-workspace/NotificationListWorkspace.vue": {
+    ":deep(.notification-empty-state--list)": 1
+  },
+  "src/widgets/scoreboard-detail-workspace/ScoreboardDetailWorkspace.vue": {
+    ":deep(.scoreboard-empty-state)": 1
+  }
+}

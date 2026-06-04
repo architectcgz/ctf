@@ -1,23 +1,7 @@
-<script setup lang="ts">
-import { ArrowRight } from 'lucide-vue-next'
-
-import type { RecommendationItem } from '@/api/contracts'
-import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
-import SectionCard from '@/shared/ui/common/SectionCard.vue'
-import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
-
-defineProps<{
-  recommendations: RecommendationItem[]
-}>()
-
-const emit = defineEmits<{
-  openChallenge: [challengeId: string]
-}>()
-</script>
-
 <template>
   <SectionCard
     class="insight-tab-section-card"
+    variant="teacher-flat"
     title="推荐训练任务"
     subtitle="根据当前薄弱维度筛出的优先训练题目。"
   >
@@ -66,6 +50,11 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+.insight-tab-section-card {
+  --section-card-border-top-width: 0;
+  --section-card-header-border-bottom: 0;
+}
+
 .insight-recommendation-pills {
   display: inline-flex;
   flex: 0 0 auto;
@@ -117,3 +106,20 @@ const emit = defineEmits<{
   }
 }
 </style>
+
+<script setup lang="ts">
+import { ArrowRight } from 'lucide-vue-next'
+
+import type { RecommendationItem } from '@/api/contracts'
+import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
+
+defineProps<{
+  recommendations: RecommendationItem[]
+}>()
+
+const emit = defineEmits<{
+  openChallenge: [challengeId: string]
+}>()
+</script>

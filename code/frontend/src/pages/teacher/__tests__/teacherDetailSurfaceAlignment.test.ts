@@ -15,11 +15,12 @@ import interventionPanelSource from '@/features/teaching/student-analysis-review
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
-import studentInsightWriteupsSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightWriteupsSection.vue?raw'
-import studentInsightManualReviewSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightManualReviewSection.vue?raw'
+import studentInsightWriteupsSource from '@/features/teaching/student-analysis-review/ui/StudentInsightWriteupsSection.vue?raw'
+import studentInsightManualReviewSource from '@/features/teaching/student-analysis-review/ui/StudentInsightManualReviewSection.vue?raw'
 import reviewArchiveSource from '@/pages/review-archive/StudentReviewArchiveRoutePage.vue?raw'
 import reviewArchiveWorkspaceSource from '@/widgets/review-archive-workspace/ReviewArchiveWorkspace.vue?raw'
 import reviewArchiveSummarySectionSource from '@/widgets/review-archive-workspace/ReviewArchiveSummarySection.vue?raw'
+import sectionCardSource from '@/shared/ui/common/SectionCard.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -79,9 +80,11 @@ describe('teacher detail surface alignment', () => {
 
     expect(studentAnalysisSource).toContain('--teacher-card-border:')
     expect(studentAnalysisSource).toContain('--teacher-divider:')
-    expect(studentAnalysisSource).toContain('class="workspace-shell journal-eyebrow-text"')
+    expect(studentAnalysisSource).toContain(
+      'class="workspace-shell student-analysis-shell journal-eyebrow-text flex min-h-full flex-1 flex-col"'
+    )
     expect(studentAnalysisSource).not.toContain('class="workspace-topbar"')
-    expect(studentAnalysisSource).toContain('class="workspace-tabbar top-tabs"')
+    expect(studentAnalysisSource).toContain('StudentAnalysisWorkspaceTabs')
     expect(studentAnalysisOverviewHeroSource).toContain(
       'class="workspace-panel-header student-analysis-overview-head"'
     )
@@ -101,10 +104,20 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisOverviewHeroSource).toMatch(
       /\.student-analysis-title\s*\{[\s\S]*--workspace-page-title-margin-top:\s*0;[\s\S]*max-width:\s*min\(100%,\s*38rem\);/s
     )
-    expect(studentAnalysisSource).toMatch(
-      /:deep\(\.section-card\)\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*90%,\s*transparent\);/s
+    expect(sectionCardSource).toContain("type SectionCardVariant = 'default' | 'teacher-flat' | 'teacher-surface'")
+    expect(sectionCardSource).toMatch(
+      /\.section-card--teacher-flat\s*\{[\s\S]*--section-card-border-top-color:\s*color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);/s
+    )
+    expect(sectionCardSource).toMatch(
+      /\.section-card--teacher-surface\s*\{[\s\S]*--section-card-border:\s*1px solid var\(--teacher-card-border\);[\s\S]*--section-card-header-border-bottom:\s*1px dashed var\(--teacher-divider\);/s
     )
     expect(studentAnalysisSource).not.toMatch(/\.content-pane\s*\{[\s\S]*padding-top:/s)
+    expect(studentAnalysisSource).toMatch(
+      /\.content-pane\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*align-content:\s*start;/s
+    )
+    expect(studentAnalysisSource).toMatch(
+      /\.student-analysis-shell\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent;[\s\S]*box-shadow:\s*none;[\s\S]*overflow:\s*visible;/s
+    )
     expect(studentAnalysisOverviewHeroSource).toMatch(
       /\.summary-strip\s*\{[\s\S]*?margin:\s*0;[\s\S]*?padding:\s*0;/s
     )
@@ -125,10 +138,13 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisOverviewHeroSource).toContain('--summary-card-accent: var(--color-success);')
     expect(studentAnalysisOverviewHeroSource).not.toContain('--summary-card-accent: var(--color-warning);')
     expect(studentAnalysisOverviewHeroSource).toContain('--metric-panel-value-color:')
-    expect(studentAnalysisSource).toMatch(
-      /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed color-mix\(in srgb,\s*var\(--teacher-divider\)\s*86%,\s*transparent\);/s
+    expect(studentAnalysisSource).not.toContain(':deep(.section-card)')
+    expect(studentAnalysisSource).not.toContain(':deep(.section-card__header)')
+    expect(studentInsightRecommendationsSectionSource).toContain('variant="teacher-flat"')
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /\.insight-tab-section-card\s*\{[\s\S]*--section-card-border-top-width:\s*0;[\s\S]*--section-card-header-border-bottom:\s*0;/s
     )
-    expect(studentAnalysisCompositeSource).toContain('StudentAnalysisOverviewHeroPanel')
+    expect(studentAnalysisSource).toContain('StudentAnalysisWorkspaceContent')
 
     expect(reviewArchiveCombinedSource).toContain('--teacher-card-border:')
     expect(reviewArchiveCombinedSource).toContain('--teacher-divider:')
@@ -136,12 +152,9 @@ describe('teacher detail surface alignment', () => {
     expect(reviewArchiveCombinedSource).toContain(
       '--journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));'
     )
-    expect(reviewArchiveCombinedSource).toMatch(
-      /:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
-    )
-    expect(reviewArchiveCombinedSource).toMatch(
-      /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s
-    )
+    expect(reviewArchiveCombinedSource).toContain('variant="teacher-surface"')
+    expect(reviewArchiveCombinedSource).not.toContain(':deep(.section-card)')
+    expect(reviewArchiveCombinedSource).not.toContain(':deep(.section-card__header)')
     expect(reviewArchiveCombinedSource).toContain('metric-panel-card')
     expect(reviewArchiveCombinedSource).toContain('--metric-panel-border: var(--teacher-card-border);')
     expect(reviewArchiveCombinedSource).toContain('class="summary-grid metric-panel-grid metric-panel-default-surface"')
@@ -162,22 +175,18 @@ describe('teacher detail surface alignment', () => {
     expect(teacherPanelShellSource).toMatch(
       /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
     )
-    expect(classTrendPanelSource).toContain("@import '../../../assets/styles/teacher-panel-shell.css';")
-    expect(classInsightsPanelSource).toContain("@import '../../../assets/styles/teacher-panel-shell.css';")
-    expect(classReviewPanelSource).toContain("@import '../../../assets/styles/teacher-panel-shell.css';")
-    expect(interventionPanelSource).toContain(
-      "@import '../../../assets/styles/teacher-panel-shell.css';"
-    )
+    expect(classTrendPanelSource).toContain("@import '@/assets/styles/teacher-panel-shell.css';")
+    expect(classInsightsPanelSource).toContain("@import '@/assets/styles/teacher-panel-shell.css';")
+    expect(classReviewPanelSource).toContain("@import '@/assets/styles/teacher-panel-shell.css';")
+    expect(interventionPanelSource).toContain("@import '@/assets/styles/teacher-panel-shell.css';")
     expect(studentInsightPanelSource).toContain('--teacher-card-border:')
     expect(studentInsightPanelSource).toContain('--teacher-divider:')
-    expect(studentInsightPanelSource).toMatch(
-      /:deep\(\.section-card\)\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);/s
-    )
     expect(studentInsightOverviewSectionSource).toMatch(
       /\.insight-overview-layout\s*\{[\s\S]*?border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);/s
     )
+    expect(studentInsightOverviewSectionSource).toContain('variant="teacher-flat"')
     expect(studentInsightOverviewSectionSource).toMatch(
-      /\.insight-overview-layout\s*:deep\(\.section-card\)\s*\{[\s\S]*?border-top:\s*0;/s
+      /\.insight-overview-card\s*\{[\s\S]*?--section-card-border-top-width:\s*0;/s
     )
     expect(studentInsightPanelSource).not.toMatch(/\.insight-rate-panel\s*\{[^}]*border-top:/s)
     expect(studentInsightCompositeSource).toMatch(

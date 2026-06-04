@@ -39,7 +39,7 @@
 
 - `scripts/check-backend-architecture.sh --quick`：快速检查后端模块依赖方向。
 - `scripts/check-backend-architecture.sh --full`：在 quick 基础上补充 `internal/app` 的 concrete cross-module import、context architecture，以及后端测试分层 guardrail。
-- `scripts/check-frontend-architecture.sh --quick`：快速检查前端分层边界与 route view 约束。
+- `scripts/check-frontend-architecture.sh --quick`：快速检查前端分层边界、route view 约束和 `:deep` 存量守卫。
 - `scripts/check-frontend-architecture.sh --full`：在 quick 基础上补充前端热点文件增长守卫、feature owner boundary、overlay 结构约束和前端主题 token 检查。
 - `scripts/check-architecture.sh --quick`：聚合执行 backend quick + frontend quick。
 - `scripts/check-architecture.sh --full`：聚合执行 backend full + frontend full。
@@ -57,6 +57,7 @@
 - 前端分层：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - 路由边界：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 前端增长守卫：`code/frontend/scripts/check-frontend-growth-guard.mjs`
+- 前端深度选择器守卫：`code/frontend/scripts/check-vue-deep-guard.mjs`
 - AWD owner 边界：`code/frontend/src/features/contest-awd-admin/model/useAwdOwnerBoundaries.test.ts`
 - 共享模板：`code/frontend/src/shared/ui/common/__tests__/ModalTemplates.test.ts`
 

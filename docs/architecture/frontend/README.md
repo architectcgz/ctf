@@ -42,6 +42,7 @@
 
 - 前端架构脚本入口：`scripts/check-frontend-architecture.sh`
 - 前端架构策略单点事实：`code/frontend/scripts/frontend-architecture-policy.json`
+- `:deep` 存量守卫：`code/frontend/scripts/check-vue-deep-guard.mjs`
 - 路由与页面边界：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
 - 前端分层约束：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - 导航命名空间：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`

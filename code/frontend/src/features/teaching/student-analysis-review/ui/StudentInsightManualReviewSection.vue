@@ -1,71 +1,7 @@
-<script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { ArrowRight, CheckCircle, ClipboardList, Clock3 } from 'lucide-vue-next'
-
-import type {
-  ManualReviewSubmissionDetailData,
-  ManualReviewSubmissionItemData,
-} from '@/api/contracts'
-import AppCard from '@/shared/ui/common/AppCard.vue'
-import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
-import SectionCard from '@/shared/ui/common/SectionCard.vue'
-import {
-  formatDateTime,
-  manualReviewStatusClass,
-  manualReviewStatusLabel,
-} from './studentInsightShared'
-
-const props = defineProps<{
-  manualReviewSubmissions: ManualReviewSubmissionItemData[]
-  activeManualReview: ManualReviewSubmissionDetailData | null
-  manualReviewLoading: boolean
-  manualReviewSaving: boolean
-}>()
-
-const emit = defineEmits<{
-  openManualReview: [submissionId: string]
-  reviewManualReview: [
-    payload: {
-      submissionId: string
-      reviewStatus: 'approved' | 'rejected'
-      reviewComment?: string
-    },
-  ]
-}>()
-
-const manualReviewComment = ref('')
-const approvedManualReviewCount = computed(
-  () => props.manualReviewSubmissions.filter((item) => item.review_status === 'approved').length
-)
-const pendingManualReviewCount = computed(
-  () => props.manualReviewSubmissions.filter((item) => item.review_status === 'pending').length
-)
-
-watch(
-  () => props.activeManualReview,
-  (value) => {
-    manualReviewComment.value = value?.review_comment ?? ''
-  },
-  { immediate: true }
-)
-
-function openManualReview(submissionId: string): void {
-  emit('openManualReview', submissionId)
-}
-
-function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
-  if (!props.activeManualReview) return
-  emit('reviewManualReview', {
-    submissionId: props.activeManualReview.id,
-    reviewStatus,
-    reviewComment: manualReviewComment.value.trim() || undefined,
-  })
-}
-</script>
-
 <template>
   <SectionCard
     class="insight-tab-section-card"
+    variant="teacher-flat"
     title="人工审核题"
     subtitle="查看当前学员需要教师判定的题解内容。"
   >
@@ -236,6 +172,11 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 </template>
 
 <style scoped>
+.insight-tab-section-card {
+  --section-card-border-top-width: 0;
+  --section-card-header-border-bottom: 0;
+}
+
 .writeup-chip {
   display: inline-flex;
   align-items: center;
@@ -321,3 +262,68 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
   border-color: color-mix(in srgb, var(--journal-accent) 34%, transparent);
 }
 </style>
+
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { ArrowRight, CheckCircle, ClipboardList, Clock3 } from 'lucide-vue-next'
+
+import type {
+  ManualReviewSubmissionDetailData,
+  ManualReviewSubmissionItemData,
+} from '@/api/contracts'
+import AppCard from '@/shared/ui/common/AppCard.vue'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
+import {
+  formatDateTime,
+  manualReviewStatusClass,
+  manualReviewStatusLabel,
+} from './studentInsightShared'
+
+const props = defineProps<{
+  manualReviewSubmissions: ManualReviewSubmissionItemData[]
+  activeManualReview: ManualReviewSubmissionDetailData | null
+  manualReviewLoading: boolean
+  manualReviewSaving: boolean
+}>()
+
+const emit = defineEmits<{
+  openManualReview: [submissionId: string]
+  reviewManualReview: [
+    payload: {
+      submissionId: string
+      reviewStatus: 'approved' | 'rejected'
+      reviewComment?: string
+    },
+  ]
+}>()
+
+const manualReviewComment = ref('')
+const approvedManualReviewCount = computed(
+  () => props.manualReviewSubmissions.filter((item) => item.review_status === 'approved').length
+)
+const pendingManualReviewCount = computed(
+  () => props.manualReviewSubmissions.filter((item) => item.review_status === 'pending').length
+)
+
+watch(
+  () => props.activeManualReview,
+  (value) => {
+    manualReviewComment.value = value?.review_comment ?? ''
+  },
+  { immediate: true }
+)
+
+function openManualReview(submissionId: string): void {
+  emit('openManualReview', submissionId)
+}
+
+function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
+  if (!props.activeManualReview) return
+  emit('reviewManualReview', {
+    submissionId: props.activeManualReview.id,
+    reviewStatus,
+    reviewComment: manualReviewComment.value.trim() || undefined,
+  })
+}
+</script>

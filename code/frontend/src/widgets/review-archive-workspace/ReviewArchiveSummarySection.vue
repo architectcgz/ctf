@@ -1,6 +1,7 @@
 <template>
   <section class="review-archive-summary-grid">
     <SectionCard
+      variant="teacher-surface"
       :title="REVIEW_ARCHIVE_SUMMARY_COPY.summaryTitle"
       :subtitle="REVIEW_ARCHIVE_SUMMARY_COPY.summarySubtitle"
     >
@@ -29,6 +30,7 @@
     </SectionCard>
 
     <SectionCard
+      variant="teacher-surface"
       :title="REVIEW_ARCHIVE_SUMMARY_COPY.skillTitle"
       :subtitle="REVIEW_ARCHIVE_SUMMARY_COPY.skillSubtitle"
     >

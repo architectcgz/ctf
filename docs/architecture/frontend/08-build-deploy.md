@@ -18,7 +18,7 @@
   - 不负责：运行时登录态恢复、页面错误处理或主题样式加载
 
 - `code/frontend/package.json`
-  - 负责：声明前端依赖版本和 `dev / build / preview / typecheck / lint / format / test / check:theme-tail` 脚本
+  - 负责：声明前端依赖版本和 `dev / build / preview / typecheck / lint / format / test / check:theme-tail / check:vue-deep` 脚本
   - 不负责：替代仓库级 workflow 检查
 
 - `code/frontend/src/main.ts`
@@ -141,13 +141,15 @@ dev proxy 规则：
 | `npm run build` | 生产构建 |
 | `npm run preview` | 预览构建产物 |
 | `npm run typecheck` | `vue-tsc --noEmit` |
+| `npm run check:vue-deep` | 检查真实产品路径中的 `:deep` 是否只停留在存量 allowlist 内 |
 | `npm run check:theme-tail` | 检查硬编码主题尾部 token |
-| `npm run lint` | ESLint |
+| `npm run lint` | 先跑 `check:vue-deep`，再执行 ESLint |
 | `npm run format` | Prettier |
 | `npm run test` / `npm run test:run` | Vitest |
 
 当前文档任务关联度最高的运行校验：
 
+- `npm run check:vue-deep`
 - `npm run check:theme-tail`
 - `npm run typecheck`
 - `npm run test:run`
