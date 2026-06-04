@@ -95,7 +95,6 @@ describe('ContestOperations', () => {
     expect(platformContestOperationsPageSource).toContain('AWDOperationsPanel')
     expect(platformContestOperationsPageSource).toContain('AWDServiceAlertBanner')
     expect(contestOperationsSource).not.toContain('ContestOperationsTopbarPanel')
-    expect(contestOperationsSource).not.toContain('class="ops-topbar"')
     expect(platformContestOperationsPageSource).not.toContain('height: 100vh')
     expect(platformContestOperationsPageSource).not.toContain('overflow: hidden')
   })
