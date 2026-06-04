@@ -107,7 +107,7 @@ describe('StudentReviewWorkspace', () => {
     )
     expect(studentReviewWorkspaceSource).not.toContain("formatDateTime(session.started_at)")
     expect(studentReviewWorkspaceSource).not.toContain(
-      'class="student-insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-teacher-surface md:grid-cols-4"'
+      'class="student-insight-kpi-grid student-insight-kpi-grid--4 progress-strip metric-panel-grid metric-panel-default-surface"'
     )
   })
 

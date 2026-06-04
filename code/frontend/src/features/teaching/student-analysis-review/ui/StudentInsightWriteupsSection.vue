@@ -50,7 +50,9 @@
       </template>
 
       <template #default>
-        <div class="student-insight-kpi-grid writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface">
+        <div
+          class="student-insight-kpi-grid student-insight-kpi-grid--3 progress-strip metric-panel-grid metric-panel-default-surface"
+        >
           <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
             <div class="student-insight-kpi-label progress-card-label metric-panel-label">
               <span>已发布题解</span>
@@ -360,12 +362,6 @@
   background: transparent;
 }
 
-.writeup-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
 .writeup-directory-head,
 .writeup-directory-row {
   display: grid;
@@ -633,10 +629,6 @@
 }
 
 @media (max-width: 1023px) {
-  .writeup-kpi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .writeup-directory-head {
     display: none;
   }
@@ -652,11 +644,6 @@
   }
 }
 
-@media (max-width: 767px) {
-  .writeup-kpi-grid {
-    grid-template-columns: 1fr;
-  }
-}
 </style>
 
 <script setup lang="ts">

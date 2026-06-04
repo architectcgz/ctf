@@ -21,7 +21,7 @@
 
       <template #default>
         <div
-          class="student-insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"
+          class="student-insight-kpi-grid student-insight-kpi-grid--3 progress-strip metric-panel-grid metric-panel-default-surface"
         >
           <article class="insight-kpi-card progress-card metric-panel-card">
             <div class="student-insight-kpi-label progress-card-label metric-panel-label">

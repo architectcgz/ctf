@@ -16,6 +16,14 @@
   align-items: stretch;
 }
 
+.student-insight-kpi-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.student-insight-kpi-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .student-insight-kpi-label {
   --metric-panel-label-size: var(--font-size-0-70);
   --metric-panel-label-spacing: 0.15em;
@@ -38,4 +46,18 @@
   padding: var(--space-4) 0;
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
   background: transparent;
+}
+
+@media (max-width: 1023px) {
+  .student-insight-kpi-grid--3,
+  .student-insight-kpi-grid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .student-insight-kpi-grid--3,
+  .student-insight-kpi-grid--4 {
+    grid-template-columns: 1fr;
+  }
 }

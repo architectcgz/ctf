@@ -230,7 +230,7 @@ describe('teacher detail surface alignment', () => {
       /\.student-insight-kpi-value\s*\{[\s\S]*--metric-panel-value-size:\s*var\(--font-size-1-00\);/s
     )
     expect(studentInsightCompositeSource).toContain(
-      'class="student-insight-kpi-grid writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="student-insight-kpi-grid student-insight-kpi-grid--3 progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(studentInsightWriteupsSource).toContain(
       '<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSections.css"></style>'
@@ -243,6 +243,18 @@ describe('teacher detail surface alignment', () => {
     )
     expect(studentInsightSectionsSharedSource).toMatch(
       /\.student-insight-kpi-grid\s*\{[\s\S]*--metric-panel-background:\s*transparent;[\s\S]*--metric-panel-shadow:\s*none;[\s\S]*--metric-panel-radius:\s*0;/s
+    )
+    expect(studentInsightSectionsSharedSource).toMatch(
+      /\.student-insight-kpi-grid--3\s*\{[\s\S]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s
+    )
+    expect(studentInsightSectionsSharedSource).toMatch(
+      /\.student-insight-kpi-grid--4\s*\{[\s\S]*grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\);/s
+    )
+    expect(studentInsightSectionsSharedSource).toMatch(
+      /@media \(max-width:\s*1023px\)\s*\{[\s\S]*\.student-insight-kpi-grid--3,\s*[\s\S]*\.student-insight-kpi-grid--4\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/s
+    )
+    expect(studentInsightSectionsSharedSource).toMatch(
+      /@media \(max-width:\s*767px\)\s*\{[\s\S]*\.student-insight-kpi-grid--3,\s*[\s\S]*\.student-insight-kpi-grid--4\s*\{[\s\S]*grid-template-columns:\s*1fr;/s
     )
     expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card"'
@@ -257,7 +269,10 @@ describe('teacher detail surface alignment', () => {
       'class="student-insight-kpi-hint progress-card-hint metric-panel-helper"'
     )
     expect(studentInsightCompositeSource).toContain(
-      'class="student-insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"'
+      'class="student-insight-kpi-grid student-insight-kpi-grid--3 progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(studentInsightAttackSessionsSectionSource).toContain(
+      'class="student-insight-kpi-grid student-insight-kpi-grid--4 progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(studentInsightPanelSource).toContain(':loading="loading"')
     expect(studentInsightPanelSource).not.toContain('insight-loading-shell')
@@ -279,6 +294,7 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightWriteupsSource).toMatch(
       /\.writeup-review-panel\s*\{[\s\S]*background:\s*transparent;/s
     )
+    expect(studentInsightWriteupsSource).not.toMatch(/\.writeup-kpi-grid\s*\{/)
     expect(studentInsightWriteupsSource).toMatch(
       /\.insight-manual-input\s*\{[\s\S]*background:\s*transparent;/s
     )

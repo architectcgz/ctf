@@ -51,15 +51,17 @@ describe('StudentInsightAttackSessionsSection', () => {
     })
 
     expect(wrapper.find('.student-insight-kpi-grid').exists()).toBe(true)
-    expect(wrapper.get('.student-insight-kpi-grid').classes()).toContain('teacher-summary-grid')
+    expect(wrapper.get('.student-insight-kpi-grid').classes()).toContain(
+      'student-insight-kpi-grid--4'
+    )
     expect(wrapper.get('.student-insight-kpi-grid').classes()).toContain('metric-panel-default-surface')
-    expect(wrapper.get('.student-insight-kpi-grid').classes()).not.toContain('metric-panel-teacher-surface')
+    expect(wrapper.get('.student-insight-kpi-grid').classes()).not.toContain('teacher-summary-grid')
     expect(wrapper.find('.evidence-state-surface').exists()).toBe(true)
     expect(wrapper.html().indexOf('student-insight-kpi-grid')).toBeLessThan(
       wrapper.html().indexOf('evidence-state-surface')
     )
     expect(studentInsightAttackSessionsSectionSource).toMatch(
-      /class="student-insight-kpi-grid[\s\S]*teacher-summary-grid[\s\S]*metric-panel-default-surface[\s\S]*<StudentInsightStateSurface/s
+      /class="student-insight-kpi-grid[\s\S]*student-insight-kpi-grid--4[\s\S]*metric-panel-default-surface[\s\S]*<StudentInsightStateSurface/s
     )
   })
 })

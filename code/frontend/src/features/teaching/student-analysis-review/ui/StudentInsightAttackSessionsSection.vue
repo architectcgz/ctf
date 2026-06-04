@@ -7,7 +7,7 @@
   >
     <div
       v-if="summaryItems.length > 0"
-      class="student-insight-kpi-grid evidence-summary-grid teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4"
+      class="student-insight-kpi-grid student-insight-kpi-grid--4 progress-strip metric-panel-grid metric-panel-default-surface"
     >
       <article
         v-for="item in summaryItems"
@@ -82,10 +82,6 @@
 <style src="@/features/teaching/student-analysis-shared/ui/studentInsightSections.css"></style>
 
 <style scoped>
-.evidence-summary-grid {
-  --teacher-summary-columns: repeat(4, minmax(0, 1fr));
-}
-
 .evidence-state-surface {
   margin-top: var(--space-5);
 }
