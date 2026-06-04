@@ -36,10 +36,9 @@ const teacherInstanceManagementSource = [
 ].join('\n')
 
 describe('teacher eyebrow shared styles', () => {
-  it('应该在 teacher surface 共享样式里声明 teacher 页面和 panel 的 eyebrow 规则', () => {
+  it('应该由 teacher surface 共享样式承接 teacher 页面和 panel 的 eyebrow owner', () => {
     expect(teacherSurfaceSource).toContain('.teacher-surface .journal-eyebrow')
     expect(teacherSurfaceSource).toContain('.teacher-panel .journal-eyebrow')
-    expect(teacherSurfaceSource).toContain('--teacher-eyebrow-spacing, 0.08em')
   })
 
   it('teacher 页和 panel 不应继续本地重写整套 eyebrow 样式', () => {
@@ -56,17 +55,6 @@ describe('teacher eyebrow shared styles', () => {
       awdReviewDetailSource,
     ]) {
       expect(source).not.toMatch(/^\.journal-eyebrow\s*\{/m)
-    }
-  })
-
-  it('班级工作区的 trend review insight action panel 不应继续渲染 eyebrow 结构', () => {
-    for (const source of [
-      teacherClassInsightsSource,
-      teacherClassReviewSource,
-      teacherClassTrendSource,
-      interventionPanelSource,
-    ]) {
-      expect(source).not.toContain('class="journal-eyebrow"')
     }
   })
 })

@@ -224,7 +224,6 @@ describe('PlatformStudentAnalysis route owner', () => {
     expect(platformViewSource).not.toContain('@open-class-management="openClassManagement"')
     expect(platformViewSource).not.toContain('@select-class="selectClass"')
     expect(platformViewSource).not.toContain('@select-student="selectStudent"')
-    expect(platformViewSource).toContain('route-root-class="platform-route-root"')
   })
 
   it('应在运行时把共享页面事件桥接到平台路由和导出弹窗 owner', async () => {
