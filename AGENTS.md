@@ -24,6 +24,10 @@
 - 管理员端“目录标题 + `WorkspaceDirectoryToolbar` + 列表/表格/空状态/分页”结构的垂直节奏由页面目录 section 统一控制，避免 section `gap` 与 toolbar `margin-bottom` 叠加。
 - 前端页面路由命名空间：教师端只使用 `/academy/*`，管理员端只使用 `/platform/*`；不再新增 `/teacher/*`、`/admin/*` 页面路由、重定向或兼容入口。
 - Vue 单文件组件统一采用 `template -> style -> script` 块顺序；`<script setup>` 或 `<script>` 必须放在文件最下方，不再写在 `<template>` 上方。
+- UI 测试优先覆盖用户行为、状态 owner 和架构边界；不要新增只断言 class 名、CSS 文本块、utility class 顺序或组件内部 markup 细节的过细测试。
+  - `?raw` 源码字符串测试只允许作为明确护栏：层级 / 依赖 / public API 边界、route / page owner 边界、危险 surface 回归防线，或带 owner 与移除条件的迁移 guard。
+  - `loading / empty / error / loaded` 这类状态优先用 Vue Test Utils 做组件渲染测试；页面测试只覆盖入口集成，不重复锁定共享组件内部结构。
+  - 如果测试只能证明“源码里包含某段字符串 / 某个 class”，而不能证明行为、状态归属或架构边界，禁止新增；触碰相关区域时顺手迁移或删除这类存量测试。
 - 前端组件不得再用 `embedded` 之类的布尔开关同时切换 page shell、section shell、content root、主 padding 或 divider 等布局 owner 语义。
   - 如果同一份内容要出现在完整页、tab 面板、drawer 或 section 中，默认做法是“共享内容组件 + 各入口自己的壳组件”。
   - `embedded` 只允许用于不会改变 owner 边界的局部视觉嵌入态；一旦它开始切换完整布局节奏，就必须回到显式拆壳。
