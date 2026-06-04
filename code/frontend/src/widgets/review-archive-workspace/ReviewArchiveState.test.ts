@@ -13,7 +13,10 @@ describe('ReviewArchiveState', () => {
       },
     })
 
-    await wrapper.get('.ui-btn.ui-btn--primary').trigger('click')
+    const reloadButton = wrapper.get('button')
+    expect(reloadButton.text()).toContain('重新加载')
+
+    await reloadButton.trigger('click')
 
     expect(wrapper.emitted('reload')).toBeTruthy()
   })
@@ -26,10 +29,10 @@ describe('ReviewArchiveState', () => {
         hasArchive: true,
       },
       slots: {
-        default: '<div class="archive-content">loaded</div>',
+        default: '<div>loaded</div>',
       },
     })
 
-    expect(wrapper.find('.archive-content').exists()).toBe(true)
+    expect(wrapper.text()).toContain('loaded')
   })
 })
