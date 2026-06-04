@@ -85,7 +85,11 @@ describe('ReviewArchiveWorkspace', () => {
     })
 
     await wrapper.get('#export').trigger('click')
-    await wrapper.get('.ui-btn.ui-btn--primary').trigger('click')
+    const reloadButton = wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('重新加载'))
+    expect(reloadButton).toBeTruthy()
+    await reloadButton!.trigger('click')
 
     const hero = wrapper.getComponent({ name: 'ReviewArchiveHero' })
     expect(hero.props('analysisRoute')).toEqual(analysisRoute)
