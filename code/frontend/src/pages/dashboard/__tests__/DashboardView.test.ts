@@ -662,8 +662,12 @@ describe('DashboardView', () => {
 
     expect(summary.classes()).toContain('progress-strip')
     expect(summary.classes()).toContain('metric-panel-grid')
-    expect(summary.classes()).toContain('metric-panel-default-surface')
-    expect(summary.findAll('.timeline-metric-card.progress-card.metric-panel-card')).toHaveLength(4)
+    expect(summary.classes()).not.toContain('metric-panel-default-surface')
+    expect(
+      summary.findAll(
+        '.timeline-metric-card.progress-card.metric-panel-card.metric-panel-default-surface.metric-panel-workspace-surface'
+      )
+    ).toHaveLength(4)
     expect(summary.findAll('.progress-card-label.metric-panel-label')).toHaveLength(4)
     expect(summary.findAll('.progress-card-value.metric-panel-value')).toHaveLength(4)
     expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(4)

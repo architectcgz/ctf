@@ -18,16 +18,21 @@
         <article
           v-for="metric in timelineMetrics"
           :key="metric.key"
-          class="timeline-metric-card progress-card metric-panel-card metric-panel-default-surface workspace-glass-metric-surface"
+          class="timeline-metric-card progress-card metric-panel-card metric-panel-default-surface metric-panel-workspace-surface"
         >
-          <div class="journal-note-label progress-card-label metric-panel-label">
+          <template v-if="loading">
+            <span class="student-insight-skeleton-line timeline-metric-skeleton-label" />
+            <span class="student-insight-skeleton-line timeline-metric-skeleton-value" />
+            <span class="student-insight-skeleton-line timeline-metric-skeleton-helper" />
+          </template>
+          <div v-else class="journal-note-label progress-card-label metric-panel-label">
             <span>{{ metric.label }}</span>
             <component :is="metric.icon" class="h-4 w-4" />
           </div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
+          <div v-if="!loading" class="journal-note-value progress-card-value metric-panel-value">
             {{ metric.value }}
           </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+          <div v-if="!loading" class="journal-note-helper progress-card-hint metric-panel-helper">
             {{ metric.helper }}
           </div>
         </article>
@@ -37,7 +42,7 @@
     <div class="timeline-board mt-0 px-0 pt-0 md:px-0 md:pt-0">
       <section class="timeline-section workspace-directory-section">
         <section
-          class="timeline-directory-shell workspace-glass-region workspace-directory-list"
+          class="timeline-directory-shell workspace-directory-list"
         >
           <header class="list-heading timeline-list-heading">
             <div class="timeline-list-heading__body">
@@ -49,7 +54,25 @@
           </header>
 
           <div
-            v-if="groupedTimeline.length === 0"
+            v-if="loading"
+            class="timeline-group-list"
+          >
+            <div
+              v-for="index in 2"
+              :key="index"
+              class="timeline-event-item timeline-event-item--loading"
+            >
+              <span class="student-insight-skeleton-panel timeline-loading-row-dot" />
+              <div class="timeline-loading-row-body">
+                <span class="student-insight-skeleton-line timeline-loading-row-title" />
+                <span class="student-insight-skeleton-line timeline-loading-row-copy" />
+              </div>
+              <span class="student-insight-skeleton-line timeline-loading-row-meta" />
+            </div>
+          </div>
+
+          <div
+            v-else-if="groupedTimeline.length === 0"
             class="journal-soft-empty-state workspace-directory-empty timeline-empty-state"
           >
             当前还没有训练动态。
@@ -121,6 +144,8 @@
   </div>
 </template>
 
+<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSurface.css"></style>
+
 <style scoped>
 .timeline-content {
   min-width: 0;
@@ -132,6 +157,27 @@
 
 .timeline-metric-card {
   min-height: 100%;
+}
+
+.timeline-metric-card.metric-panel-workspace-surface {
+  --metric-panel-shadow: 0 10px 22px color-mix(in srgb, var(--color-shadow-soft) 28%, transparent);
+}
+
+.timeline-metric-skeleton-label {
+  width: min(8rem, 72%);
+  height: var(--space-3);
+}
+
+.timeline-metric-skeleton-value {
+  width: min(5rem, 54%);
+  height: var(--space-7);
+  margin-top: var(--space-3);
+}
+
+.timeline-metric-skeleton-helper {
+  width: min(12rem, 88%);
+  height: var(--space-3);
+  margin-top: var(--space-3);
 }
 
 .timeline-board {
@@ -166,16 +212,20 @@
 }
 
 .timeline-group-list {
+  --timeline-list-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --timeline-list-background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
   min-width: 0;
-  border-top: 1px solid var(--workspace-directory-row-divider);
-  padding-top: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
 }
 
 .timeline-group {
-  padding: var(--space-4) 0;
+  display: grid;
+  gap: var(--space-3);
 }
 
 .timeline-group + .timeline-group {
+  padding-top: var(--space-3);
   border-top: 1px solid var(--journal-divider);
 }
 
@@ -195,11 +245,18 @@
 
 .timeline-event-list {
   position: relative;
+  display: grid;
+  gap: var(--space-2-5);
 }
 
 .timeline-event-item {
   position: relative;
-  padding: var(--space-4) 0 var(--space-4) var(--space-4-5);
+  overflow: hidden;
+  border: 1px solid var(--timeline-list-border);
+  border-radius: var(--workspace-radius-lg, 18px);
+  background: var(--timeline-list-background);
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-4-5);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--color-shadow-soft) 14%, transparent);
 }
 
 .timeline-event-item::before {
@@ -228,7 +285,44 @@
 }
 
 .timeline-event-item + .timeline-event-item {
-  border-top: 1px solid var(--workspace-directory-row-divider);
+  border-top: 1px solid var(--timeline-list-border);
+}
+
+.timeline-event-item--loading {
+  display: grid;
+  grid-template-columns: var(--space-10) minmax(0, 1fr) var(--space-16);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.timeline-event-item--loading::before {
+  display: none;
+}
+
+.timeline-loading-row-dot {
+  width: var(--space-10);
+  height: var(--space-10);
+}
+
+.timeline-loading-row-body {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.timeline-loading-row-title {
+  width: min(24rem, 76%);
+  height: var(--space-3);
+}
+
+.timeline-loading-row-copy {
+  width: min(42rem, 92%);
+  height: var(--space-3);
+}
+
+.timeline-loading-row-meta {
+  width: var(--space-16);
+  height: var(--space-3);
 }
 
 .timeline-pagination {
@@ -371,9 +465,11 @@ import {
 const props = withDefaults(
   defineProps<{
     timeline: TimelineEvent[]
+    loading?: boolean
     pageSize?: number
   }>(),
   {
+    loading: false,
     pageSize: 10,
   }
 )

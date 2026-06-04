@@ -98,10 +98,13 @@ describe('student and user surface alignment', () => {
     )
 
     expect(trainingTimelineContentSource).toMatch(
-      /\.timeline-group-list\s*\{[\s\S]*border-top:\s*1px solid var\(--workspace-directory-row-divider\);/s
+      /\.timeline-group-list\s*\{[^}]*display:\s*grid;[^}]*gap:\s*var\(--space-3\);[^}]*\}/s
     )
     expect(trainingTimelineContentSource).toMatch(
-      /\.timeline-event-item \+ \.timeline-event-item\s*\{[\s\S]*border-top:\s*1px solid var\(--workspace-directory-row-divider\);/s
+      /\.timeline-event-item\s*\{[^}]*border:\s*1px solid var\(--timeline-list-border\);[^}]*background:\s*var\(--timeline-list-background\);[^}]*\}/s
+    )
+    expect(trainingTimelineContentSource).not.toMatch(
+      /\.timeline-group-list\s*\{[^}]*border:\s*1px solid var\(--timeline-list-border\);[^}]*\}/s
     )
     expect(trainingTimelineContentSource).toContain(
       'margin-top: var(--workspace-panel-divider-gap, var(--space-workspace-panel-divider-gap));'
@@ -176,13 +179,16 @@ describe('student and user surface alignment', () => {
       'class="timeline-section workspace-directory-section"'
     )
     expect(trainingTimelineContentSource).toContain(
-      'class="timeline-directory-shell workspace-glass-region workspace-directory-list"'
+      'class="timeline-directory-shell workspace-directory-list"'
+    )
+    expect(trainingTimelineContentSource).toContain(
+      'class="timeline-group-list"'
     )
     expect(trainingTimelineContentSource).toContain(
       'class="timeline-pagination workspace-directory-pagination"'
     )
     expect(trainingTimelineContentSource).toContain(
-      'class="timeline-metric-card progress-card metric-panel-card metric-panel-default-surface workspace-glass-metric-surface"'
+      'class="timeline-metric-card progress-card metric-panel-card metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(trainingTimelineContentSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
@@ -195,8 +201,10 @@ describe('student and user surface alignment', () => {
     )
     expect(trainingTimelineContentSource).toContain('<component :is="metric.icon" class="h-4 w-4" />')
     expect(trainingTimelineContentSource).not.toContain('teacher-surface-section')
-    expect(trainingTimelineContentSource).toContain('workspace-glass-metric-surface')
-    expect(trainingTimelineContentSource).toContain('workspace-glass-region workspace-directory-list')
+    expect(trainingTimelineContentSource).not.toContain('workspace-glass-metric-surface')
+    expect(trainingTimelineContentSource).not.toContain('workspace-glass-region')
+    expect(trainingTimelineContentSource).toContain('workspace-directory-list')
+    expect(trainingTimelineContentSource).toContain('metric-panel-workspace-surface')
     expect(trainingTimelineContentSource).not.toContain('.teacher-directory-shell {')
     expect(trainingTimelineContentSource).not.toContain('.timeline-metric-grid.metric-panel-default-surface {')
     expect(workspaceGlassSource).toContain('.workspace-glass-region')

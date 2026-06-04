@@ -11,6 +11,7 @@ import studentAnalysisOverviewHeroSource from '@/features/teaching/student-analy
 import classTrendPanelSource from '@/entities/class-insight/ui/ClassTrendPanel.vue?raw'
 import classInsightsPanelSource from '@/entities/class-insight/ui/ClassInsightsPanel.vue?raw'
 import classReviewPanelSource from '@/entities/class-insight/ui/ClassReviewPanel.vue?raw'
+import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 import interventionPanelSource from '@/features/teaching/student-analysis-review/ui/InterventionPanel.vue?raw'
 import studentInsightLoadingSurfaceSource from '@/features/teaching/student-analysis-shared/ui/StudentInsightLoadingSurface.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
@@ -284,7 +285,21 @@ describe('teacher detail surface alignment', () => {
     )
     expect(studentInsightPanelSource).toContain(':loading="loading"')
     expect(studentInsightPanelSource).not.toContain('insight-loading-shell')
-    expect(studentInsightTimelineSectionSource).toContain('StudentInsightLoadingSurface')
+    expect(studentInsightTimelineSectionSource).toContain('TrainingTimelineContent')
+    expect(studentInsightTimelineSectionSource).toContain(':loading="loading"')
+    expect(studentInsightTimelineSectionSource).not.toContain('StudentInsightLoadingSurface')
+    expect(studentInsightTimelineSectionSource).not.toContain('<SectionCard')
+    expect(studentInsightTimelineSectionSource).not.toContain('insight-timeline-loading-hero')
+    expect(studentInsightTimelineSectionSource).not.toContain('insight-timeline-loading-list')
+    expect(studentInsightTimelineSectionSource).not.toContain('insight-timeline-loading-row')
+    expect(studentInsightTimelineSectionSource).not.toContain('workspace-glass-metric-surface')
+    expect(studentInsightTimelineSectionSource).not.toContain('workspace-glass-region')
+    expect(trainingTimelineContentSource).toContain('loading?: boolean')
+    expect(trainingTimelineContentSource).toContain('timeline-metric-skeleton-label')
+    expect(trainingTimelineContentSource).toContain('timeline-event-item--loading')
+    expect(trainingTimelineContentSource).toContain(
+      '<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSurface.css"></style>'
+    )
     expect(studentInsightLoadingSurfaceSource).toContain('student-insight-glass-surface')
     expect(studentInsightSurfaceSharedSource).not.toContain('.student-insight-glass-region')
     expect(workspaceGlassSource).toContain('.workspace-glass-region')

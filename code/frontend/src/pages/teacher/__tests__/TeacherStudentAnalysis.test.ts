@@ -13,6 +13,7 @@ import studentAnalysisWorkspaceContentSource from '@/features/teaching/student-a
 import studentAnalysisWorkspaceTabsSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisWorkspaceTabs.vue?raw'
 import studentAnalysisWorkspaceTabsHelperSource from '@/features/teaching/student-analysis-workspace/ui/studentAnalysisWorkspaceTabs.ts?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
+import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 import studentInsightLoadingSurfaceSource from '@/features/teaching/student-analysis-shared/ui/StudentInsightLoadingSurface.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
 import studentInsightPrimarySectionsSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPrimarySections.vue?raw'
@@ -377,11 +378,18 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightOverviewSectionSource).toContain('insight-overview-loading-radar')
     expect(studentInsightOverviewSectionSource).toContain('student-insight-skeleton-panel')
     expect(studentInsightOverviewSectionSource).toContain('class="insight-dimension-frame mt-4"')
-    expect(studentInsightTimelineSectionSource).toContain('StudentInsightLoadingSurface')
     expect(studentInsightTimelineSectionSource).toContain('TrainingTimelineContent')
-    expect(studentInsightTimelineSectionSource).toContain('insight-timeline-loading-hero')
-    expect(studentInsightTimelineSectionSource).toContain('insight-timeline-loading-metrics')
-    expect(studentInsightTimelineSectionSource).toContain('insight-timeline-loading-list')
+    expect(studentInsightTimelineSectionSource).toContain(':loading="loading"')
+    expect(studentInsightTimelineSectionSource).not.toContain('StudentInsightLoadingSurface')
+    expect(studentInsightTimelineSectionSource).not.toContain('<SectionCard')
+    expect(studentInsightTimelineSectionSource).not.toContain('insight-timeline-loading-hero')
+    expect(studentInsightTimelineSectionSource).not.toContain('insight-timeline-loading-list')
+    expect(studentInsightTimelineSectionSource).not.toContain('insight-timeline-loading-row')
+    expect(studentInsightTimelineSectionSource).not.toContain('workspace-glass-metric-surface')
+    expect(studentInsightTimelineSectionSource).not.toContain('workspace-glass-region')
+    expect(trainingTimelineContentSource).toContain('loading?: boolean')
+    expect(trainingTimelineContentSource).toContain('timeline-metric-skeleton-label')
+    expect(trainingTimelineContentSource).toContain('timeline-event-item--loading')
     expect(studentInsightRecommendationsSectionSource).toContain(
       '<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSurface.css"></style>'
     )
