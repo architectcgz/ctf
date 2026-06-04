@@ -144,7 +144,7 @@ const emit = defineEmits<{
 }
 
 .summary-card--completion {
-  --summary-card-accent: var(--color-success);
+  --summary-card-accent: var(--workspace-brand);
 }
 
 .summary-card--weakness {

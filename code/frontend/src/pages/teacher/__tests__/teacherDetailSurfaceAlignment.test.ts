@@ -137,7 +137,10 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisOverviewHeroSource).toContain('var(--teacher-card-border)')
     expect(studentAnalysisOverviewHeroSource).toContain('--summary-card-accent: var(--workspace-brand);')
     expect(studentAnalysisOverviewHeroSource).toContain('--summary-card-accent: var(--color-primary);')
-    expect(studentAnalysisOverviewHeroSource).toContain('--summary-card-accent: var(--color-success);')
+    expect(studentAnalysisOverviewHeroSource).not.toContain('--summary-card-accent: var(--color-success);')
+    expect(studentAnalysisOverviewHeroSource).toMatch(
+      /\.summary-card--completion\s*\{[\s\S]*--summary-card-accent:\s*var\(--workspace-brand\);/s
+    )
     expect(studentAnalysisOverviewHeroSource).not.toContain('--summary-card-accent: var(--color-warning);')
     expect(studentAnalysisOverviewHeroSource).toContain('--metric-panel-value-color:')
     expect(studentAnalysisSource).not.toContain(':deep(.section-card)')
