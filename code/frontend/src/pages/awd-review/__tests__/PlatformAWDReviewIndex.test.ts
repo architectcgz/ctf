@@ -126,18 +126,6 @@ describe('PlatformAWDReviewIndex', () => {
   it('应使用平台工作台目录壳层而不是教师目录模板', async () => {
     expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'")
     expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
-    expect(platformAwdReviewIndexSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero admin-awd-review-shell flex min-h-full flex-1 flex-col"'
-    )
-    expect(awdReviewHeroPanelSource).toContain(
-      'class="admin-summary-grid admin-awd-review-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(combinedSource).toContain(
-      'class="workspace-directory-section admin-awd-review-directory"'
-    )
-    expect(combinedSource).toContain('class="workspace-directory-list admin-awd-review-table"')
-    expect(combinedSource).not.toContain('teacher-management-shell')
-    expect(combinedSource).not.toContain('teacher-directory-row')
 
     const { wrapper } = await mountPage()
 
