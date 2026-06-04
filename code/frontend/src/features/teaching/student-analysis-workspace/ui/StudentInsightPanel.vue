@@ -9,61 +9,39 @@
 
     <template v-else>
       <StudentInsightPrimarySections
-        v-if="loading && activeSection === 'recommendations'"
         :profile="profile"
         :recommendations="recommendations"
-        :recommendations-loading="true"
+        :recommendations-loading="loading"
         :timeline="timeline"
+        :loading="loading"
         :active-section="activeSection"
         @open-challenge="emit('openChallenge', $event)"
       />
 
-      <div v-else-if="loading" class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <div class="insight-loading-shell">
-          <div class="insight-skeleton-line h-6 w-36 animate-pulse rounded" />
-          <div class="mt-6 space-y-3">
-            <div class="insight-skeleton-block h-16 animate-pulse rounded-xl" />
-            <div class="insight-skeleton-block h-16 animate-pulse rounded-xl" />
-          </div>
-        </div>
-        <div class="insight-loading-shell">
-          <div class="insight-skeleton-block h-[280px] animate-pulse rounded-2xl" />
-        </div>
-      </div>
-
-      <template v-else-if="student">
-        <StudentInsightPrimarySections
-          :profile="profile"
-          :recommendations="recommendations"
-          :timeline="timeline"
-          :active-section="activeSection"
-          @open-challenge="emit('openChallenge', $event)"
-        />
-
-        <StudentInsightReviewSections
-          :active-section="activeSection"
-          :attack-sessions="attackSessions"
-          :evidence="evidence"
-          :review-challenge-options="reviewChallengeOptions"
-          :review-workspace-loading="reviewWorkspaceLoading"
-          :review-workspace-query="reviewWorkspaceQuery"
-          :writeup-submissions="writeupSubmissions"
-          :writeup-page="writeupPage"
-          :writeup-total="writeupTotal"
-          :writeup-total-pages="writeupTotalPages"
-          :writeup-pagination-loading="writeupPaginationLoading"
-          :manual-review-submissions="manualReviewSubmissions"
-          :active-manual-review="activeManualReview"
-          :manual-review-loading="manualReviewLoading"
-          :manual-review-saving="manualReviewSaving"
-          @open-challenge="emit('openChallenge', $event)"
-          @open-manual-review="emit('openManualReview', $event)"
-          @moderate-writeup="emit('moderateWriteup', $event)"
-          @review-manual-review="emit('reviewManualReview', $event)"
-          @change-writeup-page="emit('changeWriteupPage', $event)"
-          @update-review-workspace-filters="emit('updateReviewWorkspaceFilters', $event)"
-        />
-      </template>
+      <StudentInsightReviewSections
+        v-if="student"
+        :active-section="activeSection"
+        :attack-sessions="attackSessions"
+        :evidence="evidence"
+        :review-challenge-options="reviewChallengeOptions"
+        :review-workspace-loading="reviewWorkspaceLoading"
+        :review-workspace-query="reviewWorkspaceQuery"
+        :writeup-submissions="writeupSubmissions"
+        :writeup-page="writeupPage"
+        :writeup-total="writeupTotal"
+        :writeup-total-pages="writeupTotalPages"
+        :writeup-pagination-loading="writeupPaginationLoading"
+        :manual-review-submissions="manualReviewSubmissions"
+        :active-manual-review="activeManualReview"
+        :manual-review-loading="manualReviewLoading"
+        :manual-review-saving="manualReviewSaving"
+        @open-challenge="emit('openChallenge', $event)"
+        @open-manual-review="emit('openManualReview', $event)"
+        @moderate-writeup="emit('moderateWriteup', $event)"
+        @review-manual-review="emit('reviewManualReview', $event)"
+        @change-writeup-page="emit('changeWriteupPage', $event)"
+        @update-review-workspace-filters="emit('updateReviewWorkspaceFilters', $event)"
+      />
     </template>
   </div>
 </template>
@@ -81,20 +59,6 @@
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
 }
 
-.insight-skeleton-line,
-.insight-skeleton-block {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-border) 78%, transparent),
-    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-  );
-}
-
-.insight-loading-shell {
-  padding: var(--space-4) 0;
-  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
-  background: transparent;
-}
 </style>
 
 <script setup lang="ts">

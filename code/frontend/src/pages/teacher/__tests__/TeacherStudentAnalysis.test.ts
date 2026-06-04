@@ -335,8 +335,46 @@ describe('TeacherStudentAnalysis', () => {
       /<div[\s\S]*class="insight-recommendation-list workspace-directory-list"[\s\S]*<template v-if="loading">[\s\S]*<AppEmpty[\s\S]*v-else-if="recommendations\.length === 0"[\s\S]*<template v-else>/s
     )
     expect(studentInsightPrimarySectionsSource).toContain(':loading="recommendationsLoading"')
-    expect(studentInsightPanelSource).toContain("loading && activeSection === 'recommendations'")
-    expect(studentInsightPanelSource).toContain(':recommendations-loading="true"')
+    // merged: loading 和 loaded 共用同一个 StudentInsightPrimarySections 实例
+    expect(studentInsightPanelSource).toContain(':recommendations-loading="loading"')
+    expect(studentInsightPanelSource).toContain(':loading="loading"')
+    // 不再包含独立的分支骨架
+    expect(studentInsightPanelSource).not.toContain('insight-loading-shell')
+    expect(studentInsightPanelSource).not.toContain('insight-skeleton-line')
+    expect(studentInsightPanelSource).not.toContain('insight-skeleton-block')
+    // overview glass skeleton
+    expect(studentInsightOverviewSectionSource).toContain('v-if="loading"')
+    expect(studentInsightOverviewSectionSource).toContain('insight-overview-glass')
+    expect(studentInsightOverviewSectionSource).toContain('insight-overview-glass__radar')
+    expect(studentInsightOverviewSectionSource).toContain('insight-overview-glass__bars')
+    expect(studentInsightOverviewSectionSource).toContain(
+      'class="insight-overview-glass__bar-row"'
+    )
+    expect(studentInsightOverviewSectionSource).toMatch(
+      /\.insight-overview-glass\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
+    )
+    expect(studentInsightOverviewSectionSource).toMatch(
+      /\.insight-overview-glass__title,[\s\S]*\.insight-overview-glass__bar-value\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*insightOverviewSkeletonSweep 1\.55s ease-in-out infinite;/s
+    )
+    expect(studentInsightOverviewSectionSource).toContain(
+      '@media (prefers-reduced-motion: reduce)'
+    )
+    expect(studentInsightOverviewSectionSource).toContain('keyframes insightOverviewSkeletonSweep')
+    // timeline glass skeleton
+    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-glass')
+    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-glass__hero')
+    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-glass__metrics')
+    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-glass__list')
+    expect(studentInsightPrimarySectionsSource).toContain(
+      'class="insight-timeline-glass__row"'
+    )
+    expect(studentInsightPrimarySectionsSource).toMatch(
+      /\.insight-timeline-glass\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
+    )
+    expect(studentInsightPrimarySectionsSource).toMatch(
+      /\.insight-timeline-glass__eyebrow,[\s\S]*\.insight-timeline-glass__row-meta\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*insightTimelineSkeletonSweep 1\.55s ease-in-out infinite;/s
+    )
+    expect(studentInsightPrimarySectionsSource).toContain('keyframes insightTimelineSkeletonSweep')
     expect(studentInsightRecommendationsSectionSource).toMatch(
       /\.insight-recommendation-list\s*\{[\s\S]*--workspace-directory-shell-border:\s*color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);[\s\S]*--workspace-directory-shell-background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*--workspace-directory-shell-radius:\s*var\(--workspace-radius-lg\);[\s\S]*overflow:\s*hidden;[\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
     )

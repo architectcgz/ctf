@@ -13,6 +13,7 @@ import classInsightsPanelSource from '@/entities/class-insight/ui/ClassInsightsP
 import classReviewPanelSource from '@/entities/class-insight/ui/ClassReviewPanel.vue?raw'
 import interventionPanelSource from '@/features/teaching/student-analysis-review/ui/InterventionPanel.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
+import studentInsightPrimarySectionsSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPrimarySections.vue?raw'
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
 import studentInsightWriteupsSource from '@/features/teaching/student-analysis-review/ui/StudentInsightWriteupsSection.vue?raw'
@@ -44,6 +45,7 @@ const reviewArchiveCombinedSource = [
 ].join('\n')
 const studentInsightCompositeSource = [
   studentInsightPanelSource,
+  studentInsightPrimarySectionsSource,
   studentInsightOverviewSectionSource,
   studentInsightRecommendationsSectionSource,
   studentInsightWriteupsSource,
@@ -94,7 +96,7 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisOverviewHeroSource).toContain(
       'class="workspace-panel-header__summary summary-strip metric-panel-grid"'
     )
-    expect(studentAnalysisOverviewHeroSource).toContain('class="workspace-panel-divider"')
+    expect(studentAnalysisOverviewHeroSource).not.toContain('class="workspace-panel-divider"')
     expect(studentAnalysisOverviewHeroSource).toContain(
       'class="teacher-title workspace-page-title student-analysis-title"'
     )
@@ -119,7 +121,7 @@ describe('teacher detail surface alignment', () => {
       /\.student-analysis-shell\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent;[\s\S]*box-shadow:\s*none;[\s\S]*overflow:\s*visible;/s
     )
     expect(studentAnalysisOverviewHeroSource).toMatch(
-      /\.summary-strip\s*\{[\s\S]*?margin:\s*0;[\s\S]*?padding:\s*0;/s
+      /\.summary-strip\s*\{[\s\S]*?margin:\s*var\(--space-6\)\s*0\s*0;[\s\S]*?padding:\s*0;/s
     )
     expect(studentAnalysisOverviewHeroSource).not.toMatch(/\.summary-strip\s*\{[^}]*border-bottom:/s)
     expect(studentAnalysisOverviewHeroSource).toContain(
@@ -182,7 +184,10 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightPanelSource).toContain('--teacher-card-border:')
     expect(studentInsightPanelSource).toContain('--teacher-divider:')
     expect(studentInsightOverviewSectionSource).toMatch(
-      /\.insight-overview-layout\s*\{[\s\S]*?border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);/s
+      /\.insight-overview-layout\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-6\);/s
+    )
+    expect(studentInsightOverviewSectionSource).not.toMatch(
+      /\.insight-overview-layout\s*\{[\s\S]*border-top:/s
     )
     expect(studentInsightOverviewSectionSource).toContain('variant="teacher-flat"')
     expect(studentInsightOverviewSectionSource).toMatch(
@@ -213,10 +218,9 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"'
     )
-    expect(studentInsightPanelSource).toContain('class="insight-loading-shell"')
-    expect(studentInsightPanelSource).toMatch(
-      /\.insight-loading-shell\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);[\s\S]*background:\s*transparent;/s
-    )
+    expect(studentInsightPanelSource).toContain(':loading="loading"')
+    expect(studentInsightPanelSource).not.toContain('insight-loading-shell')
+    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-glass')
     expect(studentInsightManualReviewSource).toMatch(
       /\.insight-kpi-grid\s*\{[\s\S]*--metric-panel-background:\s*transparent;[\s\S]*--metric-panel-shadow:\s*none;[\s\S]*--metric-panel-radius:\s*0;/s
     )
