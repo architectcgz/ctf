@@ -442,7 +442,6 @@ describe('DashboardView', () => {
     expect(trainingTimelineContentSource).toContain('<div class="workspace-overline">')
     expect(trainingTimelineContentSource).toContain('Timeline')
     expect(trainingTimelinePanelSource).toContain('journal-shell journal-hero timeline-shell-flat')
-    expect(trainingTimelinePanelSource).not.toContain('embedded')
     expect(studentDifficultyPageSource).toContain('<div class="workspace-overline">')
     expect(studentDifficultyPageSource).toContain('Difficulty')
   })

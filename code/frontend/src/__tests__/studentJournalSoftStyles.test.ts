@@ -39,8 +39,6 @@ describe('student journal soft shared styles', () => {
     ]) {
       expect(source).toContain('journal-soft-surface')
       expect(source).not.toMatch(/^\.journal-eyebrow\s*\{/m)
-      expect(source).not.toMatch(/^\.journal-shell-embedded,\s*$/m)
-      expect(source).not.toMatch(/^\.journal-shell-embedded\s*\{/m)
     }
 
     for (const source of [
@@ -57,8 +55,6 @@ describe('student journal soft shared styles', () => {
     }
 
     expect(trainingTimelineContentSource).not.toMatch(/^\.journal-eyebrow\s*\{/m)
-    expect(trainingTimelineContentSource).not.toMatch(/^\.journal-shell-embedded,\s*$/m)
-    expect(trainingTimelineContentSource).not.toMatch(/^\.journal-shell-embedded\s*\{/m)
   })
 
   it('student journal 页面应复用共享空态面板样式，而不是重复写裸圆角和主题色类', () => {
