@@ -83,7 +83,7 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toContain('--teacher-card-border:')
     expect(studentAnalysisSource).toContain('--teacher-divider:')
     expect(studentAnalysisSource).toContain(
-      'class="workspace-shell student-analysis-shell journal-eyebrow-text flex min-h-full flex-1 flex-col"'
+      'class="workspace-shell teacher-management-shell teacher-surface student-analysis-shell journal-eyebrow-text flex min-h-full flex-1 flex-col"'
     )
     expect(studentAnalysisSource).not.toContain('class="workspace-topbar"')
     expect(studentAnalysisSource).toContain('StudentAnalysisWorkspaceTabs')
@@ -117,7 +117,7 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toMatch(
       /\.content-pane\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*align-content:\s*start;/s
     )
-    expect(studentAnalysisSource).toMatch(
+    expect(studentAnalysisSource).not.toMatch(
       /\.student-analysis-shell\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent;[\s\S]*box-shadow:\s*none;[\s\S]*overflow:\s*visible;/s
     )
     expect(studentAnalysisOverviewHeroSource).toMatch(
