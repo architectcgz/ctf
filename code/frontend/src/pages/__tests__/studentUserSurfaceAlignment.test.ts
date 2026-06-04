@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
+import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
@@ -61,7 +62,7 @@ describe('student and user surface alignment', () => {
       'class="workspace-panel-header category-header"'
     )
     expect(studentDifficultySource).toContain('class="workspace-panel-header difficulty-header"')
-    expect(trainingTimelineSource).toContain('class="workspace-panel-header timeline-header"')
+    expect(trainingTimelineContentSource).toContain('class="workspace-panel-header timeline-header"')
     expect(studentOverviewSource).toContain('class="workspace-panel-divider"')
     expect(studentRecommendationSource).toContain('class="workspace-panel-divider"')
     expect(studentCategoryProgressSource).toContain('class="workspace-panel-divider"')
@@ -121,10 +122,10 @@ describe('student and user surface alignment', () => {
     expect(studentDifficultySource).not.toContain('bg-[rgba(226,232,240,0.65)]')
 
     expect(trainingTimelineSource).toContain('journal-soft-surface')
-    expect(trainingTimelineSource).toMatch(
+    expect(trainingTimelineContentSource).toMatch(
       /\.stat-icon\s*\{[\s\S]*border:\s*1px solid var\(--journal-soft-border\);/s
     )
-    expect(trainingTimelineSource).not.toContain('rgba(226, 232, 240, 0.72)')
+    expect(trainingTimelineContentSource).not.toContain('rgba(226, 232, 240, 0.72)')
 
     expect(journalSoftSurfacesSource).toMatch(
       /\.journal-soft-surface \.journal-btn-outline\s*\{[\s\S]*border:\s*1px solid var\(--journal-control-border\);/s
@@ -150,26 +151,39 @@ describe('student and user surface alignment', () => {
   })
 
   it('student timeline 概况卡片应显式采用统一 metric-panel 样式栈', () => {
-    expect(trainingTimelineSource).toContain(
+    expect(trainingTimelineContentSource).toContain(
       'class="workspace-panel-header__summary timeline-metric-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
-    expect(trainingTimelineSource).toContain(
+    expect(trainingTimelineContentSource).toContain(
+      'class="timeline-section workspace-directory-section"'
+    )
+    expect(trainingTimelineContentSource).toContain(
+      'class="timeline-directory-shell teacher-directory-shell workspace-directory-list workspace-directory-list--catalog"'
+    )
+    expect(trainingTimelineContentSource).toContain(
+      'class="timeline-pagination workspace-directory-pagination"'
+    )
+    expect(trainingTimelineContentSource).toContain(
       'class="timeline-metric-card progress-card metric-panel-card"'
     )
-    expect(trainingTimelineSource).toContain(
+    expect(trainingTimelineContentSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
     )
-    expect(trainingTimelineSource).toContain(
+    expect(trainingTimelineContentSource).toContain(
       'class="journal-note-value progress-card-value metric-panel-value"'
     )
-    expect(trainingTimelineSource).toContain(
+    expect(trainingTimelineContentSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
-    expect(trainingTimelineSource).toContain('<component :is="metric.icon" class="h-4 w-4" />')
-    expect(trainingTimelineSource).not.toContain('teacher-surface-section')
-    expect(trainingTimelineSource).toMatch(
+    expect(trainingTimelineContentSource).toContain('<component :is="metric.icon" class="h-4 w-4" />')
+    expect(trainingTimelineContentSource).not.toContain('teacher-surface-section')
+    expect(trainingTimelineContentSource).toMatch(
       /\.timeline-metric-grid\.metric-panel-default-surface\s*\{[\s\S]*--metric-panel-background:\s*radial-gradient\(/s
     )
+    expect(trainingTimelineContentSource).toMatch(
+      /\.timeline-directory-shell\s*\{[\s\S]*--workspace-directory-shell-border:\s*var\(--journal-soft-border\);[\s\S]*--workspace-directory-row-divider:\s*var\(--journal-divider\);/s
+    )
+    expect(trainingTimelineContentSource).toContain('class="workspace-overline">Timeline Log</div>')
   })
 
   it('student overview 当前排名卡片应切换到 shared metric-panel 卡片栈，而不是继续复用本地 note 边框样式', () => {

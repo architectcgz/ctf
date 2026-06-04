@@ -38,12 +38,12 @@ describe('metric panel surface ownership', () => {
       )
       .map(({ filePath }) => relative(srcRoot, filePath))
 
-    expect(matches).toEqual(['components/training/TrainingTimelinePanel.vue'])
+    expect(matches).toEqual(['entities/training-timeline/ui/TrainingTimelineContent.vue'])
   })
 
   it('student timeline 的局部桥接应保留共享卡片的高光加底面双层背景语义', () => {
     const timelineSource = readFileSync(
-      join(process.cwd(), 'src/components/training/TrainingTimelinePanel.vue'),
+      join(process.cwd(), 'src/entities/training-timeline/ui/TrainingTimelineContent.vue'),
       'utf8'
     )
 

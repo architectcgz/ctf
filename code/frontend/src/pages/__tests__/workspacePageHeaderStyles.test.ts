@@ -42,6 +42,7 @@ import studentOverviewSource from '@/features/student-dashboard/ui/StudentOvervi
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressPage.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
+import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyPage.vue?raw'
 import teacherDashboardSourceBase from '@/features/teacher/dashboard/ui/TeacherDashboardPage.vue?raw'
 import teacherDashboardPortraitPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardPortraitPanel.vue?raw'
@@ -332,7 +333,7 @@ describe('workspace page header styles', () => {
         exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
       },
       {
-        source: trainingTimelineSource,
+        source: trainingTimelineContentSource,
         include: /<h1 class="journal-page-title workspace-page-title[\s\S]*?>/,
         exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
       },
@@ -508,7 +509,7 @@ describe('workspace page header styles', () => {
           '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
       },
       {
-        source: trainingTimelineSource,
+        source: trainingTimelineContentSource,
         include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
         exclude:
           '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',

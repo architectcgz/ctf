@@ -1,4 +1,5 @@
 export { default as TrainingTimelinePanel } from './ui/TrainingTimelinePanel.vue'
+export { default as TrainingTimelineContent } from './ui/TrainingTimelineContent.vue'
 export {
   canonicalDifficultyOrder,
   compareProgressPriority,

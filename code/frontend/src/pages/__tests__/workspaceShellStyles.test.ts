@@ -11,6 +11,7 @@ import studentDifficultySource from '@/features/student-dashboard/ui/StudentDiff
 import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
+import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 import classManagementPageSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
 import classStudentsPageSourceBase from '@/features/teaching/class-students-workspace/ui/ClassStudentsPage.vue?raw'
 import classStudentsOverviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsOverviewPanel.vue?raw'
@@ -335,7 +336,7 @@ describe('workspace shell shared styles', () => {
       [studentRecommendationSource, 'Action Queue'],
       [studentCategoryProgressSource, 'Action Ranking'],
       [studentDifficultySource, 'Intensity Workspace'],
-      [trainingTimelineSource, 'Timeline Log'],
+      [trainingTimelineContentSource, 'Timeline Log'],
     ] as const) {
       expect(source).not.toContain(label)
     }

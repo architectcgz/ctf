@@ -7,6 +7,7 @@ import studentDifficultySource from '@/features/student-dashboard/ui/StudentDiff
 import studentOverviewEditorialSource from '@/features/student-dashboard/ui/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationPage.vue?raw'
 import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
+import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 
 const journalSoftSurfacesSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-soft-surfaces.css`,
@@ -64,7 +65,7 @@ describe('student journal soft shared styles', () => {
       studentCategoryProgressSource,
       studentDifficultySource,
       studentRecommendationSource,
-      trainingTimelineSource,
+      trainingTimelineContentSource,
     ]) {
       expect(source).toContain('journal-soft-empty-state')
       expect(source).not.toContain(
@@ -105,7 +106,7 @@ describe('student journal soft shared styles', () => {
       studentDifficultySource,
       studentOverviewEditorialSource,
       studentRecommendationSource,
-      trainingTimelineSource,
+      trainingTimelineContentSource,
     ]) {
       expect(source).not.toContain('text-[var(--journal-ink)]')
     }
@@ -114,7 +115,7 @@ describe('student journal soft shared styles', () => {
       studentCategoryProgressSource,
       studentOverviewEditorialSource,
       studentRecommendationSource,
-      trainingTimelineSource,
+      trainingTimelineContentSource,
     ]) {
       expect(source).not.toContain('text-[var(--journal-muted)]')
     }

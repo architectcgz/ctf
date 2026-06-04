@@ -5,3 +5,4 @@ export { default as StudentInsightOverviewSection } from './StudentInsightOvervi
 export { default as StudentInsightPanel } from './StudentInsightPanel.vue'
 export { default as StudentInsightPrimarySections } from './StudentInsightPrimarySections.vue'
 export { default as StudentInsightRecommendationsSection } from './StudentInsightRecommendationsSection.vue'
+export { default as StudentInsightTimelineSection } from './StudentInsightTimelineSection.vue'

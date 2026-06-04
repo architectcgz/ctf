@@ -16,6 +16,7 @@ import studentAnalysisOverviewHeroPanelSource from '@/features/teaching/student-
 import studentInsightLoadingSurfaceSource from '@/features/teaching/student-analysis-shared/ui/StudentInsightLoadingSurface.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
 import studentInsightPrimarySectionsSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPrimarySections.vue?raw'
+import studentInsightTimelineSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightTimelineSection.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/features/teaching/student-analysis-review/ui/StudentInsightAttackSessionsSection.vue?raw'
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
@@ -334,7 +335,7 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightPanelSource).not.toContain('TeacherStudentReviewWorkspace')
     expect(studentInsightPrimarySectionsSource).toContain('StudentInsightOverviewSection')
     expect(studentInsightPrimarySectionsSource).toContain('StudentInsightRecommendationsSection')
-    expect(studentInsightPrimarySectionsSource).toContain('TrainingTimelinePanel')
+    expect(studentInsightPrimarySectionsSource).toContain('StudentInsightTimelineSection')
     expect(studentInsightOverviewSectionSource).toContain('<SkillRadar :scores="radarScores" />')
     expect(studentInsightRecommendationsSectionSource).toContain(
       'class="insight-recommendation-list workspace-directory-list"'
@@ -354,10 +355,11 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightOverviewSectionSource).toContain('insight-overview-loading-radar')
     expect(studentInsightOverviewSectionSource).toContain('student-insight-skeleton-panel')
     expect(studentInsightOverviewSectionSource).toContain('class="insight-dimension-frame mt-4"')
-    expect(studentInsightPrimarySectionsSource).toContain('StudentInsightLoadingSurface')
-    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-loading-hero')
-    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-loading-metrics')
-    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-loading-list')
+    expect(studentInsightTimelineSectionSource).toContain('StudentInsightLoadingSurface')
+    expect(studentInsightTimelineSectionSource).toContain('TrainingTimelineContent')
+    expect(studentInsightTimelineSectionSource).toContain('insight-timeline-loading-hero')
+    expect(studentInsightTimelineSectionSource).toContain('insight-timeline-loading-metrics')
+    expect(studentInsightTimelineSectionSource).toContain('insight-timeline-loading-list')
     expect(studentInsightRecommendationsSectionSource).toMatch(
       /\.insight-recommendation-list\s*\{[\s\S]*--workspace-directory-shell-border:\s*color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);[\s\S]*--workspace-directory-shell-background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*--workspace-directory-shell-radius:\s*var\(--workspace-radius-lg\);[\s\S]*overflow:\s*hidden;[\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
     )
