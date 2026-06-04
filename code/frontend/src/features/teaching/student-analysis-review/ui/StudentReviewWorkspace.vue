@@ -5,8 +5,6 @@ import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import type { AttackSessionQuery, AttackSessionResponseData, StudentEvidenceData } from '@/api/contracts'
 import {
   buildChallengeFilterOptions,
-  buildReviewWorkspaceObservations,
-  buildReviewWorkspaceSummaryItems,
   eventMetaItems,
   eventTypeLabel,
   formatDateTime,
@@ -28,13 +26,6 @@ const emit = defineEmits<{
   updateFilters: [payload: Partial<AttackSessionQuery>]
 }>()
 
-const summaryItems = computed(() =>
-  buildReviewWorkspaceSummaryItems({
-    sessionSummary: props.attackSessions?.summary,
-    evidenceSummary: props.evidence?.summary,
-  })
-)
-
 const challengeOptions = computed(() =>
   props.challengeOptions && props.challengeOptions.length > 0
     ? props.challengeOptions
@@ -42,13 +33,6 @@ const challengeOptions = computed(() =>
         evidence: props.evidence,
         attackSessions: props.attackSessions,
       })
-)
-
-const observations = computed(() =>
-  buildReviewWorkspaceObservations({
-    evidence: props.evidence,
-    attackSessions: props.attackSessions,
-  })
 )
 </script>
 
@@ -136,46 +120,8 @@ const observations = computed(() =>
     </div>
 
     <div
-      v-if="observations.length > 0"
-      class="review-observation-strip"
+      class="attack-session-list"
     >
-      <article
-        v-for="item in observations"
-        :key="item.key"
-        class="review-observation"
-        :class="`review-observation--${item.level}`"
-      >
-        <div class="review-observation__label">
-          {{ item.label }}
-        </div>
-        <p class="review-observation__summary">
-          {{ item.summary }}
-        </p>
-      </article>
-    </div>
-
-    <div
-      class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-teacher-surface md:grid-cols-4"
-    >
-      <article
-        v-for="item in summaryItems"
-        :key="item.key"
-        class="insight-kpi-card progress-card metric-panel-card"
-      >
-        <div class="insight-kpi-label progress-card-label metric-panel-label">
-          <span>{{ item.label }}</span>
-          <component :is="item.icon" class="h-4 w-4" />
-        </div>
-        <div class="insight-kpi-value progress-card-value metric-panel-value">
-          {{ item.value }}
-        </div>
-        <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-          {{ item.hint }}
-        </div>
-      </article>
-    </div>
-
-    <div class="attack-session-list">
       <article
         v-for="session in attackSessions.sessions"
         :key="session.id"
@@ -192,7 +138,6 @@ const observations = computed(() =>
             <div class="attack-session__meta">
               <span>{{ sessionModeLabel(session.mode) }}</span>
               <span>{{ session.event_count }} 个事件</span>
-              <span>{{ formatDateTime(session.started_at) }}</span>
             </div>
             <p>{{ sessionPathSummary(session) }}</p>
           </div>
@@ -287,61 +232,16 @@ const observations = computed(() =>
   white-space: nowrap;
 }
 
-.review-observation-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: var(--space-3);
-  margin-bottom: var(--space-5);
-}
-
-.review-observation {
-  --review-observation-accent: var(--journal-border);
-  display: grid;
-  gap: var(--space-1-5);
-  border: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
-  border-radius: var(--radius-md);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--review-observation-accent) 4%, transparent),
-      transparent 72%
-    ),
-    color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--review-observation-accent) 30%, transparent);
-  padding: var(--space-3) var(--space-3-5);
-}
-
-.review-observation--good {
-  --review-observation-accent: var(--color-success);
-}
-
-.review-observation--attention {
-  --review-observation-accent: var(--color-warning);
-}
-
-.review-observation__label {
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-72);
-}
-
-.review-observation__summary {
-  margin: 0;
-  color: var(--journal-ink);
-  font-size: var(--font-size-0-86);
-  line-height: 1.5;
-}
-
 .attack-session-list {
   display: grid;
-  gap: var(--space-4);
-  margin-top: var(--space-5);
+  gap: var(--space-3);
 }
 
 .attack-session {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-3);
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
-  padding-top: var(--space-4);
+  padding-top: var(--space-3);
 }
 
 .attack-session__head {
@@ -380,7 +280,7 @@ const observations = computed(() =>
 }
 
 .attack-session__meta {
-  margin-top: var(--space-2);
+  margin-top: var(--space-1-5);
 }
 
 .attack-session__target {
@@ -389,15 +289,15 @@ const observations = computed(() =>
 
 .attack-session__main p,
 .attack-event__body p {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-1-5) 0 0;
   color: var(--journal-muted);
-  font-size: var(--font-size-0-88);
-  line-height: 1.65;
+  font-size: var(--font-size-0-84);
+  line-height: 1.55;
 }
 
 .attack-event-list {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2-5);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -406,7 +306,7 @@ const observations = computed(() =>
 .attack-event {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-3);
+  gap: var(--space-2-5);
 }
 
 .attack-event__marker {
@@ -420,7 +320,7 @@ const observations = computed(() =>
 .attack-event__body {
   min-width: 0;
   border-left: 1px solid color-mix(in srgb, var(--teacher-divider) 82%, transparent);
-  padding-left: var(--space-3);
+  padding-left: var(--space-2-5);
 }
 
 .attack-event__head {

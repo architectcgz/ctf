@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
 import StudentReviewWorkspace from './StudentReviewWorkspace.vue'
+import studentReviewWorkspaceSource from './StudentReviewWorkspace.vue?raw'
 
 describe('StudentReviewWorkspace', () => {
   it('应渲染空状态', () => {
@@ -90,17 +91,24 @@ describe('StudentReviewWorkspace', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('会话数')
-    expect(wrapper.text()).toContain('成功会话')
-    expect(wrapper.text()).toContain('实操请求')
-    expect(wrapper.text()).toContain('训练闭环')
     expect(wrapper.text()).toContain('训练')
     expect(wrapper.text()).toContain('POST')
     expect(wrapper.text()).toContain('/login')
-    expect(wrapper.findAll('.metric-panel-label svg')).toHaveLength(4)
-    expect(wrapper.get('.insight-kpi-grid').classes()).toContain('metric-panel-default-surface')
-    expect(wrapper.get('.insight-kpi-grid').classes()).toContain('metric-panel-teacher-surface')
-    expect(wrapper.get('.insight-kpi-grid').classes()).not.toContain('metric-panel-workspace-surface')
+    expect(wrapper.find('.review-observation-strip').exists()).toBe(false)
+    expect(wrapper.find('.insight-kpi-grid').exists()).toBe(false)
+    expect(studentReviewWorkspaceSource).toMatch(
+      /\.attack-session-list\s*\{[\s\S]*gap:\s*var\(--space-3\);/s
+    )
+    expect(studentReviewWorkspaceSource).toMatch(
+      /\.attack-session\s*\{[\s\S]*gap:\s*var\(--space-3\);[\s\S]*padding-top:\s*var\(--space-3\);/s
+    )
+    expect(studentReviewWorkspaceSource).toMatch(
+      /\.attack-event-list\s*\{[\s\S]*gap:\s*var\(--space-2-5\);/s
+    )
+    expect(studentReviewWorkspaceSource).not.toContain("formatDateTime(session.started_at)")
+    expect(studentReviewWorkspaceSource).not.toContain(
+      'class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-teacher-surface md:grid-cols-4"'
+    )
   })
 
   it('应在筛选变更时发出查询更新事件', async () => {

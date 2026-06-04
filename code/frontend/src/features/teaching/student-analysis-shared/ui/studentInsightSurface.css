@@ -1,0 +1,124 @@
+.student-insight-glass-surface,
+.student-insight-state-surface--glass {
+  --student-insight-surface-border: color-mix(
+    in srgb,
+    var(--teacher-card-border) 88%,
+    transparent
+  );
+  --student-insight-surface-radius: var(--workspace-radius-lg);
+  --student-insight-surface-padding: var(--space-4);
+  --student-insight-surface-background:
+    radial-gradient(
+      ellipse at top right,
+      color-mix(in srgb, var(--journal-accent) 9%, transparent),
+      transparent 46%
+    ),
+    radial-gradient(
+      ellipse at bottom left,
+      color-mix(in srgb, var(--color-bg-surface) 58%, transparent),
+      transparent 52%
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base))
+    );
+  --student-insight-surface-shadow: var(--workspace-shadow-panel);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--student-insight-surface-border);
+  border-radius: var(--student-insight-surface-radius);
+  padding: var(--student-insight-surface-padding);
+  background: var(--student-insight-surface-background);
+  box-shadow: var(--student-insight-surface-shadow);
+}
+
+.student-insight-glass-surface::before,
+.student-insight-state-surface--glass::before {
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  content: '';
+  border-radius: calc(var(--student-insight-surface-radius) - 1px);
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      color-mix(in srgb, var(--color-bg-surface) 34%, transparent) 38%,
+      transparent 72%
+    );
+  opacity: 0.54;
+}
+
+.student-insight-state-surface {
+  position: relative;
+}
+
+.student-insight-state-surface--loading {
+  display: grid;
+  gap: var(--student-insight-state-gap, var(--space-3));
+  min-height: var(--student-insight-state-min-height, clamp(12rem, 24vh, 16rem));
+  align-content: start;
+}
+
+.student-insight-state-surface--empty {
+  display: grid;
+  min-height: var(--student-insight-empty-min-height, clamp(11rem, 24vh, 16rem));
+  place-items: center;
+}
+
+.student-insight-empty {
+  --app-empty-border-top: 0;
+  --app-empty-border-bottom: 0;
+  --app-empty-background: transparent;
+  width: 100%;
+}
+
+.student-insight-skeleton-line,
+.student-insight-skeleton-pill,
+.student-insight-skeleton-block,
+.student-insight-skeleton-panel {
+  display: block;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
+      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
+      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
+    );
+  background-size: 220% 100%;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
+    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
+  animation: studentInsightSkeletonSweep 1.55s ease-in-out infinite;
+}
+
+.student-insight-skeleton-line,
+.student-insight-skeleton-pill {
+  border-radius: 999px;
+}
+
+.student-insight-skeleton-block,
+.student-insight-skeleton-panel {
+  border-radius: var(--workspace-radius-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-insight-skeleton-line,
+  .student-insight-skeleton-pill,
+  .student-insight-skeleton-block,
+  .student-insight-skeleton-panel {
+    animation: none;
+  }
+}
+
+@keyframes studentInsightSkeletonSweep {
+  0% {
+    background-position: 120% 0;
+  }
+
+  100% {
+    background-position: -120% 0;
+  }
+}

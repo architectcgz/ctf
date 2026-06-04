@@ -5,41 +5,77 @@
     title="复盘工作台"
     subtitle="按攻击会话查看访问、请求、提交和复盘输出。"
   >
-    <div v-if="reviewWorkspaceLoading && !attackSessions" class="evidence-glass">
-      <div class="evidence-glass__filters">
-        <span class="evidence-glass__filter" />
-        <span class="evidence-glass__filter" />
-        <span class="evidence-glass__filter" />
-      </div>
-      <div class="evidence-glass__summary">
-        <span
-          v-for="index in 4"
-          :key="index"
-          class="evidence-glass__summary-card"
-        />
-      </div>
-      <div class="evidence-glass__sessions">
-        <div
-          v-for="index in 3"
-          :key="index"
-          class="evidence-glass__session"
-        >
-          <span class="evidence-glass__session-icon" />
-          <span class="evidence-glass__session-text" />
-          <span class="evidence-glass__session-meta" />
+    <div
+      v-if="summaryItems.length > 0"
+      class="insight-kpi-grid teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4"
+    >
+      <article
+        v-for="item in summaryItems"
+        :key="item.key"
+        class="insight-kpi-card progress-card metric-panel-card"
+      >
+        <div class="insight-kpi-label progress-card-label metric-panel-label">
+          <span>{{ item.label }}</span>
+          <component :is="item.icon" class="h-4 w-4" />
         </div>
-      </div>
+        <div class="insight-kpi-value progress-card-value metric-panel-value">
+          {{ item.value }}
+        </div>
+        <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+          {{ item.hint }}
+        </div>
+      </article>
     </div>
 
-    <StudentReviewWorkspace
-      v-else
-      :evidence="evidence"
-      :attack-sessions="attackSessions"
-      :challenge-options="reviewChallengeOptions"
-      :loading="reviewWorkspaceLoading"
-      :query="reviewWorkspaceQuery"
-      @update-filters="emit('updateReviewWorkspaceFilters', $event)"
-    />
+    <StudentInsightStateSurface
+      class="evidence-state-surface"
+      :loading="reviewWorkspaceLoading && !attackSessions"
+      :empty="!reviewWorkspaceLoading && (!attackSessions || attackSessions.sessions.length === 0)"
+    >
+      <template #loading>
+        <div class="evidence-loading-filters">
+          <span class="student-insight-skeleton-panel evidence-loading-filter" />
+          <span class="student-insight-skeleton-panel evidence-loading-filter" />
+          <span class="student-insight-skeleton-panel evidence-loading-filter" />
+        </div>
+        <div class="evidence-loading-summary">
+          <span
+            v-for="index in 4"
+            :key="index"
+            class="student-insight-skeleton-panel evidence-loading-summary-card"
+          />
+        </div>
+        <div class="evidence-loading-sessions">
+          <div
+            v-for="index in 3"
+            :key="index"
+            class="evidence-loading-session"
+          >
+            <span class="student-insight-skeleton-panel evidence-loading-session-icon" />
+            <span class="student-insight-skeleton-line evidence-loading-session-text" />
+            <span class="student-insight-skeleton-line evidence-loading-session-meta" />
+          </div>
+        </div>
+      </template>
+
+      <template #empty>
+        <AppEmpty
+          class="student-insight-empty"
+          title="暂无攻击会话"
+          description="当前学员还没有可用于复盘的攻击过程记录。"
+          icon="NotebookText"
+        />
+      </template>
+
+      <StudentReviewWorkspace
+        :evidence="evidence"
+        :attack-sessions="attackSessions"
+        :challenge-options="reviewChallengeOptions"
+        :loading="reviewWorkspaceLoading"
+        :query="reviewWorkspaceQuery"
+        @update-filters="emit('updateReviewWorkspaceFilters', $event)"
+      />
+    </StudentInsightStateSurface>
   </SectionCard>
 </template>
 
@@ -49,110 +85,44 @@
   --section-card-header-border-bottom: 0;
 }
 
-/* ── Evidence glass skeleton ── */
+.insight-kpi-grid {
+  --teacher-summary-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+}
 
-.evidence-glass {
-  position: relative;
-  overflow: hidden;
+.evidence-state-surface {
+  --student-insight-state-gap: var(--space-4);
   margin-top: var(--space-5);
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  border-radius: var(--workspace-radius-lg);
-  padding: var(--space-4);
-  background:
-    radial-gradient(
-      ellipse at top right,
-      color-mix(in srgb, var(--journal-accent) 9%, transparent),
-      transparent 46%
-    ),
-    radial-gradient(
-      ellipse at bottom left,
-      color-mix(in srgb, var(--color-bg-surface) 58%, transparent),
-      transparent 52%
-    ),
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base))
-    );
-  box-shadow: var(--workspace-shadow-panel);
-  display: grid;
-  gap: var(--space-4);
 }
 
-.evidence-glass::before {
-  position: absolute;
-  inset: 1px;
-  pointer-events: none;
-  content: '';
-  border-radius: calc(var(--workspace-radius-lg) - 1px);
-  background:
-    linear-gradient(
-      115deg,
-      transparent 0%,
-      color-mix(in srgb, var(--color-bg-surface) 34%, transparent) 38%,
-      transparent 72%
-    );
-  opacity: 0.54;
-}
-
-.evidence-glass__filters {
+.evidence-loading-filters {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
-.evidence-glass__filter {
-  display: block;
+.evidence-loading-filter {
   height: var(--space-10);
-  overflow: hidden;
-  border-radius: var(--workspace-radius-lg);
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
-      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
-      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
-    );
-  background-size: 220% 100%;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
-    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
-  animation: evidenceGlassSkeletonSweep 1.55s ease-in-out infinite;
 }
 
-.evidence-glass__summary {
+.evidence-loading-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
-.evidence-glass__summary-card {
-  display: block;
+.evidence-loading-summary-card {
   height: var(--space-16);
-  overflow: hidden;
-  border-radius: var(--workspace-radius-lg);
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
-      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
-      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
-    );
-  background-size: 220% 100%;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
-    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
-  animation: evidenceGlassSkeletonSweep 1.55s ease-in-out infinite;
 }
 
-.evidence-glass__sessions {
+.evidence-loading-sessions {
   display: grid;
   gap: var(--space-2);
   padding-top: var(--space-2);
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 68%, transparent);
 }
 
-.evidence-glass__session {
+.evidence-loading-session {
   display: grid;
   grid-template-columns: var(--space-10) minmax(0, 1fr) var(--space-18);
   align-items: center;
@@ -160,104 +130,43 @@
   padding: var(--space-2) 0;
 }
 
-.evidence-glass__session-icon {
-  display: block;
+.evidence-loading-session-icon {
   width: var(--space-10);
   height: var(--space-10);
-  overflow: hidden;
-  border-radius: var(--workspace-radius-lg);
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
-      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
-      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
-    );
-  background-size: 220% 100%;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
-    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
-  animation: evidenceGlassSkeletonSweep 1.55s ease-in-out infinite;
 }
 
-.evidence-glass__session-text {
-  display: block;
+.evidence-loading-session-text {
   width: min(28rem, 76%);
   height: var(--space-3);
-  overflow: hidden;
-  border-radius: 999px;
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
-      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
-      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
-    );
-  background-size: 220% 100%;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
-    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
-  animation: evidenceGlassSkeletonSweep 1.55s ease-in-out infinite;
 }
 
-.evidence-glass__session-meta {
-  display: block;
+.evidence-loading-session-meta {
   width: var(--space-18);
   height: var(--space-3);
-  overflow: hidden;
-  border-radius: 999px;
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
-      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
-      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
-    );
-  background-size: 220% 100%;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
-    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
-  animation: evidenceGlassSkeletonSweep 1.55s ease-in-out infinite;
 }
 
 @media (max-width: 767px) {
-  .evidence-glass__filters,
-  .evidence-glass__summary {
+  .evidence-loading-filters,
+  .evidence-loading-summary {
     grid-template-columns: 1fr;
   }
 
-  .evidence-glass__session-meta {
+  .evidence-loading-session-meta {
     display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .evidence-glass__filter,
-  .evidence-glass__summary-card,
-  .evidence-glass__session-icon,
-  .evidence-glass__session-text,
-  .evidence-glass__session-meta {
-    animation: none;
-  }
-}
-
-@keyframes evidenceGlassSkeletonSweep {
-  0% {
-    background-position: 120% 0;
-  }
-
-  100% {
-    background-position: -120% 0;
   }
 }
 </style>
 
 <script setup lang="ts">
 import type { AttackSessionQuery, AttackSessionResponseData, StudentEvidenceData } from '@/api/contracts'
+import { computed } from 'vue'
+import { StudentInsightStateSurface } from '@/features/teaching/student-analysis-shared/ui'
+import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import SectionCard from '@/shared/ui/common/SectionCard.vue'
 import StudentReviewWorkspace from './StudentReviewWorkspace.vue'
+import { buildReviewWorkspaceSummaryItems } from './studentInsightShared'
 
-defineProps<{
+const props = defineProps<{
   attackSessions: AttackSessionResponseData | null
   evidence: StudentEvidenceData | null
   reviewChallengeOptions: Array<{ value: string; label: string }>
@@ -268,4 +177,13 @@ defineProps<{
 const emit = defineEmits<{
   updateReviewWorkspaceFilters: [payload: Partial<AttackSessionQuery>]
 }>()
+
+const summaryItems = computed(() =>
+  props.attackSessions && props.attackSessions.sessions.length > 0
+    ? buildReviewWorkspaceSummaryItems({
+        sessionSummary: props.attackSessions.summary,
+        evidenceSummary: props.evidence?.summary,
+      })
+    : []
+)
 </script>
