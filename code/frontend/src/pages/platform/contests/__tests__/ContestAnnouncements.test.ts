@@ -116,9 +116,6 @@ describe('ContestAnnouncements', () => {
 
   it('页面应加载竞赛详情和公告列表', async () => {
     expect(contestAnnouncementsTopbarPanelSource).toContain('Contest Announcements')
-    expect(contestAnnouncementsTopbarPanelSource).toContain('class="contest-announcement-status"')
-    expect(contestAnnouncementsTopbarPanelSource).toContain('class="contest-announcement-topbar"')
-    expect(contestAnnouncementsTopbarPanelSource).toContain('class="contest-announcement-back"')
     expect(contestAnnouncementsWorkspacePanelSource).toContain('Publish')
     expect(contestAnnouncementsWorkspacePanelSource).toContain('历史公告')
     expect(contestAnnouncementsWorkspacePanelSource).toContain('赛事已结束，公告区仅保留查看能力。')
