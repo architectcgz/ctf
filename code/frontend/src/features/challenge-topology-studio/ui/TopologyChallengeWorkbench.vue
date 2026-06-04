@@ -1,3 +1,289 @@
+<template>
+  <main class="content-pane topology-workspace">
+    <div class="topology-primary-column">
+      <TopologyCanvasWorkspaceSection
+        variant="challenge"
+        :interaction-mode="interactionMode"
+        :canvas-mode-label="canvasModeLabel"
+        :selected-canvas-summary="selectedCanvasSummary"
+        :draft-validation-issues="draftValidationIssues"
+        :canvas-graph="canvasGraph"
+        :pending-source-node-key="pendingSourceNodeKey"
+        :selected-node-key="selectedNodeKey"
+        :selected-edge-id="selectedEdgeId"
+        :selected-node-draft="selectedNodeDraft"
+        :has-selected-edge="hasSelectedEdge"
+        :node-options="nodeOptions"
+        :networks="networks"
+        :images="images"
+        :selected-edge-source-key="selectedEdgeSourceKey"
+        :selected-edge-target-key="selectedEdgeTargetKey"
+        :selected-edge-kind="selectedEdgeKind"
+        @set-interaction-mode="emit('setInteractionMode', $event)"
+        @remove-selected-canvas-item="emit('removeSelectedCanvasItem')"
+        @select-node="emit('selectNode', $event)"
+        @select-edge="emit('selectEdge', $event)"
+        @create-node-at="emit('createNodeAt', $event)"
+        @create-edge="emit('createEdge', $event)"
+        @clear-pending="emit('clearPending')"
+        @update-position="emit('updatePosition', $event)"
+        @update-selected-node-field="emit('updateSelectedNodeField', $event)"
+        @update-selected-node-service-port="emit('updateSelectedNodeServicePort', $event)"
+        @toggle-selected-node-network="emit('toggleSelectedNodeNetwork', $event)"
+        @update-selected-edge-source-key="emit('updateSelectedEdgeSourceKey', $event)"
+        @update-selected-edge-target-key="emit('updateSelectedEdgeTargetKey', $event)"
+        @update-selected-edge-kind="emit('updateSelectedEdgeKind', $event)"
+        @update-network="emit('updateNetwork', $event)"
+      />
+
+      <TopologyEntryNodeSection
+        :entry-node-key="entryNodeKey"
+        :node-options="nodeOptions"
+        :show-delete-action="true"
+        :delete-disabled="saving || !hasSavedTopology"
+        @update-entry-node-key="emit('updateEntryNodeKey', $event)"
+        @delete-topology="emit('deleteTopology')"
+      />
+
+      <TopologyNetworkSection
+        :networks="networks"
+        add-button-class="ui-btn ui-btn--ghost topology-action-btn"
+        @add-network="emit('addNetwork')"
+        @remove-network="emit('removeNetwork', $event)"
+        @update-network="emit('updateNetwork', $event)"
+      />
+
+      <TopologyNodeSection
+        :nodes="nodes"
+        :images="images"
+        :networks="networks"
+        :selected-node-key="selectedNodeKey"
+        add-button-class="ui-btn ui-btn--ghost topology-action-btn"
+        @add-node="emit('addNode')"
+        @remove-node="emit('removeNode', $event)"
+        @update-node="emit('updateNode', $event)"
+      />
+
+      <TopologyConnectivitySections
+        :links="links"
+        :policies="policies"
+        :node-options="nodeOptions"
+        add-button-class="ui-btn ui-btn--ghost topology-action-btn"
+        @add-link="emit('addLink')"
+        @remove-link="emit('removeLink', $event)"
+        @update-link="emit('updateLink', $event)"
+        @add-policy="emit('addPolicy')"
+        @remove-policy="emit('removePolicy', $event)"
+        @update-policy="emit('updatePolicy', $event)"
+      />
+    </div>
+
+    <TopologyChallengeContextRail
+      :template-keyword="templateKeyword"
+      :template-name="templateName"
+      :template-description="templateDescription"
+      :status-card="statusCard"
+      :secondary-card="secondaryCard"
+      :package-source-summary="packageSourceSummary"
+      :package-baseline-summary="packageBaselineSummary"
+      :package-files="packageFiles"
+      :package-revision-history="packageRevisionHistory"
+      :exporting="exporting"
+      :selected-template-summary="selectedTemplateSummary"
+      :selected-template-id="selectedTemplateId"
+      :templates="templates"
+      :template-busy="templateBusy"
+      @export-package="emit('exportPackage')"
+      @update:template-keyword="emit('update:templateKeyword', $event)"
+      @update:template-name="emit('update:templateName', $event)"
+      @update:template-description="emit('update:templateDescription', $event)"
+      @load-template="emit('loadTemplate', $event)"
+      @clear-template-selection="emit('clearTemplateSelection')"
+      @search-templates="emit('searchTemplates')"
+      @reset-template-form="emit('resetTemplateForm', $event)"
+      @apply-template="emit('applyTemplate', $event)"
+      @delete-template="emit('deleteTemplate', $event)"
+      @reset-template-editor="emit('resetTemplateEditor')"
+      @create-template="emit('createTemplate')"
+      @update-template="emit('updateTemplate')"
+    />
+  </main>
+</template>
+
+<style scoped>
+.content-pane.topology-workspace {
+  --section-card-padding-block-start: var(--space-5);
+  --section-card-padding-inline: 0;
+  --section-card-padding-block-end: 0;
+  --section-card-border-top-color: var(--topology-divider);
+  --section-card-header-margin-bottom: var(--space-4);
+  --section-card-header-padding: 0 0 var(--space-3) 0;
+  --section-card-header-border-bottom: 1px solid var(--topology-divider);
+  --section-card-title-font-size: var(--font-size-1-08);
+  --section-card-title-color: var(--journal-ink);
+  --section-card-subtitle-color: var(--journal-muted);
+  --section-card-body-padding-left: 0;
+  --section-card-direct-surface-border-color: var(--journal-border);
+  --section-card-direct-surface-background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--topology-panel) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--topology-panel-subtle) 96%, var(--color-bg-base))
+  );
+  --section-card-direct-surface-box-shadow: 0 14px 30px var(--color-shadow-soft);
+
+  display: grid;
+  gap: var(--space-7);
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 22rem);
+  align-items: start;
+  min-width: 0;
+  padding: 0;
+}
+
+.topology-primary-column {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.topology-primary-column > :first-child {
+  --section-card-padding-block-start: 0;
+  --section-card-border-top-width: 0;
+}
+
+:deep(.topology-context-stack),
+:deep(.topology-side-stack) {
+  display: grid;
+  gap: var(--space-6);
+}
+
+:deep(.topology-context-rail) {
+  min-width: 0;
+  padding-left: var(--space-6);
+  border-left: 1px solid var(--topology-divider);
+}
+
+:deep(.topology-context-stack) {
+  position: sticky;
+  top: var(--space-6);
+}
+
+:deep([data-node-editor]),
+:deep(.topology-canvas-board__root) {
+  border-color: var(--journal-border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--topology-panel) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--topology-panel-subtle) 96%, var(--color-bg-base))
+  );
+  box-shadow: 0 14px 30px var(--color-shadow-soft);
+}
+
+:deep(input),
+:deep(select),
+:deep(textarea) {
+  border-color: var(--journal-border);
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  color: var(--journal-ink);
+}
+
+:deep(input::placeholder),
+:deep(textarea::placeholder) {
+  color: color-mix(in srgb, var(--journal-muted) 78%, transparent);
+}
+
+:deep(option) {
+  background: var(--journal-surface);
+  color: var(--journal-ink);
+}
+
+:deep(input:focus),
+:deep(select:focus),
+:deep(textarea:focus) {
+  border-color: color-mix(in srgb, var(--journal-accent) 48%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
+  outline: none;
+}
+
+:deep(.topology-canvas-board__surface) {
+  border-color: color-mix(in srgb, var(--journal-border) 70%, transparent);
+}
+
+:deep(.topology-action-btn) {
+  --ui-btn-height: 2.45rem;
+  --ui-btn-padding: var(--space-2) var(--space-4);
+  --ui-btn-radius: 0.75rem;
+  --ui-btn-font-size: var(--font-size-0-84);
+  --ui-btn-secondary-border: var(--journal-border);
+  --ui-btn-secondary-background: color-mix(
+    in srgb,
+    var(--journal-surface) 94%,
+    var(--color-bg-base)
+  );
+  --ui-btn-secondary-color: var(--journal-ink);
+  --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  --ui-btn-secondary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
+  --ui-btn-secondary-hover-color: var(--journal-accent);
+  --ui-btn-ghost-color: var(--journal-ink);
+  --ui-btn-ghost-hover-color: var(--journal-accent);
+  --ui-btn-ghost-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
+  --ui-btn-primary-border: transparent;
+  --ui-btn-primary-background: var(--journal-accent);
+  --ui-btn-primary-color: var(--color-bg-base);
+  --ui-btn-primary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 88%,
+    var(--color-bg-base)
+  );
+  --ui-btn-primary-hover-shadow: 0 12px 28px
+    color-mix(in srgb, var(--journal-accent) 16%, transparent);
+  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
+  --ui-btn-danger-hover-background: color-mix(
+    in srgb,
+    var(--color-danger) 14%,
+    var(--journal-surface)
+  );
+  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+}
+
+:deep(.topology-action-btn:disabled) {
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+:deep(.topology-action-btn--icon) {
+  min-width: 2.75rem;
+  padding-inline: var(--space-3);
+}
+
+@media (max-width: 1023px) {
+  .content-pane.topology-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :deep(.topology-context-rail) {
+    padding-left: 0;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--topology-divider);
+    border-left: 0;
+  }
+
+  :deep(.topology-context-stack) {
+    position: static;
+  }
+}
+</style>
+
 <script setup lang="ts">
 import type {
   AdminImageListItem,
@@ -216,301 +502,3 @@ const emit = defineEmits<{
   updateTemplate: []
 }>()
 </script>
-
-<template>
-  <main class="content-pane topology-workspace">
-    <div class="topology-primary-column">
-      <TopologyCanvasWorkspaceSection
-        variant="challenge"
-        :interaction-mode="interactionMode"
-        :canvas-mode-label="canvasModeLabel"
-        :selected-canvas-summary="selectedCanvasSummary"
-        :draft-validation-issues="draftValidationIssues"
-        :canvas-graph="canvasGraph"
-        :pending-source-node-key="pendingSourceNodeKey"
-        :selected-node-key="selectedNodeKey"
-        :selected-edge-id="selectedEdgeId"
-        :selected-node-draft="selectedNodeDraft"
-        :has-selected-edge="hasSelectedEdge"
-        :node-options="nodeOptions"
-        :networks="networks"
-        :images="images"
-        :selected-edge-source-key="selectedEdgeSourceKey"
-        :selected-edge-target-key="selectedEdgeTargetKey"
-        :selected-edge-kind="selectedEdgeKind"
-        @set-interaction-mode="emit('setInteractionMode', $event)"
-        @remove-selected-canvas-item="emit('removeSelectedCanvasItem')"
-        @select-node="emit('selectNode', $event)"
-        @select-edge="emit('selectEdge', $event)"
-        @create-node-at="emit('createNodeAt', $event)"
-        @create-edge="emit('createEdge', $event)"
-        @clear-pending="emit('clearPending')"
-        @update-position="emit('updatePosition', $event)"
-        @update-selected-node-field="emit('updateSelectedNodeField', $event)"
-        @update-selected-node-service-port="emit('updateSelectedNodeServicePort', $event)"
-        @toggle-selected-node-network="emit('toggleSelectedNodeNetwork', $event)"
-        @update-selected-edge-source-key="emit('updateSelectedEdgeSourceKey', $event)"
-        @update-selected-edge-target-key="emit('updateSelectedEdgeTargetKey', $event)"
-        @update-selected-edge-kind="emit('updateSelectedEdgeKind', $event)"
-        @update-network="emit('updateNetwork', $event)"
-      />
-
-      <TopologyEntryNodeSection
-        :entry-node-key="entryNodeKey"
-        :node-options="nodeOptions"
-        :show-delete-action="true"
-        :delete-disabled="saving || !hasSavedTopology"
-        @update-entry-node-key="emit('updateEntryNodeKey', $event)"
-        @delete-topology="emit('deleteTopology')"
-      />
-
-      <TopologyNetworkSection
-        :networks="networks"
-        add-button-class="ui-btn ui-btn--ghost topology-action-btn"
-        @add-network="emit('addNetwork')"
-        @remove-network="emit('removeNetwork', $event)"
-        @update-network="emit('updateNetwork', $event)"
-      />
-
-      <TopologyNodeSection
-        :nodes="nodes"
-        :images="images"
-        :networks="networks"
-        :selected-node-key="selectedNodeKey"
-        add-button-class="ui-btn ui-btn--ghost topology-action-btn"
-        @add-node="emit('addNode')"
-        @remove-node="emit('removeNode', $event)"
-        @update-node="emit('updateNode', $event)"
-      />
-
-      <TopologyConnectivitySections
-        :links="links"
-        :policies="policies"
-        :node-options="nodeOptions"
-        add-button-class="ui-btn ui-btn--ghost topology-action-btn"
-        @add-link="emit('addLink')"
-        @remove-link="emit('removeLink', $event)"
-        @update-link="emit('updateLink', $event)"
-        @add-policy="emit('addPolicy')"
-        @remove-policy="emit('removePolicy', $event)"
-        @update-policy="emit('updatePolicy', $event)"
-      />
-    </div>
-
-    <TopologyChallengeContextRail
-      :template-keyword="templateKeyword"
-      :template-name="templateName"
-      :template-description="templateDescription"
-      :status-card="statusCard"
-      :secondary-card="secondaryCard"
-      :package-source-summary="packageSourceSummary"
-      :package-baseline-summary="packageBaselineSummary"
-      :package-files="packageFiles"
-      :package-revision-history="packageRevisionHistory"
-      :exporting="exporting"
-      :selected-template-summary="selectedTemplateSummary"
-      :selected-template-id="selectedTemplateId"
-      :templates="templates"
-      :template-busy="templateBusy"
-      @export-package="emit('exportPackage')"
-      @update:template-keyword="emit('update:templateKeyword', $event)"
-      @update:template-name="emit('update:templateName', $event)"
-      @update:template-description="emit('update:templateDescription', $event)"
-      @load-template="emit('loadTemplate', $event)"
-      @clear-template-selection="emit('clearTemplateSelection')"
-      @search-templates="emit('searchTemplates')"
-      @reset-template-form="emit('resetTemplateForm', $event)"
-      @apply-template="emit('applyTemplate', $event)"
-      @delete-template="emit('deleteTemplate', $event)"
-      @reset-template-editor="emit('resetTemplateEditor')"
-      @create-template="emit('createTemplate')"
-      @update-template="emit('updateTemplate')"
-    />
-  </main>
-</template>
-
-<style scoped>
-.content-pane.topology-workspace {
-  display: grid;
-  gap: var(--space-7);
-  grid-template-columns: minmax(0, 1fr) minmax(19rem, 22rem);
-  align-items: start;
-  min-width: 0;
-  padding: 0;
-}
-
-.topology-primary-column {
-  display: grid;
-  gap: var(--space-6);
-}
-
-:deep(.topology-context-stack),
-:deep(.topology-side-stack) {
-  display: grid;
-  gap: var(--space-6);
-}
-
-:deep(.topology-context-rail) {
-  min-width: 0;
-  padding-left: var(--space-6);
-  border-left: 1px solid var(--topology-divider);
-}
-
-:deep(.topology-context-stack) {
-  position: sticky;
-  top: var(--space-6);
-}
-
-.topology-primary-column :deep(.section-card:first-child) {
-  padding-top: 0;
-  border-top: 0;
-}
-
-:deep(.topology-side-stack .section-card:first-child) {
-  padding-top: 0;
-  border-top: 0;
-}
-
-:deep(.section-card) {
-  padding: var(--space-5) 0 0;
-  border-top: 1px solid var(--topology-divider);
-}
-
-:deep(.section-card__header) {
-  margin-bottom: var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom-color: var(--topology-divider);
-}
-
-:deep(.section-card__header h2) {
-  color: var(--journal-ink);
-  font-size: var(--font-size-1-08);
-}
-
-:deep(.section-card__header p) {
-  color: var(--journal-muted);
-}
-
-:deep(.section-card__body) {
-  padding-left: 0;
-}
-
-:deep(.section-card__body > .rounded-2xl),
-:deep(.section-card__body > .rounded-xl),
-:deep([data-node-editor]),
-:deep(.topology-canvas-board__root) {
-  border-color: var(--journal-border);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--topology-panel) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--topology-panel-subtle) 96%, var(--color-bg-base))
-  );
-  box-shadow: 0 14px 30px var(--color-shadow-soft);
-}
-
-:deep(input),
-:deep(select),
-:deep(textarea) {
-  border-color: var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  color: var(--journal-ink);
-}
-
-:deep(input::placeholder),
-:deep(textarea::placeholder) {
-  color: color-mix(in srgb, var(--journal-muted) 78%, transparent);
-}
-
-:deep(option) {
-  background: var(--journal-surface);
-  color: var(--journal-ink);
-}
-
-:deep(input:focus),
-:deep(select:focus),
-:deep(textarea:focus) {
-  border-color: color-mix(in srgb, var(--journal-accent) 48%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
-  outline: none;
-}
-
-:deep(.topology-canvas-board__surface) {
-  border-color: color-mix(in srgb, var(--journal-border) 70%, transparent);
-}
-
-:deep(.topology-action-btn) {
-  --ui-btn-height: 2.45rem;
-  --ui-btn-padding: var(--space-2) var(--space-4);
-  --ui-btn-radius: 0.75rem;
-  --ui-btn-font-size: var(--font-size-0-84);
-  --ui-btn-secondary-border: var(--journal-border);
-  --ui-btn-secondary-background: color-mix(
-    in srgb,
-    var(--journal-surface) 94%,
-    var(--color-bg-base)
-  );
-  --ui-btn-secondary-color: var(--journal-ink);
-  --ui-btn-secondary-hover-border: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  --ui-btn-secondary-hover-background: color-mix(
-    in srgb,
-    var(--journal-accent) 4%,
-    var(--journal-surface)
-  );
-  --ui-btn-secondary-hover-color: var(--journal-accent);
-  --ui-btn-ghost-color: var(--journal-ink);
-  --ui-btn-ghost-hover-color: var(--journal-accent);
-  --ui-btn-ghost-hover-background: color-mix(
-    in srgb,
-    var(--journal-accent) 4%,
-    var(--journal-surface)
-  );
-  --ui-btn-primary-border: transparent;
-  --ui-btn-primary-background: var(--journal-accent);
-  --ui-btn-primary-color: var(--color-bg-base);
-  --ui-btn-primary-hover-background: color-mix(
-    in srgb,
-    var(--journal-accent) 88%,
-    var(--color-bg-base)
-  );
-  --ui-btn-primary-hover-shadow: 0 12px 28px
-    color-mix(in srgb, var(--journal-accent) 16%, transparent);
-  --ui-btn-danger-border: color-mix(in srgb, var(--color-danger) 28%, transparent);
-  --ui-btn-danger-background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
-  --ui-btn-danger-color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
-  --ui-btn-danger-hover-border: color-mix(in srgb, var(--color-danger) 34%, transparent);
-  --ui-btn-danger-hover-background: color-mix(
-    in srgb,
-    var(--color-danger) 14%,
-    var(--journal-surface)
-  );
-  --ui-btn-focus-ring: color-mix(in srgb, var(--journal-accent) 18%, transparent);
-}
-
-:deep(.topology-action-btn:disabled) {
-  opacity: 0.65;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-:deep(.topology-action-btn--icon) {
-  min-width: 2.75rem;
-  padding-inline: var(--space-3);
-}
-
-@media (max-width: 1023px) {
-  .content-pane.topology-workspace {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  :deep(.topology-context-rail) {
-    padding-left: 0;
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--topology-divider);
-    border-left: 0;
-  }
-
-  :deep(.topology-context-stack) {
-    position: static;
-  }
-}
-</style>

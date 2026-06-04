@@ -68,14 +68,6 @@
     ":deep(.challenge-empty-state.challenge-directory-state)": 1
   },
   "src/features/challenge-topology-studio/ui/TopologyChallengeWorkbench.vue": {
-    ":deep(.section-card)": 1,
-    ":deep(.section-card:first-child)": 1,
-    ":deep(.section-card__body > .rounded-2xl)": 1,
-    ":deep(.section-card__body > .rounded-xl)": 1,
-    ":deep(.section-card__body)": 1,
-    ":deep(.section-card__header h2)": 1,
-    ":deep(.section-card__header p)": 1,
-    ":deep(.section-card__header)": 1,
     ":deep(.topology-action-btn)": 1,
     ":deep(.topology-action-btn--icon)": 1,
     ":deep(.topology-action-btn:disabled)": 1,
@@ -105,17 +97,7 @@
     ":deep(.page-header)": 2,
     ":deep(.page-header__eyebrow)": 1
   },
-  "src/features/challenge-topology-studio/ui/TopologyTemplateSidePanel.vue": {
-    ":deep(.section-card:first-child)": 1
-  },
   "src/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue": {
-    ":deep(.section-card)": 1,
-    ":deep(.section-card__body > .rounded-2xl)": 1,
-    ":deep(.section-card__body > .rounded-xl)": 1,
-    ":deep(.section-card__body)": 1,
-    ":deep(.section-card__header h2)": 1,
-    ":deep(.section-card__header p)": 1,
-    ":deep(.section-card__header)": 1,
     ":deep(.template-canvas-mode-banner)": 1,
     ":deep(.template-quick-editor)": 1,
     ":deep(.topology-action-btn)": 2,

@@ -1,117 +1,7 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { Layout, Network, Plus, RefreshCw, Server, Trash2 } from 'lucide-vue-next'
-
-import type { EnvironmentTemplateData } from '@/api/contracts'
-import AppCard from '@/shared/ui/common/AppCard.vue'
-import SectionCard from '@/shared/ui/common/SectionCard.vue'
-
-const props = defineProps<{
-  isTemplateLibraryMode: boolean
-  selectedTemplateSummary: string
-  selectedTemplateId: string | null
-  templates: EnvironmentTemplateData[]
-  templateKeyword: string
-  templateName: string
-  templateDescription: string
-  templateBusy: boolean
-}>()
-
-const emit = defineEmits<{
-  'update:templateKeyword': [value: string]
-  'update:templateName': [value: string]
-  'update:templateDescription': [value: string]
-  loadTemplate: [template: EnvironmentTemplateData]
-  clearTemplateSelection: []
-  searchTemplates: []
-  resetTemplateForm: [template: EnvironmentTemplateData]
-  applyTemplate: [template: EnvironmentTemplateData]
-  deleteTemplate: [templateId: string]
-  resetTemplateEditor: []
-  createTemplate: []
-  updateTemplate: []
-}>()
-
-const rootClasses = computed(() =>
-  props.isTemplateLibraryMode
-    ? 'topology-side-stack topology-side-stack--library topology-template-side-panel'
-    : 'topology-side-stack topology-template-side-panel space-y-6'
-)
-const selectedTemplate = computed(
-  () => props.templates.find((template) => template.id === props.selectedTemplateId) || null
-)
-
-const focusCardClasses = computed(() =>
-  props.isTemplateLibraryMode
-    ? 'template-focus-card'
-    : 'rounded-2xl border border-border bg-elevated px-4 py-4'
-)
-
-const searchRowClasses = computed(() =>
-  props.isTemplateLibraryMode ? 'template-search-row' : 'grid gap-3 md:grid-cols-[1fr_auto]'
-)
-
-const emptyStateClasses = computed(() =>
-  props.isTemplateLibraryMode
-    ? 'template-empty-state'
-    : 'rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted'
-)
-
-const templateListClasses = computed(() =>
-  props.isTemplateLibraryMode ? 'template-library-list' : 'space-y-3'
-)
-
-const writebackFormClasses = computed(() =>
-  props.isTemplateLibraryMode ? 'template-writeback-form' : 'space-y-4'
-)
-
-const boundaryListClasses = computed(() =>
-  props.isTemplateLibraryMode ? 'template-boundary-list' : 'space-y-4'
-)
-
-function templateItemClasses(template: EnvironmentTemplateData) {
-  if (props.isTemplateLibraryMode) {
-    return [
-      'template-library-item',
-      props.selectedTemplateId === template.id
-        ? 'template-library-item--active'
-        : 'template-library-item--idle',
-    ]
-  }
-
-  return [
-    'rounded-2xl border p-4 transition',
-    props.selectedTemplateId === template.id
-      ? 'border-primary bg-primary/8'
-      : 'border-border bg-elevated',
-  ]
-}
-
-function templateActionClass(variant: 'default' | 'primary' | 'danger' = 'default') {
-  if (!props.isTemplateLibraryMode) {
-    const variantClass =
-      variant === 'primary'
-        ? 'ui-btn--primary'
-        : variant === 'danger'
-          ? 'ui-btn--danger'
-          : 'ui-btn--secondary'
-    return `ui-btn ui-btn--sm ${variantClass}`
-  }
-
-  if (variant === 'primary') return 'template-action-btn template-action-btn--primary'
-  if (variant === 'danger') return 'template-action-btn template-action-btn--danger'
-  return 'template-action-btn'
-}
-
-function reloadSelectedTemplate() {
-  if (!selectedTemplate.value) return
-  emit('loadTemplate', selectedTemplate.value)
-}
-</script>
-
 <template>
   <div :class="rootClasses">
     <SectionCard
+      class="topology-leading-section-card"
       title="模板库"
       :subtitle="
         isTemplateLibraryMode
@@ -437,9 +327,9 @@ function reloadSelectedTemplate() {
   padding: 0;
 }
 
-.topology-side-stack--library :deep(.section-card:first-child) {
-  padding-top: 0;
-  border-top: 0;
+.topology-leading-section-card {
+  --section-card-padding-block-start: 0;
+  --section-card-border-top-width: 0;
 }
 
 .template-focus-card,
@@ -628,3 +518,114 @@ function reloadSelectedTemplate() {
   }
 }
 </style>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { Layout, Network, Plus, RefreshCw, Server, Trash2 } from 'lucide-vue-next'
+
+import type { EnvironmentTemplateData } from '@/api/contracts'
+import AppCard from '@/shared/ui/common/AppCard.vue'
+import SectionCard from '@/shared/ui/common/SectionCard.vue'
+
+const props = defineProps<{
+  isTemplateLibraryMode: boolean
+  selectedTemplateSummary: string
+  selectedTemplateId: string | null
+  templates: EnvironmentTemplateData[]
+  templateKeyword: string
+  templateName: string
+  templateDescription: string
+  templateBusy: boolean
+}>()
+
+const emit = defineEmits<{
+  'update:templateKeyword': [value: string]
+  'update:templateName': [value: string]
+  'update:templateDescription': [value: string]
+  loadTemplate: [template: EnvironmentTemplateData]
+  clearTemplateSelection: []
+  searchTemplates: []
+  resetTemplateForm: [template: EnvironmentTemplateData]
+  applyTemplate: [template: EnvironmentTemplateData]
+  deleteTemplate: [templateId: string]
+  resetTemplateEditor: []
+  createTemplate: []
+  updateTemplate: []
+}>()
+
+const rootClasses = computed(() =>
+  props.isTemplateLibraryMode
+    ? 'topology-side-stack topology-side-stack--library topology-template-side-panel'
+    : 'topology-side-stack topology-template-side-panel space-y-6'
+)
+const selectedTemplate = computed(
+  () => props.templates.find((template) => template.id === props.selectedTemplateId) || null
+)
+
+const focusCardClasses = computed(() =>
+  props.isTemplateLibraryMode
+    ? 'template-focus-card'
+    : 'rounded-2xl border border-border bg-elevated px-4 py-4'
+)
+
+const searchRowClasses = computed(() =>
+  props.isTemplateLibraryMode ? 'template-search-row' : 'grid gap-3 md:grid-cols-[1fr_auto]'
+)
+
+const emptyStateClasses = computed(() =>
+  props.isTemplateLibraryMode
+    ? 'template-empty-state'
+    : 'rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted'
+)
+
+const templateListClasses = computed(() =>
+  props.isTemplateLibraryMode ? 'template-library-list' : 'space-y-3'
+)
+
+const writebackFormClasses = computed(() =>
+  props.isTemplateLibraryMode ? 'template-writeback-form' : 'space-y-4'
+)
+
+const boundaryListClasses = computed(() =>
+  props.isTemplateLibraryMode ? 'template-boundary-list' : 'space-y-4'
+)
+
+function templateItemClasses(template: EnvironmentTemplateData) {
+  if (props.isTemplateLibraryMode) {
+    return [
+      'template-library-item',
+      props.selectedTemplateId === template.id
+        ? 'template-library-item--active'
+        : 'template-library-item--idle',
+    ]
+  }
+
+  return [
+    'rounded-2xl border p-4 transition',
+    props.selectedTemplateId === template.id
+      ? 'border-primary bg-primary/8'
+      : 'border-border bg-elevated',
+  ]
+}
+
+function templateActionClass(variant: 'default' | 'primary' | 'danger' = 'default') {
+  if (!props.isTemplateLibraryMode) {
+    const variantClass =
+      variant === 'primary'
+        ? 'ui-btn--primary'
+        : variant === 'danger'
+          ? 'ui-btn--danger'
+          : 'ui-btn--secondary'
+    return `ui-btn ui-btn--sm ${variantClass}`
+  }
+
+  if (variant === 'primary') return 'template-action-btn template-action-btn--primary'
+  if (variant === 'danger') return 'template-action-btn template-action-btn--danger'
+  return 'template-action-btn'
+}
+
+function reloadSelectedTemplate() {
+  if (!selectedTemplate.value) return
+  emit('loadTemplate', selectedTemplate.value)
+}
+</script>
