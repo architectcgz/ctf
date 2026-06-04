@@ -331,6 +331,36 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightRecommendationsSectionSource).toContain(
       'class="insight-recommendation-list workspace-directory-list"'
     )
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /<div[\s\S]*class="insight-recommendation-list workspace-directory-list"[\s\S]*<template v-if="loading">[\s\S]*<AppEmpty[\s\S]*v-else-if="recommendations\.length === 0"[\s\S]*<template v-else>/s
+    )
+    expect(studentInsightPrimarySectionsSource).toContain(':loading="recommendationsLoading"')
+    expect(studentInsightPanelSource).toContain("loading && activeSection === 'recommendations'")
+    expect(studentInsightPanelSource).toContain(':recommendations-loading="true"')
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /\.insight-recommendation-list\s*\{[\s\S]*--workspace-directory-shell-border:\s*color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);[\s\S]*--workspace-directory-shell-background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*--workspace-directory-shell-radius:\s*var\(--workspace-radius-lg\);[\s\S]*overflow:\s*hidden;[\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
+    )
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /\.insight-recommendation-empty\s*\{[\s\S]*--app-empty-border-top:\s*0;[\s\S]*--app-empty-border-bottom:\s*0;[\s\S]*--app-empty-background:\s*transparent;/s
+    )
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      '<div class="insight-recommendation-skeleton-head">'
+    )
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      'class="insight-recommendation-skeleton-row"'
+    )
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      'class="insight-recommendation-skeleton-pills"'
+    )
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /\.insight-recommendation-skeleton-row\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*auto\s*auto;[\s\S]*border-bottom:\s*1px solid var\(--workspace-directory-row-divider\);/s
+    )
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /\.insight-recommendation-skeleton-kicker,[\s\S]*\.insight-recommendation-skeleton-action\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*insightRecommendationSkeletonSweep 1\.55s ease-in-out infinite;/s
+    )
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      '@media (prefers-reduced-motion: reduce)'
+    )
   })
 
   it('复盘区 section 应由 student-analysis-review feature 承接共享工作台组件', () => {
@@ -641,12 +671,21 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.find('#student-tab-evidence').exists()).toBe(true)
     expect(wrapper.find('#student-tab-timeline').exists()).toBe(true)
     expect(studentAnalysisPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
+    expect(studentAnalysisPageSource).toMatch(
+      /class="[^"]*\bstudent-analysis-shell\b[^"]*\bflex\b[^"]*\bmin-h-full\b[^"]*\bflex-1\b[^"]*\bflex-col\b[^"]*"/
+    )
     expect(studentAnalysisPageSource).not.toContain('class="workspace-topbar"')
     expect(studentAnalysisPageSource).toContain('class="content-pane"')
     expect(studentAnalysisPageSource).toContain('StudentAnalysisWorkspaceTabs')
     expect(studentAnalysisWorkspaceTabsSource).toContain('class="workspace-tabbar top-tabs"')
     expect(studentAnalysisPageSource).toMatch(
       /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<StudentAnalysisWorkspaceTabs[\s\S]*<main class="content-pane">/s
+    )
+    expect(studentAnalysisPageSource).toMatch(
+      /\.content-pane\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*align-content:\s*start;/s
+    )
+    expect(studentAnalysisPageSource).toMatch(
+      /\.student-analysis-shell\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent;[\s\S]*box-shadow:\s*none;[\s\S]*overflow:\s*visible;/s
     )
   })
 

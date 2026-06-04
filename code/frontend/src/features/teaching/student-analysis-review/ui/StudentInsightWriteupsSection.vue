@@ -345,12 +345,17 @@
 
 .writeup-directory {
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 84%, transparent);
+  background: transparent;
 }
 
 .writeup-kpi-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
+  --metric-panel-border: color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  --metric-panel-background: transparent;
+  --metric-panel-shadow: none;
+  --metric-panel-radius: 0;
 }
 
 .writeup-directory-head,
@@ -382,7 +387,7 @@
 }
 
 .writeup-directory-row--manual {
-  background: color-mix(in srgb, var(--journal-accent) 4%, transparent);
+  background: transparent;
 }
 
 .writeup-directory-cell {
@@ -446,7 +451,7 @@
   border-radius: 10px;
   border: 1px solid color-mix(in srgb, var(--journal-accent) 28%, var(--teacher-divider));
   color: var(--journal-accent-strong);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  background: transparent;
   transition:
     border-color 160ms ease,
     background-color 160ms ease,
@@ -456,7 +461,7 @@
 .writeup-open-link:hover,
 .writeup-open-link:focus-visible {
   border-color: color-mix(in srgb, var(--journal-accent) 46%, var(--teacher-divider));
-  background: color-mix(in srgb, var(--journal-accent) 16%, transparent);
+  background: transparent;
   color: var(--journal-accent);
   outline: none;
 }
@@ -466,7 +471,7 @@
   padding: 0 var(--space-3);
   border-radius: 10px;
   border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
+  background: transparent;
   font-size: var(--font-size-0-78);
   font-weight: 600;
   color: var(--journal-ink);
@@ -479,28 +484,28 @@
 .writeup-action-button:hover,
 .writeup-action-button:focus-visible {
   border-color: color-mix(in srgb, var(--journal-accent) 30%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+  background: transparent;
   color: var(--journal-accent-strong);
   outline: none;
 }
 
 .writeup-action-button--primary {
   border-color: color-mix(in srgb, var(--journal-accent) 28%, var(--teacher-divider));
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  background: transparent;
   color: var(--journal-accent-strong);
 }
 
 .writeup-action-button--primary:hover,
 .writeup-action-button--primary:focus-visible {
   border-color: color-mix(in srgb, var(--journal-accent) 46%, var(--teacher-divider));
-  background: color-mix(in srgb, var(--journal-accent) 16%, transparent);
+  background: transparent;
   color: var(--journal-accent);
 }
 
 .writeup-action-button--warning:hover,
 .writeup-action-button--warning:focus-visible {
   border-color: color-mix(in srgb, var(--color-warning) 36%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 10%, var(--journal-surface));
+  background: transparent;
   color: color-mix(in srgb, var(--color-warning) 86%, var(--journal-ink));
 }
 
@@ -508,7 +513,7 @@
   margin-top: var(--space-5);
   padding: var(--space-4);
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 34%, transparent);
+  background: transparent;
 }
 
 .writeup-review-panel__head {
@@ -538,7 +543,7 @@
   border: 0;
   border-left: 2px solid color-mix(in srgb, var(--journal-accent) 28%, transparent);
   border-radius: 0;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 48%, transparent);
+  background: transparent;
 }
 
 .insight-answer-panel__label {
@@ -551,7 +556,7 @@
 
 .insight-manual-input {
   border-color: color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  background: transparent;
   color: var(--journal-ink);
 }
 

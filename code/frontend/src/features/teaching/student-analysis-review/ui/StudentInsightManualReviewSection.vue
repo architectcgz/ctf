@@ -92,7 +92,7 @@
           </AppCard>
         </div>
 
-        <AppCard variant="panel" accent="neutral">
+        <div class="manual-review-detail-shell">
           <div v-if="manualReviewLoading" class="space-y-3">
             <div class="insight-skeleton-line h-5 w-32 animate-pulse rounded" />
             <div class="insight-skeleton-block h-24 animate-pulse rounded-2xl" />
@@ -165,7 +165,7 @@
               </div>
             </div>
           </template>
-        </AppCard>
+        </div>
       </div>
     </template>
   </SectionCard>
@@ -203,6 +203,10 @@
 
 .insight-kpi-grid {
   --metric-panel-grid-gap: var(--space-3);
+  --metric-panel-border: color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  --metric-panel-background: transparent;
+  --metric-panel-shadow: none;
+  --metric-panel-radius: 0;
   align-items: stretch;
 }
 
@@ -233,11 +237,17 @@
   );
 }
 
+.manual-review-detail-shell {
+  padding: var(--space-4) 0;
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  background: transparent;
+}
+
 .insight-answer-panel {
   border: 0;
   border-left: 2px solid color-mix(in srgb, var(--journal-accent) 28%, transparent);
   border-radius: 0;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 48%, transparent);
+  background: transparent;
 }
 
 .insight-answer-panel__label {
@@ -250,7 +260,7 @@
 
 .insight-manual-input {
   border-color: color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  background: transparent;
   color: var(--journal-ink);
 }
 

@@ -8,17 +8,27 @@
     />
 
     <template v-else>
-      <div v-if="loading" class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <AppCard variant="panel" accent="neutral">
+      <StudentInsightPrimarySections
+        v-if="loading && activeSection === 'recommendations'"
+        :profile="profile"
+        :recommendations="recommendations"
+        :recommendations-loading="true"
+        :timeline="timeline"
+        :active-section="activeSection"
+        @open-challenge="emit('openChallenge', $event)"
+      />
+
+      <div v-else-if="loading" class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <div class="insight-loading-shell">
           <div class="insight-skeleton-line h-6 w-36 animate-pulse rounded" />
           <div class="mt-6 space-y-3">
             <div class="insight-skeleton-block h-16 animate-pulse rounded-xl" />
             <div class="insight-skeleton-block h-16 animate-pulse rounded-xl" />
           </div>
-        </AppCard>
-        <AppCard variant="panel" accent="neutral">
+        </div>
+        <div class="insight-loading-shell">
           <div class="insight-skeleton-block h-[280px] animate-pulse rounded-2xl" />
-        </AppCard>
+        </div>
       </div>
 
       <template v-else-if="student">
@@ -79,6 +89,12 @@
     color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
   );
 }
+
+.insight-loading-shell {
+  padding: var(--space-4) 0;
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  background: transparent;
+}
 </style>
 
 <script setup lang="ts">
@@ -99,7 +115,6 @@ import {
   StudentInsightReviewSections,
   type StudentInsightSection,
 } from '@/features/teaching/student-analysis-review'
-import AppCard from '@/shared/ui/common/AppCard.vue'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import StudentInsightPrimarySections from './StudentInsightPrimarySections.vue'
 

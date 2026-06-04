@@ -6,6 +6,7 @@
   <StudentInsightRecommendationsSection
     v-if="isSectionVisible('recommendations')"
     :recommendations="recommendations"
+    :loading="recommendationsLoading"
     @open-challenge="emit('openChallenge', $event)"
   />
 
@@ -29,6 +30,7 @@ import StudentInsightRecommendationsSection from './StudentInsightRecommendation
 const props = defineProps<{
   profile: SkillProfileData | null
   recommendations: RecommendationItem[]
+  recommendationsLoading?: boolean
   timeline: TimelineEvent[]
   activeSection?: StudentInsightSection
 }>()

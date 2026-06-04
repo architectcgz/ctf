@@ -195,6 +195,9 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightCompositeSource).toContain(
       'class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
+    expect(studentInsightWriteupsSource).toMatch(
+      /\.writeup-kpi-grid\s*\{[\s\S]*--metric-panel-background:\s*transparent;[\s\S]*--metric-panel-shadow:\s*none;[\s\S]*--metric-panel-radius:\s*0;/s
+    )
     expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card"'
     )
@@ -210,8 +213,28 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"'
     )
+    expect(studentInsightPanelSource).toContain('class="insight-loading-shell"')
+    expect(studentInsightPanelSource).toMatch(
+      /\.insight-loading-shell\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);[\s\S]*background:\s*transparent;/s
+    )
+    expect(studentInsightManualReviewSource).toMatch(
+      /\.insight-kpi-grid\s*\{[\s\S]*--metric-panel-background:\s*transparent;[\s\S]*--metric-panel-shadow:\s*none;[\s\S]*--metric-panel-radius:\s*0;/s
+    )
+    expect(studentInsightManualReviewSource).toContain('class="manual-review-detail-shell"')
+    expect(studentInsightManualReviewSource).toMatch(
+      /\.manual-review-detail-shell\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);[\s\S]*background:\s*transparent;/s
+    )
     expect(studentInsightCompositeSource).toContain(
       'class="insight-kpi-card progress-card metric-panel-card"'
+    )
+    expect(studentInsightWriteupsSource).toMatch(
+      /\.writeup-review-panel\s*\{[\s\S]*background:\s*transparent;/s
+    )
+    expect(studentInsightWriteupsSource).toMatch(
+      /\.insight-manual-input\s*\{[\s\S]*background:\s*transparent;/s
+    )
+    expect(studentInsightManualReviewSource).toMatch(
+      /\.insight-manual-input\s*\{[\s\S]*background:\s*transparent;/s
     )
     expect(studentInsightManualReviewSource).toContain(
       'class="ui-btn ui-btn--secondary insight-outline-action disabled:cursor-not-allowed disabled:opacity-50"'
@@ -223,6 +246,33 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightPanelSource).not.toContain('challenge-btn-primary')
     expect(studentInsightRecommendationsSectionSource).toContain(
       'class="insight-recommendation-list workspace-directory-list"'
+    )
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /<div[\s\S]*class="insight-recommendation-list workspace-directory-list"[\s\S]*<template v-if="loading">[\s\S]*<AppEmpty[\s\S]*v-else-if="recommendations\.length === 0"[\s\S]*<template v-else>/s
+    )
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /\.insight-recommendation-list\s*\{[\s\S]*--workspace-directory-shell-border:\s*color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);[\s\S]*--workspace-directory-shell-background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*--workspace-directory-shell-radius:\s*var\(--workspace-radius-lg\);[\s\S]*overflow:\s*hidden;[\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
+    )
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /\.insight-recommendation-empty\s*\{[\s\S]*--app-empty-border-top:\s*0;[\s\S]*--app-empty-border-bottom:\s*0;[\s\S]*--app-empty-background:\s*transparent;/s
+    )
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      '<div class="insight-recommendation-skeleton-head">'
+    )
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      'class="insight-recommendation-skeleton-row"'
+    )
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      'class="insight-recommendation-skeleton-pills"'
+    )
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /\.insight-recommendation-skeleton-row\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*auto\s*auto;[\s\S]*border-bottom:\s*1px solid var\(--workspace-directory-row-divider\);/s
+    )
+    expect(studentInsightRecommendationsSectionSource).toMatch(
+      /\.insight-recommendation-skeleton-kicker,[\s\S]*\.insight-recommendation-skeleton-action\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*insightRecommendationSkeletonSweep 1\.55s ease-in-out infinite;/s
+    )
+    expect(studentInsightRecommendationsSectionSource).toContain(
+      '@media (prefers-reduced-motion: reduce)'
     )
     expect(studentInsightRecommendationsSectionSource).toContain(
       'class="insight-recommendation-row workspace-directory-grid-row"'

@@ -1,5 +1,5 @@
 <template>
-  <div class="workspace-shell journal-eyebrow-text">
+  <div class="workspace-shell student-analysis-shell journal-eyebrow-text flex min-h-full flex-1 flex-col">
     <StudentAnalysisWorkspaceTabs
       :active-workspace-tab="props.activeWorkspaceTab"
       @select-workspace-tab="emit('selectWorkspaceTab', $event)"
@@ -65,7 +65,7 @@
 </template>
 
 <style scoped>
-.workspace-shell {
+.student-analysis-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
@@ -93,10 +93,16 @@
     color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
   --workspace-radius-xl: 28px;
   --workspace-radius-lg: 18px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
 }
 
 .content-pane {
   display: grid;
+  flex: 1 1 auto;
+  align-content: start;
   gap: var(--space-section-gap-compact, var(--space-4));
 }
 
