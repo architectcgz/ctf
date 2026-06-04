@@ -65,7 +65,10 @@ describe('PlatformChallengeFlagConfigPanel', () => {
       },
     })
 
-    await wrapper.get('button.ui-btn--primary').trigger('click')
+    const saveButton = wrapper.get('button')
+    expect(saveButton.text()).toContain('保存配置')
+
+    await saveButton.trigger('click')
 
     expect(wrapper.emitted('save')).toBeTruthy()
     expect(wrapper.emitted('save')?.length).toBe(1)
