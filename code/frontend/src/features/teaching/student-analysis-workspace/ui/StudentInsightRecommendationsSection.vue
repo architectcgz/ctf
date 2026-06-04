@@ -5,17 +5,16 @@
     title="推荐训练任务"
     subtitle="根据当前薄弱维度筛出的优先训练题目。"
   >
-    <div
+    <StudentInsightStateSurface
       class="insight-recommendation-list workspace-directory-list"
-      :class="{
-        'insight-recommendation-list--loading': loading,
-        'insight-recommendation-list--empty': !loading && recommendations.length === 0,
-      }"
+      :loading="loading"
+      :empty="!loading && recommendations.length === 0"
+      surface="plain"
     >
-      <template v-if="loading">
+      <template #loading>
         <div class="insight-recommendation-skeleton-head">
-          <span class="insight-recommendation-skeleton-kicker" />
-          <span class="insight-recommendation-skeleton-count" />
+          <span class="student-insight-skeleton-line insight-recommendation-skeleton-kicker" />
+          <span class="student-insight-skeleton-line insight-recommendation-skeleton-count" />
         </div>
         <div
           v-for="index in 2"
@@ -23,27 +22,28 @@
           class="insight-recommendation-skeleton-row"
         >
           <div class="insight-recommendation-skeleton-main">
-            <span class="insight-recommendation-skeleton-title" />
-            <span class="insight-recommendation-skeleton-copy" />
-            <span class="insight-recommendation-skeleton-evidence" />
+            <span class="student-insight-skeleton-line insight-recommendation-skeleton-title" />
+            <span class="student-insight-skeleton-line insight-recommendation-skeleton-copy" />
+            <span class="student-insight-skeleton-line insight-recommendation-skeleton-evidence" />
           </div>
           <div class="insight-recommendation-skeleton-pills">
-            <span />
-            <span />
+            <span class="student-insight-skeleton-pill" />
+            <span class="student-insight-skeleton-pill" />
           </div>
-          <span class="insight-recommendation-skeleton-action" />
+          <span class="student-insight-skeleton-line insight-recommendation-skeleton-action" />
         </div>
       </template>
 
-      <AppEmpty
-        v-else-if="recommendations.length === 0"
-        class="insight-recommendation-empty"
-        title="暂无推荐题目"
-        description="当前画像还没有生成新的推荐训练任务。"
-        icon="BookOpen"
-      />
+      <template #empty>
+        <AppEmpty
+          class="student-insight-empty"
+          title="暂无推荐题目"
+          description="当前画像还没有生成新的推荐训练任务。"
+          icon="BookOpen"
+        />
+      </template>
 
-      <template v-else>
+      <template #default>
         <button
           v-for="item in recommendations"
           :key="item.challenge_id"
@@ -77,7 +77,7 @@
           </span>
         </button>
       </template>
-    </div>
+    </StudentInsightStateSurface>
   </SectionCard>
 </template>
 
@@ -148,24 +148,17 @@
   gap: var(--space-4);
 }
 
-.insight-recommendation-list--empty {
+.insight-recommendation-list.student-insight-state-surface--empty {
   display: grid;
   min-height: clamp(11rem, 24vh, 16rem);
   place-items: center;
 }
 
-.insight-recommendation-list--loading {
+.insight-recommendation-list.student-insight-state-surface--loading {
   display: grid;
   gap: var(--space-2-5);
   min-height: clamp(12rem, 24vh, 16rem);
   align-content: start;
-}
-
-.insight-recommendation-empty {
-  --app-empty-border-top: 0;
-  --app-empty-border-bottom: 0;
-  --app-empty-background: transparent;
-  width: 100%;
 }
 
 .insight-recommendation-skeleton-row {
@@ -201,30 +194,6 @@
 
 .insight-recommendation-skeleton-pills {
   grid-template-columns: repeat(2, minmax(var(--space-12), 1fr));
-}
-
-.insight-recommendation-skeleton-kicker,
-.insight-recommendation-skeleton-count,
-.insight-recommendation-skeleton-title,
-.insight-recommendation-skeleton-copy,
-.insight-recommendation-skeleton-evidence,
-.insight-recommendation-skeleton-pills span,
-.insight-recommendation-skeleton-action {
-  display: block;
-  overflow: hidden;
-  border-radius: 999px;
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
-      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
-      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
-    );
-  background-size: 220% 100%;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
-    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
-  animation: insightRecommendationSkeletonSweep 1.55s ease-in-out infinite;
 }
 
 .insight-recommendation-skeleton-kicker {
@@ -302,34 +271,13 @@
     justify-self: start;
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .insight-recommendation-skeleton-kicker,
-  .insight-recommendation-skeleton-count,
-  .insight-recommendation-skeleton-title,
-  .insight-recommendation-skeleton-copy,
-  .insight-recommendation-skeleton-evidence,
-  .insight-recommendation-skeleton-pills span,
-  .insight-recommendation-skeleton-action {
-    animation: none;
-  }
-}
-
-@keyframes insightRecommendationSkeletonSweep {
-  0% {
-    background-position: 120% 0;
-  }
-
-  100% {
-    background-position: -120% 0;
-  }
-}
 </style>
 
 <script setup lang="ts">
 import { ArrowRight } from 'lucide-vue-next'
 
 import type { RecommendationItem } from '@/api/contracts'
+import { StudentInsightStateSurface } from '@/features/teaching/student-analysis-shared/ui'
 import { ChallengeCategoryDifficultyPills } from '@/entities/challenge'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import SectionCard from '@/shared/ui/common/SectionCard.vue'

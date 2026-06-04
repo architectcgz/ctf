@@ -1,30 +1,30 @@
 <template>
   <div v-if="loading" class="insight-overview-layout">
-    <div class="insight-overview-glass">
-      <div class="insight-overview-glass__head">
-        <span class="insight-overview-glass__title" />
-        <span class="insight-overview-glass__subtitle" />
+    <StudentInsightLoadingSurface class="insight-overview-loading-surface">
+      <div class="insight-overview-loading-head">
+        <span class="student-insight-skeleton-line insight-overview-loading-title" />
+        <span class="student-insight-skeleton-line insight-overview-loading-subtitle" />
       </div>
-      <div class="insight-overview-glass__radar" />
-    </div>
+      <span class="student-insight-skeleton-panel insight-overview-loading-radar" />
+    </StudentInsightLoadingSurface>
 
-    <div class="insight-overview-glass">
-      <div class="insight-overview-glass__head">
-        <span class="insight-overview-glass__title insight-overview-glass__title--short" />
-        <span class="insight-overview-glass__subtitle" />
+    <StudentInsightLoadingSurface class="insight-overview-loading-surface">
+      <div class="insight-overview-loading-head">
+        <span class="student-insight-skeleton-line insight-overview-loading-title insight-overview-loading-title--short" />
+        <span class="student-insight-skeleton-line insight-overview-loading-subtitle" />
       </div>
-      <div class="insight-overview-glass__bars">
+      <div class="insight-overview-loading-bars">
         <div
           v-for="index in 6"
           :key="index"
-          class="insight-overview-glass__bar-row"
+          class="insight-overview-loading-bar-row"
         >
-          <span class="insight-overview-glass__bar-label" />
-          <span class="insight-overview-glass__bar-track" />
-          <span class="insight-overview-glass__bar-value" />
+          <span class="student-insight-skeleton-line insight-overview-loading-bar-label" />
+          <span class="student-insight-skeleton-line insight-overview-loading-bar-track" />
+          <span class="student-insight-skeleton-line insight-overview-loading-bar-value" />
         </div>
       </div>
-    </div>
+    </StudentInsightLoadingSurface>
   </div>
 
   <div v-else class="insight-overview-layout">
@@ -45,22 +45,24 @@
       title="维度得分占比"
       subtitle="条状图展示各维度当前分值。"
     >
-      <div v-if="rankedProfileDimensions.length > 0" class="insight-dimension-bars mt-4">
-        <article
-          v-for="item in rankedProfileDimensions"
-          :key="item.key"
-          class="insight-dimension-item"
-        >
-          <div class="insight-dimension-item__head">
-            <strong>{{ item.name }}</strong>
-            <span>{{ item.value }}%</span>
-          </div>
-          <div class="insight-dimension-item__track">
-            <div class="insight-dimension-item__fill" :style="{ width: `${item.value}%` }" />
-          </div>
-        </article>
+      <div class="insight-dimension-frame mt-4">
+        <div v-if="rankedProfileDimensions.length > 0" class="insight-dimension-bars">
+          <article
+            v-for="item in rankedProfileDimensions"
+            :key="item.key"
+            class="insight-dimension-item"
+          >
+            <div class="insight-dimension-item__head">
+              <strong>{{ item.name }}</strong>
+              <span>{{ item.value }}%</span>
+            </div>
+            <div class="insight-dimension-item__track">
+              <div class="insight-dimension-item__fill" :style="{ width: `${item.value}%` }" />
+            </div>
+          </article>
+        </div>
+        <div v-else class="insight-dimension-empty">暂无画像维度数据</div>
       </div>
-      <div v-else class="insight-dimension-empty mt-4">暂无画像维度数据</div>
     </SectionCard>
   </div>
 </template>
@@ -78,122 +80,55 @@
   --section-card-border-top-width: 0;
 }
 
-/* ── Glass skeleton ── */
-
-.insight-overview-glass {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  border-radius: var(--workspace-radius-lg);
-  padding: var(--space-4);
-  background:
-    radial-gradient(
-      ellipse at top right,
-      color-mix(in srgb, var(--journal-accent) 9%, transparent),
-      transparent 46%
-    ),
-    radial-gradient(
-      ellipse at bottom left,
-      color-mix(in srgb, var(--color-bg-surface) 58%, transparent),
-      transparent 52%
-    ),
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base))
-    );
-  box-shadow: var(--workspace-shadow-panel);
-}
-
-.insight-overview-glass::before {
-  position: absolute;
-  inset: 1px;
-  pointer-events: none;
-  content: '';
-  border-radius: calc(var(--workspace-radius-lg) - 1px);
-  background:
-    linear-gradient(
-      115deg,
-      transparent 0%,
-      color-mix(in srgb, var(--color-bg-surface) 34%, transparent) 38%,
-      transparent 72%
-    );
-  opacity: 0.54;
-}
-
-.insight-overview-glass__head {
+.insight-overview-loading-head {
   display: grid;
   gap: var(--space-2);
   margin-bottom: var(--space-4);
 }
 
-.insight-overview-glass__title,
-.insight-overview-glass__subtitle,
-.insight-overview-glass__radar,
-.insight-overview-glass__bar-label,
-.insight-overview-glass__bar-track,
-.insight-overview-glass__bar-value {
-  display: block;
-  overflow: hidden;
-  border-radius: 999px;
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
-      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
-      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
-    );
-  background-size: 220% 100%;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
-    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
-  animation: insightOverviewSkeletonSweep 1.55s ease-in-out infinite;
-}
-
-.insight-overview-glass__title {
+.insight-overview-loading-title {
   width: min(16rem, 68%);
   height: var(--space-4);
 }
 
-.insight-overview-glass__title--short {
+.insight-overview-loading-title--short {
   width: min(12rem, 54%);
 }
 
-.insight-overview-glass__subtitle {
+.insight-overview-loading-subtitle {
   width: min(24rem, 86%);
   height: var(--space-3);
 }
 
-.insight-overview-glass__radar {
+.insight-overview-loading-radar {
   width: 100%;
   aspect-ratio: 1 / 1;
   max-height: 280px;
-  border-radius: var(--workspace-radius-lg);
 }
 
-.insight-overview-glass__bars {
+.insight-overview-loading-bars {
   display: grid;
   gap: var(--space-3-5);
 }
 
-.insight-overview-glass__bar-row {
+.insight-overview-loading-bar-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--space-12);
   align-items: center;
   gap: var(--space-3);
 }
 
-.insight-overview-glass__bar-label {
+.insight-overview-loading-bar-label {
   width: min(8rem, 72%);
   height: var(--space-3);
 }
 
-.insight-overview-glass__bar-track {
+.insight-overview-loading-bar-track {
   width: 100%;
   height: var(--space-2-5);
 }
 
-.insight-overview-glass__bar-value {
+.insight-overview-loading-bar-value {
   width: var(--space-12);
   height: var(--space-3);
 }
@@ -203,6 +138,29 @@
 .insight-dimension-bars {
   display: grid;
   gap: var(--space-3-5);
+}
+
+.insight-dimension-frame {
+  display: grid;
+  gap: var(--space-3-5);
+  min-height: 100%;
+  padding: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
+  border-radius: var(--workspace-radius-lg);
+  background:
+    radial-gradient(
+      ellipse at top right,
+      color-mix(in srgb, var(--journal-accent) 7%, transparent),
+      transparent 44%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 82%, var(--color-bg-base))
+    );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 78%, transparent),
+    0 18px 32px -28px color-mix(in srgb, var(--journal-shadow) 26%, transparent);
 }
 
 .insight-dimension-item {
@@ -251,33 +209,12 @@
     grid-template-columns: 1fr;
   }
 
-  .insight-overview-glass__bar-row {
+  .insight-overview-loading-bar-row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .insight-overview-glass__bar-value {
+  .insight-overview-loading-bar-value {
     display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .insight-overview-glass__title,
-  .insight-overview-glass__subtitle,
-  .insight-overview-glass__radar,
-  .insight-overview-glass__bar-label,
-  .insight-overview-glass__bar-track,
-  .insight-overview-glass__bar-value {
-    animation: none;
-  }
-}
-
-@keyframes insightOverviewSkeletonSweep {
-  0% {
-    background-position: 120% 0;
-  }
-
-  100% {
-    background-position: -120% 0;
   }
 }
 </style>
@@ -286,6 +223,7 @@
 import { computed } from 'vue'
 
 import type { SkillProfileData } from '@/api/contracts'
+import { StudentInsightLoadingSurface } from '@/features/teaching/student-analysis-shared/ui'
 import { toRadarScores } from '@/entities/skill-profile'
 import SectionCard from '@/shared/ui/common/SectionCard.vue'
 import SkillRadar from '@/shared/ui/common/SkillRadar.vue'

@@ -13,12 +13,14 @@ import studentAnalysisWorkspaceContentSource from '@/features/teaching/student-a
 import studentAnalysisWorkspaceTabsSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisWorkspaceTabs.vue?raw'
 import studentAnalysisWorkspaceTabsHelperSource from '@/features/teaching/student-analysis-workspace/ui/studentAnalysisWorkspaceTabs.ts?raw'
 import studentAnalysisOverviewHeroPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
+import studentInsightLoadingSurfaceSource from '@/features/teaching/student-analysis-shared/ui/StudentInsightLoadingSurface.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
 import studentInsightPrimarySectionsSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPrimarySections.vue?raw'
 import studentInsightAttackSessionsSectionSource from '@/features/teaching/student-analysis-review/ui/StudentInsightAttackSessionsSection.vue?raw'
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
 import studentInsightReviewSectionsSource from '@/features/teaching/student-analysis-review/ui/StudentInsightReviewSections.vue?raw'
+import studentInsightStateSurfaceSource from '@/features/teaching/student-analysis-shared/ui/StudentInsightStateSurface.vue?raw'
 import writeupsSectionSource from '@/features/teaching/student-analysis-review/ui/StudentInsightWriteupsSection.vue?raw'
 import studentReviewWorkspaceSource from '@/features/teaching/student-analysis-review/ui/StudentReviewWorkspace.vue?raw'
 import { useAuthStore } from '@/stores/auth'
@@ -302,9 +304,14 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisWorkspaceTabsHelperSource).toContain("label: '证据链'")
     expect(studentAnalysisWorkspaceContentSource).toContain('StudentAnalysisOverviewHeroPanel')
     expect(studentAnalysisWorkspaceContentSource).toContain('StudentInsightPanel')
+    expect(studentAnalysisWorkspaceContentSource).toContain(':loading="loadingDetails"')
     expect(studentAnalysisOverviewHeroPanelSource).toContain(
       "{{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}"
     )
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('loading?: boolean')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('v-if="loading"')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain('summary-card summary-card--loading progress-card metric-panel-card')
+    expect(studentAnalysisOverviewHeroPanelSource).toContain("'summary-card-loading-value'")
     expect(studentAnalysisOverviewHeroPanelSource).toContain('<span>已做题目数</span>')
     expect(studentAnalysisOverviewHeroPanelSource).toContain('<CheckCircle class="h-4 w-4" />')
     expect(studentAnalysisOverviewHeroPanelSource).toContain('<span>完成率</span>')
@@ -333,7 +340,7 @@ describe('TeacherStudentAnalysis', () => {
       'class="insight-recommendation-list workspace-directory-list"'
     )
     expect(studentInsightRecommendationsSectionSource).toMatch(
-      /<div[\s\S]*class="insight-recommendation-list workspace-directory-list"[\s\S]*<template v-if="loading">[\s\S]*<AppEmpty[\s\S]*v-else-if="recommendations\.length === 0"[\s\S]*<template v-else>/s
+      /<StudentInsightStateSurface[\s\S]*class="insight-recommendation-list workspace-directory-list"[\s\S]*<template #loading>[\s\S]*<template #empty>[\s\S]*<template #default>/s
     )
     expect(studentInsightPrimarySectionsSource).toContain(':loading="recommendationsLoading"')
     // merged: loading 和 loaded 共用同一个 StudentInsightPrimarySections 实例
@@ -343,44 +350,16 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightPanelSource).not.toContain('insight-loading-shell')
     expect(studentInsightPanelSource).not.toContain('insight-skeleton-line')
     expect(studentInsightPanelSource).not.toContain('insight-skeleton-block')
-    // overview glass skeleton
-    expect(studentInsightOverviewSectionSource).toContain('v-if="loading"')
-    expect(studentInsightOverviewSectionSource).toContain('insight-overview-glass')
-    expect(studentInsightOverviewSectionSource).toContain('insight-overview-glass__radar')
-    expect(studentInsightOverviewSectionSource).toContain('insight-overview-glass__bars')
-    expect(studentInsightOverviewSectionSource).toContain(
-      'class="insight-overview-glass__bar-row"'
-    )
-    expect(studentInsightOverviewSectionSource).toMatch(
-      /\.insight-overview-glass\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
-    )
-    expect(studentInsightOverviewSectionSource).toMatch(
-      /\.insight-overview-glass__title,[\s\S]*\.insight-overview-glass__bar-value\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*insightOverviewSkeletonSweep 1\.55s ease-in-out infinite;/s
-    )
-    expect(studentInsightOverviewSectionSource).toContain(
-      '@media (prefers-reduced-motion: reduce)'
-    )
-    expect(studentInsightOverviewSectionSource).toContain('keyframes insightOverviewSkeletonSweep')
-    // timeline glass skeleton
-    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-glass')
-    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-glass__hero')
-    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-glass__metrics')
-    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-glass__list')
-    expect(studentInsightPrimarySectionsSource).toContain(
-      'class="insight-timeline-glass__row"'
-    )
-    expect(studentInsightPrimarySectionsSource).toMatch(
-      /\.insight-timeline-glass\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
-    )
-    expect(studentInsightPrimarySectionsSource).toMatch(
-      /\.insight-timeline-glass__eyebrow,[\s\S]*\.insight-timeline-glass__row-meta\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*insightTimelineSkeletonSweep 1\.55s ease-in-out infinite;/s
-    )
-    expect(studentInsightPrimarySectionsSource).toContain('keyframes insightTimelineSkeletonSweep')
+    expect(studentInsightOverviewSectionSource).toContain('StudentInsightLoadingSurface')
+    expect(studentInsightOverviewSectionSource).toContain('insight-overview-loading-radar')
+    expect(studentInsightOverviewSectionSource).toContain('student-insight-skeleton-panel')
+    expect(studentInsightOverviewSectionSource).toContain('class="insight-dimension-frame mt-4"')
+    expect(studentInsightPrimarySectionsSource).toContain('StudentInsightLoadingSurface')
+    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-loading-hero')
+    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-loading-metrics')
+    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-loading-list')
     expect(studentInsightRecommendationsSectionSource).toMatch(
       /\.insight-recommendation-list\s*\{[\s\S]*--workspace-directory-shell-border:\s*color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);[\s\S]*--workspace-directory-shell-background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*--workspace-directory-shell-radius:\s*var\(--workspace-radius-lg\);[\s\S]*overflow:\s*hidden;[\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
-    )
-    expect(studentInsightRecommendationsSectionSource).toMatch(
-      /\.insight-recommendation-empty\s*\{[\s\S]*--app-empty-border-top:\s*0;[\s\S]*--app-empty-border-bottom:\s*0;[\s\S]*--app-empty-background:\s*transparent;/s
     )
     expect(studentInsightRecommendationsSectionSource).toContain(
       '<div class="insight-recommendation-skeleton-head">'
@@ -394,12 +373,9 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightRecommendationsSectionSource).toMatch(
       /\.insight-recommendation-skeleton-row\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*auto\s*auto;[\s\S]*border-bottom:\s*1px solid var\(--workspace-directory-row-divider\);/s
     )
-    expect(studentInsightRecommendationsSectionSource).toMatch(
-      /\.insight-recommendation-skeleton-kicker,[\s\S]*\.insight-recommendation-skeleton-action\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*insightRecommendationSkeletonSweep 1\.55s ease-in-out infinite;/s
-    )
-    expect(studentInsightRecommendationsSectionSource).toContain(
-      '@media (prefers-reduced-motion: reduce)'
-    )
+    expect(studentInsightRecommendationsSectionSource).toContain('student-insight-skeleton-line')
+    expect(studentInsightStateSurfaceSource).toContain('student-insight-state-surface--loading')
+    expect(studentInsightLoadingSurfaceSource).toContain('student-insight-glass-surface')
   })
 
   it('复盘区 section 应由 student-analysis-review feature 承接共享工作台组件', () => {
@@ -410,32 +386,17 @@ describe('TeacherStudentAnalysis', () => {
       "import StudentReviewWorkspace from './StudentReviewWorkspace.vue'"
     )
     expect(studentInsightAttackSessionsSectionSource).not.toContain('TeacherStudentReviewWorkspace')
-    // writeups glass skeleton
-    expect(writeupsSectionSource).toContain('writeup-glass')
-    expect(writeupsSectionSource).toContain('writeup-glass__metrics')
-    expect(writeupsSectionSource).toContain('writeup-glass__head')
-    expect(writeupsSectionSource).toContain('writeup-glass__rows')
-    expect(writeupsSectionSource).toMatch(
-      /\.writeup-glass\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
-    )
-    expect(writeupsSectionSource).toMatch(
-      /\.writeup-glass__metric\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*writeupGlassSkeletonSweep 1\.55s ease-in-out infinite;/s
-    )
-    expect(writeupsSectionSource).toContain(
-      '@media (prefers-reduced-motion: reduce)'
-    )
+    expect(writeupsSectionSource).toContain('StudentInsightStateSurface')
+    expect(writeupsSectionSource).toContain('writeup-loading-metrics')
+    expect(writeupsSectionSource).toContain('writeup-loading-head')
+    expect(writeupsSectionSource).toContain('writeup-loading-rows')
     expect(studentInsightReviewSectionsSource).toContain(':loading="writeupPaginationLoading"')
-    // evidence glass skeleton
-    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-glass')
-    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-glass__filters')
-    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-glass__summary')
-    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-glass__sessions')
-    expect(studentInsightAttackSessionsSectionSource).toMatch(
-      /\.evidence-glass\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);[\s\S]*background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
-    )
-    expect(studentInsightAttackSessionsSectionSource).toMatch(
-      /\.evidence-glass__filter\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*evidenceGlassSkeletonSweep 1\.55s ease-in-out infinite;/s
-    )
+    expect(studentInsightAttackSessionsSectionSource).toContain('StudentInsightStateSurface')
+    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-loading-filters')
+    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-loading-summary')
+    expect(studentInsightAttackSessionsSectionSource).toContain('evidence-loading-sessions')
+    expect(writeupsSectionSource).not.toContain('writeup-glass')
+    expect(studentInsightAttackSessionsSectionSource).not.toContain('evidence-glass')
     expect(studentAnalysisReviewQuerySyncSource).toContain("from '@/api/contracts'")
     expect(studentAnalysisReviewQuerySyncSource).not.toContain("from '@/api/teacher'")
     expect(studentAnalysisReviewQuerySyncSource).not.toContain("from '@/api/teaching'")
@@ -744,14 +705,14 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).toContain('StudentAnalysisWorkspaceTabs')
     expect(studentAnalysisWorkspaceTabsSource).toContain('class="workspace-tabbar top-tabs"')
     expect(studentAnalysisPageSource).toMatch(
-      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<StudentAnalysisWorkspaceTabs[\s\S]*<main class="content-pane">/s
+      /<div\s+class="[^"]*\bworkspace-shell\b[^"]*"\s*>[\s\S]*<StudentAnalysisWorkspaceTabs[\s\S]*<main class="content-pane">/s
     )
     expect(studentAnalysisPageSource).toMatch(
       /\.content-pane\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*align-content:\s*start;/s
     )
-    expect(studentAnalysisPageSource).toMatch(
-      /\.student-analysis-shell\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent;[\s\S]*box-shadow:\s*none;[\s\S]*overflow:\s*visible;/s
-    )
+    expect(studentAnalysisPageSource).toContain('--workspace-shell-bg:')
+    expect(studentAnalysisPageSource).toContain('--workspace-panel:')
+    expect(studentAnalysisPageSource).toContain('--workspace-shadow-shell:')
   })
 
   it('点击导出班级报告时应打开当前班级上下文对话框', async () => {

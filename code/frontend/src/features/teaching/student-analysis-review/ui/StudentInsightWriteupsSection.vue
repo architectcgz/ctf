@@ -5,255 +5,262 @@
     title="题解列表"
     subtitle="集中处理发布状态、可见性与人工审核。"
   >
-    <div v-if="loading && !hasWriteupRows" class="writeup-glass">
-      <div class="writeup-glass__metrics">
-        <span
-          v-for="index in 3"
-          :key="index"
-          class="writeup-glass__metric"
-        />
-      </div>
-      <div class="writeup-glass__head">
-        <span
-          v-for="index in 5"
-          :key="index"
-          class="writeup-glass__head-cell"
-        />
-      </div>
-      <div class="writeup-glass__rows">
-        <div
-          v-for="index in 3"
-          :key="index"
-          class="writeup-glass__row"
-        >
+    <StudentInsightStateSurface
+      class="writeup-state-surface"
+      :loading="loading && !hasWriteupRows"
+      :empty="!loading && !hasWriteupRows"
+    >
+      <template #loading>
+        <div class="writeup-loading-metrics">
           <span
-            v-for="cell in 5"
-            :key="cell"
-            class="writeup-glass__cell"
+            v-for="index in 3"
+            :key="index"
+            class="student-insight-skeleton-panel writeup-loading-metric"
           />
         </div>
-      </div>
-    </div>
+        <div class="writeup-loading-head">
+          <span
+            v-for="index in 5"
+            :key="index"
+            class="student-insight-skeleton-line writeup-loading-head-cell"
+          />
+        </div>
+        <div class="writeup-loading-rows">
+          <div
+            v-for="index in 3"
+            :key="index"
+            class="writeup-loading-row"
+          >
+            <span
+              v-for="cell in 5"
+              :key="cell"
+              class="student-insight-skeleton-line writeup-loading-cell"
+            />
+          </div>
+        </div>
+      </template>
 
-    <AppEmpty
-      v-else-if="!hasWriteupRows"
-      title="暂无题解记录"
-      description="当前学员还没有发布题解或提交人工审核内容。"
-      icon="FileText"
-    />
-
-    <template v-else>
-      <div class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface">
-        <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-          <div class="insight-kpi-label progress-card-label metric-panel-label">
-            <span>已发布题解</span>
-            <FileText class="h-4 w-4" />
-          </div>
-          <div class="insight-kpi-value progress-card-value metric-panel-value">
-            {{ publishedWriteupSubmissions.length }}
-          </div>
-          <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-            当前学员已发布题解
-          </div>
-        </article>
-        <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-          <div class="insight-kpi-label progress-card-label metric-panel-label">
-            <span>对应题目</span>
-            <FolderKanban class="h-4 w-4" />
-          </div>
-          <div class="insight-kpi-value progress-card-value metric-panel-value">
-            {{ publishedChallengeCount }}
-          </div>
-          <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-            已发布题解覆盖题目
-          </div>
-        </article>
-        <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-          <div class="insight-kpi-label progress-card-label metric-panel-label">
-            <span>待审核</span>
-            <ClipboardList class="h-4 w-4" />
-          </div>
-          <div class="insight-kpi-value progress-card-value metric-panel-value">
-            {{ pendingManualReviewCount }}
-          </div>
-          <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
-            人工审核待处理
-          </div>
-        </article>
-      </div>
-
-      <section class="writeup-directory mt-5">
-        <header class="writeup-directory-head">
-          <span>题目</span>
-          <span>题解</span>
-          <span>社区题解状态</span>
-          <span>审核状态</span>
-          <span>操作</span>
-        </header>
-
-        <article
-          v-for="item in publishedWriteupSubmissions"
-          :key="item.id"
-          class="writeup-directory-row"
-        >
-          <div class="writeup-directory-cell">
-            <div class="writeup-directory-challenge">
-              {{ item.challenge_title }}
-            </div>
-          </div>
-
-          <div class="writeup-directory-cell">
-            <div class="writeup-directory-title">
-              {{ item.title }}
-            </div>
-            <div class="writeup-directory-preview">
-              {{ item.content_preview || '暂无摘要' }}
-            </div>
-          </div>
-
-          <div class="writeup-directory-cell">
-            <div class="writeup-directory-status-label">社区题解状态</div>
-            <div class="writeup-directory-status">
-              <span class="writeup-chip writeup-chip--muted">已发布</span>
-              <span :class="visibilityStatusClass(item.visibility_status)">
-                {{ visibilityStatusLabel(item.visibility_status) }}
-              </span>
-              <span v-if="item.is_recommended" class="writeup-chip writeup-chip--primary">
-                推荐题解
-              </span>
-            </div>
-          </div>
-
-          <div class="writeup-directory-cell">
-            <div class="writeup-directory-status-label">审核状态</div>
-            <div v-if="findManualReview(item.challenge_id)" class="writeup-directory-status">
-              <span :class="manualReviewStatusClass(findManualReview(item.challenge_id)!.review_status)">
-                {{ manualReviewStatusLabel(findManualReview(item.challenge_id)!.review_status) }}
-              </span>
-              <span class="writeup-directory-time">
-                {{ formatDateTime(findManualReview(item.challenge_id)!.submitted_at) }}
-              </span>
-            </div>
-            <span v-else class="writeup-chip writeup-chip--muted">无人工审核</span>
-          </div>
-
-          <div class="writeup-directory-cell writeup-directory-action">
-            <div class="writeup-action-stack">
-              <button
-                type="button"
-                class="writeup-open-link inline-flex items-center gap-1 font-medium"
-                @click="openChallenge(item.challenge_id)"
-              >
-                查看题目
-                <ArrowRight class="h-4 w-4" />
-              </button>
-              <button
-                v-if="findManualReview(item.challenge_id)"
-                type="button"
-                class="writeup-action-button writeup-action-button--primary"
-                @click="openManualReview(findManualReview(item.challenge_id)!.id)"
-              >
-                {{ activeManualReview?.id === findManualReview(item.challenge_id)!.id ? '刷新审核' : '查看审核' }}
-              </button>
-              <button
-                type="button"
-                class="writeup-action-button"
-                @click="moderateWriteup(item.id, item.is_recommended ? 'unrecommend' : 'recommend')"
-              >
-                {{ item.is_recommended ? '取消推荐' : '推荐题解' }}
-              </button>
-              <button
-                type="button"
-                class="writeup-action-button writeup-action-button--warning"
-                @click="
-                  moderateWriteup(item.id, item.visibility_status === 'hidden' ? 'restore' : 'hide')
-                "
-              >
-                {{ item.visibility_status === 'hidden' ? '恢复公开' : '隐藏题解' }}
-              </button>
-            </div>
-          </div>
-        </article>
-
-        <article
-          v-for="item in standaloneManualReviewSubmissions"
-          :key="`manual-${item.id}`"
-          class="writeup-directory-row writeup-directory-row--manual"
-        >
-          <div class="writeup-directory-cell">
-            <div class="writeup-directory-challenge">
-              {{ item.challenge_title }}
-            </div>
-          </div>
-
-          <div class="writeup-directory-cell">
-            <div class="writeup-directory-title">
-              人工审核提交
-            </div>
-            <div class="writeup-directory-preview">
-              {{ item.answer_preview || '暂无答案摘要' }}
-            </div>
-          </div>
-
-          <div class="writeup-directory-cell">
-            <div class="writeup-directory-status-label">社区题解状态</div>
-            <span class="writeup-chip writeup-chip--muted">未发布到题解区</span>
-          </div>
-
-          <div class="writeup-directory-cell">
-            <div class="writeup-directory-status-label">审核状态</div>
-            <div class="writeup-directory-status">
-              <span :class="manualReviewStatusClass(item.review_status)">
-                {{ manualReviewStatusLabel(item.review_status) }}
-              </span>
-              <span class="writeup-directory-time">
-                {{ formatDateTime(item.submitted_at) }}
-              </span>
-            </div>
-          </div>
-
-          <div class="writeup-directory-cell writeup-directory-action">
-            <div class="writeup-action-stack">
-              <button
-                type="button"
-                class="writeup-open-link inline-flex items-center gap-1 font-medium"
-                @click="openChallenge(item.challenge_id)"
-              >
-                查看题目
-                <ArrowRight class="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                class="writeup-action-button writeup-action-button--primary"
-                @click="openManualReview(item.id)"
-              >
-                {{ activeManualReview?.id === item.id ? '刷新审核' : '查看审核' }}
-              </button>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <div class="writeup-pagination mt-4">
-        <PagePaginationControls
-          :page="writeupPage"
-          :total-pages="writeupTotalPages"
-          :total="writeupTotal"
-          total-label="发布题解总数"
-          :disabled="writeupPaginationLoading"
-          show-jump
-          @change-page="changeWriteupPage"
+      <template #empty>
+        <AppEmpty
+          class="student-insight-empty"
+          title="暂无题解记录"
+          description="当前学员还没有发布题解或提交人工审核内容。"
+          icon="FileText"
         />
-      </div>
+      </template>
 
-      <section
-        v-if="manualReviewLoading || activeManualReview"
-        class="writeup-review-panel"
-        aria-live="polite"
-      >
+      <template #default>
+        <div class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface">
+          <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
+            <div class="insight-kpi-label progress-card-label metric-panel-label">
+              <span>已发布题解</span>
+              <FileText class="h-4 w-4" />
+            </div>
+            <div class="insight-kpi-value progress-card-value metric-panel-value">
+              {{ publishedWriteupSubmissions.length }}
+            </div>
+            <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+              当前学员已发布题解
+            </div>
+          </article>
+          <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
+            <div class="insight-kpi-label progress-card-label metric-panel-label">
+              <span>对应题目</span>
+              <FolderKanban class="h-4 w-4" />
+            </div>
+            <div class="insight-kpi-value progress-card-value metric-panel-value">
+              {{ publishedChallengeCount }}
+            </div>
+            <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+              已发布题解覆盖题目
+            </div>
+          </article>
+          <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
+            <div class="insight-kpi-label progress-card-label metric-panel-label">
+              <span>待审核</span>
+              <ClipboardList class="h-4 w-4" />
+            </div>
+            <div class="insight-kpi-value progress-card-value metric-panel-value">
+              {{ pendingManualReviewCount }}
+            </div>
+            <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+              人工审核待处理
+            </div>
+          </article>
+        </div>
+
+        <section class="writeup-directory mt-5">
+          <header class="writeup-directory-head">
+            <span>题目</span>
+            <span>题解</span>
+            <span>社区题解状态</span>
+            <span>审核状态</span>
+            <span>操作</span>
+          </header>
+
+          <article
+            v-for="item in publishedWriteupSubmissions"
+            :key="item.id"
+            class="writeup-directory-row"
+          >
+            <div class="writeup-directory-cell">
+              <div class="writeup-directory-challenge">
+                {{ item.challenge_title }}
+              </div>
+            </div>
+
+            <div class="writeup-directory-cell">
+              <div class="writeup-directory-title">
+                {{ item.title }}
+              </div>
+              <div class="writeup-directory-preview">
+                {{ item.content_preview || '暂无摘要' }}
+              </div>
+            </div>
+
+            <div class="writeup-directory-cell">
+              <div class="writeup-directory-status-label">社区题解状态</div>
+              <div class="writeup-directory-status">
+                <span class="writeup-chip writeup-chip--muted">已发布</span>
+                <span :class="visibilityStatusClass(item.visibility_status)">
+                  {{ visibilityStatusLabel(item.visibility_status) }}
+                </span>
+                <span v-if="item.is_recommended" class="writeup-chip writeup-chip--primary">
+                  推荐题解
+                </span>
+              </div>
+            </div>
+
+            <div class="writeup-directory-cell">
+              <div class="writeup-directory-status-label">审核状态</div>
+              <div v-if="findManualReview(item.challenge_id)" class="writeup-directory-status">
+                <span :class="manualReviewStatusClass(findManualReview(item.challenge_id)!.review_status)">
+                  {{ manualReviewStatusLabel(findManualReview(item.challenge_id)!.review_status) }}
+                </span>
+                <span class="writeup-directory-time">
+                  {{ formatDateTime(findManualReview(item.challenge_id)!.submitted_at) }}
+                </span>
+              </div>
+              <span v-else class="writeup-chip writeup-chip--muted">无人工审核</span>
+            </div>
+
+            <div class="writeup-directory-cell writeup-directory-action">
+              <div class="writeup-action-stack">
+                <button
+                  type="button"
+                  class="writeup-open-link inline-flex items-center gap-1 font-medium"
+                  @click="openChallenge(item.challenge_id)"
+                >
+                  查看题目
+                  <ArrowRight class="h-4 w-4" />
+                </button>
+                <button
+                  v-if="findManualReview(item.challenge_id)"
+                  type="button"
+                  class="writeup-action-button writeup-action-button--primary"
+                  @click="openManualReview(findManualReview(item.challenge_id)!.id)"
+                >
+                  {{ activeManualReview?.id === findManualReview(item.challenge_id)!.id ? '刷新审核' : '查看审核' }}
+                </button>
+                <button
+                  type="button"
+                  class="writeup-action-button"
+                  @click="moderateWriteup(item.id, item.is_recommended ? 'unrecommend' : 'recommend')"
+                >
+                  {{ item.is_recommended ? '取消推荐' : '推荐题解' }}
+                </button>
+                <button
+                  type="button"
+                  class="writeup-action-button writeup-action-button--warning"
+                  @click="
+                    moderateWriteup(item.id, item.visibility_status === 'hidden' ? 'restore' : 'hide')
+                  "
+                >
+                  {{ item.visibility_status === 'hidden' ? '恢复公开' : '隐藏题解' }}
+                </button>
+              </div>
+            </div>
+          </article>
+
+          <article
+            v-for="item in standaloneManualReviewSubmissions"
+            :key="`manual-${item.id}`"
+            class="writeup-directory-row writeup-directory-row--manual"
+          >
+            <div class="writeup-directory-cell">
+              <div class="writeup-directory-challenge">
+                {{ item.challenge_title }}
+              </div>
+            </div>
+
+            <div class="writeup-directory-cell">
+              <div class="writeup-directory-title">
+                人工审核提交
+              </div>
+              <div class="writeup-directory-preview">
+                {{ item.answer_preview || '暂无答案摘要' }}
+              </div>
+            </div>
+
+            <div class="writeup-directory-cell">
+              <div class="writeup-directory-status-label">社区题解状态</div>
+              <span class="writeup-chip writeup-chip--muted">未发布到题解区</span>
+            </div>
+
+            <div class="writeup-directory-cell">
+              <div class="writeup-directory-status-label">审核状态</div>
+              <div class="writeup-directory-status">
+                <span :class="manualReviewStatusClass(item.review_status)">
+                  {{ manualReviewStatusLabel(item.review_status) }}
+                </span>
+                <span class="writeup-directory-time">
+                  {{ formatDateTime(item.submitted_at) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="writeup-directory-cell writeup-directory-action">
+              <div class="writeup-action-stack">
+                <button
+                  type="button"
+                  class="writeup-open-link inline-flex items-center gap-1 font-medium"
+                  @click="openChallenge(item.challenge_id)"
+                >
+                  查看题目
+                  <ArrowRight class="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  class="writeup-action-button writeup-action-button--primary"
+                  @click="openManualReview(item.id)"
+                >
+                  {{ activeManualReview?.id === item.id ? '刷新审核' : '查看审核' }}
+                </button>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <div class="writeup-pagination mt-4">
+          <PagePaginationControls
+            :page="writeupPage"
+            :total-pages="writeupTotalPages"
+            :total="writeupTotal"
+            total-label="发布题解总数"
+            :disabled="writeupPaginationLoading"
+            show-jump
+            @change-page="changeWriteupPage"
+          />
+        </div>
+
+        <section
+          v-if="manualReviewLoading || activeManualReview"
+          class="writeup-review-panel"
+          aria-live="polite"
+        >
         <div v-if="manualReviewLoading" class="space-y-3">
-          <div class="insight-skeleton-line h-5 w-32 animate-pulse rounded" />
-          <div class="insight-skeleton-block h-24 animate-pulse rounded-2xl" />
+          <div class="student-insight-skeleton-line h-5 w-32 rounded" />
+          <div class="student-insight-skeleton-block h-24 rounded-2xl" />
         </div>
 
         <template v-else-if="activeManualReview">
@@ -310,8 +317,9 @@
             </div>
           </div>
         </template>
-      </section>
-    </template>
+        </section>
+      </template>
+    </StudentInsightStateSurface>
   </SectionCard>
 </template>
 
@@ -371,6 +379,10 @@
   --metric-panel-helper-margin-top: var(--space-2);
   --metric-panel-helper-size: var(--font-size-0-80);
   --metric-panel-helper-line-height: 1.55;
+}
+
+.writeup-state-surface {
+  --student-insight-state-gap: var(--space-4);
 }
 
 .writeup-directory {
@@ -560,15 +572,6 @@
   color: var(--journal-ink);
 }
 
-.insight-skeleton-line,
-.insight-skeleton-block {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-border) 78%, transparent),
-    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-  );
-}
-
 .insight-answer-panel {
   border: 0;
   border-left: 2px solid color-mix(in srgb, var(--journal-accent) 28%, transparent);
@@ -599,78 +602,17 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
 }
 
-/* ── Glass skeleton ── */
-
-.writeup-glass {
-  position: relative;
-  overflow: hidden;
-  margin-top: var(--space-5);
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  border-radius: var(--workspace-radius-lg);
-  padding: var(--space-4);
-  background:
-    radial-gradient(
-      ellipse at top right,
-      color-mix(in srgb, var(--journal-accent) 9%, transparent),
-      transparent 46%
-    ),
-    radial-gradient(
-      ellipse at bottom left,
-      color-mix(in srgb, var(--color-bg-surface) 58%, transparent),
-      transparent 52%
-    ),
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base))
-    );
-  box-shadow: var(--workspace-shadow-panel);
-  display: grid;
-  gap: var(--space-4);
-}
-
-.writeup-glass::before {
-  position: absolute;
-  inset: 1px;
-  pointer-events: none;
-  content: '';
-  border-radius: calc(var(--workspace-radius-lg) - 1px);
-  background:
-    linear-gradient(
-      115deg,
-      transparent 0%,
-      color-mix(in srgb, var(--color-bg-surface) 34%, transparent) 38%,
-      transparent 72%
-    );
-  opacity: 0.54;
-}
-
-.writeup-glass__metrics {
+.writeup-loading-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
-.writeup-glass__metric {
-  display: block;
+.writeup-loading-metric {
   height: var(--space-20);
-  overflow: hidden;
-  border-radius: var(--workspace-radius-lg);
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
-      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
-      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
-    );
-  background-size: 220% 100%;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
-    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
-  animation: writeupGlassSkeletonSweep 1.55s ease-in-out infinite;
 }
 
-.writeup-glass__head {
+.writeup-loading-head {
   display: grid;
   grid-template-columns:
     minmax(0, 1.2fr)
@@ -683,31 +625,16 @@
   border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 68%, transparent);
 }
 
-.writeup-glass__head-cell {
-  display: block;
+.writeup-loading-head-cell {
   height: var(--space-2-5);
-  overflow: hidden;
-  border-radius: 999px;
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
-      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
-      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
-    );
-  background-size: 220% 100%;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
-    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
-  animation: writeupGlassSkeletonSweep 1.55s ease-in-out infinite;
 }
 
-.writeup-glass__rows {
+.writeup-loading-rows {
   display: grid;
   gap: var(--space-2);
 }
 
-.writeup-glass__row {
+.writeup-loading-row {
   display: grid;
   grid-template-columns:
     minmax(0, 1.2fr)
@@ -719,56 +646,23 @@
   padding: var(--space-2) 0;
 }
 
-.writeup-glass__cell {
-  display: block;
+.writeup-loading-cell {
   height: var(--space-3);
-  overflow: hidden;
-  border-radius: 999px;
-  background:
-    linear-gradient(
-      100deg,
-      color-mix(in srgb, var(--teacher-divider) 66%, transparent) 0%,
-      color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface)) 42%,
-      color-mix(in srgb, var(--teacher-divider) 58%, transparent) 76%
-    );
-  background-size: 220% 100%;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-bg-surface) 68%, transparent),
-    0 1px 0 color-mix(in srgb, var(--teacher-divider) 48%, transparent);
-  animation: writeupGlassSkeletonSweep 1.55s ease-in-out infinite;
 }
 
 @media (max-width: 1023px) {
-  .writeup-glass__head {
+  .writeup-loading-head {
     display: none;
   }
 
-  .writeup-glass__row {
+  .writeup-loading-row {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 767px) {
-  .writeup-glass__metrics {
+  .writeup-loading-metrics {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .writeup-glass__metric,
-  .writeup-glass__head-cell,
-  .writeup-glass__cell {
-    animation: none;
-  }
-}
-
-@keyframes writeupGlassSkeletonSweep {
-  0% {
-    background-position: 120% 0;
-  }
-
-  100% {
-    background-position: -120% 0;
   }
 }
 
@@ -808,6 +702,7 @@ import type {
   ManualReviewSubmissionItemData,
   WriteupSubmissionItemData,
 } from '@/api/contracts'
+import { StudentInsightStateSurface } from '@/features/teaching/student-analysis-shared/ui'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import PagePaginationControls from '@/shared/ui/common/PagePaginationControls.vue'
 import SectionCard from '@/shared/ui/common/SectionCard.vue'

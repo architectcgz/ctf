@@ -12,10 +12,12 @@ import classTrendPanelSource from '@/entities/class-insight/ui/ClassTrendPanel.v
 import classInsightsPanelSource from '@/entities/class-insight/ui/ClassInsightsPanel.vue?raw'
 import classReviewPanelSource from '@/entities/class-insight/ui/ClassReviewPanel.vue?raw'
 import interventionPanelSource from '@/features/teaching/student-analysis-review/ui/InterventionPanel.vue?raw'
+import studentInsightLoadingSurfaceSource from '@/features/teaching/student-analysis-shared/ui/StudentInsightLoadingSurface.vue?raw'
 import studentInsightPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPanel.vue?raw'
 import studentInsightPrimarySectionsSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightPrimarySections.vue?raw'
 import studentInsightOverviewSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightOverviewSection.vue?raw'
 import studentInsightRecommendationsSectionSource from '@/features/teaching/student-analysis-workspace/ui/StudentInsightRecommendationsSection.vue?raw'
+import studentInsightStateSurfaceSource from '@/features/teaching/student-analysis-shared/ui/StudentInsightStateSurface.vue?raw'
 import studentInsightWriteupsSource from '@/features/teaching/student-analysis-review/ui/StudentInsightWriteupsSection.vue?raw'
 import studentInsightManualReviewSource from '@/features/teaching/student-analysis-review/ui/StudentInsightManualReviewSection.vue?raw'
 import reviewArchiveSource from '@/pages/review-archive/StudentReviewArchiveRoutePage.vue?raw'
@@ -133,6 +135,11 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisOverviewHeroSource).toContain(
       'class="summary-card summary-card--weakness progress-card metric-panel-card"'
     )
+    expect(studentAnalysisOverviewHeroSource).toContain(
+      'class="summary-card summary-card--loading progress-card metric-panel-card"'
+    )
+    expect(studentAnalysisOverviewHeroSource).toContain('student-insight-skeleton-pill summary-card-loading-icon')
+    expect(studentAnalysisOverviewHeroSource).toContain('summary-card-loading-value--wide')
     expect(studentAnalysisOverviewHeroSource).toContain('--metric-panel-border:')
     expect(studentAnalysisOverviewHeroSource).toContain('var(--teacher-card-border)')
     expect(studentAnalysisOverviewHeroSource).toContain('--summary-card-accent: var(--workspace-brand);')
@@ -196,6 +203,10 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightOverviewSectionSource).toMatch(
       /\.insight-overview-card\s*\{[\s\S]*?--section-card-border-top-width:\s*0;/s
     )
+    expect(studentInsightOverviewSectionSource).toContain('class="insight-dimension-frame mt-4"')
+    expect(studentInsightOverviewSectionSource).toMatch(
+      /\.insight-dimension-frame\s*\{[\s\S]*border:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);[\s\S]*border-radius:\s*var\(--workspace-radius-lg\);/s
+    )
     expect(studentInsightPanelSource).not.toMatch(/\.insight-rate-panel\s*\{[^}]*border-top:/s)
     expect(studentInsightCompositeSource).toMatch(
       /\.insight-kpi-value\s*\{[\s\S]*--metric-panel-value-size:\s*var\(--font-size-1-00\);/s
@@ -223,10 +234,12 @@ describe('teacher detail surface alignment', () => {
     )
     expect(studentInsightPanelSource).toContain(':loading="loading"')
     expect(studentInsightPanelSource).not.toContain('insight-loading-shell')
-    expect(studentInsightPrimarySectionsSource).toContain('insight-timeline-glass')
+    expect(studentInsightPrimarySectionsSource).toContain('StudentInsightLoadingSurface')
+    expect(studentInsightLoadingSurfaceSource).toContain('student-insight-glass-surface')
     expect(studentInsightManualReviewSource).toMatch(
       /\.insight-kpi-grid\s*\{[\s\S]*--metric-panel-background:\s*transparent;[\s\S]*--metric-panel-shadow:\s*none;[\s\S]*--metric-panel-radius:\s*0;/s
     )
+    expect(studentInsightManualReviewSource).toContain('StudentInsightStateSurface')
     expect(studentInsightManualReviewSource).toContain('class="manual-review-detail-shell"')
     expect(studentInsightManualReviewSource).toMatch(
       /\.manual-review-detail-shell\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);[\s\S]*background:\s*transparent;/s
@@ -255,14 +268,12 @@ describe('teacher detail surface alignment', () => {
       'class="insight-recommendation-list workspace-directory-list"'
     )
     expect(studentInsightRecommendationsSectionSource).toMatch(
-      /<div[\s\S]*class="insight-recommendation-list workspace-directory-list"[\s\S]*<template v-if="loading">[\s\S]*<AppEmpty[\s\S]*v-else-if="recommendations\.length === 0"[\s\S]*<template v-else>/s
+      /<StudentInsightStateSurface[\s\S]*class="insight-recommendation-list workspace-directory-list"[\s\S]*<template #loading>[\s\S]*<template #empty>[\s\S]*<template #default>/s
     )
     expect(studentInsightRecommendationsSectionSource).toMatch(
       /\.insight-recommendation-list\s*\{[\s\S]*--workspace-directory-shell-border:\s*color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);[\s\S]*--workspace-directory-shell-background:[\s\S]*radial-gradient\([\s\S]*linear-gradient\([\s\S]*--workspace-directory-shell-radius:\s*var\(--workspace-radius-lg\);[\s\S]*overflow:\s*hidden;[\s\S]*box-shadow:\s*var\(--workspace-shadow-panel\);/s
     )
-    expect(studentInsightRecommendationsSectionSource).toMatch(
-      /\.insight-recommendation-empty\s*\{[\s\S]*--app-empty-border-top:\s*0;[\s\S]*--app-empty-border-bottom:\s*0;[\s\S]*--app-empty-background:\s*transparent;/s
-    )
+    expect(studentInsightRecommendationsSectionSource).toContain('student-insight-skeleton-line')
     expect(studentInsightRecommendationsSectionSource).toContain(
       '<div class="insight-recommendation-skeleton-head">'
     )
@@ -275,12 +286,7 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightRecommendationsSectionSource).toMatch(
       /\.insight-recommendation-skeleton-row\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*auto\s*auto;[\s\S]*border-bottom:\s*1px solid var\(--workspace-directory-row-divider\);/s
     )
-    expect(studentInsightRecommendationsSectionSource).toMatch(
-      /\.insight-recommendation-skeleton-kicker,[\s\S]*\.insight-recommendation-skeleton-action\s*\{[\s\S]*background-size:\s*220% 100%;[\s\S]*animation:\s*insightRecommendationSkeletonSweep 1\.55s ease-in-out infinite;/s
-    )
-    expect(studentInsightRecommendationsSectionSource).toContain(
-      '@media (prefers-reduced-motion: reduce)'
-    )
+    expect(studentInsightStateSurfaceSource).toContain('student-insight-state-surface--loading')
     expect(studentInsightRecommendationsSectionSource).toContain(
       'class="insight-recommendation-row workspace-directory-grid-row"'
     )

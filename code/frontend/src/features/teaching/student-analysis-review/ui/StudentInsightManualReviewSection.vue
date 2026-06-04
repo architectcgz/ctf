@@ -5,14 +5,21 @@
     title="人工审核题"
     subtitle="查看当前学员需要教师判定的题解内容。"
   >
-    <AppEmpty
-      v-if="manualReviewSubmissions.length === 0"
-      title="暂无题解审核提交"
-      description="当前学员还没有需要教师处理的题解审核内容。"
-      icon="ClipboardCheck"
-    />
+    <StudentInsightStateSurface
+      class="manual-review-state-surface"
+      :empty="manualReviewSubmissions.length === 0"
+      surface="plain"
+    >
+      <template #empty>
+        <AppEmpty
+          class="student-insight-empty"
+          title="暂无题解审核提交"
+          description="当前学员还没有需要教师处理的题解审核内容。"
+          icon="ClipboardCheck"
+        />
+      </template>
 
-    <template v-else>
+      <template #default>
       <div
         class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"
       >
@@ -92,22 +99,32 @@
           </AppCard>
         </div>
 
-        <div class="manual-review-detail-shell">
-          <div v-if="manualReviewLoading" class="space-y-3">
-            <div class="insight-skeleton-line h-5 w-32 animate-pulse rounded" />
-            <div class="insight-skeleton-block h-24 animate-pulse rounded-2xl" />
-            <div class="insight-skeleton-block h-24 animate-pulse rounded-2xl" />
-          </div>
+        <StudentInsightStateSurface
+          class="manual-review-detail-shell"
+          :loading="manualReviewLoading"
+          :empty="!manualReviewLoading && !activeManualReview"
+          surface="plain"
+        >
+          <template #loading>
+            <div class="manual-review-detail-loading">
+              <div class="student-insight-skeleton-line manual-review-detail-loading-title" />
+              <div class="student-insight-skeleton-block manual-review-detail-loading-panel" />
+              <div class="student-insight-skeleton-block manual-review-detail-loading-panel" />
+            </div>
+          </template>
 
-          <AppEmpty
-            v-else-if="!activeManualReview"
-            title="选择一条题解审核提交"
-            description="点击左侧卡片查看完整内容并进行审核。"
-            icon="ClipboardList"
-          />
+          <template #empty>
+            <AppEmpty
+              class="student-insight-empty"
+              title="选择一条题解审核提交"
+              description="点击左侧卡片查看完整内容并进行审核。"
+              icon="ClipboardList"
+            />
+          </template>
 
-          <template v-else>
-            <div class="flex flex-wrap items-start justify-between gap-3">
+          <template #default>
+            <template v-if="activeManualReview">
+              <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div class="journal-eyebrow">Writeup Review</div>
                 <h4 class="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">
@@ -164,10 +181,12 @@
                 </button>
               </div>
             </div>
+            </template>
           </template>
-        </div>
+        </StudentInsightStateSurface>
       </div>
-    </template>
+      </template>
+    </StudentInsightStateSurface>
   </SectionCard>
 </template>
 
@@ -228,19 +247,28 @@
   --metric-panel-helper-line-height: 1.55;
 }
 
-.insight-skeleton-line,
-.insight-skeleton-block {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-border) 78%, transparent),
-    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-  );
+.manual-review-state-surface {
+  --student-insight-state-gap: var(--space-4);
 }
 
 .manual-review-detail-shell {
   padding: var(--space-4) 0;
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
   background: transparent;
+}
+
+.manual-review-detail-loading {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.manual-review-detail-loading-title {
+  width: var(--space-32);
+  height: var(--space-5);
+}
+
+.manual-review-detail-loading-panel {
+  height: 6rem;
 }
 
 .insight-answer-panel {
@@ -281,6 +309,7 @@ import type {
   ManualReviewSubmissionDetailData,
   ManualReviewSubmissionItemData,
 } from '@/api/contracts'
+import { StudentInsightStateSurface } from '@/features/teaching/student-analysis-shared/ui'
 import AppCard from '@/shared/ui/common/AppCard.vue'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import SectionCard from '@/shared/ui/common/SectionCard.vue'

@@ -16,6 +16,7 @@
         :progress="progress"
         :solved-rate="solvedRate"
         :weak-dimensions="weakDimensions"
+        :loading="loadingDetails"
         @open-class-students="emit('openClassStudents')"
         @open-report-export="emit('openReportExport')"
         @open-review-archive="emit('openReviewArchive')"
