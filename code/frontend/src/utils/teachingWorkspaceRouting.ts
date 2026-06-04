@@ -24,6 +24,12 @@ export function resolveClassStudentsRouteName(
   return role === 'admin' ? 'PlatformClassStudents' : 'TeacherClassStudents'
 }
 
+export function resolveClassReviewRouteName(
+  role?: TeachingWorkspaceRole
+): 'PlatformClassReview' | 'TeacherClassReview' {
+  return role === 'admin' ? 'PlatformClassReview' : 'TeacherClassReview'
+}
+
 export function resolveStudentAnalysisRouteName(
   role?: TeachingWorkspaceRole
 ): 'PlatformStudentAnalysis' | 'TeacherStudentAnalysis' {

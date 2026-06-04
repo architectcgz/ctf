@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+
 interface StudentInsightRow {
   key: string
   status: string
@@ -6,10 +9,23 @@ interface StudentInsightRow {
   detail: string
   chips: string[]
   tone: 'ready' | 'warning' | 'danger'
+  classRoute?: AppRouteTarget | null
+  studentTargets?: Array<{
+    id: string
+    title: string
+    className: string
+    detail: string
+    chips: string[]
+    route: AppRouteTarget | null
+  }>
 }
 
 defineProps<{
   studentInsightRows: StudentInsightRow[]
+}>()
+
+const emit = defineEmits<{
+  openStudentList: [row: StudentInsightRow]
 }>()
 </script>
 
@@ -34,7 +50,27 @@ defineProps<{
           </div>
           <div class="student-insight-row__main">
             <div class="student-insight-row__title-line">
-              <h3 class="student-insight-row__title" :title="row.title">
+              <AppRouteLink
+                v-if="row.classRoute"
+                :to="row.classRoute"
+                class="student-insight-row__title-link"
+              >
+                <span class="student-insight-row__title">
+                  {{ row.title }}
+                </span>
+              </AppRouteLink>
+              <button
+                v-else-if="row.studentTargets && row.studentTargets.length > 0"
+                type="button"
+                class="student-insight-row__title-trigger"
+                :title="row.title"
+                @click="emit('openStudentList', row)"
+              >
+                <span class="student-insight-row__title">
+                  {{ row.title }}
+                </span>
+              </button>
+              <h3 v-else class="student-insight-row__title" :title="row.title">
                 {{ row.title }}
               </h3>
               <div v-if="row.chips.length > 0" class="student-insight-row__chips">
@@ -131,7 +167,6 @@ defineProps<{
 
 .student-insight-row__title {
   margin: 0;
-  flex: 1 1 16rem;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -139,6 +174,37 @@ defineProps<{
   font-size: var(--font-size-16);
   font-weight: 800;
   color: var(--journal-ink);
+}
+
+.student-insight-row__title-trigger,
+.student-insight-row__title-link,
+.student-insight-row__title {
+  flex: 1 1 16rem;
+}
+
+.student-insight-row__title-link,
+.student-insight-row__title-trigger {
+  min-width: 0;
+}
+
+.student-insight-row__title-link {
+  text-decoration: none;
+}
+
+.student-insight-row__title-trigger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.student-insight-row__title-link:hover .student-insight-row__title,
+.student-insight-row__title-link:focus-visible .student-insight-row__title,
+.student-insight-row__title-trigger:hover .student-insight-row__title,
+.student-insight-row__title-trigger:focus-visible .student-insight-row__title {
+  color: var(--workspace-brand-ink);
+  text-decoration: underline;
 }
 
 .student-insight-row__title-line {

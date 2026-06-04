@@ -9,6 +9,7 @@ import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import teacherDashboardPageSourceBase from '@/features/teacher/dashboard/ui/TeacherDashboardPage.vue?raw'
 import teacherDashboardPortraitPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardPortraitPanel.vue?raw'
 import teacherDashboardStudentInsightPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardStudentInsightPanel.vue?raw'
+import teacherDashboardStudentListDialogSource from '@/features/teacher/dashboard/ui/TeacherDashboardStudentListDialog.vue?raw'
 import teacherDashboardTrendPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardTrendPanel.vue?raw'
 import teacherDashboardReviewPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardReviewPanel.vue?raw'
 import teacherDashboardInterventionPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardInterventionPanel.vue?raw'
@@ -21,6 +22,7 @@ const teacherDashboardPageSource = [
   teacherDashboardPageSourceBase,
   teacherDashboardPortraitPanelSource,
   teacherDashboardStudentInsightPanelSource,
+  teacherDashboardStudentListDialogSource,
   teacherDashboardTrendPanelSource,
   teacherDashboardReviewPanelSource,
   teacherDashboardInterventionPanelSource,
@@ -57,9 +59,29 @@ function createTestRouter() {
         component: { template: '<div>class management</div>' },
       },
       {
+        path: '/academy/classes/:className/students/:studentId',
+        name: 'TeacherStudentAnalysis',
+        component: { template: '<div>teacher student analysis</div>' },
+      },
+      {
+        path: '/academy/classes/:className/review',
+        name: 'TeacherClassReview',
+        component: { template: '<div>teacher class review</div>' },
+      },
+      {
         path: '/platform/classes',
         name: 'PlatformClassManagement',
         component: { template: '<div>platform class management</div>' },
+      },
+      {
+        path: '/platform/classes/:className/students/:studentId',
+        name: 'PlatformStudentAnalysis',
+        component: { template: '<div>platform student analysis</div>' },
+      },
+      {
+        path: '/platform/classes/:className/review',
+        name: 'PlatformClassReview',
+        component: { template: '<div>platform class review</div>' },
       },
     ],
   })
@@ -78,6 +100,11 @@ async function mountDashboard(path = '/academy/overview') {
       stubs: {
         LineChart: true,
         SkillRadar: true,
+        AdminSurfaceModal: {
+          props: ['open', 'title', 'subtitle'],
+          template:
+            '<div v-if="open" class="admin-surface-modal-stub"><div>{{ title }}</div><div>{{ subtitle }}</div><slot /><slot name="footer" /></div>',
+        },
       },
     },
   })
@@ -231,6 +258,14 @@ describe('TeacherDashboard', () => {
       "import { useUrlSyncedTabs } from '@/shared/model/navigation/useUrlSyncedTabs'"
     )
     expect(teacherDashboardPageSource).not.toContain('useUrlSyncedTabs<DashboardTab>(')
+    expect(teacherDashboardPageSource).toContain('TeacherDashboardStudentListDialog')
+    expect(teacherDashboardStudentListDialogSource).toContain(
+      "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
+    )
+    expect(teacherDashboardStudentListDialogSource).toContain(
+      "from '@/shared/ui/navigation/AppRouteLink.vue'"
+    )
+    expect(teacherDashboardPageSource).toContain('@open-student-list')
   })
 
   it('教师概览夜间模式样式应继续基于主题变量且不回流亮色硬编码', () => {
@@ -345,5 +380,62 @@ describe('TeacherDashboard', () => {
     expect(router.currentRoute.value.query.panel).toBe('review')
     expect(wrapper.find('#review').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('#overview').attributes('aria-hidden')).toBe('true')
+  })
+
+  it('教师应能先查看风险组学生列表，再进入对应学生详情', async () => {
+    const { wrapper, router } = await mountDashboard('/academy/overview?panel=insight')
+
+    const riskTrigger = wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('风险组: 1 名学生处于低活跃或低进度区间'))
+
+    expect(riskTrigger).toBeDefined()
+
+    await riskTrigger!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('共 1 名学生，先确认名单，再进入个人复盘。')
+    expect(wrapper.text()).toContain('Alice')
+
+    const modalLink = wrapper
+      .findAll('a')
+      .find((node) => node.text().includes('查看复盘'))
+
+    expect(modalLink).toBeDefined()
+
+    await modalLink!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('TeacherStudentAnalysis')
+    expect(router.currentRoute.value.params).toMatchObject({
+      className: 'Class A',
+      studentId: 'stu-1',
+    })
+  })
+
+  it('管理员应能从教学复盘直接进入后台班级复盘页', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      class_name: 'Class A',
+    })
+
+    const { wrapper, router } = await mountDashboard('/academy/overview?panel=review')
+
+    const reviewLink = wrapper
+      .findAll('a')
+      .find((node) => node.text().includes('Class A 复盘摘要'))
+
+    expect(reviewLink).toBeDefined()
+
+    await reviewLink!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.name).toBe('PlatformClassReview')
+    expect(router.currentRoute.value.params).toMatchObject({
+      className: 'Class A',
+    })
   })
 })

@@ -94,13 +94,17 @@ export interface TeacherDashboardReviewHighlight {
   detail: string
   chips: string[]
   tone: 'ready' | 'warning' | 'danger'
+  students: StudentDirectoryItem[]
+  reviewClassName?: string
 }
 
 export function buildReviewHighlights(
   focusClasses: TeacherOverviewClassFocusData[],
-  weakDimensions: TeacherOverviewWeakDimensionData[]
+  weakDimensions: TeacherOverviewWeakDimensionData[],
+  focusStudents: StudentDirectoryItem[]
 ): TeacherDashboardReviewHighlight[] {
   const rows: TeacherDashboardReviewHighlight[] = focusClasses.slice(0, 4).map((item) => {
+    const matchedStudents = focusStudents.filter((student) => student.class_name === item.class_name)
     const riskCopy =
       item.risk_student_count > 0
         ? `${item.class_name} 当前有 ${item.risk_student_count} 名学生需要优先跟进。`
@@ -120,6 +124,8 @@ export function buildReviewHighlights(
       ],
       tone:
         item.risk_student_count > 0 ? 'danger' : item.active_rate < 65 ? 'warning' : 'ready',
+      students: matchedStudents,
+      reviewClassName: item.class_name,
     }
   })
 
@@ -129,6 +135,7 @@ export function buildReviewHighlights(
 
   if (weakDimensions.length > 0) {
     const first = weakDimensions[0]
+    const matchedStudents = focusStudents.filter((student) => student.weak_dimension === first.dimension)
     return [
       {
         key: first.dimension,
@@ -136,6 +143,7 @@ export function buildReviewHighlights(
         detail: `当前共有 ${first.student_count} 名学生在该方向暴露薄弱信号，适合先安排基础题或统一讲解。`,
         chips: [`${first.student_count} 名学生命中`, '建议统一补强'],
         tone: 'warning',
+        students: matchedStudents,
       },
     ]
   }

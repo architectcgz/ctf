@@ -7,6 +7,7 @@ import { getUserDisplayName } from '@/entities/user'
 
 interface BuildStudentInsightRowsOptions {
   riskStudentCount: number
+  focusStudents: StudentDirectoryItem[]
   spotlightStudent: StudentDirectoryItem | null
   dominantWeakDimension: string
   strongestDimensionCount: number
@@ -20,6 +21,8 @@ export interface TeacherDashboardInsightRow {
   detail: string
   status: string
   tone: 'ready' | 'warning' | 'danger'
+  students: StudentDirectoryItem[]
+  reviewClassName?: string
 }
 
 export function buildStudentInsightRows(
@@ -27,12 +30,20 @@ export function buildStudentInsightRows(
 ): TeacherDashboardInsightRow[] {
   const {
     riskStudentCount,
+    focusStudents,
     spotlightStudent,
     dominantWeakDimension,
     strongestDimensionCount,
     focusClass,
   } = options
   const rows: TeacherDashboardInsightRow[] = []
+  const primaryFocusStudent = focusStudents[0] ?? null
+  const weakDimensionStudents =
+    focusStudents.filter((student) => student.weak_dimension === dominantWeakDimension)
+  const classFocusStudents =
+    focusClass
+      ? focusStudents.filter((student) => student.class_name === focusClass.class_name)
+      : []
 
   rows.push({
     key: 'risk',
@@ -50,6 +61,7 @@ export function buildStudentInsightRows(
         : '当前教学范围内没有明显掉队样本，可以把更多注意力放在薄弱维度补强和重点班级观察上。',
     status: riskStudentCount > 0 ? '高优先级' : '稳定',
     tone: riskStudentCount > 0 ? 'warning' : 'ready',
+    students: focusStudents,
   })
 
   rows.push({
@@ -63,6 +75,7 @@ export function buildStudentInsightRows(
       : '还没有足够的学生表现数据用于识别班级示范样本。',
     status: spotlightStudent ? '可推进' : '待观察',
     tone: spotlightStudent ? 'ready' : 'warning',
+    students: spotlightStudent ? [spotlightStudent] : [],
   })
 
   rows.push({
@@ -81,6 +94,12 @@ export function buildStudentInsightRows(
         : '当前班级还没有足够的弱项样本，暂不建议过早做统一干预。',
     status: dominantWeakDimension !== '待观察' ? '需介入' : '待观察',
     tone: dominantWeakDimension !== '待观察' ? 'danger' : 'warning',
+    students:
+      weakDimensionStudents.length > 0
+        ? weakDimensionStudents
+        : primaryFocusStudent
+          ? [primaryFocusStudent]
+          : [],
   })
 
   rows.push({
@@ -99,6 +118,13 @@ export function buildStudentInsightRows(
       : '当前还没有足够的范围数据用于锁定重点班级。',
     status: focusClass ? '需观察' : '待观察',
     tone: focusClass ? 'warning' : 'ready',
+    students:
+      classFocusStudents.length > 0
+        ? classFocusStudents
+        : primaryFocusStudent
+          ? [primaryFocusStudent]
+          : [],
+    reviewClassName: focusClass?.class_name,
   })
 
   return rows

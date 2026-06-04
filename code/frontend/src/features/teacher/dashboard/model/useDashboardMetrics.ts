@@ -1,6 +1,8 @@
 import { computed, type Ref } from 'vue'
 
 import type { TeacherOverviewData, StudentDirectoryItem } from '@/api/contracts'
+import { getUserDisplayName } from '@/entities/user'
+import { useAuthStore } from '@/stores/auth'
 import {
   buildPortraitSummaryNotes,
   buildStudentInsightRows,
@@ -13,6 +15,7 @@ import {
   buildOverviewMetrics,
   buildReviewHighlights,
 } from './teacherDashboardOverviewBuilders'
+import { teacherClassReviewRoute, teacherStudentAnalysisRoute } from './teacherDashboardRoutes'
 
 interface WeakDimensionStat {
   dimension: string
@@ -25,6 +28,7 @@ interface UseDashboardMetricsOptions {
 }
 
 export function useDashboardMetrics({ overview }: UseDashboardMetricsOptions) {
+  const authStore = useAuthStore()
   const summary = computed(() => overview.value?.summary ?? null)
   const focusClasses = computed(() => overview.value?.focus_classes ?? [])
   const focusStudents = computed(() => overview.value?.focus_students ?? [])
@@ -96,8 +100,40 @@ export function useDashboardMetrics({ overview }: UseDashboardMetricsOptions) {
     })
   )
 
+  function buildStudentTargets(students: StudentDirectoryItem[]) {
+    const deduped = new Map<string, StudentDirectoryItem>()
+    students.forEach((student) => {
+      deduped.set(String(student.id), student)
+    })
+
+    return Array.from(deduped.values()).map((student) => ({
+      id: String(student.id),
+      title: getUserDisplayName(student),
+      className: student.class_name || '班级待识别',
+      detail: `近 7 天 ${student.recent_event_count ?? 0} 次训练动作，累计 ${student.solved_count ?? 0} 题 / ${student.total_score ?? 0} 分。`,
+      chips: [
+        student.class_name || '班级待识别',
+        student.weak_dimension ? `薄弱项 ${student.weak_dimension}` : '薄弱项待观察',
+      ],
+      route:
+        student.class_name
+          ? teacherStudentAnalysisRoute(authStore.user?.role, String(student.id), student.class_name)
+          : null,
+    }))
+  }
+
   const reviewHighlights = computed(() =>
-    buildReviewHighlights(focusClasses.value, overview.value?.weak_dimensions ?? [])
+    buildReviewHighlights(
+      focusClasses.value,
+      overview.value?.weak_dimensions ?? [],
+      focusStudents.value
+    ).map((item) => ({
+      ...item,
+      classRoute: item.reviewClassName
+        ? teacherClassReviewRoute(authStore.user?.role, item.reviewClassName)
+        : null,
+      studentTargets: buildStudentTargets(item.students),
+    }))
   )
 
   const interventionTargets = computed(() => buildInterventionTargets(focusStudents.value))
@@ -105,11 +141,18 @@ export function useDashboardMetrics({ overview }: UseDashboardMetricsOptions) {
   const studentInsightRows = computed(() =>
     buildStudentInsightRows({
       riskStudentCount: riskStudentCount.value,
+      focusStudents: focusStudents.value,
       spotlightStudent: topStudent.value,
       dominantWeakDimension: dominantWeakDimension.value,
       strongestDimensionCount: strongestDimensionCount.value,
       focusClass: focusClasses.value[0] ?? null,
-    })
+    }).map((item) => ({
+      ...item,
+      classRoute: item.reviewClassName
+        ? teacherClassReviewRoute(authStore.user?.role, item.reviewClassName)
+        : null,
+      studentTargets: buildStudentTargets(item.students),
+    }))
   )
 
   const portraitSummaryNotes = computed(() =>

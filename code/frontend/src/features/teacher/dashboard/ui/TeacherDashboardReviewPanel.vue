@@ -1,14 +1,30 @@
 <script setup lang="ts">
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
+import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+
 interface ReviewHighlight {
   key: string
   title: string
   detail: string
   chips: string[]
   tone: 'ready' | 'warning' | 'danger'
+  classRoute?: AppRouteTarget | null
+  studentTargets?: Array<{
+    id: string
+    title: string
+    className: string
+    detail: string
+    chips: string[]
+    route: AppRouteTarget | null
+  }>
 }
 
 defineProps<{
   reviewHighlights: ReviewHighlight[]
+}>()
+
+const emit = defineEmits<{
+  openStudentList: [item: ReviewHighlight]
 }>()
 </script>
 
@@ -31,7 +47,22 @@ defineProps<{
       >
         <div class="review-highlight-item__main">
           <div class="review-highlight-item__title-line">
-            <h3 class="review-highlight-item__title">{{ item.title }}</h3>
+            <AppRouteLink
+              v-if="item.classRoute"
+              :to="item.classRoute"
+              class="review-highlight-item__title-link"
+            >
+              <span class="review-highlight-item__title">{{ item.title }}</span>
+            </AppRouteLink>
+            <button
+              v-else-if="item.studentTargets && item.studentTargets.length > 0"
+              type="button"
+              class="review-highlight-item__title-trigger"
+              @click="emit('openStudentList', item)"
+            >
+              <span class="review-highlight-item__title">{{ item.title }}</span>
+            </button>
+            <h3 v-else class="review-highlight-item__title">{{ item.title }}</h3>
             <div class="review-highlight-item__chips">
               <span
                 v-for="chip in item.chips"
@@ -99,11 +130,41 @@ defineProps<{
 
 .review-highlight-item__title {
   margin: 0;
-  flex: 1 1 16rem;
   min-width: 0;
   font-size: var(--font-size-16);
   font-weight: 800;
   color: var(--journal-ink);
+}
+
+.review-highlight-item__title-trigger,
+.review-highlight-item__title-link,
+.review-highlight-item__title {
+  flex: 1 1 16rem;
+}
+
+.review-highlight-item__title-link,
+.review-highlight-item__title-trigger {
+  min-width: 0;
+}
+
+.review-highlight-item__title-link {
+  text-decoration: none;
+}
+
+.review-highlight-item__title-trigger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.review-highlight-item__title-link:hover .review-highlight-item__title,
+.review-highlight-item__title-link:focus-visible .review-highlight-item__title,
+.review-highlight-item__title-trigger:hover .review-highlight-item__title,
+.review-highlight-item__title-trigger:focus-visible .review-highlight-item__title {
+  color: var(--workspace-brand-ink);
+  text-decoration: underline;
 }
 
 .review-highlight-item__title-line {

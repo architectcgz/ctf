@@ -1,20 +1,31 @@
 <script setup lang="ts">
-import { toRef } from 'vue'
+import { computed, ref, toRef } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
 
 import type { TeacherOverviewData } from '@/api/contracts'
 import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'
+import type { AppRouteTarget } from '@/shared/lib/navigation/routeTarget'
 import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
 import { useDashboardMetrics } from '../model/useDashboardMetrics'
 import type { TeacherDashboardPanelKey } from '../model'
 import TeacherDashboardInterventionPanel from './TeacherDashboardInterventionPanel.vue'
 import TeacherDashboardPortraitPanel from './TeacherDashboardPortraitPanel.vue'
 import TeacherDashboardReviewPanel from './TeacherDashboardReviewPanel.vue'
+import TeacherDashboardStudentListDialog from './TeacherDashboardStudentListDialog.vue'
 import TeacherDashboardStudentInsightPanel from './TeacherDashboardStudentInsightPanel.vue'
 import TeacherDashboardTrendPanel from './TeacherDashboardTrendPanel.vue'
 
 interface DashboardRouteTarget {
   name: string
+}
+
+interface DashboardStudentTarget {
+  id: string
+  title: string
+  className: string
+  detail: string
+  chips: string[]
+  route: AppRouteTarget | null
 }
 
 const props = defineProps<{
@@ -68,6 +79,18 @@ const {
 } = useDashboardMetrics({
   overview: toRef(props, 'overview'),
 })
+
+const studentListDialogOpen = ref(false)
+const studentListDialogTitle = ref('')
+const studentListDialogStudents = ref<DashboardStudentTarget[]>([])
+
+const hasStudentListDialog = computed(() => studentListDialogStudents.value.length > 0)
+
+function openStudentListDialog(input: { title: string; studentTargets?: DashboardStudentTarget[] }) {
+  studentListDialogTitle.value = input.title
+  studentListDialogStudents.value = input.studentTargets ?? []
+  studentListDialogOpen.value = true
+}
 </script>
 
 <template>
@@ -197,7 +220,10 @@ const {
         aria-labelledby="dashboard-tab-insight"
         :aria-hidden="activePanel === 'insight' ? 'false' : 'true'"
       >
-        <TeacherDashboardStudentInsightPanel :student-insight-rows="studentInsightRows" />
+        <TeacherDashboardStudentInsightPanel
+          :student-insight-rows="studentInsightRows"
+          @open-student-list="openStudentListDialog"
+        />
       </section>
 
       <section
@@ -224,7 +250,10 @@ const {
         aria-labelledby="dashboard-tab-review"
         :aria-hidden="activePanel === 'review' ? 'false' : 'true'"
       >
-        <TeacherDashboardReviewPanel :review-highlights="reviewHighlights" />
+        <TeacherDashboardReviewPanel
+          :review-highlights="reviewHighlights"
+          @open-student-list="openStudentListDialog"
+        />
       </section>
 
       <section
@@ -239,6 +268,13 @@ const {
         <TeacherDashboardInterventionPanel :intervention-targets="interventionTargets" />
       </section>
     </main>
+
+    <TeacherDashboardStudentListDialog
+      v-if="hasStudentListDialog"
+      v-model="studentListDialogOpen"
+      :title="studentListDialogTitle"
+      :students="studentListDialogStudents"
+    />
   </div>
 </template>
 
