@@ -1,40 +1,15 @@
 <template>
-  <div v-if="loading" class="insight-overview-layout">
-    <StudentInsightLoadingSurface class="insight-overview-loading-surface">
-      <div class="insight-overview-loading-head">
-        <span class="student-insight-skeleton-line insight-overview-loading-title" />
-        <span class="student-insight-skeleton-line insight-overview-loading-subtitle" />
-      </div>
-      <span class="student-insight-skeleton-panel insight-overview-loading-radar" />
-    </StudentInsightLoadingSurface>
-
-    <StudentInsightLoadingSurface class="insight-overview-loading-surface">
-      <div class="insight-overview-loading-head">
-        <span class="student-insight-skeleton-line insight-overview-loading-title insight-overview-loading-title--short" />
-        <span class="student-insight-skeleton-line insight-overview-loading-subtitle" />
-      </div>
-      <div class="insight-overview-loading-bars">
-        <div
-          v-for="index in 6"
-          :key="index"
-          class="insight-overview-loading-bar-row"
-        >
-          <span class="student-insight-skeleton-line insight-overview-loading-bar-label" />
-          <span class="student-insight-skeleton-line insight-overview-loading-bar-track" />
-          <span class="student-insight-skeleton-line insight-overview-loading-bar-value" />
-        </div>
-      </div>
-    </StudentInsightLoadingSurface>
-  </div>
-
-  <div v-else class="insight-overview-layout">
+  <div class="insight-overview-layout">
     <SectionCard
       class="insight-overview-card"
       variant="teacher-flat"
       title="六维能力分布"
       subtitle="雷达图展示当前六个能力维度的训练分布。"
     >
-      <div class="mt-4">
+      <div v-if="loading" class="insight-overview-loading-body mt-4">
+        <span class="student-insight-skeleton-panel insight-overview-loading-radar" />
+      </div>
+      <div v-else class="mt-4">
         <SkillRadar :scores="radarScores" />
       </div>
     </SectionCard>
@@ -45,7 +20,20 @@
       title="维度得分占比"
       subtitle="条状图展示各维度当前分值。"
     >
-      <div class="insight-dimension-frame mt-4">
+      <div v-if="loading" class="insight-dimension-frame insight-dimension-frame--loading mt-4">
+        <div class="insight-overview-loading-bars">
+          <div
+            v-for="index in 6"
+            :key="index"
+            class="insight-overview-loading-bar-row"
+          >
+            <span class="student-insight-skeleton-line insight-overview-loading-bar-label" />
+            <span class="student-insight-skeleton-line insight-overview-loading-bar-track" />
+            <span class="student-insight-skeleton-line insight-overview-loading-bar-value" />
+          </div>
+        </div>
+      </div>
+      <div v-else class="insight-dimension-frame mt-4">
         <div v-if="rankedProfileDimensions.length > 0" class="insight-dimension-bars">
           <article
             v-for="item in rankedProfileDimensions"
@@ -67,6 +55,8 @@
   </div>
 </template>
 
+<style src="@/features/teaching/student-analysis-shared/ui/studentInsightSurface.css"></style>
+
 <style scoped>
 .insight-overview-layout {
   display: grid;
@@ -80,24 +70,8 @@
   --section-card-border-top-width: 0;
 }
 
-.insight-overview-loading-head {
+.insight-overview-loading-body {
   display: grid;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-
-.insight-overview-loading-title {
-  width: min(16rem, 68%);
-  height: var(--space-4);
-}
-
-.insight-overview-loading-title--short {
-  width: min(12rem, 54%);
-}
-
-.insight-overview-loading-subtitle {
-  width: min(24rem, 86%);
-  height: var(--space-3);
 }
 
 .insight-overview-loading-radar {
@@ -163,6 +137,10 @@
     0 18px 32px -28px color-mix(in srgb, var(--journal-shadow) 26%, transparent);
 }
 
+.insight-dimension-frame--loading {
+  align-content: center;
+}
+
 .insight-dimension-item {
   display: grid;
   gap: var(--space-2);
@@ -223,7 +201,6 @@
 import { computed } from 'vue'
 
 import type { SkillProfileData } from '@/api/contracts'
-import { StudentInsightLoadingSurface } from '@/features/teaching/student-analysis-shared/ui'
 import { toRadarScores } from '@/entities/skill-profile'
 import SectionCard from '@/shared/ui/common/SectionCard.vue'
 import SkillRadar from '@/shared/ui/common/SkillRadar.vue'

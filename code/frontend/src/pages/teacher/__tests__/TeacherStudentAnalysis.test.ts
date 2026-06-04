@@ -373,7 +373,7 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentInsightPanelSource).not.toContain('insight-loading-shell')
     expect(studentInsightPanelSource).not.toContain('insight-skeleton-line')
     expect(studentInsightPanelSource).not.toContain('insight-skeleton-block')
-    expect(studentInsightOverviewSectionSource).toContain('StudentInsightLoadingSurface')
+    expect(studentInsightOverviewSectionSource).not.toContain('StudentInsightLoadingSurface')
     expect(studentInsightOverviewSectionSource).toContain('insight-overview-loading-radar')
     expect(studentInsightOverviewSectionSource).toContain('student-insight-skeleton-panel')
     expect(studentInsightOverviewSectionSource).toContain('class="insight-dimension-frame mt-4"')
