@@ -423,6 +423,7 @@ describe('TopNav', () => {
     expect(topNavSource).toContain('--topnav-surface')
     expect(topNavSource).toContain('--topnav-line')
     expect(topNavSource).toContain('topnav-shell--workspace')
+    expect(topNavSource).toContain('background: var(--topnav-surface);')
     expect(topNavSource).toContain("[data-theme='dark'] .topnav-tool-cluster--workspace")
     expect(topNavSource).toContain("[data-theme='dark'] .topnav-user-card--workspace")
   })

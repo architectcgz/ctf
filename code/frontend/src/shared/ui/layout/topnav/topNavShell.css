@@ -17,6 +17,7 @@
 
 .topnav-shell--workspace {
   border-bottom-color: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  background: var(--topnav-surface);
   box-shadow: none;
   backdrop-filter: none;
 }
