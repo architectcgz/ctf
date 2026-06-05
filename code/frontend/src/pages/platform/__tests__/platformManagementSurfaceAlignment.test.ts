@@ -1,886 +1,231 @@
 /// <reference types="node" />
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
 import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
 import auditLogDirectoryPanelSource from '@/features/audit-log/ui/AuditLogDirectoryPanel.vue?raw'
-import auditLogHeroPanelSource from '@/features/audit-log/ui/AuditLogHeroPanel.vue?raw'
-import awdReviewIndexSource from '@/pages/awd-review/PlatformAwdReviewIndexRoutePage.vue?raw'
-import awdReviewHeroPanelSource from '@/widgets/awd-review-workspace/AwdReviewHeroPanel.vue?raw'
 import awdReviewDirectoryPanelSource from '@/widgets/awd-review-workspace/AwdReviewDirectoryPanel.vue?raw'
-import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
 import challengeManageDirectoryPanelSource from '@/features/platform/challenges/ui/ChallengeManageDirectoryPanel.vue?raw'
 import challengeManageHeroPanelSource from '@/features/platform/challenges/ui/ChallengeManageHeroPanel.vue?raw'
-import cheatDetectionHeroPanelSource from '@/features/platform/cheat-detection/ui/CheatDetectionHeroPanel.vue?raw'
 import classManageSource from '@/pages/platform/ClassManageRoutePage.vue?raw'
 import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
 import classManageWorkspacePanelSource from '@/features/platform/class-management/ui/ClassManageWorkspacePanel.vue?raw'
+import contestManageCreatePanelSource from '@/features/platform/contest-manage/ui/ContestManageCreatePanel.vue?raw'
+import contestManageOverviewPanelSource from '@/features/platform/contest-manage/ui/ContestManageOverviewPanel.vue?raw'
+import contestOrchestrationSource from '@/features/platform/contest-manage/ui/ContestOrchestrationPage.vue?raw'
 import instanceManageSource from '@/pages/platform/InstanceManageRoutePage.vue?raw'
 import instanceManageHeroPanelSource from '@/features/platform/instance-management/ui/InstanceManageHeroPanel.vue?raw'
 import instanceManageWorkspacePanelSource from '@/features/platform/instance-management/ui/InstanceManageWorkspacePanel.vue?raw'
-import adminChallengeProfilePanelSource from '@/features/platform/challenge-detail/ui/AdminChallengeProfilePanel.vue?raw'
-import challengeWriteupDirectoryRowSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectoryRow.vue?raw'
-import challengeWriteupDirectorySectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectorySection.vue?raw'
-import challengeWriteupManageHeaderSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManageHeader.vue?raw'
-import challengeWriteupManagePanelSourceBase from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
-import challengeWriteupSummaryStripSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSummaryStrip.vue?raw'
-import challengeProfileSummaryStripSource from '@/entities/challenge/ui/ChallengeProfileSummaryStrip.vue?raw'
-import contestEditSource from '@/pages/platform/contests/ContestEditRoutePage.vue?raw'
-import contestEditTopbarPanelSource from '@/features/platform/contest-manage/ui/ContestEditTopbarPanel.vue?raw'
-import contestWorkbenchStageTabsSource from '@/features/contest-workbench/ui/ContestWorkbenchStageTabs.vue?raw'
-import contestEditWorkspacePanelSource from '@/features/platform/contest-manage/ui/ContestEditWorkspacePanel.vue?raw'
-import imageManageSource from '@/pages/platform/ImageManageRoutePage.vue?raw'
-import imageDirectoryPanelSource from '@/features/image-management/ui/ImageDirectoryPanel.vue?raw'
-import imageManageHeroPanelSource from '@/features/image-management/ui/ImageManageHeroPanel.vue?raw'
+import adminContestTableSource from '@/features/platform/contest-manage/ui/PlatformContestTable.vue?raw'
 import studentManageSource from '@/pages/platform/StudentManageRoutePage.vue?raw'
 import studentManageHeroPanelSource from '@/features/platform/student-management/ui/StudentManageHeroPanel.vue?raw'
 import studentManageWorkspacePanelSource from '@/features/platform/student-management/ui/StudentManageWorkspacePanel.vue?raw'
-import cheatDetectionSource from '@/pages/platform/CheatDetectionRoutePage.vue?raw'
-import cheatDetectionReviewPanelsSource from '@/features/platform/cheat-detection/ui/CheatDetectionReviewPanels.vue?raw'
-import cheatDetectionSummaryPanelSource from '@/features/platform/cheat-detection/ui/CheatDetectionSummaryPanel.vue?raw'
-import cheatDetectionWorkspacePanelSource from '@/features/platform/cheat-detection/ui/CheatDetectionWorkspacePanel.vue?raw'
-import awdInspectorCanvasWorkspaceSource from '@/features/awd-inspector/ui/AWDInspectorCanvasWorkspace.vue?raw'
-import awdInspectorStatsHudSource from '@/features/awd-inspector/ui/AWDInspectorStatsHud.vue?raw'
-import awdRoundInspectorSource from '@/features/awd-inspector/ui/AWDRoundInspector.vue?raw'
-import awdTrafficEventTableSource from '@/features/awd-inspector/ui/AWDTrafficEventTable.vue?raw'
-import awdTrafficIntelligenceGridSource from '@/features/awd-inspector/ui/AWDTrafficIntelligenceGrid.vue?raw'
-import awdTrafficPanelSourceBase from '@/features/awd-inspector/ui/AWDTrafficPanel.vue?raw'
-import awdTrafficSummaryBandSource from '@/features/awd-inspector/ui/AWDTrafficSummaryBand.vue?raw'
-import awdChallengeConfigPanelSource from '@/features/platform/contest-manage/ui/AWDChallengeConfigPanel.vue?raw'
-import awdChallengeConfigDirectoryRowSource from '@/features/platform/contest-manage/ui/AWDChallengeConfigDirectoryRow.vue?raw'
-import awdChallengeConfigDirectorySectionSource from '@/features/platform/contest-manage/ui/AWDChallengeConfigDirectorySection.vue?raw'
-import awdChallengeConfigHeaderSource from '@/features/platform/contest-manage/ui/AWDChallengeConfigHeader.vue?raw'
-import awdReadinessChecklistSource from '@/features/awd-readiness/ui/AWDReadinessChecklist.vue?raw'
-import awdReadinessOverrideDialogSource from '@/features/awd-readiness/ui/AWDReadinessOverrideDialog.vue?raw'
-import workspaceDataTableSource from '@/shared/ui/common/WorkspaceDataTable.vue?raw'
-import workspaceDirectoryToolbarSource from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue?raw'
-import adminContestFormDialogSource from '@/features/platform/contest-manage/ui/PlatformContestFormDialog.vue?raw'
-import adminContestFormPanelSource from '@/features/platform/contest-manage/ui/PlatformContestFormPanel.vue?raw'
-import contestFormActionsSource from '@/features/platform/contest-manage/ui/PlatformContestFormActions.vue?raw'
-import contestFormIdentitySectionSource from '@/features/platform/contest-manage/ui/PlatformContestIdentitySection.vue?raw'
-import contestFormRulesSectionSource from '@/features/platform/contest-manage/ui/PlatformContestRulesSection.vue?raw'
-import contestFormSectionShellSource from '@/features/platform/contest-manage/ui/PlatformContestFormSectionShell.vue?raw'
-import contestFormTimelineSectionSource from '@/features/platform/contest-manage/ui/PlatformContestTimelineSection.vue?raw'
-import contestOrchestrationSource from '@/features/platform/contest-manage/ui/ContestOrchestrationPage.vue?raw'
-import adminContestTableSource from '@/features/platform/contest-manage/ui/PlatformContestTable.vue?raw'
-import userGovernancePageSource from '@/features/platform/user-management/ui/UserGovernancePage.vue?raw'
-import userGovernanceOverviewPanelSource from '@/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue?raw'
-import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
-
-const userGovernanceSource = [
-  userGovernancePageSource,
-  userGovernanceOverviewPanelSource,
-  userGovernanceDetailModalSource,
-  userGovernanceImportPanelSource,
-].join('\n')
+import userGovernanceOverviewPanelSource from '@/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue?raw'
+import userGovernancePageSource from '@/features/platform/user-management/ui/UserGovernancePage.vue?raw'
+import workspaceDirectoryToolbarSource from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue?raw'
 
 const styleSource = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8')
 const journalNotesSource = readFileSync(
   resolve(process.cwd(), 'src/assets/styles/journal-notes.css'),
   'utf8'
 )
-const auditLogCombinedSource = [
-  auditLogSource,
-  auditLogDirectoryPanelSource,
-  auditLogHeroPanelSource,
+
+const userGovernanceSource = [
+  userGovernancePageSource,
+  userGovernanceOverviewPanelSource,
+  userGovernanceImportPanelSource,
 ].join('\n')
-const challengeManageCombinedSource = [
-  challengeManageSource,
-  challengeManageDirectoryPanelSource,
-  challengeManageHeroPanelSource,
-].join('\n')
-const classManageCombinedSource = [
-  classManageSource,
-  classManageHeroPanelSource,
-  classManageWorkspacePanelSource,
-].join('\n')
-const cheatDetectionCombinedSource = [
-  cheatDetectionSource,
-  cheatDetectionWorkspacePanelSource,
-  cheatDetectionHeroPanelSource,
-  cheatDetectionReviewPanelsSource,
-  cheatDetectionSummaryPanelSource,
-].join('\n')
-const imageManageCombinedSource = [
-  imageManageSource,
-  imageDirectoryPanelSource,
-  imageManageHeroPanelSource,
-].join('\n')
-const instanceManageCombinedSource = [
-  instanceManageSource,
-  instanceManageHeroPanelSource,
-  instanceManageWorkspacePanelSource,
-].join('\n')
-const studentManageCombinedSource = [
-  studentManageSource,
-  studentManageHeroPanelSource,
-  studentManageWorkspacePanelSource,
-].join('\n')
-const awdReviewCombinedSource = [
-  awdReviewIndexSource,
-  awdReviewHeroPanelSource,
-  awdReviewDirectoryPanelSource,
-].join('\n')
-const contestEditCombinedSource = [
-  contestEditSource,
-  contestEditTopbarPanelSource,
-  contestWorkbenchStageTabsSource,
-  contestEditWorkspacePanelSource,
-].join('\n')
-const contestFormCombinedSource = [
-  adminContestFormPanelSource,
-  contestFormSectionShellSource,
-  contestFormIdentitySectionSource,
-  contestFormRulesSectionSource,
-  contestFormTimelineSectionSource,
-  contestFormActionsSource,
-].join('\n')
-const challengeWriteupManagePanelSource = [
-  challengeWriteupManagePanelSourceBase,
-  challengeWriteupManageHeaderSource,
-  challengeWriteupSummaryStripSource,
-  challengeWriteupDirectorySectionSource,
-  challengeWriteupDirectoryRowSource,
-  readFileSync(
-    resolve(
-      process.cwd(),
-      'src/features/challenge-writeup-editor/ui/challengeWriteupManagePanel.css'
-    ),
-    'utf8'
-  ),
-].join('\n')
-const awdRoundInspectorCombinedSource = [
-  awdRoundInspectorSource,
-  awdInspectorStatsHudSource,
-  awdInspectorCanvasWorkspaceSource,
-  readFileSync(
-    resolve(process.cwd(), 'src/features/awd-inspector/ui/awdRoundInspector.css'),
-    'utf8'
-  ),
-].join('\n')
-const awdTrafficPanelSource = [
-  awdTrafficPanelSourceBase,
-  awdTrafficSummaryBandSource,
-  awdTrafficIntelligenceGridSource,
-  awdTrafficEventTableSource,
-  readFileSync(resolve(process.cwd(), 'src/features/awd-inspector/ui/awdTrafficPanel.css'), 'utf8'),
-].join('\n')
-const awdChallengeConfigCombinedSource = [
-  awdChallengeConfigPanelSource,
-  awdChallengeConfigHeaderSource,
-  awdChallengeConfigDirectorySectionSource,
-  awdChallengeConfigDirectoryRowSource,
-  readFileSync(
-    resolve(process.cwd(), 'src/features/platform/contest-manage/ui/awdChallengeConfigPanel.css'),
-    'utf8'
-  ),
+
+const contestManagementSource = [
+  contestOrchestrationSource,
+  contestManageOverviewPanelSource,
+  contestManageCreatePanelSource,
+  adminContestTableSource,
 ].join('\n')
 
 describe('admin management surface alignment', () => {
-  it('audit log should soften table and empty-state borders on dark surfaces', () => {
-    expect(auditLogCombinedSource).toMatch(
-      /--audit-table-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 74%, transparent\);/
-    )
-    expect(auditLogCombinedSource).toMatch(
-      /--audit-row-divider:\s*color-mix\(in srgb,\s*var\(--journal-border\) 62%, transparent\);/
-    )
-    expect(auditLogCombinedSource).toMatch(/class="audit-empty-state[^"]*"/)
-    expect(auditLogCombinedSource).toContain('class="audit-list workspace-directory-list"')
-    expect(auditLogCombinedSource).toMatch(
-      /\.audit-list\s*\{[\s\S]*border:\s*1px solid var\(--audit-table-border\);/s
-    )
-    expect(auditLogCombinedSource).toMatch(
-      /\.audit-list :deep\(\.workspace-data-table__row\)\s*\{[\s\S]*border-bottom-color:\s*var\(--audit-row-divider\);/s
-    )
-  })
-
-  it('user governance should soften control and table shell borders', () => {
-    expect(userGovernanceSource).toMatch(
-      /--admin-control-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 76%, transparent\);/
-    )
-    expect(userGovernanceSource).toMatch(
-      /--user-table-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 72%, transparent\);/
-    )
-    expect(userGovernanceSource).toMatch(
-      /--user-row-divider:\s*color-mix\(in srgb,\s*var\(--journal-border\) 58%, transparent\);/
-    )
-    expect(userGovernanceSource).toContain(
-      'class="workspace-panel-header__actions header-actions user-panel-actions"'
-    )
-    expect(userGovernanceSource).toContain('class="header-btn header-btn--ghost"')
-    expect(userGovernanceSource).toContain('class="header-btn header-btn--primary"')
-    expect(userGovernanceOverviewPanelSource).toMatch(
-      /\.user-row__actions\s*>\s*\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.75rem;[\s\S]*--ui-btn-radius:\s*1rem;/s
-    )
-    expect(userGovernanceDetailModalSource).toMatch(
-      /\.user-detail-actions\s*>\s*\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*2\.75rem;[\s\S]*--ui-btn-radius:\s*1rem;/s
-    )
-    expect(styleSource).toMatch(
-      /\.workspace-directory-empty\s+\.ui-btn\s*\{[\s\S]*--ui-btn-height:\s*var\(--ui-control-height-md\);[\s\S]*--ui-btn-radius:\s*var\(--ui-control-radius-md\);/s
-    )
-    expect(userGovernanceSource).toMatch(
-      /\.user-row__actions\s*>\s*\.ui-btn\.ui-btn--secondary\s*\{[\s\S]*--ui-btn-border:\s*var\(--admin-control-border\);/s
-    )
-    expect(userGovernanceSource).toMatch(
-      /\.admin-input\s*\{[\s\S]*border:\s*1px solid var\(--admin-control-border\);/s
-    )
-    expect(userGovernanceSource).toMatch(
-      /\.user-table-shell\s*\{[\s\S]*--workspace-directory-shell-border:\s*var\(--user-table-border\);/s
-    )
-    expect(userGovernanceSource).toMatch(
-      /\.user-table-shell\s*\{[\s\S]*--workspace-directory-row-divider:\s*var\(--user-row-divider\);/s
-    )
-    expect(userGovernanceSource).toMatch(
-      /\.user-table-row\s*\{[\s\S]*border-top:\s*1px solid var\(--user-row-divider\);/s
-    )
-    expect(userGovernanceSource).toMatch(
-      /<h2 class="list-heading__title">\s*全部用户\s*<\/h2>/
-    )
-    expect(userGovernanceSource).toMatch(
-      /<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/
-    )
-    expect(userGovernanceSource).toMatch(
-      /<h2 class="list-heading__title">\s*导入回执\s*<\/h2>/
-    )
-    expect(userGovernanceSource).toContain('<header class="workspace-panel-header user-overview-head">')
-    expect(userGovernanceSource).toContain('<header class="workspace-tab-heading user-import-head">')
-    expect(userGovernanceSource).toContain(
-      'class="workspace-panel-header__summary admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(userGovernanceSource).toContain('<div class="workspace-panel-divider" aria-hidden="true" />')
-    expect(userGovernanceSource).not.toContain('<header class="workspace-page-header user-overview-head">')
-    expect(userGovernanceSource).not.toContain('<header class="workspace-tab-heading user-overview-head">')
-    expect(userGovernanceSource).not.toContain('<header class="list-heading user-overview-head">')
-    expect(userGovernanceSource).not.toContain('<header class="list-heading user-import-head">')
-    expect(userGovernanceSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(userGovernanceSource).not.toMatch(
-      /\.user-directory-section,\s*\.user-import-panel,\s*\.user-import-receipt-section\s*\{/s
-    )
-    expect(userGovernanceSource).not.toMatch(
-      /\.user-directory-head\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-    expect(userGovernanceSource).not.toMatch(
-      /\.user-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-    expect(userGovernanceSource).not.toContain('<nav class="top-tabs"')
-    expect(userGovernanceSource).toContain('id="user-panel-overview"')
-    expect(userGovernanceSource).toContain('id="user-panel-import"')
-  })
-
-  it('contest orchestration should soften control and empty-state borders', () => {
-    expect(contestOrchestrationSource).toMatch(
-      /--admin-control-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 76%, transparent\);/
-    )
-    expect(contestOrchestrationSource).toMatch(
-      /--workspace-panel:\s*color-mix\(in srgb,\s*var\(--color-bg-surface\) 90%, var\(--color-bg-base\)\);/
-    )
-    expect(contestOrchestrationSource).toMatch(
-      /--workspace-line-soft:\s*color-mix\(in srgb,\s*var\(--color-text-primary\) 10%, transparent\);/
-    )
-    expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
-    expect(contestOrchestrationSource).toContain('class="ui-btn ui-btn--ghost"')
-    expect(contestOrchestrationSource).toContain(
-      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
-    )
-    expect(contestOrchestrationSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(contestOrchestrationSource).toContain('class="ui-field contest-filter-field"')
-    expect(contestOrchestrationSource).toContain('class="ui-control contest-filter-control"')
-    expect(contestOrchestrationSource).toMatch(
-      /\.contest-empty-state\s*\{[\s\S]*border-top-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);[\s\S]*border-bottom-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);/s
-    )
-    expect(contestOrchestrationSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(contestOrchestrationSource).toMatch(
-      /\.contest-directory-section,\s*\.contest-create-panel\s*\{[\s\S]*--workspace-directory-section-padding:\s*var\(--space-5\)\s*var\(--space-5-5\);/s
-    )
-    expect(contestOrchestrationSource).not.toMatch(
-      /\.contest-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-    expect(contestOrchestrationSource).toMatch(
-      /<div class="workspace-overline">\s*Contest Workspace\s*<\/div>/
-    )
-    expect(contestOrchestrationSource).toMatch(
-      /<h1 class="workspace-page-title">\s*竞赛目录\s*<\/h1>/
-    )
-    expect(contestOrchestrationSource).toMatch(
-      /<h2 class="list-heading__title">\s*竞赛列表\s*<\/h2>/
-    )
-    expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
-    expect(contestOrchestrationSource).not.toContain('当前筛选结果')
-    expect(contestOrchestrationSource).not.toContain(
-      'workspace-tab-heading__title">当前筛选结果</h3>'
-    )
-    expect(contestOrchestrationSource).not.toContain('<nav class="top-tabs"')
-    expect(contestOrchestrationSource).not.toContain('class="contest-list-filters"')
-    expect(contestOrchestrationSource).toContain('class="contest-filter-stack"')
-    expect(contestOrchestrationSource).not.toContain('class="contest-filter-grid"')
-    expect(contestOrchestrationSource).not.toContain('contest-filter-field--action')
-    expect(contestOrchestrationSource).not.toContain('class="contest-filter-actions"')
-    expect(contestOrchestrationSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(contestOrchestrationSource).toMatch(
-      /\.contest-directory-section,\s*\.contest-create-panel\s*\{[\s\S]*--workspace-directory-section-padding:\s*var\(--space-5\)\s*var\(--space-5-5\);/s
-    )
-    expect(contestOrchestrationSource).not.toMatch(
-      /\.contest-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-    expect(contestOrchestrationSource).toMatch(
-      /\.contest-overview-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{[\s\S]*--metric-panel-border:\s*color-mix\(in srgb,\s*var\(--workspace-brand\)\s*16%,\s*var\(--workspace-line-soft\)\);/s
-    )
-    expect(contestOrchestrationSource).not.toMatch(
-      /\.contest-overview-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{[\s\S]*--metric-panel-background:/s
-    )
-  })
-
-  it('contest directory rows should expose split schedule columns and dedicated status pills', () => {
-    expect(adminContestTableSource).toContain("{ key: 'starts_at', label: '开始时间'")
-    expect(adminContestTableSource).toContain("{ key: 'ends_at', label: '结束时间'")
-    expect(adminContestTableSource).not.toContain('<span>时间窗口</span>')
-    expect(adminContestTableSource).toContain('class="ui-badge contest-status-pill"')
-    expect(adminContestTableSource).toContain('.contest-status-pill--registering')
-    expect(adminContestTableSource).toContain('.contest-status-pill--running')
-    expect(adminContestTableSource).toContain('.contest-table__time--start')
-    expect(adminContestTableSource).toContain('.contest-table__time--end')
-  })
-
-  it('contest form dialog should adopt the admin workspace dialog shell and section headings', () => {
-    expect(adminContestFormDialogSource).toContain('class="contest-form-dialog"')
-    expect(adminContestFormDialogSource).toContain(
-      "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
-    )
-    expect(adminContestFormDialogSource).toContain(
-      ':deep(.contest-form-dialog .modal-template-panel--classic)'
-    )
-    expect(adminContestFormDialogSource).toContain('Contest Workspace')
-    expect(contestFormCombinedSource).toContain('title="基础信息"')
-    expect(contestFormCombinedSource).toContain('title="赛制与时间"')
-    expect(contestFormCombinedSource).toContain(
-      'class="ui-btn ui-btn--primary contest-form-button contest-form-button--primary"'
-    )
-  })
-
-  it('contest edit page should use the admin workspace shell and a dedicated back action', () => {
-    expect(contestEditCombinedSource).toMatch(/class="[^"]*\bworkspace-topbar\b[^"]*"/)
-    expect(contestEditCombinedSource).toMatch(
-      /<h1[\s\S]*class="studio-contest-heading"[\s\S]*>\s*\{\{ pageTitle \}\}\s*<\/h1>/
-    )
-    expect(contestEditCombinedSource).toContain('class="studio-edit-label"')
-    expect(contestEditCombinedSource).toContain('返回竞赛目录')
-    expect(contestEditCombinedSource).toContain('Contest Studio')
-    expect(contestEditCombinedSource).toContain('background: var(--color-bg-surface);')
-    expect(contestEditCombinedSource).toContain('background: var(--color-bg-base);')
-    expect(contestEditCombinedSource).toContain('border-top: 0;')
-    expect(contestEditCombinedSource).toMatch(
-      /class="[^"]*\bworkspace-directory-section\b[^"]*\bcontest-edit-section\b[^"]*"/
-    )
-  })
-
-  it('awd round inspector traffic filters should stay flattened into the table section instead of using a split intro bar', () => {
-    expect(awdRoundInspectorCombinedSource).toContain('<AWDTrafficPanel')
-    expect(awdTrafficPanelSource).toContain('id="awd-traffic-reset-filters"')
-    expect(awdRoundInspectorCombinedSource).not.toContain(
-      '按攻击方、受害方、题目、状态分桶和路径关键字筛选。'
-    )
-    expect(awdRoundInspectorCombinedSource).not.toContain(
-      'class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/60 px-4 py-3"'
-    )
-  })
-
-  it('awd challenge config and readiness sections should use list-heading for directory blocks', () => {
-    expect(awdChallengeConfigCombinedSource).toMatch(/class="[^"]*\bworkspace-directory-section\b[^"]*"/)
-    expect(awdChallengeConfigCombinedSource).toMatch(/class="[^"]*list-heading[^"]*"/)
-    expect(awdChallengeConfigCombinedSource).toMatch(
-      /<h3 class="list-heading__title">\s*题目目录\s*<\/h3>/
-    )
-    expect(awdChallengeConfigCombinedSource).not.toContain(
-      'workspace-tab-heading__title">已关联题目</h3>'
-    )
-
-    expect(awdReadinessChecklistSource).toMatch(/class="[^"]*list-heading[^"]*"/)
-    expect(awdReadinessChecklistSource).toMatch(
-      /<h3 class="list-heading__title">\s*系统级阻塞\s*<\/h3>/
-    )
-    expect(awdReadinessChecklistSource).toMatch(
-      /<h3 class="list-heading__title">\s*阻塞短名单\s*<\/h3>/
-    )
-    expect(awdReadinessChecklistSource).not.toContain('workspace-tab-heading__title">系统级阻塞</h3>')
-    expect(awdReadinessChecklistSource).not.toContain('workspace-tab-heading__title">阻塞短名单</h3>')
-  })
-
-  it('awd readiness override dialog should use list-heading for override sections', () => {
-    expect(awdReadinessOverrideDialogSource).toContain(
-      'class="workspace-directory-section readiness-override-section"'
-    )
-    expect(awdReadinessOverrideDialogSource).toMatch(/class="[^"]*list-heading[^"]*"/)
-    expect(awdReadinessOverrideDialogSource).toContain(
-      '<h3 class="list-heading__title">系统级阻塞</h3>'
-    )
-    expect(awdReadinessOverrideDialogSource).toContain(
-      '<h3 class="list-heading__title">阻塞题目</h3>'
-    )
-    expect(awdReadinessOverrideDialogSource).toContain(
-      '<h3 class="list-heading__title">填写本次放行原因</h3>'
-    )
-    expect(awdReadinessOverrideDialogSource).not.toContain(
-      'workspace-tab-heading__title">系统级阻塞</h3>'
-    )
-    expect(awdReadinessOverrideDialogSource).not.toContain(
-      'workspace-tab-heading__title">阻塞题目</h3>'
-    )
-    expect(awdReadinessOverrideDialogSource).not.toContain(
-      'workspace-tab-heading__title">填写本次放行原因</h3>'
-    )
-  })
-
-  it('challenge detail hint section should use list-heading for the hint directory header', () => {
-    expect(adminChallengeProfilePanelSource).toMatch(
-      /<div class="workspace-overline">\s*Challenge Profile\s*<\/div>/
-    )
-    expect(adminChallengeProfilePanelSource).toContain("from '@/entities/challenge'")
-    expect(adminChallengeProfilePanelSource).toContain('<ChallengeProfileSummaryStrip')
-    expect(adminChallengeProfilePanelSource).not.toContain('class="challenge-overview-summary')
-    expect(challengeProfileSummaryStripSource).toContain(
-      'class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(challengeProfileSummaryStripSource).toContain('<Tags class="h-4 w-4" />')
-    expect(challengeProfileSummaryStripSource).toContain('<Gauge class="h-4 w-4" />')
-    expect(challengeProfileSummaryStripSource).toContain('<Trophy class="h-4 w-4" />')
-    expect(challengeProfileSummaryStripSource).toContain('<CircleDot class="h-4 w-4" />')
-    expect(adminChallengeProfilePanelSource).toMatch(
-      /<h2 class="list-heading__title">\s*基础信息\s*<\/h2>/
-    )
-    expect(adminChallengeProfilePanelSource).not.toContain(
-      '<div class="journal-note-label">Question Ops</div>'
-    )
-    expect(adminChallengeProfilePanelSource).toMatch(
-      /<div class="journal-note-label">\s*Hints\s*<\/div>/
-    )
-    expect(adminChallengeProfilePanelSource).toMatch(
-      /<h2 class="list-heading__title">\s*提示管理\s*<\/h2>/
-    )
-    expect(adminChallengeProfilePanelSource).not.toContain('workspace-tab-heading__title">提示管理</h2>')
-  })
-
-  it('cheat detection sections should use list-heading for directory headers', () => {
-    expect(cheatDetectionHeroPanelSource).toContain('<header class="workspace-page-header">')
-    expect(cheatDetectionHeroPanelSource).not.toContain('<section class="workspace-hero">')
-    expect(cheatDetectionHeroPanelSource).toContain('<CheatDetectionSummaryPanel')
-    expect(cheatDetectionCombinedSource).toMatch(
-      /\.cheat-workbench\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
-    )
-    expect(cheatDetectionCombinedSource).toMatch(
-      /\.cheat-directory-section\s*\{[\s\S]*gap:\s*var\(--space-4\);[\s\S]*padding:\s*0;/s
-    )
-    expect(cheatDetectionCombinedSource).toContain('<h2 class="list-heading__title">高频提交账号</h2>')
-    expect(cheatDetectionCombinedSource).toContain('<h2 class="list-heading__title">共享 IP 线索</h2>')
-    expect(cheatDetectionCombinedSource).toContain('<h2 class="list-heading__title">审计联动</h2>')
-    expect(cheatDetectionCombinedSource).not.toContain(
-      'workspace-tab-heading__title">高频提交账号</h2>'
-    )
-    expect(cheatDetectionCombinedSource).not.toContain(
-      'workspace-tab-heading__title">共享 IP 线索</h2>'
-    )
-    expect(cheatDetectionCombinedSource).not.toContain(
-      'workspace-tab-heading__title">审计联动</h2>'
-    )
-  })
-
-  it('contest orchestration should merge metrics and directory into one workspace instead of keeping a top tab rail', () => {
-    expect(contestOrchestrationSource).not.toContain('class="top-tabs"')
-    expect(contestOrchestrationSource).toContain('id="contest-panel-overview"')
-    expect(contestOrchestrationSource).not.toContain('id="contest-panel-list"')
-    expect(contestOrchestrationSource).toContain(
-      'class="workspace-directory-section contest-directory-section"'
-    )
-  })
-
-  it('admin list pages should use shared directory spacing utilities', () => {
-    expect(styleSource).toContain('--workspace-directory-gap-top: 0.75rem;')
-    expect(styleSource).toContain('--workspace-directory-gap-pagination: 0.5rem;')
-    expect(styleSource).toContain('--workspace-directory-page-block-gap: var(--space-5);')
-    expect(styleSource).toContain('--workspace-directory-toolbar-gap-bottom: 0;')
+  it('keeps directory spacing, pagination spacing, and summary-grid foundations on shared owners', () => {
     expect(styleSource).toContain('.workspace-directory-section {')
-    expect(styleSource).toContain('.workspace-directory-section > .list-heading {')
-    expect(styleSource).toContain('.list-heading {')
-    expect(styleSource).toContain('.list-heading__title {')
-    expect(styleSource).toContain('.workspace-directory-loading,')
     expect(styleSource).toContain('.workspace-directory-list {')
-    expect(styleSource).toContain('--workspace-directory-shell-border')
-    expect(styleSource).toContain('.workspace-directory-list .workspace-data-table__head-cell')
-    expect(styleSource).toContain('.workspace-directory-list .workspace-data-table__row')
-    expect(styleSource).toContain('@media (max-width: 768px) {')
-    expect(styleSource).toContain('.list-heading {')
-    expect(styleSource).toMatch(
-      /\.workspace-directory-section\s*>\s*:where\(\.workspace-directory-loading,\s*\.workspace-directory-empty,\s*\.workspace-directory-list\)/
-    )
     expect(styleSource).toContain('.workspace-directory-section > .workspace-directory-pagination')
-    expect(workspaceDataTableSource).not.toMatch(
-      /\.workspace-data-table-shell\s*\{[^}]*\bborder:\s*none;/s
-    )
-    expect(workspaceDataTableSource).not.toMatch(
-      /\.workspace-data-table-shell\s*\{[^}]*\bbackground:\s*transparent;/s
-    )
-
-    expect(userGovernanceSource).toContain('workspace-directory-section')
-    expect(userGovernanceSource).toContain(
-      'class="user-table-shell workspace-directory-list user-list"'
-    )
-    expect(userGovernanceSource).toContain(
-      'class="admin-pagination workspace-directory-pagination"'
-    )
-
-    expect(imageManageCombinedSource).toContain('class="image-board workspace-directory-section"')
-    expect(imageManageCombinedSource).toContain(
-      'class="image-directory-shell workspace-directory-list"'
-    )
-    expect(imageManageCombinedSource).not.toContain('class="image-list workspace-directory-list"')
-    expect(imageManageCombinedSource).toContain(
-      'class="admin-pagination workspace-directory-pagination"'
-    )
-
-    expect(auditLogCombinedSource).toContain('class="admin-board workspace-directory-section"')
-    expect(auditLogCombinedSource).toContain('class="audit-list workspace-directory-list"')
-    expect(auditLogCombinedSource).toContain('class="admin-pagination workspace-directory-pagination"')
-
-    expect(challengeManageCombinedSource).toContain(
-      'class="workspace-directory-section challenge-manage-directory"'
-    )
-    expect(challengeManageCombinedSource).toContain(
-      'class="challenge-directory-shell workspace-directory-list"'
-    )
-    expect(challengeManageCombinedSource).not.toContain(
-      'class="challenge-list workspace-directory-list"'
-    )
-    expect(challengeManageCombinedSource).toContain('class="workspace-directory-loading"')
-    expect(challengeManageCombinedSource).toContain('class="workspace-directory-empty"')
-    expect(challengeManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
-
-    expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')
-    expect(adminContestTableSource).toContain(
-      'class="admin-pagination workspace-directory-pagination'
-    )
-
-    expect(classManageCombinedSource).toContain('class="workspace-directory-section admin-class-manage-directory"')
-    expect(classManageCombinedSource).toContain('class="workspace-directory-list admin-class-manage-table"')
-    expect(classManageCombinedSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(classManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
-    expect(classManageCombinedSource).toMatch(
-      /\.admin-class-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
-    )
-
-    expect(studentManageCombinedSource).toContain(
-      'class="workspace-directory-section admin-student-manage-directory"'
-    )
-    expect(studentManageCombinedSource).toContain(
-      'class="workspace-directory-list admin-student-manage-table"'
-    )
-    expect(studentManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
-    expect(studentManageCombinedSource).toMatch(
-      /\.admin-student-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
-    )
-
-    expect(instanceManageCombinedSource).toContain(
-      'class="workspace-directory-section admin-instance-manage-directory"'
-    )
-    expect(instanceManageCombinedSource).toContain(
-      'class="workspace-directory-list admin-instance-manage-table"'
-    )
-    expect(instanceManageCombinedSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(instanceManageCombinedSource).toContain('<WorkspaceDirectoryPagination')
-    expect(instanceManageCombinedSource).toMatch(
-      /\.admin-instance-manage-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
-    )
-
-    expect(awdReviewCombinedSource).toContain(
-      'class="workspace-directory-section admin-awd-review-directory"'
-    )
-    expect(awdReviewCombinedSource).toContain(
-      'class="workspace-directory-list admin-awd-review-table"'
-    )
-    expect(awdReviewCombinedSource).toContain('class="workspace-directory-loading"')
-    expect(awdReviewCombinedSource).toContain('class="workspace-directory-empty"')
-    expect(awdReviewIndexSource).toMatch(
-      /\.admin-awd-review-shell__content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap\);/s
-    )
-
-    expect(challengeManageSource).toMatch(
-      /\.challenge-manage-content\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap,\s*var\(--space-5\)\);/s
-    )
-    expect(challengeManageSource).toMatch(
-      /\.challenge-manage-panel\s*\{[\s\S]*gap:\s*var\(--workspace-directory-page-block-gap,\s*var\(--space-5\)\);/s
-    )
-    expect(challengeManageCombinedSource).toMatch(
-      /\.challenge-manage-hero-panel\s*\{[\s\S]*gap:\s*0;/s
-    )
-    expect(challengeManageCombinedSource).toMatch(
-      /\.challenge-metric-head\s*\{[\s\S]*margin-bottom:\s*var\(--space-2\);/s
-    )
-    expect(challengeManageCombinedSource).toMatch(
-      /\.challenge-metric-value-wrap\s+\.metric-panel-value,\s*[\s\S]*\.challenge-metric-value-wrap\s+\.metric-panel-helper\s*\{[\s\S]*margin-top:\s*0;/s
-    )
+    expect(styleSource).toContain('--workspace-directory-page-block-gap: var(--space-5);')
     expect(workspaceDirectoryToolbarSource).toContain(
       'margin-bottom: var(--workspace-directory-toolbar-gap-bottom, 1.5rem);'
     )
-    expect(auditLogSource).not.toMatch(
-      /\.admin-board :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-    expect(imageManageSource).not.toMatch(
-      /\.image-board :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-    expect(challengeManageSource).not.toMatch(
-      /\.challenge-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:/s
-    )
-    expect(classManageCombinedSource).not.toMatch(
-      /\.admin-class-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-    expect(studentManageCombinedSource).not.toMatch(
-      /\.admin-student-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-    expect(instanceManageCombinedSource).not.toMatch(
-      /\.admin-instance-manage-directory :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-  })
-
-  it('admin paginations should expose a shared jump-page control instead of prev-next only', () => {
-    expect(userGovernanceSource).toContain('PagePaginationControls')
-    expect(imageManageSource).toContain('PagePaginationControls')
-    expect(auditLogCombinedSource).toContain('PagePaginationControls')
-    expect(challengeManageCombinedSource).toContain('WorkspaceDirectoryPagination')
-    expect(adminContestTableSource).toContain('PagePaginationControls')
-    expect(awdRoundInspectorCombinedSource).toContain('<AWDTrafficPanel')
-    expect(awdTrafficPanelSource).toContain('PagePaginationControls')
-  })
-
-  it('admin summary grids should use shared summary-grid base styles', () => {
     expect(journalNotesSource).toContain(
       '.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid)'
     )
-
-    expect(challengeManageSource).not.toMatch(
-      /^\.manage-summary-grid\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:/m
-    )
-    expect(auditLogSource).not.toMatch(
-      /^\.admin-summary-grid\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:/m
-    )
-    expect(imageManageSource).not.toMatch(
-      /^\.image-summary-grid\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:/m
-    )
-    expect(auditLogSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(imageManageSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(classManageSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(studentManageSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(instanceManageSource).not.toMatch(/^\.list-heading\s*\{/m)
-    expect(userGovernanceSource).toContain(
-      'class="workspace-panel-header__summary admin-summary-grid user-overview-grid'
-    )
-    expect(contestOrchestrationSource).toContain(
-      'class="workspace-panel-header__summary admin-summary-grid contest-overview-summary'
-    )
-    expect(classManageCombinedSource).toContain(
-      'class="admin-summary-grid admin-class-manage-shell__summary'
-    )
-    expect(classManageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-class-manage-shell"'
-    )
-    expect(classManageSource).toMatch(
-      /\.admin-class-manage-shell\s*\{[\s\S]*--workspace-line-soft:\s*color-mix\(in srgb,\s*var\(--color-text-primary\) 10%, transparent\);/s
-    )
-    expect(studentManageCombinedSource).toContain(
-      'class="admin-summary-grid admin-student-manage-shell__summary'
-    )
-    expect(studentManageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-student-manage-shell"'
-    )
-    expect(studentManageSource).toMatch(
-      /\.admin-student-manage-shell\s*\{[\s\S]*--workspace-line-soft:\s*color-mix\(in srgb,\s*var\(--color-text-primary\) 10%, transparent\);/s
-    )
-    expect(instanceManageCombinedSource).toContain(
-      'class="admin-summary-grid admin-instance-manage-shell__summary'
-    )
-    expect(instanceManageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-instance-manage-shell"'
-    )
-    expect(instanceManageSource).toMatch(
-      /\.admin-instance-manage-shell\s*\{[\s\S]*--workspace-line-soft:\s*color-mix\(in srgb,\s*var\(--color-text-primary\) 10%, transparent\);/s
-    )
-    expect(awdReviewCombinedSource).toContain('class="admin-summary-grid admin-awd-review-shell__summary')
+    expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
   })
 
-  it('admin summary cards should explicitly adopt metric-panel utility classes', () => {
-    expect(auditLogCombinedSource).toContain(
-      'class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+  it('keeps user governance on shared summary, directory, and pagination owners', () => {
+    expect(userGovernancePageSource).toContain('id="user-panel-overview"')
+    expect(userGovernancePageSource).toContain('id="user-panel-import"')
+    expect(userGovernanceOverviewPanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(auditLogCombinedSource).toContain('class="journal-note progress-card metric-panel-card"')
-    expect(auditLogCombinedSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
+    expect(userGovernanceOverviewPanelSource).toContain(
+      "from '@/shared/ui/common/PagePaginationControls.vue'"
     )
-    expect(auditLogCombinedSource).toContain(
-      'class="journal-note-value progress-card-value metric-panel-value"'
+    expect(userGovernanceOverviewPanelSource).toContain(
+      'class="workspace-panel-header__summary admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(auditLogCombinedSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    expect(userGovernanceOverviewPanelSource).toContain(
+      'class="workspace-directory-section user-directory-section"'
     )
+    expect(userGovernanceOverviewPanelSource).toMatch(
+      /<h2 class="list-heading__title">\s*全部用户\s*<\/h2>/
+    )
+    expect(userGovernanceImportPanelSource).toContain(
+      'class="workspace-directory-section user-import-panel"'
+    )
+    expect(userGovernanceImportPanelSource).toContain(
+      'class="workspace-directory-section user-import-receipt-section"'
+    )
+    expect(userGovernanceImportPanelSource).toMatch(
+      /<h2 class="list-heading__title">\s*导入回执\s*<\/h2>/
+    )
+    expect(userGovernanceSource).not.toContain('<nav class="top-tabs"')
+    expect(userGovernanceSource).not.toMatch(/^\.list-heading\s*\{/m)
+  })
 
-    expect(journalNotesSource).toContain('.metric-panel-default-surface {')
-    expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
-    expect(styleSource).toContain('--workspace-hero-summary-gap: var(--space-5);')
-    expect(journalNotesSource).toContain(
-      '.workspace-page-header + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid),'
+  it('keeps contest management on shared workspace, directory, and table owners', () => {
+    expect(contestOrchestrationSource).toContain('ContestManageOverviewPanel')
+    expect(contestOrchestrationSource).toContain('ContestManageCreatePanel')
+    expect(contestManageOverviewPanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(journalNotesSource).toContain(
-      '.workspace-hero + :where(.progress-strip, .admin-summary-grid, .manage-summary-grid) {'
-    )
-    expect(journalNotesSource).toContain(
-      'margin-top: var(--workspace-hero-summary-gap, var(--space-5));'
-    )
-    expect(journalNotesSource).toContain('.progress-card {')
-    expect(journalNotesSource).toContain(
-      '--metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-3-5);'
-    )
-    expect(journalNotesSource).toContain('.progress-card-label {')
-    expect(journalNotesSource).toContain('.progress-card-value {')
-    expect(journalNotesSource).toContain('.progress-card-hint {')
-    expect(journalNotesSource).toContain('position: relative;')
-    expect(journalNotesSource).toContain('display: block;')
-    expect(journalNotesSource).toContain('min-height: 1rem;')
-    expect(journalNotesSource).toContain('padding-inline-end: var(--space-7);')
-    expect(journalNotesSource).toContain(
-      '.progress-card.metric-panel-card .metric-panel-label > :is(svg, .lucide) {'
-    )
-    expect(journalNotesSource).toContain('top: var(--space-3-5);')
-    expect(journalNotesSource).toContain('right: var(--space-4);')
-    expect(journalNotesSource).toContain(
-      'font-size: var(--metric-panel-label-size, var(--font-size-11));'
-    )
-    expect(journalNotesSource).toContain(
-      'font-size: var(--metric-panel-value-size, var(--font-size-26));'
-    )
-    expect(journalNotesSource).toContain(
-      'font-size: var(--metric-panel-helper-size, var(--font-size-13));'
-    )
-    expect(journalNotesSource).toContain('--metric-panel-label-size: var(--font-size-11);')
-    expect(journalNotesSource).toContain('--metric-panel-radius: var(--workspace-radius-lg, 18px);')
-    expect(journalNotesSource).toContain('--metric-panel-value-size: var(--font-size-26);')
-    expect(journalNotesSource).toContain('--metric-panel-helper-size: var(--font-size-13);')
-    expect(journalNotesSource).toContain('--metric-panel-helper-line-height: 1.7;')
-    expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
-    expect(journalNotesSource).toContain(
-      'var(--workspace-brand, var(--journal-accent, var(--color-primary-default))) 18%'
-    )
-    expect(journalNotesSource).toContain('--workspace-panel-soft,')
-    expect(journalNotesSource).toMatch(
-      /\.journal-shell-admin :is\(\.admin-summary-grid, \.manage-summary-grid, \.image-summary-grid\) > \.journal-note \.journal-note-label\s*\{[\s\S]*color:\s*var\(--metric-panel-label-color,\s*var\(--journal-muted\)\);/s
-    )
-    expect(journalNotesSource).toMatch(
-      /\.journal-shell-admin :is\(\.admin-summary-grid, \.manage-summary-grid, \.image-summary-grid\) > \.journal-note \.journal-note-value\s*\{[\s\S]*color:\s*var\(--metric-panel-value-color,\s*var\(--journal-ink\)\);/s
-    )
-    expect(journalNotesSource).toMatch(
-      /\.journal-shell-admin :is\(\.admin-summary-grid, \.manage-summary-grid, \.image-summary-grid\) > \.journal-note \.journal-note-helper\s*\{[\s\S]*color:\s*var\(--metric-panel-helper-color,\s*var\(--journal-muted\)\);/s
-    )
-    expect(journalNotesSource).toContain(
-      '.journal-shell-admin.journal-notes-card .journal-note:not(.metric-panel-card) {'
-    )
-    expect(journalNotesSource).not.toContain(
-      '.journal-shell-admin.journal-notes-card .journal-note {'
-    )
-    expect(challengeManageCombinedSource).toContain(
-      'class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(challengeManageCombinedSource).toContain(
-      'class="journal-note progress-card metric-panel-card"'
-    )
-    expect(challengeManageCombinedSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
-    )
-    expect(challengeManageCombinedSource).toContain(
-      'class="journal-note-value progress-card-value metric-panel-value"'
-    )
-    expect(challengeManageCombinedSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(imageManageCombinedSource).toContain('class="image-status-strip"')
-    expect(imageManageCombinedSource).toContain(
-      'class="image-status-strip__note">{{ refreshHint }}</div>'
-    )
-    expect(imageManageCombinedSource).not.toContain(
-      'class="image-summary-card progress-card metric-panel-card"'
-    )
-
-    expect(userGovernanceSource).toContain(
-      'class="workspace-panel-header__summary admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface'
-    )
-    expect(userGovernanceSource).toContain('class="journal-note progress-card metric-panel-card"')
-    expect(userGovernanceSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
-    )
-    expect(userGovernanceSource).toContain(
-      'class="journal-note-value progress-card-value metric-panel-value"'
-    )
-    expect(userGovernanceSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(userGovernanceSource).not.toContain('user-overview-stat')
-
-    expect(contestOrchestrationSource).toContain(
+    expect(contestManageOverviewPanelSource).toContain(
       'class="workspace-panel-header__summary admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(contestOrchestrationSource).toContain(
-      'class="journal-note progress-card metric-panel-card"'
+    expect(contestManageOverviewPanelSource).toContain(
+      'class="workspace-directory-section contest-directory-section"'
     )
-    expect(contestOrchestrationSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
+    expect(contestManageOverviewPanelSource).toMatch(
+      /<h2 class="list-heading__title">\s*竞赛列表\s*<\/h2>/
     )
-    expect(contestOrchestrationSource).toContain(
-      'class="journal-note-value progress-card-value metric-panel-value"'
+    expect(contestManageOverviewPanelSource).toContain(
+      'class="workspace-directory-empty contest-empty-state"'
     )
-    expect(contestOrchestrationSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    expect(adminContestTableSource).toContain(
+      "from '@/shared/ui/common/PagePaginationControls.vue'"
     )
-
-    expect(classManageCombinedSource).toContain(
-      'class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(studentManageCombinedSource).toContain(
-      'class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(instanceManageCombinedSource).toContain(
-      'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(awdReviewCombinedSource).toContain(
-      'class="admin-summary-grid admin-awd-review-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
+    expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')
+    expect(adminContestTableSource).toContain("{ key: 'starts_at', label: '开始时间'")
+    expect(adminContestTableSource).toContain("{ key: 'ends_at', label: '结束时间'")
+    expect(adminContestTableSource).toContain('class="ui-badge contest-status-pill"')
+    expect(contestManagementSource).not.toContain('<nav class="top-tabs"')
   })
 
-  it('workspace summary headers should divide actions from metric cards', () => {
-    expect(userGovernanceSource).toContain('<header class="workspace-panel-header user-overview-head">')
-    expect(userGovernanceSource).toContain('<div class="workspace-panel-divider" aria-hidden="true" />')
-    expect(userGovernanceSource).not.toMatch(
-      /\.user-overview-head\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+  it('keeps audit log and challenge management on shared directory and pagination owners', () => {
+    expect(auditLogSource).toContain('AuditLogHeroPanel')
+    expect(auditLogSource).toContain('AuditLogDirectoryPanel')
+    expect(auditLogDirectoryPanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(contestOrchestrationSource).toContain(
-      '<header class="workspace-panel-header contest-overview-head">'
+    expect(auditLogDirectoryPanelSource).toContain(
+      "from '@/shared/ui/common/PagePaginationControls.vue'"
     )
-    expect(contestOrchestrationSource).toContain(
-      '<div class="workspace-panel-divider" aria-hidden="true" />'
+    expect(auditLogDirectoryPanelSource).toContain(
+      'class="admin-board workspace-directory-section"'
     )
-    expect(contestOrchestrationSource).not.toMatch(
-      /\.contest-overview-head\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
+    expect(auditLogDirectoryPanelSource).toContain(
+      '<h2 class="list-heading__title">操作流水</h2>'
     )
-    for (const source of [
-      awdReviewHeroPanelSource,
-      classManageHeroPanelSource,
-      studentManageHeroPanelSource,
-      instanceManageHeroPanelSource,
-    ]) {
-      expect(source).toContain('workspace-page-header')
-      expect(source).not.toMatch(/\.workspace-hero\s*\{/)
-      expect(source).not.toMatch(/padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s)
-    }
-    expect(adminChallengeProfilePanelSource).toMatch(
-      /\.challenge-detail-header\s*\{[\s\S]*padding-bottom:\s*var\(--space-4\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft,/s
+    expect(auditLogDirectoryPanelSource).toContain('class="audit-list workspace-directory-list"')
+
+    expect(challengeManageHeroPanelSource).toContain(
+      'class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(challengeWriteupManagePanelSource).toMatch(
-      /\.writeup-manage-header\s*\{[\s\S]*padding-bottom:\s*var\(--space-6\);[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft,/s
+    expect(challengeManageDirectoryPanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(challengeManageDirectoryPanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
+    )
+    expect(challengeManageDirectoryPanelSource).toContain(
+      'class="workspace-directory-section challenge-manage-directory"'
+    )
+    expect(challengeManageDirectoryPanelSource).toContain(
+      'class="challenge-directory-shell workspace-directory-list"'
+    )
+    expect(challengeManageDirectoryPanelSource).toContain(
+      '<h2 class="list-heading__title">题目目录</h2>'
+    )
+    expect(challengeManageDirectoryPanelSource).toContain('<WorkspaceDirectoryPagination')
+  })
+
+  it('keeps class, student, instance, and awd review pages on thin routes plus shared list owners', () => {
+    expect(classManageSource).toContain('ClassManageHeroPanel')
+    expect(classManageSource).toContain('ClassManageWorkspacePanel')
+    expect(classManageHeroPanelSource).toContain(
+      'class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(classManageWorkspacePanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(classManageWorkspacePanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
+    )
+    expect(classManageWorkspacePanelSource).toContain(
+      'class="workspace-directory-section admin-class-manage-directory"'
+    )
+    expect(classManageWorkspacePanelSource).toContain(
+      'class="workspace-directory-list admin-class-manage-table"'
+    )
+
+    expect(studentManageSource).toContain('StudentManageHeroPanel')
+    expect(studentManageSource).toContain('StudentManageWorkspacePanel')
+    expect(studentManageHeroPanelSource).toContain(
+      'class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(studentManageWorkspacePanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(studentManageWorkspacePanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
+    )
+    expect(studentManageWorkspacePanelSource).toContain(
+      'class="workspace-directory-section admin-student-manage-directory"'
+    )
+    expect(studentManageWorkspacePanelSource).toContain(
+      'class="workspace-directory-list admin-student-manage-table"'
+    )
+
+    expect(instanceManageSource).toContain('<PlatformInstanceManagementPage />')
+    expect(instanceManageHeroPanelSource).toContain(
+      'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(instanceManageWorkspacePanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(instanceManageWorkspacePanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
+    )
+    expect(instanceManageWorkspacePanelSource).toContain(
+      'class="workspace-directory-section admin-instance-manage-directory"'
+    )
+    expect(instanceManageWorkspacePanelSource).toContain(
+      'class="workspace-directory-list admin-instance-manage-table"'
+    )
+
+    expect(awdReviewDirectoryPanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
+    )
+    expect(awdReviewDirectoryPanelSource).toContain(
+      "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
+    )
+    expect(awdReviewDirectoryPanelSource).toContain(
+      'class="workspace-directory-section admin-awd-review-directory"'
+    )
+    expect(awdReviewDirectoryPanelSource).toContain(
+      '<h2 class="list-heading__title">赛事目录</h2>'
+    )
+    expect(awdReviewDirectoryPanelSource).toContain(
+      'class="workspace-directory-list admin-awd-review-table"'
     )
   })
 })
