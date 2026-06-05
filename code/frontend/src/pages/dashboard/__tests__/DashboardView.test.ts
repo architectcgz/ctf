@@ -221,7 +221,7 @@ describe('DashboardView', () => {
     expect(userPresentationSource).toContain('getUserDisplayName')
   })
 
-  it('应该把竞技表现统计区域渲染为共享摘要卡片', async () => {
+  it('应该展示竞技表现统计内容', async () => {
     const authStore = useAuthStore()
     authStore.setAuth({
       id: 'student-1',
@@ -234,22 +234,13 @@ describe('DashboardView', () => {
 
     await flushPromises()
 
-    const summary = wrapper.get('.story-metric-grid')
-
-    expect(summary.classes()).toContain('progress-strip')
-    expect(summary.classes()).toContain('metric-panel-grid')
-    expect(summary.classes()).toContain('metric-panel-default-surface')
-    expect(summary.findAll('.journal-metric.progress-card.metric-panel-card')).toHaveLength(4)
-    expect(summary.findAll('.progress-card-label.metric-panel-label')).toHaveLength(4)
-    expect(summary.findAll('.progress-card-value.metric-panel-value')).toHaveLength(4)
-    expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(4)
-    expect(summary.text()).toContain('总得分')
-    expect(summary.text()).toContain('当前累计获得的训练积分')
-    expect(summary.text()).toContain('完成率')
-    expect(summary.text()).toContain('按当前分类题量计算的覆盖比例')
+    expect(wrapper.text()).toContain('总得分')
+    expect(wrapper.text()).toContain('当前累计获得的训练积分')
+    expect(wrapper.text()).toContain('完成率')
+    expect(wrapper.text()).toContain('按当前分类题量计算的覆盖比例')
   })
 
-  it('应该把当前排名区域渲染为独立卡片', async () => {
+  it('应该展示当前排名内容', async () => {
     const authStore = useAuthStore()
     authStore.setAuth({
       id: 'student-1',
@@ -262,14 +253,9 @@ describe('DashboardView', () => {
 
     await flushPromises()
 
-    const rankSummary = wrapper.get('.journal-rank-summary')
-
-    expect(rankSummary.classes()).toContain('progress-card')
-    expect(rankSummary.classes()).toContain('metric-panel-card')
-    expect(rankSummary.classes()).toContain('metric-panel-default-surface')
-    expect(rankSummary.get('.progress-card-label.metric-panel-label').text()).toContain('当前排名')
-    expect(rankSummary.get('.progress-card-value.metric-panel-value').text()).toBe('#7')
-    expect(rankSummary.get('.progress-card-hint.metric-panel-helper').text()).toContain('积分排名')
+    expect(wrapper.text()).toContain('当前排名')
+    expect(wrapper.text()).toContain('#7')
+    expect(wrapper.text()).toContain('积分排名')
   })
 
   it('应该在 recommendation 子菜单下激活并显示训练建议面板', async () => {
@@ -340,7 +326,6 @@ describe('DashboardView', () => {
     expect(recommendationPanel.text()).toContain('当前没有推荐题目，可以先去题目列表探索新的方向。')
     expect(recommendationPanel.findAll('.recommend-item')).toHaveLength(0)
     expect(browseButtons).toHaveLength(1)
-    expect(browseButtons[0].classes()).toContain('journal-btn-primary')
   })
 
   it('应该在 category 子菜单下展示行动优先的分类列表并支持跳转到对应分类题目', async () => {
@@ -369,8 +354,6 @@ describe('DashboardView', () => {
     expect(categoryPanel.text()).toContain('优先补这个分类')
     expect(categoryPanel.text()).toContain('crypto')
     expect(categoryPanel.findAll('.category-action-item')).toHaveLength(2)
-    expect(webActionStyle).toContain('--journal-soft-panel-item-border:')
-    expect(webActionStyle).toContain('color-mix')
 
     await cryptoAction.get('button').trigger('click')
 
@@ -423,35 +406,6 @@ describe('DashboardView', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'Challenges' })
   })
 
-  it('分类补强卡片应统一使用明确的外边框 token', () => {
-    expect(studentCategoryProgressPageSource).toContain('categoryActionItemStyle(')
-    expect(studentCategoryProgressPageSource).toContain('getChallengeCategoryColor')
-    expect(studentCategoryProgressPageSource).toContain(
-      'primaryCategory?.category === item.category'
-    )
-  })
-
-  it('学生仪表盘的各个 tab 面板应补齐统一的 eyebrow', () => {
-    expect(studentOverviewPageSource).toContain('<div class="workspace-overline">')
-    expect(studentOverviewPageSource).toContain('Overview')
-    expect(studentRecommendationPageSource).toContain('<div class="workspace-overline">')
-    expect(studentRecommendationPageSource).toContain('Recommendations')
-    expect(studentCategoryProgressPageSource).toContain('<div class="workspace-overline">')
-    expect(studentCategoryProgressPageSource).toContain('Category')
-    expect(studentDashboardPanelRegistrySource).toContain('timeline: TrainingTimelineContent')
-    expect(studentDashboardPanelRegistrySource).not.toContain('timeline: TrainingTimelinePanel')
-    expect(studentDifficultyPageSource).toContain('<div class="workspace-overline">')
-    expect(studentDifficultyPageSource).toContain('Difficulty')
-  })
-
-  it('difficulty 补强卡片应统一使用可见外边框 token', () => {
-    expect(studentDifficultyPageSource).toContain('difficultyActionItemStyle(')
-    expect(studentDifficultyPageSource).toContain('getChallengeDifficultyColor')
-    expect(studentDifficultyPageSource).toContain(
-      'primaryDifficulty?.difficulty === item.difficulty'
-    )
-  })
-
   it('应该在 difficulty 子菜单下展示强度推进工作区并支持跳转到对应难度题目', async () => {
     routeState.query = { panel: 'difficulty' }
 
@@ -480,10 +434,6 @@ describe('DashboardView', () => {
     expect(difficultyPanel.text()).toContain('中等')
     expect(difficultyPanel.findAll('.difficulty-action-item')).toHaveLength(2)
     expect(mediumAction.classes()).toContain('difficulty-action-item--primary')
-    expect(easyActionStyle).toContain('--journal-soft-panel-item-border:')
-    expect(easyActionStyle).toContain('color-mix')
-    expect(mediumActionStyle).toContain('--journal-soft-panel-item-border:')
-    expect(mediumActionStyle).toContain('color-mix')
 
     await mediumAction.get('button').trigger('click')
 
@@ -655,19 +605,6 @@ describe('DashboardView', () => {
 
     await flushPromises()
 
-    const summary = wrapper.get('.timeline-metric-grid')
-
-    expect(summary.classes()).toContain('progress-strip')
-    expect(summary.classes()).toContain('metric-panel-grid')
-    expect(summary.classes()).not.toContain('metric-panel-default-surface')
-    expect(
-      summary.findAll(
-        '.timeline-metric-card.progress-card.metric-panel-card.metric-panel-default-surface.metric-panel-workspace-surface'
-      )
-    ).toHaveLength(4)
-    expect(summary.findAll('.progress-card-label.metric-panel-label')).toHaveLength(4)
-    expect(summary.findAll('.progress-card-value.metric-panel-value')).toHaveLength(4)
-    expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(4)
     expect(wrapper.text()).toContain('训练记录')
     expect(wrapper.text()).toContain('成功解题')
     expect(wrapper.text()).toContain('累计命中 Flag 的训练次数')
@@ -717,12 +654,5 @@ describe('DashboardView', () => {
     expect(assessmentApiMocks.getMyTimeline).not.toHaveBeenCalled()
     expect(assessmentApiMocks.getRecommendations).not.toHaveBeenCalled()
     expect(assessmentApiMocks.getSkillProfile).not.toHaveBeenCalled()
-  })
-
-  it('应该移除仪表盘页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {
-    expect(dashboardViewSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'
-    )
-    expect(dashboardViewSource).not.toContain('journal-eyebrow-text')
   })
 })

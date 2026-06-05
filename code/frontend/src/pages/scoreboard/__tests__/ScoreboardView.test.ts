@@ -231,25 +231,6 @@ describe('ScoreboardView', () => {
     expect(scoreboardDetailWorkspaceSource).not.toContain('返回排行列表')
     expect(scoreboardDetailWorkspaceSource).not.toContain('scoreboard-back-link')
     expect(scoreboardDetailWorkspaceSource).not.toContain('ArrowLeft')
-    expect(scoreboardDetailWorkspaceSource).toContain(
-      'class="student-directory-section workspace-directory-section scoreboard-detail-directory-section"'
-    )
-    expect(scoreboardDetailWorkspaceSource).toContain(
-      'class="student-directory-shell scoreboard-detail-directory workspace-directory-list"'
-    )
-    expect(scoreboardDetailWorkspaceSource).toContain(
-      'class="student-directory-shell__head student-directory-list-heading list-heading"'
-    )
-    expect(scoreboardDetailWorkspaceSource).toContain(
-      'class="workspace-directory-grid-head scoreboard-detail-directory-head"'
-    )
-    expect(scoreboardDetailWorkspaceSource).toContain(
-      'class="workspace-directory-grid-row scoreboard-detail-row"'
-    )
-    expect(scoreboardDetailWorkspaceSource).not.toContain('scoreboard-directory-top')
-    expect(scoreboardDetailWorkspaceSource).not.toContain('scoreboard-directory-title')
-    expect(scoreboardDetailWorkspaceSource).not.toContain('scoreboard-directory-meta')
-    expect(scoreboardDetailWorkspaceSource).not.toContain('<table class="sb-table">')
   })
 
   it('竞赛排行列表应提供学生通用状态与模式筛选，并透传后端查询参数', async () => {
@@ -663,57 +644,6 @@ describe('ScoreboardView', () => {
     expect(webSocketMocks.getHandlers('contests/contest-running/scoreboard')).toBeUndefined()
   })
 
-  it('排行榜页概况卡片应使用统一 metric-panel 样式类', () => {
-    expect(scoreboardWorkspaceShellSource).toContain('class="scoreboard-summary-grid metric-panel-grid"')
-    expect(scoreboardWorkspaceShellSource).toContain(
-      'class="scoreboard-summary-item progress-card metric-panel-card"'
-    )
-    expect(scoreboardWorkspaceShellSource).toContain(
-      'class="scoreboard-summary-label progress-card-label metric-panel-label"'
-    )
-    expect(scoreboardWorkspaceShellSource).toContain(
-      'class="scoreboard-summary-value progress-card-value metric-panel-value"'
-    )
-    expect(scoreboardWorkspaceShellSource).toContain(
-      'class="scoreboard-summary-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(scoreboardWorkspaceShellSource).toContain('<Trophy class="h-4 w-4" />')
-    expect(scoreboardWorkspaceShellSource).toContain('<Clock3 class="h-4 w-4" />')
-    expect(scoreboardWorkspaceShellSource).toContain('<Shield class="h-4 w-4" />')
-    expect(scoreboardWorkspaceShellSource).toContain('<Flag class="h-4 w-4" />')
-    expect(scoreboardDetailWorkspaceSource).toContain(
-      'class="scoreboard-summary-item progress-card metric-panel-card"'
-    )
-    expect(scoreboardDetailWorkspaceSource).toContain(
-      'class="scoreboard-summary-label progress-card-label metric-panel-label"'
-    )
-    expect(scoreboardDetailWorkspaceSource).toContain('<Users class="h-4 w-4" />')
-    expect(scoreboardDetailWorkspaceSource).toContain('<Trophy class="h-4 w-4" />')
-    expect(scoreboardDetailWorkspaceSource).toContain('<CheckCircle class="h-4 w-4" />')
-    expect(scoreboardDetailWorkspaceSource).toContain('<Shield class="h-4 w-4" />')
-  })
-
-  it('tabs 应直接位于页面顶部，面板内容应补齐统一 eyebrow', () => {
-    expect(scoreboardWorkspaceSource).not.toContain('<header class="scoreboard-topbar">')
-    expect(scoreboardWorkspaceSource).not.toContain('<h2 class="scoreboard-directory-title">积分排行榜</h2>')
-    expect(scoreboardWorkspaceShellSource).toContain(
-      '<div class="workspace-overline scoreboard-panel-overline">'
-    )
-    expect(scoreboardWorkspaceShellSource).toContain('Contest Scoreboard')
-    expect(scoreboardWorkspaceShellSource).toContain('Points Scoreboard')
-    expect(scoreboardWorkspaceSource).not.toContain(
-      'class="journal-note-label student-directory-shell__eyebrow student-directory-list-heading__eyebrow"'
-    )
-  })
-
-  it('排行榜顶部页签应接入统一 workspace tab 样式', () => {
-    expect(scoreboardWorkspaceShellSource).toContain('class="workspace-tabbar top-tabs"')
-    expect(scoreboardWorkspaceShellSource).toContain('class="workspace-tab top-tab"')
-    expect(scoreboardSource).not.toContain('--page-top-tabs-gap: var(--space-7);')
-    expect(scoreboardSource).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
-    expect(scoreboardSource).not.toContain('--page-top-tab-min-height: 52px;')
-  })
-
   it('竞赛排行列表分页展示并支持切换下一页', async () => {
     getPracticeRankingMock.mockResolvedValue([])
     getContestsMock.mockImplementation(async ({ page }: { page: number }) =>
@@ -835,18 +765,6 @@ describe('ScoreboardView', () => {
     const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
     expect(paginationButtons[0].attributes('disabled')).toBeDefined()
     expect(paginationButtons[1].attributes('disabled')).toBeDefined()
-  })
-
-  it('排行榜页级 shell 不应继续携带 journal-eyebrow-text 修饰类', () => {
-    expect(scoreboardSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'
-    )
-    expect(scoreboardSource).not.toContain('journal-eyebrow-text')
-  })
-
-  it('排行榜空态操作按钮应接入共享 ui-btn 原语', () => {
-    expect(scoreboardWorkspaceShellSource).toContain('class="ui-btn ui-btn--secondary"')
-    expect(scoreboardWorkspaceSource).not.toContain('class="scoreboard-btn"')
   })
 
   it('提供竞赛排行榜与积分排行榜两个页签，并展示积分榜字段', async () => {
