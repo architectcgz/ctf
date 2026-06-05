@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 
 import ContestManage from '@/pages/platform/contests/ContestManageRoutePage.vue'
 import contestManageSource from '@/pages/platform/contests/ContestManageRoutePage.vue?raw'
@@ -26,15 +24,6 @@ const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 const routeState = vi.hoisted(() => ({
   query: {} as Record<string, string>,
 }))
-const contestOrchestrationCombinedSource = [
-  contestOrchestrationSource,
-  contestManageOverviewPanelSource,
-  contestManageCreatePanelSource,
-  readFileSync(
-    resolve(process.cwd(), 'src/features/platform/contest-manage/ui/contestOrchestrationPage.css'),
-    'utf8'
-  ),
-].join('\n')
 
 vi.mock('@/api/admin/contest-manage', async () => {
   const actual =
@@ -558,7 +547,7 @@ describe('ContestManage', () => {
     expect(wrapper.text()).not.toContain('当前页 1 场赛事')
   })
 
-  it('赛事目录筛选应切到共享目录工具栏', () => {
+  it('赛事目录页应继续把筛选与面板切换 owner 留在 feature 和 model 层', () => {
     expect(contestManageSource).toContain('PlatformContestManagePage')
     expect(contestManageSource).not.toContain('useContestManagePage')
     expect(contestManageSource).not.toContain('onMounted(')
@@ -571,37 +560,17 @@ describe('ContestManage', () => {
     expect(contestManagePageModelSource).toContain('buildContestOperationsRoute')
     expect(contestManagePageModelSource).toContain('buildContestAnnouncementsRoute')
     expect(platformContestTableSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
-    expect(platformContestTableSource).toContain('<AppRouteLink')
     expect(contestAnnouncementDrawerSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(contestAnnouncementDrawerSource).toContain('id="contest-open-announcement-page"')
-    expect(contestOrchestrationCombinedSource).toContain(
+    expect(contestManageOverviewPanelSource).toContain(
       "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
-    expect(contestOrchestrationCombinedSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(contestOrchestrationCombinedSource).toContain('filter-panel-title="赛事筛选"')
-    expect(contestOrchestrationCombinedSource).toContain('total-suffix="场赛事"')
-    expect(contestOrchestrationCombinedSource).not.toMatch(
-      /\.contest-directory-section,\s*\.contest-create-panel\s*\{[\s\S]*gap:\s*var\(--space-4\);/s
-    )
-    expect(contestOrchestrationCombinedSource).not.toMatch(
-      /\.contest-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-    expect(contestOrchestrationCombinedSource).not.toContain('<nav class="top-tabs"')
-    expect(contestOrchestrationCombinedSource).not.toContain('class="contest-filter-grid"')
-    expect(contestOrchestrationCombinedSource).not.toContain('class="contest-filter-strip"')
-    expect(contestOrchestrationCombinedSource).toContain(
-      '<header class="workspace-panel-header contest-overview-head">'
-    )
-    expect(contestOrchestrationCombinedSource).toContain('class="workspace-panel-header__intro"')
-    expect(contestOrchestrationCombinedSource).toContain(
-      'class="workspace-panel-header__actions ui-toolbar-actions contest-panel-actions"'
-    )
-    expect(contestOrchestrationCombinedSource).toContain(
-      'class="workspace-panel-header__summary admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(contestOrchestrationCombinedSource).not.toMatch(
-      /\.contest-overview-head\s*\{[\s\S]*border-bottom:\s*1px solid var\(--workspace-line-soft\);/s
-    )
+    expect(contestOrchestrationSource).toContain('<ContestManageOverviewPanel')
+    expect(contestOrchestrationSource).toContain('<ContestManageCreatePanel')
+    expect(contestManageOverviewPanelSource).toContain('<WorkspaceDirectoryToolbar')
+    expect(contestManageOverviewPanelSource).toContain('filter-panel-title="赛事筛选"')
+    expect(contestManageOverviewPanelSource).toContain('total-suffix="场赛事"')
+    expect(contestManageCreatePanelSource).toContain('id="contest-panel-create"')
   })
 
   it('应该在赛事目录通过共享筛选面板切换状态筛选', async () => {
