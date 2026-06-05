@@ -7,6 +7,9 @@ git config core.hooksPath .githooks
 
 chmod +x .githooks/pre-commit
 chmod +x .githooks/commit-msg
+chmod +x scripts/check-consistency.sh
+chmod +x scripts/check-frontend-test-guard.sh
+chmod +x scripts/check-architecture.sh
 chmod +x scripts/check-commit-message.sh
 chmod +x scripts/check-reuse-first.sh
 chmod +x scripts/check-skill-sync-reminder.sh

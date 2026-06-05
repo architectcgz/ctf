@@ -10,7 +10,7 @@ bash scripts/install-githooks.sh
 
 当前 hooks：
 
-- `pre-commit`：仅当修改 API 相关文件时自动运行 `scripts/sync_openapi_from_contract.py`，当前包含 API 合同文档、`docs/architecture/backend/04-api-design.md`、后端路由/handler/dto、统一响应与错误码；不会再因容器、数据库等非 API 改动触发。
+- `pre-commit`：运行本地 harness 检查，包括一致性、前端过细样式测试守卫、reuse-first、架构护栏和 skill sync reminder。
 - `commit-msg`：运行 `scripts/check-commit-message.sh`，要求普通提交采用“标题 + 正文”结构。标题继续使用英文类型前缀，如 `fix`、`refactor`、`docs`，可选 scope 放在英文括号里，冒号后的描述必须包含中文说明；正文至少两行有效内容，且需要有足够具体的变更说明。
 
 <!-- BEGIN HARNESS ENGINEERING: hook-docs -->
@@ -35,7 +35,17 @@ bash scripts/install-githooks.sh
 4. `scripts/check-architecture.sh --quick`
 5. `scripts/check-skill-sync-reminder.sh --staged`
 6. `scripts/check-commit-message.sh <commit-message-file>`（在 `commit-msg` 阶段执行）
-- 若需要在提交前手工自检，可直接运行 `bash scripts/check-reuse-first.sh --staged`。
+- 写完前端测试后，推荐先手工运行：
+
+```bash
+bash scripts/check-frontend-test-guard.sh
+bash scripts/check-frontend-test-guard.sh --files code/frontend/src/path/to/example.test.ts
+```
+
+- `bash scripts/check-frontend-test-guard.sh` 默认检查当前工作区里变更过的前端测试文件。
+- `bash scripts/check-frontend-test-guard.sh --staged` 保持给 `pre-commit` 使用，只检查暂存区新增断言。
+- `bash scripts/check-frontend-test-guard.sh --files <path...>` 适合只针对当前正在改的测试文件做显式检查。
+- 需要同时检查受保护实现的复用决策时，再运行 `bash scripts/check-reuse-first.sh --staged`。
 - 推荐提交流程示例：
 
 ```bash
