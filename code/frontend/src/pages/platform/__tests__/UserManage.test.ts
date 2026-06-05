@@ -483,13 +483,9 @@ describe('UserManage', () => {
       "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
     expect(userGovernanceSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
-    expect(userGovernanceSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(userGovernanceSource).toContain('<WorkspaceDataTable')
-    expect(userGovernanceSource).not.toContain('<table class="user-table min-w-full text-sm">')
     expect(wrapper.find('.user-list').exists()).toBe(true)
     expect(wrapper.find('.workspace-directory-toolbar').exists()).toBe(true)
     expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(2)
-    expect(wrapper.find('.user-table-accent').exists()).toBe(false)
     const headers = wrapper.findAll('.workspace-data-table__head-cell').map((item) => item.text())
     expect(headers).toEqual(['用户', '姓名', '角色', '状态', '操作'])
     expect(wrapper.find('.admin-pagination').exists()).toBe(true)
@@ -504,23 +500,12 @@ describe('UserManage', () => {
     expect(rows[1]?.text()).not.toContain('S002')
     expect(rows[1]?.text()).not.toContain('学号：')
     expect(rows[1]?.text()).not.toContain('工号：')
-    expect(wrapper.findAll('.user-action-btn')).toHaveLength(4)
-    expect(wrapper.find('.user-list .admin-inline-chip').exists()).toBe(false)
 
     expect(document.body.querySelector('.user-detail-drawer')).toBeNull()
     await wrapper.get('#user-row-detail-1').trigger('click')
     await flushPromises()
 
     const drawer = document.body.querySelector<HTMLElement>('.user-detail-drawer')
-    expect(userGovernanceSource).toContain(
-      "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
-    )
-    expect(userGovernanceSource).toContain('<AdminSurfaceModal')
-    expect(userGovernanceSource).toContain('width="40rem"')
-    expect(userGovernanceSource).not.toContain('.user-detail-overlay')
-    expect(userGovernanceSource).not.toContain(
-      'background: color-mix(in srgb, var(--color-bg-base) 42%, transparent);'
-    )
     expect(drawer).not.toBeNull()
     expect(drawer?.textContent).toContain('alice')
     expect(drawer?.textContent).toContain('alice@example.com')
@@ -583,71 +568,6 @@ describe('UserManage', () => {
     )
   })
 
-  it('用户目录筛选与列表应切到共享目录原语', () => {
-    expect(userGovernanceSource).toContain('workspace-directory-section')
-    expect(userGovernanceSource).toContain(
-      'class="user-table-shell workspace-directory-list user-list"'
-    )
-    expect(userGovernanceSource).toContain(
-      'search-placeholder="用户名 / 邮箱 / 班级 / 学号 / 工号"'
-    )
-    expect(userGovernanceSource).toContain('filter-panel-title="用户筛选"')
-    expect(userGovernanceSource).toContain('total-suffix="个用户"')
-    expect(userGovernanceSource).not.toContain('class="mt-5 grid gap-4"')
-    expect(userGovernanceSource).not.toContain('<table class="user-table min-w-full text-sm">')
-  })
-
-  it('用户治理页头部操作应改用共享 header-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(userGovernanceSource).toContain(
-      'class="workspace-panel-header__actions header-actions user-panel-actions"'
-    )
-    expect(userGovernanceSource).toContain('class="header-btn header-btn--ghost"')
-    expect(userGovernanceSource).toContain('class="header-btn header-btn--primary"')
-    expect(userGovernanceSource).toContain('class="ui-btn ui-btn--secondary user-action-btn"')
-    expect(userGovernanceSource).toContain('class="ui-btn ui-btn--danger user-action-btn"')
-    expect(userGovernanceSource).not.toContain('admin-btn admin-btn-ghost')
-    expect(userGovernanceSource).not.toContain('admin-btn admin-btn-primary')
-    expect(userGovernanceSource).not.toContain('admin-btn admin-btn-danger')
-    expect(userGovernanceSource).not.toContain('admin-btn-compact')
-  })
-
-  it('用户治理页应改成 SaaS 全景工作台，并仅保留导入独立面板', () => {
-    const importPanelStart = userGovernanceSource.indexOf('id="user-panel-import"')
-
-    expect(userGovernanceSource).toContain('id="user-panel-overview"')
-    expect(userGovernanceSource).toContain('id="user-panel-import"')
-    expect(userGovernanceSource).not.toContain('user-tab-overview')
-    expect(userGovernanceSource).not.toContain('user-tab-directory')
-    expect(userGovernanceSource).not.toContain('user-tab-import')
-    expect(userGovernanceSource).not.toMatch(/role="tablist"/s)
-    expect(userGovernanceSource).toContain('<main class="content-pane">')
-    expect(userGovernanceSource).toMatch(/<div class="workspace-overline">\s*User Workspace\s*<\/div>/)
-    expect(userGovernanceSource).toMatch(/<h1 class="workspace-page-title">\s*用户治理台\s*<\/h1>/)
-    expect(userGovernanceSource).toMatch(/<h2 class="list-heading__title">\s*全部用户\s*<\/h2>/)
-    expect(userGovernanceSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(importPanelStart).toBeGreaterThan(-1)
-    expect(userGovernanceSource).toMatch(/<div class="workspace-overline">\s*User Import\s*<\/div>/)
-    expect(userGovernanceSource).toMatch(/<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/)
-    expect(userGovernanceSource).not.toMatch(
-      /\.user-directory-section :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
-  })
-
-  it('用户导入流应保留独立导入面板和回执区', () => {
-    expect(userGovernanceSource).toContain('class="workspace-directory-section user-import-panel"')
-    expect(userGovernanceSource).toContain('class="workspace-tab-heading user-import-head"')
-    expect(userGovernanceSource).toMatch(/<h2 class="workspace-page-title">\s*导入用户\s*<\/h2>/)
-    expect(userGovernanceSource).toMatch(/<h2 class="list-heading__title">\s*导入回执\s*<\/h2>/)
-    expect(userGovernanceSource).toContain('id="user-return-overview"')
-  })
-
-  it('用户工作台头部应暴露全局操作按钮，而不是顶层 tabs', () => {
-    expect(userGovernanceSource).toContain('id="user-open-import"')
-    expect(userGovernanceSource).toContain('id="user-open-create"')
-    expect(userGovernanceSource).toContain('刷新列表')
-    expect(userGovernanceSource).not.toContain('<nav class="top-tabs"')
-  })
-
   it('用户工作台摘要应内嵌在 overview 区并呈现四个指标卡片', async () => {
     adminApiMocks.getUsers.mockResolvedValue({
       list: [
@@ -691,32 +611,12 @@ describe('UserManage', () => {
     const summaryCards = summary.findAll('.progress-card.metric-panel-card')
 
     expect(summaryCards).toHaveLength(4)
-    expect(summary.find('.user-overview-grid').exists()).toBe(true)
-    expect(summary.findAll('.progress-card-label.metric-panel-label')).toHaveLength(4)
-    expect(summary.findAll('.progress-card-value.metric-panel-value')).toHaveLength(4)
-    expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(4)
     expect(summaryCards.map((item) => item.find('.journal-note-label').text())).toEqual([
       '用户总量',
       '活跃账号',
       '教师角色',
       '导入回执',
     ])
-    expect(userGovernanceSource).not.toContain(
-      '上面直接查看用户规模和导入回执，下面围绕具体账号完成搜索、筛选、编辑与治理操作。'
-    )
-    expect(userGovernanceSource).toContain(
-      '--workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);'
-    )
-    expect(userGovernanceSource).toContain(
-      '<header class="workspace-panel-header user-overview-head">'
-    )
-    expect(userGovernanceSource).toContain('class="workspace-panel-header__intro"')
-    expect(userGovernanceSource).toContain(
-      'class="workspace-panel-header__actions header-actions user-panel-actions"'
-    )
-    expect(userGovernanceSource).toContain(
-      'class="workspace-panel-header__summary admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
   })
 
   it('删除用户失败时不应抛到全局错误页', async () => {

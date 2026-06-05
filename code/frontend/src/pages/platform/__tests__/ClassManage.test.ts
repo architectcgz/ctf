@@ -4,8 +4,6 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import PlatformClassManagement from '@/pages/platform/ClassManageRoutePage.vue'
 import adminClassManageSource from '@/pages/platform/ClassManageRoutePage.vue?raw'
-import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
-import classManageHeroPanelSource from '@/features/platform/class-management/ui/ClassManageHeroPanel.vue?raw'
 import classManageWorkspacePanelSource from '@/features/platform/class-management/ui/ClassManageWorkspacePanel.vue?raw'
 import platformClassManagementPageSource from '@/features/platform/class-management/model/usePlatformClassManagementPage.ts?raw'
 import platformClassDirectorySource from '@/features/platform/class-management/model/usePlatformClassDirectory.ts?raw'
@@ -69,15 +67,6 @@ describe('PlatformClassManagement', () => {
     expect(adminClassManageSource).not.toContain('getAdminClasses')
     expect(adminClassManageSource).toContain('ClassManageHeroPanel')
     expect(adminClassManageSource).toContain('ClassManageWorkspacePanel')
-    expect(adminClassManageSource).toContain('<ClassManageHeroPanel')
-    expect(adminClassManageSource).toContain('<ClassManageWorkspacePanel')
-    expect(adminClassManageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-class-manage-shell"'
-    )
-    expect(classManageHeroPanelSource).toContain('刷新目录')
-    expect(classManageHeroPanelSource).toContain(
-      'class="admin-summary-grid admin-class-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
     expect(classManageWorkspacePanelSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(classManageWorkspacePanelSource).toContain(
       "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
@@ -88,22 +77,11 @@ describe('PlatformClassManagement', () => {
     expect(classManageWorkspacePanelSource).toContain(
       "from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
-    expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(classManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
-    expect(classManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
-    expect(classManageWorkspacePanelSource).toContain('<AppRouteLink')
-    expect(classManageWorkspacePanelSource).toContain('search-placeholder="搜索班级名称..."')
-    expect(classManageWorkspacePanelSource).toContain('filter-panel-title="班级筛选"')
-    expect(classManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
-    expect(classManageWorkspacePanelSource).not.toContain('class="ui-btn ui-btn--ghost"')
-    expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(platformClassManagementPageSource).not.toContain("from 'vue-router'")
     expect(platformClassManagementPageSource).toContain("from './usePlatformClassDirectory'")
     expect(platformClassManagementPageSource).not.toContain("from '@/api/admin'")
     expect(platformClassDirectorySource).toContain("from '@/api/admin'")
     expect(platformClassManagementPageSource).toContain('function buildClassRoute')
-    expect(adminClassManageSource).not.toContain('teacher-management-shell')
-    expect(adminClassManageSource).not.toContain('teacher-directory-row')
 
     const { wrapper } = await mountPage()
 

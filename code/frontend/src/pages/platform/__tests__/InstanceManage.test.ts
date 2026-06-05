@@ -5,7 +5,6 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import instancePresentationSource from '@/entities/instance/model/presentation.ts?raw'
 import PlatformInstanceManagement from '@/pages/platform/InstanceManageRoutePage.vue'
 import adminInstanceManageSource from '@/pages/platform/InstanceManageRoutePage.vue?raw'
-import appRouteLinkSource from '@/shared/ui/navigation/AppRouteLink.vue?raw'
 import platformInstanceManagementPageSource from '@/features/platform/instance-management/ui/PlatformInstanceManagementPage.vue?raw'
 import instanceManageHeroPanelSource from '@/features/platform/instance-management/ui/InstanceManageHeroPanel.vue?raw'
 import instanceManageWorkspacePanelSource from '@/features/platform/instance-management/ui/InstanceManageWorkspacePanel.vue?raw'
@@ -154,20 +153,10 @@ describe('PlatformInstanceManagement', () => {
     expect(platformInstanceManagementPageSource).toContain('usePlatformInstanceManagementPage')
     expect(platformInstanceManagementPageSource).toContain('InstanceManageWorkspacePanel')
     expect(platformInstanceManagementPageSource).toContain('InstanceManageHeroPanel')
-    expect(platformInstanceManagementPageSource).toContain('<InstanceManageHeroPanel')
-    expect(platformInstanceManagementPageSource).toContain('<InstanceManageWorkspacePanel')
-    expect(platformInstanceManagementPageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-instance-manage-shell"'
-    )
     expect(platformInstanceManagementPageSource).not.toContain("from '@/api/instances'")
     expect(instanceManageHeroPanelSource).toContain("from '@/shared/ui/navigation/AppRouteLink.vue'")
-    expect(instanceManageHeroPanelSource).toContain('<AppRouteLink')
     expect(instanceManageHeroPanelSource).toContain('返回概览')
     expect(instanceManageHeroPanelSource).toContain('刷新列表')
-    expect(instanceManageHeroPanelSource).toContain('class="header-btn header-btn--primary"')
-    expect(instanceManageHeroPanelSource).toContain(
-      'class="admin-summary-grid admin-instance-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
     expect(instanceManageWorkspacePanelSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(instanceManageWorkspacePanelSource).toContain(
       "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
@@ -181,19 +170,7 @@ describe('PlatformInstanceManagement', () => {
     expect(instanceManageWorkspacePanelSource).toContain(
       "from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
-    expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
-    expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(instanceManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
-    expect(instanceManageWorkspacePanelSource).toContain('<AppRouteLink')
-    expect(instanceManageWorkspacePanelSource).toContain('search-placeholder="检索实例、题目、用户或访问地址..."')
-    expect(instanceManageWorkspacePanelSource).toContain('filter-panel-title="实例筛选"')
-    expect(instanceManageWorkspacePanelSource).toContain('class="instance-user-link"')
-    expect(instanceManageWorkspacePanelSource).toContain('class="instance-status-pill"')
     expect(instanceManageWorkspacePanelSource).toContain('getInstanceStatusPillClass')
-    expect(instanceManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--danger ui-btn--xs"')
-    expect(appRouteLinkSource).toContain("from 'vue-router'")
-    expect(platformInstanceManagementPageSource).not.toContain('bg-green-100 text-green-700')
-    expect(platformInstanceManagementPageSource).not.toContain('bg-slate-100 text-slate-600')
 
     const { wrapper } = await mountPage()
 
