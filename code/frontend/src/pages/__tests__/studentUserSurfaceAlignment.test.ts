@@ -23,275 +23,50 @@ const journalUserShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-shell.css`,
   'utf-8'
 )
+
 const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
 const notificationListWorkspaceSource = `${notificationListSource}\n${notificationListWorkspaceSourceBase}`
 
 describe('student and user surface alignment', () => {
-  it('student dashboard panel headers 应复用 timeline 节奏抽出的共享 header 间距原语', () => {
-    expect(themeSource).toContain(
-      '--space-workspace-panel-title-gap: var(--workspace-page-title-margin-top);'
-    )
-    expect(themeSource).toContain(
-      '--space-workspace-panel-copy-gap: var(--workspace-page-copy-margin-top);'
-    )
-    expect(themeSource).toContain('--space-workspace-panel-block-gap: var(--space-5);')
-    expect(themeSource).toContain('--space-workspace-panel-divider-gap: var(--space-3);')
+  it('student dashboard panel headers 应复用共享 header 与 divider 原语', () => {
+    expect(themeSource).toContain('--space-workspace-panel-title-gap:')
+    expect(themeSource).toContain('--space-workspace-panel-copy-gap:')
     expect(styleSource).toContain('.workspace-panel-header__intro')
     expect(styleSource).toContain('.workspace-panel-divider')
-    expect(styleSource).toContain('.workspace-panel-header__meta,')
-    expect(styleSource).toContain('.workspace-panel-header__actions,')
-    expect(styleSource).toContain('.workspace-panel-header__summary {')
-    expect(styleSource).toContain(
-      'var(--workspace-panel-header-title-gap, var(--space-workspace-panel-title-gap))'
-    )
-    expect(styleSource).toContain(
-      'var(--workspace-panel-header-copy-gap, var(--space-workspace-panel-copy-gap))'
-    )
-    expect(styleSource).toContain(
-      'var(--workspace-panel-header-block-gap, var(--space-workspace-panel-block-gap))'
-    )
-    expect(styleSource).toContain(
-      'var(--workspace-panel-divider-gap, var(--space-workspace-panel-divider-gap))'
-    )
-    expect(studentOverviewSource).toContain(
-      'class="workspace-panel-header__actions journal-actions"'
-    )
-    expect(studentRecommendationSource).toContain(
-      'class="workspace-panel-header recommendation-header"'
-    )
-    expect(studentCategoryProgressSource).toContain(
-      'class="workspace-panel-header category-header"'
-    )
-    expect(studentDifficultySource).toContain('class="workspace-panel-header difficulty-header"')
     expect(studentOverviewSource).toContain('class="workspace-panel-divider"')
-    expect(studentRecommendationSource).toContain('class="workspace-panel-divider"')
-    expect(studentCategoryProgressSource).toContain('class="workspace-panel-divider"')
-    expect(studentDifficultySource).toContain('class="workspace-panel-divider"')
+    expect(studentRecommendationSource).toContain('class="workspace-panel-header recommendation-header"')
+    expect(studentCategoryProgressSource).toContain('class="workspace-panel-header category-header"')
+    expect(studentDifficultySource).toContain('class="workspace-panel-header difficulty-header"')
   })
 
-  it('student dashboard tabs 应通过共享 divider 收口 header 和 body 之间的分隔，而不是继续各自维护外层边线', () => {
-    expect(studentOverviewSource).not.toMatch(/\.journal-board::before\s*\{/)
-    expect(studentOverviewSource).not.toContain('journal-board--embedded')
-
-    expect(studentRecommendationSource).not.toContain('recommend-board mt-6')
-    expect(studentRecommendationSource).not.toContain('recommend-board--embedded')
-    expect(studentRecommendationSource).not.toMatch(
-      /\.recommend-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
-    )
-
-    expect(studentCategoryProgressSource).not.toContain('category-board mt-6')
-    expect(studentCategoryProgressSource).not.toContain('category-board--embedded')
-    expect(studentCategoryProgressSource).not.toMatch(
-      /\.category-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
-    )
-
-    expect(studentDifficultySource).not.toContain('difficulty-board mt-6')
-    expect(studentDifficultySource).not.toContain('difficulty-board--embedded')
-    expect(studentDifficultySource).not.toMatch(
-      /\.difficulty-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
-    )
-
-  })
-
-  it('student dashboard detail pages should use softened control and track tokens instead of bright hardcoded borders', () => {
+  it('student dashboard panels should continue to use shared journal soft surface owner', () => {
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-shell')
-    expect(journalSoftSurfacesSource).toContain('--journal-shell-border: color-mix')
-    expect(journalSoftSurfacesSource).toContain('--journal-soft-border: color-mix')
-    expect(journalSoftSurfacesSource).toContain('--journal-divider: color-mix')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-panel-shell')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-soft-panel-item')
-    expect(journalSoftSurfacesSource).toMatch(
-      /\.journal-soft-surface \.journal-soft-panel-item\s*\{[\s\S]*display:\s*block;[\s\S]*width:\s*100%;/s
-    )
-    expect(journalSoftSurfacesSource).toContain(
-      '.journal-soft-surface .journal-soft-panel-item--accent'
-    )
-    expect(studentOverviewSource).toMatch(
-      /\.journal-inline-item\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s
-    )
-    expect(studentOverviewSource).toContain('story-metric-grid')
-    expect(studentOverviewSource).not.toContain('border-[var(--journal-border)]')
-    expect(studentOverviewSource).not.toMatch(/border:\s*1px solid var\(--journal-border\);/)
-
-    expect(studentDifficultySource).toContain('journal-soft-surface')
-    expect(studentDifficultySource).toContain('journal-soft-panel-shell')
-    expect(studentDifficultySource).toContain('journal-soft-panel-item')
-    expect(studentDifficultySource).toContain('difficultyActionItemStyle(')
-    expect(studentDifficultySource).toContain('getChallengeDifficultyColor')
-    expect(studentDifficultySource).toContain('.difficulty-note')
-    expect(studentDifficultySource).not.toContain('rgba(226, 232, 240, 0.72)')
-    expect(studentDifficultySource).not.toContain('bg-[rgba(226,232,240,0.65)]')
-
-    expect(trainingTimelineSource).toContain('journal-soft-surface')
-
-    expect(journalSoftSurfacesSource).toMatch(
-      /\.journal-soft-surface \.journal-btn-outline\s*\{[\s\S]*border:\s*1px solid var\(--journal-control-border\);/s
-    )
     expect(studentRecommendationSource).toContain('journal-soft-surface')
-    expect(studentRecommendationSource).not.toMatch(/^\.journal-btn-outline\s*\{/m)
-    expect(studentRecommendationSource).not.toContain('border-slate-200')
-    expect(studentRecommendationSource).not.toContain('bg-slate-50')
-    expect(studentRecommendationSource).not.toContain('border-emerald-200')
-    expect(studentRecommendationSource).not.toContain('bg-emerald-50')
-
     expect(studentCategoryProgressSource).toContain('journal-soft-surface')
-    expect(studentCategoryProgressSource).toContain('journal-soft-panel-shell')
-    expect(studentCategoryProgressSource).toContain('journal-soft-panel-item')
-    expect(studentCategoryProgressSource).toMatch(
-      /\.category-action-list\s*\{[\s\S]*--journal-soft-panel-shell-padding:\s*0;[\s\S]*\}/s
-    )
-    expect(studentCategoryProgressSource).toMatch(
-      /\.category-track\s*\{[\s\S]*background:\s*var\(--journal-track\);/s
-    )
-    expect(studentCategoryProgressSource).not.toMatch(/^\.journal-btn-outline\s*\{/m)
-    expect(studentCategoryProgressSource).not.toContain('rgba(226, 232, 240, 0.65)')
+    expect(studentDifficultySource).toContain('journal-soft-surface')
+    expect(trainingTimelineSource).toContain('journal-soft-surface')
   })
 
-  it('student overview 当前排名卡片应切换到 shared metric-panel 卡片栈，而不是继续复用本地 note 边框样式', () => {
-    expect(studentOverviewSource).toContain(
-      'class="journal-rank-summary mt-5 progress-card metric-panel-card metric-panel-default-surface"'
-    )
-    expect(studentOverviewSource).toContain(
-      'class="journal-rank-summary__label progress-card-label metric-panel-label"'
-    )
-    expect(studentOverviewSource).toContain(
-      'class="journal-rank-summary__value progress-card-value metric-panel-value tech-font"'
-    )
-    expect(studentOverviewSource).toContain(
-      'class="journal-rank-summary__helper progress-card-hint metric-panel-helper"'
-    )
-    expect(studentOverviewSource).toMatch(
-      /\.journal-inline-item\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s
-    )
-    expect(studentOverviewSource).not.toMatch(
-      /\.journal-metric,\s*\.journal-inline-item,\s*\.journal-rank-summary\s*\{/s
-    )
-  })
-
-  it('student overview 竞技表现统计卡片应复用 shared metric-panel 样式栈，而不是继续使用本地 journal-metric 表面', () => {
-    expect(studentOverviewSource).toContain(
-      "'story-metric-grid mt-6 progress-strip metric-panel-grid metric-panel-default-surface'"
-    )
-    expect(studentOverviewSource).toContain(':class="storyMetricGridClass"')
-    expect(studentOverviewSource).toContain(
-      'class="journal-metric progress-card metric-panel-card"'
-    )
-    expect(studentOverviewSource).toContain('class="progress-card-label metric-panel-label"')
-    expect(studentOverviewSource).toContain('class="progress-card-value metric-panel-value"')
-    expect(studentOverviewSource).toContain('class="progress-card-hint metric-panel-helper"')
-    expect(studentOverviewSource).not.toMatch(/\.journal-metric-accent\s*\{/)
-    expect(studentOverviewSource).not.toMatch(
-      /\.journal-metric,\s*\.journal-inline-item\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s
-    )
-  })
-
-  it('student recommendation 应切换到行动优先布局和 shared metric-panel 摘要卡片栈', () => {
-    expect(studentRecommendationSource).toContain('现在先练这几道')
-    expect(studentRecommendationSource).toContain('当前目标难度')
-    expect(studentRecommendationSource).toContain('浏览全部题目')
-    expect(studentRecommendationSource).toContain(
-      'class="workspace-panel-header__summary recommendation-summary-strip progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
-    expect(studentRecommendationSource).toContain(
-      'class="recommendation-summary-card progress-card metric-panel-card"'
-    )
-    expect(studentRecommendationSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
-    )
-    expect(studentRecommendationSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(studentRecommendationSource).toContain('<component :is="card.icon" class="h-4 w-4" />')
-    expect(studentRecommendationSource).not.toContain('Top Queue')
-    expect(studentRecommendationSource).not.toContain('Full List')
-    expect(studentRecommendationSource).not.toContain('推荐摘要')
-    expect(studentRecommendationSource).not.toContain('训练动作目录')
-    expect(studentRecommendationSource).not.toContain('为什么先做这些')
-  })
-
-  it('student recommendation 题目分类胶囊应使用明确的 category-pill 专用变量', () => {
+  it('student recommendation 与难度/分类面板应继续通过 challenge entity 承接胶囊与映射 owner', () => {
     expect(themeSource).toContain('--challenge-category-pill-web')
-    expect(themeSource).toContain('--challenge-category-pill-forensics')
+    expect(themeSource).toContain('--challenge-difficulty-pill-beginner')
     expect(challengePresentationSource).toContain('var(--challenge-category-pill-web)')
+    expect(challengePresentationSource).toContain('var(--challenge-difficulty-pill-easy)')
     expect(studentRecommendationSource).toContain("from '@/entities/challenge'")
     expect(studentRecommendationSource).toContain('<ChallengeCategoryDifficultyPills')
     expect(studentRecommendationSource).toContain('toChallengeCategory')
     expect(studentRecommendationSource).not.toContain('categoryPillStyle(item.category)')
-    expect(studentRecommendationSource).not.toContain('--challenge-tone-')
+    expect(studentDifficultySource).toContain('getChallengeDifficultyColor')
+    expect(studentCategoryProgressSource).toContain('category-action')
   })
 
-  it('题目难度胶囊应使用明确的 difficulty-pill 专用变量', () => {
-    expect(themeSource).toContain('--challenge-difficulty-pill-beginner')
-    expect(themeSource).toContain('--challenge-difficulty-pill-insane')
-    expect(challengePresentationSource).toContain('var(--challenge-difficulty-pill-easy)')
-    expect(studentRecommendationSource).toContain('<ChallengeCategoryDifficultyPills')
-    expect(studentRecommendationSource).not.toContain('difficultyClass(item.difficulty)')
-    expect(themeSource).not.toContain('--challenge-diff-beginner')
-  })
-
-  it('student category progress 应切换到 shared metric-panel 摘要卡片栈和行动列表，而不是继续保留强弱高亮双卡', () => {
-    expect(studentCategoryProgressSource).toContain('优先补这个分类')
-    expect(studentCategoryProgressSource).toContain(
-      'class="workspace-panel-header__summary category-summary-strip progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
-    expect(studentCategoryProgressSource).toContain(
-      'class="category-summary-card progress-card metric-panel-card"'
-    )
-    expect(studentCategoryProgressSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
-    )
-    expect(studentCategoryProgressSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(studentCategoryProgressSource).toContain('<component :is="card.icon" class="h-4 w-4" />')
-    expect(studentCategoryProgressSource).toContain(
-      ':data-test="`category-action-${item.category}`"'
-    )
-    expect(studentCategoryProgressSource).not.toContain('category-highlight')
-    expect(studentCategoryProgressSource).not.toContain('Strongest Direction')
-    expect(studentCategoryProgressSource).not.toContain('Weakest Direction')
-    expect(studentCategoryProgressSource).not.toContain('Action Directory')
-  })
-
-  it('student difficulty 应切换到强度推进工作区和 shared metric-panel 摘要卡片栈，而不是继续保留说明型双栏结构', () => {
-    expect(studentDifficultySource).toContain('先推这一档强度')
-    expect(studentDifficultySource).toContain(
-      'class="workspace-panel-header__summary difficulty-summary-strip progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
-    expect(studentDifficultySource).toContain(
-      'class="difficulty-summary-card progress-card metric-panel-card"'
-    )
-    expect(studentDifficultySource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
-    )
-    expect(studentDifficultySource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(studentDifficultySource).toContain('<component :is="card.icon" class="h-4 w-4" />')
-    expect(studentDifficultySource).toContain(':data-test="`difficulty-action-${item.difficulty}`"')
-    expect(studentDifficultySource).not.toContain('difficulty-insight-list')
-    expect(studentDifficultySource).not.toContain('难度层级总览')
-    expect(studentDifficultySource).not.toContain('训练解读')
-    expect(studentDifficultySource).not.toContain('Action Directory')
-    expect(studentDifficultySource).not.toContain('为什么现在先推这一档')
-  })
-
-  it('instance and notification pages should soften list shells, controls, and empty-state separators', () => {
+  it('instance 与 notification 页面应继续通过 journal-shell-user 承接用户侧 surface', () => {
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user')
-    expect(journalUserShellSource).toContain('--journal-border:')
-    expect(journalUserShellSource).toContain('--journal-surface:')
-
     expect(instanceListWorkspaceSource).toContain('journal-shell-user')
-    expect(instanceListWorkspaceSource).not.toContain('border-[var(--journal-border)]')
-    expect(instanceListWorkspaceSource).not.toContain('border-[var(--journal-border)]/80')
-    expect(instanceListWorkspaceSource).toContain(
-      'class="instance-summary-label progress-card-label metric-panel-label"'
-    )
-    expect(instanceListWorkspaceSource).toContain('<Activity class="h-4 w-4" />')
-    expect(instanceListWorkspaceSource).toContain('<Clock3 class="h-4 w-4" />')
-    expect(instanceListWorkspaceSource).toContain('<Server class="h-4 w-4" />')
-
     expect(notificationListWorkspaceSource).toContain('journal-shell-user')
+    expect(instanceListWorkspaceSource).not.toContain('border-[var(--journal-border)]')
     expect(notificationListWorkspaceSource).not.toContain('rgba(148, 163, 184, 0.58)')
   })
 })

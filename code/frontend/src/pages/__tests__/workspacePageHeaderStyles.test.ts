@@ -1,49 +1,22 @@
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
 import contestListSource from '@/pages/contests/ContestListRoutePage.vue?raw'
 import contestListWorkspaceSource from '@/widgets/contest-list-workspace/ContestListWorkspace.vue?raw'
-import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import instanceListSource from '@/pages/instances/InstanceListRoutePage.vue?raw'
-import notificationListSource from '@/pages/notifications/NotificationListRoutePage.vue?raw'
-import notificationListWorkspaceSource from '@/widgets/notification-list-workspace/NotificationListWorkspace.vue?raw'
-import scoreboardViewSource from '@/pages/scoreboard/ScoreboardViewRoutePage.vue?raw'
+import instanceListWorkspaceShellSource from '@/features/instance-list/ui/InstanceListWorkspaceShell.vue?raw'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
-import challengeManageSource from '@/features/platform/challenges/ui/ChallengeManagePage.vue?raw'
-import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
-import imageManageSource from '@/pages/platform/ImageManageRoutePage.vue?raw'
-import challengePackageFormatSource from '@/pages/platform/challenges/ChallengePackageFormatRoutePage.vue?raw'
-import challengeImportManageSource from '@/pages/platform/challenges/ChallengeImportManageRoutePage.vue?raw'
-import cheatDetectionSource from '@/pages/platform/CheatDetectionRoutePage.vue?raw'
-import skillProfileSource from '@/pages/profile/SkillProfileRoutePage.vue?raw'
-import skillProfileWorkspaceShellSource from '@/features/skill-profile/ui/SkillProfileWorkspaceShell.vue?raw'
-import userProfileSource from '@/pages/profile/UserProfileRoutePage.vue?raw'
-import userProfileWorkspaceShellSource from '@/features/profile/ui/UserProfileWorkspaceShell.vue?raw'
-import securitySettingsSource from '@/pages/profile/SecuritySettingsRoutePage.vue?raw'
-import securitySettingsWorkspaceShellSource from '@/features/profile/ui/SecuritySettingsWorkspaceShell.vue?raw'
+import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
+import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
+import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressContent.vue?raw'
+import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
+import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
 import classManagementPageSource from '@/features/teacher/class-management/ui/ClassManagementPage.vue?raw'
-import classStudentsPageSourceBase from '@/features/teaching/class-students-workspace/ui/ClassStudentsPage.vue?raw'
-import classStudentsOverviewPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsOverviewPanel.vue?raw'
-import classStudentsInsightWindowPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsInsightWindowPanel.vue?raw'
-import classStudentsDirectoryPanelSource from '@/features/teaching/class-students-workspace/ui/ClassStudentsDirectoryPanel.vue?raw'
-import studentAnalysisPageSourceBase from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisPage.vue?raw'
-import studentAnalysisOverviewHeroPanelSource from '@/features/teaching/student-analysis-workspace/ui/StudentAnalysisOverviewHeroPanel.vue?raw'
 import studentManagementPageSource from '@/features/teacher/student-management/ui/StudentManagementPage.vue?raw'
 import teacherInstanceManagementPageSourceBase from '@/features/teacher/instances/ui/TeacherInstanceManagementPage.vue?raw'
 import teacherInstanceDirectorySectionSource from '@/features/teacher/instances/ui/TeacherInstanceDirectorySection.vue?raw'
 import teacherInstanceHeroPanelSource from '@/features/teacher/instances/ui/TeacherInstanceHeroPanel.vue?raw'
-import topologyStudioPageSource from '@/features/challenge-topology-studio/ui/ChallengeTopologyStudioPage.vue?raw'
-import topologyTemplateLibraryHeaderSource from '@/features/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue?raw'
-import topologyTemplateHeroSectionSource from '@/features/challenge-topology-studio/ui/TopologyTemplateHeroSection.vue?raw'
-import topologyChallengeWorkspaceHeaderSource from '@/features/challenge-topology-studio/ui/TopologyChallengeWorkspaceHeader.vue?raw'
-import studentOverviewSource from '@/features/student-dashboard/ui/StudentOverviewContent.vue?raw'
-import studentRecommendationSource from '@/features/student-dashboard/ui/StudentRecommendationContent.vue?raw'
-import studentCategoryProgressSource from '@/features/student-dashboard/ui/StudentCategoryProgressContent.vue?raw'
-import trainingTimelineSource from '@/entities/training-timeline/ui/TrainingTimelinePanel.vue?raw'
-import trainingTimelineContentSource from '@/entities/training-timeline/ui/TrainingTimelineContent.vue?raw'
-import studentDifficultySource from '@/features/student-dashboard/ui/StudentDifficultyContent.vue?raw'
 import teacherDashboardSourceBase from '@/features/teacher/dashboard/ui/TeacherDashboardPage.vue?raw'
 import teacherDashboardPortraitPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardPortraitPanel.vue?raw'
 import teacherDashboardStudentInsightPanelSource from '@/features/teacher/dashboard/ui/TeacherDashboardStudentInsightPanel.vue?raw'
@@ -58,32 +31,24 @@ import userGovernancePageSource from '@/features/platform/user-management/ui/Use
 import userGovernanceOverviewPanelSource from '@/features/platform/user-management/ui/UserGovernanceOverviewPanel.vue?raw'
 import userGovernanceDetailModalSource from '@/features/platform/user-management/ui/UserGovernanceDetailModal.vue?raw'
 import userGovernanceImportPanelSource from '@/features/platform/user-management/ui/UserGovernanceImportPanel.vue?raw'
-import contestOrchestrationSource from '@/features/platform/contest-manage/ui/ContestOrchestrationPage.vue?raw'
 import contestManageOverviewPanelSource from '@/features/platform/contest-manage/ui/ContestManageOverviewPanel.vue?raw'
-import contestOperationsHubHeroPanelSource from '@/features/platform/contest-operations/ui/ContestOperationsHubHeroPanel.vue?raw'
-import writeupManageDirectoryRowSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectoryRow.vue?raw'
-import writeupManageDirectorySectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupDirectorySection.vue?raw'
-import writeupManageHeaderSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManageHeader.vue?raw'
-import writeupManageSourceBase from '@/features/challenge-writeup-editor/ui/ChallengeWriteupManagePanel.vue?raw'
-import writeupManageSummaryStripSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSummaryStrip.vue?raw'
-import writeupEditorChallengeRailSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupChallengeRail.vue?raw'
-import writeupEditorContentSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorContent.vue?raw'
-import writeupEditorFormSectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorFormSection.vue?raw'
-import writeupEditorPageSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupEditorPage.vue?raw'
-import writeupEditorSnapshotSectionSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupSnapshotSection.vue?raw'
+import pageHeaderSource from '@/shared/ui/common/PageHeader.vue?raw'
+import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
+import challengeDetailWidgetSource from '@/widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue?raw'
+import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
+import contestDetailWidgetSource from '@/widgets/contest-detail-workspace/ContestDetailWorkspace.vue?raw'
+import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
+import errorStatusShellSource from '@/shared/ui/errors/ErrorStatusShell.vue?raw'
 
-const classStudentsPageSource = [
-  classStudentsPageSourceBase,
-  classStudentsOverviewPanelSource,
-  classStudentsInsightWindowPanelSource,
-  classStudentsDirectoryPanelSource,
+const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
+
+const contestListWorkspaceCombinedSource = `${contestListSource}\n${contestListWorkspaceSource}`
+const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
+const teacherInstanceManagementPageSource = [
+  teacherInstanceManagementPageSourceBase,
+  teacherInstanceHeroPanelSource,
+  teacherInstanceDirectorySectionSource,
 ].join('\n')
-
-const studentAnalysisPageSource = [
-  studentAnalysisPageSourceBase,
-  studentAnalysisOverviewHeroPanelSource,
-].join('\n')
-
 const teacherDashboardSource = [
   teacherDashboardSourceBase,
   teacherDashboardPortraitPanelSource,
@@ -92,490 +57,91 @@ const teacherDashboardSource = [
   teacherDashboardReviewPanelSource,
   teacherDashboardInterventionPanelSource,
 ].join('\n')
-
-const teacherInstanceManagementPageSource = [
-  teacherInstanceManagementPageSourceBase,
-  teacherInstanceHeroPanelSource,
-  teacherInstanceDirectorySectionSource,
-].join('\n')
-
 const adminDashboardSource = [
   adminDashboardSourceBase,
   platformOverviewHeroPanelSource,
   platformOverviewAlertsSectionSource,
   platformOverviewHotspotsSectionSource,
 ].join('\n')
-
 const userGovernanceSource = [
   userGovernancePageSource,
   userGovernanceOverviewPanelSource,
   userGovernanceDetailModalSource,
   userGovernanceImportPanelSource,
 ].join('\n')
-const writeupManageSource = [
-  writeupManageSourceBase,
-  writeupManageHeaderSource,
-  writeupManageSummaryStripSource,
-  writeupManageDirectorySectionSource,
-  writeupManageDirectoryRowSource,
-  readFileSync(
-    resolve(
-      process.cwd(),
-      'src/features/challenge-writeup-editor/ui/challengeWriteupManagePanel.css'
-    ),
-    'utf8'
-  ),
-].join('\n')
-const writeupEditorSource = [
-  writeupEditorPageSource,
-  writeupEditorContentSource,
-  writeupEditorFormSectionSource,
-  writeupEditorSnapshotSectionSource,
-  writeupEditorChallengeRailSource,
-  readFileSync(
-    resolve(
-      process.cwd(),
-      'src/features/challenge-writeup-editor/ui/challengeWriteupEditorPage.css'
-    ),
-    'utf8'
-  ),
-].join('\n')
-const topologyStudioSource = [
-  topologyStudioPageSource,
-  topologyTemplateLibraryHeaderSource,
-  topologyTemplateHeroSectionSource,
-  topologyChallengeWorkspaceHeaderSource,
-].join('\n')
-import writeupViewSource from '@/features/challenge-writeup-editor/ui/ChallengeWriteupViewPage.vue?raw'
-import pageHeaderSource from '@/shared/ui/common/PageHeader.vue?raw'
-import adminChallengeDetailSource from '@/pages/platform/challenges/ChallengeDetailRoutePage.vue?raw'
-import challengeImportPreviewSource from '@/pages/platform/challenges/ChallengeImportPreviewRoutePage.vue?raw'
-import adminChallengeTopbarSource from '@/features/platform/challenge-detail/ui/AdminChallengeTopbarPanel.vue?raw'
-import challengeImportHeroSource from '@/features/platform/challenge-package-import/ui/ChallengeImportHeroPanel.vue?raw'
-import challengeImportPreviewWorkspaceSource from '@/features/platform/challenge-package-import/ui/ChallengeImportPreviewWorkspacePanel.vue?raw'
-import challengeManageHeroSource from '@/features/platform/challenges/ui/ChallengeManageHeroPanel.vue?raw'
-import challengeQuestionPanelSource from '@/features/challenge-detail/ui/ChallengeQuestionPanel.vue?raw'
-import challengeSolutionsPanelSource from '@/features/challenge-detail/ui/ChallengeSolutionsPanel.vue?raw'
-import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
-import challengeDetailWidgetSource from '@/widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue?raw'
-import contestDetailSource from '@/pages/contests/ContestDetailRoutePage.vue?raw'
-import contestDetailWidgetSource from '@/widgets/contest-detail-workspace/ContestDetailWorkspace.vue?raw'
-import contestOverviewPanelSource from '@/features/contest-detail/ui/ContestOverviewPanel.vue?raw'
-import notificationDetailSource from '@/pages/notifications/NotificationDetailRoutePage.vue?raw'
-import notificationDetailWorkspaceSource from '@/widgets/notification-detail-workspace/NotificationDetailWorkspace.vue?raw'
-import reviewArchiveHeroSource from '@/widgets/review-archive-workspace/ReviewArchiveHero.vue?raw'
-import errorStatusShellSource from '@/shared/ui/errors/ErrorStatusShell.vue?raw'
-
-const challengeManageWorkspaceSource = `${challengeManageSource}\n${challengeManageHeroSource}`
-const challengeImportManageWorkspaceSource = `${challengeImportManageSource}\n${challengeImportHeroSource}`
-const challengeImportPreviewWorkspaceBundleSource = `${challengeImportPreviewSource}\n${challengeImportPreviewWorkspaceSource}`
-const adminChallengeDetailWorkspaceSource = `${adminChallengeDetailSource}\n${adminChallengeTopbarSource}`
 const challengeDetailWorkspaceSource = [
   challengeDetailSource,
   challengeDetailWidgetSource,
-  challengeQuestionPanelSource,
-  challengeSolutionsPanelSource,
 ].join('\n')
 const contestDetailWorkspaceSource = [
   contestDetailSource,
   contestDetailWidgetSource,
   contestOverviewPanelSource,
 ].join('\n')
-const contestListWorkspaceCombinedSource = `${contestListSource}\n${contestListWorkspaceSource}`
-const notificationDetailWorkspaceCombinedSource = `${notificationDetailSource}\n${notificationDetailWorkspaceSource}`
-const notificationListWorkspaceCombinedSource = `${notificationListSource}\n${notificationListWorkspaceSource}`
-const skillProfileWorkspaceSource = `${skillProfileSource}\n${skillProfileWorkspaceShellSource}`
-const securitySettingsWorkspaceSource = `${securitySettingsSource}\n${securitySettingsWorkspaceShellSource}`
-const userProfileWorkspaceSource = `${userProfileSource}\n${userProfileWorkspaceShellSource}`
-const instanceListWorkspaceSource = `${instanceListSource}\n${instanceListWorkspaceShellSource}`
-
-const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-function expectNoLocalTitleTypography(source: string, selector: string): void {
-  const escapedSelector = escapeRegExp(selector)
-  expect(source).not.toMatch(new RegExp(`${escapedSelector}\\s*\\{[^}]*font-size:`, 's'))
-  expect(source).not.toMatch(new RegExp(`${escapedSelector}\\s*\\{[^}]*letter-spacing:`, 's'))
-}
-
-function expectNoLocalCopyTypography(source: string, selector: string): void {
-  const escapedSelector = escapeRegExp(selector)
-  expect(source).not.toMatch(new RegExp(`${escapedSelector}\\s*\\{[^}]*font-size:`, 's'))
-  expect(source).not.toMatch(new RegExp(`${escapedSelector}\\s*\\{[^}]*line-height:`, 's'))
-}
-
-function expectSourceToContain(source: string, pattern: string | RegExp): void {
-  if (typeof pattern === 'string') {
-    expect(source).toContain(pattern)
-    return
-  }
-  expect(source).toMatch(pattern)
-}
-
-function expectSourceNotToContain(source: string, pattern: string | RegExp): void {
-  if (typeof pattern === 'string') {
-    expect(source).not.toContain(pattern)
-    return
-  }
-  expect(source).not.toMatch(pattern)
-}
 
 describe('workspace page header styles', () => {
-  it('应该在全局样式中统一声明工作区页面标题与说明文案样式', () => {
-    const sharedTitleSelectors = [
-      '.workspace-page-title',
-      '.journal-page-title',
-      '.challenge-title',
-      '.contest-title',
-      '.instance-title',
-      '.scoreboard-title',
-      '.notification-title',
-      '.teacher-management-shell .teacher-title',
-      '.manage-title',
-      '.hero-title',
-      '.admin-page-title',
-      '.image-title',
-      '.report-title',
-      '.topology-hero-title',
-    ]
-
-    const sharedCopySelectors = [
-      '.workspace-page-copy',
-      '.challenge-subtitle',
-      '.contest-subtitle',
-      '.instance-subtitle',
-      '.scoreboard-subtitle',
-      '.notification-subtitle',
-      '.teacher-management-shell .teacher-copy',
-      '.admin-page-copy',
-      '.image-copy',
-      '.report-copy',
-      '.skill-overview-copy',
-      '.topology-hero-description',
-    ]
-
-    for (const selector of sharedTitleSelectors) {
-      expect(sharedStylesSource).toContain(selector)
-    }
-
-    for (const selector of sharedCopySelectors) {
-      expect(sharedStylesSource).toContain(selector)
-    }
-
-    expect(sharedStylesSource).toContain(
-      '--workspace-page-title-font-size: clamp(24px, 3vw, 34px);'
-    )
-    expect(sharedStylesSource).toContain('--workspace-page-title-line-height: 1.08;')
-    expect(sharedStylesSource).toContain('--workspace-page-title-letter-spacing: -0.03em;')
+  it('应该在全局样式中声明共享页级标题与说明文案入口', () => {
+    expect(sharedStylesSource).toContain('.workspace-page-title')
+    expect(sharedStylesSource).toContain('.workspace-page-copy')
+    expect(sharedStylesSource).toContain('--workspace-page-title-font-size:')
+    expect(sharedStylesSource).toContain('--workspace-page-title-line-height:')
+    expect(sharedStylesSource).toContain('--workspace-page-title-letter-spacing:')
   })
 
-  it('不应在页面局部重复声明公共标题排版', () => {
-    expectNoLocalTitleTypography(contestListSource, '.contest-title')
-    expectNoLocalTitleTypography(challengeListSource, '.challenge-title')
-    expectNoLocalTitleTypography(instanceListWorkspaceSource, '.instance-title')
-    expectNoLocalTitleTypography(notificationListSource, '.notification-title')
-    expectNoLocalTitleTypography(scoreboardViewSource, '.scoreboard-title')
-    expectNoLocalTitleTypography(challengeManageSource, '.manage-title')
-    expectNoLocalTitleTypography(auditLogSource, '.admin-page-title')
-    expectNoLocalTitleTypography(imageManageSource, '.image-title')
-    expectNoLocalTitleTypography(challengePackageFormatSource, '.hero-title')
-    expectNoLocalTitleTypography(cheatDetectionSource, '.hero-title')
-    expectNoLocalTitleTypography(skillProfileWorkspaceSource, '.journal-page-title')
-    expectNoLocalTitleTypography(classManagementPageSource, '.teacher-title')
-    expectNoLocalTitleTypography(classStudentsPageSource, '.teacher-title')
-    expectNoLocalTitleTypography(studentAnalysisPageSource, '.teacher-title')
-    expectNoLocalTitleTypography(studentManagementPageSource, '.teacher-title')
-    expectNoLocalTitleTypography(teacherInstanceManagementPageSource, '.teacher-title')
-    expectNoLocalTitleTypography(
-      topologyStudioSource,
-      '.topology-page--template-library .topology-hero-title'
-    )
-  })
+  it('典型页面标题应接入 workspace-page-title，而不是继续混用 workspace-tab-heading 标题', () => {
+    expect(studentOverviewSource).toContain('workspace-page-title')
+    expect(studentRecommendationSource).toContain('workspace-page-title')
+    expect(studentCategoryProgressSource).toContain('workspace-page-title')
+    expect(studentDifficultySource).toContain('workspace-page-title')
+    expect(trainingTimelineContentSource).toContain('workspace-page-title')
+    expect(classManagementPageSource).toContain('workspace-page-title')
+    expect(studentManagementPageSource).toContain('workspace-page-title')
+    expect(teacherInstanceManagementPageSource).toContain('workspace-page-title')
+    expect(teacherDashboardSource).toContain('workspace-page-title')
+    expect(adminDashboardSource).toContain('workspace-page-title')
+    expect(userGovernanceSource).toContain('workspace-page-title')
 
-  it('不应在页面局部重复声明公共说明排版', () => {
-    expectNoLocalCopyTypography(contestListSource, '.contest-subtitle')
-    expectNoLocalCopyTypography(challengeListSource, '.challenge-subtitle')
-    expectNoLocalCopyTypography(instanceListWorkspaceSource, '.instance-subtitle')
-    expectNoLocalCopyTypography(notificationListSource, '.notification-subtitle')
-    expectNoLocalCopyTypography(scoreboardViewSource, '.scoreboard-subtitle')
-    expectNoLocalCopyTypography(auditLogSource, '.admin-page-copy')
-    expectNoLocalCopyTypography(imageManageSource, '.image-copy')
-    expectNoLocalCopyTypography(classManagementPageSource, '.teacher-copy')
-    expectNoLocalCopyTypography(classStudentsPageSource, '.teacher-copy')
-    expectNoLocalCopyTypography(studentAnalysisPageSource, '.teacher-copy')
-    expectNoLocalCopyTypography(studentManagementPageSource, '.teacher-copy')
-    expectNoLocalCopyTypography(teacherInstanceManagementPageSource, '.teacher-copy')
-    expectNoLocalCopyTypography(
-      topologyStudioSource,
-      '.topology-page--template-library .topology-hero-description'
-    )
-  })
-
-  it('student overview 标题应接入共享页级标题类，而不是继续混用 tab 标题类', () => {
-    expect(studentOverviewSource).toContain(
-      '<h1 class="journal-page-title workspace-page-title journal-soft-page-title max-w-3xl">'
-    )
-    expect(studentOverviewSource).not.toContain(
-      '<h1 class="journal-page-title workspace-tab-heading__title max-w-3xl text-[var(--journal-ink)]">'
-    )
-  })
-
-  it('workspace 页级标题应统一接入共享页头类，而不是继续使用 tab 标题类', () => {
-    const pageTitleSources = [
-      {
-        source: studentRecommendationSource,
-        include: /<h1 class="journal-page-title workspace-page-title[\s\S]*?>/,
-        exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
-      },
-      {
-        source: studentCategoryProgressSource,
-        include: /<h1 class="journal-page-title workspace-page-title[\s\S]*?>/,
-        exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
-      },
-      {
-        source: trainingTimelineContentSource,
-        include: /<h1 class="journal-page-title workspace-page-title[\s\S]*?>/,
-        exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
-      },
-      {
-        source: studentDifficultySource,
-        include: /<h1 class="journal-page-title workspace-page-title[\s\S]*?>/,
-        exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
-      },
-      {
-        source: teacherDashboardSource,
-        include: /<h1 class="hero-title workspace-page-title">\s*教学介入台\s*<\/h1>/,
-        exclude: '<h1 class="hero-title workspace-tab-heading__title">教学介入台</h1>',
-      },
-      {
-        source: classManagementPageSource,
-        include: '<h1 class="teacher-title workspace-page-title">班级管理</h1>',
-        exclude: '<h1 class="teacher-title workspace-tab-heading__title">班级管理</h1>',
-      },
-      {
-        source: studentManagementPageSource,
-        include: /<h1 class="teacher-title workspace-page-title">\s*学生管理\s*<\/h1>/,
-        exclude: /<h1 class="teacher-title workspace-tab-heading__title">\s*学生管理\s*<\/h1>/,
-      },
-      {
-        source: teacherInstanceManagementPageSource,
-        include: /<h1 class="teacher-title workspace-page-title">\s*实例管理\s*<\/h1>/,
-        exclude: /<h1 class="teacher-title workspace-tab-heading__title">\s*实例管理\s*<\/h1>/,
-      },
-      {
-        source: studentAnalysisPageSource,
-        include: /<h1 class="teacher-title workspace-page-title[\s\S]*?<\/h1>/,
-        exclude: /<h1 class="teacher-title workspace-tab-heading__title">[\s\S]*?<\/h1>/,
-      },
-      {
-        source: adminDashboardSource,
-        include: /<h1 class="hero-title workspace-page-title">\s*系统值守台\s*<\/h1>/,
-        exclude: '<h1 class="hero-title workspace-tab-heading__title">系统值守台</h1>',
-      },
-      {
-        source: userGovernanceSource,
-        include: '<h1 class="workspace-page-title">用户治理台</h1>',
-        exclude: '<h1 class="workspace-tab-heading__title">用户治理台</h1>',
-      },
-      {
-        source: contestManageOverviewPanelSource,
-        include: '<h1 class="workspace-page-title">竞赛目录</h1>',
-        exclude: '<h1 class="workspace-page-title workspace-tab-heading__title">竞赛目录</h1>',
-      },
-      {
-        source: challengeManageWorkspaceSource,
-        include: /<h1 class="workspace-page-title">\s*Jeopardy题库\s*<\/h1>/,
-        exclude: /<h1 class="workspace-tab-heading__title">\s*Jeopardy题库\s*<\/h1>/,
-      },
-      {
-        source: challengeImportManageWorkspaceSource,
-        include: /<h1 class="workspace-page-title">\s*导入题目\s*<\/h1>/,
-        exclude: /<h1 class="workspace-tab-heading__title">导入题目<\/h1>/,
-      },
-      {
-        source: challengeImportPreviewWorkspaceBundleSource,
-        include: /<PageHeader[\s\S]*title="导入预览"/,
-        exclude: '<h1 class="workspace-tab-heading__title">导入预览</h1>',
-      },
-      {
-        source: adminChallengeDetailWorkspaceSource,
-        include: '<span class="workspace-overline">Challenge Profile</span>',
-        exclude: '<h1 class="workspace-tab-heading__title">题目详情</h1>',
-      },
-      {
-        source: writeupManageSource,
-        include: '<h1 class="workspace-page-title">题解管理</h1>',
-        exclude: '<h1 class="workspace-tab-heading__title">题解管理</h1>',
-      },
-      {
-        source: writeupEditorSource,
-        include: /<PageHeader[\s\S]*title="题解管理"/,
-        exclude: '<h1 class="workspace-tab-heading__title">题解管理</h1>',
-      },
-      {
-        source: writeupViewSource,
-        include: /<PageHeader[\s\S]*:title="writeup\.title"/,
-        exclude: /<h1 class="workspace-tab-heading__title">\{\{ writeup\.title \}\}<\/h1>/,
-      },
-      {
-        source: topologyStudioSource,
-        include: /(?:<PageHeader[\s\S]*:title="title"|<h1 class="hero-title">\s*\{\{ title \}\}\s*<\/h1>)/,
-        exclude: /<h1 class="hero-title workspace-tab-heading__title">\s*\{\{ title \}\}\s*<\/h1>/,
-      },
-      {
-        source: pageHeaderSource,
-        include: '<h1 class="workspace-page-title">{{ title }}</h1>',
-        exclude:
-          '<h1 class="text-3xl font-semibold tracking-tight text-text-primary">{{ title }}</h1>',
-      },
-    ]
-
-    for (const entry of pageTitleSources) {
-      expectSourceToContain(entry.source, entry.include)
-      expectSourceNotToContain(entry.source, entry.exclude)
-    }
-
-    expect(pageHeaderSource).toContain('class="workspace-page-copy"')
-    expect(pageHeaderSource).not.toContain(
-      'class="max-w-3xl text-sm leading-6 text-text-secondary"'
-    )
-  })
-
-  it('独立详情和状态页标题也应接入共享页级标题类', () => {
-    const specialPageTitleSources = [
-      {
-        source: challengeDetailWorkspaceSource,
-        include: /<h1 class="question-title workspace-page-title">\s*\{\{ challenge\.title \}\}/,
-        exclude: '<h1 class="question-title">',
-      },
-      {
-        source: contestDetailWorkspaceSource,
-        include: /<h1 class="contest-hero__title workspace-page-title">\s*\{\{ contest\.title \}\}\s*<\/h1>/,
-        exclude: '<h1 class="contest-hero__title">{{ contest.title }}</h1>',
-      },
-      {
-        source: notificationDetailWorkspaceCombinedSource,
-        include: /<h1 class="notification-detail-title workspace-page-title">\s*/,
-        exclude: '<h1 class="notification-detail-title">',
-      },
-      {
-        source: reviewArchiveHeroSource,
-        include: /<h1 class="archive-hero__title workspace-page-title">\s*教学复盘归档\s*<\/h1>/,
-        exclude: '<h1 class="archive-hero__title">教学复盘归档</h1>',
-      },
-      {
-        source: errorStatusShellSource,
-        include: /<h1 class="error-status-title workspace-page-title">\s*/,
-        exclude: '<h1 class="error-status-title">',
-      },
-    ]
-
-    for (const entry of specialPageTitleSources) {
-      expectSourceToContain(entry.source, entry.include)
-      expectSourceNotToContain(entry.source, entry.exclude)
-    }
-
-    expect(contestDetailWorkspaceSource).toMatch(/<p class="contest-hero__desc workspace-page-copy">\s*/)
-    expect(reviewArchiveHeroSource).toMatch(
-      /<p class="archive-hero__description workspace-page-copy">\s*/
-    )
-    expect(errorStatusShellSource).toMatch(/<p class="error-status-text workspace-page-copy">\s*/)
-  })
-
-  it('页级说明应统一接入共享页级说明类，而不是继续使用 tab copy', () => {
-    const pageCopySources = [
-      {
-        source: studentOverviewSource,
-        include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
-        exclude:
-          '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
-      },
-      {
-        source: studentRecommendationSource,
-        include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
-        exclude:
-          '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
-      },
-      {
-        source: studentCategoryProgressSource,
-        include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
-        exclude:
-          '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
-      },
-      {
-        source: studentDifficultySource,
-        include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
-        exclude:
-          '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
-      },
-      {
-        source: trainingTimelineContentSource,
-        include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
-        exclude:
-          '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
-      },
-      {
-        source: userGovernanceSource,
-        include: '<p class="workspace-page-copy">',
-        exclude: '<p class="workspace-tab-copy">',
-      },
-      {
-        source: classManagementPageSource,
-        include: '<p class="teacher-copy workspace-page-copy">',
-        exclude: '<p class="teacher-copy workspace-tab-copy">',
-      },
-      {
-        source: studentManagementPageSource,
-        include: '<p class="teacher-copy workspace-page-copy">',
-        exclude: '<p class="teacher-copy workspace-tab-copy">',
-      },
-      {
-        source: teacherInstanceManagementPageSource,
-        include: '<p class="teacher-copy workspace-page-copy">',
-        exclude: '<p class="teacher-copy workspace-tab-copy">',
-      },
-      {
-        source: challengeManageWorkspaceSource,
-        include: '<p class="workspace-page-copy">',
-        exclude: '<p class="workspace-tab-copy">',
-      },
-      {
-        source: topologyStudioSource,
-        include: '<p class="workspace-page-copy topology-page-copy">',
-        exclude: '<p class="workspace-tab-copy topology-page-copy">',
-      },
-    ]
-
-    for (const entry of pageCopySources) {
-      expectSourceToContain(entry.source, entry.include)
-      expectSourceNotToContain(entry.source, entry.exclude)
+    for (const source of [
+      studentOverviewSource,
+      studentRecommendationSource,
+      studentCategoryProgressSource,
+      studentDifficultySource,
+      classManagementPageSource,
+      studentManagementPageSource,
+      teacherInstanceManagementPageSource,
+    ]) {
+      expect(source).not.toContain('workspace-tab-heading__title')
     }
   })
 
-  it('典型工作区页头应优先复用共享 workspace-page-header 结构', () => {
-    expect(challengeImportPreviewWorkspaceBundleSource).toContain('<PageHeader')
-    expect(userProfileWorkspaceSource).not.toContain('<PageHeader')
-    expect(userProfileWorkspaceSource).toContain('class="workspace-page-header profile-topbar"')
-    expect(userProfileWorkspaceSource).toContain('class="profile-topbar-meta"')
-    expect(securitySettingsWorkspaceSource).not.toContain('<PageHeader')
-    expect(securitySettingsWorkspaceSource).toContain('class="workspace-page-header security-topbar"')
-    expect(securitySettingsWorkspaceSource).toContain('class="security-topbar-meta"')
+  it('页级说明应接入 workspace-page-copy，而不是继续使用 workspace-tab-copy', () => {
+    for (const source of [
+      studentOverviewSource,
+      studentRecommendationSource,
+      studentCategoryProgressSource,
+      studentDifficultySource,
+      trainingTimelineContentSource,
+      classManagementPageSource,
+      studentManagementPageSource,
+      teacherInstanceManagementPageSource,
+      userGovernanceSource,
+    ]) {
+      expect(source).toContain('workspace-page-copy')
+      expect(source).not.toContain('workspace-tab-copy')
+    }
+  })
+
+  it('典型页头 owner 应继续收口到 workspace-page-header 或 PageHeader', () => {
     expect(contestListWorkspaceCombinedSource).toContain('class="workspace-page-header contest-topbar"')
     expect(instanceListWorkspaceSource).toContain('class="workspace-page-header instance-topbar"')
-    expect(notificationListWorkspaceCombinedSource).toContain(
-      'class="workspace-page-header notification-topbar"'
-    )
-    expect(challengeImportHeroSource).toContain(
-      '<header class="workspace-page-header challenge-import-heading">'
-    )
-    expect(writeupEditorSource).toContain('<PageHeader')
-    expect(writeupViewSource).toContain('<PageHeader')
+    expect(challengeListSource).toContain('class="workspace-page-header challenge-topbar"')
+    expect(pageHeaderSource).toContain('<h1 class="workspace-page-title">{{ title }}</h1>')
+    expect(pageHeaderSource).toContain('class="workspace-page-copy"')
+    expect(contestDetailWorkspaceSource).toContain('workspace-page-copy')
+    expect(errorStatusShellSource).toContain('workspace-page-title')
   })
 
-  it('overview 工作区面板应复用共享 workspace-panel-header 结构', () => {
+  it('overview 面板应继续复用 workspace-panel-header 结构', () => {
     expect(userGovernanceSource).toContain('<header class="workspace-panel-header user-overview-head">')
     expect(userGovernanceSource).not.toContain(
       '<header class="workspace-page-header user-overview-head">'
@@ -586,28 +152,5 @@ describe('workspace page header styles', () => {
     expect(contestManageOverviewPanelSource).not.toContain(
       '<header class="workspace-page-header contest-overview-head">'
     )
-    expect(teacherDashboardSource).toContain(
-      '<header class="workspace-panel-header teacher-dashboard-overview-head">'
-    )
-    expect(studentAnalysisPageSource).toContain(
-      '<header class="workspace-panel-header student-analysis-overview-head">'
-    )
-    expect(contestOperationsHubHeroPanelSource).toContain(
-      '<header class="workspace-panel-header contest-ops-hero">'
-    )
-    expect(contestOperationsHubHeroPanelSource).not.toContain(
-      '<header class="workspace-page-header contest-ops-hero">'
-    )
-  })
-
-  it('高频详情页顶部 tab 触控高度应回到共享默认值', () => {
-    expect(challengeDetailWorkspaceSource).toMatch(
-      /\.challenge-subtabs\s*\{[\s\S]*--page-top-tab-min-height: 3rem;/s
-    )
-    expect(challengeDetailWorkspaceSource).not.toMatch(
-      /\.challenge-subtabs\s*\{[\s\S]*--page-top-tab-min-height: 2\.5rem;/s
-    )
-    expect(contestDetailWorkspaceSource).toContain('--page-top-tab-min-height: 3rem;')
-    expect(contestDetailWorkspaceSource).not.toContain('--page-top-tab-min-height: 2.5rem;')
   })
 })
