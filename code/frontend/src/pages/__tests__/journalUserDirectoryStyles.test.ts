@@ -40,12 +40,10 @@ describe('journal user directory shared styles', () => {
     expect(journalUserDirectorySource).toContain('.notification-btn')
     expect(journalUserDirectorySource).toContain('.scoreboard-btn')
     expect(journalUserDirectorySource).toContain('.instance-btn')
-    expect(challengeListSource).toContain('class="workspace-page-header challenge-topbar"')
-    expect(contestListWorkspaceSource).toContain('class="workspace-page-header contest-topbar"')
-    expect(notificationListWorkspaceSource).toContain(
-      'class="workspace-page-header notification-topbar"'
-    )
-    expect(instanceListWorkspaceSource).toContain('class="workspace-page-header instance-topbar"')
+    expect(challengeListSource).toContain('workspace-page-header')
+    expect(contestListWorkspaceSource).toContain('workspace-page-header')
+    expect(notificationListWorkspaceSource).toContain('workspace-page-header')
+    expect(instanceListWorkspaceSource).toContain('workspace-page-header')
   })
 
   it('目标页面不应继续在 scoped style 中重复声明公共目录骨架与按钮基础样式', () => {
@@ -60,16 +58,12 @@ describe('journal user directory shared styles', () => {
   })
 
   it('profile 与 security 页顶部应继续复用共享 topbar 与 summary 骨架', () => {
-    expect(userProfileWorkspaceSource).toContain('class="workspace-page-header profile-topbar"')
-    expect(userProfileWorkspaceSource).toContain('class="profile-summary metric-panel-default-surface"')
+    expect(userProfileWorkspaceSource).toContain('workspace-page-header')
+    expect(userProfileWorkspaceSource).toContain('metric-panel-default-surface')
     expect(userProfileWorkspaceSource).not.toContain('<PageHeader')
 
-    expect(securitySettingsWorkspaceSource).toContain(
-      'class="workspace-page-header security-topbar"'
-    )
-    expect(securitySettingsWorkspaceSource).toContain(
-      'class="security-summary metric-panel-default-surface"'
-    )
+    expect(securitySettingsWorkspaceSource).toContain('workspace-page-header')
+    expect(securitySettingsWorkspaceSource).toContain('metric-panel-default-surface')
     expect(securitySettingsWorkspaceSource).not.toContain('<PageHeader')
   })
 

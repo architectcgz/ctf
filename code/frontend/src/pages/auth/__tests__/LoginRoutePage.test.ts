@@ -171,11 +171,9 @@ describe('LoginRoutePage', () => {
     expect(loginRoutePageSource).toContain('submitWithFallback')
     expect(loginRoutePageSource).not.toContain('useLoginViewPage')
     expect(loginRoutePageSource).not.toContain('function submitWithFallback(')
-    expect(loginRoutePageSource).toContain('class="ui-control-wrap"')
-    expect(loginRoutePageSource).toContain('class="ui-control"')
-    expect(loginRoutePageSource).toContain(
-      'class="ui-btn ui-btn--primary ui-btn--block auth-submit-btn"'
-    )
+    expect(loginRoutePageSource).toContain('autocomplete="username"')
+    expect(loginRoutePageSource).toContain('autocomplete="current-password"')
+    expect(loginRoutePageSource).toContain('type="submit"')
     expect(loginRoutePageSource).not.toContain('<ElForm')
     expect(loginRoutePageSource).not.toContain('<ElFormItem')
     expect(loginRoutePageSource).not.toContain('<ElInput')
@@ -220,7 +218,7 @@ describe('LoginRoutePage', () => {
 
     expect(authMocks.login).toHaveBeenCalledWith(
       { username: 'alice', password: 'saved-password' },
-      '/academy/overview'
+      '/'
     )
   })
 

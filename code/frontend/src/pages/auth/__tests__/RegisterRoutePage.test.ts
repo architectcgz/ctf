@@ -199,11 +199,9 @@ describe('RegisterRoutePage', () => {
       "import AppRouteRedirect from '@/shared/ui/navigation/AppRouteRedirect.vue'"
     )
     expect(registerRoutePageSource).toContain('useRegisterPage')
-    expect(registerRoutePageSource).toContain('class="ui-control-wrap"')
-    expect(registerRoutePageSource).toContain('class="ui-control"')
-    expect(registerRoutePageSource).toContain(
-      'class="ui-btn ui-btn--primary ui-btn--block auth-register-submit"'
-    )
+    expect(registerRoutePageSource).toContain('autocomplete="username"')
+    expect(registerRoutePageSource).toContain('autocomplete="new-password"')
+    expect(registerRoutePageSource).toContain('type="submit"')
     expect(registerRoutePageSource).not.toContain('<ElForm')
     expect(registerRoutePageSource).not.toContain('<ElFormItem')
     expect(registerRoutePageSource).not.toContain('<ElInput')

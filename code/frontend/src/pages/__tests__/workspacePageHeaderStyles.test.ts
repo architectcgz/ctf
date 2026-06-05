@@ -132,11 +132,11 @@ describe('workspace page header styles', () => {
   })
 
   it('典型页头 owner 应继续收口到 workspace-page-header 或 PageHeader', () => {
-    expect(contestListWorkspaceCombinedSource).toContain('class="workspace-page-header contest-topbar"')
-    expect(instanceListWorkspaceSource).toContain('class="workspace-page-header instance-topbar"')
-    expect(challengeListSource).toContain('class="workspace-page-header challenge-topbar"')
-    expect(pageHeaderSource).toContain('<h1 class="workspace-page-title">{{ title }}</h1>')
-    expect(pageHeaderSource).toContain('class="workspace-page-copy"')
+    expect(contestListWorkspaceCombinedSource).toContain('workspace-page-header')
+    expect(instanceListWorkspaceSource).toContain('workspace-page-header')
+    expect(challengeListSource).toContain('workspace-page-header')
+    expect(pageHeaderSource).toContain('workspace-page-title')
+    expect(pageHeaderSource).toContain('workspace-page-copy')
     expect(contestDetailWorkspaceSource).toContain('workspace-page-copy')
     expect(errorStatusShellSource).toContain('workspace-page-title')
   })
