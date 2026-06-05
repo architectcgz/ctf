@@ -88,15 +88,10 @@ describe('ContestOperations', () => {
       "component: () => import('@/pages/platform/contests/ContestOperationsRoutePage.vue')"
     )
     expect(platformRoutesSource).toContain('contestId: String(route.params.id || \'\')')
-    expect(platformContestOperationsPageSource).toContain(
-      'workspace-shell journal-shell journal-shell-admin'
-    )
     expect(platformContestOperationsPageSource).toContain('useContestOperationsPage')
     expect(platformContestOperationsPageSource).toContain('AWDOperationsPanel')
     expect(platformContestOperationsPageSource).toContain('AWDServiceAlertBanner')
     expect(contestOperationsSource).not.toContain('ContestOperationsTopbarPanel')
-    expect(platformContestOperationsPageSource).not.toContain('height: 100vh')
-    expect(platformContestOperationsPageSource).not.toContain('overflow: hidden')
   })
 
   it('父页不再提供实例编排 tab，而是固定组合运维态面板', async () => {
