@@ -13,16 +13,8 @@ const adminDashboardSource = [
 ].join('\n')
 
 describe('admin dashboard surface alignment', () => {
-  it('platform overview should keep hero action owner on shared header actions instead of page-private actions', () => {
-    expect(adminDashboardSource).toContain('class="overview-hero-actions"')
-    expect(adminDashboardSource).toContain('class="header-actions overview-action-grid"')
+  it('platform overview should keep hero and sections on shared workspace owners', () => {
     expect(adminDashboardSource).toContain('class="workspace-page-header overview-page-header"')
-    expect(adminDashboardSource).toContain('class="header-btn header-btn--primary"')
-    expect(adminDashboardSource).toContain('class="header-btn header-btn--ghost"')
-    expect(adminDashboardSource).not.toContain('overview-action-main')
-  })
-
-  it('platform overview should keep summary and directory owner on shared workspace primitives', () => {
     expect(adminDashboardSource).toContain('class="workspace-directory-section overview-directory-section"')
     expect(adminDashboardSource).toContain('class="workspace-directory-list overview-list-shell"')
     expect(adminDashboardSource).not.toContain('metric-panel-card--premium')

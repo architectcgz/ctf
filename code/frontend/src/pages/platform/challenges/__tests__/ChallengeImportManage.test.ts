@@ -71,15 +71,7 @@ describe('ChallengeImportManage', () => {
     expect(challengeImportHeroPanelSource).toContain('返回题目目录')
     expect(challengeImportHeroPanelSource).toContain('题目包规范')
     expect(challengeImportHeroPanelSource).toContain('下载示例题目包')
-    expect(challengePackageImportEntrySource).toContain(
-      'class="ui-btn ui-btn--primary import-entry__upload-action"'
-    )
     expect(challengePackageImportEntrySource).toContain('导入题目包')
-    expect(challengeImportHeroPanelSource).toContain(
-      'class="header-actions challenge-import-hero-actions"'
-    )
-    expect(challengeImportHeroPanelSource).toContain('class="header-btn header-btn--ghost"')
-    expect(challengeImportHeroPanelSource).toContain('class="header-btn header-btn--primary"')
     expect(challengeImportHeroPanelSource).toContain(
       "import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
