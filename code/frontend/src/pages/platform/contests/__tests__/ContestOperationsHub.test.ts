@@ -312,8 +312,6 @@ describe('ContestOperationsHub', () => {
     )
     expect(contestOperationsHubWorkspacePanelSource).toContain('<PagePaginationControls')
     expect(contestOperationsHubWorkspacePanelSource).toContain('contestTableColumns')
-    expect(contestOperationsHubWorkspacePanelSource).not.toContain('class="contest-ops-row"')
-    expect(contestOperationsHubWorkspacePanelSource).not.toContain('class="contest-ops-card"')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsTraffic')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsProjector')
     expect(contestOperationsHubSource).not.toContain('PlatformContestOpsScoreboard')

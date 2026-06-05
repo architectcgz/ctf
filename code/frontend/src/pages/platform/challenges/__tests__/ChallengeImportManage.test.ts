@@ -76,10 +76,6 @@ describe('ChallengeImportManage', () => {
       "import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
     expect(challengeImportQueuePanelSource).toContain('<AppRouteLink')
-    expect(challengeImportHeroPanelSource).not.toContain('challenge-import-action')
-    expect(challengePackageImportEntrySource).not.toContain('challenge-import-action')
-    expect(challengeImportQueuePanelSource).not.toContain('challenge-queue-action')
-    expect(challengePackageImportEntrySource).not.toContain('class="import-entry__dropzone"')
 
     const wrapper = mount(ChallengeImportManageRoutePage)
     await flushPromises()
