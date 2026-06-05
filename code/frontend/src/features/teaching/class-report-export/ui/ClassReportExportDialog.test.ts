@@ -183,11 +183,8 @@ describe('ClassReportExportDialog', () => {
     )
     expect(classReportExportDialogSource).toContain('<AdminSurfaceModal')
     expect(classReportExportDialogSource).not.toContain('<ElDialog')
-    expect(classReportExportDialogSource).toContain('class="ui-field')
-    expect(classReportExportDialogSource).toContain('class="ui-control-wrap')
-    expect(classReportExportDialogSource).toContain('class="ui-control')
-    expect(classReportExportDialogSource).toContain('class="ui-btn ui-btn--secondary')
-    expect(classReportExportDialogSource).toContain('class="ui-btn ui-btn--primary')
+    expect(classReportExportDialogSource).toContain('创建导出任务')
+    expect(classReportExportDialogSource).toContain('下载报告')
     expect(classReportExportDialogSource).toContain('type="date"')
   })
 

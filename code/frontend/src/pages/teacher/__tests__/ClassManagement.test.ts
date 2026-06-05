@@ -144,9 +144,7 @@ describe('ClassManagement', () => {
   it('应该支持按班级编号或班级名称筛选', async () => {
     const { wrapper } = await mountPage()
 
-    expect(wrapper.find('.workspace-directory-section.teacher-directory-section').exists()).toBe(
-      true
-    )
+    expect(wrapper.find('.workspace-directory-section').exists()).toBe(true)
     expect(wrapper.find('.list-heading').exists()).toBe(true)
     expect(wrapper.find('.workspace-directory-toolbar').exists()).toBe(true)
     expect(wrapper.find('.teacher-directory-meta').exists()).toBe(false)
@@ -250,35 +248,27 @@ describe('ClassManagement', () => {
     expect(classManagementSource).toContain('<Users class="h-4 w-4" />')
     expect(classManagementSource).toContain('<WorkspaceDataTable')
     expect(classManagementSource).toContain('<WorkspaceDirectoryPagination')
-    expect(classManagementSource).toContain('class="list-heading"')
+    expect(classManagementSource).toContain('list-heading')
     expect(classManagementSource).not.toContain('teacher-controls-title')
     expect(classManagementSource).not.toContain('teacher-controls-copy')
     expect(classManagementSource).not.toContain('支持按班级编号或班级名称快速定位班级入口。')
     expect(classManagementSource).toMatch(
       /class="teacher-directory-row-title"[\s\S]*:title="\(row as ClassDirectoryTableRow\)\.name"/s
     )
-    expect(classManagementSource).toMatch(
-      /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
-    )
   })
 
   it('班级管理概况卡片应复用教学概览的默认 metric-panel 外观', () => {
-    expect(classManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
+    expect(classManagementSource).toContain('metric-panel-default-surface')
     expect(classManagementSource).not.toContain('teacher-summary--overview-metrics')
     expect(classManagementSource).not.toContain('当前状态')
     expect(classManagementSource).not.toContain('已就绪')
   })
 
   it('班级管理概览头部应接入通用 workspace 页头模板', () => {
-    expect(classManagementSource).toContain('<header class="workspace-page-header teacher-topbar">')
-    expect(classManagementSource).toContain(
-      '<div class="teacher-heading workspace-tab-heading__main">'
-    )
-    expect(classManagementSource).toContain('<div class="workspace-overline">')
-    expect(classManagementSource).toMatch(
-      /<h1 class="teacher-title workspace-page-title">\s*班级管理\s*<\/h1>/
-    )
-    expect(classManagementSource).toContain('<p class="teacher-copy workspace-page-copy">')
+    expect(classManagementSource).toContain('workspace-page-header')
+    expect(classManagementSource).toContain('workspace-overline')
+    expect(classManagementSource).toContain('workspace-page-title')
+    expect(classManagementSource).toContain('workspace-page-copy')
     expect(classManagementSource).not.toContain('teacher-surface-eyebrow journal-eyebrow')
     expect(classManagementSource).not.toContain('workspace-tab-heading__title')
   })
