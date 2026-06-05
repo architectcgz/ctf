@@ -28,6 +28,7 @@
   - `?raw` 源码字符串测试只允许作为明确护栏：层级 / 依赖 / public API 边界、route / page owner 边界、危险 surface 回归防线，或带 owner 与移除条件的迁移 guard。
   - `loading / empty / error / loaded` 这类状态优先用 Vue Test Utils 做组件渲染测试；页面测试只覆盖入口集成，不重复锁定共享组件内部结构。
   - 如果测试只能证明“源码里包含某段字符串 / 某个 class”，而不能证明行为、状态归属或架构边界，禁止新增；触碰相关区域时顺手迁移或删除这类存量测试。
+  - pre-commit 会运行 `bash scripts/check-frontend-test-guard.sh --staged`，阻止新增只锁 `class`、局部 markup 和 `padding/gap` 文本的过细前端测试；如确有 owner / boundary 级例外，必须在测试里显式写出理由。
 - 前端组件不得再用 `embedded` 之类的布尔开关同时切换 page shell、section shell、content root、主 padding 或 divider 等布局 owner 语义。
   - 如果同一份内容要出现在完整页、tab 面板、drawer 或 section 中，默认做法是“共享内容组件 + 各入口自己的壳组件”。
   - `embedded` 只允许用于不会改变 owner 边界的局部视觉嵌入态；一旦它开始切换完整布局节奏，就必须回到显式拆壳。

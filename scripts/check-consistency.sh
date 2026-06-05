@@ -81,14 +81,17 @@ fi
 echo "[C5] hook runs strict consistency check"
 if [[ -f ".githooks/pre-commit" ]]; then
   check_contains ".githooks/pre-commit" 'scripts/check-consistency\.sh' "pre-commit runs scripts/check-consistency.sh"
+  check_contains ".githooks/pre-commit" 'scripts/check-frontend-test-guard\.sh --staged' "pre-commit runs frontend test guard"
 else
   echo "  $(red FAIL) — missing .githooks/pre-commit"
   fail=1
 fi
 check_file ".githooks/commit-msg"
 check_file "scripts/check-commit-message.sh"
+check_file "scripts/check-frontend-test-guard.sh"
 check_contains ".githooks/commit-msg" 'scripts/check-commit-message\.sh' "commit-msg runs scripts/check-commit-message.sh"
 check_contains ".githooks/README.md" 'scripts/check-commit-message\.sh' "hook docs mention commit message checks"
+check_contains ".githooks/README.md" 'scripts/check-frontend-test-guard\.sh --staged' "hook docs mention frontend test guard"
 
 echo "[C6] migrated accumulation indexes exist"
 check_file "feedback/improvements-index.md"

@@ -18,6 +18,7 @@ bash scripts/install-githooks.sh
 ## Harness 检查
 
 - `pre-commit`：运行 `scripts/check-consistency.sh`，检查严格参考 harness 的顶层目录、导航和资料计数。
+- `pre-commit`：运行 `scripts/check-frontend-test-guard.sh --staged`，阻止新增只锁 `class`、局部 markup、`padding/gap` 文本的过细前端样式测试。
 - `pre-commit`：运行 `scripts/check-reuse-first.sh --staged`，要求受保护页面、组件、hook、API wrapper、store、表单、表格和 schema 变更先完成复用决策。
 - `pre-commit`：运行 `scripts/check-architecture.sh --quick`，检查后端模块依赖方向和前端分层边界。
 - `pre-commit`：运行 `scripts/check-skill-sync-reminder.sh --staged`，当 `feedback/`、`harness/reuse/history.md`、`harness/reuse/index.yaml` 或 `harness/prompts|policies|templates/` 变更时，非阻塞提醒是否需要同步到全局 skill。
@@ -28,11 +29,12 @@ bash scripts/install-githooks.sh
 
 - 本仓库的 reuse-first 约束以本地 hook 和本地脚本为准，不依赖 GitHub Actions 才能生效。
 - 安装 hook 后，提交前会先执行：
-  1. `scripts/check-consistency.sh`
-  2. `scripts/check-reuse-first.sh --staged`
-  3. `scripts/check-architecture.sh --quick`
-  4. `scripts/check-skill-sync-reminder.sh --staged`
-  5. `scripts/check-commit-message.sh <commit-message-file>`（在 `commit-msg` 阶段执行）
+1. `scripts/check-consistency.sh`
+2. `scripts/check-frontend-test-guard.sh --staged`
+3. `scripts/check-reuse-first.sh --staged`
+4. `scripts/check-architecture.sh --quick`
+5. `scripts/check-skill-sync-reminder.sh --staged`
+6. `scripts/check-commit-message.sh <commit-message-file>`（在 `commit-msg` 阶段执行）
 - 若需要在提交前手工自检，可直接运行 `bash scripts/check-reuse-first.sh --staged`。
 - 推荐提交流程示例：
 
