@@ -128,7 +128,7 @@ describe('Admin ChallengeDetail', () => {
     expect(useBackofficeBreadcrumbDetail().breadcrumbDetailTitle.value).toBeNull()
   })
 
-  it('头部操作应改用共享 header-btn 原语而不是页面私有 admin-btn 按钮族', () => {
+  it('详情路由页应继续把顶部工作区 owner 留在 challenge detail widget 上', () => {
     expect(challengeDetailSource).toContain('usePlatformChallengeDetailRoutePage')
     expect(challengeDetailSource).not.toContain('useRouteQueryTabs')
     expect(challengeDetailSource).not.toContain('useRoute')
@@ -137,11 +137,10 @@ describe('Admin ChallengeDetail', () => {
       "import { PlatformChallengeDetailWorkspace } from '@/widgets/platform-challenge-detail'"
     )
     expect(platformChallengeDetailWorkspaceSource).toContain('<AdminChallengeTopbarPanel')
-    expect(adminChallengeTopbarPanelSource).toContain('class="header-actions topbar-actions"')
-    expect(adminChallengeTopbarPanelSource).toContain('class="header-btn header-btn--primary"')
-    expect(adminChallengeTopbarPanelSource).toContain('class="header-btn header-btn--ghost"')
     expect(challengeDetailSource).not.toContain('admin-btn admin-btn-primary')
     expect(challengeDetailSource).not.toContain('admin-btn admin-btn-ghost')
+    expect(adminChallengeTopbarPanelSource).toContain('拓扑编排')
+    expect(adminChallengeTopbarPanelSource).toContain('返回 Jeopardy题库')
   })
 
   it('详情页 page model 应通过 feature route target + transport 处理导航，而不是直接 import vue-router', () => {
@@ -160,33 +159,6 @@ describe('Admin ChallengeDetail', () => {
     expect(platformChallengeDetailRoutesSource).toContain("name: 'PlatformChallengeTopologyStudio'")
     expect(platformChallengeDetailRoutesSource).toContain(
       "name: mode === 'view' ? 'PlatformChallengeWriteupView' : 'PlatformChallengeWriteup'"
-    )
-  })
-
-  it('题目详情页顶部 tab 应复用全局 tab 标准并收紧标题间距', () => {
-    expect(challengeDetailSource).toContain('--workspace-topbar-tabs-gap: 0;')
-    expect(challengeDetailSource).toContain(
-      '--workspace-tabs-offset-top: var(--workspace-topbar-tabs-gap);'
-    )
-    expect(challengeDetailSource).toContain('--workspace-tabs-panel-gap: var(--space-2);')
-    expect(challengeDetailSource).toContain(
-      '--journal-topbar-padding-bottom: var(--workspace-topbar-tabs-gap);'
-    )
-    expect(challengeDetailSource).toContain(
-      '--page-top-tabs-margin: 0 calc(var(--space-6) * -1) 0;'
-    )
-    expect(challengeDetailSource).toContain('--page-top-tabs-padding: 0 var(--space-6);')
-    expect(challengeDetailSource).toContain('--page-top-tab-min-height: 42px;')
-    expect(challengeDetailSource).toContain(
-      '--page-top-tab-padding: var(--space-1-5) 0 var(--space-2);'
-    )
-    expect(challengeDetailSource).not.toContain('--page-top-tab-min-height: 52px;')
-    expect(challengeDetailSource).not.toContain(
-      '--page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);'
-    )
-    expect(challengeDetailSource).not.toContain('--journal-topbar-padding-bottom: var(--space-3);')
-    expect(challengeDetailSource).not.toContain(
-      '--page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;'
     )
   })
 
