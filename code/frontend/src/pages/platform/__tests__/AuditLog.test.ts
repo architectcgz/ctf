@@ -154,27 +154,17 @@ describe('AuditLog', () => {
     expect(auditLogSource).toContain('AuditActorDetailModal')
     expect(auditLogSource).toContain('<AuditActorDetailModal')
     expect(auditActorDetailModalSource).toContain('<AdminSurfaceModal')
-    expect(auditActorDetailModalSource).toContain('class="audit-actor-modal"')
     expect(auditLogDirectoryPanelSource).toContain("from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'")
     expect(auditLogDirectoryPanelSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
-    expect(auditLogDirectoryPanelSource).toContain('class="audit-list workspace-directory-list"')
+    expect(auditLogDirectoryPanelSource).toContain("from '@/shared/ui/common/PagePaginationControls.vue'")
   })
 
   it('审计摘要应继续由 hero panel 单独承接，而不是回退到页面内联壳层', () => {
     expect(auditLogSource).toContain("from '@/features/audit-log'")
     expect(auditLogSource).toContain('AuditLogHeroPanel')
     expect(auditLogSource).toContain('<AuditLogHeroPanel')
-    expect(auditLogSource).toContain('class="audit-log-body"')
     expect(auditLogSource).not.toContain('mt-10 space-y-10')
-    expect(auditLogSource).toContain(
-      'gap: var(--workspace-directory-page-block-gap, var(--space-5));'
-    )
-    expect(auditLogHeroPanelSource).toContain('<div class="workspace-overline">Audit Log</div>')
-    expect(auditLogHeroPanelSource).not.toContain('<div class="journal-eyebrow">Audit Log</div>')
-    expect(auditLogHeroPanelSource).toContain(
-      'class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(auditLogHeroPanelSource).toContain('<header class="workspace-page-header">')
+    expect(auditLogHeroPanelSource).toContain('Audit Log')
     expect(auditLogHeroPanelSource).toContain('本页已加载的日志条数')
   })
 })

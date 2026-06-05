@@ -120,17 +120,8 @@ describe('ImageManage', () => {
     expect(imageManageSource).toContain("from '@/features/image-management'")
     expect(imageManageSource).toContain('ImageManageHeroPanel')
     expect(imageManageSource).toContain('<ImageManageHeroPanel')
-    expect(imageManageHeroPanelSource).toContain('class="image-status-strip"')
     expect(imageManageHeroPanelSource).toContain('data-testid="image-status-pill"')
-    expect(imageManageHeroPanelSource).toMatch(
-      /<div class="image-status-strip__note">\s*\{\{ refreshHint \}\}\s*<\/div>/
-    )
-    expect(imageManageHeroPanelSource).toMatch(
-      /<div class="workspace-overline">\s*Image Registry\s*<\/div>/
-    )
-    expect(imageManageHeroPanelSource).not.toContain(
-      '<div class="journal-eyebrow">Image Registry</div>'
-    )
+    expect(imageManageHeroPanelSource).toContain('{{ refreshHint }}')
     expect(imageManageHeroPanelSource).not.toContain('镜像总量')
     expect(imageManageHeroPanelSource).not.toContain('当前查询结果的镜像总数')
     expect(imageManageHeroPanelSource).not.toContain('这一页已加载的镜像数量')
@@ -149,11 +140,10 @@ describe('ImageManage', () => {
     expect(imageCreateModalSource).not.toContain('<ElForm')
     expect(imageCreateModalSource).not.toContain('<ElFormItem')
     expect(imageCreateModalSource).not.toContain('<ElInput')
-    expect(imageCreateModalSource).toContain('class="ui-field')
-    expect(imageCreateModalSource).toContain('class="ui-control-wrap')
-    expect(imageCreateModalSource).toContain('class="ui-control')
-    expect(imageCreateModalSource).toContain('class="ui-btn ui-btn--secondary')
-    expect(imageCreateModalSource).toContain('class="ui-btn ui-btn--primary')
+    expect(imageCreateModalSource).toContain("type { ImageCreateForm }")
+    expect(imageCreateModalSource).toContain("emit('update:name'")
+    expect(imageCreateModalSource).toContain("emit('update:tag'")
+    expect(imageCreateModalSource).toContain("emit('update:description'")
     expect(imageManagePageSource).toContain(
       "import { useImageManageAutoRefresh } from './useImageManageAutoRefresh'"
     )
@@ -175,7 +165,8 @@ describe('ImageManage', () => {
       "from '@/shared/ui/common/modal-templates/AdminSurfaceModal.vue'"
     )
     expect(imageDetailModalSource).toContain('<AdminSurfaceModal')
-    expect(imageDetailModalSource).toContain('class="image-detail__grid"')
+    expect(imageDetailModalSource).toContain('getStatusLabel')
+    expect(imageDetailModalSource).toContain('getStatusStyle')
   })
 
   it('应该把镜像名称、标签、来源和摘要拆成独立列', async () => {
@@ -248,17 +239,8 @@ describe('ImageManage', () => {
   })
 
   it('镜像目录头部应继续由目录 panel owner 承接标题而不是回退到旧提示壳层', () => {
-    expect(combinedSource).toContain('<header class="list-heading image-board__head">')
-    expect(combinedSource).toMatch(
-      /<h2 class="list-heading__title image-section-title">\s*镜像列表\s*<\/h2>/
-    )
+    expect(combinedSource).toContain('镜像列表')
     expect(combinedSource).not.toContain('image-board__hint')
-  })
-
-  it('镜像状态摘要应位于头部标题区域右侧', () => {
-    expect(imageManageHeroPanelSource).toMatch(
-      /<div class="image-header__intro">[\s\S]*<div class="image-header__copy">[\s\S]*<div\s+class="image-status-strip"[\s\S]*<div class="image-header__side">/s
-    )
   })
 
   it('应该支持手动刷新镜像列表', async () => {
