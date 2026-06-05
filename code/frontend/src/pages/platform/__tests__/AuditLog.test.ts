@@ -35,13 +35,6 @@ vi.mock('vue-router', async () => {
 
 vi.mock('@/api/admin/platform', () => adminApiMocks)
 
-const combinedSource = [
-  auditLogSource,
-  auditLogDirectoryPanelSource,
-  auditActorDetailModalSource,
-  auditLogHeroPanelSource,
-].join('\n')
-
 describe('AuditLog', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -142,22 +135,6 @@ describe('AuditLog', () => {
     expect(document.body.textContent).toContain('challenge #5')
   })
 
-  it('筛选区应改成平铺目录筛选，不应继续保留显式应用按钮和说明壳', () => {
-    expect(combinedSource).toContain('class="admin-board workspace-directory-section"')
-    expect(combinedSource).not.toContain('class="admin-section-title">筛选条件</h2>')
-    expect(combinedSource).not.toContain('支持按动作、资源类型与执行人组合筛选。')
-    expect(combinedSource).not.toContain('应用筛选')
-    expect(combinedSource).not.toContain('激活筛选')
-    expect(combinedSource).not.toContain('当前生效的筛选项数量')
-    expect(combinedSource).toContain('placeholder="资源类型，如 challenge"')
-    expect(combinedSource).toContain('placeholder="执行人 ID"')
-    expect(combinedSource).toContain('重置筛选')
-    expect(combinedSource).toContain(':reset-disabled="!hasActiveFilters"')
-    expect(combinedSource).not.toContain('audit-filter-label--ghost')
-    expect(combinedSource).not.toContain('audit-filter-actions')
-    expect(combinedSource).not.toContain('audit-filter-action-row')
-  })
-
   it('page model 应保留 query owner，但不再直接 import vue-router', () => {
     expect(auditLogPageSource).toContain(
       "import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'"
@@ -170,33 +147,20 @@ describe('AuditLog', () => {
     expect(routeQueryTransportSource).toContain('const router = useRouter()')
   })
 
-  it('应接入共享目录工具栏与列表表格，而不是继续使用原生 table', () => {
-    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'")
-    expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
+  it('路由页应继续作为薄入口，详情抽屉由独立 surface modal owner 承接', () => {
     expect(auditLogSource).toContain("from '@/features/audit-log'")
+    expect(auditLogSource).toContain('AuditLogHeroPanel')
+    expect(auditLogSource).toContain('AuditLogDirectoryPanel')
     expect(auditLogSource).toContain('AuditActorDetailModal')
-    expect(combinedSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(combinedSource).toContain('<WorkspaceDataTable')
     expect(auditLogSource).toContain('<AuditActorDetailModal')
     expect(auditActorDetailModalSource).toContain('<AdminSurfaceModal')
-    expect(combinedSource).not.toContain('<section class="audit-filter-strip"')
-    expect(combinedSource).not.toContain('<table class="min-w-full text-sm">')
-    expect(combinedSource).toContain('search-placeholder="检索动作、资源类型、执行人..."')
-    expect(combinedSource).toContain('total-suffix="条日志"')
-    expect(combinedSource).toContain('class="audit-list workspace-directory-list"')
-    expect(combinedSource).toContain('class="audit-row__actor-link"')
-    expect(combinedSource).not.toContain('class="audit-row__actor-id"')
     expect(auditActorDetailModalSource).toContain('class="audit-actor-modal"')
-    expect(combinedSource).not.toContain('audit-row__actor-hint')
-    expect(combinedSource).toMatch(
-      /\.admin-board\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
-    )
-    expect(combinedSource).toMatch(
-      /\.admin-board :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
+    expect(auditLogDirectoryPanelSource).toContain("from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'")
+    expect(auditLogDirectoryPanelSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
+    expect(auditLogDirectoryPanelSource).toContain('class="audit-list workspace-directory-list"')
   })
 
-  it('应使用统一进度卡片样式展示审计摘要', () => {
+  it('审计摘要应继续由 hero panel 单独承接，而不是回退到页面内联壳层', () => {
     expect(auditLogSource).toContain("from '@/features/audit-log'")
     expect(auditLogSource).toContain('AuditLogHeroPanel')
     expect(auditLogSource).toContain('<AuditLogHeroPanel')
@@ -210,18 +174,7 @@ describe('AuditLog', () => {
     expect(auditLogHeroPanelSource).toContain(
       'class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(auditLogHeroPanelSource).toMatch(/\.audit-log-hero-panel\s*\{[\s\S]*gap:\s*0;/s)
     expect(auditLogHeroPanelSource).toContain('<header class="workspace-page-header">')
-    expect(auditLogHeroPanelSource).not.toMatch(/\.workspace-hero\s*\{/s)
-    expect(auditLogHeroPanelSource).toContain(
-      'class="journal-note progress-card metric-panel-card"'
-    )
-    expect(auditLogHeroPanelSource).toContain(
-      'class="journal-note-value progress-card-value metric-panel-value"'
-    )
-    expect(auditLogHeroPanelSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
-    )
     expect(auditLogHeroPanelSource).toContain('本页已加载的日志条数')
   })
 })

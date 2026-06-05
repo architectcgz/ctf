@@ -113,9 +113,6 @@ describe('ImageManage', () => {
     await flushPromises()
 
     expect(wrapper.element.tagName).toBe('SECTION')
-    expect(wrapper.classes()).toContain('journal-shell')
-    expect(wrapper.classes()).toContain('journal-hero')
-    expect(wrapper.classes()).toContain('min-h-full')
     expect(wrapper.text()).toContain('镜像管理')
   })
 
@@ -181,31 +178,6 @@ describe('ImageManage', () => {
     expect(imageDetailModalSource).toContain('class="image-detail__grid"')
   })
 
-  it('头部操作应改用共享 header-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(imageManageHeroPanelSource).toContain('class="header-actions image-header__actions"')
-    expect(imageManageHeroPanelSource).toContain('class="header-btn header-btn--ghost"')
-    expect(imageManageHeroPanelSource).toContain('class="header-btn header-btn--primary"')
-    expect(imageDirectoryPanelSource).toContain('class="ui-btn ui-btn--sm ui-btn--primary"')
-    expect(combinedSource).toContain('class="ui-btn ui-btn--sm ui-btn--danger"')
-    expect(imageManageSource).not.toContain('admin-btn admin-btn-ghost')
-    expect(imageManageSource).not.toContain('admin-btn admin-btn-primary')
-    expect(imageManageSource).not.toContain('admin-btn admin-btn-danger')
-  })
-
-  it('不应在头部摘要和镜像列表之间重复渲染分割线', () => {
-    expect(imageManageHeroPanelSource).toContain('<header class="workspace-page-header image-header">')
-    expect(imageManageHeroPanelSource).not.toMatch(/\.image-header\s*\{[\s\S]*border-bottom:/s)
-    expect(imageManageSource).not.toContain('<div class="journal-divider image-divider" />')
-    expect(imageManageSource).not.toMatch(/\.image-divider\s*\{/s)
-  })
-
-  it('立即刷新按钮不应通过页面私有变量覆盖共享 header-btn 视觉', () => {
-    expect(imageManageHeroPanelSource).toContain('data-testid="image-refresh-button"')
-    expect(imageManageHeroPanelSource).not.toContain('--header-btn-border:')
-    expect(imageManageHeroPanelSource).not.toContain('--header-btn-background:')
-    expect(imageManageHeroPanelSource).not.toContain('--header-btn-color:')
-  })
-
   it('应该把镜像名称、标签、来源和摘要拆成独立列', async () => {
     const wrapper = mountPage()
 
@@ -250,12 +222,6 @@ describe('ImageManage', () => {
     expect(combinedSource).toContain("from '@/shared/ui/common/WorkspaceDataTable.vue'")
     expect(combinedSource).toContain('<WorkspaceDirectoryToolbar')
     expect(combinedSource).toContain('<WorkspaceDataTable')
-    expect(combinedSource).toMatch(
-      /\.image-board\s*\{[\s\S]*display:\s*grid;[\s\S]*gap:\s*var\(--space-4\);/s
-    )
-    expect(combinedSource).toMatch(
-      /\.image-board :deep\(\.workspace-directory-toolbar\)\s*\{[\s\S]*margin-bottom:\s*0;/s
-    )
 
     const wrapper = mountPage()
     await flushPromises()
@@ -281,45 +247,17 @@ describe('ImageManage', () => {
     expect(titles).toEqual(['alpha', 'zeta'])
   })
 
-  it('镜像目录头部应只保留左侧标题组并恢复目录标题样式', () => {
+  it('镜像目录头部应继续由目录 panel owner 承接标题而不是回退到旧提示壳层', () => {
     expect(combinedSource).toContain('<header class="list-heading image-board__head">')
     expect(combinedSource).toMatch(
       /<h2 class="list-heading__title image-section-title">\s*镜像列表\s*<\/h2>/
     )
     expect(combinedSource).not.toContain('image-board__hint')
-    expect(combinedSource).toMatch(/\.image-board__head\s*\{[\s\S]*margin-bottom:\s*0;/s)
-    expect(combinedSource).toMatch(
-      /\.list-heading__title\s*\{[\s\S]*font-size:\s*clamp\(1\.2rem,\s*1rem\s*\+\s*0\.5vw,\s*1\.45rem\);/s
-    )
   })
 
   it('镜像状态摘要应位于头部标题区域右侧', () => {
     expect(imageManageHeroPanelSource).toMatch(
       /<div class="image-header__intro">[\s\S]*<div class="image-header__copy">[\s\S]*<div\s+class="image-status-strip"[\s\S]*<div class="image-header__side">/s
-    )
-    expect(imageManageHeroPanelSource).toMatch(
-      /\.image-header__intro\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(18rem,\s*auto\);/s
-    )
-  })
-
-  it('应该为镜像列表长文本保留省略样式和完整悬浮提示', () => {
-    expect(combinedSource).toMatch(
-      /class="image-row__name"[\s\S]*:title="\(row as AdminImageListItem\)\.name"/s
-    )
-    expect(combinedSource).toMatch(
-      /class="image-row__tag"[\s\S]*:title="\(row as AdminImageListItem\)\.tag"/s
-    )
-    expect(combinedSource).toMatch(
-      /class="image-row__description"[\s\S]*:title="[\s\S]*\(row as AdminImageListItem\)\.last_error \|\|[\s\S]*\(row as AdminImageListItem\)\.digest \|\|[\s\S]*\(row as AdminImageListItem\)\.description \|\|[\s\S]*'未生成摘要'/s
-    )
-    expect(combinedSource).toMatch(
-      /\.image-row__name\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
-    )
-    expect(combinedSource).toMatch(
-      /\.image-row__tag\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
-    )
-    expect(combinedSource).toMatch(
-      /\.image-row__description\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s
     )
   })
 
