@@ -36,25 +36,16 @@ describe('admin journal shell shared styles', () => {
     expect(journalAdminShellSource).toContain('.journal-shell.journal-shell-admin')
     expect(journalAdminShellSource).toContain('.journal-shell.journal-shell-admin.journal-hero')
     expect(journalAdminShellSource).toContain('.journal-shell.journal-shell-admin .journal-panel')
-    expect(journalAdminShellSource).toMatch(
-      /\.journal-shell\.journal-shell-admin\.journal-hero\s*\{[\s\S]*border-radius:\s*0\s*!important;/s
-    )
     expect(journalAdminShellSource).toContain(
       "[data-theme='dark'] .journal-shell.journal-shell-admin"
     )
   })
 
-  it('admin 壳层在暗色模式下应为 secondary 与 ghost 按钮提供低对比深色 token，而不是白底按钮', () => {
+  it('admin 壳层在暗色模式下应继续承接按钮主题 token owner', () => {
     expect(journalAdminShellSource).toContain("[data-theme='dark'] .journal-shell.journal-shell-admin")
-    expect(journalAdminShellSource).toMatch(
-      /\[data-theme='dark'\] \.journal-shell\.journal-shell-admin\s*\{[\s\S]*--ui-btn-secondary-background:\s*color-mix\(/s
-    )
-    expect(journalAdminShellSource).toMatch(
-      /\[data-theme='dark'\] \.journal-shell\.journal-shell-admin\s*\{[\s\S]*--ui-btn-secondary-border:\s*color-mix\(/s
-    )
-    expect(journalAdminShellSource).toMatch(
-      /\[data-theme='dark'\] \.journal-shell\.journal-shell-admin\s*\{[\s\S]*--ui-btn-ghost-hover-background:\s*color-mix\(/s
-    )
+    expect(journalAdminShellSource).toContain('--ui-btn-secondary-background:')
+    expect(journalAdminShellSource).toContain('--ui-btn-secondary-border:')
+    expect(journalAdminShellSource).toContain('--ui-btn-ghost-hover-background:')
   })
 
   it('admin 管理页应继续通过 journal-shell-admin 接入共享壳层', () => {

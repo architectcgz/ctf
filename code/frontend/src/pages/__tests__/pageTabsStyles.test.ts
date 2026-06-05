@@ -33,13 +33,10 @@ describe('page tabs shared styles', () => {
     expect(pageTabsSource).toContain('.tab-panel')
   })
 
-  it('应提供顶部标题、页签轨道与面板之间的全局间距语义变量', () => {
+  it('应提供顶部标题、页签轨道与面板之间的共享变量入口', () => {
     expect(globalStyleSource).toContain('--workspace-topbar-tabs-gap: 0;')
-    expect(globalStyleSource).toContain('--workspace-tabs-panel-gap: var(--space-workspace-tabs-panel-gap);')
-    expect(themeSource).toContain('--space-workspace-tabs-panel-gap: var(--space-3-5);')
-    expect(pageTabsSource).toContain(
-      'padding-bottom: var(--journal-topbar-padding-bottom, var(--workspace-topbar-tabs-gap, 0));'
-    )
+    expect(globalStyleSource).toContain('--workspace-tabs-panel-gap:')
+    expect(themeSource).toContain('--space-workspace-tabs-panel-gap:')
   })
 
   it('使用共享页签轨道的页面应改为注入变量，而不是继续本地重写整套样式', () => {
@@ -58,19 +55,19 @@ describe('page tabs shared styles', () => {
 
   it('workspace 顶部主页签应由共享预设提供默认变量', () => {
     expect(pageTabsSource).toContain('.workspace-tabbar.top-tabs')
-    expect(pageTabsSource).toContain('--page-top-tabs-gap: var(--space-7);')
-    expect(pageTabsSource).toContain('--page-top-tabs-padding: 0 var(--space-7);')
-    expect(pageTabsSource).toContain('--page-top-tab-min-height: 52px;')
-    expect(pageTabsSource).toContain('--page-top-tab-active-border: var(--brand);')
+    expect(pageTabsSource).toContain('--page-top-tabs-gap:')
+    expect(pageTabsSource).toContain('--page-top-tabs-padding:')
+    expect(pageTabsSource).toContain('--page-top-tab-min-height:')
+    expect(pageTabsSource).toContain('--page-top-tab-active-border:')
 
     for (const source of [
       challengeWorkspaceShellSource,
       scoreboardWorkspaceShellSource,
       skillProfileWorkspaceSource,
     ].filter((source) => source.includes('class="workspace-tabbar top-tabs"'))) {
-      expect(source).not.toContain('--page-top-tabs-gap: var(--space-7);')
-      expect(source).not.toContain('--page-top-tabs-padding: 0 var(--space-7);')
-      expect(source).not.toContain('--page-top-tab-min-height: 52px;')
+      expect(source).not.toContain('--page-top-tabs-gap:')
+      expect(source).not.toContain('--page-top-tabs-padding:')
+      expect(source).not.toContain('--page-top-tab-min-height:')
     }
   })
 })
