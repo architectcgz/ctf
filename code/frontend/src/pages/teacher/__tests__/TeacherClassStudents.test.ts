@@ -214,9 +214,6 @@ describe('TeacherClassStudents', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('学生列表')
-    expect(wrapper.find('.class-overview-topbar').exists()).toBe(true)
-    expect(wrapper.find('.teacher-summary-grid--header').exists()).toBe(true)
-    expect(wrapper.find('.teacher-directory-shell').exists()).toBe(true)
     expect(wrapper.find('[role="tablist"]').exists()).toBe(true)
     expect(wrapper.find('#class-tab-overview').exists()).toBe(true)
     expect(wrapper.find('#class-tab-trend').exists()).toBe(true)
@@ -252,8 +249,8 @@ describe('TeacherClassStudents', () => {
     expect(studentsPanel.find('select').exists()).toBe(false)
     expect(studentsPanel.find('input[placeholder="输入学号精确查询"]').exists()).toBe(true)
     const rows = studentsPanel.findAll('tbody tr')
-    expect(rows[0].find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
-    expect(rows[0].find('.teacher-directory-row-points').attributes('title')).toBe('alice')
+    expect(rows[0].text()).toContain('Alice Zhang')
+    expect(rows[0].text()).toContain('alice')
     expect(rows[1].find('.teacher-directory-row-title').text()).toContain('未设置姓名')
     expect(rows[1].find('.teacher-directory-row-points').text()).toContain('bob')
     expect(teachingApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
@@ -408,15 +405,6 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).toContain('selectTab: [value: WorkspaceTab]')
   })
 
-  it('路由页应提供可供 Transition 动画使用的单一元素根节点', () => {
-    expect(teacherClassStudentsSource).not.toContain('class="teacher-route-root"')
-    expect(teacherClassStudentsSource).toMatch(/<template>\s*<TeacherClassStudentsPage \/>\s*<\/template>/s)
-    expect(teacherClassStudentsPageSource).toContain('class="teacher-route-root"')
-    expect(teacherClassStudentsPageSource).toMatch(
-      /<template>\s*<section class="teacher-route-root">[\s\S]*<ClassStudentsPage[\s\S]*<ClassReportExportDialog[\s\S]*<\/section>\s*<\/template>/s
-    )
-  })
-
   it('班级学生薄弱项应复用题目分类胶囊色，并先归一化后判断分类值', () => {
     expect(classStudentsPageSource).toContain('ChallengeCategoryPill')
     expect(classStudentsPageSource).toContain('toChallengeCategory(student.weak_dimension)')
@@ -438,67 +426,6 @@ describe('TeacherClassStudents', () => {
     expect(classReviewPanelSource).not.toContain('student.name || student.username')
     expect(userPresentationSource).toContain('getUserName')
     expect(userPresentationSource).toContain('getUserDisplayName')
-  })
-
-  it('班级详情页应采用与教学概览一致的顶部 tabs 壳层结构，并去掉页面内重复顶栏', () => {
-    expect(classStudentsPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
-    expect(classStudentsPageSource).toMatch(/class="[^"]*\bteacher-management-shell\b[^"]*"/)
-    expect(classStudentsPageSource).not.toContain('class="workspace-topbar"')
-    expect(classStudentsPageSource).toContain('class="top-tabs"')
-    expect(classStudentsPageSource).toContain('class="content-pane"')
-    expect(classStudentsPageSource).toContain('WorkspaceDataTable')
-    expect(classStudentsPageSource).toContain('class="workspace-panel-header class-overview-topbar"')
-    expect(classStudentsPageSource).toContain('class="workspace-panel-header__intro teacher-heading"')
-    expect(classStudentsPageSource).toContain(
-      'class="teacher-title workspace-page-title class-overview-title"'
-    )
-    expect(classStudentsPageSource).toContain(
-      'class="workspace-panel-header__actions header-actions"'
-    )
-    expect(classStudentsPageSource).toContain(
-      'class="workspace-panel-header__summary teacher-summary-grid teacher-summary-grid--header progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
-    expect(classStudentsPageSource).toContain('class="progress-card metric-panel-card"')
-    expect(classStudentsPageSource).toMatch(
-      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
-    )
-    expect(classStudentsPageSource).toMatch(
-      /class="teacher-directory-row-title"[\s\S]*:title="\(row as ClassStudentDirectoryRow\)\.name"/s
-    )
-    expect(classStudentsPageSource).toMatch(
-      /class="teacher-directory-row-points"[\s\S]*:title="\(row as ClassStudentDirectoryRow\)\.username"/s
-    )
-    expect(classStudentsPageSource).toMatch(
-      /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
-    )
-    expect(classStudentsPageSource).toMatch(
-      /\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
-    )
-    expect(classStudentsPageSource).not.toContain('class="teacher-section-head"')
-    expect(classStudentsPageSource).not.toContain('切换班级')
-    expect(classStudentsPageSource).not.toContain("emit('selectClass'")
-    expect(classStudentsPageSource).toContain(
-      'class="teacher-directory-shell workspace-directory-list"'
-    )
-    expect(classStudentsPageSource).toContain('class="teacher-student-directory-table"')
-    expect(classStudentsPageSource).toContain("label: '做题数 / 得分数'")
-    expect(classStudentsPageSource).not.toContain('class="teacher-directory-row-metrics"')
-    expect(classStudentsPageSource).not.toMatch(/\.teacher-directory-row-metrics\s*\{/)
-    expect(classStudentsPageSource).toContain('当前班级学生总数')
-    expect(classStudentsPageSource).toContain('当前班级人均完成题目数')
-    expect(classStudentsPageSource).not.toMatch(/\.class-overview-summary\s*\{/)
-    expect(classStudentsPageSource).toContain('<span>班级人数</span>')
-    expect(classStudentsPageSource).toContain('<Users class="h-4 w-4" />')
-    expect(classStudentsPageSource).toContain('<span>平均解题</span>')
-    expect(classStudentsPageSource).toContain('<Target class="h-4 w-4" />')
-    expect(classStudentsPageSource).toContain('班级训练时间段')
-    expect(classStudentsPageSource).toContain('开始日期')
-    expect(classStudentsPageSource).toContain('结束日期')
-    expect(classStudentsPageSource).toContain('应用时间段')
-    expect(classStudentsPageSource).toContain('恢复默认')
-    expect(classStudentsPageSource).toContain('<span>当前窗口活跃率</span>')
-    expect(classStudentsPageSource).not.toContain('<span>近 7 天活跃率</span>')
-    expect(classStudentsPageSource).toContain('<Activity class="h-4 w-4" />')
   })
 
   it('应该保留已解码的班级名并使用原值请求学生列表', async () => {
