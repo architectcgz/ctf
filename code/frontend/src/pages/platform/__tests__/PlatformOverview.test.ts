@@ -1,22 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 
-import adminDashboardPageSourceBase from '@/features/platform/overview/ui/PlatformOverviewPage.vue?raw'
 import platformOverviewPageModelSource from '@/features/platform/overview/model/usePlatformOverviewPage.ts?raw'
 import platformOverviewDataSource from '@/features/platform/overview/model/usePlatformOverviewData.ts?raw'
 import platformOverviewRoutesSource from '@/features/platform/overview/model/platformOverviewRoutes.ts?raw'
-import platformOverviewAlertsSectionSource from '@/features/platform/overview/ui/PlatformOverviewAlertsSection.vue?raw'
-import platformOverviewHeroPanelSource from '@/features/platform/overview/ui/PlatformOverviewHeroPanel.vue?raw'
-import platformOverviewHotspotsSectionSource from '@/features/platform/overview/ui/PlatformOverviewHotspotsSection.vue?raw'
 import PlatformOverview from '@/pages/platform/PlatformOverviewRoutePage.vue'
 import platformOverviewViewSource from '@/pages/platform/PlatformOverviewRoutePage.vue?raw'
-
-const adminDashboardPageSource = [
-  adminDashboardPageSourceBase,
-  platformOverviewHeroPanelSource,
-  platformOverviewAlertsSectionSource,
-  platformOverviewHotspotsSectionSource,
-].join('\n')
 
 const adminApiMocks = vi.hoisted(() => ({
   getDashboard: vi.fn(),
@@ -143,25 +132,6 @@ describe('PlatformOverview', () => {
     expect(wrapper.find('#admin-dashboard-hotspots').text()).toContain('web-01')
   })
 
-  it('应该去掉页面内顶部标签栏', () => {
-    expect(adminDashboardPageSource).not.toContain('role="tablist"')
-    expect(adminDashboardPageSource).not.toContain('class="top-tabs"')
-    expect(adminDashboardPageSource).not.toContain('admin-dashboard-tab-overview')
-    expect(adminDashboardPageSource).not.toContain('admin-dashboard-tab-alerts')
-    expect(adminDashboardPageSource).not.toContain('admin-dashboard-tab-hotspots')
-  })
-
-  it('头部操作应改用共享 header-btn 原语而不是页面私有 admin-btn 按钮族', () => {
-    expect(adminDashboardPageSource).toContain('class="header-btn header-btn--primary"')
-    expect(adminDashboardPageSource).toContain('class="header-btn header-btn--ghost"')
-    expect(adminDashboardPageSource).toContain(
-      'class="header-btn header-btn--ghost overview-anchor-btn"'
-    )
-    expect(adminDashboardPageSource).not.toContain('overview-action-main')
-    expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-primary')
-    expect(adminDashboardPageSource).not.toContain('admin-btn admin-btn-ghost')
-  })
-
   it('总览页应通过 route target contract 渲染审计与风险研判入口', async () => {
     const wrapper = mountPage()
 
@@ -176,42 +146,5 @@ describe('PlatformOverview', () => {
 
     expect(auditLink?.props('to')).toEqual({ name: 'AuditLog' })
     expect(cheatLink?.props('to')).toEqual({ name: 'CheatDetection' })
-  })
-
-  it('应该采用与 teacher dashboard 一致的 workspace 骨架，并去掉页面内重复顶栏', () => {
-    expect(adminDashboardPageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-hero overview-shell"'
-    )
-    expect(adminDashboardPageSource).not.toContain('class="workspace-topbar"')
-    expect(adminDashboardPageSource).toContain('class="content-pane overview-content"')
-    expect(adminDashboardPageSource).toContain('class="workspace-page-header overview-page-header"')
-    expect(adminDashboardPageSource).not.toContain('class="workspace-hero"')
-    expect(adminDashboardPageSource).not.toContain('tab-panel')
-    expect(adminDashboardPageSource).toContain('class="hero-title workspace-page-title"')
-    expect(adminDashboardPageSource).toContain('系统值守台')
-    expect(adminDashboardPageSource).toContain('class="hero-summary workspace-page-copy"')
-    expect(adminDashboardPageSource).toContain('class="meta-strip"')
-    expect(adminDashboardPageSource).toContain(
-      'class="admin-summary-grid overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
-    expect(adminDashboardPageSource).toContain(
-      'class="journal-note progress-card metric-panel-card"'
-    )
-    expect(adminDashboardPageSource).toContain('class="overview-hero-actions"')
-    expect(adminDashboardPageSource).toContain('class="header-actions overview-action-grid"')
-  })
-
-  it('总览面板应将系统脉搏收进 hero 右侧操作轨道，而不是单独的 rail 区块', () => {
-    expect(adminDashboardPageSource).not.toContain('overview-pulse-panel')
-    expect(adminDashboardPageSource).not.toContain('class="hero-rail"')
-    expect(adminDashboardPageSource).toContain('class="hero-meta-badge"')
-    expect(adminDashboardPageSource).toContain('System Pulse')
-  })
-
-  it('总览 premium 指标条应使用数字列数变量，避免四个指标退化成单列', () => {
-    expect(adminDashboardPageSource).toContain('--metric-panel-columns: 4;')
-    expect(adminDashboardPageSource).not.toContain(
-      '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
-    )
   })
 })

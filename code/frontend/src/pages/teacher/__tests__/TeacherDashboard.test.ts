@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs'
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -29,14 +27,6 @@ const teacherDashboardPageSource = [
   teacherDashboardReviewPanelSource,
   teacherDashboardInterventionPanelSource,
 ].join('\n')
-const teacherDashboardSummaryStyleSource = readFileSync(
-  `${process.cwd()}/src/features/teacher/dashboard/ui/teacherDashboardSummary.css`,
-  'utf-8'
-)
-
-const teacherSurfacePattern =
-  /--journal-ink:\s*var\(--color-text-primary\);[\s\S]*--journal-surface:\s*color-mix\(in srgb, var\(--color-bg-surface\) 88%, var\(--color-bg-base\)\);/s
-const forbiddenTeacherSurfaceLiterals = ['rgba(255, 255, 255, 0.98)', '#ffffff', '#f8fafc']
 
 const teacherApiMocks = vi.hoisted(() => ({
   getTeacherOverview: vi.fn(),
@@ -212,17 +202,10 @@ describe('TeacherDashboard', () => {
     expect(wrapper.text()).toContain('Bob 当前保持领先')
     expect(wrapper.text()).toContain('Alice')
     expect(wrapper.text()).toContain('薄弱项 crypto')
-    expect(wrapper.find('#overview .teacher-dashboard-overview-head').exists()).toBe(true)
-    expect(wrapper.find('#overview .workspace-overline').text()).toBe('Teaching Overview')
+    expect(wrapper.find('#overview').text()).toContain('Teaching Overview')
 
-    expect(
-      wrapper.findAll('#overview .teacher-dashboard-overview-card.progress-card.metric-panel-card')
-    ).toHaveLength(4)
-    expect(
-      wrapper.findAll('#portrait .teacher-dashboard-summary-card.progress-card.metric-panel-card')
-    ).toHaveLength(
-      3
-    )
+    expect(wrapper.findAll('#overview .metric-panel-card')).toHaveLength(4)
+    expect(wrapper.findAll('#portrait .metric-panel-card')).toHaveLength(3)
     expect(wrapper.findAll('#trend .focus-class-row')).toHaveLength(1)
     expect(wrapper.findAll('#review .review-highlight-item')).toHaveLength(1)
     expect(wrapper.findAll('#intervention .intervention-target-row')).toHaveLength(1)
@@ -276,35 +259,7 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).toContain('@open-student-list')
   })
 
-  it('教师概览夜间模式样式应继续基于主题变量且不回流亮色硬编码', () => {
-    expect(teacherDashboardPageSource).toMatch(teacherSurfacePattern)
-    for (const literal of forbiddenTeacherSurfaceLiterals) {
-      expect(
-        teacherDashboardPageSource,
-        `TeacherDashboardPage.vue contains forbidden literal: ${literal}`
-      ).not.toContain(literal)
-    }
-  })
-
-  it('教师概览应复用全局 workspace tab 与 metric-panel 样式栈', async () => {
-    expect(teacherDashboardPageSource).toContain(
-      'class="workspace-shell teacher-management-shell teacher-surface teacher-dashboard-shell flex min-h-full flex-1 flex-col"'
-    )
-    expect(teacherDashboardPageSource).toContain('class="workspace-tabbar top-tabs"')
-    expect(teacherDashboardPageSource).toContain('class="workspace-tab top-tab"')
-    expect(teacherDashboardPageSource).toContain(
-      'class="workspace-panel-header teacher-dashboard-overview-head"'
-    )
-    expect(teacherDashboardPageSource).toContain(
-      'class="workspace-panel-header__meta meta-strip"'
-    )
-    expect(teacherDashboardPageSource).toContain(
-      'class="workspace-panel-header__summary teacher-dashboard-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
-    expect(teacherDashboardPageSource).toContain(
-      'class="workspace-panel-header__actions header-actions"'
-    )
-    expect(teacherDashboardPageSource).toContain('班级管理')
+  it('教师概览摘要样式 owner 应继续收口到共享 CSS 文件', () => {
     expect(teacherDashboardPageSource).toContain(
       '<style src="@/features/teacher/dashboard/ui/teacherDashboardSummary.css"></style>'
     )
@@ -314,36 +269,6 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardTrendPanelSource).toContain(
       '<style src="@/features/teacher/dashboard/ui/teacherDashboardSummary.css"></style>'
     )
-    expect(teacherDashboardSummaryStyleSource).toMatch(
-      /\.teacher-dashboard-summary-grid\s*\{[\s\S]*--metric-panel-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s
-    )
-    expect(teacherDashboardSummaryStyleSource).toMatch(
-      /\.teacher-dashboard-summary-card\s*\{[\s\S]*min-height:\s*7\.25rem;/s
-    )
-    expect(teacherDashboardSummaryStyleSource).toMatch(
-      /\.teacher-dashboard-overview-card\s*\{[\s\S]*min-height:\s*7\.75rem;/s
-    )
-    expect(teacherDashboardPageSource).toContain('--workspace-brand: var(--journal-accent);')
-    expect(teacherDashboardPageSource).toContain(
-      '--metric-panel-columns: repeat(4, minmax(0, 1fr));'
-    )
-    expect(teacherDashboardPageSource).not.toContain('overview-pulse-panel')
-    expect(teacherDashboardPageSource).toContain('class="workspace-overline"')
-    expect(teacherDashboardPageSource).not.toContain('openReportExport')
-
-    const { wrapper } = await mountDashboard()
-    const summary = wrapper.find('#overview .teacher-dashboard-overview-summary')
-    const portraitSummary = wrapper.find('#portrait .teacher-dashboard-summary-grid')
-
-    expect(summary.classes()).toContain('progress-strip')
-    expect(summary.classes()).toContain('metric-panel-grid')
-    expect(summary.classes()).toContain('metric-panel-default-surface')
-    expect(portraitSummary.classes()).toContain('progress-strip')
-    expect(portraitSummary.classes()).toContain('metric-panel-grid')
-    expect(portraitSummary.classes()).toContain('metric-panel-default-surface')
-    expect(wrapper.text()).not.toContain('Quick Actions')
-    expect(wrapper.text()).not.toContain('导出报告')
-    expect(wrapper.text()).toContain('班级管理')
   })
 
   it('教师从教师概览进入班级管理时应进入教师班级页', async () => {

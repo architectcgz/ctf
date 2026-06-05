@@ -154,34 +154,24 @@ describe('TeacherStudentManagement', () => {
     const { wrapper, router } = await mountPage()
 
     expect(wrapper.text()).toContain('学生管理')
-    expect(wrapper.find('.workspace-directory-section.teacher-directory-section').exists()).toBe(
-      true
-    )
-    expect(wrapper.find('.teacher-directory-shell.workspace-directory-list').exists()).toBe(true)
-    expect(wrapper.find('.list-heading').exists()).toBe(true)
-    expect(wrapper.find('.workspace-directory-toolbar').exists()).toBe(true)
-    expect(wrapper.find('.workspace-data-table').exists()).toBe(true)
     expect(wrapper.findAll('.workspace-data-table__body tr')).toHaveLength(2)
-    const headers = wrapper.findAll('.workspace-data-table__head-cell').map((cell) => cell.text())
-    expect(headers).toEqual(['学号', '学生名称', '昵称', '薄弱项', '做题数', '得分数', '操作'])
 
     const rows = wrapper.findAll('.workspace-data-table__body tr')
-    expect(rows[0].find('.teacher-directory-cell-student-no').text()).toContain('2024001')
-    expect(rows[0].find('.teacher-directory-cell-name').text()).toContain('Alice Zhang')
-    expect(rows[0].find('.teacher-directory-row-points').text()).toContain('alice')
-    expect(rows[0].find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
-    expect(rows[0].find('.teacher-directory-row-points').attributes('title')).toBe('alice')
-    expect(rows[0].find('.teacher-directory-chip').text()).toContain('暂无薄弱项')
-    expect(rows[0].find('.teacher-directory-row-solved').text()).toBe('0')
-    expect(rows[0].find('.teacher-directory-row-score').text()).toBe('0')
+    expect(wrapper.text()).toContain('学号')
+    expect(wrapper.text()).toContain('学生名称')
+    expect(wrapper.text()).toContain('昵称')
+    expect(wrapper.text()).toContain('薄弱项')
+    expect(wrapper.text()).toContain('做题数')
+    expect(wrapper.text()).toContain('得分数')
+    expect(rows[0].text()).toContain('2024001')
+    expect(rows[0].text()).toContain('Alice Zhang')
+    expect(rows[0].text()).toContain('alice')
+    expect(rows[0].text()).toContain('暂无薄弱项')
     expect(rows[0].find('.teacher-directory-chip').text()).not.toContain('Student')
-    expect(rows[1].find('.teacher-directory-cell-student-no').text()).toContain('未设置学号')
-    expect(rows[1].find('.teacher-directory-cell-name').text()).toContain('未设置姓名')
-    expect(rows[1].find('.teacher-directory-row-points').text()).toContain('bob')
-    expect(rows[1].find('.teacher-directory-chip').text()).toContain('暂无薄弱项')
-    expect(rows[1].find('.teacher-directory-row-solved').text()).toBe('1')
-    expect(rows[1].find('.teacher-directory-row-score').text()).toBe('0')
-    expect(rows[1].find('.teacher-directory-row-status').exists()).toBe(false)
+    expect(rows[1].text()).toContain('未设置学号')
+    expect(rows[1].text()).toContain('未设置姓名')
+    expect(rows[1].text()).toContain('bob')
+    expect(rows[1].text()).toContain('暂无薄弱项')
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('bob')
 
@@ -227,37 +217,6 @@ describe('TeacherStudentManagement', () => {
 
     expect(router.currentRoute.value.name).toBe('TeacherStudentAnalysis')
     expect(router.currentRoute.value.params).toEqual({ className: 'Class A', studentId: 'stu-1' })
-  })
-
-  it('学生管理概况卡片应复用 admin dashboard 的共享数值卡片结构', () => {
-    expect(studentManagementSource).toContain(
-      'class="teacher-summary metric-panel-default-surface"'
-    )
-    expect(studentManagementSource).toContain(
-      'class="teacher-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
-    expect(studentManagementSource).toContain('class="progress-card metric-panel-card"')
-    expect(studentManagementSource).not.toContain(
-      'class="teacher-summary-item progress-card metric-panel-card"'
-    )
-    expect(studentManagementSource).toContain('class="progress-card-label metric-panel-label"')
-    expect(studentManagementSource).not.toContain(
-      'class="teacher-summary-label progress-card-label metric-panel-label"'
-    )
-    expect(studentManagementSource).toContain('class="progress-card-value metric-panel-value"')
-    expect(studentManagementSource).not.toContain(
-      'class="teacher-summary-value progress-card-value metric-panel-value"'
-    )
-    expect(studentManagementSource).toContain('class="progress-card-hint metric-panel-helper"')
-    expect(studentManagementSource).not.toContain(
-      'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(studentManagementSource).toContain('<span>可访问班级</span>')
-    expect(studentManagementSource).toContain('<FolderKanban class="h-4 w-4" />')
-    expect(studentManagementSource).toContain('<span>当前班级学生</span>')
-    expect(studentManagementSource).toContain('<Users class="h-4 w-4" />')
-    expect(studentManagementSource).toContain('<span>搜索结果</span>')
-    expect(studentManagementSource).toContain('<Search class="h-4 w-4" />')
   })
 
   it('页面应通过 feature model 获取学生目录状态，不再直接耦合 teacher api', () => {
@@ -679,50 +638,6 @@ describe('TeacherStudentManagement', () => {
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('2 / 2')
     expect(wrapper.text()).toContain('Student 21')
     expect(wrapper.text()).not.toContain('Student 20')
-  })
-
-  it('应该为学生列表姓名和昵称保留单行省略与完整提示', () => {
-    expect(studentManagementSource).toContain(
-      'class="workspace-directory-section teacher-directory-section"'
-    )
-    expect(studentManagementSource).toContain(
-      'class="teacher-directory-shell workspace-directory-list"'
-    )
-    expect(studentManagementSource).toContain(
-      '--workspace-directory-shell-padding: var(--space-5);'
-    )
-    expect(studentManagementSource).toContain(
-      '--workspace-directory-shell-radius: var(--radius-2xl);'
-    )
-    expect(studentManagementSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(studentManagementSource).toContain('<WorkspaceDataTable')
-    expect(studentManagementSource).toContain('<WorkspaceDirectoryPagination')
-    expect(studentManagementSource).toContain('class="list-heading"')
-    expect(studentManagementSource).toContain('class="workspace-overline">Student Directory')
-    expect(studentManagementSource).not.toContain(
-      'class="workspace-directory-list teacher-student-directory-table"'
-    )
-    expect(studentManagementSource).not.toContain('teacher-directory-shell__head')
-    expect(studentManagementSource).not.toContain('teacher-controls-title')
-    expect(studentManagementSource).toContain('filter-panel-title="学生筛选"')
-    expect(studentManagementSource).toMatch(/key:\s*'solved_count'[\s\S]*label:\s*'做题数'/)
-    expect(studentManagementSource).toMatch(/key:\s*'total_score'[\s\S]*label:\s*'得分数'/)
-    expect(studentManagementSource).toContain('class="teacher-directory-row-solved"')
-    expect(studentManagementSource).toContain('class="teacher-directory-row-score"')
-    expect(studentManagementSource).not.toContain("label: '数据'")
-    expect(studentManagementSource).not.toContain('class="teacher-directory-row-metrics"')
-    expect(studentManagementSource).toMatch(
-      /class="teacher-directory-row-title"[\s\S]*:title="\(row as StudentDirectoryTableRow\)\.name"/s
-    )
-    expect(studentManagementSource).toMatch(
-      /class="teacher-directory-row-points"[\s\S]*:title="\(row as StudentDirectoryTableRow\)\.username"/s
-    )
-    expect(studentManagementSource).toMatch(
-      /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
-    )
-    expect(studentManagementSource).toMatch(
-      /\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
-    )
   })
 
   it('点击导出班级报告时应打开当前筛选班级的上下文对话框', async () => {

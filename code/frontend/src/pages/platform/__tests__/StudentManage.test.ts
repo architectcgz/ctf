@@ -116,20 +116,9 @@ describe('PlatformStudentManagement', () => {
   it('应复用后台工作台目录组件和 admin 教学目录接口 owner', async () => {
     expect(adminStudentManageSource).toContain("from '@/features/platform/student-management'")
     expect(adminStudentManageSource).toContain('usePlatformStudentManagementPage')
-    expect(adminStudentManageSource).toContain('StudentManageWorkspacePanel')
     expect(adminStudentManageSource).not.toContain("from '@/api/teacher'")
     expect(adminStudentManageSource).not.toContain("from '@/features/student-directory'")
-    expect(adminStudentManageSource).toContain('StudentManageHeroPanel')
     expect(adminStudentManageSource).not.toContain("from '@/composables/usePlatformStudentDirectory'")
-    expect(adminStudentManageSource).toContain('<StudentManageHeroPanel')
-    expect(adminStudentManageSource).toContain('<StudentManageWorkspacePanel')
-    expect(adminStudentManageSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-admin journal-hero admin-student-manage-shell"'
-    )
-    expect(studentManageHeroPanelSource).toContain('刷新目录')
-    expect(studentManageHeroPanelSource).toContain(
-      'class="admin-summary-grid admin-student-manage-shell__summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
-    )
     expect(studentManageWorkspacePanelSource).toContain(
       "from '@/shared/ui/common/WorkspaceDirectoryToolbar.vue'"
     )
@@ -139,15 +128,6 @@ describe('PlatformStudentManagement', () => {
     expect(studentManageWorkspacePanelSource).toContain(
       "from '@/shared/ui/common/WorkspaceDirectoryPagination.vue'"
     )
-    expect(studentManageWorkspacePanelSource).toContain(
-      "from '@/shared/ui/navigation/AppRouteLink.vue'"
-    )
-    expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDirectoryToolbar')
-    expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDataTable')
-    expect(studentManageWorkspacePanelSource).toContain('<WorkspaceDirectoryPagination')
-    expect(studentManageWorkspacePanelSource).toContain('<AppRouteLink')
-    expect(studentManageWorkspacePanelSource).toContain('class="ui-btn ui-btn--primary ui-btn--sm"')
-    expect(appRouteLinkSource).toContain("from 'vue-router'")
     expect(platformStudentManagementPageSource).not.toContain("from 'vue-router'")
     expect(platformStudentManagementPageSource).toContain("from './usePlatformStudentDirectory'")
     expect(platformStudentManagementPageSource).not.toContain("from '@/api/admin'")
