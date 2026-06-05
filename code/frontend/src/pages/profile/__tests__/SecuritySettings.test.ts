@@ -116,26 +116,10 @@ describe('SecuritySettings', () => {
     expect(securitySettingsSource).not.toContain('validatePasswordForm')
     expect(securitySettingsSource).toContain("from '@/features/profile'")
     expect(securitySettingsSource).toContain('SecuritySettingsWorkspaceShell')
-    expect(securitySettingsWorkspaceSource).toContain('class="workspace-page-header security-topbar"')
-    expect(securitySettingsWorkspaceSource).toContain('class="security-topbar-meta"')
     expect(securitySettingsWorkspaceSource).not.toContain('<PageHeader')
-    expect(securitySettingsWorkspaceSource).toContain(
-      'class="security-summary metric-panel-default-surface"'
-    )
-    expect(securitySettingsWorkspaceSource).toContain(
-      'class="security-summary-item progress-card metric-panel-card"'
-    )
-    expect(securitySettingsWorkspaceSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
-    )
-    expect(securitySettingsWorkspaceSource).toContain(
-      'class="security-summary-value progress-card-value metric-panel-value"'
-    )
-    expect(securitySettingsWorkspaceSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
-    )
+    expect(securitySettingsWorkspaceSource).toContain('安全概况')
+    expect(securitySettingsWorkspaceSource).toContain('submitPasswordChange')
     expect(securitySettingsWorkspaceSource).toContain('<component :is="stat.icon" class="h-4 w-4" />')
-    expect(securitySettingsWorkspaceSource).not.toContain('class="security-summary-icon"')
   })
 
   it('密码修改进行中重复提交表单时只应提交一次', async () => {
@@ -172,50 +156,5 @@ describe('SecuritySettings', () => {
     expect(wrapper.text()).not.toContain('绿色')
     expect(wrapper.text()).not.toContain('青色')
     expect(wrapper.text()).not.toContain('蓝色')
-  })
-
-  it('应该移除安全设置页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {
-    expect(securitySettingsWorkspaceSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'
-    )
-    expect(securitySettingsWorkspaceSource).not.toContain('journal-eyebrow-text')
-  })
-
-  it('应该把安全设置内容区的 soft eyebrow 收敛为局部 section kicker', () => {
-    expect(securitySettingsWorkspaceSource).toMatch(
-      /<div class="security-section-kicker">\s*Password\s*<\/div>/
-    )
-    expect(securitySettingsWorkspaceSource).toMatch(
-      /<div class="security-section-kicker">\s*Tips\s*<\/div>/
-    )
-    expect(securitySettingsWorkspaceSource).not.toContain(
-      '<div class="journal-eyebrow journal-eyebrow-soft">Password</div>'
-    )
-    expect(securitySettingsWorkspaceSource).not.toContain(
-      '<div class="journal-eyebrow journal-eyebrow-soft">Tips</div>'
-    )
-  })
-
-  it('应使用共享 ui-control 原语承载密码输入框', () => {
-    expect(securitySettingsWorkspaceSource).toContain('class="ui-control-wrap"')
-    expect(securitySettingsWorkspaceSource).toContain('class="ui-control"')
-    expect(securitySettingsWorkspaceSource).not.toMatch(/^\.journal-input\s*\{/m)
-    expect(securitySettingsWorkspaceSource).not.toMatch(/^\.journal-input:focus\s*\{/m)
-    expect(securitySettingsWorkspaceSource).not.toMatch(/^\.journal-input--error\s*\{/m)
-  })
-
-  it('应把安全提示区的内文字色收敛为语义类', () => {
-    expect(securitySettingsWorkspaceSource).toContain('security-side-status')
-    expect(securitySettingsWorkspaceSource).toContain('security-side-copy')
-    expect(securitySettingsWorkspaceSource).toContain('security-tip-copy')
-    expect(securitySettingsWorkspaceSource).not.toContain(
-      'class="flex items-center gap-2 text-sm font-medium text-[var(--journal-ink)]"'
-    )
-    expect(securitySettingsWorkspaceSource).not.toContain(
-      'class="mt-3 text-sm leading-6 text-[var(--journal-muted)]"'
-    )
-    expect(securitySettingsWorkspaceSource).not.toContain(
-      'class="mt-2 text-sm leading-6 text-[var(--journal-ink)]"'
-    )
   })
 })

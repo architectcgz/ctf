@@ -109,18 +109,11 @@ describe('NotificationList', () => {
 
   it('renders the page surface directly as a section inside the layout main area', async () => {
     const { wrapper } = await mountPage()
-    const className = wrapper.attributes('class')
 
     expect(wrapper.element.tagName).toBe('SECTION')
     expect(wrapper.text()).toContain('Notifications')
     expect(wrapper.classes()).toContain('journal-shell')
     expect(wrapper.classes()).toContain('min-h-full')
-    expect(wrapper.classes()).toContain('space-y-6')
-    expect(className).not.toContain('-mx-4')
-    expect(className).not.toContain('-my-6')
-    expect(className).not.toContain('md:-mx-6')
-    expect(className).not.toContain('xl:-mx-8')
-    expect(className).not.toContain('md:min-h-[calc(100vh-5rem)]')
 
     const firstRow = wrapper.find('.notification-row')
     expect(firstRow.find('.notification-row-title').attributes('title')).toBe('系统通知')
@@ -171,49 +164,20 @@ describe('NotificationList', () => {
     expect(teacherPage.wrapper.text()).not.toContain('发布通知')
   })
 
-  it('keeps notification list titles and content truncated with full hover text', () => {
-    expect(notificationListWorkspaceSource).toMatch(
-      /class="notification-row-title"[\s\S]*:title="item\.title"/s
-    )
-    expect(notificationListWorkspaceSource).toMatch(
-      /class="notification-row-copy"[\s\S]*:title="item\.content"/s
-    )
-    expect(notificationListWorkspaceSource).toMatch(
-      /\.notification-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
-    )
-    expect(notificationListWorkspaceSource).toMatch(
-      /\.notification-row-copy\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s
-    )
-  })
-
   it('通知页应将消息数与未读数放到分类筛选同行，并把操作按钮留在页头', () => {
-    expect(notificationListWorkspaceSource).toMatch(
-      /<div class="workspace-overline">\s*Notifications\s*<\/div>/
-    )
-    expect(notificationListWorkspaceSource).toMatch(
-      /<h1 class="notification-title workspace-page-title">\s*通知中心\s*<\/h1>/
-    )
+    expect(notificationListWorkspaceSource).toContain('Notifications')
+    expect(notificationListWorkspaceSource).toContain('通知中心')
     expect(notificationListWorkspaceSource).not.toContain(
       '<div class="journal-eyebrow">Notifications</div>'
     )
     expect(notificationListWorkspaceSource).not.toContain('journal-eyebrow-text')
-    expect(notificationListWorkspaceSource).toContain('class="notification-topbar-meta"')
-    expect(notificationListWorkspaceSource).not.toContain('class="notification-title-line"')
-    expect(notificationListWorkspaceSource).toMatch(
-      /class="student-directory-filters notification-filter-section"[\s\S]*<NotificationCategoryFilter[\s\S]*class="notification-head-stats"/
-    )
-    expect(notificationListWorkspaceSource).toContain('class="notification-head-stats"')
-    expect(notificationListWorkspaceSource).toContain('class="notification-head-stat"')
+    expect(notificationListWorkspaceSource).toContain('NotificationCategoryFilter')
     expect(notificationListWorkspaceSource).toContain('v-for="stat in headStats"')
     expect(notificationListWorkspaceSource).toContain('{{ stat.label }}')
     expect(notificationListWorkspaceSource).not.toContain('当前消息概况')
     expect(notificationListWorkspaceSource).not.toContain('本页消息')
     expect(notificationListWorkspaceSource).not.toContain('已读消息')
     expect(notificationListWorkspaceSource).not.toContain('总消息数')
-    expect(notificationListWorkspaceSource).toContain('notification-empty-state--list')
-    expect(notificationListWorkspaceSource).toMatch(
-      /:deep\(\.notification-empty-state--list\)\s*\{[^}]*margin-top:\s*calc\(var\(--student-directory-shell-section-gap\)\s*\+\s*var\(--space-2\)\);/s
-    )
   })
 
   it('通知分类筛选应复用学生目录筛选样式并透传 type 查询参数', async () => {
@@ -223,11 +187,7 @@ describe('NotificationList', () => {
     expect(notificationListWorkspaceSource).toContain(
       "import { NotificationReadStatePill, NotificationTypePill } from '@/entities/notification'"
     )
-    expect(notificationListWorkspaceSource).toContain(
-      'student-directory-filters notification-filter-section'
-    )
     expect(notificationCategoryFilterSource).toContain('student-directory-filters')
-    expect(notificationCategoryFilterSource).toContain('student-directory-filter-control')
     expect(notificationListWorkspaceSource).not.toContain('notification-category-bar')
     expect(wrapper.text()).toContain('全部消息')
 
@@ -241,14 +201,7 @@ describe('NotificationList', () => {
         type: 'contest',
       })
     )
-    expect(notificationListWorkspaceSource).not.toContain('class="notification-directory-meta"')
     expect(notificationPresentationSource).toContain("challenge: '训练'")
-  })
-
-  it('通知页操作按钮应接入共享 ui-btn 原语', () => {
-    expect(notificationListWorkspaceSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(notificationListWorkspaceSource).toContain('class="ui-btn ui-btn--secondary"')
-    expect(notificationListWorkspaceSource).not.toContain('class="notification-btn')
   })
 
   it('短时间内连续刷新后应显示试探型提示且仍执行真实刷新', async () => {

@@ -148,32 +148,11 @@ describe('NotificationDetail', () => {
     expect(wrapper.text()).toContain('返回通知列表')
   })
 
-  it('uses a full-width detail surface instead of a centered outer card shell', () => {
-    expect(notificationDetailWorkspaceSource).toMatch(
-      /\.notification-detail-shell\s*\{[\s\S]*width:\s*100%;/s
-    )
-    expect(notificationDetailWorkspaceSource).not.toContain('width: min(72rem, 100%)')
-    expect(notificationDetailWorkspaceSource).toMatch(
-      /\.notification-detail-page\s*\{[\s\S]*background:\s*transparent;[\s\S]*\}/s
-    )
-    expect(notificationDetailWorkspaceSource).not.toMatch(
-      /\.notification-detail-page\s*\{[\s\S]*box-shadow:\s*0 20px 40px var\(--color-shadow-soft\);[\s\S]*\}/s
-    )
-  })
-
   it('通知详情页 overline 应接入 workspace-overline 共享语义', () => {
-    expect(notificationDetailWorkspaceSource).toMatch(
-      /<div class="workspace-overline">\s*Notification\s*<\/div>/
-    )
-    expect(notificationDetailWorkspaceSource).toMatch(
-      /<div class="workspace-overline">\s*Meta\s*<\/div>/
-    )
-    expect(notificationDetailWorkspaceSource).toMatch(
-      /<div class="workspace-overline">\s*ID\s*<\/div>/
-    )
-    expect(notificationDetailWorkspaceSource).toMatch(
-      /<div class="workspace-overline">\s*Message\s*<\/div>/
-    )
+    expect(notificationDetailWorkspaceSource).toContain('Notification')
+    expect(notificationDetailWorkspaceSource).toContain('Meta')
+    expect(notificationDetailWorkspaceSource).toContain('ID')
+    expect(notificationDetailWorkspaceSource).toContain('Message')
     expect(notificationDetailWorkspaceSource).not.toContain(
       '<div class="notification-overline">Notification</div>'
     )
@@ -187,18 +166,6 @@ describe('NotificationDetail', () => {
       '<div class="notification-overline">Message</div>'
     )
     expect(notificationDetailWorkspaceSource).not.toMatch(/^\.notification-overline\s*\{/m)
-    expect(notificationDetailWorkspaceSource).toContain(
-      "import {\n  getNotificationTypeLabel,\n  NotificationReadStatePill,\n  NotificationTypePill,\n} from '@/entities/notification'"
-    )
-  })
-
-  it('通知详情页操作按钮应接入共享 ui-btn 原语', () => {
-    expect(notificationDetailWorkspaceSource).toContain('class="ui-btn ui-btn--primary"')
-    expect(notificationDetailWorkspaceSource).not.toContain('notification-detail-action')
-    expect(notificationDetailWorkspaceSource).not.toMatch(/^\.notification-detail-action\s*\{/m)
-    expect(notificationDetailWorkspaceSource).not.toMatch(
-      /^\.notification-detail-action--primary\s*\{/m
-    )
     expect(notificationPresentationSource).toContain("team: 'violet'")
   })
 

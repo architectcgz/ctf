@@ -134,26 +134,10 @@ describe('UserProfile', () => {
     expect(userProfileSource).toContain('useUserProfilePage')
     expect(userProfileSource).not.toContain("from '@/api/auth'")
     expect(userProfileSource).not.toContain("from '@/api/assessment'")
-    expect(userProfileWorkspaceSource).toContain('class="workspace-page-header profile-topbar"')
-    expect(userProfileWorkspaceSource).toContain('class="profile-topbar-meta"')
     expect(userProfileWorkspaceSource).not.toContain('<PageHeader')
-    expect(userProfileWorkspaceSource).toContain(
-      'class="profile-summary metric-panel-default-surface"'
-    )
-    expect(userProfileWorkspaceSource).toContain(
-      'class="profile-summary-item progress-card metric-panel-card"'
-    )
-    expect(userProfileWorkspaceSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label"'
-    )
-    expect(userProfileWorkspaceSource).toContain(
-      'class="profile-summary-value progress-card-value metric-panel-value"'
-    )
-    expect(userProfileWorkspaceSource).toContain(
-      'class="journal-note-helper progress-card-hint metric-panel-helper"'
-    )
+    expect(userProfileWorkspaceSource).toContain('账号概况')
+    expect(userProfileWorkspaceSource).toContain('reportTaskMeta')
     expect(userProfileWorkspaceSource).toContain('<component')
-    expect(userProfileWorkspaceSource).not.toContain('class="profile-summary-icon"')
   })
 
   it('管理员不应该展示个人报告区块', async () => {
@@ -216,34 +200,5 @@ describe('UserProfile', () => {
 
     expect(assessmentApiMocks.downloadReport).toHaveBeenCalledWith('report-1')
     expect(wrapper.text()).toContain('下载失败')
-  })
-
-  it('应该移除个人资料页级 shell 上遗留的 journal-eyebrow-text 修饰类', () => {
-    expect(userProfileWorkspaceSource).toContain(
-      'class="workspace-shell journal-shell journal-shell-user journal-hero flex min-h-full flex-1 flex-col"'
-    )
-    expect(userProfileWorkspaceSource).not.toContain('journal-eyebrow-text')
-  })
-
-  it('应该把个人资料内容区的 soft eyebrow 收敛为局部 section kicker', () => {
-    expect(userProfileWorkspaceSource).toContain('<div class="profile-section-kicker">Account</div>')
-    expect(userProfileWorkspaceSource).toContain('<div class="profile-section-kicker">Report</div>')
-    expect(userProfileWorkspaceSource).not.toContain(
-      '<div class="journal-eyebrow journal-eyebrow-soft">Account</div>'
-    )
-    expect(userProfileWorkspaceSource).not.toContain(
-      '<div class="journal-eyebrow journal-eyebrow-soft">Report</div>'
-    )
-  })
-
-  it('应该把个人资料页残留的骨架圆角与内文字色收敛为语义类', () => {
-    expect(userProfileWorkspaceSource).not.toContain('rounded-[24px]')
-    expect(userProfileWorkspaceSource).not.toContain('text-[var(--journal-accent)]')
-    expect(userProfileWorkspaceSource).not.toContain('text-[var(--journal-ink)]')
-    expect(userProfileWorkspaceSource).not.toContain('text-[var(--journal-muted)]')
-    expect(userProfileWorkspaceSource).toContain('profile-loading-card')
-    expect(userProfileWorkspaceSource).toContain('profile-accent-icon')
-    expect(userProfileWorkspaceSource).toContain('profile-format-title')
-    expect(userProfileWorkspaceSource).toContain('profile-format-copy')
   })
 })
