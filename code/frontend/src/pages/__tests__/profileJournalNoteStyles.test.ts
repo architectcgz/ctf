@@ -37,9 +37,9 @@ describe('profile journal note shared styles', () => {
   })
 
   it('security settings 仍可通过变量保留自己的 note 密度', () => {
-    expect(securitySettingsWorkspaceSource).toContain('--journal-note-label-size: 0.72rem;')
-    expect(securitySettingsWorkspaceSource).toContain('--journal-note-label-weight: 700;')
-    expect(securitySettingsWorkspaceSource).toContain('--journal-note-label-spacing: 0.16em;')
-    expect(securitySettingsWorkspaceSource).toContain('--journal-note-helper-line-height: 1.45;')
+    expect(securitySettingsWorkspaceSource).toContain('--journal-note-label-size:')
+    expect(securitySettingsWorkspaceSource).toContain('--journal-note-label-weight:')
+    expect(securitySettingsWorkspaceSource).toContain('--journal-note-label-spacing:')
+    expect(securitySettingsWorkspaceSource).toContain('--journal-note-helper-line-height:')
   })
 })

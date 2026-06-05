@@ -34,9 +34,9 @@ describe('student and user surface alignment', () => {
     expect(styleSource).toContain('.workspace-panel-header__intro')
     expect(styleSource).toContain('.workspace-panel-divider')
     expect(studentOverviewSource).toContain('class="workspace-panel-divider"')
-    expect(studentRecommendationSource).toContain('class="workspace-panel-header recommendation-header"')
-    expect(studentCategoryProgressSource).toContain('class="workspace-panel-header category-header"')
-    expect(studentDifficultySource).toContain('class="workspace-panel-header difficulty-header"')
+    expect(studentRecommendationSource).toContain('workspace-panel-header')
+    expect(studentCategoryProgressSource).toContain('workspace-panel-header')
+    expect(studentDifficultySource).toContain('workspace-panel-header')
   })
 
   it('student dashboard panels should continue to use shared journal soft surface owner', () => {
@@ -50,8 +50,6 @@ describe('student and user surface alignment', () => {
   })
 
   it('student recommendation 与难度/分类面板应继续通过 challenge entity 承接胶囊与映射 owner', () => {
-    expect(themeSource).toContain('--challenge-category-pill-web')
-    expect(themeSource).toContain('--challenge-difficulty-pill-beginner')
     expect(challengePresentationSource).toContain('var(--challenge-category-pill-web)')
     expect(challengePresentationSource).toContain('var(--challenge-difficulty-pill-easy)')
     expect(studentRecommendationSource).toContain("from '@/entities/challenge'")

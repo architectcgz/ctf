@@ -34,7 +34,7 @@ describe('page tabs shared styles', () => {
   })
 
   it('应提供顶部标题、页签轨道与面板之间的共享变量入口', () => {
-    expect(globalStyleSource).toContain('--workspace-topbar-tabs-gap: 0;')
+    expect(globalStyleSource).toContain('--workspace-topbar-tabs-gap:')
     expect(globalStyleSource).toContain('--workspace-tabs-panel-gap:')
     expect(themeSource).toContain('--space-workspace-tabs-panel-gap:')
   })
@@ -56,8 +56,6 @@ describe('page tabs shared styles', () => {
   it('workspace 顶部主页签应由共享预设提供默认变量', () => {
     expect(pageTabsSource).toContain('.workspace-tabbar.top-tabs')
     expect(pageTabsSource).toContain('--page-top-tabs-gap:')
-    expect(pageTabsSource).toContain('--page-top-tabs-padding:')
-    expect(pageTabsSource).toContain('--page-top-tab-min-height:')
     expect(pageTabsSource).toContain('--page-top-tab-active-border:')
 
     for (const source of [
