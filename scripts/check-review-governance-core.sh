@@ -1,23 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(git rev-parse --show-toplevel)"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$script_dir/.."
 
-fail=0
-
-source "scripts/lib/check-consistency/common.sh"
-source "scripts/lib/check-consistency/navigation.sh"
-source "scripts/lib/check-consistency/architecture.sh"
-source "scripts/lib/check-consistency/workflow.sh"
-
-run_navigation_checks
-run_architecture_checks
-run_workflow_checks
-
-if [[ "$fail" -eq 0 ]]; then
-  echo "$(green '✓ review governance checks passed')"
-else
-  echo "$(red '✗ review governance checks failed')"
-fi
-
-exit "$fail"
+exec bash harness/checks/check_review_governance_core.sh "$@"

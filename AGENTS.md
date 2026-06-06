@@ -105,6 +105,7 @@
 - `docs/thesis/`、`docs/weekly-reports/`、`docs/开题报告/`、`docs/文献/`、`docs/毕业设计文档相关/`：论文与学校材料，不混入产品事实源。
 - `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`references/` 是 harness 顶层目录；各目录局部规则见对应 `AGENTS.md`。
 - `harness/checks/` 存放项目本地、可提交、长期维护的机械检查主体；`scripts/` 中对应 `check-*` 命令默认只保留稳定 wrapper 入口。
+- `scripts/check-review-governance-core.sh` 与 `scripts/doctor-local-harness.sh` 也是稳定入口；真正的检查主体默认继续下沉到 `harness/checks/`，不要再把大段检查逻辑直接堆回 `scripts/`。
 - `harness/bridges/` 存放项目本地、可提交、长期维护的 harness bridge / adapter；这层只负责把共享 harness 能力和本项目路径、policy、入口约定接起来。
 - `.harness/` 保存当前任务状态、短期执行证据和用户本地私有索引；其中 `.harness/session-gates/` 只放本地启动凭证，`.harness/reuse-decisions/` 只放按需补充的任务证据，`.harness/reuse-index/` 只放用户自用的长期复用索引，不进入版本控制。
 - 已稳定的结论要回收到对应事实源；旧中间稿在原位置标记 `Superseded by ...`。

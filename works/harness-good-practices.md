@@ -35,6 +35,7 @@
 - `feedback/` 只写 agent 工作流、review、prompt、policy、协作方式的踩坑与修正。
 - `works/` 只写可复用输出，例如地图、模板、教程、good practices。
 - `harness/prompts/` 只放仓库内稳定 prompt 入口、局部补充，以及仍然项目专属的 prompt；跨项目共享正文优先放 `/home/azhi/.agents/harness/prompts/`。
+- `harness/checks/` 只放项目本地、长期维护的机械检查主体；`scripts/check-*.sh` 如果只是给人、hook、README 保留稳定命令名，就应该收成薄 wrapper。
 - `harness/bridges/` 只放项目本地、长期维护的 harness adapter；例如把共享 checker、shared harness 工具或项目内 skill 安装流程接到当前仓库路径和 policy 上。
 - `references/` 只放外部资料索引和研究入口。
 
