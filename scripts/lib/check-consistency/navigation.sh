@@ -15,37 +15,11 @@ run_navigation_checks() {
   check_contains "AGENTS.md" 'harness/prompts/' "AGENTS references harness prompts"
   check_contains "AGENTS.md" 'references/' "AGENTS references references"
 
-  echo "[C2a] project entrypoint checks stay owned by local harness setup"
-  check_file "scripts/check-agent-entrypoints.sh"
-  check_file "harness/checks/check_agent_entrypoints.sh"
-  check_contains "AGENTS.md" 'scripts/check-agent-entrypoints\.sh' "AGENTS references project entrypoint checker"
-  check_contains "scripts/check-agent-entrypoints.sh" 'harness/checks/check_agent_entrypoints\.sh' "entrypoint wrapper delegates to harness check"
-  check_contains "harness/checks/check_local_harness_setup.sh" 'scripts/check-agent-entrypoints\.sh' "local harness setup runs entrypoint checks"
-  check_contains "scripts/install-agent-symlinks.sh" 'scripts/check-agent-entrypoints\.sh' "shared skill installer re-checks entrypoints"
-
-  echo "[C2b] shared skill bridge stays aligned"
-  check_file "scripts/check-shared-skills.sh"
-  check_dir "harness/checks"
-  check_file "harness/checks/check_shared_skills.sh"
-  check_file "scripts/install-agent-symlinks.sh"
-  check_file "scripts/uninstall-agent-symlinks.sh"
-  check_contains "AGENTS.md" '\.agents/skills/' "AGENTS references shared skill source"
-  check_contains "AGENTS.md" 'scripts/install-agent-symlinks\.sh' "AGENTS references shared skill installer"
-  check_contains "scripts/check-shared-skills.sh" 'harness/checks/check_shared_skills\.sh' "check-shared-skills wrapper delegates to harness check"
-  check_contains "scripts/install-agent-symlinks.sh" '\.agents/skills' "install-agent-symlinks reads project shared skills"
-  check_contains "scripts/install-agent-symlinks.sh" 'scripts/check-shared-skills\.sh' "install-agent-symlinks validates shared skills before linking"
-  check_contains "scripts/uninstall-agent-symlinks.sh" '\.agents/skills' "uninstall-agent-symlinks resolves project shared skills"
   if [[ -e "harness/bridges" ]]; then
     echo "  $(red FAIL) — harness/bridges must not exist; ordinary project commands should live in scripts/ or harness/checks/"
     fail=1
   else
     echo "  $(green PASS) — harness/bridges is absent"
-  fi
-  if [[ -x "scripts/check-shared-skills.sh" ]]; then
-    bash scripts/check-shared-skills.sh
-  else
-    echo "  $(red FAIL) — scripts/check-shared-skills.sh is not executable"
-    fail=1
   fi
 
   echo "[C3] articles.md numbering is contiguous 1..N"

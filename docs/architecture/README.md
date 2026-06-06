@@ -45,8 +45,8 @@
 - `scripts/check-architecture.sh --full`：聚合执行 backend full + frontend full。
 - `harness/workflow-plugins/code-workflow/`：项目把本地 guardrail 挂到 `pre-commit-quick`、`completion-full`、`workflow-governance` 这三个 workflow stage 的注册点。
 - `python3 scripts/check-docs-consistency.py`：检查架构文档状态、索引引用与 `## 当前设计` 结构底线。
-- `scripts/check-workflow-governance.sh`：检查 harness 导航、脚本接线与本地 guardrail 是否接入。
-- `scripts/check-agent-entrypoints.sh` / `scripts/doctor-local-harness.sh`：检查项目根 agent 入口软链接与共享 skill 入口接线是否仍然对齐。
+- `scripts/check-workflow-governance.sh`：检查 harness 导航、脚本接线与本地 workflow guardrail 是否接入。
+- `scripts/check-agent-entrypoints.sh` / `scripts/check-shared-skills.sh` / `scripts/doctor-local-harness.sh`：检查项目根 agent 入口软链接与共享 skill 入口接线是否仍然对齐。
 
 主要代码级 guardrail：
 

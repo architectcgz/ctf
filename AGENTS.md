@@ -5,7 +5,7 @@
 - 本仓库默认先进入 harness：除非任务明显简单、局部、可逆且不需要沉淀经验，否则开始前必须先按 `harness-router` 判断 `SIMPLE` / `HARNESS`。
 - 路线为 `HARNESS` 时，先读本文件和相关 harness 入口，再决定是否需要计划、review、验证或更新 `feedback/`、`harness/prompts/`、`references/`、`works/`。
 - 任务分流使用全局 `harness-router` skill；完整治理审计使用 `bash scripts/check-workflow-governance.sh`，提交前本地只跑与当前改动强相关的轻量门禁。`bash scripts/check-review-governance.sh` 与 `bash scripts/check-consistency.sh` 仅保留为兼容别名。
-- 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；主检查入口是 `bash scripts/check-agent-entrypoints.sh`，并由 `bash scripts/doctor-local-harness.sh` 与 `bash scripts/install-agent-symlinks.sh` 主动执行，`bash scripts/check-workflow-governance.sh` 只保留 wiring 审计兜底。
+- 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；主检查入口是 `bash scripts/check-agent-entrypoints.sh`，并由 `bash scripts/doctor-local-harness.sh` 与 `bash scripts/install-agent-symlinks.sh` 主动执行，不再挂到 `workflow-governance` 后置审计里。
 - 项目级 workflow 守卫统一注册在 `harness/workflow-plugins/code-workflow/`；shared `code-workflow` 只提供 stage 模型，`ctf` 自己 owner 每个 stage 下要跑的插件集合。
 - 如果需要理解 `pre-commit-quick / completion-full / workflow-governance` 的时机划分，以及为什么 backend module boundary 仍留在提交前，优先读 `harness/workflow-plugins/code-workflow/README.md`。
 - `scripts/` 顶层文件保留为稳定入口层；项目本地机械检查主体放在 `harness/checks/`，只有像 `code-workflow` 这样确实需要共享 workflow 项目适配的能力，才放到 `harness/workflow-plugins/`。`tools/` 存放工程工具入口，`.harness/` 只放任务态 / 本地态资料，不承载长期接线。

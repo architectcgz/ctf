@@ -16,7 +16,7 @@
 
 - `../scripts/check-task-intake.sh`：任务开始前的轻量 intake reminder，会顺手提示 `docs/todos/` 中尚未收口的事项。
 - `../scripts/start-implementation.sh <topic-or-slug>`：非琐碎任务和受保护实现面的统一入口；负责创建 worktree、implementation plan 和本地 startup gate。
-- `../scripts/check-workflow-governance.sh`：`code-workflow` 后置的 workflow 治理审计入口；包含文档导航、OpenAPI 同步和 harness 接线审计，不再作为所有提交前的无条件门禁。`AGENTS/CLAUDE` 入口一致性的主检查改由 `../scripts/check-agent-entrypoints.sh` 与 `../scripts/doctor-local-harness.sh` 承担。
+- `../scripts/check-workflow-governance.sh`：`code-workflow` 后置的 workflow 治理审计入口；包含文档导航、OpenAPI 同步和项目 workflow 接线审计，不再作为所有提交前的无条件门禁。`AGENTS/CLAUDE` 与 shared skill 入口接线的主检查改由 `../scripts/check-agent-entrypoints.sh`、`../scripts/check-shared-skills.sh` 与 `../scripts/doctor-local-harness.sh` 承担。
 - `../scripts/check-review-governance.sh`、`../scripts/check-consistency.sh`：兼容别名，内部转发到 `../scripts/check-workflow-governance.sh`。
 
 ## 读取原则
