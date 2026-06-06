@@ -11,6 +11,7 @@ run_navigation_checks() {
   check_contains "AGENTS.md" 'practice/' "AGENTS references practice"
   check_contains "AGENTS.md" 'feedback/' "AGENTS references feedback"
   check_contains "AGENTS.md" 'works/' "AGENTS references works"
+  check_contains "AGENTS.md" 'harness/bridges/' "AGENTS references harness bridges"
   check_contains "AGENTS.md" 'harness/prompts/' "AGENTS references harness prompts"
   check_contains "AGENTS.md" 'references/' "AGENTS references references"
 
@@ -32,8 +33,14 @@ run_navigation_checks() {
   check_file "scripts/check-shared-skills.sh"
   check_file "scripts/install-agent-symlinks.sh"
   check_file "scripts/uninstall-agent-symlinks.sh"
+  check_dir "harness/bridges"
+  check_file "harness/bridges/README.md"
+  check_file "harness/bridges/install-agent-symlinks.sh"
+  check_file "harness/bridges/uninstall-agent-symlinks.sh"
   check_contains "AGENTS.md" '\.agents/skills/' "AGENTS references shared skill source"
   check_contains "AGENTS.md" 'scripts/install-agent-symlinks\.sh' "AGENTS references shared skill installer"
+  check_contains "scripts/install-agent-symlinks.sh" 'harness/bridges/install-agent-symlinks\.sh' "install-agent-symlinks wrapper delegates to harness bridge"
+  check_contains "scripts/uninstall-agent-symlinks.sh" 'harness/bridges/uninstall-agent-symlinks\.sh' "uninstall-agent-symlinks wrapper delegates to harness bridge"
   if [[ -x "scripts/check-agent-entrypoints.sh" ]]; then
     bash scripts/check-agent-entrypoints.sh
   else

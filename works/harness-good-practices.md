@@ -35,6 +35,7 @@
 - `feedback/` 只写 agent 工作流、review、prompt、policy、协作方式的踩坑与修正。
 - `works/` 只写可复用输出，例如地图、模板、教程、good practices。
 - `harness/prompts/` 只放仓库内稳定 prompt 入口、局部补充，以及仍然项目专属的 prompt；跨项目共享正文优先放 `/home/azhi/.agents/harness/prompts/`。
+- `harness/bridges/` 只放项目本地、长期维护的 harness adapter；例如把共享 checker、shared harness 工具或项目内 skill 安装流程接到当前仓库路径和 policy 上。
 - `references/` 只放外部资料索引和研究入口。
 
 如果内容是“当前产品怎么工作”，优先回到 `docs/` 事实源，而不是塞进 harness 目录。
@@ -75,6 +76,7 @@
 - 把 review 结论当作当前设计事实源。
 - 把仍未决定的方案写进 `contracts` 或 `architecture`。
 - 把待办和 backlog 写进 `feedback/`。
+- 把项目长期 adapter 塞进 `.harness/`；`.harness/` 是任务态目录，不是 bridge owner。
 - 同一 input contract 的 `normalize / default / validate` 在 `application` 和 `repository` 两层重复出现，最后靠双重兜底维持“看起来能工作”。
 - repository 直接接收未收敛的裸字符串排序键、分页键或筛选键，再在仓储层补默认值和白名单，而不是由上游先收口成受限语义。
 - application 虽然已经成为唯一 owner，但内部 contract 仍继续暴露可手工拼装的导出 enum / struct，最后只能靠 repository 的 panic 或 defensive branch 晚发现错误。

@@ -28,6 +28,7 @@ bash scripts/install-githooks.sh
 
 - `scripts/check-review-governance.sh` 现在作为 review / doctor 级治理审计入口，不再作为所有提交前都无条件执行的本地门禁。
 - `scripts/check-consistency.sh` 只保留为兼容别名，内部直接转发到 `scripts/check-review-governance.sh`。
+- 项目本地 harness adapter 统一收口到 `harness/bridges/`；`scripts/` 中对应命令保留为稳定入口 wrapper，供 hook、README、AGENTS 和操作者直接调用。
 - OpenAPI 拆分源与 bundle 的同步检查继续放在 `scripts/check-review-governance.sh`，不按提交路径临时下沉到 `pre-commit`。
 - 项目级 workflow 插件根目录是 `harness/workflow-plugins/code-workflow/`；shared `code-workflow` 只负责 stage 模型，不内置 `ctf` 的具体守卫列表。
 - `scripts/check-skill-sync-reminder.sh` 属于 harness 知识治理提醒，不属于 `code-workflow` 语义本体。
