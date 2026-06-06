@@ -20,6 +20,8 @@ import (
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
+const awdServiceOperationSupersededError = "superseded_by_new_operation"
+
 type Repository struct {
 	db           *gorm.DB
 	runtimePorts runtimeports.PortReservationOwner
@@ -452,7 +454,33 @@ func (r *Repository) CreateInstance(ctx context.Context, instance *instancecontr
 }
 
 func (r *Repository) CreateAWDServiceOperation(ctx context.Context, operation *runtimecontracts.AWDServiceOperation) error {
-	return r.dbWithContext(ctx).Create(operation).Error
+	if operation == nil {
+		return nil
+	}
+	db := r.dbWithContext(ctx)
+	if !shouldCloseActiveAWDServiceOperationsForScope(operation) {
+		return db.Create(operation).Error
+	}
+
+	finishedAt := operation.StartedAt.UTC()
+	if finishedAt.IsZero() {
+		finishedAt = time.Now().UTC()
+	}
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&runtimecontracts.AWDServiceOperation{}).
+			Where("contest_id = ? AND team_id = ? AND service_id = ? AND status IN ?",
+				operation.ContestID, operation.TeamID, operation.ServiceID, activeAWDServiceOperationStatuses()).
+			Updates(map[string]any{
+				"status":        runtimecontracts.AWDServiceOperationStatusFailed,
+				"error_message": awdServiceOperationSupersededError,
+				"finished_at":   finishedAt,
+				"updated_at":    finishedAt,
+			}).Error; err != nil {
+			return err
+		}
+		return tx.Create(operation).Error
+	})
 }
 
 func (r *Repository) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
@@ -461,11 +489,7 @@ func (r *Repository) FinishActiveAWDServiceOperationForInstance(ctx context.Cont
 	}
 	return r.dbWithContext(ctx).
 		Model(&runtimecontracts.AWDServiceOperation{}).
-		Where("instance_id = ? AND status IN ?", instanceID, []string{
-			runtimecontracts.AWDServiceOperationStatusRequested,
-			runtimecontracts.AWDServiceOperationStatusProvisioning,
-			runtimecontracts.AWDServiceOperationStatusRecovering,
-		}).
+		Where("instance_id = ? AND status IN ?", instanceID, activeAWDServiceOperationStatuses()).
 		Updates(map[string]any{
 			"status":        status,
 			"error_message": errorMessage,
@@ -488,6 +512,21 @@ func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID 
 		Model(&runtimecontracts.AWDServiceOperation{}).
 		Where("id = ?", operationID).
 		Updates(updates).Error
+}
+
+func activeAWDServiceOperationStatuses() []string {
+	return []string{
+		runtimecontracts.AWDServiceOperationStatusRequested,
+		runtimecontracts.AWDServiceOperationStatusProvisioning,
+		runtimecontracts.AWDServiceOperationStatusRecovering,
+	}
+}
+
+func shouldCloseActiveAWDServiceOperationsForScope(operation *runtimecontracts.AWDServiceOperation) bool {
+	if operation == nil {
+		return false
+	}
+	return operation.ContestID > 0 && operation.TeamID > 0 && operation.ServiceID > 0
 }
 
 func (r *Repository) ReserveAvailablePort(ctx context.Context, start, end int) (int, error) {

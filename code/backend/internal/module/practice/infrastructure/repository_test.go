@@ -123,6 +123,75 @@ func TestRepositoryReleaseReservedPortOnlyDeletesUnboundAllocation(t *testing.T)
 	}
 }
 
+func TestRepositoryCreateAWDServiceOperationClosesStaleActiveScopeEntries(t *testing.T) {
+	db := newRepositoryTestDB(t, &runtimeentity.AWDServiceOperation{})
+
+	startedAt := time.Date(2026, 6, 5, 3, 3, 38, 0, time.UTC)
+	stale := &runtimeentity.AWDServiceOperation{
+		ContestID:     8,
+		TeamID:        15,
+		ServiceID:     22,
+		InstanceID:    2379,
+		OperationType: runtimeentity.AWDServiceOperationTypeStart,
+		RequestedBy:   runtimeentity.AWDServiceOperationRequestedBySystem,
+		Reason:        "desired_runtime_reconcile",
+		SLABillable:   false,
+		Status:        runtimeentity.AWDServiceOperationStatusProvisioning,
+		StartedAt:     startedAt.Add(-5 * time.Minute),
+		CreatedAt:     startedAt.Add(-5 * time.Minute),
+		UpdatedAt:     startedAt.Add(-5 * time.Minute),
+	}
+	if err := db.Create(stale).Error; err != nil {
+		t.Fatalf("seed stale awd operation: %v", err)
+	}
+
+	repo := practiceinfra.NewRepository(db)
+	replacement := &runtimeentity.AWDServiceOperation{
+		ContestID:     8,
+		TeamID:        15,
+		ServiceID:     22,
+		InstanceID:    2540,
+		OperationType: runtimeentity.AWDServiceOperationTypeRecreate,
+		RequestedBy:   runtimeentity.AWDServiceOperationRequestedBySystem,
+		Reason:        "desired_runtime_reconcile",
+		SLABillable:   false,
+		Status:        runtimeentity.AWDServiceOperationStatusProvisioning,
+		StartedAt:     startedAt,
+		CreatedAt:     startedAt,
+		UpdatedAt:     startedAt,
+	}
+	if err := repo.CreateAWDServiceOperation(context.Background(), replacement); err != nil {
+		t.Fatalf("CreateAWDServiceOperation() error = %v", err)
+	}
+
+	var operations []runtimeentity.AWDServiceOperation
+	if err := db.Order("id ASC").Find(&operations).Error; err != nil {
+		t.Fatalf("query awd operations: %v", err)
+	}
+	if len(operations) != 2 {
+		t.Fatalf("expected stale and replacement operations, got %+v", operations)
+	}
+
+	closed := operations[0]
+	if closed.Status != runtimeentity.AWDServiceOperationStatusFailed {
+		t.Fatalf("expected stale operation to be closed as failed, got %+v", closed)
+	}
+	if closed.FinishedAt == nil || !closed.FinishedAt.Equal(startedAt) {
+		t.Fatalf("expected stale operation finished at replacement start time %s, got %+v", startedAt, closed)
+	}
+	if closed.ErrorMessage != "superseded_by_new_operation" {
+		t.Fatalf("expected stale operation superseded marker, got %+v", closed)
+	}
+
+	active := operations[1]
+	if active.Status != runtimeentity.AWDServiceOperationStatusProvisioning {
+		t.Fatalf("expected replacement operation to stay active, got %+v", active)
+	}
+	if active.InstanceID != replacement.InstanceID {
+		t.Fatalf("expected replacement instance %d, got %+v", replacement.InstanceID, active)
+	}
+}
+
 func TestRepositoryResetInstanceRuntimeForRestartClearsHostPortWhenNotPreserved(t *testing.T) {
 	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
 
