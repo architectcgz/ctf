@@ -4,7 +4,7 @@
 
 **Goal:** 把 `ctf` 项目本地 harness adapter 从 `scripts/` 收口到 `harness/bridges/`，同时保留稳定命令入口不变。
 
-**Architecture:** `scripts/` 继续承担用户、hook、文档直接引用的稳定入口；真正的项目本地接线逻辑迁入 `harness/bridges/`，由 wrapper 负责定位 repo root 并转发。共享 `code-workflow` 的 managed 入口仍保留在 `scripts/`，不混进项目本地 bridge 层。
+**Architecture:** `scripts/` 继续承担用户、hook、文档直接引用的稳定入口；真正的项目本地接线逻辑迁入 `harness/bridges/`，由 wrapper 负责定位 repo root 并转发。共享 `code-workflow` 的 managed 入口按职责分别落到 `scripts/` 或项目 harness 下，不混进项目本地 bridge 层。
 
 **Tech Stack:** Bash, Python shared harness tooling, repo-local harness governance scripts
 
@@ -25,7 +25,7 @@
   - 把 `scripts/` 中对应文件收成薄 wrapper，并更新 AGENTS / hook 文档 / consistency checks。
 - Non-Goals:
   - 不改 shared `code-workflow` managed 脚本的 owner 边界。
-  - 不迁移 `start-implementation`、`check-task-intake`、`check-startup-gate`、`archive-task-artifacts` 这类共享 workflow 入口到 `harness/bridges/`。
+  - 不迁移 `start-implementation`、`check-task-intake`、`check-startup-gate` 这类共享 workflow 入口到 `harness/bridges/`。
   - 不调整项目业务逻辑、guardrail 规则内容或 hook 执行顺序。
 
 ## Inputs
@@ -37,6 +37,7 @@
 - Related architecture/contracts:
   - `scripts/lib/check-consistency/navigation.sh`
   - `scripts/lib/check-consistency/architecture.sh`
+  - `scripts/lib/check-consistency/workflow.sh`
   - `harness/policies/commit-message.json`
 - Related prior work:
   - `refactor(workflow): 将项目守卫收口到 stage plugins`
@@ -61,18 +62,24 @@
   - `AGENTS.md`
   - `.githooks/README.md`
   - `works/harness-good-practices.md`
+  - `harness/workflow-plugins/code-workflow/README.md`
+  - `harness/checks/check_local_harness_setup.sh`
+  - `harness/checks/check_local_workflow_assets.sh`
   - `scripts/check-commit-message.sh`
   - `scripts/check-skill-sync-reminder.sh`
   - `scripts/install-agent-symlinks.sh`
   - `scripts/uninstall-agent-symlinks.sh`
   - `scripts/lib/check-consistency/navigation.sh`
   - `scripts/lib/check-consistency/architecture.sh`
+  - global `~/.agents/harness/workflows/code-workflow/workflow.sh`
+  - global `~/.agents/skills/code-workflow/SKILL.md`
 - Review:
   - `harness/workflow-plugins/code-workflow/README.md`
   - `scripts/check-review-governance.sh`
 - Test:
   - `scripts/check-review-governance.sh`
   - `scripts/check-consistency.sh`
+  - `scripts/doctor-local-harness.sh`
   - `scripts/check-commit-message.sh`
   - `scripts/check-skill-sync-reminder.sh --working`
   - `scripts/install-agent-symlinks.sh`

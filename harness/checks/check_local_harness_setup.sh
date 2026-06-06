@@ -40,6 +40,7 @@ check "harness/checks/check_local_harness_setup.sh exists" test -f "harness/chec
 check "harness/checks/check_local_toolchain.sh exists" test -f "harness/checks/check_local_toolchain.sh"
 check "harness/checks/check_local_workflow_assets.sh exists" test -f "harness/checks/check_local_workflow_assets.sh"
 check "harness/workflow-plugins/code-workflow/run_workflow_stage.sh exists" test -f "harness/workflow-plugins/code-workflow/run_workflow_stage.sh"
+check "harness/workflow-plugins/code-workflow/archive_task_artifacts.sh exists" test -f "harness/workflow-plugins/code-workflow/archive_task_artifacts.sh"
 
 echo "[doctor] workflow wiring"
 check "harness/policies/commit-message.json exists" test -f "harness/policies/commit-message.json"

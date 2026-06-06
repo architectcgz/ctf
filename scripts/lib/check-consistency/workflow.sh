@@ -5,10 +5,12 @@ run_workflow_checks() {
   check_file "harness/checks/change_detection.py"
   check_file "harness/checks/common.py"
   check_file "harness/checks/check_startup_gate.py"
+  check_file "harness/workflow-plugins/code-workflow/archive_task_artifacts.sh"
   check_file "scripts/check-task-intake.sh"
   check_file "scripts/start-implementation.sh"
   check_file "scripts/check-startup-gate.sh"
   check_contains "AGENTS.md" 'scripts/start-implementation\.sh' "AGENTS references implementation startup gate"
+  check_contains "AGENTS.md" 'harness/workflow-plugins/code-workflow/archive_task_artifacts\.sh' "AGENTS references workflow archive entry"
   check_contains "AGENTS.md" '\.harness/session-gates/' "AGENTS references local startup gate directory"
   check_contains "AGENTS.md" '\.harness/reuse-index/' "AGENTS references local private reuse index"
   check_contains "AGENTS.md" '\.harness/reuse-decisions/' "AGENTS still explains optional supplemental reuse notes"
@@ -34,6 +36,12 @@ run_workflow_checks() {
     fail=1
   else
     echo "  $(green PASS) — no legacy single-file reuse decision present"
+  fi
+  if [[ -f "scripts/archive-task-artifacts.sh" ]]; then
+    echo "  $(red FAIL) — legacy scripts/archive-task-artifacts.sh must be removed"
+    fail=1
+  else
+    echo "  $(green PASS) — no legacy archive wrapper remains in scripts/"
   fi
   check_contains "AGENTS.md" 'scripts/start-implementation\.sh.*startup gate|startup gate.*scripts/start-implementation\.sh' "AGENTS marks startup gate as authoritative"
 

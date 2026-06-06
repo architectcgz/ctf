@@ -1,6 +1,5 @@
+<!-- Managed by code-workflow package (version: 2026-06-06.4) -->
 # __TASK_TITLE__ Implementation Plan
-
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** TODO
 
@@ -47,16 +46,15 @@
 - Owner boundary:
 - Why this is the narrowest safe surface:
 
+## Intake Analysis Gate
+
+- Relevant superpowers analysis pass:
+- Why this pass fits:
+- grill-with-docs findings:
+- Plan adjustments after challenge:
+
 ## Validation
 
 - Commands:
 - Manual checks:
 - Review focus:
-
-## Execution Checklist
-
-- [ ] Review and complete this plan with `writing-plans`
-- [ ] Confirm the owning boundaries and reuse / owner decision
-- [ ] Implement the first reviewable slice
-- [ ] Run the planned validation for that slice
-- [ ] Prepare the slice for review

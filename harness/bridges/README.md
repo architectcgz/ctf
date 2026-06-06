@@ -17,5 +17,5 @@
 
 不属于这里的内容：
 
-- shared `code-workflow` 安装出来的 managed 入口，例如 `start-implementation.sh`、`check-task-intake.sh`、`check-startup-gate.sh`、`archive-task-artifacts.sh`
+- shared `code-workflow` 安装出来的 managed 入口，例如 `start-implementation.sh`、`check-task-intake.sh`、`check-startup-gate.sh`，以及 `harness/workflow-plugins/code-workflow/archive_task_artifacts.sh`
 - 业务级 guardrail、workflow stage plugin 和项目 policy

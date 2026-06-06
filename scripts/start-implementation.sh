@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
+# Managed by code-workflow package (version: 2026-06-06.4)
 set -euo pipefail
 
 usage() {
-  cat <<'EOF' >&2
+  cat <<'EOH' >&2
 Usage:
   bash scripts/start-implementation.sh <topic-or-slug> [--title <plan-title>] [--base <git-ref>] [--dry-run]
-
-Examples:
-  bash scripts/start-implementation.sh workflow-governance-refactor
-  bash scripts/start-implementation.sh 2026-06-05-workflow-governance-refactor --title "Workflow Governance Refactor"
-EOF
+EOH
 }
 
 ROOT="$(git rev-parse --show-toplevel)"
@@ -197,7 +194,7 @@ sed \
 created_plan=1
 initial_plan_sha="$(sha256sum "$plan_path" | awk '{print $1}')"
 
-cat > "$gate_path" <<EOF
+cat > "$gate_path" <<EOG
 {
   "task_slug": "$task_slug",
   "status": "active",
@@ -207,7 +204,7 @@ cat > "$gate_path" <<EOF
   "branch": "$branch_name",
   "plan_path": "docs/plan/impl-plan/$plan_file_name"
 }
-EOF
+EOG
 created_gate=1
 
 printf '%s\n' "PASS: implementation workspace initialized"
@@ -219,5 +216,6 @@ printf '%s\n' "- gate: $gate_dir/$gate_file_name"
 printf '\n'
 printf '%s\n' "Next steps:"
 printf '%s\n' "1. cd $worktree_path"
-printf '%s\n' "2. Complete the plan via writing-plans"
-printf '%s\n' "3. Start implementation only after the plan is complete enough for the current slice"
+printf '%s\n' "2. Run the intake analysis gate: relevant superpowers analysis pass first, then grill-with-docs"
+printf '%s\n' "3. Complete the plan via superpowers:writing-plans using that analysis output"
+printf '%s\n' "4. Start implementation only after the plan is complete enough for the current slice"

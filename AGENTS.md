@@ -55,7 +55,7 @@
 ## Reuse And Owner Notes
 
 - 对普通非琐碎任务，复用与 owner 决策默认写在 active implementation plan 的 `## Files` 和 `## 复用与 Owner 决策` 章节里，不再单独依赖项目级 reuse-first 检查链路。
-- 非琐碎任务的启动时序由共享 `code-workflow` owner：`scripts/check-task-intake.sh` 负责 intake 提醒，`scripts/start-implementation.sh` 负责初始化 worktree / slug / plan / startup gate，`scripts/check-startup-gate.sh` 负责核验当前 worktree 的 gate 状态，完成后用 `scripts/archive-task-artifacts.sh` 归档 plan / task 工件。
+- 非琐碎任务的启动时序由共享 `code-workflow` owner：`scripts/check-task-intake.sh` 负责 intake 提醒，`scripts/start-implementation.sh` 负责初始化 worktree / slug / plan / startup gate，`scripts/check-startup-gate.sh` 负责核验当前 worktree 的 gate 状态，完成后用 `harness/workflow-plugins/code-workflow/archive_task_artifacts.sh` 归档 plan / task 工件。
 - 当 plan 已归档、但当前 task 还需要完成最终提交或合并清理时，startup gate 会进入 `ready_to_merge` 本地状态；这仍然视为当前 worktree 的有效 task gate，不需要重新起新 task。
 - 只有跨模块、高风险，或 review 明确要求补充证据的任务，才额外在 `.harness/reuse-decisions/<task-slug>.md` 写 standalone reuse decision；这类文档只是补充证据，不是默认阻塞门禁。
 - `.harness/reuse-decision.md` 已废弃；仓库只接受 `.harness/reuse-decisions/` 下的 task-scoped reuse decision 文档。

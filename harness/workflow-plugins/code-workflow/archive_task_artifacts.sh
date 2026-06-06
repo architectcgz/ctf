@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Managed by code-workflow package (version: 2026-06-06.2)
+# Managed by code-workflow package (version: 2026-06-06.4)
 set -euo pipefail
 
 usage() {
   cat <<'EOH' >&2
 Usage:
-  bash scripts/archive-task-artifacts.sh [--task-slug <slug>] [--plan <path>] [--task <path> ...] [--dry-run]
+  bash harness/workflow-plugins/code-workflow/archive_task_artifacts.sh [--task-slug <slug>] [--plan <path>] [--task <path> ...] [--dry-run]
 
 Description:
   Archive the completed implementation plan and any matching docs/tasks artifacts for a task.
@@ -180,7 +180,7 @@ task_archive_paths = sys.argv[4:]
 
 payload = json.loads(gate_path.read_text(encoding="utf-8"))
 if payload.get("task_slug") == task_slug and payload.get("status") == "active":
-    payload["status"] = "ready_to_merge"
+    payload["status"] = "archived"
     payload["archived_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     payload["archived_plan_path"] = plan_archive_path
     payload["archived_task_paths"] = task_archive_paths
@@ -191,9 +191,6 @@ fi
 printf '%s\n' "PASS: task artifacts archived"
 printf '%s\n' "- task slug: $task_slug"
 printf '%s\n' "- plan: $plan_archive_path"
-if [[ -n "$active_gate_path" && -f "$active_gate_path" ]]; then
-  printf '%s\n' "- gate status: ready_to_merge (allows final commit / merge cleanup in current worktree)"
-fi
 if [[ "${#task_archive_paths[@]}" -eq 0 ]]; then
   printf '%s\n' "- tasks: none"
 else

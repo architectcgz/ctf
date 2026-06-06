@@ -1,70 +1,74 @@
 #!/usr/bin/env python3
+# Managed by code-workflow package (version: 2026-06-06.4)
 from __future__ import annotations
 
 import argparse
 import json
 import re
+import subprocess
 import sys
-from fnmatch import fnmatch
 from pathlib import Path
 
-from change_detection import ROOT, classify_protected_changes, get_changed_files
-
+ROOT = Path(__file__).resolve().parents[2]
 SESSION_GATES_DIR = ROOT / ".harness" / "session-gates"
 TASK_SLUG_RE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(?:-[a-z0-9]+)*$")
-ACTIVE_GATE_STATUSES = {"active", "ready_to_merge"}
 REQUIRED_PLAN_HEADINGS = (
     "## Task Metadata",
     "## Task Classification",
     "## Files",
     "## 复用与 Owner 决策",
+    "## Intake Analysis Gate",
     "## Validation",
 )
 PLACEHOLDER_TOKENS = ("TODO", "待填写", "__TASK_", "__STARTED_AT__", "__WORKTREE_PATH__", "__BRANCH_NAME__")
-WORKFLOW_GATED_PATTERNS = (
-    "AGENTS.md",
-    ".githooks/**",
-    "scripts/*.sh",
-    "harness/**/*.md",
-    "harness/**/*.py",
-    "harness/**/*.yaml",
-    "harness/**/*.yml",
-    ".agents/**/*.md",
-    ".agents/**/*.yaml",
-    ".agents/**/*.yml",
-    "docs/plan/impl-plan/*.md",
+LOW_RISK_PREFIXES = (
+    "docs/",
+    "README",
+    ".gitignore",
+)
+LOW_RISK_SUFFIXES = (
+    ".md",
+    ".txt",
 )
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="validate local startup gate state for non-trivial work")
-    parser.add_argument("--print-active-slug", action="store_true", help="print the active task slug and exit")
-    parser.add_argument("--print-gate-path", action="store_true", help="print the active gate path and exit")
-    parser.add_argument("--quiet", action="store_true", help="suppress PASS output when validation succeeds")
-    parser.add_argument("--staged", action="store_true", help="inspect staged diff")
-    parser.add_argument("--base", help="base revision for compare mode")
-    parser.add_argument("--head", default="HEAD", help="head revision for compare mode")
+    parser.add_argument("--print-active-slug", action="store_true")
+    parser.add_argument("--print-gate-path", action="store_true")
+    parser.add_argument("--quiet", action="store_true")
+    parser.add_argument("--staged", action="store_true")
+    parser.add_argument("--base")
+    parser.add_argument("--head", default="HEAD")
     args = parser.parse_args()
-
     if args.staged and args.base:
         parser.error("--staged and --base cannot be used together")
-
     return args
 
 
-def workflow_gated_paths(paths: list[str]) -> list[str]:
-    gated = []
-    for path in paths:
-        if any(fnmatch(path, pattern) for pattern in WORKFLOW_GATED_PATTERNS):
-            gated.append(path)
-    return sorted(set(gated))
+def run_git(*args: str) -> str:
+    result = subprocess.run(["git", *args], cwd=ROOT, check=True, capture_output=True, text=True)
+    return result.stdout
+
+
+def changed_paths(args: argparse.Namespace) -> list[str]:
+    if args.base:
+      output = run_git("diff", "--name-only", "--diff-filter=ACMR", f"{args.base}...{args.head}")
+    else:
+      output = run_git("diff", "--cached", "--name-only", "--diff-filter=ACMR")
+    return [line.strip() for line in output.splitlines() if line.strip()]
+
+
+def requires_gate(path: str) -> bool:
+    if path.startswith(LOW_RISK_PREFIXES) or path.endswith(LOW_RISK_SUFFIXES):
+        return False
+    return True
 
 
 def load_active_gates() -> list[tuple[Path, dict[str, object]]]:
     gates: list[tuple[Path, dict[str, object]]] = []
     if not SESSION_GATES_DIR.is_dir():
         return gates
-
     for path in sorted(SESSION_GATES_DIR.glob("*.json")):
         if not path.is_file():
             continue
@@ -72,9 +76,13 @@ def load_active_gates() -> list[tuple[Path, dict[str, object]]]:
             payload = json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             raise SystemExit(f"FAIL: invalid startup gate file: {path.relative_to(ROOT).as_posix()}")
-        if payload.get("status") in ACTIVE_GATE_STATUSES:
+        if payload.get("status") == "active":
             gates.append((path, payload))
     return gates
+
+
+def contains_placeholder(text: str) -> bool:
+    return any(token in text for token in PLACEHOLDER_TOKENS)
 
 
 def extract_section(plan_text: str, heading: str) -> str:
@@ -83,15 +91,8 @@ def extract_section(plan_text: str, heading: str) -> str:
     return match.group(1).strip() if match else ""
 
 
-def contains_placeholder(text: str) -> bool:
-    return any(token in text for token in PLACEHOLDER_TOKENS)
-
-
 def validate_active_gate(path: Path, payload: dict[str, object], *, require_completed_plan: bool) -> list[str]:
     errors: list[str] = []
-    status = payload.get("status")
-    if status not in ACTIVE_GATE_STATUSES:
-        errors.append(f"status missing or invalid: {status!r}")
 
     task_slug = payload.get("task_slug")
     if not isinstance(task_slug, str) or not TASK_SLUG_RE.fullmatch(task_slug):
@@ -102,27 +103,14 @@ def validate_active_gate(path: Path, payload: dict[str, object], *, require_comp
         errors.append("branch missing or invalid")
 
     plan_path_value = payload.get("plan_path")
-    archived_plan_path_value = payload.get("archived_plan_path")
-    effective_plan_path_value = plan_path_value
-    if status == "ready_to_merge" and isinstance(archived_plan_path_value, str):
-        effective_plan_path_value = archived_plan_path_value
-
-    if not isinstance(effective_plan_path_value, str):
-        errors.append("effective plan path missing")
+    if not isinstance(plan_path_value, str):
+        errors.append("plan_path missing")
         return errors
 
-    plan_path = ROOT / effective_plan_path_value
+    plan_path = ROOT / plan_path_value
     if not plan_path.is_file():
-        errors.append(f"plan file missing: {effective_plan_path_value}")
+        errors.append(f"plan file missing: {plan_path_value}")
         return errors
-
-    if status == "ready_to_merge":
-        if not effective_plan_path_value.startswith("docs/plan/archive/impl-plan/"):
-            errors.append(
-                f"ready_to_merge plan path must be under docs/plan/archive/impl-plan: {effective_plan_path_value}"
-            )
-    elif not effective_plan_path_value.startswith("docs/plan/impl-plan/"):
-        errors.append(f"plan path outside docs/plan/impl-plan: {effective_plan_path_value}")
 
     plan_text = plan_path.read_text(encoding="utf-8")
     for heading in REQUIRED_PLAN_HEADINGS:
@@ -133,15 +121,13 @@ def validate_active_gate(path: Path, payload: dict[str, object], *, require_comp
         errors.append("plan missing required summary fields")
     elif require_completed_plan:
         summary_lines = "\n".join(
-            line
-            for line in plan_text.splitlines()
-            if line.startswith("**Goal:**") or line.startswith("**Architecture:**")
+            line for line in plan_text.splitlines() if line.startswith("**Goal:**") or line.startswith("**Architecture:**")
         )
         if contains_placeholder(summary_lines):
             errors.append("plan summary fields still contain placeholders")
 
     if require_completed_plan:
-        for heading in ("## Task Classification", "## Files", "## 复用与 Owner 决策", "## Validation"):
+        for heading in ("## Task Classification", "## Files", "## 复用与 Owner 决策", "## Intake Analysis Gate", "## Validation"):
             section_text = extract_section(plan_text, heading)
             if not section_text:
                 errors.append(f"plan section is empty: {heading}")
@@ -150,11 +136,6 @@ def validate_active_gate(path: Path, payload: dict[str, object], *, require_comp
                 errors.append(f"plan section still contains placeholders: {heading}")
 
     return errors
-
-
-def changed_files_from_args(args: argparse.Namespace):
-    diff_args = argparse.Namespace(staged=args.staged, base=args.base, head=args.head)
-    return get_changed_files(diff_args)
 
 
 def main() -> int:
@@ -166,8 +147,6 @@ def main() -> int:
             return 1
         if len(gates) > 1:
             print("FAIL: multiple active startup gates in current worktree", file=sys.stderr)
-            for path, _ in gates:
-                print(f"- {path.relative_to(ROOT).as_posix()}", file=sys.stderr)
             return 1
         gate_path, payload = gates[0]
         errors = validate_active_gate(gate_path, payload, require_completed_plan=False)
@@ -176,43 +155,31 @@ def main() -> int:
             for error in errors:
                 print(f"- {error}", file=sys.stderr)
             return 1
-        if args.print_active_slug:
-            print(payload["task_slug"])
-        else:
-            print(gate_path.relative_to(ROOT).as_posix())
+        print(payload["task_slug"] if args.print_active_slug else gate_path.relative_to(ROOT).as_posix())
         return 0
 
-    changed_files = changed_files_from_args(args)
-    changed_paths = [item.path for item in changed_files]
-    protected = classify_protected_changes(changed_files)
-    gated_paths = sorted(
-        set(workflow_gated_paths(changed_paths) + [path for paths in protected.values() for path in paths])
-    )
+    changed = changed_paths(args)
+    gated = sorted(path for path in changed if requires_gate(path))
 
-    if not gated_paths:
+    if not gated:
         if not args.quiet:
             print("PASS: no startup-gated changes in diff")
         return 0
 
     if not gates:
         print("FAIL: startup-gated changes require an active task gate", file=sys.stderr)
-        for path in gated_paths:
+        for path in gated:
             print(f"- {path}", file=sys.stderr)
         print("Use scripts/start-implementation.sh before continuing.", file=sys.stderr)
         return 1
 
     if len(gates) > 1:
         print("FAIL: multiple active startup gates in current worktree", file=sys.stderr)
-        for gate_path, _ in gates:
-            print(f"- {gate_path.relative_to(ROOT).as_posix()}", file=sys.stderr)
         return 1
 
     gate_path, payload = gates[0]
     plan_path_value = payload.get("plan_path")
-    requires_completed_plan = any(
-        not (isinstance(plan_path_value, str) and path == plan_path_value)
-        for path in gated_paths
-    )
+    requires_completed_plan = any(path != plan_path_value for path in gated)
     errors = validate_active_gate(gate_path, payload, require_completed_plan=requires_completed_plan)
     if errors:
         print("FAIL: active startup gate is invalid", file=sys.stderr)
@@ -225,9 +192,7 @@ def main() -> int:
         print("PASS: startup gate covers current diff")
         print(f"- gate: {gate_path.relative_to(ROOT).as_posix()}")
         print(f"- task slug: {payload['task_slug']}")
-        plan_output = payload.get("archived_plan_path") if payload.get("status") == "ready_to_merge" else payload.get("plan_path")
-        print(f"- gate status: {payload['status']}")
-        print(f"- plan: {plan_output}")
+        print(f"- plan: {payload['plan_path']}")
     return 0
 
 
