@@ -34,6 +34,7 @@ done < "$EXECUTABLE_LIST"
 
 echo "[doctor] harness check bodies"
 check "harness/checks/check_code_change_contracts.sh exists" test -f "harness/checks/check_code_change_contracts.sh"
+check "harness/checks/check_frontend_test_guard.sh exists" test -f "harness/checks/check_frontend_test_guard.sh"
 check "harness/checks/check_review_governance_core.sh exists" test -f "harness/checks/check_review_governance_core.sh"
 check "harness/checks/check_local_harness_setup.sh exists" test -f "harness/checks/check_local_harness_setup.sh"
 check "harness/checks/check_local_toolchain.sh exists" test -f "harness/checks/check_local_toolchain.sh"
