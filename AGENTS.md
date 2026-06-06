@@ -4,8 +4,8 @@
 
 - 本仓库默认先进入 harness：除非任务明显简单、局部、可逆且不需要沉淀经验，否则开始前必须先按 `harness-router` 判断 `SIMPLE` / `HARNESS`。
 - 路线为 `HARNESS` 时，先读本文件和相关 harness 入口，再决定是否需要计划、review、验证或更新 `feedback/`、`harness/prompts/`、`references/`、`works/`。
-- 任务分流使用全局 `harness-router` skill；完整治理审计使用 `bash scripts/check-consistency.sh`，提交前本地只跑与当前改动强相关的轻量门禁。
-- 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；这条约束由 `bash scripts/check-consistency.sh` 机械检查。
+- 任务分流使用全局 `harness-router` skill；完整治理审计使用 `bash scripts/check-review-governance.sh`，提交前本地只跑与当前改动强相关的轻量门禁。`bash scripts/check-consistency.sh` 仅保留为兼容别名。
+- 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；这条约束由 `bash scripts/check-review-governance.sh` 机械检查。
 - 跨 agent 共享的项目级 skill 源放在 `.agents/skills/`；`Claude` 通过 `.claude/skills -> ../.agents/skills` 读取，`Codex` 通过 `bash scripts/install-agent-symlinks.sh` 安装到 `~/.codex/skills/`。
 - 开始新任务前，先运行 `bash scripts/check-task-intake.sh`；它会调用 `bash scripts/check-open-todos.sh --quiet-if-empty` 提示 `docs/todos/` 里未收口事项。
 - 若任务属于 `非琐碎任务`，或会进入受保护实现面，必须先运行 `bash scripts/start-implementation.sh <topic-or-slug>`；统一入口会创建独立 worktree、task slug、implementation plan 和 `.harness/session-gates/<task-slug>.json`。
@@ -53,6 +53,7 @@
 
 - 对普通非琐碎任务，复用与 owner 决策默认写在 active implementation plan 的 `## Files` 和 `## 复用与 Owner 决策` 章节里，不再单独依赖项目级 reuse-first 检查链路。
 - 非琐碎任务的启动时序由共享 `code-workflow` owner：`scripts/check-task-intake.sh` 负责 intake 提醒，`scripts/start-implementation.sh` 负责初始化 worktree / slug / plan / startup gate，`scripts/check-startup-gate.sh` 负责核验当前 worktree 的 gate 状态，完成后用 `scripts/archive-task-artifacts.sh` 归档 plan / task 工件。
+- 当 plan 已归档、但当前 task 还需要完成最终提交或合并清理时，startup gate 会进入 `ready_to_merge` 本地状态；这仍然视为当前 worktree 的有效 task gate，不需要重新起新 task。
 - 只有跨模块、高风险，或 review 明确要求补充证据的任务，才额外在 `.harness/reuse-decisions/<task-slug>.md` 写 standalone reuse decision；这类文档只是补充证据，不是默认阻塞门禁。
 - `.harness/reuse-decision.md` 已废弃；仓库只接受 `.harness/reuse-decisions/` 下的 task-scoped reuse decision 文档。
 - 长期复用线索仍然可以保存在本地私有的 `.harness/reuse-index/`；它属于操作者自用索引，不属于本仓库提交前强校验的一部分。
@@ -130,4 +131,4 @@
 - `works/`：可展示模板、报告和说明。
 - `harness/prompts/`：项目内 prompt 入口、局部补充，以及仍然只属于本仓库的 prompt；共享正文上收到 `/home/azhi/.agents/harness/prompts/`。
 - `references/`：文章、仓库和工具索引。
-- 机械化检查：`bash scripts/check-consistency.sh`。
+- 机械化检查：`bash scripts/check-review-governance.sh`（`bash scripts/check-consistency.sh` 为兼容别名）。

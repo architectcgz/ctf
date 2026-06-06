@@ -44,7 +44,7 @@
 - `scripts/check-architecture.sh --quick`：聚合执行 backend quick + frontend quick。
 - `scripts/check-architecture.sh --full`：聚合执行 backend full + frontend full。
 - `python3 scripts/check-docs-consistency.py`：检查架构文档状态、索引引用与 `## 当前设计` 结构底线。
-- `scripts/check-consistency.sh`：检查 harness 入口、脚本接线与本地 guardrail 是否接入。
+- `scripts/check-review-governance.sh`：检查 harness 入口、脚本接线与本地 guardrail 是否接入。
 
 主要代码级 guardrail：
 

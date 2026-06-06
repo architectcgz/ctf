@@ -88,5 +88,5 @@
 
 - 新建文档前先看 `AGENTS.md` 里的 `File Placement Rules`。
 - 如果内容要跨多个目录，先决定哪一份是事实源，其他文件只保留索引或 `Superseded by ...`。
-- 如果目录契约变更会影响 agent 导航或发现路径，同步更新 `works/` 索引和 `scripts/check-consistency.sh`。
+- 如果目录契约变更会影响 agent 导航或发现路径，同步更新 `works/` 索引和 `scripts/check-review-governance.sh`。
 - 如果测试一改就绿、但实现理由说不清，先停下来重查 owner、contract 和真实用户语义；不要把“测试通过”当成问题已经解决的证据。

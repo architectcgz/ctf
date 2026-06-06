@@ -28,12 +28,14 @@ check ".githooks/commit-msg is executable" test -x ".githooks/commit-msg"
 
 echo "[doctor] harness scripts"
 check "scripts/check-consistency.sh is executable" test -x "scripts/check-consistency.sh"
+check "scripts/check-review-governance.sh is executable" test -x "scripts/check-review-governance.sh"
 check "scripts/check-task-intake.sh is executable" test -x "scripts/check-task-intake.sh"
 check "scripts/start-implementation.sh is executable" test -x "scripts/start-implementation.sh"
 check "scripts/check-commit-message.sh is executable" test -x "scripts/check-commit-message.sh"
 check "scripts/check-architecture.sh is executable" test -x "scripts/check-architecture.sh"
 check "scripts/check-backend-architecture.sh is executable" test -x "scripts/check-backend-architecture.sh"
 check "scripts/check-frontend-architecture.sh is executable" test -x "scripts/check-frontend-architecture.sh"
+check "scripts/ensure-frontend-tooling.sh is executable" test -x "scripts/ensure-frontend-tooling.sh"
 check "scripts/doctor-local-harness.sh is executable" test -x "scripts/doctor-local-harness.sh"
 check "harness/policies/commit-message.json exists" test -f "harness/policies/commit-message.json"
 
@@ -50,10 +52,10 @@ check "legacy .harness/reuse-decision.md is absent" test ! -f ".harness/reuse-de
 check ".gitignore ignores .harness/reuse-index/" grep -qx '/.harness/reuse-index/' ".gitignore"
 check ".gitignore ignores .harness/session-gates/" grep -qx '/.harness/session-gates/' ".gitignore"
 
-if [[ -d "code/frontend/node_modules" ]]; then
-  echo "  $(green PASS) — code/frontend/node_modules exists"
+if bash scripts/ensure-frontend-tooling.sh --quiet >/dev/null 2>&1; then
+  echo "  $(green PASS) — frontend tooling is available"
 else
-  echo "  $(red FAIL) — code/frontend/node_modules missing; run npm install in code/frontend"
+  echo "  $(red FAIL) — frontend tooling is unavailable; run npm install in code/frontend or ensure main worktree dependencies exist"
   fail=1
 fi
 

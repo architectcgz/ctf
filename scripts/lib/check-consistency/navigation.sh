@@ -84,10 +84,12 @@ run_navigation_checks() {
   fi
   check_file ".githooks/commit-msg"
   check_file "scripts/check-commit-message.sh"
+  check_file "scripts/check-review-governance.sh"
   check_file "harness/policies/commit-message.json"
   check_file "scripts/check-frontend-test-guard.sh"
   check_file "scripts/check-startup-gate.sh"
   check_contains ".githooks/commit-msg" 'scripts/check-commit-message\.sh' "commit-msg runs scripts/check-commit-message.sh"
+  check_contains "scripts/check-consistency.sh" 'scripts/check-review-governance\.sh' "check-consistency delegates to review governance"
   check_contains ".githooks/README.md" 'scripts/check-commit-message\.sh' "hook docs mention commit message checks"
   check_contains ".githooks/README.md" 'harness/policies/commit-message\.json' "hook docs mention commit message policy"
   check_contains ".githooks/README.md" 'scripts/check-frontend-test-guard\.sh --staged' "hook docs mention frontend test guard"

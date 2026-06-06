@@ -162,9 +162,9 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 - `harness/prompts/`：仓库内 prompt 入口、局部补充，以及仍然项目专属的 prompt
 - `references/`：外部资料
 
-一致性检查：
+治理审计：
 
 ```bash
-bash scripts/check-consistency.sh
+bash scripts/check-review-governance.sh
 ```
 <!-- END HARNESS ENGINEERING: readme-harness -->

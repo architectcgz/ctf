@@ -6,7 +6,7 @@
 
 - Guides：`AGENTS.md`、`concepts/`、`harness/prompts/`
 - Shared prompt bodies：`/home/azhi/.agents/harness/prompts/`
-- Sensors：`scripts/check-consistency.sh`、hook、review 记录
+- Sensors：`scripts/check-review-governance.sh`、hook、review 记录
 - Memory：`feedback/`、`thinking/`、`references/`
 - Practice：`practice/`
 - Output：`works/`

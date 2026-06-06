@@ -26,8 +26,9 @@ bash scripts/install-githooks.sh
 
 ## 本地工作流优先
 
-- `scripts/check-consistency.sh` 现在作为 review / doctor 级治理审计入口，不再作为所有提交前都无条件执行的本地门禁。
-- OpenAPI 拆分源与 bundle 的同步检查继续放在 `scripts/check-consistency.sh`，不按提交路径临时下沉到 `pre-commit`。
+- `scripts/check-review-governance.sh` 现在作为 review / doctor 级治理审计入口，不再作为所有提交前都无条件执行的本地门禁。
+- `scripts/check-consistency.sh` 只保留为兼容别名，内部直接转发到 `scripts/check-review-governance.sh`。
+- OpenAPI 拆分源与 bundle 的同步检查继续放在 `scripts/check-review-governance.sh`，不按提交路径临时下沉到 `pre-commit`。
 - 安装 hook 后，提交前会先执行：
 1. `scripts/check-frontend-test-guard.sh --staged`
 2. `scripts/check-startup-gate.sh --staged`
@@ -45,7 +46,8 @@ bash scripts/check-frontend-test-guard.sh --files code/frontend/src/path/to/exam
 - `bash scripts/check-frontend-test-guard.sh --staged` 保持给 `pre-commit` 使用，只检查暂存区新增断言。
 - `bash scripts/check-frontend-test-guard.sh --files <path...>` 适合只针对当前正在改的测试文件做显式检查。
 - 命中非琐碎启动门禁的任务，应先运行 `bash scripts/start-implementation.sh <topic-or-slug>` 创建独立 worktree、主 plan 和本地启动凭证。
-- 需要做完整仓库治理审计或 review 前自检时，再手工运行 `bash scripts/check-consistency.sh`。
+- 当 task plan 已归档、但当前 worktree 还要完成最终提交或合并清理时，startup gate 会进入 `ready_to_merge` 状态；这仍然允许当前 task 继续提交，不需要重新起新 task。
+- 需要做完整仓库治理审计或 review 前自检时，再手工运行 `bash scripts/check-review-governance.sh`；保留旧命令时，也可以继续用 `bash scripts/check-consistency.sh`。
 - 推荐提交流程示例：
 
 ```bash

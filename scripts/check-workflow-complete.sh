@@ -47,7 +47,7 @@ changed="$(changed_files)"
 backend_architecture_pattern='(^docs/architecture/|^scripts/check-architecture\.sh$|^scripts/check-backend-architecture\.sh$|^code/backend/)'
 frontend_architecture_pattern='(^docs/architecture/|^scripts/check-architecture\.sh$|^scripts/check-frontend-architecture\.sh$|^code/frontend/package\.json$|^code/frontend/scripts/|^code/frontend/src/|^code/frontend/vite\.config\.[^/]+$)'
 
-run_check "harness consistency" bash scripts/check-consistency.sh
+run_check "review governance" bash scripts/check-review-governance.sh
 run_check "code change contract checks" bash scripts/check-code-changes.sh
 
 if [[ -n "$changed" ]] && matches_any "$backend_architecture_pattern" "$changed"; then

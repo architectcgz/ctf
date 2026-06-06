@@ -12,4 +12,4 @@
 - 修改 OpenAPI 时，先改 `openapi-v1/` 下的拆分源，不直接手工编辑 `openapi-v1.yaml`。
 - 根入口是 `openapi-v1/index.yaml`，负责聚合 `paths/*.yaml` 和 `components/schemas/*.yaml`。
 - 修改后运行 `python3 scripts/sync_openapi_from_contract.py` 生成 bundle。
-- 提交前运行 `python3 scripts/sync_openapi_from_contract.py --check` 或 `bash scripts/check-consistency.sh`，确认 source 与 bundle 没有漂移。
+- review / doctor 自检时运行 `python3 scripts/sync_openapi_from_contract.py --check` 或 `bash scripts/check-review-governance.sh`，确认 source 与 bundle 没有漂移。

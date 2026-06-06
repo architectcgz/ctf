@@ -12,6 +12,7 @@ from change_detection import ROOT, classify_protected_changes, get_changed_files
 
 SESSION_GATES_DIR = ROOT / ".harness" / "session-gates"
 TASK_SLUG_RE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(?:-[a-z0-9]+)*$")
+ACTIVE_GATE_STATUSES = {"active", "ready_to_merge"}
 REQUIRED_PLAN_HEADINGS = (
     "## Task Metadata",
     "## Task Classification",
@@ -71,7 +72,7 @@ def load_active_gates() -> list[tuple[Path, dict[str, object]]]:
             payload = json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             raise SystemExit(f"FAIL: invalid startup gate file: {path.relative_to(ROOT).as_posix()}")
-        if payload.get("status") == "active":
+        if payload.get("status") in ACTIVE_GATE_STATUSES:
             gates.append((path, payload))
     return gates
 
@@ -88,6 +89,9 @@ def contains_placeholder(text: str) -> bool:
 
 def validate_active_gate(path: Path, payload: dict[str, object], *, require_completed_plan: bool) -> list[str]:
     errors: list[str] = []
+    status = payload.get("status")
+    if status not in ACTIVE_GATE_STATUSES:
+        errors.append(f"status missing or invalid: {status!r}")
 
     task_slug = payload.get("task_slug")
     if not isinstance(task_slug, str) or not TASK_SLUG_RE.fullmatch(task_slug):
@@ -98,17 +102,27 @@ def validate_active_gate(path: Path, payload: dict[str, object], *, require_comp
         errors.append("branch missing or invalid")
 
     plan_path_value = payload.get("plan_path")
-    if not isinstance(plan_path_value, str):
-        errors.append("plan_path missing")
+    archived_plan_path_value = payload.get("archived_plan_path")
+    effective_plan_path_value = plan_path_value
+    if status == "ready_to_merge" and isinstance(archived_plan_path_value, str):
+        effective_plan_path_value = archived_plan_path_value
+
+    if not isinstance(effective_plan_path_value, str):
+        errors.append("effective plan path missing")
         return errors
 
-    plan_path = ROOT / plan_path_value
+    plan_path = ROOT / effective_plan_path_value
     if not plan_path.is_file():
-        errors.append(f"plan file missing: {plan_path_value}")
+        errors.append(f"plan file missing: {effective_plan_path_value}")
         return errors
 
-    if not plan_path_value.startswith("docs/plan/impl-plan/"):
-        errors.append(f"plan path outside docs/plan/impl-plan: {plan_path_value}")
+    if status == "ready_to_merge":
+        if not effective_plan_path_value.startswith("docs/plan/archive/impl-plan/"):
+            errors.append(
+                f"ready_to_merge plan path must be under docs/plan/archive/impl-plan: {effective_plan_path_value}"
+            )
+    elif not effective_plan_path_value.startswith("docs/plan/impl-plan/"):
+        errors.append(f"plan path outside docs/plan/impl-plan: {effective_plan_path_value}")
 
     plan_text = plan_path.read_text(encoding="utf-8")
     for heading in REQUIRED_PLAN_HEADINGS:
@@ -211,7 +225,9 @@ def main() -> int:
         print("PASS: startup gate covers current diff")
         print(f"- gate: {gate_path.relative_to(ROOT).as_posix()}")
         print(f"- task slug: {payload['task_slug']}")
-        print(f"- plan: {payload['plan_path']}")
+        plan_output = payload.get("archived_plan_path") if payload.get("status") == "ready_to_merge" else payload.get("plan_path")
+        print(f"- gate status: {payload['status']}")
+        print(f"- plan: {plan_output}")
     return 0
 
 
