@@ -38,7 +38,7 @@
   - `scripts/check-workflow-governance.sh`
   - `.githooks/pre-commit`
   - `~/.agents/skills/code-workflow/SKILL.md`
-  - `~/.agents/skills/harness-workflow/SKILL.md`
+  - `~/.agents/skills/workflow-package-manager/SKILL.md`
 - Related architecture/contracts:
   - `scripts/check-architecture.sh`
   - `scripts/check-backend-architecture.sh`
