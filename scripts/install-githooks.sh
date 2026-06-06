@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(git rev-parse --show-toplevel)"
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+EXECUTABLE_LIST="harness/policies/local-harness-executables.txt"
+
+cd "$ROOT_DIR"
 
 git config core.hooksPath .githooks
 
-chmod +x .githooks/pre-commit
-chmod +x .githooks/commit-msg
-chmod +x scripts/check-consistency.sh
-chmod +x scripts/run-workflow-stage.sh
-chmod +x scripts/check-review-governance.sh
-chmod +x scripts/check-review-governance-core.sh
-chmod +x scripts/check-frontend-test-guard.sh
-chmod +x scripts/check-architecture.sh
-chmod +x scripts/check-commit-message.sh
-chmod +x scripts/check-skill-sync-reminder.sh
-chmod +x scripts/ensure-frontend-tooling.sh
-chmod +x scripts/sync_openapi_from_contract.py
+if [[ ! -f "$EXECUTABLE_LIST" ]]; then
+  echo "missing executable manifest: $EXECUTABLE_LIST" >&2
+  exit 1
+fi
+
+while IFS= read -r path; do
+  [[ -z "$path" ]] && continue
+  if [[ ! -e "$path" ]]; then
+    echo "missing executable entrypoint: $path" >&2
+    exit 1
+  fi
+  chmod +x "$path"
+done < "$EXECUTABLE_LIST"
 
 echo "Installed git hooks to .githooks (core.hooksPath=.githooks)"

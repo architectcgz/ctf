@@ -37,6 +37,7 @@
 - `harness/prompts/` 只放仓库内稳定 prompt 入口、局部补充，以及仍然项目专属的 prompt；跨项目共享正文优先放 `/home/azhi/.agents/harness/prompts/`。
 - `harness/checks/` 只放项目本地、长期维护的机械检查主体；`scripts/check-*.sh` 如果只是给人、hook、README 保留稳定命令名，就应该收成薄 wrapper。
 - `harness/bridges/` 只放项目本地、长期维护的 harness adapter；例如把共享 checker、shared harness 工具或项目内 skill 安装流程接到当前仓库路径和 policy 上。
+- 当安装脚本和 doctor / consistency 守卫共享同一份“哪些本地入口必须可执行”的约束时，把这份清单收口到 `harness/policies/`，不要在多个 shell 脚本里各写一遍。
 - `references/` 只放外部资料索引和研究入口。
 
 如果内容是“当前产品怎么工作”，优先回到 `docs/` 事实源，而不是塞进 harness 目录。
