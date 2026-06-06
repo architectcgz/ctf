@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1.7
 ARG GO_VERSION=1.26
+ARG MIGRATE_VERSION=v4.18.3
 FROM golang:${GO_VERSION}-alpine AS builder
+ARG MIGRATE_VERSION
 
 WORKDIR /src
 
@@ -10,6 +12,9 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+
+RUN GOBIN=/out CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@${MIGRATE_VERSION}
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -trimpath -ldflags="-s -w" -o /out/ctf-api ./cmd/api
@@ -21,11 +26,14 @@ WORKDIR /app
 RUN apk add --no-cache ca-certificates tzdata docker-cli
 
 COPY --from=builder /out/ctf-api /app/ctf-api
+COPY --from=builder /out/migrate /app/migrate
 COPY configs /app/configs
 COPY migrations /app/migrations
+COPY scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
 
 RUN mkdir -p /app/storage/exports /app/storage/runtime
+RUN chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 8080
 
-ENTRYPOINT ["/app/ctf-api"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

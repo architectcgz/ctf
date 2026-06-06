@@ -47,6 +47,7 @@ services:
       CTF_POSTGRES_DATABASE: ctf
       CTF_POSTGRES_USERNAME: postgres
       CTF_POSTGRES_PASSWORD: postgres123456
+      CTF_AUTO_MIGRATE: "true"
       CTF_REDIS_ADDR: ctf-redis:6379
       CTF_REDIS_PASSWORD: redis123456
       CTF_REDIS_DB: 2
