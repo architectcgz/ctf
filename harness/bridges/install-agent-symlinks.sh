@@ -14,7 +14,7 @@ if [[ ! -d "$shared_skills_dir" ]]; then
   exit 1
 fi
 
-bash "$repo_root/scripts/check-shared-skills.sh"
+bash "$repo_root/harness/checks/check_shared_skills.sh"
 
 mkdir -p "$codex_skills_dir" "$repo_root/.claude"
 ln -sfn ../.agents/skills "$repo_root/.claude/skills"
@@ -37,5 +37,5 @@ while IFS= read -r source_dir; do
   echo "linked: $target_link -> $source_dir"
 done < <(find "$shared_skills_dir" -mindepth 1 -maxdepth 1 -type d | sort)
 
-bash "$repo_root/scripts/check-agent-entrypoints.sh"
+bash "$repo_root/harness/checks/check_agent_entrypoints.sh"
 echo "Installed shared skills for Claude and Codex."

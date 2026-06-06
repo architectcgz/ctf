@@ -31,6 +31,9 @@ run_navigation_checks() {
   echo "[C2b] shared skill bridge stays aligned"
   check_file "scripts/check-agent-entrypoints.sh"
   check_file "scripts/check-shared-skills.sh"
+  check_dir "harness/checks"
+  check_file "harness/checks/check_agent_entrypoints.sh"
+  check_file "harness/checks/check_shared_skills.sh"
   check_file "scripts/install-agent-symlinks.sh"
   check_file "scripts/uninstall-agent-symlinks.sh"
   check_dir "harness/bridges"
@@ -39,6 +42,8 @@ run_navigation_checks() {
   check_file "harness/bridges/uninstall-agent-symlinks.sh"
   check_contains "AGENTS.md" '\.agents/skills/' "AGENTS references shared skill source"
   check_contains "AGENTS.md" 'scripts/install-agent-symlinks\.sh' "AGENTS references shared skill installer"
+  check_contains "scripts/check-agent-entrypoints.sh" 'harness/checks/check_agent_entrypoints\.sh' "check-agent-entrypoints wrapper delegates to harness check"
+  check_contains "scripts/check-shared-skills.sh" 'harness/checks/check_shared_skills\.sh' "check-shared-skills wrapper delegates to harness check"
   check_contains "scripts/install-agent-symlinks.sh" 'harness/bridges/install-agent-symlinks\.sh' "install-agent-symlinks wrapper delegates to harness bridge"
   check_contains "scripts/uninstall-agent-symlinks.sh" 'harness/bridges/uninstall-agent-symlinks\.sh' "uninstall-agent-symlinks wrapper delegates to harness bridge"
   if [[ -x "scripts/check-agent-entrypoints.sh" ]]; then
