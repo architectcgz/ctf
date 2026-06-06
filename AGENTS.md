@@ -7,6 +7,7 @@
 - 任务分流使用全局 `harness-router` skill；完整治理审计使用 `bash scripts/check-review-governance.sh`，提交前本地只跑与当前改动强相关的轻量门禁。`bash scripts/check-consistency.sh` 仅保留为兼容别名。
 - 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；这条约束由 `bash scripts/check-review-governance.sh` 机械检查。
 - 项目级 workflow 守卫统一注册在 `harness/workflow-plugins/code-workflow/`；shared `code-workflow` 只提供 stage 模型，`ctf` 自己 owner 每个 stage 下要跑的插件集合。
+- 如果需要理解 `pre-commit-quick / completion-full / review-governance` 的时机划分，以及为什么 backend module boundary 仍留在提交前，优先读 `harness/workflow-plugins/code-workflow/README.md`。
 - 项目本地、长期存在的 harness adapter 统一放在 `harness/bridges/`；`scripts/` 保留稳定入口名并转发到这些 bridge，`.harness/` 只放任务态 / 本地态资料，不承载长期接线。
 - 跨 agent 共享的项目级 skill 源放在 `.agents/skills/`；`Claude` 通过 `.claude/skills -> ../.agents/skills` 读取，`Codex` 通过 `bash scripts/install-agent-symlinks.sh` 安装到 `~/.codex/skills/`。
 - 开始新任务前，先运行 `bash scripts/check-task-intake.sh`；它会调用 `bash scripts/check-open-todos.sh --quiet-if-empty` 提示 `docs/todos/` 里未收口事项。

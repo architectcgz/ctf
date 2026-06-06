@@ -6,6 +6,7 @@
 
 - shared `code-workflow` 只定义阶段，不定义 `ctf` 的具体守卫集合。
 - `ctf` 通过 `harness/workflow-plugins/code-workflow/<stage>.d/*.sh` 注册本地检查。
+- `harness/workflow-plugins/code-workflow/run_workflow_stage.sh` 是项目内 stage runner 主体；`scripts/run-workflow-stage.sh` 只保留稳定入口 wrapper。
 - stage runner 只负责发现、排序、执行插件，不理解业务规则。
 
 当前阶段：
@@ -13,6 +14,35 @@
 - `pre-commit-quick.d/`：提交前轻量门禁，只跑当前改动强相关的快速检查。
 - `completion-full.d/`：任务收尾时的完整代码级检查。
 - `review-governance.d/`：review / doctor / 治理审计阶段。
+
+阶段时机：
+
+- `pre-commit-quick` 只放“每次提交都不该退化”的便宜硬约束。目标是尽早阻断错误边界，避免坏状态继续扩散到后续提交。
+- `completion-full` 放明显更重、但适合在任务收尾时统一确认的完整检查；它不是用来替代 pre-commit，而是补齐 pre-commit 故意没有放进去的重检查。
+- `review-governance` 放仓库导航、文档事实源、OpenAPI 同步、guardrail 接线这类治理审计；这些不要求每次提交都无条件阻断，但在 review / doctor 前必须可验证。
+
+当前 `ctf` 的架构检查分层：
+
+- `pre-commit-quick`
+  - 前端过细测试守卫
+  - startup gate
+  - quick 架构检查
+- quick 架构检查当前只放便宜的硬边界：
+  - backend：`TestModuleArchitectureBoundaries`
+  - frontend：`check:vue-deep`、`architectureBoundaries.test.ts`、`routePageArchitectureBoundary.test.ts`
+- `completion-full`
+  - code change contract checks
+  - backend full architecture
+  - frontend full architecture
+- full 架构检查才覆盖更重的内容：
+  - backend：`internal/app` composition / context 约束、`tests/architecture`
+  - frontend：growth guard、feature owner boundaries、overlay boundaries、theme tail guard
+
+为什么 backend module boundary 放在 `pre-commit-quick`：
+
+- 它足够快，适合每次提交都执行。
+- 它是仓库不变量，而不是只在“任务完成时”才关心的质量项。
+- 一旦跨模块边界在早期提交里被打破，后续实现很容易建立在错误 owner 上，返工成本会明显上升。
 
 不放在这里的内容：
 
