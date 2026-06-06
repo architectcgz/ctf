@@ -5,11 +5,11 @@
 - 本仓库默认先进入 harness：除非任务明显简单、局部、可逆且不需要沉淀经验，否则开始前必须先按 `harness-router` 判断 `SIMPLE` / `HARNESS`。
 - 路线为 `HARNESS` 时，先读本文件和相关 harness 入口，再决定是否需要计划、review、验证或更新 `feedback/`、`harness/prompts/`、`references/`、`works/`。
 - 任务分流使用全局 `harness-router` skill；完整治理审计使用 `bash scripts/check-workflow-governance.sh`，提交前本地只跑与当前改动强相关的轻量门禁。`bash scripts/check-review-governance.sh` 与 `bash scripts/check-consistency.sh` 仅保留为兼容别名。
-- 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；主检查入口是 `bash scripts/check-agent-entrypoints.sh`，并由 `bash scripts/doctor-local-harness.sh` 与 `bash scripts/install-agent-symlinks.sh` 主动执行，不再挂到 `workflow-governance` 后置审计里。
+- 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；主检查入口是 `bash scripts/check-agent-entrypoints.sh`，并由 `bash scripts/doctor-local-harness.sh` 与 `bash ~/.agents/harness/install-project-skills.sh "$PWD"` 主动执行，不再挂到 `workflow-governance` 后置审计里。
 - 项目级 workflow 守卫统一注册在 `harness/workflow-plugins/code-workflow/`；shared `code-workflow` 只提供 stage 模型，`ctf` 自己 owner 每个 stage 下要跑的插件集合。
 - 如果需要理解 `pre-commit-quick / completion-full / workflow-governance` 的时机划分，以及为什么 backend module boundary 仍留在提交前，优先读 `harness/workflow-plugins/code-workflow/README.md`。
 - `scripts/` 顶层文件保留为稳定入口层；项目本地机械检查主体放在 `harness/checks/`，只有像 `code-workflow` 这样确实需要共享 workflow 项目适配的能力，才放到 `harness/workflow-plugins/`。`tools/` 存放工程工具入口，`.harness/` 只放任务态 / 本地态资料，不承载长期接线。
-- 跨 agent 共享的项目级 skill 源放在 `.agents/skills/`；`Claude` 通过 `.claude/skills -> ../.agents/skills` 读取，`Codex` 通过 `bash scripts/install-agent-symlinks.sh` 安装到 `~/.codex/skills/`。
+- 跨 agent 共享的项目级 skill 源放在 `.agents/skills/`；`Claude` 通过 `.claude/skills -> ../.agents/skills` 读取，`Codex` 通过 `bash ~/.agents/harness/install-project-skills.sh "$PWD"` 安装到 `~/.codex/skills/`，卸载时用 `bash ~/.agents/harness/uninstall-project-skills.sh "$PWD"`。
 - 开始新任务前，先运行 `bash scripts/check-task-intake.sh`；它会调用 `bash scripts/check-open-todos.sh --quiet-if-empty` 提示 `docs/todos/` 里未收口事项。
 - 若任务属于 `非琐碎任务`，或会进入受保护实现面，先绑定 task slug、implementation plan 和 `.harness/session-gates/<task-slug>.json`。默认入口仍是 `bash scripts/start-implementation.sh <topic-or-slug>`；若 `main` 干净、当前没有并行任务且不需要额外隔离，可以直接在当前 worktree 绑定，不强制再开新 worktree。
 - 进入实现前，先在当前 task 上下文内完成 intake analysis gate：优先选择合适的 `superpowers` 分析 skill，通常是 `brainstorming`，bug / 异常任务优先 `systematic-debugging`；随后运行 `grill-with-docs` 查漏补缺，再据此收口 implementation plan。

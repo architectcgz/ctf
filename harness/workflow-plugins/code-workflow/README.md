@@ -21,7 +21,7 @@
 - `pre-commit-quick` 只放“每次提交都不该退化”的便宜硬约束。目标是尽早阻断错误边界，避免坏状态继续扩散到后续提交。
 - `completion-full` 放明显更重、但适合在任务收尾时统一确认的完整检查；它不是用来替代 pre-commit，而是补齐 pre-commit 故意没有放进去的重检查。
 - `workflow-governance` 放仓库导航、文档事实源、OpenAPI 同步、project workflow guardrail 接线这类治理审计；这些不要求每次提交都无条件阻断，但在 workflow 收尾 / doctor 前必须可验证。
-- `AGENTS.md / CLAUDE.md` 入口一致性和 shared skill bridge 不再把 `workflow-governance` 当 owner；主检查放在 `scripts/check-agent-entrypoints.sh`、`scripts/check-shared-skills.sh`，并由 `scripts/doctor-local-harness.sh` 与 `scripts/install-agent-symlinks.sh` 提前执行。
+- `AGENTS.md / CLAUDE.md` 入口一致性和 shared skill bridge 不再把 `workflow-governance` 当 owner；主检查放在 `scripts/check-agent-entrypoints.sh`、`scripts/check-shared-skills.sh`，并由 `scripts/doctor-local-harness.sh` 与 `bash ~/.agents/harness/install-project-skills.sh "$PWD"` 提前执行。
 
 当前 `ctf` 的架构检查分层：
 

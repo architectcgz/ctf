@@ -3,6 +3,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 EXECUTABLE_LIST="harness/policies/local-harness-executables.txt"
+GLOBAL_SKILL_INSTALLER="$HOME/.agents/harness/install-project-skills.sh"
+GLOBAL_SKILL_UNINSTALLER="$HOME/.agents/harness/uninstall-project-skills.sh"
 fail=0
 
 red() { printf '\033[31m%s\033[0m' "$1"; }
@@ -48,8 +50,10 @@ check "harness/workflow-plugins/code-workflow/archive_task_artifacts.sh exists" 
 echo "[doctor] local agent and skill wiring"
 check "agent entrypoints stay aligned" bash scripts/check-agent-entrypoints.sh
 check "shared skills stay aligned" bash scripts/check-shared-skills.sh
-check "shared skill installer exists" test -f "scripts/install-agent-symlinks.sh"
-check "shared skill uninstaller exists" test -f "scripts/uninstall-agent-symlinks.sh"
+
+echo "[doctor] shared harness skill installers"
+check "$GLOBAL_SKILL_INSTALLER is executable" test -x "$GLOBAL_SKILL_INSTALLER"
+check "$GLOBAL_SKILL_UNINSTALLER is executable" test -x "$GLOBAL_SKILL_UNINSTALLER"
 
 echo "[doctor] workflow wiring"
 check "harness/policies/commit-message.json exists" test -f "harness/policies/commit-message.json"

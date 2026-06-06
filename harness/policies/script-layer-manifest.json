@@ -21,11 +21,9 @@
     "scripts/check-task-intake.sh",
     "scripts/check-workflow-complete.sh",
     "scripts/doctor-local-harness.sh",
-    "scripts/install-agent-symlinks.sh",
     "scripts/install-githooks.sh",
     "scripts/run-workflow-stage.sh",
-    "scripts/start-implementation.sh",
-    "scripts/uninstall-agent-symlinks.sh"
+    "scripts/start-implementation.sh"
   ],
   "project_tools": [
     "tools/ensure-frontend-tooling.sh",

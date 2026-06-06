@@ -17,8 +17,6 @@ scripts/start-implementation.sh
 scripts/check-startup-gate.sh
 scripts/check-agent-entrypoints.sh
 scripts/check-shared-skills.sh
-scripts/install-agent-symlinks.sh
-scripts/uninstall-agent-symlinks.sh
 scripts/check-backend-architecture.sh
 scripts/check-frontend-architecture.sh
 scripts/doctor-local-harness.sh
