@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODE="${1:-full}"
 
-bash "$ROOT_DIR/scripts/ensure-frontend-tooling.sh" --quiet
+bash "$ROOT_DIR/tools/ensure-frontend-tooling.sh" --quiet
 
 run_frontend_layer_checks() {
   echo "[architecture][frontend] layer boundaries"

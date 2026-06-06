@@ -8,8 +8,7 @@ scripts/check-frontend-test-guard.sh
 scripts/check-architecture.sh
 scripts/check-commit-message.sh
 scripts/check-skill-sync-reminder.sh
-scripts/ensure-frontend-tooling.sh
-scripts/sync_openapi_from_contract.py
+scripts/check-script-layer.sh
 scripts/check-task-intake.sh
 scripts/check-open-todos.sh
 scripts/start-implementation.sh
@@ -17,3 +16,6 @@ scripts/check-startup-gate.sh
 scripts/check-backend-architecture.sh
 scripts/check-frontend-architecture.sh
 scripts/doctor-local-harness.sh
+tools/ensure-frontend-tooling.sh
+tools/sync_openapi_from_contract.py
+tools/runtime-agent-dual-node-e2e.sh

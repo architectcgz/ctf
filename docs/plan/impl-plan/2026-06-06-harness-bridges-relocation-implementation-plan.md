@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 把 `ctf` 项目本地 harness adapter 从 `scripts/` 收口到 `harness/bridges/`，同时保留稳定命令入口不变。
+**Goal:** 把 `ctf` 项目本地 harness adapter 从 `scripts/` 收口到 `harness/bridges/`，同时把 `scripts/` 顶层收紧成稳定入口层，并为项目工程工具建立独立命名与守卫。
 
-**Architecture:** `scripts/` 继续承担用户、hook、文档直接引用的稳定入口；真正的项目本地接线逻辑迁入 `harness/bridges/`，由 wrapper 负责定位 repo root 并转发。共享 `code-workflow` 的 managed 入口按职责分别落到 `scripts/` 或项目 harness 下，不混进项目本地 bridge 层。
+**Architecture:** `scripts/` 顶层继续承担用户、hook、文档直接引用的稳定入口；真正的项目本地接线逻辑迁入 `harness/bridges/`，由 wrapper 负责定位 repo root 并转发。共享 `code-workflow` 的 managed 入口按职责分别落到 `scripts/` 或项目 harness 下，不混进项目本地 bridge 层。非稳定入口的工程工具迁到 `tools/`，并由项目本地 manifest + guard 校验 `scripts/` / `tools/` / `scripts/<namespace>/` 的边界。
 
 **Tech Stack:** Bash, Python shared harness tooling, repo-local harness governance scripts
 
@@ -24,6 +24,8 @@
   - 迁移 `check-commit-message`、`check-skill-sync-reminder`、`install-agent-symlinks`、`uninstall-agent-symlinks` 四个项目本地 bridge。
   - 把 `scripts/` 中对应文件收成薄 wrapper，并更新 AGENTS / hook 文档 / consistency checks。
   - 将共享 `archive-task-artifacts` managed asset 从项目根 `scripts/` 迁到 `harness/workflow-plugins/code-workflow/`。
+  - 将 `ensure-frontend-tooling`、`sync_openapi_from_contract`、`runtime-agent-dual-node-e2e` 这类工程工具从 `scripts/` 顶层迁到 `tools/`。
+  - 新增脚本层 manifest 与机械检查，防止未来再次把内部主体或工程工具混回稳定入口层。
 - Non-Goals:
   - 不改 shared `code-workflow` managed 脚本的 owner 边界。
   - 不迁移 `start-implementation`、`check-task-intake`、`check-startup-gate` 这类共享 workflow 入口到 `harness/bridges/`。
@@ -60,6 +62,10 @@
   - `harness/bridges/install-agent-symlinks.sh`
   - `harness/bridges/uninstall-agent-symlinks.sh`
   - `harness/workflow-plugins/code-workflow/archive_task_artifacts.sh`
+  - `tools/AGENTS.md`
+  - `scripts/check-script-layer.sh`
+  - `harness/checks/check_script_layer_conventions.py`
+  - `harness/policies/script-layer-manifest.json`
 - Modify:
   - `AGENTS.md`
   - `.githooks/README.md`
@@ -77,8 +83,13 @@
   - `scripts/check-task-intake.sh`
   - `scripts/start-implementation.sh`
   - `scripts/check-startup-gate.sh`
+  - `scripts/check-frontend-architecture.sh`
   - `harness/checks/check_startup_gate.py`
+  - `harness/policies/local-harness-executables.txt`
   - `harness/templates/implementation-plan-skeleton.md`
+  - `tools/ensure-frontend-tooling.sh`
+  - `tools/sync_openapi_from_contract.py`
+  - `tools/runtime-agent-dual-node-e2e.sh`
   - global `~/.agents/harness/workflows/code-workflow/workflow.sh`
   - global `~/.agents/skills/code-workflow/SKILL.md`
 - Review:
@@ -102,6 +113,7 @@
 - Reuse / extend / split / create-new decision:
   - 复用现有 `scripts/` 入口名与 hook 接线。
   - 新建 `harness/bridges/` 承载项目本地 adapter，实现“稳定入口”和“本地 bridge owner”分层。
+  - 新建 `tools/` 承载非稳定入口的工程工具，并用 manifest 约束脚本层角色。
 - Owner boundary:
   - 共享 checker / reminder / workflow scaffold 仍归 `~/.agents/harness/*` owner。
   - `ctf` 只 owner 项目特有 policy、路径、skill 安装接线和 wrapper 组织。
@@ -118,9 +130,11 @@
   - `scripts/` 应只保留稳定入口 wrapper；项目本地接线主体应进入 `harness/bridges/`。
   - shared `code-workflow` managed asset 不应继续散落在项目根 `scripts/`，应安装到项目 harness 的 workflow plugin 目录。
   - review/doctor/sync-check 需要把 legacy `scripts/archive-task-artifacts.sh` 识别为漂移或废弃路径。
+  - `scripts/` 顶层如果继续混放工程工具，会让“稳定入口层”语义重新变宽；需要一个单独的 `tools/` 和一份 manifest 做机械边界。
 - Plan adjustments after challenge:
   - 在原 bridge 迁位范围上，追加 archive managed asset 迁位和 shared installer/sync-check 同步。
   - 更新实现计划骨架与 startup gate 检查，确保后续任务 intake 信息成为必填项。
+  - 追加 `tools/` 工具层迁位与脚本层命名守卫，让 `scripts/` 顶层只保留稳定入口。
 
 ## Validation
 
@@ -128,6 +142,7 @@
   - `bash scripts/check-skill-sync-reminder.sh --working`
   - `bash scripts/check-review-governance.sh`
   - `bash scripts/check-consistency.sh`
+  - `bash scripts/check-script-layer.sh`
   - `bash scripts/install-agent-symlinks.sh`
   - `bash scripts/uninstall-agent-symlinks.sh`
 - Manual checks:

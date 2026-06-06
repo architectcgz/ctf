@@ -8,7 +8,7 @@
 - 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；这条约束由 `bash scripts/check-review-governance.sh` 机械检查。
 - 项目级 workflow 守卫统一注册在 `harness/workflow-plugins/code-workflow/`；shared `code-workflow` 只提供 stage 模型，`ctf` 自己 owner 每个 stage 下要跑的插件集合。
 - 如果需要理解 `pre-commit-quick / completion-full / review-governance` 的时机划分，以及为什么 backend module boundary 仍留在提交前，优先读 `harness/workflow-plugins/code-workflow/README.md`。
-- 项目本地、长期存在的 harness adapter 统一放在 `harness/bridges/`；`scripts/` 保留稳定入口名并转发到这些 bridge，`.harness/` 只放任务态 / 本地态资料，不承载长期接线。
+- 项目本地、长期存在的 harness adapter 统一放在 `harness/bridges/`；`scripts/` 顶层文件保留为稳定入口层并转发到这些 bridge，`tools/` 存放工程工具入口，`.harness/` 只放任务态 / 本地态资料，不承载长期接线。
 - 跨 agent 共享的项目级 skill 源放在 `.agents/skills/`；`Claude` 通过 `.claude/skills -> ../.agents/skills` 读取，`Codex` 通过 `bash scripts/install-agent-symlinks.sh` 安装到 `~/.codex/skills/`。
 - 开始新任务前，先运行 `bash scripts/check-task-intake.sh`；它会调用 `bash scripts/check-open-todos.sh --quiet-if-empty` 提示 `docs/todos/` 里未收口事项。
 - 若任务属于 `非琐碎任务`，或会进入受保护实现面，必须先运行 `bash scripts/start-implementation.sh <topic-or-slug>`；统一入口会创建独立 worktree、task slug、implementation plan 和 `.harness/session-gates/<task-slug>.json`。
@@ -92,7 +92,7 @@
 - 新增文件前，先判断它属于“最终事实”“中间设计”“实施过程”“评审证据”“长期积累”中的哪一类。
 - `docs/architecture/`：当前架构与最终设计事实源；后端、前端、业务专题和最终页面设计进入这里。
 - `docs/contracts/`：API、OpenAPI、事件、题包格式、导入导出结构等契约。
-- OpenAPI v1 采用双层结构：`docs/contracts/openapi-v1/` 是拆分源，`docs/contracts/openapi-v1.yaml` 是稳定 bundle；修改 OpenAPI 时先改拆分源，再运行 `python3 scripts/sync_openapi_from_contract.py`。
+- OpenAPI v1 采用双层结构：`docs/contracts/openapi-v1/` 是拆分源，`docs/contracts/openapi-v1.yaml` 是稳定 bundle；修改 OpenAPI 时先改拆分源，再运行 `python3 tools/sync_openapi_from_contract.py`。
 - `docs/design/`：仍在推演的中间设计稿、设计索引和过期说明。
 - `docs/plan/impl-plan/`：当前仍在执行或尚未归档的结构性实现方案、阶段计划、执行清单和验证步骤。
 - `docs/plan/archive/impl-plan/`：历史实施计划目录入口；当前只保留目录说明，旧计划正文默认通过 Git 历史追溯，不作为当前事实源或默认读取入口。
@@ -105,9 +105,12 @@
 - `docs/Q&A/`：会被重复引用的问答式说明。
 - `docs/thesis/`、`docs/weekly-reports/`、`docs/开题报告/`、`docs/文献/`、`docs/毕业设计文档相关/`：论文与学校材料，不混入产品事实源。
 - `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`references/` 是 harness 顶层目录；各目录局部规则见对应 `AGENTS.md`。
+- `scripts/` 顶层文件是稳定入口层：给 hook、README、AGENTS、review 流程和操作者长期直接调用；新增顶层入口前，先更新 `harness/policies/script-layer-manifest.json` 并通过 `bash scripts/check-script-layer.sh`。
 - `harness/checks/` 存放项目本地、可提交、长期维护的机械检查主体；`scripts/` 中对应 `check-*` 命令默认只保留稳定 wrapper 入口。
 - `scripts/check-review-governance-core.sh` 与 `scripts/doctor-local-harness.sh` 也是稳定入口；真正的检查主体默认继续下沉到 `harness/checks/`，不要再把大段检查逻辑直接堆回 `scripts/`。
 - `harness/bridges/` 存放项目本地、可提交、长期维护的 harness bridge / adapter；这层只负责把共享 harness 能力和本项目路径、policy、入口约定接起来。
+- `tools/` 存放项目工程工具入口，例如依赖准备、OpenAPI bundle 同步、E2E 演练；它们不承担默认 hook / review 稳定入口职责。
+- `scripts/challenges/`、`scripts/registry/`、`scripts/lib/` 这类子目录属于命名空间，不等同于 `scripts/` 顶层稳定入口层；新增子目录前同样要先登记到 `harness/policies/script-layer-manifest.json`。
 - `.harness/` 保存当前任务状态、短期执行证据和用户本地私有索引；其中 `.harness/session-gates/` 只放本地启动凭证，`.harness/reuse-decisions/` 只放按需补充的任务证据，`.harness/reuse-index/` 只放用户自用的长期复用索引，不进入版本控制。
 - 已稳定的结论要回收到对应事实源；旧中间稿在原位置标记 `Superseded by ...`。
 - 不再新增 `docs/improvements/`、`docs/superpowers/`、`docs/refs/`、`docs/skills/` 作为活动入口；对应内容分别进入 `feedback/`、`practice/`、`references/`、`harness/prompts/`。

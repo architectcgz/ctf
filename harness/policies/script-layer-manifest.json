@@ -1,0 +1,38 @@
+{
+  "stable_entrypoints": [
+    "scripts/check-agent-entrypoints.sh",
+    "scripts/check-architecture.sh",
+    "scripts/check-backend-architecture.sh",
+    "scripts/check-code-changes.sh",
+    "scripts/check-commit-message.sh",
+    "scripts/check-consistency.sh",
+    "scripts/check-docs-consistency.py",
+    "scripts/check-frontend-architecture.sh",
+    "scripts/check-frontend-test-guard.sh",
+    "scripts/check-open-todos.sh",
+    "scripts/check-review-governance-core.sh",
+    "scripts/check-review-governance.sh",
+    "scripts/check-script-layer.sh",
+    "scripts/check-shared-skills.sh",
+    "scripts/check-skill-sync-reminder.sh",
+    "scripts/check-startup-gate.sh",
+    "scripts/check-task-intake.sh",
+    "scripts/check-workflow-complete.sh",
+    "scripts/doctor-local-harness.sh",
+    "scripts/install-agent-symlinks.sh",
+    "scripts/install-githooks.sh",
+    "scripts/run-workflow-stage.sh",
+    "scripts/start-implementation.sh",
+    "scripts/uninstall-agent-symlinks.sh"
+  ],
+  "project_tools": [
+    "tools/ensure-frontend-tooling.sh",
+    "tools/runtime-agent-dual-node-e2e.sh",
+    "tools/sync_openapi_from_contract.py"
+  ],
+  "script_namespaces": {
+    "scripts/challenges": "domain_tools",
+    "scripts/lib": "internal_helpers",
+    "scripts/registry": "domain_tools"
+  }
+}

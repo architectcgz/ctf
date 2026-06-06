@@ -4,8 +4,9 @@
 
 边界约定：
 
-- `scripts/`：稳定入口。给用户、hook、README、AGENTS 和其他脚本直接调用。
+- `scripts/` 顶层文件：稳定入口层。给用户、hook、README、AGENTS 和其他脚本直接调用。
 - `harness/bridges/`：项目本地 bridge 实现。负责把共享 harness 能力和本项目的 policy、路径、目录契约接起来。
+- `tools/`：项目工程工具入口。给同步、依赖准备、E2E 演练等命令使用，不默认承担稳定入口职责。
 - `.harness/`：执行态和本地态目录，不放长期 bridge。
 
 当前 bridge 范围：

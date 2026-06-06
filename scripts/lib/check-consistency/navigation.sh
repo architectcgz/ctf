@@ -139,9 +139,13 @@ run_navigation_checks() {
   check_file "scripts/start-implementation.sh"
   check_file "scripts/check-open-todos.sh"
   check_file "scripts/check-docs-consistency.py"
+  check_file "scripts/check-script-layer.sh"
   check_file "harness/checks/check_open_todos.sh"
   check_file "harness/checks/check_docs_consistency.py"
-  check_file "scripts/sync_openapi_from_contract.py"
+  check_file "harness/checks/check_script_layer_conventions.py"
+  check_file "harness/policies/script-layer-manifest.json"
+  check_file "tools/AGENTS.md"
+  check_file "tools/sync_openapi_from_contract.py"
   check_contains "AGENTS.md" 'docs/文档规范\.md' "AGENTS references documentation guide"
   check_contains "docs/README.md" 'docs/文档规范\.md' "docs README references documentation guide"
   check_contains "docs/README.md" 'docs/contracts/README\.md' "docs README references contracts guide"
@@ -164,6 +168,7 @@ run_navigation_checks() {
   check_contains "docs/文档规范.md" '`当前设计` 质量检查' "documentation guide defines current design quality checks"
   check_contains "scripts/check-open-todos.sh" 'harness/checks/check_open_todos\.sh' "open todos wrapper delegates to harness check"
   check_contains "scripts/check-docs-consistency.py" 'harness/checks/check_docs_consistency\.py' "documentation consistency wrapper delegates to harness check"
+  check_contains "scripts/check-script-layer.sh" 'harness/checks/check_script_layer_conventions\.py' "script layer wrapper delegates to harness check"
   check_contains "harness/checks/check_docs_consistency.py" 'VAGUE_ARCHITECTURE_PHRASES' "documentation consistency script checks vague architecture phrases"
   check_contains "harness/checks/check_docs_consistency.py" 'check_architecture_doc_quality' "documentation consistency script checks architecture doc quality"
   check_contains "AGENTS.md" 'docs/architecture/' "AGENTS references docs/architecture"
@@ -178,6 +183,8 @@ run_navigation_checks() {
   check_contains "AGENTS.md" 'scripts/start-implementation\.sh' "AGENTS references implementation startup gate"
   check_contains "AGENTS.md" 'scripts/check-open-todos\.sh' "AGENTS references todo reminder script"
   check_contains "AGENTS.md" 'docs/operations/' "AGENTS references docs/operations"
+  check_contains "AGENTS.md" 'tools/' "AGENTS references tools layer"
+  check_contains "AGENTS.md" 'script-layer-manifest\.json' "AGENTS references script layer manifest"
   check_file "docs/plan/README.md"
   check_file "docs/plan/impl-plan/README.md"
   check_file "docs/plan/archive/impl-plan/README.md"
@@ -195,7 +202,10 @@ run_navigation_checks() {
   python3 scripts/check-docs-consistency.py
 
   echo "[C8c] OpenAPI source and bundle stay synced"
-  python3 scripts/sync_openapi_from_contract.py --check
+  python3 tools/sync_openapi_from_contract.py --check
+
+  echo "[C8d] script layer naming and ownership stay aligned"
+  bash scripts/check-script-layer.sh
 
   echo "[C9] works index covers harness good practices"
   check_file "works/harness-good-practices.md"

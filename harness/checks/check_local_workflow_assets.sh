@@ -27,7 +27,7 @@ check "legacy scripts/archive-task-artifacts.sh is absent" test ! -f "scripts/ar
 check ".gitignore ignores .harness/reuse-index/" grep -qx '/.harness/reuse-index/' ".gitignore"
 check ".gitignore ignores .harness/session-gates/" grep -qx '/.harness/session-gates/' ".gitignore"
 
-if bash scripts/ensure-frontend-tooling.sh --quiet >/dev/null 2>&1; then
+if bash tools/ensure-frontend-tooling.sh --quiet >/dev/null 2>&1; then
   echo "  $(green PASS) — frontend tooling is available"
 else
   echo "  $(red FAIL) — frontend tooling is unavailable; run npm install in code/frontend or ensure main worktree dependencies exist"

@@ -4,7 +4,7 @@
 >
 > 机器可读版本：`ctf/docs/contracts/openapi-v1.yaml`（OpenAPI 3.0，稳定 bundle），应与本文保持一致。
 >
-> 拆分源：`ctf/docs/contracts/openapi-v1/`；修改 OpenAPI 时先改拆分源，再运行 `python3 scripts/sync_openapi_from_contract.py`。
+> 拆分源：`ctf/docs/contracts/openapi-v1/`；修改 OpenAPI 时先改拆分源，再运行 `python3 tools/sync_openapi_from_contract.py`。
 >
 > 最后更新：2026-05-29
 

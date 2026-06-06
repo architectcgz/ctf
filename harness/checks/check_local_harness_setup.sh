@@ -39,14 +39,17 @@ check "harness/checks/check_review_governance_core.sh exists" test -f "harness/c
 check "harness/checks/check_local_harness_setup.sh exists" test -f "harness/checks/check_local_harness_setup.sh"
 check "harness/checks/check_local_toolchain.sh exists" test -f "harness/checks/check_local_toolchain.sh"
 check "harness/checks/check_local_workflow_assets.sh exists" test -f "harness/checks/check_local_workflow_assets.sh"
+check "harness/checks/check_script_layer_conventions.py exists" test -f "harness/checks/check_script_layer_conventions.py"
 check "harness/workflow-plugins/code-workflow/run_workflow_stage.sh exists" test -f "harness/workflow-plugins/code-workflow/run_workflow_stage.sh"
 check "harness/workflow-plugins/code-workflow/archive_task_artifacts.sh exists" test -f "harness/workflow-plugins/code-workflow/archive_task_artifacts.sh"
 
 echo "[doctor] workflow wiring"
 check "harness/policies/commit-message.json exists" test -f "harness/policies/commit-message.json"
+check "harness/policies/script-layer-manifest.json exists" test -f "harness/policies/script-layer-manifest.json"
 check "workflow plugin root exists" test -d "harness/workflow-plugins/code-workflow"
 check "pre-commit stage plugin dir exists" test -d "harness/workflow-plugins/code-workflow/pre-commit-quick.d"
 check "completion stage plugin dir exists" test -d "harness/workflow-plugins/code-workflow/completion-full.d"
 check "review stage plugin dir exists" test -d "harness/workflow-plugins/code-workflow/review-governance.d"
+check "script layer check passes" bash scripts/check-script-layer.sh
 
 exit "$fail"

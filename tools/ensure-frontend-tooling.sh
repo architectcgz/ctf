@@ -12,7 +12,7 @@ while [[ $# -gt 0 ]]; do
     -h|--help)
       cat <<'EOF'
 Usage:
-  bash scripts/ensure-frontend-tooling.sh [--quiet]
+  bash tools/ensure-frontend-tooling.sh [--quiet]
 
 Description:
   Ensure code/frontend/node_modules is available in the current worktree.
