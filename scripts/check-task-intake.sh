@@ -2,7 +2,8 @@
 # Managed by code-workflow package (version: 2026-06-06.2)
 set -euo pipefail
 
-cd "$(git rev-parse --show-toplevel)"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$script_dir/.."
 
 if [[ $# -gt 0 ]]; then
   echo "FAIL: check-task-intake.sh no longer accepts task-scoped reuse arguments" >&2
