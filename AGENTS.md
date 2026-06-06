@@ -53,10 +53,8 @@
 
 - 对普通非琐碎任务，复用与 owner 决策默认写在 active implementation plan 的 `## Files` 和 `## 复用与 Owner 决策` 章节里，不再单独依赖项目级 reuse-first 检查链路。
 - 非琐碎任务的启动时序由共享 `code-workflow` owner：`scripts/check-task-intake.sh` 负责 intake 提醒，`scripts/start-implementation.sh` 负责初始化 worktree / slug / plan / startup gate，`scripts/check-startup-gate.sh` 负责核验当前 worktree 的 gate 状态，完成后用 `scripts/archive-task-artifacts.sh` 归档 plan / task 工件。
-- 复用与 owner 决策默认写进 implementation plan 的“复用与 Owner 决策”一节，不再要求每个任务都先写独立 reuse decision 文档。
-- 对跨模块、高风险或 review 明确需要补充证据的任务，仍可在 `.harness/reuse-decisions/<task-slug>.md` 追加 standalone reuse decision；这类文档只作为补充证据，不再是共享启动 workflow 的唯一入口。
+- 只有跨模块、高风险，或 review 明确要求补充证据的任务，才额外在 `.harness/reuse-decisions/<task-slug>.md` 写 standalone reuse decision；这类文档只是补充证据，不是默认阻塞门禁。
 - `.harness/reuse-decision.md` 已废弃；仓库只接受 `.harness/reuse-decisions/` 下的 task-scoped reuse decision 文档。
-- 如果某个任务确实需要补充当前任务证据，可以继续在 `.harness/reuse-decisions/` 下写独立说明；但它是补充记录，不是默认阻塞门禁。
 - 长期复用线索仍然可以保存在本地私有的 `.harness/reuse-index/`；它属于操作者自用索引，不属于本仓库提交前强校验的一部分。
 - `.harness/session-gates/` 保存本地 startup gate 凭证，不进 Git；它只用于当前 worktree 的非琐碎任务链路绑定。
 
@@ -64,7 +62,8 @@
 
 - 本节为 `ctf` 仓库内的覆盖规则；命中时优先于上层通用 worktree 约定。
 - 本仓库提交信息格式固定为“标题 + 正文”两段结构。标题仍使用 `英文类型(可选 scope): 中文描述`，例如 `fix(frontend): 修正拓扑页导出按钮禁用态`；`fix`、`refactor`、`docs`、`chore` 等类型前缀必须使用英文。
-- 普通提交不能只有单行标题；正文至少提供两行有效内容，并说明改动点、原因、影响或验证中的关键信息。提交时优先使用多个 `-m` 组织标题和正文。
+- 具体提交策略放在 `harness/policies/commit-message.json`，由 `scripts/check-commit-message.sh` 调全局 `~/.agents/harness/commit-message/check_commit_message.py` 执行。
+- 普通提交不能只有单行标题；正文至少提供两行有效内容，并说明改动点、原因、影响或验证中的关键信息。若当前 worktree 有激活中的 task gate，还必须显式写一行 `Task: <task-slug>`；这类元数据不计入正文说明行数和信息量统计。提交时优先使用多个 `-m` 组织标题和正文。
 - `琐碎任务` 默认允许直接在当前工作区修改；`非琐碎任务` 和命中 startup gate 的受保护实现面，默认必须先走 `scripts/start-implementation.sh` 创建独立 worktree。
 - 非琐碎实现任务沿用共享 `code-workflow`：一项任务绑定一个独立 worktree、一个 task slug、一份 implementation plan 和一条本地 startup gate 记录。
 - 纯文档编辑默认直接在当前分支修改，不创建新分支、不创建新 worktree；但如果文档本身属于某个非琐碎任务的交付物，仍应跟随该任务 worktree。

@@ -10,7 +10,6 @@
 ## 当前模块
 
 - `architecture-diagram-generation.md`：共享正文位于 `/home/azhi/.agents/harness/prompts/architecture-diagram-generation.md`
-- `coding-agent-system-prompt.md`：共享正文位于 `/home/azhi/.agents/harness/prompts/coding-agent-system-prompt.md`
 - `frontend-architecture-review.md`：共享正文位于 `/home/azhi/.agents/skills/code-reviewer/frontend/architecture-review.md`
 
 ## 入口约定

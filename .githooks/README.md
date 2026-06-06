@@ -11,7 +11,7 @@ bash scripts/install-githooks.sh
 当前 hooks：
 
 - `pre-commit`：运行本地轻量门禁，包括前端过细样式测试守卫、startup gate、架构护栏和 skill sync reminder。
-- `commit-msg`：运行 `scripts/check-commit-message.sh`，要求普通提交采用“标题 + 正文”结构。标题继续使用英文类型前缀，如 `fix`、`refactor`、`docs`，可选 scope 放在英文括号里，冒号后的描述必须包含中文说明；正文至少两行有效内容，且需要有足够具体的变更说明。若当前 worktree 有激活中的非琐碎任务 gate，正文还必须显式写一行 `Task: <task-slug>`。
+- `commit-msg`：运行 `scripts/check-commit-message.sh`。本地 wrapper 会调用全局 `~/.agents/harness/commit-message/check_commit_message.py`，再读取仓库内 `harness/policies/commit-message.json` 执行项目策略。普通提交仍要求采用“标题 + 正文”结构：标题继续使用英文类型前缀，如 `fix`、`refactor`、`docs`，可选 scope 放在英文括号里，冒号后的描述必须包含中文说明；正文至少两行有效内容，且需要有足够具体的变更说明。若当前 worktree 有激活中的非琐碎任务 gate，正文还必须显式写一行 `Task: <task-slug>`；这类 `Task:` 元数据不再计入正文说明行数和信息量统计。
 
 <!-- BEGIN HARNESS ENGINEERING: hook-docs -->
 
@@ -21,7 +21,7 @@ bash scripts/install-githooks.sh
 - `pre-commit`：运行 `scripts/check-startup-gate.sh --staged`，要求命中启动门禁的非琐碎改动先通过统一入口并拥有合法启动凭证。
 - `pre-commit`：运行 `scripts/check-architecture.sh --quick`，检查后端模块依赖方向和前端分层边界。
 - `pre-commit`：运行 `scripts/check-skill-sync-reminder.sh --staged`，当 `feedback/`、`harness/reuse/history.md`、`harness/reuse/index.yaml` 或 `harness/prompts|policies|templates/` 变更时，非阻塞提醒是否需要同步到全局 skill。
-- `commit-msg`：运行 `scripts/check-commit-message.sh`，阻止中文类型前缀、纯英文描述标题、只有简短标题而没有详细正文的普通提交进入历史；若存在激活中的 task gate，还要求正文显式带上 `Task: <task-slug>`。
+- `commit-msg`：运行 `scripts/check-commit-message.sh`，通过全局共享检查器 + 本地 policy 阻止中文类型前缀、纯英文描述标题、只有简短标题而没有详细正文的普通提交进入历史；若存在激活中的 task gate，还要求正文显式带上 `Task: <task-slug>`。
 - 原有 API 合同同步逻辑继续保留。
 
 ## 本地工作流优先

@@ -35,6 +35,7 @@ check "scripts/check-architecture.sh is executable" test -x "scripts/check-archi
 check "scripts/check-backend-architecture.sh is executable" test -x "scripts/check-backend-architecture.sh"
 check "scripts/check-frontend-architecture.sh is executable" test -x "scripts/check-frontend-architecture.sh"
 check "scripts/doctor-local-harness.sh is executable" test -x "scripts/doctor-local-harness.sh"
+check "harness/policies/commit-message.json exists" test -f "harness/policies/commit-message.json"
 
 echo "[doctor] local tools"
 check "git is available" command -v git
