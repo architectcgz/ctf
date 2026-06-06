@@ -23,6 +23,7 @@
   - 新增 `harness/bridges/` 作为项目长期提交的本地 adapter 层。
   - 迁移 `check-commit-message`、`check-skill-sync-reminder`、`install-agent-symlinks`、`uninstall-agent-symlinks` 四个项目本地 bridge。
   - 把 `scripts/` 中对应文件收成薄 wrapper，并更新 AGENTS / hook 文档 / consistency checks。
+  - 将共享 `archive-task-artifacts` managed asset 从项目根 `scripts/` 迁到 `harness/workflow-plugins/code-workflow/`。
 - Non-Goals:
   - 不改 shared `code-workflow` managed 脚本的 owner 边界。
   - 不迁移 `start-implementation`、`check-task-intake`、`check-startup-gate` 这类共享 workflow 入口到 `harness/bridges/`。
@@ -58,6 +59,7 @@
   - `harness/bridges/check-skill-sync-reminder.sh`
   - `harness/bridges/install-agent-symlinks.sh`
   - `harness/bridges/uninstall-agent-symlinks.sh`
+  - `harness/workflow-plugins/code-workflow/archive_task_artifacts.sh`
 - Modify:
   - `AGENTS.md`
   - `.githooks/README.md`
@@ -71,6 +73,12 @@
   - `scripts/uninstall-agent-symlinks.sh`
   - `scripts/lib/check-consistency/navigation.sh`
   - `scripts/lib/check-consistency/architecture.sh`
+  - `scripts/lib/check-consistency/workflow.sh`
+  - `scripts/check-task-intake.sh`
+  - `scripts/start-implementation.sh`
+  - `scripts/check-startup-gate.sh`
+  - `harness/checks/check_startup_gate.py`
+  - `harness/templates/implementation-plan-skeleton.md`
   - global `~/.agents/harness/workflows/code-workflow/workflow.sh`
   - global `~/.agents/skills/code-workflow/SKILL.md`
 - Review:
@@ -99,6 +107,20 @@
   - `ctf` 只 owner 项目特有 policy、路径、skill 安装接线和 wrapper 组织。
 - Why this is the narrowest safe surface:
   - 只迁移项目本地 adapter，不改共享 workflow 文件落点，不引入新入口名，不改变 hook 使用方式。
+
+## Intake Analysis Gate
+
+- Relevant superpowers analysis pass:
+  - `brainstorming`
+- Why this pass fits:
+  - 这次不是业务功能开发，而是 harness 分层治理；先确认 owner 边界、稳定入口和可迁位面比直接编码更重要。
+- grill-with-docs findings:
+  - `scripts/` 应只保留稳定入口 wrapper；项目本地接线主体应进入 `harness/bridges/`。
+  - shared `code-workflow` managed asset 不应继续散落在项目根 `scripts/`，应安装到项目 harness 的 workflow plugin 目录。
+  - review/doctor/sync-check 需要把 legacy `scripts/archive-task-artifacts.sh` 识别为漂移或废弃路径。
+- Plan adjustments after challenge:
+  - 在原 bridge 迁位范围上，追加 archive managed asset 迁位和 shared installer/sync-check 同步。
+  - 更新实现计划骨架与 startup gate 检查，确保后续任务 intake 信息成为必填项。
 
 ## Validation
 
