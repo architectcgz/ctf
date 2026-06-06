@@ -4,4 +4,4 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$script_dir/.."
 
-exec bash harness/checks/check_agent_entrypoints.sh "$@"
+exec bash "$HOME/.agents/harness/check-project-agent-entrypoints.sh" "$@"
