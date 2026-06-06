@@ -5,6 +5,7 @@
 ## 入口规则
 
 - 本项目只使用 `feedback/` 记录 agent 工作流、review、prompt、skill、policy 和项目协作方式相关反馈。
+- `feedback/` 本身不是项目行为入口；只有当结论被明确沉到 `AGENTS.md`、`harness/`、脚本、hook、事实文档或全局 skill / harness 后，才算真正进入项目或全局规则面。
 - 历史 `docs/improvements/` 条目迁入 `feedback/` 后，不再新增 `docs/improvements/`。
 - 如果外部 skill 仍提示写入 `docs/improvements/`，在本项目内以本文件规则覆盖。
 - 可执行的业务任务、需求拆分或待办不写入 `feedback/`，按性质进入 `docs/plan/` 或 `docs/todo/`。
@@ -31,6 +32,7 @@
 
 归属判断：
 
+- 只是事故记录、背景信息或一次性复盘：留在 `feedback/`，不默认外溢到项目行为。
 - 只影响 CTF 项目事实或路径：留在项目 `AGENTS.md`、项目 `harness/` 或对应文档。
 - 能机械化检查：沉到 `harness/checks/`、`scripts/check-*.sh` 或 hook。
 - 项目复用模式：沉到 `.harness/reuse-index/index.yaml` 或对应源码镜像目录下的 `README.md`。

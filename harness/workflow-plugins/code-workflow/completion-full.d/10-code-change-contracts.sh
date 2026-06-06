@@ -2,4 +2,4 @@
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
-exec bash scripts/run-workflow-stage.sh review-governance "$@"
+bash scripts/check-code-changes.sh
