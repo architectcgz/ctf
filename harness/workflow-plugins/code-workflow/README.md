@@ -6,7 +6,7 @@
 
 - shared `code-workflow` 只定义阶段，不定义 `ctf` 的具体守卫集合。
 - `ctf` 通过 `harness/workflow-plugins/code-workflow/<stage>.d/*.sh` 注册本地检查。
-- `harness/workflow-plugins/code-workflow/run_workflow_stage.sh` 是项目内 stage runner 主体；`scripts/run-workflow-stage.sh` 只保留稳定入口 wrapper。
+- `harness/workflow-plugins/code-workflow/run_workflow_stage.sh` 由 shared `code-workflow` package 安装到仓库内；`ctf` 不再本地 owner stage runner 实现，`scripts/run-workflow-stage.sh` 只保留稳定入口 wrapper。
 - `harness/workflow-plugins/code-workflow/archive_task_artifacts.sh` 是 shared `code-workflow` 安装到项目 harness 内的归档入口；不再保留 `scripts/archive-task-artifacts.sh`。
 - stage runner 只负责发现、排序、执行插件，不理解业务规则。
 

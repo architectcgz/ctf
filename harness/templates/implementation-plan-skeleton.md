@@ -1,4 +1,4 @@
-<!-- Managed by code-workflow package (version: 2026-06-06.4) -->
+<!-- Managed by code-workflow package (version: 2026-06-06.5) -->
 # __TASK_TITLE__ Implementation Plan
 
 **Goal:** TODO

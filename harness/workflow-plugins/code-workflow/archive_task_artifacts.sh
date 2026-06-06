@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Managed by code-workflow package (version: 2026-06-06.4)
+# Managed by code-workflow package (version: 2026-06-06.5)
 set -euo pipefail
 
 usage() {

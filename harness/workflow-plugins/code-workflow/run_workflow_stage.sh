@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
+# Managed by code-workflow package (version: 2026-06-06.5)
 set -euo pipefail
 
 usage() {
-  cat <<'EOF' >&2
+  cat <<'EOH' >&2
 Usage:
   bash scripts/run-workflow-stage.sh <stage>
 
@@ -10,7 +11,7 @@ Stages:
   pre-commit-quick
   completion-full
   workflow-governance
-EOF
+EOH
 }
 
 changed_files() {
