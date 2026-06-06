@@ -22,7 +22,7 @@ run_check() {
 
 cd "$ROOT_DIR"
 
-run_check "review governance stage" bash scripts/run-workflow-stage.sh review-governance
+run_check "workflow governance stage" bash scripts/run-workflow-stage.sh workflow-governance
 run_check "completion-full stage" bash scripts/run-workflow-stage.sh completion-full
 
 if [[ "$fail" -eq 0 ]]; then

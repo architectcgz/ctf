@@ -35,7 +35,8 @@ done < "$EXECUTABLE_LIST"
 echo "[doctor] harness check bodies"
 check "harness/checks/check_code_change_contracts.sh exists" test -f "harness/checks/check_code_change_contracts.sh"
 check "harness/checks/check_frontend_test_guard.sh exists" test -f "harness/checks/check_frontend_test_guard.sh"
-check "harness/checks/check_review_governance_core.sh exists" test -f "harness/checks/check_review_governance_core.sh"
+check "harness/checks/check_workflow_governance_core.sh exists" test -f "harness/checks/check_workflow_governance_core.sh"
+check "harness/checks/check_agent_entrypoints.sh exists" test -f "harness/checks/check_agent_entrypoints.sh"
 check "harness/checks/check_local_harness_setup.sh exists" test -f "harness/checks/check_local_harness_setup.sh"
 check "harness/checks/check_local_toolchain.sh exists" test -f "harness/checks/check_local_toolchain.sh"
 check "harness/checks/check_local_workflow_assets.sh exists" test -f "harness/checks/check_local_workflow_assets.sh"
@@ -49,7 +50,8 @@ check "harness/policies/script-layer-manifest.json exists" test -f "harness/poli
 check "workflow plugin root exists" test -d "harness/workflow-plugins/code-workflow"
 check "pre-commit stage plugin dir exists" test -d "harness/workflow-plugins/code-workflow/pre-commit-quick.d"
 check "completion stage plugin dir exists" test -d "harness/workflow-plugins/code-workflow/completion-full.d"
-check "review stage plugin dir exists" test -d "harness/workflow-plugins/code-workflow/review-governance.d"
+check "workflow governance stage plugin dir exists" test -d "harness/workflow-plugins/code-workflow/workflow-governance.d"
+check "agent entrypoints stay aligned" bash scripts/check-agent-entrypoints.sh
 check "script layer check passes" bash scripts/check-script-layer.sh
 
 exit "$fail"

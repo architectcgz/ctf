@@ -21,7 +21,7 @@
 
 - Objective:
   - 为 `ctf` 增加统一 stage runner 和项目本地 plugin 目录约定。
-  - 将 pre-commit、completion、review-governance 三类现有守卫改为通过 stage runner 执行。
+  - 将 pre-commit、completion、workflow-governance 三类现有守卫改为通过 stage runner 执行。
   - 保留现有守卫脚本本身，不重写 backend/frontend/review 的具体检查逻辑。
   - 更新项目文档与入口说明，使“workflow 本体”和“项目插件”边界清楚。
 - Non-Goals:
@@ -35,7 +35,7 @@
   - `AGENTS.md`
   - `scripts/start-implementation.sh`
   - `scripts/check-workflow-complete.sh`
-  - `scripts/check-review-governance.sh`
+  - `scripts/check-workflow-governance.sh`
   - `.githooks/pre-commit`
   - `~/.agents/skills/code-workflow/SKILL.md`
   - `~/.agents/skills/harness-workflow/SKILL.md`
@@ -46,7 +46,7 @@
   - `scripts/check-code-changes.sh`
 - Related prior work:
   - `2026-06-06-commit-gate-timing-repair`
-  - `scripts/check-consistency.sh -> scripts/check-review-governance.sh` 的治理入口拆分
+  - `scripts/check-consistency.sh -> scripts/check-workflow-governance.sh` 的治理入口拆分
 
 ## Task Classification
 
@@ -60,12 +60,12 @@
   - `scripts/run-workflow-stage.sh`
   - `harness/workflow-plugins/code-workflow/pre-commit-quick.d/*.sh`
   - `harness/workflow-plugins/code-workflow/completion-full.d/*.sh`
-  - `harness/workflow-plugins/code-workflow/review-governance.d/*.sh`
+  - `harness/workflow-plugins/code-workflow/workflow-governance.d/*.sh`
   - 可能需要 `harness/workflow-plugins/code-workflow/README.md`
 - Modify:
   - `.githooks/pre-commit`
   - `scripts/check-workflow-complete.sh`
-  - `scripts/check-review-governance.sh`
+  - `scripts/check-workflow-governance.sh`
   - `AGENTS.md`
   - 相关 README / harness 文档（按实际 touched surface 收口）
 - Review:
@@ -73,7 +73,7 @@
   - stage 名称和 hook / completion / review 时机是否一致
 - Test:
   - `bash scripts/run-workflow-stage.sh pre-commit-quick`
-  - `bash scripts/run-workflow-stage.sh review-governance`
+  - `bash scripts/run-workflow-stage.sh workflow-governance`
   - `bash scripts/run-workflow-stage.sh completion-full`
   - `bash scripts/check-workflow-complete.sh`
   - 视情况补 `git commit` 触发 hook 的真实链路验证
@@ -82,7 +82,7 @@
 
 - Existing patterns searched:
   - shared `code-workflow` 提供 startup / archive / gate 骨架
-  - `ctf` 已有 `check-architecture`、`check-workflow-complete`、`check-review-governance` 的分层
+  - `ctf` 已有 `check-architecture`、`check-workflow-complete`、`check-workflow-governance` 的分层
 - Reuse / extend / split / create-new decision:
   - 复用现有守卫脚本。
   - 新增一个薄的 stage runner。
@@ -98,7 +98,7 @@
 
 - Commands:
   - `bash scripts/run-workflow-stage.sh pre-commit-quick`
-  - `bash scripts/run-workflow-stage.sh review-governance`
+  - `bash scripts/run-workflow-stage.sh workflow-governance`
   - `bash scripts/run-workflow-stage.sh completion-full`
   - `bash scripts/check-workflow-complete.sh`
   - `git status --short`

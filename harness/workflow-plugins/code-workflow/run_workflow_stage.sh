@@ -9,7 +9,7 @@ Usage:
 Stages:
   pre-commit-quick
   completion-full
-  review-governance
+  workflow-governance
 EOF
 }
 
@@ -33,8 +33,17 @@ if [[ $# -lt 1 ]]; then
 fi
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-STAGE="$1"
+REQUESTED_STAGE="$1"
 shift
+
+case "$REQUESTED_STAGE" in
+  review-governance)
+    STAGE="workflow-governance"
+    ;;
+  *)
+    STAGE="$REQUESTED_STAGE"
+    ;;
+esac
 
 PLUGIN_DIR="$ROOT_DIR/harness/workflow-plugins/code-workflow/${STAGE}.d"
 
@@ -66,6 +75,9 @@ export WORKFLOW_TASK_SLUG="$(
 fail=0
 
 echo "[workflow-stage] $STAGE"
+if [[ "$REQUESTED_STAGE" != "$STAGE" ]]; then
+  echo "  [alias] $REQUESTED_STAGE -> $STAGE"
+fi
 
 for plugin in "${plugins[@]}"; do
   label="$(basename "$plugin")"

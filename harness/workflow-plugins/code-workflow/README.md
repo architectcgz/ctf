@@ -14,13 +14,14 @@
 
 - `pre-commit-quick.d/`：提交前轻量门禁，只跑当前改动强相关的快速检查。
 - `completion-full.d/`：任务收尾时的完整代码级检查。
-- `review-governance.d/`：review / doctor / 治理审计阶段。
+- `workflow-governance.d/`：`code-workflow` 后置的 workflow 治理审计阶段。
 
 阶段时机：
 
 - `pre-commit-quick` 只放“每次提交都不该退化”的便宜硬约束。目标是尽早阻断错误边界，避免坏状态继续扩散到后续提交。
 - `completion-full` 放明显更重、但适合在任务收尾时统一确认的完整检查；它不是用来替代 pre-commit，而是补齐 pre-commit 故意没有放进去的重检查。
-- `review-governance` 放仓库导航、文档事实源、OpenAPI 同步、guardrail 接线这类治理审计；这些不要求每次提交都无条件阻断，但在 review / doctor 前必须可验证。
+- `workflow-governance` 放仓库导航、文档事实源、OpenAPI 同步、guardrail 接线这类治理审计；这些不要求每次提交都无条件阻断，但在 workflow 收尾 / doctor 前必须可验证。
+- `AGENTS.md / CLAUDE.md` 入口一致性不再把 `workflow-governance` 当主 owner；主检查放在 `scripts/check-agent-entrypoints.sh`，并由 `scripts/doctor-local-harness.sh` 与 `scripts/install-agent-symlinks.sh` 提前执行，`workflow-governance` 只审计这条接线是否仍然存在。
 
 当前 `ctf` 的架构检查分层：
 
@@ -48,6 +49,10 @@
 不放在这里的内容：
 
 - `scripts/check-skill-sync-reminder.sh` 这类 harness 级知识治理提醒不属于 `code-workflow` 语义本体，应由 hook 或独立 harness 入口调用，而不是注册成 task workflow plugin。
+
+兼容说明：
+
+- 历史命令里的 `review-governance` / `check-review-governance.sh` 仍可继续调用，但它们现在只作为兼容别名转发到 `workflow-governance`。
 
 插件约定：
 

@@ -94,9 +94,9 @@
   - global `~/.agents/skills/code-workflow/SKILL.md`
 - Review:
   - `harness/workflow-plugins/code-workflow/README.md`
-  - `scripts/check-review-governance.sh`
+  - `scripts/check-workflow-governance.sh`
 - Test:
-  - `scripts/check-review-governance.sh`
+  - `scripts/check-workflow-governance.sh`
   - `scripts/check-consistency.sh`
   - `scripts/doctor-local-harness.sh`
   - `scripts/check-commit-message.sh`
@@ -140,7 +140,7 @@
 
 - Commands:
   - `bash scripts/check-skill-sync-reminder.sh --working`
-  - `bash scripts/check-review-governance.sh`
+  - `bash scripts/check-workflow-governance.sh`
   - `bash scripts/check-consistency.sh`
   - `bash scripts/check-script-layer.sh`
   - `bash scripts/install-agent-symlinks.sh`

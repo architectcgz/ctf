@@ -11,46 +11,35 @@ run_navigation_checks() {
   check_contains "AGENTS.md" 'practice/' "AGENTS references practice"
   check_contains "AGENTS.md" 'feedback/' "AGENTS references feedback"
   check_contains "AGENTS.md" 'works/' "AGENTS references works"
-  check_contains "AGENTS.md" 'harness/bridges/' "AGENTS references harness bridges"
+  check_contains "AGENTS.md" 'harness/workflow-plugins/' "AGENTS references workflow plugin adapters"
   check_contains "AGENTS.md" 'harness/prompts/' "AGENTS references harness prompts"
   check_contains "AGENTS.md" 'references/' "AGENTS references references"
 
-  echo "[C2a] project CLAUDE entrypoint stays aligned"
-  if [[ -L "CLAUDE.md" ]]; then
-    if [[ "$(readlink -f CLAUDE.md)" == "$(readlink -f AGENTS.md)" ]]; then
-      echo "  $(green PASS) — CLAUDE.md points to AGENTS.md"
-    else
-      echo "  $(red FAIL) — CLAUDE.md does not resolve to AGENTS.md"
-      fail=1
-    fi
-  else
-    echo "  $(red FAIL) — CLAUDE.md must be a symlink to AGENTS.md"
-    fail=1
-  fi
+  echo "[C2a] project entrypoint checks stay owned by local harness setup"
+  check_file "scripts/check-agent-entrypoints.sh"
+  check_file "harness/checks/check_agent_entrypoints.sh"
+  check_contains "AGENTS.md" 'scripts/check-agent-entrypoints\.sh' "AGENTS references project entrypoint checker"
+  check_contains "scripts/check-agent-entrypoints.sh" 'harness/checks/check_agent_entrypoints\.sh' "entrypoint wrapper delegates to harness check"
+  check_contains "harness/checks/check_local_harness_setup.sh" 'scripts/check-agent-entrypoints\.sh' "local harness setup runs entrypoint checks"
+  check_contains "scripts/install-agent-symlinks.sh" 'scripts/check-agent-entrypoints\.sh' "shared skill installer re-checks entrypoints"
 
   echo "[C2b] shared skill bridge stays aligned"
-  check_file "scripts/check-agent-entrypoints.sh"
   check_file "scripts/check-shared-skills.sh"
   check_dir "harness/checks"
-  check_file "harness/checks/check_agent_entrypoints.sh"
   check_file "harness/checks/check_shared_skills.sh"
   check_file "scripts/install-agent-symlinks.sh"
   check_file "scripts/uninstall-agent-symlinks.sh"
-  check_dir "harness/bridges"
-  check_file "harness/bridges/README.md"
-  check_file "harness/bridges/install-agent-symlinks.sh"
-  check_file "harness/bridges/uninstall-agent-symlinks.sh"
   check_contains "AGENTS.md" '\.agents/skills/' "AGENTS references shared skill source"
   check_contains "AGENTS.md" 'scripts/install-agent-symlinks\.sh' "AGENTS references shared skill installer"
-  check_contains "scripts/check-agent-entrypoints.sh" 'harness/checks/check_agent_entrypoints\.sh' "check-agent-entrypoints wrapper delegates to harness check"
   check_contains "scripts/check-shared-skills.sh" 'harness/checks/check_shared_skills\.sh' "check-shared-skills wrapper delegates to harness check"
-  check_contains "scripts/install-agent-symlinks.sh" 'harness/bridges/install-agent-symlinks\.sh' "install-agent-symlinks wrapper delegates to harness bridge"
-  check_contains "scripts/uninstall-agent-symlinks.sh" 'harness/bridges/uninstall-agent-symlinks\.sh' "uninstall-agent-symlinks wrapper delegates to harness bridge"
-  if [[ -x "scripts/check-agent-entrypoints.sh" ]]; then
-    bash scripts/check-agent-entrypoints.sh
-  else
-    echo "  $(red FAIL) — scripts/check-agent-entrypoints.sh is not executable"
+  check_contains "scripts/install-agent-symlinks.sh" '\.agents/skills' "install-agent-symlinks reads project shared skills"
+  check_contains "scripts/install-agent-symlinks.sh" 'scripts/check-shared-skills\.sh' "install-agent-symlinks validates shared skills before linking"
+  check_contains "scripts/uninstall-agent-symlinks.sh" '\.agents/skills' "uninstall-agent-symlinks resolves project shared skills"
+  if [[ -e "harness/bridges" ]]; then
+    echo "  $(red FAIL) — harness/bridges must not exist; ordinary project commands should live in scripts/ or harness/checks/"
     fail=1
+  else
+    echo "  $(green PASS) — harness/bridges is absent"
   fi
   if [[ -x "scripts/check-shared-skills.sh" ]]; then
     bash scripts/check-shared-skills.sh
@@ -96,6 +85,8 @@ run_navigation_checks() {
   fi
   check_file ".githooks/commit-msg"
   check_file "scripts/check-commit-message.sh"
+  check_file "scripts/check-workflow-governance.sh"
+  check_file "scripts/check-workflow-governance-core.sh"
   check_file "scripts/check-review-governance.sh"
   check_file "scripts/check-review-governance-core.sh"
   check_file "scripts/run-workflow-stage.sh"
@@ -103,8 +94,9 @@ run_navigation_checks() {
   check_file "scripts/check-frontend-test-guard.sh"
   check_file "scripts/check-startup-gate.sh"
   check_contains ".githooks/commit-msg" 'scripts/check-commit-message\.sh' "commit-msg runs scripts/check-commit-message.sh"
-  check_contains "scripts/check-consistency.sh" 'scripts/check-review-governance\.sh' "check-consistency delegates to review governance"
-  check_contains "scripts/check-review-governance.sh" 'scripts/run-workflow-stage\.sh review-governance' "review governance wrapper uses stage runner"
+  check_contains "scripts/check-consistency.sh" 'scripts/check-workflow-governance\.sh' "check-consistency delegates to workflow governance"
+  check_contains "scripts/check-workflow-governance.sh" 'scripts/run-workflow-stage\.sh workflow-governance' "workflow governance wrapper uses stage runner"
+  check_contains "scripts/check-review-governance.sh" 'scripts/check-workflow-governance\.sh' "review governance wrapper stays as compatibility alias"
   check_contains ".githooks/README.md" 'scripts/check-commit-message\.sh' "hook docs mention commit message checks"
   check_contains ".githooks/README.md" 'harness/policies/commit-message\.json' "hook docs mention commit message policy"
   check_contains ".githooks/README.md" 'scripts/run-workflow-stage\.sh pre-commit-quick' "hook docs mention workflow stage runner"

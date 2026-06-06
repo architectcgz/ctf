@@ -2,6 +2,8 @@
 .githooks/commit-msg
 scripts/check-consistency.sh
 scripts/run-workflow-stage.sh
+scripts/check-workflow-governance.sh
+scripts/check-workflow-governance-core.sh
 scripts/check-review-governance.sh
 scripts/check-review-governance-core.sh
 scripts/check-frontend-test-guard.sh

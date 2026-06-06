@@ -2,4 +2,4 @@
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
-exec bash harness/checks/check_workflow_governance_core.sh "$@"
+bash scripts/check-workflow-governance-core.sh

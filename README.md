@@ -165,6 +165,6 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 治理审计：
 
 ```bash
-bash scripts/check-review-governance.sh
+bash scripts/check-workflow-governance.sh
 ```
 <!-- END HARNESS ENGINEERING: readme-harness -->

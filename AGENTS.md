@@ -4,15 +4,15 @@
 
 - 本仓库默认先进入 harness：除非任务明显简单、局部、可逆且不需要沉淀经验，否则开始前必须先按 `harness-router` 判断 `SIMPLE` / `HARNESS`。
 - 路线为 `HARNESS` 时，先读本文件和相关 harness 入口，再决定是否需要计划、review、验证或更新 `feedback/`、`harness/prompts/`、`references/`、`works/`。
-- 任务分流使用全局 `harness-router` skill；完整治理审计使用 `bash scripts/check-review-governance.sh`，提交前本地只跑与当前改动强相关的轻量门禁。`bash scripts/check-consistency.sh` 仅保留为兼容别名。
-- 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；这条约束由 `bash scripts/check-review-governance.sh` 机械检查。
+- 任务分流使用全局 `harness-router` skill；完整治理审计使用 `bash scripts/check-workflow-governance.sh`，提交前本地只跑与当前改动强相关的轻量门禁。`bash scripts/check-review-governance.sh` 与 `bash scripts/check-consistency.sh` 仅保留为兼容别名。
+- 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；主检查入口是 `bash scripts/check-agent-entrypoints.sh`，并由 `bash scripts/doctor-local-harness.sh` 与 `bash scripts/install-agent-symlinks.sh` 主动执行，`bash scripts/check-workflow-governance.sh` 只保留 wiring 审计兜底。
 - 项目级 workflow 守卫统一注册在 `harness/workflow-plugins/code-workflow/`；shared `code-workflow` 只提供 stage 模型，`ctf` 自己 owner 每个 stage 下要跑的插件集合。
-- 如果需要理解 `pre-commit-quick / completion-full / review-governance` 的时机划分，以及为什么 backend module boundary 仍留在提交前，优先读 `harness/workflow-plugins/code-workflow/README.md`。
-- 项目本地、长期存在的 harness adapter 统一放在 `harness/bridges/`；`scripts/` 顶层文件保留为稳定入口层并转发到这些 bridge，`tools/` 存放工程工具入口，`.harness/` 只放任务态 / 本地态资料，不承载长期接线。
+- 如果需要理解 `pre-commit-quick / completion-full / workflow-governance` 的时机划分，以及为什么 backend module boundary 仍留在提交前，优先读 `harness/workflow-plugins/code-workflow/README.md`。
+- `scripts/` 顶层文件保留为稳定入口层；项目本地机械检查主体放在 `harness/checks/`，只有像 `code-workflow` 这样确实需要共享 workflow 项目适配的能力，才放到 `harness/workflow-plugins/`。`tools/` 存放工程工具入口，`.harness/` 只放任务态 / 本地态资料，不承载长期接线。
 - 跨 agent 共享的项目级 skill 源放在 `.agents/skills/`；`Claude` 通过 `.claude/skills -> ../.agents/skills` 读取，`Codex` 通过 `bash scripts/install-agent-symlinks.sh` 安装到 `~/.codex/skills/`。
 - 开始新任务前，先运行 `bash scripts/check-task-intake.sh`；它会调用 `bash scripts/check-open-todos.sh --quiet-if-empty` 提示 `docs/todos/` 里未收口事项。
-- 若任务属于 `非琐碎任务`，或会进入受保护实现面，必须先运行 `bash scripts/start-implementation.sh <topic-or-slug>`；统一入口会创建独立 worktree、task slug、implementation plan 和 `.harness/session-gates/<task-slug>.json`。
-- 进入实现前，先在该 task worktree 内完成 intake analysis gate：优先选择合适的 `superpowers` 分析 skill，通常是 `brainstorming`，bug / 异常任务优先 `systematic-debugging`；随后运行 `grill-with-docs` 查漏补缺，再据此收口 implementation plan。
+- 若任务属于 `非琐碎任务`，或会进入受保护实现面，先绑定 task slug、implementation plan 和 `.harness/session-gates/<task-slug>.json`。默认入口仍是 `bash scripts/start-implementation.sh <topic-or-slug>`；若 `main` 干净、当前没有并行任务且不需要额外隔离，可以直接在当前 worktree 绑定，不强制再开新 worktree。
+- 进入实现前，先在当前 task 上下文内完成 intake analysis gate：优先选择合适的 `superpowers` 分析 skill，通常是 `brainstorming`，bug / 异常任务优先 `systematic-debugging`；随后运行 `grill-with-docs` 查漏补缺，再据此收口 implementation plan。
 - 对 `API / filter / sort / pagination` 契约改动，plan review 必须写清 `normalize / default / validate` 的唯一 owner，至少覆盖 `handler -> application -> repository` 三层。
 - 对同一输入语义出现跨层重复 `normalize/default/validate` 的情况，默认不视为“安全兜底”。除非其中一层承担明确 trust-boundary 防御且理由写清，否则应继续收口成单点 owner。
 - 内部 `filter / sort / pagination` contract 应收口成 downstream 不易误用的表示，优先 opaque value object、受控构造器或不可直接手工拼装的字段。
@@ -68,8 +68,8 @@
 - 本仓库提交信息格式固定为“标题 + 正文”两段结构。标题仍使用 `英文类型(可选 scope): 中文描述`，例如 `fix(frontend): 修正拓扑页导出按钮禁用态`；`fix`、`refactor`、`docs`、`chore` 等类型前缀必须使用英文。
 - 具体提交策略放在 `harness/policies/commit-message.json`，由 `scripts/check-commit-message.sh` 调全局 `~/.agents/harness/commit-message/check_commit_message.py` 执行。
 - 普通提交不能只有单行标题；正文至少提供两行有效内容，并说明改动点、原因、影响或验证中的关键信息。若当前 worktree 有激活中的 task gate，还必须显式写一行 `Task: <task-slug>`；这类元数据不计入正文说明行数和信息量统计。提交时优先使用多个 `-m` 组织标题和正文。
-- `琐碎任务` 默认允许直接在当前工作区修改；`非琐碎任务` 和命中 startup gate 的受保护实现面，默认必须先走 `scripts/start-implementation.sh` 创建独立 worktree。
-- 非琐碎实现任务沿用共享 `code-workflow`：一项任务绑定一个独立 worktree、一个 task slug、一份 implementation plan 和一条本地 startup gate 记录。
+- `琐碎任务` 默认允许直接在当前工作区修改；`非琐碎任务` 和命中 startup gate 的受保护实现面，默认必须先绑定 task slug、implementation plan 和本地 startup gate。若 `main` 干净且没有并行隔离需求，当前 worktree 可以直接作为这组绑定的执行上下文。
+- 非琐碎实现任务沿用共享 `code-workflow`：一项任务至少绑定一个隔离执行上下文、一个 task slug、一份 implementation plan 和一条本地 startup gate 记录；隔离执行上下文通常是独立 worktree，但在 `main` 干净且无需并行时也可以是当前 worktree。
 - 纯文档编辑默认直接在当前分支修改，不创建新分支、不创建新 worktree；但如果文档本身属于某个非琐碎任务的交付物，仍应跟随该任务 worktree。
 - 更新前端 UI、页面样式、视觉优化时，局部可逆的小改可以直接在当前工作区处理；一旦触达页面 owner、共享组件 contract、跨页面样式模式或其他受保护 surface，就按非琐碎任务进入统一入口。
 - 若当前仓库实际不在 `main`，先说明当前所在分支，再按用户意图继续执行。
@@ -107,8 +107,8 @@
 - `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`references/` 是 harness 顶层目录；各目录局部规则见对应 `AGENTS.md`。
 - `scripts/` 顶层文件是稳定入口层：给 hook、README、AGENTS、review 流程和操作者长期直接调用；新增顶层入口前，先更新 `harness/policies/script-layer-manifest.json` 并通过 `bash scripts/check-script-layer.sh`。
 - `harness/checks/` 存放项目本地、可提交、长期维护的机械检查主体；`scripts/` 中对应 `check-*` 命令默认只保留稳定 wrapper 入口。
-- `scripts/check-review-governance-core.sh` 与 `scripts/doctor-local-harness.sh` 也是稳定入口；真正的检查主体默认继续下沉到 `harness/checks/`，不要再把大段检查逻辑直接堆回 `scripts/`。
-- `harness/bridges/` 存放项目本地、可提交、长期维护的 harness bridge / adapter；这层只负责把共享 harness 能力和本项目路径、policy、入口约定接起来。
+- `scripts/check-workflow-governance-core.sh`、`scripts/check-review-governance-core.sh` 与 `scripts/doctor-local-harness.sh` 也是稳定入口；真正的检查主体默认继续下沉到 `harness/checks/`，不要再把大段检查逻辑直接堆回 `scripts/`。
+- `harness/workflow-plugins/` 存放共享 workflow 的项目适配层，例如 `code-workflow` 的 stage plugin 和 stage runner；不要再把普通稳定入口、薄脚本转发或项目检查主体泛化成额外 `bridge` 目录。
 - `tools/` 存放项目工程工具入口，例如依赖准备、OpenAPI bundle 同步、E2E 演练；它们不承担默认 hook / review 稳定入口职责。
 - `scripts/challenges/`、`scripts/registry/`、`scripts/lib/` 这类子目录属于命名空间，不等同于 `scripts/` 顶层稳定入口层；新增子目录前同样要先登记到 `harness/policies/script-layer-manifest.json`。
 - `.harness/` 保存当前任务状态、短期执行证据和用户本地私有索引；其中 `.harness/session-gates/` 只放本地启动凭证，`.harness/reuse-decisions/` 只放按需补充的任务证据，`.harness/reuse-index/` 只放用户自用的长期复用索引，不进入版本控制。
@@ -140,4 +140,4 @@
 - `works/`：可展示模板、报告和说明。
 - `harness/prompts/`：项目内 prompt 入口、局部补充，以及仍然只属于本仓库的 prompt；共享正文上收到 `/home/azhi/.agents/harness/prompts/`。
 - `references/`：文章、仓库和工具索引。
-- 机械化检查：`bash scripts/check-review-governance.sh`（`bash scripts/check-consistency.sh` 为兼容别名）。
+- 机械化检查：`bash scripts/check-workflow-governance.sh`（`bash scripts/check-review-governance.sh`、`bash scripts/check-consistency.sh` 为兼容别名）。

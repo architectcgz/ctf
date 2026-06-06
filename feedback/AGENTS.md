@@ -16,7 +16,7 @@
 - 结构：问题描述 → 原因分析 → 解决方案 → 收获 → 沉淀状态
 - `沉淀状态` 必须说明状态、owner 和链接，避免 feedback 只积累、不归位。
 - 如果反馈导致 `harness/prompts/`、concepts、脚本、AGENTS 或 skill 更新，必须交叉链接。
-- 新增或修改的 `feedback/*.md` 会被 `scripts/check-review-governance.sh` 检查是否包含 `## 沉淀状态`。
+- 新增或修改的 `feedback/*.md` 会被 `scripts/check-workflow-governance.sh` 检查是否包含 `## 沉淀状态`。
 
 ## 沉淀状态字段
 
@@ -26,7 +26,7 @@
 ## 沉淀状态
 
 - 状态：已沉淀 / 仅项目保留 / 待同步 skill / 已机械化 / 已废弃
-- Owner：frontend-engineer skill / scripts/check-review-governance.sh / ctf AGENTS.md / .harness/reuse-index/index.yaml
+- Owner：frontend-engineer skill / scripts/check-workflow-governance.sh / ctf AGENTS.md / .harness/reuse-index/index.yaml
 - 链接：...
 ```
 

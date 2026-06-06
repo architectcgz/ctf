@@ -10,6 +10,8 @@
     "scripts/check-frontend-architecture.sh",
     "scripts/check-frontend-test-guard.sh",
     "scripts/check-open-todos.sh",
+    "scripts/check-workflow-governance-core.sh",
+    "scripts/check-workflow-governance.sh",
     "scripts/check-review-governance-core.sh",
     "scripts/check-review-governance.sh",
     "scripts/check-script-layer.sh",

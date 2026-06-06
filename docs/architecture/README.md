@@ -43,9 +43,10 @@
 - `scripts/check-frontend-architecture.sh --full`：在 quick 基础上补充前端热点文件增长守卫、feature owner boundary、overlay 结构约束和前端主题 token 检查。
 - `scripts/check-architecture.sh --quick`：聚合执行 backend quick + frontend quick。
 - `scripts/check-architecture.sh --full`：聚合执行 backend full + frontend full。
-- `harness/workflow-plugins/code-workflow/`：项目把本地 guardrail 挂到 `pre-commit-quick`、`completion-full`、`review-governance` 这三个 workflow stage 的注册点。
+- `harness/workflow-plugins/code-workflow/`：项目把本地 guardrail 挂到 `pre-commit-quick`、`completion-full`、`workflow-governance` 这三个 workflow stage 的注册点。
 - `python3 scripts/check-docs-consistency.py`：检查架构文档状态、索引引用与 `## 当前设计` 结构底线。
-- `scripts/check-review-governance.sh`：检查 harness 入口、脚本接线与本地 guardrail 是否接入。
+- `scripts/check-workflow-governance.sh`：检查 harness 导航、脚本接线与本地 guardrail 是否接入。
+- `scripts/check-agent-entrypoints.sh` / `scripts/doctor-local-harness.sh`：检查项目根 agent 入口软链接与共享 skill 入口接线是否仍然对齐。
 
 主要代码级 guardrail：
 

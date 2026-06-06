@@ -3,4 +3,4 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$script_dir/.."
-exec bash scripts/check-workflow-governance.sh "$@"
+exec bash scripts/run-workflow-stage.sh workflow-governance "$@"

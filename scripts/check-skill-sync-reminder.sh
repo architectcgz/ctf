@@ -2,6 +2,6 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$script_dir/.."
+repo_root="$(cd "$script_dir/.." && pwd)"
 
-exec bash harness/bridges/check-skill-sync-reminder.sh "$@"
+exec python3 ~/.agents/harness/skill-sync/remind_skill_sync.py --cwd "$repo_root" "$@"
