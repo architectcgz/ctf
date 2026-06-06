@@ -122,3 +122,20 @@ EOF
   esac
   exit 1
 fi
+
+active_task_slug="$(bash scripts/check-startup-gate.sh --print-active-slug 2>/dev/null || true)"
+if [[ -n "$active_task_slug" ]]; then
+  if ! grep -Eq "^Task:[[:space:]]+$active_task_slug$" "$message_file"; then
+    cat >&2 <<EOF
+[commit-msg] 当前 worktree 存在激活中的非琐碎任务 gate，提交正文必须显式带上 task slug。
+要求：
+  - 在正文单独写一行：Task: $active_task_slug
+示例：
+  git commit -m "refactor(workflow): 拆分 shared skill 校验" \\
+    -m "把 shared skill 完整性检查从 consistency 总脚本里拆成独立子脚本。" \\
+    -m "同步让安装脚本与治理审计分别调用，减少职责混写。" \\
+    -m "Task: $active_task_slug"
+EOF
+    exit 1
+  fi
+fi

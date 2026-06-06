@@ -1,9 +1,10 @@
-# Reuse Decision
+# Supplemental Reuse Decision
 
 Suggested path: `.harness/reuse-decisions/<task-slug>.md`
 
-This file is task-scoped current-task evidence.
-Keep one reuse decision file per protected task and do not overwrite another task's decision file.
+This file is optional supplemental current-task evidence.
+The default place for reuse / owner reasoning is the active implementation plan's `## Files` and `## 复用与 Owner 决策` sections.
+Keep one supplemental reuse decision file per task only when the task is especially large, cross-module, or high-risk, and do not overwrite another task's decision file.
 Durable reuse knowledge belongs in:
 
 - `.harness/reuse-index/index.yaml` for searchable local pattern entries.

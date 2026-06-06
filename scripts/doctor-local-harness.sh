@@ -29,8 +29,8 @@ check ".githooks/commit-msg is executable" test -x ".githooks/commit-msg"
 echo "[doctor] harness scripts"
 check "scripts/check-consistency.sh is executable" test -x "scripts/check-consistency.sh"
 check "scripts/check-task-intake.sh is executable" test -x "scripts/check-task-intake.sh"
+check "scripts/start-implementation.sh is executable" test -x "scripts/start-implementation.sh"
 check "scripts/check-commit-message.sh is executable" test -x "scripts/check-commit-message.sh"
-check "scripts/check-reuse-first.sh is executable" test -x "scripts/check-reuse-first.sh"
 check "scripts/check-architecture.sh is executable" test -x "scripts/check-architecture.sh"
 check "scripts/check-backend-architecture.sh is executable" test -x "scripts/check-backend-architecture.sh"
 check "scripts/check-frontend-architecture.sh is executable" test -x "scripts/check-frontend-architecture.sh"
@@ -43,10 +43,11 @@ check "go is available" command -v go
 check "node is available" command -v node
 check "npm is available" command -v npm
 
-echo "[doctor] reuse-first assets"
-check ".harness/reuse-decisions exists" test -d ".harness/reuse-decisions"
+echo "[doctor] local workflow assets"
+check ".harness/session-gates directory is available or can be created" test -d ".harness/session-gates" -o ! -e ".harness/session-gates"
 check "legacy .harness/reuse-decision.md is absent" test ! -f ".harness/reuse-decision.md"
 check ".gitignore ignores .harness/reuse-index/" grep -qx '/.harness/reuse-index/' ".gitignore"
+check ".gitignore ignores .harness/session-gates/" grep -qx '/.harness/session-gates/' ".gitignore"
 
 if [[ -d "code/frontend/node_modules" ]]; then
   echo "  $(green PASS) — code/frontend/node_modules exists"

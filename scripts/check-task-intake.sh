@@ -3,33 +3,16 @@ set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 
-reuse_document=""
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --reuse-decision)
-      if [[ $# -lt 2 ]]; then
-        echo "FAIL: --reuse-decision requires a task slug or document path" >&2
-        exit 1
-      fi
-      reuse_document="$2"
-      shift 2
-      ;;
-    *)
-      echo "FAIL: unknown argument: $1" >&2
-      echo "usage: bash scripts/check-task-intake.sh [--reuse-decision <task-slug-or-path>]" >&2
-      exit 1
-      ;;
-  esac
-done
+if [[ $# -gt 0 ]]; then
+  echo "FAIL: check-task-intake.sh no longer accepts task-scoped reuse arguments" >&2
+  echo "Use: bash scripts/start-implementation.sh <topic-or-slug>" >&2
+  exit 1
+fi
 
 if [[ -x "scripts/check-open-todos.sh" ]]; then
   bash scripts/check-open-todos.sh --quiet-if-empty
 fi
 
-if [[ -n "$reuse_document" ]]; then
-  python3 harness/checks/check-reuse-startup.py --document "$reuse_document"
-else
-  echo "PASS: task intake reminder completed"
-  echo "- no startup reuse-decision gate requested"
-fi
+echo "PASS: task intake reminder completed"
+echo "- reviewed open todos and local intake reminders"
+echo "- non-trivial or protected implementation should start with: bash scripts/start-implementation.sh <topic-or-slug>"

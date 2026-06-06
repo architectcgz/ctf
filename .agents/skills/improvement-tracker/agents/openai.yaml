@@ -1,0 +1,4 @@
+interface:
+  display_name: "Improvement Tracker"
+  short_description: "Record agent-discovered improvement gaps under feedback/ with durable status tracking"
+  default_prompt: "Use improvement-tracker to record this agent-discovered improvement under feedback/ with the correct status and evidence."

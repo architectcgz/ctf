@@ -11,7 +11,6 @@ chmod +x scripts/check-consistency.sh
 chmod +x scripts/check-frontend-test-guard.sh
 chmod +x scripts/check-architecture.sh
 chmod +x scripts/check-commit-message.sh
-chmod +x scripts/check-reuse-first.sh
 chmod +x scripts/check-skill-sync-reminder.sh
 chmod +x scripts/sync_openapi_from_contract.py
 

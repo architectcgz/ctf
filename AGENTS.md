@@ -4,8 +4,11 @@
 
 - 本仓库默认先进入 harness：除非任务明显简单、局部、可逆且不需要沉淀经验，否则开始前必须先按 `harness-router` 判断 `SIMPLE` / `HARNESS`。
 - 路线为 `HARNESS` 时，先读本文件和相关 harness 入口，再决定是否需要计划、review、验证或更新 `feedback/`、`harness/prompts/`、`references/`、`works/`。
-- 任务分流使用全局 `harness-router` skill；机械化检查使用 `bash scripts/check-consistency.sh`。
-- 开始新任务前，先运行 `bash scripts/check-task-intake.sh`；它会调用 `bash scripts/check-open-todos.sh --quiet-if-empty` 提示 `docs/todos/` 里未收口事项。若将进入受保护实现面，必须在动代码前运行 `bash scripts/check-task-intake.sh --reuse-decision <task-slug>`，先让 task-scoped reuse decision 过 startup gate，再进入实现。
+- 任务分流使用全局 `harness-router` skill；完整治理审计使用 `bash scripts/check-consistency.sh`，提交前本地只跑与当前改动强相关的轻量门禁。
+- 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；这条约束由 `bash scripts/check-consistency.sh` 机械检查。
+- 跨 agent 共享的项目级 skill 源放在 `.agents/skills/`；`Claude` 通过 `.claude/skills -> ../.agents/skills` 读取，`Codex` 通过 `bash scripts/install-agent-symlinks.sh` 安装到 `~/.codex/skills/`。
+- 开始新任务前，先运行 `bash scripts/check-task-intake.sh`；它会调用 `bash scripts/check-open-todos.sh --quiet-if-empty` 提示 `docs/todos/` 里未收口事项。
+- 若任务属于 `非琐碎任务`，或会进入受保护实现面，必须先运行 `bash scripts/start-implementation.sh <topic-or-slug>`；统一入口会创建独立 worktree、主 plan 和本地 startup gate，再进入实现。
 - 对 `API / filter / sort / pagination` 契约改动，plan review 必须写清 `normalize / default / validate` 的唯一 owner，至少覆盖 `handler -> application -> repository` 三层。
 - 对同一输入语义出现跨层重复 `normalize/default/validate` 的情况，默认不视为“安全兜底”。除非其中一层承担明确 trust-boundary 防御且理由写清，否则应继续收口成单点 owner。
 - 内部 `filter / sort / pagination` contract 应收口成 downstream 不易误用的表示，优先 opaque value object、受控构造器或不可直接手工拼装的字段。
@@ -45,23 +48,21 @@
   - 只服务教师后台 `/academy/*` 的能力，统一放在 `features/teacher/*`。
   - 不再新增语义上属于平台后台、但路径仍落在顶层 `features/*` 的 feature。
 
-## Reuse-First Workflow
+## Reuse And Owner Notes
 
-- reuse-first harness 是前后端实现前置约束，不是建议项；具体受保护类型、搜索范围和前后端复用模式以 `harness/policies/reuse-first.yaml`、`harness/policies/project-patterns.yaml` 和 `harness/templates/reuse-decision.md` 为准。
-- `scripts/check-task-intake.sh --reuse-decision <task-slug>` 是 reuse-first 的最早启动门禁；它检查 task-scoped reuse decision 是否已经存在且结构完整，然后才允许进入受保护实现。
-- 触发受保护改动时，编码前必须在 `.harness/reuse-decisions/<task-slug>.md` 完成当前任务 reuse decision；当前 diff 里的每个受保护文件都必须被至少一个有效的 reuse decision 文档覆盖。
-- `.harness/reuse-decision.md` 已废弃；仓库只接受 `.harness/reuse-decisions/` 下的 task-scoped reuse decision 文档。
-- 长期复用线索改为保存在本地私有的 `.harness/reuse-index/`；仓库级入口用 `.harness/reuse-index/index.yaml`，模块级 / 模块内部二级索引用 `.harness/reuse-index/<source-path>/README.md` 镜像源码目录，不再把这类个人索引提交进仓库。
-- 本地 workflow 是 reuse-first harness 的权威入口；`scripts/check-task-intake.sh` 负责实现前 startup gate，`scripts/check-reuse-first.sh` 和 `.githooks/pre-commit` 负责提交前终态检查。
+- 对普通非琐碎任务，复用与 owner 决策默认写在 active implementation plan 的 `## Files` 和 `## 复用与 Owner 决策` 章节里，不再单独依赖项目级 reuse-first 检查链路。
+- 如果某个任务确实需要补充当前任务证据，可以继续在 `.harness/reuse-decisions/` 下写独立说明；但它是补充记录，不是默认阻塞门禁。
+- 长期复用线索仍然可以保存在本地私有的 `.harness/reuse-index/`；它属于操作者自用索引，不属于本仓库提交前强校验的一部分。
+- `.harness/session-gates/` 保存本地 startup gate 凭证，不进 Git；它只用于当前 worktree 的非琐碎任务链路绑定。
 
 ## Workflow Overrides
 
 - 本节为 `ctf` 仓库内的覆盖规则；命中时优先于上层通用 worktree 约定。
 - 本仓库提交信息格式固定为“标题 + 正文”两段结构。标题仍使用 `英文类型(可选 scope): 中文描述`，例如 `fix(frontend): 修正拓扑页导出按钮禁用态`；`fix`、`refactor`、`docs`、`chore` 等类型前缀必须使用英文。
 - 普通提交不能只有单行标题；正文至少提供两行有效内容，并说明改动点、原因、影响或验证中的关键信息。提交时优先使用多个 `-m` 组织标题和正文。
-- 当用户没有明确指定“新分支 / worktree / 隔离开发”时，默认直接在当前主工作区的 `main` 分支修改。
-- 纯文档编辑默认直接在当前分支修改，不创建新分支、不创建新 worktree。
-- 更新前端 UI、页面样式、视觉优化时，默认直接在 `main` 分支修改；只有用户明确要求隔离开发时才创建新分支或 worktree。
+- `琐碎任务` 默认允许直接在当前工作区修改；`非琐碎任务` 和命中 startup gate 的受保护实现面，默认必须先走 `scripts/start-implementation.sh` 创建独立 worktree。
+- 纯文档编辑默认直接在当前分支修改，不创建新分支、不创建新 worktree；但如果文档本身属于某个非琐碎任务的交付物，仍应跟随该任务 worktree。
+- 更新前端 UI、页面样式、视觉优化时，局部可逆的小改可以直接在当前工作区处理；一旦触达页面 owner、共享组件 contract、跨页面样式模式或其他受保护 surface，就按非琐碎任务进入统一入口。
 - 若当前仓库实际不在 `main`，先说明当前所在分支，再按用户意图继续执行。
 - 若本地已启动前端开发服务，默认复用当前服务以便用户立即看到页面变化，不主动中断。
 
@@ -95,7 +96,7 @@
 - `docs/Q&A/`：会被重复引用的问答式说明。
 - `docs/thesis/`、`docs/weekly-reports/`、`docs/开题报告/`、`docs/文献/`、`docs/毕业设计文档相关/`：论文与学校材料，不混入产品事实源。
 - `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`references/` 是 harness 顶层目录；各目录局部规则见对应 `AGENTS.md`。
-- `.harness/` 保存当前任务状态、短期执行证据和用户本地私有索引；其中 `.harness/reuse-decisions/` 只放任务证据，`.harness/reuse-index/` 只放用户自用的长期复用索引，不进入版本控制。
+- `.harness/` 保存当前任务状态、短期执行证据和用户本地私有索引；其中 `.harness/session-gates/` 只放本地启动凭证，`.harness/reuse-decisions/` 只放按需补充的任务证据，`.harness/reuse-index/` 只放用户自用的长期复用索引，不进入版本控制。
 - 已稳定的结论要回收到对应事实源；旧中间稿在原位置标记 `Superseded by ...`。
 - 不再新增 `docs/improvements/`、`docs/superpowers/`、`docs/refs/`、`docs/skills/` 作为活动入口；对应内容分别进入 `feedback/`、`practice/`、`references/`、`harness/prompts/`。
 
