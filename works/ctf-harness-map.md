@@ -9,5 +9,5 @@
 - `practice/`：实验和初始化记录
 - `feedback/`：踩坑与修正
 - `works/`：可展示输出
-- `harness/prompts/`：已验证的项目级 agent 工作流 prompt
+- `harness/prompts/`：仓库内 prompt 入口与项目特化补充；共享正文位于 `/home/azhi/.agents/harness/prompts/`
 - `references/`：外部资料索引

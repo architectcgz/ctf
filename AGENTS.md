@@ -8,7 +8,8 @@
 - 项目根保持 `CLAUDE.md -> AGENTS.md` 软链接，保证不同 agent 的入口发现一致；这条约束由 `bash scripts/check-consistency.sh` 机械检查。
 - 跨 agent 共享的项目级 skill 源放在 `.agents/skills/`；`Claude` 通过 `.claude/skills -> ../.agents/skills` 读取，`Codex` 通过 `bash scripts/install-agent-symlinks.sh` 安装到 `~/.codex/skills/`。
 - 开始新任务前，先运行 `bash scripts/check-task-intake.sh`；它会调用 `bash scripts/check-open-todos.sh --quiet-if-empty` 提示 `docs/todos/` 里未收口事项。
-- 若任务属于 `非琐碎任务`，或会进入受保护实现面，必须先运行 `bash scripts/start-implementation.sh <topic-or-slug>`；统一入口会创建独立 worktree、主 plan 和本地 startup gate，再进入实现。
+- 若任务属于 `非琐碎任务`，或会进入受保护实现面，必须先运行 `bash scripts/start-implementation.sh <topic-or-slug>`；统一入口会创建独立 worktree、task slug、implementation plan 和 `.harness/session-gates/<task-slug>.json`。
+- 进入实现前，先在该 task worktree 内完成 intake analysis gate：优先选择合适的 `superpowers` 分析 skill，通常是 `brainstorming`，bug / 异常任务优先 `systematic-debugging`；随后运行 `grill-with-docs` 查漏补缺，再据此收口 implementation plan。
 - 对 `API / filter / sort / pagination` 契约改动，plan review 必须写清 `normalize / default / validate` 的唯一 owner，至少覆盖 `handler -> application -> repository` 三层。
 - 对同一输入语义出现跨层重复 `normalize/default/validate` 的情况，默认不视为“安全兜底”。除非其中一层承担明确 trust-boundary 防御且理由写清，否则应继续收口成单点 owner。
 - 内部 `filter / sort / pagination` contract 应收口成 downstream 不易误用的表示，优先 opaque value object、受控构造器或不可直接手工拼装的字段。
@@ -51,6 +52,10 @@
 ## Reuse And Owner Notes
 
 - 对普通非琐碎任务，复用与 owner 决策默认写在 active implementation plan 的 `## Files` 和 `## 复用与 Owner 决策` 章节里，不再单独依赖项目级 reuse-first 检查链路。
+- 非琐碎任务的启动时序由共享 `code-workflow` owner：`scripts/check-task-intake.sh` 负责 intake 提醒，`scripts/start-implementation.sh` 负责初始化 worktree / slug / plan / startup gate，`scripts/check-startup-gate.sh` 负责核验当前 worktree 的 gate 状态，完成后用 `scripts/archive-task-artifacts.sh` 归档 plan / task 工件。
+- 复用与 owner 决策默认写进 implementation plan 的“复用与 Owner 决策”一节，不再要求每个任务都先写独立 reuse decision 文档。
+- 对跨模块、高风险或 review 明确需要补充证据的任务，仍可在 `.harness/reuse-decisions/<task-slug>.md` 追加 standalone reuse decision；这类文档只作为补充证据，不再是共享启动 workflow 的唯一入口。
+- `.harness/reuse-decision.md` 已废弃；仓库只接受 `.harness/reuse-decisions/` 下的 task-scoped reuse decision 文档。
 - 如果某个任务确实需要补充当前任务证据，可以继续在 `.harness/reuse-decisions/` 下写独立说明；但它是补充记录，不是默认阻塞门禁。
 - 长期复用线索仍然可以保存在本地私有的 `.harness/reuse-index/`；它属于操作者自用索引，不属于本仓库提交前强校验的一部分。
 - `.harness/session-gates/` 保存本地 startup gate 凭证，不进 Git；它只用于当前 worktree 的非琐碎任务链路绑定。
@@ -61,6 +66,7 @@
 - 本仓库提交信息格式固定为“标题 + 正文”两段结构。标题仍使用 `英文类型(可选 scope): 中文描述`，例如 `fix(frontend): 修正拓扑页导出按钮禁用态`；`fix`、`refactor`、`docs`、`chore` 等类型前缀必须使用英文。
 - 普通提交不能只有单行标题；正文至少提供两行有效内容，并说明改动点、原因、影响或验证中的关键信息。提交时优先使用多个 `-m` 组织标题和正文。
 - `琐碎任务` 默认允许直接在当前工作区修改；`非琐碎任务` 和命中 startup gate 的受保护实现面，默认必须先走 `scripts/start-implementation.sh` 创建独立 worktree。
+- 非琐碎实现任务沿用共享 `code-workflow`：一项任务绑定一个独立 worktree、一个 task slug、一份 implementation plan 和一条本地 startup gate 记录。
 - 纯文档编辑默认直接在当前分支修改，不创建新分支、不创建新 worktree；但如果文档本身属于某个非琐碎任务的交付物，仍应跟随该任务 worktree。
 - 更新前端 UI、页面样式、视觉优化时，局部可逆的小改可以直接在当前工作区处理；一旦触达页面 owner、共享组件 contract、跨页面样式模式或其他受保护 surface，就按非琐碎任务进入统一入口。
 - 若当前仓库实际不在 `main`，先说明当前所在分支，再按用户意图继续执行。
@@ -123,6 +129,6 @@
 - `practice/`：初始化和后续实验记录。
 - `feedback/`：踩坑、修正和可复用经验。
 - `works/`：可展示模板、报告和说明。
-- `harness/prompts/`：已验证、会复用的项目级 agent 工作流 prompt。
+- `harness/prompts/`：项目内 prompt 入口、局部补充，以及仍然只属于本仓库的 prompt；共享正文上收到 `/home/azhi/.agents/harness/prompts/`。
 - `references/`：文章、仓库和工具索引。
 - 机械化检查：`bash scripts/check-consistency.sh`。

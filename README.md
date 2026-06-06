@@ -147,7 +147,7 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 - `docs/architecture/`：当前架构、页面设计和专题设计入口
 - `docs/contracts/`：接口、事件和题包格式等契约
 - `challenges/`：题目、题包、题面、源码、writeup 和防守说明
-- `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`references/`：项目在开发过程中沉淀的规则、实验、资料和可复用说明；项目级 prompt 资产位于 `harness/prompts/`
+- `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`references/`：项目在开发过程中沉淀的规则、实验、资料和可复用说明；仓库内 prompt 入口位于 `harness/prompts/`，共享正文位于 `/home/azhi/.agents/harness/prompts/`
 
 <!-- BEGIN HARNESS ENGINEERING: readme-harness -->
 ## Harness Engineering
@@ -159,7 +159,7 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 - `practice/`：实践记录
 - `feedback/`：反馈闭环
 - `works/`：作品输出
-- `harness/prompts/`：已验证的项目级 agent 工作流 prompt
+- `harness/prompts/`：仓库内 prompt 入口、局部补充，以及仍然项目专属的 prompt
 - `references/`：外部资料
 
 一致性检查：

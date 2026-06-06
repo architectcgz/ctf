@@ -34,7 +34,7 @@
 - 只影响 CTF 项目事实或路径：留在项目 `AGENTS.md`、项目 `harness/` 或对应文档。
 - 能机械化检查：沉到 `harness/checks/`、`scripts/check-*.sh` 或 hook。
 - 项目复用模式：沉到 `.harness/reuse-index/index.yaml` 或对应源码镜像目录下的 `README.md`。
-- 项目 prompt 工作流：沉到 `harness/prompts/`。
+- 项目 prompt 入口和项目特化补充：沉到 `harness/prompts/`；跨项目共享正文：沉到 `/home/azhi/.agents/harness/prompts/`。
 - 跨项目通用方法、坏做法或检查清单：沉到对应全局 skill。
 
 ## 已迁移积累

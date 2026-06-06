@@ -108,3 +108,4 @@ code/frontend/docs/
 !prompts/*.md
 !references/
 !references/*.md
+/.harness/session-gates/

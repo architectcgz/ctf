@@ -1,13 +1,20 @@
-# harness/prompts/ — Harness Prompt Assets
+# harness/prompts/ — 项目 Prompt 入口
 
-本目录是仓库内 harness prompt 的唯一事实源。
+本目录保留 CTF 仓库内的 prompt 入口和项目特化补充，不再作为共享 prompt 正文 owner。
+
+## 归属
+
+- 共享正文：`/home/azhi/.agents/harness/prompts/`
+- 本地入口：稳定仓库路径、项目参数、CTF 特化补充和交叉引用
 
 ## 当前模块
 
-- `architecture-diagram-generation.md`：根据当前事实源生成可 review 的架构图输入包。
-- `frontend-architecture-review.md`：CTF 前端架构级 code review 提示词。
+- `architecture-diagram-generation.md`：共享正文位于 `/home/azhi/.agents/harness/prompts/architecture-diagram-generation.md`
+- `coding-agent-system-prompt.md`：共享正文位于 `/home/azhi/.agents/harness/prompts/coding-agent-system-prompt.md`
+- `frontend-architecture-review.md`：共享正文位于 `/home/azhi/.agents/skills/code-reviewer/frontend/architecture-review.md`
 
 ## 入口约定
 
-- 本目录只保留已经验证过、会复用的项目级 agent 工作流 prompt。
+- 跨项目可复用的 prompt 正文优先迁到 `/home/azhi/.agents/harness/prompts/`。
+- 本目录只保留项目内仍需要稳定引用的入口文件和局部补充。
 - 历史迁移 prompt、一次性初始化 prompt 和已沉淀为 skill 的规则不要继续保留在这里。
