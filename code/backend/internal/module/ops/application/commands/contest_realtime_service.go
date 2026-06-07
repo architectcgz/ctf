@@ -8,8 +8,6 @@ import (
 	platformevents "ctf-platform/internal/platform/events"
 )
 
-const awdPreviewProgressMessageType = "awd.preview.progress"
-
 type contestRealtimeRelayPublisher interface {
 	Publish(ctx context.Context, relay contestcontracts.RealtimeRelayEvent, dedupeKey string) (string, error)
 }
@@ -29,7 +27,6 @@ func (s *ContestRealtimeService) RegisterContestEventConsumers(bus platformevent
 	bus.Subscribe(contestcontracts.EventAnnouncementCreated, s.handleAnnouncementCreated)
 	bus.Subscribe(contestcontracts.EventAnnouncementDeleted, s.handleAnnouncementDeleted)
 	bus.Subscribe(contestcontracts.EventScoreboardUpdated, s.handleScoreboardUpdated)
-	bus.Subscribe(contestcontracts.EventAWDPreviewProgress, s.handleAWDPreviewProgress)
 }
 
 func (s *ContestRealtimeService) handleAnnouncementCreated(ctx context.Context, evt platformevents.Event) error {
@@ -56,14 +53,5 @@ func (s *ContestRealtimeService) handleScoreboardUpdated(ctx context.Context, ev
 		return fmt.Errorf("unexpected contest scoreboard updated payload: %T", evt.Payload)
 	}
 	_, err := s.publisher.Publish(ctx, contestcontracts.RelayScoreboardUpdated(payload), "")
-	return err
-}
-
-func (s *ContestRealtimeService) handleAWDPreviewProgress(ctx context.Context, evt platformevents.Event) error {
-	payload, ok := evt.Payload.(contestcontracts.AWDPreviewProgressEvent)
-	if !ok {
-		return fmt.Errorf("unexpected contest awd preview progress payload: %T", evt.Payload)
-	}
-	_, err := s.publisher.Publish(ctx, contestcontracts.RelayAWDPreviewProgress(payload), "")
 	return err
 }

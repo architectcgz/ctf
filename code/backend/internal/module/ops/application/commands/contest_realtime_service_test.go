@@ -29,7 +29,6 @@ func TestContestRealtimeServiceRegisterContestEventConsumers(t *testing.T) {
 		contestcontracts.EventAnnouncementCreated,
 		contestcontracts.EventAnnouncementDeleted,
 		contestcontracts.EventScoreboardUpdated,
-		contestcontracts.EventAWDPreviewProgress,
 	}
 	for _, eventName := range expected {
 		if got := len(bus.subscribers[eventName]); got != 1 {
@@ -85,7 +84,7 @@ func TestContestRealtimeServicePublishesAnnouncementRelay(t *testing.T) {
 	}
 }
 
-func TestContestRealtimeServicePublishesScoreboardAndPreviewRelays(t *testing.T) {
+func TestContestRealtimeServicePublishesScoreboardRelay(t *testing.T) {
 	publisher := &stubContestRealtimeRelayPublisher{}
 	service := NewContestRealtimeService(publisher)
 	bus := &recordingBus{}
@@ -102,38 +101,10 @@ func TestContestRealtimeServicePublishesScoreboardAndPreviewRelays(t *testing.T)
 		t.Fatalf("Publish(scoreboard_updated) error = %v", err)
 	}
 
-	previewAt := time.Date(2026, 5, 12, 3, 11, 0, 0, time.UTC)
-	if err := bus.Publish(context.Background(), platformevents.Event{
-		Name: contestcontracts.EventAWDPreviewProgress,
-		Payload: contestcontracts.AWDPreviewProgressEvent{
-			UserID:           9001,
-			ContestID:        88,
-			PreviewRequestID: "preview-1",
-			PhaseKey:         "attempt-1",
-			PhaseLabel:       "第 1 轮试跑",
-			Detail:           "正在执行第 1 / 3 轮请求校验。",
-			Attempt:          1,
-			TotalAttempts:    3,
-			Status:           "running",
-			OccurredAt:       previewAt,
-		},
-	}); err != nil {
-		t.Fatalf("Publish(awd_preview_progress) error = %v", err)
-	}
-
-	if len(publisher.relays) != 2 {
-		t.Fatalf("expected 2 relays, got %+v", publisher.relays)
+	if len(publisher.relays) != 1 {
+		t.Fatalf("expected 1 relay, got %+v", publisher.relays)
 	}
 	if publisher.relays[0].Channel != contestcontracts.ScoreboardChannel(88) || publisher.relays[0].MessageType != "scoreboard.updated" {
 		t.Fatalf("unexpected scoreboard relay: %+v", publisher.relays[0])
-	}
-	if publisher.relays[1].RecipientUserID == nil || *publisher.relays[1].RecipientUserID != 9001 {
-		t.Fatalf("unexpected preview relay recipient: %+v", publisher.relays[1])
-	}
-	if publisher.relays[1].MessageType != awdPreviewProgressMessageType {
-		t.Fatalf("unexpected preview relay message type: %+v", publisher.relays[1])
-	}
-	if publisher.relays[1].Timestamp != previewAt {
-		t.Fatalf("unexpected preview relay timestamp: %+v", publisher.relays[1])
 	}
 }

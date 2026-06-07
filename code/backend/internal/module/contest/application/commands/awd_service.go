@@ -25,6 +25,7 @@ type AWDService struct {
 	awdConfig         config.ContestAWDConfig
 	log               *zap.Logger
 	eventBus          platformevents.Bus
+	outbox            contestports.ContestRealtimeOutboxRepository
 	imageRepo         challengecontracts.ImageStore
 	awdChallengeRepo  challengeports.AWDChallengeQueryRepository
 	runtimeProbe      challengeports.ChallengeRuntimeProbe
@@ -91,6 +92,14 @@ func (s *AWDService) SetEventBus(bus platformevents.Bus) *AWDService {
 		return nil
 	}
 	s.eventBus = bus
+	return s
+}
+
+func (s *AWDService) SetRealtimeOutbox(repo contestports.ContestRealtimeOutboxRepository) *AWDService {
+	if s == nil {
+		return nil
+	}
+	s.outbox = repo
 	return s
 }
 
