@@ -105,10 +105,12 @@ run_navigation_checks() {
   check_file "scripts/start-implementation.sh"
   check_file "scripts/check-open-todos.sh"
   check_file "scripts/check-docs-consistency.py"
+  check_file "scripts/check-script-guard.sh"
   check_file "scripts/check-script-layer.sh"
   check_file "harness/checks/check_open_todos.sh"
   check_file "harness/checks/check_docs_consistency.py"
   check_file "harness/checks/check_script_layer_conventions.py"
+  check_file "harness/policies/script-guard.json"
   check_file "harness/policies/script-layer-manifest.json"
   check_file "tools/AGENTS.md"
   check_file "tools/sync_openapi_from_contract.py"
@@ -134,6 +136,7 @@ run_navigation_checks() {
   check_contains "docs/文档规范.md" '`当前设计` 质量检查' "documentation guide defines current design quality checks"
   check_contains "scripts/check-open-todos.sh" 'harness/checks/check_open_todos\.sh' "open todos wrapper delegates to harness check"
   check_contains "scripts/check-docs-consistency.py" 'harness/checks/check_docs_consistency\.py' "documentation consistency wrapper delegates to harness check"
+  check_contains "scripts/check-script-guard.sh" 'check_script_guard\.py' "script guard wrapper delegates to shared harness check"
   check_contains "scripts/check-script-layer.sh" 'harness/checks/check_script_layer_conventions\.py' "script layer wrapper delegates to harness check"
   check_contains "harness/checks/check_docs_consistency.py" 'VAGUE_ARCHITECTURE_PHRASES' "documentation consistency script checks vague architecture phrases"
   check_contains "harness/checks/check_docs_consistency.py" 'check_architecture_doc_quality' "documentation consistency script checks architecture doc quality"
@@ -172,6 +175,9 @@ run_navigation_checks() {
 
   echo "[C8d] script layer naming and ownership stay aligned"
   bash scripts/check-script-layer.sh
+
+  echo "[C8e] script growth stays under guard"
+  bash scripts/check-script-guard.sh
 
   echo "[C9] works index covers harness good practices"
   check_file "works/harness-good-practices.md"

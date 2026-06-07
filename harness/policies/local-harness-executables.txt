@@ -10,6 +10,7 @@ scripts/check-frontend-test-guard.sh
 scripts/check-architecture.sh
 scripts/check-commit-message.sh
 scripts/check-skill-sync-reminder.sh
+scripts/check-script-guard.sh
 scripts/check-script-layer.sh
 scripts/check-task-intake.sh
 scripts/check-open-todos.sh

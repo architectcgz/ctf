@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Managed by code-workflow package (version: 2026-06-06.5)
+# Managed by code-workflow package (version: 2026-06-06.6)
 from __future__ import annotations
 
 import argparse
@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SESSION_GATES_DIR = ROOT / ".harness" / "session-gates"
 TASK_SLUG_RE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(?:-[a-z0-9]+)*$")
+EFFECTIVE_GATE_STATUSES = {"active", "ready_to_merge"}
 REQUIRED_PLAN_HEADINGS = (
     "## Task Metadata",
     "## Task Classification",
@@ -53,9 +54,9 @@ def run_git(*args: str) -> str:
 
 def changed_paths(args: argparse.Namespace) -> list[str]:
     if args.base:
-      output = run_git("diff", "--name-only", "--diff-filter=ACMR", f"{args.base}...{args.head}")
+        output = run_git("diff", "--name-only", "--diff-filter=ACMR", f"{args.base}...{args.head}")
     else:
-      output = run_git("diff", "--cached", "--name-only", "--diff-filter=ACMR")
+        output = run_git("diff", "--cached", "--name-only", "--diff-filter=ACMR")
     return [line.strip() for line in output.splitlines() if line.strip()]
 
 
@@ -65,7 +66,7 @@ def requires_gate(path: str) -> bool:
     return True
 
 
-def load_active_gates() -> list[tuple[Path, dict[str, object]]]:
+def load_effective_gates() -> list[tuple[Path, dict[str, object]]]:
     gates: list[tuple[Path, dict[str, object]]] = []
     if not SESSION_GATES_DIR.is_dir():
         return gates
@@ -76,7 +77,7 @@ def load_active_gates() -> list[tuple[Path, dict[str, object]]]:
             payload = json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             raise SystemExit(f"FAIL: invalid startup gate file: {path.relative_to(ROOT).as_posix()}")
-        if payload.get("status") == "active":
+        if payload.get("status") in EFFECTIVE_GATE_STATUSES:
             gates.append((path, payload))
     return gates
 
@@ -91,12 +92,16 @@ def extract_section(plan_text: str, heading: str) -> str:
     return match.group(1).strip() if match else ""
 
 
-def validate_active_gate(path: Path, payload: dict[str, object], *, require_completed_plan: bool) -> list[str]:
+def validate_effective_gate(path: Path, payload: dict[str, object], *, require_completed_plan: bool) -> list[str]:
     errors: list[str] = []
 
     task_slug = payload.get("task_slug")
     if not isinstance(task_slug, str) or not TASK_SLUG_RE.fullmatch(task_slug):
         errors.append("task_slug missing or invalid")
+
+    status = payload.get("status")
+    if status not in EFFECTIVE_GATE_STATUSES:
+        errors.append("status missing or invalid")
 
     branch = payload.get("branch")
     if not isinstance(branch, str) or not branch.startswith("task/"):
@@ -140,18 +145,18 @@ def validate_active_gate(path: Path, payload: dict[str, object], *, require_comp
 
 def main() -> int:
     args = parse_args()
-    gates = load_active_gates()
+    gates = load_effective_gates()
 
     if args.print_active_slug or args.print_gate_path:
         if not gates:
             return 1
         if len(gates) > 1:
-            print("FAIL: multiple active startup gates in current worktree", file=sys.stderr)
+            print("FAIL: multiple effective startup gates in current worktree", file=sys.stderr)
             return 1
         gate_path, payload = gates[0]
-        errors = validate_active_gate(gate_path, payload, require_completed_plan=False)
+        errors = validate_effective_gate(gate_path, payload, require_completed_plan=False)
         if errors:
-            print("FAIL: active startup gate is invalid", file=sys.stderr)
+            print("FAIL: effective startup gate is invalid", file=sys.stderr)
             for error in errors:
                 print(f"- {error}", file=sys.stderr)
             return 1
@@ -167,22 +172,22 @@ def main() -> int:
         return 0
 
     if not gates:
-        print("FAIL: startup-gated changes require an active task gate", file=sys.stderr)
+        print("FAIL: startup-gated changes require an effective task gate", file=sys.stderr)
         for path in gated:
             print(f"- {path}", file=sys.stderr)
         print("Use scripts/start-implementation.sh before continuing.", file=sys.stderr)
         return 1
 
     if len(gates) > 1:
-        print("FAIL: multiple active startup gates in current worktree", file=sys.stderr)
+        print("FAIL: multiple effective startup gates in current worktree", file=sys.stderr)
         return 1
 
     gate_path, payload = gates[0]
     plan_path_value = payload.get("plan_path")
     requires_completed_plan = any(path != plan_path_value for path in gated)
-    errors = validate_active_gate(gate_path, payload, require_completed_plan=requires_completed_plan)
+    errors = validate_effective_gate(gate_path, payload, require_completed_plan=requires_completed_plan)
     if errors:
-        print("FAIL: active startup gate is invalid", file=sys.stderr)
+        print("FAIL: effective startup gate is invalid", file=sys.stderr)
         print(f"- gate: {gate_path.relative_to(ROOT).as_posix()}", file=sys.stderr)
         for error in errors:
             print(f"- {error}", file=sys.stderr)
@@ -191,6 +196,7 @@ def main() -> int:
     if not args.quiet:
         print("PASS: startup gate covers current diff")
         print(f"- gate: {gate_path.relative_to(ROOT).as_posix()}")
+        print(f"- status: {payload['status']}")
         print(f"- task slug: {payload['task_slug']}")
         print(f"- plan: {payload['plan_path']}")
     return 0

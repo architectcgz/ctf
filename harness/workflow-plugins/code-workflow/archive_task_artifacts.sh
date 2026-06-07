@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Managed by code-workflow package (version: 2026-06-06.5)
+# Managed by code-workflow package (version: 2026-06-06.6)
 set -euo pipefail
 
 usage() {
@@ -10,6 +10,7 @@ Usage:
 Description:
   Archive the completed implementation plan and any matching docs/tasks artifacts for a task.
   If --task-slug is omitted, the script will try to use the current active startup gate.
+  When the current worktree owns that gate, archiving moves it from active to ready_to_merge.
 EOH
 }
 
@@ -180,8 +181,9 @@ task_archive_paths = sys.argv[4:]
 
 payload = json.loads(gate_path.read_text(encoding="utf-8"))
 if payload.get("task_slug") == task_slug and payload.get("status") == "active":
-    payload["status"] = "archived"
+    payload["status"] = "ready_to_merge"
     payload["archived_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    payload["plan_path"] = plan_archive_path
     payload["archived_plan_path"] = plan_archive_path
     payload["archived_task_paths"] = task_archive_paths
     gate_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

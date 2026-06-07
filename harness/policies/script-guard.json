@@ -1,0 +1,26 @@
+{
+  "include": [
+    "scripts/check-*.sh",
+    "scripts/check-*.py",
+    "scripts/start-*.sh",
+    "scripts/start-*.py",
+    "scripts/run-*.sh",
+    "scripts/run-*.py",
+    "scripts/install-*.sh",
+    "scripts/install-*.py",
+    "scripts/uninstall-*.sh",
+    "scripts/uninstall-*.py",
+    "scripts/doctor-*.sh",
+    "scripts/doctor-*.py",
+    "harness/checks/**/*.sh",
+    "harness/checks/**/*.py",
+    "tools/*.sh",
+    "tools/*.py"
+  ],
+  "exclude": [
+    "scripts/lib/**"
+  ],
+  "max_lines": 260,
+  "max_lines_by_glob": {},
+  "advice": "If a workflow, operator, or harness script keeps growing, split the stable entrypoint from helper modules or harness/checks instead of extending one file."
+}

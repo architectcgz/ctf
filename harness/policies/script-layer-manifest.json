@@ -17,6 +17,7 @@
     "scripts/check-script-layer.sh",
     "scripts/check-shared-skills.sh",
     "scripts/check-skill-sync-reminder.sh",
+    "scripts/check-script-guard.sh",
     "scripts/check-startup-gate.sh",
     "scripts/check-task-intake.sh",
     "scripts/check-workflow-complete.sh",
