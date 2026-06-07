@@ -15,6 +15,15 @@ run_navigation_checks() {
   check_contains "AGENTS.md" 'harness/prompts/' "AGENTS references harness prompts"
   check_contains "AGENTS.md" 'references/' "AGENTS references references"
 
+  echo "[C2a] project agent entrypoints stay aligned"
+  check_file "scripts/check-agent-entrypoints.sh"
+  if [[ -x "scripts/check-agent-entrypoints.sh" ]]; then
+    bash scripts/check-agent-entrypoints.sh
+  else
+    echo "  $(red FAIL) — scripts/check-agent-entrypoints.sh is not executable"
+    fail=1
+  fi
+
   if [[ -e "harness/bridges" ]]; then
     echo "  $(red FAIL) — harness/bridges must not exist; ordinary project commands should live in scripts/ or harness/checks/"
     fail=1
@@ -104,6 +113,7 @@ run_navigation_checks() {
   check_file "scripts/check-task-intake.sh"
   check_file "scripts/start-implementation.sh"
   check_file "scripts/check-open-todos.sh"
+  check_file "scripts/check-agent-entrypoints.sh"
   check_file "scripts/check-docs-consistency.py"
   check_file "scripts/check-script-guard.sh"
   check_file "scripts/check-script-layer.sh"
