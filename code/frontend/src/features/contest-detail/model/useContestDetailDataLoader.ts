@@ -1,6 +1,7 @@
 import { toValue, type MaybeRefOrGetter, type Ref } from 'vue'
 
 import {
+  getAnnouncementSync,
   getAnnouncements,
   getContestChallenges,
   getContestDetail,
@@ -12,6 +13,10 @@ import type {
   ContestDetailData,
   TeamData,
 } from '@/api/contracts'
+import {
+  applyContestAnnouncementSyncEvents,
+  nextContestAnnouncementSyncCursor,
+} from '@/features/contest-announcements/model/announcementSync'
 
 interface UseContestDetailDataLoaderOptions {
   contestId: MaybeRefOrGetter<string>
@@ -45,6 +50,7 @@ export function useContestDetailDataLoader({
   onLoadFailed,
 }: UseContestDetailDataLoaderOptions) {
   let requestToken = 0
+  let announcementSyncCursor = ''
 
   async function refreshAnnouncements() {
     if (!contest.value) {
@@ -53,9 +59,45 @@ export function useContestDetailDataLoader({
 
     try {
       announcements.value = await getAnnouncements(contest.value.id)
+      const sync = await getAnnouncementSync(contest.value.id)
+      announcementSyncCursor = nextContestAnnouncementSyncCursor(sync)
       announcementsError.value = ''
     } catch {
       announcementsError.value = '公告加载失败，请稍后刷新重试'
+      announcementSyncCursor = ''
+    }
+  }
+
+  async function syncAnnouncementsIncrementally() {
+    if (!contest.value) {
+      announcementSyncCursor = ''
+      return
+    }
+
+    try {
+      if (!announcementSyncCursor) {
+        if (announcements.value.length > 0) {
+          await refreshAnnouncements()
+          return
+        }
+        const sync = await getAnnouncementSync(contest.value.id)
+        announcementSyncCursor = nextContestAnnouncementSyncCursor(sync)
+        return
+      }
+
+      let afterId = announcementSyncCursor
+      while (afterId) {
+        const sync = await getAnnouncementSync(contest.value.id, afterId)
+        announcements.value = applyContestAnnouncementSyncEvents(announcements.value, sync.events)
+        announcementSyncCursor = nextContestAnnouncementSyncCursor(sync)
+        if (!sync.has_more) {
+          break
+        }
+        afterId = announcementSyncCursor
+      }
+      announcementsError.value = ''
+    } catch {
+      announcementsError.value = '公告同步失败，请稍后刷新重试'
     }
   }
 
@@ -91,10 +133,18 @@ export function useContestDetailDataLoader({
 
       if (announcementsData) {
         announcements.value = announcementsData
-        announcementsError.value = ''
+        try {
+          const sync = await getAnnouncementSync(nextContestId)
+          announcementSyncCursor = nextContestAnnouncementSyncCursor(sync)
+          announcementsError.value = ''
+        } catch {
+          announcementSyncCursor = ''
+          announcementsError.value = '公告加载失败，请稍后刷新重试'
+        }
       } else {
         announcements.value = []
         announcementsError.value = '公告加载失败，请稍后刷新重试'
+        announcementSyncCursor = ''
       }
 
       startCountdown()
@@ -105,6 +155,7 @@ export function useContestDetailDataLoader({
 
       resetPageState()
       stopCountdown()
+      announcementSyncCursor = ''
       onLoadFailed()
     } finally {
       if (currentToken === requestToken) {
@@ -116,5 +167,6 @@ export function useContestDetailDataLoader({
   return {
     loadPage,
     refreshAnnouncements,
+    syncAnnouncementsIncrementally,
   }
 }

@@ -42,6 +42,7 @@
     :join-team-action="joinTeamAction"
     :kick-member="kickMember"
     :refresh-announcements="refreshAnnouncements"
+    :sync-announcements-incrementally="syncAnnouncementsIncrementally"
   />
 </template>
 
@@ -87,5 +88,6 @@ const {
   joinTeamAction,
   kickMember,
   refreshAnnouncements,
+  syncAnnouncementsIncrementally,
 } = useContestDetailRoutePage()
 </script>

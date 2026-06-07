@@ -7,30 +7,20 @@ import (
 
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	platformevents "ctf-platform/internal/platform/events"
-	ctfws "ctf-platform/internal/websocket"
 )
 
-type stubContestRealtimeBroadcaster struct {
-	channels []string
-	users    []int64
-	messages []ctfws.Envelope
+type stubContestRealtimeRelayPublisher struct {
+	relays []contestcontracts.RealtimeRelayEvent
 }
 
-func (b *stubContestRealtimeBroadcaster) SendToChannel(channel string, message ctfws.Envelope) int {
-	b.channels = append(b.channels, channel)
-	b.messages = append(b.messages, message)
-	return 1
-}
-
-func (b *stubContestRealtimeBroadcaster) SendToUser(userID int64, message ctfws.Envelope) int {
-	b.users = append(b.users, userID)
-	b.messages = append(b.messages, message)
-	return 1
+func (p *stubContestRealtimeRelayPublisher) Publish(_ context.Context, relay contestcontracts.RealtimeRelayEvent, _ string) (string, error) {
+	p.relays = append(p.relays, relay)
+	return "1-0", nil
 }
 
 func TestContestRealtimeServiceRegisterContestEventConsumers(t *testing.T) {
-	broadcaster := &stubContestRealtimeBroadcaster{}
-	service := NewContestRealtimeService(broadcaster)
+	publisher := &stubContestRealtimeRelayPublisher{}
+	service := NewContestRealtimeService(publisher)
 	bus := &recordingBus{}
 
 	service.RegisterContestEventConsumers(bus)
@@ -51,9 +41,9 @@ func TestContestRealtimeServiceRegisterContestEventConsumers(t *testing.T) {
 	}
 }
 
-func TestContestRealtimeServiceRelayAnnouncementCreated(t *testing.T) {
-	broadcaster := &stubContestRealtimeBroadcaster{}
-	service := NewContestRealtimeService(broadcaster)
+func TestContestRealtimeServicePublishesAnnouncementRelay(t *testing.T) {
+	publisher := &stubContestRealtimeRelayPublisher{}
+	service := NewContestRealtimeService(publisher)
 	bus := &recordingBus{}
 	service.RegisterContestEventConsumers(bus)
 
@@ -73,50 +63,31 @@ func TestContestRealtimeServiceRelayAnnouncementCreated(t *testing.T) {
 		t.Fatalf("Publish(announcement_created) error = %v", err)
 	}
 
-	if len(broadcaster.channels) != 1 || broadcaster.channels[0] != "contest:77:announcements" {
-		t.Fatalf("unexpected channels = %+v", broadcaster.channels)
+	if len(publisher.relays) != 1 {
+		t.Fatalf("expected 1 relay, got %+v", publisher.relays)
 	}
-	if len(broadcaster.messages) != 1 || broadcaster.messages[0].Type != "contest.announcement.created" {
-		t.Fatalf("unexpected messages = %+v", broadcaster.messages)
+	relay := publisher.relays[0]
+	if relay.EventName != contestcontracts.EventAnnouncementCreated {
+		t.Fatalf("unexpected relay event name: %+v", relay)
 	}
-	messagePayload, ok := broadcaster.messages[0].Payload.(map[string]any)
+	if relay.Delivery != contestcontracts.RealtimeDeliveryChannel || relay.Channel != contestcontracts.AnnouncementChannel(77) {
+		t.Fatalf("unexpected relay delivery target: %+v", relay)
+	}
+	if relay.MessageType != "contest.announcement.created" {
+		t.Fatalf("unexpected relay message type: %+v", relay)
+	}
+	payload, ok := relay.Payload.(contestcontracts.AnnouncementCreatedRelayPayload)
 	if !ok {
-		t.Fatalf("unexpected envelope payload = %#v", broadcaster.messages[0].Payload)
+		t.Fatalf("unexpected announcement payload: %#v", relay.Payload)
 	}
-	payload, ok := messagePayload["announcement"].(map[string]any)
-	if !ok {
-		t.Fatalf("unexpected announcement payload = %#v", messagePayload)
-	}
-	if payload["id"] != int64(501) || payload["title"] != "比赛开始" {
-		t.Fatalf("unexpected announcement body = %#v", payload)
-	}
-	if !broadcaster.messages[0].Timestamp.Equal(occurredAt) {
-		t.Fatalf("unexpected timestamp = %v", broadcaster.messages[0].Timestamp)
-	}
-
-	err = bus.Publish(context.Background(), platformevents.Event{
-		Name: contestcontracts.EventAnnouncementDeleted,
-		Payload: contestcontracts.AnnouncementDeletedEvent{
-			ContestID:      77,
-			AnnouncementID: 501,
-			OccurredAt:     occurredAt.Add(time.Second),
-		},
-	})
-	if err != nil {
-		t.Fatalf("Publish(announcement_deleted) error = %v", err)
-	}
-
-	if len(broadcaster.channels) != 2 || broadcaster.channels[1] != "contest:77:announcements" {
-		t.Fatalf("unexpected channels after delete = %+v", broadcaster.channels)
-	}
-	if len(broadcaster.messages) != 2 || broadcaster.messages[1].Type != "contest.announcement.deleted" {
-		t.Fatalf("unexpected delete message = %+v", broadcaster.messages)
+	if payload.Announcement.ID != int64(501) || payload.Announcement.Title != "比赛开始" {
+		t.Fatalf("unexpected announcement body: %#v", payload)
 	}
 }
 
-func TestContestRealtimeServiceRelayScoreboardAndPreview(t *testing.T) {
-	broadcaster := &stubContestRealtimeBroadcaster{}
-	service := NewContestRealtimeService(broadcaster)
+func TestContestRealtimeServicePublishesScoreboardAndPreviewRelays(t *testing.T) {
+	publisher := &stubContestRealtimeRelayPublisher{}
+	service := NewContestRealtimeService(publisher)
 	bus := &recordingBus{}
 	service.RegisterContestEventConsumers(bus)
 
@@ -129,13 +100,6 @@ func TestContestRealtimeServiceRelayScoreboardAndPreview(t *testing.T) {
 		},
 	}); err != nil {
 		t.Fatalf("Publish(scoreboard_updated) error = %v", err)
-	}
-
-	if len(broadcaster.channels) != 1 || broadcaster.channels[0] != "contest:88:scoreboard" {
-		t.Fatalf("unexpected scoreboard channels = %+v", broadcaster.channels)
-	}
-	if broadcaster.messages[0].Type != "scoreboard.updated" {
-		t.Fatalf("unexpected scoreboard message type = %s", broadcaster.messages[0].Type)
 	}
 
 	previewAt := time.Date(2026, 5, 12, 3, 11, 0, 0, time.UTC)
@@ -157,20 +121,19 @@ func TestContestRealtimeServiceRelayScoreboardAndPreview(t *testing.T) {
 		t.Fatalf("Publish(awd_preview_progress) error = %v", err)
 	}
 
-	if len(broadcaster.users) != 1 || broadcaster.users[0] != 9001 {
-		t.Fatalf("unexpected preview users = %+v", broadcaster.users)
+	if len(publisher.relays) != 2 {
+		t.Fatalf("expected 2 relays, got %+v", publisher.relays)
 	}
-	if len(broadcaster.messages) != 2 || broadcaster.messages[1].Type != awdPreviewProgressMessageType {
-		t.Fatalf("unexpected preview message = %+v", broadcaster.messages)
+	if publisher.relays[0].Channel != contestcontracts.ScoreboardChannel(88) || publisher.relays[0].MessageType != "scoreboard.updated" {
+		t.Fatalf("unexpected scoreboard relay: %+v", publisher.relays[0])
 	}
-	previewPayload, ok := broadcaster.messages[1].Payload.(map[string]any)
-	if !ok {
-		t.Fatalf("unexpected preview envelope payload = %#v", broadcaster.messages[1].Payload)
+	if publisher.relays[1].RecipientUserID == nil || *publisher.relays[1].RecipientUserID != 9001 {
+		t.Fatalf("unexpected preview relay recipient: %+v", publisher.relays[1])
 	}
-	if previewPayload["attempt"] != 1 || previewPayload["total_attempts"] != 3 {
-		t.Fatalf("unexpected preview payload = %#v", previewPayload)
+	if publisher.relays[1].MessageType != awdPreviewProgressMessageType {
+		t.Fatalf("unexpected preview relay message type: %+v", publisher.relays[1])
 	}
-	if !broadcaster.messages[1].Timestamp.Equal(previewAt) {
-		t.Fatalf("unexpected preview timestamp = %v", broadcaster.messages[1].Timestamp)
+	if publisher.relays[1].Timestamp != previewAt {
+		t.Fatalf("unexpected preview relay timestamp: %+v", publisher.relays[1])
 	}
 }

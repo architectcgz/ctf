@@ -6,6 +6,7 @@ import type {
   AWDDefenseSSHAccessData,
   AWDRoundData,
   ContestAnnouncement,
+  ContestAnnouncementSyncData,
   ContestAWDWorkspaceData,
   ContestAWDWorkspaceRecentEventData,
   ContestAWDWorkspaceServiceData,
@@ -159,6 +160,27 @@ interface RawContestAWDWorkspaceData extends Omit<
   recent_events: RawContestAWDWorkspaceRecentEventData[]
 }
 
+interface RawContestAnnouncement {
+  id: string | number
+  title: string
+  content?: string
+  created_at: string
+}
+
+interface RawContestAnnouncementSyncEvent {
+  cursor: string | number
+  type: ContestAnnouncementSyncData['events'][number]['type']
+  announcement?: RawContestAnnouncement
+  announcement_id?: string | number
+  occurred_at: string
+}
+
+interface RawContestAnnouncementSyncData {
+  events: RawContestAnnouncementSyncEvent[]
+  next_cursor: string | number
+  has_more: boolean
+}
+
 export type GetContestsData = ContestPageData<ContestListItem>
 
 export interface GetContestsParams {
@@ -214,7 +236,9 @@ function normalizeContest(item: RawContestItem): ContestDetailData {
   }
 }
 
-function normalizeContestSummary(summary?: RawContestListSummary): ContestPageData<ContestListItem>['summary'] {
+function normalizeContestSummary(
+  summary?: RawContestListSummary
+): ContestPageData<ContestListItem>['summary'] {
   if (!summary) {
     return undefined
   }
@@ -253,6 +277,33 @@ function normalizeTeam(payload: RawTeamData | null): TeamData | null {
       username: member.username,
       joined_at: member.joined_at,
     })),
+  }
+}
+
+function normalizeContestAnnouncement(item: RawContestAnnouncement): ContestAnnouncement {
+  return {
+    id: String(item.id),
+    title: item.title,
+    content: item.content,
+    created_at: item.created_at,
+  }
+}
+
+function normalizeContestAnnouncementSync(
+  data: RawContestAnnouncementSyncData
+): ContestAnnouncementSyncData {
+  return {
+    events: data.events.map((event) => ({
+      cursor: String(event.cursor),
+      type: event.type,
+      announcement: event.announcement
+        ? normalizeContestAnnouncement(event.announcement)
+        : undefined,
+      announcement_id: event.announcement_id == null ? undefined : String(event.announcement_id),
+      occurred_at: event.occurred_at,
+    })),
+    next_cursor: String(data.next_cursor),
+    has_more: data.has_more,
   }
 }
 
@@ -399,10 +450,23 @@ export async function getScoreboard(
 }
 
 export async function getAnnouncements(id: string): Promise<ContestAnnouncement[]> {
-  return request<ContestAnnouncement[]>({
+  const response = await request<RawContestAnnouncement[]>({
     method: 'GET',
     url: `/contests/${encodeURIComponent(id)}/announcements`,
   })
+  return response.map(normalizeContestAnnouncement)
+}
+
+export async function getAnnouncementSync(
+  id: string,
+  afterId?: string
+): Promise<ContestAnnouncementSyncData> {
+  const response = await request<RawContestAnnouncementSyncData>({
+    method: 'GET',
+    url: `/contests/${encodeURIComponent(id)}/announcements/sync`,
+    params: afterId ? { after_id: afterId } : undefined,
+  })
+  return normalizeContestAnnouncementSync(response)
 }
 
 export async function createTeam(id: string, data: Record<string, unknown>): Promise<void> {

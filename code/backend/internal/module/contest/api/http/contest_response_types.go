@@ -90,6 +90,20 @@ type ContestAnnouncementResp struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type ContestAnnouncementSyncEventResp struct {
+	Cursor         int64                    `json:"cursor"`
+	Type           string                   `json:"type"`
+	Announcement   *ContestAnnouncementResp `json:"announcement,omitempty"`
+	AnnouncementID *int64                   `json:"announcement_id,omitempty"`
+	OccurredAt     time.Time                `json:"occurred_at"`
+}
+
+type ContestAnnouncementSyncResp struct {
+	Events     []*ContestAnnouncementSyncEventResp `json:"events"`
+	NextCursor int64                               `json:"next_cursor"`
+	HasMore    bool                                `json:"has_more"`
+}
+
 type ContestSolvedProgressItem struct {
 	ContestChallengeID int64     `json:"contest_challenge_id"`
 	SolvedAt           time.Time `json:"solved_at"`

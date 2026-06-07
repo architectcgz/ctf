@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"context"
 
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"gorm.io/gorm"
 )
@@ -25,6 +26,19 @@ func (r *SubmissionRepository) dbWithContext(ctx context.Context) *gorm.DB {
 
 func (r *SubmissionRepository) WithinScoringTransaction(ctx context.Context, fn func(repo contestports.ContestSubmissionScoringTxRepository) error) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return fn(r.WithDB(tx))
+		txRepo := &submissionScoringTxRepository{
+			SubmissionRepository: r.WithDB(tx),
+			outbox:               NewRealtimeOutboxRepository(tx),
+		}
+		return fn(txRepo)
 	})
+}
+
+type submissionScoringTxRepository struct {
+	*SubmissionRepository
+	outbox *RealtimeOutboxRepository
+}
+
+func (r *submissionScoringTxRepository) EnqueueRealtimeRelay(ctx context.Context, relay contestcontracts.RealtimeRelayEvent, dedupeKey string) error {
+	return r.outbox.EnqueueRealtimeRelay(ctx, relay, dedupeKey)
 }

@@ -83,6 +83,16 @@ func (s *SubmissionService) applyCorrectSubmissionScoring(ctx context.Context, s
 			}
 		}
 
+		if len(result.teamScoreDeltas) > 0 {
+			if err := txRepo.EnqueueRealtimeRelay(
+				ctx,
+				scoreboardUpdatedRelay(*submission.ContestID, submission.SubmittedAt),
+				scoreboardSubmissionDedupeKey(*submission.ContestID, submission.ID),
+			); err != nil {
+				return err
+			}
+		}
+
 		result.finalScore = currentScore
 		return nil
 	})

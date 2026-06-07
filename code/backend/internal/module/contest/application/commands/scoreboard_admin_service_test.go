@@ -110,6 +110,15 @@ func TestScoreboardAdminServiceFreezeScoreboardCreatesTransitionAndSnapshot(t *t
 	if transition.SideEffectStatus != contestdomain.ContestStatusTransitionSideEffectSucceeded {
 		t.Fatalf("unexpected transition record: %+v", transition)
 	}
+
+	outboxRepo := contestinfra.NewRealtimeOutboxRepository(db)
+	pending, err := outboxRepo.ListPendingRealtimeRelays(context.Background(), time.Now().UTC().Add(time.Second), 10)
+	if err != nil {
+		t.Fatalf("ListPendingRealtimeRelays() error = %v", err)
+	}
+	if len(pending) != 1 || pending[0].Relay.EventName != contestcontracts.EventScoreboardUpdated {
+		t.Fatalf("expected scoreboard realtime relay, got %+v", pending)
+	}
 }
 
 func TestScoreboardAdminServiceUnfreezeScoreboardClearsSnapshot(t *testing.T) {
@@ -166,6 +175,7 @@ func newScoreboardAdminServiceForTest(t *testing.T) (*ScoreboardAdminService, *g
 	})
 	service := NewScoreboardAdminService(contestinfra.NewRepository(db), contestinfra.NewContestScoreboardStateStore(redisClient), nil)
 	service.SetStatusSideEffectStore(contestinfra.NewContestStatusSideEffectStore(redisClient))
+	service.SetRealtimeOutbox(contestinfra.NewRealtimeOutboxRepository(db))
 	return service, db, redisClient, mini
 }
 

@@ -100,6 +100,14 @@ func NewParticipationRegistrationRepository(source interface {
 	return &ParticipationRegistrationRepository{source: source}
 }
 
+func (r *ParticipationRegistrationRepository) WithinAnnouncementTransaction(ctx context.Context, fn func(repo contestports.ContestParticipationAnnouncementTxRepository) error) error {
+	runner, ok := r.source.(contestports.ContestParticipationAnnouncementTxRunner)
+	if !ok {
+		return errors.New("participation registration source does not support announcement transactions")
+	}
+	return runner.WithinAnnouncementTransaction(ctx, fn)
+}
+
 func (r *ParticipationRegistrationRepository) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
 	registration, err := r.source.FindRegistration(ctx, contestID, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -136,6 +144,14 @@ func (r *ParticipationRegistrationRepository) ListAnnouncements(ctx context.Cont
 	return r.source.ListAnnouncements(ctx, contestID)
 }
 
+func (r *ParticipationRegistrationRepository) ListAnnouncementSyncEvents(ctx context.Context, contestID, afterID int64, limit int) ([]*contestports.ContestAnnouncementSyncEventRow, error) {
+	return r.source.ListAnnouncementSyncEvents(ctx, contestID, afterID, limit)
+}
+
+func (r *ParticipationRegistrationRepository) LatestAnnouncementSyncCursor(ctx context.Context, contestID int64) (int64, error) {
+	return r.source.LatestAnnouncementSyncCursor(ctx, contestID)
+}
+
 func (r *ParticipationRegistrationRepository) CreateAnnouncement(ctx context.Context, announcement *contestentity.ContestAnnouncement) error {
 	return r.source.CreateAnnouncement(ctx, announcement)
 }
@@ -154,4 +170,5 @@ var _ contestports.ContestParticipationRegistrationListRepository = (*Participat
 var _ contestports.ContestParticipationUserLookupRepository = (*ParticipationRegistrationRepository)(nil)
 var _ contestports.ContestParticipationAnnouncementReadRepository = (*ParticipationRegistrationRepository)(nil)
 var _ contestports.ContestParticipationAnnouncementWriteRepository = (*ParticipationRegistrationRepository)(nil)
+var _ contestports.ContestParticipationAnnouncementTxRunner = (*ParticipationRegistrationRepository)(nil)
 var _ contestports.ContestParticipationProgressRepository = (*ParticipationRegistrationRepository)(nil)

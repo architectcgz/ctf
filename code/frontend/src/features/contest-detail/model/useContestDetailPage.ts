@@ -118,23 +118,24 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
     team,
     refreshTeam,
   })
-  const { loadPage, refreshAnnouncements } = useContestDetailDataLoader({
-    contestId: options.contestId,
-    contest,
-    team,
-    challenges,
-    announcements,
-    announcementsError,
-    loading,
-    resetPageState,
-    startCountdown,
-    stopCountdown,
-    syncSelectedChallengeFromQuery,
-    clearSubmissionState,
-    onLoadFailed: () => {
-      toast.error('加载竞赛详情失败，请稍后刷新重试')
-    },
-  })
+  const { loadPage, refreshAnnouncements, syncAnnouncementsIncrementally } =
+    useContestDetailDataLoader({
+      contestId: options.contestId,
+      contest,
+      team,
+      challenges,
+      announcements,
+      announcementsError,
+      loading,
+      resetPageState,
+      startCountdown,
+      stopCountdown,
+      syncSelectedChallengeFromQuery,
+      clearSubmissionState,
+      onLoadFailed: () => {
+        toast.error('加载竞赛详情失败，请稍后刷新重试')
+      },
+    })
 
   watch(
     () => toValue(options.contestId),
@@ -184,5 +185,6 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
     joinTeamAction,
     kickMember,
     refreshAnnouncements,
+    syncAnnouncementsIncrementally,
   }
 }

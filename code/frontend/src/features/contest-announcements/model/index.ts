@@ -1,2 +1,2 @@
 export * from './useContestAnnouncementManagement'
-export * from './useContestAnnouncementRealtime'
+export * from './useAnnouncementSubscription'

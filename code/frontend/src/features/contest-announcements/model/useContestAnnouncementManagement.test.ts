@@ -7,6 +7,7 @@ import type { ContestDetailData } from '@/api/contracts'
 
 const adminApiMocks = vi.hoisted(() => ({
   getAdminContestAnnouncements: vi.fn(),
+  getAdminContestAnnouncementSync: vi.fn(),
   createAdminContestAnnouncement: vi.fn(),
   deleteAdminContestAnnouncement: vi.fn(),
 }))
@@ -58,6 +59,7 @@ describe('useContestAnnouncementManagement', () => {
 
   beforeEach(() => {
     adminApiMocks.getAdminContestAnnouncements.mockReset()
+    adminApiMocks.getAdminContestAnnouncementSync.mockReset()
     adminApiMocks.createAdminContestAnnouncement.mockReset()
     adminApiMocks.deleteAdminContestAnnouncement.mockReset()
     toastMocks.success.mockReset()
@@ -72,6 +74,11 @@ describe('useContestAnnouncementManagement', () => {
         created_at: '2026-04-22T09:00:00.000Z',
       },
     ])
+    adminApiMocks.getAdminContestAnnouncementSync.mockResolvedValue({
+      events: [],
+      next_cursor: '1',
+      has_more: false,
+    })
     adminApiMocks.createAdminContestAnnouncement.mockResolvedValue({
       id: 'announcement-2',
       title: '开赛通知',
@@ -88,6 +95,7 @@ describe('useContestAnnouncementManagement', () => {
     await flushPromises()
 
     expect(adminApiMocks.getAdminContestAnnouncements).toHaveBeenCalledWith('contest-1')
+    expect(adminApiMocks.getAdminContestAnnouncementSync).toHaveBeenCalledWith('contest-1')
     expect(result.announcements.value).toEqual([
       expect.objectContaining({
         id: 'announcement-1',
@@ -101,29 +109,39 @@ describe('useContestAnnouncementManagement', () => {
   })
 
   it('发布成功后应清空表单并刷新列表', async () => {
-    adminApiMocks.getAdminContestAnnouncements
-      .mockResolvedValueOnce([
-        {
-          id: 'announcement-1',
-          title: '报名提醒',
-          content: '请在今晚前完成组队。',
-          created_at: '2026-04-22T09:00:00.000Z',
-        },
-      ])
-      .mockResolvedValueOnce([
-        {
-          id: 'announcement-1',
-          title: '报名提醒',
-          content: '请在今晚前完成组队。',
-          created_at: '2026-04-22T09:00:00.000Z',
-        },
-        {
-          id: 'announcement-2',
-          title: '开赛通知',
-          content: '比赛将于十分钟后开始。',
-          created_at: '2026-04-22T09:10:00.000Z',
-        },
-      ])
+    adminApiMocks.getAdminContestAnnouncements.mockResolvedValueOnce([
+      {
+        id: 'announcement-1',
+        title: '报名提醒',
+        content: '请在今晚前完成组队。',
+        created_at: '2026-04-22T09:00:00.000Z',
+      },
+    ])
+    adminApiMocks.getAdminContestAnnouncements.mockResolvedValueOnce([
+      {
+        id: 'announcement-1',
+        title: '报名提醒',
+        content: '请在今晚前完成组队。',
+        created_at: '2026-04-22T09:00:00.000Z',
+      },
+      {
+        id: 'announcement-2',
+        title: '开赛通知',
+        content: '比赛将于十分钟后开始。',
+        created_at: '2026-04-22T09:10:00.000Z',
+      },
+    ])
+    adminApiMocks.getAdminContestAnnouncementSync
+      .mockResolvedValueOnce({
+        events: [],
+        next_cursor: '1',
+        has_more: false,
+      })
+      .mockResolvedValueOnce({
+        events: [],
+        next_cursor: '2',
+        has_more: false,
+      })
 
     const { result, wrapper } = withSetup()
     await result.loadAnnouncements()
@@ -149,29 +167,39 @@ describe('useContestAnnouncementManagement', () => {
   })
 
   it('删除成功后应刷新列表', async () => {
-    adminApiMocks.getAdminContestAnnouncements
-      .mockResolvedValueOnce([
-        {
-          id: 'announcement-1',
-          title: '报名提醒',
-          content: '请在今晚前完成组队。',
-          created_at: '2026-04-22T09:00:00.000Z',
-        },
-        {
-          id: 'announcement-2',
-          title: '开赛通知',
-          content: '比赛将于十分钟后开始。',
-          created_at: '2026-04-22T09:10:00.000Z',
-        },
-      ])
-      .mockResolvedValueOnce([
-        {
-          id: 'announcement-2',
-          title: '开赛通知',
-          content: '比赛将于十分钟后开始。',
-          created_at: '2026-04-22T09:10:00.000Z',
-        },
-      ])
+    adminApiMocks.getAdminContestAnnouncements.mockResolvedValueOnce([
+      {
+        id: 'announcement-1',
+        title: '报名提醒',
+        content: '请在今晚前完成组队。',
+        created_at: '2026-04-22T09:00:00.000Z',
+      },
+      {
+        id: 'announcement-2',
+        title: '开赛通知',
+        content: '比赛将于十分钟后开始。',
+        created_at: '2026-04-22T09:10:00.000Z',
+      },
+    ])
+    adminApiMocks.getAdminContestAnnouncements.mockResolvedValueOnce([
+      {
+        id: 'announcement-2',
+        title: '开赛通知',
+        content: '比赛将于十分钟后开始。',
+        created_at: '2026-04-22T09:10:00.000Z',
+      },
+    ])
+    adminApiMocks.getAdminContestAnnouncementSync
+      .mockResolvedValueOnce({
+        events: [],
+        next_cursor: '2',
+        has_more: false,
+      })
+      .mockResolvedValueOnce({
+        events: [],
+        next_cursor: '3',
+        has_more: false,
+      })
 
     const { result, wrapper } = withSetup()
     await result.loadAnnouncements()
@@ -213,6 +241,53 @@ describe('useContestAnnouncementManagement', () => {
 
     expect(toastMocks.error).toHaveBeenCalledWith('publish failed')
     expect(toastMocks.error).toHaveBeenCalledWith('delete failed')
+
+    wrapper.unmount()
+  })
+
+  it('增量同步时应应用创建和删除事件', async () => {
+    adminApiMocks.getAdminContestAnnouncementSync
+      .mockResolvedValueOnce({
+        events: [],
+        next_cursor: '8',
+        has_more: false,
+      })
+      .mockResolvedValueOnce({
+        events: [
+          {
+            cursor: '9',
+            type: 'contest.announcement.created',
+            announcement: {
+              id: 'announcement-2',
+              title: '开赛通知',
+              content: '比赛将于十分钟后开始。',
+              created_at: '2026-04-22T09:10:00.000Z',
+            },
+            occurred_at: '2026-04-22T09:10:00.000Z',
+          },
+          {
+            cursor: '10',
+            type: 'contest.announcement.deleted',
+            announcement_id: 'announcement-1',
+            occurred_at: '2026-04-22T09:11:00.000Z',
+          },
+        ],
+        next_cursor: '10',
+        has_more: false,
+      })
+
+    const { result, wrapper } = withSetup()
+    await result.loadAnnouncements()
+
+    await result.syncAnnouncementsIncrementally()
+    await flushPromises()
+
+    expect(result.announcements.value).toEqual([
+      expect.objectContaining({
+        id: 'announcement-2',
+        title: '开赛通知',
+      }),
+    ])
 
     wrapper.unmount()
   })

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 
-import { useContestAnnouncementRealtime } from '../model'
+import { useAnnouncementSubscription } from '../model'
 
 const props = defineProps<{
   contestId: string
@@ -11,7 +11,7 @@ const emit = defineEmits<{
   updated: []
 }>()
 
-const { start } = useContestAnnouncementRealtime(props.contestId, () => {
+const { start } = useAnnouncementSubscription(props.contestId, () => {
   emit('updated')
 })
 

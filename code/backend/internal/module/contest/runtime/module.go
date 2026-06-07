@@ -165,6 +165,7 @@ func buildCoreHandler(deps *moduleDeps) (*contesthttp.Handler, *contestcmd.Score
 
 	scoreboardCommands := contestcmd.NewScoreboardAdminService(deps.contestAdmin, scoreboardStateStore, &cfg.Contest)
 	scoreboardCommands.SetStatusSideEffectStore(statusSideEffects)
+	scoreboardCommands.SetRealtimeOutbox(contestinfra.NewRealtimeOutboxRepository(deps.input.DB))
 	scoreboardCommands.SetEventBus(deps.input.Events)
 	scoreboardQueries := contestqry.NewScoreboardService(deps.contestScoreboard, scoreboardStateStore, &cfg.Contest, log.Named("contest_scoreboard_service"))
 	contestCommands := contestcmd.NewContestService(deps.contestCommands, deps.awdRepo, log.Named("contest_service"))

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
@@ -31,11 +32,22 @@ type ContestParticipationUserLookupRepository interface {
 
 type ContestParticipationAnnouncementReadRepository interface {
 	ListAnnouncements(ctx context.Context, contestID int64) ([]*contestentity.ContestAnnouncement, error)
+	ListAnnouncementSyncEvents(ctx context.Context, contestID, afterID int64, limit int) ([]*ContestAnnouncementSyncEventRow, error)
+	LatestAnnouncementSyncCursor(ctx context.Context, contestID int64) (int64, error)
 }
 
 type ContestParticipationAnnouncementWriteRepository interface {
 	CreateAnnouncement(ctx context.Context, announcement *contestentity.ContestAnnouncement) error
 	DeleteAnnouncement(ctx context.Context, contestID, announcementID int64) (bool, error)
+}
+
+type ContestParticipationAnnouncementTxRepository interface {
+	ContestParticipationAnnouncementWriteRepository
+	EnqueueRealtimeRelay(ctx context.Context, relay contestcontracts.RealtimeRelayEvent, dedupeKey string) error
+}
+
+type ContestParticipationAnnouncementTxRunner interface {
+	WithinAnnouncementTransaction(ctx context.Context, fn func(repo ContestParticipationAnnouncementTxRepository) error) error
 }
 
 type ContestParticipationProgressRepository interface {
@@ -59,4 +71,12 @@ type ContestParticipationSolvedProgressRow struct {
 	ContestChallengeID int64
 	SolvedAt           time.Time
 	PointsEarned       int
+}
+
+type ContestAnnouncementSyncEventRow struct {
+	Cursor         int64
+	MessageType    string
+	Announcement   *contestcontracts.AnnouncementRealtimePayload
+	AnnouncementID *int64
+	OccurredAt     time.Time
 }

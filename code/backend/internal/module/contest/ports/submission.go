@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
@@ -19,6 +20,7 @@ type ContestSubmissionScoringTxRepository interface {
 	UpdateSubmissionScore(ctx context.Context, submissionID int64, score int) error
 	AddTeamScore(ctx context.Context, teamID int64, delta int, lastSolveAt *time.Time) error
 	CreateSubmission(ctx context.Context, submission *contestentity.Submission) error
+	EnqueueRealtimeRelay(ctx context.Context, relay contestcontracts.RealtimeRelayEvent, dedupeKey string) error
 }
 
 type ContestSubmissionScoringTxRunner interface {

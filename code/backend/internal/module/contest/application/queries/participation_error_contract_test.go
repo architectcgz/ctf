@@ -9,7 +9,10 @@ import (
 )
 
 type participationQueryRepoStub struct {
-	findRegistrationFn func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
+	findRegistrationFn             func(context.Context, int64, int64) (*contestentity.ContestRegistration, error)
+	listAnnouncementsFn            func(context.Context, int64) ([]*contestentity.ContestAnnouncement, error)
+	listAnnouncementSyncEventsFn   func(context.Context, int64, int64, int) ([]*contestports.ContestAnnouncementSyncEventRow, error)
+	latestAnnouncementSyncCursorFn func(context.Context, int64) (int64, error)
 }
 
 func (s participationQueryRepoStub) FindRegistration(ctx context.Context, contestID, userID int64) (*contestentity.ContestRegistration, error) {
@@ -27,8 +30,25 @@ func (s participationQueryRepoStub) ListRegistrations(context.Context, int64, *s
 	return nil, 0, nil
 }
 
-func (s participationQueryRepoStub) ListAnnouncements(context.Context, int64) ([]*contestentity.ContestAnnouncement, error) {
+func (s participationQueryRepoStub) ListAnnouncements(ctx context.Context, contestID int64) ([]*contestentity.ContestAnnouncement, error) {
+	if s.listAnnouncementsFn != nil {
+		return s.listAnnouncementsFn(ctx, contestID)
+	}
 	return nil, nil
+}
+
+func (s participationQueryRepoStub) ListAnnouncementSyncEvents(ctx context.Context, contestID int64, afterID int64, limit int) ([]*contestports.ContestAnnouncementSyncEventRow, error) {
+	if s.listAnnouncementSyncEventsFn != nil {
+		return s.listAnnouncementSyncEventsFn(ctx, contestID, afterID, limit)
+	}
+	return nil, nil
+}
+
+func (s participationQueryRepoStub) LatestAnnouncementSyncCursor(ctx context.Context, contestID int64) (int64, error) {
+	if s.latestAnnouncementSyncCursorFn != nil {
+		return s.latestAnnouncementSyncCursorFn(ctx, contestID)
+	}
+	return 0, nil
 }
 
 func (s participationQueryRepoStub) ListSolvedProgress(context.Context, int64, int64) ([]*contestports.ContestParticipationSolvedProgressRow, error) {
