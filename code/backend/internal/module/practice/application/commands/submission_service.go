@@ -64,14 +64,15 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 		}
 	}
 
+	now := time.Now().UTC()
 	submission := &practiceports.SubmissionRecord{
 		UserID:       userID,
 		ChallengeID:  challengeID,
 		Flag:         "",
 		IsCorrect:    false,
 		ReviewStatus: practiceports.SubmissionReviewStatusNotRequired,
-		SubmittedAt:  time.Now(),
-		UpdatedAt:    time.Now(),
+		SubmittedAt:  now,
+		UpdatedAt:    now,
 	}
 	status := SubmissionStatusIncorrect
 	submissionPersisted := false

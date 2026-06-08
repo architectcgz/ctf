@@ -102,7 +102,7 @@ func (s *ScoreService) UpdateUserScore(ctx context.Context, userID int64) error 
 		UserID:      userID,
 		TotalScore:  totalScore,
 		SolvedCount: len(challengeIDs),
-		UpdatedAt:   time.Now(),
+		UpdatedAt:   time.Now().UTC(),
 	})
 	if err != nil {
 		return err

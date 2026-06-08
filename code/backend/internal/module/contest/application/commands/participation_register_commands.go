@@ -32,7 +32,7 @@ func (s *ParticipationService) RegisterContest(ctx context.Context, contestID, u
 		return apperror.ErrInternal.WithCause(err)
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	registration, err := s.repo.FindRegistration(ctx, contestID, userID)
 	if err != nil {
 		if !errors.Is(err, contestports.ErrContestParticipationRegistrationNotFound) {

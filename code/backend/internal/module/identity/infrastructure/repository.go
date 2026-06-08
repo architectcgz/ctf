@@ -126,7 +126,7 @@ func (r *Repository) Update(ctx context.Context, user *identitycontracts.User) e
 				"role":          user.Role,
 				"class_name":    user.ClassName,
 				"status":        user.Status,
-				"updated_at":    time.Now(),
+				"updated_at":    time.Now().UTC(),
 			})
 		if result.Error != nil {
 			return mapUserWriteError(result.Error)
@@ -191,7 +191,7 @@ func (r *Repository) UpdateProfile(ctx context.Context, user *identitycontracts.
 		"failed_login_attempts": user.FailedLoginAttempts,
 		"last_failed_login_at":  user.LastFailedLoginAt,
 		"locked_until":          user.LockedUntil,
-		"updated_at":            time.Now(),
+		"updated_at":            time.Now().UTC(),
 	}
 	result := r.dbWithContext(ctx).Model(&identityentity.User{}).Where("id = ? AND deleted_at IS NULL", user.ID).Updates(updates)
 	if result.Error != nil {
