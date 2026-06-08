@@ -14,6 +14,7 @@ run_architecture_checks() {
   check_file "scripts/check-review-governance-core.sh"
   check_file "scripts/check-code-changes.sh"
   check_file "scripts/check-frontend-test-guard.sh"
+  check_file "scripts/check-test-architecture.sh"
   check_file "scripts/check-script-guard.sh"
   check_file "scripts/run-workflow-stage.sh"
   check_file "scripts/check-startup-gate.sh"
@@ -22,6 +23,8 @@ run_architecture_checks() {
   check_dir "harness/checks"
   check_file "harness/checks/check_code_change_contracts.sh"
   check_file "harness/checks/check_frontend_test_guard.sh"
+  check_file "harness/checks/check_test_architecture_guard.py"
+  check_file "harness/checks/test_architecture_guard.py"
   check_file "harness/checks/check_workflow_governance_core.sh"
   check_file "harness/checks/check_local_harness_setup.sh"
   check_file "harness/checks/check_local_toolchain.sh"
@@ -32,6 +35,8 @@ run_architecture_checks() {
   check_dir "harness/workflow-plugins/code-workflow/pre-commit-quick.d"
   check_dir "harness/workflow-plugins/code-workflow/completion-full.d"
   check_dir "harness/workflow-plugins/code-workflow/workflow-governance.d"
+  check_file "harness/workflow-plugins/code-workflow/pre-commit-quick.d/40-test-architecture.sh"
+  check_file "harness/workflow-plugins/code-workflow/completion-full.d/40-test-architecture.sh"
   check_file "harness/policies/commit-message.json"
   check_file "harness/policies/local-harness-executables.txt"
   check_file "harness/policies/script-guard.json"
@@ -47,7 +52,10 @@ run_architecture_checks() {
   check_contains "scripts/check-shared-skills.sh" 'check-project-shared-skills\.sh' "shared skills wrapper delegates to shared harness checker"
   check_contains "scripts/check-frontend-architecture.sh" 'tools/ensure-frontend-tooling\.sh' "frontend architecture checks ensure shared tooling"
   check_contains "scripts/check-frontend-test-guard.sh" 'harness/checks/check_frontend_test_guard\.sh' "frontend test guard wrapper delegates to harness checks"
+  check_contains "scripts/check-test-architecture.sh" 'harness/checks/check_test_architecture_guard\.py' "test architecture wrapper delegates to harness checks"
   check_contains "scripts/check-code-changes.sh" 'harness/checks/check_code_change_contracts\.sh' "code change wrapper delegates to harness checks"
+  check_contains "harness/workflow-plugins/code-workflow/pre-commit-quick.d/40-test-architecture.sh" 'scripts/check-test-architecture\.sh --changed-from-env' "pre-commit stage runs test architecture guard"
+  check_contains "harness/workflow-plugins/code-workflow/completion-full.d/40-test-architecture.sh" 'scripts/check-test-architecture\.sh --working-tree' "completion stage runs test architecture guard"
   check_contains "scripts/check-script-guard.sh" 'check_script_guard\.py' "script guard wrapper delegates to shared harness check"
   check_contains "scripts/check-workflow-governance-core.sh" 'harness/checks/check_workflow_governance_core\.sh' "workflow governance core wrapper delegates to harness checks"
   check_contains "scripts/check-review-governance-core.sh" 'scripts/check-workflow-governance-core\.sh' "review governance core wrapper stays as compatibility alias"
@@ -120,6 +128,9 @@ run_architecture_checks() {
     )"
     if [[ -z "$ssh_port" ]]; then
       echo "  $(red FAIL) — unable to resolve defense_ssh_port from $dev_config_file"
+      fail=1
+    elif ! grep -qE '^[[:space:]]{2}ctf-awd-defense-ssh-gateway:[[:space:]]*$' "$dev_compose_file"; then
+      echo "  $(red FAIL) — dev compose must declare ctf-awd-defense-ssh-gateway service when defense_ssh_enabled is true"
       fail=1
     elif grep -qE "\"127\\.0\\.0\\.1:${ssh_port}:${ssh_port}\"|\"0\\.0\\.0\\.0:${ssh_port}:${ssh_port}\"|\"${ssh_port}:${ssh_port}\"" "$dev_compose_file"; then
       echo "  $(green PASS) — dev compose exposes AWD defense SSH port $ssh_port"

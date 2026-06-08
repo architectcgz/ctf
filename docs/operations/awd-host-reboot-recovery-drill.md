@@ -15,10 +15,10 @@
 
 截至 2026-05-16，仓库里已经具备这些自动恢复能力：
 
-- API 启动时会读取 Redis `platform_runtime_state`，检测 boot ID 变化或 heartbeat 长时间停滞。
+- API 启动后会先竞争 Redis leader lock；只有 leader 会读取 Redis `platform_runtime_state`。真正触发启动恢复的条件是 boot ID 变化；同 `boot_id` 下的 heartbeat gap 只表示 leaderless gap。非 leader 副本会等 leader 写入当前 `boot_id` heartbeat 后再继续启动。
 - 检测到 outage 后，会先给活跃 AWD 比赛补 `paused_seconds`，刷新活跃实例 `expires_at`，再执行 active runtime recovery 和 desired runtime reconciliation。
 - desired reconcile 对长期坏配置会在 scope 级做 backoff / suppress，不再每个 `desired_reconcile_interval` 固定重试。
-- `container.flag_global_secret_file` 会在启动时恢复或自动生成 AWD dynamic flag 全局密钥，只要文件位于持久化卷中，宿主重启后不会丢。
+- `container.flag_global_secret_file` 会在启动时恢复 AWD dynamic flag 全局密钥。生产环境不会在文件缺失时自动生成；多 API 实例必须使用同一 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或同一份预置 secret 文件。
 
 当前还没有随仓库提交一份“已实际执行过这次真实宿主重启”的证据记录；这份文档是 runbook，不是完成证明。
 
@@ -27,7 +27,7 @@
 演练前至少确认下面几项：
 
 - 使用的部署确实把 PostgreSQL、Redis 数据目录和 `/app/storage` 放在持久化卷上。
-- `CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE` 或 `container.flag_global_secret_file` 指向持久化路径。compose dev 默认是 `/app/storage/runtime/flag-global-secret`。
+- `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 已由部署层统一注入，或 `CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE` / `container.flag_global_secret_file` 指向所有 API 实例一致可见的持久化路径。compose dev 默认是 `/app/storage/runtime/flag-global-secret`。
 - 演练目标中至少有一场 `running` 或 `frozen` 的 AWD 比赛，并且至少存在一组可见 service。
 - 最好提前准备一条“正常 scope”和一条“坏配置 scope”，方便同时观察恢复与 suppress 行为。
 - 选定本次观测的 `<contest_id>`，并记住至少一组 `<team_id> + <service_id>`。
@@ -40,6 +40,7 @@
 
 ```bash
 docker compose -f docker/ctf/docker-compose.dev.yml ps
+curl -fsS http://127.0.0.1:8080/ready
 curl -fsS http://127.0.0.1:8080/health
 ```
 
@@ -60,10 +61,10 @@ ORDER BY team_id, service_id, id;
 "
 ```
 
-3. 记录 AWD global secret 文件，确认它已经落在持久化卷里。
+3. 记录 AWD global secret 文件元数据和 fingerprint，确认它已经落在持久化卷里；不要输出或归档 secret 明文。
 
 ```bash
-docker exec ctf-api sh -lc 'ls -l /app/storage/runtime/flag-global-secret && cat /app/storage/runtime/flag-global-secret'
+docker exec ctf-api sh -lc 'ls -l /app/storage/runtime/flag-global-secret && sha256sum /app/storage/runtime/flag-global-secret'
 ```
 
 4. 如果要观察 suppress 行为，再记录目标 scope 的 Redis 状态和最近 operation。
@@ -95,6 +96,7 @@ sudo systemctl reboot
 ```bash
 docker compose -f docker/ctf/docker-compose.dev.yml up -d
 docker compose -f docker/ctf/docker-compose.dev.yml ps
+curl -fsS http://127.0.0.1:8080/ready
 curl -fsS http://127.0.0.1:8080/health
 ```
 
@@ -114,14 +116,14 @@ docker logs --since 10m ctf-api | rg 'runtime_outage_detected_for_startup_recove
 - `contests.paused_seconds` 比重启前增加，`runtime_recovery_key` 和 `runtime_recovery_applied_seconds` 有对应变化。
 - 重启前仍应活跃的 AWD scope，最终要么已经回到 `running`，要么先进入 `pending / creating` 后被调度器拉起。
 - `awd_service_operations` 不应出现同一坏配置 scope 每 15 秒稳定新增一条自动 start/recreate 噪声；如果触发了 suppress，Redis `suppressed_until` 应晚于当前时间。
-- `/app/storage/runtime/flag-global-secret` 在重启后仍存在且内容不变；如果内容变化，说明持久化卷或 secret 注入策略不成立。
+- `/app/storage/runtime/flag-global-secret` 在重启后仍存在且 fingerprint 不变；如果 fingerprint 变化，说明持久化卷或 secret 注入策略不成立。
 
 ## 失败判读
 
 - `paused_seconds` 没变化：启动恢复服务没有识别到 outage，优先检查 Redis `platform_runtime_state` 是否可写、boot ID 读取是否正常。
 - 实例长期停在 `pending`：先查 `ctf-api` 日志里的 provisioning 错误，再查 Docker daemon 是否可用。
 - 同一坏配置 scope 仍然每轮都新增 operation：优先检查 Redis 是否可写，以及 `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>` 是否根本没生成。
-- global secret 文件丢失或变化：说明 `/app/storage` 没有持久化，或者部署层在每次启动时都覆盖了 `CTF_CONTAINER_FLAG_GLOBAL_SECRET`。
+- global secret 文件丢失或变化：说明 `/app/storage` 没有持久化，或者部署层在每次启动时都覆盖了 `CTF_CONTAINER_FLAG_GLOBAL_SECRET`。如果 `/ready` 中 `container_flag_secret=down`，优先检查 `runtime_cluster_secrets` 里的 active key id / fingerprint 是否与当前实例配置一致。
 
 ## 证据保留
 
@@ -132,7 +134,7 @@ docker logs --since 10m ctf-api | rg 'runtime_outage_detected_for_startup_recove
 - 重启前后的 `contests.paused_seconds / runtime_recovery_*`
 - 目标 scope 的 `instances` 和 `awd_service_operations`
 - `ctf-api` 恢复日志摘录
-- `flag-global-secret` 文件路径与内容校验结果
+- `flag-global-secret` 文件路径与 fingerprint 校验结果
 
 ## 已知限制
 

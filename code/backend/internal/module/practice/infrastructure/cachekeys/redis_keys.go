@@ -10,6 +10,7 @@ const (
 	userScorePrefix                = "score:user:"
 	rankingKey                     = "ranking"
 	scoreLockPrefix                = "lock:score:"
+	provisioningSchedulerLockKey   = "practice:instance:scheduler:lock"
 )
 
 func withNamespace(key string) string {
@@ -34,4 +35,8 @@ func RankingKey() string {
 
 func ScoreLockKey(userID int64) string {
 	return withNamespace(fmt.Sprintf("%s%d", scoreLockPrefix, userID))
+}
+
+func ProvisioningSchedulerLockKey() string {
+	return withNamespace(provisioningSchedulerLockKey)
 }

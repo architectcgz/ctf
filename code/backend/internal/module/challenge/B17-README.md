@@ -27,8 +27,8 @@
 - `GetPublishedChallenge()` - GET /api/v1/challenges/:id
 
 ### 6. 数据库迁移
-- `migrations/000008_create_submissions_table.up.sql`
-- `migrations/000008_create_submissions_table.down.sql`
+- 当前 schema 已收口到 `migrations/000001_init_schema.up.sql`
+- `submissions` 表定义包含在 baseline 中
 
 ## 功能特性
 

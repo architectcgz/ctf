@@ -14,8 +14,8 @@
 
 ## 当前设计
 
-- `code/backend/migrations/000001_init_schema.up.sql`、`000002_create_awd_service_operations.up.sql`、`000003_create_contest_status_transitions.up.sql`、`000005_create_image_build_jobs.up.sql`、`000006_create_awd_defense_workspaces.up.sql`
-  - 负责：定义当前 PostgreSQL 主 schema，覆盖用户、题目、实例、竞赛、AWD、评估、导出、审计以及后续专题增量表；新增结构统一通过 migration 递进落库
+- `code/backend/migrations/000001_init_schema.up.sql`
+  - 负责：定义当前 PostgreSQL 主 schema，覆盖用户、题目、实例、竞赛、AWD、评估、导出、审计以及当前已收口的专题表；新增结构统一通过 baseline 更新后的 migration owner 落库
   - 不负责：把文档中的示意表或历史命名直接当成当前数据库真相；最终字段、索引和外键以 migration 为准
 
 - `code/backend/internal/model/challenge.go`、`instance.go`、`contest.go`、`contest_awd_service.go`、`contest_status_transition.go`、`image_build_job.go`、`awd_service_operation.go`、`awd_defense_workspace.go`

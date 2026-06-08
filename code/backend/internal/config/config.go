@@ -12,7 +12,13 @@ import (
 
 	"github.com/spf13/viper"
 
+	startuprecovery "ctf-platform/internal/module/instance/startuprecovery"
 	"ctf-platform/internal/platform/randomstring"
+)
+
+var containerStartupRecoveryMaxLockTTL = startuprecovery.MaxSafeLockTTL(
+	startuprecovery.DefaultHeartbeatInterval,
+	startuprecovery.DefaultLeaderRetry,
 )
 
 type Config struct {
@@ -133,45 +139,56 @@ type RateLimitPolicyConfig struct {
 }
 
 type ContainerConfig struct {
-	DefaultCPUQuota                 float64                  `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
-	DefaultMemory                   int64                    `mapstructure:"default_memory"`    // 内存限制（字节）
-	DefaultPidsLimit                int64                    `mapstructure:"default_pids_limit"`
-	ReadonlyRootfs                  bool                     `mapstructure:"readonly_rootfs"`
-	RunAsUser                       string                   `mapstructure:"run_as_user"`
-	AllowedCapabilities             []string                 `mapstructure:"allowed_capabilities"`
-	Seccomp                         string                   `mapstructure:"seccomp"`
-	PortRangeStart                  int                      `mapstructure:"port_range_start"`
-	PortRangeEnd                    int                      `mapstructure:"port_range_end"`
-	DefaultExposedPort              int                      `mapstructure:"default_exposed_port"`
-	MaxConcurrentPerUser            int                      `mapstructure:"max_concurrent_per_user"`
-	DefaultTTL                      time.Duration            `mapstructure:"default_ttl"`
-	SolveGracePeriod                time.Duration            `mapstructure:"solve_grace_period"`
-	MaxExtends                      int                      `mapstructure:"max_extends"`
-	ExtendDuration                  time.Duration            `mapstructure:"extend_duration"`
-	CleanupInterval                 string                   `mapstructure:"cleanup_interval"`
-	CleanupLockTTL                  time.Duration            `mapstructure:"cleanup_lock_ttl"`
-	DeletePollInterval              time.Duration            `mapstructure:"delete_poll_interval"`
-	DeleteMaxConcurrent             int                      `mapstructure:"delete_max_concurrent"`
-	OrphanGracePeriod               time.Duration            `mapstructure:"orphan_grace_period"`
-	CreateTimeout                   time.Duration            `mapstructure:"create_timeout"`
-	StartProbeTimeout               time.Duration            `mapstructure:"start_probe_timeout"`
-	StartProbeInterval              time.Duration            `mapstructure:"start_probe_interval"`
-	StartProbeAttempts              int                      `mapstructure:"start_probe_attempts"`
-	FlagGlobalSecret                string                   `mapstructure:"flag_global_secret"`
-	FlagGlobalSecretFile            string                   `mapstructure:"flag_global_secret_file"`
-	PublicHost                      string                   `mapstructure:"public_host"`
-	AccessHost                      string                   `mapstructure:"access_host"`
-	ProxyTicketTTL                  time.Duration            `mapstructure:"proxy_ticket_ttl"`
-	ProxyBodyPreviewSize            int                      `mapstructure:"proxy_body_preview_size"`
-	DefenseSSHEnabled               bool                     `mapstructure:"defense_ssh_enabled"`
-	DefenseSSHHost                  string                   `mapstructure:"defense_ssh_host"`
-	DefenseSSHPort                  int                      `mapstructure:"defense_ssh_port"`
-	DefenseSSHHostKeyPath           string                   `mapstructure:"defense_ssh_host_key_path"`
-	DefenseWorkbenchReadOnlyEnabled bool                     `mapstructure:"defense_workbench_readonly_enabled"`
-	DefenseWorkbenchRoot            string                   `mapstructure:"defense_workbench_root"`
-	Network                         ContainerNetworkConfig   `mapstructure:"network"`
-	Registry                        ContainerRegistryConfig  `mapstructure:"registry"`
-	Scheduler                       ContainerSchedulerConfig `mapstructure:"scheduler"`
+	DefaultCPUQuota                 float64                        `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
+	DefaultMemory                   int64                          `mapstructure:"default_memory"`    // 内存限制（字节）
+	DefaultPidsLimit                int64                          `mapstructure:"default_pids_limit"`
+	ReadonlyRootfs                  bool                           `mapstructure:"readonly_rootfs"`
+	RunAsUser                       string                         `mapstructure:"run_as_user"`
+	AllowedCapabilities             []string                       `mapstructure:"allowed_capabilities"`
+	Seccomp                         string                         `mapstructure:"seccomp"`
+	PortRangeStart                  int                            `mapstructure:"port_range_start"`
+	PortRangeEnd                    int                            `mapstructure:"port_range_end"`
+	DefaultExposedPort              int                            `mapstructure:"default_exposed_port"`
+	MaxConcurrentPerUser            int                            `mapstructure:"max_concurrent_per_user"`
+	DefaultTTL                      time.Duration                  `mapstructure:"default_ttl"`
+	SolveGracePeriod                time.Duration                  `mapstructure:"solve_grace_period"`
+	MaxExtends                      int                            `mapstructure:"max_extends"`
+	ExtendDuration                  time.Duration                  `mapstructure:"extend_duration"`
+	CleanupInterval                 string                         `mapstructure:"cleanup_interval"`
+	CleanupLockTTL                  time.Duration                  `mapstructure:"cleanup_lock_ttl"`
+	StartupRecoveryLockTTL          time.Duration                  `mapstructure:"startup_recovery_lock_ttl"`
+	DeletePollInterval              time.Duration                  `mapstructure:"delete_poll_interval"`
+	DeleteMaxConcurrent             int                            `mapstructure:"delete_max_concurrent"`
+	OrphanGracePeriod               time.Duration                  `mapstructure:"orphan_grace_period"`
+	CreateTimeout                   time.Duration                  `mapstructure:"create_timeout"`
+	StartProbeTimeout               time.Duration                  `mapstructure:"start_probe_timeout"`
+	StartProbeInterval              time.Duration                  `mapstructure:"start_probe_interval"`
+	StartProbeAttempts              int                            `mapstructure:"start_probe_attempts"`
+	FlagGlobalSecret                string                         `mapstructure:"flag_global_secret"`
+	FlagGlobalSecretFile            string                         `mapstructure:"flag_global_secret_file"`
+	FlagGlobalSecretKeyID           string                         `mapstructure:"flag_global_secret_key_id"`
+	FlagGlobalSecretKeyring         []ContainerFlagSecretKeyConfig `mapstructure:"flag_global_secret_keyring"`
+	FlagGlobalSecretAllowRotation   bool                           `mapstructure:"flag_global_secret_allow_rotation"`
+	ResolvedFlagSecretKeyID         string                         `mapstructure:"-"`
+	ResolvedFlagSecrets             map[string]string              `mapstructure:"-"`
+	PublicHost                      string                         `mapstructure:"public_host"`
+	AccessHost                      string                         `mapstructure:"access_host"`
+	ProxyTicketTTL                  time.Duration                  `mapstructure:"proxy_ticket_ttl"`
+	ProxyBodyPreviewSize            int                            `mapstructure:"proxy_body_preview_size"`
+	DefenseSSHEnabled               bool                           `mapstructure:"defense_ssh_enabled"`
+	DefenseSSHHost                  string                         `mapstructure:"defense_ssh_host"`
+	DefenseSSHPort                  int                            `mapstructure:"defense_ssh_port"`
+	DefenseSSHHostKeyPath           string                         `mapstructure:"defense_ssh_host_key_path"`
+	DefenseWorkbenchReadOnlyEnabled bool                           `mapstructure:"defense_workbench_readonly_enabled"`
+	DefenseWorkbenchRoot            string                         `mapstructure:"defense_workbench_root"`
+	Network                         ContainerNetworkConfig         `mapstructure:"network"`
+	Registry                        ContainerRegistryConfig        `mapstructure:"registry"`
+	Scheduler                       ContainerSchedulerConfig       `mapstructure:"scheduler"`
+}
+
+type ContainerFlagSecretKeyConfig struct {
+	KeyID  string `mapstructure:"key_id"`
+	Secret string `mapstructure:"secret"`
 }
 
 type ContainerNetworkConfig struct {
@@ -206,6 +223,7 @@ type ContainerSchedulerConfig struct {
 	BatchSize                             int           `mapstructure:"batch_size"`
 	MaxConcurrentStarts                   int           `mapstructure:"max_concurrent_starts"`
 	MaxActiveInstances                    int           `mapstructure:"max_active_instances"`
+	LockTTL                               time.Duration `mapstructure:"lock_ttl"`
 }
 
 type PaginationConfig struct {
@@ -370,13 +388,16 @@ func Load(env string) (*Config, error) {
 	if cfg.Container.FlagGlobalSecret != "" && len(cfg.Container.FlagGlobalSecret) < 32 {
 		return nil, fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(cfg.Container.FlagGlobalSecret))
 	}
-	resolvedFlagSecret, err := resolveContainerFlagGlobalSecret(cfg.Container.FlagGlobalSecret, cfg.Container.FlagGlobalSecretFile)
+	resolvedFlagSecret, err := resolveContainerFlagGlobalSecret(cfg.Container.FlagGlobalSecret, cfg.Container.FlagGlobalSecretFile, !isProductionEnv(cfg.App.Env))
 	if err != nil {
 		return nil, err
 	}
 	cfg.Container.FlagGlobalSecret = resolvedFlagSecret
 	if len(cfg.Container.FlagGlobalSecret) < 32 {
 		return nil, fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(cfg.Container.FlagGlobalSecret))
+	}
+	if err := cfg.resolveContainerFlagSecretKeyring(); err != nil {
+		return nil, err
 	}
 
 	if err := cfg.Validate(); err != nil {
@@ -419,6 +440,15 @@ func (c *Config) Validate() error {
 	}
 	if c.Container.CleanupLockTTL <= 0 {
 		return fmt.Errorf("container.cleanup_lock_ttl must be greater than 0")
+	}
+	if c.Container.StartupRecoveryLockTTL <= 0 {
+		return fmt.Errorf("container.startup_recovery_lock_ttl must be greater than 0")
+	}
+	// startup recovery only runs on the current leader. To avoid mistaking a
+	// normal leader handoff for a runtime outage, lock TTL must stay within the
+	// failover window derived from the shared startup recovery policy owner.
+	if c.Container.StartupRecoveryLockTTL > containerStartupRecoveryMaxLockTTL {
+		return fmt.Errorf("container.startup_recovery_lock_ttl must be less than or equal to %s", containerStartupRecoveryMaxLockTTL)
 	}
 	if c.Container.ProxyTicketTTL <= 0 {
 		return fmt.Errorf("container.proxy_ticket_ttl must be greater than 0")
@@ -502,6 +532,9 @@ func (c *Config) Validate() error {
 		}
 		if c.Container.Scheduler.MaxActiveInstances < 0 {
 			return fmt.Errorf("container.scheduler.max_active_instances must be greater than or equal to 0")
+		}
+		if c.Container.Scheduler.LockTTL <= 0 {
+			return fmt.Errorf("container.scheduler.lock_ttl must be greater than 0")
 		}
 	}
 	if c.Container.DeletePollInterval <= 0 {
@@ -865,6 +898,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.extend_duration", 1*time.Hour)
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
 	v.SetDefault("container.cleanup_lock_ttl", 2*time.Minute)
+	v.SetDefault("container.startup_recovery_lock_ttl", startuprecovery.DefaultLockTTL)
 	v.SetDefault("container.delete_poll_interval", time.Second)
 	v.SetDefault("container.delete_max_concurrent", 8)
 	v.SetDefault("container.orphan_grace_period", 5*time.Minute)
@@ -874,6 +908,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.start_probe_attempts", 5)
 	v.SetDefault("container.flag_global_secret", "")
 	v.SetDefault("container.flag_global_secret_file", "storage/runtime/flag-global-secret")
+	v.SetDefault("container.flag_global_secret_key_id", "default")
+	v.SetDefault("container.flag_global_secret_keyring", []ContainerFlagSecretKeyConfig{})
+	v.SetDefault("container.flag_global_secret_allow_rotation", false)
 	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("container.access_host", "")
 	v.SetDefault("container.proxy_ticket_ttl", 15*time.Minute)
@@ -909,6 +946,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.scheduler.batch_size", 4)
 	v.SetDefault("container.scheduler.max_concurrent_starts", 4)
 	v.SetDefault("container.scheduler.max_active_instances", 60)
+	v.SetDefault("container.scheduler.lock_ttl", 30*time.Second)
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
 	v.SetDefault("challenge.solved_count_cache_ttl", 5*time.Minute)
@@ -987,7 +1025,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("contest.awd.checker_sandbox.network_mode", "")
 }
 
-func resolveContainerFlagGlobalSecret(secret, secretFile string) (string, error) {
+func resolveContainerFlagGlobalSecret(secret, secretFile string, allowAutoGenerate bool) (string, error) {
 	secret = strings.TrimSpace(secret)
 	secretFile = strings.TrimSpace(secretFile)
 
@@ -1023,6 +1061,10 @@ func resolveContainerFlagGlobalSecret(secret, secretFile string) (string, error)
 		return persistedSecret, nil
 	}
 
+	if !allowAutoGenerate {
+		return "", fmt.Errorf("container.flag_global_secret must be explicitly configured via CTF_CONTAINER_FLAG_GLOBAL_SECRET or pre-created container.flag_global_secret_file")
+	}
+
 	generatedSecret, err := randomstring.Generate()
 	if err != nil {
 		return "", fmt.Errorf("generate container.flag_global_secret: %w", err)
@@ -1032,6 +1074,50 @@ func resolveContainerFlagGlobalSecret(secret, secretFile string) (string, error)
 		return "", fmt.Errorf("persist generated container.flag_global_secret_file: %w", err)
 	}
 	return generatedSecret, nil
+}
+
+func (c *Config) resolveContainerFlagSecretKeyring() error {
+	if c == nil {
+		return fmt.Errorf("config is nil")
+	}
+	activeSecret := strings.TrimSpace(c.Container.FlagGlobalSecret)
+	if activeSecret == "" {
+		return fmt.Errorf("container.flag_global_secret must not be empty")
+	}
+	if len(activeSecret) < 32 {
+		return fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(activeSecret))
+	}
+
+	activeKeyID := strings.TrimSpace(c.Container.FlagGlobalSecretKeyID)
+	if activeKeyID == "" {
+		activeKeyID = "default"
+	}
+
+	keys := map[string]string{
+		activeKeyID: activeSecret,
+	}
+	for _, item := range c.Container.FlagGlobalSecretKeyring {
+		keyID := strings.TrimSpace(item.KeyID)
+		secret := strings.TrimSpace(item.Secret)
+		if keyID == "" {
+			return fmt.Errorf("container.flag_global_secret_keyring contains an empty key_id")
+		}
+		if secret == "" {
+			return fmt.Errorf("container.flag_global_secret_keyring[%s] secret must not be empty", keyID)
+		}
+		if len(secret) < 32 {
+			return fmt.Errorf("container.flag_global_secret_keyring[%s] secret must be at least 32 bytes, current length: %d", keyID, len(secret))
+		}
+		if existing, exists := keys[keyID]; exists && existing != secret {
+			return fmt.Errorf("container.flag_global_secret_keyring[%s] conflicts with another secret", keyID)
+		}
+		keys[keyID] = secret
+	}
+
+	c.Container.FlagGlobalSecretKeyID = activeKeyID
+	c.Container.ResolvedFlagSecretKeyID = activeKeyID
+	c.Container.ResolvedFlagSecrets = keys
+	return nil
 }
 
 func loadPersistedContainerFlagGlobalSecret(secretFile string) (string, bool, error) {

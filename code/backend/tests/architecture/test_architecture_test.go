@@ -47,6 +47,13 @@ var forbiddenSystemHTTPImports = []string{
 	"database/sql",
 }
 
+var allowedAutoMigrateOwners = map[string]struct{}{
+	"internal/testutil/systemapp/sqlite_helpers.go":        {},
+	"internal/module/challenge/testsupport/test_helper.go": {},
+	"internal/module/contest/testsupport/db.go":            {},
+	"internal/module/practice/testsupport/test_helper.go":  {},
+}
+
 var setupDBPattern = regexp.MustCompile(`\bsetup[A-Za-z0-9_]*DB\(`)
 var systemHTTPReadmeDirPattern = regexp.MustCompile("`tests/system/http/([a-z0-9]+)/?`")
 
@@ -149,6 +156,39 @@ func TestBackendTestsReadmeListsCurrentSystemHTTPScenarioDirectories(t *testing.
 	if len(violations) > 0 {
 		sort.Strings(violations)
 		t.Fatalf("backend tests README must track system/http scenario directories:\n%s", strings.Join(violations, "\n"))
+	}
+}
+
+func TestAutoMigrateStaysInTestSupport(t *testing.T) {
+	t.Parallel()
+
+	files := collectGoFiles(t, ".")
+	violations := make([]string, 0)
+	seenAllowed := make(map[string]struct{}, len(allowedAutoMigrateOwners))
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		content := readBackendTestFile(t, file)
+		if !strings.Contains(content, "AutoMigrate(") {
+			continue
+		}
+		if _, ok := allowedAutoMigrateOwners[file]; !ok {
+			violations = append(violations, file+" must not own AutoMigrate outside test support")
+			continue
+		}
+		seenAllowed[file] = struct{}{}
+	}
+
+	for file := range allowedAutoMigrateOwners {
+		if _, ok := seenAllowed[file]; !ok {
+			violations = append(violations, "AutoMigrate allowlist is stale: "+file)
+		}
+	}
+
+	if len(violations) > 0 {
+		sort.Strings(violations)
+		t.Fatalf("AutoMigrate must stay inside test-support helpers:\n%s", strings.Join(violations, "\n"))
 	}
 }
 

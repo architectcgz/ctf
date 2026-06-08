@@ -7,6 +7,7 @@ import (
 
 	redislib "github.com/redis/go-redis/v9"
 
+	"ctf-platform/internal/infrastructure/redislock"
 	"ctf-platform/internal/module/runtime/infrastructure/cachekeys"
 )
 
@@ -52,4 +53,11 @@ func (s *PlatformRuntimeStateStore) SavePlatformRuntimeState(ctx context.Context
 		"boot_id":           strings.TrimSpace(bootID),
 		"last_heartbeat_at": heartbeatAt.UTC().Format(time.RFC3339Nano),
 	}).Err()
+}
+
+func (s *PlatformRuntimeStateStore) AcquireStartupRecoveryLock(ctx context.Context, ttl time.Duration) (*redislock.Lock, bool, error) {
+	if s == nil || s.cache == nil {
+		return nil, true, nil
+	}
+	return redislock.Acquire(ctx, s.cache, cachekeys.PlatformRuntimeRecoveryLockKey(), ttl)
 }

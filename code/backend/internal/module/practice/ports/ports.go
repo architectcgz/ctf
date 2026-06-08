@@ -496,6 +496,12 @@ type PracticeScoreLockLease interface {
 	Release(ctx context.Context) (bool, error)
 }
 
+type PracticeSchedulerLockLease interface {
+	Key(ctx context.Context) string
+	Release(ctx context.Context) (bool, error)
+	Refresh(ctx context.Context, ttl time.Duration) (bool, error)
+}
+
 type PracticeScoreStateStore interface {
 	AcquireUserScoreUpdateLock(ctx context.Context, userID int64, ttl time.Duration) (PracticeScoreLockLease, bool, error)
 	LoadUserScoreCache(ctx context.Context, userID int64) (*practicecontracts.UserScoreInfo, bool, error)
@@ -519,6 +525,10 @@ type PracticeDesiredAWDReconcileStateStore interface {
 	LoadDesiredAWDReconcileState(ctx context.Context, contestID, teamID, serviceID int64) (*DesiredAWDReconcileState, bool, error)
 	StoreDesiredAWDReconcileState(ctx context.Context, contestID, teamID, serviceID int64, state *DesiredAWDReconcileState) error
 	DeleteDesiredAWDReconcileState(ctx context.Context, contestID, teamID, serviceID int64) error
+}
+
+type PracticeInstanceSchedulerLockStore interface {
+	AcquireProvisioningSchedulerLock(ctx context.Context, ttl time.Duration) (PracticeSchedulerLockLease, bool, error)
 }
 
 type PracticeInstanceReadinessProbe interface {

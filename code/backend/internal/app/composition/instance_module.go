@@ -80,11 +80,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service"))
 	queryService := instanceqry.NewInstanceService(repo, &cfg.Container, cfg.Pagination)
-	proxyTicketService := instanceqry.NewProxyTicketService(
-		runtimeinfra.NewProxyTicketStore(root.Cache()),
-		repo,
-		cfg.Container.ProxyTicketTTL,
-	)
+	proxyTicketService := buildRuntimeProxyTicketService(root, repo)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
 		repo,
 		maintenanceRuntime,
@@ -99,7 +95,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		runtimeinfra.NewPlatformRuntimeStateStore(root.Cache()),
 		0,
 		log.Named("startup_runtime_recovery"),
-	)
+	).SetLockTTL(cfg.Container.StartupRecoveryLockTTL)
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"startup_runtime_recovery",
 		startupRecovery.Start,
@@ -122,22 +118,6 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		"instance_stopping_cleanup",
 		maintenanceService.RunStoppingCleanupLoop,
 	))
-
-	if cfg.Container.DefenseSSHEnabled && module.InteractiveExecutor != nil {
-		gateway := NewAWDDefenseSSHGateway(
-			proxyTicketService,
-			repo,
-			module.InteractiveExecutor,
-			cfg.Container.DefenseSSHHostKeyPath,
-			cfg.Container.DefenseSSHPort,
-			log.Named("awd_defense_ssh_gateway"),
-		)
-		root.RegisterBackgroundJob(NewBackgroundJob(
-			"awd_defense_ssh_gateway",
-			gateway.Start,
-			gateway.Stop,
-		))
-	}
 
 	return &InstanceModule{
 		PracticeInstanceRepository:  repo,

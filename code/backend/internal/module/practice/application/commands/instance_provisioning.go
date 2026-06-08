@@ -151,14 +151,15 @@ func (s *Service) buildProvisioningFlag(instance *instancecontracts.Instance, ch
 		if strings.TrimSpace(instance.Nonce) == "" {
 			return "", apperror.ErrInternal.WithCause(fmt.Errorf("instance nonce is empty"))
 		}
-		if strings.TrimSpace(s.config.Container.FlagGlobalSecret) == "" {
+		secret, ok := s.flagSecretForKeyID(instance.FlagKeyID)
+		if !ok {
 			return "", apperror.ErrInternal.WithCause(fmt.Errorf("flag global secret is empty"))
 		}
 		subjectID := instance.UserID
 		if instance.TeamID != nil && *instance.TeamID > 0 {
 			subjectID = *instance.TeamID
 		}
-		return crypto.GenerateDynamicFlag(subjectID, chal.ID, s.config.Container.FlagGlobalSecret, instance.Nonce, chal.FlagPrefix), nil
+		return crypto.GenerateDynamicFlag(subjectID, chal.ID, secret, instance.Nonce, chal.FlagPrefix), nil
 	case practiceentity.FlagTypeStatic:
 		return chal.FlagHash, nil
 	default:

@@ -161,11 +161,34 @@ apply_runtime_defaults() {
 }
 
 run_migrations() {
-  GOPROXY="${MIGRATE_GOPROXY}" \
-    go run -tags "${MIGRATE_TAGS}" github.com/golang-migrate/migrate/v4/cmd/migrate@"${MIGRATE_VERSION}" \
-    -path ./migrations \
-    -database "${MIGRATE_DATABASE_URL:-postgres://postgres:postgres123456@127.0.0.1:15432/ctf?sslmode=disable}" \
-    up
+  local migration_output
+  local migration_status
+
+  set +e
+  migration_output="$(
+    GOPROXY="${MIGRATE_GOPROXY}" \
+      go run -tags "${MIGRATE_TAGS}" github.com/golang-migrate/migrate/v4/cmd/migrate@"${MIGRATE_VERSION}" \
+      -path ./migrations \
+      -database "${MIGRATE_DATABASE_URL:-postgres://postgres:postgres123456@127.0.0.1:15432/ctf?sslmode=disable}" \
+      up 2>&1
+  )"
+  migration_status=$?
+  set -e
+
+  if [[ "${migration_status}" -ne 0 ]]; then
+    printf '%s\n' "${migration_output}" >&2
+    case "${migration_output}" in
+      *"no migration found for version "*)
+        echo "当前仓库已经收口到单文件 baseline migration，旧的 000002..000012 增量链不再支持原地升级。" >&2
+        echo "请重建本地数据库或重置 PostgreSQL volume，然后重新执行 ./scripts/dev-run.sh --infra --migrate。" >&2
+        ;;
+    esac
+    return "${migration_status}"
+  fi
+
+  if [[ -n "${migration_output}" ]]; then
+    printf '%s\n' "${migration_output}"
+  fi
 }
 
 prepare_log_file() {

@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -45,6 +46,9 @@ func TestBuildRuntimeHostExecutorProvidesReachableRuntimeInTestEnv(t *testing.T)
 	}
 	if err := db.AutoMigrate(&runtimeentity.NetworkAllocation{}); err != nil {
 		t.Fatalf("auto migrate runtime network allocation: %v", err)
+	}
+	if err := db.AutoMigrate(&runtimeentity.RuntimeNode{}); err != nil {
+		t.Fatalf("auto migrate runtime nodes: %v", err)
 	}
 
 	executor := buildRuntimeHostExecutor(root)
@@ -139,6 +143,9 @@ func TestBuildContainerRuntimeModuleFailsWhenRemoteRuntimeAgentDialFails(t *test
 	if err != nil {
 		t.Fatalf("BuildRoot() error = %v", err)
 	}
+	if err := db.AutoMigrate(&runtimeentity.RuntimeNode{}); err != nil {
+		t.Fatalf("auto migrate runtime nodes: %v", err)
+	}
 
 	module, err := BuildContainerRuntimeModule(root)
 	if err == nil {
@@ -156,6 +163,9 @@ func TestBuildContainerRuntimeModuleFailsWhenLocalCheckerRunnerInitFails(t *test
 	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
 	if err != nil {
 		t.Fatalf("BuildRoot() error = %v", err)
+	}
+	if err := db.AutoMigrate(&runtimeentity.RuntimeNode{}); err != nil {
+		t.Fatalf("auto migrate runtime nodes: %v", err)
 	}
 
 	originalNewLocalRuntimeHostRunner := newLocalRuntimeHostRunner
@@ -187,6 +197,9 @@ func TestBuildContainerRuntimeModuleProvidesDefaultRuntimeNodeSelector(t *testin
 	t.Parallel()
 
 	cfg, db, cache := newRootTestDependencies(t)
+	if err := db.AutoMigrate(&runtimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
+		t.Fatalf("auto migrate runtime module tables: %v", err)
+	}
 
 	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -218,6 +231,30 @@ func TestBuildContainerRuntimeModuleProvidesDefaultRuntimeNodeSelector(t *testin
 	}
 }
 
+func TestBuildDefaultRuntimeNodeSelectorRequiresFormalMigrationOutsideTestEnv(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.App.Env = "dev"
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	selector, repo, node, err := buildDefaultRuntimeNodeSelector(root, defaultRuntimeNodeName(cfg))
+	if err == nil {
+		t.Fatalf("expected missing runtime_nodes migration error, got selector=%+v repo=%+v node=%+v", selector, repo, node)
+	}
+	lowerErr := strings.ToLower(err.Error())
+	if !strings.Contains(lowerErr, "no such table") && !strings.Contains(lowerErr, "does not exist") {
+		t.Fatalf("expected missing table error, got %v", err)
+	}
+	if db.Migrator().HasTable(&runtimeentity.RuntimeNode{}) {
+		t.Fatal("expected runtime node table to stay owned by formal SQL migrations")
+	}
+}
+
 func TestBuildContainerRuntimeModuleSelectsConfiguredDefaultRuntimeNode(t *testing.T) {
 	cfg, db, cache := newRootTestDependencies(t)
 	cfg.RuntimeAgent = config.RuntimeAgentConfig{
@@ -226,8 +263,8 @@ func TestBuildContainerRuntimeModuleSelectsConfiguredDefaultRuntimeNode(t *testi
 		ServerName: "runtime-agent.internal",
 	}
 
-	if err := db.AutoMigrate(&runtimeentity.RuntimeNode{}); err != nil {
-		t.Fatalf("auto migrate runtime nodes: %v", err)
+	if err := db.AutoMigrate(&runtimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
+		t.Fatalf("auto migrate runtime module tables: %v", err)
 	}
 
 	legacyNode := runtimeentity.RuntimeNode{

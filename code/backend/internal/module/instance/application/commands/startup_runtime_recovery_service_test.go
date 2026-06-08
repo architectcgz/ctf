@@ -4,9 +4,11 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
+	"ctf-platform/internal/infrastructure/redislock"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
@@ -115,20 +117,31 @@ func (s *startupRuntimeInstanceRepoStub) RefreshActiveAWDInstanceExpiryByContest
 }
 
 type startupRuntimeStateStoreStub struct {
+	loadFn          func(context.Context) (string, time.Time, bool, error)
+	saveFn          func(context.Context, string, time.Time) error
+	acquireLockFn   func(context.Context, time.Duration) (*redislock.Lock, bool, error)
 	loadBootID      string
 	loadHeartbeatAt time.Time
 	loadOK          bool
+	lockAcquired    bool
+	lockErr         error
 	saveCalls       []struct {
 		bootID      string
 		heartbeatAt time.Time
 	}
 }
 
-func (s *startupRuntimeStateStoreStub) LoadPlatformRuntimeState(context.Context) (string, time.Time, bool, error) {
+func (s *startupRuntimeStateStoreStub) LoadPlatformRuntimeState(ctx context.Context) (string, time.Time, bool, error) {
+	if s.loadFn != nil {
+		return s.loadFn(ctx)
+	}
 	return s.loadBootID, s.loadHeartbeatAt, s.loadOK, nil
 }
 
-func (s *startupRuntimeStateStoreStub) SavePlatformRuntimeState(_ context.Context, bootID string, heartbeatAt time.Time) error {
+func (s *startupRuntimeStateStoreStub) SavePlatformRuntimeState(ctx context.Context, bootID string, heartbeatAt time.Time) error {
+	if s.saveFn != nil {
+		return s.saveFn(ctx, bootID, heartbeatAt)
+	}
 	s.saveCalls = append(s.saveCalls, struct {
 		bootID      string
 		heartbeatAt time.Time
@@ -137,6 +150,19 @@ func (s *startupRuntimeStateStoreStub) SavePlatformRuntimeState(_ context.Contex
 		heartbeatAt: heartbeatAt,
 	})
 	return nil
+}
+
+func (s *startupRuntimeStateStoreStub) AcquireStartupRecoveryLock(ctx context.Context, ttl time.Duration) (*redislock.Lock, bool, error) {
+	if s.acquireLockFn != nil {
+		return s.acquireLockFn(ctx, ttl)
+	}
+	if s.lockErr != nil {
+		return nil, false, s.lockErr
+	}
+	if !s.lockAcquired {
+		return nil, false, nil
+	}
+	return nil, true, nil
 }
 
 func TestStartupRuntimeRecoveryServiceRebootExtendsContestsBeforeReconcile(t *testing.T) {
@@ -191,6 +217,7 @@ func TestStartupRuntimeRecoveryServiceRebootExtendsContestsBeforeReconcile(t *te
 		loadBootID:      "boot-old",
 		loadHeartbeatAt: lastHeartbeat,
 		loadOK:          true,
+		lockAcquired:    true,
 	}
 
 	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, time.Hour, nil)
@@ -261,6 +288,7 @@ func TestStartupRuntimeRecoveryServiceSameBootOnlyRecordsHeartbeat(t *testing.T)
 		loadBootID:      "boot-same",
 		loadHeartbeatAt: startedAt.Add(-45 * time.Second),
 		loadOK:          true,
+		lockAcquired:    true,
 	}
 
 	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, 30*time.Second, nil)
@@ -293,12 +321,11 @@ func TestStartupRuntimeRecoveryServiceSameBootOnlyRecordsHeartbeat(t *testing.T)
 	}
 }
 
-func TestStartupRuntimeRecoveryServiceSameBootWithStaleHeartbeatTriggersRecovery(t *testing.T) {
+func TestStartupRuntimeRecoveryServiceSameBootWithStaleHeartbeatSkipsRecovery(t *testing.T) {
 	t.Parallel()
 
 	lastHeartbeat := time.Date(2026, 5, 16, 10, 0, 0, 0, time.UTC)
 	startedAt := time.Date(2026, 5, 16, 10, 2, 0, 0, time.UTC)
-	recoveredAt := startedAt.Add(20 * time.Second)
 
 	contestRepo := &startupRuntimeContestRepoStub{
 		contests: []*contestcontracts.Contest{
@@ -320,10 +347,11 @@ func TestStartupRuntimeRecoveryServiceSameBootWithStaleHeartbeatTriggersRecovery
 		loadBootID:      "boot-same",
 		loadHeartbeatAt: lastHeartbeat,
 		loadOK:          true,
+		lockAcquired:    true,
 	}
 
 	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, 30*time.Second, nil)
-	service.now = newDeterministicNow(startedAt, recoveredAt)
+	service.now = newDeterministicNow(startedAt)
 	service.bootIDPath = writeBootIDFile(t, "boot-same")
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -335,28 +363,21 @@ func TestStartupRuntimeRecoveryServiceSameBootWithStaleHeartbeatTriggersRecovery
 		_ = service.Stop(context.Background())
 	})
 
-	if !reconciler.called {
-		t.Fatal("expected runtime reconciler to run when heartbeat is stale")
+	if reconciler.called {
+		t.Fatal("expected same-boot stale heartbeat to skip runtime outage recovery")
 	}
-	if len(contestRepo.calls) != 2 {
-		t.Fatalf("expected two contest extension calls, got %d", len(contestRepo.calls))
+	if len(contestRepo.calls) != 0 {
+		t.Fatalf("expected no contest extension calls, got %d", len(contestRepo.calls))
 	}
-	if contestRepo.calls[0].targetPausedSeconds != 120 {
-		t.Fatalf("expected initial paused seconds target 120, got %d", contestRepo.calls[0].targetPausedSeconds)
+	if len(instanceRepo.calls) != 0 {
+		t.Fatalf("expected no instance expiry refreshes, got %d", len(instanceRepo.calls))
 	}
-	if contestRepo.calls[1].targetPausedSeconds != 140 {
-		t.Fatalf("expected final paused seconds target 140, got %d", contestRepo.calls[1].targetPausedSeconds)
-	}
-	if len(instanceRepo.calls) != 2 {
-		t.Fatalf("expected two instance expiry refreshes, got %d", len(instanceRepo.calls))
-	}
-	expectedRecoveryKey := buildStartupRuntimeRecoveryKey("boot-same", lastHeartbeat)
-	if contestRepo.calls[0].recoveryKey != expectedRecoveryKey {
-		t.Fatalf("unexpected recovery key %q", contestRepo.calls[0].recoveryKey)
+	if len(stateStore.saveCalls) != 1 {
+		t.Fatalf("expected exactly one heartbeat save, got %d", len(stateStore.saveCalls))
 	}
 	lastSave := stateStore.saveCalls[len(stateStore.saveCalls)-1]
-	if !lastSave.heartbeatAt.Equal(recoveredAt) {
-		t.Fatalf("expected recovered heartbeat %s, got %s", recoveredAt, lastSave.heartbeatAt)
+	if !lastSave.heartbeatAt.Equal(startedAt) {
+		t.Fatalf("expected heartbeat %s, got %s", startedAt, lastSave.heartbeatAt)
 	}
 }
 
@@ -386,6 +407,7 @@ func TestStartupRuntimeRecoveryServiceRetryDoesNotDoubleCountPreviouslyAppliedPa
 		loadBootID:      "boot-old",
 		loadHeartbeatAt: lastHeartbeat,
 		loadOK:          true,
+		lockAcquired:    true,
 	}
 
 	firstService := NewStartupRuntimeRecoveryService(&startupRuntimeReconcilerStub{err: context.Canceled}, contestRepo, instanceRepo, stateStore, time.Hour, nil)
@@ -419,7 +441,7 @@ func TestStartupRuntimeRecoveryServiceStartRetryAfterInitFailure(t *testing.T) {
 	t.Parallel()
 
 	startedAt := time.Date(2026, 5, 16, 10, 10, 0, 0, time.UTC)
-	stateStore := &startupRuntimeStateStoreStub{}
+	stateStore := &startupRuntimeStateStoreStub{lockAcquired: true}
 	service := NewStartupRuntimeRecoveryService(nil, nil, nil, stateStore, time.Hour, nil)
 	service.now = newDeterministicNow(startedAt)
 	service.bootIDPath = filepath.Join(t.TempDir(), "missing-boot-id")
@@ -457,7 +479,7 @@ func TestStartupRuntimeRecoveryServiceCanRestartAfterStop(t *testing.T) {
 
 	firstStartedAt := time.Date(2026, 5, 16, 10, 10, 0, 0, time.UTC)
 	secondStartedAt := time.Date(2026, 5, 16, 10, 12, 0, 0, time.UTC)
-	stateStore := &startupRuntimeStateStoreStub{}
+	stateStore := &startupRuntimeStateStoreStub{lockAcquired: true}
 	service := NewStartupRuntimeRecoveryService(nil, nil, nil, stateStore, time.Hour, nil)
 	service.now = newDeterministicNow(firstStartedAt, secondStartedAt)
 	service.bootIDPath = writeBootIDFile(t, "boot-restart-ok")
@@ -489,6 +511,178 @@ func TestStartupRuntimeRecoveryServiceCanRestartAfterStop(t *testing.T) {
 	}
 	if !stateStore.saveCalls[1].heartbeatAt.Equal(secondStartedAt) {
 		t.Fatalf("expected second heartbeat at %s, got %s", secondStartedAt, stateStore.saveCalls[1].heartbeatAt)
+	}
+}
+
+func TestStartupRuntimeRecoveryServiceStandbyReplicaStartsWithoutLeaderReady(t *testing.T) {
+	t.Parallel()
+
+	reconciler := &startupRuntimeReconcilerStub{}
+	stateStore := &startupRuntimeStateStoreStub{
+		loadBootID:      "boot-prev",
+		loadHeartbeatAt: time.Date(2026, 5, 16, 10, 0, 0, 0, time.UTC),
+		loadOK:          true,
+		lockAcquired:    false,
+	}
+	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, time.Hour, nil)
+	service.now = newDeterministicNow(time.Date(2026, 5, 16, 10, 1, 0, 0, time.UTC))
+	service.bootIDPath = writeBootIDFile(t, "boot-standby")
+	service.leaderRetry = 10 * time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+	startDone := make(chan error, 1)
+	go func() {
+		startDone <- service.Start(ctx)
+	}()
+
+	select {
+	case err := <-startDone:
+		if err != nil {
+			t.Fatalf("Start() error = %v", err)
+		}
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("expected standby Start() to return without waiting for leader readiness")
+	}
+	t.Cleanup(func() {
+		_ = service.Stop(context.Background())
+	})
+
+	if reconciler.called {
+		t.Fatal("expected standby replica to skip recovery")
+	}
+	if len(stateStore.saveCalls) != 0 {
+		t.Fatalf("expected standby replica to skip heartbeat writes, got %d", len(stateStore.saveCalls))
+	}
+
+	cancel()
+}
+
+func TestStartupRuntimeRecoveryServiceStandbyReplicaCanTakeOverAfterAsyncStart(t *testing.T) {
+	t.Parallel()
+
+	startedAt := time.Date(2026, 5, 16, 10, 1, 0, 0, time.UTC)
+	var mu sync.Mutex
+	allowAcquire := false
+	heartbeatSaved := make(chan struct{}, 1)
+	stateStore := &startupRuntimeStateStoreStub{
+		loadFn: func(context.Context) (string, time.Time, bool, error) {
+			return "boot-ready", startedAt.Add(-time.Minute), true, nil
+		},
+		acquireLockFn: func(context.Context, time.Duration) (*redislock.Lock, bool, error) {
+			mu.Lock()
+			defer mu.Unlock()
+			return nil, allowAcquire, nil
+		},
+		saveFn: func(context.Context, string, time.Time) error {
+			select {
+			case heartbeatSaved <- struct{}{}:
+			default:
+			}
+			return nil
+		},
+	}
+	service := NewStartupRuntimeRecoveryService(&startupRuntimeReconcilerStub{}, nil, nil, stateStore, 0, nil)
+	service.now = newDeterministicNow(startedAt)
+	service.bootIDPath = writeBootIDFile(t, "boot-ready")
+	service.leaderRetry = 10 * time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	startDone := make(chan error, 1)
+	go func() {
+		startDone <- service.Start(ctx)
+	}()
+
+	select {
+	case err := <-startDone:
+		if err != nil {
+			t.Fatalf("Start() error = %v", err)
+		}
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("expected standby Start() to return before leader is ready")
+	}
+	t.Cleanup(func() {
+		_ = service.Stop(context.Background())
+	})
+
+	mu.Lock()
+	allowAcquire = true
+	mu.Unlock()
+
+	select {
+	case <-heartbeatSaved:
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("expected async standby loop to take over and record heartbeat")
+	}
+}
+
+func TestStartupRuntimeRecoveryServiceLeaderFailoverWithinSafeWindowSkipsRecovery(t *testing.T) {
+	t.Parallel()
+
+	startedAt := time.Date(2026, 5, 16, 10, 1, 0, 0, time.UTC)
+	reconciler := &startupRuntimeReconcilerStub{}
+	stateStore := &startupRuntimeStateStoreStub{
+		loadBootID:      "boot-shared",
+		loadHeartbeatAt: startedAt.Add(-55 * time.Second),
+		loadOK:          true,
+		lockAcquired:    true,
+	}
+	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, 0, nil)
+	service.now = newDeterministicNow(startedAt)
+	service.bootIDPath = writeBootIDFile(t, "boot-shared")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := service.Start(ctx); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	t.Cleanup(func() {
+		_ = service.Stop(context.Background())
+	})
+
+	if reconciler.called {
+		t.Fatal("expected leader failover within safe window to skip recovery")
+	}
+	if len(stateStore.saveCalls) != 1 {
+		t.Fatalf("expected leader takeover to record a fresh heartbeat once, got %d", len(stateStore.saveCalls))
+	}
+	if !stateStore.saveCalls[0].heartbeatAt.Equal(startedAt) {
+		t.Fatalf("expected failover heartbeat at %s, got %s", startedAt, stateStore.saveCalls[0].heartbeatAt)
+	}
+}
+
+func TestStartupRuntimeRecoveryServiceSameBootLeaderGapSkipsRecovery(t *testing.T) {
+	t.Parallel()
+
+	startedAt := time.Date(2026, 5, 16, 10, 10, 0, 0, time.UTC)
+	reconciler := &startupRuntimeReconcilerStub{}
+	stateStore := &startupRuntimeStateStoreStub{
+		loadBootID:      "boot-shared",
+		loadHeartbeatAt: startedAt.Add(-10 * time.Minute),
+		loadOK:          true,
+		lockAcquired:    true,
+	}
+	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, 0, nil)
+	service.now = newDeterministicNow(startedAt)
+	service.bootIDPath = writeBootIDFile(t, "boot-shared")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := service.Start(ctx); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	t.Cleanup(func() {
+		_ = service.Stop(context.Background())
+	})
+
+	if reconciler.called {
+		t.Fatal("expected same-boot leader gap to skip runtime outage recovery")
+	}
+	if len(stateStore.saveCalls) != 1 {
+		t.Fatalf("expected leader gap takeover to record a fresh heartbeat once, got %d", len(stateStore.saveCalls))
+	}
+	if !stateStore.saveCalls[0].heartbeatAt.Equal(startedAt) {
+		t.Fatalf("expected leader gap heartbeat at %s, got %s", startedAt, stateStore.saveCalls[0].heartbeatAt)
 	}
 }
 

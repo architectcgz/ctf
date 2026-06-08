@@ -20,6 +20,7 @@
 
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`、`awd_desired_runtime_reconciler.go`
   - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制；普通实例继续使用 `container.default_ttl` 计算 `expires_at`，AWD 队伍服务实例则统一跟随 `contestdomain.ContestEffectiveEndTime(contest)`，也就是比赛 `end_time + paused_seconds`
+  - 负责：在多 API 副本部署下，通过 Redis `ctf:practice:instance:scheduler:lock` 把 provisioning scheduler 收口成单 owner；只有拿到 `container.scheduler.lock_ttl` 租约并持续续租的实例才会执行 desired reconcile 和 `pending -> creating` 领取
   - 负责：在 `practice_instance_scheduler` 循环里按 `container.scheduler.desired_reconcile_interval` 周期性收敛 AWD `running / frozen` 比赛的期望运行态，补齐“应该活着的 `team × visible service`”，并优先复用已有实例行 / nonce，而不是直接扩展成新的批量重启控制面
   - 负责：对同一 `contest_id + team_id + service_id` scope 的坏配置或 provisioning 失败，把 `failure_count / last_failure_at / next_attempt_at / suppressed_until / last_error` 落到 Redis `DesiredAWDReconcileStateKey(...)`；backoff 或 suppress 窗口内直接跳过自动 operation 与重复告警，scope 一旦恢复 active 会清掉这份状态
   - 不负责：引入外部消息队列或让 HTTP 请求直接长期持有 Docker 冷启动；当前排队事实仍在 `instances` 表和调度器里
@@ -31,35 +32,43 @@
 
 - `code/backend/internal/module/contest/domain/contest_timing.go`、`code/backend/internal/module/contest/application/jobs/{status_update_support.go,awd_round_plan.go,awd_round_flag_support.go}`、`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`
   - 负责：把 AWD 比赛的有效时间窗统一收口到 `effectiveNow = now - pausedDuration` 与 `effectiveEnd = end_time + pausedDuration`；`pausedDuration` 来自 `contests.paused_seconds`，会同时作用到 round 推进、封榜时间、Flag 读取窗口、榜单结束时间和 `until_contest_end` 实例过期时间
-  - 负责：API 启动时通过 Redis 中的 `platform_runtime_state` 记录读取上次 `boot_id + last_heartbeat_at`。当检测到宿主机 boot identity 变化或 heartbeat 长时间停滞时，启动恢复服务会先给 `running / frozen` 的 AWD 比赛补暂停时长、刷新这些比赛下活跃实例的 `expires_at`、执行 `ReconcileLostActiveRuntimes` 恢复停机前仍有 active row 的运行态，再执行 `ReconcileDesiredAWDInstances` 补齐缺失的 `team × visible service`，最后把恢复耗时继续累计到 `paused_seconds`；同一次 outage 通过 `runtime_recovery_key + runtime_recovery_applied_seconds` 做幂等补差，避免恢复重试或二次扩展时重复累计
+  - 负责：API 启动后先通过 Redis `ctf:platform:runtime:recovery:lock` 竞争 leader；只有拿到 `container.startup_recovery_lock_ttl` 租约并续租成功的实例，才会读取 / 写入 `platform_runtime_state` 并负责 outage recovery。拿不到锁的副本保持待命，不参与 heartbeat 或恢复链路；在 leader 完成首轮恢复并写入当前 `boot_id` heartbeat 之前，副本不会越过启动门禁进入对外服务态
+  - 负责：leader 读取 Redis 中的 `platform_runtime_state` 保存的上次 `boot_id + last_heartbeat_at`。启动恢复只在检测到宿主机 boot identity 变化时触发：服务会先给 `running / frozen` 的 AWD 比赛补暂停时长、刷新这些比赛下活跃实例的 `expires_at`、执行 `ReconcileLostActiveRuntimes` 恢复停机前仍有 active row 的运行态，再执行 `ReconcileDesiredAWDInstances` 补齐缺失的 `team × visible service`，最后把恢复耗时继续累计到 `paused_seconds`；同一次 outage 通过 `runtime_recovery_key + runtime_recovery_applied_seconds` 做幂等补差，避免恢复重试或二次扩展时重复累计。同 `boot_id` 下的 heartbeat gap 只用于 leader readiness，不再直接当成 runtime outage
   - 不负责：提供管理员手动暂停状态机，或把同一套暂停语义扩散到 Jeopardy 比赛
 
 - `code/backend/internal/config/config.go`、`code/backend/Dockerfile`、`docker/ctf/docker-compose.dev.yml`
   - 负责：在进程启动时通过 `container.flag_global_secret_file` 解析 AWD dynamic flag 的全局密钥；显式 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 仍然优先，但若与持久化文件值不一致会直接报错，而不是静默覆盖
-  - 负责：当环境变量未注入时优先读取持久化文件；文件不存在时自动生成新 secret 并原子写回。默认路径是 `storage/runtime/flag-global-secret`，镜像预建 `/app/storage/runtime`，compose dev 通过 `/app/storage` 挂载把 secret 留在持久化卷里，避免 API / Docker 宿主重启后丢失
-  - 不负责：跨多副本分发 secret、对接外部 KMS，或替部署层实现 secret rotation
+  - 负责：非生产环境在环境变量未注入时优先读取持久化文件；文件不存在时才自动生成新 secret 并原子写回。默认路径是 `storage/runtime/flag-global-secret`，镜像预建 `/app/storage/runtime`，compose dev 通过 `/app/storage` 挂载把 secret 留在持久化卷里，避免 API / Docker 宿主重启后丢失
+  - 负责：生产环境禁止在文件缺失时自动生成 secret；多 API 实例必须通过同一 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或预置的一致 `container.flag_global_secret_file` 启动
+  - 负责：启动时把 active key id、active fingerprint 和 key id -> fingerprint 映射注册到 `runtime_cluster_secrets`，后续 API 实例若 active key、fingerprint 或仍被有效实例引用的 keyring 条目不一致，会启动失败，`/ready` 也会将 `container_flag_secret` 标记为 down
+  - 负责：当需要轮换 active key 时，部署配置必须同时带上旧 active key、新 active key，以及仍被 `instances.flag_key_id` 引用的历史 key；升级前空 `flag_key_id` 的实例固定按 `default` key 解释。active key 变化必须显式开启 `container.flag_global_secret_allow_rotation`，否则仍按错配处理
+  - 不负责：保存 secret 明文到数据库、跨多副本分发 secret、对接外部 KMS，或替部署层选择 secret 轮换时机
 
 - `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
   - 负责：题目自检和导入阶段的临时运行时探测、附件与构建源隔离、镜像构建 / registry 校验前置条件
   - 不负责：在 preview / commit 阶段替学生或队伍正式开题，或把导入工作目录暴露为运行态实例入口
 
 - `code/backend/internal/module/instance/application/{commands/instance_service.go,commands/maintenance_service.go,queries/instance_service.go,queries/proxy_ticket_service.go}`、`code/backend/internal/app/composition/{runtime_http_service_adapter.go,awd_defense_ssh_gateway.go}`
-  - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把实例访问入口与 SSH 防守入口收敛到 ticket + scope 校验链路；当前 runtime HTTP facade 只覆盖仍然开放的实例访问 / proxy / AWD defense SSH 入口
-  - 不负责：让调用方直接持有容器 IP/端口、绕过平台鉴权访问，或回退到浏览器文件工作台方案
+  - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把实例访问入口与 SSH 防守入口收敛到 ticket + scope 校验链路；当前 runtime HTTP facade 只覆盖仍然开放的实例访问 / proxy / AWD defense SSH 票据签发入口
+  - 不负责：持有 `2222` listener 生命周期、让调用方直接持有容器 IP/端口、绕过平台鉴权访问，或回退到浏览器文件工作台方案
+
+- `code/backend/internal/app/composition/awd_defense_ssh_gateway_builder.go`、`code/backend/internal/bootstrap/awd_defense_ssh_gateway.go`
+  - 负责：把 AWD defense SSH ingress 装配成独立进程，监听 `container.defense_ssh_port`，校验 ticket 后进入目标工作区容器；多 node 场景下通过 `runtimeNodeExecutionRouter` 按 `container_id -> node_id` 路由 interactive exec
+  - 不负责：签发 ticket、决定 contest/team/service 作用域规则，或替 `runtime-agent` 承担执行面 owner
 
 ## 接口或数据影响
 
-- 当前运行态核心数据在 `instances`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope` 等字段约束。
+- 当前运行态核心数据在 `instances`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope`、`flag_key_id` 等字段约束。
 - 动态网络预留事实持久化在 `network_allocations`；内部 `TopologyCreateRequest.SubnetPool` 只区分 `single_container` 与 `topology` 两类动态子网池，不向 HTTP 契约直接暴露 Docker 子网选择细节。
 - AWD 比赛时间暂停事实持久化在 `contests.paused_seconds`，同一次宿主机 outage 的幂等账本持久化在 `contests.runtime_recovery_key` 与 `contests.runtime_recovery_applied_seconds`，宿主机恢复检测状态持久化在 Redis `platform_runtime_state`；后端内部不新增比赛暂停枚举，而是统一基于 `effectiveNow / effectiveEnd` 解释活跃 AWD 比赛时间窗。
 - AWD desired reconcile 的 scope 级降噪状态持久化在 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>`，字段包括 `failure_count`、`last_failure_at`、`next_attempt_at`、`suppressed_until` 和 `last_error`；scope 恢复 active 后由 reconcile 主动清除。
-- AWD dynamic flag 的稳定密钥事实最终落在 `container.flag_global_secret_file` 指向的本地文件或持久化卷里；`container.flag_global_secret` 只是当前进程加载后的内存值。
+- AWD dynamic flag 的 raw secret 最终来自 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或 `container.flag_global_secret_file` 指向的本地文件 / 持久化卷；`container.flag_global_secret` 只是当前进程加载后的内存值。集群一致性事实只在 `runtime_cluster_secrets` 中保存 active key id、active fingerprint 和 key id -> fingerprint 映射，不保存 secret 明文；每条动态实例行通过 `instances.flag_key_id` 记录生成该实例 Flag 时使用的 key，升级前为空的旧行固定按 `default` key 解释。
 - 运行时入口与访问相关 API 包括 `POST /api/v1/challenges/:id/instances`、`POST /api/v1/contests/:id/challenges/:cid/instances`、`POST /api/v1/contests/:id/awd/services/:sid/instances`、`POST /api/v1/instances/:id/access` 以及 AWD 相关访问 / 复盘接口；契约以 `docs/contracts/openapi-v1.yaml` 为准。
-- 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.proxy_ticket_ttl`、`container.registry.*`、`container.network.single_container_*`、`container.network.topology_*`、`contest.awd.scheduler_*`；两套 CIDR 会在启动时做 IPv4、网络地址、掩码范围和 overlap 校验，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
+- 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.startup_recovery_lock_ttl`、`container.proxy_ticket_ttl`、`container.registry.*`、`container.network.single_container_*`、`container.network.topology_*`、`contest.awd.scheduler_*`；两套 CIDR 会在启动时做 IPv4、网络地址、掩码范围和 overlap 校验，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
 
 ## Guardrail
 
-- 运行时装配与可选 SSH 网关：`code/backend/internal/app/composition/runtime_module_test.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
+- 运行时装配与独立 SSH 网关：`code/backend/internal/app/composition/runtime_module_test.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
 - runtime / composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`、`code/backend/internal/module/runtime/architecture_test.go`
 - 练习实例创建、desired reconcile 与补偿：`code/backend/internal/module/practice/application/commands/runtime_container_create_test.go`、`instance_provisioning_test.go`、`instance_start_service_test.go`、`awd_desired_runtime_reconciler_test.go`
 - AWD 宿主机重启恢复与时间窗顺延：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service_test.go`、`code/backend/internal/module/contest/infrastructure/contest_awd_runtime_recovery_repository_test.go`、`code/backend/internal/module/runtime/infrastructure/repository_awd_expiry_refresh_test.go`、`code/backend/internal/module/contest/application/jobs/awd_round_plan_test.go`

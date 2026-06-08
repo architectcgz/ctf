@@ -156,6 +156,18 @@ GET /api/v1/admin/audit-logs?start_time=2026-01-01T00:00:00Z&end_time=2026-02-01
 
 - 模糊搜索使用 `keyword` 参数：`GET /api/v1/challenges?keyword=注入`
 
+### 1.7 健康检查接口
+
+健康检查同时挂在根路径和 `/api/v1` 下，给 systemd、反向代理和容器编排使用：
+
+- `GET /live`、`GET /api/v1/live`：只检查进程存活，不依赖 PostgreSQL、Redis 或运行态 secret。
+- `GET /ready`、`GET /api/v1/ready`：检查进程是否 draining、PostgreSQL、Redis，以及集群级动态 Flag secret 一致性。
+- `GET /health`、`GET /api/v1/health`：返回依赖诊断摘要。
+- `GET /health/db`、`GET /api/v1/health/db`：只检查 PostgreSQL。
+- `GET /health/redis`、`GET /api/v1/health/redis`：只检查 Redis。
+
+`/ready` 响应的 `dependencies` 是字符串 map。当前稳定键包括 `process`、`postgres`、`redis` 和 `container_flag_secret`；其中 `container_flag_secret=down` 表示当前 API 实例加载的 active dynamic Flag key id / fingerprint，或仍被有效实例引用的 keyring 条目，与数据库 `runtime_cluster_secrets` 记录不一致，反向代理应摘除该实例。
+
 ---
 
 ## 2. 统一响应格式

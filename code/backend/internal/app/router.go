@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -14,12 +16,14 @@ import (
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	"ctf-platform/internal/platform/clustersecret"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
 )
 
 type routerRuntime struct {
 	engine           *gin.Engine
+	readiness        *healthService.ReadinessState
 	closers          []lifecycleComponent
 	assessment       *composition.AssessmentModule
 	containerRuntime *composition.ContainerRuntimeModule
@@ -75,8 +79,11 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 
 	rateChecker := ratelimitpkg.NewChecker(cache, cfg.RateLimit.RedisKeyPrefix)
 
-	healthSvc := healthService.NewService(cfg, db, cache)
+	readiness := healthService.NewReadinessState()
+	healthSvc := healthService.NewService(cfg, db, cache, readiness, containerFlagSecretDependencyCheck(cfg, db)...)
 	health := healthHandler.NewHandler(healthSvc)
+	engine.GET("/live", health.GetLive)
+	engine.GET("/ready", health.GetReady)
 	engine.GET("/health", health.Get)
 	engine.GET("/health/db", health.GetDB)
 	engine.GET("/health/redis", health.GetRedis)
@@ -101,6 +108,8 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	}
 
 	apiV1 := engine.Group("/api/v1")
+	apiV1.GET("/live", health.GetLive)
+	apiV1.GET("/ready", health.GetReady)
 	apiV1.GET("/health", health.Get)
 	apiV1.GET("/health/db", health.GetDB)
 	apiV1.GET("/health/redis", health.GetRedis)
@@ -200,6 +209,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 
 	return &routerRuntime{
 		engine:           engine,
+		readiness:        readiness,
 		assessment:       assessmentModule,
 		containerRuntime: containerRuntimeModule,
 		contest:          contestModule,
@@ -211,4 +221,37 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 			{name: "runtime_execution_bridge", closer: containerRuntimeModule.LifecycleCloser},
 		},
 	}, nil
+}
+
+func containerFlagSecretDependencyCheck(cfg *config.Config, db *gorm.DB) []healthService.DependencyCheck {
+	if cfg == nil || db == nil || cfg.Container.FlagGlobalSecret == "" {
+		return nil
+	}
+	keyID := cfg.Container.ResolvedFlagSecretKeyID
+	if keyID == "" {
+		keyID = cfg.Container.FlagGlobalSecretKeyID
+	}
+	if keyID == "" {
+		keyID = "default"
+	}
+	secret := cfg.Container.FlagGlobalSecret
+	secrets := cfg.Container.ResolvedFlagSecrets
+	if secrets == nil {
+		secrets = map[string]string{keyID: secret}
+	}
+	return []healthService.DependencyCheck{{
+		Name: "container_flag_secret",
+		Check: func(ctx context.Context) error {
+			requiredKeyIDs, err := clustersecret.RequiredContainerFlagSecretKeyIDs(ctx, db)
+			if err != nil {
+				return err
+			}
+			return clustersecret.CheckContainerFlagSecretKeyring(ctx, db, clustersecret.ContainerFlagSecretKeyring{
+				ActiveKeyID:    keyID,
+				ActiveSecret:   secret,
+				Secrets:        secrets,
+				RequiredKeyIDs: requiredKeyIDs,
+			})
+		},
+	}}
 }

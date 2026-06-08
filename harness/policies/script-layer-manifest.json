@@ -10,6 +10,7 @@
     "scripts/check-frontend-architecture.sh",
     "scripts/check-frontend-test-guard.sh",
     "scripts/check-open-todos.sh",
+    "scripts/check-test-architecture.sh",
     "scripts/check-workflow-governance-core.sh",
     "scripts/check-workflow-governance.sh",
     "scripts/check-review-governance-core.sh",
@@ -28,6 +29,7 @@
   ],
   "project_tools": [
     "tools/ensure-frontend-tooling.sh",
+    "tools/multi-instance-nginx-proxy-smoke.sh",
     "tools/runtime-agent-dual-node-e2e.sh",
     "tools/sync_openapi_from_contract.py"
   ],

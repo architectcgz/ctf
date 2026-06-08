@@ -55,7 +55,6 @@ services:
       CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE: /app/storage/runtime/flag-global-secret
     ports:
       - "127.0.0.1:8080:8080"
-      - "127.0.0.1:2222:2222"
     depends_on:
       ctf-postgres:
         condition: service_healthy
@@ -70,11 +69,59 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - wget -qO- http://localhost:8080/health | grep -q '"status":"ok"' || exit 1
+        - wget -qO- http://localhost:8080/ready | grep -q '"status":"ready"' || exit 1
       interval: 15s
       timeout: 5s
       start_period: 30s
       retries: 10
+    restart: unless-stopped
+    networks:
+      - ctf-network
+
+  ctf-awd-defense-ssh-gateway:
+    container_name: ctf-awd-defense-ssh-gateway
+    image: ctf-backend:local
+    build:
+      context: ../../code/backend
+      dockerfile: Dockerfile
+    command:
+      - /app/ctf-awd-defense-ssh-gateway
+    env_file:
+      - path: infra/registry/ctf-platform-registry.env
+        required: false
+    environment:
+      APP_ENV: dev
+      DOCKER_HOST: unix:///var/run/docker.sock
+      AWD_CHECKER_ARTIFACT_DIR: ${CTF_HOST_ROOT:-${PWD}}/docker/ctf/runtime/awd-checker-artifacts
+      CTF_HTTP_HOST: 0.0.0.0
+      CTF_HTTP_PORT: 8080
+      CTF_CONTAINER_PUBLIC_HOST: 127.0.0.1
+      CTF_CONTAINER_ACCESS_HOST: host-gateway.internal
+      CTF_CONTEST_AWD_CHECKER_SANDBOX_HOST_WORK_ROOT: ${CTF_HOST_ROOT:-${PWD}}/docker/ctf/runtime/checker-sandboxes
+      CTF_POSTGRES_HOST: ctf-postgres
+      CTF_POSTGRES_PORT: 5432
+      CTF_POSTGRES_DATABASE: ctf
+      CTF_POSTGRES_USERNAME: postgres
+      CTF_POSTGRES_PASSWORD: postgres123456
+      CTF_AUTO_MIGRATE: "false"
+      CTF_REDIS_ADDR: ctf-redis:6379
+      CTF_REDIS_PASSWORD: redis123456
+      CTF_REDIS_DB: 2
+      CTF_CONTAINER_FLAG_GLOBAL_SECRET: ctf-container-flag-secret-0123456789abcdef
+      CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE: /app/storage/runtime/flag-global-secret
+    ports:
+      - "127.0.0.1:2222:2222"
+    depends_on:
+      ctf-postgres:
+        condition: service_healthy
+      ctf-redis:
+        condition: service_healthy
+    volumes:
+      - ${CTF_HOST_ROOT:-${PWD}}/docker/ctf:${CTF_HOST_ROOT:-${PWD}}/docker/ctf
+      - ${CTF_HOST_ROOT:-${PWD}}/docker/ctf/runtime/app-storage:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host-gateway.internal:host-gateway"
     restart: unless-stopped
     networks:
       - ctf-network

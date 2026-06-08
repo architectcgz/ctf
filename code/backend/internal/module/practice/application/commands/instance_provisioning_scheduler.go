@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	"ctf-platform/internal/shared/lockkeepalive"
 )
 
 func (s *Service) RunProvisioningLoop(ctx context.Context) {
@@ -24,15 +25,12 @@ func (s *Service) RunProvisioningLoop(ctx context.Context) {
 	var lastDesiredReconcileAt time.Time
 
 	for {
-		if nextAttemptAt := time.Now().UTC(); s.shouldRunDesiredAWDReconcile(lastDesiredReconcileAt, nextAttemptAt) {
-			lastDesiredReconcileAt = nextAttemptAt
-			if err := s.ReconcileDesiredAWDInstances(ctx); err != nil && !errors.Is(err, context.Canceled) {
-				s.logger.Warn("对账 AWD 期望运行态失败", zap.Error(err))
+		if nextLastAttemptAt, acquired, err := s.runProvisioningCycle(ctx, lastDesiredReconcileAt); err != nil {
+			if !errors.Is(err, context.Canceled) {
+				s.logger.Warn("调度待启动实例失败", zap.Error(err))
 			}
-		}
-
-		if err := s.dispatchPendingInstances(ctx); err != nil && !errors.Is(err, context.Canceled) {
-			s.logger.Warn("调度待启动实例失败", zap.Error(err))
+		} else if acquired {
+			lastDesiredReconcileAt = nextLastAttemptAt
 		}
 
 		select {
@@ -41,6 +39,20 @@ func (s *Service) RunProvisioningLoop(ctx context.Context) {
 		case <-ticker.C:
 		}
 	}
+}
+
+func (s *Service) runProvisioningCycle(ctx context.Context, lastDesiredReconcileAt time.Time) (time.Time, bool, error) {
+	nextLastDesiredReconcileAt := lastDesiredReconcileAt
+	acquired, err := s.withProvisioningSchedulerLock(ctx, func(lockCtx context.Context) error {
+		if nextAttemptAt := time.Now().UTC(); s.shouldRunDesiredAWDReconcile(lastDesiredReconcileAt, nextAttemptAt) {
+			nextLastDesiredReconcileAt = nextAttemptAt
+			if err := s.ReconcileDesiredAWDInstances(lockCtx); err != nil && !errors.Is(err, context.Canceled) {
+				s.logger.Warn("对账 AWD 期望运行态失败", zap.Error(err))
+			}
+		}
+		return s.dispatchPendingInstances(lockCtx)
+	})
+	return nextLastDesiredReconcileAt, acquired, err
 }
 
 func (s *Service) dispatchPendingInstances(ctx context.Context) error {
@@ -217,4 +229,58 @@ func (s *Service) schedulerMaxActiveInstances() int {
 		return 0
 	}
 	return s.config.Container.Scheduler.MaxActiveInstances
+}
+
+func (s *Service) schedulerLockTTL() time.Duration {
+	if s == nil || s.config == nil || s.config.Container.Scheduler.LockTTL <= 0 {
+		return 30 * time.Second
+	}
+	return s.config.Container.Scheduler.LockTTL
+}
+
+func (s *Service) tryAcquireProvisioningSchedulerLock(ctx context.Context) (practiceSchedulerLockLease, bool, error) {
+	if s == nil || s.schedulerLockStore == nil {
+		return nil, true, nil
+	}
+	return s.schedulerLockStore.AcquireProvisioningSchedulerLock(ctx, s.schedulerLockTTL())
+}
+
+func (s *Service) withProvisioningSchedulerLock(ctx context.Context, fn func(context.Context) error) (bool, error) {
+	lock, acquired, err := s.tryAcquireProvisioningSchedulerLock(ctx)
+	if err != nil {
+		return false, err
+	}
+	if !acquired {
+		return false, nil
+	}
+
+	lockCtx, stopKeepalive := lockkeepalive.Start(ctx, s.logger, lock, "practice_instance_scheduler", s.schedulerLockTTL())
+	defer stopKeepalive()
+	defer s.releaseProvisioningSchedulerLock(ctx, lock)
+	return true, fn(lockCtx)
+}
+
+func (s *Service) releaseProvisioningSchedulerLock(ctx context.Context, lock practiceSchedulerLockLease) {
+	if lock == nil || ctx == nil {
+		return
+	}
+
+	releaseCtx := context.WithoutCancel(ctx)
+	if timeout := s.schedulerLockTTL(); timeout > 0 {
+		var cancel context.CancelFunc
+		releaseCtx, cancel = context.WithTimeout(releaseCtx, timeout)
+		defer cancel()
+	}
+
+	released, err := lock.Release(releaseCtx)
+	if err != nil {
+		s.logger.Error("practice_instance_scheduler_lock_release_failed",
+			zap.String("lock_key", lock.Key(releaseCtx)),
+			zap.Error(err))
+		return
+	}
+	if !released && ctx.Err() == nil {
+		s.logger.Warn("practice_instance_scheduler_lock_already_lost",
+			zap.String("lock_key", lock.Key(releaseCtx)))
+	}
 }

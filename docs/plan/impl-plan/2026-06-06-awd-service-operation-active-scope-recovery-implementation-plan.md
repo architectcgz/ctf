@@ -32,7 +32,7 @@
 - Related architecture/contracts:
   - `code/backend/internal/module/practice/infrastructure/repository.go`
   - `code/backend/internal/module/practice/infrastructure/repository_test.go`
-  - `code/backend/migrations/000002_create_awd_service_operations.up.sql`
+  - `code/backend/migrations/000001_init_schema.up.sql`（`awd_service_operations` 表定义已收口到当前 baseline）
 - Related prior work:
   - `code/backend/internal/module/practice/application/commands/contest_awd_operations.go`
   - `code/backend/internal/module/practice/application/commands/awd_desired_runtime_reconciler.go`

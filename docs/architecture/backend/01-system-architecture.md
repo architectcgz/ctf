@@ -55,7 +55,7 @@ flowchart TD
 | 部署环境 | 学校物理机，校园网内网，无公网暴露 |
 | 用户规模 | 注册用户 ≤ 2000，日常训练并发 ≤ 200 |
 | 容器上限 | 单机同时运行靶机容器 ≤ 200（推荐配置 16 核 64GB 下的评估值）；竞赛模式下通过降低单容器配额（small 级别）和容器池预热提升密度；如单机仍不足，一期支持双机方案（详见 03-container-architecture §9） |
-| 可用性目标 | 日常训练 99%+（允许计划内停机维护）；竞赛期间 99.5%+（竞赛窗口内禁止维护操作，通过健康检查 + systemd 自动重启保障） |
+| 可用性目标 | 日常训练 99%+（允许计划内停机维护）；竞赛期间 99.5%+（竞赛窗口内禁止维护操作，通过 `/ready` 摘流、`/live` 存活探测、`/health` 依赖诊断 + systemd 自动重启保障） |
 | 安全边界 | 靶机容器必须网络隔离，禁止访问宿主机和平台内部服务 |
 
 ---
@@ -814,7 +814,7 @@ flowchart TD
 
 | 方案 | 适用阶段 | 结论 | 说明 |
 |------|----------|------|------|
-| API 容器直接挂载宿主 `/var/run/docker.sock` | 仅限一次性本机开发排障 | 不推荐作为默认路径 | API 容器失陷后会直接继承宿主 Docker daemon 的控制权，不能作为共享开发、演示或正式环境边界 |
+| API / `awd-defense-ssh-gateway` 容器直接挂载宿主 `/var/run/docker.sock` | 仅限一次性本机开发排障 | 不推荐作为默认路径 | 任一容器失陷后都会直接继承宿主 Docker daemon 的控制权，不能作为共享开发、演示或正式环境边界 |
 | API 直接跑宿主机进程，Docker Engine 仍在本机 | 本地开发、小规模单机试运行 | 可作为过渡方案 | 能去掉“容器内通过 docker.sock 直接提权”的捷径，但 API 一旦失陷，攻击者仍可能利用 API 所在主机上的 Docker 控制能力继续扩大权限 |
 | API 主机与靶机 Docker 主机分离，API 通过 `runtime-agent` + mTLS 调用执行面 | 共享开发、校内试运行、正式比赛 | 推荐的正式目标 | 把平台控制面与靶机宿主隔离开，并把 ACL、checker sandbox、容器文件写入、容器 exec 等宿主机副作用下沉到节点 agent；API 失陷后不会自动获得 API 所在主机的本地 Docker root，也不会再因为本地 bind mount 假设而误写远端宿主 |
 
@@ -894,7 +894,7 @@ contest:
   - 采用 `api -> application -> domain`、`application -> ports` 的依赖方向，更容易稳定边界并控制跨模块耦合
   - 如后续确有拆分需求，可以沿当前模块边界抽离，而不是回到大一统的 handler/service/repository 堆叠
 - 风险：
-  - 单进程仍是运行时单点，通过 systemd 自动重启 + 健康检查缓解
+  - 单进程仍是运行时单点，通过 systemd 自动重启、`/live` 存活探测、`/ready` 流量摘除和 `/health` 依赖诊断缓解
   - 若 composition root 继续膨胀，会重新把模块边界拉回路由层，因此必须把 wiring 留在 `runtime` 与 `internal/app/composition`
 
 ### ADR-002：平台服务不容器化
@@ -918,15 +918,15 @@ contest:
 
 ### ADR-004：动态 Flag 生成策略
 
-- 决策：动态 Flag 采用 `HMAC-SHA256(global_secret + contest_salt, user_id + ":" + challenge_id + ":" + instance_nonce)` 生成
+- 决策：动态 Flag 采用 `HMAC-SHA256(secret_by_key_id, subject_id + ":" + challenge_id + ":" + instance_nonce)` 生成
 - 算法要点：
-  - `global_secret`：全局密钥，存储于环境变量 `CTF_FLAG_SECRET`，禁止写入数据库或日志
-  - `contest_salt`：每场竞赛独立的随机 salt（32 字节），竞赛创建时生成，加密存储于数据库
+  - `secret_by_key_id`：由 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或 `container.flag_global_secret_file` 加载到进程内存，数据库只保存 active key id、active fingerprint 和 key id -> fingerprint 映射，禁止写入 secret 明文或日志
+  - `flag_key_id`：普通实例启动时写入 `instances.flag_key_id`，用于 secret rotation 后继续校验旧实例；升级前为空的旧行固定按 `default` key 解释
   - `instance_nonce`：实例级随机值，容器创建时生成，防止同一用户同一题的不同实例产生相同 Flag
-  - HMAC key = `global_secret + contest_salt`，message = `user_id:challenge_id:instance_nonce`
+  - HMAC key = `secret_by_key_id`，message = `subject_id:challenge_id:instance_nonce`
 - 理由：
   - 每用户每题每实例唯一 Flag，防止选手之间共享答案
-  - 三层密钥分离（global_secret / contest_salt / instance_nonce），单一泄露不会导致全部 Flag 可计算
+  - 密钥与实例随机输入分离，且实例记录 key id 后支持 active key rotation
   - 基于 HMAC 的确定性生成，无需额外存储每用户的 Flag 值
   - 校验时服务端重新计算比对，不依赖容器内的 Flag 值
 - Flag 格式：`flag{<hex_prefix_32chars>}`，统一前缀便于正则匹配和防作弊检测

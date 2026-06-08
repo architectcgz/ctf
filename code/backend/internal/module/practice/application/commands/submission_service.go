@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -188,22 +189,24 @@ func formatSolveGracePeriod(delay time.Duration) string {
 	return fmt.Sprintf("%d 分钟", minutes)
 }
 
-func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *practiceentity.Challenge) (string, string, error) {
+func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *practiceentity.Challenge) (string, string, string, error) {
 	switch chal.FlagType {
 	case practiceentity.FlagTypeDynamic:
 		nonce, err := randomstring.Generate()
 		if err != nil {
-			return "", "", apperror.ErrInternal.WithCause(err)
+			return "", "", "", apperror.ErrInternal.WithCause(err)
 		}
-		if s.config.Container.FlagGlobalSecret == "" {
-			return "", "", apperror.ErrInternal.WithCause(fmt.Errorf("flag global secret is empty"))
+		keyID := s.activeFlagSecretKeyID()
+		secret, ok := s.flagSecretForKeyID(keyID)
+		if !ok {
+			return "", "", "", apperror.ErrInternal.WithCause(fmt.Errorf("flag global secret is empty"))
 		}
-		flag := crypto.GenerateDynamicFlag(subjectID, challengeID, s.config.Container.FlagGlobalSecret, nonce, chal.FlagPrefix)
-		return flag, nonce, nil
+		flag := crypto.GenerateDynamicFlag(subjectID, challengeID, secret, nonce, chal.FlagPrefix)
+		return flag, nonce, keyID, nil
 	case practiceentity.FlagTypeStatic:
-		return chal.FlagHash, "", nil
+		return chal.FlagHash, "", "", nil
 	default:
-		return "", "", nil
+		return "", "", "", nil
 	}
 }
 
@@ -225,10 +228,50 @@ func (s *Service) validateSubmittedFlag(ctx context.Context, userID int64, chall
 	if err != nil {
 		return false, apperror.ErrInternal.WithCause(err)
 	}
-	if instance == nil || instance.Nonce == "" || s.config.Container.FlagGlobalSecret == "" {
+	if instance == nil || instance.Nonce == "" {
+		return false, nil
+	}
+	secret, ok := s.flagSecretForKeyID(instance.FlagKeyID)
+	if !ok {
 		return false, nil
 	}
 
-	expectedFlag := crypto.GenerateDynamicFlag(userID, challengeItem.ID, s.config.Container.FlagGlobalSecret, instance.Nonce, challengeItem.FlagPrefix)
+	expectedFlag := crypto.GenerateDynamicFlag(userID, challengeItem.ID, secret, instance.Nonce, challengeItem.FlagPrefix)
 	return crypto.ValidateFlag(flag, expectedFlag), nil
+}
+
+func (s *Service) activeFlagSecretKeyID() string {
+	if s == nil || s.config == nil {
+		return ""
+	}
+	if keyID := strings.TrimSpace(s.config.Container.ResolvedFlagSecretKeyID); keyID != "" {
+		return keyID
+	}
+	if keyID := strings.TrimSpace(s.config.Container.FlagGlobalSecretKeyID); keyID != "" {
+		return keyID
+	}
+	return "default"
+}
+
+func (s *Service) flagSecretForKeyID(keyID string) (string, bool) {
+	if s == nil || s.config == nil {
+		return "", false
+	}
+	keyID = strings.TrimSpace(keyID)
+	if keyID == "" {
+		keyID = "default"
+	}
+	if keyID == "" {
+		return "", false
+	}
+	if secret := strings.TrimSpace(s.config.Container.ResolvedFlagSecrets[keyID]); secret != "" {
+		return secret, true
+	}
+	activeKeyID := s.activeFlagSecretKeyID()
+	if keyID == activeKeyID || (keyID == "default" && activeKeyID == "") {
+		if secret := strings.TrimSpace(s.config.Container.FlagGlobalSecret); secret != "" {
+			return secret, true
+		}
+	}
+	return "", false
 }

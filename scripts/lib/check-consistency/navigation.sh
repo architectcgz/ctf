@@ -75,6 +75,7 @@ run_navigation_checks() {
   check_file "scripts/run-workflow-stage.sh"
   check_file "harness/policies/commit-message.json"
   check_file "scripts/check-frontend-test-guard.sh"
+  check_file "scripts/check-test-architecture.sh"
   check_file "scripts/check-startup-gate.sh"
   check_contains ".githooks/commit-msg" 'scripts/check-commit-message\.sh' "commit-msg runs scripts/check-commit-message.sh"
   check_contains "scripts/check-consistency.sh" 'scripts/check-workflow-governance\.sh' "check-consistency delegates to workflow governance"

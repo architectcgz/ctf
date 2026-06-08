@@ -137,7 +137,7 @@ sequenceDiagram
 | 启动节流 | `container.scheduler.max_concurrent_starts` | 显式限制同一时刻的 Docker 冷启动数 |
 | 宿主机容量保护 | `container.scheduler.max_active_instances` 控制 `creating + running` | 不再默认宿主机可以无限接单 |
 | AWD 期望调和节流 | `container.scheduler.desired_reconcile_interval` | 把“应该活着的队伍服务补齐”并到现有 scheduler 循环，同时避免高频全量扫描所有 AWD 比赛 |
-| Flag 生成算法 | `HMAC-SHA256(global_secret, uid + ":" + challenge_id + ":" + instance_nonce)` | 当前训练/普通竞赛链路由全局密钥与实例随机 `nonce` 共同生成动态 Flag；AWD 轮次会把队伍、赛事、轮次等上下文拼接为 `nonce` 后复用同一 HMAC 逻辑 |
+| Flag 生成算法 | `HMAC-SHA256(secret_by_key_id, uid + ":" + challenge_id + ":" + instance_nonce)` | 当前训练链路由实例记录的 `flag_key_id` 找到对应密钥，再结合实例随机 `nonce` 生成动态 Flag；AWD 轮次会把队伍、赛事、轮次等上下文拼接为 `nonce` 后复用同一 HMAC 逻辑 |
 | 资源限制 | Docker `--memory`、`--cpus`、`--pids-limit` 从 challenge 配置读取 | 防止恶意容器耗尽宿主机资源 |
 | 网络隔离 | 每个实例独立 Docker Network，仅暴露指定端口 | 防止实例间横向渗透 |
 | 同步/异步切换 | `container.scheduler.enabled` 控制 | 测试环境或小规模环境可回退同步启动 |
@@ -266,7 +266,7 @@ sequenceDiagram
 | 决策点 | 方案 | 理由 |
 |--------|------|------|
 | 频率限制 | Redis `INCR` + `EXPIRE`，每用户每题 10 次/分钟 | 防止暴力枚举 Flag，使用滑动窗口更精确但此场景固定窗口足够 |
-| Flag 验证方式 | 静态题：`SHA-256(submitted_flag + salt)` 与数据库存储的哈希比对；动态题：用 `instance.nonce` 重新 HMAC 计算后比对 | 静态 Flag 不存明文（仅存哈希+盐），动态 Flag 不存明文（只存 nonce），防止数据库泄露后 Flag 暴露 |
+| Flag 验证方式 | 静态题：`SHA-256(submitted_flag + salt)` 与数据库存储的哈希比对；动态题：用 `instance.flag_key_id + instance.nonce` 找到对应密钥并重新 HMAC 计算后比对；空 `flag_key_id` 按 `default` key 解释 | 静态 Flag 不存明文（仅存哈希+盐），动态 Flag 不存明文（只存 key id + nonce），防止数据库泄露后 Flag 暴露；旧实例在 active key 轮换后仍可用原 key 校验到过期，前提是所有 API 副本的 keyring 仍保留被旧实例引用的 key |
 | 幂等保证 | 数据库部分唯一索引：竞赛 `UNIQUE(user_id, challenge_id, contest_id) WHERE result='correct' AND contest_id IS NOT NULL`；练习 `UNIQUE(user_id, challenge_id) WHERE result='correct' AND contest_id IS NULL` | 数据库层面兜底，即使并发请求同时通过应用层检查也不会重复计分 |
 | 计分公式 | `score = base_score × difficulty_weight - hint_penalty` | 简单直观，hint_penalty 从已使用的提示累加 |
 | 得分更新 | 原子累加 `UPDATE ... SET score=score+?, solved_count=solved_count+1` | 无需乐观锁版本校验，PostgreSQL 行锁保证原子性；同一用户不会高频得分，行锁持有时间极短 |
@@ -649,15 +649,19 @@ sequenceDiagram
 Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库中仍处于 `running / creating` 的实例可能已经失去实际容器。平台通过 runtime 维护任务和 practice 期望调和做主动对账：
 
 - `maintenance_service.ReconcileLostActiveRuntimes` 负责扫描未过期的 `running / creating` 实例。
+- `startup_runtime_recovery` 在多 API 副本下会先竞争 Redis leader lock；只有持锁副本才会读取 / 写入 `platform_runtime_state` 并执行下面这条恢复链路。
 - 主动删除入口会先把实例置为 `stopping`。`stopping` 表示“实例 owner 已确认销毁，但 runtime cleanup 尚未完成”，它不再属于 active runtime recovery 的候选集合。
 - 它会根据 `container_id` 与 `runtime_details.containers[]` 检查入口容器和拓扑容器是否仍存在且处于运行状态；若单个实例 Docker inspect 失败，只记录日志并跳过该实例，本轮继续处理其他实例。
 - 若 active instance 的容器缺失或已退出，就把该实例重新置为 `pending`，交由现有 `practice_instance_scheduler` 按 `pending -> creating -> running` 流程重建。
 - 重新入队时保留 `user_id / contest_id / team_id / challenge_id / service_id / share_scope / nonce / host_port / expires_at`，只清空 `container_id / network_id / runtime_details / access_url` 这类运行时字段。
 - `practice.ReconcileDesiredAWDInstances` 负责 `running / frozen` AWD 比赛的差集补齐：按 `teams × visible services` 推导应该活着的 scope，如果没有 active instance，就优先复用该 scope 下最近的 restartable / failed 实例，否则新建 `pending` 实例。
+- `practice_instance_scheduler` 在多 API 副本下同样先竞争 Redis scheduler lock；只有持锁副本才会执行 desired reconcile、计算全局容量并把 `pending` 领取为 `creating`。
 - desired reconcile 在 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>` 中记录 scope 级失败退避状态；立即配置错误和异步 provisioning 失败都会推进 `failure_count`，并根据 `container.scheduler.desired_reconcile_failure_*` 与 `desired_reconcile_suppress_*` 计算 `next_attempt_at / suppressed_until`。
 - 当某个 scope 已经有 `pending / creating / running` 实例，或重建最终回到 active 状态时，desired reconcile 会主动清掉对应 Redis 状态，避免长期 suppress 卡死已经恢复的 scope。
 - 多容器拓扑中任一容器丢失或退出时，active runtime recovery 会把整条实例重新入队，避免局部恢复破坏拓扑一致性。
-- 启动恢复顺序是：补 `paused_seconds`、刷新活跃实例 `expires_at`、执行 active runtime recovery、执行 desired runtime reconciliation、把恢复耗时继续累计到 `paused_seconds` 并保存 heartbeat。
+- 启动恢复顺序是：检测 `boot_id` 变化、补 `paused_seconds`、刷新活跃实例 `expires_at`、执行 active runtime recovery、执行 desired runtime reconciliation、把恢复耗时继续累计到 `paused_seconds` 并保存 heartbeat。
+- 非 leader 副本会等到 leader 完成首轮恢复并写入当前 `boot_id` heartbeat 后，才越过启动门禁继续启动其他后台任务和 HTTP 服务。
+- `container.startup_recovery_lock_ttl` 既要小于 leader failover 包络允许的上限，也要让 `lock TTL + refresh interval + leader retry` 仍落在 heartbeat stale 容忍窗内；同 `boot_id` 下的 heartbeat gap 只表示 leaderless gap，不再直接触发 outage recovery。
 
 这两层恢复都不直接创建容器。容器创建、动态 Flag 构造、端口复用、就绪探测与失败标记继续由 practice 实例调度器统一负责。
 

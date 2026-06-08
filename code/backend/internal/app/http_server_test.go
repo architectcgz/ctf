@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"ctf-platform/internal/app/composition"
+	"ctf-platform/internal/config"
+	healthService "ctf-platform/internal/service/health"
 	"go.uber.org/zap"
 )
 
@@ -143,19 +145,39 @@ func TestHTTPServerShutdownStartsHTTPDrainBeforeStoppingBackgroundJobs(t *testin
 	}
 }
 
+func TestHTTPServerShutdownMarksReadinessDrainingBeforeStoppingBackgroundJobs(t *testing.T) {
+	t.Parallel()
+
+	readiness := healthService.NewReadinessState()
+	server := &HTTPServer{
+		backgroundJobs: []composition.BackgroundJob{
+			composition.NewBackgroundJob(
+				"test_background_job",
+				nil,
+				func(context.Context) error {
+					if !readiness.IsDraining() {
+						return errors.New("readiness was not marked draining before background job stop")
+					}
+					return nil
+				},
+			),
+		},
+		readiness: readiness,
+		logger:    zap.NewNop(),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		t.Fatalf("Shutdown() error = %v", err)
+	}
+}
+
 func TestNewHTTPServerBuildsAndShutsDown(t *testing.T) {
 	t.Parallel()
 
 	cfg, db, cache := newAppTestDependencies(t)
-	cfg.Contest.StatusUpdateInterval = time.Second
-	cfg.Contest.StatusUpdateBatchSize = 10
-	cfg.Contest.StatusUpdateLockTTL = time.Second
-	cfg.Contest.AWD.SchedulerInterval = time.Second
-	cfg.Contest.AWD.SchedulerLockTTL = time.Second
-	cfg.Contest.AWD.SchedulerBatchSize = 10
-	cfg.Contest.AWD.RoundInterval = time.Second
-	cfg.Contest.AWD.RoundLockTTL = time.Second
-	cfg.Contest.AWD.CheckerTimeout = time.Second
+	configureHTTPServerBackgroundJobTestConfig(cfg)
 
 	server, err := NewHTTPServer(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -170,4 +192,51 @@ func TestNewHTTPServerBuildsAndShutsDown(t *testing.T) {
 	if err := server.Shutdown(ctx); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
 	}
+}
+
+func TestNewHTTPServerDoesNotWaitForStartupRecoveryLeaderReadiness(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newAppTestDependencies(t)
+	configureHTTPServerBackgroundJobTestConfig(cfg)
+	cfg.Container.StartupRecoveryLockTTL = time.Second
+	if err := cache.Set(context.Background(), "ctf:platform:runtime:recovery:lock", "foreign-owner", time.Minute).Err(); err != nil {
+		t.Fatalf("seed startup recovery lock: %v", err)
+	}
+
+	type result struct {
+		server *HTTPServer
+		err    error
+	}
+	done := make(chan result, 1)
+	go func() {
+		server, err := NewHTTPServer(cfg, zap.NewNop(), db, cache)
+		done <- result{server: server, err: err}
+	}()
+
+	select {
+	case result := <-done:
+		if result.err != nil {
+			t.Fatalf("NewHTTPServer() error = %v", result.err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		if err := result.server.Shutdown(ctx); err != nil {
+			t.Fatalf("Shutdown() error = %v", err)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("expected NewHTTPServer() to return while startup recovery lock is held by another owner")
+	}
+}
+
+func configureHTTPServerBackgroundJobTestConfig(cfg *config.Config) {
+	cfg.Contest.StatusUpdateInterval = time.Second
+	cfg.Contest.StatusUpdateBatchSize = 10
+	cfg.Contest.StatusUpdateLockTTL = time.Second
+	cfg.Contest.AWD.SchedulerInterval = time.Second
+	cfg.Contest.AWD.SchedulerLockTTL = time.Second
+	cfg.Contest.AWD.SchedulerBatchSize = 10
+	cfg.Contest.AWD.RoundInterval = time.Second
+	cfg.Contest.AWD.RoundLockTTL = time.Second
+	cfg.Contest.AWD.CheckerTimeout = time.Second
 }

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	startuprecovery "ctf-platform/internal/module/instance/startuprecovery"
 )
 
 func chdirToBackendRoot(t *testing.T) {
@@ -315,6 +317,50 @@ func TestLoadGeneratesAndPersistsContainerFlagSecretWhenMissing(t *testing.T) {
 	}
 }
 
+func TestResolveContainerFlagSecretRejectsProductionAutoGeneration(t *testing.T) {
+	t.Parallel()
+
+	secretFile := filepath.Join(t.TempDir(), "flag-global-secret")
+
+	_, err := resolveContainerFlagGlobalSecret("", secretFile, false)
+	if err == nil {
+		t.Fatal("expected production secret resolution to reject missing secret auto-generation")
+	}
+	if !strings.Contains(err.Error(), "must be explicitly configured") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, statErr := os.Stat(secretFile); !os.IsNotExist(statErr) {
+		t.Fatalf("expected secret file not to be generated, stat error = %v", statErr)
+	}
+}
+
+func TestContainerFlagSecretKeyringIncludesActiveAndPreviousKeys(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Container: ContainerConfig{
+			FlagGlobalSecret:      "active-secret-12345678901234567890",
+			FlagGlobalSecretKeyID: "active",
+			FlagGlobalSecretKeyring: []ContainerFlagSecretKeyConfig{
+				{KeyID: "previous", Secret: "previous-secret-123456789012345678"},
+			},
+		},
+	}
+
+	if err := cfg.resolveContainerFlagSecretKeyring(); err != nil {
+		t.Fatalf("resolveContainerFlagSecretKeyring() error = %v", err)
+	}
+	if cfg.Container.ResolvedFlagSecretKeyID != "active" {
+		t.Fatalf("active key id = %q, want active", cfg.Container.ResolvedFlagSecretKeyID)
+	}
+	if got := cfg.Container.ResolvedFlagSecrets["active"]; got != "active-secret-12345678901234567890" {
+		t.Fatalf("active secret = %q", got)
+	}
+	if got := cfg.Container.ResolvedFlagSecrets["previous"]; got != "previous-secret-123456789012345678" {
+		t.Fatalf("previous secret = %q", got)
+	}
+}
+
 func TestLoadRejectsMismatchedPersistedContainerFlagSecret(t *testing.T) {
 	chdirToBackendRoot(t)
 
@@ -390,6 +436,19 @@ func TestValidateRejectsEnabledDefenseSSHWithoutHostKeyPath(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "container.defense_ssh_host_key_path must not be empty") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateRejectsTooLargeStartupRecoveryLockTTL(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.StartupRecoveryLockTTL = containerStartupRecoveryMaxLockTTL + time.Second
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject oversized startup recovery lock ttl")
+	}
+	if got := err.Error(); got != "container.startup_recovery_lock_ttl must be less than or equal to "+containerStartupRecoveryMaxLockTTL.String() {
+		t.Fatalf("unexpected error: %s", got)
 	}
 }
 
@@ -578,18 +637,22 @@ func validConfigForValidationTests() *Config {
 			AllowCredentials: true,
 		},
 		Container: ContainerConfig{
-			DefaultCPUQuota:      1,
-			DefaultMemory:        256 * 1024 * 1024,
-			DefaultPidsLimit:     128,
-			DefaultExposedPort:   8080,
-			PortRangeStart:       30000,
-			PortRangeEnd:         40000,
-			DeletePollInterval:   time.Second,
-			DeleteMaxConcurrent:  8,
-			OrphanGracePeriod:    time.Minute,
-			CleanupLockTTL:       time.Minute,
-			ProxyTicketTTL:       time.Minute,
-			ProxyBodyPreviewSize: 1024,
+			DefaultCPUQuota:        1,
+			DefaultMemory:          256 * 1024 * 1024,
+			DefaultPidsLimit:       128,
+			DefaultExposedPort:     8080,
+			PortRangeStart:         30000,
+			PortRangeEnd:           40000,
+			DeletePollInterval:     time.Second,
+			DeleteMaxConcurrent:    8,
+			OrphanGracePeriod:      time.Minute,
+			CleanupLockTTL:         time.Minute,
+			StartupRecoveryLockTTL: startuprecovery.DefaultLockTTL,
+			ProxyTicketTTL:         time.Minute,
+			ProxyBodyPreviewSize:   1024,
+			Scheduler: ContainerSchedulerConfig{
+				LockTTL: time.Minute,
+			},
 			Network: ContainerNetworkConfig{
 				SingleContainerSubnetBase: "10.11.0.0/16",
 				SingleContainerSubnetMask: 29,

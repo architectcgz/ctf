@@ -31,7 +31,7 @@
 
 ## 接口或数据影响
 
-- 当前 AWD 主数据表是 `contest_awd_services`、`awd_rounds`、`awd_team_services`、`awd_attack_logs`、`awd_service_operations`、`awd_defense_workspaces`；对应 migration 见 `code/backend/migrations/000001_init_schema.up.sql`、`000002_create_awd_service_operations.up.sql`、`000006_create_awd_defense_workspaces.up.sql`。
+- 当前 AWD 主数据表是 `contest_awd_services`、`awd_rounds`、`awd_team_services`、`awd_attack_logs`、`awd_service_operations`、`awd_defense_workspaces`；对应 schema 已收口到 `code/backend/migrations/000001_init_schema.up.sql`。
 - 管理端与学员端契约通过 `docs/contracts/openapi-v1.yaml` 暴露，包括 AWD service CRUD、checker preview、readiness、round summary、attack logs、workspace 等接口。
 - `service_id` 现在是运行态主身份，`challenge_id` 只承担题目来源和默认配置继承；若两者语义冲突，以 `contest_awd_services` 和运行态查询结果为准。
 
