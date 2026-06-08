@@ -10,7 +10,6 @@ import (
 	"ctf-platform/internal/config"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
-	opsports "ctf-platform/internal/module/ops/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
@@ -28,13 +27,13 @@ type BackgroundJob struct {
 type Module struct {
 	BackgroundJobs []BackgroundJob
 
-	ChallengeImageRuntime   challengeports.ImageRuntime
-	ChallengeRuntimeProbe   challengeports.ChallengeRuntimeProbe
-	OpsRuntimeQuery         opsports.RuntimeQuery
-	OpsRuntimeStatsProvider opsports.RuntimeStatsProvider
-	ContestContainerFiles   contestports.AWDContainerFileWriter
-	ProvisioningService     *runtimecmd.ProvisioningService
-	CleanupService          *runtimecmd.RuntimeCleanupService
+	ChallengeImageRuntime challengeports.ImageRuntime
+	ChallengeRuntimeProbe challengeports.ChallengeRuntimeProbe
+	RuntimeQuery          runtimeports.CountRunningRepository
+	RuntimeStatsProvider  runtimeports.ManagedContainerStatsReader
+	ContestContainerFiles contestports.AWDContainerFileWriter
+	ProvisioningService   *runtimecmd.ProvisioningService
+	CleanupService        *runtimecmd.RuntimeCleanupService
 
 	ProvisioningRuntime       runtimeports.ContainerProvisioningRuntime
 	CleanupRuntime            runtimeports.ContainerCleanupRuntime
@@ -72,7 +71,7 @@ type runtimeInstanceRepository interface {
 type runtimeModuleDeps struct {
 	input                 Deps
 	repo                  runtimeInstanceRepository
-	countRunningQuery     opsports.RuntimeQuery
+	countRunningQuery     runtimeports.CountRunningRepository
 	cleanupService        *runtimecmd.RuntimeCleanupService
 	provisioningService   *runtimecmd.ProvisioningService
 	containerStatsService *runtimeapp.ContainerStatsService
@@ -84,15 +83,15 @@ type runtimeModuleDeps struct {
 func Build(deps Deps) *Module {
 	internalDeps := buildRuntimeModuleDeps(deps)
 	challengeDeps := buildRuntimeChallengeDeps(internalDeps)
-	opsDeps := buildRuntimeOpsDeps(internalDeps)
+	observabilityDeps := buildRuntimeObservabilityDeps(internalDeps)
 	contestDeps := buildRuntimeContestDeps(internalDeps)
 
 	return &Module{
 		BackgroundJobs:            buildBackgroundJobs(internalDeps),
 		ChallengeImageRuntime:     challengeDeps.imageRuntime,
 		ChallengeRuntimeProbe:     challengeDeps.runtimeProbe,
-		OpsRuntimeQuery:           opsDeps.query,
-		OpsRuntimeStatsProvider:   opsDeps.statsProvider,
+		RuntimeQuery:              observabilityDeps.query,
+		RuntimeStatsProvider:      observabilityDeps.statsProvider,
 		ContestContainerFiles:     contestDeps.containerFiles,
 		ProvisioningService:       internalDeps.provisioningService,
 		CleanupService:            internalDeps.cleanupService,
@@ -151,15 +150,15 @@ func buildRuntimeChallengeDeps(deps runtimeModuleDeps) runtimeChallengeDeps {
 	}
 }
 
-type runtimeOpsDeps struct {
-	query         opsports.RuntimeQuery
-	statsProvider opsports.RuntimeStatsProvider
+type runtimeObservabilityDeps struct {
+	query         runtimeports.CountRunningRepository
+	statsProvider runtimeports.ManagedContainerStatsReader
 }
 
-func buildRuntimeOpsDeps(deps runtimeModuleDeps) runtimeOpsDeps {
-	return runtimeOpsDeps{
+func buildRuntimeObservabilityDeps(deps runtimeModuleDeps) runtimeObservabilityDeps {
+	return runtimeObservabilityDeps{
 		query:         deps.countRunningQuery,
-		statsProvider: newRuntimeOpsStatsProvider(deps.containerStatsService),
+		statsProvider: deps.containerStatsService,
 	}
 }
 

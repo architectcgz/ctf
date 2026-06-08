@@ -99,8 +99,8 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	return &ContainerRuntimeModule{
 		ChallengeImageRuntime:   module.ChallengeImageRuntime,
 		ChallengeRuntimeProbe:   module.ChallengeRuntimeProbe,
-		OpsRuntimeQuery:         module.OpsRuntimeQuery,
-		OpsRuntimeStatsProvider: module.OpsRuntimeStatsProvider,
+		OpsRuntimeQuery:         newOpsRuntimeQueryAdapter(module.RuntimeQuery),
+		OpsRuntimeStatsProvider: newOpsRuntimeStatsProviderAdapter(module.RuntimeStatsProvider),
 		ContestContainerFiles:   contestContainerFiles,
 		ContestCheckerRunner:    contestCheckerRunner,
 		RuntimeNodeSelector:     nodeSelector,

@@ -21,7 +21,7 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"repo",
 		"runtimeInstanceRepository",
 		"countRunningQuery",
-		"opsports.RuntimeQuery",
+		"runtimeports.CountRunningRepository",
 		"cleanupService",
 		"*runtimecmd.RuntimeCleanupService",
 		"provisioningService",
@@ -45,6 +45,7 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"practiceInstanceRepository",
 		"PracticeInstanceRepository",
 		"PracticeRuntimeService",
+		"opsports.RuntimeQuery",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
@@ -423,7 +424,8 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"challengeports.ImageRuntime",
-		"opsports.RuntimeQuery",
+		"runtimeports.CountRunningRepository",
+		"runtimeports.ManagedContainerStatsReader",
 		"contestports.AWDContainerFileWriter",
 	}
 	for _, marker := range expected {
@@ -434,6 +436,8 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 
 	blocked := []string{
 		"contestinfra.AWDContainerFileWriter",
+		"opsports.RuntimeQuery",
+		"opsports.RuntimeStatsProvider",
 		"practiceRuntimeRepositoryBridge",
 		"practiceRuntimeInstanceService",
 	}
