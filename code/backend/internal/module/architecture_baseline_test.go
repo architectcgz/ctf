@@ -64,17 +64,5 @@ var reviewedTransactionBoundaryFiles = map[string]struct{}{
 var reviewedOversizedRuntimeModuleFiles = map[string]struct{}{}
 
 var reviewedTimeNowFiles = map[string]struct{}{
-	"assessment/application/commands/profile_service.go":     {},
-	"assessment/application/commands/report_service.go":      {},
-	"auth/application/commands/cas_service.go":               {},
-	"contest/application/jobs/awd_checker_preview.go":        {},
-	"contest/application/jobs/awd_http_checker_runner.go":    {},
-	"instance/application/awd_defense_workbench_service.go":  {},
-	"contest/application/jobs/awd_probe_runtime.go":          {},
-	"contest/application/jobs/awd_script_checker_runner.go":  {},
-	"contest/application/jobs/awd_tcp_checker_runner.go":     {},
-	"contest/infrastructure/docker_checker_runner.go":        {},
-	"practice/application/commands/instance_provisioning.go": {},
-	"instance/application/commands/maintenance_service.go":   {},
 	"runtime/application/commands/provisioning_service.go":   {},
 }

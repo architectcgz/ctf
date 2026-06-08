@@ -244,6 +244,121 @@ func blocked(other time.Time) time.Time {
 	}
 }
 
+func TestTimeNowUsageGuardAllowsRuntimeOnlyPatterns(t *testing.T) {
+	t.Parallel()
+
+	const source = `package sample
+
+import (
+	"fmt"
+	"net"
+	"time"
+)
+
+type result struct {
+	StartedAt time.Time
+	FinishedAt time.Time
+	Duration time.Duration
+}
+
+func suffix() string {
+	return fmt.Sprintf("tmp-%d", time.Now().UnixNano())
+}
+
+func duration() result {
+	startedAt := time.Now()
+	out := result{StartedAt: startedAt.UTC()}
+	finishedAt := time.Now()
+	out.FinishedAt = finishedAt.UTC()
+	out.Duration = finishedAt.Sub(startedAt)
+	return out
+}
+
+func probe() time.Duration {
+	start := time.Now()
+	return time.Since(start)
+}
+
+func deadline(conn net.Conn, timeout time.Duration) bool {
+	_ = conn.SetDeadline(time.Now().Add(timeout))
+	deadline := time.Now().Add(timeout)
+	return time.Now().After(deadline)
+}
+`
+
+	needsException, err := sourceNeedsReviewedTimeNowException(source)
+	if err != nil {
+		t.Fatalf("parse sample source: %v", err)
+	}
+	if needsException {
+		t.Fatalf("runtime-only time.Now usage should not need a reviewed exception")
+	}
+}
+
+func TestTimeNowUsageGuardRejectsRawAssignedBusinessTime(t *testing.T) {
+	t.Parallel()
+
+	const source = `package sample
+
+import "time"
+
+type result struct {
+	StartedAt time.Time
+}
+
+func blocked() time.Time {
+	now := time.Now()
+	return now
+}
+
+func blockedField() result {
+	startedAt := time.Now()
+	out := result{}
+	out.StartedAt = startedAt
+	return out
+}
+`
+
+	needsException, err := sourceNeedsReviewedTimeNowException(source)
+	if err != nil {
+		t.Fatalf("parse sample source: %v", err)
+	}
+	if !needsException {
+		t.Fatalf("raw assigned time.Now business value must still need a reviewed exception")
+	}
+}
+
+func TestTimeNowUsageGuardRejectsWrappedAssignedRuntimeTime(t *testing.T) {
+	t.Parallel()
+
+	const source = `package sample
+
+import "time"
+
+func wrap(value time.Time) time.Time {
+	return value
+}
+
+func duration() time.Duration {
+	start := wrap(time.Now())
+	return time.Since(start)
+}
+
+func deadline(timeout time.Duration) bool {
+	deadline := wrap(time.Now().Add(timeout))
+	return time.Now().After(deadline)
+}
+`
+
+	needsException, err := sourceNeedsReviewedTimeNowException(source)
+	if err != nil {
+		t.Fatalf("parse sample source: %v", err)
+	}
+	if !needsException {
+		t.Fatalf("wrapped time.Now values must not be inferred as local runtime-only assignments")
+	}
+}
+
 func fileNeedsReviewedTimeNowException(t *testing.T, file string) bool {
 	t.Helper()
 
@@ -275,19 +390,79 @@ func sourceNeedsReviewedTimeNowException(content string) (bool, error) {
 		return true
 	})
 
+	timeNowAssignments := collectTimeNowAssignments(fileNode)
+	identifierUses := collectIdentifierUses(fileNode)
+
 	needsException := false
 	ast.Inspect(fileNode, func(node ast.Node) bool {
 		call, ok := node.(*ast.CallExpr)
 		if !ok || !isTimeNowCall(call) {
 			return true
 		}
-		if !timeNowCallChainEndsWithUTC(call, parents) {
+		if !timeNowCallIsAllowed(call, parents, timeNowAssignments, identifierUses) {
 			needsException = true
 			return false
 		}
 		return true
 	})
 	return needsException, nil
+}
+
+func collectTimeNowAssignments(fileNode *ast.File) map[*ast.CallExpr]*ast.Object {
+	assignments := make(map[*ast.CallExpr]*ast.Object)
+	ast.Inspect(fileNode, func(node ast.Node) bool {
+		assign, ok := node.(*ast.AssignStmt)
+		if !ok {
+			return true
+		}
+		for idx, rhs := range assign.Rhs {
+			if idx >= len(assign.Lhs) {
+				continue
+			}
+			ident, ok := assign.Lhs[idx].(*ast.Ident)
+			if !ok || ident.Obj == nil {
+				continue
+			}
+			if call := directTimeNowCallInAssignedExpr(rhs); call != nil {
+				assignments[call] = ident.Obj
+			}
+		}
+		return true
+	})
+	return assignments
+}
+
+func collectIdentifierUses(fileNode *ast.File) map[*ast.Object][]*ast.Ident {
+	uses := make(map[*ast.Object][]*ast.Ident)
+	ast.Inspect(fileNode, func(node ast.Node) bool {
+		ident, ok := node.(*ast.Ident)
+		if !ok || ident.Obj == nil {
+			return true
+		}
+		uses[ident.Obj] = append(uses[ident.Obj], ident)
+		return true
+	})
+	return uses
+}
+
+func directTimeNowCallInAssignedExpr(expr ast.Expr) *ast.CallExpr {
+	switch node := expr.(type) {
+	case *ast.CallExpr:
+		if isTimeNowCall(node) {
+			return node
+		}
+		selector, ok := node.Fun.(*ast.SelectorExpr)
+		if !ok {
+			return nil
+		}
+		return directTimeNowCallInAssignedExpr(selector.X)
+	case *ast.SelectorExpr:
+		return directTimeNowCallInAssignedExpr(node.X)
+	case *ast.ParenExpr:
+		return directTimeNowCallInAssignedExpr(node.X)
+	default:
+		return nil
+	}
 }
 
 func isTimeNowCall(call *ast.CallExpr) bool {
@@ -299,7 +474,23 @@ func isTimeNowCall(call *ast.CallExpr) bool {
 	return ok && ident.Name == "time"
 }
 
-func timeNowCallChainEndsWithUTC(call *ast.CallExpr, parents map[ast.Node]ast.Node) bool {
+func timeNowCallIsAllowed(call *ast.CallExpr, parents map[ast.Node]ast.Node, assignments map[*ast.CallExpr]*ast.Object, uses map[*ast.Object][]*ast.Ident) bool {
+	if timeNowCallChainHasAllowedTerminal(call, parents) {
+		return true
+	}
+	if timeNowCallFeedsSetDeadline(call, parents) {
+		return true
+	}
+	if timeNowCallComparesDeadline(call, parents) {
+		return true
+	}
+	if obj := assignments[call]; obj != nil && timeNowAssignedObjectIsRuntimeOnly(obj, uses[obj], parents) {
+		return true
+	}
+	return false
+}
+
+func timeNowCallChainHasAllowedTerminal(call *ast.CallExpr, parents map[ast.Node]ast.Node) bool {
 	var current ast.Node = call
 	for {
 		parent := parents[current]
@@ -308,7 +499,7 @@ func timeNowCallChainEndsWithUTC(call *ast.CallExpr, parents map[ast.Node]ast.No
 			if node.X != current {
 				return false
 			}
-			if node.Sel.Name == "UTC" {
+			if node.Sel.Name == "UTC" || node.Sel.Name == "Unix" || node.Sel.Name == "UnixNano" {
 				if utcCall, ok := parents[node].(*ast.CallExpr); ok && utcCall.Fun == node {
 					return true
 				}
@@ -323,6 +514,158 @@ func timeNowCallChainEndsWithUTC(call *ast.CallExpr, parents map[ast.Node]ast.No
 			return false
 		}
 	}
+}
+
+func timeNowCallFeedsSetDeadline(call *ast.CallExpr, parents map[ast.Node]ast.Node) bool {
+	terminal := terminalCallInTimeNowChain(call, parents)
+	parent, ok := parents[terminal].(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+	for _, arg := range parent.Args {
+		if arg == terminal {
+			selector, ok := parent.Fun.(*ast.SelectorExpr)
+			return ok && selector.Sel.Name == "SetDeadline"
+		}
+	}
+	return false
+}
+
+func timeNowCallComparesDeadline(call *ast.CallExpr, parents map[ast.Node]ast.Node) bool {
+	terminal := terminalCallInTimeNowChain(call, parents)
+	selector, ok := terminal.Fun.(*ast.SelectorExpr)
+	if !ok || selector.X == nil || (selector.Sel.Name != "After" && selector.Sel.Name != "Before") {
+		return false
+	}
+	if len(terminal.Args) != 1 {
+		return false
+	}
+	ident, ok := terminal.Args[0].(*ast.Ident)
+	return ok && strings.Contains(strings.ToLower(ident.Name), "deadline")
+}
+
+func terminalCallInTimeNowChain(call *ast.CallExpr, parents map[ast.Node]ast.Node) *ast.CallExpr {
+	current := ast.Node(call)
+	terminal := call
+	for {
+		parent := parents[current]
+		switch node := parent.(type) {
+		case *ast.SelectorExpr:
+			if node.X != current {
+				return terminal
+			}
+			current = node
+		case *ast.CallExpr:
+			if node.Fun != current {
+				return terminal
+			}
+			terminal = node
+			current = node
+		default:
+			return terminal
+		}
+	}
+}
+
+func timeNowAssignedObjectIsRuntimeOnly(obj *ast.Object, uses []*ast.Ident, parents map[ast.Node]ast.Node) bool {
+	for _, use := range uses {
+		if isDefinitionIdent(use, obj) || isAssignmentLHS(use, parents) {
+			continue
+		}
+		if isRuntimeOnlyTimeIdentUse(use, parents) {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+func isDefinitionIdent(ident *ast.Ident, obj *ast.Object) bool {
+	return obj != nil && obj.Decl == ident
+}
+
+func isAssignmentLHS(ident *ast.Ident, parents map[ast.Node]ast.Node) bool {
+	assign, ok := parents[ident].(*ast.AssignStmt)
+	if !ok {
+		return false
+	}
+	for _, lhs := range assign.Lhs {
+		if lhs == ident {
+			return true
+		}
+	}
+	return false
+}
+
+func isRuntimeOnlyTimeIdentUse(ident *ast.Ident, parents map[ast.Node]ast.Node) bool {
+	if identUsedAsUTCReceiver(ident, parents) {
+		return true
+	}
+	if identUsedWithTimeSince(ident, parents) {
+		return true
+	}
+	if identUsedWithSub(ident, parents) {
+		return true
+	}
+	if identUsedAsDeadlineComparisonArg(ident, parents) {
+		return true
+	}
+	return false
+}
+
+func identUsedAsUTCReceiver(ident *ast.Ident, parents map[ast.Node]ast.Node) bool {
+	selector, ok := parents[ident].(*ast.SelectorExpr)
+	if !ok || selector.X != ident || selector.Sel.Name != "UTC" {
+		return false
+	}
+	call, ok := parents[selector].(*ast.CallExpr)
+	return ok && call.Fun == selector
+}
+
+func identUsedWithTimeSince(ident *ast.Ident, parents map[ast.Node]ast.Node) bool {
+	call, ok := parents[ident].(*ast.CallExpr)
+	if !ok || len(call.Args) != 1 || call.Args[0] != ident {
+		return false
+	}
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok || selector.Sel.Name != "Since" {
+		return false
+	}
+	receiver, ok := selector.X.(*ast.Ident)
+	return ok && receiver.Name == "time"
+}
+
+func identUsedWithSub(ident *ast.Ident, parents map[ast.Node]ast.Node) bool {
+	if selector, ok := parents[ident].(*ast.SelectorExpr); ok && selector.X == ident && selector.Sel.Name == "Sub" {
+		call, ok := parents[selector].(*ast.CallExpr)
+		return ok && call.Fun == selector
+	}
+	call, ok := parents[ident].(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok || selector.Sel.Name != "Sub" {
+		return false
+	}
+	for _, arg := range call.Args {
+		if arg == ident {
+			return true
+		}
+	}
+	return false
+}
+
+func identUsedAsDeadlineComparisonArg(ident *ast.Ident, parents map[ast.Node]ast.Node) bool {
+	if !strings.Contains(strings.ToLower(ident.Name), "deadline") {
+		return false
+	}
+	call, ok := parents[ident].(*ast.CallExpr)
+	if !ok || len(call.Args) != 1 || call.Args[0] != ident {
+		return false
+	}
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	return ok && (selector.Sel.Name == "After" || selector.Sel.Name == "Before")
 }
 
 func TestTransactionBoundaryExceptionsAreCurrent(t *testing.T) {
