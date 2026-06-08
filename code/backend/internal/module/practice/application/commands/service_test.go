@@ -76,6 +76,19 @@ func wirePracticeSubmissionAdapters(
 	return service
 }
 
+func wirePracticeSubmissionHistoryAdapters(
+	service *Service,
+	challengeRepo challengecontracts.PracticeChallengeContract,
+) *Service {
+	if service == nil {
+		return nil
+	}
+	if challengeRepo != nil {
+		service = service.SetRuntimeSubjectRepository(practiceinfra.NewRuntimeSubjectRepository(challengeRepo))
+	}
+	return service
+}
+
 type stubPracticeRuntimeService struct {
 	cleanupRuntimeFn          func(ctx context.Context, instance *instanceentity.Instance) error
 	createTopologyFn          func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
