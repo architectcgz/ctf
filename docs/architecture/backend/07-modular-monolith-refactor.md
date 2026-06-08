@@ -470,7 +470,7 @@ flowchart LR
 
 ### 5.2 当前代码级模块依赖
 
-这里的“代码级依赖”指 `internal/module/*` 之间实际发生的 import 关系，以 `code/backend/internal/module/architecture_allowlist_test.go` 为准；它和上面的装配视图不完全等价。
+这里的“代码级依赖”指 `internal/module/*` 之间实际发生的 import 关系，以 `code/backend/internal/module/architecture_baseline_test.go` 为准；它和上面的装配视图不完全等价。
 
 ```mermaid
 flowchart LR

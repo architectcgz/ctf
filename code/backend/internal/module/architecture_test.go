@@ -21,7 +21,7 @@ func TestModuleArchitectureBoundaries(t *testing.T) {
 
 		switch layer {
 		case "domain":
-			assertDomainInternalImportsAreAllowlisted(t, file, imports)
+			assertDomainInternalImportsAreReviewed(t, file, imports)
 			assertNoForbiddenImports(t, file, imports, []string{
 				"github.com/gin-gonic/gin",
 				"github.com/redis/go-redis",
@@ -45,7 +45,7 @@ func TestModuleArchitectureBoundaries(t *testing.T) {
 			assertNoForbiddenImports(t, file, imports, []string{
 				"github.com/gin-gonic/gin",
 			})
-			assertApplicationConcreteImportsAreAllowlisted(t, file, imports)
+			assertApplicationConcreteImportsAreReviewed(t, file, imports)
 		case "ports":
 			assertNoForbiddenImports(t, file, imports, []string{
 				"github.com/gin-gonic/gin",
@@ -64,7 +64,7 @@ func TestModuleArchitectureBoundaries(t *testing.T) {
 	}
 }
 
-func TestModuleDependencyAllowlistIsCurrent(t *testing.T) {
+func TestModuleDependencyBaselineIsCurrent(t *testing.T) {
 	t.Parallel()
 
 	files := archtest.RuntimeGoFiles(t, ".")
@@ -73,21 +73,21 @@ func TestModuleDependencyAllowlistIsCurrent(t *testing.T) {
 		for _, importPath := range archtest.Imports(t, file) {
 			if key, ok := moduleDependencyKey(file, importPath); ok {
 				actual[key] = struct{}{}
-				if _, allowed := allowedModuleDependencies[key]; !allowed {
-					t.Fatalf("module dependency is not allowlisted: %s via %s", key, file)
+				if _, known := moduleDependencyBaseline[key]; !known {
+					t.Fatalf("module dependency is outside the reviewed baseline: %s via %s", key, file)
 				}
 			}
 		}
 	}
 
-	for allowed := range allowedModuleDependencies {
-		if _, exists := actual[allowed]; !exists {
-			t.Fatalf("module dependency allowlist entry is stale: %s", allowed)
+	for baseline := range moduleDependencyBaseline {
+		if _, exists := actual[baseline]; !exists {
+			t.Fatalf("module dependency baseline entry is stale: %s", baseline)
 		}
 	}
 }
 
-func TestDomainInternalImportAllowlistIsCurrent(t *testing.T) {
+func TestDomainInternalImportExceptionsAreCurrent(t *testing.T) {
 	t.Parallel()
 
 	files := archtest.RuntimeGoFiles(t, ".")
@@ -103,14 +103,14 @@ func TestDomainInternalImportAllowlistIsCurrent(t *testing.T) {
 		}
 	}
 
-	for allowed := range allowedDomainInternalImports {
-		if _, exists := actual[allowed]; !exists {
-			t.Fatalf("domain internal import allowlist entry is stale: %s", allowed)
+	for exception := range reviewedDomainInternalImportExceptions {
+		if _, exists := actual[exception]; !exists {
+			t.Fatalf("domain internal import exception is stale: %s", exception)
 		}
 	}
 }
 
-func TestApplicationConcreteDependencyAllowlistIsCurrent(t *testing.T) {
+func TestApplicationConcreteDependencyExceptionsAreCurrent(t *testing.T) {
 	t.Parallel()
 
 	files := archtest.RuntimeGoFiles(t, ".")
@@ -126,14 +126,14 @@ func TestApplicationConcreteDependencyAllowlistIsCurrent(t *testing.T) {
 		}
 	}
 
-	for allowed := range allowedApplicationConcreteImports {
-		if _, exists := actual[allowed]; !exists {
-			t.Fatalf("application concrete dependency allowlist entry is stale: %s", allowed)
+	for exception := range reviewedApplicationConcreteImportExceptions {
+		if _, exists := actual[exception]; !exists {
+			t.Fatalf("application concrete dependency exception is stale: %s", exception)
 		}
 	}
 }
 
-func TestCrossModulePrivateImportAllowlistIsCurrent(t *testing.T) {
+func TestCrossModulePrivateImportExceptionsAreCurrent(t *testing.T) {
 	t.Parallel()
 
 	files := archtest.RuntimeGoFiles(t, ".")
@@ -146,9 +146,9 @@ func TestCrossModulePrivateImportAllowlistIsCurrent(t *testing.T) {
 		}
 	}
 
-	for allowed := range allowedCrossModulePrivateImports {
-		if _, exists := actual[allowed]; !exists {
-			t.Fatalf("cross-module private import allowlist entry is stale: %s", allowed)
+	for exception := range reviewedCrossModulePrivateImportExceptions {
+		if _, exists := actual[exception]; !exists {
+			t.Fatalf("cross-module private import exception is stale: %s", exception)
 		}
 	}
 }
@@ -187,12 +187,12 @@ func TestBackendBusinessCodeDoesNotCreateRootContext(t *testing.T) {
 	for allowed := range allowedRootContextFiles {
 		content := archtest.ReadFile(t, allowed)
 		if !strings.Contains(content, "context.Background()") && !strings.Contains(content, "context.TODO()") {
-			t.Fatalf("root context allowlist entry is stale: %s", allowed)
+			t.Fatalf("root context exception is stale: %s", allowed)
 		}
 	}
 }
 
-func TestTimeNowUsageAllowlistIsCurrent(t *testing.T) {
+func TestTimeNowUsageExceptionsAreCurrent(t *testing.T) {
 	t.Parallel()
 
 	files := archtest.RuntimeGoFiles(t, ".")
@@ -204,18 +204,18 @@ func TestTimeNowUsageAllowlistIsCurrent(t *testing.T) {
 	}
 
 	for file := range actual {
-		if _, allowed := allowedTimeNowFiles[file]; !allowed {
-			t.Fatalf("%s uses time.Now; use UTC business time or add a reviewed allowlist entry", file)
+		if _, allowed := reviewedTimeNowFiles[file]; !allowed {
+			t.Fatalf("%s uses time.Now; use UTC business time or add a reviewed exception", file)
 		}
 	}
-	for allowed := range allowedTimeNowFiles {
+	for allowed := range reviewedTimeNowFiles {
 		if _, exists := actual[allowed]; !exists {
-			t.Fatalf("time.Now allowlist entry is stale: %s", allowed)
+			t.Fatalf("time.Now exception is stale: %s", allowed)
 		}
 	}
 }
 
-func TestTransactionBoundaryAllowlistIsCurrent(t *testing.T) {
+func TestTransactionBoundaryExceptionsAreCurrent(t *testing.T) {
 	t.Parallel()
 
 	files := archtest.RuntimeGoFiles(t, ".")
@@ -227,13 +227,13 @@ func TestTransactionBoundaryAllowlistIsCurrent(t *testing.T) {
 	}
 
 	for file := range actual {
-		if _, allowed := allowedTransactionFiles[file]; !allowed {
-			t.Fatalf("%s opens a transaction outside the reviewed boundary allowlist", file)
+		if _, allowed := reviewedTransactionBoundaryFiles[file]; !allowed {
+			t.Fatalf("%s opens a transaction outside the reviewed boundary exceptions", file)
 		}
 	}
-	for allowed := range allowedTransactionFiles {
+	for allowed := range reviewedTransactionBoundaryFiles {
 		if _, exists := actual[allowed]; !exists {
-			t.Fatalf("transaction allowlist entry is stale: %s", allowed)
+			t.Fatalf("transaction exception is stale: %s", allowed)
 		}
 	}
 }
@@ -250,14 +250,14 @@ func TestRuntimeModulesStaySmallAndWiringOnly(t *testing.T) {
 		if lineCount <= 250 {
 			continue
 		}
-		if _, allowed := allowedOversizedRuntimeModules[file]; !allowed {
+		if _, allowed := reviewedOversizedRuntimeModuleFiles[file]; !allowed {
 			t.Fatalf("%s has %d lines; runtime module files should stay wiring-only", file, lineCount)
 		}
 	}
-	for allowed := range allowedOversizedRuntimeModules {
+	for allowed := range reviewedOversizedRuntimeModuleFiles {
 		content := archtest.ReadFile(t, allowed)
 		if len(strings.Split(content, "\n")) <= 250 {
-			t.Fatalf("runtime module size allowlist entry is stale: %s", allowed)
+			t.Fatalf("runtime module size exception is stale: %s", allowed)
 		}
 	}
 }
@@ -329,13 +329,13 @@ func assertNoCrossModulePrivateImports(t *testing.T, filePath string, imports []
 			continue
 		}
 		key := crossModuleImportKey(filePath, importPath)
-		if _, allowed := allowedCrossModulePrivateImports[key]; !allowed {
+		if _, allowed := reviewedCrossModulePrivateImportExceptions[key]; !allowed {
 			t.Fatalf("%s must not import private layer from another module: %s", filePath, importPath)
 		}
 	}
 }
 
-func assertDomainInternalImportsAreAllowlisted(t *testing.T, filePath string, imports []string) {
+func assertDomainInternalImportsAreReviewed(t *testing.T, filePath string, imports []string) {
 	t.Helper()
 
 	for _, importPath := range imports {
@@ -343,7 +343,7 @@ func assertDomainInternalImportsAreAllowlisted(t *testing.T, filePath string, im
 			continue
 		}
 		key := domainInternalImportKey(filePath, importPath)
-		if _, allowed := allowedDomainInternalImports[key]; !allowed {
+		if _, allowed := reviewedDomainInternalImportExceptions[key]; !allowed {
 			t.Fatalf("%s imports %s from domain; move through a domain-owned type or update the reviewed baseline", filePath, importPath)
 		}
 	}
@@ -391,7 +391,7 @@ func crossModuleImportKey(filePath string, importPath string) string {
 	return filepath.ToSlash(filePath) + " -> " + importPath
 }
 
-func assertApplicationConcreteImportsAreAllowlisted(t *testing.T, filePath string, imports []string) {
+func assertApplicationConcreteImportsAreReviewed(t *testing.T, filePath string, imports []string) {
 	t.Helper()
 
 	for _, importPath := range imports {
@@ -399,8 +399,8 @@ func assertApplicationConcreteImportsAreAllowlisted(t *testing.T, filePath strin
 			continue
 		}
 		key := applicationConcreteImportKey(filePath, importPath)
-		if _, allowed := allowedApplicationConcreteImports[key]; !allowed {
-			t.Fatalf("%s imports concrete dependency %s; add a port/infrastructure adapter instead of growing the allowlist", filePath, importPath)
+		if _, allowed := reviewedApplicationConcreteImportExceptions[key]; !allowed {
+			t.Fatalf("%s imports concrete dependency %s; add a port/infrastructure adapter instead of growing reviewed exceptions", filePath, importPath)
 		}
 	}
 }

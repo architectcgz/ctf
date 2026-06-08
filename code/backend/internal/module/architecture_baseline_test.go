@@ -1,19 +1,19 @@
 package module
 
-var allowedApplicationConcreteImports = map[string]struct{}{}
+var reviewedApplicationConcreteImportExceptions = map[string]struct{}{}
 
-var allowedCrossModulePrivateImports = map[string]struct{}{
+var reviewedCrossModulePrivateImportExceptions = map[string]struct{}{
 	"contest/infrastructure/docker_checker_runner.go -> ctf-platform/internal/module/runtime/domain":                {},
 	"practice/application/commands/awd_defense_workspace_support.go -> ctf-platform/internal/module/contest/domain": {},
 }
 
-var allowedDomainInternalImports = map[string]struct{}{
+var reviewedDomainInternalImportExceptions = map[string]struct{}{
 	"assessment/domain/profile.go -> ctf-platform/internal/config":        {},
 	"assessment/domain/recommendation.go -> ctf-platform/internal/config": {},
 	"assessment/domain/report.go -> ctf-platform/internal/config":         {},
 }
 
-var allowedModuleDependencies = map[string]struct{}{
+var moduleDependencyBaseline = map[string]struct{}{
 	"assessment -> contest":        {},
 	"assessment -> challenge":      {},
 	"assessment -> identity":       {},
@@ -53,7 +53,7 @@ var allowedModuleDependencies = map[string]struct{}{
 	"teaching_query -> assessment": {},
 }
 
-var allowedTransactionFiles = map[string]struct{}{
+var reviewedTransactionBoundaryFiles = map[string]struct{}{
 	"challenge/infrastructure/repository.go":                            {},
 	"challenge/infrastructure/tag_repository.go":                        {},
 	"contest/infrastructure/awd_repository.go":                          {},
@@ -68,12 +68,12 @@ var allowedTransactionFiles = map[string]struct{}{
 	"runtime/infrastructure/repository.go":                              {},
 }
 
-var allowedOversizedRuntimeModules = map[string]struct{}{
+var reviewedOversizedRuntimeModuleFiles = map[string]struct{}{
 	"contest/runtime/module.go":   {},
 	"challenge/runtime/module.go": {},
 }
 
-var allowedTimeNowFiles = map[string]struct{}{
+var reviewedTimeNowFiles = map[string]struct{}{
 	"assessment/application/commands/profile_service.go":                   {},
 	"assessment/application/commands/report_service.go":                    {},
 	"assessment/application/queries/teacher_awd_review_service.go":         {},

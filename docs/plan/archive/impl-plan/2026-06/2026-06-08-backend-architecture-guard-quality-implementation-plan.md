@@ -24,7 +24,7 @@
   - 保持现有 `scripts/check-backend-architecture.sh --full` 接入方式不变。
 - Non-Goals:
   - 不一次性重写所有模块级 `architecture_test.go`。
-  - 不改变现有业务代码、模块依赖 allowlist 或 workflow stage 注册。
+  - 不改变现有业务代码、模块依赖 baseline 或 workflow stage 注册。
   - 不把架构守卫从 Go test 迁移到 Python。
 
 ## Inputs
@@ -55,7 +55,7 @@
   - `code/backend/internal/shared/architecture_test.go`
 - Modify:
   - `code/backend/internal/module/architecture_test.go`
-  - `code/backend/internal/module/architecture_allowlist_test.go`
+  - `code/backend/internal/module/architecture_baseline_test.go`
   - `code/backend/internal/module/mapper_policy_test.go`
   - `code/backend/internal/app/architecture_rules_test.go`
   - `code/backend/internal/module/contest/application/commands/awd_attack_submit_support.go`
@@ -73,7 +73,7 @@
 - Test:
   - `go test ./internal/testutil/archtest`
   - `go test ./internal/shared -run TestSharedPackagesStayLightweightAndModuleAgnostic -count=1`
-  - `go test ./internal/module -run 'TestModuleArchitectureBoundaries|TestModuleDependencyAllowlistIsCurrent|TestCrossModulePrivateImportAllowlistIsCurrent|TestMapperWrappersFollowGlobalDelegationPolicy' -count=1`
+  - `go test ./internal/module -run 'TestModuleArchitectureBoundaries|TestModuleDependencyBaselineIsCurrent|TestCrossModulePrivateImportExceptionsAreCurrent|TestMapperWrappersFollowGlobalDelegationPolicy' -count=1`
   - `go test ./internal/app -run TestArchitectureRulesRejectConcreteCrossModuleImports -count=1`
   - `bash scripts/check-backend-architecture.sh --full`
   - `bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh workflow-governance`
@@ -94,10 +94,10 @@
 
 ## Implementation Notes
 
-- `scripts/check-backend-architecture.sh` 的 module 阶段从只跑 `TestModuleArchitectureBoundaries` 调整为跑完整 `./internal/module` 架构包，避免 allowlist currentness、root context、`time.Now`、transaction 和 mapper policy 守卫只靠人工执行。
+- `scripts/check-backend-architecture.sh` 的 module 阶段从只跑 `TestModuleArchitectureBoundaries` 调整为跑完整 `./internal/module` 架构包，避免 baseline / exception currentness、root context、`time.Now`、transaction 和 mapper policy 守卫只靠人工执行。
 - 扩大脚本覆盖后暴露两个既有隐藏失败：
-  - `internal/bootstrap/awd_defense_ssh_gateway.go` 是真实进程入口，已与 app context guard 对齐加入 module root context allowlist。
-  - `awd_attack_flag_rotation_support.go` 不再直接调用 `time.Now()`，改用提交链路 `submitAttackContext` 已记录的 UTC 时间；`runtime/infrastructure/node_repository.go` 作为 repository 时间戳写入点加入 reviewed `time.Now` allowlist。
+  - `internal/bootstrap/awd_defense_ssh_gateway.go` 是真实进程入口，已与 app context guard 对齐加入 module root context exception。
+  - `awd_attack_flag_rotation_support.go` 不再直接调用 `time.Now()`，改用提交链路 `submitAttackContext` 已记录的 UTC 时间；`runtime/infrastructure/node_repository.go` 作为 repository 时间戳写入点加入 reviewed `time.Now` exception。
 
 ## Intake Analysis Gate
 
@@ -107,7 +107,7 @@
   - 这是架构守卫质量优化，需要先明确优化边界，避免把“优化”扩大成重写全部守卫。
 - grill-with-docs findings:
   - 后端架构文档明确 `internal/shared` 是“映射与轻量共享工具”，不是业务 owner 或基础设施实现层。
-  - `internal/module/*` 是主要 bounded-context surface，跨模块依赖已有 allowlist 守卫。
+  - `internal/module/*` 是主要 bounded-context surface，跨模块依赖已有 baseline / reviewed exception 守卫。
   - 当前缺少 `internal/shared` 自身不能依赖业务模块 / 基础设施实现的机械守卫。
 - Plan adjustments after challenge:
   - 第一阶段只补 `archtest` helper 和 `internal/shared` 守卫；后续如果需要，再逐步迁移各模块私有 guard。
@@ -117,14 +117,14 @@
 - Commands:
   - `go test ./internal/testutil/archtest`
   - `go test ./internal/shared -count=1`
-  - `go test ./internal/module -run 'TestModuleArchitectureBoundaries|TestModuleDependencyAllowlistIsCurrent|TestCrossModulePrivateImportAllowlistIsCurrent' -count=1`
+  - `go test ./internal/module -run 'TestModuleArchitectureBoundaries|TestModuleDependencyBaselineIsCurrent|TestCrossModulePrivateImportExceptionsAreCurrent' -count=1`
   - `go test ./internal/app -run TestArchitectureRulesRejectConcreteCrossModuleImports -count=1`
   - `bash scripts/check-backend-architecture.sh --full`
   - `bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh pre-commit-quick`
   - `bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`
   - `bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh workflow-governance`
 - Results:
-  - `timeout 120s go test ./internal/testutil/archtest ./internal/shared ./internal/module ./internal/app -run 'TestSharedPackagesStayLightweightAndModuleAgnostic|TestModuleArchitectureBoundaries|TestModuleDependencyAllowlistIsCurrent|TestDomainInternalImportAllowlistIsCurrent|TestApplicationConcreteDependencyAllowlistIsCurrent|TestCrossModulePrivateImportAllowlistIsCurrent|TestModuleRuntimeCodeDoesNotCreateRootContext|TestBackendBusinessCodeDoesNotCreateRootContext|TestTimeNowUsageAllowlistIsCurrent|TestTransactionBoundaryAllowlistIsCurrent|TestRuntimeModulesStaySmallAndWiringOnly|TestMapperWrappersFollowGlobalDelegationPolicy|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`：通过。
+  - `timeout 120s go test ./internal/testutil/archtest ./internal/shared ./internal/module ./internal/app -run 'TestSharedPackagesStayLightweightAndModuleAgnostic|TestModuleArchitectureBoundaries|TestModuleDependencyBaselineIsCurrent|TestDomainInternalImportExceptionsAreCurrent|TestApplicationConcreteDependencyExceptionsAreCurrent|TestCrossModulePrivateImportExceptionsAreCurrent|TestModuleRuntimeCodeDoesNotCreateRootContext|TestBackendBusinessCodeDoesNotCreateRootContext|TestTimeNowUsageExceptionsAreCurrent|TestTransactionBoundaryExceptionsAreCurrent|TestRuntimeModulesStaySmallAndWiringOnly|TestMapperWrappersFollowGlobalDelegationPolicy|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`：通过。
   - `timeout 180s bash scripts/check-backend-architecture.sh --full`：通过。
   - `timeout 300s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh pre-commit-quick`：通过。
   - `timeout 600s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`：通过。
