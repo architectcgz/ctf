@@ -46,17 +46,24 @@ var moduleDependencyBaseline = map[string]struct{}{
 	"teaching_query -> assessment": {},
 }
 
-var reviewedTransactionBoundaryFiles = map[string]struct{}{
-	"challenge/infrastructure/repository.go":                            {},
-	"challenge/infrastructure/tag_repository.go":                        {},
-	"contest/infrastructure/contest_awd_runtime_recovery_repository.go": {},
-	"contest/infrastructure/contest_status_update_repository.go":        {},
-	"contest/infrastructure/team_membership_lifecycle_repository.go":    {},
-	"contest/infrastructure/team_membership_repository.go":              {},
-	"identity/infrastructure/repository.go":                             {},
-	"ops/infrastructure/notification_repository.go":                     {},
-	"practice/infrastructure/repository.go":                             {},
-	"runtime/infrastructure/repository.go":                              {},
+var reviewedTransactionBoundaryFunctions = map[string]struct{}{
+	"challenge/infrastructure/repository.go#CreateWithHints":                                                 {},
+	"challenge/infrastructure/repository.go#UpdateWithHints":                                                 {},
+	"challenge/infrastructure/tag_repository.go#AttachTagsInTx":                                              {},
+	"contest/infrastructure/contest_awd_runtime_recovery_repository.go#AddPausedDurationToActiveAWDContests": {},
+	"contest/infrastructure/contest_status_update_repository.go#applyStatusTransitionWithUpdates":            {},
+	"contest/infrastructure/team_membership_lifecycle_repository.go#CreateWithMember":                        {},
+	"contest/infrastructure/team_membership_lifecycle_repository.go#DeleteWithMembers":                       {},
+	"contest/infrastructure/team_membership_repository.go#AddMemberWithLock":                                 {},
+	"contest/infrastructure/team_membership_repository.go#RemoveMember":                                      {},
+	"identity/infrastructure/repository.go#Create":                                                           {},
+	"identity/infrastructure/repository.go#Update":                                                           {},
+	"ops/infrastructure/notification_repository.go#CreateBatch":                                              {},
+	"practice/infrastructure/repository.go#CreateAWDServiceOperation":                                        {},
+	"practice/infrastructure/repository.go#ResetInstanceRuntimeForRestart":                                   {},
+	"runtime/infrastructure/repository.go#BumpAWDDefenseWorkspaceRevision":                                   {},
+	"runtime/infrastructure/repository.go#finalizeInstanceRuntime":                                           {},
+	"runtime/infrastructure/repository.go#updateStatusAndReleasePortWithCurrentStatus":                       {},
 }
 
 var reviewedOversizedRuntimeModuleFiles = map[string]struct{}{}

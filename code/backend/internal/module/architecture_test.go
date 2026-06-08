@@ -1,6 +1,7 @@
 package module
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -771,55 +772,62 @@ func TestTransactionBoundaryExceptionsAreCurrent(t *testing.T) {
 	files := archtest.RuntimeGoFiles(t, ".")
 	actual := make(map[string]struct{})
 	for _, file := range files {
-		if fileNeedsReviewedTransactionBoundaryException(t, file) {
-			actual[file] = struct{}{}
+		for fn := range fileReviewedTransactionBoundaryExceptionFunctions(t, file) {
+			actual[transactionBoundaryExceptionKey(file, fn)] = struct{}{}
 		}
 	}
 
-	for file := range actual {
-		if _, allowed := reviewedTransactionBoundaryFiles[file]; !allowed {
-			t.Fatalf("%s opens a transaction outside the reviewed boundary exceptions", file)
+	for key := range actual {
+		if _, allowed := reviewedTransactionBoundaryFunctions[key]; !allowed {
+			t.Fatalf("%s opens a transaction outside the reviewed boundary exceptions", key)
 		}
 	}
-	for allowed := range reviewedTransactionBoundaryFiles {
+	for allowed := range reviewedTransactionBoundaryFunctions {
 		if _, exists := actual[allowed]; !exists {
 			t.Fatalf("transaction exception is stale: %s", allowed)
 		}
 	}
 }
 
-func fileNeedsReviewedTransactionBoundaryException(t *testing.T, file string) bool {
+func fileReviewedTransactionBoundaryExceptionFunctions(t *testing.T, file string) map[string]struct{} {
 	t.Helper()
 
-	needsException, err := sourceNeedsReviewedTransactionBoundaryException(archtest.ReadFile(t, file))
+	functions, err := sourceReviewedTransactionBoundaryExceptionFunctions(archtest.ReadFile(t, file))
 	if err != nil {
 		t.Fatalf("parse %s: %v", file, err)
 	}
-	return needsException
+	return functions
 }
 
 func sourceNeedsReviewedTransactionBoundaryException(content string) (bool, error) {
+	functions, err := sourceReviewedTransactionBoundaryExceptionFunctions(content)
+	if err != nil {
+		return false, err
+	}
+	return len(functions) > 0, nil
+}
+
+func sourceReviewedTransactionBoundaryExceptionFunctions(content string) (map[string]struct{}, error) {
 	fileSet := token.NewFileSet()
 	fileNode, err := parser.ParseFile(fileSet, "sample.go", content, 0)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	parents := collectASTParents(fileNode)
 
-	needsException := false
+	functions := make(map[string]struct{})
 	ast.Inspect(fileNode, func(node ast.Node) bool {
 		call, ok := node.(*ast.CallExpr)
 		if !ok || !isTransactionCall(call) {
 			return true
 		}
 		if !transactionCallIsInsideExplicitBoundaryMethod(call, parents) {
-			needsException = true
-			return false
+			functions[enclosingFunctionName(call, parents)] = struct{}{}
 		}
 		return true
 	})
-	return needsException, nil
+	return functions, nil
 }
 
 func isTransactionCall(call *ast.CallExpr) bool {
@@ -828,14 +836,7 @@ func isTransactionCall(call *ast.CallExpr) bool {
 }
 
 func transactionCallIsInsideExplicitBoundaryMethod(call *ast.CallExpr, parents map[ast.Node]ast.Node) bool {
-	for current := ast.Node(call); current != nil; current = parents[current] {
-		fn, ok := current.(*ast.FuncDecl)
-		if !ok || fn.Name == nil {
-			continue
-		}
-		return isExplicitTransactionBoundaryMethodName(fn.Name.Name)
-	}
-	return false
+	return isExplicitTransactionBoundaryMethodName(enclosingFunctionName(call, parents))
 }
 
 func isExplicitTransactionBoundaryMethodName(name string) bool {
@@ -843,6 +844,21 @@ func isExplicitTransactionBoundaryMethodName(name string) bool {
 		return false
 	}
 	return strings.HasSuffix(name, "Transaction") || strings.HasSuffix(name, "Tx")
+}
+
+func enclosingFunctionName(node ast.Node, parents map[ast.Node]ast.Node) string {
+	for current := node; current != nil; current = parents[current] {
+		fn, ok := current.(*ast.FuncDecl)
+		if !ok || fn.Name == nil {
+			continue
+		}
+		return fn.Name.Name
+	}
+	return "<unknown>"
+}
+
+func transactionBoundaryExceptionKey(file, function string) string {
+	return fmt.Sprintf("%s#%s", filepath.ToSlash(file), function)
 }
 
 func collectASTParents(root ast.Node) map[ast.Node]ast.Node {
