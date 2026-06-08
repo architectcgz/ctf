@@ -18,9 +18,9 @@ bash scripts/install-githooks.sh
 ## Harness 检查
 
 - `pre-commit-quick` stage：当前由 `harness/workflow-plugins/code-workflow/pre-commit-quick.d/` 下的插件依次运行前端过细测试守卫、startup gate 和 quick 架构检查。
-- harness reminder：`scripts/check-skill-sync-reminder.sh --staged` 作为独立的 harness 级非阻塞提醒执行，不再挂在 `code-workflow` stage plugin 下。
+- harness reminder：`scripts/check-skill-sync-reminder.sh --staged` 作为独立的 harness 级非阻塞提醒执行；项目 wrapper 只保留稳定入口，真正 owner 已收回全局 `~/.agents/harness/check-skill-sync-reminder.sh`，不再挂在 `code-workflow` stage plugin 下。
 - `completion-full` stage：当前由 `harness/workflow-plugins/code-workflow/completion-full.d/` 下的插件运行 code change contract checks、backend full architecture、frontend full architecture。
-- `workflow-governance` stage：当前由 `harness/workflow-plugins/code-workflow/workflow-governance.d/` 下的插件运行治理审计核心脚本；`review-governance` 仍作为兼容 stage 别名存在。
+- `workflow-governance` stage：当前由 `harness/workflow-plugins/code-workflow/workflow-governance.d/` 下的插件运行治理审计核心脚本；除了本地治理核查外，还会调用全局 `feedback` 归档状态守卫，防止已吸收条目继续停留在活动状态；`review-governance` 仍作为兼容 stage 别名存在。
 - `commit-msg`：运行 `scripts/check-commit-message.sh`，通过全局共享检查器 + 本地 policy 阻止中文类型前缀、纯英文描述标题、只有简短标题而没有详细正文的普通提交进入历史；若存在激活中的 task gate，还要求正文显式带上 `Task: <task-slug>`。
 - 原有 API 合同同步逻辑继续保留。
 

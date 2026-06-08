@@ -60,4 +60,12 @@ run_workflow_checks() {
       check_contains "$file" '^## 沉淀状态$' "$file declares sedimentation status"
     done <<< "$feedback_changed"
   fi
+
+  echo "[C12b] absorbed feedback switches to archived state"
+  if bash "$HOME/.agents/harness/check-feedback-archive-state.sh" --cwd "$PWD"; then
+    echo "  $(green PASS) — absorbed feedback records are archived"
+  else
+    echo "  $(red FAIL) — absorbed feedback must switch to archived state"
+    fail=1
+  fi
 }
