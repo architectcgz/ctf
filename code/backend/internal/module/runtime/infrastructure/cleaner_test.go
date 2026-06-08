@@ -5,7 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
+	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+
+	"ctf-platform/internal/module/runtime/infrastructure/cachekeys"
 )
 
 type blockingCleanerService struct {
@@ -56,6 +60,104 @@ func TestCleanerStopCancelsRunningTask(t *testing.T) {
 	case <-service.done:
 	case <-time.After(time.Second):
 		t.Fatal("cleaner task did not stop after cancellation")
+	}
+}
+
+func TestCleanerStopsRunningTaskWhenCleanupLockIsLost(t *testing.T) {
+	t.Parallel()
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service := &blockingCleanerService{
+		started: make(chan struct{}),
+		done:    make(chan struct{}),
+	}
+	cleaner := NewCleaner(service, redisClient, 60*time.Millisecond, zap.NewNop())
+	cleaner.baseCtx, cleaner.cancel = context.WithCancel(context.Background())
+	t.Cleanup(cleaner.cancel)
+
+	cleaner.startRunOnce()
+
+	select {
+	case <-service.started:
+	case <-time.After(time.Second):
+		t.Fatal("cleaner task did not start")
+	}
+
+	lockKey := cachekeys.ContainerCleanupLockKey()
+	if !mini.Exists(lockKey) {
+		t.Fatal("expected cleanup lock to exist after cleaner run starts")
+	}
+	if err := mini.Set(lockKey, "other-owner"); err != nil {
+		t.Fatalf("replace cleanup lock token: %v", err)
+	}
+	mini.SetTTL(lockKey, time.Minute)
+
+	select {
+	case <-service.done:
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("expected cleaner task context to stop after cleanup lock is lost")
+	}
+
+	stopCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := cleaner.Stop(stopCtx); err != nil {
+		t.Fatalf("Stop() error = %v", err)
+	}
+}
+
+func TestCleanerStopReleasesCleanupLockAfterBaseContextCancellation(t *testing.T) {
+	t.Parallel()
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service := &blockingCleanerService{
+		started: make(chan struct{}),
+		done:    make(chan struct{}),
+	}
+	cleaner := NewCleaner(service, redisClient, time.Minute, zap.NewNop())
+	cleaner.baseCtx, cleaner.cancel = context.WithCancel(context.Background())
+	t.Cleanup(cleaner.cancel)
+
+	cleaner.startRunOnce()
+
+	select {
+	case <-service.started:
+	case <-time.After(time.Second):
+		t.Fatal("cleaner task did not start")
+	}
+
+	lockKey := cachekeys.ContainerCleanupLockKey()
+	if !mini.Exists(lockKey) {
+		t.Fatal("expected cleanup lock to exist after cleaner run starts")
+	}
+
+	stopCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := cleaner.Stop(stopCtx); err != nil {
+		t.Fatalf("Stop() error = %v", err)
+	}
+
+	if mini.Exists(lockKey) {
+		t.Fatal("expected cleanup lock to be released after cleaner shutdown")
 	}
 }
 
