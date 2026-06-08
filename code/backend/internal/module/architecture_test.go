@@ -279,6 +279,13 @@ func probe() time.Duration {
 	return time.Since(start)
 }
 
+func track() func() time.Duration {
+	start := time.Now()
+	return func() time.Duration {
+		return time.Since(start)
+	}
+}
+
 func deadline(conn net.Conn, timeout time.Duration) bool {
 	_ = conn.SetDeadline(time.Now().Add(timeout))
 	deadline := time.Now().Add(timeout)
@@ -356,6 +363,30 @@ func deadline(timeout time.Duration) bool {
 	}
 	if !needsException {
 		t.Fatalf("wrapped time.Now values must not be inferred as local runtime-only assignments")
+	}
+}
+
+func TestTimeNowUsageGuardRejectsClosureBusinessTime(t *testing.T) {
+	t.Parallel()
+
+	const source = `package sample
+
+import "time"
+
+func blocked() func() time.Time {
+	startedAt := time.Now()
+	return func() time.Time {
+		return startedAt
+	}
+}
+`
+
+	needsException, err := sourceNeedsReviewedTimeNowException(source)
+	if err != nil {
+		t.Fatalf("parse sample source: %v", err)
+	}
+	if !needsException {
+		t.Fatalf("closure-captured time.Now business value must still need a reviewed exception")
 	}
 }
 

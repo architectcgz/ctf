@@ -63,6 +63,4 @@ var reviewedTransactionBoundaryFiles = map[string]struct{}{
 
 var reviewedOversizedRuntimeModuleFiles = map[string]struct{}{}
 
-var reviewedTimeNowFiles = map[string]struct{}{
-	"runtime/application/commands/provisioning_service.go":   {},
-}
+var reviewedTimeNowFiles = map[string]struct{}{}

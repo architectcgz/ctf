@@ -806,6 +806,7 @@ func TestServiceCreateTopologyLogsProvisioningStages(t *testing.T) {
 		if got, ok := ctxMap["instance_id"].(int64); !ok || got != 4242 {
 			t.Fatalf("expected instance_id=4242 in stage log, got %+v", ctxMap)
 		}
+		assertNonNegativeLogDuration(t, ctxMap)
 		if stage == "container_create" {
 			switch ctxMap["node_key"] {
 			case "web":
@@ -1141,8 +1142,21 @@ func TestServiceCreateTopologyLogsStageFailure(t *testing.T) {
 	if got, ok := ctxMap["instance_id"].(int64); !ok || got != 5252 {
 		t.Fatalf("expected instance_id=5252 in failure log, got %+v", ctxMap)
 	}
+	assertNonNegativeLogDuration(t, ctxMap)
 	if _, exists := ctxMap["error"]; !exists {
 		t.Fatalf("expected failure log to include error field, got %+v", ctxMap)
+	}
+}
+
+func assertNonNegativeLogDuration(t *testing.T, ctxMap map[string]interface{}) {
+	t.Helper()
+
+	duration, ok := ctxMap["duration"].(time.Duration)
+	if !ok {
+		t.Fatalf("expected duration field in stage log, got %+v", ctxMap)
+	}
+	if duration < 0 {
+		t.Fatalf("expected non-negative duration, got %s in %+v", duration, ctxMap)
 	}
 }
 

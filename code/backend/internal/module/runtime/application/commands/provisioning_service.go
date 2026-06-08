@@ -206,9 +206,9 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 				return nil, err
 			}
 			occupiedSubnets = appendUniqueSubnet(occupiedSubnets, subnet)
-			stageStartedAt := time.Now()
+			finish := s.startTopologyStage()
 			networkID, err = s.engine.CreateNetwork(ctx, networkName, managedLabels, network.Internal, network.Shared, subnet)
-			s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+			finish(err, topologyStageContext{
 				instanceID:  req.OwnerInstanceID,
 				stage:       "network_create",
 				networkKey:  network.Key,
@@ -263,9 +263,9 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		}
 		servicePort := node.ServicePort
 		if node.IsEntryPoint && servicePort <= 0 {
-			stageStartedAt := time.Now()
+			finish := s.startTopologyStage()
 			resolvedPort, err := s.resolveServicePort(ctx, node.Image)
-			s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+			finish(err, topologyStageContext{
 				instanceID:  req.OwnerInstanceID,
 				stage:       "service_port_resolve",
 				nodeKey:     node.Key,
@@ -287,7 +287,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			}
 		}
 
-		stageStartedAt := time.Now()
+		finish := s.startTopologyStage()
 		containerID, err := s.engine.CreateContainer(ctx, &runtimecontracts.ContainerConfig{
 			Image:          node.Image,
 			Name:           buildManagedContainerName(req.ContainerName),
@@ -301,7 +301,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			Network:        primaryNetwork.name,
 			NetworkAliases: normalizedNetworkAliases(node.NetworkAliases),
 		})
-		s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+		finish(err, topologyStageContext{
 			instanceID:  req.OwnerInstanceID,
 			stage:       "container_create",
 			nodeKey:     node.Key,
@@ -316,9 +316,9 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
-		stageStartedAt = time.Now()
+		finish = s.startTopologyStage()
 		err = s.engine.StartContainer(ctx, containerID)
-		s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+		finish(err, topologyStageContext{
 			instanceID:  req.OwnerInstanceID,
 			stage:       "container_start",
 			nodeKey:     node.Key,
@@ -336,9 +336,9 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 		}
 		for _, networkKey := range nodeNetworkKeys[1:] {
 			extraNetwork := networkByKey[networkKey]
-			stageStartedAt = time.Now()
+			finish = s.startTopologyStage()
 			err = s.engine.ConnectContainerToNetwork(ctx, containerID, extraNetwork.name)
-			s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+			finish(err, topologyStageContext{
 				instanceID:  req.OwnerInstanceID,
 				stage:       "connect_extra_networks",
 				nodeKey:     node.Key,
@@ -355,9 +355,9 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 				return nil, err
 			}
 		}
-		stageStartedAt = time.Now()
+		finish = s.startTopologyStage()
 		networkIPs, err := s.engine.InspectContainerNetworkIPs(ctx, containerID)
-		s.logTopologyStage(stageStartedAt, err, topologyStageContext{
+		finish(err, topologyStageContext{
 			instanceID:  req.OwnerInstanceID,
 			stage:       "inspect_network_ips",
 			nodeKey:     node.Key,
@@ -627,11 +627,18 @@ func (s *ProvisioningService) removeNetwork(ctx context.Context, networkID strin
 	return nil
 }
 
-func (s *ProvisioningService) logTopologyStage(startedAt time.Time, err error, stageCtx topologyStageContext) {
+func (s *ProvisioningService) startTopologyStage() func(error, topologyStageContext) {
+	startedAt := time.Now()
+	return func(err error, stageCtx topologyStageContext) {
+		s.logTopologyStage(time.Since(startedAt), err, stageCtx)
+	}
+}
+
+func (s *ProvisioningService) logTopologyStage(duration time.Duration, err error, stageCtx topologyStageContext) {
 	fields := make([]zap.Field, 0, 10)
 	fields = append(fields,
 		zap.String("stage", stageCtx.stage),
-		zap.Duration("duration", time.Since(startedAt)),
+		zap.Duration("duration", duration),
 	)
 	if stageCtx.instanceID > 0 {
 		fields = append(fields, zap.Int64("instance_id", stageCtx.instanceID))
