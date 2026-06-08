@@ -26,6 +26,31 @@ import (
 	"time"
 )
 
+type stubPracticeSchedulerLockStore struct {
+	acquired bool
+	err      error
+}
+
+type stubPracticeSchedulerLockLease struct{}
+
+func (s *stubPracticeSchedulerLockStore) AcquireProvisioningSchedulerLock(context.Context, time.Duration) (practiceports.PracticeSchedulerLockLease, bool, error) {
+	if s.err != nil {
+		return nil, false, s.err
+	}
+	if !s.acquired {
+		return nil, false, nil
+	}
+	return stubPracticeSchedulerLockLease{}, true, nil
+}
+
+func (stubPracticeSchedulerLockLease) Key(context.Context) string { return "practice-scheduler-lock" }
+
+func (stubPracticeSchedulerLockLease) Release(context.Context) (bool, error) { return true, nil }
+
+func (stubPracticeSchedulerLockLease) Refresh(context.Context, time.Duration) (bool, error) {
+	return true, nil
+}
+
 func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	t.Parallel()
 
@@ -122,6 +147,113 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		}
 		return instance.Status == instanceentity.InstanceStatusRunning && instance.ContainerID == "container-queued"
 	})
+}
+
+func TestRunProvisioningLoopSkipsWorkWhenSchedulerLockHeldByOtherReplica(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	healthyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	}))
+	t.Cleanup(healthyServer.Close)
+	publicHost, hostPort := parseHTTPServerEndpoint(t, healthyServer.URL)
+	if err := db.Create(&practiceCommandImageRow{
+		ID:        112,
+		Name:      "ctf/web",
+		Tag:       "v1",
+		Status:    challengecontracts.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	if err := db.Create(&practiceCommandChallengeRow{
+		ID:         212,
+		Title:      "Queued Standby",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
+		Points:     100,
+		ImageID:    112,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
+		FlagHash:   "flag{static}",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Create(&identitycontracts.User{ID: 53, Username: "student-53", Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+
+	var createCalls atomic.Int32
+	service := wirePracticeScopeAdapters(NewService(
+		practiceinfra.NewRepository(db),
+
+		challengeinfra.NewImageRepository(db),
+		runtimeinfrarepo.NewRepository(db),
+		&stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
+				createCalls.Add(1)
+				return "container-standby", "network-standby", hostPort, 8080, nil
+			},
+		},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PortRangeStart:       hostPort,
+				PortRangeEnd:         hostPort + 1,
+				DefaultExposedPort:   8080,
+				PublicHost:           publicHost,
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				CreateTimeout:        time.Second,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:             true,
+					PollInterval:        10 * time.Millisecond,
+					BatchSize:           1,
+					MaxConcurrentStarts: 1,
+					MaxActiveInstances:  10,
+					LockTTL:             time.Second,
+				},
+			},
+		},
+		nil),
+
+		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db)).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe()).
+		SetSchedulerLockStore(&stubPracticeSchedulerLockStore{acquired: false})
+
+	service.StartBackgroundTasks(context.Background())
+
+	resp, err := service.StartChallenge(context.Background(), 53, 212)
+	if err != nil {
+		t.Fatalf("StartChallenge() error = %v", err)
+	}
+	if resp.Status != instanceentity.InstanceStatusPending {
+		t.Fatalf("expected pending status, got %+v", resp)
+	}
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go service.RunProvisioningLoop(runCtx)
+
+	time.Sleep(120 * time.Millisecond)
+
+	var instance instanceentity.Instance
+	if err := db.First(&instance, resp.ID).Error; err != nil {
+		t.Fatalf("load instance: %v", err)
+	}
+	if instance.Status != instanceentity.InstanceStatusPending {
+		t.Fatalf("expected standby replica to leave instance pending, got %s", instance.Status)
+	}
+	if createCalls.Load() != 0 {
+		t.Fatalf("expected standby replica to skip runtime provisioning, got %d calls", createCalls.Load())
+	}
 }
 
 func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.T) {

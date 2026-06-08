@@ -20,6 +20,7 @@
 
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`、`awd_desired_runtime_reconciler.go`
   - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制；普通实例继续使用 `container.default_ttl` 计算 `expires_at`，AWD 队伍服务实例则统一跟随 `contestdomain.ContestEffectiveEndTime(contest)`，也就是比赛 `end_time + paused_seconds`
+  - 负责：在多 API 副本部署下，通过 Redis `ctf:practice:instance:scheduler:lock` 把 provisioning scheduler 收口成单 owner；只有拿到 `container.scheduler.lock_ttl` 租约并持续续租的实例才会执行 desired reconcile 和 `pending -> creating` 领取
   - 负责：在 `practice_instance_scheduler` 循环里按 `container.scheduler.desired_reconcile_interval` 周期性收敛 AWD `running / frozen` 比赛的期望运行态，补齐“应该活着的 `team × visible service`”，并优先复用已有实例行 / nonce，而不是直接扩展成新的批量重启控制面
   - 负责：对同一 `contest_id + team_id + service_id` scope 的坏配置或 provisioning 失败，把 `failure_count / last_failure_at / next_attempt_at / suppressed_until / last_error` 落到 Redis `DesiredAWDReconcileStateKey(...)`；backoff 或 suppress 窗口内直接跳过自动 operation 与重复告警，scope 一旦恢复 active 会清掉这份状态
   - 不负责：引入外部消息队列或让 HTTP 请求直接长期持有 Docker 冷启动；当前排队事实仍在 `instances` 表和调度器里
@@ -31,7 +32,8 @@
 
 - `code/backend/internal/module/contest/domain/contest_timing.go`、`code/backend/internal/module/contest/application/jobs/{status_update_support.go,awd_round_plan.go,awd_round_flag_support.go}`、`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`
   - 负责：把 AWD 比赛的有效时间窗统一收口到 `effectiveNow = now - pausedDuration` 与 `effectiveEnd = end_time + pausedDuration`；`pausedDuration` 来自 `contests.paused_seconds`，会同时作用到 round 推进、封榜时间、Flag 读取窗口、榜单结束时间和 `until_contest_end` 实例过期时间
-  - 负责：API 启动时通过 Redis 中的 `platform_runtime_state` 记录读取上次 `boot_id + last_heartbeat_at`。当检测到宿主机 boot identity 变化或 heartbeat 长时间停滞时，启动恢复服务会先给 `running / frozen` 的 AWD 比赛补暂停时长、刷新这些比赛下活跃实例的 `expires_at`、执行 `ReconcileLostActiveRuntimes` 恢复停机前仍有 active row 的运行态，再执行 `ReconcileDesiredAWDInstances` 补齐缺失的 `team × visible service`，最后把恢复耗时继续累计到 `paused_seconds`；同一次 outage 通过 `runtime_recovery_key + runtime_recovery_applied_seconds` 做幂等补差，避免恢复重试或二次扩展时重复累计
+  - 负责：API 启动后先通过 Redis `ctf:platform:runtime:recovery:lock` 竞争 leader；只有拿到 `container.startup_recovery_lock_ttl` 租约并续租成功的实例，才会读取 / 写入 `platform_runtime_state` 并负责 outage recovery。拿不到锁的副本保持待命，不参与 heartbeat 或恢复链路；在 leader 完成首轮恢复并写入当前 `boot_id` heartbeat 之前，副本不会越过启动门禁进入对外服务态
+  - 负责：leader 读取 Redis 中的 `platform_runtime_state` 保存的上次 `boot_id + last_heartbeat_at`。启动恢复只在检测到宿主机 boot identity 变化时触发：服务会先给 `running / frozen` 的 AWD 比赛补暂停时长、刷新这些比赛下活跃实例的 `expires_at`、执行 `ReconcileLostActiveRuntimes` 恢复停机前仍有 active row 的运行态，再执行 `ReconcileDesiredAWDInstances` 补齐缺失的 `team × visible service`，最后把恢复耗时继续累计到 `paused_seconds`；同一次 outage 通过 `runtime_recovery_key + runtime_recovery_applied_seconds` 做幂等补差，避免恢复重试或二次扩展时重复累计。同 `boot_id` 下的 heartbeat gap 只用于 leader readiness，不再直接当成 runtime outage
   - 不负责：提供管理员手动暂停状态机，或把同一套暂停语义扩散到 Jeopardy 比赛
 
 - `code/backend/internal/config/config.go`、`code/backend/Dockerfile`、`docker/ctf/docker-compose.dev.yml`
@@ -59,7 +61,7 @@
 - AWD desired reconcile 的 scope 级降噪状态持久化在 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>`，字段包括 `failure_count`、`last_failure_at`、`next_attempt_at`、`suppressed_until` 和 `last_error`；scope 恢复 active 后由 reconcile 主动清除。
 - AWD dynamic flag 的稳定密钥事实最终落在 `container.flag_global_secret_file` 指向的本地文件或持久化卷里；`container.flag_global_secret` 只是当前进程加载后的内存值。
 - 运行时入口与访问相关 API 包括 `POST /api/v1/challenges/:id/instances`、`POST /api/v1/contests/:id/challenges/:cid/instances`、`POST /api/v1/contests/:id/awd/services/:sid/instances`、`POST /api/v1/instances/:id/access` 以及 AWD 相关访问 / 复盘接口；契约以 `docs/contracts/openapi-v1.yaml` 为准。
-- 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.proxy_ticket_ttl`、`container.registry.*`、`container.network.single_container_*`、`container.network.topology_*`、`contest.awd.scheduler_*`；两套 CIDR 会在启动时做 IPv4、网络地址、掩码范围和 overlap 校验，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
+- 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.startup_recovery_lock_ttl`、`container.proxy_ticket_ttl`、`container.registry.*`、`container.network.single_container_*`、`container.network.topology_*`、`contest.awd.scheduler_*`；两套 CIDR 会在启动时做 IPv4、网络地址、掩码范围和 overlap 校验，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
 
 ## Guardrail
 

@@ -3,8 +3,9 @@ package cachekeys
 const redisNamespace = "ctf"
 
 const (
-	containerCleanupLockKey = "container:cleanup:lock"
-	platformRuntimeStateKey = "platform:runtime:state"
+	containerCleanupLockKey        = "container:cleanup:lock"
+	platformRuntimeStateKey        = "platform:runtime:state"
+	platformRuntimeRecoveryLockKey = "platform:runtime:recovery:lock"
 )
 
 func withNamespace(key string) string {
@@ -17,4 +18,8 @@ func ContainerCleanupLockKey() string {
 
 func PlatformRuntimeStateKey() string {
 	return withNamespace(platformRuntimeStateKey)
+}
+
+func PlatformRuntimeRecoveryLockKey() string {
+	return withNamespace(platformRuntimeRecoveryLockKey)
 }

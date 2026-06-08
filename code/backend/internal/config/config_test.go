@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	startuprecovery "ctf-platform/internal/module/instance/startuprecovery"
 )
 
 func chdirToBackendRoot(t *testing.T) {
@@ -393,6 +395,19 @@ func TestValidateRejectsEnabledDefenseSSHWithoutHostKeyPath(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsTooLargeStartupRecoveryLockTTL(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Container.StartupRecoveryLockTTL = containerStartupRecoveryMaxLockTTL + time.Second
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject oversized startup recovery lock ttl")
+	}
+	if got := err.Error(); got != "container.startup_recovery_lock_ttl must be less than or equal to "+containerStartupRecoveryMaxLockTTL.String() {
+		t.Fatalf("unexpected error: %s", got)
+	}
+}
+
 func TestValidateAllowsEnabledDefenseSSHWithHostKeyPath(t *testing.T) {
 	cfg := validConfigForValidationTests()
 	cfg.Container.DefenseSSHEnabled = true
@@ -578,18 +593,22 @@ func validConfigForValidationTests() *Config {
 			AllowCredentials: true,
 		},
 		Container: ContainerConfig{
-			DefaultCPUQuota:      1,
-			DefaultMemory:        256 * 1024 * 1024,
-			DefaultPidsLimit:     128,
-			DefaultExposedPort:   8080,
-			PortRangeStart:       30000,
-			PortRangeEnd:         40000,
-			DeletePollInterval:   time.Second,
-			DeleteMaxConcurrent:  8,
-			OrphanGracePeriod:    time.Minute,
-			CleanupLockTTL:       time.Minute,
-			ProxyTicketTTL:       time.Minute,
-			ProxyBodyPreviewSize: 1024,
+			DefaultCPUQuota:        1,
+			DefaultMemory:          256 * 1024 * 1024,
+			DefaultPidsLimit:       128,
+			DefaultExposedPort:     8080,
+			PortRangeStart:         30000,
+			PortRangeEnd:           40000,
+			DeletePollInterval:     time.Second,
+			DeleteMaxConcurrent:    8,
+			OrphanGracePeriod:      time.Minute,
+			CleanupLockTTL:         time.Minute,
+			StartupRecoveryLockTTL: startuprecovery.DefaultLockTTL,
+			ProxyTicketTTL:         time.Minute,
+			ProxyBodyPreviewSize:   1024,
+			Scheduler: ContainerSchedulerConfig{
+				LockTTL: time.Minute,
+			},
 			Network: ContainerNetworkConfig{
 				SingleContainerSubnetBase: "10.11.0.0/16",
 				SingleContainerSubnetMask: 29,

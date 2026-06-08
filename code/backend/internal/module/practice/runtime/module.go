@@ -118,6 +118,7 @@ type moduleDeps struct {
 	imageStore     challengecontracts.ImageStore
 	progressCache  practiceports.PracticeUserProgressCache
 	desiredState   practiceports.PracticeDesiredAWDReconcileStateStore
+	schedulerLock  practiceports.PracticeInstanceSchedulerLockStore
 }
 
 func Build(deps Deps) *Module {
@@ -152,6 +153,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 		imageStore:          deps.ImageStore,
 		progressCache:       practiceinfra.NewProgressCache(deps.Cache),
 		desiredState:        practiceinfra.NewDesiredAWDReconcileStateStore(deps.Cache),
+		schedulerLock:       practiceinfra.NewSchedulerStateStore(deps.Cache),
 	}
 }
 
@@ -180,6 +182,7 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 		log.Named("practice_service")).
 		SetRuntimeNodeSelector(deps.runtimeNodeSelector).
 		SetDesiredAWDReconcileStateStore(deps.desiredState).
+		SetSchedulerLockStore(deps.schedulerLock).
 		SetSolvedSubmissionRepository(practiceinfra.NewSolvedSubmissionRepository(deps.commandRepo)).
 		SetManualReviewRepository(practiceinfra.NewManualReviewRepository(deps.commandRepo)).
 		SetContestScopeRepository(practiceinfra.NewContestScopeRepository(deps.commandRepo)).

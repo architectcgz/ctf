@@ -15,7 +15,7 @@
 
 截至 2026-05-16，仓库里已经具备这些自动恢复能力：
 
-- API 启动时会读取 Redis `platform_runtime_state`，检测 boot ID 变化或 heartbeat 长时间停滞。
+- API 启动后会先竞争 Redis leader lock；只有 leader 会读取 Redis `platform_runtime_state`。真正触发启动恢复的条件是 boot ID 变化；同 `boot_id` 下的 heartbeat gap 只表示 leaderless gap。非 leader 副本会等 leader 写入当前 `boot_id` heartbeat 后再继续启动。
 - 检测到 outage 后，会先给活跃 AWD 比赛补 `paused_seconds`，刷新活跃实例 `expires_at`，再执行 active runtime recovery 和 desired runtime reconciliation。
 - desired reconcile 对长期坏配置会在 scope 级做 backoff / suppress，不再每个 `desired_reconcile_interval` 固定重试。
 - `container.flag_global_secret_file` 会在启动时恢复或自动生成 AWD dynamic flag 全局密钥，只要文件位于持久化卷中，宿主重启后不会丢。
