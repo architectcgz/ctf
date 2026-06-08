@@ -17,7 +17,7 @@ except Exception as exc:  # pragma: no cover - runtime dependency check
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_REGISTRY_ENV = REPO_ROOT / "docker/ctf/infra/registry/ctf-platform-registry.env"
+DEFAULT_REGISTRY_ENV = REPO_ROOT / "docker/infra/registry/ctf-platform-registry.env"
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--registry-env",
         default=str(DEFAULT_REGISTRY_ENV),
-        help="registry 环境变量文件，默认 docker/ctf/infra/registry/ctf-platform-registry.env",
+        help="registry 环境变量文件，默认 docker/infra/registry/ctf-platform-registry.env",
     )
     parser.add_argument("--db-container", default="ctf-postgres", help="PostgreSQL 容器名")
     parser.add_argument("--db-name", default="ctf", help="数据库名")

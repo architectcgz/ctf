@@ -54,14 +54,14 @@ EOF
 resolve_compose_file() {
   local candidate
 
-  candidate="${REPO_ROOT}/docker/ctf/docker-compose.dev.yml"
+  candidate="${REPO_ROOT}/docker/docker-compose.dev.yml"
   if [[ -f "${candidate}" ]]; then
     printf '%s\n' "${candidate}"
     return 0
   fi
 
   while IFS= read -r worktree_path; do
-    candidate="${worktree_path}/docker/ctf/docker-compose.dev.yml"
+    candidate="${worktree_path}/docker/docker-compose.dev.yml"
     if [[ -f "${candidate}" ]]; then
       printf '%s\n' "${candidate}"
       return 0
@@ -74,14 +74,14 @@ resolve_compose_file() {
 resolve_registry_env_file() {
   local candidate
 
-  candidate="${REPO_ROOT}/docker/ctf/infra/registry/ctf-platform-registry.env"
+  candidate="${REPO_ROOT}/docker/infra/registry/ctf-platform-registry.env"
   if [[ -f "${candidate}" ]]; then
     printf '%s\n' "${candidate}"
     return 0
   fi
 
   while IFS= read -r worktree_path; do
-    candidate="${worktree_path}/docker/ctf/infra/registry/ctf-platform-registry.env"
+    candidate="${worktree_path}/docker/infra/registry/ctf-platform-registry.env"
     if [[ -f "${candidate}" ]]; then
       printf '%s\n' "${candidate}"
       return 0
@@ -137,7 +137,7 @@ start_infra() {
   local compose_file
 
   if ! compose_file="$(resolve_compose_file)"; then
-    echo "未找到 docker/ctf/docker-compose.dev.yml，无法自动启动开发依赖容器。" >&2
+    echo "未找到 docker/docker-compose.dev.yml，无法自动启动开发依赖容器。" >&2
     echo "如果你在主工作区维护了该文件，请在主工作区执行 docker compose，或先手动启动 PostgreSQL / Redis。" >&2
     exit 1
   fi

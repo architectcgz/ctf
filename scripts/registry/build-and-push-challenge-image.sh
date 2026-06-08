@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-DEFAULT_REGISTRY_ENV="${REPO_ROOT}/docker/ctf/infra/registry/ctf-platform-registry.env"
+DEFAULT_REGISTRY_ENV="${REPO_ROOT}/docker/infra/registry/ctf-platform-registry.env"
 LEGACY_REGISTRY_ENV="${HOME}/ctf-registry/auth/ctf-platform-registry.env"
 DEFAULT_REGISTRY_CONFIG="${SCRIPT_DIR}/deploy-private-registry.conf"
 DEFAULT_REGISTRY_SERVER="${DEFAULT_REGISTRY_SERVER:-127.0.0.1:5000}"
@@ -35,7 +35,7 @@ usage() {
 
 选项:
   --tag TAG              镜像标签；默认优先复用 challenge.yml 里的 runtime.image.ref 标签，否则使用当前日期时间
-  --registry-env FILE    平台 registry 环境变量文件，默认 docker/ctf/infra/registry/ctf-platform-registry.env
+  --registry-env FILE    平台 registry 环境变量文件，默认 docker/infra/registry/ctf-platform-registry.env
   --registry-config FILE registry 部署配置文件，默认 scripts/registry/deploy-private-registry.conf
   --registry SERVER      registry 地址，不带 http/https，例如 192.168.1.10:5000
   --registry-scheme http|https

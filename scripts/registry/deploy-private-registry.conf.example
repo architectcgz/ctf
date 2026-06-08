@@ -23,13 +23,13 @@ REGISTRY_USERNAME="ctf"
 # Registry 密码。请复制为 deploy-private-registry.conf 后改成自己的强密码。
 REGISTRY_PASSWORD="change-this-password"
 
-# 镜像数据和认证文件目录。默认收口到仓库内的 docker/ctf/infra/registry/runtime。
-REGISTRY_DATA_DIR="$REPO_ROOT/docker/ctf/infra/registry/runtime/data"
-REGISTRY_AUTH_DIR="$REPO_ROOT/docker/ctf/infra/registry/runtime/auth"
+# 镜像数据和认证文件目录。默认收口到仓库内的 docker/infra/registry/runtime。
+REGISTRY_DATA_DIR="$REPO_ROOT/docker/infra/registry/runtime/data"
+REGISTRY_AUTH_DIR="$REPO_ROOT/docker/infra/registry/runtime/auth"
 
 # 平台后端与 ctf-api 共用的 registry 环境变量文件。
 # 留空表示脚本不写该文件，需要手工注入 container.registry 配置。
-CTF_COMPOSE_REGISTRY_ENV_FILE="$REPO_ROOT/docker/ctf/infra/registry/ctf-platform-registry.env"
+CTF_COMPOSE_REGISTRY_ENV_FILE="$REPO_ROOT/docker/infra/registry/ctf-platform-registry.env"
 
 # 使用的镜像。
 REGISTRY_IMAGE="registry:2"

@@ -21,7 +21,7 @@
   - 负责：对 `container.registry.server` 做 image ref 归属判断；若配置了 `container.registry.access_server`，则用它发起 `HEAD /v2/.../manifests/...` 直连请求
   - 不负责：改写镜像 ref、影响 Docker daemon 的 push/pull 目标，或替代 image build service 决定状态推进
 
-- `code/backend/internal/config/config.go`、`scripts/registry/deploy-private-registry.sh`、`docker/ctf/infra/registry/ctf-platform-registry.env`
+- `code/backend/internal/config/config.go`、`scripts/registry/deploy-private-registry.sh`、`docker/infra/registry/ctf-platform-registry.env`
   - 负责：把 registry 配置拆成两层含义
     - `server`：镜像 ref 与 Docker daemon 看到的 canonical registry server
     - `access_server`：仅给 `ctf-api` 进程直连 registry API 的可选 host:port

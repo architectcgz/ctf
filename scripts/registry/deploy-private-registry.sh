@@ -3,12 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-REGISTRY_INFRA_ROOT="${REPO_ROOT}/docker/ctf/infra/registry"
+REGISTRY_INFRA_ROOT="${REPO_ROOT}/docker/infra/registry"
 LEGACY_REGISTRY_ROOT="${HOME}/ctf-registry"
 LEGACY_REGISTRY_DATA_DIR="${LEGACY_REGISTRY_ROOT}/data"
 LEGACY_REGISTRY_AUTH_DIR="${LEGACY_REGISTRY_ROOT}/auth"
 LEGACY_PLATFORM_ENV_FILE="${LEGACY_REGISTRY_AUTH_DIR}/ctf-platform-registry.env"
-LEGACY_COMPOSE_REGISTRY_ENV_FILE="${REPO_ROOT}/docker/ctf/.env.registry"
+LEGACY_COMPOSE_REGISTRY_ENV_FILE="${REPO_ROOT}/docker/.env.registry"
 CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/deploy-private-registry.conf}"
 CONFIG_FILE_EXPLICIT=false
 REGISTRY_NAME="${REGISTRY_NAME:-ctf-registry}"
@@ -46,9 +46,9 @@ usage() {
   --scheme http|https     供构建脚本访问 registry API 使用的协议，默认 http
   --username USER         Registry 用户名，默认 ctf
   --password PASSWORD     Registry 密码；未提供时自动生成
-  --data-dir DIR          镜像数据目录，默认 docker/ctf/infra/registry/runtime/data
-  --auth-dir DIR          认证文件目录，默认 docker/ctf/infra/registry/runtime/auth
-  --ctf-env-file FILE     平台与 ctf-api 共用的 registry env，默认 docker/ctf/infra/registry/ctf-platform-registry.env
+  --data-dir DIR          镜像数据目录，默认 docker/infra/registry/runtime/data
+  --auth-dir DIR          认证文件目录，默认 docker/infra/registry/runtime/auth
+  --ctf-env-file FILE     平台与 ctf-api 共用的 registry env，默认 docker/infra/registry/ctf-platform-registry.env
   --no-ctf-env-file       不写入 ctf compose registry env
   --image IMAGE           Registry 镜像，默认 registry:2
   --htpasswd-image IMAGE  用于生成 htpasswd 的镜像，默认 httpd:2.4-alpine
@@ -64,7 +64,7 @@ usage() {
   REGISTRY_PORT=15000 REGISTRY_PASSWORD='change-me' scripts/registry/deploy-private-registry.sh
 
 输出:
-  docker/ctf/infra/registry/ctf-platform-registry.env
+  docker/infra/registry/ctf-platform-registry.env
 
 该文件可供后端部署环境加载，内容形如:
   CTF_CONTAINER_REGISTRY_ENABLED=true
@@ -75,7 +75,7 @@ usage() {
   CTF_CONTAINER_REGISTRY_USERNAME=ctf
   CTF_CONTAINER_REGISTRY_PASSWORD=...
 
-当前实现会把 registry 作为 `docker/ctf/docker-compose.dev.yml` 里的 `ctf-registry`
+当前实现会把 registry 作为 `docker/docker-compose.dev.yml` 里的 `ctf-registry`
 service 启动到同一个 `ctf` Compose 项目里，不再长期依赖手工 `docker run`。
 EOF
 }
@@ -250,7 +250,7 @@ compose_registry() {
   CTF_REGISTRY_RESTART_POLICY="${REGISTRY_RESTART_POLICY}" \
     docker compose \
       --profile registry \
-      -f "${REPO_ROOT}/docker/ctf/docker-compose.dev.yml" \
+      -f "${REPO_ROOT}/docker/docker-compose.dev.yml" \
       "$@"
 }
 

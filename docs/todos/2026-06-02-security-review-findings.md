@@ -6,8 +6,8 @@
 ## P1 — 高风险
 
 - [ ] **Docker socket 挂载权限收窄**
-  `docker/ctf/docker-compose.dev.yml:66` — `/var/run/docker.sock` 直接挂载到 API 容器，容器被攻破后攻击者可控制宿主机 Docker daemon。考虑：Docker TLS 远程访问 + 受限权限、只读 rootfs、非 root 运行 API 容器。
-  关联：`docker/ctf/docker-compose.dev.yml:63-66`
+  `docker/docker-compose.dev.yml:66` — `/var/run/docker.sock` 直接挂载到 API 容器，容器被攻破后攻击者可控制宿主机 Docker daemon。考虑：Docker TLS 远程访问 + 受限权限、只读 rootfs、非 root 运行 API 容器。
+  关联：`docker/docker-compose.dev.yml:63-66`
 
 - [x] **iptables 命令参数校验加固**（2026-06-02 已修复）
   `code/backend/internal/module/runtime/infrastructure/acl.go` — 已在 `validateAndCanonicalizeACLRule()` 中对 SourceIP/TargetIP（`net/netip` 单 IPv4）、Action（`allow`/`deny` 白名单）、Protocol（`any`/`tcp`/`udp` 白名单）、Ports（1-65535 去重排序、multiport 上限 15、`protocol=any` 禁止端口）、Comment（系统重建，不信任持久化值）做执行前白名单校验。同时 ACL cleanup authority 已从 `acl_rules` 数据库字段收口到实例级 iptables chain handle（`runtime_details.acl`），`acl_rules` 降级为调试快照。
@@ -15,7 +15,7 @@
 ## P2 — 中等风险
 
 - [ ] **开发环境凭据去硬编码**
-  `docker/ctf/docker-compose.dev.yml` 和 `code/backend/scripts/dev-run.sh` 中硬编码了 `postgres123456`、`redis123456`、`ctf-container-flag-secret-0123456789abcdef`。建议改为随机生成（`.env` 或启动脚本自动生成），并在 README 标注不可用于生产。
+  `docker/docker-compose.dev.yml` 和 `code/backend/scripts/dev-run.sh` 中硬编码了 `postgres123456`、`redis123456`、`ctf-container-flag-secret-0123456789abcdef`。建议改为随机生成（`.env` 或启动脚本自动生成），并在 README 标注不可用于生产。
 
 - [ ] **WebSocket 端点认证校验确认**
   `code/backend/internal/app/router.go:135-136,191-193` — `/ws/notifications`、`/ws/contests/:id/announcements` 等 WebSocket 端点绕过 Auth 中间件，直接挂在 `engine` 上。需逐一确认 handler 内部是否有独立的 ticket/query param 认证，防止未授权连接。

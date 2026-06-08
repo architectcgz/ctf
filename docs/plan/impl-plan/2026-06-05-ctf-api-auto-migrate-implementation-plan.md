@@ -1,6 +1,6 @@
 # CTF API Auto Migrate Implementation Plan
 
-**Goal:** 让 `docker/ctf/docker-compose.dev.yml` 下的 `ctf-api` 容器在启动应用前先执行正式 SQL migration，并在当时的增量链下修复 `schema_migrations=11` 但 `runtime_nodes` 已被提前建表的半迁移状态。
+**Goal:** 让 `docker/docker-compose.dev.yml` 下的 `ctf-api` 容器在启动应用前先执行正式 SQL migration，并在当时的增量链下修复 `schema_migrations=11` 但 `runtime_nodes` 已被提前建表的半迁移状态。
 
 **Architecture:** schema owner 继续收口在 `code/backend/migrations/*.sql` 和 `golang-migrate`，镜像入口只负责在 API 进程启动前调用既有 migration owner，不把 schema 变更重新塞回应用内 `AutoMigrate`。
 
@@ -34,7 +34,7 @@
 - Related architecture/contracts:
   - `code/backend/Dockerfile`
   - `code/backend/migrations/000001_init_schema.up.sql`（当前 baseline；`000012` 语义已在 2026-06-08 baseline squash 中吸收）
-  - `docker/ctf/docker-compose.dev.yml`
+  - `docker/docker-compose.dev.yml`
 - Related prior work:
   - `.harness/reuse-decisions/ctf-api-auto-migrate.md`
   - `code/backend/scripts/dev-run.sh`
@@ -53,7 +53,7 @@
 - Modify:
   - `code/backend/Dockerfile`
   - 当时的 `000012_create_runtime_nodes.up.sql` 已在当前 baseline 中吸收，不再作为活动 runtime migration 文件存在
-  - `docker/ctf/docker-compose.dev.yml`
+  - `docker/docker-compose.dev.yml`
   - `README.md`
 - Review:
   - `.harness/reuse-decisions/ctf-api-auto-migrate.md`
@@ -67,7 +67,7 @@
 - Existing patterns searched:
   - `code/backend/scripts/dev-run.sh`
   - `code/backend/migrations/000001_init_schema.up.sql`（当前 baseline；原 `000012` 语义已被吸收）
-  - `docker/ctf/docker-compose.dev.yml`
+  - `docker/docker-compose.dev.yml`
 - Reuse / extend / split / create-new decision:
   - 复用现有 `golang-migrate` owner，扩展镜像入口去调用它。
   - 历史上曾通过扩展当时的 `000012` migration 收口坏库状态；当前事实源已统一为 baseline，不再把已删除 migration 当成活动 owner。
@@ -83,7 +83,7 @@
   - `go test ./internal/app -run TestInternalAppTestSchemaIncludesRuntimeTables -count=1`
   - `go test ./internal/module/practice/application/commands -run TestPracticeCommandDBMigratesRuntimeNodeSchema -count=1`
 - Manual checks:
-  - 需要时再跑 `docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-api`
+  - 需要时再跑 `docker compose -f docker/docker-compose.dev.yml up -d --build ctf-api`
   - 当前历史备注：`runtime_nodes` / `instances.node_id` 已在 `000001_init_schema.up.sql` baseline 中统一收口
 - Review focus:
   - 正式 migration owner 是否仍然单点收口

@@ -148,7 +148,7 @@ func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
 		AWDChallengeID: challengeID,
 		DisplayName:    "Web",
 		IsVisible:      true,
-		RuntimeConfig:  `{"challenge_runtime":{"defense_scope":{"editable_paths":["docker/challenge_app.py"],"protected_paths":["docker/app.py","docker/ctf_runtime.py","docker/check/check.py","challenge.yml"]}}}`,
+		RuntimeConfig:  `{"challenge_runtime":{"defense_workspace":{"entry_mode":"ssh","seed_root":"docker/workspace","workspace_roots":["docker/workspace/src","docker/workspace/templates"],"writable_roots":["docker/workspace/src"],"readonly_roots":["docker/workspace/templates"],"runtime_mounts":[{"source":"docker/workspace/src","target":"/workspace/src","mode":"rw"},{"source":"docker/workspace/templates","target":"/workspace/templates","mode":"ro"}]},"defense_scope":{"protected_paths":["docker/runtime/app.py","docker/runtime/ctf_runtime.py","docker/check/check.py","challenge.yml"]}}}`,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	})

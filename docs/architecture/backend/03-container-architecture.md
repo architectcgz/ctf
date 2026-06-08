@@ -36,7 +36,7 @@
   - 负责：leader 读取 Redis 中的 `platform_runtime_state` 保存的上次 `boot_id + last_heartbeat_at`。启动恢复只在检测到宿主机 boot identity 变化时触发：服务会先给 `running / frozen` 的 AWD 比赛补暂停时长、刷新这些比赛下活跃实例的 `expires_at`、执行 `ReconcileLostActiveRuntimes` 恢复停机前仍有 active row 的运行态，再执行 `ReconcileDesiredAWDInstances` 补齐缺失的 `team × visible service`，最后把恢复耗时继续累计到 `paused_seconds`；同一次 outage 通过 `runtime_recovery_key + runtime_recovery_applied_seconds` 做幂等补差，避免恢复重试或二次扩展时重复累计。同 `boot_id` 下的 heartbeat gap 只用于 leader readiness，不再直接当成 runtime outage
   - 不负责：提供管理员手动暂停状态机，或把同一套暂停语义扩散到 Jeopardy 比赛
 
-- `code/backend/internal/config/config.go`、`code/backend/Dockerfile`、`docker/ctf/docker-compose.dev.yml`
+- `code/backend/internal/config/config.go`、`code/backend/Dockerfile`、`docker/docker-compose.dev.yml`
   - 负责：在进程启动时通过 `container.flag_global_secret_file` 解析 AWD dynamic flag 的全局密钥；显式 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 仍然优先，但若与持久化文件值不一致会直接报错，而不是静默覆盖
   - 负责：非生产环境在环境变量未注入时优先读取持久化文件；文件不存在时才自动生成新 secret 并原子写回。默认路径是 `storage/runtime/flag-global-secret`，镜像预建 `/app/storage/runtime`，compose dev 通过 `/app/storage` 挂载把 secret 留在持久化卷里，避免 API / Docker 宿主重启后丢失
   - 负责：生产环境禁止在文件缺失时自动生成 secret；多 API 实例必须通过同一 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或预置的一致 `container.flag_global_secret_file` 启动
@@ -1444,16 +1444,16 @@ scripts/registry/deploy-private-registry.sh
 scripts/registry/deploy-private-registry.sh --config /etc/ctf/private-registry.conf
 ```
 
-脚本会通过 `docker/ctf/docker-compose.dev.yml` 里的 `ctf-registry` service 启动 `registry:2`，生成 htpasswd 认证文件，并把平台后端唯一使用的 registry env 写到：
+脚本会通过 `docker/docker-compose.dev.yml` 里的 `ctf-registry` service 启动 `registry:2`，生成 htpasswd 认证文件，并把平台后端唯一使用的 registry env 写到：
 
 ```bash
-source "docker/ctf/infra/registry/ctf-platform-registry.env"
+source "docker/infra/registry/ctf-platform-registry.env"
 ```
 
 这两个运行态目录要看成同一次部署产物：
 
-- `docker/ctf/infra/registry/runtime/auth/htpasswd`
-- `docker/ctf/infra/registry/runtime/data/`
+- `docker/infra/registry/runtime/auth/htpasswd`
+- `docker/infra/registry/runtime/data/`
 
 如果要重置用户名或密码，必须重新执行 `deploy-private-registry.sh`，让脚本同时更新 `htpasswd`、平台 env 文件并按需重建 `ctf-registry` 容器。不要只手改其中一份，否则很容易出现下面这种错位状态：
 
@@ -1476,9 +1476,9 @@ scripts/registry/deploy-private-registry.sh \
 
 当前推荐路径只保留 Compose 管理。若要理解底层资源关系，可以把它看成：
 
-- 宿主机目录 `docker/ctf/infra/registry/runtime/data` 挂到容器 `/var/lib/registry`
-- 宿主机目录 `docker/ctf/infra/registry/runtime/auth` 挂到容器 `/auth`
-- 平台后端统一读取 `docker/ctf/infra/registry/ctf-platform-registry.env`
+- 宿主机目录 `docker/infra/registry/runtime/data` 挂到容器 `/var/lib/registry`
+- 宿主机目录 `docker/infra/registry/runtime/auth` 挂到容器 `/auth`
+- 平台后端统一读取 `docker/infra/registry/ctf-platform-registry.env`
 
 平台运行节点拉取私有镜像、平台构建题包镜像并推送到私有 registry 时，都通过后端 `container.registry` 配置读取 registry 地址和凭据。该配置属于 `ctf` 平台部署配置，只加载到 `ctf-api`；不要写进题包、题目容器或学生防守容器。
 
@@ -1530,12 +1530,12 @@ container:
 开发 compose project 的推荐落点是：
 
 ```text
-docker/ctf/docker-compose.dev.yml
-docker/ctf/infra/
-docker/ctf/infra/registry/ctf-platform-registry.env
+docker/docker-compose.dev.yml
+docker/infra/
+docker/infra/registry/ctf-platform-registry.env
 ```
 
-`scripts/registry/deploy-private-registry.sh` 会把 `ctf-registry` service 启动到同一个 `ctf` Compose 项目下，并把平台后端唯一使用的 registry env 写入 `docker/ctf/infra/registry/ctf-platform-registry.env`。`ctf-api` compose service 与本地 shell 都应复用这一份文件，不再额外维护 `docker/ctf/.env.registry` 或 `$HOME/ctf-registry/auth/ctf-platform-registry.env` 的重复副本。脚本在首次迁移时会复用旧路径上的已有数据和凭据。
+`scripts/registry/deploy-private-registry.sh` 会把 `ctf-registry` service 启动到同一个 `ctf` Compose 项目下，并把平台后端唯一使用的 registry env 写入 `docker/infra/registry/ctf-platform-registry.env`。`ctf-api` compose service 与本地 shell 都应复用这一份文件，不再额外维护 `docker/.env.registry` 或 `$HOME/ctf-registry/auth/ctf-platform-registry.env` 的重复副本。脚本在首次迁移时会复用旧路径上的已有数据和凭据。
 
 平台内部题包导入不应通过 HTTP API 自调用 `/authoring/images` 注册镜像，而应在导入 application service 内创建 `images` 和 `image_build_jobs`。这样题目记录、镜像记录和构建任务可以保持同一事务边界；HTTP API 只保留给管理员手动登记外部镜像。
 

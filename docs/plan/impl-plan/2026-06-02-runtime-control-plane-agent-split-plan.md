@@ -24,7 +24,7 @@
 - `code/backend/internal/app/composition/runtime_module.go`
 - `code/backend/internal/app/composition/instance_module.go`
 - `code/backend/internal/config/config.go`
-- `docker/ctf/docker-compose.dev.yml`
+- `docker/docker-compose.dev.yml`
 - `docs/architecture/backend/01-system-architecture.md`
 
 ## Current problem statement

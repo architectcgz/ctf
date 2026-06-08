@@ -60,12 +60,12 @@ npm run dev
 只有在需要验证完整容器编排、Nginx 反代、容器网络或运行时行为时，再启动整套容器：
 
 ```bash
-CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build
+CTF_HOST_ROOT="$(pwd)" docker compose -f docker/docker-compose.dev.yml up -d --build
 ```
 
 这条路径下，`ctf-api` 容器会在启动应用前先执行一次 `/app/migrations` 里的正式 SQL migration；如需临时关闭，可给 `ctf-api` 设置 `CTF_AUTO_MIGRATE=false`。如果容器数据库仍停留在旧的 `000002..000012` 增量链上，入口脚本会明确报错并要求你先重建本地数据库。
 
-这条路径默认只适合单用户、本机临时联调，不适合作为共享开发、演示或正式部署方案。原因是 `docker/ctf/docker-compose.dev.yml` 里的 `ctf-api` 会直接访问宿主 Docker daemon，用来管理靶机、checker sandbox 和运行时网络；如果 API 容器失陷，攻击者通常可以继续控制宿主 Docker 运行时。因此：
+这条路径默认只适合单用户、本机临时联调，不适合作为共享开发、演示或正式部署方案。原因是 `docker/docker-compose.dev.yml` 里的 `ctf-api` 会直接访问宿主 Docker daemon，用来管理靶机、checker sandbox 和运行时网络；如果 API 容器失陷，攻击者通常可以继续控制宿主 Docker 运行时。因此：
 
 - 日常开发优先使用上面的“依赖容器 + 本机前后端”
 - 需要多人长期使用时，至少把 API 改成宿主机进程运行
@@ -85,12 +85,12 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 如果 `5173` 已被占用，可以改前端容器端口：
 
 ```bash
-CTF_HOST_ROOT="$(pwd)" CTF_FRONTEND_PORT=15173 docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-frontend ctf-api ctf-awd-defense-ssh-gateway ctf-postgres ctf-redis
+CTF_HOST_ROOT="$(pwd)" CTF_FRONTEND_PORT=15173 docker compose -f docker/docker-compose.dev.yml up -d --build ctf-frontend ctf-api ctf-awd-defense-ssh-gateway ctf-postgres ctf-redis
 ```
 
 ### 局域网访问部署
 
-`docker/ctf/docker-compose.dev.yml` 默认面向“只在宿主机本机调试”的场景：
+`docker/docker-compose.dev.yml` 默认面向“只在宿主机本机调试”的场景：
 
 - `CTF_CONTAINER_PUBLIC_HOST=127.0.0.1` 会让 Jeopardy / TCP 题目的访问地址返回为宿主机本地地址。
 - `ctf-frontend`、`ctf-api`、`ctf-awd-defense-ssh-gateway` 默认都只绑定在 `127.0.0.1`，局域网内其他机器无法直接访问。
@@ -100,7 +100,7 @@ CTF_HOST_ROOT="$(pwd)" CTF_FRONTEND_PORT=15173 docker compose -f docker/ctf/dock
 1. 把 `ctf-api` 环境变量里的 `CTF_CONTAINER_PUBLIC_HOST` 改成学生真实可访问到的宿主机地址，例如固定局域网 IP 或内网域名。
 2. 把 `ctf-frontend`、`ctf-api`、`ctf-awd-defense-ssh-gateway` 的端口绑定从 `127.0.0.1:...` 改成 `0.0.0.0:...` 或指定局域网 IP。
 
-可直接按下面的方式修改 `docker/ctf/docker-compose.dev.yml`：
+可直接按下面的方式修改 `docker/docker-compose.dev.yml`：
 
 ```yaml
 services:
@@ -142,7 +142,7 @@ curl http://<宿主机地址>:8080/ready
 
 ```bash
 scripts/registry/deploy-private-registry.sh --force-recreate
-CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-api ctf-awd-defense-ssh-gateway
+CTF_HOST_ROOT="$(pwd)" docker compose -f docker/docker-compose.dev.yml up -d --build ctf-api ctf-awd-defense-ssh-gateway
 ```
 
 相关编排细则见 `docs/docker-compose-rules.md`。

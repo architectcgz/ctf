@@ -108,7 +108,7 @@ run_architecture_checks() {
 
   echo "[C13] dev compose exposes AWD defense SSH port when enabled"
   dev_config_file="code/backend/configs/config.dev.yaml"
-  dev_compose_file="docker/ctf/docker-compose.dev.yml"
+  dev_compose_file="docker/docker-compose.dev.yml"
   if [[ ! -f "$dev_config_file" ]]; then
     echo "  $(red FAIL) — missing $dev_config_file"
     fail=1

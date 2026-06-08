@@ -17,38 +17,35 @@ func TestAWDDefenseWorkbenchServiceReadsAndListsEditablePaths(t *testing.T) {
 		stubAWDDefenseWorkbenchScopeReader{scope: testAWDDefenseSSHScope()},
 		stubAWDDefenseWorkbenchRuntime{
 			files: map[string][]byte{
-				"/home/student/challenge_app.py": []byte("print('vuln')"),
+				"/home/student/workspace/src/challenge_app.py": []byte("print('vuln')"),
 			},
 			entries: []instanceports.ContainerDirectoryEntry{
-				{Name: "app.py", Type: "file", Size: 13},
-				{Name: "ctf_runtime.py", Type: "file", Size: 64},
-				{Name: "requirements.txt", Type: "file", Size: 128},
-				{Name: "challenge_app.py", Type: "file", Size: 42},
+				{Name: "src", Type: "dir"},
 				{Name: "templates", Type: "dir"},
 			},
 		},
 		AWDDefenseWorkbenchConfig{ReadOnlyEnabled: true, Root: "/home/student"},
 	)
 
-	fileResp, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/challenge_app.py")
+	fileResp, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/workspace/src/challenge_app.py")
 	if err != nil {
 		t.Fatalf("ReadAWDDefenseFile() error = %v", err)
 	}
-	if fileResp.Path != "docker/challenge_app.py" || fileResp.Content != "print('vuln')" {
+	if fileResp.Path != "docker/workspace/src/challenge_app.py" || fileResp.Content != "print('vuln')" {
 		t.Fatalf("unexpected file response: %+v", fileResp)
 	}
 
-	dirResp, err := service.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker")
+	dirResp, err := service.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/workspace")
 	if err != nil {
 		t.Fatalf("ListAWDDefenseDirectory() error = %v", err)
 	}
-	if dirResp.Path != "docker" || len(dirResp.Entries) != 2 {
+	if dirResp.Path != "docker/workspace" || len(dirResp.Entries) != 2 {
 		t.Fatalf("unexpected directory response: %+v", dirResp)
 	}
-	if dirResp.Entries[0].Path != "docker/templates" || dirResp.Entries[0].Type != "dir" {
-		t.Fatalf("expected editable templates directory, got %+v", dirResp.Entries)
+	if dirResp.Entries[0].Path != "docker/workspace/src" || dirResp.Entries[0].Type != "dir" {
+		t.Fatalf("expected editable workspace directory, got %+v", dirResp.Entries)
 	}
-	if dirResp.Entries[1].Path != "docker/challenge_app.py" || dirResp.Entries[1].Name != "challenge_app.py" {
+	if dirResp.Entries[1].Path != "docker/workspace/templates" || dirResp.Entries[1].Name != "templates" {
 		t.Fatalf("unexpected directory response: %+v", dirResp)
 	}
 }
@@ -59,10 +56,10 @@ func TestAWDDefenseWorkbenchServiceRejectsWhenReadOnlyDisabled(t *testing.T) {
 		stubAWDDefenseWorkbenchRuntime{},
 		AWDDefenseWorkbenchConfig{ReadOnlyEnabled: false, Root: "/home/student"},
 	)
-	if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/challenge_app.py"); err == nil {
+	if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/workspace/src/challenge_app.py"); err == nil {
 		t.Fatal("expected disabled workbench read to fail")
 	}
-	if _, err := service.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker"); err == nil {
+	if _, err := service.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/workspace"); err == nil {
 		t.Fatal("expected disabled workbench list to fail")
 	}
 }
@@ -80,7 +77,7 @@ func TestAWDDefenseWorkbenchServiceRejectsSensitivePaths(t *testing.T) {
 			t.Fatalf("expected read path %q to fail", path)
 		}
 	}
-	if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/app.py"); err == nil {
+	if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/runtime/app.py"); err == nil {
 		t.Fatal("expected protected path to fail")
 	}
 	if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "../app.py"); err == nil {
@@ -99,7 +96,7 @@ func TestAWDDefenseWorkbenchServiceRejectsInvalidRoot(t *testing.T) {
 			stubAWDDefenseWorkbenchRuntime{},
 			AWDDefenseWorkbenchConfig{ReadOnlyEnabled: true, Root: root},
 		)
-		if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/challenge_app.py"); err == nil {
+		if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/workspace/src/challenge_app.py"); err == nil {
 			t.Fatalf("expected root %q to fail", root)
 		}
 	}
@@ -108,22 +105,22 @@ func TestAWDDefenseWorkbenchServiceRejectsInvalidRoot(t *testing.T) {
 func TestAWDDefenseWorkbenchServiceMapsDockerPathsToContainerRoot(t *testing.T) {
 	runtime := &recordingAWDDefenseWorkbenchRuntime{fileContent: []byte("print('vuln')")}
 	service := NewAWDDefenseWorkbenchService(
-		stubAWDDefenseWorkbenchScopeReader{scope: testAWDDefenseSSHScopeWithEditable("docker/src/app.py")},
+		stubAWDDefenseWorkbenchScopeReader{scope: testAWDDefenseSSHScopeWithEditable("docker/workspace/src/app.py")},
 		runtime,
 		AWDDefenseWorkbenchConfig{ReadOnlyEnabled: true, Root: "/home/student"},
 	)
 
-	if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/src/app.py"); err != nil {
+	if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/workspace/src/app.py"); err != nil {
 		t.Fatalf("ReadAWDDefenseFile() error = %v", err)
 	}
-	if runtime.readPath != "/home/student/src/app.py" {
+	if runtime.readPath != "/home/student/workspace/src/app.py" {
 		t.Fatalf("expected rooted read path, got %q", runtime.readPath)
 	}
 
-	if _, err := service.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/src"); err != nil {
+	if _, err := service.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/workspace"); err != nil {
 		t.Fatalf("ListAWDDefenseDirectory() error = %v", err)
 	}
-	if runtime.listPath != "/home/student/src" {
+	if runtime.listPath != "/home/student/workspace" {
 		t.Fatalf("expected rooted list path, got %q", runtime.listPath)
 	}
 }
@@ -137,31 +134,31 @@ func TestAWDDefenseWorkbenchServiceSavesOnlyEditableFiles(t *testing.T) {
 	)
 
 	resp, err := service.SaveAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, instancecontracts.AWDDefenseFileSaveReq{
-		Path:    "docker/challenge_app.py",
+		Path:    "docker/workspace/src/challenge_app.py",
 		Content: "print('fixed')",
 		Backup:  true,
 	})
 	if err != nil {
 		t.Fatalf("SaveAWDDefenseFile() error = %v", err)
 	}
-	if runtime.readPath != "/home/student/challenge_app.py" {
+	if runtime.readPath != "/home/student/workspace/src/challenge_app.py" {
 		t.Fatalf("expected backup read from mapped editable path, got %q", runtime.readPath)
 	}
 	if len(runtime.writePaths) != 2 {
 		t.Fatalf("expected backup and save writes, got %+v", runtime.writePaths)
 	}
-	if !strings.HasPrefix(runtime.writePaths[0], "/home/student/challenge_app.py.bak.") {
+	if !strings.HasPrefix(runtime.writePaths[0], "/home/student/workspace/src/challenge_app.py.bak.") {
 		t.Fatalf("expected mapped backup path, got %+v", runtime.writePaths)
 	}
-	if runtime.writePaths[1] != "/home/student/challenge_app.py" {
+	if runtime.writePaths[1] != "/home/student/workspace/src/challenge_app.py" {
 		t.Fatalf("expected mapped save path, got %+v", runtime.writePaths)
 	}
-	if resp.Path != "docker/challenge_app.py" || !strings.HasPrefix(resp.BackupPath, "docker/challenge_app.py.bak.") {
+	if resp.Path != "docker/workspace/src/challenge_app.py" || !strings.HasPrefix(resp.BackupPath, "docker/workspace/src/challenge_app.py.bak.") {
 		t.Fatalf("unexpected save response: %+v", resp)
 	}
 
 	if _, err := service.SaveAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, instancecontracts.AWDDefenseFileSaveReq{
-		Path:    "docker/app.py",
+		Path:    "docker/runtime/app.py",
 		Content: "print('nope')",
 	}); err == nil {
 		t.Fatal("expected protected path save to fail")
@@ -258,7 +255,7 @@ func (s *recordingAWDDefenseWorkbenchRuntime) ReadFileFromContainer(_ context.Co
 func (s *recordingAWDDefenseWorkbenchRuntime) ListDirectoryFromContainer(_ context.Context, _ string, dirPath string, _ int) ([]instanceports.ContainerDirectoryEntry, error) {
 	s.listPath = dirPath
 	return []instanceports.ContainerDirectoryEntry{
-		{Name: "challenge_app.py", Type: "file", Size: 13},
+		{Name: "src", Type: "dir"},
 		{Name: "templates", Type: "dir"},
 	}, nil
 }
@@ -276,14 +273,14 @@ func (s *recordingAWDDefenseWorkbenchRuntime) ExecContainerCommand(_ context.Con
 }
 
 func testAWDDefenseSSHScope() *instanceports.AWDDefenseSSHScope {
-	return testAWDDefenseSSHScopeWithEditable("docker/challenge_app.py", "docker/templates/mail.html")
+	return testAWDDefenseSSHScopeWithEditable("docker/workspace/src/challenge_app.py", "docker/workspace/templates/mail.html")
 }
 
 func testAWDDefenseSSHScopeWithEditable(editablePaths ...string) *instanceports.AWDDefenseSSHScope {
 	return &instanceports.AWDDefenseSSHScope{
 		ContainerID:    "container-12",
 		EditablePaths:  append([]string(nil), editablePaths...),
-		ProtectedPaths: []string{"docker/app.py", "docker/ctf_runtime.py", "docker/check/check.py", "challenge.yml"},
+		ProtectedPaths: []string{"docker/runtime/app.py", "docker/runtime/ctf_runtime.py", "docker/check/check.py", "challenge.yml"},
 	}
 }
 
@@ -295,17 +292,17 @@ func TestAWDDefenseWorkbenchServiceUsesMappedDockerRoot(t *testing.T) {
 		AWDDefenseWorkbenchConfig{ReadOnlyEnabled: true, Root: "/home/student"},
 	)
 
-	if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/challenge_app.py"); err != nil {
+	if _, err := service.ReadAWDDefenseFile(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/workspace/src/challenge_app.py"); err != nil {
 		t.Fatalf("ReadAWDDefenseFile() error = %v", err)
 	}
-	if runtime.readPath != "/home/student/challenge_app.py" {
+	if runtime.readPath != "/home/student/workspace/src/challenge_app.py" {
 		t.Fatalf("expected mapped read path, got %q", runtime.readPath)
 	}
 
-	if _, err := service.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker"); err != nil {
+	if _, err := service.ListAWDDefenseDirectory(context.Background(), authctx.CurrentUser{UserID: 1001}, 5, 12, "docker/workspace"); err != nil {
 		t.Fatalf("ListAWDDefenseDirectory() error = %v", err)
 	}
-	if runtime.listPath != "/home/student" {
+	if runtime.listPath != "/home/student/workspace" {
 		t.Fatalf("expected mapped docker directory path, got %q", runtime.listPath)
 	}
 }

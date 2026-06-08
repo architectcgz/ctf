@@ -55,7 +55,7 @@
   - `code/backend/internal/module/runtime/infrastructure/awd_target_proxy_repository.go`
   - `code/backend/Dockerfile`
   - `code/backend/scripts/docker-entrypoint.sh`
-  - `docker/ctf/docker-compose.dev.yml`
+  - `docker/docker-compose.dev.yml`
 - Related prior work:
   - `docs/plan/impl-plan/2026-06-02-runtime-control-plane-agent-split-plan.md`
   - `docs/operations/runtime-agent-deployment.md`
@@ -86,7 +86,7 @@
   - `code/backend/internal/config/config_test.go`
   - `code/backend/Dockerfile`
   - `code/backend/scripts/docker-entrypoint.sh`
-  - `docker/ctf/docker-compose.dev.yml`
+  - `docker/docker-compose.dev.yml`
   - `scripts/lib/check-consistency/architecture.sh`
   - `README.md`
   - `docs/architecture/backend/03-container-architecture.md`
@@ -148,7 +148,7 @@
   - `cd code/backend && go test ./internal/config -run 'TestValidate.*DefenseSSH' -count=1`
   - `bash scripts/check-workflow-governance.sh`
 - Manual checks:
-  - `docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-api ctf-awd-defense-ssh-gateway ctf-postgres ctf-redis`
+  - `docker compose -f docker/docker-compose.dev.yml up -d --build ctf-api ctf-awd-defense-ssh-gateway ctf-postgres ctf-redis`
   - 通过 API 申请 AWD defense SSH ticket，确认 `host/port` 仍指向 `container.defense_ssh_*`
   - 用返回的 `ssh user+contest+service@host -p 2222` 登录，确认能进入 `/workspace`
   - 在 `runtime_agent.enabled=true` 的单 remote-agent 场景重复一次，确认 SSH 会落到目标 node
@@ -198,7 +198,7 @@
   - `internal/app/http_server.go`：shutdown 开始时先把 readiness 标为 draining，再停止后台任务。
   - `internal/module/instance/application/commands/startup_runtime_recovery_service.go`：standby 副本未拿到 startup recovery lock 时，`Start()` 只启动后台选举循环并立即返回；初始拿到锁的 leader 仍同步完成恢复初始化后再返回。
 - 运行侧：
-  - `docker/ctf/docker-compose.dev.yml` 的 `ctf-api` healthcheck 改用 `/ready`。
+  - `docker/docker-compose.dev.yml` 的 `ctf-api` healthcheck 改用 `/ready`。
   - 运维手册中把 `/ready` 作为接流量检查，`/health` 作为依赖诊断保留。
 
 ### Task 1: 锁定结构边界与多 node 路由测试
@@ -378,7 +378,7 @@
 ### Task 4: 更新 dev compose、文档和守卫
 
 **Files:**
-- Modify: `docker/ctf/docker-compose.dev.yml`
+- Modify: `docker/docker-compose.dev.yml`
 - Modify: `scripts/lib/check-consistency/architecture.sh`
 - Modify: `README.md`
 - Modify: `docs/architecture/backend/03-container-architecture.md`
@@ -434,7 +434,7 @@
   Run:
 
   ```bash
-  docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-api ctf-awd-defense-ssh-gateway ctf-postgres ctf-redis
+  docker compose -f docker/docker-compose.dev.yml up -d --build ctf-api ctf-awd-defense-ssh-gateway ctf-postgres ctf-redis
   ```
 
   然后验证：
@@ -445,6 +445,6 @@
 - [ ] **Step 7: Commit**
 
   ```bash
-  git add docker/ctf/docker-compose.dev.yml scripts/lib/check-consistency/architecture.sh README.md docs/architecture/backend/03-container-architecture.md docs/architecture/backend/07-modular-monolith-refactor.md docs/operations/runtime-agent-deployment.md
+  git add docker/docker-compose.dev.yml scripts/lib/check-consistency/architecture.sh README.md docs/architecture/backend/07-modular-monolith-refactor.md docs/operations/runtime-agent-deployment.md
   git commit -m "docs(ops): 对齐 awd defense ssh gateway 独立部署"
   ```

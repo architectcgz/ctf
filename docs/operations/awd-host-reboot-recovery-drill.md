@@ -1,7 +1,7 @@
 # AWD 宿主机重启恢复演练手册
 
 > 状态：Current
-> 事实源：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`、`code/backend/internal/module/practice/application/commands/awd_desired_runtime_reconciler.go`、`code/backend/internal/config/config.go`、`docker/ctf/docker-compose.dev.yml`
+> 事实源：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`、`code/backend/internal/module/practice/application/commands/awd_desired_runtime_reconciler.go`、`code/backend/internal/config/config.go`、`docker/docker-compose.dev.yml`
 > 替代：无
 
 ## 定位
@@ -39,7 +39,7 @@
 1. 记录容器与 API 健康状态。
 
 ```bash
-docker compose -f docker/ctf/docker-compose.dev.yml ps
+docker compose -f docker/docker-compose.dev.yml ps
 curl -fsS http://127.0.0.1:8080/ready
 curl -fsS http://127.0.0.1:8080/health
 ```
@@ -94,8 +94,8 @@ sudo systemctl reboot
 3. 宿主机起来后，等待 Docker、PostgreSQL、Redis 和 API 全部恢复。
 
 ```bash
-docker compose -f docker/ctf/docker-compose.dev.yml up -d
-docker compose -f docker/ctf/docker-compose.dev.yml ps
+docker compose -f docker/docker-compose.dev.yml up -d
+docker compose -f docker/docker-compose.dev.yml ps
 curl -fsS http://127.0.0.1:8080/ready
 curl -fsS http://127.0.0.1:8080/health
 ```
