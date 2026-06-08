@@ -37,9 +37,12 @@ type AWDDefenseSSHGateway struct {
 	port         int
 	logger       *zap.Logger
 
-	mu       sync.Mutex
-	listener net.Listener
-	done     chan struct{}
+	mu          sync.Mutex
+	listener    net.Listener
+	done        chan struct{}
+	runCancel   context.CancelFunc
+	activeConns map[net.Conn]struct{}
+	workerWG    sync.WaitGroup
 }
 
 type runtimeHTTPProxyTicketService interface {
@@ -80,12 +83,16 @@ func (g *AWDDefenseSSHGateway) Start(ctx context.Context) error {
 	if g == nil || g.proxyTickets == nil || g.scopeReader == nil || g.executor == nil || g.port <= 0 {
 		return nil
 	}
+	if ctx == nil {
+		return errors.New("awd defense ssh gateway start requires context")
+	}
 
 	g.mu.Lock()
 	if g.listener != nil {
 		g.mu.Unlock()
 		return nil
 	}
+	runCtx, runCancel := context.WithCancel(ctx)
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", g.port))
 	if err != nil {
 		g.mu.Unlock()
@@ -93,20 +100,26 @@ func (g *AWDDefenseSSHGateway) Start(ctx context.Context) error {
 	}
 	g.listener = listener
 	g.done = make(chan struct{})
+	g.runCancel = runCancel
+	if g.activeConns == nil {
+		g.activeConns = make(map[net.Conn]struct{})
+	}
 	done := g.done
 	g.mu.Unlock()
 
-	config, err := g.serverConfig(ctx)
+	config, err := g.serverConfig(runCtx)
 	if err != nil {
+		runCancel()
 		_ = listener.Close()
 		g.mu.Lock()
 		g.listener = nil
 		g.done = nil
+		g.runCancel = nil
 		g.mu.Unlock()
 		return err
 	}
 
-	go g.serve(ctx, listener, config, done)
+	go g.serve(runCtx, listener, config, done)
 	g.logger.Info("awd_defense_ssh_gateway_started", zap.Int("port", g.port))
 	return nil
 }
@@ -115,28 +128,44 @@ func (g *AWDDefenseSSHGateway) Stop(ctx context.Context) error {
 	if g == nil {
 		return nil
 	}
+	if ctx == nil {
+		return errors.New("awd defense ssh gateway stop requires context")
+	}
 
 	g.mu.Lock()
 	listener := g.listener
 	done := g.done
+	runCancel := g.runCancel
+	activeConns := make([]net.Conn, 0, len(g.activeConns))
+	for conn := range g.activeConns {
+		activeConns = append(activeConns, conn)
+	}
 	g.listener = nil
 	g.done = nil
+	g.runCancel = nil
 	g.mu.Unlock()
 
-	if listener == nil {
+	if listener == nil && done == nil && runCancel == nil && len(activeConns) == 0 {
 		return nil
 	}
-	_ = listener.Close()
-	if done == nil {
-		return nil
+	if runCancel != nil {
+		runCancel()
+	}
+	if listener != nil {
+		_ = listener.Close()
+	}
+	for _, conn := range activeConns {
+		_ = conn.Close()
 	}
 
-	select {
-	case <-done:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
+	if done != nil {
+		select {
+		case <-done:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 	}
+	return waitWaitGroup(ctx, &g.workerWG)
 }
 
 func (g *AWDDefenseSSHGateway) serverConfig(ctx context.Context) (*ssh.ServerConfig, error) {
@@ -293,11 +322,15 @@ func (g *AWDDefenseSSHGateway) serve(ctx context.Context, listener net.Listener,
 			g.logger.Debug("awd_defense_ssh_accept_stopped", zap.Error(err))
 			return
 		}
+		g.trackConn(conn)
+		g.workerWG.Add(1)
 		go g.handleConn(ctx, conn, config)
 	}
 }
 
 func (g *AWDDefenseSSHGateway) handleConn(ctx context.Context, rawConn net.Conn, config *ssh.ServerConfig) {
+	defer g.workerWG.Done()
+	defer g.untrackConn(rawConn)
 	defer rawConn.Close()
 
 	serverConn, channels, requests, err := ssh.NewServerConn(rawConn, config)
@@ -324,7 +357,7 @@ func (g *AWDDefenseSSHGateway) handleConn(ctx context.Context, rawConn net.Conn,
 			g.logger.Debug("awd_defense_ssh_channel_accept_failed", zap.Error(err))
 			continue
 		}
-		go g.handleSessionChannel(ctx, channel, requests, session)
+		g.handleSessionChannel(ctx, channel, requests, session)
 	}
 }
 
@@ -437,4 +470,44 @@ func parseSSHExecCommand(payload []byte) string {
 		return ""
 	}
 	return parsed.Command
+}
+
+func (g *AWDDefenseSSHGateway) trackConn(conn net.Conn) {
+	if g == nil || conn == nil {
+		return
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.activeConns == nil {
+		g.activeConns = make(map[net.Conn]struct{})
+	}
+	g.activeConns[conn] = struct{}{}
+}
+
+func (g *AWDDefenseSSHGateway) untrackConn(conn net.Conn) {
+	if g == nil || conn == nil {
+		return
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	delete(g.activeConns, conn)
+}
+
+func waitWaitGroup(ctx context.Context, wg *sync.WaitGroup) error {
+	if wg == nil {
+		return nil
+	}
+
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }

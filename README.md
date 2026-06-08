@@ -69,6 +69,7 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 - 日常开发优先使用上面的“依赖容器 + 本机前后端”
 - 需要多人长期使用时，至少把 API 改成宿主机进程运行
 - 正式比赛或共享环境，推荐把 API 主机与靶机 Docker 主机拆开，由 API 通过 `runtime-agent` + mTLS 调用执行面；`DOCKER_HOST` 只能作为底层 Docker client 连接参数，不再等同于完整多机方案
+- 当前 dev compose 里，`ctf-api` 和 `ctf-awd-defense-ssh-gateway` 都挂载了宿主 `docker.sock`；这只适合本机开发，不应当视为共享环境的安全边界
 
 更完整的威胁模型与部署建议见 `docs/architecture/backend/01-system-architecture.md` 的“7.5 安全边界设计”；运行模式和最小配置见 `docs/operations/runtime-agent-deployment.md`。
 
@@ -76,14 +77,14 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d
 
 - `ctf-frontend`：`5173`
 - `ctf-api`：`8080`
-- `ctf-api` AWD 防守 SSH 网关：`2222`
+- `ctf-awd-defense-ssh-gateway`：`2222`
 - `ctf-postgres`：`15432`
 - `ctf-redis`：`16379`
 
 如果 `5173` 已被占用，可以改前端容器端口：
 
 ```bash
-CTF_HOST_ROOT="$(pwd)" CTF_FRONTEND_PORT=15173 docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-frontend ctf-api ctf-postgres ctf-redis
+CTF_HOST_ROOT="$(pwd)" CTF_FRONTEND_PORT=15173 docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-frontend ctf-api ctf-awd-defense-ssh-gateway ctf-postgres ctf-redis
 ```
 
 ### 局域网访问部署
@@ -91,12 +92,12 @@ CTF_HOST_ROOT="$(pwd)" CTF_FRONTEND_PORT=15173 docker compose -f docker/ctf/dock
 `docker/ctf/docker-compose.dev.yml` 默认面向“只在宿主机本机调试”的场景：
 
 - `CTF_CONTAINER_PUBLIC_HOST=127.0.0.1` 会让 Jeopardy / TCP 题目的访问地址返回为宿主机本地地址。
-- `ctf-frontend`、`ctf-api`、`ctf-api` 的 SSH 网关端口默认都只绑定在 `127.0.0.1`，局域网内其他机器无法直接访问。
+- `ctf-frontend`、`ctf-api`、`ctf-awd-defense-ssh-gateway` 默认都只绑定在 `127.0.0.1`，局域网内其他机器无法直接访问。
 
 如果需要让学生从局域网内其他机器访问平台和题目实例，至少要同时调整两类配置：
 
 1. 把 `ctf-api` 环境变量里的 `CTF_CONTAINER_PUBLIC_HOST` 改成学生真实可访问到的宿主机地址，例如固定局域网 IP 或内网域名。
-2. 把 `ctf-frontend`、`ctf-api`、`ctf-api` SSH 网关的端口绑定从 `127.0.0.1:...` 改成 `0.0.0.0:...` 或指定局域网 IP。
+2. 把 `ctf-frontend`、`ctf-api`、`ctf-awd-defense-ssh-gateway` 的端口绑定从 `127.0.0.1:...` 改成 `0.0.0.0:...` 或指定局域网 IP。
 
 可直接按下面的方式修改 `docker/ctf/docker-compose.dev.yml`：
 
@@ -112,6 +113,9 @@ services:
       CTF_CONTAINER_ACCESS_HOST: host-gateway.internal
     ports:
       - "0.0.0.0:8080:8080"
+
+  ctf-awd-defense-ssh-gateway:
+    ports:
       - "0.0.0.0:2222:2222"
 ```
 
@@ -135,7 +139,7 @@ curl http://<宿主机地址>:8080/health
 
 ```bash
 scripts/registry/deploy-private-registry.sh --force-recreate
-CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-api
+CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build ctf-api ctf-awd-defense-ssh-gateway
 ```
 
 相关编排细则见 `docs/docker-compose-rules.md`。

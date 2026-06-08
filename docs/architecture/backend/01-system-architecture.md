@@ -814,7 +814,7 @@ flowchart TD
 
 | 方案 | 适用阶段 | 结论 | 说明 |
 |------|----------|------|------|
-| API 容器直接挂载宿主 `/var/run/docker.sock` | 仅限一次性本机开发排障 | 不推荐作为默认路径 | API 容器失陷后会直接继承宿主 Docker daemon 的控制权，不能作为共享开发、演示或正式环境边界 |
+| API / `awd-defense-ssh-gateway` 容器直接挂载宿主 `/var/run/docker.sock` | 仅限一次性本机开发排障 | 不推荐作为默认路径 | 任一容器失陷后都会直接继承宿主 Docker daemon 的控制权，不能作为共享开发、演示或正式环境边界 |
 | API 直接跑宿主机进程，Docker Engine 仍在本机 | 本地开发、小规模单机试运行 | 可作为过渡方案 | 能去掉“容器内通过 docker.sock 直接提权”的捷径，但 API 一旦失陷，攻击者仍可能利用 API 所在主机上的 Docker 控制能力继续扩大权限 |
 | API 主机与靶机 Docker 主机分离，API 通过 `runtime-agent` + mTLS 调用执行面 | 共享开发、校内试运行、正式比赛 | 推荐的正式目标 | 把平台控制面与靶机宿主隔离开，并把 ACL、checker sandbox、容器文件写入、容器 exec 等宿主机副作用下沉到节点 agent；API 失陷后不会自动获得 API 所在主机的本地 Docker root，也不会再因为本地 bind mount 假设而误写远端宿主 |
 

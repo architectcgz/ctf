@@ -126,6 +126,80 @@ func TestRuntimeNodeExecutionRouterRoutesContainerFileWritesByWorkspaceContainer
 	}
 }
 
+func TestRuntimeNodeExecutionRouterRoutesInteractiveExecByWorkspaceContainerNodeID(t *testing.T) {
+	cfg, db, _ := newRootTestDependencies(t)
+	nodeA, nodeB := seedRuntimeRouterNodes(t, db)
+
+	if err := db.AutoMigrate(&instanceentity.Instance{}, &runtimeentity.AWDDefenseWorkspace{}); err != nil {
+		t.Fatalf("auto migrate interactive exec dependencies: %v", err)
+	}
+
+	nodeBID := nodeB.ID
+	instance := instanceentity.Instance{
+		ID:          2051,
+		UserID:      3051,
+		ContestID:   int64PtrForRouterTest(43),
+		TeamID:      int64PtrForRouterTest(53),
+		ChallengeID: 63,
+		ServiceID:   int64PtrForRouterTest(73),
+		NodeID:      &nodeBID,
+		ContainerID: "primary-ctr",
+		ShareScope:  instanceentity.ShareScopePerUser,
+		Status:      instanceentity.InstanceStatusRunning,
+		ExpiresAt:   time.Now().UTC().Add(time.Hour),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("create instance: %v", err)
+	}
+	workspace := runtimeentity.AWDDefenseWorkspace{
+		ContestID:         43,
+		TeamID:            53,
+		ServiceID:         73,
+		InstanceID:        instance.ID,
+		WorkspaceRevision: 1,
+		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
+		ContainerID:       "workspace-interactive-ctr",
+		SeedSignature:     "seed-v3",
+		CreatedAt:         time.Now().UTC(),
+		UpdatedAt:         time.Now().UTC(),
+	}
+	if err := db.Create(&workspace).Error; err != nil {
+		t.Fatalf("create defense workspace: %v", err)
+	}
+
+	executorA := &stubRuntimeNodeHostExecutor{}
+	executorB := &stubRuntimeNodeHostExecutor{}
+	overrideRuntimeNodeClientBuilder(t, map[int64]runtimeNodeClient{
+		nodeA.ID: newStubNodeRuntimeClient(executorA, nil),
+		nodeB.ID: newStubNodeRuntimeClient(executorB, nil),
+	})
+
+	router := newRuntimeNodeExecutionRouter(
+		cfg,
+		zap.NewNop(),
+		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewRuntimeNodeRepository(db),
+		"",
+	)
+
+	if err := router.ExecContainerInteractive(context.Background(), "workspace-interactive-ctr", []string{"sh", "-lc", "pwd"}, nil, io.Discard); err != nil {
+		t.Fatalf("ExecContainerInteractive() error = %v", err)
+	}
+	if len(executorA.interactiveCalls) != 0 {
+		t.Fatalf("expected node-a executor to stay idle, got %+v", executorA.interactiveCalls)
+	}
+	if len(executorB.interactiveCalls) != 1 {
+		t.Fatalf("expected node-b executor to receive 1 interactive call, got %+v", executorB.interactiveCalls)
+	}
+	call := executorB.interactiveCalls[0]
+	if call.containerID != "workspace-interactive-ctr" {
+		t.Fatalf("unexpected interactive container id: %+v", call)
+	}
+	if len(call.command) != 3 || call.command[0] != "sh" || call.command[2] != "pwd" {
+		t.Fatalf("unexpected interactive command: %+v", call)
+	}
+}
+
 func TestRuntimeNodeExecutionRouterRoutesCleanupByRuntimeDetailsContainerNodeID(t *testing.T) {
 	cfg, db, _ := newRootTestDependencies(t)
 	nodeA, nodeB := seedRuntimeRouterNodes(t, db)
@@ -391,8 +465,14 @@ type runtimeNodeWriteCall struct {
 	content     []byte
 }
 
+type runtimeNodeInteractiveCall struct {
+	containerID string
+	command     []string
+}
+
 type stubRuntimeNodeHostExecutor struct {
 	writeCalls                  []runtimeNodeWriteCall
+	interactiveCalls            []runtimeNodeInteractiveCall
 	listManagedContainersResult []runtimeports.ManagedContainer
 	removedContainers           []string
 	appliedACLCalls             []stubRuntimeNodeACLCall
@@ -515,6 +595,10 @@ func (s *stubRuntimeNodeHostExecutor) ListManagedContainerStats(context.Context)
 	return nil, nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) ExecContainerInteractive(context.Context, string, []string, io.Reader, io.Writer) error {
+func (s *stubRuntimeNodeHostExecutor) ExecContainerInteractive(_ context.Context, containerID string, command []string, _ io.Reader, _ io.Writer) error {
+	s.interactiveCalls = append(s.interactiveCalls, runtimeNodeInteractiveCall{
+		containerID: containerID,
+		command:     append([]string(nil), command...),
+	})
 	return nil
 }

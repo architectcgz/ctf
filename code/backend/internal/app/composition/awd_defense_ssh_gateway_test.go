@@ -2,22 +2,90 @@ package composition
 
 import (
 	"context"
+	"io"
+	"net"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
+	"ctf-platform/internal/config"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
+	runtimemodule "ctf-platform/internal/module/runtime/runtime"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 )
 
 type stubAWDDefenseSSHGatewayProxyTickets struct {
 	claims *runtimeports.ProxyTicketClaims
 	err    error
+}
+
+type blockingInteractiveExecutor struct {
+	started chan struct{}
+	stopped chan struct{}
+	once    sync.Once
+}
+
+func newBlockingInteractiveExecutor() *blockingInteractiveExecutor {
+	return &blockingInteractiveExecutor{
+		started: make(chan struct{}),
+		stopped: make(chan struct{}),
+	}
+}
+
+func (e *blockingInteractiveExecutor) ExecContainerInteractive(ctx context.Context, _ string, _ []string, _ io.Reader, _ io.Writer) error {
+	e.once.Do(func() {
+		close(e.started)
+	})
+	<-ctx.Done()
+	close(e.stopped)
+	return ctx.Err()
+}
+
+type stubGatewayListener struct{}
+
+func (stubGatewayListener) Accept() (net.Conn, error) {
+	return nil, io.EOF
+}
+
+func (stubGatewayListener) Close() error {
+	return nil
+}
+
+func (stubGatewayListener) Addr() net.Addr {
+	return &net.TCPAddr{}
+}
+
+type stubSSHChannel struct{}
+
+func (stubSSHChannel) Read(_ []byte) (int, error) {
+	return 0, io.EOF
+}
+
+func (stubSSHChannel) Write(p []byte) (int, error) {
+	return len(p), nil
+}
+
+func (stubSSHChannel) Close() error {
+	return nil
+}
+
+func (stubSSHChannel) CloseWrite() error {
+	return nil
+}
+
+func (stubSSHChannel) SendRequest(_ string, _ bool, _ []byte) (bool, error) {
+	return false, nil
+}
+
+func (stubSSHChannel) Stderr() io.ReadWriter {
+	return stubSSHChannel{}
 }
 
 type stubRuntimeHTTPProxyTicketReader struct {
@@ -203,5 +271,119 @@ func TestLoadOrCreateAWDDefenseSSHHostKeySignerRejectsInvalidExistingFile(t *tes
 	_, err := loadOrCreateAWDDefenseSSHHostKeySigner(hostKeyPath)
 	if err == nil {
 		t.Fatal("expected loadOrCreateAWDDefenseSSHHostKeySigner() to reject invalid host key file")
+	}
+}
+
+func TestBuildAWDDefenseSSHGatewayUsesNodeRouterInteractiveExecutorWhenAvailable(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.Container = config.ContainerConfig{
+		DefenseSSHEnabled:     true,
+		DefenseSSHHost:        "ssh.ctf.local",
+		DefenseSSHPort:        2222,
+		DefenseSSHHostKeyPath: filepath.Join(t.TempDir(), "runtime", "awd-defense-ssh-host-key.pem"),
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	defaultExecutor := &stubRuntimeNodeHostExecutor{}
+	runtime := &ContainerRuntimeModule{
+		nodeRouter: &runtimeNodeExecutionRouter{},
+		runtime: &runtimemodule.Module{
+			InteractiveExecutor: defaultExecutor,
+		},
+	}
+
+	gateway := BuildAWDDefenseSSHGateway(root, runtime)
+	if gateway == nil {
+		t.Fatal("expected gateway")
+	}
+	if gateway.executor != runtime.nodeRouter {
+		t.Fatalf("expected gateway executor to use node router, got %T", gateway.executor)
+	}
+}
+
+func TestBuildAWDDefenseSSHGatewayFallsBackToRuntimeInteractiveExecutorWithoutNodeRouter(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.Container = config.ContainerConfig{
+		DefenseSSHEnabled:     true,
+		DefenseSSHHost:        "ssh.ctf.local",
+		DefenseSSHPort:        2222,
+		DefenseSSHHostKeyPath: filepath.Join(t.TempDir(), "runtime", "awd-defense-ssh-host-key.pem"),
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	defaultExecutor := &stubRuntimeNodeHostExecutor{}
+	runtime := &ContainerRuntimeModule{
+		runtime: &runtimemodule.Module{
+			InteractiveExecutor: defaultExecutor,
+		},
+	}
+
+	gateway := BuildAWDDefenseSSHGateway(root, runtime)
+	if gateway == nil {
+		t.Fatal("expected gateway")
+	}
+	if gateway.executor != defaultExecutor {
+		t.Fatalf("expected gateway executor to use default interactive executor, got %T", gateway.executor)
+	}
+}
+
+func TestAWDDefenseSSHGatewayStopCancelsActiveInteractiveSession(t *testing.T) {
+	t.Parallel()
+
+	executor := newBlockingInteractiveExecutor()
+	runCtx, runCancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	close(done)
+
+	gateway := &AWDDefenseSSHGateway{
+		executor:    executor,
+		logger:      zap.NewNop(),
+		listener:    stubGatewayListener{},
+		done:        done,
+		runCancel:   runCancel,
+		activeConns: map[net.Conn]struct{}{},
+	}
+
+	session := &runtimeports.AWDDefenseSSHSession{
+		InstanceID:        9003,
+		WorkspaceRevision: 5,
+		ContainerID:       "workspace-ctr",
+	}
+
+	gateway.workerWG.Add(1)
+	go func() {
+		defer gateway.workerWG.Done()
+		gateway.runContainerCommand(runCtx, stubSSHChannel{}, session, []string{"/bin/sh"})
+	}()
+
+	select {
+	case <-executor.started:
+	case <-time.After(time.Second):
+		t.Fatal("expected interactive executor to start")
+	}
+
+	stopCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	if err := gateway.Stop(stopCtx); err != nil {
+		t.Fatalf("Stop() error = %v", err)
+	}
+
+	select {
+	case <-executor.stopped:
+	case <-time.After(time.Second):
+		t.Fatal("expected Stop() to cancel active interactive session")
 	}
 }

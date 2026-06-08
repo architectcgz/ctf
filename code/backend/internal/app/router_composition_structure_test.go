@@ -189,13 +189,23 @@ func TestBuildInstanceModuleDelegatesToSubBuilders(t *testing.T) {
 		"module := runtime.runtime",
 		"runtimeinfra.NewRepository(root.DB())",
 		"instancecmd.NewInstanceService(",
-		"instanceqry.NewProxyTicketService(",
+		"buildRuntimeProxyTicketService(root, repo)",
 		"instancecmd.NewInstanceMaintenanceService(",
 		"runtimehttp.NewHandler(m.service",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
 			t.Fatalf("instance module should delegate through %s", marker)
+		}
+	}
+
+	blocked := []string{
+		`"awd_defense_ssh_gateway"`,
+		`NewAWDDefenseSSHGateway(`,
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("instance module should not keep inline ssh gateway wiring %s", marker)
 		}
 	}
 }

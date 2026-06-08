@@ -2,6 +2,7 @@ package composition
 
 import (
 	"context"
+	"io"
 	"strings"
 	"sync"
 
@@ -23,6 +24,7 @@ type runtimeNodeClient interface {
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error)
 	ApplyACL(ctx context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle, rules []runtimecontracts.InstanceRuntimeACLRule) error
 	CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
+	ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error
 	RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
 	RemoveContainer(ctx context.Context, containerID string) error
 	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
@@ -380,6 +382,24 @@ func (r *runtimeNodeExecutionRouter) WriteFileToContainer(ctx context.Context, c
 		return err
 	}
 	return client.WriteFileToContainer(ctx, containerID, filePath, content)
+}
+
+func (c *nodeRuntimeClient) ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error {
+	if c == nil || c.executor == nil || strings.TrimSpace(containerID) == "" {
+		return nil
+	}
+	return c.executor.ExecContainerInteractive(ctx, containerID, command, stdin, stdout)
+}
+
+func (r *runtimeNodeExecutionRouter) ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error {
+	if r == nil || strings.TrimSpace(containerID) == "" {
+		return nil
+	}
+	client, _, err := r.clientForContainerID(ctx, containerID)
+	if err != nil {
+		return err
+	}
+	return client.ExecContainerInteractive(ctx, containerID, command, stdin, stdout)
 }
 
 func (c *nodeRuntimeClient) Close(ctx context.Context) error {

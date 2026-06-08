@@ -48,6 +48,23 @@ APP_ENV=prod go run ./cmd/runtime-agent
 
 生产环境更推荐编译成独立二进制后交给 systemd 或等价进程管理器运行。
 
+## 启动 AWD defense SSH gateway
+
+AWD 防守 SSH 入口已经从 `ctf-api` 进程拆成独立命令，入口在 `code/backend/cmd/awd-defense-ssh-gateway/main.go`，启动逻辑在 `code/backend/internal/bootstrap/awd_defense_ssh_gateway.go`。
+
+开发或部署时可以直接启动：
+
+```bash
+cd code/backend
+APP_ENV=prod go run ./cmd/awd-defense-ssh-gateway
+```
+
+要求：
+
+- gateway 节点需要访问与 API 相同的 PostgreSQL / Redis
+- 本地单机模式下，gateway 节点本机需要直接访问 Docker Engine
+- `runtime_agent.enabled: true` 时，gateway 与 API 一样通过 runtime node / agent 路由进入目标工作区容器
+
 ## 最小配置
 
 ### runtime-agent 节点
@@ -92,6 +109,7 @@ runtime_agent:
 - `runtime_agent.enabled` 为 `true` 时，`endpoint`、`dial_timeout`、`server_name`、`ca_file`、`cert_file`、`key_file` 都必须存在
 - `server_name` 要与目标 node 的 `tls_identity` 一致
 - API 主机不再依赖“切 `DOCKER_HOST` 就完成多机”的假设；完整执行 authority 来自 agent 协议和 `node_id`
+- API 仍负责签发 AWD defense SSH ticket，但 `2222` listener 由独立的 `awd-defense-ssh-gateway` 进程持有
 
 ## node 绑定说明
 
@@ -100,7 +118,7 @@ runtime_agent:
   - `true` -> `agent-default`
 - 新实例启动时会把选中的 `node_id` 持久化到实例记录
 - checker job metadata、AWD service instance 和容器文件写入路径都会显式携带或反查 `node_id`
-- 容器清理、checker 执行、AWD 防守工作区写入都不再以“当前 API 进程连着哪台宿主机”作为 authority
+- 容器清理、checker 执行、AWD 防守工作区写入和 AWD defense SSH interactive exec 都不再以“当前 API 进程连着哪台宿主机”作为 authority
 
 ## 运维限制
 

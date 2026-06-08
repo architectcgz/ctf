@@ -45,8 +45,14 @@ run_migrations() {
   log "ctf-api entrypoint: database migrations finished"
 }
 
-if auto_migrate_enabled; then
+if [ "$#" -eq 0 ]; then
+  set -- /app/ctf-api
+elif [ "${1#-}" != "$1" ]; then
+  set -- /app/ctf-api "$@"
+fi
+
+if [ "$1" = "/app/ctf-api" ] && auto_migrate_enabled; then
   run_migrations
 fi
 
-exec /app/ctf-api "$@"
+exec "$@"

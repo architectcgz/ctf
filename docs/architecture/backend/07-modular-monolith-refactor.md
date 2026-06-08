@@ -30,7 +30,7 @@
   - 不负责：让 auth application surface 继续直接知道 `net/http` client、CAS XML response 或 ticket request 细节
 
 - `code/backend/internal/app/composition/instance_module.go`、`code/backend/internal/app/composition/runtime_module.go`
-  - 负责：在 app 层把同一个 `internal/module/runtime/runtime.Module` 收口成两个组合视图；`InstanceModule` 直接装配 `internal/module/instance/application/*` 的实例命令、查询、proxy ticket 和 maintenance use case，并通过 `internal/module/instance/contracts` 把它们交给 runtime access adapter，对外暴露实例/AWD 访问 handler、`practice` 依赖的实例仓储和运行时服务，同时注册 `runtime_cleaner` 与 AWD 防守 SSH gateway；`ContainerRuntimeModule` 只保留 `challenge`、`contest`、`ops` 需要的 container-facing 能力，`RuntimeModule` 仅保留兼容别名
+  - 负责：在 app 层把同一个 `internal/module/runtime/runtime.Module` 收口成两个组合视图；`InstanceModule` 直接装配 `internal/module/instance/application/*` 的实例命令、查询、proxy ticket 和 maintenance use case，并通过 `internal/module/instance/contracts` 把它们交给 runtime access adapter，对外暴露实例/AWD 访问 handler、`practice` 依赖的实例仓储和运行时服务，同时注册 `runtime_cleaner`；`ContainerRuntimeModule` 只保留 `challenge`、`contest`、`ops` 需要的 container-facing 能力，并给独立的 AWD defense SSH gateway 进程提供 interactive exec / node routing 依赖；`RuntimeModule` 仅保留兼容别名
   - 不负责：继续让 `runtime/runtime.Module` 承担实例 handler / cleaner 的生产装配，或把 `runtime/application/*` 的 compat import path 误写成长期 owner；当前 compat mirror 已压成基于 `instance/contracts` 的薄 wrapper，但它仍不是生产 wiring owner
 
 - `code/backend/internal/module/instance/contracts/*.go`

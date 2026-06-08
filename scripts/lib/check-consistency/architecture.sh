@@ -121,6 +121,9 @@ run_architecture_checks() {
     if [[ -z "$ssh_port" ]]; then
       echo "  $(red FAIL) — unable to resolve defense_ssh_port from $dev_config_file"
       fail=1
+    elif ! grep -qE '^[[:space:]]{2}ctf-awd-defense-ssh-gateway:[[:space:]]*$' "$dev_compose_file"; then
+      echo "  $(red FAIL) — dev compose must declare ctf-awd-defense-ssh-gateway service when defense_ssh_enabled is true"
+      fail=1
     elif grep -qE "\"127\\.0\\.0\\.1:${ssh_port}:${ssh_port}\"|\"0\\.0\\.0\\.0:${ssh_port}:${ssh_port}\"|\"${ssh_port}:${ssh_port}\"" "$dev_compose_file"; then
       echo "  $(green PASS) — dev compose exposes AWD defense SSH port $ssh_port"
     else

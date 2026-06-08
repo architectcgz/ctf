@@ -44,8 +44,12 @@
   - 不负责：在 preview / commit 阶段替学生或队伍正式开题，或把导入工作目录暴露为运行态实例入口
 
 - `code/backend/internal/module/instance/application/{commands/instance_service.go,commands/maintenance_service.go,queries/instance_service.go,queries/proxy_ticket_service.go}`、`code/backend/internal/app/composition/{runtime_http_service_adapter.go,awd_defense_ssh_gateway.go}`
-  - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把实例访问入口与 SSH 防守入口收敛到 ticket + scope 校验链路；当前 runtime HTTP facade 只覆盖仍然开放的实例访问 / proxy / AWD defense SSH 入口
-  - 不负责：让调用方直接持有容器 IP/端口、绕过平台鉴权访问，或回退到浏览器文件工作台方案
+  - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把实例访问入口与 SSH 防守入口收敛到 ticket + scope 校验链路；当前 runtime HTTP facade 只覆盖仍然开放的实例访问 / proxy / AWD defense SSH 票据签发入口
+  - 不负责：持有 `2222` listener 生命周期、让调用方直接持有容器 IP/端口、绕过平台鉴权访问，或回退到浏览器文件工作台方案
+
+- `code/backend/internal/app/composition/awd_defense_ssh_gateway_builder.go`、`code/backend/internal/bootstrap/awd_defense_ssh_gateway.go`
+  - 负责：把 AWD defense SSH ingress 装配成独立进程，监听 `container.defense_ssh_port`，校验 ticket 后进入目标工作区容器；多 node 场景下通过 `runtimeNodeExecutionRouter` 按 `container_id -> node_id` 路由 interactive exec
+  - 不负责：签发 ticket、决定 contest/team/service 作用域规则，或替 `runtime-agent` 承担执行面 owner
 
 ## 接口或数据影响
 
@@ -59,7 +63,7 @@
 
 ## Guardrail
 
-- 运行时装配与可选 SSH 网关：`code/backend/internal/app/composition/runtime_module_test.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
+- 运行时装配与独立 SSH 网关：`code/backend/internal/app/composition/runtime_module_test.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
 - runtime / composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`、`code/backend/internal/module/runtime/architecture_test.go`
 - 练习实例创建、desired reconcile 与补偿：`code/backend/internal/module/practice/application/commands/runtime_container_create_test.go`、`instance_provisioning_test.go`、`instance_start_service_test.go`、`awd_desired_runtime_reconciler_test.go`
 - AWD 宿主机重启恢复与时间窗顺延：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service_test.go`、`code/backend/internal/module/contest/infrastructure/contest_awd_runtime_recovery_repository_test.go`、`code/backend/internal/module/runtime/infrastructure/repository_awd_expiry_refresh_test.go`、`code/backend/internal/module/contest/application/jobs/awd_round_plan_test.go`
