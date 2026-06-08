@@ -1,6 +1,9 @@
 package module
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -198,7 +201,7 @@ func TestTimeNowUsageExceptionsAreCurrent(t *testing.T) {
 	files := archtest.RuntimeGoFiles(t, ".")
 	actual := make(map[string]struct{})
 	for _, file := range files {
-		if strings.Contains(archtest.ReadFile(t, file), "time.Now(") {
+		if fileNeedsReviewedTimeNowException(t, file) {
 			actual[moduleFileKey(file)] = struct{}{}
 		}
 	}
@@ -211,6 +214,113 @@ func TestTimeNowUsageExceptionsAreCurrent(t *testing.T) {
 	for allowed := range reviewedTimeNowFiles {
 		if _, exists := actual[allowed]; !exists {
 			t.Fatalf("time.Now exception is stale: %s", allowed)
+		}
+	}
+}
+
+func TestTimeNowUsageGuardRequiresUTCOnSameCallChain(t *testing.T) {
+	t.Parallel()
+
+	const source = `package sample
+
+import "time"
+
+func allowed() time.Time {
+	return time.Now().Add(time.Hour).UTC()
+}
+
+func blocked(other time.Time) time.Time {
+	_ = other.UTC()
+	return time.Now()
+}
+`
+
+	needsException, err := sourceNeedsReviewedTimeNowException(source)
+	if err != nil {
+		t.Fatalf("parse sample source: %v", err)
+	}
+	if !needsException {
+		t.Fatalf("time.Now usage without UTC on the same call chain must still need a reviewed exception")
+	}
+}
+
+func fileNeedsReviewedTimeNowException(t *testing.T, file string) bool {
+	t.Helper()
+
+	needsException, err := sourceNeedsReviewedTimeNowException(archtest.ReadFile(t, file))
+	if err != nil {
+		t.Fatalf("parse %s for time.Now usage: %v", file, err)
+	}
+	return needsException
+}
+
+func sourceNeedsReviewedTimeNowException(content string) (bool, error) {
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, "", content, 0)
+	if err != nil {
+		return false, err
+	}
+
+	parents := make(map[ast.Node]ast.Node)
+	var stack []ast.Node
+	ast.Inspect(fileNode, func(node ast.Node) bool {
+		if node == nil {
+			stack = stack[:len(stack)-1]
+			return true
+		}
+		if len(stack) > 0 {
+			parents[node] = stack[len(stack)-1]
+		}
+		stack = append(stack, node)
+		return true
+	})
+
+	needsException := false
+	ast.Inspect(fileNode, func(node ast.Node) bool {
+		call, ok := node.(*ast.CallExpr)
+		if !ok || !isTimeNowCall(call) {
+			return true
+		}
+		if !timeNowCallChainEndsWithUTC(call, parents) {
+			needsException = true
+			return false
+		}
+		return true
+	})
+	return needsException, nil
+}
+
+func isTimeNowCall(call *ast.CallExpr) bool {
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok || selector.Sel.Name != "Now" {
+		return false
+	}
+	ident, ok := selector.X.(*ast.Ident)
+	return ok && ident.Name == "time"
+}
+
+func timeNowCallChainEndsWithUTC(call *ast.CallExpr, parents map[ast.Node]ast.Node) bool {
+	var current ast.Node = call
+	for {
+		parent := parents[current]
+		switch node := parent.(type) {
+		case *ast.SelectorExpr:
+			if node.X != current {
+				return false
+			}
+			if node.Sel.Name == "UTC" {
+				if utcCall, ok := parents[node].(*ast.CallExpr); ok && utcCall.Fun == node {
+					return true
+				}
+			}
+			current = node
+		case *ast.CallExpr:
+			if node.Fun != current {
+				return false
+			}
+			current = node
+		default:
+			return false
 		}
 	}
 }
