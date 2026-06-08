@@ -26,10 +26,10 @@
 ## P2：模块迁移后的结构尾项
 
 - [ ] `challenges.image_id = 0` 的历史 no-image 哨兵值还没有完成 schema / contract 清理，暂时不能继续补物理 FK。
-  - 现状：`000011_add_additional_foreign_keys` 已继续补上 `audit_logs.user_id`、`awd_*` 的 creator / verifier / submitter、`instances` 主引用列、`submissions` 主引用列；`awd_* .service_id` 这批历史孤儿也已经在开发库回填完成，但 `challenges.image_id` 仍有 `76` 条历史 `image_id = 0` 记录。
+  - 现状：当前 baseline `000001_init_schema.up.sql` 已吸收原 `000011_add_additional_foreign_keys` 里的 `audit_logs.user_id`、`awd_*` 的 creator / verifier / submitter、`instances` 主引用列、`submissions` 主引用列；`awd_* .service_id` 这批历史孤儿也已经在开发库回填完成，但 `challenges.image_id` 仍有 `76` 条历史 `image_id = 0` 记录。
   - 影响：`challenges.image_id` 继续缺少数据库级完整性约束，后续迁移和数据清理仍要保留逻辑层对 no-image 哨兵值的兼容。
   - 处理方向：先把 `image_id = 0` 的 schema / contract 语义清理完，再单独补 `image_id` 的 FK migration。
-  - 依据：`code/backend/migrations/000011_add_additional_foreign_keys.up.sql`
+  - 依据：`code/backend/migrations/000001_init_schema.up.sql`
 
 - [ ] `assessment / ops` 的副作用事件化边界仍有继续收口空间。
   - 现状：assessment 画像刷新、推荐缓存刷新、ops realtime relay 与通知等主链路已经挂到 event consumers；剩余问题主要是个别同步副作用、缓存失效 owner 和失败回退策略还没有彻底压平。

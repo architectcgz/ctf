@@ -7,38 +7,32 @@ import (
 	"testing"
 )
 
-func TestContestStatusTransitionMigrationContract(t *testing.T) {
-	up, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000003_create_contest_status_transitions.up.sql"))
+func TestContestStatusTransitionContractInBaseline(t *testing.T) {
+	up, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000001_init_schema.up.sql"))
 	if err != nil {
-		t.Fatalf("read transition up migration: %v", err)
+		t.Fatalf("read baseline migration: %v", err)
 	}
 	upSQL := string(up)
 	for _, snippet := range []string{
-		"ALTER TABLE public.contests",
-		"ADD COLUMN status_version bigint DEFAULT 0 NOT NULL",
+		"CREATE TABLE public.contests",
+		"status_version bigint DEFAULT 0 NOT NULL",
 		"CREATE TABLE public.contest_status_transitions",
+		"status_version bigint NOT NULL",
 		"CREATE UNIQUE INDEX uk_contest_status_transitions_contest_version",
 		"(contest_id, status_version)",
 		"CREATE INDEX idx_contest_status_transitions_occurred_at",
 	} {
 		if !strings.Contains(upSQL, snippet) {
-			t.Fatalf("transition up migration should contain %q, got:\n%s", snippet, upSQL)
+			t.Fatalf("baseline migration should contain %q, got:\n%s", snippet, upSQL)
 		}
 	}
 
-	down, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000003_create_contest_status_transitions.down.sql"))
+	down, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000001_init_schema.down.sql"))
 	if err != nil {
-		t.Fatalf("read transition down migration: %v", err)
+		t.Fatalf("read baseline down migration: %v", err)
 	}
 	downSQL := string(down)
-	for _, snippet := range []string{
-		"DROP INDEX IF EXISTS public.idx_contest_status_transitions_occurred_at",
-		"DROP INDEX IF EXISTS public.uk_contest_status_transitions_contest_version",
-		"DROP TABLE IF EXISTS public.contest_status_transitions",
-		"ALTER TABLE public.contests DROP COLUMN IF EXISTS status_version",
-	} {
-		if !strings.Contains(downSQL, snippet) {
-			t.Fatalf("transition down migration should contain %q, got:\n%s", snippet, downSQL)
-		}
+	if !strings.Contains(downSQL, "DROP SCHEMA IF EXISTS public CASCADE") {
+		t.Fatalf("baseline down migration should reset public schema, got:\n%s", downSQL)
 	}
 }

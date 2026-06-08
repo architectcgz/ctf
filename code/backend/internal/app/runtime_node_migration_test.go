@@ -1,4 +1,4 @@
-package app_test
+package app
 
 import (
 	"os"
@@ -7,17 +7,22 @@ import (
 	"testing"
 )
 
-func TestContestPausedSecondsContractInBaseline(t *testing.T) {
+func TestRuntimeNodeContractInBaseline(t *testing.T) {
+	t.Parallel()
+
 	up, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000001_init_schema.up.sql"))
 	if err != nil {
 		t.Fatalf("read baseline migration: %v", err)
 	}
 	upSQL := string(up)
 	for _, snippet := range []string{
-		"CREATE TABLE public.contests",
-		"paused_seconds bigint DEFAULT 0 NOT NULL",
-		"runtime_recovery_key character varying(191) DEFAULT ''::character varying NOT NULL",
-		"runtime_recovery_applied_seconds bigint DEFAULT 0 NOT NULL",
+		"CREATE TABLE public.runtime_nodes",
+		"CREATE TABLE public.instances",
+		"node_id bigint",
+		"ALTER TABLE ONLY public.instances",
+		"ADD CONSTRAINT instances_node_id_fkey",
+		"FOREIGN KEY (node_id) REFERENCES public.runtime_nodes(id)",
+		"CREATE INDEX idx_instances_node_id ON public.instances USING btree (node_id)",
 	} {
 		if !strings.Contains(upSQL, snippet) {
 			t.Fatalf("baseline migration should contain %q, got:\n%s", snippet, upSQL)

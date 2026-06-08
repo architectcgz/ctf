@@ -42,6 +42,7 @@ npm run dev
 说明：
 
 - `./scripts/dev-run.sh --infra --migrate --hot` 会自动启动本地 PostgreSQL / Redis 容器，补齐开发环境变量，并在启动前执行数据库迁移
+- `2026-06-08` 起，runtime migration 已收口到单文件 baseline；如果你的本地库还来自旧的 `000002..000012` 增量链，需要先删库重建或重置 PostgreSQL volume，再执行 `--migrate`
 - 如果 `8080` 已被占用，脚本会自动把后端切到 `18080`
 - 如果不需要热重载，也可以用 `cd code/backend && ./scripts/dev-run.sh --infra --migrate`
 - 如果只想直接运行后端，也可以用 `cd code/backend && APP_ENV=dev go run ./cmd/api`，但这时数据库和 Redis 相关环境变量需要自己提供
@@ -62,7 +63,7 @@ npm run dev
 CTF_HOST_ROOT="$(pwd)" docker compose -f docker/ctf/docker-compose.dev.yml up -d --build
 ```
 
-这条路径下，`ctf-api` 容器会在启动应用前先执行一次 `/app/migrations` 里的正式 SQL migration；如需临时关闭，可给 `ctf-api` 设置 `CTF_AUTO_MIGRATE=false`。
+这条路径下，`ctf-api` 容器会在启动应用前先执行一次 `/app/migrations` 里的正式 SQL migration；如需临时关闭，可给 `ctf-api` 设置 `CTF_AUTO_MIGRATE=false`。如果容器数据库仍停留在旧的 `000002..000012` 增量链上，入口脚本会明确报错并要求你先重建本地数据库。
 
 这条路径默认只适合单用户、本机临时联调，不适合作为共享开发、演示或正式部署方案。原因是 `docker/ctf/docker-compose.dev.yml` 里的 `ctf-api` 会直接访问宿主 Docker daemon，用来管理靶机、checker sandbox 和运行时网络；如果 API 容器失陷，攻击者通常可以继续控制宿主 Docker 运行时。因此：
 

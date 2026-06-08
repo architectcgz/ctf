@@ -35,13 +35,37 @@ build_migrate_database_url() {
     "${CTF_POSTGRES_SSL_MODE:-disable}"
 }
 
+print_legacy_chain_reset_hint() {
+  printf '%s\n' \
+    "ctf-api entrypoint: this repository now uses a single baseline migration." \
+    "ctf-api entrypoint: databases created from the removed 000002..000012 chain are no longer upgraded in place." \
+    "ctf-api entrypoint: reset the local database or PostgreSQL volume, then rerun migrations." >&2
+}
+
 run_migrations() {
   migrate_database_url="$(build_migrate_database_url)"
   log "ctf-api entrypoint: running database migrations"
-  /app/migrate \
-    -path "${CTF_MIGRATIONS_PATH:-/app/migrations}" \
-    -database "${migrate_database_url}" \
-    up
+  set +e
+  migration_output="$(
+    /app/migrate \
+      -path "${CTF_MIGRATIONS_PATH:-/app/migrations}" \
+      -database "${migrate_database_url}" \
+      up 2>&1
+  )"
+  migration_status=$?
+  set -e
+  if [ "${migration_status}" -ne 0 ]; then
+    printf '%s\n' "${migration_output}" >&2
+    case "${migration_output}" in
+      *"no migration found for version "*)
+        print_legacy_chain_reset_hint
+        ;;
+    esac
+    exit "${migration_status}"
+  fi
+  if [ -n "${migration_output}" ]; then
+    printf '%s\n' "${migration_output}"
+  fi
   log "ctf-api entrypoint: database migrations finished"
 }
 

@@ -80,11 +80,6 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("open postgres: %w", err))
 	}
-	if getenvBool("CHALLENGE_IMPORT_AUTO_MIGRATE", false) {
-		if err := db.AutoMigrate(&challengeentity.Image{}, &challengeentity.Challenge{}, &challengeentity.ChallengeHint{}); err != nil {
-			panic(fmt.Errorf("auto migrate import schema: %w", err))
-		}
-	}
 
 	packsDir := strings.TrimSpace(os.Getenv("CHALLENGE_PACKS_DIR"))
 	if packsDir == "" {

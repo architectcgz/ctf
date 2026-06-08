@@ -2,7 +2,6 @@ package composition
 
 import (
 	"context"
-	"strings"
 
 	"ctf-platform/internal/config"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -131,11 +130,6 @@ func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtim
 	if cfg == nil {
 		cfg = &config.Config{}
 	}
-	if cfg.App.Env == "test" {
-		if err := root.DB().AutoMigrate(&runtimeentity.RuntimeNode{}); err != nil {
-			return nil, nil, nil, err
-		}
-	}
 
 	repo := runtimeinfra.NewRuntimeNodeRepository(root.DB())
 	if repo == nil {
@@ -149,16 +143,7 @@ func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtim
 	}
 	node, err := repo.EnsureDefaultNode(root.Context(), spec)
 	if err != nil {
-		lowerErr := strings.ToLower(err.Error())
-		if strings.Contains(lowerErr, "no such table") || strings.Contains(lowerErr, "does not exist") {
-			if migrateErr := root.DB().AutoMigrate(&runtimeentity.RuntimeNode{}); migrateErr != nil {
-				return nil, nil, nil, migrateErr
-			}
-			node, err = repo.EnsureDefaultNode(root.Context(), spec)
-		}
-		if err != nil {
-			return nil, nil, nil, err
-		}
+		return nil, nil, nil, err
 	}
 	return runtimeinfra.NewDefaultRuntimeNodeSelector(repo, defaultNodeName), repo, node, nil
 }
