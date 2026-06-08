@@ -63,15 +63,14 @@ func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 					return []practiceports.SubmissionRecord{{ID: 1, UserID: userID, ChallengeID: challengeID, SubmittedAt: time.Now()}}, nil
 				},
 			},
-
 			nil,
 			nil,
 			nil,
 			nil,
 			nil,
 			&config.Config{},
-			nil),
-
+			nil,
+		),
 		challengeRepo,
 	)
 
@@ -142,15 +141,14 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 					}, nil
 				},
 			},
-
 			nil,
 			nil,
 			nil,
 			nil,
 			nil,
 			&config.Config{},
-			nil),
-
+			nil,
+		),
 		challengeRepo,
 	)
 

@@ -44,7 +44,6 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 	service := wirePracticeManualReviewAdapters(
 		NewService(
 			repo,
-
 			nil,
 			nil,
 			nil,
@@ -59,8 +58,8 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 					},
 				},
 			},
-			nil),
-
+			nil,
+		),
 		repo,
 		challengeRepo,
 	)
@@ -138,7 +137,6 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 	service := wirePracticeManualReviewAdapters(
 		NewService(
 			repo,
-
 			nil,
 			nil,
 			nil,
@@ -164,8 +162,8 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 					ProgressTTL: time.Minute,
 				},
 			},
-			nil),
-
+			nil,
+		),
 		repo,
 		challengeRepo,
 	)

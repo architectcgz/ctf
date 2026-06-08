@@ -268,7 +268,8 @@ func isAllowedNoContextRepositoryMethod(name string) bool {
 func isApprovedContextRootFile(path string) bool {
 	switch path {
 	case "internal/app/composition/root.go",
-		"internal/bootstrap/run.go":
+		"internal/bootstrap/run.go",
+		"internal/bootstrap/awd_defense_ssh_gateway.go":
 		return true
 	default:
 		return false

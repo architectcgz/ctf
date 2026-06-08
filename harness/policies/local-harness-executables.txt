@@ -7,6 +7,7 @@ scripts/check-workflow-governance-core.sh
 scripts/check-review-governance.sh
 scripts/check-review-governance-core.sh
 scripts/check-frontend-test-guard.sh
+scripts/check-test-architecture.sh
 scripts/check-architecture.sh
 scripts/check-commit-message.sh
 scripts/check-skill-sync-reminder.sh
@@ -20,6 +21,7 @@ scripts/check-agent-entrypoints.sh
 scripts/check-shared-skills.sh
 scripts/check-backend-architecture.sh
 scripts/check-frontend-architecture.sh
+harness/checks/check_test_architecture_guard.py
 scripts/doctor-local-harness.sh
 tools/ensure-frontend-tooling.sh
 tools/sync_openapi_from_contract.py

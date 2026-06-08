@@ -13,6 +13,9 @@ function collectSourceFiles(directory: string): string[] {
     const path = join(directory, entry)
     const stats = statSync(path)
     if (stats.isDirectory()) {
+      if (entry === '__tests__') {
+        return []
+      }
       return collectSourceFiles(path)
     }
     if (/\.(ts|vue)$/.test(entry)) {

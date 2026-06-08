@@ -57,11 +57,11 @@ func RunAWDDefenseSSHGateway() {
 		log.Fatal("awd_defense_ssh_gateway_init_failed", zap.Error(err))
 	}
 	if err := process.Start(rootCtx); err != nil {
-		_ = process.Shutdown(context.Background())
+		_ = process.Shutdown(rootCtx)
 		log.Fatal("awd_defense_ssh_gateway_start_failed", zap.Error(err))
 	}
 
-	signalCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	signalCtx, stop := signal.NotifyContext(rootCtx, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	if err := shutdownGracefully(signalCtx, stop, process, process.shutdownTimeout()); err != nil {
@@ -96,7 +96,7 @@ func buildAWDDefenseSSHGatewayProcess(ctx context.Context, cfg *config.Config, l
 	gateway := composition.BuildAWDDefenseSSHGateway(root, runtime)
 	if gateway == nil {
 		if runtime != nil && runtime.LifecycleCloser != nil {
-			_ = runtime.LifecycleCloser.Close(context.Background())
+			_ = runtime.LifecycleCloser.Close(ctx)
 		}
 		closeResources(log, db, cache)
 		return nil, errors.New("awd defense ssh gateway is unavailable")
