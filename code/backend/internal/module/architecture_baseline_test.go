@@ -49,10 +49,8 @@ var moduleDependencyBaseline = map[string]struct{}{
 var reviewedTransactionBoundaryFiles = map[string]struct{}{
 	"challenge/infrastructure/repository.go":                            {},
 	"challenge/infrastructure/tag_repository.go":                        {},
-	"contest/infrastructure/awd_repository.go":                          {},
 	"contest/infrastructure/contest_awd_runtime_recovery_repository.go": {},
 	"contest/infrastructure/contest_status_update_repository.go":        {},
-	"contest/infrastructure/submission_repository.go":                   {},
 	"contest/infrastructure/team_membership_lifecycle_repository.go":    {},
 	"contest/infrastructure/team_membership_repository.go":              {},
 	"identity/infrastructure/repository.go":                             {},

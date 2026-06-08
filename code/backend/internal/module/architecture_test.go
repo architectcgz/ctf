@@ -390,6 +390,84 @@ func blocked() func() time.Time {
 	}
 }
 
+func TestTransactionBoundaryGuardAllowsExplicitBoundaryMethods(t *testing.T) {
+	t.Parallel()
+
+	const source = `package sample
+
+import (
+	"context"
+	"gorm.io/gorm"
+)
+
+type Repository struct {
+	db *gorm.DB
+}
+
+func (r *Repository) WithinScoringTransaction(ctx context.Context, fn func(*Repository) error) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(&Repository{db: tx})
+	})
+}
+
+func (r *Repository) WithinInstanceStartTx(ctx context.Context, fn func(*Repository) error) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(&Repository{db: tx})
+	})
+}
+`
+
+	needsException, err := sourceNeedsReviewedTransactionBoundaryException(source)
+	if err != nil {
+		t.Fatalf("parse sample source: %v", err)
+	}
+	if needsException {
+		t.Fatalf("explicit transaction boundary methods should not need a reviewed exception")
+	}
+}
+
+func TestTransactionBoundaryGuardRejectsOrdinaryRepositoryTransactions(t *testing.T) {
+	t.Parallel()
+
+	const source = `package sample
+
+import (
+	"context"
+	"gorm.io/gorm"
+)
+
+type Repository struct {
+	db *gorm.DB
+}
+
+func (r *Repository) CreateWithHints(ctx context.Context) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return nil
+	})
+}
+
+func (r *Repository) AttachTagsInTx(ctx context.Context) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return nil
+	})
+}
+
+func (r *Repository) WithinTransactionalCleanup(ctx context.Context) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return nil
+	})
+}
+`
+
+	needsException, err := sourceNeedsReviewedTransactionBoundaryException(source)
+	if err != nil {
+		t.Fatalf("parse sample source: %v", err)
+	}
+	if !needsException {
+		t.Fatalf("ordinary repository methods opening transactions must still need a reviewed exception")
+	}
+}
+
 func fileNeedsReviewedTimeNowException(t *testing.T, file string) bool {
 	t.Helper()
 
@@ -407,19 +485,7 @@ func sourceNeedsReviewedTimeNowException(content string) (bool, error) {
 		return false, err
 	}
 
-	parents := make(map[ast.Node]ast.Node)
-	var stack []ast.Node
-	ast.Inspect(fileNode, func(node ast.Node) bool {
-		if node == nil {
-			stack = stack[:len(stack)-1]
-			return true
-		}
-		if len(stack) > 0 {
-			parents[node] = stack[len(stack)-1]
-		}
-		stack = append(stack, node)
-		return true
-	})
+	parents := collectASTParents(fileNode)
 
 	timeNowAssignments := collectTimeNowAssignments(fileNode)
 	identifierUses := collectIdentifierUses(fileNode)
@@ -705,7 +771,7 @@ func TestTransactionBoundaryExceptionsAreCurrent(t *testing.T) {
 	files := archtest.RuntimeGoFiles(t, ".")
 	actual := make(map[string]struct{})
 	for _, file := range files {
-		if strings.Contains(archtest.ReadFile(t, file), ".Transaction(") {
+		if fileNeedsReviewedTransactionBoundaryException(t, file) {
 			actual[file] = struct{}{}
 		}
 	}
@@ -720,6 +786,80 @@ func TestTransactionBoundaryExceptionsAreCurrent(t *testing.T) {
 			t.Fatalf("transaction exception is stale: %s", allowed)
 		}
 	}
+}
+
+func fileNeedsReviewedTransactionBoundaryException(t *testing.T, file string) bool {
+	t.Helper()
+
+	needsException, err := sourceNeedsReviewedTransactionBoundaryException(archtest.ReadFile(t, file))
+	if err != nil {
+		t.Fatalf("parse %s: %v", file, err)
+	}
+	return needsException
+}
+
+func sourceNeedsReviewedTransactionBoundaryException(content string) (bool, error) {
+	fileSet := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fileSet, "sample.go", content, 0)
+	if err != nil {
+		return false, err
+	}
+
+	parents := collectASTParents(fileNode)
+
+	needsException := false
+	ast.Inspect(fileNode, func(node ast.Node) bool {
+		call, ok := node.(*ast.CallExpr)
+		if !ok || !isTransactionCall(call) {
+			return true
+		}
+		if !transactionCallIsInsideExplicitBoundaryMethod(call, parents) {
+			needsException = true
+			return false
+		}
+		return true
+	})
+	return needsException, nil
+}
+
+func isTransactionCall(call *ast.CallExpr) bool {
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	return ok && selector.Sel.Name == "Transaction"
+}
+
+func transactionCallIsInsideExplicitBoundaryMethod(call *ast.CallExpr, parents map[ast.Node]ast.Node) bool {
+	for current := ast.Node(call); current != nil; current = parents[current] {
+		fn, ok := current.(*ast.FuncDecl)
+		if !ok || fn.Name == nil {
+			continue
+		}
+		return isExplicitTransactionBoundaryMethodName(fn.Name.Name)
+	}
+	return false
+}
+
+func isExplicitTransactionBoundaryMethodName(name string) bool {
+	if !strings.HasPrefix(name, "Within") {
+		return false
+	}
+	return strings.HasSuffix(name, "Transaction") || strings.HasSuffix(name, "Tx")
+}
+
+func collectASTParents(root ast.Node) map[ast.Node]ast.Node {
+	parents := make(map[ast.Node]ast.Node)
+	var stack []ast.Node
+	ast.Inspect(root, func(node ast.Node) bool {
+		if node == nil {
+			stack = stack[:len(stack)-1]
+			return true
+		}
+		if len(stack) > 0 {
+			parents[node] = stack[len(stack)-1]
+		}
+		stack = append(stack, node)
+		return true
+	})
+	return parents
 }
 
 func TestRuntimeModulesStaySmallAndWiringOnly(t *testing.T) {
