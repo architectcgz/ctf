@@ -26,8 +26,13 @@ auth:
   session_cookie_secure: true
 
 container:
-  # 若部署层不稳定注入 CTF_CONTAINER_FLAG_GLOBAL_SECRET，可改用持久化文件恢复同一把动态 Flag 密钥。
+  # 多 API 实例必须使用同一把动态 Flag 密钥；生产环境不会在文件缺失时自动生成。
+  # 推荐通过 CTF_CONTAINER_FLAG_GLOBAL_SECRET 注入，或提前把该文件放到所有实例一致可见的持久化位置。
   flag_global_secret_file: storage/runtime/flag-global-secret
+  flag_global_secret_key_id: default
+  # active key 轮换时，所有 API 副本必须保留仍被实例引用的旧 key；升级前空 flag_key_id 的实例使用 default key。
+  flag_global_secret_keyring: []
+  flag_global_secret_allow_rotation: false
   # 生产部署时应显式配置可从浏览器访问的主机名或域名，不要依赖默认 localhost
   public_host: ctf.example.com
   # 可选；仅当后端进程与题目发布端口不在同一网络视角时，才需要单独配置内部访问 host。

@@ -14,6 +14,7 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
 	"fmt"
 	"go.uber.org/zap"
@@ -32,6 +33,40 @@ type stubPracticeSchedulerLockStore struct {
 }
 
 type stubPracticeSchedulerLockLease struct{}
+
+func TestBuildProvisioningFlagUsesInstanceFlagKeyID(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(nil, nil, nil, nil, nil, nil, &config.Config{
+		Container: config.ContainerConfig{
+			FlagGlobalSecret:        "active-secret-12345678901234567890",
+			ResolvedFlagSecretKeyID: "active",
+			ResolvedFlagSecrets: map[string]string{
+				"active":   "active-secret-12345678901234567890",
+				"previous": "previous-secret-123456789012345678",
+			},
+		},
+	}, nil)
+
+	flag, err := service.buildProvisioningFlag(&instancecontracts.Instance{
+		UserID:      7,
+		ChallengeID: 11,
+		Nonce:       "nonce-provision",
+		FlagKeyID:   "previous",
+	}, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{
+		ID:         11,
+		FlagType:   challengecontracts.FlagTypeDynamic,
+		FlagPrefix: "flag",
+	}))
+	if err != nil {
+		t.Fatalf("buildProvisioningFlag() error = %v", err)
+	}
+
+	expected := flagcrypto.GenerateDynamicFlag(7, 11, "previous-secret-123456789012345678", "nonce-provision", "flag")
+	if flag != expected {
+		t.Fatalf("flag = %q, want %q", flag, expected)
+	}
+}
 
 func (s *stubPracticeSchedulerLockStore) AcquireProvisioningSchedulerLock(context.Context, time.Duration) (practiceports.PracticeSchedulerLockLease, bool, error) {
 	if s.err != nil {

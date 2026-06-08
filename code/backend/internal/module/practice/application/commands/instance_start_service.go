@@ -431,7 +431,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		return nil, err
 	}
 
-	flag, nonce, err := s.buildInstanceFlag(scope.FlagSubjectID, challengeID, chal)
+	flag, nonce, flagKeyID, err := s.buildInstanceFlag(scope.FlagSubjectID, challengeID, chal)
 	if err != nil {
 		return nil, err
 	}
@@ -516,6 +516,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			ShareScope:  scope.ShareScope,
 			Status:      initialStatus,
 			Nonce:       nonce,
+			FlagKeyID:   flagKeyID,
 			ExpiresAt:   expiresAt,
 			MaxExtends:  s.config.Container.MaxExtends,
 		}

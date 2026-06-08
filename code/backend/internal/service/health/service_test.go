@@ -2,6 +2,7 @@ package health
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	miniredis "github.com/alicebob/miniredis/v2"
@@ -66,6 +67,27 @@ func TestCheckReadyFailsWhenDependencyIsDown(t *testing.T) {
 	}
 	if status.HealthStatus.Dependencies["redis"] != "down" {
 		t.Fatalf("redis dependency = %q, want down", status.HealthStatus.Dependencies["redis"])
+	}
+}
+
+func TestCheckReadyFailsWhenContainerFlagSecretCheckFails(t *testing.T) {
+	t.Parallel()
+
+	db := newHealthTestDB(t)
+	redis := newHealthTestRedis(t)
+	svc := NewService(testHealthConfig(), db, redis, NewReadinessState(), DependencyCheck{
+		Name: "container_flag_secret",
+		Check: func(context.Context) error {
+			return errors.New("fingerprint mismatch")
+		},
+	})
+
+	status := svc.CheckReady(context.Background())
+	if status.HTTPStatus() != 503 {
+		t.Fatalf("CheckReady() HTTPStatus = %d, want 503", status.HTTPStatus())
+	}
+	if status.HealthStatus.Dependencies["container_flag_secret"] != "down" {
+		t.Fatalf("container flag secret dependency = %q, want down", status.HealthStatus.Dependencies["container_flag_secret"])
 	}
 }
 

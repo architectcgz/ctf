@@ -22,6 +22,7 @@ import (
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	"ctf-platform/internal/platform/clustersecret"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -94,6 +95,7 @@ var internalAppTestSchemaModels = []any{
 	&challengeentity.ChallengePackageRevision{},
 	&contestcontracts.Submission{},
 	&instancecontracts.Instance{},
+	&clustersecret.RuntimeClusterSecret{},
 	&runtimeentity.PortAllocation{},
 	&runtimeentity.NetworkAllocation{},
 	&runtimeentity.RuntimeNode{},
