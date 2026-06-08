@@ -22,6 +22,16 @@ func (h *Handler) Get(c *gin.Context) {
 	response.SuccessWithStatus(c, status.HTTPStatus(), status.HealthStatus)
 }
 
+func (h *Handler) GetLive(c *gin.Context) {
+	status := h.service.CheckLive(c.Request.Context())
+	response.SuccessWithStatus(c, status.HTTPStatus(), status.HealthStatus)
+}
+
+func (h *Handler) GetReady(c *gin.Context) {
+	status := h.service.CheckReady(c.Request.Context())
+	response.SuccessWithStatus(c, status.HTTPStatus(), status.HealthStatus)
+}
+
 func (h *Handler) GetDB(c *gin.Context) {
 	if err := h.service.CheckDB(c.Request.Context()); err != nil {
 		response.SuccessWithStatus(c, http.StatusServiceUnavailable, gin.H{

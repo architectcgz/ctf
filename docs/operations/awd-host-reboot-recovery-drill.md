@@ -40,6 +40,7 @@
 
 ```bash
 docker compose -f docker/ctf/docker-compose.dev.yml ps
+curl -fsS http://127.0.0.1:8080/ready
 curl -fsS http://127.0.0.1:8080/health
 ```
 
@@ -95,6 +96,7 @@ sudo systemctl reboot
 ```bash
 docker compose -f docker/ctf/docker-compose.dev.yml up -d
 docker compose -f docker/ctf/docker-compose.dev.yml ps
+curl -fsS http://127.0.0.1:8080/ready
 curl -fsS http://127.0.0.1:8080/health
 ```
 

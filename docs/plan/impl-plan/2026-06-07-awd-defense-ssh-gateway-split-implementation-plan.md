@@ -157,6 +157,7 @@
   - gateway 是否只持有 ingress 所需依赖，没有回流 HTTP handler / contest owner 逻辑
   - interactive exec 是否按 `container_id -> node_id` 路由，而不是回退到默认 node
   - Dockerfile / entrypoint / compose 是否允许 API 与 gateway 共用镜像但独立运行
+  - 多 API 副本下，负载均衡只依赖进程级 `/ready` 摘流，不把 startup recovery / practice scheduler 的分布式锁 leader 状态误当成 HTTP readiness
 
 ## Working Design
 
@@ -179,6 +180,26 @@
 - 验证：
   - `TDD`
   - 先写结构/路由/bootstrap 失败测试，再做最小实现，最后用 compose dev 做一次真实 SSH 联调
+
+### Addendum: 多实例 API health / readiness 缺口
+
+- 背景：
+  - `ctf-api` 拆出 `2222` 后可以横向部署多个 HTTP API 副本。
+  - 后台全局编排已经通过 Redis owner lock 收敛，但 HTTP 健康检查仍只有 `/health`，且 `/health` 同时承担诊断和流量接入判断，容易在多实例部署里把依赖诊断、存活探测和摘流语义混在一起。
+- 决策：
+  - `/live`：只表示进程仍能响应，不检查 Postgres / Redis。
+  - `/ready`：表示当前 API 副本可接收流量，检查 Postgres、Redis 和本进程是否进入 shutdown drain。
+  - `/health`：继续作为依赖诊断聚合，保留原有 `ok / degraded` 语义。
+  - readiness 不读取 startup recovery / practice scheduler lock owner；standby API 副本只要依赖可用且未 drain，就应当可接 HTTP 流量。
+- 代码 owner：
+  - `internal/service/health`：health / live / ready 的状态构造与依赖检查。
+  - `internal/handler/health`：HTTP handler。
+  - `internal/app/router.go`：根路径与 `/api/v1` 路由接线。
+  - `internal/app/http_server.go`：shutdown 开始时先把 readiness 标为 draining，再停止后台任务。
+  - `internal/module/instance/application/commands/startup_runtime_recovery_service.go`：standby 副本未拿到 startup recovery lock 时，`Start()` 只启动后台选举循环并立即返回；初始拿到锁的 leader 仍同步完成恢复初始化后再返回。
+- 运行侧：
+  - `docker/ctf/docker-compose.dev.yml` 的 `ctf-api` healthcheck 改用 `/ready`。
+  - 运维手册中把 `/ready` 作为接流量检查，`/health` 作为依赖诊断保留。
 
 ### Task 1: 锁定结构边界与多 node 路由测试
 

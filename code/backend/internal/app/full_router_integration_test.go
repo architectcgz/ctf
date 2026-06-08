@@ -192,8 +192,8 @@ func isTeacherAuthoringAdminRoute(path string) bool {
 
 func isPublicRoute(method, path string) bool {
 	switch path {
-	case "/health", "/health/db", "/health/redis",
-		"/api/v1/health", "/api/v1/health/db", "/api/v1/health/redis",
+	case "/live", "/ready", "/health", "/health/db", "/health/redis",
+		"/api/v1/live", "/api/v1/ready", "/api/v1/health", "/api/v1/health/db", "/api/v1/health/redis",
 		"/api/v1/auth/register", "/api/v1/auth/login",
 		"/api/v1/auth/cas/status", "/api/v1/auth/cas/login", "/api/v1/auth/cas/callback",
 		"/ws/notifications",

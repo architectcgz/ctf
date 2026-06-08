@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
+	healthService "ctf-platform/internal/service/health"
 )
 
 type lifecycleCloser interface {
@@ -31,6 +32,7 @@ type HTTPServer struct {
 	cancelApp             context.CancelFunc
 	shutdownHTTPServer    func(context.Context) error
 	onHTTPShutdownStarted func()
+	readiness             *healthService.ReadinessState
 	logger                *zap.Logger
 }
 
@@ -57,6 +59,7 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 		appCtx:             root.Context(),
 		cancelApp:          root.Cancel,
 		shutdownHTTPServer: nil,
+		readiness:          routerRuntime.readiness,
 		logger:             log,
 	}
 	if err := server.startBackgroundJobs(); err != nil {
@@ -117,6 +120,9 @@ func (s *HTTPServer) shutdownHTTP(ctx context.Context, started chan<- struct{}) 
 	}
 	if s.server != nil {
 		s.server.SetKeepAlivesEnabled(false)
+	}
+	if s.readiness != nil {
+		s.readiness.MarkDraining()
 	}
 	if s.onHTTPShutdownStarted != nil {
 		s.onHTTPShutdownStarted()

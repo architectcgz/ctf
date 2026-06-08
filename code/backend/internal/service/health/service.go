@@ -2,7 +2,9 @@ package health
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"sync/atomic"
 
 	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -12,6 +14,8 @@ import (
 
 type Service interface {
 	Check(ctx context.Context) *Status
+	CheckLive(ctx context.Context) *Status
+	CheckReady(ctx context.Context) *Status
 	CheckDB(ctx context.Context) error
 	CheckRedis(ctx context.Context) error
 }
@@ -29,17 +33,41 @@ type Status struct {
 	healthy      bool
 }
 
-type service struct {
-	cfg   *config.Config
-	db    *gorm.DB
-	redis *redislib.Client
+type ReadinessState struct {
+	draining atomic.Bool
 }
 
-func NewService(cfg *config.Config, db *gorm.DB, redis *redislib.Client) Service {
+type service struct {
+	cfg       *config.Config
+	db        *gorm.DB
+	redis     *redislib.Client
+	readiness *ReadinessState
+}
+
+func NewReadinessState() *ReadinessState {
+	return &ReadinessState{}
+}
+
+func (s *ReadinessState) MarkDraining() {
+	if s == nil {
+		return
+	}
+	s.draining.Store(true)
+}
+
+func (s *ReadinessState) IsDraining() bool {
+	return s != nil && s.draining.Load()
+}
+
+func NewService(cfg *config.Config, db *gorm.DB, redis *redislib.Client, readiness *ReadinessState) Service {
+	if readiness == nil {
+		readiness = NewReadinessState()
+	}
 	return &service{
-		cfg:   cfg,
-		db:    db,
-		redis: redis,
+		cfg:       cfg,
+		db:        db,
+		redis:     redis,
+		readiness: readiness,
 	}
 }
 
@@ -64,19 +92,48 @@ func (s *service) Check(ctx context.Context) *Status {
 		status = "degraded"
 	}
 
-	return &Status{
-		HealthStatus: HealthStatus{
-			Status:       status,
-			Service:      s.cfg.App.Name,
-			Environment:  s.cfg.App.Env,
-			Dependencies: dependencies,
-			Version:      s.cfg.App.Version,
-		},
-		healthy: healthy,
+	return NewStatus(s.newHealthStatus(status, dependencies), healthy)
+}
+
+func (s *service) CheckLive(context.Context) *Status {
+	return NewStatus(s.newHealthStatus("ok", map[string]string{
+		"process": "ok",
+	}), true)
+}
+
+func (s *service) CheckReady(ctx context.Context) *Status {
+	dependencies := map[string]string{
+		"process":  "ok",
+		"postgres": "ok",
+		"redis":    "ok",
 	}
+	ready := true
+
+	if s.readiness.IsDraining() {
+		dependencies["process"] = "draining"
+		ready = false
+	}
+	if err := s.CheckDB(ctx); err != nil {
+		dependencies["postgres"] = "down"
+		ready = false
+	}
+	if err := s.CheckRedis(ctx); err != nil {
+		dependencies["redis"] = "down"
+		ready = false
+	}
+
+	status := "ready"
+	if !ready {
+		status = "not_ready"
+	}
+
+	return NewStatus(s.newHealthStatus(status, dependencies), ready)
 }
 
 func (s *service) CheckDB(ctx context.Context) error {
+	if s.db == nil {
+		return errors.New("postgres dependency is not configured")
+	}
 	sqlDB, err := s.db.WithContext(ctx).DB()
 	if err != nil {
 		return err
@@ -85,7 +142,27 @@ func (s *service) CheckDB(ctx context.Context) error {
 }
 
 func (s *service) CheckRedis(ctx context.Context) error {
+	if s.redis == nil {
+		return errors.New("redis dependency is not configured")
+	}
 	return s.redis.Ping(ctx).Err()
+}
+
+func (s *service) newHealthStatus(status string, dependencies map[string]string) HealthStatus {
+	return HealthStatus{
+		Status:       status,
+		Service:      s.cfg.App.Name,
+		Environment:  s.cfg.App.Env,
+		Dependencies: dependencies,
+		Version:      s.cfg.App.Version,
+	}
+}
+
+func NewStatus(status HealthStatus, healthy bool) *Status {
+	return &Status{
+		HealthStatus: status,
+		healthy:      healthy,
+	}
 }
 
 func (s *Status) HTTPStatus() int {

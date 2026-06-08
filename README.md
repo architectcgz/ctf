@@ -128,8 +128,10 @@ services:
 修改后建议从另一台局域网机器验证：
 
 ```bash
-curl http://<宿主机地址>:8080/health
+curl http://<宿主机地址>:8080/ready
 ```
+
+`/ready` 用于负载均衡或 compose healthcheck 判断当前 API 副本是否可接流量；`/health` 保留为依赖诊断聚合，`/live` 只表示进程仍在响应。
 
 再登录学生账号创建 Jeopardy 实例，确认页面展示的实例地址和“打开目标”返回地址已经不再是 `127.0.0.1`。
 

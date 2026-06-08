@@ -514,7 +514,7 @@ func TestStartupRuntimeRecoveryServiceCanRestartAfterStop(t *testing.T) {
 	}
 }
 
-func TestStartupRuntimeRecoveryServiceStandbyReplicaSkipsHeartbeatAndRecovery(t *testing.T) {
+func TestStartupRuntimeRecoveryServiceStandbyReplicaStartsWithoutLeaderReady(t *testing.T) {
 	t.Parallel()
 
 	reconciler := &startupRuntimeReconcilerStub{}
@@ -535,7 +535,18 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaSkipsHeartbeatAndRecovery(t 
 		startDone <- service.Start(ctx)
 	}()
 
-	time.Sleep(20 * time.Millisecond)
+	select {
+	case err := <-startDone:
+		if err != nil {
+			t.Fatalf("Start() error = %v", err)
+		}
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("expected standby Start() to return without waiting for leader readiness")
+	}
+	t.Cleanup(func() {
+		_ = service.Stop(context.Background())
+	})
+
 	if reconciler.called {
 		t.Fatal("expected standby replica to skip recovery")
 	}
@@ -544,28 +555,30 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaSkipsHeartbeatAndRecovery(t 
 	}
 
 	cancel()
-	if err := <-startDone; err == nil {
-		t.Fatal("expected standby Start() to unblock with context cancellation when no leader becomes ready")
-	}
 }
 
-func TestStartupRuntimeRecoveryServiceStandbyReplicaWaitsForLeaderReady(t *testing.T) {
+func TestStartupRuntimeRecoveryServiceStandbyReplicaCanTakeOverAfterAsyncStart(t *testing.T) {
 	t.Parallel()
 
 	startedAt := time.Date(2026, 5, 16, 10, 1, 0, 0, time.UTC)
 	var mu sync.Mutex
-	leaderReady := false
+	allowAcquire := false
+	heartbeatSaved := make(chan struct{}, 1)
 	stateStore := &startupRuntimeStateStoreStub{
 		loadFn: func(context.Context) (string, time.Time, bool, error) {
-			mu.Lock()
-			defer mu.Unlock()
-			if leaderReady {
-				return "boot-ready", startedAt, true, nil
-			}
-			return "boot-prev", startedAt.Add(-time.Minute), true, nil
+			return "boot-ready", startedAt.Add(-time.Minute), true, nil
 		},
 		acquireLockFn: func(context.Context, time.Duration) (*redislock.Lock, bool, error) {
-			return nil, false, nil
+			mu.Lock()
+			defer mu.Unlock()
+			return nil, allowAcquire, nil
+		},
+		saveFn: func(context.Context, string, time.Time) error {
+			select {
+			case heartbeatSaved <- struct{}{}:
+			default:
+			}
+			return nil
 		},
 	}
 	service := NewStartupRuntimeRecoveryService(&startupRuntimeReconcilerStub{}, nil, nil, stateStore, 0, nil)
@@ -582,25 +595,25 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaWaitsForLeaderReady(t *testi
 
 	select {
 	case err := <-startDone:
-		t.Fatalf("expected standby Start() to wait for leader readiness, got %v", err)
-	case <-time.After(40 * time.Millisecond):
-	}
-
-	mu.Lock()
-	leaderReady = true
-	mu.Unlock()
-
-	select {
-	case err := <-startDone:
 		if err != nil {
 			t.Fatalf("Start() error = %v", err)
 		}
-	case <-time.After(250 * time.Millisecond):
-		t.Fatal("expected standby Start() to return after leader became ready")
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("expected standby Start() to return before leader is ready")
 	}
 	t.Cleanup(func() {
 		_ = service.Stop(context.Background())
 	})
+
+	mu.Lock()
+	allowAcquire = true
+	mu.Unlock()
+
+	select {
+	case <-heartbeatSaved:
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("expected async standby loop to take over and record heartbeat")
+	}
 }
 
 func TestStartupRuntimeRecoveryServiceLeaderFailoverWithinSafeWindowSkipsRecovery(t *testing.T) {
