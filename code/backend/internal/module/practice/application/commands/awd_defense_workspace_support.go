@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -228,7 +228,7 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 		if s.config != nil {
 			secret = s.config.Container.FlagGlobalSecret
 		}
-		checkerToken := contestdomain.BuildAWDCheckerToken(contestID, teamID, serviceID, challengeID, secret)
+		checkerToken := contestcontracts.BuildAWDCheckerToken(contestID, teamID, serviceID, challengeID, secret)
 		if strings.TrimSpace(checkerToken) == "" {
 			return nil, fmt.Errorf("awd checker token secret is not configured")
 		}

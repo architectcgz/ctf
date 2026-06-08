@@ -16,7 +16,6 @@ import (
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -177,10 +176,10 @@ func TestServiceCreateContainerMarksAWDImagesAsAWDComposeService(t *testing.T) {
 	if _, _, _, _, err := service.CreateContainer(context.Background(), "127.0.0.1:5000/awd/awd-supply-ticket:latest", nil, 0); err != nil {
 		t.Fatalf("CreateContainer() error = %v", err)
 	}
-	if got := engine.createdContainerCfg.Labels[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+	if got := engine.createdContainerCfg.Labels[runtimecontracts.ComposeServiceLabelKey]; got != runtimecontracts.ComposeServiceAWD {
 		t.Fatalf("expected awd compose service label, got %q", got)
 	}
-	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+	if got := engine.createdNetworkLabel[runtimecontracts.ComposeServiceLabelKey]; got != runtimecontracts.ComposeServiceAWD {
 		t.Fatalf("expected awd network label, got %q", got)
 	}
 }
@@ -223,10 +222,10 @@ func TestServiceCreateTopologyMarksAWDWorkspaceAsAWDComposeService(t *testing.T)
 	if err != nil {
 		t.Fatalf("CreateTopology() error = %v", err)
 	}
-	if got := engine.createdContainerCfg.Labels[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+	if got := engine.createdContainerCfg.Labels[runtimecontracts.ComposeServiceLabelKey]; got != runtimecontracts.ComposeServiceAWD {
 		t.Fatalf("expected awd compose service label, got %q", got)
 	}
-	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+	if got := engine.createdNetworkLabel[runtimecontracts.ComposeServiceLabelKey]; got != runtimecontracts.ComposeServiceAWD {
 		t.Fatalf("expected awd network label, got %q", got)
 	}
 	if engine.createdNetworkSubnet != "" {

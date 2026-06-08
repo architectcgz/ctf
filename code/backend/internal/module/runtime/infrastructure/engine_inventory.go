@@ -7,7 +7,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 
-	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -20,8 +20,8 @@ func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeports.Mana
 	containers, err := cli.ContainerList(ctx, container.ListOptions{
 		All: true,
 		Filters: filters.NewArgs(
-			filters.Arg("label", runtimedomain.ProjectFilter()),
-			filters.Arg("label", runtimedomain.ManagedByFilter()),
+			filters.Arg("label", runtimecontracts.ProjectFilter()),
+			filters.Arg("label", runtimecontracts.ManagedByFilter()),
 		),
 	})
 	if err != nil {

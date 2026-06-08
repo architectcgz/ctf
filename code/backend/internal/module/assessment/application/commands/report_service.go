@@ -20,6 +20,7 @@ import (
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	assessmentconfig "ctf-platform/internal/module/assessment/config"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
@@ -141,7 +142,7 @@ func NewReportService(
 		logger = zap.NewNop()
 	}
 
-	cfg = assessmentdomain.NormalizeReportConfig(cfg)
+	cfg = assessmentconfig.NormalizeReportConfig(cfg)
 	return &ReportService{
 		lifecycleRepo:     lifecycleRepo,
 		userRepo:          userRepo,

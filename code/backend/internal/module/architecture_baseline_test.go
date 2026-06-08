@@ -2,16 +2,9 @@ package module
 
 var reviewedApplicationConcreteImportExceptions = map[string]struct{}{}
 
-var reviewedCrossModulePrivateImportExceptions = map[string]struct{}{
-	"contest/infrastructure/docker_checker_runner.go -> ctf-platform/internal/module/runtime/domain":                {},
-	"practice/application/commands/awd_defense_workspace_support.go -> ctf-platform/internal/module/contest/domain": {},
-}
+var reviewedCrossModulePrivateImportExceptions = map[string]struct{}{}
 
-var reviewedDomainInternalImportExceptions = map[string]struct{}{
-	"assessment/domain/profile.go -> ctf-platform/internal/config":        {},
-	"assessment/domain/recommendation.go -> ctf-platform/internal/config": {},
-	"assessment/domain/report.go -> ctf-platform/internal/config":         {},
-}
+var reviewedDomainInternalImportExceptions = map[string]struct{}{}
 
 var moduleDependencyBaseline = map[string]struct{}{
 	"assessment -> contest":        {},
@@ -68,10 +61,7 @@ var reviewedTransactionBoundaryFiles = map[string]struct{}{
 	"runtime/infrastructure/repository.go":                              {},
 }
 
-var reviewedOversizedRuntimeModuleFiles = map[string]struct{}{
-	"contest/runtime/module.go":   {},
-	"challenge/runtime/module.go": {},
-}
+var reviewedOversizedRuntimeModuleFiles = map[string]struct{}{}
 
 var reviewedTimeNowFiles = map[string]struct{}{
 	"assessment/application/commands/profile_service.go":                   {},

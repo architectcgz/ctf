@@ -10,8 +10,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
+	assessmentconfig "ctf-platform/internal/module/assessment/config"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
-	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -44,7 +44,7 @@ func NewRecommendationService(repo recommendationRepository, challengeRepo asses
 		challengeRepo: challengeRepo,
 		cache:         cache,
 		logger:        logger,
-		config:        assessmentdomain.NormalizeRecommendationConfig(cfg),
+		config:        assessmentconfig.NormalizeRecommendationConfig(cfg),
 	}
 }
 

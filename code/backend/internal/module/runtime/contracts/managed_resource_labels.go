@@ -1,4 +1,4 @@
-package domain
+package contracts
 
 import "fmt"
 
@@ -17,17 +17,17 @@ const (
 	ComposeServiceJeopardy      = "jeopardy"
 )
 
-// ProjectFilter 返回 ctf 项目资源的统一标签过滤条件。
+// ProjectFilter returns the common label filter for CTF-managed resources.
 func ProjectFilter() string {
 	return fmt.Sprintf("%s=%s", ProjectLabelKey, ProjectLabelValue)
 }
 
-// ManagedByFilter 返回受管容器/网络的统一标签过滤条件。
+// ManagedByFilter returns the common label filter for platform-managed resources.
 func ManagedByFilter() string {
 	return fmt.Sprintf("%s=%s", ManagedByLabelKey, ManagedByLabelValue)
 }
 
-// ManagedProjectLabels 返回平台受管资源共享的基础标签。
+// ManagedProjectLabels returns the baseline labels shared by platform-managed resources.
 func ManagedProjectLabels() map[string]string {
 	return map[string]string{
 		ProjectLabelKey:        ProjectLabelValue,
@@ -36,7 +36,7 @@ func ManagedProjectLabels() map[string]string {
 	}
 }
 
-// ChallengeInstanceLabels 返回题目实例容器/网络的统一标签。
+// ChallengeInstanceLabels returns labels used for challenge instance containers and networks.
 func ChallengeInstanceLabels(service string) map[string]string {
 	labels := ManagedProjectLabels()
 	labels[ChallengeInstanceLabelKey] = ChallengeInstanceLabelValue
@@ -44,7 +44,7 @@ func ChallengeInstanceLabels(service string) map[string]string {
 	return labels
 }
 
-// CheckerSandboxLabels 返回 AWD checker sandbox 的统一标签。
+// CheckerSandboxLabels returns labels used for AWD checker sandbox containers.
 func CheckerSandboxLabels() map[string]string {
 	labels := ManagedProjectLabels()
 	labels[CheckerRoleLabelKey] = CheckerRoleLabelValue

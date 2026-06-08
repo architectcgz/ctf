@@ -11,6 +11,7 @@ import (
 
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
+	assessmentconfig "ctf-platform/internal/module/assessment/config"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
@@ -46,7 +47,7 @@ func NewProfileService(repo profileCommandRepository, lockStore assessmentports.
 	return &Service{
 		repo:      repo,
 		lockStore: lockStore,
-		config:    assessmentdomain.NormalizeAssessmentConfig(cfg),
+		config:    assessmentconfig.NormalizeAssessmentConfig(cfg),
 		logger:    logger,
 	}
 }

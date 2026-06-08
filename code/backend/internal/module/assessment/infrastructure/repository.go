@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
+	assessmentconfig "ctf-platform/internal/module/assessment/config"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
@@ -35,7 +36,7 @@ func WithPublishedDimensionTotalCache(store assessmentports.AssessmentDimensionT
 			return
 		}
 		r.dimensionTotalCache = store
-		r.dimensionTotalCacheTTL = assessmentdomain.NormalizeAssessmentConfig(config.AssessmentConfig{
+		r.dimensionTotalCacheTTL = assessmentconfig.NormalizeAssessmentConfig(config.AssessmentConfig{
 			DimensionTotalCacheTTL: ttl,
 		}).DimensionTotalCacheTTL
 	}

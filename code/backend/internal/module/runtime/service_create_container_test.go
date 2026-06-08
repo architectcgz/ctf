@@ -7,7 +7,7 @@ import (
 
 	"ctf-platform/internal/config"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -52,13 +52,13 @@ func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
 	if _, exists := engine.createdContainerCfg.Ports["80"]; !exists {
 		t.Fatalf("expected container to publish resolved service port 80, got %+v", engine.createdContainerCfg.Ports)
 	}
-	if got := engine.createdContainerCfg.Labels[runtimedomain.ComposeProjectLabelKey]; got != runtimedomain.ProjectLabelValue {
-		t.Fatalf("expected compose project label %q, got %q", runtimedomain.ProjectLabelValue, got)
+	if got := engine.createdContainerCfg.Labels[runtimecontracts.ComposeProjectLabelKey]; got != runtimecontracts.ProjectLabelValue {
+		t.Fatalf("expected compose project label %q, got %q", runtimecontracts.ProjectLabelValue, got)
 	}
-	if got := engine.createdContainerCfg.Labels[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceJeopardy {
+	if got := engine.createdContainerCfg.Labels[runtimecontracts.ComposeServiceLabelKey]; got != runtimecontracts.ComposeServiceJeopardy {
 		t.Fatalf("expected jeopardy compose service label, got %q", got)
 	}
-	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceJeopardy {
+	if got := engine.createdNetworkLabel[runtimecontracts.ComposeServiceLabelKey]; got != runtimecontracts.ComposeServiceJeopardy {
 		t.Fatalf("expected jeopardy network label, got %q", got)
 	}
 	if engine.createdNetworkSubnet != "10.11.0.0/29" {

@@ -735,14 +735,14 @@ func appendUniqueSubnet(items []string, subnet string) []string {
 }
 
 func managedContainerLabels(req *runtimeports.TopologyCreateRequest) map[string]string {
-	return runtimedomain.ChallengeInstanceLabels(resolveManagedComposeService(req))
+	return runtimecontracts.ChallengeInstanceLabels(resolveManagedComposeService(req))
 }
 
 func resolveManagedComposeService(req *runtimeports.TopologyCreateRequest) string {
 	if isAWDTopology(req) {
-		return runtimedomain.ComposeServiceAWD
+		return runtimecontracts.ComposeServiceAWD
 	}
-	return runtimedomain.ComposeServiceJeopardy
+	return runtimecontracts.ComposeServiceJeopardy
 }
 
 func isAWDTopology(req *runtimeports.TopologyCreateRequest) bool {

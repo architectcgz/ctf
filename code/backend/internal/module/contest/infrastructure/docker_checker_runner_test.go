@@ -17,7 +17,7 @@ import (
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
-	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestDockerCheckerRunnerBuildsLockedDownContainerSpec(t *testing.T) {
@@ -87,10 +87,10 @@ func TestDockerCheckerRunnerBuildsLockedDownContainerSpec(t *testing.T) {
 	if spec.ContainerConfig.Labels["ctf.role"] != "checker-sandbox" {
 		t.Fatalf("missing checker-sandbox label: %+v", spec.ContainerConfig.Labels)
 	}
-	if spec.ContainerConfig.Labels[runtimedomain.ComposeProjectLabelKey] != runtimedomain.ProjectLabelValue {
+	if spec.ContainerConfig.Labels[runtimecontracts.ComposeProjectLabelKey] != runtimecontracts.ProjectLabelValue {
 		t.Fatalf("missing compose project label: %+v", spec.ContainerConfig.Labels)
 	}
-	if spec.ContainerConfig.Labels[runtimedomain.ComposeServiceLabelKey] != runtimedomain.ComposeServiceAWD {
+	if spec.ContainerConfig.Labels[runtimecontracts.ComposeServiceLabelKey] != runtimecontracts.ComposeServiceAWD {
 		t.Fatalf("missing awd compose service label: %+v", spec.ContainerConfig.Labels)
 	}
 }

@@ -1,11 +1,9 @@
 package domain
 
 import (
-	"strings"
 	"time"
 
 	"ctf-platform/internal/apperror"
-	"ctf-platform/internal/config"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/internal/shared/taxonomy"
@@ -239,26 +237,4 @@ func ClassReportDifficultyOrder() []string {
 		taxonomy.DifficultyHard,
 		taxonomy.DifficultyInsane,
 	}
-}
-
-func NormalizeReportConfig(cfg config.ReportConfig) config.ReportConfig {
-	if strings.TrimSpace(cfg.StorageDir) == "" {
-		cfg.StorageDir = "storage/exports"
-	}
-	if cfg.DefaultFormat != assessmententity.ReportFormatPDF && cfg.DefaultFormat != assessmententity.ReportFormatExcel {
-		cfg.DefaultFormat = assessmententity.ReportFormatPDF
-	}
-	if cfg.PersonalTimeout <= 0 {
-		cfg.PersonalTimeout = 30 * time.Second
-	}
-	if cfg.ClassTimeout <= 0 {
-		cfg.ClassTimeout = 2 * time.Minute
-	}
-	if cfg.FileTTL <= 0 {
-		cfg.FileTTL = 7 * 24 * time.Hour
-	}
-	if cfg.MaxWorkers <= 0 {
-		cfg.MaxWorkers = 2
-	}
-	return cfg
 }

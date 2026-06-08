@@ -11,8 +11,8 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/config"
+	assessmentconfig "ctf-platform/internal/module/assessment/config"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
-	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentcachekeys "ctf-platform/internal/module/assessment/infrastructure/cachekeys"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 )
@@ -54,7 +54,7 @@ func NewProfileLockStore(cache *redislib.Client, cfg config.AssessmentConfig) *P
 	if cache == nil {
 		return nil
 	}
-	normalized := assessmentdomain.NormalizeAssessmentConfig(cfg)
+	normalized := assessmentconfig.NormalizeAssessmentConfig(cfg)
 	return &ProfileLockStore{
 		cache:  cache,
 		prefix: normalized.RedisKeyPrefix,

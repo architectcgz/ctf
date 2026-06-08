@@ -22,7 +22,7 @@ import (
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
-	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type dockerCheckerClient interface {
@@ -262,7 +262,7 @@ func (r *DockerCheckerRunner) buildContainerSpec(job contestports.CheckerRunJob)
 		WorkingDir:      workDir,
 		User:            strings.TrimSpace(r.cfg.User),
 		NetworkDisabled: networkDisabled,
-		Labels:          runtimedomain.CheckerSandboxLabels(),
+		Labels:          runtimecontracts.CheckerSandboxLabels(),
 		AttachStdout:    true,
 		AttachStderr:    true,
 	}

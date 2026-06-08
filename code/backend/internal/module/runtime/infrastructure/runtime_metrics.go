@@ -11,7 +11,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
 
-	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -34,8 +34,8 @@ func (e *Engine) RemoveImage(ctx context.Context, imageRef string) error {
 func (e *Engine) ListManagedContainerStats(ctx context.Context) ([]runtimeports.ManagedContainerStat, error) {
 	containers, err := e.cli.ContainerList(ctx, containertypes.ListOptions{
 		Filters: filters.NewArgs(
-			filters.Arg("label", runtimedomain.ProjectFilter()),
-			filters.Arg("label", runtimedomain.ManagedByFilter()),
+			filters.Arg("label", runtimecontracts.ProjectFilter()),
+			filters.Arg("label", runtimecontracts.ManagedByFilter()),
 		),
 	})
 	if err != nil {
