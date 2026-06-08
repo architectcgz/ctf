@@ -105,4 +105,4 @@
   - `go test ./internal/module/practice/application/commands -count=1` failed because existing Docker container `ctf-instance-iot-c8-t16-s23` binds host port `30000`, causing unrelated AWD readiness tests to fail with `address already in use`.
 - Review focus:
   - Test coverage preservation and clean ownership boundaries.
-  - Round 2 independent review archived at `docs/reviews/backend/2026-06-08-worktree-review-split-practice-submission-tests-round2.md`.
+  - Round 2 independent review archived at `docs/reviews/backend/archive/2026-06/2026-06-08-worktree-review-split-practice-submission-tests-round2.md`.

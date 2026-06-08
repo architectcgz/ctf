@@ -93,7 +93,7 @@
 
 - Goal：在拆分完成后做一次 backend review，确认没有把结构债换成更多间接层。
 - Touched files：
-  - `docs/reviews/backend/2026-06-03-backend-router-admin-contest-awd-split-review.md`
+  - `docs/reviews/backend/archive/2026-06/2026-06-03-backend-router-admin-contest-awd-split-review.md`
 - Validation：
   - `cd code/backend && go test ./internal/app -count=1`
 - Review focus：

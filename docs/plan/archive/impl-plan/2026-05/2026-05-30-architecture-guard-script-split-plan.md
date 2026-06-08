@@ -86,7 +86,7 @@
   - `docs/architecture/README.md`
   - `docs/architecture/backend/README.md`
   - `docs/architecture/frontend/README.md`
-  - `docs/reviews/architecture/2026-05-30-architecture-guard-script-split-review.md`
+  - `docs/reviews/architecture/archive/2026-05/2026-05-30-architecture-guard-script-split-review.md`
 
 ## 验证
 

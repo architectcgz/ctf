@@ -18,7 +18,7 @@
 - `code/backend/internal/app/router_admin_contest_routes.go`
 - `code/backend/internal/app/router_session_routes_test.go`
 - `code/backend/internal/app/router_test.go`
-- `docs/reviews/backend/2026-06-03-backend-router-admin-contest-awd-split-review.md`
+- `docs/reviews/backend/archive/2026-06/2026-06-03-backend-router-admin-contest-awd-split-review.md`
 
 ## Current problem
 
@@ -84,7 +84,7 @@
 
 - Goal：记录本轮 self-review 结论与独立 reviewer gate 状态。
 - Touched files：
-  - `docs/reviews/backend/2026-06-03-backend-router-admin-identity-ops-split-review.md`
+  - `docs/reviews/backend/archive/2026-06/2026-06-03-backend-router-admin-identity-ops-split-review.md`
 
 ## Expected change surface
 

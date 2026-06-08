@@ -39,8 +39,8 @@
   - `code/backend/internal/module/runtime/infrastructure/platform_runtime_state_store.go`
   - `code/backend/internal/app/http_server.go`
 - Related prior work:
-  - `docs/reviews/backend/2026-06-08-multi-instance-distributed-lock-hardening-review.md`
-  - `docs/reviews/backend/2026-06-08-gate-review-multi-instance-distributed-lock-hardening.md`
+  - `docs/reviews/backend/archive/2026-06/2026-06-08-multi-instance-distributed-lock-hardening-review.md`
+  - `docs/reviews/backend/archive/2026-06/2026-06-08-gate-review-multi-instance-distributed-lock-hardening.md`
 
 ## Task Classification
 

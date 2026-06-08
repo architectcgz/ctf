@@ -20,8 +20,8 @@
 
 - `docs/reviews/frontend/README.md`
 - `docs/reviews/frontend/ctf-frontend-audit-20260422.md`
-- `docs/reviews/general/2026-05-05-awd-defense-content-page-review.md`
-- `docs/reviews/architecture/2026-05-06-awd-defense-workspace-review.md`
+- `docs/reviews/general/archive/2026-05/2026-05-05-awd-defense-content-page-review.md`
+- `docs/reviews/architecture/archive/2026-05/2026-05-06-awd-defense-workspace-review.md`
 - `code/frontend/src/components/contests/ContestAWDWorkspacePanel.vue`
 - `code/frontend/src/components/contests/awd/AWDDefenseServiceList.vue`
 - `code/frontend/src/components/contests/awd/AWDDefenseOperationsPanel.vue`

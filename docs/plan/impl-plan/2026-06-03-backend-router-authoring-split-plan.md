@@ -19,7 +19,7 @@
 - `code/backend/internal/app/full_router_integration_test.go`
 - `code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - `code/backend/internal/app/practice_flow_integration_test.go`
-- `docs/reviews/backend/2026-06-03-backend-router-user-teacher-split-review.md`
+- `docs/reviews/backend/archive/2026-06/2026-06-03-backend-router-user-teacher-split-review.md`
 
 ## Current problem
 
@@ -98,7 +98,7 @@
 
 - Goal：记录本轮 self-review 与独立 reviewer gate 状态。
 - Touched files：
-  - `docs/reviews/backend/2026-06-03-backend-router-authoring-split-review.md`
+  - `docs/reviews/backend/archive/2026-06/2026-06-03-backend-router-authoring-split-review.md`
 
 ## Expected change surface
 

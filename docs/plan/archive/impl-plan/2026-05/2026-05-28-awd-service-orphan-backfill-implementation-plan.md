@@ -25,7 +25,7 @@
 
 - 开发库 `ctf`
 - `.harness/reuse-decisions/awd-service-orphan-backfill.md`
-- `docs/reviews/backend/2026-05-28-awd-service-orphan-backfill-review.md`
+- `docs/reviews/backend/archive/2026-05/2026-05-28-awd-service-orphan-backfill-review.md`
 - `docs/operations/2026-05-28-awd-service-orphan-backfill.md`
 
 ## 兼容性与风险
