@@ -26,7 +26,6 @@ import (
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
 )
 
@@ -520,7 +519,7 @@ func TestAWDServicePreviewCheckerReturnsQuorumPassWhenTwoOfThreeAttemptsSucceed(
 	}
 }
 
-func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testing.T) {
+func TestAWDServicePreviewCheckerEnqueuesRealtimeProgressRelayForRequester(t *testing.T) {
 	db := newAWDTestDB(t)
 	mini, err := miniredis.Run()
 	if err != nil {
@@ -571,22 +570,13 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 			},
 		},
 	}
-	bus := platformevents.NewBus()
-	received := make(chan contestcontracts.AWDPreviewProgressEvent, 8)
-	bus.Subscribe(contestcontracts.EventAWDPreviewProgress, func(_ context.Context, evt platformevents.Event) error {
-		payload, ok := evt.Payload.(contestcontracts.AWDPreviewProgressEvent)
-		if !ok {
-			t.Fatalf("unexpected payload type: %T", evt.Payload)
-		}
-		received <- payload
-		return nil
-	})
 
 	awdRepo := newAWDCommandRepositoryForTest(db)
 	contestRepo := contestinfra.NewRepository(db)
 	imageRepo, awdChallengeRepo := newAWDPreviewRuntimeLookupsForTest(db)
 	stateStore := contestinfra.NewAWDRoundStateStore(redisClient)
 	previewTokenStore := contestinfra.NewAWDCheckerPreviewTokenStore(redisClient)
+	outboxRepo := contestinfra.NewRealtimeOutboxRepository(db)
 	service := contestcmd.NewAWDService(
 		awdRepo,
 		contestRepo,
@@ -600,7 +590,7 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 		awdChallengeRepo,
 		nil,
 	)
-	service.SetEventBus(bus)
+	service.SetRealtimeOutbox(outboxRepo)
 
 	ctx := contestcmd.WithAWDPreviewRequester(context.Background(), 9001)
 	_, err = service.PreviewChecker(ctx, 281, contestcmd.PreviewCheckerInput{
@@ -623,35 +613,45 @@ func TestAWDServicePreviewCheckerBroadcastsRealtimeProgressToRequester(t *testin
 	}
 
 	expectedPhases := []string{"prepare", "attempt-1", "attempt-2", "attempt-3", "summary"}
-	gotEvents := make([]contestcontracts.AWDPreviewProgressEvent, 0, len(expectedPhases))
-	for range expectedPhases {
-		select {
-		case evt := <-received:
-			gotEvents = append(gotEvents, evt)
-		case <-time.After(time.Second):
-			t.Fatalf("expected %d realtime progress events, got %d", len(expectedPhases), len(gotEvents))
-		}
+	pendingRelays, err := outboxRepo.ListPendingRealtimeRelays(context.Background(), time.Now().Add(time.Minute), 16)
+	if err != nil {
+		t.Fatalf("ListPendingRealtimeRelays() error = %v", err)
+	}
+	if len(pendingRelays) != len(expectedPhases) {
+		t.Fatalf("expected %d pending progress relays, got %d", len(expectedPhases), len(pendingRelays))
 	}
 	for index, expectedPhase := range expectedPhases {
-		evt := gotEvents[index]
-		if evt.UserID != 9001 {
-			t.Fatalf("unexpected broadcast user: %d", evt.UserID)
+		relay := pendingRelays[index].Relay
+		if relay.EventName != contestcontracts.EventAWDPreviewProgress {
+			t.Fatalf("relay %d unexpected event name: %s", index, relay.EventName)
 		}
-		if evt.PhaseKey != expectedPhase {
-			t.Fatalf("event %d unexpected phase_key: %s", index, evt.PhaseKey)
+		if relay.Delivery != contestcontracts.RealtimeDeliveryUser {
+			t.Fatalf("relay %d unexpected delivery: %s", index, relay.Delivery)
 		}
-		if evt.PreviewRequestID != "preview-progress-1" {
-			t.Fatalf("event %d unexpected preview_request_id: %s", index, evt.PreviewRequestID)
+		if relay.RecipientUserID == nil || *relay.RecipientUserID != 9001 {
+			t.Fatalf("relay %d unexpected recipient: %+v", index, relay.RecipientUserID)
 		}
-		if evt.Status != "running" {
-			t.Fatalf("event %d unexpected status: %s", index, evt.Status)
+		payload, ok := relay.Payload.(contestcontracts.AWDPreviewProgressRelayPayload)
+		if !ok {
+			t.Fatalf("relay %d unexpected payload type: %T", index, relay.Payload)
+		}
+		if payload.PhaseKey != expectedPhase {
+			t.Fatalf("relay %d unexpected phase_key: %s", index, payload.PhaseKey)
+		}
+		if payload.PreviewRequestID != "preview-progress-1" {
+			t.Fatalf("relay %d unexpected preview_request_id: %s", index, payload.PreviewRequestID)
+		}
+		if payload.Status != "running" {
+			t.Fatalf("relay %d unexpected status: %s", index, payload.Status)
 		}
 	}
-	if gotEvents[1].Attempt != 1 {
-		t.Fatalf("attempt-1 event missing attempt: %+v", gotEvents[1])
+	attemptOnePayload := pendingRelays[1].Relay.Payload.(contestcontracts.AWDPreviewProgressRelayPayload)
+	if attemptOnePayload.Attempt != 1 {
+		t.Fatalf("attempt-1 relay missing attempt: %+v", attemptOnePayload)
 	}
-	if gotEvents[3].Attempt != 3 {
-		t.Fatalf("attempt-3 event missing attempt: %+v", gotEvents[3])
+	attemptThreePayload := pendingRelays[3].Relay.Payload.(contestcontracts.AWDPreviewProgressRelayPayload)
+	if attemptThreePayload.Attempt != 3 {
+		t.Fatalf("attempt-3 relay missing attempt: %+v", attemptThreePayload)
 	}
 }
 
