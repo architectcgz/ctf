@@ -59,7 +59,13 @@ type StartupRuntimeRecoveryService struct {
 	mu      sync.Mutex
 	cancel  context.CancelFunc
 	started bool
+	ready   *startupRuntimeStartReady
 	wg      sync.WaitGroup
+}
+
+type startupRuntimeStartReady struct {
+	done chan struct{}
+	err  error
 }
 
 func NewStartupRuntimeRecoveryService(
@@ -106,30 +112,45 @@ func (s *StartupRuntimeRecoveryService) SetLockTTL(ttl time.Duration) *StartupRu
 	return s
 }
 
-func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) error {
+func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) (err error) {
 	if ctx == nil {
 		return fmt.Errorf("startup runtime recovery requires context")
 	}
 
 	s.mu.Lock()
 	if s.started {
+		ready := s.ready
 		s.mu.Unlock()
+		if ready != nil {
+			return ready.wait(ctx)
+		}
 		return nil
 	}
 	runCtx, cancel := context.WithCancel(ctx)
+	ready := &startupRuntimeStartReady{done: make(chan struct{})}
 	s.cancel = cancel
 	s.started = true
+	s.ready = ready
 	s.mu.Unlock()
 
 	started := false
 	defer func() {
+		ready.complete(err)
 		if started {
+			s.mu.Lock()
+			if s.ready == ready {
+				s.ready = nil
+			}
+			s.mu.Unlock()
 			return
 		}
 		cancel()
 		s.mu.Lock()
 		s.cancel = nil
 		s.started = false
+		if s.ready == ready {
+			s.ready = nil
+		}
 		s.mu.Unlock()
 	}()
 
@@ -159,6 +180,26 @@ func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) error {
 	}
 	started = true
 	return nil
+}
+
+func (r *startupRuntimeStartReady) wait(ctx context.Context) error {
+	if r == nil {
+		return nil
+	}
+	select {
+	case <-r.done:
+		return r.err
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func (r *startupRuntimeStartReady) complete(err error) {
+	if r == nil {
+		return
+	}
+	r.err = err
+	close(r.done)
 }
 
 func (s *StartupRuntimeRecoveryService) Stop(ctx context.Context) error {
