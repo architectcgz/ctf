@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -11,6 +12,44 @@ import (
 
 	"ctf-platform/internal/infrastructure/redislock"
 )
+
+type blockingRefreshLease struct{}
+
+func (l blockingRefreshLease) Refresh(ctx context.Context, _ time.Duration) (bool, error) {
+	<-ctx.Done()
+	return false, ctx.Err()
+}
+
+func (l blockingRefreshLease) Key(context.Context) string {
+	return "contest:blocking-refresh"
+}
+
+func (l blockingRefreshLease) Release(context.Context) (bool, error) {
+	return true, nil
+}
+
+func TestRedisLockKeepaliveCancelsWhenRefreshBlocksPastTTL(t *testing.T) {
+	t.Parallel()
+
+	baseCtx, cancel := context.WithCancel(context.Background())
+	runCtx, stop := startRedisLockKeepalive(baseCtx, zap.NewNop(), blockingRefreshLease{}, redisLockKeepaliveConfig{
+		Name: "contest_status_updater",
+		TTL:  60 * time.Millisecond,
+	})
+	defer func() {
+		cancel()
+		stop()
+	}()
+
+	select {
+	case <-runCtx.Done():
+		if !errors.Is(runCtx.Err(), context.Canceled) {
+			t.Fatalf("expected canceled run context, got %v", runCtx.Err())
+		}
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("expected keepalive to cancel run context when refresh blocks past ttl")
+	}
+}
 
 func TestRedisLockKeepaliveRefreshesOwnedLock(t *testing.T) {
 	mini, err := miniredis.Run()

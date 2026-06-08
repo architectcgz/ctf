@@ -13,6 +13,7 @@ import (
 
 	"ctf-platform/internal/infrastructure/redislock"
 	"ctf-platform/internal/module/runtime/infrastructure/cachekeys"
+	"ctf-platform/internal/shared/lockkeepalive"
 )
 
 type Cleaner struct {
@@ -94,23 +95,29 @@ func (c *Cleaner) runOnce() {
 		c.logger.Debug("实例清理任务已由其他节点执行")
 		return
 	}
+	runCtx := ctx
 	if lock != nil {
+		var stopKeepalive func()
+		runCtx, stopKeepalive = lockkeepalive.Start(ctx, c.logger, lock, "runtime_cleaner", c.lockTTL)
 		defer func() {
-			released, releaseErr := lock.Release(ctx)
+			stopKeepalive()
+			releaseCtx, releaseCancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+			defer releaseCancel()
+			released, releaseErr := lock.Release(releaseCtx)
 			if releaseErr != nil {
 				if !errors.Is(releaseErr, context.Canceled) {
-					c.logger.Error("释放实例清理任务锁失败", zap.String("lock_key", lock.Key(ctx)), zap.Error(releaseErr))
+					c.logger.Error("释放实例清理任务锁失败", zap.String("lock_key", lock.Key(releaseCtx)), zap.Error(releaseErr))
 				}
 				return
 			}
 			if !released && ctx.Err() == nil {
-				c.logger.Warn("实例清理任务锁已过期或被覆盖", zap.String("lock_key", lock.Key(ctx)))
+				c.logger.Warn("实例清理任务锁已过期或被覆盖", zap.String("lock_key", lock.Key(releaseCtx)))
 			}
 		}()
 	}
 
 	c.logger.Info("开始对账实例运行时")
-	if err := c.service.ReconcileLostActiveRuntimes(ctx); err != nil {
+	if err := c.service.ReconcileLostActiveRuntimes(runCtx); err != nil {
 		if !errors.Is(err, context.Canceled) {
 			c.logger.Error("对账实例运行时失败", zap.Error(err))
 		}
@@ -118,13 +125,13 @@ func (c *Cleaner) runOnce() {
 	}
 
 	c.logger.Info("开始清理过期实例")
-	if err := c.service.CleanExpiredInstances(ctx); err != nil {
+	if err := c.service.CleanExpiredInstances(runCtx); err != nil {
 		if !errors.Is(err, context.Canceled) {
 			c.logger.Error("清理过期实例失败", zap.Error(err))
 		}
 		return
 	}
-	if err := c.service.CleanupOrphans(ctx); err != nil {
+	if err := c.service.CleanupOrphans(runCtx); err != nil {
 		if !errors.Is(err, context.Canceled) {
 			c.logger.Error("清理孤儿容器失败", zap.Error(err))
 		}

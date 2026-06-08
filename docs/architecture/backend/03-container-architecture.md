@@ -16,6 +16,7 @@
 - `code/backend/internal/module/runtime/runtime/module.go`、`code/backend/internal/module/runtime/runtime/adapters.go`、`code/backend/internal/module/runtime/application/{commands/provisioning_service.go,commands/runtime_cleanup_service.go,container_file_service.go,container_stats_service.go,image_runtime_service.go}`
   - 负责：封装当前单机 Docker Engine 适配、容器创建 / 清理 / 文件 / 镜像 / 统计能力，以及 practice / challenge / ops 仍在复用的底层 runtime adapter
   - 负责：在 `ProvisioningService.CreateTopology()` 内收口动态子网分配；当前按 `TopologyCreateRequest.SubnetPool` 在两套地址池之间分流，单容器实例使用 `10.11.0.0/16` 的 `/29` 子网，多容器 topology 使用 `10.10.0.0/16` 的 `/24` 子网，`shared=true` 或显式 `subnet` 的网络继续跳过动态分配
+  - 负责：`runtime_cleaner` 在多 API 副本下通过 Redis `ctf:container:cleanup:lock` 收口成单 owner；单轮清理期间会续租 `container.cleanup_lock_ttl`，一旦锁丢失会停止本轮 `ReconcileLostActiveRuntimes / CleanExpiredInstances / CleanupOrphans`，避免同一清理窗口内两个副本继续推进 runtime cleanup
   - 不负责：拥有实例命令、实例查询、proxy ticket 或 maintenance 业务 owner；这些已收口到 `instance` 模块和 app composition
 
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`、`awd_desired_runtime_reconciler.go`
