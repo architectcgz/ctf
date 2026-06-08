@@ -128,7 +128,7 @@ func (s *casService) syncUser(ctx context.Context, principal *authports.CASPrinc
 	if user.Status == identitycontracts.UserStatusBanned {
 		return nil, authcontracts.ErrAccountDisabled
 	}
-	if user.Status == identitycontracts.UserStatusLocked && (user.LockedUntil == nil || time.Now().Before(*user.LockedUntil)) {
+	if user.Status == identitycontracts.UserStatusLocked && (user.LockedUntil == nil || time.Now().UTC().Before(*user.LockedUntil)) {
 		return nil, authcontracts.ErrAccountLocked
 	}
 

@@ -67,8 +67,6 @@ var reviewedTimeNowFiles = map[string]struct{}{
 	"assessment/application/commands/profile_service.go":     {},
 	"assessment/application/commands/report_service.go":      {},
 	"auth/application/commands/cas_service.go":               {},
-	"challenge/application/commands/challenge_service.go":    {},
-	"challenge/application/commands/image_build_service.go":  {},
 	"contest/application/jobs/awd_checker_preview.go":        {},
 	"contest/application/jobs/awd_http_checker_runner.go":    {},
 	"instance/application/awd_defense_workbench_service.go":  {},
@@ -79,5 +77,4 @@ var reviewedTimeNowFiles = map[string]struct{}{
 	"practice/application/commands/instance_provisioning.go": {},
 	"instance/application/commands/maintenance_service.go":   {},
 	"runtime/application/commands/provisioning_service.go":   {},
-	"runtime/infrastructure/repository.go":                   {},
 }

@@ -233,7 +233,7 @@ func (s *ImageBuildService) CreatePlatformBuildJobInTx(
 		"digest":       "",
 		"verified_at":  nil,
 		"deleted_at":   nil,
-		"updated_at":   time.Now(),
+		"updated_at":   time.Now().UTC(),
 	}
 	if err := txStore.UpdateImage(ctx, image, updates); err != nil {
 		return nil, err
@@ -423,7 +423,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 		return fmt.Errorf("registry verifier is not configured")
 	}
 
-	startedAt := time.Now()
+	startedAt := time.Now().UTC()
 	started, err := s.repo.TryStartImageBuildJob(ctx, jobID, startedAt)
 	if err != nil {
 		return err
@@ -453,7 +453,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 	if err := s.builder.Push(buildCtx, job.TargetRef); err != nil {
 		return s.failImageBuildJob(ctx, job, image, err)
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	job.Status = challengeentity.ImageBuildJobStatusPushed
 	job.UpdatedAt = now
 	if err := s.repo.UpdateImageBuildJob(ctx, job); err != nil {
@@ -464,7 +464,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 	}
 
 	job.Status = challengeentity.ImageBuildJobStatusVerifying
-	job.UpdatedAt = time.Now()
+	job.UpdatedAt = time.Now().UTC()
 	if err := s.repo.UpdateImageBuildJob(ctx, job); err != nil {
 		return err
 	}
@@ -484,7 +484,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 		return s.failImageBuildJob(ctx, job, image, err)
 	}
 
-	finishedAt := time.Now()
+	finishedAt := time.Now().UTC()
 	job.Status = challengeentity.ImageBuildJobStatusAvailable
 	job.TargetDigest = digest
 	job.FinishedAt = &finishedAt
@@ -499,7 +499,7 @@ func (s *ImageBuildService) ProcessImageBuildJob(ctx context.Context, jobID int6
 
 func (s *ImageBuildService) failImageBuildJob(ctx context.Context, job *challengeentity.ImageBuildJob, image *challengeentity.Image, cause error) error {
 	summary := strings.TrimSpace(cause.Error())
-	finishedAt := time.Now()
+	finishedAt := time.Now().UTC()
 	job.Status = challengeentity.ImageBuildJobStatusFailed
 	job.ErrorSummary = summary
 	job.FinishedAt = &finishedAt
@@ -527,7 +527,7 @@ func (s *ImageBuildService) updateImageBuildStatus(ctx context.Context, image *c
 	image.Digest = digest
 	image.LastError = lastError
 	if status == challengeentity.ImageStatusAvailable {
-		now := time.Now()
+		now := time.Now().UTC()
 		image.VerifiedAt = &now
 	} else {
 		image.VerifiedAt = nil
@@ -635,10 +635,10 @@ func updateExternalImageTx(
 		"size":         size,
 		"last_error":   lastError,
 		"deleted_at":   nil,
-		"updated_at":   time.Now(),
+		"updated_at":   time.Now().UTC(),
 	}
 	if status == challengeentity.ImageStatusAvailable {
-		now := time.Now()
+		now := time.Now().UTC()
 		updates["verified_at"] = &now
 	} else {
 		updates["verified_at"] = nil
