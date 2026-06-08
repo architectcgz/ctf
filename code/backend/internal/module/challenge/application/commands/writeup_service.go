@@ -50,7 +50,7 @@ func (s *WriteupService) Upsert(ctx context.Context, challengeID, actorUserID in
 		Content:     strings.TrimSpace(req.Content),
 		Visibility:  req.Visibility,
 		CreatedBy:   &actorUserID,
-		UpdatedAt:   time.Now(),
+		UpdatedAt:   time.Now().UTC(),
 	}
 	if existing != nil {
 		writeup.ID = existing.ID
@@ -91,7 +91,7 @@ func (s *WriteupService) UpsertSubmission(ctx context.Context, challengeID, acto
 		return nil, challengecontracts.ErrChallengeNotPublish
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	submissionStatus := req.SubmissionStatus
 	var publishedAt *time.Time
 
@@ -153,7 +153,7 @@ func (s *WriteupService) RecommendOfficial(ctx context.Context, challengeID, act
 		return nil, err
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	item.IsRecommended = true
 	item.RecommendedAt = &now
 	item.RecommendedBy = &actorUserID
@@ -179,7 +179,7 @@ func (s *WriteupService) UnrecommendOfficial(ctx context.Context, challengeID, _
 	item.IsRecommended = false
 	item.RecommendedAt = nil
 	item.RecommendedBy = nil
-	item.UpdatedAt = time.Now()
+	item.UpdatedAt = time.Now().UTC()
 
 	if err := s.repo.UpsertWriteup(ctx, item); err != nil {
 		return nil, err
@@ -201,7 +201,7 @@ func (s *WriteupService) RecommendCommunity(ctx context.Context, submissionID, r
 		return nil, apperror.ErrInvalidParams.WithCause(errors.New("隐藏题解不能设为推荐"))
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	record.IsRecommended = true
 	record.RecommendedAt = &now
 	record.RecommendedBy = &requesterID
@@ -227,7 +227,7 @@ func (s *WriteupService) UnrecommendCommunity(ctx context.Context, submissionID,
 	record.IsRecommended = false
 	record.RecommendedAt = nil
 	record.RecommendedBy = nil
-	record.UpdatedAt = time.Now()
+	record.UpdatedAt = time.Now().UTC()
 
 	if err := s.repo.UpsertSubmissionWriteup(ctx, record); err != nil {
 		return nil, err
@@ -250,7 +250,7 @@ func (s *WriteupService) HideCommunity(ctx context.Context, submissionID, reques
 	record.IsRecommended = false
 	record.RecommendedAt = nil
 	record.RecommendedBy = nil
-	record.UpdatedAt = time.Now()
+	record.UpdatedAt = time.Now().UTC()
 
 	if err := s.repo.UpsertSubmissionWriteup(ctx, record); err != nil {
 		return nil, err
@@ -270,7 +270,7 @@ func (s *WriteupService) RestoreCommunity(ctx context.Context, submissionID, req
 	}
 
 	record.VisibilityStatus = challengeentity.SubmissionWriteupVisibilityVisible
-	record.UpdatedAt = time.Now()
+	record.UpdatedAt = time.Now().UTC()
 
 	if err := s.repo.UpsertSubmissionWriteup(ctx, record); err != nil {
 		return nil, err

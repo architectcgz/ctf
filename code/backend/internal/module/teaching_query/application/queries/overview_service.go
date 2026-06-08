@@ -54,7 +54,7 @@ func (s *OverviewQueryService) GetOverview(ctx context.Context, requesterID int6
 		return emptyOverviewResponse(), nil
 	}
 
-	since := time.Now().AddDate(0, 0, -6)
+	since := time.Now().UTC().AddDate(0, 0, -6)
 	startOfDay := time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, since.Location())
 
 	studentItems, err := s.repo.ListStudentsByClasses(ctx, classNames, "", "", startOfDay)

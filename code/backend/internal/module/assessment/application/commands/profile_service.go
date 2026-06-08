@@ -143,7 +143,7 @@ func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int
 		UserID:    userID,
 		Dimension: dimension,
 		Score:     rate,
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Now().UTC(),
 	}
 
 	return s.repo.Upsert(ctx, profile)
@@ -180,7 +180,7 @@ func (s *Service) CalculateSkillProfile(ctx context.Context, userID int64) ([]*a
 
 	dimensions := make([]*assessmentcontracts.SkillDimension, 0, len(scores))
 	profiles := make([]*assessmententity.SkillProfile, 0, len(scores))
-	now := time.Now()
+	now := time.Now().UTC()
 
 	for _, score := range scores {
 		// 校验维度合法性

@@ -65,7 +65,7 @@ func (r *ReportRepository) FindByID(ctx context.Context, reportID int64) (*asses
 }
 
 func (r *ReportRepository) MarkReady(ctx context.Context, reportID int64, filePath string, expiresAt time.Time) error {
-	now := time.Now()
+	now := time.Now().UTC()
 	return r.db.WithContext(ctx).Model(&assessmententity.Report{}).
 		Where("id = ?", reportID).
 		Updates(map[string]any{

@@ -74,7 +74,7 @@ func (s *TopologyService) SaveChallengeTopology(ctx context.Context, challengeID
 		TemplateID:   templateID,
 		EntryNodeKey: entryNodeKey,
 		Spec:         rawSpec,
-		UpdatedAt:    time.Now(),
+		UpdatedAt:    time.Now().UTC(),
 	}
 	if existing != nil {
 		item.SourceType = existing.SourceType
@@ -177,7 +177,7 @@ func (s *TopologyService) UpdateTemplate(ctx context.Context, id int64, req Upse
 	item.Description = strings.TrimSpace(req.Description)
 	item.EntryNodeKey = entryNodeKey
 	item.Spec = rawSpec
-	item.UpdatedAt = time.Now()
+	item.UpdatedAt = time.Now().UTC()
 	if err := s.templateRepo.Update(ctx, item); err != nil {
 		return nil, err
 	}

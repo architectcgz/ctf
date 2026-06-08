@@ -40,11 +40,12 @@ func NewRiskService(repo riskRepository, log *zap.Logger) *RiskService {
 }
 
 func (s *RiskService) GetCheatDetection(ctx context.Context) (*CheatDetectionResp, error) {
-	submitEvents, err := s.repo.ListRecentSubmitEvents(ctx, time.Now().Add(-submitBurstWindow), submitBurstLimit)
+	now := time.Now().UTC()
+	submitEvents, err := s.repo.ListRecentSubmitEvents(ctx, now.Add(-submitBurstWindow), submitBurstLimit)
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
-	loginEvents, err := s.repo.ListRecentLoginEvents(ctx, time.Now().Add(-loginSharedIPWindow), loginBurstLimit)
+	loginEvents, err := s.repo.ListRecentLoginEvents(ctx, now.Add(-loginSharedIPWindow), loginBurstLimit)
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
@@ -61,7 +62,7 @@ func (s *RiskService) GetCheatDetection(ctx context.Context) (*CheatDetectionRes
 	}
 
 	return &CheatDetectionResp{
-		GeneratedAt: time.Now().Format(time.RFC3339),
+		GeneratedAt: now.Format(time.RFC3339),
 		Summary: CheatDetectionSummary{
 			SubmitBurstUsers: len(suspects),
 			SharedIPGroups:   len(sharedIPs),

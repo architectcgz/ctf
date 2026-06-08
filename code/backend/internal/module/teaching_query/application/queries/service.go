@@ -160,7 +160,7 @@ func (s *QueryService) ListStudents(
 		}
 	}
 
-	since := time.Now().AddDate(0, 0, -6)
+	since := time.Now().UTC().AddDate(0, 0, -6)
 	startOfDay := time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, since.Location())
 	items, total, err := s.repo.ListStudents(ctx, className, keyword, studentNo, sortKey, sortOrder, startOfDay, (page-1)*size, size)
 	if err != nil {
@@ -209,7 +209,7 @@ func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64,
 		keyword = strings.TrimSpace(query.Keyword)
 	}
 
-	since := time.Now().AddDate(0, 0, -6)
+	since := time.Now().UTC().AddDate(0, 0, -6)
 	startOfDay := time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, since.Location())
 	items, err := s.repo.ListStudentsByClass(ctx, normalized, keyword, studentNo, startOfDay)
 	if err != nil {

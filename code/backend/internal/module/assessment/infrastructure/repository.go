@@ -111,7 +111,7 @@ func (r *Repository) GetStudentTeachingFactSnapshot(ctx context.Context, userID 
 		}
 	}
 
-	since := time.Now().AddDate(0, 0, -7)
+	since := time.Now().UTC().AddDate(0, 0, -7)
 	if err := r.fillStudentRecentActivity(ctx, userID, since, snapshot); err != nil {
 		return nil, err
 	}
