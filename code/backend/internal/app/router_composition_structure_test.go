@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -20,6 +21,7 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsports "ctf-platform/internal/module/ops/ports"
@@ -44,6 +46,111 @@ func TestBuildRoot(t *testing.T) {
 	}
 	if root.Events == nil {
 		t.Fatal("expected events bus")
+	}
+}
+
+func TestBuildRootRejectsMismatchedContainerFlagSecret(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newAppTestDependencies(t)
+	cfg.Container.FlagGlobalSecret = "first-cluster-secret-123456789012345"
+	cfg.Container.FlagGlobalSecretKeyID = "active"
+	cfg.Container.ResolvedFlagSecretKeyID = "active"
+
+	root, err := composition.BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("first BuildRoot() error = %v", err)
+	}
+	root.Cancel()
+
+	nextCfg := *cfg
+	nextCfg.Container.FlagGlobalSecret = "second-cluster-secret-12345678901234"
+	_, err = composition.BuildRoot(&nextCfg, zap.NewNop(), db, cache)
+	if err == nil {
+		t.Fatal("expected BuildRoot() to reject mismatched container flag secret")
+	}
+	if !strings.Contains(err.Error(), "container flag secret fingerprint mismatch") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestBuildRootAllowsContainerFlagSecretRotationWhenPreviousActiveKeyConfigured(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newAppTestDependencies(t)
+	cfg.Container.FlagGlobalSecret = "old-cluster-secret-123456789012345678"
+	cfg.Container.FlagGlobalSecretKeyID = "old"
+	cfg.Container.ResolvedFlagSecretKeyID = "old"
+	cfg.Container.ResolvedFlagSecrets = map[string]string{
+		"default": "old-cluster-secret-123456789012345678",
+		"old":     "old-cluster-secret-123456789012345678",
+	}
+
+	root, err := composition.BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("first BuildRoot() error = %v", err)
+	}
+	root.Cancel()
+
+	nextCfg := *cfg
+	nextCfg.Container.FlagGlobalSecret = "new-cluster-secret-123456789012345678"
+	nextCfg.Container.FlagGlobalSecretKeyID = "new"
+	nextCfg.Container.ResolvedFlagSecretKeyID = "new"
+	nextCfg.Container.FlagGlobalSecretAllowRotation = true
+	nextCfg.Container.ResolvedFlagSecrets = map[string]string{
+		"old": "old-cluster-secret-123456789012345678",
+		"new": "new-cluster-secret-123456789012345678",
+	}
+	rotatedRoot, err := composition.BuildRoot(&nextCfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("rotating BuildRoot() error = %v", err)
+	}
+	rotatedRoot.Cancel()
+}
+
+func TestBuildRootRejectsMissingRequiredLegacyContainerFlagSecret(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newAppTestDependencies(t)
+	cfg.Container.FlagGlobalSecret = "old-cluster-secret-123456789012345678"
+	cfg.Container.FlagGlobalSecretKeyID = "old"
+	cfg.Container.ResolvedFlagSecretKeyID = "old"
+	cfg.Container.ResolvedFlagSecrets = map[string]string{
+		"default": "old-cluster-secret-123456789012345678",
+		"old":     "old-cluster-secret-123456789012345678",
+	}
+
+	if err := db.Create(&instancecontracts.Instance{
+		UserID:      7,
+		ChallengeID: 11,
+		Status:      "running",
+		Nonce:       "legacy-nonce",
+		ExpiresAt:   time.Now().UTC().Add(time.Hour),
+	}).Error; err != nil {
+		t.Fatalf("create legacy instance: %v", err)
+	}
+
+	root, err := composition.BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("first BuildRoot() error = %v", err)
+	}
+	root.Cancel()
+
+	nextCfg := *cfg
+	nextCfg.Container.FlagGlobalSecret = "new-cluster-secret-123456789012345678"
+	nextCfg.Container.FlagGlobalSecretKeyID = "new"
+	nextCfg.Container.ResolvedFlagSecretKeyID = "new"
+	nextCfg.Container.FlagGlobalSecretAllowRotation = true
+	nextCfg.Container.ResolvedFlagSecrets = map[string]string{
+		"old": "old-cluster-secret-123456789012345678",
+		"new": "new-cluster-secret-123456789012345678",
+	}
+	_, err = composition.BuildRoot(&nextCfg, zap.NewNop(), db, cache)
+	if err == nil {
+		t.Fatal("expected BuildRoot() to reject missing legacy default key")
+	}
+	if !strings.Contains(err.Error(), "required container flag secret key default is not configured") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

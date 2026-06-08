@@ -918,15 +918,15 @@ contest:
 
 ### ADR-004：动态 Flag 生成策略
 
-- 决策：动态 Flag 采用 `HMAC-SHA256(global_secret + contest_salt, user_id + ":" + challenge_id + ":" + instance_nonce)` 生成
+- 决策：动态 Flag 采用 `HMAC-SHA256(secret_by_key_id, subject_id + ":" + challenge_id + ":" + instance_nonce)` 生成
 - 算法要点：
-  - `global_secret`：全局密钥，存储于环境变量 `CTF_FLAG_SECRET`，禁止写入数据库或日志
-  - `contest_salt`：每场竞赛独立的随机 salt（32 字节），竞赛创建时生成，加密存储于数据库
+  - `secret_by_key_id`：由 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或 `container.flag_global_secret_file` 加载到进程内存，数据库只保存 active key id、active fingerprint 和 key id -> fingerprint 映射，禁止写入 secret 明文或日志
+  - `flag_key_id`：普通实例启动时写入 `instances.flag_key_id`，用于 secret rotation 后继续校验旧实例；升级前为空的旧行固定按 `default` key 解释
   - `instance_nonce`：实例级随机值，容器创建时生成，防止同一用户同一题的不同实例产生相同 Flag
-  - HMAC key = `global_secret + contest_salt`，message = `user_id:challenge_id:instance_nonce`
+  - HMAC key = `secret_by_key_id`，message = `subject_id:challenge_id:instance_nonce`
 - 理由：
   - 每用户每题每实例唯一 Flag，防止选手之间共享答案
-  - 三层密钥分离（global_secret / contest_salt / instance_nonce），单一泄露不会导致全部 Flag 可计算
+  - 密钥与实例随机输入分离，且实例记录 key id 后支持 active key rotation
   - 基于 HMAC 的确定性生成，无需额外存储每用户的 Flag 值
   - 校验时服务端重新计算比对，不依赖容器内的 Flag 值
 - Flag 格式：`flag{<hex_prefix_32chars>}`，统一前缀便于正则匹配和防作弊检测

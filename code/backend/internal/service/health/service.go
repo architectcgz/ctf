@@ -28,6 +28,11 @@ type HealthStatus struct {
 	Version      string            `json:"version"`
 }
 
+type DependencyCheck struct {
+	Name  string
+	Check func(context.Context) error
+}
+
 type Status struct {
 	HealthStatus HealthStatus
 	healthy      bool
@@ -42,6 +47,7 @@ type service struct {
 	db        *gorm.DB
 	redis     *redislib.Client
 	readiness *ReadinessState
+	checks    []DependencyCheck
 }
 
 func NewReadinessState() *ReadinessState {
@@ -59,15 +65,23 @@ func (s *ReadinessState) IsDraining() bool {
 	return s != nil && s.draining.Load()
 }
 
-func NewService(cfg *config.Config, db *gorm.DB, redis *redislib.Client, readiness *ReadinessState) Service {
+func NewService(cfg *config.Config, db *gorm.DB, redis *redislib.Client, readiness *ReadinessState, checks ...DependencyCheck) Service {
 	if readiness == nil {
 		readiness = NewReadinessState()
+	}
+	filteredChecks := make([]DependencyCheck, 0, len(checks))
+	for _, check := range checks {
+		if check.Name == "" || check.Check == nil {
+			continue
+		}
+		filteredChecks = append(filteredChecks, check)
 	}
 	return &service{
 		cfg:       cfg,
 		db:        db,
 		redis:     redis,
 		readiness: readiness,
+		checks:    filteredChecks,
 	}
 }
 
@@ -85,6 +99,13 @@ func (s *service) Check(ctx context.Context) *Status {
 	if err := s.CheckRedis(ctx); err != nil {
 		dependencies["redis"] = "down"
 		healthy = false
+	}
+	for _, check := range s.checks {
+		dependencies[check.Name] = "ok"
+		if err := check.Check(ctx); err != nil {
+			dependencies[check.Name] = "down"
+			healthy = false
+		}
 	}
 
 	status := "ok"
@@ -120,6 +141,13 @@ func (s *service) CheckReady(ctx context.Context) *Status {
 	if err := s.CheckRedis(ctx); err != nil {
 		dependencies["redis"] = "down"
 		ready = false
+	}
+	for _, check := range s.checks {
+		dependencies[check.Name] = "ok"
+		if err := check.Check(ctx); err != nil {
+			dependencies[check.Name] = "down"
+			ready = false
+		}
 	}
 
 	status := "ready"

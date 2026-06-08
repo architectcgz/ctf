@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/platform/clustersecret"
 	"ctf-platform/internal/platform/events"
 )
 
@@ -98,6 +99,10 @@ func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob 
 
 func BuildRoot(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*Root, error) {
 	appCtx, appCancel := context.WithCancel(context.Background())
+	if err := registerContainerFlagSecret(appCtx, cfg, db); err != nil {
+		appCancel()
+		return nil, err
+	}
 	return &Root{
 		Events:    events.NewBus(),
 		appCtx:    appCtx,
@@ -107,6 +112,34 @@ func BuildRoot(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 		db:        db,
 		cache:     cache,
 	}, nil
+}
+
+func registerContainerFlagSecret(ctx context.Context, cfg *config.Config, db *gorm.DB) error {
+	if cfg == nil || db == nil || cfg.Container.FlagGlobalSecret == "" {
+		return nil
+	}
+	keyID := cfg.Container.ResolvedFlagSecretKeyID
+	if keyID == "" {
+		keyID = cfg.Container.FlagGlobalSecretKeyID
+	}
+	if keyID == "" {
+		keyID = "default"
+	}
+	secrets := cfg.Container.ResolvedFlagSecrets
+	if secrets == nil {
+		secrets = map[string]string{keyID: cfg.Container.FlagGlobalSecret}
+	}
+	requiredKeyIDs, err := clustersecret.RequiredContainerFlagSecretKeyIDs(ctx, db)
+	if err != nil {
+		return err
+	}
+	return clustersecret.RegisterContainerFlagSecretKeyring(ctx, db, clustersecret.ContainerFlagSecretKeyring{
+		ActiveKeyID:    keyID,
+		ActiveSecret:   cfg.Container.FlagGlobalSecret,
+		Secrets:        secrets,
+		RequiredKeyIDs: requiredKeyIDs,
+		AllowRotation:  cfg.Container.FlagGlobalSecretAllowRotation,
+	})
 }
 
 func (r *Root) Context() context.Context {

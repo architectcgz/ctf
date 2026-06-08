@@ -37,14 +37,15 @@
 核心做法是：
 
 1. 先生成一个随机 `nonce`
-2. 用 `subjectID + challengeID + nonce` 作为消息体
-3. 用平台全局密钥做 `HMAC-SHA256`
-4. 截取前 32 个十六进制字符，拼成 `flag{...}` 或题目配置的前缀格式
+2. 记录当前 active `flag_key_id`
+3. 用 `subjectID + challengeID + nonce` 作为消息体
+4. 用 `flag_key_id` 对应的平台密钥做 `HMAC-SHA256`
+5. 截取前 32 个十六进制字符，拼成 `flag{...}` 或题目配置的前缀格式
 
 项目里的算法在 `code/backend/pkg/crypto/flag.go`，形式是：
 
 ```text
-flag = HMAC-SHA256(globalSecret, "userID:challengeID:nonce")
+flag = HMAC-SHA256(secretByKeyID, "userID:challengeID:nonce")
 ```
 
 再结合题目的 `flag_prefix`，生成类似：
@@ -57,6 +58,7 @@ ctf{2f3c...}
 这里的关键点是：
 
 - 不把真实 Flag 存数据库明文
+- 不把全局密钥存数据库明文；数据库只保存 key 指纹映射和实例使用的 `flag_key_id`
 - 同一个用户/队伍、同一道题、不同实例会因为 `nonce` 不同而得到不同 Flag
 - 判题时只要重新按相同参数计算一次，就能验证提交是否正确
 
@@ -68,7 +70,7 @@ ctf{2f3c...}
 
 - 让同一个用户反复启动同一道题时，不会永远拿到同一个 Flag
 - 把 Flag 绑定到“这一次实例”，而不是只绑定到 `userID + challengeID`
-- 让服务端只保存 `nonce`，就可以在校验时重新计算期望 Flag，而不必存明文 Flag
+- 让服务端只保存 `flag_key_id + nonce`，就可以在校验时重新计算期望 Flag，而不必存明文 Flag
 
 如果没有 `nonce`，只靠：
 
@@ -82,7 +84,7 @@ userID + challengeID + secret
 
 > **这个实例专属的随机因子。**
 
-当前项目里它由 `GenerateNonce()` 生成，并保存到 `instances.nonce`。后续用户提交 Flag 时，服务端会取出这个 `nonce`，按同样算法重算，再与提交值比较。
+当前项目里它由随机字符串生成，并保存到 `instances.nonce`；同时 `instances.flag_key_id` 会记录生成该实例 Flag 时使用的 key。后续用户提交 Flag 时，服务端会取出 `flag_key_id + nonce`，按同样算法重算，再与提交值比较。
 
 ---
 
@@ -259,9 +261,9 @@ AWD 注入器当前默认写入路径是：
 
 ### 7.1 全局密钥不进数据库
 
-动态 Flag 依赖全局密钥 `container.flag_global_secret`。
+动态 Flag 依赖全局密钥 `container.flag_global_secret` 和当前 active key id。
 
-当前代码要求它必须配置，且长度至少 32 字节；推荐通过环境变量 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 注入应用配置，而不是写进数据库或日志。
+当前代码要求密钥长度至少 32 字节。生产环境必须通过 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或预置的一致 secret 文件提供，不会在文件缺失时自动生成。数据库保存 active key id、active fingerprint 和 key id -> fingerprint 映射，用于多 API 实例启动 / readiness 一致性检查，不保存 secret 明文。active key 轮换需要同时配置旧 key、新 key，以及仍被有效实例引用的历史 key；升级前空 `flag_key_id` 的实例按 `default` key 校验。缺少这些 keyring 条目会按 secret 错配拒绝启动或让 `/ready` 变为 down。
 
 ### 7.2 不用 shell 拼接写 Flag
 
@@ -312,7 +314,7 @@ AWD 文档里已经明确：
 
 这个项目里的动态 Flag，本质上是：
 
-- 用全局密钥 + 身份信息 + nonce/轮次信息动态算出 Flag
+- 用 key id 对应的全局密钥 + 身份信息 + nonce/轮次信息动态算出 Flag
 - 普通实例在启动时通过环境变量注入
 - AWD 在运行中通过 Docker API 写入 `/flag/flag.txt` 完成轮换
 - 校验端再按同样规则重建或从 Redis 读取当前轮 Flag 做验证

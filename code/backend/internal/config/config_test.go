@@ -317,6 +317,50 @@ func TestLoadGeneratesAndPersistsContainerFlagSecretWhenMissing(t *testing.T) {
 	}
 }
 
+func TestResolveContainerFlagSecretRejectsProductionAutoGeneration(t *testing.T) {
+	t.Parallel()
+
+	secretFile := filepath.Join(t.TempDir(), "flag-global-secret")
+
+	_, err := resolveContainerFlagGlobalSecret("", secretFile, false)
+	if err == nil {
+		t.Fatal("expected production secret resolution to reject missing secret auto-generation")
+	}
+	if !strings.Contains(err.Error(), "must be explicitly configured") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, statErr := os.Stat(secretFile); !os.IsNotExist(statErr) {
+		t.Fatalf("expected secret file not to be generated, stat error = %v", statErr)
+	}
+}
+
+func TestContainerFlagSecretKeyringIncludesActiveAndPreviousKeys(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Container: ContainerConfig{
+			FlagGlobalSecret:      "active-secret-12345678901234567890",
+			FlagGlobalSecretKeyID: "active",
+			FlagGlobalSecretKeyring: []ContainerFlagSecretKeyConfig{
+				{KeyID: "previous", Secret: "previous-secret-123456789012345678"},
+			},
+		},
+	}
+
+	if err := cfg.resolveContainerFlagSecretKeyring(); err != nil {
+		t.Fatalf("resolveContainerFlagSecretKeyring() error = %v", err)
+	}
+	if cfg.Container.ResolvedFlagSecretKeyID != "active" {
+		t.Fatalf("active key id = %q, want active", cfg.Container.ResolvedFlagSecretKeyID)
+	}
+	if got := cfg.Container.ResolvedFlagSecrets["active"]; got != "active-secret-12345678901234567890" {
+		t.Fatalf("active secret = %q", got)
+	}
+	if got := cfg.Container.ResolvedFlagSecrets["previous"]; got != "previous-secret-123456789012345678" {
+		t.Fatalf("previous secret = %q", got)
+	}
+}
+
 func TestLoadRejectsMismatchedPersistedContainerFlagSecret(t *testing.T) {
 	chdirToBackendRoot(t)
 

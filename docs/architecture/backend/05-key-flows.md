@@ -137,7 +137,7 @@ sequenceDiagram
 | 启动节流 | `container.scheduler.max_concurrent_starts` | 显式限制同一时刻的 Docker 冷启动数 |
 | 宿主机容量保护 | `container.scheduler.max_active_instances` 控制 `creating + running` | 不再默认宿主机可以无限接单 |
 | AWD 期望调和节流 | `container.scheduler.desired_reconcile_interval` | 把“应该活着的队伍服务补齐”并到现有 scheduler 循环，同时避免高频全量扫描所有 AWD 比赛 |
-| Flag 生成算法 | `HMAC-SHA256(global_secret, uid + ":" + challenge_id + ":" + instance_nonce)` | 当前训练/普通竞赛链路由全局密钥与实例随机 `nonce` 共同生成动态 Flag；AWD 轮次会把队伍、赛事、轮次等上下文拼接为 `nonce` 后复用同一 HMAC 逻辑 |
+| Flag 生成算法 | `HMAC-SHA256(secret_by_key_id, uid + ":" + challenge_id + ":" + instance_nonce)` | 当前训练链路由实例记录的 `flag_key_id` 找到对应密钥，再结合实例随机 `nonce` 生成动态 Flag；AWD 轮次会把队伍、赛事、轮次等上下文拼接为 `nonce` 后复用同一 HMAC 逻辑 |
 | 资源限制 | Docker `--memory`、`--cpus`、`--pids-limit` 从 challenge 配置读取 | 防止恶意容器耗尽宿主机资源 |
 | 网络隔离 | 每个实例独立 Docker Network，仅暴露指定端口 | 防止实例间横向渗透 |
 | 同步/异步切换 | `container.scheduler.enabled` 控制 | 测试环境或小规模环境可回退同步启动 |
@@ -266,7 +266,7 @@ sequenceDiagram
 | 决策点 | 方案 | 理由 |
 |--------|------|------|
 | 频率限制 | Redis `INCR` + `EXPIRE`，每用户每题 10 次/分钟 | 防止暴力枚举 Flag，使用滑动窗口更精确但此场景固定窗口足够 |
-| Flag 验证方式 | 静态题：`SHA-256(submitted_flag + salt)` 与数据库存储的哈希比对；动态题：用 `instance.nonce` 重新 HMAC 计算后比对 | 静态 Flag 不存明文（仅存哈希+盐），动态 Flag 不存明文（只存 nonce），防止数据库泄露后 Flag 暴露 |
+| Flag 验证方式 | 静态题：`SHA-256(submitted_flag + salt)` 与数据库存储的哈希比对；动态题：用 `instance.flag_key_id + instance.nonce` 找到对应密钥并重新 HMAC 计算后比对；空 `flag_key_id` 按 `default` key 解释 | 静态 Flag 不存明文（仅存哈希+盐），动态 Flag 不存明文（只存 key id + nonce），防止数据库泄露后 Flag 暴露；旧实例在 active key 轮换后仍可用原 key 校验到过期，前提是所有 API 副本的 keyring 仍保留被旧实例引用的 key |
 | 幂等保证 | 数据库部分唯一索引：竞赛 `UNIQUE(user_id, challenge_id, contest_id) WHERE result='correct' AND contest_id IS NOT NULL`；练习 `UNIQUE(user_id, challenge_id) WHERE result='correct' AND contest_id IS NULL` | 数据库层面兜底，即使并发请求同时通过应用层检查也不会重复计分 |
 | 计分公式 | `score = base_score × difficulty_weight - hint_penalty` | 简单直观，hint_penalty 从已使用的提示累加 |
 | 得分更新 | 原子累加 `UPDATE ... SET score=score+?, solved_count=solved_count+1` | 无需乐观锁版本校验，PostgreSQL 行锁保证原子性；同一用户不会高频得分，行锁持有时间极短 |

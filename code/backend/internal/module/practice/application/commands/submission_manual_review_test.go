@@ -8,6 +8,7 @@ import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
@@ -1704,6 +1705,182 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 	}
 	if !instanceLookupCalled {
 		t.Fatal("expected dynamic flag instance lookup to be called")
+	}
+}
+
+func TestSubmitFlagValidatesDynamicFlagWithInstanceKeyID(t *testing.T) {
+	t.Parallel()
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+	instanceStore := &stubPracticeInstanceStore{
+		findByUserAndChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*instanceentity.Instance, error) {
+			return &instanceentity.Instance{
+				ID:          302,
+				UserID:      userID,
+				ChallengeID: challengeID,
+				Nonce:       "nonce-302",
+				FlagKeyID:   "previous",
+			}, nil
+		},
+	}
+	repo := &stubPracticeRepository{
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
+			return nil, gorm.ErrRecordNotFound
+		},
+		createSubmissionFn: func(context.Context, *practiceports.SubmissionRecord) error {
+			return nil
+		},
+	}
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
+				ID:         id,
+				Category:   taxonomy.DimensionWeb,
+				Points:     100,
+				Status:     challengecontracts.ChallengeStatusPublished,
+				FlagType:   challengecontracts.FlagTypeDynamic,
+				FlagPrefix: "flag",
+			}, nil
+		},
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			nil,
+			instanceStore,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:keyring",
+					FlagSubmit:     config.RateLimitPolicyConfig{Limit: 5, Window: time.Minute},
+				},
+				Container: config.ContainerConfig{
+					FlagGlobalSecret:        "active-secret-12345678901234567890",
+					ResolvedFlagSecretKeyID: "active",
+					ResolvedFlagSecrets:     map[string]string{"active": "active-secret-12345678901234567890", "previous": "previous-secret-123456789012345678"},
+				},
+			},
+			nil),
+		repo,
+		challengeRepo,
+	)
+
+	flag := flagcrypto.GenerateDynamicFlag(7, 11, "previous-secret-123456789012345678", "nonce-302", "flag")
+	resp, err := service.SubmitFlag(context.Background(), 7, 11, flag)
+	if err != nil {
+		t.Fatalf("SubmitFlag() error = %v", err)
+	}
+	if resp == nil || !resp.IsCorrect {
+		t.Fatalf("expected dynamic flag validated with previous key to be correct, got %+v", resp)
+	}
+}
+
+func TestSubmitFlagValidatesLegacyDynamicFlagWithDefaultKeyID(t *testing.T) {
+	t.Parallel()
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+	instanceStore := &stubPracticeInstanceStore{
+		findByUserAndChallengeWithContextFn: func(ctx context.Context, userID, challengeID int64) (*instanceentity.Instance, error) {
+			return &instanceentity.Instance{
+				ID:          303,
+				UserID:      userID,
+				ChallengeID: challengeID,
+				Nonce:       "legacy-nonce-303",
+			}, nil
+		},
+	}
+	repo := &stubPracticeRepository{
+		findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
+			return nil, gorm.ErrRecordNotFound
+		},
+		createSubmissionFn: func(context.Context, *practiceports.SubmissionRecord) error {
+			return nil
+		},
+	}
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
+				ID:         id,
+				Category:   taxonomy.DimensionWeb,
+				Points:     100,
+				Status:     challengecontracts.ChallengeStatusPublished,
+				FlagType:   challengecontracts.FlagTypeDynamic,
+				FlagPrefix: "flag",
+			}, nil
+		},
+	}
+	service := wirePracticeSubmissionAdapters(
+		NewService(
+			repo,
+			nil,
+			instanceStore,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:legacy-keyring",
+					FlagSubmit:     config.RateLimitPolicyConfig{Limit: 5, Window: time.Minute},
+				},
+				Container: config.ContainerConfig{
+					FlagGlobalSecret:        "rotated-active-secret-1234567890123",
+					FlagGlobalSecretKeyID:   "active",
+					ResolvedFlagSecretKeyID: "active",
+					ResolvedFlagSecrets: map[string]string{
+						"active":  "rotated-active-secret-1234567890123",
+						"default": "legacy-default-secret-1234567890123",
+					},
+				},
+			},
+			nil),
+		repo,
+		challengeRepo,
+	)
+
+	flag := flagcrypto.GenerateDynamicFlag(7, 11, "legacy-default-secret-1234567890123", "legacy-nonce-303", "flag")
+	resp, err := service.SubmitFlag(context.Background(), 7, 11, flag)
+	if err != nil {
+		t.Fatalf("SubmitFlag() error = %v", err)
+	}
+	if resp == nil || !resp.IsCorrect {
+		t.Fatalf("expected legacy dynamic flag validated with default key to be correct, got %+v", resp)
+	}
+}
+
+func TestBuildInstanceFlagReturnsActiveKeyID(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(nil, nil, nil, nil, nil, nil, &config.Config{
+		Container: config.ContainerConfig{
+			FlagGlobalSecret:        "active-secret-12345678901234567890",
+			ResolvedFlagSecretKeyID: "active",
+			ResolvedFlagSecrets:     map[string]string{"active": "active-secret-12345678901234567890"},
+		},
+	}, nil)
+
+	flag, nonce, keyID, err := service.buildInstanceFlag(7, 11, &practiceentity.Challenge{
+		ID:         11,
+		FlagType:   practiceentity.FlagTypeDynamic,
+		FlagPrefix: "flag",
+	})
+	if err != nil {
+		t.Fatalf("buildInstanceFlag() error = %v", err)
+	}
+	if nonce == "" {
+		t.Fatal("expected nonce to be generated")
+	}
+	if keyID != "active" {
+		t.Fatalf("key id = %q, want active", keyID)
+	}
+	expected := flagcrypto.GenerateDynamicFlag(7, 11, "active-secret-12345678901234567890", nonce, "flag")
+	if flag != expected {
+		t.Fatalf("flag = %q, want %q", flag, expected)
 	}
 }
 

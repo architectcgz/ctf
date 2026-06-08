@@ -38,8 +38,11 @@
 
 - `code/backend/internal/config/config.go`、`code/backend/Dockerfile`、`docker/ctf/docker-compose.dev.yml`
   - 负责：在进程启动时通过 `container.flag_global_secret_file` 解析 AWD dynamic flag 的全局密钥；显式 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 仍然优先，但若与持久化文件值不一致会直接报错，而不是静默覆盖
-  - 负责：当环境变量未注入时优先读取持久化文件；文件不存在时自动生成新 secret 并原子写回。默认路径是 `storage/runtime/flag-global-secret`，镜像预建 `/app/storage/runtime`，compose dev 通过 `/app/storage` 挂载把 secret 留在持久化卷里，避免 API / Docker 宿主重启后丢失
-  - 不负责：跨多副本分发 secret、对接外部 KMS，或替部署层实现 secret rotation
+  - 负责：非生产环境在环境变量未注入时优先读取持久化文件；文件不存在时才自动生成新 secret 并原子写回。默认路径是 `storage/runtime/flag-global-secret`，镜像预建 `/app/storage/runtime`，compose dev 通过 `/app/storage` 挂载把 secret 留在持久化卷里，避免 API / Docker 宿主重启后丢失
+  - 负责：生产环境禁止在文件缺失时自动生成 secret；多 API 实例必须通过同一 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或预置的一致 `container.flag_global_secret_file` 启动
+  - 负责：启动时把 active key id、active fingerprint 和 key id -> fingerprint 映射注册到 `runtime_cluster_secrets`，后续 API 实例若 active key、fingerprint 或仍被有效实例引用的 keyring 条目不一致，会启动失败，`/ready` 也会将 `container_flag_secret` 标记为 down
+  - 负责：当需要轮换 active key 时，部署配置必须同时带上旧 active key、新 active key，以及仍被 `instances.flag_key_id` 引用的历史 key；升级前空 `flag_key_id` 的实例固定按 `default` key 解释。active key 变化必须显式开启 `container.flag_global_secret_allow_rotation`，否则仍按错配处理
+  - 不负责：保存 secret 明文到数据库、跨多副本分发 secret、对接外部 KMS，或替部署层选择 secret 轮换时机
 
 - `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
   - 负责：题目自检和导入阶段的临时运行时探测、附件与构建源隔离、镜像构建 / registry 校验前置条件
@@ -55,11 +58,11 @@
 
 ## 接口或数据影响
 
-- 当前运行态核心数据在 `instances`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope` 等字段约束。
+- 当前运行态核心数据在 `instances`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope`、`flag_key_id` 等字段约束。
 - 动态网络预留事实持久化在 `network_allocations`；内部 `TopologyCreateRequest.SubnetPool` 只区分 `single_container` 与 `topology` 两类动态子网池，不向 HTTP 契约直接暴露 Docker 子网选择细节。
 - AWD 比赛时间暂停事实持久化在 `contests.paused_seconds`，同一次宿主机 outage 的幂等账本持久化在 `contests.runtime_recovery_key` 与 `contests.runtime_recovery_applied_seconds`，宿主机恢复检测状态持久化在 Redis `platform_runtime_state`；后端内部不新增比赛暂停枚举，而是统一基于 `effectiveNow / effectiveEnd` 解释活跃 AWD 比赛时间窗。
 - AWD desired reconcile 的 scope 级降噪状态持久化在 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>`，字段包括 `failure_count`、`last_failure_at`、`next_attempt_at`、`suppressed_until` 和 `last_error`；scope 恢复 active 后由 reconcile 主动清除。
-- AWD dynamic flag 的稳定密钥事实最终落在 `container.flag_global_secret_file` 指向的本地文件或持久化卷里；`container.flag_global_secret` 只是当前进程加载后的内存值。
+- AWD dynamic flag 的 raw secret 最终来自 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或 `container.flag_global_secret_file` 指向的本地文件 / 持久化卷；`container.flag_global_secret` 只是当前进程加载后的内存值。集群一致性事实只在 `runtime_cluster_secrets` 中保存 active key id、active fingerprint 和 key id -> fingerprint 映射，不保存 secret 明文；每条动态实例行通过 `instances.flag_key_id` 记录生成该实例 Flag 时使用的 key，升级前为空的旧行固定按 `default` key 解释。
 - 运行时入口与访问相关 API 包括 `POST /api/v1/challenges/:id/instances`、`POST /api/v1/contests/:id/challenges/:cid/instances`、`POST /api/v1/contests/:id/awd/services/:sid/instances`、`POST /api/v1/instances/:id/access` 以及 AWD 相关访问 / 复盘接口；契约以 `docs/contracts/openapi-v1.yaml` 为准。
 - 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.startup_recovery_lock_ttl`、`container.proxy_ticket_ttl`、`container.registry.*`、`container.network.single_container_*`、`container.network.topology_*`、`contest.awd.scheduler_*`；两套 CIDR 会在启动时做 IPv4、网络地址、掩码范围和 overlap 校验，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
 

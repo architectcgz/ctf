@@ -26,6 +26,7 @@ type Instance struct {
 	Status         string     `gorm:"size:16;not null;index"`
 	AccessURL      string     `gorm:"size:255"`
 	Nonce          string     `gorm:"size:64"`
+	FlagKeyID      string     `gorm:"column:flag_key_id;size:128"`
 	ExpiresAt      time.Time  `gorm:"not null;index"`
 	DestroyedAt    *time.Time `gorm:"column:destroyed_at;index"`
 	ExtendCount    int        `gorm:"default:0"`
