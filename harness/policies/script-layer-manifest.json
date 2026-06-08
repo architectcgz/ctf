@@ -28,6 +28,7 @@
   ],
   "project_tools": [
     "tools/ensure-frontend-tooling.sh",
+    "tools/multi-instance-nginx-proxy-smoke.sh",
     "tools/runtime-agent-dual-node-e2e.sh",
     "tools/sync_openapi_from_contract.py"
   ],
