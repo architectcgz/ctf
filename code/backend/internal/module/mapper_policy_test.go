@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"ctf-platform/internal/testutil/archtest"
 )
 
 var allowedManualMapperWrapperFiles = map[string]string{
@@ -19,7 +21,7 @@ var allowedManualMapperWrapperFiles = map[string]string{
 func TestMapperWrappersFollowGlobalDelegationPolicy(t *testing.T) {
 	t.Parallel()
 
-	files := collectGoRuntimeFiles(t, ".")
+	files := archtest.RuntimeGoFiles(t, ".")
 	manualWrapperFiles := make(map[string]struct{})
 
 	for _, file := range files {
@@ -62,7 +64,7 @@ type mapperPolicyFileInfo struct {
 func parseMapperPolicyFile(t *testing.T, filePath string) mapperPolicyFileInfo {
 	t.Helper()
 
-	content := readFile(t, filePath)
+	content := archtest.ReadFile(t, filePath)
 	info := mapperPolicyFileInfo{
 		hasGoverterConverter: strings.Contains(content, "goverter:converter"),
 		mapperMethods:        make(map[string]struct{}),

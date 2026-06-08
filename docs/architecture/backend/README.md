@@ -47,6 +47,7 @@
 
 - 后端架构脚本入口：`scripts/check-backend-architecture.sh`
 - 模块依赖方向：`code/backend/internal/module/architecture_test.go`
+- shared 轻量边界：`code/backend/internal/shared/architecture_test.go`
 - 进程级装配边界：`code/backend/internal/app/architecture_rules_test.go`
 - backend context 架构：`code/backend/internal/app/backend_context_architecture_test.go`
 - 路由与组合装配：`code/backend/internal/app/router_test.go`

@@ -1,13 +1,11 @@
 package module
 
 import (
-	"go/parser"
-	"go/token"
-	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
+
+	"ctf-platform/internal/testutil/archtest"
 )
 
 const moduleImportPrefix = "ctf-platform/internal/module/"
@@ -15,10 +13,10 @@ const moduleImportPrefix = "ctf-platform/internal/module/"
 func TestModuleArchitectureBoundaries(t *testing.T) {
 	t.Parallel()
 
-	files := collectGoRuntimeFiles(t, ".")
+	files := archtest.RuntimeGoFiles(t, ".")
 	for _, file := range files {
 		layer := moduleLayer(file)
-		imports := parseImports(t, file)
+		imports := archtest.Imports(t, file)
 		assertNoCrossModulePrivateImports(t, file, imports)
 
 		switch layer {
@@ -69,10 +67,10 @@ func TestModuleArchitectureBoundaries(t *testing.T) {
 func TestModuleDependencyAllowlistIsCurrent(t *testing.T) {
 	t.Parallel()
 
-	files := collectGoRuntimeFiles(t, ".")
+	files := archtest.RuntimeGoFiles(t, ".")
 	actual := make(map[string]struct{})
 	for _, file := range files {
-		for _, importPath := range parseImports(t, file) {
+		for _, importPath := range archtest.Imports(t, file) {
 			if key, ok := moduleDependencyKey(file, importPath); ok {
 				actual[key] = struct{}{}
 				if _, allowed := allowedModuleDependencies[key]; !allowed {
@@ -92,13 +90,13 @@ func TestModuleDependencyAllowlistIsCurrent(t *testing.T) {
 func TestDomainInternalImportAllowlistIsCurrent(t *testing.T) {
 	t.Parallel()
 
-	files := collectGoRuntimeFiles(t, ".")
+	files := archtest.RuntimeGoFiles(t, ".")
 	actual := make(map[string]struct{})
 	for _, file := range files {
 		if moduleLayer(file) != "domain" {
 			continue
 		}
-		for _, importPath := range parseImports(t, file) {
+		for _, importPath := range archtest.Imports(t, file) {
 			if isDomainInternalImport(importPath) {
 				actual[domainInternalImportKey(file, importPath)] = struct{}{}
 			}
@@ -115,13 +113,13 @@ func TestDomainInternalImportAllowlistIsCurrent(t *testing.T) {
 func TestApplicationConcreteDependencyAllowlistIsCurrent(t *testing.T) {
 	t.Parallel()
 
-	files := collectGoRuntimeFiles(t, ".")
+	files := archtest.RuntimeGoFiles(t, ".")
 	actual := make(map[string]struct{})
 	for _, file := range files {
 		if moduleLayer(file) != "application" {
 			continue
 		}
-		for _, importPath := range parseImports(t, file) {
+		for _, importPath := range archtest.Imports(t, file) {
 			if isConcreteApplicationImport(importPath) {
 				actual[applicationConcreteImportKey(file, importPath)] = struct{}{}
 			}
@@ -138,10 +136,10 @@ func TestApplicationConcreteDependencyAllowlistIsCurrent(t *testing.T) {
 func TestCrossModulePrivateImportAllowlistIsCurrent(t *testing.T) {
 	t.Parallel()
 
-	files := collectGoRuntimeFiles(t, ".")
+	files := archtest.RuntimeGoFiles(t, ".")
 	actual := make(map[string]struct{})
 	for _, file := range files {
-		for _, importPath := range parseImports(t, file) {
+		for _, importPath := range archtest.Imports(t, file) {
 			if isCrossModulePrivateImport(file, importPath) {
 				actual[crossModuleImportKey(file, importPath)] = struct{}{}
 			}
@@ -158,9 +156,9 @@ func TestCrossModulePrivateImportAllowlistIsCurrent(t *testing.T) {
 func TestModuleRuntimeCodeDoesNotCreateRootContext(t *testing.T) {
 	t.Parallel()
 
-	files := collectGoRuntimeFiles(t, ".")
+	files := archtest.RuntimeGoFiles(t, ".")
 	for _, file := range files {
-		content := readFile(t, file)
+		content := archtest.ReadFile(t, file)
 		if strings.Contains(content, "context.Background()") || strings.Contains(content, "context.TODO()") {
 			t.Fatalf("%s must receive context from its caller instead of creating a root context", file)
 		}
@@ -170,13 +168,14 @@ func TestModuleRuntimeCodeDoesNotCreateRootContext(t *testing.T) {
 func TestBackendBusinessCodeDoesNotCreateRootContext(t *testing.T) {
 	t.Parallel()
 
-	files := collectBackendRuntimeFiles(t, "..")
+	files := archtest.RuntimeGoFiles(t, "..")
 	allowedRootContextFiles := map[string]struct{}{
-		"../app/composition/root.go": {},
-		"../bootstrap/run.go":        {},
+		"../app/composition/root.go":              {},
+		"../bootstrap/awd_defense_ssh_gateway.go": {},
+		"../bootstrap/run.go":                     {},
 	}
 	for _, file := range files {
-		content := readFile(t, file)
+		content := archtest.ReadFile(t, file)
 		if !strings.Contains(content, "context.Background()") && !strings.Contains(content, "context.TODO()") {
 			continue
 		}
@@ -186,7 +185,7 @@ func TestBackendBusinessCodeDoesNotCreateRootContext(t *testing.T) {
 		t.Fatalf("%s must receive context from its caller instead of creating a root context", file)
 	}
 	for allowed := range allowedRootContextFiles {
-		content := readFile(t, allowed)
+		content := archtest.ReadFile(t, allowed)
 		if !strings.Contains(content, "context.Background()") && !strings.Contains(content, "context.TODO()") {
 			t.Fatalf("root context allowlist entry is stale: %s", allowed)
 		}
@@ -196,10 +195,10 @@ func TestBackendBusinessCodeDoesNotCreateRootContext(t *testing.T) {
 func TestTimeNowUsageAllowlistIsCurrent(t *testing.T) {
 	t.Parallel()
 
-	files := collectGoRuntimeFiles(t, ".")
+	files := archtest.RuntimeGoFiles(t, ".")
 	actual := make(map[string]struct{})
 	for _, file := range files {
-		if strings.Contains(readFile(t, file), "time.Now(") {
+		if strings.Contains(archtest.ReadFile(t, file), "time.Now(") {
 			actual[moduleFileKey(file)] = struct{}{}
 		}
 	}
@@ -219,10 +218,10 @@ func TestTimeNowUsageAllowlistIsCurrent(t *testing.T) {
 func TestTransactionBoundaryAllowlistIsCurrent(t *testing.T) {
 	t.Parallel()
 
-	files := collectGoRuntimeFiles(t, ".")
+	files := archtest.RuntimeGoFiles(t, ".")
 	actual := make(map[string]struct{})
 	for _, file := range files {
-		if strings.Contains(readFile(t, file), ".Transaction(") {
+		if strings.Contains(archtest.ReadFile(t, file), ".Transaction(") {
 			actual[file] = struct{}{}
 		}
 	}
@@ -242,12 +241,12 @@ func TestTransactionBoundaryAllowlistIsCurrent(t *testing.T) {
 func TestRuntimeModulesStaySmallAndWiringOnly(t *testing.T) {
 	t.Parallel()
 
-	files := collectGoRuntimeFiles(t, ".")
+	files := archtest.RuntimeGoFiles(t, ".")
 	for _, file := range files {
 		if !strings.HasSuffix(filepath.ToSlash(file), "/runtime/module.go") {
 			continue
 		}
-		lineCount := len(strings.Split(readFile(t, file), "\n"))
+		lineCount := len(strings.Split(archtest.ReadFile(t, file), "\n"))
 		if lineCount <= 250 {
 			continue
 		}
@@ -256,65 +255,11 @@ func TestRuntimeModulesStaySmallAndWiringOnly(t *testing.T) {
 		}
 	}
 	for allowed := range allowedOversizedRuntimeModules {
-		content := readFile(t, allowed)
+		content := archtest.ReadFile(t, allowed)
 		if len(strings.Split(content, "\n")) <= 250 {
 			t.Fatalf("runtime module size allowlist entry is stale: %s", allowed)
 		}
 	}
-}
-
-func collectGoRuntimeFiles(t *testing.T, root string) []string {
-	t.Helper()
-
-	files := make([]string, 0)
-	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if entry.IsDir() {
-			if entry.Name() == "testsupport" || entry.Name() == "data" {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if strings.HasSuffix(path, ".go") && !strings.HasSuffix(path, "_test.go") {
-			files = append(files, path)
-		}
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("walk module go files: %v", err)
-	}
-
-	return files
-}
-
-func collectBackendRuntimeFiles(t *testing.T, roots ...string) []string {
-	t.Helper()
-
-	files := make([]string, 0)
-	for _, root := range roots {
-		err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if entry.IsDir() {
-				switch entry.Name() {
-				case "testsupport", "testdata", "data":
-					return filepath.SkipDir
-				}
-				return nil
-			}
-			if strings.HasSuffix(path, ".go") && !strings.HasSuffix(path, "_test.go") {
-				files = append(files, path)
-			}
-			return nil
-		})
-		if err != nil {
-			t.Fatalf("walk backend go files under %s: %v", root, err)
-		}
-	}
-	return files
 }
 
 func moduleLayer(filePath string) string {
@@ -339,36 +284,6 @@ func moduleOwner(filePath string) string {
 	return parts[0]
 }
 
-func parseImports(t *testing.T, filePath string) []string {
-	t.Helper()
-
-	fset := token.NewFileSet()
-	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
-	if err != nil {
-		t.Fatalf("parse imports for %s: %v", filePath, err)
-	}
-
-	imports := make([]string, 0, len(fileNode.Imports))
-	for _, importSpec := range fileNode.Imports {
-		importPath, err := strconv.Unquote(importSpec.Path.Value)
-		if err != nil {
-			t.Fatalf("unquote import in %s: %v", filePath, err)
-		}
-		imports = append(imports, importPath)
-	}
-	return imports
-}
-
-func readFile(t *testing.T, filePath string) string {
-	t.Helper()
-
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		t.Fatalf("read %s: %v", filePath, err)
-	}
-	return string(content)
-}
-
 func moduleFileKey(filePath string) string {
 	return filepath.ToSlash(filePath)
 }
@@ -378,7 +293,7 @@ func assertNoForbiddenImports(t *testing.T, filePath string, imports []string, f
 
 	for _, importPath := range imports {
 		for _, blocked := range forbidden {
-			if importPath == blocked || strings.HasPrefix(importPath, blocked+"/") {
+			if archtest.ImportPathMatches(importPath, blocked) {
 				t.Fatalf("%s must not import %s", filePath, importPath)
 			}
 		}

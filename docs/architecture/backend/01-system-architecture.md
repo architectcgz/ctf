@@ -351,7 +351,7 @@ ctf/code/backend/
 │   ├── middleware/                  # RequestID、CORS、Auth、RateLimit 等中间件
 │   ├── model/                       # 跨模块共享的持久化模型
 │   ├── platform/events/             # 进程内事件总线
-│   ├── shared/                      # 映射与轻量共享工具
+│   ├── shared/                      # 映射与轻量共享工具；Guardrail 见 internal/shared/architecture_test.go
 │   ├── infrastructure/              # PostgreSQL / Redis 等进程级基础设施
 │   ├── handler/health/              # 健康检查
 │   ├── validation/                  # 请求校验规则

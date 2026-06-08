@@ -1,13 +1,11 @@
 package app
 
 import (
-	"go/parser"
-	"go/token"
-	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
+
+	"ctf-platform/internal/testutil/archtest"
 )
 
 type importViolation struct {
@@ -21,42 +19,25 @@ func TestArchitectureRulesRejectConcreteCrossModuleImports(t *testing.T) {
 	t.Parallel()
 
 	repoRoot := filepath.Join("..", "..")
-	violations, err := scanConcreteCrossModuleImports(repoRoot)
-	if err != nil {
-		t.Fatalf("scanConcreteCrossModuleImports() error = %v", err)
-	}
+	violations := scanConcreteCrossModuleImports(t, repoRoot)
 	if len(violations) > 0 {
 		t.Fatalf("unexpected concrete cross-module imports: %+v", violations)
 	}
 }
 
-func scanConcreteCrossModuleImports(repoRoot string) ([]importViolation, error) {
+func scanConcreteCrossModuleImports(t testing.TB, repoRoot string) []importViolation {
+	t.Helper()
+
 	moduleRoot := filepath.Join(repoRoot, "internal", "module")
-	fset := token.NewFileSet()
 	violations := make([]importViolation, 0)
 
-	err := filepath.Walk(moduleRoot, func(path string, info os.FileInfo, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if info == nil || info.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
-			return nil
-		}
-
+	for _, path := range archtest.RuntimeGoFiles(t, moduleRoot) {
 		moduleName, ok := moduleNameFromFilePath(moduleRoot, path)
 		if !ok {
-			return nil
+			continue
 		}
 
-		fileNode, err := parser.ParseFile(fset, path, nil, parser.ImportsOnly)
-		if err != nil {
-			return err
-		}
-		for _, importSpec := range fileNode.Imports {
-			importPath, err := strconv.Unquote(importSpec.Path.Value)
-			if err != nil {
-				return err
-			}
+		for _, importPath := range archtest.Imports(t, path) {
 			targetModule, targetLayer, ok := concreteCrossModuleImport(moduleName, importPath)
 			if !ok {
 				continue
@@ -68,9 +49,8 @@ func scanConcreteCrossModuleImports(repoRoot string) ([]importViolation, error) 
 				targetLayer: targetLayer,
 			})
 		}
-		return nil
-	})
-	return violations, err
+	}
+	return violations
 }
 
 func moduleNameFromFilePath(moduleRoot, filePath string) (string, bool) {

@@ -148,6 +148,7 @@ var allowedTimeNowFiles = map[string]struct{}{
 	"instance/application/queries/instance_service.go":                     {},
 	"instance/application/queries/proxy_ticket_service.go":                 {},
 	"runtime/application/commands/provisioning_service.go":                 {},
+	"runtime/infrastructure/node_repository.go":                            {},
 	"runtime/infrastructure/repository.go":                                 {},
 	"teaching_query/application/queries/class_insight_service.go":          {},
 	"teaching_query/application/queries/overview_service.go":               {},

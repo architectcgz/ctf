@@ -8,7 +8,15 @@ run_backend_module_checks() {
   echo "[architecture][backend] module boundaries"
   (
     cd "$ROOT_DIR/code/backend"
-    go test ./internal/module -run TestModuleArchitectureBoundaries
+    go test ./internal/module
+  )
+}
+
+run_backend_shared_checks() {
+  echo "[architecture][backend] shared boundaries"
+  (
+    cd "$ROOT_DIR/code/backend"
+    go test ./internal/shared -run TestSharedPackagesStayLightweightAndModuleAgnostic
   )
 }
 
@@ -31,9 +39,11 @@ run_backend_test_architecture_checks() {
 case "$MODE" in
   --quick|quick)
     run_backend_module_checks
+    run_backend_shared_checks
     ;;
   --full|full)
     run_backend_module_checks
+    run_backend_shared_checks
     run_backend_app_architecture_checks
     run_backend_test_architecture_checks
     ;;

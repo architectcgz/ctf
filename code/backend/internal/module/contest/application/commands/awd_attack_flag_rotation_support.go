@@ -38,7 +38,7 @@ func (s *AWDService) rotateCurrentRoundFlag(
 		return nil, false, apperror.ErrInternal.WithMessage("awd rotated flag unexpectedly unchanged")
 	}
 
-	ttl := s.currentRoundTTL(attackContext.contest, attackContext.round, time.Now().UTC())
+	ttl := s.currentRoundTTL(attackContext.contest, attackContext.round, attackContext.businessNow())
 	claimed, err := s.stateStore.ReplaceAWDRoundFlagIfMatch(
 		ctx,
 		attackContext.contest.ID,
@@ -76,7 +76,7 @@ func (s *AWDService) restoreRotatedRoundFlag(ctx context.Context, attackContext 
 	if attackContext == nil || attackContext.contest == nil || attackContext.round == nil || rotation == nil {
 		return
 	}
-	ttl := s.currentRoundTTL(attackContext.contest, attackContext.round, time.Now().UTC())
+	ttl := s.currentRoundTTL(attackContext.contest, attackContext.round, attackContext.businessNow())
 	assignment := contestports.AWDFlagAssignment{
 		ServiceID:      attackContext.runtimeService.ID,
 		TeamID:         attackContext.victimTeamID,
