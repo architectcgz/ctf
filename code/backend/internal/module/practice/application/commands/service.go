@@ -20,6 +20,12 @@ type ScoreUpdater interface {
 	lockTimeout() time.Duration
 }
 
+type practiceSchedulerLockLease interface {
+	Key(ctx context.Context) string
+	Release(ctx context.Context) (bool, error)
+	Refresh(ctx context.Context, ttl time.Duration) (bool, error)
+}
+
 type practiceCommandRepository interface {
 	practiceports.PracticeInstanceStartTxManager
 	practiceports.PracticeInstanceRestartTxManager
@@ -68,6 +74,7 @@ type Service struct {
 	scoreService        ScoreUpdater
 	rateLimitStore      practiceports.PracticeFlagSubmitRateLimitStore
 	desiredState        practiceports.PracticeDesiredAWDReconcileStateStore
+	schedulerLockStore  practiceports.PracticeInstanceSchedulerLockStore
 	config              *config.Config
 	logger              *zap.Logger
 	eventBus            platformevents.Bus
@@ -89,6 +96,14 @@ func (s *Service) SetDesiredAWDReconcileStateStore(store practiceports.PracticeD
 		return nil
 	}
 	s.desiredState = store
+	return s
+}
+
+func (s *Service) SetSchedulerLockStore(store practiceports.PracticeInstanceSchedulerLockStore) *Service {
+	if s == nil {
+		return nil
+	}
+	s.schedulerLockStore = store
 	return s
 }
 

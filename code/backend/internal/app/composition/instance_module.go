@@ -95,7 +95,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		runtimeinfra.NewPlatformRuntimeStateStore(root.Cache()),
 		0,
 		log.Named("startup_runtime_recovery"),
-	)
+	).SetLockTTL(cfg.Container.StartupRecoveryLockTTL)
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"startup_runtime_recovery",
 		startupRecovery.Start,

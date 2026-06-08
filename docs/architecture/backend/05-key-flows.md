@@ -649,15 +649,19 @@ sequenceDiagram
 Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库中仍处于 `running / creating` 的实例可能已经失去实际容器。平台通过 runtime 维护任务和 practice 期望调和做主动对账：
 
 - `maintenance_service.ReconcileLostActiveRuntimes` 负责扫描未过期的 `running / creating` 实例。
+- `startup_runtime_recovery` 在多 API 副本下会先竞争 Redis leader lock；只有持锁副本才会读取 / 写入 `platform_runtime_state` 并执行下面这条恢复链路。
 - 主动删除入口会先把实例置为 `stopping`。`stopping` 表示“实例 owner 已确认销毁，但 runtime cleanup 尚未完成”，它不再属于 active runtime recovery 的候选集合。
 - 它会根据 `container_id` 与 `runtime_details.containers[]` 检查入口容器和拓扑容器是否仍存在且处于运行状态；若单个实例 Docker inspect 失败，只记录日志并跳过该实例，本轮继续处理其他实例。
 - 若 active instance 的容器缺失或已退出，就把该实例重新置为 `pending`，交由现有 `practice_instance_scheduler` 按 `pending -> creating -> running` 流程重建。
 - 重新入队时保留 `user_id / contest_id / team_id / challenge_id / service_id / share_scope / nonce / host_port / expires_at`，只清空 `container_id / network_id / runtime_details / access_url` 这类运行时字段。
 - `practice.ReconcileDesiredAWDInstances` 负责 `running / frozen` AWD 比赛的差集补齐：按 `teams × visible services` 推导应该活着的 scope，如果没有 active instance，就优先复用该 scope 下最近的 restartable / failed 实例，否则新建 `pending` 实例。
+- `practice_instance_scheduler` 在多 API 副本下同样先竞争 Redis scheduler lock；只有持锁副本才会执行 desired reconcile、计算全局容量并把 `pending` 领取为 `creating`。
 - desired reconcile 在 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>` 中记录 scope 级失败退避状态；立即配置错误和异步 provisioning 失败都会推进 `failure_count`，并根据 `container.scheduler.desired_reconcile_failure_*` 与 `desired_reconcile_suppress_*` 计算 `next_attempt_at / suppressed_until`。
 - 当某个 scope 已经有 `pending / creating / running` 实例，或重建最终回到 active 状态时，desired reconcile 会主动清掉对应 Redis 状态，避免长期 suppress 卡死已经恢复的 scope。
 - 多容器拓扑中任一容器丢失或退出时，active runtime recovery 会把整条实例重新入队，避免局部恢复破坏拓扑一致性。
-- 启动恢复顺序是：补 `paused_seconds`、刷新活跃实例 `expires_at`、执行 active runtime recovery、执行 desired runtime reconciliation、把恢复耗时继续累计到 `paused_seconds` 并保存 heartbeat。
+- 启动恢复顺序是：检测 `boot_id` 变化、补 `paused_seconds`、刷新活跃实例 `expires_at`、执行 active runtime recovery、执行 desired runtime reconciliation、把恢复耗时继续累计到 `paused_seconds` 并保存 heartbeat。
+- 非 leader 副本会等到 leader 完成首轮恢复并写入当前 `boot_id` heartbeat 后，才越过启动门禁继续启动其他后台任务和 HTTP 服务。
+- `container.startup_recovery_lock_ttl` 既要小于 leader failover 包络允许的上限，也要让 `lock TTL + refresh interval + leader retry` 仍落在 heartbeat stale 容忍窗内；同 `boot_id` 下的 heartbeat gap 只表示 leaderless gap，不再直接触发 outage recovery。
 
 这两层恢复都不直接创建容器。容器创建、动态 Flag 构造、端口复用、就绪探测与失败标记继续由 practice 实例调度器统一负责。
 

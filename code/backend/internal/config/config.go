@@ -12,7 +12,13 @@ import (
 
 	"github.com/spf13/viper"
 
+	startuprecovery "ctf-platform/internal/module/instance/startuprecovery"
 	"ctf-platform/internal/platform/randomstring"
+)
+
+var containerStartupRecoveryMaxLockTTL = startuprecovery.MaxSafeLockTTL(
+	startuprecovery.DefaultHeartbeatInterval,
+	startuprecovery.DefaultLeaderRetry,
 )
 
 type Config struct {
@@ -150,6 +156,7 @@ type ContainerConfig struct {
 	ExtendDuration                  time.Duration            `mapstructure:"extend_duration"`
 	CleanupInterval                 string                   `mapstructure:"cleanup_interval"`
 	CleanupLockTTL                  time.Duration            `mapstructure:"cleanup_lock_ttl"`
+	StartupRecoveryLockTTL          time.Duration            `mapstructure:"startup_recovery_lock_ttl"`
 	DeletePollInterval              time.Duration            `mapstructure:"delete_poll_interval"`
 	DeleteMaxConcurrent             int                      `mapstructure:"delete_max_concurrent"`
 	OrphanGracePeriod               time.Duration            `mapstructure:"orphan_grace_period"`
@@ -206,6 +213,7 @@ type ContainerSchedulerConfig struct {
 	BatchSize                             int           `mapstructure:"batch_size"`
 	MaxConcurrentStarts                   int           `mapstructure:"max_concurrent_starts"`
 	MaxActiveInstances                    int           `mapstructure:"max_active_instances"`
+	LockTTL                               time.Duration `mapstructure:"lock_ttl"`
 }
 
 type PaginationConfig struct {
@@ -420,6 +428,15 @@ func (c *Config) Validate() error {
 	if c.Container.CleanupLockTTL <= 0 {
 		return fmt.Errorf("container.cleanup_lock_ttl must be greater than 0")
 	}
+	if c.Container.StartupRecoveryLockTTL <= 0 {
+		return fmt.Errorf("container.startup_recovery_lock_ttl must be greater than 0")
+	}
+	// startup recovery only runs on the current leader. To avoid mistaking a
+	// normal leader handoff for a runtime outage, lock TTL must stay within the
+	// failover window derived from the shared startup recovery policy owner.
+	if c.Container.StartupRecoveryLockTTL > containerStartupRecoveryMaxLockTTL {
+		return fmt.Errorf("container.startup_recovery_lock_ttl must be less than or equal to %s", containerStartupRecoveryMaxLockTTL)
+	}
 	if c.Container.ProxyTicketTTL <= 0 {
 		return fmt.Errorf("container.proxy_ticket_ttl must be greater than 0")
 	}
@@ -502,6 +519,9 @@ func (c *Config) Validate() error {
 		}
 		if c.Container.Scheduler.MaxActiveInstances < 0 {
 			return fmt.Errorf("container.scheduler.max_active_instances must be greater than or equal to 0")
+		}
+		if c.Container.Scheduler.LockTTL <= 0 {
+			return fmt.Errorf("container.scheduler.lock_ttl must be greater than 0")
 		}
 	}
 	if c.Container.DeletePollInterval <= 0 {
@@ -865,6 +885,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.extend_duration", 1*time.Hour)
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
 	v.SetDefault("container.cleanup_lock_ttl", 2*time.Minute)
+	v.SetDefault("container.startup_recovery_lock_ttl", startuprecovery.DefaultLockTTL)
 	v.SetDefault("container.delete_poll_interval", time.Second)
 	v.SetDefault("container.delete_max_concurrent", 8)
 	v.SetDefault("container.orphan_grace_period", 5*time.Minute)
@@ -909,6 +930,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.scheduler.batch_size", 4)
 	v.SetDefault("container.scheduler.max_concurrent_starts", 4)
 	v.SetDefault("container.scheduler.max_active_instances", 60)
+	v.SetDefault("container.scheduler.lock_ttl", 30*time.Second)
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
 	v.SetDefault("challenge.solved_count_cache_ttl", 5*time.Minute)
