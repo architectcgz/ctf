@@ -18,7 +18,7 @@ func (r *TeamRepository) CreateWithMember(ctx context.Context, team *contestenti
 			ContestID: team.ContestID,
 			TeamID:    team.ID,
 			UserID:    captainID,
-			JoinedAt:  time.Now(),
+			JoinedAt:  time.Now().UTC(),
 		}
 		if err := tx.Create(member).Error; err != nil {
 			return err
@@ -46,7 +46,7 @@ func (r *TeamRepository) DeleteWithMembers(ctx context.Context, id int64) error 
 				Where("contest_id = ? AND user_id IN ?", team.ContestID, userIDs).
 				Updates(map[string]any{
 					"team_id":    nil,
-					"updated_at": time.Now(),
+					"updated_at": time.Now().UTC(),
 				}).Error; err != nil {
 				return err
 			}

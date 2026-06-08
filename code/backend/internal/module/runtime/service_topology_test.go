@@ -16,7 +16,6 @@ import (
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -177,10 +176,10 @@ func TestServiceCreateContainerMarksAWDImagesAsAWDComposeService(t *testing.T) {
 	if _, _, _, _, err := service.CreateContainer(context.Background(), "127.0.0.1:5000/awd/awd-supply-ticket:latest", nil, 0); err != nil {
 		t.Fatalf("CreateContainer() error = %v", err)
 	}
-	if got := engine.createdContainerCfg.Labels[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+	if got := engine.createdContainerCfg.Labels[runtimecontracts.ComposeServiceLabelKey]; got != runtimecontracts.ComposeServiceAWD {
 		t.Fatalf("expected awd compose service label, got %q", got)
 	}
-	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+	if got := engine.createdNetworkLabel[runtimecontracts.ComposeServiceLabelKey]; got != runtimecontracts.ComposeServiceAWD {
 		t.Fatalf("expected awd network label, got %q", got)
 	}
 }
@@ -223,10 +222,10 @@ func TestServiceCreateTopologyMarksAWDWorkspaceAsAWDComposeService(t *testing.T)
 	if err != nil {
 		t.Fatalf("CreateTopology() error = %v", err)
 	}
-	if got := engine.createdContainerCfg.Labels[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+	if got := engine.createdContainerCfg.Labels[runtimecontracts.ComposeServiceLabelKey]; got != runtimecontracts.ComposeServiceAWD {
 		t.Fatalf("expected awd compose service label, got %q", got)
 	}
-	if got := engine.createdNetworkLabel[runtimedomain.ComposeServiceLabelKey]; got != runtimedomain.ComposeServiceAWD {
+	if got := engine.createdNetworkLabel[runtimecontracts.ComposeServiceLabelKey]; got != runtimecontracts.ComposeServiceAWD {
 		t.Fatalf("expected awd network label, got %q", got)
 	}
 	if engine.createdNetworkSubnet != "" {
@@ -807,6 +806,7 @@ func TestServiceCreateTopologyLogsProvisioningStages(t *testing.T) {
 		if got, ok := ctxMap["instance_id"].(int64); !ok || got != 4242 {
 			t.Fatalf("expected instance_id=4242 in stage log, got %+v", ctxMap)
 		}
+		assertNonNegativeLogDuration(t, ctxMap)
 		if stage == "container_create" {
 			switch ctxMap["node_key"] {
 			case "web":
@@ -1142,8 +1142,21 @@ func TestServiceCreateTopologyLogsStageFailure(t *testing.T) {
 	if got, ok := ctxMap["instance_id"].(int64); !ok || got != 5252 {
 		t.Fatalf("expected instance_id=5252 in failure log, got %+v", ctxMap)
 	}
+	assertNonNegativeLogDuration(t, ctxMap)
 	if _, exists := ctxMap["error"]; !exists {
 		t.Fatalf("expected failure log to include error field, got %+v", ctxMap)
+	}
+}
+
+func assertNonNegativeLogDuration(t *testing.T, ctxMap map[string]interface{}) {
+	t.Helper()
+
+	duration, ok := ctxMap["duration"].(time.Duration)
+	if !ok {
+		t.Fatalf("expected duration field in stage log, got %+v", ctxMap)
+	}
+	if duration < 0 {
+		t.Fatalf("expected non-negative duration, got %s in %+v", duration, ctxMap)
 	}
 }
 

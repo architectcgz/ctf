@@ -266,7 +266,7 @@ flowchart LR
 - `ops` 替代旧的 `system` 叙事，承接通知、审计、运营支撑与运行时可观测能力。
 - `teaching_query` 负责跨 owner 的只读查询聚合，不承担业务状态修改。
 - `instance` 已经有独立的 `internal/module/instance/*` owner；app 层 `InstanceModule` 只是它当前对外暴露的组合视图与访问入口。
-- 更细的模块依赖表与代码级 allowlist 说明见 [07-modular-monolith-refactor.md](./07-modular-monolith-refactor.md)。
+- 更细的模块依赖表与代码级 baseline / reviewed exception 说明见 [07-modular-monolith-refactor.md](./07-modular-monolith-refactor.md)。
 
 ### 3.3 模块协作方式
 
@@ -282,7 +282,7 @@ flowchart LR
 
 - `internal/app/composition/architecture_test.go` 当前已经阻止 composition 和 runtime 回退到旧的 `internal/module/container` 依赖。
 - `internal/app/router_test.go` 当前已经约束 `ContainerRuntimeModule` 不再暴露 `Handler` / `PracticeRuntimeService`，并要求 `BuildPracticeModule` 依赖 `InstanceModule`。
-- `internal/module/architecture_allowlist_test.go` 当前记录了代码级跨模块依赖白名单，用来校验哪些 import 仍属于已审阅例外。
+- `internal/module/architecture_baseline_test.go` 当前记录了代码级模块依赖 baseline 与已审阅例外，用来校验哪些 import 仍属于当前架构事实。
 - 新模块必须先确定 owner，再决定是否需要 `domain`、`ports`、`contracts`；禁止先堆目录、后找边界。
 - 后端对外的长期事实源以 `docs/architecture/backend/` 与专题架构文档为准，不再保留迁移中间稿。
 
@@ -351,7 +351,7 @@ ctf/code/backend/
 │   ├── middleware/                  # RequestID、CORS、Auth、RateLimit 等中间件
 │   ├── model/                       # 跨模块共享的持久化模型
 │   ├── platform/events/             # 进程内事件总线
-│   ├── shared/                      # 映射与轻量共享工具
+│   ├── shared/                      # 映射与轻量共享工具；Guardrail 见 internal/shared/architecture_test.go
 │   ├── infrastructure/              # PostgreSQL / Redis 等进程级基础设施
 │   ├── handler/health/              # 健康检查
 │   ├── validation/                  # 请求校验规则

@@ -20,6 +20,7 @@ import (
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	assessmentconfig "ctf-platform/internal/module/assessment/config"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
@@ -141,7 +142,7 @@ func NewReportService(
 		logger = zap.NewNop()
 	}
 
-	cfg = assessmentdomain.NormalizeReportConfig(cfg)
+	cfg = assessmentconfig.NormalizeReportConfig(cfg)
 	return &ReportService{
 		lifecycleRepo:     lifecycleRepo,
 		userRepo:          userRepo,
@@ -597,7 +598,7 @@ func (s *ReportService) generatePersonalReport(ctx context.Context, reportID, us
 		return "", time.Time{}, err
 	}
 
-	return filePath, time.Now().Add(s.config.FileTTL), nil
+	return filePath, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) generateClassReport(ctx context.Context, reportID int64, className, format string, window classwindow.Range) (string, time.Time, error) {
@@ -631,7 +632,7 @@ func (s *ReportService) generateContestExport(ctx context.Context, reportID, con
 		return "", time.Time{}, err
 	}
 
-	return filePath, time.Now().Add(s.config.FileTTL), nil
+	return filePath, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) generateStudentReviewArchive(ctx context.Context, reportID, studentID int64, format string) (string, time.Time, error) {
@@ -648,7 +649,7 @@ func (s *ReportService) generateStudentReviewArchive(ctx context.Context, report
 		return "", time.Time{}, err
 	}
 
-	return filePath, time.Now().Add(s.config.FileTTL), nil
+	return filePath, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) generateTeacherAWDReviewArchive(reportID int64, archive *assessmentqry.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
@@ -659,7 +660,7 @@ func (s *ReportService) generateTeacherAWDReviewArchive(reportID int64, archive 
 	if err := RenderAWDReviewArchiveZip(filePath, archive); err != nil {
 		return "", time.Time{}, err
 	}
-	return filePath, time.Now().Add(s.config.FileTTL), nil
+	return filePath, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) generateTeacherAWDReviewReport(reportID int64, archive *assessmentqry.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
@@ -670,7 +671,7 @@ func (s *ReportService) generateTeacherAWDReviewReport(reportID int64, archive *
 	if err := RenderAWDReviewReportPDF(filePath, archive); err != nil {
 		return "", time.Time{}, err
 	}
-	return filePath, time.Now().Add(s.config.FileTTL), nil
+	return filePath, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) buildPersonalReportData(ctx context.Context, userID int64) (*personalReportData, error) {
@@ -817,7 +818,7 @@ func (s *ReportService) buildContestExportData(ctx context.Context, contestID in
 	}
 
 	return &contestExportData{
-		GeneratedAt: time.Now(),
+		GeneratedAt: reportNow(),
 		Contest: contestExportMeta{
 			ID:          contest.ID,
 			Title:       contest.Title,

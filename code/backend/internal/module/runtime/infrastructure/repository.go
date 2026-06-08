@@ -186,7 +186,7 @@ func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64
 		Where("id = ?", instanceID).
 		Updates(map[string]any{
 			"expires_at": expiresAt,
-			"updated_at": time.Now(),
+			"updated_at": time.Now().UTC(),
 		}).Error
 }
 
@@ -218,12 +218,13 @@ func (r *Repository) updateStatusAndReleasePortWithCurrentStatus(ctx context.Con
 			return err
 		}
 
+		now := time.Now().UTC()
 		updates := map[string]any{
 			"status":     status,
-			"updated_at": time.Now(),
+			"updated_at": now,
 		}
 		if status == instancecontracts.InstanceStatusStopped || status == instancecontracts.InstanceStatusExpired {
-			updates["destroyed_at"] = time.Now()
+			updates["destroyed_at"] = now
 			updates["host_port"] = 0
 			updates["container_id"] = ""
 			updates["network_id"] = ""
@@ -348,7 +349,7 @@ func (r *Repository) PersistProvisionedRuntime(ctx context.Context, instance *in
 			"runtime_details": instance.RuntimeDetails,
 			"access_url":      instance.AccessURL,
 			"status":          instance.Status,
-			"updated_at":      time.Now(),
+			"updated_at":      time.Now().UTC(),
 		})
 	if result.Error != nil {
 		return false, result.Error
@@ -382,7 +383,7 @@ func (r *Repository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *r
 		workspace.Status = runtimeentity.AWDDefenseWorkspaceStatusPending
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	if err := r.dbWithContext(ctx).Clauses(clause.OnConflict{
 		Columns: []clause.Column{
 			{Name: "contest_id"},
@@ -412,7 +413,7 @@ func (r *Repository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *r
 }
 
 func (r *Repository) BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error {
-	now := time.Now()
+	now := time.Now().UTC()
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var workspace runtimeentity.AWDDefenseWorkspace
 		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -578,7 +579,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 func (r *Repository) FindExpired(ctx context.Context) ([]*instancecontracts.Instance, error) {
 	var instances []*instancecontracts.Instance
 	err := r.dbWithContext(ctx).Where("status = ? AND expires_at < ?",
-		instancecontracts.InstanceStatusRunning, time.Now()).
+		instancecontracts.InstanceStatusRunning, time.Now().UTC()).
 		Find(&instances).Error
 	return instances, err
 }
@@ -587,7 +588,7 @@ func (r *Repository) ListRecoverableActiveInstances(ctx context.Context) ([]*ins
 	var instances []*instancecontracts.Instance
 	err := r.dbWithContext(ctx).
 		Where("status IN ?", []string{instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning}).
-		Where("expires_at > ?", time.Now()).
+		Where("expires_at > ?", time.Now().UTC()).
 		Order("updated_at ASC, id ASC").
 		Find(&instances).Error
 	return instances, err
@@ -655,7 +656,7 @@ func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, er
 		Where("id = ? AND status IN ? AND expires_at > ?",
 			id,
 			[]string{instancecontracts.InstanceStatusCreating, instancecontracts.InstanceStatusRunning},
-			time.Now(),
+			time.Now().UTC(),
 		).
 		Updates(map[string]any{
 			"status":          instancecontracts.InstanceStatusPending,
@@ -663,7 +664,7 @@ func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, er
 			"network_id":      "",
 			"runtime_details": "",
 			"access_url":      "",
-			"updated_at":      time.Now(),
+			"updated_at":      time.Now().UTC(),
 		})
 	if result.Error != nil {
 		return false, result.Error
@@ -690,7 +691,7 @@ func (r *Repository) FinishActiveAWDServiceOperationForInstance(ctx context.Cont
 			"status":        status,
 			"error_message": errorMessage,
 			"finished_at":   finishedAt,
-			"updated_at":    time.Now(),
+			"updated_at":    time.Now().UTC(),
 		}).Error
 }
 
@@ -705,13 +706,13 @@ func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID 
 			"status":        status,
 			"error_message": errorMessage,
 			"finished_at":   finishedAt,
-			"updated_at":    time.Now(),
+			"updated_at":    time.Now().UTC(),
 		}).Error
 }
 
 func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) (*runtimeports.TeacherInstancePage, error) {
 	rows := make([]teacherInstanceRow, 0)
-	now := time.Now()
+	now := time.Now().UTC()
 
 	query := r.dbWithContext(ctx).
 		Table("instances AS i").
@@ -977,7 +978,7 @@ func (r *Repository) TryTransitionStatus(ctx context.Context, id int64, fromStat
 		Where("id = ? AND status = ?", id, fromStatus).
 		Updates(map[string]any{
 			"status":     toStatus,
-			"updated_at": time.Now(),
+			"updated_at": time.Now().UTC(),
 		})
 	if result.Error != nil {
 		return false, result.Error
@@ -1046,7 +1047,7 @@ func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID 
 		Where("port = ?", port).
 		Updates(map[string]any{
 			"instance_id": instanceID,
-			"updated_at":  time.Now(),
+			"updated_at":  time.Now().UTC(),
 		}).Error
 }
 

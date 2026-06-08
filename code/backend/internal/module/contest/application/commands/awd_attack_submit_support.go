@@ -21,6 +21,7 @@ type submitAttackContext struct {
 	flagPrefix     string
 	currentFlag    string
 	acceptedFlags  []string
+	now            time.Time
 }
 
 func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, contestID, serviceID int64, req SubmitAttackInput) (*submitAttackContext, error) {
@@ -69,7 +70,15 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 		flagPrefix:     flagPrefix,
 		currentFlag:    currentFlag,
 		acceptedFlags:  acceptedFlags,
+		now:            now,
 	}, nil
+}
+
+func (c *submitAttackContext) businessNow() time.Time {
+	if c == nil || c.now.IsZero() {
+		return time.Now().UTC()
+	}
+	return c.now.UTC()
 }
 
 func resolveSubmitAttackFlagPrefix(snapshot contestentity.ContestAWDServiceSnapshot) string {

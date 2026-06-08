@@ -3,7 +3,6 @@ package domain
 import (
 	"time"
 
-	"ctf-platform/internal/config"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	"ctf-platform/internal/shared/taxonomy"
@@ -53,29 +52,4 @@ func buildProfileSnapshot(profiles []*assessmententity.SkillProfile) (map[string
 		}
 	}
 	return dimensionMap, latestUpdate
-}
-
-func NormalizeAssessmentConfig(cfg config.AssessmentConfig) config.AssessmentConfig {
-	if cfg.RedisKeyPrefix == "" {
-		cfg.RedisKeyPrefix = "ctf:assessment:skill-profile"
-	}
-	if cfg.DimensionTotalCacheTTL <= 0 {
-		cfg.DimensionTotalCacheTTL = 5 * time.Minute
-	}
-	if cfg.LockTTL <= 0 {
-		cfg.LockTTL = 10 * time.Second
-	}
-	if cfg.FullRebuildCron == "" {
-		cfg.FullRebuildCron = "0 0 * * *"
-	}
-	if cfg.FullRebuildTimeout <= 0 {
-		cfg.FullRebuildTimeout = 30 * time.Minute
-	}
-	if cfg.IncrementalUpdateDelay <= 0 {
-		cfg.IncrementalUpdateDelay = 100 * time.Millisecond
-	}
-	if cfg.IncrementalUpdateTimeout <= 0 {
-		cfg.IncrementalUpdateTimeout = 5 * time.Second
-	}
-	return cfg
 }

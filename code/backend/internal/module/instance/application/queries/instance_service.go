@@ -53,7 +53,7 @@ func (s *InstanceService) GetAccessURL(ctx context.Context, instanceID, userID i
 	if instance == nil {
 		return "", apperror.ErrForbidden
 	}
-	if visibleInstanceStatus(instance.Status, instance.ExpiresAt, time.Now()) != instancecontracts.InstanceStatusRunning || strings.TrimSpace(instance.AccessURL) == "" {
+	if visibleInstanceStatus(instance.Status, instance.ExpiresAt, time.Now().UTC()) != instancecontracts.InstanceStatusRunning || strings.TrimSpace(instance.AccessURL) == "" {
 		return "", instancecontracts.ErrInstanceExpired
 	}
 
@@ -68,7 +68,7 @@ func (s *InstanceService) GetUserInstances(ctx context.Context, userID int64) ([
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	result := make([]*instancecontracts.InstanceInfo, len(instances))
 	for idx, inst := range instances {
 		result[idx] = toInstanceInfo(inst, now, s.cfg.PublicHost, s.cfg.AccessHost)
@@ -127,7 +127,7 @@ func (s *InstanceService) ListTeacherInstances(
 		items = &instanceports.TeacherInstancePage{}
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	result := make([]instancecontracts.TeacherInstanceItem, len(items.List))
 	for idx, item := range items.List {
 		result[idx] = toTeacherInstanceItem(item, now, s.cfg.PublicHost, s.cfg.AccessHost)

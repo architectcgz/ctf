@@ -113,7 +113,7 @@ func (s *InstanceMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Con
 	if err != nil {
 		return err
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	for _, instance := range instances {
 		if instance == nil {
 			continue

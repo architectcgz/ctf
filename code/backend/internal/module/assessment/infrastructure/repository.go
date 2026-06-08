@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
+	assessmentconfig "ctf-platform/internal/module/assessment/config"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
@@ -35,7 +36,7 @@ func WithPublishedDimensionTotalCache(store assessmentports.AssessmentDimensionT
 			return
 		}
 		r.dimensionTotalCache = store
-		r.dimensionTotalCacheTTL = assessmentdomain.NormalizeAssessmentConfig(config.AssessmentConfig{
+		r.dimensionTotalCacheTTL = assessmentconfig.NormalizeAssessmentConfig(config.AssessmentConfig{
 			DimensionTotalCacheTTL: ttl,
 		}).DimensionTotalCacheTTL
 	}
@@ -110,7 +111,7 @@ func (r *Repository) GetStudentTeachingFactSnapshot(ctx context.Context, userID 
 		}
 	}
 
-	since := time.Now().AddDate(0, 0, -7)
+	since := time.Now().UTC().AddDate(0, 0, -7)
 	if err := r.fillStudentRecentActivity(ctx, userID, since, snapshot); err != nil {
 		return nil, err
 	}

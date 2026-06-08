@@ -84,7 +84,7 @@ func (s *InstanceService) ExtendInstance(ctx context.Context, instanceID, userID
 	if isAWDTeamServiceInstance(instance) {
 		return nil, apperror.ErrForbidden
 	}
-	if instance.Status != instancecontracts.InstanceStatusRunning || !instance.ExpiresAt.After(time.Now()) {
+	if instance.Status != instancecontracts.InstanceStatusRunning || !instance.ExpiresAt.After(time.Now().UTC()) {
 		return nil, instancecontracts.ErrInstanceExpired
 	}
 

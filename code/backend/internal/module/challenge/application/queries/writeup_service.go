@@ -60,7 +60,7 @@ func (s *WriteupService) GetPublished(ctx context.Context, userID, challengeID i
 		return nil, challengecontracts.ErrChallengeNotPublish
 	}
 
-	item, err := s.repo.FindReleasedWriteupByChallengeID(ctx, challengeID, time.Now())
+	item, err := s.repo.FindReleasedWriteupByChallengeID(ctx, challengeID, time.Now().UTC())
 	if err != nil {
 		if errors.Is(err, challengeports.ErrChallengeReleasedWriteupNotFound) {
 			return nil, apperror.ErrNotFound
@@ -104,7 +104,7 @@ func (s *WriteupService) ListRecommendedSolutions(ctx context.Context, userID, c
 		return nil, err
 	}
 
-	items, err := s.repo.ListRecommendedSolutionsByChallengeID(ctx, challengeID, time.Now())
+	items, err := s.repo.ListRecommendedSolutionsByChallengeID(ctx, challengeID, time.Now().UTC())
 	if err != nil {
 		return nil, err
 	}

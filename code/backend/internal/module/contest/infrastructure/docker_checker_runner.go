@@ -22,7 +22,7 @@ import (
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
-	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type dockerCheckerClient interface {
@@ -104,11 +104,15 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 	result := contestports.CheckerRunResult{
 		Status:    contestports.CheckerRunStatusFailed,
 		Reason:    contestports.CheckerReasonSandboxError,
-		StartedAt: startedAt,
+		StartedAt: startedAt.UTC(),
+	}
+	finish := func() {
+		finishedAt := time.Now()
+		result.FinishedAt = finishedAt.UTC()
+		result.Duration = finishedAt.Sub(startedAt)
 	}
 	if r == nil || r.cli == nil {
-		result.FinishedAt = time.Now()
-		result.Duration = result.FinishedAt.Sub(startedAt)
+		finish()
 		return result, fmt.Errorf("checker runner docker client is not configured")
 	}
 
@@ -124,15 +128,13 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 
 	spec, err := r.buildContainerSpec(job)
 	if err != nil {
-		result.FinishedAt = time.Now()
-		result.Duration = result.FinishedAt.Sub(startedAt)
+		finish()
 		return result, err
 	}
 
 	created, err := r.cli.ContainerCreate(runCtx, spec.ContainerConfig, spec.HostConfig, spec.NetworkConfig, nil, "")
 	if err != nil {
-		result.FinishedAt = time.Now()
-		result.Duration = result.FinishedAt.Sub(startedAt)
+		finish()
 		return result, err
 	}
 	containerID := created.ID
@@ -145,14 +147,12 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 	}()
 
 	if err := r.copyCheckerFilesToContainer(runCtx, containerID, spec.ContainerConfig.WorkingDir, job.Files); err != nil {
-		result.FinishedAt = time.Now()
-		result.Duration = result.FinishedAt.Sub(startedAt)
+		finish()
 		return result, err
 	}
 
 	if err := r.cli.ContainerStart(runCtx, containerID, container.StartOptions{}); err != nil {
-		result.FinishedAt = time.Now()
-		result.Duration = result.FinishedAt.Sub(startedAt)
+		finish()
 		return result, err
 	}
 
@@ -161,14 +161,12 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 	select {
 	case waitResp = <-waitCh:
 	case err := <-errCh:
-		result.FinishedAt = time.Now()
-		result.Duration = result.FinishedAt.Sub(startedAt)
+		finish()
 		return result, err
 	case <-runCtx.Done():
 		result.Reason = contestports.CheckerReasonTimeout
 		result.ResourceLimitHit = "timeout"
-		result.FinishedAt = time.Now()
-		result.Duration = result.FinishedAt.Sub(startedAt)
+		finish()
 		return result, nil
 	}
 
@@ -177,8 +175,7 @@ func (r *DockerCheckerRunner) RunChecker(ctx context.Context, job contestports.C
 	result.Stderr = stderr
 	result.OutputLimitHit = outputLimitHit
 	result.ExitCode = waitResp.StatusCode
-	result.FinishedAt = time.Now()
-	result.Duration = result.FinishedAt.Sub(startedAt)
+	finish()
 
 	if outputLimitHit {
 		result.Reason = contestports.CheckerReasonOutputLimitExceeded
@@ -262,7 +259,7 @@ func (r *DockerCheckerRunner) buildContainerSpec(job contestports.CheckerRunJob)
 		WorkingDir:      workDir,
 		User:            strings.TrimSpace(r.cfg.User),
 		NetworkDisabled: networkDisabled,
-		Labels:          runtimedomain.CheckerSandboxLabels(),
+		Labels:          runtimecontracts.CheckerSandboxLabels(),
 		AttachStdout:    true,
 		AttachStderr:    true,
 	}

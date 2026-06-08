@@ -100,7 +100,7 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 		return nil, nil, authcontracts.ErrAccountDisabled
 	}
 	if user.Status == identitycontracts.UserStatusLocked {
-		if user.LockedUntil == nil || time.Now().Before(*user.LockedUntil) {
+		if user.LockedUntil == nil || time.Now().UTC().Before(*user.LockedUntil) {
 			s.log.Warn("auth_login_failed_account_locked", zap.String("username", req.Username), zap.Int64("user_id", user.ID))
 			return nil, nil, authcontracts.ErrAccountLocked
 		}
@@ -111,7 +111,7 @@ func (s *service) Login(ctx context.Context, req LoginInput) (*LoginResp, *authc
 	}
 
 	if !s.ValidatePassword(user, req.Password) {
-		locked, updateErr := s.recordFailedLogin(ctx, user, time.Now())
+		locked, updateErr := s.recordFailedLogin(ctx, user, time.Now().UTC())
 		if updateErr != nil {
 			s.log.Error("auth_login_failed_record_attempt", zap.String("username", req.Username), zap.Int64("user_id", user.ID), zap.Error(updateErr))
 			return nil, nil, apperror.ErrInternal.WithCause(updateErr)

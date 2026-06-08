@@ -418,7 +418,7 @@ func (s *ChallengeService) dispatchPublishCheckJobs(ctx context.Context) {
 		if job == nil {
 			continue
 		}
-		startedAt := time.Now()
+		startedAt := time.Now().UTC()
 		started, err := s.repo.TryStartPublishCheckJob(ctx, job.ID, startedAt)
 		if err != nil {
 			s.logger.Warn("start publish check job failed", zap.Int64("job_id", job.ID), zap.Error(err))
@@ -465,7 +465,7 @@ func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int
 			passed = false
 			failureSummary = fmt.Sprintf("自动发布失败: %v", err)
 		} else {
-			now := time.Now()
+			now := time.Now().UTC()
 			publishedAt = &now
 		}
 	}
@@ -484,7 +484,7 @@ func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *chall
 	if job == nil {
 		return
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	job.FinishedAt = &now
 	job.UpdatedAt = now
 	job.FailureSummary = strings.TrimSpace(failureSummary)
@@ -593,22 +593,22 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*c
 		ChallengeID: challenge.ID,
 	}
 
-	resp.Precheck.StartedAt = time.Now()
+	resp.Precheck.StartedAt = time.Now().UTC()
 	input, precheckPassed, err := s.runPrecheck(ctx, challenge, &resp.Precheck.Steps)
-	resp.Precheck.EndedAt = time.Now()
+	resp.Precheck.EndedAt = time.Now().UTC()
 	if err != nil {
 		return nil, err
 	}
 	resp.Precheck.Passed = precheckPassed
 
-	resp.Runtime.StartedAt = time.Now()
+	resp.Runtime.StartedAt = time.Now().UTC()
 	if !resp.Precheck.Passed {
 		resp.Runtime.Steps = append(resp.Runtime.Steps, challengecontracts.ChallengeSelfCheckStepResp{
 			Name:    "runtime_startup",
 			Passed:  false,
 			Message: "预检未通过，已跳过真实拉起",
 		})
-		resp.Runtime.EndedAt = time.Now()
+		resp.Runtime.EndedAt = time.Now().UTC()
 		return resp, nil
 	}
 	if input.skipRuntime {
@@ -617,7 +617,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*c
 			Passed:  true,
 			Message: "当前题目无需运行时，已跳过真实拉起",
 		})
-		resp.Runtime.EndedAt = time.Now()
+		resp.Runtime.EndedAt = time.Now().UTC()
 		resp.Runtime.Passed = true
 		return resp, nil
 	}
@@ -627,7 +627,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*c
 			Passed:  false,
 			Message: "运行时自测能力未配置",
 		})
-		resp.Runtime.EndedAt = time.Now()
+		resp.Runtime.EndedAt = time.Now().UTC()
 		return resp, nil
 	}
 
@@ -724,7 +724,7 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*c
 		}
 	}
 
-	resp.Runtime.EndedAt = time.Now()
+	resp.Runtime.EndedAt = time.Now().UTC()
 	resp.Runtime.Passed = runtimePassed
 	resp.Runtime.AccessURL = accessURL
 	resp.Runtime.ContainerCount = len(runtimeDetails.Containers)

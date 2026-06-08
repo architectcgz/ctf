@@ -37,7 +37,7 @@
 
 ## 机械化 Guardrail
 
-- `scripts/check-backend-architecture.sh --quick`：快速检查后端模块依赖方向。
+- `scripts/check-backend-architecture.sh --quick`：快速检查后端模块架构包与 `internal/shared` 边界。
 - `scripts/check-backend-architecture.sh --full`：在 quick 基础上补充 `internal/app` 的 concrete cross-module import、context architecture，以及后端测试分层 guardrail。
 - `scripts/check-frontend-architecture.sh --quick`：快速检查前端分层边界、route view 约束和 `:deep` 存量守卫。
 - `scripts/check-frontend-architecture.sh --full`：在 quick 基础上补充前端热点文件增长守卫、feature owner boundary、overlay 结构约束和前端主题 token 检查。
@@ -51,6 +51,7 @@
 主要代码级 guardrail：
 
 - 后端：`code/backend/internal/module/architecture_test.go`
+- 后端 shared 边界：`code/backend/internal/shared/architecture_test.go`
 - 进程装配：`code/backend/internal/app/architecture_rules_test.go`
 - 后端 context 架构：`code/backend/internal/app/backend_context_architecture_test.go`
 - 后端测试架构：`code/backend/tests/architecture/test_architecture_test.go`

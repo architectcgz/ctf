@@ -59,7 +59,7 @@ func (s *Service) ReviewManualReviewSubmission(
 		return nil, apperror.ErrInvalidParams.WithCause(errors.New("当前提交不属于人工审核题"))
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	item := record.Submission
 	item.ReviewStatus = req.ReviewStatus
 	item.ReviewComment = strings.TrimSpace(req.ReviewComment)

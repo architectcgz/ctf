@@ -13,7 +13,7 @@ func bindContestRegistrationTeam(tx *gorm.DB, contestID, userID int64, teamID *i
 		Where("contest_id = ? AND user_id = ?", contestID, userID).
 		Updates(map[string]any{
 			"team_id":    teamID,
-			"updated_at": time.Now(),
+			"updated_at": time.Now().UTC(),
 		})
 	if result.Error != nil {
 		return result.Error

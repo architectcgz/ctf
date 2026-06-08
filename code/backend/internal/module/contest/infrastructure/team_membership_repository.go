@@ -42,7 +42,7 @@ func (r *TeamRepository) AddMemberWithLock(ctx context.Context, contestID, teamI
 			ContestID: contestID,
 			TeamID:    teamID,
 			UserID:    userID,
-			JoinedAt:  time.Now(),
+			JoinedAt:  time.Now().UTC(),
 		}
 		if err := tx.Create(member).Error; err != nil {
 			return err

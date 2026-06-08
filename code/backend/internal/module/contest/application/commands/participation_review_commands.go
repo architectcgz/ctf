@@ -31,7 +31,7 @@ func (s *ParticipationService) ReviewRegistration(ctx context.Context, contestID
 		return nil, contestcontracts.ErrInvalidStatusTransition
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 	registration.Status = req.Status
 	registration.ReviewedBy = &reviewerID
 	registration.ReviewedAt = &now
