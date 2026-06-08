@@ -194,7 +194,7 @@ func TestNewHTTPServerBuildsAndShutsDown(t *testing.T) {
 	}
 }
 
-func TestNewHTTPServerDoesNotWaitForStartupRecoveryLeaderReadiness(t *testing.T) {
+func TestNewHTTPServerWaitsForStartupRecoveryLeaderReadiness(t *testing.T) {
 	t.Parallel()
 
 	cfg, db, cache := newAppTestDependencies(t)
@@ -216,6 +216,21 @@ func TestNewHTTPServerDoesNotWaitForStartupRecoveryLeaderReadiness(t *testing.T)
 
 	select {
 	case result := <-done:
+		if result.server != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_ = result.server.Shutdown(ctx)
+		}
+		t.Fatalf("expected NewHTTPServer() to wait while startup recovery lock is held, got err=%v", result.err)
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	if err := cache.Del(context.Background(), "ctf:platform:runtime:recovery:lock").Err(); err != nil {
+		t.Fatalf("release seeded startup recovery lock: %v", err)
+	}
+
+	select {
+	case result := <-done:
 		if result.err != nil {
 			t.Fatalf("NewHTTPServer() error = %v", result.err)
 		}
@@ -224,8 +239,8 @@ func TestNewHTTPServerDoesNotWaitForStartupRecoveryLeaderReadiness(t *testing.T)
 		if err := result.server.Shutdown(ctx); err != nil {
 			t.Fatalf("Shutdown() error = %v", err)
 		}
-	case <-time.After(500 * time.Millisecond):
-		t.Fatal("expected NewHTTPServer() to return while startup recovery lock is held by another owner")
+	case <-time.After(2 * time.Second):
+		t.Fatal("expected NewHTTPServer() to return after startup recovery lock becomes acquirable")
 	}
 }
 

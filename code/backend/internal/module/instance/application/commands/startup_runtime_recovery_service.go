@@ -138,24 +138,17 @@ func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) error {
 		return err
 	}
 
-	initialLock, initialAcquired, err := s.tryAcquireStartupRecoveryLock(runCtx)
+	initialLock, _, err := s.tryAcquireStartupRecoveryLock(runCtx)
 	if err != nil {
 		return err
 	}
 
-	var initReady chan error
-	if initialAcquired {
-		initReady = make(chan error, 1)
-	}
+	initReady := make(chan error, 1)
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
 		s.runLeaderElectionLoop(runCtx, currentBootID, initialLock, initReady)
 	}()
-	if initReady == nil {
-		started = true
-		return nil
-	}
 	select {
 	case err := <-initReady:
 		if err != nil {

@@ -514,7 +514,7 @@ func TestStartupRuntimeRecoveryServiceCanRestartAfterStop(t *testing.T) {
 	}
 }
 
-func TestStartupRuntimeRecoveryServiceStandbyReplicaStartsWithoutLeaderReady(t *testing.T) {
+func TestStartupRuntimeRecoveryServiceStandbyReplicaWaitsForLeaderReady(t *testing.T) {
 	t.Parallel()
 
 	reconciler := &startupRuntimeReconcilerStub{}
@@ -537,15 +537,9 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaStartsWithoutLeaderReady(t *
 
 	select {
 	case err := <-startDone:
-		if err != nil {
-			t.Fatalf("Start() error = %v", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatal("expected standby Start() to return without waiting for leader readiness")
+		t.Fatalf("expected standby Start() to wait for leader readiness, got err=%v", err)
+	case <-time.After(50 * time.Millisecond):
 	}
-	t.Cleanup(func() {
-		_ = service.Stop(context.Background())
-	})
 
 	if reconciler.called {
 		t.Fatal("expected standby replica to skip recovery")
@@ -555,9 +549,17 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaStartsWithoutLeaderReady(t *
 	}
 
 	cancel()
+	select {
+	case err := <-startDone:
+		if err == nil {
+			t.Fatal("expected canceled standby Start() to return context error")
+		}
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("expected standby Start() to stop after context cancellation")
+	}
 }
 
-func TestStartupRuntimeRecoveryServiceStandbyReplicaCanTakeOverAfterAsyncStart(t *testing.T) {
+func TestStartupRuntimeRecoveryServiceStandbyReplicaCanTakeOverBeforeStartReturns(t *testing.T) {
 	t.Parallel()
 
 	startedAt := time.Date(2026, 5, 16, 10, 1, 0, 0, time.UTC)
@@ -566,7 +568,7 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaCanTakeOverAfterAsyncStart(t
 	heartbeatSaved := make(chan struct{}, 1)
 	stateStore := &startupRuntimeStateStoreStub{
 		loadFn: func(context.Context) (string, time.Time, bool, error) {
-			return "boot-ready", startedAt.Add(-time.Minute), true, nil
+			return "boot-ready", startedAt.Add(-2 * time.Minute), true, nil
 		},
 		acquireLockFn: func(context.Context, time.Duration) (*redislock.Lock, bool, error) {
 			mu.Lock()
@@ -595,24 +597,92 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaCanTakeOverAfterAsyncStart(t
 
 	select {
 	case err := <-startDone:
-		if err != nil {
-			t.Fatalf("Start() error = %v", err)
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatal("expected standby Start() to return before leader is ready")
+		t.Fatalf("expected standby Start() to wait before takeover, got err=%v", err)
+	case <-time.After(50 * time.Millisecond):
 	}
-	t.Cleanup(func() {
-		_ = service.Stop(context.Background())
-	})
 
 	mu.Lock()
 	allowAcquire = true
 	mu.Unlock()
 
 	select {
+	case err := <-startDone:
+		if err != nil {
+			t.Fatalf("Start() error = %v", err)
+		}
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("expected standby Start() to return after takeover records heartbeat")
+	}
+	t.Cleanup(func() {
+		_ = service.Stop(context.Background())
+	})
+
+	select {
 	case <-heartbeatSaved:
 	case <-time.After(250 * time.Millisecond):
 		t.Fatal("expected async standby loop to take over and record heartbeat")
+	}
+}
+
+func TestStartupRuntimeRecoveryServiceStandbyReplicaReturnsAfterForeignLeaderReady(t *testing.T) {
+	t.Parallel()
+
+	startedAt := time.Date(2026, 5, 16, 10, 1, 0, 0, time.UTC)
+	var mu sync.Mutex
+	foreignLeaderReady := false
+	reconciler := &startupRuntimeReconcilerStub{}
+	stateStore := &startupRuntimeStateStoreStub{
+		loadFn: func(context.Context) (string, time.Time, bool, error) {
+			mu.Lock()
+			defer mu.Unlock()
+			if foreignLeaderReady {
+				return "boot-ready", startedAt, true, nil
+			}
+			return "boot-ready", startedAt.Add(-2 * time.Minute), true, nil
+		},
+		acquireLockFn: func(context.Context, time.Duration) (*redislock.Lock, bool, error) {
+			return nil, false, nil
+		},
+	}
+	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, 0, nil)
+	service.now = func() time.Time { return startedAt }
+	service.bootIDPath = writeBootIDFile(t, "boot-ready")
+	service.leaderRetry = 10 * time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	startDone := make(chan error, 1)
+	go func() {
+		startDone <- service.Start(ctx)
+	}()
+
+	select {
+	case err := <-startDone:
+		t.Fatalf("expected standby Start() to wait before foreign leader heartbeat is ready, got err=%v", err)
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	mu.Lock()
+	foreignLeaderReady = true
+	mu.Unlock()
+
+	select {
+	case err := <-startDone:
+		if err != nil {
+			t.Fatalf("Start() error = %v", err)
+		}
+	case <-time.After(250 * time.Millisecond):
+		t.Fatal("expected standby Start() to return after foreign leader heartbeat is ready")
+	}
+	t.Cleanup(func() {
+		_ = service.Stop(context.Background())
+	})
+
+	if reconciler.called {
+		t.Fatal("expected standby replica to skip recovery when foreign leader is ready")
+	}
+	if len(stateStore.saveCalls) != 0 {
+		t.Fatalf("expected standby replica to skip heartbeat writes, got %d", len(stateStore.saveCalls))
 	}
 }
 
