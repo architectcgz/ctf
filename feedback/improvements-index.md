@@ -29,4 +29,4 @@
 
 - Agent 工作流、review、prompt、skill、policy 类反馈优先写入 `feedback/`。
 - 可执行业务任务不要堆在 `feedback/`，应进入 `docs/plan/` 或 `docs/todo/`。
-- 反馈已经沉淀到 `AGENTS.md`、skill、脚本或 CI 后，从活动反馈列表移除；需要追溯时使用 Git 历史。
+- 反馈已经沉淀到 `AGENTS.md`、skill、脚本或 CI 后，默认切到 `archived` 状态；只有明确不再保留原文上下文时才从活动反馈列表移除。

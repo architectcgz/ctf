@@ -25,7 +25,7 @@
 ```text
 ## 沉淀状态
 
-- 状态：已沉淀 / 仅项目保留 / 待同步 skill / 已机械化 / 已废弃
+- 状态：已沉淀 / 仅项目保留 / 待同步 skill / 已机械化 / archived / 已废弃
 - Owner：frontend-engineer skill / scripts/check-workflow-governance.sh / ctf AGENTS.md / .harness/reuse-index/index.yaml
 - 链接：...
 ```
@@ -38,6 +38,7 @@
 - 项目复用模式：沉到 `.harness/reuse-index/index.yaml` 或对应源码镜像目录下的 `README.md`。
 - 项目 prompt 入口和项目特化补充：沉到 `harness/prompts/`；跨项目共享正文：沉到 `/home/azhi/.agents/harness/prompts/`。
 - 跨项目通用方法、坏做法或检查清单：沉到对应全局 skill。
+- 已经完成吸收但仍希望保留原始复盘上下文：把文件切到 `archived` 状态，明确 owner 与链接，不再把它当成活动反馈。
 
 ## 已迁移积累
 
@@ -55,4 +56,4 @@
 - `2026-05-23-frontend-review-snapshots-can-be-pruned-after-audit-absorption.md`：前端 review 单轮快照在主索引吸收后应及时清理，避免旧“未修复”状态继续污染活动目录。
 - `2026-06-04-frontend-state-surface-owner-and-ui-test-layering.md`：前端 loading / empty / loaded 状态 surface owner 应收口到同一视觉区域，同时 UI 测试需要从大量源码字符串断言转向分层覆盖。
 
-已沉淀到全局 skill、全局 AGENTS 或项目机械检查中的旧反馈不在本目录长期保留；需要追溯原始事故时使用 Git 历史。
+已沉淀到全局 skill、全局 AGENTS 或项目机械检查中的旧反馈，不应继续以活动状态停留在本目录；默认切到 `archived` 状态保留上下文，需要追溯更早版本时再使用 Git 历史。
