@@ -16,7 +16,6 @@ import (
 	"gorm.io/gorm/clause"
 
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
-	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
@@ -97,9 +96,14 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*instancecontracts
 	return &instance, nil
 }
 
-func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
-	var user identitycontracts.User
-	if err := r.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
+func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*runtimeports.InstanceUser, error) {
+	var user runtimeports.InstanceUser
+	if err := r.db.WithContext(ctx).
+		Table("users").
+		Select("id, role, class_name").
+		Where("id = ?", userID).
+		Where("deleted_at IS NULL").
+		First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -728,7 +732,7 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
 		Where("i.status <> ?", instancecontracts.InstanceStatusStopped).
 		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", contestcontracts.ContestModeAWD).
-		Where("u.role = ? AND u.deleted_at IS NULL", identitycontracts.RoleStudent)
+		Where("u.role = ? AND u.deleted_at IS NULL", runtimeports.InstanceUserRoleStudent)
 
 	query = applyTeacherInstanceQueryFilters(query, filter, now)
 

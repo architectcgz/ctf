@@ -35,7 +35,7 @@ func (noopRuntimeCleaner) CleanupRuntime(context.Context, *instanceentity.Instan
 
 type runtimeInstanceContextRepo struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*instanceentity.Instance, error)
-	findUserByIDFn                          func(ctx context.Context, userID int64) (*identitycontracts.User, error)
+	findUserByIDFn                          func(ctx context.Context, userID int64) (*runtimeports.InstanceUser, error)
 	listVisibleByUserFn                     func(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error)
 	markStoppingWithContextFn               func(ctx context.Context, id int64) (bool, error)
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
@@ -48,7 +48,7 @@ func (r *runtimeInstanceContextRepo) FindByID(ctx context.Context, id int64) (*i
 	return nil, nil
 }
 
-func (r *runtimeInstanceContextRepo) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+func (r *runtimeInstanceContextRepo) FindUserByID(ctx context.Context, userID int64) (*runtimeports.InstanceUser, error) {
 	if r.findUserByIDFn != nil {
 		return r.findUserByIDFn(ctx, userID)
 	}
@@ -1111,16 +1111,16 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 			}
 			return &instanceentity.Instance{ID: id, UserID: 2, Status: instanceentity.InstanceStatusRunning}, nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*runtimeports.InstanceUser, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
 			if userID == 1001 {
 				findRequesterCalled = true
-				return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
+				return &runtimeports.InstanceUser{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 			}
 			findOwnerCalled = true
-			return &identitycontracts.User{ID: userID, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
+			return &runtimeports.InstanceUser{ID: userID, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
 		},
 		markStoppingWithContextFn: func(ctx context.Context, id int64) (bool, error) {
 			markCalled = true

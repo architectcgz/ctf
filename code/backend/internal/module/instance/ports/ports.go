@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 )
 
@@ -13,7 +12,7 @@ type InstanceLookupRepository interface {
 }
 
 type InstanceUserLookupRepository interface {
-	FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error)
+	FindUserByID(ctx context.Context, userID int64) (*InstanceUser, error)
 }
 
 type InstanceAccessRepository interface {
@@ -41,6 +40,14 @@ type InstanceStatusRepository interface {
 type RuntimeCleaner interface {
 	CleanupRuntime(ctx context.Context, instance *instanceentity.Instance) error
 }
+
+type InstanceUser struct {
+	ID        int64
+	Role      string
+	ClassName string
+}
+
+const InstanceUserRoleStudent = "student"
 
 type TeacherInstanceFilter struct {
 	ClassName string

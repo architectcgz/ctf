@@ -75,6 +75,34 @@ func TestServiceListTeacherInstancesRejectsTeacherCrossClassFilter(t *testing.T)
 	}
 }
 
+func TestRepositoryFindUserByIDIgnoresSoftDeletedUsers(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	now := time.Now()
+	user := &identitycontracts.User{
+		ID:        1,
+		Username:  "teacher-a",
+		Role:      identitycontracts.RoleTeacher,
+		ClassName: "Class A",
+		Status:    identitycontracts.UserStatusActive,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	seedUser(t, repo.db, user)
+	if err := repo.db.Delete(user).Error; err != nil {
+		t.Fatalf("soft delete user: %v", err)
+	}
+
+	got, err := repo.FindUserByID(context.Background(), user.ID)
+	if err != nil {
+		t.Fatalf("FindUserByID() error = %v", err)
+	}
+	if got != nil {
+		t.Fatalf("expected soft-deleted user to be hidden, got %+v", got)
+	}
+}
+
 func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	t.Parallel()
 

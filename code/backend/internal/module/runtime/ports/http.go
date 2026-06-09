@@ -16,6 +16,10 @@ type InstanceLookupRepository = instanceports.InstanceLookupRepository
 
 type InstanceUserLookupRepository = instanceports.InstanceUserLookupRepository
 
+type InstanceUser = instanceports.InstanceUser
+
+const InstanceUserRoleStudent = instanceports.InstanceUserRoleStudent
+
 type InstanceAccessRepository = instanceports.InstanceAccessRepository
 
 type UserVisibleInstanceRepository = instanceports.UserVisibleInstanceRepository
