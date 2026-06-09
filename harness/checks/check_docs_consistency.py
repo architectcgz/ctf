@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from doc_path_refs import missing_changed_feature_doc_code_refs
+
 
 ROOT = Path(__file__).resolve().parents[2]
 FAILURES: list[str] = []
@@ -241,6 +243,8 @@ def main() -> int:
 
     check_architecture_status()
     check_architecture_doc_quality()
+    for message in missing_changed_feature_doc_code_refs(ROOT, git_changed_architecture_docs()):
+        fail(message)
     check_diagrams()
 
     if FAILURES:

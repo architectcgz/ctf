@@ -151,6 +151,7 @@ run_navigation_checks() {
   check_contains "scripts/check-script-layer.sh" 'harness/checks/check_script_layer_conventions\.py' "script layer wrapper delegates to harness check"
   check_contains "harness/checks/check_docs_consistency.py" 'VAGUE_ARCHITECTURE_PHRASES' "documentation consistency script checks vague architecture phrases"
   check_contains "harness/checks/check_docs_consistency.py" 'check_architecture_doc_quality' "documentation consistency script checks architecture doc quality"
+  check_contains "harness/checks/check_docs_consistency.py" 'missing_changed_feature_doc_code_refs' "documentation consistency script checks changed feature doc code paths"
   check_contains "AGENTS.md" 'docs/architecture/' "AGENTS references docs/architecture"
   check_contains "AGENTS.md" 'docs/contracts/' "AGENTS references docs/contracts"
   check_contains "AGENTS.md" 'docs/contracts/openapi-v1/' "AGENTS references split OpenAPI source"
