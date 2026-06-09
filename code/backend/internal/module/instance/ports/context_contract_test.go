@@ -38,14 +38,6 @@ func (ctxOnlyInstanceRepository) MarkStopping(context.Context, int64) (bool, err
 	return true, nil
 }
 
-func (ctxOnlyInstanceRepository) FinalizeStoppedRuntime(context.Context, int64) error {
-	return nil
-}
-
-func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePort(context.Context, int64, string) error {
-	return nil
-}
-
 type ctxOnlyProxyTicketInstanceReader struct{}
 
 func (ctxOnlyProxyTicketInstanceReader) FindByID(context.Context, int64) (*instanceentity.Instance, error) {
@@ -66,5 +58,4 @@ var _ instanceports.InstanceAccessRepository = (*ctxOnlyInstanceRepository)(nil)
 var _ instanceports.UserVisibleInstanceRepository = (*ctxOnlyInstanceRepository)(nil)
 var _ instanceports.TeacherInstanceQueryRepository = (*ctxOnlyInstanceRepository)(nil)
 var _ instanceports.InstanceExtendRepository = (*ctxOnlyInstanceRepository)(nil)
-var _ instanceports.InstanceStatusRepository = (*ctxOnlyInstanceRepository)(nil)
 var _ instanceports.ProxyTicketInstanceReader = (*ctxOnlyProxyTicketInstanceReader)(nil)

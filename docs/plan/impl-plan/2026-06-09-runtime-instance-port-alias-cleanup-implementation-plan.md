@@ -397,7 +397,7 @@ Expected: PASS.
 - Modify: `code/backend/internal/app/composition/instance_module.go`
 - Modify focused repository and composition tests.
 
-- [ ] **Step 1: List runtime repository methods by owner**
+- [x] **Step 1: List runtime repository methods by owner**
 
 Classify each `runtime/infrastructure.Repository` method as:
 
@@ -405,17 +405,22 @@ Classify each `runtime/infrastructure.Repository` method as:
 - runtime allocation/state persistence
 - mixed instance state plus runtime allocation transaction
 
-- [ ] **Step 2: Move pure instance methods**
+- [x] **Step 2: Move pure instance methods**
 
 Move pure instance methods to `instance/infrastructure.Repository`, preserving SQL behavior and tests.
 
-- [ ] **Step 3: Adapt mixed methods at composition**
+- [x] **Step 3: Adapt mixed methods at composition**
 
 For mixed methods, compose `instanceinfra.Repository` and a narrow runtime allocation repository in `app/composition` rather than making either module own both concepts.
 
-- [ ] **Step 4: Verify owner split**
+- [x] **Step 4: Verify owner split**
 
 Run focused instance/runtime repository tests and module architecture guards before committing.
+
+Current residual surface after Task 8:
+
+- `runtime/infrastructure.Repository` still owns mixed instance-state + runtime-allocation writes such as `UpdateStatusAndReleasePort`, `FinalizeStoppedRuntime`, `FailProvisioning`, `PersistProvisionedRuntime`, `RequeueLostRuntime`, and startup / cleanup support queries.
+- `app/composition/instance_module.go` now wires instance command/query services from `instanceinfra.Repository`, while maintenance / practice runtime flows continue to cross the composition adapter into runtime-owned mixed persistence.
 
 ## Task 9: Re-home Instance HTTP Surface
 
@@ -423,14 +428,19 @@ Run focused instance/runtime repository tests and module architecture guards bef
 - Review: `code/backend/internal/module/runtime/api/http/*`
 - Review: router wiring under `code/backend/internal/app`
 
-- [ ] **Step 1: Decide physical owner**
+- [x] **Step 1: Decide physical owner**
 
 After Task 7 and Task 8, choose whether to move instance route handlers to `instance/api/http` or keep a compatibility wrapper in runtime while the implementation lives under instance.
 
-- [ ] **Step 2: Preserve route and response contracts**
+- [x] **Step 2: Preserve route and response contracts**
 
 Move or recompose without changing public HTTP paths, JSON fields, proxy ticket behavior, or audit logging.
 
 - [ ] **Step 3: Remove final baseline**
 
 Delete `runtime -> instance` from `moduleDependencyBaseline` only after production imports are gone and module guard tests pass.
+
+Current remaining surface after Task 9:
+
+- Production `InstanceModule` handler ownership has moved to `instance/api/http`, and route wiring assertions now point at the instance module.
+- Legacy `runtime/api/http` implementation files still exist as compatibility / migration surface and should be collapsed before removing the final `runtime -> instance` baseline entry.

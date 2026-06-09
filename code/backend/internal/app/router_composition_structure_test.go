@@ -21,13 +21,13 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	instancehttp "ctf-platform/internal/module/instance/api/http"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 )
@@ -169,7 +169,7 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileCommands", reflect.TypeOf((*identitycontracts.ProfileCommandService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileQueries", reflect.TypeOf((*identitycontracts.ProfileQueryService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "Users", reflect.TypeOf((*identitycontracts.UserLookupRepository)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.InstanceModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
+	assertFieldType(t, reflect.TypeOf(composition.InstanceModule{}), "Handler", reflect.TypeOf(&instancehttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.InstanceModule{}), "PracticeRuntimeService", reflect.TypeOf((*practiceports.RuntimeInstanceService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.PracticeModule{}), "Handler", reflect.TypeOf(&practicehttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.ContainerRuntimeModule{}), "ChallengeImageRuntime", reflect.TypeOf((*challengeports.ImageRuntime)(nil)).Elem())
@@ -299,7 +299,7 @@ func TestBuildInstanceModuleDelegatesToSubBuilders(t *testing.T) {
 		"instancecmd.NewInstanceService(",
 		"buildRuntimeProxyTicketService(root, instanceRepo)",
 		"instancecmd.NewInstanceMaintenanceService(",
-		"runtimehttp.NewHandler(m.service",
+		"instancehttp.NewHandler(m.service",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

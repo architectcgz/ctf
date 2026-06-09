@@ -9,9 +9,24 @@ import (
 	"gorm.io/gorm"
 
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type countRunningContextKey string
+
+type instanceDestroyStatusRepository interface {
+	MarkStopping(ctx context.Context, id int64) (bool, error)
+}
+
+var (
+	_ instanceports.InstanceLookupRepository       = (*Repository)(nil)
+	_ instanceports.InstanceUserLookupRepository   = (*Repository)(nil)
+	_ instanceports.InstanceAccessRepository       = (*Repository)(nil)
+	_ instanceports.UserVisibleInstanceRepository  = (*Repository)(nil)
+	_ instanceports.TeacherInstanceQueryRepository = (*Repository)(nil)
+	_ instanceports.InstanceExtendRepository       = (*Repository)(nil)
+	_ instanceDestroyStatusRepository              = (*Repository)(nil)
+)
 
 func newInstanceRepositoryTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
@@ -91,5 +106,41 @@ func TestCountRunningInstancesPropagatesContextToGORM(t *testing.T) {
 	}
 	if count != 1 {
 		t.Fatalf("CountRunningInstances() count = %d, want 1", count)
+	}
+}
+
+func TestMarkStoppingTransitionsActiveInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceRepositoryTestDB(t)
+	repo := NewRepository(db)
+
+	instance := instancecontracts.Instance{
+		ID:          11,
+		UserID:      7,
+		ChallengeID: 99,
+		Status:      instancecontracts.InstanceStatusRunning,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("seed instance: %v", err)
+	}
+
+	changed, err := repo.MarkStopping(context.Background(), instance.ID)
+	if err != nil {
+		t.Fatalf("MarkStopping() error = %v", err)
+	}
+	if !changed {
+		t.Fatal("expected active instance to transition to stopping")
+	}
+
+	var row struct {
+		Status string `gorm:"column:status"`
+	}
+	if err := db.Table("instances").Select("status").Where("id = ?", instance.ID).Take(&row).Error; err != nil {
+		t.Fatalf("load instance: %v", err)
+	}
+	if row.Status != instancecontracts.InstanceStatusStopping {
+		t.Fatalf("instance status = %q, want %q", row.Status, instancecontracts.InstanceStatusStopping)
 	}
 }

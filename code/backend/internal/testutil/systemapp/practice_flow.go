@@ -380,7 +380,7 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	practiceRepo := practiceinfra.NewRepositoryWithRuntimePortOwner(db, func(db *gorm.DB) runtimeports.PortReservationOwner {
 		return runtimeinfrarepo.NewRepository(db)
 	})
-	instanceRepo := runtimeinfrarepo.NewRepository(db)
+	instanceRepo := instanceinfra.NewRepository(db)
 	proxyTicketInstanceRepo := instanceinfra.NewRepository(db)
 	root, err := composition.BuildRoot(cfg, logger, db, cache)
 	if err != nil {

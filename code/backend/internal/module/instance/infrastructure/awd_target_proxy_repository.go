@@ -171,3 +171,9 @@ func joinAWDActiveScopeControls(query *gorm.DB, contestExpr, teamExpr, serviceEx
 		Joins(retiredJoin, awdScopeControlScopeTeam, awdScopeControlTypeRetired).
 		Joins(disabledJoin, awdScopeControlScopeTeamService, awdScopeControlTypeServiceDisabled)
 }
+
+func applyAWDActiveScopeFilter(query *gorm.DB, serviceExpr, retiredAlias, disabledAlias string) *gorm.DB {
+	return query.Where(
+		fmt.Sprintf("(%s IS NULL OR (%s.id IS NULL AND %s.id IS NULL))", serviceExpr, retiredAlias, disabledAlias),
+	)
+}

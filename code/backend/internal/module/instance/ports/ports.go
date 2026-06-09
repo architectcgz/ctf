@@ -31,12 +31,6 @@ type InstanceExtendRepository interface {
 	AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error
 }
 
-type InstanceStatusRepository interface {
-	MarkStopping(ctx context.Context, id int64) (bool, error)
-	FinalizeStoppedRuntime(ctx context.Context, id int64) error
-	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
-}
-
 type RunningInstanceCountRepository interface {
 	CountRunningInstances(ctx context.Context) (int64, error)
 }

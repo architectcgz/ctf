@@ -29,7 +29,11 @@ type instanceCommandRepository interface {
 	instanceports.InstanceUserLookupRepository
 	instanceports.InstanceAccessRepository
 	instanceports.InstanceExtendRepository
-	instanceports.InstanceStatusRepository
+	instanceDestroyStatusRepository
+}
+
+type instanceDestroyStatusRepository interface {
+	MarkStopping(ctx context.Context, id int64) (bool, error)
 }
 
 func NewInstanceService(repo instanceCommandRepository, cleaner instanceports.RuntimeCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *InstanceService {

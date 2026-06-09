@@ -383,42 +383,6 @@ func TestUpdateStatusAndReleasePortClearsRuntimeFieldsForExpiredInstance(t *test
 	}
 }
 
-func TestMarkStoppingTransitionsActiveInstance(t *testing.T) {
-	t.Parallel()
-
-	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
-
-	instance := instancecontracts.Instance{
-		ID:          11,
-		UserID:      7,
-		ChallengeID: 99,
-		Status:      instancecontracts.InstanceStatusRunning,
-		ExpiresAt:   time.Now().Add(time.Hour),
-	}
-	if err := db.Create(&instance).Error; err != nil {
-		t.Fatalf("seed instance: %v", err)
-	}
-
-	changed, err := repo.MarkStopping(context.Background(), instance.ID)
-	if err != nil {
-		t.Fatalf("MarkStopping() error = %v", err)
-	}
-	if !changed {
-		t.Fatal("expected active instance to transition to stopping")
-	}
-
-	var row struct {
-		Status string `gorm:"column:status"`
-	}
-	if err := db.Table("instances").Select("status").Where("id = ?", instance.ID).Take(&row).Error; err != nil {
-		t.Fatalf("load instance: %v", err)
-	}
-	if row.Status != instancecontracts.InstanceStatusStopping {
-		t.Fatalf("instance status = %q, want %q", row.Status, instancecontracts.InstanceStatusStopping)
-	}
-}
-
 func TestFailProvisioningDoesNotOverrideStoppingInstance(t *testing.T) {
 	t.Parallel()
 

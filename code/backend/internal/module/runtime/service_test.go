@@ -18,6 +18,7 @@ import (
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
@@ -28,7 +29,8 @@ import (
 
 type runtimeTestRepository struct {
 	*runtimeinfra.Repository
-	db *gorm.DB
+	instanceRepo *instanceinfra.Repository
+	db           *gorm.DB
 }
 
 func newTestRepository(t *testing.T) *runtimeTestRepository {
@@ -57,8 +59,9 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 		t.Fatalf("migrate awd operation tables: %v", err)
 	}
 	return &runtimeTestRepository{
-		Repository: runtimeinfra.NewRepository(db),
-		db:         db,
+		Repository:   runtimeinfra.NewRepository(db),
+		instanceRepo: instanceinfra.NewRepository(db),
+		db:           db,
 	}
 }
 
@@ -110,10 +113,17 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	instanceCleaner := newRuntimeTestCleanerAdapter(cleanupService)
 	return &testRuntimeService{
-		commands:    instancecmd.NewInstanceService(repo, instanceCleaner, cfg, nil),
-		queries:     instanceqry.NewInstanceService(repo, cfg),
+		commands:    instancecmd.NewInstanceService(repo.instanceRepo, instanceCleaner, cfg, nil),
+		queries:     instanceqry.NewInstanceService(repo.instanceRepo, cfg),
 		maintenance: instancecmd.NewInstanceMaintenanceService(newRuntimeTestMaintenanceRepository(repo), nil, instanceCleaner, cfg, nil),
 	}
+}
+
+func (r *runtimeTestRepository) FindUserByID(ctx context.Context, userID int64) (*instanceports.InstanceUser, error) {
+	if r == nil || r.instanceRepo == nil {
+		return nil, nil
+	}
+	return r.instanceRepo.FindUserByID(ctx, userID)
 }
 
 type runtimeTestMaintenanceRepository struct {

@@ -8,9 +8,9 @@ import (
 
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
+	instancehttp "ctf-platform/internal/module/instance/api/http"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 )
 
 type runtimeHTTPServiceAdapter struct {
@@ -106,7 +106,7 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDTargetProxyTicket(ctx context.Contex
 	return ticket, err
 }
 
-func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*runtimehttp.AWDDefenseSSHAccessResp, error) {
+func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*instancehttp.AWDDefenseSSHAccessResp, error) {
 	if a == nil || a.proxyTickets == nil {
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
@@ -119,7 +119,7 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 		return nil, err
 	}
 	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
-	return &runtimehttp.AWDDefenseSSHAccessResp{
+	return &instancehttp.AWDDefenseSSHAccessResp{
 		Host:      a.defenseSSHHost,
 		Port:      a.defenseSSHPort,
 		Username:  username,

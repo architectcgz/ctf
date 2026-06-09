@@ -9,13 +9,13 @@ import (
 	"ctf-platform/internal/auditlog"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+	instancehttp "ctf-platform/internal/module/instance/api/http"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
@@ -23,7 +23,7 @@ import (
 )
 
 type InstanceModule struct {
-	Handler *runtimehttp.Handler
+	Handler *instancehttp.Handler
 
 	PracticeInstanceRepository interface {
 		FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error)
@@ -82,8 +82,8 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		maintenanceRuntime = newInstanceMaintenanceRuntime(runtime.nodeRouter, runtime.nodeRouter)
 		practiceRuntimeService = newNodeScopedPracticeRuntimeServiceAdapter(runtime.nodeRouter)
 	}
-	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service")).SetEventBus(root.Events)
-	queryService := instanceqry.NewInstanceService(repo, &cfg.Container, cfg.Pagination)
+	commandService := instancecmd.NewInstanceService(instanceRepo, cleanupService, &cfg.Container, log.Named("instance_service")).SetEventBus(root.Events)
+	queryService := instanceqry.NewInstanceService(instanceRepo, &cfg.Container, cfg.Pagination)
 	proxyTicketService := buildRuntimeProxyTicketService(root, instanceRepo)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
 		newInstanceMaintenanceRepository(repo),
@@ -163,7 +163,7 @@ func (m *InstanceModule) BuildHandler(root *Root, ops *OpsModule) {
 	if ops != nil {
 		auditRecorder = ops.AuditService
 	}
-	m.Handler = runtimehttp.NewHandler(m.service, cfg.Container.PublicHost, cfg.Container.AccessHost, auditRecorder, runtimehttp.CookieConfig{
+	m.Handler = instancehttp.NewHandler(m.service, cfg.Container.PublicHost, cfg.Container.AccessHost, auditRecorder, instancehttp.CookieConfig{
 		Secure:   cfg.Auth.SessionCookieSecure,
 		SameSite: cfg.Auth.CookieSameSite(),
 	}, m.proxyTrafficRecorder)
