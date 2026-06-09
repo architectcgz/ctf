@@ -132,6 +132,18 @@ func TestRuntimePortsDoNotReexportInstancePorts(t *testing.T) {
 	}
 }
 
+func TestRuntimePortsTestsDoNotAssertInstancePorts(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("ports", "*_test.go"))
+	if err != nil {
+		t.Fatalf("glob runtime port test files: %v", err)
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/instance/ports")
+	}
+}
+
 func TestRuntimeModuleDoesNotExposeLegacyEngineSurface(t *testing.T) {
 	t.Parallel()
 
