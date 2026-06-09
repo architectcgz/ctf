@@ -29,7 +29,7 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"containerStatsService",
 		"*runtimeapp.ContainerStatsService",
 		"imageRuntime",
-		"challengeports.ImageRuntime",
+		"*runtimeapp.ImageRuntimeService",
 		"containerFiles",
 		"contestports.AWDContainerFileWriter",
 		"containerPublicHost",
@@ -46,10 +46,12 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"PracticeInstanceRepository",
 		"PracticeRuntimeService",
 		"opsports.RuntimeQuery",
+		"challengeports.ImageRuntime",
+		"challengeports.ChallengeRuntimeProbe",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("runtime runtime module should not keep practice-facing glue marker %s", marker)
+			t.Fatalf("runtime runtime module should not keep cross-module glue marker %s", marker)
 		}
 	}
 }
@@ -423,7 +425,7 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"challengeports.ImageRuntime",
+		"*runtimeapp.ImageRuntimeService",
 		"runtimeports.CountRunningRepository",
 		"runtimeports.ManagedContainerStatsReader",
 		"contestports.AWDContainerFileWriter",
@@ -440,6 +442,8 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 		"opsports.RuntimeStatsProvider",
 		"practiceRuntimeRepositoryBridge",
 		"practiceRuntimeInstanceService",
+		"challengeports.ImageRuntime",
+		"challengeports.ChallengeRuntimeProbe",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {

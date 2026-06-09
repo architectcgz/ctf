@@ -8,6 +8,7 @@ import (
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/module/runtime/infrastructure/agentclient"
@@ -42,7 +43,7 @@ type ContainerRuntimeModule struct {
 type RuntimeModule = ContainerRuntimeModule
 
 func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
-	cfg := root.Config()
+	cfg := runtimeConfigOrDefault(root.Config())
 	log := root.Logger()
 	runtimeRepo := runtimeinfra.NewRepository(root.DB())
 	defaultNodeName := defaultRuntimeNodeName(cfg)
@@ -97,8 +98,8 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	}
 
 	return &ContainerRuntimeModule{
-		ChallengeImageRuntime:   module.ChallengeImageRuntime,
-		ChallengeRuntimeProbe:   module.ChallengeRuntimeProbe,
+		ChallengeImageRuntime:   module.ImageRuntime,
+		ChallengeRuntimeProbe:   newChallengeRuntimeProbeAdapter(module.CleanupService, module.ProvisioningService, runtimePublishedAccessHost(cfg)),
 		OpsRuntimeQuery:         newOpsRuntimeQueryAdapter(module.RuntimeQuery),
 		OpsRuntimeStatsProvider: newOpsRuntimeStatsProviderAdapter(module.RuntimeStatsProvider),
 		ContestContainerFiles:   contestContainerFiles,
@@ -112,6 +113,18 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 
 func BuildRuntimeModule(root *Root) (*RuntimeModule, error) {
 	return BuildContainerRuntimeModule(root)
+}
+
+func runtimeConfigOrDefault(cfg *config.Config) *config.Config {
+	if cfg == nil {
+		return &config.Config{}
+	}
+	return cfg
+}
+
+func runtimePublishedAccessHost(cfg *config.Config) string {
+	cfg = runtimeConfigOrDefault(cfg)
+	return runtimecontracts.ResolveRuntimePublishedAccessHost(cfg.Container.PublicHost, cfg.Container.AccessHost)
 }
 
 func buildRuntimeHostExecutor(root *Root) runtimeports.RuntimeHostExecutor {

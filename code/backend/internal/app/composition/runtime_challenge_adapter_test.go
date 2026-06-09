@@ -1,4 +1,4 @@
-package runtime
+package composition
 
 import (
 	"testing"
@@ -31,7 +31,7 @@ func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
 		},
 	}
 
-	got := toRuntimeChallengeTopologyCreateRequest(req.toPorts(), "host-gateway.internal")
+	got := toRuntimeTopologyCreateRequestFromChallenge(req.toPorts(), "host-gateway.internal")
 	if got.SubnetPool != runtimeports.SubnetPoolTopology {
 		t.Fatalf("expected topology subnet pool, got %+v", got.SubnetPool)
 	}
@@ -72,14 +72,53 @@ func TestRuntimeChallengeTopologyAdapterDisablesPublishedEntryPortWithoutAccessH
 		},
 	}
 
-	got := toRuntimeChallengeTopologyCreateRequest(req.toPorts(), "")
+	got := toRuntimeTopologyCreateRequestFromChallenge(req.toPorts(), "")
 	if !got.DisableEntryPortPublishing {
 		t.Fatalf("expected private entry access without published access host, got %+v", got)
 	}
 }
 
+func TestRuntimeChallengeTopologyAdapterClonesMutableFields(t *testing.T) {
+	req := &challengeports.RuntimeTopologyCreateRequest{
+		Networks: []challengeports.RuntimeTopologyCreateNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey},
+		},
+		Nodes: []challengeports.RuntimeTopologyCreateNode{
+			{
+				Key:         "web",
+				Image:       "ctf/web:latest",
+				Env:         map[string]string{"MODE": "awd"},
+				NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey},
+				Resources:   &runtimecontracts.ResourceLimits{CPUQuota: 50000},
+			},
+		},
+		Policies: []runtimecontracts.TopologyTrafficPolicy{
+			{Action: runtimecontracts.TopologyPolicyActionAllow, Ports: []int{8080}},
+		},
+	}
+
+	got := toRuntimeTopologyCreateRequestFromChallenge(req, "host-gateway.internal")
+	req.Nodes[0].Env["MODE"] = "mutated"
+	req.Nodes[0].NetworkKeys[0] = "mutated-network"
+	req.Nodes[0].Resources.CPUQuota = 100
+	req.Policies[0].Ports[0] = 9090
+
+	if got.Nodes[0].Env["MODE"] != "awd" {
+		t.Fatalf("expected env to be cloned, got %+v", got.Nodes[0].Env)
+	}
+	if got.Nodes[0].NetworkKeys[0] != runtimecontracts.TopologyDefaultNetworkKey {
+		t.Fatalf("expected network keys to be cloned, got %+v", got.Nodes[0].NetworkKeys)
+	}
+	if got.Nodes[0].Resources.CPUQuota != 50000 {
+		t.Fatalf("expected resources to be cloned, got %+v", got.Nodes[0].Resources)
+	}
+	if got.Policies[0].Ports[0] != 8080 {
+		t.Fatalf("expected policy ports to be cloned, got %+v", got.Policies)
+	}
+}
+
 func TestRuntimeChallengeSingleContainerRequestUsesSingleContainerSubnetPool(t *testing.T) {
-	got := buildRuntimeChallengeSingleContainerCreateRequest("ctf/web:latest", map[string]string{"FLAG": "flag{1}"})
+	got := buildRuntimeSingleContainerCreateRequestForChallenge("ctf/web:latest", map[string]string{"FLAG": "flag{1}"})
 	if got.SubnetPool != runtimeports.SubnetPoolSingleContainer {
 		t.Fatalf("expected single container subnet pool, got %+v", got.SubnetPool)
 	}

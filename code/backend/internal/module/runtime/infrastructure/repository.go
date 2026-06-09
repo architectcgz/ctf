@@ -15,7 +15,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -107,18 +106,6 @@ func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*identityc
 		return nil, fmt.Errorf("find user by id: %w", err)
 	}
 	return &user, nil
-}
-
-func (r *Repository) FindChallengeByID(ctx context.Context, challengeID int64) (*challengecontracts.RecommendationChallenge, error) {
-	var challenge challengecontracts.RecommendationChallenge
-	if err := r.dbWithContext(ctx).
-		Table("challenges").
-		Select("id, title, category, category AS recommendation_dimension, difficulty, points").
-		Where("id = ?", challengeID).
-		Take(&challenge).Error; err != nil {
-		return nil, err
-	}
-	return &challenge, nil
 }
 
 func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.Instance, error) {

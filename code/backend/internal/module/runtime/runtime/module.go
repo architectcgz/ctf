@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
-	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
@@ -27,8 +26,7 @@ type BackgroundJob struct {
 type Module struct {
 	BackgroundJobs []BackgroundJob
 
-	ChallengeImageRuntime challengeports.ImageRuntime
-	ChallengeRuntimeProbe challengeports.ChallengeRuntimeProbe
+	ImageRuntime          *runtimeapp.ImageRuntimeService
 	RuntimeQuery          runtimeports.CountRunningRepository
 	RuntimeStatsProvider  runtimeports.ManagedContainerStatsReader
 	ContestContainerFiles contestports.AWDContainerFileWriter
@@ -75,21 +73,19 @@ type runtimeModuleDeps struct {
 	cleanupService        *runtimecmd.RuntimeCleanupService
 	provisioningService   *runtimecmd.ProvisioningService
 	containerStatsService *runtimeapp.ContainerStatsService
-	imageRuntime          challengeports.ImageRuntime
+	imageRuntime          *runtimeapp.ImageRuntimeService
 	containerFiles        contestports.AWDContainerFileWriter
 	containerPublicHost   string
 }
 
 func Build(deps Deps) *Module {
 	internalDeps := buildRuntimeModuleDeps(deps)
-	challengeDeps := buildRuntimeChallengeDeps(internalDeps)
 	observabilityDeps := buildRuntimeObservabilityDeps(internalDeps)
 	contestDeps := buildRuntimeContestDeps(internalDeps)
 
 	return &Module{
 		BackgroundJobs:            buildBackgroundJobs(internalDeps),
-		ChallengeImageRuntime:     challengeDeps.imageRuntime,
-		ChallengeRuntimeProbe:     challengeDeps.runtimeProbe,
+		ImageRuntime:              internalDeps.imageRuntime,
 		RuntimeQuery:              observabilityDeps.query,
 		RuntimeStatsProvider:      observabilityDeps.statsProvider,
 		ContestContainerFiles:     contestDeps.containerFiles,
@@ -136,18 +132,6 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 func buildBackgroundJobs(deps runtimeModuleDeps) []BackgroundJob {
 	_ = deps
 	return nil
-}
-
-type runtimeChallengeDeps struct {
-	imageRuntime challengeports.ImageRuntime
-	runtimeProbe challengeports.ChallengeRuntimeProbe
-}
-
-func buildRuntimeChallengeDeps(deps runtimeModuleDeps) runtimeChallengeDeps {
-	return runtimeChallengeDeps{
-		imageRuntime: deps.imageRuntime,
-		runtimeProbe: newRuntimeChallengeServiceAdapter(deps.cleanupService, deps.provisioningService, deps.containerPublicHost),
-	}
 }
 
 type runtimeObservabilityDeps struct {

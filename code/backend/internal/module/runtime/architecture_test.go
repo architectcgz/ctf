@@ -126,11 +126,20 @@ func TestRuntimeModuleDoesNotExposeLegacyEngineSurface(t *testing.T) {
 	assertStructDoesNotDeclareField(t, fileNode, "Deps", "Engine")
 }
 
-func TestRuntimeWiringDoesNotImportPracticePorts(t *testing.T) {
+func TestRuntimeWiringDoesNotImportCrossModulePorts(t *testing.T) {
 	t.Parallel()
 
-	assertFileDoesNotImport(t, filepath.Join("runtime", "module.go"), "ctf-platform/internal/module/practice/ports")
-	assertFileDoesNotImport(t, filepath.Join("runtime", "adapters.go"), "ctf-platform/internal/module/practice/ports")
+	files, err := filepath.Glob(filepath.Join("runtime", "*.go"))
+	if err != nil {
+		t.Fatalf("glob runtime wiring files: %v", err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/challenge/ports")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice/ports")
+	}
 }
 
 func TestAPIHTTPDoesNotDeclareRetiredDefenseWorkbenchMethods(t *testing.T) {

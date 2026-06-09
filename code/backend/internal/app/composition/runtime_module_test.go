@@ -89,6 +89,14 @@ func TestBuildRuntimeHostExecutorProvidesReachableRuntimeInTestEnv(t *testing.T)
 	}
 }
 
+func TestRuntimePublishedAccessHostAllowsNilConfig(t *testing.T) {
+	t.Parallel()
+
+	if got := runtimePublishedAccessHost(nil); got != "" {
+		t.Fatalf("expected empty runtime access host for nil config, got %q", got)
+	}
+}
+
 func TestRuntimeHTTPServiceAdapterReturnsSSHAccessWithoutProfile(t *testing.T) {
 	expiresAt := time.Date(2026, 4, 28, 10, 0, 0, 0, time.UTC)
 	adapter := newRuntimeHTTPServiceAdapter(

@@ -1,4 +1,4 @@
-package runtime
+package composition
 
 import (
 	"context"
@@ -12,53 +12,31 @@ import (
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
-func cloneRuntimeStringMap(input map[string]string) map[string]string {
-	if len(input) == 0 {
-		return nil
-	}
-	output := make(map[string]string, len(input))
-	for key, value := range input {
-		output[key] = value
-	}
-	return output
-}
-
-func cloneRuntimeResourceLimits(input *runtimecontracts.ResourceLimits) *runtimecontracts.ResourceLimits {
-	if input == nil {
-		return nil
-	}
-	return &runtimecontracts.ResourceLimits{
-		CPUQuota:  input.CPUQuota,
-		Memory:    input.Memory,
-		PidsLimit: input.PidsLimit,
-	}
-}
-
-type runtimeChallengeServiceAdapter struct {
+type challengeRuntimeProbeAdapter struct {
 	cleaner     *runtimecmd.RuntimeCleanupService
 	provisioner *runtimecmd.ProvisioningService
 	accessHost  string
 }
 
-func newRuntimeChallengeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService, provisioner *runtimecmd.ProvisioningService, accessHost string) challengeports.ChallengeRuntimeProbe {
+func newChallengeRuntimeProbeAdapter(cleaner *runtimecmd.RuntimeCleanupService, provisioner *runtimecmd.ProvisioningService, accessHost string) challengeports.ChallengeRuntimeProbe {
 	if cleaner == nil && provisioner == nil {
 		return nil
 	}
-	return &runtimeChallengeServiceAdapter{
+	return &challengeRuntimeProbeAdapter{
 		cleaner:     cleaner,
 		provisioner: provisioner,
 		accessHost:  accessHost,
 	}
 }
 
-func (a *runtimeChallengeServiceAdapter) CreateTopology(ctx context.Context, req *challengeports.RuntimeTopologyCreateRequest) (*challengeports.RuntimeTopologyCreateResult, error) {
+func (a *challengeRuntimeProbeAdapter) CreateTopology(ctx context.Context, req *challengeports.RuntimeTopologyCreateRequest) (*challengeports.RuntimeTopologyCreateResult, error) {
 	if a == nil || a.provisioner == nil {
 		return nil, fmt.Errorf("runtime provisioning service is not configured")
 	}
 	if req == nil {
 		return nil, fmt.Errorf("runtime topology create request is nil")
 	}
-	result, err := a.provisioner.CreateTopology(ctx, toRuntimeChallengeTopologyCreateRequest(req, a.accessHost))
+	result, err := a.provisioner.CreateTopology(ctx, toRuntimeTopologyCreateRequestFromChallenge(req, a.accessHost))
 	if err != nil {
 		return nil, err
 	}
@@ -68,19 +46,19 @@ func (a *runtimeChallengeServiceAdapter) CreateTopology(ctx context.Context, req
 	}, nil
 }
 
-func (a *runtimeChallengeServiceAdapter) CreateContainer(ctx context.Context, imageName string, env map[string]string) (string, runtimecontracts.InstanceRuntimeDetails, error) {
+func (a *challengeRuntimeProbeAdapter) CreateContainer(ctx context.Context, imageName string, env map[string]string) (string, runtimecontracts.InstanceRuntimeDetails, error) {
 	if a == nil || a.provisioner == nil {
 		return "", runtimecontracts.InstanceRuntimeDetails{}, fmt.Errorf("runtime provisioning service is not configured")
 	}
 
-	result, err := a.provisioner.CreateTopology(ctx, buildRuntimeChallengeSingleContainerCreateRequest(imageName, env))
+	result, err := a.provisioner.CreateTopology(ctx, buildRuntimeSingleContainerCreateRequestForChallenge(imageName, env))
 	if err != nil {
 		return "", runtimecontracts.InstanceRuntimeDetails{}, err
 	}
 	return result.AccessURL, result.RuntimeDetails, nil
 }
 
-func (a *runtimeChallengeServiceAdapter) CleanupRuntimeDetails(ctx context.Context, details runtimecontracts.InstanceRuntimeDetails) error {
+func (a *challengeRuntimeProbeAdapter) CleanupRuntimeDetails(ctx context.Context, details runtimecontracts.InstanceRuntimeDetails) error {
 	if a == nil || a.cleaner == nil {
 		return nil
 	}
@@ -95,7 +73,7 @@ func (a *runtimeChallengeServiceAdapter) CleanupRuntimeDetails(ctx context.Conte
 	return a.cleaner.CleanupRuntime(ctx, instance)
 }
 
-func toRuntimeChallengeTopologyCreateRequest(req *challengeports.RuntimeTopologyCreateRequest, publishedAccessHost string) *runtimeports.TopologyCreateRequest {
+func toRuntimeTopologyCreateRequestFromChallenge(req *challengeports.RuntimeTopologyCreateRequest, publishedAccessHost string) *runtimeports.TopologyCreateRequest {
 	if req == nil {
 		return nil
 	}
@@ -112,24 +90,24 @@ func toRuntimeChallengeTopologyCreateRequest(req *challengeports.RuntimeTopology
 		nodes = append(nodes, runtimeports.TopologyCreateNode{
 			Key:             node.Key,
 			Image:           node.Image,
-			Env:             cloneRuntimeStringMap(node.Env),
+			Env:             cloneCompositionStringMap(node.Env),
 			ServicePort:     node.ServicePort,
 			ServiceProtocol: node.ServiceProtocol,
 			IsEntryPoint:    node.IsEntryPoint,
 			NetworkKeys:     append([]string(nil), node.NetworkKeys...),
-			Resources:       cloneRuntimeResourceLimits(node.Resources),
+			Resources:       cloneCompositionResourceLimits(node.Resources),
 		})
 	}
 	return &runtimeports.TopologyCreateRequest{
 		SubnetPool:                 runtimeports.SubnetPoolTopology,
 		Networks:                   networks,
 		Nodes:                      nodes,
-		Policies:                   append([]runtimecontracts.TopologyTrafficPolicy(nil), req.Policies...),
+		Policies:                   cloneCompositionTrafficPolicies(req.Policies),
 		DisableEntryPortPublishing: strings.TrimSpace(publishedAccessHost) == "",
 	}
 }
 
-func buildRuntimeChallengeSingleContainerCreateRequest(imageName string, env map[string]string) *runtimeports.TopologyCreateRequest {
+func buildRuntimeSingleContainerCreateRequestForChallenge(imageName string, env map[string]string) *runtimeports.TopologyCreateRequest {
 	return &runtimeports.TopologyCreateRequest{
 		SubnetPool: runtimeports.SubnetPoolSingleContainer,
 		Networks: []runtimeports.TopologyCreateNetwork{
@@ -139,11 +117,45 @@ func buildRuntimeChallengeSingleContainerCreateRequest(imageName string, env map
 			{
 				Key:             "default",
 				Image:           imageName,
-				Env:             cloneRuntimeStringMap(env),
+				Env:             cloneCompositionStringMap(env),
 				IsEntryPoint:    true,
 				NetworkKeys:     []string{runtimecontracts.TopologyDefaultNetworkKey},
 				ServiceProtocol: runtimecontracts.ChallengeTargetProtocolHTTP,
 			},
 		},
 	}
+}
+
+func cloneCompositionStringMap(input map[string]string) map[string]string {
+	if len(input) == 0 {
+		return nil
+	}
+	output := make(map[string]string, len(input))
+	for key, value := range input {
+		output[key] = value
+	}
+	return output
+}
+
+func cloneCompositionResourceLimits(input *runtimecontracts.ResourceLimits) *runtimecontracts.ResourceLimits {
+	if input == nil {
+		return nil
+	}
+	return &runtimecontracts.ResourceLimits{
+		CPUQuota:  input.CPUQuota,
+		Memory:    input.Memory,
+		PidsLimit: input.PidsLimit,
+	}
+}
+
+func cloneCompositionTrafficPolicies(input []runtimecontracts.TopologyTrafficPolicy) []runtimecontracts.TopologyTrafficPolicy {
+	if len(input) == 0 {
+		return nil
+	}
+	output := make([]runtimecontracts.TopologyTrafficPolicy, len(input))
+	for idx, policy := range input {
+		output[idx] = policy
+		output[idx].Ports = append([]int(nil), policy.Ports...)
+	}
+	return output
 }
