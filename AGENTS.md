@@ -17,6 +17,9 @@
 - 对同一输入语义出现跨层重复 `normalize/default/validate` 的情况，默认不视为“安全兜底”。除非其中一层承担明确 trust-boundary 防御且理由写清，否则应继续收口成单点 owner。
 - 内部 `filter / sort / pagination` contract 应收口成 downstream 不易误用的表示，优先 opaque value object、受控构造器或不可直接手工拼装的字段。
 - 测试失败、review finding 或契约漂移时，先判断是不是 owner / contract / 架构未收口；不得为了让测试变绿而放宽断言、修改 fixture / mock 迁就错误实现。
+- TDD 产出的测试默认属于交付物和回归护栏，不因为功能开发完成而删除；只有在同一行为信号已由更清晰的测试覆盖、测试锁定实现细节、迁移 guard 到期且 owner / 移除条件满足，或行为本身被明确废弃时，才合并或删除。
+- 测试文件过多时，优先按行为 owner 和测试层级治理：模块语义留在对应模块，黑盒 HTTP 场景放 `code/backend/tests/system/http`，runtime / PostgreSQL / 容器协作放 `code/backend/tests/runtime`，前端状态、校验、权限和交互规则贴近 composable / store / feature owner；重复 setup 再抽 builder、fixture、assert helper。
+- 新增或迁移后端测试前，先读 `code/backend/tests/README.md` 判断测试层级、放置位置和 helper / fixture 归属；即使测试最终贴在 `internal/module/*` 包内，也按这份说明判断是否和 `tests/system/http`、`tests/runtime` 或 `tests/testkit` 重复。
 
 ## Product And Design Context
 

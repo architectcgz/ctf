@@ -7,6 +7,21 @@
 - `internal/app` 继续保留必须贴着 `package app` 的测试，以及旧系统测试的兼容壳。
 - 共享测试环境、请求 helper、通用断言先收口到 `internal/testutil/`，当前 phase 1 落点是 `internal/testutil/systemapp`。
 - 新增系统级测试时，优先复用 testutil，不再把大段 helper owner 放回 `internal/app/*_test.go`。
+- TDD 写出的测试默认是行为规格和回归护栏，不因为对应功能已经实现就删除；只在行为信号重复、实现细节锁定、迁移 guard 到期，或目标行为明确废弃时合并或删除。
+- 测试文件变多时先按 owner 和层级重组，再考虑抽 helper；不要只为了减少文件数量把跨角色、跨模块、跨 runtime 的场景重新堆进一个大测试文件。
+
+## 放置判断
+
+新增后端测试前先判断这条测试证明的是哪一层契约：
+
+- 包内 `*_test.go`：模块内业务语义、未导出实现、application service / command / query / repository 的局部契约；需要访问包私有符号时默认留在源码旁边。
+- `internal/testutil/*`：需要接近内部实现、会被多个包内或系统测试复用的测试工具；不要放只服务单个测试文件的一次性封装。
+- `tests/architecture`：源码级架构 guardrail，只检查边界、目录和迁移约束，不跑业务语义回归。
+- `tests/system/http/<scenario>`：黑盒 HTTP / router 级长场景，只表达请求、角色、状态和响应断言；环境搭建、seed 和通用断言优先复用 testutil / testkit。
+- `tests/runtime`：需要 PostgreSQL、runtime agent、容器端口、外部进程或真实 migration 参与的集成测试。
+- `tests/testkit`：跨 `tests/*` 复用的场景 builder、fixture、assert helper 和测试数据工厂；不访问未导出实现。
+
+同一行为不要同时在 handler、application、repository、HTTP 系统测试里重复断言。需要多层覆盖时，每一层必须证明不同契约：模块内证明业务规则，HTTP 系统测试证明路由组合 / 权限 / 序列化，runtime 测试证明真实依赖协作。
 
 ## 目标目录
 
