@@ -27,7 +27,7 @@ import (
 )
 
 type runtimeTestRepository struct {
-	*runtimeinfra.Repository
+	*runtimeinfra.RuntimeStateRepository
 	*runtimeinfra.AllocationRepository
 	*runtimeinfra.AWDRepository
 	instanceRepo *instanceinfra.Repository
@@ -60,11 +60,11 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 		t.Fatalf("migrate awd operation tables: %v", err)
 	}
 	return &runtimeTestRepository{
-		Repository:           runtimeinfra.NewRepository(db),
-		AllocationRepository: runtimeinfra.NewAllocationRepository(db),
-		AWDRepository:        runtimeinfra.NewAWDRepository(db),
-		instanceRepo:         instanceinfra.NewRepository(db),
-		db:                   db,
+		RuntimeStateRepository: runtimeinfra.NewRuntimeStateRepository(db),
+		AllocationRepository:   runtimeinfra.NewAllocationRepository(db),
+		AWDRepository:          runtimeinfra.NewAWDRepository(db),
+		instanceRepo:           instanceinfra.NewRepository(db),
+		db:                     db,
 	}
 }
 

@@ -12,23 +12,23 @@ import (
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
-type Repository struct {
+type RuntimeStateRepository struct {
 	db *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+func NewRuntimeStateRepository(db *gorm.DB) *RuntimeStateRepository {
+	return &RuntimeStateRepository{db: db}
 }
 
-func (r *Repository) WithDB(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+func (r *RuntimeStateRepository) WithDB(db *gorm.DB) *RuntimeStateRepository {
+	return &RuntimeStateRepository{db: db}
 }
 
-func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
+func (r *RuntimeStateRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *Repository) FindByID(ctx context.Context, id int64) (*runtimecontracts.RuntimeManagedInstance, error) {
+func (r *RuntimeStateRepository) FindByID(ctx context.Context, id int64) (*runtimecontracts.RuntimeManagedInstance, error) {
 	var instance runtimecontracts.RuntimeManagedInstance
 	err := r.dbWithContext(ctx).Where("id = ?", id).First(&instance).Error
 	if err != nil {
@@ -40,7 +40,7 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*runtimecontracts.
 	return &instance, nil
 }
 
-func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
+func (r *RuntimeStateRepository) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
 	var items []struct {
 		ContainerID    string
 		RuntimeDetails string
@@ -111,7 +111,7 @@ func (r *Repository) ListActiveContainerIDs(ctx context.Context) ([]string, erro
 	return result, nil
 }
 
-func (r *Repository) FindRuntimeNodeIDByContainerID(ctx context.Context, containerID string) (*int64, error) {
+func (r *RuntimeStateRepository) FindRuntimeNodeIDByContainerID(ctx context.Context, containerID string) (*int64, error) {
 	containerID = strings.TrimSpace(containerID)
 	if containerID == "" {
 		return nil, nil
@@ -170,7 +170,7 @@ func (r *Repository) FindRuntimeNodeIDByContainerID(ctx context.Context, contain
 	return workspace.NodeID, nil
 }
 
-func (r *Repository) ListInstancesNeedingACLHandleMigration(ctx context.Context) ([]runtimecontracts.RuntimeManagedInstance, error) {
+func (r *RuntimeStateRepository) ListInstancesNeedingACLHandleMigration(ctx context.Context) ([]runtimecontracts.RuntimeManagedInstance, error) {
 	type instanceACLMigrationRow struct {
 		ID             int64  `gorm:"column:id"`
 		NodeID         *int64 `gorm:"column:node_id"`
@@ -206,7 +206,7 @@ func (r *Repository) ListInstancesNeedingACLHandleMigration(ctx context.Context)
 	return result, nil
 }
 
-func (r *Repository) UpdateInstanceRuntimeDetails(ctx context.Context, instanceID int64, runtimeDetails string) error {
+func (r *RuntimeStateRepository) UpdateInstanceRuntimeDetails(ctx context.Context, instanceID int64, runtimeDetails string) error {
 	if instanceID <= 0 {
 		return nil
 	}

@@ -270,7 +270,7 @@ func TestBuildContainerRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
 		"type RuntimeModule = ContainerRuntimeModule",
 		"func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {",
 		"func BuildRuntimeModule(root *Root) (*RuntimeModule, error) {",
-		"defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, runtimeRepo, defaultNode)",
+		"defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, allocationRepo, defaultNode)",
 		"nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)",
 		"module := runtimemodule.Build(",
 		"runtimemodule.Deps{",
@@ -294,7 +294,7 @@ func TestBuildInstanceModuleDelegatesToSubBuilders(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"module := runtime.runtime",
-		"runtimeinfra.NewRepository(root.DB())",
+		"runtimeinfra.NewRuntimeStateRepository(root.DB())",
 		"instanceinfra.NewRepository(root.DB())",
 		"instancecmd.NewInstanceService(",
 		"buildRuntimeProxyTicketService(root, instanceRepo)",

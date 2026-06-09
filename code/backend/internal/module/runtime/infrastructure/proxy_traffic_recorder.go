@@ -9,8 +9,16 @@ import (
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
-func NewProxyTrafficEventRecorder(db *gorm.DB) *Repository {
-	return NewRepository(db)
+type ProxyTrafficEventRecorder struct {
+	db *gorm.DB
+}
+
+func NewProxyTrafficEventRecorder(db *gorm.DB) *ProxyTrafficEventRecorder {
+	return &ProxyTrafficEventRecorder{db: db}
+}
+
+func (r *ProxyTrafficEventRecorder) dbWithContext(ctx context.Context) *gorm.DB {
+	return r.db.WithContext(ctx)
 }
 
 type runtimeProxyTrafficInstanceRow struct {
@@ -20,7 +28,7 @@ type runtimeProxyTrafficInstanceRow struct {
 	AWDChallengeID int64  `gorm:"column:awd_challenge_id"`
 }
 
-func (r *Repository) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error {
+func (r *ProxyTrafficEventRecorder) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error {
 	instanceScope, err := r.loadRuntimeProxyTrafficInstanceScope(ctx, instanceID)
 	if err != nil || instanceScope == nil {
 		return err
@@ -59,7 +67,7 @@ func (r *Repository) RecordRuntimeProxyTrafficEvent(ctx context.Context, instanc
 	}).Error
 }
 
-func (r *Repository) RecordAWDProxyTrafficEvent(ctx context.Context, event contestcontracts.AWDProxyTrafficEventInput) error {
+func (r *ProxyTrafficEventRecorder) RecordAWDProxyTrafficEvent(ctx context.Context, event contestcontracts.AWDProxyTrafficEventInput) error {
 	if event.ContestID <= 0 || event.AttackerTeamID <= 0 || event.VictimTeamID <= 0 || event.ServiceID <= 0 || event.AWDChallengeID <= 0 {
 		return nil
 	}
@@ -86,7 +94,7 @@ func (r *Repository) RecordAWDProxyTrafficEvent(ctx context.Context, event conte
 	}).Error
 }
 
-func (r *Repository) loadRuntimeProxyTrafficInstanceScope(ctx context.Context, instanceID int64) (*runtimeProxyTrafficInstanceRow, error) {
+func (r *ProxyTrafficEventRecorder) loadRuntimeProxyTrafficInstanceScope(ctx context.Context, instanceID int64) (*runtimeProxyTrafficInstanceRow, error) {
 	var row runtimeProxyTrafficInstanceRow
 	err := r.dbWithContext(ctx).
 		Table("instances AS inst").
@@ -103,7 +111,7 @@ func (r *Repository) loadRuntimeProxyTrafficInstanceScope(ctx context.Context, i
 	return &row, nil
 }
 
-func (r *Repository) findRunningAWDRound(ctx context.Context, contestID int64) (*contestcontracts.AWDRound, error) {
+func (r *ProxyTrafficEventRecorder) findRunningAWDRound(ctx context.Context, contestID int64) (*contestcontracts.AWDRound, error) {
 	var round contestcontracts.AWDRound
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND status = ?", contestID, contestcontracts.AWDRoundStatusRunning).
@@ -114,7 +122,7 @@ func (r *Repository) findRunningAWDRound(ctx context.Context, contestID int64) (
 	return &round, nil
 }
 
-func (r *Repository) findRuntimeProxyAttackerTeam(ctx context.Context, contestID, userID int64) (*contestcontracts.Team, error) {
+func (r *ProxyTrafficEventRecorder) findRuntimeProxyAttackerTeam(ctx context.Context, contestID, userID int64) (*contestcontracts.Team, error) {
 	var team contestcontracts.Team
 	if err := r.dbWithContext(ctx).
 		Table("teams AS t").

@@ -64,7 +64,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		log = zap.NewNop()
 	}
 
-	repo := runtimeinfra.NewRepository(root.DB())
+	stateRepo := runtimeinfra.NewRuntimeStateRepository(root.DB())
 	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
 	awdRepo := runtimeinfra.NewAWDRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
@@ -89,7 +89,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	queryService := instanceqry.NewInstanceService(instanceRepo, &cfg.Container, cfg.Pagination)
 	proxyTicketService := buildRuntimeProxyTicketService(root, instanceRepo)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
-		newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, repo),
+		newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, stateRepo),
 		maintenanceRuntime,
 		cleanupService,
 		&cfg.Container,
@@ -129,7 +129,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	))
 
 	return &InstanceModule{
-		PracticeInstanceRepository:  newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, repo),
+		PracticeInstanceRepository:  newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo),
 		PracticeRuntimeService:      practiceRuntimeService,
 		PracticeRuntimeNodeSelector: newPracticeRuntimeNodeSelectorAdapter(runtime.RuntimeNodeSelector),
 		service: newRuntimeHTTPServiceAdapter(
@@ -288,11 +288,11 @@ type instanceMaintenanceRepositoryAdapter struct {
 	instanceRepo   *instanceinfra.Repository
 	allocationRepo *runtimeinfra.AllocationRepository
 	awdRepo        *runtimeinfra.AWDRepository
-	runtimeRepo    *runtimeinfra.Repository
+	stateRepo      *runtimeinfra.RuntimeStateRepository
 }
 
-func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository, runtimeRepo *runtimeinfra.Repository) *instanceMaintenanceRepositoryAdapter {
-	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil && runtimeRepo == nil {
+func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository, stateRepo *runtimeinfra.RuntimeStateRepository) *instanceMaintenanceRepositoryAdapter {
+	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil && stateRepo == nil {
 		return nil
 	}
 	return &instanceMaintenanceRepositoryAdapter{
@@ -300,7 +300,7 @@ func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.R
 		instanceRepo:   instanceRepo,
 		allocationRepo: allocationRepo,
 		awdRepo:        awdRepo,
-		runtimeRepo:    runtimeRepo,
+		stateRepo:      stateRepo,
 	}
 }
 
@@ -399,7 +399,10 @@ func (a *instanceMaintenanceRepositoryAdapter) RequeueLostRuntime(ctx context.Co
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
-	return a.runtimeRepo.ListActiveContainerIDs(ctx)
+	if a == nil || a.stateRepo == nil {
+		return nil, nil
+	}
+	return a.stateRepo.ListActiveContainerIDs(ctx)
 }
 
 type practiceInstanceRepositoryAdapter struct {
@@ -407,11 +410,10 @@ type practiceInstanceRepositoryAdapter struct {
 	instanceRepo   *instanceinfra.Repository
 	allocationRepo *runtimeinfra.AllocationRepository
 	awdRepo        *runtimeinfra.AWDRepository
-	runtimeRepo    *runtimeinfra.Repository
 }
 
-func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository, runtimeRepo *runtimeinfra.Repository) *practiceInstanceRepositoryAdapter {
-	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil && runtimeRepo == nil {
+func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository) *practiceInstanceRepositoryAdapter {
+	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil {
 		return nil
 	}
 	return &practiceInstanceRepositoryAdapter{
@@ -419,7 +421,6 @@ func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repo
 		instanceRepo:   instanceRepo,
 		allocationRepo: allocationRepo,
 		awdRepo:        awdRepo,
-		runtimeRepo:    runtimeRepo,
 	}
 }
 

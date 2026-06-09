@@ -715,3 +715,50 @@ Current remaining surface after Task 14:
 - Remaining `runtime/infrastructure.Repository` responsibilities are active container inventory, container-to-node state lookup, ACL migration state update, runtime managed instance lookup, and proxy traffic event recorder support. These should be split in a later state/index slice instead of using the broad repository as a default landing zone.
 - `container_runtime` capability interface / host adapter / `ContainerRuntimeModule` physical owner is still undecided and remains a separate structure question.
 - 下一步剩余 debt 已进一步收敛成 concrete runtime persistence 本身的继续拆分，以及 capability interface / host adapter / `ContainerRuntimeModule` 的最终物理 owner 迁移。
+
+## Task 15: Split Runtime State Repository
+
+**Files:**
+- Create:
+  - `code/backend/internal/module/runtime/infrastructure/state_repository.go`
+- Modify:
+  - `code/backend/internal/module/runtime/infrastructure/proxy_traffic_recorder.go`
+  - `code/backend/internal/app/composition/runtime_module.go`
+  - `code/backend/internal/app/composition/instance_module.go`
+  - `code/backend/internal/app/composition/runtime_node_execution_router_test.go`
+  - `code/backend/internal/app/composition/runtime_node_execution_router_e2e_test.go`
+  - `code/backend/internal/app/router_composition_structure_test.go`
+  - `code/backend/internal/app/router_composition_typed_deps_test.go`
+  - `code/backend/internal/module/runtime/service_test.go`
+  - `docs/design/backend-module-boundary-target.md`
+  - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
+- Delete:
+  - `code/backend/internal/module/runtime/infrastructure/repository.go`
+
+- [x] **Step 1: Add runtime state owner guard**
+
+Extend typed dependency tests so `runtimeinfra.RuntimeStateRepository` owns runtime managed instance lookup, active container inventory, container-to-node state lookup, and ACL migration state persistence. Other runtime infrastructure files should not continue to expose those methods.
+
+- [x] **Step 2: Move runtime state/index methods**
+
+Move `FindByID`, `ListActiveContainerIDs`, `FindRuntimeNodeIDByContainerID`, `ListInstancesNeedingACLHandleMigration`, and `UpdateInstanceRuntimeDetails` into `runtime/infrastructure.RuntimeStateRepository`.
+
+- [x] **Step 3: Rewire composition and recorder owner**
+
+Use `runtimeinfra.NewRuntimeStateRepository(root.DB())` for runtime node router state lookup, legacy ACL migration state update, and instance maintenance active container inventory reads. At the same time, let proxy traffic recording own its own concrete `ProxyTrafficEventRecorder` instead of hanging off the retired broad repository.
+
+- [x] **Step 4: Verify**
+
+Run:
+
+```bash
+go test ./internal/app -run 'TestRuntimeRepositoryDoesNotOwnStatePersistence|TestRuntimeStatePersistenceWiredFromCompositionRoot|TestRuntimeRepositoryDoesNotOwnAWDPersistence|TestRuntimeRepositoryDoesNotOwnAllocationPersistence|TestRuntimeCompositionInjectsRuntimePersistenceIntoRuntimeModule|TestBuildContainerRuntimeModuleDelegatesToSubBuilders|TestBuildInstanceModuleDelegatesToSubBuilders' -count=1
+go test ./internal/app/composition -run 'TestRuntimeNodeExecutionRouter.*' -count=1
+go test ./internal/module/runtime/... -count=1
+```
+
+Current remaining surface after Task 15:
+
+- `runtime/infrastructure.Repository` 已删除；allocation、AWD、runtime state、proxy traffic recorder 都已经有各自 concrete owner。
+- runtime 侧剩余的结构问题主要从“宽仓储继续拆”收敛成“`runtime/ports/*` capability interface、host adapter、`ContainerRuntimeModule` 的最终物理 owner 是否继续留在 runtime，还是迁到独立 `container_runtime` / platform adapter”。
+- `runtime/infrastructure.RuntimeStateRepository` 目前仍把 runtime managed instance lookup、active container inventory、container-to-node state lookup 与 ACL migration-facing state update 放在同一 owner；如果后续要继续拆，应按使用者视角决定是否再分成 inventory/index/migration 视图，而不是恢复广义仓储。
