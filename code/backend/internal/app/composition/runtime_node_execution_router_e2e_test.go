@@ -75,6 +75,7 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesRuntimeDetailsContainerNode(t *
 		cfg,
 		zap.NewNop(),
 		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		runtimeNodeRouterE2EDefaultRuntimeNodeName,
 	)
@@ -182,6 +183,7 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesWorkspaceContainerNode(t *testi
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
+		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		runtimeNodeRouterE2EDefaultRuntimeNodeName,

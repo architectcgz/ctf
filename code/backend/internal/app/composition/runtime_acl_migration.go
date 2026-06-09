@@ -9,13 +9,17 @@ import (
 
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
+type runtimeACLMigrationRepository interface {
+	ListInstancesNeedingACLHandleMigration(ctx context.Context) ([]runtimecontracts.RuntimeManagedInstance, error)
+	UpdateInstanceRuntimeDetails(ctx context.Context, instanceID int64, runtimeDetails string) error
+}
+
 func migrateLegacyInstanceACLHandles(
 	ctx context.Context,
-	repo *runtimeinfra.Repository,
+	repo runtimeACLMigrationRepository,
 	router *runtimeNodeExecutionRouter,
 	defaultClient *nodeRuntimeClient,
 	logger *zap.Logger,
@@ -50,7 +54,7 @@ func migrateLegacyInstanceACLHandles(
 
 func migrateLegacyInstanceACLHandle(
 	ctx context.Context,
-	repo *runtimeinfra.Repository,
+	repo runtimeACLMigrationRepository,
 	router *runtimeNodeExecutionRouter,
 	defaultClient *nodeRuntimeClient,
 	instance *instancecontracts.Instance,

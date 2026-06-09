@@ -73,7 +73,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		ManagedContainerStats:     executor,
 		InteractiveExecutor:       executor,
 	})
-	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), runtimeRepo, nodeRepo, defaultNodeName)
+	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), runtimeRepo, runtimeRepo, nodeRepo, defaultNodeName)
 	if nodeRouter != nil && defaultNode != nil && defaultNode.ID > 0 {
 		nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)
 	}
@@ -175,11 +175,11 @@ func buildDefaultRuntimeNodeClient(root *Root) (*nodeRuntimeClient, error) {
 	return buildDefaultNodeRuntimeClient(root, runtimeRepo, defaultNode)
 }
 
-func buildDefaultNodeRuntimeClient(root *Root, runtimeRepo *runtimeinfra.Repository, node *runtimeentity.RuntimeNode) (*nodeRuntimeClient, error) {
+func buildDefaultNodeRuntimeClient(root *Root, allocationRepo runtimeNodeAllocationRepository, node *runtimeentity.RuntimeNode) (*nodeRuntimeClient, error) {
 	if root == nil {
 		return nil, nil
 	}
-	client, err := buildRuntimeNodeClient(root.Context(), root.Config(), root.Logger(), runtimeRepo, node)
+	client, err := buildRuntimeNodeClient(root.Context(), root.Config(), root.Logger(), allocationRepo, node)
 	if err != nil {
 		return nil, err
 	}

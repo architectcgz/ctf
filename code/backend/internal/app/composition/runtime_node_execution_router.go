@@ -35,6 +35,15 @@ type runtimeNodeClient interface {
 	Close(ctx context.Context) error
 }
 
+type runtimeNodeAllocationRepository interface {
+	runtimecmd.ProvisioningRepository
+	runtimecmd.RuntimeCleanupRepository
+}
+
+type runtimeNodeStateRepository interface {
+	FindRuntimeNodeIDByContainerID(ctx context.Context, containerID string) (*int64, error)
+}
+
 type nodeRuntimeClient struct {
 	executor      runtimeports.RuntimeHostExecutor
 	checkerRunner contestports.CheckerRunner
@@ -46,7 +55,8 @@ type nodeRuntimeClient struct {
 type runtimeNodeExecutionRouter struct {
 	cfg             *config.Config
 	logger          *zap.Logger
-	runtimeRepo     *runtimeinfra.Repository
+	allocationRepo  runtimeNodeAllocationRepository
+	stateRepo       runtimeNodeStateRepository
 	nodeRepo        *runtimeinfra.RuntimeNodeRepository
 	defaultNodeName string
 
@@ -60,7 +70,7 @@ var buildRuntimeNodeClient = buildRuntimeNodeClientFromNode
 func newNodeRuntimeClient(
 	cfg *config.Config,
 	logger *zap.Logger,
-	runtimeRepo *runtimeinfra.Repository,
+	allocationRepo runtimeNodeAllocationRepository,
 	executor runtimeports.RuntimeHostExecutor,
 	checkerRunner contestports.CheckerRunner,
 	closer runtimeLifecycleCloser,
@@ -74,8 +84,8 @@ func newNodeRuntimeClient(
 	return &nodeRuntimeClient{
 		executor:      executor,
 		checkerRunner: checkerRunner,
-		provisioner:   runtimecmd.NewProvisioningService(runtimeRepo, executor, &cfg.Container, logger.Named("runtime_provisioning_service")),
-		cleaner:       runtimecmd.NewRuntimeCleanupService(executor, runtimeRepo, logger.Named("runtime_cleanup_service")),
+		provisioner:   runtimecmd.NewProvisioningService(allocationRepo, executor, &cfg.Container, logger.Named("runtime_provisioning_service")),
+		cleaner:       runtimecmd.NewRuntimeCleanupService(executor, allocationRepo, logger.Named("runtime_cleanup_service")),
 		closer:        closer,
 	}
 }
@@ -84,7 +94,7 @@ func buildRuntimeNodeClientFromNode(
 	ctx context.Context,
 	cfg *config.Config,
 	logger *zap.Logger,
-	runtimeRepo *runtimeinfra.Repository,
+	allocationRepo runtimeNodeAllocationRepository,
 	node *runtimeentity.RuntimeNode,
 ) (runtimeNodeClient, error) {
 	if cfg == nil {
@@ -95,7 +105,7 @@ func buildRuntimeNodeClientFromNode(
 	}
 	if cfg.App.Env == "test" {
 		executor := newTestRuntimeEngine(logger.Named("runtime_test_engine"))
-		return newNodeRuntimeClient(cfg, logger, runtimeRepo, executor, nil, nil), nil
+		return newNodeRuntimeClient(cfg, logger, allocationRepo, executor, nil, nil), nil
 	}
 	if node == nil {
 		return nil, runtimeports.ErrRuntimeNodeUnavailable
@@ -110,24 +120,25 @@ func buildRuntimeNodeClientFromNode(
 		if err != nil {
 			return nil, err
 		}
-		return newNodeRuntimeClient(cfg, logger, runtimeRepo, executor, runner, nil), nil
+		return newNodeRuntimeClient(cfg, logger, allocationRepo, executor, runner, nil), nil
 	}
 
 	bridge, err := dialRuntimeAgent(ctx, runtimeAgentConfigForNode(cfg.RuntimeAgent, node))
 	if err != nil {
 		return nil, err
 	}
-	return newNodeRuntimeClient(cfg, logger, runtimeRepo, bridge, bridge, bridge), nil
+	return newNodeRuntimeClient(cfg, logger, allocationRepo, bridge, bridge, bridge), nil
 }
 
 func newRuntimeNodeExecutionRouter(
 	cfg *config.Config,
 	logger *zap.Logger,
-	runtimeRepo *runtimeinfra.Repository,
+	allocationRepo runtimeNodeAllocationRepository,
+	stateRepo runtimeNodeStateRepository,
 	nodeRepo *runtimeinfra.RuntimeNodeRepository,
 	defaultNodeName string,
 ) *runtimeNodeExecutionRouter {
-	if runtimeRepo == nil || nodeRepo == nil {
+	if allocationRepo == nil || stateRepo == nil || nodeRepo == nil {
 		return nil
 	}
 	if cfg == nil {
@@ -139,7 +150,8 @@ func newRuntimeNodeExecutionRouter(
 	return &runtimeNodeExecutionRouter{
 		cfg:              cfg,
 		logger:           logger,
-		runtimeRepo:      runtimeRepo,
+		allocationRepo:   allocationRepo,
+		stateRepo:        stateRepo,
 		nodeRepo:         nodeRepo,
 		defaultNodeName:  strings.TrimSpace(defaultNodeName),
 		clients:          make(map[int64]runtimeNodeClient),
@@ -464,7 +476,7 @@ func (r *runtimeNodeExecutionRouter) clientForConcreteNode(ctx context.Context, 
 	}
 	r.mu.Unlock()
 
-	client, err := buildRuntimeNodeClient(ctx, r.cfg, r.logger, r.runtimeRepo, node)
+	client, err := buildRuntimeNodeClient(ctx, r.cfg, r.logger, r.allocationRepo, node)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -506,8 +518,8 @@ func (r *runtimeNodeExecutionRouter) resolveNodeIDForContainer(ctx context.Conte
 		return cachedNodeID, nil
 	}
 
-	if r.runtimeRepo != nil {
-		nodeID, err := r.runtimeRepo.FindRuntimeNodeIDByContainerID(ctx, trimmedID)
+	if r.stateRepo != nil {
+		nodeID, err := r.stateRepo.FindRuntimeNodeIDByContainerID(ctx, trimmedID)
 		if err != nil {
 			return 0, err
 		}

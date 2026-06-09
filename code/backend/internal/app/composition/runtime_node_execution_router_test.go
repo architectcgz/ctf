@@ -34,6 +34,7 @@ func TestRuntimeNodeExecutionRouterRoutesCheckerByNodeID(t *testing.T) {
 		cfg,
 		zap.NewNop(),
 		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -107,6 +108,7 @@ func TestRuntimeNodeExecutionRouterRoutesContainerFileWritesByWorkspaceContainer
 		cfg,
 		zap.NewNop(),
 		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -178,6 +180,7 @@ func TestRuntimeNodeExecutionRouterRoutesInteractiveExecByWorkspaceContainerNode
 		cfg,
 		zap.NewNop(),
 		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -241,6 +244,7 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByRuntimeDetailsContainerNodeID(
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
+		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
@@ -318,6 +322,7 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByWorkspaceContainerIDWithoutNod
 		cfg,
 		zap.NewNop(),
 		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -352,6 +357,7 @@ func TestRuntimeNodeExecutionRouterRoutesRemoveContainerByInventoryCache(t *test
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
+		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
@@ -418,7 +424,7 @@ func overrideRuntimeNodeClientBuilder(t *testing.T, clients map[int64]runtimeNod
 	t.Helper()
 
 	original := buildRuntimeNodeClient
-	buildRuntimeNodeClient = func(_ context.Context, _ *config.Config, _ *zap.Logger, _ *runtimeinfra.Repository, node *runtimeentity.RuntimeNode) (runtimeNodeClient, error) {
+	buildRuntimeNodeClient = func(_ context.Context, _ *config.Config, _ *zap.Logger, _ runtimeNodeAllocationRepository, node *runtimeentity.RuntimeNode) (runtimeNodeClient, error) {
 		if node == nil {
 			return nil, runtimeports.ErrRuntimeNodeUnavailable
 		}

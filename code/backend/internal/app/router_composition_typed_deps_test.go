@@ -524,6 +524,63 @@ func TestRuntimeCompositionInjectsRuntimePersistenceIntoRuntimeModule(t *testing
 	}
 }
 
+func TestRuntimeNodeExecutionRouterUsesNarrowRuntimePersistenceDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "runtime_node_execution_router.go"))
+	if err != nil {
+		t.Fatalf("read runtime_node_execution_router.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type runtimeNodeAllocationRepository interface",
+		"type runtimeNodeStateRepository interface",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("runtime node execution router should declare narrow runtime persistence marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"*runtimeinfra.Repository",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("runtime node execution router should not depend on concrete runtime repository marker %s", marker)
+		}
+	}
+}
+
+func TestRuntimeACLMigrationUsesNarrowRuntimeStateDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "runtime_acl_migration.go"))
+	if err != nil {
+		t.Fatalf("read runtime_acl_migration.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type runtimeACLMigrationRepository interface",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("runtime acl migration should declare narrow runtime state marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"*runtimeinfra.Repository",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("runtime acl migration should not depend on concrete runtime repository marker %s", marker)
+		}
+	}
+}
+
 func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 

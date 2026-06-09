@@ -564,3 +564,58 @@ Current remaining surface after Task 11:
 
 - `runtime/runtime.Module` 已经不再直接依赖 `runtime/infrastructure` 的具体构造，也不再把 DB / cache 作为自己的输入；container-facing service builder 与 runtime-owned persistence 构造边界已经分开。
 - 剩余 debt 主要是 capability interface、host adapter 和 `ContainerRuntimeModule` 这组物理包落点仍留在 `runtime`，以及 `runtime/infrastructure.Repository` 内部仍有待继续拆分的 runtime-owned persistence 面。
+
+## Task 12: Narrow Composition Runtime Repo Dependencies
+
+**Files:**
+- Modify:
+  - `code/backend/internal/app/composition/runtime_acl_migration.go`
+  - `code/backend/internal/app/composition/runtime_node_execution_router.go`
+  - `code/backend/internal/app/composition/runtime_module.go`
+  - `code/backend/internal/app/composition/runtime_node_execution_router_test.go`
+  - `code/backend/internal/app/composition/runtime_node_execution_router_e2e_test.go`
+  - `code/backend/internal/app/router_composition_typed_deps_test.go`
+  - `docs/design/backend-module-boundary-target.md`
+  - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
+
+- [x] **Step 1: Add failing guards**
+
+Require `runtime_acl_migration.go` and `runtime_node_execution_router.go` to stop depending on `*runtimeinfra.Repository` directly.
+
+Run:
+
+```bash
+go test ./internal/app -run 'TestRuntimeNodeExecutionRouterUsesNarrowRuntimePersistenceDeps|TestRuntimeACLMigrationUsesNarrowRuntimeStateDeps' -count=1
+```
+
+Expected: FAIL before the slice because both files still referenced `*runtimeinfra.Repository`.
+
+- [x] **Step 2: Introduce narrow composition-side interfaces**
+
+Define:
+
+- `runtimeACLMigrationRepository`
+- `runtimeNodeAllocationRepository`
+- `runtimeNodeStateRepository`
+
+Keep them local to `app/composition`, because this slice is about narrowing the composition wiring surface, not creating a new shared port package yet.
+
+- [x] **Step 3: Rewire router and ACL migration**
+
+Change runtime node router and ACL migration helpers to accept the narrow interfaces. Keep `runtimeinfra.NewRepository(root.DB())` as the concrete provider at composition entry, but stop threading `*runtimeinfra.Repository` through the container runtime orchestration path.
+
+- [x] **Step 4: Verify**
+
+Run:
+
+```bash
+go test ./internal/app -run 'TestRuntimeModuleUsesExternalPortsForCrossModuleDeps|TestRuntimeModuleDoesNotConstructRuntimeInfrastructure|TestRuntimeCompositionInjectsRuntimePersistenceIntoRuntimeModule|TestRuntimeNodeExecutionRouterUsesNarrowRuntimePersistenceDeps|TestRuntimeACLMigrationUsesNarrowRuntimeStateDeps|TestBuildContainerRuntimeModuleDelegatesToSubBuilders|TestBuildRuntimeHostExecutorProvidesReachableRuntimeInTestEnv|TestAWDDefenseSSHGateway' -count=1
+go test ./internal/app/composition -count=1
+go test ./internal/module/runtime/... -count=1
+go test ./internal/module -count=1
+```
+
+Current remaining surface after Task 12:
+
+- 容器能力装配链已经不再把 `*runtimeinfra.Repository` 作为 concrete 类型向下传递；composition 面上已经明确分成 module 注入、router allocation/state、ACL migration state 三类窄依赖。
+- 下一步剩余 debt 已进一步收敛成 concrete runtime persistence 本身的继续拆分，以及 capability interface / host adapter / `ContainerRuntimeModule` 的最终物理 owner 迁移。
