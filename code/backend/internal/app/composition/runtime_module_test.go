@@ -22,6 +22,7 @@ import (
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
@@ -220,6 +221,26 @@ func TestBuildContainerRuntimeModuleProvidesDefaultRuntimeNodeSelector(t *testin
 	}
 	if module == nil || module.RuntimeNodeSelector == nil {
 		t.Fatalf("expected runtime node selector, got %+v", module)
+	}
+	if module.OpsRuntimeQuery == nil {
+		t.Fatalf("expected ops runtime query, got %+v", module)
+	}
+
+	if err := db.Create(&instanceentity.Instance{
+		ID:          101,
+		UserID:      9,
+		ChallengeID: 21,
+		Status:      instanceentity.InstanceStatusRunning,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	}).Error; err != nil {
+		t.Fatalf("seed running instance: %v", err)
+	}
+	activeContainers, err := module.OpsRuntimeQuery.CountRunning(context.Background())
+	if err != nil {
+		t.Fatalf("OpsRuntimeQuery.CountRunning() error = %v", err)
+	}
+	if activeContainers != 1 {
+		t.Fatalf("OpsRuntimeQuery.CountRunning() = %d, want 1", activeContainers)
 	}
 
 	binding, err := module.RuntimeNodeSelector.SelectDefaultNode(context.Background())

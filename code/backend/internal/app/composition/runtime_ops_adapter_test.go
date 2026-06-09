@@ -14,7 +14,7 @@ type stubOpsRuntimeCountQuery struct {
 	err   error
 }
 
-func (s *stubOpsRuntimeCountQuery) CountRunning(ctx context.Context) (int64, error) {
+func (s *stubOpsRuntimeCountQuery) CountRunningInstances(ctx context.Context) (int64, error) {
 	s.ctx = ctx
 	return s.count, s.err
 }

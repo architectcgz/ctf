@@ -20,8 +20,6 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"type runtimeModuleDeps struct",
 		"repo",
 		"runtimeInstanceRepository",
-		"countRunningQuery",
-		"runtimeports.CountRunningRepository",
 		"cleanupService",
 		"*runtimecmd.RuntimeCleanupService",
 		"provisioningService",
@@ -68,7 +66,6 @@ func TestRuntimeModuleUsesCommandsQueriesServices(t *testing.T) {
 	expected := []string{
 		"runtimecmd.NewRuntimeCleanupService(",
 		"runtimecmd.NewProvisioningService(",
-		"runtimeqry.NewCountRunningService(",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -449,7 +446,6 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"*runtimeapp.ImageRuntimeService",
-		"runtimeports.CountRunningRepository",
 		"runtimeports.ManagedContainerStatsReader",
 		"contestports.AWDContainerFileWriter",
 	}

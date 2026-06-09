@@ -7,10 +7,6 @@ import (
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
-type CountRunningRepository interface {
-	CountRunning(ctx context.Context) (int64, error)
-}
-
 type AWDDefenseWorkspaceLookupRepository interface {
 	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimeentity.AWDDefenseWorkspace, error)
 }

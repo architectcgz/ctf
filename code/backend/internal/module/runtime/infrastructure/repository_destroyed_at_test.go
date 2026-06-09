@@ -15,8 +15,6 @@ import (
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
-type runtimeRepositoryCountRunningContextKey string
-
 func TestReserveAvailablePortExcludingSkipsExcludedPort(t *testing.T) {
 	t.Parallel()
 
@@ -466,54 +464,6 @@ func TestFailProvisioningDoesNotOverrideStoppingInstance(t *testing.T) {
 	}
 	if remaining != 1 {
 		t.Fatalf("expected fail-provisioning rejection to preserve port allocation, got %d", remaining)
-	}
-}
-
-func TestCountRunningPropagatesContextToGorm(t *testing.T) {
-	t.Parallel()
-
-	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
-	ctxKey := runtimeRepositoryCountRunningContextKey("count-running")
-	expectedCtxValue := "ctx-runtime-count-running"
-	var callbackCalled bool
-
-	callbackName := fmt.Sprintf("runtime-count-running-context-%s", strings.ReplaceAll(t.Name(), "/", "-"))
-	if err := db.Callback().Query().Before("gorm:query").Register(callbackName, func(tx *gorm.DB) {
-		if tx.Statement == nil || tx.Statement.Table != "instances" {
-			return
-		}
-		callbackCalled = true
-		if got := tx.Statement.Context.Value(ctxKey); got != expectedCtxValue {
-			t.Fatalf("expected query ctx value %v, got %v", expectedCtxValue, got)
-		}
-	}); err != nil {
-		t.Fatalf("register query callback: %v", err)
-	}
-	t.Cleanup(func() {
-		_ = db.Callback().Query().Remove(callbackName)
-	})
-
-	if err := db.Create(&instancecontracts.Instance{
-		ID:          101,
-		UserID:      9,
-		ChallengeID: 21,
-		Status:      instancecontracts.InstanceStatusRunning,
-		ExpiresAt:   time.Now().Add(time.Hour),
-	}).Error; err != nil {
-		t.Fatalf("seed running instance: %v", err)
-	}
-
-	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	count, err := repo.CountRunning(ctx)
-	if err != nil {
-		t.Fatalf("CountRunning() error = %v", err)
-	}
-	if !callbackCalled {
-		t.Fatal("expected gorm query callback to observe context-aware count running query")
-	}
-	if count != 1 {
-		t.Fatalf("CountRunning() count = %d, want 1", count)
 	}
 }
 

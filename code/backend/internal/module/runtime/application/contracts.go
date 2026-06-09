@@ -2,9 +2,6 @@ package application
 
 import runtimeports "ctf-platform/internal/module/runtime/ports"
 
-// CountRunningRepository 定义运行中实例统计仓储能力。
-type CountRunningRepository = runtimeports.CountRunningRepository
-
 // ManagedContainerStat 表示 runtime application 层使用的受管容器运行指标快照。
 type ManagedContainerStat = runtimeports.ManagedContainerStat
 

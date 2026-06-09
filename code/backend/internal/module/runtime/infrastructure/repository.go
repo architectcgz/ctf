@@ -942,14 +942,6 @@ func (r *Repository) AtomicExtendByID(ctx context.Context, id int64, maxExtends 
 	return nil
 }
 
-func (r *Repository) CountRunning(ctx context.Context) (int64, error) {
-	var count int64
-	err := r.db.WithContext(ctx).Model(&instancecontracts.Instance{}).
-		Where("status = ?", instancecontracts.InstanceStatusRunning).
-		Count(&count).Error
-	return count, err
-}
-
 func (r *Repository) ListPendingInstances(ctx context.Context, limit int) ([]*instancecontracts.Instance, error) {
 	if limit <= 0 {
 		return []*instancecontracts.Instance{}, nil

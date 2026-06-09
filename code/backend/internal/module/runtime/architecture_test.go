@@ -108,12 +108,24 @@ func TestInfrastructureDoesNotDependOnDTOOrGin(t *testing.T) {
 func TestPortsDoNotDeclareWideInstanceRepository(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("ports", "http.go"))
+	files, err := filepath.Glob(filepath.Join("ports", "*.go"))
 	if err != nil {
-		t.Fatalf("read runtime ports file: %v", err)
+		t.Fatalf("glob runtime port files: %v", err)
 	}
-	if strings.Contains(string(content), "type InstanceRepository interface") {
-		t.Fatalf("runtime ports must not declare the legacy wide InstanceRepository interface")
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("read runtime ports file %s: %v", file, err)
+		}
+		if strings.Contains(string(content), "type InstanceRepository interface") {
+			t.Fatalf("runtime ports must not declare the legacy wide InstanceRepository interface in %s", file)
+		}
+		if strings.Contains(string(content), "type CountRunningRepository interface") {
+			t.Fatalf("running instance count query belongs to instance/ops, not runtime ports: %s", file)
+		}
 	}
 }
 

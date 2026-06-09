@@ -38,6 +38,10 @@ type InstanceStatusRepository interface {
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 }
 
+type RunningInstanceCountRepository interface {
+	CountRunningInstances(ctx context.Context) (int64, error)
+}
+
 type RuntimeCleaner interface {
 	CleanupRuntime(ctx context.Context, instance *instanceentity.Instance) error
 }

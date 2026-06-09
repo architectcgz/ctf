@@ -7,6 +7,7 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
@@ -46,6 +47,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	cfg := runtimeConfigOrDefault(root.Config())
 	log := root.Logger()
 	runtimeRepo := runtimeinfra.NewRepository(root.DB())
+	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultNodeName := defaultRuntimeNodeName(cfg)
 	nodeSelector, nodeRepo, defaultNode, err := buildDefaultRuntimeNodeSelector(root, defaultNodeName)
 	if err != nil {
@@ -100,7 +102,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	return &ContainerRuntimeModule{
 		ChallengeImageRuntime:   module.ImageRuntime,
 		ChallengeRuntimeProbe:   newChallengeRuntimeProbeAdapter(module.CleanupService, module.ProvisioningService, runtimePublishedAccessHost(cfg)),
-		OpsRuntimeQuery:         newOpsRuntimeQueryAdapter(module.RuntimeQuery),
+		OpsRuntimeQuery:         newOpsRuntimeQueryAdapter(instanceRepo),
 		OpsRuntimeStatsProvider: newOpsRuntimeStatsProviderAdapter(module.RuntimeStatsProvider),
 		ContestContainerFiles:   contestContainerFiles,
 		ContestCheckerRunner:    contestCheckerRunner,

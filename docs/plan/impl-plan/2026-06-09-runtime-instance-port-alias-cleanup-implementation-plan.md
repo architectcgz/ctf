@@ -23,10 +23,10 @@
   - Move `ManagedContainer` and `ManagedContainerState` ownership back to `runtime/ports`, with `instance/ports` consuming them as runtime capability shapes.
   - Replace production and test references to instance-owned runtime aliases, such as `runtimeports.ProxyTicketClaims`, `RuntimeCleaner`, `TeacherInstanceFilter`, and `ProxyTicketInstanceReader`, with direct `instanceports` imports.
   - Keep behavior, public HTTP API, proxy ticket JSON, runtime-agent protocol shape, and repository queries unchanged.
+  - Move the running instance count query out of runtime ports so instance owns the `instances` table read and ops keeps the dashboard-facing consumer port.
 - Non-Goals:
   - Do not move runtime repository methods or proxy ticket storage implementation out of `runtime/infrastructure` in this slice.
   - Do not delete or rename `runtime/ports/http.go`; file placement cleanup can be a later mechanical slice after aliases are gone.
-  - Do not migrate `CountRunningRepository` to instance/ops owner in this slice.
   - Do not change database schema, runtime-agent messages, HTTP route paths, or DTO response contracts.
 
 ## Inputs
@@ -110,10 +110,10 @@
 - grill-with-docs findings:
   - Code confirms the stale alias surface is wider than `runtime/ports/http.go`: `runtime/ports/metrics.go` also aliases instance-owned `ManagedContainer` shapes.
   - Docs already describe `runtime/ports/http.go` instance aliases as the remaining runtime -> instance boundary debt.
-  - Moving implementations out of `runtime/infrastructure` would be a larger repository-owner migration and is out of scope for this first alias cleanup.
+  - Moving most implementations out of `runtime/infrastructure` would be a larger repository-owner migration and is out of scope for this first alias cleanup.
 - Plan adjustments after challenge:
   - Include `ManagedContainer` / `ManagedContainerState` ownership correction in this slice.
-  - Keep `CountRunningRepository` and physical file deletion for later slices.
+  - Keep broad runtime infrastructure owner migration and physical file deletion for later slices.
 
 ## Validation
 
@@ -173,8 +173,30 @@ Change production and test code from `runtimeports.<instance-owned type>` to `in
 
 - [x] **Step 3: Remove `instance/ports` import from runtime ports**
 
-Delete the alias declarations from `runtime/ports/http.go` and `runtime/ports/metrics.go`; keep runtime-owned contracts such as `CountRunningRepository`, `ContainerDirectoryEntry`, runtime workspace repositories, and proxy traffic recorder unchanged.
+Delete the alias declarations from `runtime/ports/http.go` and `runtime/ports/metrics.go`; keep runtime-owned contracts such as `ContainerDirectoryEntry`, runtime workspace repositories, and proxy traffic recorder unchanged.
 
 - [x] **Step 4: Verify GREEN**
 
 Run the validation commands listed above and update docs if the active backlog wording changes.
+
+## Task 3: Move Running Instance Count Owner
+
+**Files:**
+- Modify: `code/backend/internal/module/instance/ports/ports.go`
+- Create: `code/backend/internal/module/instance/infrastructure/repository.go`
+- Create: `code/backend/internal/module/instance/infrastructure/repository_test.go`
+- Modify: `code/backend/internal/app/composition/runtime_ops_adapter.go`
+- Modify: `code/backend/internal/app/composition/runtime_module.go`
+- Modify/delete runtime count query service and tests.
+
+- [x] **Step 1: Add instance-owned running count port and repository**
+
+Define `RunningInstanceCountRepository` in `instance/ports` and implement `CountRunningInstances(ctx)` in `instance/infrastructure.Repository` against the `instances` table.
+
+- [x] **Step 2: Adapt ops dashboard query from instance owner**
+
+Keep `opsports.RuntimeQuery` as the dashboard-facing consumer interface, but adapt it from the instance running count repository in app composition.
+
+- [x] **Step 3: Remove runtime count owner**
+
+Remove `runtimeports.CountRunningRepository`, `runtime/application/queries.CountRunningService`, `Module.RuntimeQuery`, and `runtime/infrastructure.Repository.CountRunning`.

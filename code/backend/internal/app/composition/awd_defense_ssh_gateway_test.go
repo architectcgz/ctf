@@ -15,7 +15,7 @@ import (
 	"ctf-platform/internal/config"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimemodule "ctf-platform/internal/module/runtime/runtime"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"

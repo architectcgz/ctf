@@ -12,7 +12,6 @@ import (
 	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -28,7 +27,6 @@ type Module struct {
 	BackgroundJobs []BackgroundJob
 
 	ImageRuntime          *runtimeapp.ImageRuntimeService
-	RuntimeQuery          runtimeports.CountRunningRepository
 	RuntimeStatsProvider  runtimeports.ManagedContainerStatsReader
 	ContestContainerFiles contestports.AWDContainerFileWriter
 	ProvisioningService   *runtimecmd.ProvisioningService
@@ -64,13 +62,11 @@ type runtimeInstanceRepository interface {
 	instanceports.InstanceExtendRepository
 	instanceports.InstanceStatusRepository
 	instanceports.ProxyTicketInstanceReader
-	runtimeports.CountRunningRepository
 }
 
 type runtimeModuleDeps struct {
 	input                 Deps
 	repo                  runtimeInstanceRepository
-	countRunningQuery     runtimeports.CountRunningRepository
 	cleanupService        *runtimecmd.RuntimeCleanupService
 	provisioningService   *runtimecmd.ProvisioningService
 	containerStatsService *runtimeapp.ContainerStatsService
@@ -87,7 +83,6 @@ func Build(deps Deps) *Module {
 	return &Module{
 		BackgroundJobs:            buildBackgroundJobs(internalDeps),
 		ImageRuntime:              internalDeps.imageRuntime,
-		RuntimeQuery:              observabilityDeps.query,
 		RuntimeStatsProvider:      observabilityDeps.statsProvider,
 		ContestContainerFiles:     contestDeps.containerFiles,
 		ProvisioningService:       internalDeps.provisioningService,
@@ -120,7 +115,6 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 	return runtimeModuleDeps{
 		input:                 deps,
 		repo:                  repo,
-		countRunningQuery:     runtimeqry.NewCountRunningService(repo),
 		cleanupService:        cleanupService,
 		provisioningService:   provisioningService,
 		containerStatsService: containerStatsService,
@@ -136,13 +130,11 @@ func buildBackgroundJobs(deps runtimeModuleDeps) []BackgroundJob {
 }
 
 type runtimeObservabilityDeps struct {
-	query         runtimeports.CountRunningRepository
 	statsProvider runtimeports.ManagedContainerStatsReader
 }
 
 func buildRuntimeObservabilityDeps(deps runtimeModuleDeps) runtimeObservabilityDeps {
 	return runtimeObservabilityDeps{
-		query:         deps.countRunningQuery,
 		statsProvider: deps.containerStatsService,
 	}
 }
