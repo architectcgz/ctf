@@ -150,7 +150,7 @@ func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtim
 	if repo == nil {
 		return nil, nil, nil, nil
 	}
-	spec := runtimeports.RuntimeNodeBootstrapSpec{
+	spec := runtimecontracts.RuntimeNodeBootstrapSpec{
 		Name:        defaultNodeName,
 		Endpoint:    defaultRuntimeNodeEndpoint(cfg),
 		TLSIdentity: defaultRuntimeNodeTLSIdentity(cfg),

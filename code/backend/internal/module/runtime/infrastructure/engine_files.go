@@ -13,7 +13,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func (e *Engine) WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error {
@@ -101,7 +101,7 @@ func (e *Engine) ReadFileFromContainer(ctx context.Context, containerID, filePat
 	}
 }
 
-func (e *Engine) ListDirectoryFromContainer(ctx context.Context, containerID, dirPath string, limit int) ([]runtimeports.ContainerDirectoryEntry, error) {
+func (e *Engine) ListDirectoryFromContainer(ctx context.Context, containerID, dirPath string, limit int) ([]runtimecontracts.ContainerDirectoryEntry, error) {
 	cli, err := e.requireClient()
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func (e *Engine) ListDirectoryFromContainer(ctx context.Context, containerID, di
 	defer reader.Close()
 
 	rootName := path.Base(path.Clean(resolvedPath))
-	entriesByName := make(map[string]runtimeports.ContainerDirectoryEntry)
+	entriesByName := make(map[string]runtimecontracts.ContainerDirectoryEntry)
 	tr := tar.NewReader(reader)
 	for {
 		header, err := tr.Next()
@@ -139,7 +139,7 @@ func (e *Engine) ListDirectoryFromContainer(ctx context.Context, containerID, di
 		if !ok {
 			continue
 		}
-		entry := runtimeports.ContainerDirectoryEntry{
+		entry := runtimecontracts.ContainerDirectoryEntry{
 			Name: name,
 			Type: entryType,
 			Size: header.Size,
@@ -152,7 +152,7 @@ func (e *Engine) ListDirectoryFromContainer(ctx context.Context, containerID, di
 		}
 	}
 
-	entries := make([]runtimeports.ContainerDirectoryEntry, 0, len(entriesByName))
+	entries := make([]runtimecontracts.ContainerDirectoryEntry, 0, len(entriesByName))
 	for _, entry := range entriesByName {
 		entries = append(entries, entry)
 	}

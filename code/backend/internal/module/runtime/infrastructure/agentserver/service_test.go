@@ -140,7 +140,7 @@ func (*healthTestRuntimeHostExecutor) ReadFileFromContainer(context.Context, str
 	return nil, nil
 }
 
-func (*healthTestRuntimeHostExecutor) ListDirectoryFromContainer(context.Context, string, string, int) ([]runtimeports.ContainerDirectoryEntry, error) {
+func (*healthTestRuntimeHostExecutor) ListDirectoryFromContainer(context.Context, string, string, int) ([]runtimecontracts.ContainerDirectoryEntry, error) {
 	return nil, nil
 }
 
@@ -156,15 +156,15 @@ func (*healthTestRuntimeHostExecutor) RemoveImage(context.Context, string) error
 	return nil
 }
 
-func (*healthTestRuntimeHostExecutor) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
+func (*healthTestRuntimeHostExecutor) ListManagedContainers(context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	return nil, nil
 }
 
-func (*healthTestRuntimeHostExecutor) InspectManagedContainer(context.Context, string) (*runtimeports.ManagedContainerState, error) {
+func (*healthTestRuntimeHostExecutor) InspectManagedContainer(context.Context, string) (*runtimecontracts.ManagedContainerState, error) {
 	return nil, nil
 }
 
-func (*healthTestRuntimeHostExecutor) ListManagedContainerStats(context.Context) ([]runtimeports.ManagedContainerStat, error) {
+func (*healthTestRuntimeHostExecutor) ListManagedContainerStats(context.Context) ([]runtimecontracts.ManagedContainerStat, error) {
 	return nil, nil
 }
 

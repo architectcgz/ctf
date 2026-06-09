@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 
@@ -30,7 +31,7 @@ func (r *RuntimeNodeRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *RuntimeNodeRepository) EnsureDefaultNode(ctx context.Context, spec runtimeports.RuntimeNodeBootstrapSpec) (*runtimeentity.RuntimeNode, error) {
+func (r *RuntimeNodeRepository) EnsureDefaultNode(ctx context.Context, spec runtimecontracts.RuntimeNodeBootstrapSpec) (*runtimeentity.RuntimeNode, error) {
 	if r == nil || r.db == nil {
 		return nil, nil
 	}
@@ -174,7 +175,7 @@ func NewDefaultRuntimeNodeSelector(repo *RuntimeNodeRepository, defaultNodeName 
 	}
 }
 
-func (s *defaultRuntimeNodeSelector) SelectDefaultNode(ctx context.Context) (*runtimeports.RuntimeNodeBinding, error) {
+func (s *defaultRuntimeNodeSelector) SelectDefaultNode(ctx context.Context) (*runtimecontracts.RuntimeNodeBinding, error) {
 	if s == nil || s.repo == nil {
 		return nil, runtimeports.ErrRuntimeNodeUnavailable
 	}
@@ -191,7 +192,7 @@ func (s *defaultRuntimeNodeSelector) SelectDefaultNode(ctx context.Context) (*ru
 	if err != nil {
 		return nil, err
 	}
-	return &runtimeports.RuntimeNodeBinding{
+	return &runtimecontracts.RuntimeNodeBinding{
 		NodeID:   node.ID,
 		NodeName: node.Name,
 	}, nil

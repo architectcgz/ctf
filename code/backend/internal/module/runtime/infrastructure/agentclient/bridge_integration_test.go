@@ -19,7 +19,6 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/internal/module/runtime/infrastructure/agentclient"
 	"ctf-platform/internal/module/runtime/infrastructure/agentserver"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -221,8 +220,8 @@ func (*fakeRuntimeHostExecutor) ReadFileFromContainer(context.Context, string, s
 	return []byte("hello"), nil
 }
 
-func (*fakeRuntimeHostExecutor) ListDirectoryFromContainer(context.Context, string, string, int) ([]runtimeports.ContainerDirectoryEntry, error) {
-	return []runtimeports.ContainerDirectoryEntry{{Name: "main.py", Type: "file", Size: 64}}, nil
+func (*fakeRuntimeHostExecutor) ListDirectoryFromContainer(context.Context, string, string, int) ([]runtimecontracts.ContainerDirectoryEntry, error) {
+	return []runtimecontracts.ContainerDirectoryEntry{{Name: "main.py", Type: "file", Size: 64}}, nil
 }
 
 func (*fakeRuntimeHostExecutor) ExecContainerCommand(context.Context, string, []string, []byte, int64) ([]byte, error) {
@@ -237,16 +236,16 @@ func (*fakeRuntimeHostExecutor) RemoveImage(context.Context, string) error {
 	return nil
 }
 
-func (*fakeRuntimeHostExecutor) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
-	return []runtimeports.ManagedContainer{{ID: "container-123", Name: "ctf-container", CreatedAt: time.Unix(0, 0).UTC()}}, nil
+func (*fakeRuntimeHostExecutor) ListManagedContainers(context.Context) ([]runtimecontracts.ManagedContainer, error) {
+	return []runtimecontracts.ManagedContainer{{ID: "container-123", Name: "ctf-container", CreatedAt: time.Unix(0, 0).UTC()}}, nil
 }
 
-func (*fakeRuntimeHostExecutor) InspectManagedContainer(context.Context, string) (*runtimeports.ManagedContainerState, error) {
-	return &runtimeports.ManagedContainerState{ID: "container-123", Exists: true, Running: true, Status: "running"}, nil
+func (*fakeRuntimeHostExecutor) InspectManagedContainer(context.Context, string) (*runtimecontracts.ManagedContainerState, error) {
+	return &runtimecontracts.ManagedContainerState{ID: "container-123", Exists: true, Running: true, Status: "running"}, nil
 }
 
-func (*fakeRuntimeHostExecutor) ListManagedContainerStats(context.Context) ([]runtimeports.ManagedContainerStat, error) {
-	return []runtimeports.ManagedContainerStat{{ContainerID: "container-123", ContainerName: "ctf-container", CPUPercent: 12.5}}, nil
+func (*fakeRuntimeHostExecutor) ListManagedContainerStats(context.Context) ([]runtimecontracts.ManagedContainerStat, error) {
+	return []runtimecontracts.ManagedContainerStat{{ContainerID: "container-123", ContainerName: "ctf-container", CPUPercent: 12.5}}, nil
 }
 
 func (*fakeRuntimeHostExecutor) ExecContainerInteractive(_ context.Context, _ string, _ []string, stdin io.Reader, stdout io.Writer) error {

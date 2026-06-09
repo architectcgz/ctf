@@ -6,7 +6,6 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
@@ -32,7 +31,7 @@ func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {
 	}
 
 	got := toRuntimeTopologyCreateRequestFromChallenge(req.toPorts(), "host-gateway.internal")
-	if got.SubnetPool != runtimeports.SubnetPoolTopology {
+	if got.SubnetPool != runtimecontracts.SubnetPoolTopology {
 		t.Fatalf("expected topology subnet pool, got %+v", got.SubnetPool)
 	}
 	if len(got.Networks) != 1 || !got.Networks[0].Internal {
@@ -119,7 +118,7 @@ func TestRuntimeChallengeTopologyAdapterClonesMutableFields(t *testing.T) {
 
 func TestRuntimeChallengeSingleContainerRequestUsesSingleContainerSubnetPool(t *testing.T) {
 	got := buildRuntimeSingleContainerCreateRequestForChallenge("ctf/web:latest", map[string]string{"FLAG": "flag{1}"})
-	if got.SubnetPool != runtimeports.SubnetPoolSingleContainer {
+	if got.SubnetPool != runtimecontracts.SubnetPoolSingleContainer {
 		t.Fatalf("expected single container subnet pool, got %+v", got.SubnetPool)
 	}
 	if len(got.Networks) != 1 || got.Networks[0].Key != runtimecontracts.TopologyDefaultNetworkKey {

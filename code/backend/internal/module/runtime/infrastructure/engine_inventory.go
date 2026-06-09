@@ -8,10 +8,9 @@ import (
 	"github.com/docker/docker/api/types/filters"
 
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
-func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error) {
+func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	cli, err := e.requireClient()
 	if err != nil {
 		return nil, err
@@ -28,13 +27,13 @@ func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeports.Mana
 		return nil, err
 	}
 
-	items := make([]runtimeports.ManagedContainer, 0, len(containers))
+	items := make([]runtimecontracts.ManagedContainer, 0, len(containers))
 	for _, item := range containers {
 		name := item.ID[:12]
 		if len(item.Names) > 0 {
 			name = item.Names[0]
 		}
-		items = append(items, runtimeports.ManagedContainer{
+		items = append(items, runtimecontracts.ManagedContainer{
 			ID:        item.ID,
 			Name:      name,
 			CreatedAt: time.Unix(item.Created, 0),
@@ -43,19 +42,19 @@ func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeports.Mana
 	return items, nil
 }
 
-func (e *Engine) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (e *Engine) InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 	cli, err := e.requireClient()
 	if err != nil {
 		return nil, err
 	}
 	if containerID == "" {
-		return &runtimeports.ManagedContainerState{Exists: false}, nil
+		return &runtimecontracts.ManagedContainerState{Exists: false}, nil
 	}
 
 	resp, err := cli.ContainerInspect(ctx, containerID)
 	if err != nil {
 		if isRuntimeContainerNotFoundError(err) {
-			return &runtimeports.ManagedContainerState{
+			return &runtimecontracts.ManagedContainerState{
 				ID:     containerID,
 				Exists: false,
 			}, nil
@@ -63,7 +62,7 @@ func (e *Engine) InspectManagedContainer(ctx context.Context, containerID string
 		return nil, err
 	}
 
-	state := &runtimeports.ManagedContainerState{
+	state := &runtimecontracts.ManagedContainerState{
 		ID:     resp.ID,
 		Exists: true,
 	}

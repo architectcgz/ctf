@@ -1,6 +1,4 @@
-package ports
-
-import runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+package contracts
 
 type SubnetPoolKind string
 
@@ -20,8 +18,8 @@ type TopologyCreateNode struct {
 	IsEntryPoint    bool
 	NetworkKeys     []string
 	NetworkAliases  []string
-	Mounts          []runtimecontracts.ContainerMount
-	Resources       *runtimecontracts.ResourceLimits
+	Mounts          []ContainerMount
+	Resources       *ResourceLimits
 }
 
 type TopologyCreateNetwork struct {
@@ -35,7 +33,7 @@ type TopologyCreateNetwork struct {
 type TopologyCreateRequest struct {
 	Networks                   []TopologyCreateNetwork
 	Nodes                      []TopologyCreateNode
-	Policies                   []runtimecontracts.TopologyTrafficPolicy
+	Policies                   []TopologyTrafficPolicy
 	SubnetPool                 SubnetPoolKind
 	OwnerInstanceID            int64
 	ReservedHostPort           int
@@ -47,5 +45,5 @@ type TopologyCreateResult struct {
 	PrimaryContainerID string
 	NetworkID          string
 	AccessURL          string
-	RuntimeDetails     runtimecontracts.InstanceRuntimeDetails
+	RuntimeDetails     InstanceRuntimeDetails
 }

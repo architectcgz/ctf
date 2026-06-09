@@ -27,8 +27,8 @@ type runtimeNodeClient interface {
 	ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error
 	RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
 	RemoveContainer(ctx context.Context, containerID string) error
-	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
-	ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error)
+	InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error)
+	ListManagedContainers(ctx context.Context) ([]runtimecontracts.ManagedContainer, error)
 	StartContainer(ctx context.Context, containerID string) error
 	RunChecker(ctx context.Context, job contestports.CheckerRunJob) (contestports.CheckerRunResult, error)
 	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
@@ -270,14 +270,14 @@ func (r *runtimeNodeExecutionRouter) RemoveContainer(ctx context.Context, contai
 	return client.RemoveContainer(ctx, containerID)
 }
 
-func (c *nodeRuntimeClient) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (c *nodeRuntimeClient) InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 	if c == nil || c.executor == nil || strings.TrimSpace(containerID) == "" {
 		return nil, nil
 	}
 	return c.executor.InspectManagedContainer(ctx, containerID)
 }
 
-func (r *runtimeNodeExecutionRouter) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (r *runtimeNodeExecutionRouter) InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 	if r == nil || strings.TrimSpace(containerID) == "" {
 		return nil, nil
 	}
@@ -288,14 +288,14 @@ func (r *runtimeNodeExecutionRouter) InspectManagedContainer(ctx context.Context
 	return client.InspectManagedContainer(ctx, containerID)
 }
 
-func (c *nodeRuntimeClient) ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error) {
+func (c *nodeRuntimeClient) ListManagedContainers(ctx context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	if c == nil || c.executor == nil {
 		return nil, nil
 	}
 	return c.executor.ListManagedContainers(ctx)
 }
 
-func (r *runtimeNodeExecutionRouter) ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error) {
+func (r *runtimeNodeExecutionRouter) ListManagedContainers(ctx context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	if r == nil {
 		return nil, nil
 	}
@@ -304,7 +304,7 @@ func (r *runtimeNodeExecutionRouter) ListManagedContainers(ctx context.Context) 
 		return nil, err
 	}
 
-	containers := make([]runtimeports.ManagedContainer, 0)
+	containers := make([]runtimecontracts.ManagedContainer, 0)
 	seen := make(map[string]struct{})
 	for i := range nodes {
 		client, nodeID, err := r.clientForConcreteNode(ctx, &nodes[i])
@@ -521,7 +521,7 @@ func (r *runtimeNodeExecutionRouter) resolveNodeIDForContainer(ctx context.Conte
 	return 0, nil
 }
 
-func (r *runtimeNodeExecutionRouter) recordContainerNodeIDs(nodeID int64, containers []runtimeports.ManagedContainer) {
+func (r *runtimeNodeExecutionRouter) recordContainerNodeIDs(nodeID int64, containers []runtimecontracts.ManagedContainer) {
 	if r == nil || nodeID <= 0 || len(containers) == 0 {
 		return
 	}

@@ -133,7 +133,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 			nodeAliases = []string{buildAWDServiceAlias(instance)}
 		}
 		request := &practiceports.TopologyCreateRequest{
-			SubnetPool:                 runtimeports.SubnetPoolSingleContainer,
+			SubnetPool:                 runtimecontracts.SubnetPoolSingleContainer,
 			NodeID:                     runtimeNodeIDValue(instance.NodeID),
 			OwnerInstanceID:            instance.ID,
 			ReservedHostPort:           instance.HostPort,
@@ -196,7 +196,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 	}
 
 	request := &practiceports.TopologyCreateRequest{
-		SubnetPool:                 runtimeports.SubnetPoolSingleContainer,
+		SubnetPool:                 runtimecontracts.SubnetPoolSingleContainer,
 		NodeID:                     runtimeNodeIDValue(instance.NodeID),
 		OwnerInstanceID:            instance.ID,
 		ReservedHostPort:           instance.HostPort,

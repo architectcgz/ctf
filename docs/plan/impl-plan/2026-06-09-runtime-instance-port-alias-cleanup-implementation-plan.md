@@ -447,3 +447,65 @@ Current remaining surface after Task 9:
 
 - Production `InstanceModule` handler ownership and HTTP tests have moved to `instance/api/http`; runtime test fixtures and system DTO decode paths now point at the instance module.
 - `runtime/infrastructure.Repository` no longer imports `instance/contracts`; remaining cross-owner lifecycle consistency is now orchestrated at the composition edge instead of staying inside runtime persistence.
+
+## Task 10: Move Pure Runtime Shapes To Runtime Contracts
+
+**Files:**
+- Create:
+  - `code/backend/internal/module/runtime/contracts/container_directory.go`
+  - `code/backend/internal/module/runtime/contracts/container_inventory.go`
+  - `code/backend/internal/module/runtime/contracts/runtime_node.go`
+  - `code/backend/internal/module/runtime/contracts/topology_create.go`
+- Modify:
+  - `code/backend/internal/module/runtime/ports/container_file_runtime.go`
+  - `code/backend/internal/module/runtime/ports/container_inventory_runtime.go`
+  - `code/backend/internal/module/runtime/ports/container_stats_runtime.go`
+  - `code/backend/internal/module/runtime/ports/node.go`
+  - `code/backend/internal/module/runtime/ports/http.go`
+  - `code/backend/internal/module/runtime/application/contracts.go`
+  - `code/backend/internal/app/composition/*`
+  - `code/backend/internal/module/practice/*`
+  - `code/backend/internal/module/runtime/infrastructure/*`
+  - `docs/design/backend-module-boundary-target.md`
+  - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
+- Delete:
+  - `code/backend/internal/module/runtime/ports/metrics.go`
+  - `code/backend/internal/module/runtime/ports/topology.go`
+
+- [x] **Step 1: Move pure shapes out of capability ports**
+
+Move topology create request/result, managed container inventory/stat/state, container directory entry, and runtime node bootstrap/binding shapes from `runtime/ports` to `runtime/contracts`.
+
+- [x] **Step 2: Keep `runtime/ports` focused on capability interfaces**
+
+Update container file / inventory / stats / node ports to reference `runtime/contracts` for shapes while keeping capability interface ownership in `runtime/ports`.
+
+- [x] **Step 3: Rewire all consumers without alias shims**
+
+Change composition adapters, runtime infrastructure, practice ports, runtime agent protocol, and related tests to use `runtimecontracts.*` directly for the moved shapes. Do not add compatibility aliases in `runtime/ports`.
+
+- [x] **Step 4: Verify**
+
+Run:
+
+```bash
+go generate ./internal/module/practice/application/queries
+go test ./internal/app -run 'TestRuntimeModuleUsesExternalPortsForCrossModuleDeps|TestBuildContainerRuntimeModuleDelegatesToSubBuilders|TestBuildRuntimeHostExecutorProvidesReachableRuntimeInTestEnv|TestAWDDefenseSSHGateway' -count=1
+go test ./internal/module/runtime/... -count=1
+go test ./internal/module/practice/... -count=1
+go test ./internal/app/composition -count=1
+go test ./internal/module -count=1
+go test ./internal/module -run TestMapperWrappersFollowGlobalDelegationPolicy -count=1
+python3 scripts/check-docs-consistency.py
+bash scripts/check-code-changes.sh
+git diff --check
+```
+
+Validation note:
+
+- `go test ./internal/module/practice/... -count=1` first hit a pre-existing-looking readiness probe flake at `TestInstanceReadinessProbeFallsBackToTCPForMalformedHTTPStatusCode`; the focused rerun on `./internal/module/practice/infrastructure -run TestInstanceReadinessProbeFallsBackToTCPForMalformedHTTPStatusCode -count=5` passed, and the full `practice/...` rerun then passed cleanly.
+
+Current remaining surface after Task 10:
+
+- `runtime/ports` 已经只保留 capability interface 与错误哨兵；纯数据形状不再要求 consumer 依赖 capability port 包。
+- `container_runtime` 的剩余问题已经收敛成更明确的一条：底层 capability interface 与 Docker / runtime-agent 实现仍然物理落在 `runtime` 模块，后续需要继续判断是否拆到独立 `container_runtime` / platform adapter owner。

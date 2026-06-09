@@ -24,7 +24,6 @@ import (
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type runtimeTestRepository struct {
@@ -305,8 +304,8 @@ type fakeRuntimeEngine struct {
 	imageSize                      int64
 	imageInspectErr                error
 	removedImageRef                string
-	managedContainerStats          []runtimeports.ManagedContainerStat
-	managedContainerStates         map[string]*runtimeports.ManagedContainerState
+	managedContainerStats          []runtimecontracts.ManagedContainerStat
+	managedContainerStates         map[string]*runtimecontracts.ManagedContainerState
 	inspectContainerNetworkIPsFunc func(containerID string, engine *fakeRuntimeEngine) map[string]string
 	stopContainerFn                func(ctx context.Context, containerID string, timeout time.Duration) error
 	removeContainerFn              func(ctx context.Context, containerID string, force bool) error
@@ -378,8 +377,8 @@ func (f *fakeRuntimeEngine) RemoveImage(_ context.Context, imageRef string) erro
 	return nil
 }
 
-func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context) ([]runtimeports.ManagedContainerStat, error) {
-	return append([]runtimeports.ManagedContainerStat(nil), f.managedContainerStats...), nil
+func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context) ([]runtimecontracts.ManagedContainerStat, error) {
+	return append([]runtimecontracts.ManagedContainerStat(nil), f.managedContainerStats...), nil
 }
 
 func (f *fakeRuntimeEngine) ConnectContainerToNetwork(_ context.Context, containerID, networkName string) error {
@@ -467,18 +466,18 @@ func (f *fakeRuntimeEngine) WriteFileToContainer(_ context.Context, containerID,
 	return nil
 }
 
-func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimeports.ManagedContainer, error) {
+func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	return nil, nil
 }
 
-func (f *fakeRuntimeEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (f *fakeRuntimeEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 	if f.managedContainerStates == nil {
-		return &runtimeports.ManagedContainerState{ID: containerID, Exists: true, Running: true, Status: "running"}, nil
+		return &runtimecontracts.ManagedContainerState{ID: containerID, Exists: true, Running: true, Status: "running"}, nil
 	}
 	if state, exists := f.managedContainerStates[containerID]; exists {
 		return state, nil
 	}
-	return &runtimeports.ManagedContainerState{ID: containerID, Exists: false}, nil
+	return &runtimecontracts.ManagedContainerState{ID: containerID, Exists: false}, nil
 }
 
 func seedInstance(t *testing.T, db *gorm.DB, instance *instanceentity.Instance) {

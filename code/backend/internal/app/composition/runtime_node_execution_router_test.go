@@ -339,10 +339,10 @@ func TestRuntimeNodeExecutionRouterRoutesRemoveContainerByInventoryCache(t *test
 	nodeA, nodeB := seedRuntimeRouterNodes(t, db)
 
 	executorA := &stubRuntimeNodeHostExecutor{
-		listManagedContainersResult: []runtimeports.ManagedContainer{{ID: "node-a-ctr"}},
+		listManagedContainersResult: []runtimecontracts.ManagedContainer{{ID: "node-a-ctr"}},
 	}
 	executorB := &stubRuntimeNodeHostExecutor{
-		listManagedContainersResult: []runtimeports.ManagedContainer{{ID: "orphan-ctr"}},
+		listManagedContainersResult: []runtimecontracts.ManagedContainer{{ID: "orphan-ctr"}},
 	}
 	overrideRuntimeNodeClientBuilder(t, map[int64]runtimeNodeClient{
 		nodeA.ID: newStubNodeRuntimeClient(executorA, nil),
@@ -473,7 +473,7 @@ type runtimeNodeInteractiveCall struct {
 type stubRuntimeNodeHostExecutor struct {
 	writeCalls                  []runtimeNodeWriteCall
 	interactiveCalls            []runtimeNodeInteractiveCall
-	listManagedContainersResult []runtimeports.ManagedContainer
+	listManagedContainersResult []runtimecontracts.ManagedContainer
 	removedContainers           []string
 	appliedACLCalls             []stubRuntimeNodeACLCall
 	removedACLRulesCalls        [][]runtimecontracts.InstanceRuntimeACLRule
@@ -567,7 +567,7 @@ func (s *stubRuntimeNodeHostExecutor) ReadFileFromContainer(context.Context, str
 	return nil, nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) ListDirectoryFromContainer(context.Context, string, string, int) ([]runtimeports.ContainerDirectoryEntry, error) {
+func (s *stubRuntimeNodeHostExecutor) ListDirectoryFromContainer(context.Context, string, string, int) ([]runtimecontracts.ContainerDirectoryEntry, error) {
 	return nil, nil
 }
 
@@ -583,15 +583,15 @@ func (s *stubRuntimeNodeHostExecutor) RemoveImage(context.Context, string) error
 	return nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
-	return append([]runtimeports.ManagedContainer(nil), s.listManagedContainersResult...), nil
+func (s *stubRuntimeNodeHostExecutor) ListManagedContainers(context.Context) ([]runtimecontracts.ManagedContainer, error) {
+	return append([]runtimecontracts.ManagedContainer(nil), s.listManagedContainersResult...), nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) InspectManagedContainer(context.Context, string) (*runtimeports.ManagedContainerState, error) {
+func (s *stubRuntimeNodeHostExecutor) InspectManagedContainer(context.Context, string) (*runtimecontracts.ManagedContainerState, error) {
 	return nil, nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) ListManagedContainerStats(context.Context) ([]runtimeports.ManagedContainerStat, error) {
+func (s *stubRuntimeNodeHostExecutor) ListManagedContainerStats(context.Context) ([]runtimecontracts.ManagedContainerStat, error) {
 	return nil, nil
 }
 

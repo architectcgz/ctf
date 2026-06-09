@@ -111,13 +111,13 @@ func (s *ProvisioningService) CreateContainer(ctx context.Context, imageName str
 		return "", "", 0, 0, err
 	}
 
-	result, err := s.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
-		SubnetPool:       runtimeports.SubnetPoolSingleContainer,
+	result, err := s.CreateTopology(ctx, &runtimecontracts.TopologyCreateRequest{
+		SubnetPool:       runtimecontracts.SubnetPoolSingleContainer,
 		ReservedHostPort: reservedHostPort,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{
 				Key:             "default",
 				Image:           imageName,
@@ -143,7 +143,7 @@ func (s *ProvisioningService) CreateContainer(ctx context.Context, imageName str
 }
 
 // CreateTopology 按拓扑请求创建网络、容器与 ACL 规则。
-func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimeports.TopologyCreateRequest) (*runtimeports.TopologyCreateResult, error) {
+func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimecontracts.TopologyCreateRequest) (*runtimecontracts.TopologyCreateResult, error) {
 	ctx = normalizeContext(ctx)
 	if req == nil || len(req.Nodes) == 0 {
 		return nil, fmt.Errorf("topology nodes are required")
@@ -420,7 +420,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimepo
 	}
 
 	success = true
-	return &runtimeports.TopologyCreateResult{
+	return &runtimecontracts.TopologyCreateResult{
 		PrimaryContainerID: details.Containers[entryNodeIndex].ContainerID,
 		NetworkID:          details.Networks[0].NetworkID,
 		AccessURL:          accessURL,
@@ -501,7 +501,7 @@ func (s *ProvisioningService) resolveServicePort(ctx context.Context, imageRef s
 	return resolvedPort, nil
 }
 
-func (s *ProvisioningService) resolveTopologyACLRules(ctx context.Context, req *runtimeports.TopologyCreateRequest, details runtimecontracts.InstanceRuntimeDetails) ([]runtimecontracts.InstanceRuntimeACLRule, error) {
+func (s *ProvisioningService) resolveTopologyACLRules(ctx context.Context, req *runtimecontracts.TopologyCreateRequest, details runtimecontracts.InstanceRuntimeDetails) ([]runtimecontracts.InstanceRuntimeACLRule, error) {
 	if s.engine == nil || req == nil || len(req.Policies) == 0 {
 		return nil, nil
 	}
@@ -526,7 +526,7 @@ func (s *ProvisioningService) allocatePort(ctx context.Context) (int, error) {
 	return s.repo.ReserveAvailablePort(ctx, s.config.PortRangeStart, s.config.PortRangeEnd)
 }
 
-func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, req *runtimeports.TopologyCreateRequest, ownerInstanceID int64, network runtimeports.TopologyCreateNetwork, excludedSubnets []string) (string, error) {
+func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, req *runtimecontracts.TopologyCreateRequest, ownerInstanceID int64, network runtimecontracts.TopologyCreateNetwork, excludedSubnets []string) (string, error) {
 	if network.Shared {
 		return "", nil
 	}
@@ -543,24 +543,24 @@ func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, req *ru
 	return s.repo.ReserveAvailableSubnetExcluding(ctx, baseCIDR, subnetMask, excludedSubnets)
 }
 
-func (s *ProvisioningService) resolveNetworkPool(req *runtimeports.TopologyCreateRequest) (string, int) {
+func (s *ProvisioningService) resolveNetworkPool(req *runtimecontracts.TopologyCreateRequest) (string, int) {
 	switch resolveSubnetPoolKind(req) {
-	case runtimeports.SubnetPoolSingleContainer:
+	case runtimecontracts.SubnetPoolSingleContainer:
 		return s.config.Network.SingleContainerSubnetBase, s.config.Network.SingleContainerSubnetMask
 	default:
 		return s.config.Network.TopologySubnetBase, s.config.Network.TopologySubnetMask
 	}
 }
 
-func resolveSubnetPoolKind(req *runtimeports.TopologyCreateRequest) runtimeports.SubnetPoolKind {
+func resolveSubnetPoolKind(req *runtimecontracts.TopologyCreateRequest) runtimecontracts.SubnetPoolKind {
 	if req == nil {
-		return runtimeports.SubnetPoolTopology
+		return runtimecontracts.SubnetPoolTopology
 	}
 	switch req.SubnetPool {
-	case runtimeports.SubnetPoolSingleContainer:
-		return runtimeports.SubnetPoolSingleContainer
+	case runtimecontracts.SubnetPoolSingleContainer:
+		return runtimecontracts.SubnetPoolSingleContainer
 	default:
-		return runtimeports.SubnetPoolTopology
+		return runtimecontracts.SubnetPoolTopology
 	}
 }
 
@@ -700,14 +700,14 @@ func buildManagedNetworkName(key string) string {
 	return fmt.Sprintf("%s%s-%d", managedNetworkNamePrefix, trimmed, time.Now().UnixNano())
 }
 
-func resolveCreateNetworkName(network runtimeports.TopologyCreateNetwork) string {
+func resolveCreateNetworkName(network runtimecontracts.TopologyCreateNetwork) string {
 	if name := strings.TrimSpace(network.Name); name != "" {
 		return name
 	}
 	return buildManagedNetworkName(network.Key)
 }
 
-func canRetrySubnetAllocation(network runtimeports.TopologyCreateNetwork, subnet string) bool {
+func canRetrySubnetAllocation(network runtimecontracts.TopologyCreateNetwork, subnet string) bool {
 	return strings.TrimSpace(subnet) != "" && !network.Shared && strings.TrimSpace(network.Subnet) == ""
 }
 
@@ -741,18 +741,18 @@ func appendUniqueSubnet(items []string, subnet string) []string {
 	return append(items, subnet)
 }
 
-func managedContainerLabels(req *runtimeports.TopologyCreateRequest) map[string]string {
+func managedContainerLabels(req *runtimecontracts.TopologyCreateRequest) map[string]string {
 	return runtimecontracts.ChallengeInstanceLabels(resolveManagedComposeService(req))
 }
 
-func resolveManagedComposeService(req *runtimeports.TopologyCreateRequest) string {
+func resolveManagedComposeService(req *runtimecontracts.TopologyCreateRequest) string {
 	if isAWDTopology(req) {
 		return runtimecontracts.ComposeServiceAWD
 	}
 	return runtimecontracts.ComposeServiceJeopardy
 }
 
-func isAWDTopology(req *runtimeports.TopologyCreateRequest) bool {
+func isAWDTopology(req *runtimecontracts.TopologyCreateRequest) bool {
 	if req == nil {
 		return false
 	}
@@ -802,14 +802,14 @@ func looksLikeAWDImage(image string) bool {
 	return base == "awd" || strings.HasPrefix(base, "awd-")
 }
 
-func normalizedCreateNetworks(networks []runtimeports.TopologyCreateNetwork) []runtimeports.TopologyCreateNetwork {
+func normalizedCreateNetworks(networks []runtimecontracts.TopologyCreateNetwork) []runtimecontracts.TopologyCreateNetwork {
 	if len(networks) == 0 {
-		return []runtimeports.TopologyCreateNetwork{{Key: runtimecontracts.TopologyDefaultNetworkKey}}
+		return []runtimecontracts.TopologyCreateNetwork{{Key: runtimecontracts.TopologyDefaultNetworkKey}}
 	}
 	return networks
 }
 
-func topologyNeedsRuntimeOccupiedSubnets(networks []runtimeports.TopologyCreateNetwork) bool {
+func topologyNeedsRuntimeOccupiedSubnets(networks []runtimecontracts.TopologyCreateNetwork) bool {
 	for _, network := range normalizedCreateNetworks(networks) {
 		if network.Shared {
 			continue
@@ -822,7 +822,7 @@ func topologyNeedsRuntimeOccupiedSubnets(networks []runtimeports.TopologyCreateN
 	return false
 }
 
-func normalizedNodeNetworkKeys(keys []string, networks []runtimeports.TopologyCreateNetwork) []string {
+func normalizedNodeNetworkKeys(keys []string, networks []runtimecontracts.TopologyCreateNetwork) []string {
 	if len(keys) > 0 {
 		return append([]string(nil), keys...)
 	}

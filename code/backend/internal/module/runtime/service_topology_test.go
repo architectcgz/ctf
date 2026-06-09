@@ -34,11 +34,11 @@ func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testin
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
-		Networks: []runtimeports.TopologyCreateNetwork{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
@@ -89,12 +89,12 @@ func TestServiceCreateTopologyCanKeepEntryPointPrivate(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		DisableEntryPortPublishing: true,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	})
@@ -138,12 +138,12 @@ func TestServiceCreateTopologyUsesPreferredContainerName(t *testing.T) {
 	}, nil)
 
 	preferredName := "ctf-instance-bank-portal-c8-t15"
-	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	_, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		ContainerName: preferredName,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	})
@@ -201,13 +201,13 @@ func TestServiceCreateTopologyMarksAWDWorkspaceAsAWDComposeService(t *testing.T)
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	_, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		DisableEntryPortPublishing: true,
 		ContainerName:              "ctf-workspace-workspace-c8-t15-s21-r2",
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{
 				Key:             "workspace",
 				Image:           "python:3.12-alpine",
@@ -253,12 +253,12 @@ func TestServiceCreateTopologyPassesMountsAndCommandToEngine(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	_, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		DisableEntryPortPublishing: true,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{
 				Key:             "workspace",
 				Image:           "python:3.12-alpine",
@@ -325,11 +325,11 @@ func TestServiceCreateTopologyBuildsTCPEntryAccessURL(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
-		Networks: []runtimeports.TopologyCreateNetwork{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{
 				Key:             "pwn",
 				Image:           "ctf/pwn:v1",
@@ -644,12 +644,12 @@ func TestServiceCreateTopologyUsesStableAliasForPrivateEntryPoint(t *testing.T) 
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		DisableEntryPortPublishing: true,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "ctf-awd-contest-8", Shared: true},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{
 				Key:            "web",
 				Image:          "ctf/web:v1",
@@ -697,12 +697,12 @@ func TestServiceCreateTopologyCreatesAndConnectsMultipleNetworks(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
-		Networks: []runtimeports.TopologyCreateNetwork{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: "public"},
 			{Key: "backend", Internal: true},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{"public", "backend"}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{"backend"}},
 		},
@@ -769,13 +769,13 @@ func TestServiceCreateTopologyLogsProvisioningStages(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, logger)
 
-	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	_, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		OwnerInstanceID: 4242,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 			{Key: "extra"},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{
 				Key:          "web",
 				Image:        "ctf/web:v1",
@@ -863,12 +863,12 @@ func TestServiceCreateTopologySkipsConflictingSubnetAndRetries(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		OwnerInstanceID: 7001,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	})
@@ -910,12 +910,12 @@ func TestServiceCreateTopologySkipsRuntimeOccupiedSubnetsBeforeCreate(t *testing
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		OwnerInstanceID: 7002,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	})
@@ -958,13 +958,13 @@ func TestServiceCreateTopologySharesOccupiedSubnetsAcrossNetworks(t *testing.T) 
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		OwnerInstanceID: 7003,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey, Subnet: "10.10.1.0/24"},
 			{Key: "backend"},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{
 				Key:          "web",
 				Image:        "ctf/web:v1",
@@ -1013,12 +1013,12 @@ func TestServiceCreateTopologySkipsRuntimeSubnetListingForExplicitSubnetsOnly(t 
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		OwnerInstanceID: 7005,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey, Subnet: "10.10.10.0/24"},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	})
@@ -1069,12 +1069,12 @@ func TestServiceCreateTopologySkipsRuntimeOccupiedOwnerReservationWithoutRetry(t
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		OwnerInstanceID: instanceID,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	})
@@ -1115,12 +1115,12 @@ func TestServiceCreateTopologyLogsStageFailure(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, logger)
 
-	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	_, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		OwnerInstanceID: 5252,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
 	})
@@ -1187,12 +1187,12 @@ func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	result, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		OwnerInstanceID: 4242,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
@@ -1250,11 +1250,11 @@ func TestServiceCreateTopologyRejectsACLWithoutOwnerInstanceID(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
-		Networks: []runtimeports.TopologyCreateNetwork{
+	_, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},
@@ -1298,12 +1298,12 @@ func TestServiceCreateTopologyRollsBackWhenACLApplyFails(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+	_, err := service.CreateTopology(context.Background(), &runtimecontracts.TopologyCreateRequest{
 		OwnerInstanceID: 1,
-		Networks: []runtimeports.TopologyCreateNetwork{
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
 		},

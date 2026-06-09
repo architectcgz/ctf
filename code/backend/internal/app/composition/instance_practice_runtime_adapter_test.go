@@ -9,7 +9,6 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func TestPracticeRuntimeTopologyAdapterPreservesAWDNetworkFields(t *testing.T) {
@@ -80,7 +79,7 @@ func TestPracticeRuntimeTopologyAdapterPreservesWorkspaceShellFields(t *testing.
 	if got.ContainerName != "workspace-companion" {
 		t.Fatalf("expected container name preserved, got %+v", got)
 	}
-	if got.SubnetPool != runtimeports.SubnetPoolSingleContainer {
+	if got.SubnetPool != runtimecontracts.SubnetPoolSingleContainer {
 		t.Fatalf("expected subnet pool preserved, got %q", got.SubnetPool)
 	}
 	if len(got.Nodes) != 1 {
@@ -103,11 +102,11 @@ func TestPracticeRuntimeTopologyAdapterPreservesWorkspaceShellFields(t *testing.
 
 func TestPracticeRuntimeServiceAdapterInspectManagedContainerDelegatesToEngine(t *testing.T) {
 	adapter := newPracticeRuntimeServiceAdapter(nil, nil, &stubPracticeRuntimeEngine{
-		inspectFn: func(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+		inspectFn: func(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 			if containerID != "workspace-ctr" {
 				t.Fatalf("unexpected container inspect target: %s", containerID)
 			}
-			return &runtimeports.ManagedContainerState{
+			return &runtimecontracts.ManagedContainerState{
 				ID:      containerID,
 				Exists:  true,
 				Running: true,
@@ -131,7 +130,7 @@ func TestPracticeRuntimeServiceAdapterInspectManagedContainerDelegatesToEngine(t
 func TestPracticeRuntimeServiceAdapterInspectManagedContainerPropagatesErrors(t *testing.T) {
 	wantErr := errors.New("inspect failed")
 	adapter := newPracticeRuntimeServiceAdapter(nil, nil, &stubPracticeRuntimeEngine{
-		inspectFn: func(context.Context, string) (*runtimeports.ManagedContainerState, error) {
+		inspectFn: func(context.Context, string) (*runtimecontracts.ManagedContainerState, error) {
 			return nil, wantErr
 		},
 	})
@@ -146,10 +145,10 @@ func TestPracticeRuntimeServiceAdapterInspectManagedContainerPropagatesErrors(t 
 }
 
 type stubPracticeRuntimeEngine struct {
-	inspectFn func(context.Context, string) (*runtimeports.ManagedContainerState, error)
+	inspectFn func(context.Context, string) (*runtimecontracts.ManagedContainerState, error)
 }
 
-func (s *stubPracticeRuntimeEngine) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (s *stubPracticeRuntimeEngine) InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 	if s.inspectFn == nil {
 		return nil, nil
 	}

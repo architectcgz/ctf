@@ -14,7 +14,6 @@ import (
 	"go.uber.org/zap"
 
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type testRuntimeEngine struct {
@@ -286,7 +285,7 @@ func (e *testRuntimeEngine) ReadFileFromContainer(_ context.Context, containerID
 	return append([]byte(nil), content...), nil
 }
 
-func (e *testRuntimeEngine) ListDirectoryFromContainer(_ context.Context, containerID, dirPath string, limit int) ([]runtimeports.ContainerDirectoryEntry, error) {
+func (e *testRuntimeEngine) ListDirectoryFromContainer(_ context.Context, containerID, dirPath string, limit int) ([]runtimecontracts.ContainerDirectoryEntry, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	container, ok := e.containers[containerID]
@@ -304,7 +303,7 @@ func (e *testRuntimeEngine) ListDirectoryFromContainer(_ context.Context, contai
 		prefix = strings.TrimSuffix(dirPath, "/") + "/"
 	}
 
-	entriesByName := make(map[string]runtimeports.ContainerDirectoryEntry)
+	entriesByName := make(map[string]runtimecontracts.ContainerDirectoryEntry)
 	for filePath, content := range container.files {
 		if prefix != "" && !strings.HasPrefix(filePath, prefix) {
 			continue
@@ -322,13 +321,13 @@ func (e *testRuntimeEngine) ListDirectoryFromContainer(_ context.Context, contai
 		}
 		name := parts[0]
 		if existing, exists := entriesByName[name]; !exists || existing.Type != "dir" {
-			entriesByName[name] = runtimeports.ContainerDirectoryEntry{Name: name, Type: entryType, Size: size}
+			entriesByName[name] = runtimecontracts.ContainerDirectoryEntry{Name: name, Type: entryType, Size: size}
 		}
 		if len(entriesByName) >= limit {
 			break
 		}
 	}
-	entries := make([]runtimeports.ContainerDirectoryEntry, 0, len(entriesByName))
+	entries := make([]runtimecontracts.ContainerDirectoryEntry, 0, len(entriesByName))
 	for _, entry := range entriesByName {
 		entries = append(entries, entry)
 	}
@@ -390,13 +389,13 @@ func (e *testRuntimeEngine) RemoveImage(_ context.Context, _ string) error {
 	return nil
 }
 
-func (e *testRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimeports.ManagedContainer, error) {
+func (e *testRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	result := make([]runtimeports.ManagedContainer, 0, len(e.containers))
+	result := make([]runtimecontracts.ManagedContainer, 0, len(e.containers))
 	for _, container := range e.containers {
-		result = append(result, runtimeports.ManagedContainer{
+		result = append(result, runtimecontracts.ManagedContainer{
 			ID:        container.id,
 			Name:      container.id,
 			CreatedAt: container.createdAt,
@@ -405,15 +404,15 @@ func (e *testRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimep
 	return result, nil
 }
 
-func (e *testRuntimeEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (e *testRuntimeEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	container, ok := e.containers[containerID]
 	if !ok {
-		return &runtimeports.ManagedContainerState{ID: containerID, Exists: false}, nil
+		return &runtimecontracts.ManagedContainerState{ID: containerID, Exists: false}, nil
 	}
-	return &runtimeports.ManagedContainerState{
+	return &runtimecontracts.ManagedContainerState{
 		ID:      container.id,
 		Exists:  true,
 		Running: true,
@@ -421,13 +420,13 @@ func (e *testRuntimeEngine) InspectManagedContainer(_ context.Context, container
 	}, nil
 }
 
-func (e *testRuntimeEngine) ListManagedContainerStats(_ context.Context) ([]runtimeports.ManagedContainerStat, error) {
+func (e *testRuntimeEngine) ListManagedContainerStats(_ context.Context) ([]runtimecontracts.ManagedContainerStat, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	result := make([]runtimeports.ManagedContainerStat, 0, len(e.containers))
+	result := make([]runtimecontracts.ManagedContainerStat, 0, len(e.containers))
 	for _, container := range e.containers {
-		result = append(result, runtimeports.ManagedContainerStat{
+		result = append(result, runtimecontracts.ManagedContainerStat{
 			ContainerID:   container.id,
 			ContainerName: container.id,
 		})

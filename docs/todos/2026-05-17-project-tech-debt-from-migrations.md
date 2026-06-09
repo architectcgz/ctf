@@ -7,7 +7,7 @@
 ## P1：运行时边界迁移仍有残余边界
 
 - [ ] `container_runtime` capability port 的最终物理 owner 还没有完全定型。
-  - 现状：原 `runtime/ports/container_runtime.go` 已拆成 provisioning / cleanup / file / image / inventory / stats / interactive 等能力文件；`RuntimeHostExecutor` 也已有架构测试限制在 runtime host adapter 与 app composition 边界。`runtime/ports` 对 `instance/ports` 的实例访问兼容 alias 已清理，proxy ticket store 与 AWD ticket scope reader 已迁回 `instance/infrastructure`。剩余问题是底层容器实现仍落在 `runtime` 物理模块，`internal/app/composition/runtime_module.go` 继续以 `ContainerRuntimeModule` 做组合视图，且 `runtime/infrastructure` 仍实现一部分 instance-facing repository 能力。
+  - 现状：原 `runtime/ports/container_runtime.go` 已拆成 provisioning / cleanup / file / image / inventory / stats / interactive 等能力文件；拓扑创建、受管容器状态、目录项、runtime node binding 这类纯数据形状也已经迁到 `runtime/contracts`。`RuntimeHostExecutor` 也已有架构测试限制在 runtime host adapter 与 app composition 边界。`runtime/ports` 对 `instance/ports` 的实例访问兼容 alias 已清理，proxy ticket store 与 AWD ticket scope reader 已迁回 `instance/infrastructure`。剩余问题是底层 capability interface 和容器实现仍落在 `runtime` 物理模块，`internal/app/composition/runtime_module.go` 继续以 `ContainerRuntimeModule` 做组合视图。
   - 影响：后续继续拆 `runtime` 时，仍需要单独判断容器适配能力是否迁到独立 `container_runtime` / platform adapter，并继续把 runtime infrastructure 中剩余的 instance-facing persistence 能力迁回 instance-owned infrastructure。
   - 依据：`docs/design/backend-module-boundary-target.md`
 

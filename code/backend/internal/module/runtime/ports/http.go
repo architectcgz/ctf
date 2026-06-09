@@ -16,12 +16,6 @@ type AWDDefenseWorkspaceWriteRepository interface {
 	BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error
 }
 
-type ContainerDirectoryEntry struct {
-	Name string
-	Type string
-	Size int64
-}
-
 type ProxyTrafficEventRecorder interface {
 	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
 	RecordAWDProxyTrafficEvent(ctx context.Context, event contestcontracts.AWDProxyTrafficEventInput) error

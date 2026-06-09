@@ -11,11 +11,11 @@ type InstanceRuntimeACLHandle struct {
 }
 
 type InstanceRuntimeDetails struct {
-	Networks   []InstanceRuntimeNetwork    `json:"networks,omitempty"`
-	Containers []InstanceRuntimeContainer  `json:"containers,omitempty"`
-	ACL        *InstanceRuntimeACLHandle   `json:"acl,omitempty"`
-	ACLRules   []InstanceRuntimeACLRule    `json:"acl_rules,omitempty"`
-	AWD        *InstanceAWDRuntimeDetails  `json:"awd,omitempty"`
+	Networks   []InstanceRuntimeNetwork   `json:"networks,omitempty"`
+	Containers []InstanceRuntimeContainer `json:"containers,omitempty"`
+	ACL        *InstanceRuntimeACLHandle  `json:"acl,omitempty"`
+	ACLRules   []InstanceRuntimeACLRule   `json:"acl_rules,omitempty"`
+	AWD        *InstanceAWDRuntimeDetails `json:"awd,omitempty"`
 }
 
 type InstanceRuntimeNetwork struct {
