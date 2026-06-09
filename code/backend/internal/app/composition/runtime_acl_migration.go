@@ -37,7 +37,7 @@ func migrateLegacyInstanceACLHandles(
 			repo,
 			router,
 			defaultClient,
-			runtimeManagedInstanceToInstance(&instances[i]),
+			instanceFromRuntimeManaged(&instances[i]),
 		); err != nil {
 			return err
 		}
@@ -112,6 +112,36 @@ func runtimeNodeClientForInstanceMigration(
 		return defaultClient, nil
 	}
 	return nil, runtimeports.ErrRuntimeNodeUnavailable
+}
+
+func instanceFromRuntimeManaged(instance *runtimecontracts.RuntimeManagedInstance) *instancecontracts.Instance {
+	if instance == nil {
+		return nil
+	}
+	return &instancecontracts.Instance{
+		ID:             instance.ID,
+		UserID:         instance.UserID,
+		ContestID:      instance.ContestID,
+		TeamID:         instance.TeamID,
+		ChallengeID:    instance.ChallengeID,
+		ServiceID:      instance.ServiceID,
+		NodeID:         instance.NodeID,
+		HostPort:       instance.HostPort,
+		ContainerID:    instance.ContainerID,
+		NetworkID:      instance.NetworkID,
+		RuntimeDetails: instance.RuntimeDetails,
+		ShareScope:     instancecontracts.ShareScope(instance.ShareScope),
+		Status:         instance.Status,
+		AccessURL:      instance.AccessURL,
+		Nonce:          instance.Nonce,
+		FlagKeyID:      instance.FlagKeyID,
+		ExpiresAt:      instance.ExpiresAt,
+		DestroyedAt:    instance.DestroyedAt,
+		ExtendCount:    instance.ExtendCount,
+		MaxExtends:     instance.MaxExtends,
+		CreatedAt:      instance.CreatedAt,
+		UpdatedAt:      instance.UpdatedAt,
+	}
 }
 
 func shouldIgnoreLegacyACLRemovalError(err error) bool {

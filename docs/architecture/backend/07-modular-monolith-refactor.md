@@ -321,7 +321,7 @@ flowchart TB
 | `challenge` | 业务 owner | 题目元数据、附件、镜像信息、Flag 规则、题包导入/导出 | 题目查询、镜像探针、Flag 规则读取 |
 | `runtime` | 基础运行时物理模块 | Docker 运行时、镜像探针、容器文件访问、运行时统计，以及 practice / challenge / contest 仍在复用的 container-facing adapter；底层实现仍落在 `internal/module/runtime/*` | `runtimemodule.Build(...)`、显式 runtime capability fields、practice runtime bridge、底层容器适配实现 |
 | `container_runtime` | app 层组合视图（迁移中） | 在 `internal/app/composition/runtime_module.go` 中承接 challenge / contest / ops 依赖的容器与运行时能力；当前主类型是 `ContainerRuntimeModule`，`RuntimeModule` 仅保留兼容别名 | image runtime、runtime probe、运行时统计 query、AWD 文件写入 |
-| `instance` | 业务 owner（物理模块 + app 层组合视图） | `internal/module/instance/*` 承接实例命令、查询、proxy ticket、maintenance；`internal/app/composition/instance_module.go` 把这些 use case 接到 runtime repo 与显式 capability adapter，并对外暴露实例访问 handler、`PracticeInstanceRepository`、`PracticeRuntimeService` 与实例清理任务 | instance command/query、proxy ticket service、maintenance service、实例访问 handler |
+| `instance` | 业务 owner（物理模块 + app 层组合视图） | `internal/module/instance/*` 承接实例命令、查询、proxy ticket、maintenance；`internal/app/composition/instance_module.go` 把这些 use case 接到 `instanceinfra.Repository`、少量 runtime mixed persistence adapter 与显式 capability adapter，并对外暴露实例访问 handler、`PracticeInstanceRepository`、`PracticeRuntimeService` 与实例清理任务 | instance command/query、proxy ticket service、maintenance service、实例访问 handler |
 | `practice` | 业务 owner | 练习开题、排队与 provisioning、Flag 提交、个人训练进度与时间线查询 | 开题/续期/销毁/提交等应用服务与 handler |
 | `contest` | 业务 owner | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | 竞赛应用服务、实时广播、AWD 编排 |
 | `assessment` | 业务 owner | 评估任务、技能画像、报告导出、评估归档 | 画像查询、报告导出、归档能力 |
@@ -530,7 +530,7 @@ flowchart LR
 - `/api/v1/users/me/progress` 与 `/api/v1/users/me/timeline` 已在 2026-05-12 phase 4 / slice 1 并回 `practice/application/queries` 与 `practice/api/http`，因为它们只读取 practice 自有事实，不再保留独立 `practice_readmodel` 模块。
 - `teaching_query` 目前没有直接 import `practice`、`contest` 写模块；教师视角的大部分数据仍由本模块基础设施层做只读拼装，其中基础用户存在性与班级归属校验已改为复用 `identity.Users`，`GetOverview` 已在 2026-05-12 phase 4 / slice 2 拆到独立 `application/queries/overview_service.go`，`GetClassSummary / GetClassTrend / GetClassReview` 已在同日 phase 4 / slice 3 拆到独立 `application/queries/class_insight_service.go`，`GetStudentProgress / GetStudentRecommendations / GetStudentTimeline / GetStudentEvidence / GetStudentAttackSessions` 已在 2026-05-13 phase 4 / slice 4 拆到独立 `application/queries/student_review_service.go`，HTTP handler 现在分别依赖 `Service`、`OverviewService`、`ClassInsightService` 与 `StudentReviewService`。
 - `runtime -> instance` 这条代码级依赖不再通过 `runtime/ports/http.go`、`runtime/ports/metrics.go` re-export `instance/ports`；proxy ticket store 与 AWD ticket scope reader 已迁回 `instance/infrastructure`，当前主要剩余在 runtime infrastructure 对其他 instance-facing repository 方法的实现，以及 app composition / runtime HTTP handler 对 instance contracts 的显式适配。
-- `runtime -> practice` 这条代码级依赖已在 2026-05-12 phase 2 / slice 14 删除；`PracticeInstanceRepository` 与 `PracticeRuntimeService` 现在由 `composition.InstanceModule` 本地组合 `runtimeinfra.Repository`、`RuntimeCleanupService`、`ProvisioningService` 和显式 capability fields 后暴露给 `practice`。
+- `runtime -> practice` 这条代码级依赖已在 2026-05-12 phase 2 / slice 14 删除；`PracticeInstanceRepository` 与 `PracticeRuntimeService` 现在由 `composition.InstanceModule` 本地组合 `instanceinfra.Repository`、少量 runtime mixed lifecycle persistence、`RuntimeCleanupService`、`ProvisioningService` 和显式 capability fields 后暴露给 `practice`。
 - `contest/application/statusmachine` 当前只编排竞赛状态迁移副作用；冻结榜快照与比赛结束时 AWD 运行态缓存清理由 `contest/ports.ContestStatusSideEffectStore` 配合 `contest/infrastructure/status_side_effect_store.go` 落到 Redis。`contest/application/jobs/status_updater.go` 的调度锁则通过 `contest/ports.ContestStatusUpdateLockStore` 配合 `contest/infrastructure/status_update_lock_store.go` 落到 Redis；`contest/application/jobs/AWDRoundUpdater` 的 scheduler lock、round lock、current round、round flags 和 live service status cache 则通过 `contest/ports.AWDRoundStateStore` 配合 `contest/infrastructure/awd_round_state_store.go` 落到 Redis。
 
 ### 5.3 协作方式
@@ -553,7 +553,7 @@ flowchart LR
 - 用户实例路由、教师实例路由、AWD target proxy 与 defense SSH 入口统一挂到 `InstanceModule.Handler`
 - `runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
 - `runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，不再保留向上暴露整块宽 `Engine` 的出口
-- `InstanceModule` 现在直接在 composition 边缘组合 `PracticeInstanceRepository` 与 `PracticeRuntimeService`；这层 practice-facing glue 已不再停留在 `runtime/runtime.Module` 或 `runtime/runtime/adapters.go`
+- `InstanceModule` 现在直接在 composition 边缘组合 `PracticeInstanceRepository`（默认走 `instanceinfra.Repository`，mixed lifecycle 写路径再桥接 runtime repo）与 `PracticeRuntimeService`；这层 practice-facing glue 已不再停留在 `runtime/runtime.Module` 或 `runtime/runtime/adapters.go`
 - `composition.BuildContainerRuntimeModule(...)` 仍可在边缘用本地 `buildRuntimeEngine(...)` helper 绑定底层实现，但 `InstanceModule` 只按 use case 取能力，并在本地组合 maintenance 所需的 inspect/start 视图
 - 生产使用的 runtime HTTP adapter 已收口到 `composition/runtime_http_service_adapter.go`；`runtime/runtime/adapters.go` 只保留 challenge / ops 仍在复用的底层 adapter，不再平行保留一份 runtime HTTP adapter
 - `runtime/application/{commands,queries}` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除，不再留下 legacy import path

@@ -151,7 +151,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
-		runtimeinfrarepo.NewRepository(db),
+		newPracticeTestInstanceRepository(db),
 		&stubPracticeRuntimeService{
 			cleanupRuntimeFn: func(context.Context, *instanceentity.Instance) error { return nil },
 			inspectManagedContainerFn: func(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {

@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 )
 
 func TestRefreshActiveAWDInstanceExpiryByContest(t *testing.T) {
@@ -44,7 +45,7 @@ func TestRefreshActiveAWDInstanceExpiryByContest(t *testing.T) {
 		}
 	}
 
-	repo := NewRepository(db)
+	repo := instanceinfra.NewRepository(db)
 	if err := repo.RefreshActiveAWDInstanceExpiryByContest(context.Background(), contestID, activeAt, newExpiresAt); err != nil {
 		t.Fatalf("RefreshActiveAWDInstanceExpiryByContest() error = %v", err)
 	}

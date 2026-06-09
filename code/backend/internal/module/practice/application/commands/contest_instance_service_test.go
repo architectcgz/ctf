@@ -21,7 +21,9 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceinfrarepo "ctf-platform/internal/module/instance/infrastructure"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -31,6 +33,70 @@ import (
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/shared/taxonomy"
 )
+
+type contestInstanceTestInstanceRepository struct {
+	instanceRepo *instanceinfrarepo.Repository
+	runtimeRepo  *runtimeinfrarepo.Repository
+}
+
+func newContestInstanceTestInstanceRepository(db *gorm.DB) *contestInstanceTestInstanceRepository {
+	return &contestInstanceTestInstanceRepository{
+		instanceRepo: instanceinfrarepo.NewRepository(db),
+		runtimeRepo:  runtimeinfrarepo.NewRepository(db),
+	}
+}
+
+func (r *contestInstanceTestInstanceRepository) FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error) {
+	return r.instanceRepo.FindByID(ctx, id)
+}
+
+func (r *contestInstanceTestInstanceRepository) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.Instance, error) {
+	return r.instanceRepo.FindByUserAndChallenge(ctx, userID, challengeID)
+}
+
+func (r *contestInstanceTestInstanceRepository) UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	return r.instanceRepo.UpdateRuntime(ctx, instance)
+}
+
+func (r *contestInstanceTestInstanceRepository) PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error) {
+	return r.instanceRepo.PersistProvisionedRuntime(ctx, instance)
+}
+
+func (r *contestInstanceTestInstanceRepository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+	return r.instanceRepo.RefreshInstanceExpiry(ctx, instanceID, expiresAt)
+}
+
+func (r *contestInstanceTestInstanceRepository) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
+	return r.runtimeRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
+}
+
+func (r *contestInstanceTestInstanceRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
+	return r.runtimeRepo.UpdateStatusAndReleasePort(ctx, id, status)
+}
+
+func (r *contestInstanceTestInstanceRepository) FailProvisioning(ctx context.Context, id int64) (bool, error) {
+	return r.runtimeRepo.FailProvisioning(ctx, id)
+}
+
+func (r *contestInstanceTestInstanceRepository) ListPendingInstances(ctx context.Context, limit int) ([]*instancecontracts.Instance, error) {
+	return r.instanceRepo.ListPendingInstances(ctx, limit)
+}
+
+func (r *contestInstanceTestInstanceRepository) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
+	return r.instanceRepo.TryTransitionStatus(ctx, id, fromStatus, toStatus)
+}
+
+func (r *contestInstanceTestInstanceRepository) CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error) {
+	return r.instanceRepo.CountInstancesByStatus(ctx, statuses)
+}
+
+func (r *contestInstanceTestInstanceRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error) {
+	return r.runtimeRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
+}
+
+func (r *contestInstanceTestInstanceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error {
+	return r.runtimeRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
+}
 
 func TestServiceStartContestChallengeRejectsAWDContest(t *testing.T) {
 	db := newContestInstanceTestDB(t)
@@ -625,7 +691,7 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	instanceRepo := runtimeinfrarepo.NewRepository(db)
+	instanceRepo := newContestInstanceTestInstanceRepository(db)
 	return practicecmd.NewService(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 		imageRepo,

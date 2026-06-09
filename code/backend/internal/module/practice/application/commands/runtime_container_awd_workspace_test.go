@@ -76,7 +76,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 	service := &Service{
 		repo:         repo,
 		imageRepo:    challengeinfra.NewImageRepository(db),
-		instanceRepo: runtimeinfrarepo.NewRepository(db),
+		instanceRepo: newPracticeTestInstanceRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 				requests = append(requests, req)

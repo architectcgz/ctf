@@ -10,14 +10,120 @@ import (
 	"gorm.io/gorm"
 
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceinfrarepo "ctf-platform/internal/module/instance/infrastructure"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 )
+
+type practiceTestInstanceRepository struct {
+	instanceRepo *instanceinfrarepo.Repository
+	runtimeRepo  *runtimeinfrarepo.Repository
+}
+
+func newPracticeTestInstanceRepository(db *gorm.DB) *practiceTestInstanceRepository {
+	return &practiceTestInstanceRepository{
+		instanceRepo: instanceinfrarepo.NewRepository(db),
+		runtimeRepo:  runtimeinfrarepo.NewRepository(db),
+	}
+}
+
+func (r *practiceTestInstanceRepository) FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error) {
+	if r == nil || r.instanceRepo == nil {
+		return nil, nil
+	}
+	return r.instanceRepo.FindByID(ctx, id)
+}
+
+func (r *practiceTestInstanceRepository) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.Instance, error) {
+	if r == nil || r.instanceRepo == nil {
+		return nil, nil
+	}
+	return r.instanceRepo.FindByUserAndChallenge(ctx, userID, challengeID)
+}
+
+func (r *practiceTestInstanceRepository) UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	if r == nil || r.instanceRepo == nil {
+		return nil
+	}
+	return r.instanceRepo.UpdateRuntime(ctx, instance)
+}
+
+func (r *practiceTestInstanceRepository) PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error) {
+	if r == nil || r.instanceRepo == nil {
+		return false, nil
+	}
+	return r.instanceRepo.PersistProvisionedRuntime(ctx, instance)
+}
+
+func (r *practiceTestInstanceRepository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+	if r == nil || r.instanceRepo == nil {
+		return nil
+	}
+	return r.instanceRepo.RefreshInstanceExpiry(ctx, instanceID, expiresAt)
+}
+
+func (r *practiceTestInstanceRepository) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
+	if r == nil || r.runtimeRepo == nil {
+		return nil
+	}
+	return r.runtimeRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
+}
+
+func (r *practiceTestInstanceRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
+	if r == nil || r.runtimeRepo == nil {
+		return nil
+	}
+	return r.runtimeRepo.UpdateStatusAndReleasePort(ctx, id, status)
+}
+
+func (r *practiceTestInstanceRepository) FailProvisioning(ctx context.Context, id int64) (bool, error) {
+	if r == nil || r.runtimeRepo == nil {
+		return false, nil
+	}
+	return r.runtimeRepo.FailProvisioning(ctx, id)
+}
+
+func (r *practiceTestInstanceRepository) ListPendingInstances(ctx context.Context, limit int) ([]*instancecontracts.Instance, error) {
+	if r == nil || r.instanceRepo == nil {
+		return nil, nil
+	}
+	return r.instanceRepo.ListPendingInstances(ctx, limit)
+}
+
+func (r *practiceTestInstanceRepository) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
+	if r == nil || r.instanceRepo == nil {
+		return false, nil
+	}
+	return r.instanceRepo.TryTransitionStatus(ctx, id, fromStatus, toStatus)
+}
+
+func (r *practiceTestInstanceRepository) CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error) {
+	if r == nil || r.instanceRepo == nil {
+		return 0, nil
+	}
+	return r.instanceRepo.CountInstancesByStatus(ctx, statuses)
+}
+
+func (r *practiceTestInstanceRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error) {
+	if r == nil || r.runtimeRepo == nil {
+		return nil, nil
+	}
+	return r.runtimeRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
+}
+
+func (r *practiceTestInstanceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error {
+	if r == nil || r.runtimeRepo == nil {
+		return nil
+	}
+	return r.runtimeRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
+}
 
 type stubPracticeRepository struct {
 	withinInstanceStartTxFn                func(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceStartTxRepository) error) error

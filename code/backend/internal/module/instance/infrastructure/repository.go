@@ -84,6 +84,28 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*instancecontracts
 	return &instance, nil
 }
 
+func (r *Repository) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.Instance, error) {
+	var instance instancecontracts.Instance
+	err := r.dbWithContext(ctx).
+		Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?",
+			userID,
+			challengeID,
+			[]string{
+				instancecontracts.InstanceStatusPending,
+				instancecontracts.InstanceStatusCreating,
+				instancecontracts.InstanceStatusRunning,
+			},
+		).
+		First(&instance).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &instance, nil
+}
+
 func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*instanceports.InstanceUser, error) {
 	var user instanceports.InstanceUser
 	if err := r.dbWithContext(ctx).
@@ -324,6 +346,43 @@ func (r *Repository) AtomicExtendByID(ctx context.Context, id int64, maxExtends 
 	return nil
 }
 
+func (r *Repository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+	return r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("id = ?", instanceID).
+		Updates(map[string]any{
+			"expires_at": expiresAt,
+			"updated_at": time.Now().UTC(),
+		}).Error
+}
+
+func (r *Repository) UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	_, err := r.PersistProvisionedRuntime(ctx, instance)
+	return err
+}
+
+func (r *Repository) PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error) {
+	if instance == nil || instance.ID <= 0 {
+		return false, nil
+	}
+	result := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("id = ? AND status = ?", instance.ID, instancecontracts.InstanceStatusCreating).
+		Updates(map[string]any{
+			"contest_id":      instance.ContestID,
+			"team_id":         instance.TeamID,
+			"host_port":       instance.HostPort,
+			"container_id":    instance.ContainerID,
+			"network_id":      instance.NetworkID,
+			"runtime_details": instance.RuntimeDetails,
+			"access_url":      instance.AccessURL,
+			"status":          instance.Status,
+			"updated_at":      time.Now().UTC(),
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}
+
 func (r *Repository) MarkStopping(ctx context.Context, id int64) (bool, error) {
 	if id <= 0 {
 		return false, nil
@@ -345,6 +404,129 @@ func (r *Repository) MarkStopping(ctx context.Context, id int64) (bool, error) {
 		return false, result.Error
 	}
 	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) FindExpired(ctx context.Context) ([]*instancecontracts.Instance, error) {
+	var instances []*instancecontracts.Instance
+	err := r.dbWithContext(ctx).
+		Where("status = ? AND expires_at < ?", instancecontracts.InstanceStatusRunning, time.Now().UTC()).
+		Find(&instances).Error
+	return instances, err
+}
+
+func (r *Repository) ListRecoverableActiveInstances(ctx context.Context) ([]*instancecontracts.Instance, error) {
+	var instances []*instancecontracts.Instance
+	err := r.dbWithContext(ctx).
+		Where("status IN ?", []string{
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
+		}).
+		Where("expires_at > ?", time.Now().UTC()).
+		Order("updated_at ASC, id ASC").
+		Find(&instances).Error
+	return instances, err
+}
+
+func (r *Repository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instancecontracts.Instance, error) {
+	var instances []*instancecontracts.Instance
+	query := r.dbWithContext(ctx).
+		Where("status = ?", instancecontracts.InstanceStatusStopping)
+	if !updatedBefore.IsZero() {
+		query = query.Where("updated_at <= ?", updatedBefore)
+	}
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	err := query.Order("updated_at ASC, id ASC").Find(&instances).Error
+	return instances, err
+}
+
+func (r *Repository) RefreshActiveAWDInstanceExpiryByContest(ctx context.Context, contestID int64, activeAt, expiresAt time.Time) error {
+	if contestID <= 0 || expiresAt.IsZero() {
+		return nil
+	}
+	return r.dbWithContext(ctx).
+		Model(&instancecontracts.Instance{}).
+		Where("contest_id = ? AND service_id IS NOT NULL AND status IN ?", contestID, []string{
+			instancecontracts.InstanceStatusPending,
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
+		}).
+		Where("expires_at > ?", activeAt.UTC()).
+		Updates(map[string]any{
+			"expires_at": expiresAt.UTC(),
+			"updated_at": time.Now().UTC(),
+		}).Error
+}
+
+func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
+	if id <= 0 {
+		return false, nil
+	}
+
+	result := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("id = ? AND status IN ? AND expires_at > ?",
+			id,
+			[]string{
+				instancecontracts.InstanceStatusCreating,
+				instancecontracts.InstanceStatusRunning,
+			},
+			time.Now().UTC(),
+		).
+		Updates(map[string]any{
+			"status":          instancecontracts.InstanceStatusPending,
+			"container_id":    "",
+			"network_id":      "",
+			"runtime_details": "",
+			"access_url":      "",
+			"updated_at":      time.Now().UTC(),
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) ListPendingInstances(ctx context.Context, limit int) ([]*instancecontracts.Instance, error) {
+	if limit <= 0 {
+		return []*instancecontracts.Instance{}, nil
+	}
+
+	instances := make([]*instancecontracts.Instance, 0, limit)
+	err := r.dbWithContext(ctx).
+		Where("status = ?", instancecontracts.InstanceStatusPending).
+		Order("created_at ASC, id ASC").
+		Limit(limit).
+		Find(&instances).Error
+	if err != nil {
+		return nil, err
+	}
+	return instances, nil
+}
+
+func (r *Repository) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
+	result := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("id = ? AND status = ?", id, fromStatus).
+		Updates(map[string]any{
+			"status":     toStatus,
+			"updated_at": time.Now().UTC(),
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error) {
+	if len(statuses) == 0 {
+		return 0, nil
+	}
+
+	var count int64
+	err := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("status IN ?", statuses).
+		Count(&count).Error
+	return count, err
 }
 
 func (r *Repository) CountRunningInstances(ctx context.Context) (int64, error) {

@@ -157,7 +157,7 @@ flowchart LR
 当前状态（2026-05-12，phase 2 / slice 14）：
 
 - `internal/module/instance/` 已经落地 `application/commands`、`application/queries`、`ports`、`domain`，实例命令、实例查询、proxy ticket 和 maintenance use case 已有独立物理 owner。
-- `code/backend/internal/app/composition/instance_module.go` 现在直接装配 `instancecmd.NewInstanceService`、`instanceqry.NewInstanceService`、`instanceqry.NewProxyTicketService`、`instancecmd.NewInstanceMaintenanceService`，并把它们接到 runtime repo 与显式 capability adapter。
+- `code/backend/internal/app/composition/instance_module.go` 现在直接装配 `instancecmd.NewInstanceService`、`instanceqry.NewInstanceService`、`instanceqry.NewProxyTicketService`、`instancecmd.NewInstanceMaintenanceService`，并把它们接到 `instanceinfra.Repository`、少量 runtime mixed persistence adapter 与显式 capability adapter。
 - `runtime_cleaner` 与 AWD defense SSH gateway 已经从 `runtime/runtime.Module` 上移到 `InstanceModule` 注册；用户实例路由、教师实例路由、AWD target proxy 和 defense SSH 入口继续统一通过 `InstanceModule.Handler` 挂载。
 - app 层已经把 challenge / contest / ops 依赖的容器能力显式命名为 `ContainerRuntimeModule`；`BuildChallengeModule`、`BuildContestModule`、`BuildOpsModule`、`BuildInstanceModule` 都已经改依赖这个视图。
 - `runtime/runtime/module.go` 不再生产装配 instance command/query、proxy ticket 或 maintenance service，只保留 container-facing builder 与 practice/challenge/ops/contest 仍需复用的显式 runtime capability fields，不再向上暴露宽 `Engine`。
@@ -166,7 +166,7 @@ flowchart LR
 - `runtime/application/*` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除；实例命令、查询、proxy ticket、maintenance 的唯一 owner 固定在 `instance`。
 - 原本放在 `runtime/application` 目录里的实例行为测试已经切到 `instancecmd` / `instanceqry`，compat 层只保留最小 wrapper 测试。
 - `runtime/application` 中仍保留的 provisioning / cleanup / container file / image / stats service，已经统一依赖 `runtime/ports/` 下按能力拆分的 container runtime ports；`RuntimeHostExecutor` 只允许在 runtime host adapter 与 app composition 边界出现。`runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，maintenance 需要的 inspect/start 组合留在 composition 边缘完成。
-- `code/backend/internal/app/composition/instance_module.go` 现在直接基于 `runtimeinfra.NewRepository(...)` 与本地 practice runtime adapter 暴露 `PracticeInstanceRepository`、`PracticeRuntimeService`；`runtime/runtime.Module` 与 `runtime/runtime/adapters.go` 已不再 import `practice/ports`，`runtime -> practice` allowlist 也已删除。
+- `code/backend/internal/app/composition/instance_module.go` 现在以 `instanceinfra.NewRepository(...)` 为主暴露 `PracticeInstanceRepository`，只有 `FailProvisioning`、`UpdateStatusAndReleasePort` 这类 mixed lifecycle 写路径继续通过 composition 桥接到 `runtimeinfra.Repository`；`PracticeRuntimeService` 仍由本地 practice runtime adapter 暴露。`runtime/runtime.Module` 与 `runtime/runtime/adapters.go` 已不再 import `practice/ports`，`runtime -> practice` allowlist 也已删除。
 
 建议动作：
 

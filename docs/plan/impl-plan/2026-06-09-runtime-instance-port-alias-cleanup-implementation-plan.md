@@ -419,8 +419,9 @@ Run focused instance/runtime repository tests and module architecture guards bef
 
 Current residual surface after Task 8:
 
-- `runtime/infrastructure.Repository` still owns mixed instance-state + runtime-allocation writes such as `UpdateStatusAndReleasePort`, `FinalizeStoppedRuntime`, `FailProvisioning`, `PersistProvisionedRuntime`, `RequeueLostRuntime`, and startup / cleanup support queries.
-- `app/composition/instance_module.go` now wires instance command/query services from `instanceinfra.Repository`, while maintenance / practice runtime flows continue to cross the composition adapter into runtime-owned mixed persistence.
+- Pure `instances` table methods have moved to `instance/infrastructure.Repository`, including `FindByUserAndChallenge`, `RefreshInstanceExpiry`, `UpdateRuntime`, `PersistProvisionedRuntime`, `FindExpired`, `ListRecoverableActiveInstances`, `ListStoppingInstances`, `RefreshActiveAWDInstanceExpiryByContest`, `RequeueLostRuntime`, `ListPendingInstances`, `TryTransitionStatus`, and `CountInstancesByStatus`.
+- `app/composition/instance_module.go` now wires practice, maintenance, and startup recovery reads/writes to `instanceinfra.Repository` by default; only mixed lifecycle writes such as `FailProvisioning`, `UpdateStatusAndReleasePort`, `FinalizeStoppedRuntime`, and `ExpireInstanceRuntime` still cross into `runtimeinfra.Repository`.
+- `runtime/infrastructure.Repository` now remains for runtime-owned allocations, AWD workspace / operation persistence, active container inventory support, and the mixed instance-state + runtime-allocation transactions that still need a narrower orchestration slice.
 
 ## Task 9: Re-home Instance HTTP Surface
 
