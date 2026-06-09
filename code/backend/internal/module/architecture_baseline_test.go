@@ -6,6 +6,15 @@ var reviewedCrossModulePrivateImportExceptions = map[string]struct{}{}
 
 var reviewedDomainInternalImportExceptions = map[string]struct{}{}
 
+var reviewedRuntimeHostExecutorUsageFiles = map[string]struct{}{
+	"../app/composition/runtime_module.go":                {},
+	"../app/composition/runtime_node_execution_router.go": {},
+	"runtime/infrastructure/agentclient/bridge.go":        {},
+	"runtime/infrastructure/agentserver/service.go":       {},
+	"runtime/infrastructure/engine.go":                    {},
+	"runtime/ports/runtime_host_executor.go":              {},
+}
+
 var moduleDependencyBaseline = map[string]struct{}{
 	"assessment -> contest":        {},
 	"assessment -> challenge":      {},

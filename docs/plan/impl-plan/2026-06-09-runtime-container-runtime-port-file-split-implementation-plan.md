@@ -20,11 +20,11 @@
 
 - Objective:
   - Split provisioning, cleanup, file, image, inventory, stats, interactive, and host-executor port definitions into dedicated files under `code/backend/internal/module/runtime/ports/`.
+  - Add an architecture guard that keeps `RuntimeHostExecutor` usage limited to the runtime host adapter and app composition boundary.
   - Preserve all exported type names and method signatures.
   - Keep all production wiring and tests behaviorally unchanged.
 - Non-Goals:
   - Do not move runtime host execution out of `runtime`.
-  - Do not add the `RuntimeHostExecutor` usage guard in this slice.
   - Do not migrate ops running-count ownership to `instance`.
   - Do not remove `runtime/ports/http.go` instance aliases.
   - Do not change runtime-agent protocol, Docker engine implementation, or app composition fields.
@@ -62,8 +62,8 @@
   - `code/backend/internal/module/runtime/ports/container_interactive_runtime.go`
   - `code/backend/internal/module/runtime/ports/runtime_host_executor.go`
 - Modify:
-  - None expected beyond generated Git delete/create state.
-  - If comments or tests reveal stale references, keep edits scoped to `runtime/ports` architecture checks.
+  - `code/backend/internal/module/architecture_test.go`
+  - If comments or tests reveal stale references, keep edits scoped to `runtime/ports` and architecture checks.
 - Review:
   - `code/backend/internal/module/runtime/ports/http.go`
   - `code/backend/internal/module/runtime/ports/metrics.go`
@@ -74,6 +74,7 @@
   - `go test ./internal/module/runtime/... -count=1`
   - `go test ./internal/app -run 'TestRuntimeModuleUsesExternalPortsForCrossModuleDeps|TestBuildContainerRuntimeModuleDelegatesToSubBuilders' -count=1`
   - `go test ./internal/module -run TestBoundaryPackagesDoNotDependOnOuterLayers -count=1`
+  - `go test ./internal/module -run TestRuntimeHostExecutorUsageIsRestricted -count=1`
 
 ## 复用与 Owner 决策
 
@@ -164,3 +165,35 @@ git diff --check
 Validation note:
 
 - First `go test ./internal/module/runtime/... -count=1` run observed an existing flaky duplicate-cleanup assertion in `TestServiceDestroyManagedInstanceMarksStoppingThenBackgroundCleanupRemovesRuntime`; the failing test passed when rerun directly, and the full `runtime/...` command passed on a clean rerun. This slice did not touch runtime cleanup code.
+
+## Task 2: Guard RuntimeHostExecutor Usage
+
+**Files:**
+- Modify:
+  - `code/backend/internal/module/architecture_test.go`
+
+- [x] **Step 1: Add a production-source guard for `RuntimeHostExecutor` references**
+
+Scan non-test Go files under `code/backend/internal/module` and `code/backend/internal/app`. Allow the wide host executor only in:
+
+- `code/backend/internal/module/runtime/ports/runtime_host_executor.go`
+- `code/backend/internal/module/runtime/infrastructure/engine.go`
+- `code/backend/internal/module/runtime/infrastructure/agentclient/bridge.go`
+- `code/backend/internal/module/runtime/infrastructure/agentserver/service.go`
+- `code/backend/internal/app/composition/runtime_module.go`
+- `code/backend/internal/app/composition/runtime_node_execution_router.go`
+
+- [x] **Step 2: Run focused architecture validation**
+
+Run:
+
+```bash
+go test ./internal/module -run TestRuntimeHostExecutorUsageIsRestricted -count=1
+go test ./internal/module -count=1
+go test ./internal/app -run 'TestRuntimeModuleUsesExternalPortsForCrossModuleDeps|TestBuildContainerRuntimeModuleDelegatesToSubBuilders' -count=1
+git diff --check
+```
+
+- [x] **Step 3: Review guard behavior**
+
+Confirm the guard blocks new production references to the wide host executor outside runtime infrastructure and app composition, while keeping test fakes outside the production scan.
