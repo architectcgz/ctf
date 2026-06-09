@@ -47,125 +47,19 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*runtimecontracts.
 	return &instance, nil
 }
 
-func (r *Repository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
-	_, err := r.updateStatusAndReleasePortWithCurrentStatus(ctx, id, nil, status)
-	return err
-}
-
-func (r *Repository) FailProvisioning(ctx context.Context, id int64) (bool, error) {
-	return r.updateStatusAndReleasePortWithCurrentStatus(
-		ctx,
-		id,
-		[]string{runtimecontracts.RuntimeManagedInstanceStatusCreating},
-		runtimecontracts.RuntimeManagedInstanceStatusFailed,
-	)
-}
-
-func (r *Repository) updateStatusAndReleasePortWithCurrentStatus(ctx context.Context, id int64, currentStatuses []string, status string) (bool, error) {
-	if id <= 0 {
-		return false, nil
-	}
-
-	changed := false
-	err := r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var instance runtimecontracts.RuntimeManagedInstance
-		query := tx.Select("id", "host_port").Where("id = ?", id)
-		if len(currentStatuses) > 0 {
-			query = query.Where("status IN ?", currentStatuses)
-		}
-		if err := query.First(&instance).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) && len(currentStatuses) > 0 {
-				return nil
-			}
-			return err
-		}
-
-		now := time.Now().UTC()
-		updates := map[string]any{
-			"status":     status,
-			"updated_at": now,
-		}
-		if status == runtimecontracts.RuntimeManagedInstanceStatusStopped || status == runtimecontracts.RuntimeManagedInstanceStatusExpired {
-			updates["destroyed_at"] = now
-			updates["host_port"] = 0
-			updates["container_id"] = ""
-			updates["network_id"] = ""
-			updates["runtime_details"] = ""
-			updates["access_url"] = ""
-		}
-		updateQuery := tx.Model(&runtimecontracts.RuntimeManagedInstance{}).
-			Where("id = ?", id)
-		if len(currentStatuses) > 0 {
-			updateQuery = updateQuery.Where("status IN ?", currentStatuses)
-		}
-		result := updateQuery.Updates(updates)
-		if result.Error != nil {
-			return result.Error
-		}
-		if len(currentStatuses) > 0 && result.RowsAffected == 0 {
-			return nil
-		}
-
-		deleteQuery := tx.Where("instance_id = ?", id)
-		if instance.HostPort > 0 {
-			deleteQuery = deleteQuery.Or("port = ?", instance.HostPort)
-		}
-		if err := deleteQuery.Delete(&runtimeentity.PortAllocation{}).Error; err != nil {
-			return err
-		}
-		if err := tx.Where("instance_id = ?", id).Delete(&runtimeentity.NetworkAllocation{}).Error; err != nil {
-			return err
-		}
-		changed = true
-		return nil
-	})
-	return changed, err
-}
-
-func (r *Repository) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
-	return r.finalizeInstanceRuntime(ctx, id, runtimecontracts.RuntimeManagedInstanceStatusStopped)
-}
-
-func (r *Repository) ExpireInstanceRuntime(ctx context.Context, id int64) error {
-	return r.finalizeInstanceRuntime(ctx, id, runtimecontracts.RuntimeManagedInstanceStatusExpired)
-}
-
-func (r *Repository) finalizeInstanceRuntime(ctx context.Context, id int64, status string) error {
-	if id <= 0 {
+func (r *Repository) ReleaseRuntimeAllocationsForInstance(ctx context.Context, instanceID int64, hostPort int) error {
+	if instanceID <= 0 {
 		return nil
 	}
 
-	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var instance runtimecontracts.RuntimeManagedInstance
-		if err := tx.Select("id", "host_port").Where("id = ?", id).First(&instance).Error; err != nil {
-			return err
-		}
-
-		now := time.Now().UTC()
-		if err := tx.Model(&runtimecontracts.RuntimeManagedInstance{}).
-			Where("id = ?", id).
-			Updates(map[string]any{
-				"status":          status,
-				"host_port":       0,
-				"container_id":    "",
-				"network_id":      "",
-				"runtime_details": "",
-				"access_url":      "",
-				"destroyed_at":    now,
-				"updated_at":      now,
-			}).Error; err != nil {
-			return err
-		}
-
-		deleteQuery := tx.Where("instance_id = ?", id)
-		if instance.HostPort > 0 {
-			deleteQuery = deleteQuery.Or("port = ?", instance.HostPort)
-		}
-		if err := deleteQuery.Delete(&runtimeentity.PortAllocation{}).Error; err != nil {
-			return err
-		}
-		return tx.Where("instance_id = ?", id).Delete(&runtimeentity.NetworkAllocation{}).Error
-	})
+	deleteQuery := r.dbWithContext(ctx).Where("instance_id = ?", instanceID)
+	if hostPort > 0 {
+		deleteQuery = deleteQuery.Or("port = ?", hostPort)
+	}
+	if err := deleteQuery.Delete(&runtimeentity.PortAllocation{}).Error; err != nil {
+		return err
+	}
+	return r.dbWithContext(ctx).Where("instance_id = ?", instanceID).Delete(&runtimeentity.NetworkAllocation{}).Error
 }
 
 func (r *Repository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimeentity.AWDDefenseWorkspace, error) {

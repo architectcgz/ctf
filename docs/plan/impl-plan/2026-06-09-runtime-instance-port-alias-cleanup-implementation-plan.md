@@ -395,6 +395,8 @@ Expected: PASS.
 - Modify: `code/backend/internal/module/instance/infrastructure/repository.go`
 - Modify: `code/backend/internal/module/runtime/infrastructure/repository.go`
 - Modify: `code/backend/internal/app/composition/instance_module.go`
+- Modify: `code/backend/internal/app/composition/contest_module.go`
+- Create: `code/backend/internal/app/composition/instance_runtime_lifecycle_tx.go`
 - Modify focused repository and composition tests.
 
 - [x] **Step 1: List runtime repository methods by owner**
@@ -420,8 +422,8 @@ Run focused instance/runtime repository tests and module architecture guards bef
 Current residual surface after Task 8:
 
 - Pure `instances` table methods have moved to `instance/infrastructure.Repository`, including `FindByUserAndChallenge`, `RefreshInstanceExpiry`, `UpdateRuntime`, `PersistProvisionedRuntime`, `FindExpired`, `ListRecoverableActiveInstances`, `ListStoppingInstances`, `RefreshActiveAWDInstanceExpiryByContest`, `RequeueLostRuntime`, `ListPendingInstances`, `TryTransitionStatus`, and `CountInstancesByStatus`.
-- `app/composition/instance_module.go` now wires practice, maintenance, and startup recovery reads/writes to `instanceinfra.Repository` by default; only mixed lifecycle writes such as `FailProvisioning`, `UpdateStatusAndReleasePort`, `FinalizeStoppedRuntime`, and `ExpireInstanceRuntime` still cross into `runtimeinfra.Repository`.
-- `runtime/infrastructure.Repository` now remains for runtime-owned allocations, AWD workspace / operation persistence, active container inventory support, and the mixed instance-state + runtime-allocation transactions that still need a narrower orchestration slice.
+- `app/composition/instance_module.go`, `app/composition/contest_module.go`, and `app/composition/instance_runtime_lifecycle_tx.go` now own the cross-owner DB transaction orchestration for `FailProvisioning`, `UpdateStatusAndReleasePort`, `FinalizeStoppedRuntime`, and `ExpireInstanceRuntime`; instance state mutation stays in `instanceinfra.Repository`, while allocation release stays in `runtimeinfra.Repository`.
+- `runtime/infrastructure.Repository` now remains for runtime-owned allocations, AWD workspace / operation persistence, and active container inventory support; it no longer owns mixed instance-state + runtime-allocation lifecycle transactions.
 
 ## Task 9: Re-home Instance HTTP Surface
 
@@ -444,4 +446,4 @@ Delete `runtime -> instance` from `moduleDependencyBaseline` only after producti
 Current remaining surface after Task 9:
 
 - Production `InstanceModule` handler ownership and HTTP tests have moved to `instance/api/http`; runtime test fixtures and system DTO decode paths now point at the instance module.
-- `runtime/infrastructure.Repository` no longer imports `instance/contracts`; remaining mixed instance-state + runtime-allocation persistence stays behind runtime-owned lifecycle projections and composition adapters.
+- `runtime/infrastructure.Repository` no longer imports `instance/contracts`; remaining cross-owner lifecycle consistency is now orchestrated at the composition edge instead of staying inside runtime persistence.

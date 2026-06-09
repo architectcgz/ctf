@@ -126,6 +126,21 @@ func (r *runtimeTestRepository) FindByID(ctx context.Context, id int64) (*instan
 	return r.instanceRepo.FindByID(ctx, id)
 }
 
+func (r *runtimeTestRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
+	if r == nil || r.db == nil || r.instanceRepo == nil || r.Repository == nil {
+		return nil
+	}
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		instanceTx := r.instanceRepo.WithDB(tx)
+		runtimeTx := r.Repository.WithDB(tx)
+		release, err := instanceTx.UpdateStatus(ctx, id, status)
+		if err != nil || release == nil {
+			return err
+		}
+		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
+}
+
 func (r *runtimeTestRepository) FindExpired(ctx context.Context) ([]*instanceentity.Instance, error) {
 	if r == nil || r.instanceRepo == nil {
 		return nil, nil
@@ -152,6 +167,21 @@ func (r *runtimeTestRepository) RequeueLostRuntime(ctx context.Context, id int64
 		return false, nil
 	}
 	return r.instanceRepo.RequeueLostRuntime(ctx, id)
+}
+
+func (r *runtimeTestRepository) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
+	if r == nil || r.db == nil || r.instanceRepo == nil || r.Repository == nil {
+		return nil
+	}
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		instanceTx := r.instanceRepo.WithDB(tx)
+		runtimeTx := r.Repository.WithDB(tx)
+		release, err := instanceTx.FinalizeStoppedRuntime(ctx, id)
+		if err != nil || release == nil {
+			return err
+		}
+		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
 }
 
 func (r *runtimeTestRepository) FindUserByID(ctx context.Context, userID int64) (*instanceports.InstanceUser, error) {

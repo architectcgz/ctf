@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"ctf-platform/internal/auditlog"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -86,7 +87,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	queryService := instanceqry.NewInstanceService(instanceRepo, &cfg.Container, cfg.Pagination)
 	proxyTicketService := buildRuntimeProxyTicketService(root, instanceRepo)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
-		newInstanceMaintenanceRepository(instanceRepo, repo),
+		newInstanceMaintenanceRepository(root.DB(), instanceRepo, repo),
 		maintenanceRuntime,
 		cleanupService,
 		&cfg.Container,
@@ -126,7 +127,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	))
 
 	return &InstanceModule{
-		PracticeInstanceRepository:  newPracticeInstanceRepository(instanceRepo, repo),
+		PracticeInstanceRepository:  newPracticeInstanceRepository(root.DB(), instanceRepo, repo),
 		PracticeRuntimeService:      practiceRuntimeService,
 		PracticeRuntimeNodeSelector: newPracticeRuntimeNodeSelectorAdapter(runtime.RuntimeNodeSelector),
 		service: newRuntimeHTTPServiceAdapter(
@@ -281,22 +282,33 @@ func (a *instanceMaintenanceRuntimeAdapter) StartContainer(ctx context.Context, 
 }
 
 type instanceMaintenanceRepositoryAdapter struct {
+	db           *gorm.DB
 	instanceRepo *instanceinfra.Repository
 	runtimeRepo  *runtimeinfra.Repository
 }
 
-func newInstanceMaintenanceRepository(instanceRepo *instanceinfra.Repository, runtimeRepo *runtimeinfra.Repository) *instanceMaintenanceRepositoryAdapter {
+func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, runtimeRepo *runtimeinfra.Repository) *instanceMaintenanceRepositoryAdapter {
 	if instanceRepo == nil && runtimeRepo == nil {
 		return nil
 	}
 	return &instanceMaintenanceRepositoryAdapter{
+		db:           db,
 		instanceRepo: instanceRepo,
 		runtimeRepo:  runtimeRepo,
 	}
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
-	return a.runtimeRepo.UpdateStatusAndReleasePort(ctx, id, status)
+	if a == nil || a.db == nil || a.instanceRepo == nil || a.runtimeRepo == nil {
+		return nil
+	}
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.runtimeRepo, func(instanceTx *instanceinfra.Repository, runtimeTx *runtimeinfra.Repository) error {
+		release, err := instanceTx.UpdateStatus(ctx, id, status)
+		if err != nil || release == nil {
+			return err
+		}
+		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) FindExpired(ctx context.Context) ([]*instancecontracts.Instance, error) {
@@ -355,7 +367,16 @@ func (a *instanceMaintenanceRepositoryAdapter) FinishAWDServiceOperation(ctx con
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
-	return a.runtimeRepo.FinalizeStoppedRuntime(ctx, id)
+	if a == nil || a.db == nil || a.instanceRepo == nil || a.runtimeRepo == nil {
+		return nil
+	}
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.runtimeRepo, func(instanceTx *instanceinfra.Repository, runtimeTx *runtimeinfra.Repository) error {
+		release, err := instanceTx.FinalizeStoppedRuntime(ctx, id)
+		if err != nil || release == nil {
+			return err
+		}
+		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
@@ -367,15 +388,17 @@ func (a *instanceMaintenanceRepositoryAdapter) ListActiveContainerIDs(ctx contex
 }
 
 type practiceInstanceRepositoryAdapter struct {
+	db           *gorm.DB
 	instanceRepo *instanceinfra.Repository
 	runtimeRepo  *runtimeinfra.Repository
 }
 
-func newPracticeInstanceRepository(instanceRepo *instanceinfra.Repository, runtimeRepo *runtimeinfra.Repository) *practiceInstanceRepositoryAdapter {
+func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, runtimeRepo *runtimeinfra.Repository) *practiceInstanceRepositoryAdapter {
 	if instanceRepo == nil && runtimeRepo == nil {
 		return nil
 	}
 	return &practiceInstanceRepositoryAdapter{
+		db:           db,
 		instanceRepo: instanceRepo,
 		runtimeRepo:  runtimeRepo,
 	}
@@ -389,10 +412,22 @@ func (a *practiceInstanceRepositoryAdapter) FindByID(ctx context.Context, id int
 }
 
 func (a *practiceInstanceRepositoryAdapter) FailProvisioning(ctx context.Context, id int64) (bool, error) {
-	if a == nil || a.runtimeRepo == nil {
+	if a == nil || a.db == nil || a.instanceRepo == nil || a.runtimeRepo == nil {
 		return false, nil
 	}
-	return a.runtimeRepo.FailProvisioning(ctx, id)
+	changed := false
+	err := withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.runtimeRepo, func(instanceTx *instanceinfra.Repository, runtimeTx *runtimeinfra.Repository) error {
+		release, failed, err := instanceTx.FailProvisioning(ctx, id)
+		if err != nil {
+			return err
+		}
+		changed = failed
+		if !failed || release == nil {
+			return nil
+		}
+		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
+	return changed, err
 }
 
 func (a *practiceInstanceRepositoryAdapter) UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
@@ -424,10 +459,16 @@ func (a *practiceInstanceRepositoryAdapter) RefreshInstanceExpiry(ctx context.Co
 }
 
 func (a *practiceInstanceRepositoryAdapter) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
-	if a == nil || a.runtimeRepo == nil {
+	if a == nil || a.db == nil || a.instanceRepo == nil || a.runtimeRepo == nil {
 		return nil
 	}
-	return a.runtimeRepo.UpdateStatusAndReleasePort(ctx, id, status)
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.runtimeRepo, func(instanceTx *instanceinfra.Repository, runtimeTx *runtimeinfra.Repository) error {
+		release, err := instanceTx.UpdateStatus(ctx, id, status)
+		if err != nil || release == nil {
+			return err
+		}
+		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
 }
 
 func (a *practiceInstanceRepositoryAdapter) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.Instance, error) {

@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
@@ -219,8 +220,6 @@ func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-
-	repo := NewRepository(db)
 	now := time.Date(2026, 4, 23, 10, 0, 0, 0, time.UTC)
 	instance := instancecontracts.Instance{
 		ID:             1,
@@ -251,7 +250,7 @@ func TestUpdateStatusAndReleasePortSetsDestroyedAtForStoppedInstance(t *testing.
 	}
 
 	before := time.Now()
-	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, instancecontracts.InstanceStatusStopped); err != nil {
+	if err := updateStatusAndReleasePort(context.Background(), db, instance.ID, instancecontracts.InstanceStatusStopped); err != nil {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 	after := time.Now()
@@ -303,8 +302,6 @@ func TestUpdateStatusAndReleasePortClearsRuntimeFieldsForExpiredInstance(t *test
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-
-	repo := NewRepository(db)
 	now := time.Date(2026, 4, 23, 11, 0, 0, 0, time.UTC)
 	instance := instancecontracts.Instance{
 		ID:             2,
@@ -335,7 +332,7 @@ func TestUpdateStatusAndReleasePortClearsRuntimeFieldsForExpiredInstance(t *test
 	}
 
 	before := time.Now()
-	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, instancecontracts.InstanceStatusExpired); err != nil {
+	if err := updateStatusAndReleasePort(context.Background(), db, instance.ID, instancecontracts.InstanceStatusExpired); err != nil {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 	after := time.Now()
@@ -387,7 +384,6 @@ func TestFailProvisioningDoesNotOverrideStoppingInstance(t *testing.T) {
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
 
 	instance := instancecontracts.Instance{
 		ID:          12,
@@ -404,7 +400,7 @@ func TestFailProvisioningDoesNotOverrideStoppingInstance(t *testing.T) {
 		t.Fatalf("seed port allocation: %v", err)
 	}
 
-	changed, err := repo.FailProvisioning(context.Background(), instance.ID)
+	changed, err := failProvisioning(context.Background(), db, instance.ID)
 	if err != nil {
 		t.Fatalf("FailProvisioning() error = %v", err)
 	}
@@ -435,8 +431,6 @@ func TestUpdateStatusAndReleasePortDoesNotSetDestroyedAtForFailedInstance(t *tes
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-
-	repo := NewRepository(db)
 	instance := instancecontracts.Instance{
 		ID:          2,
 		UserID:      9,
@@ -452,7 +446,7 @@ func TestUpdateStatusAndReleasePortDoesNotSetDestroyedAtForFailedInstance(t *tes
 		t.Fatalf("seed instance: %v", err)
 	}
 
-	if err := repo.UpdateStatusAndReleasePort(context.Background(), instance.ID, instancecontracts.InstanceStatusFailed); err != nil {
+	if err := updateStatusAndReleasePort(context.Background(), db, instance.ID, instancecontracts.InstanceStatusFailed); err != nil {
 		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
 	}
 
@@ -475,8 +469,6 @@ func TestExpireInstanceRuntimeClearsRuntimeFieldsAndPortAllocation(t *testing.T)
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-
-	repo := NewRepository(db)
 	now := time.Date(2026, 5, 15, 10, 0, 0, 0, time.UTC)
 	instance := instancecontracts.Instance{
 		ID:             3,
@@ -507,7 +499,7 @@ func TestExpireInstanceRuntimeClearsRuntimeFieldsAndPortAllocation(t *testing.T)
 	}
 
 	before := time.Now()
-	if err := repo.ExpireInstanceRuntime(context.Background(), instance.ID); err != nil {
+	if err := expireInstanceRuntime(context.Background(), db, instance.ID); err != nil {
 		t.Fatalf("ExpireInstanceRuntime() error = %v", err)
 	}
 	after := time.Now()
@@ -559,7 +551,6 @@ func TestFinalizeStoppedRuntimeClearsRuntimeFieldsAndAllocations(t *testing.T) {
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
 	now := time.Date(2026, 5, 20, 10, 0, 0, 0, time.UTC)
 	instance := instancecontracts.Instance{
 		ID:             31,
@@ -590,7 +581,7 @@ func TestFinalizeStoppedRuntimeClearsRuntimeFieldsAndAllocations(t *testing.T) {
 	}
 
 	before := time.Now()
-	if err := repo.FinalizeStoppedRuntime(context.Background(), instance.ID); err != nil {
+	if err := finalizeStoppedRuntime(context.Background(), db, instance.ID); err != nil {
 		t.Fatalf("FinalizeStoppedRuntime() error = %v", err)
 	}
 	after := time.Now()
@@ -651,4 +642,61 @@ func newRuntimeRepositoryDestroyedAtTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 	return db
+}
+
+func updateStatusAndReleasePort(ctx context.Context, db *gorm.DB, id int64, status string) error {
+	return runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, runtimeTx *Repository) error {
+		release, err := instanceTx.UpdateStatus(ctx, id, status)
+		if err != nil || release == nil {
+			return err
+		}
+		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
+}
+
+func failProvisioning(ctx context.Context, db *gorm.DB, id int64) (bool, error) {
+	changed := false
+	err := runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, runtimeTx *Repository) error {
+		release, failed, err := instanceTx.FailProvisioning(ctx, id)
+		if err != nil {
+			return err
+		}
+		changed = failed
+		if !failed || release == nil {
+			return nil
+		}
+		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
+	return changed, err
+}
+
+func expireInstanceRuntime(ctx context.Context, db *gorm.DB, id int64) error {
+	return runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, runtimeTx *Repository) error {
+		release, err := instanceTx.ExpireInstanceRuntime(ctx, id)
+		if err != nil || release == nil {
+			return err
+		}
+		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
+}
+
+func finalizeStoppedRuntime(ctx context.Context, db *gorm.DB, id int64) error {
+	return runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, runtimeTx *Repository) error {
+		release, err := instanceTx.FinalizeStoppedRuntime(ctx, id)
+		if err != nil || release == nil {
+			return err
+		}
+		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
+}
+
+func runRuntimeLifecycleTx(ctx context.Context, db *gorm.DB, fn func(instanceTx *instanceinfra.Repository, runtimeTx *Repository) error) error {
+	if db == nil || fn == nil {
+		return nil
+	}
+	instanceRepo := instanceinfra.NewRepository(db)
+	runtimeRepo := NewRepository(db)
+	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(instanceRepo.WithDB(tx), runtimeRepo.WithDB(tx))
+	})
 }

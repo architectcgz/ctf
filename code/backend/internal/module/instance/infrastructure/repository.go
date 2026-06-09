@@ -18,6 +18,11 @@ type Repository struct {
 	db *gorm.DB
 }
 
+type RuntimeAllocationRelease struct {
+	InstanceID int64
+	HostPort   int
+}
+
 type userVisibleInstanceRow struct {
 	ID              int64                        `gorm:"column:id"`
 	ContestMode     string                       `gorm:"column:contest_mode"`
@@ -65,6 +70,10 @@ type teacherInstanceSummaryRow struct {
 }
 
 func NewRepository(db *gorm.DB) *Repository {
+	return &Repository{db: db}
+}
+
+func (r *Repository) WithDB(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
@@ -360,6 +369,20 @@ func (r *Repository) UpdateRuntime(ctx context.Context, instance *instancecontra
 	return err
 }
 
+func (r *Repository) UpdateStatus(ctx context.Context, id int64, status string) (*RuntimeAllocationRelease, error) {
+	release, _, err := r.updateStatusWithCurrentStatuses(ctx, id, nil, status)
+	return release, err
+}
+
+func (r *Repository) FailProvisioning(ctx context.Context, id int64) (*RuntimeAllocationRelease, bool, error) {
+	return r.updateStatusWithCurrentStatuses(
+		ctx,
+		id,
+		[]string{instancecontracts.InstanceStatusCreating},
+		instancecontracts.InstanceStatusFailed,
+	)
+}
+
 func (r *Repository) PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error) {
 	if instance == nil || instance.ID <= 0 {
 		return false, nil
@@ -381,6 +404,55 @@ func (r *Repository) PersistProvisionedRuntime(ctx context.Context, instance *in
 		return false, result.Error
 	}
 	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) updateStatusWithCurrentStatuses(ctx context.Context, id int64, currentStatuses []string, status string) (*RuntimeAllocationRelease, bool, error) {
+	if id <= 0 {
+		return nil, false, nil
+	}
+
+	var instance instancecontracts.Instance
+	query := r.dbWithContext(ctx).Select("id", "host_port").Where("id = ?", id)
+	if len(currentStatuses) > 0 {
+		query = query.Where("status IN ?", currentStatuses)
+	}
+	if err := query.First(&instance).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) && len(currentStatuses) > 0 {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+
+	now := time.Now().UTC()
+	updates := map[string]any{
+		"status":     status,
+		"updated_at": now,
+	}
+	if status == instancecontracts.InstanceStatusStopped || status == instancecontracts.InstanceStatusExpired {
+		updates["destroyed_at"] = now
+		updates["host_port"] = 0
+		updates["container_id"] = ""
+		updates["network_id"] = ""
+		updates["runtime_details"] = ""
+		updates["access_url"] = ""
+	}
+	updateQuery := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("id = ?", id)
+	if len(currentStatuses) > 0 {
+		updateQuery = updateQuery.Where("status IN ?", currentStatuses)
+	}
+	result := updateQuery.Updates(updates)
+	if result.Error != nil {
+		return nil, false, result.Error
+	}
+	if len(currentStatuses) > 0 && result.RowsAffected == 0 {
+		return nil, false, nil
+	}
+
+	return &RuntimeAllocationRelease{
+		InstanceID: instance.ID,
+		HostPort:   instance.HostPort,
+	}, true, nil
 }
 
 func (r *Repository) MarkStopping(ctx context.Context, id int64) (bool, error) {
@@ -485,6 +557,46 @@ func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, er
 		return false, result.Error
 	}
 	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) FinalizeStoppedRuntime(ctx context.Context, id int64) (*RuntimeAllocationRelease, error) {
+	return r.finalizeInstanceRuntime(ctx, id, instancecontracts.InstanceStatusStopped)
+}
+
+func (r *Repository) ExpireInstanceRuntime(ctx context.Context, id int64) (*RuntimeAllocationRelease, error) {
+	return r.finalizeInstanceRuntime(ctx, id, instancecontracts.InstanceStatusExpired)
+}
+
+func (r *Repository) finalizeInstanceRuntime(ctx context.Context, id int64, status string) (*RuntimeAllocationRelease, error) {
+	if id <= 0 {
+		return nil, nil
+	}
+
+	var instance instancecontracts.Instance
+	if err := r.dbWithContext(ctx).Select("id", "host_port").Where("id = ?", id).First(&instance).Error; err != nil {
+		return nil, err
+	}
+
+	now := time.Now().UTC()
+	if err := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("id = ?", id).
+		Updates(map[string]any{
+			"status":          status,
+			"host_port":       0,
+			"container_id":    "",
+			"network_id":      "",
+			"runtime_details": "",
+			"access_url":      "",
+			"destroyed_at":    now,
+			"updated_at":      now,
+		}).Error; err != nil {
+		return nil, err
+	}
+
+	return &RuntimeAllocationRelease{
+		InstanceID: instance.ID,
+		HostPort:   instance.HostPort,
+	}, nil
 }
 
 func (r *Repository) ListPendingInstances(ctx context.Context, limit int) ([]*instancecontracts.Instance, error) {
