@@ -72,7 +72,7 @@ func (stubRuntimeService) ProxyBodyPreviewSize() int {
 }
 
 func TestHandlerContractsCompile(t *testing.T) {
-	var _ runtimeService = stubRuntimeService{}
+	var _ Service = stubRuntimeService{}
 	_ = NewHandler(stubRuntimeService{}, "", "", nil, CookieConfig{}, nil)
 }
 

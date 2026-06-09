@@ -12,8 +12,8 @@ import (
 	"ctf-platform/internal/apperror"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
+	instancehttp "ctf-platform/internal/module/instance/api/http"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	"ctf-platform/internal/shared/taxonomy"
 )
 
@@ -92,7 +92,7 @@ func VerifyInstanceHintAndProxyStateMatrix(t *testing.T, driver InstanceHintAndP
 	resp = driver.Request(http.MethodGet, "/api/v1/teacher/instances", nil, driver.TeacherHeaders)
 	assertStatus(t, resp, http.StatusOK)
 
-	var teacherInstances runtimehttp.TeacherInstancePageResp
+	var teacherInstances instancehttp.TeacherInstancePageResp
 	decodeEnvelopeData(t, resp, &teacherInstances)
 	if len(teacherInstances.List) == 0 {
 		t.Fatalf("expected teacher instances for own class")
@@ -123,7 +123,7 @@ func VerifyInstanceHintAndProxyStateMatrix(t *testing.T, driver InstanceHintAndP
 	resp = driver.Request(http.MethodPost, fmt.Sprintf("/api/v1/instances/%d/access", driver.InstanceID), nil, driver.StudentHeaders)
 	assertStatus(t, resp, http.StatusOK)
 
-	var access runtimehttp.InstanceAccessResp
+	var access instancehttp.InstanceAccessResp
 	decodeEnvelopeData(t, resp, &access)
 	parsedAccessURL, err := url.Parse(access.AccessURL)
 	if err != nil {
@@ -172,7 +172,7 @@ func VerifyAWDTrafficAdminStateMatrix(t *testing.T, driver AWDTrafficAdminStateM
 	resp := driver.Request(http.MethodPost, fmt.Sprintf("/api/v1/instances/%d/access", driver.InstanceID), nil, driver.StudentHeaders)
 	assertStatus(t, resp, http.StatusOK)
 
-	var access runtimehttp.InstanceAccessResp
+	var access instancehttp.InstanceAccessResp
 	decodeEnvelopeData(t, resp, &access)
 	parsedAccessURL, err := url.Parse(access.AccessURL)
 	if err != nil {

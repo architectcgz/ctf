@@ -233,13 +233,13 @@ func TestRuntimeWiringDoesNotImportCrossModulePorts(t *testing.T) {
 func TestAPIHTTPDoesNotDeclareRetiredDefenseWorkbenchMethods(t *testing.T) {
 	t.Parallel()
 
-	fileNode := parseGoFile(t, filepath.Join("api", "http", "handler.go"))
-	assertInterfaceDoesNotDeclareMethods(t, fileNode, "runtimeService",
-		"ReadAWDDefenseFile",
-		"ListAWDDefenseDirectory",
-		"SaveAWDDefenseFile",
-		"RunAWDDefenseCommand",
-	)
+	files, err := filepath.Glob(filepath.Join("api", "http", "*.go"))
+	if err != nil {
+		t.Fatalf("glob api/http files: %v", err)
+	}
+	if len(files) != 0 {
+		t.Fatalf("runtime/api/http should be fully retired, got files %v", files)
+	}
 }
 
 func TestRootPackageKeepsOnlyDocFile(t *testing.T) {

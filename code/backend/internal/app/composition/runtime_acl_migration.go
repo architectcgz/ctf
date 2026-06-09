@@ -32,7 +32,13 @@ func migrateLegacyInstanceACLHandles(
 		return fmt.Errorf("list instances needing acl migration: %w", err)
 	}
 	for i := range instances {
-		if err := migrateLegacyInstanceACLHandle(ctx, repo, router, defaultClient, &instances[i]); err != nil {
+		if err := migrateLegacyInstanceACLHandle(
+			ctx,
+			repo,
+			router,
+			defaultClient,
+			runtimeManagedInstanceToInstance(&instances[i]),
+		); err != nil {
 			return err
 		}
 	}

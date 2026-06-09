@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
+	instancehttp "ctf-platform/internal/module/instance/api/http"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 )
 
 type httpInstanceCommandService interface {
@@ -84,13 +84,13 @@ func (a *HTTPService) IssueAWDTargetProxyTicket(ctx context.Context, user authct
 	return ticket, err
 }
 
-func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*runtimehttp.AWDDefenseSSHAccessResp, error) {
+func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*instancehttp.AWDDefenseSSHAccessResp, error) {
 	ticket, expiresAt, err := a.proxyTickets.IssueAWDDefenseSSHTicket(ctx, user, contestID, serviceID)
 	if err != nil {
 		return nil, err
 	}
 	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
-	return &runtimehttp.AWDDefenseSSHAccessResp{
+	return &instancehttp.AWDDefenseSSHAccessResp{
 		Host:      "127.0.0.1",
 		Port:      2222,
 		Username:  username,

@@ -40,6 +40,7 @@ import (
 	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
+	instancehttp "ctf-platform/internal/module/instance/api/http"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -53,7 +54,6 @@ import (
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
-	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
@@ -439,7 +439,7 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 		teachingQueryClassInsightService,
 		teachingQueryStudentReviewService,
 	)
-	runtimeHandler := runtimehttp.NewHandler(runtimeService, cfg.Container.PublicHost, cfg.Container.AccessHost, auditCommandService, runtimehttp.CookieConfig{}, nil)
+	runtimeHandler := instancehttp.NewHandler(runtimeService, cfg.Container.PublicHost, cfg.Container.AccessHost, auditCommandService, instancehttp.CookieConfig{}, nil)
 
 	createFlowUser(t, db, "admin_user", "Password123", identitycontracts.RoleAdmin)
 	createFlowUser(t, db, "student_user", "Password123", identitycontracts.RoleStudent)

@@ -13,7 +13,6 @@ import (
 )
 
 var allowedManualMapperWrapperFiles = map[string]string{
-	"runtime/api/http/teacher_instance_mapper.go":                         "runtime teacher instance http query 需要轻量定制映射",
 	"teaching_query/api/http/request_mapper.go":                           "teaching query request 需按 query 参数规则做裁剪与归一",
 	"teaching_query/application/queries/class_insight_response_mapper.go": "class insight 聚合响应包含业务整形逻辑",
 }

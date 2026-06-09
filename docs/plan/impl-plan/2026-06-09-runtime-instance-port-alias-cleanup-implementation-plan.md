@@ -436,11 +436,11 @@ After Task 7 and Task 8, choose whether to move instance route handlers to `inst
 
 Move or recompose without changing public HTTP paths, JSON fields, proxy ticket behavior, or audit logging.
 
-- [ ] **Step 3: Remove final baseline**
+- [x] **Step 3: Remove final baseline**
 
 Delete `runtime -> instance` from `moduleDependencyBaseline` only after production imports are gone and module guard tests pass.
 
 Current remaining surface after Task 9:
 
-- Production `InstanceModule` handler ownership has moved to `instance/api/http`, and route wiring assertions now point at the instance module.
-- Legacy `runtime/api/http` implementation files still exist as compatibility / migration surface and should be collapsed before removing the final `runtime -> instance` baseline entry.
+- Production `InstanceModule` handler ownership and HTTP tests have moved to `instance/api/http`; runtime test fixtures and system DTO decode paths now point at the instance module.
+- `runtime/infrastructure.Repository` no longer imports `instance/contracts`; remaining mixed instance-state + runtime-allocation persistence stays behind runtime-owned lifecycle projections and composition adapters.

@@ -17,6 +17,7 @@ import (
 	instanceports "ctf-platform/internal/module/instance/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -126,7 +127,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	))
 
 	return &InstanceModule{
-		PracticeInstanceRepository:  repo,
+		PracticeInstanceRepository:  newPracticeInstanceRepository(instanceRepo, repo),
 		PracticeRuntimeService:      practiceRuntimeService,
 		PracticeRuntimeNodeSelector: newPracticeRuntimeNodeSelectorAdapter(runtime.RuntimeNodeSelector),
 		service: newRuntimeHTTPServiceAdapter(
@@ -296,15 +297,27 @@ func (a *instanceMaintenanceRepositoryAdapter) UpdateStatusAndReleasePort(ctx co
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) FindExpired(ctx context.Context) ([]*instancecontracts.Instance, error) {
-	return a.repo.FindExpired(ctx)
+	instances, err := a.repo.FindExpired(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return runtimeManagedInstancesToInstances(instances), nil
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instancecontracts.Instance, error) {
-	return a.repo.ListStoppingInstances(ctx, updatedBefore, limit)
+	instances, err := a.repo.ListStoppingInstances(ctx, updatedBefore, limit)
+	if err != nil {
+		return nil, err
+	}
+	return runtimeManagedInstancesToInstances(instances), nil
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) ListRecoverableActiveInstances(ctx context.Context) ([]*instancecontracts.Instance, error) {
-	return a.repo.ListRecoverableActiveInstances(ctx)
+	instances, err := a.repo.ListRecoverableActiveInstances(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return runtimeManagedInstancesToInstances(instances), nil
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*instanceports.AWDDefenseWorkspace, error) {
@@ -360,4 +373,177 @@ func (a *instanceMaintenanceRepositoryAdapter) RequeueLostRuntime(ctx context.Co
 
 func (a *instanceMaintenanceRepositoryAdapter) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
 	return a.repo.ListActiveContainerIDs(ctx)
+}
+
+type practiceInstanceRepositoryAdapter struct {
+	instanceRepo *instanceinfra.Repository
+	runtimeRepo  *runtimeinfra.Repository
+}
+
+func newPracticeInstanceRepository(instanceRepo *instanceinfra.Repository, runtimeRepo *runtimeinfra.Repository) *practiceInstanceRepositoryAdapter {
+	if instanceRepo == nil && runtimeRepo == nil {
+		return nil
+	}
+	return &practiceInstanceRepositoryAdapter{
+		instanceRepo: instanceRepo,
+		runtimeRepo:  runtimeRepo,
+	}
+}
+
+func (a *practiceInstanceRepositoryAdapter) FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error) {
+	if a == nil || a.instanceRepo == nil {
+		return nil, nil
+	}
+	return a.instanceRepo.FindByID(ctx, id)
+}
+
+func (a *practiceInstanceRepositoryAdapter) FailProvisioning(ctx context.Context, id int64) (bool, error) {
+	if a == nil || a.runtimeRepo == nil {
+		return false, nil
+	}
+	return a.runtimeRepo.FailProvisioning(ctx, id)
+}
+
+func (a *practiceInstanceRepositoryAdapter) UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	if a == nil || a.runtimeRepo == nil {
+		return nil
+	}
+	return a.runtimeRepo.UpdateRuntime(ctx, runtimeManagedInstanceFromInstance(instance))
+}
+
+func (a *practiceInstanceRepositoryAdapter) PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error) {
+	if a == nil || a.runtimeRepo == nil {
+		return false, nil
+	}
+	return a.runtimeRepo.PersistProvisionedRuntime(ctx, runtimeManagedInstanceFromInstance(instance))
+}
+
+func (a *practiceInstanceRepositoryAdapter) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
+	if a == nil || a.runtimeRepo == nil {
+		return nil
+	}
+	return a.runtimeRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
+}
+
+func (a *practiceInstanceRepositoryAdapter) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
+	if a == nil || a.runtimeRepo == nil {
+		return nil
+	}
+	return a.runtimeRepo.RefreshInstanceExpiry(ctx, instanceID, expiresAt)
+}
+
+func (a *practiceInstanceRepositoryAdapter) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
+	if a == nil || a.runtimeRepo == nil {
+		return nil
+	}
+	return a.runtimeRepo.UpdateStatusAndReleasePort(ctx, id, status)
+}
+
+func (a *practiceInstanceRepositoryAdapter) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.Instance, error) {
+	if a == nil || a.runtimeRepo == nil {
+		return nil, nil
+	}
+	instance, err := a.runtimeRepo.FindByUserAndChallenge(ctx, userID, challengeID)
+	if err != nil {
+		return nil, err
+	}
+	return runtimeManagedInstanceToInstance(instance), nil
+}
+
+func (a *practiceInstanceRepositoryAdapter) ListPendingInstances(ctx context.Context, limit int) ([]*instancecontracts.Instance, error) {
+	if a == nil || a.runtimeRepo == nil {
+		return nil, nil
+	}
+	instances, err := a.runtimeRepo.ListPendingInstances(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+	return runtimeManagedInstancesToInstances(instances), nil
+}
+
+func (a *practiceInstanceRepositoryAdapter) TryTransitionStatus(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
+	if a == nil || a.runtimeRepo == nil {
+		return false, nil
+	}
+	return a.runtimeRepo.TryTransitionStatus(ctx, id, fromStatus, toStatus)
+}
+
+func (a *practiceInstanceRepositoryAdapter) CountInstancesByStatus(ctx context.Context, statuses []string) (int64, error) {
+	if a == nil || a.runtimeRepo == nil {
+		return 0, nil
+	}
+	return a.runtimeRepo.CountInstancesByStatus(ctx, statuses)
+}
+
+func runtimeManagedInstancesToInstances(instances []*runtimecontracts.RuntimeManagedInstance) []*instancecontracts.Instance {
+	if instances == nil {
+		return nil
+	}
+	result := make([]*instancecontracts.Instance, 0, len(instances))
+	for _, instance := range instances {
+		if mapped := runtimeManagedInstanceToInstance(instance); mapped != nil {
+			result = append(result, mapped)
+		}
+	}
+	return result
+}
+
+func runtimeManagedInstanceToInstance(instance *runtimecontracts.RuntimeManagedInstance) *instancecontracts.Instance {
+	if instance == nil {
+		return nil
+	}
+	return &instancecontracts.Instance{
+		ID:             instance.ID,
+		UserID:         instance.UserID,
+		ContestID:      instance.ContestID,
+		TeamID:         instance.TeamID,
+		ChallengeID:    instance.ChallengeID,
+		ServiceID:      instance.ServiceID,
+		NodeID:         instance.NodeID,
+		HostPort:       instance.HostPort,
+		ContainerID:    instance.ContainerID,
+		NetworkID:      instance.NetworkID,
+		RuntimeDetails: instance.RuntimeDetails,
+		ShareScope:     instancecontracts.ShareScope(instance.ShareScope),
+		Status:         instance.Status,
+		AccessURL:      instance.AccessURL,
+		Nonce:          instance.Nonce,
+		FlagKeyID:      instance.FlagKeyID,
+		ExpiresAt:      instance.ExpiresAt,
+		DestroyedAt:    instance.DestroyedAt,
+		ExtendCount:    instance.ExtendCount,
+		MaxExtends:     instance.MaxExtends,
+		CreatedAt:      instance.CreatedAt,
+		UpdatedAt:      instance.UpdatedAt,
+	}
+}
+
+func runtimeManagedInstanceFromInstance(instance *instancecontracts.Instance) *runtimecontracts.RuntimeManagedInstance {
+	if instance == nil {
+		return nil
+	}
+	return &runtimecontracts.RuntimeManagedInstance{
+		ID:             instance.ID,
+		UserID:         instance.UserID,
+		ContestID:      instance.ContestID,
+		TeamID:         instance.TeamID,
+		ChallengeID:    instance.ChallengeID,
+		ServiceID:      instance.ServiceID,
+		NodeID:         instance.NodeID,
+		HostPort:       instance.HostPort,
+		ContainerID:    instance.ContainerID,
+		NetworkID:      instance.NetworkID,
+		RuntimeDetails: instance.RuntimeDetails,
+		ShareScope:     string(instance.ShareScope),
+		Status:         instance.Status,
+		AccessURL:      instance.AccessURL,
+		Nonce:          instance.Nonce,
+		FlagKeyID:      instance.FlagKeyID,
+		ExpiresAt:      instance.ExpiresAt,
+		DestroyedAt:    instance.DestroyedAt,
+		ExtendCount:    instance.ExtendCount,
+		MaxExtends:     instance.MaxExtends,
+		CreatedAt:      instance.CreatedAt,
+		UpdatedAt:      instance.UpdatedAt,
+	}
 }

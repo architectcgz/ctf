@@ -119,6 +119,37 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 	}
 }
 
+func (r *runtimeTestRepository) FindByID(ctx context.Context, id int64) (*instanceentity.Instance, error) {
+	if r == nil || r.instanceRepo == nil {
+		return nil, nil
+	}
+	return r.instanceRepo.FindByID(ctx, id)
+}
+
+func (r *runtimeTestRepository) FindExpired(ctx context.Context) ([]*instanceentity.Instance, error) {
+	instances, err := r.Repository.FindExpired(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return runtimeTestInstancesFromManaged(instances), nil
+}
+
+func (r *runtimeTestRepository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error) {
+	instances, err := r.Repository.ListStoppingInstances(ctx, updatedBefore, limit)
+	if err != nil {
+		return nil, err
+	}
+	return runtimeTestInstancesFromManaged(instances), nil
+}
+
+func (r *runtimeTestRepository) ListRecoverableActiveInstances(ctx context.Context) ([]*instanceentity.Instance, error) {
+	instances, err := r.Repository.ListRecoverableActiveInstances(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return runtimeTestInstancesFromManaged(instances), nil
+}
+
 func (r *runtimeTestRepository) FindUserByID(ctx context.Context, userID int64) (*instanceports.InstanceUser, error) {
 	if r == nil || r.instanceRepo == nil {
 		return nil, nil
@@ -201,6 +232,43 @@ func (r *runtimeTestMaintenanceRepository) RequeueLostRuntime(ctx context.Contex
 
 func (r *runtimeTestMaintenanceRepository) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
 	return r.repo.ListActiveContainerIDs(ctx)
+}
+
+func runtimeTestInstancesFromManaged(instances []*runtimecontracts.RuntimeManagedInstance) []*instanceentity.Instance {
+	if instances == nil {
+		return nil
+	}
+	result := make([]*instanceentity.Instance, 0, len(instances))
+	for _, instance := range instances {
+		if instance == nil {
+			continue
+		}
+		result = append(result, &instanceentity.Instance{
+			ID:             instance.ID,
+			UserID:         instance.UserID,
+			ContestID:      instance.ContestID,
+			TeamID:         instance.TeamID,
+			ChallengeID:    instance.ChallengeID,
+			ServiceID:      instance.ServiceID,
+			NodeID:         instance.NodeID,
+			HostPort:       instance.HostPort,
+			ContainerID:    instance.ContainerID,
+			NetworkID:      instance.NetworkID,
+			RuntimeDetails: instance.RuntimeDetails,
+			ShareScope:     instanceentity.ShareScope(instance.ShareScope),
+			Status:         instance.Status,
+			AccessURL:      instance.AccessURL,
+			Nonce:          instance.Nonce,
+			FlagKeyID:      instance.FlagKeyID,
+			ExpiresAt:      instance.ExpiresAt,
+			DestroyedAt:    instance.DestroyedAt,
+			ExtendCount:    instance.ExtendCount,
+			MaxExtends:     instance.MaxExtends,
+			CreatedAt:      instance.CreatedAt,
+			UpdatedAt:      instance.UpdatedAt,
+		})
+	}
+	return result
 }
 
 type fakeRuntimeEngine struct {
