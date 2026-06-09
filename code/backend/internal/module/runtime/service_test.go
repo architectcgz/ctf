@@ -18,6 +18,7 @@ import (
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
@@ -110,8 +111,85 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 	return &testRuntimeService{
 		commands:    instancecmd.NewInstanceService(repo, cleanupService, cfg, nil),
 		queries:     instanceqry.NewInstanceService(repo, cfg),
-		maintenance: instancecmd.NewInstanceMaintenanceService(repo, nil, cleanupService, cfg, nil),
+		maintenance: instancecmd.NewInstanceMaintenanceService(newRuntimeTestMaintenanceRepository(repo), nil, cleanupService, cfg, nil),
 	}
+}
+
+type runtimeTestMaintenanceRepository struct {
+	repo *runtimeTestRepository
+}
+
+func newRuntimeTestMaintenanceRepository(repo *runtimeTestRepository) *runtimeTestMaintenanceRepository {
+	return &runtimeTestMaintenanceRepository{repo: repo}
+}
+
+func (r *runtimeTestMaintenanceRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
+	return r.repo.UpdateStatusAndReleasePort(ctx, id, status)
+}
+
+func (r *runtimeTestMaintenanceRepository) FindExpired(ctx context.Context) ([]*instanceentity.Instance, error) {
+	return r.repo.FindExpired(ctx)
+}
+
+func (r *runtimeTestMaintenanceRepository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error) {
+	return r.repo.ListStoppingInstances(ctx, updatedBefore, limit)
+}
+
+func (r *runtimeTestMaintenanceRepository) ListRecoverableActiveInstances(ctx context.Context) ([]*instanceentity.Instance, error) {
+	return r.repo.ListRecoverableActiveInstances(ctx)
+}
+
+func (r *runtimeTestMaintenanceRepository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*instanceports.AWDDefenseWorkspace, error) {
+	workspace, err := r.repo.FindRunningAWDDefenseWorkspaceByInstanceID(ctx, instanceID)
+	if err != nil || workspace == nil {
+		return nil, err
+	}
+	return &instanceports.AWDDefenseWorkspace{ContainerID: workspace.ContainerID}, nil
+}
+
+func (r *runtimeTestMaintenanceRepository) CreateAWDServiceOperation(ctx context.Context, operation *instanceports.AWDServiceOperation) error {
+	if operation == nil {
+		return nil
+	}
+	row := runtimeentity.AWDServiceOperation{
+		ID:            operation.ID,
+		ContestID:     operation.ContestID,
+		TeamID:        operation.TeamID,
+		ServiceID:     operation.ServiceID,
+		InstanceID:    operation.InstanceID,
+		OperationType: operation.OperationType,
+		RequestedBy:   operation.RequestedBy,
+		RequestedByID: operation.RequestedByID,
+		Reason:        operation.Reason,
+		SLABillable:   operation.SLABillable,
+		Status:        operation.Status,
+		ErrorMessage:  operation.ErrorMessage,
+		StartedAt:     operation.StartedAt,
+		FinishedAt:    operation.FinishedAt,
+		CreatedAt:     operation.CreatedAt,
+		UpdatedAt:     operation.UpdatedAt,
+	}
+	if err := r.repo.CreateAWDServiceOperation(ctx, &row); err != nil {
+		return err
+	}
+	operation.ID = row.ID
+	return nil
+}
+
+func (r *runtimeTestMaintenanceRepository) FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error {
+	return r.repo.FinishAWDServiceOperation(ctx, operationID, status, errorMessage, finishedAt)
+}
+
+func (r *runtimeTestMaintenanceRepository) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
+	return r.repo.FinalizeStoppedRuntime(ctx, id)
+}
+
+func (r *runtimeTestMaintenanceRepository) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
+	return r.repo.RequeueLostRuntime(ctx, id)
+}
+
+func (r *runtimeTestMaintenanceRepository) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
+	return r.repo.ListActiveContainerIDs(ctx)
 }
 
 type fakeRuntimeEngine struct {

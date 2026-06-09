@@ -25,6 +25,7 @@
   - Keep behavior, public HTTP API, proxy ticket JSON, runtime-agent protocol shape, and repository queries unchanged.
   - Move the running instance count query out of runtime ports so instance owns the `instances` table read and ops keeps the dashboard-facing consumer port.
   - Remove the stale `instance -> runtime` module dependency baseline by moving instance-side access URL parsing, maintenance container views, and AWD operation input shapes to instance-owned contracts / ports.
+  - Remove unused runtime application response mappers that only referenced instance contracts and had no runtime business caller.
 - Non-Goals:
   - Do not move the remaining runtime repository methods unrelated to running count or proxy ticket scope out of `runtime/infrastructure` in this slice.
   - Do not delete or rename `runtime/ports/http.go`; file placement cleanup can be a later mechanical slice after aliases are gone.
@@ -67,8 +68,6 @@
   - `code/backend/internal/module/instance/ports/ports.go`
   - `code/backend/internal/module/runtime/runtime/module.go`
   - `code/backend/internal/module/runtime/application/contracts.go`
-  - `code/backend/internal/module/runtime/application/queries/response_mapper.go`
-  - `code/backend/internal/module/runtime/application/queries/response_mapper_gen.go`
   - `code/backend/internal/module/runtime/infrastructure/repository.go`
   - `code/backend/internal/module/instance/infrastructure/awd_target_proxy_repository.go`
   - `code/backend/internal/module/instance/infrastructure/proxy_ticket_store.go`
@@ -79,6 +78,7 @@
 - Review:
   - `code/backend/internal/module/runtime/ports/container_inventory_runtime.go`
   - `code/backend/internal/module/instance/application/commands/maintenance_service.go`
+  - `code/backend/internal/module/runtime/application/{commands,queries}/response_mapper*.go`
   - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
 - Test:
   - `go test ./internal/module/runtime -run TestRuntimePortsDoNotReexportInstancePorts -count=1`
@@ -92,7 +92,7 @@
 - Existing patterns searched:
   - `instance/ports` already owns instance lookup, proxy ticket, teacher query, runtime cleaner, and maintenance-facing container state contracts.
   - `runtime/ports` owns container provisioning, cleanup, file, image, inventory, stats, interactive, and host executor contracts.
-  - The module dependency baseline already records `runtime -> instance` and `instance -> runtime`; this slice reduces hidden re-export coupling rather than removing the full implementation dependency.
+  - The module dependency baseline still records `runtime -> instance`; `instance -> runtime` has been removed after the instance-owned contract cleanup.
 - Reuse / extend / split / create-new decision:
   - Reuse `instance/ports` directly for instance-owned types.
   - Define `ManagedContainer` and `ManagedContainerState` in `runtime/ports` because they describe runtime-managed container inventory, then alias them from `instance/ports` for the maintenance use case.
@@ -255,3 +255,25 @@ Map runtime container inventory structs to instance maintenance views in `app/co
 - [x] **Step 3: Remove stale baseline allowlist**
 
 Delete `instance -> runtime` from `moduleDependencyBaseline`; `TestModuleDependencyBaselineIsCurrent` now protects against reintroducing that dependency unless a new architecture review explicitly changes the baseline.
+
+## Task 6: Remove Unused Runtime Application Instance Mappers
+
+**Files:**
+- Delete: `code/backend/internal/module/runtime/application/commands/response_mapper.go`
+- Delete: `code/backend/internal/module/runtime/application/commands/response_mapper_assign.go`
+- Delete: `code/backend/internal/module/runtime/application/commands/response_mapper_gen.go`
+- Delete: `code/backend/internal/module/runtime/application/queries/response_mapper.go`
+- Delete: `code/backend/internal/module/runtime/application/queries/response_mapper_assign.go`
+- Delete: `code/backend/internal/module/runtime/application/queries/response_mapper_gen.go`
+
+- [x] **Step 1: Confirm the mapper island has no caller**
+
+`runtimeResponseMapper`, `instanceResponseMapperImpl`, `ToInstanceResp`, `ToInstanceInfo`, and `CopyTime` only resolved inside the six mapper files and had no runtime application caller.
+
+- [x] **Step 2: Delete the unused mapper island**
+
+Remove the command/query response mapper declarations, build-tag assignment files, and generated mapper files so runtime application no longer carries this instance contract import noise.
+
+- [x] **Step 3: Verify**
+
+Run runtime/module architecture tests and workflow checks before committing.

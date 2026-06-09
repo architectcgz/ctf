@@ -468,7 +468,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 
 	engine := &fakeRuntimeEngine{removeContainerErr: errors.New("remove failed")}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
-	service := instancecmd.NewInstanceMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
+	service := instancecmd.NewInstanceMaintenanceService(newRuntimeTestMaintenanceRepository(repo), nil, cleanupService, &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
@@ -526,7 +526,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 		removeContainerErr: runtimeports.WrapRuntimeContainerNotFound(errors.New("Error response from daemon: No such container: missing-ctr")),
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil, nil)
-	service := instancecmd.NewInstanceMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
+	service := instancecmd.NewInstanceMaintenanceService(newRuntimeTestMaintenanceRepository(repo), nil, cleanupService, &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
