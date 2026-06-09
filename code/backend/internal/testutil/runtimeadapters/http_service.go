@@ -7,8 +7,8 @@ import (
 
 	"ctf-platform/internal/authctx"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type httpInstanceCommandService interface {
@@ -27,8 +27,8 @@ type httpProxyTicketService interface {
 	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
 	IssueAWDTargetTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, time.Time, error)
 	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (string, time.Time, error)
-	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
-	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
+	ResolveTicket(ctx context.Context, ticket string) (*instanceports.ProxyTicketClaims, error)
+	ResolveAWDTargetAccessURL(ctx context.Context, claims *instanceports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	MaxAge() int
 }
 
@@ -121,11 +121,11 @@ func (a *HTTPService) RunAWDDefenseCommand(_ context.Context, _ authctx.CurrentU
 	}, nil
 }
 
-func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
+func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*instanceports.ProxyTicketClaims, error) {
 	return a.proxyTickets.ResolveTicket(ctx, ticket)
 }
 
-func (a *HTTPService) ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
+func (a *HTTPService) ResolveAWDTargetAccessURL(ctx context.Context, claims *instanceports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
 	return a.proxyTickets.ResolveAWDTargetAccessURL(ctx, claims, contestID, serviceID, victimTeamID)
 }
 

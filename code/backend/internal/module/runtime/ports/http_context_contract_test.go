@@ -5,7 +5,7 @@ import (
 	"time"
 
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type ctxOnlyInstanceRepository struct{}
@@ -14,7 +14,7 @@ func (ctxOnlyInstanceRepository) FindByID(context.Context, int64) (*instanceenti
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) FindUserByID(context.Context, int64) (*runtimeports.InstanceUser, error) {
+func (ctxOnlyInstanceRepository) FindUserByID(context.Context, int64) (*instanceports.InstanceUser, error) {
 	return nil, nil
 }
 
@@ -22,11 +22,11 @@ func (ctxOnlyInstanceRepository) FindAccessibleByIDForUser(context.Context, int6
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) ListVisibleByUser(context.Context, int64) ([]runtimeports.UserVisibleInstanceRow, error) {
+func (ctxOnlyInstanceRepository) ListVisibleByUser(context.Context, int64) ([]instanceports.UserVisibleInstanceRow, error) {
 	return nil, nil
 }
 
-func (ctxOnlyInstanceRepository) ListTeacherInstances(context.Context, runtimeports.TeacherInstanceFilter) (*runtimeports.TeacherInstancePage, error) {
+func (ctxOnlyInstanceRepository) ListTeacherInstances(context.Context, instanceports.TeacherInstanceFilter) (*instanceports.TeacherInstancePage, error) {
 	return nil, nil
 }
 
@@ -52,19 +52,19 @@ func (ctxOnlyProxyTicketInstanceReader) FindByID(context.Context, int64) (*insta
 	return nil, nil
 }
 
-func (ctxOnlyProxyTicketInstanceReader) FindAWDTargetProxyScope(context.Context, int64, int64, int64, int64) (*runtimeports.AWDTargetProxyScope, error) {
+func (ctxOnlyProxyTicketInstanceReader) FindAWDTargetProxyScope(context.Context, int64, int64, int64, int64) (*instanceports.AWDTargetProxyScope, error) {
 	return nil, nil
 }
 
-func (ctxOnlyProxyTicketInstanceReader) FindAWDDefenseSSHScope(context.Context, int64, int64, int64) (*runtimeports.AWDDefenseSSHScope, error) {
+func (ctxOnlyProxyTicketInstanceReader) FindAWDDefenseSSHScope(context.Context, int64, int64, int64) (*instanceports.AWDDefenseSSHScope, error) {
 	return nil, nil
 }
 
-var _ runtimeports.InstanceLookupRepository = (*ctxOnlyInstanceRepository)(nil)
-var _ runtimeports.InstanceUserLookupRepository = (*ctxOnlyInstanceRepository)(nil)
-var _ runtimeports.InstanceAccessRepository = (*ctxOnlyInstanceRepository)(nil)
-var _ runtimeports.UserVisibleInstanceRepository = (*ctxOnlyInstanceRepository)(nil)
-var _ runtimeports.TeacherInstanceQueryRepository = (*ctxOnlyInstanceRepository)(nil)
-var _ runtimeports.InstanceExtendRepository = (*ctxOnlyInstanceRepository)(nil)
-var _ runtimeports.InstanceStatusRepository = (*ctxOnlyInstanceRepository)(nil)
-var _ runtimeports.ProxyTicketInstanceReader = (*ctxOnlyProxyTicketInstanceReader)(nil)
+var _ instanceports.InstanceLookupRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ instanceports.InstanceUserLookupRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ instanceports.InstanceAccessRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ instanceports.UserVisibleInstanceRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ instanceports.TeacherInstanceQueryRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ instanceports.InstanceExtendRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ instanceports.InstanceStatusRepository = (*ctxOnlyInstanceRepository)(nil)
+var _ instanceports.ProxyTicketInstanceReader = (*ctxOnlyProxyTicketInstanceReader)(nil)

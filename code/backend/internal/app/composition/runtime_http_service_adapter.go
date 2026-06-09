@@ -9,8 +9,8 @@ import (
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type runtimeHTTPServiceAdapter struct {
@@ -133,14 +133,14 @@ func errRuntimeHTTPProxyTicketServiceUnavailable() error {
 	return apperror.ErrInternal.WithCause(fmt.Errorf("proxy ticket service is not configured"))
 }
 
-func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
+func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*instanceports.ProxyTicketClaims, error) {
 	if a == nil || a.proxyTickets == nil {
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
 	return a.proxyTickets.ResolveTicket(ctx, ticket)
 }
 
-func (a *runtimeHTTPServiceAdapter) ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
+func (a *runtimeHTTPServiceAdapter) ResolveAWDTargetAccessURL(ctx context.Context, claims *instanceports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
 	if a == nil || a.proxyTickets == nil {
 		return "", errRuntimeHTTPProxyTicketServiceUnavailable()
 	}

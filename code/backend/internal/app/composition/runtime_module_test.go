@@ -490,11 +490,11 @@ func (s stubRuntimeHTTPProxyTickets) IssueAWDDefenseSSHTicket(context.Context, a
 	return s.ticket, s.expiresAt, nil
 }
 
-func (s stubRuntimeHTTPProxyTickets) ResolveTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
+func (s stubRuntimeHTTPProxyTickets) ResolveTicket(context.Context, string) (*instanceports.ProxyTicketClaims, error) {
 	return nil, nil
 }
 
-func (s stubRuntimeHTTPProxyTickets) ResolveAWDTargetAccessURL(context.Context, *runtimeports.ProxyTicketClaims, int64, int64, int64) (string, error) {
+func (s stubRuntimeHTTPProxyTickets) ResolveAWDTargetAccessURL(context.Context, *instanceports.ProxyTicketClaims, int64, int64, int64) (string, error) {
 	return "", nil
 }
 

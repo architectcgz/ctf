@@ -14,7 +14,7 @@ import (
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type stubRuntimeService struct{}
@@ -55,11 +55,11 @@ func (stubRuntimeService) IssueAWDDefenseSSHTicket(context.Context, authctx.Curr
 	return nil, nil
 }
 
-func (stubRuntimeService) ResolveProxyTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
+func (stubRuntimeService) ResolveProxyTicket(context.Context, string) (*instanceports.ProxyTicketClaims, error) {
 	return nil, nil
 }
 
-func (stubRuntimeService) ResolveAWDTargetAccessURL(context.Context, *runtimeports.ProxyTicketClaims, int64, int64, int64) (string, error) {
+func (stubRuntimeService) ResolveAWDTargetAccessURL(context.Context, *instanceports.ProxyTicketClaims, int64, int64, int64) (string, error) {
 	return "", nil
 }
 
@@ -79,14 +79,14 @@ func TestHandlerContractsCompile(t *testing.T) {
 type stubProxyRuntimeService struct {
 	stubRuntimeService
 	targetURL string
-	claims    *runtimeports.ProxyTicketClaims
+	claims    *instanceports.ProxyTicketClaims
 }
 
 func (s stubProxyRuntimeService) GetAccessURL(context.Context, int64, int64) (string, error) {
 	return s.targetURL, nil
 }
 
-func (s stubProxyRuntimeService) ResolveProxyTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
+func (s stubProxyRuntimeService) ResolveProxyTicket(context.Context, string) (*instanceports.ProxyTicketClaims, error) {
 	return s.claims, nil
 }
 
@@ -94,7 +94,7 @@ type stubAWDProxyRuntimeService struct {
 	stubRuntimeService
 	issuedTicket string
 	targetURL    string
-	claims       *runtimeports.ProxyTicketClaims
+	claims       *instanceports.ProxyTicketClaims
 }
 
 type stubAWDDefenseSSHRuntimeService struct {
@@ -237,11 +237,11 @@ func (s stubAWDProxyRuntimeService) IssueAWDTargetProxyTicket(context.Context, a
 	return s.issuedTicket, nil
 }
 
-func (s stubAWDProxyRuntimeService) ResolveProxyTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
+func (s stubAWDProxyRuntimeService) ResolveProxyTicket(context.Context, string) (*instanceports.ProxyTicketClaims, error) {
 	return s.claims, nil
 }
 
-func (s stubAWDProxyRuntimeService) ResolveAWDTargetAccessURL(context.Context, *runtimeports.ProxyTicketClaims, int64, int64, int64) (string, error) {
+func (s stubAWDProxyRuntimeService) ResolveAWDTargetAccessURL(context.Context, *instanceports.ProxyTicketClaims, int64, int64, int64) (string, error) {
 	return s.targetURL, nil
 }
 
@@ -272,7 +272,7 @@ func TestProxyInstanceTrafficRecorderFailureDoesNotAffectProxyResponse(t *testin
 	handler := NewHandler(
 		stubProxyRuntimeService{
 			targetURL: target.URL,
-			claims: &runtimeports.ProxyTicketClaims{
+			claims: &instanceports.ProxyTicketClaims{
 				UserID:     1001,
 				Username:   "alice",
 				InstanceID: 42,
@@ -360,13 +360,13 @@ func TestProxyAWDTargetForwardsAndRecordsExplicitTrafficScope(t *testing.T) {
 	handler := NewHandler(
 		stubAWDProxyRuntimeService{
 			targetURL: target.URL,
-			claims: &runtimeports.ProxyTicketClaims{
+			claims: &instanceports.ProxyTicketClaims{
 				UserID:            1001,
 				Username:          "alice",
 				Role:              identitycontracts.RoleStudent,
 				InstanceID:        42,
 				ContestID:         &contestID,
-				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
+				Purpose:           instanceports.ProxyTicketPurposeAWDAttack,
 				ShareScope:        instancecontracts.ShareScopePerTeam,
 				AWDAttackerTeamID: &attackerTeamID,
 				AWDVictimTeamID:   &victimTeamID,
@@ -426,13 +426,13 @@ func TestProxyAWDTargetRewritesRootRelativeHTMLLinks(t *testing.T) {
 	handler := NewHandler(
 		stubAWDProxyRuntimeService{
 			targetURL: target.URL,
-			claims: &runtimeports.ProxyTicketClaims{
+			claims: &instanceports.ProxyTicketClaims{
 				UserID:            1001,
 				Username:          "alice",
 				Role:              identitycontracts.RoleStudent,
 				InstanceID:        42,
 				ContestID:         &contestID,
-				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
+				Purpose:           instanceports.ProxyTicketPurposeAWDAttack,
 				AWDAttackerTeamID: &attackerTeamID,
 				AWDVictimTeamID:   &victimTeamID,
 				AWDServiceID:      &serviceID,
@@ -494,13 +494,13 @@ func TestProxyAWDTargetRewritesRootRelativeRedirectLocation(t *testing.T) {
 	handler := NewHandler(
 		stubAWDProxyRuntimeService{
 			targetURL: target.URL,
-			claims: &runtimeports.ProxyTicketClaims{
+			claims: &instanceports.ProxyTicketClaims{
 				UserID:            1001,
 				Username:          "alice",
 				Role:              identitycontracts.RoleStudent,
 				InstanceID:        42,
 				ContestID:         &contestID,
-				Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
+				Purpose:           instanceports.ProxyTicketPurposeAWDAttack,
 				AWDAttackerTeamID: &attackerTeamID,
 				AWDVictimTeamID:   &victimTeamID,
 				AWDServiceID:      &serviceID,

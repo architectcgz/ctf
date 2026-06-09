@@ -2,12 +2,12 @@ package queries
 
 import (
 	contracts "ctf-platform/internal/module/instance/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type instanceResponseMapperImpl struct{}
 
-func (c *instanceResponseMapperImpl) ToInstanceInfo(source runtimeports.UserVisibleInstanceRow) contracts.InstanceInfo {
+func (c *instanceResponseMapperImpl) ToInstanceInfo(source instanceports.UserVisibleInstanceRow) contracts.InstanceInfo {
 	var contractsInstanceInfo contracts.InstanceInfo
 	contractsInstanceInfo.ID = source.ID
 	contractsInstanceInfo.ContestMode = source.ContestMode
@@ -23,7 +23,7 @@ func (c *instanceResponseMapperImpl) ToInstanceInfo(source runtimeports.UserVisi
 	contractsInstanceInfo.CreatedAt = CopyTime(source.CreatedAt)
 	return contractsInstanceInfo
 }
-func (c *instanceResponseMapperImpl) ToInstanceInfoPtr(source *runtimeports.UserVisibleInstanceRow) *contracts.InstanceInfo {
+func (c *instanceResponseMapperImpl) ToInstanceInfoPtr(source *instanceports.UserVisibleInstanceRow) *contracts.InstanceInfo {
 	var pContractsInstanceInfo *contracts.InstanceInfo
 	if source != nil {
 		contractsInstanceInfo := c.ToInstanceInfo((*source))

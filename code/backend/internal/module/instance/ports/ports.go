@@ -5,6 +5,7 @@ import (
 	"time"
 
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type InstanceLookupRepository interface {
@@ -182,15 +183,6 @@ type ProxyTicketInstanceReader interface {
 	FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*AWDDefenseSSHScope, error)
 }
 
-type ManagedContainer struct {
-	ID        string
-	Name      string
-	CreatedAt time.Time
-}
+type ManagedContainer = runtimeports.ManagedContainer
 
-type ManagedContainerState struct {
-	ID      string
-	Exists  bool
-	Running bool
-	Status  string
-}
+type ManagedContainerState = runtimeports.ManagedContainerState

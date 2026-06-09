@@ -6,17 +6,17 @@ import (
 
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
-func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*runtimeports.AWDTargetProxyScope, error) {
+func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*instanceports.AWDTargetProxyScope, error) {
 	if userID <= 0 || contestID <= 0 || serviceID <= 0 || victimTeamID <= 0 {
 		return nil, nil
 	}
 
-	var scope runtimeports.AWDTargetProxyScope
+	var scope instanceports.AWDTargetProxyScope
 	query := r.dbWithContext(ctx).
 		Table("contests AS co").
 		Select(`
@@ -87,7 +87,7 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 	return &scope, nil
 }
 
-func (r *Repository) FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*runtimeports.AWDDefenseSSHScope, error) {
+func (r *Repository) FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*instanceports.AWDDefenseSSHScope, error) {
 	if userID <= 0 || contestID <= 0 || serviceID <= 0 {
 		return nil, nil
 	}
@@ -132,7 +132,7 @@ func (r *Repository) FindAWDDefenseSSHScope(ctx context.Context, userID, contest
 	if err != nil {
 		return nil, err
 	}
-	scope := runtimeports.AWDDefenseSSHScope{
+	scope := instanceports.AWDDefenseSSHScope{
 		InstanceID:        row.InstanceID,
 		ContestID:         row.ContestID,
 		TeamID:            row.TeamID,

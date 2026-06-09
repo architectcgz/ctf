@@ -20,8 +20,8 @@ import (
 	response "ctf-platform/internal/httpresponse"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 const proxyAccessCookieName = "ctf_instance_proxy_ticket"
@@ -46,8 +46,8 @@ type runtimeService interface {
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
 	IssueAWDTargetProxyTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, error)
 	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*AWDDefenseSSHAccessResp, error)
-	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
-	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
+	ResolveProxyTicket(ctx context.Context, ticket string) (*instanceports.ProxyTicketClaims, error)
+	ResolveAWDTargetAccessURL(ctx context.Context, claims *instanceports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	ProxyTicketMaxAge() int
 	ProxyBodyPreviewSize() int
 }
@@ -255,7 +255,7 @@ func (h *Handler) ProxyAWDTarget(c *gin.Context) {
 	h.proxyToTarget(c, claims, claims.InstanceID, targetURL)
 }
 
-func (h *Handler) proxyToTarget(c *gin.Context, claims *runtimeports.ProxyTicketClaims, instanceID int64, targetURL string) {
+func (h *Handler) proxyToTarget(c *gin.Context, claims *instanceports.ProxyTicketClaims, instanceID int64, targetURL string) {
 	parsedTarget, err := url.Parse(targetURL)
 	if err != nil || parsedTarget.Scheme == "" || parsedTarget.Host == "" {
 		if err == nil {
@@ -363,7 +363,7 @@ func buildAWDTargetProxyAccessURL(contestID, serviceID, victimTeamID int64, tick
 		"/proxy/?ticket=" + url.QueryEscape(ticket)
 }
 
-func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtimeports.ProxyTicketClaims, string, error) {
+func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*instanceports.ProxyTicketClaims, string, error) {
 	if h.service == nil {
 		return nil, "", apperror.ErrInternal.WithCause(apperror.ErrServiceUnavailable)
 	}
@@ -395,7 +395,7 @@ func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtime
 	return claims, "", nil
 }
 
-func (h *Handler) resolveAWDTargetProxyClaims(c *gin.Context, contestID, serviceID, victimTeamID int64) (*runtimeports.ProxyTicketClaims, string, error) {
+func (h *Handler) resolveAWDTargetProxyClaims(c *gin.Context, contestID, serviceID, victimTeamID int64) (*instanceports.ProxyTicketClaims, string, error) {
 	if h.service == nil {
 		return nil, "", apperror.ErrInternal.WithCause(apperror.ErrServiceUnavailable)
 	}
@@ -427,8 +427,8 @@ func (h *Handler) resolveAWDTargetProxyClaims(c *gin.Context, contestID, service
 	return claims, "", nil
 }
 
-func validateAWDTargetProxyClaims(claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) error {
-	if claims == nil || claims.Purpose != runtimeports.ProxyTicketPurposeAWDAttack {
+func validateAWDTargetProxyClaims(claims *instanceports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) error {
+	if claims == nil || claims.Purpose != instanceports.ProxyTicketPurposeAWDAttack {
 		return instancecontracts.ErrProxyTicketInvalid
 	}
 	if claims.ContestID == nil || *claims.ContestID != contestID ||
@@ -582,7 +582,7 @@ func shouldAuditProxyRequest(method, requestPath string) bool {
 
 func (h *Handler) recordProxyAudit(
 	c *gin.Context,
-	claims *runtimeports.ProxyTicketClaims,
+	claims *instanceports.ProxyTicketClaims,
 	instanceID int64,
 	username string,
 	requestID string,
@@ -625,7 +625,7 @@ func (h *Handler) recordProxyAudit(
 		})
 	}
 	if h.proxyTrafficRecorder != nil {
-		if claims.Purpose == runtimeports.ProxyTicketPurposeAWDAttack &&
+		if claims.Purpose == instanceports.ProxyTicketPurposeAWDAttack &&
 			claims.ContestID != nil &&
 			claims.AWDAttackerTeamID != nil &&
 			claims.AWDVictimTeamID != nil &&

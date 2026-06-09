@@ -17,9 +17,9 @@ import (
 
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type Repository struct {
@@ -96,8 +96,8 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*instancecontracts
 	return &instance, nil
 }
 
-func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*runtimeports.InstanceUser, error) {
-	var user runtimeports.InstanceUser
+func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*instanceports.InstanceUser, error) {
+	var user instanceports.InstanceUser
 	if err := r.db.WithContext(ctx).
 		Table("users").
 		Select("id, role, class_name").
@@ -494,7 +494,7 @@ func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*in
 	return instances, err
 }
 
-func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error) {
+func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]instanceports.UserVisibleInstanceRow, error) {
 	rows := make([]userVisibleInstanceRow, 0)
 	query := r.db.WithContext(ctx).
 		Table("instances AS inst").
@@ -544,10 +544,10 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		return nil, err
 	}
 
-	items := make([]runtimeports.UserVisibleInstanceRow, len(rows))
+	items := make([]instanceports.UserVisibleInstanceRow, len(rows))
 	for idx, row := range rows {
 		metadata := buildRuntimeInstanceMetadata(row.ContestMode, row.ServiceSnapshot, row.ServiceName, row.ChallengeTitle, row.Category, row.Difficulty, row.FlagType)
-		items[idx] = runtimeports.UserVisibleInstanceRow{
+		items[idx] = instanceports.UserVisibleInstanceRow{
 			ID:             row.ID,
 			ContestMode:    row.ContestMode,
 			ChallengeID:    row.ChallengeID,
@@ -704,7 +704,7 @@ func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID 
 		}).Error
 }
 
-func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) (*runtimeports.TeacherInstancePage, error) {
+func (r *Repository) ListTeacherInstances(ctx context.Context, filter instanceports.TeacherInstanceFilter) (*instanceports.TeacherInstancePage, error) {
 	rows := make([]teacherInstanceRow, 0)
 	now := time.Now().UTC()
 
@@ -735,7 +735,7 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
 		Where("i.status <> ?", instancecontracts.InstanceStatusStopped).
 		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", contestcontracts.ContestModeAWD).
-		Where("u.role = ? AND u.deleted_at IS NULL", runtimeports.InstanceUserRoleStudent)
+		Where("u.role = ? AND u.deleted_at IS NULL", instanceports.InstanceUserRoleStudent)
 
 	query = applyTeacherInstanceQueryFilters(query, filter, now)
 
@@ -779,10 +779,10 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 		return nil, fmt.Errorf("list teacher instances: %w", err)
 	}
 
-	items := make([]runtimeports.TeacherInstanceRow, len(rows))
+	items := make([]instanceports.TeacherInstanceRow, len(rows))
 	for idx, row := range rows {
 		metadata := buildRuntimeInstanceMetadata(row.ContestMode, row.ServiceSnapshot, row.ServiceName, row.ChallengeTitle, "", "", "")
-		items[idx] = runtimeports.TeacherInstanceRow{
+		items[idx] = instanceports.TeacherInstanceRow{
 			ID:              row.ID,
 			StudentID:       row.StudentID,
 			StudentName:     row.StudentName,
@@ -799,10 +799,10 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 			CreatedAt:       row.CreatedAt,
 		}
 	}
-	return &runtimeports.TeacherInstancePage{
+	return &instanceports.TeacherInstancePage{
 		List:  items,
 		Total: summary.TotalCount,
-		Summary: runtimeports.TeacherInstanceListSummary{
+		Summary: instanceports.TeacherInstanceListSummary{
 			TotalCount:        summary.TotalCount,
 			RunningCount:      summary.RunningCount,
 			ExpiringSoonCount: summary.ExpiringSoonCount,
@@ -811,7 +811,7 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 	}, nil
 }
 
-func applyTeacherInstanceQueryFilters(query *gorm.DB, filter runtimeports.TeacherInstanceFilter, now time.Time) *gorm.DB {
+func applyTeacherInstanceQueryFilters(query *gorm.DB, filter instanceports.TeacherInstanceFilter, now time.Time) *gorm.DB {
 	if filter.ClassName != "" {
 		query = query.Where("u.class_name = ?", filter.ClassName)
 	}

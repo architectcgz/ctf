@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
@@ -55,14 +56,14 @@ type Deps struct {
 }
 
 type runtimeInstanceRepository interface {
-	runtimeports.InstanceLookupRepository
-	runtimeports.InstanceUserLookupRepository
-	runtimeports.InstanceAccessRepository
-	runtimeports.UserVisibleInstanceRepository
-	runtimeports.TeacherInstanceQueryRepository
-	runtimeports.InstanceExtendRepository
-	runtimeports.InstanceStatusRepository
-	runtimeports.ProxyTicketInstanceReader
+	instanceports.InstanceLookupRepository
+	instanceports.InstanceUserLookupRepository
+	instanceports.InstanceAccessRepository
+	instanceports.UserVisibleInstanceRepository
+	instanceports.TeacherInstanceQueryRepository
+	instanceports.InstanceExtendRepository
+	instanceports.InstanceStatusRepository
+	instanceports.ProxyTicketInstanceReader
 	runtimeports.CountRunningRepository
 }
 

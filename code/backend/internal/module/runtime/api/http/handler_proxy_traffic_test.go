@@ -10,7 +10,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type recordingAuditRecorder struct {
@@ -65,7 +65,7 @@ func TestRecordProxyAuditAlsoRecordsAWDTrafficEvent(t *testing.T) {
 
 	h.recordProxyAudit(
 		ctx,
-		&runtimeports.ProxyTicketClaims{UserID: 2001, Username: "attacker", InstanceID: 100},
+		&instanceports.ProxyTicketClaims{UserID: 2001, Username: "attacker", InstanceID: 100},
 		100,
 		"attacker",
 		"req-traffic-1",
@@ -110,11 +110,11 @@ func TestRecordProxyAuditUsesExplicitAWDAttackScope(t *testing.T) {
 
 	h.recordProxyAudit(
 		ctx,
-		&runtimeports.ProxyTicketClaims{
+		&instanceports.ProxyTicketClaims{
 			UserID:            2001,
 			Username:          "attacker",
 			InstanceID:        100,
-			Purpose:           runtimeports.ProxyTicketPurposeAWDAttack,
+			Purpose:           instanceports.ProxyTicketPurposeAWDAttack,
 			ContestID:         &contestID,
 			AWDAttackerTeamID: &attackerTeamID,
 			AWDVictimTeamID:   &victimTeamID,

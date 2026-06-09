@@ -20,10 +20,10 @@ import (
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
 )
@@ -37,8 +37,8 @@ func (noopRuntimeCleaner) CleanupRuntime(context.Context, *instanceentity.Instan
 type runtimeInstanceContextRepo struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*instanceentity.Instance, error)
 	findAccessibleByIDForUserFn             func(ctx context.Context, instanceID, userID int64) (*instanceentity.Instance, error)
-	findUserByIDFn                          func(ctx context.Context, userID int64) (*runtimeports.InstanceUser, error)
-	listVisibleByUserFn                     func(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error)
+	findUserByIDFn                          func(ctx context.Context, userID int64) (*instanceports.InstanceUser, error)
+	listVisibleByUserFn                     func(ctx context.Context, userID int64) ([]instanceports.UserVisibleInstanceRow, error)
 	markStoppingWithContextFn               func(ctx context.Context, id int64) (bool, error)
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
 }
@@ -50,7 +50,7 @@ func (r *runtimeInstanceContextRepo) FindByID(ctx context.Context, id int64) (*i
 	return nil, nil
 }
 
-func (r *runtimeInstanceContextRepo) FindUserByID(ctx context.Context, userID int64) (*runtimeports.InstanceUser, error) {
+func (r *runtimeInstanceContextRepo) FindUserByID(ctx context.Context, userID int64) (*instanceports.InstanceUser, error) {
 	if r.findUserByIDFn != nil {
 		return r.findUserByIDFn(ctx, userID)
 	}
@@ -64,14 +64,14 @@ func (r *runtimeInstanceContextRepo) FindAccessibleByIDForUser(ctx context.Conte
 	return nil, nil
 }
 
-func (r *runtimeInstanceContextRepo) ListVisibleByUser(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error) {
+func (r *runtimeInstanceContextRepo) ListVisibleByUser(ctx context.Context, userID int64) ([]instanceports.UserVisibleInstanceRow, error) {
 	if r.listVisibleByUserFn != nil {
 		return r.listVisibleByUserFn(ctx, userID)
 	}
 	return nil, nil
 }
 
-func (r *runtimeInstanceContextRepo) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) (*runtimeports.TeacherInstancePage, error) {
+func (r *runtimeInstanceContextRepo) ListTeacherInstances(ctx context.Context, filter instanceports.TeacherInstanceFilter) (*instanceports.TeacherInstancePage, error) {
 	return nil, nil
 }
 
@@ -1176,16 +1176,16 @@ func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *t
 			}
 			return &instanceentity.Instance{ID: id, UserID: 2, Status: instanceentity.InstanceStatusRunning}, nil
 		},
-		findUserByIDFn: func(ctx context.Context, userID int64) (*runtimeports.InstanceUser, error) {
+		findUserByIDFn: func(ctx context.Context, userID int64) (*instanceports.InstanceUser, error) {
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find-user ctx value %v, got %v", expectedCtxValue, got)
 			}
 			if userID == 1001 {
 				findRequesterCalled = true
-				return &runtimeports.InstanceUser{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
+				return &instanceports.InstanceUser{ID: userID, Role: identitycontracts.RoleTeacher, ClassName: "Class A"}, nil
 			}
 			findOwnerCalled = true
-			return &runtimeports.InstanceUser{ID: userID, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
+			return &instanceports.InstanceUser{ID: userID, Role: identitycontracts.RoleStudent, ClassName: "Class A"}, nil
 		},
 		markStoppingWithContextFn: func(ctx context.Context, id int64) (bool, error) {
 			markCalled = true
@@ -1260,11 +1260,11 @@ func TestInstanceQueryServiceDoesNotCreateBackgroundContext(t *testing.T) {
 	t.Parallel()
 
 	repo := &runtimeInstanceContextRepo{
-		listVisibleByUserFn: func(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error) {
+		listVisibleByUserFn: func(ctx context.Context, userID int64) ([]instanceports.UserVisibleInstanceRow, error) {
 			if ctx != nil {
 				t.Fatalf("expected list-visible ctx to stay nil, got %v", ctx)
 			}
-			return []runtimeports.UserVisibleInstanceRow{}, nil
+			return []instanceports.UserVisibleInstanceRow{}, nil
 		},
 	}
 	service := instanceqry.NewInstanceService(repo, &config.ContainerConfig{})
