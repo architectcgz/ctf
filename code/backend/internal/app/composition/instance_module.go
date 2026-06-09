@@ -65,6 +65,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 
 	repo := runtimeinfra.NewRepository(root.DB())
+	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultCleanupService := module.CleanupService
 	var cleanupService interface {
@@ -87,7 +88,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	queryService := instanceqry.NewInstanceService(instanceRepo, &cfg.Container, cfg.Pagination)
 	proxyTicketService := buildRuntimeProxyTicketService(root, instanceRepo)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
-		newInstanceMaintenanceRepository(root.DB(), instanceRepo, repo),
+		newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, repo),
 		maintenanceRuntime,
 		cleanupService,
 		&cfg.Container,
@@ -127,7 +128,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	))
 
 	return &InstanceModule{
-		PracticeInstanceRepository:  newPracticeInstanceRepository(root.DB(), instanceRepo, repo),
+		PracticeInstanceRepository:  newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, repo),
 		PracticeRuntimeService:      practiceRuntimeService,
 		PracticeRuntimeNodeSelector: newPracticeRuntimeNodeSelectorAdapter(runtime.RuntimeNodeSelector),
 		service: newRuntimeHTTPServiceAdapter(
@@ -282,32 +283,34 @@ func (a *instanceMaintenanceRuntimeAdapter) StartContainer(ctx context.Context, 
 }
 
 type instanceMaintenanceRepositoryAdapter struct {
-	db           *gorm.DB
-	instanceRepo *instanceinfra.Repository
-	runtimeRepo  *runtimeinfra.Repository
+	db             *gorm.DB
+	instanceRepo   *instanceinfra.Repository
+	allocationRepo *runtimeinfra.AllocationRepository
+	runtimeRepo    *runtimeinfra.Repository
 }
 
-func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, runtimeRepo *runtimeinfra.Repository) *instanceMaintenanceRepositoryAdapter {
-	if instanceRepo == nil && runtimeRepo == nil {
+func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, runtimeRepo *runtimeinfra.Repository) *instanceMaintenanceRepositoryAdapter {
+	if instanceRepo == nil && allocationRepo == nil && runtimeRepo == nil {
 		return nil
 	}
 	return &instanceMaintenanceRepositoryAdapter{
-		db:           db,
-		instanceRepo: instanceRepo,
-		runtimeRepo:  runtimeRepo,
+		db:             db,
+		instanceRepo:   instanceRepo,
+		allocationRepo: allocationRepo,
+		runtimeRepo:    runtimeRepo,
 	}
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
-	if a == nil || a.db == nil || a.instanceRepo == nil || a.runtimeRepo == nil {
+	if a == nil || a.db == nil || a.instanceRepo == nil || a.allocationRepo == nil {
 		return nil
 	}
-	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.runtimeRepo, func(instanceTx *instanceinfra.Repository, runtimeTx *runtimeinfra.Repository) error {
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error {
 		release, err := instanceTx.UpdateStatus(ctx, id, status)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 
@@ -367,15 +370,15 @@ func (a *instanceMaintenanceRepositoryAdapter) FinishAWDServiceOperation(ctx con
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
-	if a == nil || a.db == nil || a.instanceRepo == nil || a.runtimeRepo == nil {
+	if a == nil || a.db == nil || a.instanceRepo == nil || a.allocationRepo == nil {
 		return nil
 	}
-	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.runtimeRepo, func(instanceTx *instanceinfra.Repository, runtimeTx *runtimeinfra.Repository) error {
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error {
 		release, err := instanceTx.FinalizeStoppedRuntime(ctx, id)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 
@@ -388,19 +391,21 @@ func (a *instanceMaintenanceRepositoryAdapter) ListActiveContainerIDs(ctx contex
 }
 
 type practiceInstanceRepositoryAdapter struct {
-	db           *gorm.DB
-	instanceRepo *instanceinfra.Repository
-	runtimeRepo  *runtimeinfra.Repository
+	db             *gorm.DB
+	instanceRepo   *instanceinfra.Repository
+	allocationRepo *runtimeinfra.AllocationRepository
+	runtimeRepo    *runtimeinfra.Repository
 }
 
-func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, runtimeRepo *runtimeinfra.Repository) *practiceInstanceRepositoryAdapter {
-	if instanceRepo == nil && runtimeRepo == nil {
+func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, runtimeRepo *runtimeinfra.Repository) *practiceInstanceRepositoryAdapter {
+	if instanceRepo == nil && allocationRepo == nil && runtimeRepo == nil {
 		return nil
 	}
 	return &practiceInstanceRepositoryAdapter{
-		db:           db,
-		instanceRepo: instanceRepo,
-		runtimeRepo:  runtimeRepo,
+		db:             db,
+		instanceRepo:   instanceRepo,
+		allocationRepo: allocationRepo,
+		runtimeRepo:    runtimeRepo,
 	}
 }
 
@@ -412,11 +417,11 @@ func (a *practiceInstanceRepositoryAdapter) FindByID(ctx context.Context, id int
 }
 
 func (a *practiceInstanceRepositoryAdapter) FailProvisioning(ctx context.Context, id int64) (bool, error) {
-	if a == nil || a.db == nil || a.instanceRepo == nil || a.runtimeRepo == nil {
+	if a == nil || a.db == nil || a.instanceRepo == nil || a.allocationRepo == nil {
 		return false, nil
 	}
 	changed := false
-	err := withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.runtimeRepo, func(instanceTx *instanceinfra.Repository, runtimeTx *runtimeinfra.Repository) error {
+	err := withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error {
 		release, failed, err := instanceTx.FailProvisioning(ctx, id)
 		if err != nil {
 			return err
@@ -425,7 +430,7 @@ func (a *practiceInstanceRepositoryAdapter) FailProvisioning(ctx context.Context
 		if !failed || release == nil {
 			return nil
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 	return changed, err
 }
@@ -459,15 +464,15 @@ func (a *practiceInstanceRepositoryAdapter) RefreshInstanceExpiry(ctx context.Co
 }
 
 func (a *practiceInstanceRepositoryAdapter) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
-	if a == nil || a.db == nil || a.instanceRepo == nil || a.runtimeRepo == nil {
+	if a == nil || a.db == nil || a.instanceRepo == nil || a.allocationRepo == nil {
 		return nil
 	}
-	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.runtimeRepo, func(instanceTx *instanceinfra.Repository, runtimeTx *runtimeinfra.Repository) error {
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error {
 		release, err := instanceTx.UpdateStatus(ctx, id, status)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 

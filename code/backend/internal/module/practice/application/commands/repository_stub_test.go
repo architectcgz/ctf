@@ -23,16 +23,18 @@ import (
 )
 
 type practiceTestInstanceRepository struct {
-	db           *gorm.DB
-	instanceRepo *instanceinfrarepo.Repository
-	runtimeRepo  *runtimeinfrarepo.Repository
+	db             *gorm.DB
+	instanceRepo   *instanceinfrarepo.Repository
+	runtimeRepo    *runtimeinfrarepo.Repository
+	allocationRepo *runtimeinfrarepo.AllocationRepository
 }
 
 func newPracticeTestInstanceRepository(db *gorm.DB) *practiceTestInstanceRepository {
 	return &practiceTestInstanceRepository{
-		db:           db,
-		instanceRepo: instanceinfrarepo.NewRepository(db),
-		runtimeRepo:  runtimeinfrarepo.NewRepository(db),
+		db:             db,
+		instanceRepo:   instanceinfrarepo.NewRepository(db),
+		runtimeRepo:    runtimeinfrarepo.NewRepository(db),
+		allocationRepo: runtimeinfrarepo.NewAllocationRepository(db),
 	}
 }
 
@@ -79,28 +81,28 @@ func (r *practiceTestInstanceRepository) FinishActiveAWDServiceOperationForInsta
 }
 
 func (r *practiceTestInstanceRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
-	if r == nil || r.db == nil || r.instanceRepo == nil || r.runtimeRepo == nil {
+	if r == nil || r.db == nil || r.instanceRepo == nil || r.allocationRepo == nil {
 		return nil
 	}
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		instanceTx := r.instanceRepo.WithDB(tx)
-		runtimeTx := r.runtimeRepo.WithDB(tx)
+		allocationTx := r.allocationRepo.WithDB(tx)
 		release, err := instanceTx.UpdateStatus(ctx, id, status)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 
 func (r *practiceTestInstanceRepository) FailProvisioning(ctx context.Context, id int64) (bool, error) {
-	if r == nil || r.db == nil || r.instanceRepo == nil || r.runtimeRepo == nil {
+	if r == nil || r.db == nil || r.instanceRepo == nil || r.allocationRepo == nil {
 		return false, nil
 	}
 	changed := false
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		instanceTx := r.instanceRepo.WithDB(tx)
-		runtimeTx := r.runtimeRepo.WithDB(tx)
+		allocationTx := r.allocationRepo.WithDB(tx)
 		release, failed, err := instanceTx.FailProvisioning(ctx, id)
 		if err != nil {
 			return err
@@ -109,7 +111,7 @@ func (r *practiceTestInstanceRepository) FailProvisioning(ctx context.Context, i
 		if !failed || release == nil {
 			return nil
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 	return changed, err
 }

@@ -47,6 +47,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	cfg := runtimeConfigOrDefault(root.Config())
 	log := root.Logger()
 	runtimeRepo := runtimeinfra.NewRepository(root.DB())
+	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultNodeName := defaultRuntimeNodeName(cfg)
 	nodeSelector, nodeRepo, defaultNode, err := buildDefaultRuntimeNodeSelector(root, defaultNodeName)
@@ -54,7 +55,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		return nil, err
 	}
 
-	defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, runtimeRepo, defaultNode)
+	defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, allocationRepo, defaultNode)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +64,8 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	module := runtimemodule.Build(runtimemodule.Deps{
 		Config:                    cfg,
 		Logger:                    log,
-		ProvisioningRepository:    runtimeRepo,
-		CleanupRepository:         runtimeRepo,
+		ProvisioningRepository:    allocationRepo,
+		CleanupRepository:         allocationRepo,
 		ProvisioningRuntime:       executor,
 		CleanupRuntime:            executor,
 		FileRuntime:               executor,
@@ -73,7 +74,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		ManagedContainerStats:     executor,
 		InteractiveExecutor:       executor,
 	})
-	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), runtimeRepo, runtimeRepo, nodeRepo, defaultNodeName)
+	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), allocationRepo, runtimeRepo, nodeRepo, defaultNodeName)
 	if nodeRouter != nil && defaultNode != nil && defaultNode.ID > 0 {
 		nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)
 	}
@@ -167,12 +168,12 @@ func buildDefaultRuntimeNodeClient(root *Root) (*nodeRuntimeClient, error) {
 	if root == nil {
 		return nil, nil
 	}
-	runtimeRepo := runtimeinfra.NewRepository(root.DB())
+	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
 	_, _, defaultNode, err := buildDefaultRuntimeNodeSelector(root, defaultRuntimeNodeName(root.Config()))
 	if err != nil {
 		return nil, err
 	}
-	return buildDefaultNodeRuntimeClient(root, runtimeRepo, defaultNode)
+	return buildDefaultNodeRuntimeClient(root, allocationRepo, defaultNode)
 }
 
 func buildDefaultNodeRuntimeClient(root *Root, allocationRepo runtimeNodeAllocationRepository, node *runtimeentity.RuntimeNode) (*nodeRuntimeClient, error) {

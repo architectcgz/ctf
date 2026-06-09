@@ -345,11 +345,52 @@ func TestPracticeModuleWiresRuntimePortOwnerFromCompositionRoot(t *testing.T) {
 		"runtimeports \"ctf-platform/internal/module/runtime/ports\"",
 		"RuntimePortOwnerFor: runtimePortOwnerFor",
 		"func runtimePortOwnerFor(db *gorm.DB) runtimeports.PortReservationOwner",
-		"return runtimeinfra.NewRepository(db)",
+		"return runtimeinfra.NewAllocationRepository(db)",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
 			t.Fatalf("practice composition should wire runtime port owner through composition root marker %s", marker)
+		}
+	}
+}
+
+func TestRuntimeRepositoryDoesNotOwnAllocationPersistence(t *testing.T) {
+	t.Parallel()
+
+	repositoryContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "repository.go"))
+	if err != nil {
+		t.Fatalf("read runtime repository.go: %v", err)
+	}
+	allocationContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "allocation_repository.go"))
+	if err != nil {
+		t.Fatalf("read runtime allocation_repository.go: %v", err)
+	}
+
+	repositorySource := string(repositoryContent)
+	allocationSource := string(allocationContent)
+	expected := []string{
+		"type AllocationRepository struct",
+		"func NewAllocationRepository(db *gorm.DB) *AllocationRepository",
+		"func (r *AllocationRepository) ReleaseRuntimeAllocationsForInstance",
+		"func (r *AllocationRepository) ReserveAvailablePort",
+		"func (r *AllocationRepository) ReserveAvailableSubnet",
+		"func (r *AllocationRepository) SyncInstanceHostPortForRestart",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(allocationSource, marker) {
+			t.Fatalf("runtime allocation repository should own marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"func (r *Repository) ReleaseRuntimeAllocationsForInstance",
+		"func (r *Repository) ReserveAvailablePort",
+		"func (r *Repository) ReserveAvailableSubnet",
+		"func (r *Repository) SyncInstanceHostPortForRestart",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(repositorySource, marker) {
+			t.Fatalf("runtime Repository should not own allocation marker %s", marker)
 		}
 	}
 }

@@ -422,7 +422,7 @@ Run focused instance/runtime repository tests and module architecture guards bef
 Current residual surface after Task 8:
 
 - Pure `instances` table methods have moved to `instance/infrastructure.Repository`, including `FindByUserAndChallenge`, `RefreshInstanceExpiry`, `UpdateRuntime`, `PersistProvisionedRuntime`, `FindExpired`, `ListRecoverableActiveInstances`, `ListStoppingInstances`, `RefreshActiveAWDInstanceExpiryByContest`, `RequeueLostRuntime`, `ListPendingInstances`, `TryTransitionStatus`, and `CountInstancesByStatus`.
-- `app/composition/instance_module.go`, `app/composition/contest_module.go`, and `app/composition/instance_runtime_lifecycle_tx.go` now own the cross-owner DB transaction orchestration for `FailProvisioning`, `UpdateStatusAndReleasePort`, `FinalizeStoppedRuntime`, and `ExpireInstanceRuntime`; instance state mutation stays in `instanceinfra.Repository`, while allocation release stays in `runtimeinfra.Repository`.
+- `app/composition/instance_module.go`, `app/composition/contest_module.go`, and `app/composition/instance_runtime_lifecycle_tx.go` now own the cross-owner DB transaction orchestration for `FailProvisioning`, `UpdateStatusAndReleasePort`, `FinalizeStoppedRuntime`, and `ExpireInstanceRuntime`; instance state mutation stays in `instanceinfra.Repository`, while allocation release now goes through `runtimeinfra.AllocationRepository`.
 - `runtime/infrastructure.Repository` now remains for runtime-owned allocations, AWD workspace / operation persistence, and active container inventory support; it no longer owns mixed instance-state + runtime-allocation lifecycle transactions.
 
 ## Task 9: Re-home Instance HTTP Surface
@@ -618,4 +618,54 @@ go test ./internal/module -count=1
 Current remaining surface after Task 12:
 
 - 容器能力装配链已经不再把 `*runtimeinfra.Repository` 作为 concrete 类型向下传递；composition 面上已经明确分成 module 注入、router allocation/state、ACL migration state 三类窄依赖。
+
+## Task 13: Split Runtime Allocation Repository
+
+**Files:**
+- Create:
+  - `code/backend/internal/module/runtime/infrastructure/allocation_repository.go`
+- Modify:
+  - `code/backend/internal/module/runtime/infrastructure/repository.go`
+  - `code/backend/internal/app/composition/runtime_module.go`
+  - `code/backend/internal/app/composition/instance_module.go`
+  - `code/backend/internal/app/composition/contest_module.go`
+  - `code/backend/internal/app/composition/instance_runtime_lifecycle_tx.go`
+  - `code/backend/internal/app/composition/practice_module.go`
+  - `code/backend/internal/app/composition/runtime_node_execution_router_test.go`
+  - `code/backend/internal/app/composition/runtime_node_execution_router_e2e_test.go`
+  - `code/backend/internal/app/router_composition_typed_deps_test.go`
+  - practice/runtime/contest test adapters that release runtime allocations or construct a practice runtime port owner.
+  - `docs/design/backend-module-boundary-target.md`
+  - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
+
+- [x] **Step 1: Add composition guard for allocation owner**
+
+Extend typed dependency tests so `runtimeinfra.AllocationRepository` owns port/subnet reservation and allocation release methods, and broad `runtimeinfra.Repository` no longer declares them.
+
+- [x] **Step 2: Move allocation persistence methods**
+
+Move `ReserveAvailablePort*`, `ReserveAvailableSubnet*`, `SyncInstanceHostPortForRestart`, `ReleaseRuntimeAllocationsForInstance`, release helpers, and allocation conflict helpers from `runtime/infrastructure.Repository` into `runtime/infrastructure.AllocationRepository`.
+
+- [x] **Step 3: Rewire composition and test adapters**
+
+Use `runtimeinfra.NewAllocationRepository(root.DB())` for provisioning, cleanup, node router allocation, practice runtime port owner, and mixed lifecycle transaction release paths. Keep `runtimeinfra.Repository` only for AWD workspace / operation persistence, runtime state index lookups, runtime node state, and migration support.
+
+- [x] **Step 4: Verify**
+
+Run:
+
+```bash
+go test ./internal/app -run 'TestPracticeModuleWiresRuntimePortOwnerFromCompositionRoot|TestRuntimeRepositoryDoesNotOwnAllocationPersistence' -count=1
+go test ./internal/module/runtime/infrastructure -count=1
+go test ./internal/app/composition -count=1
+go test ./internal/module/practice/... -count=1
+go test ./internal/module/runtime/... -count=1
+go test ./internal/module -count=1
+```
+
+Current remaining surface after Task 13:
+
+- `runtime/infrastructure.Repository` no longer owns allocation persistence; port/subnet reservation and allocation release now have a concrete owner in `runtime/infrastructure.AllocationRepository`.
+- `runtime/infrastructure.Repository` still groups AWD defense workspace / AWD service operation persistence with runtime state index and migration-facing state lookups. The next runtime persistence cleanup should split those remaining owner groups instead of adding methods back to the broad repository.
+- `container_runtime` capability interface / host adapter / `ContainerRuntimeModule` physical owner is still undecided and remains a separate structure question.
 - 下一步剩余 debt 已进一步收敛成 concrete runtime persistence 本身的继续拆分，以及 capability interface / host adapter / `ContainerRuntimeModule` 的最终物理 owner 迁移。

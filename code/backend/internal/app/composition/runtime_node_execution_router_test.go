@@ -33,7 +33,7 @@ func TestRuntimeNodeExecutionRouterRoutesCheckerByNodeID(t *testing.T) {
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
@@ -107,7 +107,7 @@ func TestRuntimeNodeExecutionRouterRoutesContainerFileWritesByWorkspaceContainer
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
@@ -179,7 +179,7 @@ func TestRuntimeNodeExecutionRouterRoutesInteractiveExecByWorkspaceContainerNode
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
@@ -244,7 +244,7 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByRuntimeDetailsContainerNodeID(
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
@@ -321,7 +321,7 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByWorkspaceContainerIDWithoutNod
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
@@ -357,7 +357,7 @@ func TestRuntimeNodeExecutionRouterRoutesRemoveContainerByInventoryCache(t *test
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",

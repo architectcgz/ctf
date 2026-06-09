@@ -52,12 +52,13 @@ func buildContestEndedRuntimeCleaner(root *Root, runtime *ContainerRuntimeModule
 	}
 
 	runtimeRepo := runtimeinfra.NewRepository(root.DB())
+	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	var cleanupService interface {
 		CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
 	} = newContestEndedRuntimeCleanupAdapter(runtimecmd.NewRuntimeCleanupService(
 		runtime.runtime.CleanupRuntime,
-		runtimeRepo,
+		allocationRepo,
 		logger.Named("contest_ended_runtime_cleanup_service"),
 	))
 	if runtime.nodeRouter != nil {
@@ -68,7 +69,7 @@ func buildContestEndedRuntimeCleaner(root *Root, runtime *ContainerRuntimeModule
 		awdRepo,
 		awdRepo,
 		cleanupService,
-		newContestEndedRuntimeStateStore(root.DB(), instanceRepo, runtimeRepo),
+		newContestEndedRuntimeStateStore(root.DB(), instanceRepo, allocationRepo, runtimeRepo),
 	)
 }
 
@@ -109,19 +110,21 @@ func (a *contestEndedRuntimeCleanupRouterAdapter) CleanupRuntime(ctx context.Con
 }
 
 type contestEndedRuntimeStateStoreAdapter struct {
-	db           *gorm.DB
-	instanceRepo *instanceinfra.Repository
-	runtimeRepo  *runtimeinfra.Repository
+	db             *gorm.DB
+	instanceRepo   *instanceinfra.Repository
+	allocationRepo *runtimeinfra.AllocationRepository
+	runtimeRepo    *runtimeinfra.Repository
 }
 
-func newContestEndedRuntimeStateStore(db *gorm.DB, instanceRepo *instanceinfra.Repository, runtimeRepo *runtimeinfra.Repository) *contestEndedRuntimeStateStoreAdapter {
-	if db == nil || instanceRepo == nil || runtimeRepo == nil {
+func newContestEndedRuntimeStateStore(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, runtimeRepo *runtimeinfra.Repository) *contestEndedRuntimeStateStoreAdapter {
+	if db == nil || instanceRepo == nil || allocationRepo == nil || runtimeRepo == nil {
 		return nil
 	}
 	return &contestEndedRuntimeStateStoreAdapter{
-		db:           db,
-		instanceRepo: instanceRepo,
-		runtimeRepo:  runtimeRepo,
+		db:             db,
+		instanceRepo:   instanceRepo,
+		allocationRepo: allocationRepo,
+		runtimeRepo:    runtimeRepo,
 	}
 }
 
@@ -129,12 +132,12 @@ func (a *contestEndedRuntimeStateStoreAdapter) ExpireInstanceRuntime(ctx context
 	if a == nil {
 		return nil
 	}
-	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.runtimeRepo, func(instanceTx *instanceinfra.Repository, runtimeTx *runtimeinfra.Repository) error {
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error {
 		release, err := instanceTx.ExpireInstanceRuntime(ctx, id)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 

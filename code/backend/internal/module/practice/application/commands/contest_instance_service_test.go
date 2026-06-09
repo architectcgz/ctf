@@ -35,16 +35,18 @@ import (
 )
 
 type contestInstanceTestInstanceRepository struct {
-	db           *gorm.DB
-	instanceRepo *instanceinfrarepo.Repository
-	runtimeRepo  *runtimeinfrarepo.Repository
+	db             *gorm.DB
+	instanceRepo   *instanceinfrarepo.Repository
+	runtimeRepo    *runtimeinfrarepo.Repository
+	allocationRepo *runtimeinfrarepo.AllocationRepository
 }
 
 func newContestInstanceTestInstanceRepository(db *gorm.DB) *contestInstanceTestInstanceRepository {
 	return &contestInstanceTestInstanceRepository{
-		db:           db,
-		instanceRepo: instanceinfrarepo.NewRepository(db),
-		runtimeRepo:  runtimeinfrarepo.NewRepository(db),
+		db:             db,
+		instanceRepo:   instanceinfrarepo.NewRepository(db),
+		runtimeRepo:    runtimeinfrarepo.NewRepository(db),
+		allocationRepo: runtimeinfrarepo.NewAllocationRepository(db),
 	}
 }
 
@@ -75,12 +77,12 @@ func (r *contestInstanceTestInstanceRepository) FinishActiveAWDServiceOperationF
 func (r *contestInstanceTestInstanceRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		instanceTx := r.instanceRepo.WithDB(tx)
-		runtimeTx := r.runtimeRepo.WithDB(tx)
+		allocationTx := r.allocationRepo.WithDB(tx)
 		release, err := instanceTx.UpdateStatus(ctx, id, status)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 
@@ -88,7 +90,7 @@ func (r *contestInstanceTestInstanceRepository) FailProvisioning(ctx context.Con
 	changed := false
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		instanceTx := r.instanceRepo.WithDB(tx)
-		runtimeTx := r.runtimeRepo.WithDB(tx)
+		allocationTx := r.allocationRepo.WithDB(tx)
 		release, failed, err := instanceTx.FailProvisioning(ctx, id)
 		if err != nil {
 			return err
@@ -97,7 +99,7 @@ func (r *contestInstanceTestInstanceRepository) FailProvisioning(ctx context.Con
 		if !failed || release == nil {
 			return nil
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 	return changed, err
 }

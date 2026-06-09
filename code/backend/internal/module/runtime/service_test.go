@@ -28,6 +28,7 @@ import (
 
 type runtimeTestRepository struct {
 	*runtimeinfra.Repository
+	*runtimeinfra.AllocationRepository
 	instanceRepo *instanceinfra.Repository
 	db           *gorm.DB
 }
@@ -58,9 +59,10 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 		t.Fatalf("migrate awd operation tables: %v", err)
 	}
 	return &runtimeTestRepository{
-		Repository:   runtimeinfra.NewRepository(db),
-		instanceRepo: instanceinfra.NewRepository(db),
-		db:           db,
+		Repository:           runtimeinfra.NewRepository(db),
+		AllocationRepository: runtimeinfra.NewAllocationRepository(db),
+		instanceRepo:         instanceinfra.NewRepository(db),
+		db:                   db,
 	}
 }
 
@@ -126,17 +128,17 @@ func (r *runtimeTestRepository) FindByID(ctx context.Context, id int64) (*instan
 }
 
 func (r *runtimeTestRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
-	if r == nil || r.db == nil || r.instanceRepo == nil || r.Repository == nil {
+	if r == nil || r.db == nil || r.instanceRepo == nil || r.AllocationRepository == nil {
 		return nil
 	}
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		instanceTx := r.instanceRepo.WithDB(tx)
-		runtimeTx := r.Repository.WithDB(tx)
+		allocationTx := r.AllocationRepository.WithDB(tx)
 		release, err := instanceTx.UpdateStatus(ctx, id, status)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 
@@ -169,17 +171,17 @@ func (r *runtimeTestRepository) RequeueLostRuntime(ctx context.Context, id int64
 }
 
 func (r *runtimeTestRepository) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
-	if r == nil || r.db == nil || r.instanceRepo == nil || r.Repository == nil {
+	if r == nil || r.db == nil || r.instanceRepo == nil || r.AllocationRepository == nil {
 		return nil
 	}
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		instanceTx := r.instanceRepo.WithDB(tx)
-		runtimeTx := r.Repository.WithDB(tx)
+		allocationTx := r.AllocationRepository.WithDB(tx)
 		release, err := instanceTx.FinalizeStoppedRuntime(ctx, id)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 

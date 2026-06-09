@@ -378,7 +378,7 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	flagHandler := challengehttp.NewFlagHandler(flagCommandService, flagQueryService)
 
 	practiceRepo := practiceinfra.NewRepositoryWithRuntimePortOwner(db, func(db *gorm.DB) runtimeports.PortReservationOwner {
-		return runtimeinfrarepo.NewRepository(db)
+		return runtimeinfrarepo.NewAllocationRepository(db)
 	})
 	instanceRepo := instanceinfra.NewRepository(db)
 	proxyTicketInstanceRepo := instanceinfra.NewRepository(db)

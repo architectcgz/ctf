@@ -53,7 +53,7 @@ func TestBuildRuntimeHostExecutorProvidesReachableRuntimeInTestEnv(t *testing.T)
 	}
 
 	executor := buildRuntimeHostExecutor(root)
-	service := runtimecmd.NewProvisioningService(runtimeinfra.NewRepository(db), executor, &cfg.Container, zap.NewNop())
+	service := runtimecmd.NewProvisioningService(runtimeinfra.NewAllocationRepository(db), executor, &cfg.Container, zap.NewNop())
 
 	containerID, networkID, hostPort, _, err := service.CreateContainer(context.Background(), "ctf/test:v1", nil, 35001)
 	if err != nil {

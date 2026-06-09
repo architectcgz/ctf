@@ -34,5 +34,5 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *Insta
 }
 
 func runtimePortOwnerFor(db *gorm.DB) runtimeports.PortReservationOwner {
-	return runtimeinfra.NewRepository(db)
+	return runtimeinfra.NewAllocationRepository(db)
 }

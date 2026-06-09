@@ -444,9 +444,10 @@ func collectCleanedContainerIDs(t *testing.T, instances []*instanceentity.Instan
 }
 
 type endedContestRuntimeStateStoreAdapter struct {
-	db           *gorm.DB
-	instanceRepo *instanceinfra.Repository
-	runtimeRepo  *runtimeinfra.Repository
+	db             *gorm.DB
+	instanceRepo   *instanceinfra.Repository
+	runtimeRepo    *runtimeinfra.Repository
+	allocationRepo *runtimeinfra.AllocationRepository
 }
 
 func newEndedContestRuntimeStateStore(db *gorm.DB) *endedContestRuntimeStateStoreAdapter {
@@ -454,24 +455,25 @@ func newEndedContestRuntimeStateStore(db *gorm.DB) *endedContestRuntimeStateStor
 		return nil
 	}
 	return &endedContestRuntimeStateStoreAdapter{
-		db:           db,
-		instanceRepo: instanceinfra.NewRepository(db),
-		runtimeRepo:  runtimeinfra.NewRepository(db),
+		db:             db,
+		instanceRepo:   instanceinfra.NewRepository(db),
+		runtimeRepo:    runtimeinfra.NewRepository(db),
+		allocationRepo: runtimeinfra.NewAllocationRepository(db),
 	}
 }
 
 func (a *endedContestRuntimeStateStoreAdapter) ExpireInstanceRuntime(ctx context.Context, id int64) error {
-	if a == nil || a.db == nil || a.instanceRepo == nil || a.runtimeRepo == nil {
+	if a == nil || a.db == nil || a.instanceRepo == nil || a.allocationRepo == nil {
 		return nil
 	}
 	return a.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		instanceTx := a.instanceRepo.WithDB(tx)
-		runtimeTx := a.runtimeRepo.WithDB(tx)
+		allocationTx := a.allocationRepo.WithDB(tx)
 		release, err := instanceTx.ExpireInstanceRuntime(ctx, id)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 

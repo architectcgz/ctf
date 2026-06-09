@@ -20,7 +20,7 @@ func TestReserveAvailablePortExcludingSkipsExcludedPort(t *testing.T) {
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
+	repo := NewAllocationRepository(db)
 
 	port, err := repo.ReserveAvailablePortExcluding(context.Background(), 30000, 30003, 30000)
 	if err != nil {
@@ -35,7 +35,7 @@ func TestReserveAvailablePortExcludingReusesUnboundAllocation(t *testing.T) {
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
+	repo := NewAllocationRepository(db)
 
 	staleUpdatedAt := time.Now().Add(-time.Hour).UTC()
 	if err := db.Create(&runtimeentity.PortAllocation{
@@ -76,7 +76,7 @@ func TestReserveAvailableSubnetForInstanceSkipsAllocatedSubnet(t *testing.T) {
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
+	repo := NewAllocationRepository(db)
 	otherInstanceID := int64(9001)
 	if err := db.Create(&runtimeentity.NetworkAllocation{
 		Subnet:     "10.10.0.0/24",
@@ -99,7 +99,7 @@ func TestReserveAvailableSubnetForInstanceReusesOwnerReservation(t *testing.T) {
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
+	repo := NewAllocationRepository(db)
 	instanceID := int64(9101)
 	if err := db.Create(&runtimeentity.NetworkAllocation{
 		Subnet:     "10.10.9.0/24",
@@ -122,7 +122,7 @@ func TestReserveAvailableSubnetForInstanceExcludingSkipsExcludedSubnet(t *testin
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
+	repo := NewAllocationRepository(db)
 
 	subnet, err := repo.ReserveAvailableSubnetForInstanceExcluding(
 		context.Background(),
@@ -144,7 +144,7 @@ func TestReserveAvailableSubnetForInstanceExcludingReassignsExcludedOwnerReserva
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
+	repo := NewAllocationRepository(db)
 	instanceID := int64(9301)
 	if err := db.Create(&runtimeentity.NetworkAllocation{
 		Subnet:     "10.10.9.0/24",
@@ -182,7 +182,7 @@ func TestSyncInstanceHostPortForRestartPreservesAndBindsAllocation(t *testing.T)
 	t.Parallel()
 
 	db := newRuntimeRepositoryDestroyedAtTestDB(t)
-	repo := NewRepository(db)
+	repo := NewAllocationRepository(db)
 
 	instanceID := int64(6001)
 	if err := db.Create(&instancecontracts.Instance{
@@ -645,18 +645,18 @@ func newRuntimeRepositoryDestroyedAtTestDB(t *testing.T) *gorm.DB {
 }
 
 func updateStatusAndReleasePort(ctx context.Context, db *gorm.DB, id int64, status string) error {
-	return runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, runtimeTx *Repository) error {
+	return runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, allocationTx *AllocationRepository) error {
 		release, err := instanceTx.UpdateStatus(ctx, id, status)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 
 func failProvisioning(ctx context.Context, db *gorm.DB, id int64) (bool, error) {
 	changed := false
-	err := runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, runtimeTx *Repository) error {
+	err := runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, allocationTx *AllocationRepository) error {
 		release, failed, err := instanceTx.FailProvisioning(ctx, id)
 		if err != nil {
 			return err
@@ -665,38 +665,38 @@ func failProvisioning(ctx context.Context, db *gorm.DB, id int64) (bool, error) 
 		if !failed || release == nil {
 			return nil
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 	return changed, err
 }
 
 func expireInstanceRuntime(ctx context.Context, db *gorm.DB, id int64) error {
-	return runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, runtimeTx *Repository) error {
+	return runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, allocationTx *AllocationRepository) error {
 		release, err := instanceTx.ExpireInstanceRuntime(ctx, id)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 
 func finalizeStoppedRuntime(ctx context.Context, db *gorm.DB, id int64) error {
-	return runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, runtimeTx *Repository) error {
+	return runRuntimeLifecycleTx(ctx, db, func(instanceTx *instanceinfra.Repository, allocationTx *AllocationRepository) error {
 		release, err := instanceTx.FinalizeStoppedRuntime(ctx, id)
 		if err != nil || release == nil {
 			return err
 		}
-		return runtimeTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 }
 
-func runRuntimeLifecycleTx(ctx context.Context, db *gorm.DB, fn func(instanceTx *instanceinfra.Repository, runtimeTx *Repository) error) error {
+func runRuntimeLifecycleTx(ctx context.Context, db *gorm.DB, fn func(instanceTx *instanceinfra.Repository, allocationTx *AllocationRepository) error) error {
 	if db == nil || fn == nil {
 		return nil
 	}
 	instanceRepo := instanceinfra.NewRepository(db)
-	runtimeRepo := NewRepository(db)
+	allocationRepo := NewAllocationRepository(db)
 	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return fn(instanceRepo.WithDB(tx), runtimeRepo.WithDB(tx))
+		return fn(instanceRepo.WithDB(tx), allocationRepo.WithDB(tx))
 	})
 }
