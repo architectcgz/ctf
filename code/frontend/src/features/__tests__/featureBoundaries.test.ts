@@ -10,6 +10,9 @@ function collectSourceFiles(directory: string): string[] {
     const path = join(directory, entry)
     const stats = statSync(path)
     if (stats.isDirectory()) {
+      if (entry === '__tests__') {
+        return []
+      }
       return collectSourceFiles(path)
     }
     if (/\.(ts|vue)$/.test(entry)) {
@@ -20,7 +23,11 @@ function collectSourceFiles(directory: string): string[] {
 }
 
 function isTestFile(filePath: string): boolean {
-  return filePath.endsWith('.test.ts') || filePath.endsWith('.spec.ts')
+  return (
+    filePath.endsWith('.test.ts') ||
+    filePath.endsWith('.spec.ts') ||
+    filePath.endsWith('.test-harness.ts')
+  )
 }
 
 function extractImportSpecifiers(source: string): string[] {

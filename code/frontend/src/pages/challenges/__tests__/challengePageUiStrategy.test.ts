@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+// ui-test-guard: allow - This raw-source spec guards page owner boundaries and shared
+// UI primitive adoption during the challenge page migration, not local markup snapshots.
 import challengeDetailSource from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
+import challengeDetailShellSource from '@/widgets/challenge-detail-workspace/ChallengeDetailPage.vue?raw'
 import challengeDetailWidgetSource from '@/widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue?raw'
 import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
 import challengeWorkspaceShellSource from '@/features/challenge-detail/ui/ChallengeWorkspaceShell.vue?raw'
@@ -15,6 +18,7 @@ import challengeActionAsideSource from '@/features/challenge-detail/ui/Challenge
 
 const challengeDetailWorkspaceSource = [
   challengeDetailSource,
+  challengeDetailShellSource,
   challengeDetailWidgetSource,
   challengeWorkspaceShellSource,
   challengeSolutionsPanelSource,
@@ -26,14 +30,19 @@ const challengeDetailWorkspaceSource = [
 describe('challenge page ui strategy', () => {
   it('challenge detail route should stay as a thin page shell that delegates to feature-owned workspace sections', () => {
     expect(challengeDetailSource).toContain(
+      "import { ChallengeDetailPage } from '@/widgets/challenge-detail-workspace'"
+    )
+    expect(challengeDetailSource).toContain('<ChallengeDetailPage />')
+    expect(challengeDetailSource).not.toContain('useChallengeDetailPage')
+    expect(challengeDetailSource).not.toContain('<ChallengeDetailWorkspace')
+    expect(challengeDetailSource).not.toContain("from '@/api/challenge'")
+
+    expect(challengeDetailShellSource).toContain(
       "import { useChallengeDetailPage } from '@/features/challenge-detail'"
     )
-    expect(challengeDetailSource).toContain(
-      "import { ChallengeDetailWorkspace } from '@/widgets/challenge-detail-workspace'"
-    )
-    expect(challengeDetailSource).toContain('<ChallengeDetailWorkspace')
-    expect(challengeDetailSource).not.toContain('<ChallengeWorkspaceShell')
-    expect(challengeDetailSource).not.toContain("from '@/api/challenge'")
+    expect(challengeDetailShellSource).toContain("import ChallengeDetailWorkspace from './ChallengeDetailWorkspace.vue'")
+    expect(challengeDetailShellSource).toContain('<ChallengeDetailWorkspace')
+    expect(challengeDetailShellSource).not.toContain("from '@/api/challenge'")
 
     expect(challengeDetailWidgetSource).toContain('<ChallengeWorkspaceShell')
     expect(challengeWorkspaceShellSource).toContain('<ChallengeQuestionPanel')
@@ -77,7 +86,7 @@ describe('challenge page ui strategy', () => {
       "import { useTabKeyboardNavigation } from '@/shared/lib/keyboard/useTabKeyboardNavigation'"
     )
     expect(challengeDetailWidgetSource).toContain('useTabKeyboardNavigation<WorkspaceTab>({')
-    expect(challengeDetailSource).toContain('function setSelectedSolutionId(value: string | null): void {')
+    expect(challengeDetailShellSource).toContain('function setSelectedSolutionId(value: string | null): void {')
     expect(challengeDetailSource).not.toContain('function selectWorkspaceTabFromWidget(')
     expect(challengeDetailSource).not.toContain('function selectSolutionTabFromWidget(')
     expect(challengeDetailSource).not.toContain('function focusTab(id: string): void {')
@@ -88,9 +97,11 @@ describe('challenge page ui strategy', () => {
 
   it('challenge list route should stay as a thin page shell that delegates directory rendering to shared challenge UI', () => {
     expect(challengeListSource).toContain(
-      "import { ChallengeDirectoryPanel, useChallengeListPage } from '@/features/challenge-list'"
+      "import { ChallengeListPage } from '@/features/challenge-list'"
     )
-    expect(challengeListSource).toContain('<ChallengeDirectoryPanel')
+    expect(challengeListSource).toContain('<ChallengeListPage />')
+    expect(challengeListSource).not.toContain('useChallengeListPage')
+    expect(challengeListSource).not.toContain('<ChallengeDirectoryPanel')
     expect(challengeDirectoryPanelSource).toContain(
       "import { ChallengeDirectoryRow } from '@/entities/challenge'"
     )

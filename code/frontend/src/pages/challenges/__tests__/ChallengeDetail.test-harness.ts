@@ -4,6 +4,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 
 export { ApiError } from '@/api/request'
 export { default as challengeDetailSource } from '@/pages/challenges/ChallengeDetailRoutePage.vue?raw'
+export { default as challengeDetailShellSource } from '@/widgets/challenge-detail-workspace/ChallengeDetailPage.vue?raw'
 export { default as challengeDetailPageSource } from '@/features/challenge-detail/model/useChallengeDetailPage.ts?raw'
 export { default as challengeDetailWorkspaceSource } from '@/widgets/challenge-detail-workspace/ChallengeDetailWorkspace.vue?raw'
 export { default as challengeDetailRoutesSource } from '@/features/challenge-detail/model/challengeDetailRoutes.ts?raw'
