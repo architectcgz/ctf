@@ -8,8 +8,8 @@
 - 关联模块：
   - `internal/module/contest/application/commands`
   - `internal/module/contest/application/jobs`
-  - `frontend/src/components/platform/contest`
-  - `frontend/src/features/contest-awd-config`
+  - `frontend/src/pages/platform/contests/ContestAwdConfigRoutePage.vue`
+  - `frontend/src/features/platform/contest-awd-config`
 - 过程追溯：`practice/superpowers-plan-index.md` 中的 `2026-04-11-awd-engine-phase6-checker-preview`
 - 最后更新：`2026-05-07`
 
@@ -33,7 +33,7 @@
 
 ### 3.1 模块清单
 
-- `ContestAwdConfig.vue` / `useContestAwdConfigPage`
+- `ContestAwdConfigRoutePage.vue` / `useContestAwdConfigPage`
   - 负责：收集草稿、触发试跑、展示实时进度、在保存时附带 `awd_checker_preview_token`
   - 不负责：自行决定校验状态
 
@@ -80,7 +80,7 @@
 
 ### 5.1 试跑执行链路
 
-1. 管理员在 `ContestAwdConfig.vue` 中填写 checker 草稿。
+1. 管理员在 `ContestAwdConfigRoutePage.vue` 入口组合的 AWD 配置工作台中填写 checker 草稿。
 2. 前端调用 `runContestAWDCheckerPreview`，可传显式 `access_url`，也可让后端自动拉起 preview runtime。
 3. `AWDService.PreviewChecker` 校验 AWD 赛事上下文、checker 类型与配置。
 4. 如果未提供 `access_url`，且题目是单容器部署并存在可用镜像，`prepareCheckerPreviewAccessURL` 会通过 `runtimeProbe.CreateContainer` 拉起临时实例。
@@ -130,10 +130,10 @@
 - `code/backend/internal/module/contest/application/commands/awd_checker_preview_token_support.go`
 - `code/backend/internal/module/contest/application/jobs/awd_checker_preview.go`
 - `code/backend/internal/module/contest/api/http/awd_round_check_handler.go`
-- `code/frontend/src/views/platform/ContestAwdConfig.vue`
-- `code/frontend/src/components/platform/contest/ContestAwdDebugStation.vue`
-- `code/frontend/src/features/contest-awd-config/model/useAwdCheckerPreview.ts`
-- `code/frontend/src/features/contest-awd-config/model/useContestAwdConfigPage.ts`
+- `code/frontend/src/pages/platform/contests/ContestAwdConfigRoutePage.vue`
+- `code/frontend/src/features/platform/contest-awd-config/ui/ContestAwdDebugStation.vue`
+- `code/frontend/src/features/platform/contest-awd-config/model/useAwdCheckerPreview.ts`
+- `code/frontend/src/features/platform/contest-awd-config/model/useContestAwdConfigPage.ts`
 - `code/frontend/src/api/admin/contests.ts`
 
 ## 9. 验证标准

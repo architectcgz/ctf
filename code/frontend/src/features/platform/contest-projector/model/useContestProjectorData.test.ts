@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
 
-import { useContestProjectorData } from '@/features/contest-projector'
+import { useContestProjectorData } from '@/features/platform/contest-projector'
 import type { AWDRoundData, ContestDetailData } from '@/api/contracts'
 
 const adminApiMocks = vi.hoisted(() => ({

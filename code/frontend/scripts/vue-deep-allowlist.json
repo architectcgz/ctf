@@ -35,7 +35,7 @@
   "src/features/admin-notification-publisher/ui/AdminNotificationPublishDrawer.vue": {
     ":deep(.modal-template-panel--drawer)": 1
   },
-  "src/features/audit-log/ui/AuditLogDirectoryPanel.vue": {
+  "src/features/platform/audit-log/ui/AuditLogDirectoryPanel.vue": {
     ":deep(.workspace-data-table__row)": 1,
     ":deep(.workspace-directory-toolbar)": 1
   },
@@ -67,7 +67,7 @@
   "src/features/challenge-list/ui/ChallengeDirectoryPanel.vue": {
     ":deep(.challenge-empty-state.challenge-directory-state)": 1
   },
-  "src/features/challenge-topology-studio/ui/TopologyChallengeWorkbench.vue": {
+  "src/features/platform/challenge-topology-studio/ui/TopologyChallengeWorkbench.vue": {
     ":deep(.topology-action-btn)": 1,
     ":deep(.topology-action-btn--icon)": 1,
     ":deep(.topology-action-btn:disabled)": 1,
@@ -88,16 +88,16 @@
     ":deep(textarea::placeholder)": 1,
     ":deep(textarea:focus)": 1
   },
-  "src/features/challenge-topology-studio/ui/TopologyTemplateHeroSection.vue": {
+  "src/features/platform/challenge-topology-studio/ui/TopologyTemplateHeroSection.vue": {
     ":deep(.topology-hero-aside--library > section h2)": 1,
     ":deep(.topology-hero-aside--library > section p)": 1,
     ":deep(.topology-hero-aside--library > section)": 1
   },
-  "src/features/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue": {
+  "src/features/platform/challenge-topology-studio/ui/TopologyTemplateLibraryHeader.vue": {
     ":deep(.page-header)": 2,
     ":deep(.page-header__eyebrow)": 1
   },
-  "src/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue": {
+  "src/features/platform/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue": {
     ":deep(.template-canvas-mode-banner)": 1,
     ":deep(.template-quick-editor)": 1,
     ":deep(.topology-action-btn)": 2,
@@ -115,7 +115,7 @@
   "src/features/challenge-writeup-editor/ui/challengeWriteupManagePanel.css": {
     ":deep(.app-empty__actions .ui-btn)": 1
   },
-  "src/features/contest-awd-config/ui/ContestAwdCheckerConfigSection.vue": {
+  "src/features/platform/contest-awd-config/ui/ContestAwdCheckerConfigSection.vue": {
     ":deep(.awd-config-control--mono)": 1,
     ":deep(.awd-config-small-field)": 1,
     ":deep(.checker-action-extra-grid--http)": 3,
@@ -153,17 +153,17 @@
     ":deep(.ui-field__label)": 1,
     ":deep(textarea.ui-control)": 1
   },
-  "src/features/contest-awd-config/ui/ContestAwdDebugStation.vue": {
+  "src/features/platform/contest-awd-config/ui/ContestAwdDebugStation.vue": {
     ":deep(.ui-control)": 1,
     ":deep(.ui-field)": 1,
     ":deep(.ui-field__label)": 1
   },
-  "src/features/contest-awd-config/ui/ContestAwdScoreWeights.vue": {
+  "src/features/platform/contest-awd-config/ui/ContestAwdScoreWeights.vue": {
     ":deep(.ui-control)": 1,
     ":deep(.ui-field)": 1,
     ":deep(.ui-field__label)": 1
   },
-  "src/features/contest-projector/ui/ContestProjectorFocusOverlay.vue": {
+  "src/features/platform/contest-projector/ui/ContestProjectorFocusOverlay.vue": {
     ":deep(.attack-feed-panel)": 1,
     ":deep(.attack-map-panel--board-only)": 1,
     ":deep(.attack-panel)": 1,
@@ -176,7 +176,7 @@
     ":deep(.workspace-data-table)": 1,
     ":deep(.workspace-data-table__head-cell)": 1
   },
-  "src/features/image-management/ui/ImageDirectoryPanel.vue": {
+  "src/features/platform/image-management/ui/ImageDirectoryPanel.vue": {
     ":deep(.workspace-data-table__body tr:last-child)": 1,
     ":deep(.workspace-data-table__body-cell)": 1,
     ":deep(.workspace-data-table__head-cell)": 1,

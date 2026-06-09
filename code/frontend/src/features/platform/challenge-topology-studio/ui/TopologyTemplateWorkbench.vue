@@ -328,7 +328,7 @@ import type {
   TopologyNetworkDraft,
   TopologyNodeDraft,
   TopologyPolicyDraft,
-} from '@/features/challenge-topology-studio/model'
+} from '@/features/platform/challenge-topology-studio/model'
 import TopologyCanvasWorkspaceSection from './TopologyCanvasWorkspaceSection.vue'
 import TopologyConnectivitySections from './TopologyConnectivitySections.vue'
 import TopologyEntryNodeSection from './TopologyEntryNodeSection.vue'

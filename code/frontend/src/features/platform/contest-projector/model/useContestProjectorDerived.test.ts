@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ref } from 'vue'
 
 import type { AWDAttackLogData, AWDTrafficSummaryData, AWDTeamServiceData, ScoreboardRow } from '@/api/contracts'
-import { useContestProjectorDerived } from '@/features/contest-projector'
+import { useContestProjectorDerived } from '@/features/platform/contest-projector'
 
 function buildAttack(overrides: Partial<AWDAttackLogData> = {}): AWDAttackLogData {
   return {

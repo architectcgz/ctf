@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import ContestProjectorServiceMatrix from '@/features/contest-projector/ui/ContestProjectorServiceMatrix.vue'
+import ContestProjectorServiceMatrix from '@/features/platform/contest-projector/ui/ContestProjectorServiceMatrix.vue'
 import type { AWDTeamServiceData } from '@/api/contracts'
 
 function buildService(overrides: Partial<AWDTeamServiceData> = {}): AWDTeamServiceData {

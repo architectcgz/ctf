@@ -112,7 +112,7 @@ import {
   ImageDirectoryPanel,
   ImageManageHeroPanel,
   useImageManagePage,
-} from '@/features/image-management'
+} from '@/features/platform/image-management'
 
 const {
   activeImage,

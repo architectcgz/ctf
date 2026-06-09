@@ -3,10 +3,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import AuditLog from '@/pages/platform/AuditLogRoutePage.vue'
 import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
-import auditActorDetailModalSource from '@/features/audit-log/ui/AuditActorDetailModal.vue?raw'
-import auditLogHeroPanelSource from '@/features/audit-log/ui/AuditLogHeroPanel.vue?raw'
-import auditLogDirectoryPanelSource from '@/features/audit-log/ui/AuditLogDirectoryPanel.vue?raw'
-import auditLogPageSource from '@/features/audit-log/model/useAuditLogPage.ts?raw'
+import auditActorDetailModalSource from '@/features/platform/audit-log/ui/AuditActorDetailModal.vue?raw'
+import auditLogHeroPanelSource from '@/features/platform/audit-log/ui/AuditLogHeroPanel.vue?raw'
+import auditLogDirectoryPanelSource from '@/features/platform/audit-log/ui/AuditLogDirectoryPanel.vue?raw'
+import auditLogPageSource from '@/features/platform/audit-log/model/useAuditLogPage.ts?raw'
 import routeQueryTransportSource from '@/shared/model/navigation/useRouteQueryTransport.ts?raw'
 
 const replaceMock = vi.fn()
@@ -148,7 +148,7 @@ describe('AuditLog', () => {
   })
 
   it('路由页应继续作为薄入口，详情抽屉由独立 surface modal owner 承接', () => {
-    expect(auditLogSource).toContain("from '@/features/audit-log'")
+    expect(auditLogSource).toContain("from '@/features/platform/audit-log'")
     expect(auditLogSource).toContain('AuditLogHeroPanel')
     expect(auditLogSource).toContain('AuditLogDirectoryPanel')
     expect(auditLogSource).toContain('AuditActorDetailModal')
@@ -160,7 +160,7 @@ describe('AuditLog', () => {
   })
 
   it('审计摘要应继续由 hero panel 单独承接，而不是回退到页面内联壳层', () => {
-    expect(auditLogSource).toContain("from '@/features/audit-log'")
+    expect(auditLogSource).toContain("from '@/features/platform/audit-log'")
     expect(auditLogSource).toContain('AuditLogHeroPanel')
     expect(auditLogSource).toContain('<AuditLogHeroPanel')
     expect(auditLogSource).not.toContain('mt-10 space-y-10')

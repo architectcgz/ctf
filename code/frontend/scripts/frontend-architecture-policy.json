@@ -78,10 +78,10 @@
     "src/features/notifications/model/useNotificationDrawerPublicApiBoundary.test.ts",
     "src/entities/notification/model/notificationTypeMetaOwnershipBoundary.test.ts",
     "src/entities/instance/model/presentationBoundary.test.ts",
-    "src/features/challenge-topology-studio/model/topologyStudioBoundary.test.ts",
+    "src/features/platform/challenge-topology-studio/model/topologyStudioBoundary.test.ts",
     "src/features/awd-inspector/model/awdInspectorBoundary.test.ts",
-    "src/features/contest-projector/model/contestProjectorBoundary.test.ts",
-    "src/features/contest-awd-config/model/contestAwdConfigBoundary.test.ts",
+    "src/features/platform/contest-projector/model/contestProjectorBoundary.test.ts",
+    "src/features/platform/contest-awd-config/model/contestAwdConfigBoundary.test.ts",
     "src/features/contest-workbench/model/contestWorkbenchBoundary.test.ts"
   ]
 }

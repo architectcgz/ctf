@@ -4,17 +4,17 @@ import { join } from 'node:path'
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import ContestProjectorAttackMap from '@/features/contest-projector/ui/ContestProjectorAttackMap.vue'
+import ContestProjectorAttackMap from '@/features/platform/contest-projector/ui/ContestProjectorAttackMap.vue'
 import type { AWDAttackLogData, AWDTeamServiceData, ScoreboardRow } from '@/api/contracts'
 import type {
   ContestProjectorAttackEdge,
   ContestProjectorServiceMatrixRow,
-} from '@/features/contest-projector/model/projectorTypes'
+} from '@/features/platform/contest-projector/model/projectorTypes'
 
 const attackDetailOverlayCss = readFileSync(
   join(
     process.cwd(),
-    'src/features/contest-projector/ui/ContestProjectorAttackDetailOverlay.css'
+    'src/features/platform/contest-projector/ui/ContestProjectorAttackDetailOverlay.css'
   ),
   'utf-8'
 )

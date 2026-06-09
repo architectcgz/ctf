@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import auditLogSource from '@/pages/platform/AuditLogRoutePage.vue?raw'
-import auditLogDirectoryPanelSource from '@/features/audit-log/ui/AuditLogDirectoryPanel.vue?raw'
+import auditLogDirectoryPanelSource from '@/features/platform/audit-log/ui/AuditLogDirectoryPanel.vue?raw'
 import awdReviewDirectoryPanelSource from '@/widgets/awd-review-workspace/AwdReviewDirectoryPanel.vue?raw'
 import challengeManageDirectoryPanelSource from '@/features/platform/challenges/ui/ChallengeManageDirectoryPanel.vue?raw'
 import challengeManageHeroPanelSource from '@/features/platform/challenges/ui/ChallengeManageHeroPanel.vue?raw'

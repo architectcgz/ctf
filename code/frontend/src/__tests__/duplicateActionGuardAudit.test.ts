@@ -15,8 +15,8 @@ import awdServiceCheckResultSectionSource from '@/features/contest-awd-admin/ui/
 import awdServiceCheckTargetSectionSource from '@/features/contest-awd-admin/ui/AWDServiceCheckTargetSection.vue?raw'
 import contestChallengeEditorDialogSource from '@/features/contest-workbench/ui/ContestChallengeEditorDialog.vue?raw'
 import platformUserFormDialogSource from '@/features/platform/user-management/ui/PlatformUserFormDialog.vue?raw'
-import awdCheckerSaveFlowSource from '@/features/contest-awd-config/model/useAwdCheckerSaveFlow.ts?raw'
-import imageManageMutationsSource from '@/features/image-management/model/useImageManageMutations.ts?raw'
+import awdCheckerSaveFlowSource from '@/features/platform/contest-awd-config/model/useAwdCheckerSaveFlow.ts?raw'
+import imageManageMutationsSource from '@/features/platform/image-management/model/useImageManageMutations.ts?raw'
 
 const awdAttackLogDialogSource = [
   awdAttackLogDialogSourceBase,

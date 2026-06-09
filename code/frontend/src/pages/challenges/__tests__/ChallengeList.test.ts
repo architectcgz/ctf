@@ -3,10 +3,11 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ChallengeList from '@/pages/challenges/ChallengeListRoutePage.vue'
-import challengeListSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
+import challengeListRouteSource from '@/pages/challenges/ChallengeListRoutePage.vue?raw'
+import challengeListPageSource from '@/features/challenge-list/ui/ChallengeListPage.vue?raw'
 import challengeDirectoryPanelSource from '@/features/challenge-list/ui/ChallengeDirectoryPanel.vue?raw'
 import challengeDirectoryRowSource from '@/entities/challenge/ui/ChallengeDirectoryRow.vue?raw'
-import challengeListPageSource from '@/features/challenge-list/model/useChallengeListPage.ts?raw'
+import challengeListPageModelSource from '@/features/challenge-list/model/useChallengeListPage.ts?raw'
 import routeQueryTransportSource from '@/shared/model/navigation/useRouteQueryTransport.ts?raw'
 import { getChallenges } from '@/api/challenge'
 
@@ -98,14 +99,15 @@ describe('ChallengeList', () => {
   })
 
   it('页面应通过 feature model 获取列表状态，不再直接耦合 challenge api 与分页流程', () => {
-    expect(challengeListSource).toContain("useChallengeListPage } from '@/features/challenge-list'")
-    expect(challengeListSource).not.toContain("from '@/api/challenge'")
-    expect(challengeListSource).not.toContain("from '@/composables/usePagination'")
-    expect(challengeListSource).not.toContain('const summaryStats = computed(() => [')
-    expect(challengeListSource).not.toContain('async function syncFilterQuery()')
-    expect(challengeListSource).not.toContain('watch(')
-    expect(challengeListPageSource).not.toContain("from 'vue-router'")
-    expect(challengeListPageSource).toContain(
+    expect(challengeListRouteSource).toContain("ChallengeListPage } from '@/features/challenge-list'")
+    expect(challengeListRouteSource).not.toContain("from '@/api/challenge'")
+    expect(challengeListRouteSource).not.toContain("from '@/composables/usePagination'")
+    expect(challengeListRouteSource).not.toContain('const summaryStats = computed(() => [')
+    expect(challengeListRouteSource).not.toContain('async function syncFilterQuery()')
+    expect(challengeListRouteSource).not.toContain('watch(')
+    expect(challengeListPageSource).toContain("useChallengeListPage } from '../model'")
+    expect(challengeListPageModelSource).not.toContain("from 'vue-router'")
+    expect(challengeListPageModelSource).toContain(
       "from '@/shared/model/navigation/useRouteQueryTransport'"
     )
     expect(routeQueryTransportSource).toContain('const route = useRoute()')
@@ -419,12 +421,12 @@ describe('ChallengeList', () => {
 
     const { wrapper, router } = await mountPageWithRouter()
 
-    expect(challengeListSource).toContain("import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'")
+    expect(challengeListPageSource).toContain("import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'")
     expect(challengeDirectoryRowSource).toContain(
       "import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'"
     )
-    expect(challengeListSource).not.toContain('@click="goToDashboard"')
-    expect(challengeListSource).not.toContain('@click="openSkillProfile"')
+    expect(challengeListPageSource).not.toContain('@click="goToDashboard"')
+    expect(challengeListPageSource).not.toContain('@click="openSkillProfile"')
     expect(challengeDirectoryPanelSource).not.toContain("@open-detail")
 
     const dashboardLink = wrapper.get('a[href="/student/dashboard"]')

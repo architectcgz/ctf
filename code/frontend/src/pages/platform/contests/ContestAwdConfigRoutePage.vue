@@ -48,7 +48,7 @@
 import {
   ContestAwdConfigWorkspaceShell,
   useContestAwdConfigPage,
-} from '@/features/contest-awd-config'
+} from '@/features/platform/contest-awd-config'
 
 const {
   AWD_HTTP_METHOD_OPTIONS,

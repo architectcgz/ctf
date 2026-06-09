@@ -122,7 +122,7 @@ import {
   ContestProjectorHero,
   ContestProjectorToolbar,
   useContestProjectorPage,
-} from '@/features/contest-projector'
+} from '@/features/platform/contest-projector'
 
 const {
   projectorStageRef,

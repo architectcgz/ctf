@@ -2,7 +2,7 @@
 import { Plus, Trash2 } from 'lucide-vue-next'
 
 import SectionCard from '@/shared/ui/common/SectionCard.vue'
-import type { TopologyNetworkDraft } from '@/features/challenge-topology-studio/model'
+import type { TopologyNetworkDraft } from '@/features/platform/challenge-topology-studio/model'
 
 type NetworkPatch = Partial<Pick<TopologyNetworkDraft, 'key' | 'name' | 'cidr' | 'internal'>>
 

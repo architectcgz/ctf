@@ -49,7 +49,7 @@
     "max_growth": 20,
     "max_lines": 175
   },
-  "src/features/contest-projector/model/useContestProjectorData.ts": {
+  "src/features/platform/contest-projector/model/useContestProjectorData.ts": {
     "baseline_lines": 256,
     "max_growth": 34,
     "max_lines": 300

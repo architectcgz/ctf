@@ -7,7 +7,7 @@ import {
   createEmptyEnvEntryDraft,
   type TopologyNetworkDraft,
   type TopologyNodeDraft,
-} from '@/features/challenge-topology-studio/model'
+} from '@/features/platform/challenge-topology-studio/model'
 
 const node = defineModel<TopologyNodeDraft>({ required: true })
 

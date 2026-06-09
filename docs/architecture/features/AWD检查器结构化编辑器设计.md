@@ -7,11 +7,11 @@
 - 适用范围：`frontend`、`backend`、`contracts`
 - 关联模块：
   - `code/frontend/src/pages/platform/contests/ContestAwdConfigRoutePage.vue`
-  - `code/frontend/src/features/contest-awd-config/model/useContestAwdConfigPage.ts`
-  - `code/frontend/src/features/contest-awd-config/model/useAwdCheckerConfigDraft.ts`
-  - `code/frontend/src/features/contest-awd-config/model/useAwdCheckerDraftHydration.ts`
-  - `code/frontend/src/features/contest-awd-config/model/awdCheckerConfigSupport.ts`
-  - `code/frontend/src/features/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue`
+  - `code/frontend/src/features/platform/contest-awd-config/model/useContestAwdConfigPage.ts`
+  - `code/frontend/src/features/platform/contest-awd-config/model/useAwdCheckerConfigDraft.ts`
+  - `code/frontend/src/features/platform/contest-awd-config/model/useAwdCheckerDraftHydration.ts`
+  - `code/frontend/src/features/platform/contest-awd-config/model/awdCheckerConfigSupport.ts`
+  - `code/frontend/src/features/platform/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue`
   - `code/frontend/src/features/contest-awd-admin`
   - `code/backend/internal/module/contest/application/commands`
 - 过程追溯：`practice/superpowers-plan-index.md` 中的 `2026-04-11-awd-engine-phase5-structured-config-editor`
@@ -184,15 +184,15 @@
 ## 8. 代码落点
 
 - `code/frontend/src/pages/platform/contests/ContestAwdConfigRoutePage.vue`
-- `code/frontend/src/features/contest-awd-config/model/useContestAwdConfigPage.ts`
-- `code/frontend/src/features/contest-awd-config/model/useAwdCheckerConfigDraft.ts`
-- `code/frontend/src/features/contest-awd-config/model/useAwdCheckerDraftHydration.ts`
-- `code/frontend/src/features/contest-awd-config/model/useAwdCheckerSaveFlow.ts`
-- `code/frontend/src/features/contest-awd-config/model/useAwdCheckerPreview.ts`
-- `code/frontend/src/features/contest-awd-config/model/useContestAwdConfigDataLoader.ts`
-- `code/frontend/src/features/contest-awd-config/model/awdCheckerConfigSupport.ts`
-- `code/frontend/src/features/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue`
-- `code/frontend/src/features/contest-awd-config/ui/ContestAwdDebugStation.vue`
+- `code/frontend/src/features/platform/contest-awd-config/model/useContestAwdConfigPage.ts`
+- `code/frontend/src/features/platform/contest-awd-config/model/useAwdCheckerConfigDraft.ts`
+- `code/frontend/src/features/platform/contest-awd-config/model/useAwdCheckerDraftHydration.ts`
+- `code/frontend/src/features/platform/contest-awd-config/model/useAwdCheckerSaveFlow.ts`
+- `code/frontend/src/features/platform/contest-awd-config/model/useAwdCheckerPreview.ts`
+- `code/frontend/src/features/platform/contest-awd-config/model/useContestAwdConfigDataLoader.ts`
+- `code/frontend/src/features/platform/contest-awd-config/model/awdCheckerConfigSupport.ts`
+- `code/frontend/src/features/platform/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue`
+- `code/frontend/src/features/platform/contest-awd-config/ui/ContestAwdDebugStation.vue`
 - `code/frontend/src/features/contest-awd-admin/model/useAwdChallengeLinkOperations.ts`
 - `code/backend/internal/module/contest/application/commands/challenge_awd_support.go`
 - `code/backend/internal/module/contest/application/commands/contest_awd_service_support.go`

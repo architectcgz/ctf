@@ -4,7 +4,7 @@ import contestProjectorSource from '@/pages/platform/contests/ContestProjectorRo
 
 describe('ContestProjector', () => {
   it('路由页应通过 feature page model 组合大屏工作区，而不是继续内联生命周期和派生逻辑', () => {
-    expect(contestProjectorSource).toContain("from '@/features/contest-projector'")
+    expect(contestProjectorSource).toContain("from '@/features/platform/contest-projector'")
     expect(contestProjectorSource).toContain('useContestProjectorPage')
     expect(contestProjectorSource).toContain('ContestProjectorAttackMap')
     expect(contestProjectorSource).toContain('ContestProjectorFocusOverlay')

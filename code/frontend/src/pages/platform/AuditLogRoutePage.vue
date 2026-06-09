@@ -67,7 +67,7 @@ import {
   AuditLogDirectoryPanel,
   AuditLogHeroPanel,
   useAuditLogPage,
-} from '@/features/audit-log'
+} from '@/features/platform/audit-log'
 
 const {
   activeActorLog,

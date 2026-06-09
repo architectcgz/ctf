@@ -3,11 +3,11 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestAwdConfig from '@/pages/platform/contests/ContestAwdConfigRoutePage.vue'
 import contestAwdConfigSource from '@/pages/platform/contests/ContestAwdConfigRoutePage.vue?raw'
-import contestAwdCheckerConfigSectionSource from '@/features/contest-awd-config/ui/ContestAwdCheckerConfigSection.vue?raw'
-import contestAwdConfigWorkspaceShellSource from '@/features/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue?raw'
-import awdChallengeSelectionSource from '@/features/contest-awd-config/model/useAwdChallengeSelection.ts?raw'
-import contestAwdConfigRoutesSource from '@/features/contest-awd-config/model/contestAwdConfigRoutes.ts?raw'
-import contestAwdConfigPageSource from '@/features/contest-awd-config/model/useContestAwdConfigPage.ts?raw'
+import contestAwdCheckerConfigSectionSource from '@/features/platform/contest-awd-config/ui/ContestAwdCheckerConfigSection.vue?raw'
+import contestAwdConfigWorkspaceShellSource from '@/features/platform/contest-awd-config/ui/ContestAwdConfigWorkspaceShell.vue?raw'
+import awdChallengeSelectionSource from '@/features/platform/contest-awd-config/model/useAwdChallengeSelection.ts?raw'
+import contestAwdConfigRoutesSource from '@/features/platform/contest-awd-config/model/contestAwdConfigRoutes.ts?raw'
+import contestAwdConfigPageSource from '@/features/platform/contest-awd-config/model/useContestAwdConfigPage.ts?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -148,7 +148,7 @@ describe('ContestAwdConfig', () => {
   })
 
   it('路由页拆分为稳定的 AWD 配置子组件', () => {
-    expect(contestAwdConfigSource).toContain("from '@/features/contest-awd-config'")
+    expect(contestAwdConfigSource).toContain("from '@/features/platform/contest-awd-config'")
     expect(contestAwdConfigSource).toContain('ContestAwdConfigWorkspaceShell')
     expect(contestAwdConfigSource).toContain('useContestAwdConfigPage')
     expect(contestAwdConfigSource).not.toContain("from '@/api/admin/contests'")
@@ -177,7 +177,7 @@ describe('ContestAwdConfig', () => {
     expect(contestAwdConfigWorkspaceSource).toContain('<ContestAwdCheckerConfigSection')
     expect(contestAwdConfigWorkspaceSource).toContain('<ContestAwdDebugStation')
     expect(contestAwdConfigPageSource).not.toContain(
-      "from '@/features/contest-awd-config/model/awdCheckerConfigSupport'"
+      "from '@/features/platform/contest-awd-config/model/awdCheckerConfigSupport'"
     )
     expect(contestAwdConfigPageSource).toContain(
       "import { useAwdCheckerPreviewFlow } from './useAwdCheckerPreview'"
