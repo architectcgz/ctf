@@ -385,6 +385,18 @@ type RegistryVerifier interface {
 	CheckManifest(ctx context.Context, imageRef string) (string, error)
 }
 
+type ArtifactReferences struct {
+	AttachmentURLs       []string
+	AttachmentPaths      []string
+	ImageBuildSourceDirs []string
+	AWDCheckerConfigs    []string
+	AWDCheckerDirs       []string
+}
+
+type ArtifactReferenceRepository interface {
+	ListArtifactReferences(ctx context.Context) (ArtifactReferences, error)
+}
+
 type EnvironmentTemplateCommandRepository interface {
 	Create(ctx context.Context, template *challengeentity.EnvironmentTemplate) error
 	Update(ctx context.Context, template *challengeentity.EnvironmentTemplate) error

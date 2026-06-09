@@ -17,8 +17,9 @@ import (
 )
 
 type AWDChallengeHandler struct {
-	commands awdChallengeCommandService
-	queries  awdChallengeQueryService
+	commands        awdChallengeCommandService
+	queries         awdChallengeQueryService
+	packageDelivery packageDeliveryService
 }
 
 type awdChallengeCommandService interface {
@@ -37,7 +38,11 @@ type awdChallengeQueryService interface {
 }
 
 func NewAWDChallengeHandler(commands awdChallengeCommandService, queries awdChallengeQueryService) *AWDChallengeHandler {
-	return &AWDChallengeHandler{commands: commands, queries: queries}
+	return &AWDChallengeHandler{
+		commands:        commands,
+		queries:         queries,
+		packageDelivery: challengecmd.NewPackageDeliveryService(nil, commands),
+	}
 }
 
 func (h *AWDChallengeHandler) CreateChallenge(c *gin.Context) {
@@ -128,17 +133,17 @@ func (h *AWDChallengeHandler) PreviewImport(c *gin.Context) {
 	}
 	defer file.Close()
 
-	resp, err := h.commands.PreviewImport(
-		c.Request.Context(),
-		authctx.MustCurrentUser(c).UserID,
-		fileHeader.Filename,
-		file,
-	)
+	result, err := h.packageDelivery.Preview(c.Request.Context(), challengecmd.PackageDeliveryPreviewRequest{
+		Mode:        challengecmd.PackageDeliveryModeAWD,
+		ActorUserID: authctx.MustCurrentUser(c).UserID,
+		FileName:    fileHeader.Filename,
+		Reader:      file,
+	})
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
-	response.SuccessWithStatus(c, nethttp.StatusCreated, toAWDChallengeImportPreviewResp(resp))
+	response.SuccessWithStatus(c, nethttp.StatusCreated, toAWDChallengeImportPreviewResp(result.AWD))
 }
 
 func (h *AWDChallengeHandler) ListImports(c *gin.Context) {
@@ -166,10 +171,14 @@ func (h *AWDChallengeHandler) CommitImport(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CommitImport(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	result, err := h.packageDelivery.Commit(c.Request.Context(), challengecmd.PackageDeliveryCommitRequest{
+		Mode:        challengecmd.PackageDeliveryModeAWD,
+		ActorUserID: authctx.MustCurrentUser(c).UserID,
+		PreviewID:   id,
+	})
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, toAWDChallengeImportCommitResp(resp))
+	response.Success(c, toAWDChallengeImportCommitResp(result.AWD))
 }

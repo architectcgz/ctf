@@ -22,6 +22,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -trimpath -ldflags="-s -w" -o /out/ctf-awd-defense-ssh-gateway ./cmd/awd-defense-ssh-gateway
 
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -trimpath -ldflags="-s -w" -o /out/ctf-storage-gc ./cmd/storage-gc
+
 FROM alpine:3.22
 
 WORKDIR /app
@@ -30,6 +33,7 @@ RUN apk add --no-cache ca-certificates tzdata docker-cli
 
 COPY --from=builder /out/ctf-api /app/ctf-api
 COPY --from=builder /out/ctf-awd-defense-ssh-gateway /app/ctf-awd-defense-ssh-gateway
+COPY --from=builder /out/ctf-storage-gc /app/ctf-storage-gc
 COPY --from=builder /out/migrate /app/migrate
 COPY configs /app/configs
 COPY migrations /app/migrations

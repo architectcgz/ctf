@@ -162,11 +162,10 @@ func TestContractsDoNotReExportSharedTaxonomy(t *testing.T) {
 func TestRuntimeOwnsChallengeWiring(t *testing.T) {
 	t.Parallel()
 
-	runtimeFile := filepath.Join("runtime", "module.go")
-	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/challenge/infrastructure")
-	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/challenge/application/commands")
-	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/challenge/application/queries")
-	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/challenge/api/http")
+	assertFileImports(t, filepath.Join("runtime", "module.go"), "ctf-platform/internal/module/challenge/infrastructure")
+	assertFileImports(t, filepath.Join("runtime", "module.go"), "ctf-platform/internal/module/challenge/api/http")
+	assertFileImports(t, filepath.Join("runtime", "wiring.go"), "ctf-platform/internal/module/challenge/application/commands")
+	assertFileImports(t, filepath.Join("runtime", "wiring.go"), "ctf-platform/internal/module/challenge/application/queries")
 }
 
 func TestRuntimeUsesTypedPortsDeps(t *testing.T) {

@@ -108,3 +108,38 @@ func TestRegistryClientCheckManifestRejectsMismatchedRegistry(t *testing.T) {
 		t.Fatal("expected mismatched registry error")
 	}
 }
+
+func TestRegistryClientDeleteManifestUsesDigestAndAccessServer(t *testing.T) {
+	var sawAuth bool
+	var sawPath string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			t.Fatalf("method = %s, want DELETE", r.Method)
+		}
+		sawPath = r.URL.Path
+		username, password, ok := r.BasicAuth()
+		if ok && username == "ctf" && password == "secret" {
+			sawAuth = true
+		}
+		w.WriteHeader(http.StatusAccepted)
+	}))
+	defer server.Close()
+
+	client := NewRegistryClient(RegistryClientConfig{
+		Scheme:       "http",
+		Server:       "127.0.0.1:5000",
+		AccessServer: strings.TrimPrefix(server.URL, "http://"),
+		Username:     "ctf",
+		Password:     "secret",
+	}, server.Client())
+
+	if err := client.DeleteManifest(context.Background(), "127.0.0.1:5000/jeopardy/web-demo:v1", "sha256:demo"); err != nil {
+		t.Fatalf("DeleteManifest() error = %v", err)
+	}
+	if sawPath != "/v2/jeopardy/web-demo/manifests/sha256:demo" {
+		t.Fatalf("path = %s", sawPath)
+	}
+	if !sawAuth {
+		t.Fatal("expected basic auth")
+	}
+}

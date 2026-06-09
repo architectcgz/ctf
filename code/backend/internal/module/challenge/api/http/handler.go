@@ -19,8 +19,9 @@ import (
 )
 
 type Handler struct {
-	commands challengeCommandService
-	queries  challengeQueryService
+	commands        challengeCommandService
+	queries         challengeQueryService
+	packageDelivery packageDeliveryService
 }
 
 type challengeCommandService interface {
@@ -45,8 +46,17 @@ type challengeQueryService interface {
 	GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*challengecontracts.ChallengeDetailResp, error)
 }
 
+type packageDeliveryService interface {
+	Preview(ctx context.Context, req challengecmd.PackageDeliveryPreviewRequest) (*challengecmd.PackageDeliveryPreviewResult, error)
+	Commit(ctx context.Context, req challengecmd.PackageDeliveryCommitRequest) (*challengecmd.PackageDeliveryCommitResult, error)
+}
+
 func NewHandler(commands challengeCommandService, queries challengeQueryService) *Handler {
-	return &Handler{commands: commands, queries: queries}
+	return &Handler{
+		commands:        commands,
+		queries:         queries,
+		packageDelivery: challengecmd.NewPackageDeliveryService(commands, nil),
+	}
 }
 
 func (h *Handler) CreateChallenge(c *gin.Context) {
@@ -148,18 +158,18 @@ func (h *Handler) PreviewChallengeImport(c *gin.Context) {
 	}
 	defer file.Close()
 
-	resp, err := h.commands.PreviewChallengeImport(
-		c.Request.Context(),
-		authctx.MustCurrentUser(c).UserID,
-		fileHeader.Filename,
-		file,
-	)
+	result, err := h.packageDelivery.Preview(c.Request.Context(), challengecmd.PackageDeliveryPreviewRequest{
+		Mode:        challengecmd.PackageDeliveryModeJeopardy,
+		ActorUserID: authctx.MustCurrentUser(c).UserID,
+		FileName:    fileHeader.Filename,
+		Reader:      file,
+	})
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 
-	response.SuccessWithStatus(c, nethttp.StatusCreated, toChallengeImportPreviewResp(resp))
+	response.SuccessWithStatus(c, nethttp.StatusCreated, toChallengeImportPreviewResp(result.Jeopardy))
 }
 
 func (h *Handler) ListChallengeImports(c *gin.Context) {
@@ -187,12 +197,16 @@ func (h *Handler) CommitChallengeImport(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CommitChallengeImport(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	result, err := h.packageDelivery.Commit(c.Request.Context(), challengecmd.PackageDeliveryCommitRequest{
+		Mode:        challengecmd.PackageDeliveryModeJeopardy,
+		ActorUserID: authctx.MustCurrentUser(c).UserID,
+		PreviewID:   id,
+	})
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
-	response.Success(c, toChallengeImportCommitResp(resp))
+	response.Success(c, toChallengeImportCommitResp(result.Jeopardy))
 }
 
 func (h *Handler) ExportChallengePackage(c *gin.Context) {

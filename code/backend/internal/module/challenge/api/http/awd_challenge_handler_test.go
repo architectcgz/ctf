@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -53,8 +54,10 @@ func newJSONTestContext(t *testing.T, method, target, body string) (*gin.Context
 }
 
 type stubAWDChallengeCommandService struct {
-	listImportsFunc func(ctx context.Context, actorUserID int64) ([]challengecontracts.AWDChallengeImportPreviewResp, error)
-	getImportFunc   func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeImportPreviewResp, error)
+	previewImportFunc func(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.AWDChallengeImportPreviewResp, error)
+	listImportsFunc   func(ctx context.Context, actorUserID int64) ([]challengecontracts.AWDChallengeImportPreviewResp, error)
+	getImportFunc     func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeImportPreviewResp, error)
+	commitImportFunc  func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeResp, error)
 }
 
 func (stubAWDChallengeCommandService) CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateAWDChallengeInput) (*challengecontracts.AWDChallengeResp, error) {
@@ -69,7 +72,10 @@ func (stubAWDChallengeCommandService) DeleteChallenge(ctx context.Context, id in
 	return nil
 }
 
-func (stubAWDChallengeCommandService) PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
+func (s stubAWDChallengeCommandService) PreviewImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
+	if s.previewImportFunc != nil {
+		return s.previewImportFunc(ctx, actorUserID, fileName, reader)
+	}
 	return nil, nil
 }
 
@@ -87,7 +93,10 @@ func (s stubAWDChallengeCommandService) GetImport(ctx context.Context, actorUser
 	return nil, nil
 }
 
-func (stubAWDChallengeCommandService) CommitImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeResp, error) {
+func (s stubAWDChallengeCommandService) CommitImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeResp, error) {
+	if s.commitImportFunc != nil {
+		return s.commitImportFunc(ctx, actorUserID, id)
+	}
 	return nil, nil
 }
 
@@ -107,6 +116,86 @@ func (s stubAWDChallengeQueryService) ListChallenges(ctx context.Context, req ch
 }
 
 type awdChallengeHandlerContextKey string
+
+func TestAWDChallengeHandlerPreviewImportUsesPackageDeliveryFacade(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	called := false
+	handler := NewAWDChallengeHandler(
+		stubAWDChallengeCommandService{
+			previewImportFunc: func(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
+				called = true
+				if actorUserID != 2001 {
+					t.Fatalf("unexpected actor user id: %d", actorUserID)
+				}
+				if fileName != "awd.zip" {
+					t.Fatalf("unexpected file name: %s", fileName)
+				}
+				content, err := io.ReadAll(reader)
+				if err != nil {
+					t.Fatalf("read upload: %v", err)
+				}
+				if string(content) != "zip" {
+					t.Fatalf("unexpected upload content: %q", string(content))
+				}
+				return &challengecontracts.AWDChallengeImportPreviewResp{
+					ID:        "preview-1",
+					FileName:  fileName,
+					Slug:      "awd-bank-portal",
+					Title:     "AWD Bank Portal",
+					CreatedAt: time.Date(2026, 6, 9, 0, 0, 0, 0, time.UTC),
+				}, nil
+			},
+		},
+		stubAWDChallengeQueryService{},
+	)
+
+	ctx, recorder := newMultipartFileTestContext(t, http.MethodPost, "/admin/awd-challenge-imports", "file", "awd.zip", "zip")
+	authctx.SetCurrentUser(ctx, authctx.CurrentUser{UserID: 2001})
+
+	handler.PreviewImport(ctx)
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d", recorder.Code)
+	}
+	if !called {
+		t.Fatal("expected package delivery facade to call preview delegate")
+	}
+}
+
+func TestAWDChallengeHandlerCommitImportUsesPackageDeliveryFacade(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	called := false
+	handler := NewAWDChallengeHandler(
+		stubAWDChallengeCommandService{
+			commitImportFunc: func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.AWDChallengeResp, error) {
+				called = true
+				if actorUserID != 2001 {
+					t.Fatalf("unexpected actor user id: %d", actorUserID)
+				}
+				if id != "preview-1" {
+					t.Fatalf("unexpected import id: %s", id)
+				}
+				return &challengecontracts.AWDChallengeResp{ID: 77, Name: "Imported AWD"}, nil
+			},
+		},
+		stubAWDChallengeQueryService{},
+	)
+
+	ctx, recorder := newJSONTestContext(t, http.MethodPost, "/admin/awd-challenge-imports/preview-1/commit", "")
+	ctx.Params = gin.Params{{Key: "id", Value: "preview-1"}}
+	authctx.SetCurrentUser(ctx, authctx.CurrentUser{UserID: 2001})
+
+	handler.CommitImport(ctx)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", recorder.Code)
+	}
+	if !called {
+		t.Fatal("expected package delivery facade to call commit delegate")
+	}
+}
 
 func TestAWDChallengeHandlerListImportsPropagatesRequestContextToCommandService(t *testing.T) {
 	gin.SetMode(gin.TestMode)
