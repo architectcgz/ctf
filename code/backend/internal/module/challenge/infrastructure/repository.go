@@ -4,7 +4,6 @@ import (
 	"context"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
-	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"errors"
 	"fmt"
 	"strings"
@@ -206,7 +205,7 @@ func (r *Repository) List(ctx context.Context, query *challengecontracts.Challen
 
 func (r *Repository) HasRunningInstances(ctx context.Context, challengeID int64) (bool, error) {
 	var count int64
-	err := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+	err := r.dbWithContext(ctx).Table("instances").
 		Where("challenge_id = ? AND status IN (?)", challengeID, []string{"creating", "running"}).
 		Count(&count).Error
 	return count > 0, err

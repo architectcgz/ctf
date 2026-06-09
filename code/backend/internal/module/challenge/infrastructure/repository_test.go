@@ -116,19 +116,32 @@ func TestRepositoryListPublishedUsesOnlyJeopardyChallenges(t *testing.T) {
 }
 
 func TestRepositoryHasRunningInstances(t *testing.T) {
-	db := testsupport.SetupTestDB(t)
-	repo := NewRepository(db)
-
-	challenge := &challengeentity.Challenge{Title: "Test"}
-	db.Create(challenge)
-	db.Create(&instancecontracts.Instance{ChallengeID: challenge.ID, Status: "running"})
-
-	has, err := repo.HasRunningInstances(context.Background(), challenge.ID)
-	if err != nil {
-		t.Fatalf("HasRunningInstances() error = %v", err)
+	tests := []struct {
+		name   string
+		status string
+		want   bool
+	}{
+		{name: "creating", status: "creating", want: true},
+		{name: "running", status: "running", want: true},
+		{name: "stopped", status: "stopped", want: false},
 	}
-	if !has {
-		t.Fatal("should have running instances")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db := testsupport.SetupTestDB(t)
+			repo := NewRepository(db)
+
+			challenge := &challengeentity.Challenge{Title: "Test"}
+			db.Create(challenge)
+			db.Create(&instancecontracts.Instance{ChallengeID: challenge.ID, Status: tt.status})
+
+			has, err := repo.HasRunningInstances(context.Background(), challenge.ID)
+			if err != nil {
+				t.Fatalf("HasRunningInstances() error = %v", err)
+			}
+			if has != tt.want {
+				t.Fatalf("HasRunningInstances() = %v, want %v", has, tt.want)
+			}
+		})
 	}
 }
 
