@@ -24,6 +24,7 @@
   - Replace production and test references to instance-owned runtime aliases, such as `runtimeports.ProxyTicketClaims`, `RuntimeCleaner`, `TeacherInstanceFilter`, and `ProxyTicketInstanceReader`, with direct `instanceports` imports.
   - Keep behavior, public HTTP API, proxy ticket JSON, runtime-agent protocol shape, and repository queries unchanged.
   - Move the running instance count query out of runtime ports so instance owns the `instances` table read and ops keeps the dashboard-facing consumer port.
+  - Remove the stale `instance -> runtime` module dependency baseline by moving instance-side access URL parsing, maintenance container views, and AWD operation input shapes to instance-owned contracts / ports.
 - Non-Goals:
   - Do not move the remaining runtime repository methods unrelated to running count or proxy ticket scope out of `runtime/infrastructure` in this slice.
   - Do not delete or rename `runtime/ports/http.go`; file placement cleanup can be a later mechanical slice after aliases are gone.
@@ -44,6 +45,7 @@
   - `code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
   - `code/backend/internal/module/runtime/infrastructure/repository.go`
   - `code/backend/internal/module/instance/infrastructure/{repository.go,awd_target_proxy_repository.go,proxy_ticket_store.go}`
+  - `code/backend/internal/module/architecture_baseline_test.go`
 - Related prior work:
   - `26f118c5b refactor(runtime): 拆分容器运行时端口文件`
   - `892eadeeb test(runtime): 限制宿主执行器宽接口使用面`
@@ -229,3 +231,27 @@ Use `instanceinfra.NewRepository` and `instanceinfra.NewProxyTicketStore` for in
 - [x] **Step 4: Verify**
 
 Run focused instance/runtime/app tests plus workflow checks before commit.
+
+## Task 5: Remove Instance -> Runtime Baseline Entry
+
+**Files:**
+- Modify: `code/backend/internal/module/instance/ports/ports.go`
+- Create: `code/backend/internal/module/instance/contracts/access_url.go`
+- Modify: `code/backend/internal/module/instance/contracts/instance_output.go`
+- Modify: `code/backend/internal/module/instance/application/commands/{instance_service.go,maintenance_service.go}`
+- Modify: `code/backend/internal/module/instance/application/queries/instance_service.go`
+- Modify: `code/backend/internal/module/instance/infrastructure/awd_target_proxy_repository.go`
+- Modify: `code/backend/internal/app/composition/instance_module.go`
+- Modify: `code/backend/internal/module/architecture_baseline_test.go`
+
+- [x] **Step 1: Remove instance-side runtime import sites**
+
+Define instance-owned `ManagedContainer`, `ManagedContainerState`, `AWDDefenseWorkspace`, and `AWDServiceOperation` port shapes. Move instance access URL rewriting / alias resolution to `instance/contracts` and keep runtime details parsing narrow to the instance access use case.
+
+- [x] **Step 2: Adapt runtime implementations at composition edge**
+
+Map runtime container inventory structs to instance maintenance views in `app/composition`, and wrap the existing runtime repository with an instance-maintenance adapter so runtime persistence rows are not exposed through instance application interfaces.
+
+- [x] **Step 3: Remove stale baseline allowlist**
+
+Delete `instance -> runtime` from `moduleDependencyBaseline`; `TestModuleDependencyBaselineIsCurrent` now protects against reintroducing that dependency unless a new architecture review explicitly changes the baseline.

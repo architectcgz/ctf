@@ -16,6 +16,7 @@ import (
 	instanceports "ctf-platform/internal/module/instance/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
+	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -77,14 +78,14 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	practiceRuntimeService := newPracticeRuntimeServiceAdapter(defaultCleanupService, provisioningService, module.ManagedContainerInventory)
 	if runtime.nodeRouter != nil {
 		cleanupService = runtime.nodeRouter
-		maintenanceRuntime = runtime.nodeRouter
+		maintenanceRuntime = newInstanceMaintenanceRuntime(runtime.nodeRouter, runtime.nodeRouter)
 		practiceRuntimeService = newNodeScopedPracticeRuntimeServiceAdapter(runtime.nodeRouter)
 	}
 	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service")).SetEventBus(root.Events)
 	queryService := instanceqry.NewInstanceService(repo, &cfg.Container, cfg.Pagination)
 	proxyTicketService := buildRuntimeProxyTicketService(root, instanceRepo)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
-		repo,
+		newInstanceMaintenanceRepository(repo),
 		maintenanceRuntime,
 		cleanupService,
 		&cfg.Container,
@@ -169,10 +170,14 @@ func (m *InstanceModule) BuildHandler(root *Root, ops *OpsModule) {
 
 type instanceMaintenanceRuntimeAdapter struct {
 	inventory    runtimeports.ManagedContainerInventory
-	provisioning runtimeports.ContainerProvisioningRuntime
+	provisioning runtimeContainerStarter
 }
 
-func newInstanceMaintenanceRuntime(inventory runtimeports.ManagedContainerInventory, provisioning runtimeports.ContainerProvisioningRuntime) *instanceMaintenanceRuntimeAdapter {
+type runtimeContainerStarter interface {
+	StartContainer(ctx context.Context, containerID string) error
+}
+
+func newInstanceMaintenanceRuntime(inventory runtimeports.ManagedContainerInventory, provisioning runtimeContainerStarter) *instanceMaintenanceRuntimeAdapter {
 	if inventory == nil || provisioning == nil {
 		return nil
 	}
@@ -186,14 +191,35 @@ func (a *instanceMaintenanceRuntimeAdapter) ListManagedContainers(ctx context.Co
 	if a == nil || a.inventory == nil {
 		return nil, nil
 	}
-	return a.inventory.ListManagedContainers(ctx)
+	containers, err := a.inventory.ListManagedContainers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]instanceports.ManagedContainer, len(containers))
+	for idx, container := range containers {
+		result[idx] = instanceports.ManagedContainer{
+			ID:        container.ID,
+			Name:      container.Name,
+			CreatedAt: container.CreatedAt,
+		}
+	}
+	return result, nil
 }
 
 func (a *instanceMaintenanceRuntimeAdapter) InspectManagedContainer(ctx context.Context, containerID string) (*instanceports.ManagedContainerState, error) {
 	if a == nil || a.inventory == nil {
 		return nil, nil
 	}
-	return a.inventory.InspectManagedContainer(ctx, containerID)
+	state, err := a.inventory.InspectManagedContainer(ctx, containerID)
+	if err != nil || state == nil {
+		return nil, err
+	}
+	return &instanceports.ManagedContainerState{
+		ID:      state.ID,
+		Exists:  state.Exists,
+		Running: state.Running,
+		Status:  state.Status,
+	}, nil
 }
 
 func (a *instanceMaintenanceRuntimeAdapter) StartContainer(ctx context.Context, containerID string) error {
@@ -201,4 +227,86 @@ func (a *instanceMaintenanceRuntimeAdapter) StartContainer(ctx context.Context, 
 		return nil
 	}
 	return a.provisioning.StartContainer(ctx, containerID)
+}
+
+type instanceMaintenanceRepositoryAdapter struct {
+	repo *runtimeinfra.Repository
+}
+
+func newInstanceMaintenanceRepository(repo *runtimeinfra.Repository) *instanceMaintenanceRepositoryAdapter {
+	if repo == nil {
+		return nil
+	}
+	return &instanceMaintenanceRepositoryAdapter{repo: repo}
+}
+
+func (a *instanceMaintenanceRepositoryAdapter) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
+	return a.repo.UpdateStatusAndReleasePort(ctx, id, status)
+}
+
+func (a *instanceMaintenanceRepositoryAdapter) FindExpired(ctx context.Context) ([]*instancecontracts.Instance, error) {
+	return a.repo.FindExpired(ctx)
+}
+
+func (a *instanceMaintenanceRepositoryAdapter) ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instancecontracts.Instance, error) {
+	return a.repo.ListStoppingInstances(ctx, updatedBefore, limit)
+}
+
+func (a *instanceMaintenanceRepositoryAdapter) ListRecoverableActiveInstances(ctx context.Context) ([]*instancecontracts.Instance, error) {
+	return a.repo.ListRecoverableActiveInstances(ctx)
+}
+
+func (a *instanceMaintenanceRepositoryAdapter) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*instanceports.AWDDefenseWorkspace, error) {
+	workspace, err := a.repo.FindRunningAWDDefenseWorkspaceByInstanceID(ctx, instanceID)
+	if err != nil || workspace == nil {
+		return nil, err
+	}
+	return &instanceports.AWDDefenseWorkspace{
+		ContainerID: workspace.ContainerID,
+	}, nil
+}
+
+func (a *instanceMaintenanceRepositoryAdapter) CreateAWDServiceOperation(ctx context.Context, operation *instanceports.AWDServiceOperation) error {
+	if operation == nil {
+		return nil
+	}
+	row := runtimeentity.AWDServiceOperation{
+		ID:            operation.ID,
+		ContestID:     operation.ContestID,
+		TeamID:        operation.TeamID,
+		ServiceID:     operation.ServiceID,
+		InstanceID:    operation.InstanceID,
+		OperationType: operation.OperationType,
+		RequestedBy:   operation.RequestedBy,
+		RequestedByID: operation.RequestedByID,
+		Reason:        operation.Reason,
+		SLABillable:   operation.SLABillable,
+		Status:        operation.Status,
+		ErrorMessage:  operation.ErrorMessage,
+		StartedAt:     operation.StartedAt,
+		FinishedAt:    operation.FinishedAt,
+		CreatedAt:     operation.CreatedAt,
+		UpdatedAt:     operation.UpdatedAt,
+	}
+	if err := a.repo.CreateAWDServiceOperation(ctx, &row); err != nil {
+		return err
+	}
+	operation.ID = row.ID
+	return nil
+}
+
+func (a *instanceMaintenanceRepositoryAdapter) FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error {
+	return a.repo.FinishAWDServiceOperation(ctx, operationID, status, errorMessage, finishedAt)
+}
+
+func (a *instanceMaintenanceRepositoryAdapter) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
+	return a.repo.FinalizeStoppedRuntime(ctx, id)
+}
+
+func (a *instanceMaintenanceRepositoryAdapter) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
+	return a.repo.RequeueLostRuntime(ctx, id)
+}
+
+func (a *instanceMaintenanceRepositoryAdapter) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
+	return a.repo.ListActiveContainerIDs(ctx)
 }

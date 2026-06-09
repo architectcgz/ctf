@@ -9,7 +9,6 @@ import (
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 const (
@@ -94,7 +93,7 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 	if scope.InstanceID <= 0 {
 		return nil, nil
 	}
-	scope.AccessURL = runtimecontracts.ResolveRuntimeAliasAccessURL(scope.AccessURL, scope.RuntimeDetails)
+	scope.AccessURL = instancecontracts.ResolveInstanceAliasAccessURL(scope.AccessURL, scope.RuntimeDetails)
 	return &scope, nil
 }
 

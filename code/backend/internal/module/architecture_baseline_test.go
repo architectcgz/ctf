@@ -31,7 +31,6 @@ var moduleDependencyBaseline = map[string]struct{}{
 	"contest -> runtime":           {},
 	"instance -> identity":         {},
 	"instance -> contest":          {},
-	"instance -> runtime":          {},
 	"ops -> auth":                  {},
 	"ops -> challenge":             {},
 	"ops -> contest":               {},

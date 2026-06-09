@@ -5,7 +5,6 @@ import (
 	"time"
 
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type InstanceLookupRepository interface {
@@ -187,6 +186,50 @@ type ProxyTicketInstanceReader interface {
 	FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*AWDDefenseSSHScope, error)
 }
 
-type ManagedContainer = runtimeports.ManagedContainer
+type ManagedContainer struct {
+	ID        string
+	Name      string
+	CreatedAt time.Time
+}
 
-type ManagedContainerState = runtimeports.ManagedContainerState
+type ManagedContainerState struct {
+	ID      string
+	Exists  bool
+	Running bool
+	Status  string
+}
+
+type AWDDefenseWorkspace struct {
+	ContainerID string
+}
+
+type AWDServiceOperation struct {
+	ID            int64
+	ContestID     int64
+	TeamID        int64
+	ServiceID     int64
+	InstanceID    int64
+	OperationType string
+	RequestedBy   string
+	RequestedByID *int64
+	Reason        string
+	SLABillable   bool
+	Status        string
+	ErrorMessage  string
+	StartedAt     time.Time
+	FinishedAt    *time.Time
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
+const (
+	AWDServiceOperationTypeRecover  = "recover"
+	AWDServiceOperationTypeRecreate = "recreate"
+
+	AWDServiceOperationRequestedBySystem = "system"
+
+	AWDServiceOperationStatusProvisioning = "provisioning"
+	AWDServiceOperationStatusRecovering   = "recovering"
+	AWDServiceOperationStatusRecovered    = "recovered"
+	AWDServiceOperationStatusFailed       = "failed"
+)
