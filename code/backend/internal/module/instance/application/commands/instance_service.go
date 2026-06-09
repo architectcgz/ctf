@@ -14,6 +14,7 @@ import (
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type InstanceService struct {
@@ -21,6 +22,7 @@ type InstanceService struct {
 	cleaner instanceports.RuntimeCleaner
 	config  *config.ContainerConfig
 	logger  *zap.Logger
+	events  platformevents.Bus
 }
 
 type instanceCommandRepository interface {
@@ -44,6 +46,14 @@ func NewInstanceService(repo instanceCommandRepository, cleaner instanceports.Ru
 		config:  cfg,
 		logger:  logger,
 	}
+}
+
+func (s *InstanceService) SetEventBus(bus platformevents.Bus) *InstanceService {
+	if s == nil {
+		return nil
+	}
+	s.events = bus
+	return s
 }
 
 func (s *InstanceService) DestroyInstance(ctx context.Context, instanceID, userID int64) error {
@@ -158,7 +168,22 @@ func (s *InstanceService) destroyManagedInstance(ctx context.Context, instance *
 	if !stopping {
 		return nil
 	}
+	s.publishStoppingCleanupWakeup(ctx, instance.ID)
 	return nil
+}
+
+func (s *InstanceService) publishStoppingCleanupWakeup(ctx context.Context, instanceID int64) {
+	if s == nil || s.events == nil {
+		return
+	}
+	if err := s.events.Publish(ctx, platformevents.Event{
+		Name: instancecontracts.EventInstanceStoppingCleanupWakeup,
+		Payload: instancecontracts.InstanceStoppingCleanupWakeupEvent{
+			InstanceID: instanceID,
+		},
+	}); err != nil {
+		s.logger.Warn("publish_instance_stopping_cleanup_wakeup_failed", zap.Int64("instance_id", instanceID), zap.Error(err))
+	}
 }
 
 func isAWDTeamServiceInstance(instance *instancecontracts.Instance) bool {

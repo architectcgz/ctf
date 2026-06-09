@@ -24,6 +24,7 @@ import (
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
 )
 
@@ -35,6 +36,7 @@ func (noopRuntimeCleaner) CleanupRuntime(context.Context, *instanceentity.Instan
 
 type runtimeInstanceContextRepo struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*instanceentity.Instance, error)
+	findAccessibleByIDForUserFn             func(ctx context.Context, instanceID, userID int64) (*instanceentity.Instance, error)
 	findUserByIDFn                          func(ctx context.Context, userID int64) (*runtimeports.InstanceUser, error)
 	listVisibleByUserFn                     func(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error)
 	markStoppingWithContextFn               func(ctx context.Context, id int64) (bool, error)
@@ -56,6 +58,9 @@ func (r *runtimeInstanceContextRepo) FindUserByID(ctx context.Context, userID in
 }
 
 func (r *runtimeInstanceContextRepo) FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*instanceentity.Instance, error) {
+	if r.findAccessibleByIDForUserFn != nil {
+		return r.findAccessibleByIDForUserFn(ctx, instanceID, userID)
+	}
 	return nil, nil
 }
 
@@ -96,7 +101,7 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 	t.Parallel()
 
 	db := newInstanceServiceTestDB(t)
-	now := time.Now()
+	now := time.Now().UTC()
 	contestID := int64(501)
 	teamID := int64(601)
 
@@ -804,7 +809,7 @@ func TestInstanceServiceListTeacherInstancesAppliesStatusAndPagination(t *testin
 	t.Parallel()
 
 	db := newInstanceServiceTestDB(t)
-	now := time.Now()
+	now := time.Now().UTC()
 
 	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 1, Username: "teacher-a", Role: identitycontracts.RoleTeacher, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceUser(t, db, &identitycontracts.User{ID: 2, Username: "alice", StudentNo: "S-1001", Role: identitycontracts.RoleStudent, ClassName: "Class A", Status: identitycontracts.UserStatusActive, CreatedAt: now, UpdatedAt: now})
@@ -1093,6 +1098,66 @@ func seedInstanceServiceInstance(t *testing.T, db *gorm.DB, instance *instanceen
 }
 
 type runtimeInstanceContextKey string
+
+type runtimeInstanceEventBus struct {
+	events []platformevents.Event
+	err    error
+}
+
+func (b *runtimeInstanceEventBus) Subscribe(string, platformevents.Handler) {}
+
+func (b *runtimeInstanceEventBus) Publish(_ context.Context, evt platformevents.Event) error {
+	b.events = append(b.events, evt)
+	return b.err
+}
+
+func TestInstanceServiceDestroyInstancePublishesStoppingCleanupWakeupAfterMarkStopping(t *testing.T) {
+	t.Parallel()
+
+	repo := &runtimeInstanceContextRepo{
+		findAccessibleByIDForUserFn: func(ctx context.Context, instanceID, userID int64) (*instanceentity.Instance, error) {
+			return &instanceentity.Instance{ID: instanceID, UserID: userID, Status: instanceentity.InstanceStatusRunning}, nil
+		},
+		markStoppingWithContextFn: func(ctx context.Context, id int64) (bool, error) {
+			return true, nil
+		},
+	}
+	bus := &runtimeInstanceEventBus{}
+	service := instancecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil).SetEventBus(bus)
+
+	if err := service.DestroyInstance(context.Background(), 501, 42); err != nil {
+		t.Fatalf("DestroyInstance() error = %v", err)
+	}
+
+	if len(bus.events) != 1 {
+		t.Fatalf("expected one wakeup event, got %d", len(bus.events))
+	}
+	if bus.events[0].Name != instancecontracts.EventInstanceStoppingCleanupWakeup {
+		t.Fatalf("expected wakeup event %q, got %q", instancecontracts.EventInstanceStoppingCleanupWakeup, bus.events[0].Name)
+	}
+}
+
+func TestInstanceServiceDestroyInstanceSkipsWakeupWhenMarkStoppingDoesNotChangeState(t *testing.T) {
+	t.Parallel()
+
+	repo := &runtimeInstanceContextRepo{
+		findAccessibleByIDForUserFn: func(ctx context.Context, instanceID, userID int64) (*instanceentity.Instance, error) {
+			return &instanceentity.Instance{ID: instanceID, UserID: userID, Status: instanceentity.InstanceStatusRunning}, nil
+		},
+		markStoppingWithContextFn: func(ctx context.Context, id int64) (bool, error) {
+			return false, nil
+		},
+	}
+	bus := &runtimeInstanceEventBus{}
+	service := instancecmd.NewInstanceService(repo, noopRuntimeCleaner{}, &config.ContainerConfig{}, nil).SetEventBus(bus)
+
+	if err := service.DestroyInstance(context.Background(), 502, 42); err != nil {
+		t.Fatalf("DestroyInstance() error = %v", err)
+	}
+	if len(bus.events) != 0 {
+		t.Fatalf("expected no wakeup event, got %d", len(bus.events))
+	}
+}
 
 func TestInstanceServiceDestroyTeacherInstancePropagatesContextToRepository(t *testing.T) {
 	t.Parallel()

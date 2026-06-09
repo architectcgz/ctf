@@ -585,12 +585,15 @@ func (r *Repository) ListRecoverableActiveInstances(ctx context.Context) ([]*ins
 	return instances, err
 }
 
-func (r *Repository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time) ([]*instancecontracts.Instance, error) {
+func (r *Repository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instancecontracts.Instance, error) {
 	var instances []*instancecontracts.Instance
 	query := r.dbWithContext(ctx).
 		Where("status = ?", instancecontracts.InstanceStatusStopping)
 	if !updatedBefore.IsZero() {
 		query = query.Where("updated_at <= ?", updatedBefore)
+	}
+	if limit > 0 {
+		query = query.Limit(limit)
 	}
 	err := query.Order("updated_at ASC, id ASC").Find(&instances).Error
 	return instances, err

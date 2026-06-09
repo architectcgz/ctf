@@ -443,7 +443,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 	t.Parallel()
 
 	repo := newTestRepository(t)
-	now := time.Now()
+	now := time.Now().UTC()
 	instance := &instanceentity.Instance{
 		ID:          2101,
 		UserID:      1,
@@ -499,7 +499,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 	t.Parallel()
 
 	repo := newTestRepository(t)
-	now := time.Now()
+	now := time.Now().UTC()
 	instance := &instanceentity.Instance{
 		ID:          2102,
 		UserID:      1,

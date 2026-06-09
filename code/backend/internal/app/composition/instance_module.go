@@ -78,7 +78,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		maintenanceRuntime = runtime.nodeRouter
 		practiceRuntimeService = newNodeScopedPracticeRuntimeServiceAdapter(runtime.nodeRouter)
 	}
-	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service"))
+	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service")).SetEventBus(root.Events)
 	queryService := instanceqry.NewInstanceService(repo, &cfg.Container, cfg.Pagination)
 	proxyTicketService := buildRuntimeProxyTicketService(root, repo)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
@@ -87,7 +87,9 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		cleanupService,
 		&cfg.Container,
 		log.Named("instance_maintenance_service"),
+		runtimeinfra.NewStoppingCleanupLockStore(root.Cache(), cfg.Container.CleanupLockTTL, log.Named("instance_stopping_cleanup_lock")),
 	)
+	maintenanceService.RegisterStoppingCleanupWakeup(root.Events)
 	startupRecovery := instancecmd.NewStartupRuntimeRecoveryService(
 		maintenanceService,
 		contestinfra.NewRepository(root.DB()),

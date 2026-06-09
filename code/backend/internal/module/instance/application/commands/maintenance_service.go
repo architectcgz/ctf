@@ -13,12 +13,13 @@ import (
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type instanceMaintenanceRepository interface {
 	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
 	FindExpired(ctx context.Context) ([]*instanceentity.Instance, error)
-	ListStoppingInstances(ctx context.Context, updatedBefore time.Time) ([]*instanceentity.Instance, error)
+	ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error)
 	ListRecoverableActiveInstances(ctx context.Context) ([]*instanceentity.Instance, error)
 	FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*runtimecontracts.AWDDefenseWorkspace, error)
 	CreateAWDServiceOperation(ctx context.Context, operation *runtimecontracts.AWDServiceOperation) error
@@ -39,13 +40,19 @@ type instanceMaintenanceCleaner interface {
 	RemoveContainer(ctx context.Context, containerID string) error
 }
 
+type instanceMaintenanceLockStore interface {
+	WithStoppingCleanupLock(ctx context.Context, fn func(context.Context)) (bool, error)
+}
+
 // InstanceMaintenanceService 收口实例 owner 视角的后台维护能力。
 type InstanceMaintenanceService struct {
-	repo    instanceMaintenanceRepository
-	engine  instanceMaintenanceEngine
-	cleaner instanceMaintenanceCleaner
-	config  *config.ContainerConfig
-	logger  *zap.Logger
+	repo      instanceMaintenanceRepository
+	engine    instanceMaintenanceEngine
+	cleaner   instanceMaintenanceCleaner
+	lockStore instanceMaintenanceLockStore
+	wakeup    chan struct{}
+	config    *config.ContainerConfig
+	logger    *zap.Logger
 }
 
 const (
@@ -53,7 +60,7 @@ const (
 	defaultStoppingCleanupMaxConcurrent = 8
 )
 
-func NewInstanceMaintenanceService(repo instanceMaintenanceRepository, engine instanceMaintenanceEngine, cleaner instanceMaintenanceCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *InstanceMaintenanceService {
+func NewInstanceMaintenanceService(repo instanceMaintenanceRepository, engine instanceMaintenanceEngine, cleaner instanceMaintenanceCleaner, cfg *config.ContainerConfig, logger *zap.Logger, lockStores ...instanceMaintenanceLockStore) *InstanceMaintenanceService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -69,12 +76,38 @@ func NewInstanceMaintenanceService(repo instanceMaintenanceRepository, engine in
 	if cfg == nil {
 		cfg = &config.ContainerConfig{}
 	}
+	var lockStore instanceMaintenanceLockStore
+	if len(lockStores) > 0 && !isNilCommandDependency(lockStores[0]) {
+		lockStore = lockStores[0]
+	}
 	return &InstanceMaintenanceService{
-		repo:    repo,
-		engine:  engine,
-		cleaner: cleaner,
-		config:  cfg,
-		logger:  logger,
+		repo:      repo,
+		engine:    engine,
+		cleaner:   cleaner,
+		lockStore: lockStore,
+		wakeup:    make(chan struct{}, 1),
+		config:    cfg,
+		logger:    logger,
+	}
+}
+
+func (s *InstanceMaintenanceService) RegisterStoppingCleanupWakeup(bus platformevents.Bus) {
+	if s == nil || bus == nil {
+		return
+	}
+	bus.Subscribe(instancecontracts.EventInstanceStoppingCleanupWakeup, func(context.Context, platformevents.Event) error {
+		s.signalStoppingCleanupWakeup()
+		return nil
+	})
+}
+
+func (s *InstanceMaintenanceService) signalStoppingCleanupWakeup() {
+	if s == nil || s.wakeup == nil {
+		return
+	}
+	select {
+	case s.wakeup <- struct{}{}:
+	default:
 	}
 }
 
@@ -177,6 +210,7 @@ func (s *InstanceMaintenanceService) RunStoppingCleanupLoop(ctx context.Context)
 		case <-ctx.Done():
 			wg.Wait()
 			return
+		case <-s.wakeup:
 		case <-ticker.C:
 		}
 	}
@@ -186,8 +220,31 @@ func (s *InstanceMaintenanceService) dispatchStoppingCleanup(ctx context.Context
 	if s == nil || s.repo == nil || s.cleaner == nil {
 		return
 	}
+	if s.lockStore == nil {
+		s.dispatchStoppingCleanupLocked(ctx, wg, mu, inFlight)
+		return
+	}
+	acquired, err := s.lockStore.WithStoppingCleanupLock(ctx, func(lockCtx context.Context) {
+		s.dispatchStoppingCleanupLocked(lockCtx, wg, mu, inFlight)
+		wg.Wait()
+	})
+	if err != nil {
+		if !errors.Is(err, context.Canceled) {
+			s.logger.Warn("获取 stopping 实例清理锁失败", zap.Error(err))
+		}
+		return
+	}
+	if !acquired {
+		s.logger.Debug("stopping 实例清理已由其他节点执行")
+	}
+}
 
-	instances, err := s.repo.ListStoppingInstances(ctx, time.Time{})
+func (s *InstanceMaintenanceService) dispatchStoppingCleanupLocked(ctx context.Context, wg *sync.WaitGroup, mu *sync.Mutex, inFlight map[int64]struct{}) {
+	if s == nil || s.repo == nil || s.cleaner == nil {
+		return
+	}
+
+	instances, err := s.repo.ListStoppingInstances(ctx, time.Time{}, s.stoppingCleanupMaxConcurrent())
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
 			s.logger.Warn("查询 stopping 实例失败", zap.Error(err))

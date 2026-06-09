@@ -161,6 +161,78 @@ func TestCleanerStopReleasesCleanupLockAfterBaseContextCancellation(t *testing.T
 	}
 }
 
+func TestStoppingCleanupLockStoreSkipsCallbackWhenLockHeld(t *testing.T) {
+	t.Parallel()
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	lockKey := cachekeys.StoppingCleanupLockKey()
+	if err := mini.Set(lockKey, "other-owner"); err != nil {
+		t.Fatalf("seed stopping cleanup lock: %v", err)
+	}
+	mini.SetTTL(lockKey, time.Minute)
+
+	store := NewStoppingCleanupLockStore(redisClient, time.Minute, zap.NewNop())
+	called := false
+	acquired, err := store.WithStoppingCleanupLock(context.Background(), func(context.Context) {
+		called = true
+	})
+	if err != nil {
+		t.Fatalf("WithStoppingCleanupLock() error = %v", err)
+	}
+	if acquired {
+		t.Fatal("expected lock not to be acquired")
+	}
+	if called {
+		t.Fatal("expected callback to be skipped when stopping cleanup lock is held")
+	}
+}
+
+func TestStoppingCleanupLockStoreRunsCallbackAndReleasesLock(t *testing.T) {
+	t.Parallel()
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	store := NewStoppingCleanupLockStore(redisClient, time.Minute, zap.NewNop())
+	called := false
+	acquired, err := store.WithStoppingCleanupLock(context.Background(), func(context.Context) {
+		called = true
+		if !mini.Exists(cachekeys.StoppingCleanupLockKey()) {
+			t.Fatal("expected stopping cleanup lock to exist during callback")
+		}
+	})
+	if err != nil {
+		t.Fatalf("WithStoppingCleanupLock() error = %v", err)
+	}
+	if !acquired {
+		t.Fatal("expected lock to be acquired")
+	}
+	if !called {
+		t.Fatal("expected callback to run")
+	}
+	if mini.Exists(cachekeys.StoppingCleanupLockKey()) {
+		t.Fatal("expected stopping cleanup lock to be released after callback")
+	}
+}
+
 func TestCleanerStopRejectsNilContext(t *testing.T) {
 	t.Parallel()
 

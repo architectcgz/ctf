@@ -287,7 +287,7 @@ func TestRepositoryListStoppingInstancesFiltersByUpdatedBefore(t *testing.T) {
 		UpdatedAt:   staleUpdatedAt,
 	})
 
-	instances, err := repo.ListStoppingInstances(context.Background(), cutoff)
+	instances, err := repo.ListStoppingInstances(context.Background(), cutoff, 0)
 	if err != nil {
 		t.Fatalf("ListStoppingInstances() error = %v", err)
 	}
@@ -296,5 +296,36 @@ func TestRepositoryListStoppingInstancesFiltersByUpdatedBefore(t *testing.T) {
 	}
 	if instances[0].ID != 301 || instances[1].ID != 302 {
 		t.Fatalf("expected stale stopping instances ordered by updated_at then id, got ids=%d,%d", instances[0].ID, instances[1].ID)
+	}
+}
+
+func TestRepositoryListStoppingInstancesAppliesLimit(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	now := time.Now()
+	updatedAt := now.Add(-10 * time.Minute)
+
+	for i := int64(0); i < 4; i++ {
+		seedInstance(t, repo.db, &instanceentity.Instance{
+			ID:          401 + i,
+			UserID:      1,
+			ChallengeID: 301 + i,
+			Status:      instanceentity.InstanceStatusStopping,
+			ExpiresAt:   now.Add(time.Hour),
+			CreatedAt:   updatedAt,
+			UpdatedAt:   updatedAt.Add(time.Duration(i) * time.Second),
+		})
+	}
+
+	instances, err := repo.ListStoppingInstances(context.Background(), time.Time{}, 2)
+	if err != nil {
+		t.Fatalf("ListStoppingInstances() error = %v", err)
+	}
+	if len(instances) != 2 {
+		t.Fatalf("expected 2 stopping instances, got %d", len(instances))
+	}
+	if instances[0].ID != 401 || instances[1].ID != 402 {
+		t.Fatalf("expected oldest stopping instances first, got ids=%d,%d", instances[0].ID, instances[1].ID)
 	}
 }

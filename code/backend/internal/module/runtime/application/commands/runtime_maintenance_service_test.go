@@ -10,10 +10,12 @@ import (
 
 	"ctf-platform/internal/config"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type maintenanceTestRepository struct {
@@ -26,7 +28,7 @@ type maintenanceTestRepository struct {
 	operations                              []*runtimeentity.AWDServiceOperation
 	finishedOperations                      []int64
 	findExpiredFn                           func(ctx context.Context) ([]*instanceentity.Instance, error)
-	listStoppingInstancesFn                 func(ctx context.Context, updatedBefore time.Time) ([]*instanceentity.Instance, error)
+	listStoppingInstancesFn                 func(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error)
 	listRecoverableActiveInstancesFn        func(ctx context.Context) ([]*instanceentity.Instance, error)
 	findRunningWorkspaceByInstanceIDFn      func(ctx context.Context, instanceID int64) (*runtimeentity.AWDDefenseWorkspace, error)
 	finalizeStoppedRuntimeFn                func(ctx context.Context, id int64) error
@@ -34,6 +36,20 @@ type maintenanceTestRepository struct {
 	listActiveContainerIDsFn                func(ctx context.Context) ([]string, error)
 	updateStatusAndReleasePortFn            func(id int64, status string) error
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
+}
+
+type maintenanceTestLockStore struct {
+	acquired bool
+	called   int
+}
+
+func (s *maintenanceTestLockStore) WithStoppingCleanupLock(ctx context.Context, fn func(context.Context)) (bool, error) {
+	s.called++
+	if !s.acquired {
+		return false, nil
+	}
+	fn(ctx)
+	return true, nil
 }
 
 func (r *maintenanceTestRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
@@ -50,9 +66,9 @@ func (r *maintenanceTestRepository) FindExpired(ctx context.Context) ([]*instanc
 	return nil, nil
 }
 
-func (r *maintenanceTestRepository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time) ([]*instanceentity.Instance, error) {
+func (r *maintenanceTestRepository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error) {
 	if r.listStoppingInstancesFn != nil {
-		return r.listStoppingInstancesFn(ctx, updatedBefore)
+		return r.listStoppingInstancesFn(ctx, updatedBefore, limit)
 	}
 	return append([]*instanceentity.Instance(nil), r.stoppingInstances...), nil
 }
@@ -369,7 +385,7 @@ func TestRuntimeMaintenanceServiceRunStoppingCleanupLoopFinalizesStoppingInstanc
 			},
 		},
 	}
-	repo.listStoppingInstancesFn = func(ctx context.Context, updatedBefore time.Time) ([]*instanceentity.Instance, error) {
+	repo.listStoppingInstancesFn = func(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error) {
 		repoMu.Lock()
 		defer repoMu.Unlock()
 		return append([]*instanceentity.Instance(nil), repo.stoppingInstances...), nil
@@ -416,6 +432,150 @@ func TestRuntimeMaintenanceServiceRunStoppingCleanupLoopFinalizesStoppingInstanc
 	}
 }
 
+func TestRuntimeMaintenanceServiceRunStoppingCleanupLoopSkipsWhenLockHeldByAnotherNode(t *testing.T) {
+	t.Parallel()
+
+	var queried bool
+	repo := &maintenanceTestRepository{}
+	repo.listStoppingInstancesFn = func(context.Context, time.Time, int) ([]*instanceentity.Instance, error) {
+		queried = true
+		return nil, nil
+	}
+	lockStore := &maintenanceTestLockStore{acquired: false}
+	service := instancecmd.NewInstanceMaintenanceService(repo, nil, &maintenanceTestCleaner{}, &config.ContainerConfig{
+		DeletePollInterval:  5 * time.Millisecond,
+		DeleteMaxConcurrent: 2,
+	}, nil, lockStore)
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		service.RunStoppingCleanupLoop(runCtx)
+	}()
+
+	time.Sleep(20 * time.Millisecond)
+	cancel()
+	<-done
+
+	if lockStore.called == 0 {
+		t.Fatal("expected stopping cleanup lock to be attempted")
+	}
+	if queried {
+		t.Fatal("expected stopping instances query to be skipped when lock is not acquired")
+	}
+}
+
+func TestRuntimeMaintenanceServiceRunStoppingCleanupLoopPassesConfiguredBatchLimit(t *testing.T) {
+	t.Parallel()
+
+	limits := make(chan int, 1)
+	repo := &maintenanceTestRepository{}
+	repo.listStoppingInstancesFn = func(_ context.Context, _ time.Time, limit int) ([]*instanceentity.Instance, error) {
+		limits <- limit
+		return nil, nil
+	}
+	lockStore := &maintenanceTestLockStore{acquired: true}
+	service := instancecmd.NewInstanceMaintenanceService(repo, nil, &maintenanceTestCleaner{}, &config.ContainerConfig{
+		DeletePollInterval:  5 * time.Millisecond,
+		DeleteMaxConcurrent: 3,
+	}, nil, lockStore)
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		service.RunStoppingCleanupLoop(runCtx)
+	}()
+
+	var gotLimit int
+	select {
+	case gotLimit = <-limits:
+	case <-time.After(time.Second):
+		t.Fatal("expected stopping instances query")
+	}
+	cancel()
+	<-done
+
+	if gotLimit != 3 {
+		t.Fatalf("expected configured batch limit 3, got %d", gotLimit)
+	}
+	if lockStore.called == 0 {
+		t.Fatal("expected stopping cleanup lock to be attempted")
+	}
+}
+
+func TestRuntimeMaintenanceServiceStoppingCleanupWakeupTriggersDispatchBeforeNextTick(t *testing.T) {
+	t.Parallel()
+
+	firstQueryDone := make(chan struct{})
+	var (
+		repoMu sync.Mutex
+		calls  int
+	)
+	repo := &maintenanceTestRepository{
+		stoppingInstances: []*instanceentity.Instance{
+			{ID: 4501, Status: instanceentity.InstanceStatusStopping, ExpiresAt: time.Now().Add(time.Hour)},
+		},
+	}
+	repo.listStoppingInstancesFn = func(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error) {
+		repoMu.Lock()
+		defer repoMu.Unlock()
+		calls++
+		if calls == 1 {
+			close(firstQueryDone)
+			return nil, nil
+		}
+		return append([]*instanceentity.Instance(nil), repo.stoppingInstances...), nil
+	}
+	repo.finalizeStoppedRuntimeFn = func(ctx context.Context, id int64) error {
+		repoMu.Lock()
+		defer repoMu.Unlock()
+		repo.finalizedStoppedIDs = append(repo.finalizedStoppedIDs, id)
+		repo.stoppingInstances = nil
+		return nil
+	}
+
+	bus := platformevents.NewBus()
+	service := instancecmd.NewInstanceMaintenanceService(repo, nil, &maintenanceTestCleaner{}, &config.ContainerConfig{
+		DeletePollInterval:  time.Hour,
+		DeleteMaxConcurrent: 2,
+	}, nil)
+	service.RegisterStoppingCleanupWakeup(bus)
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		service.RunStoppingCleanupLoop(runCtx)
+	}()
+
+	select {
+	case <-firstQueryDone:
+	case <-time.After(time.Second):
+		t.Fatal("expected initial stopping cleanup query")
+	}
+	if err := bus.Publish(context.Background(), platformevents.Event{
+		Name: instancecontracts.EventInstanceStoppingCleanupWakeup,
+		Payload: instancecontracts.InstanceStoppingCleanupWakeupEvent{
+			InstanceID: 4501,
+		},
+	}); err != nil {
+		t.Fatalf("publish wakeup event: %v", err)
+	}
+
+	deadline := time.Now().Add(time.Second)
+	for len(repo.finalizedStoppedIDs) < 1 && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+	<-done
+
+	if len(repo.finalizedStoppedIDs) != 1 || repo.finalizedStoppedIDs[0] != 4501 {
+		t.Fatalf("expected wakeup to finalize stopping instance before next tick, got %v", repo.finalizedStoppedIDs)
+	}
+}
+
 func TestRuntimeMaintenanceServiceRunStoppingCleanupLoopHonorsConcurrencyLimit(t *testing.T) {
 	t.Parallel()
 
@@ -427,7 +587,7 @@ func TestRuntimeMaintenanceServiceRunStoppingCleanupLoopHonorsConcurrencyLimit(t
 			{ID: 4403, Status: instanceentity.InstanceStatusStopping, ExpiresAt: time.Now().Add(time.Hour)},
 		},
 	}
-	repo.listStoppingInstancesFn = func(ctx context.Context, updatedBefore time.Time) ([]*instanceentity.Instance, error) {
+	repo.listStoppingInstancesFn = func(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error) {
 		repoMu.Lock()
 		defer repoMu.Unlock()
 		return append([]*instanceentity.Instance(nil), repo.stoppingInstances...), nil
