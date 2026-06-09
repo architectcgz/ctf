@@ -159,7 +159,7 @@ func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) (err error) {
 		return err
 	}
 
-	initialLock, _, err := s.tryAcquireStartupRecoveryLock(runCtx)
+	initialLock, initialLockAcquired, err := s.tryAcquireStartupRecoveryLock(runCtx)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) (err error) {
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
-		s.runLeaderElectionLoop(runCtx, currentBootID, initialLock, initReady)
+		s.runLeaderElectionLoop(runCtx, currentBootID, initialLock, initialLockAcquired, initReady)
 	}()
 	select {
 	case err := <-initReady:
@@ -349,13 +349,14 @@ func (s *StartupRuntimeRecoveryService) runHeartbeatLoop(ctx context.Context, bo
 	}
 }
 
-func (s *StartupRuntimeRecoveryService) runLeaderElectionLoop(ctx context.Context, currentBootID string, initialLock *redislock.Lock, initReady chan error) {
+func (s *StartupRuntimeRecoveryService) runLeaderElectionLoop(ctx context.Context, currentBootID string, initialLock *redislock.Lock, initialLockAcquired bool, initReady chan error) {
 	lock := initialLock
+	lockAcquired := initialLockAcquired
 	for {
 		if ctx.Err() != nil {
 			return
 		}
-		if lock == nil {
+		if !lockAcquired {
 			if initReady != nil {
 				ready, err := s.observedLeaderReady(ctx, currentBootID)
 				if err != nil {
@@ -384,6 +385,7 @@ func (s *StartupRuntimeRecoveryService) runLeaderElectionLoop(ctx context.Contex
 				continue
 			}
 			lock = acquiredLock
+			lockAcquired = true
 		}
 
 		if err := s.runAsLeader(ctx, currentBootID, lock, initReady); err != nil {
@@ -394,6 +396,7 @@ func (s *StartupRuntimeRecoveryService) runLeaderElectionLoop(ctx context.Contex
 				return
 			}
 			lock = nil
+			lockAcquired = false
 			if !s.waitLeaderRetry(ctx) {
 				return
 			}
@@ -401,6 +404,7 @@ func (s *StartupRuntimeRecoveryService) runLeaderElectionLoop(ctx context.Contex
 		}
 		initReady = nil
 		lock = nil
+		lockAcquired = false
 		if !s.waitLeaderRetry(ctx) {
 			return
 		}
