@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	challengeentity "ctf-platform/internal/module/challenge/entity"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
 const defaultInternalAppSystemShellMaxLines = 250
@@ -56,6 +59,29 @@ var allowedAutoMigrateOwners = map[string]struct{}{
 
 var setupDBPattern = regexp.MustCompile(`\bsetup[A-Za-z0-9_]*DB\(`)
 var systemHTTPReadmeDirPattern = regexp.MustCompile("`tests/system/http/([a-z0-9]+)/?`")
+
+func TestAWDCheckerTypeValuesStayAlignedAcrossChallengeAndContest(t *testing.T) {
+	t.Parallel()
+
+	challengeValues := []string{
+		string(challengeentity.AWDCheckerTypeLegacyProbe),
+		string(challengeentity.AWDCheckerTypeHTTPStandard),
+		string(challengeentity.AWDCheckerTypeTCPStandard),
+		string(challengeentity.AWDCheckerTypeScript),
+	}
+	contestValues := []string{
+		string(contestentity.AWDCheckerTypeLegacyProbe),
+		string(contestentity.AWDCheckerTypeHTTPStandard),
+		string(contestentity.AWDCheckerTypeTCPStandard),
+		string(contestentity.AWDCheckerTypeScript),
+	}
+
+	sort.Strings(challengeValues)
+	sort.Strings(contestValues)
+	if strings.Join(challengeValues, "\n") != strings.Join(contestValues, "\n") {
+		t.Fatalf("AWD checker type values drifted between challenge and contest:\nchallenge=%v\ncontest=%v", challengeValues, contestValues)
+	}
+}
 
 func TestInternalAppSystemTestShellsStayThinAndReferenceScenarioOwners(t *testing.T) {
 	t.Parallel()

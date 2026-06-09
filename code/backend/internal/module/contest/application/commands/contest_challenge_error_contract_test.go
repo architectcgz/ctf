@@ -121,7 +121,7 @@ func (s contestAWDChallengeLookupStub) FindAWDChallengeByID(ctx context.Context,
 	return &challengecontracts.AWDChallenge{
 		ID:          id,
 		Name:        "awd challenge",
-		CheckerType: contestentity.AWDCheckerTypeHTTPStandard,
+		CheckerType: challengecontracts.AWDCheckerTypeHTTPStandard,
 	}, nil
 }
 

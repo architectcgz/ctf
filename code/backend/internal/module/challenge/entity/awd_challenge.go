@@ -3,7 +3,6 @@ package entity
 import (
 	"time"
 
-	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"gorm.io/gorm"
 )
 
@@ -38,32 +37,41 @@ const (
 	AWDReadinessStatusFailed  AWDReadinessStatus = "failed"
 )
 
+type AWDCheckerType string
+
+const (
+	AWDCheckerTypeLegacyProbe  AWDCheckerType = "legacy_probe"
+	AWDCheckerTypeHTTPStandard AWDCheckerType = "http_standard"
+	AWDCheckerTypeTCPStandard  AWDCheckerType = "tcp_standard"
+	AWDCheckerTypeScript       AWDCheckerType = "script_checker"
+)
+
 type AWDChallenge struct {
-	ID               int64                           `gorm:"column:id;primaryKey"`
-	Name             string                          `gorm:"column:name"`
-	Slug             string                          `gorm:"column:slug"`
-	Category         string                          `gorm:"column:category"`
-	Difficulty       string                          `gorm:"column:difficulty"`
-	Description      string                          `gorm:"column:description"`
-	ServiceType      AWDServiceType                  `gorm:"column:service_type"`
-	DeploymentMode   AWDDeploymentMode               `gorm:"column:deployment_mode"`
-	Version          string                          `gorm:"column:version"`
-	Status           AWDChallengeStatus              `gorm:"column:status"`
-	CheckerType      contestcontracts.AWDCheckerType `gorm:"column:checker_type"`
-	CheckerConfig    string                          `gorm:"column:checker_config"`
-	FlagMode         string                          `gorm:"column:flag_mode"`
-	FlagConfig       string                          `gorm:"column:flag_config"`
-	DefenseEntryMode string                          `gorm:"column:defense_entry_mode"`
-	AccessConfig     string                          `gorm:"column:access_config"`
-	RuntimeConfig    string                          `gorm:"column:runtime_config"`
-	ReadinessStatus  AWDReadinessStatus              `gorm:"column:readiness_status"`
-	ReadinessReport  string                          `gorm:"column:readiness_report"`
-	LastVerifiedAt   *time.Time                      `gorm:"column:last_verified_at"`
-	LastVerifiedBy   *int64                          `gorm:"column:last_verified_by"`
-	CreatedBy        *int64                          `gorm:"column:created_by"`
-	CreatedAt        time.Time                       `gorm:"column:created_at"`
-	UpdatedAt        time.Time                       `gorm:"column:updated_at"`
-	DeletedAt        gorm.DeletedAt                  `gorm:"column:deleted_at"`
+	ID               int64              `gorm:"column:id;primaryKey"`
+	Name             string             `gorm:"column:name"`
+	Slug             string             `gorm:"column:slug"`
+	Category         string             `gorm:"column:category"`
+	Difficulty       string             `gorm:"column:difficulty"`
+	Description      string             `gorm:"column:description"`
+	ServiceType      AWDServiceType     `gorm:"column:service_type"`
+	DeploymentMode   AWDDeploymentMode  `gorm:"column:deployment_mode"`
+	Version          string             `gorm:"column:version"`
+	Status           AWDChallengeStatus `gorm:"column:status"`
+	CheckerType      AWDCheckerType     `gorm:"column:checker_type"`
+	CheckerConfig    string             `gorm:"column:checker_config"`
+	FlagMode         string             `gorm:"column:flag_mode"`
+	FlagConfig       string             `gorm:"column:flag_config"`
+	DefenseEntryMode string             `gorm:"column:defense_entry_mode"`
+	AccessConfig     string             `gorm:"column:access_config"`
+	RuntimeConfig    string             `gorm:"column:runtime_config"`
+	ReadinessStatus  AWDReadinessStatus `gorm:"column:readiness_status"`
+	ReadinessReport  string             `gorm:"column:readiness_report"`
+	LastVerifiedAt   *time.Time         `gorm:"column:last_verified_at"`
+	LastVerifiedBy   *int64             `gorm:"column:last_verified_by"`
+	CreatedBy        *int64             `gorm:"column:created_by"`
+	CreatedAt        time.Time          `gorm:"column:created_at"`
+	UpdatedAt        time.Time          `gorm:"column:updated_at"`
+	DeletedAt        gorm.DeletedAt     `gorm:"column:deleted_at"`
 }
 
 func (AWDChallenge) TableName() string {

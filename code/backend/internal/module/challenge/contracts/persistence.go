@@ -33,6 +33,15 @@ const (
 	AWDReadinessStatusFailed  = challengeentity.AWDReadinessStatusFailed
 )
 
+type AWDCheckerType = challengeentity.AWDCheckerType
+
+const (
+	AWDCheckerTypeLegacyProbe  = challengeentity.AWDCheckerTypeLegacyProbe
+	AWDCheckerTypeHTTPStandard = challengeentity.AWDCheckerTypeHTTPStandard
+	AWDCheckerTypeTCPStandard  = challengeentity.AWDCheckerTypeTCPStandard
+	AWDCheckerTypeScript       = challengeentity.AWDCheckerTypeScript
+)
+
 type AWDChallenge = challengeentity.AWDChallenge
 
 const (

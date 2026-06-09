@@ -21,7 +21,6 @@ import (
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	contestcontracts "ctf-platform/internal/module/contest/contracts"
 )
 
 const defaultAWDChallengeImportPreviewRoot = "./data/awd-challenge-import-previews"
@@ -237,7 +236,7 @@ func (s *AWDChallengeImportService) CommitImport(
 			DeploymentMode:   challengeentity.AWDDeploymentMode(parsed.DeploymentMode),
 			Version:          parsed.Version,
 			Status:           challengeentity.AWDChallengeStatusPublished,
-			CheckerType:      contestcontracts.AWDCheckerType(parsed.CheckerType),
+			CheckerType:      challengeentity.AWDCheckerType(parsed.CheckerType),
 			CheckerConfig:    checkerConfigWithArtifact,
 			FlagMode:         parsed.FlagMode,
 			FlagConfig:       flagConfigRaw,
@@ -395,7 +394,7 @@ func persistAWDCheckerArtifact(parsed *domain.ParsedAWDChallengePackage) (string
 		return "{}", nil
 	}
 	config := cloneAWDChallengeConfig(parsed.CheckerConfig)
-	if parsed.CheckerType != string(contestcontracts.AWDCheckerTypeScript) {
+	if parsed.CheckerType != string(challengeentity.AWDCheckerTypeScript) {
 		return marshalAWDChallengeConfig(config)
 	}
 	if strings.TrimSpace(parsed.CheckerEntryAbs) == "" || strings.TrimSpace(parsed.CheckerEntryPath) == "" {

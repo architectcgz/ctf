@@ -11,7 +11,6 @@ import (
 
 	"ctf-platform/internal/apperror"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
-	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"gopkg.in/yaml.v3"
 )
 
@@ -102,7 +101,7 @@ func buildParsedAWDChallengePackage(
 
 	checkerType := strings.TrimSpace(awd.Checker.Type)
 	switch checkerType {
-	case string(contestcontracts.AWDCheckerTypeLegacyProbe), string(contestcontracts.AWDCheckerTypeHTTPStandard), string(contestcontracts.AWDCheckerTypeTCPStandard), string(contestcontracts.AWDCheckerTypeScript):
+	case string(challengeentity.AWDCheckerTypeLegacyProbe), string(challengeentity.AWDCheckerTypeHTTPStandard), string(challengeentity.AWDCheckerTypeTCPStandard), string(challengeentity.AWDCheckerTypeScript):
 	default:
 		return nil, apperror.ErrInvalidParams.WithCause(errors.New("extensions.awd.checker.type 仅支持 legacy_probe、http_standard、tcp_standard、script_checker"))
 	}
@@ -178,7 +177,7 @@ func buildParsedAWDChallengePackage(
 }
 
 func resolveAWDPackageCheckerFiles(rootDir, checkerType string, checkerConfig map[string]any) (string, string, []ParsedAWDCheckerFile, error) {
-	if checkerType != string(contestcontracts.AWDCheckerTypeScript) {
+	if checkerType != string(challengeentity.AWDCheckerTypeScript) {
 		return "", "", nil, nil
 	}
 	rawEntry, ok := checkerConfig["entry"].(string)

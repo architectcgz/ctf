@@ -69,7 +69,7 @@ func (s *ContestAWDServiceService) CreateContestAWDService(ctx context.Context, 
 	}
 	checkerType, checkerConfig, slaScore, defenseScore, err := normalizeContestAWDServiceRuntimeFields(
 		contest,
-		awdChallenge.CheckerType,
+		contestdomain.NormalizeAWDCheckerType(string(awdChallenge.CheckerType)),
 		awdChallenge.CheckerConfig,
 		req.CheckerType,
 		req.CheckerConfig,
@@ -183,7 +183,7 @@ func (s *ContestAWDServiceService) UpdateContestAWDService(ctx context.Context, 
 		}
 		updates["awd_challenge_id"] = *req.AWDChallengeID
 		updates["service_snapshot"] = buildContestAWDServiceSnapshot(awdChallenge)
-		defaultCheckerType = awdChallenge.CheckerType
+		defaultCheckerType = contestdomain.NormalizeAWDCheckerType(string(awdChallenge.CheckerType))
 		defaultCheckerConfig = awdChallenge.CheckerConfig
 		extraRuntimeConfig = awdChallenge.RuntimeConfig
 		if req.DisplayName == nil || strings.TrimSpace(displayName) == "" {
