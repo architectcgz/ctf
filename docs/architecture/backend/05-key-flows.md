@@ -18,7 +18,7 @@
   - 负责：按 `container.scheduler.desired_reconcile_interval` 周期性收敛 `running / frozen` AWD 比赛里“应该活着的 `team × visible service`”，缺失时优先复用已有实例行 / nonce，再交回现有 provisioning loop；同一 scope 连续遇到坏配置或 provisioning 失败时，会用 Redis 记录 backoff / suppress 状态，窗口内直接跳过自动 operation
   - 不负责：引入独立 Redis 队列或让 HTTP 请求直接等待完整 Docker 冷启动；当前排队事实仍落在 `instances` 表与调度器循环里
 
-- `code/backend/internal/module/runtime/application/queries/proxy_ticket_service.go`、`instance_service.go`
+- `code/backend/internal/module/instance/application/queries/proxy_ticket_service.go`、`instance_service.go`
   - 负责：把实例访问、AWD 攻击访问和 AWD 防守 SSH 入口统一收敛到 proxy ticket / access URL 链路，避免直接暴露容器地址
   - 不负责：让前端或外部工具绕过平台鉴权直接使用底层容器网络信息
 

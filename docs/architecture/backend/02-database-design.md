@@ -26,7 +26,7 @@
   - 负责：按 owner 模块读写各自表，教师复盘、证据链、画像和归档查询通过 `teaching_query` 基础设施层做跨表聚合；依据见 `practice/infrastructure/repository.go`、`contest/infrastructure/*.go`、`assessment/infrastructure/*.go`
   - 不负责：让查询聚合模块修改练习、竞赛或题目写侧状态，也不让页面查询直接越过 owner 拼接写库逻辑
 
-- `code/backend/internal/pkg/redis/keys.go`、`code/backend/internal/module/runtime/infrastructure/proxy_ticket_store.go`
+- `code/backend/internal/pkg/redis/keys.go`、`code/backend/internal/module/instance/infrastructure/proxy_ticket_store.go`
   - 负责：提供会话、榜单缓存、调度锁、代理票据等 Redis key 约束；缓存和锁只承担性能与并发职责，不覆盖 PostgreSQL 中的业务真相
   - 不负责：成为需要审计、归档或跨模块恢复的长期事实源
 

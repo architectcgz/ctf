@@ -25,7 +25,7 @@
   - 负责：驱动轮次同步、checker 执行、`awd_team_services` 快照、`awd_attack_logs` / `awd_traffic_events` 计分输入和榜单回写
   - 不负责：把 AWD 裁判主链路外包给独立进程或外部调度平台；当前 jobs 仍运行在同一后端进程里
 
-- `code/backend/internal/module/practice/application/commands/contest_instance_scope.go`、`instance_start_service.go`、`code/backend/internal/module/runtime/application/queries/proxy_ticket_service.go`
+- `code/backend/internal/module/practice/application/commands/contest_instance_scope.go`、`instance_start_service.go`、`code/backend/internal/module/instance/application/queries/proxy_ticket_service.go`
   - 负责：按 `contest_id + team_id + service_id` 派生队伍共享实例、攻击访问 ticket 和防守 SSH ticket，使赛事运行态与实例访问都围绕 `service_id` 对齐
   - 不负责：让学生直接按 `challenge_id` 打开独立实例，或回到浏览器式防守工作台主入口
 

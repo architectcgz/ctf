@@ -18,8 +18,6 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"type runtimeModuleDeps struct",
-		"repo",
-		"runtimeInstanceRepository",
 		"cleanupService",
 		"*runtimecmd.RuntimeCleanupService",
 		"provisioningService",
@@ -46,6 +44,7 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"opsports.RuntimeQuery",
 		"challengeports.ImageRuntime",
 		"challengeports.ChallengeRuntimeProbe",
+		"runtimeInstanceRepository",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {

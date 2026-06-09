@@ -295,8 +295,9 @@ func TestBuildInstanceModuleDelegatesToSubBuilders(t *testing.T) {
 	expected := []string{
 		"module := runtime.runtime",
 		"runtimeinfra.NewRepository(root.DB())",
+		"instanceinfra.NewRepository(root.DB())",
 		"instancecmd.NewInstanceService(",
-		"buildRuntimeProxyTicketService(root, repo)",
+		"buildRuntimeProxyTicketService(root, instanceRepo)",
 		"instancecmd.NewInstanceMaintenanceService(",
 		"runtimehttp.NewHandler(m.service",
 	}

@@ -25,7 +25,7 @@
   - Keep behavior, public HTTP API, proxy ticket JSON, runtime-agent protocol shape, and repository queries unchanged.
   - Move the running instance count query out of runtime ports so instance owns the `instances` table read and ops keeps the dashboard-facing consumer port.
 - Non-Goals:
-  - Do not move runtime repository methods or proxy ticket storage implementation out of `runtime/infrastructure` in this slice.
+  - Do not move the remaining runtime repository methods unrelated to running count or proxy ticket scope out of `runtime/infrastructure` in this slice.
   - Do not delete or rename `runtime/ports/http.go`; file placement cleanup can be a later mechanical slice after aliases are gone.
   - Do not change database schema, runtime-agent messages, HTTP route paths, or DTO response contracts.
 
@@ -42,7 +42,8 @@
   - `code/backend/internal/module/runtime/api/http/handler.go`
   - `code/backend/internal/app/composition/runtime_http_service_adapter.go`
   - `code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
-  - `code/backend/internal/module/runtime/infrastructure/{repository.go,awd_target_proxy_repository.go,proxy_ticket_store.go}`
+  - `code/backend/internal/module/runtime/infrastructure/repository.go`
+  - `code/backend/internal/module/instance/infrastructure/{repository.go,awd_target_proxy_repository.go,proxy_ticket_store.go}`
 - Related prior work:
   - `26f118c5b refactor(runtime): 拆分容器运行时端口文件`
   - `892eadeeb test(runtime): 限制宿主执行器宽接口使用面`
@@ -67,8 +68,8 @@
   - `code/backend/internal/module/runtime/application/queries/response_mapper.go`
   - `code/backend/internal/module/runtime/application/queries/response_mapper_gen.go`
   - `code/backend/internal/module/runtime/infrastructure/repository.go`
-  - `code/backend/internal/module/runtime/infrastructure/awd_target_proxy_repository.go`
-  - `code/backend/internal/module/runtime/infrastructure/proxy_ticket_store.go`
+  - `code/backend/internal/module/instance/infrastructure/awd_target_proxy_repository.go`
+  - `code/backend/internal/module/instance/infrastructure/proxy_ticket_store.go`
   - `code/backend/internal/module/runtime/api/http/handler.go`
   - `code/backend/internal/app/composition/runtime_http_service_adapter.go`
   - `code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
@@ -113,7 +114,7 @@
   - Moving most implementations out of `runtime/infrastructure` would be a larger repository-owner migration and is out of scope for this first alias cleanup.
 - Plan adjustments after challenge:
   - Include `ManagedContainer` / `ManagedContainerState` ownership correction in this slice.
-  - Keep broad runtime infrastructure owner migration and physical file deletion for later slices.
+  - Keep broad runtime infrastructure owner migration for later slices, but allow focused owner moves when the current task explicitly continues into those blocks.
 
 ## Validation
 
@@ -200,3 +201,31 @@ Keep `opsports.RuntimeQuery` as the dashboard-facing consumer interface, but ada
 - [x] **Step 3: Remove runtime count owner**
 
 Remove `runtimeports.CountRunningRepository`, `runtime/application/queries.CountRunningService`, `Module.RuntimeQuery`, and `runtime/infrastructure.Repository.CountRunning`.
+
+## Task 4: Move Proxy Ticket Infrastructure Owner
+
+**Files:**
+- Create: `code/backend/internal/module/instance/infrastructure/proxy_ticket_store.go`
+- Create: `code/backend/internal/module/instance/infrastructure/awd_target_proxy_repository.go`
+- Move tests from `runtime/infrastructure` to `instance/infrastructure`.
+- Modify: `code/backend/internal/app/composition/instance_module.go`
+- Modify: `code/backend/internal/app/composition/awd_defense_ssh_gateway_builder.go`
+- Modify: `code/backend/internal/testutil/systemapp/practice_flow.go`
+- Modify: `code/backend/internal/module/runtime/architecture_test.go`
+- Delete runtime-owned proxy ticket implementation files after call sites move.
+
+- [x] **Step 1: Add runtime infrastructure guard**
+
+Add a failing architecture test that rejects proxy ticket store and AWD proxy/SSH scope reader implementations under `runtime/infrastructure`.
+
+- [x] **Step 2: Move proxy ticket Redis store and scope reader**
+
+Move Redis ticket storage and AWD target / defense SSH scope SQL reads into `instance/infrastructure`, preserving query behavior and public ticket JSON.
+
+- [x] **Step 3: Rewire composition and tests**
+
+Use `instanceinfra.NewRepository` and `instanceinfra.NewProxyTicketStore` for instance proxy ticket service wiring. Keep runtime infrastructure imports only where runtime container capability or runtime state persistence is still the owner.
+
+- [x] **Step 4: Verify**
+
+Run focused instance/runtime/app tests plus workflow checks before commit.

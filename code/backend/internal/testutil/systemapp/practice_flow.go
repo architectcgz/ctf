@@ -43,6 +43,7 @@ import (
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
@@ -379,6 +380,7 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 		return runtimeinfrarepo.NewRepository(db)
 	})
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
+	proxyTicketInstanceRepo := instanceinfra.NewRepository(db)
 	root, err := composition.BuildRoot(cfg, logger, db, cache)
 	if err != nil {
 		t.Fatalf("build composition root: %v", err)
@@ -391,7 +393,7 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, logger)
 	runtimeInstanceCommands := instancecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
 	runtimeInstanceQueries := instanceqry.NewInstanceService(instanceRepo, &cfg.Container)
-	runtimeProxyTicketService := instanceqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), instanceRepo, cfg.Container.ProxyTicketTTL)
+	runtimeProxyTicketService := instanceqry.NewProxyTicketService(instanceinfra.NewProxyTicketStore(cache), proxyTicketInstanceRepo, cfg.Container.ProxyTicketTTL)
 	runtimeService := runtimeadapters.NewHTTPService(
 		runtimeInstanceCommands,
 		runtimeInstanceQueries,

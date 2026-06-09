@@ -12,8 +12,6 @@ import (
 
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
@@ -167,13 +165,13 @@ func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	})
-	seedAWDTargetProxyRow(t, db, &runtimeentity.AWDDefenseWorkspace{
+	seedAWDTargetProxyRow(t, db, &awdDefenseWorkspaceTestRow{
 		ContestID:         contestID,
 		TeamID:            teamID,
 		ServiceID:         serviceID,
 		InstanceID:        instanceID,
 		WorkspaceRevision: 7,
-		Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
+		Status:            awdDefenseWorkspaceStatusRunning,
 		ContainerID:       "workspace-red-web",
 		SeedSignature:     "seed:v1",
 		CreatedAt:         now,
@@ -250,29 +248,29 @@ func TestFindAWDTargetProxyScopeReturnsNilWhenScopeControlled(t *testing.T) {
 		{
 			name:        "attacker_team_retired",
 			teamID:      9210,
-			scopeType:   runtimecontracts.AWDScopeControlScopeTeam,
-			controlType: runtimecontracts.AWDScopeControlTypeRetired,
+			scopeType:   awdScopeControlScopeTeam,
+			controlType: awdScopeControlTypeRetired,
 			serviceID:   0,
 		},
 		{
 			name:        "attacker_service_disabled",
 			teamID:      9210,
-			scopeType:   runtimecontracts.AWDScopeControlScopeTeamService,
-			controlType: runtimecontracts.AWDScopeControlTypeServiceDisabled,
+			scopeType:   awdScopeControlScopeTeamService,
+			controlType: awdScopeControlTypeServiceDisabled,
 			serviceID:   9310,
 		},
 		{
 			name:        "victim_team_retired",
 			teamID:      9211,
-			scopeType:   runtimecontracts.AWDScopeControlScopeTeam,
-			controlType: runtimecontracts.AWDScopeControlTypeRetired,
+			scopeType:   awdScopeControlScopeTeam,
+			controlType: awdScopeControlTypeRetired,
 			serviceID:   0,
 		},
 		{
 			name:        "victim_service_disabled",
 			teamID:      9211,
-			scopeType:   runtimecontracts.AWDScopeControlScopeTeamService,
-			controlType: runtimecontracts.AWDScopeControlTypeServiceDisabled,
+			scopeType:   awdScopeControlScopeTeamService,
+			controlType: awdScopeControlTypeServiceDisabled,
 			serviceID:   9310,
 		},
 	} {
@@ -306,7 +304,7 @@ func TestFindAWDTargetProxyScopeReturnsNilWhenScopeControlled(t *testing.T) {
 				CreatedAt:   now,
 				UpdatedAt:   now,
 			})
-			seedAWDTargetProxyRow(t, db, &runtimecontracts.AWDScopeControl{
+			seedAWDTargetProxyRow(t, db, &awdScopeControlTestRow{
 				ContestID:   contestID,
 				TeamID:      tc.teamID,
 				ScopeType:   tc.scopeType,
@@ -339,14 +337,14 @@ func TestFindAWDDefenseSSHScopeReturnsNilWhenScopeControlled(t *testing.T) {
 	}{
 		{
 			name:        "team_retired",
-			scopeType:   runtimecontracts.AWDScopeControlScopeTeam,
-			controlType: runtimecontracts.AWDScopeControlTypeRetired,
+			scopeType:   awdScopeControlScopeTeam,
+			controlType: awdScopeControlTypeRetired,
 			serviceID:   0,
 		},
 		{
 			name:        "service_disabled",
-			scopeType:   runtimecontracts.AWDScopeControlScopeTeamService,
-			controlType: runtimecontracts.AWDScopeControlTypeServiceDisabled,
+			scopeType:   awdScopeControlScopeTeamService,
+			controlType: awdScopeControlTypeServiceDisabled,
 			serviceID:   9311,
 		},
 	} {
@@ -380,19 +378,19 @@ func TestFindAWDDefenseSSHScopeReturnsNilWhenScopeControlled(t *testing.T) {
 				CreatedAt:   now,
 				UpdatedAt:   now,
 			})
-			seedAWDTargetProxyRow(t, db, &runtimeentity.AWDDefenseWorkspace{
+			seedAWDTargetProxyRow(t, db, &awdDefenseWorkspaceTestRow{
 				ContestID:         contestID,
 				TeamID:            teamID,
 				ServiceID:         serviceID,
 				InstanceID:        instanceID,
 				WorkspaceRevision: 2,
-				Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
+				Status:            awdDefenseWorkspaceStatusRunning,
 				ContainerID:       "workspace-red-web",
 				SeedSignature:     "seed:v1",
 				CreatedAt:         now,
 				UpdatedAt:         now,
 			})
-			seedAWDTargetProxyRow(t, db, &runtimecontracts.AWDScopeControl{
+			seedAWDTargetProxyRow(t, db, &awdScopeControlTestRow{
 				ContestID:   contestID,
 				TeamID:      teamID,
 				ScopeType:   tc.scopeType,
@@ -414,6 +412,41 @@ func TestFindAWDDefenseSSHScopeReturnsNilWhenScopeControlled(t *testing.T) {
 	}
 }
 
+type awdDefenseWorkspaceTestRow struct {
+	ID                int64     `gorm:"column:id;primaryKey"`
+	ContestID         int64     `gorm:"column:contest_id;not null"`
+	TeamID            int64     `gorm:"column:team_id;not null"`
+	ServiceID         int64     `gorm:"column:service_id;not null"`
+	InstanceID        int64     `gorm:"column:instance_id;not null"`
+	WorkspaceRevision int64     `gorm:"column:workspace_revision;not null;default:1"`
+	Status            string    `gorm:"column:status;size:24;not null;default:'pending'"`
+	ContainerID       string    `gorm:"column:container_id;size:64;not null;default:''"`
+	SeedSignature     string    `gorm:"column:seed_signature;type:text;not null;default:''"`
+	CreatedAt         time.Time `gorm:"column:created_at"`
+	UpdatedAt         time.Time `gorm:"column:updated_at"`
+}
+
+func (awdDefenseWorkspaceTestRow) TableName() string {
+	return "awd_defense_workspaces"
+}
+
+type awdScopeControlTestRow struct {
+	ID          int64     `gorm:"column:id;primaryKey"`
+	ContestID   int64     `gorm:"column:contest_id;not null"`
+	TeamID      int64     `gorm:"column:team_id;not null"`
+	ScopeType   string    `gorm:"column:scope_type;size:24;not null"`
+	ServiceID   int64     `gorm:"column:service_id;not null;default:0"`
+	ControlType string    `gorm:"column:control_type;size:48;not null"`
+	Reason      string    `gorm:"column:reason;type:text;not null;default:''"`
+	UpdatedBy   *int64    `gorm:"column:updated_by"`
+	CreatedAt   time.Time `gorm:"column:created_at"`
+	UpdatedAt   time.Time `gorm:"column:updated_at"`
+}
+
+func (awdScopeControlTestRow) TableName() string {
+	return "awd_scope_controls"
+}
+
 func newAWDTargetProxyRepositoryTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
@@ -430,8 +463,8 @@ func newAWDTargetProxyRepositoryTestDB(t *testing.T) *gorm.DB {
 		&contestcontracts.AWDRound{},
 		&contestcontracts.ContestAWDService{},
 		&instancecontracts.Instance{},
-		&runtimeentity.AWDDefenseWorkspace{},
-		&runtimecontracts.AWDScopeControl{},
+		&awdDefenseWorkspaceTestRow{},
+		&awdScopeControlTestRow{},
 	); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}

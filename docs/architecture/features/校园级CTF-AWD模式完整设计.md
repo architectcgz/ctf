@@ -199,8 +199,8 @@
 - `code/backend/internal/module/contest/application/jobs/awd_round_updater.go`
 - `code/backend/internal/module/contest/application/queries/awd_workspace_query.go`
 - `code/backend/internal/module/contest/application/queries/awd_summary_query.go`
-- `code/backend/internal/module/runtime/application/queries/proxy_ticket_service.go`
-- `code/backend/internal/module/runtime/infrastructure/awd_target_proxy_repository.go`
+- `code/backend/internal/module/instance/application/queries/proxy_ticket_service.go`
+- `code/backend/internal/module/instance/infrastructure/awd_target_proxy_repository.go`
 - `code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
 - `code/backend/internal/app/router_routes.go`
 - `code/frontend/src/views/contests/ContestDetail.vue`

@@ -4,11 +4,22 @@ import (
 	"context"
 	"fmt"
 
+	"gorm.io/gorm"
+
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
+)
+
+const (
+	awdDefenseWorkspaceStatusRunning = "running"
+
+	awdScopeControlScopeTeam        = "team"
+	awdScopeControlScopeTeamService = "team_service"
+
+	awdScopeControlTypeRetired         = "retired"
+	awdScopeControlTypeServiceDisabled = "service_disabled"
 )
 
 func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*instanceports.AWDTargetProxyScope, error) {
@@ -40,26 +51,26 @@ func (r *Repository) FindAWDTargetProxyScope(ctx context.Context, userID, contes
 		Joins(
 			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = tm.team_id AND %s.scope_type = ? AND %s.service_id = 0 AND %s.control_type = ?",
 				"attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl"),
-			runtimecontracts.AWDScopeControlScopeTeam,
-			runtimecontracts.AWDScopeControlTypeRetired,
+			awdScopeControlScopeTeam,
+			awdScopeControlTypeRetired,
 		).
 		Joins(
 			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = tm.team_id AND %s.scope_type = ? AND %s.service_id = cas.id AND %s.control_type = ?",
 				"attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl"),
-			runtimecontracts.AWDScopeControlScopeTeamService,
-			runtimecontracts.AWDScopeControlTypeServiceDisabled,
+			awdScopeControlScopeTeamService,
+			awdScopeControlTypeServiceDisabled,
 		).
 		Joins(
 			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = victim.id AND %s.scope_type = ? AND %s.service_id = 0 AND %s.control_type = ?",
 				"victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl"),
-			runtimecontracts.AWDScopeControlScopeTeam,
-			runtimecontracts.AWDScopeControlTypeRetired,
+			awdScopeControlScopeTeam,
+			awdScopeControlTypeRetired,
 		).
 		Joins(
 			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = victim.id AND %s.scope_type = ? AND %s.service_id = cas.id AND %s.control_type = ?",
 				"victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl"),
-			runtimecontracts.AWDScopeControlScopeTeamService,
-			runtimecontracts.AWDScopeControlTypeServiceDisabled,
+			awdScopeControlScopeTeamService,
+			awdScopeControlTypeServiceDisabled,
 		)
 	err := query.
 		Where("co.id = ? AND co.mode = ? AND co.status IN ? AND co.deleted_at IS NULL", contestID, contestcontracts.ContestModeAWD, []string{contestcontracts.ContestStatusRunning, contestcontracts.ContestStatusFrozen}).
@@ -125,7 +136,7 @@ func (r *Repository) FindAWDDefenseSSHScope(ctx context.Context, userID, contest
 		Where("defense_team_retired_ctl.id IS NULL").
 		Where("defense_service_disabled_ctl.id IS NULL").
 		Where("inst.status = ?", instancecontracts.InstanceStatusRunning).
-		Where("ws.status = ? AND ws.container_id <> '' AND ws.workspace_revision > 0", runtimeentity.AWDDefenseWorkspaceStatusRunning).
+		Where("ws.status = ? AND ws.container_id <> '' AND ws.workspace_revision > 0", awdDefenseWorkspaceStatusRunning).
 		Order("inst.created_at DESC, inst.id DESC").
 		Limit(1).
 		Scan(&row).Error
@@ -146,4 +157,18 @@ func (r *Repository) FindAWDDefenseSSHScope(ctx context.Context, userID, contest
 		return nil, nil
 	}
 	return &scope, nil
+}
+
+func joinAWDActiveScopeControls(query *gorm.DB, contestExpr, teamExpr, serviceExpr, retiredAlias, disabledAlias string) *gorm.DB {
+	retiredJoin := fmt.Sprintf(
+		"LEFT JOIN awd_scope_controls AS %[1]s ON %[1]s.contest_id = %[2]s AND %[1]s.team_id = %[3]s AND %[1]s.scope_type = ? AND %[1]s.service_id = 0 AND %[1]s.control_type = ?",
+		retiredAlias, contestExpr, teamExpr,
+	)
+	disabledJoin := fmt.Sprintf(
+		"LEFT JOIN awd_scope_controls AS %[1]s ON %[1]s.contest_id = %[2]s AND %[1]s.team_id = %[3]s AND %[1]s.scope_type = ? AND %[1]s.service_id = %[4]s AND %[1]s.control_type = ?",
+		disabledAlias, contestExpr, teamExpr, serviceExpr,
+	)
+	return query.
+		Joins(retiredJoin, awdScopeControlScopeTeam, awdScopeControlTypeRetired).
+		Joins(disabledJoin, awdScopeControlScopeTeamService, awdScopeControlTypeServiceDisabled)
 }

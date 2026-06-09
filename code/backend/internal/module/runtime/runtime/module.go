@@ -9,7 +9,6 @@ import (
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
-	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
@@ -53,20 +52,8 @@ type Deps struct {
 	InteractiveExecutor       runtimeports.ContainerInteractiveExecutor
 }
 
-type runtimeInstanceRepository interface {
-	instanceports.InstanceLookupRepository
-	instanceports.InstanceUserLookupRepository
-	instanceports.InstanceAccessRepository
-	instanceports.UserVisibleInstanceRepository
-	instanceports.TeacherInstanceQueryRepository
-	instanceports.InstanceExtendRepository
-	instanceports.InstanceStatusRepository
-	instanceports.ProxyTicketInstanceReader
-}
-
 type runtimeModuleDeps struct {
 	input                 Deps
-	repo                  runtimeInstanceRepository
 	cleanupService        *runtimecmd.RuntimeCleanupService
 	provisioningService   *runtimecmd.ProvisioningService
 	containerStatsService *runtimeapp.ContainerStatsService
@@ -114,7 +101,6 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 
 	return runtimeModuleDeps{
 		input:                 deps,
-		repo:                  repo,
 		cleanupService:        cleanupService,
 		provisioningService:   provisioningService,
 		containerStatsService: containerStatsService,

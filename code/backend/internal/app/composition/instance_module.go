@@ -12,6 +12,7 @@ import (
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
@@ -61,6 +62,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 
 	repo := runtimeinfra.NewRepository(root.DB())
+	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultCleanupService := module.CleanupService
 	var cleanupService interface {
 		instanceports.RuntimeCleaner
@@ -80,7 +82,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 	commandService := instancecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("instance_service")).SetEventBus(root.Events)
 	queryService := instanceqry.NewInstanceService(repo, &cfg.Container, cfg.Pagination)
-	proxyTicketService := buildRuntimeProxyTicketService(root, repo)
+	proxyTicketService := buildRuntimeProxyTicketService(root, instanceRepo)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
 		repo,
 		maintenanceRuntime,

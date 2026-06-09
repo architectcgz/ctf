@@ -156,6 +156,43 @@ func TestRuntimePortsTestsDoNotAssertInstancePorts(t *testing.T) {
 	}
 }
 
+func TestRuntimeInfrastructureDoesNotOwnInstanceProxyTickets(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("infrastructure", "*.go"))
+	if err != nil {
+		t.Fatalf("glob runtime infrastructure files: %v", err)
+	}
+	retiredMethods := map[string]struct{}{
+		"SaveProxyTicket":         {},
+		"FindProxyTicket":         {},
+		"FindAWDTargetProxyScope": {},
+		"FindAWDDefenseSSHScope":  {},
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		fileNode := parseGoFile(t, file)
+		for _, decl := range fileNode.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok {
+				continue
+			}
+			if _, blocked := retiredMethods[fn.Name.Name]; blocked {
+				t.Fatalf("instance proxy ticket infrastructure belongs to instance/infrastructure, found method %s in %s", fn.Name.Name, file)
+			}
+		}
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("read runtime infrastructure file %s: %v", file, err)
+		}
+		if strings.Contains(string(content), "proxy:ticket") {
+			t.Fatalf("instance proxy ticket storage keys belong to instance/infrastructure, found proxy ticket key in %s", file)
+		}
+	}
+}
+
 func TestRuntimeModuleDoesNotExposeLegacyEngineSurface(t *testing.T) {
 	t.Parallel()
 
