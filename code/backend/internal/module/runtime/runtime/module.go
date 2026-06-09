@@ -3,16 +3,13 @@ package runtime
 import (
 	"context"
 
-	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -41,8 +38,8 @@ type Module struct {
 type Deps struct {
 	Config                    *config.Config
 	Logger                    *zap.Logger
-	DB                        *gorm.DB
-	Cache                     *redislib.Client
+	ProvisioningRepository    runtimecmd.ProvisioningRepository
+	CleanupRepository         runtimecmd.RuntimeCleanupRepository
 	ProvisioningRuntime       runtimeports.ContainerProvisioningRuntime
 	CleanupRuntime            runtimeports.ContainerCleanupRuntime
 	FileRuntime               runtimeports.ContainerFileRuntime
@@ -91,9 +88,8 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	repo := runtimeinfra.NewRepository(deps.DB)
-	cleanupService := runtimecmd.NewRuntimeCleanupService(deps.CleanupRuntime, repo, log.Named("runtime_cleanup_service"))
-	provisioningService := runtimecmd.NewProvisioningService(repo, deps.ProvisioningRuntime, &cfg.Container, log.Named("runtime_provisioning_service"))
+	cleanupService := runtimecmd.NewRuntimeCleanupService(deps.CleanupRuntime, deps.CleanupRepository, log.Named("runtime_cleanup_service"))
+	provisioningService := runtimecmd.NewProvisioningService(deps.ProvisioningRepository, deps.ProvisioningRuntime, &cfg.Container, log.Named("runtime_provisioning_service"))
 	var containerStatsService *runtimeapp.ContainerStatsService
 	if deps.ManagedContainerStats != nil {
 		containerStatsService = runtimeapp.NewContainerStatsService(deps.ManagedContainerStats)

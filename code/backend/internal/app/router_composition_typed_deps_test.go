@@ -470,6 +470,60 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 	}
 }
 
+func TestRuntimeModuleDoesNotConstructRuntimeInfrastructure(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("..", "module", "runtime", "runtime", "module.go"))
+	if err != nil {
+		t.Fatalf("read runtime runtime module: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"ProvisioningRepository",
+		"runtimecmd.ProvisioningRepository",
+		"CleanupRepository",
+		"runtimecmd.RuntimeCleanupRepository",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("runtime runtime module should declare injected runtime persistence marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"runtimeinfra.NewRepository(",
+		"ctf-platform/internal/module/runtime/infrastructure",
+		"*gorm.DB",
+		"*redislib.Client",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("runtime runtime module should not construct infrastructure marker %s", marker)
+		}
+	}
+}
+
+func TestRuntimeCompositionInjectsRuntimePersistenceIntoRuntimeModule(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
+	if err != nil {
+		t.Fatalf("read runtime_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"ProvisioningRepository:",
+		"CleanupRepository:",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("runtime composition should inject runtime persistence marker %s", marker)
+		}
+	}
+}
+
 func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 

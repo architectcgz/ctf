@@ -23,7 +23,7 @@ const (
 	awdWorkspaceNamePrefix     = "ctf-workspace-"
 )
 
-type provisioningRepository interface {
+type ProvisioningRepository interface {
 	ReserveAvailablePort(ctx context.Context, start, end int) (int, error)
 	ReleaseReservedPort(ctx context.Context, port int) error
 	ReserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int) (string, error)
@@ -57,14 +57,14 @@ type topologyStageContext struct {
 
 // ProvisioningService 收口运行时资源创建编排，包括单容器与拓扑实例创建。
 type ProvisioningService struct {
-	repo   provisioningRepository
+	repo   ProvisioningRepository
 	engine runtimeports.ContainerProvisioningRuntime
 	config *config.ContainerConfig
 	logger *zap.Logger
 }
 
 // NewProvisioningService 创建运行时资源编排服务。
-func NewProvisioningService(repo provisioningRepository, engine runtimeports.ContainerProvisioningRuntime, cfg *config.ContainerConfig, logger *zap.Logger) *ProvisioningService {
+func NewProvisioningService(repo ProvisioningRepository, engine runtimeports.ContainerProvisioningRuntime, cfg *config.ContainerConfig, logger *zap.Logger) *ProvisioningService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

@@ -509,3 +509,58 @@ Current remaining surface after Task 10:
 
 - `runtime/ports` 已经只保留 capability interface 与错误哨兵；纯数据形状不再要求 consumer 依赖 capability port 包。
 - `container_runtime` 的剩余问题已经收敛成更明确的一条：底层 capability interface 与 Docker / runtime-agent 实现仍然物理落在 `runtime` 模块，后续需要继续判断是否拆到独立 `container_runtime` / platform adapter owner。
+
+## Task 11: Move Runtime Persistence Construction To Composition
+
+**Files:**
+- Modify:
+  - `code/backend/internal/module/runtime/application/commands/provisioning_service.go`
+  - `code/backend/internal/module/runtime/application/commands/runtime_cleanup_service.go`
+  - `code/backend/internal/module/runtime/runtime/module.go`
+  - `code/backend/internal/app/composition/runtime_module.go`
+  - `code/backend/internal/app/router_composition_typed_deps_test.go`
+  - `docs/design/backend-module-boundary-target.md`
+  - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
+
+- [x] **Step 1: Add failing guards**
+
+Require:
+
+- `runtime/runtime.Module` to declare injected runtime persistence dependencies instead of constructing `runtimeinfra.Repository`.
+- `app/composition/runtime_module.go` to inject those runtime-owned persistence adapters explicitly.
+
+Run:
+
+```bash
+go test ./internal/app -run 'TestRuntimeModuleDoesNotConstructRuntimeInfrastructure|TestRuntimeCompositionInjectsRuntimePersistenceIntoRuntimeModule' -count=1
+```
+
+Expected: FAIL before the slice because `runtime/runtime/module.go` still imported `runtimeinfra` and `gorm/redis` and composition did not inject runtime persistence adapters.
+
+- [x] **Step 2: Export narrow command dependency interfaces**
+
+Export `runtimecmd.ProvisioningRepository` and `runtimecmd.RuntimeCleanupRepository` from the commands package so the runtime module can depend on named narrow persistence ports instead of a concrete repository constructor.
+
+- [x] **Step 3: Remove runtime module infrastructure construction**
+
+Change `runtimemodule.Deps` to accept injected runtime-owned persistence adapters and remove `DB` / `Cache` / `runtimeinfra.NewRepository(...)` from `runtime/runtime/module.go`.
+
+- [x] **Step 4: Move injection to composition**
+
+Make `internal/app/composition/runtime_module.go` own the `runtimeinfra.NewRepository(root.DB())` construction and pass it into `runtimemodule.Build(...)` as the provisioning / cleanup persistence adapter.
+
+- [x] **Step 5: Verify**
+
+Run:
+
+```bash
+go test ./internal/app -run 'TestRuntimeModuleUsesExternalPortsForCrossModuleDeps|TestRuntimeModuleDoesNotConstructRuntimeInfrastructure|TestRuntimeCompositionInjectsRuntimePersistenceIntoRuntimeModule|TestBuildContainerRuntimeModuleDelegatesToSubBuilders|TestBuildRuntimeHostExecutorProvidesReachableRuntimeInTestEnv|TestAWDDefenseSSHGateway' -count=1
+go test ./internal/module/runtime/... -count=1
+go test ./internal/app/composition -count=1
+go test ./internal/module -count=1
+```
+
+Current remaining surface after Task 11:
+
+- `runtime/runtime.Module` 已经不再直接依赖 `runtime/infrastructure` 的具体构造，也不再把 DB / cache 作为自己的输入；container-facing service builder 与 runtime-owned persistence 构造边界已经分开。
+- 剩余 debt 主要是 capability interface、host adapter 和 `ContainerRuntimeModule` 这组物理包落点仍留在 `runtime`，以及 `runtime/infrastructure.Repository` 内部仍有待继续拆分的 runtime-owned persistence 面。

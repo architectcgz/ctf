@@ -13,7 +13,7 @@ import (
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
-type runtimeCleanupRepository interface {
+type RuntimeCleanupRepository interface {
 	ReleaseReservedPort(ctx context.Context, port int) error
 	ReleasePortForInstance(ctx context.Context, port int, instanceID int64) error
 	ReleaseReservedSubnet(ctx context.Context, subnet string) error
@@ -23,7 +23,7 @@ type runtimeCleanupRepository interface {
 // RuntimeCleanupService 收口实例运行时资源清理能力。
 type RuntimeCleanupService struct {
 	engine runtimeports.ContainerCleanupRuntime
-	repo   runtimeCleanupRepository
+	repo   RuntimeCleanupRepository
 	logger *zap.Logger
 }
 
@@ -33,7 +33,7 @@ const runtimeCleanupNetworkOpTimeout = 10 * time.Second
 const runtimeCleanupNetworkRemovalPollInterval = 500 * time.Millisecond
 
 // NewRuntimeCleanupService 创建运行时资源清理服务。
-func NewRuntimeCleanupService(engine runtimeports.ContainerCleanupRuntime, repo runtimeCleanupRepository, logger *zap.Logger) *RuntimeCleanupService {
+func NewRuntimeCleanupService(engine runtimeports.ContainerCleanupRuntime, repo RuntimeCleanupRepository, logger *zap.Logger) *RuntimeCleanupService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

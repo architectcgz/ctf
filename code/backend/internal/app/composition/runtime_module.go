@@ -63,8 +63,8 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	module := runtimemodule.Build(runtimemodule.Deps{
 		Config:                    cfg,
 		Logger:                    log,
-		DB:                        root.DB(),
-		Cache:                     root.Cache(),
+		ProvisioningRepository:    runtimeRepo,
+		CleanupRepository:         runtimeRepo,
 		ProvisioningRuntime:       executor,
 		CleanupRuntime:            executor,
 		FileRuntime:               executor,
