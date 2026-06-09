@@ -17,6 +17,23 @@ changed_files() {
   git diff --name-only | sort -u
 }
 
+diff_args() {
+  if [[ -n "$(git diff --cached --name-only)" ]]; then
+    printf '%s\n' "--cached"
+  fi
+}
+
+changed_diff() {
+  local pathspecs=("$@")
+  local args=()
+  local diff_mode
+  diff_mode="$(diff_args)"
+  if [[ -n "$diff_mode" ]]; then
+    args+=("$diff_mode")
+  fi
+  git diff "${args[@]}" --unified=0 -- "${pathspecs[@]}"
+}
+
 matches_any() {
   local pattern="$1"
   local input="$2"
@@ -27,15 +44,37 @@ matches_any() {
   fi
 }
 
+api_contract_signal_changed() {
+  local changed="$1"
+
+  local direct_contract_surface_pattern='(^code/backend/internal/app/router(_routes)?\.go$|^code/backend/internal/dto/|^code/backend/pkg/response/|^code/backend/pkg/errcode/|^code/frontend/src/api/.+\.(ts|vue)$|^code/frontend/src/api/contracts\.ts$)'
+  if matches_any "$direct_contract_surface_pattern" "$changed"; then
+    return 0
+  fi
+
+  local api_files
+  api_files="$(printf '%s\n' "$changed" | grep -E '(^code/backend/internal/handler/|^code/backend/internal/module/.+/api/|^code/backend/internal/module/.+/handler\.go$)' | grep -Ev '(_test\.go$|/testdata/)' || true)"
+  if [[ -z "$api_files" ]]; then
+    return 1
+  fi
+
+  local diff
+  local -a api_pathspecs
+  mapfile -t api_pathspecs <<<"$api_files"
+  diff="$(changed_diff "${api_pathspecs[@]}")"
+
+  local contract_signal_pattern='^[+-][^+-].*(\.(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD|Any|Handle|Group)\(|`(json|form|uri|binding|header):|ShouldBind|Bind(Query|JSON|Uri|Header)?|Param\(|Query(Array|Map)?\(|DefaultQuery\(|PostForm|Status[A-Za-z0-9_]*|HTTP[A-Za-z0-9_]*|errcode\.|response\.|AbortWithStatus|SetCookie\(|Header\()'
+  matches_any "$contract_signal_pattern" "$diff"
+}
+
 check_api_contract_changes() {
   local changed="$1"
   local runtime_changed
-  runtime_changed="$(printf '%s\n' "$changed" | grep -Ev '^code/frontend/src/api/__tests__/' || true)"
-  local api_surface_pattern='(^code/backend/internal/app/router\.go$|^code/backend/internal/dto/|^code/backend/internal/handler/|^code/backend/internal/module/.+/api/|^code/backend/internal/module/.+/handler\.go$|^code/backend/pkg/response/|^code/backend/pkg/errcode/|^code/frontend/src/api/.+\.(ts|vue)$|^code/frontend/src/api/contracts\.ts$)'
+  runtime_changed="$(printf '%s\n' "$changed" | grep -Ev '(^code/frontend/src/api/__tests__/|_test\.go$)' || true)"
   local contract_pattern='(^docs/contracts/api-contract-v1\.md$|^docs/contracts/openapi-v1\.yaml$|^docs/contracts/openapi-v1/|^docs/architecture/backend/04-api-design\.md$)'
 
-  if ! matches_any "$api_surface_pattern" "$runtime_changed"; then
-    echo "  $(green PASS) — API surface unchanged"
+  if ! api_contract_signal_changed "$runtime_changed"; then
+    echo "  $(green PASS) — API contract surface unchanged"
     return
   fi
 
