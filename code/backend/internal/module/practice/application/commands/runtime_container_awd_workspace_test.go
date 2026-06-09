@@ -167,7 +167,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 		t.Fatalf("unexpected runtime instance after createSingleContainer(): %+v", instance)
 	}
 
-	workspace, err := runtimeinfrarepo.NewRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
+	workspace, err := runtimeinfrarepo.NewAWDRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
 	if err != nil {
 		t.Fatalf("FindAWDDefenseWorkspace() error = %v", err)
 	}

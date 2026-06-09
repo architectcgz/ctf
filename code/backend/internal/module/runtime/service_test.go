@@ -29,6 +29,7 @@ import (
 type runtimeTestRepository struct {
 	*runtimeinfra.Repository
 	*runtimeinfra.AllocationRepository
+	*runtimeinfra.AWDRepository
 	instanceRepo *instanceinfra.Repository
 	db           *gorm.DB
 }
@@ -61,6 +62,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	return &runtimeTestRepository{
 		Repository:           runtimeinfra.NewRepository(db),
 		AllocationRepository: runtimeinfra.NewAllocationRepository(db),
+		AWDRepository:        runtimeinfra.NewAWDRepository(db),
 		instanceRepo:         instanceinfra.NewRepository(db),
 		db:                   db,
 	}

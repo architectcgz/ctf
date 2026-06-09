@@ -27,6 +27,7 @@ type practiceTestInstanceRepository struct {
 	instanceRepo   *instanceinfrarepo.Repository
 	runtimeRepo    *runtimeinfrarepo.Repository
 	allocationRepo *runtimeinfrarepo.AllocationRepository
+	awdRepo        *runtimeinfrarepo.AWDRepository
 }
 
 func newPracticeTestInstanceRepository(db *gorm.DB) *practiceTestInstanceRepository {
@@ -35,6 +36,7 @@ func newPracticeTestInstanceRepository(db *gorm.DB) *practiceTestInstanceReposit
 		instanceRepo:   instanceinfrarepo.NewRepository(db),
 		runtimeRepo:    runtimeinfrarepo.NewRepository(db),
 		allocationRepo: runtimeinfrarepo.NewAllocationRepository(db),
+		awdRepo:        runtimeinfrarepo.NewAWDRepository(db),
 	}
 }
 
@@ -74,10 +76,10 @@ func (r *practiceTestInstanceRepository) RefreshInstanceExpiry(ctx context.Conte
 }
 
 func (r *practiceTestInstanceRepository) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
-	if r == nil || r.runtimeRepo == nil {
+	if r == nil || r.awdRepo == nil {
 		return nil
 	}
-	return r.runtimeRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
+	return r.awdRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
 }
 
 func (r *practiceTestInstanceRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
@@ -138,17 +140,17 @@ func (r *practiceTestInstanceRepository) CountInstancesByStatus(ctx context.Cont
 }
 
 func (r *practiceTestInstanceRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error) {
-	if r == nil || r.runtimeRepo == nil {
+	if r == nil || r.awdRepo == nil {
 		return nil, nil
 	}
-	return r.runtimeRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
+	return r.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
 }
 
 func (r *practiceTestInstanceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error {
-	if r == nil || r.runtimeRepo == nil {
+	if r == nil || r.awdRepo == nil {
 		return nil
 	}
-	return r.runtimeRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
+	return r.awdRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
 }
 
 type stubPracticeRepository struct {

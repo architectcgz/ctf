@@ -395,6 +395,89 @@ func TestRuntimeRepositoryDoesNotOwnAllocationPersistence(t *testing.T) {
 	}
 }
 
+func TestRuntimeRepositoryDoesNotOwnAWDPersistence(t *testing.T) {
+	t.Parallel()
+
+	repositoryContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "repository.go"))
+	if err != nil {
+		t.Fatalf("read runtime repository.go: %v", err)
+	}
+	awdContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "awd_repository.go"))
+	if err != nil {
+		t.Fatalf("read runtime awd_repository.go: %v", err)
+	}
+
+	repositorySource := string(repositoryContent)
+	awdSource := string(awdContent)
+	expected := []string{
+		"type AWDRepository struct",
+		"func NewAWDRepository(db *gorm.DB) *AWDRepository",
+		"func (r *AWDRepository) FindAWDDefenseWorkspace",
+		"func (r *AWDRepository) UpsertAWDDefenseWorkspace",
+		"func (r *AWDRepository) BumpAWDDefenseWorkspaceRevision",
+		"func (r *AWDRepository) FindRunningAWDDefenseWorkspaceByInstanceID",
+		"func (r *AWDRepository) CreateAWDServiceOperation",
+		"func (r *AWDRepository) FinishActiveAWDServiceOperationForInstance",
+		"func (r *AWDRepository) FinishAWDServiceOperation",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(awdSource, marker) {
+			t.Fatalf("runtime AWD repository should own marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"func (r *Repository) FindAWDDefenseWorkspace",
+		"func (r *Repository) UpsertAWDDefenseWorkspace",
+		"func (r *Repository) BumpAWDDefenseWorkspaceRevision",
+		"func (r *Repository) FindRunningAWDDefenseWorkspaceByInstanceID",
+		"func (r *Repository) CreateAWDServiceOperation",
+		"func (r *Repository) FinishActiveAWDServiceOperationForInstance",
+		"func (r *Repository) FinishAWDServiceOperation",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(repositorySource, marker) {
+			t.Fatalf("runtime Repository should not own AWD marker %s", marker)
+		}
+	}
+}
+
+func TestRuntimeAWDPersistenceWiredFromCompositionRoot(t *testing.T) {
+	t.Parallel()
+
+	instanceContent, err := os.ReadFile(filepath.Join("composition", "instance_module.go"))
+	if err != nil {
+		t.Fatalf("read instance_module.go: %v", err)
+	}
+	contestContent, err := os.ReadFile(filepath.Join("composition", "contest_module.go"))
+	if err != nil {
+		t.Fatalf("read contest_module.go: %v", err)
+	}
+
+	instanceSource := string(instanceContent)
+	instanceExpected := []string{
+		"awdRepo := runtimeinfra.NewAWDRepository(root.DB())",
+		"newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, repo)",
+		"newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, repo)",
+	}
+	for _, marker := range instanceExpected {
+		if !strings.Contains(instanceSource, marker) {
+			t.Fatalf("instance composition should wire runtime AWD repository marker %s", marker)
+		}
+	}
+
+	contestSource := string(contestContent)
+	contestExpected := []string{
+		"runtimeAWDRepo := runtimeinfra.NewAWDRepository(root.DB())",
+		"newContestEndedRuntimeStateStore(root.DB(), instanceRepo, allocationRepo, runtimeAWDRepo)",
+	}
+	for _, marker := range contestExpected {
+		if !strings.Contains(contestSource, marker) {
+			t.Fatalf("contest composition should wire runtime AWD repository marker %s", marker)
+		}
+	}
+}
+
 func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 	t.Parallel()
 

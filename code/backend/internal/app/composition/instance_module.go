@@ -66,6 +66,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 
 	repo := runtimeinfra.NewRepository(root.DB())
 	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
+	awdRepo := runtimeinfra.NewAWDRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultCleanupService := module.CleanupService
 	var cleanupService interface {
@@ -88,7 +89,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	queryService := instanceqry.NewInstanceService(instanceRepo, &cfg.Container, cfg.Pagination)
 	proxyTicketService := buildRuntimeProxyTicketService(root, instanceRepo)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
-		newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, repo),
+		newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, repo),
 		maintenanceRuntime,
 		cleanupService,
 		&cfg.Container,
@@ -128,7 +129,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	))
 
 	return &InstanceModule{
-		PracticeInstanceRepository:  newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, repo),
+		PracticeInstanceRepository:  newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, repo),
 		PracticeRuntimeService:      practiceRuntimeService,
 		PracticeRuntimeNodeSelector: newPracticeRuntimeNodeSelectorAdapter(runtime.RuntimeNodeSelector),
 		service: newRuntimeHTTPServiceAdapter(
@@ -286,17 +287,19 @@ type instanceMaintenanceRepositoryAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
 	allocationRepo *runtimeinfra.AllocationRepository
+	awdRepo        *runtimeinfra.AWDRepository
 	runtimeRepo    *runtimeinfra.Repository
 }
 
-func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, runtimeRepo *runtimeinfra.Repository) *instanceMaintenanceRepositoryAdapter {
-	if instanceRepo == nil && allocationRepo == nil && runtimeRepo == nil {
+func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository, runtimeRepo *runtimeinfra.Repository) *instanceMaintenanceRepositoryAdapter {
+	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil && runtimeRepo == nil {
 		return nil
 	}
 	return &instanceMaintenanceRepositoryAdapter{
 		db:             db,
 		instanceRepo:   instanceRepo,
 		allocationRepo: allocationRepo,
+		awdRepo:        awdRepo,
 		runtimeRepo:    runtimeRepo,
 	}
 }
@@ -327,7 +330,10 @@ func (a *instanceMaintenanceRepositoryAdapter) ListRecoverableActiveInstances(ct
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*instanceports.AWDDefenseWorkspace, error) {
-	workspace, err := a.runtimeRepo.FindRunningAWDDefenseWorkspaceByInstanceID(ctx, instanceID)
+	if a == nil || a.awdRepo == nil {
+		return nil, nil
+	}
+	workspace, err := a.awdRepo.FindRunningAWDDefenseWorkspaceByInstanceID(ctx, instanceID)
 	if err != nil || workspace == nil {
 		return nil, err
 	}
@@ -337,7 +343,7 @@ func (a *instanceMaintenanceRepositoryAdapter) FindRunningAWDDefenseWorkspaceByI
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) CreateAWDServiceOperation(ctx context.Context, operation *instanceports.AWDServiceOperation) error {
-	if operation == nil {
+	if a == nil || operation == nil {
 		return nil
 	}
 	row := runtimeentity.AWDServiceOperation{
@@ -358,7 +364,10 @@ func (a *instanceMaintenanceRepositoryAdapter) CreateAWDServiceOperation(ctx con
 		CreatedAt:     operation.CreatedAt,
 		UpdatedAt:     operation.UpdatedAt,
 	}
-	if err := a.runtimeRepo.CreateAWDServiceOperation(ctx, &row); err != nil {
+	if a.awdRepo == nil {
+		return nil
+	}
+	if err := a.awdRepo.CreateAWDServiceOperation(ctx, &row); err != nil {
 		return err
 	}
 	operation.ID = row.ID
@@ -366,7 +375,10 @@ func (a *instanceMaintenanceRepositoryAdapter) CreateAWDServiceOperation(ctx con
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error {
-	return a.runtimeRepo.FinishAWDServiceOperation(ctx, operationID, status, errorMessage, finishedAt)
+	if a == nil || a.awdRepo == nil {
+		return nil
+	}
+	return a.awdRepo.FinishAWDServiceOperation(ctx, operationID, status, errorMessage, finishedAt)
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
@@ -394,17 +406,19 @@ type practiceInstanceRepositoryAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
 	allocationRepo *runtimeinfra.AllocationRepository
+	awdRepo        *runtimeinfra.AWDRepository
 	runtimeRepo    *runtimeinfra.Repository
 }
 
-func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, runtimeRepo *runtimeinfra.Repository) *practiceInstanceRepositoryAdapter {
-	if instanceRepo == nil && allocationRepo == nil && runtimeRepo == nil {
+func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository, runtimeRepo *runtimeinfra.Repository) *practiceInstanceRepositoryAdapter {
+	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil && runtimeRepo == nil {
 		return nil
 	}
 	return &practiceInstanceRepositoryAdapter{
 		db:             db,
 		instanceRepo:   instanceRepo,
 		allocationRepo: allocationRepo,
+		awdRepo:        awdRepo,
 		runtimeRepo:    runtimeRepo,
 	}
 }
@@ -450,10 +464,10 @@ func (a *practiceInstanceRepositoryAdapter) PersistProvisionedRuntime(ctx contex
 }
 
 func (a *practiceInstanceRepositoryAdapter) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
-	if a == nil || a.runtimeRepo == nil {
+	if a == nil || a.awdRepo == nil {
 		return nil
 	}
-	return a.runtimeRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
+	return a.awdRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
 }
 
 func (a *practiceInstanceRepositoryAdapter) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {

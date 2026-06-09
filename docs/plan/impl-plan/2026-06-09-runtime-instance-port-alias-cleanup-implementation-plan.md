@@ -668,4 +668,50 @@ Current remaining surface after Task 13:
 - `runtime/infrastructure.Repository` no longer owns allocation persistence; port/subnet reservation and allocation release now have a concrete owner in `runtime/infrastructure.AllocationRepository`.
 - `runtime/infrastructure.Repository` still groups AWD defense workspace / AWD service operation persistence with runtime state index and migration-facing state lookups. The next runtime persistence cleanup should split those remaining owner groups instead of adding methods back to the broad repository.
 - `container_runtime` capability interface / host adapter / `ContainerRuntimeModule` physical owner is still undecided and remains a separate structure question.
+
+## Task 14: Split Runtime AWD Persistence Repository
+
+**Files:**
+- Create:
+  - `code/backend/internal/module/runtime/infrastructure/awd_repository.go`
+- Modify:
+  - `code/backend/internal/module/runtime/infrastructure/repository.go`
+  - `code/backend/internal/module/runtime/infrastructure/awd_defense_workspace_repository_test.go`
+  - `code/backend/internal/app/composition/instance_module.go`
+  - `code/backend/internal/app/composition/contest_module.go`
+  - `code/backend/internal/app/router_composition_typed_deps_test.go`
+  - runtime / practice / contest test adapters that read AWD workspace or finish AWD service operations.
+  - `docs/design/backend-module-boundary-target.md`
+  - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
+
+- [x] **Step 1: Add AWD persistence owner guard**
+
+Extend typed dependency tests so `runtimeinfra.AWDRepository` owns AWD defense workspace and AWD service operation persistence, and broad `runtimeinfra.Repository` no longer declares those methods.
+
+- [x] **Step 2: Move AWD workspace / operation methods**
+
+Move `FindAWDDefenseWorkspace`, `UpsertAWDDefenseWorkspace`, `BumpAWDDefenseWorkspaceRevision`, `FindRunningAWDDefenseWorkspaceByInstanceID`, `CreateAWDServiceOperation`, `FinishActiveAWDServiceOperationForInstance`, and `FinishAWDServiceOperation` from `runtime/infrastructure.Repository` into `runtime/infrastructure.AWDRepository`.
+
+- [x] **Step 3: Rewire composition and test adapters**
+
+Use `runtimeinfra.NewAWDRepository(root.DB())` for instance maintenance AWD workspace / operation paths, practice active AWD operation finish, and contest ended-runtime workspace state store. Keep `runtimeinfra.Repository` for active container inventory, container -> node state lookup, ACL migration state, proxy traffic recorder, and other state/index reads not moved in this slice.
+
+- [x] **Step 4: Verify**
+
+Run:
+
+```bash
+go test ./internal/app -run 'TestRuntimeRepositoryDoesNotOwnAWDPersistence|TestRuntimeRepositoryDoesNotOwnAllocationPersistence' -count=1
+go test ./internal/module/runtime/infrastructure -count=1
+go test ./internal/app/composition -count=1
+go test ./internal/module/practice/... -count=1
+go test ./internal/module/runtime/... -count=1
+go test ./internal/module/contest/infrastructure -count=1
+```
+
+Current remaining surface after Task 14:
+
+- `runtime/infrastructure.Repository` no longer owns allocation persistence or AWD workspace / operation persistence.
+- Remaining `runtime/infrastructure.Repository` responsibilities are active container inventory, container-to-node state lookup, ACL migration state update, runtime managed instance lookup, and proxy traffic event recorder support. These should be split in a later state/index slice instead of using the broad repository as a default landing zone.
+- `container_runtime` capability interface / host adapter / `ContainerRuntimeModule` physical owner is still undecided and remains a separate structure question.
 - 下一步剩余 debt 已进一步收敛成 concrete runtime persistence 本身的继续拆分，以及 capability interface / host adapter / `ContainerRuntimeModule` 的最终物理 owner 迁移。

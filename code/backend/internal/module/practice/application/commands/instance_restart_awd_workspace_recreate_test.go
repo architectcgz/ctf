@@ -237,7 +237,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 		t.Fatalf("expected runtime and workspace recreation, got %d topology calls", createTopologyCalls.Load())
 	}
 
-	workspace, err := runtimeinfrarepo.NewRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
+	workspace, err := runtimeinfrarepo.NewAWDRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
 	if err != nil {
 		t.Fatalf("FindAWDDefenseWorkspace() error = %v", err)
 	}

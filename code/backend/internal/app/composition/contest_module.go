@@ -51,8 +51,8 @@ func buildContestEndedRuntimeCleaner(root *Root, runtime *ContainerRuntimeModule
 		logger = zap.NewNop()
 	}
 
-	runtimeRepo := runtimeinfra.NewRepository(root.DB())
 	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
+	runtimeAWDRepo := runtimeinfra.NewAWDRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	var cleanupService interface {
 		CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
@@ -64,12 +64,12 @@ func buildContestEndedRuntimeCleaner(root *Root, runtime *ContainerRuntimeModule
 	if runtime.nodeRouter != nil {
 		cleanupService = newContestEndedRuntimeCleanupRouterAdapter(runtime.nodeRouter)
 	}
-	awdRepo := contestinfra.NewAWDRepository(root.DB())
+	contestAWDRepo := contestinfra.NewAWDRepository(root.DB())
 	return contestinfra.NewContestEndedRuntimeCleaner(
-		awdRepo,
-		awdRepo,
+		contestAWDRepo,
+		contestAWDRepo,
 		cleanupService,
-		newContestEndedRuntimeStateStore(root.DB(), instanceRepo, allocationRepo, runtimeRepo),
+		newContestEndedRuntimeStateStore(root.DB(), instanceRepo, allocationRepo, runtimeAWDRepo),
 	)
 }
 
@@ -113,18 +113,18 @@ type contestEndedRuntimeStateStoreAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
 	allocationRepo *runtimeinfra.AllocationRepository
-	runtimeRepo    *runtimeinfra.Repository
+	awdRepo        *runtimeinfra.AWDRepository
 }
 
-func newContestEndedRuntimeStateStore(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, runtimeRepo *runtimeinfra.Repository) *contestEndedRuntimeStateStoreAdapter {
-	if db == nil || instanceRepo == nil || allocationRepo == nil || runtimeRepo == nil {
+func newContestEndedRuntimeStateStore(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository) *contestEndedRuntimeStateStoreAdapter {
+	if db == nil || instanceRepo == nil || allocationRepo == nil || awdRepo == nil {
 		return nil
 	}
 	return &contestEndedRuntimeStateStoreAdapter{
 		db:             db,
 		instanceRepo:   instanceRepo,
 		allocationRepo: allocationRepo,
-		runtimeRepo:    runtimeRepo,
+		awdRepo:        awdRepo,
 	}
 }
 
@@ -142,22 +142,22 @@ func (a *contestEndedRuntimeStateStoreAdapter) ExpireInstanceRuntime(ctx context
 }
 
 func (a *contestEndedRuntimeStateStoreAdapter) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error) {
-	if a == nil || a.runtimeRepo == nil {
+	if a == nil || a.awdRepo == nil {
 		return nil, nil
 	}
-	return a.runtimeRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
+	return a.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
 }
 
 func (a *contestEndedRuntimeStateStoreAdapter) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error {
-	if a == nil || a.runtimeRepo == nil {
+	if a == nil || a.awdRepo == nil {
 		return nil
 	}
-	return a.runtimeRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
+	return a.awdRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
 }
 
 func (a *contestEndedRuntimeStateStoreAdapter) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
-	if a == nil || a.runtimeRepo == nil {
+	if a == nil || a.awdRepo == nil {
 		return nil
 	}
-	return a.runtimeRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
+	return a.awdRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
 }

@@ -63,7 +63,7 @@ var reviewedTransactionBoundaryFunctions = map[string]struct{}{
 	"ops/infrastructure/notification_repository.go#CreateBatch":                                              {},
 	"practice/infrastructure/repository.go#CreateAWDServiceOperation":                                        {},
 	"practice/infrastructure/repository.go#ResetInstanceRuntimeForRestart":                                   {},
-	"runtime/infrastructure/repository.go#BumpAWDDefenseWorkspaceRevision":                                   {},
+	"runtime/infrastructure/awd_repository.go#BumpAWDDefenseWorkspaceRevision":                               {},
 }
 
 var reviewedOversizedRuntimeModuleFiles = map[string]struct{}{}

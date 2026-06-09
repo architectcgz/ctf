@@ -682,7 +682,7 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 		t.Fatal("expected createSingleContainer() to fail when stale workspace cleanup fails")
 	}
 
-	workspace, err := runtimeinfrarepo.NewRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
+	workspace, err := runtimeinfrarepo.NewAWDRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
 	if err != nil {
 		t.Fatalf("FindAWDDefenseWorkspace() error = %v", err)
 	}
@@ -1066,7 +1066,7 @@ func (r *interceptAWDDefenseWorkspaceRepository) UpsertAWDDefenseWorkspace(ctx c
 			return err
 		}
 	}
-	return r.runtimeRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
+	return r.awdRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
 }
 
 type practiceServiceContextKey string

@@ -39,6 +39,7 @@ type contestInstanceTestInstanceRepository struct {
 	instanceRepo   *instanceinfrarepo.Repository
 	runtimeRepo    *runtimeinfrarepo.Repository
 	allocationRepo *runtimeinfrarepo.AllocationRepository
+	awdRepo        *runtimeinfrarepo.AWDRepository
 }
 
 func newContestInstanceTestInstanceRepository(db *gorm.DB) *contestInstanceTestInstanceRepository {
@@ -47,6 +48,7 @@ func newContestInstanceTestInstanceRepository(db *gorm.DB) *contestInstanceTestI
 		instanceRepo:   instanceinfrarepo.NewRepository(db),
 		runtimeRepo:    runtimeinfrarepo.NewRepository(db),
 		allocationRepo: runtimeinfrarepo.NewAllocationRepository(db),
+		awdRepo:        runtimeinfrarepo.NewAWDRepository(db),
 	}
 }
 
@@ -71,7 +73,7 @@ func (r *contestInstanceTestInstanceRepository) RefreshInstanceExpiry(ctx contex
 }
 
 func (r *contestInstanceTestInstanceRepository) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
-	return r.runtimeRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
+	return r.awdRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
 }
 
 func (r *contestInstanceTestInstanceRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
@@ -117,11 +119,11 @@ func (r *contestInstanceTestInstanceRepository) CountInstancesByStatus(ctx conte
 }
 
 func (r *contestInstanceTestInstanceRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error) {
-	return r.runtimeRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
+	return r.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
 }
 
 func (r *contestInstanceTestInstanceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error {
-	return r.runtimeRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
+	return r.awdRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
 }
 
 func TestServiceStartContestChallengeRejectsAWDContest(t *testing.T) {

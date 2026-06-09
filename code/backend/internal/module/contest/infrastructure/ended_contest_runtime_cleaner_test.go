@@ -446,8 +446,8 @@ func collectCleanedContainerIDs(t *testing.T, instances []*instanceentity.Instan
 type endedContestRuntimeStateStoreAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
-	runtimeRepo    *runtimeinfra.Repository
 	allocationRepo *runtimeinfra.AllocationRepository
+	awdRepo        *runtimeinfra.AWDRepository
 }
 
 func newEndedContestRuntimeStateStore(db *gorm.DB) *endedContestRuntimeStateStoreAdapter {
@@ -457,8 +457,8 @@ func newEndedContestRuntimeStateStore(db *gorm.DB) *endedContestRuntimeStateStor
 	return &endedContestRuntimeStateStoreAdapter{
 		db:             db,
 		instanceRepo:   instanceinfra.NewRepository(db),
-		runtimeRepo:    runtimeinfra.NewRepository(db),
 		allocationRepo: runtimeinfra.NewAllocationRepository(db),
+		awdRepo:        runtimeinfra.NewAWDRepository(db),
 	}
 }
 
@@ -478,24 +478,24 @@ func (a *endedContestRuntimeStateStoreAdapter) ExpireInstanceRuntime(ctx context
 }
 
 func (a *endedContestRuntimeStateStoreAdapter) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error) {
-	if a == nil || a.runtimeRepo == nil {
+	if a == nil || a.awdRepo == nil {
 		return nil, nil
 	}
-	return a.runtimeRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
+	return a.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
 }
 
 func (a *endedContestRuntimeStateStoreAdapter) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error {
-	if a == nil || a.runtimeRepo == nil {
+	if a == nil || a.awdRepo == nil {
 		return nil
 	}
-	return a.runtimeRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
+	return a.awdRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
 }
 
 func (a *endedContestRuntimeStateStoreAdapter) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
-	if a == nil || a.runtimeRepo == nil {
+	if a == nil || a.awdRepo == nil {
 		return nil
 	}
-	return a.runtimeRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
+	return a.awdRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
 }
 
 func int64Ptr(value int64) *int64 {
