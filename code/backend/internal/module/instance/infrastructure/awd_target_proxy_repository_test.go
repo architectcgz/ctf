@@ -1,0 +1,479 @@
+package infrastructure
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
+)
+
+func TestFindAWDTargetProxyScopeReturnsCrossTeamRunningInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newAWDTargetProxyRepositoryTestDB(t)
+	now := time.Now()
+	contestID := int64(9101)
+	attackerTeamID := int64(9201)
+	victimTeamID := int64(9202)
+	serviceID := int64(9301)
+	challengeID := int64(9401)
+	instanceID := int64(9501)
+
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{
+		ID:        contestID,
+		Title:     "AWD",
+		Mode:      contestcontracts.ContestModeAWD,
+		Status:    contestcontracts.ContestStatusRunning,
+		StartTime: now.Add(-time.Minute),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: attackerTeamID, ContestID: contestID, Name: "Red", CaptainID: 1001, InviteCode: "red", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: victimTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1002, InviteCode: "blue", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: attackerTeamID, UserID: 1001, JoinedAt: now, CreatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9601, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{
+		ID:             serviceID,
+		ContestID:      contestID,
+		AWDChallengeID: challengeID,
+		DisplayName:    "Web",
+		IsVisible:      true,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	})
+	seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
+		ID:          instanceID,
+		UserID:      1002,
+		ContestID:   &contestID,
+		TeamID:      &victimTeamID,
+		ChallengeID: challengeID,
+		ServiceID:   &serviceID,
+		ContainerID: "ctr-blue-web",
+		RuntimeDetails: `{
+			"networks":[{"key":"default","name":"ctf-awd-contest-9101","network_id":"net-awd-contest-9101","shared":true}],
+			"containers":[{"container_id":"ctr-blue-web","is_entry_point":true,"network_keys":["default"],"network_aliases":["awd-c9101-t9202-s9301"],"network_ips":{"ctf-awd-contest-9101":"172.30.10.20"}}]
+		}`,
+		ShareScope: instancecontracts.ShareScopePerTeam,
+		Status:     instancecontracts.InstanceStatusRunning,
+		AccessURL:  "http://awd-c9101-t9202-s9301:8080",
+		ExpiresAt:  now.Add(time.Hour),
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+
+	scope, err := NewRepository(db).FindAWDTargetProxyScope(context.Background(), 1001, contestID, serviceID, victimTeamID)
+	if err != nil {
+		t.Fatalf("FindAWDTargetProxyScope() error = %v", err)
+	}
+	if scope == nil {
+		t.Fatal("expected target scope")
+	}
+	if scope.InstanceID != instanceID || scope.AccessURL != "http://172.30.10.20:8080" {
+		t.Fatalf("unexpected instance scope: %+v", scope)
+	}
+	if scope.AttackerTeamID != attackerTeamID || scope.VictimTeamID != victimTeamID {
+		t.Fatalf("unexpected team scope: %+v", scope)
+	}
+	if scope.ServiceID != serviceID || scope.AWDChallengeID != challengeID {
+		t.Fatalf("unexpected service scope: %+v", scope)
+	}
+}
+
+func TestFindAWDTargetProxyScopeRejectsOwnTeamTarget(t *testing.T) {
+	t.Parallel()
+
+	db := newAWDTargetProxyRepositoryTestDB(t)
+	now := time.Now()
+	contestID := int64(9102)
+	teamID := int64(9203)
+	serviceID := int64(9302)
+
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{ID: contestID, Title: "AWD", Mode: contestcontracts.ContestModeAWD, Status: contestcontracts.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1003, InviteCode: "red-own", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1003, JoinedAt: now, CreatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9602, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 9402, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
+		ID:          9502,
+		UserID:      1003,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 9402,
+		ServiceID:   &serviceID,
+		ContainerID: "ctr-red-web",
+		ShareScope:  instancecontracts.ShareScopePerTeam,
+		Status:      instancecontracts.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:39002",
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+	scope, err := NewRepository(db).FindAWDTargetProxyScope(context.Background(), 1003, contestID, serviceID, teamID)
+	if err != nil {
+		t.Fatalf("FindAWDTargetProxyScope() error = %v", err)
+	}
+	if scope != nil {
+		t.Fatalf("expected own team target to be rejected, got %+v", scope)
+	}
+}
+
+func TestFindAWDDefenseSSHScopeReturnsOwnTeamRunningInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newAWDTargetProxyRepositoryTestDB(t)
+	now := time.Now()
+	contestID := int64(9103)
+	teamID := int64(9204)
+	serviceID := int64(9303)
+	challengeID := int64(9403)
+	instanceID := int64(9503)
+
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{ID: contestID, Title: "AWD", Mode: contestcontracts.ContestModeAWD, Status: contestcontracts.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1004, InviteCode: "redssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1004, JoinedAt: now, CreatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9603, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{
+		ID:             serviceID,
+		ContestID:      contestID,
+		AWDChallengeID: challengeID,
+		DisplayName:    "Web",
+		IsVisible:      true,
+		RuntimeConfig:  `{"challenge_runtime":{"defense_workspace":{"entry_mode":"ssh","seed_root":"docker/workspace","workspace_roots":["docker/workspace/src","docker/workspace/templates"],"writable_roots":["docker/workspace/src"],"readonly_roots":["docker/workspace/templates"],"runtime_mounts":[{"source":"docker/workspace/src","target":"/workspace/src","mode":"rw"},{"source":"docker/workspace/templates","target":"/workspace/templates","mode":"ro"}]},"defense_scope":{"protected_paths":["docker/runtime/app.py","docker/runtime/ctf_runtime.py","docker/check/check.py","challenge.yml"]}}}`,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	})
+	seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
+		ID:          instanceID,
+		UserID:      1004,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: challengeID,
+		ServiceID:   &serviceID,
+		ContainerID: "ctr-red-web",
+		ShareScope:  instancecontracts.ShareScopePerTeam,
+		Status:      instancecontracts.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:39003",
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+	seedAWDTargetProxyRow(t, db, &awdDefenseWorkspaceTestRow{
+		ContestID:         contestID,
+		TeamID:            teamID,
+		ServiceID:         serviceID,
+		InstanceID:        instanceID,
+		WorkspaceRevision: 7,
+		Status:            awdDefenseWorkspaceStatusRunning,
+		ContainerID:       "workspace-red-web",
+		SeedSignature:     "seed:v1",
+		CreatedAt:         now,
+		UpdatedAt:         now,
+	})
+
+	scope, err := NewRepository(db).FindAWDDefenseSSHScope(context.Background(), 1004, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("FindAWDDefenseSSHScope() error = %v", err)
+	}
+	if scope == nil {
+		t.Fatal("expected defense ssh scope")
+	}
+	if scope.InstanceID != instanceID || scope.ContainerID != "workspace-red-web" {
+		t.Fatalf("unexpected instance scope: %+v", scope)
+	}
+	if scope.TeamID != teamID || scope.ServiceID != serviceID || scope.AWDChallengeID != challengeID || scope.WorkspaceRevision != 7 {
+		t.Fatalf("unexpected team/service scope: %+v", scope)
+	}
+}
+
+func TestFindAWDDefenseSSHScopeRejectsOtherTeamInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newAWDTargetProxyRepositoryTestDB(t)
+	now := time.Now()
+	contestID := int64(9104)
+	ownTeamID := int64(9205)
+	otherTeamID := int64(9206)
+	serviceID := int64(9304)
+	challengeID := int64(9404)
+
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{ID: contestID, Title: "AWD", Mode: contestcontracts.ContestModeAWD, Status: contestcontracts.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: ownTeamID, ContestID: contestID, Name: "Red", CaptainID: 1005, InviteCode: "ownssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: otherTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1006, InviteCode: "othssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: ownTeamID, UserID: 1005, JoinedAt: now, CreatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9604, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+	seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
+		ID:          9504,
+		UserID:      1006,
+		ContestID:   &contestID,
+		TeamID:      &otherTeamID,
+		ChallengeID: challengeID,
+		ServiceID:   &serviceID,
+		ContainerID: "ctr-blue-web",
+		ShareScope:  instancecontracts.ShareScopePerTeam,
+		Status:      instancecontracts.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:39004",
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	scope, err := NewRepository(db).FindAWDDefenseSSHScope(context.Background(), 1005, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("FindAWDDefenseSSHScope() error = %v", err)
+	}
+	if scope != nil {
+		t.Fatalf("expected other team instance to be rejected, got %+v", scope)
+	}
+}
+
+func TestFindAWDTargetProxyScopeReturnsNilWhenScopeControlled(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name        string
+		teamID      int64
+		scopeType   string
+		controlType string
+		serviceID   int64
+	}{
+		{
+			name:        "attacker_team_retired",
+			teamID:      9210,
+			scopeType:   awdScopeControlScopeTeam,
+			controlType: awdScopeControlTypeRetired,
+			serviceID:   0,
+		},
+		{
+			name:        "attacker_service_disabled",
+			teamID:      9210,
+			scopeType:   awdScopeControlScopeTeamService,
+			controlType: awdScopeControlTypeServiceDisabled,
+			serviceID:   9310,
+		},
+		{
+			name:        "victim_team_retired",
+			teamID:      9211,
+			scopeType:   awdScopeControlScopeTeam,
+			controlType: awdScopeControlTypeRetired,
+			serviceID:   0,
+		},
+		{
+			name:        "victim_service_disabled",
+			teamID:      9211,
+			scopeType:   awdScopeControlScopeTeamService,
+			controlType: awdScopeControlTypeServiceDisabled,
+			serviceID:   9310,
+		},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			db := newAWDTargetProxyRepositoryTestDB(t)
+			now := time.Now().UTC()
+			contestID := int64(9110)
+			attackerTeamID := int64(9210)
+			victimTeamID := int64(9211)
+			serviceID := int64(9310)
+
+			seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{ID: contestID, Title: "AWD", Mode: contestcontracts.ContestModeAWD, Status: contestcontracts.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: attackerTeamID, ContestID: contestID, Name: "Red", CaptainID: 1010, InviteCode: "red", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: victimTeamID, ContestID: contestID, Name: "Blue", CaptainID: 1011, InviteCode: "blue", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: attackerTeamID, UserID: 1010, JoinedAt: now, CreatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9610, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: 9410, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
+				ID:          9510,
+				UserID:      1011,
+				ContestID:   &contestID,
+				TeamID:      &victimTeamID,
+				ChallengeID: 9410,
+				ServiceID:   &serviceID,
+				ContainerID: "ctr-blue-web",
+				ShareScope:  instancecontracts.ShareScopePerTeam,
+				Status:      instancecontracts.InstanceStatusRunning,
+				AccessURL:   "http://127.0.0.1:39110",
+				ExpiresAt:   now.Add(time.Hour),
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			})
+			seedAWDTargetProxyRow(t, db, &awdScopeControlTestRow{
+				ContestID:   contestID,
+				TeamID:      tc.teamID,
+				ScopeType:   tc.scopeType,
+				ServiceID:   tc.serviceID,
+				ControlType: tc.controlType,
+				Reason:      tc.name,
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			})
+
+			scope, err := NewRepository(db).FindAWDTargetProxyScope(context.Background(), 1010, contestID, serviceID, victimTeamID)
+			if err != nil {
+				t.Fatalf("FindAWDTargetProxyScope() error = %v", err)
+			}
+			if scope != nil {
+				t.Fatalf("expected controlled target scope to be hidden, got %+v", scope)
+			}
+		})
+	}
+}
+
+func TestFindAWDDefenseSSHScopeReturnsNilWhenScopeControlled(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name        string
+		scopeType   string
+		controlType string
+		serviceID   int64
+	}{
+		{
+			name:        "team_retired",
+			scopeType:   awdScopeControlScopeTeam,
+			controlType: awdScopeControlTypeRetired,
+			serviceID:   0,
+		},
+		{
+			name:        "service_disabled",
+			scopeType:   awdScopeControlScopeTeamService,
+			controlType: awdScopeControlTypeServiceDisabled,
+			serviceID:   9311,
+		},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			db := newAWDTargetProxyRepositoryTestDB(t)
+			now := time.Now().UTC()
+			contestID := int64(9111)
+			teamID := int64(9212)
+			serviceID := int64(9311)
+			challengeID := int64(9411)
+			instanceID := int64(9511)
+
+			seedAWDTargetProxyRow(t, db, &contestcontracts.Contest{ID: contestID, Title: "AWD", Mode: contestcontracts.ContestModeAWD, Status: contestcontracts.ContestStatusRunning, StartTime: now.Add(-time.Minute), EndTime: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.Team{ID: teamID, ContestID: contestID, Name: "Red", CaptainID: 1012, InviteCode: "redssh", MaxMembers: 4, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.TeamMember{ContestID: contestID, TeamID: teamID, UserID: 1012, JoinedAt: now, CreatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.AWDRound{ID: 9611, ContestID: contestID, RoundNumber: 1, Status: contestcontracts.AWDRoundStatusRunning, StartedAt: &now, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &contestcontracts.ContestAWDService{ID: serviceID, ContestID: contestID, AWDChallengeID: challengeID, DisplayName: "Web", IsVisible: true, CreatedAt: now, UpdatedAt: now})
+			seedAWDTargetProxyRow(t, db, &instancecontracts.Instance{
+				ID:          instanceID,
+				UserID:      1012,
+				ContestID:   &contestID,
+				TeamID:      &teamID,
+				ChallengeID: challengeID,
+				ServiceID:   &serviceID,
+				ContainerID: "ctr-red-web",
+				ShareScope:  instancecontracts.ShareScopePerTeam,
+				Status:      instancecontracts.InstanceStatusRunning,
+				AccessURL:   "http://127.0.0.1:39111",
+				ExpiresAt:   now.Add(time.Hour),
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			})
+			seedAWDTargetProxyRow(t, db, &awdDefenseWorkspaceTestRow{
+				ContestID:         contestID,
+				TeamID:            teamID,
+				ServiceID:         serviceID,
+				InstanceID:        instanceID,
+				WorkspaceRevision: 2,
+				Status:            awdDefenseWorkspaceStatusRunning,
+				ContainerID:       "workspace-red-web",
+				SeedSignature:     "seed:v1",
+				CreatedAt:         now,
+				UpdatedAt:         now,
+			})
+			seedAWDTargetProxyRow(t, db, &awdScopeControlTestRow{
+				ContestID:   contestID,
+				TeamID:      teamID,
+				ScopeType:   tc.scopeType,
+				ServiceID:   tc.serviceID,
+				ControlType: tc.controlType,
+				Reason:      tc.name,
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			})
+
+			scope, err := NewRepository(db).FindAWDDefenseSSHScope(context.Background(), 1012, contestID, serviceID)
+			if err != nil {
+				t.Fatalf("FindAWDDefenseSSHScope() error = %v", err)
+			}
+			if scope != nil {
+				t.Fatalf("expected controlled defense scope to be hidden, got %+v", scope)
+			}
+		})
+	}
+}
+
+type awdDefenseWorkspaceTestRow struct {
+	ID                int64     `gorm:"column:id;primaryKey"`
+	ContestID         int64     `gorm:"column:contest_id;not null"`
+	TeamID            int64     `gorm:"column:team_id;not null"`
+	ServiceID         int64     `gorm:"column:service_id;not null"`
+	InstanceID        int64     `gorm:"column:instance_id;not null"`
+	WorkspaceRevision int64     `gorm:"column:workspace_revision;not null;default:1"`
+	Status            string    `gorm:"column:status;size:24;not null;default:'pending'"`
+	ContainerID       string    `gorm:"column:container_id;size:64;not null;default:''"`
+	SeedSignature     string    `gorm:"column:seed_signature;type:text;not null;default:''"`
+	CreatedAt         time.Time `gorm:"column:created_at"`
+	UpdatedAt         time.Time `gorm:"column:updated_at"`
+}
+
+func (awdDefenseWorkspaceTestRow) TableName() string {
+	return "awd_defense_workspaces"
+}
+
+type awdScopeControlTestRow struct {
+	ID          int64     `gorm:"column:id;primaryKey"`
+	ContestID   int64     `gorm:"column:contest_id;not null"`
+	TeamID      int64     `gorm:"column:team_id;not null"`
+	ScopeType   string    `gorm:"column:scope_type;size:24;not null"`
+	ServiceID   int64     `gorm:"column:service_id;not null;default:0"`
+	ControlType string    `gorm:"column:control_type;size:48;not null"`
+	Reason      string    `gorm:"column:reason;type:text;not null;default:''"`
+	UpdatedBy   *int64    `gorm:"column:updated_by"`
+	CreatedAt   time.Time `gorm:"column:created_at"`
+	UpdatedAt   time.Time `gorm:"column:updated_at"`
+}
+
+func (awdScopeControlTestRow) TableName() string {
+	return "awd_scope_controls"
+}
+
+func newAWDTargetProxyRepositoryTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
+	name := strings.NewReplacer("/", "_", " ", "_").Replace(t.Name())
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", name)
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := db.AutoMigrate(
+		&contestcontracts.Contest{},
+		&contestcontracts.Team{},
+		&contestcontracts.TeamMember{},
+		&contestcontracts.AWDRound{},
+		&contestcontracts.ContestAWDService{},
+		&instancecontracts.Instance{},
+		&awdDefenseWorkspaceTestRow{},
+		&awdScopeControlTestRow{},
+	); err != nil {
+		t.Fatalf("migrate sqlite: %v", err)
+	}
+	return db
+}
+
+func seedAWDTargetProxyRow(t *testing.T, db *gorm.DB, value any) {
+	t.Helper()
+	if err := db.Create(value).Error; err != nil {
+		t.Fatalf("seed row: %v", err)
+	}
+}

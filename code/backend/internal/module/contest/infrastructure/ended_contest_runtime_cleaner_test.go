@@ -6,9 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"gorm.io/gorm"
+
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
@@ -263,8 +266,12 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 
 	runtimeCleaner := &endedContestRuntimeCleanupStub{}
 	awdRepo := NewAWDRepository(db)
-	runtimeRepo := runtimeinfra.NewRepository(db)
-	cleaner := NewContestEndedRuntimeCleaner(awdRepo, awdRepo, runtimeCleaner, runtimeRepo)
+	cleaner := NewContestEndedRuntimeCleaner(
+		awdRepo,
+		awdRepo,
+		runtimeCleaner,
+		newEndedContestRuntimeStateStore(db),
+	)
 
 	if err := cleaner.CleanupEndedContestAWDInstances(context.Background(), contestID); err != nil {
 		t.Fatalf("CleanupEndedContestAWDInstances() error = %v", err)
@@ -434,6 +441,61 @@ func collectCleanedContainerIDs(t *testing.T, instances []*instanceentity.Instan
 		}
 	}
 	return result
+}
+
+type endedContestRuntimeStateStoreAdapter struct {
+	db             *gorm.DB
+	instanceRepo   *instanceinfra.Repository
+	allocationRepo *runtimeinfra.AllocationRepository
+	awdRepo        *runtimeinfra.AWDRepository
+}
+
+func newEndedContestRuntimeStateStore(db *gorm.DB) *endedContestRuntimeStateStoreAdapter {
+	if db == nil {
+		return nil
+	}
+	return &endedContestRuntimeStateStoreAdapter{
+		db:             db,
+		instanceRepo:   instanceinfra.NewRepository(db),
+		allocationRepo: runtimeinfra.NewAllocationRepository(db),
+		awdRepo:        runtimeinfra.NewAWDRepository(db),
+	}
+}
+
+func (a *endedContestRuntimeStateStoreAdapter) ExpireInstanceRuntime(ctx context.Context, id int64) error {
+	if a == nil || a.db == nil || a.instanceRepo == nil || a.allocationRepo == nil {
+		return nil
+	}
+	return a.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		instanceTx := a.instanceRepo.WithDB(tx)
+		allocationTx := a.allocationRepo.WithDB(tx)
+		release, err := instanceTx.ExpireInstanceRuntime(ctx, id)
+		if err != nil || release == nil {
+			return err
+		}
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
+}
+
+func (a *endedContestRuntimeStateStoreAdapter) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error) {
+	if a == nil || a.awdRepo == nil {
+		return nil, nil
+	}
+	return a.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
+}
+
+func (a *endedContestRuntimeStateStoreAdapter) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error {
+	if a == nil || a.awdRepo == nil {
+		return nil
+	}
+	return a.awdRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
+}
+
+func (a *endedContestRuntimeStateStoreAdapter) FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error {
+	if a == nil || a.awdRepo == nil {
+		return nil
+	}
+	return a.awdRepo.FinishActiveAWDServiceOperationForInstance(ctx, instanceID, status, errorMessage, finishedAt)
 }
 
 func int64Ptr(value int64) *int64 {

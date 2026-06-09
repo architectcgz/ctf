@@ -10,7 +10,6 @@ import (
 	"ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"errors"
 	"testing"
@@ -72,7 +71,7 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 			},
 		},
 		imageRepo:    challengeinfra.NewImageRepository(db),
-		instanceRepo: runtimeinfrarepo.NewRepository(db),
+		instanceRepo: newPracticeTestInstanceRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 				createTopologyCalls++
@@ -273,7 +272,7 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 			},
 		},
 		imageRepo:    challengeinfra.NewImageRepository(db),
-		instanceRepo: runtimeinfrarepo.NewRepository(db),
+		instanceRepo: newPracticeTestInstanceRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 				createTopologyCalls++

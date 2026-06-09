@@ -9,7 +9,6 @@ import (
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
@@ -271,7 +270,7 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 			repo,
 
 			nil,
-			runtimeinfrarepo.NewRepository(db),
+			newPracticeTestInstanceRepository(db),
 			nil,
 			nil,
 			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),

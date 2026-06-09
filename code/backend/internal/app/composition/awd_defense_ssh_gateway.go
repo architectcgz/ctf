@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -24,14 +23,15 @@ import (
 
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 const awdDefenseSSHWorkspaceDir = "/workspace"
 
 type AWDDefenseSSHGateway struct {
 	proxyTickets runtimeHTTPProxyTicketService
-	scopeReader  runtimeports.ProxyTicketInstanceReader
+	scopeReader  instanceports.ProxyTicketInstanceReader
 	executor     runtimeContainerInteractiveExecutor
 	hostKeyPath  string
 	port         int
@@ -49,8 +49,8 @@ type runtimeHTTPProxyTicketService interface {
 	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
 	IssueAWDTargetTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, time.Time, error)
 	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (string, time.Time, error)
-	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
-	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
+	ResolveTicket(ctx context.Context, ticket string) (*instanceports.ProxyTicketClaims, error)
+	ResolveAWDTargetAccessURL(ctx context.Context, claims *instanceports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	MaxAge() int
 }
 
@@ -60,7 +60,7 @@ type runtimeContainerInteractiveExecutor interface {
 
 func NewAWDDefenseSSHGateway(
 	proxyTickets runtimeHTTPProxyTicketService,
-	scopeReader runtimeports.ProxyTicketInstanceReader,
+	scopeReader instanceports.ProxyTicketInstanceReader,
 	executor runtimeContainerInteractiveExecutor,
 	hostKeyPath string,
 	port int,
@@ -267,7 +267,7 @@ func loadAWDDefenseSSHHostKeySignerFromFile(hostKeyPath string) (ssh.Signer, err
 	return signer, nil
 }
 
-func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, password string) (*runtimeports.AWDDefenseSSHSession, error) {
+func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, password string) (*instanceports.AWDDefenseSSHSession, error) {
 	login, err := parseAWDDefenseSSHUsername(sshUsername)
 	if err != nil {
 		return nil, err
@@ -278,7 +278,7 @@ func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, pa
 		return nil, err
 	}
 	if claims == nil ||
-		claims.Purpose != runtimeports.ProxyTicketPurposeAWDDefenseSSH ||
+		claims.Purpose != instanceports.ProxyTicketPurposeAWDDefenseSSH ||
 		claims.Username != login.username ||
 		claims.ContestID == nil || *claims.ContestID != login.contestID ||
 		claims.AWDServiceID == nil || *claims.AWDServiceID != login.serviceID ||
@@ -300,7 +300,7 @@ func (g *AWDDefenseSSHGateway) authenticate(ctx context.Context, sshUsername, pa
 		return nil, apperror.ErrForbidden
 	}
 
-	return &runtimeports.AWDDefenseSSHSession{
+	return &instanceports.AWDDefenseSSHSession{
 		UserID:            claims.UserID,
 		Username:          claims.Username,
 		InstanceID:        scope.InstanceID,
@@ -361,7 +361,7 @@ func (g *AWDDefenseSSHGateway) handleConn(ctx context.Context, rawConn net.Conn,
 	}
 }
 
-func (g *AWDDefenseSSHGateway) handleSessionChannel(ctx context.Context, channel ssh.Channel, requests <-chan *ssh.Request, session *runtimeports.AWDDefenseSSHSession) {
+func (g *AWDDefenseSSHGateway) handleSessionChannel(ctx context.Context, channel ssh.Channel, requests <-chan *ssh.Request, session *instanceports.AWDDefenseSSHSession) {
 	defer channel.Close()
 
 	started := false
@@ -400,7 +400,7 @@ func (g *AWDDefenseSSHGateway) handleSessionChannel(ctx context.Context, channel
 	}
 }
 
-func (g *AWDDefenseSSHGateway) runContainerCommand(ctx context.Context, channel ssh.Channel, session *runtimeports.AWDDefenseSSHSession, command []string) {
+func (g *AWDDefenseSSHGateway) runContainerCommand(ctx context.Context, channel ssh.Channel, session *instanceports.AWDDefenseSSHSession, command []string) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -444,7 +444,7 @@ func parseAWDDefenseSSHUsername(input string) (*awdDefenseSSHLogin, error) {
 	return &awdDefenseSSHLogin{username: username, contestID: contestID, serviceID: serviceID}, nil
 }
 
-func sshSessionFromPermissions(permissions *ssh.Permissions) (*runtimeports.AWDDefenseSSHSession, error) {
+func sshSessionFromPermissions(permissions *ssh.Permissions) (*instanceports.AWDDefenseSSHSession, error) {
 	if permissions == nil || permissions.Extensions == nil {
 		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
@@ -452,7 +452,7 @@ func sshSessionFromPermissions(permissions *ssh.Permissions) (*runtimeports.AWDD
 	if payload == "" {
 		return nil, instancecontracts.ErrProxyTicketInvalid
 	}
-	var session runtimeports.AWDDefenseSSHSession
+	var session instanceports.AWDDefenseSSHSession
 	if err := json.Unmarshal([]byte(payload), &session); err != nil {
 		return nil, err
 	}

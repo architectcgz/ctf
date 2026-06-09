@@ -12,7 +12,6 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type InstanceService struct {
@@ -151,7 +150,7 @@ func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, pu
 	status := visibleInstanceStatus(inst.Status, inst.ExpiresAt, now)
 	accessURL := ""
 	if status == instancecontracts.InstanceStatusRunning {
-		accessURL = runtimecontracts.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
+		accessURL = instancecontracts.ResolveInstancePublicAccessURL(inst.AccessURL, publicHost, accessHost)
 	}
 	if inst.ContestMode == contestcontracts.ContestModeAWD {
 		accessURL = ""
@@ -181,7 +180,7 @@ func toTeacherInstanceItem(item instanceports.TeacherInstanceRow, now time.Time,
 	status := visibleInstanceStatus(item.Status, item.ExpiresAt, now)
 	accessURL := ""
 	if status == instancecontracts.InstanceStatusRunning {
-		accessURL = runtimecontracts.ResolveRuntimePublicAccessURL(item.AccessURL, publicHost, accessHost)
+		accessURL = instancecontracts.ResolveInstancePublicAccessURL(item.AccessURL, publicHost, accessHost)
 	}
 	return instancecontracts.TeacherInstanceItem{
 		ID:              item.ID,

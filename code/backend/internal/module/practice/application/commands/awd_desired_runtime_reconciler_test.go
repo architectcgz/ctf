@@ -20,7 +20,6 @@ import (
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
@@ -892,7 +891,7 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
-		runtimeinfrarepo.NewRepository(db),
+		newPracticeTestInstanceRepository(db),
 		&stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 				switch createTopologyCalls.Add(1) {

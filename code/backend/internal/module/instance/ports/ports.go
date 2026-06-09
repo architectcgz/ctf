@@ -31,10 +31,8 @@ type InstanceExtendRepository interface {
 	AtomicExtendByID(ctx context.Context, id int64, maxExtends int, duration time.Duration) error
 }
 
-type InstanceStatusRepository interface {
-	MarkStopping(ctx context.Context, id int64) (bool, error)
-	FinalizeStoppedRuntime(ctx context.Context, id int64) error
-	UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error
+type RunningInstanceCountRepository interface {
+	CountRunningInstances(ctx context.Context) (int64, error)
 }
 
 type RuntimeCleaner interface {
@@ -194,3 +192,38 @@ type ManagedContainerState struct {
 	Running bool
 	Status  string
 }
+
+type AWDDefenseWorkspace struct {
+	ContainerID string
+}
+
+type AWDServiceOperation struct {
+	ID            int64
+	ContestID     int64
+	TeamID        int64
+	ServiceID     int64
+	InstanceID    int64
+	OperationType string
+	RequestedBy   string
+	RequestedByID *int64
+	Reason        string
+	SLABillable   bool
+	Status        string
+	ErrorMessage  string
+	StartedAt     time.Time
+	FinishedAt    *time.Time
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
+const (
+	AWDServiceOperationTypeRecover  = "recover"
+	AWDServiceOperationTypeRecreate = "recreate"
+
+	AWDServiceOperationRequestedBySystem = "system"
+
+	AWDServiceOperationStatusProvisioning = "provisioning"
+	AWDServiceOperationStatusRecovering   = "recovering"
+	AWDServiceOperationStatusRecovered    = "recovered"
+	AWDServiceOperationStatusFailed       = "failed"
+)

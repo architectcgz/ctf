@@ -33,7 +33,8 @@ func TestRuntimeNodeExecutionRouterRoutesCheckerByNodeID(t *testing.T) {
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
+		runtimeinfra.NewContainerNodeIndexRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -106,7 +107,8 @@ func TestRuntimeNodeExecutionRouterRoutesContainerFileWritesByWorkspaceContainer
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
+		runtimeinfra.NewContainerNodeIndexRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -177,7 +179,8 @@ func TestRuntimeNodeExecutionRouterRoutesInteractiveExecByWorkspaceContainerNode
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
+		runtimeinfra.NewContainerNodeIndexRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -241,7 +244,8 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByRuntimeDetailsContainerNodeID(
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
+		runtimeinfra.NewContainerNodeIndexRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -254,7 +258,7 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByRuntimeDetailsContainerNodeID(
 	if err != nil {
 		t.Fatalf("encode cleanup runtime details: %v", err)
 	}
-	if err := router.CleanupRuntime(context.Background(), &instanceentity.Instance{RuntimeDetails: cleanupPayloadDetails}); err != nil {
+	if err := router.CleanupRuntime(context.Background(), runtimeCleanupTargetFromInstance(&instanceentity.Instance{RuntimeDetails: cleanupPayloadDetails})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 
@@ -317,12 +321,13 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByWorkspaceContainerIDWithoutNod
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
+		runtimeinfra.NewContainerNodeIndexRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
 
-	if err := router.CleanupRuntime(context.Background(), &instanceentity.Instance{ContainerID: "workspace-cleanup-ctr"}); err != nil {
+	if err := router.CleanupRuntime(context.Background(), runtimeCleanupTargetFromInstance(&instanceentity.Instance{ContainerID: "workspace-cleanup-ctr"})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 
@@ -339,10 +344,10 @@ func TestRuntimeNodeExecutionRouterRoutesRemoveContainerByInventoryCache(t *test
 	nodeA, nodeB := seedRuntimeRouterNodes(t, db)
 
 	executorA := &stubRuntimeNodeHostExecutor{
-		listManagedContainersResult: []runtimeports.ManagedContainer{{ID: "node-a-ctr"}},
+		listManagedContainersResult: []runtimecontracts.ManagedContainer{{ID: "node-a-ctr"}},
 	}
 	executorB := &stubRuntimeNodeHostExecutor{
-		listManagedContainersResult: []runtimeports.ManagedContainer{{ID: "orphan-ctr"}},
+		listManagedContainersResult: []runtimecontracts.ManagedContainer{{ID: "orphan-ctr"}},
 	}
 	overrideRuntimeNodeClientBuilder(t, map[int64]runtimeNodeClient{
 		nodeA.ID: newStubNodeRuntimeClient(executorA, nil),
@@ -352,7 +357,8 @@ func TestRuntimeNodeExecutionRouterRoutesRemoveContainerByInventoryCache(t *test
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
+		runtimeinfra.NewContainerNodeIndexRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -418,7 +424,7 @@ func overrideRuntimeNodeClientBuilder(t *testing.T, clients map[int64]runtimeNod
 	t.Helper()
 
 	original := buildRuntimeNodeClient
-	buildRuntimeNodeClient = func(_ context.Context, _ *config.Config, _ *zap.Logger, _ *runtimeinfra.Repository, node *runtimeentity.RuntimeNode) (runtimeNodeClient, error) {
+	buildRuntimeNodeClient = func(_ context.Context, _ *config.Config, _ *zap.Logger, _ runtimeNodeAllocationRepository, node *runtimeentity.RuntimeNode) (runtimeNodeClient, error) {
 		if node == nil {
 			return nil, runtimeports.ErrRuntimeNodeUnavailable
 		}
@@ -473,7 +479,7 @@ type runtimeNodeInteractiveCall struct {
 type stubRuntimeNodeHostExecutor struct {
 	writeCalls                  []runtimeNodeWriteCall
 	interactiveCalls            []runtimeNodeInteractiveCall
-	listManagedContainersResult []runtimeports.ManagedContainer
+	listManagedContainersResult []runtimecontracts.ManagedContainer
 	removedContainers           []string
 	appliedACLCalls             []stubRuntimeNodeACLCall
 	removedACLRulesCalls        [][]runtimecontracts.InstanceRuntimeACLRule
@@ -567,7 +573,7 @@ func (s *stubRuntimeNodeHostExecutor) ReadFileFromContainer(context.Context, str
 	return nil, nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) ListDirectoryFromContainer(context.Context, string, string, int) ([]runtimeports.ContainerDirectoryEntry, error) {
+func (s *stubRuntimeNodeHostExecutor) ListDirectoryFromContainer(context.Context, string, string, int) ([]runtimecontracts.ContainerDirectoryEntry, error) {
 	return nil, nil
 }
 
@@ -583,15 +589,15 @@ func (s *stubRuntimeNodeHostExecutor) RemoveImage(context.Context, string) error
 	return nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
-	return append([]runtimeports.ManagedContainer(nil), s.listManagedContainersResult...), nil
+func (s *stubRuntimeNodeHostExecutor) ListManagedContainers(context.Context) ([]runtimecontracts.ManagedContainer, error) {
+	return append([]runtimecontracts.ManagedContainer(nil), s.listManagedContainersResult...), nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) InspectManagedContainer(context.Context, string) (*runtimeports.ManagedContainerState, error) {
+func (s *stubRuntimeNodeHostExecutor) InspectManagedContainer(context.Context, string) (*runtimecontracts.ManagedContainerState, error) {
 	return nil, nil
 }
 
-func (s *stubRuntimeNodeHostExecutor) ListManagedContainerStats(context.Context) ([]runtimeports.ManagedContainerStat, error) {
+func (s *stubRuntimeNodeHostExecutor) ListManagedContainerStats(context.Context) ([]runtimecontracts.ManagedContainerStat, error) {
 	return nil, nil
 }
 

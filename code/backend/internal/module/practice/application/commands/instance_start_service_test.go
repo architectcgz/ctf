@@ -54,7 +54,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
-		runtimeinfrarepo.NewRepository(db),
+		newPracticeTestInstanceRepository(db),
 		&stubPracticeRuntimeService{
 			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				createCalls.Add(1)
@@ -142,7 +142,7 @@ func TestStartChallengePersistsSelectedRuntimeNodeID(t *testing.T) {
 	service := wirePracticeScopeAdapters(NewService(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 		challengeinfra.NewImageRepository(db),
-		runtimeinfrarepo.NewRepository(db),
+		newPracticeTestInstanceRepository(db),
 		&stubPracticeRuntimeService{},
 		nil,
 		nil,
@@ -239,7 +239,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
-		runtimeinfrarepo.NewRepository(db),
+		newPracticeTestInstanceRepository(db),
 		&stubPracticeRuntimeService{},
 		nil,
 		nil,
@@ -406,7 +406,7 @@ func TestStartChallengeReusesStoppingInstanceInsteadOfCreatingNewOne(t *testing.
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
-		runtimeinfrarepo.NewRepository(db),
+		newPracticeTestInstanceRepository(db),
 		&stubPracticeRuntimeService{},
 		nil,
 		nil,
@@ -454,7 +454,7 @@ func TestStartChallengeReusesStoppingInstanceInsteadOfCreatingNewOne(t *testing.
 		t.Fatalf("expected no replacement instance to be created, got %d rows", count)
 	}
 
-	stored, err := runtimeinfrarepo.NewRepository(db).FindByID(context.Background(), 9007)
+	stored, err := runtimeinfrarepo.NewManagedInstanceRepository(db).FindByID(context.Background(), 9007)
 	if err != nil {
 		t.Fatalf("load stored stopping instance: %v", err)
 	}

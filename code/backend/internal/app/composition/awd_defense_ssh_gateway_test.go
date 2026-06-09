@@ -15,14 +15,14 @@ import (
 	"ctf-platform/internal/config"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimemodule "ctf-platform/internal/module/runtime/runtime"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 )
 
 type stubAWDDefenseSSHGatewayProxyTickets struct {
-	claims *runtimeports.ProxyTicketClaims
+	claims *instanceports.ProxyTicketClaims
 	err    error
 }
 
@@ -89,18 +89,18 @@ func (stubSSHChannel) Stderr() io.ReadWriter {
 }
 
 type stubRuntimeHTTPProxyTicketReader struct {
-	scope *runtimeports.AWDDefenseSSHScope
+	scope *instanceports.AWDDefenseSSHScope
 }
 
 func (s stubRuntimeHTTPProxyTicketReader) FindByID(context.Context, int64) (*instancecontracts.Instance, error) {
 	return nil, nil
 }
 
-func (s stubRuntimeHTTPProxyTicketReader) FindAWDTargetProxyScope(context.Context, int64, int64, int64, int64) (*runtimeports.AWDTargetProxyScope, error) {
+func (s stubRuntimeHTTPProxyTicketReader) FindAWDTargetProxyScope(context.Context, int64, int64, int64, int64) (*instanceports.AWDTargetProxyScope, error) {
 	return nil, nil
 }
 
-func (s stubRuntimeHTTPProxyTicketReader) FindAWDDefenseSSHScope(context.Context, int64, int64, int64) (*runtimeports.AWDDefenseSSHScope, error) {
+func (s stubRuntimeHTTPProxyTicketReader) FindAWDDefenseSSHScope(context.Context, int64, int64, int64) (*instanceports.AWDDefenseSSHScope, error) {
 	return s.scope, nil
 }
 
@@ -116,11 +116,11 @@ func (s stubAWDDefenseSSHGatewayProxyTickets) IssueAWDTargetTicket(context.Conte
 	return "", time.Time{}, nil
 }
 
-func (s stubAWDDefenseSSHGatewayProxyTickets) ResolveTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
+func (s stubAWDDefenseSSHGatewayProxyTickets) ResolveTicket(context.Context, string) (*instanceports.ProxyTicketClaims, error) {
 	return s.claims, s.err
 }
 
-func (s stubAWDDefenseSSHGatewayProxyTickets) ResolveAWDTargetAccessURL(context.Context, *runtimeports.ProxyTicketClaims, int64, int64, int64) (string, error) {
+func (s stubAWDDefenseSSHGatewayProxyTickets) ResolveAWDTargetAccessURL(context.Context, *instanceports.ProxyTicketClaims, int64, int64, int64) (string, error) {
 	return "", nil
 }
 
@@ -138,14 +138,14 @@ func TestAWDDefenseSSHGatewayAuthenticateUsesWorkspaceScope(t *testing.T) {
 	workspaceRevision := int64(7)
 	gateway := NewAWDDefenseSSHGateway(
 		stubAWDDefenseSSHGatewayProxyTickets{
-			claims: &runtimeports.ProxyTicketClaims{
+			claims: &instanceports.ProxyTicketClaims{
 				UserID:               1001,
 				Username:             "student",
 				Role:                 identitycontracts.RoleStudent,
 				InstanceID:           9001,
 				ContestID:            &contestID,
 				ShareScope:           instancecontracts.ShareScopePerTeam,
-				Purpose:              runtimeports.ProxyTicketPurposeAWDDefenseSSH,
+				Purpose:              instanceports.ProxyTicketPurposeAWDDefenseSSH,
 				AWDAttackerTeamID:    &teamID,
 				AWDServiceID:         &serviceID,
 				AWDChallengeID:       &challengeID,
@@ -153,7 +153,7 @@ func TestAWDDefenseSSHGatewayAuthenticateUsesWorkspaceScope(t *testing.T) {
 			},
 		},
 		stubRuntimeHTTPProxyTicketReader{
-			scope: &runtimeports.AWDDefenseSSHScope{
+			scope: &instanceports.AWDDefenseSSHScope{
 				InstanceID:        9001,
 				ContestID:         contestID,
 				TeamID:            teamID,
@@ -193,14 +193,14 @@ func TestAWDDefenseSSHGatewayAuthenticateRejectsStaleWorkspaceRevision(t *testin
 	currentRevision := int64(4)
 	gateway := NewAWDDefenseSSHGateway(
 		stubAWDDefenseSSHGatewayProxyTickets{
-			claims: &runtimeports.ProxyTicketClaims{
+			claims: &instanceports.ProxyTicketClaims{
 				UserID:               1002,
 				Username:             "student",
 				Role:                 identitycontracts.RoleStudent,
 				InstanceID:           9002,
 				ContestID:            &contestID,
 				ShareScope:           instancecontracts.ShareScopePerTeam,
-				Purpose:              runtimeports.ProxyTicketPurposeAWDDefenseSSH,
+				Purpose:              instanceports.ProxyTicketPurposeAWDDefenseSSH,
 				AWDAttackerTeamID:    &teamID,
 				AWDServiceID:         &serviceID,
 				AWDChallengeID:       &challengeID,
@@ -208,7 +208,7 @@ func TestAWDDefenseSSHGatewayAuthenticateRejectsStaleWorkspaceRevision(t *testin
 			},
 		},
 		stubRuntimeHTTPProxyTicketReader{
-			scope: &runtimeports.AWDDefenseSSHScope{
+			scope: &instanceports.AWDDefenseSSHScope{
 				InstanceID:        9002,
 				ContestID:         contestID,
 				TeamID:            teamID,
@@ -356,7 +356,7 @@ func TestAWDDefenseSSHGatewayStopCancelsActiveInteractiveSession(t *testing.T) {
 		activeConns: map[net.Conn]struct{}{},
 	}
 
-	session := &runtimeports.AWDDefenseSSHSession{
+	session := &instanceports.AWDDefenseSSHSession{
 		InstanceID:        9003,
 		WorkspaceRevision: 5,
 		ContainerID:       "workspace-ctr",

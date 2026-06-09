@@ -6,6 +6,15 @@ var reviewedCrossModulePrivateImportExceptions = map[string]struct{}{}
 
 var reviewedDomainInternalImportExceptions = map[string]struct{}{}
 
+var reviewedRuntimeHostExecutorUsageFiles = map[string]struct{}{
+	"../app/composition/runtime_module.go":                {},
+	"../app/composition/runtime_node_execution_router.go": {},
+	"runtime/infrastructure/agentclient/bridge.go":        {},
+	"runtime/infrastructure/agentserver/service.go":       {},
+	"runtime/infrastructure/engine.go":                    {},
+	"runtime/ports/runtime_host_executor.go":              {},
+}
+
 var moduleDependencyBaseline = map[string]struct{}{
 	"assessment -> contest":        {},
 	"assessment -> challenge":      {},
@@ -22,7 +31,6 @@ var moduleDependencyBaseline = map[string]struct{}{
 	"contest -> runtime":           {},
 	"instance -> identity":         {},
 	"instance -> contest":          {},
-	"instance -> runtime":          {},
 	"ops -> auth":                  {},
 	"ops -> challenge":             {},
 	"ops -> contest":               {},
@@ -34,7 +42,6 @@ var moduleDependencyBaseline = map[string]struct{}{
 	"practice -> instance":         {},
 	"practice -> runtime":          {},
 	"runtime -> contest":           {},
-	"runtime -> instance":          {},
 	"teaching_query -> challenge":  {},
 	"teaching_query -> identity":   {},
 	"teaching_query -> contest":    {},
@@ -56,9 +63,7 @@ var reviewedTransactionBoundaryFunctions = map[string]struct{}{
 	"ops/infrastructure/notification_repository.go#CreateBatch":                                              {},
 	"practice/infrastructure/repository.go#CreateAWDServiceOperation":                                        {},
 	"practice/infrastructure/repository.go#ResetInstanceRuntimeForRestart":                                   {},
-	"runtime/infrastructure/repository.go#BumpAWDDefenseWorkspaceRevision":                                   {},
-	"runtime/infrastructure/repository.go#finalizeInstanceRuntime":                                           {},
-	"runtime/infrastructure/repository.go#updateStatusAndReleasePortWithCurrentStatus":                       {},
+	"runtime/infrastructure/awd_repository.go#BumpAWDDefenseWorkspaceRevision":                               {},
 }
 
 var reviewedOversizedRuntimeModuleFiles = map[string]struct{}{}

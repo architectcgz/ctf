@@ -157,7 +157,7 @@ flowchart LR
 当前状态（2026-05-12，phase 2 / slice 14）：
 
 - `internal/module/instance/` 已经落地 `application/commands`、`application/queries`、`ports`、`domain`，实例命令、实例查询、proxy ticket 和 maintenance use case 已有独立物理 owner。
-- `code/backend/internal/app/composition/instance_module.go` 现在直接装配 `instancecmd.NewInstanceService`、`instanceqry.NewInstanceService`、`instanceqry.NewProxyTicketService`、`instancecmd.NewInstanceMaintenanceService`，并把它们接到 runtime repo 与显式 capability adapter。
+- `code/backend/internal/app/composition/instance_module.go` 现在直接装配 `instancecmd.NewInstanceService`、`instanceqry.NewInstanceService`、`instanceqry.NewProxyTicketService`、`instancecmd.NewInstanceMaintenanceService`，并把它们接到 `instanceinfra.Repository`、少量 runtime mixed persistence adapter 与显式 capability adapter。
 - `runtime_cleaner` 与 AWD defense SSH gateway 已经从 `runtime/runtime.Module` 上移到 `InstanceModule` 注册；用户实例路由、教师实例路由、AWD target proxy 和 defense SSH 入口继续统一通过 `InstanceModule.Handler` 挂载。
 - app 层已经把 challenge / contest / ops 依赖的容器能力显式命名为 `ContainerRuntimeModule`；`BuildChallengeModule`、`BuildContestModule`、`BuildOpsModule`、`BuildInstanceModule` 都已经改依赖这个视图。
 - `runtime/runtime/module.go` 不再生产装配 instance command/query、proxy ticket 或 maintenance service，只保留 container-facing builder 与 practice/challenge/ops/contest 仍需复用的显式 runtime capability fields，不再向上暴露宽 `Engine`。
@@ -165,13 +165,14 @@ flowchart LR
 - `internal/module/instance/contracts` 已经落地；生产使用的 runtime HTTP adapter 已收口到 `internal/app/composition/runtime_http_service_adapter.go`，`runtime/runtime/adapters.go` 只保留 practice / challenge / ops 仍在复用的底层 adapter，不再平行保留一份 runtime HTTP adapter。
 - `runtime/application/*` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除；实例命令、查询、proxy ticket、maintenance 的唯一 owner 固定在 `instance`。
 - 原本放在 `runtime/application` 目录里的实例行为测试已经切到 `instancecmd` / `instanceqry`，compat 层只保留最小 wrapper 测试。
-- `runtime/application` 中仍保留的 provisioning / cleanup / container file / image / stats service，已经统一依赖 `runtime/ports/container_runtime.go` 里的 container runtime ports；`runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，maintenance 需要的 inspect/start 组合留在 composition 边缘完成。
-- `code/backend/internal/app/composition/instance_module.go` 现在直接基于 `runtimeinfra.NewRepository(...)` 与本地 practice runtime adapter 暴露 `PracticeInstanceRepository`、`PracticeRuntimeService`；`runtime/runtime.Module` 与 `runtime/runtime/adapters.go` 已不再 import `practice/ports`，`runtime -> practice` allowlist 也已删除。
+- `runtime/application` 中仍保留的 provisioning / cleanup / container file / image / stats service，已经统一依赖 `runtime/ports/` 下按能力拆分的 capability interface；拓扑创建、受管容器状态、目录项、runtime node binding 这类纯数据形状已经回收到 `runtime/contracts`。`RuntimeHostExecutor` 只允许在 runtime host adapter 与 app composition 边界出现。`runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，且 provisioning / cleanup 所需的 runtime-owned persistence adapter 也已经改由 app composition 注入，不再在 module 内部直接 new 宽 runtime repo；runtime node router 与 legacy ACL migration 也已经收口成窄 runtime state / allocation 依赖，不再把 concrete runtime repo 类型带进容器能力装配链；port/subnet allocation 与 lifecycle release persistence 已经拆到 `runtimeinfra.AllocationRepository`，AWD defense workspace / AWD service operation persistence 已经拆到 `runtimeinfra.AWDRepository`，runtime managed instance lookup / active container inventory / container-to-node state lookup / ACL migration state update 已经进一步拆到 `runtimeinfra.ManagedInstanceRepository`、`ActiveContainerInventoryRepository`、`ContainerNodeIndexRepository`、`ACLMigrationStateRepository`，proxy traffic recorder 也已成为独立 `runtimeinfra.ProxyTrafficEventRecorder`；maintenance 需要的 inspect/start 组合留在 composition 边缘完成。
+- `code/backend/internal/app/composition/instance_module.go` 现在以 `instanceinfra.NewRepository(...)` 为主暴露 `PracticeInstanceRepository`，`FailProvisioning`、`UpdateStatusAndReleasePort`、`FinalizeStoppedRuntime`、`ExpireInstanceRuntime` 这类 mixed lifecycle 写路径继续由 composition 编排，实例状态写入走 `instanceinfra.Repository`，allocation release 走 `runtimeinfra.AllocationRepository`；`PracticeRuntimeService` 仍由本地 practice runtime adapter 暴露。`runtime/runtime.Module` 与 `runtime/runtime/adapters.go` 已不再 import `practice/ports`，`runtime -> practice` allowlist 也已删除。
 
 建议动作：
 
-1. 继续判断 `runtime/ports/container_runtime.go` 这组 capability port 的最终物理落点，是继续留在 `runtime` 过渡，还是后续随 `container_runtime` 物理模块一起迁出。
-2. 如果未来确实再次出现兼容 import path 需求，需要重新评估边界，而不是默认恢复旧 wrapper。
+1. 继续判断 `runtime/ports/` 这组 container capability port，以及 `runtime/runtime.Module` / host adapter 这一层的最终物理 owner，是继续留在 `runtime` 过渡，还是后续随 `container_runtime` 物理模块一起迁出。
+2. 继续评估 `ManagedInstanceRepository` 是否还需要保留为 production owner；如果只剩测试或极窄读取面，应进一步消除，而不是再回并成新的宽 state repo。
+3. 如果未来确实再次出现兼容 import path 需求，需要重新评估边界，而不是默认恢复旧 wrapper。
 
 ### 阶段 3：事件化评估与运营副作用
 

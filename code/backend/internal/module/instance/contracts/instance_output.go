@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type InstanceAccessInfo struct {
@@ -90,6 +88,8 @@ type AWDDefenseCommandResp struct {
 	Output  string `json:"output"`
 }
 
+const challengeTargetProtocolTCP = "tcp"
+
 func BuildInstanceAccessInfo(accessURL string) *InstanceAccessInfo {
 	trimmed := strings.TrimSpace(accessURL)
 	if trimmed == "" {
@@ -114,7 +114,7 @@ func BuildInstanceAccessInfo(accessURL string) *InstanceAccessInfo {
 			info.Port = port
 		}
 	}
-	if protocol == runtimecontracts.ChallengeTargetProtocolTCP && info.Host != "" && info.Port > 0 {
+	if protocol == challengeTargetProtocolTCP && info.Host != "" && info.Port > 0 {
 		info.Command = fmt.Sprintf("nc %s %d", formatCommandHost(info.Host), info.Port)
 	}
 	return info

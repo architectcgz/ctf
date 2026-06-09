@@ -13,7 +13,6 @@ import (
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
 	"fmt"
@@ -130,7 +129,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
-		runtimeinfrarepo.NewRepository(db),
+		newPracticeTestInstanceRepository(db),
 		&stubPracticeRuntimeService{
 			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				return "container-queued", "network-queued", hostPort, 8080, nil
@@ -229,7 +228,7 @@ func TestRunProvisioningLoopSkipsWorkWhenSchedulerLockHeldByOtherReplica(t *test
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
-		runtimeinfrarepo.NewRepository(db),
+		newPracticeTestInstanceRepository(db),
 		&stubPracticeRuntimeService{
 			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				createCalls.Add(1)
@@ -353,7 +352,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
-		runtimeinfrarepo.NewRepository(db),
+		newPracticeTestInstanceRepository(db),
 		&stubPracticeRuntimeService{
 			cleanupRuntimeFn: func(context.Context, *instanceentity.Instance) error {
 				cleanupCalls.Add(1)
@@ -707,7 +706,7 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 			},
 		},
 		imageRepo:    challengeinfra.NewImageRepository(db),
-		instanceRepo: runtimeinfrarepo.NewRepository(db),
+		instanceRepo: newPracticeTestInstanceRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 				return &practiceports.TopologyCreateResult{
@@ -827,7 +826,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 
 	var cleanupPayload *instanceentity.Instance
 	instanceRepo := &interceptAWDDefenseWorkspaceRepository{
-		Repository: runtimeinfrarepo.NewRepository(db),
+		practiceTestInstanceRepository: newPracticeTestInstanceRepository(db),
 		upsertFn: func(ctx context.Context, workspace *runtimeentity.AWDDefenseWorkspace) error {
 			if workspace != nil && workspace.Status == runtimeentity.AWDDefenseWorkspaceStatusRunning {
 				return fmt.Errorf("persist running workspace state failed")
@@ -1042,7 +1041,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
-		runtimeinfrarepo.NewRepository(db),
+		newPracticeTestInstanceRepository(db),
 		&stubPracticeRuntimeService{
 			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, _ int64) (string, string, int, int, error) {
 				started <- reservedHostPort

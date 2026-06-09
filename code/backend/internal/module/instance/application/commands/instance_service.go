@@ -13,7 +13,6 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 )
 
@@ -30,7 +29,11 @@ type instanceCommandRepository interface {
 	instanceports.InstanceUserLookupRepository
 	instanceports.InstanceAccessRepository
 	instanceports.InstanceExtendRepository
-	instanceports.InstanceStatusRepository
+	instanceDestroyStatusRepository
+}
+
+type instanceDestroyStatusRepository interface {
+	MarkStopping(ctx context.Context, id int64) (bool, error)
 }
 
 func NewInstanceService(repo instanceCommandRepository, cleaner instanceports.RuntimeCleaner, cfg *config.ContainerConfig, logger *zap.Logger) *InstanceService {
@@ -194,7 +197,7 @@ func (s *InstanceService) toInstanceResp(inst *instancecontracts.Instance) *inst
 	if inst == nil {
 		return nil
 	}
-	accessURL := runtimecontracts.ResolveRuntimePublicAccessURL(inst.AccessURL, s.config.PublicHost, s.config.AccessHost)
+	accessURL := instancecontracts.ResolveInstancePublicAccessURL(inst.AccessURL, s.config.PublicHost, s.config.AccessHost)
 	return &instancecontracts.InstanceResp{
 		ID:               inst.ID,
 		ChallengeID:      inst.ChallengeID,

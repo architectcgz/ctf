@@ -1,7 +1,7 @@
 # 容器编排架构设计
 
 > 状态：Current
-> 事实源：`code/backend/internal/module/runtime/`、`code/backend/internal/module/practice/application/commands/`、`code/backend/internal/config/config.go`
+> 事实源：`code/backend/internal/module/runtime/`、`code/backend/internal/module/instance/`、`code/backend/internal/module/practice/application/commands/`、`code/backend/internal/config/config.go`
 > 替代：无
 
 ## 定位

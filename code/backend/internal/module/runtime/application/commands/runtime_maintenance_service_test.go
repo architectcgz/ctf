@@ -12,9 +12,8 @@ import (
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 	platformevents "ctf-platform/internal/platform/events"
 )
 
@@ -22,15 +21,15 @@ type maintenanceTestRepository struct {
 	activeContainerIDs                      []string
 	recoverableActiveInstances              []*instanceentity.Instance
 	stoppingInstances                       []*instanceentity.Instance
-	runningWorkspaceByInstanceID            map[int64]*runtimeentity.AWDDefenseWorkspace
+	runningWorkspaceByInstanceID            map[int64]*instanceports.AWDDefenseWorkspace
 	requeuedIDs                             []int64
 	finalizedStoppedIDs                     []int64
-	operations                              []*runtimeentity.AWDServiceOperation
+	operations                              []*instanceports.AWDServiceOperation
 	finishedOperations                      []int64
 	findExpiredFn                           func(ctx context.Context) ([]*instanceentity.Instance, error)
 	listStoppingInstancesFn                 func(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error)
 	listRecoverableActiveInstancesFn        func(ctx context.Context) ([]*instanceentity.Instance, error)
-	findRunningWorkspaceByInstanceIDFn      func(ctx context.Context, instanceID int64) (*runtimeentity.AWDDefenseWorkspace, error)
+	findRunningWorkspaceByInstanceIDFn      func(ctx context.Context, instanceID int64) (*instanceports.AWDDefenseWorkspace, error)
 	finalizeStoppedRuntimeFn                func(ctx context.Context, id int64) error
 	requeueLostRuntimeFn                    func(ctx context.Context, id int64) (bool, error)
 	listActiveContainerIDsFn                func(ctx context.Context) ([]string, error)
@@ -87,7 +86,7 @@ func (r *maintenanceTestRepository) ListRecoverableActiveInstances(ctx context.C
 	return append([]*instanceentity.Instance(nil), r.recoverableActiveInstances...), nil
 }
 
-func (r *maintenanceTestRepository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*runtimeentity.AWDDefenseWorkspace, error) {
+func (r *maintenanceTestRepository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*instanceports.AWDDefenseWorkspace, error) {
 	if r.findRunningWorkspaceByInstanceIDFn != nil {
 		return r.findRunningWorkspaceByInstanceIDFn(ctx, instanceID)
 	}
@@ -97,7 +96,7 @@ func (r *maintenanceTestRepository) FindRunningAWDDefenseWorkspaceByInstanceID(c
 	return r.runningWorkspaceByInstanceID[instanceID], nil
 }
 
-func (r *maintenanceTestRepository) CreateAWDServiceOperation(_ context.Context, operation *runtimeentity.AWDServiceOperation) error {
+func (r *maintenanceTestRepository) CreateAWDServiceOperation(_ context.Context, operation *instanceports.AWDServiceOperation) error {
 	operation.ID = int64(len(r.operations) + 1)
 	r.operations = append(r.operations, operation)
 	return nil
@@ -132,19 +131,19 @@ func (r *maintenanceTestRepository) RequeueLostRuntime(ctx context.Context, id i
 }
 
 type maintenanceTestEngine struct {
-	managedContainers []runtimeports.ManagedContainer
-	containerStates   map[string]*runtimeports.ManagedContainerState
+	managedContainers []instanceports.ManagedContainer
+	containerStates   map[string]*instanceports.ManagedContainerState
 	inspectErr        error
 	inspectErrs       map[string]error
 	startedIDs        []string
 	startErrs         map[string]error
 }
 
-func (e *maintenanceTestEngine) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
-	return append([]runtimeports.ManagedContainer(nil), e.managedContainers...), nil
+func (e *maintenanceTestEngine) ListManagedContainers(context.Context) ([]instanceports.ManagedContainer, error) {
+	return append([]instanceports.ManagedContainer(nil), e.managedContainers...), nil
 }
 
-func (e *maintenanceTestEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (e *maintenanceTestEngine) InspectManagedContainer(_ context.Context, containerID string) (*instanceports.ManagedContainerState, error) {
 	if e.inspectErr != nil {
 		return nil, e.inspectErr
 	}
@@ -152,12 +151,12 @@ func (e *maintenanceTestEngine) InspectManagedContainer(_ context.Context, conta
 		return nil, err
 	}
 	if e.containerStates == nil {
-		return &runtimeports.ManagedContainerState{ID: containerID, Exists: true, Running: true, Status: "running"}, nil
+		return &instanceports.ManagedContainerState{ID: containerID, Exists: true, Running: true, Status: "running"}, nil
 	}
 	if state, ok := e.containerStates[containerID]; ok {
 		return state, nil
 	}
-	return &runtimeports.ManagedContainerState{ID: containerID, Exists: false}, nil
+	return &instanceports.ManagedContainerState{ID: containerID, Exists: false}, nil
 }
 
 func (e *maintenanceTestEngine) StartContainer(_ context.Context, containerID string) error {
@@ -191,11 +190,11 @@ func (c *maintenanceTestCleaner) RemoveContainer(_ context.Context, containerID 
 
 type typedNilMaintenanceEngine struct{}
 
-func (*typedNilMaintenanceEngine) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
+func (*typedNilMaintenanceEngine) ListManagedContainers(context.Context) ([]instanceports.ManagedContainer, error) {
 	return nil, nil
 }
 
-func (*typedNilMaintenanceEngine) InspectManagedContainer(context.Context, string) (*runtimeports.ManagedContainerState, error) {
+func (*typedNilMaintenanceEngine) InspectManagedContainer(context.Context, string) (*instanceports.ManagedContainerState, error) {
 	return nil, nil
 }
 
@@ -210,7 +209,7 @@ func TestRuntimeMaintenanceServiceCleanupOrphansSkipsActiveAndGracePeriod(t *tes
 		activeContainerIDs: []string{"active"},
 	}
 	engine := &maintenanceTestEngine{
-		managedContainers: []runtimeports.ManagedContainer{
+		managedContainers: []instanceports.ManagedContainer{
 			{ID: "active", Name: "ctf-instance-active", CreatedAt: time.Now().Add(-10 * time.Minute)},
 			{ID: "fresh", Name: "ctf-instance-fresh", CreatedAt: time.Now().Add(-2 * time.Minute)},
 			{ID: "orphan", Name: "ctf-instance-orphan", CreatedAt: time.Now().Add(-12 * time.Minute)},
@@ -294,7 +293,7 @@ func TestRuntimeMaintenanceServiceCleanupOrphansPropagatesContextToRepository(t 
 		},
 	}
 	engine := &maintenanceTestEngine{
-		managedContainers: []runtimeports.ManagedContainer{
+		managedContainers: []instanceports.ManagedContainer{
 			{ID: "active", Name: "ctf-instance-active", CreatedAt: time.Now().Add(-10 * time.Minute)},
 		},
 	}
@@ -323,7 +322,7 @@ func TestRuntimeMaintenanceServiceRequeuesMissingRunningContainer(t *testing.T) 
 		},
 	}
 	engine := &maintenanceTestEngine{
-		containerStates: map[string]*runtimeports.ManagedContainerState{
+		containerStates: map[string]*instanceports.ManagedContainerState{
 			"missing-container": {ID: "missing-container", Exists: false},
 		},
 	}
@@ -354,7 +353,7 @@ func TestRuntimeMaintenanceServiceSkipsStoppingInstanceRecovery(t *testing.T) {
 		},
 	}
 	engine := &maintenanceTestEngine{
-		containerStates: map[string]*runtimeports.ManagedContainerState{
+		containerStates: map[string]*instanceports.ManagedContainerState{
 			"stopping-container": {ID: "stopping-container", Exists: false},
 		},
 	}
@@ -708,7 +707,7 @@ func TestRuntimeMaintenanceServiceRestartsExitedTopologyContainerBeforeRequeue(t
 		},
 	}
 	engine := &maintenanceTestEngine{
-		containerStates: map[string]*runtimeports.ManagedContainerState{
+		containerStates: map[string]*instanceports.ManagedContainerState{
 			"entry":   {ID: "entry", Exists: true, Running: true, Status: "running"},
 			"sidecar": {ID: "sidecar", Exists: true, Running: false, Status: "exited"},
 		},
@@ -730,10 +729,10 @@ func TestRuntimeMaintenanceServiceRestartsExitedTopologyContainerBeforeRequeue(t
 		t.Fatalf("expected one system recover operation, got %+v", repo.operations)
 	}
 	operation := repo.operations[0]
-	if operation.OperationType != runtimeentity.AWDServiceOperationTypeRecover || operation.RequestedBy != runtimeentity.AWDServiceOperationRequestedBySystem || operation.SLABillable {
+	if operation.OperationType != instanceports.AWDServiceOperationTypeRecover || operation.RequestedBy != instanceports.AWDServiceOperationRequestedBySystem || operation.SLABillable {
 		t.Fatalf("unexpected recover operation: %+v", operation)
 	}
-	if operation.Status != runtimeentity.AWDServiceOperationStatusRecovered || operation.FinishedAt == nil {
+	if operation.Status != instanceports.AWDServiceOperationStatusRecovered || operation.FinishedAt == nil {
 		t.Fatalf("expected recovered operation to be finished, got %+v", operation)
 	}
 }
@@ -757,16 +756,14 @@ func TestRuntimeMaintenanceServiceRestartsStoppedWorkspaceCompanionBeforeRequeue
 				UpdatedAt:   time.Now().Add(-time.Minute),
 			},
 		},
-		runningWorkspaceByInstanceID: map[int64]*runtimeentity.AWDDefenseWorkspace{
+		runningWorkspaceByInstanceID: map[int64]*instanceports.AWDDefenseWorkspace{
 			48: {
-				InstanceID:  48,
-				Status:      runtimeentity.AWDDefenseWorkspaceStatusRunning,
 				ContainerID: "workspace-companion",
 			},
 		},
 	}
 	engine := &maintenanceTestEngine{
-		containerStates: map[string]*runtimeports.ManagedContainerState{
+		containerStates: map[string]*instanceports.ManagedContainerState{
 			"entry":               {ID: "entry", Exists: true, Running: true, Status: "running"},
 			"workspace-companion": {ID: "workspace-companion", Exists: true, Running: false, Status: "exited"},
 		},
@@ -867,7 +864,7 @@ func TestRuntimeMaintenanceServiceInspectFailureDoesNotBlockOtherInstances(t *te
 		inspectErrs: map[string]error{
 			"inspect-fails": fmt.Errorf("docker inspect failed"),
 		},
-		containerStates: map[string]*runtimeports.ManagedContainerState{
+		containerStates: map[string]*instanceports.ManagedContainerState{
 			"missing-runtime": {ID: "missing-runtime", Exists: false},
 		},
 	}, nil, &config.ContainerConfig{

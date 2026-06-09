@@ -3,7 +3,6 @@ package agentcontracts
 import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type HealthRequest struct{}
@@ -139,7 +138,7 @@ type ListDirectoryFromContainerRequest struct {
 }
 
 type ListDirectoryFromContainerResponse struct {
-	Entries []runtimeports.ContainerDirectoryEntry `json:"entries,omitempty"`
+	Entries []runtimecontracts.ContainerDirectoryEntry `json:"entries,omitempty"`
 }
 
 type ExecContainerCommandRequest struct {
@@ -170,7 +169,7 @@ type RemoveImageResponse struct{}
 type ListManagedContainersRequest struct{}
 
 type ListManagedContainersResponse struct {
-	Containers []runtimeports.ManagedContainer `json:"containers,omitempty"`
+	Containers []runtimecontracts.ManagedContainer `json:"containers,omitempty"`
 }
 
 type InspectManagedContainerRequest struct {
@@ -178,13 +177,13 @@ type InspectManagedContainerRequest struct {
 }
 
 type InspectManagedContainerResponse struct {
-	State *runtimeports.ManagedContainerState `json:"state,omitempty"`
+	State *runtimecontracts.ManagedContainerState `json:"state,omitempty"`
 }
 
 type ListManagedContainerStatsRequest struct{}
 
 type ListManagedContainerStatsResponse struct {
-	Stats []runtimeports.ManagedContainerStat `json:"stats,omitempty"`
+	Stats []runtimecontracts.ManagedContainerStat `json:"stats,omitempty"`
 }
 
 type RunCheckerRequest struct {

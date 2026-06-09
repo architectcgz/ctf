@@ -76,7 +76,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 	service := &Service{
 		repo:         repo,
 		imageRepo:    challengeinfra.NewImageRepository(db),
-		instanceRepo: runtimeinfrarepo.NewRepository(db),
+		instanceRepo: newPracticeTestInstanceRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 				requests = append(requests, req)
@@ -167,7 +167,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 		t.Fatalf("unexpected runtime instance after createSingleContainer(): %+v", instance)
 	}
 
-	workspace, err := runtimeinfrarepo.NewRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
+	workspace, err := runtimeinfrarepo.NewAWDRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
 	if err != nil {
 		t.Fatalf("FindAWDDefenseWorkspace() error = %v", err)
 	}

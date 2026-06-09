@@ -23,16 +23,25 @@ type runtimeNodeClient interface {
 	CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error)
 	ApplyACL(ctx context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle, rules []runtimecontracts.InstanceRuntimeACLRule) error
-	CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
+	CleanupRuntime(ctx context.Context, target runtimecontracts.RuntimeCleanupTarget) error
 	ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error
 	RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
 	RemoveContainer(ctx context.Context, containerID string) error
-	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
-	ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error)
+	InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error)
+	ListManagedContainers(ctx context.Context) ([]runtimecontracts.ManagedContainer, error)
 	StartContainer(ctx context.Context, containerID string) error
 	RunChecker(ctx context.Context, job contestports.CheckerRunJob) (contestports.CheckerRunResult, error)
 	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
 	Close(ctx context.Context) error
+}
+
+type runtimeNodeAllocationRepository interface {
+	runtimecmd.ProvisioningRepository
+	runtimecmd.RuntimeCleanupRepository
+}
+
+type runtimeNodeStateRepository interface {
+	FindRuntimeNodeIDByContainerID(ctx context.Context, containerID string) (*int64, error)
 }
 
 type nodeRuntimeClient struct {
@@ -46,7 +55,8 @@ type nodeRuntimeClient struct {
 type runtimeNodeExecutionRouter struct {
 	cfg             *config.Config
 	logger          *zap.Logger
-	runtimeRepo     *runtimeinfra.Repository
+	allocationRepo  runtimeNodeAllocationRepository
+	stateRepo       runtimeNodeStateRepository
 	nodeRepo        *runtimeinfra.RuntimeNodeRepository
 	defaultNodeName string
 
@@ -60,7 +70,7 @@ var buildRuntimeNodeClient = buildRuntimeNodeClientFromNode
 func newNodeRuntimeClient(
 	cfg *config.Config,
 	logger *zap.Logger,
-	runtimeRepo *runtimeinfra.Repository,
+	allocationRepo runtimeNodeAllocationRepository,
 	executor runtimeports.RuntimeHostExecutor,
 	checkerRunner contestports.CheckerRunner,
 	closer runtimeLifecycleCloser,
@@ -74,8 +84,8 @@ func newNodeRuntimeClient(
 	return &nodeRuntimeClient{
 		executor:      executor,
 		checkerRunner: checkerRunner,
-		provisioner:   runtimecmd.NewProvisioningService(runtimeRepo, executor, &cfg.Container, logger.Named("runtime_provisioning_service")),
-		cleaner:       runtimecmd.NewRuntimeCleanupService(executor, runtimeRepo, logger.Named("runtime_cleanup_service")),
+		provisioner:   runtimecmd.NewProvisioningService(allocationRepo, executor, &cfg.Container, logger.Named("runtime_provisioning_service")),
+		cleaner:       runtimecmd.NewRuntimeCleanupService(executor, allocationRepo, logger.Named("runtime_cleanup_service")),
 		closer:        closer,
 	}
 }
@@ -84,7 +94,7 @@ func buildRuntimeNodeClientFromNode(
 	ctx context.Context,
 	cfg *config.Config,
 	logger *zap.Logger,
-	runtimeRepo *runtimeinfra.Repository,
+	allocationRepo runtimeNodeAllocationRepository,
 	node *runtimeentity.RuntimeNode,
 ) (runtimeNodeClient, error) {
 	if cfg == nil {
@@ -95,7 +105,7 @@ func buildRuntimeNodeClientFromNode(
 	}
 	if cfg.App.Env == "test" {
 		executor := newTestRuntimeEngine(logger.Named("runtime_test_engine"))
-		return newNodeRuntimeClient(cfg, logger, runtimeRepo, executor, nil, nil), nil
+		return newNodeRuntimeClient(cfg, logger, allocationRepo, executor, nil, nil), nil
 	}
 	if node == nil {
 		return nil, runtimeports.ErrRuntimeNodeUnavailable
@@ -110,24 +120,25 @@ func buildRuntimeNodeClientFromNode(
 		if err != nil {
 			return nil, err
 		}
-		return newNodeRuntimeClient(cfg, logger, runtimeRepo, executor, runner, nil), nil
+		return newNodeRuntimeClient(cfg, logger, allocationRepo, executor, runner, nil), nil
 	}
 
 	bridge, err := dialRuntimeAgent(ctx, runtimeAgentConfigForNode(cfg.RuntimeAgent, node))
 	if err != nil {
 		return nil, err
 	}
-	return newNodeRuntimeClient(cfg, logger, runtimeRepo, bridge, bridge, bridge), nil
+	return newNodeRuntimeClient(cfg, logger, allocationRepo, bridge, bridge, bridge), nil
 }
 
 func newRuntimeNodeExecutionRouter(
 	cfg *config.Config,
 	logger *zap.Logger,
-	runtimeRepo *runtimeinfra.Repository,
+	allocationRepo runtimeNodeAllocationRepository,
+	stateRepo runtimeNodeStateRepository,
 	nodeRepo *runtimeinfra.RuntimeNodeRepository,
 	defaultNodeName string,
 ) *runtimeNodeExecutionRouter {
-	if runtimeRepo == nil || nodeRepo == nil {
+	if allocationRepo == nil || stateRepo == nil || nodeRepo == nil {
 		return nil
 	}
 	if cfg == nil {
@@ -139,7 +150,8 @@ func newRuntimeNodeExecutionRouter(
 	return &runtimeNodeExecutionRouter{
 		cfg:              cfg,
 		logger:           logger,
-		runtimeRepo:      runtimeRepo,
+		allocationRepo:   allocationRepo,
+		stateRepo:        stateRepo,
 		nodeRepo:         nodeRepo,
 		defaultNodeName:  strings.TrimSpace(defaultNodeName),
 		clients:          make(map[int64]runtimeNodeClient),
@@ -227,11 +239,11 @@ func (r *runtimeNodeExecutionRouter) CreateContainer(ctx context.Context, imageN
 	return client.CreateContainer(ctx, imageName, env, reservedHostPort)
 }
 
-func (c *nodeRuntimeClient) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
-	if c == nil || c.cleaner == nil || instance == nil {
+func (c *nodeRuntimeClient) CleanupRuntime(ctx context.Context, target runtimecontracts.RuntimeCleanupTarget) error {
+	if c == nil || c.cleaner == nil || target == (runtimecontracts.RuntimeCleanupTarget{}) {
 		return nil
 	}
-	return c.cleaner.CleanupRuntime(ctx, instance)
+	return c.cleaner.CleanupRuntime(ctx, target)
 }
 
 func (c *nodeRuntimeClient) RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
@@ -241,15 +253,15 @@ func (c *nodeRuntimeClient) RemoveACLRules(ctx context.Context, rules []runtimec
 	return c.executor.RemoveACLRules(ctx, rules)
 }
 
-func (r *runtimeNodeExecutionRouter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
-	if r == nil || instance == nil {
+func (r *runtimeNodeExecutionRouter) CleanupRuntime(ctx context.Context, target runtimecontracts.RuntimeCleanupTarget) error {
+	if r == nil || target == (runtimecontracts.RuntimeCleanupTarget{}) {
 		return nil
 	}
-	client, _, err := r.clientForCleanupRuntime(ctx, instance)
+	client, _, err := r.clientForCleanupRuntime(ctx, target)
 	if err != nil {
 		return err
 	}
-	return client.CleanupRuntime(ctx, instance)
+	return client.CleanupRuntime(ctx, target)
 }
 
 func (c *nodeRuntimeClient) RemoveContainer(ctx context.Context, containerID string) error {
@@ -270,14 +282,14 @@ func (r *runtimeNodeExecutionRouter) RemoveContainer(ctx context.Context, contai
 	return client.RemoveContainer(ctx, containerID)
 }
 
-func (c *nodeRuntimeClient) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (c *nodeRuntimeClient) InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 	if c == nil || c.executor == nil || strings.TrimSpace(containerID) == "" {
 		return nil, nil
 	}
 	return c.executor.InspectManagedContainer(ctx, containerID)
 }
 
-func (r *runtimeNodeExecutionRouter) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (r *runtimeNodeExecutionRouter) InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 	if r == nil || strings.TrimSpace(containerID) == "" {
 		return nil, nil
 	}
@@ -288,14 +300,14 @@ func (r *runtimeNodeExecutionRouter) InspectManagedContainer(ctx context.Context
 	return client.InspectManagedContainer(ctx, containerID)
 }
 
-func (c *nodeRuntimeClient) ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error) {
+func (c *nodeRuntimeClient) ListManagedContainers(ctx context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	if c == nil || c.executor == nil {
 		return nil, nil
 	}
 	return c.executor.ListManagedContainers(ctx)
 }
 
-func (r *runtimeNodeExecutionRouter) ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error) {
+func (r *runtimeNodeExecutionRouter) ListManagedContainers(ctx context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	if r == nil {
 		return nil, nil
 	}
@@ -304,7 +316,7 @@ func (r *runtimeNodeExecutionRouter) ListManagedContainers(ctx context.Context) 
 		return nil, err
 	}
 
-	containers := make([]runtimeports.ManagedContainer, 0)
+	containers := make([]runtimecontracts.ManagedContainer, 0)
 	seen := make(map[string]struct{})
 	for i := range nodes {
 		client, nodeID, err := r.clientForConcreteNode(ctx, &nodes[i])
@@ -416,14 +428,14 @@ func (r *runtimeNodeExecutionRouter) clientForInstance(ctx context.Context, inst
 	return r.clientForNodeID(ctx, runtimeNodeIDValue(instance.NodeID))
 }
 
-func (r *runtimeNodeExecutionRouter) clientForCleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) (runtimeNodeClient, int64, error) {
-	if instance == nil {
+func (r *runtimeNodeExecutionRouter) clientForCleanupRuntime(ctx context.Context, target runtimecontracts.RuntimeCleanupTarget) (runtimeNodeClient, int64, error) {
+	if target == (runtimecontracts.RuntimeCleanupTarget{}) {
 		return nil, 0, nil
 	}
-	if nodeID := runtimeNodeIDValue(instance.NodeID); nodeID > 0 {
+	if nodeID := runtimeNodeIDValue(target.NodeID); nodeID > 0 {
 		return r.clientForNodeID(ctx, nodeID)
 	}
-	for _, containerID := range cleanupRuntimeContainerIDs(instance) {
+	for _, containerID := range cleanupRuntimeContainerIDs(target) {
 		nodeID, err := r.resolveNodeIDForContainer(ctx, containerID)
 		if err != nil {
 			return nil, 0, err
@@ -433,7 +445,7 @@ func (r *runtimeNodeExecutionRouter) clientForCleanupRuntime(ctx context.Context
 		}
 		return r.clientForNodeID(ctx, nodeID)
 	}
-	return r.clientForInstance(ctx, instance)
+	return r.clientForNodeID(ctx, 0)
 }
 
 func (r *runtimeNodeExecutionRouter) clientForContainerID(ctx context.Context, containerID string) (runtimeNodeClient, int64, error) {
@@ -464,7 +476,7 @@ func (r *runtimeNodeExecutionRouter) clientForConcreteNode(ctx context.Context, 
 	}
 	r.mu.Unlock()
 
-	client, err := buildRuntimeNodeClient(ctx, r.cfg, r.logger, r.runtimeRepo, node)
+	client, err := buildRuntimeNodeClient(ctx, r.cfg, r.logger, r.allocationRepo, node)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -506,8 +518,8 @@ func (r *runtimeNodeExecutionRouter) resolveNodeIDForContainer(ctx context.Conte
 		return cachedNodeID, nil
 	}
 
-	if r.runtimeRepo != nil {
-		nodeID, err := r.runtimeRepo.FindRuntimeNodeIDByContainerID(ctx, trimmedID)
+	if r.stateRepo != nil {
+		nodeID, err := r.stateRepo.FindRuntimeNodeIDByContainerID(ctx, trimmedID)
 		if err != nil {
 			return 0, err
 		}
@@ -521,7 +533,7 @@ func (r *runtimeNodeExecutionRouter) resolveNodeIDForContainer(ctx context.Conte
 	return 0, nil
 }
 
-func (r *runtimeNodeExecutionRouter) recordContainerNodeIDs(nodeID int64, containers []runtimeports.ManagedContainer) {
+func (r *runtimeNodeExecutionRouter) recordContainerNodeIDs(nodeID int64, containers []runtimecontracts.ManagedContainer) {
 	if r == nil || nodeID <= 0 || len(containers) == 0 {
 		return
 	}
@@ -543,8 +555,8 @@ func runtimeNodeIDValue(nodeID *int64) int64 {
 	return *nodeID
 }
 
-func cleanupRuntimeContainerIDs(instance *instancecontracts.Instance) []string {
-	if instance == nil {
+func cleanupRuntimeContainerIDs(target runtimecontracts.RuntimeCleanupTarget) []string {
+	if target == (runtimecontracts.RuntimeCleanupTarget{}) {
 		return nil
 	}
 
@@ -562,9 +574,9 @@ func cleanupRuntimeContainerIDs(instance *instancecontracts.Instance) []string {
 		result = append(result, containerID)
 	}
 
-	appendContainerID(instance.ContainerID)
+	appendContainerID(target.ContainerID)
 
-	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(target.RuntimeDetails)
 	if err != nil {
 		return result
 	}

@@ -8,7 +8,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestCollectManagedContainerStatsSkipsFailedContainers(t *testing.T) {
@@ -19,11 +19,11 @@ func TestCollectManagedContainerStatsSkipsFailedContainers(t *testing.T) {
 		{ID: "bbbbbbbbbbbb2222", Names: []string{"/db"}},
 	}
 
-	stats := collectManagedContainerStats(context.Background(), containers, func(_ context.Context, container types.Container) (runtimeports.ManagedContainerStat, error) {
+	stats := collectManagedContainerStats(context.Background(), containers, func(_ context.Context, container types.Container) (runtimecontracts.ManagedContainerStat, error) {
 		if container.ID == "bbbbbbbbbbbb2222" {
-			return runtimeports.ManagedContainerStat{}, errors.New("stats unavailable")
+			return runtimecontracts.ManagedContainerStat{}, errors.New("stats unavailable")
 		}
-		return runtimeports.ManagedContainerStat{
+		return runtimecontracts.ManagedContainerStat{
 			ContainerID:   shortContainerID(container.ID),
 			ContainerName: "web",
 			CPUPercent:    12.5,
@@ -47,16 +47,16 @@ func TestCollectManagedContainerStatsPreservesSuccessfulOrder(t *testing.T) {
 		{ID: "eeeeeeeeeeee5555", Names: []string{"/third"}},
 	}
 
-	stats := collectManagedContainerStats(context.Background(), containers, func(_ context.Context, container types.Container) (runtimeports.ManagedContainerStat, error) {
+	stats := collectManagedContainerStats(context.Background(), containers, func(_ context.Context, container types.Container) (runtimecontracts.ManagedContainerStat, error) {
 		switch container.ID {
 		case "cccccccccccc3333":
 			time.Sleep(20 * time.Millisecond)
-			return runtimeports.ManagedContainerStat{ContainerID: "cccccccccccc", ContainerName: "first"}, nil
+			return runtimecontracts.ManagedContainerStat{ContainerID: "cccccccccccc", ContainerName: "first"}, nil
 		case "dddddddddddd4444":
-			return runtimeports.ManagedContainerStat{}, errors.New("decode failed")
+			return runtimecontracts.ManagedContainerStat{}, errors.New("decode failed")
 		default:
 			time.Sleep(5 * time.Millisecond)
-			return runtimeports.ManagedContainerStat{ContainerID: "eeeeeeeeeeee", ContainerName: "third"}, nil
+			return runtimecontracts.ManagedContainerStat{ContainerID: "eeeeeeeeeeee", ContainerName: "third"}, nil
 		}
 	})
 

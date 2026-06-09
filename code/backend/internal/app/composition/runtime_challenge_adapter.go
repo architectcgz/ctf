@@ -6,10 +6,8 @@ import (
 	"strings"
 
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type challengeRuntimeProbeAdapter struct {
@@ -67,27 +65,24 @@ func (a *challengeRuntimeProbeAdapter) CleanupRuntimeDetails(ctx context.Context
 	if err != nil {
 		return err
 	}
-	instance := &instancecontracts.Instance{
-		RuntimeDetails: rawDetails,
-	}
-	return a.cleaner.CleanupRuntime(ctx, instance)
+	return a.cleaner.CleanupRuntime(ctx, runtimecontracts.RuntimeCleanupTarget{RuntimeDetails: rawDetails})
 }
 
-func toRuntimeTopologyCreateRequestFromChallenge(req *challengeports.RuntimeTopologyCreateRequest, publishedAccessHost string) *runtimeports.TopologyCreateRequest {
+func toRuntimeTopologyCreateRequestFromChallenge(req *challengeports.RuntimeTopologyCreateRequest, publishedAccessHost string) *runtimecontracts.TopologyCreateRequest {
 	if req == nil {
 		return nil
 	}
-	networks := make([]runtimeports.TopologyCreateNetwork, 0, len(req.Networks))
+	networks := make([]runtimecontracts.TopologyCreateNetwork, 0, len(req.Networks))
 	for _, network := range req.Networks {
-		networks = append(networks, runtimeports.TopologyCreateNetwork{
+		networks = append(networks, runtimecontracts.TopologyCreateNetwork{
 			Key:      network.Key,
 			Internal: network.Internal,
 		})
 	}
 
-	nodes := make([]runtimeports.TopologyCreateNode, 0, len(req.Nodes))
+	nodes := make([]runtimecontracts.TopologyCreateNode, 0, len(req.Nodes))
 	for _, node := range req.Nodes {
-		nodes = append(nodes, runtimeports.TopologyCreateNode{
+		nodes = append(nodes, runtimecontracts.TopologyCreateNode{
 			Key:             node.Key,
 			Image:           node.Image,
 			Env:             cloneCompositionStringMap(node.Env),
@@ -98,8 +93,8 @@ func toRuntimeTopologyCreateRequestFromChallenge(req *challengeports.RuntimeTopo
 			Resources:       cloneCompositionResourceLimits(node.Resources),
 		})
 	}
-	return &runtimeports.TopologyCreateRequest{
-		SubnetPool:                 runtimeports.SubnetPoolTopology,
+	return &runtimecontracts.TopologyCreateRequest{
+		SubnetPool:                 runtimecontracts.SubnetPoolTopology,
 		Networks:                   networks,
 		Nodes:                      nodes,
 		Policies:                   cloneCompositionTrafficPolicies(req.Policies),
@@ -107,13 +102,13 @@ func toRuntimeTopologyCreateRequestFromChallenge(req *challengeports.RuntimeTopo
 	}
 }
 
-func buildRuntimeSingleContainerCreateRequestForChallenge(imageName string, env map[string]string) *runtimeports.TopologyCreateRequest {
-	return &runtimeports.TopologyCreateRequest{
-		SubnetPool: runtimeports.SubnetPoolSingleContainer,
-		Networks: []runtimeports.TopologyCreateNetwork{
+func buildRuntimeSingleContainerCreateRequestForChallenge(imageName string, env map[string]string) *runtimecontracts.TopologyCreateRequest {
+	return &runtimecontracts.TopologyCreateRequest{
+		SubnetPool: runtimecontracts.SubnetPoolSingleContainer,
+		Networks: []runtimecontracts.TopologyCreateNetwork{
 			{Key: runtimecontracts.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeports.TopologyCreateNode{
+		Nodes: []runtimecontracts.TopologyCreateNode{
 			{
 				Key:             "default",
 				Image:           imageName,

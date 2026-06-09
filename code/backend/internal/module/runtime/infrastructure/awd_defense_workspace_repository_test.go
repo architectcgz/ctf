@@ -44,7 +44,7 @@ func TestAWDDefenseWorkspaceUniqueScopeConstraint(t *testing.T) {
 	}
 }
 
-func TestRepositoryFindAWDDefenseWorkspaceReturnsScopedRecord(t *testing.T) {
+func TestAWDRepositoryFindAWDDefenseWorkspaceReturnsScopedRecord(t *testing.T) {
 	t.Parallel()
 
 	db := newAWDDefenseWorkspaceRepositoryTestDB(t)
@@ -62,7 +62,7 @@ func TestRepositoryFindAWDDefenseWorkspaceReturnsScopedRecord(t *testing.T) {
 		t.Fatalf("seed workspace: %v", err)
 	}
 
-	found, err := NewRepository(db).FindAWDDefenseWorkspace(context.Background(), 102, 202, 302)
+	found, err := NewAWDRepository(db).FindAWDDefenseWorkspace(context.Background(), 102, 202, 302)
 	if err != nil {
 		t.Fatalf("FindAWDDefenseWorkspace() error = %v", err)
 	}
@@ -74,11 +74,11 @@ func TestRepositoryFindAWDDefenseWorkspaceReturnsScopedRecord(t *testing.T) {
 	}
 }
 
-func TestRepositoryUpsertAWDDefenseWorkspaceCreatesAndUpdatesScope(t *testing.T) {
+func TestAWDRepositoryUpsertAWDDefenseWorkspaceCreatesAndUpdatesScope(t *testing.T) {
 	t.Parallel()
 
 	db := newAWDDefenseWorkspaceRepositoryTestDB(t)
-	repo := NewRepository(db)
+	repo := NewAWDRepository(db)
 
 	workspace := &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         103,
@@ -129,11 +129,11 @@ func TestRepositoryUpsertAWDDefenseWorkspaceCreatesAndUpdatesScope(t *testing.T)
 	}
 }
 
-func TestRepositoryBumpAWDDefenseWorkspaceRevisionResetsProvisioningState(t *testing.T) {
+func TestAWDRepositoryBumpAWDDefenseWorkspaceRevisionResetsProvisioningState(t *testing.T) {
 	t.Parallel()
 
 	db := newAWDDefenseWorkspaceRepositoryTestDB(t)
-	repo := NewRepository(db)
+	repo := NewAWDRepository(db)
 
 	if err := repo.UpsertAWDDefenseWorkspace(context.Background(), &runtimeentity.AWDDefenseWorkspace{
 		ContestID:         104,

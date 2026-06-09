@@ -21,7 +21,7 @@ import (
 
 func newRepositoryWithRuntimePortOwner(db *gorm.DB) *practiceinfra.Repository {
 	return practiceinfra.NewRepositoryWithRuntimePortOwner(db, func(db *gorm.DB) runtimeports.PortReservationOwner {
-		return runtimeinfra.NewRepository(db)
+		return runtimeinfra.NewAllocationRepository(db)
 	})
 }
 

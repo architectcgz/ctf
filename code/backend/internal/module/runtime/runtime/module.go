@@ -3,17 +3,13 @@ package runtime
 import (
 	"context"
 
-	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
@@ -27,7 +23,6 @@ type Module struct {
 	BackgroundJobs []BackgroundJob
 
 	ImageRuntime          *runtimeapp.ImageRuntimeService
-	RuntimeQuery          runtimeports.CountRunningRepository
 	RuntimeStatsProvider  runtimeports.ManagedContainerStatsReader
 	ContestContainerFiles contestports.AWDContainerFileWriter
 	ProvisioningService   *runtimecmd.ProvisioningService
@@ -43,8 +38,8 @@ type Module struct {
 type Deps struct {
 	Config                    *config.Config
 	Logger                    *zap.Logger
-	DB                        *gorm.DB
-	Cache                     *redislib.Client
+	ProvisioningRepository    runtimecmd.ProvisioningRepository
+	CleanupRepository         runtimecmd.RuntimeCleanupRepository
 	ProvisioningRuntime       runtimeports.ContainerProvisioningRuntime
 	CleanupRuntime            runtimeports.ContainerCleanupRuntime
 	FileRuntime               runtimeports.ContainerFileRuntime
@@ -54,22 +49,8 @@ type Deps struct {
 	InteractiveExecutor       runtimeports.ContainerInteractiveExecutor
 }
 
-type runtimeInstanceRepository interface {
-	runtimeports.InstanceLookupRepository
-	runtimeports.InstanceUserLookupRepository
-	runtimeports.InstanceAccessRepository
-	runtimeports.UserVisibleInstanceRepository
-	runtimeports.TeacherInstanceQueryRepository
-	runtimeports.InstanceExtendRepository
-	runtimeports.InstanceStatusRepository
-	runtimeports.ProxyTicketInstanceReader
-	runtimeports.CountRunningRepository
-}
-
 type runtimeModuleDeps struct {
 	input                 Deps
-	repo                  runtimeInstanceRepository
-	countRunningQuery     runtimeports.CountRunningRepository
 	cleanupService        *runtimecmd.RuntimeCleanupService
 	provisioningService   *runtimecmd.ProvisioningService
 	containerStatsService *runtimeapp.ContainerStatsService
@@ -86,7 +67,6 @@ func Build(deps Deps) *Module {
 	return &Module{
 		BackgroundJobs:            buildBackgroundJobs(internalDeps),
 		ImageRuntime:              internalDeps.imageRuntime,
-		RuntimeQuery:              observabilityDeps.query,
 		RuntimeStatsProvider:      observabilityDeps.statsProvider,
 		ContestContainerFiles:     contestDeps.containerFiles,
 		ProvisioningService:       internalDeps.provisioningService,
@@ -108,9 +88,8 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	repo := runtimeinfra.NewRepository(deps.DB)
-	cleanupService := runtimecmd.NewRuntimeCleanupService(deps.CleanupRuntime, repo, log.Named("runtime_cleanup_service"))
-	provisioningService := runtimecmd.NewProvisioningService(repo, deps.ProvisioningRuntime, &cfg.Container, log.Named("runtime_provisioning_service"))
+	cleanupService := runtimecmd.NewRuntimeCleanupService(deps.CleanupRuntime, deps.CleanupRepository, log.Named("runtime_cleanup_service"))
+	provisioningService := runtimecmd.NewProvisioningService(deps.ProvisioningRepository, deps.ProvisioningRuntime, &cfg.Container, log.Named("runtime_provisioning_service"))
 	var containerStatsService *runtimeapp.ContainerStatsService
 	if deps.ManagedContainerStats != nil {
 		containerStatsService = runtimeapp.NewContainerStatsService(deps.ManagedContainerStats)
@@ -118,8 +97,6 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 
 	return runtimeModuleDeps{
 		input:                 deps,
-		repo:                  repo,
-		countRunningQuery:     runtimeqry.NewCountRunningService(repo),
 		cleanupService:        cleanupService,
 		provisioningService:   provisioningService,
 		containerStatsService: containerStatsService,
@@ -135,13 +112,11 @@ func buildBackgroundJobs(deps runtimeModuleDeps) []BackgroundJob {
 }
 
 type runtimeObservabilityDeps struct {
-	query         runtimeports.CountRunningRepository
 	statsProvider runtimeports.ManagedContainerStatsReader
 }
 
 func buildRuntimeObservabilityDeps(deps runtimeModuleDeps) runtimeObservabilityDeps {
 	return runtimeObservabilityDeps{
-		query:         deps.countRunningQuery,
 		statsProvider: deps.containerStatsService,
 	}
 }

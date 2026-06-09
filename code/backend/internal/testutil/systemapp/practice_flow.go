@@ -40,9 +40,11 @@ import (
 	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
+	instancehttp "ctf-platform/internal/module/instance/api/http"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
@@ -52,8 +54,8 @@ import (
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
-	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
@@ -376,9 +378,10 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	flagHandler := challengehttp.NewFlagHandler(flagCommandService, flagQueryService)
 
 	practiceRepo := practiceinfra.NewRepositoryWithRuntimePortOwner(db, func(db *gorm.DB) runtimeports.PortReservationOwner {
-		return runtimeinfrarepo.NewRepository(db)
+		return runtimeinfrarepo.NewAllocationRepository(db)
 	})
-	instanceRepo := runtimeinfrarepo.NewRepository(db)
+	instanceRepo := instanceinfra.NewRepository(db)
+	proxyTicketInstanceRepo := instanceinfra.NewRepository(db)
 	root, err := composition.BuildRoot(cfg, logger, db, cache)
 	if err != nil {
 		t.Fatalf("build composition root: %v", err)
@@ -389,9 +392,9 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	}
 	instanceModule := composition.BuildInstanceModule(root, runtimeModule)
 	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, logger)
-	runtimeInstanceCommands := instancecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
+	runtimeInstanceCommands := instancecmd.NewInstanceService(instanceRepo, systemRuntimeCleanerAdapter{cleaner: runtimeCleanupService}, &cfg.Container, logger)
 	runtimeInstanceQueries := instanceqry.NewInstanceService(instanceRepo, &cfg.Container)
-	runtimeProxyTicketService := instanceqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), instanceRepo, cfg.Container.ProxyTicketTTL)
+	runtimeProxyTicketService := instanceqry.NewProxyTicketService(instanceinfra.NewProxyTicketStore(cache), proxyTicketInstanceRepo, cfg.Container.ProxyTicketTTL)
 	runtimeService := runtimeadapters.NewHTTPService(
 		runtimeInstanceCommands,
 		runtimeInstanceQueries,
@@ -436,7 +439,7 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 		teachingQueryClassInsightService,
 		teachingQueryStudentReviewService,
 	)
-	runtimeHandler := runtimehttp.NewHandler(runtimeService, cfg.Container.PublicHost, cfg.Container.AccessHost, auditCommandService, runtimehttp.CookieConfig{}, nil)
+	runtimeHandler := instancehttp.NewHandler(runtimeService, cfg.Container.PublicHost, cfg.Container.AccessHost, auditCommandService, instancehttp.CookieConfig{}, nil)
 
 	createFlowUser(t, db, "admin_user", "Password123", identitycontracts.RoleAdmin)
 	createFlowUser(t, db, "student_user", "Password123", identitycontracts.RoleStudent)
@@ -505,6 +508,24 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 		Cache:   cache,
 		ImageID: imageID,
 	}
+}
+
+type systemRuntimeCleanerAdapter struct {
+	cleaner *runtimecmd.RuntimeCleanupService
+}
+
+func (a systemRuntimeCleanerAdapter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	if a.cleaner == nil || instance == nil {
+		return nil
+	}
+	return a.cleaner.CleanupRuntime(ctx, runtimecontracts.RuntimeCleanupTarget{
+		InstanceID:     instance.ID,
+		NodeID:         instance.NodeID,
+		ContainerID:    instance.ContainerID,
+		NetworkID:      instance.NetworkID,
+		HostPort:       instance.HostPort,
+		RuntimeDetails: instance.RuntimeDetails,
+	})
 }
 
 func NewPracticeFlowTestConfig(t *testing.T) *config.Config {

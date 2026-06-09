@@ -10,7 +10,6 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"errors"
 	"testing"
 	"time"
@@ -72,7 +71,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 			},
 		},
 		imageRepo:    challengeinfra.NewImageRepository(db),
-		instanceRepo: runtimeinfrarepo.NewRepository(db),
+		instanceRepo: newPracticeTestInstanceRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 				createTopologyCalls++

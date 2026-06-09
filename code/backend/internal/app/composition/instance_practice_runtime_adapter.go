@@ -7,7 +7,6 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type practiceRuntimeServiceAdapter struct {
@@ -18,7 +17,7 @@ type practiceRuntimeServiceAdapter struct {
 }
 
 type practiceManagedContainerInspector interface {
-	InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error)
+	InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error)
 }
 
 func newPracticeRuntimeServiceAdapter(
@@ -45,12 +44,12 @@ func newNodeScopedPracticeRuntimeServiceAdapter(router *runtimeNodeExecutionRout
 
 func (a *practiceRuntimeServiceAdapter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
 	if a != nil && a.router != nil {
-		return a.router.CleanupRuntime(ctx, instance)
+		return a.router.CleanupRuntime(ctx, runtimeCleanupTargetFromInstance(instance))
 	}
 	if a == nil || a.cleaner == nil {
 		return nil
 	}
-	return a.cleaner.CleanupRuntime(ctx, instance)
+	return a.cleaner.CleanupRuntime(ctx, runtimeCleanupTargetFromInstance(instance))
 }
 
 func (a *practiceRuntimeServiceAdapter) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
@@ -88,14 +87,14 @@ func (a *practiceRuntimeServiceAdapter) InspectManagedContainer(ctx context.Cont
 	return a.inspector.InspectManagedContainer(ctx, containerID)
 }
 
-func toRuntimeTopologyCreateRequestFromPractice(req *practiceports.TopologyCreateRequest) *runtimeports.TopologyCreateRequest {
+func toRuntimeTopologyCreateRequestFromPractice(req *practiceports.TopologyCreateRequest) *runtimecontracts.TopologyCreateRequest {
 	if req == nil {
 		return nil
 	}
 
-	networks := make([]runtimeports.TopologyCreateNetwork, 0, len(req.Networks))
+	networks := make([]runtimecontracts.TopologyCreateNetwork, 0, len(req.Networks))
 	for _, network := range req.Networks {
-		networks = append(networks, runtimeports.TopologyCreateNetwork{
+		networks = append(networks, runtimecontracts.TopologyCreateNetwork{
 			Key:      network.Key,
 			Name:     network.Name,
 			Subnet:   network.Subnet,
@@ -104,9 +103,9 @@ func toRuntimeTopologyCreateRequestFromPractice(req *practiceports.TopologyCreat
 		})
 	}
 
-	nodes := make([]runtimeports.TopologyCreateNode, 0, len(req.Nodes))
+	nodes := make([]runtimecontracts.TopologyCreateNode, 0, len(req.Nodes))
 	for _, node := range req.Nodes {
-		nodes = append(nodes, runtimeports.TopologyCreateNode{
+		nodes = append(nodes, runtimecontracts.TopologyCreateNode{
 			Key:             node.Key,
 			Image:           node.Image,
 			Env:             clonePracticeRuntimeStringMap(node.Env),
@@ -122,7 +121,7 @@ func toRuntimeTopologyCreateRequestFromPractice(req *practiceports.TopologyCreat
 		})
 	}
 
-	return &runtimeports.TopologyCreateRequest{
+	return &runtimecontracts.TopologyCreateRequest{
 		Networks:                   networks,
 		Nodes:                      nodes,
 		Policies:                   append([]runtimecontracts.TopologyTrafficPolicy(nil), req.Policies...),
@@ -134,7 +133,7 @@ func toRuntimeTopologyCreateRequestFromPractice(req *practiceports.TopologyCreat
 	}
 }
 
-func fromRuntimeTopologyCreateResultForPractice(result *runtimeports.TopologyCreateResult) *practiceports.TopologyCreateResult {
+func fromRuntimeTopologyCreateResultForPractice(result *runtimecontracts.TopologyCreateResult) *practiceports.TopologyCreateResult {
 	if result == nil {
 		return nil
 	}

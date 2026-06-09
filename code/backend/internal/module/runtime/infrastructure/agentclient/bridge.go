@@ -206,7 +206,7 @@ func (b *Bridge) ReadFileFromContainer(ctx context.Context, containerID, filePat
 	return resp.Content, nil
 }
 
-func (b *Bridge) ListDirectoryFromContainer(ctx context.Context, containerID, dirPath string, limit int) ([]runtimeports.ContainerDirectoryEntry, error) {
+func (b *Bridge) ListDirectoryFromContainer(ctx context.Context, containerID, dirPath string, limit int) ([]runtimecontracts.ContainerDirectoryEntry, error) {
 	resp, err := b.requireClient().ListDirectoryFromContainer(ctx, &agentcontracts.ListDirectoryFromContainerRequest{
 		ContainerID: containerID,
 		DirPath:     dirPath,
@@ -244,7 +244,7 @@ func (b *Bridge) RemoveImage(ctx context.Context, imageRef string) error {
 	return err
 }
 
-func (b *Bridge) ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error) {
+func (b *Bridge) ListManagedContainers(ctx context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	resp, err := b.requireClient().ListManagedContainers(ctx, &agentcontracts.ListManagedContainersRequest{})
 	if err != nil {
 		return nil, err
@@ -252,7 +252,7 @@ func (b *Bridge) ListManagedContainers(ctx context.Context) ([]runtimeports.Mana
 	return resp.Containers, nil
 }
 
-func (b *Bridge) InspectManagedContainer(ctx context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (b *Bridge) InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 	resp, err := b.requireClient().InspectManagedContainer(ctx, &agentcontracts.InspectManagedContainerRequest{ContainerID: containerID})
 	if err != nil {
 		return nil, err
@@ -260,7 +260,7 @@ func (b *Bridge) InspectManagedContainer(ctx context.Context, containerID string
 	return resp.State, nil
 }
 
-func (b *Bridge) ListManagedContainerStats(ctx context.Context) ([]runtimeports.ManagedContainerStat, error) {
+func (b *Bridge) ListManagedContainerStats(ctx context.Context) ([]runtimecontracts.ManagedContainerStat, error) {
 	resp, err := b.requireClient().ListManagedContainerStats(ctx, &agentcontracts.ListManagedContainerStatsRequest{})
 	if err != nil {
 		return nil, err

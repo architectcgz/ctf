@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type stubOpsRuntimeCountQuery struct {
@@ -14,18 +14,18 @@ type stubOpsRuntimeCountQuery struct {
 	err   error
 }
 
-func (s *stubOpsRuntimeCountQuery) CountRunning(ctx context.Context) (int64, error) {
+func (s *stubOpsRuntimeCountQuery) CountRunningInstances(ctx context.Context) (int64, error) {
 	s.ctx = ctx
 	return s.count, s.err
 }
 
 type stubOpsRuntimeStatsReader struct {
 	ctx   context.Context
-	stats []runtimeports.ManagedContainerStat
+	stats []runtimecontracts.ManagedContainerStat
 	err   error
 }
 
-func (s *stubOpsRuntimeStatsReader) ListManagedContainerStats(ctx context.Context) ([]runtimeports.ManagedContainerStat, error) {
+func (s *stubOpsRuntimeStatsReader) ListManagedContainerStats(ctx context.Context) ([]runtimecontracts.ManagedContainerStat, error) {
 	s.ctx = ctx
 	return s.stats, s.err
 }
@@ -90,7 +90,7 @@ func TestOpsRuntimeStatsProviderAdapterMapsManagedContainerStats(t *testing.T) {
 
 	ctx := context.WithValue(context.Background(), testContextKey("runtime-stats"), "marker")
 	reader := &stubOpsRuntimeStatsReader{
-		stats: []runtimeports.ManagedContainerStat{
+		stats: []runtimecontracts.ManagedContainerStat{
 			{
 				ContainerID:   "container-1",
 				ContainerName: "challenge-runtime-1",

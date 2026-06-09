@@ -170,7 +170,7 @@ func TestChallengeOwnerGuardPropagatesRequestContextToLookup(t *testing.T) {
 	}
 }
 
-func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {
+func TestNewRouterUsesInstanceHandlersForInstanceRoutes(t *testing.T) {
 	cfg, db, cache := newAppTestDependencies(t)
 
 	router, err := NewRouter(cfg, zap.NewNop(), db, cache)
@@ -178,24 +178,24 @@ func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {
 		t.Fatalf("create router: %v", err)
 	}
 
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/instances", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "DELETE", "/api/v1/instances/:id", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "POST", "/api/v1/instances/:id/extend", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "POST", "/api/v1/instances/:id/access", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/instances/:id/proxy", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/instances/:id/proxy/*proxyPath", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "POST", "/api/v1/instances/:id/proxy/*proxyPath", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/access", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/defense/ssh", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/instances", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "DELETE", "/api/v1/instances/:id", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/instances/:id/extend", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/instances/:id/access", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/instances/:id/proxy", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/instances/:id/proxy/*proxyPath", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/instances/:id/proxy/*proxyPath", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/access", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/defense/ssh", "internal/module/instance/api/http")
 	assertRouteMissing(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/defense/files")
 	assertRouteMissing(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/defense/directories")
 	assertRouteMissing(t, router, "PUT", "/api/v1/contests/:id/awd/services/:sid/defense/files")
 	assertRouteMissing(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/defense/commands")
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/instances", "internal/module/runtime")
-	assertRouteHandlerContains(t, router, "DELETE", "/api/v1/teacher/instances/:id", "internal/module/runtime")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/targets/:team_id/proxy/*proxyPath", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/instances", "internal/module/instance/api/http")
+	assertRouteHandlerContains(t, router, "DELETE", "/api/v1/teacher/instances/:id", "internal/module/instance/api/http")
 }
 
 func TestNewRouterFailsWhenRemoteRuntimeAgentDialFails(t *testing.T) {

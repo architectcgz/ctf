@@ -14,10 +14,9 @@ import (
 
 	"ctf-platform/internal/config"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
-	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 type stubDashboardRuntimeQuery struct {
@@ -73,12 +72,31 @@ func newDashboardTestService(t *testing.T, db *gorm.DB, redis *redislib.Client) 
 
 	cfg := newDashboardTestConfig()
 	return NewDashboardService(
-		runtimeqry.NewCountRunningService(runtimeinfrarepo.NewRepository(db)),
+		newDashboardRunningInstanceQueryAdapter(instanceinfra.NewRepository(db)),
 		nil,
 		opsinfra.NewDashboardStateStore(redis, cfg, zap.NewNop()),
 		cfg,
 		zap.NewNop(),
 	)
+}
+
+type dashboardRunningInstanceQuery interface {
+	CountRunningInstances(ctx context.Context) (int64, error)
+}
+
+type dashboardRunningInstanceQueryAdapter struct {
+	query dashboardRunningInstanceQuery
+}
+
+func newDashboardRunningInstanceQueryAdapter(query dashboardRunningInstanceQuery) opsports.RuntimeQuery {
+	return &dashboardRunningInstanceQueryAdapter{query: query}
+}
+
+func (a *dashboardRunningInstanceQueryAdapter) CountRunning(ctx context.Context) (int64, error) {
+	if a == nil || a.query == nil {
+		return 0, nil
+	}
+	return a.query.CountRunningInstances(ctx)
 }
 
 func seedDashboardSession(t *testing.T, redis *redislib.Client, key string, userID int64) {

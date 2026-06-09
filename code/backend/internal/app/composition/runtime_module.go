@@ -7,6 +7,7 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
@@ -45,14 +46,17 @@ type RuntimeModule = ContainerRuntimeModule
 func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	cfg := runtimeConfigOrDefault(root.Config())
 	log := root.Logger()
-	runtimeRepo := runtimeinfra.NewRepository(root.DB())
+	indexRepo := runtimeinfra.NewContainerNodeIndexRepository(root.DB())
+	aclMigrationRepo := runtimeinfra.NewACLMigrationStateRepository(root.DB())
+	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
+	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultNodeName := defaultRuntimeNodeName(cfg)
 	nodeSelector, nodeRepo, defaultNode, err := buildDefaultRuntimeNodeSelector(root, defaultNodeName)
 	if err != nil {
 		return nil, err
 	}
 
-	defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, runtimeRepo, defaultNode)
+	defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, allocationRepo, defaultNode)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +65,8 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	module := runtimemodule.Build(runtimemodule.Deps{
 		Config:                    cfg,
 		Logger:                    log,
-		DB:                        root.DB(),
-		Cache:                     root.Cache(),
+		ProvisioningRepository:    allocationRepo,
+		CleanupRepository:         allocationRepo,
 		ProvisioningRuntime:       executor,
 		CleanupRuntime:            executor,
 		FileRuntime:               executor,
@@ -71,11 +75,11 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		ManagedContainerStats:     executor,
 		InteractiveExecutor:       executor,
 	})
-	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), runtimeRepo, nodeRepo, defaultNodeName)
+	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), allocationRepo, indexRepo, nodeRepo, defaultNodeName)
 	if nodeRouter != nil && defaultNode != nil && defaultNode.ID > 0 {
 		nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)
 	}
-	if err := migrateLegacyInstanceACLHandles(root.Context(), runtimeRepo, nodeRouter, defaultNodeClient, log.Named("runtime_acl_migration")); err != nil {
+	if err := migrateLegacyInstanceACLHandles(root.Context(), aclMigrationRepo, nodeRouter, defaultNodeClient, log.Named("runtime_acl_migration")); err != nil {
 		if nodeRouter != nil {
 			_ = nodeRouter.Close(root.Context())
 		} else if defaultNodeClient != nil {
@@ -100,7 +104,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	return &ContainerRuntimeModule{
 		ChallengeImageRuntime:   module.ImageRuntime,
 		ChallengeRuntimeProbe:   newChallengeRuntimeProbeAdapter(module.CleanupService, module.ProvisioningService, runtimePublishedAccessHost(cfg)),
-		OpsRuntimeQuery:         newOpsRuntimeQueryAdapter(module.RuntimeQuery),
+		OpsRuntimeQuery:         newOpsRuntimeQueryAdapter(instanceRepo),
 		OpsRuntimeStatsProvider: newOpsRuntimeStatsProviderAdapter(module.RuntimeStatsProvider),
 		ContestContainerFiles:   contestContainerFiles,
 		ContestCheckerRunner:    contestCheckerRunner,
@@ -148,7 +152,7 @@ func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtim
 	if repo == nil {
 		return nil, nil, nil, nil
 	}
-	spec := runtimeports.RuntimeNodeBootstrapSpec{
+	spec := runtimecontracts.RuntimeNodeBootstrapSpec{
 		Name:        defaultNodeName,
 		Endpoint:    defaultRuntimeNodeEndpoint(cfg),
 		TLSIdentity: defaultRuntimeNodeTLSIdentity(cfg),
@@ -165,19 +169,19 @@ func buildDefaultRuntimeNodeClient(root *Root) (*nodeRuntimeClient, error) {
 	if root == nil {
 		return nil, nil
 	}
-	runtimeRepo := runtimeinfra.NewRepository(root.DB())
+	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
 	_, _, defaultNode, err := buildDefaultRuntimeNodeSelector(root, defaultRuntimeNodeName(root.Config()))
 	if err != nil {
 		return nil, err
 	}
-	return buildDefaultNodeRuntimeClient(root, runtimeRepo, defaultNode)
+	return buildDefaultNodeRuntimeClient(root, allocationRepo, defaultNode)
 }
 
-func buildDefaultNodeRuntimeClient(root *Root, runtimeRepo *runtimeinfra.Repository, node *runtimeentity.RuntimeNode) (*nodeRuntimeClient, error) {
+func buildDefaultNodeRuntimeClient(root *Root, allocationRepo runtimeNodeAllocationRepository, node *runtimeentity.RuntimeNode) (*nodeRuntimeClient, error) {
 	if root == nil {
 		return nil, nil
 	}
-	client, err := buildRuntimeNodeClient(root.Context(), root.Config(), root.Logger(), runtimeRepo, node)
+	client, err := buildRuntimeNodeClient(root.Context(), root.Config(), root.Logger(), allocationRepo, node)
 	if err != nil {
 		return nil, err
 	}

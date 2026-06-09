@@ -1,14 +1,14 @@
 # 迁移过程中识别出的项目技术债
 
-更新时间：2026-05-28
+更新时间：2026-06-09
 
 本文只记录当前仍成立、或仍需保留为 follow-up 的项目技术债。已经被代码和架构事实收口的条目不再继续保留在活动 backlog 中。
 
 ## P1：运行时边界迁移仍有残余边界
 
-- [ ] `container_runtime` capability port 的最终物理落点还没有完全定型。
-  - 现状：`runtime/ports/container_runtime.go` 仍集中承载 provisioning / cleanup / file / image / stats / interactive 等 capability interface，`internal/app/composition/runtime_module.go` 继续以 `ContainerRuntimeModule` 做物理聚合。
-  - 影响：后续继续拆 `runtime` 时，仍可能再次引入过渡 owner 或把 capability 继续堆在组合层。
+- [ ] `container_runtime` capability port 的最终物理 owner 还没有完全定型。
+  - 现状：原 `runtime/ports/container_runtime.go` 已拆成 provisioning / cleanup / file / image / inventory / stats / interactive 等能力文件；拓扑创建、受管容器状态、目录项、runtime node binding 这类纯数据形状也已经迁到 `runtime/contracts`。`RuntimeHostExecutor` 也已有架构测试限制在 runtime host adapter 与 app composition 边界。`runtime/runtime.Module` 对 runtime-owned persistence 的依赖已改成由 `internal/app/composition/runtime_module.go` 显式注入，不再在 module 内部直接 new 宽 runtime repo；runtime node router 与 ACL migration 这条容器能力链也已经改成只依赖窄 runtime allocation / state 接口；port/subnet allocation 与 lifecycle release persistence 已经拆到 `runtime/infrastructure.AllocationRepository`，AWD defense workspace / AWD service operation persistence 已经拆到 `runtime/infrastructure.AWDRepository`，runtime managed instance lookup / active container inventory / container-to-node state lookup / ACL migration state update 已经进一步拆到 `ManagedInstanceRepository`、`ActiveContainerInventoryRepository`、`ContainerNodeIndexRepository`、`ACLMigrationStateRepository`，proxy traffic recorder 也已经收口成独立 `runtime/infrastructure.ProxyTrafficEventRecorder`。剩余问题是 capability interface、host adapter、`ContainerRuntimeModule` 组合视图和对应实现仍然物理落在 `runtime` 模块，而 `ManagedInstanceRepository` 是否还需要继续保留为 production owner 还没有最后定论。
+  - 影响：后续继续拆 `runtime` 时，仍需要单独判断容器适配能力是否迁到独立 `container_runtime` / platform adapter，并继续把 runtime infrastructure 中剩余的 instance-facing 或具体 owner 不清的 persistence 能力迁回更明确的 owner。
   - 依据：`docs/design/backend-module-boundary-target.md`
 
 ## P2：教学评估与 AWD 统一仍有残余边界

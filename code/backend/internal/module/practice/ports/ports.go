@@ -10,7 +10,6 @@ import (
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 var ErrPracticeContestNotFound = errors.New("practice contest not found")
@@ -26,8 +25,8 @@ var ErrPracticeSolvedSubmissionNotFound = errors.New("practice solved submission
 var ErrPracticeUserNotFound = errors.New("practice user not found")
 
 const (
-	SubnetPoolTopology        = runtimeports.SubnetPoolTopology
-	SubnetPoolSingleContainer = runtimeports.SubnetPoolSingleContainer
+	SubnetPoolTopology        = runtimecontracts.SubnetPoolTopology
+	SubnetPoolSingleContainer = runtimecontracts.SubnetPoolSingleContainer
 )
 
 const (
@@ -146,7 +145,7 @@ type TopologyCreateRequest struct {
 	Networks                   []TopologyCreateNetwork
 	Nodes                      []TopologyCreateNode
 	Policies                   []runtimecontracts.TopologyTrafficPolicy
-	SubnetPool                 runtimeports.SubnetPoolKind
+	SubnetPool                 runtimecontracts.SubnetPoolKind
 	NodeID                     int64
 	OwnerInstanceID            int64
 	ReservedHostPort           int
@@ -161,7 +160,7 @@ type TopologyCreateResult struct {
 	RuntimeDetails     runtimecontracts.InstanceRuntimeDetails
 }
 
-type ManagedContainerState = runtimeports.ManagedContainerState
+type ManagedContainerState = runtimecontracts.ManagedContainerState
 
 type PracticeInstanceScopeLockRepository interface {
 	LockInstanceScope(ctx context.Context, userID, challengeID int64, scope InstanceScope) error

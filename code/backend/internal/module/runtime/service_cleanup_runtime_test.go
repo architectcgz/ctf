@@ -22,7 +22,7 @@ func TestServiceCleanupRuntimeFailsWhenRuntimeEngineUnavailable(t *testing.T) {
 		NetworkID:   "net-missing-engine",
 	}
 
-	err := cleanupService.CleanupRuntime(context.Background(), instance)
+	err := cleanupService.CleanupRuntime(context.Background(), runtimeCleanupTarget(instance))
 	if err == nil {
 		t.Fatal("expected CleanupRuntime() to fail when runtime engine is unavailable")
 	}
@@ -52,7 +52,7 @@ func TestServiceCleanupRuntimeHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	if err := cleanupService.CleanupRuntime(ctx, instance); !errors.Is(err, context.Canceled) {
+	if err := cleanupService.CleanupRuntime(ctx, runtimeCleanupTarget(instance)); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
@@ -70,7 +70,7 @@ func TestServiceCleanupRuntimeIgnoresMissingNetwork(t *testing.T) {
 		NetworkID: "net-missing",
 	}
 
-	if err := cleanupService.CleanupRuntime(context.Background(), instance); err != nil {
+	if err := cleanupService.CleanupRuntime(context.Background(), runtimeCleanupTarget(instance)); err != nil {
 		t.Fatalf("expected missing network to be ignored, got %v", err)
 	}
 	if engine.removedNetworkID != "net-missing" {
@@ -101,7 +101,7 @@ func TestServiceCleanupRuntimeRetriesDeadlineExceededNetworkRemoval(t *testing.T
 		NetworkID: "net-timeout",
 	}
 
-	if err := cleanupService.CleanupRuntime(context.Background(), instance); err != nil {
+	if err := cleanupService.CleanupRuntime(context.Background(), runtimeCleanupTarget(instance)); err != nil {
 		t.Fatalf("expected network timeout followed by not found to be treated as success, got %v", err)
 	}
 	if removeCalls != 2 {
@@ -151,7 +151,7 @@ func TestServiceCleanupRuntimeRetriesDeadlineExceededContainerRemoval(t *testing
 		UpdatedAt:   now,
 	}
 
-	if err := cleanupService.CleanupRuntime(context.Background(), instance); err != nil {
+	if err := cleanupService.CleanupRuntime(context.Background(), runtimeCleanupTarget(instance)); err != nil {
 		t.Fatalf("expected timeout followed by missing container to be treated as success, got %v", err)
 	}
 	if removeCalls != 2 {
@@ -213,7 +213,7 @@ func TestServiceCleanupRuntimeWaitsForContainerRemovalAlreadyInProgress(t *testi
 		UpdatedAt:   now,
 	}
 
-	if err := cleanupService.CleanupRuntime(context.Background(), instance); err != nil {
+	if err := cleanupService.CleanupRuntime(context.Background(), runtimeCleanupTarget(instance)); err != nil {
 		t.Fatalf("expected cleanup to wait until background removal completes, got %v", err)
 	}
 	if removeCalls != 3 {

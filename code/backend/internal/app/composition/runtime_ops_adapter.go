@@ -3,15 +3,16 @@ package composition
 import (
 	"context"
 
+	instanceports "ctf-platform/internal/module/instance/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type opsRuntimeQueryAdapter struct {
-	query runtimeports.CountRunningRepository
+	query instanceports.RunningInstanceCountRepository
 }
 
-func newOpsRuntimeQueryAdapter(query runtimeports.CountRunningRepository) opsports.RuntimeQuery {
+func newOpsRuntimeQueryAdapter(query instanceports.RunningInstanceCountRepository) opsports.RuntimeQuery {
 	return &opsRuntimeQueryAdapter{query: query}
 }
 
@@ -19,7 +20,7 @@ func (a *opsRuntimeQueryAdapter) CountRunning(ctx context.Context) (int64, error
 	if a == nil || a.query == nil {
 		return 0, nil
 	}
-	return a.query.CountRunning(ctx)
+	return a.query.CountRunningInstances(ctx)
 }
 
 type opsRuntimeStatsProviderAdapter struct {

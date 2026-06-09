@@ -2,41 +2,41 @@ package application_test
 
 import (
 	"context"
-	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"testing"
 	"time"
 
 	"ctf-platform/internal/authctx"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type stubProxyTicketStore struct {
 	savedTicket string
-	savedClaims runtimeports.ProxyTicketClaims
+	savedClaims instanceports.ProxyTicketClaims
 	savedTTL    time.Duration
-	findClaims  *runtimeports.ProxyTicketClaims
+	findClaims  *instanceports.ProxyTicketClaims
 	saveErr     error
 	findErr     error
 }
 
-func (s *stubProxyTicketStore) SaveProxyTicket(ctx context.Context, ticket string, claims runtimeports.ProxyTicketClaims, ttl time.Duration) error {
+func (s *stubProxyTicketStore) SaveProxyTicket(ctx context.Context, ticket string, claims instanceports.ProxyTicketClaims, ttl time.Duration) error {
 	s.savedTicket = ticket
 	s.savedClaims = claims
 	s.savedTTL = ttl
 	return s.saveErr
 }
 
-func (s *stubProxyTicketStore) FindProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
+func (s *stubProxyTicketStore) FindProxyTicket(ctx context.Context, ticket string) (*instanceports.ProxyTicketClaims, error) {
 	return s.findClaims, s.findErr
 }
 
 type stubProxyTicketInstanceReader struct {
 	findByIDWithContextFn            func(ctx context.Context, id int64) (*instanceentity.Instance, error)
-	findAWDTargetProxyScopeWithCtxFn func(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*runtimeports.AWDTargetProxyScope, error)
-	findAWDDefenseSSHScopeWithCtxFn  func(ctx context.Context, userID, contestID, serviceID int64) (*runtimeports.AWDDefenseSSHScope, error)
+	findAWDTargetProxyScopeWithCtxFn func(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*instanceports.AWDTargetProxyScope, error)
+	findAWDDefenseSSHScopeWithCtxFn  func(ctx context.Context, userID, contestID, serviceID int64) (*instanceports.AWDDefenseSSHScope, error)
 }
 
 func (s *stubProxyTicketInstanceReader) FindByID(ctx context.Context, id int64) (*instanceentity.Instance, error) {
@@ -46,14 +46,14 @@ func (s *stubProxyTicketInstanceReader) FindByID(ctx context.Context, id int64) 
 	return nil, nil
 }
 
-func (s *stubProxyTicketInstanceReader) FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*runtimeports.AWDTargetProxyScope, error) {
+func (s *stubProxyTicketInstanceReader) FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*instanceports.AWDTargetProxyScope, error) {
 	if s.findAWDTargetProxyScopeWithCtxFn != nil {
 		return s.findAWDTargetProxyScopeWithCtxFn(ctx, userID, contestID, serviceID, victimTeamID)
 	}
 	return nil, nil
 }
 
-func (s *stubProxyTicketInstanceReader) FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*runtimeports.AWDDefenseSSHScope, error) {
+func (s *stubProxyTicketInstanceReader) FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*instanceports.AWDDefenseSSHScope, error) {
 	if s.findAWDDefenseSSHScopeWithCtxFn != nil {
 		return s.findAWDDefenseSSHScopeWithCtxFn(ctx, userID, contestID, serviceID)
 	}
@@ -115,11 +115,11 @@ func TestProxyTicketServiceIssueAWDTargetTicketPersistsAttackScope(t *testing.T)
 
 	store := &stubProxyTicketStore{}
 	service := instanceqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{
-		findAWDTargetProxyScopeWithCtxFn: func(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*runtimeports.AWDTargetProxyScope, error) {
+		findAWDTargetProxyScopeWithCtxFn: func(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*instanceports.AWDTargetProxyScope, error) {
 			if userID != 1001 || contestID != 3001 || serviceID != 4001 || victimTeamID != 5002 {
 				t.Fatalf("unexpected target lookup args: user=%d contest=%d service=%d victim=%d", userID, contestID, serviceID, victimTeamID)
 			}
-			return &runtimeports.AWDTargetProxyScope{
+			return &instanceports.AWDTargetProxyScope{
 				InstanceID:     9001,
 				ContestID:      contestID,
 				AttackerTeamID: 5001,
@@ -143,7 +143,7 @@ func TestProxyTicketServiceIssueAWDTargetTicketPersistsAttackScope(t *testing.T)
 	if ticket == "" || expiresAt.IsZero() {
 		t.Fatalf("expected issued ticket and expiry, got ticket=%q expires=%s", ticket, expiresAt)
 	}
-	if store.savedClaims.Purpose != runtimeports.ProxyTicketPurposeAWDAttack {
+	if store.savedClaims.Purpose != instanceports.ProxyTicketPurposeAWDAttack {
 		t.Fatalf("expected awd attack purpose, got %+v", store.savedClaims)
 	}
 	if store.savedClaims.InstanceID != 9001 || store.savedClaims.AWDAttackerTeamID == nil || *store.savedClaims.AWDAttackerTeamID != 5001 {
@@ -165,11 +165,11 @@ func TestProxyTicketServiceIssueAWDDefenseSSHTicketPersistsOwnTeamScope(t *testi
 
 	store := &stubProxyTicketStore{}
 	service := instanceqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{
-		findAWDDefenseSSHScopeWithCtxFn: func(ctx context.Context, userID, contestID, serviceID int64) (*runtimeports.AWDDefenseSSHScope, error) {
+		findAWDDefenseSSHScopeWithCtxFn: func(ctx context.Context, userID, contestID, serviceID int64) (*instanceports.AWDDefenseSSHScope, error) {
 			if userID != 1001 || contestID != 3001 || serviceID != 4001 {
 				t.Fatalf("unexpected defense ssh lookup args: user=%d contest=%d service=%d", userID, contestID, serviceID)
 			}
-			return &runtimeports.AWDDefenseSSHScope{
+			return &instanceports.AWDDefenseSSHScope{
 				InstanceID:        9001,
 				ContestID:         contestID,
 				TeamID:            5001,
@@ -193,7 +193,7 @@ func TestProxyTicketServiceIssueAWDDefenseSSHTicketPersistsOwnTeamScope(t *testi
 	if ticket == "" || expiresAt.IsZero() {
 		t.Fatalf("expected issued ticket and expiry, got ticket=%q expires=%s", ticket, expiresAt)
 	}
-	if store.savedClaims.Purpose != runtimeports.ProxyTicketPurposeAWDDefenseSSH {
+	if store.savedClaims.Purpose != instanceports.ProxyTicketPurposeAWDDefenseSSH {
 		t.Fatalf("expected awd defense ssh purpose, got %+v", store.savedClaims)
 	}
 	if store.savedClaims.InstanceID != 9001 {
@@ -220,7 +220,7 @@ func TestProxyTicketServiceResolveTicketAllowsClaimsWithoutChallengeID(t *testin
 	t.Parallel()
 
 	store := &stubProxyTicketStore{
-		findClaims: &runtimeports.ProxyTicketClaims{
+		findClaims: &instanceports.ProxyTicketClaims{
 			UserID:     1001,
 			Username:   "alice",
 			Role:       identitycontracts.RoleStudent,
@@ -243,7 +243,7 @@ func TestProxyTicketServiceResolveTicketRejectsInvalidClaims(t *testing.T) {
 	t.Parallel()
 
 	store := &stubProxyTicketStore{
-		findClaims: &runtimeports.ProxyTicketClaims{
+		findClaims: &instanceports.ProxyTicketClaims{
 			UserID:     1001,
 			InstanceID: 2001,
 		},
@@ -264,14 +264,14 @@ func TestProxyTicketServiceResolveTicketRejectsDefenseClaimsWithoutWorkspaceRevi
 	serviceID := int64(4001)
 	challengeID := int64(6001)
 	store := &stubProxyTicketStore{
-		findClaims: &runtimeports.ProxyTicketClaims{
+		findClaims: &instanceports.ProxyTicketClaims{
 			UserID:            1001,
 			Username:          "alice",
 			Role:              identitycontracts.RoleStudent,
 			InstanceID:        2001,
 			ContestID:         &contestID,
 			ShareScope:        instanceentity.ShareScopePerTeam,
-			Purpose:           runtimeports.ProxyTicketPurposeAWDDefenseSSH,
+			Purpose:           instanceports.ProxyTicketPurposeAWDDefenseSSH,
 			AWDAttackerTeamID: &teamID,
 			AWDServiceID:      &serviceID,
 			AWDChallengeID:    &challengeID,

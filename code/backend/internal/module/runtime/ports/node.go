@@ -1,19 +1,11 @@
 package ports
 
-import "context"
+import (
+	"context"
 
-type RuntimeNodeBinding struct {
-	NodeID   int64
-	NodeName string
-}
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+)
 
 type RuntimeNodeSelector interface {
-	SelectDefaultNode(ctx context.Context) (*RuntimeNodeBinding, error)
-}
-
-type RuntimeNodeBootstrapSpec struct {
-	Name        string
-	Endpoint    string
-	TLSIdentity string
-	Schedulable bool
+	SelectDefaultNode(ctx context.Context) (*runtimecontracts.RuntimeNodeBinding, error)
 }

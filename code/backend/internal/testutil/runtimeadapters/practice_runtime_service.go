@@ -7,7 +7,6 @@ import (
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type practiceRuntimeCleaner interface {
@@ -15,7 +14,7 @@ type practiceRuntimeCleaner interface {
 }
 
 type practiceRuntimeProvisioner interface {
-	CreateTopology(ctx context.Context, req *runtimeports.TopologyCreateRequest) (*runtimeports.TopologyCreateResult, error)
+	CreateTopology(ctx context.Context, req *runtimecontracts.TopologyCreateRequest) (*runtimecontracts.TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 }
 
@@ -48,10 +47,11 @@ func (a *PracticeRuntimeService) CreateTopology(ctx context.Context, req *practi
 		return nil, nil
 	}
 
-	result, err := a.provisioner.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
+	result, err := a.provisioner.CreateTopology(ctx, &runtimecontracts.TopologyCreateRequest{
 		Networks:                   toRuntimeTopologyNetworks(req.Networks),
 		Nodes:                      toRuntimeTopologyNodes(req.Nodes),
 		Policies:                   append([]runtimecontracts.TopologyTrafficPolicy(nil), req.Policies...),
+		SubnetPool:                 req.SubnetPool,
 		OwnerInstanceID:            req.OwnerInstanceID,
 		ReservedHostPort:           req.ReservedHostPort,
 		DisableEntryPortPublishing: req.DisableEntryPortPublishing,
@@ -91,10 +91,10 @@ func isNilDependency(dependency any) bool {
 	}
 }
 
-func toRuntimeTopologyNetworks(items []practiceports.TopologyCreateNetwork) []runtimeports.TopologyCreateNetwork {
-	result := make([]runtimeports.TopologyCreateNetwork, 0, len(items))
+func toRuntimeTopologyNetworks(items []practiceports.TopologyCreateNetwork) []runtimecontracts.TopologyCreateNetwork {
+	result := make([]runtimecontracts.TopologyCreateNetwork, 0, len(items))
 	for _, item := range items {
-		result = append(result, runtimeports.TopologyCreateNetwork{
+		result = append(result, runtimecontracts.TopologyCreateNetwork{
 			Key:      item.Key,
 			Name:     item.Name,
 			Subnet:   item.Subnet,
@@ -105,17 +105,21 @@ func toRuntimeTopologyNetworks(items []practiceports.TopologyCreateNetwork) []ru
 	return result
 }
 
-func toRuntimeTopologyNodes(items []practiceports.TopologyCreateNode) []runtimeports.TopologyCreateNode {
-	result := make([]runtimeports.TopologyCreateNode, 0, len(items))
+func toRuntimeTopologyNodes(items []practiceports.TopologyCreateNode) []runtimecontracts.TopologyCreateNode {
+	result := make([]runtimecontracts.TopologyCreateNode, 0, len(items))
 	for _, item := range items {
-		result = append(result, runtimeports.TopologyCreateNode{
+		result = append(result, runtimecontracts.TopologyCreateNode{
 			Key:             item.Key,
 			Image:           item.Image,
 			Env:             cloneStringMap(item.Env),
+			Command:         append([]string(nil), item.Command...),
+			WorkingDir:      item.WorkingDir,
 			ServicePort:     item.ServicePort,
 			ServiceProtocol: item.ServiceProtocol,
 			IsEntryPoint:    item.IsEntryPoint,
 			NetworkKeys:     append([]string(nil), item.NetworkKeys...),
+			NetworkAliases:  append([]string(nil), item.NetworkAliases...),
+			Mounts:          append([]runtimecontracts.ContainerMount(nil), item.Mounts...),
 			Resources:       cloneResourceLimits(item.Resources),
 		})
 	}

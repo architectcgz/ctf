@@ -74,7 +74,8 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesRuntimeDetailsContainerNode(t *
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
+		runtimeinfra.NewContainerNodeIndexRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		runtimeNodeRouterE2EDefaultRuntimeNodeName,
 	)
@@ -141,7 +142,7 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesRuntimeDetailsContainerNode(t *
 
 	cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), runtimeNodeRouterE2ECleanupTimeout)
 	defer cleanupCancel()
-	if err := router.CleanupRuntime(cleanupCtx, &instanceentity.Instance{RuntimeDetails: runtimeDetails}); err != nil {
+	if err := router.CleanupRuntime(cleanupCtx, runtimeCleanupTargetFromInstance(&instanceentity.Instance{RuntimeDetails: runtimeDetails})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 
@@ -182,7 +183,8 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesWorkspaceContainerNode(t *testi
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewRepository(db),
+		runtimeinfra.NewAllocationRepository(db),
+		runtimeinfra.NewContainerNodeIndexRepository(db),
 		runtimeinfra.NewRuntimeNodeRepository(db),
 		runtimeNodeRouterE2EDefaultRuntimeNodeName,
 	)
@@ -242,7 +244,7 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesWorkspaceContainerNode(t *testi
 
 	cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), runtimeNodeRouterE2ECleanupTimeout)
 	defer cleanupCancel()
-	if err := router.CleanupRuntime(cleanupCtx, &instanceentity.Instance{ContainerID: containerID}); err != nil {
+	if err := router.CleanupRuntime(cleanupCtx, runtimeCleanupTargetFromInstance(&instanceentity.Instance{ContainerID: containerID})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 

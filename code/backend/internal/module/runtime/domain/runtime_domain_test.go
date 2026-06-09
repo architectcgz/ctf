@@ -5,14 +5,13 @@ import (
 	"testing"
 	"time"
 
-	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestExtractManagedResourcesPrefersRuntimeDetails(t *testing.T) {
 	t.Parallel()
 
-	instance := &instanceentity.Instance{
+	target := runtimecontracts.RuntimeCleanupTarget{
 		ContainerID: "legacy-web",
 		NetworkID:   "legacy-net",
 		RuntimeDetails: `{
@@ -32,7 +31,7 @@ func TestExtractManagedResourcesPrefersRuntimeDetails(t *testing.T) {
 		}`,
 	}
 
-	resources := ExtractManagedResources(instance)
+	resources := ExtractManagedResources(target)
 	if len(resources.ContainerIDs) != 2 || resources.ContainerIDs[0] != "web-ctr" || resources.ContainerIDs[1] != "db-ctr" {
 		t.Fatalf("unexpected container ids: %+v", resources.ContainerIDs)
 	}
@@ -44,7 +43,7 @@ func TestExtractManagedResourcesPrefersRuntimeDetails(t *testing.T) {
 func TestExtractManagedResourcesSkipsSharedNetworks(t *testing.T) {
 	t.Parallel()
 
-	instance := &instanceentity.Instance{
+	target := runtimecontracts.RuntimeCleanupTarget{
 		ContainerID: "legacy-web",
 		NetworkID:   "legacy-net",
 		RuntimeDetails: `{
@@ -58,7 +57,7 @@ func TestExtractManagedResourcesSkipsSharedNetworks(t *testing.T) {
 		}`,
 	}
 
-	resources := ExtractManagedResources(instance)
+	resources := ExtractManagedResources(target)
 	if len(resources.ContainerIDs) != 1 || resources.ContainerIDs[0] != "web-ctr" {
 		t.Fatalf("unexpected container ids: %+v", resources.ContainerIDs)
 	}
@@ -70,7 +69,7 @@ func TestExtractManagedResourcesSkipsSharedNetworks(t *testing.T) {
 func TestExtractManagedResourcesDoesNotFallbackToSharedLegacyNetwork(t *testing.T) {
 	t.Parallel()
 
-	instance := &instanceentity.Instance{
+	target := runtimecontracts.RuntimeCleanupTarget{
 		ContainerID: "legacy-web",
 		NetworkID:   "net-awd-contest-8",
 		RuntimeDetails: `{
@@ -83,7 +82,7 @@ func TestExtractManagedResourcesDoesNotFallbackToSharedLegacyNetwork(t *testing.
 		}`,
 	}
 
-	resources := ExtractManagedResources(instance)
+	resources := ExtractManagedResources(target)
 	if len(resources.NetworkIDs) != 0 {
 		t.Fatalf("shared network must not be removed via legacy fallback, got %+v", resources.NetworkIDs)
 	}
@@ -92,12 +91,12 @@ func TestExtractManagedResourcesDoesNotFallbackToSharedLegacyNetwork(t *testing.
 func TestExtractManagedResourcesFallsBackToLegacyFields(t *testing.T) {
 	t.Parallel()
 
-	instance := &instanceentity.Instance{
+	target := runtimecontracts.RuntimeCleanupTarget{
 		ContainerID: "legacy-web",
 		NetworkID:   "legacy-net",
 	}
 
-	resources := ExtractManagedResources(instance)
+	resources := ExtractManagedResources(target)
 	if len(resources.ContainerIDs) != 1 || resources.ContainerIDs[0] != "legacy-web" {
 		t.Fatalf("unexpected container ids: %+v", resources.ContainerIDs)
 	}

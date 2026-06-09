@@ -8,9 +8,9 @@ import (
 
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
+	instancehttp "ctf-platform/internal/module/instance/api/http"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimehttp "ctf-platform/internal/module/runtime/api/http"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type runtimeHTTPServiceAdapter struct {
@@ -106,7 +106,7 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDTargetProxyTicket(ctx context.Contex
 	return ticket, err
 }
 
-func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*runtimehttp.AWDDefenseSSHAccessResp, error) {
+func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*instancehttp.AWDDefenseSSHAccessResp, error) {
 	if a == nil || a.proxyTickets == nil {
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
@@ -119,7 +119,7 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 		return nil, err
 	}
 	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
-	return &runtimehttp.AWDDefenseSSHAccessResp{
+	return &instancehttp.AWDDefenseSSHAccessResp{
 		Host:      a.defenseSSHHost,
 		Port:      a.defenseSSHPort,
 		Username:  username,
@@ -133,14 +133,14 @@ func errRuntimeHTTPProxyTicketServiceUnavailable() error {
 	return apperror.ErrInternal.WithCause(fmt.Errorf("proxy ticket service is not configured"))
 }
 
-func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
+func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*instanceports.ProxyTicketClaims, error) {
 	if a == nil || a.proxyTickets == nil {
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
 	return a.proxyTickets.ResolveTicket(ctx, ticket)
 }
 
-func (a *runtimeHTTPServiceAdapter) ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
+func (a *runtimeHTTPServiceAdapter) ResolveAWDTargetAccessURL(ctx context.Context, claims *instanceports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
 	if a == nil || a.proxyTickets == nil {
 		return "", errRuntimeHTTPProxyTicketServiceUnavailable()
 	}

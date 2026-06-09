@@ -77,6 +77,18 @@ func TestDomainDoesNotDependOnGinGORMOrRuntimeInfra(t *testing.T) {
 	}
 }
 
+func TestRuntimeCleanupCoreDoesNotDependOnInstanceContracts(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "commands", "runtime_cleanup_service.go"),
+		filepath.Join("domain", "resources.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/instance/contracts")
+	}
+}
+
 func TestAPIHTTPDoesNotDependOnGORMOrRuntimeInfra(t *testing.T) {
 	t.Parallel()
 
@@ -108,12 +120,88 @@ func TestInfrastructureDoesNotDependOnDTOOrGin(t *testing.T) {
 func TestPortsDoNotDeclareWideInstanceRepository(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("ports", "http.go"))
+	files, err := filepath.Glob(filepath.Join("ports", "*.go"))
 	if err != nil {
-		t.Fatalf("read runtime ports file: %v", err)
+		t.Fatalf("glob runtime port files: %v", err)
 	}
-	if strings.Contains(string(content), "type InstanceRepository interface") {
-		t.Fatalf("runtime ports must not declare the legacy wide InstanceRepository interface")
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("read runtime ports file %s: %v", file, err)
+		}
+		if strings.Contains(string(content), "type InstanceRepository interface") {
+			t.Fatalf("runtime ports must not declare the legacy wide InstanceRepository interface in %s", file)
+		}
+		if strings.Contains(string(content), "type CountRunningRepository interface") {
+			t.Fatalf("running instance count query belongs to instance/ops, not runtime ports: %s", file)
+		}
+	}
+}
+
+func TestRuntimePortsDoNotReexportInstancePorts(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("ports", "*.go"))
+	if err != nil {
+		t.Fatalf("glob runtime port files: %v", err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/instance/ports")
+	}
+}
+
+func TestRuntimePortsTestsDoNotAssertInstancePorts(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("ports", "*_test.go"))
+	if err != nil {
+		t.Fatalf("glob runtime port test files: %v", err)
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/instance/ports")
+	}
+}
+
+func TestRuntimeInfrastructureDoesNotOwnInstanceProxyTickets(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("infrastructure", "*.go"))
+	if err != nil {
+		t.Fatalf("glob runtime infrastructure files: %v", err)
+	}
+	retiredMethods := map[string]struct{}{
+		"SaveProxyTicket":         {},
+		"FindProxyTicket":         {},
+		"FindAWDTargetProxyScope": {},
+		"FindAWDDefenseSSHScope":  {},
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		fileNode := parseGoFile(t, file)
+		for _, decl := range fileNode.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok {
+				continue
+			}
+			if _, blocked := retiredMethods[fn.Name.Name]; blocked {
+				t.Fatalf("instance proxy ticket infrastructure belongs to instance/infrastructure, found method %s in %s", fn.Name.Name, file)
+			}
+		}
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("read runtime infrastructure file %s: %v", file, err)
+		}
+		if strings.Contains(string(content), "proxy:ticket") {
+			t.Fatalf("instance proxy ticket storage keys belong to instance/infrastructure, found proxy ticket key in %s", file)
+		}
 	}
 }
 
@@ -145,13 +233,13 @@ func TestRuntimeWiringDoesNotImportCrossModulePorts(t *testing.T) {
 func TestAPIHTTPDoesNotDeclareRetiredDefenseWorkbenchMethods(t *testing.T) {
 	t.Parallel()
 
-	fileNode := parseGoFile(t, filepath.Join("api", "http", "handler.go"))
-	assertInterfaceDoesNotDeclareMethods(t, fileNode, "runtimeService",
-		"ReadAWDDefenseFile",
-		"ListAWDDefenseDirectory",
-		"SaveAWDDefenseFile",
-		"RunAWDDefenseCommand",
-	)
+	files, err := filepath.Glob(filepath.Join("api", "http", "*.go"))
+	if err != nil {
+		t.Fatalf("glob api/http files: %v", err)
+	}
+	if len(files) != 0 {
+		t.Fatalf("runtime/api/http should be fully retired, got files %v", files)
+	}
 }
 
 func TestRootPackageKeepsOnlyDocFile(t *testing.T) {

@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
+	instancehttp "ctf-platform/internal/module/instance/api/http"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimehttp "ctf-platform/internal/module/runtime/api/http"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type httpInstanceCommandService interface {
@@ -27,8 +27,8 @@ type httpProxyTicketService interface {
 	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
 	IssueAWDTargetTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID, victimTeamID int64) (string, time.Time, error)
 	IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (string, time.Time, error)
-	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
-	ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
+	ResolveTicket(ctx context.Context, ticket string) (*instanceports.ProxyTicketClaims, error)
+	ResolveAWDTargetAccessURL(ctx context.Context, claims *instanceports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error)
 	MaxAge() int
 }
 
@@ -84,13 +84,13 @@ func (a *HTTPService) IssueAWDTargetProxyTicket(ctx context.Context, user authct
 	return ticket, err
 }
 
-func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*runtimehttp.AWDDefenseSSHAccessResp, error) {
+func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx.CurrentUser, contestID, serviceID int64) (*instancehttp.AWDDefenseSSHAccessResp, error) {
 	ticket, expiresAt, err := a.proxyTickets.IssueAWDDefenseSSHTicket(ctx, user, contestID, serviceID)
 	if err != nil {
 		return nil, err
 	}
 	username := fmt.Sprintf("%s+%d+%d", user.Username, contestID, serviceID)
-	return &runtimehttp.AWDDefenseSSHAccessResp{
+	return &instancehttp.AWDDefenseSSHAccessResp{
 		Host:      "127.0.0.1",
 		Port:      2222,
 		Username:  username,
@@ -121,11 +121,11 @@ func (a *HTTPService) RunAWDDefenseCommand(_ context.Context, _ authctx.CurrentU
 	}, nil
 }
 
-func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
+func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*instanceports.ProxyTicketClaims, error) {
 	return a.proxyTickets.ResolveTicket(ctx, ticket)
 }
 
-func (a *HTTPService) ResolveAWDTargetAccessURL(ctx context.Context, claims *runtimeports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
+func (a *HTTPService) ResolveAWDTargetAccessURL(ctx context.Context, claims *instanceports.ProxyTicketClaims, contestID, serviceID, victimTeamID int64) (string, error) {
 	return a.proxyTickets.ResolveAWDTargetAccessURL(ctx, claims, contestID, serviceID, victimTeamID)
 }
 

@@ -18,16 +18,21 @@ import (
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type runtimeTestRepository struct {
-	*runtimeinfra.Repository
-	db *gorm.DB
+	*runtimeinfra.ManagedInstanceRepository
+	*runtimeinfra.ActiveContainerInventoryRepository
+	*runtimeinfra.AllocationRepository
+	*runtimeinfra.AWDRepository
+	instanceRepo *instanceinfra.Repository
+	db           *gorm.DB
 }
 
 func newTestRepository(t *testing.T) *runtimeTestRepository {
@@ -56,8 +61,12 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 		t.Fatalf("migrate awd operation tables: %v", err)
 	}
 	return &runtimeTestRepository{
-		Repository: runtimeinfra.NewRepository(db),
-		db:         db,
+		ManagedInstanceRepository:          runtimeinfra.NewManagedInstanceRepository(db),
+		ActiveContainerInventoryRepository: runtimeinfra.NewActiveContainerInventoryRepository(db),
+		AllocationRepository:               runtimeinfra.NewAllocationRepository(db),
+		AWDRepository:                      runtimeinfra.NewAWDRepository(db),
+		instanceRepo:                       instanceinfra.NewRepository(db),
+		db:                                 db,
 	}
 }
 
@@ -107,11 +116,161 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 		DeleteMaxConcurrent: 2,
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
+	instanceCleaner := newRuntimeTestCleanerAdapter(cleanupService)
 	return &testRuntimeService{
-		commands:    instancecmd.NewInstanceService(repo, cleanupService, cfg, nil),
-		queries:     instanceqry.NewInstanceService(repo, cfg),
-		maintenance: instancecmd.NewInstanceMaintenanceService(repo, nil, cleanupService, cfg, nil),
+		commands:    instancecmd.NewInstanceService(repo.instanceRepo, instanceCleaner, cfg, nil),
+		queries:     instanceqry.NewInstanceService(repo.instanceRepo, cfg),
+		maintenance: instancecmd.NewInstanceMaintenanceService(newRuntimeTestMaintenanceRepository(repo), nil, instanceCleaner, cfg, nil),
 	}
+}
+
+func (r *runtimeTestRepository) FindByID(ctx context.Context, id int64) (*instanceentity.Instance, error) {
+	if r == nil || r.instanceRepo == nil {
+		return nil, nil
+	}
+	return r.instanceRepo.FindByID(ctx, id)
+}
+
+func (r *runtimeTestRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
+	if r == nil || r.db == nil || r.instanceRepo == nil || r.AllocationRepository == nil {
+		return nil
+	}
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		instanceTx := r.instanceRepo.WithDB(tx)
+		allocationTx := r.AllocationRepository.WithDB(tx)
+		release, err := instanceTx.UpdateStatus(ctx, id, status)
+		if err != nil || release == nil {
+			return err
+		}
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
+}
+
+func (r *runtimeTestRepository) FindExpired(ctx context.Context) ([]*instanceentity.Instance, error) {
+	if r == nil || r.instanceRepo == nil {
+		return nil, nil
+	}
+	return r.instanceRepo.FindExpired(ctx)
+}
+
+func (r *runtimeTestRepository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error) {
+	if r == nil || r.instanceRepo == nil {
+		return nil, nil
+	}
+	return r.instanceRepo.ListStoppingInstances(ctx, updatedBefore, limit)
+}
+
+func (r *runtimeTestRepository) ListRecoverableActiveInstances(ctx context.Context) ([]*instanceentity.Instance, error) {
+	if r == nil || r.instanceRepo == nil {
+		return nil, nil
+	}
+	return r.instanceRepo.ListRecoverableActiveInstances(ctx)
+}
+
+func (r *runtimeTestRepository) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
+	if r == nil || r.instanceRepo == nil {
+		return false, nil
+	}
+	return r.instanceRepo.RequeueLostRuntime(ctx, id)
+}
+
+func (r *runtimeTestRepository) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
+	if r == nil || r.db == nil || r.instanceRepo == nil || r.AllocationRepository == nil {
+		return nil
+	}
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		instanceTx := r.instanceRepo.WithDB(tx)
+		allocationTx := r.AllocationRepository.WithDB(tx)
+		release, err := instanceTx.FinalizeStoppedRuntime(ctx, id)
+		if err != nil || release == nil {
+			return err
+		}
+		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
+	})
+}
+
+func (r *runtimeTestRepository) FindUserByID(ctx context.Context, userID int64) (*instanceports.InstanceUser, error) {
+	if r == nil || r.instanceRepo == nil {
+		return nil, nil
+	}
+	return r.instanceRepo.FindUserByID(ctx, userID)
+}
+
+type runtimeTestMaintenanceRepository struct {
+	repo *runtimeTestRepository
+}
+
+func newRuntimeTestMaintenanceRepository(repo *runtimeTestRepository) *runtimeTestMaintenanceRepository {
+	return &runtimeTestMaintenanceRepository{repo: repo}
+}
+
+func (r *runtimeTestMaintenanceRepository) UpdateStatusAndReleasePort(ctx context.Context, id int64, status string) error {
+	return r.repo.UpdateStatusAndReleasePort(ctx, id, status)
+}
+
+func (r *runtimeTestMaintenanceRepository) FindExpired(ctx context.Context) ([]*instanceentity.Instance, error) {
+	return r.repo.FindExpired(ctx)
+}
+
+func (r *runtimeTestMaintenanceRepository) ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error) {
+	return r.repo.ListStoppingInstances(ctx, updatedBefore, limit)
+}
+
+func (r *runtimeTestMaintenanceRepository) ListRecoverableActiveInstances(ctx context.Context) ([]*instanceentity.Instance, error) {
+	return r.repo.ListRecoverableActiveInstances(ctx)
+}
+
+func (r *runtimeTestMaintenanceRepository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*instanceports.AWDDefenseWorkspace, error) {
+	workspace, err := r.repo.FindRunningAWDDefenseWorkspaceByInstanceID(ctx, instanceID)
+	if err != nil || workspace == nil {
+		return nil, err
+	}
+	return &instanceports.AWDDefenseWorkspace{ContainerID: workspace.ContainerID}, nil
+}
+
+func (r *runtimeTestMaintenanceRepository) CreateAWDServiceOperation(ctx context.Context, operation *instanceports.AWDServiceOperation) error {
+	if operation == nil {
+		return nil
+	}
+	row := runtimeentity.AWDServiceOperation{
+		ID:            operation.ID,
+		ContestID:     operation.ContestID,
+		TeamID:        operation.TeamID,
+		ServiceID:     operation.ServiceID,
+		InstanceID:    operation.InstanceID,
+		OperationType: operation.OperationType,
+		RequestedBy:   operation.RequestedBy,
+		RequestedByID: operation.RequestedByID,
+		Reason:        operation.Reason,
+		SLABillable:   operation.SLABillable,
+		Status:        operation.Status,
+		ErrorMessage:  operation.ErrorMessage,
+		StartedAt:     operation.StartedAt,
+		FinishedAt:    operation.FinishedAt,
+		CreatedAt:     operation.CreatedAt,
+		UpdatedAt:     operation.UpdatedAt,
+	}
+	if err := r.repo.CreateAWDServiceOperation(ctx, &row); err != nil {
+		return err
+	}
+	operation.ID = row.ID
+	return nil
+}
+
+func (r *runtimeTestMaintenanceRepository) FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error {
+	return r.repo.FinishAWDServiceOperation(ctx, operationID, status, errorMessage, finishedAt)
+}
+
+func (r *runtimeTestMaintenanceRepository) FinalizeStoppedRuntime(ctx context.Context, id int64) error {
+	return r.repo.FinalizeStoppedRuntime(ctx, id)
+}
+
+func (r *runtimeTestMaintenanceRepository) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
+	return r.repo.RequeueLostRuntime(ctx, id)
+}
+
+func (r *runtimeTestMaintenanceRepository) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
+	return r.repo.ListActiveContainerIDs(ctx)
 }
 
 type fakeRuntimeEngine struct {
@@ -151,8 +310,8 @@ type fakeRuntimeEngine struct {
 	imageSize                      int64
 	imageInspectErr                error
 	removedImageRef                string
-	managedContainerStats          []runtimeports.ManagedContainerStat
-	managedContainerStates         map[string]*runtimeports.ManagedContainerState
+	managedContainerStats          []runtimecontracts.ManagedContainerStat
+	managedContainerStates         map[string]*runtimecontracts.ManagedContainerState
 	inspectContainerNetworkIPsFunc func(containerID string, engine *fakeRuntimeEngine) map[string]string
 	stopContainerFn                func(ctx context.Context, containerID string, timeout time.Duration) error
 	removeContainerFn              func(ctx context.Context, containerID string, force bool) error
@@ -224,8 +383,8 @@ func (f *fakeRuntimeEngine) RemoveImage(_ context.Context, imageRef string) erro
 	return nil
 }
 
-func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context) ([]runtimeports.ManagedContainerStat, error) {
-	return append([]runtimeports.ManagedContainerStat(nil), f.managedContainerStats...), nil
+func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context) ([]runtimecontracts.ManagedContainerStat, error) {
+	return append([]runtimecontracts.ManagedContainerStat(nil), f.managedContainerStats...), nil
 }
 
 func (f *fakeRuntimeEngine) ConnectContainerToNetwork(_ context.Context, containerID, networkName string) error {
@@ -313,18 +472,18 @@ func (f *fakeRuntimeEngine) WriteFileToContainer(_ context.Context, containerID,
 	return nil
 }
 
-func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimeports.ManagedContainer, error) {
+func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	return nil, nil
 }
 
-func (f *fakeRuntimeEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimeports.ManagedContainerState, error) {
+func (f *fakeRuntimeEngine) InspectManagedContainer(_ context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error) {
 	if f.managedContainerStates == nil {
-		return &runtimeports.ManagedContainerState{ID: containerID, Exists: true, Running: true, Status: "running"}, nil
+		return &runtimecontracts.ManagedContainerState{ID: containerID, Exists: true, Running: true, Status: "running"}, nil
 	}
 	if state, exists := f.managedContainerStates[containerID]; exists {
 		return state, nil
 	}
-	return &runtimeports.ManagedContainerState{ID: containerID, Exists: false}, nil
+	return &runtimecontracts.ManagedContainerState{ID: containerID, Exists: false}, nil
 }
 
 func seedInstance(t *testing.T, db *gorm.DB, instance *instanceentity.Instance) {

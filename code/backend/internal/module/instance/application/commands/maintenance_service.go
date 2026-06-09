@@ -12,7 +12,6 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 )
 
@@ -21,8 +20,8 @@ type instanceMaintenanceRepository interface {
 	FindExpired(ctx context.Context) ([]*instanceentity.Instance, error)
 	ListStoppingInstances(ctx context.Context, updatedBefore time.Time, limit int) ([]*instanceentity.Instance, error)
 	ListRecoverableActiveInstances(ctx context.Context) ([]*instanceentity.Instance, error)
-	FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*runtimecontracts.AWDDefenseWorkspace, error)
-	CreateAWDServiceOperation(ctx context.Context, operation *runtimecontracts.AWDServiceOperation) error
+	FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*instanceports.AWDDefenseWorkspace, error)
+	CreateAWDServiceOperation(ctx context.Context, operation *instanceports.AWDServiceOperation) error
 	FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
 	FinalizeStoppedRuntime(ctx context.Context, id int64) error
 	RequeueLostRuntime(ctx context.Context, id int64) (bool, error)
@@ -174,7 +173,7 @@ func (s *InstanceMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Con
 			return err
 		}
 		if requeued {
-			s.recordSystemAWDOperation(ctx, instance, runtimecontracts.AWDServiceOperationTypeRecreate, runtimecontracts.AWDServiceOperationStatusProvisioning, reason, "")
+			s.recordSystemAWDOperation(ctx, instance, instanceports.AWDServiceOperationTypeRecreate, instanceports.AWDServiceOperationStatusProvisioning, reason, "")
 			s.logger.Warn("实例运行时丢失，已重新入队",
 				zap.Int64("instance_id", instance.ID),
 				zap.String("status", instance.Status),
@@ -368,10 +367,10 @@ func (s *InstanceMaintenanceService) collectRecoverableContainerIDs(ctx context.
 }
 
 func (s *InstanceMaintenanceService) restartStoppedContainers(ctx context.Context, instance *instanceentity.Instance, containerIDs []string) error {
-	operationID := s.recordSystemAWDOperation(ctx, instance, runtimecontracts.AWDServiceOperationTypeRecover, runtimecontracts.AWDServiceOperationStatusRecovering, "container_not_running", "")
+	operationID := s.recordSystemAWDOperation(ctx, instance, instanceports.AWDServiceOperationTypeRecover, instanceports.AWDServiceOperationStatusRecovering, "container_not_running", "")
 	for _, containerID := range containerIDs {
 		if err := s.engine.StartContainer(ctx, containerID); err != nil {
-			s.finishAWDOperation(ctx, operationID, runtimecontracts.AWDServiceOperationStatusFailed, err.Error())
+			s.finishAWDOperation(ctx, operationID, instanceports.AWDServiceOperationStatusFailed, err.Error())
 			s.logger.Warn("恢复停止的实例容器失败，准备重新入队",
 				zap.Int64("instance_id", instance.ID),
 				zap.String("container_id", containerID),
@@ -382,7 +381,7 @@ func (s *InstanceMaintenanceService) restartStoppedContainers(ctx context.Contex
 			zap.Int64("instance_id", instance.ID),
 			zap.String("container_id", containerID))
 	}
-	s.finishAWDOperation(ctx, operationID, runtimecontracts.AWDServiceOperationStatusRecovered, "")
+	s.finishAWDOperation(ctx, operationID, instanceports.AWDServiceOperationStatusRecovered, "")
 	return nil
 }
 
@@ -391,13 +390,13 @@ func (s *InstanceMaintenanceService) recordSystemAWDOperation(ctx context.Contex
 		return 0
 	}
 	now := time.Now().UTC()
-	operation := &runtimecontracts.AWDServiceOperation{
+	operation := &instanceports.AWDServiceOperation{
 		ContestID:     *instance.ContestID,
 		TeamID:        *instance.TeamID,
 		ServiceID:     *instance.ServiceID,
 		InstanceID:    instance.ID,
 		OperationType: operationType,
-		RequestedBy:   runtimecontracts.AWDServiceOperationRequestedBySystem,
+		RequestedBy:   instanceports.AWDServiceOperationRequestedBySystem,
 		Reason:        reason,
 		SLABillable:   false,
 		Status:        status,
@@ -513,12 +512,12 @@ func collectInstanceContainerIDs(instance *instanceentity.Instance) []string {
 	}
 	ids := make([]string, 0, 1)
 	ids = appendUniqueContainerID(ids, instance.ContainerID)
-	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	containerIDs, err := instancecontracts.ExtractInstanceRuntimeContainerIDs(instance.RuntimeDetails)
 	if err != nil {
 		return ids
 	}
-	for _, container := range details.Containers {
-		ids = appendUniqueContainerID(ids, container.ContainerID)
+	for _, containerID := range containerIDs {
+		ids = appendUniqueContainerID(ids, containerID)
 	}
 	return ids
 }

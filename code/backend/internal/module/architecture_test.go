@@ -94,6 +94,30 @@ func TestBoundaryPackagesDoNotDependOnOuterLayers(t *testing.T) {
 	}
 }
 
+func TestRuntimeHostExecutorUsageIsRestricted(t *testing.T) {
+	t.Parallel()
+
+	files := archtest.RuntimeGoFiles(t, ".", "../app")
+	actual := make(map[string]struct{})
+	for _, file := range files {
+		content := archtest.ReadFile(t, file)
+		if !strings.Contains(content, "RuntimeHostExecutor") {
+			continue
+		}
+		key := filepath.ToSlash(file)
+		actual[key] = struct{}{}
+		if _, allowed := reviewedRuntimeHostExecutorUsageFiles[key]; !allowed {
+			t.Fatalf("%s references RuntimeHostExecutor; keep the wide host executor limited to runtime infrastructure and app composition", file)
+		}
+	}
+
+	for allowed := range reviewedRuntimeHostExecutorUsageFiles {
+		if _, exists := actual[allowed]; !exists {
+			t.Fatalf("RuntimeHostExecutor usage exception is stale: %s", allowed)
+		}
+	}
+}
+
 func TestModuleDependencyBaselineIsCurrent(t *testing.T) {
 	t.Parallel()
 

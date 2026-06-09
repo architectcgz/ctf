@@ -432,7 +432,7 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 			},
 		},
 		imageRepo:    challengeinfra.NewImageRepository(db),
-		instanceRepo: runtimeinfrarepo.NewRepository(db),
+		instanceRepo: newPracticeTestInstanceRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 				cleanupCalls++
@@ -622,7 +622,7 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 			},
 		},
 		imageRepo:    challengeinfra.NewImageRepository(db),
-		instanceRepo: runtimeinfrarepo.NewRepository(db),
+		instanceRepo: newPracticeTestInstanceRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 				return fmt.Errorf("cleanup stale workspace failed")
@@ -682,7 +682,7 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 		t.Fatal("expected createSingleContainer() to fail when stale workspace cleanup fails")
 	}
 
-	workspace, err := runtimeinfrarepo.NewRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
+	workspace, err := runtimeinfrarepo.NewAWDRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
 	if err != nil {
 		t.Fatalf("FindAWDDefenseWorkspace() error = %v", err)
 	}
@@ -753,7 +753,7 @@ func TestPrepareAWDDefenseWorkspacePlanTreatsFailedWorkspaceContainerAsStale(t *
 				}, nil
 			},
 		},
-		instanceRepo: runtimeinfrarepo.NewRepository(db),
+		instanceRepo: newPracticeTestInstanceRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			inspectManagedContainerFn: func(ctx context.Context, containerID string) (*practiceports.ManagedContainerState, error) {
 				t.Fatalf("unexpected managed container inspection for failed workspace state: %s", containerID)
@@ -1056,7 +1056,7 @@ func (s *stubPracticeInstanceStore) CountInstancesByStatus(ctx context.Context, 
 }
 
 type interceptAWDDefenseWorkspaceRepository struct {
-	*runtimeinfrarepo.Repository
+	*practiceTestInstanceRepository
 	upsertFn func(ctx context.Context, workspace *runtimeentity.AWDDefenseWorkspace) error
 }
 
@@ -1066,7 +1066,7 @@ func (r *interceptAWDDefenseWorkspaceRepository) UpsertAWDDefenseWorkspace(ctx c
 			return err
 		}
 	}
-	return r.Repository.UpsertAWDDefenseWorkspace(ctx, workspace)
+	return r.awdRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
 }
 
 type practiceServiceContextKey string

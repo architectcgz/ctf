@@ -22,6 +22,7 @@ import (
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
@@ -52,7 +53,7 @@ func TestBuildRuntimeHostExecutorProvidesReachableRuntimeInTestEnv(t *testing.T)
 	}
 
 	executor := buildRuntimeHostExecutor(root)
-	service := runtimecmd.NewProvisioningService(runtimeinfra.NewRepository(db), executor, &cfg.Container, zap.NewNop())
+	service := runtimecmd.NewProvisioningService(runtimeinfra.NewAllocationRepository(db), executor, &cfg.Container, zap.NewNop())
 
 	containerID, networkID, hostPort, _, err := service.CreateContainer(context.Background(), "ctf/test:v1", nil, 35001)
 	if err != nil {
@@ -220,6 +221,26 @@ func TestBuildContainerRuntimeModuleProvidesDefaultRuntimeNodeSelector(t *testin
 	}
 	if module == nil || module.RuntimeNodeSelector == nil {
 		t.Fatalf("expected runtime node selector, got %+v", module)
+	}
+	if module.OpsRuntimeQuery == nil {
+		t.Fatalf("expected ops runtime query, got %+v", module)
+	}
+
+	if err := db.Create(&instanceentity.Instance{
+		ID:          101,
+		UserID:      9,
+		ChallengeID: 21,
+		Status:      instanceentity.InstanceStatusRunning,
+		ExpiresAt:   time.Now().Add(time.Hour),
+	}).Error; err != nil {
+		t.Fatalf("seed running instance: %v", err)
+	}
+	activeContainers, err := module.OpsRuntimeQuery.CountRunning(context.Background())
+	if err != nil {
+		t.Fatalf("OpsRuntimeQuery.CountRunning() error = %v", err)
+	}
+	if activeContainers != 1 {
+		t.Fatalf("OpsRuntimeQuery.CountRunning() = %d, want 1", activeContainers)
 	}
 
 	binding, err := module.RuntimeNodeSelector.SelectDefaultNode(context.Background())
@@ -490,11 +511,11 @@ func (s stubRuntimeHTTPProxyTickets) IssueAWDDefenseSSHTicket(context.Context, a
 	return s.ticket, s.expiresAt, nil
 }
 
-func (s stubRuntimeHTTPProxyTickets) ResolveTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
+func (s stubRuntimeHTTPProxyTickets) ResolveTicket(context.Context, string) (*instanceports.ProxyTicketClaims, error) {
 	return nil, nil
 }
 
-func (s stubRuntimeHTTPProxyTickets) ResolveAWDTargetAccessURL(context.Context, *runtimeports.ProxyTicketClaims, int64, int64, int64) (string, error) {
+func (s stubRuntimeHTTPProxyTickets) ResolveAWDTargetAccessURL(context.Context, *instanceports.ProxyTicketClaims, int64, int64, int64) (string, error) {
 	return "", nil
 }
 
