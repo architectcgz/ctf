@@ -11,7 +11,7 @@ bash scripts/install-githooks.sh
 当前 hooks：
 
 - `pre-commit`：先运行 `bash scripts/run-workflow-stage.sh pre-commit-quick`，再单独运行 `bash scripts/check-skill-sync-reminder.sh --staged`。前者负责 task workflow 相关轻量门禁，后者是 harness 级非阻塞知识同步提醒。
-- `commit-msg`：运行 `scripts/check-commit-message.sh`。这个项目命令会调用全局 `~/.agents/harness/commit-message/check_commit_message.py`，再读取仓库内 `harness/policies/commit-message.json` 执行项目策略。普通提交仍要求采用“标题 + 正文”结构：标题继续使用英文类型前缀，如 `fix`、`refactor`、`docs`，可选 scope 放在英文括号里，冒号后的描述必须包含中文说明；正文至少两行有效内容，且需要有足够具体的变更说明。若当前 worktree 有激活中的非琐碎任务 gate，正文还必须显式写一行 `Task: <task-slug>`；这类 `Task:` 元数据不再计入正文说明行数和信息量统计。
+- `commit-msg`：运行 `scripts/check-commit-message.sh`。这个项目命令会调用全局 `~/.agents/harness/commit-message/check_commit_message.py`，再读取仓库内 `harness/policies/commit-message.json` 执行项目策略。普通提交仍要求采用“标题 + 正文”结构：标题继续使用英文类型前缀，如 `fix`、`refactor`、`docs`，可选 scope 放在英文括号里，冒号后的描述必须包含中文说明；正文至少两行有效内容，且需要有足够具体的变更说明。只有当当前暂存改动本身命中 startup gate 时，正文才必须显式写一行 `Task: <task-slug>`；这类 `Task:` 元数据不再计入正文说明行数和信息量统计。
 
 <!-- BEGIN HARNESS ENGINEERING: hook-docs -->
 
@@ -21,7 +21,7 @@ bash scripts/install-githooks.sh
 - harness reminder：`scripts/check-skill-sync-reminder.sh --staged` 作为独立的 harness 级非阻塞提醒执行；项目 wrapper 只保留稳定入口，真正 owner 已收回全局 `~/.agents/harness/check-skill-sync-reminder.sh`，不再挂在 `code-workflow` stage plugin 下。
 - `completion-full` stage：当前由 `harness/workflow-plugins/code-workflow/completion-full.d/` 下的插件运行 code change contract checks、backend full architecture、frontend full architecture。
 - `workflow-governance` stage：当前由 `harness/workflow-plugins/code-workflow/workflow-governance.d/` 下的插件运行治理审计核心脚本；除了本地治理核查外，还会调用全局 `feedback` 归档状态守卫，防止已吸收条目继续停留在活动状态；`review-governance` 仍作为兼容 stage 别名存在。
-- `commit-msg`：运行 `scripts/check-commit-message.sh`，通过全局共享检查器 + 本地 policy 阻止中文类型前缀、纯英文描述标题、只有简短标题而没有详细正文的普通提交进入历史；若存在激活中的 task gate，还要求正文显式带上 `Task: <task-slug>`。
+- `commit-msg`：运行 `scripts/check-commit-message.sh`，通过全局共享检查器 + 本地 policy 阻止中文类型前缀、纯英文描述标题、只有简短标题而没有详细正文的普通提交进入历史；只有当前暂存改动命中 startup gate 时，才要求正文显式带上 `Task: <task-slug>`。
 - 原有 API 合同同步逻辑继续保留。
 
 ## 本地工作流优先

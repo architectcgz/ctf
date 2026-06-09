@@ -33,9 +33,9 @@ fi
 
 cmd=(python3 "$checker" --message-file "$message_file" --policy-file "$policy_file")
 if [[ -x "$repo_root/scripts/check-startup-gate.sh" ]]; then
-  active_task_slug="$(bash "$repo_root/scripts/check-startup-gate.sh" --print-active-slug 2>/dev/null || true)"
-  if [[ -n "$active_task_slug" ]]; then
-    cmd+=(--active-task-slug "$active_task_slug")
+  required_task_slug="$(bash "$repo_root/scripts/check-startup-gate.sh" --staged --print-required-task-slug 2>/dev/null || true)"
+  if [[ -n "$required_task_slug" ]]; then
+    cmd+=(--active-task-slug "$required_task_slug")
   fi
 fi
 
