@@ -38,7 +38,7 @@ func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := service.CleanupRuntime(context.Background(), &instanceentity.Instance{RuntimeDetails: runtimeDetails}); err != nil {
+	if err := service.CleanupRuntime(context.Background(), runtimeCleanupTarget(&instanceentity.Instance{RuntimeDetails: runtimeDetails})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 
@@ -80,7 +80,7 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailHostPort(t *testing.T) {
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := service.CleanupRuntime(context.Background(), &instanceentity.Instance{ID: instanceID, RuntimeDetails: runtimeDetails}); err != nil {
+	if err := service.CleanupRuntime(context.Background(), runtimeCleanupTarget(&instanceentity.Instance{ID: instanceID, RuntimeDetails: runtimeDetails})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 
@@ -123,7 +123,7 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailSubnet(t *testing.T) {
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := service.CleanupRuntime(context.Background(), &instanceentity.Instance{ID: instanceID, RuntimeDetails: runtimeDetails}); err != nil {
+	if err := service.CleanupRuntime(context.Background(), runtimeCleanupTarget(&instanceentity.Instance{ID: instanceID, RuntimeDetails: runtimeDetails})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 
@@ -166,7 +166,7 @@ func TestRuntimeCleanupServiceKeepsForeignOwnedRuntimeDetailHostPort(t *testing.
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := service.CleanupRuntime(context.Background(), &instanceentity.Instance{ID: ownerInstanceID, RuntimeDetails: runtimeDetails}); err != nil {
+	if err := service.CleanupRuntime(context.Background(), runtimeCleanupTarget(&instanceentity.Instance{ID: ownerInstanceID, RuntimeDetails: runtimeDetails})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 

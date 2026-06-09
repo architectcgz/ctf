@@ -45,12 +45,12 @@ func newNodeScopedPracticeRuntimeServiceAdapter(router *runtimeNodeExecutionRout
 
 func (a *practiceRuntimeServiceAdapter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
 	if a != nil && a.router != nil {
-		return a.router.CleanupRuntime(ctx, instance)
+		return a.router.CleanupRuntime(ctx, runtimeCleanupTargetFromInstance(instance))
 	}
 	if a == nil || a.cleaner == nil {
 		return nil
 	}
-	return a.cleaner.CleanupRuntime(ctx, instance)
+	return a.cleaner.CleanupRuntime(ctx, runtimeCleanupTargetFromInstance(instance))
 }
 
 func (a *practiceRuntimeServiceAdapter) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {

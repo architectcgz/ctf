@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -67,10 +66,7 @@ func (a *challengeRuntimeProbeAdapter) CleanupRuntimeDetails(ctx context.Context
 	if err != nil {
 		return err
 	}
-	instance := &instancecontracts.Instance{
-		RuntimeDetails: rawDetails,
-	}
-	return a.cleaner.CleanupRuntime(ctx, instance)
+	return a.cleaner.CleanupRuntime(ctx, runtimecontracts.RuntimeCleanupTarget{RuntimeDetails: rawDetails})
 }
 
 func toRuntimeTopologyCreateRequestFromChallenge(req *challengeports.RuntimeTopologyCreateRequest, publishedAccessHost string) *runtimeports.TopologyCreateRequest {

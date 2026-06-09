@@ -3,7 +3,6 @@ package domain
 import (
 	"time"
 
-	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
@@ -16,26 +15,22 @@ type ManagedResources struct {
 	ACLHandle    *runtimecontracts.InstanceRuntimeACLHandle
 }
 
-// ExtractManagedResources 提取实例持有的容器、网络和 ACL 资源标识。
-func ExtractManagedResources(instance *instancecontracts.Instance) ManagedResources {
-	if instance == nil {
-		return ManagedResources{}
-	}
-
-	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+// ExtractManagedResources 提取清理目标持有的容器、网络和 ACL 资源标识。
+func ExtractManagedResources(target runtimecontracts.RuntimeCleanupTarget) ManagedResources {
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(target.RuntimeDetails)
 	if err != nil {
 		return ManagedResources{
-			ContainerIDs: fallbackIDs(instance.ContainerID),
-			NetworkIDs:   fallbackIDs(instance.NetworkID),
-			HostPorts:    fallbackPorts(instance.HostPort),
+			ContainerIDs: fallbackIDs(target.ContainerID),
+			NetworkIDs:   fallbackIDs(target.NetworkID),
+			HostPorts:    fallbackPorts(target.HostPort),
 		}
 	}
 
 	return ManagedResources{
-		ContainerIDs: uniqueContainerIDs(details, instance.ContainerID),
-		NetworkIDs:   uniqueNetworkIDs(details, instance.NetworkID),
+		ContainerIDs: uniqueContainerIDs(details, target.ContainerID),
+		NetworkIDs:   uniqueNetworkIDs(details, target.NetworkID),
 		Subnets:      uniqueNetworkSubnets(details),
-		HostPorts:    uniqueHostPorts(details, instance.HostPort),
+		HostPorts:    uniqueHostPorts(details, target.HostPort),
 		ACLHandle:    details.ACL,
 	}
 }

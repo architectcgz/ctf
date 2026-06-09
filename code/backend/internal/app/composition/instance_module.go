@@ -16,6 +16,7 @@ import (
 	instanceports "ctf-platform/internal/module/instance/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
+	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
@@ -68,7 +69,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	var cleanupService interface {
 		instanceports.RuntimeCleaner
 		RemoveContainer(ctx context.Context, containerID string) error
-	} = defaultCleanupService
+	} = newInstanceRuntimeCleanupAdapter(defaultCleanupService)
 	provisioningService := module.ProvisioningService
 	var maintenanceRuntime interface {
 		ListManagedContainers(ctx context.Context) ([]instanceports.ManagedContainer, error)
@@ -77,7 +78,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	} = newInstanceMaintenanceRuntime(module.ManagedContainerInventory, module.ProvisioningRuntime)
 	practiceRuntimeService := newPracticeRuntimeServiceAdapter(defaultCleanupService, provisioningService, module.ManagedContainerInventory)
 	if runtime.nodeRouter != nil {
-		cleanupService = runtime.nodeRouter
+		cleanupService = newInstanceRuntimeCleanupRouterAdapter(runtime.nodeRouter)
 		maintenanceRuntime = newInstanceMaintenanceRuntime(runtime.nodeRouter, runtime.nodeRouter)
 		practiceRuntimeService = newNodeScopedPracticeRuntimeServiceAdapter(runtime.nodeRouter)
 	}
@@ -166,6 +167,56 @@ func (m *InstanceModule) BuildHandler(root *Root, ops *OpsModule) {
 		Secure:   cfg.Auth.SessionCookieSecure,
 		SameSite: cfg.Auth.CookieSameSite(),
 	}, m.proxyTrafficRecorder)
+}
+
+type instanceRuntimeCleanupAdapter struct {
+	cleaner *runtimecmd.RuntimeCleanupService
+}
+
+func newInstanceRuntimeCleanupAdapter(cleaner *runtimecmd.RuntimeCleanupService) *instanceRuntimeCleanupAdapter {
+	if cleaner == nil {
+		return nil
+	}
+	return &instanceRuntimeCleanupAdapter{cleaner: cleaner}
+}
+
+func (a *instanceRuntimeCleanupAdapter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	if a == nil || a.cleaner == nil {
+		return nil
+	}
+	return a.cleaner.CleanupRuntime(ctx, runtimeCleanupTargetFromInstance(instance))
+}
+
+func (a *instanceRuntimeCleanupAdapter) RemoveContainer(ctx context.Context, containerID string) error {
+	if a == nil || a.cleaner == nil {
+		return nil
+	}
+	return a.cleaner.RemoveContainer(ctx, containerID)
+}
+
+type instanceRuntimeCleanupRouterAdapter struct {
+	router *runtimeNodeExecutionRouter
+}
+
+func newInstanceRuntimeCleanupRouterAdapter(router *runtimeNodeExecutionRouter) *instanceRuntimeCleanupRouterAdapter {
+	if router == nil {
+		return nil
+	}
+	return &instanceRuntimeCleanupRouterAdapter{router: router}
+}
+
+func (a *instanceRuntimeCleanupRouterAdapter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	if a == nil || a.router == nil {
+		return nil
+	}
+	return a.router.CleanupRuntime(ctx, runtimeCleanupTargetFromInstance(instance))
+}
+
+func (a *instanceRuntimeCleanupRouterAdapter) RemoveContainer(ctx context.Context, containerID string) error {
+	if a == nil || a.router == nil {
+		return nil
+	}
+	return a.router.RemoveContainer(ctx, containerID)
 }
 
 type instanceMaintenanceRuntimeAdapter struct {

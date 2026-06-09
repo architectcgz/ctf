@@ -23,7 +23,7 @@ type runtimeNodeClient interface {
 	CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error)
 	ApplyACL(ctx context.Context, handle *runtimecontracts.InstanceRuntimeACLHandle, rules []runtimecontracts.InstanceRuntimeACLRule) error
-	CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
+	CleanupRuntime(ctx context.Context, target runtimecontracts.RuntimeCleanupTarget) error
 	ExecContainerInteractive(ctx context.Context, containerID string, command []string, stdin io.Reader, stdout io.Writer) error
 	RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error
 	RemoveContainer(ctx context.Context, containerID string) error
@@ -227,11 +227,11 @@ func (r *runtimeNodeExecutionRouter) CreateContainer(ctx context.Context, imageN
 	return client.CreateContainer(ctx, imageName, env, reservedHostPort)
 }
 
-func (c *nodeRuntimeClient) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
-	if c == nil || c.cleaner == nil || instance == nil {
+func (c *nodeRuntimeClient) CleanupRuntime(ctx context.Context, target runtimecontracts.RuntimeCleanupTarget) error {
+	if c == nil || c.cleaner == nil || target == (runtimecontracts.RuntimeCleanupTarget{}) {
 		return nil
 	}
-	return c.cleaner.CleanupRuntime(ctx, instance)
+	return c.cleaner.CleanupRuntime(ctx, target)
 }
 
 func (c *nodeRuntimeClient) RemoveACLRules(ctx context.Context, rules []runtimecontracts.InstanceRuntimeACLRule) error {
@@ -241,15 +241,15 @@ func (c *nodeRuntimeClient) RemoveACLRules(ctx context.Context, rules []runtimec
 	return c.executor.RemoveACLRules(ctx, rules)
 }
 
-func (r *runtimeNodeExecutionRouter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
-	if r == nil || instance == nil {
+func (r *runtimeNodeExecutionRouter) CleanupRuntime(ctx context.Context, target runtimecontracts.RuntimeCleanupTarget) error {
+	if r == nil || target == (runtimecontracts.RuntimeCleanupTarget{}) {
 		return nil
 	}
-	client, _, err := r.clientForCleanupRuntime(ctx, instance)
+	client, _, err := r.clientForCleanupRuntime(ctx, target)
 	if err != nil {
 		return err
 	}
-	return client.CleanupRuntime(ctx, instance)
+	return client.CleanupRuntime(ctx, target)
 }
 
 func (c *nodeRuntimeClient) RemoveContainer(ctx context.Context, containerID string) error {
@@ -416,14 +416,14 @@ func (r *runtimeNodeExecutionRouter) clientForInstance(ctx context.Context, inst
 	return r.clientForNodeID(ctx, runtimeNodeIDValue(instance.NodeID))
 }
 
-func (r *runtimeNodeExecutionRouter) clientForCleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) (runtimeNodeClient, int64, error) {
-	if instance == nil {
+func (r *runtimeNodeExecutionRouter) clientForCleanupRuntime(ctx context.Context, target runtimecontracts.RuntimeCleanupTarget) (runtimeNodeClient, int64, error) {
+	if target == (runtimecontracts.RuntimeCleanupTarget{}) {
 		return nil, 0, nil
 	}
-	if nodeID := runtimeNodeIDValue(instance.NodeID); nodeID > 0 {
+	if nodeID := runtimeNodeIDValue(target.NodeID); nodeID > 0 {
 		return r.clientForNodeID(ctx, nodeID)
 	}
-	for _, containerID := range cleanupRuntimeContainerIDs(instance) {
+	for _, containerID := range cleanupRuntimeContainerIDs(target) {
 		nodeID, err := r.resolveNodeIDForContainer(ctx, containerID)
 		if err != nil {
 			return nil, 0, err
@@ -433,7 +433,7 @@ func (r *runtimeNodeExecutionRouter) clientForCleanupRuntime(ctx context.Context
 		}
 		return r.clientForNodeID(ctx, nodeID)
 	}
-	return r.clientForInstance(ctx, instance)
+	return r.clientForNodeID(ctx, 0)
 }
 
 func (r *runtimeNodeExecutionRouter) clientForContainerID(ctx context.Context, containerID string) (runtimeNodeClient, int64, error) {
@@ -543,8 +543,8 @@ func runtimeNodeIDValue(nodeID *int64) int64 {
 	return *nodeID
 }
 
-func cleanupRuntimeContainerIDs(instance *instancecontracts.Instance) []string {
-	if instance == nil {
+func cleanupRuntimeContainerIDs(target runtimecontracts.RuntimeCleanupTarget) []string {
+	if target == (runtimecontracts.RuntimeCleanupTarget{}) {
 		return nil
 	}
 
@@ -562,9 +562,9 @@ func cleanupRuntimeContainerIDs(instance *instancecontracts.Instance) []string {
 		result = append(result, containerID)
 	}
 
-	appendContainerID(instance.ContainerID)
+	appendContainerID(target.ContainerID)
 
-	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(target.RuntimeDetails)
 	if err != nil {
 		return result
 	}

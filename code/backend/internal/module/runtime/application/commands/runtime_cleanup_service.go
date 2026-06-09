@@ -8,7 +8,7 @@ import (
 
 	"go.uber.org/zap"
 
-	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
@@ -55,16 +55,16 @@ func (s *RuntimeCleanupService) RemoveContainer(ctx context.Context, containerID
 	return s.removeContainer(normalizeContext(ctx), containerID)
 }
 
-// CleanupRuntime 清理实例对应的容器、网络和 ACL 规则。
-func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+// CleanupRuntime 清理目标对应的容器、网络和 ACL 规则。
+func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, target runtimecontracts.RuntimeCleanupTarget) error {
 	ctx = normalizeContext(ctx)
-	if instance == nil {
+	if target == (runtimecontracts.RuntimeCleanupTarget{}) {
 		return nil
 	}
 
-	resources := runtimedomain.ExtractManagedResources(instance)
+	resources := runtimedomain.ExtractManagedResources(target)
 	if err := s.removeACL(ctx, resources); err != nil {
-		s.logger.Warn("删除实例 ACL 规则失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+		s.logger.Warn("删除实例 ACL 规则失败", zap.Int64("instance_id", target.InstanceID), zap.Error(err))
 	}
 	for _, containerID := range resources.ContainerIDs {
 		if err := s.RemoveContainer(ctx, containerID); err != nil {
@@ -77,12 +77,12 @@ func (s *RuntimeCleanupService) CleanupRuntime(ctx context.Context, instance *in
 		}
 	}
 	for _, subnet := range resources.Subnets {
-		if err := s.releaseSubnet(ctx, instance.ID, subnet); err != nil {
+		if err := s.releaseSubnet(ctx, target.InstanceID, subnet); err != nil {
 			return err
 		}
 	}
 	for _, hostPort := range resources.HostPorts {
-		if err := s.releasePort(ctx, instance.ID, hostPort); err != nil {
+		if err := s.releasePort(ctx, target.InstanceID, hostPort); err != nil {
 			return err
 		}
 	}

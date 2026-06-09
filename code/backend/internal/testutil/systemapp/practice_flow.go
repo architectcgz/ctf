@@ -55,6 +55,7 @@ import (
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
@@ -391,7 +392,7 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	}
 	instanceModule := composition.BuildInstanceModule(root, runtimeModule)
 	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, logger)
-	runtimeInstanceCommands := instancecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
+	runtimeInstanceCommands := instancecmd.NewInstanceService(instanceRepo, systemRuntimeCleanerAdapter{cleaner: runtimeCleanupService}, &cfg.Container, logger)
 	runtimeInstanceQueries := instanceqry.NewInstanceService(instanceRepo, &cfg.Container)
 	runtimeProxyTicketService := instanceqry.NewProxyTicketService(instanceinfra.NewProxyTicketStore(cache), proxyTicketInstanceRepo, cfg.Container.ProxyTicketTTL)
 	runtimeService := runtimeadapters.NewHTTPService(
@@ -507,6 +508,24 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 		Cache:   cache,
 		ImageID: imageID,
 	}
+}
+
+type systemRuntimeCleanerAdapter struct {
+	cleaner *runtimecmd.RuntimeCleanupService
+}
+
+func (a systemRuntimeCleanerAdapter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	if a.cleaner == nil || instance == nil {
+		return nil
+	}
+	return a.cleaner.CleanupRuntime(ctx, runtimecontracts.RuntimeCleanupTarget{
+		InstanceID:     instance.ID,
+		NodeID:         instance.NodeID,
+		ContainerID:    instance.ContainerID,
+		NetworkID:      instance.NetworkID,
+		HostPort:       instance.HostPort,
+		RuntimeDetails: instance.RuntimeDetails,
+	})
 }
 
 func NewPracticeFlowTestConfig(t *testing.T) *config.Config {

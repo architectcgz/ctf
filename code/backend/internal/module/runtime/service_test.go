@@ -108,10 +108,11 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 		DeleteMaxConcurrent: 2,
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
+	instanceCleaner := newRuntimeTestCleanerAdapter(cleanupService)
 	return &testRuntimeService{
-		commands:    instancecmd.NewInstanceService(repo, cleanupService, cfg, nil),
+		commands:    instancecmd.NewInstanceService(repo, instanceCleaner, cfg, nil),
 		queries:     instanceqry.NewInstanceService(repo, cfg),
-		maintenance: instancecmd.NewInstanceMaintenanceService(newRuntimeTestMaintenanceRepository(repo), nil, cleanupService, cfg, nil),
+		maintenance: instancecmd.NewInstanceMaintenanceService(newRuntimeTestMaintenanceRepository(repo), nil, instanceCleaner, cfg, nil),
 	}
 }
 

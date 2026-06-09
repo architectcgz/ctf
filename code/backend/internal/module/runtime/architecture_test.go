@@ -77,6 +77,18 @@ func TestDomainDoesNotDependOnGinGORMOrRuntimeInfra(t *testing.T) {
 	}
 }
 
+func TestRuntimeCleanupCoreDoesNotDependOnInstanceContracts(t *testing.T) {
+	t.Parallel()
+
+	files := []string{
+		filepath.Join("application", "commands", "runtime_cleanup_service.go"),
+		filepath.Join("domain", "resources.go"),
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/instance/contracts")
+	}
+}
+
 func TestAPIHTTPDoesNotDependOnGORMOrRuntimeInfra(t *testing.T) {
 	t.Parallel()
 

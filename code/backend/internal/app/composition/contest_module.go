@@ -7,8 +7,8 @@ import (
 
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
-	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	contestruntime "ctf-platform/internal/module/contest/runtime"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
@@ -50,14 +50,50 @@ func buildContestEndedRuntimeCleaner(root *Root, runtime *ContainerRuntimeModule
 	runtimeRepo := runtimeinfra.NewRepository(root.DB())
 	var cleanupService interface {
 		CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error
-	} = runtimecmd.NewRuntimeCleanupService(
+	} = newContestEndedRuntimeCleanupAdapter(runtimecmd.NewRuntimeCleanupService(
 		runtime.runtime.CleanupRuntime,
 		runtimeRepo,
 		logger.Named("contest_ended_runtime_cleanup_service"),
-	)
+	))
 	if runtime.nodeRouter != nil {
-		cleanupService = runtime.nodeRouter
+		cleanupService = newContestEndedRuntimeCleanupRouterAdapter(runtime.nodeRouter)
 	}
 	awdRepo := contestinfra.NewAWDRepository(root.DB())
 	return contestinfra.NewContestEndedRuntimeCleaner(awdRepo, awdRepo, cleanupService, runtimeRepo)
+}
+
+type contestEndedRuntimeCleanupAdapter struct {
+	cleaner *runtimecmd.RuntimeCleanupService
+}
+
+func newContestEndedRuntimeCleanupAdapter(cleaner *runtimecmd.RuntimeCleanupService) *contestEndedRuntimeCleanupAdapter {
+	if cleaner == nil {
+		return nil
+	}
+	return &contestEndedRuntimeCleanupAdapter{cleaner: cleaner}
+}
+
+func (a *contestEndedRuntimeCleanupAdapter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	if a == nil || a.cleaner == nil {
+		return nil
+	}
+	return a.cleaner.CleanupRuntime(ctx, runtimeCleanupTargetFromInstance(instance))
+}
+
+type contestEndedRuntimeCleanupRouterAdapter struct {
+	router *runtimeNodeExecutionRouter
+}
+
+func newContestEndedRuntimeCleanupRouterAdapter(router *runtimeNodeExecutionRouter) *contestEndedRuntimeCleanupRouterAdapter {
+	if router == nil {
+		return nil
+	}
+	return &contestEndedRuntimeCleanupRouterAdapter{router: router}
+}
+
+func (a *contestEndedRuntimeCleanupRouterAdapter) CleanupRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
+	if a == nil || a.router == nil {
+		return nil
+	}
+	return a.router.CleanupRuntime(ctx, runtimeCleanupTargetFromInstance(instance))
 }

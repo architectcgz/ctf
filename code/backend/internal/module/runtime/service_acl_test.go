@@ -25,7 +25,7 @@ func TestServiceCleanupRuntimeRemovesACLByHandle(t *testing.T) {
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := cleanupService.CleanupRuntime(context.Background(), &instanceentity.Instance{RuntimeDetails: details}); err != nil {
+	if err := cleanupService.CleanupRuntime(context.Background(), runtimeCleanupTarget(&instanceentity.Instance{RuntimeDetails: details})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 	if engine.removedACLHandle == nil || engine.removedACLHandle.Chain != "CTF-INS-123" {
@@ -51,7 +51,7 @@ func TestServiceCleanupRuntimeSkipsLegacyACLRulesWithoutHandle(t *testing.T) {
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := cleanupService.CleanupRuntime(context.Background(), &instanceentity.Instance{RuntimeDetails: details}); err != nil {
+	if err := cleanupService.CleanupRuntime(context.Background(), runtimeCleanupTarget(&instanceentity.Instance{RuntimeDetails: details})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 	if engine.removedACLHandle != nil {
@@ -79,7 +79,7 @@ func TestServiceCleanupRuntimeACLHandleUnaffectedByPollutedRules(t *testing.T) {
 		t.Fatalf("encode runtime details: %v", err)
 	}
 
-	if err := cleanupService.CleanupRuntime(context.Background(), &instanceentity.Instance{RuntimeDetails: details}); err != nil {
+	if err := cleanupService.CleanupRuntime(context.Background(), runtimeCleanupTarget(&instanceentity.Instance{RuntimeDetails: details})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 	if engine.removedACLHandle == nil || engine.removedACLHandle.Chain != "CTF-INS-456" {

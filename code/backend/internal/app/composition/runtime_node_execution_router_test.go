@@ -254,7 +254,7 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByRuntimeDetailsContainerNodeID(
 	if err != nil {
 		t.Fatalf("encode cleanup runtime details: %v", err)
 	}
-	if err := router.CleanupRuntime(context.Background(), &instanceentity.Instance{RuntimeDetails: cleanupPayloadDetails}); err != nil {
+	if err := router.CleanupRuntime(context.Background(), runtimeCleanupTargetFromInstance(&instanceentity.Instance{RuntimeDetails: cleanupPayloadDetails})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 
@@ -322,7 +322,7 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByWorkspaceContainerIDWithoutNod
 		"",
 	)
 
-	if err := router.CleanupRuntime(context.Background(), &instanceentity.Instance{ContainerID: "workspace-cleanup-ctr"}); err != nil {
+	if err := router.CleanupRuntime(context.Background(), runtimeCleanupTargetFromInstance(&instanceentity.Instance{ContainerID: "workspace-cleanup-ctr"})); err != nil {
 		t.Fatalf("CleanupRuntime() error = %v", err)
 	}
 

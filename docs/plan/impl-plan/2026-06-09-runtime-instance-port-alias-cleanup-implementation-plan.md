@@ -277,3 +277,160 @@ Remove the command/query response mapper declarations, build-tag assignment file
 - [x] **Step 3: Verify**
 
 Run runtime/module architecture tests and workflow checks before committing.
+
+## Remaining Runtime -> Instance Dependency Orchestration
+
+The remaining production `runtime -> instance` edge should be reduced in small owner-preserving slices. Do not replace the dependency with aliases; each slice should move the owner or add a narrow composition adapter.
+
+Current remaining production import sites:
+
+- `code/backend/internal/module/runtime/application/commands/runtime_cleanup_service.go`
+- `code/backend/internal/module/runtime/domain/resources.go`
+- `code/backend/internal/module/runtime/api/http/{handler.go,access_response_types.go,teacher_instance_types.go,teacher_instance_mapper.go}`
+- `code/backend/internal/module/runtime/infrastructure/repository.go`
+
+Target sequencing:
+
+1. Runtime cleanup view first.
+   - Runtime cleanup only needs `InstanceID`, optional `NodeID`, fallback `ContainerID`, fallback `NetworkID`, fallback `HostPort`, and encoded `RuntimeDetails`.
+   - Add a runtime-owned cleanup target for `RuntimeCleanupService` and `runtime/domain` resource extraction.
+   - Keep instance/practice/contest-facing ports unchanged initially, and convert from instance records to cleanup targets in `app/composition`.
+   - Completion criteria: runtime application commands and runtime domain no longer import `instance/contracts`.
+2. Instance persistence owner second.
+   - Move instance table reads/writes out of `runtime/infrastructure.Repository` into `instance/infrastructure.Repository`.
+   - Keep runtime allocation persistence (`PortAllocation`, `NetworkAllocation`, runtime nodes, runtime workspaces) in runtime infrastructure.
+   - Use a narrow composition adapter where one use case must update instance state and release runtime allocations together.
+   - Completion criteria: instance command/query/maintenance services are wired primarily from `instanceinfra.Repository`; runtime infrastructure no longer implements broad instance query/command ports.
+3. HTTP compatibility surface third.
+   - `runtime/api/http` currently handles instance HTTP routes and returns instance DTOs.
+   - After application and persistence owner cleanup, either migrate this handler to `instance/api/http` or rename/recompose it as an instance handler while preserving routes and response contracts.
+   - Completion criteria: runtime HTTP no longer imports instance contracts for instance route DTOs, or the file physically moves to the instance module with router compatibility preserved.
+4. Baseline cleanup last.
+   - Delete `runtime -> instance` from `moduleDependencyBaseline` only after production imports are gone.
+   - Keep `TestModuleDependencyBaselineIsCurrent` as the enforcement gate.
+
+## Task 7: Introduce Runtime Cleanup Target
+
+**Files:**
+- Modify: `code/backend/internal/module/runtime/architecture_test.go`
+- Create: `code/backend/internal/module/runtime/contracts/cleanup_target.go`
+- Modify: `code/backend/internal/module/runtime/domain/resources.go`
+- Modify: `code/backend/internal/module/runtime/application/commands/runtime_cleanup_service.go`
+- Modify: `code/backend/internal/app/composition/runtime_node_execution_router.go`
+- Modify: `code/backend/internal/app/composition/instance_practice_runtime_adapter.go`
+- Modify: `code/backend/internal/app/composition/runtime_challenge_adapter.go`
+- Modify: `code/backend/internal/app/composition/contest_module.go`
+- Update focused tests that construct cleanup payloads.
+
+- [x] **Step 1: Add failing architecture guard**
+
+Add a focused guard that rejects `instance/contracts` imports from:
+
+- `runtime/application/commands/runtime_cleanup_service.go`
+- `runtime/domain/resources.go`
+
+Run:
+
+```bash
+go test ./internal/module/runtime -run TestRuntimeCleanupCoreDoesNotDependOnInstanceContracts -count=1
+```
+
+Expected: FAIL because both files currently import `ctf-platform/internal/module/instance/contracts`.
+
+- [x] **Step 2: Add runtime-owned cleanup target**
+
+Define a small cleanup target under runtime-owned contracts:
+
+```go
+type RuntimeCleanupTarget struct {
+    InstanceID     int64
+    NodeID         *int64
+    ContainerID    string
+    NetworkID      string
+    HostPort       int
+    RuntimeDetails string
+}
+```
+
+Also add a helper only where useful, for example `NewRuntimeCleanupTarget(...)` at the composition edge, not in runtime core.
+
+- [x] **Step 3: Move runtime core to cleanup target**
+
+Change:
+
+- `RuntimeCleanupService.CleanupRuntime(ctx, target runtimeports.RuntimeCleanupTarget)`
+- `runtimedomain.ExtractManagedResources(target runtimeports.RuntimeCleanupTarget)`
+
+Use `target.InstanceID` for port/subnet release and logging. Use `target.RuntimeDetails` plus fallback fields for resource extraction.
+
+- [x] **Step 4: Adapt composition edges**
+
+Keep existing instance/practice/contest-facing ports stable for this slice. Add conversion adapters in `app/composition` so callers that still pass `*instancecontracts.Instance` do not force runtime core to import instance contracts.
+
+- [x] **Step 5: Verify focused runtime cleanup tests**
+
+Run:
+
+```bash
+go test ./internal/module/runtime -run 'Test.*Cleanup|TestRuntimeCleanupCoreDoesNotDependOnInstanceContracts' -count=1
+go test ./internal/app/composition -run 'Test.*Cleanup|Test.*RuntimeNode' -count=1
+```
+
+Expected: PASS.
+
+- [x] **Step 6: Verify module boundary**
+
+Run:
+
+```bash
+go test ./internal/module/runtime/... -count=1
+go test ./internal/module -run 'TestModuleDependencyBaselineIsCurrent|TestMapperWrappersFollowGlobalDelegationPolicy' -count=1
+```
+
+Expected: PASS.
+
+## Task 8: Move Remaining Instance Persistence Owner
+
+**Files:**
+- Modify: `code/backend/internal/module/instance/infrastructure/repository.go`
+- Modify: `code/backend/internal/module/runtime/infrastructure/repository.go`
+- Modify: `code/backend/internal/app/composition/instance_module.go`
+- Modify focused repository and composition tests.
+
+- [ ] **Step 1: List runtime repository methods by owner**
+
+Classify each `runtime/infrastructure.Repository` method as:
+
+- instance table query/write
+- runtime allocation/state persistence
+- mixed instance state plus runtime allocation transaction
+
+- [ ] **Step 2: Move pure instance methods**
+
+Move pure instance methods to `instance/infrastructure.Repository`, preserving SQL behavior and tests.
+
+- [ ] **Step 3: Adapt mixed methods at composition**
+
+For mixed methods, compose `instanceinfra.Repository` and a narrow runtime allocation repository in `app/composition` rather than making either module own both concepts.
+
+- [ ] **Step 4: Verify owner split**
+
+Run focused instance/runtime repository tests and module architecture guards before committing.
+
+## Task 9: Re-home Instance HTTP Surface
+
+**Files:**
+- Review: `code/backend/internal/module/runtime/api/http/*`
+- Review: router wiring under `code/backend/internal/app`
+
+- [ ] **Step 1: Decide physical owner**
+
+After Task 7 and Task 8, choose whether to move instance route handlers to `instance/api/http` or keep a compatibility wrapper in runtime while the implementation lives under instance.
+
+- [ ] **Step 2: Preserve route and response contracts**
+
+Move or recompose without changing public HTTP paths, JSON fields, proxy ticket behavior, or audit logging.
+
+- [ ] **Step 3: Remove final baseline**
+
+Delete `runtime -> instance` from `moduleDependencyBaseline` only after production imports are gone and module guard tests pass.
