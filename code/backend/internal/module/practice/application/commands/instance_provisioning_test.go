@@ -127,7 +127,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 	}
 
 	service := wirePracticeScopeAdapters(NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
@@ -158,7 +158,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		},
 		nil),
 
-		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db)).
+		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db)).
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	service.StartBackgroundTasks(context.Background())
@@ -226,7 +226,7 @@ func TestRunProvisioningLoopSkipsWorkWhenSchedulerLockHeldByOtherReplica(t *test
 
 	var createCalls atomic.Int32
 	service := wirePracticeScopeAdapters(NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
@@ -259,7 +259,7 @@ func TestRunProvisioningLoopSkipsWorkWhenSchedulerLockHeldByOtherReplica(t *test
 		},
 		nil),
 
-		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db)).
+		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db)).
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe()).
 		SetSchedulerLockStore(&stubPracticeSchedulerLockStore{acquired: false})
 
@@ -350,7 +350,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 
 	var cleanupCalls atomic.Int32
 	service := NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
@@ -1039,7 +1039,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 	started := make(chan int, 2)
 	release := make(chan struct{})
 	service := wirePracticeScopeAdapters(NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
@@ -1072,7 +1072,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 		},
 		nil),
 
-		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db))
 
 	service.StartBackgroundTasks(context.Background())
 

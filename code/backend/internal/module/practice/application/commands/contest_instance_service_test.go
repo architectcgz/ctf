@@ -627,7 +627,7 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 	imageRepo := challengeinfra.NewImageRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
 	return practicecmd.NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 		imageRepo,
 		instanceRepo,
 		contestInstanceTestRuntimeService{},
@@ -646,7 +646,7 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 			},
 		},
 		zap.NewNop()).
-		SetContestScopeRepository(practiceinfra.NewContestScopeRepository(practiceinfra.NewRepository(db))).
+		SetContestScopeRepository(practiceinfra.NewContestScopeRepository(newPracticeRepositoryWithRuntimePortOwner(db))).
 		SetRuntimeSubjectRepository(practiceinfra.NewRuntimeSubjectRepository(challengeRepo)).
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 

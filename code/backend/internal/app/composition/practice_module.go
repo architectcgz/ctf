@@ -2,6 +2,9 @@ package composition
 
 import (
 	practiceruntime "ctf-platform/internal/module/practice/runtime"
+	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
+	"gorm.io/gorm"
 )
 
 type PracticeModule = practiceruntime.Module
@@ -17,6 +20,7 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *Insta
 		InstanceRepo:        instance.PracticeInstanceRepository,
 		RuntimeService:      instance.PracticeRuntimeService,
 		RuntimeNodeSelector: instance.PracticeRuntimeNodeSelector,
+		RuntimePortOwnerFor: runtimePortOwnerFor,
 		ChallengeRepo:       challenge.Catalog,
 		ImageStore:          challenge.ImageStore,
 	})
@@ -27,4 +31,8 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *Insta
 		root.RegisterBackgroundJob(NewLoopBackgroundJob(job.Name, job.Run))
 	}
 	return module
+}
+
+func runtimePortOwnerFor(db *gorm.DB) runtimeports.PortReservationOwner {
+	return runtimeinfra.NewRepository(db)
 }

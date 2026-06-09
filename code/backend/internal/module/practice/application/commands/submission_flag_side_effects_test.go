@@ -7,7 +7,6 @@ import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
-	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
@@ -147,7 +146,7 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
 	defer redisClient.Close()
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newPracticeRepositoryWithRuntimePortOwner(db)
 	challengeRepo := &stubPracticeChallengeContract{
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
@@ -252,7 +251,7 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
 	defer redisClient.Close()
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newPracticeRepositoryWithRuntimePortOwner(db)
 	challengeRepo := &stubPracticeChallengeContract{
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{

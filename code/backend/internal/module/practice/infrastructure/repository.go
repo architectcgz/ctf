@@ -16,15 +16,17 @@ import (
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeportreservation "ctf-platform/internal/module/runtime/contracts/portreservation"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 const awdServiceOperationSupersededError = "superseded_by_new_operation"
 
+var errRuntimePortReservationOwnerNotConfigured = errors.New("runtime port reservation owner is not configured")
+
 type Repository struct {
-	db           *gorm.DB
-	runtimePorts runtimeports.PortReservationOwner
+	db                  *gorm.DB
+	runtimePortOwnerFor func(*gorm.DB) runtimeports.PortReservationOwner
+	runtimePorts        runtimeports.PortReservationOwner
 }
 
 type sharedChallengeLockRecord struct {
@@ -36,16 +38,31 @@ func (sharedChallengeLockRecord) TableName() string {
 }
 
 func NewRepository(db *gorm.DB) *Repository {
+	return NewRepositoryWithRuntimePortOwner(db, nil)
+}
+
+func NewRepositoryWithRuntimePortOwner(db *gorm.DB, ownerFor func(*gorm.DB) runtimeports.PortReservationOwner) *Repository {
+	var runtimePorts runtimeports.PortReservationOwner
+	if ownerFor != nil {
+		runtimePorts = ownerFor(db)
+	}
 	return &Repository{
-		db:           db,
-		runtimePorts: runtimeportreservation.NewOwner(db),
+		db:                  db,
+		runtimePortOwnerFor: ownerFor,
+		runtimePorts:        runtimePorts,
 	}
 }
 
 func (r *Repository) WithDB(db *gorm.DB) *Repository {
+	ownerFor := r.runtimePortOwnerFor
+	var runtimePorts runtimeports.PortReservationOwner
+	if ownerFor != nil {
+		runtimePorts = ownerFor(db)
+	}
 	return &Repository{
-		db:           db,
-		runtimePorts: runtimeportreservation.NewOwner(db),
+		db:                  db,
+		runtimePortOwnerFor: ownerFor,
+		runtimePorts:        runtimePorts,
 	}
 }
 
@@ -417,6 +434,9 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 		}
 
 		repoWithTx := r.WithDB(tx)
+		if repoWithTx.runtimePorts == nil {
+			return errRuntimePortReservationOwnerNotConfigured
+		}
 		hostPort, err := repoWithTx.runtimePorts.SyncInstanceHostPortForRestart(ctx, instance.ID, instance.HostPort, preserveHostPort)
 		if err != nil {
 			return err
@@ -446,6 +466,9 @@ func (r *Repository) ResetInstanceRuntimeForRestart(ctx context.Context, instanc
 }
 
 func (r *Repository) IsHostPortReusableForRestart(ctx context.Context, instanceID int64, hostPort int) (bool, error) {
+	if r.runtimePorts == nil {
+		return false, errRuntimePortReservationOwnerNotConfigured
+	}
 	return r.runtimePorts.IsHostPortReusableForRestart(ctx, instanceID, hostPort)
 }
 
@@ -530,22 +553,37 @@ func shouldCloseActiveAWDServiceOperationsForScope(operation *runtimecontracts.A
 }
 
 func (r *Repository) ReserveAvailablePort(ctx context.Context, start, end int) (int, error) {
+	if r.runtimePorts == nil {
+		return 0, errRuntimePortReservationOwnerNotConfigured
+	}
 	return r.runtimePorts.ReserveAvailablePort(ctx, start, end)
 }
 
 func (r *Repository) ReserveAvailablePortExcluding(ctx context.Context, start, end, excludedPort int) (int, error) {
+	if r.runtimePorts == nil {
+		return 0, errRuntimePortReservationOwnerNotConfigured
+	}
 	return r.runtimePorts.ReserveAvailablePortExcluding(ctx, start, end, excludedPort)
 }
 
 func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID int64) error {
+	if r.runtimePorts == nil {
+		return errRuntimePortReservationOwnerNotConfigured
+	}
 	return r.runtimePorts.BindReservedPort(ctx, port, instanceID)
 }
 
 func (r *Repository) ReleaseReservedPort(ctx context.Context, port int) error {
+	if r.runtimePorts == nil {
+		return errRuntimePortReservationOwnerNotConfigured
+	}
 	return r.runtimePorts.ReleaseReservedPort(ctx, port)
 }
 
 func (r *Repository) ReleasePortForInstance(ctx context.Context, port int, instanceID int64) error {
+	if r.runtimePorts == nil {
+		return errRuntimePortReservationOwnerNotConfigured
+	}
 	return r.runtimePorts.ReleasePortForInstance(ctx, port, instanceID)
 }
 

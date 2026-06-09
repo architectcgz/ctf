@@ -15,7 +15,15 @@ import (
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
+
+func newRepositoryWithRuntimePortOwner(db *gorm.DB) *practiceinfra.Repository {
+	return practiceinfra.NewRepositoryWithRuntimePortOwner(db, func(db *gorm.DB) runtimeports.PortReservationOwner {
+		return runtimeinfra.NewRepository(db)
+	})
+}
 
 func TestRepositoryReserveAvailablePortSkipsAllocatedPort(t *testing.T) {
 	db := newRepositoryTestDB(t, &runtimeentity.PortAllocation{})
@@ -24,7 +32,7 @@ func TestRepositoryReserveAvailablePortSkipsAllocatedPort(t *testing.T) {
 		t.Fatalf("seed allocated port: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	port, err := repo.ReserveAvailablePort(context.Background(), 30000, 30002)
 	if err != nil {
 		t.Fatalf("ReserveAvailablePort() error = %v", err)
@@ -45,7 +53,7 @@ func TestRepositoryReserveAvailablePortSkipsAllocatedPort(t *testing.T) {
 func TestRepositoryReserveAvailablePortExcludingSkipsExcludedPort(t *testing.T) {
 	db := newRepositoryTestDB(t, &runtimeentity.PortAllocation{})
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	port, err := repo.ReserveAvailablePortExcluding(context.Background(), 30000, 30003, 30000)
 	if err != nil {
 		t.Fatalf("ReserveAvailablePortExcluding() error = %v", err)
@@ -64,7 +72,7 @@ func TestRepositoryReleasePortForInstanceOnlyDeletesOwnedAllocation(t *testing.T
 		t.Fatalf("seed allocated port: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	if err := repo.ReleasePortForInstance(context.Background(), 30015, otherInstanceID); err != nil {
 		t.Fatalf("ReleasePortForInstance() with foreign owner error = %v", err)
 	}
@@ -99,7 +107,7 @@ func TestRepositoryReleaseReservedPortOnlyDeletesUnboundAllocation(t *testing.T)
 		t.Fatalf("seed bound port allocation: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	if err := repo.ReleaseReservedPort(context.Background(), 30017); err != nil {
 		t.Fatalf("ReleaseReservedPort() with bound allocation error = %v", err)
 	}
@@ -145,7 +153,7 @@ func TestRepositoryCreateAWDServiceOperationClosesStaleActiveScopeEntries(t *tes
 		t.Fatalf("seed stale awd operation: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	replacement := &runtimeentity.AWDServiceOperation{
 		ContestID:     8,
 		TeamID:        15,
@@ -212,7 +220,7 @@ func TestRepositoryResetInstanceRuntimeForRestartClearsHostPortWhenNotPreserved(
 		t.Fatalf("seed other allocation: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, instancecontracts.InstanceStatusPending, time.Now().Add(2*time.Hour), false); err != nil {
 		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
 	}
@@ -254,7 +262,7 @@ func TestRepositoryResetInstanceRuntimeForRestartReleasesOwnedHostPortWhenNotPre
 		t.Fatalf("seed allocation: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, instancecontracts.InstanceStatusPending, time.Now().Add(2*time.Hour), false); err != nil {
 		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
 	}
@@ -288,7 +296,7 @@ func TestRepositoryResetInstanceRuntimeForRestartPreservesOwnedHostPort(t *testi
 		t.Fatalf("seed allocation: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, instancecontracts.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
 		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
 	}
@@ -322,7 +330,7 @@ func TestRepositoryResetInstanceRuntimeForRestartSyncsBoundAllocationWhenHostPor
 		t.Fatalf("seed allocation: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, instancecontracts.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
 		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
 	}
@@ -360,7 +368,7 @@ func TestRepositoryResetInstanceRuntimeForRestartUsesBoundAllocationWhenStoredHo
 		t.Fatalf("seed rebound allocation: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	if err := repo.ResetInstanceRuntimeForRestart(context.Background(), instance.ID, instancecontracts.InstanceStatusPending, time.Now().Add(2*time.Hour), true); err != nil {
 		t.Fatalf("ResetInstanceRuntimeForRestart() error = %v", err)
 	}
@@ -390,7 +398,7 @@ func TestRepositoryFindContestAWDServiceRuntimeSubjectMapsSnapshot(t *testing.T)
 		t.Fatalf("seed awd service: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 	subject, err := repo.FindContestAWDServiceRuntimeSubject(context.Background(), service.ContestID, service.ID)
 	if err != nil {
 		t.Fatalf("FindContestAWDServiceRuntimeSubject() error = %v", err)
@@ -448,7 +456,7 @@ func TestRepositoryIsHostPortReusableForRestart(t *testing.T) {
 		t.Fatalf("seed unbound allocation: %v", err)
 	}
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newRepositoryWithRuntimePortOwner(db)
 
 	reusable, err := repo.IsHostPortReusableForRestart(context.Background(), currentInstanceID, 30011)
 	if err != nil {

@@ -14,6 +14,7 @@ import (
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	platformevents "ctf-platform/internal/platform/events"
 )
 
@@ -53,6 +54,7 @@ type Deps struct {
 	}
 	RuntimeService      practiceports.RuntimeInstanceService
 	RuntimeNodeSelector practiceports.RuntimeNodeSelector
+	RuntimePortOwnerFor func(*gorm.DB) runtimeports.PortReservationOwner
 	ChallengeRepo       challengecontracts.PracticeChallengeContract
 	ImageStore          challengecontracts.ImageStore
 }
@@ -139,7 +141,7 @@ func Build(deps Deps) *Module {
 }
 
 func newModuleDeps(deps Deps) moduleDeps {
-	repo := practiceinfra.NewRepository(deps.DB)
+	repo := practiceinfra.NewRepositoryWithRuntimePortOwner(deps.DB, deps.RuntimePortOwnerFor)
 	return moduleDeps{
 		input:               deps,
 		commandRepo:         repo,

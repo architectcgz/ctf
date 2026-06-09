@@ -55,6 +55,7 @@ import (
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	teachingqueryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
@@ -374,7 +375,9 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	}
 	flagHandler := challengehttp.NewFlagHandler(flagCommandService, flagQueryService)
 
-	practiceRepo := practiceinfra.NewRepository(db)
+	practiceRepo := practiceinfra.NewRepositoryWithRuntimePortOwner(db, func(db *gorm.DB) runtimeports.PortReservationOwner {
+		return runtimeinfrarepo.NewRepository(db)
+	})
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
 	root, err := composition.BuildRoot(cfg, logger, db, cache)
 	if err != nil {

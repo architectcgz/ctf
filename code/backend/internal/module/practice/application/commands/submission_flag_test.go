@@ -5,7 +5,6 @@ import (
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
@@ -80,7 +79,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
 	defer redisClient.Close()
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newPracticeRepositoryWithRuntimePortOwner(db)
 	challengeRepo := &stubPracticeChallengeContract{
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
@@ -137,7 +136,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
 	defer redisClient.Close()
 
-	repo := practiceinfra.NewRepository(db)
+	repo := newPracticeRepositoryWithRuntimePortOwner(db)
 	challengeRepo := &stubPracticeChallengeContract{
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{

@@ -11,7 +11,6 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
@@ -137,7 +136,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 
 	var createTopologyCalls atomic.Int32
 	service := wirePracticeScopeAdapters(NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
@@ -184,7 +183,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 		},
 		nil),
 
-		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.RestartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {

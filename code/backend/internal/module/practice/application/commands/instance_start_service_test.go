@@ -7,7 +7,6 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/shared/taxonomy"
@@ -52,7 +51,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 
 	var createCalls atomic.Int32
 	service := wirePracticeScopeAdapters(NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
@@ -84,7 +83,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 		},
 		nil),
 
-		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.StartChallenge(context.Background(), 42, 201)
 	if err != nil {
@@ -141,7 +140,7 @@ func TestStartChallengePersistsSelectedRuntimeNodeID(t *testing.T) {
 	}
 
 	service := wirePracticeScopeAdapters(NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{},
@@ -171,7 +170,7 @@ func TestStartChallengePersistsSelectedRuntimeNodeID(t *testing.T) {
 				return &practiceports.RuntimeNodeBinding{NodeID: 901, NodeName: "node-901"}, nil
 			},
 		}),
-		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.StartChallenge(context.Background(), 52, 211)
 	if err != nil {
@@ -237,7 +236,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 	}
 
 	service := wirePracticeScopeAdapters(NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
@@ -264,7 +263,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 		},
 		nil),
 
-		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.StartChallenge(context.Background(), 46, 206)
 	if err != nil {
@@ -404,7 +403,7 @@ func TestStartChallengeReusesStoppingInstanceInsteadOfCreatingNewOne(t *testing.
 	}
 
 	service := wirePracticeScopeAdapters(NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
@@ -431,7 +430,7 @@ func TestStartChallengeReusesStoppingInstanceInsteadOfCreatingNewOne(t *testing.
 		},
 		nil),
 
-		practiceinfra.NewRepository(db), challengeinfra.NewRepository(db))
+		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db))
 
 	resp, err := service.StartChallenge(context.Background(), 47, 207)
 	if err != nil {

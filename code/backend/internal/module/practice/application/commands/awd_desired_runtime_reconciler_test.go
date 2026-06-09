@@ -889,7 +889,7 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 
 	var createTopologyCalls atomic.Int32
 	service := wirePracticeScopeAdapters(NewService(
-		practiceinfra.NewRepository(db),
+		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
 		runtimeinfrarepo.NewRepository(db),
@@ -959,7 +959,7 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 		},
 		nil),
 
-		practiceinfra.NewRepository(db), nil)
+		newPracticeRepositoryWithRuntimePortOwner(db), nil)
 	service.StartBackgroundTasks(context.Background())
 
 	runCtx, cancel := context.WithCancel(context.Background())

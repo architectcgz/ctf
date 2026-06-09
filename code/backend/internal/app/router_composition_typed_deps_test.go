@@ -335,6 +335,29 @@ func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
 	}
 }
 
+func TestPracticeModuleWiresRuntimePortOwnerFromCompositionRoot(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "practice_module.go"))
+	if err != nil {
+		t.Fatalf("read practice_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"runtimeinfra \"ctf-platform/internal/module/runtime/infrastructure\"",
+		"runtimeports \"ctf-platform/internal/module/runtime/ports\"",
+		"RuntimePortOwnerFor: runtimePortOwnerFor",
+		"func runtimePortOwnerFor(db *gorm.DB) runtimeports.PortReservationOwner",
+		"return runtimeinfra.NewRepository(db)",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("practice composition should wire runtime port owner through composition root marker %s", marker)
+		}
+	}
+}
+
 func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 	t.Parallel()
 

@@ -68,6 +68,32 @@ func TestModuleArchitectureBoundaries(t *testing.T) {
 	}
 }
 
+func TestBoundaryPackagesDoNotDependOnOuterLayers(t *testing.T) {
+	t.Parallel()
+
+	for _, file := range archtest.RuntimeGoFiles(t, ".") {
+		layer := moduleBoundaryLayer(file)
+		switch layer {
+		case "contracts", "ports", "domain":
+		default:
+			continue
+		}
+		assertNoModuleOuterLayerImports(t, file, archtest.Imports(t, file), []string{
+			"api",
+			"application",
+			"infrastructure",
+			"runtime",
+		})
+		assertNoForbiddenImports(t, file, archtest.Imports(t, file), []string{
+			"github.com/gin-gonic/gin",
+			"github.com/redis/go-redis",
+			"github.com/docker/docker",
+			"gorm.io/gorm",
+			"database/sql",
+		})
+	}
+}
+
 func TestModuleDependencyBaselineIsCurrent(t *testing.T) {
 	t.Parallel()
 
@@ -910,6 +936,20 @@ func moduleLayer(filePath string) string {
 	for i := 1; i < len(parts); i++ {
 		switch parts[i] {
 		case "api", "application", "domain", "infrastructure", "ports", "runtime":
+			return parts[i]
+		}
+	}
+	return ""
+}
+
+func moduleBoundaryLayer(filePath string) string {
+	parts := strings.Split(filepath.ToSlash(filePath), "/")
+	if len(parts) < 2 {
+		return ""
+	}
+	for i := 1; i < len(parts); i++ {
+		switch parts[i] {
+		case "contracts", "ports", "domain":
 			return parts[i]
 		}
 	}
