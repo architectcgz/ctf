@@ -720,7 +720,10 @@ Current remaining surface after Task 14:
 
 **Files:**
 - Create:
-  - `code/backend/internal/module/runtime/infrastructure/state_repository.go`
+  - `code/backend/internal/module/runtime/infrastructure/managed_instance_repository.go`
+  - `code/backend/internal/module/runtime/infrastructure/active_container_inventory_repository.go`
+  - `code/backend/internal/module/runtime/infrastructure/container_node_index_repository.go`
+  - `code/backend/internal/module/runtime/infrastructure/acl_migration_state_repository.go`
 - Modify:
   - `code/backend/internal/module/runtime/infrastructure/proxy_traffic_recorder.go`
   - `code/backend/internal/app/composition/runtime_module.go`
@@ -734,18 +737,19 @@ Current remaining surface after Task 14:
   - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
 - Delete:
   - `code/backend/internal/module/runtime/infrastructure/repository.go`
+  - `code/backend/internal/module/runtime/infrastructure/state_repository.go`
 
 - [x] **Step 1: Add runtime state owner guard**
 
-Extend typed dependency tests so `runtimeinfra.RuntimeStateRepository` owns runtime managed instance lookup, active container inventory, container-to-node state lookup, and ACL migration state persistence. Other runtime infrastructure files should not continue to expose those methods.
+Extend typed dependency tests so runtime managed instance lookup, active container inventory, container-to-node state lookup, and ACL migration state persistence each have their own concrete repository owner. Other runtime infrastructure files should not continue to expose those methods.
 
 - [x] **Step 2: Move runtime state/index methods**
 
-Move `FindByID`, `ListActiveContainerIDs`, `FindRuntimeNodeIDByContainerID`, `ListInstancesNeedingACLHandleMigration`, and `UpdateInstanceRuntimeDetails` into `runtime/infrastructure.RuntimeStateRepository`.
+Move `FindByID`, `ListActiveContainerIDs`, `FindRuntimeNodeIDByContainerID`, `ListInstancesNeedingACLHandleMigration`, and `UpdateInstanceRuntimeDetails` out of the transitional `RuntimeStateRepository`, and split them into `ManagedInstanceRepository`, `ActiveContainerInventoryRepository`, `ContainerNodeIndexRepository`, and `ACLMigrationStateRepository`.
 
 - [x] **Step 3: Rewire composition and recorder owner**
 
-Use `runtimeinfra.NewRuntimeStateRepository(root.DB())` for runtime node router state lookup, legacy ACL migration state update, and instance maintenance active container inventory reads. At the same time, let proxy traffic recording own its own concrete `ProxyTrafficEventRecorder` instead of hanging off the retired broad repository.
+Use `runtimeinfra.NewContainerNodeIndexRepository(root.DB())` for runtime node router lookup, `runtimeinfra.NewACLMigrationStateRepository(root.DB())` for legacy ACL migration state, and `runtimeinfra.NewActiveContainerInventoryRepository(root.DB())` for instance maintenance active container inventory reads. At the same time, let proxy traffic recording own its own concrete `ProxyTrafficEventRecorder` instead of hanging off the retired broad repository.
 
 - [x] **Step 4: Verify**
 
@@ -759,6 +763,6 @@ go test ./internal/module/runtime/... -count=1
 
 Current remaining surface after Task 15:
 
-- `runtime/infrastructure.Repository` 已删除；allocation、AWD、runtime state、proxy traffic recorder 都已经有各自 concrete owner。
+- `runtime/infrastructure.Repository` 与过渡态 `RuntimeStateRepository` 都已删除；allocation、AWD、managed instance、active container inventory、container-node index、ACL migration、proxy traffic recorder 都已经有各自 concrete owner。
 - runtime 侧剩余的结构问题主要从“宽仓储继续拆”收敛成“`runtime/ports/*` capability interface、host adapter、`ContainerRuntimeModule` 的最终物理 owner 是否继续留在 runtime，还是迁到独立 `container_runtime` / platform adapter”。
-- `runtime/infrastructure.RuntimeStateRepository` 目前仍把 runtime managed instance lookup、active container inventory、container-to-node state lookup 与 ACL migration-facing state update 放在同一 owner；如果后续要继续拆，应按使用者视角决定是否再分成 inventory/index/migration 视图，而不是恢复广义仓储。
+- 当前只剩 `ManagedInstanceRepository` 是否应继续保留为 production owner 需要观察；如果后续只剩测试或极窄读面，应继续下沉或消除，而不是再回并成新的宽 state repo。

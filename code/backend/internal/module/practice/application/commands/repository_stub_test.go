@@ -25,7 +25,6 @@ import (
 type practiceTestInstanceRepository struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfrarepo.Repository
-	runtimeRepo    *runtimeinfrarepo.Repository
 	allocationRepo *runtimeinfrarepo.AllocationRepository
 	awdRepo        *runtimeinfrarepo.AWDRepository
 }
@@ -34,7 +33,6 @@ func newPracticeTestInstanceRepository(db *gorm.DB) *practiceTestInstanceReposit
 	return &practiceTestInstanceRepository{
 		db:             db,
 		instanceRepo:   instanceinfrarepo.NewRepository(db),
-		runtimeRepo:    runtimeinfrarepo.NewRepository(db),
 		allocationRepo: runtimeinfrarepo.NewAllocationRepository(db),
 		awdRepo:        runtimeinfrarepo.NewAWDRepository(db),
 	}

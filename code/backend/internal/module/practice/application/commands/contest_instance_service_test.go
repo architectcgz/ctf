@@ -37,7 +37,6 @@ import (
 type contestInstanceTestInstanceRepository struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfrarepo.Repository
-	runtimeRepo    *runtimeinfrarepo.Repository
 	allocationRepo *runtimeinfrarepo.AllocationRepository
 	awdRepo        *runtimeinfrarepo.AWDRepository
 }
@@ -46,7 +45,6 @@ func newContestInstanceTestInstanceRepository(db *gorm.DB) *contestInstanceTestI
 	return &contestInstanceTestInstanceRepository{
 		db:             db,
 		instanceRepo:   instanceinfrarepo.NewRepository(db),
-		runtimeRepo:    runtimeinfrarepo.NewRepository(db),
 		allocationRepo: runtimeinfrarepo.NewAllocationRepository(db),
 		awdRepo:        runtimeinfrarepo.NewAWDRepository(db),
 	}

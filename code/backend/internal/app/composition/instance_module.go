@@ -64,7 +64,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		log = zap.NewNop()
 	}
 
-	stateRepo := runtimeinfra.NewRuntimeStateRepository(root.DB())
+	inventoryRepo := runtimeinfra.NewActiveContainerInventoryRepository(root.DB())
 	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
 	awdRepo := runtimeinfra.NewAWDRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
@@ -89,7 +89,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	queryService := instanceqry.NewInstanceService(instanceRepo, &cfg.Container, cfg.Pagination)
 	proxyTicketService := buildRuntimeProxyTicketService(root, instanceRepo)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
-		newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, stateRepo),
+		newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, inventoryRepo),
 		maintenanceRuntime,
 		cleanupService,
 		&cfg.Container,
@@ -288,11 +288,11 @@ type instanceMaintenanceRepositoryAdapter struct {
 	instanceRepo   *instanceinfra.Repository
 	allocationRepo *runtimeinfra.AllocationRepository
 	awdRepo        *runtimeinfra.AWDRepository
-	stateRepo      *runtimeinfra.RuntimeStateRepository
+	inventoryRepo  *runtimeinfra.ActiveContainerInventoryRepository
 }
 
-func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository, stateRepo *runtimeinfra.RuntimeStateRepository) *instanceMaintenanceRepositoryAdapter {
-	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil && stateRepo == nil {
+func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository, inventoryRepo *runtimeinfra.ActiveContainerInventoryRepository) *instanceMaintenanceRepositoryAdapter {
+	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil && inventoryRepo == nil {
 		return nil
 	}
 	return &instanceMaintenanceRepositoryAdapter{
@@ -300,7 +300,7 @@ func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.R
 		instanceRepo:   instanceRepo,
 		allocationRepo: allocationRepo,
 		awdRepo:        awdRepo,
-		stateRepo:      stateRepo,
+		inventoryRepo:  inventoryRepo,
 	}
 }
 
@@ -399,10 +399,10 @@ func (a *instanceMaintenanceRepositoryAdapter) RequeueLostRuntime(ctx context.Co
 }
 
 func (a *instanceMaintenanceRepositoryAdapter) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
-	if a == nil || a.stateRepo == nil {
+	if a == nil || a.inventoryRepo == nil {
 		return nil, nil
 	}
-	return a.stateRepo.ListActiveContainerIDs(ctx)
+	return a.inventoryRepo.ListActiveContainerIDs(ctx)
 }
 
 type practiceInstanceRepositoryAdapter struct {

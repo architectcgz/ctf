@@ -454,7 +454,7 @@ func TestStartChallengeReusesStoppingInstanceInsteadOfCreatingNewOne(t *testing.
 		t.Fatalf("expected no replacement instance to be created, got %d rows", count)
 	}
 
-	stored, err := runtimeinfrarepo.NewRepository(db).FindByID(context.Background(), 9007)
+	stored, err := runtimeinfrarepo.NewManagedInstanceRepository(db).FindByID(context.Background(), 9007)
 	if err != nil {
 		t.Fatalf("load stored stopping instance: %v", err)
 	}

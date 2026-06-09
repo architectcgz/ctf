@@ -46,7 +46,8 @@ type RuntimeModule = ContainerRuntimeModule
 func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	cfg := runtimeConfigOrDefault(root.Config())
 	log := root.Logger()
-	stateRepo := runtimeinfra.NewRuntimeStateRepository(root.DB())
+	indexRepo := runtimeinfra.NewContainerNodeIndexRepository(root.DB())
+	aclMigrationRepo := runtimeinfra.NewACLMigrationStateRepository(root.DB())
 	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultNodeName := defaultRuntimeNodeName(cfg)
@@ -74,11 +75,11 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		ManagedContainerStats:     executor,
 		InteractiveExecutor:       executor,
 	})
-	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), allocationRepo, stateRepo, nodeRepo, defaultNodeName)
+	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), allocationRepo, indexRepo, nodeRepo, defaultNodeName)
 	if nodeRouter != nil && defaultNode != nil && defaultNode.ID > 0 {
 		nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)
 	}
-	if err := migrateLegacyInstanceACLHandles(root.Context(), stateRepo, nodeRouter, defaultNodeClient, log.Named("runtime_acl_migration")); err != nil {
+	if err := migrateLegacyInstanceACLHandles(root.Context(), aclMigrationRepo, nodeRouter, defaultNodeClient, log.Named("runtime_acl_migration")); err != nil {
 		if nodeRouter != nil {
 			_ = nodeRouter.Close(root.Context())
 		} else if defaultNodeClient != nil {
