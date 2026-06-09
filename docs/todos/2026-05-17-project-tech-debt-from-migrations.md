@@ -1,14 +1,14 @@
 # 迁移过程中识别出的项目技术债
 
-更新时间：2026-05-28
+更新时间：2026-06-09
 
 本文只记录当前仍成立、或仍需保留为 follow-up 的项目技术债。已经被代码和架构事实收口的条目不再继续保留在活动 backlog 中。
 
 ## P1：运行时边界迁移仍有残余边界
 
-- [ ] `container_runtime` capability port 的最终物理落点还没有完全定型。
-  - 现状：`runtime/ports/container_runtime.go` 仍集中承载 provisioning / cleanup / file / image / stats / interactive 等 capability interface，`internal/app/composition/runtime_module.go` 继续以 `ContainerRuntimeModule` 做物理聚合。
-  - 影响：后续继续拆 `runtime` 时，仍可能再次引入过渡 owner 或把 capability 继续堆在组合层。
+- [ ] `container_runtime` capability port 的最终物理 owner 还没有完全定型。
+  - 现状：原 `runtime/ports/container_runtime.go` 已拆成 provisioning / cleanup / file / image / inventory / stats / interactive 等能力文件；`RuntimeHostExecutor` 也已有架构测试限制在 runtime host adapter 与 app composition 边界。剩余问题是底层实现仍落在 `runtime` 物理模块，`internal/app/composition/runtime_module.go` 继续以 `ContainerRuntimeModule` 做组合视图，且 `runtime/ports/http.go` 还保留一组指向 `instance/ports` 的实例访问兼容 alias。
+  - 影响：后续继续拆 `runtime` 时，仍需要单独判断容器适配能力是否迁到独立 `container_runtime` / platform adapter，并清理 runtime -> instance 的兼容 alias，避免把实例访问契约继续挂在 runtime ports 下。
   - 依据：`docs/design/backend-module-boundary-target.md`
 
 ## P2：教学评估与 AWD 统一仍有残余边界

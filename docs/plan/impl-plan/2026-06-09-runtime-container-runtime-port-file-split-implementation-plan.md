@@ -103,7 +103,8 @@
   - `RuntimeHostExecutor` remains necessary for the local Docker / remote runtime-agent bridge surface.
 - Plan adjustments after challenge:
   - Limit this slice to physical file split.
-  - Leave `RuntimeHostExecutor` guard, ops count migration, and runtime->instance alias cleanup as later slices.
+  - Add the `RuntimeHostExecutor` guard after the file split.
+  - Leave ops count migration and runtime->instance alias cleanup as later slices.
 
 ## Validation
 
