@@ -7,7 +7,7 @@ import (
 	"ctf-platform/internal/apperror"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 )
 
 func BuildTopologySpec(entryNodeKey string, networks []challengecontracts.TopologyNetworkReq, nodes []challengecontracts.TopologyNodeReq, links []challengecontracts.TopologyLinkReq, policies []challengecontracts.TopologyTrafficPolicyReq) (string, string, error) {

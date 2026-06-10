@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 

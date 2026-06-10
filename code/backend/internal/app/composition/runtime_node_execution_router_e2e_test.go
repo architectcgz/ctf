@@ -13,8 +13,8 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )

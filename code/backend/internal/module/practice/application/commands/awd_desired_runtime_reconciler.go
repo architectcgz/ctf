@@ -6,11 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
-
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
+	"go.uber.org/zap"
 )
 
 const desiredAWDReconcileLastErrorLimit = 256
@@ -119,9 +118,9 @@ func (s *Service) ensureDesiredAdminContestAWDTeamService(ctx context.Context, c
 		Scope:        scope,
 		NoopIfActive: true,
 		Audit: awdScopedRuntimeAudit{
-			StartOperationType:   runtimecontracts.AWDServiceOperationTypeStart,
-			RestartOperationType: runtimecontracts.AWDServiceOperationTypeRecreate,
-			RequestedBy:          runtimecontracts.AWDServiceOperationRequestedBySystem,
+			StartOperationType:   runtimestate.AWDServiceOperationTypeStart,
+			RestartOperationType: runtimestate.AWDServiceOperationTypeRecreate,
+			RequestedBy:          runtimestate.AWDServiceOperationRequestedBySystem,
 			Reason:               "desired_runtime_reconcile",
 			SLABillable:          false,
 		},

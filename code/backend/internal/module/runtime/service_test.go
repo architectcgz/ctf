@@ -12,6 +12,8 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/config"
+	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
@@ -20,8 +22,7 @@ import (
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
@@ -54,7 +55,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err := db.AutoMigrate(&contestcontracts.Contest{}, &contestcontracts.ContestAWDService{}); err != nil {
 		t.Fatalf("migrate awd tables: %v", err)
 	}
-	if err := db.AutoMigrate(&runtimecontracts.AWDScopeControl{}); err != nil {
+	if err := db.AutoMigrate(&runtimestate.AWDScopeControl{}); err != nil {
 		t.Fatalf("migrate awd scope control tables: %v", err)
 	}
 	if err := db.AutoMigrate(&runtimeentity.AWDServiceOperation{}); err != nil {

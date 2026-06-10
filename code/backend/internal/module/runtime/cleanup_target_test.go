@@ -3,9 +3,9 @@ package runtime_test
 import (
 	"context"
 
+	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func runtimeCleanupTarget(instance *instanceentity.Instance) runtimecontracts.RuntimeCleanupTarget {

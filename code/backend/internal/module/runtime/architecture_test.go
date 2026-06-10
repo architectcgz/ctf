@@ -40,7 +40,7 @@ func TestCommandsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtime/api/http")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtime/infrastructure")
-		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtime/application/queries")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/container_runtime/application/queries")
 	}
 }
 
@@ -58,7 +58,7 @@ func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtime/api/http")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtime/infrastructure")
-		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtime/application/commands")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/container_runtime/application/commands")
 	}
 }
 
@@ -81,8 +81,8 @@ func TestRuntimeCleanupCoreDoesNotDependOnInstanceContracts(t *testing.T) {
 	t.Parallel()
 
 	files := []string{
-		filepath.Join("application", "commands", "runtime_cleanup_service.go"),
-		filepath.Join("domain", "resources.go"),
+		filepath.Join("..", "container_runtime", "application", "commands", "runtime_cleanup_service.go"),
+		filepath.Join("..", "container_runtime", "domain", "resources.go"),
 	}
 	for _, file := range files {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/instance/contracts")
@@ -99,7 +99,7 @@ func TestAPIHTTPDoesNotDependOnGORMOrRuntimeInfra(t *testing.T) {
 	for _, file := range files {
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtimeinfra")
-		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtime/application")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/container_runtime/application")
 	}
 }
 
@@ -113,7 +113,7 @@ func TestInfrastructureDoesNotDependOnDTOOrGin(t *testing.T) {
 	for _, file := range files {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
-		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtime/application")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/container_runtime/application")
 	}
 }
 
@@ -205,13 +205,23 @@ func TestRuntimeInfrastructureDoesNotOwnInstanceProxyTickets(t *testing.T) {
 	}
 }
 
-func TestRuntimeModuleDoesNotExposeLegacyEngineSurface(t *testing.T) {
+func TestLegacyRuntimeModulePackageIsRetired(t *testing.T) {
 	t.Parallel()
 
-	fileNode := parseGoFile(t, filepath.Join("runtime", "module.go"))
-	assertTypeDoesNotExist(t, fileNode, "Engine")
-	assertStructDoesNotDeclareField(t, fileNode, "Module", "Engine")
-	assertStructDoesNotDeclareField(t, fileNode, "Deps", "Engine")
+	files, err := filepath.Glob(filepath.Join("runtime", "*.go"))
+	if err != nil {
+		t.Fatalf("glob runtime module files: %v", err)
+	}
+	nonTestFiles := make([]string, 0, len(files))
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		nonTestFiles = append(nonTestFiles, file)
+	}
+	if len(nonTestFiles) != 0 {
+		t.Fatalf("legacy runtime/runtime package should be retired, got production files %v", nonTestFiles)
+	}
 }
 
 func TestRuntimeWiringDoesNotImportCrossModulePorts(t *testing.T) {

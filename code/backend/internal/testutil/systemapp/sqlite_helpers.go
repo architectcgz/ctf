@@ -20,7 +20,7 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	practiceentity "ctf-platform/internal/module/practice/entity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	"ctf-platform/internal/platform/clustersecret"
 	"gorm.io/driver/sqlite"
@@ -117,8 +117,8 @@ var internalAppTestSchemaModels = []any{
 	&contestcontracts.AWDTeamService{},
 	&contestcontracts.AWDAttackLog{},
 	&contestcontracts.AWDTrafficEvent{},
-	&runtimecontracts.AWDServiceOperation{},
-	&runtimecontracts.AWDScopeControl{},
+	&runtimestate.AWDServiceOperation{},
+	&runtimestate.AWDScopeControl{},
 }
 
 var (

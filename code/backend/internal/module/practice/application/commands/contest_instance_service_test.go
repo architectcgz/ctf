@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -28,7 +29,7 @@ import (
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/shared/taxonomy"
@@ -116,11 +117,11 @@ func (r *contestInstanceTestInstanceRepository) CountInstancesByStatus(ctx conte
 	return r.instanceRepo.CountInstancesByStatus(ctx, statuses)
 }
 
-func (r *contestInstanceTestInstanceRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error) {
+func (r *contestInstanceTestInstanceRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimestate.AWDDefenseWorkspace, error) {
 	return r.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
 }
 
-func (r *contestInstanceTestInstanceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error {
+func (r *contestInstanceTestInstanceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimestate.AWDDefenseWorkspace) error {
 	return r.awdRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
 }
 

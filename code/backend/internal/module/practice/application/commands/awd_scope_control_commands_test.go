@@ -6,15 +6,14 @@ import (
 	"testing"
 	"time"
 
-	miniredis "github.com/alicebob/miniredis/v2"
-	"github.com/redis/go-redis/v9"
-
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
+	miniredis "github.com/alicebob/miniredis/v2"
+	"github.com/redis/go-redis/v9"
 )
 
 func TestServiceAWDControlLifecycleGuards(t *testing.T) {
@@ -28,7 +27,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 	}{
 		{
 			name:        "user_start_rejects_retired_team",
-			controlType: runtimecontracts.AWDScopeControlTypeRetired,
+			controlType: runtimestate.AWDScopeControlTypeRetired,
 			action: func(t *testing.T, service *practicecmd.Service, contestID, teamID, serviceID, userID int64) error {
 				_, err := service.StartContestAWDService(context.Background(), userID, contestID, serviceID)
 				return err
@@ -37,7 +36,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 		},
 		{
 			name:        "user_start_rejects_disabled_service",
-			controlType: runtimecontracts.AWDScopeControlTypeServiceDisabled,
+			controlType: runtimestate.AWDScopeControlTypeServiceDisabled,
 			action: func(t *testing.T, service *practicecmd.Service, contestID, teamID, serviceID, userID int64) error {
 				_, err := service.StartContestAWDService(context.Background(), userID, contestID, serviceID)
 				return err
@@ -46,7 +45,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 		},
 		{
 			name:        "admin_start_rejects_retired_team",
-			controlType: runtimecontracts.AWDScopeControlTypeRetired,
+			controlType: runtimestate.AWDScopeControlTypeRetired,
 			action: func(t *testing.T, service *practicecmd.Service, contestID, teamID, serviceID, userID int64) error {
 				_, err := service.StartAdminContestAWDTeamService(context.Background(), contestID, teamID, serviceID)
 				return err
@@ -55,7 +54,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 		},
 		{
 			name:        "admin_start_rejects_disabled_service",
-			controlType: runtimecontracts.AWDScopeControlTypeServiceDisabled,
+			controlType: runtimestate.AWDScopeControlTypeServiceDisabled,
 			action: func(t *testing.T, service *practicecmd.Service, contestID, teamID, serviceID, userID int64) error {
 				_, err := service.StartAdminContestAWDTeamService(context.Background(), contestID, teamID, serviceID)
 				return err
@@ -84,13 +83,13 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 				t.Fatalf("ensure instances.service_id column: %v", err)
 			}
 
-			scopeType := runtimecontracts.AWDScopeControlScopeTeam
+			scopeType := runtimestate.AWDScopeControlScopeTeam
 			controlServiceID := int64(0)
-			if tc.controlType == runtimecontracts.AWDScopeControlTypeServiceDisabled {
-				scopeType = runtimecontracts.AWDScopeControlScopeTeamService
+			if tc.controlType == runtimestate.AWDScopeControlTypeServiceDisabled {
+				scopeType = runtimestate.AWDScopeControlScopeTeamService
 				controlServiceID = serviceID
 			}
-			if err := db.Create(&runtimecontracts.AWDScopeControl{
+			if err := db.Create(&runtimestate.AWDScopeControl{
 				ContestID:   contestID,
 				TeamID:      teamID,
 				ScopeType:   scopeType,
@@ -139,12 +138,12 @@ func TestServiceStartContestAWDServiceAllowsManualStartWhenDesiredReconcileSuppr
 	if err := ensureContestInstanceServiceIDColumn(db); err != nil {
 		t.Fatalf("ensure instances.service_id column: %v", err)
 	}
-	if err := db.Create(&runtimecontracts.AWDScopeControl{
+	if err := db.Create(&runtimestate.AWDScopeControl{
 		ContestID:   contestID,
 		TeamID:      teamID,
-		ScopeType:   runtimecontracts.AWDScopeControlScopeTeamService,
+		ScopeType:   runtimestate.AWDScopeControlScopeTeamService,
 		ServiceID:   serviceID,
-		ControlType: runtimecontracts.AWDScopeControlTypeDesiredReconcileSuppressed,
+		ControlType: runtimestate.AWDScopeControlTypeDesiredReconcileSuppressed,
 		Reason:      "manual-suppress",
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -232,15 +231,15 @@ func TestServiceSetAdminContestAWDTeamRetiredStopsActiveInstancesAndClearsDesire
 	if err != nil {
 		t.Fatalf("SetAdminContestAWDTeamRetired() error = %v", err)
 	}
-	if resp == nil || !resp.Enabled || resp.ControlType != runtimecontracts.AWDScopeControlTypeRetired {
+	if resp == nil || !resp.Enabled || resp.ControlType != runtimestate.AWDScopeControlTypeRetired {
 		t.Fatalf("unexpected awd team retirement response: %+v", resp)
 	}
 
-	var controls []runtimecontracts.AWDScopeControl
+	var controls []runtimestate.AWDScopeControl
 	if err := db.Where("contest_id = ? AND team_id = ?", contestID, teamID).Find(&controls).Error; err != nil {
 		t.Fatalf("list awd scope controls: %v", err)
 	}
-	if len(controls) != 1 || controls[0].ControlType != runtimecontracts.AWDScopeControlTypeRetired {
+	if len(controls) != 1 || controls[0].ControlType != runtimestate.AWDScopeControlTypeRetired {
 		t.Fatalf("expected team retirement control persisted, got %+v", controls)
 	}
 
@@ -320,19 +319,19 @@ func TestServiceSetAdminContestAWDTeamServiceDisabledStopsActiveInstanceAndClear
 	if err != nil {
 		t.Fatalf("SetAdminContestAWDTeamServiceDisabled() error = %v", err)
 	}
-	if resp == nil || !resp.Enabled || resp.ControlType != runtimecontracts.AWDScopeControlTypeServiceDisabled {
+	if resp == nil || !resp.Enabled || resp.ControlType != runtimestate.AWDScopeControlTypeServiceDisabled {
 		t.Fatalf("unexpected awd service disable response: %+v", resp)
 	}
 	if resp.ServiceID == nil || *resp.ServiceID != serviceID {
 		t.Fatalf("expected service-scoped disable response, got %+v", resp)
 	}
 
-	var control runtimecontracts.AWDScopeControl
-	if err := db.Where("contest_id = ? AND team_id = ? AND service_id = ? AND control_type = ?", contestID, teamID, serviceID, runtimecontracts.AWDScopeControlTypeServiceDisabled).
+	var control runtimestate.AWDScopeControl
+	if err := db.Where("contest_id = ? AND team_id = ? AND service_id = ? AND control_type = ?", contestID, teamID, serviceID, runtimestate.AWDScopeControlTypeServiceDisabled).
 		First(&control).Error; err != nil {
 		t.Fatalf("load service disable control: %v", err)
 	}
-	if control.ScopeType != runtimecontracts.AWDScopeControlScopeTeamService {
+	if control.ScopeType != runtimestate.AWDScopeControlScopeTeamService {
 		t.Fatalf("expected team service control scope, got %+v", control)
 	}
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 )
 
 type stubOpsRuntimeCountQuery struct {

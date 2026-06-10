@@ -6,7 +6,7 @@ import (
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	"testing"
 	"time"
@@ -132,8 +132,8 @@ func TestRestartOrStartScopedAWDServiceRecreatesActiveInstanceWhenCheckerTokenMe
 		Scope:        scope,
 		NoopIfActive: true,
 		Audit: awdScopedRuntimeAudit{
-			RestartOperationType: runtimecontracts.AWDServiceOperationTypeRecreate,
-			RequestedBy:          runtimecontracts.AWDServiceOperationRequestedBySystem,
+			RestartOperationType: runtimestate.AWDServiceOperationTypeRecreate,
+			RequestedBy:          runtimestate.AWDServiceOperationRequestedBySystem,
 			Reason:               "desired_runtime_reconcile",
 		},
 	})

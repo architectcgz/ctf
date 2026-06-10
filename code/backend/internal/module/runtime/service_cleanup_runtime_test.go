@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func TestServiceCleanupRuntimeFailsWhenRuntimeEngineUnavailable(t *testing.T) {

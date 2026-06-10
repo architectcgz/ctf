@@ -6,9 +6,9 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	runtimeapp "ctf-platform/internal/module/container_runtime/application"
+	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 )
 
 type BackgroundJob struct {

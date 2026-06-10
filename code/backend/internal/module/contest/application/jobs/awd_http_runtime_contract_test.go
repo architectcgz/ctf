@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestAWDRoundUpdaterRunAWDHTTPCheckerActionUsesHTTPRuntime(t *testing.T) {

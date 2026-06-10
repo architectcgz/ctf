@@ -10,7 +10,7 @@ import (
 func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("..", "module", "runtime", "runtime", "module.go"))
+	content, err := os.ReadFile(filepath.Join("..", "module", "container_runtime", "runtime", "module.go"))
 	if err != nil {
 		t.Fatalf("read runtime runtime module: %v", err)
 	}
@@ -27,8 +27,7 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"imageRuntime",
 		"*runtimeapp.ImageRuntimeService",
 		"containerFiles",
-		"contestports.AWDContainerFileWriter",
-		"containerPublicHost",
+		"runtimeports.ContainerFileWriter",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -56,7 +55,7 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 func TestRuntimeModuleUsesCommandsQueriesServices(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("..", "module", "runtime", "runtime", "module.go"))
+	content, err := os.ReadFile(filepath.Join("..", "module", "container_runtime", "runtime", "module.go"))
 	if err != nil {
 		t.Fatalf("read runtime runtime module: %v", err)
 	}
@@ -342,7 +341,7 @@ func TestPracticeModuleWiresRuntimePortOwnerFromCompositionRoot(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"runtimeinfra \"ctf-platform/internal/module/runtime/infrastructure\"",
-		"runtimeports \"ctf-platform/internal/module/runtime/ports\"",
+		"runtimeports \"ctf-platform/internal/module/container_runtime/ports\"",
 		"RuntimePortOwnerFor: runtimePortOwnerFor",
 		"func runtimePortOwnerFor(db *gorm.DB) runtimeports.PortReservationOwner",
 		"return runtimeinfra.NewAllocationRepository(db)",
@@ -662,7 +661,7 @@ func TestPracticeModuleAvoidsRuntimeBridgeGlue(t *testing.T) {
 func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("..", "module", "runtime", "runtime", "module.go"))
+	content, err := os.ReadFile(filepath.Join("..", "module", "container_runtime", "runtime", "module.go"))
 	if err != nil {
 		t.Fatalf("read runtime runtime module: %v", err)
 	}
@@ -671,7 +670,7 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 	expected := []string{
 		"*runtimeapp.ImageRuntimeService",
 		"runtimeports.ManagedContainerStatsReader",
-		"contestports.AWDContainerFileWriter",
+		"runtimeports.ContainerFileWriter",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -698,7 +697,7 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 func TestRuntimeModuleDoesNotConstructRuntimeInfrastructure(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("..", "module", "runtime", "runtime", "module.go"))
+	content, err := os.ReadFile(filepath.Join("..", "module", "container_runtime", "runtime", "module.go"))
 	if err != nil {
 		t.Fatalf("read runtime runtime module: %v", err)
 	}

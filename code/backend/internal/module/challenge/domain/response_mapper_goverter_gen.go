@@ -7,7 +7,7 @@ import (
 	contracts "ctf-platform/internal/module/challenge/contracts"
 	entity "ctf-platform/internal/module/challenge/entity"
 	ports "ctf-platform/internal/module/challenge/ports"
-	contracts1 "ctf-platform/internal/module/runtime/contracts"
+	contracts1 "ctf-platform/internal/module/container_runtime/contracts"
 )
 
 type ChallengeResponseMapperImpl struct{}

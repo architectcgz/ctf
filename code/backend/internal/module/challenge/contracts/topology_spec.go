@@ -3,7 +3,7 @@ package contracts
 import (
 	"encoding/json"
 
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 )
 
 const (

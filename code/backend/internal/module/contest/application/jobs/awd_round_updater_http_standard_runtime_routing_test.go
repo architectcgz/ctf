@@ -13,9 +13,9 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestAWDRoundUpdaterHTTPStandardKeepsAWDAliasHostWhenDialingRuntimeIP(t *testing.T) {

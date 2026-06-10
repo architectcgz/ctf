@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 func joinAWDActiveScopeControls(query *gorm.DB, contestExpr, teamExpr, serviceExpr, retiredAlias, disabledAlias string) *gorm.DB {
@@ -18,8 +18,8 @@ func joinAWDActiveScopeControls(query *gorm.DB, contestExpr, teamExpr, serviceEx
 		disabledAlias, contestExpr, teamExpr, serviceExpr,
 	)
 	return query.
-		Joins(retiredJoin, runtimecontracts.AWDScopeControlScopeTeam, runtimecontracts.AWDScopeControlTypeRetired).
-		Joins(disabledJoin, runtimecontracts.AWDScopeControlScopeTeamService, runtimecontracts.AWDScopeControlTypeServiceDisabled)
+		Joins(retiredJoin, runtimestate.AWDScopeControlScopeTeam, runtimestate.AWDScopeControlTypeRetired).
+		Joins(disabledJoin, runtimestate.AWDScopeControlScopeTeamService, runtimestate.AWDScopeControlTypeServiceDisabled)
 }
 
 func applyAWDActiveScopeFilter(query *gorm.DB, serviceExpr, retiredAlias, disabledAlias string) *gorm.DB {

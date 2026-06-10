@@ -5,7 +5,7 @@ import (
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 )
 
 func TestRuntimeChallengeTopologyAdapterPreservesRuntimeFields(t *testing.T) {

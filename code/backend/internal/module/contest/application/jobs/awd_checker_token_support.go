@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strings"
 
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func (u *AWDRoundUpdater) resolveAWDCheckerToken(definition contestports.AWDServiceDefinition, contestID, teamID int64) (string, error) {

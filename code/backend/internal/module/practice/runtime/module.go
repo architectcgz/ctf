@@ -9,12 +9,12 @@ import (
 
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 	platformevents "ctf-platform/internal/platform/events"
 )
 

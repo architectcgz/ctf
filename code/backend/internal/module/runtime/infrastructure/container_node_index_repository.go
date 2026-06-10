@@ -7,7 +7,8 @@ import (
 
 	"gorm.io/gorm"
 
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 type ContainerNodeIndexRepository struct {
@@ -37,7 +38,7 @@ func (r *ContainerNodeIndexRepository) FindRuntimeNodeIDByContainerID(ctx contex
 	rows := make([]instanceContainerLookupRow, 0)
 	likePattern := "%" + containerID + "%"
 	if err := r.dbWithContext(ctx).
-		Model(&runtimecontracts.RuntimeManagedInstance{}).
+		Model(&runtimestate.RuntimeManagedInstance{}).
 		Select("node_id, container_id, runtime_details").
 		Where("container_id = ? OR runtime_details LIKE ?", containerID, likePattern).
 		Scan(&rows).Error; err != nil {

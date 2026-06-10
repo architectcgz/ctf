@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"ctf-platform/internal/config"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {

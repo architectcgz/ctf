@@ -6,7 +6,8 @@ import (
 
 	"gorm.io/gorm"
 
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
@@ -27,11 +28,11 @@ func (r *ActiveContainerInventoryRepository) ListActiveContainerIDs(ctx context.
 		ContainerID    string
 		RuntimeDetails string
 	}
-	if err := r.dbWithContext(ctx).Model(&runtimecontracts.RuntimeManagedInstance{}).
+	if err := r.dbWithContext(ctx).Model(&runtimestate.RuntimeManagedInstance{}).
 		Where("status IN ?", []string{
-			runtimecontracts.RuntimeManagedInstanceStatusCreating,
-			runtimecontracts.RuntimeManagedInstanceStatusRunning,
-			runtimecontracts.RuntimeManagedInstanceStatusStopping,
+			runtimestate.RuntimeManagedInstanceStatusCreating,
+			runtimestate.RuntimeManagedInstanceStatusRunning,
+			runtimestate.RuntimeManagedInstanceStatusStopping,
 		}).
 		Select("container_id, runtime_details").
 		Scan(&items).Error; err != nil {
@@ -66,9 +67,9 @@ func (r *ActiveContainerInventoryRepository) ListActiveContainerIDs(ctx context.
 		Table("awd_defense_workspaces AS ws").
 		Joins("JOIN instances AS inst ON inst.id = ws.instance_id").
 		Where("inst.status IN ?", []string{
-			runtimecontracts.RuntimeManagedInstanceStatusCreating,
-			runtimecontracts.RuntimeManagedInstanceStatusRunning,
-			runtimecontracts.RuntimeManagedInstanceStatusStopping,
+			runtimestate.RuntimeManagedInstanceStatusCreating,
+			runtimestate.RuntimeManagedInstanceStatusRunning,
+			runtimestate.RuntimeManagedInstanceStatusStopping,
 		}).
 		Where("ws.status = ? AND ws.container_id <> ''", runtimeentity.AWDDefenseWorkspaceStatusRunning).
 		Select("ws.container_id").

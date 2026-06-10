@@ -7,8 +7,8 @@ import (
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 var (

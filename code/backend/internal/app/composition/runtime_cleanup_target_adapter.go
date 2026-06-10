@@ -1,8 +1,8 @@
 package composition
 
 import (
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func runtimeCleanupTargetFromInstance(instance *instancecontracts.Instance) runtimecontracts.RuntimeCleanupTarget {

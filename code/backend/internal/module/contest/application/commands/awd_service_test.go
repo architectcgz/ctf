@@ -20,6 +20,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestjobs "ctf-platform/internal/module/contest/application/jobs"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
@@ -30,7 +31,6 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 const (

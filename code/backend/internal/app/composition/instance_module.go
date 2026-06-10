@@ -8,6 +8,8 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/auditlog"
+	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	instancehttp "ctf-platform/internal/module/instance/api/http"
@@ -17,10 +19,8 @@ import (
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type InstanceModule struct {

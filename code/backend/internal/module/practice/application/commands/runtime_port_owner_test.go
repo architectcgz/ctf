@@ -3,9 +3,9 @@ package commands
 import (
 	"gorm.io/gorm"
 
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func newPracticeRepositoryWithRuntimePortOwner(db *gorm.DB) *practiceinfra.Repository {

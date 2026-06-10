@@ -5,11 +5,12 @@ import (
 	"errors"
 	"time"
 
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 var ErrPracticeContestNotFound = errors.New("practice contest not found")
@@ -195,7 +196,7 @@ type PracticeInstanceCreateRepository interface {
 }
 
 type PracticeAWDServiceOperationCreateRepository interface {
-	CreateAWDServiceOperation(ctx context.Context, operation *runtimecontracts.AWDServiceOperation) error
+	CreateAWDServiceOperation(ctx context.Context, operation *runtimestate.AWDServiceOperation) error
 }
 
 type PracticeAWDServiceOperationFinishRepository interface {
@@ -299,11 +300,11 @@ type PracticeContestAWDInstanceRepository interface {
 }
 
 type PracticeAWDDefenseWorkspaceLookupRepository interface {
-	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error)
+	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimestate.AWDDefenseWorkspace, error)
 }
 
 type PracticeAWDDefenseWorkspaceWriteRepository interface {
-	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error
+	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimestate.AWDDefenseWorkspace) error
 	BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error
 }
 
@@ -322,9 +323,9 @@ type PracticeContestRegistrationRepository interface {
 }
 
 type PracticeAWDScopeControlRepository interface {
-	ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*runtimecontracts.AWDScopeControl, error)
-	ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*runtimecontracts.AWDScopeControl, error)
-	UpsertAWDScopeControl(ctx context.Context, control *runtimecontracts.AWDScopeControl) error
+	ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*runtimestate.AWDScopeControl, error)
+	ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*runtimestate.AWDScopeControl, error)
+	UpsertAWDScopeControl(ctx context.Context, control *runtimestate.AWDScopeControl) error
 	DeleteAWDScopeControl(ctx context.Context, contestID, teamID int64, scopeType, controlType string, serviceID int64) error
 }
 

@@ -5,11 +5,11 @@ import (
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	"testing"
 	"time"
 )

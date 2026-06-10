@@ -3,8 +3,8 @@ package composition
 import (
 	"context"
 
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type practiceRuntimeNodeSelectorAdapter struct {

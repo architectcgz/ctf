@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 )
 
 func TestServiceRemoveContainerFailsWhenRuntimeEngineUnavailable(t *testing.T) {

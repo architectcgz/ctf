@@ -2,13 +2,12 @@ package infrastructure
 
 import (
 	"context"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	"time"
-
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
-func (r *AWDRepository) ListLatestServiceOperationsByContest(ctx context.Context, contestID int64) ([]runtimecontracts.AWDServiceOperation, error) {
-	var operations []runtimecontracts.AWDServiceOperation
+func (r *AWDRepository) ListLatestServiceOperationsByContest(ctx context.Context, contestID int64) ([]runtimestate.AWDServiceOperation, error) {
+	var operations []runtimestate.AWDServiceOperation
 	if contestID <= 0 {
 		return operations, nil
 	}
@@ -33,17 +32,17 @@ func (r *AWDRepository) HasSystemRecoveryOperationAt(ctx context.Context, contes
 	}
 	var count int64
 	err := r.dbWithContext(ctx).
-		Model(&runtimecontracts.AWDServiceOperation{}).
+		Model(&runtimestate.AWDServiceOperation{}).
 		Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).
-		Where("requested_by = ? AND operation_type IN ?", runtimecontracts.AWDServiceOperationRequestedBySystem, []string{
-			runtimecontracts.AWDServiceOperationTypeRecover,
-			runtimecontracts.AWDServiceOperationTypeRecreate,
+		Where("requested_by = ? AND operation_type IN ?", runtimestate.AWDServiceOperationRequestedBySystem, []string{
+			runtimestate.AWDServiceOperationTypeRecover,
+			runtimestate.AWDServiceOperationTypeRecreate,
 		}).
 		Where("sla_billable = ?", false).
 		Where("(status IN ? OR (started_at <= ? AND (finished_at IS NULL OR finished_at >= ?)))", []string{
-			runtimecontracts.AWDServiceOperationStatusRequested,
-			runtimecontracts.AWDServiceOperationStatusProvisioning,
-			runtimecontracts.AWDServiceOperationStatusRecovering,
+			runtimestate.AWDServiceOperationStatusRequested,
+			runtimestate.AWDServiceOperationStatusProvisioning,
+			runtimestate.AWDServiceOperationStatusRecovering,
 		}, checkedAt, checkedAt).
 		Count(&count).Error
 	return count > 0, err

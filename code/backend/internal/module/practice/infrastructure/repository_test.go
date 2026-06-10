@@ -11,12 +11,12 @@ import (
 	"gorm.io/gorm/logger"
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func newRepositoryWithRuntimePortOwner(db *gorm.DB) *practiceinfra.Repository {

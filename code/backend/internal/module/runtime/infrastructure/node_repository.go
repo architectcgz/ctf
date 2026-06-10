@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 
 	"gorm.io/gorm"
 )

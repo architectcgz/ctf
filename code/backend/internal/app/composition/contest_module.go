@@ -7,13 +7,13 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	contestruntime "ctf-platform/internal/module/contest/runtime"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
@@ -141,14 +141,14 @@ func (a *contestEndedRuntimeStateStoreAdapter) ExpireInstanceRuntime(ctx context
 	})
 }
 
-func (a *contestEndedRuntimeStateStoreAdapter) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error) {
+func (a *contestEndedRuntimeStateStoreAdapter) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimestate.AWDDefenseWorkspace, error) {
 	if a == nil || a.awdRepo == nil {
 		return nil, nil
 	}
 	return a.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
 }
 
-func (a *contestEndedRuntimeStateStoreAdapter) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error {
+func (a *contestEndedRuntimeStateStoreAdapter) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimestate.AWDDefenseWorkspace) error {
 	if a == nil || a.awdRepo == nil {
 		return nil
 	}

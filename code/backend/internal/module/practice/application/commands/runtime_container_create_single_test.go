@@ -9,10 +9,10 @@ import (
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func TestCreateSingleContainerRebindsHostPortAfterPublishConflict(t *testing.T) {

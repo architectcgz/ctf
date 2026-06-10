@@ -7,11 +7,12 @@ import (
 	"strings"
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 const (
@@ -45,8 +46,8 @@ var awdDefenseWorkspaceShellEnv = map[string]string{
 }
 
 type awdDefenseWorkspaceRepository interface {
-	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error)
-	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error
+	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimestate.AWDDefenseWorkspace, error)
+	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimestate.AWDDefenseWorkspace) error
 }
 
 type awdDefenseWorkspacePlan struct {
@@ -237,12 +238,12 @@ func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *
 	}
 	if current != nil {
 		plan.workspaceContainerID = strings.TrimSpace(current.ContainerID)
-		if current.Status != runtimecontracts.AWDDefenseWorkspaceStatusRunning && plan.workspaceContainerID != "" {
+		if current.Status != runtimestate.AWDDefenseWorkspaceStatusRunning && plan.workspaceContainerID != "" {
 			plan.staleWorkspaceContainerID = plan.workspaceContainerID
 			plan.workspaceContainerID = ""
 		}
 	}
-	plan.createWorkspace = current == nil || current.Status != runtimecontracts.AWDDefenseWorkspaceStatusRunning || plan.workspaceContainerID == ""
+	plan.createWorkspace = current == nil || current.Status != runtimestate.AWDDefenseWorkspaceStatusRunning || plan.workspaceContainerID == ""
 	if !plan.createWorkspace {
 		state, err := s.runtimeService.InspectManagedContainer(ctx, plan.workspaceContainerID)
 		if err != nil {
@@ -319,7 +320,7 @@ func (s *Service) persistAWDDefenseWorkspaceState(ctx context.Context, plan *awd
 	if workspaceRepo == nil {
 		return fmt.Errorf("awd defense workspace repository is not configured")
 	}
-	return workspaceRepo.UpsertAWDDefenseWorkspace(ctx, &runtimecontracts.AWDDefenseWorkspace{
+	return workspaceRepo.UpsertAWDDefenseWorkspace(ctx, &runtimestate.AWDDefenseWorkspace{
 		ContestID:         plan.contestID,
 		TeamID:            plan.teamID,
 		ServiceID:         plan.serviceID,
@@ -401,7 +402,7 @@ func (s *Service) persistAWDDefenseWorkspaceFailure(ctx context.Context, plan *a
 		ctx,
 		plan,
 		instanceID,
-		runtimecontracts.AWDDefenseWorkspaceStatusFailed,
+		runtimestate.AWDDefenseWorkspaceStatusFailed,
 		resolveAWDDefenseWorkspaceFailureContainerID(plan, containerID),
 	)
 }

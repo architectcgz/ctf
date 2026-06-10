@@ -13,12 +13,13 @@ import (
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practicecachekeys "ctf-platform/internal/module/practice/infrastructure/cachekeys"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
@@ -767,13 +768,13 @@ func TestReconcileDesiredAWDInstancesSkipsManuallySuppressedScope(t *testing.T) 
 		listContestAWDInstancesFn: func(context.Context, int64) ([]*instanceentity.Instance, error) {
 			return nil, nil
 		},
-		listContestAWDScopeControlsFn: func(context.Context, int64) ([]*runtimecontracts.AWDScopeControl, error) {
-			return []*runtimecontracts.AWDScopeControl{{
+		listContestAWDScopeControlsFn: func(context.Context, int64) ([]*runtimestate.AWDScopeControl, error) {
+			return []*runtimestate.AWDScopeControl{{
 				ContestID:   contestID,
 				TeamID:      teamID,
-				ScopeType:   runtimecontracts.AWDScopeControlScopeTeamService,
+				ScopeType:   runtimestate.AWDScopeControlScopeTeamService,
 				ServiceID:   serviceID,
-				ControlType: runtimecontracts.AWDScopeControlTypeDesiredReconcileSuppressed,
+				ControlType: runtimestate.AWDScopeControlTypeDesiredReconcileSuppressed,
 			}}, nil
 		},
 		createInstanceFn: func(context.Context, *instanceentity.Instance) error {

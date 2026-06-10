@@ -11,9 +11,9 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/infrastructure/logger"
+	runtimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
+	"ctf-platform/internal/module/container_runtime/infrastructure/agentserver"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
-	"ctf-platform/internal/module/runtime/infrastructure/agentserver"
 
 	"go.uber.org/zap"
 )

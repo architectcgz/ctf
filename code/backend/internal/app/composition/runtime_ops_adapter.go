@@ -3,9 +3,9 @@ package composition
 import (
 	"context"
 
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type opsRuntimeQueryAdapter struct {

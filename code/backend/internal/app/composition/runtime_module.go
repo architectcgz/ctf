@@ -5,16 +5,17 @@ import (
 
 	"ctf-platform/internal/config"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
+	"ctf-platform/internal/module/container_runtime/infrastructure/agentclient"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	containerruntime "ctf-platform/internal/module/container_runtime/runtime"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
-	"ctf-platform/internal/module/runtime/infrastructure/agentclient"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type runtimeLifecycleCloser interface {
@@ -23,7 +24,7 @@ type runtimeLifecycleCloser interface {
 
 var (
 	dialRuntimeAgent          = agentclient.DialContext
-	newLocalRuntimeHostRunner = runtimeinfra.NewLocalHostExecutor
+	newLocalRuntimeHostRunner = containerruntimeinfra.NewLocalHostExecutor
 	newLocalCheckerRunner     = contestinfra.NewLocalCheckerRunner
 )
 

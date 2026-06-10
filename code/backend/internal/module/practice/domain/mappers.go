@@ -1,8 +1,8 @@
 package domain
 
 import (
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func InstanceRespFromModel(inst *instancecontracts.Instance, publicHost, accessHost string) *instancecontracts.InstanceResp {

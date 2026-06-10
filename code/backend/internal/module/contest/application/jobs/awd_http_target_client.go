@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strings"
 
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestports "ctf-platform/internal/module/contest/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func (u *AWDRoundUpdater) executeAWDHTTPRequest(ctx context.Context, request contestports.AWDHTTPRequest) (contestports.AWDHTTPResponse, error) {

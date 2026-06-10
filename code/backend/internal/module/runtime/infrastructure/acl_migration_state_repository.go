@@ -7,7 +7,8 @@ import (
 
 	"gorm.io/gorm"
 
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 type ACLMigrationStateRepository struct {
@@ -22,7 +23,7 @@ func (r *ACLMigrationStateRepository) dbWithContext(ctx context.Context) *gorm.D
 	return r.db.WithContext(ctx)
 }
 
-func (r *ACLMigrationStateRepository) ListInstancesNeedingACLHandleMigration(ctx context.Context) ([]runtimecontracts.RuntimeManagedInstance, error) {
+func (r *ACLMigrationStateRepository) ListInstancesNeedingACLHandleMigration(ctx context.Context) ([]runtimestate.RuntimeManagedInstance, error) {
 	type instanceACLMigrationRow struct {
 		ID             int64  `gorm:"column:id"`
 		NodeID         *int64 `gorm:"column:node_id"`
@@ -31,7 +32,7 @@ func (r *ACLMigrationStateRepository) ListInstancesNeedingACLHandleMigration(ctx
 
 	rows := make([]instanceACLMigrationRow, 0)
 	if err := r.dbWithContext(ctx).
-		Model(&runtimecontracts.RuntimeManagedInstance{}).
+		Model(&runtimestate.RuntimeManagedInstance{}).
 		Where("destroyed_at IS NULL").
 		Where("runtime_details <> ''").
 		Select("id, node_id, runtime_details").
@@ -43,13 +44,13 @@ func (r *ACLMigrationStateRepository) ListInstancesNeedingACLHandleMigration(ctx
 		return nil, err
 	}
 
-	result := make([]runtimecontracts.RuntimeManagedInstance, 0, len(rows))
+	result := make([]runtimestate.RuntimeManagedInstance, 0, len(rows))
 	for _, row := range rows {
 		details, err := runtimecontracts.DecodeInstanceRuntimeDetails(row.RuntimeDetails)
 		if err != nil || details.ACL != nil || len(details.ACLRules) == 0 {
 			continue
 		}
-		result = append(result, runtimecontracts.RuntimeManagedInstance{
+		result = append(result, runtimestate.RuntimeManagedInstance{
 			ID:             row.ID,
 			NodeID:         row.NodeID,
 			RuntimeDetails: row.RuntimeDetails,
@@ -63,7 +64,7 @@ func (r *ACLMigrationStateRepository) UpdateInstanceRuntimeDetails(ctx context.C
 		return nil
 	}
 	return r.dbWithContext(ctx).
-		Model(&runtimecontracts.RuntimeManagedInstance{}).
+		Model(&runtimestate.RuntimeManagedInstance{}).
 		Where("id = ?", instanceID).
 		Updates(map[string]any{
 			"runtime_details": runtimeDetails,

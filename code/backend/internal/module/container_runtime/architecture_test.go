@@ -9,6 +9,43 @@ import (
 	"testing"
 )
 
+func TestContainerRuntimeOwnsCapabilityImplementationPackages(t *testing.T) {
+	t.Parallel()
+
+	for _, dir := range []string{
+		"application",
+		filepath.Join("application", "commands"),
+		"contracts",
+		"domain",
+		"infrastructure",
+		"ports",
+	} {
+		matches, err := filepath.Glob(filepath.Join(dir, "*.go"))
+		if err != nil {
+			t.Fatalf("glob container_runtime %s files: %v", dir, err)
+		}
+		if len(matches) == 0 {
+			t.Fatalf("container_runtime/%s must own runtime capability implementation files", filepath.ToSlash(dir))
+		}
+	}
+}
+
+func TestRuntimePackageDoesNotDependOnLegacyRuntimeImplementation(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("runtime", "*.go"))
+	if err != nil {
+		t.Fatalf("glob container_runtime runtime files: %v", err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		assertFileDoesNotImportMatching(t, file, "ctf-platform/internal/module/runtime/application")
+		assertFileDoesNotImportMatching(t, file, "ctf-platform/internal/module/runtime/ports")
+	}
+}
+
 func TestRuntimePackageDoesNotDependOnBusinessOwnerPorts(t *testing.T) {
 	t.Parallel()
 

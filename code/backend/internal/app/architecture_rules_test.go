@@ -15,10 +15,7 @@ type importViolation struct {
 	targetLayer string
 }
 
-var reviewedConcreteCrossModuleImportExceptions = map[string]struct{}{
-	"../../internal/module/container_runtime/runtime/module.go -> ctf-platform/internal/module/runtime/application":          {},
-	"../../internal/module/container_runtime/runtime/module.go -> ctf-platform/internal/module/runtime/application/commands": {},
-}
+var reviewedConcreteCrossModuleImportExceptions = map[string]struct{}{}
 
 func TestArchitectureRulesRejectConcreteCrossModuleImports(t *testing.T) {
 	t.Parallel()

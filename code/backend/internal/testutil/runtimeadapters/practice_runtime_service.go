@@ -4,9 +4,9 @@ import (
 	"context"
 	"reflect"
 
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type practiceRuntimeCleaner interface {

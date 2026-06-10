@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 )
 
 type challengeRuntimeProbeAdapter struct {

@@ -12,11 +12,12 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/apperror"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 const (
@@ -49,7 +50,7 @@ func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID,
 	if err != nil {
 		return nil, err
 	}
-	s.recordAWDServiceOperation(ctx, resp.ID, contestID, scope, runtimecontracts.AWDServiceOperationTypeStart, awdOperationStatusForInstanceStatus(resp.Status), runtimecontracts.AWDServiceOperationRequestedByUser, &userID, "user_start", true)
+	s.recordAWDServiceOperation(ctx, resp.ID, contestID, scope, runtimestate.AWDServiceOperationTypeStart, awdOperationStatusForInstanceStatus(resp.Status), runtimestate.AWDServiceOperationRequestedByUser, &userID, "user_start", true)
 	return resp, nil
 }
 
@@ -67,9 +68,9 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 		ChallengeID: challengeID,
 		Scope:       scope,
 		Audit: awdScopedRuntimeAudit{
-			StartOperationType:   runtimecontracts.AWDServiceOperationTypeRestart,
-			RestartOperationType: runtimecontracts.AWDServiceOperationTypeRestart,
-			RequestedBy:          runtimecontracts.AWDServiceOperationRequestedByUser,
+			StartOperationType:   runtimestate.AWDServiceOperationTypeRestart,
+			RestartOperationType: runtimestate.AWDServiceOperationTypeRestart,
+			RequestedBy:          runtimestate.AWDServiceOperationRequestedByUser,
 			RequestedByID:        &userID,
 			Reason:               "user_restart",
 			SLABillable:          true,
@@ -178,9 +179,9 @@ restartInstance:
 		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus, nextExpiresAt, preserveHostPort); err != nil {
 			return apperror.ErrInternal.WithCause(err)
 		}
-		operationStatus := runtimecontracts.AWDServiceOperationStatusRequested
+		operationStatus := runtimestate.AWDServiceOperationStatusRequested
 		if nextStatus == instancecontracts.InstanceStatusPending {
-			operationStatus = runtimecontracts.AWDServiceOperationStatusProvisioning
+			operationStatus = runtimestate.AWDServiceOperationStatusProvisioning
 		}
 		if err := createAWDServiceOperation(ctx, txRepo, instance.ID, req.ContestID, scope, req.Audit.RestartOperationType, operationStatus, req.Audit.RequestedBy, req.Audit.RequestedByID, req.Audit.Reason, req.Audit.SLABillable); err != nil {
 			return apperror.ErrInternal.WithCause(err)

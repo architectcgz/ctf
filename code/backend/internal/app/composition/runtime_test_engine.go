@@ -13,7 +13,7 @@ import (
 
 	"go.uber.org/zap"
 
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 )
 
 type testRuntimeEngine struct {

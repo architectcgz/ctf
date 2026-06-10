@@ -16,7 +16,7 @@ import (
 	"ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/platform/randomstring"
 	crypto "ctf-platform/internal/shared/flagcrypto"

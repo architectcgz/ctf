@@ -7,12 +7,12 @@ import (
 
 	"go.uber.org/zap"
 
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 type stubAWDContainerFileWriter struct {

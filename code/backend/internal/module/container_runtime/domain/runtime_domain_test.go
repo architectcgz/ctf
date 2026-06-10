@@ -1,0 +1,190 @@
+package domain
+
+import (
+	"strings"
+	"testing"
+	"time"
+
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+)
+
+func TestExtractManagedResourcesPrefersRuntimeDetails(t *testing.T) {
+	t.Parallel()
+
+	target := runtimecontracts.RuntimeCleanupTarget{
+		ContainerID: "legacy-web",
+		NetworkID:   "legacy-net",
+		RuntimeDetails: `{
+			"containers":[
+				{"container_id":"web-ctr"},
+				{"container_id":"db-ctr"},
+				{"container_id":"web-ctr"}
+			],
+			"networks":[
+				{"network_id":"net-a"},
+				{"network_id":"net-b"},
+				{"network_id":"net-a"}
+			],
+			"acl_rules":[
+				{"comment":"ctf:acl:test"}
+			]
+		}`,
+	}
+
+	resources := ExtractManagedResources(target)
+	if len(resources.ContainerIDs) != 2 || resources.ContainerIDs[0] != "web-ctr" || resources.ContainerIDs[1] != "db-ctr" {
+		t.Fatalf("unexpected container ids: %+v", resources.ContainerIDs)
+	}
+	if len(resources.NetworkIDs) != 2 || resources.NetworkIDs[0] != "net-a" || resources.NetworkIDs[1] != "net-b" {
+		t.Fatalf("unexpected network ids: %+v", resources.NetworkIDs)
+	}
+}
+
+func TestExtractManagedResourcesSkipsSharedNetworks(t *testing.T) {
+	t.Parallel()
+
+	target := runtimecontracts.RuntimeCleanupTarget{
+		ContainerID: "legacy-web",
+		NetworkID:   "legacy-net",
+		RuntimeDetails: `{
+			"containers":[
+				{"container_id":"web-ctr"}
+			],
+			"networks":[
+				{"network_id":"net-awd-contest-8","shared":true},
+				{"network_id":"net-owned"}
+			]
+		}`,
+	}
+
+	resources := ExtractManagedResources(target)
+	if len(resources.ContainerIDs) != 1 || resources.ContainerIDs[0] != "web-ctr" {
+		t.Fatalf("unexpected container ids: %+v", resources.ContainerIDs)
+	}
+	if len(resources.NetworkIDs) != 1 || resources.NetworkIDs[0] != "net-owned" {
+		t.Fatalf("expected only owned network to be removed, got %+v", resources.NetworkIDs)
+	}
+}
+
+func TestExtractManagedResourcesDoesNotFallbackToSharedLegacyNetwork(t *testing.T) {
+	t.Parallel()
+
+	target := runtimecontracts.RuntimeCleanupTarget{
+		ContainerID: "legacy-web",
+		NetworkID:   "net-awd-contest-8",
+		RuntimeDetails: `{
+			"containers":[
+				{"container_id":"web-ctr"}
+			],
+			"networks":[
+				{"network_id":"net-awd-contest-8","shared":true}
+			]
+		}`,
+	}
+
+	resources := ExtractManagedResources(target)
+	if len(resources.NetworkIDs) != 0 {
+		t.Fatalf("shared network must not be removed via legacy fallback, got %+v", resources.NetworkIDs)
+	}
+}
+
+func TestExtractManagedResourcesFallsBackToLegacyFields(t *testing.T) {
+	t.Parallel()
+
+	target := runtimecontracts.RuntimeCleanupTarget{
+		ContainerID: "legacy-web",
+		NetworkID:   "legacy-net",
+	}
+
+	resources := ExtractManagedResources(target)
+	if len(resources.ContainerIDs) != 1 || resources.ContainerIDs[0] != "legacy-web" {
+		t.Fatalf("unexpected container ids: %+v", resources.ContainerIDs)
+	}
+	if len(resources.NetworkIDs) != 1 || resources.NetworkIDs[0] != "legacy-net" {
+		t.Fatalf("unexpected network ids: %+v", resources.NetworkIDs)
+	}
+}
+
+func TestRemainingHelpersClampAtZero(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	if got := RemainingExtends(1, 3); got != 0 {
+		t.Fatalf("RemainingExtends() = %d, want 0", got)
+	}
+	if got := RemainingTime(now.Add(-time.Second), now); got != 0 {
+		t.Fatalf("RemainingTime() = %d, want 0", got)
+	}
+}
+
+func TestResolveTopologyACLRulesGeneratesAllowAndFallbackDeny(t *testing.T) {
+	t.Parallel()
+
+	details := runtimecontracts.InstanceRuntimeDetails{
+		Networks: []runtimecontracts.InstanceRuntimeNetwork{
+			{Key: runtimecontracts.TopologyDefaultNetworkKey, Name: "runtime-net"},
+		},
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
+			{NodeKey: "web", ContainerID: "web-ctr", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+			{NodeKey: "db", ContainerID: "db-ctr", NetworkKeys: []string{runtimecontracts.TopologyDefaultNetworkKey}},
+		},
+	}
+	ipsByContainerID := map[string]map[string]string{
+		"web-ctr": {"runtime-net": "172.30.0.2"},
+		"db-ctr":  {"runtime-net": "172.30.0.3"},
+	}
+
+	rules, err := ResolveTopologyACLRules([]runtimecontracts.TopologyTrafficPolicy{
+		{
+			SourceNodeKey: "web",
+			TargetNodeKey: "db",
+			Action:        runtimecontracts.TopologyPolicyActionAllow,
+			Protocol:      runtimecontracts.TopologyPolicyProtocolTCP,
+			Ports:         []int{3306},
+		},
+	}, details, ipsByContainerID)
+	if err != nil {
+		t.Fatalf("ResolveTopologyACLRules() error = %v", err)
+	}
+	if len(rules) != 2 {
+		t.Fatalf("expected 2 acl rules, got %+v", rules)
+	}
+	if rules[0].Action != runtimecontracts.TopologyPolicyActionAllow || rules[0].Protocol != runtimecontracts.TopologyPolicyProtocolTCP {
+		t.Fatalf("unexpected allow rule: %+v", rules[0])
+	}
+	if rules[1].Action != runtimecontracts.TopologyPolicyActionDeny || rules[1].Protocol != runtimecontracts.TopologyPolicyProtocolAny {
+		t.Fatalf("unexpected fallback deny rule: %+v", rules[1])
+	}
+}
+
+func TestResolveTopologyACLRulesRejectsAllowWithoutSharedRuntimeNetwork(t *testing.T) {
+	t.Parallel()
+
+	details := runtimecontracts.InstanceRuntimeDetails{
+		Networks: []runtimecontracts.InstanceRuntimeNetwork{
+			{Key: "web-net", Name: "web-net"},
+			{Key: "db-net", Name: "db-net"},
+		},
+		Containers: []runtimecontracts.InstanceRuntimeContainer{
+			{NodeKey: "web", ContainerID: "web-ctr", NetworkKeys: []string{"web-net"}},
+			{NodeKey: "db", ContainerID: "db-ctr", NetworkKeys: []string{"db-net"}},
+		},
+	}
+	ipsByContainerID := map[string]map[string]string{
+		"web-ctr": {"web-net": "172.30.0.2"},
+		"db-ctr":  {"db-net": "172.30.0.3"},
+	}
+
+	_, err := ResolveTopologyACLRules([]runtimecontracts.TopologyTrafficPolicy{
+		{
+			SourceNodeKey: "web",
+			TargetNodeKey: "db",
+			Action:        runtimecontracts.TopologyPolicyActionAllow,
+			Protocol:      runtimecontracts.TopologyPolicyProtocolTCP,
+			Ports:         []int{3306},
+		},
+	}, details, ipsByContainerID)
+	if err == nil || !strings.Contains(err.Error(), "no shared runtime network") {
+		t.Fatalf("expected no shared runtime network error, got %v", err)
+	}
+}

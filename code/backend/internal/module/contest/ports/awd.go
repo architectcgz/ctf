@@ -7,7 +7,7 @@ import (
 
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 var (
@@ -106,7 +106,7 @@ type AWDDefenseWorkspaceSummaryQuery interface {
 }
 
 type AWDServiceOperationQuery interface {
-	ListLatestServiceOperationsByContest(ctx context.Context, contestID int64) ([]runtimecontracts.AWDServiceOperation, error)
+	ListLatestServiceOperationsByContest(ctx context.Context, contestID int64) ([]runtimestate.AWDServiceOperation, error)
 	HasSystemRecoveryOperationAt(ctx context.Context, contestID, teamID, serviceID int64, checkedAt time.Time) (bool, error)
 }
 

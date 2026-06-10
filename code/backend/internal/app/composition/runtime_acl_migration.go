@@ -7,13 +7,14 @@ import (
 
 	"go.uber.org/zap"
 
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
-	runtimeports "ctf-platform/internal/module/runtime/ports"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 type runtimeACLMigrationRepository interface {
-	ListInstancesNeedingACLHandleMigration(ctx context.Context) ([]runtimecontracts.RuntimeManagedInstance, error)
+	ListInstancesNeedingACLHandleMigration(ctx context.Context) ([]runtimestate.RuntimeManagedInstance, error)
 	UpdateInstanceRuntimeDetails(ctx context.Context, instanceID int64, runtimeDetails string) error
 }
 
@@ -118,7 +119,7 @@ func runtimeNodeClientForInstanceMigration(
 	return nil, runtimeports.ErrRuntimeNodeUnavailable
 }
 
-func instanceFromRuntimeManaged(instance *runtimecontracts.RuntimeManagedInstance) *instancecontracts.Instance {
+func instanceFromRuntimeManaged(instance *runtimestate.RuntimeManagedInstance) *instancecontracts.Instance {
 	if instance == nil {
 		return nil
 	}

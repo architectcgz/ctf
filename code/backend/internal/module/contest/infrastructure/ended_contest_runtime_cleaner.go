@@ -2,13 +2,12 @@ package infrastructure
 
 import (
 	"context"
-	"strings"
-	"time"
-
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
+	"strings"
+	"time"
 )
 
 type contestEndedRuntimeServiceStore interface {
@@ -21,8 +20,8 @@ type contestEndedRuntimeCleanupService interface {
 
 type contestEndedRuntimeStateStore interface {
 	ExpireInstanceRuntime(ctx context.Context, id int64) error
-	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error)
-	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error
+	FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimestate.AWDDefenseWorkspace, error)
+	UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimestate.AWDDefenseWorkspace) error
 	FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
 }
 
@@ -94,7 +93,7 @@ func (c *ContestEndedRuntimeCleaner) CleanupEndedContestAWDInstances(ctx context
 		if err := c.stateStore.FinishActiveAWDServiceOperationForInstance(
 			ctx,
 			item.InstanceID,
-			runtimecontracts.AWDServiceOperationStatusFailed,
+			runtimestate.AWDServiceOperationStatusFailed,
 			"contest_ended",
 			time.Now().UTC(),
 		); err != nil {
@@ -104,14 +103,14 @@ func (c *ContestEndedRuntimeCleaner) CleanupEndedContestAWDInstances(ctx context
 	return nil
 }
 
-func (c *ContestEndedRuntimeCleaner) loadDefenseWorkspace(ctx context.Context, contestID int64, item contestports.AWDServiceInstance) (*runtimecontracts.AWDDefenseWorkspace, error) {
+func (c *ContestEndedRuntimeCleaner) loadDefenseWorkspace(ctx context.Context, contestID int64, item contestports.AWDServiceInstance) (*runtimestate.AWDDefenseWorkspace, error) {
 	if c == nil || c.stateStore == nil || contestID <= 0 || item.TeamID <= 0 || item.ServiceID <= 0 {
 		return nil, nil
 	}
 	return c.stateStore.FindAWDDefenseWorkspace(ctx, contestID, item.TeamID, item.ServiceID)
 }
 
-func (c *ContestEndedRuntimeCleaner) cleanupDefenseWorkspaceRuntime(ctx context.Context, instanceID int64, workspace *runtimecontracts.AWDDefenseWorkspace) error {
+func (c *ContestEndedRuntimeCleaner) cleanupDefenseWorkspaceRuntime(ctx context.Context, instanceID int64, workspace *runtimestate.AWDDefenseWorkspace) error {
 	if c == nil || c.runtime == nil || workspace == nil {
 		return nil
 	}
@@ -122,13 +121,13 @@ func (c *ContestEndedRuntimeCleaner) cleanupDefenseWorkspaceRuntime(ctx context.
 	return c.runtime.CleanupRuntime(ctx, endedContestDefenseWorkspaceRuntimeView(instanceID, containerID))
 }
 
-func (c *ContestEndedRuntimeCleaner) clearDefenseWorkspaceRuntimeState(ctx context.Context, instanceID int64, workspace *runtimecontracts.AWDDefenseWorkspace) error {
+func (c *ContestEndedRuntimeCleaner) clearDefenseWorkspaceRuntimeState(ctx context.Context, instanceID int64, workspace *runtimestate.AWDDefenseWorkspace) error {
 	if c == nil || c.stateStore == nil || workspace == nil {
 		return nil
 	}
 	updated := *workspace
 	updated.InstanceID = instanceID
-	updated.Status = runtimecontracts.AWDDefenseWorkspaceStatusFailed
+	updated.Status = runtimestate.AWDDefenseWorkspaceStatusFailed
 	updated.ContainerID = ""
 	return c.stateStore.UpsertAWDDefenseWorkspace(ctx, &updated)
 }

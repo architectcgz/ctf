@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
@@ -403,10 +403,10 @@ func (r *AllocationRepository) ListAllocatedPorts(ctx context.Context) ([]int, e
 	}
 
 	var accessURLs []string
-	if err := r.dbWithContext(ctx).Model(&runtimecontracts.RuntimeManagedInstance{}).
+	if err := r.dbWithContext(ctx).Model(&runtimestate.RuntimeManagedInstance{}).
 		Where("status IN ?", []string{
-			runtimecontracts.RuntimeManagedInstanceStatusCreating,
-			runtimecontracts.RuntimeManagedInstanceStatusRunning,
+			runtimestate.RuntimeManagedInstanceStatusCreating,
+			runtimestate.RuntimeManagedInstanceStatusRunning,
 		}).
 		Where("access_url <> ''").
 		Pluck("access_url", &accessURLs).Error; err != nil {

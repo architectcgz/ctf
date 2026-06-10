@@ -8,11 +8,12 @@ import (
 
 	"gorm.io/gorm"
 
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
@@ -32,7 +33,7 @@ func TestContestEndedRuntimeCleanerCleanupDefenseWorkspaceUsesContainerAuthority
 	runtimeCleaner := &endedContestRuntimeCleanupStub{}
 	cleaner := &ContestEndedRuntimeCleaner{runtime: runtimeCleaner}
 
-	err := cleaner.cleanupDefenseWorkspaceRuntime(context.Background(), 1001, &runtimecontracts.AWDDefenseWorkspace{
+	err := cleaner.cleanupDefenseWorkspaceRuntime(context.Background(), 1001, &runtimestate.AWDDefenseWorkspace{
 		ContainerID: "workspace-ended-ctr",
 	})
 	if err != nil {
@@ -477,14 +478,14 @@ func (a *endedContestRuntimeStateStoreAdapter) ExpireInstanceRuntime(ctx context
 	})
 }
 
-func (a *endedContestRuntimeStateStoreAdapter) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimecontracts.AWDDefenseWorkspace, error) {
+func (a *endedContestRuntimeStateStoreAdapter) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimestate.AWDDefenseWorkspace, error) {
 	if a == nil || a.awdRepo == nil {
 		return nil, nil
 	}
 	return a.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
 }
 
-func (a *endedContestRuntimeStateStoreAdapter) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimecontracts.AWDDefenseWorkspace) error {
+func (a *endedContestRuntimeStateStoreAdapter) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimestate.AWDDefenseWorkspace) error {
 	if a == nil || a.awdRepo == nil {
 		return nil
 	}

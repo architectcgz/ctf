@@ -655,10 +655,14 @@ func TestRuntimeOwnsContestWiring(t *testing.T) {
 
 	runtimeFile := filepath.Join("runtime", "module.go")
 	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/contest/infrastructure")
-	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/contest/application/commands")
-	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/contest/application/jobs")
-	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/contest/application/queries")
 	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/contest/api/http")
+
+	wiringFile := filepath.Join("runtime", "wiring.go")
+	assertFileImports(t, wiringFile, "ctf-platform/internal/module/contest/infrastructure")
+	assertFileImports(t, wiringFile, "ctf-platform/internal/module/contest/application/commands")
+	assertFileImports(t, wiringFile, "ctf-platform/internal/module/contest/application/jobs")
+	assertFileImports(t, wiringFile, "ctf-platform/internal/module/contest/application/queries")
+	assertFileImports(t, wiringFile, "ctf-platform/internal/module/contest/api/http")
 }
 
 func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {

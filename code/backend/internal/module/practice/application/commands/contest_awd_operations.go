@@ -10,10 +10,11 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/apperror"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 func (s *Service) recordAWDServiceOperation(ctx context.Context, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status, requestedBy string, requestedByID *int64, reason string, slaBillable bool) {
@@ -37,7 +38,7 @@ func createAWDServiceOperation(ctx context.Context, repo practiceports.PracticeA
 	if isFinishedAWDServiceOperationStatus(status) {
 		finishedAt = &now
 	}
-	return repo.CreateAWDServiceOperation(ctx, &runtimecontracts.AWDServiceOperation{
+	return repo.CreateAWDServiceOperation(ctx, &runtimestate.AWDServiceOperation{
 		ContestID:     contestID,
 		TeamID:        *scope.TeamID,
 		ServiceID:     *scope.ServiceID,
@@ -57,15 +58,15 @@ func createAWDServiceOperation(ctx context.Context, repo practiceports.PracticeA
 
 func awdOperationStatusForInstanceStatus(instanceStatus string) string {
 	if instanceStatus == instancecontracts.InstanceStatusRunning {
-		return runtimecontracts.AWDServiceOperationStatusSucceeded
+		return runtimestate.AWDServiceOperationStatusSucceeded
 	}
-	return runtimecontracts.AWDServiceOperationStatusProvisioning
+	return runtimestate.AWDServiceOperationStatusProvisioning
 }
 
 func isFinishedAWDServiceOperationStatus(status string) bool {
-	return status == runtimecontracts.AWDServiceOperationStatusSucceeded ||
-		status == runtimecontracts.AWDServiceOperationStatusRecovered ||
-		status == runtimecontracts.AWDServiceOperationStatusFailed
+	return status == runtimestate.AWDServiceOperationStatusSucceeded ||
+		status == runtimestate.AWDServiceOperationStatusRecovered ||
+		status == runtimestate.AWDServiceOperationStatusFailed
 }
 
 func restartCleanupRuntimeView(instance *instancecontracts.Instance) *instancecontracts.Instance {
@@ -166,7 +167,7 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 	return resp, nil
 }
 
-func adminAWDScopeControlRecordResp(control *runtimecontracts.AWDScopeControl) *AdminAWDScopeControlResp {
+func adminAWDScopeControlRecordResp(control *runtimestate.AWDScopeControl) *AdminAWDScopeControlResp {
 	if control == nil {
 		return nil
 	}
@@ -179,7 +180,7 @@ func adminAWDScopeControlRecordResp(control *runtimecontracts.AWDScopeControl) *
 		UpdatedBy:   control.UpdatedBy,
 		UpdatedAt:   &control.UpdatedAt,
 	}
-	if control.ScopeType == runtimecontracts.AWDScopeControlScopeTeamService && control.ServiceID > 0 {
+	if control.ScopeType == runtimestate.AWDScopeControlScopeTeamService && control.ServiceID > 0 {
 		serviceID := control.ServiceID
 		resp.ServiceID = &serviceID
 	}

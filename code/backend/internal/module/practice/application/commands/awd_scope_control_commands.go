@@ -9,7 +9,7 @@ import (
 	"ctf-platform/internal/apperror"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
+	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 type awdScopeControlSpec struct {
@@ -32,8 +32,8 @@ func (s *Service) SetAdminContestAWDTeamRetired(ctx context.Context, contestID, 
 	spec := awdScopeControlSpec{
 		ContestID:   contest.ID,
 		TeamID:      teamID,
-		ScopeType:   runtimecontracts.AWDScopeControlScopeTeam,
-		ControlType: runtimecontracts.AWDScopeControlTypeRetired,
+		ScopeType:   runtimestate.AWDScopeControlScopeTeam,
+		ControlType: runtimestate.AWDScopeControlTypeRetired,
 	}
 	resp, err := s.setAWDScopeControl(ctx, spec, actorUserID, retired, reason)
 	if err != nil {
@@ -60,8 +60,8 @@ func (s *Service) SetAdminContestAWDTeamServiceDisabled(ctx context.Context, con
 		ContestID:   contest.ID,
 		TeamID:      teamID,
 		ServiceID:   serviceID,
-		ScopeType:   runtimecontracts.AWDScopeControlScopeTeamService,
-		ControlType: runtimecontracts.AWDScopeControlTypeServiceDisabled,
+		ScopeType:   runtimestate.AWDScopeControlScopeTeamService,
+		ControlType: runtimestate.AWDScopeControlTypeServiceDisabled,
 	}
 	resp, err := s.setAWDScopeControl(ctx, spec, actorUserID, disabled, reason)
 	if err != nil {
@@ -90,8 +90,8 @@ func (s *Service) SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Conte
 		ContestID:   contest.ID,
 		TeamID:      teamID,
 		ServiceID:   serviceID,
-		ScopeType:   runtimecontracts.AWDScopeControlScopeTeamService,
-		ControlType: runtimecontracts.AWDScopeControlTypeDesiredReconcileSuppressed,
+		ScopeType:   runtimestate.AWDScopeControlScopeTeamService,
+		ControlType: runtimestate.AWDScopeControlTypeDesiredReconcileSuppressed,
 	}
 	resp, err := s.setAWDScopeControl(ctx, spec, actorUserID, suppressed, reason)
 	if err != nil {
@@ -112,7 +112,7 @@ func (s *Service) setAWDScopeControl(ctx context.Context, spec awdScopeControlSp
 	}
 
 	if enabled {
-		control := &runtimecontracts.AWDScopeControl{
+		control := &runtimestate.AWDScopeControl{
 			ContestID:   spec.ContestID,
 			TeamID:      spec.TeamID,
 			ScopeType:   spec.ScopeType,
@@ -138,14 +138,14 @@ func (s *Service) setAWDScopeControl(ctx context.Context, spec awdScopeControlSp
 	return adminAWDScopeControlRespFromModel(spec, row), nil
 }
 
-func adminAWDScopeControlRespFromModel(spec awdScopeControlSpec, row *runtimecontracts.AWDScopeControl) *AdminAWDScopeControlResp {
+func adminAWDScopeControlRespFromModel(spec awdScopeControlSpec, row *runtimestate.AWDScopeControl) *AdminAWDScopeControlResp {
 	resp := &AdminAWDScopeControlResp{
 		ScopeType:   spec.ScopeType,
 		ControlType: spec.ControlType,
 		TeamID:      spec.TeamID,
 		Enabled:     row != nil,
 	}
-	if spec.ScopeType == runtimecontracts.AWDScopeControlScopeTeamService && spec.ServiceID > 0 {
+	if spec.ScopeType == runtimestate.AWDScopeControlScopeTeamService && spec.ServiceID > 0 {
 		serviceID := spec.ServiceID
 		resp.ServiceID = &serviceID
 	}
@@ -157,7 +157,7 @@ func adminAWDScopeControlRespFromModel(spec awdScopeControlSpec, row *runtimecon
 	return resp
 }
 
-func findAWDScopeControlRow(rows []*runtimecontracts.AWDScopeControl, scopeType, controlType string, serviceID int64) *runtimecontracts.AWDScopeControl {
+func findAWDScopeControlRow(rows []*runtimestate.AWDScopeControl, scopeType, controlType string, serviceID int64) *runtimestate.AWDScopeControl {
 	for _, row := range rows {
 		if row == nil {
 			continue

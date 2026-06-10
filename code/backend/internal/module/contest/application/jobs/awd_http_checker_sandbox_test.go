@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestports "ctf-platform/internal/module/contest/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestAWDHTTPStandardUsesSandboxNetworkForAliasTarget(t *testing.T) {

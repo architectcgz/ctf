@@ -3,8 +3,8 @@ package infrastructure
 import (
 	"context"
 
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func (i *dockerAWDFlagInjector) findTargetContainers(ctx context.Context, contestID, teamID, serviceID, _ int64) ([]string, error) {

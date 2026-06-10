@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
+	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	contestports "ctf-platform/internal/module/contest/ports"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 )
 
 func TestAWDHTTPRuntimeAdapterExecuteKeepsAliasHostWhenDialingRuntimeIP(t *testing.T) {
