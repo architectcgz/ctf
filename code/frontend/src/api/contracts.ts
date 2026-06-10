@@ -388,6 +388,24 @@ export interface ContestAnnouncement {
   created_at: ISODateTime
 }
 
+export type ContestAnnouncementSyncEventType =
+  | 'contest.announcement.created'
+  | 'contest.announcement.deleted'
+
+export interface ContestAnnouncementSyncEvent {
+  cursor: ID
+  type: ContestAnnouncementSyncEventType
+  announcement?: ContestAnnouncement
+  announcement_id?: ID
+  occurred_at: ISODateTime
+}
+
+export interface ContestAnnouncementSyncData {
+  events: ContestAnnouncementSyncEvent[]
+  next_cursor: ID
+  has_more: boolean
+}
+
 export interface TeamData {
   id: ID
   name: string

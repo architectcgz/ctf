@@ -109,6 +109,23 @@ func TestSubmissionServiceSubmitFlagInContestAppliesDynamicScoreAndFirstBlood(t 
 	if secondScore != 405 {
 		t.Fatalf("unexpected second redis score: %v", secondScore)
 	}
+
+	outboxRepo := contestinfra.NewRealtimeOutboxRepository(db)
+	pending, err := outboxRepo.ListPendingRealtimeRelays(context.Background(), time.Now().UTC().Add(time.Second), 10)
+	if err != nil {
+		t.Fatalf("ListPendingRealtimeRelays() error = %v", err)
+	}
+	if len(pending) != 2 {
+		t.Fatalf("expected 2 pending realtime relays, got %+v", pending)
+	}
+	for _, item := range pending {
+		if item.Relay.EventName != contestcontracts.EventScoreboardUpdated {
+			t.Fatalf("unexpected relay event: %+v", item)
+		}
+		if item.Relay.Channel != contestcontracts.ScoreboardChannel(contestID) {
+			t.Fatalf("unexpected relay channel: %+v", item)
+		}
+	}
 }
 
 func TestSubmissionServiceSubmitFlagInContestUsesContestScoreAsDynamicBase(t *testing.T) {

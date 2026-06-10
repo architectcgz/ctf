@@ -14,6 +14,7 @@ type ScoreboardAdminService struct {
 	stateStore  contestports.ContestScoreboardStateStore
 	cfg         *config.ContestConfig
 	eventBus    platformevents.Bus
+	outbox      contestports.ContestRealtimeOutboxRepository
 }
 
 func NewScoreboardAdminService(repo contestports.ContestScoreboardAdminRepository, stateStore contestports.ContestScoreboardStateStore, cfg *config.ContestConfig) *ScoreboardAdminService {
@@ -43,5 +44,13 @@ func (s *ScoreboardAdminService) SetEventBus(bus platformevents.Bus) *Scoreboard
 		return nil
 	}
 	s.eventBus = bus
+	return s
+}
+
+func (s *ScoreboardAdminService) SetRealtimeOutbox(repo contestports.ContestRealtimeOutboxRepository) *ScoreboardAdminService {
+	if s == nil {
+		return nil
+	}
+	s.outbox = repo
 	return s
 }

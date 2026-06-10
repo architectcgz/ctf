@@ -27,6 +27,7 @@ func registerUserContestRoutes(apiV1, protected *gin.RouterGroup, deps userConte
 	contestGroup.GET("/:id", middleware.ParseInt64Param("id"), deps.contest.Handler.GetContest)
 	contestGroup.GET("/:id/scoreboard", deps.contest.Handler.GetScoreboard)
 	contestGroup.GET("/:id/announcements", deps.contest.ParticipationHandler.ListAnnouncements)
+	contestGroup.GET("/:id/announcements/sync", deps.contest.ParticipationHandler.SyncAnnouncements)
 
 	protected.POST("/contests/:id/register",
 		audit(middleware.AuditOptions{

@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/auditlog"
 	websocketpkg "ctf-platform/internal/infrastructure/websocket"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opsruntime "ctf-platform/internal/module/ops/runtime"
 )
@@ -23,14 +24,18 @@ type OpsModule struct {
 
 func BuildOpsModule(root *Root, runtime *ContainerRuntimeModule) *OpsModule {
 	module := opsruntime.Build(opsruntime.Deps{
-		Config:       root.Config(),
-		Logger:       root.Logger(),
-		DB:           root.DB(),
-		Cache:        root.Cache(),
-		Events:       root.Events,
-		RuntimeQuery: runtime.OpsRuntimeQuery,
-		RuntimeStats: runtime.OpsRuntimeStatsProvider,
+		Config:                root.Config(),
+		Logger:                root.Logger(),
+		DB:                    root.DB(),
+		Cache:                 root.Cache(),
+		Events:                root.Events,
+		RuntimeQuery:          runtime.OpsRuntimeQuery,
+		RuntimeStats:          runtime.OpsRuntimeStatsProvider,
+		ContestRealtimeOutbox: contestinfra.NewRealtimeOutboxRepository(root.DB()),
 	})
+	for _, job := range module.BackgroundJobs {
+		root.RegisterBackgroundJob(NewLoopBackgroundJob(job.Name, job.Run))
+	}
 	return &OpsModule{
 		AuditService:     module.AuditService,
 		AuditHandler:     module.AuditHandler,

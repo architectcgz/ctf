@@ -3,124 +3,55 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
 
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	platformevents "ctf-platform/internal/platform/events"
-	ctfws "ctf-platform/internal/websocket"
 )
 
-const awdPreviewProgressMessageType = "awd.preview.progress"
-
-type contestRealtimeBroadcaster interface {
-	SendToChannel(channel string, message ctfws.Envelope) int
-	SendToUser(userID int64, message ctfws.Envelope) int
+type contestRealtimeRelayPublisher interface {
+	Publish(ctx context.Context, relay contestcontracts.RealtimeRelayEvent, dedupeKey string) (string, error)
 }
 
 type ContestRealtimeService struct {
-	broadcaster contestRealtimeBroadcaster
+	publisher contestRealtimeRelayPublisher
 }
 
-func NewContestRealtimeService(broadcaster contestRealtimeBroadcaster) *ContestRealtimeService {
-	return &ContestRealtimeService{broadcaster: broadcaster}
+func NewContestRealtimeService(publisher contestRealtimeRelayPublisher) *ContestRealtimeService {
+	return &ContestRealtimeService{publisher: publisher}
 }
 
 func (s *ContestRealtimeService) RegisterContestEventConsumers(bus platformevents.Bus) {
-	if s == nil || s.broadcaster == nil || bus == nil {
+	if s == nil || s.publisher == nil || bus == nil {
 		return
 	}
 	bus.Subscribe(contestcontracts.EventAnnouncementCreated, s.handleAnnouncementCreated)
 	bus.Subscribe(contestcontracts.EventAnnouncementDeleted, s.handleAnnouncementDeleted)
 	bus.Subscribe(contestcontracts.EventScoreboardUpdated, s.handleScoreboardUpdated)
-	bus.Subscribe(contestcontracts.EventAWDPreviewProgress, s.handleAWDPreviewProgress)
 }
 
-func (s *ContestRealtimeService) handleAnnouncementCreated(_ context.Context, evt platformevents.Event) error {
+func (s *ContestRealtimeService) handleAnnouncementCreated(ctx context.Context, evt platformevents.Event) error {
 	payload, ok := evt.Payload.(contestcontracts.AnnouncementCreatedEvent)
 	if !ok {
 		return fmt.Errorf("unexpected contest announcement created payload: %T", evt.Payload)
 	}
-	s.broadcaster.SendToChannel(contestcontracts.AnnouncementChannel(payload.ContestID), ctfws.Envelope{
-		Type: "contest.announcement.created",
-		Payload: map[string]any{
-			"contest_id": payload.ContestID,
-			"announcement": map[string]any{
-				"id":         payload.AnnouncementID,
-				"title":      payload.Title,
-				"content":    payload.Content,
-				"created_at": payload.CreatedAt,
-			},
-		},
-		Timestamp: contestRealtimeTimestamp(payload.OccurredAt),
-	})
-	return nil
+	_, err := s.publisher.Publish(ctx, contestcontracts.RelayAnnouncementCreated(payload), "")
+	return err
 }
 
-func (s *ContestRealtimeService) handleAnnouncementDeleted(_ context.Context, evt platformevents.Event) error {
+func (s *ContestRealtimeService) handleAnnouncementDeleted(ctx context.Context, evt platformevents.Event) error {
 	payload, ok := evt.Payload.(contestcontracts.AnnouncementDeletedEvent)
 	if !ok {
 		return fmt.Errorf("unexpected contest announcement deleted payload: %T", evt.Payload)
 	}
-	s.broadcaster.SendToChannel(contestcontracts.AnnouncementChannel(payload.ContestID), ctfws.Envelope{
-		Type: "contest.announcement.deleted",
-		Payload: map[string]any{
-			"contest_id":      payload.ContestID,
-			"announcement_id": payload.AnnouncementID,
-		},
-		Timestamp: contestRealtimeTimestamp(payload.OccurredAt),
-	})
-	return nil
+	_, err := s.publisher.Publish(ctx, contestcontracts.RelayAnnouncementDeleted(payload), "")
+	return err
 }
 
-func (s *ContestRealtimeService) handleScoreboardUpdated(_ context.Context, evt platformevents.Event) error {
+func (s *ContestRealtimeService) handleScoreboardUpdated(ctx context.Context, evt platformevents.Event) error {
 	payload, ok := evt.Payload.(contestcontracts.ScoreboardUpdatedEvent)
 	if !ok {
 		return fmt.Errorf("unexpected contest scoreboard updated payload: %T", evt.Payload)
 	}
-	s.broadcaster.SendToChannel(contestcontracts.ScoreboardChannel(payload.ContestID), ctfws.Envelope{
-		Type: "scoreboard.updated",
-		Payload: map[string]any{
-			"contest_id": payload.ContestID,
-		},
-		Timestamp: contestRealtimeTimestamp(payload.OccurredAt),
-	})
-	return nil
-}
-
-func (s *ContestRealtimeService) handleAWDPreviewProgress(_ context.Context, evt platformevents.Event) error {
-	payload, ok := evt.Payload.(contestcontracts.AWDPreviewProgressEvent)
-	if !ok {
-		return fmt.Errorf("unexpected contest awd preview progress payload: %T", evt.Payload)
-	}
-	messagePayload := map[string]any{
-		"contest_id":         payload.ContestID,
-		"preview_request_id": strings.TrimSpace(payload.PreviewRequestID),
-		"phase_key":          strings.TrimSpace(payload.PhaseKey),
-		"phase_label":        strings.TrimSpace(payload.PhaseLabel),
-		"detail":             strings.TrimSpace(payload.Detail),
-		"status":             strings.TrimSpace(payload.Status),
-	}
-	if payload.Attempt > 0 {
-		messagePayload["attempt"] = payload.Attempt
-	}
-	if payload.TotalAttempts > 0 {
-		messagePayload["total_attempts"] = payload.TotalAttempts
-	}
-	if payload.Error != "" {
-		messagePayload["error"] = strings.TrimSpace(payload.Error)
-	}
-	s.broadcaster.SendToUser(payload.UserID, ctfws.Envelope{
-		Type:      awdPreviewProgressMessageType,
-		Payload:   messagePayload,
-		Timestamp: contestRealtimeTimestamp(payload.OccurredAt),
-	})
-	return nil
-}
-
-func contestRealtimeTimestamp(ts time.Time) time.Time {
-	if ts.IsZero() {
-		return time.Now().UTC()
-	}
-	return ts.UTC()
+	_, err := s.publisher.Publish(ctx, contestcontracts.RelayScoreboardUpdated(payload), "")
+	return err
 }

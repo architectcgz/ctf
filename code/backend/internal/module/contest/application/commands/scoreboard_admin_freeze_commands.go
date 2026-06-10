@@ -43,14 +43,7 @@ func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID
 		return apperror.ErrInternal.WithCause(err)
 	}
 
-	publishContestWeakEvent(ctx, s.eventBus, platformevents.Event{
-		Name: contestcontracts.EventScoreboardUpdated,
-		Payload: contestcontracts.ScoreboardUpdatedEvent{
-			ContestID:  contestID,
-			OccurredAt: contestEventTimestamp(now),
-		},
-	})
-	return nil
+	return s.emitScoreboardUpdatedRealtime(ctx, contestID, "freeze", now)
 }
 
 func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contestID int64) error {
@@ -81,14 +74,7 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 		return apperror.ErrInternal.WithCause(err)
 	}
 
-	publishContestWeakEvent(ctx, s.eventBus, platformevents.Event{
-		Name: contestcontracts.EventScoreboardUpdated,
-		Payload: contestcontracts.ScoreboardUpdatedEvent{
-			ContestID:  contestID,
-			OccurredAt: contestEventTimestamp(now),
-		},
-	})
-	return nil
+	return s.emitScoreboardUpdatedRealtime(ctx, contestID, "unfreeze", now)
 }
 
 func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Context, contest *contestentity.Contest, fromStatus string, fromVersion int64) error {
@@ -134,4 +120,24 @@ func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Con
 		}
 	}
 	return nil
+}
+
+func (s *ScoreboardAdminService) emitScoreboardUpdatedRealtime(ctx context.Context, contestID int64, operation string, occurredAt time.Time) error {
+	if s == nil {
+		return nil
+	}
+	if s.outbox != nil {
+		return s.outbox.EnqueueRealtimeRelay(
+			ctx,
+			scoreboardUpdatedRelay(contestID, occurredAt),
+			scoreboardOperationDedupeKey(contestID, operation, occurredAt),
+		)
+	}
+	if s.eventBus == nil {
+		return nil
+	}
+	return s.eventBus.Publish(ctx, platformevents.Event{
+		Name:    contestcontracts.EventScoreboardUpdated,
+		Payload: contestcontracts.ScoreboardUpdatedEvent{ContestID: contestID, OccurredAt: contestEventTimestamp(occurredAt)},
+	})
 }

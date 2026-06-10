@@ -13,18 +13,23 @@ type participationCommandRepository interface {
 }
 
 type ParticipationService struct {
-	contestRepo contestports.ContestLookupRepository
-	repo        participationCommandRepository
-	teamRepo    contestports.ContestTeamFinder
-	eventBus    platformevents.Bus
+	contestRepo          contestports.ContestLookupRepository
+	repo                 participationCommandRepository
+	announcementTxRunner contestports.ContestParticipationAnnouncementTxRunner
+	teamRepo             contestports.ContestTeamFinder
+	eventBus             platformevents.Bus
 }
 
 func NewParticipationService(contestRepo contestports.ContestLookupRepository, repo participationCommandRepository, teamRepo contestports.ContestTeamFinder) *ParticipationService {
-	return &ParticipationService{
+	service := &ParticipationService{
 		contestRepo: contestRepo,
 		repo:        repo,
 		teamRepo:    teamRepo,
 	}
+	if runner, ok := repo.(contestports.ContestParticipationAnnouncementTxRunner); ok {
+		service.announcementTxRunner = runner
+	}
+	return service
 }
 
 func (s *ParticipationService) SetEventBus(bus platformevents.Bus) *ParticipationService {

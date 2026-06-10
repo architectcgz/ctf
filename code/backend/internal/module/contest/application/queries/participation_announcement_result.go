@@ -8,3 +8,17 @@ type ContestAnnouncementResult struct {
 	Content   string
 	CreatedAt time.Time
 }
+
+type ContestAnnouncementSyncEventResult struct {
+	Cursor         int64
+	Type           string
+	Announcement   *ContestAnnouncementResult
+	AnnouncementID *int64
+	OccurredAt     time.Time
+}
+
+type ContestAnnouncementSyncResult struct {
+	Events     []*ContestAnnouncementSyncEventResult
+	NextCursor int64
+	HasMore    bool
+}

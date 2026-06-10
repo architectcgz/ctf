@@ -1,7 +1,10 @@
 import { useWebSocket } from '@/shared/model/realtime/useWebSocket'
 
-export function useContestAnnouncementRealtime(contestId: string, onUpdated: () => void) {
+export function useAnnouncementSubscription(contestId: string, onUpdated: () => void) {
   const { status, connect, disconnect } = useWebSocket(`contests/${contestId}/announcements`, {
+    'system.connected': () => {
+      onUpdated()
+    },
     'contest.announcement.created': () => {
       onUpdated()
     },

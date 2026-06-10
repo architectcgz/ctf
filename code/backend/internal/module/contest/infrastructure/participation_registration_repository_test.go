@@ -51,6 +51,14 @@ func (s participationRegistrationSourceStub) ListAnnouncements(context.Context, 
 	return nil, nil
 }
 
+func (s participationRegistrationSourceStub) ListAnnouncementSyncEvents(context.Context, int64, int64, int) ([]*contestports.ContestAnnouncementSyncEventRow, error) {
+	return nil, nil
+}
+
+func (s participationRegistrationSourceStub) LatestAnnouncementSyncCursor(context.Context, int64) (int64, error) {
+	return 0, nil
+}
+
 func (s participationRegistrationSourceStub) CreateAnnouncement(context.Context, *contestentity.ContestAnnouncement) error {
 	return nil
 }

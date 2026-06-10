@@ -1,5 +1,8 @@
 <template>
-  <div class="contest-page-shell" :style="contest ? getContestAccentVarStyle(contest.status) : undefined">
+  <div
+    class="contest-page-shell"
+    :style="contest ? getContestAccentVarStyle(contest.status) : undefined"
+  >
     <section
       class="workspace-shell journal-shell journal-shell-user journal-hero contest-detail-view flex min-h-full flex-1 flex-col"
     >
@@ -11,7 +14,10 @@
       </main>
 
       <template v-else-if="contest && contestAccessible">
-        <ContestAnnouncementRealtimeBridge :contest-id="contest.id" @updated="refreshAnnouncements" />
+        <ContestAnnouncementRealtimeBridge
+          :contest-id="contest.id"
+          @updated="syncAnnouncementsIncrementally"
+        />
 
         <div class="workspace-tabbar top-tabs" role="tablist" aria-label="竞赛页面主切换">
           <button
@@ -194,11 +200,7 @@
   --journal-shell-hero-radial-strength: 10%;
   --journal-shell-hero-radial-size: 18rem;
   --journal-shell-hero-top-strength: 97%;
-  --journal-shell-hero-end: color-mix(
-    in srgb,
-    var(--color-bg-elevated) 95%,
-    var(--color-bg-base)
-  );
+  --journal-shell-hero-end: color-mix(in srgb, var(--color-bg-elevated) 95%, var(--color-bg-base));
   --journal-shell-hero-shadow: none;
   flex: 1 1 auto;
 }
@@ -385,5 +387,6 @@ defineProps<{
   joinTeamAction: () => void | Promise<void>
   kickMember: (userId: string) => void | Promise<void>
   refreshAnnouncements: () => void | Promise<void>
+  syncAnnouncementsIncrementally: () => void | Promise<void>
 }>()
 </script>

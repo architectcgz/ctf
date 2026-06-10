@@ -23,6 +23,7 @@ func registerAdminContestParticipationRoutes(
 		deps.contest.ParticipationHandler.ReviewRegistration,
 	)
 	contestByID.GET("/announcements", deps.contest.ParticipationHandler.ListAnnouncements)
+	contestByID.GET("/announcements/sync", deps.contest.ParticipationHandler.SyncAnnouncements)
 	contestByID.POST("/announcements",
 		audit(middleware.AuditOptions{
 			Action:        auditlog.ActionCreate,

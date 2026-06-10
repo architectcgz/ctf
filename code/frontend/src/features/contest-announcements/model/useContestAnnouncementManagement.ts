@@ -1,8 +1,17 @@
 import { computed, reactive, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
-import { createAdminContestAnnouncement, deleteAdminContestAnnouncement, getAdminContestAnnouncements } from '@/api/admin/contest-announcements'
+import {
+  createAdminContestAnnouncement,
+  deleteAdminContestAnnouncement,
+  getAdminContestAnnouncements,
+  getAdminContestAnnouncementSync,
+} from '@/api/admin/contest-announcements'
 import type { ContestAnnouncement, ContestDetailData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
+import {
+  applyContestAnnouncementSyncEvents,
+  nextContestAnnouncementSyncCursor,
+} from '@/entities/contest-announcement'
 import { useToast } from '@/shared/model/common/useToast'
 
 interface AnnouncementFormDraft {
@@ -42,6 +51,7 @@ export function useContestAnnouncementManagement(
   const loadError = ref('')
   const publishing = ref(false)
   const deletingAnnouncementId = ref<string | null>(null)
+  const syncCursor = ref('')
 
   const form = reactive<AnnouncementFormDraft>(createDefaultForm())
   const errors = reactive<AnnouncementFormErrors>({})
@@ -80,6 +90,7 @@ export function useContestAnnouncementManagement(
     if (!contestId.value) {
       announcements.value = []
       loadError.value = ''
+      syncCursor.value = ''
       return []
     }
 
@@ -88,14 +99,55 @@ export function useContestAnnouncementManagement(
     try {
       const result = await getAdminContestAnnouncements(contestId.value)
       announcements.value = result
+      try {
+        const sync = await getAdminContestAnnouncementSync(contestId.value)
+        syncCursor.value = nextContestAnnouncementSyncCursor(sync)
+      } catch {
+        syncCursor.value = ''
+      }
       return result
     } catch (error) {
       const message = humanizeRequestError(error, '公告加载失败，请稍后重试。')
       announcements.value = []
       loadError.value = message
+      syncCursor.value = ''
       return []
     } finally {
       loading.value = false
+    }
+  }
+
+  async function syncAnnouncementsIncrementally(): Promise<ContestAnnouncement[]> {
+    if (!contestId.value) {
+      syncCursor.value = ''
+      return announcements.value
+    }
+
+    try {
+      if (!syncCursor.value) {
+        if (announcements.value.length > 0) {
+          return loadAnnouncements()
+        }
+        const sync = await getAdminContestAnnouncementSync(contestId.value)
+        syncCursor.value = nextContestAnnouncementSyncCursor(sync)
+        return announcements.value
+      }
+
+      let afterId = syncCursor.value
+      while (afterId) {
+        const sync = await getAdminContestAnnouncementSync(contestId.value, afterId)
+        announcements.value = applyContestAnnouncementSyncEvents(announcements.value, sync.events)
+        syncCursor.value = nextContestAnnouncementSyncCursor(sync)
+        if (!sync.has_more) {
+          break
+        }
+        afterId = syncCursor.value
+      }
+      loadError.value = ''
+      return announcements.value
+    } catch (error) {
+      loadError.value = humanizeRequestError(error, '公告同步失败，请稍后重试。')
+      return announcements.value
     }
   }
 
@@ -152,6 +204,7 @@ export function useContestAnnouncementManagement(
     () => {
       announcements.value = []
       loadError.value = ''
+      syncCursor.value = ''
       resetForm()
       deletingAnnouncementId.value = null
     }
@@ -167,6 +220,7 @@ export function useContestAnnouncementManagement(
     errors,
     canManageAnnouncements,
     loadAnnouncements,
+    syncAnnouncementsIncrementally,
     publishAnnouncement,
     deleteAnnouncement,
     resetForm,

@@ -12,6 +12,7 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
+	"go.uber.org/zap"
 )
 
 const awdCheckerPreviewAttemptCount = 3
@@ -226,7 +227,19 @@ func (s *AWDService) reportAWDPreviewProgress(
 	status string,
 	extra map[string]any,
 ) {
-	broadcastAWDPreviewProgress(ctx, s.eventBus, contestID, requestID, phaseKey, phaseLabel, detail, attempt, totalAttempts, status, extra)
+	if s == nil {
+		return
+	}
+	if err := enqueueAWDPreviewProgressRealtime(ctx, s.outbox, contestID, requestID, phaseKey, phaseLabel, detail, attempt, totalAttempts, status, extra); err != nil {
+		s.log.Warn(
+			"enqueue_awd_preview_progress_relay_failed",
+			zap.Int64("contest_id", contestID),
+			zap.String("request_id", requestID),
+			zap.String("phase_key", phaseKey),
+			zap.String("status", status),
+			zap.Error(err),
+		)
+	}
 }
 
 func (s *AWDService) reportAWDPreviewFailure(ctx context.Context, contestID int64, requestID string, phaseKey string, detail string, err error) {

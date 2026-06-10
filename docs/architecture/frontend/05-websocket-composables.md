@@ -21,9 +21,9 @@
   - 负责：先同步首屏通知，再建立 `notifications` 实时连接，并把 `notification.created / notification.read` 写回 `notification` store
   - 不负责：在 store 内自己建连，或把通知详情页的页面交互塞回实时层
 
-- `code/frontend/src/features/contest-announcements/model/useContestAnnouncementRealtime.ts`、`code/frontend/src/features/scoreboard/model/useContestScoreboardRealtime.ts`、`code/frontend/src/features/awd-inspector/model/useContestAwdPreviewRealtime.ts`
+- `code/frontend/src/features/contest-announcements/model/useAnnouncementSubscription.ts`、`code/frontend/src/features/scoreboard/model/useContestScoreboardRealtime.ts`、`code/frontend/src/features/awd-inspector/model/useContestAwdPreviewRealtime.ts`
   - 负责：把不同业务端点包装成页面可调用的 `start / stop / status`
-  - 不负责：在实时通道里传输整页状态；当前公告和排行榜更新仍以“事件触发后 HTTP 刷新”为主
+  - 不负责：在实时通道里传输整页状态；当前公告和排行榜更新仍以“事件触发后 HTTP 同步”为主
 
 ## 1. 连接入口
 
@@ -73,7 +73,7 @@
 | 端点 | 前端 owner | 后端入口 | 当前行为 |
 | --- | --- | --- | --- |
 | `/ws/notifications` | `useNotificationRealtime()` | `code/backend/internal/app/router.go` -> `opsModule.NotificationHandler.ServeWS` | 首屏拉通知后，实时写入通知 store |
-| `/ws/contests/:id/announcements` | `useContestAnnouncementRealtime()` | `contestRealtimeHandler.ServeAnnouncementWS` | 收到事件后触发页面重新拉公告 |
+| `/ws/contests/:id/announcements` | `useAnnouncementSubscription()` | `contestRealtimeHandler.ServeAnnouncementWS` | 收到事件后触发页面同步公告，必要时重新拉公告 |
 | `/ws/contests/:id/scoreboard` | `useContestScoreboardRealtime()` | `contestRealtimeHandler.ServeScoreboardWS` | 收到 `scoreboard.updated` 后触发 HTTP 刷榜 |
 | `/ws/contests/:id/awd-preview` | `useContestAwdPreviewRealtime()` | `contestRealtimeHandler.ServeAWDPreviewWS` | 推送 AWD 预览/校验进度 |
 
@@ -97,14 +97,15 @@
 
 ### 4.2 竞赛公告与排行榜
 
-当前公告和排行榜都采用“轻事件 + HTTP 刷新”的模型：
+当前公告和排行榜都采用“轻事件 + HTTP 同步”的模型：
 
 - 公告实时：`contest.announcement.created`、`contest.announcement.deleted`
 - 排行榜实时：`scoreboard.updated`
 
 相关 owner：
 
-- 公告：`code/frontend/src/features/contest-announcements/model/useContestAnnouncementRealtime.ts`
+- 公告订阅：`code/frontend/src/features/contest-announcements/model/useAnnouncementSubscription.ts`
+- 公告同步 reducer：`code/frontend/src/entities/contest-announcement/model/sync.ts`
 - 排行榜桥接：`code/frontend/src/components/scoreboard/ScoreboardRealtimeBridge.vue`
 - 排行榜详情页：`code/frontend/src/features/scoreboard/model/useScoreboardDetailPage.ts`
 

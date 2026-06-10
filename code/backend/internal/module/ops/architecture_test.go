@@ -125,9 +125,9 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 		"auditRepo        opsports.AuditRepository",
 		"riskRepo         opsports.RiskRepository",
 		"notificationRepo opsports.NotificationRepository",
-		"runtimeQuery     opsports.RuntimeQuery",
-		"runtimeStats     opsports.RuntimeStatsProvider",
-		"webSocketManager *websocketpkg.Manager",
+		"runtimeQuery          opsports.RuntimeQuery",
+		"runtimeStats          opsports.RuntimeStatsProvider",
+		"webSocketManager      *websocketpkg.Manager",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

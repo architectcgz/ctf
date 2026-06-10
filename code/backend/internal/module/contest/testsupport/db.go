@@ -25,6 +25,7 @@ func SetupContestTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(
 		&contestentity.Contest{},
 		&contestentity.ContestStatusTransition{},
+		&contestentity.ContestRealtimeOutbox{},
 		&contestChallengeRecord{},
 		&contestImageRecord{},
 		&challengecontracts.AWDChallenge{},

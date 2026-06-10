@@ -1,16 +1,16 @@
 <template>
   <div class="contest-announcement-shell">
-    <div
-      v-if="loading"
-      class="contest-announcement-loading"
-    >
+    <div v-if="loading" class="contest-announcement-loading">
       <AppLoading>正在同步竞赛公告...</AppLoading>
     </div>
 
-    <main
-      v-else
-      class="contest-announcement-content"
-    >
+    <main v-else class="contest-announcement-content">
+      <ContestAnnouncementRealtimeBridge
+        v-if="contest"
+        :contest-id="contest.id"
+        @updated="void management.syncAnnouncementsIncrementally()"
+      />
+
       <ContestAnnouncementsTopbarPanel
         v-if="contest"
         :contest-title="contest.title"
@@ -63,6 +63,7 @@ import { toRef } from 'vue'
 import AppEmpty from '@/shared/ui/common/AppEmpty.vue'
 import AppLoading from '@/shared/ui/common/AppLoading.vue'
 import AppRouteLink from '@/shared/ui/navigation/AppRouteLink.vue'
+import { ContestAnnouncementRealtimeBridge } from '@/features/contest-announcements'
 import { useContestAnnouncementsPage } from '../model'
 import ContestAnnouncementsTopbarPanel from './ContestAnnouncementsTopbarPanel.vue'
 import ContestAnnouncementsWorkspacePanel from './ContestAnnouncementsWorkspacePanel.vue'

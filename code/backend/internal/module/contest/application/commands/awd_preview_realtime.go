@@ -2,11 +2,11 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
-	platformevents "ctf-platform/internal/platform/events"
 )
 
 type awdPreviewRequesterContextKey struct{}
@@ -32,9 +32,9 @@ func awdPreviewRequesterFromContext(ctx context.Context) (int64, bool) {
 	return userID, true
 }
 
-func broadcastAWDPreviewProgress(
+func enqueueAWDPreviewProgressRealtime(
 	ctx context.Context,
-	bus platformevents.Bus,
+	outbox contestcontractsRealtimeOutbox,
 	contestID int64,
 	requestID string,
 	phaseKey string,
@@ -44,13 +44,13 @@ func broadcastAWDPreviewProgress(
 	totalAttempts int,
 	status string,
 	extra map[string]any,
-) {
-	if bus == nil {
-		return
+) error {
+	if outbox == nil {
+		return nil
 	}
 	userID, ok := awdPreviewRequesterFromContext(ctx)
 	if !ok {
-		return
+		return nil
 	}
 	event := contestcontracts.AWDPreviewProgressEvent{
 		UserID:           userID,
@@ -67,9 +67,25 @@ func broadcastAWDPreviewProgress(
 	if extraError, ok := extra["error"].(string); ok {
 		event.Error = strings.TrimSpace(extraError)
 	}
+	return outbox.EnqueueRealtimeRelay(
+		ctx,
+		contestcontracts.RelayAWDPreviewProgress(event),
+		awdPreviewProgressDedupeKey(contestID, userID, event.PreviewRequestID, event.PhaseKey, event.Attempt, event.Status),
+	)
+}
 
-	publishContestWeakEvent(ctx, bus, platformevents.Event{
-		Name:    contestcontracts.EventAWDPreviewProgress,
-		Payload: event,
-	})
+type contestcontractsRealtimeOutbox interface {
+	EnqueueRealtimeRelay(ctx context.Context, relay contestcontracts.RealtimeRelayEvent, dedupeKey string) error
+}
+
+func awdPreviewProgressDedupeKey(contestID, userID int64, requestID, phaseKey string, attempt int, status string) string {
+	return fmt.Sprintf(
+		"contest:%d:awd_preview:%d:%s:%s:%d:%s",
+		contestID,
+		userID,
+		strings.TrimSpace(requestID),
+		strings.TrimSpace(phaseKey),
+		attempt,
+		strings.TrimSpace(status),
+	)
 }

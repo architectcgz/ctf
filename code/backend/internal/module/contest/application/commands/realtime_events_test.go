@@ -9,7 +9,6 @@ import (
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
-	platformevents "ctf-platform/internal/platform/events"
 )
 
 type scoreboardUpdaterStub struct {
@@ -27,29 +26,14 @@ func (s *scoreboardUpdaterStub) RebuildScoreboard(_ context.Context, contestID i
 	return nil
 }
 
-func TestParticipationServiceCreateAnnouncementBroadcastsRealtimeEvent(t *testing.T) {
+func TestParticipationServiceCreateAnnouncementEnqueuesRealtimeRelay(t *testing.T) {
 	t.Parallel()
 
 	db := testsupport.SetupContestTestDB(t)
 	contestRepo := contestinfra.NewRepository(db)
 	participationRepo := contestinfra.NewParticipationRepository(db)
 	teamRepo := contestinfra.NewTeamRepository(db)
-	bus := platformevents.NewBus()
-	received := make(chan contestcontracts.AnnouncementCreatedEvent, 1)
-	bus.Subscribe(contestcontracts.EventAnnouncementCreated, func(_ context.Context, evt platformevents.Event) error {
-		payload, ok := evt.Payload.(contestcontracts.AnnouncementCreatedEvent)
-		if !ok {
-			t.Fatalf("unexpected payload type: %T", evt.Payload)
-		}
-		received <- payload
-		return nil
-	})
-	service := &ParticipationService{
-		contestRepo: contestRepo,
-		repo:        participationRepo,
-		teamRepo:    teamRepo,
-		eventBus:    bus,
-	}
+	service := NewParticipationService(contestRepo, participationRepo, teamRepo)
 
 	now := time.Now()
 	contest := &contestentity.Contest{
@@ -77,39 +61,35 @@ func TestParticipationServiceCreateAnnouncementBroadcastsRealtimeEvent(t *testin
 		t.Fatalf("expected created announcement, got %+v", item)
 	}
 
-	select {
-	case evt := <-received:
-		if evt.ContestID != 77 || evt.AnnouncementID != item.ID {
-			t.Fatalf("unexpected event payload: %+v", evt)
-		}
-		if evt.Title != "比赛开始" || evt.Content != "欢迎接入实时公告。" {
-			t.Fatalf("unexpected event announcement body: %+v", evt)
-		}
-		if evt.CreatedAt.IsZero() || evt.OccurredAt.IsZero() {
-			t.Fatalf("expected non-zero event timestamps, got %+v", evt)
-		}
-	case <-time.After(time.Second):
-		t.Fatal("expected contest.announcement_created event to be published")
+	outboxRepo := contestinfra.NewRealtimeOutboxRepository(db)
+	pending, err := outboxRepo.ListPendingRealtimeRelays(context.Background(), time.Now().UTC().Add(time.Second), 10)
+	if err != nil {
+		t.Fatalf("ListPendingRealtimeRelays() error = %v", err)
+	}
+	if len(pending) != 1 {
+		t.Fatalf("expected 1 pending relay, got %+v", pending)
+	}
+	if pending[0].Relay.EventName != contestcontracts.EventAnnouncementCreated {
+		t.Fatalf("unexpected relay event name: %+v", pending[0])
+	}
+	if pending[0].Relay.Channel != contestcontracts.AnnouncementChannel(77) {
+		t.Fatalf("unexpected relay channel: %+v", pending[0])
+	}
+	payload, ok := pending[0].Relay.Payload.(contestcontracts.AnnouncementCreatedRelayPayload)
+	if !ok {
+		t.Fatalf("unexpected relay payload: %#v", pending[0].Relay.Payload)
+	}
+	if payload.Announcement.ID != item.ID || payload.Announcement.Title != "比赛开始" {
+		t.Fatalf("unexpected relay announcement payload: %#v", payload)
 	}
 }
 
-func TestSubmissionServiceSyncCorrectSubmissionScoreboardBroadcastsRealtimeEvent(t *testing.T) {
+func TestSubmissionServiceSyncCorrectSubmissionScoreboardUpdatesScoreboardCache(t *testing.T) {
 	t.Parallel()
 
 	scoreboard := &scoreboardUpdaterStub{}
-	bus := platformevents.NewBus()
-	received := make(chan contestcontracts.ScoreboardUpdatedEvent, 1)
-	bus.Subscribe(contestcontracts.EventScoreboardUpdated, func(_ context.Context, evt platformevents.Event) error {
-		payload, ok := evt.Payload.(contestcontracts.ScoreboardUpdatedEvent)
-		if !ok {
-			t.Fatalf("unexpected payload type: %T", evt.Payload)
-		}
-		received <- payload
-		return nil
-	})
 	service := &SubmissionService{
 		scoreboardService: scoreboard,
-		eventBus:          bus,
 	}
 
 	contestID := int64(88)
@@ -122,17 +102,5 @@ func TestSubmissionServiceSyncCorrectSubmissionScoreboardBroadcastsRealtimeEvent
 
 	if len(scoreboard.updateCalls) != 1 {
 		t.Fatalf("expected 1 scoreboard update, got %d", len(scoreboard.updateCalls))
-	}
-
-	select {
-	case evt := <-received:
-		if evt.ContestID != contestID {
-			t.Fatalf("unexpected event payload: %+v", evt)
-		}
-		if evt.OccurredAt.IsZero() {
-			t.Fatalf("expected non-zero occurred_at, got %+v", evt)
-		}
-	case <-time.After(time.Second):
-		t.Fatal("expected contest.scoreboard_updated event to be published")
 	}
 }

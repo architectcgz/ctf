@@ -46,6 +46,10 @@ type ContestRegistrationQuery struct {
 	Size   int     `form:"page_size" binding:"omitempty,min=1,max=100"`
 }
 
+type ContestAnnouncementSyncQuery struct {
+	AfterID int64 `form:"after_id" binding:"omitempty,min=1"`
+}
+
 type ReviewContestRegistrationReq struct {
 	Status string `json:"status" binding:"required,oneof=approved rejected"`
 }
