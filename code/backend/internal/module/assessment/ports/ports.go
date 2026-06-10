@@ -11,7 +11,6 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -127,8 +126,8 @@ type AssessmentClassReportRepository interface {
 }
 
 type AssessmentClassInsightRepository interface {
-	GetClassSummary(ctx context.Context, className string, since time.Time) (*queryports.ClassSummary, error)
-	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*queryports.ClassTrend, error)
+	GetClassSummary(ctx context.Context, className string, since time.Time) (*assessmentdomain.ClassInsightSummary, error)
+	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*assessmentdomain.ClassInsightTrend, error)
 	ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error)
 }
 
