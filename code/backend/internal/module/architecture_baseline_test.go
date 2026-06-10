@@ -1,11 +1,5 @@
 package module
 
-var reviewedApplicationConcreteImportExceptions = map[string]struct{}{}
-
-var reviewedCrossModulePrivateImportExceptions = map[string]struct{}{}
-
-var reviewedDomainInternalImportExceptions = map[string]struct{}{}
-
 var reviewedRuntimeHostExecutorUsageFiles = map[string]struct{}{
 	"../app/composition/runtime_module.go":                    {},
 	"../app/composition/runtime_node_execution_router.go":     {},
@@ -63,7 +57,3 @@ var reviewedTransactionBoundaryFunctions = map[string]struct{}{
 	"practice/infrastructure/repository.go#CreateAWDServiceOperation":                                        {},
 	"practice/infrastructure/repository.go#ResetInstanceRuntimeForRestart":                                   {},
 }
-
-var reviewedOversizedRuntimeModuleFiles = map[string]struct{}{}
-
-var reviewedTimeNowFiles = map[string]struct{}{}
