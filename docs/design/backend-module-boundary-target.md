@@ -1,12 +1,12 @@
 # 后端模块边界目标设计稿
 
-> 状态：Draft
+> 状态：Superseded
 > 事实源：`code/backend/internal/module/` 当前实现、`docs/architecture/backend/07-modular-monolith-refactor.md` 当前事实、模块边界复核结论
-> 替代：无；迁移完成后应回收到 `docs/architecture/backend/07-modular-monolith-refactor.md`
+> 替代：`docs/architecture/backend/07-modular-monolith-refactor.md`
 
 ## 定位
 
-本文档说明后端模块化单体的目标边界，不把当前代码形态直接视为合理终态。
+本文档保留后端模块化单体目标边界的历史推演。当前模块边界事实以 `docs/architecture/backend/07-modular-monolith-refactor.md` 为准。
 
 - 负责：定义目标模块划分、组合方式、依赖方向、对外暴露口径、已知技术债和迁移切片。
 - 不负责：记录当前已落地事实、替代当前架构事实源、设计微服务拆分方案、改写外部 HTTP 路由或论文正文。

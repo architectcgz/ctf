@@ -50,13 +50,12 @@ func contestAWDServiceRespFromModel(item *contestentity.ContestAWDService) *Cont
 		UpdatedAt:       baseResp.UpdatedAt,
 		ValidationState: baseResp.ValidationState,
 	}
-	runtimeConfig := sanitizeContestAWDServiceRuntimeConfig(contestdomain.ParseAWDCheckerConfig(item.RuntimeConfig))
 	snapshot, _ := contestentity.DecodeContestAWDServiceSnapshot(item.ServiceSnapshot)
 	resp.Title = snapshot.Name
 	resp.Category = snapshot.Category
 	resp.Difficulty = snapshot.Difficulty
 	resp.ScoreConfig = contestdomain.ParseAWDCheckerConfig(item.ScoreConfig)
-	resp.RuntimeConfig = runtimeConfig
+	resp.RuntimeConfig = contestdomain.ParseAWDCheckerConfig(item.RuntimeConfig)
 	resp.ValidationState = contestdomain.NormalizeAWDCheckerValidationState(string(item.ValidationState))
 	previewResult := awdPreviewResultMapper.ToDTOPtr(contestdomain.ParseAWDCheckerPreviewResult(item.LastPreviewResult))
 	if previewResult != nil {
@@ -85,20 +84,6 @@ func teamRespFromModel(team *contestentity.Team, memberCount int) *TeamResp {
 	}
 	resp.MemberCount = memberCount
 	return resp
-}
-
-func sanitizeContestAWDServiceRuntimeConfig(runtimeConfig map[string]any) map[string]any {
-	if len(runtimeConfig) == 0 {
-		return runtimeConfig
-	}
-	sanitized := make(map[string]any, len(runtimeConfig))
-	for key, value := range runtimeConfig {
-		if key == "challenge_id" {
-			continue
-		}
-		sanitized[key] = value
-	}
-	return sanitized
 }
 
 func parseContestAWDServiceScoreValue(scoreConfig map[string]any, key string) (int, bool) {

@@ -65,7 +65,7 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 		Order:             2,
 		IsVisible:         true,
 		ScoreConfig:       `{"points":100,"awd_sla_score":1,"awd_defense_score":2}`,
-		RuntimeConfig:     `{"challenge_id":9801,"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/health"}}}`,
+		RuntimeConfig:     `{"checker_type":"http_standard","checker_config":{"get_flag":{"path":"/health"}}}`,
 		ValidationState:   contestentity.AWDCheckerValidationStateFailed,
 		LastPreviewAt:     &now,
 		LastPreviewResult: `{"service_status":"down","check_result":{"status_code":500},"preview_context":{"access_url":"http://preview.internal"}}`,
@@ -93,9 +93,6 @@ func TestContestAWDServiceQueryServiceListContestAWDServicesIncludesValidationSt
 	}
 	if !strings.Contains(resp[0].LastPreviewResultRaw, `"access_url":"http://preview.internal"`) {
 		t.Fatalf("unexpected preview result: %+v", resp[0].LastPreviewResultRaw)
-	}
-	if _, ok := resp[0].RuntimeConfig["challenge_id"]; ok {
-		t.Fatalf("expected runtime config to hide compatibility challenge_id, got %+v", resp[0].RuntimeConfig)
 	}
 	if resp[0].RuntimeConfig["checker_type"] != "http_standard" {
 		t.Fatalf("expected checker_type to remain visible, got %+v", resp[0].RuntimeConfig)

@@ -49,7 +49,7 @@ func (s *ContestAWDServiceQueryService) ListContestAWDServices(ctx context.Conte
 			Order:                item.Order,
 			IsVisible:            item.IsVisible,
 			ScoreConfig:          contestdomain.ParseAWDCheckerConfig(item.ScoreConfig),
-			RuntimeConfig:        sanitizeContestAWDServiceRuntimeConfig(contestdomain.ParseAWDCheckerConfig(item.RuntimeConfig)),
+			RuntimeConfig:        contestdomain.ParseAWDCheckerConfig(item.RuntimeConfig),
 			ValidationState:      string(contestdomain.NormalizeAWDCheckerValidationState(string(item.ValidationState))),
 			LastPreviewAt:        item.LastPreviewAt,
 			LastPreviewResultRaw: item.LastPreviewResult,
@@ -75,18 +75,4 @@ func decodeContestAWDServiceSnapshot(raw string) contestAWDServiceSnapshotResult
 		return contestAWDServiceSnapshotResult{}
 	}
 	return snapshot
-}
-
-func sanitizeContestAWDServiceRuntimeConfig(runtimeConfig map[string]any) map[string]any {
-	if len(runtimeConfig) == 0 {
-		return runtimeConfig
-	}
-	sanitized := make(map[string]any, len(runtimeConfig))
-	for key, value := range runtimeConfig {
-		if key == "challenge_id" {
-			continue
-		}
-		sanitized[key] = value
-	}
-	return sanitized
 }

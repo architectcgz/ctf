@@ -59,7 +59,7 @@
 - 已切换：`ListReadinessChallengesByContest` 优先读取 `contest_awd_services.runtime_config + validation`
 - 已切换：round flag 存储、checker 取 flag、攻击提交支持 `service_id` 优先、`challenge_id` 回退
 - 已切换：`awd_team_services`、`awd_attack_logs` 以 `contest_awd_services.id` 作为运行态主身份
-- 已切换：`awd_traffic_events` 显式持久化 `service_id`，runtime proxy 归因改为 `instance.service_id -> contest_awd_services.challenge_id`
+- 已切换：`awd_traffic_events` 显式持久化 `service_id`，runtime proxy 归因改为 `instance.service_id -> contest_awd_services.awd_challenge_id`
 - 已降级：`challenge_id` 在运行态持久化中只承担题目元数据与展示字段
 - 已切换：workspace 查询、实例聚合与学生工作台服务目录改为以 `contest_awd_services.id` 为主键驱动
 - 已切换：学生 AWD 工作台实例启动入口支持 `/contests/:id/awd/services/:sid/instances`，以 `service_id` 作为主入口
@@ -263,9 +263,9 @@
 遗留说明：
 
 - `ContestChallenge` 代码模型与 AWD 主测试夹具已经移除这些字段，不再围绕 `contest_challenges.awd_*` 建模或 seed
-- 本次通过迁移 `000062_drop_legacy_awd_fields_from_contest_challenges` 将这些列从 `contest_challenges` 正式删除
+- 当前 baseline 已不再包含这些列，`contest_challenges` 不再承载 AWD service 配置
 - 如需回退，只允许从 `contest_awd_services` 回填这些列，不再恢复其主事实源地位
-- 当前兼容清理重点已经转到历史数据中的 `contest_awd_services.runtime_config.challenge_id` 等影子字段；新写路径不再生成这些字段
+- `contest_awd_services.runtime_config.challenge_id` 历史影子字段已由 `000015_remove_legacy_awd_runtime_config_challenge_id` 清理；新写路径不生成该字段，查询 / response mapper 也不再保留专门过滤层
 
 ### 6.4 `service_id` / `challenge_id` 的职责边界
 
@@ -279,17 +279,17 @@
   - 题目元数据身份
   - 用于关联题目标题、`flag_prefix`、镜像/题库资产和赛事题目关系
   - 可以继续出现在返回体、导出、展示聚合和兼容持久化中，但不再承担 AWD 运行态主定位或唯一键职责
-- `contest_awd_services.challenge_id`
+- `contest_awd_services.awd_challenge_id`
   - 是 service 到题目元数据的正式关联列
   - 新代码若需要题目身份，应直接读取这一列，不再从 `runtime_config.challenge_id` 反推
 - `contest_awd_services.runtime_config.challenge_id`
-  - 不再写入新的 service 记录
-  - 历史数据里若仍带有该字段，只按兼容遗留看待，不再作为正式配置契约
-  - 管理接口与前端归一化结果不把该字段当作正式 runtime 配置对外暴露
-  - 当前剩余使用面只应存在于旧数据兼容测试和迁移核对代码中，不再允许新查询、新写路径或新 UI 依赖它
-- `awd_team_services.challenge_id`、`awd_attack_logs.challenge_id`、`awd_traffic_events.challenge_id`
+  - 已退役，不再写入新的 service 记录
+  - 历史存量值由 `000015_remove_legacy_awd_runtime_config_challenge_id` 从 `runtime_config` 中删除
+  - 管理接口、前端归一化结果、查询 mapper 和 response mapper 不再为该字段保留兼容过滤或回退读取逻辑
+  - 新查询、新写路径、新 UI 以及迁移后的测试夹具都不得依赖它
+- `awd_team_services.awd_challenge_id`、`awd_attack_logs.awd_challenge_id`、`awd_traffic_events.awd_challenge_id`
   - 当前保留为展示字段、旧接口字段和兼容聚合字段
-  - 写入时必须由 `service_id -> contest_awd_services.challenge_id` 派生
+  - 写入时必须由 `service_id -> contest_awd_services.awd_challenge_id` 派生
   - 不参与唯一键、攻击去重、实例定位和流量主归因
 
 ### 6.2 `awd_team_services` 作为每轮 service 结果表
@@ -574,8 +574,8 @@
 
 第二步（已完成当前阶段收口）：
 
-- 通过 `000062` 删除 `contest_challenges.awd_*`，彻底结束 relation 表承载 AWD service 配置的阶段
-- 新写入的 `contest_awd_services.runtime_config` 不再持久化 `challenge_id` 影子字段；历史脏数据仅在兼容测试和迁移核对中保留识别
+- 当前 baseline 已删除 `contest_challenges.awd_*`，彻底结束 relation 表承载 AWD service 配置的阶段
+- 新写入的 `contest_awd_services.runtime_config` 不再持久化 `challenge_id` 影子字段；`000015_remove_legacy_awd_runtime_config_challenge_id` 已清理历史存量 key
 - 将运行态事实表中的 `challenge_id` 固定为由 `service_id` 回填的展示字段，待旧查询和导出切换完成后再评估是否继续保留
 - 旧 AWD 赛事若没有显式配置 checker，则使用默认 `http_standard`
 - 默认 `awd_checker_config` 从现有全局 `CheckerHealthPath` 推导出最小 `getflag/havoc` 占位配置
@@ -586,8 +586,7 @@
 
 - `legacy_probe` 作为 checker 类型回退，保证未完成标准 checker 配置的 service 仍可过渡运行
 - 学生端、教师端与部分查询接口继续回传 `challenge_id` 作为展示字段
-- 历史数据中的 `contest_awd_services.runtime_config.challenge_id` 与运行态事实表中的 `challenge_id` 仍可能存在；前者只按遗留兼容字段看待，后者继续作为展示字段保留
-- 这些影子字段现在只允许留在历史存储、兼容测试与迁移核对中；管理接口、前端合成视图与新运行链路不得继续透传或回退读取
+- 运行态事实表中的 `challenge_id` 继续作为展示字段保留，但 `contest_awd_services.runtime_config.challenge_id` 已不再属于兼容范围
 - checker preview 在“创建前、service 尚未落库”场景下允许继续接受 `challenge_id`，但 service 已存在时必须切到 `service_id`
 
 兼容范围之外，边界明确如下：
@@ -659,8 +658,8 @@
 - `contest_challenges` 只承担赛事题目关系与编排字段
 - `awd_team_services` 承担每轮 checker 结果
 - `service_id` 是 AWD 运行态主身份，`challenge_id` 降级为题目元数据与兼容展示字段
-- `contest_challenges.awd_*` 已通过 `000062` 从 relation 表删除，不再存在于主 schema
-- 新写入的 `contest_awd_services.runtime_config` 不再持久化 `challenge_id`；历史遗留值仅在兼容检查中识别
+- `contest_challenges.awd_*` 已从当前 baseline 的 relation 表删除，不再存在于主 schema
+- 新写入的 `contest_awd_services.runtime_config` 不再持久化 `challenge_id`；历史存量 key 已由 `000015_remove_legacy_awd_runtime_config_challenge_id` 清理
 - 第一版只实现 `http_standard` checker
 - 排行榜升级为 `sla / attack / defense / total`
 - 保留现有 flag 轮换、攻击提交流程、流量监控和后台面板框架
