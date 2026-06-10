@@ -2,7 +2,11 @@ package module
 
 var reviewedApplicationConcreteImportExceptions = map[string]struct{}{}
 
-var reviewedCrossModulePrivateImportExceptions = map[string]struct{}{}
+var reviewedCrossModulePrivateImportExceptions = map[string]struct{}{
+	"container_runtime/runtime/module.go -> ctf-platform/internal/module/runtime/application":          {},
+	"container_runtime/runtime/module.go -> ctf-platform/internal/module/runtime/application/commands": {},
+	"runtime/runtime/module.go -> ctf-platform/internal/module/container_runtime/runtime":              {},
+}
 
 var reviewedDomainInternalImportExceptions = map[string]struct{}{}
 
@@ -22,6 +26,7 @@ var moduleDependencyBaseline = map[string]struct{}{
 	"assessment -> practice":       {},
 	"assessment -> teaching_query": {},
 	"auth -> identity":             {},
+	"container_runtime -> runtime": {},
 	"challenge -> identity":        {},
 	"challenge -> runtime":         {},
 	"contest -> auth":              {},
@@ -41,6 +46,7 @@ var moduleDependencyBaseline = map[string]struct{}{
 	"practice -> identity":         {},
 	"practice -> instance":         {},
 	"practice -> runtime":          {},
+	"runtime -> container_runtime": {},
 	"runtime -> contest":           {},
 	"teaching_query -> challenge":  {},
 	"teaching_query -> identity":   {},

@@ -13,10 +13,10 @@ import (
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
+	containerruntime "ctf-platform/internal/module/container_runtime/runtime"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	runtimemodule "ctf-platform/internal/module/runtime/runtime"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 )
@@ -293,7 +293,7 @@ func TestBuildAWDDefenseSSHGatewayUsesNodeRouterInteractiveExecutorWhenAvailable
 	defaultExecutor := &stubRuntimeNodeHostExecutor{}
 	runtime := &ContainerRuntimeModule{
 		nodeRouter: &runtimeNodeExecutionRouter{},
-		runtime: &runtimemodule.Module{
+		runtime: &containerruntime.Module{
 			InteractiveExecutor: defaultExecutor,
 		},
 	}
@@ -325,7 +325,7 @@ func TestBuildAWDDefenseSSHGatewayFallsBackToRuntimeInteractiveExecutorWithoutNo
 
 	defaultExecutor := &stubRuntimeNodeHostExecutor{}
 	runtime := &ContainerRuntimeModule{
-		runtime: &runtimemodule.Module{
+		runtime: &containerruntime.Module{
 			InteractiveExecutor: defaultExecutor,
 		},
 	}

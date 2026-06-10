@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/config"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	containerruntime "ctf-platform/internal/module/container_runtime/runtime"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
@@ -14,7 +15,6 @@ import (
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/module/runtime/infrastructure/agentclient"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
-	runtimemodule "ctf-platform/internal/module/runtime/runtime"
 )
 
 type runtimeLifecycleCloser interface {
@@ -38,7 +38,7 @@ type ContainerRuntimeModule struct {
 	LifecycleCloser         runtimeLifecycleCloser
 
 	nodeRouter *runtimeNodeExecutionRouter
-	runtime    *runtimemodule.Module
+	runtime    *containerruntime.Module
 }
 
 type RuntimeModule = ContainerRuntimeModule
@@ -62,7 +62,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	}
 	executor := defaultNodeClient.executor
 	checkerRunner := defaultNodeClient.checkerRunner
-	module := runtimemodule.Build(runtimemodule.Deps{
+	module := containerruntime.Build(containerruntime.Deps{
 		Config:                    cfg,
 		Logger:                    log,
 		ProvisioningRepository:    allocationRepo,
@@ -92,7 +92,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		root.RegisterBackgroundJob(NewBackgroundJob(job.Name, job.Start, job.Stop))
 	}
 
-	contestContainerFiles := module.ContestContainerFiles
+	contestContainerFiles := module.ContainerFiles
 	contestCheckerRunner := checkerRunner
 	lifecycleCloser := runtimeLifecycleCloser(defaultNodeClient)
 	if nodeRouter != nil {

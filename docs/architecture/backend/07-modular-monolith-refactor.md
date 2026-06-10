@@ -29,9 +29,9 @@
   - 负责：由 CAS command service 继续承接 callback 用例编排、validate URL 构造、用户同步和 session 签发；`auth/ports.CASTicketValidator` 与 `auth/infrastructure/cas_ticket_validator.go` 统一承接 CAS validate request、XML principal 解析、用户名校验和 invalid ticket sentinel，`auth/runtime/module.go` 负责把 validator 注入 command service
   - 不负责：让 auth application surface 继续直接知道 `net/http` client、CAS XML response 或 ticket request 细节
 
-- `code/backend/internal/app/composition/instance_module.go`、`code/backend/internal/app/composition/runtime_module.go`
-  - 负责：在 app 层把同一个 `internal/module/runtime/runtime.Module` 收口成两个组合视图；`InstanceModule` 直接装配 `internal/module/instance/application/*` 的实例命令、查询、proxy ticket 和 maintenance use case，并通过 `internal/module/instance/contracts` 把它们交给 runtime access adapter，对外暴露实例/AWD 访问 handler、`practice` 依赖的实例仓储和运行时服务，同时注册 `runtime_cleaner`；`ContainerRuntimeModule` 只保留 `challenge`、`contest`、`ops` 需要的 container-facing 能力，并给独立的 AWD defense SSH gateway 进程提供 interactive exec / node routing 依赖；`RuntimeModule` 仅保留兼容别名
-  - 不负责：继续让 `runtime/runtime.Module` 承担实例 handler / cleaner 的生产装配，或把 `runtime/application/*` 的 compat import path 误写成长期 owner；当前 compat mirror 已压成基于 `instance/contracts` 的薄 wrapper，但它仍不是生产 wiring owner
+- `code/backend/internal/module/container_runtime/runtime/`、`code/backend/internal/app/composition/instance_module.go`、`code/backend/internal/app/composition/runtime_module.go`
+  - 负责：由 `internal/module/container_runtime/runtime.Module` 承接容器运行能力的底层 module builder，app 层再把它组合成 `ContainerRuntimeModule`；`InstanceModule` 直接装配 `internal/module/instance/application/*` 的实例命令、查询、proxy ticket 和 maintenance use case，并通过 `internal/module/instance/contracts` 把它们交给 runtime access adapter，对外暴露实例/AWD 访问 handler、`practice` 依赖的实例仓储和运行时服务，同时注册 `runtime_cleaner`；`ContainerRuntimeModule` 只保留 `challenge`、`contest`、`ops` 需要的 container-facing 能力，并给独立的 AWD defense SSH gateway 进程提供 interactive exec / node routing 依赖；`RuntimeModule` 仅保留兼容别名
+  - 不负责：继续让 `runtime/runtime.Module` 承担实例 handler / cleaner 的生产装配，或把 `runtime/application/*` 的旧 import path 误写成长期 owner；当前 `runtime/runtime.Module` 只是转发到 `container_runtime/runtime.Module` 的兼容入口，仍不是生产 wiring owner
 
 - `code/backend/internal/module/instance/contracts/*.go`
   - 负责：作为 `runtime -> instance` 的合法跨模块落点，定义实例 owner 暴露给外部模块的 command / query / proxy ticket / maintenance service contract
@@ -284,6 +284,9 @@ flowchart TB
 - runtime 物理模块边界：`code/backend/internal/module/runtime/architecture_test.go`
   - 阻止 `runtime/runtime.Module` 与 `Deps` 回到宽 `Engine` 结构面
   - 阻止 runtime HTTP handler 为已下线的 defense workbench 路由保留死 service interface
+- container runtime 底层模块边界：`code/backend/internal/module/container_runtime/architecture_test.go`
+  - 阻止 `container_runtime/runtime` 直接依赖 contest / practice / instance 业务 owner ports / contracts
+  - 阻止 `container_runtime/runtime` 直接引入 Gin、GORM、Redis、Docker SDK 等外层或基础设施 concrete 类型
 - 路由与运行时装配：`code/backend/internal/app/router_test.go`、`code/backend/internal/app/full_router_integration_test.go`
 - `code/backend/internal/app/architecture_rules_test.go` 仍明确禁止 `runtime -> instance application` 的 concrete cross-module import；因此如果未来再出现 compat 需求，必须重新选择合法落点，不能直接把实例 owner 逻辑补回 `runtime/application/*`
 
@@ -306,7 +309,7 @@ flowchart TB
 - **运行形态**：单个 Go API 进程，配套 PostgreSQL、Redis、Docker Engine，整体仍是单体部署。
 - **代码架构**：按业务模块组织的 Onion Architecture，而不是大一统的 handler/service/repository 三层堆叠。
 - **模块类型**：业务 owner 模块负责状态变更，查询聚合模块负责跨模块只读拼装。
-- **边界口径**：不再把 `teacher`、`system`、`container` 作为当前主模块叙事；当前代码分别收敛为 `teaching_query`、`ops`、`runtime` 物理模块，并在 app 层明确成 `container_runtime + instance` 两个组合视图。
+- **边界口径**：不再把 `teacher`、`system`、`container` 作为当前主模块叙事；当前代码分别收敛为 `teaching_query`、`ops`、`container_runtime` 底层模块与仍在迁移中的 `runtime` 实现基座，并在 app 层明确成 `container_runtime + instance` 两个组合视图。
 
 这里关注的是“系统现在是什么”，不记录迁移过程。
 
@@ -319,8 +322,8 @@ flowchart TB
 | `auth` | 业务 owner | 注册、登录、登出、CAS、会话票据、WebSocket ticket、基于 session 的当前用户解析 | 认证 handler、token service、登录链路应用服务 |
 | `identity` | 业务 owner | 用户、角色、账号状态、资料、管理端用户能力 | 用户查询、资料命令/查询、管理端用户 handler |
 | `challenge` | 业务 owner | 题目元数据、附件、镜像信息、Flag 规则、题包导入/导出 | 题目查询、镜像探针、Flag 规则读取 |
-| `runtime` | 基础运行时物理模块 | Docker 运行时、镜像探针、容器文件访问、运行时统计，以及 practice / challenge / contest 仍在复用的 container-facing adapter；底层实现仍落在 `internal/module/runtime/*` | `runtimemodule.Build(...)`、显式 runtime capability fields、practice runtime bridge、底层容器适配实现 |
-| `container_runtime` | app 层组合视图（迁移中） | 在 `internal/app/composition/runtime_module.go` 中承接 challenge / contest / ops 依赖的容器与运行时能力；当前主类型是 `ContainerRuntimeModule`，`RuntimeModule` 仅保留兼容别名 | image runtime、runtime probe、运行时统计 query、AWD 文件写入 |
+| `runtime` | 历史运行时实现基座（迁移中） | 暂时保留 provisioning / cleanup / image / file / stats service、runtime contracts / ports / infrastructure 与 runtime-agent adapter 的旧物理路径；`internal/module/runtime/runtime` 只保留兼容转发 | runtime contracts / ports / infrastructure、旧 import path 兼容 |
+| `container_runtime` | 底层容器运行时模块 + app 层组合视图 | `internal/module/container_runtime/runtime` 承接容器运行能力的物理 module builder；`internal/app/composition/runtime_module.go` 继续把它组合成 challenge / contest / ops / instance 需要的 `ContainerRuntimeModule` 视图 | image runtime、runtime probe、运行时统计 query、AWD 文件写入、provisioning / cleanup / file / inventory / interactive capability fields |
 | `instance` | 业务 owner（物理模块 + app 层组合视图） | `internal/module/instance/*` 承接实例命令、查询、proxy ticket、maintenance；`internal/app/composition/instance_module.go` 把这些 use case 接到 `instanceinfra.Repository`、少量 runtime mixed persistence adapter 与显式 capability adapter，并对外暴露实例访问 handler、`PracticeInstanceRepository`、`PracticeRuntimeService` 与实例清理任务 | instance command/query、proxy ticket service、maintenance service、实例访问 handler |
 | `practice` | 业务 owner | 练习开题、排队与 provisioning、Flag 提交、个人训练进度与时间线查询 | 开题/续期/销毁/提交等应用服务与 handler |
 | `contest` | 业务 owner | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | 竞赛应用服务、实时广播、AWD 编排 |
@@ -463,7 +466,7 @@ flowchart LR
     Practice -.practice.flag_accepted event.-> Assessment
 ```
 
-这张图描述的是 `internal/app/composition/*.go` 里的进程装配关系，也就是 router/runtime 在启动时把哪些模块或组合视图接在一起。`container_runtime`、`instance` 在这里是 app 层组合视图，不是 `internal/module/*` 下的物理模块。
+这张图描述的是 `internal/app/composition/*.go` 里的进程装配关系，也就是 router/runtime 在启动时把哪些模块或组合视图接在一起。`container_runtime` 在这里既有 `internal/module/container_runtime/runtime` 底层 module builder，也有 app 层的 `ContainerRuntimeModule` 组合视图；`instance` 在这里是 app 层组合视图并连接 `internal/module/instance/*` 业务 owner。
 
 - 实线表示当前组合装配里的能力提供关系。
 - 虚线表示 capability injection，不等同于模块内部 import。
@@ -518,11 +521,12 @@ flowchart LR
 | `auth` | `identity` | `identity/contracts` | 登录、CAS、profile 读写经 `identity` contract 完成；审计记录在 app 层通过 `ops.AuditService` 注入，不形成模块 import |
 | `challenge` | 无 | 无 | 运行时探针、镜像检查等能力由 `ContainerRuntimeModule` 注入；模块本身不直接 import `runtime`，发布自检完成通知通过 `challenge.publish_check_finished` 事件交给 `ops` 消费；题目详情 solved-count 缓存通过 `challenge/ports.ChallengeSolvedCountCache` 交给模块内 infrastructure Redis adapter 处理 |
 | `assessment` | `practice`、`contest` | `practice/contracts`、`contest/contracts` | 画像增量更新和推荐缓存刷新订阅 practice / contest 事件；`challenge.Catalog` 通过 composition 注入本模块 ports，不形成模块 import |
+| `container_runtime` | `runtime` | `runtime/application`、`runtime/application/commands`、`runtime/ports` | 这是当前迁移切片的显式过渡依赖：`container_runtime/runtime` 已成为底层 module builder，但 service / ports / contracts / infrastructure 仍复用旧 `runtime` 物理路径，后续再按 capability 迁移 |
 | `ops` | `auth`、`challenge`、`contest`、`practice` | `auth/contracts`、`challenge/contracts`、`contest/contracts`、`practice/contracts` | 通知 handler 依赖 token service；通知命令服务订阅 challenge / practice 事件；contest realtime relay 订阅公告 / 榜单 / AWD 预览事件；运行时概览通过 `ContainerRuntimeModule` 注入，不形成模块 import |
 | `contest` | `auth`、`challenge`、`runtime` | `auth/contracts`、`challenge/contracts` / `ports`、`runtime/domain` | 实时 WebSocket handler 解析 auth ticket；公告、榜单刷新和 AWD 预览进度改为发布 `contest/contracts` 事件交给 `ops` relay；竞赛/AWD 读 challenge catalog；checker runner 仍复用一条受控的 `runtime/domain` 私有依赖 |
 | `practice` | `challenge`、`contest`、`runtime` | `challenge/contracts`、`contest/domain`、`runtime/ports` | `practice` 不再直接依赖 `assessment/contracts`；能力画像增量更新与推荐缓存刷新统一通过 `practice.flag_accepted` 事件由 `assessment` 消费。生产装配已经改成依赖 `InstanceModule`，但 `practice/ports` 仍复用 `runtime/ports` 里的受管容器 shape，AWD 防守工作区逻辑也还保留一条受控的 `contest/domain` 私有依赖 |
 | `instance` | 无 | 无 | 当前 owner 代码集中在 `internal/module/instance/*`；对外 contract 由 `instance/contracts` 暴露 |
-| `runtime` | `challenge`、`contest`、`ops`、`instance` | 各模块 `ports`，以及 `instance/ports` | 当前仍是共享容器能力适配层，同时向 challenge / contest / ops 暴露 consumer-side ports；proxy ticket store 与 AWD ticket scope reader 已迁回 instance infrastructure，剩余 instance-facing repository 实现仍有一部分由 runtime infrastructure 承接，但 runtime ports 不再 re-export instance ports。practice-facing glue 已上移到 `composition.InstanceModule` |
+| `runtime` | `challenge`、`contest`、`ops`、`instance`、`container_runtime` | 各模块 `ports`，以及 `instance/ports`、`container_runtime/runtime` | 当前仍是共享容器能力实现基座，同时向 challenge / contest / ops 暴露 consumer-side ports；proxy ticket store 与 AWD ticket scope reader 已迁回 instance infrastructure，剩余 instance-facing repository 实现仍有一部分由 runtime infrastructure 承接，但 runtime ports 不再 re-export instance ports。practice-facing glue 已上移到 `composition.InstanceModule`，`runtime/runtime` 仅作为旧 import path 转发到 `container_runtime/runtime` |
 | `teaching_query` | `assessment` | `assessment/contracts` | 当前直接 import 只落在 `assessment.RecommendationProvider`；基础用户 lookup 通过 app/composition 注入 `identity.Users` 适配器复用，因此不形成 `teaching_query -> identity` 的物理模块 import。overview 已拆到独立 `OverviewService`，班级详情洞察已拆到独立 `ClassInsightService`，学生复盘已拆到独立 `StudentReviewService`，目录查询继续由 `Service` owner 承接 |
 
 补充说明：
@@ -544,22 +548,23 @@ flowchart LR
 
 ### 5.4 共享运行时边界
 
-`runtime` 当前仍是共享的底层物理模块，但 app 层已经把“实例入口”从“容器运行能力”中拆成两个显式组合视图，并把实例 owner use case 直接装到 `internal/module/instance/*`：
+`container_runtime` 已成为容器运行能力的底层 module builder；`runtime` 当前仍保留 contracts / ports / application / infrastructure 的历史实现基座。app 层已经把“实例入口”从“容器运行能力”中拆成两个显式组合视图，并把实例 owner use case 直接装到 `internal/module/instance/*`：
 
 - `challenge` 继续通过 `ContainerRuntimeModule` 做镜像探测和运行时探针接入
 - `contest` 继续通过 `ContainerRuntimeModule` 完成 AWD 服务运行态、容器文件写入和运行时编排
 - `ops` 继续通过 `ContainerRuntimeModule` 读取运行时统计与概览信息
 - `practice` 现在只通过 `InstanceModule` 使用实例仓储和运行时服务，不再直接拿整个 `ContainerRuntimeModule`
 - 用户实例路由、教师实例路由、AWD target proxy 与 defense SSH 入口统一挂到 `InstanceModule.Handler`
-- `runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
-- `runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，不再保留向上暴露整块宽 `Engine` 的出口
+- `container_runtime/runtime.Module` 不再组装实例 handler、proxy ticket service 或 `runtime_cleaner`；这些生产 wiring 已上移到 `composition.InstanceModule`
+- `container_runtime/runtime.Module` 现在只暴露 `ProvisioningRuntime`、`CleanupRuntime`、`FileRuntime`、`ManagedContainerInventory`、`InteractiveExecutor` 等显式能力字段，不再保留向上暴露整块宽 `Engine` 的出口；`runtime/runtime.Module` 只是兼容转发入口
 - `InstanceModule` 现在直接在 composition 边缘组合 `PracticeInstanceRepository`（默认走 `instanceinfra.Repository`，mixed lifecycle 写路径再桥接 runtime repo）与 `PracticeRuntimeService`；这层 practice-facing glue 已不再停留在 `runtime/runtime.Module` 或 `runtime/runtime/adapters.go`
-- `composition.BuildContainerRuntimeModule(...)` 仍可在边缘用本地 `buildRuntimeEngine(...)` helper 绑定底层实现，但 `InstanceModule` 只按 use case 取能力，并在本地组合 maintenance 所需的 inspect/start 视图
+- `composition.BuildContainerRuntimeModule(...)` 现在通过 `internal/module/container_runtime/runtime.Build(...)` 创建底层 module，并在边缘用本地 runtime node client / host executor 绑定底层实现；`InstanceModule` 只按 use case 取能力，并在本地组合 maintenance 所需的 inspect/start 视图
 - 生产使用的 runtime HTTP adapter 已收口到 `composition/runtime_http_service_adapter.go`；`runtime/runtime/adapters.go` 只保留 challenge / ops 仍在复用的底层 adapter，不再平行保留一份 runtime HTTP adapter
 - `runtime/application/{commands,queries}` 中原本保留的 instance / proxy ticket / maintenance compat wrapper 已删除，不再留下 legacy import path
 - `composition/runtime_adapter_compat.go` 也已删除；当前活跃的 runtime HTTP facade 只保留在 `composition/runtime_http_service_adapter.go`，并且只覆盖仍在路由表里的实例访问、proxy 和 AWD defense SSH 入口
 - `practice_flow_integration_test.go`、`runtime/service_test.go` 以及 `runtime/application` 目录里的实例行为测试都已经继续切到 `instance/*` owner；`runtime/application` 当前只保留 container capability 相关 service
 - `runtime/application` 里仍保留的 provisioning / cleanup / container file / image / stats service，现已统一依赖 `runtime/ports/` 下按能力拆分的 container runtime ports；`RuntimeHostExecutor` 只允许在 runtime host adapter 与 app composition 边界出现。这些 service 和 app 层 wiring 现在都围绕显式 capability port 组合，不再把 `runtime/runtime.Module.Engine` 当成公共结构面
+- `container_runtime/runtime` 当前有两条受控过渡私有依赖：复用 `runtime/application` 与 `runtime/application/commands`；这不是终态 owner，只是为了先固定底层模块入口，避免把 contracts / ports / infrastructure 全量迁移和 builder 切换混在同一个切片
 
 这部分共享能力通过 query / service / ports 暴露，而不是把 Docker 细节散落到各业务模块。
 
@@ -572,8 +577,8 @@ flowchart LR
 - 用户、角色、账号状态、资料与管理端用户能力：`identity`。
 - 会话、token、WebSocket ticket 与当前用户解析：`auth`。
 - 题目元数据、附件、Flag 规则、题包信息：`challenge`。
-- 运行时资源、镜像探针、容器文件读写、端口与 ACL、运行时任务：`runtime`。
-- 容器运行时能力视图：当前在 app 层由 `container_runtime` 组合视图对外收口，底层实现仍落在 `runtime` 物理模块。
+- 容器运行时能力的 module builder、镜像探针、容器文件写入、provisioning / cleanup / stats capability 输出：`container_runtime`。
+- 运行时 contracts / ports / infrastructure、端口与 ACL 持久化、runtime-agent adapter 和旧 import path 兼容：当前仍在 `runtime` 物理路径中过渡。
 - 实例记录、实例续期/销毁、实例可见性查询、proxy ticket 与实例维护调度：`internal/module/instance`。
 - 实例访问入口、AWD target / defense SSH 访问入口，以及实例 owner 与 runtime adapter 的最终装配：当前在 app 层由 `instance` 组合视图对外收口。
 - 练习开题、个人训练进度、Flag 提交与练习态更新：`practice`。

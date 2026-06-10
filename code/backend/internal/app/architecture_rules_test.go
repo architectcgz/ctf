@@ -15,21 +15,39 @@ type importViolation struct {
 	targetLayer string
 }
 
+var reviewedConcreteCrossModuleImportExceptions = map[string]struct{}{
+	"../../internal/module/container_runtime/runtime/module.go -> ctf-platform/internal/module/runtime/application":          {},
+	"../../internal/module/container_runtime/runtime/module.go -> ctf-platform/internal/module/runtime/application/commands": {},
+}
+
 func TestArchitectureRulesRejectConcreteCrossModuleImports(t *testing.T) {
 	t.Parallel()
 
 	repoRoot := filepath.Join("..", "..")
-	violations := scanConcreteCrossModuleImports(t, repoRoot)
+	violations, _ := scanConcreteCrossModuleImports(t, repoRoot)
 	if len(violations) > 0 {
 		t.Fatalf("unexpected concrete cross-module imports: %+v", violations)
 	}
 }
 
-func scanConcreteCrossModuleImports(t testing.TB, repoRoot string) []importViolation {
+func TestArchitectureRulesConcreteCrossModuleImportExceptionsAreCurrent(t *testing.T) {
+	t.Parallel()
+
+	repoRoot := filepath.Join("..", "..")
+	_, actualExceptions := scanConcreteCrossModuleImports(t, repoRoot)
+	for exception := range reviewedConcreteCrossModuleImportExceptions {
+		if _, exists := actualExceptions[exception]; !exists {
+			t.Fatalf("concrete cross-module import exception is stale: %s", exception)
+		}
+	}
+}
+
+func scanConcreteCrossModuleImports(t testing.TB, repoRoot string) ([]importViolation, map[string]struct{}) {
 	t.Helper()
 
 	moduleRoot := filepath.Join(repoRoot, "internal", "module")
 	violations := make([]importViolation, 0)
+	actualExceptions := make(map[string]struct{})
 
 	for _, path := range archtest.RuntimeGoFiles(t, moduleRoot) {
 		moduleName, ok := moduleNameFromFilePath(moduleRoot, path)
@@ -42,6 +60,11 @@ func scanConcreteCrossModuleImports(t testing.TB, repoRoot string) []importViola
 			if !ok {
 				continue
 			}
+			key := concreteCrossModuleImportExceptionKey(path, importPath)
+			if _, allowed := reviewedConcreteCrossModuleImportExceptions[key]; allowed {
+				actualExceptions[key] = struct{}{}
+				continue
+			}
 			violations = append(violations, importViolation{
 				filePath:    path,
 				importPath:  importPath,
@@ -50,7 +73,11 @@ func scanConcreteCrossModuleImports(t testing.TB, repoRoot string) []importViola
 			})
 		}
 	}
-	return violations
+	return violations, actualExceptions
+}
+
+func concreteCrossModuleImportExceptionKey(filePath string, importPath string) string {
+	return filepath.ToSlash(filePath) + " -> " + importPath
 }
 
 func moduleNameFromFilePath(moduleRoot, filePath string) (string, bool) {

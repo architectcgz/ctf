@@ -15,4 +15,7 @@ func TestBuildExposesCoreRuntimeServices(t *testing.T) {
 	if module.CleanupService == nil {
 		t.Fatal("expected cleanup service to be constructed by runtime module")
 	}
+	if module.ContestContainerFiles == nil {
+		t.Fatal("expected contest container file writer to be preserved by runtime module compat surface")
+	}
 }

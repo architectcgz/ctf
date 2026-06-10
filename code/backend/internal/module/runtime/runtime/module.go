@@ -1,24 +1,18 @@
 package runtime
 
 import (
-	"context"
-
-	"go.uber.org/zap"
-
-	"ctf-platform/internal/config"
+	containerruntime "ctf-platform/internal/module/container_runtime/runtime"
 	contestports "ctf-platform/internal/module/contest/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
-	runtimecontracts "ctf-platform/internal/module/runtime/contracts"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
-type BackgroundJob struct {
-	Name  string
-	Start func(context.Context) error
-	Stop  func(context.Context) error
-}
+type BackgroundJob = containerruntime.BackgroundJob
+type Deps = containerruntime.Deps
 
+// Module preserves the old runtime module exported field surface while
+// delegating construction to container_runtime/runtime.
 type Module struct {
 	BackgroundJobs []BackgroundJob
 
@@ -35,98 +29,22 @@ type Module struct {
 	InteractiveExecutor       runtimeports.ContainerInteractiveExecutor
 }
 
-type Deps struct {
-	Config                    *config.Config
-	Logger                    *zap.Logger
-	ProvisioningRepository    runtimecmd.ProvisioningRepository
-	CleanupRepository         runtimecmd.RuntimeCleanupRepository
-	ProvisioningRuntime       runtimeports.ContainerProvisioningRuntime
-	CleanupRuntime            runtimeports.ContainerCleanupRuntime
-	FileRuntime               runtimeports.ContainerFileRuntime
-	ImageRuntime              runtimeports.ContainerImageRuntime
-	ManagedContainerInventory runtimeports.ManagedContainerInventory
-	ManagedContainerStats     runtimeports.ManagedContainerStatsReader
-	InteractiveExecutor       runtimeports.ContainerInteractiveExecutor
-}
-
-type runtimeModuleDeps struct {
-	input                 Deps
-	cleanupService        *runtimecmd.RuntimeCleanupService
-	provisioningService   *runtimecmd.ProvisioningService
-	containerStatsService *runtimeapp.ContainerStatsService
-	imageRuntime          *runtimeapp.ImageRuntimeService
-	containerFiles        contestports.AWDContainerFileWriter
-	containerPublicHost   string
-}
-
 func Build(deps Deps) *Module {
-	internalDeps := buildRuntimeModuleDeps(deps)
-	observabilityDeps := buildRuntimeObservabilityDeps(internalDeps)
-	contestDeps := buildRuntimeContestDeps(internalDeps)
-
+	module := containerruntime.Build(deps)
+	if module == nil {
+		return nil
+	}
 	return &Module{
-		BackgroundJobs:            buildBackgroundJobs(internalDeps),
-		ImageRuntime:              internalDeps.imageRuntime,
-		RuntimeStatsProvider:      observabilityDeps.statsProvider,
-		ContestContainerFiles:     contestDeps.containerFiles,
-		ProvisioningService:       internalDeps.provisioningService,
-		CleanupService:            internalDeps.cleanupService,
-		ProvisioningRuntime:       deps.ProvisioningRuntime,
-		CleanupRuntime:            deps.CleanupRuntime,
-		FileRuntime:               deps.FileRuntime,
-		ManagedContainerInventory: deps.ManagedContainerInventory,
-		InteractiveExecutor:       deps.InteractiveExecutor,
-	}
-}
-
-func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
-	cfg := deps.Config
-	log := deps.Logger
-	if cfg == nil {
-		cfg = &config.Config{}
-	}
-	if log == nil {
-		log = zap.NewNop()
-	}
-	cleanupService := runtimecmd.NewRuntimeCleanupService(deps.CleanupRuntime, deps.CleanupRepository, log.Named("runtime_cleanup_service"))
-	provisioningService := runtimecmd.NewProvisioningService(deps.ProvisioningRepository, deps.ProvisioningRuntime, &cfg.Container, log.Named("runtime_provisioning_service"))
-	var containerStatsService *runtimeapp.ContainerStatsService
-	if deps.ManagedContainerStats != nil {
-		containerStatsService = runtimeapp.NewContainerStatsService(deps.ManagedContainerStats)
-	}
-
-	return runtimeModuleDeps{
-		input:                 deps,
-		cleanupService:        cleanupService,
-		provisioningService:   provisioningService,
-		containerStatsService: containerStatsService,
-		imageRuntime:          runtimeapp.NewImageRuntimeService(deps.ImageRuntime),
-		containerFiles:        runtimeapp.NewContainerFileService(deps.FileRuntime, log.Named("runtime_container_file_service")),
-		containerPublicHost:   runtimecontracts.ResolveRuntimePublishedAccessHost(cfg.Container.PublicHost, cfg.Container.AccessHost),
-	}
-}
-
-func buildBackgroundJobs(deps runtimeModuleDeps) []BackgroundJob {
-	_ = deps
-	return nil
-}
-
-type runtimeObservabilityDeps struct {
-	statsProvider runtimeports.ManagedContainerStatsReader
-}
-
-func buildRuntimeObservabilityDeps(deps runtimeModuleDeps) runtimeObservabilityDeps {
-	return runtimeObservabilityDeps{
-		statsProvider: deps.containerStatsService,
-	}
-}
-
-type runtimeContestDeps struct {
-	containerFiles contestports.AWDContainerFileWriter
-}
-
-func buildRuntimeContestDeps(deps runtimeModuleDeps) runtimeContestDeps {
-	return runtimeContestDeps{
-		containerFiles: deps.containerFiles,
+		BackgroundJobs:            module.BackgroundJobs,
+		ImageRuntime:              module.ImageRuntime,
+		RuntimeStatsProvider:      module.RuntimeStatsProvider,
+		ContestContainerFiles:     module.ContainerFiles,
+		ProvisioningService:       module.ProvisioningService,
+		CleanupService:            module.CleanupService,
+		ProvisioningRuntime:       module.ProvisioningRuntime,
+		CleanupRuntime:            module.CleanupRuntime,
+		FileRuntime:               module.FileRuntime,
+		ManagedContainerInventory: module.ManagedContainerInventory,
+		InteractiveExecutor:       module.InteractiveExecutor,
 	}
 }

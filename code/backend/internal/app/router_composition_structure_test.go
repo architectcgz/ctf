@@ -272,8 +272,8 @@ func TestBuildContainerRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
 		"func BuildRuntimeModule(root *Root) (*RuntimeModule, error) {",
 		"defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, allocationRepo, defaultNode)",
 		"nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)",
-		"module := runtimemodule.Build(",
-		"runtimemodule.Deps{",
+		"module := containerruntime.Build(",
+		"containerruntime.Deps{",
 		"module.BackgroundJobs",
 	}
 	for _, marker := range expected {
