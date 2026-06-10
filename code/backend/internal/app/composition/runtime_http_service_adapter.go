@@ -2,7 +2,6 @@ package composition
 
 import (
 	"context"
-	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"fmt"
 	"time"
 
@@ -111,7 +110,7 @@ func (a *runtimeHTTPServiceAdapter) IssueAWDDefenseSSHTicket(ctx context.Context
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}
 	if !a.defenseSSHEnabled || a.defenseSSHHost == "" || a.defenseSSHPort <= 0 {
-		return nil, contestcontracts.ErrAWDDefenseSSHUnavailable.WithCause(fmt.Errorf("awd defense ssh gateway is not enabled"))
+		return nil, instancecontracts.ErrAWDDefenseSSHUnavailable.WithCause(fmt.Errorf("awd defense ssh gateway is not enabled"))
 	}
 
 	ticket, expiresAt, err := a.proxyTickets.IssueAWDDefenseSSHTicket(ctx, user, contestID, serviceID)

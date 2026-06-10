@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/infrastructure/redislock"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type startupRuntimeReconcilerStub struct {
@@ -66,14 +67,14 @@ type startupRuntimeContestRepoStub struct {
 	calls    []startupRuntimeContestCall
 }
 
-func (s *startupRuntimeContestRepoStub) AddPausedDurationToActiveAWDContests(_ context.Context, activeAt time.Time, recoveryKey string, targetPausedSeconds int64, updatedAt time.Time) ([]*contestcontracts.Contest, error) {
+func (s *startupRuntimeContestRepoStub) AddPausedDurationToActiveAWDContests(_ context.Context, activeAt time.Time, recoveryKey string, targetPausedSeconds int64, updatedAt time.Time) ([]*instanceports.ActiveAWDContestPause, error) {
 	s.calls = append(s.calls, startupRuntimeContestCall{
 		activeAt:            activeAt,
 		recoveryKey:         recoveryKey,
 		targetPausedSeconds: targetPausedSeconds,
 		updatedAt:           updatedAt,
 	})
-	result := make([]*contestcontracts.Contest, 0, len(s.contests))
+	result := make([]*instanceports.ActiveAWDContestPause, 0, len(s.contests))
 	for _, contest := range s.contests {
 		if contest == nil {
 			continue
@@ -92,7 +93,11 @@ func (s *startupRuntimeContestRepoStub) AddPausedDurationToActiveAWDContests(_ c
 		contest.PausedSeconds = cloned.PausedSeconds
 		contest.RuntimeRecoveryKey = cloned.RuntimeRecoveryKey
 		contest.RuntimeRecoveryAppliedSeconds = cloned.RuntimeRecoveryAppliedSeconds
-		result = append(result, &cloned)
+		result = append(result, &instanceports.ActiveAWDContestPause{
+			ID:            cloned.ID,
+			EndTime:       cloned.EndTime,
+			PausedSeconds: cloned.PausedSeconds,
+		})
 	}
 	return result, nil
 }

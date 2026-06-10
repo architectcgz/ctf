@@ -103,6 +103,12 @@ type TeacherInstanceRow struct {
 	CreatedAt       time.Time
 }
 
+type ActiveAWDContestPause struct {
+	ID            int64
+	EndTime       time.Time
+	PausedSeconds int64
+}
+
 type ProxyTicketClaims struct {
 	UserID               int64                     `json:"user_id"`
 	Username             string                    `json:"username"`
@@ -149,6 +155,17 @@ type AWDDefenseSSHScope struct {
 	ShareScope        instanceentity.ShareScope
 	EditablePaths     []string `gorm:"-"`
 	ProtectedPaths    []string `gorm:"-"`
+}
+
+type AWDProxyTrafficEventInput struct {
+	ContestID      int64
+	AttackerTeamID int64
+	VictimTeamID   int64
+	ServiceID      int64
+	AWDChallengeID int64
+	Method         string
+	Path           string
+	StatusCode     int
 }
 
 type AWDDefenseSSHSession struct {

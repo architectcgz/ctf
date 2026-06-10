@@ -14,4 +14,6 @@ var (
 	ErrContainerCreateFailed = apperror.Define(12005, "容器创建失败", http.StatusInternalServerError)
 	ErrContainerStartFailed  = apperror.Define(12006, "容器启动失败", http.StatusInternalServerError)
 	ErrProxyTicketInvalid    = apperror.Define(15003, "实例代理票据无效或已过期", http.StatusUnauthorized)
+
+	ErrAWDDefenseSSHUnavailable = apperror.Define(14028, "AWD SSH 防守入口未启用", http.StatusConflict)
 )

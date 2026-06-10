@@ -30,7 +30,6 @@ var moduleDependencyBaseline = map[string]struct{}{
 	"contest -> identity":            {},
 	"contest -> instance":            {},
 	"instance -> identity":           {},
-	"instance -> contest":            {},
 	"ops -> auth":                    {},
 	"ops -> challenge":               {},
 	"ops -> contest":                 {},

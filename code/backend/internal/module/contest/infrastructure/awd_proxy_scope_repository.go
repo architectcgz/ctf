@@ -1,0 +1,163 @@
+package infrastructure
+
+import (
+	"context"
+	"fmt"
+
+	"gorm.io/gorm"
+
+	contestentity "ctf-platform/internal/module/contest/entity"
+	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceports "ctf-platform/internal/module/instance/ports"
+)
+
+func (r *AWDRepository) FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*instanceports.AWDTargetProxyScope, error) {
+	if userID <= 0 || contestID <= 0 || serviceID <= 0 || victimTeamID <= 0 {
+		return nil, nil
+	}
+
+	var scope instanceports.AWDTargetProxyScope
+	query := r.dbWithContext(ctx).
+		Table("contests AS co").
+		Select(`
+			inst.id AS instance_id,
+			inst.access_url AS access_url,
+			inst.share_scope AS share_scope,
+			inst.status AS status,
+			inst.runtime_details AS runtime_details,
+			co.id AS contest_id,
+			tm.team_id AS attacker_team_id,
+			victim.id AS victim_team_id,
+			cas.id AS service_id,
+			cas.awd_challenge_id AS awd_challenge_id
+		`).
+		Joins("JOIN team_members AS tm ON tm.contest_id = co.id AND tm.user_id = ?", userID).
+		Joins("JOIN teams AS victim ON victim.contest_id = co.id AND victim.id = ? AND victim.deleted_at IS NULL", victimTeamID).
+		Joins("JOIN contest_awd_services AS cas ON cas.contest_id = co.id AND cas.id = ? AND cas.is_visible = ? AND cas.deleted_at IS NULL", serviceID, true).
+		Joins("JOIN instances AS inst ON inst.contest_id = co.id AND inst.team_id = victim.id AND inst.service_id = cas.id").
+		Joins("JOIN awd_rounds AS round ON round.contest_id = co.id AND round.status = ?", contestentity.AWDRoundStatusRunning)
+	query = query.
+		Joins(
+			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = tm.team_id AND %s.scope_type = ? AND %s.service_id = 0 AND %s.control_type = ?",
+				"attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl", "attacker_team_retired_ctl"),
+			contestentity.AWDScopeControlScopeTeam,
+			contestentity.AWDScopeControlTypeRetired,
+		).
+		Joins(
+			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = tm.team_id AND %s.scope_type = ? AND %s.service_id = cas.id AND %s.control_type = ?",
+				"attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl", "attacker_service_disabled_ctl"),
+			contestentity.AWDScopeControlScopeTeamService,
+			contestentity.AWDScopeControlTypeServiceDisabled,
+		).
+		Joins(
+			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = victim.id AND %s.scope_type = ? AND %s.service_id = 0 AND %s.control_type = ?",
+				"victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl", "victim_team_retired_ctl"),
+			contestentity.AWDScopeControlScopeTeam,
+			contestentity.AWDScopeControlTypeRetired,
+		).
+		Joins(
+			fmt.Sprintf("LEFT JOIN awd_scope_controls AS %s ON %s.contest_id = co.id AND %s.team_id = victim.id AND %s.scope_type = ? AND %s.service_id = cas.id AND %s.control_type = ?",
+				"victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl", "victim_service_disabled_ctl"),
+			contestentity.AWDScopeControlScopeTeamService,
+			contestentity.AWDScopeControlTypeServiceDisabled,
+		)
+	err := query.
+		Where("co.id = ? AND co.mode = ? AND co.status IN ? AND co.deleted_at IS NULL", contestID, contestentity.ContestModeAWD, []string{contestentity.ContestStatusRunning, contestentity.ContestStatusFrozen}).
+		Where("tm.team_id <> victim.id").
+		Where("attacker_team_retired_ctl.id IS NULL").
+		Where("attacker_service_disabled_ctl.id IS NULL").
+		Where("victim_team_retired_ctl.id IS NULL").
+		Where("victim_service_disabled_ctl.id IS NULL").
+		Where("inst.status IN ?", []string{
+			instancecontracts.InstanceStatusPending,
+			instancecontracts.InstanceStatusCreating,
+			instancecontracts.InstanceStatusRunning,
+			instancecontracts.InstanceStatusFailed,
+		}).
+		Order("inst.created_at DESC, inst.id DESC").
+		Limit(1).
+		Scan(&scope).Error
+	if err != nil {
+		return nil, err
+	}
+	if scope.InstanceID <= 0 {
+		return nil, nil
+	}
+	scope.AccessURL = instancecontracts.ResolveInstanceAliasAccessURL(scope.AccessURL, scope.RuntimeDetails)
+	return &scope, nil
+}
+
+func (r *AWDRepository) FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*instanceports.AWDDefenseSSHScope, error) {
+	if userID <= 0 || contestID <= 0 || serviceID <= 0 {
+		return nil, nil
+	}
+
+	var row struct {
+		InstanceID        int64                        `gorm:"column:instance_id"`
+		ContainerID       string                       `gorm:"column:container_id"`
+		WorkspaceRevision int64                        `gorm:"column:workspace_revision"`
+		ShareScope        instancecontracts.ShareScope `gorm:"column:share_scope"`
+		ContestID         int64                        `gorm:"column:contest_id"`
+		TeamID            int64                        `gorm:"column:team_id"`
+		ServiceID         int64                        `gorm:"column:service_id"`
+		AWDChallengeID    int64                        `gorm:"column:awd_challenge_id"`
+	}
+	query := r.dbWithContext(ctx).
+		Table("contests AS co").
+		Select(`
+			inst.id AS instance_id,
+			ws.container_id AS container_id,
+			ws.workspace_revision AS workspace_revision,
+			inst.share_scope AS share_scope,
+			co.id AS contest_id,
+			tm.team_id AS team_id,
+			cas.id AS service_id,
+			cas.awd_challenge_id AS awd_challenge_id
+		`).
+		Joins("JOIN team_members AS tm ON tm.contest_id = co.id AND tm.user_id = ?", userID).
+		Joins("JOIN contest_awd_services AS cas ON cas.contest_id = co.id AND cas.id = ? AND cas.is_visible = ? AND cas.deleted_at IS NULL", serviceID, true).
+		Joins("JOIN instances AS inst ON inst.contest_id = co.id AND inst.team_id = tm.team_id AND inst.service_id = cas.id").
+		Joins("JOIN awd_defense_workspaces AS ws ON ws.contest_id = co.id AND ws.team_id = tm.team_id AND ws.service_id = cas.id AND ws.instance_id = inst.id").
+		Joins("JOIN awd_rounds AS round ON round.contest_id = co.id AND round.status = ?", contestentity.AWDRoundStatusRunning)
+	query = joinActiveAWDScopeControls(query, "co.id", "tm.team_id", "cas.id", "defense_team_retired_ctl", "defense_service_disabled_ctl")
+	err := query.
+		Where("co.id = ? AND co.mode = ? AND co.status IN ? AND co.deleted_at IS NULL", contestID, contestentity.ContestModeAWD, []string{contestentity.ContestStatusRunning, contestentity.ContestStatusFrozen}).
+		Where("defense_team_retired_ctl.id IS NULL").
+		Where("defense_service_disabled_ctl.id IS NULL").
+		Where("inst.status = ?", instancecontracts.InstanceStatusRunning).
+		Where("ws.status = ? AND ws.container_id <> '' AND ws.workspace_revision > 0", contestentity.AWDDefenseWorkspaceStatusRunning).
+		Order("inst.created_at DESC, inst.id DESC").
+		Limit(1).
+		Scan(&row).Error
+	if err != nil {
+		return nil, err
+	}
+	scope := instanceports.AWDDefenseSSHScope{
+		InstanceID:        row.InstanceID,
+		ContestID:         row.ContestID,
+		TeamID:            row.TeamID,
+		ServiceID:         row.ServiceID,
+		AWDChallengeID:    row.AWDChallengeID,
+		WorkspaceRevision: row.WorkspaceRevision,
+		ContainerID:       row.ContainerID,
+		ShareScope:        row.ShareScope,
+	}
+	if scope.InstanceID <= 0 {
+		return nil, nil
+	}
+	return &scope, nil
+}
+
+func joinActiveAWDScopeControls(query *gorm.DB, contestExpr, teamExpr, serviceExpr, retiredAlias, disabledAlias string) *gorm.DB {
+	retiredJoin := fmt.Sprintf(
+		"LEFT JOIN awd_scope_controls AS %[1]s ON %[1]s.contest_id = %[2]s AND %[1]s.team_id = %[3]s AND %[1]s.scope_type = ? AND %[1]s.service_id = 0 AND %[1]s.control_type = ?",
+		retiredAlias, contestExpr, teamExpr,
+	)
+	disabledJoin := fmt.Sprintf(
+		"LEFT JOIN awd_scope_controls AS %[1]s ON %[1]s.contest_id = %[2]s AND %[1]s.team_id = %[3]s AND %[1]s.scope_type = ? AND %[1]s.service_id = %[4]s AND %[1]s.control_type = ?",
+		disabledAlias, contestExpr, teamExpr, serviceExpr,
+	)
+	return query.
+		Joins(retiredJoin, contestentity.AWDScopeControlScopeTeam, contestentity.AWDScopeControlTypeRetired).
+		Joins(disabledJoin, contestentity.AWDScopeControlScopeTeamService, contestentity.AWDScopeControlTypeServiceDisabled)
+}

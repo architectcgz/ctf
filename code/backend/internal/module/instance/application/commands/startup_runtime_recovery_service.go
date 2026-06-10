@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/infrastructure/redislock"
-	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	startuprecovery "ctf-platform/internal/module/instance/startuprecovery"
 	"ctf-platform/internal/shared/lockkeepalive"
 )
@@ -30,7 +30,7 @@ type startupRuntimeDesiredReconciler interface {
 }
 
 type startupRuntimeContestRepository interface {
-	AddPausedDurationToActiveAWDContests(ctx context.Context, activeAt time.Time, recoveryKey string, targetPausedSeconds int64, updatedAt time.Time) ([]*contestcontracts.Contest, error)
+	AddPausedDurationToActiveAWDContests(ctx context.Context, activeAt time.Time, recoveryKey string, targetPausedSeconds int64, updatedAt time.Time) ([]*instanceports.ActiveAWDContestPause, error)
 }
 
 type startupRuntimeInstanceRepository interface {
@@ -307,7 +307,7 @@ func (s *StartupRuntimeRecoveryService) extendActiveAWDContests(ctx context.Cont
 	return nil
 }
 
-func startupRuntimeContestEffectiveEndTime(contest *contestcontracts.Contest) time.Time {
+func startupRuntimeContestEffectiveEndTime(contest *instanceports.ActiveAWDContestPause) time.Time {
 	if contest == nil {
 		return time.Time{}
 	}

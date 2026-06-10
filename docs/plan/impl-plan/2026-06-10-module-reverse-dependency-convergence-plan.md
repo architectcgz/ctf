@@ -1,6 +1,6 @@
 # 模块反向依赖收口方案（container_runtime→contest、instance→contest）
 
-> 状态：Draft
+> 状态：Implemented
 > 事实源：`code/backend/internal/module/architecture_baseline_test.go` 当前 baseline、`docs/design/backend-module-boundary-target.md` 目标版图、各模块当前 import 事实
 > 替代：无；落地后稳定结论回收到 `docs/architecture/backend/07-modular-monolith-refactor.md`
 

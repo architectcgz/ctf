@@ -40,6 +40,7 @@ import (
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -49,6 +50,7 @@ import (
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
+	instanceports "ctf-platform/internal/module/instance/ports"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
@@ -77,6 +79,32 @@ type FlowEnvelope struct {
 	Code    int             `json:"code"`
 	Message string          `json:"message"`
 	Data    json.RawMessage `json:"data"`
+}
+
+type systemProxyTicketReader struct {
+	instances *instanceinfra.Repository
+	awdScopes *contestinfra.AWDRepository
+}
+
+func (r systemProxyTicketReader) FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error) {
+	if r.instances == nil {
+		return nil, nil
+	}
+	return r.instances.FindByID(ctx, id)
+}
+
+func (r systemProxyTicketReader) FindAWDTargetProxyScope(ctx context.Context, userID, contestID, serviceID, victimTeamID int64) (*instanceports.AWDTargetProxyScope, error) {
+	if r.awdScopes == nil {
+		return nil, nil
+	}
+	return r.awdScopes.FindAWDTargetProxyScope(ctx, userID, contestID, serviceID, victimTeamID)
+}
+
+func (r systemProxyTicketReader) FindAWDDefenseSSHScope(ctx context.Context, userID, contestID, serviceID int64) (*instanceports.AWDDefenseSSHScope, error) {
+	if r.awdScopes == nil {
+		return nil, nil
+	}
+	return r.awdScopes.FindAWDDefenseSSHScope(ctx, userID, contestID, serviceID)
 }
 
 type FlowLoginResponse struct {
@@ -382,6 +410,10 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	})
 	instanceRepo := instanceinfra.NewRepository(db)
 	proxyTicketInstanceRepo := instanceinfra.NewRepository(db)
+	proxyTicketReader := systemProxyTicketReader{
+		instances: proxyTicketInstanceRepo,
+		awdScopes: contestinfra.NewAWDRepository(db),
+	}
 	root, err := composition.BuildRoot(cfg, logger, db, cache)
 	if err != nil {
 		t.Fatalf("build composition root: %v", err)
@@ -394,7 +426,7 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil, logger)
 	runtimeInstanceCommands := instancecmd.NewInstanceService(instanceRepo, systemRuntimeCleanerAdapter{cleaner: runtimeCleanupService}, &cfg.Container, logger)
 	runtimeInstanceQueries := instanceqry.NewInstanceService(instanceRepo, &cfg.Container)
-	runtimeProxyTicketService := instanceqry.NewProxyTicketService(instanceinfra.NewProxyTicketStore(cache), proxyTicketInstanceRepo, cfg.Container.ProxyTicketTTL)
+	runtimeProxyTicketService := instanceqry.NewProxyTicketService(instanceinfra.NewProxyTicketStore(cache), proxyTicketReader, cfg.Container.ProxyTicketTTL)
 	runtimeService := runtimeadapters.NewHTTPService(
 		runtimeInstanceCommands,
 		runtimeInstanceQueries,

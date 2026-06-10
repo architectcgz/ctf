@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
@@ -254,7 +253,7 @@ func (r *failingTrafficRecorder) RecordRuntimeProxyTrafficEvent(context.Context,
 	return errors.New("persist failed")
 }
 
-func (r *failingTrafficRecorder) RecordAWDProxyTrafficEvent(context.Context, contestcontracts.AWDProxyTrafficEventInput) error {
+func (r *failingTrafficRecorder) RecordAWDProxyTrafficEvent(context.Context, instanceports.AWDProxyTrafficEventInput) error {
 	r.calls++
 	return errors.New("persist failed")
 }

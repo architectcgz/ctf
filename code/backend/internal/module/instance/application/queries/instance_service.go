@@ -7,7 +7,6 @@ import (
 
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
-	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instancedomain "ctf-platform/internal/module/instance/domain"
@@ -19,6 +18,8 @@ type InstanceService struct {
 	cfg        *config.ContainerConfig
 	pagination config.PaginationConfig
 }
+
+const persistedContestModeAWD = "awd"
 
 type instanceQueryRepository interface {
 	instanceports.InstanceUserLookupRepository
@@ -152,7 +153,7 @@ func toInstanceInfo(inst instanceports.UserVisibleInstanceRow, now time.Time, pu
 	if status == instancecontracts.InstanceStatusRunning {
 		accessURL = instancecontracts.ResolveInstancePublicAccessURL(inst.AccessURL, publicHost, accessHost)
 	}
-	if inst.ContestMode == contestcontracts.ContestModeAWD {
+	if inst.ContestMode == persistedContestModeAWD {
 		accessURL = ""
 	}
 	return &instancecontracts.InstanceInfo{

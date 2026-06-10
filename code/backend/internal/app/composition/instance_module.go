@@ -11,7 +11,6 @@ import (
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
-	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	instancehttp "ctf-platform/internal/module/instance/api/http"
@@ -49,7 +48,7 @@ type InstanceModule struct {
 
 type runtimeProxyTrafficRecorder interface {
 	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
-	RecordAWDProxyTrafficEvent(ctx context.Context, event contestcontracts.AWDProxyTrafficEventInput) error
+	RecordAWDProxyTrafficEvent(ctx context.Context, event instanceports.AWDProxyTrafficEventInput) error
 }
 
 func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceModule {
@@ -71,6 +70,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	allocationRepo := containerruntimeinfra.NewAllocationRepository(root.DB())
 	awdRepo := contestinfra.NewAWDRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
+	proxyTicketReader := newInstanceProxyTicketReader(instanceRepo, awdRepo)
 	defaultCleanupService := module.CleanupService
 	var cleanupService interface {
 		instanceports.RuntimeCleaner
@@ -90,7 +90,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 	commandService := instancecmd.NewInstanceService(instanceRepo, cleanupService, &cfg.Container, log.Named("instance_service")).SetEventBus(root.Events)
 	queryService := instanceqry.NewInstanceService(instanceRepo, &cfg.Container, cfg.Pagination)
-	proxyTicketService := buildRuntimeProxyTicketService(root, instanceRepo)
+	proxyTicketService := buildRuntimeProxyTicketService(root, proxyTicketReader)
 	maintenanceService := instancecmd.NewInstanceMaintenanceService(
 		newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, inventoryRepo),
 		maintenanceRuntime,
@@ -102,7 +102,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	maintenanceService.RegisterStoppingCleanupWakeup(root.Events)
 	startupRecovery := instancecmd.NewStartupRuntimeRecoveryService(
 		maintenanceService,
-		contestinfra.NewRepository(root.DB()),
+		newStartupRuntimeContestRepository(contestinfra.NewRepository(root.DB())),
 		instanceRepo,
 		instanceinfra.NewPlatformRuntimeStateStore(root.Cache()),
 		0,
@@ -146,7 +146,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 			cfg.Container.DefenseSSHPort,
 		),
 		startupRecovery:      startupRecovery,
-		proxyTrafficRecorder: awdRepo,
+		proxyTrafficRecorder: newInstanceProxyTrafficRecorder(awdRepo),
 	}
 }
 

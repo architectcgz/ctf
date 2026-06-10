@@ -9,7 +9,6 @@ import (
 
 	"gorm.io/gorm"
 
-	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
 )
@@ -137,7 +136,7 @@ func (r *Repository) FindAccessibleByIDForUser(ctx context.Context, instanceID, 
 		Table("instances AS inst").
 		Select("inst.*").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
-		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, contestcontracts.ContestRegistrationStatusApproved)
+		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, persistedContestRegistrationStatusApproved)
 	query = joinAWDActiveScopeControls(query, "inst.contest_id", "inst.team_id", "inst.service_id", "inst_team_retired_ctl", "inst_service_disabled_ctl")
 	err := applyAWDActiveScopeFilter(query, "inst.service_id", "inst_team_retired_ctl", "inst_service_disabled_ctl").
 		Where("inst.id = ?", instanceID).
@@ -183,7 +182,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]ins
 		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = inst.service_id AND cas.deleted_at IS NULL").
 		Joins("LEFT JOIN challenges c ON c.id = inst.challenge_id").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
-		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, contestcontracts.ContestRegistrationStatusApproved)
+		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, persistedContestRegistrationStatusApproved)
 	query = joinAWDActiveScopeControls(query, "inst.contest_id", "inst.team_id", "inst.service_id", "list_team_retired_ctl", "list_service_disabled_ctl")
 	err := applyAWDActiveScopeFilter(query, "inst.service_id", "list_team_retired_ctl", "list_service_disabled_ctl").
 		Where("inst.status IN ?", []string{
@@ -194,7 +193,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]ins
 			instancecontracts.InstanceStatusFailed,
 			instancecontracts.InstanceStatusExpired,
 		}).
-		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", contestcontracts.ContestModeAWD).
+		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", persistedContestModeAWD).
 		Where(strings.Join([]string{
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
 			"(inst.share_scope = 'shared' AND inst.contest_id IS NOT NULL AND reg.user_id IS NOT NULL)",
@@ -260,7 +259,7 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter instancepo
 		Joins("LEFT JOIN contest_awd_services AS cas ON cas.id = i.service_id AND cas.deleted_at IS NULL").
 		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
 		Where("i.status <> ?", instancecontracts.InstanceStatusStopped).
-		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", contestcontracts.ContestModeAWD).
+		Where("(co.mode IS NULL OR co.mode <> ? OR cas.id IS NOT NULL)", persistedContestModeAWD).
 		Where("u.role = ? AND u.deleted_at IS NULL", instanceports.InstanceUserRoleStudent)
 
 	query = applyTeacherInstanceQueryFilters(query, filter, now)
@@ -708,11 +707,11 @@ func buildInstanceMetadata(contestMode, serviceSnapshot, serviceName, challengeT
 		Difficulty: difficulty,
 		FlagType:   flagType,
 	}
-	if contestMode != contestcontracts.ContestModeAWD {
+	if contestMode != persistedContestModeAWD {
 		return metadata
 	}
 
-	snapshot, err := contestcontracts.DecodeContestAWDServiceSnapshot(serviceSnapshot)
+	snapshot, err := decodeContestAWDServiceSnapshotReadModel(serviceSnapshot)
 	if err != nil {
 		return metadata
 	}

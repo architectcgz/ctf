@@ -5,6 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	instanceports "ctf-platform/internal/module/instance/ports"
@@ -38,8 +39,9 @@ func BuildAWDDefenseSSHGateway(root *Root, runtime *ContainerRuntimeModule) *AWD
 	if repo == nil {
 		return nil
 	}
+	proxyTicketReader := newInstanceProxyTicketReader(repo, contestinfra.NewAWDRepository(root.DB()))
 
-	proxyTicketService := buildRuntimeProxyTicketService(root, repo)
+	proxyTicketService := buildRuntimeProxyTicketService(root, proxyTicketReader)
 	if proxyTicketService == nil {
 		return nil
 	}
@@ -51,7 +53,7 @@ func BuildAWDDefenseSSHGateway(root *Root, runtime *ContainerRuntimeModule) *AWD
 
 	return NewAWDDefenseSSHGateway(
 		proxyTicketService,
-		repo,
+		proxyTicketReader,
 		executor,
 		hostKeyPath,
 		cfg.Container.DefenseSSHPort,

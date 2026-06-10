@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/auditlog"
-	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
@@ -25,7 +24,7 @@ func (r *recordingAuditRecorder) Record(_ context.Context, entry auditlog.Entry)
 type recordingProxyTrafficRecorder struct {
 	instanceID int64
 	userID     int64
-	awdEvent   *contestcontracts.AWDProxyTrafficEventInput
+	awdEvent   *instanceports.AWDProxyTrafficEventInput
 
 	method      string
 	requestPath string
@@ -43,7 +42,7 @@ func (r *recordingProxyTrafficRecorder) RecordRuntimeProxyTrafficEvent(_ context
 	return nil
 }
 
-func (r *recordingProxyTrafficRecorder) RecordAWDProxyTrafficEvent(_ context.Context, event contestcontracts.AWDProxyTrafficEventInput) error {
+func (r *recordingProxyTrafficRecorder) RecordAWDProxyTrafficEvent(_ context.Context, event instanceports.AWDProxyTrafficEventInput) error {
 	r.awdEvent = &event
 	r.method = event.Method
 	r.requestPath = event.Path
