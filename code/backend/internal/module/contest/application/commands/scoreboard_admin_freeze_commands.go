@@ -31,19 +31,26 @@ func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID
 	contest.FreezeTime = &storedFreezeTime
 	previousStatus := contest.Status
 	previousVersion := contest.StatusVersion
+	relay := scoreboardUpdatedRelay(contestID, now)
+	dedupeKey := scoreboardOperationDedupeKey(contestID, "freeze", now)
 	effectiveNow := contestdomain.ContestEffectiveNow(contest, now)
 	if !effectiveNow.Before(storedFreezeTime) {
 		contest.Status = contestentity.ContestStatusFrozen
 		contest.StatusVersion++
 		contest.UpdatedAt = now
-		if err := s.applyScoreboardStatusTransition(ctx, contest, previousStatus, previousVersion); err != nil {
+		if err := s.applyScoreboardStatusTransition(ctx, contest, previousStatus, previousVersion, relay, dedupeKey); err != nil {
 			return err
 		}
-	} else if err := s.repo.Update(ctx, contest); err != nil {
-		return apperror.ErrInternal.WithCause(err)
+	} else {
+		if err := s.updateScoreboardContest(ctx, contest, relay, dedupeKey); err != nil {
+			return err
+		}
 	}
 
-	return s.emitScoreboardUpdatedRealtime(ctx, contestID, "freeze", now)
+	if s.outbox == nil {
+		return s.emitScoreboardUpdatedRealtime(ctx, contestID, "freeze", now)
+	}
+	return nil
 }
 
 func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contestID int64) error {
@@ -63,21 +70,47 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 	previousStatus := contest.Status
 	previousVersion := contest.StatusVersion
 	now := time.Now().UTC()
+	relay := scoreboardUpdatedRelay(contestID, now)
+	dedupeKey := scoreboardOperationDedupeKey(contestID, "unfreeze", now)
 	if contest.Status == contestentity.ContestStatusFrozen && !contestdomain.ContestHasEndedAt(contest, now) {
 		contest.Status = contestentity.ContestStatusRunning
 		contest.StatusVersion++
 		contest.UpdatedAt = now
-		if err := s.applyScoreboardStatusTransition(ctx, contest, previousStatus, previousVersion); err != nil {
+		if err := s.applyScoreboardStatusTransition(ctx, contest, previousStatus, previousVersion, relay, dedupeKey); err != nil {
 			return err
 		}
-	} else if err := s.repo.Update(ctx, contest); err != nil {
-		return apperror.ErrInternal.WithCause(err)
+	} else {
+		if err := s.updateScoreboardContest(ctx, contest, relay, dedupeKey); err != nil {
+			return err
+		}
 	}
 
-	return s.emitScoreboardUpdatedRealtime(ctx, contestID, "unfreeze", now)
+	if s.outbox == nil {
+		return s.emitScoreboardUpdatedRealtime(ctx, contestID, "unfreeze", now)
+	}
+	return nil
 }
 
-func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Context, contest *contestentity.Contest, fromStatus string, fromVersion int64) error {
+func (s *ScoreboardAdminService) updateScoreboardContest(ctx context.Context, contest *contestentity.Contest, relay contestcontracts.RealtimeRelayEvent, dedupeKey string) error {
+	if s.outbox != nil {
+		if s.realtimeTx == nil {
+			return apperror.ErrInternal.WithCause(fmt.Errorf("scoreboard realtime transaction repository unavailable"))
+		}
+		if err := s.realtimeTx.UpdateContestWithRealtimeRelay(ctx, contest, relay, dedupeKey); err != nil {
+			if err == contestdomain.ErrContestNotFound {
+				return contestcontracts.ErrContestNotFound
+			}
+			return apperror.ErrInternal.WithCause(err)
+		}
+		return nil
+	}
+	if err := s.repo.Update(ctx, contest); err != nil {
+		return apperror.ErrInternal.WithCause(err)
+	}
+	return nil
+}
+
+func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Context, contest *contestentity.Contest, fromStatus string, fromVersion int64, relay contestcontracts.RealtimeRelayEvent, dedupeKey string) error {
 	if contest == nil {
 		return contestcontracts.ErrContestNotFound
 	}
@@ -85,7 +118,7 @@ func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Con
 		return apperror.ErrInternal.WithCause(fmt.Errorf("scoreboard transition repository unavailable"))
 	}
 
-	result, err := s.transition.UpdateContestWithStatusTransition(ctx, contest, contestdomain.ContestStatusTransition{
+	transition := contestdomain.ContestStatusTransition{
 		ContestID:         contest.ID,
 		FromStatus:        fromStatus,
 		ToStatus:          contest.Status,
@@ -93,7 +126,17 @@ func (s *ScoreboardAdminService) applyScoreboardStatusTransition(ctx context.Con
 		Reason:            contestdomain.ContestStatusTransitionReasonManualUpdate,
 		OccurredAt:        contest.UpdatedAt.UTC(),
 		AppliedBy:         "scoreboard_admin_service",
-	})
+	}
+	var result contestdomain.ContestStatusTransitionResult
+	var err error
+	if s.outbox != nil {
+		if s.realtimeTx == nil {
+			return apperror.ErrInternal.WithCause(fmt.Errorf("scoreboard realtime transaction repository unavailable"))
+		}
+		result, err = s.realtimeTx.UpdateContestWithStatusTransitionAndRealtimeRelay(ctx, contest, transition, relay, dedupeKey)
+	} else {
+		result, err = s.transition.UpdateContestWithStatusTransition(ctx, contest, transition)
+	}
 	if err != nil {
 		if err == contestdomain.ErrContestNotFound {
 			return contestcontracts.ErrContestNotFound

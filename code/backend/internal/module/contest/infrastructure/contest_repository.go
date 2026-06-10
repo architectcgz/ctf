@@ -39,15 +39,7 @@ func (r *Repository) Update(ctx context.Context, contest *contestentity.Contest)
 	updateResult := r.dbWithContext(ctx).
 		Model(&contestentity.Contest{}).
 		Where("id = ? AND deleted_at IS NULL", contest.ID).
-		Updates(map[string]any{
-			"title":       contest.Title,
-			"description": contest.Description,
-			"mode":        contest.Mode,
-			"start_time":  contest.StartTime,
-			"end_time":    contest.EndTime,
-			"freeze_time": contest.FreezeTime,
-			"updated_at":  updatedAt,
-		})
+		Updates(contestUpdateFields(contest, updatedAt))
 	if updateResult.Error != nil {
 		return updateResult.Error
 	}

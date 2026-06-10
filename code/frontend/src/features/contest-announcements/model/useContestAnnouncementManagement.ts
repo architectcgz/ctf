@@ -97,14 +97,10 @@ export function useContestAnnouncementManagement(
     loading.value = true
     loadError.value = ''
     try {
+      const sync = await getAdminContestAnnouncementSync(contestId.value)
       const result = await getAdminContestAnnouncements(contestId.value)
       announcements.value = result
-      try {
-        const sync = await getAdminContestAnnouncementSync(contestId.value)
-        syncCursor.value = nextContestAnnouncementSyncCursor(sync)
-      } catch {
-        syncCursor.value = ''
-      }
+      syncCursor.value = nextContestAnnouncementSyncCursor(sync)
       return result
     } catch (error) {
       const message = humanizeRequestError(error, '公告加载失败，请稍后重试。')

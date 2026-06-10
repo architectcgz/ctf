@@ -96,6 +96,9 @@ describe('useContestAnnouncementManagement', () => {
 
     expect(adminApiMocks.getAdminContestAnnouncements).toHaveBeenCalledWith('contest-1')
     expect(adminApiMocks.getAdminContestAnnouncementSync).toHaveBeenCalledWith('contest-1')
+    expect(adminApiMocks.getAdminContestAnnouncementSync.mock.invocationCallOrder[0]).toBeLessThan(
+      adminApiMocks.getAdminContestAnnouncements.mock.invocationCallOrder[0]
+    )
     expect(result.announcements.value).toEqual([
       expect.objectContaining({
         id: 'announcement-1',

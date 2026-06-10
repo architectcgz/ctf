@@ -58,8 +58,8 @@ export function useContestDetailDataLoader({
     }
 
     try {
-      announcements.value = await getAnnouncements(contest.value.id)
       const sync = await getAnnouncementSync(contest.value.id)
+      announcements.value = await getAnnouncements(contest.value.id)
       announcementSyncCursor = nextContestAnnouncementSyncCursor(sync)
       announcementsError.value = ''
     } catch {
@@ -115,11 +115,18 @@ export function useContestDetailDataLoader({
 
     try {
       const contestData = await getContestDetail(nextContestId)
-      const [teamData, challengesData, announcementsData] = await Promise.all([
-        getMyTeam(nextContestId).catch(() => null),
-        getContestChallenges(nextContestId).catch(() => []),
-        getAnnouncements(nextContestId).catch(() => null),
-      ])
+      const teamDataPromise = getMyTeam(nextContestId).catch(() => null)
+      const challengesDataPromise = getContestChallenges(nextContestId).catch(() => [])
+      let announcementsData: ContestAnnouncement[] | null = null
+      let announcementSyncAnchor: Awaited<ReturnType<typeof getAnnouncementSync>> | null = null
+      try {
+        announcementSyncAnchor = await getAnnouncementSync(nextContestId)
+        announcementsData = await getAnnouncements(nextContestId)
+      } catch {
+        announcementsData = null
+        announcementSyncAnchor = null
+      }
+      const [teamData, challengesData] = await Promise.all([teamDataPromise, challengesDataPromise])
 
       if (currentToken !== requestToken) {
         return
@@ -133,11 +140,10 @@ export function useContestDetailDataLoader({
 
       if (announcementsData) {
         announcements.value = announcementsData
-        try {
-          const sync = await getAnnouncementSync(nextContestId)
-          announcementSyncCursor = nextContestAnnouncementSyncCursor(sync)
+        if (announcementSyncAnchor) {
+          announcementSyncCursor = nextContestAnnouncementSyncCursor(announcementSyncAnchor)
           announcementsError.value = ''
-        } catch {
+        } else {
           announcementSyncCursor = ''
           announcementsError.value = '公告加载失败，请稍后刷新重试'
         }

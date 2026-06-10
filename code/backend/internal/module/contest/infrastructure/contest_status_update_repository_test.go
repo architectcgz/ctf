@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -200,5 +201,79 @@ func TestRepositoryUpdateContestWithStatusTransitionUsesCompareAndSet(t *testing
 	}
 	if persisted.Status != contestentity.ContestStatusRunning || persisted.Title != "manual-cas-updated" {
 		t.Fatalf("unexpected persisted contest: %+v", persisted)
+	}
+}
+
+func TestRepositoryUpdateContestWithStatusTransitionAndRealtimeRelayRollsBackOnOutboxError(t *testing.T) {
+	t.Parallel()
+
+	db := contesttestsupport.SetupContestTestDB(t)
+	repo := contestinfra.NewRepository(db)
+	now := time.Now().UTC()
+	contest := &contestentity.Contest{
+		ID:            912,
+		Title:         "rollback-check",
+		Mode:          contestentity.ContestModeJeopardy,
+		Status:        contestentity.ContestStatusRunning,
+		StatusVersion: 2,
+		StartTime:     now.Add(-time.Hour),
+		EndTime:       now.Add(time.Hour),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}
+	if err := db.Create(contest).Error; err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+
+	contest.Status = contestentity.ContestStatusFrozen
+	contest.StatusVersion = 3
+	contest.UpdatedAt = now.Add(time.Minute)
+	_, err := repo.UpdateContestWithStatusTransitionAndRealtimeRelay(
+		context.Background(),
+		contest,
+		contestdomain.ContestStatusTransition{
+			ContestID:         contest.ID,
+			FromStatus:        contestentity.ContestStatusRunning,
+			ToStatus:          contestentity.ContestStatusFrozen,
+			FromStatusVersion: 2,
+			Reason:            contestdomain.ContestStatusTransitionReasonManualUpdate,
+			OccurredAt:        contest.UpdatedAt,
+			AppliedBy:         "test",
+		},
+		contestcontracts.RealtimeRelayEvent{
+			EventName: contestcontracts.EventScoreboardUpdated,
+			Delivery:  contestcontracts.RealtimeDeliveryChannel,
+			Channel:   contestcontracts.ScoreboardChannel(contest.ID),
+			Payload:   func() {},
+			Timestamp: contest.UpdatedAt,
+		},
+		"contest:912:scoreboard:rollback",
+	)
+	if err == nil {
+		t.Fatal("expected outbox marshal failure")
+	}
+
+	var stored contestentity.Contest
+	if err := db.First(&stored, contest.ID).Error; err != nil {
+		t.Fatalf("load contest: %v", err)
+	}
+	if stored.Status != contestentity.ContestStatusRunning || stored.StatusVersion != 2 {
+		t.Fatalf("expected contest update to roll back, got %+v", stored)
+	}
+
+	var transitionCount int64
+	if err := db.Model(&contestentity.ContestStatusTransition{}).Where("contest_id = ?", contest.ID).Count(&transitionCount).Error; err != nil {
+		t.Fatalf("count transitions: %v", err)
+	}
+	if transitionCount != 0 {
+		t.Fatalf("expected transition insert to roll back, got %d", transitionCount)
+	}
+
+	var outboxCount int64
+	if err := db.Model(&contestentity.ContestRealtimeOutbox{}).Where("dedupe_key = ?", "contest:912:scoreboard:rollback").Count(&outboxCount).Error; err != nil {
+		t.Fatalf("count outbox: %v", err)
+	}
+	if outboxCount != 0 {
+		t.Fatalf("expected no outbox row, got %d", outboxCount)
 	}
 }
