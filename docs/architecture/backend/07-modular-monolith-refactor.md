@@ -513,7 +513,7 @@ flowchart LR
     Contest -->|instance-facing ports| Instance
 
     Practice -->|challenge contracts| Challenge
-    Practice -.contest.domain reviewed exception.-> Contest
+    Practice -->|contest contracts| Contest
     Practice -->|container contracts / ports| ContainerRuntime
     Practice -->|identity contracts| Identity
     Practice -->|instance ports| Instance
@@ -533,7 +533,7 @@ flowchart LR
 | `container_runtime` | 无 | 无 | 容器 capability owner 不再依赖业务模块；runtime-agent checker 通道通过中性 `SandboxExecutor` / `SandboxExecJob` 协议承载，contest 侧用 `SandboxCheckerRunner` 适配业务 checker 语义 |
 | `ops` | `auth`、`challenge`、`contest`、`identity`、`practice` | `auth/contracts`、`challenge/contracts`、`contest/contracts`、`identity/contracts`、`practice/contracts` | 通知 handler 依赖 token service；通知命令服务订阅 challenge / practice 事件；contest realtime relay 订阅公告 / 榜单 / AWD 预览事件；运行时概览通过 `ContainerRuntimeModule` 注入，不形成模块 import |
 | `contest` | `auth`、`challenge`、`container_runtime`、`identity`、`instance` | `auth/contracts`、`challenge/contracts` / `ports`、`container_runtime/contracts` / `ports`、`identity/contracts`、`instance/ports` | 实时 WebSocket handler 解析 auth ticket；公告、榜单刷新和 AWD 预览进度发布 `contest/contracts` 事件交给 `ops` relay；竞赛/AWD 读 challenge catalog；AWD HTTP / checker / cleanup runtime contract 使用 `container_runtime` 能力；AWD proxy / defense SSH 准入查询由 contest infrastructure 实现 instance-facing ports |
-| `practice` | `challenge`、`container_runtime`、`contest`、`identity`、`instance` | `challenge/contracts`、`container_runtime/contracts` / `ports`、`contest/domain`、`identity/contracts`、`instance/ports` | `practice` 不再直接依赖 `assessment/contracts`；能力画像增量更新与推荐缓存刷新统一通过 `practice.flag_accepted` 事件由 `assessment` 消费。生产装配依赖 `InstanceModule` 暴露的 practice-facing 实例仓储和运行时服务；topology / managed-container shape 使用 `container_runtime` capability contract / ports |
+| `practice` | `challenge`、`container_runtime`、`contest`、`identity`、`instance` | `challenge/contracts`、`container_runtime/contracts` / `ports`、`contest/contracts`、`identity/contracts`、`instance/contracts` | `practice` 不再直接依赖 `assessment/contracts`；能力画像增量更新与推荐缓存刷新统一通过 `practice.flag_accepted` 事件由 `assessment` 消费。生产装配依赖 `InstanceModule` 暴露的 practice-facing 实例仓储和运行时服务；topology / managed-container shape 使用 `container_runtime` capability contract / ports |
 | `instance` | `identity` | `identity/contracts` | 当前 owner 代码集中在 `internal/module/instance/*`；对外 contract 由 `instance/contracts` 暴露；AWD proxy / SSH 准入经自身 ports 由 app composition 注入 contest 实现，production instance 不直接 import contest |
 | `teaching_query` | `assessment`、`challenge`、`contest`、`identity` | `assessment/contracts`、`challenge/contracts`、`contest/contracts`、`identity/contracts` | overview 已拆到独立 `OverviewService`，班级详情洞察已拆到独立 `ClassInsightService`，学生复盘已拆到独立 `StudentReviewService`，目录查询继续由 `Service` owner 承接 |
 
@@ -542,6 +542,7 @@ flowchart LR
 - `/api/v1/users/me/progress` 与 `/api/v1/users/me/timeline` 已在 2026-05-12 phase 4 / slice 1 并回 `practice/application/queries` 与 `practice/api/http`，因为它们只读取 practice 自有事实，不再保留独立 `practice_readmodel` 模块。
 - `teaching_query` 目前没有直接 import `practice`、`contest` 写模块；教师视角的大部分数据仍由本模块基础设施层做只读拼装，其中基础用户存在性与班级归属校验已改为复用 `identity.Users`，`GetOverview` 已在 2026-05-12 phase 4 / slice 2 拆到独立 `application/queries/overview_service.go`，`GetClassSummary / GetClassTrend / GetClassReview` 已在同日 phase 4 / slice 3 拆到独立 `application/queries/class_insight_service.go`，`GetStudentProgress / GetStudentRecommendations / GetStudentTimeline / GetStudentEvidence / GetStudentAttackSessions` 已在 2026-05-13 phase 4 / slice 4 拆到独立 `application/queries/student_review_service.go`，HTTP handler 现在分别依赖 `Service`、`OverviewService`、`ClassInsightService` 与 `StudentReviewService`。
 - legacy `runtime` 模块已退役，`runtime -> instance`、`runtime -> practice`、`runtime -> contest` 与 `runtime -> container_runtime` 这些历史边不再作为生产模块依赖存在。
+- `moduleDependencyBaseline` 已不再包含 `container_runtime -> contest` 与 `instance -> contest`。checker 执行契约已经迁到 `container_runtime` 中性 `SandboxExecutor`，AWD proxy / defense SSH 准入查询已经按 `contest -> instance/ports` 的方向由 contest 实现并注入 instance。
 - `PracticeInstanceRepository` 与 `PracticeRuntimeService` 现在由 `composition.InstanceModule` 本地组合 `instanceinfra.Repository`、`container_runtime` capability service、contest AWD runtime state repository 和显式 adapter 后暴露给 `practice`。
 - `contest/application/statusmachine` 当前只编排竞赛状态迁移副作用；冻结榜快照与比赛结束时 AWD 运行态缓存清理由 `contest/ports.ContestStatusSideEffectStore` 配合 `contest/infrastructure/status_side_effect_store.go` 落到 Redis。`contest/application/jobs/status_updater.go` 的调度锁则通过 `contest/ports.ContestStatusUpdateLockStore` 配合 `contest/infrastructure/status_update_lock_store.go` 落到 Redis；`contest/application/jobs/AWDRoundUpdater` 的 scheduler lock、round lock、current round、round flags 和 live service status cache 则通过 `contest/ports.AWDRoundStateStore` 配合 `contest/infrastructure/awd_round_state_store.go` 落到 Redis。
 
@@ -576,6 +577,27 @@ flowchart LR
 
 这部分共享能力通过 query / service / ports 暴露，而不是把 Docker 细节散落到各业务模块。
 
+### 5.5 模块边界与数据访问
+
+模块边界是逻辑边界，不是数据库边界，这条口径长期有效：
+
+- 模块边界约束 `internal/module/*` 之间的 Go import 方向与 owner 职责，以 `code/backend/internal/module/architecture_baseline_test.go` 为准；它不要求每个模块独立数据库。当前所有业务模块共享同一个 PostgreSQL。
+- 架构守卫（`architecture_test.go`、`architecture_baseline_test.go`）检查的是 import 方向与跨层依赖，不限制一条 SQL 能 join 哪些物理表。
+- 因此跨 owner 表的只读 join 是正当且高效的；不为设想中的物理隔离，在单体里禁止 join 或改成多次查询。
+
+跨 owner 查询的归属，先看有没有明确主导 owner：
+
+- 有主导 owner（查询主导语义属某业务模块，只是顺带读其他模块的表字段）：放该 owner 模块实现。owner 可只读 join 其他模块的物理表，但用自己的 row struct scan，不 import 对方的 GORM model。
+- 跨模块协作优先依赖倒置（DIP）：消费方在自己的 `ports` 定义最小接口，owner 在自己的 `infrastructure` 实现，由 `app/composition` 注入，从而保持合规的依赖方向（对应 5.3 表格“端口由消费方定义，适配器在 provider 侧实现”）。
+  - 例：AWD 代理准入查询（准入判定 + 实例访问信息）主导 owner 是 `contest`。instance proxy 入口经 `instance/ports` 定义的 resolver 接口消费，`contest` 实现该接口（一条 SQL 同时 join contest 自有 AWD 表与 `instances` 表），composition 注入；依赖方向是 `contest -> instance`，instance 不反向 import contest。详见 `docs/plan/impl-plan/2026-06-10-module-reverse-dependency-convergence-plan.md`。
+- 无单一 owner（跨多个 owner 的教师视角、复盘、统计报表）：进 `teaching_query` 查询聚合模块，不挂在任一业务 owner，也不反向回写 owner 表。
+
+服务化演进接缝：
+
+- 单体内 DIP 接口的实现用 DB join；接口稳定意味着将来若真拆库或拆服务，实现可从 join 演进到读模型（CQRS / 事件驱动物化）或跨服务 RPC，消费方无感。
+- 所以现在用 join 实现与将来不矛盾，反而把演进点预留在接口处；不为尚未发生的拆库提前付读模型 / 缓存一致性的复杂度（参见 `## 7. 当前架构约束` “沿 application + ports + contracts 边界抽离”）。
+- 两种“分布式”要分清：runtime-agent 执行面分布式（见 5.4）让容器与 checker 执行落到远程节点，但业务状态仍在中心 API 的共享库，跨表 join 不受影响；业务模块拆成独立库 / 服务当前无此计划（见 `## 1. 结论`，保持单体）。
+
 ---
 
 ## 6. 数据 ownership 口径
@@ -596,7 +618,7 @@ flowchart LR
 - 审计、通知、运营支撑视图：`ops`。
 - 教师视角或复盘视角的跨模块查询聚合：`teaching_query`。
 
-当一个查询同时跨越多个 owner 时，优先进入查询聚合模块，而不是在某个业务 owner 模块里继续堆跨表 SQL。
+当一个查询同时跨越多个 owner 时，先判断它是否有明确主导 owner（按 5.5）：有主导 owner 的查询放该 owner 模块，以只读 join + 依赖倒置的方式读其他模块的表；只有无单一 owner 的报表 / 复盘聚合才进入查询聚合模块。两种情况都不在消费方模块里反向堆其他 owner 的写模型或越权 SQL。
 
 ---
 
