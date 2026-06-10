@@ -7,8 +7,8 @@ import (
 
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
@@ -18,7 +18,7 @@ func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
 	engine := &fakeRuntimeEngine{}
 	service := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	now := time.Now()
-	if err := repo.db.Create(&runtimeentity.PortAllocation{
+	if err := repo.db.Create(&containerruntimeentity.PortAllocation{
 		Port:      30001,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -43,7 +43,7 @@ func TestRuntimeCleanupServiceReleasesRuntimeDetailHostPort(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -59,7 +59,7 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailHostPort(t *testing.T) {
 	service := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	now := time.Now()
 	instanceID := int64(3201)
-	if err := repo.db.Create(&runtimeentity.PortAllocation{
+	if err := repo.db.Create(&containerruntimeentity.PortAllocation{
 		Port:       30011,
 		InstanceID: &instanceID,
 		CreatedAt:  now,
@@ -85,7 +85,7 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailHostPort(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30011).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30011).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -101,7 +101,7 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailSubnet(t *testing.T) {
 	service := runtimecmd.NewRuntimeCleanupService(engine, repo, nil)
 	now := time.Now()
 	instanceID := int64(3202)
-	if err := repo.db.Create(&runtimeentity.NetworkAllocation{
+	if err := repo.db.Create(&containerruntimeentity.NetworkAllocation{
 		Subnet:     "10.10.5.0/24",
 		InstanceID: &instanceID,
 		NetworkKey: runtimecontracts.TopologyDefaultNetworkKey,
@@ -128,7 +128,7 @@ func TestRuntimeCleanupServiceReleasesOwnedRuntimeDetailSubnet(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.NetworkAllocation{}).Where("subnet = ?", "10.10.5.0/24").Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.NetworkAllocation{}).Where("subnet = ?", "10.10.5.0/24").Count(&count).Error; err != nil {
 		t.Fatalf("count subnet allocations: %v", err)
 	}
 	if count != 0 {
@@ -145,7 +145,7 @@ func TestRuntimeCleanupServiceKeepsForeignOwnedRuntimeDetailHostPort(t *testing.
 	now := time.Now()
 	ownerInstanceID := int64(3202)
 	otherInstanceID := int64(3203)
-	if err := repo.db.Create(&runtimeentity.PortAllocation{
+	if err := repo.db.Create(&containerruntimeentity.PortAllocation{
 		Port:       30012,
 		InstanceID: &otherInstanceID,
 		CreatedAt:  now,
@@ -171,7 +171,7 @@ func TestRuntimeCleanupServiceKeepsForeignOwnedRuntimeDetailHostPort(t *testing.
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30012).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30012).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 1 {

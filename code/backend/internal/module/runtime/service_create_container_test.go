@@ -8,8 +8,8 @@ import (
 	"ctf-platform/internal/config"
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
@@ -87,7 +87,7 @@ func TestServiceCreateContainerReservesAllocatedHostPort(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", hostPort).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", hostPort).Count(&count).Error; err != nil {
 		t.Fatalf("count reserved port allocation: %v", err)
 	}
 	if count != 1 {
@@ -144,7 +144,7 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 		t.Fatalf("expected network cleanup, got %s", engine.removedNetworkID)
 	}
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30000).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30000).Count(&count).Error; err != nil {
 		t.Fatalf("count released reserved port allocation: %v", err)
 	}
 	if count != 0 {

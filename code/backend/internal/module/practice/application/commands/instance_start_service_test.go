@@ -7,8 +7,8 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/shared/taxonomy"
 	"sync/atomic"
 	"testing"
@@ -454,7 +454,7 @@ func TestStartChallengeReusesStoppingInstanceInsteadOfCreatingNewOne(t *testing.
 		t.Fatalf("expected no replacement instance to be created, got %d rows", count)
 	}
 
-	stored, err := runtimeinfrarepo.NewManagedInstanceRepository(db).FindByID(context.Background(), 9007)
+	stored, err := instanceinfra.NewRepository(db).FindByID(context.Background(), 9007)
 	if err != nil {
 		t.Fatalf("load stored stopping instance: %v", err)
 	}

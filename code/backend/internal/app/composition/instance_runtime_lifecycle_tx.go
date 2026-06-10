@@ -6,16 +6,16 @@ import (
 
 	"gorm.io/gorm"
 
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 func withInstanceRuntimeLifecycleTx(
 	ctx context.Context,
 	db *gorm.DB,
 	instanceRepo *instanceinfra.Repository,
-	allocationRepo *runtimeinfra.AllocationRepository,
-	fn func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error,
+	allocationRepo *containerruntimeinfra.AllocationRepository,
+	fn func(instanceTx *instanceinfra.Repository, allocationTx *containerruntimeinfra.AllocationRepository) error,
 ) error {
 	if db == nil || instanceRepo == nil || allocationRepo == nil || fn == nil {
 		return fmt.Errorf("instance runtime lifecycle transaction is not configured")

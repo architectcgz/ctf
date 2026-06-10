@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -65,7 +66,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	}
 
 	inventoryRepo := runtimeinfra.NewActiveContainerInventoryRepository(root.DB())
-	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
+	allocationRepo := containerruntimeinfra.NewAllocationRepository(root.DB())
 	awdRepo := runtimeinfra.NewAWDRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultCleanupService := module.CleanupService
@@ -94,14 +95,14 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		cleanupService,
 		&cfg.Container,
 		log.Named("instance_maintenance_service"),
-		runtimeinfra.NewStoppingCleanupLockStore(root.Cache(), cfg.Container.CleanupLockTTL, log.Named("instance_stopping_cleanup_lock")),
+		instanceinfra.NewStoppingCleanupLockStore(root.Cache(), cfg.Container.CleanupLockTTL, log.Named("instance_stopping_cleanup_lock")),
 	)
 	maintenanceService.RegisterStoppingCleanupWakeup(root.Events)
 	startupRecovery := instancecmd.NewStartupRuntimeRecoveryService(
 		maintenanceService,
 		contestinfra.NewRepository(root.DB()),
 		instanceRepo,
-		runtimeinfra.NewPlatformRuntimeStateStore(root.Cache()),
+		instanceinfra.NewPlatformRuntimeStateStore(root.Cache()),
 		0,
 		log.Named("startup_runtime_recovery"),
 	).SetLockTTL(cfg.Container.StartupRecoveryLockTTL)
@@ -110,7 +111,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		startupRecovery.Start,
 		startupRecovery.Stop,
 	))
-	cleaner := runtimeinfra.NewCleaner(
+	cleaner := instanceinfra.NewCleaner(
 		maintenanceService,
 		root.Cache(),
 		cfg.Container.CleanupLockTTL,
@@ -286,12 +287,12 @@ func (a *instanceMaintenanceRuntimeAdapter) StartContainer(ctx context.Context, 
 type instanceMaintenanceRepositoryAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
-	allocationRepo *runtimeinfra.AllocationRepository
+	allocationRepo *containerruntimeinfra.AllocationRepository
 	awdRepo        *runtimeinfra.AWDRepository
 	inventoryRepo  *runtimeinfra.ActiveContainerInventoryRepository
 }
 
-func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository, inventoryRepo *runtimeinfra.ActiveContainerInventoryRepository) *instanceMaintenanceRepositoryAdapter {
+func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *containerruntimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository, inventoryRepo *runtimeinfra.ActiveContainerInventoryRepository) *instanceMaintenanceRepositoryAdapter {
 	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil && inventoryRepo == nil {
 		return nil
 	}
@@ -308,7 +309,7 @@ func (a *instanceMaintenanceRepositoryAdapter) UpdateStatusAndReleasePort(ctx co
 	if a == nil || a.db == nil || a.instanceRepo == nil || a.allocationRepo == nil {
 		return nil
 	}
-	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error {
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *containerruntimeinfra.AllocationRepository) error {
 		release, err := instanceTx.UpdateStatus(ctx, id, status)
 		if err != nil || release == nil {
 			return err
@@ -385,7 +386,7 @@ func (a *instanceMaintenanceRepositoryAdapter) FinalizeStoppedRuntime(ctx contex
 	if a == nil || a.db == nil || a.instanceRepo == nil || a.allocationRepo == nil {
 		return nil
 	}
-	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error {
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *containerruntimeinfra.AllocationRepository) error {
 		release, err := instanceTx.FinalizeStoppedRuntime(ctx, id)
 		if err != nil || release == nil {
 			return err
@@ -408,11 +409,11 @@ func (a *instanceMaintenanceRepositoryAdapter) ListActiveContainerIDs(ctx contex
 type practiceInstanceRepositoryAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
-	allocationRepo *runtimeinfra.AllocationRepository
+	allocationRepo *containerruntimeinfra.AllocationRepository
 	awdRepo        *runtimeinfra.AWDRepository
 }
 
-func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository) *practiceInstanceRepositoryAdapter {
+func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *containerruntimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository) *practiceInstanceRepositoryAdapter {
 	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil {
 		return nil
 	}
@@ -436,7 +437,7 @@ func (a *practiceInstanceRepositoryAdapter) FailProvisioning(ctx context.Context
 		return false, nil
 	}
 	changed := false
-	err := withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error {
+	err := withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *containerruntimeinfra.AllocationRepository) error {
 		release, failed, err := instanceTx.FailProvisioning(ctx, id)
 		if err != nil {
 			return err
@@ -482,7 +483,7 @@ func (a *practiceInstanceRepositoryAdapter) UpdateStatusAndReleasePort(ctx conte
 	if a == nil || a.db == nil || a.instanceRepo == nil || a.allocationRepo == nil {
 		return nil
 	}
-	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error {
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *containerruntimeinfra.AllocationRepository) error {
 		release, err := instanceTx.UpdateStatus(ctx, id, status)
 		if err != nil || release == nil {
 			return err

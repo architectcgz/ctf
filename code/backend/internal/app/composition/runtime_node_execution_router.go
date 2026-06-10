@@ -11,12 +11,12 @@ import (
 	"ctf-platform/internal/config"
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 type runtimeNodeClient interface {
@@ -57,7 +57,7 @@ type runtimeNodeExecutionRouter struct {
 	logger          *zap.Logger
 	allocationRepo  runtimeNodeAllocationRepository
 	stateRepo       runtimeNodeStateRepository
-	nodeRepo        *runtimeinfra.RuntimeNodeRepository
+	nodeRepo        *containerruntimeinfra.RuntimeNodeRepository
 	defaultNodeName string
 
 	mu               sync.Mutex
@@ -135,7 +135,7 @@ func newRuntimeNodeExecutionRouter(
 	logger *zap.Logger,
 	allocationRepo runtimeNodeAllocationRepository,
 	stateRepo runtimeNodeStateRepository,
-	nodeRepo *runtimeinfra.RuntimeNodeRepository,
+	nodeRepo *containerruntimeinfra.RuntimeNodeRepository,
 	defaultNodeName string,
 ) *runtimeNodeExecutionRouter {
 	if allocationRepo == nil || stateRepo == nil || nodeRepo == nil {

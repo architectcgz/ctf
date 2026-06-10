@@ -20,6 +20,8 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -38,7 +40,7 @@ import (
 type contestInstanceTestInstanceRepository struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfrarepo.Repository
-	allocationRepo *runtimeinfrarepo.AllocationRepository
+	allocationRepo *containerruntimeinfra.AllocationRepository
 	awdRepo        *runtimeinfrarepo.AWDRepository
 }
 
@@ -46,7 +48,7 @@ func newContestInstanceTestInstanceRepository(db *gorm.DB) *contestInstanceTestI
 	return &contestInstanceTestInstanceRepository{
 		db:             db,
 		instanceRepo:   instanceinfrarepo.NewRepository(db),
-		allocationRepo: runtimeinfrarepo.NewAllocationRepository(db),
+		allocationRepo: containerruntimeinfra.NewAllocationRepository(db),
 		awdRepo:        runtimeinfrarepo.NewAWDRepository(db),
 	}
 }
@@ -631,8 +633,8 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&runtimeentity.AWDServiceOperation{},
 		&runtimeentity.AWDScopeControl{},
 		&runtimeentity.AWDDefenseWorkspace{},
-		&runtimeentity.PortAllocation{},
-		&runtimeentity.NetworkAllocation{},
+		&containerruntimeentity.PortAllocation{},
+		&containerruntimeentity.NetworkAllocation{},
 		&contestentity.Submission{},
 	); err != nil {
 		t.Fatalf("auto migrate contest instance test schema: %v", err)

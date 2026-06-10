@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -61,7 +63,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	t.Parallel()
 
 	db := contesttestsupport.SetupAWDTestDB(t)
-	if err := db.AutoMigrate(&runtimeentity.PortAllocation{}, &runtimeentity.NetworkAllocation{}); err != nil {
+	if err := db.AutoMigrate(&containerruntimeentity.PortAllocation{}, &containerruntimeentity.NetworkAllocation{}); err != nil {
 		t.Fatalf("auto migrate runtime allocations: %v", err)
 	}
 	now := time.Now().UTC()
@@ -163,7 +165,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		}
 	}
 
-	for _, allocation := range []runtimeentity.PortAllocation{
+	for _, allocation := range []containerruntimeentity.PortAllocation{
 		{Port: 32011, InstanceID: int64Ptr(1001), CreatedAt: now, UpdatedAt: now},
 		{Port: 32012, InstanceID: int64Ptr(1002), CreatedAt: now, UpdatedAt: now},
 		{Port: 32013, InstanceID: int64Ptr(1004), CreatedAt: now, UpdatedAt: now},
@@ -172,7 +174,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			t.Fatalf("create port allocation: %v", err)
 		}
 	}
-	for _, allocation := range []runtimeentity.NetworkAllocation{
+	for _, allocation := range []containerruntimeentity.NetworkAllocation{
 		{Subnet: "10.81.1.0/24", InstanceID: int64Ptr(1001), NetworkKey: runtimecontracts.TopologyDefaultNetworkKey, CreatedAt: now, UpdatedAt: now},
 		{Subnet: "10.81.2.0/24", InstanceID: int64Ptr(1002), NetworkKey: runtimecontracts.TopologyDefaultNetworkKey, CreatedAt: now, UpdatedAt: now},
 		{Subnet: "10.82.1.0/24", InstanceID: int64Ptr(1004), NetworkKey: runtimecontracts.TopologyDefaultNetworkKey, CreatedAt: now, UpdatedAt: now},
@@ -381,7 +383,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	}
 
 	var remainingEndedContestAllocations int64
-	if err := db.Model(&runtimeentity.PortAllocation{}).
+	if err := db.Model(&containerruntimeentity.PortAllocation{}).
 		Where("instance_id IN ?", []int64{1001, 1002}).
 		Count(&remainingEndedContestAllocations).Error; err != nil {
 		t.Fatalf("count ended contest port allocations: %v", err)
@@ -389,7 +391,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	if remainingEndedContestAllocations != 0 {
 		t.Fatalf("expected ended contest port allocations to be released, got %d", remainingEndedContestAllocations)
 	}
-	if err := db.Model(&runtimeentity.NetworkAllocation{}).
+	if err := db.Model(&containerruntimeentity.NetworkAllocation{}).
 		Where("instance_id IN ?", []int64{1001, 1002}).
 		Count(&remainingEndedContestAllocations).Error; err != nil {
 		t.Fatalf("count ended contest network allocations: %v", err)
@@ -399,7 +401,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	}
 
 	var otherContestAllocations int64
-	if err := db.Model(&runtimeentity.PortAllocation{}).
+	if err := db.Model(&containerruntimeentity.PortAllocation{}).
 		Where("instance_id = ?", 1004).
 		Count(&otherContestAllocations).Error; err != nil {
 		t.Fatalf("count other contest port allocations: %v", err)
@@ -407,7 +409,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 	if otherContestAllocations != 1 {
 		t.Fatalf("expected other contest port allocation to stay, got %d", otherContestAllocations)
 	}
-	if err := db.Model(&runtimeentity.NetworkAllocation{}).
+	if err := db.Model(&containerruntimeentity.NetworkAllocation{}).
 		Where("instance_id = ?", 1004).
 		Count(&otherContestAllocations).Error; err != nil {
 		t.Fatalf("count other contest network allocations: %v", err)
@@ -447,7 +449,7 @@ func collectCleanedContainerIDs(t *testing.T, instances []*instanceentity.Instan
 type endedContestRuntimeStateStoreAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
-	allocationRepo *runtimeinfra.AllocationRepository
+	allocationRepo *containerruntimeinfra.AllocationRepository
 	awdRepo        *runtimeinfra.AWDRepository
 }
 
@@ -458,7 +460,7 @@ func newEndedContestRuntimeStateStore(db *gorm.DB) *endedContestRuntimeStateStor
 	return &endedContestRuntimeStateStoreAdapter{
 		db:             db,
 		instanceRepo:   instanceinfra.NewRepository(db),
-		allocationRepo: runtimeinfra.NewAllocationRepository(db),
+		allocationRepo: containerruntimeinfra.NewAllocationRepository(db),
 		awdRepo:        runtimeinfra.NewAWDRepository(db),
 	}
 }

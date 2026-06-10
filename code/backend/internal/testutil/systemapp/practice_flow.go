@@ -37,6 +37,7 @@ import (
 	challengeruntime "ctf-platform/internal/module/challenge/runtime"
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
@@ -57,7 +58,6 @@ import (
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	teachingqueryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
@@ -378,7 +378,7 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	flagHandler := challengehttp.NewFlagHandler(flagCommandService, flagQueryService)
 
 	practiceRepo := practiceinfra.NewRepositoryWithRuntimePortOwner(db, func(db *gorm.DB) runtimeports.PortReservationOwner {
-		return runtimeinfrarepo.NewAllocationRepository(db)
+		return containerruntimeinfra.NewAllocationRepository(db)
 	})
 	instanceRepo := instanceinfra.NewRepository(db)
 	proxyTicketInstanceRepo := instanceinfra.NewRepository(db)

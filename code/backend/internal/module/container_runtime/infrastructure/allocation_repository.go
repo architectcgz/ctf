@@ -6,8 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -15,8 +13,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
 )
 
 type AllocationRepository struct {
@@ -392,44 +389,6 @@ func (r *AllocationRepository) releaseAllPortsForInstance(ctx context.Context, i
 	return r.dbWithContext(ctx).
 		Where("instance_id = ?", instanceID).
 		Delete(&runtimeentity.PortAllocation{}).Error
-}
-
-func (r *AllocationRepository) ListAllocatedPorts(ctx context.Context) ([]int, error) {
-	var ports []int
-	if err := r.dbWithContext(ctx).Model(&runtimeentity.PortAllocation{}).Pluck("port", &ports).Error; err == nil {
-		return ports, nil
-	} else if !strings.Contains(strings.ToLower(err.Error()), "no such table") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
-		return nil, err
-	}
-
-	var accessURLs []string
-	if err := r.dbWithContext(ctx).Model(&runtimestate.RuntimeManagedInstance{}).
-		Where("status IN ?", []string{
-			runtimestate.RuntimeManagedInstanceStatusCreating,
-			runtimestate.RuntimeManagedInstanceStatusRunning,
-		}).
-		Where("access_url <> ''").
-		Pluck("access_url", &accessURLs).Error; err != nil {
-		return nil, err
-	}
-
-	ports = make([]int, 0, len(accessURLs))
-	for _, rawURL := range accessURLs {
-		parsed, err := url.Parse(rawURL)
-		if err != nil {
-			continue
-		}
-		portValue := parsed.Port()
-		if portValue == "" {
-			continue
-		}
-		port, err := strconv.Atoi(portValue)
-		if err != nil {
-			continue
-		}
-		ports = append(ports, port)
-	}
-	return ports, nil
 }
 
 func isPortAllocationConflict(err error) bool {

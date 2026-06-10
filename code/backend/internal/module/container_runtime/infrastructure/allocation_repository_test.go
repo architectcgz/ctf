@@ -11,9 +11,9 @@ import (
 	"gorm.io/gorm"
 
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestReserveAvailablePortExcludingSkipsExcludedPort(t *testing.T) {

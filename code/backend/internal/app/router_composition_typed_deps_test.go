@@ -340,11 +340,11 @@ func TestPracticeModuleWiresRuntimePortOwnerFromCompositionRoot(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"runtimeinfra \"ctf-platform/internal/module/runtime/infrastructure\"",
+		"containerruntimeinfra \"ctf-platform/internal/module/container_runtime/infrastructure\"",
 		"runtimeports \"ctf-platform/internal/module/container_runtime/ports\"",
 		"RuntimePortOwnerFor: runtimePortOwnerFor",
 		"func runtimePortOwnerFor(db *gorm.DB) runtimeports.PortReservationOwner",
-		"return runtimeinfra.NewAllocationRepository(db)",
+		"return containerruntimeinfra.NewAllocationRepository(db)",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -353,15 +353,15 @@ func TestPracticeModuleWiresRuntimePortOwnerFromCompositionRoot(t *testing.T) {
 	}
 }
 
-func TestRuntimeRepositoryDoesNotOwnAllocationPersistence(t *testing.T) {
+func TestContainerRuntimeRepositoryOwnsAllocationPersistence(t *testing.T) {
 	t.Parallel()
 
-	allocationContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "allocation_repository.go"))
+	allocationContent, err := os.ReadFile(filepath.Join("..", "module", "container_runtime", "infrastructure", "allocation_repository.go"))
 	if err != nil {
-		t.Fatalf("read runtime allocation_repository.go: %v", err)
+		t.Fatalf("read container_runtime allocation_repository.go: %v", err)
 	}
 
-	otherInfrastructure := runtimeInfrastructureSourceExcept(t, "allocation_repository.go")
+	runtimeInfrastructure := runtimeInfrastructureSourceExcept(t)
 	allocationSource := string(allocationContent)
 	expected := []string{
 		"type AllocationRepository struct",
@@ -373,7 +373,7 @@ func TestRuntimeRepositoryDoesNotOwnAllocationPersistence(t *testing.T) {
 	}
 	for _, marker := range expected {
 		if !strings.Contains(allocationSource, marker) {
-			t.Fatalf("runtime allocation repository should own marker %s", marker)
+			t.Fatalf("container_runtime allocation repository should own marker %s", marker)
 		}
 	}
 
@@ -384,8 +384,8 @@ func TestRuntimeRepositoryDoesNotOwnAllocationPersistence(t *testing.T) {
 		"SyncInstanceHostPortForRestart",
 	}
 	for _, marker := range blocked {
-		if strings.Contains(otherInfrastructure, marker) {
-			t.Fatalf("runtime allocation persistence should not leak outside allocation_repository.go marker %s", marker)
+		if strings.Contains(runtimeInfrastructure, marker) {
+			t.Fatalf("runtime infrastructure should not own allocation persistence marker %s", marker)
 		}
 	}
 }
@@ -436,10 +436,6 @@ func TestRuntimeRepositoryDoesNotOwnAWDPersistence(t *testing.T) {
 func TestRuntimeRepositoryDoesNotOwnStatePersistence(t *testing.T) {
 	t.Parallel()
 
-	managedContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "managed_instance_repository.go"))
-	if err != nil {
-		t.Fatalf("read managed_instance_repository.go: %v", err)
-	}
 	inventoryContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "active_container_inventory_repository.go"))
 	if err != nil {
 		t.Fatalf("read active_container_inventory_repository.go: %v", err)
@@ -455,17 +451,11 @@ func TestRuntimeRepositoryDoesNotOwnStatePersistence(t *testing.T) {
 
 	otherInfrastructure := runtimeInfrastructureSourceExcept(
 		t,
-		"managed_instance_repository.go",
 		"active_container_inventory_repository.go",
 		"container_node_index_repository.go",
 		"acl_migration_state_repository.go",
 	)
 	expectedByFile := map[string][]string{
-		string(managedContent): {
-			"type ManagedInstanceRepository struct",
-			"func NewManagedInstanceRepository(db *gorm.DB) *ManagedInstanceRepository",
-			"func (r *ManagedInstanceRepository) FindByID",
-		},
 		string(inventoryContent): {
 			"type ActiveContainerInventoryRepository struct",
 			"func NewActiveContainerInventoryRepository(db *gorm.DB) *ActiveContainerInventoryRepository",
@@ -492,7 +482,6 @@ func TestRuntimeRepositoryDoesNotOwnStatePersistence(t *testing.T) {
 	}
 
 	blocked := []string{
-		"func (r *ManagedInstanceRepository) FindByID",
 		"func (r *ActiveContainerInventoryRepository) ListActiveContainerIDs",
 		"func (r *ContainerNodeIndexRepository) FindRuntimeNodeIDByContainerID",
 		"func (r *ACLMigrationStateRepository) ListInstancesNeedingACLHandleMigration",

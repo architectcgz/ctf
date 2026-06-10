@@ -14,10 +14,10 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testing.T) {
@@ -115,7 +115,7 @@ func TestServiceCreateTopologyCanKeepEntryPointPrivate(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -370,7 +370,7 @@ func TestServiceDestroyManagedInstanceMarksStoppingThenBackgroundCleanupRemovesR
 		ExpiresAt:      time.Now().Add(time.Hour),
 	}
 	seedInstance(t, repo.db, instance)
-	if err := repo.db.Create(&runtimeentity.PortAllocation{Port: 30001, InstanceID: &instance.ID}).Error; err != nil {
+	if err := repo.db.Create(&containerruntimeentity.PortAllocation{Port: 30001, InstanceID: &instance.ID}).Error; err != nil {
 		t.Fatalf("create port allocation: %v", err)
 	}
 
@@ -431,7 +431,7 @@ func TestServiceDestroyManagedInstanceMarksStoppingThenBackgroundCleanupRemovesR
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -457,7 +457,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 		UpdatedAt:   now,
 	}
 	seedInstance(t, repo.db, instance)
-	if err := repo.db.Create(&runtimeentity.PortAllocation{
+	if err := repo.db.Create(&containerruntimeentity.PortAllocation{
 		Port:       30002,
 		InstanceID: &instance.ID,
 		CreatedAt:  now,
@@ -487,7 +487,7 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30002).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30002).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 1 {
@@ -513,7 +513,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 		UpdatedAt:   now,
 	}
 	seedInstance(t, repo.db, instance)
-	if err := repo.db.Create(&runtimeentity.PortAllocation{
+	if err := repo.db.Create(&containerruntimeentity.PortAllocation{
 		Port:       30003,
 		InstanceID: &instance.ID,
 		CreatedAt:  now,
@@ -545,7 +545,7 @@ func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30003).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30003).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -581,7 +581,7 @@ func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
 		UpdatedAt:      now,
 	}
 	seedInstance(t, repo.db, instance)
-	if err := repo.db.Create(&runtimeentity.PortAllocation{
+	if err := repo.db.Create(&containerruntimeentity.PortAllocation{
 		Port:       30004,
 		InstanceID: &instance.ID,
 		CreatedAt:  now,
@@ -616,7 +616,7 @@ func TestRepositoryRequeueLostRuntimePreservesInstanceScope(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30004).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30004).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocation: %v", err)
 	}
 	if count != 1 {
@@ -1042,7 +1042,7 @@ func TestServiceCreateTopologySkipsRuntimeOccupiedOwnerReservationWithoutRetry(t
 	repo := newTestRepository(t)
 	instanceID := int64(7004)
 	now := time.Now()
-	if err := repo.db.Create(&runtimeentity.NetworkAllocation{
+	if err := repo.db.Create(&containerruntimeentity.NetworkAllocation{
 		Subnet:     "10.10.9.0/24",
 		InstanceID: &instanceID,
 		NetworkKey: runtimecontracts.TopologyDefaultNetworkKey,
@@ -1091,7 +1091,7 @@ func TestServiceCreateTopologySkipsRuntimeOccupiedOwnerReservationWithoutRetry(t
 		t.Fatalf("expected runtime-occupied owner subnet to be reassigned before create, got %+v", engine.createdNetworkSubnets)
 	}
 
-	var allocation runtimeentity.NetworkAllocation
+	var allocation containerruntimeentity.NetworkAllocation
 	if err := repo.db.Where("instance_id = ? AND network_key = ?", instanceID, runtimecontracts.TopologyDefaultNetworkKey).First(&allocation).Error; err != nil {
 		t.Fatalf("load updated subnet allocation: %v", err)
 	}

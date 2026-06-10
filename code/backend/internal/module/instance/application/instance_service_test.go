@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
@@ -1032,7 +1033,7 @@ func newInstanceServiceTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&identitycontracts.User{}, &runtimeApplicationChallengeRow{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &runtimeentity.NetworkAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &runtimeApplicationChallengeRow{}, &instanceentity.Instance{}, &containerruntimeentity.PortAllocation{}, &containerruntimeentity.NetworkAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&contestcontracts.Team{}, &contestcontracts.TeamMember{}); err != nil {

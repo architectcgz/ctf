@@ -1,9 +1,9 @@
 package composition
 
 import (
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	practiceruntime "ctf-platform/internal/module/practice/runtime"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	"gorm.io/gorm"
 )
 
@@ -34,5 +34,5 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *Insta
 }
 
 func runtimePortOwnerFor(db *gorm.DB) runtimeports.PortReservationOwner {
-	return runtimeinfra.NewAllocationRepository(db)
+	return containerruntimeinfra.NewAllocationRepository(db)
 }

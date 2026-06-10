@@ -6,6 +6,7 @@ import (
 	"time"
 
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
@@ -197,7 +198,7 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 		UpdatedAt:   now,
 	}
 	seedInstance(t, repo.db, instance)
-	if err := repo.db.Create(&runtimeentity.PortAllocation{
+	if err := repo.db.Create(&containerruntimeentity.PortAllocation{
 		Port:       30001,
 		InstanceID: &instance.ID,
 		CreatedAt:  now,
@@ -205,7 +206,7 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 	}).Error; err != nil {
 		t.Fatalf("create port allocation: %v", err)
 	}
-	if err := repo.db.Create(&runtimeentity.NetworkAllocation{
+	if err := repo.db.Create(&containerruntimeentity.NetworkAllocation{
 		Subnet:     "10.10.0.0/24",
 		InstanceID: &instance.ID,
 		NetworkKey: runtimecontracts.TopologyDefaultNetworkKey,
@@ -228,13 +229,13 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
 		t.Fatalf("expected port allocation to be removed, count=%d", count)
 	}
-	if err := repo.db.Model(&runtimeentity.NetworkAllocation{}).Where("instance_id = ?", instance.ID).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.NetworkAllocation{}).Where("instance_id = ?", instance.ID).Count(&count).Error; err != nil {
 		t.Fatalf("count network allocations: %v", err)
 	}
 	if count != 0 {

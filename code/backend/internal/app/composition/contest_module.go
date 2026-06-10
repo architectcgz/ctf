@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	contestruntime "ctf-platform/internal/module/contest/runtime"
@@ -51,7 +52,7 @@ func buildContestEndedRuntimeCleaner(root *Root, runtime *ContainerRuntimeModule
 		logger = zap.NewNop()
 	}
 
-	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
+	allocationRepo := containerruntimeinfra.NewAllocationRepository(root.DB())
 	runtimeAWDRepo := runtimeinfra.NewAWDRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	var cleanupService interface {
@@ -112,11 +113,11 @@ func (a *contestEndedRuntimeCleanupRouterAdapter) CleanupRuntime(ctx context.Con
 type contestEndedRuntimeStateStoreAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
-	allocationRepo *runtimeinfra.AllocationRepository
+	allocationRepo *containerruntimeinfra.AllocationRepository
 	awdRepo        *runtimeinfra.AWDRepository
 }
 
-func newContestEndedRuntimeStateStore(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *runtimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository) *contestEndedRuntimeStateStoreAdapter {
+func newContestEndedRuntimeStateStore(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *containerruntimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository) *contestEndedRuntimeStateStoreAdapter {
 	if db == nil || instanceRepo == nil || allocationRepo == nil || awdRepo == nil {
 		return nil
 	}
@@ -132,7 +133,7 @@ func (a *contestEndedRuntimeStateStoreAdapter) ExpireInstanceRuntime(ctx context
 	if a == nil {
 		return nil
 	}
-	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *runtimeinfra.AllocationRepository) error {
+	return withInstanceRuntimeLifecycleTx(ctx, a.db, a.instanceRepo, a.allocationRepo, func(instanceTx *instanceinfra.Repository, allocationTx *containerruntimeinfra.AllocationRepository) error {
 		release, err := instanceTx.ExpireInstanceRuntime(ctx, id)
 		if err != nil || release == nil {
 			return err

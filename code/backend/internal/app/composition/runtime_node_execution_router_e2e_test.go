@@ -14,6 +14,8 @@ import (
 
 	"ctf-platform/internal/config"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
@@ -62,10 +64,10 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesRuntimeDetailsContainerNode(t *
 	applyRuntimeNodeRouterE2EContainerConfig(&cfg.Container)
 
 	if err := db.AutoMigrate(
-		&runtimeentity.RuntimeNode{},
+		&containerruntimeentity.RuntimeNode{},
 		&instanceentity.Instance{},
-		&runtimeentity.PortAllocation{},
-		&runtimeentity.NetworkAllocation{},
+		&containerruntimeentity.PortAllocation{},
+		&containerruntimeentity.NetworkAllocation{},
 	); err != nil {
 		t.Fatalf("auto migrate runtime router e2e tables: %v", err)
 	}
@@ -74,9 +76,9 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesRuntimeDetailsContainerNode(t *
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewAllocationRepository(db),
+		containerruntimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewContainerNodeIndexRepository(db),
-		runtimeinfra.NewRuntimeNodeRepository(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		runtimeNodeRouterE2EDefaultRuntimeNodeName,
 	)
 	t.Cleanup(func() {
@@ -170,11 +172,11 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesWorkspaceContainerNode(t *testi
 	applyRuntimeNodeRouterE2EContainerConfig(&cfg.Container)
 
 	if err := db.AutoMigrate(
-		&runtimeentity.RuntimeNode{},
+		&containerruntimeentity.RuntimeNode{},
 		&instanceentity.Instance{},
 		&runtimeentity.AWDDefenseWorkspace{},
-		&runtimeentity.PortAllocation{},
-		&runtimeentity.NetworkAllocation{},
+		&containerruntimeentity.PortAllocation{},
+		&containerruntimeentity.NetworkAllocation{},
 	); err != nil {
 		t.Fatalf("auto migrate workspace e2e tables: %v", err)
 	}
@@ -183,9 +185,9 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesWorkspaceContainerNode(t *testi
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewAllocationRepository(db),
+		containerruntimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewContainerNodeIndexRepository(db),
-		runtimeinfra.NewRuntimeNodeRepository(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		runtimeNodeRouterE2EDefaultRuntimeNodeName,
 	)
 	t.Cleanup(func() {
@@ -289,16 +291,16 @@ func loadRuntimeNodeRouterE2EEnv(t *testing.T) (runtimeNodeRouterE2EEnv, bool) {
 	return env, true
 }
 
-func seedRuntimeRouterE2ENodes(t *testing.T, db *gorm.DB, env runtimeNodeRouterE2EEnv) (*runtimeentity.RuntimeNode, *runtimeentity.RuntimeNode) {
+func seedRuntimeRouterE2ENodes(t *testing.T, db *gorm.DB, env runtimeNodeRouterE2EEnv) (*containerruntimeentity.RuntimeNode, *containerruntimeentity.RuntimeNode) {
 	t.Helper()
 
-	nodeA := &runtimeentity.RuntimeNode{
+	nodeA := &containerruntimeentity.RuntimeNode{
 		Name:             runtimeNodeRouterE2EDefaultRuntimeNodeName,
 		Endpoint:         env.agentAEndpoint,
 		TLSIdentity:      env.agentAServerName,
 		Schedulable:      true,
 		Labels:           "{}",
-		HealthStatus:     runtimeentity.RuntimeNodeHealthReady,
+		HealthStatus:     containerruntimeentity.RuntimeNodeHealthReady,
 		CapacitySnapshot: "{}",
 		CreatedAt:        time.Now().UTC(),
 		UpdatedAt:        time.Now().UTC(),
@@ -306,13 +308,13 @@ func seedRuntimeRouterE2ENodes(t *testing.T, db *gorm.DB, env runtimeNodeRouterE
 	if err := db.Create(nodeA).Error; err != nil {
 		t.Fatalf("create node A: %v", err)
 	}
-	nodeB := &runtimeentity.RuntimeNode{
+	nodeB := &containerruntimeentity.RuntimeNode{
 		Name:             "agent-b-e2e",
 		Endpoint:         env.agentBEndpoint,
 		TLSIdentity:      env.agentBServerName,
 		Schedulable:      true,
 		Labels:           "{}",
-		HealthStatus:     runtimeentity.RuntimeNodeHealthReady,
+		HealthStatus:     containerruntimeentity.RuntimeNodeHealthReady,
 		CapacitySnapshot: "{}",
 		CreatedAt:        time.Now().UTC(),
 		UpdatedAt:        time.Now().UTC(),

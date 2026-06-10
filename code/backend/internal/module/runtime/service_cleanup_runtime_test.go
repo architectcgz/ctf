@@ -7,9 +7,9 @@ import (
 	"time"
 
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestServiceCleanupRuntimeFailsWhenRuntimeEngineUnavailable(t *testing.T) {
@@ -115,7 +115,7 @@ func TestServiceCleanupRuntimeRetriesDeadlineExceededContainerRemoval(t *testing
 	repo := newTestRepository(t)
 	now := time.Now()
 	instanceID := int64(3005)
-	if err := repo.db.Create(&runtimeentity.PortAllocation{
+	if err := repo.db.Create(&containerruntimeentity.PortAllocation{
 		Port:       30009,
 		InstanceID: &instanceID,
 		CreatedAt:  now,
@@ -159,7 +159,7 @@ func TestServiceCleanupRuntimeRetriesDeadlineExceededContainerRemoval(t *testing
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30009).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30009).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {
@@ -173,7 +173,7 @@ func TestServiceCleanupRuntimeWaitsForContainerRemovalAlreadyInProgress(t *testi
 	repo := newTestRepository(t)
 	now := time.Now()
 	instanceID := int64(3006)
-	if err := repo.db.Create(&runtimeentity.PortAllocation{
+	if err := repo.db.Create(&containerruntimeentity.PortAllocation{
 		Port:       30010,
 		InstanceID: &instanceID,
 		CreatedAt:  now,
@@ -221,7 +221,7 @@ func TestServiceCleanupRuntimeWaitsForContainerRemovalAlreadyInProgress(t *testi
 	}
 
 	var count int64
-	if err := repo.db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30010).Count(&count).Error; err != nil {
+	if err := repo.db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30010).Count(&count).Error; err != nil {
 		t.Fatalf("count port allocations: %v", err)
 	}
 	if count != 0 {

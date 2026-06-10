@@ -6,6 +6,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
@@ -810,9 +811,9 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&runtimeentity.AWDServiceOperation{},
 		&runtimeentity.AWDScopeControl{},
 		&runtimeentity.AWDDefenseWorkspace{},
-		&runtimeentity.PortAllocation{},
-		&runtimeentity.NetworkAllocation{},
-		&runtimeentity.RuntimeNode{},
+		&containerruntimeentity.PortAllocation{},
+		&containerruntimeentity.NetworkAllocation{},
+		&containerruntimeentity.RuntimeNode{},
 		&contestentity.Submission{},
 	); err != nil {
 		t.Fatalf("migrate practice command tables: %v", err)

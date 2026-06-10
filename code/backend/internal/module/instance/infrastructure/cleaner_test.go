@@ -9,7 +9,7 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/module/runtime/infrastructure/cachekeys"
+	"ctf-platform/internal/module/instance/infrastructure/cachekeys"
 )
 
 type blockingCleanerService struct {

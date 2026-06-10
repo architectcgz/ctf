@@ -12,6 +12,8 @@ import (
 	"ctf-platform/internal/config"
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -33,9 +35,9 @@ func TestRuntimeNodeExecutionRouterRoutesCheckerByNodeID(t *testing.T) {
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewAllocationRepository(db),
+		containerruntimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewContainerNodeIndexRepository(db),
-		runtimeinfra.NewRuntimeNodeRepository(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
 
@@ -107,9 +109,9 @@ func TestRuntimeNodeExecutionRouterRoutesContainerFileWritesByWorkspaceContainer
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewAllocationRepository(db),
+		containerruntimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewContainerNodeIndexRepository(db),
-		runtimeinfra.NewRuntimeNodeRepository(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
 
@@ -179,9 +181,9 @@ func TestRuntimeNodeExecutionRouterRoutesInteractiveExecByWorkspaceContainerNode
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewAllocationRepository(db),
+		containerruntimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewContainerNodeIndexRepository(db),
-		runtimeinfra.NewRuntimeNodeRepository(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
 
@@ -244,9 +246,9 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByRuntimeDetailsContainerNodeID(
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewAllocationRepository(db),
+		containerruntimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewContainerNodeIndexRepository(db),
-		runtimeinfra.NewRuntimeNodeRepository(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
 
@@ -321,9 +323,9 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByWorkspaceContainerIDWithoutNod
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewAllocationRepository(db),
+		containerruntimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewContainerNodeIndexRepository(db),
-		runtimeinfra.NewRuntimeNodeRepository(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
 
@@ -357,9 +359,9 @@ func TestRuntimeNodeExecutionRouterRoutesRemoveContainerByInventoryCache(t *test
 	router := newRuntimeNodeExecutionRouter(
 		cfg,
 		zap.NewNop(),
-		runtimeinfra.NewAllocationRepository(db),
+		containerruntimeinfra.NewAllocationRepository(db),
 		runtimeinfra.NewContainerNodeIndexRepository(db),
-		runtimeinfra.NewRuntimeNodeRepository(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
 
@@ -382,19 +384,19 @@ func TestRuntimeNodeExecutionRouterRoutesRemoveContainerByInventoryCache(t *test
 	}
 }
 
-func seedRuntimeRouterNodes(t *testing.T, db *gorm.DB) (*runtimeentity.RuntimeNode, *runtimeentity.RuntimeNode) {
+func seedRuntimeRouterNodes(t *testing.T, db *gorm.DB) (*containerruntimeentity.RuntimeNode, *containerruntimeentity.RuntimeNode) {
 	t.Helper()
 
-	if err := db.AutoMigrate(&runtimeentity.RuntimeNode{}); err != nil {
+	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}); err != nil {
 		t.Fatalf("auto migrate runtime nodes: %v", err)
 	}
 
-	nodeA := &runtimeentity.RuntimeNode{
+	nodeA := &containerruntimeentity.RuntimeNode{
 		Name:             "node-a",
 		Endpoint:         "local://docker",
 		Schedulable:      true,
 		Labels:           "{}",
-		HealthStatus:     runtimeentity.RuntimeNodeHealthReady,
+		HealthStatus:     containerruntimeentity.RuntimeNodeHealthReady,
 		CapacitySnapshot: "{}",
 		CreatedAt:        time.Now().UTC(),
 		UpdatedAt:        time.Now().UTC(),
@@ -403,13 +405,13 @@ func seedRuntimeRouterNodes(t *testing.T, db *gorm.DB) (*runtimeentity.RuntimeNo
 		t.Fatalf("create node-a: %v", err)
 	}
 
-	nodeB := &runtimeentity.RuntimeNode{
+	nodeB := &containerruntimeentity.RuntimeNode{
 		Name:             "node-b",
 		Endpoint:         "grpc://runtime-agent-b",
 		TLSIdentity:      "runtime-agent-b",
 		Schedulable:      true,
 		Labels:           "{}",
-		HealthStatus:     runtimeentity.RuntimeNodeHealthReady,
+		HealthStatus:     containerruntimeentity.RuntimeNodeHealthReady,
 		CapacitySnapshot: "{}",
 		CreatedAt:        time.Now().UTC(),
 		UpdatedAt:        time.Now().UTC(),
@@ -424,7 +426,7 @@ func overrideRuntimeNodeClientBuilder(t *testing.T, clients map[int64]runtimeNod
 	t.Helper()
 
 	original := buildRuntimeNodeClient
-	buildRuntimeNodeClient = func(_ context.Context, _ *config.Config, _ *zap.Logger, _ runtimeNodeAllocationRepository, node *runtimeentity.RuntimeNode) (runtimeNodeClient, error) {
+	buildRuntimeNodeClient = func(_ context.Context, _ *config.Config, _ *zap.Logger, _ runtimeNodeAllocationRepository, node *containerruntimeentity.RuntimeNode) (runtimeNodeClient, error) {
 		if node == nil {
 			return nil, runtimeports.ErrRuntimeNodeUnavailable
 		}

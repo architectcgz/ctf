@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/infrastructure/redislock"
-	"ctf-platform/internal/module/runtime/infrastructure/cachekeys"
+	"ctf-platform/internal/module/instance/infrastructure/cachekeys"
 	"ctf-platform/internal/shared/lockkeepalive"
 )
 

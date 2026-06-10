@@ -11,24 +11,25 @@ import (
 	"gorm.io/gorm/logger"
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
 	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 func newRepositoryWithRuntimePortOwner(db *gorm.DB) *practiceinfra.Repository {
 	return practiceinfra.NewRepositoryWithRuntimePortOwner(db, func(db *gorm.DB) runtimeports.PortReservationOwner {
-		return runtimeinfra.NewAllocationRepository(db)
+		return containerruntimeinfra.NewAllocationRepository(db)
 	})
 }
 
 func TestRepositoryReserveAvailablePortSkipsAllocatedPort(t *testing.T) {
-	db := newRepositoryTestDB(t, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &containerruntimeentity.PortAllocation{})
 	ownerInstanceID := int64(400)
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30000, InstanceID: &ownerInstanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30000, InstanceID: &ownerInstanceID}).Error; err != nil {
 		t.Fatalf("seed allocated port: %v", err)
 	}
 
@@ -42,7 +43,7 @@ func TestRepositoryReserveAvailablePortSkipsAllocatedPort(t *testing.T) {
 	}
 
 	var count int64
-	if err := db.Model(&runtimeentity.PortAllocation{}).Where("port IN ?", []int{30000, 30001}).Count(&count).Error; err != nil {
+	if err := db.Model(&containerruntimeentity.PortAllocation{}).Where("port IN ?", []int{30000, 30001}).Count(&count).Error; err != nil {
 		t.Fatalf("count allocated ports: %v", err)
 	}
 	if count != 2 {
@@ -51,7 +52,7 @@ func TestRepositoryReserveAvailablePortSkipsAllocatedPort(t *testing.T) {
 }
 
 func TestRepositoryReserveAvailablePortExcludingSkipsExcludedPort(t *testing.T) {
-	db := newRepositoryTestDB(t, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &containerruntimeentity.PortAllocation{})
 
 	repo := newRepositoryWithRuntimePortOwner(db)
 	port, err := repo.ReserveAvailablePortExcluding(context.Background(), 30000, 30003, 30000)
@@ -64,11 +65,11 @@ func TestRepositoryReserveAvailablePortExcludingSkipsExcludedPort(t *testing.T) 
 }
 
 func TestRepositoryReleasePortForInstanceOnlyDeletesOwnedAllocation(t *testing.T) {
-	db := newRepositoryTestDB(t, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &containerruntimeentity.PortAllocation{})
 
 	ownerInstanceID := int64(401)
 	otherInstanceID := int64(402)
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30015, InstanceID: &ownerInstanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30015, InstanceID: &ownerInstanceID}).Error; err != nil {
 		t.Fatalf("seed allocated port: %v", err)
 	}
 
@@ -78,7 +79,7 @@ func TestRepositoryReleasePortForInstanceOnlyDeletesOwnedAllocation(t *testing.T
 	}
 
 	var count int64
-	if err := db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30015).Count(&count).Error; err != nil {
+	if err := db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30015).Count(&count).Error; err != nil {
 		t.Fatalf("count preserved allocation: %v", err)
 	}
 	if count != 1 {
@@ -88,7 +89,7 @@ func TestRepositoryReleasePortForInstanceOnlyDeletesOwnedAllocation(t *testing.T
 	if err := repo.ReleasePortForInstance(context.Background(), 30015, ownerInstanceID); err != nil {
 		t.Fatalf("ReleasePortForInstance() with owner error = %v", err)
 	}
-	if err := db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30015).Count(&count).Error; err != nil {
+	if err := db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30015).Count(&count).Error; err != nil {
 		t.Fatalf("count released allocation: %v", err)
 	}
 	if count != 0 {
@@ -97,13 +98,13 @@ func TestRepositoryReleasePortForInstanceOnlyDeletesOwnedAllocation(t *testing.T
 }
 
 func TestRepositoryReleaseReservedPortOnlyDeletesUnboundAllocation(t *testing.T) {
-	db := newRepositoryTestDB(t, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &containerruntimeentity.PortAllocation{})
 
 	ownerInstanceID := int64(501)
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30016}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30016}).Error; err != nil {
 		t.Fatalf("seed unbound port allocation: %v", err)
 	}
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30017, InstanceID: &ownerInstanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30017, InstanceID: &ownerInstanceID}).Error; err != nil {
 		t.Fatalf("seed bound port allocation: %v", err)
 	}
 
@@ -113,7 +114,7 @@ func TestRepositoryReleaseReservedPortOnlyDeletesUnboundAllocation(t *testing.T)
 	}
 
 	var count int64
-	if err := db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30017).Count(&count).Error; err != nil {
+	if err := db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30017).Count(&count).Error; err != nil {
 		t.Fatalf("count bound allocation: %v", err)
 	}
 	if count != 1 {
@@ -123,7 +124,7 @@ func TestRepositoryReleaseReservedPortOnlyDeletesUnboundAllocation(t *testing.T)
 	if err := repo.ReleaseReservedPort(context.Background(), 30016); err != nil {
 		t.Fatalf("ReleaseReservedPort() with unbound allocation error = %v", err)
 	}
-	if err := db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30016).Count(&count).Error; err != nil {
+	if err := db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30016).Count(&count).Error; err != nil {
 		t.Fatalf("count unbound allocation: %v", err)
 	}
 	if count != 0 {
@@ -201,7 +202,7 @@ func TestRepositoryCreateAWDServiceOperationClosesStaleActiveScopeEntries(t *tes
 }
 
 func TestRepositoryResetInstanceRuntimeForRestartClearsHostPortWhenNotPreserved(t *testing.T) {
-	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &containerruntimeentity.PortAllocation{})
 
 	otherInstanceID := int64(98)
 	instance := instancecontracts.Instance{
@@ -216,7 +217,7 @@ func TestRepositoryResetInstanceRuntimeForRestartClearsHostPortWhenNotPreserved(
 	if err := db.Create(&instance).Error; err != nil {
 		t.Fatalf("seed instance: %v", err)
 	}
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30000, InstanceID: &otherInstanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30000, InstanceID: &otherInstanceID}).Error; err != nil {
 		t.Fatalf("seed other allocation: %v", err)
 	}
 
@@ -233,7 +234,7 @@ func TestRepositoryResetInstanceRuntimeForRestartClearsHostPortWhenNotPreserved(
 		t.Fatalf("expected host port cleared and pending status, got host_port=%d status=%s", stored.HostPort, stored.Status)
 	}
 
-	var allocation runtimeentity.PortAllocation
+	var allocation containerruntimeentity.PortAllocation
 	if err := db.First(&allocation, "port = ?", 30000).Error; err != nil {
 		t.Fatalf("expected other allocation to remain: %v", err)
 	}
@@ -243,7 +244,7 @@ func TestRepositoryResetInstanceRuntimeForRestartClearsHostPortWhenNotPreserved(
 }
 
 func TestRepositoryResetInstanceRuntimeForRestartReleasesOwnedHostPortWhenNotPreserved(t *testing.T) {
-	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &containerruntimeentity.PortAllocation{})
 
 	instanceID := int64(100)
 	instance := instancecontracts.Instance{
@@ -258,7 +259,7 @@ func TestRepositoryResetInstanceRuntimeForRestartReleasesOwnedHostPortWhenNotPre
 	if err := db.Create(&instance).Error; err != nil {
 		t.Fatalf("seed instance: %v", err)
 	}
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30002, InstanceID: &instanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30002, InstanceID: &instanceID}).Error; err != nil {
 		t.Fatalf("seed allocation: %v", err)
 	}
 
@@ -268,7 +269,7 @@ func TestRepositoryResetInstanceRuntimeForRestartReleasesOwnedHostPortWhenNotPre
 	}
 
 	var count int64
-	if err := db.Model(&runtimeentity.PortAllocation{}).Where("port = ?", 30002).Count(&count).Error; err != nil {
+	if err := db.Model(&containerruntimeentity.PortAllocation{}).Where("port = ?", 30002).Count(&count).Error; err != nil {
 		t.Fatalf("count allocations: %v", err)
 	}
 	if count != 0 {
@@ -277,7 +278,7 @@ func TestRepositoryResetInstanceRuntimeForRestartReleasesOwnedHostPortWhenNotPre
 }
 
 func TestRepositoryResetInstanceRuntimeForRestartPreservesOwnedHostPort(t *testing.T) {
-	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &containerruntimeentity.PortAllocation{})
 
 	instanceID := int64(101)
 	instance := instancecontracts.Instance{
@@ -292,7 +293,7 @@ func TestRepositoryResetInstanceRuntimeForRestartPreservesOwnedHostPort(t *testi
 	if err := db.Create(&instance).Error; err != nil {
 		t.Fatalf("seed instance: %v", err)
 	}
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30001, InstanceID: &instanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30001, InstanceID: &instanceID}).Error; err != nil {
 		t.Fatalf("seed allocation: %v", err)
 	}
 
@@ -311,7 +312,7 @@ func TestRepositoryResetInstanceRuntimeForRestartPreservesOwnedHostPort(t *testi
 }
 
 func TestRepositoryResetInstanceRuntimeForRestartSyncsBoundAllocationWhenHostPortMissing(t *testing.T) {
-	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &containerruntimeentity.PortAllocation{})
 
 	instanceID := int64(102)
 	instance := instancecontracts.Instance{
@@ -326,7 +327,7 @@ func TestRepositoryResetInstanceRuntimeForRestartSyncsBoundAllocationWhenHostPor
 	if err := db.Create(&instance).Error; err != nil {
 		t.Fatalf("seed instance: %v", err)
 	}
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30003, InstanceID: &instanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30003, InstanceID: &instanceID}).Error; err != nil {
 		t.Fatalf("seed allocation: %v", err)
 	}
 
@@ -345,7 +346,7 @@ func TestRepositoryResetInstanceRuntimeForRestartSyncsBoundAllocationWhenHostPor
 }
 
 func TestRepositoryResetInstanceRuntimeForRestartUsesBoundAllocationWhenStoredHostPortConflicts(t *testing.T) {
-	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &instancecontracts.Instance{}, &containerruntimeentity.PortAllocation{})
 
 	instanceID := int64(103)
 	otherInstanceID := int64(104)
@@ -361,10 +362,10 @@ func TestRepositoryResetInstanceRuntimeForRestartUsesBoundAllocationWhenStoredHo
 	if err := db.Create(&instance).Error; err != nil {
 		t.Fatalf("seed instance: %v", err)
 	}
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30004, InstanceID: &otherInstanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30004, InstanceID: &otherInstanceID}).Error; err != nil {
 		t.Fatalf("seed conflicting allocation: %v", err)
 	}
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30007, InstanceID: &instanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30007, InstanceID: &instanceID}).Error; err != nil {
 		t.Fatalf("seed rebound allocation: %v", err)
 	}
 
@@ -442,17 +443,17 @@ func TestRepositoryFindContestAWDServiceRuntimeSubjectMapsSnapshot(t *testing.T)
 }
 
 func TestRepositoryIsHostPortReusableForRestart(t *testing.T) {
-	db := newRepositoryTestDB(t, &runtimeentity.PortAllocation{})
+	db := newRepositoryTestDB(t, &containerruntimeentity.PortAllocation{})
 
 	currentInstanceID := int64(201)
 	otherInstanceID := int64(202)
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30011, InstanceID: &currentInstanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30011, InstanceID: &currentInstanceID}).Error; err != nil {
 		t.Fatalf("seed owned allocation: %v", err)
 	}
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30012, InstanceID: &otherInstanceID}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30012, InstanceID: &otherInstanceID}).Error; err != nil {
 		t.Fatalf("seed foreign allocation: %v", err)
 	}
-	if err := db.Create(&runtimeentity.PortAllocation{Port: 30013}).Error; err != nil {
+	if err := db.Create(&containerruntimeentity.PortAllocation{Port: 30013}).Error; err != nil {
 		t.Fatalf("seed unbound allocation: %v", err)
 	}
 

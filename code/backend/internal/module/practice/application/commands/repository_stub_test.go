@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"time"
 
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -24,7 +25,7 @@ import (
 type practiceTestInstanceRepository struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfrarepo.Repository
-	allocationRepo *runtimeinfrarepo.AllocationRepository
+	allocationRepo *containerruntimeinfra.AllocationRepository
 	awdRepo        *runtimeinfrarepo.AWDRepository
 }
 
@@ -32,7 +33,7 @@ func newPracticeTestInstanceRepository(db *gorm.DB) *practiceTestInstanceReposit
 	return &practiceTestInstanceRepository{
 		db:             db,
 		instanceRepo:   instanceinfrarepo.NewRepository(db),
-		allocationRepo: runtimeinfrarepo.NewAllocationRepository(db),
+		allocationRepo: containerruntimeinfra.NewAllocationRepository(db),
 		awdRepo:        runtimeinfrarepo.NewAWDRepository(db),
 	}
 }

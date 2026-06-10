@@ -14,6 +14,8 @@ import (
 	"ctf-platform/internal/config"
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
+	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
@@ -28,9 +30,8 @@ import (
 )
 
 type runtimeTestRepository struct {
-	*runtimeinfra.ManagedInstanceRepository
 	*runtimeinfra.ActiveContainerInventoryRepository
-	*runtimeinfra.AllocationRepository
+	*containerruntimeinfra.AllocationRepository
 	*runtimeinfra.AWDRepository
 	instanceRepo *instanceinfra.Repository
 	db           *gorm.DB
@@ -46,7 +47,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&identitycontracts.User{}, &runtimeChallengeTestRow{}, &instanceentity.Instance{}, &runtimeentity.PortAllocation{}, &runtimeentity.NetworkAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.User{}, &runtimeChallengeTestRow{}, &instanceentity.Instance{}, &containerruntimeentity.PortAllocation{}, &containerruntimeentity.NetworkAllocation{}, &contestcontracts.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&contestcontracts.Team{}, &contestcontracts.TeamMember{}); err != nil {
@@ -62,9 +63,8 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 		t.Fatalf("migrate awd operation tables: %v", err)
 	}
 	return &runtimeTestRepository{
-		ManagedInstanceRepository:          runtimeinfra.NewManagedInstanceRepository(db),
 		ActiveContainerInventoryRepository: runtimeinfra.NewActiveContainerInventoryRepository(db),
-		AllocationRepository:               runtimeinfra.NewAllocationRepository(db),
+		AllocationRepository:               containerruntimeinfra.NewAllocationRepository(db),
 		AWDRepository:                      runtimeinfra.NewAWDRepository(db),
 		instanceRepo:                       instanceinfra.NewRepository(db),
 		db:                                 db,

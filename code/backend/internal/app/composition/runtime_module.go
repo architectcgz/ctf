@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/config"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	"ctf-platform/internal/module/container_runtime/infrastructure/agentclient"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
@@ -14,7 +15,6 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
@@ -49,7 +49,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	log := root.Logger()
 	indexRepo := runtimeinfra.NewContainerNodeIndexRepository(root.DB())
 	aclMigrationRepo := runtimeinfra.NewACLMigrationStateRepository(root.DB())
-	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
+	allocationRepo := containerruntimeinfra.NewAllocationRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultNodeName := defaultRuntimeNodeName(cfg)
 	nodeSelector, nodeRepo, defaultNode, err := buildDefaultRuntimeNodeSelector(root, defaultNodeName)
@@ -140,7 +140,7 @@ func buildRuntimeHostExecutor(root *Root) runtimeports.RuntimeHostExecutor {
 	return client.executor
 }
 
-func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtimeports.RuntimeNodeSelector, *runtimeinfra.RuntimeNodeRepository, *runtimeentity.RuntimeNode, error) {
+func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtimeports.RuntimeNodeSelector, *containerruntimeinfra.RuntimeNodeRepository, *runtimeentity.RuntimeNode, error) {
 	if root == nil || root.DB() == nil {
 		return nil, nil, nil, nil
 	}
@@ -149,7 +149,7 @@ func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtim
 		cfg = &config.Config{}
 	}
 
-	repo := runtimeinfra.NewRuntimeNodeRepository(root.DB())
+	repo := containerruntimeinfra.NewRuntimeNodeRepository(root.DB())
 	if repo == nil {
 		return nil, nil, nil, nil
 	}
@@ -163,14 +163,14 @@ func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtim
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	return runtimeinfra.NewDefaultRuntimeNodeSelector(repo, defaultNodeName), repo, node, nil
+	return containerruntimeinfra.NewDefaultRuntimeNodeSelector(repo, defaultNodeName), repo, node, nil
 }
 
 func buildDefaultRuntimeNodeClient(root *Root) (*nodeRuntimeClient, error) {
 	if root == nil {
 		return nil, nil
 	}
-	allocationRepo := runtimeinfra.NewAllocationRepository(root.DB())
+	allocationRepo := containerruntimeinfra.NewAllocationRepository(root.DB())
 	_, _, defaultNode, err := buildDefaultRuntimeNodeSelector(root, defaultRuntimeNodeName(root.Config()))
 	if err != nil {
 		return nil, err

@@ -14,6 +14,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -21,7 +22,6 @@ import (
 	opsentity "ctf-platform/internal/module/ops/entity"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	runtimestate "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	"ctf-platform/internal/platform/clustersecret"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -96,9 +96,9 @@ var internalAppTestSchemaModels = []any{
 	&contestcontracts.Submission{},
 	&instancecontracts.Instance{},
 	&clustersecret.RuntimeClusterSecret{},
-	&runtimeentity.PortAllocation{},
-	&runtimeentity.NetworkAllocation{},
-	&runtimeentity.RuntimeNode{},
+	&containerruntimeentity.PortAllocation{},
+	&containerruntimeentity.NetworkAllocation{},
+	&containerruntimeentity.RuntimeNode{},
 	&practiceentity.UserScore{},
 	&opsentity.AuditLog{},
 	&opsentity.NotificationBatch{},

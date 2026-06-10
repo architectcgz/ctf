@@ -8,7 +8,7 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/infrastructure/redislock"
-	"ctf-platform/internal/module/runtime/infrastructure/cachekeys"
+	"ctf-platform/internal/module/instance/infrastructure/cachekeys"
 )
 
 type PlatformRuntimeStateStore struct {
