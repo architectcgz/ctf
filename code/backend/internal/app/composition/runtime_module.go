@@ -24,7 +24,9 @@ type runtimeLifecycleCloser interface {
 var (
 	dialRuntimeAgent          = agentclient.DialContext
 	newLocalRuntimeHostRunner = containerruntimeinfra.NewLocalHostExecutor
-	newLocalCheckerRunner     = contestinfra.NewLocalCheckerRunner
+	newLocalSandboxExecutor   = func(cfg config.CheckerSandboxConfig) (runtimeports.SandboxExecutor, error) {
+		return containerruntimeinfra.NewDockerSandboxExecutor(cfg)
+	}
 )
 
 type ContainerRuntimeModule struct {

@@ -117,11 +117,11 @@ func buildRuntimeNodeClientFromNode(
 		if err != nil {
 			return nil, err
 		}
-		runner, err := newLocalCheckerRunner(cfg.Contest.AWD.CheckerSandbox)
+		sandboxExecutor, err := newLocalSandboxExecutor(cfg.Contest.AWD.CheckerSandbox)
 		if err != nil {
 			return nil, err
 		}
-		return newNodeRuntimeClient(cfg, logger, allocationRepo, executor, runner, nil), nil
+		return newNodeRuntimeClient(cfg, logger, allocationRepo, executor, contestinfra.NewSandboxCheckerRunner(sandboxExecutor), nil), nil
 	}
 
 	bridge, err := dialRuntimeAgent(ctx, runtimeAgentConfigForNode(cfg.RuntimeAgent, node))

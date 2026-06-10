@@ -57,3 +57,12 @@ const (
 	SandboxExecStatusOK     SandboxExecStatus = "ok"
 	SandboxExecStatusFailed SandboxExecStatus = "failed"
 )
+
+const (
+	SandboxExecReasonPassed              = "sandbox_exec_passed"
+	SandboxExecReasonFailed              = "sandbox_exec_failed"
+	SandboxExecReasonTimeout             = "sandbox_exec_timeout"
+	SandboxExecReasonOutputLimitExceeded = "sandbox_output_limit_exceeded"
+	SandboxExecReasonInvalidOutput       = "sandbox_invalid_output"
+	SandboxExecReasonSandboxError        = "sandbox_error"
+)

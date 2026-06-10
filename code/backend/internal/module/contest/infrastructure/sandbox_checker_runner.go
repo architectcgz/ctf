@@ -177,7 +177,7 @@ func parseInt64Label(labels map[string]string, key string) int64 {
 func sandboxExecResultFromCheckerRunResult(result contestports.CheckerRunResult) runtimeports.SandboxExecResult {
 	return runtimeports.SandboxExecResult{
 		Status:           sandboxExecStatusFromCheckerRunStatus(result.Status),
-		Reason:           result.Reason,
+		Reason:           sandboxExecReasonFromCheckerReason(result.Reason),
 		ExitCode:         result.ExitCode,
 		Stdout:           result.Stdout,
 		Stderr:           result.Stderr,
@@ -192,7 +192,7 @@ func sandboxExecResultFromCheckerRunResult(result contestports.CheckerRunResult)
 func checkerRunResultFromSandboxExecResult(result runtimeports.SandboxExecResult) contestports.CheckerRunResult {
 	return contestports.CheckerRunResult{
 		Status:           checkerRunStatusFromSandboxExecStatus(result.Status),
-		Reason:           result.Reason,
+		Reason:           checkerReasonFromSandboxExecReason(result.Reason),
 		ExitCode:         result.ExitCode,
 		Stdout:           result.Stdout,
 		Stderr:           result.Stderr,
@@ -216,6 +216,44 @@ func checkerRunStatusFromSandboxExecStatus(status runtimeports.SandboxExecStatus
 		return contestports.CheckerRunStatusOK
 	}
 	return contestports.CheckerRunStatusFailed
+}
+
+func sandboxExecReasonFromCheckerReason(reason string) string {
+	switch reason {
+	case contestports.CheckerReasonPassed:
+		return runtimeports.SandboxExecReasonPassed
+	case contestports.CheckerReasonFailed:
+		return runtimeports.SandboxExecReasonFailed
+	case contestports.CheckerReasonTimeout:
+		return runtimeports.SandboxExecReasonTimeout
+	case contestports.CheckerReasonOutputLimitExceeded:
+		return runtimeports.SandboxExecReasonOutputLimitExceeded
+	case contestports.CheckerReasonInvalidOutput:
+		return runtimeports.SandboxExecReasonInvalidOutput
+	case contestports.CheckerReasonSandboxError:
+		return runtimeports.SandboxExecReasonSandboxError
+	default:
+		return reason
+	}
+}
+
+func checkerReasonFromSandboxExecReason(reason string) string {
+	switch reason {
+	case runtimeports.SandboxExecReasonPassed:
+		return contestports.CheckerReasonPassed
+	case runtimeports.SandboxExecReasonFailed:
+		return contestports.CheckerReasonFailed
+	case runtimeports.SandboxExecReasonTimeout:
+		return contestports.CheckerReasonTimeout
+	case runtimeports.SandboxExecReasonOutputLimitExceeded:
+		return contestports.CheckerReasonOutputLimitExceeded
+	case runtimeports.SandboxExecReasonInvalidOutput:
+		return contestports.CheckerReasonInvalidOutput
+	case runtimeports.SandboxExecReasonSandboxError:
+		return contestports.CheckerReasonSandboxError
+	default:
+		return reason
+	}
 }
 
 func cloneStringMap(values map[string]string) map[string]string {

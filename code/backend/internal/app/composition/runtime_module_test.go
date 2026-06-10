@@ -25,7 +25,6 @@ import (
 	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
-	contestports "ctf-platform/internal/module/contest/ports"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceports "ctf-platform/internal/module/instance/ports"
 )
@@ -165,7 +164,7 @@ func TestBuildContainerRuntimeModuleFailsWhenRemoteRuntimeAgentDialFails(t *test
 	}
 }
 
-func TestBuildContainerRuntimeModuleFailsWhenLocalCheckerRunnerInitFails(t *testing.T) {
+func TestBuildContainerRuntimeModuleFailsWhenLocalSandboxExecutorInitFails(t *testing.T) {
 	cfg, db, cache := newRootTestDependencies(t)
 	cfg.App.Env = "dev"
 
@@ -178,16 +177,16 @@ func TestBuildContainerRuntimeModuleFailsWhenLocalCheckerRunnerInitFails(t *test
 	}
 
 	originalNewLocalRuntimeHostRunner := newLocalRuntimeHostRunner
-	originalNewLocalCheckerRunner := newLocalCheckerRunner
+	originalNewLocalSandboxExecutor := newLocalSandboxExecutor
 	newLocalRuntimeHostRunner = func(*config.ContainerConfig) (runtimeports.RuntimeHostExecutor, error) {
 		return newTestRuntimeEngine(zap.NewNop()), nil
 	}
-	newLocalCheckerRunner = func(config.CheckerSandboxConfig) (contestports.CheckerRunner, error) {
-		return nil, errors.New("checker init failed")
+	newLocalSandboxExecutor = func(config.CheckerSandboxConfig) (runtimeports.SandboxExecutor, error) {
+		return nil, errors.New("sandbox init failed")
 	}
 	t.Cleanup(func() {
 		newLocalRuntimeHostRunner = originalNewLocalRuntimeHostRunner
-		newLocalCheckerRunner = originalNewLocalCheckerRunner
+		newLocalSandboxExecutor = originalNewLocalSandboxExecutor
 	})
 
 	module, err := BuildContainerRuntimeModule(root)
@@ -195,10 +194,10 @@ func TestBuildContainerRuntimeModuleFailsWhenLocalCheckerRunnerInitFails(t *test
 		t.Fatal("expected BuildContainerRuntimeModule() to fail when local checker runner init fails")
 	}
 	if module != nil {
-		t.Fatalf("expected module to be nil on checker runner init failure, got %+v", module)
+		t.Fatalf("expected module to be nil on sandbox executor init failure, got %+v", module)
 	}
-	if err.Error() != "checker init failed" {
-		t.Fatalf("error = %v, want checker init failed", err)
+	if err.Error() != "sandbox init failed" {
+		t.Fatalf("error = %v, want sandbox init failed", err)
 	}
 }
 

@@ -13,7 +13,6 @@ import (
 	"ctf-platform/internal/infrastructure/logger"
 	runtimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	"ctf-platform/internal/module/container_runtime/infrastructure/agentserver"
-	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 
 	"go.uber.org/zap"
 )
@@ -41,9 +40,9 @@ func RunRuntimeAgent() {
 	if err != nil {
 		log.Fatal("runtime_agent_executor_init_failed", zap.Error(err))
 	}
-	checkerRunner, err := contestinfra.NewLocalCheckerRunner(cfg.Contest.AWD.CheckerSandbox)
+	sandboxExecutor, err := runtimeinfra.NewDockerSandboxExecutor(cfg.Contest.AWD.CheckerSandbox)
 	if err != nil {
-		log.Fatal("runtime_agent_checker_runner_init_failed", zap.Error(err))
+		log.Fatal("runtime_agent_sandbox_executor_init_failed", zap.Error(err))
 	}
 	tlsConfig, err := agentserver.LoadServerTLSConfig(
 		cfg.RuntimeAgent.Server.CertFile,
@@ -63,7 +62,7 @@ func RunRuntimeAgent() {
 		_ = listener.Close()
 	}()
 
-	server := agentserver.NewGRPCServer(tlsConfig, agentserver.NewService(hostExecutor, contestinfra.NewCheckerSandboxExecutor(checkerRunner)))
+	server := agentserver.NewGRPCServer(tlsConfig, agentserver.NewService(hostExecutor, sandboxExecutor))
 	go func() {
 		log.Info("runtime_agent_starting",
 			zap.String("env", cfg.App.Env),
