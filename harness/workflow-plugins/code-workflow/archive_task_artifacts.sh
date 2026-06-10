@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Managed by code-workflow package (version: 2026-06-06.6)
+# Managed by code-workflow package (version: 2026-06-10.1)
 set -euo pipefail
 
 usage() {
@@ -168,7 +168,7 @@ if [[ "${#task_paths[@]}" -gt 0 ]]; then
 fi
 
 if [[ -n "$active_gate_path" && -f "$active_gate_path" ]]; then
-  python3 - "$active_gate_path" "$task_slug" "$plan_archive_path" "${task_archive_paths[@]}" <<'PY'
+  python3 - "$active_gate_path" "$task_slug" "$plan_archive_path" ${task_archive_paths[@]+"${task_archive_paths[@]}"} <<'PY'
 import json
 import sys
 from datetime import datetime, timezone

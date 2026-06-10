@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Managed by code-workflow package (version: 2026-06-06.6)
+# Managed by code-workflow package (version: 2026-06-10.1)
 from __future__ import annotations
 
 import argparse
