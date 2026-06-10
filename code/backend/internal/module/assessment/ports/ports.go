@@ -11,7 +11,6 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
 )
@@ -126,9 +125,30 @@ type AssessmentClassReportRepository interface {
 	GetClassContestMigrationSummary(ctx context.Context, className string) (*assessmentdomain.ClassContestMigrationSummary, error)
 }
 
+type ClassInsightSummary struct {
+	ClassName          string
+	StudentCount       int64
+	AverageSolved      float64
+	ActiveStudentCount int64
+	ActiveRate         float64
+	RecentEventCount   int64
+}
+
+type ClassInsightTrendPoint struct {
+	Date               string
+	ActiveStudentCount int64
+	EventCount         int64
+	SolveCount         int64
+}
+
+type ClassInsightTrend struct {
+	ClassName string
+	Points    []ClassInsightTrendPoint
+}
+
 type AssessmentClassInsightRepository interface {
-	GetClassSummary(ctx context.Context, className string, since time.Time) (*queryports.ClassSummary, error)
-	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*queryports.ClassTrend, error)
+	GetClassSummary(ctx context.Context, className string, since time.Time) (*ClassInsightSummary, error)
+	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*ClassInsightTrend, error)
 	ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error)
 }
 

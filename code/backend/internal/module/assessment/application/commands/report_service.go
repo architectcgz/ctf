@@ -27,8 +27,6 @@ import (
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
-	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/shared/taxonomy"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/classreview"
@@ -69,9 +67,9 @@ type classReportData struct {
 	AverageScore           float64                                       `json:"average_score"`
 	DimensionAverages      []assessmentdomain.ClassDimensionAverage      `json:"dimension_averages"`
 	TopStudents            []assessmentdomain.ClassTopStudent            `json:"top_students"`
-	Summary                *teachingquerycontracts.TeacherClassSummary   `json:"summary,omitempty"`
-	Trend                  *teachingquerycontracts.TeacherClassTrend     `json:"trend,omitempty"`
-	Review                 *teachingquerycontracts.TeacherClassReview    `json:"review,omitempty"`
+	Summary                *classReportSummary                           `json:"summary,omitempty"`
+	Trend                  *classReportTrend                             `json:"trend,omitempty"`
+	Review                 *classReportReview                            `json:"review,omitempty"`
 	CategoryDistribution   []assessmentdomain.ClassDistributionStat      `json:"category_distribution"`
 	DifficultyDistribution []assessmentdomain.ClassDistributionStat      `json:"difficulty_distribution"`
 	ContestMigration       assessmentdomain.ClassContestMigrationSummary `json:"contest_migration"`
@@ -81,6 +79,63 @@ type classReportWindow struct {
 	FromDate string `json:"from_date"`
 	ToDate   string `json:"to_date"`
 	Days     int    `json:"days"`
+}
+
+type classReportSummary struct {
+	ClassName          string  `json:"class_name"`
+	StudentCount       int64   `json:"student_count"`
+	AverageSolved      float64 `json:"average_solved"`
+	ActiveStudentCount int64   `json:"active_student_count"`
+	ActiveRate         float64 `json:"active_rate"`
+	RecentEventCount   int64   `json:"recent_event_count"`
+}
+
+type classReportTrendPoint struct {
+	Date               string `json:"date"`
+	ActiveStudentCount int64  `json:"active_student_count"`
+	EventCount         int64  `json:"event_count"`
+	SolveCount         int64  `json:"solve_count"`
+}
+
+type classReportTrend struct {
+	ClassName string                  `json:"class_name"`
+	Points    []classReportTrendPoint `json:"points"`
+}
+
+type classReportReviewStudentRef struct {
+	ID       int64   `json:"id"`
+	Username string  `json:"username"`
+	Name     *string `json:"name,omitempty"`
+}
+
+type classReportRecommendationItem struct {
+	ChallengeID    int64    `json:"challenge_id"`
+	Title          string   `json:"title"`
+	Category       string   `json:"category"`
+	Difficulty     string   `json:"difficulty"`
+	Dimension      string   `json:"dimension,omitempty"`
+	DifficultyBand string   `json:"difficulty_band,omitempty"`
+	Severity       string   `json:"severity,omitempty"`
+	ReasonCodes    []string `json:"reason_codes,omitempty"`
+	Summary        string   `json:"summary"`
+	Evidence       string   `json:"evidence,omitempty"`
+}
+
+type classReportReviewItem struct {
+	Code           string                         `json:"code"`
+	Severity       string                         `json:"severity"`
+	Summary        string                         `json:"summary"`
+	Evidence       string                         `json:"evidence,omitempty"`
+	Action         string                         `json:"action,omitempty"`
+	ReasonCodes    []string                       `json:"reason_codes,omitempty"`
+	Dimension      string                         `json:"dimension,omitempty"`
+	Students       []classReportReviewStudentRef  `json:"students,omitempty"`
+	Recommendation *classReportRecommendationItem `json:"recommendation,omitempty"`
+}
+
+type classReportReview struct {
+	ClassName string                  `json:"class_name"`
+	Items     []classReportReviewItem `json:"items"`
 }
 
 type contestExportData struct {
@@ -732,9 +787,9 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
-	var summaryResp *teachingquerycontracts.TeacherClassSummary
-	var trendResp *teachingquerycontracts.TeacherClassTrend
-	var reviewResp *teachingquerycontracts.TeacherClassReview
+	var summaryResp *classReportSummary
+	var trendResp *classReportTrend
+	var reviewResp *classReportReview
 	if s.classInsightRepo != nil {
 		summary, err := s.classInsightRepo.GetClassSummary(ctx, className, window.Since)
 		if err != nil {
@@ -1524,11 +1579,11 @@ func (s *ReportService) parseClassWindow(req CreateClassReportInput) (classwindo
 	return window, nil
 }
 
-func mapClassSummary(summary *queryports.ClassSummary) *teachingquerycontracts.TeacherClassSummary {
+func mapClassSummary(summary *assessmentports.ClassInsightSummary) *classReportSummary {
 	if summary == nil {
 		return nil
 	}
-	return &teachingquerycontracts.TeacherClassSummary{
+	return &classReportSummary{
 		ClassName:          summary.ClassName,
 		StudentCount:       summary.StudentCount,
 		AverageSolved:      summary.AverageSolved,
@@ -1538,32 +1593,32 @@ func mapClassSummary(summary *queryports.ClassSummary) *teachingquerycontracts.T
 	}
 }
 
-func mapClassTrend(trend *queryports.ClassTrend) *teachingquerycontracts.TeacherClassTrend {
+func mapClassTrend(trend *assessmentports.ClassInsightTrend) *classReportTrend {
 	if trend == nil {
 		return nil
 	}
-	points := make([]teachingquerycontracts.TeacherClassTrendPoint, 0, len(trend.Points))
+	points := make([]classReportTrendPoint, 0, len(trend.Points))
 	for _, point := range trend.Points {
-		points = append(points, teachingquerycontracts.TeacherClassTrendPoint{
+		points = append(points, classReportTrendPoint{
 			Date:               point.Date,
 			ActiveStudentCount: point.ActiveStudentCount,
 			EventCount:         point.EventCount,
 			SolveCount:         point.SolveCount,
 		})
 	}
-	return &teachingquerycontracts.TeacherClassTrend{
+	return &classReportTrend{
 		ClassName: trend.ClassName,
 		Points:    points,
 	}
 }
 
-func mapClassReview(review *classreview.Response) *teachingquerycontracts.TeacherClassReview {
+func mapClassReview(review *classreview.Response) *classReportReview {
 	if review == nil {
 		return nil
 	}
-	items := make([]teachingquerycontracts.TeacherClassReviewItem, 0, len(review.Items))
+	items := make([]classReportReviewItem, 0, len(review.Items))
 	for _, item := range review.Items {
-		items = append(items, teachingquerycontracts.TeacherClassReviewItem{
+		items = append(items, classReportReviewItem{
 			Code:           item.Code,
 			Severity:       item.Severity,
 			Summary:        item.Summary,
@@ -1575,16 +1630,16 @@ func mapClassReview(review *classreview.Response) *teachingquerycontracts.Teache
 			Recommendation: mapReviewRecommendation(item.Recommendation),
 		})
 	}
-	return &teachingquerycontracts.TeacherClassReview{
+	return &classReportReview{
 		ClassName: review.ClassName,
 		Items:     items,
 	}
 }
 
-func mapReviewStudents(students []classreview.ReviewStudentRef) []teachingquerycontracts.TeacherReviewStudentRef {
-	items := make([]teachingquerycontracts.TeacherReviewStudentRef, 0, len(students))
+func mapReviewStudents(students []classreview.ReviewStudentRef) []classReportReviewStudentRef {
+	items := make([]classReportReviewStudentRef, 0, len(students))
 	for _, student := range students {
-		items = append(items, teachingquerycontracts.TeacherReviewStudentRef{
+		items = append(items, classReportReviewStudentRef{
 			ID:       student.ID,
 			Username: student.Username,
 			Name:     student.Name,
@@ -1593,11 +1648,11 @@ func mapReviewStudents(students []classreview.ReviewStudentRef) []teachingqueryc
 	return items
 }
 
-func mapReviewRecommendation(item *classreview.RecommendationItem) *teachingquerycontracts.TeacherRecommendationItem {
+func mapReviewRecommendation(item *classreview.RecommendationItem) *classReportRecommendationItem {
 	if item == nil {
 		return nil
 	}
-	return &teachingquerycontracts.TeacherRecommendationItem{
+	return &classReportRecommendationItem{
 		ChallengeID:    item.ChallengeID,
 		Title:          item.Title,
 		Category:       item.Category,
@@ -2047,7 +2102,7 @@ func addTopStudentsTable(pdf *gofpdf.Fpdf, title string, rows []assessmentdomain
 	}
 }
 
-func addClassTrendTable(pdf *gofpdf.Fpdf, title string, trend *teachingquerycontracts.TeacherClassTrend) {
+func addClassTrendTable(pdf *gofpdf.Fpdf, title string, trend *classReportTrend) {
 	points := safeTrendPoints(trend)
 	if len(points) == 0 {
 		return
@@ -2098,7 +2153,7 @@ func addContestMigrationSection(pdf *gofpdf.Fpdf, summary assessmentdomain.Class
 	})
 }
 
-func addClassReviewOutlineTable(pdf *gofpdf.Fpdf, review *teachingquerycontracts.TeacherClassReview) {
+func addClassReviewOutlineTable(pdf *gofpdf.Fpdf, review *classReportReview) {
 	items := safeReviewItems(review)
 	if len(items) == 0 {
 		return
@@ -2297,7 +2352,7 @@ func writeDistributionSheet(file *excelize.File, sheet string, headerStyle int, 
 	}
 }
 
-func writeReviewSheet(file *excelize.File, sheet string, headerStyle int, review *teachingquerycontracts.TeacherClassReview) {
+func writeReviewSheet(file *excelize.File, sheet string, headerStyle int, review *classReportReview) {
 	file.SetCellValue(sheet, "A1", "Code")
 	file.SetCellValue(sheet, "B1", "Severity")
 	file.SetCellValue(sheet, "C1", "Dimension")
@@ -2328,21 +2383,21 @@ func writeContestMigrationSheet(file *excelize.File, sheet string, headerStyle i
 	}, headerStyle)
 }
 
-func safeTrendPoints(trend *teachingquerycontracts.TeacherClassTrend) []teachingquerycontracts.TeacherClassTrendPoint {
+func safeTrendPoints(trend *classReportTrend) []classReportTrendPoint {
 	if trend == nil {
-		return []teachingquerycontracts.TeacherClassTrendPoint{}
+		return []classReportTrendPoint{}
 	}
 	return trend.Points
 }
 
-func safeReviewItems(review *teachingquerycontracts.TeacherClassReview) []teachingquerycontracts.TeacherClassReviewItem {
+func safeReviewItems(review *classReportReview) []classReportReviewItem {
 	if review == nil {
-		return []teachingquerycontracts.TeacherClassReviewItem{}
+		return []classReportReviewItem{}
 	}
 	return review.Items
 }
 
-func reviewStudentNames(students []teachingquerycontracts.TeacherReviewStudentRef) string {
+func reviewStudentNames(students []classReportReviewStudentRef) string {
 	names := make([]string, 0, len(students))
 	for _, student := range students {
 		if student.Name != nil && strings.TrimSpace(*student.Name) != "" {
@@ -2356,14 +2411,14 @@ func reviewStudentNames(students []teachingquerycontracts.TeacherReviewStudentRe
 	return strings.Join(names, ", ")
 }
 
-func reviewSummaryActiveRate(summary *teachingquerycontracts.TeacherClassSummary) float64 {
+func reviewSummaryActiveRate(summary *classReportSummary) float64 {
 	if summary == nil {
 		return 0
 	}
 	return summary.ActiveRate
 }
 
-func reviewSummaryRecentEvents(summary *teachingquerycontracts.TeacherClassSummary) int64 {
+func reviewSummaryRecentEvents(summary *classReportSummary) int64 {
 	if summary == nil {
 		return 0
 	}

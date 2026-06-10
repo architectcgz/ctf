@@ -66,6 +66,32 @@ func TestReportFlowDoesNotDependOnGlobalDTO(t *testing.T) {
 	}
 }
 
+func TestAssessmentRuntimeCodeDoesNotDependOnTeachingQuery(t *testing.T) {
+	t.Parallel()
+
+	err := filepath.WalkDir(".", func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			switch entry.Name() {
+			case "data", "testdata", "testsupport":
+				return filepath.SkipDir
+			default:
+				return nil
+			}
+		}
+		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		assertFileDoesNotImportPrefix(t, path, "ctf-platform/internal/module/teaching_query")
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk assessment runtime files: %v", err)
+	}
+}
+
 func TestCommandsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 
@@ -279,6 +305,26 @@ func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string
 		}
 		if importPath == blockedImport {
 			t.Fatalf("%s must not import %s", filePath, blockedImport)
+		}
+	}
+}
+
+func assertFileDoesNotImportPrefix(t *testing.T, filePath string, blockedPrefix string) {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
+	}
+
+	for _, importSpec := range fileNode.Imports {
+		importPath, err := strconv.Unquote(importSpec.Path.Value)
+		if err != nil {
+			t.Fatalf("unquote import %s: %v", importSpec.Path.Value, err)
+		}
+		if importPath == blockedPrefix || strings.HasPrefix(importPath, blockedPrefix+"/") {
+			t.Fatalf("%s must not import %s", filePath, importPath)
 		}
 	}
 }

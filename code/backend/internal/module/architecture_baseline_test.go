@@ -14,7 +14,6 @@ var moduleDependencyBaseline = map[string]struct{}{
 	"assessment -> challenge":        {},
 	"assessment -> identity":         {},
 	"assessment -> practice":         {},
-	"assessment -> teaching_query":   {},
 	"auth -> identity":               {},
 	"challenge -> identity":          {},
 	"challenge -> container_runtime": {},
