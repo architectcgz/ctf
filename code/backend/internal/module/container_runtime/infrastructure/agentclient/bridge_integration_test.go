@@ -18,6 +18,7 @@ import (
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	"ctf-platform/internal/module/container_runtime/infrastructure/agentclient"
 	"ctf-platform/internal/module/container_runtime/infrastructure/agentserver"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 
 	"google.golang.org/grpc"
@@ -51,7 +52,7 @@ func TestRemoteExecutionBridgeDelegatesRuntimeAndCheckerCallsOverMTLS(t *testing
 		grpc.Creds(credentials.NewTLS(serverTLS)),
 		grpc.ForceServerCodec(agentcontracts.JSONCodec()),
 	)
-	agentcontracts.RegisterRuntimeAgentService(server, agentserver.NewService(hostExecutor, checkerRunner))
+	agentcontracts.RegisterRuntimeAgentService(server, agentserver.NewService(hostExecutor, contestinfra.NewCheckerSandboxExecutor(checkerRunner)))
 	go func() {
 		_ = server.Serve(lis)
 	}()
@@ -82,6 +83,7 @@ func TestRemoteExecutionBridgeDelegatesRuntimeAndCheckerCallsOverMTLS(t *testing
 	}
 
 	bridge := agentclient.New(conn)
+	checkerRunnerClient := contestinfra.NewSandboxCheckerRunner(bridge)
 
 	networkID, err := bridge.CreateNetwork(ctx, "ctf-net", map[string]string{"scope": "test"}, true, true, "10.10.0.0/24")
 	if err != nil {
@@ -114,7 +116,7 @@ func TestRemoteExecutionBridgeDelegatesRuntimeAndCheckerCallsOverMTLS(t *testing
 		t.Fatalf("expected remote host executor to receive acl removal handle, got %+v", hostExecutor.removedACLHandle)
 	}
 
-	result, err := bridge.RunChecker(ctx, contestports.CheckerRunJob{
+	result, err := checkerRunnerClient.RunChecker(ctx, contestports.CheckerRunJob{
 		Runtime: "python3",
 		Image:   "python:3.12-alpine",
 		Entry:   "/checker/main.py",

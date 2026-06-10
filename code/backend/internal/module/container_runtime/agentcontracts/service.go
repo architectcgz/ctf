@@ -61,7 +61,7 @@ type RuntimeAgentService interface {
 	ListManagedContainers(ctx context.Context, req *ListManagedContainersRequest) (*ListManagedContainersResponse, error)
 	InspectManagedContainer(ctx context.Context, req *InspectManagedContainerRequest) (*InspectManagedContainerResponse, error)
 	ListManagedContainerStats(ctx context.Context, req *ListManagedContainerStatsRequest) (*ListManagedContainerStatsResponse, error)
-	RunChecker(ctx context.Context, req *RunCheckerRequest) (*RunCheckerResponse, error)
+	RunSandboxExec(ctx context.Context, req *RunSandboxExecRequest) (*RunSandboxExecResponse, error)
 	ExecContainerInteractive(stream RuntimeAgent_ExecContainerInteractiveServer) error
 }
 
@@ -90,7 +90,7 @@ type RuntimeAgentClient interface {
 	ListManagedContainers(ctx context.Context, req *ListManagedContainersRequest, opts ...grpc.CallOption) (*ListManagedContainersResponse, error)
 	InspectManagedContainer(ctx context.Context, req *InspectManagedContainerRequest, opts ...grpc.CallOption) (*InspectManagedContainerResponse, error)
 	ListManagedContainerStats(ctx context.Context, req *ListManagedContainerStatsRequest, opts ...grpc.CallOption) (*ListManagedContainerStatsResponse, error)
-	RunChecker(ctx context.Context, req *RunCheckerRequest, opts ...grpc.CallOption) (*RunCheckerResponse, error)
+	RunSandboxExec(ctx context.Context, req *RunSandboxExecRequest, opts ...grpc.CallOption) (*RunSandboxExecResponse, error)
 	ExecContainerInteractive(ctx context.Context, opts ...grpc.CallOption) (RuntimeAgent_ExecContainerInteractiveClient, error)
 }
 
@@ -339,8 +339,8 @@ func (c *runtimeAgentClient) ListManagedContainerStats(ctx context.Context, req 
 	return resp, nil
 }
 
-func (c *runtimeAgentClient) RunChecker(ctx context.Context, req *RunCheckerRequest, opts ...grpc.CallOption) (*RunCheckerResponse, error) {
-	resp := new(RunCheckerResponse)
+func (c *runtimeAgentClient) RunSandboxExec(ctx context.Context, req *RunSandboxExecRequest, opts ...grpc.CallOption) (*RunSandboxExecResponse, error) {
+	resp := new(RunSandboxExecResponse)
 	if err := c.cc.Invoke(ctx, MethodRunChecker, req, resp, opts...); err != nil {
 		return nil, err
 	}
@@ -461,8 +461,8 @@ var RuntimeAgentServiceDesc = grpc.ServiceDesc{
 		unaryMethod(MethodListManagedContainerStats, func() *ListManagedContainerStatsRequest { return &ListManagedContainerStatsRequest{} }, func(s RuntimeAgentService, ctx context.Context, req *ListManagedContainerStatsRequest) (*ListManagedContainerStatsResponse, error) {
 			return s.ListManagedContainerStats(ctx, req)
 		}),
-		unaryMethod(MethodRunChecker, func() *RunCheckerRequest { return &RunCheckerRequest{} }, func(s RuntimeAgentService, ctx context.Context, req *RunCheckerRequest) (*RunCheckerResponse, error) {
-			return s.RunChecker(ctx, req)
+		unaryMethod(MethodRunChecker, func() *RunSandboxExecRequest { return &RunSandboxExecRequest{} }, func(s RuntimeAgentService, ctx context.Context, req *RunSandboxExecRequest) (*RunSandboxExecResponse, error) {
+			return s.RunSandboxExec(ctx, req)
 		}),
 	},
 	Streams: []grpc.StreamDesc{

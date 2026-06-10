@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"ctf-platform/internal/testutil/archtest"
 )
 
 func TestContainerRuntimeOwnsCapabilityImplementationPackages(t *testing.T) {
@@ -63,6 +65,16 @@ func TestRuntimePackageDoesNotDependOnBusinessOwnerPorts(t *testing.T) {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/contracts")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice/contracts")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/instance/contracts")
+	}
+}
+
+func TestContainerRuntimeDoesNotDependOnBusinessOwnerModules(t *testing.T) {
+	t.Parallel()
+
+	for _, file := range archtest.RuntimeGoFiles(t, ".") {
+		assertFileDoesNotImportMatching(t, file, "ctf-platform/internal/module/contest")
+		assertFileDoesNotImportMatching(t, file, "ctf-platform/internal/module/practice")
+		assertFileDoesNotImportMatching(t, file, "ctf-platform/internal/module/instance")
 	}
 }
 

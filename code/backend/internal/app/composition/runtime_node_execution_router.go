@@ -14,6 +14,7 @@ import (
 	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -127,7 +128,7 @@ func buildRuntimeNodeClientFromNode(
 	if err != nil {
 		return nil, err
 	}
-	return newNodeRuntimeClient(cfg, logger, allocationRepo, bridge, bridge, bridge), nil
+	return newNodeRuntimeClient(cfg, logger, allocationRepo, bridge, contestinfra.NewSandboxCheckerRunner(bridge), bridge), nil
 }
 
 func newRuntimeNodeExecutionRouter(

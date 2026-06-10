@@ -2,7 +2,7 @@ package agentcontracts
 
 import (
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
-	contestports "ctf-platform/internal/module/contest/ports"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 )
 
 type HealthRequest struct{}
@@ -186,12 +186,12 @@ type ListManagedContainerStatsResponse struct {
 	Stats []runtimecontracts.ManagedContainerStat `json:"stats,omitempty"`
 }
 
-type RunCheckerRequest struct {
-	Job contestports.CheckerRunJob `json:"job"`
+type RunSandboxExecRequest struct {
+	Job runtimeports.SandboxExecJob `json:"job"`
 }
 
-type RunCheckerResponse struct {
-	Result contestports.CheckerRunResult `json:"result"`
+type RunSandboxExecResponse struct {
+	Result runtimeports.SandboxExecResult `json:"result"`
 }
 
 type ExecContainerInteractiveOpen struct {

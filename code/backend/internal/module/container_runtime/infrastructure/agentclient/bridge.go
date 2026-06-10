@@ -13,7 +13,6 @@ import (
 	"ctf-platform/internal/module/container_runtime/agentcontracts"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
-	contestports "ctf-platform/internal/module/contest/ports"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -25,7 +24,7 @@ type Bridge struct {
 }
 
 var _ runtimeports.RuntimeHostExecutor = (*Bridge)(nil)
-var _ contestports.CheckerRunner = (*Bridge)(nil)
+var _ runtimeports.SandboxExecutor = (*Bridge)(nil)
 
 func New(conn *grpc.ClientConn) *Bridge {
 	if conn == nil {
@@ -268,10 +267,10 @@ func (b *Bridge) ListManagedContainerStats(ctx context.Context) ([]runtimecontra
 	return resp.Stats, nil
 }
 
-func (b *Bridge) RunChecker(ctx context.Context, job contestports.CheckerRunJob) (contestports.CheckerRunResult, error) {
-	resp, err := b.requireClient().RunChecker(ctx, &agentcontracts.RunCheckerRequest{Job: job})
+func (b *Bridge) RunSandboxExec(ctx context.Context, job runtimeports.SandboxExecJob) (runtimeports.SandboxExecResult, error) {
+	resp, err := b.requireClient().RunSandboxExec(ctx, &agentcontracts.RunSandboxExecRequest{Job: job})
 	if err != nil {
-		return contestports.CheckerRunResult{}, err
+		return runtimeports.SandboxExecResult{}, err
 	}
 	return resp.Result, nil
 }

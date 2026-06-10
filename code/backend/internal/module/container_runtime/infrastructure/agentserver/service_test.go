@@ -8,7 +8,6 @@ import (
 
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
-	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func TestServiceHealthReflectsAvailableDependencies(t *testing.T) {
@@ -17,7 +16,7 @@ func TestServiceHealthReflectsAvailableDependencies(t *testing.T) {
 	testCases := []struct {
 		name             string
 		hostExecutor     runtimeports.RuntimeHostExecutor
-		checkerRunner    contestports.CheckerRunner
+		sandboxExecutor  runtimeports.SandboxExecutor
 		wantReady        bool
 		wantCapabilities []string
 	}{
@@ -34,14 +33,14 @@ func TestServiceHealthReflectsAvailableDependencies(t *testing.T) {
 		},
 		{
 			name:             "checker runner only",
-			checkerRunner:    healthTestCheckerRunner{},
+			sandboxExecutor:  healthTestSandboxExecutor{},
 			wantReady:        false,
 			wantCapabilities: []string{"checker_runner"},
 		},
 		{
 			name:             "all dependencies",
 			hostExecutor:     &healthTestRuntimeHostExecutor{},
-			checkerRunner:    healthTestCheckerRunner{},
+			sandboxExecutor:  healthTestSandboxExecutor{},
 			wantReady:        true,
 			wantCapabilities: []string{"runtime_host_execution", "checker_runner", "interactive_exec"},
 		},
@@ -49,7 +48,7 @@ func TestServiceHealthReflectsAvailableDependencies(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := NewService(tc.hostExecutor, tc.checkerRunner).Health(context.Background(), nil)
+			resp, err := NewService(tc.hostExecutor, tc.sandboxExecutor).Health(context.Background(), nil)
 			if err != nil {
 				t.Fatalf("Health() error = %v", err)
 			}
@@ -68,10 +67,10 @@ func TestServiceHealthReflectsAvailableDependencies(t *testing.T) {
 	}
 }
 
-type healthTestCheckerRunner struct{}
+type healthTestSandboxExecutor struct{}
 
-func (healthTestCheckerRunner) RunChecker(context.Context, contestports.CheckerRunJob) (contestports.CheckerRunResult, error) {
-	return contestports.CheckerRunResult{}, nil
+func (healthTestSandboxExecutor) RunSandboxExec(context.Context, runtimeports.SandboxExecJob) (runtimeports.SandboxExecResult, error) {
+	return runtimeports.SandboxExecResult{}, nil
 }
 
 type healthTestRuntimeHostExecutor struct{}

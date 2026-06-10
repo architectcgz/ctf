@@ -13,7 +13,6 @@ import (
 
 	"ctf-platform/internal/module/container_runtime/agentcontracts"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
-	contestports "ctf-platform/internal/module/contest/ports"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -21,16 +20,16 @@ import (
 
 var (
 	errRuntimeExecutorUnavailable = errors.New("runtime host executor is unavailable")
-	errCheckerRunnerUnavailable   = errors.New("checker runner is unavailable")
+	errSandboxExecutorUnavailable = errors.New("sandbox executor is unavailable")
 )
 
 type Service struct {
-	hostExecutor  runtimeports.RuntimeHostExecutor
-	checkerRunner contestports.CheckerRunner
+	hostExecutor    runtimeports.RuntimeHostExecutor
+	sandboxExecutor runtimeports.SandboxExecutor
 }
 
-func NewService(hostExecutor runtimeports.RuntimeHostExecutor, checkerRunner contestports.CheckerRunner) *Service {
-	return &Service{hostExecutor: hostExecutor, checkerRunner: checkerRunner}
+func NewService(hostExecutor runtimeports.RuntimeHostExecutor, sandboxExecutor runtimeports.SandboxExecutor) *Service {
+	return &Service{hostExecutor: hostExecutor, sandboxExecutor: sandboxExecutor}
 }
 
 func LoadServerTLSConfig(certFile, keyFile, clientCAFile string) (*tls.Config, error) {
@@ -71,14 +70,14 @@ func (s *Service) Health(context.Context, *agentcontracts.HealthRequest) (*agent
 	if s != nil && s.hostExecutor != nil {
 		capabilities = append(capabilities, "runtime_host_execution")
 	}
-	if s != nil && s.checkerRunner != nil {
+	if s != nil && s.sandboxExecutor != nil {
 		capabilities = append(capabilities, "checker_runner")
 	}
 	if s != nil && s.hostExecutor != nil {
 		capabilities = append(capabilities, "interactive_exec")
 	}
 	return &agentcontracts.HealthResponse{
-		Ready:        s != nil && s.hostExecutor != nil && s.checkerRunner != nil,
+		Ready:        s != nil && s.hostExecutor != nil && s.sandboxExecutor != nil,
 		Capabilities: capabilities,
 	}, nil
 }
@@ -348,16 +347,16 @@ func (s *Service) ListManagedContainerStats(ctx context.Context, _ *agentcontrac
 	return &agentcontracts.ListManagedContainerStatsResponse{Stats: stats}, nil
 }
 
-func (s *Service) RunChecker(ctx context.Context, req *agentcontracts.RunCheckerRequest) (*agentcontracts.RunCheckerResponse, error) {
-	runner, err := s.requireCheckerRunner()
+func (s *Service) RunSandboxExec(ctx context.Context, req *agentcontracts.RunSandboxExecRequest) (*agentcontracts.RunSandboxExecResponse, error) {
+	executor, err := s.requireSandboxExecutor()
 	if err != nil {
 		return nil, err
 	}
-	result, err := runner.RunChecker(ctx, req.Job)
+	result, err := executor.RunSandboxExec(ctx, req.Job)
 	if err != nil {
 		return nil, err
 	}
-	return &agentcontracts.RunCheckerResponse{Result: result}, nil
+	return &agentcontracts.RunSandboxExecResponse{Result: result}, nil
 }
 
 func (s *Service) ExecContainerInteractive(stream agentcontracts.RuntimeAgent_ExecContainerInteractiveServer) error {
@@ -416,11 +415,11 @@ func (s *Service) requireHostExecutor() (runtimeports.RuntimeHostExecutor, error
 	return s.hostExecutor, nil
 }
 
-func (s *Service) requireCheckerRunner() (contestports.CheckerRunner, error) {
-	if s == nil || s.checkerRunner == nil {
-		return nil, errCheckerRunnerUnavailable
+func (s *Service) requireSandboxExecutor() (runtimeports.SandboxExecutor, error) {
+	if s == nil || s.sandboxExecutor == nil {
+		return nil, errSandboxExecutorUnavailable
 	}
-	return s.checkerRunner, nil
+	return s.sandboxExecutor, nil
 }
 
 type interactiveStreamWriter struct {
