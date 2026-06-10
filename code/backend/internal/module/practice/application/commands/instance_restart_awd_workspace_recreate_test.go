@@ -10,12 +10,12 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
+	contestinfrarepo "ctf-platform/internal/module/contest/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *testing.T) {
@@ -237,7 +237,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 		t.Fatalf("expected runtime and workspace recreation, got %d topology calls", createTopologyCalls.Load())
 	}
 
-	workspace, err := runtimeinfrarepo.NewAWDRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
+	workspace, err := contestinfrarepo.NewAWDRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
 	if err != nil {
 		t.Fatalf("FindAWDDefenseWorkspace() error = %v", err)
 	}

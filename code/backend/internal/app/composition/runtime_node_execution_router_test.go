@@ -15,10 +15,11 @@ import (
 	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 )
 
 func TestRuntimeNodeExecutionRouterRoutesCheckerByNodeID(t *testing.T) {
@@ -36,7 +37,7 @@ func TestRuntimeNodeExecutionRouterRoutesCheckerByNodeID(t *testing.T) {
 		cfg,
 		zap.NewNop(),
 		containerruntimeinfra.NewAllocationRepository(db),
-		runtimeinfra.NewContainerNodeIndexRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
 		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -110,7 +111,7 @@ func TestRuntimeNodeExecutionRouterRoutesContainerFileWritesByWorkspaceContainer
 		cfg,
 		zap.NewNop(),
 		containerruntimeinfra.NewAllocationRepository(db),
-		runtimeinfra.NewContainerNodeIndexRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
 		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -182,7 +183,7 @@ func TestRuntimeNodeExecutionRouterRoutesInteractiveExecByWorkspaceContainerNode
 		cfg,
 		zap.NewNop(),
 		containerruntimeinfra.NewAllocationRepository(db),
-		runtimeinfra.NewContainerNodeIndexRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
 		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -247,7 +248,7 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByRuntimeDetailsContainerNodeID(
 		cfg,
 		zap.NewNop(),
 		containerruntimeinfra.NewAllocationRepository(db),
-		runtimeinfra.NewContainerNodeIndexRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
 		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -324,7 +325,7 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByWorkspaceContainerIDWithoutNod
 		cfg,
 		zap.NewNop(),
 		containerruntimeinfra.NewAllocationRepository(db),
-		runtimeinfra.NewContainerNodeIndexRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
 		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -360,7 +361,7 @@ func TestRuntimeNodeExecutionRouterRoutesRemoveContainerByInventoryCache(t *test
 		cfg,
 		zap.NewNop(),
 		containerruntimeinfra.NewAllocationRepository(db),
-		runtimeinfra.NewContainerNodeIndexRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
 		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		"",
 	)
@@ -420,6 +421,13 @@ func seedRuntimeRouterNodes(t *testing.T, db *gorm.DB) (*containerruntimeentity.
 		t.Fatalf("create node-b: %v", err)
 	}
 	return nodeA, nodeB
+}
+
+func newRuntimeNodeTestContainerIndex(db *gorm.DB) runtimeNodeStateRepository {
+	return newCompositeRuntimeNodeContainerIndex(
+		newInstanceRuntimeInventoryProvider(instanceinfra.NewContainerInventoryRepository(db)),
+		contestinfra.NewAWDContainerInventoryRepository(db),
+	)
 }
 
 func overrideRuntimeNodeClientBuilder(t *testing.T, clients map[int64]runtimeNodeClient) {

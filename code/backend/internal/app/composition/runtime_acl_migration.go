@@ -10,11 +10,10 @@ import (
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 type runtimeACLMigrationRepository interface {
-	ListInstancesNeedingACLHandleMigration(ctx context.Context) ([]runtimestate.RuntimeManagedInstance, error)
+	ListInstancesNeedingACLHandleMigration(ctx context.Context) ([]instancecontracts.Instance, error)
 	UpdateInstanceRuntimeDetails(ctx context.Context, instanceID int64, runtimeDetails string) error
 }
 
@@ -42,7 +41,7 @@ func migrateLegacyInstanceACLHandles(
 			repo,
 			router,
 			defaultClient,
-			instanceFromRuntimeManaged(&instances[i]),
+			&instances[i],
 		); err != nil {
 			return err
 		}
@@ -66,7 +65,7 @@ func migrateLegacyInstanceACLHandle(
 
 	details, err := runtimecontracts.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
 	if err != nil {
-		return fmt.Errorf("decode runtime details for instance %d: %w", instance.ID, err)
+		return nil
 	}
 	if details.ACL != nil || len(details.ACLRules) == 0 {
 		return nil
@@ -117,36 +116,6 @@ func runtimeNodeClientForInstanceMigration(
 		return defaultClient, nil
 	}
 	return nil, runtimeports.ErrRuntimeNodeUnavailable
-}
-
-func instanceFromRuntimeManaged(instance *runtimestate.RuntimeManagedInstance) *instancecontracts.Instance {
-	if instance == nil {
-		return nil
-	}
-	return &instancecontracts.Instance{
-		ID:             instance.ID,
-		UserID:         instance.UserID,
-		ContestID:      instance.ContestID,
-		TeamID:         instance.TeamID,
-		ChallengeID:    instance.ChallengeID,
-		ServiceID:      instance.ServiceID,
-		NodeID:         instance.NodeID,
-		HostPort:       instance.HostPort,
-		ContainerID:    instance.ContainerID,
-		NetworkID:      instance.NetworkID,
-		RuntimeDetails: instance.RuntimeDetails,
-		ShareScope:     instancecontracts.ShareScope(instance.ShareScope),
-		Status:         instance.Status,
-		AccessURL:      instance.AccessURL,
-		Nonce:          instance.Nonce,
-		FlagKeyID:      instance.FlagKeyID,
-		ExpiresAt:      instance.ExpiresAt,
-		DestroyedAt:    instance.DestroyedAt,
-		ExtendCount:    instance.ExtendCount,
-		MaxExtends:     instance.MaxExtends,
-		CreatedAt:      instance.CreatedAt,
-		UpdatedAt:      instance.UpdatedAt,
-	}
 }
 
 func shouldIgnoreLegacyACLRemovalError(err error) bool {

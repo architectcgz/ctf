@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 type ctxOnlyInstanceRepository struct{}

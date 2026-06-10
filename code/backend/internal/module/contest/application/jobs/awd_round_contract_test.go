@@ -9,8 +9,8 @@ import (
 	"ctf-platform/internal/config"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 type awdRoundUpdaterRepoStub struct {

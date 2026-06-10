@@ -294,7 +294,9 @@ func TestBuildInstanceModuleDelegatesToSubBuilders(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"module := runtime.runtime",
-		"runtimeinfra.NewActiveContainerInventoryRepository(root.DB())",
+		"newCompositeActiveContainerInventory(",
+		"newInstanceRuntimeInventoryProvider(instanceinfra.NewContainerInventoryRepository(root.DB()))",
+		"contestinfra.NewAWDContainerInventoryRepository(root.DB())",
 		"instanceinfra.NewRepository(root.DB())",
 		"instancecmd.NewInstanceService(",
 		"buildRuntimeProxyTicketService(root, instanceRepo)",

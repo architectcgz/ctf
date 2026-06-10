@@ -9,8 +9,8 @@ import (
 	"gorm.io/gorm"
 
 	contestentity "ctf-platform/internal/module/contest/entity"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 	contestports "ctf-platform/internal/module/contest/ports"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 type awdJobRepositorySourceStub struct {

@@ -81,6 +81,34 @@ const (
 	AWDAttackSourceSubmission = contestentity.AWDAttackSourceSubmission
 
 	AWDTrafficSourceRuntimeProxy = contestentity.AWDTrafficSourceRuntimeProxy
+
+	AWDDefenseWorkspaceStatusPending      = contestentity.AWDDefenseWorkspaceStatusPending
+	AWDDefenseWorkspaceStatusProvisioning = contestentity.AWDDefenseWorkspaceStatusProvisioning
+	AWDDefenseWorkspaceStatusRunning      = contestentity.AWDDefenseWorkspaceStatusRunning
+	AWDDefenseWorkspaceStatusFailed       = contestentity.AWDDefenseWorkspaceStatusFailed
+
+	AWDServiceOperationTypeStart    = contestentity.AWDServiceOperationTypeStart
+	AWDServiceOperationTypeRestart  = contestentity.AWDServiceOperationTypeRestart
+	AWDServiceOperationTypeRecover  = contestentity.AWDServiceOperationTypeRecover
+	AWDServiceOperationTypeRecreate = contestentity.AWDServiceOperationTypeRecreate
+
+	AWDServiceOperationRequestedByUser   = contestentity.AWDServiceOperationRequestedByUser
+	AWDServiceOperationRequestedByAdmin  = contestentity.AWDServiceOperationRequestedByAdmin
+	AWDServiceOperationRequestedBySystem = contestentity.AWDServiceOperationRequestedBySystem
+
+	AWDServiceOperationStatusRequested    = contestentity.AWDServiceOperationStatusRequested
+	AWDServiceOperationStatusProvisioning = contestentity.AWDServiceOperationStatusProvisioning
+	AWDServiceOperationStatusRecovering   = contestentity.AWDServiceOperationStatusRecovering
+	AWDServiceOperationStatusRecovered    = contestentity.AWDServiceOperationStatusRecovered
+	AWDServiceOperationStatusSucceeded    = contestentity.AWDServiceOperationStatusSucceeded
+	AWDServiceOperationStatusFailed       = contestentity.AWDServiceOperationStatusFailed
+
+	AWDScopeControlScopeTeam        = contestentity.AWDScopeControlScopeTeam
+	AWDScopeControlScopeTeamService = contestentity.AWDScopeControlScopeTeamService
+
+	AWDScopeControlTypeRetired                    = contestentity.AWDScopeControlTypeRetired
+	AWDScopeControlTypeServiceDisabled            = contestentity.AWDScopeControlTypeServiceDisabled
+	AWDScopeControlTypeDesiredReconcileSuppressed = contestentity.AWDScopeControlTypeDesiredReconcileSuppressed
 )
 
 type AWDRound = contestentity.AWDRound
@@ -92,3 +120,9 @@ type AWDAttackLog = contestentity.AWDAttackLog
 type AWDTrafficEvent = contestentity.AWDTrafficEvent
 
 type AWDProxyTrafficEventInput = contestentity.AWDProxyTrafficEventInput
+
+type AWDDefenseWorkspace = contestentity.AWDDefenseWorkspace
+
+type AWDServiceOperation = contestentity.AWDServiceOperation
+
+type AWDScopeControl = contestentity.AWDScopeControl

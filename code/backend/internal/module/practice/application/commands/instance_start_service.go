@@ -17,7 +17,6 @@ import (
 	"ctf-platform/internal/module/practice/domain"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 const (
@@ -50,7 +49,7 @@ func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID,
 	if err != nil {
 		return nil, err
 	}
-	s.recordAWDServiceOperation(ctx, resp.ID, contestID, scope, runtimestate.AWDServiceOperationTypeStart, awdOperationStatusForInstanceStatus(resp.Status), runtimestate.AWDServiceOperationRequestedByUser, &userID, "user_start", true)
+	s.recordAWDServiceOperation(ctx, resp.ID, contestID, scope, contestcontracts.AWDServiceOperationTypeStart, awdOperationStatusForInstanceStatus(resp.Status), contestcontracts.AWDServiceOperationRequestedByUser, &userID, "user_start", true)
 	return resp, nil
 }
 
@@ -68,9 +67,9 @@ func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestI
 		ChallengeID: challengeID,
 		Scope:       scope,
 		Audit: awdScopedRuntimeAudit{
-			StartOperationType:   runtimestate.AWDServiceOperationTypeRestart,
-			RestartOperationType: runtimestate.AWDServiceOperationTypeRestart,
-			RequestedBy:          runtimestate.AWDServiceOperationRequestedByUser,
+			StartOperationType:   contestcontracts.AWDServiceOperationTypeRestart,
+			RestartOperationType: contestcontracts.AWDServiceOperationTypeRestart,
+			RequestedBy:          contestcontracts.AWDServiceOperationRequestedByUser,
 			RequestedByID:        &userID,
 			Reason:               "user_restart",
 			SLABillable:          true,
@@ -179,9 +178,9 @@ restartInstance:
 		if err := txRepo.ResetInstanceRuntimeForRestart(ctx, instance.ID, nextStatus, nextExpiresAt, preserveHostPort); err != nil {
 			return apperror.ErrInternal.WithCause(err)
 		}
-		operationStatus := runtimestate.AWDServiceOperationStatusRequested
+		operationStatus := contestcontracts.AWDServiceOperationStatusRequested
 		if nextStatus == instancecontracts.InstanceStatusPending {
-			operationStatus = runtimestate.AWDServiceOperationStatusProvisioning
+			operationStatus = contestcontracts.AWDServiceOperationStatusProvisioning
 		}
 		if err := createAWDServiceOperation(ctx, txRepo, instance.ID, req.ContestID, scope, req.Audit.RestartOperationType, operationStatus, req.Audit.RequestedBy, req.Audit.RequestedByID, req.Audit.Reason, req.Audit.SLABillable); err != nil {
 			return apperror.ErrInternal.WithCause(err)

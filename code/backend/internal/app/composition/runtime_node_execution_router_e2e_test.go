@@ -16,9 +16,10 @@ import (
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 )
 
 const (
@@ -77,7 +78,7 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesRuntimeDetailsContainerNode(t *
 		cfg,
 		zap.NewNop(),
 		containerruntimeinfra.NewAllocationRepository(db),
-		runtimeinfra.NewContainerNodeIndexRepository(db),
+		newRuntimeNodeE2EContainerIndex(db),
 		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		runtimeNodeRouterE2EDefaultRuntimeNodeName,
 	)
@@ -186,7 +187,7 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesWorkspaceContainerNode(t *testi
 		cfg,
 		zap.NewNop(),
 		containerruntimeinfra.NewAllocationRepository(db),
-		runtimeinfra.NewContainerNodeIndexRepository(db),
+		newRuntimeNodeE2EContainerIndex(db),
 		containerruntimeinfra.NewRuntimeNodeRepository(db),
 		runtimeNodeRouterE2EDefaultRuntimeNodeName,
 	)
@@ -323,6 +324,13 @@ func seedRuntimeRouterE2ENodes(t *testing.T, db *gorm.DB, env runtimeNodeRouterE
 		t.Fatalf("create node B: %v", err)
 	}
 	return nodeA, nodeB
+}
+
+func newRuntimeNodeE2EContainerIndex(db *gorm.DB) runtimeNodeStateRepository {
+	return newCompositeRuntimeNodeContainerIndex(
+		newInstanceRuntimeInventoryProvider(instanceinfra.NewContainerInventoryRepository(db)),
+		contestinfra.NewAWDContainerInventoryRepository(db),
+	)
 }
 
 func applyRuntimeNodeRouterE2EContainerConfig(cfg *config.ContainerConfig) {

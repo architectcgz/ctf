@@ -16,6 +16,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
 	instanceqry "ctf-platform/internal/module/instance/application/queries"
@@ -23,8 +24,6 @@ import (
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	instanceports "ctf-platform/internal/module/instance/ports"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
 )
@@ -336,14 +335,14 @@ func TestInstanceServiceGetUserInstancesHidesControlledAWDInstance(t *testing.T)
 	}{
 		{
 			name:        "team_retired",
-			scopeType:   runtimestate.AWDScopeControlScopeTeam,
-			controlType: runtimestate.AWDScopeControlTypeRetired,
+			scopeType:   contestcontracts.AWDScopeControlScopeTeam,
+			controlType: contestcontracts.AWDScopeControlTypeRetired,
 			serviceID:   0,
 		},
 		{
 			name:        "service_disabled",
-			scopeType:   runtimestate.AWDScopeControlScopeTeamService,
-			controlType: runtimestate.AWDScopeControlTypeServiceDisabled,
+			scopeType:   contestcontracts.AWDScopeControlScopeTeamService,
+			controlType: contestcontracts.AWDScopeControlTypeServiceDisabled,
 			serviceID:   9703,
 		},
 	} {
@@ -420,7 +419,7 @@ func TestInstanceServiceGetUserInstancesHidesControlledAWDInstance(t *testing.T)
 				CreatedAt:   now,
 				UpdatedAt:   now,
 			})
-			if err := db.Create(&runtimestate.AWDScopeControl{
+			if err := db.Create(&contestcontracts.AWDScopeControl{
 				ContestID:   contestID,
 				TeamID:      teamID,
 				ScopeType:   tc.scopeType,
@@ -719,12 +718,12 @@ func TestInstanceServiceGetAccessURLRejectsControlledAWDInstance(t *testing.T) {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	})
-	if err := db.Create(&runtimestate.AWDScopeControl{
+	if err := db.Create(&contestcontracts.AWDScopeControl{
 		ContestID:   contestID,
 		TeamID:      teamID,
-		ScopeType:   runtimestate.AWDScopeControlScopeTeamService,
+		ScopeType:   contestcontracts.AWDScopeControlScopeTeamService,
 		ServiceID:   serviceID,
-		ControlType: runtimestate.AWDScopeControlTypeServiceDisabled,
+		ControlType: contestcontracts.AWDScopeControlTypeServiceDisabled,
 		Reason:      "disabled",
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -1042,7 +1041,7 @@ func newInstanceServiceTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(&contestcontracts.Contest{}, &contestcontracts.ContestAWDService{}); err != nil {
 		t.Fatalf("migrate awd tables: %v", err)
 	}
-	if err := db.AutoMigrate(&runtimestate.AWDScopeControl{}); err != nil {
+	if err := db.AutoMigrate(&contestcontracts.AWDScopeControl{}); err != nil {
 		t.Fatalf("migrate awd scope control tables: %v", err)
 	}
 	if err := db.AutoMigrate(&runtimeentity.AWDServiceOperation{}); err != nil {

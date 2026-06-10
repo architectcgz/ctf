@@ -12,11 +12,11 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 func (s *Service) createContainer(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
@@ -29,7 +29,7 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 		return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 	}
 	if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
-		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimestate.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
+		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, contestcontracts.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
 			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 		}
 	}
@@ -77,7 +77,7 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 				return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 			}
 		}
-		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimestate.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
+		if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, contestcontracts.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
 			if awdWorkspacePlan.createWorkspace {
 				if cleanupErr := s.cleanupAWDDefenseWorkspaceCompanion(ctx, workspaceContainerID); cleanupErr != nil {
 					s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, workspaceContainerID)
@@ -112,7 +112,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 			return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 		}
 		if awdWorkspacePlan != nil && awdWorkspacePlan.createWorkspace {
-			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimestate.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
+			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, contestcontracts.AWDDefenseWorkspaceStatusProvisioning, ""); err != nil {
 				return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 			}
 		}
@@ -182,7 +182,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *instancec
 					return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 				}
 			}
-			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, runtimestate.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
+			if err := s.persistAWDDefenseWorkspaceState(ctx, awdWorkspacePlan, instance.ID, contestcontracts.AWDDefenseWorkspaceStatusRunning, workspaceContainerID); err != nil {
 				if awdWorkspacePlan.createWorkspace {
 					if cleanupErr := s.cleanupAWDDefenseWorkspaceCompanion(ctx, workspaceContainerID); cleanupErr != nil {
 						s.persistAWDDefenseWorkspaceFailure(ctx, awdWorkspacePlan, instance.ID, workspaceContainerID)

@@ -9,27 +9,11 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	contestentity "ctf-platform/internal/module/contest/entity"
 )
 
-type AWDRepository struct {
-	db *gorm.DB
-}
-
-func NewAWDRepository(db *gorm.DB) *AWDRepository {
-	return &AWDRepository{db: db}
-}
-
-func (r *AWDRepository) WithDB(db *gorm.DB) *AWDRepository {
-	return &AWDRepository{db: db}
-}
-
-func (r *AWDRepository) dbWithContext(ctx context.Context) *gorm.DB {
-	return r.db.WithContext(ctx)
-}
-
-func (r *AWDRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimeentity.AWDDefenseWorkspace, error) {
-	var workspace runtimeentity.AWDDefenseWorkspace
+func (r *AWDRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*contestentity.AWDDefenseWorkspace, error) {
+	var workspace contestentity.AWDDefenseWorkspace
 	err := r.dbWithContext(ctx).
 		Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).
 		First(&workspace).Error
@@ -42,7 +26,7 @@ func (r *AWDRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, 
 	return &workspace, nil
 }
 
-func (r *AWDRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimeentity.AWDDefenseWorkspace) error {
+func (r *AWDRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *contestentity.AWDDefenseWorkspace) error {
 	if workspace == nil {
 		return nil
 	}
@@ -51,7 +35,7 @@ func (r *AWDRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace
 		workspace.WorkspaceRevision = 1
 	}
 	if strings.TrimSpace(workspace.Status) == "" {
-		workspace.Status = runtimeentity.AWDDefenseWorkspaceStatusPending
+		workspace.Status = contestentity.AWDDefenseWorkspaceStatusPending
 	}
 
 	now := time.Now().UTC()
@@ -86,7 +70,7 @@ func (r *AWDRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace
 func (r *AWDRepository) BumpAWDDefenseWorkspaceRevision(ctx context.Context, contestID, teamID, serviceID, instanceID int64, seedSignature string) error {
 	now := time.Now().UTC()
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var workspace runtimeentity.AWDDefenseWorkspace
+		var workspace contestentity.AWDDefenseWorkspace
 		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).
 			First(&workspace).Error
@@ -94,25 +78,25 @@ func (r *AWDRepository) BumpAWDDefenseWorkspaceRevision(ctx context.Context, con
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				return err
 			}
-			return tx.Create(&runtimeentity.AWDDefenseWorkspace{
+			return tx.Create(&contestentity.AWDDefenseWorkspace{
 				ContestID:         contestID,
 				TeamID:            teamID,
 				ServiceID:         serviceID,
 				InstanceID:        instanceID,
 				WorkspaceRevision: 1,
-				Status:            runtimeentity.AWDDefenseWorkspaceStatusProvisioning,
+				Status:            contestentity.AWDDefenseWorkspaceStatusProvisioning,
 				SeedSignature:     seedSignature,
 				CreatedAt:         now,
 				UpdatedAt:         now,
 			}).Error
 		}
 
-		return tx.Model(&runtimeentity.AWDDefenseWorkspace{}).
+		return tx.Model(&contestentity.AWDDefenseWorkspace{}).
 			Where("id = ?", workspace.ID).
 			Updates(map[string]any{
 				"instance_id":        instanceID,
 				"workspace_revision": workspace.WorkspaceRevision + 1,
-				"status":             runtimeentity.AWDDefenseWorkspaceStatusProvisioning,
+				"status":             contestentity.AWDDefenseWorkspaceStatusProvisioning,
 				"container_id":       "",
 				"seed_signature":     seedSignature,
 				"updated_at":         now,
@@ -120,15 +104,15 @@ func (r *AWDRepository) BumpAWDDefenseWorkspaceRevision(ctx context.Context, con
 	})
 }
 
-func (r *AWDRepository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*runtimeentity.AWDDefenseWorkspace, error) {
+func (r *AWDRepository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.Context, instanceID int64) (*contestentity.AWDDefenseWorkspace, error) {
 	if instanceID <= 0 {
 		return nil, nil
 	}
 
-	var workspace runtimeentity.AWDDefenseWorkspace
+	var workspace contestentity.AWDDefenseWorkspace
 	err := r.dbWithContext(ctx).
 		Where("instance_id = ?", instanceID).
-		Where("status = ?", runtimeentity.AWDDefenseWorkspaceStatusRunning).
+		Where("status = ?", contestentity.AWDDefenseWorkspaceStatusRunning).
 		Where("container_id <> ''").
 		First(&workspace).Error
 	if err != nil {
@@ -144,7 +128,7 @@ func (r *AWDRepository) FindRunningAWDDefenseWorkspaceByInstanceID(ctx context.C
 	return &workspace, nil
 }
 
-func (r *AWDRepository) CreateAWDServiceOperation(ctx context.Context, operation *runtimeentity.AWDServiceOperation) error {
+func (r *AWDRepository) CreateAWDServiceOperation(ctx context.Context, operation *contestentity.AWDServiceOperation) error {
 	return r.dbWithContext(ctx).Create(operation).Error
 }
 
@@ -153,11 +137,11 @@ func (r *AWDRepository) FinishActiveAWDServiceOperationForInstance(ctx context.C
 		return nil
 	}
 	return r.dbWithContext(ctx).
-		Model(&runtimeentity.AWDServiceOperation{}).
+		Model(&contestentity.AWDServiceOperation{}).
 		Where("instance_id = ? AND status IN ?", instanceID, []string{
-			runtimeentity.AWDServiceOperationStatusRequested,
-			runtimeentity.AWDServiceOperationStatusProvisioning,
-			runtimeentity.AWDServiceOperationStatusRecovering,
+			contestentity.AWDServiceOperationStatusRequested,
+			contestentity.AWDServiceOperationStatusProvisioning,
+			contestentity.AWDServiceOperationStatusRecovering,
 		}).
 		Updates(map[string]any{
 			"status":        status,
@@ -172,7 +156,7 @@ func (r *AWDRepository) FinishAWDServiceOperation(ctx context.Context, operation
 		return nil
 	}
 	return r.dbWithContext(ctx).
-		Model(&runtimeentity.AWDServiceOperation{}).
+		Model(&contestentity.AWDServiceOperation{}).
 		Where("id = ?", operationID).
 		Updates(map[string]any{
 			"status":        status,

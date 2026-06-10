@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	"go.uber.org/zap"
 )
 
@@ -118,9 +118,9 @@ func (s *Service) ensureDesiredAdminContestAWDTeamService(ctx context.Context, c
 		Scope:        scope,
 		NoopIfActive: true,
 		Audit: awdScopedRuntimeAudit{
-			StartOperationType:   runtimestate.AWDServiceOperationTypeStart,
-			RestartOperationType: runtimestate.AWDServiceOperationTypeRecreate,
-			RequestedBy:          runtimestate.AWDServiceOperationRequestedBySystem,
+			StartOperationType:   contestcontracts.AWDServiceOperationTypeStart,
+			RestartOperationType: contestcontracts.AWDServiceOperationTypeRecreate,
+			RequestedBy:          contestcontracts.AWDServiceOperationRequestedBySystem,
 			Reason:               "desired_runtime_reconcile",
 			SLABillable:          false,
 		},

@@ -8,6 +8,9 @@ import (
 	"time"
 
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
+	contestinfrarepo "ctf-platform/internal/module/contest/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -16,9 +19,6 @@ import (
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"gorm.io/gorm"
 )
 
@@ -26,7 +26,7 @@ type practiceTestInstanceRepository struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfrarepo.Repository
 	allocationRepo *containerruntimeinfra.AllocationRepository
-	awdRepo        *runtimeinfrarepo.AWDRepository
+	awdRepo        *contestinfrarepo.AWDRepository
 }
 
 func newPracticeTestInstanceRepository(db *gorm.DB) *practiceTestInstanceRepository {
@@ -34,7 +34,7 @@ func newPracticeTestInstanceRepository(db *gorm.DB) *practiceTestInstanceReposit
 		db:             db,
 		instanceRepo:   instanceinfrarepo.NewRepository(db),
 		allocationRepo: containerruntimeinfra.NewAllocationRepository(db),
-		awdRepo:        runtimeinfrarepo.NewAWDRepository(db),
+		awdRepo:        contestinfrarepo.NewAWDRepository(db),
 	}
 }
 
@@ -137,14 +137,14 @@ func (r *practiceTestInstanceRepository) CountInstancesByStatus(ctx context.Cont
 	return r.instanceRepo.CountInstancesByStatus(ctx, statuses)
 }
 
-func (r *practiceTestInstanceRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimestate.AWDDefenseWorkspace, error) {
+func (r *practiceTestInstanceRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*contestcontracts.AWDDefenseWorkspace, error) {
 	if r == nil || r.awdRepo == nil {
 		return nil, nil
 	}
 	return r.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
 }
 
-func (r *practiceTestInstanceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimestate.AWDDefenseWorkspace) error {
+func (r *practiceTestInstanceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *contestcontracts.AWDDefenseWorkspace) error {
 	if r == nil || r.awdRepo == nil {
 		return nil
 	}
@@ -165,9 +165,9 @@ type stubPracticeRepository struct {
 	findContestTeamFn                      func(ctx context.Context, contestID, teamID int64) (*practiceports.ContestTeamRecord, error)
 	listContestTeamsFn                     func(ctx context.Context, contestID int64) ([]*practiceports.ContestTeamRecord, error)
 	findContestRegistrationFn              func(ctx context.Context, contestID, userID int64) (*practiceports.ContestParticipation, error)
-	listContestAWDScopeControlsFn          func(ctx context.Context, contestID int64) ([]*runtimestate.AWDScopeControl, error)
-	listScopeAWDScopeControlsFn            func(ctx context.Context, contestID, teamID, serviceID int64) ([]*runtimestate.AWDScopeControl, error)
-	upsertAWDScopeControlFn                func(ctx context.Context, control *runtimestate.AWDScopeControl) error
+	listContestAWDScopeControlsFn          func(ctx context.Context, contestID int64) ([]*contestcontracts.AWDScopeControl, error)
+	listScopeAWDScopeControlsFn            func(ctx context.Context, contestID, teamID, serviceID int64) ([]*contestcontracts.AWDScopeControl, error)
+	upsertAWDScopeControlFn                func(ctx context.Context, control *contestcontracts.AWDScopeControl) error
 	deleteAWDScopeControlFn                func(ctx context.Context, contestID, teamID int64, scopeType, controlType string, serviceID int64) error
 	lockInstanceScopeFn                    func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error
 	findScopedExistingInstanceFn           func(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*instanceentity.Instance, error)
@@ -420,21 +420,21 @@ func (s *stubPracticeRepository) FindContestRegistration(ctx context.Context, co
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (s *stubPracticeRepository) ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*runtimestate.AWDScopeControl, error) {
+func (s *stubPracticeRepository) ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*contestcontracts.AWDScopeControl, error) {
 	if s.listContestAWDScopeControlsFn != nil {
 		return s.listContestAWDScopeControlsFn(ctx, contestID)
 	}
 	return nil, nil
 }
 
-func (s *stubPracticeRepository) ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*runtimestate.AWDScopeControl, error) {
+func (s *stubPracticeRepository) ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*contestcontracts.AWDScopeControl, error) {
 	if s.listScopeAWDScopeControlsFn != nil {
 		return s.listScopeAWDScopeControlsFn(ctx, contestID, teamID, serviceID)
 	}
 	return nil, nil
 }
 
-func (s *stubPracticeRepository) UpsertAWDScopeControl(ctx context.Context, control *runtimestate.AWDScopeControl) error {
+func (s *stubPracticeRepository) UpsertAWDScopeControl(ctx context.Context, control *contestcontracts.AWDScopeControl) error {
 	if s.upsertAWDScopeControlFn != nil {
 		return s.upsertAWDScopeControlFn(ctx, control)
 	}

@@ -15,7 +15,6 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 type runtimeLifecycleCloser interface {
@@ -47,8 +46,11 @@ type RuntimeModule = ContainerRuntimeModule
 func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	cfg := runtimeConfigOrDefault(root.Config())
 	log := root.Logger()
-	indexRepo := runtimeinfra.NewContainerNodeIndexRepository(root.DB())
-	aclMigrationRepo := runtimeinfra.NewACLMigrationStateRepository(root.DB())
+	indexRepo := newCompositeRuntimeNodeContainerIndex(
+		newInstanceRuntimeInventoryProvider(instanceinfra.NewContainerInventoryRepository(root.DB())),
+		contestinfra.NewAWDContainerInventoryRepository(root.DB()),
+	)
+	aclMigrationRepo := instanceinfra.NewACLMigrationStateRepository(root.DB())
 	allocationRepo := containerruntimeinfra.NewAllocationRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultNodeName := defaultRuntimeNodeName(cfg)

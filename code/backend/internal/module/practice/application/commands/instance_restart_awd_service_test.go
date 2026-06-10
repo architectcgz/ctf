@@ -3,11 +3,11 @@ package commands
 import (
 	"context"
 	"ctf-platform/internal/config"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	"testing"
 	"time"
 )
@@ -132,8 +132,8 @@ func TestRestartOrStartScopedAWDServiceRecreatesActiveInstanceWhenCheckerTokenMe
 		Scope:        scope,
 		NoopIfActive: true,
 		Audit: awdScopedRuntimeAudit{
-			RestartOperationType: runtimestate.AWDServiceOperationTypeRecreate,
-			RequestedBy:          runtimestate.AWDServiceOperationRequestedBySystem,
+			RestartOperationType: contestcontracts.AWDServiceOperationTypeRecreate,
+			RequestedBy:          contestcontracts.AWDServiceOperationRequestedBySystem,
 			Reason:               "desired_runtime_reconcile",
 		},
 	})

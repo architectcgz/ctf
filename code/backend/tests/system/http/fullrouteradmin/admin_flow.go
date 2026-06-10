@@ -20,7 +20,6 @@ import (
 	opsentity "ctf-platform/internal/module/ops/entity"
 	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	"ctf-platform/internal/shared/taxonomy"
 	xws "golang.org/x/net/websocket"
 )
@@ -98,7 +97,7 @@ func VerifyAdminCanToggleAWDControlsAndSeeOrchestrationState(
 			},
 			assert: func(t *testing.T, resp *practicecommands.AdminAWDScopeControlResp) {
 				t.Helper()
-				if !resp.Enabled || resp.ControlType != runtimestate.AWDScopeControlTypeRetired || resp.TeamID != target.TeamID {
+				if !resp.Enabled || resp.ControlType != contestcontracts.AWDScopeControlTypeRetired || resp.TeamID != target.TeamID {
 					t.Fatalf("unexpected retirement response: %+v", resp)
 				}
 			},
@@ -112,7 +111,7 @@ func VerifyAdminCanToggleAWDControlsAndSeeOrchestrationState(
 			},
 			assert: func(t *testing.T, resp *practicecommands.AdminAWDScopeControlResp) {
 				t.Helper()
-				if !resp.Enabled || resp.ControlType != runtimestate.AWDScopeControlTypeServiceDisabled || resp.ServiceID == nil || *resp.ServiceID != target.ServiceID {
+				if !resp.Enabled || resp.ControlType != contestcontracts.AWDScopeControlTypeServiceDisabled || resp.ServiceID == nil || *resp.ServiceID != target.ServiceID {
 					t.Fatalf("unexpected disable response: %+v", resp)
 				}
 			},
@@ -126,7 +125,7 @@ func VerifyAdminCanToggleAWDControlsAndSeeOrchestrationState(
 			},
 			assert: func(t *testing.T, resp *practicecommands.AdminAWDScopeControlResp) {
 				t.Helper()
-				if !resp.Enabled || resp.ControlType != runtimestate.AWDScopeControlTypeDesiredReconcileSuppressed || resp.ServiceID == nil || *resp.ServiceID != target.ServiceID {
+				if !resp.Enabled || resp.ControlType != contestcontracts.AWDScopeControlTypeDesiredReconcileSuppressed || resp.ServiceID == nil || *resp.ServiceID != target.ServiceID {
 					t.Fatalf("unexpected suppress response: %+v", resp)
 				}
 			},
@@ -157,9 +156,9 @@ func VerifyAdminCanToggleAWDControlsAndSeeOrchestrationState(
 		seen[control.ControlType] = true
 	}
 	for _, controlType := range []string{
-		runtimestate.AWDScopeControlTypeRetired,
-		runtimestate.AWDScopeControlTypeServiceDisabled,
-		runtimestate.AWDScopeControlTypeDesiredReconcileSuppressed,
+		contestcontracts.AWDScopeControlTypeRetired,
+		contestcontracts.AWDScopeControlTypeServiceDisabled,
+		contestcontracts.AWDScopeControlTypeDesiredReconcileSuppressed,
 	} {
 		if !seen[controlType] {
 			t.Fatalf("expected orchestration to include control %q, got %+v", controlType, orchestration.Controls)

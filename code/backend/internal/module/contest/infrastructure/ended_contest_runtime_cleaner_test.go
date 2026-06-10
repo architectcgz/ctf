@@ -15,9 +15,6 @@ import (
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 type endedContestRuntimeCleanupStub struct {
@@ -35,7 +32,7 @@ func TestContestEndedRuntimeCleanerCleanupDefenseWorkspaceUsesContainerAuthority
 	runtimeCleaner := &endedContestRuntimeCleanupStub{}
 	cleaner := &ContestEndedRuntimeCleaner{runtime: runtimeCleaner}
 
-	err := cleaner.cleanupDefenseWorkspaceRuntime(context.Background(), 1001, &runtimestate.AWDDefenseWorkspace{
+	err := cleaner.cleanupDefenseWorkspaceRuntime(context.Background(), 1001, &contestentity.AWDDefenseWorkspace{
 		ContainerID: "workspace-ended-ctr",
 	})
 	if err != nil {
@@ -184,14 +181,14 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		}
 	}
 
-	for _, workspace := range []runtimeentity.AWDDefenseWorkspace{
+	for _, workspace := range []contestentity.AWDDefenseWorkspace{
 		{
 			ContestID:         contestID,
 			TeamID:            teamID,
 			ServiceID:         serviceID,
 			InstanceID:        1001,
 			WorkspaceRevision: 7,
-			Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
+			Status:            contestentity.AWDDefenseWorkspaceStatusRunning,
 			ContainerID:       "workspace-ctr-team-a",
 			SeedSignature:     "seed:team-a",
 			CreatedAt:         now,
@@ -203,7 +200,7 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			ServiceID:         otherServiceID,
 			InstanceID:        1004,
 			WorkspaceRevision: 3,
-			Status:            runtimeentity.AWDDefenseWorkspaceStatusRunning,
+			Status:            contestentity.AWDDefenseWorkspaceStatusRunning,
 			ContainerID:       "workspace-ctr-other",
 			SeedSignature:     "seed:other",
 			CreatedAt:         now,
@@ -215,18 +212,18 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		}
 	}
 
-	for _, operation := range []runtimeentity.AWDServiceOperation{
+	for _, operation := range []contestentity.AWDServiceOperation{
 		{
 			ID:            2001,
 			ContestID:     contestID,
 			TeamID:        teamID,
 			ServiceID:     serviceID,
 			InstanceID:    1001,
-			OperationType: runtimeentity.AWDServiceOperationTypeRestart,
-			RequestedBy:   runtimeentity.AWDServiceOperationRequestedByUser,
+			OperationType: contestentity.AWDServiceOperationTypeRestart,
+			RequestedBy:   contestentity.AWDServiceOperationRequestedByUser,
 			Reason:        "user_restart",
 			SLABillable:   true,
-			Status:        runtimeentity.AWDServiceOperationStatusProvisioning,
+			Status:        contestentity.AWDServiceOperationStatusProvisioning,
 			StartedAt:     now.Add(-3 * time.Minute),
 			CreatedAt:     now.Add(-3 * time.Minute),
 			UpdatedAt:     now.Add(-2 * time.Minute),
@@ -237,11 +234,11 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			TeamID:        secondTeamID,
 			ServiceID:     secondServiceID,
 			InstanceID:    1002,
-			OperationType: runtimeentity.AWDServiceOperationTypeRecover,
-			RequestedBy:   runtimeentity.AWDServiceOperationRequestedBySystem,
+			OperationType: contestentity.AWDServiceOperationTypeRecover,
+			RequestedBy:   contestentity.AWDServiceOperationRequestedBySystem,
 			Reason:        "container_not_running",
 			SLABillable:   false,
-			Status:        runtimeentity.AWDServiceOperationStatusRecovering,
+			Status:        contestentity.AWDServiceOperationStatusRecovering,
 			StartedAt:     now.Add(-4 * time.Minute),
 			CreatedAt:     now.Add(-4 * time.Minute),
 			UpdatedAt:     now.Add(-3 * time.Minute),
@@ -252,11 +249,11 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 			TeamID:        teamID,
 			ServiceID:     otherServiceID,
 			InstanceID:    1004,
-			OperationType: runtimeentity.AWDServiceOperationTypeRestart,
-			RequestedBy:   runtimeentity.AWDServiceOperationRequestedByUser,
+			OperationType: contestentity.AWDServiceOperationTypeRestart,
+			RequestedBy:   contestentity.AWDServiceOperationRequestedByUser,
 			Reason:        "other_contest",
 			SLABillable:   true,
-			Status:        runtimeentity.AWDServiceOperationStatusProvisioning,
+			Status:        contestentity.AWDServiceOperationStatusProvisioning,
 			StartedAt:     now.Add(-2 * time.Minute),
 			CreatedAt:     now.Add(-2 * time.Minute),
 			UpdatedAt:     now.Add(-time.Minute),
@@ -339,32 +336,32 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		t.Fatalf("expected other contest instance to stay untouched, got %+v", otherContestInstance)
 	}
 
-	var workspace runtimeentity.AWDDefenseWorkspace
+	var workspace contestentity.AWDDefenseWorkspace
 	if err := db.Where("contest_id = ? AND team_id = ? AND service_id = ?", contestID, teamID, serviceID).First(&workspace).Error; err != nil {
 		t.Fatalf("load ended contest workspace: %v", err)
 	}
 	if workspace.InstanceID != 1001 || workspace.WorkspaceRevision != 7 {
 		t.Fatalf("expected workspace identity to stay scoped, got %+v", workspace)
 	}
-	if workspace.Status != runtimeentity.AWDDefenseWorkspaceStatusFailed || workspace.ContainerID != "" {
+	if workspace.Status != contestentity.AWDDefenseWorkspaceStatusFailed || workspace.ContainerID != "" {
 		t.Fatalf("expected workspace runtime to be cleared into failed state, got %+v", workspace)
 	}
 
-	var otherWorkspace runtimeentity.AWDDefenseWorkspace
+	var otherWorkspace contestentity.AWDDefenseWorkspace
 	if err := db.Where("contest_id = ? AND team_id = ? AND service_id = ?", otherContestID, teamID, otherServiceID).First(&otherWorkspace).Error; err != nil {
 		t.Fatalf("load other contest workspace: %v", err)
 	}
-	if otherWorkspace.Status != runtimeentity.AWDDefenseWorkspaceStatusRunning || otherWorkspace.ContainerID != "workspace-ctr-other" {
+	if otherWorkspace.Status != contestentity.AWDDefenseWorkspaceStatusRunning || otherWorkspace.ContainerID != "workspace-ctr-other" {
 		t.Fatalf("expected other contest workspace to stay untouched, got %+v", otherWorkspace)
 	}
 
 	for _, operationID := range []int64{2001, 2002} {
-		var operation runtimeentity.AWDServiceOperation
+		var operation contestentity.AWDServiceOperation
 		if err := db.First(&operation, operationID).Error; err != nil {
 			t.Fatalf("load ended contest operation %d: %v", operationID, err)
 		}
-		if operation.Status != runtimeentity.AWDServiceOperationStatusFailed {
-			t.Fatalf("operation %d status = %q, want %q", operationID, operation.Status, runtimeentity.AWDServiceOperationStatusFailed)
+		if operation.Status != contestentity.AWDServiceOperationStatusFailed {
+			t.Fatalf("operation %d status = %q, want %q", operationID, operation.Status, contestentity.AWDServiceOperationStatusFailed)
 		}
 		if operation.ErrorMessage != "contest_ended" {
 			t.Fatalf("operation %d error_message = %q, want contest_ended", operationID, operation.ErrorMessage)
@@ -374,11 +371,11 @@ func TestContestEndedRuntimeCleanerCleansOnlyCurrentContestAWDInstances(t *testi
 		}
 	}
 
-	var otherContestOperation runtimeentity.AWDServiceOperation
+	var otherContestOperation contestentity.AWDServiceOperation
 	if err := db.First(&otherContestOperation, 2003).Error; err != nil {
 		t.Fatalf("load other contest operation: %v", err)
 	}
-	if otherContestOperation.Status != runtimeentity.AWDServiceOperationStatusProvisioning || otherContestOperation.FinishedAt != nil {
+	if otherContestOperation.Status != contestentity.AWDServiceOperationStatusProvisioning || otherContestOperation.FinishedAt != nil {
 		t.Fatalf("expected other contest operation to stay active, got %+v", otherContestOperation)
 	}
 
@@ -450,7 +447,7 @@ type endedContestRuntimeStateStoreAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
 	allocationRepo *containerruntimeinfra.AllocationRepository
-	awdRepo        *runtimeinfra.AWDRepository
+	awdRepo        *AWDRepository
 }
 
 func newEndedContestRuntimeStateStore(db *gorm.DB) *endedContestRuntimeStateStoreAdapter {
@@ -461,7 +458,7 @@ func newEndedContestRuntimeStateStore(db *gorm.DB) *endedContestRuntimeStateStor
 		db:             db,
 		instanceRepo:   instanceinfra.NewRepository(db),
 		allocationRepo: containerruntimeinfra.NewAllocationRepository(db),
-		awdRepo:        runtimeinfra.NewAWDRepository(db),
+		awdRepo:        NewAWDRepository(db),
 	}
 }
 
@@ -480,14 +477,14 @@ func (a *endedContestRuntimeStateStoreAdapter) ExpireInstanceRuntime(ctx context
 	})
 }
 
-func (a *endedContestRuntimeStateStoreAdapter) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimestate.AWDDefenseWorkspace, error) {
+func (a *endedContestRuntimeStateStoreAdapter) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*contestentity.AWDDefenseWorkspace, error) {
 	if a == nil || a.awdRepo == nil {
 		return nil, nil
 	}
 	return a.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
 }
 
-func (a *endedContestRuntimeStateStoreAdapter) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimestate.AWDDefenseWorkspace) error {
+func (a *endedContestRuntimeStateStoreAdapter) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *contestentity.AWDDefenseWorkspace) error {
 	if a == nil || a.awdRepo == nil {
 		return nil
 	}

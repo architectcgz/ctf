@@ -390,16 +390,20 @@ func TestContainerRuntimeRepositoryOwnsAllocationPersistence(t *testing.T) {
 	}
 }
 
-func TestRuntimeRepositoryDoesNotOwnAWDPersistence(t *testing.T) {
+func TestContestRepositoryOwnsAWDPersistence(t *testing.T) {
 	t.Parallel()
 
-	awdContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "awd_repository.go"))
+	runtimeStateContent, err := os.ReadFile(filepath.Join("..", "module", "contest", "infrastructure", "awd_runtime_state_repository.go"))
 	if err != nil {
-		t.Fatalf("read runtime awd_repository.go: %v", err)
+		t.Fatalf("read contest awd_runtime_state_repository.go: %v", err)
+	}
+	operationContent, err := os.ReadFile(filepath.Join("..", "module", "contest", "infrastructure", "awd_service_operation_repository.go"))
+	if err != nil {
+		t.Fatalf("read contest awd_service_operation_repository.go: %v", err)
 	}
 
-	otherInfrastructure := runtimeInfrastructureSourceExcept(t, "awd_repository.go")
-	awdSource := string(awdContent)
+	runtimeInfrastructure := runtimeInfrastructureSourceExcept(t)
+	awdSource := string(runtimeStateContent) + "\n" + string(operationContent)
 	expected := []string{
 		"type AWDRepository struct",
 		"func NewAWDRepository(db *gorm.DB) *AWDRepository",
@@ -413,7 +417,7 @@ func TestRuntimeRepositoryDoesNotOwnAWDPersistence(t *testing.T) {
 	}
 	for _, marker := range expected {
 		if !strings.Contains(awdSource, marker) {
-			t.Fatalf("runtime AWD repository should own marker %s", marker)
+			t.Fatalf("contest AWD repository should own marker %s", marker)
 		}
 	}
 
@@ -427,50 +431,57 @@ func TestRuntimeRepositoryDoesNotOwnAWDPersistence(t *testing.T) {
 		"FinishAWDServiceOperation",
 	}
 	for _, marker := range blocked {
-		if strings.Contains(otherInfrastructure, marker) {
-			t.Fatalf("runtime AWD persistence should not leak outside awd_repository.go marker %s", marker)
+		if strings.Contains(runtimeInfrastructure, marker) {
+			t.Fatalf("legacy runtime infrastructure should not own AWD persistence marker %s", marker)
 		}
 	}
 }
 
-func TestRuntimeRepositoryDoesNotOwnStatePersistence(t *testing.T) {
+func TestRuntimeStatePersistenceHasFinalOwners(t *testing.T) {
 	t.Parallel()
 
-	inventoryContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "active_container_inventory_repository.go"))
+	instanceInventoryContent, err := os.ReadFile(filepath.Join("..", "module", "instance", "infrastructure", "container_inventory_repository.go"))
 	if err != nil {
-		t.Fatalf("read active_container_inventory_repository.go: %v", err)
+		t.Fatalf("read instance container_inventory_repository.go: %v", err)
 	}
-	indexContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "container_node_index_repository.go"))
+	contestInventoryContent, err := os.ReadFile(filepath.Join("..", "module", "contest", "infrastructure", "awd_container_inventory_repository.go"))
 	if err != nil {
-		t.Fatalf("read container_node_index_repository.go: %v", err)
+		t.Fatalf("read contest awd_container_inventory_repository.go: %v", err)
 	}
-	migrationContent, err := os.ReadFile(filepath.Join("..", "module", "runtime", "infrastructure", "acl_migration_state_repository.go"))
+	migrationContent, err := os.ReadFile(filepath.Join("..", "module", "instance", "infrastructure", "acl_migration_state_repository.go"))
 	if err != nil {
-		t.Fatalf("read acl_migration_state_repository.go: %v", err)
+		t.Fatalf("read instance acl_migration_state_repository.go: %v", err)
+	}
+	compositionProviderContent, err := os.ReadFile(filepath.Join("composition", "runtime_state_providers.go"))
+	if err != nil {
+		t.Fatalf("read runtime_state_providers.go: %v", err)
 	}
 
-	otherInfrastructure := runtimeInfrastructureSourceExcept(
-		t,
-		"active_container_inventory_repository.go",
-		"container_node_index_repository.go",
-		"acl_migration_state_repository.go",
-	)
+	runtimeInfrastructure := runtimeInfrastructureSourceExcept(t)
 	expectedByFile := map[string][]string{
-		string(inventoryContent): {
-			"type ActiveContainerInventoryRepository struct",
-			"func NewActiveContainerInventoryRepository(db *gorm.DB) *ActiveContainerInventoryRepository",
-			"func (r *ActiveContainerInventoryRepository) ListActiveContainerIDs",
+		string(instanceInventoryContent): {
+			"type ContainerInventoryRepository struct",
+			"func NewContainerInventoryRepository(db *gorm.DB) *ContainerInventoryRepository",
+			"func (r *ContainerInventoryRepository) ListActiveContainerInventory",
+			"func (r *ContainerInventoryRepository) ListContainerNodeLookupCandidates",
 		},
-		string(indexContent): {
-			"type ContainerNodeIndexRepository struct",
-			"func NewContainerNodeIndexRepository(db *gorm.DB) *ContainerNodeIndexRepository",
-			"func (r *ContainerNodeIndexRepository) FindRuntimeNodeIDByContainerID",
+		string(contestInventoryContent): {
+			"type AWDContainerInventoryRepository struct",
+			"func NewAWDContainerInventoryRepository(db *gorm.DB) *AWDContainerInventoryRepository",
+			"func (r *AWDContainerInventoryRepository) ListActiveContainerIDs",
+			"func (r *AWDContainerInventoryRepository) FindRuntimeNodeIDByContainerID",
 		},
 		string(migrationContent): {
 			"type ACLMigrationStateRepository struct",
 			"func NewACLMigrationStateRepository(db *gorm.DB) *ACLMigrationStateRepository",
 			"func (r *ACLMigrationStateRepository) ListInstancesNeedingACLHandleMigration",
 			"func (r *ACLMigrationStateRepository) UpdateInstanceRuntimeDetails",
+		},
+		string(compositionProviderContent): {
+			"type instanceRuntimeInventoryProvider struct",
+			"func newInstanceRuntimeInventoryProvider",
+			"func (p *instanceRuntimeInventoryProvider) ListActiveContainerIDs",
+			"func (p *instanceRuntimeInventoryProvider) FindRuntimeNodeIDByContainerID",
 		},
 	}
 	for source, expected := range expectedByFile {
@@ -488,13 +499,13 @@ func TestRuntimeRepositoryDoesNotOwnStatePersistence(t *testing.T) {
 		"func (r *ACLMigrationStateRepository) UpdateInstanceRuntimeDetails",
 	}
 	for _, marker := range blocked {
-		if strings.Contains(otherInfrastructure, marker) {
-			t.Fatalf("runtime state persistence should not leak outside split state repositories marker %s", marker)
+		if strings.Contains(runtimeInfrastructure, marker) {
+			t.Fatalf("legacy runtime infrastructure should not own state persistence marker %s", marker)
 		}
 	}
 }
 
-func TestRuntimeAWDPersistenceWiredFromCompositionRoot(t *testing.T) {
+func TestContestAWDPersistenceWiredFromCompositionRoot(t *testing.T) {
 	t.Parallel()
 
 	instanceContent, err := os.ReadFile(filepath.Join("composition", "instance_module.go"))
@@ -508,24 +519,25 @@ func TestRuntimeAWDPersistenceWiredFromCompositionRoot(t *testing.T) {
 
 	instanceSource := string(instanceContent)
 	instanceExpected := []string{
-		"awdRepo := runtimeinfra.NewAWDRepository(root.DB())",
+		"awdRepo := contestinfra.NewAWDRepository(root.DB())",
 		"newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, inventoryRepo)",
 		"newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo)",
+		"proxyTrafficRecorder: awdRepo",
 	}
 	for _, marker := range instanceExpected {
 		if !strings.Contains(instanceSource, marker) {
-			t.Fatalf("instance composition should wire runtime AWD repository marker %s", marker)
+			t.Fatalf("instance composition should wire contest AWD repository marker %s", marker)
 		}
 	}
 
 	contestSource := string(contestContent)
 	contestExpected := []string{
-		"runtimeAWDRepo := runtimeinfra.NewAWDRepository(root.DB())",
-		"newContestEndedRuntimeStateStore(root.DB(), instanceRepo, allocationRepo, runtimeAWDRepo)",
+		"contestAWDRepo := contestinfra.NewAWDRepository(root.DB())",
+		"newContestEndedRuntimeStateStore(root.DB(), instanceRepo, allocationRepo, contestAWDRepo)",
 	}
 	for _, marker := range contestExpected {
 		if !strings.Contains(contestSource, marker) {
-			t.Fatalf("contest composition should wire runtime AWD repository marker %s", marker)
+			t.Fatalf("contest composition should wire contest AWD repository marker %s", marker)
 		}
 	}
 }
@@ -544,8 +556,10 @@ func TestRuntimeStatePersistenceWiredFromCompositionRoot(t *testing.T) {
 
 	runtimeSource := string(runtimeContent)
 	runtimeExpected := []string{
-		"indexRepo := runtimeinfra.NewContainerNodeIndexRepository(root.DB())",
-		"aclMigrationRepo := runtimeinfra.NewACLMigrationStateRepository(root.DB())",
+		"indexRepo := newCompositeRuntimeNodeContainerIndex(",
+		"newInstanceRuntimeInventoryProvider(instanceinfra.NewContainerInventoryRepository(root.DB()))",
+		"contestinfra.NewAWDContainerInventoryRepository(root.DB())",
+		"aclMigrationRepo := instanceinfra.NewACLMigrationStateRepository(root.DB())",
 		"newRuntimeNodeExecutionRouter(cfg, log.Named(\"runtime_node_router\"), allocationRepo, indexRepo, nodeRepo, defaultNodeName)",
 		"migrateLegacyInstanceACLHandles(root.Context(), aclMigrationRepo, nodeRouter, defaultNodeClient, log.Named(\"runtime_acl_migration\"))",
 	}
@@ -557,7 +571,9 @@ func TestRuntimeStatePersistenceWiredFromCompositionRoot(t *testing.T) {
 
 	instanceSource := string(instanceContent)
 	instanceExpected := []string{
-		"inventoryRepo := runtimeinfra.NewActiveContainerInventoryRepository(root.DB())",
+		"inventoryRepo := newCompositeActiveContainerInventory(",
+		"newInstanceRuntimeInventoryProvider(instanceinfra.NewContainerInventoryRepository(root.DB()))",
+		"contestinfra.NewAWDContainerInventoryRepository(root.DB())",
 		"newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, inventoryRepo)",
 	}
 	for _, marker := range instanceExpected {
@@ -729,8 +745,8 @@ func TestRuntimeCompositionInjectsRuntimePersistenceIntoRuntimeModule(t *testing
 	expected := []string{
 		"ProvisioningRepository:",
 		"CleanupRepository:",
-		"indexRepo := runtimeinfra.NewContainerNodeIndexRepository(root.DB())",
-		"aclMigrationRepo := runtimeinfra.NewACLMigrationStateRepository(root.DB())",
+		"indexRepo := newCompositeRuntimeNodeContainerIndex(",
+		"aclMigrationRepo := instanceinfra.NewACLMigrationStateRepository(root.DB())",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

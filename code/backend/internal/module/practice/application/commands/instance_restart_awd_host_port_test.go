@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"ctf-platform/internal/config"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestRestartContestAWDServicePreservesHostPortWhenAccessHostConfigured(t *testing.T) {

@@ -9,10 +9,10 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/apperror"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
@@ -41,7 +41,7 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *instancecont
 			zap.Int64("instance_id", instance.ID))
 		return
 	}
-	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, runtimestate.AWDServiceOperationStatusFailed, "provision_failed", failedAt); err != nil {
+	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, contestcontracts.AWDServiceOperationStatusFailed, "provision_failed", failedAt); err != nil {
 		s.logger.Warn("更新失败实例 AWD 操作状态失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 	if instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil {
@@ -91,7 +91,7 @@ func (s *Service) provisionInstance(ctx context.Context, instance *instancecontr
 	if instance.ContestID != nil && instance.TeamID != nil && instance.ServiceID != nil {
 		s.clearDesiredAWDReconcileFailure(ctx, *instance.ContestID, *instance.TeamID, *instance.ServiceID)
 	}
-	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, runtimestate.AWDServiceOperationStatusSucceeded, "", time.Now().UTC()); err != nil {
+	if err := s.instanceRepo.FinishActiveAWDServiceOperationForInstance(ctx, instance.ID, contestcontracts.AWDServiceOperationStatusSucceeded, "", time.Now().UTC()); err != nil {
 		s.logger.Warn("更新实例 AWD 操作完成状态失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 

@@ -11,10 +11,10 @@ import (
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 	"ctf-platform/internal/shared/taxonomy"
 )
 

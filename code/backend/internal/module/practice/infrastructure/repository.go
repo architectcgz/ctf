@@ -7,12 +7,12 @@ import (
 	"time"
 
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -208,8 +208,8 @@ func (r *Repository) FindContestRegistration(ctx context.Context, contestID, use
 	}, nil
 }
 
-func (r *Repository) ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*runtimestate.AWDScopeControl, error) {
-	var controls []*runtimestate.AWDScopeControl
+func (r *Repository) ListContestAWDScopeControls(ctx context.Context, contestID int64) ([]*contestcontracts.AWDScopeControl, error) {
+	var controls []*contestcontracts.AWDScopeControl
 	if err := r.dbWithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Order("team_id ASC, scope_type ASC, service_id ASC, control_type ASC, id ASC").
@@ -219,19 +219,19 @@ func (r *Repository) ListContestAWDScopeControls(ctx context.Context, contestID 
 	return controls, nil
 }
 
-func (r *Repository) ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*runtimestate.AWDScopeControl, error) {
-	var controls []*runtimestate.AWDScopeControl
+func (r *Repository) ListScopeAWDScopeControls(ctx context.Context, contestID, teamID, serviceID int64) ([]*contestcontracts.AWDScopeControl, error) {
+	var controls []*contestcontracts.AWDScopeControl
 	query := r.dbWithContext(ctx).
 		Where("contest_id = ? AND team_id = ?", contestID, teamID)
 	if serviceID > 0 {
 		query = query.Where(
 			"(scope_type = ? AND service_id = 0) OR (scope_type = ? AND service_id = ?)",
-			runtimestate.AWDScopeControlScopeTeam,
-			runtimestate.AWDScopeControlScopeTeamService,
+			contestcontracts.AWDScopeControlScopeTeam,
+			contestcontracts.AWDScopeControlScopeTeamService,
 			serviceID,
 		)
 	} else {
-		query = query.Where("scope_type = ? AND service_id = 0", runtimestate.AWDScopeControlScopeTeam)
+		query = query.Where("scope_type = ? AND service_id = 0", contestcontracts.AWDScopeControlScopeTeam)
 	}
 	if err := query.
 		Order("scope_type ASC, service_id ASC, control_type ASC, id ASC").
@@ -241,7 +241,7 @@ func (r *Repository) ListScopeAWDScopeControls(ctx context.Context, contestID, t
 	return controls, nil
 }
 
-func (r *Repository) UpsertAWDScopeControl(ctx context.Context, control *runtimestate.AWDScopeControl) error {
+func (r *Repository) UpsertAWDScopeControl(ctx context.Context, control *contestcontracts.AWDScopeControl) error {
 	if control == nil {
 		return nil
 	}
@@ -272,7 +272,7 @@ func (r *Repository) DeleteAWDScopeControl(ctx context.Context, contestID, teamI
 	return r.dbWithContext(ctx).
 		Where("contest_id = ? AND team_id = ? AND scope_type = ? AND control_type = ? AND service_id = ?",
 			contestID, teamID, scopeType, controlType, serviceID).
-		Delete(&runtimestate.AWDScopeControl{}).Error
+		Delete(&contestcontracts.AWDScopeControl{}).Error
 }
 
 func (r *Repository) LockInstanceScope(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) error {
@@ -475,7 +475,7 @@ func (r *Repository) CreateInstance(ctx context.Context, instance *instancecontr
 	return r.dbWithContext(ctx).Create(instance).Error
 }
 
-func (r *Repository) CreateAWDServiceOperation(ctx context.Context, operation *runtimestate.AWDServiceOperation) error {
+func (r *Repository) CreateAWDServiceOperation(ctx context.Context, operation *contestcontracts.AWDServiceOperation) error {
 	if operation == nil {
 		return nil
 	}
@@ -490,11 +490,11 @@ func (r *Repository) CreateAWDServiceOperation(ctx context.Context, operation *r
 	}
 
 	return db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&runtimestate.AWDServiceOperation{}).
+		if err := tx.Model(&contestcontracts.AWDServiceOperation{}).
 			Where("contest_id = ? AND team_id = ? AND service_id = ? AND status IN ?",
 				operation.ContestID, operation.TeamID, operation.ServiceID, activeAWDServiceOperationStatuses()).
 			Updates(map[string]any{
-				"status":        runtimestate.AWDServiceOperationStatusFailed,
+				"status":        contestcontracts.AWDServiceOperationStatusFailed,
 				"error_message": awdServiceOperationSupersededError,
 				"finished_at":   finishedAt,
 				"updated_at":    finishedAt,
@@ -510,7 +510,7 @@ func (r *Repository) FinishActiveAWDServiceOperationForInstance(ctx context.Cont
 		return nil
 	}
 	return r.dbWithContext(ctx).
-		Model(&runtimestate.AWDServiceOperation{}).
+		Model(&contestcontracts.AWDServiceOperation{}).
 		Where("instance_id = ? AND status IN ?", instanceID, activeAWDServiceOperationStatuses()).
 		Updates(map[string]any{
 			"status":        status,
@@ -531,20 +531,20 @@ func (r *Repository) FinishAWDServiceOperation(ctx context.Context, operationID 
 		"updated_at":    time.Now().UTC(),
 	}
 	return r.dbWithContext(ctx).
-		Model(&runtimestate.AWDServiceOperation{}).
+		Model(&contestcontracts.AWDServiceOperation{}).
 		Where("id = ?", operationID).
 		Updates(updates).Error
 }
 
 func activeAWDServiceOperationStatuses() []string {
 	return []string{
-		runtimestate.AWDServiceOperationStatusRequested,
-		runtimestate.AWDServiceOperationStatusProvisioning,
-		runtimestate.AWDServiceOperationStatusRecovering,
+		contestcontracts.AWDServiceOperationStatusRequested,
+		contestcontracts.AWDServiceOperationStatusProvisioning,
+		contestcontracts.AWDServiceOperationStatusRecovering,
 	}
 }
 
-func shouldCloseActiveAWDServiceOperationsForScope(operation *runtimestate.AWDServiceOperation) bool {
+func shouldCloseActiveAWDServiceOperationsForScope(operation *contestcontracts.AWDServiceOperation) bool {
 	if operation == nil {
 		return false
 	}

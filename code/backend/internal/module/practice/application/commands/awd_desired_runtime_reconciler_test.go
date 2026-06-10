@@ -14,13 +14,13 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practicecachekeys "ctf-platform/internal/module/practice/infrastructure/cachekeys"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
@@ -768,13 +768,13 @@ func TestReconcileDesiredAWDInstancesSkipsManuallySuppressedScope(t *testing.T) 
 		listContestAWDInstancesFn: func(context.Context, int64) ([]*instanceentity.Instance, error) {
 			return nil, nil
 		},
-		listContestAWDScopeControlsFn: func(context.Context, int64) ([]*runtimestate.AWDScopeControl, error) {
-			return []*runtimestate.AWDScopeControl{{
+		listContestAWDScopeControlsFn: func(context.Context, int64) ([]*contestcontracts.AWDScopeControl, error) {
+			return []*contestcontracts.AWDScopeControl{{
 				ContestID:   contestID,
 				TeamID:      teamID,
-				ScopeType:   runtimestate.AWDScopeControlScopeTeamService,
+				ScopeType:   contestcontracts.AWDScopeControlScopeTeamService,
 				ServiceID:   serviceID,
-				ControlType: runtimestate.AWDScopeControlTypeDesiredReconcileSuppressed,
+				ControlType: contestcontracts.AWDScopeControlTypeDesiredReconcileSuppressed,
 			}}, nil
 		},
 		createInstanceFn: func(context.Context, *instanceentity.Instance) error {

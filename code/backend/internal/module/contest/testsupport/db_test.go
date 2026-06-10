@@ -3,7 +3,7 @@ package testsupport
 import (
 	"testing"
 
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 )
 
 func TestSetupAWDTestDBAutoMigratesAWDDefenseWorkspace(t *testing.T) {

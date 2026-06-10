@@ -23,6 +23,8 @@ import (
 	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
+	contestinfrarepo "ctf-platform/internal/module/contest/infrastructure"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -31,9 +33,6 @@ import (
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/shared/taxonomy"
 )
 
@@ -41,7 +40,7 @@ type contestInstanceTestInstanceRepository struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfrarepo.Repository
 	allocationRepo *containerruntimeinfra.AllocationRepository
-	awdRepo        *runtimeinfrarepo.AWDRepository
+	awdRepo        *contestinfrarepo.AWDRepository
 }
 
 func newContestInstanceTestInstanceRepository(db *gorm.DB) *contestInstanceTestInstanceRepository {
@@ -49,7 +48,7 @@ func newContestInstanceTestInstanceRepository(db *gorm.DB) *contestInstanceTestI
 		db:             db,
 		instanceRepo:   instanceinfrarepo.NewRepository(db),
 		allocationRepo: containerruntimeinfra.NewAllocationRepository(db),
-		awdRepo:        runtimeinfrarepo.NewAWDRepository(db),
+		awdRepo:        contestinfrarepo.NewAWDRepository(db),
 	}
 }
 
@@ -119,11 +118,11 @@ func (r *contestInstanceTestInstanceRepository) CountInstancesByStatus(ctx conte
 	return r.instanceRepo.CountInstancesByStatus(ctx, statuses)
 }
 
-func (r *contestInstanceTestInstanceRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*runtimestate.AWDDefenseWorkspace, error) {
+func (r *contestInstanceTestInstanceRepository) FindAWDDefenseWorkspace(ctx context.Context, contestID, teamID, serviceID int64) (*contestcontracts.AWDDefenseWorkspace, error) {
 	return r.awdRepo.FindAWDDefenseWorkspace(ctx, contestID, teamID, serviceID)
 }
 
-func (r *contestInstanceTestInstanceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *runtimestate.AWDDefenseWorkspace) error {
+func (r *contestInstanceTestInstanceRepository) UpsertAWDDefenseWorkspace(ctx context.Context, workspace *contestcontracts.AWDDefenseWorkspace) error {
 	return r.awdRepo.UpsertAWDDefenseWorkspace(ctx, workspace)
 }
 

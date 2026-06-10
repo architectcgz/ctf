@@ -13,8 +13,8 @@ import (
 
 	"ctf-platform/internal/config"
 	contestentity "ctf-platform/internal/module/contest/entity"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 	instanceentity "ctf-platform/internal/module/instance/entity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) {

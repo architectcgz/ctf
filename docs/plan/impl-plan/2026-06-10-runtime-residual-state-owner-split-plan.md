@@ -1,6 +1,6 @@
 # runtime 残余状态 owner 拆分方案（runtime 模块最终退役）
 
-> 状态：In Progress
+> 状态：Implemented
 > 事实源：`code/backend/internal/module/runtime/` 当前实现、`docs/design/backend-module-boundary-target.md` 目标版图、`docs/todos/2026-05-17-project-tech-debt-from-migrations.md` P1 技术债
 > 替代：无；各切片落地后，稳定结论回收到 `docs/architecture/backend/07-modular-monolith-refactor.md` 与对应模块边界事实
 
@@ -66,16 +66,25 @@
 - `cd code/backend && bash ../../scripts/check-backend-architecture.sh --full`：通过。
 - `git diff --check`：通过。
 
+本轮切片 4-7 已执行：
+
+- `cd code/backend && go test ./internal/app/composition ./internal/module/contest/... ./internal/module/instance/... ./internal/module/practice/... ./internal/module/container_runtime/... -count=1`：通过。
+- `cd code/backend && go test ./internal/module -run TestModuleDependencyBaselineIsCurrent -count=1`：通过。
+- `cd code/backend && bash ../../scripts/check-backend-architecture.sh --full`：通过。
+- `bash scripts/check-startup-gate.sh`：通过，当前 diff 未命中 startup-gated changes。
+- `git diff --check`：通过。
+- `test ! -e code/backend/internal/module/runtime`：通过，legacy runtime module path 已移除。
+
 ## 执行清单
 
 - [x] 切片 0：删除 runtime 死代码并调整测试引用。
 - [x] 切片 1：runtime node 迁入 `container_runtime/entity` + infrastructure。
 - [x] 切片 2：allocation 迁入 `container_runtime/entity` + infrastructure。
 - [x] 切片 3：实例清理与启动恢复 Redis 状态迁入 `instance/infrastructure`。
-- [ ] 切片 4：AWD 运行态迁入 `contest`，不保留 runtime alias。
-- [ ] 切片 5：proxy traffic recorder 收口到 `contest`。
-- [ ] 切片 6：inventory / node-index 拆成 instance + contest providers。
-- [ ] 切片 7：ACL 收口、`RuntimeManagedInstance` 消除、runtime 退役。
+- [x] 切片 4：AWD 运行态迁入 `contest`，不保留 runtime alias。
+- [x] 切片 5：proxy traffic recorder 收口到 `contest`。
+- [x] 切片 6：inventory / node-index 拆成 instance + contest providers。
+- [x] 切片 7：ACL 收口、`RuntimeManagedInstance` 消除、runtime 退役。
 
 ## 定位
 

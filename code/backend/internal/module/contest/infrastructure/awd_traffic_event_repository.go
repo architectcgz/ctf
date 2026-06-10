@@ -55,6 +55,33 @@ func (r *AWDRepository) RecordRuntimeProxyTrafficEvent(ctx context.Context, inst
 	}).Error
 }
 
+func (r *AWDRepository) RecordAWDProxyTrafficEvent(ctx context.Context, event contestentity.AWDProxyTrafficEventInput) error {
+	if event.ContestID <= 0 || event.AttackerTeamID <= 0 || event.VictimTeamID <= 0 || event.ServiceID <= 0 || event.AWDChallengeID <= 0 {
+		return nil
+	}
+
+	round, err := r.FindRunningRound(ctx, event.ContestID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return err
+	}
+
+	return r.dbWithContext(ctx).Create(&contestentity.AWDTrafficEvent{
+		ContestID:      event.ContestID,
+		RoundID:        round.ID,
+		AttackerTeamID: event.AttackerTeamID,
+		VictimTeamID:   event.VictimTeamID,
+		ServiceID:      event.ServiceID,
+		AWDChallengeID: event.AWDChallengeID,
+		Method:         trimToLength(event.Method, 16),
+		Path:           trimToLength(event.Path, 1024),
+		StatusCode:     event.StatusCode,
+		Source:         contestentity.AWDTrafficSourceRuntimeProxy,
+	}).Error
+}
+
 func (r *AWDRepository) ListTrafficEvents(ctx context.Context, contestID, roundID int64) ([]contestports.AWDTrafficEventRecord, error) {
 	rows := make([]contestports.AWDTrafficEventRecord, 0)
 	err := r.dbWithContext(ctx).

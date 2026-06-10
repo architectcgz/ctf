@@ -30,7 +30,6 @@ var moduleDependencyBaseline = map[string]struct{}{
 	"contest -> challenge":           {},
 	"contest -> identity":            {},
 	"contest -> instance":            {},
-	"contest -> runtime":             {},
 	"instance -> identity":           {},
 	"instance -> contest":            {},
 	"ops -> auth":                    {},
@@ -43,9 +42,6 @@ var moduleDependencyBaseline = map[string]struct{}{
 	"practice -> contest":            {},
 	"practice -> identity":           {},
 	"practice -> instance":           {},
-	"practice -> runtime":            {},
-	"runtime -> container_runtime":   {},
-	"runtime -> contest":             {},
 	"teaching_query -> challenge":    {},
 	"teaching_query -> identity":     {},
 	"teaching_query -> contest":      {},
@@ -57,6 +53,7 @@ var reviewedTransactionBoundaryFunctions = map[string]struct{}{
 	"challenge/infrastructure/repository.go#UpdateWithHints":                                                 {},
 	"challenge/infrastructure/tag_repository.go#AttachTagsInTx":                                              {},
 	"contest/infrastructure/contest_awd_runtime_recovery_repository.go#AddPausedDurationToActiveAWDContests": {},
+	"contest/infrastructure/awd_runtime_state_repository.go#BumpAWDDefenseWorkspaceRevision":                 {},
 	"contest/infrastructure/contest_status_update_repository.go#applyStatusTransitionWithUpdates":            {},
 	"contest/infrastructure/team_membership_lifecycle_repository.go#CreateWithMember":                        {},
 	"contest/infrastructure/team_membership_lifecycle_repository.go#DeleteWithMembers":                       {},
@@ -67,7 +64,6 @@ var reviewedTransactionBoundaryFunctions = map[string]struct{}{
 	"ops/infrastructure/notification_repository.go#CreateBatch":                                              {},
 	"practice/infrastructure/repository.go#CreateAWDServiceOperation":                                        {},
 	"practice/infrastructure/repository.go#ResetInstanceRuntimeForRestart":                                   {},
-	"runtime/infrastructure/awd_repository.go#BumpAWDDefenseWorkspaceRevision":                               {},
 }
 
 var reviewedOversizedRuntimeModuleFiles = map[string]struct{}{}

@@ -118,6 +118,18 @@ func TestRuntimeHostExecutorUsageIsRestricted(t *testing.T) {
 	}
 }
 
+func TestLegacyRuntimeModulePackageIsRetired(t *testing.T) {
+	t.Parallel()
+
+	matches, err := filepath.Glob(filepath.Join("runtime", "*"))
+	if err != nil {
+		t.Fatalf("glob runtime module path: %v", err)
+	}
+	if len(matches) != 0 {
+		t.Fatalf("legacy runtime module should stay retired, found %v", matches)
+	}
+}
+
 func TestModuleDependencyBaselineIsCurrent(t *testing.T) {
 	t.Parallel()
 

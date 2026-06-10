@@ -14,7 +14,6 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	"ctf-platform/internal/module/practice/domain"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimestate "ctf-platform/internal/module/runtime/contracts"
 )
 
 func (s *Service) recordAWDServiceOperation(ctx context.Context, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status, requestedBy string, requestedByID *int64, reason string, slaBillable bool) {
@@ -38,7 +37,7 @@ func createAWDServiceOperation(ctx context.Context, repo practiceports.PracticeA
 	if isFinishedAWDServiceOperationStatus(status) {
 		finishedAt = &now
 	}
-	return repo.CreateAWDServiceOperation(ctx, &runtimestate.AWDServiceOperation{
+	return repo.CreateAWDServiceOperation(ctx, &contestcontracts.AWDServiceOperation{
 		ContestID:     contestID,
 		TeamID:        *scope.TeamID,
 		ServiceID:     *scope.ServiceID,
@@ -58,15 +57,15 @@ func createAWDServiceOperation(ctx context.Context, repo practiceports.PracticeA
 
 func awdOperationStatusForInstanceStatus(instanceStatus string) string {
 	if instanceStatus == instancecontracts.InstanceStatusRunning {
-		return runtimestate.AWDServiceOperationStatusSucceeded
+		return contestcontracts.AWDServiceOperationStatusSucceeded
 	}
-	return runtimestate.AWDServiceOperationStatusProvisioning
+	return contestcontracts.AWDServiceOperationStatusProvisioning
 }
 
 func isFinishedAWDServiceOperationStatus(status string) bool {
-	return status == runtimestate.AWDServiceOperationStatusSucceeded ||
-		status == runtimestate.AWDServiceOperationStatusRecovered ||
-		status == runtimestate.AWDServiceOperationStatusFailed
+	return status == contestcontracts.AWDServiceOperationStatusSucceeded ||
+		status == contestcontracts.AWDServiceOperationStatusRecovered ||
+		status == contestcontracts.AWDServiceOperationStatusFailed
 }
 
 func restartCleanupRuntimeView(instance *instancecontracts.Instance) *instancecontracts.Instance {
@@ -167,7 +166,7 @@ func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contes
 	return resp, nil
 }
 
-func adminAWDScopeControlRecordResp(control *runtimestate.AWDScopeControl) *AdminAWDScopeControlResp {
+func adminAWDScopeControlRecordResp(control *contestcontracts.AWDScopeControl) *AdminAWDScopeControlResp {
 	if control == nil {
 		return nil
 	}
@@ -180,7 +179,7 @@ func adminAWDScopeControlRecordResp(control *runtimestate.AWDScopeControl) *Admi
 		UpdatedBy:   control.UpdatedBy,
 		UpdatedAt:   &control.UpdatedAt,
 	}
-	if control.ScopeType == runtimestate.AWDScopeControlScopeTeamService && control.ServiceID > 0 {
+	if control.ScopeType == contestcontracts.AWDScopeControlScopeTeamService && control.ServiceID > 0 {
 		serviceID := control.ServiceID
 		resp.ServiceID = &serviceID
 	}

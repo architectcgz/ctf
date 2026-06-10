@@ -14,10 +14,10 @@ import (
 	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
 )
 
 func newRepositoryWithRuntimePortOwner(db *gorm.DB) *practiceinfra.Repository {

@@ -6,11 +6,11 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
+	runtimeentity "ctf-platform/internal/module/contest/entity"
+	contestinfrarepo "ctf-platform/internal/module/contest/infrastructure"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/module/practice/testsupport/contestentity"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"testing"
 	"time"
 )
@@ -167,7 +167,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 		t.Fatalf("unexpected runtime instance after createSingleContainer(): %+v", instance)
 	}
 
-	workspace, err := runtimeinfrarepo.NewAWDRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
+	workspace, err := contestinfrarepo.NewAWDRepository(db).FindAWDDefenseWorkspace(context.Background(), contestID, teamID, serviceID)
 	if err != nil {
 		t.Fatalf("FindAWDDefenseWorkspace() error = %v", err)
 	}

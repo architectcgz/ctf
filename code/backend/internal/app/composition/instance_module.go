@@ -12,6 +12,7 @@ import (
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	instancehttp "ctf-platform/internal/module/instance/api/http"
 	instancecmd "ctf-platform/internal/module/instance/application/commands"
@@ -20,8 +21,6 @@ import (
 	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimeentity "ctf-platform/internal/module/runtime/entity"
-	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 )
 
 type InstanceModule struct {
@@ -65,9 +64,12 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		log = zap.NewNop()
 	}
 
-	inventoryRepo := runtimeinfra.NewActiveContainerInventoryRepository(root.DB())
+	inventoryRepo := newCompositeActiveContainerInventory(
+		newInstanceRuntimeInventoryProvider(instanceinfra.NewContainerInventoryRepository(root.DB())),
+		contestinfra.NewAWDContainerInventoryRepository(root.DB()),
+	)
 	allocationRepo := containerruntimeinfra.NewAllocationRepository(root.DB())
-	awdRepo := runtimeinfra.NewAWDRepository(root.DB())
+	awdRepo := contestinfra.NewAWDRepository(root.DB())
 	instanceRepo := instanceinfra.NewRepository(root.DB())
 	defaultCleanupService := module.CleanupService
 	var cleanupService interface {
@@ -144,7 +146,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 			cfg.Container.DefenseSSHPort,
 		),
 		startupRecovery:      startupRecovery,
-		proxyTrafficRecorder: runtimeinfra.NewProxyTrafficEventRecorder(root.DB()),
+		proxyTrafficRecorder: awdRepo,
 	}
 }
 
@@ -288,11 +290,11 @@ type instanceMaintenanceRepositoryAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
 	allocationRepo *containerruntimeinfra.AllocationRepository
-	awdRepo        *runtimeinfra.AWDRepository
-	inventoryRepo  *runtimeinfra.ActiveContainerInventoryRepository
+	awdRepo        *contestinfra.AWDRepository
+	inventoryRepo  activeContainerInventoryProvider
 }
 
-func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *containerruntimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository, inventoryRepo *runtimeinfra.ActiveContainerInventoryRepository) *instanceMaintenanceRepositoryAdapter {
+func newInstanceMaintenanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *containerruntimeinfra.AllocationRepository, awdRepo *contestinfra.AWDRepository, inventoryRepo activeContainerInventoryProvider) *instanceMaintenanceRepositoryAdapter {
 	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil && inventoryRepo == nil {
 		return nil
 	}
@@ -347,7 +349,7 @@ func (a *instanceMaintenanceRepositoryAdapter) CreateAWDServiceOperation(ctx con
 	if a == nil || operation == nil {
 		return nil
 	}
-	row := runtimeentity.AWDServiceOperation{
+	row := contestentity.AWDServiceOperation{
 		ID:            operation.ID,
 		ContestID:     operation.ContestID,
 		TeamID:        operation.TeamID,
@@ -410,10 +412,10 @@ type practiceInstanceRepositoryAdapter struct {
 	db             *gorm.DB
 	instanceRepo   *instanceinfra.Repository
 	allocationRepo *containerruntimeinfra.AllocationRepository
-	awdRepo        *runtimeinfra.AWDRepository
+	awdRepo        *contestinfra.AWDRepository
 }
 
-func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *containerruntimeinfra.AllocationRepository, awdRepo *runtimeinfra.AWDRepository) *practiceInstanceRepositoryAdapter {
+func newPracticeInstanceRepository(db *gorm.DB, instanceRepo *instanceinfra.Repository, allocationRepo *containerruntimeinfra.AllocationRepository, awdRepo *contestinfra.AWDRepository) *practiceInstanceRepositoryAdapter {
 	if instanceRepo == nil && allocationRepo == nil && awdRepo == nil {
 		return nil
 	}
