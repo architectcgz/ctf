@@ -1,7 +1,7 @@
 package module
 
 var reviewedRuntimeHostExecutorUsageFiles = map[string]struct{}{
-	"../app/composition/runtime_module.go":                    {},
+	"../app/composition/container_runtime_module.go":          {},
 	"../app/composition/runtime_node_execution_router.go":     {},
 	"container_runtime/infrastructure/agentclient/bridge.go":  {},
 	"container_runtime/infrastructure/agentserver/service.go": {},

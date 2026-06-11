@@ -545,9 +545,9 @@ func TestContestAWDPersistenceWiredFromCompositionRoot(t *testing.T) {
 func TestRuntimeStatePersistenceWiredFromCompositionRoot(t *testing.T) {
 	t.Parallel()
 
-	runtimeContent, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
+	runtimeContent, err := os.ReadFile(filepath.Join("composition", "container_runtime_module.go"))
 	if err != nil {
-		t.Fatalf("read runtime_module.go: %v", err)
+		t.Fatalf("read container_runtime_module.go: %v", err)
 	}
 	instanceContent, err := os.ReadFile(filepath.Join("composition", "instance_module.go"))
 	if err != nil {
@@ -736,9 +736,9 @@ func TestRuntimeModuleDoesNotConstructRuntimeInfrastructure(t *testing.T) {
 func TestRuntimeCompositionInjectsRuntimePersistenceIntoRuntimeModule(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
+	content, err := os.ReadFile(filepath.Join("composition", "container_runtime_module.go"))
 	if err != nil {
-		t.Fatalf("read runtime_module.go: %v", err)
+		t.Fatalf("read container_runtime_module.go: %v", err)
 	}
 
 	source := string(content)

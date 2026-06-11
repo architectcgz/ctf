@@ -18,7 +18,7 @@
   - 负责：`practice` 负责训练写路径以及用户态 `GET /api/v1/users/me/progress`、`GET /api/v1/users/me/timeline` 查询；`teaching_analysis` 负责教师视角、班级洞察和复盘场景的跨 owner 查询聚合，并在 app 层复用 `identity` 暴露的基础用户 lookup
   - 不负责：把只读取 practice 自有事实的用户态查询继续拆成独立查询模块，或作为业务 owner 模块修改练习、竞赛、评估等业务状态
 
-- `code/backend/internal/module/container_runtime`、`code/backend/internal/module/instance`、`code/backend/internal/app/composition/runtime_module.go`、`code/backend/internal/app/composition/instance_module.go`
+- `code/backend/internal/module/container_runtime`、`code/backend/internal/module/instance`、`code/backend/internal/app/composition/container_runtime_module.go`、`code/backend/internal/app/composition/instance_module.go`
   - 负责：`internal/module/container_runtime/*` 承接 container runtime capability、共享 adapter、runtime-agent 协议、`runtime_nodes` 数据模型、allocation 持久化和容器执行通道；`internal/module/instance/*` 负责实例命令、查询、proxy ticket、maintenance、startup recovery 与实例访问 owner；app 层把它们收口成 `ContainerRuntimeModule` 与 `InstanceModule` 两个组合视图，其中 `runtime_node_execution_router` 会按 `instance.node_id`、AWD service `node_id` 和 checker metadata `node_id` 路由到单节点执行 client；Guardrail 见 `code/backend/internal/app/composition/runtime_node_execution_router.go`、`code/backend/internal/app/composition/runtime_node_execution_router_test.go`
   - 不负责：把实例业务 owner 重新塞回容器运行时模块，或让 `practice`、用户实例路由重新直接依赖整块容器运行时视图；也不再把“当前 API 进程连到哪台 Docker 宿主机”当成执行 authority
 
