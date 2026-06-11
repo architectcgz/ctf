@@ -9,7 +9,6 @@ import (
 	"ctf-platform/internal/config"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
-	assessmentports "ctf-platform/internal/module/assessment/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/internal/shared/taxonomy"
 	teachingadvice "ctf-platform/internal/teaching/advice"
@@ -97,7 +96,7 @@ func TestBuildClassReportDataUsesSharedWindowedClassInsight(t *testing.T) {
 
 	start := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)
 	repo := &testReportRepository{
-		classSummary: &assessmentports.ClassInsightSummary{
+		classSummary: &assessmentdomain.ClassInsightSummary{
 			ClassName:          "class-a",
 			StudentCount:       2,
 			AverageSolved:      2,
@@ -105,9 +104,9 @@ func TestBuildClassReportDataUsesSharedWindowedClassInsight(t *testing.T) {
 			ActiveRate:         50,
 			RecentEventCount:   6,
 		},
-		classTrend: &assessmentports.ClassInsightTrend{
+		classTrend: &assessmentdomain.ClassInsightTrend{
 			ClassName: "class-a",
-			Points: []assessmentports.ClassInsightTrendPoint{
+			Points: []assessmentdomain.ClassInsightTrendPoint{
 				{Date: "2026-05-01", ActiveStudentCount: 1, EventCount: 2, SolveCount: 1},
 				{Date: "2026-05-03", ActiveStudentCount: 1, EventCount: 4, SolveCount: 2},
 			},
