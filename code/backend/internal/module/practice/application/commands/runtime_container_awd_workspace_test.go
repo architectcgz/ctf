@@ -152,7 +152,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 	}
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:          601,
-		ImageID:     601,
+		ImageID:     int64Ptr(601),
 		FlagType:    challengecontracts.FlagTypeStatic,
 		PackageSlug: stringPtr("campus-drive"),
 	}

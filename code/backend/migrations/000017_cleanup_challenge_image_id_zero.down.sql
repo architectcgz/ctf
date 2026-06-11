@@ -1,0 +1,1 @@
+-- No-op rollback: historical challenges.image_id=0 sentinel rows cannot be reconstructed safely after cleanup.

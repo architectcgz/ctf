@@ -107,7 +107,7 @@ func TestCreateSingleContainerRebindsHostPortAfterPublishConflict(t *testing.T) 
 	}
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       410,
-		ImageID:  410,
+		ImageID:  int64Ptr(410),
 		FlagType: challengecontracts.FlagTypeStatic,
 	}
 
@@ -194,7 +194,7 @@ func TestCreateSingleContainerUsesSingleContainerSubnetPool(t *testing.T) {
 	}
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       411,
-		ImageID:  411,
+		ImageID:  int64Ptr(411),
 		FlagType: challengecontracts.FlagTypeStatic,
 	}
 

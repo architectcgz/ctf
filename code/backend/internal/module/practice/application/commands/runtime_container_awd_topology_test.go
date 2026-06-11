@@ -139,7 +139,7 @@ func TestCreateTopologyAWDContainerUsesStableContestNetwork(t *testing.T) {
 	}
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       503,
-		ImageID:  503,
+		ImageID:  int64Ptr(503),
 		FlagType: challengecontracts.FlagTypeStatic,
 	}
 	topology, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{
@@ -281,7 +281,7 @@ func TestCreateTopologyAWDContainerUsesPublishedAccessHostWhenConfigured(t *test
 	}
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       513,
-		ImageID:  513,
+		ImageID:  int64Ptr(513),
 		FlagType: challengecontracts.FlagTypeStatic,
 	}
 	topology, err := challengecontracts.EncodeTopologySpec(challengecontracts.TopologySpec{

@@ -510,7 +510,7 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 	}
 	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{
 		ID:             challengeID,
-		ImageID:        601,
+		ImageID:        int64Ptr(601),
 		TargetPort:     8080,
 		TargetProtocol: challengecontracts.ChallengeTargetProtocolHTTP,
 	}), "flag{demo}"); err != nil {
@@ -675,7 +675,7 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 	}
 	err = service.createSingleContainer(context.Background(), instance, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{
 		ID:             challengeID,
-		ImageID:        602,
+		ImageID:        int64Ptr(602),
 		TargetPort:     8080,
 		TargetProtocol: challengecontracts.ChallengeTargetProtocolHTTP,
 	}), "flag{demo}")

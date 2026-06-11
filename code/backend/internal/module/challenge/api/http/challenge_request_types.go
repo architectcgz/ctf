@@ -1,9 +1,39 @@
 package http
 
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+)
+
 type ChallengeHintReq struct {
 	Level   int    `json:"level" binding:"required,min=1"`
 	Title   string `json:"title" binding:"omitempty,max=128"`
 	Content string `json:"content" binding:"required"`
+}
+
+type OptionalImageIDField struct {
+	Set   bool
+	Value *int64
+}
+
+func (f *OptionalImageIDField) UnmarshalJSON(data []byte) error {
+	f.Set = true
+	trimmed := bytes.TrimSpace(data)
+	if bytes.Equal(trimmed, []byte("null")) {
+		f.Value = nil
+		return nil
+	}
+
+	var value int64
+	if err := json.Unmarshal(trimmed, &value); err != nil {
+		return err
+	}
+	if value <= 0 {
+		return fmt.Errorf("image_id must be greater than 0")
+	}
+	f.Value = &value
+	return nil
 }
 
 type CreateChallengeReq struct {
@@ -12,7 +42,7 @@ type CreateChallengeReq struct {
 	Category        string                `json:"category" binding:"required"`
 	Difficulty      string                `json:"difficulty" binding:"required,oneof=beginner easy medium hard insane"`
 	Points          int                   `json:"points" binding:"required,min=1"`
-	ImageID         int64                 `json:"image_id"`
+	ImageID         *int64                `json:"image_id" binding:"omitempty,min=1"`
 	AttachmentURL   string                `json:"attachment_url" binding:"omitempty,max=2048"`
 	InstanceSharing string                `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
 	Hints           []ChallengeHintReq    `json:"hints" binding:"omitempty,dive"`
@@ -24,7 +54,7 @@ type UpdateChallengeReq struct {
 	Category        string                `json:"category"`
 	Difficulty      string                `json:"difficulty" binding:"omitempty,oneof=beginner easy medium hard insane"`
 	Points          int                   `json:"points" binding:"omitempty,min=1"`
-	ImageID         *int64                `json:"image_id"`
+	ImageID         OptionalImageIDField  `json:"image_id"`
 	AttachmentURL   *string               `json:"attachment_url" binding:"omitempty,max=2048"`
 	InstanceSharing string                `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
 	Hints           []ChallengeHintReq    `json:"hints" binding:"omitempty,dive"`

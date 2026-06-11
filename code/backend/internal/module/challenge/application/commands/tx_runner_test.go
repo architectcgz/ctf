@@ -244,7 +244,7 @@ func (s *testChallengeImportTxStore) ResolvePlatformBuildImage(
 	if err != nil {
 		return nil, err
 	}
-	return &challengeports.ImportedImageResolution{ImageID: result.ImageID, ImageRef: result.TargetRef}, nil
+	return &challengeports.ImportedImageResolution{ImageID: int64Ptr(result.ImageID), ImageRef: result.TargetRef}, nil
 }
 
 func (s *testChallengeImportTxStore) ResolveExternalImage(
@@ -260,7 +260,7 @@ func (s *testChallengeImportTxStore) ResolveExternalImage(
 	if err != nil {
 		return nil, err
 	}
-	return &challengeports.ImportedImageResolution{ImageID: result.ImageID, ImageRef: result.ImageRef}, nil
+	return &challengeports.ImportedImageResolution{ImageID: int64Ptr(result.ImageID), ImageRef: result.ImageRef}, nil
 }
 
 func (s *testChallengeImportTxStore) ResolveExistingImageRef(
@@ -301,7 +301,7 @@ func (s *testChallengeImportTxStore) ResolveExistingImageRef(
 			return nil, err
 		}
 	}
-	return &challengeports.ImportedImageResolution{ImageID: image.ID, ImageRef: ref}, nil
+	return &challengeports.ImportedImageResolution{ImageID: int64Ptr(image.ID), ImageRef: ref}, nil
 }
 
 type testAWDChallengeImportTxRunner struct {

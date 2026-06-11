@@ -158,7 +158,7 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
-		ImageID:    image.ID,
+		ImageID:    int64Ptr(image.ID),
 		FlagType:   challengeentity.FlagTypeStatic,
 		FlagSalt:   salt,
 		FlagHash:   flagcrypto.HashStaticFlag("flag{ok}", salt),
@@ -220,7 +220,7 @@ func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
-		ImageID:    image.ID,
+		ImageID:    int64Ptr(image.ID),
 		FlagType:   challengeentity.FlagTypeStatic,
 		FlagSalt:   salt,
 		FlagHash:   flagcrypto.HashStaticFlag("flag{ok}", salt),
@@ -299,7 +299,7 @@ func TestChallengeSelfCheckManualReviewSkipsFlagValidationFailure(t *testing.T) 
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
-		ImageID:    image.ID,
+		ImageID:    int64Ptr(image.ID),
 		FlagType:   challengeentity.FlagTypeManualReview,
 	}
 	if err := db.Create(challenge).Error; err != nil {

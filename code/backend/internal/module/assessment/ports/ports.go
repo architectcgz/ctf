@@ -132,30 +132,9 @@ type AssessmentClassReportRepository interface {
 	GetClassContestMigrationSummary(ctx context.Context, className string) (*assessmentdomain.ClassContestMigrationSummary, error)
 }
 
-type ClassInsightSummary struct {
-	ClassName          string
-	StudentCount       int64
-	AverageSolved      float64
-	ActiveStudentCount int64
-	ActiveRate         float64
-	RecentEventCount   int64
-}
-
-type ClassInsightTrendPoint struct {
-	Date               string
-	ActiveStudentCount int64
-	EventCount         int64
-	SolveCount         int64
-}
-
-type ClassInsightTrend struct {
-	ClassName string
-	Points    []ClassInsightTrendPoint
-}
-
 type AssessmentClassInsightRepository interface {
-	GetClassSummary(ctx context.Context, className string, since time.Time) (*ClassInsightSummary, error)
-	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*ClassInsightTrend, error)
+	GetClassSummary(ctx context.Context, className string, since time.Time) (*assessmentdomain.ClassInsightSummary, error)
+	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*assessmentdomain.ClassInsightTrend, error)
 	ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error)
 }
 

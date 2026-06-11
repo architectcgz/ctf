@@ -64,6 +64,63 @@ type ClassContestMigrationSummary struct {
 	SuccessDimensions     []string
 }
 
+type ClassInsightSummary struct {
+	ClassName          string  `json:"class_name"`
+	StudentCount       int64   `json:"student_count"`
+	AverageSolved      float64 `json:"average_solved"`
+	ActiveStudentCount int64   `json:"active_student_count"`
+	ActiveRate         float64 `json:"active_rate"`
+	RecentEventCount   int64   `json:"recent_event_count"`
+}
+
+type ClassInsightTrendPoint struct {
+	Date               string `json:"date"`
+	ActiveStudentCount int64  `json:"active_student_count"`
+	EventCount         int64  `json:"event_count"`
+	SolveCount         int64  `json:"solve_count"`
+}
+
+type ClassInsightTrend struct {
+	ClassName string                   `json:"class_name"`
+	Points    []ClassInsightTrendPoint `json:"points"`
+}
+
+type ClassReviewStudentRef struct {
+	ID       int64   `json:"id"`
+	Username string  `json:"username"`
+	Name     *string `json:"name,omitempty"`
+}
+
+type ClassReviewRecommendation struct {
+	ChallengeID    int64    `json:"challenge_id"`
+	Title          string   `json:"title"`
+	Category       string   `json:"category"`
+	Difficulty     string   `json:"difficulty"`
+	Dimension      string   `json:"dimension,omitempty"`
+	DifficultyBand string   `json:"difficulty_band,omitempty"`
+	Severity       string   `json:"severity,omitempty"`
+	ReasonCodes    []string `json:"reason_codes,omitempty"`
+	Summary        string   `json:"summary"`
+	Evidence       string   `json:"evidence,omitempty"`
+}
+
+type ClassReviewItem struct {
+	Code           string                     `json:"code"`
+	Severity       string                     `json:"severity"`
+	Summary        string                     `json:"summary"`
+	Evidence       string                     `json:"evidence,omitempty"`
+	Action         string                     `json:"action,omitempty"`
+	ReasonCodes    []string                   `json:"reason_codes,omitempty"`
+	Dimension      string                     `json:"dimension,omitempty"`
+	Students       []ClassReviewStudentRef    `json:"students,omitempty"`
+	Recommendation *ClassReviewRecommendation `json:"recommendation,omitempty"`
+}
+
+type ClassReview struct {
+	ClassName string            `json:"class_name"`
+	Items     []ClassReviewItem `json:"items"`
+}
+
 type ContestExportScoreboardItem struct {
 	Rank             int        `json:"rank"`
 	TeamID           int64      `json:"team_id"`

@@ -27,7 +27,7 @@ func TestChallengeServiceCreateChallengeTreatsModuleImageNotFoundAsErrNotFound(t
 		zap.NewNop(),
 	)
 
-	_, err := service.CreateChallenge(context.Background(), 1001, CreateChallengeInput{ImageID: 9})
+	_, err := service.CreateChallenge(context.Background(), 1001, CreateChallengeInput{ImageID: int64Ptr(9)})
 	if err == nil || err.Error() != apperror.ErrNotFound.Error() {
 		t.Fatalf("expected image not found error, got %v", err)
 	}

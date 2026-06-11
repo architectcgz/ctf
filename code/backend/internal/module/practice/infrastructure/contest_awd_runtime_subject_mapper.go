@@ -91,15 +91,16 @@ func parseContestAWDServiceSnapshotPoints(scoreConfig string) int {
 	return parseContestAWDServiceSnapshotInt(payload["points"])
 }
 
-func parseContestAWDServiceSnapshotImageID(runtimeConfig map[string]any) int64 {
+func parseContestAWDServiceSnapshotImageID(runtimeConfig map[string]any) *int64 {
 	if runtimeConfig == nil {
-		return 0
+		return nil
 	}
 	value := parseContestAWDServiceSnapshotInt(runtimeConfig["image_id"])
 	if value <= 0 {
-		return 0
+		return nil
 	}
-	return int64(value)
+	result := int64(value)
+	return &result
 }
 
 func parseContestAWDServiceSnapshotInstanceSharing(runtimeConfig map[string]any) string {

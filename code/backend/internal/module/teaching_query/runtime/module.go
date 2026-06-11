@@ -25,17 +25,32 @@ type Deps struct {
 }
 
 type moduleDeps struct {
-	input Deps
-	users queryports.TeachingUserLookupRepository
-	repo  interface {
-		queryports.TeachingClassQueryRepository
-		queryports.TeachingStudentDirectoryRepository
-		queryports.TeachingStudentProfileRepository
-		queryports.TeachingStudentActivityRepository
-		queryports.TeachingClassInsightRepository
-		queryports.TeachingOverviewRepository
-	}
-	recommendations assessmentcontracts.RecommendationProvider
+	input            Deps
+	users            queryports.TeachingUserLookupRepository
+	classQuery       queryports.TeachingClassQueryRepository
+	studentDirectory queryports.TeachingStudentDirectoryRepository
+	studentProfile   queryports.TeachingStudentProfileRepository
+	studentActivity  queryports.TeachingStudentActivityRepository
+	classInsight     queryports.TeachingClassInsightRepository
+	overview         queryports.TeachingOverviewRepository
+	recommendations  assessmentcontracts.RecommendationProvider
+}
+
+type queryServiceRepository struct {
+	queryports.TeachingClassQueryRepository
+	queryports.TeachingStudentDirectoryRepository
+}
+
+type overviewServiceRepository struct {
+	queryports.TeachingClassQueryRepository
+	queryports.TeachingStudentDirectoryRepository
+	queryports.TeachingClassInsightRepository
+	queryports.TeachingOverviewRepository
+}
+
+type studentReviewServiceRepository struct {
+	queryports.TeachingStudentProfileRepository
+	queryports.TeachingStudentActivityRepository
 }
 
 func Build(deps Deps) *Module {
@@ -54,10 +69,15 @@ func Build(deps Deps) *Module {
 
 func newModuleDeps(deps Deps) moduleDeps {
 	return moduleDeps{
-		input:           deps,
-		users:           deps.Users,
-		repo:            queryinfra.NewRepository(deps.DB),
-		recommendations: deps.Recommendations,
+		input:            deps,
+		users:            deps.Users,
+		classQuery:       queryinfra.NewClassQueryRepository(deps.DB),
+		studentDirectory: queryinfra.NewStudentDirectoryRepository(deps.DB),
+		studentProfile:   queryinfra.NewStudentProfileRepository(deps.DB),
+		studentActivity:  queryinfra.NewStudentActivityRepository(deps.DB),
+		classInsight:     queryinfra.NewClassInsightRepository(deps.DB),
+		overview:         queryinfra.NewOverviewRepository(deps.DB),
+		recommendations:  deps.Recommendations,
 	}
 }
 
@@ -65,19 +85,27 @@ func buildQueryService(deps moduleDeps) teachingqueries.Service {
 	cfg := deps.input.Config
 	return teachingqueries.NewQueryService(
 		deps.users,
-		deps.repo,
+		queryServiceRepository{
+			TeachingClassQueryRepository:       deps.classQuery,
+			TeachingStudentDirectoryRepository: deps.studentDirectory,
+		},
 		cfg.Pagination,
 	)
 }
 
 func buildOverviewService(deps moduleDeps) teachingqueries.OverviewService {
-	return teachingqueries.NewOverviewService(deps.users, deps.repo)
+	return teachingqueries.NewOverviewService(deps.users, overviewServiceRepository{
+		TeachingClassQueryRepository:       deps.classQuery,
+		TeachingStudentDirectoryRepository: deps.studentDirectory,
+		TeachingClassInsightRepository:     deps.classInsight,
+		TeachingOverviewRepository:         deps.overview,
+	})
 }
 
 func buildClassInsightService(deps moduleDeps) teachingqueries.ClassInsightService {
 	return teachingqueries.NewClassInsightService(
 		deps.users,
-		deps.repo,
+		deps.classInsight,
 		deps.recommendations,
 		deps.input.Logger.Named("teaching_query_class_insight_service"),
 	)
@@ -86,7 +114,10 @@ func buildClassInsightService(deps moduleDeps) teachingqueries.ClassInsightServi
 func buildStudentReviewService(deps moduleDeps) teachingqueries.StudentReviewService {
 	return teachingqueries.NewStudentReviewService(
 		deps.users,
-		deps.repo,
+		studentReviewServiceRepository{
+			TeachingStudentProfileRepository:  deps.studentProfile,
+			TeachingStudentActivityRepository: deps.studentActivity,
+		},
 		deps.recommendations,
 	)
 }

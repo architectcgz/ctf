@@ -420,7 +420,7 @@ func (s *serviceCore) startChallengeWithScope(ctx context.Context, userID, chall
 	if chal.Status != practiceentity.ChallengeStatusPublished {
 		return nil, challengecontracts.ErrChallengeNotPublish
 	}
-	if chal.ImageID == 0 {
+	if chal.ImageID == nil {
 		if topology == nil {
 			return nil, apperror.ErrInvalidParams.WithCause(errors.New(errMsgChallengeNoTarget))
 		}

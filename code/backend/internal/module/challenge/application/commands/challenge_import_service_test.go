@@ -223,11 +223,11 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	if err := db.First(&challenge, resp.ID).Error; err != nil {
 		t.Fatalf("load challenge: %v", err)
 	}
-	if challenge.ImageID <= 0 {
+	if challenge.ImageID == nil || *challenge.ImageID <= 0 {
 		t.Fatal("expected challenge image id")
 	}
 
-	image, err := imageRepo.FindByID(context.Background(), challenge.ImageID)
+	image, err := imageRepo.FindByID(context.Background(), *challenge.ImageID)
 	if err != nil {
 		t.Fatalf("FindByID(image) error = %v", err)
 	}
@@ -443,7 +443,10 @@ func TestCommitChallengeImportFromPreviewKeepsPlatformBuildSourceAccessible(t *t
 	if err := db.First(&challenge, resp.ID).Error; err != nil {
 		t.Fatalf("load challenge: %v", err)
 	}
-	image, err := imageRepo.FindByID(context.Background(), challenge.ImageID)
+	if challenge.ImageID == nil {
+		t.Fatal("expected challenge image id")
+	}
+	image, err := imageRepo.FindByID(context.Background(), *challenge.ImageID)
 	if err != nil {
 		t.Fatalf("FindByID(image) error = %v", err)
 	}

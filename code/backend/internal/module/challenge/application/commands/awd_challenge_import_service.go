@@ -210,8 +210,8 @@ func (s *AWDChallengeImportService) CommitImport(
 		if strings.TrimSpace(resolvedImageRef) != "" {
 			runtimeConfig["image_ref"] = resolvedImageRef
 		}
-		if resolvedImageID > 0 {
-			runtimeConfig["image_id"] = resolvedImageID
+		if resolvedImageID != nil {
+			runtimeConfig["image_id"] = *resolvedImageID
 		}
 
 		now := time.Now().UTC()
@@ -336,7 +336,7 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 	actorUserID int64,
 	parsed *domain.ParsedAWDChallengePackage,
 	buildSource *importedImageBuildSource,
-) (int64, string, error) {
+) (*int64, string, error) {
 	var imageBuild *ImageBuildService
 	var logger *zap.Logger
 	if s != nil {
@@ -346,24 +346,24 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 	if parsed.ImageSourceType == domain.ImageSourceTypeExternalRef {
 		if challengeImportMissingImageBuildService(imageBuild, parsed.ImageSourceType) {
 			warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "commit")
-			return 0, "", challengeImportImageBuildServiceUnavailableError(parsed.ImageSourceType)
+			return nil, "", challengeImportImageBuildServiceUnavailableError(parsed.ImageSourceType)
 		}
 		result, err := store.ResolveExternalImage(ctx, parsed.Slug, parsed.RuntimeImageRef)
 		if err != nil {
-			return 0, "", err
+			return nil, "", err
 		}
 		return result.ImageID, result.ImageRef, nil
 	}
 	if parsed.ImageSourceType != domain.ImageSourceTypePlatformBuild {
 		result, err := store.ResolveExistingImageRef(ctx, parsed.Slug, parsed.RuntimeImageRef)
 		if err != nil {
-			return 0, "", err
+			return nil, "", err
 		}
 		return result.ImageID, parsed.RuntimeImageRef, nil
 	}
 	if challengeImportMissingImageBuildService(imageBuild, parsed.ImageSourceType) {
 		warnChallengeImportImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "commit")
-		return 0, "", challengeImportImageBuildServiceUnavailableError(parsed.ImageSourceType)
+		return nil, "", challengeImportImageBuildServiceUnavailableError(parsed.ImageSourceType)
 	}
 	sourceDir := parsed.RootDir
 	dockerfilePath := parsed.DockerfilePath
@@ -383,7 +383,7 @@ func (s *AWDChallengeImportService) resolveAWDImportedImageForCommit(
 		CreatedBy:      actorUserID,
 	})
 	if err != nil {
-		return 0, "", err
+		return nil, "", err
 	}
 	return result.ImageID, result.ImageRef, nil
 }

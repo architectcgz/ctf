@@ -16,6 +16,7 @@ import (
 	"ctf-platform/internal/platform/randomstring"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
+	"database/sql"
 	"errors"
 	"testing"
 	"time"
@@ -138,7 +139,7 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 		Category:        "web",
 		Difficulty:      "easy",
 		Points:          100,
-		ImageID:         1,
+		ImageID:         int64Ptr(1),
 		InstanceSharing: string(challengeentity.InstanceSharingPerUser),
 	})
 
@@ -164,7 +165,7 @@ func TestServiceCreateChallengeImageNotFound(t *testing.T) {
 	service := newTestService(repo, imageRepo)
 
 	_, err := service.CreateChallenge(context.Background(), 1001, CreateChallengeInput{
-		ImageID: 999,
+		ImageID: int64Ptr(999),
 	})
 	if err == nil || err.Error() != apperror.ErrNotFound.Error() {
 		t.Fatalf("expected image not found error, got %v", err)
@@ -184,14 +185,21 @@ func TestServiceCreateChallengeWithoutImageSuccess(t *testing.T) {
 		Category:    "misc",
 		Difficulty:  "easy",
 		Points:      50,
-		ImageID:     0,
 	})
 
 	if err != nil {
 		t.Fatalf("CreateChallenge() without image error = %v", err)
 	}
-	if resp.ImageID != 0 {
-		t.Fatalf("expected image_id=0, got %d", resp.ImageID)
+	if resp.ImageID != nil {
+		t.Fatalf("expected image_id=nil, got %+v", resp.ImageID)
+	}
+
+	var imageID sql.NullInt64
+	if err := db.Raw("SELECT image_id FROM challenges WHERE id = ?", resp.ID).Scan(&imageID).Error; err != nil {
+		t.Fatalf("query challenge image_id: %v", err)
+	}
+	if imageID.Valid {
+		t.Fatalf("expected persisted image_id to be NULL, got %+v", imageID)
 	}
 }
 
@@ -302,7 +310,7 @@ func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 func TestServicePublishChallengeNoImage(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 
-	challenge := &challengeentity.Challenge{Title: "Test", ImageID: 0}
+	challenge := &challengeentity.Challenge{Title: "Test", ImageID: nil}
 	db.Create(challenge)
 
 	repo := challengeinfra.NewRepository(db)
@@ -453,7 +461,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
-		ImageID:    image.ID,
+		ImageID:    int64Ptr(image.ID),
 		Status:     challengeentity.ChallengeStatusDraft,
 		CreatedBy:  &teacher.ID,
 		FlagType:   challengeentity.FlagTypeStatic,
@@ -724,7 +732,7 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: challengeentity.ChallengeDifficultyEasy,
 		Points:     100,
-		ImageID:    0,
+		ImageID:    nil,
 		Status:     challengeentity.ChallengeStatusDraft,
 		CreatedBy:  &teacher.ID,
 		UpdatedAt:  updatedAt,

@@ -267,7 +267,7 @@ func (s *ReportService) buildContestExportData(ctx context.Context, contestID in
 	}, nil
 }
 
-func mapClassSummary(summary *assessmentports.ClassInsightSummary) *classReportSummary {
+func mapClassSummary(summary *assessmentdomain.ClassInsightSummary) *classReportSummary {
 	if summary == nil {
 		return nil
 	}
@@ -281,7 +281,7 @@ func mapClassSummary(summary *assessmentports.ClassInsightSummary) *classReportS
 	}
 }
 
-func mapClassTrend(trend *assessmentports.ClassInsightTrend) *classReportTrend {
+func mapClassTrend(trend *assessmentdomain.ClassInsightTrend) *classReportTrend {
 	if trend == nil {
 		return nil
 	}

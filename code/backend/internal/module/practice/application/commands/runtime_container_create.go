@@ -92,7 +92,10 @@ func (s *serviceCore) createContainer(ctx context.Context, instance *instancecon
 }
 
 func (s *serviceCore) createSingleContainer(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, flag string) error {
-	imageItem, err := s.imageRepo.FindByID(ctx, chal.ImageID)
+	if chal.ImageID == nil {
+		return instancecontracts.ErrContainerCreateFailed.WithCause(errors.New(errMsgChallengeNoTarget))
+	}
+	imageItem, err := s.imageRepo.FindByID(ctx, *chal.ImageID)
 	if err != nil {
 		return instancecontracts.ErrContainerCreateFailed.WithCause(err)
 	}
@@ -323,9 +326,13 @@ func (s *serviceCore) buildTopologyCreateRequest(
 		}
 	}
 
-	defaultImageRef, err := s.resolveAvailableImageRef(ctx, chal.ImageID)
-	if err != nil {
-		return nil, err
+	defaultImageRef := ""
+	var err error
+	if chal != nil && chal.ImageID != nil {
+		defaultImageRef, err = s.resolveAvailableImageRef(ctx, *chal.ImageID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	request := &practiceports.TopologyCreateRequest{
@@ -344,6 +351,8 @@ func (s *serviceCore) buildTopologyCreateRequest(
 			if err != nil {
 				return nil, err
 			}
+		} else if imageRef == "" {
+			return nil, instancecontracts.ErrContainerCreateFailed.WithCause(fmt.Errorf("topology node %s has no image", node.Key))
 		}
 
 		env := make(map[string]string, len(node.Env)+1)

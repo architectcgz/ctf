@@ -24,7 +24,7 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 		config:    &config.Config{},
 	}
 
-	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, false, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{ImageID: 1}), "web", challengecontracts.TopologySpec{
+	request, err := service.buildTopologyCreateRequest(context.Background(), 30001, false, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{ImageID: int64Ptr(1)}), "web", challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", ServicePort: 8080, InjectFlag: true},
 		},
@@ -56,7 +56,7 @@ func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testin
 	}
 
 	_, err := service.buildTopologyCreateRequest(context.Background(), 30002, false, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{
-		ImageID:         2,
+		ImageID:         int64Ptr(2),
 		InstanceSharing: challengecontracts.InstanceSharingShared,
 	}), "web", challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{

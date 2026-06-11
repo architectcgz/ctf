@@ -201,6 +201,27 @@ func TestRuntimeOwnsAssessmentWiring(t *testing.T) {
 	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/assessment/api/http")
 }
 
+func TestProductionAssessmentDoesNotImportTeachingQueryModule(t *testing.T) {
+	t.Parallel()
+
+	err := filepath.WalkDir(".", func(path string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		assertFileDoesNotImportPrefix(t, path, "ctf-platform/internal/module/teaching_query")
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk assessment go files: %v", err)
+	}
+}
+
 func TestRuntimeUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 
@@ -357,7 +378,7 @@ func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string
 	}
 }
 
-func assertFileDoesNotImportPrefix(t *testing.T, filePath string, blockedPrefix string) {
+func assertFileDoesNotImportPrefix(t *testing.T, filePath string, blockedImportPrefix string) {
 	t.Helper()
 
 	fset := token.NewFileSet()
@@ -371,8 +392,8 @@ func assertFileDoesNotImportPrefix(t *testing.T, filePath string, blockedPrefix 
 		if err != nil {
 			t.Fatalf("unquote import %s: %v", importSpec.Path.Value, err)
 		}
-		if importPath == blockedPrefix || strings.HasPrefix(importPath, blockedPrefix+"/") {
-			t.Fatalf("%s must not import %s", filePath, importPath)
+		if importPath == blockedImportPrefix || strings.HasPrefix(importPath, blockedImportPrefix+"/") {
+			t.Fatalf("%s must not import %s subtree, got %s", filePath, blockedImportPrefix, importPath)
 		}
 	}
 }

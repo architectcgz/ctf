@@ -14,8 +14,9 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 		Logger:     root.Logger(),
 		DB:         root.DB(),
 		Cache:      root.Cache(),
-		Events:     root.Events, ChallengeRepo: challenge.Catalog,
-		ClassInsightRepo: newAssessmentClassInsightAdapter(queryinfra.NewRepository(root.DB())),
+		Events:     root.Events,
+		ChallengeRepo:    challenge.Catalog,
+		ClassInsightRepo: newAssessmentClassInsightAdapter(queryinfra.NewClassInsightRepository(root.DB())),
 	})
 	for _, job := range module.BackgroundJobs {
 		root.RegisterBackgroundJob(NewBackgroundJob(job.Name, job.Start, job.Stop))

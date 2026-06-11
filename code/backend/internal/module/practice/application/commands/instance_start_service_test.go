@@ -36,7 +36,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
-		ImageID:    101,
+		ImageID:    int64Ptr(101),
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
@@ -126,7 +126,7 @@ func TestStartChallengePersistsSelectedRuntimeNodeID(t *testing.T) {
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
-		ImageID:    111,
+		ImageID:    int64Ptr(111),
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
@@ -207,7 +207,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
-		ImageID:    106,
+		ImageID:    int64Ptr(106),
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
@@ -322,7 +322,7 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingShar
 	}
 	challengeRepo := &stubPracticeChallengeContract{
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
-			return &challengecontracts.PracticeRuntimeChallenge{ID: id, ImageID: 1, Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{shared}", InstanceSharing: challengecontracts.InstanceSharingShared}, nil
+			return &challengecontracts.PracticeRuntimeChallenge{ID: id, ImageID: int64Ptr(1), Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{shared}", InstanceSharing: challengecontracts.InstanceSharingShared}, nil
 		},
 		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
 			return nil, nil
@@ -377,7 +377,7 @@ func TestStartChallengeReusesStoppingInstanceInsteadOfCreatingNewOne(t *testing.
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
-		ImageID:    107,
+		ImageID:    int64Ptr(107),
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
@@ -523,7 +523,7 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingIns
 	}
 	challengeRepo := &stubPracticeChallengeContract{
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
-			return &challengecontracts.PracticeRuntimeChallenge{ID: id, ImageID: 1, Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{new}"}, nil
+			return &challengecontracts.PracticeRuntimeChallenge{ID: id, ImageID: int64Ptr(1), Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{new}"}, nil
 		},
 		findChallengeTopologyByChallengeIDFn: func(context.Context, int64) (*challengecontracts.PracticeRuntimeChallengeTopology, error) {
 			return nil, nil

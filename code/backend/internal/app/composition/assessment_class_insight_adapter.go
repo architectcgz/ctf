@@ -4,30 +4,40 @@ import (
 	"context"
 	"time"
 
+	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	queryports "ctf-platform/internal/module/teaching_query/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
-type assessmentClassInsightAdapter struct {
-	repo queryports.TeachingClassInsightRepository
+type teachingClassInsightSource interface {
+	GetClassSummary(ctx context.Context, className string, since time.Time) (*queryports.ClassSummary, error)
+	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*queryports.ClassTrend, error)
+	ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error)
 }
 
-var _ assessmentports.AssessmentClassInsightRepository = assessmentClassInsightAdapter{}
+type assessmentClassInsightAdapter struct {
+	source teachingClassInsightSource
+}
 
-func newAssessmentClassInsightAdapter(repo queryports.TeachingClassInsightRepository) assessmentports.AssessmentClassInsightRepository {
-	if repo == nil {
+var _ assessmentports.AssessmentClassInsightRepository = (*assessmentClassInsightAdapter)(nil)
+
+func newAssessmentClassInsightAdapter(source teachingClassInsightSource) assessmentports.AssessmentClassInsightRepository {
+	if source == nil {
 		return nil
 	}
-	return assessmentClassInsightAdapter{repo: repo}
+	return &assessmentClassInsightAdapter{source: source}
 }
 
-func (a assessmentClassInsightAdapter) GetClassSummary(ctx context.Context, className string, since time.Time) (*assessmentports.ClassInsightSummary, error) {
-	summary, err := a.repo.GetClassSummary(ctx, className, since)
-	if err != nil || summary == nil {
+func (a *assessmentClassInsightAdapter) GetClassSummary(ctx context.Context, className string, since time.Time) (*assessmentdomain.ClassInsightSummary, error) {
+	summary, err := a.source.GetClassSummary(ctx, className, since)
+	if err != nil {
 		return nil, err
 	}
-	return &assessmentports.ClassInsightSummary{
+	if summary == nil {
+		return nil, nil
+	}
+	return &assessmentdomain.ClassInsightSummary{
 		ClassName:          summary.ClassName,
 		StudentCount:       summary.StudentCount,
 		AverageSolved:      summary.AverageSolved,
@@ -37,26 +47,29 @@ func (a assessmentClassInsightAdapter) GetClassSummary(ctx context.Context, clas
 	}, nil
 }
 
-func (a assessmentClassInsightAdapter) GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*assessmentports.ClassInsightTrend, error) {
-	trend, err := a.repo.GetClassTrend(ctx, className, since, days)
-	if err != nil || trend == nil {
+func (a *assessmentClassInsightAdapter) GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*assessmentdomain.ClassInsightTrend, error) {
+	trend, err := a.source.GetClassTrend(ctx, className, since, days)
+	if err != nil {
 		return nil, err
 	}
-	points := make([]assessmentports.ClassInsightTrendPoint, 0, len(trend.Points))
+	if trend == nil {
+		return nil, nil
+	}
+	points := make([]assessmentdomain.ClassInsightTrendPoint, 0, len(trend.Points))
 	for _, point := range trend.Points {
-		points = append(points, assessmentports.ClassInsightTrendPoint{
+		points = append(points, assessmentdomain.ClassInsightTrendPoint{
 			Date:               point.Date,
 			ActiveStudentCount: point.ActiveStudentCount,
 			EventCount:         point.EventCount,
 			SolveCount:         point.SolveCount,
 		})
 	}
-	return &assessmentports.ClassInsightTrend{
+	return &assessmentdomain.ClassInsightTrend{
 		ClassName: trend.ClassName,
 		Points:    points,
 	}, nil
 }
 
-func (a assessmentClassInsightAdapter) ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error) {
-	return a.repo.ListClassTeachingFactSnapshots(ctx, className, since)
+func (a *assessmentClassInsightAdapter) ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error) {
+	return a.source.ListClassTeachingFactSnapshots(ctx, className, since)
 }

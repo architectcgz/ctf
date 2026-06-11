@@ -32,8 +32,8 @@ type testReportRepository struct {
 	contests          map[int64]*contestcontracts.Contest
 	personalStats     *assessmentdomain.PersonalReportStats
 	totalChallenges   int64
-	classSummary      *assessmentports.ClassInsightSummary
-	classTrend        *assessmentports.ClassInsightTrend
+	classSummary      *assessmentdomain.ClassInsightSummary
+	classTrend        *assessmentdomain.ClassInsightTrend
 	classSnapshots    []teachingadvice.StudentFactSnapshot
 	categoryStats     []assessmentdomain.ClassDistributionStat
 	difficultyStats   []assessmentdomain.ClassDistributionStat
@@ -46,6 +46,7 @@ type testReportRepository struct {
 	evidence          []assessmentdomain.ReviewArchiveEvidenceEvent
 	writeups          []assessmentdomain.ReviewArchiveWriteupItem
 	manualReviews     []assessmentdomain.ReviewArchiveManualReviewItem
+
 }
 
 type testReportOutputStore struct {
@@ -184,17 +185,17 @@ func (r *testReportRepository) GetClassContestMigrationSummary(context.Context, 
 	return &assessmentdomain.ClassContestMigrationSummary{}, nil
 }
 
-func (r *testReportRepository) GetClassSummary(_ context.Context, _ string, since time.Time) (*assessmentports.ClassInsightSummary, error) {
+func (r *testReportRepository) GetClassSummary(_ context.Context, _ string, since time.Time) (*assessmentdomain.ClassInsightSummary, error) {
 	if r != nil {
 		r.lastSummarySince = since
 	}
 	if r != nil && r.classSummary != nil {
 		return r.classSummary, nil
 	}
-	return &assessmentports.ClassInsightSummary{}, nil
+	return &assessmentdomain.ClassInsightSummary{}, nil
 }
 
-func (r *testReportRepository) GetClassTrend(_ context.Context, _ string, since time.Time, days int) (*assessmentports.ClassInsightTrend, error) {
+func (r *testReportRepository) GetClassTrend(_ context.Context, _ string, since time.Time, days int) (*assessmentdomain.ClassInsightTrend, error) {
 	if r != nil {
 		r.lastTrendSince = since
 		r.lastTrendDays = days
@@ -202,7 +203,7 @@ func (r *testReportRepository) GetClassTrend(_ context.Context, _ string, since 
 	if r != nil && r.classTrend != nil {
 		return r.classTrend, nil
 	}
-	return &assessmentports.ClassInsightTrend{}, nil
+	return &assessmentdomain.ClassInsightTrend{}, nil
 }
 
 func (r *testReportRepository) ListClassTeachingFactSnapshots(_ context.Context, _ string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error) {

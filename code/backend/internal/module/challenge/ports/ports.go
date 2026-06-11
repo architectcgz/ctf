@@ -49,7 +49,7 @@ type ChallengeWriteModel struct {
 	Category        string
 	Difficulty      string
 	Points          int
-	ImageID         int64
+	ImageID         *int64
 	AttachmentURL   string
 	Status          string
 	FlagType        string
@@ -102,7 +102,7 @@ type ChallengeReadModel struct {
 	Category        string
 	Difficulty      string
 	Points          int
-	ImageID         int64
+	ImageID         *int64
 	AttachmentURL   string
 	Status          string
 	FlagType        string
@@ -263,7 +263,7 @@ type ImportedPlatformBuildImageRequest struct {
 }
 
 type ImportedImageResolution struct {
-	ImageID  int64
+	ImageID  *int64
 	ImageRef string
 }
 
@@ -281,7 +281,7 @@ type ImportedChallenge struct {
 	Category       string
 	Difficulty     string
 	Points         int
-	ImageID        int64
+	ImageID        *int64
 	AttachmentURL  string
 	Status         string
 	FlagPrefix     string
@@ -469,7 +469,7 @@ type ChallengePackageCore struct {
 	Category    string
 	Difficulty  string
 	Points      int
-	ImageID     int64
+	ImageID     *int64
 	FlagType    string
 	FlagPrefix  string
 	FlagRegex   string

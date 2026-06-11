@@ -114,7 +114,7 @@ func (s *awdChallengeImportTxStore) ResolvePlatformBuildImage(
 		return nil, err
 	}
 	return &challengeports.ImportedImageResolution{
-		ImageID:  result.ImageID,
+		ImageID:  int64Ptr(result.ImageID),
 		ImageRef: result.TargetRef,
 	}, nil
 }
@@ -137,7 +137,7 @@ func (s *awdChallengeImportTxStore) ResolveExternalImage(
 		return nil, err
 	}
 	return &challengeports.ImportedImageResolution{
-		ImageID:  result.ImageID,
+		ImageID:  int64Ptr(result.ImageID),
 		ImageRef: result.ImageRef,
 	}, nil
 }

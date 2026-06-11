@@ -160,7 +160,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 	}
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       501,
-		ImageID:  501,
+		ImageID:  int64Ptr(501),
 		FlagType: challengecontracts.FlagTypeStatic,
 	}
 

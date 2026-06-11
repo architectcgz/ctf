@@ -240,8 +240,8 @@ func (s *ChallengeSelfCheckService) runPrecheck(ctx context.Context, challenge *
 		passed = false
 	}
 
-	if challenge.ImageID > 0 {
-		imageRef, err := s.resolveAvailableImageRef(ctx, challenge.ImageID)
+	if challenge.ImageID != nil {
+		imageRef, err := s.resolveAvailableImageRef(ctx, *challenge.ImageID)
 		if err != nil {
 			passed = false
 			*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{
@@ -273,7 +273,7 @@ func (s *ChallengeSelfCheckService) runPrecheck(ctx context.Context, challenge *
 		if !errors.Is(err, challengeports.ErrChallengeTopologyNotFound) {
 			return input, false, err
 		}
-		if challenge.ImageID <= 0 {
+		if challenge.ImageID == nil {
 			if strings.TrimSpace(challenge.AttachmentURL) != "" {
 				input.skipRuntime = true
 				*steps = append(*steps, challengecontracts.ChallengeSelfCheckStepResp{

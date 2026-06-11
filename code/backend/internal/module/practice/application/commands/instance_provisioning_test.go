@@ -112,7 +112,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
-		ImageID:    102,
+		ImageID:    int64Ptr(102),
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
@@ -210,7 +210,7 @@ func TestRunProvisioningLoopSkipsWorkWhenSchedulerLockHeldByOtherReplica(t *test
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
-		ImageID:    112,
+		ImageID:    int64Ptr(112),
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
@@ -311,7 +311,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 		Category:   taxonomy.DimensionWeb,
 		Difficulty: taxonomy.DifficultyEasy,
 		Points:     100,
-		ImageID:    104,
+		ImageID:    int64Ptr(104),
 		Status:     challengecontracts.ChallengeStatusPublished,
 		FlagType:   challengecontracts.FlagTypeStatic,
 		FlagHash:   "flag{static}",
@@ -444,7 +444,7 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 	defer server.Close()
 	host, port := parseHTTPServerEndpoint(t, server.URL)
 	instance := &instanceentity.Instance{ID: 951, ChallengeID: 2051, HostPort: port, Status: instanceentity.InstanceStatusCreating}
-	challenge := &challengecontracts.PracticeRuntimeChallenge{ID: 2051, ImageID: 301, Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{ok}"}
+	challenge := &challengecontracts.PracticeRuntimeChallenge{ID: 2051, ImageID: int64Ptr(301), Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{ok}"}
 	service.config.Container.PublicHost = host
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 
@@ -499,7 +499,7 @@ func TestProvisionInstanceCleansRuntimeWhenInstanceLeavesCreatingBeforePersist(t
 	service.config.Container.PublicHost = host
 
 	instance := &instanceentity.Instance{ID: 953, ChallengeID: 2053, HostPort: port, Status: instanceentity.InstanceStatusCreating}
-	challenge := &challengecontracts.PracticeRuntimeChallenge{ID: 2053, ImageID: 302, Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{cancelled}"}
+	challenge := &challengecontracts.PracticeRuntimeChallenge{ID: 2053, ImageID: int64Ptr(302), Status: challengecontracts.ChallengeStatusPublished, FlagType: challengecontracts.FlagTypeStatic, FlagHash: "flag{cancelled}"}
 
 	if err := service.provisionInstance(context.Background(), instance, toPracticeChallenge(challenge), nil, "flag{cancelled}"); err != nil {
 		t.Fatalf("provisionInstance() error = %v", err)
@@ -630,7 +630,7 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 	instance := &instanceentity.Instance{ID: 952, ChallengeID: 2052, HostPort: 0, Status: instanceentity.InstanceStatusCreating}
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:             2052,
-		ImageID:        301,
+		ImageID:        int64Ptr(301),
 		Status:         challengecontracts.ChallengeStatusPublished,
 		FlagType:       challengecontracts.FlagTypeStatic,
 		FlagHash:       "flag{ok}",
@@ -747,7 +747,7 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 	}
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       502,
-		ImageID:  502,
+		ImageID:  int64Ptr(502),
 		FlagType: challengecontracts.FlagTypeStatic,
 	}
 
@@ -899,7 +899,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 
 	err = service.provisionInstance(context.Background(), instance, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{
 		ID:             503,
-		ImageID:        503,
+		ImageID:        int64Ptr(503),
 		FlagType:       challengecontracts.FlagTypeStatic,
 		FlagHash:       "flag{demo}",
 		TargetPort:     8080,
@@ -985,7 +985,7 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
 
 	instance := &instanceentity.Instance{ID: 611, ChallengeID: 711, HostPort: reserveClosedLoopbackPort(t), Status: instanceentity.InstanceStatusCreating}
-	challenge := &challengecontracts.PracticeRuntimeChallenge{ID: 711, ImageID: 105, Status: challengecontracts.ChallengeStatusPublished}
+	challenge := &challengecontracts.PracticeRuntimeChallenge{ID: 711, ImageID: int64Ptr(105), Status: challengecontracts.ChallengeStatusPublished}
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 
 	err := service.provisionInstance(ctx, instance, toPracticeChallenge(challenge), nil, "flag{ctx}")
@@ -1019,7 +1019,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 			Category:   taxonomy.DimensionWeb,
 			Difficulty: taxonomy.DifficultyEasy,
 			Points:     100,
-			ImageID:    103,
+			ImageID:    int64Ptr(103),
 			Status:     challengecontracts.ChallengeStatusPublished,
 			FlagType:   challengecontracts.FlagTypeStatic,
 			FlagHash:   "flag{static}",

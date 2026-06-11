@@ -85,7 +85,7 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	}
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	request, err := service.buildTopologyCreateRequest(ctx, 30001, false, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{ImageID: 1}), "web", challengecontracts.TopologySpec{
+	request, err := service.buildTopologyCreateRequest(ctx, 30001, false, toPracticeChallenge(&challengecontracts.PracticeRuntimeChallenge{ImageID: int64Ptr(1)}), "web", challengecontracts.TopologySpec{
 		Nodes: []challengecontracts.TopologyNode{
 			{Key: "web", Name: "Web", ServicePort: 8080},
 			{Key: "worker", Name: "Worker", ImageID: 2, ServicePort: 9000},

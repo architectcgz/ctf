@@ -60,7 +60,7 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Status:   challengecontracts.ChallengeStatusPublished,
-				ImageID:  105,
+				ImageID:  int64Ptr(105),
 				FlagType: challengecontracts.FlagTypeStatic,
 				FlagHash: "flag{awd-static}",
 			}, nil
@@ -158,7 +158,7 @@ func TestStartContestAWDServiceReservesHostPortWhenAccessHostConfigured(t *testi
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Status:   challengecontracts.ChallengeStatusPublished,
-				ImageID:  115,
+				ImageID:  int64Ptr(115),
 				FlagType: challengecontracts.FlagTypeStatic,
 				FlagHash: "flag{awd-static}",
 			}, nil

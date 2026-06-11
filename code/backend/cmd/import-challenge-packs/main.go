@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/infrastructure/postgres"
 	challengedomain "ctf-platform/internal/module/challenge/domain"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
+	"ctf-platform/internal/platform/randomstring"
 	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
@@ -34,7 +35,7 @@ type challengeSpec struct {
 	Category       string
 	Difficulty     string
 	Points         int
-	ImageID        int64
+	ImageID        *int64
 	ImageRef       string
 	TargetProtocol string
 	TargetPort     int
@@ -196,12 +197,7 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 		case err != nil:
 			return fmt.Errorf("find challenge %s: %w", spec.Slug, err)
 		default:
-			imageID := challenge.ImageID
-			if resolvedImageID > 0 {
-				imageID = resolvedImageID
-			} else if imageID == 0 && spec.ImageID > 0 {
-				imageID = spec.ImageID
-			}
+			imageID := chooseImportedImageID(spec.ImageID, resolvedImageID)
 			attachment := challenge.AttachmentURL
 			if spec.Attachment != "" {
 				attachment = spec.Attachment
@@ -322,7 +318,7 @@ func buildChallengeSpec(parsed *challengedomain.ParsedChallengePackage) (*challe
 		Category:       parsed.Category,
 		Difficulty:     parsed.Difficulty,
 		Points:         parsed.Points,
-		ImageID:        0,
+		ImageID:        nil,
 		ImageRef:       parsed.RuntimeImageRef,
 		TargetProtocol: parsed.RuntimeProtocol,
 		TargetPort:     parsed.RuntimePort,
@@ -391,7 +387,7 @@ func configureFlag(tx *gorm.DB, challengeID int64, flagType, prefix, value strin
 }
 
 func configureStaticFlag(tx *gorm.DB, challengeID int64, prefix, value string) error {
-	salt, err := crypto.GenerateSalt()
+	salt, err := randomstring.Generate()
 	if err != nil {
 		return fmt.Errorf("generate salt for challenge %d: %w", challengeID, err)
 	}
@@ -462,21 +458,21 @@ func configureManualReviewFlag(tx *gorm.DB, challengeID int64, prefix string) er
 	return nil
 }
 
-func chooseImportedImageID(specImageID, resolvedImageID int64) int64 {
-	if resolvedImageID > 0 {
+func chooseImportedImageID(specImageID, resolvedImageID *int64) *int64 {
+	if resolvedImageID != nil {
 		return resolvedImageID
 	}
 	return specImageID
 }
 
-func resolveImportedImageID(tx *gorm.DB, slug, imageRef string) (int64, error) {
+func resolveImportedImageID(tx *gorm.DB, slug, imageRef string) (*int64, error) {
 	ref := strings.TrimSpace(imageRef)
 	if ref == "" {
-		return 0, nil
+		return nil, nil
 	}
 	name, tag, err := splitImageRef(ref)
 	if err != nil {
-		return 0, fmt.Errorf("invalid image ref for %s: %w", slug, err)
+		return nil, fmt.Errorf("invalid image ref for %s: %w", slug, err)
 	}
 
 	var image challengeentity.Image
@@ -493,20 +489,20 @@ func resolveImportedImageID(tx *gorm.DB, slug, imageRef string) (int64, error) {
 			Size:        0,
 		}
 		if err := tx.Create(&image).Error; err != nil {
-			return 0, fmt.Errorf("create image %s:%s for %s: %w", name, tag, slug, err)
+			return nil, fmt.Errorf("create image %s:%s for %s: %w", name, tag, slug, err)
 		}
-		return image.ID, nil
+		return int64Ptr(image.ID), nil
 	case findErr != nil:
-		return 0, fmt.Errorf("find image %s:%s for %s: %w", name, tag, slug, findErr)
+		return nil, fmt.Errorf("find image %s:%s for %s: %w", name, tag, slug, findErr)
 	default:
 		if err := tx.Model(&image).Updates(map[string]any{
 			"status":     challengeentity.ImageStatusAvailable,
 			"deleted_at": nil,
 			"updated_at": time.Now(),
 		}).Error; err != nil {
-			return 0, fmt.Errorf("update image %s:%s for %s: %w", name, tag, slug, err)
+			return nil, fmt.Errorf("update image %s:%s for %s: %w", name, tag, slug, err)
 		}
-		return image.ID, nil
+		return int64Ptr(image.ID), nil
 	}
 }
 
@@ -528,6 +524,10 @@ func splitImageRef(imageRef string) (string, string, error) {
 	}
 
 	return trimmed, "latest", nil
+}
+
+func int64Ptr(value int64) *int64 {
+	return &value
 }
 
 func getenvBool(key string, defaultValue bool) bool {
