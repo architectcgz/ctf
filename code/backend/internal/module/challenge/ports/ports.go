@@ -3,6 +3,7 @@ package ports
 import (
 	"context"
 	"errors"
+	"io"
 	"time"
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -307,6 +308,128 @@ type ChallengeImportTxStore interface {
 
 type ChallengeImportTxRunner interface {
 	WithinChallengeImportTransaction(ctx context.Context, fn func(store ChallengeImportTxStore) error) error
+}
+
+type ChallengeImportPreviewWorkspace struct {
+	ID          string
+	FileName    string
+	ArchivePath string
+	SourceDir   string
+}
+
+type ChallengeImportPreviewRecord struct {
+	ID          string
+	FileName    string
+	ArchivePath string
+	SourceDir   string
+	CreatedBy   int64
+	CreatedAt   time.Time
+	Preview     challengecontracts.ChallengeImportPreviewResp
+}
+
+type ChallengeImportPreviewStore interface {
+	CreateWorkspace(ctx context.Context, id string, fileName string, reader io.Reader) (*ChallengeImportPreviewWorkspace, error)
+	SaveRecord(ctx context.Context, record *ChallengeImportPreviewRecord) error
+	LoadRecord(ctx context.Context, id string) (*ChallengeImportPreviewRecord, error)
+	ListRecords(ctx context.Context) ([]*ChallengeImportPreviewRecord, error)
+	DeleteWorkspace(ctx context.Context, id string) error
+}
+
+type AWDChallengeImportPreviewWorkspace struct {
+	ID          string
+	FileName    string
+	ArchivePath string
+	SourceDir   string
+}
+
+type AWDChallengeImportPreviewRecord struct {
+	ID          string
+	FileName    string
+	ArchivePath string
+	SourceDir   string
+	CreatedBy   int64
+	CreatedAt   time.Time
+	Preview     challengecontracts.AWDChallengeImportPreviewResp
+}
+
+type AWDChallengeImportPreviewStore interface {
+	CreateWorkspace(ctx context.Context, id string, fileName string, reader io.Reader) (*AWDChallengeImportPreviewWorkspace, error)
+	SaveRecord(ctx context.Context, record *AWDChallengeImportPreviewRecord) error
+	LoadRecord(ctx context.Context, id string) (*AWDChallengeImportPreviewRecord, error)
+	ListRecords(ctx context.Context) ([]*AWDChallengeImportPreviewRecord, error)
+	DeleteWorkspace(ctx context.Context, id string) error
+}
+
+type ChallengeImportedAttachment struct {
+	Name         string
+	Path         string
+	AbsolutePath string
+}
+
+type ChallengeImportedAttachmentBundleRequest struct {
+	PackageSlug string
+	Attachments []ChallengeImportedAttachment
+}
+
+type ChallengeAttachmentStore interface {
+	PersistImportedAttachmentBundle(ctx context.Context, req ChallengeImportedAttachmentBundleRequest) (string, error)
+}
+
+type ChallengeImportedPackageSourceRequest struct {
+	ChallengeID        int64
+	RevisionNo         int
+	PackageSlug        string
+	SourceDir          string
+	PreviewArchivePath string
+	PreviewArchiveName string
+}
+
+type ChallengeStoredPackageSource struct {
+	RevisionRoot string
+	SourceDir    string
+	ArchivePath  string
+}
+
+type ChallengeImportedImageBuildSourceRequest struct {
+	ChallengeMode  string
+	PackageSlug    string
+	PreviewID      string
+	RootDir        string
+	DockerfilePath string
+	ContextPath    string
+}
+
+type ChallengeStoredImageBuildSource struct {
+	RootDir        string
+	SourceDir      string
+	DockerfilePath string
+	ContextPath    string
+}
+
+type ChallengePackageExportWorkspaceRequest struct {
+	ChallengeID int64
+	RevisionNo  int
+	PackageSlug string
+	SourceDir   string
+	FileName    string
+}
+
+type ChallengePackageExportWorkspace struct {
+	ExportRoot  string
+	SourceDir   string
+	ArchivePath string
+	FileName    string
+}
+
+type ChallengePackageStorage interface {
+	PersistImportedPackageSource(ctx context.Context, req ChallengeImportedPackageSourceRequest) (*ChallengeStoredPackageSource, error)
+	PersistImportedImageBuildSource(ctx context.Context, req ChallengeImportedImageBuildSourceRequest) (*ChallengeStoredImageBuildSource, error)
+	PrepareExportWorkspace(ctx context.Context, req ChallengePackageExportWorkspaceRequest) (*ChallengePackageExportWorkspace, error)
+	ReadTextFile(ctx context.Context, rootDir string, relativePath string) (string, error)
+	WriteTextFile(ctx context.Context, rootDir string, relativePath string, content string) error
+	BuildExportArchive(ctx context.Context, workspace ChallengePackageExportWorkspace) error
+	EnsureArchiveExists(ctx context.Context, archivePath string) (string, error)
+	DeletePath(ctx context.Context, path string) error
 }
 
 type AWDChallengeImportTxStore interface {

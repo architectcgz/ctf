@@ -19,6 +19,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
+	challengeimport "ctf-platform/internal/module/challenge/application/challengeimport"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -83,7 +84,7 @@ func (appChallengeImportRegistryVerifier) CheckManifest(ctx context.Context, ima
 	return "sha256:app-import", nil
 }
 
-func newChallengeImportServiceForAppTest(db *gorm.DB) *challengecmd.ChallengeService {
+func newChallengeImportServiceForAppTest(db *gorm.DB) *challengeimport.ChallengeImportService {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := challengecmd.NewImageBuildService(
@@ -92,19 +93,15 @@ func newChallengeImportServiceForAppTest(db *gorm.DB) *challengecmd.ChallengeSer
 		challengecmd.WithImageBuildDockerBuilder(appChallengeImportDockerBuilder{}),
 		challengecmd.WithImageBuildRegistryVerifier(appChallengeImportRegistryVerifier{}),
 	)
-	service := challengecmd.NewChallengeService(
-		challengeinfra.NewChallengeCommandRepository(repo),
-		challengeinfra.NewImageQueryRepository(imageRepo),
-		challengeinfra.NewTopologyServiceRepository(repo),
-		challengeinfra.NewTopologyPackageRevisionRepository(repo),
+	return challengeimport.NewChallengeImportService(
+		challengeinfra.NewChallengeImportPreviewStore(""),
+		challengeinfra.NewChallengeAttachmentStore(""),
+		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
+		challengeruntime.NewChallengeImportTxRunner(repo, imageBuildService),
+		imageBuildService,
 		nil,
-		challengecmd.SelfCheckConfig{},
 		zap.NewNop(),
 	)
-	service.SetChallengeImportTxRunner(challengeruntime.NewChallengeImportTxRunner(repo, imageBuildService))
-	service.SetChallengePackageExportTxRunner(challengeruntime.NewChallengePackageExportTxRunner(repo))
-	service.SetImageBuildService(imageBuildService)
-	return service
 }
 
 func TestChallengeImportPreviewAndCommitFlow(t *testing.T) {
@@ -366,8 +363,12 @@ func TestChallengeImportPreviewRejectsArchiveWithTooManyFiles(t *testing.T) {
 	}
 }
 
-func buildChallengeImportRouter(service *challengecmd.ChallengeService) *gin.Engine {
-	handler := challengehttp.NewHandler(service, challengeImportQueryStub{})
+func buildChallengeImportRouter(service *challengeimport.ChallengeImportService) *gin.Engine {
+	handler := challengehttp.NewHandler(challengehttp.HandlerDeps{
+		Queries:         challengeImportQueryStub{},
+		Imports:         service,
+		PackageDelivery: challengecmd.NewPackageDeliveryService(service, nil),
+	})
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()

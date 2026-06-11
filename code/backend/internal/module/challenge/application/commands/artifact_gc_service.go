@@ -36,6 +36,13 @@ type ArtifactGCConfig struct {
 	AWDCheckerRetention       time.Duration
 }
 
+type ArtifactGCRoots struct {
+	PreviewRoots           []string
+	AttachmentRoot         string
+	ImageBuildSourceRoot   string
+	AWDCheckerArtifactRoot string
+}
+
 type ArtifactReferenceReader interface {
 	ListArtifactReferences(ctx context.Context) (challengeports.ArtifactReferences, error)
 }
@@ -81,16 +88,16 @@ func NewArtifactGCService(config ArtifactGCConfig, references ArtifactReferenceR
 	return &ArtifactGCService{config: config, references: references}
 }
 
-func DefaultArtifactGCConfigFromEnv(now time.Time) ArtifactGCConfig {
+func DefaultArtifactGCConfig(now time.Time, roots ArtifactGCRoots) ArtifactGCConfig {
 	return ArtifactGCConfig{
 		Now:                       now,
-		PreviewRoots:              []string{challengeImportPreviewRoot(), awdChallengeImportPreviewRoot()},
+		PreviewRoots:              append([]string(nil), roots.PreviewRoots...),
 		PreviewRetention:          24 * time.Hour,
-		AttachmentRoot:            challengeImportedAttachmentRoot(),
+		AttachmentRoot:            roots.AttachmentRoot,
 		AttachmentRetention:       30 * 24 * time.Hour,
-		ImageBuildSourceRoot:      importedImageBuildSourceRoot(),
+		ImageBuildSourceRoot:      roots.ImageBuildSourceRoot,
 		ImageBuildSourceRetention: 7 * 24 * time.Hour,
-		AWDCheckerArtifactRoot:    awdCheckerArtifactRoot(),
+		AWDCheckerArtifactRoot:    roots.AWDCheckerArtifactRoot,
 		AWDCheckerRetention:       30 * 24 * time.Hour,
 	}
 }

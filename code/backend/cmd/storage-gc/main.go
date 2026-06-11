@@ -46,8 +46,17 @@ func run(ctx context.Context, args []string) error {
 		defer sqlDB.Close()
 	}
 
+	roots := challengeinfra.DefaultChallengeLocalStorageRootsFromEnv()
 	service := challengecmd.NewArtifactGCService(
-		challengecmd.DefaultArtifactGCConfigFromEnv(time.Now().UTC()),
+		challengecmd.DefaultArtifactGCConfig(time.Now().UTC(), challengecmd.ArtifactGCRoots{
+			PreviewRoots: []string{
+				roots.ChallengeImportPreviewRoot,
+				roots.AWDChallengeImportPreviewRoot,
+			},
+			AttachmentRoot:         roots.ChallengeAttachmentRoot,
+			ImageBuildSourceRoot:   roots.ImageBuildSourceRoot,
+			AWDCheckerArtifactRoot: roots.AWDCheckerArtifactRoot,
+		}),
 		challengeinfra.NewArtifactReferenceRepository(db),
 	)
 	report, err := service.CollectFiles(ctx, challengecmd.ArtifactGCExecution{DryRun: !*execute})

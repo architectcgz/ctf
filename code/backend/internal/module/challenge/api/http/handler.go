@@ -5,10 +5,10 @@ import (
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/authctx"
 	response "ctf-platform/internal/httpresponse"
+	challengecore "ctf-platform/internal/module/challenge/application/challengecore"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"fmt"
-	"io"
 	nethttp "net/http"
 	"os"
 	"path/filepath"
@@ -21,20 +21,34 @@ import (
 type Handler struct {
 	commands        challengeCommandService
 	queries         challengeQueryService
+	imports         challengeImportService
+	selfChecks      challengeSelfCheckService
+	publishChecks   challengePublishCheckService
+	packageExports  challengePackageExportService
 	packageDelivery packageDeliveryService
 }
 
 type challengeCommandService interface {
-	CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateChallengeInput) (*challengecontracts.ChallengeResp, error)
-	UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateChallengeInput) error
+	CreateChallenge(ctx context.Context, actorUserID int64, req challengecore.CreateChallengeInput) (*challengecontracts.ChallengeResp, error)
+	UpdateChallenge(ctx context.Context, id int64, req challengecore.UpdateChallengeInput) error
 	DeleteChallenge(ctx context.Context, id int64) error
-	RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error)
-	GetLatestPublishCheck(ctx context.Context, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error)
-	SelfCheckChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeSelfCheckResp, error)
-	PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.ChallengeImportPreviewResp, error)
+}
+
+type challengeImportService interface {
 	ListChallengeImports(ctx context.Context, actorUserID int64) ([]challengecontracts.ChallengeImportPreviewResp, error)
 	GetChallengeImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeImportPreviewResp, error)
-	CommitChallengeImport(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeResp, error)
+}
+
+type challengeSelfCheckService interface {
+	SelfCheckChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeSelfCheckResp, error)
+}
+
+type challengePublishCheckService interface {
+	RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error)
+	GetLatestPublishCheck(ctx context.Context, id int64) (*challengecontracts.ChallengePublishCheckJobResp, error)
+}
+
+type challengePackageExportService interface {
 	ExportChallengePackage(ctx context.Context, actorUserID int64, challengeID int64) (*challengecontracts.ChallengePackageExportResp, error)
 	GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*challengecontracts.ChallengePackageExportResp, error)
 }
@@ -51,11 +65,25 @@ type packageDeliveryService interface {
 	Commit(ctx context.Context, req challengecmd.PackageDeliveryCommitRequest) (*challengecmd.PackageDeliveryCommitResult, error)
 }
 
-func NewHandler(commands challengeCommandService, queries challengeQueryService) *Handler {
+type HandlerDeps struct {
+	Commands        challengeCommandService
+	Queries         challengeQueryService
+	Imports         challengeImportService
+	SelfChecks      challengeSelfCheckService
+	PublishChecks   challengePublishCheckService
+	PackageExports  challengePackageExportService
+	PackageDelivery packageDeliveryService
+}
+
+func NewHandler(deps HandlerDeps) *Handler {
 	return &Handler{
-		commands:        commands,
-		queries:         queries,
-		packageDelivery: challengecmd.NewPackageDeliveryService(commands, nil),
+		commands:        deps.Commands,
+		queries:         deps.Queries,
+		imports:         deps.Imports,
+		selfChecks:      deps.SelfChecks,
+		publishChecks:   deps.PublishChecks,
+		packageExports:  deps.PackageExports,
+		packageDelivery: deps.PackageDelivery,
 	}
 }
 
@@ -173,7 +201,7 @@ func (h *Handler) PreviewChallengeImport(c *gin.Context) {
 }
 
 func (h *Handler) ListChallengeImports(c *gin.Context) {
-	resp, err := h.commands.ListChallengeImports(c.Request.Context(), authctx.MustCurrentUser(c).UserID)
+	resp, err := h.imports.ListChallengeImports(c.Request.Context(), authctx.MustCurrentUser(c).UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -182,7 +210,7 @@ func (h *Handler) ListChallengeImports(c *gin.Context) {
 }
 
 func (h *Handler) GetChallengeImport(c *gin.Context) {
-	resp, err := h.commands.GetChallengeImport(c.Request.Context(), authctx.MustCurrentUser(c).UserID, strings.TrimSpace(c.Param("id")))
+	resp, err := h.imports.GetChallengeImport(c.Request.Context(), authctx.MustCurrentUser(c).UserID, strings.TrimSpace(c.Param("id")))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -215,7 +243,7 @@ func (h *Handler) ExportChallengePackage(c *gin.Context) {
 		response.InvalidParams(c, "无效的ID")
 		return
 	}
-	resp, err := h.commands.ExportChallengePackage(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	resp, err := h.packageExports.ExportChallengePackage(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -239,7 +267,7 @@ func (h *Handler) DownloadChallengePackageExport(c *gin.Context) {
 		}
 		revisionID = &parsed
 	}
-	resp, err := h.commands.GetChallengePackageExport(c.Request.Context(), challengeID, revisionID)
+	resp, err := h.packageExports.GetChallengePackageExport(c.Request.Context(), challengeID, revisionID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -254,7 +282,7 @@ func (h *Handler) SelfCheckChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.SelfCheckChallenge(c.Request.Context(), id)
+	resp, err := h.selfChecks.SelfCheckChallenge(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -270,7 +298,7 @@ func (h *Handler) RequestPublishCheck(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.RequestPublishCheck(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	resp, err := h.publishChecks.RequestPublishCheck(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -285,7 +313,7 @@ func (h *Handler) GetLatestPublishCheck(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.GetLatestPublishCheck(c.Request.Context(), id)
+	resp, err := h.publishChecks.GetLatestPublishCheck(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return

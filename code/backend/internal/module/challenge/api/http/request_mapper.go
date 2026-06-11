@@ -1,6 +1,7 @@
 package http
 
 import (
+	challengecore "ctf-platform/internal/module/challenge/application/challengecore"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -13,8 +14,8 @@ import (
 // goverter:output:file ./request_mapper_gen.go
 // goverter:output:package :http
 type ChallengeRequestMapper interface {
-	ToCreateChallengeInput(source CreateChallengeReq) challengecmd.CreateChallengeInput
-	ToUpdateChallengeInput(source UpdateChallengeReq) challengecmd.UpdateChallengeInput
+	ToCreateChallengeInput(source CreateChallengeReq) challengecore.CreateChallengeInput
+	ToUpdateChallengeInput(source UpdateChallengeReq) challengecore.UpdateChallengeInput
 	ToCreateAWDChallengeInput(source CreateAWDChallengeReq) challengecmd.CreateAWDChallengeInput
 	ToUpdateAWDChallengeInput(source UpdateAWDChallengeReq) challengecmd.UpdateAWDChallengeInput
 	ToCreateTagInput(source CreateTagReq) challengecmd.CreateTagInput

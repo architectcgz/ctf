@@ -67,6 +67,7 @@
 - 2026-05-17 的 contest request DTO localization 同样没有新增、删除或重命名外部 HTTP 契约；`contest` 与 `contest/awd` 路由保持原路径、query 参数、请求体字段和校验口径不变，变化仅在内部 owner：request/query DTO 从全局 `internal/dto` 收回 `contest/api/http`，`request mapper` 与 handler 绑定改为模块内类型。
 - 2026-05-17 的 challenge request DTO localization 同样没有新增、删除或重命名外部 HTTP 契约；`challenge` 与 `challenge/awd` 路由保持原路径、query 参数、请求体字段和校验口径不变，变化仅在内部 owner：request/query DTO 从全局 `internal/dto` 收回 `challenge/api/http`，handler 统一经 `request mapper` 转换到既有 application 输入。
 - 2026-05-17 的 challenge response DTO localization（core query/image/tag/flag/topology/awd）同样没有新增、删除或重命名外部 HTTP 契约；相关路由保持原路径、状态码与 JSON 字段不变，变化仅在内部 owner：handler 输出改为通过 `challenge/api/http` response mapper 把全局 `dto` 映射为模块内 response DTO。
+- 2026-06-11 的 challenge command service decomposition 同样没有新增、删除或重命名外部 HTTP 契约；challenge import / commit / self-check / publish-check / package export 相关路由保持原路径、状态码与 JSON 字段不变，变化仅在内部 owner：`challenge/api/http.Handler` 不再依赖宽 command service，而是显式接收 core command、import、self-check、publish-check、package export 与 package delivery service。
 - 当前 AWD 学生侧运行时 HTTP 面只保留 `POST /api/v1/contests/:id/awd/services/:sid/defense/ssh`；不存在 `defense/files`、`defense/directories`、`defense/commands` 路由，runtime HTTP facade 也不再为这组已下线路由保留 service interface。
 
 ## Guardrail

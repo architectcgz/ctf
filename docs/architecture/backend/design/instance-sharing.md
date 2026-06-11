@@ -25,7 +25,7 @@
   - 负责：执行 scope 锁、按 `contest_id / team_id / service_id / user_id` 查询可复用实例、统计运行中实例并维持复用边界
   - 不负责：全局无作用域复用，或忽略 `service_id` 直接把同队所有 AWD 服务合并成一个实例
 
-- `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`flag_service.go`、`code/backend/internal/module/runtime/application/commands/instance_service.go`
+- `code/backend/internal/module/challenge/application/challengecore/service.go`、`code/backend/internal/module/challenge/application/commands/flag_service.go`、`code/backend/internal/module/runtime/application/commands/instance_service.go`
   - 负责：校验共享配置是否合法、决定共享实例的 flag subject 口径，并在实例查询 / 访问返回里保持 `share_scope` 与访问结果一致
   - 不负责：把共享实例重新退化为 per-user flag 语义，或允许无校验地开启 `shared`
 

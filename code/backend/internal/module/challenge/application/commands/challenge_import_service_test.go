@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -17,6 +16,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
@@ -27,7 +27,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 	tempDir := t.TempDir()
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
 
-	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+	mustWriteChallengeImportPreviewRecord(t, tempDir, challengeports.ChallengeImportPreviewRecord{
 		ID:        "older-owned",
 		FileName:  "older.zip",
 		CreatedBy: 1001,
@@ -43,7 +43,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "static"},
 		},
 	})
-	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+	mustWriteChallengeImportPreviewRecord(t, tempDir, challengeports.ChallengeImportPreviewRecord{
 		ID:        "newer-owned",
 		FileName:  "newer.zip",
 		CreatedBy: 1001,
@@ -59,7 +59,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 			Flag:       challengecontracts.ChallengeImportFlagResp{Type: "dynamic"},
 		},
 	})
-	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+	mustWriteChallengeImportPreviewRecord(t, tempDir, challengeports.ChallengeImportPreviewRecord{
 		ID:        "other-user",
 		FileName:  "other.zip",
 		CreatedBy: 2002,
@@ -76,7 +76,7 @@ func TestServiceListChallengeImportsSortsAndFiltersByActor(t *testing.T) {
 		},
 	})
 
-	service := &ChallengeService{}
+	service := newDBBackedChallengeImportService(nil, nil)
 
 	previews, err := service.ListChallengeImports(context.Background(), 1001)
 	if err != nil {
@@ -98,7 +98,7 @@ func TestServiceListChallengeImportsReturnsEmptyWhenPreviewRootMissing(t *testin
 	tempDir := filepath.Join(t.TempDir(), "missing")
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", tempDir)
 
-	service := &ChallengeService{}
+	service := newDBBackedChallengeImportService(nil, nil)
 
 	previews, err := service.ListChallengeImports(context.Background(), 1001)
 	if err != nil {
@@ -117,8 +117,7 @@ func TestPreviewChallengeImportReturnsPlatformBuildImageDelivery(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
-	service.SetImageBuildService(imageBuildService)
+	service := newDBBackedChallengeImportService(repo, imageBuildService)
 
 	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
 	preview, err := service.PreviewChallengeImport(
@@ -151,8 +150,7 @@ func TestPreviewChallengeImportWarnsWhenPlatformBuildServiceUnavailable(t *testi
 
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+	service := newDBBackedChallengeImportService(repo, nil)
 
 	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
 	preview, err := service.PreviewChallengeImport(
@@ -191,11 +189,10 @@ func TestCommitChallengeImportCreatesPlatformBuildJob(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
-	service.SetImageBuildService(imageBuildService)
+	service := newDBBackedChallengeImportService(repo, imageBuildService)
 
 	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
-	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+	mustWriteChallengeImportPreviewRecord(t, tempDir, challengeports.ChallengeImportPreviewRecord{
 		ID:        "platform-build",
 		FileName:  "platform-build.zip",
 		SourceDir: packageDir,
@@ -259,8 +256,7 @@ func TestCommitChallengeImportDemotesPublishedLegacyChallengeAndPublishesCatalog
 
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+	service := newDBBackedChallengeImportService(repo, nil)
 	var publishedEvents []platformevents.Event
 	service.SetEventBus(&challengeCommandEventBusStub{
 		publishFn: func(ctx context.Context, evt platformevents.Event) error {
@@ -311,7 +307,7 @@ flag:
 		t.Fatalf("seed legacy challenge: %v", err)
 	}
 
-	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+	mustWriteChallengeImportPreviewRecord(t, tempDir, challengeports.ChallengeImportPreviewRecord{
 		ID:        "legacy-published-refresh",
 		FileName:  "legacy-published-refresh.zip",
 		SourceDir: packageDir,
@@ -368,8 +364,7 @@ func TestCommitChallengeImportReturnsServiceUnavailableWhenPlatformBuildServiceM
 
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+	service := newDBBackedChallengeImportService(repo, nil)
 
 	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
 	preview, err := service.PreviewChallengeImport(
@@ -396,8 +391,7 @@ func TestCommitChallengeImportReturnsServiceUnavailableWhenExternalImageVerifica
 
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+	service := newDBBackedChallengeImportService(repo, nil)
 
 	packageDir := writeExternalRefChallengePackage(t, tempDir, "web-external-ref", "registry.example.edu/ctf/web-external-ref:v1")
 	preview, err := service.PreviewChallengeImport(
@@ -427,8 +421,7 @@ func TestCommitChallengeImportFromPreviewKeepsPlatformBuildSourceAccessible(t *t
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
-	service.SetImageBuildService(imageBuildService)
+	service := newDBBackedChallengeImportService(repo, imageBuildService)
 
 	packageDir := writePlatformBuildChallengePackage(t, tempDir, "web-platform-build")
 	preview, err := service.PreviewChallengeImport(
@@ -480,8 +473,7 @@ func TestCommitChallengeImportRejectsSoftDeletedDuplicateSlug(t *testing.T) {
 
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+	service := newDBBackedChallengeImportService(repo, nil)
 
 	packageDir := filepath.Join(tempDir, "package")
 	if err := os.MkdirAll(packageDir, 0o755); err != nil {
@@ -528,7 +520,7 @@ flag:
 		t.Fatalf("seed legacy challenge: %v", err)
 	}
 
-	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+	mustWriteChallengeImportPreviewRecord(t, tempDir, challengeports.ChallengeImportPreviewRecord{
 		ID:        "restore-soft-deleted",
 		FileName:  "restore-soft-deleted.zip",
 		SourceDir: packageDir,
@@ -583,8 +575,7 @@ func TestCommitChallengeImportPersistsRuntimeServiceTarget(t *testing.T) {
 		WithImageBuildDockerBuilder(&fakeDockerImageBuilder{}),
 		WithImageBuildRegistryVerifier(fakeRegistryVerifier{digest: "sha256:test"}),
 	)
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
-	service.SetImageBuildService(imageBuildService)
+	service := newDBBackedChallengeImportService(repo, imageBuildService)
 
 	packageDir := filepath.Join(tempDir, "package")
 	if err := os.MkdirAll(packageDir, 0o755); err != nil {
@@ -623,7 +614,7 @@ runtime:
 		t.Fatalf("WriteFile(challenge.yml) error = %v", err)
 	}
 
-	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+	mustWriteChallengeImportPreviewRecord(t, tempDir, challengeports.ChallengeImportPreviewRecord{
 		ID:        "tcp-target",
 		FileName:  "tcp-target.zip",
 		SourceDir: packageDir,
@@ -666,8 +657,7 @@ func TestCommitChallengeImportRejectsDuplicateSlugWithoutClearingPublishCheckJob
 
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+	service := newDBBackedChallengeImportService(repo, nil)
 
 	packageDir := filepath.Join(tempDir, "package")
 	if err := os.MkdirAll(packageDir, 0o755); err != nil {
@@ -725,7 +715,7 @@ flag:
 		t.Fatalf("seed legacy publish check job: %v", err)
 	}
 
-	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+	mustWriteChallengeImportPreviewRecord(t, tempDir, challengeports.ChallengeImportPreviewRecord{
 		ID:        "clear-legacy-publish-check-jobs",
 		FileName:  "clear-legacy-publish-check-jobs.zip",
 		SourceDir: packageDir,
@@ -773,11 +763,10 @@ func TestCommitChallengeImportCreatesTopologyAndPackageRevision(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
-	service.SetImageBuildService(imageBuildService)
+	service := newDBBackedChallengeImportService(repo, imageBuildService)
 
 	packageDir := writeChallengePackageWithTopology(t, tempDir, "bank-portal")
-	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+	mustWriteChallengeImportPreviewRecord(t, tempDir, challengeports.ChallengeImportPreviewRecord{
 		ID:        "import-with-topology",
 		FileName:  "import-with-topology.zip",
 		SourceDir: packageDir,
@@ -867,11 +856,10 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
-	service.SetImageBuildService(imageBuildService)
+	service := newDBBackedChallengeImportService(repo, imageBuildService)
 
 	packageDir := writeChallengePackageWithTopology(t, tempDir, "exportable-bank")
-	mustWriteChallengeImportPreviewRecord(t, tempDir, storedChallengeImportPreview{
+	mustWriteChallengeImportPreviewRecord(t, tempDir, challengeports.ChallengeImportPreviewRecord{
 		ID:        "exportable-bank",
 		FileName:  "exportable-bank.zip",
 		SourceDir: packageDir,
@@ -919,7 +907,8 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 		t.Fatalf("save topology: %v", err)
 	}
 
-	exportResp, err := service.ExportChallengePackage(context.Background(), 9, challengeID)
+	exportService := newDBBackedChallengePackageExportService(repo)
+	exportResp, err := exportService.ExportChallengePackage(context.Background(), 9, challengeID)
 	if err != nil {
 		t.Fatalf("ExportChallengePackage() error = %v", err)
 	}
@@ -971,8 +960,7 @@ func TestExportChallengePackageRewritesManifestAndTopology(t *testing.T) {
 func TestGetChallengePackageExportMapsMissingChallengeToChallengeNotFound(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+	service := newDBBackedChallengePackageExportService(repo)
 
 	_, err := service.GetChallengePackageExport(context.Background(), 404, nil)
 	if err == nil {
@@ -988,8 +976,7 @@ func TestGetChallengePackageExportMapsMissingChallengeToChallengeNotFound(t *tes
 func TestGetChallengePackageExportMapsMissingTopologyToNotFound(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+	service := newDBBackedChallengePackageExportService(repo)
 
 	challenge := &challengeentity.Challenge{
 		Title:      "no-topology",
@@ -1013,20 +1000,12 @@ func TestGetChallengePackageExportMapsMissingTopologyToNotFound(t *testing.T) {
 	}
 }
 
-func mustWriteChallengeImportPreviewRecord(t *testing.T, root string, record storedChallengeImportPreview) {
+func mustWriteChallengeImportPreviewRecord(t *testing.T, root string, record challengeports.ChallengeImportPreviewRecord) {
 	t.Helper()
 
-	previewDir := filepath.Join(root, record.ID)
-	if err := os.MkdirAll(previewDir, 0o755); err != nil {
-		t.Fatalf("MkdirAll() error = %v", err)
-	}
-
-	content, err := json.MarshalIndent(record, "", "  ")
-	if err != nil {
-		t.Fatalf("MarshalIndent() error = %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(previewDir, "preview.json"), content, 0o644); err != nil {
-		t.Fatalf("WriteFile() error = %v", err)
+	store := challengeinfra.NewChallengeImportPreviewStore(root)
+	if err := store.SaveRecord(context.Background(), &record); err != nil {
+		t.Fatalf("SaveRecord() error = %v", err)
 	}
 }
 

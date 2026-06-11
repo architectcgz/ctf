@@ -229,6 +229,137 @@ func TestRuntimeDelegatesThroughSubBuilders(t *testing.T) {
 	}
 }
 
+func TestChallengeCommandServicesAreSeparated(t *testing.T) {
+	t.Parallel()
+
+	expectedServiceFiles := map[string]string{
+		filepath.Join("application", "challengecore", "service.go"):          "type ChallengeService struct",
+		filepath.Join("application", "challengeimport", "service.go"):        "type ChallengeImportService struct",
+		filepath.Join("application", "challengeselfcheck", "service.go"):     "type ChallengeSelfCheckService struct",
+		filepath.Join("application", "challengepublishcheck", "service.go"):  "type ChallengePublishCheckService struct",
+		filepath.Join("application", "challengepackageexport", "service.go"): "type ChallengePackageExportService struct",
+	}
+	for file, marker := range expectedServiceFiles {
+		source := readFileSource(t, file)
+		if !strings.Contains(source, marker) {
+			t.Fatalf("%s must contain %s", file, marker)
+		}
+	}
+
+	challengeImportService := readFileSource(t, filepath.Join("application", "challengeimport", "service.go"))
+	if !strings.Contains(challengeImportService, "type ChallengeImportService struct") {
+		t.Fatalf("jeopardy import flow must be owned by ChallengeImportService")
+	}
+	if strings.Contains(challengeImportService, "type ChallengeService struct") {
+		t.Fatalf("challenge_import_service.go must not define the core ChallengeService")
+	}
+
+	coreService := readFileSource(t, filepath.Join("application", "challengecore", "service.go"))
+	blockedCoreMethods := []string{
+		"PreviewChallengeImport",
+		"ListChallengeImports",
+		"GetChallengeImport",
+		"CommitChallengeImport",
+		"SelfCheckChallenge",
+		"RequestPublishCheck",
+		"GetLatestPublishCheck",
+		"RunPublishCheckLoop",
+		"ExportChallengePackage",
+		"GetChallengePackageExport",
+	}
+	for _, method := range blockedCoreMethods {
+		marker := "func (s *ChallengeService) " + method + "("
+		if strings.Contains(coreService, marker) {
+			t.Fatalf("core ChallengeService must not own %s", method)
+		}
+	}
+
+	commandFiles, err := filepath.Glob(filepath.Join("application", "commands", "*.go"))
+	if err != nil {
+		t.Fatalf("glob commands files: %v", err)
+	}
+	blockedCommandMarkers := []string{
+		"type ChallengeService struct",
+		"type ChallengeImportService struct",
+		"type ChallengeSelfCheckService struct",
+		"type ChallengePublishCheckService struct",
+		"type ChallengePackageExportService struct",
+	}
+	blockedUseCaseImports := []string{
+		"ctf-platform/internal/module/challenge/application/challengecore",
+		"ctf-platform/internal/module/challenge/application/challengeimport",
+		"ctf-platform/internal/module/challenge/application/challengeselfcheck",
+		"ctf-platform/internal/module/challenge/application/challengepublishcheck",
+		"ctf-platform/internal/module/challenge/application/challengepackageexport",
+	}
+	for _, file := range commandFiles {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		source := readFileSource(t, file)
+		for _, marker := range blockedCommandMarkers {
+			if strings.Contains(source, marker) {
+				t.Fatalf("commands package must not retain split service marker %s in %s", marker, file)
+			}
+		}
+		for _, importPath := range blockedUseCaseImports {
+			assertFileDoesNotImport(t, file, importPath)
+		}
+	}
+
+	runtime := readFileSource(t, filepath.Join("runtime", "wiring.go"))
+	for _, importPath := range blockedUseCaseImports {
+		if !strings.Contains(runtime, importPath) {
+			t.Fatalf("runtime wiring must import split use-case package %s directly", importPath)
+		}
+	}
+
+	handler := readFileSource(t, filepath.Join("api", "http", "handler.go"))
+	if strings.Contains(handler, "NewPackageDeliveryService(commands, nil)") {
+		t.Fatalf("handler must receive package delivery wiring instead of constructing it from the wide command service")
+	}
+}
+
+func TestChallengeCommandFileStorageBoundaryIsInInfrastructure(t *testing.T) {
+	t.Parallel()
+
+	blockedMarkers := []string{
+		"writeImportUploadArchive",
+		"extractChallengeImportArchive",
+		"saveChallengeImportPreviewRecord",
+		"loadChallengeImportPreviewRecord",
+		"saveAWDChallengeImportPreviewRecord",
+		"loadAWDChallengeImportPreviewRecord",
+		"challengeImportPreviewRoot",
+		"challengeImportedAttachmentRoot",
+		"challengePackageSourceRoot",
+		"challengePackageExportRoot",
+		"importedImageBuildSourceRoot",
+		"awdChallengeImportPreviewRoot",
+		"persistImportedImageBuildSource",
+		"copyDirectoryTree",
+		"zipDirectory",
+		"addZipFile",
+		"DefaultArtifactGCConfigFromEnv",
+	}
+
+	files := []string{
+		filepath.Join("application", "challengeimport", "service.go"),
+		filepath.Join("application", "challengeimport", "package_revision.go"),
+		filepath.Join("application", "challengepackageexport", "revision_service.go"),
+		filepath.Join("application", "commands", "awd_challenge_import_service.go"),
+		filepath.Join("application", "commands", "artifact_gc_service.go"),
+	}
+	for _, file := range files {
+		source := readFileSource(t, file)
+		for _, marker := range blockedMarkers {
+			if strings.Contains(source, marker) {
+				t.Fatalf("%s must not own LocalFS/zip helper %s", file, marker)
+			}
+		}
+	}
+}
+
 func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 	t.Parallel()
 
@@ -241,6 +372,16 @@ func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
 		assertFileDoesNotImport(t, file, "github.com/redis/go-redis/v9")
 	}
+}
+
+func readFileSource(t *testing.T, filePath string) string {
+	t.Helper()
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("read file %s: %v", filePath, err)
+	}
+	return string(content)
 }
 
 func assertFileImports(t *testing.T, filePath string, expectedImport string) {

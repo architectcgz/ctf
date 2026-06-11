@@ -1,14 +1,9 @@
-package commands
+package challengepackageexport
 
 import (
-	"archive/zip"
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -21,59 +16,7 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
-func (s *ChallengeService) createImportedPackageRevision(
-	ctx context.Context,
-	store challengeports.ChallengeImportTxStore,
-	actorUserID int64,
-	challenge *challengeports.ImportedChallenge,
-	record storedChallengeImportPreview,
-	parsed *domain.ParsedChallengePackage,
-) (*challengeentity.ChallengePackageRevision, error) {
-	if challenge == nil || parsed == nil {
-		return nil, apperror.ErrInvalidParams.WithCause(errors.New("缺少题目或题包信息"))
-	}
-
-	revisionNo, err := store.NextChallengePackageRevisionNo(ctx, challenge.ID)
-	if err != nil {
-		return nil, err
-	}
-	revisionRoot := filepath.Join(challengePackageSourceRoot(), fmt.Sprintf("challenge-%d", challenge.ID), fmt.Sprintf("r%04d", revisionNo))
-	sourceDir := filepath.Join(revisionRoot, "source")
-	if err := copyDirectoryTree(parsed.RootDir, sourceDir); err != nil {
-		return nil, fmt.Errorf("copy imported package source: %w", err)
-	}
-
-	archivePath := ""
-	previewArchivePath := filepath.Join(challengeImportPreviewRoot(), record.ID, "package.zip")
-	if info, statErr := os.Stat(previewArchivePath); statErr == nil && !info.IsDir() {
-		archivePath = filepath.Join(revisionRoot, sanitizeImportedAttachmentName(record.FileName, "challenge-package.zip"))
-		if err := copyFile(previewArchivePath, archivePath); err != nil {
-			return nil, fmt.Errorf("copy imported package archive: %w", err)
-		}
-	}
-
-	now := time.Now().UTC()
-	revision := &challengeentity.ChallengePackageRevision{
-		ChallengeID:        challenge.ID,
-		RevisionNo:         revisionNo,
-		SourceType:         challengeentity.ChallengePackageRevisionSourceImported,
-		PackageSlug:        resolveChallengePackageSlug(challenge.PackageSlug, challenge.ID, parsed.Slug),
-		ArchivePath:        archivePath,
-		SourceDir:          sourceDir,
-		ManifestSnapshot:   parsed.ManifestRaw,
-		TopologySourcePath: resolveTopologySourcePath(parsed.Topology),
-		TopologySnapshot:   resolveTopologySnapshot(parsed.Topology),
-		CreatedBy:          int64Ptr(actorUserID),
-		CreatedAt:          now,
-		UpdatedAt:          now,
-	}
-	if err := store.CreateImportedPackageRevision(ctx, revision); err != nil {
-		return nil, err
-	}
-	return revision, nil
-}
-
-func (s *ChallengeService) ExportChallengePackage(
+func (s *ChallengePackageExportService) ExportChallengePackage(
 	ctx context.Context,
 	actorUserID int64,
 	challengeID int64,
@@ -82,6 +25,9 @@ func (s *ChallengeService) ExportChallengePackage(
 	cleanupPaths := make([]string, 0, 2)
 	if s.packageExportTxRunner == nil {
 		return nil, fmt.Errorf("challenge package export tx runner is not configured")
+	}
+	if s.packageStorage == nil {
+		return nil, fmt.Errorf("challenge package storage is not configured")
 	}
 	if err := s.packageExportTxRunner.WithinChallengePackageExportTransaction(ctx, func(store challengeports.ChallengePackageExportTxStore) error {
 		challenge, err := store.FindChallenge(ctx, challengeID)
@@ -118,32 +64,35 @@ func (s *ChallengeService) ExportChallengePackage(
 		if err != nil {
 			return err
 		}
-		exportRoot := filepath.Join(challengePackageExportRoot(), fmt.Sprintf("challenge-%d", challengeID), fmt.Sprintf("r%04d", revisionNo))
-		sourceDir := filepath.Join(exportRoot, "source")
-		if err := copyDirectoryTree(baseRevision.SourceDir, sourceDir); err != nil {
-			return fmt.Errorf("copy export package source: %w", err)
+		fileName := resolveChallengePackageSlug(challenge.PackageSlug, challenge.ID, baseRevision.PackageSlug) + ".zip"
+		workspace, err := s.packageStorage.PrepareExportWorkspace(ctx, challengeports.ChallengePackageExportWorkspaceRequest{
+			ChallengeID: challengeID,
+			RevisionNo:  revisionNo,
+			PackageSlug: resolveChallengePackageSlug(challenge.PackageSlug, challenge.ID, baseRevision.PackageSlug),
+			SourceDir:   baseRevision.SourceDir,
+			FileName:    fileName,
+		})
+		if err != nil {
+			return err
 		}
-		cleanupPaths = append(cleanupPaths, sourceDir)
+		cleanupPaths = append(cleanupPaths, workspace.ExportRoot)
 
 		hints, err := store.ListChallengeHints(ctx, challengeID)
 		if err != nil {
 			return err
 		}
-		manifestRaw, err := rewriteChallengeManifestSnapshot(ctx, store, sourceDir, challenge, topology, hints, baseRevision)
+		manifestRaw, err := rewriteChallengeManifestSnapshot(ctx, s.packageStorage, store, workspace.SourceDir, challenge, topology, hints, baseRevision)
 		if err != nil {
 			return err
 		}
-		topologyRaw, err := rewriteChallengeTopologySnapshot(ctx, store, sourceDir, topology, baseRevision)
+		topologyRaw, err := rewriteChallengeTopologySnapshot(ctx, s.packageStorage, store, workspace.SourceDir, topology, baseRevision)
 		if err != nil {
 			return err
 		}
 
-		fileName := sanitizeImportedAttachmentName(resolveChallengePackageSlug(challenge.PackageSlug, challenge.ID, baseRevision.PackageSlug)+".zip", "challenge-package.zip")
-		archivePath := filepath.Join(exportRoot, fileName)
-		if err := zipDirectory(sourceDir, archivePath); err != nil {
+		if err := s.packageStorage.BuildExportArchive(ctx, *workspace); err != nil {
 			return fmt.Errorf("zip exported package: %w", err)
 		}
-		cleanupPaths = append(cleanupPaths, archivePath)
 
 		now := time.Now().UTC()
 		parentRevisionID := baseRevision.ID
@@ -153,8 +102,8 @@ func (s *ChallengeService) ExportChallengePackage(
 			SourceType:         challengeentity.ChallengePackageRevisionSourceExported,
 			ParentRevisionID:   &parentRevisionID,
 			PackageSlug:        resolveChallengePackageSlug(challenge.PackageSlug, challenge.ID, baseRevision.PackageSlug),
-			ArchivePath:        archivePath,
-			SourceDir:          sourceDir,
+			ArchivePath:        workspace.ArchivePath,
+			SourceDir:          workspace.SourceDir,
 			ManifestSnapshot:   manifestRaw,
 			TopologySourcePath: resolveRevisionTopologySourcePath(topology, baseRevision),
 			TopologySnapshot:   topologyRaw,
@@ -174,9 +123,9 @@ func (s *ChallengeService) ExportChallengePackage(
 		response = &challengecontracts.ChallengePackageExportResp{
 			ChallengeID: challengeID,
 			RevisionID:  revision.ID,
-			ArchivePath: archivePath,
-			SourceDir:   sourceDir,
-			FileName:    fileName,
+			ArchivePath: workspace.ArchivePath,
+			SourceDir:   workspace.SourceDir,
+			FileName:    workspace.FileName,
 			CreatedAt:   now,
 		}
 		return nil
@@ -185,7 +134,7 @@ func (s *ChallengeService) ExportChallengePackage(
 			if strings.TrimSpace(cleanupPath) == "" {
 				continue
 			}
-			_ = os.RemoveAll(cleanupPath)
+			_ = s.packageStorage.DeletePath(ctx, cleanupPath)
 		}
 		return nil, err
 	}
@@ -193,11 +142,14 @@ func (s *ChallengeService) ExportChallengePackage(
 	return response, nil
 }
 
-func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*challengecontracts.ChallengePackageExportResp, error) {
+func (s *ChallengePackageExportService) GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*challengecontracts.ChallengePackageExportResp, error) {
 	if s.packageRepo == nil {
 		return nil, apperror.ErrNotFound.WithCause(errors.New("题包修订仓储未配置"))
 	}
-	if _, err := s.repo.FindByID(ctx, challengeID); err != nil {
+	if s.packageStorage == nil {
+		return nil, apperror.ErrNotFound.WithCause(errors.New("题包存储未配置"))
+	}
+	if _, err := s.challengeRepo.FindByID(ctx, challengeID); err != nil {
 		if errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 			return nil, challengecontracts.ErrChallengeNotFound
 		}
@@ -244,21 +196,28 @@ func (s *ChallengeService) GetChallengePackageExport(ctx context.Context, challe
 	if strings.TrimSpace(revision.ArchivePath) == "" {
 		return nil, apperror.ErrNotFound.WithCause(errors.New("当前修订没有可下载的题包归档"))
 	}
-	if _, err := os.Stat(revision.ArchivePath); err != nil {
-		if os.IsNotExist(err) {
+	fileName, err := s.packageStorage.EnsureArchiveExists(ctx, revision.ArchivePath)
+	if err != nil {
+		if errors.Is(err, apperror.ErrNotFound) {
 			return nil, apperror.ErrNotFound.WithCause(errors.New("题包归档文件不存在"))
 		}
 		return nil, err
 	}
 
-	resp := challengeCommandResponseMapperInst.ToChallengePackageExportRespBasePtr(revision)
-	resp.ChallengeID = challengeID
-	resp.FileName = filepath.Base(revision.ArchivePath)
-	return resp, nil
+	return &challengecontracts.ChallengePackageExportResp{
+		ChallengeID: challengeID,
+		RevisionID:  revision.ID,
+		ArchivePath: revision.ArchivePath,
+		SourceDir:   revision.SourceDir,
+		FileName:    fileName,
+		DownloadURL: "",
+		CreatedAt:   revision.CreatedAt,
+	}, nil
 }
 
 func rewriteChallengeManifestSnapshot(
 	ctx context.Context,
+	storage challengeports.ChallengePackageStorage,
 	store challengeports.ChallengePackageExportTxStore,
 	sourceDir string,
 	challenge *challengeports.ChallengePackageCore,
@@ -269,11 +228,11 @@ func rewriteChallengeManifestSnapshot(
 	var manifest domain.ChallengePackageManifest
 	manifestRaw := strings.TrimSpace(revision.ManifestSnapshot)
 	if manifestRaw == "" {
-		content, err := os.ReadFile(filepath.Join(sourceDir, "challenge.yml"))
+		content, err := storage.ReadTextFile(ctx, sourceDir, "challenge.yml")
 		if err != nil {
 			return "", err
 		}
-		manifestRaw = string(content)
+		manifestRaw = content
 	}
 	if err := yaml.Unmarshal([]byte(manifestRaw), &manifest); err != nil {
 		return "", err
@@ -327,11 +286,7 @@ func rewriteChallengeManifestSnapshot(
 		statementPath = "statement.md"
 		manifest.Content.Statement = statementPath
 	}
-	absoluteStatementPath := filepath.Join(sourceDir, filepath.FromSlash(statementPath))
-	if err := os.MkdirAll(filepath.Dir(absoluteStatementPath), 0o755); err != nil {
-		return "", err
-	}
-	if err := os.WriteFile(absoluteStatementPath, []byte(challenge.Description), 0o644); err != nil {
+	if err := storage.WriteTextFile(ctx, sourceDir, statementPath, challenge.Description); err != nil {
 		return "", err
 	}
 
@@ -339,7 +294,7 @@ func rewriteChallengeManifestSnapshot(
 	if err != nil {
 		return "", err
 	}
-	if err := os.WriteFile(filepath.Join(sourceDir, "challenge.yml"), content, 0o644); err != nil {
+	if err := storage.WriteTextFile(ctx, sourceDir, "challenge.yml", string(content)); err != nil {
 		return "", err
 	}
 	return string(content), nil
@@ -347,6 +302,7 @@ func rewriteChallengeManifestSnapshot(
 
 func rewriteChallengeTopologySnapshot(
 	ctx context.Context,
+	storage challengeports.ChallengePackageStorage,
 	store challengeports.ChallengePackageExportTxStore,
 	sourceDir string,
 	topology *challengeentity.ChallengeTopology,
@@ -441,11 +397,7 @@ func rewriteChallengeTopologySnapshot(
 		return "", err
 	}
 	topologyPath := resolveRevisionTopologySourcePath(topology, revision)
-	absolutePath := filepath.Join(sourceDir, filepath.FromSlash(topologyPath))
-	if err := os.MkdirAll(filepath.Dir(absolutePath), 0o755); err != nil {
-		return "", err
-	}
-	if err := os.WriteFile(absolutePath, content, 0o644); err != nil {
+	if err := storage.WriteTextFile(ctx, sourceDir, topologyPath, string(content)); err != nil {
 		return "", err
 	}
 	return string(content), nil
@@ -488,120 +440,6 @@ func resolveRevisionTopologySourcePath(topology *challengeentity.ChallengeTopolo
 	return "docker/topology.yml"
 }
 
-func copyDirectoryTree(sourceDir string, targetDir string) error {
-	if err := os.MkdirAll(targetDir, 0o755); err != nil {
-		return err
-	}
-	return filepath.Walk(sourceDir, func(current string, info os.FileInfo, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		relativePath, err := filepath.Rel(sourceDir, current)
-		if err != nil {
-			return err
-		}
-		if relativePath == "." {
-			return nil
-		}
-		targetPath := filepath.Join(targetDir, relativePath)
-		if info.IsDir() {
-			return os.MkdirAll(targetPath, info.Mode().Perm())
-		}
-		return copyFile(current, targetPath)
-	})
-}
-
-func copyFile(sourcePath string, targetPath string) error {
-	source, err := os.Open(sourcePath)
-	if err != nil {
-		return err
-	}
-	defer source.Close()
-
-	info, err := source.Stat()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
-		return err
-	}
-	target, err := os.OpenFile(targetPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode().Perm())
-	if err != nil {
-		return err
-	}
-	defer target.Close()
-
-	if _, err := io.Copy(target, source); err != nil {
-		return err
-	}
-	return nil
-}
-
-func zipDirectory(sourceDir string, archivePath string) error {
-	if err := os.MkdirAll(filepath.Dir(archivePath), 0o755); err != nil {
-		return err
-	}
-	target, err := os.Create(archivePath)
-	if err != nil {
-		return err
-	}
-	defer target.Close()
-
-	writer := zip.NewWriter(target)
-	defer writer.Close()
-
-	entries := make([]string, 0, 32)
-	if err := filepath.Walk(sourceDir, func(current string, info os.FileInfo, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if info.IsDir() {
-			return nil
-		}
-		relativePath, err := filepath.Rel(sourceDir, current)
-		if err != nil {
-			return err
-		}
-		entries = append(entries, relativePath)
-		return nil
-	}); err != nil {
-		return err
-	}
-	sort.Strings(entries)
-
-	for _, relativePath := range entries {
-		sourcePath := filepath.Join(sourceDir, relativePath)
-		if err := addZipFile(writer, sourceDir, sourcePath); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func addZipFile(writer *zip.Writer, rootDir string, sourcePath string) error {
-	info, err := os.Stat(sourcePath)
-	if err != nil {
-		return err
-	}
-	header, err := zip.FileInfoHeader(info)
-	if err != nil {
-		return err
-	}
-	header.Method = zip.Deflate
-	relativePath, err := filepath.Rel(rootDir, sourcePath)
-	if err != nil {
-		return err
-	}
-	header.Name = filepath.ToSlash(relativePath)
-	fileWriter, err := writer.CreateHeader(header)
-	if err != nil {
-		return err
-	}
-	file, err := os.Open(sourcePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	_, err = io.Copy(fileWriter, file)
-	return err
+func int64Ptr(value int64) *int64 {
+	return &value
 }

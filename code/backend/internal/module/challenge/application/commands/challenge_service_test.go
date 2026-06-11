@@ -29,9 +29,6 @@ func newTestService(repo *challengeinfra.Repository, imageRepo challengeports.Im
 		challengeinfra.NewChallengeCommandRepository(repo),
 		challengeinfra.NewImageQueryRepository(imageRepo),
 		nil,
-		nil,
-		nil,
-		SelfCheckConfig{},
 		zap.NewNop(),
 	)
 }
@@ -47,16 +44,82 @@ func newDBBackedChallengeService(
 		challengeinfra.NewChallengeCommandRepository(repo),
 		challengeinfra.NewImageQueryRepository(imageRepo),
 		challengeinfra.NewTopologyServiceRepository(repo),
-		challengeinfra.NewTopologyPackageRevisionRepository(repo),
+		zap.NewNop(),
+	)
+	return service
+}
+
+func newDBBackedChallengeImportService(
+	repo *challengeinfra.Repository,
+	imageBuildService *ImageBuildService,
+) *ChallengeImportService {
+	service := NewChallengeImportService(
+		challengeinfra.NewChallengeImportPreviewStore(""),
+		challengeinfra.NewChallengeAttachmentStore(""),
+		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
+		nil,
+		imageBuildService,
+		nil,
+		zap.NewNop(),
+	)
+	if repo != nil {
+		service.SetTxRunner(newTestChallengeImportTxRunner(repo, func() *ImageBuildService {
+			return imageBuildService
+		}))
+	}
+	return service
+}
+
+func newDBBackedChallengeSelfCheckService(
+	repo *challengeinfra.Repository,
+	imageRepo *challengeinfra.ImageRepository,
+	runtimeProbe challengeports.ChallengeRuntimeProbe,
+	cfg SelfCheckConfig,
+) *ChallengeSelfCheckService {
+	return NewChallengeSelfCheckService(
+		challengeinfra.NewChallengeCommandRepository(repo),
+		challengeinfra.NewImageQueryRepository(imageRepo),
+		challengeinfra.NewTopologyServiceRepository(repo),
 		runtimeProbe,
 		cfg,
 		zap.NewNop(),
 	)
-	service.SetChallengeImportTxRunner(newTestChallengeImportTxRunner(repo, func() *ImageBuildService {
-		return service.imageBuild
-	}))
-	service.SetChallengePackageExportTxRunner(newTestChallengePackageExportTxRunner(repo))
-	return service
+}
+
+func newDBBackedChallengePublishCheckService(
+	repo *challengeinfra.Repository,
+	imageRepo *challengeinfra.ImageRepository,
+	runtimeProbe challengeports.ChallengeRuntimeProbe,
+	cfg SelfCheckConfig,
+) *ChallengePublishCheckService {
+	commandRepo := challengeinfra.NewChallengeCommandRepository(repo)
+	coreService := NewChallengeService(
+		commandRepo,
+		challengeinfra.NewImageQueryRepository(imageRepo),
+		challengeinfra.NewTopologyServiceRepository(repo),
+		zap.NewNop(),
+	)
+	selfCheckService := NewChallengeSelfCheckService(
+		commandRepo,
+		challengeinfra.NewImageQueryRepository(imageRepo),
+		challengeinfra.NewTopologyServiceRepository(repo),
+		runtimeProbe,
+		cfg,
+		zap.NewNop(),
+	)
+	return NewChallengePublishCheckService(commandRepo, commandRepo, selfCheckService, coreService, cfg, nil, zap.NewNop())
+}
+
+func newDBBackedChallengePackageExportService(
+	repo *challengeinfra.Repository,
+) *ChallengePackageExportService {
+	return NewChallengePackageExportService(
+		challengeinfra.NewChallengeCommandRepository(repo),
+		challengeinfra.NewTopologyServiceRepository(repo),
+		challengeinfra.NewTopologyPackageRevisionRepository(repo),
+		newTestChallengePackageExportTxRunner(repo),
+		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
+	)
 }
 
 func TestServiceCreateChallengeSuccess(t *testing.T) {
@@ -410,7 +473,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 			Networks:   []runtimecontracts.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
 		},
 	}
-	service := newDBBackedChallengeService(db, repo, imageRepo, probe, SelfCheckConfig{
+	service := newDBBackedChallengePublishCheckService(repo, imageRepo, probe, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
 	})
 	var publishedEvents []platformevents.Event
@@ -429,7 +492,7 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		t.Fatalf("unexpected requested job status: %s", job.Status)
 	}
 
-	service.dispatchPublishCheckJobs(context.Background())
+	service.DispatchPublishCheckJobs(context.Background())
 
 	publishedChallenge, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
@@ -508,7 +571,7 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(db, repo, imageRepo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{
+	service := newDBBackedChallengePublishCheckService(repo, imageRepo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
 	})
 	var publishedEvents []platformevents.Event
@@ -523,7 +586,7 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 		t.Fatalf("RequestPublishCheck() error = %v", err)
 	}
 
-	service.dispatchPublishCheckJobs(context.Background())
+	service.DispatchPublishCheckJobs(context.Background())
 
 	stored, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
@@ -589,7 +652,7 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	probe := &fakeChallengeRuntimeProbe{}
-	service := newDBBackedChallengeService(db, repo, imageRepo, probe, SelfCheckConfig{
+	service := newDBBackedChallengePublishCheckService(repo, imageRepo, probe, SelfCheckConfig{
 		PublishCheckBatchSize: 1,
 	})
 	var publishedEvents []platformevents.Event
@@ -604,7 +667,7 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 		t.Fatalf("RequestPublishCheck() error = %v", err)
 	}
 
-	service.dispatchPublishCheckJobs(context.Background())
+	service.DispatchPublishCheckJobs(context.Background())
 
 	publishedChallenge, err := repo.FindByID(context.Background(), challenge.ID)
 	if err != nil {
@@ -688,7 +751,7 @@ func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T)
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(db, repo, imageRepo, nil, SelfCheckConfig{})
+	service := newDBBackedChallengePublishCheckService(repo, imageRepo, nil, SelfCheckConfig{})
 
 	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
 	if err == nil || err.Error() != apperror.ErrNotFound.Error() {

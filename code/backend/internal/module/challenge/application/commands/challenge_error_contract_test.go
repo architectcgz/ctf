@@ -24,9 +24,6 @@ func TestChallengeServiceCreateChallengeTreatsModuleImageNotFoundAsErrNotFound(t
 			},
 		},
 		&challengeCommandTopologyRepoStub{},
-		nil,
-		nil,
-		SelfCheckConfig{},
 		zap.NewNop(),
 	)
 
@@ -47,9 +44,6 @@ func TestChallengeServiceUpdateChallengeTreatsModuleChallengeNotFoundAsErrChalle
 		},
 		&challengeCommandImageRepoStub{},
 		&challengeCommandTopologyRepoStub{},
-		nil,
-		nil,
-		SelfCheckConfig{},
 		zap.NewNop(),
 	)
 
@@ -84,9 +78,6 @@ func TestChallengeServiceUpdateChallengeTreatsTopologySentinelAsMissingTopology(
 				return nil, challengeports.ErrChallengeTopologyNotFound
 			},
 		},
-		nil,
-		nil,
-		SelfCheckConfig{},
 		zap.NewNop(),
 	)
 
@@ -99,29 +90,30 @@ func TestChallengeServiceUpdateChallengeTreatsTopologySentinelAsMissingTopology(
 	}
 }
 
-func TestChallengeServiceRequestPublishCheckTreatsMissingActiveJobSentinelAsNoActiveJob(t *testing.T) {
+func TestChallengePublishCheckServiceRequestPublishCheckTreatsMissingActiveJobSentinelAsNoActiveJob(t *testing.T) {
 	t.Parallel()
 
-	service := NewChallengeService(
-		&challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
-				return &challengeentity.Challenge{ID: 9, Status: challengeentity.ChallengeStatusDraft}, nil
-			},
-			findActivePublishCheckJobByIDFn: func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
-				return nil, challengeports.ErrChallengePublishCheckJobNotFound
-			},
-			createPublishCheckJobFn: func(_ context.Context, job *challengeentity.ChallengePublishCheckJob) error {
-				job.ID = 101
-				job.CreatedAt = time.Now()
-				job.UpdatedAt = job.CreatedAt
-				return nil
-			},
+	repo := &challengeCommandContextRepoStub{
+		findByIDWithContextFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
+			return &challengeentity.Challenge{ID: 9, Status: challengeentity.ChallengeStatusDraft}, nil
 		},
-		&challengeCommandImageRepoStub{},
-		&challengeCommandTopologyRepoStub{},
+		findActivePublishCheckJobByIDFn: func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
+			return nil, challengeports.ErrChallengePublishCheckJobNotFound
+		},
+		createPublishCheckJobFn: func(_ context.Context, job *challengeentity.ChallengePublishCheckJob) error {
+			job.ID = 101
+			job.CreatedAt = time.Now()
+			job.UpdatedAt = job.CreatedAt
+			return nil
+		},
+	}
+	service := NewChallengePublishCheckService(
+		repo,
+		repo,
 		nil,
 		nil,
 		SelfCheckConfig{},
+		nil,
 		zap.NewNop(),
 	)
 
@@ -134,23 +126,24 @@ func TestChallengeServiceRequestPublishCheckTreatsMissingActiveJobSentinelAsNoAc
 	}
 }
 
-func TestChallengeServiceGetLatestPublishCheckTreatsMissingJobSentinelAsErrNotFound(t *testing.T) {
+func TestChallengePublishCheckServiceGetLatestPublishCheckTreatsMissingJobSentinelAsErrNotFound(t *testing.T) {
 	t.Parallel()
 
-	service := NewChallengeService(
-		&challengeCommandContextRepoStub{
-			findByIDWithContextFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
-				return &challengeentity.Challenge{ID: 9, UpdatedAt: time.Now()}, nil
-			},
-			findLatestPublishCheckJobByIDFn: func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
-				return nil, challengeports.ErrChallengePublishCheckJobNotFound
-			},
+	repo := &challengeCommandContextRepoStub{
+		findByIDWithContextFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
+			return &challengeentity.Challenge{ID: 9, UpdatedAt: time.Now()}, nil
 		},
-		&challengeCommandImageRepoStub{},
-		&challengeCommandTopologyRepoStub{},
+		findLatestPublishCheckJobByIDFn: func(context.Context, int64) (*challengeentity.ChallengePublishCheckJob, error) {
+			return nil, challengeports.ErrChallengePublishCheckJobNotFound
+		},
+	}
+	service := NewChallengePublishCheckService(
+		repo,
+		repo,
 		nil,
 		nil,
 		SelfCheckConfig{},
+		nil,
 		zap.NewNop(),
 	)
 
@@ -160,10 +153,10 @@ func TestChallengeServiceGetLatestPublishCheckTreatsMissingJobSentinelAsErrNotFo
 	}
 }
 
-func TestChallengeServiceSelfCheckChallengeTreatsModuleChallengeNotFoundAsErrChallengeNotFound(t *testing.T) {
+func TestChallengeSelfCheckServiceSelfCheckChallengeTreatsModuleChallengeNotFoundAsErrChallengeNotFound(t *testing.T) {
 	t.Parallel()
 
-	service := NewChallengeService(
+	service := NewChallengeSelfCheckService(
 		&challengeCommandContextRepoStub{
 			findByIDWithContextFn: func(context.Context, int64) (*challengeentity.Challenge, error) {
 				return nil, challengeports.ErrChallengeCommandChallengeNotFound
@@ -171,7 +164,6 @@ func TestChallengeServiceSelfCheckChallengeTreatsModuleChallengeNotFoundAsErrCha
 		},
 		&challengeCommandImageRepoStub{},
 		&challengeCommandTopologyRepoStub{},
-		nil,
 		nil,
 		SelfCheckConfig{},
 		zap.NewNop(),

@@ -28,11 +28,28 @@ func newAWDChallengeImportServiceForTest(db *gorm.DB, repo *challengeinfra.Repos
 		WithImageBuildDockerBuilder(&fakeDockerImageBuilder{}),
 		WithImageBuildRegistryVerifier(fakeRegistryVerifier{digest: "sha256:test"}),
 	)
-	service := NewAWDChallengeImportService(repo, imageBuildService)
+	service := NewAWDChallengeImportService(
+		repo,
+		challengeinfra.NewAWDChallengeImportPreviewStore(""),
+		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
+		imageBuildService,
+	)
 	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService {
 		return service.imageBuild
 	}))
 	return service
+}
+
+func newAWDChallengeImportServiceWithStoresForTest(
+	repo *challengeinfra.Repository,
+	imageBuildService ...*ImageBuildService,
+) *AWDChallengeImportService {
+	return NewAWDChallengeImportService(
+		repo,
+		challengeinfra.NewAWDChallengeImportPreviewStore(""),
+		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
+		imageBuildService...,
+	)
 }
 
 func TestAWDChallengeImportFlowPreviewAndCommit(t *testing.T) {
@@ -108,7 +125,7 @@ func TestAWDChallengeImportPreviewReturnsPlatformBuildImageDelivery(t *testing.T
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := NewAWDChallengeImportService(repo, imageBuildService)
+	service := newAWDChallengeImportServiceWithStoresForTest(repo, imageBuildService)
 	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService { return service.imageBuild }))
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
@@ -141,7 +158,7 @@ func TestAWDChallengeImportPreviewReturnsPlatformBuildImageDelivery(t *testing.T
 func TestAWDChallengeImportPreviewWarnsWhenPlatformBuildServiceUnavailable(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(repo)
+	service := newAWDChallengeImportServiceWithStoresForTest(repo)
 	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService { return service.imageBuild }))
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
@@ -179,7 +196,7 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := NewImageBuildService(imageRepo, ImageBuildConfig{Registry: "127.0.0.1:5000"})
-	service := NewAWDChallengeImportService(repo, imageBuildService)
+	service := newAWDChallengeImportServiceWithStoresForTest(repo, imageBuildService)
 	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService { return service.imageBuild }))
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
@@ -243,7 +260,7 @@ func TestAWDChallengeImportCommitCreatesPlatformBuildJob(t *testing.T) {
 func TestAWDChallengeImportCommitReturnsServiceUnavailableWhenPlatformBuildServiceMissing(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(repo)
+	service := newAWDChallengeImportServiceWithStoresForTest(repo)
 	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService { return service.imageBuild }))
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")
@@ -270,7 +287,7 @@ func TestAWDChallengeImportCommitReturnsServiceUnavailableWhenPlatformBuildServi
 func TestAWDChallengeImportCommitReturnsServiceUnavailableWhenExternalImageVerificationServiceMissing(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	repo := challengeinfra.NewRepository(db)
-	service := NewAWDChallengeImportService(repo)
+	service := newAWDChallengeImportServiceWithStoresForTest(repo)
 	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService { return service.imageBuild }))
 
 	previewDir := filepath.Join(t.TempDir(), "awd-imports")

@@ -1,15 +1,19 @@
 # CTF 靶场平台 — 文件存储设计（MVP：宿主机文件系统）
 
 > 状态：Current
-> 事实源：`code/backend/internal/module/challenge/application/commands/`、`docs/contracts/challenge-pack-v1.md`
+> 事实源：`code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`、`code/backend/internal/module/challenge/infrastructure/{challenge_import_preview_store.go,challenge_attachment_store.go,challenge_package_storage.go}`、`docs/contracts/challenge-pack-v1.md`
 > 替代：无
 > 关联：题目包规范 `docs/contracts/challenge-pack-v1.md`
 
 ## 当前设计
 
-- `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`、`code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`
-  - 负责：把题目包预览目录落到 `./data/challenge-import-previews` 或 `./data/awd-challenge-import-previews`，写入 `preview.json`，并在 commit 后清理预览目录；Guardrail 见 `code/backend/internal/module/challenge/runtime/module_import_test.go`
-  - 不负责：在 preview / commit 阶段启动容器或把导入预览目录直接暴露给学员访问
+- `code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`
+  - 负责：编排题目包 preview/list/get/commit，解析题包业务语义，创建题目、Flag、Hint、镜像构建任务、拓扑和题包修订；Guardrail 见 `code/backend/internal/module/challenge/runtime/module_import_test.go` 与 `code/backend/internal/module/challenge/architecture_test.go`
+  - 不负责：直接解包 zip、写入 `preview.json`、复制附件、复制 build source，或在 preview / commit 阶段启动容器并把导入预览目录暴露给学员访问
+
+- `code/backend/internal/module/challenge/infrastructure/{challenge_import_preview_store.go,challenge_attachment_store.go,challenge_package_storage.go}`
+  - 负责：实现 `challenge/ports` 中的 LocalFS/zip storage port，把题目包预览目录落到 `./data/challenge-import-previews` 或 `./data/awd-challenge-import-previews`，保存/读取 `preview.json`，拒绝 zip-slip、symlink、超限文件，持久化导入附件、题包 source/archive、导出 archive 和 image build source，并按 service 调用清理工作目录
+  - 不负责：决定导入事务如何落库、题目是否发布、镜像 job 如何推进，或替代 application service 做权限和业务状态判断
 
 - `code/backend/internal/module/challenge/api/http/handler.go`、`code/backend/internal/app/router_routes.go`
   - 负责：提供题目附件下载与 `SelfCheckChallenge` 入口，并把对外下载路径收敛为 `/api/v1/challenges/attachments/...`
@@ -108,17 +112,17 @@ ${STORAGE_ROOT}/
 
 推荐流程（安全优先）：
 
-1. 上传原始 Zip 到导入预览目录（当前实现为 `challenge-import-previews/<preview-id>/package.zip`）。
-2. 在同一预览工作目录内解包并定位“题目包根目录”（当前支持 Zip 根目录直接包含 `challenge.yml`，或仅包含一个题目子目录）。
+1. 上传原始 Zip 后，application service 调用 `ChallengeImportPreviewStore` / `AWDChallengeImportPreviewStore` 创建预览工作目录（当前 LocalFS 实现为 `challenge-import-previews/<preview-id>/package.zip` 或 `awd-challenge-import-previews/<preview-id>/package.zip`）。
+2. infrastructure preview store 在同一预览工作目录内解包并定位“题目包根目录”（当前支持 Zip 根目录直接包含 `challenge.yml`，或仅包含一个题目子目录）。
 3. 静态校验：
    - 结构校验：`challenge.yml`、题面 Markdown，以及题目包中引用的附件/运行时信息等必需项存在。
    - 安全校验：拒绝 zip-slip 路径、symlink、zip bomb；限制文件数与大小。
    - `challenge.yml` 字段校验（meta/category/difficulty/flag/runtime/extensions 等）。
 4. 附件提取：
    - 仅允许提取 `challenge.yml` 中显式声明的附件文件。
-   - 当前实现会把导入后的附件持久化到 `challenge-attachments/imports/<slug>/`，并生成 `/api/v1/challenges/attachments/imports/...` 下载路径。
+   - 当前实现由 `ChallengeAttachmentStore` 把导入后的附件持久化到 `challenge-attachments/imports/<slug>/`，并生成 `/api/v1/challenges/attachments/imports/...` 下载路径。
 5. 生成题目记录，并同步 Hint、Flag、运行时镜像引用与附件下载地址。
-6. commit 完成后清理该次导入预览目录。
+6. commit 完成后，application service 调用 preview store 清理该次导入预览目录。
 
 > 在线构建（dockerfile build）如果启用，必须异步化，并在隔离 builder 上执行，禁止 builder 访问平台内网与敏感配置。
 
@@ -127,16 +131,16 @@ ${STORAGE_ROOT}/
 ```mermaid
 flowchart TD
   A[管理员上传题目包 zip] --> B[POST /api/v1/admin/challenge-imports/preview]
-  B --> C[保存 package.zip 到 challenge-import-previews/<preview-id>/]
-  C --> D[解包并定位题目包根目录 challenge.yml]
+  B --> C[PreviewStore 保存 package.zip\n到 challenge-import-previews/<preview-id>/]
+  C --> D[PreviewStore 解包并定位题目包根目录 challenge.yml]
   D --> E{静态预检是否通过}
   E -- 否 --> F[返回预检错误\n结构/路径/symlink/大小/字段校验失败]
   E -- 是 --> G[生成预览数据 preview.json]
   G --> H[返回预览结果给管理端]
   H --> I[管理员确认导入\nPOST /api/v1/admin/challenge-imports/:id/commit]
   I --> J[重新解析 challenge.yml 与引用文件]
-  J --> K[落库 challenge/hints/flag/image 引用\n持久化附件到 challenge-attachments/imports/<slug>/]
-  K --> L[清理 challenge-import-previews/<preview-id>/]
+  J --> K[落库 challenge/hints/flag/image 引用\nAttachmentStore 持久化附件]
+  K --> L[PreviewStore 清理 challenge-import-previews/<preview-id>/]
   L --> M[返回 challenge 草稿]
   M --> N[可选：执行题目自检 SelfCheckChallenge]
   N --> O[仅在自检阶段尝试拉起容器/拓扑]

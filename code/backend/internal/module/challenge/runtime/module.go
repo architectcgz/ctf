@@ -116,7 +116,7 @@ func Build(deps Deps) (*Module, error) {
 
 	imageCommandService, imageHandler := buildImageHandler(internalDeps)
 	imageBuildService := buildImageBuildService(internalDeps)
-	coreService, coreHandler := buildCoreHandler(internalDeps, imageBuildService)
+	publishCheckService, coreHandler := buildCoreHandler(internalDeps, imageBuildService)
 	flagHandler, flagValidator, err := buildFlagHandler(internalDeps)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func Build(deps Deps) (*Module, error) {
 	if deps.Config != nil && deps.Config.Challenge.PublishCheck.Enabled {
 		module.BackgroundJobs = append(module.BackgroundJobs, BackgroundJob{
 			Name: "challenge_publish_check_worker",
-			Run:  coreService.RunPublishCheckLoop,
+			Run:  publishCheckService.RunPublishCheckLoop,
 		})
 	}
 	return module, nil

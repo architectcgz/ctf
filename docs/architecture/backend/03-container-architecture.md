@@ -45,7 +45,7 @@
   - 负责：当需要轮换 active key 时，部署配置必须同时带上旧 active key、新 active key，以及仍被 `instances.flag_key_id` 引用的历史 key；升级前空 `flag_key_id` 的实例固定按 `default` key 解释。active key 变化必须显式开启 `container.flag_global_secret_allow_rotation`，否则仍按错配处理
   - 不负责：保存 secret 明文到数据库、跨多副本分发 secret、对接外部 KMS，或替部署层选择 secret 轮换时机
 
-- `code/backend/internal/module/challenge/application/commands/challenge_service.go`、`code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
+- `code/backend/internal/module/challenge/application/challengecore/service.go`、`code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/challenge/application/challengeselfcheck/service.go`
   - 负责：题目自检和导入阶段的临时运行时探测、附件与构建源隔离、镜像构建 / registry 校验前置条件
   - 不负责：在 preview / commit 阶段替学生或队伍正式开题，或把导入工作目录暴露为运行态实例入口
 
@@ -76,7 +76,7 @@
 - AWD global secret 恢复与持久化：`code/backend/internal/config/config_test.go`
 - 运行时清理与维护：`code/backend/internal/module/runtime/service_test.go`
 - 端到端访问与状态矩阵：`code/backend/internal/app/full_router_state_matrix_integration_test.go`
-- 题目自检运行态边界：`code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`
+- 题目自检运行态边界：`code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`（测试兼容层覆盖 `application/challengeselfcheck` service）
 
 ## 历史迁移
 

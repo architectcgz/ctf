@@ -755,7 +755,7 @@ volumes:
 
 CTF 靶场的核心安全挑战：靶机容器本身就是"有漏洞的服务"，必须严格隔离，防止选手通过靶机攻击平台或其他用户。
 
-这里的关键前提不是“API 一定已经存在可利用漏洞”，而是平台边界必须按“API 迟早会出现实现缺陷、配置缺陷或外部集成缺陷”来设计。当前 `code/backend/internal/app/router.go` 对外暴露了认证、文件上传、WebSocket、竞赛实时通道等入口；`code/backend/internal/module/challenge/api/http/handler.go`、`code/backend/internal/module/challenge/application/commands/challenge_import_service.go`、`code/backend/internal/module/auth/infrastructure/cas_ticket_validator.go` 会处理 zip / YAML / CAS 外部响应等不可信输入；`code/backend/internal/module/container_runtime/infrastructure/engine_provisioning.go`、`code/backend/internal/module/container_runtime/infrastructure/engine_files.go`、`code/backend/internal/module/contest/infrastructure/docker_checker_runner.go` 又掌握容器创建、镜像拉取、网络创建、容器内 exec 与 checker sandbox 管理等高权限能力。因此部署边界不能建立在“API 永远不会被打穿”这个假设上，而应保证 API 失陷后不会直接升级成宿主机级控制。
+这里的关键前提不是“API 一定已经存在可利用漏洞”，而是平台边界必须按“API 迟早会出现实现缺陷、配置缺陷或外部集成缺陷”来设计。当前 `code/backend/internal/app/router.go` 对外暴露了认证、文件上传、WebSocket、竞赛实时通道等入口；`code/backend/internal/module/challenge/api/http/handler.go`、`code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/auth/infrastructure/cas_ticket_validator.go` 会处理 zip / YAML / CAS 外部响应等不可信输入；`code/backend/internal/module/container_runtime/infrastructure/engine_provisioning.go`、`code/backend/internal/module/container_runtime/infrastructure/engine_files.go`、`code/backend/internal/module/contest/infrastructure/docker_checker_runner.go` 又掌握容器创建、镜像拉取、网络创建、容器内 exec 与 checker sandbox 管理等高权限能力。因此部署边界不能建立在“API 永远不会被打穿”这个假设上，而应保证 API 失陷后不会直接升级成宿主机级控制。
 
 #### 网络隔离模型
 

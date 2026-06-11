@@ -7,6 +7,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/module/challenge/application/challengecatalog"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -269,7 +270,7 @@ func TestChallengeServiceCreateChallengePropagatesContextToRepositories(t *testi
 			return &challengeentity.Image{ID: id, Name: "ctf/web", Tag: "v1"}, nil
 		},
 	}
-	service := NewChallengeService(repo, imageRepo, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, imageRepo, &challengeCommandTopologyRepoStub{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.CreateChallenge(ctx, 1001, CreateChallengeInput{
@@ -342,7 +343,7 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 			return &challengeentity.ChallengeTopology{ChallengeID: challengeID, EntryNodeKey: "web", Spec: rawSpec}, nil
 		},
 	}
-	service := NewChallengeService(repo, imageRepo, topologyRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, imageRepo, topologyRepo, zap.NewNop())
 
 	imageID := int64(7)
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
@@ -386,7 +387,7 @@ func TestChallengeServiceDeleteChallengePropagatesContextToRepository(t *testing
 			return nil
 		},
 	}
-	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if err := service.DeleteChallenge(ctx, 12); err != nil {
@@ -424,7 +425,7 @@ func (s *challengeCommandRuntimeProbeStub) CleanupRuntimeDetails(ctx context.Con
 	return nil
 }
 
-func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *testing.T) {
+func TestChallengePublishCheckServiceRequestPublishCheckPropagatesContextToRepositories(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeCommandContextKey("request-publish-check")
@@ -457,7 +458,7 @@ func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *t
 			return nil
 		},
 	}
-	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengePublishCheckService(repo, repo, nil, nil, SelfCheckConfig{}, nil, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.RequestPublishCheck(ctx, 1001, 9)
@@ -472,7 +473,7 @@ func TestChallengeServiceRequestPublishCheckPropagatesContextToRepositories(t *t
 	}
 }
 
-func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t *testing.T) {
+func TestChallengePublishCheckServiceGetLatestPublishCheckPropagatesContextToRepositories(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeCommandContextKey("latest-publish-check")
@@ -497,7 +498,7 @@ func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t 
 			return &challengeentity.ChallengePublishCheckJob{ID: 21, ChallengeID: challengeID, Status: challengeentity.ChallengePublishCheckStatusPassed, UpdatedAt: now}, nil
 		},
 	}
-	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengePublishCheckService(repo, repo, nil, nil, SelfCheckConfig{}, nil, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.GetLatestPublishCheck(ctx, 9)
@@ -512,7 +513,7 @@ func TestChallengeServiceGetLatestPublishCheckPropagatesContextToRepositories(t 
 	}
 }
 
-func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *testing.T) {
+func TestChallengeSelfCheckServiceSelfCheckChallengePropagatesContextToRepositories(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeCommandContextKey("self-check")
@@ -566,7 +567,7 @@ func TestChallengeServiceSelfCheckChallengePropagatesContextToRepositories(t *te
 			return nil
 		},
 	}
-	service := NewChallengeService(repo, imageRepo, topologyRepo, nil, probe, SelfCheckConfig{RuntimeCreateTimeout: time.Second}, zap.NewNop())
+	service := NewChallengeSelfCheckService(repo, imageRepo, topologyRepo, probe, SelfCheckConfig{RuntimeCreateTimeout: time.Second}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.SelfCheckChallenge(ctx, 9)
@@ -608,7 +609,7 @@ func TestChallengeServicePublishChallengePropagatesContextToRepository(t *testin
 			return nil
 		},
 	}
-	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, &challengeCommandTopologyRepoStub{}, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	if err := service.PublishChallenge(ctx, 15); err != nil {
@@ -619,7 +620,7 @@ func TestChallengeServicePublishChallengePropagatesContextToRepository(t *testin
 	}
 }
 
-func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t *testing.T) {
+func TestChallengePublishCheckServiceProcessPublishCheckJobPropagatesContextToRepositories(t *testing.T) {
 	t.Parallel()
 
 	ctxKey := challengeCommandContextKey("process-publish-job")
@@ -670,10 +671,12 @@ func TestChallengeServiceProcessPublishCheckJobPropagatesContextToRepositories(t
 			return nil, challengeports.ErrChallengeTopologyNotFound
 		},
 	}
-	service := NewChallengeService(repo, &challengeCommandImageRepoStub{}, topologyRepo, nil, &challengeCommandRuntimeProbeStub{}, SelfCheckConfig{}, zap.NewNop())
+	coreService := NewChallengeService(repo, &challengeCommandImageRepoStub{}, topologyRepo, zap.NewNop())
+	selfCheckService := NewChallengeSelfCheckService(repo, &challengeCommandImageRepoStub{}, topologyRepo, &challengeCommandRuntimeProbeStub{}, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengePublishCheckService(repo, repo, selfCheckService, coreService, SelfCheckConfig{}, nil, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	service.processPublishCheckJob(ctx, 51)
+	service.ProcessPublishCheckJob(ctx, 51)
 	if !loadJobCalled || !findChallengeCalled || !publishUpdateCalled || updateJobCalled == 0 {
 		t.Fatalf("expected process job calls, got load=%v find=%v publish=%v updateJob=%d", loadJobCalled, findChallengeCalled, publishUpdateCalled, updateJobCalled)
 	}
@@ -683,7 +686,7 @@ func TestChallengeServicePublishWeakEventDoesNotCreateBackgroundContext(t *testi
 	t.Parallel()
 
 	publishCalled := false
-	service := (&ChallengeService{}).SetEventBus(&challengeCommandEventBusStub{
+	bus := &challengeCommandEventBusStub{
 		publishFn: func(ctx context.Context, evt platformevents.Event) error {
 			publishCalled = true
 			if ctx != nil {
@@ -691,9 +694,9 @@ func TestChallengeServicePublishWeakEventDoesNotCreateBackgroundContext(t *testi
 			}
 			return nil
 		},
-	})
+	}
 
-	service.publishWeakEvent(nil, platformevents.Event{Name: "challenge.test"})
+	challengecatalog.PublishWeakEvent(nil, zap.NewNop(), bus, platformevents.Event{Name: "challenge.test"})
 	if !publishCalled {
 		t.Fatal("expected event to be published")
 	}

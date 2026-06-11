@@ -10,7 +10,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -23,30 +22,29 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
-const defaultAWDChallengeImportPreviewRoot = "./data/awd-challenge-import-previews"
 const defaultAWDCheckerArtifactRoot = "./data/awd-checker-artifacts"
 
-type storedAWDChallengeImportPreview struct {
-	ID        string                                           `json:"id"`
-	FileName  string                                           `json:"file_name"`
-	SourceDir string                                           `json:"source_dir"`
-	CreatedBy int64                                            `json:"created_by"`
-	CreatedAt time.Time                                        `json:"created_at"`
-	Preview   challengecontracts.AWDChallengeImportPreviewResp `json:"preview"`
-}
-
 type AWDChallengeImportService struct {
-	repo       challengeports.AWDChallengeCommandRepository
-	txRunner   challengeports.AWDChallengeImportTxRunner
-	imageBuild *ImageBuildService
-	logger     *zap.Logger
+	repo           challengeports.AWDChallengeCommandRepository
+	previewStore   challengeports.AWDChallengeImportPreviewStore
+	packageStorage challengeports.ChallengePackageStorage
+	txRunner       challengeports.AWDChallengeImportTxRunner
+	imageBuild     *ImageBuildService
+	logger         *zap.Logger
 }
 
 func NewAWDChallengeImportService(
 	repo challengeports.AWDChallengeCommandRepository,
+	previewStore challengeports.AWDChallengeImportPreviewStore,
+	packageStorage challengeports.ChallengePackageStorage,
 	imageBuild ...*ImageBuildService,
 ) *AWDChallengeImportService {
-	service := &AWDChallengeImportService{repo: repo, logger: zap.NewNop()}
+	service := &AWDChallengeImportService{
+		repo:           repo,
+		previewStore:   previewStore,
+		packageStorage: packageStorage,
+		logger:         zap.NewNop(),
+	}
 	if len(imageBuild) > 0 {
 		service.imageBuild = imageBuild[0]
 	}
@@ -76,51 +74,53 @@ func (s *AWDChallengeImportService) PreviewImport(
 	if strings.TrimSpace(fileName) == "" {
 		fileName = "awd-challenge-package.zip"
 	}
+	if s.previewStore == nil {
+		return nil, fmt.Errorf("awd challenge import preview store is not configured")
+	}
 
 	previewID, err := generateChallengeImportPreviewID()
 	if err != nil {
 		return nil, err
 	}
 
-	previewDir := filepath.Join(awdChallengeImportPreviewRoot(), previewID)
-	archivePath := filepath.Join(previewDir, "package.zip")
-	extractDir := filepath.Join(previewDir, "source")
-	if err := os.MkdirAll(previewDir, 0o755); err != nil {
-		return nil, fmt.Errorf("create preview dir: %w", err)
-	}
-
-	if err := writeImportUploadArchive(archivePath, reader); err != nil {
-		return nil, err
-	}
-
-	rootDir, err := extractChallengeImportArchive(archivePath, extractDir)
+	workspace, err := s.previewStore.CreateWorkspace(ctx, previewID, fileName, reader)
 	if err != nil {
 		return nil, err
 	}
+	keepWorkspace := false
+	defer func() {
+		if !keepWorkspace {
+			_ = s.previewStore.DeleteWorkspace(ctx, workspace.ID)
+		}
+	}()
 
-	parsed, err := domain.ParseAWDChallengePackageDir(rootDir)
+	parsed, err := domain.ParseAWDChallengePackageDir(workspace.SourceDir)
 	if err != nil {
 		return nil, err
 	}
 
 	preview := s.buildAWDChallengeImportPreview(previewID, fileName, parsed, time.Now().UTC())
-	record := storedAWDChallengeImportPreview{
-		ID:        previewID,
-		FileName:  fileName,
-		SourceDir: rootDir,
-		CreatedBy: actorUserID,
-		CreatedAt: preview.CreatedAt,
-		Preview:   *preview,
+	record := &challengeports.AWDChallengeImportPreviewRecord{
+		ID:          workspace.ID,
+		FileName:    workspace.FileName,
+		ArchivePath: workspace.ArchivePath,
+		SourceDir:   workspace.SourceDir,
+		CreatedBy:   actorUserID,
+		CreatedAt:   preview.CreatedAt,
+		Preview:     *preview,
 	}
-	if err := saveAWDChallengeImportPreviewRecord(previewDir, &record); err != nil {
+	if err := s.previewStore.SaveRecord(ctx, record); err != nil {
 		return nil, err
 	}
+	keepWorkspace = true
 	return preview, nil
 }
 
 func (s *AWDChallengeImportService) ListImports(ctx context.Context, actorUserID int64) ([]challengecontracts.AWDChallengeImportPreviewResp, error) {
-	_ = ctx
-	records, err := loadAWDChallengeImportPreviewRecords()
+	if s.previewStore == nil {
+		return nil, fmt.Errorf("awd challenge import preview store is not configured")
+	}
+	records, err := s.previewStore.ListRecords(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -143,8 +143,10 @@ func (s *AWDChallengeImportService) GetImport(
 	actorUserID int64,
 	id string,
 ) (*challengecontracts.AWDChallengeImportPreviewResp, error) {
-	_ = ctx
-	record, err := loadAWDChallengeImportPreviewRecord(id)
+	if s.previewStore == nil {
+		return nil, fmt.Errorf("awd challenge import preview store is not configured")
+	}
+	record, err := s.previewStore.LoadRecord(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +162,16 @@ func (s *AWDChallengeImportService) CommitImport(
 	actorUserID int64,
 	id string,
 ) (*challengecontracts.AWDChallengeResp, error) {
-	record, err := loadAWDChallengeImportPreviewRecord(id)
+	if s.previewStore == nil {
+		return nil, fmt.Errorf("awd challenge import preview store is not configured")
+	}
+	if s.packageStorage == nil {
+		return nil, fmt.Errorf("challenge package storage is not configured")
+	}
+	if s.txRunner == nil {
+		return nil, fmt.Errorf("awd challenge import tx runner is not configured")
+	}
+	record, err := s.previewStore.LoadRecord(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -173,22 +184,19 @@ func (s *AWDChallengeImportService) CommitImport(
 		return nil, err
 	}
 
-	buildSource, err := persistImportedImageBuildSource(
-		domain.ChallengePackageModeAWD,
-		parsed.Slug,
-		record.ID,
-		parsed.RootDir,
-		parsed.DockerfilePath,
-		parsed.BuildContextPath,
-	)
+	buildSource, err := s.packageStorage.PersistImportedImageBuildSource(ctx, challengeports.ChallengeImportedImageBuildSourceRequest{
+		ChallengeMode:  domain.ChallengePackageModeAWD,
+		PackageSlug:    parsed.Slug,
+		PreviewID:      record.ID,
+		RootDir:        parsed.RootDir,
+		DockerfilePath: parsed.DockerfilePath,
+		ContextPath:    parsed.BuildContextPath,
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	var challenge *challengeentity.AWDChallenge
-	if s.txRunner == nil {
-		return nil, fmt.Errorf("awd challenge import tx runner is not configured")
-	}
 	if err := s.txRunner.WithinAWDChallengeImportTransaction(ctx, func(store challengeports.AWDChallengeImportTxStore) error {
 		if err := store.RejectImportedAWDChallengeSlugConflict(ctx, parsed.Slug); err != nil {
 			return err
@@ -259,12 +267,12 @@ func (s *AWDChallengeImportService) CommitImport(
 		return nil
 	}); err != nil {
 		if buildSource != nil {
-			_ = os.RemoveAll(buildSource.RootDir)
+			_ = s.packageStorage.DeletePath(ctx, buildSource.RootDir)
 		}
 		return nil, err
 	}
 
-	_ = os.RemoveAll(filepath.Join(awdChallengeImportPreviewRoot(), id))
+	_ = s.previewStore.DeleteWorkspace(ctx, id)
 	return domain.AWDChallengeRespFromModel(challenge), nil
 }
 
@@ -564,71 +572,6 @@ func cloneAWDChallengeConfig(value map[string]any) map[string]any {
 		return map[string]any{}
 	}
 	return cloned
-}
-
-func saveAWDChallengeImportPreviewRecord(
-	previewDir string,
-	record *storedAWDChallengeImportPreview,
-) error {
-	content, err := json.MarshalIndent(record, "", "  ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(filepath.Join(previewDir, "preview.json"), content, 0o644)
-}
-
-func loadAWDChallengeImportPreviewRecord(id string) (*storedAWDChallengeImportPreview, error) {
-	content, err := os.ReadFile(filepath.Join(awdChallengeImportPreviewRoot(), id, "preview.json"))
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, apperror.ErrNotFound
-		}
-		return nil, err
-	}
-
-	var record storedAWDChallengeImportPreview
-	if err := json.Unmarshal(content, &record); err != nil {
-		return nil, fmt.Errorf("parse awd challenge import preview: %w", err)
-	}
-	return &record, nil
-}
-
-func loadAWDChallengeImportPreviewRecords() ([]*storedAWDChallengeImportPreview, error) {
-	root := awdChallengeImportPreviewRoot()
-	entries, err := os.ReadDir(root)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	records := make([]*storedAWDChallengeImportPreview, 0, len(entries))
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-		record, err := loadAWDChallengeImportPreviewRecord(entry.Name())
-		if err != nil {
-			if errors.Is(err, apperror.ErrNotFound) {
-				continue
-			}
-			return nil, err
-		}
-		records = append(records, record)
-	}
-
-	sort.Slice(records, func(i, j int) bool {
-		return records[i].CreatedAt.After(records[j].CreatedAt)
-	})
-	return records, nil
-}
-
-func awdChallengeImportPreviewRoot() string {
-	if value := strings.TrimSpace(os.Getenv("AWD_CHALLENGE_IMPORT_PREVIEW_DIR")); value != "" {
-		return value
-	}
-	return defaultAWDChallengeImportPreviewRoot
 }
 
 func awdCheckerArtifactRoot() string {

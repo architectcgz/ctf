@@ -30,6 +30,11 @@ import (
 	authqry "ctf-platform/internal/module/auth/application/queries"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
+	challengecore "ctf-platform/internal/module/challenge/application/challengecore"
+	challengeimport "ctf-platform/internal/module/challenge/application/challengeimport"
+	challengepackageexport "ctf-platform/internal/module/challenge/application/challengepackageexport"
+	challengepublishcheck "ctf-platform/internal/module/challenge/application/challengepublishcheck"
+	challengeselfcheck "ctf-platform/internal/module/challenge/application/challengeselfcheck"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -376,24 +381,68 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	challengeRepo := challengeinfra.NewRepository(db)
 	flagRepo := challengeinfra.NewFlagRepository(challengeRepo)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	challengeCommandService := challengecmd.NewChallengeService(
-		challengeinfra.NewChallengeCommandRepository(challengeRepo),
-		challengeinfra.NewImageQueryRepository(imageRepo),
-		challengeinfra.NewTopologyServiceRepository(challengeRepo),
-		challengeinfra.NewTopologyPackageRevisionRepository(challengeRepo),
+	challengeCommandRepo := challengeinfra.NewChallengeCommandRepository(challengeRepo)
+	challengeImageQueryRepo := challengeinfra.NewImageQueryRepository(imageRepo)
+	challengeTopologyRepo := challengeinfra.NewTopologyServiceRepository(challengeRepo)
+	challengePackageRepo := challengeinfra.NewTopologyPackageRevisionRepository(challengeRepo)
+	challengePackageStorage := challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{})
+	challengeCommandService := challengecore.NewChallengeService(
+		challengeCommandRepo,
+		challengeImageQueryRepo,
+		challengeTopologyRepo,
+		logger,
+	)
+	challengeImportService := challengeimport.NewChallengeImportService(
+		challengeinfra.NewChallengeImportPreviewStore(""),
+		challengeinfra.NewChallengeAttachmentStore(""),
+		challengePackageStorage,
+		challengeruntime.NewChallengeImportTxRunner(challengeRepo, nil),
 		nil,
-		challengecmd.SelfCheckConfig{
+		nil,
+		logger.Named("challenge_import_service"),
+	)
+	challengeSelfCheckService := challengeselfcheck.NewChallengeSelfCheckService(
+		challengeCommandRepo,
+		challengeImageQueryRepo,
+		challengeTopologyRepo,
+		nil,
+		challengeselfcheck.Config{
 			RuntimeCreateTimeout: cfg.Container.CreateTimeout,
 			FlagGlobalSecret:     cfg.Container.FlagGlobalSecret,
 		},
-		logger,
+		logger.Named("challenge_self_check_service"),
 	)
-	challengeCommandService.SetChallengeImportTxRunner(challengeruntime.NewChallengeImportTxRunner(challengeRepo, nil))
-	challengeCommandService.SetChallengePackageExportTxRunner(challengeruntime.NewChallengePackageExportTxRunner(challengeRepo))
+	challengePackageExportService := challengepackageexport.NewChallengePackageExportService(
+		challengeCommandRepo,
+		challengeTopologyRepo,
+		challengePackageRepo,
+		challengeruntime.NewChallengePackageExportTxRunner(challengeRepo),
+		challengePackageStorage,
+	)
+	challengePublishCheckService := challengepublishcheck.NewChallengePublishCheckService(
+		challengeCommandRepo,
+		challengeCommandRepo,
+		challengeSelfCheckService,
+		challengeCommandService,
+		challengepublishcheck.Config{
+			PollInterval: cfg.Challenge.PublishCheck.PollInterval,
+			BatchSize:    cfg.Challenge.PublishCheck.BatchSize,
+		},
+		nil,
+		logger.Named("challenge_publish_check_service"),
+	)
 	challengeQueryService := challengeqry.NewChallengeService(challengeinfra.NewChallengeQueryRepository(challengeRepo), challengeinfra.NewSolvedCountCache(cache), &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, logger)
-	challengeHandler := challengehttp.NewHandler(challengeCommandService, challengeQueryService)
+	challengeHandler := challengehttp.NewHandler(challengehttp.HandlerDeps{
+		Commands:        challengeCommandService,
+		Queries:         challengeQueryService,
+		Imports:         challengeImportService,
+		SelfChecks:      challengeSelfCheckService,
+		PublishChecks:   challengePublishCheckService,
+		PackageExports:  challengePackageExportService,
+		PackageDelivery: challengecmd.NewPackageDeliveryService(challengeImportService, nil),
+	})
 
 	flagQueryService, err := challengeqry.NewFlagService(flagRepo, cfg.Container.FlagGlobalSecret)
 	if err != nil {

@@ -1,4 +1,4 @@
-package commands
+package challengecore
 
 type ChallengeHintInput struct {
 	Level   int

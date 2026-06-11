@@ -75,7 +75,7 @@ func TestChallengeSelfCheckSkipsRuntimeWhenPrecheckFails(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	probe := &fakeChallengeRuntimeProbe{}
-	service := newDBBackedChallengeService(nil, repo, imageRepo, probe, SelfCheckConfig{})
+	service := newDBBackedChallengeSelfCheckService(repo, imageRepo, probe, SelfCheckConfig{})
 
 	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
@@ -116,7 +116,7 @@ func TestChallengeSelfCheckAttachmentOnlyChallengeSkipsRuntimeStartup(t *testing
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	probe := &fakeChallengeRuntimeProbe{}
-	service := newDBBackedChallengeService(nil, repo, imageRepo, probe, SelfCheckConfig{})
+	service := newDBBackedChallengeSelfCheckService(repo, imageRepo, probe, SelfCheckConfig{})
 
 	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
@@ -176,7 +176,7 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 			Networks:   []runtimecontracts.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
 		},
 	}
-	service := newDBBackedChallengeService(nil, repo, imageRepo, probe, SelfCheckConfig{})
+	service := newDBBackedChallengeSelfCheckService(repo, imageRepo, probe, SelfCheckConfig{})
 
 	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
@@ -234,7 +234,7 @@ func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 	probe := &fakeChallengeRuntimeProbe{
 		containerResultErr: errors.New("docker start failed"),
 	}
-	service := newDBBackedChallengeService(nil, repo, imageRepo, probe, SelfCheckConfig{})
+	service := newDBBackedChallengeSelfCheckService(repo, imageRepo, probe, SelfCheckConfig{})
 
 	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
@@ -268,7 +268,7 @@ func TestChallengeSelfCheckFailsOnInvalidRegexFlag(t *testing.T) {
 
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	service := newDBBackedChallengeService(nil, repo, imageRepo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{})
+	service := newDBBackedChallengeSelfCheckService(repo, imageRepo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{})
 
 	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
@@ -315,7 +315,7 @@ func TestChallengeSelfCheckManualReviewSkipsFlagValidationFailure(t *testing.T) 
 			Networks:   []runtimecontracts.InstanceRuntimeNetwork{{NetworkID: "net-manual"}},
 		},
 	}
-	service := newDBBackedChallengeService(nil, repo, imageRepo, probe, SelfCheckConfig{})
+	service := newDBBackedChallengeSelfCheckService(repo, imageRepo, probe, SelfCheckConfig{})
 
 	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {

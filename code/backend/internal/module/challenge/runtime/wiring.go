@@ -6,6 +6,11 @@ import (
 
 	"ctf-platform/internal/config"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
+	challengecore "ctf-platform/internal/module/challenge/application/challengecore"
+	challengeimport "ctf-platform/internal/module/challenge/application/challengeimport"
+	challengepackageexport "ctf-platform/internal/module/challenge/application/challengepackageexport"
+	challengepublishcheck "ctf-platform/internal/module/challenge/application/challengepublishcheck"
+	challengeselfcheck "ctf-platform/internal/module/challenge/application/challengeselfcheck"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -81,7 +86,12 @@ func buildImageBuildService(deps moduleDeps) *challengecmd.ImageBuildService {
 }
 
 func buildAWDChallengeHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuildService) *challengehttp.AWDChallengeHandler {
-	importService := challengecmd.NewAWDChallengeImportService(deps.awdChallengeCommandRepo, imageBuildService)
+	importService := challengecmd.NewAWDChallengeImportService(
+		deps.awdChallengeCommandRepo,
+		challengeinfra.NewAWDChallengeImportPreviewStore(""),
+		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
+		imageBuildService,
+	)
 	importService.SetTxRunner(NewAWDChallengeImportTxRunner(deps.rawRepo, imageBuildService))
 	commandService := challengecmd.NewAWDChallengeCommandFacade(deps.awdChallengeCommandRepo, importService)
 	commandService.SetImportLogger(deps.input.Logger.Named("awd_challenge_import_service"))
@@ -102,32 +112,71 @@ func buildImageHandler(deps moduleDeps) (*challengecmd.ImageService, *challengeh
 	return imageCommandService, challengehttp.NewImageHandler(imageCommandService, imageQueryService)
 }
 
-func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuildService) (*challengecmd.ChallengeService, *challengehttp.Handler) {
+func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuildService) (*challengepublishcheck.ChallengePublishCheckService, *challengehttp.Handler) {
 	cfg := deps.input.Config
 	challengeCommandRepo := challengeinfra.NewChallengeCommandRepository(deps.challengeCommandRepo)
 	challengeCommandImageRepo := challengeinfra.NewImageQueryRepository(deps.imageRepo)
-	challengeCommandService := challengecmd.NewChallengeService(
+	packageRepo := challengeinfra.NewTopologyPackageRevisionRepository(deps.challengeCommandRepo)
+	packageStorage := challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{})
+	challengeCommandService := challengecore.NewChallengeService(
 		challengeCommandRepo,
 		challengeCommandImageRepo,
 		deps.topologyRepo,
-		challengeinfra.NewTopologyPackageRevisionRepository(deps.challengeCommandRepo),
-		deps.runtimeProbe,
-		challengecmd.SelfCheckConfig{
-			RuntimeCreateTimeout:     cfg.Container.CreateTimeout,
-			FlagGlobalSecret:         cfg.Container.FlagGlobalSecret,
-			PublishCheckPollInterval: cfg.Challenge.PublishCheck.PollInterval,
-			PublishCheckBatchSize:    cfg.Challenge.PublishCheck.BatchSize,
-		},
 		deps.input.Logger.Named("challenge_command_service"),
 	)
-	challengeCommandService.SetChallengeImportTxRunner(NewChallengeImportTxRunner(deps.rawRepo, imageBuildService))
-	challengeCommandService.SetChallengePackageExportTxRunner(NewChallengePackageExportTxRunner(deps.rawRepo))
-	challengeCommandService.SetImageBuildService(imageBuildService)
 	challengeCommandService.SetEventBus(deps.input.Events)
+	challengeImportService := challengeimport.NewChallengeImportService(
+		challengeinfra.NewChallengeImportPreviewStore(""),
+		challengeinfra.NewChallengeAttachmentStore(""),
+		packageStorage,
+		NewChallengeImportTxRunner(deps.rawRepo, imageBuildService),
+		imageBuildService,
+		deps.input.Events,
+		deps.input.Logger.Named("challenge_import_service"),
+	)
+	challengeSelfCheckService := challengeselfcheck.NewChallengeSelfCheckService(
+		challengeCommandRepo,
+		challengeCommandImageRepo,
+		deps.topologyRepo,
+		deps.runtimeProbe,
+		challengeselfcheck.Config{
+			RuntimeCreateTimeout: cfg.Container.CreateTimeout,
+			FlagGlobalSecret:     cfg.Container.FlagGlobalSecret,
+		},
+		deps.input.Logger.Named("challenge_self_check_service"),
+	)
+	challengePackageExportService := challengepackageexport.NewChallengePackageExportService(
+		challengeCommandRepo,
+		deps.topologyRepo,
+		packageRepo,
+		NewChallengePackageExportTxRunner(deps.rawRepo),
+		packageStorage,
+	)
+	challengePublishCheckService := challengepublishcheck.NewChallengePublishCheckService(
+		challengeCommandRepo,
+		challengeCommandRepo,
+		challengeSelfCheckService,
+		challengeCommandService,
+		challengepublishcheck.Config{
+			PollInterval: cfg.Challenge.PublishCheck.PollInterval,
+			BatchSize:    cfg.Challenge.PublishCheck.BatchSize,
+		},
+		deps.input.Events,
+		deps.input.Logger.Named("challenge_publish_check_service"),
+	)
 	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, challengeinfra.NewSolvedCountCache(deps.input.Cache), &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, deps.input.Logger.Named("challenge_service"))
-	return challengeCommandService, challengehttp.NewHandler(challengeCommandService, challengeQueryService)
+	packageDeliveryService := challengecmd.NewPackageDeliveryService(challengeImportService, nil)
+	return challengePublishCheckService, challengehttp.NewHandler(challengehttp.HandlerDeps{
+		Commands:        challengeCommandService,
+		Queries:         challengeQueryService,
+		Imports:         challengeImportService,
+		SelfChecks:      challengeSelfCheckService,
+		PublishChecks:   challengePublishCheckService,
+		PackageExports:  challengePackageExportService,
+		PackageDelivery: packageDeliveryService,
+	})
 }
 
 func buildFlagHandler(deps moduleDeps) (*challengehttp.FlagHandler, challengecontracts.FlagValidator, error) {

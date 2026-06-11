@@ -1,7 +1,7 @@
 # 题包 Registry 交付架构
 
 > 状态：Current
-> 事实源：`code/backend/internal/module/challenge/domain/image_delivery.go`、`code/backend/internal/module/challenge/application/commands/image_build_service.go`、`code/backend/internal/module/challenge/infrastructure/registry_client.go`、`code/backend/internal/module/challenge/runtime/module.go`、`code/backend/internal/config/config.go`、`scripts/registry/deploy-private-registry.sh`
+> 事实源：`code/backend/internal/module/challenge/domain/image_delivery.go`、`code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/challenge/application/commands/image_build_service.go`、`code/backend/internal/module/challenge/infrastructure/registry_client.go`、`code/backend/internal/module/challenge/runtime/module.go`、`code/backend/internal/config/config.go`、`scripts/registry/deploy-private-registry.sh`
 > 替代：无
 
 ## 定位
@@ -56,17 +56,21 @@
   - 负责：生成平台镜像地址、拆分镜像引用、提取 tag 建议
   - 不负责：执行 build、push 或 registry 校验
 
-- `internal/module/challenge/application/commands/challenge_import_service`
+- `internal/module/challenge/application/challengeimport`
   - 负责：普通题包预览、导入提交时解析镜像来源，并在事务内创建平台构建任务或校验外部镜像
-  - 不负责：后台异步执行镜像构建
+  - 不负责：后台异步执行镜像构建，或直接解包 zip、复制附件和持久化 build source
 
 - `internal/module/challenge/application/commands/awd_challenge_import_service`
   - 负责：AWD 题包沿用同一套镜像交付语义，但使用 `awd` 命名空间
-  - 不负责：定义另一套独立镜像状态机
+  - 不负责：定义另一套独立镜像状态机，或直接持有 AWD 导入预览 zip / preview JSON 的 LocalFS 实现
 
 - `internal/module/challenge/application/commands/image_build_service`
   - 负责：创建 `image_build_jobs`、处理构建队列、推进镜像状态机、执行 push 后校验
   - 不负责：解析题包结构
+
+- `internal/module/challenge/infrastructure/{challenge_import_preview_store,challenge_package_storage}`
+  - 负责：通过 `challenge/ports` 保存导入预览 workspace、解析后的 source 目录和 image build source，使 `image_build_jobs.source_dir/dockerfile_path/context_path` 指向稳定的服务端存储路径
+  - 不负责：决定镜像来源类型、创建 `images` / `image_build_jobs` 记录，或推进构建状态机
 
 - `internal/module/challenge/application/commands/docker_image_builder`
   - 负责：执行 `docker build/push/pull/inspect`
@@ -150,13 +154,14 @@ pending -> building -> pushed -> verifying -> available
 
 ### 5.1 导入预览链路
 
-1. 上传题包后，解析器判断镜像来源是 `platform_build` 还是 `external_ref`。
-2. 预览接口返回 `image_delivery.source_type`、`suggested_tag`。
-3. 若是 `platform_build`，服务端提前计算 `target_image_ref`，并在预览中显示 `build_status=pending`。
+1. 上传题包后，`ChallengeImportPreviewStore` / `AWDChallengeImportPreviewStore` 保存 zip、解包并返回 source 目录。
+2. 解析器判断镜像来源是 `platform_build` 还是 `external_ref`。
+3. 预览接口返回 `image_delivery.source_type`、`suggested_tag`。
+4. 若是 `platform_build`，服务端提前计算 `target_image_ref`，并在预览中显示 `build_status=pending`。
 
 ### 5.2 平台构建链路
 
-1. 普通题或 AWD 题提交导入时，导入服务在事务内调用 `CreatePlatformBuildJobInTx`。
+1. 普通题或 AWD 题提交导入时，导入服务先通过 `ChallengePackageStorage.PersistImportedImageBuildSource` 固化构建上下文，再在事务内调用 `CreatePlatformBuildJobInTx`。
 2. 平台生成目标镜像名：
    - `registry/<mode>/<slug>:<tag>`
 3. 事务内创建或更新 `images` 与 `image_build_jobs`，初始状态为 `pending`。
@@ -216,8 +221,10 @@ pending -> building -> pushed -> verifying -> available
 - `code/backend/internal/module/challenge/application/commands/image_build_service.go`
 - `code/backend/internal/module/challenge/application/commands/docker_image_builder.go`
 - `code/backend/internal/module/challenge/infrastructure/registry_client.go`
-- `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`
+- `code/backend/internal/module/challenge/application/challengeimport/service.go`
 - `code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`
+- `code/backend/internal/module/challenge/infrastructure/challenge_import_preview_store.go`
+- `code/backend/internal/module/challenge/infrastructure/challenge_package_storage.go`
 - `code/backend/internal/config/config.go`
 - `code/frontend/src/api/admin/authoring.ts`
 - `code/frontend/src/features/platform/challenge-package-import/ui/ChallengePackageImportReview.vue`

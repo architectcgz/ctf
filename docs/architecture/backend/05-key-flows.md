@@ -34,7 +34,7 @@
   - 负责：驱动 AWD 轮次同步、checker 执行、快照写入、空实例兜底结果和计分输入表更新
   - 不负责：把 AWD 裁判链路外包给独立引擎进程；当前主链路仍在 `contest` 模块内部 jobs
 
-- `code/backend/internal/module/challenge/application/commands/challenge_import_service.go`、`awd_challenge_import_service.go`、`challenge_service.go`
+- `code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/challenge/application/challengeselfcheck/service.go`、`code/backend/internal/module/challenge/application/challengecore/service.go`、`code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`
   - 负责：处理题包 preview / commit / self-check、附件持久化、镜像构建源准备和题目自检的运行时探测
   - 不负责：在导入 preview 阶段启动正式学员实例，或把导入工作目录作为长期运行态的一部分
 
@@ -54,7 +54,7 @@
 - 竞赛状态机与锁续租：`code/backend/internal/module/contest/application/jobs/status_updater_test.go`、`awd_round_scheduler_runtime_internal_test.go`
 - AWD service 配置冻结：`code/backend/internal/module/contest/application/commands/contest_awd_service_service_test.go`
 - AWD 轮次与 checker：`code/backend/internal/module/contest/application/jobs/awd_round_updater_test.go`、`code/backend/internal/module/contest/application/commands/awd_service_test.go`
-- 题包导入 / 附件 / 自检：`code/backend/internal/app/challenge_import_integration_test.go`、`code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`
+- 题包导入 / 附件 / 自检：`code/backend/internal/app/challenge_import_integration_test.go`、`code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`（测试兼容层覆盖 `application/challengeselfcheck` service）
 
 ## 历史迁移
 

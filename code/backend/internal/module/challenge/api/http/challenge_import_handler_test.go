@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
+	challengecore "ctf-platform/internal/module/challenge/application/challengecore"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
@@ -24,11 +25,11 @@ type challengeImportHandlerCommandStub struct {
 	commitChallengeImportFn  func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeResp, error)
 }
 
-func (s challengeImportHandlerCommandStub) CreateChallenge(ctx context.Context, actorUserID int64, req challengecmd.CreateChallengeInput) (*challengecontracts.ChallengeResp, error) {
+func (s challengeImportHandlerCommandStub) CreateChallenge(ctx context.Context, actorUserID int64, req challengecore.CreateChallengeInput) (*challengecontracts.ChallengeResp, error) {
 	return nil, nil
 }
 
-func (s challengeImportHandlerCommandStub) UpdateChallenge(ctx context.Context, id int64, req challengecmd.UpdateChallengeInput) error {
+func (s challengeImportHandlerCommandStub) UpdateChallenge(ctx context.Context, id int64, req challengecore.UpdateChallengeInput) error {
 	return nil
 }
 
@@ -104,38 +105,44 @@ func (challengeImportHandlerQueryStub) GetPublishedChallenge(ctx context.Context
 
 type challengeImportHandlerContextKey string
 
+func newChallengeImportHandlerForTest(command challengeImportHandlerCommandStub) *Handler {
+	return NewHandler(HandlerDeps{
+		Commands:        command,
+		Queries:         challengeImportHandlerQueryStub{},
+		Imports:         command,
+		PackageDelivery: challengecmd.NewPackageDeliveryService(command, nil),
+	})
+}
+
 func TestHandlerPreviewChallengeImportUsesPackageDeliveryFacade(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	called := false
-	handler := NewHandler(
-		challengeImportHandlerCommandStub{
-			previewChallengeImportFn: func(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.ChallengeImportPreviewResp, error) {
-				called = true
-				if actorUserID != 1001 {
-					t.Fatalf("unexpected actor user id: %d", actorUserID)
-				}
-				if fileName != "challenge.zip" {
-					t.Fatalf("unexpected file name: %s", fileName)
-				}
-				content, err := io.ReadAll(reader)
-				if err != nil {
-					t.Fatalf("read upload: %v", err)
-				}
-				if string(content) != "zip" {
-					t.Fatalf("unexpected upload content: %q", string(content))
-				}
-				return &challengecontracts.ChallengeImportPreviewResp{
-					ID:        "preview-1",
-					FileName:  fileName,
-					Slug:      "web-source-audit",
-					Title:     "Web Source Audit",
-					CreatedAt: time.Date(2026, 6, 9, 0, 0, 0, 0, time.UTC),
-				}, nil
-			},
+	handler := newChallengeImportHandlerForTest(challengeImportHandlerCommandStub{
+		previewChallengeImportFn: func(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*challengecontracts.ChallengeImportPreviewResp, error) {
+			called = true
+			if actorUserID != 1001 {
+				t.Fatalf("unexpected actor user id: %d", actorUserID)
+			}
+			if fileName != "challenge.zip" {
+				t.Fatalf("unexpected file name: %s", fileName)
+			}
+			content, err := io.ReadAll(reader)
+			if err != nil {
+				t.Fatalf("read upload: %v", err)
+			}
+			if string(content) != "zip" {
+				t.Fatalf("unexpected upload content: %q", string(content))
+			}
+			return &challengecontracts.ChallengeImportPreviewResp{
+				ID:        "preview-1",
+				FileName:  fileName,
+				Slug:      "web-source-audit",
+				Title:     "Web Source Audit",
+				CreatedAt: time.Date(2026, 6, 9, 0, 0, 0, 0, time.UTC),
+			}, nil
 		},
-		challengeImportHandlerQueryStub{},
-	)
+	})
 
 	ctx, recorder := newMultipartFileTestContext(t, http.MethodPost, "/admin/challenge-imports", "file", "challenge.zip", "zip")
 	authctx.SetCurrentUser(ctx, authctx.CurrentUser{UserID: 1001})
@@ -154,21 +161,18 @@ func TestHandlerCommitChallengeImportUsesPackageDeliveryFacade(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	called := false
-	handler := NewHandler(
-		challengeImportHandlerCommandStub{
-			commitChallengeImportFn: func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeResp, error) {
-				called = true
-				if actorUserID != 1001 {
-					t.Fatalf("unexpected actor user id: %d", actorUserID)
-				}
-				if id != "preview-1" {
-					t.Fatalf("unexpected import id: %s", id)
-				}
-				return &challengecontracts.ChallengeResp{ID: 42, Title: "Imported"}, nil
-			},
+	handler := newChallengeImportHandlerForTest(challengeImportHandlerCommandStub{
+		commitChallengeImportFn: func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeResp, error) {
+			called = true
+			if actorUserID != 1001 {
+				t.Fatalf("unexpected actor user id: %d", actorUserID)
+			}
+			if id != "preview-1" {
+				t.Fatalf("unexpected import id: %s", id)
+			}
+			return &challengecontracts.ChallengeResp{ID: 42, Title: "Imported"}, nil
 		},
-		challengeImportHandlerQueryStub{},
-	)
+	})
 
 	ctx, recorder := newJSONTestContext(t, http.MethodPost, "/admin/challenge-imports/preview-1/commit", "")
 	ctx.Params = gin.Params{{Key: "id", Value: "preview-1"}}
@@ -190,21 +194,18 @@ func TestHandlerListChallengeImportsPropagatesRequestContextToCommandService(t *
 	ctxKey := challengeImportHandlerContextKey("list-imports")
 	expectedCtxValue := "ctx-list-imports"
 	called := false
-	handler := NewHandler(
-		challengeImportHandlerCommandStub{
-			listChallengeImportsFn: func(ctx context.Context, actorUserID int64) ([]challengecontracts.ChallengeImportPreviewResp, error) {
-				called = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected list-imports ctx value %v, got %v", expectedCtxValue, got)
-				}
-				if actorUserID != 1001 {
-					t.Fatalf("unexpected actor user id: %d", actorUserID)
-				}
-				return []challengecontracts.ChallengeImportPreviewResp{{ID: "preview-1", Slug: "web-source-audit-double-wrap-01"}}, nil
-			},
+	handler := newChallengeImportHandlerForTest(challengeImportHandlerCommandStub{
+		listChallengeImportsFn: func(ctx context.Context, actorUserID int64) ([]challengecontracts.ChallengeImportPreviewResp, error) {
+			called = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected list-imports ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if actorUserID != 1001 {
+				t.Fatalf("unexpected actor user id: %d", actorUserID)
+			}
+			return []challengecontracts.ChallengeImportPreviewResp{{ID: "preview-1", Slug: "web-source-audit-double-wrap-01"}}, nil
 		},
-		challengeImportHandlerQueryStub{},
-	)
+	})
 
 	ctx, recorder := newJSONTestContext(t, http.MethodGet, "/admin/challenge-imports", "")
 	authctx.SetCurrentUser(ctx, authctx.CurrentUser{UserID: 1001})
@@ -226,24 +227,21 @@ func TestHandlerGetChallengeImportPropagatesRequestContextToCommandService(t *te
 	ctxKey := challengeImportHandlerContextKey("get-import")
 	expectedCtxValue := "ctx-get-import"
 	called := false
-	handler := NewHandler(
-		challengeImportHandlerCommandStub{
-			getChallengeImportFn: func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeImportPreviewResp, error) {
-				called = true
-				if got := ctx.Value(ctxKey); got != expectedCtxValue {
-					t.Fatalf("expected get-import ctx value %v, got %v", expectedCtxValue, got)
-				}
-				if actorUserID != 1001 {
-					t.Fatalf("unexpected actor user id: %d", actorUserID)
-				}
-				if id != "preview-1" {
-					t.Fatalf("unexpected import id: %s", id)
-				}
-				return &challengecontracts.ChallengeImportPreviewResp{ID: id, Slug: "web-source-audit-double-wrap-01"}, nil
-			},
+	handler := newChallengeImportHandlerForTest(challengeImportHandlerCommandStub{
+		getChallengeImportFn: func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeImportPreviewResp, error) {
+			called = true
+			if got := ctx.Value(ctxKey); got != expectedCtxValue {
+				t.Fatalf("expected get-import ctx value %v, got %v", expectedCtxValue, got)
+			}
+			if actorUserID != 1001 {
+				t.Fatalf("unexpected actor user id: %d", actorUserID)
+			}
+			if id != "preview-1" {
+				t.Fatalf("unexpected import id: %s", id)
+			}
+			return &challengecontracts.ChallengeImportPreviewResp{ID: id, Slug: "web-source-audit-double-wrap-01"}, nil
 		},
-		challengeImportHandlerQueryStub{},
-	)
+	})
 
 	ctx, recorder := newJSONTestContext(t, http.MethodGet, "/admin/challenge-imports/preview-1", "")
 	ctx.Params = gin.Params{{Key: "id", Value: "preview-1"}}

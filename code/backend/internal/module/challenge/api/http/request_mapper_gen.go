@@ -4,6 +4,7 @@
 package http
 
 import (
+	challengecore "ctf-platform/internal/module/challenge/application/challengecore"
 	commands "ctf-platform/internal/module/challenge/application/commands"
 	queries "ctf-platform/internal/module/challenge/application/queries"
 	contracts "ctf-platform/internal/module/challenge/contracts"
@@ -37,23 +38,23 @@ func (c *ChallengeRequestMapperImpl) ToCreateAWDChallengeInput(source CreateAWDC
 	commandsCreateAWDChallengeInput.DeploymentMode = source.DeploymentMode
 	return commandsCreateAWDChallengeInput
 }
-func (c *ChallengeRequestMapperImpl) ToCreateChallengeInput(source CreateChallengeReq) commands.CreateChallengeInput {
-	var commandsCreateChallengeInput commands.CreateChallengeInput
-	commandsCreateChallengeInput.Title = source.Title
-	commandsCreateChallengeInput.Description = source.Description
-	commandsCreateChallengeInput.Category = source.Category
-	commandsCreateChallengeInput.Difficulty = source.Difficulty
-	commandsCreateChallengeInput.Points = source.Points
-	commandsCreateChallengeInput.ImageID = source.ImageID
-	commandsCreateChallengeInput.AttachmentURL = source.AttachmentURL
-	commandsCreateChallengeInput.InstanceSharing = source.InstanceSharing
+func (c *ChallengeRequestMapperImpl) ToCreateChallengeInput(source CreateChallengeReq) challengecore.CreateChallengeInput {
+	var challengecoreCreateChallengeInput challengecore.CreateChallengeInput
+	challengecoreCreateChallengeInput.Title = source.Title
+	challengecoreCreateChallengeInput.Description = source.Description
+	challengecoreCreateChallengeInput.Category = source.Category
+	challengecoreCreateChallengeInput.Difficulty = source.Difficulty
+	challengecoreCreateChallengeInput.Points = source.Points
+	challengecoreCreateChallengeInput.ImageID = source.ImageID
+	challengecoreCreateChallengeInput.AttachmentURL = source.AttachmentURL
+	challengecoreCreateChallengeInput.InstanceSharing = source.InstanceSharing
 	if source.Hints != nil {
-		commandsCreateChallengeInput.Hints = make([]commands.ChallengeHintInput, len(source.Hints))
+		challengecoreCreateChallengeInput.Hints = make([]challengecore.ChallengeHintInput, len(source.Hints))
 		for i := 0; i < len(source.Hints); i++ {
-			commandsCreateChallengeInput.Hints[i] = c.httpChallengeHintReqToCommandsChallengeHintInput(source.Hints[i])
+			challengecoreCreateChallengeInput.Hints[i] = c.httpChallengeHintReqToChallengecoreChallengeHintInput(source.Hints[i])
 		}
 	}
-	return commandsCreateChallengeInput
+	return challengecoreCreateChallengeInput
 }
 func (c *ChallengeRequestMapperImpl) ToCreateImageInput(source CreateImageReq) commands.CreateImageInput {
 	var commandsCreateImageInput commands.CreateImageInput
@@ -131,29 +132,29 @@ func (c *ChallengeRequestMapperImpl) ToUpdateAWDChallengeInput(source UpdateAWDC
 	commandsUpdateAWDChallengeInput.Status = source.Status
 	return commandsUpdateAWDChallengeInput
 }
-func (c *ChallengeRequestMapperImpl) ToUpdateChallengeInput(source UpdateChallengeReq) commands.UpdateChallengeInput {
-	var commandsUpdateChallengeInput commands.UpdateChallengeInput
-	commandsUpdateChallengeInput.Title = source.Title
-	commandsUpdateChallengeInput.Description = source.Description
-	commandsUpdateChallengeInput.Category = source.Category
-	commandsUpdateChallengeInput.Difficulty = source.Difficulty
-	commandsUpdateChallengeInput.Points = source.Points
+func (c *ChallengeRequestMapperImpl) ToUpdateChallengeInput(source UpdateChallengeReq) challengecore.UpdateChallengeInput {
+	var challengecoreUpdateChallengeInput challengecore.UpdateChallengeInput
+	challengecoreUpdateChallengeInput.Title = source.Title
+	challengecoreUpdateChallengeInput.Description = source.Description
+	challengecoreUpdateChallengeInput.Category = source.Category
+	challengecoreUpdateChallengeInput.Difficulty = source.Difficulty
+	challengecoreUpdateChallengeInput.Points = source.Points
 	if source.ImageID != nil {
 		xint64 := *source.ImageID
-		commandsUpdateChallengeInput.ImageID = &xint64
+		challengecoreUpdateChallengeInput.ImageID = &xint64
 	}
 	if source.AttachmentURL != nil {
 		xstring := *source.AttachmentURL
-		commandsUpdateChallengeInput.AttachmentURL = &xstring
+		challengecoreUpdateChallengeInput.AttachmentURL = &xstring
 	}
-	commandsUpdateChallengeInput.InstanceSharing = source.InstanceSharing
+	challengecoreUpdateChallengeInput.InstanceSharing = source.InstanceSharing
 	if source.Hints != nil {
-		commandsUpdateChallengeInput.Hints = make([]commands.ChallengeHintInput, len(source.Hints))
+		challengecoreUpdateChallengeInput.Hints = make([]challengecore.ChallengeHintInput, len(source.Hints))
 		for i := 0; i < len(source.Hints); i++ {
-			commandsUpdateChallengeInput.Hints[i] = c.httpChallengeHintReqToCommandsChallengeHintInput(source.Hints[i])
+			challengecoreUpdateChallengeInput.Hints[i] = c.httpChallengeHintReqToChallengecoreChallengeHintInput(source.Hints[i])
 		}
 	}
-	return commandsUpdateChallengeInput
+	return challengecoreUpdateChallengeInput
 }
 func (c *ChallengeRequestMapperImpl) ToUpdateImageInput(source UpdateImageReq) commands.UpdateImageInput {
 	var commandsUpdateImageInput commands.UpdateImageInput
@@ -209,12 +210,12 @@ func (c *ChallengeRequestMapperImpl) ToUpsertSubmissionWriteupInput(source contr
 	commandsUpsertSubmissionWriteupInput.SubmissionStatus = source.SubmissionStatus
 	return commandsUpsertSubmissionWriteupInput
 }
-func (c *ChallengeRequestMapperImpl) httpChallengeHintReqToCommandsChallengeHintInput(source ChallengeHintReq) commands.ChallengeHintInput {
-	var commandsChallengeHintInput commands.ChallengeHintInput
-	commandsChallengeHintInput.Level = source.Level
-	commandsChallengeHintInput.Title = source.Title
-	commandsChallengeHintInput.Content = source.Content
-	return commandsChallengeHintInput
+func (c *ChallengeRequestMapperImpl) httpChallengeHintReqToChallengecoreChallengeHintInput(source ChallengeHintReq) challengecore.ChallengeHintInput {
+	var challengecoreChallengeHintInput challengecore.ChallengeHintInput
+	challengecoreChallengeHintInput.Level = source.Level
+	challengecoreChallengeHintInput.Title = source.Title
+	challengecoreChallengeHintInput.Content = source.Content
+	return challengecoreChallengeHintInput
 }
 func (c *ChallengeRequestMapperImpl) httpTopologyLinkReqToContractsTopologyLinkReq(source TopologyLinkReq) contracts.TopologyLinkReq {
 	var contractsTopologyLinkReq contracts.TopologyLinkReq
