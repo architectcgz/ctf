@@ -47,9 +47,9 @@ func findSnapshotDimension(t *testing.T, snapshot teachingadvice.StudentFactSnap
 	return teachingadvice.DimensionFact{}
 }
 
-func TestRepositoryListClassTeachingFactSnapshotsBackfillsAWDSuccessDimensionFacts(t *testing.T) {
+func TestClassInsightRepositoryListClassTeachingFactSnapshotsBackfillsAWDSuccessDimensionFacts(t *testing.T) {
 	db := setupTeachingQueryRepoTestDB(t)
-	repo := NewRepository(db)
+	repo := NewClassInsightRepository(db)
 	now := time.Now().UTC()
 
 	students := []identitycontracts.User{

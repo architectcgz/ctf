@@ -68,6 +68,7 @@ import (
 	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
 	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	teachingqueryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/shared/taxonomy"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/internal/validation"
@@ -514,12 +515,38 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 		practiceScoreQueryService,
 		practiceProgressTimelineService,
 	)
-	teachingQueryRepo := teachingqueryinfra.NewRepository(db)
 	teachingQueryUsers := teachingQueryIdentityLookupAdapter{users: authRepo}
-	teachingQueryService := teachingqueryqueries.NewQueryService(teachingQueryUsers, teachingQueryRepo, cfg.Pagination)
-	teachingQueryOverviewService := teachingqueryqueries.NewOverviewService(teachingQueryUsers, teachingQueryRepo)
-	teachingQueryClassInsightService := teachingqueryqueries.NewClassInsightService(teachingQueryUsers, teachingQueryRepo, nil, logger)
-	teachingQueryStudentReviewService := teachingqueryqueries.NewStudentReviewService(teachingQueryUsers, teachingQueryRepo, nil)
+	teachingQueryService := teachingqueryqueries.NewQueryService(teachingQueryUsers, struct {
+		queryports.TeachingClassQueryRepository
+		queryports.TeachingStudentDirectoryRepository
+	}{
+		TeachingClassQueryRepository:       teachingqueryinfra.NewClassQueryRepository(db),
+		TeachingStudentDirectoryRepository: teachingqueryinfra.NewStudentDirectoryRepository(db),
+	}, cfg.Pagination)
+	teachingQueryOverviewService := teachingqueryqueries.NewOverviewService(teachingQueryUsers, struct {
+		queryports.TeachingClassQueryRepository
+		queryports.TeachingStudentDirectoryRepository
+		queryports.TeachingClassInsightRepository
+		queryports.TeachingOverviewRepository
+	}{
+		TeachingClassQueryRepository:       teachingqueryinfra.NewClassQueryRepository(db),
+		TeachingStudentDirectoryRepository: teachingqueryinfra.NewStudentDirectoryRepository(db),
+		TeachingClassInsightRepository:     teachingqueryinfra.NewClassInsightRepository(db),
+		TeachingOverviewRepository:         teachingqueryinfra.NewOverviewRepository(db),
+	})
+	teachingQueryClassInsightService := teachingqueryqueries.NewClassInsightService(
+		teachingQueryUsers,
+		teachingqueryinfra.NewClassInsightRepository(db),
+		nil,
+		logger,
+	)
+	teachingQueryStudentReviewService := teachingqueryqueries.NewStudentReviewService(teachingQueryUsers, struct {
+		queryports.TeachingStudentProfileRepository
+		queryports.TeachingStudentActivityRepository
+	}{
+		TeachingStudentProfileRepository:  teachingqueryinfra.NewStudentProfileRepository(db),
+		TeachingStudentActivityRepository: teachingqueryinfra.NewStudentActivityRepository(db),
+	}, nil)
 	teachingQueryHandler := teachingqueryhttp.NewHandler(
 		teachingQueryService,
 		teachingQueryOverviewService,
