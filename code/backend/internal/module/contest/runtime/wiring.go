@@ -126,6 +126,7 @@ func buildSubmissionHandler(deps *moduleDeps, scoreboardCommands *contestcmd.Sco
 		deps.teamFinder,
 		scoreboardCommands,
 		cfg,
+		deps.input.Logger,
 	)
 	submissionService.SetEventBus(deps.input.Events)
 	return contesthttp.NewSubmissionHandler(submissionService)

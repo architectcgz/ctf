@@ -24,6 +24,7 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+	platformevents "ctf-platform/internal/platform/events"
 	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	"ctf-platform/internal/module/contest/testsupport"
 	"ctf-platform/internal/shared/taxonomy"
@@ -159,6 +160,51 @@ func TestSubmissionServiceSubmitFlagInContestUsesContestScoreAsDynamicBase(t *te
 	}
 	if submission.Score != 297 {
 		t.Fatalf("unexpected submission score: %+v", submission)
+	}
+}
+
+func TestSubmissionServiceSubmitFlagInContestPublishesFlagAcceptedEvent(t *testing.T) {
+	service, _, db := newContestSubmissionTestService(t)
+
+	now := time.Now()
+	contestID := int64(3)
+	challengeID := int64(103)
+	teamID := int64(31)
+	userID := int64(3001)
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Delta", now)
+
+	bus := platformevents.NewBus()
+	received := make(chan contestcontracts.FlagAcceptedEvent, 1)
+	bus.Subscribe(contestcontracts.EventFlagAccepted, func(_ context.Context, evt platformevents.Event) error {
+		payload, ok := evt.Payload.(contestcontracts.FlagAcceptedEvent)
+		if !ok {
+			return fmt.Errorf("unexpected payload type %T", evt.Payload)
+		}
+		received <- payload
+		return nil
+	})
+	service.SetEventBus(bus)
+
+	resp, err := service.SubmitFlagInContest(context.Background(), userID, contestID, challengeID, "flag{contest-dynamic}")
+	if err != nil {
+		t.Fatalf("SubmitFlagInContest() error = %v", err)
+	}
+	if !resp.IsCorrect {
+		t.Fatalf("expected correct contest submission response, got %+v", resp)
+	}
+
+	select {
+	case payload := <-received:
+		if payload.UserID != userID || payload.ContestID != contestID || payload.ChallengeID != challengeID {
+			t.Fatalf("unexpected flag accepted payload: %+v", payload)
+		}
+		if payload.Dimension != taxonomy.DimensionWeb {
+			t.Fatalf("expected web dimension in payload, got %+v", payload)
+		}
+	default:
+		t.Fatal("expected contest flag accepted event to be published")
 	}
 }
 
@@ -845,6 +891,7 @@ func newContestSubmissionServiceForTest(t *testing.T, db *gorm.DB, redisClient *
 		contestinfra.NewTeamRepository(db),
 		scoreboardService,
 		cfg,
+		zap.NewNop(),
 	)
 }
 

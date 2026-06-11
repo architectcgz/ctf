@@ -10,6 +10,7 @@ import (
 const (
 	EventAnnouncementCreated = "contest.announcement_created"
 	EventAnnouncementDeleted = "contest.announcement_deleted"
+	EventFlagAccepted        = "contest.flag_accepted"
 	EventAWDAttackAccepted   = "contest.awd.attack_accepted"
 	EventAWDPreviewProgress  = "contest.awd_preview_progress"
 	EventScoreboardUpdated   = "contest.scoreboard_updated"
@@ -39,6 +40,14 @@ type AnnouncementDeletedEvent struct {
 	ContestID      int64
 	AnnouncementID int64
 	OccurredAt     time.Time
+}
+
+type FlagAcceptedEvent struct {
+	UserID      int64
+	ContestID   int64
+	ChallengeID int64
+	Dimension   string
+	OccurredAt  time.Time
 }
 
 type AWDAttackAcceptedEvent struct {

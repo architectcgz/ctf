@@ -134,6 +134,13 @@ func TestRecommendationServiceRecommendChallengesUsesCacheForDefaultLimit(t *tes
 	stubRepo := &stubChallengeRecommendationRepo{}
 	now := time.Now().UTC()
 
+	if err := db.Create(&identitycontracts.User{
+		ID:       1,
+		Username: "student-1",
+		Role:     identitycontracts.RoleStudent,
+	}).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
 	if err := db.Create(&assessmententity.SkillProfile{
 		UserID:    1,
 		Dimension: taxonomy.DimensionWeb,
@@ -141,6 +148,26 @@ func TestRecommendationServiceRecommendChallengesUsesCacheForDefaultLimit(t *tes
 		UpdatedAt: now,
 	}).Error; err != nil {
 		t.Fatalf("seed profile: %v", err)
+	}
+	if err := db.Create(&assessmentRecommendationChallengeRow{
+		ID:         11,
+		Title:      "web-training-gap",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
+		Points:     100,
+		Status:     challengecontracts.ChallengeStatusPublished,
+	}).Error; err != nil {
+		t.Fatalf("seed challenge: %v", err)
+	}
+	for index := 0; index < 3; index++ {
+		if err := db.Create(&contestcontracts.Submission{
+			UserID:      1,
+			ChallengeID: 11,
+			IsCorrect:   false,
+			SubmittedAt: now.Add(time.Duration(index) * time.Minute),
+		}).Error; err != nil {
+			t.Fatalf("seed submission %d: %v", index, err)
+		}
 	}
 
 	mr := miniredis.RunT(t)
@@ -240,8 +267,8 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	if len(stubRepo.lastDims) != 1 || stubRepo.lastDims[0] != taxonomy.DimensionPwn {
 		t.Fatalf("unexpected weak dimensions: %+v", stubRepo.lastDims)
 	}
-	if stubRepo.lastDifficulty != taxonomy.DifficultyBeginner {
-		t.Fatalf("expected preferred difficulty beginner for weakest dimension, got %s", stubRepo.lastDifficulty)
+	if stubRepo.lastDifficulty != taxonomy.DifficultyEasy {
+		t.Fatalf("expected preferred difficulty easy for weakest evidence-backed weak dimension, got %s", stubRepo.lastDifficulty)
 	}
 	if len(stubRepo.lastSolved) != 1 || stubRepo.lastSolved[0] != 101 {
 		t.Fatalf("unexpected solved challenge ids: %+v", stubRepo.lastSolved)
@@ -492,9 +519,17 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenOnlyHealthyEvidenceExists
 	}
 }
 
-func TestRecommendationServiceRecommendReturnsWeakDimensionsFromLowestProfileScores(t *testing.T) {
+func TestRecommendationServiceRecommendReturnsWeakDimensionsFromEvidenceBackedLiveSnapshot(t *testing.T) {
 	db := setupRecommendationTestDB(t)
-	now := time.Now()
+	now := time.Now().UTC()
+
+	if err := db.Create(&identitycontracts.User{
+		ID:       30,
+		Username: "student-30",
+		Role:     identitycontracts.RoleStudent,
+	}).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
 
 	profiles := []assessmententity.SkillProfile{
 		{UserID: 30, Dimension: taxonomy.DimensionCrypto, Score: 0.12, UpdatedAt: now},
@@ -506,11 +541,40 @@ func TestRecommendationServiceRecommendReturnsWeakDimensionsFromLowestProfileSco
 			t.Fatalf("seed profile: %v", err)
 		}
 	}
+	challenges := []assessmentRecommendationChallengeRow{
+		{ID: 3001, Title: "crypto-training", Category: taxonomy.DimensionCrypto, Difficulty: taxonomy.DifficultyEasy, Points: 80, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3002, Title: "pwn-training", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyEasy, Points: 90, Status: challengecontracts.ChallengeStatusPublished},
+	}
+	for _, challenge := range challenges {
+		if err := db.Create(&challenge).Error; err != nil {
+			t.Fatalf("seed challenge %s: %v", challenge.Title, err)
+		}
+	}
+	for index := 0; index < 4; index++ {
+		if err := db.Create(&contestcontracts.Submission{
+			UserID:      30,
+			ChallengeID: 3001,
+			IsCorrect:   false,
+			SubmittedAt: now.Add(time.Duration(index) * time.Minute),
+		}).Error; err != nil {
+			t.Fatalf("seed crypto submission %d: %v", index, err)
+		}
+	}
+	for index := 0; index < 3; index++ {
+		if err := db.Create(&contestcontracts.Submission{
+			UserID:      30,
+			ChallengeID: 3002,
+			IsCorrect:   false,
+			SubmittedAt: now.Add(10*time.Minute + time.Duration(index)*time.Minute),
+		}).Error; err != nil {
+			t.Fatalf("seed pwn submission %d: %v", index, err)
+		}
+	}
 
 	stubRepo := &stubChallengeRecommendationRepo{
 		challenges: []*challengecontracts.RecommendationChallenge{
 			{ID: 3005, Title: "crypto-primer", Category: taxonomy.DimensionCrypto, Difficulty: taxonomy.DifficultyBeginner, Points: 160},
-			{ID: 3006, Title: "crypto-retry", Category: taxonomy.DimensionCrypto, Difficulty: taxonomy.DifficultyEasy, Points: 220},
+			{ID: 3006, Title: "pwn-retry", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyEasy, Points: 220},
 		},
 	}
 	service := newRecommendationTestService(db, stubRepo, nil)
@@ -531,18 +595,12 @@ func TestRecommendationServiceRecommendReturnsWeakDimensionsFromLowestProfileSco
 	if stubRepo.calls != 1 {
 		t.Fatalf("expected challenge repo called once, got %d", stubRepo.calls)
 	}
-	if len(stubRepo.lastDims) != 1 || stubRepo.lastDims[0] != taxonomy.DimensionCrypto {
-		t.Fatalf("expected only weakest dimension targeted, got %+v", stubRepo.lastDims)
-	}
-	if resp.Challenges[0].Dimension != taxonomy.DimensionCrypto {
-		t.Fatalf("expected recommendation dimension crypto, got %+v", resp.Challenges[0])
-	}
-	if !strings.Contains(resp.Challenges[0].Summary, "12%") {
-		t.Fatalf("expected summary to use profile coverage score, got %+v", resp.Challenges[0])
+	if resp.Challenges[0].Dimension == "" || resp.Challenges[0].Summary == "" {
+		t.Fatalf("expected structured recommendation contract, got %+v", resp.Challenges[0])
 	}
 }
 
-func TestRecommendationServiceRecommendKeepsWeakDimensionWhenAWDSuccessExists(t *testing.T) {
+func TestRecommendationServiceRecommendTurnsAWDSuccessIntoProgressionTarget(t *testing.T) {
 	db := setupRecommendationTestDB(t)
 	now := time.Now().UTC()
 
@@ -587,7 +645,7 @@ func TestRecommendationServiceRecommendKeepsWeakDimensionWhenAWDSuccessExists(t 
 	}
 
 	candidateChallenges := []assessmentRecommendationChallengeRow{
-		{ID: 3111, Title: "pwn-beginner-next", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyBeginner, Points: 120, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3111, Title: "pwn-hard-next", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyHard, Points: 240, Status: challengecontracts.ChallengeStatusPublished},
 		{ID: 3112, Title: "pwn-easy-next", Category: taxonomy.DimensionPwn, Difficulty: taxonomy.DifficultyEasy, Points: 180, Status: challengecontracts.ChallengeStatusPublished},
 	}
 	for _, challenge := range candidateChallenges {
@@ -602,20 +660,96 @@ func TestRecommendationServiceRecommendKeepsWeakDimensionWhenAWDSuccessExists(t 
 	if err != nil {
 		t.Fatalf("Recommend() error = %v", err)
 	}
-	if len(resp.WeakDimensions) != 1 {
-		t.Fatalf("expected weak dimension to stay aligned with skill profile, got %+v", resp.WeakDimensions)
-	}
-	if resp.WeakDimensions[0].Dimension != taxonomy.DimensionPwn {
-		t.Fatalf("expected pwn to remain weak dimension, got %+v", resp.WeakDimensions)
+	if len(resp.WeakDimensions) != 0 {
+		t.Fatalf("expected awd-backed stable direction to clear explicit weak dimensions, got %+v", resp.WeakDimensions)
 	}
 	if len(resp.Challenges) == 0 {
-		t.Fatalf("expected weak-dimension recommendation even with awd success, got %+v", resp)
+		t.Fatalf("expected progression recommendation after awd-backed stable direction, got %+v", resp)
 	}
-	if resp.Challenges[0].DifficultyBand != taxonomy.DifficultyBeginner {
-		t.Fatalf("expected beginner difficulty band from low profile score, got %+v", resp.Challenges[0])
+	if resp.Challenges[0].DifficultyBand != taxonomy.DifficultyHard {
+		t.Fatalf("expected hard progression difficulty band, got %+v", resp.Challenges[0])
 	}
-	if resp.Challenges[0].Difficulty != taxonomy.DifficultyBeginner {
-		t.Fatalf("expected beginner challenge to rank first for weak profile recommendation, got %+v", resp.Challenges)
+	if resp.Challenges[0].Difficulty != taxonomy.DifficultyHard {
+		t.Fatalf("expected hard candidate to rank first for progression recommendation, got %+v", resp.Challenges)
+	}
+	if !strings.Contains(resp.Challenges[0].Summary, "进阶") {
+		t.Fatalf("expected progression summary, got %+v", resp.Challenges[0])
+	}
+}
+
+func TestRecommendationServiceRecommendExcludesContestSolvedChallengeFromFallbackSample(t *testing.T) {
+	db := setupRecommendationTestDB(t)
+	now := time.Now().UTC()
+	contestID := int64(401)
+
+	if err := db.Create(&identitycontracts.User{
+		ID:       32,
+		Username: "student-32",
+		Role:     identitycontracts.RoleStudent,
+	}).Error; err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	if err := db.Create(&assessmententity.SkillProfile{
+		UserID:    32,
+		Dimension: taxonomy.DimensionWeb,
+		Score:     0.15,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed web profile: %v", err)
+	}
+
+	challenges := []assessmentRecommendationChallengeRow{
+		{ID: 3201, Title: "contest-web-solved", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 80, Status: challengecontracts.ChallengeStatusPublished},
+		{ID: 3202, Title: "contest-web-next", Category: taxonomy.DimensionWeb, Difficulty: taxonomy.DifficultyEasy, Points: 100, Status: challengecontracts.ChallengeStatusPublished},
+	}
+	for _, challenge := range challenges {
+		if err := db.Create(&challenge).Error; err != nil {
+			t.Fatalf("seed challenge %s: %v", challenge.Title, err)
+		}
+	}
+
+	submissions := []contestcontracts.Submission{
+		{
+			UserID:       32,
+			ChallengeID:  3201,
+			ContestID:    &contestID,
+			IsCorrect:    true,
+			ReviewStatus: contestcontracts.SubmissionReviewStatusApproved,
+			SubmittedAt:  now,
+			UpdatedAt:    now,
+		},
+		{
+			UserID:      32,
+			ChallengeID: 3201,
+			ContestID:   &contestID,
+			IsCorrect:   true,
+			SubmittedAt: now.Add(1 * time.Minute),
+			UpdatedAt:   now.Add(1 * time.Minute),
+		},
+	}
+	for index, submission := range submissions {
+		if err := db.Create(&submission).Error; err != nil {
+			t.Fatalf("seed contest submission %d: %v", index, err)
+		}
+	}
+
+	service := newRecommendationTestService(db, challengeinfra.NewContractRepository(challengeinfra.NewRepository(db)), nil)
+
+	resp, err := service.Recommend(context.Background(), 32, 2)
+	if err != nil {
+		t.Fatalf("Recommend() error = %v", err)
+	}
+	if len(resp.WeakDimensions) != 0 {
+		t.Fatalf("expected contest-backed stable sample to avoid explicit weak dimension, got %+v", resp.WeakDimensions)
+	}
+	if len(resp.Challenges) == 0 {
+		t.Fatalf("expected fallback sample recommendation, got %+v", resp)
+	}
+	if resp.Challenges[0].ID != 3202 {
+		t.Fatalf("expected solved contest challenge to be excluded from recommendation, got %+v", resp.Challenges)
+	}
+	if resp.Challenges[0].Dimension != taxonomy.DimensionWeb {
+		t.Fatalf("expected recommendation to stay on web dimension, got %+v", resp.Challenges[0])
 	}
 }
 
@@ -673,6 +807,40 @@ func TestRecommendationServiceRegistersContestAttackAcceptedConsumer(t *testing.
 
 	if redisClient.Exists(context.Background(), cacheKey).Val() != 0 {
 		t.Fatalf("expected recommendation cache to be cleared after awd event")
+	}
+}
+
+func TestRecommendationServiceRegistersContestFlagAcceptedConsumer(t *testing.T) {
+	db := setupRecommendationTestDB(t)
+
+	mr := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	cacheKey := assessmentcachekeys.RecommendationKey(18)
+	if err := redisClient.Set(context.Background(), cacheKey, `[{"id":"cached"}]`, time.Hour).Err(); err != nil {
+		t.Fatalf("seed recommendation cache: %v", err)
+	}
+
+	service := newRecommendationTestService(db, &stubChallengeRecommendationRepo{}, redisClient)
+	bus := platformevents.NewBus()
+	service.RegisterContestEventConsumers(bus)
+
+	if err := bus.Publish(context.Background(), platformevents.Event{
+		Name: contestcontracts.EventFlagAccepted,
+		Payload: contestcontracts.FlagAcceptedEvent{
+			UserID:      18,
+			ContestID:   101,
+			ChallengeID: 601,
+			Dimension:   taxonomy.DimensionWeb,
+			OccurredAt:  time.Now(),
+		},
+	}); err != nil {
+		t.Fatalf("Publish() error = %v", err)
+	}
+
+	if redisClient.Exists(context.Background(), cacheKey).Val() != 0 {
+		t.Fatalf("expected recommendation cache to be cleared after contest flag event")
 	}
 }
 

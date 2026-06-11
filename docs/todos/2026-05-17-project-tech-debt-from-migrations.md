@@ -1,15 +1,8 @@
 # 迁移过程中识别出的项目技术债
 
-更新时间：2026-06-10
+更新时间：2026-06-11
 
 本文只记录当前仍成立、或仍需保留为 follow-up 的项目技术债。已经被代码和架构事实收口的条目不再继续保留在活动 backlog 中。
-
-## P2：教学评估与 AWD 统一仍有残余边界
-
-- [ ] 竞赛 / AWD 数据已回流到维度事实，但 recommendation / class review 与 practice 语义仍未完全统一。
-  - 现状：个人 recommendation 与班级 class review 的 teaching fact snapshot 已吸收 AWD 成功覆盖、profile score 补充信号与 solved difficulty 覆盖，`difficulty_band` 也已经进入推荐候选查询 owner；但推荐与复盘主链路里的 `attempt / approved review evidence` 仍主要沿用 `contest_id IS NULL` 的练习侧语义。
-  - 影响：这条债已经从“竞赛数据没有回流”收敛到“主画像里的练习 / 竞赛事实还没有完全统一”，当前仍不是一份完全统一的训练画像。
-  - 依据：`docs/reviews/architecture/2026-05-14-teaching-review-thesis-gap-review.md`、`docs/architecture/features/教学复盘建议生成架构.md`
 
 ## P2：模块迁移后的结构尾项
 
@@ -21,6 +14,7 @@
 
 ## 已核验并移出活动 backlog 的条目
 
+- [x] recommendation / class review 的 live teaching fact 语义已统一到 teaching snapshot + `internal/teaching/advice` owner：challenge submission 不再限于 practice-only，学生 scoped `awd_attack_logs(source=submission)` 会进入 attempt / success 事实，`contest.flag_accepted` 也会触发 recommendation cache 失效和 profile 增量更新。
 - [x] legacy `runtime` 模块已退役，runtime node / allocation 归 `container_runtime`，实例清理 / startup recovery / ACL 读写归 `instance` 与 app composition，AWD workspace / operation / scope / proxy traffic 归 `contest`；`moduleDependencyBaseline` 中已无 runtime 相关边。
 - [x] runtime HTTP adapter 的 compat 形态已经收口到 `internal/app/composition/runtime_http_service_adapter.go` 单一 facade，旧的 parallel compat wrapper 与 `runtime_adapter_compat.go` 均已移除，不再保留为当前技术债。
 - [x] `contest_awd_services.runtime_config.challenge_id` 历史兼容层已退场：`000015_remove_legacy_awd_runtime_config_challenge_id` 清理历史 key，query / response mapper 不再过滤该字段，新写路径测试继续保证不会重新持久化。

@@ -472,18 +472,18 @@ func (r *Repository) fillClassSubmissionStats(
 	snapshotByID map[int64]*teachingadvice.StudentFactSnapshot,
 ) error {
 	type summaryRow struct {
-		UserID                 int64 `gorm:"column:user_id"`
-		CorrectSubmissionCount int   `gorm:"column:correct_submission_count"`
-		WrongSubmissionCount   int   `gorm:"column:wrong_submission_count"`
+		UserID                int64 `gorm:"column:user_id"`
+		ChallengeSuccessCount int   `gorm:"column:challenge_success_count"`
+		ChallengeFailureCount int   `gorm:"column:challenge_failure_count"`
 	}
 	rows := make([]summaryRow, 0)
 	if err := r.db.WithContext(ctx).Raw(`
 		SELECT
 			s.user_id,
-			COALESCE(SUM(CASE WHEN s.is_correct THEN 1 ELSE 0 END), 0) AS correct_submission_count,
-			COALESCE(SUM(CASE WHEN s.is_correct THEN 0 ELSE 1 END), 0) AS wrong_submission_count
+			COALESCE(SUM(CASE WHEN s.is_correct THEN 1 ELSE 0 END), 0) AS challenge_success_count,
+			COALESCE(SUM(CASE WHEN s.is_correct THEN 0 ELSE 1 END), 0) AS challenge_failure_count
 		FROM submissions s
-		WHERE s.user_id IN ? AND s.contest_id IS NULL
+		WHERE s.user_id IN ?
 		GROUP BY s.user_id
 	`, userIDs).Scan(&rows).Error; err != nil {
 		return fmt.Errorf("get class submission summary rows: %w", err)
@@ -493,22 +493,81 @@ func (r *Repository) fillClassSubmissionStats(
 		if snapshot == nil {
 			continue
 		}
-		snapshot.CorrectSubmissionCount = row.CorrectSubmissionCount
-		snapshot.WrongSubmissionCount = row.WrongSubmissionCount
+		snapshot.ChallengeSuccessCount = row.ChallengeSuccessCount
+		snapshot.SubmissionSuccessCount = row.ChallengeSuccessCount
+		snapshot.SubmissionFailureCount = row.ChallengeFailureCount
+		snapshot.CorrectSubmissionCount = row.ChallengeSuccessCount
+		snapshot.WrongSubmissionCount = row.ChallengeFailureCount
+	}
+
+	type awdSummaryRow struct {
+		UserID          int64 `gorm:"column:user_id"`
+		AWDAttemptCount int   `gorm:"column:awd_attempt_count"`
+		AWDSuccessCount int   `gorm:"column:awd_success_count"`
+	}
+	awdRows := make([]awdSummaryRow, 0)
+	if r.db.Migrator().HasTable("awd_attack_logs") {
+		if err := r.db.WithContext(ctx).Raw(`
+			SELECT
+				al.submitted_by_user_id AS user_id,
+				COUNT(*) AS awd_attempt_count,
+				COALESCE(SUM(CASE WHEN al.is_success = TRUE AND al.score_gained > 0 THEN 1 ELSE 0 END), 0) AS awd_success_count
+			FROM awd_attack_logs al
+			WHERE al.submitted_by_user_id IN ?
+				AND al.source = ?
+			GROUP BY al.submitted_by_user_id
+		`, userIDs, contestcontracts.AWDAttackSourceSubmission).Scan(&awdRows).Error; err != nil {
+			return fmt.Errorf("get class awd submission summary rows: %w", err)
+		}
+	}
+	for _, row := range awdRows {
+		snapshot := snapshotByID[row.UserID]
+		if snapshot == nil {
+			continue
+		}
+		snapshot.AWDAttemptCount = row.AWDAttemptCount
+		snapshot.AWDSuccessCount = row.AWDSuccessCount
+		snapshot.SubmissionSuccessCount += row.AWDSuccessCount
+		snapshot.SubmissionFailureCount += maxInt(row.AWDAttemptCount-row.AWDSuccessCount, 0)
+		snapshot.CorrectSubmissionCount = snapshot.SubmissionSuccessCount
+		snapshot.WrongSubmissionCount = snapshot.SubmissionFailureCount
 	}
 
 	type resultRow struct {
-		UserID    int64     `gorm:"column:user_id"`
-		IsCorrect bool      `gorm:"column:is_correct"`
-		Timestamp time.Time `gorm:"column:submitted_at"`
-		ID        int64     `gorm:"column:id"`
+		UserID     int64     `gorm:"column:user_id"`
+		IsCorrect  bool      `gorm:"column:is_correct"`
+		OccurredAt time.Time `gorm:"column:occurred_at"`
+		EventID    int64     `gorm:"column:event_id"`
 	}
 	results := make([]resultRow, 0)
-	if err := r.db.WithContext(ctx).Table("submissions AS s").
-		Select("s.user_id, s.is_correct, s.submitted_at, s.id").
-		Where("s.user_id IN ? AND s.contest_id IS NULL", userIDs).
-		Order("s.user_id ASC, s.submitted_at ASC, s.id ASC").
-		Scan(&results).Error; err != nil {
+	resultQueryParts := []string{
+		`SELECT
+			s.user_id AS user_id,
+			s.is_correct AS is_correct,
+			s.submitted_at AS occurred_at,
+			s.id AS event_id
+		FROM submissions s
+		WHERE s.user_id IN ?`,
+	}
+	resultArgs := []any{userIDs}
+	if r.db.Migrator().HasTable("awd_attack_logs") {
+		resultQueryParts = append(resultQueryParts, `SELECT
+			al.submitted_by_user_id AS user_id,
+			CASE WHEN al.is_success = TRUE AND al.score_gained > 0 THEN TRUE ELSE FALSE END AS is_correct,
+			al.created_at AS occurred_at,
+			al.id AS event_id
+		FROM awd_attack_logs al
+		WHERE al.submitted_by_user_id IN ?
+			AND al.source = ?`)
+		resultArgs = append(resultArgs, userIDs, contestcontracts.AWDAttackSourceSubmission)
+	}
+	if err := r.db.WithContext(ctx).Raw(fmt.Sprintf(`
+		SELECT user_id, is_correct, occurred_at, event_id
+		FROM (
+			%s
+		) ordered_results
+		ORDER BY user_id ASC, occurred_at ASC, event_id ASC
+	`, strings.Join(resultQueryParts, " UNION ALL ")), resultArgs...).Scan(&results).Error; err != nil {
 		return fmt.Errorf("list class submission results: %w", err)
 	}
 
@@ -686,7 +745,7 @@ func (r *Repository) fillClassDimensionFacts(
 				COALESCE(SUM(CASE WHEN s.is_correct THEN 1 ELSE 0 END), 0) AS success_count
 			FROM submissions s
 			JOIN challenges c ON c.id = s.challenge_id
-			WHERE s.user_id IN ? AND s.contest_id IS NULL AND c.status = ?
+			WHERE s.user_id IN ? AND c.status = ?
 			GROUP BY s.user_id, c.category
 		`, userIDs, challengecontracts.ChallengeStatusPublished).Scan(&attemptRows).Error; err != nil {
 			return fmt.Errorf("get class dimension attempt facts: %w", err)
@@ -696,6 +755,35 @@ func (r *Repository) fillClassDimensionFacts(
 			fact.AttemptCount = row.AttemptCount
 			fact.SuccessCount = row.SuccessCount
 			fact.EvidenceCount += row.AttemptCount
+		}
+
+		solvedDifficultyRows := make([]struct {
+			UserID      int64  `gorm:"column:user_id"`
+			Dimension   string `gorm:"column:dimension"`
+			Difficulty  string `gorm:"column:difficulty"`
+			SolvedCount int    `gorm:"column:solved_count"`
+		}, 0)
+		if err := r.db.WithContext(ctx).Raw(`
+			SELECT
+				s.user_id,
+				c.category AS dimension,
+				c.difficulty AS difficulty,
+				COUNT(DISTINCT s.challenge_id) AS solved_count
+			FROM submissions s
+			JOIN challenges c ON c.id = s.challenge_id
+			WHERE s.user_id IN ?
+				AND s.is_correct = TRUE
+				AND c.status = ?
+			GROUP BY s.user_id, c.category, c.difficulty
+		`, userIDs, challengecontracts.ChallengeStatusPublished).Scan(&solvedDifficultyRows).Error; err != nil {
+			return fmt.Errorf("get class solved difficulty facts: %w", err)
+		}
+		for _, row := range solvedDifficultyRows {
+			fact := ensureClassDimensionFact(dimensionFactsByUser, row.UserID, row.Dimension)
+			if fact.SolvedDifficultyCounts == nil {
+				fact.SolvedDifficultyCounts = make(map[string]int)
+			}
+			fact.SolvedDifficultyCounts[row.Difficulty] = row.SolvedCount
 		}
 
 		if r.db.Migrator().HasTable("audit_logs") && r.db.Migrator().HasTable("instances") {
@@ -762,7 +850,6 @@ func (r *Repository) fillClassDimensionFacts(
 			FROM submissions s
 			JOIN challenges c ON c.id = s.challenge_id
 			WHERE s.user_id IN ?
-				AND s.contest_id IS NULL
 				AND s.review_status = ?
 				AND c.status = ?
 			GROUP BY s.user_id, c.category
@@ -776,6 +863,34 @@ func (r *Repository) fillClassDimensionFacts(
 	}
 
 	if r.db.Migrator().HasTable("awd_attack_logs") && r.db.Migrator().HasTable("awd_challenges") {
+		awdAttemptRows := make([]struct {
+			UserID       int64  `gorm:"column:user_id"`
+			Dimension    string `gorm:"column:dimension"`
+			AttemptCount int    `gorm:"column:attempt_count"`
+			SuccessCount int    `gorm:"column:success_count"`
+		}, 0)
+		if err := r.db.WithContext(ctx).Raw(`
+			SELECT
+				al.submitted_by_user_id AS user_id,
+				ac.category AS dimension,
+				COUNT(*) AS attempt_count,
+				COALESCE(SUM(CASE WHEN al.is_success = TRUE AND al.score_gained > 0 THEN 1 ELSE 0 END), 0) AS success_count
+			FROM awd_attack_logs al
+			JOIN awd_challenges ac ON ac.id = al.awd_challenge_id
+			WHERE al.submitted_by_user_id IN ?
+				AND al.source = ?
+				AND ac.status = ?
+			GROUP BY al.submitted_by_user_id, ac.category
+		`, userIDs, contestcontracts.AWDAttackSourceSubmission, challengecontracts.AWDChallengeStatusPublished).Scan(&awdAttemptRows).Error; err != nil {
+			return fmt.Errorf("get class awd attempt dimension facts: %w", err)
+		}
+		for _, row := range awdAttemptRows {
+			fact := ensureClassDimensionFact(dimensionFactsByUser, row.UserID, row.Dimension)
+			fact.AttemptCount += row.AttemptCount
+			fact.SuccessCount += row.SuccessCount
+			fact.EvidenceCount += row.AttemptCount
+		}
+
 		publishedRows := make([]struct {
 			Dimension  string `gorm:"column:dimension"`
 			TotalCount int    `gorm:"column:total_count"`
@@ -818,8 +933,6 @@ func (r *Repository) fillClassDimensionFacts(
 		}
 		for _, row := range successRows {
 			fact := ensureClassDimensionFact(dimensionFactsByUser, row.UserID, row.Dimension)
-			fact.SuccessCount += row.SolvedCount
-			fact.EvidenceCount += row.SolvedCount
 			if total := awdTotals[row.Dimension]; total > 0 {
 				coverage := float64(row.SolvedCount) / float64(total)
 				if coverage > fact.ProfileScore {
@@ -1719,6 +1832,13 @@ func (r *Repository) getRecentEventCountByClass(ctx context.Context, className s
 		return 0, fmt.Errorf("get recent event count by class: %w", err)
 	}
 	return result.Count, nil
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func toEvidenceRecord(event evidence.Event) queryports.EvidenceEventRecord {

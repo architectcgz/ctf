@@ -418,6 +418,60 @@ func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
 	}
 }
 
+func TestProfileServiceRegistersContestFlagAcceptedConsumer(t *testing.T) {
+	db := setupAssessmentTestDB(t)
+	service := newAssessmentTestService(db, nil)
+	bus := platformevents.NewBus()
+	service.RegisterContestEventConsumers(bus)
+
+	now := time.Now()
+	contestID := int64(109)
+	if err := db.Create(&assessmentChallengeTestRow{
+		ID:         61,
+		Title:      "web-contest",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
+		Points:     100,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("seed challenge: %v", err)
+	}
+	if err := db.Create(&contestcontracts.Submission{
+		ID:          61,
+		UserID:      88,
+		ChallengeID: 61,
+		ContestID:   &contestID,
+		IsCorrect:   true,
+		SubmittedAt: now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("seed contest submission: %v", err)
+	}
+
+	if err := bus.Publish(context.Background(), platformevents.Event{
+		Name: contestcontracts.EventFlagAccepted,
+		Payload: contestcontracts.FlagAcceptedEvent{
+			UserID:      88,
+			ContestID:   contestID,
+			ChallengeID: 61,
+			Dimension:   taxonomy.DimensionWeb,
+			OccurredAt:  now,
+		},
+	}); err != nil {
+		t.Fatalf("Publish() error = %v", err)
+	}
+
+	var profile assessmententity.SkillProfile
+	if err := db.Where("user_id = ? AND dimension = ?", 88, taxonomy.DimensionWeb).First(&profile).Error; err != nil {
+		t.Fatalf("query profile after event: %v", err)
+	}
+	if profile.Score != 1 {
+		t.Fatalf("expected contest submission event to rebuild web profile score, got %+v", profile)
+	}
+}
+
 func ptrInt64(value int64) *int64 {
 	return &value
 }

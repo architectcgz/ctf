@@ -63,6 +63,7 @@ func (s *Service) RegisterContestEventConsumers(bus platformevents.Bus) {
 	if s == nil || bus == nil {
 		return
 	}
+	bus.Subscribe(contestcontracts.EventFlagAccepted, s.handleContestFlagAcceptedEvent)
 	bus.Subscribe(contestcontracts.EventAWDAttackAccepted, s.handleAWDAttackAcceptedEvent)
 }
 
@@ -70,6 +71,25 @@ func (s *Service) handleFlagAcceptedEvent(ctx context.Context, evt platformevent
 	payload, ok := evt.Payload.(practicecontracts.FlagAcceptedEvent)
 	if !ok {
 		return fmt.Errorf("unexpected practice flag event payload: %T", evt.Payload)
+	}
+	if !taxonomy.IsValidDimension(payload.Dimension) {
+		return nil
+	}
+
+	updateCtx := ctx
+	cancel := func() {}
+	if timeout := s.config.IncrementalUpdateTimeout; timeout > 0 {
+		updateCtx, cancel = context.WithTimeout(ctx, timeout)
+	}
+	defer cancel()
+
+	return s.UpdateSkillProfileForDimension(updateCtx, payload.UserID, payload.Dimension)
+}
+
+func (s *Service) handleContestFlagAcceptedEvent(ctx context.Context, evt platformevents.Event) error {
+	payload, ok := evt.Payload.(contestcontracts.FlagAcceptedEvent)
+	if !ok {
+		return fmt.Errorf("unexpected contest flag event payload: %T", evt.Payload)
 	}
 	if !taxonomy.IsValidDimension(payload.Dimension) {
 		return nil

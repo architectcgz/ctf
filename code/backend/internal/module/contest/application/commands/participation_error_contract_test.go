@@ -212,6 +212,7 @@ func TestSubmissionServiceResolveTeamIDTreatsMissingRegistrationAndTeamAsNotRegi
 		},
 		nil,
 		nil,
+		nil,
 	)
 
 	teamID, err := service.resolveTeamID(context.Background(), 1001, 10)
@@ -255,6 +256,7 @@ func TestSubmissionServiceValidateContestSubmissionTreatsContestChallengeNotFoun
 		participationTeamFinderStub{},
 		nil,
 		nil,
+		nil,
 	)
 
 	_, err := service.validateContestSubmission(context.Background(), 1001, 10, 20, "flag{irrelevant}")
@@ -296,6 +298,7 @@ func TestSubmissionServiceValidateContestSubmissionTreatsChallengeEntityNotFound
 		nil,
 		nil,
 		participationTeamFinderStub{},
+		nil,
 		nil,
 		nil,
 	)
