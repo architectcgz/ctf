@@ -147,6 +147,18 @@ func TestModuleDependencyBaselineIsCurrent(t *testing.T) {
 	}
 
 	for baseline := range moduleDependencyBaseline {
+		review := moduleDependencyBaseline[baseline]
+		if len(review.categories) == 0 {
+			t.Fatalf("module dependency baseline entry lacks a review category: %s", baseline)
+		}
+		for _, category := range review.categories {
+			if _, known := reviewedModuleDependencyCategories[category]; !known {
+				t.Fatalf("module dependency baseline entry has unknown review category %q: %s", category, baseline)
+			}
+		}
+		if strings.TrimSpace(review.rationale) == "" {
+			t.Fatalf("module dependency baseline entry lacks a review rationale: %s", baseline)
+		}
 		if _, exists := actual[baseline]; !exists {
 			t.Fatalf("module dependency baseline entry is stale: %s", baseline)
 		}
