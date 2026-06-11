@@ -2,9 +2,11 @@ package commands
 
 import (
 	"bytes"
+	"encoding/json"
+
+	assessmentreporting "ctf-platform/internal/module/assessment/application/reporting"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -38,7 +40,7 @@ func TestWritePersonalPDFCreatesPDFFile(t *testing.T) {
 		},
 	}
 
-	if err := writePersonalPDF(path, data); err != nil {
+	if err := assessmentreporting.WritePersonalPDF(path, data); err != nil {
 		t.Fatalf("writePersonalPDF() error = %v", err)
 	}
 
@@ -78,7 +80,7 @@ func TestWritePersonalExcelCreatesWorkbook(t *testing.T) {
 		},
 	}
 
-	if err := writePersonalExcel(path, data); err != nil {
+	if err := assessmentreporting.WritePersonalExcel(path, data); err != nil {
 		t.Fatalf("writePersonalExcel() error = %v", err)
 	}
 
@@ -97,7 +99,7 @@ func TestWriteJSONReportCreatesJSONFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "archive.json")
 
-	if err := writeJSONReport(path, map[string]any{"type": "contest_export", "ok": true}); err != nil {
+	if err := assessmentreporting.WriteJSONReport(path, map[string]any{"type": "contest_export", "ok": true}); err != nil {
 		t.Fatalf("writeJSONReport() error = %v", err)
 	}
 
@@ -126,7 +128,7 @@ func TestWriteJSONReportPreservesSkillProfileFieldNames(t *testing.T) {
 		},
 	}
 
-	if err := writeJSONReport(path, payload); err != nil {
+	if err := assessmentreporting.WriteJSONReport(path, payload); err != nil {
 		t.Fatalf("writeJSONReport() error = %v", err)
 	}
 

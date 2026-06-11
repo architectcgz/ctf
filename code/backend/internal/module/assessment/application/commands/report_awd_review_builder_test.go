@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	assessmentreporting "ctf-platform/internal/module/assessment/application/reporting"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"strings"
 	"testing"
@@ -68,7 +69,7 @@ func TestTeacherAWDReviewExportBuilderSelectsFocusRoundWhenRoundMissing(t *testi
 func TestHottestRoundPrefersAttackDenseRound(t *testing.T) {
 	t.Parallel()
 
-	round := hottestRound([]assessmentqry.TeacherAWDReviewRoundResp{
+	round := assessmentreporting.HottestRound([]assessmentqry.TeacherAWDReviewRoundResp{
 		{RoundNumber: 1, ServiceCount: 2, AttackCount: 0, TrafficCount: 4},
 		{RoundNumber: 2, ServiceCount: 1, AttackCount: 2, TrafficCount: 1},
 		{RoundNumber: 3, ServiceCount: 5, AttackCount: 0, TrafficCount: 0},
@@ -81,7 +82,7 @@ func TestHottestRoundPrefersAttackDenseRound(t *testing.T) {
 func TestTopRiskyServicePrefersCompromisedService(t *testing.T) {
 	t.Parallel()
 
-	service := topRiskyService([]assessmentqry.TeacherAWDReviewServiceResp{
+	service := assessmentreporting.TopRiskyService([]assessmentqry.TeacherAWDReviewServiceResp{
 		{TeamName: "blue", AWDChallengeTitle: "web", ServiceStatus: contestcontracts.AWDServiceStatusUp, AttackReceived: 4},
 		{TeamName: "red", AWDChallengeTitle: "api", ServiceStatus: contestcontracts.AWDServiceStatusCompromised, AttackReceived: 1},
 	})
@@ -93,7 +94,7 @@ func TestTopRiskyServicePrefersCompromisedService(t *testing.T) {
 func TestBuildAWDReviewSuggestionsIncludesTrafficOnlyHint(t *testing.T) {
 	t.Parallel()
 
-	suggestions := buildAWDReviewSuggestions(
+	suggestions := assessmentreporting.BuildAWDReviewSuggestions(
 		[]assessmentqry.TeacherAWDReviewRoundResp{
 			{RoundNumber: 4, AttackCount: 0, TrafficCount: 3, ServiceCount: 1},
 		},
