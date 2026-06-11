@@ -153,9 +153,14 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"type moduleDeps struct",
-		"users queryports.TeachingUserLookupRepository",
+		"queryports.TeachingUserLookupRepository",
 		"queryports.TeachingClassInsightRepository",
-		"recommendations assessmentcontracts.RecommendationProvider",
+		"queryports.TeachingStudentActivityRepository",
+		"queryports.TeachingOverviewRepository",
+		"assessmentcontracts.RecommendationProvider",
+		"type queryServiceRepository struct",
+		"type overviewServiceRepository struct",
+		"type studentReviewServiceRepository struct",
 		"buildQueryService(",
 		"buildOverviewService(",
 		"buildClassInsightService(",
@@ -168,11 +173,43 @@ func TestRuntimeUsesTypedDeps(t *testing.T) {
 	}
 
 	blocked := []string{
+		"repo  interface {",
+		"queryinfra.NewRepository(",
 		"Query   teachingqueries.Service",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
 			t.Fatalf("teaching_query runtime should not keep wide query export marker %s", marker)
+		}
+	}
+}
+
+func TestInfrastructureDoesNotExposeWideRepository(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("infrastructure", "*.go"))
+	if err != nil {
+		t.Fatalf("glob infrastructure files: %v", err)
+	}
+
+	blocked := []string{
+		"type Repository struct",
+		"func NewRepository(",
+		"func (r *Repository)",
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("read %s: %v", file, err)
+		}
+		source := string(content)
+		for _, marker := range blocked {
+			if strings.Contains(source, marker) {
+				t.Fatalf("%s must not keep wide repository marker %s", file, marker)
+			}
 		}
 	}
 }

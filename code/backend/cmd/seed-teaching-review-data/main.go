@@ -22,6 +22,7 @@ import (
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	assessmentcachekeys "ctf-platform/internal/module/assessment/infrastructure/cachekeys"
+	assessmentports "ctf-platform/internal/module/assessment/ports"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
@@ -34,7 +35,9 @@ import (
 	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
 	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
 	queryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
+	queryports "ctf-platform/internal/module/teaching_query/ports"
 	"ctf-platform/internal/shared/taxonomy"
+	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 
 const (
@@ -99,6 +102,53 @@ type userSeed struct {
 
 type teachingQueryUserLookupAdapter struct {
 	users identitycontracts.UserLookupRepository
+}
+
+type assessmentClassInsightSeedAdapter struct {
+	repo queryports.TeachingClassInsightRepository
+}
+
+func newAssessmentClassInsightSeedAdapter(repo queryports.TeachingClassInsightRepository) assessmentports.AssessmentClassInsightRepository {
+	if repo == nil {
+		return nil
+	}
+	return assessmentClassInsightSeedAdapter{repo: repo}
+}
+
+func (a assessmentClassInsightSeedAdapter) GetClassSummary(ctx context.Context, className string, since time.Time) (*assessmentports.ClassInsightSummary, error) {
+	summary, err := a.repo.GetClassSummary(ctx, className, since)
+	if err != nil || summary == nil {
+		return nil, err
+	}
+	return &assessmentports.ClassInsightSummary{
+		ClassName:          summary.ClassName,
+		StudentCount:       summary.StudentCount,
+		AverageSolved:      summary.AverageSolved,
+		ActiveStudentCount: summary.ActiveStudentCount,
+		ActiveRate:         summary.ActiveRate,
+		RecentEventCount:   summary.RecentEventCount,
+	}, nil
+}
+
+func (a assessmentClassInsightSeedAdapter) GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*assessmentports.ClassInsightTrend, error) {
+	trend, err := a.repo.GetClassTrend(ctx, className, since, days)
+	if err != nil || trend == nil {
+		return nil, err
+	}
+	points := make([]assessmentports.ClassInsightTrendPoint, 0, len(trend.Points))
+	for _, point := range trend.Points {
+		points = append(points, assessmentports.ClassInsightTrendPoint{
+			Date:               point.Date,
+			ActiveStudentCount: point.ActiveStudentCount,
+			EventCount:         point.EventCount,
+			SolveCount:         point.SolveCount,
+		})
+	}
+	return &assessmentports.ClassInsightTrend{ClassName: trend.ClassName, Points: points}, nil
+}
+
+func (a assessmentClassInsightSeedAdapter) ListClassTeachingFactSnapshots(ctx context.Context, className string, since time.Time) ([]teachingadvice.StudentFactSnapshot, error) {
+	return a.repo.ListClassTeachingFactSnapshots(ctx, className, since)
 }
 
 func (a teachingQueryUserLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
@@ -411,7 +461,9 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 
 	assessmentRepo := assessmentinfra.NewRepository(db)
 	reportRepo := assessmentinfra.NewReportRepository(db)
-	queryRepo := queryinfra.NewRepository(db)
+	classInsightRepo := queryinfra.NewClassInsightRepository(db)
+	studentProfileRepo := queryinfra.NewStudentProfileRepository(db)
+	studentActivityRepo := queryinfra.NewStudentActivityRepository(db)
 	profileReader := assessmentqry.NewProfileService(assessmentRepo)
 	recommendationService := assessmentqry.NewRecommendationService(
 		assessmentRepo,
@@ -426,23 +478,30 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		reportRepo,
 		reportRepo,
 		reportRepo,
-		queryRepo,
+		newAssessmentClassInsightSeedAdapter(classInsightRepo),
 		reportRepo,
 		reportRepo,
 		profileReader,
+		assessmentinfra.NewReportOutputStore(cfg.Report.StorageDir),
 		cfg.Report,
 		zap.NewNop(),
 	)
 	userLookupRepo := teachingQueryUserLookupAdapter{users: identityinfra.NewRepository(db)}
 	classInsightService := teachingqueries.NewClassInsightService(
 		userLookupRepo,
-		queryRepo,
+		classInsightRepo,
 		recommendationService,
 		zap.NewNop(),
 	)
 	studentReviewService := teachingqueries.NewStudentReviewService(
 		userLookupRepo,
-		queryRepo,
+		struct {
+			queryports.TeachingStudentProfileRepository
+			queryports.TeachingStudentActivityRepository
+		}{
+			TeachingStudentProfileRepository:  studentProfileRepo,
+			TeachingStudentActivityRepository: studentActivityRepo,
+		},
 		recommendationService,
 	)
 
