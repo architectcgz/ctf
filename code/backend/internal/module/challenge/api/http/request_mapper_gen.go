@@ -45,7 +45,10 @@ func (c *ChallengeRequestMapperImpl) ToCreateChallengeInput(source CreateChallen
 	challengecoreCreateChallengeInput.Category = source.Category
 	challengecoreCreateChallengeInput.Difficulty = source.Difficulty
 	challengecoreCreateChallengeInput.Points = source.Points
-	challengecoreCreateChallengeInput.ImageID = source.ImageID
+	if source.ImageID != nil {
+		xint64 := *source.ImageID
+		challengecoreCreateChallengeInput.ImageID = &xint64
+	}
 	challengecoreCreateChallengeInput.AttachmentURL = source.AttachmentURL
 	challengecoreCreateChallengeInput.InstanceSharing = source.InstanceSharing
 	if source.Hints != nil {
@@ -139,10 +142,7 @@ func (c *ChallengeRequestMapperImpl) ToUpdateChallengeInput(source UpdateChallen
 	challengecoreUpdateChallengeInput.Category = source.Category
 	challengecoreUpdateChallengeInput.Difficulty = source.Difficulty
 	challengecoreUpdateChallengeInput.Points = source.Points
-	if source.ImageID != nil {
-		xint64 := *source.ImageID
-		challengecoreUpdateChallengeInput.ImageID = &xint64
-	}
+	challengecoreUpdateChallengeInput.ImageID = MapOptionalImageIDField(source.ImageID)
 	if source.AttachmentURL != nil {
 		xstring := *source.AttachmentURL
 		challengecoreUpdateChallengeInput.AttachmentURL = &xstring

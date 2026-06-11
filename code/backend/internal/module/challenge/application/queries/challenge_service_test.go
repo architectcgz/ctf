@@ -222,7 +222,7 @@ func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 		Category:      "web",
 		Difficulty:    challengeentity.ChallengeDifficultyEasy,
 		Points:        100,
-		ImageID:       1,
+		ImageID:       int64Ptr(1),
 		AttachmentURL: "https://example.com/files/hint.zip",
 		Status:        challengeentity.ChallengeStatusDraft,
 	}

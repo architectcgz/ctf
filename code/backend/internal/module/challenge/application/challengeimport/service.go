@@ -415,10 +415,17 @@ func (s *ChallengeImportService) CommitChallengeImport(
 			topologySpec, entryNodeKey, topologyErr := domain.BuildTopologySpecFromImportedPackage(
 				parsed.Topology,
 				func(imageRef string) (int64, error) {
-					if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && resolvedImageID > 0 {
-						return resolvedImageID, nil
+					if parsed.ImageSourceType == domain.ImageSourceTypePlatformBuild && resolvedImageID != nil {
+						return *resolvedImageID, nil
 					}
-					return s.resolveExternalImageRefForCommit(ctx, store, parsed.Slug, imageRef)
+					imageID, err := s.resolveExternalImageRefForCommit(ctx, store, parsed.Slug, imageRef)
+					if err != nil {
+						return 0, err
+					}
+					if imageID == nil {
+						return 0, nil
+					}
+					return *imageID, nil
 				},
 			)
 			if topologyErr != nil {
@@ -575,14 +582,14 @@ func (s *ChallengeImportService) resolveImportedImageIDForCommit(
 	actorUserID int64,
 	parsed *domain.ParsedChallengePackage,
 	buildSource *challengeports.ChallengeStoredImageBuildSource,
-) (int64, error) {
+) (*int64, error) {
 	if parsed.ImageSourceType == domain.ImageSourceTypeExternalRef {
 		return s.resolveExternalImageRefForCommit(ctx, store, parsed.Slug, parsed.RuntimeImageRef)
 	}
 	if parsed.ImageSourceType != domain.ImageSourceTypePlatformBuild {
 		resolution, err := store.ResolveExistingImageRef(ctx, parsed.Slug, parsed.RuntimeImageRef)
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
 		return resolution.ImageID, nil
 	}
@@ -594,7 +601,7 @@ func (s *ChallengeImportService) resolveImportedImageIDForCommit(
 	}
 	if missingImageBuildService(imageBuild, parsed.ImageSourceType) {
 		warnImageBuildServiceUnavailable(logger, parsed.Slug, parsed.ImageSourceType, "commit")
-		return 0, imageBuildServiceUnavailableError(parsed.ImageSourceType)
+		return nil, imageBuildServiceUnavailableError(parsed.ImageSourceType)
 	}
 	sourceDir := parsed.RootDir
 	dockerfilePath := parsed.DockerfilePath
@@ -614,7 +621,7 @@ func (s *ChallengeImportService) resolveImportedImageIDForCommit(
 		CreatedBy:      actorUserID,
 	})
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	return result.ImageID, nil
 }
@@ -624,9 +631,9 @@ func (s *ChallengeImportService) resolveExternalImageRefForCommit(
 	store challengeports.ChallengeImportTxStore,
 	packageSlug string,
 	imageRef string,
-) (int64, error) {
+) (*int64, error) {
 	if strings.TrimSpace(imageRef) == "" {
-		return 0, nil
+		return nil, nil
 	}
 	var imageBuild ImageBuildService
 	var logger *zap.Logger
@@ -636,11 +643,11 @@ func (s *ChallengeImportService) resolveExternalImageRefForCommit(
 	}
 	if missingImageBuildService(imageBuild, domain.ImageSourceTypeExternalRef) {
 		warnImageBuildServiceUnavailable(logger, packageSlug, domain.ImageSourceTypeExternalRef, "commit")
-		return 0, imageBuildServiceUnavailableError(domain.ImageSourceTypeExternalRef)
+		return nil, imageBuildServiceUnavailableError(domain.ImageSourceTypeExternalRef)
 	}
 	result, err := store.ResolveExternalImage(ctx, packageSlug, imageRef)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	return result.ImageID, nil
 }

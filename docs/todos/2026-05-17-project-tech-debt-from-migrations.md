@@ -13,11 +13,11 @@
 
 ## P2：模块迁移后的结构尾项
 
-- [ ] `challenges.image_id = 0` 的历史 no-image 哨兵值还没有完成 schema / contract 清理，暂时不能继续补物理 FK。
-  - 现状：当前 baseline `000001_init_schema.up.sql` 已吸收原 `000011_add_additional_foreign_keys` 里的 `audit_logs.user_id`、`awd_*` 的 creator / verifier / submitter、`instances` 主引用列、`submissions` 主引用列；`awd_* .service_id` 这批历史孤儿也已经在开发库回填完成，但 `challenges.image_id` 仍有 `76` 条历史 `image_id = 0` 记录。
-  - 影响：`challenges.image_id` 继续缺少数据库级完整性约束，后续迁移和数据清理仍要保留逻辑层对 no-image 哨兵值的兼容。
-  - 处理方向：先把 `image_id = 0` 的 schema / contract 语义清理完，再单独补 `image_id` 的 FK migration。
-  - 依据：`code/backend/migrations/000001_init_schema.up.sql`
+- [ ] `challenges.image_id` 仍未补数据库级 FK。
+  - 现状：`image_id = 0` 的历史 no-image 哨兵值已经完成 schema / contract 清理，`000017_cleanup_challenge_image_id_zero` 负责把存量 `0` 清成 `NULL`；当前剩余问题只是不带物理 FK。
+  - 影响：`challenges.image_id` 仍缺少数据库级完整性约束，非法引用目前仍主要依赖应用层保证。
+  - 处理方向：单独补 `challenges.image_id -> images.id` 的 FK migration，并评估软删 / 导入链路上的约束策略。
+  - 依据：`code/backend/migrations/000001_init_schema.up.sql`、`code/backend/migrations/000017_cleanup_challenge_image_id_zero.up.sql`
 
 ## 已核验并移出活动 backlog 的条目
 
@@ -31,3 +31,4 @@
 - [x] `contest_challenges.awd_*` 历史字段不再存在，原表述过期。
 - [x] application 层 GORM / Redis concrete allowlist 未全局清空这条，按当前代码状态已不成立。
 - [x] 历史 `awd_* .service_id` 孤儿引用已在开发库回填到真实 `contest_awd_services` 父记录，不再保留为当前活动技术债。
+- [x] `challenges.image_id = 0` 的历史 no-image 哨兵值已完成 schema / contract 清理，不再保留为当前活动技术债。

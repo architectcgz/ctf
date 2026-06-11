@@ -304,7 +304,10 @@ func (c *ChallengeResponseMapperImpl) ToChallengeResp(source *contracts.Challeng
 		httpChallengeResp.Category = (*source).Category
 		httpChallengeResp.Difficulty = (*source).Difficulty
 		httpChallengeResp.Points = (*source).Points
-		httpChallengeResp.ImageID = (*source).ImageID
+		if (*source).ImageID != nil {
+			xint64 := *(*source).ImageID
+			httpChallengeResp.ImageID = &xint64
+		}
 		httpChallengeResp.AttachmentURL = (*source).AttachmentURL
 		httpChallengeResp.InstanceSharing = (*source).InstanceSharing
 		if (*source).Hints != nil {
@@ -315,8 +318,8 @@ func (c *ChallengeResponseMapperImpl) ToChallengeResp(source *contracts.Challeng
 		}
 		httpChallengeResp.Status = (*source).Status
 		if (*source).CreatedBy != nil {
-			xint64 := *(*source).CreatedBy
-			httpChallengeResp.CreatedBy = &xint64
+			xint642 := *(*source).CreatedBy
+			httpChallengeResp.CreatedBy = &xint642
 		}
 		httpChallengeResp.CreatedAt = CopyTime((*source).CreatedAt)
 		httpChallengeResp.UpdatedAt = CopyTime((*source).UpdatedAt)
@@ -745,7 +748,10 @@ func (c *ChallengeResponseMapperImpl) contractsChallengeRespToPHttpChallengeResp
 	httpChallengeResp.Category = source.Category
 	httpChallengeResp.Difficulty = source.Difficulty
 	httpChallengeResp.Points = source.Points
-	httpChallengeResp.ImageID = source.ImageID
+	if source.ImageID != nil {
+		xint64 := *source.ImageID
+		httpChallengeResp.ImageID = &xint64
+	}
 	httpChallengeResp.AttachmentURL = source.AttachmentURL
 	httpChallengeResp.InstanceSharing = source.InstanceSharing
 	if source.Hints != nil {
@@ -756,8 +762,8 @@ func (c *ChallengeResponseMapperImpl) contractsChallengeRespToPHttpChallengeResp
 	}
 	httpChallengeResp.Status = source.Status
 	if source.CreatedBy != nil {
-		xint64 := *source.CreatedBy
-		httpChallengeResp.CreatedBy = &xint64
+		xint642 := *source.CreatedBy
+		httpChallengeResp.CreatedBy = &xint642
 	}
 	httpChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
 	httpChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)

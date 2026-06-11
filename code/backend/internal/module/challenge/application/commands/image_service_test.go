@@ -25,7 +25,7 @@ func TestImageServiceDeleteImageReturnsInUseWhenChallengeReferencesImage(t *test
 	}
 	if err := db.Create(&challengeentity.Challenge{
 		Title:   "challenge-1",
-		ImageID: image.ID,
+		ImageID: int64Ptr(image.ID),
 		Status:  challengeentity.ChallengeStatusDraft,
 	}).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)

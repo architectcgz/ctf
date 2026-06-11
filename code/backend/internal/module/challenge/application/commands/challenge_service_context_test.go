@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/module/challenge/application/challengecatalog"
+	"ctf-platform/internal/module/challenge/application/challengecore"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -255,7 +256,7 @@ func TestChallengeServiceCreateChallengePropagatesContextToRepositories(t *testi
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected create challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if challenge.CreatedBy == nil || *challenge.CreatedBy != 1001 || challenge.ImageID != 7 {
+			if challenge.CreatedBy == nil || *challenge.CreatedBy != 1001 || challenge.ImageID == nil || *challenge.ImageID != 7 {
 				t.Fatalf("unexpected challenge payload: %+v", challenge)
 			}
 			return nil
@@ -279,7 +280,7 @@ func TestChallengeServiceCreateChallengePropagatesContextToRepositories(t *testi
 		Category:    "web",
 		Difficulty:  "easy",
 		Points:      100,
-		ImageID:     7,
+		ImageID:     int64Ptr(7),
 	})
 	if err != nil {
 		t.Fatalf("CreateChallenge() error = %v", err)
@@ -287,7 +288,7 @@ func TestChallengeServiceCreateChallengePropagatesContextToRepositories(t *testi
 	if !imageCalled || !createCalled {
 		t.Fatalf("expected repository calls, got image=%v create=%v", imageCalled, createCalled)
 	}
-	if resp == nil || resp.ImageID != 7 {
+	if resp == nil || resp.ImageID == nil || *resp.ImageID != 7 {
 		t.Fatalf("unexpected challenge resp: %+v", resp)
 	}
 }
@@ -319,7 +320,7 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected update challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if challenge.ImageID != 7 || challenge.InstanceSharing != challengeentity.InstanceSharingShared {
+			if challenge.ImageID == nil || *challenge.ImageID != 7 || challenge.InstanceSharing != challengeentity.InstanceSharingShared {
 				t.Fatalf("unexpected updated challenge payload: %+v", challenge)
 			}
 			return nil
@@ -347,7 +348,10 @@ func TestChallengeServiceUpdateChallengePropagatesContextToRepositories(t *testi
 
 	imageID := int64(7)
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
-	if err := service.UpdateChallenge(ctx, 9, UpdateChallengeInput{ImageID: &imageID, InstanceSharing: string(challengeentity.InstanceSharingShared)}); err != nil {
+	if err := service.UpdateChallenge(ctx, 9, UpdateChallengeInput{
+		ImageID:         challengecore.OptionalImageIDInput{Set: true, Value: &imageID},
+		InstanceSharing: string(challengeentity.InstanceSharingShared),
+	}); err != nil {
 		t.Fatalf("UpdateChallenge() error = %v", err)
 	}
 	if !findCalled || !imageCalled || !topologyCalled || !updateCalled {
@@ -530,7 +534,7 @@ func TestChallengeSelfCheckServiceSelfCheckChallengePropagatesContextToRepositor
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected find challenge ctx value %v, got %v", expectedCtxValue, got)
 			}
-			return &challengeentity.Challenge{ID: id, Title: "Self Check", ImageID: 7, FlagType: challengeentity.FlagTypeStatic, FlagHash: "flag{ok}", FlagSalt: "salt"}, nil
+			return &challengeentity.Challenge{ID: id, Title: "Self Check", ImageID: int64Ptr(7), FlagType: challengeentity.FlagTypeStatic, FlagHash: "flag{ok}", FlagSalt: "salt"}, nil
 		},
 	}
 	imageRepo := &challengeCommandImageRepoStub{

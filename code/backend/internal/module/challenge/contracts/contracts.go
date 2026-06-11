@@ -56,7 +56,7 @@ type PracticeRuntimeChallenge struct {
 	Category        string
 	Difficulty      string
 	Points          int
-	ImageID         int64
+	ImageID         *int64
 	Status          string
 	FlagType        string
 	FlagHash        string

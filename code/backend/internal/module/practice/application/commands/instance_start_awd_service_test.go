@@ -67,7 +67,7 @@ func TestStartContestAWDServiceDoesNotRequireContestChallengeLookup(t *testing.T
 			return &challengecontracts.PracticeRuntimeChallenge{
 				ID:       id,
 				Status:   challengecontracts.ChallengeStatusPublished,
-				ImageID:  104,
+				ImageID:  int64Ptr(104),
 				FlagType: challengecontracts.FlagTypeStatic,
 				FlagHash: "flag{awd-static}",
 			}, nil

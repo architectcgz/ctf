@@ -184,7 +184,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		Category:      taxonomy.DimensionWeb,
 		Difficulty:    taxonomy.DifficultyEasy,
 		Points:        100,
-		ImageID:       env.image.ID,
+		ImageID:       int64PtrForFullRouterTest(env.image.ID),
 		Status:        challengecontracts.ChallengeStatusPublished,
 		FlagType:      challengecontracts.FlagTypeStatic,
 		FlagSalt:      salt,
@@ -456,6 +456,10 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 	if err := env.db.Create(env.report).Error; err != nil {
 		t.Fatalf("create report: %v", err)
 	}
+}
+
+func int64PtrForFullRouterTest(value int64) *int64 {
+	return &value
 }
 
 func seedRoles(t *testing.T, db *gorm.DB) {

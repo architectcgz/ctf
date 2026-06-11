@@ -50,7 +50,7 @@ type Challenge struct {
 	Category        string          `gorm:"column:category"`
 	Difficulty      string          `gorm:"column:difficulty"`
 	Points          int             `gorm:"column:points"`
-	ImageID         int64           `gorm:"column:image_id"`
+	ImageID         *int64          `gorm:"column:image_id"`
 	AttachmentURL   string          `gorm:"column:attachment_url"`
 	Status          ChallengeStatus `gorm:"column:status"`
 	FlagType        string          `gorm:"column:flag_type;default:'static'"`

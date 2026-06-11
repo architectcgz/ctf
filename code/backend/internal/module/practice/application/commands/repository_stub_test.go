@@ -582,15 +582,15 @@ func stubContestAWDServiceSnapshotPoints(scoreConfig string) int {
 	return stubContestAWDServiceSnapshotInt(payload["points"])
 }
 
-func stubContestAWDServiceSnapshotImageID(runtimeConfig map[string]any) int64 {
+func stubContestAWDServiceSnapshotImageID(runtimeConfig map[string]any) *int64 {
 	if runtimeConfig == nil {
-		return 0
+		return nil
 	}
 	value := stubContestAWDServiceSnapshotInt(runtimeConfig["image_id"])
 	if value <= 0 {
-		return 0
+		return nil
 	}
-	return int64(value)
+	return int64Ptr(int64(value))
 }
 
 func stubContestAWDServiceSnapshotFlagType(flagConfig map[string]any) string {

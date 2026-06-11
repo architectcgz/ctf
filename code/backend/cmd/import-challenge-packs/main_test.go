@@ -75,7 +75,7 @@ extensions:
 	if challenge.AttachmentURL == "" {
 		t.Fatal("expected attachment URL to be populated")
 	}
-	if challenge.ImageID == 0 {
+	if challenge.ImageID == nil || *challenge.ImageID == 0 {
 		t.Fatal("expected runtime image to be resolved")
 	}
 	if challenge.FlagType != challengeentity.FlagTypeStatic {
@@ -207,6 +207,71 @@ runtime:
 	}
 	if challenge.PackageSlug == nil || *challenge.PackageSlug != "mode-switch" {
 		t.Fatalf("expected adopted challenge package_slug to be mode-switch, got %+v", challenge.PackageSlug)
+	}
+}
+
+func TestImportOnePackAdoptedLegacyChallengeClearsImageWhenPackageDropsRuntimeImage(t *testing.T) {
+	db := setupImportTestDB(t)
+
+	image := challengeentity.Image{
+		Name:   "legacy-image",
+		Tag:    "latest",
+		Status: challengeentity.ImageStatusAvailable,
+	}
+	if err := db.Create(&image).Error; err != nil {
+		t.Fatalf("seed image: %v", err)
+	}
+
+	legacyChallenge := challengeentity.Challenge{
+		Title:       "Image Cleanup",
+		Description: "legacy",
+		Category:    "misc",
+		Difficulty:  "easy",
+		Points:      100,
+		Status:      challengeentity.ChallengeStatusDraft,
+		ImageID:     int64Ptr(image.ID),
+	}
+	if err := db.Create(&legacyChallenge).Error; err != nil {
+		t.Fatalf("seed legacy challenge: %v", err)
+	}
+
+	packDir := t.TempDir()
+	mustWriteFile(t, filepath.Join(packDir, "challenge.yml"), []byte(`
+api_version: v1
+kind: challenge
+meta:
+  slug: image-cleanup
+  title: Image Cleanup
+  category: misc
+  difficulty: easy
+  points: 150
+content:
+  statement: statement.md
+  attachments: []
+flag:
+  type: static
+  value: flag{image_cleanup}
+  prefix: flag
+`))
+	mustWriteFile(t, filepath.Join(packDir, "statement.md"), []byte("# Image Cleanup\n\nPackage no longer has runtime image."))
+
+	created, _, err := importOnePack(db, packDir, false, false)
+	if err != nil {
+		t.Fatalf("importOnePack() error = %v", err)
+	}
+	if created {
+		t.Fatalf("expected import to adopt legacy challenge instead of creating new one")
+	}
+
+	var challenge challengeentity.Challenge
+	if err := db.First(&challenge, legacyChallenge.ID).Error; err != nil {
+		t.Fatalf("find imported challenge: %v", err)
+	}
+	if challenge.ImageID != nil {
+		t.Fatalf("expected adopted challenge image_id to be cleared, got %+v", challenge.ImageID)
+	}
+	if challenge.Points != 150 {
+		t.Fatalf("expected adopted challenge points to be updated, got %d", challenge.Points)
 	}
 }
 

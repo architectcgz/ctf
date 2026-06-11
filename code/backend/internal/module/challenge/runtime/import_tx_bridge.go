@@ -261,7 +261,7 @@ func (s *challengeImportTxStore) ResolvePlatformBuildImage(
 		return nil, err
 	}
 	return &challengeports.ImportedImageResolution{
-		ImageID:  result.ImageID,
+		ImageID:  int64Ptr(result.ImageID),
 		ImageRef: result.TargetRef,
 	}, nil
 }
@@ -284,7 +284,7 @@ func (s *challengeImportTxStore) ResolveExternalImage(
 		return nil, err
 	}
 	return &challengeports.ImportedImageResolution{
-		ImageID:  result.ImageID,
+		ImageID:  int64Ptr(result.ImageID),
 		ImageRef: result.ImageRef,
 	}, nil
 }
@@ -332,7 +332,7 @@ func (s *challengeImportTxStore) ResolveExistingImageRef(
 		}
 	}
 	return &challengeports.ImportedImageResolution{
-		ImageID:  image.ID,
+		ImageID:  int64Ptr(image.ID),
 		ImageRef: ref,
 	}, nil
 }
@@ -383,4 +383,8 @@ func importedChallengeToEntity(source *challengeports.ImportedChallenge) *challe
 		CreatedAt:      source.CreatedAt,
 		UpdatedAt:      source.UpdatedAt,
 	}
+}
+
+func int64Ptr(value int64) *int64 {
+	return &value
 }

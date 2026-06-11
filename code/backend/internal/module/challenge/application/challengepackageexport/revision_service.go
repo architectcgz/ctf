@@ -253,8 +253,8 @@ func rewriteChallengeManifestSnapshot(
 	case challengecontracts.FlagTypeDynamic, challengecontracts.FlagTypeManualReview:
 		manifest.Flag.Value = ""
 	}
-	if challenge.ImageID > 0 {
-		ref, err := store.FindImageRefByID(ctx, challenge.ImageID)
+	if challenge.ImageID != nil {
+		ref, err := store.FindImageRefByID(ctx, *challenge.ImageID)
 		if err != nil {
 			return "", err
 		}

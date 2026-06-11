@@ -43,7 +43,7 @@ func TestRestartContestAWDServiceRecreatesMissingDefenseWorkspaceContainer(t *te
 	if err := db.Create(&practiceCommandChallengeRow{
 		ID:        challengeID,
 		Title:     "Restart Service",
-		ImageID:   imageID,
+		ImageID:   int64Ptr(imageID),
 		Status:    challengecontracts.ChallengeStatusPublished,
 		FlagType:  challengecontracts.FlagTypeStatic,
 		FlagHash:  "flag{restart}",

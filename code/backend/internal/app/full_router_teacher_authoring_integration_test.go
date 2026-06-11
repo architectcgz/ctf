@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -72,6 +73,57 @@ func TestFullRouter_CreateChallengeStoresCreator(t *testing.T) {
 	}
 	if !createdBy.Valid || createdBy.Int64 != env.teacher.ID {
 		t.Fatalf("unexpected created_by=%+v, want %d", createdBy, env.teacher.ID)
+	}
+}
+
+func TestFullRouter_CreateChallengeWithoutImageUsesNullImageID(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	teacherHeaders := sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
+	resp := performFullRouterRequest(t, env.router, "POST", "/api/v1/authoring/challenges", map[string]any{
+		"title":       "nullable-image-create",
+		"description": "no image on create",
+		"category":    taxonomy.DimensionMisc,
+		"difficulty":  taxonomy.DifficultyEasy,
+		"points":      30,
+	}, teacherHeaders)
+	assertFullRouterStatus(t, resp, 200)
+
+	var challengeData map[string]any
+	decodeFullRouterData(t, resp, &challengeData)
+	if value, ok := challengeData["image_id"]; !ok || value != nil {
+		t.Fatalf("expected response image_id=null, got %+v", challengeData["image_id"])
+	}
+
+	challengeIDFloat, ok := challengeData["id"].(float64)
+	if !ok {
+		t.Fatalf("expected numeric challenge id, got %+v", challengeData["id"])
+	}
+
+	var imageID sql.NullInt64
+	if err := env.db.Raw("SELECT image_id FROM challenges WHERE id = ?", int64(challengeIDFloat)).Scan(&imageID).Error; err != nil {
+		t.Fatalf("query challenge image_id: %v", err)
+	}
+	if imageID.Valid {
+		t.Fatalf("expected persisted image_id NULL, got %+v", imageID)
+	}
+}
+
+func TestFullRouter_UpdateChallengeNullImageIDClearsImage(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	teacherHeaders := sessionHeaders(loginForSession(t, env.router, env.teacher.Username, env.teacherPwd))
+	resp := performFullRouterRequest(t, env.router, "PUT", "/api/v1/authoring/challenges/"+strconv.FormatInt(env.challenge.ID, 10), map[string]any{
+		"image_id": nil,
+	}, teacherHeaders)
+	assertFullRouterStatus(t, resp, 200)
+
+	var imageID sql.NullInt64
+	if err := env.db.Raw("SELECT image_id FROM challenges WHERE id = ?", env.challenge.ID).Scan(&imageID).Error; err != nil {
+		t.Fatalf("query challenge image_id: %v", err)
+	}
+	if imageID.Valid {
+		t.Fatalf("expected cleared image_id NULL, got %+v", imageID)
 	}
 }
 

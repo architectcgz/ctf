@@ -180,7 +180,7 @@ func (s *ChallengeService) GetPublishedChallenge(ctx context.Context, userID, ch
 	}
 
 	resp := challengeQueryResponseMapperInst.ToChallengeDetailRespBasePtr(challenge)
-	resp.NeedTarget = challenge.ImageID > 0
+	resp.NeedTarget = challenge.ImageID != nil
 	resp.Hints = challengeQueryResponseMapperInst.ToChallengeHintRespsPtr(hints)
 	resp.SolvedCount = solvedCount
 	resp.TotalAttempts = attempts

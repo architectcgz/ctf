@@ -11,6 +11,7 @@ import (
 
 // goverter:converter
 // goverter:enum:unknown @ignore
+// goverter:extend MapOptionalImageIDField
 // goverter:output:file ./request_mapper_gen.go
 // goverter:output:package :http
 type ChallengeRequestMapper interface {
@@ -31,3 +32,10 @@ type ChallengeRequestMapper interface {
 }
 
 var challengeRequestMapper ChallengeRequestMapper
+
+func MapOptionalImageIDField(source OptionalImageIDField) challengecore.OptionalImageIDInput {
+	return challengecore.OptionalImageIDInput{
+		Set:   source.Set,
+		Value: source.Value,
+	}
+}

@@ -175,13 +175,16 @@ func (c *ChallengeResponseMapperImpl) ToChallengeRespBase(source ports.Challenge
 	contractsChallengeResp.Category = source.Category
 	contractsChallengeResp.Difficulty = source.Difficulty
 	contractsChallengeResp.Points = source.Points
-	contractsChallengeResp.ImageID = source.ImageID
+	if source.ImageID != nil {
+		xint64 := *source.ImageID
+		contractsChallengeResp.ImageID = &xint64
+	}
 	contractsChallengeResp.AttachmentURL = source.AttachmentURL
 	contractsChallengeResp.InstanceSharing = source.InstanceSharing
 	contractsChallengeResp.Status = source.Status
 	if source.CreatedBy != nil {
-		xint64 := *source.CreatedBy
-		contractsChallengeResp.CreatedBy = &xint64
+		xint642 := *source.CreatedBy
+		contractsChallengeResp.CreatedBy = &xint642
 	}
 	contractsChallengeResp.CreatedAt = CopyTime(source.CreatedAt)
 	contractsChallengeResp.UpdatedAt = CopyTime(source.UpdatedAt)

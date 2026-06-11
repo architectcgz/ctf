@@ -147,7 +147,7 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 	}
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       511,
-		ImageID:  511,
+		ImageID:  int64Ptr(511),
 		FlagType: challengecontracts.FlagTypeStatic,
 	}
 
@@ -322,7 +322,7 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 	}
 	challenge := &challengecontracts.PracticeRuntimeChallenge{
 		ID:       512,
-		ImageID:  512,
+		ImageID:  int64Ptr(512),
 		FlagType: challengecontracts.FlagTypeStatic,
 	}
 

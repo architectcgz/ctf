@@ -57,7 +57,7 @@ type ChallengeResp struct {
 	Category        string                    `json:"category"`
 	Difficulty      string                    `json:"difficulty"`
 	Points          int                       `json:"points"`
-	ImageID         int64                     `json:"image_id"`
+	ImageID         *int64                    `json:"image_id"`
 	AttachmentURL   string                    `json:"attachment_url,omitempty"`
 	InstanceSharing string                    `json:"instance_sharing"`
 	Hints           []*ChallengeHintAdminResp `json:"hints,omitempty"`

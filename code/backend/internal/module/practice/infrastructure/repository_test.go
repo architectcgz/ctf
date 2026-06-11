@@ -416,7 +416,7 @@ func TestRepositoryFindContestAWDServiceRuntimeSubjectMapsSnapshot(t *testing.T)
 	if subject.RuntimeChallenge.Title != "Display Name" {
 		t.Fatalf("expected display name to win title fallback, got %+v", subject.RuntimeChallenge)
 	}
-	if subject.RuntimeChallenge.Points != 320 || subject.RuntimeChallenge.ImageID != 105 {
+	if subject.RuntimeChallenge.Points != 320 || subject.RuntimeChallenge.ImageID == nil || *subject.RuntimeChallenge.ImageID != 105 {
 		t.Fatalf("unexpected runtime challenge payload: %+v", subject.RuntimeChallenge)
 	}
 	if subject.RuntimeChallenge.InstanceSharing != string(challengecontracts.InstanceSharingPerTeam) {

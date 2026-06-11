@@ -70,13 +70,8 @@ func (s *ChallengeService) publishPublishedCatalogChangedEvent(
 }
 
 func (s *ChallengeService) CreateChallenge(ctx context.Context, actorUserID int64, req CreateChallengeInput) (*challengecontracts.ChallengeResp, error) {
-	if req.ImageID > 0 {
-		if _, err := s.imageRepo.FindByID(ctx, req.ImageID); err != nil {
-			if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-				return nil, apperror.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
-			}
-			return nil, err
-		}
+	if err := s.ensureImageExists(ctx, req.ImageID); err != nil {
+		return nil, err
 	}
 
 	challenge := &challengeports.ChallengeWriteModel{
@@ -131,16 +126,11 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req Up
 	if req.Points > 0 {
 		challenge.Points = req.Points
 	}
-	if req.ImageID != nil {
-		if *req.ImageID > 0 {
-			if _, err := s.imageRepo.FindByID(ctx, *req.ImageID); err != nil {
-				if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
-					return apperror.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
-				}
-				return err
-			}
+	if req.ImageID.Set {
+		if err := s.ensureImageExists(ctx, req.ImageID.Value); err != nil {
+			return err
 		}
-		challenge.ImageID = *req.ImageID
+		challenge.ImageID = req.ImageID.Value
 	}
 	if req.AttachmentURL != nil {
 		challenge.AttachmentURL = strings.TrimSpace(*req.AttachmentURL)
@@ -167,6 +157,22 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, id int64, req Up
 		before,
 		challengecatalog.PublishedStateFromWriteModel(challenge),
 	)
+	return nil
+}
+
+func (s *ChallengeService) ensureImageExists(ctx context.Context, imageID *int64) error {
+	if imageID == nil {
+		return nil
+	}
+	if *imageID <= 0 {
+		return apperror.ErrInvalidParams.WithCause(errors.New("image_id 必须大于 0"))
+	}
+	if _, err := s.imageRepo.FindByID(ctx, *imageID); err != nil {
+		if errors.Is(err, challengeports.ErrChallengeImageNotFound) {
+			return apperror.ErrNotFound.WithCause(errors.New(domain.ErrMsgImageNotFound))
+		}
+		return err
+	}
 	return nil
 }
 
