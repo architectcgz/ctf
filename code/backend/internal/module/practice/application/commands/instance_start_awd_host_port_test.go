@@ -66,7 +66,7 @@ func TestStartContestAWDServiceDoesNotReserveHostPort(t *testing.T) {
 			}, nil
 		},
 	}
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -164,7 +164,7 @@ func TestStartContestAWDServiceReservesHostPortWhenAccessHostConfigured(t *testi
 			}, nil
 		},
 	}
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,

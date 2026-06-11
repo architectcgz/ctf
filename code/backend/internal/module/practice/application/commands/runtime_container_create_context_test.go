@@ -33,7 +33,7 @@ func TestLoadRuntimeSubjectWithScopePropagatesContextToChallengeContract(t *test
 			return nil, nil
 		},
 	}
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		nil,
 
 		nil,
@@ -71,7 +71,7 @@ func TestBuildTopologyCreateRequestPropagatesContextToImageRepository(t *testing
 	ctxKey := practiceServiceContextKey("topology-image")
 	expectedCtxValue := "ctx-topology-image"
 	lookups := make([]int64, 0, 2)
-	service := &Service{
+	service := &serviceCore{
 		imageRepo: &stubPracticeImageStore{
 			findByIDFn: func(ctx context.Context, id int64) (*challengecontracts.Image, error) {
 				if got := ctx.Value(ctxKey); got != expectedCtxValue {

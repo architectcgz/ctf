@@ -74,7 +74,7 @@ func TestRestartContestAWDServicePreservesHostPortWhenAccessHostConfigured(t *te
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -203,7 +203,7 @@ func TestRestartContestAWDServiceAllocatesHostPortWhenAccessHostConfiguredAndIns
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -338,7 +338,7 @@ func TestRestartContestAWDServiceReallocatesStaleHostPortWhenOwnedByAnotherInsta
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,

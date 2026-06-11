@@ -442,6 +442,26 @@ type AWDChallengeImportTxRunner interface {
 	WithinAWDChallengeImportTransaction(ctx context.Context, fn func(store AWDChallengeImportTxStore) error) error
 }
 
+type AWDCheckerArtifactPersistRequest struct {
+	Slug             string
+	CheckerType      string
+	CheckerConfig    map[string]any
+	CheckerEntryAbs  string
+	CheckerEntryPath string
+	CheckerFiles     []AWDCheckerArtifactFile
+}
+
+type AWDCheckerArtifactFile struct {
+	Path string
+	Abs  string
+}
+
+type AWDCheckerArtifactStore interface {
+	PersistScriptCheckerArtifact(ctx context.Context, req AWDCheckerArtifactPersistRequest) (string, error)
+	ArtifactDirFromConfig(ctx context.Context, raw string) string
+	RemoveArtifactDir(ctx context.Context, dir string) error
+}
+
 type ChallengePackageCore struct {
 	ID          int64
 	Title       string

@@ -16,7 +16,7 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
-func (s *Service) recordAWDServiceOperation(ctx context.Context, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status, requestedBy string, requestedByID *int64, reason string, slaBillable bool) {
+func (s *serviceCore) recordAWDServiceOperation(ctx context.Context, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status, requestedBy string, requestedByID *int64, reason string, slaBillable bool) {
 	if err := s.repo.WithinAWDServiceOperationTx(ctx, func(txRepo practiceports.PracticeAWDServiceOperationTxRepository) error {
 		return createAWDServiceOperation(ctx, txRepo, instanceID, contestID, scope, operationType, status, requestedBy, requestedByID, reason, slaBillable)
 	}); err != nil {
@@ -87,7 +87,7 @@ func restartCleanupRuntimeView(instance *instancecontracts.Instance) *instanceco
 	return &copied
 }
 
-func (s *Service) GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*AdminAWDInstanceOrchestrationResp, error) {
+func (s *serviceCore) GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*AdminAWDInstanceOrchestrationResp, error) {
 	if s.contestScope == nil {
 		return nil, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}

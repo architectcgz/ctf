@@ -1,4 +1,4 @@
-package commands
+package infrastructure
 
 import (
 	"context"
@@ -197,7 +197,7 @@ func (s *ArtifactGCService) loadReferences(ctx context.Context) (artifactReferen
 	return artifactReferenceSets{
 		attachmentSet:       pathSet(s.resolveAttachmentReferencePaths(refs)),
 		imageBuildSourceSet: pathSet(refs.ImageBuildSourceDirs),
-		awdCheckerSet:       pathSet(s.resolveAWDCheckerReferenceDirs(refs)),
+		awdCheckerSet:       pathSet(s.resolveAWDCheckerReferenceDirs(ctx, refs)),
 	}, nil
 }
 
@@ -213,10 +213,11 @@ func (s *ArtifactGCService) resolveAttachmentReferencePaths(refs challengeports.
 	return paths
 }
 
-func (s *ArtifactGCService) resolveAWDCheckerReferenceDirs(refs challengeports.ArtifactReferences) []string {
+func (s *ArtifactGCService) resolveAWDCheckerReferenceDirs(ctx context.Context, refs challengeports.ArtifactReferences) []string {
 	dirs := append([]string{}, refs.AWDCheckerDirs...)
+	checkerStore := NewAWDCheckerArtifactStore(s.config.AWDCheckerArtifactRoot)
 	for _, rawConfig := range refs.AWDCheckerConfigs {
-		if dir := awdCheckerArtifactDirFromConfig(rawConfig); dir != "" {
+		if dir := checkerStore.ArtifactDirFromConfig(ctx, rawConfig); dir != "" {
 			dirs = append(dirs, dir)
 		}
 	}

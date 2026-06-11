@@ -67,7 +67,7 @@ func TestServiceStartContestAWDServiceCanProvisionFromContestAWDServiceSnapshot(
 		t.Fatalf("create contest awd service: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	resp, err := service.StartContestAWDService(context.Background(), 5901, 3901, 7901)
 	if err != nil {
 		t.Fatalf("StartContestAWDService() error = %v", err)

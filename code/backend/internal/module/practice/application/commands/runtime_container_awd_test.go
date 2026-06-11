@@ -58,7 +58,7 @@ func TestCreateSingleAWDContainerUsesPrivateTopology(t *testing.T) {
 		t.Fatalf("encode service snapshot: %v", err)
 	}
 	createTopologyCalls := 0
-	service := &Service{
+	service := &serviceCore{
 		repo: &stubPracticeRepository{
 			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 				return &practiceports.ContestAWDServiceRecord{

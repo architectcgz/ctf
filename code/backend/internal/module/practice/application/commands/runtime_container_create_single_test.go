@@ -34,7 +34,7 @@ func TestCreateSingleContainerRebindsHostPortAfterPublishConflict(t *testing.T) 
 	createContainerCalls := 0
 	reboundBound := false
 	releasedOldPort := false
-	service := &Service{
+	service := &serviceCore{
 		repo: &stubPracticeRepository{
 			reserveAvailablePortExcludingFn: func(ctx context.Context, start, end, excludedPort int) (int, error) {
 				if excludedPort != 30021 {
@@ -150,7 +150,7 @@ func TestCreateSingleContainerUsesSingleContainerSubnetPool(t *testing.T) {
 		t.Fatalf("create image: %v", err)
 	}
 
-	service := &Service{
+	service := &serviceCore{
 		imageRepo: challengeinfra.NewImageRepository(db),
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
@@ -207,7 +207,7 @@ func TestReserveReboundProvisioningHostPortReleasesUnboundReservationWhenBindFai
 	t.Parallel()
 
 	releasedReservedPort := 0
-	service := &Service{
+	service := &serviceCore{
 		repo: &stubPracticeRepository{
 			reserveAvailablePortExcludingFn: func(ctx context.Context, start, end, excludedPort int) (int, error) {
 				if excludedPort != 30031 {

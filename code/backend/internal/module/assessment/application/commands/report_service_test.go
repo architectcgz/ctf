@@ -13,10 +13,13 @@ import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 	"ctf-platform/internal/teaching/evidence"
+	"errors"
 	"fmt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -43,6 +46,38 @@ type testReportRepository struct {
 	evidence          []assessmentdomain.ReviewArchiveEvidenceEvent
 	writeups          []assessmentdomain.ReviewArchiveWriteupItem
 	manualReviews     []assessmentdomain.ReviewArchiveManualReviewItem
+}
+
+type testReportOutputStore struct {
+	root string
+}
+
+func newTestReportOutputStore(t *testing.T) assessmentports.ReportOutputStore {
+	t.Helper()
+	return &testReportOutputStore{root: t.TempDir()}
+}
+
+func (s *testReportOutputStore) PrepareReportOutput(ctx context.Context, fileName string) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(s.root, 0o755); err != nil {
+		return "", err
+	}
+	return filepath.Join(s.root, filepath.Base(fileName)), nil
+}
+
+func (s *testReportOutputStore) ResolveReportDownloadPath(ctx context.Context, path string) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	if _, err := os.Stat(path); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", assessmentports.ErrAssessmentReportOutputNotFound
+		}
+		return "", err
+	}
+	return path, nil
 }
 
 func (r *testReportRepository) Create(ctx context.Context, report *assessmententity.Report) error {

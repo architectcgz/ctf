@@ -14,7 +14,7 @@ import (
 
 const desiredAWDReconcileLastErrorLimit = 256
 
-func (s *Service) ReconcileDesiredAWDInstances(ctx context.Context) error {
+func (s *serviceCore) ReconcileDesiredAWDInstances(ctx context.Context) error {
 	if ctx == nil {
 		return nil
 	}
@@ -35,7 +35,7 @@ func (s *Service) ReconcileDesiredAWDInstances(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) reconcileDesiredAWDContest(ctx context.Context, contest *practiceports.ContestRecord, activeAt time.Time) error {
+func (s *serviceCore) reconcileDesiredAWDContest(ctx context.Context, contest *practiceports.ContestRecord, activeAt time.Time) error {
 	teams, err := s.repo.ListContestTeams(ctx, contest.ID)
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (s *Service) reconcileDesiredAWDContest(ctx context.Context, contest *pract
 	return nil
 }
 
-func (s *Service) ensureDesiredAdminContestAWDTeamService(ctx context.Context, contest *practiceports.ContestRecord, team *practiceports.ContestTeamRecord, service *practiceports.ContestAWDServiceRecord) error {
+func (s *serviceCore) ensureDesiredAdminContestAWDTeamService(ctx context.Context, contest *practiceports.ContestRecord, team *practiceports.ContestTeamRecord, service *practiceports.ContestAWDServiceRecord) error {
 	if contest == nil || team == nil || service == nil {
 		return nil
 	}
@@ -150,7 +150,7 @@ func awdDesiredRuntimeScopeKey(teamID, serviceID int64) string {
 	return fmt.Sprintf("%d:%d", teamID, serviceID)
 }
 
-func (s *Service) shouldAttemptDesiredAWDReconcile(ctx context.Context, contestID, teamID, serviceID int64, now time.Time) (bool, error) {
+func (s *serviceCore) shouldAttemptDesiredAWDReconcile(ctx context.Context, contestID, teamID, serviceID int64, now time.Time) (bool, error) {
 	if s == nil || s.desiredState == nil || contestID <= 0 || teamID <= 0 || serviceID <= 0 {
 		return true, nil
 	}
@@ -178,7 +178,7 @@ func (s *Service) shouldAttemptDesiredAWDReconcile(ctx context.Context, contestI
 	return true, nil
 }
 
-func (s *Service) recordDesiredAWDReconcileFailure(ctx context.Context, contestID, teamID, serviceID int64, cause error, failedAt time.Time) {
+func (s *serviceCore) recordDesiredAWDReconcileFailure(ctx context.Context, contestID, teamID, serviceID int64, cause error, failedAt time.Time) {
 	if s == nil || s.desiredState == nil || contestID <= 0 || teamID <= 0 || serviceID <= 0 {
 		return
 	}
@@ -218,7 +218,7 @@ func (s *Service) recordDesiredAWDReconcileFailure(ctx context.Context, contestI
 	}
 }
 
-func (s *Service) clearDesiredAWDReconcileFailure(ctx context.Context, contestID, teamID, serviceID int64) {
+func (s *serviceCore) clearDesiredAWDReconcileFailure(ctx context.Context, contestID, teamID, serviceID int64) {
 	if s == nil || s.desiredState == nil || contestID <= 0 || teamID <= 0 || serviceID <= 0 {
 		return
 	}
@@ -231,7 +231,7 @@ func (s *Service) clearDesiredAWDReconcileFailure(ctx context.Context, contestID
 	}
 }
 
-func (s *Service) desiredAWDReconcileFailureBackoff(failureCount int) time.Duration {
+func (s *serviceCore) desiredAWDReconcileFailureBackoff(failureCount int) time.Duration {
 	if failureCount <= 1 {
 		return s.desiredAWDReconcileFailureInitialBackoff()
 	}

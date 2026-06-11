@@ -323,6 +323,26 @@ func TestChallengeCommandServicesAreSeparated(t *testing.T) {
 func TestChallengeCommandFileStorageBoundaryIsInInfrastructure(t *testing.T) {
 	t.Parallel()
 
+	forbiddenCommandImports := map[string]string{
+		"io/fs":         "filesystem traversal belongs in infrastructure",
+		"os":            "LocalFS/env operations belong in infrastructure",
+		"os/exec":       "Docker CLI process execution belongs in infrastructure",
+		"path/filepath": "LocalFS path handling belongs in infrastructure",
+	}
+	commandFiles, err := filepath.Glob(filepath.Join("application", "commands", "*.go"))
+	if err != nil {
+		t.Fatalf("glob commands files: %v", err)
+	}
+	for _, file := range commandFiles {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		for importPath, reason := range forbiddenCommandImports {
+			assertFileDoesNotImport(t, file, importPath)
+			_ = reason
+		}
+	}
+
 	blockedMarkers := []string{
 		"writeImportUploadArchive",
 		"extractChallengeImportArchive",
@@ -341,6 +361,9 @@ func TestChallengeCommandFileStorageBoundaryIsInInfrastructure(t *testing.T) {
 		"zipDirectory",
 		"addZipFile",
 		"DefaultArtifactGCConfigFromEnv",
+		"NewDockerCLIImageBuilder",
+		"exec.CommandContext",
+		"AWD_CHECKER_ARTIFACT_DIR",
 	}
 
 	files := []string{
@@ -348,7 +371,6 @@ func TestChallengeCommandFileStorageBoundaryIsInInfrastructure(t *testing.T) {
 		filepath.Join("application", "challengeimport", "package_revision.go"),
 		filepath.Join("application", "challengepackageexport", "revision_service.go"),
 		filepath.Join("application", "commands", "awd_challenge_import_service.go"),
-		filepath.Join("application", "commands", "artifact_gc_service.go"),
 	}
 	for _, file := range files {
 		source := readFileSource(t, file)
@@ -357,6 +379,12 @@ func TestChallengeCommandFileStorageBoundaryIsInInfrastructure(t *testing.T) {
 				t.Fatalf("%s must not own LocalFS/zip helper %s", file, marker)
 			}
 		}
+	}
+
+	if _, err := os.Stat(filepath.Join("application", "commands", "artifact_gc_service.go")); err == nil {
+		t.Fatalf("artifact GC service must live outside application/commands")
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("stat artifact GC service: %v", err)
 	}
 }
 

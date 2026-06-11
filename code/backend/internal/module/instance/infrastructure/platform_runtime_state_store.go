@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/infrastructure/redislock"
 	"ctf-platform/internal/module/instance/infrastructure/cachekeys"
+	instanceports "ctf-platform/internal/module/instance/ports"
 )
 
 type PlatformRuntimeStateStore struct {
@@ -55,9 +56,38 @@ func (s *PlatformRuntimeStateStore) SavePlatformRuntimeState(ctx context.Context
 	}).Err()
 }
 
-func (s *PlatformRuntimeStateStore) AcquireStartupRecoveryLock(ctx context.Context, ttl time.Duration) (*redislock.Lock, bool, error) {
+func (s *PlatformRuntimeStateStore) AcquireStartupRecoveryLock(ctx context.Context, ttl time.Duration) (instanceports.StartupRecoveryLockLease, bool, error) {
 	if s == nil || s.cache == nil {
 		return nil, true, nil
 	}
-	return redislock.Acquire(ctx, s.cache, cachekeys.PlatformRuntimeRecoveryLockKey(), ttl)
+	lock, acquired, err := redislock.Acquire(ctx, s.cache, cachekeys.PlatformRuntimeRecoveryLockKey(), ttl)
+	if err != nil || !acquired {
+		return nil, acquired, err
+	}
+	return startupRecoveryRedisLockLease{lock: lock}, true, nil
+}
+
+type startupRecoveryRedisLockLease struct {
+	lock *redislock.Lock
+}
+
+func (l startupRecoveryRedisLockLease) Refresh(ctx context.Context, ttl time.Duration) (bool, error) {
+	if l.lock == nil {
+		return false, nil
+	}
+	return l.lock.Refresh(ctx, ttl)
+}
+
+func (l startupRecoveryRedisLockLease) Release(ctx context.Context) (bool, error) {
+	if l.lock == nil {
+		return false, nil
+	}
+	return l.lock.Release(ctx)
+}
+
+func (l startupRecoveryRedisLockLease) Key(ctx context.Context) string {
+	if l.lock == nil {
+		return ""
+	}
+	return l.lock.Key(ctx)
 }

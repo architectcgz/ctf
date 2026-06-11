@@ -43,6 +43,92 @@ func TestAPIHTTPDoesNotDependOnInfrastructure(t *testing.T) {
 	}
 }
 
+func TestHTTPHandlerUsesFocusedPracticeServices(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("api", "http", "*.go"))
+	if err != nil {
+		t.Fatalf("glob api/http files: %v", err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice/application/commands")
+	}
+
+	handler := readFileSource(t, filepath.Join("api", "http", "handler.go"))
+	blocked := []string{
+		"type practiceService interface",
+		"service practiceService",
+		"h.service.",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(handler, marker) {
+			t.Fatalf("practice handler must not keep wide service marker %s", marker)
+		}
+	}
+	expected := []string{
+		"type practiceInstanceLifecycleService interface",
+		"type practiceSubmissionService interface",
+		"type practiceManualReviewService interface",
+		"instances practiceInstanceLifecycleService",
+		"submissions practiceSubmissionService",
+		"manualReviews practiceManualReviewService",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(handler, marker) {
+			t.Fatalf("practice handler should keep focused service marker %s", marker)
+		}
+	}
+
+	runtime := readFileSource(t, filepath.Join("runtime", "module.go"))
+	for _, marker := range []string{
+		"practicecmd.NewCommandServices(",
+		"commandServices.Instances,",
+		"commandServices.Submissions,",
+		"commandServices.ManualReviews,",
+	} {
+		if !strings.Contains(runtime, marker) {
+			t.Fatalf("practice runtime should wire focused service marker %s", marker)
+		}
+	}
+}
+
+func TestPracticeCommandWideServiceFacadeIsRemoved(t *testing.T) {
+	t.Parallel()
+
+	patterns := []string{
+		filepath.Join("application", "commands", "*.go"),
+		filepath.Join("api", "http", "*.go"),
+		filepath.Join("runtime", "*.go"),
+	}
+	blocked := []string{
+		"type Service struct",
+		"type Service =",
+		"func NewService(",
+		"*practicecmd.Service",
+		"practicecmd.NewService",
+	}
+	for _, pattern := range patterns {
+		files, err := filepath.Glob(pattern)
+		if err != nil {
+			t.Fatalf("glob files for %s: %v", pattern, err)
+		}
+		for _, file := range files {
+			if strings.HasSuffix(file, "_test.go") {
+				continue
+			}
+			source := readFileSource(t, file)
+			for _, marker := range blocked {
+				if strings.Contains(source, marker) {
+					t.Fatalf("practice command wide service facade marker %s still exists in %s", marker, file)
+				}
+			}
+		}
+	}
+}
+
 func TestCommandsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 
@@ -211,8 +297,8 @@ func TestRuntimeDelegatesThroughSubBuilders(t *testing.T) {
 		"newModuleDeps(",
 		"buildHandler(",
 		"practicehttp.NewHandler(",
-		"service.StartBackgroundTasks(",
-		"service.SetEventBus(",
+		"commandServices.Runtime.StartBackgroundTasks(",
+		"commandServices.SetEventBus(",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
@@ -236,6 +322,16 @@ func TestDomainDoesNotDependOnGinGORMOrRedis(t *testing.T) {
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
 		assertFileDoesNotImport(t, file, "github.com/redis/go-redis/v9")
 	}
+}
+
+func readFileSource(t *testing.T, filePath string) string {
+	t.Helper()
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("read file %s: %v", filePath, err)
+	}
+	return string(content)
 }
 
 func assertFileImports(t *testing.T, filePath string, expectedImport string) {

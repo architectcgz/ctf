@@ -60,7 +60,7 @@ type instanceRepository interface {
 	practiceports.PracticeInstanceStatsRepository
 }
 
-type Service struct {
+type serviceCore struct {
 	repo                practiceCommandRepository
 	contestScope        practiceports.PracticeContestScopeRepository
 	imageRepo           challengecontracts.ImageStore
@@ -83,7 +83,7 @@ type Service struct {
 	tasks               sync.WaitGroup
 }
 
-func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
+func (s *serviceCore) SetEventBus(bus platformevents.Bus) *serviceCore {
 	if s == nil {
 		return nil
 	}
@@ -91,7 +91,7 @@ func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
 	return s
 }
 
-func (s *Service) SetDesiredAWDReconcileStateStore(store practiceports.PracticeDesiredAWDReconcileStateStore) *Service {
+func (s *serviceCore) SetDesiredAWDReconcileStateStore(store practiceports.PracticeDesiredAWDReconcileStateStore) *serviceCore {
 	if s == nil {
 		return nil
 	}
@@ -99,7 +99,7 @@ func (s *Service) SetDesiredAWDReconcileStateStore(store practiceports.PracticeD
 	return s
 }
 
-func (s *Service) SetSchedulerLockStore(store practiceports.PracticeInstanceSchedulerLockStore) *Service {
+func (s *serviceCore) SetSchedulerLockStore(store practiceports.PracticeInstanceSchedulerLockStore) *serviceCore {
 	if s == nil {
 		return nil
 	}
@@ -107,7 +107,7 @@ func (s *Service) SetSchedulerLockStore(store practiceports.PracticeInstanceSche
 	return s
 }
 
-func (s *Service) SetInstanceReadinessProbe(probe practiceports.PracticeInstanceReadinessProbe) *Service {
+func (s *serviceCore) SetInstanceReadinessProbe(probe practiceports.PracticeInstanceReadinessProbe) *serviceCore {
 	if s == nil {
 		return nil
 	}
@@ -115,7 +115,7 @@ func (s *Service) SetInstanceReadinessProbe(probe practiceports.PracticeInstance
 	return s
 }
 
-func (s *Service) SetContestScopeRepository(repo practiceports.PracticeContestScopeRepository) *Service {
+func (s *serviceCore) SetContestScopeRepository(repo practiceports.PracticeContestScopeRepository) *serviceCore {
 	if s == nil {
 		return nil
 	}
@@ -123,7 +123,7 @@ func (s *Service) SetContestScopeRepository(repo practiceports.PracticeContestSc
 	return s
 }
 
-func (s *Service) SetRuntimeSubjectRepository(repo practiceports.PracticeRuntimeSubjectRepository) *Service {
+func (s *serviceCore) SetRuntimeSubjectRepository(repo practiceports.PracticeRuntimeSubjectRepository) *serviceCore {
 	if s == nil {
 		return nil
 	}
@@ -131,7 +131,7 @@ func (s *Service) SetRuntimeSubjectRepository(repo practiceports.PracticeRuntime
 	return s
 }
 
-func (s *Service) SetRuntimeNodeSelector(selector practiceports.RuntimeNodeSelector) *Service {
+func (s *serviceCore) SetRuntimeNodeSelector(selector practiceports.RuntimeNodeSelector) *serviceCore {
 	if s == nil {
 		return nil
 	}
@@ -139,7 +139,7 @@ func (s *Service) SetRuntimeNodeSelector(selector practiceports.RuntimeNodeSelec
 	return s
 }
 
-func (s *Service) SetManualReviewRepository(repo practiceports.PracticeManualReviewRepository) *Service {
+func (s *serviceCore) SetManualReviewRepository(repo practiceports.PracticeManualReviewRepository) *serviceCore {
 	if s == nil {
 		return nil
 	}
@@ -147,7 +147,7 @@ func (s *Service) SetManualReviewRepository(repo practiceports.PracticeManualRev
 	return s
 }
 
-func (s *Service) SetSolvedSubmissionRepository(repo practiceports.PracticeSolvedSubmissionRepository) *Service {
+func (s *serviceCore) SetSolvedSubmissionRepository(repo practiceports.PracticeSolvedSubmissionRepository) *serviceCore {
 	if s == nil {
 		return nil
 	}
@@ -155,7 +155,7 @@ func (s *Service) SetSolvedSubmissionRepository(repo practiceports.PracticeSolve
 	return s
 }
 
-func NewService(
+func newServiceCore(
 	repo practiceCommandRepository,
 	imageRepo challengecontracts.ImageStore,
 	instanceRepo instanceRepository,
@@ -164,14 +164,14 @@ func NewService(
 	rateLimitStore practiceports.PracticeFlagSubmitRateLimitStore,
 	cfg *config.Config,
 	logger *zap.Logger,
-) *Service {
+) *serviceCore {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 	if cfg == nil {
 		cfg = &config.Config{}
 	}
-	return &Service{
+	return &serviceCore{
 		repo:           repo,
 		imageRepo:      imageRepo,
 		instanceRepo:   instanceRepo,

@@ -135,7 +135,7 @@ func TestRestartContestAWDServicePreservesExistingDefenseWorkspaceRevision(t *te
 	}
 
 	var createTopologyCalls atomic.Int32
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),

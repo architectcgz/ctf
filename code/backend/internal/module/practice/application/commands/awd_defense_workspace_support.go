@@ -139,7 +139,7 @@ func shellQuoteForPOSIXSh(value string) string {
 	return "'" + strings.ReplaceAll(value, "'", `'"'"'`) + "'"
 }
 
-func (s *Service) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge) (*awdDefenseWorkspacePlan, error) {
+func (s *serviceCore) prepareAWDDefenseWorkspacePlan(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge) (*awdDefenseWorkspacePlan, error) {
 	if !isAWDInstance(instance) || instance.TeamID == nil {
 		return nil, nil
 	}
@@ -311,7 +311,7 @@ func applyAWDDefenseWorkspaceRuntimeMounts(request *practiceports.TopologyCreate
 	}
 }
 
-func (s *Service) persistAWDDefenseWorkspaceState(ctx context.Context, plan *awdDefenseWorkspacePlan, instanceID int64, status, containerID string) error {
+func (s *serviceCore) persistAWDDefenseWorkspaceState(ctx context.Context, plan *awdDefenseWorkspacePlan, instanceID int64, status, containerID string) error {
 	if plan == nil {
 		return nil
 	}
@@ -331,7 +331,7 @@ func (s *Service) persistAWDDefenseWorkspaceState(ctx context.Context, plan *awd
 	})
 }
 
-func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instance *instancecontracts.Instance, plan *awdDefenseWorkspacePlan) (string, error) {
+func (s *serviceCore) createAWDDefenseWorkspaceCompanion(ctx context.Context, instance *instancecontracts.Instance, plan *awdDefenseWorkspacePlan) (string, error) {
 	if s == nil || s.runtimeService == nil || plan == nil {
 		return "", fmt.Errorf("awd defense workspace runtime is not configured")
 	}
@@ -368,7 +368,7 @@ func (s *Service) createAWDDefenseWorkspaceCompanion(ctx context.Context, instan
 	return strings.TrimSpace(result.PrimaryContainerID), nil
 }
 
-func (s *Service) cleanupAWDDefenseWorkspaceCompanion(ctx context.Context, containerID string) error {
+func (s *serviceCore) cleanupAWDDefenseWorkspaceCompanion(ctx context.Context, containerID string) error {
 	if s == nil || s.runtimeService == nil || strings.TrimSpace(containerID) == "" {
 		return nil
 	}
@@ -393,7 +393,7 @@ func resolveAWDDefenseWorkspaceFailureContainerID(plan *awdDefenseWorkspacePlan,
 	return strings.TrimSpace(plan.staleWorkspaceContainerID)
 }
 
-func (s *Service) persistAWDDefenseWorkspaceFailure(ctx context.Context, plan *awdDefenseWorkspacePlan, instanceID int64, containerID string) {
+func (s *serviceCore) persistAWDDefenseWorkspaceFailure(ctx context.Context, plan *awdDefenseWorkspacePlan, instanceID int64, containerID string) {
 	if plan == nil || !plan.createWorkspace {
 		return
 	}

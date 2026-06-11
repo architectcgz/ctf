@@ -96,7 +96,7 @@ func TestRestartOrStartScopedAWDServiceRecreatesActiveInstanceWhenCheckerTokenMe
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -228,7 +228,7 @@ func TestRestartContestAWDServiceRequeuesExistingTeamInstance(t *testing.T) {
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,

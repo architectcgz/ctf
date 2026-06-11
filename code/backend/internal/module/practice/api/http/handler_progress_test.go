@@ -30,7 +30,7 @@ func (s *stubPracticeProgressQuery) GetTimeline(ctx context.Context, userID int6
 func TestHandlerUsesPracticeQueryForProgress(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	handler := NewHandler(nil, nil, &stubPracticeProgressQuery{
+	handler := NewHandler(nil, nil, nil, nil, &stubPracticeProgressQuery{
 		getProgressFn: func(ctx context.Context, userID int64) (*practiceports.UserProgressSnapshot, error) {
 			if userID != 42 {
 				t.Fatalf("unexpected user id: %d", userID)
@@ -69,7 +69,7 @@ func TestHandlerUsesPracticeQueryForTimeline(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	now := time.Now().UTC()
-	handler := NewHandler(nil, nil, &stubPracticeProgressQuery{
+	handler := NewHandler(nil, nil, nil, nil, &stubPracticeProgressQuery{
 		getTimelineFn: func(ctx context.Context, userID int64, limit, offset int) (*practiceports.TimelineSnapshot, error) {
 			if userID != 7 {
 				t.Fatalf("unexpected user id: %d", userID)

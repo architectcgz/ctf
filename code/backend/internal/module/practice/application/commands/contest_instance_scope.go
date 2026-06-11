@@ -13,7 +13,7 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
-func (s *Service) resolveContestChallengeInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (practiceports.InstanceScope, error) {
+func (s *serviceCore) resolveContestChallengeInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (practiceports.InstanceScope, error) {
 	if s.contestScope == nil {
 		return practiceports.InstanceScope{}, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
@@ -39,7 +39,7 @@ func (s *Service) resolveContestChallengeInstanceScope(ctx context.Context, user
 	return scope, nil
 }
 
-func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, userID, contestID, serviceID int64) (int64, practiceports.InstanceScope, error) {
+func (s *serviceCore) resolveContestAWDServiceInstanceScope(ctx context.Context, userID, contestID, serviceID int64) (int64, practiceports.InstanceScope, error) {
 	if s.contestScope == nil {
 		return 0, practiceports.InstanceScope{}, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
@@ -65,7 +65,7 @@ func (s *Service) resolveContestAWDServiceInstanceScope(ctx context.Context, use
 	return subject.ChallengeID, scope, nil
 }
 
-func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
+func (s *serviceCore) resolveAdminContestAWDServiceInstanceScope(ctx context.Context, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
 	contest, err := s.loadAdminContestAWDContest(ctx, contestID)
 	if err != nil {
 		return 0, 0, practiceports.InstanceScope{}, err
@@ -81,7 +81,7 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScope(ctx context.Context
 	return s.resolveAdminContestAWDServiceInstanceScopeWithContest(ctx, contest, contestID, teamID, serviceID)
 }
 
-func (s *Service) loadAdminContestAWDContest(ctx context.Context, contestID int64) (*practiceports.ContestRecord, error) {
+func (s *serviceCore) loadAdminContestAWDContest(ctx context.Context, contestID int64) (*practiceports.ContestRecord, error) {
 	if s.contestScope == nil {
 		return nil, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
@@ -98,7 +98,7 @@ func (s *Service) loadAdminContestAWDContest(ctx context.Context, contestID int6
 	return contest, nil
 }
 
-func (s *Service) resolveAdminContestAWDServiceInstanceScopeWithContest(ctx context.Context, contest *practiceports.ContestRecord, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
+func (s *serviceCore) resolveAdminContestAWDServiceInstanceScopeWithContest(ctx context.Context, contest *practiceports.ContestRecord, contestID, teamID, serviceID int64) (int64, int64, practiceports.InstanceScope, error) {
 	team, err := s.contestScope.FindContestTeam(ctx, contestID, teamID)
 	if err != nil {
 		if errors.Is(err, practiceports.ErrPracticeContestTeamNotFound) {
@@ -138,7 +138,7 @@ func (s *Service) resolveAdminContestAWDServiceInstanceScopeWithContest(ctx cont
 	return subject.ChallengeID, team.CaptainID, scope, nil
 }
 
-func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practiceports.InstanceScope, challengeID int64) (*practiceentity.Challenge, *practiceports.RuntimeChallengeTopology, error) {
+func (s *serviceCore) loadRuntimeSubjectWithScope(ctx context.Context, scope practiceports.InstanceScope, challengeID int64) (*practiceentity.Challenge, *practiceports.RuntimeChallengeTopology, error) {
 	if scope.ServiceID != nil && scope.ContestID != nil {
 		return s.loadContestAWDServiceRuntimeSubject(ctx, *scope.ContestID, *scope.ServiceID)
 	}
@@ -160,14 +160,14 @@ func (s *Service) loadRuntimeSubjectWithScope(ctx context.Context, scope practic
 	return chal, topology, nil
 }
 
-func (s *Service) loadRuntimeSubjectForInstance(ctx context.Context, instance *instancecontracts.Instance) (*practiceentity.Challenge, *practiceports.RuntimeChallengeTopology, error) {
+func (s *serviceCore) loadRuntimeSubjectForInstance(ctx context.Context, instance *instancecontracts.Instance) (*practiceentity.Challenge, *practiceports.RuntimeChallengeTopology, error) {
 	if instance != nil && instance.ServiceID != nil && instance.ContestID != nil {
 		return s.loadContestAWDServiceRuntimeSubject(ctx, *instance.ContestID, *instance.ServiceID)
 	}
 	return s.loadRuntimeSubjectWithScope(ctx, practiceports.InstanceScope{}, instance.ChallengeID)
 }
 
-func (s *Service) loadContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*practiceentity.Challenge, *practiceports.RuntimeChallengeTopology, error) {
+func (s *serviceCore) loadContestAWDServiceRuntimeSubject(ctx context.Context, contestID, serviceID int64) (*practiceentity.Challenge, *practiceports.RuntimeChallengeTopology, error) {
 	if s.contestScope == nil {
 		return nil, nil, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
@@ -186,7 +186,7 @@ func (s *Service) loadContestAWDServiceRuntimeSubject(ctx context.Context, conte
 	return chal, topology, nil
 }
 
-func (s *Service) resolveContestBaseInstanceScope(ctx context.Context, userID, contestID int64) (practiceports.InstanceScope, error) {
+func (s *serviceCore) resolveContestBaseInstanceScope(ctx context.Context, userID, contestID int64) (practiceports.InstanceScope, error) {
 	if s.contestScope == nil {
 		return practiceports.InstanceScope{}, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}

@@ -177,6 +177,7 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 				UpdatedAt: submittedAt.Format(time.RFC3339),
 			},
 		},
+		newTestReportOutputStore(t),
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
 			DefaultFormat: assessmententity.ReportFormatPDF,

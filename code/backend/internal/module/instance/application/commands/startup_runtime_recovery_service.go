@@ -3,14 +3,12 @@ package commands
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"go.uber.org/zap"
 
-	"ctf-platform/internal/infrastructure/redislock"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	startuprecovery "ctf-platform/internal/module/instance/startuprecovery"
 	"ctf-platform/internal/shared/lockkeepalive"
@@ -18,7 +16,6 @@ import (
 
 const (
 	defaultStartupRuntimeRecoveryTimeout = 5 * time.Minute
-	defaultBootIDPath                    = "/proc/sys/kernel/random/boot_id"
 )
 
 type startupRuntimeReconciler interface {
@@ -37,21 +34,15 @@ type startupRuntimeInstanceRepository interface {
 	RefreshActiveAWDInstanceExpiryByContest(ctx context.Context, contestID int64, activeAt, expiresAt time.Time) error
 }
 
-type startupRuntimeStateStore interface {
-	LoadPlatformRuntimeState(ctx context.Context) (string, time.Time, bool, error)
-	SavePlatformRuntimeState(ctx context.Context, bootID string, heartbeatAt time.Time) error
-	AcquireStartupRecoveryLock(ctx context.Context, ttl time.Duration) (*redislock.Lock, bool, error)
-}
-
 type StartupRuntimeRecoveryService struct {
 	reconciler   startupRuntimeReconciler
 	desired      startupRuntimeDesiredReconciler
 	contests     startupRuntimeContestRepository
 	instances    startupRuntimeInstanceRepository
-	stateStore   startupRuntimeStateStore
+	stateStore   instanceports.StartupRuntimeStateStore
+	bootIDReader instanceports.HostBootIDReader
 	log          *zap.Logger
 	now          func() time.Time
-	bootIDPath   string
 	heartbeatGap time.Duration
 	lockTTL      time.Duration
 	leaderRetry  time.Duration
@@ -72,7 +63,8 @@ func NewStartupRuntimeRecoveryService(
 	reconciler startupRuntimeReconciler,
 	contests startupRuntimeContestRepository,
 	instances startupRuntimeInstanceRepository,
-	stateStore startupRuntimeStateStore,
+	stateStore instanceports.StartupRuntimeStateStore,
+	bootIDReader instanceports.HostBootIDReader,
 	heartbeatInterval time.Duration,
 	logger *zap.Logger,
 ) *StartupRuntimeRecoveryService {
@@ -85,9 +77,9 @@ func NewStartupRuntimeRecoveryService(
 		contests:     contests,
 		instances:    instances,
 		stateStore:   stateStore,
+		bootIDReader: bootIDReader,
 		log:          logger,
 		now:          func() time.Time { return time.Now().UTC() },
-		bootIDPath:   defaultBootIDPath,
 		heartbeatGap: heartbeatInterval,
 		lockTTL:      startuprecovery.DefaultLockTTL,
 		leaderRetry:  startuprecovery.DefaultLeaderRetry,
@@ -154,7 +146,7 @@ func (s *StartupRuntimeRecoveryService) Start(ctx context.Context) (err error) {
 		s.mu.Unlock()
 	}()
 
-	currentBootID, err := s.readCurrentBootID()
+	currentBootID, err := s.readCurrentBootID(runCtx)
 	if err != nil {
 		return err
 	}
@@ -349,7 +341,7 @@ func (s *StartupRuntimeRecoveryService) runHeartbeatLoop(ctx context.Context, bo
 	}
 }
 
-func (s *StartupRuntimeRecoveryService) runLeaderElectionLoop(ctx context.Context, currentBootID string, initialLock *redislock.Lock, initialLockAcquired bool, initReady chan error) {
+func (s *StartupRuntimeRecoveryService) runLeaderElectionLoop(ctx context.Context, currentBootID string, initialLock instanceports.StartupRecoveryLockLease, initialLockAcquired bool, initReady chan error) {
 	lock := initialLock
 	lockAcquired := initialLockAcquired
 	for {
@@ -411,7 +403,7 @@ func (s *StartupRuntimeRecoveryService) runLeaderElectionLoop(ctx context.Contex
 	}
 }
 
-func (s *StartupRuntimeRecoveryService) runAsLeader(ctx context.Context, currentBootID string, lock *redislock.Lock, initReady chan error) (err error) {
+func (s *StartupRuntimeRecoveryService) runAsLeader(ctx context.Context, currentBootID string, lock instanceports.StartupRecoveryLockLease, initReady chan error) (err error) {
 	leaderCtx, stopKeepalive := lockkeepalive.Start(ctx, s.log, lock, "startup_runtime_recovery", s.startupRecoveryLockTTL())
 	defer func() {
 		stopKeepalive()
@@ -461,7 +453,7 @@ func (s *StartupRuntimeRecoveryService) loadPreviousRuntimeState(ctx context.Con
 	return s.stateStore.LoadPlatformRuntimeState(ctx)
 }
 
-func (s *StartupRuntimeRecoveryService) tryAcquireStartupRecoveryLock(ctx context.Context) (*redislock.Lock, bool, error) {
+func (s *StartupRuntimeRecoveryService) tryAcquireStartupRecoveryLock(ctx context.Context) (instanceports.StartupRecoveryLockLease, bool, error) {
 	if s == nil || s.stateStore == nil {
 		return nil, true, nil
 	}
@@ -510,7 +502,7 @@ func (s *StartupRuntimeRecoveryService) observedLeaderReady(ctx context.Context,
 	return !s.isRuntimeHeartbeatStale(lastHeartbeatAt, s.now()), nil
 }
 
-func (s *StartupRuntimeRecoveryService) releaseStartupRecoveryLock(ctx context.Context, lock *redislock.Lock) {
+func (s *StartupRuntimeRecoveryService) releaseStartupRecoveryLock(ctx context.Context, lock instanceports.StartupRecoveryLockLease) {
 	if lock == nil {
 		return
 	}
@@ -538,16 +530,11 @@ func (s *StartupRuntimeRecoveryService) releaseStartupRecoveryLock(ctx context.C
 	}
 }
 
-func (s *StartupRuntimeRecoveryService) readCurrentBootID() (string, error) {
-	content, err := os.ReadFile(s.bootIDPath)
-	if err != nil {
-		return "", err
+func (s *StartupRuntimeRecoveryService) readCurrentBootID(ctx context.Context) (string, error) {
+	if s == nil || s.bootIDReader == nil {
+		return "", fmt.Errorf("startup runtime boot id reader is not configured")
 	}
-	bootID := strings.TrimSpace(string(content))
-	if bootID == "" {
-		return "", fmt.Errorf("boot id is empty")
-	}
-	return bootID, nil
+	return s.bootIDReader.ReadBootID(ctx)
 }
 
 func startupRuntimeBootIDChanged(lastBootID, currentBootID string) bool {

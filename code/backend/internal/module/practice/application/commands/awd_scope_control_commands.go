@@ -19,7 +19,7 @@ type awdScopeControlSpec struct {
 	ControlType string
 }
 
-func (s *Service) SetAdminContestAWDTeamRetired(ctx context.Context, contestID, teamID, actorUserID int64, retired bool, reason string) (*AdminAWDScopeControlResp, error) {
+func (s *serviceCore) SetAdminContestAWDTeamRetired(ctx context.Context, contestID, teamID, actorUserID int64, retired bool, reason string) (*AdminAWDScopeControlResp, error) {
 	contest, err := s.loadAdminContestAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (s *Service) SetAdminContestAWDTeamRetired(ctx context.Context, contestID, 
 	return resp, nil
 }
 
-func (s *Service) SetAdminContestAWDTeamServiceDisabled(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, disabled bool, reason string) (*AdminAWDScopeControlResp, error) {
+func (s *serviceCore) SetAdminContestAWDTeamServiceDisabled(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, disabled bool, reason string) (*AdminAWDScopeControlResp, error) {
 	contest, err := s.validateAdminContestAWDServiceControlScope(ctx, contestID, teamID, serviceID)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (s *Service) SetAdminContestAWDTeamServiceDisabled(ctx context.Context, con
 	return resp, nil
 }
 
-func (s *Service) SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, suppressed bool, reason string) (*AdminAWDScopeControlResp, error) {
+func (s *serviceCore) SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, suppressed bool, reason string) (*AdminAWDScopeControlResp, error) {
 	contest, err := s.validateAdminContestAWDServiceControlScope(ctx, contestID, teamID, serviceID)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (s *Service) SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Conte
 	return resp, nil
 }
 
-func (s *Service) setAWDScopeControl(ctx context.Context, spec awdScopeControlSpec, actorUserID int64, enabled bool, reason string) (*AdminAWDScopeControlResp, error) {
+func (s *serviceCore) setAWDScopeControl(ctx context.Context, spec awdScopeControlSpec, actorUserID int64, enabled bool, reason string) (*AdminAWDScopeControlResp, error) {
 	if s == nil || s.repo == nil {
 		return nil, apperror.ErrInternal.WithCause(fmt.Errorf("practice awd scope control repository is nil"))
 	}
@@ -168,7 +168,7 @@ func findAWDScopeControlRow(rows []*contestcontracts.AWDScopeControl, scopeType,
 	return nil
 }
 
-func (s *Service) validateAdminContestAWDServiceControlScope(ctx context.Context, contestID, teamID, serviceID int64) (*practiceports.ContestRecord, error) {
+func (s *serviceCore) validateAdminContestAWDServiceControlScope(ctx context.Context, contestID, teamID, serviceID int64) (*practiceports.ContestRecord, error) {
 	contest, err := s.loadAdminContestAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -179,7 +179,7 @@ func (s *Service) validateAdminContestAWDServiceControlScope(ctx context.Context
 	return contest, nil
 }
 
-func (s *Service) loadAdminContestAWDTeam(ctx context.Context, contestID, teamID int64) (*practiceports.ContestTeamRecord, error) {
+func (s *serviceCore) loadAdminContestAWDTeam(ctx context.Context, contestID, teamID int64) (*practiceports.ContestTeamRecord, error) {
 	if s.contestScope == nil {
 		return nil, apperror.ErrInternal.WithCause(fmt.Errorf("practice contest scope repository is nil"))
 	}
@@ -193,7 +193,7 @@ func (s *Service) loadAdminContestAWDTeam(ctx context.Context, contestID, teamID
 	return team, nil
 }
 
-func (s *Service) stopContestAWDActiveInstances(ctx context.Context, contestID int64, match func(instance *instancecontracts.Instance) bool) error {
+func (s *serviceCore) stopContestAWDActiveInstances(ctx context.Context, contestID int64, match func(instance *instancecontracts.Instance) bool) error {
 	if s == nil || s.repo == nil || s.instanceRepo == nil {
 		return nil
 	}
@@ -217,7 +217,7 @@ func (s *Service) stopContestAWDActiveInstances(ctx context.Context, contestID i
 	return nil
 }
 
-func (s *Service) clearDesiredAWDReconcileFailuresForTeam(ctx context.Context, contestID, teamID int64) {
+func (s *serviceCore) clearDesiredAWDReconcileFailuresForTeam(ctx context.Context, contestID, teamID int64) {
 	if s == nil || s.repo == nil || s.desiredState == nil {
 		return
 	}

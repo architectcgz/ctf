@@ -43,7 +43,7 @@ func TestGetTeacherManualReviewSubmissionPropagatesContextToRepository(t *testin
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -73,7 +73,7 @@ func TestGetTeacherManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			return nil, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.GetTeacherManualReviewSubmission(context.Background(), 91, 1001, identitycontracts.RoleStudent)
 	if err == nil {
@@ -94,7 +94,7 @@ func TestGetTeacherManualReviewSubmissionTreatsPracticeManualReviewSubmissionNot
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)

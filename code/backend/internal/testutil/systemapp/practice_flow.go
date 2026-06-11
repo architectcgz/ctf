@@ -485,7 +485,7 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	scoreStateStore := practiceinfra.NewScoreStateStore(cache)
 	flagSubmitRateLimitStore := practiceinfra.NewFlagSubmitRateLimitStore(cache, cfg.RateLimit.RedisKeyPrefix)
 	practiceScoreCommandService := practicecmd.NewScoreService(practiceRepo, scoreStateStore, logger, &cfg.Score)
-	practiceService := practicecmd.NewService(
+	practiceCommandServices := practicecmd.NewCommandServices(
 		practiceRepo,
 		imageRepo,
 		instanceModule.PracticeInstanceRepository,
@@ -507,7 +507,13 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 		cfg.Cache.ProgressTTL,
 		logger,
 	)
-	practiceHandler := practicehttp.NewHandler(practiceService, practiceScoreQueryService, practiceProgressTimelineService)
+	practiceHandler := practicehttp.NewHandler(
+		practiceCommandServices.Instances,
+		practiceCommandServices.Submissions,
+		practiceCommandServices.ManualReviews,
+		practiceScoreQueryService,
+		practiceProgressTimelineService,
+	)
 	teachingQueryRepo := teachingqueryinfra.NewRepository(db)
 	teachingQueryUsers := teachingQueryIdentityLookupAdapter{users: authRepo}
 	teachingQueryService := teachingqueryqueries.NewQueryService(teachingQueryUsers, teachingQueryRepo, cfg.Pagination)

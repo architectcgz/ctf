@@ -23,7 +23,7 @@ func bestEffortFailureContext(ctx context.Context) context.Context {
 	return context.WithoutCancel(ctx)
 }
 
-func (s *Service) markInstanceFailed(ctx context.Context, instance *instancecontracts.Instance) {
+func (s *serviceCore) markInstanceFailed(ctx context.Context, instance *instancecontracts.Instance) {
 	if instance == nil {
 		return
 	}
@@ -49,7 +49,7 @@ func (s *Service) markInstanceFailed(ctx context.Context, instance *instancecont
 	}
 }
 
-func (s *Service) provisionInstance(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
+func (s *serviceCore) provisionInstance(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
 	createCtx, cancel := context.WithTimeout(ctx, s.config.Container.CreateTimeout)
 	defer cancel()
 
@@ -102,7 +102,7 @@ func (s *Service) provisionInstance(ctx context.Context, instance *instancecontr
 	return nil
 }
 
-func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string) error {
+func (s *serviceCore) waitForInstanceReadiness(ctx context.Context, accessURL string) error {
 	if strings.TrimSpace(accessURL) == "" {
 		return fmt.Errorf("instance access url is empty")
 	}
@@ -141,7 +141,7 @@ func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string
 	return lastErr
 }
 
-func (s *Service) buildProvisioningFlag(instance *instancecontracts.Instance, chal *practiceentity.Challenge) (string, error) {
+func (s *serviceCore) buildProvisioningFlag(instance *instancecontracts.Instance, chal *practiceentity.Challenge) (string, error) {
 	if instance == nil || chal == nil {
 		return "", apperror.ErrInternal.WithCause(fmt.Errorf("instance or challenge is nil"))
 	}
@@ -167,28 +167,28 @@ func (s *Service) buildProvisioningFlag(instance *instancecontracts.Instance, ch
 	}
 }
 
-func (s *Service) startProbeTimeout() time.Duration {
+func (s *serviceCore) startProbeTimeout() time.Duration {
 	if s == nil || s.config == nil || s.config.Container.StartProbeTimeout <= 0 {
 		return 800 * time.Millisecond
 	}
 	return s.config.Container.StartProbeTimeout
 }
 
-func (s *Service) startProbeInterval() time.Duration {
+func (s *serviceCore) startProbeInterval() time.Duration {
 	if s == nil || s.config == nil || s.config.Container.StartProbeInterval <= 0 {
 		return 300 * time.Millisecond
 	}
 	return s.config.Container.StartProbeInterval
 }
 
-func (s *Service) startProbeAttempts() int {
+func (s *serviceCore) startProbeAttempts() int {
 	if s == nil || s.config == nil || s.config.Container.StartProbeAttempts <= 0 {
 		return 5
 	}
 	return s.config.Container.StartProbeAttempts
 }
 
-func (s *Service) effectiveStartProbeAttempts(ctx context.Context, timeout, interval time.Duration) int {
+func (s *serviceCore) effectiveStartProbeAttempts(ctx context.Context, timeout, interval time.Duration) int {
 	attempts := s.startProbeAttempts()
 	if attempts < 1 {
 		attempts = 1

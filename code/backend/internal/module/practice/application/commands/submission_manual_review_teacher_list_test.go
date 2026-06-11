@@ -37,7 +37,7 @@ func TestListTeacherManualReviewSubmissionsPropagatesContextToRepository(t *test
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -65,7 +65,7 @@ func TestListTeacherManualReviewSubmissionsRejectsStudentRole(t *testing.T) {
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -94,7 +94,7 @@ func TestListTeacherManualReviewSubmissionsRejectsInvalidReviewStatus(t *testing
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -128,7 +128,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedPageSize(t *testing.T
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -162,7 +162,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveStudentID(t *testin
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		repo,
 		nil,
 	)
@@ -196,7 +196,7 @@ func TestListTeacherManualReviewSubmissionsRejectsNonPositiveChallengeID(t *test
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 	challengeID := int64(0)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
@@ -227,7 +227,7 @@ func TestListTeacherManualReviewSubmissionsRejectsOversizedClassName(t *testing.
 			return nil, 0, nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ListTeacherManualReviewSubmissions(
 		context.Background(),

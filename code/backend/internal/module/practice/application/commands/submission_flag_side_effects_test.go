@@ -67,7 +67,7 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 
 			nil,
@@ -160,7 +160,7 @@ func TestSubmitFlagAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T)
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 
 			nil,
@@ -266,7 +266,7 @@ func TestSubmitFlagShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 
 			nil,

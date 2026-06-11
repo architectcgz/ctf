@@ -25,11 +25,11 @@ const (
 	adminAWDPrewarmOutcomeFailed  = "failed"
 )
 
-func (s *Service) StartChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.InstanceResp, error) {
+func (s *serviceCore) StartChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.InstanceResp, error) {
 	return s.startPersonalChallenge(ctx, userID, challengeID)
 }
 
-func (s *Service) StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*instancecontracts.InstanceResp, error) {
+func (s *serviceCore) StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*instancecontracts.InstanceResp, error) {
 	scope, err := s.resolveContestChallengeInstanceScope(ctx, userID, contestID, challengeID)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (s *Service) StartContestChallenge(ctx context.Context, userID, contestID, 
 	return s.startChallengeWithScope(ctx, userID, challengeID, scope)
 }
 
-func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error) {
+func (s *serviceCore) StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error) {
 	challengeID, scope, err := s.resolveContestAWDServiceInstanceScope(ctx, userID, contestID, serviceID)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (s *Service) StartContestAWDService(ctx context.Context, userID, contestID,
 	return resp, nil
 }
 
-func (s *Service) RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error) {
+func (s *serviceCore) RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error) {
 	challengeID, scope, err := s.resolveContestAWDServiceInstanceScope(ctx, userID, contestID, serviceID)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ type awdScopedRuntimeRequest struct {
 	NoopIfActive bool
 }
 
-func (s *Service) restartOrStartScopedAWDService(ctx context.Context, req awdScopedRuntimeRequest) (*instancecontracts.InstanceResp, error) {
+func (s *serviceCore) restartOrStartScopedAWDService(ctx context.Context, req awdScopedRuntimeRequest) (*instancecontracts.InstanceResp, error) {
 	scope := resolveEffectiveInstanceScope(&practiceentity.Challenge{}, req.Scope)
 
 	var instance *instancecontracts.Instance
@@ -216,14 +216,14 @@ restartInstance:
 	return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 }
 
-func (s *Service) recordScopedAWDServiceOperation(ctx context.Context, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status string, audit awdScopedRuntimeAudit) {
+func (s *serviceCore) recordScopedAWDServiceOperation(ctx context.Context, instanceID, contestID int64, scope practiceports.InstanceScope, operationType, status string, audit awdScopedRuntimeAudit) {
 	if strings.TrimSpace(operationType) == "" {
 		return
 	}
 	s.recordAWDServiceOperation(ctx, instanceID, contestID, scope, operationType, status, audit.RequestedBy, audit.RequestedByID, audit.Reason, audit.SLABillable)
 }
 
-func (s *Service) canReuseActiveAWDInstance(ctx context.Context, scope practiceports.InstanceScope, instance *instancecontracts.Instance) (bool, error) {
+func (s *serviceCore) canReuseActiveAWDInstance(ctx context.Context, scope practiceports.InstanceScope, instance *instancecontracts.Instance) (bool, error) {
 	if instance == nil || scope.ContestID == nil || scope.ServiceID == nil {
 		return true, nil
 	}
@@ -247,7 +247,7 @@ func (s *Service) canReuseActiveAWDInstance(ctx context.Context, scope practicep
 	return strings.TrimSpace(details.FindAWDCheckerToken(subject.WorkspaceConfig.CheckerTokenEnv)) != "", nil
 }
 
-func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*AdminAWDInstanceItemResp, error) {
+func (s *serviceCore) StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*AdminAWDInstanceItemResp, error) {
 	challengeID, ownerUserID, scope, err := s.resolveAdminContestAWDServiceInstanceScope(ctx, contestID, teamID, serviceID)
 	if err != nil {
 		return nil, err
@@ -266,7 +266,7 @@ func (s *Service) StartAdminContestAWDTeamService(ctx context.Context, contestID
 	}, nil
 }
 
-func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, teamID *int64) (*AdminAWDInstancePrewarmResp, error) {
+func (s *serviceCore) PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, teamID *int64) (*AdminAWDInstancePrewarmResp, error) {
 	contest, err := s.loadAdminContestAWDContest(ctx, contestID)
 	if err != nil {
 		return nil, err
@@ -321,7 +321,7 @@ func (s *Service) PrewarmAdminContestAWDInstances(ctx context.Context, contestID
 	return resp, nil
 }
 
-func (s *Service) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contestID int64, teamID *int64) ([]*practiceports.ContestTeamRecord, error) {
+func (s *serviceCore) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contestID int64, teamID *int64) ([]*practiceports.ContestTeamRecord, error) {
 	if teamID != nil {
 		team, err := s.repo.FindContestTeam(ctx, contestID, *teamID)
 		if err != nil {
@@ -340,7 +340,7 @@ func (s *Service) resolveAdminContestAWDPrewarmTeams(ctx context.Context, contes
 	return teams, nil
 }
 
-func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contestID int64, team *practiceports.ContestTeamRecord, service *practiceports.ContestAWDServiceRecord, existingInstances []*instancecontracts.Instance) *AdminAWDInstancePrewarmItemResp {
+func (s *serviceCore) prewarmAdminContestAWDTeamService(ctx context.Context, contestID int64, team *practiceports.ContestTeamRecord, service *practiceports.ContestAWDServiceRecord, existingInstances []*instancecontracts.Instance) *AdminAWDInstancePrewarmItemResp {
 	result := &AdminAWDInstancePrewarmItemResp{
 		Outcome: adminAWDPrewarmOutcomeFailed,
 	}
@@ -405,14 +405,14 @@ func (s *Service) prewarmAdminContestAWDTeamService(ctx context.Context, contest
 	return result
 }
 
-func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.InstanceResp, error) {
+func (s *serviceCore) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.InstanceResp, error) {
 	return s.startChallengeWithScope(ctx, userID, challengeID, practiceports.InstanceScope{
 		FlagSubjectID: userID,
 		ShareScope:    instancecontracts.ShareScopePerUser,
 	})
 }
 
-func (s *Service) startChallengeWithScope(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*instancecontracts.InstanceResp, error) {
+func (s *serviceCore) startChallengeWithScope(ctx context.Context, userID, challengeID int64, scope practiceports.InstanceScope) (*instancecontracts.InstanceResp, error) {
 	chal, topology, err := s.loadRuntimeSubjectWithScope(ctx, scope, challengeID)
 	if err != nil {
 		return nil, err
@@ -549,7 +549,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	return instanceRespForScope(instance, scope, s.config.Container.PublicHost, s.config.Container.AccessHost), nil
 }
 
-func (s *Service) selectRuntimeNode(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error) {
+func (s *serviceCore) selectRuntimeNode(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error) {
 	if s == nil || s.runtimeNodeSelector == nil {
 		return nil, nil
 	}
@@ -579,7 +579,7 @@ func instanceRespForScope(instance *instancecontracts.Instance, scope practicepo
 	return resp
 }
 
-func (s *Service) resolveInstanceExpiresAt(ctx context.Context, scope practiceports.InstanceScope) (time.Time, error) {
+func (s *serviceCore) resolveInstanceExpiresAt(ctx context.Context, scope practiceports.InstanceScope) (time.Time, error) {
 	if scope.ContestMode != practiceports.ContestModeAWD || scope.ContestID == nil || *scope.ContestID <= 0 {
 		return time.Now().UTC().Add(s.config.Container.DefaultTTL), nil
 	}

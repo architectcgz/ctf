@@ -30,10 +30,10 @@ import (
 )
 
 func wirePracticeScopeAdapters(
-	service *Service,
+	service *serviceCore,
 	repo practiceports.PracticeContestScopeRepository,
 	challengeRepo challengecontracts.PracticeChallengeContract,
-) *Service {
+) *serviceCore {
 	if service == nil {
 		return nil
 	}
@@ -43,10 +43,10 @@ func wirePracticeScopeAdapters(
 }
 
 func wirePracticeManualReviewAdapters(
-	service *Service,
+	service *serviceCore,
 	repo practiceports.PracticeManualReviewRepository,
 	challengeRepo challengecontracts.PracticeChallengeContract,
-) *Service {
+) *serviceCore {
 	if service == nil {
 		return nil
 	}
@@ -61,10 +61,10 @@ func wirePracticeManualReviewAdapters(
 }
 
 func wirePracticeSubmissionAdapters(
-	service *Service,
+	service *serviceCore,
 	repo practiceports.PracticeSolvedSubmissionRepository,
 	challengeRepo challengecontracts.PracticeChallengeContract,
-) *Service {
+) *serviceCore {
 	if service == nil {
 		return nil
 	}
@@ -78,9 +78,9 @@ func wirePracticeSubmissionAdapters(
 }
 
 func wirePracticeSubmissionHistoryAdapters(
-	service *Service,
+	service *serviceCore,
 	challengeRepo challengecontracts.PracticeChallengeContract,
-) *Service {
+) *serviceCore {
 	if service == nil {
 		return nil
 	}
@@ -251,7 +251,7 @@ func TestCreateAWDDefenseWorkspaceCompanionInitializesGitReposForWritableMounts(
 	teamID := int64(15)
 	serviceID := int64(21)
 
-	service := &Service{
+	service := &serviceCore{
 		runtimeService: &stubPracticeRuntimeService{
 			createTopologyFn: func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 				if len(req.Nodes) != 1 {
@@ -420,7 +420,7 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 
 	cleanupCalls := 0
 	createTopologyCalls := 0
-	service := &Service{
+	service := &serviceCore{
 		repo: &stubPracticeRepository{
 			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 				return &practiceports.ContestAWDServiceRecord{
@@ -526,7 +526,7 @@ func TestCreateSingleAWDContainerRemovesStoppedWorkspaceCompanionBeforeRecreate(
 }
 
 func TestCleanupAWDDefenseWorkspaceCompanionUsesContainerAuthorityPayload(t *testing.T) {
-	service := &Service{
+	service := &serviceCore{
 		runtimeService: &stubPracticeRuntimeService{
 			cleanupRuntimeFn: func(ctx context.Context, instance *instanceentity.Instance) error {
 				if instance == nil {
@@ -610,7 +610,7 @@ func TestCreateSingleAWDContainerPreservesStaleWorkspaceReferenceWhenCleanupFail
 		t.Fatalf("encode service snapshot: %v", err)
 	}
 
-	service := &Service{
+	service := &serviceCore{
 		repo: &stubPracticeRepository{
 			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 				return &practiceports.ContestAWDServiceRecord{
@@ -742,7 +742,7 @@ func TestPrepareAWDDefenseWorkspacePlanTreatsFailedWorkspaceContainerAsStale(t *
 		t.Fatalf("encode service snapshot: %v", err)
 	}
 
-	service := &Service{
+	service := &serviceCore{
 		repo: &stubPracticeRepository{
 			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 				return &practiceports.ContestAWDServiceRecord{

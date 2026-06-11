@@ -138,7 +138,7 @@ func TestServiceStartContestChallengeRejectsAWDContest(t *testing.T) {
 	seedContestInstanceTeamMember(t, db, 3001, 4001, 5001, now)
 	seedContestInstanceTeamMember(t, db, 3001, 4001, 5002, now)
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 
 	resp, err := service.StartContestChallenge(context.Background(), 5001, 3001, 2001)
 	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
@@ -177,7 +177,7 @@ func TestServiceStartContestChallengeAWDDoesNotReuseExistingTeamInstance(t *test
 		t.Fatalf("seed shared instance: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	resp, err := service.StartContestChallenge(context.Background(), 5004, 3002, 2002)
 	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected awd contest challenge entry rejected even with existing instance, resp=%+v err=%v", resp, err)
@@ -200,7 +200,7 @@ func TestServiceStartContestAWDServiceResolvesServiceIDAndReusesTeamInstance(t *
 		t.Fatalf("ensure instances.service_id column: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 
 	first, err := service.StartContestAWDService(context.Background(), 5005, 3003, 7003003)
 	if err != nil {
@@ -233,7 +233,7 @@ func TestServiceStartContestAWDServicePersistsServiceIDOnInstance(t *testing.T) 
 		t.Fatalf("ensure instances.service_id column: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	resp, err := service.StartContestAWDService(context.Background(), 5007, 3004, 7003004)
 	if err != nil {
 		t.Fatalf("StartContestAWDService() error = %v", err)
@@ -262,7 +262,7 @@ func TestServiceStartAdminContestAWDTeamServiceDoesNotRequireAdminRegistration(t
 	seedContestInstanceTeam(t, db, 3005, 4005, 5008, now)
 	seedContestInstanceTeamMember(t, db, 3005, 4005, 5008, now)
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	resp, err := service.StartAdminContestAWDTeamService(context.Background(), 3005, 4005, 7003005)
 	if err != nil {
 		t.Fatalf("StartAdminContestAWDTeamService() error = %v", err)
@@ -299,7 +299,7 @@ func TestServiceStartAdminContestAWDTeamServiceAllowsRegistrationForPrewarmRetry
 	seedContestInstanceTeam(t, db, 30055, 40055, 50055, now)
 	seedContestInstanceTeamMember(t, db, 30055, 40055, 50055, now)
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	resp, err := service.StartAdminContestAWDTeamService(context.Background(), 30055, 40055, 7003055)
 	if err != nil {
 		t.Fatalf("StartAdminContestAWDTeamService() during registration error = %v", err)
@@ -327,7 +327,7 @@ func TestServicePrewarmAdminContestAWDInstancesStartsVisibleServicesForSelectedT
 		t.Fatalf("ensure instances.service_id column: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	teamID := int64(40100)
 	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30100, &teamID)
 	if err != nil {
@@ -400,7 +400,7 @@ func TestServicePrewarmAdminContestAWDInstancesReturnsReusedAndFailedResults(t *
 		t.Fatalf("seed shared instance: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30110, nil)
 	if err != nil {
 		t.Fatalf("PrewarmAdminContestAWDInstances() error = %v", err)
@@ -434,7 +434,7 @@ func TestServicePrewarmAdminContestAWDInstancesRejectsNonRegistrationContest(t *
 	seedContestInstanceTeam(t, db, 30120, 40120, 50120, now)
 	seedContestInstanceTeamMember(t, db, 30120, 40120, 50120, now)
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	resp, err := service.PrewarmAdminContestAWDInstances(context.Background(), 30120, nil)
 	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected non-registration contest prewarm rejected, resp=%+v err=%v", resp, err)
@@ -451,7 +451,7 @@ func TestServiceGetContestAWDInstanceOrchestrationReturnsTeamServiceMatrix(t *te
 	seedContestInstanceTeam(t, db, 3006, 4006, 5009, now)
 	seedContestInstanceTeamMember(t, db, 3006, 4006, 5009, now)
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	started, err := service.StartAdminContestAWDTeamService(context.Background(), 3006, 4006, 7003006)
 	if err != nil {
 		t.Fatalf("StartAdminContestAWDTeamService() error = %v", err)
@@ -485,7 +485,7 @@ func TestServiceStartChallengeSharedReusesPracticeInstance(t *testing.T) {
 		t.Fatalf("update challenge sharing: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 
 	first, err := service.StartChallenge(context.Background(), 5101, 2101)
 	if err != nil {
@@ -529,7 +529,7 @@ func TestServiceStartChallengeSharedReusesPracticeInstanceAndRefreshesExpiry(t *
 		t.Fatalf("seed shared instance: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	resp, err := service.StartChallenge(context.Background(), 5202, 2201)
 	if err != nil {
 		t.Fatalf("StartChallenge() error = %v", err)
@@ -566,7 +566,7 @@ func TestServiceStartContestChallengePerTeamReusesTeamInstance(t *testing.T) {
 	seedContestInstanceTeamMember(t, db, 3102, 4102, 5103, now)
 	seedContestInstanceTeamMember(t, db, 3102, 4102, 5104, now)
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 
 	first, err := service.StartContestChallenge(context.Background(), 5103, 3102, 2102)
 	if err != nil {
@@ -600,7 +600,7 @@ func TestServiceStartChallengeRejectsNoTargetChallenge(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	_, err := service.StartChallenge(context.Background(), 5001, 2201)
 	if err == nil || err.Error() != apperror.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for no-target challenge, got %v", err)
@@ -702,7 +702,12 @@ func (contestInstanceTestRuntimeService) InspectManagedContainer(context.Context
 	}, nil
 }
 
-func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Service {
+func newContestInstanceLifecycleService(t *testing.T, db *gorm.DB) *practicecmd.InstanceLifecycleService {
+	t.Helper()
+	return newContestInstanceCommandServices(t, db).Instances
+}
+
+func newContestInstanceCommandServices(t *testing.T, db *gorm.DB) *practicecmd.CommandServices {
 	t.Helper()
 
 	listener, err := net.Listen("tcp", "127.0.0.1:30000")
@@ -720,7 +725,7 @@ func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Servi
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	instanceRepo := newContestInstanceTestInstanceRepository(db)
-	return practicecmd.NewService(
+	return practicecmd.NewCommandServices(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 		imageRepo,
 		instanceRepo,

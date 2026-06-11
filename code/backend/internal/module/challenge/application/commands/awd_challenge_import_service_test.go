@@ -32,6 +32,7 @@ func newAWDChallengeImportServiceForTest(db *gorm.DB, repo *challengeinfra.Repos
 		repo,
 		challengeinfra.NewAWDChallengeImportPreviewStore(""),
 		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
+		challengeinfra.NewAWDCheckerArtifactStore(""),
 		imageBuildService,
 	)
 	service.SetTxRunner(newTestAWDChallengeImportTxRunner(repo, func() *ImageBuildService {
@@ -48,6 +49,7 @@ func newAWDChallengeImportServiceWithStoresForTest(
 		repo,
 		challengeinfra.NewAWDChallengeImportPreviewStore(""),
 		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
+		challengeinfra.NewAWDCheckerArtifactStore(""),
 		imageBuildService...,
 	)
 }

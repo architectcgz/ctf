@@ -1,7 +1,7 @@
 # CTF 靶场平台 — 文件存储设计（MVP：宿主机文件系统）
 
 > 状态：Current
-> 事实源：`code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`、`code/backend/internal/module/challenge/infrastructure/{challenge_import_preview_store.go,challenge_attachment_store.go,challenge_package_storage.go}`、`docs/contracts/challenge-pack-v1.md`
+> 事实源：`code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`、`code/backend/internal/module/challenge/infrastructure/{challenge_import_preview_store.go,challenge_attachment_store.go,challenge_package_storage.go,awd_checker_artifact_store.go,artifact_gc_service.go}`、`docs/contracts/challenge-pack-v1.md`
 > 替代：无
 > 关联：题目包规范 `docs/contracts/challenge-pack-v1.md`
 
@@ -11,8 +11,8 @@
   - 负责：编排题目包 preview/list/get/commit，解析题包业务语义，创建题目、Flag、Hint、镜像构建任务、拓扑和题包修订；Guardrail 见 `code/backend/internal/module/challenge/runtime/module_import_test.go` 与 `code/backend/internal/module/challenge/architecture_test.go`
   - 不负责：直接解包 zip、写入 `preview.json`、复制附件、复制 build source，或在 preview / commit 阶段启动容器并把导入预览目录暴露给学员访问
 
-- `code/backend/internal/module/challenge/infrastructure/{challenge_import_preview_store.go,challenge_attachment_store.go,challenge_package_storage.go}`
-  - 负责：实现 `challenge/ports` 中的 LocalFS/zip storage port，把题目包预览目录落到 `./data/challenge-import-previews` 或 `./data/awd-challenge-import-previews`，保存/读取 `preview.json`，拒绝 zip-slip、symlink、超限文件，持久化导入附件、题包 source/archive、导出 archive 和 image build source，并按 service 调用清理工作目录
+- `code/backend/internal/module/challenge/infrastructure/{challenge_import_preview_store.go,challenge_attachment_store.go,challenge_package_storage.go,awd_checker_artifact_store.go,artifact_gc_service.go}`
+  - 负责：实现 `challenge/ports` 中的 LocalFS/zip storage port，把题目包预览目录落到 `./data/challenge-import-previews` 或 `./data/awd-challenge-import-previews`，保存/读取 `preview.json`，拒绝 zip-slip、symlink、超限文件，持久化导入附件、题包 source/archive、导出 archive、image build source 与 AWD script checker artifact，并按 service 调用清理工作目录；`artifact_gc_service.go` 负责按配置根目录和引用集合扫描/删除过期本地文件
   - 不负责：决定导入事务如何落库、题目是否发布、镜像 job 如何推进，或替代 application service 做权限和业务状态判断
 
 - `code/backend/internal/module/challenge/api/http/handler.go`、`code/backend/internal/app/router_routes.go`

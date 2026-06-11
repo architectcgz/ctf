@@ -55,7 +55,7 @@ func TestSubmitFlagPropagatesContextToDynamicFlagInstanceLookup(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 
 			nil,
@@ -123,7 +123,7 @@ func TestSubmitFlagValidatesDynamicFlagWithInstanceNonce(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 			nil,
 			instanceStore,
@@ -192,7 +192,7 @@ func TestSubmitFlagValidatesDynamicFlagWithInstanceKeyID(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 			nil,
 			instanceStore,
@@ -266,7 +266,7 @@ func TestSubmitFlagValidatesLegacyDynamicFlagWithDefaultKeyID(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 			nil,
 			instanceStore,
@@ -307,7 +307,7 @@ func TestSubmitFlagValidatesLegacyDynamicFlagWithDefaultKeyID(t *testing.T) {
 func TestBuildInstanceFlagUsesGlobalSecret(t *testing.T) {
 	t.Parallel()
 
-	service := NewService(nil, nil, nil, nil, nil, nil, &config.Config{
+	service := newServiceCore(nil, nil, nil, nil, nil, nil, &config.Config{
 		Container: config.ContainerConfig{
 			FlagGlobalSecret:        "active-secret-12345678901234567890",
 			ResolvedFlagSecretKeyID: "active",
@@ -390,7 +390,7 @@ func TestSubmitFlagPropagatesContextToSolveGraceInstanceUpdates(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 
 			nil,

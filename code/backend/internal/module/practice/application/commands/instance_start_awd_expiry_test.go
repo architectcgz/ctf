@@ -67,7 +67,7 @@ func TestStartContestAWDServiceRefreshesExistingInstanceExpiryToContestEnd(t *te
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -154,7 +154,7 @@ func TestStartContestAWDServiceDoesNotRefreshStoppingInstanceExpiry(t *testing.T
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,

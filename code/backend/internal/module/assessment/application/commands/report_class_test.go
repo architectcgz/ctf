@@ -65,6 +65,7 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 		&testReportRepository{db: db},
 		&testReportRepository{db: db},
 		nil,
+		newTestReportOutputStore(t),
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
 			DefaultFormat: assessmententity.ReportFormatPDF,
@@ -160,6 +161,7 @@ func TestBuildClassReportDataUsesSharedWindowedClassInsight(t *testing.T) {
 		repo,
 		repo,
 		nil,
+		newTestReportOutputStore(t),
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
 			DefaultFormat: assessmententity.ReportFormatPDF,

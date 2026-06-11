@@ -22,6 +22,7 @@ func TestReportServiceCloseCancelsAsyncTasks(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		newTestReportOutputStore(t),
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
 			DefaultFormat: assessmententity.ReportFormatPDF,
@@ -70,6 +71,7 @@ func TestReportServiceCloseRejectsNilContext(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		newTestReportOutputStore(t),
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
 			DefaultFormat: assessmententity.ReportFormatPDF,
@@ -96,6 +98,7 @@ func TestCreatePersonalReportRejectsNilContext(t *testing.T) {
 		&testReportRepository{},
 		&testReportRepository{},
 		nil,
+		newTestReportOutputStore(t),
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
 			DefaultFormat: assessmententity.ReportFormatPDF,

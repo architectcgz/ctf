@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"ctf-platform/internal/config"
+	"context"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
 	"path/filepath"
 	"testing"
@@ -11,12 +11,10 @@ func TestReportFilePathUsesXLSXExtensionForExcel(t *testing.T) {
 	t.Parallel()
 
 	service := &ReportService{
-		config: config.ReportConfig{
-			StorageDir: t.TempDir(),
-		},
+		outputStore: newTestReportOutputStore(t),
 	}
 
-	path, err := service.reportFilePath(42, "class", "excel")
+	path, err := service.reportFilePath(context.Background(), 42, "class", "excel")
 	if err != nil {
 		t.Fatalf("reportFilePath() error = %v", err)
 	}

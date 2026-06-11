@@ -10,7 +10,7 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
-func (s *Service) ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*ChallengeSubmissionRecordResp, error) {
+func (s *serviceCore) ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*ChallengeSubmissionRecordResp, error) {
 	if s.runtimeSubject == nil {
 		return nil, apperror.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
 	}

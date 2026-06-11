@@ -11,30 +11,37 @@ import (
 	"ctf-platform/internal/authctx"
 	response "ctf-platform/internal/httpresponse"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
-	practicecommands "ctf-platform/internal/module/practice/application/commands"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
 type Handler struct {
-	service        practiceService
+	instances      practiceInstanceLifecycleService
+	submissions    practiceSubmissionService
+	manualReviews  practiceManualReviewService
 	rankingService practiceRankingService
 	progressQuery  practiceProgressTimelineQueryService
 }
 
-type practiceService interface {
+type practiceInstanceLifecycleService interface {
 	StartChallenge(ctx context.Context, userID, challengeID int64) (*instancecontracts.InstanceResp, error)
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*instancecontracts.InstanceResp, error)
 	StartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error)
 	RestartContestAWDService(ctx context.Context, userID, contestID, serviceID int64) (*instancecontracts.InstanceResp, error)
-	GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*practicecommands.AdminAWDInstanceOrchestrationResp, error)
-	StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*practicecommands.AdminAWDInstanceItemResp, error)
-	SetAdminContestAWDTeamRetired(ctx context.Context, contestID, teamID, actorUserID int64, retired bool, reason string) (*practicecommands.AdminAWDScopeControlResp, error)
-	SetAdminContestAWDTeamServiceDisabled(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, disabled bool, reason string) (*practicecommands.AdminAWDScopeControlResp, error)
-	SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, suppressed bool, reason string) (*practicecommands.AdminAWDScopeControlResp, error)
-	PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, teamID *int64) (*practicecommands.AdminAWDInstancePrewarmResp, error)
-	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*practicecommands.SubmissionResp, error)
-	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*practicecommands.ChallengeSubmissionRecordResp, error)
+	GetContestAWDInstanceOrchestration(ctx context.Context, contestID int64) (*practicecontracts.AdminAWDInstanceOrchestrationResp, error)
+	StartAdminContestAWDTeamService(ctx context.Context, contestID, teamID, serviceID int64) (*practicecontracts.AdminAWDInstanceItemResp, error)
+	SetAdminContestAWDTeamRetired(ctx context.Context, contestID, teamID, actorUserID int64, retired bool, reason string) (*practicecontracts.AdminAWDScopeControlResp, error)
+	SetAdminContestAWDTeamServiceDisabled(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, disabled bool, reason string) (*practicecontracts.AdminAWDScopeControlResp, error)
+	SetAdminContestAWDDesiredReconcileSuppressed(ctx context.Context, contestID, teamID, serviceID, actorUserID int64, suppressed bool, reason string) (*practicecontracts.AdminAWDScopeControlResp, error)
+	PrewarmAdminContestAWDInstances(ctx context.Context, contestID int64, teamID *int64) (*practicecontracts.AdminAWDInstancePrewarmResp, error)
+}
+
+type practiceSubmissionService interface {
+	SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*practicecontracts.SubmissionResp, error)
+	ListMyChallengeSubmissions(ctx context.Context, userID, challengeID int64) ([]*practicecontracts.ChallengeSubmissionRecordResp, error)
+}
+
+type practiceManualReviewService interface {
 	ListTeacherManualReviewSubmissions(ctx context.Context, requesterID int64, requesterRole string, query *practicecontracts.TeacherManualReviewSubmissionQuery) (*practicecontracts.PageResult[*practicecontracts.TeacherManualReviewSubmissionItemResp], error)
 	GetTeacherManualReviewSubmission(ctx context.Context, submissionID, requesterID int64, requesterRole string) (*practicecontracts.TeacherManualReviewSubmissionDetailResp, error)
 	ReviewManualReviewSubmission(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *practicecontracts.ReviewManualReviewSubmissionReq) (*practicecontracts.TeacherManualReviewSubmissionDetailResp, error)
@@ -49,8 +56,20 @@ type practiceProgressTimelineQueryService interface {
 	GetTimeline(ctx context.Context, userID int64, limit, offset int) (*practiceports.TimelineSnapshot, error)
 }
 
-func NewHandler(service practiceService, rankingService practiceRankingService, progressQuery practiceProgressTimelineQueryService) *Handler {
-	return &Handler{service: service, rankingService: rankingService, progressQuery: progressQuery}
+func NewHandler(
+	instances practiceInstanceLifecycleService,
+	submissions practiceSubmissionService,
+	manualReviews practiceManualReviewService,
+	rankingService practiceRankingService,
+	progressQuery practiceProgressTimelineQueryService,
+) *Handler {
+	return &Handler{
+		instances:      instances,
+		submissions:    submissions,
+		manualReviews:  manualReviews,
+		rankingService: rankingService,
+		progressQuery:  progressQuery,
+	}
 }
 
 // StartChallenge 启动靶机实例
@@ -63,7 +82,7 @@ func (h *Handler) StartChallenge(c *gin.Context) {
 		return
 	}
 
-	instance, err := h.service.StartChallenge(c.Request.Context(), userID, challengeID)
+	instance, err := h.instances.StartChallenge(c.Request.Context(), userID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -87,7 +106,7 @@ func (h *Handler) StartContestChallenge(c *gin.Context) {
 		return
 	}
 
-	instance, err := h.service.StartContestChallenge(c.Request.Context(), userID, contestID, challengeID)
+	instance, err := h.instances.StartContestChallenge(c.Request.Context(), userID, contestID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -111,7 +130,7 @@ func (h *Handler) StartContestAWDService(c *gin.Context) {
 		return
 	}
 
-	instance, err := h.service.StartContestAWDService(c.Request.Context(), userID, contestID, serviceID)
+	instance, err := h.instances.StartContestAWDService(c.Request.Context(), userID, contestID, serviceID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -135,7 +154,7 @@ func (h *Handler) RestartContestAWDService(c *gin.Context) {
 		return
 	}
 
-	instance, err := h.service.RestartContestAWDService(c.Request.Context(), userID, contestID, serviceID)
+	instance, err := h.instances.RestartContestAWDService(c.Request.Context(), userID, contestID, serviceID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -153,7 +172,7 @@ func (h *Handler) GetAdminContestAWDInstanceOrchestration(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.GetContestAWDInstanceOrchestration(c.Request.Context(), contestID)
+	resp, err := h.instances.GetContestAWDInstanceOrchestration(c.Request.Context(), contestID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -181,7 +200,7 @@ func (h *Handler) StartAdminContestAWDInstance(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.StartAdminContestAWDTeamService(
+	resp, err := h.instances.StartAdminContestAWDTeamService(
 		c.Request.Context(),
 		contestID,
 		req.TeamID,
@@ -214,7 +233,7 @@ func (h *Handler) PrewarmAdminContestAWDInstances(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.PrewarmAdminContestAWDInstances(c.Request.Context(), contestID, req.TeamID)
+	resp, err := h.instances.PrewarmAdminContestAWDInstances(c.Request.Context(), contestID, req.TeamID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -243,7 +262,7 @@ func (h *Handler) SetAdminContestAWDTeamRetired(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.SetAdminContestAWDTeamRetired(
+	resp, err := h.instances.SetAdminContestAWDTeamRetired(
 		c.Request.Context(),
 		contestID,
 		teamID,
@@ -283,7 +302,7 @@ func (h *Handler) SetAdminContestAWDTeamServiceDisabled(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.SetAdminContestAWDTeamServiceDisabled(
+	resp, err := h.instances.SetAdminContestAWDTeamServiceDisabled(
 		c.Request.Context(),
 		contestID,
 		teamID,
@@ -324,7 +343,7 @@ func (h *Handler) SetAdminContestAWDDesiredReconcileSuppressed(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.SetAdminContestAWDDesiredReconcileSuppressed(
+	resp, err := h.instances.SetAdminContestAWDDesiredReconcileSuppressed(
 		c.Request.Context(),
 		contestID,
 		teamID,
@@ -408,7 +427,7 @@ func (h *Handler) ListTeacherManualReviewSubmissions(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.service.ListTeacherManualReviewSubmissions(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
+	resp, err := h.manualReviews.ListTeacherManualReviewSubmissions(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -423,7 +442,7 @@ func (h *Handler) GetTeacherManualReviewSubmission(c *gin.Context) {
 		response.InvalidParams(c, "无效的 submission id")
 		return
 	}
-	resp, err := h.service.GetTeacherManualReviewSubmission(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
+	resp, err := h.manualReviews.GetTeacherManualReviewSubmission(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -443,7 +462,7 @@ func (h *Handler) ReviewManualReviewSubmission(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.service.ReviewManualReviewSubmission(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role, &req)
+	resp, err := h.manualReviews.ReviewManualReviewSubmission(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return

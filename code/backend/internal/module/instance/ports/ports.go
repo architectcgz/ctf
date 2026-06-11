@@ -109,6 +109,22 @@ type ActiveAWDContestPause struct {
 	PausedSeconds int64
 }
 
+type StartupRecoveryLockLease interface {
+	Refresh(ctx context.Context, ttl time.Duration) (bool, error)
+	Release(ctx context.Context) (bool, error)
+	Key(ctx context.Context) string
+}
+
+type StartupRuntimeStateStore interface {
+	LoadPlatformRuntimeState(ctx context.Context) (string, time.Time, bool, error)
+	SavePlatformRuntimeState(ctx context.Context, bootID string, heartbeatAt time.Time) error
+	AcquireStartupRecoveryLock(ctx context.Context, ttl time.Duration) (StartupRecoveryLockLease, bool, error)
+}
+
+type HostBootIDReader interface {
+	ReadBootID(ctx context.Context) (string, error)
+}
+
 type ProxyTicketClaims struct {
 	UserID               int64                     `json:"user_id"`
 	Username             string                    `json:"username"`

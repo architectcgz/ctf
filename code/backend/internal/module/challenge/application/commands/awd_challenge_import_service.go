@@ -2,14 +2,9 @@ package commands
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -22,12 +17,11 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
-const defaultAWDCheckerArtifactRoot = "./data/awd-checker-artifacts"
-
 type AWDChallengeImportService struct {
 	repo           challengeports.AWDChallengeCommandRepository
 	previewStore   challengeports.AWDChallengeImportPreviewStore
 	packageStorage challengeports.ChallengePackageStorage
+	checkerStore   challengeports.AWDCheckerArtifactStore
 	txRunner       challengeports.AWDChallengeImportTxRunner
 	imageBuild     *ImageBuildService
 	logger         *zap.Logger
@@ -37,12 +31,14 @@ func NewAWDChallengeImportService(
 	repo challengeports.AWDChallengeCommandRepository,
 	previewStore challengeports.AWDChallengeImportPreviewStore,
 	packageStorage challengeports.ChallengePackageStorage,
+	checkerStore challengeports.AWDCheckerArtifactStore,
 	imageBuild ...*ImageBuildService,
 ) *AWDChallengeImportService {
 	service := &AWDChallengeImportService{
 		repo:           repo,
 		previewStore:   previewStore,
 		packageStorage: packageStorage,
+		checkerStore:   checkerStore,
 		logger:         zap.NewNop(),
 	}
 	if len(imageBuild) > 0 {
@@ -168,6 +164,9 @@ func (s *AWDChallengeImportService) CommitImport(
 	if s.packageStorage == nil {
 		return nil, fmt.Errorf("challenge package storage is not configured")
 	}
+	if s.checkerStore == nil {
+		return nil, fmt.Errorf("awd checker artifact store is not configured")
+	}
 	if s.txRunner == nil {
 		return nil, fmt.Errorf("awd challenge import tx runner is not configured")
 	}
@@ -217,7 +216,7 @@ func (s *AWDChallengeImportService) CommitImport(
 
 		now := time.Now().UTC()
 		var current challengeentity.AWDChallenge
-		checkerConfigWithArtifact, err := persistAWDCheckerArtifact(parsed)
+		checkerConfigWithArtifact, err := s.checkerStore.PersistScriptCheckerArtifact(ctx, awdCheckerArtifactPersistRequestFromParsed(parsed))
 		if err != nil {
 			return err
 		}
@@ -397,165 +396,6 @@ func marshalAWDChallengeConfig(value map[string]any) (string, error) {
 	return string(encoded), nil
 }
 
-func persistAWDCheckerArtifact(parsed *domain.ParsedAWDChallengePackage) (string, error) {
-	if parsed == nil {
-		return "{}", nil
-	}
-	config := cloneAWDChallengeConfig(parsed.CheckerConfig)
-	if parsed.CheckerType != string(challengeentity.AWDCheckerTypeScript) {
-		return marshalAWDChallengeConfig(config)
-	}
-	if strings.TrimSpace(parsed.CheckerEntryAbs) == "" || strings.TrimSpace(parsed.CheckerEntryPath) == "" {
-		return "", apperror.ErrInvalidParams.WithCause(errors.New("script_checker artifact entry is missing"))
-	}
-	files := parsed.CheckerFiles
-	if len(files) == 0 {
-		files = []domain.ParsedAWDCheckerFile{{Path: parsed.CheckerEntryPath, Abs: parsed.CheckerEntryAbs}}
-	}
-	fileContents := make([][]byte, 0, len(files))
-	fileMetadata := make([]map[string]any, 0, len(files))
-	digestSeed := sha256.New()
-	for _, file := range files {
-		content, err := os.ReadFile(file.Abs)
-		if err != nil {
-			return "", fmt.Errorf("read script checker artifact %s: %w", file.Path, err)
-		}
-		sum := sha256.Sum256(content)
-		fileDigest := hex.EncodeToString(sum[:])
-		digestSeed.Write([]byte(file.Path))
-		digestSeed.Write([]byte{0})
-		digestSeed.Write([]byte(fileDigest))
-		digestSeed.Write([]byte{0})
-		digestSeed.Write([]byte(fmt.Sprintf("%d", len(content))))
-		digestSeed.Write([]byte{0})
-		fileContents = append(fileContents, content)
-		fileMetadata = append(fileMetadata, map[string]any{
-			"path":   file.Path,
-			"sha256": fileDigest,
-			"size":   len(content),
-		})
-	}
-	digest := hex.EncodeToString(digestSeed.Sum(nil))
-	targetDir := filepath.Join(awdCheckerArtifactRoot(), sanitizeAWDCheckerArtifactSegment(parsed.Slug), digest)
-	for index, file := range files {
-		targetPath := filepath.Join(targetDir, filepath.FromSlash(file.Path))
-		if err := os.MkdirAll(filepath.Dir(targetPath), 0o750); err != nil {
-			return "", fmt.Errorf("create script checker artifact dir: %w", err)
-		}
-		if err := os.WriteFile(targetPath, fileContents[index], 0o400); err != nil {
-			return "", fmt.Errorf("write script checker artifact: %w", err)
-		}
-		fileMetadata[index]["storage_path"] = targetPath
-	}
-	entryArtifact := fileMetadata[0]
-	for _, item := range fileMetadata {
-		if item["path"] == parsed.CheckerEntryPath {
-			entryArtifact = item
-			break
-		}
-	}
-	config["artifact"] = map[string]any{
-		"entry":        parsed.CheckerEntryPath,
-		"storage_path": entryArtifact["storage_path"],
-		"sha256":       entryArtifact["sha256"],
-		"size":         entryArtifact["size"],
-		"digest":       digest,
-		"files":        fileMetadata,
-	}
-	return marshalAWDChallengeConfig(config)
-}
-
-func awdCheckerArtifactDirFromConfig(raw string) string {
-	var config map[string]any
-	if err := json.Unmarshal([]byte(strings.TrimSpace(raw)), &config); err != nil {
-		return ""
-	}
-	artifact, ok := config["artifact"].(map[string]any)
-	if !ok {
-		return ""
-	}
-	storagePath, _ := artifact["storage_path"].(string)
-	packagePath, _ := artifact["entry"].(string)
-	if strings.TrimSpace(storagePath) == "" {
-		if files, ok := artifact["files"].([]any); ok {
-			for _, item := range files {
-				file, ok := item.(map[string]any)
-				if !ok {
-					continue
-				}
-				storagePath, _ = file["storage_path"].(string)
-				packagePath, _ = file["path"].(string)
-				if strings.TrimSpace(storagePath) != "" && strings.TrimSpace(packagePath) != "" {
-					break
-				}
-			}
-		}
-	}
-	return awdCheckerArtifactDirFromFile(storagePath, packagePath)
-}
-
-func awdCheckerArtifactDirFromFile(storagePath, packagePath string) string {
-	storagePath = filepath.Clean(strings.TrimSpace(storagePath))
-	packagePath = filepath.Clean(strings.TrimSpace(packagePath))
-	if storagePath == "." || packagePath == "." || packagePath == "" || filepath.IsAbs(packagePath) {
-		return ""
-	}
-	suffix := filepath.FromSlash(packagePath)
-	if !strings.HasSuffix(storagePath, suffix) {
-		return ""
-	}
-	dir := strings.TrimSuffix(storagePath, suffix)
-	dir = strings.TrimRight(dir, string(filepath.Separator))
-	if dir == "" || !isAWDCheckerArtifactDirInsideRoot(dir) {
-		return ""
-	}
-	return dir
-}
-
-func removeAWDCheckerArtifactDir(dir string) error {
-	dir = filepath.Clean(strings.TrimSpace(dir))
-	if dir == "." || dir == "" || !isAWDCheckerArtifactDirInsideRoot(dir) {
-		return nil
-	}
-	return os.RemoveAll(dir)
-}
-
-func isAWDCheckerArtifactDirInsideRoot(dir string) bool {
-	root, err := filepath.Abs(awdCheckerArtifactRoot())
-	if err != nil {
-		return false
-	}
-	target, err := filepath.Abs(dir)
-	if err != nil {
-		return false
-	}
-	rel, err := filepath.Rel(root, target)
-	if err != nil {
-		return false
-	}
-	return rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
-}
-
-func sanitizeAWDCheckerArtifactSegment(value string) string {
-	trimmed := strings.TrimSpace(value)
-	if trimmed == "" {
-		return "unknown"
-	}
-	var builder strings.Builder
-	for _, r := range trimmed {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_' {
-			builder.WriteRune(r)
-			continue
-		}
-		builder.WriteByte('-')
-	}
-	result := strings.Trim(builder.String(), "-")
-	if result == "" {
-		return "unknown"
-	}
-	return result
-}
-
 func cloneAWDChallengeConfig(value map[string]any) map[string]any {
 	if len(value) == 0 {
 		return map[string]any{}
@@ -574,9 +414,23 @@ func cloneAWDChallengeConfig(value map[string]any) map[string]any {
 	return cloned
 }
 
-func awdCheckerArtifactRoot() string {
-	if value := strings.TrimSpace(os.Getenv("AWD_CHECKER_ARTIFACT_DIR")); value != "" {
-		return value
+func awdCheckerArtifactPersistRequestFromParsed(parsed *domain.ParsedAWDChallengePackage) challengeports.AWDCheckerArtifactPersistRequest {
+	if parsed == nil {
+		return challengeports.AWDCheckerArtifactPersistRequest{}
 	}
-	return defaultAWDCheckerArtifactRoot
+	files := make([]challengeports.AWDCheckerArtifactFile, 0, len(parsed.CheckerFiles))
+	for _, file := range parsed.CheckerFiles {
+		files = append(files, challengeports.AWDCheckerArtifactFile{
+			Path: file.Path,
+			Abs:  file.Abs,
+		})
+	}
+	return challengeports.AWDCheckerArtifactPersistRequest{
+		Slug:             parsed.Slug,
+		CheckerType:      parsed.CheckerType,
+		CheckerConfig:    cloneAWDChallengeConfig(parsed.CheckerConfig),
+		CheckerEntryAbs:  parsed.CheckerEntryAbs,
+		CheckerEntryPath: parsed.CheckerEntryPath,
+		CheckerFiles:     files,
+	}
 }

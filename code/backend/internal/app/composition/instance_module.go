@@ -105,6 +105,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 		newStartupRuntimeContestRepository(contestinfra.NewRepository(root.DB())),
 		instanceRepo,
 		instanceinfra.NewPlatformRuntimeStateStore(root.Cache()),
+		instanceinfra.NewHostBootIDReader(""),
 		0,
 		log.Named("startup_runtime_recovery"),
 	).SetLockTTL(cfg.Container.StartupRecoveryLockTTL)

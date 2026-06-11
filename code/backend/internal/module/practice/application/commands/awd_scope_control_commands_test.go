@@ -16,7 +16,7 @@ import (
 )
 
 func TestServiceAWDControlLifecycleGuards(t *testing.T) {
-	type action func(t *testing.T, service *practicecmd.Service, contestID, teamID, serviceID, userID int64) error
+	type action func(t *testing.T, service *practicecmd.InstanceLifecycleService, contestID, teamID, serviceID, userID int64) error
 
 	for _, tc := range []struct {
 		name        string
@@ -27,7 +27,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 		{
 			name:        "user_start_rejects_retired_team",
 			controlType: contestcontracts.AWDScopeControlTypeRetired,
-			action: func(t *testing.T, service *practicecmd.Service, contestID, teamID, serviceID, userID int64) error {
+			action: func(t *testing.T, service *practicecmd.InstanceLifecycleService, contestID, teamID, serviceID, userID int64) error {
 				_, err := service.StartContestAWDService(context.Background(), userID, contestID, serviceID)
 				return err
 			},
@@ -36,7 +36,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 		{
 			name:        "user_start_rejects_disabled_service",
 			controlType: contestcontracts.AWDScopeControlTypeServiceDisabled,
-			action: func(t *testing.T, service *practicecmd.Service, contestID, teamID, serviceID, userID int64) error {
+			action: func(t *testing.T, service *practicecmd.InstanceLifecycleService, contestID, teamID, serviceID, userID int64) error {
 				_, err := service.StartContestAWDService(context.Background(), userID, contestID, serviceID)
 				return err
 			},
@@ -45,7 +45,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 		{
 			name:        "admin_start_rejects_retired_team",
 			controlType: contestcontracts.AWDScopeControlTypeRetired,
-			action: func(t *testing.T, service *practicecmd.Service, contestID, teamID, serviceID, userID int64) error {
+			action: func(t *testing.T, service *practicecmd.InstanceLifecycleService, contestID, teamID, serviceID, userID int64) error {
 				_, err := service.StartAdminContestAWDTeamService(context.Background(), contestID, teamID, serviceID)
 				return err
 			},
@@ -54,7 +54,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 		{
 			name:        "admin_start_rejects_disabled_service",
 			controlType: contestcontracts.AWDScopeControlTypeServiceDisabled,
-			action: func(t *testing.T, service *practicecmd.Service, contestID, teamID, serviceID, userID int64) error {
+			action: func(t *testing.T, service *practicecmd.InstanceLifecycleService, contestID, teamID, serviceID, userID int64) error {
 				_, err := service.StartAdminContestAWDTeamService(context.Background(), contestID, teamID, serviceID)
 				return err
 			},
@@ -101,7 +101,7 @@ func TestServiceAWDControlLifecycleGuards(t *testing.T) {
 				t.Fatalf("create awd scope control: %v", err)
 			}
 
-			service := newContestInstanceTestService(t, db)
+			service := newContestInstanceLifecycleService(t, db)
 			err := tc.action(t, service, contestID, teamID, serviceID, userID)
 			if err == nil || err.Error() != tc.wantErr.Error() {
 				t.Fatalf("expected %v, got %v", tc.wantErr, err)
@@ -150,7 +150,7 @@ func TestServiceStartContestAWDServiceAllowsManualStartWhenDesiredReconcileSuppr
 		t.Fatalf("create awd scope control: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db)
+	service := newContestInstanceLifecycleService(t, db)
 	resp, err := service.StartContestAWDService(context.Background(), userID, contestID, serviceID)
 	if err != nil {
 		t.Fatalf("StartContestAWDService() error = %v", err)
@@ -225,7 +225,7 @@ func TestServiceSetAdminContestAWDTeamRetiredStopsActiveInstancesAndClearsDesire
 		}
 	}
 
-	service := newContestInstanceTestService(t, db).SetDesiredAWDReconcileStateStore(stateStore)
+	service := newContestInstanceCommandServices(t, db).SetDesiredAWDReconcileStateStore(stateStore).Instances
 	resp, err := service.SetAdminContestAWDTeamRetired(context.Background(), contestID, teamID, adminID, true, "retire-team")
 	if err != nil {
 		t.Fatalf("SetAdminContestAWDTeamRetired() error = %v", err)
@@ -313,7 +313,7 @@ func TestServiceSetAdminContestAWDTeamServiceDisabledStopsActiveInstanceAndClear
 		t.Fatalf("create awd instance: %v", err)
 	}
 
-	service := newContestInstanceTestService(t, db).SetDesiredAWDReconcileStateStore(stateStore)
+	service := newContestInstanceCommandServices(t, db).SetDesiredAWDReconcileStateStore(stateStore).Instances
 	resp, err := service.SetAdminContestAWDTeamServiceDisabled(context.Background(), contestID, teamID, serviceID, adminID, true, "disable-service")
 	if err != nil {
 		t.Fatalf("SetAdminContestAWDTeamServiceDisabled() error = %v", err)

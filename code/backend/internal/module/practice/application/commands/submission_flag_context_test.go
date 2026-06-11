@@ -61,7 +61,7 @@ func TestSubmitFlagPropagatesContextToRepository(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 			nil,
 			nil,

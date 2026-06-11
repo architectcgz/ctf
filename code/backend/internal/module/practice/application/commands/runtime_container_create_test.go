@@ -19,7 +19,7 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 		t.Fatalf("create image: %v", err)
 	}
 
-	service := &Service{
+	service := &serviceCore{
 		imageRepo: challengeinfra.NewImageRepository(db),
 		config:    &config.Config{},
 	}
@@ -50,7 +50,7 @@ func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testin
 		t.Fatalf("create image: %v", err)
 	}
 
-	service := &Service{
+	service := &serviceCore{
 		imageRepo: challengeinfra.NewImageRepository(db),
 		config:    &config.Config{},
 	}

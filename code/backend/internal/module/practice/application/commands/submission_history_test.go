@@ -22,7 +22,7 @@ func TestListMyChallengeSubmissionsTreatsPracticeChallengeNotFoundAsChallengeNot
 		},
 	}
 	service := wirePracticeSubmissionHistoryAdapters(
-		NewService(&stubPracticeRepository{}, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		newServiceCore(&stubPracticeRepository{}, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		challengeRepo,
 	)
 
@@ -53,7 +53,7 @@ func TestListMyChallengeSubmissionsPropagatesContextToRepository(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionHistoryAdapters(
-		NewService(
+		newServiceCore(
 			&stubPracticeRepository{
 				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]practiceports.SubmissionRecord, error) {
 					listCalled = true
@@ -103,7 +103,7 @@ func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionHistoryAdapters(
-		NewService(
+		newServiceCore(
 			&stubPracticeRepository{
 				listChallengeSubmissionsFn: func(ctx context.Context, userID, challengeID int64, limit int) ([]practiceports.SubmissionRecord, error) {
 					if userID != 7 || challengeID != 11 {

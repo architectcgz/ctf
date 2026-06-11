@@ -42,7 +42,7 @@ func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 			nil,
 			nil,
@@ -135,7 +135,7 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 			nil,
 			nil,

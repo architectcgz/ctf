@@ -17,6 +17,8 @@ import (
 
 var ErrAssessmentReportNotFound = errors.New("assessment report not found")
 var ErrAssessmentContestNotFound = errors.New("assessment contest not found")
+var ErrAssessmentReportOutputNotFound = errors.New("assessment report output not found")
+var ErrAssessmentReportOutputUnsafePath = errors.New("assessment report output unsafe path")
 
 type AssessmentProfileLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error)
@@ -100,6 +102,11 @@ type AssessmentReportLifecycleRepository interface {
 	FindByID(ctx context.Context, reportID int64) (*assessmententity.Report, error)
 	MarkReady(ctx context.Context, reportID int64, filePath string, expiresAt time.Time) error
 	MarkFailed(ctx context.Context, reportID int64, message string) error
+}
+
+type ReportOutputStore interface {
+	PrepareReportOutput(ctx context.Context, fileName string) (string, error)
+	ResolveReportDownloadPath(ctx context.Context, path string) (string, error)
 }
 
 type AssessmentReportUserLookupRepository interface {

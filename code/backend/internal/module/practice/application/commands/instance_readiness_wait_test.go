@@ -31,7 +31,7 @@ func TestWaitForInstanceReadinessPreservesProbeBudgetForFastFailures(t *testing.
 	t.Parallel()
 
 	probe := &fastFailThenReadyProbe{readyAfter: 25 * time.Millisecond}
-	service := &Service{
+	service := &serviceCore{
 		config: &config.Config{
 			Container: config.ContainerConfig{
 				StartProbeTimeout:  40 * time.Millisecond,
@@ -57,7 +57,7 @@ func TestWaitForInstanceReadinessExpandsAttemptsToDeadlineBudget(t *testing.T) {
 	t.Parallel()
 
 	probe := &fastFailThenReadyProbe{readyAfter: 70 * time.Millisecond}
-	service := &Service{
+	service := &serviceCore{
 		config: &config.Config{
 			Container: config.ContainerConfig{
 				StartProbeTimeout:  20 * time.Millisecond,

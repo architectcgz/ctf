@@ -79,7 +79,7 @@ func TestReviewManualReviewSubmissionPropagatesContextToRepository(t *testing.T)
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 			nil,
 			nil,
@@ -134,7 +134,7 @@ func TestReviewManualReviewSubmissionRejectsStudentRole(t *testing.T) {
 			return nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -169,7 +169,7 @@ func TestReviewManualReviewSubmissionRejectsInvalidReviewStatus(t *testing.T) {
 			return nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -204,7 +204,7 @@ func TestReviewManualReviewSubmissionRejectsOversizedReviewComment(t *testing.T)
 			return nil
 		},
 	}
-	service := NewService(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
+	service := newServiceCore(repo, nil, nil, nil, nil, nil, &config.Config{}, nil)
 
 	_, err := service.ReviewManualReviewSubmission(
 		context.Background(),
@@ -278,7 +278,7 @@ func TestReviewManualReviewSubmissionRejectsApprovalAfterChallengeAlreadySolved(
 		},
 	}
 	service := wirePracticeManualReviewAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 			nil,
 			nil,

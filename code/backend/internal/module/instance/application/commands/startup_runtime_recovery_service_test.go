@@ -2,13 +2,11 @@ package commands
 
 import (
 	"context"
-	"os"
-	"path/filepath"
+	"errors"
 	"sync"
 	"testing"
 	"time"
 
-	"ctf-platform/internal/infrastructure/redislock"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
 )
@@ -124,7 +122,7 @@ func (s *startupRuntimeInstanceRepoStub) RefreshActiveAWDInstanceExpiryByContest
 type startupRuntimeStateStoreStub struct {
 	loadFn          func(context.Context) (string, time.Time, bool, error)
 	saveFn          func(context.Context, string, time.Time) error
-	acquireLockFn   func(context.Context, time.Duration) (*redislock.Lock, bool, error)
+	acquireLockFn   func(context.Context, time.Duration) (instanceports.StartupRecoveryLockLease, bool, error)
 	loadBootID      string
 	loadHeartbeatAt time.Time
 	loadOK          bool
@@ -157,7 +155,7 @@ func (s *startupRuntimeStateStoreStub) SavePlatformRuntimeState(ctx context.Cont
 	return nil
 }
 
-func (s *startupRuntimeStateStoreStub) AcquireStartupRecoveryLock(ctx context.Context, ttl time.Duration) (*redislock.Lock, bool, error) {
+func (s *startupRuntimeStateStoreStub) AcquireStartupRecoveryLock(ctx context.Context, ttl time.Duration) (instanceports.StartupRecoveryLockLease, bool, error) {
 	if s.acquireLockFn != nil {
 		return s.acquireLockFn(ctx, ttl)
 	}
@@ -168,6 +166,29 @@ func (s *startupRuntimeStateStoreStub) AcquireStartupRecoveryLock(ctx context.Co
 		return nil, false, nil
 	}
 	return nil, true, nil
+}
+
+type startupRuntimeBootIDReaderStub struct {
+	bootID string
+	err    error
+}
+
+func (s *startupRuntimeBootIDReaderStub) ReadBootID(ctx context.Context) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	if s.err != nil {
+		return "", s.err
+	}
+	return s.bootID, nil
+}
+
+func setStartupRuntimeBootID(service *StartupRuntimeRecoveryService, bootID string) {
+	service.bootIDReader = &startupRuntimeBootIDReaderStub{bootID: bootID}
+}
+
+func setStartupRuntimeBootIDError(service *StartupRuntimeRecoveryService, err error) {
+	service.bootIDReader = &startupRuntimeBootIDReaderStub{err: err}
 }
 
 func TestStartupRuntimeRecoveryServiceRebootExtendsContestsBeforeReconcile(t *testing.T) {
@@ -225,10 +246,10 @@ func TestStartupRuntimeRecoveryServiceRebootExtendsContestsBeforeReconcile(t *te
 		lockAcquired:    true,
 	}
 
-	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, time.Hour, nil)
+	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, nil, time.Hour, nil)
 	service.SetDesiredRuntimeReconciler(desired)
 	service.now = newDeterministicNow(startedAt, recoveredAt)
-	service.bootIDPath = writeBootIDFile(t, "boot-new")
+	setStartupRuntimeBootID(service, "boot-new")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -296,9 +317,9 @@ func TestStartupRuntimeRecoveryServiceSameBootOnlyRecordsHeartbeat(t *testing.T)
 		lockAcquired:    true,
 	}
 
-	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, 30*time.Second, nil)
+	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, nil, 30*time.Second, nil)
 	service.now = newDeterministicNow(startedAt)
-	service.bootIDPath = writeBootIDFile(t, "boot-same")
+	setStartupRuntimeBootID(service, "boot-same")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -355,9 +376,9 @@ func TestStartupRuntimeRecoveryServiceSameBootWithStaleHeartbeatSkipsRecovery(t 
 		lockAcquired:    true,
 	}
 
-	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, 30*time.Second, nil)
+	service := NewStartupRuntimeRecoveryService(reconciler, contestRepo, instanceRepo, stateStore, nil, 30*time.Second, nil)
 	service.now = newDeterministicNow(startedAt)
-	service.bootIDPath = writeBootIDFile(t, "boot-same")
+	setStartupRuntimeBootID(service, "boot-same")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -415,16 +436,16 @@ func TestStartupRuntimeRecoveryServiceRetryDoesNotDoubleCountPreviouslyAppliedPa
 		lockAcquired:    true,
 	}
 
-	firstService := NewStartupRuntimeRecoveryService(&startupRuntimeReconcilerStub{err: context.Canceled}, contestRepo, instanceRepo, stateStore, time.Hour, nil)
+	firstService := NewStartupRuntimeRecoveryService(&startupRuntimeReconcilerStub{err: context.Canceled}, contestRepo, instanceRepo, stateStore, nil, time.Hour, nil)
 	firstService.now = newDeterministicNow(firstStartedAt)
-	firstService.bootIDPath = writeBootIDFile(t, "boot-new")
+	setStartupRuntimeBootID(firstService, "boot-new")
 	if err := firstService.Start(context.Background()); err == nil {
 		t.Fatal("expected first recovery attempt to fail")
 	}
 
-	secondService := NewStartupRuntimeRecoveryService(&startupRuntimeReconcilerStub{}, contestRepo, instanceRepo, stateStore, time.Hour, nil)
+	secondService := NewStartupRuntimeRecoveryService(&startupRuntimeReconcilerStub{}, contestRepo, instanceRepo, stateStore, nil, time.Hour, nil)
 	secondService.now = newDeterministicNow(secondStartedAt, secondRecoveredAt)
-	secondService.bootIDPath = writeBootIDFile(t, "boot-new")
+	setStartupRuntimeBootID(secondService, "boot-new")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	if err := secondService.Start(ctx); err != nil {
@@ -447,9 +468,9 @@ func TestStartupRuntimeRecoveryServiceStartRetryAfterInitFailure(t *testing.T) {
 
 	startedAt := time.Date(2026, 5, 16, 10, 10, 0, 0, time.UTC)
 	stateStore := &startupRuntimeStateStoreStub{lockAcquired: true}
-	service := NewStartupRuntimeRecoveryService(nil, nil, nil, stateStore, time.Hour, nil)
+	service := NewStartupRuntimeRecoveryService(nil, nil, nil, stateStore, nil, time.Hour, nil)
 	service.now = newDeterministicNow(startedAt)
-	service.bootIDPath = filepath.Join(t.TempDir(), "missing-boot-id")
+	setStartupRuntimeBootIDError(service, errors.New("missing boot id"))
 
 	if err := service.Start(context.Background()); err == nil {
 		t.Fatal("expected first Start() to fail")
@@ -458,7 +479,7 @@ func TestStartupRuntimeRecoveryServiceStartRetryAfterInitFailure(t *testing.T) {
 		t.Fatalf("expected no heartbeat save after failed start, got %d", len(stateStore.saveCalls))
 	}
 
-	service.bootIDPath = writeBootIDFile(t, "boot-retry-ok")
+	setStartupRuntimeBootID(service, "boot-retry-ok")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	if err := service.Start(ctx); err != nil {
@@ -485,9 +506,9 @@ func TestStartupRuntimeRecoveryServiceCanRestartAfterStop(t *testing.T) {
 	firstStartedAt := time.Date(2026, 5, 16, 10, 10, 0, 0, time.UTC)
 	secondStartedAt := time.Date(2026, 5, 16, 10, 12, 0, 0, time.UTC)
 	stateStore := &startupRuntimeStateStoreStub{lockAcquired: true}
-	service := NewStartupRuntimeRecoveryService(nil, nil, nil, stateStore, time.Hour, nil)
+	service := NewStartupRuntimeRecoveryService(nil, nil, nil, stateStore, nil, time.Hour, nil)
 	service.now = newDeterministicNow(firstStartedAt, secondStartedAt)
-	service.bootIDPath = writeBootIDFile(t, "boot-restart-ok")
+	setStartupRuntimeBootID(service, "boot-restart-ok")
 
 	firstCtx, firstCancel := context.WithCancel(context.Background())
 	defer firstCancel()
@@ -534,9 +555,9 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaWaitsForLeaderReady(t *testi
 		},
 		lockAcquired: false,
 	}
-	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, time.Hour, nil)
+	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, nil, time.Hour, nil)
 	service.now = newDeterministicNow(time.Date(2026, 5, 16, 10, 1, 0, 0, time.UTC))
-	service.bootIDPath = writeBootIDFile(t, "boot-standby")
+	setStartupRuntimeBootID(service, "boot-standby")
 	service.leaderRetry = 10 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -580,9 +601,9 @@ func TestStartupRuntimeRecoveryServiceConcurrentStartWaitsForLeaderReady(t *test
 		},
 		lockAcquired: false,
 	}
-	service := NewStartupRuntimeRecoveryService(nil, nil, nil, stateStore, time.Hour, nil)
+	service := NewStartupRuntimeRecoveryService(nil, nil, nil, stateStore, nil, time.Hour, nil)
 	service.now = newDeterministicNow(time.Date(2026, 5, 16, 10, 1, 0, 0, time.UTC))
-	service.bootIDPath = writeBootIDFile(t, "boot-standby")
+	setStartupRuntimeBootID(service, "boot-standby")
 	service.leaderRetry = 10 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -649,7 +670,7 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaCanTakeOverBeforeStartReturn
 			}
 			return "boot-ready", startedAt.Add(-2 * time.Minute), true, nil
 		},
-		acquireLockFn: func(context.Context, time.Duration) (*redislock.Lock, bool, error) {
+		acquireLockFn: func(context.Context, time.Duration) (instanceports.StartupRecoveryLockLease, bool, error) {
 			mu.Lock()
 			defer mu.Unlock()
 			return nil, allowAcquire, nil
@@ -662,9 +683,9 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaCanTakeOverBeforeStartReturn
 			return nil
 		},
 	}
-	service := NewStartupRuntimeRecoveryService(&startupRuntimeReconcilerStub{}, nil, nil, stateStore, 0, nil)
+	service := NewStartupRuntimeRecoveryService(&startupRuntimeReconcilerStub{}, nil, nil, stateStore, nil, 0, nil)
 	service.now = newDeterministicNow(startedAt)
-	service.bootIDPath = writeBootIDFile(t, "boot-ready")
+	setStartupRuntimeBootID(service, "boot-ready")
 	service.leaderRetry = 10 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -721,13 +742,13 @@ func TestStartupRuntimeRecoveryServiceStandbyReplicaReturnsAfterForeignLeaderRea
 			}
 			return "boot-ready", startedAt.Add(-2 * time.Minute), true, nil
 		},
-		acquireLockFn: func(context.Context, time.Duration) (*redislock.Lock, bool, error) {
+		acquireLockFn: func(context.Context, time.Duration) (instanceports.StartupRecoveryLockLease, bool, error) {
 			return nil, false, nil
 		},
 	}
-	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, 0, nil)
+	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, nil, 0, nil)
 	service.now = func() time.Time { return startedAt }
-	service.bootIDPath = writeBootIDFile(t, "boot-ready")
+	setStartupRuntimeBootID(service, "boot-ready")
 	service.leaderRetry = 10 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -775,9 +796,9 @@ func TestStartupRuntimeRecoveryServiceLeaderFailoverWithinSafeWindowSkipsRecover
 		loadOK:          true,
 		lockAcquired:    true,
 	}
-	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, 0, nil)
+	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, nil, 0, nil)
 	service.now = newDeterministicNow(startedAt)
-	service.bootIDPath = writeBootIDFile(t, "boot-shared")
+	setStartupRuntimeBootID(service, "boot-shared")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -810,9 +831,9 @@ func TestStartupRuntimeRecoveryServiceSameBootLeaderGapSkipsRecovery(t *testing.
 		loadOK:          true,
 		lockAcquired:    true,
 	}
-	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, 0, nil)
+	service := NewStartupRuntimeRecoveryService(reconciler, nil, nil, stateStore, nil, 0, nil)
 	service.now = newDeterministicNow(startedAt)
-	service.bootIDPath = writeBootIDFile(t, "boot-shared")
+	setStartupRuntimeBootID(service, "boot-shared")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -847,15 +868,4 @@ func newDeterministicNow(values ...time.Time) func() time.Time {
 		index++
 		return value
 	}
-}
-
-func writeBootIDFile(t *testing.T, bootID string) string {
-	t.Helper()
-
-	dir := t.TempDir()
-	path := filepath.Join(dir, "boot_id")
-	if err := os.WriteFile(path, []byte(bootID), 0o600); err != nil {
-		t.Fatalf("write boot id file: %v", err)
-	}
-	return path
 }

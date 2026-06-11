@@ -119,7 +119,7 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -283,7 +283,7 @@ func TestReconcileDesiredAWDInstancesReusesFailedInstance(t *testing.T) {
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -383,7 +383,7 @@ func TestReconcileDesiredAWDInstancesBacksOffAfterImmediateFailure(t *testing.T)
 	}
 
 	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -502,7 +502,7 @@ func TestReconcileDesiredAWDInstancesSuppressesScopeAfterProvisionFailure(t *tes
 	}
 
 	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -622,7 +622,7 @@ func TestReconcileDesiredAWDInstancesIgnoresCorruptedDesiredState(t *testing.T) 
 	}
 
 	stateStore := practiceinfra.NewDesiredAWDReconcileStateStore(redisClient)
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -704,7 +704,7 @@ func TestReconcileDesiredAWDInstancesClearsSuppressedStateWhenScopeAlreadyActive
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -783,7 +783,7 @@ func TestReconcileDesiredAWDInstancesSkipsManuallySuppressedScope(t *testing.T) 
 		},
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -888,7 +888,7 @@ func TestRunProvisioningLoopTriggersDesiredAWDReconciliation(t *testing.T) {
 	}
 
 	var createTopologyCalls atomic.Int32
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),

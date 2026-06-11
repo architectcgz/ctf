@@ -31,7 +31,7 @@ func (h *Handler) SubmitFlag(c *gin.Context) {
 	auditControl := &auditlog.Control{}
 	ctx := auditlog.WithControl(c.Request.Context(), auditControl)
 
-	resp, err := h.service.SubmitFlag(ctx, userID, challengeID, req.Flag)
+	resp, err := h.submissions.SubmitFlag(ctx, userID, challengeID, req.Flag)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -51,7 +51,7 @@ func (h *Handler) ListMyChallengeSubmissions(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.ListMyChallengeSubmissions(c.Request.Context(), userID, challengeID)
+	resp, err := h.submissions.ListMyChallengeSubmissions(c.Request.Context(), userID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return

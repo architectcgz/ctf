@@ -9,7 +9,7 @@ import (
 	platformevents "ctf-platform/internal/platform/events"
 )
 
-func (s *Service) StartBackgroundTasks(ctx context.Context) {
+func (s *serviceCore) StartBackgroundTasks(ctx context.Context) {
 	if s == nil || ctx == nil {
 		return
 	}
@@ -19,7 +19,7 @@ func (s *Service) StartBackgroundTasks(ctx context.Context) {
 	s.baseCtx, s.cancel = context.WithCancel(ctx)
 }
 
-func (s *Service) Close(ctx context.Context) error {
+func (s *serviceCore) Close(ctx context.Context) error {
 	if ctx == nil {
 		return errors.New("practice service close requires context")
 	}
@@ -41,7 +41,7 @@ func (s *Service) Close(ctx context.Context) error {
 	}
 }
 
-func (s *Service) triggerScoreUpdate(userID int64) {
+func (s *serviceCore) triggerScoreUpdate(userID int64) {
 	if s.scoreService == nil {
 		return
 	}
@@ -60,7 +60,7 @@ func (s *Service) triggerScoreUpdate(userID int64) {
 	})
 }
 
-func (s *Service) runAsyncTask(fn func(context.Context)) {
+func (s *serviceCore) runAsyncTask(fn func(context.Context)) {
 	if s.baseCtx == nil {
 		return
 	}
@@ -79,7 +79,7 @@ func (s *Service) runAsyncTask(fn func(context.Context)) {
 	}()
 }
 
-func (s *Service) publishWeakEvent(ctx context.Context, evt platformevents.Event) {
+func (s *serviceCore) publishWeakEvent(ctx context.Context, evt platformevents.Event) {
 	if s.eventBus == nil {
 		return
 	}

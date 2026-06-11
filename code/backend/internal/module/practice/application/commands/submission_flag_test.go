@@ -37,7 +37,7 @@ func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 
 			nil,
@@ -95,7 +95,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 
 			nil,
@@ -149,7 +149,7 @@ func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
 		},
 	}
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 
 			nil,
@@ -188,7 +188,7 @@ func TestSubmitFlagTreatsPracticeChallengeNotFoundAsChallengeNotFound(t *testing
 	}
 
 	service := wirePracticeSubmissionAdapters(
-		NewService(&stubPracticeRepository{}, nil, nil, nil, nil, nil, &config.Config{}, nil),
+		newServiceCore(&stubPracticeRepository{}, nil, nil, nil, nil, nil, &config.Config{}, nil),
 		nil,
 		runtimeSubjectSource,
 	)
@@ -223,7 +223,7 @@ func TestSubmitFlagTreatsPracticeSolvedSubmissionNotFoundAsUnsolved(t *testing.T
 
 	createCalled := false
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			&stubPracticeRepository{
 				findCorrectSubmissionFn: func(context.Context, int64, int64) (*practiceports.SubmissionRecord, error) {
 					return nil, errors.New("raw solved submission repo should not be called")

@@ -1,10 +1,9 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"mime"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -36,30 +35,13 @@ func (s *ReportService) renderReport(filePath, format string, data any) error {
 	return apperror.ErrInternal.WithCause(fmt.Errorf("unsupported report payload"))
 }
 
-func (s *ReportService) reportFilePath(reportID int64, reportType, format string) (string, error) {
-	storageDir := filepath.Clean(s.config.StorageDir)
-	if err := os.MkdirAll(storageDir, 0o755); err != nil {
-		return "", err
+func (s *ReportService) reportFilePath(ctx context.Context, reportID int64, reportType, format string) (string, error) {
+	if s.outputStore == nil {
+		return "", fmt.Errorf("report output store is not configured")
 	}
 	extension := reportFileExtension(format)
 	fileName := fmt.Sprintf("%s-%d-%d.%s", reportType, reportID, time.Now().Unix(), extension)
-	return filepath.Join(storageDir, fileName), nil
-}
-
-func (s *ReportService) safeReportPath(path string) (string, error) {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return "", err
-	}
-	absStorage, err := filepath.Abs(s.config.StorageDir)
-	if err != nil {
-		return "", err
-	}
-	prefix := absStorage + string(os.PathSeparator)
-	if absPath != absStorage && !strings.HasPrefix(absPath, prefix) {
-		return "", fmt.Errorf("unsafe path")
-	}
-	return absPath, nil
+	return s.outputStore.PrepareReportOutput(ctx, fileName)
 }
 
 func (s *ReportService) normalizeFormat(format string) string {

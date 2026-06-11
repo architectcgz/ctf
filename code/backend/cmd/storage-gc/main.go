@@ -9,7 +9,6 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/infrastructure/postgres"
-	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 )
 
@@ -47,8 +46,8 @@ func run(ctx context.Context, args []string) error {
 	}
 
 	roots := challengeinfra.DefaultChallengeLocalStorageRootsFromEnv()
-	service := challengecmd.NewArtifactGCService(
-		challengecmd.DefaultArtifactGCConfig(time.Now().UTC(), challengecmd.ArtifactGCRoots{
+	service := challengeinfra.NewArtifactGCService(
+		challengeinfra.DefaultArtifactGCConfig(time.Now().UTC(), challengeinfra.ArtifactGCRoots{
 			PreviewRoots: []string{
 				roots.ChallengeImportPreviewRoot,
 				roots.AWDChallengeImportPreviewRoot,
@@ -59,7 +58,7 @@ func run(ctx context.Context, args []string) error {
 		}),
 		challengeinfra.NewArtifactReferenceRepository(db),
 	)
-	report, err := service.CollectFiles(ctx, challengecmd.ArtifactGCExecution{DryRun: !*execute})
+	report, err := service.CollectFiles(ctx, challengeinfra.ArtifactGCExecution{DryRun: !*execute})
 	if err != nil {
 		return err
 	}

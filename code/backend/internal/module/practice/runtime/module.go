@@ -125,18 +125,24 @@ type moduleDeps struct {
 
 func Build(deps Deps) *Module {
 	internalDeps := newModuleDeps(deps)
-	service, rankingService, progressTimelineService := buildHandler(internalDeps)
-	service.StartBackgroundTasks(deps.AppContext)
-	service.SetEventBus(deps.Events)
+	commandServices, rankingService, progressTimelineService := buildHandler(internalDeps)
+	commandServices.Runtime.StartBackgroundTasks(deps.AppContext)
+	commandServices.SetEventBus(deps.Events)
 	progressTimelineService.RegisterPracticeEventConsumers(deps.Events)
 
 	return &Module{
 		BackgroundJobs: []BackgroundJob{
-			{Name: "practice_instance_scheduler", Run: service.RunProvisioningLoop},
+			{Name: "practice_instance_scheduler", Run: commandServices.Runtime.RunProvisioningLoop},
 		},
-		BackgroundTasks:             service,
-		Handler:                     practicehttp.NewHandler(service, rankingService, progressTimelineService),
-		AWDDesiredRuntimeReconciler: service,
+		BackgroundTasks: commandServices.Runtime,
+		Handler: practicehttp.NewHandler(
+			commandServices.Instances,
+			commandServices.Submissions,
+			commandServices.ManualReviews,
+			rankingService,
+			progressTimelineService,
+		),
+		AWDDesiredRuntimeReconciler: commandServices.Runtime,
 	}
 }
 
@@ -159,7 +165,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 	}
 }
 
-func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreService, *practiceqry.ProgressTimelineService) {
+func buildHandler(deps moduleDeps) (*practicecmd.CommandServices, *practiceqry.ScoreService, *practiceqry.ProgressTimelineService) {
 	cfg := deps.input.Config
 	log := deps.input.Logger
 	cache := deps.input.Cache
@@ -173,7 +179,7 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 		cfg.Cache.ProgressTTL,
 		log.Named("practice_progress_timeline_query_service"),
 	)
-	service := practicecmd.NewService(
+	services := practicecmd.NewCommandServices(
 		deps.commandRepo,
 		deps.imageStore,
 		deps.instanceRepo,
@@ -193,5 +199,5 @@ func buildHandler(deps moduleDeps) (*practicecmd.Service, *practiceqry.ScoreServ
 
 	rankingService := practiceqry.NewScoreService(practiceinfra.NewScoreQueryRepository(deps.rankingRepo), scoreStateStore, log.Named("practice_score_query_service"), &cfg.Score)
 
-	return service, rankingService, progressTimelineService
+	return services, rankingService, progressTimelineService
 }

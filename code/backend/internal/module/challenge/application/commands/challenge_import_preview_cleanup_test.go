@@ -41,6 +41,7 @@ func TestAWDChallengeImportPreviewDeletesWorkspaceWhenParseFails(t *testing.T) {
 		nil,
 		challengeinfra.NewAWDChallengeImportPreviewStore(""),
 		nil,
+		nil,
 	)
 
 	_, err := service.PreviewImport(context.Background(), 1001, "invalid.zip", bytes.NewReader(invalidImportArchive(t)))

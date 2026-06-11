@@ -11,7 +11,7 @@ import (
 	"ctf-platform/internal/shared/lockkeepalive"
 )
 
-func (s *Service) RunProvisioningLoop(ctx context.Context) {
+func (s *serviceCore) RunProvisioningLoop(ctx context.Context) {
 	if !s.schedulerEnabled() {
 		return
 	}
@@ -41,7 +41,7 @@ func (s *Service) RunProvisioningLoop(ctx context.Context) {
 	}
 }
 
-func (s *Service) runProvisioningCycle(ctx context.Context, lastDesiredReconcileAt time.Time) (time.Time, bool, error) {
+func (s *serviceCore) runProvisioningCycle(ctx context.Context, lastDesiredReconcileAt time.Time) (time.Time, bool, error) {
 	nextLastDesiredReconcileAt := lastDesiredReconcileAt
 	acquired, err := s.withProvisioningSchedulerLock(ctx, func(lockCtx context.Context) error {
 		if nextAttemptAt := time.Now().UTC(); s.shouldRunDesiredAWDReconcile(lastDesiredReconcileAt, nextAttemptAt) {
@@ -55,7 +55,7 @@ func (s *Service) runProvisioningCycle(ctx context.Context, lastDesiredReconcile
 	return nextLastDesiredReconcileAt, acquired, err
 }
 
-func (s *Service) dispatchPendingInstances(ctx context.Context) error {
+func (s *serviceCore) dispatchPendingInstances(ctx context.Context) error {
 	limit, err := s.availableProvisioningSlots(ctx)
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func (s *Service) dispatchPendingInstances(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) availableProvisioningSlots(ctx context.Context) (int, error) {
+func (s *serviceCore) availableProvisioningSlots(ctx context.Context) (int, error) {
 	slots := s.schedulerMaxConcurrentStarts()
 	if slots <= 0 {
 		return 0, nil
@@ -125,7 +125,7 @@ func (s *Service) availableProvisioningSlots(ctx context.Context) (int, error) {
 	return slots, nil
 }
 
-func (s *Service) processPendingInstance(ctx context.Context, instanceID int64) {
+func (s *serviceCore) processPendingInstance(ctx context.Context, instanceID int64) {
 	instance, err := s.instanceRepo.FindByID(ctx, instanceID)
 	if err != nil {
 		s.logger.Error("读取待启动实例失败", zap.Int64("instance_id", instanceID), zap.Error(err))
@@ -154,53 +154,53 @@ func (s *Service) processPendingInstance(ctx context.Context, instanceID int64) 
 	}
 }
 
-func (s *Service) schedulerEnabled() bool {
+func (s *serviceCore) schedulerEnabled() bool {
 	return s != nil && s.config != nil && s.config.Container.Scheduler.Enabled
 }
 
-func (s *Service) schedulerPollInterval() time.Duration {
+func (s *serviceCore) schedulerPollInterval() time.Duration {
 	if s == nil || s.config == nil || s.config.Container.Scheduler.PollInterval <= 0 {
 		return time.Second
 	}
 	return s.config.Container.Scheduler.PollInterval
 }
 
-func (s *Service) desiredAWDReconcileInterval() time.Duration {
+func (s *serviceCore) desiredAWDReconcileInterval() time.Duration {
 	if s == nil || s.config == nil || s.config.Container.Scheduler.DesiredReconcileInterval <= 0 {
 		return 15 * time.Second
 	}
 	return s.config.Container.Scheduler.DesiredReconcileInterval
 }
 
-func (s *Service) desiredAWDReconcileFailureInitialBackoff() time.Duration {
+func (s *serviceCore) desiredAWDReconcileFailureInitialBackoff() time.Duration {
 	if s == nil || s.config == nil || s.config.Container.Scheduler.DesiredReconcileFailureInitialBackoff <= 0 {
 		return 30 * time.Second
 	}
 	return s.config.Container.Scheduler.DesiredReconcileFailureInitialBackoff
 }
 
-func (s *Service) desiredAWDReconcileFailureMaxBackoff() time.Duration {
+func (s *serviceCore) desiredAWDReconcileFailureMaxBackoff() time.Duration {
 	if s == nil || s.config == nil || s.config.Container.Scheduler.DesiredReconcileFailureMaxBackoff <= 0 {
 		return 10 * time.Minute
 	}
 	return s.config.Container.Scheduler.DesiredReconcileFailureMaxBackoff
 }
 
-func (s *Service) desiredAWDReconcileSuppressAfterFailures() int {
+func (s *serviceCore) desiredAWDReconcileSuppressAfterFailures() int {
 	if s == nil || s.config == nil || s.config.Container.Scheduler.DesiredReconcileSuppressAfterFailures < 0 {
 		return 0
 	}
 	return s.config.Container.Scheduler.DesiredReconcileSuppressAfterFailures
 }
 
-func (s *Service) desiredAWDReconcileSuppressDuration() time.Duration {
+func (s *serviceCore) desiredAWDReconcileSuppressDuration() time.Duration {
 	if s == nil || s.config == nil || s.config.Container.Scheduler.DesiredReconcileSuppressDuration <= 0 {
 		return 30 * time.Minute
 	}
 	return s.config.Container.Scheduler.DesiredReconcileSuppressDuration
 }
 
-func (s *Service) shouldRunDesiredAWDReconcile(lastAttemptAt, now time.Time) bool {
+func (s *serviceCore) shouldRunDesiredAWDReconcile(lastAttemptAt, now time.Time) bool {
 	if now.IsZero() {
 		now = time.Now().UTC()
 	}
@@ -210,42 +210,42 @@ func (s *Service) shouldRunDesiredAWDReconcile(lastAttemptAt, now time.Time) boo
 	return !now.Before(lastAttemptAt.Add(s.desiredAWDReconcileInterval()))
 }
 
-func (s *Service) schedulerBatchSize() int {
+func (s *serviceCore) schedulerBatchSize() int {
 	if s == nil || s.config == nil || s.config.Container.Scheduler.BatchSize <= 0 {
 		return 1
 	}
 	return s.config.Container.Scheduler.BatchSize
 }
 
-func (s *Service) schedulerMaxConcurrentStarts() int {
+func (s *serviceCore) schedulerMaxConcurrentStarts() int {
 	if s == nil || s.config == nil || s.config.Container.Scheduler.MaxConcurrentStarts <= 0 {
 		return 1
 	}
 	return s.config.Container.Scheduler.MaxConcurrentStarts
 }
 
-func (s *Service) schedulerMaxActiveInstances() int {
+func (s *serviceCore) schedulerMaxActiveInstances() int {
 	if s == nil || s.config == nil {
 		return 0
 	}
 	return s.config.Container.Scheduler.MaxActiveInstances
 }
 
-func (s *Service) schedulerLockTTL() time.Duration {
+func (s *serviceCore) schedulerLockTTL() time.Duration {
 	if s == nil || s.config == nil || s.config.Container.Scheduler.LockTTL <= 0 {
 		return 30 * time.Second
 	}
 	return s.config.Container.Scheduler.LockTTL
 }
 
-func (s *Service) tryAcquireProvisioningSchedulerLock(ctx context.Context) (practiceSchedulerLockLease, bool, error) {
+func (s *serviceCore) tryAcquireProvisioningSchedulerLock(ctx context.Context) (practiceSchedulerLockLease, bool, error) {
 	if s == nil || s.schedulerLockStore == nil {
 		return nil, true, nil
 	}
 	return s.schedulerLockStore.AcquireProvisioningSchedulerLock(ctx, s.schedulerLockTTL())
 }
 
-func (s *Service) withProvisioningSchedulerLock(ctx context.Context, fn func(context.Context) error) (bool, error) {
+func (s *serviceCore) withProvisioningSchedulerLock(ctx context.Context, fn func(context.Context) error) (bool, error) {
 	lock, acquired, err := s.tryAcquireProvisioningSchedulerLock(ctx)
 	if err != nil {
 		return false, err
@@ -260,7 +260,7 @@ func (s *Service) withProvisioningSchedulerLock(ctx context.Context, fn func(con
 	return true, fn(lockCtx)
 }
 
-func (s *Service) releaseProvisioningSchedulerLock(ctx context.Context, lock practiceSchedulerLockLease) {
+func (s *serviceCore) releaseProvisioningSchedulerLock(ctx context.Context, lock practiceSchedulerLockLease) {
 	if lock == nil || ctx == nil {
 		return
 	}

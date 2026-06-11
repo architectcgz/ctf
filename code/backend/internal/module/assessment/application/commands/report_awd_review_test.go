@@ -187,6 +187,7 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 		repo,
 		repo,
 		nil,
+		newTestReportOutputStore(t),
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
 			DefaultFormat: assessmententity.ReportFormatPDF,

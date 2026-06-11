@@ -22,7 +22,7 @@ import (
 	crypto "ctf-platform/internal/shared/flagcrypto"
 )
 
-func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*SubmissionResp, error) {
+func (s *serviceCore) SubmitFlag(ctx context.Context, userID, challengeID int64, flag string) (*SubmissionResp, error) {
 	if s.runtimeSubject == nil {
 		return nil, apperror.ErrInternal.WithCause(errors.New("practice runtime subject repository is nil"))
 	}
@@ -143,7 +143,7 @@ func (s *Service) SubmitFlag(ctx context.Context, userID, challengeID int64, fla
 	return resp, nil
 }
 
-func (s *Service) applySolveGracePeriod(ctx context.Context, userID int64, challengeItem *practiceentity.Challenge, solvedAt time.Time) *time.Time {
+func (s *serviceCore) applySolveGracePeriod(ctx context.Context, userID int64, challengeItem *practiceentity.Challenge, solvedAt time.Time) *time.Time {
 	if s == nil || s.instanceRepo == nil || challengeItem == nil {
 		return nil
 	}
@@ -190,7 +190,7 @@ func formatSolveGracePeriod(delay time.Duration) string {
 	return fmt.Sprintf("%d 分钟", minutes)
 }
 
-func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *practiceentity.Challenge) (string, string, string, error) {
+func (s *serviceCore) buildInstanceFlag(subjectID, challengeID int64, chal *practiceentity.Challenge) (string, string, string, error) {
 	switch chal.FlagType {
 	case practiceentity.FlagTypeDynamic:
 		nonce, err := randomstring.Generate()
@@ -211,7 +211,7 @@ func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *practice
 	}
 }
 
-func (s *Service) validateSubmittedFlag(ctx context.Context, userID int64, challengeItem *practiceentity.Challenge, flag string) (bool, error) {
+func (s *serviceCore) validateSubmittedFlag(ctx context.Context, userID int64, challengeItem *practiceentity.Challenge, flag string) (bool, error) {
 	switch challengeItem.FlagType {
 	case practiceentity.FlagTypeStatic:
 		inputHash := crypto.HashStaticFlag(flag, challengeItem.FlagSalt)
@@ -241,7 +241,7 @@ func (s *Service) validateSubmittedFlag(ctx context.Context, userID int64, chall
 	return crypto.ValidateFlag(flag, expectedFlag), nil
 }
 
-func (s *Service) activeFlagSecretKeyID() string {
+func (s *serviceCore) activeFlagSecretKeyID() string {
 	if s == nil || s.config == nil {
 		return ""
 	}
@@ -254,7 +254,7 @@ func (s *Service) activeFlagSecretKeyID() string {
 	return "default"
 }
 
-func (s *Service) flagSecretForKeyID(keyID string) (string, bool) {
+func (s *serviceCore) flagSecretForKeyID(keyID string) (string, bool) {
 	if s == nil || s.config == nil {
 		return "", false
 	}

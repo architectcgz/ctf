@@ -50,7 +50,7 @@ func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *
 	}
 
 	var createCalls atomic.Int32
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
@@ -139,7 +139,7 @@ func TestStartChallengePersistsSelectedRuntimeNodeID(t *testing.T) {
 		t.Fatalf("create user: %v", err)
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 		challengeinfra.NewImageRepository(db),
 		newPracticeTestInstanceRepository(db),
@@ -235,7 +235,7 @@ func TestStartChallengeIgnoresExpiredRunningInstance(t *testing.T) {
 		t.Fatalf("create expired instance: %v", err)
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
@@ -328,7 +328,7 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenReusingShar
 			return nil, nil
 		},
 	}
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,
@@ -402,7 +402,7 @@ func TestStartChallengeReusesStoppingInstanceInsteadOfCreatingNewOne(t *testing.
 		t.Fatalf("create stopping instance: %v", err)
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
@@ -529,7 +529,7 @@ func TestStartChallengePropagatesContextToTransactionalRepositoryWhenCreatingIns
 			return nil, nil
 		},
 	}
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		repo,
 
 		nil,

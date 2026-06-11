@@ -57,7 +57,7 @@ func TestSubmitFlagRequestsAuditSkipForRepeatCorrectSubmission(t *testing.T) {
 	repo := newPracticeRepositoryWithRuntimePortOwner(db)
 	challengeRepo := challengeinfra.NewRepository(db)
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 
 			nil,
@@ -135,7 +135,7 @@ func TestSubmitFlagRejectsTooFrequentAttempts(t *testing.T) {
 	repo := newPracticeRepositoryWithRuntimePortOwner(db)
 	challengeRepo := challengeinfra.NewRepository(db)
 	service := wirePracticeSubmissionAdapters(
-		NewService(
+		newServiceCore(
 			repo,
 
 			nil,

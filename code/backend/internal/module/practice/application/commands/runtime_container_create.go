@@ -19,7 +19,7 @@ import (
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
-func (s *Service) createContainer(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
+func (s *serviceCore) createContainer(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
 	if topology == nil {
 		return s.createSingleContainer(ctx, instance, chal, flag)
 	}
@@ -91,7 +91,7 @@ func (s *Service) createContainer(ctx context.Context, instance *instancecontrac
 	return nil
 }
 
-func (s *Service) createSingleContainer(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, flag string) error {
+func (s *serviceCore) createSingleContainer(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, flag string) error {
 	imageItem, err := s.imageRepo.FindByID(ctx, chal.ImageID)
 	if err != nil {
 		return instancecontracts.ErrContainerCreateFailed.WithCause(err)
@@ -249,7 +249,7 @@ func applyTopologyCreateResultToInstance(instance *instancecontracts.Instance, r
 	return nil
 }
 
-func (s *Service) createRuntimeWithHostPortRebind(ctx context.Context, instance *instancecontracts.Instance, create func() error) error {
+func (s *serviceCore) createRuntimeWithHostPortRebind(ctx context.Context, instance *instancecontracts.Instance, create func() error) error {
 	err := create()
 	if err == nil || !shouldRebindProvisioningHostPort(instance, err) {
 		return err
@@ -271,7 +271,7 @@ func (s *Service) createRuntimeWithHostPortRebind(ctx context.Context, instance 
 	return nil
 }
 
-func (s *Service) reserveReboundProvisioningHostPort(ctx context.Context, instance *instancecontracts.Instance, excludedPort int) error {
+func (s *serviceCore) reserveReboundProvisioningHostPort(ctx context.Context, instance *instancecontracts.Instance, excludedPort int) error {
 	if s == nil || s.repo == nil {
 		return fmt.Errorf("practice repository is nil")
 	}
@@ -303,7 +303,7 @@ func normalizeChallengeTargetProtocol(protocol string) string {
 	}
 }
 
-func (s *Service) buildTopologyCreateRequest(
+func (s *serviceCore) buildTopologyCreateRequest(
 	ctx context.Context,
 	reservedHostPort int,
 	disableEntryPortPublishing bool,
@@ -378,7 +378,7 @@ func (s *Service) buildTopologyCreateRequest(
 	return request, nil
 }
 
-func (s *Service) resolveAvailableImageRef(ctx context.Context, imageID int64) (string, error) {
+func (s *serviceCore) resolveAvailableImageRef(ctx context.Context, imageID int64) (string, error) {
 	imageItem, err := s.imageRepo.FindByID(ctx, imageID)
 	if err != nil {
 		return "", instancecontracts.ErrContainerCreateFailed.WithCause(err)

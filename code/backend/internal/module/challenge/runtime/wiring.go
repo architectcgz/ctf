@@ -35,7 +35,7 @@ func (g backgroundTaskGroup) Close(ctx context.Context) error {
 
 var (
 	imageBuildDockerBuilderFactory = func(registry config.ContainerRegistryConfig) challengeports.DockerImageBuilder {
-		return challengecmd.NewDockerCLIImageBuilderWithConfig(challengecmd.DockerCLIImageBuilderConfig{
+		return challengeinfra.NewDockerCLIImageBuilderWithConfig(challengeinfra.DockerCLIImageBuilderConfig{
 			RegistryServer: registry.Server,
 			Username:       registry.Username,
 			Password:       registry.Password,
@@ -90,6 +90,7 @@ func buildAWDChallengeHandler(deps moduleDeps, imageBuildService *challengecmd.I
 		deps.awdChallengeCommandRepo,
 		challengeinfra.NewAWDChallengeImportPreviewStore(""),
 		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
+		challengeinfra.NewAWDCheckerArtifactStore(""),
 		imageBuildService,
 	)
 	importService.SetTxRunner(NewAWDChallengeImportTxRunner(deps.rawRepo, imageBuildService))

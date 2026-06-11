@@ -73,7 +73,7 @@ func TestCreateSingleAWDContainerCreatesWorkspaceCompanionWithSharedMounts(t *te
 	}
 
 	var requests []*practiceports.TopologyCreateRequest
-	service := &Service{
+	service := &serviceCore{
 		repo:         repo,
 		imageRepo:    challengeinfra.NewImageRepository(db),
 		instanceRepo: newPracticeTestInstanceRepository(db),

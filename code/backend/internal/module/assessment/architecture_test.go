@@ -109,6 +109,44 @@ func TestCommandsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	}
 }
 
+func TestReportOutputStorageBoundaryIsInInfrastructure(t *testing.T) {
+	t.Parallel()
+
+	commandFiles, err := filepath.Glob(filepath.Join("application", "commands", "*.go"))
+	if err != nil {
+		t.Fatalf("glob commands files: %v", err)
+	}
+	for _, file := range commandFiles {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		assertFileDoesNotImport(t, file, "os")
+		assertFileDoesNotImport(t, file, "path/filepath")
+	}
+
+	blockedMarkers := []string{
+		"os.MkdirAll",
+		"os.Stat",
+		"os.IsNotExist",
+		"filepath.Abs",
+		"filepath.Clean",
+		"safeReportPath",
+	}
+	files := []string{
+		filepath.Join("application", "commands", "report_service.go"),
+		filepath.Join("application", "commands", "report_file_output.go"),
+		filepath.Join("application", "commands", "report_generation.go"),
+	}
+	for _, file := range files {
+		source := readFileSource(t, file)
+		for _, marker := range blockedMarkers {
+			if strings.Contains(source, marker) {
+				t.Fatalf("%s must not own report output storage helper %s", file, marker)
+			}
+		}
+	}
+}
+
 func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
 	t.Parallel()
 
@@ -265,6 +303,16 @@ func TestAssessmentTestsDoNotDependOnLegacyModelOrChallengeEntity(t *testing.T) 
 	if err != nil {
 		t.Fatalf("walk assessment test files: %v", err)
 	}
+}
+
+func readFileSource(t *testing.T, filePath string) string {
+	t.Helper()
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("read file %s: %v", filePath, err)
+	}
+	return string(content)
 }
 
 func assertFileImports(t *testing.T, filePath string, expectedImport string) {

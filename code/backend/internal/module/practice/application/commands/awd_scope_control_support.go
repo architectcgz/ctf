@@ -99,14 +99,14 @@ func normalizeAWDScopeControlReason(reason string) string {
 	return trimmed[:awdScopeControlReasonLimit]
 }
 
-func (s *Service) listContestAWDScopeControls(ctx context.Context, contestID int64) ([]*contestcontracts.AWDScopeControl, error) {
+func (s *serviceCore) listContestAWDScopeControls(ctx context.Context, contestID int64) ([]*contestcontracts.AWDScopeControl, error) {
 	if s == nil || s.repo == nil || contestID <= 0 {
 		return nil, nil
 	}
 	return s.repo.ListContestAWDScopeControls(ctx, contestID)
 }
 
-func (s *Service) loadAWDScopeControlState(ctx context.Context, contestID, teamID, serviceID int64) (awdScopeControlState, error) {
+func (s *serviceCore) loadAWDScopeControlState(ctx context.Context, contestID, teamID, serviceID int64) (awdScopeControlState, error) {
 	if s == nil || s.repo == nil || contestID <= 0 || teamID <= 0 {
 		return awdScopeControlState{}, nil
 	}
@@ -117,7 +117,7 @@ func (s *Service) loadAWDScopeControlState(ctx context.Context, contestID, teamI
 	return buildAWDScopeControlState(rows), nil
 }
 
-func (s *Service) ensureAWDScopeAllowsLifecycle(ctx context.Context, scope practiceports.InstanceScope) error {
+func (s *serviceCore) ensureAWDScopeAllowsLifecycle(ctx context.Context, scope practiceports.InstanceScope) error {
 	if scope.ContestID == nil || scope.TeamID == nil || scope.ServiceID == nil {
 		return nil
 	}

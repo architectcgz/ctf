@@ -58,7 +58,7 @@ func TestCreateSingleAWDContainerUsesPublishedAccessHostWhenConfigured(t *testin
 		t.Fatalf("encode service snapshot: %v", err)
 	}
 	createTopologyCalls := 0
-	service := &Service{
+	service := &serviceCore{
 		repo: &stubPracticeRepository{
 			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 				return &practiceports.ContestAWDServiceRecord{
@@ -229,7 +229,7 @@ func TestCreateSingleAWDContainerRebindsHostPortAfterPublishConflict(t *testing.
 	createTopologyCalls := 0
 	reboundBound := false
 	releasedOldPort := false
-	service := &Service{
+	service := &serviceCore{
 		repo: &stubPracticeRepository{
 			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 				return &practiceports.ContestAWDServiceRecord{

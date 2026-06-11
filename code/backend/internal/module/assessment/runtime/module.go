@@ -160,6 +160,7 @@ func buildReportHandler(deps moduleDeps, profileQueryService assessmentports.Ass
 		deps.reportRepo,
 		deps.reportRepo,
 		profileQueryService,
+		assessmentinfra.NewReportOutputStore(deps.input.Config.Report.StorageDir),
 		deps.input.Config.Report,
 		deps.input.Logger.Named("report_service"),
 	)

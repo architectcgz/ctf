@@ -36,7 +36,7 @@ type stubPracticeSchedulerLockLease struct{}
 func TestBuildProvisioningFlagUsesInstanceFlagKeyID(t *testing.T) {
 	t.Parallel()
 
-	service := NewService(nil, nil, nil, nil, nil, nil, &config.Config{
+	service := newServiceCore(nil, nil, nil, nil, nil, nil, &config.Config{
 		Container: config.ContainerConfig{
 			FlagGlobalSecret:        "active-secret-12345678901234567890",
 			ResolvedFlagSecretKeyID: "active",
@@ -125,7 +125,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		t.Fatalf("create user: %v", err)
 	}
 
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
@@ -224,7 +224,7 @@ func TestRunProvisioningLoopSkipsWorkWhenSchedulerLockHeldByOtherReplica(t *test
 	}
 
 	var createCalls atomic.Int32
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
@@ -348,7 +348,7 @@ func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.
 	}
 
 	var cleanupCalls atomic.Int32
-	service := NewService(
+	service := newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),
@@ -412,7 +412,7 @@ func TestProvisionInstancePropagatesContextToUpdateRuntime(t *testing.T) {
 			return nil
 		},
 	}
-	service := NewService(
+	service := newServiceCore(
 		nil,
 
 		&stubPracticeImageStore{
@@ -465,7 +465,7 @@ func TestProvisionInstanceCleansRuntimeWhenInstanceLeavesCreatingBeforePersist(t
 			return false, nil
 		},
 	}
-	service := NewService(
+	service := newServiceCore(
 		nil,
 		&stubPracticeImageStore{
 			findByIDFn: func(context.Context, int64) (*challengecontracts.Image, error) {
@@ -523,7 +523,7 @@ func TestMarkInstanceFailedSkipsFailedTransitionWhenInstanceLeavesCreating(t *te
 			return nil
 		},
 	}
-	service := NewService(
+	service := newServiceCore(
 		nil,
 		nil,
 		instanceStore,
@@ -585,7 +585,7 @@ func TestProvisionInstanceAcceptsTCPAccessURLReadiness(t *testing.T) {
 			return nil
 		},
 	}
-	service := NewService(
+	service := newServiceCore(
 		nil,
 
 		&stubPracticeImageStore{
@@ -690,7 +690,7 @@ func TestProvisionAWDStableAliasSkipsHostReadinessProbe(t *testing.T) {
 	if err != nil {
 		t.Fatalf("encode service snapshot: %v", err)
 	}
-	service := &Service{
+	service := &serviceCore{
 		repo: &stubPracticeRepository{
 			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 				if gotContestID != contestID || gotServiceID != serviceID {
@@ -834,7 +834,7 @@ func TestProvisionInstanceCleansPrimaryRuntimeWhenWorkspaceStatePersistenceFails
 			return nil
 		},
 	}
-	service := NewService(
+	service := newServiceCore(
 		&stubPracticeRepository{
 			findContestAWDServiceFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRecord, error) {
 				return &practiceports.ContestAWDServiceRecord{
@@ -943,7 +943,7 @@ func TestProvisionInstanceMarksInstanceFailedWithContext(t *testing.T) {
 	const expectedCtxValue = "practice-provision-failure"
 
 	var markedFailed atomic.Int32
-	service := NewService(
+	service := newServiceCore(
 		nil,
 
 		challengeinfra.NewImageRepository(db),
@@ -1037,7 +1037,7 @@ func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *te
 
 	started := make(chan int, 2)
 	release := make(chan struct{})
-	service := wirePracticeScopeAdapters(NewService(
+	service := wirePracticeScopeAdapters(newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
 
 		challengeinfra.NewImageRepository(db),

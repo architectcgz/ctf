@@ -15,7 +15,7 @@ import (
 	platformevents "ctf-platform/internal/platform/events"
 )
 
-func (s *Service) ReviewManualReviewSubmission(
+func (s *serviceCore) ReviewManualReviewSubmission(
 	ctx context.Context,
 	submissionID, reviewerID int64,
 	reviewerRole string,
@@ -101,7 +101,7 @@ func (s *Service) ReviewManualReviewSubmission(
 	return manualReviewDetailRespFromRecord(*record, item), nil
 }
 
-func (s *Service) ListTeacherManualReviewSubmissions(
+func (s *serviceCore) ListTeacherManualReviewSubmissions(
 	ctx context.Context,
 	requesterID int64,
 	requesterRole string,
@@ -142,7 +142,7 @@ func (s *Service) ListTeacherManualReviewSubmissions(
 	}, nil
 }
 
-func (s *Service) GetTeacherManualReviewSubmission(
+func (s *serviceCore) GetTeacherManualReviewSubmission(
 	ctx context.Context,
 	submissionID, requesterID int64,
 	requesterRole string,

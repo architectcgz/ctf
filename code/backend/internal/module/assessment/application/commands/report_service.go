@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -31,6 +30,7 @@ type ReportService struct {
 	contestExportRepo assessmentports.AssessmentContestExportRepository
 	reviewArchiveRepo assessmentports.AssessmentReviewArchiveRepository
 	assessmentService assessmentports.AssessmentProfileReader
+	outputStore       assessmentports.ReportOutputStore
 	awdReviewBuilder  AWDReviewExportBuilder
 	config            config.ReportConfig
 	logger            *zap.Logger
@@ -50,6 +50,7 @@ func NewReportService(
 	contestExportRepo assessmentports.AssessmentContestExportRepository,
 	reviewArchiveRepo assessmentports.AssessmentReviewArchiveRepository,
 	assessmentService assessmentports.AssessmentProfileReader,
+	outputStore assessmentports.ReportOutputStore,
 	cfg config.ReportConfig,
 	logger *zap.Logger,
 ) *ReportService {
@@ -68,6 +69,7 @@ func NewReportService(
 		contestExportRepo: contestExportRepo,
 		reviewArchiveRepo: reviewArchiveRepo,
 		assessmentService: assessmentService,
+		outputStore:       outputStore,
 		config:            cfg,
 		logger:            logger,
 		workerPool:        make(chan struct{}, cfg.MaxWorkers),
@@ -263,7 +265,7 @@ func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, reque
 		if err != nil {
 			return err
 		}
-		filePath, expiresAt, err := s.generateTeacherAWDReviewArchive(report.ID, archive)
+		filePath, expiresAt, err := s.generateTeacherAWDReviewArchive(runCtx, report.ID, archive)
 		if err != nil {
 			return err
 		}
@@ -301,7 +303,7 @@ func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, reques
 		if err != nil {
 			return err
 		}
-		filePath, expiresAt, err := s.generateTeacherAWDReviewReport(report.ID, archive)
+		filePath, expiresAt, err := s.generateTeacherAWDReviewReport(runCtx, report.ID, archive)
 		if err != nil {
 			return err
 		}
@@ -394,15 +396,18 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 		return nil, apperror.ErrConflict.WithMessage(message)
 	}
 
-	filePath, err := s.safeReportPath(report.FilePath)
-	if err != nil {
-		return nil, apperror.ErrForbidden
+	if s.outputStore == nil {
+		return nil, apperror.ErrServiceUnavailable.WithMessage("报告输出存储暂不可用")
 	}
-	if _, statErr := os.Stat(filePath); statErr != nil {
-		if os.IsNotExist(statErr) {
+	filePath, err := s.outputStore.ResolveReportDownloadPath(ctx, report.FilePath)
+	if err != nil {
+		if errors.Is(err, assessmentports.ErrAssessmentReportOutputUnsafePath) {
+			return nil, apperror.ErrForbidden
+		}
+		if errors.Is(err, assessmentports.ErrAssessmentReportOutputNotFound) {
 			return nil, apperror.ErrNotFound
 		}
-		return nil, apperror.ErrInternal.WithCause(statErr)
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	fileName := reportDownloadFileName(report)

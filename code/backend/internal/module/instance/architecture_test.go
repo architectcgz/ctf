@@ -27,6 +27,27 @@ func TestCommandsDoNotDependOnHTTPOrRuntimeInfrastructure(t *testing.T) {
 	}
 }
 
+func TestStartupRuntimeRecoveryInfrastructureBoundary(t *testing.T) {
+	t.Parallel()
+
+	file := filepath.Join("application", "commands", "startup_runtime_recovery_service.go")
+	assertFileDoesNotImport(t, file, "os")
+	assertFileDoesNotImport(t, file, "ctf-platform/internal/infrastructure/redislock")
+
+	source := readFileSource(t, file)
+	blockedMarkers := []string{
+		"os.ReadFile",
+		"bootIDPath",
+		"*redislock.Lock",
+		"defaultBootIDPath",
+	}
+	for _, marker := range blockedMarkers {
+		if strings.Contains(source, marker) {
+			t.Fatalf("startup recovery commands must not own infrastructure marker %s", marker)
+		}
+	}
+}
+
 func TestQueriesDoNotDependOnHTTPOrRuntimeInfrastructure(t *testing.T) {
 	t.Parallel()
 
@@ -113,6 +134,16 @@ func instanceProductionGoFiles(t *testing.T) []string {
 		t.Fatalf("walk instance production go files: %v", err)
 	}
 	return files
+}
+
+func readFileSource(t *testing.T, filePath string) string {
+	t.Helper()
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf("read file %s: %v", filePath, err)
+	}
+	return string(content)
 }
 
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {
