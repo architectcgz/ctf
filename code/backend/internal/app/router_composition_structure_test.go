@@ -267,9 +267,7 @@ func TestBuildContainerRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"type ContainerRuntimeModule struct",
-		"type RuntimeModule = ContainerRuntimeModule",
 		"func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {",
-		"func BuildRuntimeModule(root *Root) (*RuntimeModule, error) {",
 		"defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, allocationRepo, defaultNode)",
 		"nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)",
 		"module := containerruntime.Build(",
@@ -279,6 +277,16 @@ func TestBuildContainerRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
 			t.Fatalf("runtime module should delegate through %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"type RuntimeModule = ContainerRuntimeModule",
+		"func BuildRuntimeModule(root *Root) (*RuntimeModule, error) {",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("container runtime composition should not keep legacy compatibility marker %s", marker)
 		}
 	}
 }

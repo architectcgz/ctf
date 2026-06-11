@@ -753,6 +753,16 @@ func TestRuntimeCompositionInjectsRuntimePersistenceIntoRuntimeModule(t *testing
 			t.Fatalf("runtime composition should inject runtime persistence marker %s", marker)
 		}
 	}
+
+	blocked := []string{
+		"type RuntimeModule = ContainerRuntimeModule",
+		"func BuildRuntimeModule(root *Root) (*RuntimeModule, error) {",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("container runtime composition should not keep legacy compatibility marker %s", marker)
+		}
+	}
 }
 
 func runtimeInfrastructureSourceExcept(t *testing.T, excluded ...string) string {

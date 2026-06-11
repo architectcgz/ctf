@@ -43,8 +43,6 @@ type ContainerRuntimeModule struct {
 	runtime    *containerruntime.Module
 }
 
-type RuntimeModule = ContainerRuntimeModule
-
 func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	cfg := runtimeConfigOrDefault(root.Config())
 	log := root.Logger()
@@ -118,10 +116,6 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		nodeRouter:              nodeRouter,
 		runtime:                 module,
 	}, nil
-}
-
-func BuildRuntimeModule(root *Root) (*RuntimeModule, error) {
-	return BuildContainerRuntimeModule(root)
 }
 
 func runtimeConfigOrDefault(cfg *config.Config) *config.Config {
