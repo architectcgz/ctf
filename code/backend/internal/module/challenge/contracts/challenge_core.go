@@ -65,21 +65,21 @@ type ChallengeHintResp struct {
 }
 
 type ChallengeDetailResp struct {
-	ID              int64                 `json:"id"`
-	Title           string                `json:"title"`
-	Description     string                `json:"description"`
-	Category        string                `json:"category"`
-	Difficulty      string                `json:"difficulty"`
-	Points          int                   `json:"points"`
-	NeedTarget      bool                  `json:"need_target"`
-	FlagType        string                `json:"flag_type"`
-	InstanceSharing string                `json:"instance_sharing"`
-	AttachmentURL   string                `json:"attachment_url,omitempty"`
-	Hints           []*ChallengeHintResp  `json:"hints"`
-	SolvedCount     int64                 `json:"solved_count"`
-	TotalAttempts   int64                 `json:"total_attempts"`
-	IsSolved        bool                  `json:"is_solved"`
-	CreatedAt       time.Time             `json:"created_at"`
+	ID              int64                `json:"id"`
+	Title           string               `json:"title"`
+	Description     string               `json:"description"`
+	Category        string               `json:"category"`
+	Difficulty      string               `json:"difficulty"`
+	Points          int                  `json:"points"`
+	NeedTarget      bool                 `json:"need_target"`
+	FlagType        string               `json:"flag_type"`
+	InstanceSharing string               `json:"instance_sharing"`
+	AttachmentURL   string               `json:"attachment_url,omitempty"`
+	Hints           []*ChallengeHintResp `json:"hints"`
+	SolvedCount     int64                `json:"solved_count"`
+	TotalAttempts   int64                `json:"total_attempts"`
+	IsSolved        bool                 `json:"is_solved"`
+	CreatedAt       time.Time            `json:"created_at"`
 }
 
 type ChallengeSelfCheckStepResp struct {

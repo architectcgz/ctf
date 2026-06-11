@@ -107,9 +107,9 @@ type memoryTokenService struct {
 	config   config.AuthConfig
 	wsConfig config.WebSocketConfig
 
-	mu       sync.Mutex
-	sessions map[string]authcontracts.Session
-	tickets  map[string]authctx.CurrentUser
+	mu        sync.Mutex
+	sessions  map[string]authcontracts.Session
+	tickets   map[string]authctx.CurrentUser
 	revokeErr error
 }
 

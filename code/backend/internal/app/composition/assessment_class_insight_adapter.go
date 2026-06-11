@@ -6,7 +6,7 @@ import (
 
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
-	queryports "ctf-platform/internal/module/teaching_query/ports"
+	queryports "ctf-platform/internal/module/teaching_analysis/ports"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
 

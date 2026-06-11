@@ -32,10 +32,10 @@ import (
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
-	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
-	teachingquerycontracts "ctf-platform/internal/module/teaching_query/contracts"
-	queryinfra "ctf-platform/internal/module/teaching_query/infrastructure"
-	queryports "ctf-platform/internal/module/teaching_query/ports"
+	teachingqueries "ctf-platform/internal/module/teaching_analysis/application/queries"
+	teachinganalysiscontracts "ctf-platform/internal/module/teaching_analysis/contracts"
+	queryinfra "ctf-platform/internal/module/teaching_analysis/infrastructure"
+	queryports "ctf-platform/internal/module/teaching_analysis/ports"
 	"ctf-platform/internal/shared/taxonomy"
 	teachingadvice "ctf-platform/internal/teaching/advice"
 )
@@ -100,7 +100,7 @@ type userSeed struct {
 	TeacherNo string
 }
 
-type teachingQueryUserLookupAdapter struct {
+type teachingAnalysisUserLookupAdapter struct {
 	users identitycontracts.UserLookupRepository
 }
 
@@ -151,7 +151,7 @@ func (a assessmentClassInsightSeedAdapter) ListClassTeachingFactSnapshots(ctx co
 	return a.repo.ListClassTeachingFactSnapshots(ctx, className, since)
 }
 
-func (a teachingQueryUserLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+func (a teachingAnalysisUserLookupAdapter) FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error) {
 	user, err := a.users.FindByID(ctx, userID)
 	if errors.Is(err, identitycontracts.ErrUserNotFound) {
 		return nil, nil
@@ -325,7 +325,7 @@ type seedResult struct {
 	PracticeSessionCount int
 	AWDAttackCount       int
 	Students             []seededStudentResult
-	ClassReview          *teachingquerycontracts.TeacherClassReview
+	ClassReview          *teachinganalysiscontracts.TeacherClassReview
 	Coverage             seedCoverageSummary
 }
 
@@ -486,7 +486,7 @@ func seedTeachingReviewData(ctx context.Context, db *gorm.DB, cache *redislib.Cl
 		cfg.Report,
 		zap.NewNop(),
 	)
-	userLookupRepo := teachingQueryUserLookupAdapter{users: identityinfra.NewRepository(db)}
+	userLookupRepo := teachingAnalysisUserLookupAdapter{users: identityinfra.NewRepository(db)}
 	classInsightService := teachingqueries.NewClassInsightService(
 		userLookupRepo,
 		classInsightRepo,

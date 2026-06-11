@@ -14,7 +14,7 @@ import (
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
-	teachingqueries "ctf-platform/internal/module/teaching_query/application/queries"
+	teachingqueries "ctf-platform/internal/module/teaching_analysis/application/queries"
 	"ctf-platform/internal/shared/taxonomy"
 
 	"gorm.io/driver/sqlite"

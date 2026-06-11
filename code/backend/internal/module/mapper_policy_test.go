@@ -13,8 +13,8 @@ import (
 )
 
 var allowedManualMapperWrapperFiles = map[string]string{
-	"teaching_query/api/http/request_mapper.go":                           "teaching query request 需按 query 参数规则做裁剪与归一",
-	"teaching_query/application/queries/class_insight_response_mapper.go": "class insight 聚合响应包含业务整形逻辑",
+	"teaching_analysis/api/http/request_mapper.go":                           "teaching analysis request 需按 query 参数规则做裁剪与归一",
+	"teaching_analysis/application/queries/class_insight_response_mapper.go": "class insight 聚合响应包含业务整形逻辑",
 }
 
 func TestMapperWrappersFollowGlobalDelegationPolicy(t *testing.T) {

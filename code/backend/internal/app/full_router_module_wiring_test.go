@@ -6,27 +6,27 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
-	teachinghttp "ctf-platform/internal/module/teaching_query/api/http"
+	teachinghttp "ctf-platform/internal/module/teaching_analysis/api/http"
 	"go.uber.org/zap"
 )
 
-func TestTeacherRoutesAreServedByTeachingQuery(t *testing.T) {
+func TestTeacherRoutesAreServedByTeachingAnalysis(t *testing.T) {
 	cfg, db, cache := newAppTestDependencies(t)
 
-	originalBuildTeachingQueryModule := buildTeachingQueryModule
+	originalBuildTeachingAnalysisModule := buildTeachingAnalysisModule
 	t.Cleanup(func() {
-		buildTeachingQueryModule = originalBuildTeachingQueryModule
+		buildTeachingAnalysisModule = originalBuildTeachingAnalysisModule
 	})
 
 	called := false
-	buildTeachingQueryModule = func(root *composition.Root, assessment *composition.AssessmentModule, identity *composition.IdentityModule) *composition.TeachingQueryModule {
-		module := originalBuildTeachingQueryModule(root, assessment, identity)
+	buildTeachingAnalysisModule = func(root *composition.Root, assessment *composition.AssessmentModule, identity *composition.IdentityModule) *composition.TeachingAnalysisModule {
+		module := originalBuildTeachingAnalysisModule(root, assessment, identity)
 		called = true
 		if module == nil || module.Handler == nil {
-			t.Fatal("expected teaching query module handler")
+			t.Fatal("expected teaching analysis module handler")
 		}
 		if got, want := reflect.TypeOf(module.Handler), reflect.TypeOf(&teachinghttp.Handler{}); got != want {
-			t.Fatalf("teaching query handler type = %v, want %v", got, want)
+			t.Fatalf("teaching analysis handler type = %v, want %v", got, want)
 		}
 		return module
 	}
@@ -39,7 +39,7 @@ func TestTeacherRoutesAreServedByTeachingQuery(t *testing.T) {
 		t.Fatal("expected router")
 	}
 	if !called {
-		t.Fatal("expected teaching query module builder to be called")
+		t.Fatal("expected teaching analysis module builder to be called")
 	}
 }
 

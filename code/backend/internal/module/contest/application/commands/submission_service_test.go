@@ -24,9 +24,9 @@ import (
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
-	platformevents "ctf-platform/internal/platform/events"
 	rediskeys "ctf-platform/internal/module/contest/infrastructure/cachekeys"
 	"ctf-platform/internal/module/contest/testsupport"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
 )
 

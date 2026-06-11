@@ -46,7 +46,6 @@ type testReportRepository struct {
 	evidence          []assessmentdomain.ReviewArchiveEvidenceEvent
 	writeups          []assessmentdomain.ReviewArchiveWriteupItem
 	manualReviews     []assessmentdomain.ReviewArchiveManualReviewItem
-
 }
 
 type testReportOutputStore struct {

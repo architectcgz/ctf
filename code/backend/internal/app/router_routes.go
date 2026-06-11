@@ -34,14 +34,14 @@ type adminRouteDeps struct {
 }
 
 type userRouteDeps struct {
-	auditRecorder auditlog.Recorder
-	auditLogger   *zap.Logger
-	assessment    *composition.AssessmentModule
-	challenge     *composition.ChallengeModule
-	contest       *composition.ContestModule
-	instance      *composition.InstanceModule
-	practice      *composition.PracticeModule
-	teachingQuery *composition.TeachingQueryModule
+	auditRecorder    auditlog.Recorder
+	auditLogger      *zap.Logger
+	assessment       *composition.AssessmentModule
+	challenge        *composition.ChallengeModule
+	contest          *composition.ContestModule
+	instance         *composition.InstanceModule
+	practice         *composition.PracticeModule
+	teachingAnalysis *composition.TeachingAnalysisModule
 }
 
 type challengeLookup interface {
@@ -138,12 +138,12 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		practice:      deps.practice,
 	})
 	registerTeacherRoutes(protected, teacherOrAbove, teacherRouteDeps{
-		auditRecorder: deps.auditRecorder,
-		auditLogger:   deps.auditLogger,
-		assessment:    deps.assessment,
-		challenge:     deps.challenge,
-		instance:      deps.instance,
-		practice:      deps.practice,
-		teachingQuery: deps.teachingQuery,
+		auditRecorder:    deps.auditRecorder,
+		auditLogger:      deps.auditLogger,
+		assessment:       deps.assessment,
+		challenge:        deps.challenge,
+		instance:         deps.instance,
+		practice:         deps.practice,
+		teachingAnalysis: deps.teachingAnalysis,
 	})
 }

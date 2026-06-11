@@ -1,0 +1,15 @@
+package queries
+
+import teachinganalysiscontracts "ctf-platform/internal/module/teaching_analysis/contracts"
+
+type TeacherClassSummary = teachinganalysiscontracts.TeacherClassSummary
+
+type TeacherClassTrendPoint = teachinganalysiscontracts.TeacherClassTrendPoint
+
+type TeacherClassTrend = teachinganalysiscontracts.TeacherClassTrend
+
+type TeacherReviewStudentRef = teachinganalysiscontracts.TeacherReviewStudentRef
+
+type TeacherClassReviewItem = teachinganalysiscontracts.TeacherClassReviewItem
+
+type TeacherClassReview = teachinganalysiscontracts.TeacherClassReview

@@ -149,23 +149,23 @@ var moduleDependencyBaseline = map[string]moduleDependencyReview{
 		"practice consumes instance-owned contracts for practice instance lifecycle and runtime context.",
 		moduleDependencyProviderContract,
 	),
-	"teaching_query -> challenge": reviewedDependency(
-		"teaching_query aggregates teacher-facing read models from challenge-owned contracts.",
+	"teaching_analysis -> challenge": reviewedDependency(
+		"teaching_analysis aggregates teacher-facing read models from challenge-owned contracts.",
 		moduleDependencyQueryAggregation,
 		moduleDependencyProviderContract,
 	),
-	"teaching_query -> identity": reviewedDependency(
-		"teaching_query aggregates teacher-facing read models from identity-owned contracts.",
+	"teaching_analysis -> identity": reviewedDependency(
+		"teaching_analysis aggregates teacher-facing read models from identity-owned contracts.",
 		moduleDependencyQueryAggregation,
 		moduleDependencyProviderContract,
 	),
-	"teaching_query -> contest": reviewedDependency(
-		"teaching_query aggregates teacher-facing read models from contest-owned contracts.",
+	"teaching_analysis -> contest": reviewedDependency(
+		"teaching_analysis aggregates teacher-facing read models from contest-owned contracts.",
 		moduleDependencyQueryAggregation,
 		moduleDependencyProviderContract,
 	),
-	"teaching_query -> assessment": reviewedDependency(
-		"teaching_query reuses assessment-owned recommendation contracts for teacher-facing student review.",
+	"teaching_analysis -> assessment": reviewedDependency(
+		"teaching_analysis reuses assessment-owned recommendation contracts for teacher-facing student review.",
 		moduleDependencyQueryAggregation,
 		moduleDependencyProviderContract,
 	),

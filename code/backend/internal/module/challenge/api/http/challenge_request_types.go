@@ -37,27 +37,27 @@ func (f *OptionalImageIDField) UnmarshalJSON(data []byte) error {
 }
 
 type CreateChallengeReq struct {
-	Title           string                `json:"title" binding:"required"`
-	Description     string                `json:"description" binding:"required"`
-	Category        string                `json:"category" binding:"required"`
-	Difficulty      string                `json:"difficulty" binding:"required,oneof=beginner easy medium hard insane"`
-	Points          int                   `json:"points" binding:"required,min=1"`
-	ImageID         *int64                `json:"image_id" binding:"omitempty,min=1"`
-	AttachmentURL   string                `json:"attachment_url" binding:"omitempty,max=2048"`
-	InstanceSharing string                `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
-	Hints           []ChallengeHintReq    `json:"hints" binding:"omitempty,dive"`
+	Title           string             `json:"title" binding:"required"`
+	Description     string             `json:"description" binding:"required"`
+	Category        string             `json:"category" binding:"required"`
+	Difficulty      string             `json:"difficulty" binding:"required,oneof=beginner easy medium hard insane"`
+	Points          int                `json:"points" binding:"required,min=1"`
+	ImageID         *int64             `json:"image_id" binding:"omitempty,min=1"`
+	AttachmentURL   string             `json:"attachment_url" binding:"omitempty,max=2048"`
+	InstanceSharing string             `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
+	Hints           []ChallengeHintReq `json:"hints" binding:"omitempty,dive"`
 }
 
 type UpdateChallengeReq struct {
-	Title           string                `json:"title"`
-	Description     string                `json:"description"`
-	Category        string                `json:"category"`
-	Difficulty      string                `json:"difficulty" binding:"omitempty,oneof=beginner easy medium hard insane"`
-	Points          int                   `json:"points" binding:"omitempty,min=1"`
-	ImageID         OptionalImageIDField  `json:"image_id"`
-	AttachmentURL   *string               `json:"attachment_url" binding:"omitempty,max=2048"`
-	InstanceSharing string                `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
-	Hints           []ChallengeHintReq    `json:"hints" binding:"omitempty,dive"`
+	Title           string               `json:"title"`
+	Description     string               `json:"description"`
+	Category        string               `json:"category"`
+	Difficulty      string               `json:"difficulty" binding:"omitempty,oneof=beginner easy medium hard insane"`
+	Points          int                  `json:"points" binding:"omitempty,min=1"`
+	ImageID         OptionalImageIDField `json:"image_id"`
+	AttachmentURL   *string              `json:"attachment_url" binding:"omitempty,max=2048"`
+	InstanceSharing string               `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
+	Hints           []ChallengeHintReq   `json:"hints" binding:"omitempty,dive"`
 }
 
 type ChallengeQuery struct {

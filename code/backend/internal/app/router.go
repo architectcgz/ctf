@@ -41,7 +41,7 @@ var (
 	buildInstanceModule         = composition.BuildInstanceModule
 	buildOpsModule              = composition.BuildOpsModule
 	buildPracticeModule         = composition.BuildPracticeModule
-	buildTeachingQueryModule    = composition.BuildTeachingQueryModule
+	buildTeachingAnalysisModule = composition.BuildTeachingAnalysisModule
 )
 
 func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*gin.Engine, error) {
@@ -162,7 +162,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		return nil, err
 	}
 	assessmentModule := buildAssessmentModule(root, challengeModule)
-	teachingQueryModule := buildTeachingQueryModule(root, assessmentModule, identityModule)
+	teachingAnalysisModule := buildTeachingAnalysisModule(root, assessmentModule, identityModule)
 	contestModule := buildContestModule(root, challengeModule, containerRuntimeModule)
 	contestRealtimeHandler := contesthttp.NewRealtimeHandler(
 		tokenService,
@@ -194,14 +194,14 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		tokenService:    tokenService,
 	})
 	registerUserRoutes(apiV1, protected, teacherOrAbove, userRouteDeps{
-		auditLogger:   composition.NamedAuditLogger(log),
-		auditRecorder: opsModule.AuditService,
-		assessment:    assessmentModule,
-		challenge:     challengeModule,
-		contest:       contestModule,
-		practice:      practiceModule,
-		instance:      instanceModule,
-		teachingQuery: teachingQueryModule,
+		auditLogger:      composition.NamedAuditLogger(log),
+		auditRecorder:    opsModule.AuditService,
+		assessment:       assessmentModule,
+		challenge:        challengeModule,
+		contest:          contestModule,
+		practice:         practiceModule,
+		instance:         instanceModule,
+		teachingAnalysis: teachingAnalysisModule,
 	})
 	engine.GET("/ws/contests/:id/announcements", contestRealtimeHandler.ServeAnnouncementWS)
 	engine.GET("/ws/contests/:id/scoreboard", contestRealtimeHandler.ServeScoreboardWS)

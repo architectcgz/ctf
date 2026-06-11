@@ -66,7 +66,7 @@ func TestReportFlowDoesNotDependOnGlobalDTO(t *testing.T) {
 	}
 }
 
-func TestAssessmentRuntimeCodeDoesNotDependOnTeachingQuery(t *testing.T) {
+func TestAssessmentRuntimeCodeDoesNotDependOnTeachingAnalysis(t *testing.T) {
 	t.Parallel()
 
 	err := filepath.WalkDir(".", func(path string, entry fs.DirEntry, walkErr error) error {
@@ -84,7 +84,7 @@ func TestAssessmentRuntimeCodeDoesNotDependOnTeachingQuery(t *testing.T) {
 		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
 			return nil
 		}
-		assertFileDoesNotImportPrefix(t, path, "ctf-platform/internal/module/teaching_query")
+		assertFileDoesNotImportPrefix(t, path, "ctf-platform/internal/module/teaching_analysis")
 		return nil
 	})
 	if err != nil {
@@ -201,7 +201,7 @@ func TestRuntimeOwnsAssessmentWiring(t *testing.T) {
 	assertFileImports(t, runtimeFile, "ctf-platform/internal/module/assessment/api/http")
 }
 
-func TestProductionAssessmentDoesNotImportTeachingQueryModule(t *testing.T) {
+func TestProductionAssessmentDoesNotImportTeachingAnalysisModule(t *testing.T) {
 	t.Parallel()
 
 	err := filepath.WalkDir(".", func(path string, entry fs.DirEntry, err error) error {
@@ -214,7 +214,7 @@ func TestProductionAssessmentDoesNotImportTeachingQueryModule(t *testing.T) {
 		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
 			return nil
 		}
-		assertFileDoesNotImportPrefix(t, path, "ctf-platform/internal/module/teaching_query")
+		assertFileDoesNotImportPrefix(t, path, "ctf-platform/internal/module/teaching_analysis")
 		return nil
 	})
 	if err != nil {

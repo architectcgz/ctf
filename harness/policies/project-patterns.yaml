@@ -108,11 +108,11 @@
   "backend_query_aggregation": {
     "description": "Cross-module read/query work should reuse existing query aggregation modules or owner contracts instead of adding direct cross-module repository reads.",
     "examples": [
-      "code/backend/internal/module/teaching_query"
+      "code/backend/internal/module/teaching_analysis"
     ],
     "must_reuse": [
-      "code/backend/internal/module/teaching_query/ports",
-      "code/backend/internal/module/teaching_query/infrastructure",
+      "code/backend/internal/module/teaching_analysis/ports",
+      "code/backend/internal/module/teaching_analysis/infrastructure",
       "code/backend/internal/module/*/contracts"
     ]
   },

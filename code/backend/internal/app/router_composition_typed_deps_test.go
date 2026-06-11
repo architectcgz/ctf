@@ -871,24 +871,24 @@ func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 	}
 }
 
-func TestTeachingQueryModuleUsesTypedDeps(t *testing.T) {
+func TestTeachingAnalysisModuleUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 
-	content, err := os.ReadFile(filepath.Join("composition", "teaching_query_module.go"))
+	content, err := os.ReadFile(filepath.Join("composition", "teaching_analysis_module.go"))
 	if err != nil {
-		t.Fatalf("read teaching_query_module.go: %v", err)
+		t.Fatalf("read teaching_analysis_module.go: %v", err)
 	}
 
 	source := string(content)
 	expected := []string{
-		"type TeachingQueryModule = teachingqueryruntime.Module",
-		"teachingqueryruntime.Build(",
-		"teachingqueryruntime.Deps{",
-		"Users:           teachingQueryUserLookupAdapter{users: identity.Users},",
+		"type TeachingAnalysisModule = teachinganalysisruntime.Module",
+		"teachinganalysisruntime.Build(",
+		"teachinganalysisruntime.Deps{",
+		"Users:           teachingAnalysisUserLookupAdapter{users: identity.Users},",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
-			t.Fatalf("teaching query composition should declare typed deps marker %s", marker)
+			t.Fatalf("teaching analysis composition should declare typed deps marker %s", marker)
 		}
 	}
 
@@ -898,7 +898,7 @@ func TestTeachingQueryModuleUsesTypedDeps(t *testing.T) {
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
-			t.Fatalf("teaching query composition should not keep wiring marker %s", marker)
+			t.Fatalf("teaching analysis composition should not keep wiring marker %s", marker)
 		}
 	}
 }

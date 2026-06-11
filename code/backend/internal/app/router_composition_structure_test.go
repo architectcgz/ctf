@@ -28,8 +28,8 @@ import (
 	opsports "ctf-platform/internal/module/ops/ports"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	teachingqueryhttp "ctf-platform/internal/module/teaching_query/api/http"
-	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
+	teachinganalysishttp "ctf-platform/internal/module/teaching_analysis/api/http"
+	teachinganalysisqueries "ctf-platform/internal/module/teaching_analysis/application/queries"
 )
 
 func TestBuildRoot(t *testing.T) {
@@ -158,8 +158,8 @@ func TestOpsModuleContractsCompile(t *testing.T) {
 	var _ auditlog.Recorder = (*opscmd.AuditService)(nil)
 }
 
-func TestTeachingQueryModuleContractsCompile(t *testing.T) {
-	var _ teachingqueryqueries.Service = (*teachingqueryqueries.QueryService)(nil)
+func TestTeachingAnalysisModuleContractsCompile(t *testing.T) {
+	var _ teachinganalysisqueries.Service = (*teachinganalysisqueries.QueryService)(nil)
 }
 
 func TestCompositionModulesExposeContracts(t *testing.T) {
@@ -182,7 +182,7 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "DashboardHandler", reflect.TypeOf(&opshttp.DashboardHandler{}))
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "NotificationHandler", reflect.TypeOf(&opshttp.NotificationHandler{}))
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "RiskHandler", reflect.TypeOf(&opshttp.RiskHandler{}))
-	assertFieldType(t, reflect.TypeOf(composition.TeachingQueryModule{}), "Handler", reflect.TypeOf(&teachingqueryhttp.Handler{}))
+	assertFieldType(t, reflect.TypeOf(composition.TeachingAnalysisModule{}), "Handler", reflect.TypeOf(&teachinganalysishttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "Catalog", reflect.TypeOf((*challengecontracts.ChallengeContract)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagValidator", reflect.TypeOf((*challengecontracts.FlagValidator)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagHandler", reflect.TypeOf(&challengehttp.FlagHandler{}))

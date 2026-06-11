@@ -14,7 +14,7 @@
 ## 当前设计
 
 - `code/backend/internal/app/composition/*.go`、`code/backend/internal/app/router.go`
-  - 负责：在进程级 composition root 中装配 `container_runtime`、`ops`、`instance`、`identity`、`auth`、`challenge`、`assessment`、`teaching_query`、`contest`、`practice` 模块，并统一管理 background jobs 与 closers；其中 `ContainerRuntimeModule` 是容器/运行时能力视图，`InstanceModule` 是实例与访问入口视图；`practice` 同时承接用户态 progress / timeline query
+  - 负责：在进程级 composition root 中装配 `container_runtime`、`ops`、`instance`、`identity`、`auth`、`challenge`、`assessment`、`teaching_analysis`、`contest`、`practice` 模块，并统一管理 background jobs 与 closers；其中 `ContainerRuntimeModule` 是容器/运行时能力视图，`InstanceModule` 是实例与访问入口视图；`practice` 同时承接用户态 progress / timeline query
   - 不负责：实现模块内部业务规则或绕过模块 runtime 直接在 app 层拼接业务依赖
 
 - `code/backend/internal/module/*/{api,application,domain,ports,infrastructure,runtime,contracts}`
@@ -41,8 +41,8 @@
   - 负责：由 startup recovery command service 承接进程启动时的 runtime 状态恢复编排；`instance/ports.StartupRuntimeStateStore` 和 `StartupRecoveryLockLease` 只表达启动恢复锁与 runtime 状态读取/写入语义，`instance/ports.HostBootIDReader` 只表达宿主机 boot id 读取语义；`instance/infrastructure/platform_runtime_state_store.go` 负责 Redis lock concrete，`instance/infrastructure/boot_id_reader.go` 负责读取 `/proc/sys/kernel/random/boot_id`，app composition 负责注入
   - 不负责：让 startup recovery application surface 直接知道 `redislock.Lock`、Redis concrete client、`os.ReadFile` 或宿主机 boot id 文件路径
 
-- `code/backend/internal/module/practice`、`code/backend/internal/module/teaching_query`
-  - 负责：`practice` 负责训练 owner 与用户态 progress / timeline query；`teaching_query` 承担教师视角、班级洞察和复盘场景的查询聚合，把跨 owner 只读拼装集中到查询聚合边界，并在 app 层复用 `identity` 暴露的基础用户 lookup
+- `code/backend/internal/module/practice`、`code/backend/internal/module/teaching_analysis`
+  - 负责：`practice` 负责训练 owner 与用户态 progress / timeline query；`teaching_analysis` 承担教师视角、班级洞察和复盘场景的查询聚合，把跨 owner 只读拼装集中到查询聚合边界，并在 app 层复用 `identity` 暴露的基础用户 lookup
   - 不负责：把只读取 practice 自有事实的 query 再拆成独立查询模块，或拥有练习、竞赛、题目、评估的写侧状态
 
 - `code/backend/internal/module/challenge/application/commands/image_build_service.go`、`code/backend/internal/module/challenge/infrastructure/registry_client.go`
@@ -296,7 +296,7 @@ flowchart TB
 
 ## 历史迁移
 
-- 当前模块边界已经从旧的 `teacher / system / container` 叙事收口到 `teaching_query / ops / container_runtime / instance`。
+- 当前模块边界已经从旧的 `teacher / system / container` 叙事收口到 `teaching_analysis / ops / container_runtime / instance`。
 - 下文保留的“结论 / 版图 / 硬规则 / 统一口径”是当前事实的详细展开；如果与 `composition` 或模块代码冲突，以代码和 guardrail test 为准。
 
 ## 目标演进稿
@@ -313,7 +313,7 @@ flowchart TB
 - **运行形态**：单个 Go API 进程，配套 PostgreSQL、Redis、Docker Engine，整体仍是单体部署。
 - **代码架构**：按业务模块组织的 Onion Architecture，而不是大一统的 handler/service/repository 三层堆叠。
 - **模块类型**：业务 owner 模块负责状态变更，查询聚合模块负责跨模块只读拼装。
-- **边界口径**：不再把 `teacher`、`system`、`container` 作为当前主模块叙事；当前代码分别收敛为 `teaching_query`、`ops`、`container_runtime` 底层模块和 `instance` 业务 owner，并在 app 层明确成 `container_runtime + instance` 两个组合视图；legacy `runtime` 物理模块已退役。
+- **边界口径**：不再把 `teacher`、`system`、`container` 作为当前主模块叙事；当前代码分别收敛为 `teaching_analysis`、`ops`、`container_runtime` 底层模块和 `instance` 业务 owner，并在 app 层明确成 `container_runtime + instance` 两个组合视图；legacy `runtime` 物理模块已退役。
 
 这里关注的是“系统现在是什么”，不记录迁移过程。
 
@@ -332,12 +332,12 @@ flowchart TB
 | `contest` | 业务 owner | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | 竞赛应用服务、实时广播、AWD 编排 |
 | `assessment` | 业务 owner | 评估任务、技能画像、报告导出、评估归档 | 画像查询、报告导出、归档能力 |
 | `ops` | 业务 owner / 运营支撑 | 审计日志、站内通知、WebSocket 管理、运行时概览与后台支撑 | 审计服务、通知 handler、运行时统计查询 |
-| `teaching_query` | 查询聚合模块 | 教师视角证据、复盘、学员画像、教学分析聚合查询 | 教师端查询 handler 与 query service；通过 app 层复用 `identity` 基础用户 lookup |
+| `teaching_analysis` | 查询聚合模块 | 教师视角证据、复盘、学员画像、教学分析聚合查询 | 教师端查询 handler 与 query service；通过 app 层复用 `identity` 基础用户 lookup |
 
 补充说明：
 
 - `/api/v1/teacher/*` 只是外部路由命名空间，不代表存在名为 `teacher` 的业务 owner 模块。
-- `teaching_query` 不拥有业务状态，只负责把多个 owner 的只读事实整理成可查询结果；`practice` 内的 progress / timeline query 只读取本模块自有事实。
+- `teaching_analysis` 不拥有业务状态，只负责把多个 owner 的只读事实整理成可查询结果；`practice` 内的 progress / timeline query 只读取本模块自有事实。
 
 ---
 
@@ -405,7 +405,7 @@ flowchart LR
 5. `auth`
 6. `challenge`
 7. `assessment`
-8. `teaching_query`
+8. `teaching_analysis`
 9. `contest`
 10. `practice`
 
@@ -441,7 +441,7 @@ flowchart LR
         Auth["auth"]
         Challenge["challenge"]
         Assessment["assessment"]
-        Teaching["teaching_query"]
+        Teaching["teaching_analysis"]
         Contest["contest"]
         Practice["practice"]
         Ops["ops"]
@@ -490,7 +490,7 @@ flowchart LR
         Practice["practice"]
         Instance["instance"]
         ContainerRuntime["container_runtime"]
-        TeachingRM["teaching_query"]
+        TeachingRM["teaching_analysis"]
     end
 
     Auth -->|contracts| Identity
@@ -532,20 +532,20 @@ flowchart LR
 | `identity` | 无 | 无 | 纯 owner 模块，对外提供用户、资料、管理端用户 contract |
 | `auth` | `identity` | `identity/contracts` | 登录、CAS、profile 读写经 `identity` contract 完成；审计记录在 app 层通过 `ops.AuditService` 注入，不形成模块 import |
 | `challenge` | `container_runtime` | `container_runtime/contracts` | 运行时探针、镜像检查等能力由 `ContainerRuntimeModule` 注入；题目拓扑与 runtime detail 编码使用 `container_runtime/contracts` 的 capability 数据结构，发布自检完成通知通过 `challenge.publish_check_finished` 事件交给 `ops` 消费；题目详情 solved-count 缓存通过 `challenge/ports.ChallengeSolvedCountCache` 交给模块内 infrastructure Redis adapter 处理 |
-| `assessment` | `challenge`、`contest`、`identity`、`practice` | `challenge/contracts`、`contest/contracts`、`identity/contracts`、`practice/contracts` | 画像增量更新和推荐缓存刷新订阅 practice / contest 事件；班级报告导出所需的教学查询读模型经 `app/composition/assessment_class_insight_adapter.go` 映射为 assessment 自有报告类型后注入，不形成 `assessment -> teaching_query` 模块 import |
+| `assessment` | `challenge`、`contest`、`identity`、`practice` | `challenge/contracts`、`contest/contracts`、`identity/contracts`、`practice/contracts` | 画像增量更新和推荐缓存刷新订阅 practice / contest 事件；班级报告导出所需的教学查询读模型经 `app/composition/assessment_class_insight_adapter.go` 映射为 assessment 自有报告类型后注入，不形成 `assessment -> teaching_analysis` 模块 import |
 | `container_runtime` | 无 | 无 | 容器 capability owner 不再依赖业务模块；runtime-agent checker 通道通过中性 `SandboxExecutor` / `SandboxExecJob` 协议承载，contest 侧用 `SandboxCheckerRunner` 适配业务 checker 语义 |
 | `ops` | `auth`、`challenge`、`contest`、`identity`、`practice` | `auth/contracts`、`challenge/contracts`、`contest/contracts`、`identity/contracts`、`practice/contracts` | 通知 handler 依赖 token service；通知命令服务订阅 challenge / practice 事件；contest realtime relay 订阅公告 / 榜单 / AWD 预览事件；运行时概览通过 `ContainerRuntimeModule` 注入，不形成模块 import |
 | `contest` | `auth`、`challenge`、`container_runtime`、`identity`、`instance` | `auth/contracts`、`challenge/contracts` / `ports`、`container_runtime/contracts` / `ports`、`identity/contracts`、`instance/ports` | 实时 WebSocket handler 解析 auth ticket；公告、榜单刷新和 AWD 预览进度发布 `contest/contracts` 事件交给 `ops` relay；竞赛/AWD 读 challenge catalog；AWD HTTP / checker / cleanup runtime contract 使用 `container_runtime` 能力；AWD proxy / defense SSH 准入查询由 contest infrastructure 实现 instance-facing ports |
 | `practice` | `challenge`、`container_runtime`、`contest`、`identity`、`instance` | `challenge/contracts`、`container_runtime/contracts` / `ports`、`contest/contracts`、`identity/contracts`、`instance/contracts` | `practice` 不再直接依赖 `assessment/contracts`；能力画像增量更新与推荐缓存刷新统一通过 `practice.flag_accepted` 事件由 `assessment` 消费。生产装配依赖 `InstanceModule` 暴露的 practice-facing 实例仓储和运行时服务；topology / managed-container shape 使用 `container_runtime` capability contract / ports |
 | `instance` | `identity` | `identity/contracts` | 当前 owner 代码集中在 `internal/module/instance/*`；对外 contract 由 `instance/contracts` 暴露；AWD proxy / SSH 准入经自身 ports 由 app composition 注入 contest 实现，production instance 不直接 import contest |
-| `teaching_query` | `assessment`、`challenge`、`contest`、`identity` | `assessment/contracts`、`challenge/contracts`、`contest/contracts`、`identity/contracts` | overview 已拆到独立 `OverviewService`，班级详情洞察已拆到独立 `ClassInsightService`，学生复盘已拆到独立 `StudentReviewService`，目录查询继续由 `Service` owner 承接 |
+| `teaching_analysis` | `assessment`、`challenge`、`contest`、`identity` | `assessment/contracts`、`challenge/contracts`、`contest/contracts`、`identity/contracts` | overview 已拆到独立 `OverviewService`，班级详情洞察已拆到独立 `ClassInsightService`，学生复盘已拆到独立 `StudentReviewService`，目录查询继续由 `Service` owner 承接 |
 
 补充说明：
 
 - `/api/v1/users/me/progress` 与 `/api/v1/users/me/timeline` 已在 2026-05-12 phase 4 / slice 1 并回 `practice/application/queries` 与 `practice/api/http`，因为它们只读取 practice 自有事实，不再保留独立 `practice_readmodel` 模块。
-- `teaching_query` 目前没有直接 import `practice`、`contest` 写模块；教师视角的大部分数据仍由本模块基础设施层做只读拼装，其中基础用户存在性与班级归属校验已改为复用 `identity.Users`，`GetOverview` 已在 2026-05-12 phase 4 / slice 2 拆到独立 `application/queries/overview_service.go`，`GetClassSummary / GetClassTrend / GetClassReview` 已在同日 phase 4 / slice 3 拆到独立 `application/queries/class_insight_service.go`，`GetStudentProgress / GetStudentRecommendations / GetStudentTimeline / GetStudentEvidence / GetStudentAttackSessions` 已在 2026-05-13 phase 4 / slice 4 拆到独立 `application/queries/student_review_service.go`，HTTP handler 现在分别依赖 `Service`、`OverviewService`、`ClassInsightService` 与 `StudentReviewService`。
+- `teaching_analysis` 目前没有直接 import `practice`、`contest` 写模块；教师视角的大部分数据仍由本模块基础设施层做只读拼装，其中基础用户存在性与班级归属校验已改为复用 `identity.Users`，`GetOverview` 已在 2026-05-12 phase 4 / slice 2 拆到独立 `application/queries/overview_service.go`，`GetClassSummary / GetClassTrend / GetClassReview` 已在同日 phase 4 / slice 3 拆到独立 `application/queries/class_insight_service.go`，`GetStudentProgress / GetStudentRecommendations / GetStudentTimeline / GetStudentEvidence / GetStudentAttackSessions` 已在 2026-05-13 phase 4 / slice 4 拆到独立 `application/queries/student_review_service.go`，HTTP handler 现在分别依赖 `Service`、`OverviewService`、`ClassInsightService` 与 `StudentReviewService`。
 - legacy `runtime` 模块已退役，`runtime -> instance`、`runtime -> practice`、`runtime -> contest` 与 `runtime -> container_runtime` 这些历史边不再作为生产模块依赖存在。
-- `moduleDependencyBaseline` 已不再包含 `container_runtime -> contest`、`instance -> contest` 与 `assessment -> teaching_query`。checker 执行契约已经迁到 `container_runtime` 中性 `SandboxExecutor`，AWD proxy / defense SSH 准入查询已经按 `contest -> instance/ports` 的方向由 contest 实现并注入 instance；班级报告导出继续由 `assessment` owner 承接，所需 teaching read model 通过 app composition 私有 adapter 转成 assessment 自有 `ClassInsight*` 类型。
+- `moduleDependencyBaseline` 已不再包含 `container_runtime -> contest`、`instance -> contest` 与 `assessment -> teaching_analysis`。checker 执行契约已经迁到 `container_runtime` 中性 `SandboxExecutor`，AWD proxy / defense SSH 准入查询已经按 `contest -> instance/ports` 的方向由 contest 实现并注入 instance；班级报告导出继续由 `assessment` owner 承接，所需 teaching read model 通过 app composition 私有 adapter 转成 assessment 自有 `ClassInsight*` 类型。
 - `moduleDependencyBaseline` 当前按边记录 reviewed category 与 rationale，不再只是裸允许列表。分类包括 `provider_contract`、`port_boundary`、`runtime_capability`、`event_consumer`、`query_aggregation` 与 `analysis_read_model`：它们用于说明依赖目的，未知边、过期边、缺少分类或缺少理由仍会被 `TestModuleDependencyBaselineIsCurrent` 拦截。分类不表示依赖永久存在，只表示当前保留原因已显式审阅。
 - `PracticeInstanceRepository` 与 `PracticeRuntimeService` 现在由 `composition.InstanceModule` 本地组合 `instanceinfra.Repository`、`container_runtime` capability service、contest AWD runtime state repository 和显式 adapter 后暴露给 `practice`。
 - `contest/application/statusmachine` 当前只编排竞赛状态迁移副作用；冻结榜快照与比赛结束时 AWD 运行态缓存清理由 `contest/ports.ContestStatusSideEffectStore` 配合 `contest/infrastructure/status_side_effect_store.go` 落到 Redis。`contest/application/jobs/status_updater.go` 的调度锁则通过 `contest/ports.ContestStatusUpdateLockStore` 配合 `contest/infrastructure/status_update_lock_store.go` 落到 Redis；`contest/application/jobs/AWDRoundUpdater` 的 scheduler lock、round lock、current round、round flags 和 live service status cache 则通过 `contest/ports.AWDRoundStateStore` 配合 `contest/infrastructure/awd_round_state_store.go` 落到 Redis。
@@ -594,7 +594,7 @@ flowchart LR
 - 有主导 owner（查询主导语义属某业务模块，只是顺带读其他模块的表字段）：放该 owner 模块实现。owner 可只读 join 其他模块的物理表，但用自己的 row struct scan，不 import 对方的 GORM model。
 - 跨模块协作优先依赖倒置（DIP）：消费方在自己的 `ports` 定义最小接口，owner 在自己的 `infrastructure` 实现，由 `app/composition` 注入，从而保持合规的依赖方向（对应 5.3 表格“端口由消费方定义，适配器在 provider 侧实现”）。
   - 例：AWD 代理准入查询（准入判定 + 实例访问信息）主导 owner 是 `contest`。instance proxy 入口经 `instance/ports` 定义的 resolver 接口消费，`contest` 实现该接口（一条 SQL 同时 join contest 自有 AWD 表与 `instances` 表），composition 注入；依赖方向是 `contest -> instance`，instance 不反向 import contest。详见 `docs/plan/impl-plan/2026-06-10-module-reverse-dependency-convergence-plan.md`。
-- 无单一 owner（跨多个 owner 的教师视角、复盘、统计报表）：进 `teaching_query` 查询聚合模块，不挂在任一业务 owner，也不反向回写 owner 表。
+- 无单一 owner（跨多个 owner 的教师视角、复盘、统计报表）：进 `teaching_analysis` 查询聚合模块，不挂在任一业务 owner，也不反向回写 owner 表。
 
 服务化演进接缝：
 
@@ -620,7 +620,7 @@ flowchart LR
 - 竞赛配置、队伍、排行榜、AWD 轮次与服务运行态：`contest`。
 - 评估任务、画像、报告导出、归档：`assessment`。
 - 审计、通知、运营支撑视图：`ops`。
-- 教师视角或复盘视角的跨模块查询聚合：`teaching_query`。
+- 教师视角或复盘视角的跨模块查询聚合：`teaching_analysis`。
 
 当一个查询同时跨越多个 owner 时，先判断它是否有明确主导 owner（按 5.5）：有主导 owner 的查询放该 owner 模块，以只读 join + 依赖倒置的方式读其他模块的表；只有无单一 owner 的报表 / 复盘聚合才进入查询聚合模块。两种情况都不在消费方模块里反向堆其他 owner 的写模型或越权 SQL。
 
@@ -641,4 +641,4 @@ flowchart LR
 
 现在可以统一这样描述后端：
 
-> 本系统在部署上保持单体形态，但在代码结构上采用按业务模块组织的 Onion Architecture。模块内部遵循 `api -> application -> domain` 的依赖方向，外部资源通过 `ports` 和 `infrastructure` 适配，教师侧跨模块查询聚合进入 `teaching_query`，而只读取 practice 自有事实的用户态 query 留在 `practice`。这样既控制了校园级项目的运维复杂度，也让后续扩展和局部拆分保持清晰边界。
+> 本系统在部署上保持单体形态，但在代码结构上采用按业务模块组织的 Onion Architecture。模块内部遵循 `api -> application -> domain` 的依赖方向，外部资源通过 `ports` 和 `infrastructure` 适配，教师侧跨模块查询聚合进入 `teaching_analysis`，而只读取 practice 自有事实的用户态 query 留在 `practice`。这样既控制了校园级项目的运维复杂度，也让后续扩展和局部拆分保持清晰边界。

@@ -11,7 +11,7 @@ import (
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
-	teachingqueryqueries "ctf-platform/internal/module/teaching_query/application/queries"
+	teachinganalysisqueries "ctf-platform/internal/module/teaching_analysis/application/queries"
 )
 
 type RequestFunc func(method, target string, payload any, headers map[string]string) *httptest.ResponseRecorder
@@ -50,10 +50,10 @@ func VerifyTeacherAccessAndRecommendationStateMatrix(t *testing.T, driver Teache
 	assertStatus(t, resp, http.StatusOK)
 
 	var teacherClasses struct {
-		List     []teachingqueryqueries.TeacherClassItem `json:"list"`
-		Total    int64                                   `json:"total"`
-		Page     int                                     `json:"page"`
-		PageSize int                                     `json:"page_size"`
+		List     []teachinganalysisqueries.TeacherClassItem `json:"list"`
+		Total    int64                                      `json:"total"`
+		Page     int                                        `json:"page"`
+		PageSize int                                        `json:"page_size"`
 	}
 	decodeEnvelopeData(t, resp, &teacherClasses)
 	if teacherClasses.Total != 1 || len(teacherClasses.List) != 1 || teacherClasses.List[0].Name != driver.ClassName {
@@ -64,10 +64,10 @@ func VerifyTeacherAccessAndRecommendationStateMatrix(t *testing.T, driver Teache
 	assertStatus(t, resp, http.StatusOK)
 
 	var adminClasses struct {
-		List     []teachingqueryqueries.TeacherClassItem `json:"list"`
-		Total    int64                                   `json:"total"`
-		Page     int                                     `json:"page"`
-		PageSize int                                     `json:"page_size"`
+		List     []teachinganalysisqueries.TeacherClassItem `json:"list"`
+		Total    int64                                      `json:"total"`
+		Page     int                                        `json:"page"`
+		PageSize int                                        `json:"page_size"`
 	}
 	decodeEnvelopeData(t, resp, &adminClasses)
 	if adminClasses.Page != 1 || adminClasses.PageSize != 1 || len(adminClasses.List) != 1 || adminClasses.Total < 2 {
@@ -111,7 +111,7 @@ func VerifyTeacherAccessAndRecommendationStateMatrix(t *testing.T, driver Teache
 	resp = driver.Request(http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/progress", driver.StudentID), nil, driver.TeacherHeaders)
 	assertStatus(t, resp, http.StatusOK)
 
-	var progress teachingqueryqueries.TeacherProgressResp
+	var progress teachinganalysisqueries.TeacherProgressResp
 	decodeEnvelopeData(t, resp, &progress)
 	if progress.SolvedChallenges == 0 {
 		t.Fatalf("expected solved challenges in teacher progress, got %+v", progress)
@@ -120,7 +120,7 @@ func VerifyTeacherAccessAndRecommendationStateMatrix(t *testing.T, driver Teache
 	resp = driver.Request(http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/timeline", driver.StudentID), nil, driver.TeacherHeaders)
 	assertStatus(t, resp, http.StatusOK)
 
-	var timeline teachingqueryqueries.TimelineResp
+	var timeline teachinganalysisqueries.TimelineResp
 	decodeEnvelopeData(t, resp, &timeline)
 	if len(timeline.Events) == 0 {
 		t.Fatalf("expected timeline events, got %+v", timeline)
@@ -133,7 +133,7 @@ func VerifyTeacherAccessAndRecommendationStateMatrix(t *testing.T, driver Teache
 	resp = driver.Request(http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/recommendations", driver.StudentID), nil, driver.TeacherHeaders)
 	assertStatus(t, resp, http.StatusOK)
 
-	var teacherRecommendations teachingqueryqueries.TeacherRecommendationResp
+	var teacherRecommendations teachinganalysisqueries.TeacherRecommendationResp
 	decodeEnvelopeData(t, resp, &teacherRecommendations)
 	if len(teacherRecommendations.Challenges) == 0 {
 		t.Fatalf("expected teacher recommendations, got %+v", teacherRecommendations)
