@@ -5,6 +5,7 @@ import (
 
 	"ctf-platform/internal/apperror"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
+	assessmentreporting "ctf-platform/internal/module/assessment/application/reporting"
 )
 
 type AWDReviewExportBuilder interface {
@@ -35,7 +36,7 @@ func (b *teacherAWDReviewExportBuilder) BuildArchive(ctx context.Context, reques
 		return archive, err
 	}
 
-	focusRound := hottestRound(archive.Rounds)
+	focusRound := assessmentreporting.HottestRound(archive.Rounds)
 	if focusRound == nil {
 		return archive, nil
 	}
