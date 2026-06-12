@@ -3,18 +3,20 @@ package infrastructure
 import (
 	"archive/zip"
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
 	"testing"
 
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	platformsharedfs "ctf-platform/internal/platform/storage/sharedfs"
 )
 
 func TestChallengeAttachmentStorePersistsSingleAttachment(t *testing.T) {
 	ctx := context.Background()
 	root := t.TempDir()
-	store := NewChallengeAttachmentStore(root)
+	store := NewChallengeAttachmentStore(platformsharedfs.NewStore(root), "")
 
 	sourceDir := t.TempDir()
 	sourcePath := filepath.Join(sourceDir, "readme.txt")
@@ -46,7 +48,7 @@ func TestChallengeAttachmentStorePersistsSingleAttachment(t *testing.T) {
 func TestChallengeAttachmentStoreBundlesMultipleAttachments(t *testing.T) {
 	ctx := context.Background()
 	root := t.TempDir()
-	store := NewChallengeAttachmentStore(root)
+	store := NewChallengeAttachmentStore(platformsharedfs.NewStore(root), "")
 
 	sourceDir := t.TempDir()
 	first := filepath.Join(sourceDir, "first.txt")
@@ -84,5 +86,36 @@ func TestChallengeAttachmentStoreBundlesMultipleAttachments(t *testing.T) {
 	}
 	if !slices.Contains(names, "first.txt") || !slices.Contains(names, "second.txt") {
 		t.Fatalf("bundle names = %v", names)
+	}
+}
+
+func TestChallengeAttachmentStoreOpenAttachment(t *testing.T) {
+	ctx := context.Background()
+	root := t.TempDir()
+	store := NewChallengeAttachmentStore(platformsharedfs.NewStore(root), "")
+
+	attachmentPath := filepath.Join(root, "imports", "web-demo", "readme.txt")
+	if err := os.MkdirAll(filepath.Dir(attachmentPath), 0o755); err != nil {
+		t.Fatalf("mkdir attachment dir: %v", err)
+	}
+	if err := os.WriteFile(attachmentPath, []byte("shared attachment"), 0o644); err != nil {
+		t.Fatalf("write attachment: %v", err)
+	}
+
+	download, err := store.OpenAttachment(ctx, "imports/web-demo/readme.txt")
+	if err != nil {
+		t.Fatalf("OpenAttachment() error = %v", err)
+	}
+	defer download.Reader.Close()
+
+	content, err := io.ReadAll(download.Reader)
+	if err != nil {
+		t.Fatalf("ReadAll() error = %v", err)
+	}
+	if string(content) != "shared attachment" {
+		t.Fatalf("content = %q", string(content))
+	}
+	if download.FileName != "readme.txt" {
+		t.Fatalf("file name = %q", download.FileName)
 	}
 }

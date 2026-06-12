@@ -28,6 +28,11 @@ func (c *Config) Validate() error {
 	if c.CORS.AllowCredentials && len(c.CORS.AllowOrigins) == 0 {
 		return fmt.Errorf("cors.allow_origins must not be empty when cors.allow_credentials is true")
 	}
+	if strings.TrimSpace(c.SharedStorage.Type) == "shared_fs" {
+		if strings.TrimSpace(c.SharedStorage.SharedFS.Root) == "" {
+			return fmt.Errorf("shared_storage.shared_fs.root must not be empty when shared_storage.type is shared_fs")
+		}
+	}
 	for _, origin := range c.CORS.AllowOrigins {
 		if strings.TrimSpace(origin) == "" {
 			return fmt.Errorf("cors.allow_origins must not contain empty origin")

@@ -46,6 +46,11 @@ redis:
   read_timeout: 3s
   write_timeout: 3s
 
+shared_storage:
+  type: shared_fs
+  shared_fs:
+    root: storage/shared
+
 cors:
   allow_origins:
     - http://localhost:5173
@@ -138,7 +143,7 @@ container:
   start_probe_interval: 300ms
   start_probe_attempts: 5
   flag_global_secret: "" # 建议通过 CTF_CONTAINER_FLAG_GLOBAL_SECRET 注入
-  flag_global_secret_file: storage/runtime/flag-global-secret
+  flag_global_secret_file: runtime/flag-global-secret # 相对 shared_storage.shared_fs.root 解析
   flag_global_secret_key_id: default
   # active key 轮换时保留旧 key；升级前空 flag_key_id 的实例固定使用 default key。
   flag_global_secret_keyring: []

@@ -136,67 +136,67 @@
 
 ### Slice 1: platform shared_fs substrate
 
-- [ ] **Step 1: 写 shared_fs adapter path safety 测试**
+- [x] **Step 1: 写 shared_fs adapter path safety 测试**
   - Create: `code/backend/internal/platform/storage/sharedfs/store_test.go`
   - 覆盖：合法 key 写入/读取、path traversal 拒绝、missing 映射明确错误、两个 store instance 指向同一 root 可读同一对象。
 
-- [ ] **Step 2: 定义 shared storage port**
+- [x] **Step 2: 定义 shared storage port**
   - Create: `code/backend/internal/platform/storage/storage.go`
   - 最小接口包含 `Open(ctx, key)`、`Put(ctx, key, reader)`、`Stat(ctx, key)`；shared_fs 可额外提供 `PrepareLocalWrite(ctx, key)`。
 
-- [ ] **Step 3: 实现 shared_fs adapter**
+- [x] **Step 3: 实现 shared_fs adapter**
   - Create: `code/backend/internal/platform/storage/sharedfs/store.go`
   - 统一 key containment、目录创建、regular file 校验、reader close 责任说明。
 
-- [ ] **Step 4: 增加 shared_storage 配置**
+- [x] **Step 4: 增加 shared_storage 配置**
   - Modify: `code/backend/internal/config/config.go`
   - 增加 `SharedStorageConfig{Type, SharedFS.Root}`，默认 `type=shared_fs`、root 可指向 `storage/shared`。
   - 生产环境要求 shared_fs root 明确配置或文档明确 mount contract。
 
-- [ ] **Step 5: 运行 storage/config 测试**
+- [x] **Step 5: 运行 storage/config 测试**
   - Run: `cd code/backend && go test ./internal/platform/storage/... ./internal/config -run 'Test.*SharedStorage|Test.*Config' -count=1`
 
 ### Slice 2: assessment report output convergence
 
-- [ ] **Step 6: 写 ReportOutputStore 跨副本读测试**
+- [x] **Step 6: 写 ReportOutputStore 跨副本读测试**
   - Modify/Create: `code/backend/internal/module/assessment/infrastructure/report_output_store_test.go`
   - 两个 store instance 共用 shared_fs root：A prepare/write，B resolve/open 成功。
 
-- [ ] **Step 7: 扩展 assessment report port**
+- [x] **Step 7: 扩展 assessment report port**
   - Modify: `code/backend/internal/module/assessment/ports/ports.go`
   - 从只返回 local path 扩成 storage ref / download reader；若短期保留 `PrepareReportOutput`，命名和注释必须声明它是 shared_fs writable path。
 
-- [ ] **Step 8: 改 report output store 依赖 shared storage**
+- [x] **Step 8: 改 report output store 依赖 shared storage**
   - Modify: `code/backend/internal/module/assessment/infrastructure/report_output_store.go`
   - 不再直接拥有裸 `storageDir`；通过 shared_fs namespace 生成 report key / shared path。
 
-- [ ] **Step 9: 改报告下载 handler 流式返回**
+- [x] **Step 9: 改报告下载 handler 流式返回**
   - Modify: `code/backend/internal/module/assessment/api/http/report_handler.go`
   - 优先使用 store 返回 reader / size / content-type，避免只依赖 `c.FileAttachment(localPath)`。
 
-- [ ] **Step 10: 运行 assessment focused tests**
+- [x] **Step 10: 运行 assessment focused tests**
   - Run: `cd code/backend && go test ./internal/module/assessment/... -run 'Report(Output|Service|Handler|Download)' -count=1`
 
 ### Slice 3: challenge imported attachment convergence
 
-- [ ] **Step 11: 写 challenge attachment 下载 handler 测试**
+- [x] **Step 11: 写 challenge attachment 下载 handler 测试**
   - Create/Modify: `code/backend/internal/module/challenge/api/http/handler_test.go`
   - 覆盖：handler 使用 injected attachment download port；not found 返回 404；traversal 拒绝；成功响应不依赖 env local path。
 
-- [ ] **Step 12: 扩展 challenge attachment port**
+- [x] **Step 12: 扩展 challenge attachment port**
   - Modify: `code/backend/internal/module/challenge/ports/ports.go`
   - 增加 download/open 语义，例如 `OpenAttachment(ctx, relativePath)`，保持 URL contract `/api/v1/challenges/attachments/imports/...`。
 
-- [ ] **Step 13: 改 ChallengeAttachmentStore 统一 persist/download owner**
+- [x] **Step 13: 改 ChallengeAttachmentStore 统一 persist/download owner**
   - Modify: `code/backend/internal/module/challenge/infrastructure/challenge_attachment_store.go`
   - store 使用 shared storage namespace，不再和 handler 各自读取 `CHALLENGE_ATTACHMENT_STORAGE_DIR`。
 
-- [ ] **Step 14: 改 challenge handler wiring**
+- [x] **Step 14: 改 challenge handler wiring**
   - Modify: `code/backend/internal/module/challenge/api/http/handler.go`
   - Modify: `code/backend/internal/module/challenge/runtime/wiring.go`
   - `DownloadAttachment` 从 store/service open reader，不再计算 local base dir。
 
-- [ ] **Step 15: 运行 challenge focused tests**
+- [x] **Step 15: 运行 challenge focused tests**
   - Run: `cd code/backend && go test ./internal/module/challenge/... -run 'Attachment|DownloadAttachment|Import' -count=1`
 
 ### Slice 4: shared secret / host key contract

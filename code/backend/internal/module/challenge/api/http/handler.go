@@ -8,9 +8,9 @@ import (
 	challengecore "ctf-platform/internal/module/challenge/application/challengecore"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	"fmt"
 	nethttp "net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -25,6 +25,7 @@ type Handler struct {
 	selfChecks      challengeSelfCheckService
 	publishChecks   challengePublishCheckService
 	packageExports  challengePackageExportService
+	attachments     challengeports.ChallengeAttachmentStore
 	packageDelivery packageDeliveryService
 }
 
@@ -72,6 +73,7 @@ type HandlerDeps struct {
 	SelfChecks      challengeSelfCheckService
 	PublishChecks   challengePublishCheckService
 	PackageExports  challengePackageExportService
+	Attachments     challengeports.ChallengeAttachmentStore
 	PackageDelivery packageDeliveryService
 }
 
@@ -83,6 +85,7 @@ func NewHandler(deps HandlerDeps) *Handler {
 		selfChecks:      deps.SelfChecks,
 		publishChecks:   deps.PublishChecks,
 		packageExports:  deps.PackageExports,
+		attachments:     deps.Attachments,
 		packageDelivery: deps.PackageDelivery,
 	}
 }
@@ -365,55 +368,21 @@ func (h *Handler) DownloadAttachment(c *gin.Context) {
 	}
 
 	cleanPath := filepath.ToSlash(filepath.Clean(relativePath))
-	if cleanPath == "." || strings.HasPrefix(cleanPath, "../") || strings.Contains(cleanPath, "/../") {
+	if cleanPath == "." || strings.HasPrefix(cleanPath, "../") || strings.Contains(relativePath, "../") || strings.Contains(relativePath, `..\`) {
 		response.InvalidParams(c, "无效的附件路径")
 		return
 	}
-
-	baseDir := resolveChallengeAttachmentBaseDir(cleanPath)
-
-	baseAbs, err := filepath.Abs(baseDir)
+	if h.attachments == nil {
+		response.FromError(c, apperror.ErrServiceUnavailable)
+		return
+	}
+	download, err := h.attachments.OpenAttachment(c.Request.Context(), cleanPath)
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
+	defer download.Reader.Close()
 
-	target := filepath.Clean(filepath.Join(baseAbs, filepath.FromSlash(cleanPath)))
-	prefix := baseAbs + string(os.PathSeparator)
-	if target != baseAbs && !strings.HasPrefix(target, prefix) {
-		response.InvalidParams(c, "无效的附件路径")
-		return
-	}
-
-	info, err := os.Stat(target)
-	if err != nil {
-		if os.IsNotExist(err) {
-			response.Error(c, apperror.ErrNotFound)
-			return
-		}
-		response.FromError(c, err)
-		return
-	}
-	if info.IsDir() {
-		response.Error(c, apperror.ErrNotFound)
-		return
-	}
-
-	c.FileAttachment(target, filepath.Base(target))
-}
-
-func resolveChallengeAttachmentBaseDir(relativePath string) string {
-	if strings.HasPrefix(relativePath, "imports/") {
-		baseDir := strings.TrimSpace(os.Getenv("CHALLENGE_ATTACHMENT_STORAGE_DIR"))
-		if baseDir == "" {
-			baseDir = "./data/challenge-attachments"
-		}
-		return baseDir
-	}
-
-	baseDir := strings.TrimSpace(os.Getenv("CHALLENGE_PACKS_DIR"))
-	if baseDir == "" {
-		baseDir = "../../docs/challenges/packs"
-	}
-	return baseDir
+	c.Header("Content-Disposition", `attachment; filename="`+download.FileName+`"`)
+	c.DataFromReader(nethttp.StatusOK, download.Size, "application/octet-stream", download.Reader, nil)
 }

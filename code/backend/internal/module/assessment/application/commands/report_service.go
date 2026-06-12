@@ -399,7 +399,7 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 	if s.outputStore == nil {
 		return nil, apperror.ErrServiceUnavailable.WithMessage("报告输出存储暂不可用")
 	}
-	filePath, err := s.outputStore.ResolveReportDownloadPath(ctx, report.FilePath)
+	downloadStream, err := s.outputStore.OpenReportDownload(ctx, report.FilePath)
 	if err != nil {
 		if errors.Is(err, assessmentports.ErrAssessmentReportOutputUnsafePath) {
 			return nil, apperror.ErrForbidden
@@ -429,7 +429,8 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 	}
 
 	return &assessmentdomain.ReportDownload{
-		Path:        filePath,
+		Reader:      downloadStream.Reader,
+		Size:        downloadStream.Size,
 		FileName:    fileName,
 		ContentType: contentType,
 	}, nil

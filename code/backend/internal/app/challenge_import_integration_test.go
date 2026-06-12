@@ -26,6 +26,7 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	challengeruntime "ctf-platform/internal/module/challenge/runtime"
 	"ctf-platform/internal/module/challenge/testsupport"
+	platformsharedfs "ctf-platform/internal/platform/storage/sharedfs"
 )
 
 type challengeImportQueryStub struct{}
@@ -84,7 +85,9 @@ func (appChallengeImportRegistryVerifier) CheckManifest(ctx context.Context, ima
 	return "sha256:app-import", nil
 }
 
-func newChallengeImportServiceForAppTest(db *gorm.DB) *challengeimport.ChallengeImportService {
+func newChallengeImportServiceForAppTest(t *testing.T, db *gorm.DB) *challengeimport.ChallengeImportService {
+	t.Helper()
+
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	imageBuildService := challengecmd.NewImageBuildService(
@@ -95,7 +98,7 @@ func newChallengeImportServiceForAppTest(db *gorm.DB) *challengeimport.Challenge
 	)
 	return challengeimport.NewChallengeImportService(
 		challengeinfra.NewChallengeImportPreviewStore(""),
-		challengeinfra.NewChallengeAttachmentStore(""),
+		challengeinfra.NewChallengeAttachmentStore(platformsharedfs.NewStore(t.TempDir()), ""),
 		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
 		challengeruntime.NewChallengeImportTxRunner(repo, imageBuildService),
 		imageBuildService,
@@ -106,10 +109,9 @@ func newChallengeImportServiceForAppTest(db *gorm.DB) *challengeimport.Challenge
 
 func TestChallengeImportPreviewAndCommitFlow(t *testing.T) {
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
-	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	service := newChallengeImportServiceForAppTest(db)
+	service := newChallengeImportServiceForAppTest(t, db)
 	router := buildChallengeImportRouter(service)
 
 	body, contentType := buildChallengeImportMultipart(t)
@@ -170,7 +172,6 @@ func TestChallengeImportPreviewAndCommitFlow(t *testing.T) {
 
 func TestChallengeImportCommitRejectsDuplicatePackageSlug(t *testing.T) {
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
-	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
 	legacyChallenge := appChallengeRow{
@@ -185,7 +186,7 @@ func TestChallengeImportCommitRejectsDuplicatePackageSlug(t *testing.T) {
 		t.Fatalf("seed legacy challenge: %v", err)
 	}
 
-	service := newChallengeImportServiceForAppTest(db)
+	service := newChallengeImportServiceForAppTest(t, db)
 	router := buildChallengeImportRouter(service)
 
 	firstCommit := previewAndCommitChallengeImport(
@@ -261,10 +262,9 @@ func TestChallengeImportCommitRejectsDuplicatePackageSlug(t *testing.T) {
 
 func TestChallengeImportGetRejectsDifferentAdmin(t *testing.T) {
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
-	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	service := newChallengeImportServiceForAppTest(db)
+	service := newChallengeImportServiceForAppTest(t, db)
 	router := buildChallengeImportRouter(service)
 
 	body, contentType := buildChallengeImportMultipart(t)
@@ -293,10 +293,9 @@ func TestChallengeImportGetRejectsDifferentAdmin(t *testing.T) {
 
 func TestChallengeImportCommitSupportsRegexFlag(t *testing.T) {
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
-	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	service := newChallengeImportServiceForAppTest(db)
+	service := newChallengeImportServiceForAppTest(t, db)
 	router := buildChallengeImportRouter(service)
 
 	commit := previewAndCommitChallengeImport(
@@ -319,10 +318,9 @@ func TestChallengeImportCommitSupportsRegexFlag(t *testing.T) {
 
 func TestChallengeImportCommitSupportsManualReviewFlag(t *testing.T) {
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
-	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	service := newChallengeImportServiceForAppTest(db)
+	service := newChallengeImportServiceForAppTest(t, db)
 	router := buildChallengeImportRouter(service)
 
 	commit := previewAndCommitChallengeImport(
@@ -345,10 +343,9 @@ func TestChallengeImportCommitSupportsManualReviewFlag(t *testing.T) {
 
 func TestChallengeImportPreviewRejectsArchiveWithTooManyFiles(t *testing.T) {
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
-	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 
 	db := testsupport.SetupTestDB(t)
-	service := newChallengeImportServiceForAppTest(db)
+	service := newChallengeImportServiceForAppTest(t, db)
 	router := buildChallengeImportRouter(service)
 
 	body, contentType := buildChallengeImportMultipartFromArchive(t, buildChallengeImportArchiveWithTooManyFiles(t))

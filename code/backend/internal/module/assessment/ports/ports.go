@@ -3,6 +3,7 @@ package ports
 import (
 	"context"
 	"errors"
+	"io"
 	"time"
 
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
@@ -19,6 +20,17 @@ var ErrAssessmentReportNotFound = errors.New("assessment report not found")
 var ErrAssessmentContestNotFound = errors.New("assessment contest not found")
 var ErrAssessmentReportOutputNotFound = errors.New("assessment report output not found")
 var ErrAssessmentReportOutputUnsafePath = errors.New("assessment report output unsafe path")
+
+type ReportOutput struct {
+	StorageKey string
+	LocalPath  string
+}
+
+type ReportDownloadStream struct {
+	StorageKey string
+	Reader     io.ReadCloser
+	Size       int64
+}
 
 type AssessmentProfileLookupRepository interface {
 	FindUserByID(ctx context.Context, userID int64) (*identitycontracts.User, error)
@@ -105,8 +117,8 @@ type AssessmentReportLifecycleRepository interface {
 }
 
 type ReportOutputStore interface {
-	PrepareReportOutput(ctx context.Context, fileName string) (string, error)
-	ResolveReportDownloadPath(ctx context.Context, path string) (string, error)
+	PrepareReportOutput(ctx context.Context, fileName string) (*ReportOutput, error)
+	OpenReportDownload(ctx context.Context, storageKey string) (*ReportDownloadStream, error)
 }
 
 type AssessmentReportUserLookupRepository interface {
