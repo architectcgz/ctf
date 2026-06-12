@@ -36,7 +36,7 @@
 
 - Source docs:
   - `docs/plan/impl-plan/2026-06-12-true-ha-control-plane-and-runtime-recovery-implementation-plan.md`
-  - `docs/plan/impl-plan/2026-06-12-shared-storage-owner-convergence-implementation-plan.md`
+  - `docs/plan/impl-plan/2026-06-12-true-ha-group/shared-storage-owner-convergence.md`
   - `docs/architecture/backend/03-container-architecture.md`
   - `docs/operations/runtime-agent-deployment.md`
   - `docs/operations/awd-host-reboot-recovery-drill.md`
@@ -51,7 +51,7 @@
   - `code/backend/internal/config/config.go`
 - Related prior work:
   - `docs/plan/impl-plan/2026-06-07-awd-defense-ssh-gateway-split-implementation-plan.md`
-  - `docs/plan/impl-plan/2026-06-12-shared-storage-owner-convergence-implementation-plan.md`
+  - `docs/plan/impl-plan/2026-06-12-true-ha-group/shared-storage-owner-convergence.md`
 
 ## Task Classification
 

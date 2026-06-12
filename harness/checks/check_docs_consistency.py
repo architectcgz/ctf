@@ -227,7 +227,7 @@ def main() -> int:
     check_no_stale_refs(
         "docs/design/README.md",
         [
-            "docs/superpowers/plans/",
+            "docs/plan/exploratory/",
             "docs/superpowers/specs/",
             "docs/superpowers/specs/*.md",
         ],

@@ -351,17 +351,17 @@
 
 ## Execution Recommendation
 
-建议后续实现按从易到难、依赖优先的顺序拆成 5 个独立 task；每个 task 已单独展开为可执行 implementation plan：
+当前仓库状态已经不是“5 个 slice 全待做”，而是前 3 条基础/入口链路已落地，剩余实现集中在跨副本 side effect 与 runtime failover：
 
-1. T1 `redis-sentinel-and-postgres-ha-connectivity`（易，状态面 HA 前置基线）
-   - Plan: `docs/plan/impl-plan/2026-06-12-redis-sentinel-and-postgres-ha-connectivity-implementation-plan.md`
-2. T2 `shared-storage-owner-convergence`（较易，文件与密钥共源）
-   - Plan: `docs/plan/impl-plan/2026-06-12-shared-storage-owner-convergence-implementation-plan.md`
-3. T3 `ssh-gateway-ha-and-draining`（中等，依赖 T1 Redis HA 与 T2 host key 共源）
+1. T1 `redis-sentinel-and-postgres-ha-connectivity`（已完成，状态面 HA 前置基线）
+   - Plan: `docs/plan/impl-plan/2026-06-12-true-ha-group/redis-sentinel-and-postgres-ha-connectivity.md`
+2. T2 `shared-storage-owner-convergence`（已完成，文件与密钥共源）
+   - Plan: `docs/plan/impl-plan/2026-06-12-true-ha-group/shared-storage-owner-convergence.md`
+3. T3 `ssh-gateway-ha-and-draining`（已完成，依赖 T1 Redis HA 与 T2 host key 共源）
    - Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-12-ssh-gateway-ha-and-draining-implementation-plan.md`
-4. T4 `distributed-event-bus-and-outbox-relay`（较难，跨副本 side effect 与 outbox/stream owner）
-   - Plan: `docs/plan/impl-plan/2026-06-12-distributed-event-bus-and-outbox-relay-implementation-plan.md`
-5. T5 `runtime-node-health-and-failover-rebuild`（最难，runtime node health、调度排除与故障后重建）
-   - Plan: `docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md`
+4. T4 `distributed-event-bus-and-outbox-relay`（待实现，跨副本 side effect 与 outbox/stream owner）
+   - Plan: `docs/plan/impl-plan/2026-06-12-true-ha-group/distributed-event-bus-and-outbox-relay.md`
+5. T5 `runtime-node-health-and-failover-rebuild`（待实现，runtime node health、调度排除与故障后重建）
+   - Plan: `docs/plan/impl-plan/2026-06-12-true-ha-group/runtime-node-health-and-failover-rebuild.md`
 
-每个 slice 单独走 startup gate、独立 review 和最小验证，不建议把整个 HA 路线压成一次长分支实现。T3 纯按难度可排在 T4 之前，但必须等 T2 的 host key / secret 共源 contract 成立后再实现。
+后续推进建议收口成两步：先完成 T4，再进入 T5。T5 仍然依赖 T4 把跨副本事件 fanout / outbox owner 收口完毕；不建议把剩余 HA 路线重新摊成一次长分支实现。

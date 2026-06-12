@@ -60,8 +60,8 @@
   - `docs/operations/awd-host-reboot-recovery-drill.md`
   - `docs/architecture/features/题包Registry交付架构.md`
 - Related prior work:
-  - `docs/plan/impl-plan/2026-06-12-redis-sentinel-and-postgres-ha-connectivity-implementation-plan.md`
-  - `docs/plan/impl-plan/2026-06-12-shared-storage-owner-convergence-implementation-plan.md`
+  - `docs/plan/impl-plan/2026-06-12-true-ha-group/redis-sentinel-and-postgres-ha-connectivity.md`
+  - `docs/plan/impl-plan/2026-06-12-true-ha-group/shared-storage-owner-convergence.md`
   - `.harness/reuse-decisions/runtime-subnet-pool-split.md`
   - `.harness/reuse-decisions/registry-access-endpoint.md`
 

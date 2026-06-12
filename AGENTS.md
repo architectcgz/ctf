@@ -65,6 +65,23 @@
 - 长期复用线索仍然可以保存在本地私有的 `.harness/reuse-index/`；它属于操作者自用索引，不属于本仓库提交前强校验的一部分。
 - `.harness/session-gates/` 保存本地 startup gate 凭证，不进 Git；它只用于当前 worktree 的非琐碎任务链路绑定。
 
+## Plan Document Locations
+
+<!-- PLAN_LOCATION_POLICY: formal-vs-exploratory -->
+本项目区分正式实施计划和探索性计划：
+
+- **正式实施计划位置**：`docs/plan/impl-plan/`
+  - 用于结构性改动、跨模块重构、需要正式 review 和 task gate 的实现方案
+  - 必须绑定 task slug 和 startup gate
+  - 完成后归档到 `docs/plan/archive/impl-plan/`
+  
+- **探索性计划位置**：`docs/plan/exploratory/`
+  - 用于快速起草、技术验证、原型探索和临时调研
+  - 不绑定 task gate，生命周期短
+  - 完成后可删除或归档到 `docs/plan/archive/exploratory/`
+
+判断规则：如果任务属于 `非琐碎任务` 并需要进入 `code-workflow`，plan 应放在 `docs/plan/impl-plan/`；如果只是探索性验证或快速调研，plan 应放在 `docs/plan/exploratory/`。
+
 ## Workflow Overrides
 
 - 本节为 `ctf` 仓库内的覆盖规则；命中时优先于上层通用 worktree 约定。
