@@ -32,6 +32,7 @@ type maintenanceTestRepository struct {
 	findRunningWorkspaceByInstanceIDFn      func(ctx context.Context, instanceID int64) (*instanceports.AWDDefenseWorkspace, error)
 	finalizeStoppedRuntimeFn                func(ctx context.Context, id int64) error
 	requeueLostRuntimeFn                    func(ctx context.Context, id int64) (bool, error)
+	requeueLostRuntimesByNodeFn             func(ctx context.Context, nodeID int64) ([]*instanceentity.Instance, error)
 	listActiveContainerIDsFn                func(ctx context.Context) ([]string, error)
 	updateStatusAndReleasePortFn            func(id int64, status string) error
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
@@ -128,6 +129,13 @@ func (r *maintenanceTestRepository) RequeueLostRuntime(ctx context.Context, id i
 	}
 	r.requeuedIDs = append(r.requeuedIDs, id)
 	return true, nil
+}
+
+func (r *maintenanceTestRepository) RequeueLostRuntimesByNode(ctx context.Context, nodeID int64) ([]*instanceentity.Instance, error) {
+	if r.requeueLostRuntimesByNodeFn != nil {
+		return r.requeueLostRuntimesByNodeFn(ctx, nodeID)
+	}
+	return nil, nil
 }
 
 type maintenanceTestEngine struct {
@@ -876,5 +884,60 @@ func TestRuntimeMaintenanceServiceInspectFailureDoesNotBlockOtherInstances(t *te
 	}
 	if len(repo.requeuedIDs) != 1 || repo.requeuedIDs[0] != 47 {
 		t.Fatalf("expected only instance 47 requeued, got %v", repo.requeuedIDs)
+	}
+}
+
+func TestRuntimeMaintenanceServiceHandlesRuntimeNodeOfflineRequeue(t *testing.T) {
+	t.Parallel()
+
+	nodeID := int64(8801)
+	contestID := int64(9001)
+	teamID := int64(9101)
+	serviceID := int64(9201)
+	requeuedByNode := false
+	repo := &maintenanceTestRepository{
+		requeueLostRuntimesByNodeFn: func(ctx context.Context, gotNodeID int64) ([]*instanceentity.Instance, error) {
+			requeuedByNode = true
+			if gotNodeID != nodeID {
+				t.Fatalf("node id = %d, want %d", gotNodeID, nodeID)
+			}
+			return []*instanceentity.Instance{
+				{
+					ID:          501,
+					ContestID:   &contestID,
+					TeamID:      &teamID,
+					ServiceID:   &serviceID,
+					ChallengeID: 9301,
+					Status:      instanceentity.InstanceStatusRunning,
+					ExpiresAt:   time.Now().Add(time.Hour),
+				},
+				{
+					ID:          502,
+					ChallengeID: 9302,
+					Status:      instanceentity.InstanceStatusRunning,
+					ExpiresAt:   time.Now().Add(time.Hour),
+				},
+			}, nil
+		},
+	}
+	service := instancecmd.NewInstanceMaintenanceService(repo, nil, nil, &config.ContainerConfig{}, nil)
+
+	if err := service.HandleRuntimeNodeOffline(context.Background(), nodeID); err != nil {
+		t.Fatalf("HandleRuntimeNodeOffline() error = %v", err)
+	}
+	if !requeuedByNode {
+		t.Fatal("expected node-scoped requeue repository to be called")
+	}
+	if len(repo.operations) != 1 {
+		t.Fatalf("expected one AWD recreate operation for requeued AWD instance, got %+v", repo.operations)
+	}
+	operation := repo.operations[0]
+	if operation.InstanceID != 501 ||
+		operation.OperationType != instanceports.AWDServiceOperationTypeRecreate ||
+		operation.RequestedBy != instanceports.AWDServiceOperationRequestedBySystem ||
+		operation.Status != instanceports.AWDServiceOperationStatusProvisioning ||
+		operation.Reason != "runtime_node_offline" ||
+		operation.SLABillable {
+		t.Fatalf("unexpected AWD recreate operation: %+v", operation)
 	}
 }

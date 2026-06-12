@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	instanceports "ctf-platform/internal/module/instance/ports"
@@ -368,6 +369,22 @@ func (r *Repository) UpdateRuntime(ctx context.Context, instance *instancecontra
 	return err
 }
 
+func (r *Repository) BindRuntimeNode(ctx context.Context, id int64, nodeID *int64) (bool, error) {
+	if id <= 0 {
+		return false, nil
+	}
+	result := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
+		Where("id = ? AND status = ?", id, instancecontracts.InstanceStatusCreating).
+		Updates(map[string]any{
+			"node_id":    nodeID,
+			"updated_at": time.Now().UTC(),
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}
+
 func (r *Repository) UpdateStatus(ctx context.Context, id int64, status string) (*RuntimeAllocationRelease, error) {
 	release, _, err := r.updateStatusWithCurrentStatuses(ctx, id, nil, status)
 	return release, err
@@ -391,6 +408,7 @@ func (r *Repository) PersistProvisionedRuntime(ctx context.Context, instance *in
 		Updates(map[string]any{
 			"contest_id":      instance.ContestID,
 			"team_id":         instance.TeamID,
+			"node_id":         instance.NodeID,
 			"host_port":       instance.HostPort,
 			"container_id":    instance.ContainerID,
 			"network_id":      instance.NetworkID,
@@ -546,6 +564,7 @@ func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, er
 		).
 		Updates(map[string]any{
 			"status":          instancecontracts.InstanceStatusPending,
+			"node_id":         nil,
 			"container_id":    "",
 			"network_id":      "",
 			"runtime_details": "",
@@ -556,6 +575,68 @@ func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, er
 		return false, result.Error
 	}
 	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) RequeueLostRuntimesByNode(ctx context.Context, nodeID int64) ([]*instancecontracts.Instance, error) {
+	if nodeID <= 0 {
+		return []*instancecontracts.Instance{}, nil
+	}
+
+	now := time.Now().UTC()
+	instances := make([]*instancecontracts.Instance, 0)
+	if err := r.dbWithContext(ctx).
+		Where("node_id = ? AND status IN ? AND expires_at > ?",
+			nodeID,
+			[]string{
+				instancecontracts.InstanceStatusCreating,
+				instancecontracts.InstanceStatusRunning,
+			},
+			now,
+		).
+		Order("updated_at ASC, id ASC").
+		Find(&instances).Error; err != nil {
+		return nil, err
+	}
+	if len(instances) == 0 {
+		return []*instancecontracts.Instance{}, nil
+	}
+
+	ids := make([]int64, 0, len(instances))
+	for _, instance := range instances {
+		if instance == nil || instance.ID <= 0 {
+			continue
+		}
+		ids = append(ids, instance.ID)
+	}
+	if len(ids) == 0 {
+		return []*instancecontracts.Instance{}, nil
+	}
+
+	requeued := make([]*instancecontracts.Instance, 0, len(instances))
+	requeueQuery := r.dbWithContext(ctx).Model(&requeued).
+		Clauses(clause.Returning{}).
+		Where("id IN ?", ids).
+		Where("node_id = ? AND status IN ? AND expires_at > ?",
+			nodeID,
+			[]string{
+				instancecontracts.InstanceStatusCreating,
+				instancecontracts.InstanceStatusRunning,
+			},
+			now,
+		)
+	if err := requeueQuery.
+		Updates(map[string]any{
+			"status":          instancecontracts.InstanceStatusPending,
+			"node_id":         nil,
+			"container_id":    "",
+			"network_id":      "",
+			"runtime_details": "",
+			"access_url":      "",
+			"updated_at":      now,
+		}).Error; err != nil {
+		return nil, err
+	}
+	return requeued, nil
 }
 
 func (r *Repository) FinalizeStoppedRuntime(ctx context.Context, id int64) (*RuntimeAllocationRelease, error) {

@@ -549,12 +549,15 @@ sequenceDiagram
 - `instance/application/commands/instance_service.go`
   - 负责：学生 / 教师主动删除入口、权限校验，以及把实例原子推进到 `stopping`。
   - 不负责：直接在 handler 或前端里拼 Docker 删除逻辑，也不负责恢复误删后的实例。
-- `runtime/application/commands/runtime_cleanup_service.go`
+- `container_runtime/application/commands/runtime_cleanup_service.go`
   - 负责：删除容器、删除网络、移除 ACL、释放端口 / 子网占用；网络删除超时或 active endpoints 错误时按短轮询重试。
   - 不负责：决定实例是否应该进入 `pending`、`stopping` 或 `stopped`。
-- `runtime/infrastructure/repository.go`
-  - 负责：`MarkStopping`、`FinalizeStoppedRuntime`、运行时字段清空和 allocation 删除。
-  - 不负责：直接调用 Docker API。
+- `instance/infrastructure/repository.go`
+  - 负责：`MarkStopping`、`FinalizeStoppedRuntime`、运行时字段清空。
+  - 不负责：直接调用 Docker API，或直接释放 `port_allocations / network_allocations`。
+- `app/composition/instance_module.go`、`container_runtime/infrastructure/allocation_repository.go`
+  - 负责：在 `FinalizeStoppedRuntime` 后同一事务释放实例的端口 / 子网 allocation。
+  - 不负责：决定实例状态机是否应该进入 `stopping`、`stopped` 或 `pending`。
 - `instance/application/commands/maintenance_service.go`
   - 负责：恢复 `creating / running` 且仍应被视为 active 的实例，以及后台 `stopping` cleanup worker。
   - 不负责：恢复已经进入 `stopping` 的实例；删除中的实例只能继续清理，不能重新入队。
@@ -677,7 +680,21 @@ Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库�
 
 这两层恢复都不直接创建容器。容器创建、动态 Flag 构造、端口复用、就绪探测与失败标记继续由 practice 实例调度器统一负责。
 
-### 5.4.2 主动删除与 `stopping -> stopped` 收尾
+### 5.4.2 runtime node 离线与重建
+
+runtime-agent 多节点部署下，节点整体失联不再依赖逐个容器 inspect 才能恢复。当前 node failover 流程如下：
+
+1. `container_runtime/application.NodeHealthService` 由 `runtime_node_health` 后台任务按 `container.runtime_node_health.poll_interval` 扫描所有 runtime node；`schedulable=false` 只影响新调度，不会让仍承载旧容器的 node 退出健康探测。
+2. 每个 node 使用 `ListManagedContainerStats` 做探测；成功时写 `runtime_nodes.health_status=ready`、`last_seen_at=now` 和 `capacity_snapshot`。
+3. 探测失败达到 `container.runtime_node_health.failure_threshold`，或该节点上次 `last_seen_at` 已超过 `container.runtime_node_health.stale_after`，就调用 `RuntimeNodeRepository.MarkNodeOffline` 把 node 标记为 `offline`。
+4. 健康 selector 与 `runtime_node_execution_router` 在启用 `runtime_node_health` 时拆分两个语义：默认新调度只接受 `schedulable + ready/degraded + last_seen_at fresh` 的 node；显式 `node_id` 旧容器操作接受 `ready/degraded + last_seen_at fresh` 的原 node，不要求 `schedulable=true`，但绑定到离线或心跳过期 node 时返回 `ErrRuntimeNodeUnavailable`，不会自动切到其他 node。
+5. `app/composition.WireRuntimeNodeFailover` 在 node 被标记为 `offline` 后触发；同一 `NodeHealthService` 进程内成功处理后不会重复调用，处理失败会在后续失败探测中重试。API 进程重启后，已是 `offline` 的 node 可能再次进入 callback，但 `instance` owner 的 requeue 只更新仍匹配该 `node_id`、未过期且处于 `creating / running` 的行，因此重复调用保持幂等。它先调用 `InstanceModule.HandleRuntimeNodeOffline`，把仍满足条件的行重新置为 `pending`，并清空 `node_id / container_id / network_id / runtime_details / access_url`。
+6. 同一个 callback 随后调用 practice 的 `ReconcileDesiredAWDInstances`。AWD `team × visible service` 的差集判断仍由 practice owner 负责；node failover 不在 `container_runtime` 内复制一套 AWD 期望态扫描。
+7. 后续容器创建继续走 `practice_instance_scheduler` 的 `pending -> creating -> running` 流程。scheduler 在领取 `pending` 后重新选择健康 node，并在真正创建 runtime 前把新的 `node_id` 写回 `creating` 行；如果此时没有健康 node，该实例回到 `pending` 等待下一轮。
+
+这条流程只承诺“重新入队并重建”。它不迁移旧容器，不保留原 TCP / SSH / WebSocket 会话；用户侧已有会话允许中断，重新访问时会通过新的 runtime identity 和 access 入口进入重建后的实例。
+
+### 5.4.3 主动删除与 `stopping -> stopped` 收尾
 
 主动删除的当前事实如下：
 
@@ -706,6 +723,8 @@ Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库�
 | 主动删除中间态 | `stopping` | 删除失败后实例不再表现成 `running`，maintenance 也不会误恢复 |
 | 主动删除响应策略 | `MarkStopping` 后立即返回 | 避免 20 并发删除时把 Docker cleanup 的 30s 级尾延迟直接暴露给用户请求 |
 | 后台删除并发 | `container.delete_max_concurrent`，默认 `8` | 删除并发受控，避免同时清理过多容器 / 网络拖垮 Docker daemon |
+| runtime node 健康过滤 | 只选择 `schedulable + ready/degraded + last_seen_at fresh` 的 node | 避免新实例继续调度到已失联或从未成功探测的节点 |
+| runtime node 离线恢复 | node-scoped 条件 requeue + 清空 `node_id` | 让 replacement scheduling 可以重新选择健康节点，并避免并发中已经离开 `creating/running` 的实例被拉回 `pending` |
 | 批量回收并发度 | 限制为 5 个并发 goroutine | 避免瞬间大量 Docker API 调用导致 daemon 压力过大 |
 | 行锁策略 | `SELECT ... FOR UPDATE SKIP LOCKED` | 多个回收 worker 不会争抢同一条记录，避免死锁 |
 | 容器停止超时 | 10s graceful shutdown，超时后 SIGKILL | 给容器内进程合理的清理时间 |
@@ -719,6 +738,9 @@ Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库�
 | 异常场景 | 处理策略 |
 |----------|----------|
 | 单个实例 Docker inspect 失败 | 记录错误日志，跳过该实例，下轮重试 |
+| runtime-agent 节点探测失败但未达阈值 | 记录失败计数，节点暂不离线；达到阈值或心跳过期后才标记 `offline` |
+| runtime-agent 节点被标记 offline | 新调度不再选择该 node；该 node 上未过期且仍处于 `creating / running` 的实例重新入队并清空 runtime identity / `node_id`；已进入 `stopping / stopped / expired` 的实例不被恢复 |
+| scheduler 领取实例后没有健康 node | 实例回到 `pending`，不创建容器，也不写 `failed` |
 | 数据库为运行中但 Docker 容器缺失 | 保留实例作用域，清空运行时字段并重新入队 |
 | 数据库为运行中但 Docker 容器已退出 | 按运行时丢失处理，整条实例重新入队 |
 | 主动删除后后台 cleanup 网络删除超时 | 实例保持 `stopping`，前台请求不再超时；后续由后台 loop 重试，但 maintenance 不会把它恢复为 `pending` |
@@ -733,6 +755,7 @@ Docker daemon 关闭、宿主机重启或 Docker 运行时异常后，数据库�
 - **多 worker 并发回收**：`SKIP LOCKED` 保证不同 worker 处理不同实例，无锁竞争。
 - **回收与用户操作的竞态**：用户可能在回收过程中请求续期。通过数据库状态机保证：只有 `status=running` 的实例才能续期；主动删除会先进入 `stopping`，定时过期只有在 cleanup 成功后才写成 `expired`，因此续期不会把删除中的实例重新拉回活跃态。
 - **主动删除与恢复竞态**：用户删除先把实例推进到 `stopping`，恢复任务只扫描 `creating / running`，后台 cleanup 只消费 `stopping`，因此 Docker 删除超时不会再触发误恢复，也不会出现双 owner 重复清理。
+- **node failover 与旧容器操作竞态**：节点离线后，旧 `node_id` 绑定的容器操作不会回退到其他 node，避免误操作同名或不同实例容器；重新入队后的 replacement 由 pending scheduler 重新选择健康 node，并在 runtime create 前把新的 `node_id` 写回 `creating` 行。
 - **孤儿清理的安全性**：只清理带有 `ctf=true` label 的容器，且清理前再次确认数据库中仍没有 `creating / running / stopping` owner。
 
 ---
@@ -1106,7 +1129,7 @@ sequenceDiagram
 - HTTP 线程只写入 `instances(status=pending)` 并立即返回；
 - 后台调度器周期性扫描最早的 `pending` 实例；
 - 调度器在推进前先检查全局启动并发上限和全局活跃实例上限；
-- 只有拿到容量配额的实例才会被原子推进到 `creating` 并真正触发 Docker 编排。
+- 只有拿到容量配额的实例才会被原子推进到 `creating`；随后 scheduler 选择健康 runtime node、写回 `node_id`，再真正触发 Docker / runtime-agent 编排。
 
 ### 9.2 当前实现的数据结构
 
@@ -1175,6 +1198,7 @@ sequenceDiagram
 | 异常场景 | 处理策略 |
 |----------|----------|
 | 容量已满 | 新实例保持 `pending`，等待下一轮调度 |
+| 当前没有健康 runtime node | 新实例保持或回到 `pending`，等待下一轮调度 |
 | worker 宕机/进程重启 | 未领取的实例仍在 `pending`；`creating` 失败实例由补偿和清理任务收敛 |
 | 实例创建失败 | 标记 status=failed，前端轮询到后提示用户重试 |
 | 调度关闭 | 回退为同步启动路径，但保留同一套实例状态机 |

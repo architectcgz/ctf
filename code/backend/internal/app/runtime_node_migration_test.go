@@ -37,3 +37,36 @@ func TestRuntimeNodeContractInBaseline(t *testing.T) {
 		t.Fatalf("baseline down migration should reset public schema, got:\n%s", string(down))
 	}
 }
+
+func TestRuntimeNodeLastSeenMigration(t *testing.T) {
+	t.Parallel()
+
+	up, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000019_add_runtime_node_last_seen_at.up.sql"))
+	if err != nil {
+		t.Fatalf("read runtime node last_seen_at up migration: %v", err)
+	}
+	upSQL := string(up)
+	for _, snippet := range []string{
+		"ALTER TABLE public.runtime_nodes",
+		"ADD COLUMN last_seen_at timestamp with time zone",
+		"idx_runtime_nodes_health_schedulable_seen",
+	} {
+		if !strings.Contains(upSQL, snippet) {
+			t.Fatalf("runtime node last_seen_at up migration should contain %q, got:\n%s", snippet, upSQL)
+		}
+	}
+
+	down, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000019_add_runtime_node_last_seen_at.down.sql"))
+	if err != nil {
+		t.Fatalf("read runtime node last_seen_at down migration: %v", err)
+	}
+	downSQL := string(down)
+	for _, snippet := range []string{
+		"DROP INDEX IF EXISTS public.idx_runtime_nodes_health_schedulable_seen",
+		"DROP COLUMN IF EXISTS last_seen_at",
+	} {
+		if !strings.Contains(downSQL, snippet) {
+			t.Fatalf("runtime node last_seen_at down migration should contain %q, got:\n%s", snippet, downSQL)
+		}
+	}
+}

@@ -141,51 +141,52 @@ type RateLimitPolicyConfig struct {
 }
 
 type ContainerConfig struct {
-	DefaultCPUQuota                 float64                        `mapstructure:"default_cpu_quota"`
-	DefaultMemory                   int64                          `mapstructure:"default_memory"`
-	DefaultPidsLimit                int64                          `mapstructure:"default_pids_limit"`
-	ReadonlyRootfs                  bool                           `mapstructure:"readonly_rootfs"`
-	RunAsUser                       string                         `mapstructure:"run_as_user"`
-	AllowedCapabilities             []string                       `mapstructure:"allowed_capabilities"`
-	Seccomp                         string                         `mapstructure:"seccomp"`
-	PortRangeStart                  int                            `mapstructure:"port_range_start"`
-	PortRangeEnd                    int                            `mapstructure:"port_range_end"`
-	DefaultExposedPort              int                            `mapstructure:"default_exposed_port"`
-	MaxConcurrentPerUser            int                            `mapstructure:"max_concurrent_per_user"`
-	DefaultTTL                      time.Duration                  `mapstructure:"default_ttl"`
-	SolveGracePeriod                time.Duration                  `mapstructure:"solve_grace_period"`
-	MaxExtends                      int                            `mapstructure:"max_extends"`
-	ExtendDuration                  time.Duration                  `mapstructure:"extend_duration"`
-	CleanupInterval                 string                         `mapstructure:"cleanup_interval"`
-	CleanupLockTTL                  time.Duration                  `mapstructure:"cleanup_lock_ttl"`
-	StartupRecoveryLockTTL          time.Duration                  `mapstructure:"startup_recovery_lock_ttl"`
-	DeletePollInterval              time.Duration                  `mapstructure:"delete_poll_interval"`
-	DeleteMaxConcurrent             int                            `mapstructure:"delete_max_concurrent"`
-	OrphanGracePeriod               time.Duration                  `mapstructure:"orphan_grace_period"`
-	CreateTimeout                   time.Duration                  `mapstructure:"create_timeout"`
-	StartProbeTimeout               time.Duration                  `mapstructure:"start_probe_timeout"`
-	StartProbeInterval              time.Duration                  `mapstructure:"start_probe_interval"`
-	StartProbeAttempts              int                            `mapstructure:"start_probe_attempts"`
-	FlagGlobalSecret                string                         `mapstructure:"flag_global_secret"`
-	FlagGlobalSecretFile            string                         `mapstructure:"flag_global_secret_file"`
-	FlagGlobalSecretKeyID           string                         `mapstructure:"flag_global_secret_key_id"`
-	FlagGlobalSecretKeyring         []ContainerFlagSecretKeyConfig `mapstructure:"flag_global_secret_keyring"`
-	FlagGlobalSecretAllowRotation   bool                           `mapstructure:"flag_global_secret_allow_rotation"`
-	ResolvedFlagSecretKeyID         string                         `mapstructure:"-"`
-	ResolvedFlagSecrets             map[string]string              `mapstructure:"-"`
-	PublicHost                      string                         `mapstructure:"public_host"`
-	AccessHost                      string                         `mapstructure:"access_host"`
-	ProxyTicketTTL                  time.Duration                  `mapstructure:"proxy_ticket_ttl"`
-	ProxyBodyPreviewSize            int                            `mapstructure:"proxy_body_preview_size"`
-	DefenseSSHEnabled               bool                           `mapstructure:"defense_ssh_enabled"`
-	DefenseSSHHost                  string                         `mapstructure:"defense_ssh_host"`
-	DefenseSSHPort                  int                            `mapstructure:"defense_ssh_port"`
-	DefenseSSHHostKeyPath           string                         `mapstructure:"defense_ssh_host_key_path"`
-	DefenseWorkbenchReadOnlyEnabled bool                           `mapstructure:"defense_workbench_readonly_enabled"`
-	DefenseWorkbenchRoot            string                         `mapstructure:"defense_workbench_root"`
-	Network                         ContainerNetworkConfig         `mapstructure:"network"`
-	Registry                        ContainerRegistryConfig        `mapstructure:"registry"`
-	Scheduler                       ContainerSchedulerConfig       `mapstructure:"scheduler"`
+	DefaultCPUQuota                 float64                          `mapstructure:"default_cpu_quota"`
+	DefaultMemory                   int64                            `mapstructure:"default_memory"`
+	DefaultPidsLimit                int64                            `mapstructure:"default_pids_limit"`
+	ReadonlyRootfs                  bool                             `mapstructure:"readonly_rootfs"`
+	RunAsUser                       string                           `mapstructure:"run_as_user"`
+	AllowedCapabilities             []string                         `mapstructure:"allowed_capabilities"`
+	Seccomp                         string                           `mapstructure:"seccomp"`
+	PortRangeStart                  int                              `mapstructure:"port_range_start"`
+	PortRangeEnd                    int                              `mapstructure:"port_range_end"`
+	DefaultExposedPort              int                              `mapstructure:"default_exposed_port"`
+	MaxConcurrentPerUser            int                              `mapstructure:"max_concurrent_per_user"`
+	DefaultTTL                      time.Duration                    `mapstructure:"default_ttl"`
+	SolveGracePeriod                time.Duration                    `mapstructure:"solve_grace_period"`
+	MaxExtends                      int                              `mapstructure:"max_extends"`
+	ExtendDuration                  time.Duration                    `mapstructure:"extend_duration"`
+	CleanupInterval                 string                           `mapstructure:"cleanup_interval"`
+	CleanupLockTTL                  time.Duration                    `mapstructure:"cleanup_lock_ttl"`
+	StartupRecoveryLockTTL          time.Duration                    `mapstructure:"startup_recovery_lock_ttl"`
+	DeletePollInterval              time.Duration                    `mapstructure:"delete_poll_interval"`
+	DeleteMaxConcurrent             int                              `mapstructure:"delete_max_concurrent"`
+	OrphanGracePeriod               time.Duration                    `mapstructure:"orphan_grace_period"`
+	CreateTimeout                   time.Duration                    `mapstructure:"create_timeout"`
+	StartProbeTimeout               time.Duration                    `mapstructure:"start_probe_timeout"`
+	StartProbeInterval              time.Duration                    `mapstructure:"start_probe_interval"`
+	StartProbeAttempts              int                              `mapstructure:"start_probe_attempts"`
+	FlagGlobalSecret                string                           `mapstructure:"flag_global_secret"`
+	FlagGlobalSecretFile            string                           `mapstructure:"flag_global_secret_file"`
+	FlagGlobalSecretKeyID           string                           `mapstructure:"flag_global_secret_key_id"`
+	FlagGlobalSecretKeyring         []ContainerFlagSecretKeyConfig   `mapstructure:"flag_global_secret_keyring"`
+	FlagGlobalSecretAllowRotation   bool                             `mapstructure:"flag_global_secret_allow_rotation"`
+	ResolvedFlagSecretKeyID         string                           `mapstructure:"-"`
+	ResolvedFlagSecrets             map[string]string                `mapstructure:"-"`
+	PublicHost                      string                           `mapstructure:"public_host"`
+	AccessHost                      string                           `mapstructure:"access_host"`
+	ProxyTicketTTL                  time.Duration                    `mapstructure:"proxy_ticket_ttl"`
+	ProxyBodyPreviewSize            int                              `mapstructure:"proxy_body_preview_size"`
+	DefenseSSHEnabled               bool                             `mapstructure:"defense_ssh_enabled"`
+	DefenseSSHHost                  string                           `mapstructure:"defense_ssh_host"`
+	DefenseSSHPort                  int                              `mapstructure:"defense_ssh_port"`
+	DefenseSSHHostKeyPath           string                           `mapstructure:"defense_ssh_host_key_path"`
+	DefenseWorkbenchReadOnlyEnabled bool                             `mapstructure:"defense_workbench_readonly_enabled"`
+	DefenseWorkbenchRoot            string                           `mapstructure:"defense_workbench_root"`
+	Network                         ContainerNetworkConfig           `mapstructure:"network"`
+	Registry                        ContainerRegistryConfig          `mapstructure:"registry"`
+	Scheduler                       ContainerSchedulerConfig         `mapstructure:"scheduler"`
+	RuntimeNodeHealth               ContainerRuntimeNodeHealthConfig `mapstructure:"runtime_node_health"`
 }
 
 type ContainerFlagSecretKeyConfig struct {
@@ -226,6 +227,14 @@ type ContainerSchedulerConfig struct {
 	MaxConcurrentStarts                   int           `mapstructure:"max_concurrent_starts"`
 	MaxActiveInstances                    int           `mapstructure:"max_active_instances"`
 	LockTTL                               time.Duration `mapstructure:"lock_ttl"`
+}
+
+type ContainerRuntimeNodeHealthConfig struct {
+	Enabled          bool          `mapstructure:"enabled"`
+	PollInterval     time.Duration `mapstructure:"poll_interval"`
+	ProbeTimeout     time.Duration `mapstructure:"probe_timeout"`
+	StaleAfter       time.Duration `mapstructure:"stale_after"`
+	FailureThreshold int           `mapstructure:"failure_threshold"`
 }
 
 type PaginationConfig struct {

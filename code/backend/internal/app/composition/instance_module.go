@@ -28,7 +28,9 @@ type InstanceModule struct {
 	PracticeInstanceRepository interface {
 		FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error)
 		FailProvisioning(ctx context.Context, id int64) (bool, error)
+		RequeueLostRuntime(ctx context.Context, id int64) (bool, error)
 		UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error
+		BindRuntimeNode(ctx context.Context, id int64, nodeID *int64) (bool, error)
 		PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error)
 		FinishActiveAWDServiceOperationForInstance(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
 		RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error
@@ -41,14 +43,19 @@ type InstanceModule struct {
 	PracticeRuntimeService      practiceports.RuntimeInstanceService
 	PracticeRuntimeNodeSelector practiceports.RuntimeNodeSelector
 
-	service              *runtimeHTTPServiceAdapter
-	proxyTrafficRecorder runtimeProxyTrafficRecorder
-	startupRecovery      *instancecmd.StartupRuntimeRecoveryService
+	service                   *runtimeHTTPServiceAdapter
+	proxyTrafficRecorder      runtimeProxyTrafficRecorder
+	startupRecovery           *instancecmd.StartupRuntimeRecoveryService
+	runtimeNodeOfflineHandler runtimeNodeOfflineHandler
 }
 
 type runtimeProxyTrafficRecorder interface {
 	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
 	RecordAWDProxyTrafficEvent(ctx context.Context, event instanceports.AWDProxyTrafficEventInput) error
+}
+
+type runtimeNodeOfflineHandler interface {
+	HandleRuntimeNodeOffline(ctx context.Context, nodeID int64) error
 }
 
 func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceModule {
@@ -146,9 +153,17 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 			cfg.Container.DefenseSSHHost,
 			cfg.Container.DefenseSSHPort,
 		),
-		startupRecovery:      startupRecovery,
-		proxyTrafficRecorder: newInstanceProxyTrafficRecorder(awdRepo),
+		startupRecovery:           startupRecovery,
+		proxyTrafficRecorder:      newInstanceProxyTrafficRecorder(awdRepo),
+		runtimeNodeOfflineHandler: maintenanceService,
 	}
+}
+
+func (m *InstanceModule) HandleRuntimeNodeOffline(ctx context.Context, nodeID int64) error {
+	if m == nil || m.runtimeNodeOfflineHandler == nil {
+		return nil
+	}
+	return m.runtimeNodeOfflineHandler.HandleRuntimeNodeOffline(ctx, nodeID)
 }
 
 func (m *InstanceModule) SetAWDDesiredRuntimeReconciler(reconciler interface {
@@ -402,6 +417,13 @@ func (a *instanceMaintenanceRepositoryAdapter) RequeueLostRuntime(ctx context.Co
 	return a.instanceRepo.RequeueLostRuntime(ctx, id)
 }
 
+func (a *instanceMaintenanceRepositoryAdapter) RequeueLostRuntimesByNode(ctx context.Context, nodeID int64) ([]*instancecontracts.Instance, error) {
+	if a == nil || a.instanceRepo == nil {
+		return nil, nil
+	}
+	return a.instanceRepo.RequeueLostRuntimesByNode(ctx, nodeID)
+}
+
 func (a *instanceMaintenanceRepositoryAdapter) ListActiveContainerIDs(ctx context.Context) ([]string, error) {
 	if a == nil || a.inventoryRepo == nil {
 		return nil, nil
@@ -454,11 +476,25 @@ func (a *practiceInstanceRepositoryAdapter) FailProvisioning(ctx context.Context
 	return changed, err
 }
 
+func (a *practiceInstanceRepositoryAdapter) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
+	if a == nil || a.instanceRepo == nil {
+		return false, nil
+	}
+	return a.instanceRepo.RequeueLostRuntime(ctx, id)
+}
+
 func (a *practiceInstanceRepositoryAdapter) UpdateRuntime(ctx context.Context, instance *instancecontracts.Instance) error {
 	if a == nil || a.instanceRepo == nil {
 		return nil
 	}
 	return a.instanceRepo.UpdateRuntime(ctx, instance)
+}
+
+func (a *practiceInstanceRepositoryAdapter) BindRuntimeNode(ctx context.Context, id int64, nodeID *int64) (bool, error) {
+	if a == nil || a.instanceRepo == nil {
+		return false, nil
+	}
+	return a.instanceRepo.BindRuntimeNode(ctx, id, nodeID)
 }
 
 func (a *practiceInstanceRepositoryAdapter) PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error) {

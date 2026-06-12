@@ -3,8 +3,11 @@ package composition
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	"ctf-platform/internal/config"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	runtimeapp "ctf-platform/internal/module/container_runtime/application"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
@@ -39,8 +42,9 @@ type ContainerRuntimeModule struct {
 	RuntimeNodeSelector     runtimeports.RuntimeNodeSelector
 	LifecycleCloser         runtimeLifecycleCloser
 
-	nodeRouter *runtimeNodeExecutionRouter
-	runtime    *containerruntime.Module
+	nodeRouter        *runtimeNodeExecutionRouter
+	runtime           *containerruntime.Module
+	runtimeNodeHealth *runtimeapp.NodeHealthService
 }
 
 func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
@@ -94,6 +98,10 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	for _, job := range module.BackgroundJobs {
 		root.RegisterBackgroundJob(NewBackgroundJob(job.Name, job.Start, job.Stop))
 	}
+	runtimeNodeHealth := registerRuntimeNodeHealthJob(root, cfg, nodeRepo, &runtimeNodeStatsProbe{
+		router:   nodeRouter,
+		fallback: defaultNodeClient,
+	}, log.Named("runtime_node_health"))
 
 	contestContainerFiles := module.ContainerFiles
 	contestCheckerRunner := checkerRunner
@@ -115,7 +123,51 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		LifecycleCloser:         lifecycleCloser,
 		nodeRouter:              nodeRouter,
 		runtime:                 module,
+		runtimeNodeHealth:       runtimeNodeHealth,
 	}, nil
+}
+
+type runtimeNodeStatsProbe struct {
+	router   *runtimeNodeExecutionRouter
+	fallback *nodeRuntimeClient
+}
+
+func (p *runtimeNodeStatsProbe) ListManagedContainerStats(ctx context.Context, node runtimeentity.RuntimeNode) ([]runtimeapp.ManagedContainerStat, error) {
+	if p == nil {
+		return nil, runtimeports.ErrRuntimeNodeUnavailable
+	}
+	if p.router != nil {
+		client, _, err := p.router.clientForConcreteNode(ctx, &node)
+		if err != nil {
+			return nil, err
+		}
+		return client.ListManagedContainerStats(ctx)
+	}
+	if p.fallback != nil {
+		return p.fallback.ListManagedContainerStats(ctx)
+	}
+	return nil, runtimeports.ErrRuntimeNodeUnavailable
+}
+
+func registerRuntimeNodeHealthJob(root *Root, cfg *config.Config, repo *containerruntimeinfra.RuntimeNodeRepository, probe runtimeapp.NodeHealthProbe, logger *zap.Logger) *runtimeapp.NodeHealthService {
+	if root == nil || cfg == nil || repo == nil || probe == nil || !cfg.Container.RuntimeNodeHealth.Enabled {
+		return nil
+	}
+	service := runtimeapp.NewNodeHealthService(repo, probe, runtimeapp.NodeHealthOptions{
+		PollInterval:     cfg.Container.RuntimeNodeHealth.PollInterval,
+		ProbeTimeout:     cfg.Container.RuntimeNodeHealth.ProbeTimeout,
+		StaleAfter:       cfg.Container.RuntimeNodeHealth.StaleAfter,
+		FailureThreshold: cfg.Container.RuntimeNodeHealth.FailureThreshold,
+	}, logger)
+	root.RegisterBackgroundJob(NewLoopBackgroundJob("runtime_node_health", service.Run))
+	return service
+}
+
+func (m *ContainerRuntimeModule) SetRuntimeNodeOfflineHandler(handler runtimeapp.NodeOfflineHandler) {
+	if m == nil || m.runtimeNodeHealth == nil {
+		return
+	}
+	m.runtimeNodeHealth.SetOfflineHandler(handler)
 }
 
 func runtimeConfigOrDefault(cfg *config.Config) *config.Config {
@@ -161,7 +213,7 @@ func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtim
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	return containerruntimeinfra.NewDefaultRuntimeNodeSelector(repo, defaultNodeName), repo, node, nil
+	return containerruntimeinfra.NewDefaultRuntimeNodeSelector(repo, defaultNodeName, runtimeNodeHealthStaleThreshold(cfg)), repo, node, nil
 }
 
 func buildDefaultRuntimeNodeClient(root *Root) (*nodeRuntimeClient, error) {

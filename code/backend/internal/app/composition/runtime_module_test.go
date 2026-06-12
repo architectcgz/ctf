@@ -295,6 +295,62 @@ func TestBuildContainerRuntimeModuleProvidesDefaultRuntimeNodeSelector(t *testin
 	}
 }
 
+func TestBuildContainerRuntimeModuleRegistersRuntimeNodeHealthJobWhenEnabled(t *testing.T) {
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.Container.RuntimeNodeHealth.Enabled = true
+	cfg.Container.RuntimeNodeHealth.PollInterval = time.Second
+	cfg.Container.RuntimeNodeHealth.ProbeTimeout = 100 * time.Millisecond
+	cfg.Container.RuntimeNodeHealth.StaleAfter = time.Minute
+	cfg.Container.RuntimeNodeHealth.FailureThreshold = 1
+
+	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
+		t.Fatalf("auto migrate runtime module tables: %v", err)
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	module, err := BuildContainerRuntimeModule(root)
+	if err != nil {
+		t.Fatalf("BuildContainerRuntimeModule() error = %v", err)
+	}
+	if module == nil {
+		t.Fatal("expected container runtime module")
+	}
+
+	if !backgroundJobRegistered(root, "runtime_node_health") {
+		t.Fatalf("expected runtime_node_health background job, got %v", backgroundJobNames(root))
+	}
+}
+
+func TestBuildContainerRuntimeModuleSkipsRuntimeNodeHealthJobWhenDisabled(t *testing.T) {
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.Container.RuntimeNodeHealth.Enabled = false
+	cfg.Container.RuntimeNodeHealth.PollInterval = time.Second
+	cfg.Container.RuntimeNodeHealth.ProbeTimeout = 100 * time.Millisecond
+	cfg.Container.RuntimeNodeHealth.StaleAfter = time.Minute
+	cfg.Container.RuntimeNodeHealth.FailureThreshold = 1
+
+	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
+		t.Fatalf("auto migrate runtime module tables: %v", err)
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	if _, err := BuildContainerRuntimeModule(root); err != nil {
+		t.Fatalf("BuildContainerRuntimeModule() error = %v", err)
+	}
+
+	if backgroundJobRegistered(root, "runtime_node_health") {
+		t.Fatalf("expected runtime_node_health background job to be disabled, got %v", backgroundJobNames(root))
+	}
+}
+
 func TestBuildDefaultRuntimeNodeSelectorRequiresFormalMigrationOutsideTestEnv(t *testing.T) {
 	t.Parallel()
 
@@ -370,6 +426,63 @@ func TestBuildContainerRuntimeModuleSelectsConfiguredDefaultRuntimeNode(t *testi
 	}
 	if binding.NodeID == legacyNode.ID {
 		t.Fatalf("expected selector to avoid legacy local-default node, got %+v", binding)
+	}
+}
+
+func TestBuildContainerRuntimeModuleDefaultSelectorSkipsOfflineRuntimeNode(t *testing.T) {
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.Container.RuntimeNodeHealth.Enabled = true
+	cfg.Container.RuntimeNodeHealth.StaleAfter = time.Minute
+
+	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
+		t.Fatalf("auto migrate runtime module tables: %v", err)
+	}
+
+	now := time.Now().UTC()
+	offlineDefault := containerruntimeentity.RuntimeNode{
+		Name:             "local-default",
+		Endpoint:         "local://docker",
+		Schedulable:      true,
+		Labels:           "{}",
+		HealthStatus:     containerruntimeentity.RuntimeNodeHealthOffline,
+		CapacitySnapshot: "{}",
+		LastSeenAt:       &now,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	if err := db.Create(&offlineDefault).Error; err != nil {
+		t.Fatalf("create offline default runtime node: %v", err)
+	}
+	healthyNode := containerruntimeentity.RuntimeNode{
+		Name:             "node-healthy",
+		Endpoint:         "local://docker",
+		Schedulable:      true,
+		Labels:           "{}",
+		HealthStatus:     containerruntimeentity.RuntimeNodeHealthReady,
+		CapacitySnapshot: "{}",
+		LastSeenAt:       &now,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	if err := db.Create(&healthyNode).Error; err != nil {
+		t.Fatalf("create healthy runtime node: %v", err)
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	module, err := BuildContainerRuntimeModule(root)
+	if err != nil {
+		t.Fatalf("BuildContainerRuntimeModule() error = %v", err)
+	}
+	binding, err := module.RuntimeNodeSelector.SelectDefaultNode(context.Background())
+	if err != nil {
+		t.Fatalf("SelectDefaultNode() error = %v", err)
+	}
+	if binding == nil || binding.NodeID != healthyNode.ID {
+		t.Fatalf("expected default selector to skip offline node and choose healthy node, got %+v", binding)
 	}
 }
 
@@ -615,4 +728,22 @@ func newSelfSignedClientCertificatePEM(t *testing.T, commonName string) ([]byte,
 
 func bigIntFromTime(ts time.Time) *big.Int {
 	return big.NewInt(ts.UnixNano())
+}
+
+func backgroundJobRegistered(root *Root, name string) bool {
+	for _, job := range root.BackgroundJobs() {
+		if job.Name() == name {
+			return true
+		}
+	}
+	return false
+}
+
+func backgroundJobNames(root *Root) []string {
+	jobs := root.BackgroundJobs()
+	names := make([]string, 0, len(jobs))
+	for _, job := range jobs {
+		names = append(names, job.Name())
+	}
+	return names
 }

@@ -2,9 +2,11 @@ package composition
 
 import (
 	"context"
+	"errors"
 	"io"
 	"strings"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -30,6 +32,7 @@ type runtimeNodeClient interface {
 	RemoveContainer(ctx context.Context, containerID string) error
 	InspectManagedContainer(ctx context.Context, containerID string) (*runtimecontracts.ManagedContainerState, error)
 	ListManagedContainers(ctx context.Context) ([]runtimecontracts.ManagedContainer, error)
+	ListManagedContainerStats(ctx context.Context) ([]runtimecontracts.ManagedContainerStat, error)
 	StartContainer(ctx context.Context, containerID string) error
 	RunChecker(ctx context.Context, job contestports.CheckerRunJob) (contestports.CheckerRunResult, error)
 	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
@@ -67,6 +70,8 @@ type runtimeNodeExecutionRouter struct {
 }
 
 var buildRuntimeNodeClient = buildRuntimeNodeClientFromNode
+
+const defaultRuntimeNodeHealthStaleAfter = 30 * time.Second
 
 func newNodeRuntimeClient(
 	cfg *config.Config,
@@ -308,11 +313,18 @@ func (c *nodeRuntimeClient) ListManagedContainers(ctx context.Context) ([]runtim
 	return c.executor.ListManagedContainers(ctx)
 }
 
+func (c *nodeRuntimeClient) ListManagedContainerStats(ctx context.Context) ([]runtimecontracts.ManagedContainerStat, error) {
+	if c == nil || c.executor == nil {
+		return nil, nil
+	}
+	return c.executor.ListManagedContainerStats(ctx)
+}
+
 func (r *runtimeNodeExecutionRouter) ListManagedContainers(ctx context.Context) ([]runtimecontracts.ManagedContainer, error) {
 	if r == nil {
 		return nil, nil
 	}
-	nodes, err := r.nodeRepo.ListSchedulableNodes(ctx)
+	nodes, err := r.nodeRepo.ListHealthCheckNodes(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -497,6 +509,26 @@ func (r *runtimeNodeExecutionRouter) resolveNodeForExecution(ctx context.Context
 	if r == nil || r.nodeRepo == nil {
 		return nil, runtimeports.ErrRuntimeNodeUnavailable
 	}
+	if staleThreshold := runtimeNodeHealthStaleThreshold(r.cfg); staleThreshold > 0 {
+		now := time.Now().UTC()
+		if nodeID > 0 {
+			return r.nodeRepo.FindHealthyByID(ctx, nodeID, staleThreshold, now)
+		}
+		if r.defaultNodeName != "" {
+			node, err := r.nodeRepo.FindSchedulableHealthyNodeByName(ctx, r.defaultNodeName, staleThreshold, now)
+			if err == nil {
+				return node, nil
+			}
+			if !errors.Is(err, runtimeports.ErrRuntimeNodeUnavailable) {
+				return nil, err
+			}
+		}
+		nodes, err := r.nodeRepo.ListSchedulableHealthyNodes(ctx, staleThreshold, now)
+		if err != nil {
+			return nil, err
+		}
+		return &nodes[0], nil
+	}
 	if nodeID > 0 {
 		return r.nodeRepo.FindByID(ctx, nodeID)
 	}
@@ -504,6 +536,16 @@ func (r *runtimeNodeExecutionRouter) resolveNodeForExecution(ctx context.Context
 		return r.nodeRepo.FindSchedulableNodeByName(ctx, r.defaultNodeName)
 	}
 	return r.nodeRepo.FindFirstSchedulableNode(ctx)
+}
+
+func runtimeNodeHealthStaleThreshold(cfg *config.Config) time.Duration {
+	if cfg == nil || !cfg.Container.RuntimeNodeHealth.Enabled {
+		return 0
+	}
+	if cfg.Container.RuntimeNodeHealth.StaleAfter > 0 {
+		return cfg.Container.RuntimeNodeHealth.StaleAfter
+	}
+	return defaultRuntimeNodeHealthStaleAfter
 }
 
 func (r *runtimeNodeExecutionRouter) resolveNodeIDForContainer(ctx context.Context, containerID string) (int64, error) {

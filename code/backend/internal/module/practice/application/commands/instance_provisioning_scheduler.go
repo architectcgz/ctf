@@ -7,7 +7,9 @@ import (
 
 	"go.uber.org/zap"
 
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/shared/lockkeepalive"
 )
 
@@ -149,9 +151,72 @@ func (s *serviceCore) processPendingInstance(ctx context.Context, instanceID int
 		return
 	}
 
+	nodeBinding, err := s.selectRuntimeNode(ctx, instanceScopeFromInstance(instance))
+	if err != nil {
+		if errors.Is(err, runtimeports.ErrRuntimeNodeUnavailable) {
+			s.requeuePendingInstance(ctx, instance)
+			return
+		}
+		s.logger.Warn("待启动实例选择运行节点失败", zap.Int64("instance_id", instanceID), zap.Error(err))
+		s.markInstanceFailed(ctx, instance)
+		return
+	}
+	instance.NodeID = runtimeNodeIDFromBinding(nodeBinding)
+	bound, err := s.instanceRepo.BindRuntimeNode(ctx, instance.ID, instance.NodeID)
+	if err != nil {
+		s.logger.Warn("待启动实例绑定运行节点失败", zap.Int64("instance_id", instanceID), zap.Error(err))
+		s.markInstanceFailed(ctx, instance)
+		return
+	}
+	if !bound {
+		s.logger.Info("实例已不再处于 creating，跳过运行节点绑定后启动",
+			zap.Int64("instance_id", instanceID))
+		return
+	}
+
 	if err := s.provisionInstance(ctx, instance, chal, topology, flag); err != nil {
 		s.logger.Warn("实例异步启动失败", zap.Int64("instance_id", instanceID), zap.Error(err), wrappedErrorCauseField(err))
 	}
+}
+
+func (s *serviceCore) requeuePendingInstance(ctx context.Context, instance *instancecontracts.Instance) {
+	if s == nil || s.instanceRepo == nil || instance == nil {
+		return
+	}
+	requeued, err := s.instanceRepo.RequeueLostRuntime(ctx, instance.ID)
+	if err != nil {
+		s.logger.Warn("待启动实例回到 pending 失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+		return
+	}
+	if requeued {
+		s.logger.Info("待启动实例等待健康运行节点",
+			zap.Int64("instance_id", instance.ID))
+	}
+}
+
+func instanceScopeFromInstance(instance *instancecontracts.Instance) practiceports.InstanceScope {
+	if instance == nil {
+		return practiceports.InstanceScope{}
+	}
+	scope := practiceports.InstanceScope{
+		ContestID:  instance.ContestID,
+		TeamID:     instance.TeamID,
+		ServiceID:  instance.ServiceID,
+		ShareScope: instance.ShareScope,
+	}
+	switch {
+	case instance.ServiceID != nil && *instance.ServiceID > 0:
+		scope.ContestMode = practiceports.ContestModeAWD
+	}
+	switch instance.ShareScope {
+	case instancecontracts.ShareScopePerTeam:
+		if instance.TeamID != nil && *instance.TeamID > 0 {
+			scope.FlagSubjectID = *instance.TeamID
+		}
+	default:
+		scope.FlagSubjectID = instance.UserID
+	}
+	return scope
 }
 
 func (s *serviceCore) schedulerEnabled() bool {

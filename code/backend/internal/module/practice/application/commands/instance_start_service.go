@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	"errors"
 	"fmt"
@@ -436,8 +437,11 @@ func (s *serviceCore) startChallengeWithScope(ctx context.Context, userID, chall
 		return nil, err
 	}
 	nodeBinding, err := s.selectRuntimeNode(ctx, scope)
-	if err != nil {
+	if err != nil && (!s.schedulerEnabled() || !errors.Is(err, runtimeports.ErrRuntimeNodeUnavailable)) {
 		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	if err != nil {
+		nodeBinding = nil
 	}
 
 	var (

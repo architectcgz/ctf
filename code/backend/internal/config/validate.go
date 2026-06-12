@@ -155,6 +155,20 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("container.scheduler.lock_ttl must be greater than 0")
 		}
 	}
+	if c.Container.RuntimeNodeHealth.Enabled {
+		if c.Container.RuntimeNodeHealth.PollInterval <= 0 {
+			return fmt.Errorf("container.runtime_node_health.poll_interval must be greater than 0")
+		}
+		if c.Container.RuntimeNodeHealth.ProbeTimeout <= 0 {
+			return fmt.Errorf("container.runtime_node_health.probe_timeout must be greater than 0")
+		}
+		if c.Container.RuntimeNodeHealth.StaleAfter <= c.Container.RuntimeNodeHealth.ProbeTimeout {
+			return fmt.Errorf("container.runtime_node_health.stale_after must be greater than probe_timeout")
+		}
+		if c.Container.RuntimeNodeHealth.FailureThreshold <= 0 {
+			return fmt.Errorf("container.runtime_node_health.failure_threshold must be greater than 0")
+		}
+	}
 	if c.Container.DeletePollInterval <= 0 {
 		return fmt.Errorf("container.delete_poll_interval must be greater than 0")
 	}
