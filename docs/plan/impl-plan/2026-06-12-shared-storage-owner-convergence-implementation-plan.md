@@ -218,7 +218,7 @@
 - [x] **Step 19: 运行最小验证**
   - Run: `cd code/backend && go test ./internal/platform/storage/... ./internal/module/assessment/... ./internal/module/challenge/... ./internal/app/composition -run 'Shared|Report|Attachment|HostKey|Config' -count=1`
 
-- [ ] **Step 20: Commit**
+- [x] **Step 20: Commit**
   - Run: `git add code/backend/internal/platform/storage code/backend/internal/config/config.go code/backend/internal/config/config_test.go code/backend/internal/module/assessment code/backend/internal/module/challenge code/backend/internal/app/composition/awd_defense_ssh_gateway.go docs/architecture/backend/03-container-architecture.md docs/operations/awd-host-reboot-recovery-drill.md && git commit -m "feat(backend): 收口共享文件与密钥来源" -m "新增 shared_fs 共享存储 owner，并让报告输出与题目导入附件下载不再依赖副本本地路径。" -m "明确动态 Flag secret 与 AWD SSH host key 的多副本共源要求，为 SSH gateway HA 提供前置契约。" -m "Task: 2026-06-12-shared-storage-owner-convergence"`
 
 ## Validation
