@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -143,9 +144,11 @@ func (h *ReportHandler) DownloadReport(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
+	defer download.Reader.Close()
 
 	c.Header("Content-Type", download.ContentType)
-	c.FileAttachment(download.Path, download.FileName)
+	c.Header("Content-Disposition", `attachment; filename="`+download.FileName+`"`)
+	c.DataFromReader(http.StatusOK, download.Size, download.ContentType, download.Reader, nil)
 }
 
 func (h *ReportHandler) GetReportStatus(c *gin.Context) {

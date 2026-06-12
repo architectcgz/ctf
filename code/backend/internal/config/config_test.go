@@ -563,6 +563,73 @@ func TestValidateRejectsEnabledDefenseSSHWithoutHostKeyPath(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsSharedFSWithoutRoot(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.SharedStorage.Type = "shared_fs"
+	cfg.SharedStorage.SharedFS.Root = ""
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject shared_fs without root, got nil")
+	}
+	if !strings.Contains(err.Error(), "shared_storage.shared_fs.root must not be empty") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestConfigSharedStoragePathResolvesRelativePath(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.SharedStorage.Type = "shared_fs"
+	cfg.SharedStorage.SharedFS.Root = filepath.Join(t.TempDir(), "shared")
+
+	resolved := cfg.SharedStoragePath("runtime/flag-global-secret")
+	want := filepath.Join(cfg.SharedStorage.SharedFS.Root, "runtime", "flag-global-secret")
+	if resolved != want {
+		t.Fatalf("resolved = %q, want %q", resolved, want)
+	}
+}
+
+func TestLoadAppliesSharedStorageDefaults(t *testing.T) {
+	chdirToBackendRoot(t)
+	setContainerFlagSecretEnv(t, "integration-secret-123456789012345")
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.SharedStorage.Type != "shared_fs" {
+		t.Fatalf("shared storage type = %q", cfg.SharedStorage.Type)
+	}
+	if cfg.SharedStorage.SharedFS.Root != "storage/shared" {
+		t.Fatalf("shared storage root = %q", cfg.SharedStorage.SharedFS.Root)
+	}
+}
+
+func TestLoadResolvesContainerFlagSecretFileRelativeToSharedStorageRoot(t *testing.T) {
+	chdirToBackendRoot(t)
+	sharedRoot := filepath.Join(t.TempDir(), "shared")
+	t.Setenv("CTF_SHARED_STORAGE_SHARED_FS_ROOT", sharedRoot)
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "integration-secret-123456789012345")
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE", "runtime/flag-global-secret")
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	want := filepath.Join(sharedRoot, "runtime", "flag-global-secret")
+	if cfg.Container.FlagGlobalSecretFile != want {
+		t.Fatalf("flag secret file = %q, want %q", cfg.Container.FlagGlobalSecretFile, want)
+	}
+	persistedSecret, err := os.ReadFile(want)
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if strings.TrimSpace(string(persistedSecret)) != cfg.Container.FlagGlobalSecret {
+		t.Fatalf("expected persisted secret to match resolved secret, got %q", persistedSecret)
+	}
+}
+
 func TestValidateRejectsTooLargeStartupRecoveryLockTTL(t *testing.T) {
 	cfg := validConfigForValidationTests()
 	cfg.Container.StartupRecoveryLockTTL = containerStartupRecoveryMaxLockTTL + time.Second
@@ -790,6 +857,12 @@ func validConfigForValidationTests() *Config {
 				SingleContainerSubnetMask: 29,
 				TopologySubnetBase:        "10.10.0.0/16",
 				TopologySubnetMask:        24,
+			},
+		},
+		SharedStorage: SharedStorageConfig{
+			Type: "shared_fs",
+			SharedFS: SharedFSStorageConfig{
+				Root: "storage/shared",
 			},
 		},
 		Recommendation: RecommendationConfig{

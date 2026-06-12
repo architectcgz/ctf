@@ -38,9 +38,14 @@ func Load(env string) (*Config, error) {
 	if cfg.App.Env == "" {
 		cfg.App.Env = env
 	}
+	cfg.SharedStorage.Type = strings.TrimSpace(cfg.SharedStorage.Type)
+	cfg.SharedStorage.SharedFS.Root = strings.TrimSpace(cfg.SharedStorage.SharedFS.Root)
 
 	cfg.Container.FlagGlobalSecret = strings.TrimSpace(cfg.Container.FlagGlobalSecret)
 	cfg.Container.FlagGlobalSecretFile = strings.TrimSpace(cfg.Container.FlagGlobalSecretFile)
+	if cfg.Container.FlagGlobalSecretFile != "" {
+		cfg.Container.FlagGlobalSecretFile = cfg.SharedStoragePath(cfg.Container.FlagGlobalSecretFile)
+	}
 	if cfg.Container.FlagGlobalSecret != "" && len(cfg.Container.FlagGlobalSecret) < 32 {
 		return nil, fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(cfg.Container.FlagGlobalSecret))
 	}

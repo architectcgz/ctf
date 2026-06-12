@@ -36,7 +36,6 @@ type importEnvelope[T any] struct {
 
 func TestBuildWiresChallengeImportImageBuildService(t *testing.T) {
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
-	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
 	t.Setenv("CHALLENGE_IMAGE_BUILD_SOURCE_DIR", t.TempDir())
 
 	deps, db := newChallengeRuntimeImportDeps(t)
@@ -82,12 +81,12 @@ func TestBuildWiresChallengeImportImageBuildService(t *testing.T) {
 	if err := json.Unmarshal(commitRecorder.Body.Bytes(), &commit); err != nil {
 		t.Fatalf("decode commit response: %v", err)
 	}
-	if commit.Data.Challenge == nil || commit.Data.Challenge.ImageID <= 0 {
+	if commit.Data.Challenge == nil || commit.Data.Challenge.ImageID == nil || *commit.Data.Challenge.ImageID <= 0 {
 		t.Fatalf("unexpected commit response: %+v", commit.Data)
 	}
 
 	imageRepo := challengeinfra.NewImageRepository(db)
-	image, err := imageRepo.FindByID(context.Background(), commit.Data.Challenge.ImageID)
+	image, err := imageRepo.FindByID(context.Background(), *commit.Data.Challenge.ImageID)
 	if err != nil {
 		t.Fatalf("FindByID(image) error = %v", err)
 	}
@@ -191,6 +190,12 @@ func newChallengeRuntimeImportDeps(t *testing.T) (Deps, *gorm.DB) {
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Env: "test",
+		},
+		SharedStorage: config.SharedStorageConfig{
+			Type: "shared_fs",
+			SharedFS: config.SharedFSStorageConfig{
+				Root: t.TempDir(),
+			},
 		},
 		Container: config.ContainerConfig{
 			FlagGlobalSecret: "integration-secret-123456789012345",

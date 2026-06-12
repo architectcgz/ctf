@@ -15,6 +15,7 @@ import (
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
 	platformevents "ctf-platform/internal/platform/events"
+	platformsharedfs "ctf-platform/internal/platform/storage/sharedfs"
 )
 
 type BackgroundTaskCloser interface {
@@ -160,7 +161,10 @@ func buildReportHandler(deps moduleDeps, profileQueryService assessmentports.Ass
 		deps.reportRepo,
 		deps.reportRepo,
 		profileQueryService,
-		assessmentinfra.NewReportOutputStore(deps.input.Config.Report.StorageDir),
+		assessmentinfra.NewReportOutputStore(
+			platformsharedfs.NewStore(deps.input.Config.SharedStoragePath("reports")),
+			"",
+		),
 		deps.input.Config.Report,
 		deps.input.Logger.Named("report_service"),
 	)

@@ -10,6 +10,7 @@ import (
 	"ctf-platform/internal/apperror"
 	assessmentreporting "ctf-platform/internal/module/assessment/application/reporting"
 	assessmententity "ctf-platform/internal/module/assessment/entity"
+	assessmentports "ctf-platform/internal/module/assessment/ports"
 	"ctf-platform/internal/teaching/classwindow"
 )
 
@@ -35,9 +36,9 @@ func (s *ReportService) renderReport(filePath, format string, data any) error {
 	return apperror.ErrInternal.WithCause(fmt.Errorf("unsupported report payload"))
 }
 
-func (s *ReportService) reportFilePath(ctx context.Context, reportID int64, reportType, format string) (string, error) {
+func (s *ReportService) reportFilePath(ctx context.Context, reportID int64, reportType, format string) (*assessmentports.ReportOutput, error) {
 	if s.outputStore == nil {
-		return "", fmt.Errorf("report output store is not configured")
+		return nil, fmt.Errorf("report output store is not configured")
 	}
 	extension := reportFileExtension(format)
 	fileName := fmt.Sprintf("%s-%d-%d.%s", reportType, reportID, time.Now().Unix(), extension)

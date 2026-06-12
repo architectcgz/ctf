@@ -16,6 +16,7 @@ import (
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	platformsharedfs "ctf-platform/internal/platform/storage/sharedfs"
 )
 
 type backgroundTaskGroup []BackgroundTaskCloser
@@ -128,7 +129,10 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 	challengeCommandService.SetEventBus(deps.input.Events)
 	challengeImportService := challengeimport.NewChallengeImportService(
 		challengeinfra.NewChallengeImportPreviewStore(""),
-		challengeinfra.NewChallengeAttachmentStore(""),
+		challengeinfra.NewChallengeAttachmentStore(
+			platformsharedfs.NewStore(deps.input.Config.SharedStoragePath("challenge-attachments")),
+			"",
+		),
 		packageStorage,
 		NewChallengeImportTxRunner(deps.rawRepo, imageBuildService),
 		imageBuildService,
@@ -176,6 +180,10 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 		SelfChecks:      challengeSelfCheckService,
 		PublishChecks:   challengePublishCheckService,
 		PackageExports:  challengePackageExportService,
+		Attachments: challengeinfra.NewChallengeAttachmentStore(
+			platformsharedfs.NewStore(deps.input.Config.SharedStoragePath("challenge-attachments")),
+			"",
+		),
 		PackageDelivery: packageDeliveryService,
 	})
 }
