@@ -1,7 +1,7 @@
 # AWD 宿主机重启恢复演练手册
 
 > 状态：Current
-> 事实源：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`、`code/backend/internal/module/practice/application/commands/awd_desired_runtime_reconciler.go`、`code/backend/internal/config/config.go`、`docker/docker-compose.dev.yml`
+> 事实源：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`、`code/backend/internal/module/practice/application/commands/awd_desired_runtime_reconciler.go`、`code/backend/internal/config/`、`docker/docker-compose.dev.yml`
 > 替代：无
 
 ## 定位
