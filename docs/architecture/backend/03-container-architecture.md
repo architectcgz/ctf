@@ -1,7 +1,7 @@
 # 容器编排架构设计
 
 > 状态：Current
-> 事实源：`code/backend/internal/module/runtime/`、`code/backend/internal/module/instance/`、`code/backend/internal/module/practice/application/commands/`、`code/backend/internal/config/config.go`
+> 事实源：`code/backend/internal/module/runtime/`、`code/backend/internal/module/instance/`、`code/backend/internal/module/practice/application/commands/`、`code/backend/internal/config/`
 > 替代：无
 
 ## 定位
@@ -37,7 +37,7 @@
   - 负责：leader 读取 Redis 中的 `platform_runtime_state` 保存的上次 `boot_id + last_heartbeat_at`。启动恢复只在检测到宿主机 boot identity 变化时触发：服务会先给 `running / frozen` 的 AWD 比赛补暂停时长、刷新这些比赛下活跃实例的 `expires_at`、执行 `ReconcileLostActiveRuntimes` 恢复停机前仍有 active row 的运行态，再执行 `ReconcileDesiredAWDInstances` 补齐缺失的 `team × visible service`，最后把恢复耗时继续累计到 `paused_seconds`；同一次 outage 通过 `runtime_recovery_key + runtime_recovery_applied_seconds` 做幂等补差，避免恢复重试或二次扩展时重复累计。同 `boot_id` 下的 heartbeat gap 只用于 leader readiness，不再直接当成 runtime outage
   - 不负责：提供管理员手动暂停状态机，或把同一套暂停语义扩散到 Jeopardy 比赛
 
-- `code/backend/internal/config/config.go`、`code/backend/Dockerfile`、`docker/docker-compose.dev.yml`
+- `code/backend/internal/config/`、`code/backend/Dockerfile`、`docker/docker-compose.dev.yml`
   - 负责：Redis 接入配置统一由 `redis.mode` owner，支持 `single` 与 `sentinel` 两种模式；sentinel 模式通过 `master_name`、`sentinel_addrs`、`sentinel_username`、`sentinel_password` 描述 control plane 使用的哨兵拓扑
   - 负责：`internal/infrastructure/redis` 根据配置创建 single client 或 Sentinel failover client，但对上层继续暴露 `*redis.Client`；不把哨兵分支扩散到业务模块
   - 负责：PostgreSQL 连接串统一显式带 `TimeZone=UTC`，driver / 代理层负责多地址或 failover 语义；`/ready` 继续按 live Ping 反映 PostgreSQL / Redis 当前依赖状态
@@ -69,7 +69,7 @@
 - AWD desired reconcile 的 scope 级降噪状态持久化在 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>`，字段包括 `failure_count`、`last_failure_at`、`next_attempt_at`、`suppressed_until` 和 `last_error`；scope 恢复 active 后由 reconcile 主动清除。
 - AWD dynamic flag 的 raw secret 最终来自 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或 `container.flag_global_secret_file` 指向的本地文件 / 持久化卷；`container.flag_global_secret` 只是当前进程加载后的内存值。集群一致性事实只在 `runtime_cluster_secrets` 中保存 active key id、active fingerprint 和 key id -> fingerprint 映射，不保存 secret 明文；每条动态实例行通过 `instances.flag_key_id` 记录生成该实例 Flag 时使用的 key，升级前为空的旧行固定按 `default` key 解释。
 - 运行时入口与访问相关 API 包括 `POST /api/v1/challenges/:id/instances`、`POST /api/v1/contests/:id/challenges/:cid/instances`、`POST /api/v1/contests/:id/awd/services/:sid/instances`、`POST /api/v1/instances/:id/access` 以及 AWD 相关访问 / 复盘接口；契约以 `docs/contracts/openapi-v1.yaml` 为准。
-- 配置基线由 `code/backend/internal/config/config.go` 提供，包括 `container.scheduler.*`、`container.startup_recovery_lock_ttl`、`container.proxy_ticket_ttl`、`container.registry.*`、`container.network.single_container_*`、`container.network.topology_*`、`contest.awd.scheduler_*`；两套 CIDR 会在启动时做 IPv4、网络地址、掩码范围和 overlap 校验，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
+- 配置基线由 `code/backend/internal/config/` 提供，包括 `container.scheduler.*`、`container.startup_recovery_lock_ttl`、`container.proxy_ticket_ttl`、`container.registry.*`、`container.network.single_container_*`、`container.network.topology_*`、`contest.awd.scheduler_*`；两套 CIDR 会在启动时做 IPv4、网络地址、掩码范围和 overlap 校验，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
 
 ## Guardrail
 
@@ -1505,7 +1505,7 @@ scripts/registry/deploy-private-registry.sh \
 
 - 如果后端进程运行在容器里，并且 `container.registry.server` 仍指向 `127.0.0.1` / `localhost`
 - 那么必须显式配置 `container.registry.access_server`
-- 否则 `code/backend/internal/config/config.go` 会在启动阶段直接拒绝这份配置，避免把“push 能通、verify 不通”的错位状态带进运行期
+- 否则 `code/backend/internal/config/` 会在启动阶段直接拒绝这份配置，避免把“push 能通、verify 不通”的错位状态带进运行期
 
 这样可以同时满足：
 
