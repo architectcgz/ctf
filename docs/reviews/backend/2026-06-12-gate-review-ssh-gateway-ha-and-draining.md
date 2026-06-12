@@ -8,7 +8,7 @@
 - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-12-ssh-gateway-ha-and-draining`
 - Branch: `task/2026-06-12-ssh-gateway-ha-and-draining`
 - Task: `2026-06-12-ssh-gateway-ha-and-draining`
-- Plan: `docs/plan/impl-plan/2026-06-12-ssh-gateway-ha-and-draining-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-12-ssh-gateway-ha-and-draining-implementation-plan.md`
 - Diff source: 当前 worktree 未提交 diff（含 untracked `code/backend/internal/module/instance/infrastructure/proxy_ticket_store_test.go`）
 - Files reviewed:
   - `README.md`
@@ -24,7 +24,7 @@
   - `docs/architecture/backend/03-container-architecture.md`
   - `docs/operations/awd-host-reboot-recovery-drill.md`
   - `docs/operations/runtime-agent-deployment.md`
-  - `docs/plan/impl-plan/2026-06-12-ssh-gateway-ha-and-draining-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-12-ssh-gateway-ha-and-draining-implementation-plan.md`
 
 ## Classification Check
 

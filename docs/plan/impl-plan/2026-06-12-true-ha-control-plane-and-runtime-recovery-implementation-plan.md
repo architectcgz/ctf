@@ -358,7 +358,7 @@
 2. T2 `shared-storage-owner-convergence`（较易，文件与密钥共源）
    - Plan: `docs/plan/impl-plan/2026-06-12-shared-storage-owner-convergence-implementation-plan.md`
 3. T3 `ssh-gateway-ha-and-draining`（中等，依赖 T1 Redis HA 与 T2 host key 共源）
-   - Plan: `docs/plan/impl-plan/2026-06-12-ssh-gateway-ha-and-draining-implementation-plan.md`
+   - Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-12-ssh-gateway-ha-and-draining-implementation-plan.md`
 4. T4 `distributed-event-bus-and-outbox-relay`（较难，跨副本 side effect 与 outbox/stream owner）
    - Plan: `docs/plan/impl-plan/2026-06-12-distributed-event-bus-and-outbox-relay-implementation-plan.md`
 5. T5 `runtime-node-health-and-failover-rebuild`（最难，runtime node health、调度排除与故障后重建）
