@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Managed by code-workflow package (version: 2026-06-10.1)
+# Managed by code-workflow package (version: 2026-06-12.1)
 from __future__ import annotations
 
 import argparse
@@ -51,6 +51,12 @@ def parse_args() -> argparse.Namespace:
 def run_git(*args: str) -> str:
     result = subprocess.run(["git", *args], cwd=ROOT, check=True, capture_output=True, text=True)
     return result.stdout
+
+
+def run_git_quiet(*args: str) -> tuple[int, str]:
+    """Run git command without check=True, return (returncode, stdout)"""
+    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
+    return result.returncode, result.stdout
 
 
 def changed_paths(args: argparse.Namespace) -> list[str]:
@@ -140,6 +146,11 @@ def validate_effective_gate(path: Path, payload: dict[str, object], *, require_c
                 continue
             if contains_placeholder(section_text):
                 errors.append(f"plan section still contains placeholders: {heading}")
+
+        # Plan must be committed before implementation starts
+        returncode, _ = run_git_quiet("ls-files", "--error-unmatch", plan_path_value)
+        if returncode != 0:
+            errors.append(f"plan file must be committed before implementation: {plan_path_value}")
 
     return errors
 
